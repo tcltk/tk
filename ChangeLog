@@ -1,3 +1,12 @@
+2003-12-26  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWinMenu.c (DrawMenuEntryAccelerator,
+	DrawMenuEntryArrow): Move the unused menu
+	arrow drawing code in DrawMenuEntryAccelerator
+	into a new function named DrawMenuEntryArrow.
+	This makes no functional change but it will
+	make it easier to fix things in the future.
+
 2003-12-25  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/tkWin32Dll.c (DllMain): Add HAVE_NO_SEH
