@@ -6,6 +6,9 @@
 	fixed an unreported new problem if a single logical line wraps
 	to fill more than the entire display.
 	
+	* macosx/tkMacOSXScrlbr.c: fix to [Bug 840978] where the size
+	of the proportional scrollbar was calculated wrongly.
+	
 2003-11-14  Joe English  <jenglish@users.sourceforge.net>
 	* doc/text.n: Fix markup errors.
 
