@@ -1,3 +1,8 @@
+2004-09-06  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/makefile.vc: Set TK_LIBRARY when execing Tk apps (test, 
+	runtest, rundemo).
+
 2004-09-03  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* macosx/tkMacOSXMenus.c (GenerateEditEvent): 

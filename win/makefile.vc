@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.83 2004/03/09 03:35:08 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.84 2004/09/06 13:45:37 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSDEVDIR)" == ""
@@ -485,6 +485,7 @@ tktest:	  setup $(TKTEST) $(CAT32)
 
 test: setup $(TKTEST) $(TKLIB) $(CAT32)
 	set TCL_LIBRARY=$(TCL_LIBRARY)
+	set TK_LIBRARY=$(ROOT)/library
 !if $(TCLINSTALL)
 	set PATH=$(_TCLDIR)\bin;$(PATH)
 !else
@@ -498,6 +499,7 @@ test: setup $(TKTEST) $(TKLIB) $(CAT32)
 
 runtest: setup $(TKTEST) $(TKLIB) $(CAT32)
 	set TCL_LIBRARY=$(TCL_LIBRARY)
+	set TK_LIBRARY=$(ROOT)/library
 !if $(TCLINSTALL)
 	set PATH=$(_TCLDIR)\bin;$(PATH)
 !else
@@ -507,6 +509,7 @@ runtest: setup $(TKTEST) $(TKLIB) $(CAT32)
 
 rundemo: setup $(TKTEST) $(TKLIB) $(CAT32)
 	set TCL_LIBRARY=$(TCL_LIBRARY)
+	set TK_LIBRARY=$(ROOT)/library
 !if $(TCLINSTALL)
 	set PATH=$(_TCLDIR)\bin;$(PATH)
 !else
