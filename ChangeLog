@@ -1,3 +1,10 @@
+2002-09-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/button.tcl: further restrict buttons to not resetting
+	the "original" relief if it has changed in the interim.  This
+	prevents code that simulated overrelief buttons from not working
+	in 8.4.  [Bug #604270]
+
 2002-09-03  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.pbproj/project.pbxproj: Bumped version number to

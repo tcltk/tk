@@ -4,7 +4,7 @@
 # checkbutton, and radiobutton widgets and provides procedures
 # that help in implementing those bindings.
 #
-# RCS: @(#) $Id: button.tcl,v 1.16 2002/09/02 22:00:53 hobbs Exp $
+# RCS: @(#) $Id: button.tcl,v 1.17 2002/09/04 02:05:52 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -152,8 +152,10 @@ proc ::tk::ButtonEnter w {
 	set Priv($w,relief) [$w cget -relief]
 	if {$Priv(buttonWindow) eq $w} {
 	    $w configure -relief sunken -state active
-	} elseif {[$w cget -overrelief] ne ""} {
-	    $w configure -relief [$w cget -overrelief]
+	    set Priv($w,prelief) sunken
+	} elseif {[set over [$w cget -overrelief]] ne ""} {
+	    $w configure -relief $over
+	    set Priv($w,prelief) $over
 	}
     }
     set Priv(window) $w
@@ -173,12 +175,15 @@ proc ::tk::ButtonLeave w {
 	$w configure -state normal
     }
 
-    # Restore the original button relief if it was changed.
-    # That is signaled by the existence of Priv($w,relief).
+    # Restore the original button relief if it was changed by Tk.
+    # That is signaled by the existence of Priv($w,prelief).
 
     if {[info exists Priv($w,relief)]} {
-	$w configure -relief $Priv($w,relief)
-	unset Priv($w,relief)
+	if {[info exists Priv($w,prelief)] && \
+		$Priv($w,prelief) eq [$w cget -relief]} {
+	    $w configure -relief $Priv($w,relief)
+	}
+	unset -nocomplain Priv($w,relief) Priv($w,prelief)
     }
 
     set Priv(window) ""
@@ -207,6 +212,7 @@ proc ::tk::ButtonDown w {
     if {[$w cget -state] ne "disabled"} {
 	set Priv(buttonWindow) $w
 	$w configure -relief sunken -state active
+	set Priv($w,prelief) sunken
 
 	# If this button has a repeatdelay set up, get it going with an after
 	after cancel $Priv(afterId)
@@ -234,8 +240,11 @@ proc ::tk::ButtonUp w {
 	# Restore the button's relief if it was cached.
 
 	if {[info exists Priv($w,relief)]} {
-	    $w configure -relief $Priv($w,relief)
-	    unset Priv($w,relief)
+	    if {[info exists Priv($w,prelief)] && \
+		    $Priv($w,prelief) eq [$w cget -relief]} {
+		$w configure -relief $Priv($w,relief)
+	    }
+	    unset -nocomplain Priv($w,relief) Priv($w,prelief)
 	}
 
 	# Clean up the after event from the auto-repeater
@@ -268,9 +277,10 @@ proc ::tk::CheckRadioEnter w {
 	if {$Priv(buttonWindow) eq $w} {
 	    $w configure -state active
 	}
-	if {[$w cget -overrelief] ne ""} {
-	    set Priv($w,relief) [$w cget -relief]
-	    $w configure -relief [$w cget -overrelief]
+	if {[set over [$w cget -overrelief]] ne ""} {
+	    set Priv($w,relief)  [$w cget -relief]
+	    set Priv($w,prelief) $over
+	    $w configure -relief $over
 	}
     }
     set Priv(window) $w
@@ -325,8 +335,10 @@ proc ::tk::ButtonEnter {w} {
 	set Priv($w,relief) [$w cget -relief]
 	if {$Priv(buttonWindow) eq $w} {
 	    $w configure -relief sunken
-	} elseif {[$w cget -overrelief] ne ""} {
-	    $w configure -relief [$w cget -overrelief]
+	    set Priv($w,prelief) sunken
+	} elseif {[set over [$w cget -overrelief]] ne ""} {
+	    $w configure -relief $over
+	    set Priv($w,prelief) $over
 	}
     }
     set Priv(window) $w
@@ -346,12 +358,15 @@ proc ::tk::ButtonLeave w {
 	$w configure -state normal
     }
 
-    # Restore the original button relief if it was changed.
-    # That is signaled by the existence of Priv($w,relief).
+    # Restore the original button relief if it was changed by Tk.
+    # That is signaled by the existence of Priv($w,prelief).
 
     if {[info exists Priv($w,relief)]} {
-	$w configure -relief $Priv($w,relief)
-	unset Priv($w,relief)
+	if {[info exists Priv($w,prelief)] && \
+		$Priv($w,prelief) eq [$w cget -relief]} {
+	    $w configure -relief $Priv($w,relief)
+	}
+	unset -nocomplain Priv($w,relief) Priv($w,prelief)
     }
 
     set Priv(window) ""
@@ -380,6 +395,7 @@ proc ::tk::ButtonDown w {
     if {[$w cget -state] ne "disabled"} {
 	set Priv(buttonWindow) $w
 	$w configure -relief sunken
+	set Priv($w,prelief) sunken
 
 	# If this button has a repeatdelay set up, get it going with an after
 	after cancel $Priv(afterId)
@@ -407,8 +423,11 @@ proc ::tk::ButtonUp w {
 	# Restore the button's relief if it was cached.
 
 	if {[info exists Priv($w,relief)]} {
-	    $w configure -relief $Priv($w,relief)
-	    unset Priv($w,relief)
+	    if {[info exists Priv($w,prelief)] && \
+		    $Priv($w,prelief) eq [$w cget -relief]} {
+		$w configure -relief $Priv($w,relief)
+	    }
+	    unset -nocomplain Priv($w,relief) Priv($w,prelief)
 	}
 
 	# Clean up the after event from the auto-repeater
@@ -449,9 +468,10 @@ proc ::tk::ButtonEnter {w} {
 
 	if {$Priv(buttonWindow) eq $w} {
 	    $w configure -state active
-	} elseif {[$w cget -overrelief] ne ""} {
-	    set Priv($w,relief) [$w cget -relief]
-	    $w configure -relief [$w cget -overrelief]
+	} elseif {[set over [$w cget -overrelief]] ne ""} {
+	    set Priv($w,relief)  [$w cget -relief]
+	    set Priv($w,prelief) $over
+	    $w configure -relief $over
 	}
     }
     set Priv(window) $w
@@ -473,12 +493,15 @@ proc ::tk::ButtonLeave w {
 	$w configure -state normal
     }
 
-    # Restore the original button relief if it was changed.
-    # That is signaled by the existence of Priv($w,relief).
+    # Restore the original button relief if it was changed by Tk.
+    # That is signaled by the existence of Priv($w,prelief).
 
     if {[info exists Priv($w,relief)]} {
-	$w configure -relief $Priv($w,relief)
-	unset Priv($w,relief)
+	if {[info exists Priv($w,prelief)] && \
+		$Priv($w,prelief) eq [$w cget -relief]} {
+	    $w configure -relief $Priv($w,relief)
+	}
+	unset -nocomplain Priv($w,relief) Priv($w,prelief)
     }
 
     set Priv(window) ""
@@ -528,8 +551,11 @@ proc ::tk::ButtonUp w {
 	# Restore the button's relief if it was cached.
 
 	if {[info exists Priv($w,relief)]} {
-	    $w configure -relief $Priv($w,relief)
-	    unset Priv($w,relief)
+	    if {[info exists Priv($w,prelief)] && \
+		    $Priv($w,prelief) eq [$w cget -relief]} {
+		$w configure -relief $Priv($w,relief)
+	    }
+	    unset -nocomplain Priv($w,relief) Priv($w,prelief)
 	}
 
 	# Clean up the after event from the auto-repeater
