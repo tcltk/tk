@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.3 1998/09/14 18:24:00 stanton Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.4 1999/02/04 21:44:18 stanton Exp $
  */
 
 #define OEMRESOURCE
@@ -364,6 +364,10 @@ TkpDestroyMenu(menuPtr)
  	DestroyMenu(winMenuHdl);
     }
     menuPtr->platformData = NULL;
+
+    if (menuPtr == modalMenuPtr) {
+	modalMenuPtr = NULL;
+    }
 }
 
 /*
