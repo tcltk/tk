@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.13 2003/02/18 21:54:18 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.14 2003/08/20 10:26:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -736,7 +736,6 @@ Tk_PostscriptFont(interp, psInfo, tkfont)
 					 * is to be printed. */
 {
     TkPostscriptInfo *psInfoPtr = (TkPostscriptInfo *) psInfo;
-    char *end;
     char pointString[TCL_INTEGER_SPACE];
     Tcl_DString ds;
     int i, points;
@@ -747,44 +746,42 @@ Tk_PostscriptFont(interp, psInfo, tkfont)
      * containing font name and size.  Use this information.
      */
 
-    Tcl_DStringInit(&ds);
-    
     if (psInfoPtr->fontVar != NULL) {
-	CONST char *list;
-	int argc;
+	CONST char *name = Tk_NameOfFont(tkfont);
+	Tcl_Obj **objv;
+	int objc;
 	double size;
-	CONST char **argv;
-	CONST char *name;
+	Tcl_Obj *list = Tcl_GetVar2Ex(interp, psInfoPtr->fontVar, name, 0);
 
-	name = Tk_NameOfFont(tkfont);
-	list = Tcl_GetVar2(interp, psInfoPtr->fontVar, name, 0);
 	if (list != NULL) {
-	    if (Tcl_SplitList(interp, list, &argc, &argv) != TCL_OK) {
-		badMapEntry:
+	    CONST char *fontname;
+	    if (Tcl_ListObjGetElements(interp, list, &objc, &objv) != TCL_OK
+		    || objc != 2
+		    || Tcl_GetString(objv[0])[0]=='\0'
+		    || Tcl_GetDoubleFromObj(interp, objv[1], &size) != TCL_OK
+		    || size <= 0) {
 		Tcl_ResetResult(interp);
 		Tcl_AppendResult(interp, "bad font map entry for \"", name,
-			"\": \"", list, "\"", (char *) NULL);
+			"\": \"", Tcl_GetString(list), "\"", (char *) NULL);
 		return TCL_ERROR;
 	    }
-	    if (argc != 2) {
-		goto badMapEntry;
-	    }
-	    size = strtod(argv[1], &end);
-	    if ((size <= 0) || (*end != 0)) {
-		goto badMapEntry;
-	    }
 
-	    Tcl_DStringAppend(&ds, argv[0], -1);
-	    points = (int) size;
-	    
-	    ckfree((char *) argv);
-	    goto findfont;
+	    fontname = Tcl_GetString(objv[0]);
+	    sprintf(pointString, "%d", (int)size);
+
+	    Tcl_AppendResult(interp, "/", fontname, " findfont ",
+		    pointString, " scalefont ", NULL);
+	    if (strncasecmp(fontname, "Symbol", 7) != 0) {
+		Tcl_AppendResult(interp, "ISOEncode ", (char *) NULL);
+	    }
+	    Tcl_AppendResult(interp, "setfont\n", (char *) NULL);
+	    Tcl_CreateHashEntry(&psInfoPtr->fontTable, fontname, &i);
+	    return TCL_OK;
 	}
     } 
 
+    Tcl_DStringInit(&ds);
     points = Tk_PostscriptFontName(tkfont, &ds);
-
-    findfont:
     sprintf(pointString, "%d", points);
     Tcl_AppendResult(interp, "/", Tcl_DStringValue(&ds), " findfont ",
 	    pointString, " scalefont ", (char *) NULL);
