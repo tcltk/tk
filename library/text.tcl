@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.19 2001/12/27 22:26:41 hobbs Exp $
+# RCS: @(#) $Id: text.tcl,v 1.20 2001/12/28 23:03:23 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -523,7 +523,10 @@ proc ::tk::TextButton1 {w x y} {
     set Priv(pressX) $x
     $w mark set insert [TextClosestGap $w $x $y]
     $w mark set anchor insert
-    if {[string equal [$w cget -state] "normal"]} {focus $w}
+    # Allow focus in any case on Windows, because that will let the
+    # selection be displayed even for state disabled text widgets.
+    if {[string equal $::tcl_platform(platform) "windows"] \
+	    || [string equal [$w cget -state] "normal"]} {focus $w}
     if {[$w cget -autoseparators]} {$w edit separator}
 }
 
