@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.31 2002/04/05 08:38:22 hobbs Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.32 2002/04/12 10:10:48 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -269,6 +269,9 @@ TkIntStubs tkIntStubs = {
     TkpInitKeymapInfo, /* 139 */
     TkPhotoGetValidRegion, /* 140 */
     TkWmStackorderToplevel, /* 141 */
+    TkFocusFree, /* 142 */
+    TkClipCleanup, /* 143 */
+    TkGCCleanup, /* 144 */
 };
 
 TkIntPlatStubs tkIntPlatStubs = {
@@ -284,6 +287,9 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkUnixDoOneXEvent, /* 6 */
     TkUnixSetMenubar, /* 7 */
     TkpScanWindowId, /* 8 */
+    TkWmCleanup, /* 9 */
+    TkSendCleanup, /* 10 */
+    TkFreeXId, /* 11 */
 #endif /* UNIX */
 #ifdef __WIN32__
     TkAlignImageData, /* 0 */
