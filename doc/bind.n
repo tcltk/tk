@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bind.n,v 1.8 2003/08/19 19:08:08 jenglish Exp $
+'\" RCS: @(#) $Id: bind.n,v 1.9 2003/09/13 20:27:32 jenglish Exp $
 '\" 
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
@@ -316,8 +316,6 @@ in the hierarchy in the same manner as for \fBFocusIn\fP and
 \fBProperty\fP events are sent to a window whenever an X property
 belonging to that window is changed or deleted.
 \fBProperty\fP events are not normally delivered to Tk applications.
-.br
-Note that Tk provides no useful details for this event type.
 
 .IP \fBColormap\fP
 \fBColormap\fP events are generated whenever the colormap
@@ -496,6 +494,10 @@ The \fIstate\fR field from the event.  For \fBButtonPress\fR,
 is substituted.  For \fBVisibility\fR, one of the strings
 \fBVisibilityUnobscured\fR, \fBVisibilityPartiallyObscured\fR,
 and \fBVisibilityFullyObscured\fR is substituted.
+For \fBProperty\fP events, substituted with
+either the string \fBNewValue\fP (indicating that the property
+has been created or modified) or \fBDelete\fP (indicating that
+the property has been removed).
 .IP \fB%t\fR 5
 The \fItime\fR field from the event.
 This is the X server timestamp (typically the time since
@@ -549,6 +551,10 @@ string.  Valid only for \fBKeyPress\fR and \fBKeyRelease\fR events.
 .IP \fB%N\fR 5
 The keysym corresponding to the event, substituted as a decimal
 number.  Valid only for \fBKeyPress\fR and \fBKeyRelease\fR events.
+.IP \fB%P\fR 5
+The name of the property being updated or deleted (which
+may be converted to an XAtom using \fBwinfo atom\fR.) Valid
+only for \fBProperty\fP events.
 .IP \fB%R\fR 5
 The \fIroot\fR window identifier from the event.  Valid only for
 events containing a \fIroot\fR field.
