@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textWind.test,v 1.7 2003/05/19 13:04:24 vincentdarley Exp $
+# RCS: @(#) $Id: textWind.test,v 1.8 2003/09/30 08:45:46 patthoyts Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -407,8 +407,8 @@ test textWind-10.1 {EmbWinLayoutProc procedure} {
 	frame .f -width 10 -height 20 -bg $color
     }
     update
-    list [winfo exists .f] [winfo geom .f] [.t index .f]
-} {1 10x20+40+5 1.5}
+    list [winfo exists .f] [winfo width .f] [winfo height .f] [.t index .f]
+} {1 10 20 1.5}
 test textWind-10.2 {EmbWinLayoutProc procedure, error in creating window} {fonts} {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
