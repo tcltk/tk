@@ -1,3 +1,9 @@
+2005-01-10  Joe English  <jenglish@users.sourceforge.net>
+	* unix/Makefile.in, unix/configure.in, unix/tkConfig.sh.in:
+	Remove ${DBGX}, ${TK_DBGX} from Tk build system [Patch 1081595].
+	* unix/tcl.m4: re-synced with tcl/unix/tcl.m4
+	* unix/configure: Regenerated.
+
 2005-01-07  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkWindow.c (GetScreen): Make sure the result is reset on
