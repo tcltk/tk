@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.56.2.2 2004/02/16 00:42:34 wolfsuit Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.56.2.3 2004/03/26 22:01:26 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -353,7 +353,7 @@ CreateTopLevelWindow(interp, parent, name, screenName, flags)
 	 */
     
 	Tk_CreatePhotoImageFormat(&tkImgFmtGIF);
-	Tk_CreateOldPhotoImageFormat(&tkImgFmtPPM);
+	Tk_CreatePhotoImageFormat(&tkImgFmtPPM);
 
 	/*
 	 * Create exit handler to delete all windows when the application
