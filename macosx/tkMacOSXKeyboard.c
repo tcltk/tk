@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.7 2003/12/15 15:08:37 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.8 2003/12/15 16:15:44 cc_benny Exp $
  */
 
 #include "tkInt.h"
@@ -19,6 +19,20 @@
 #include "tkMacOSXInt.h"
 #include "tkMacOSXEvent.h"      /* TkMacOSXKeycodeToUnicode() FIXME: That
                                  * function should probably move here. */
+
+/*
+ * A couple of simple definitions to make code a bit more self-explaining.
+ */
+
+#define LATIN1_MAX       255
+#define MAC_KEYCODE_MAX  0x7F
+
+
+/*
+ * Tables enumerating the special keys defined on Mac keyboards.  These are
+ * necessary for correct keysym mappings for all keys where the keysyms are
+ * not identical with their ASCII or Latin-1 code points.
+ */
 
 typedef struct {
     int keycode;                /* Macintosh keycode. */
@@ -165,6 +179,8 @@ XKeycodeToKeysym(
     int newKeycode;
     UniChar newChar;
 
+    (void) display; /*unused*/
+
     if (!initialized) {
         InitKeyMaps();
     }
@@ -180,8 +196,8 @@ XKeycodeToKeysym(
     }
     
     virtualKey = keycode >> 16;
-    c = keycode & 0XFFFF;
-    if (c > 255) {
+    c = keycode & 0xFFFF;
+    if (c > MAC_KEYCODE_MAX) {
         return NoSymbol;
     }
 
@@ -204,13 +220,12 @@ XKeycodeToKeysym(
     }
 
     /* 
-     * Recompute the character based on the Shift key only.  TODO: The index
-     * may also specify the NUM_LOCK.
+     * Add in the Mac modifier flag for shift.
      */
 
     newKeycode = virtualKey;
-    if (index & 0x01) {
-        newKeycode += 0x0200;
+    if (index & 1) {
+        newKeycode |= shiftKey;
     }
 
     newChar = 0;
@@ -223,7 +238,7 @@ XKeycodeToKeysym(
      * for other characters for now.
      */
 
-    if ((newChar >= XK_space) && (newChar <= 0x255)) {
+    if ((newChar >= XK_space) && (newChar <= LATIN1_MAX)) {
         return newChar;
     }
 
@@ -494,26 +509,11 @@ TkpGetKeySym(
     }
 
     /*
-     * Figure out which of the four slots in the keymap vector to use for
-     * this key.  Refer to Xlib documentation for more info on how this
-     * computation works.
+     * Handle pure modifier keys specially.  We use -1 as a signal for
+     * this.
      */
 
-    index = 0;
-    if (eventPtr->xkey.state & dispPtr->modeModMask) {
-        index = 2;
-    }
-    if ((eventPtr->xkey.state & ShiftMask)
-            || ((dispPtr->lockUsage != LU_IGNORE)
-                    && (eventPtr->xkey.state & LockMask))) {
-        index += 1;
-    }
     if (eventPtr->xany.send_event == -1) {
-
-        /*
-         * We use -1 as a special signal for a pure modifier.
-         */
-
         int modifier = eventPtr->xkey.keycode;
         if (modifier == cmdKey) {
             return XK_Alt_L;
@@ -540,6 +540,28 @@ TkpGetKeySym(
             return NoSymbol;
         } 
     }
+
+    /*
+     * Figure out which of the four slots in the keymap vector to use for
+     * this key.  Refer to Xlib documentation for more info on how this
+     * computation works.  (Note: We use "Option" in keymap columns 2 and 3
+     * where other implementations have "Mode_switch".)
+     */
+
+    index = 0;
+    if (eventPtr->xkey.state & dispPtr->modeModMask) {
+        index |= 2;
+    }
+    if ((eventPtr->xkey.state & ShiftMask)
+            || ((dispPtr->lockUsage != LU_IGNORE)
+                    && (eventPtr->xkey.state & LockMask))) {
+        index |= 1;
+    }
+
+    /*
+     * First try of the actual translation.
+     */
+
     sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode, index);
 
     /*
