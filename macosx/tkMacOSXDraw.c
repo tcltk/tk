@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2 2002/08/31 06:12:29 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.1 2004/02/16 00:42:34 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -289,8 +289,8 @@ XCopyPlane(
              * Case 2: transparent bitmaps.  If it's color we ignore
              * the forecolor.
              */
-            pm=GetPortPixMap(srcPort);
-            if (GetPixDepth(pm)== 1) {
+            pm = GetPortPixMap(srcPort);
+            if (GetPixDepth(pm) == 1) {
                 tmode = srcOr;
             } else {
                 tmode = transparent;
@@ -453,7 +453,7 @@ XFillRectangles(
     Drawable d,                        /* Draw on this. */
     GC gc,                        /* Use this GC. */
     XRectangle *rectangles,        /* Rectangle array. */
-    int n_rectangels)                /* Number of rectangles. */
+    int n_rectangles)                /* Number of rectangles. */
 {
     MacDrawable *macWin = (MacDrawable *) d;
     CGrafPtr saveWorld;
@@ -472,7 +472,7 @@ XFillRectangles(
 
     TkMacOSXSetUpGraphicsPort(gc, destPort);
 
-    for (i=0; i<n_rectangels; i++) {
+    for (i = 0; i < n_rectangles; i++) {
         theRect.left = (short) (macWin->xOff + rectangles[i].x);
         theRect.top = (short) (macWin->yOff + rectangles[i].y);
         theRect.right = (short) (theRect.left + rectangles[i].width);
