@@ -1,3 +1,16 @@
+2001-09-25  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkBind.c:
+	* generic/tkInt.decls (TkpScanWindowId):
+	* unix/tkUnixPort.h (Tkp{Print,Scan}WindowId):
+	* unix/tkUnixXId.c (TkpScanWindowId):
+	* win/tkWinWindow.c (TkpScanWindowId): Corrected definition of
+	TkpScanWindowId to handle situation where types Window and int
+	do not have the same number of bits.  CONST-ified too.
+
+	* generic/tkIntPlatDecls.h: 
+	* generic/tkStubInit.c: make genstubs
+
 2001-09-24  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkMain.c (StdinProc): Update to handle change in
