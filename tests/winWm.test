@@ -9,7 +9,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winWm.test,v 1.9 2002/07/25 21:35:23 pspjuth Exp $
+# RCS: @(#) $Id: winWm.test,v 1.9.2.1 2004/09/17 22:45:07 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -245,31 +245,52 @@ test winWm-6.3 {wm attributes} {pcOnly} {
     list [catch {wm attributes .t -foo} msg] $msg
 } {1 {wrong # args: should be "wm attributes window ?-disabled ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}}
 
+test winWm-7.1 {deiconify on an unmapped toplevel
+        will raise the window and set the focus} {pcOnly} {
+    destroy .t
+    toplevel .t
+    lower .t
+    focus -force .
+    wm deiconify .t
+    update
+    list [wm stackorder .t isabove .] [focus]
+} {1 .t}
+
+test winWm-7.2 {deiconify on an already mapped toplevel
+        will raise the window and set the focus} {pcOnly} {
+    destroy .t
+    toplevel .t
+    lower .t
+    update
+    focus -force .
+    wm deiconify .t
+    update
+    list [wm stackorder .t isabove .] [focus]
+} {1 .t}
+
+test winWm-7.3 {UpdateWrapper must maintain Z order} win {
+    destroy .t
+    toplevel .t
+    lower .t
+    update
+    set res [wm stackorder .t isbelow .]
+    wm resizable .t 0 0
+    update
+    list $res [wm stackorder .t isbelow .]
+} {1 1}
+
+test winWm-7.4 {UpdateWrapper must maintain focus} win {
+    destroy .t
+    toplevel .t
+    focus -force .t
+    update
+    set res [focus]
+    wm resizable .t 0 0
+    update
+    list $res [focus]
+} {.t .t}
+
 destroy .t
-
-test winWm-6.1 {deiconify on an unmapped toplevel
-        will raise the window and set the focus} {pcOnly} {
-    destroy .t
-    toplevel .t
-    lower .t
-    focus -force .
-    wm deiconify .t
-    update
-    list [wm stackorder .t isabove .] [focus]
-} {1 .t}
-
-test winWm-6.2 {deiconify on an already mapped toplevel
-        will raise the window and set the focus} {pcOnly} {
-    destroy .t
-    toplevel .t
-    lower .t
-    update
-    focus -force .
-    wm deiconify .t
-    update
-    list [wm stackorder .t isabove .] [focus]
-} {1 .t}
-
 
 # cleanup
 ::tcltest::cleanupTests
