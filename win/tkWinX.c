@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.13 2001/05/30 22:41:29 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.14 2001/06/23 02:15:18 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -20,6 +20,12 @@
  */
 
 #include <zmouse.h>
+
+/*
+ * imm.h is needed by HandleIMEComposition
+ */
+
+#include <imm.h>
 
 /*
  * Declarations of static variables used in this file.
