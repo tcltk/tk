@@ -1,3 +1,9 @@
+1999-06-16    <wart@scriptics.com>
+
+	* tkConsole.c: changed some variable types from (int) to (size_t)
+	to prevent compiler warnings.  Cast return value from strlen()
+	to (int) in one place for the same reason.
+
 1999-06-03    <stanton@scriptics.com>
 
 	* unix/tkUnixSelect.c: 
