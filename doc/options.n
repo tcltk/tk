@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: options.n,v 1.7 2004/08/16 14:01:10 dkf Exp $
+'\" RCS: @(#) $Id: options.n,v 1.8 2004/08/20 14:15:29 dkf Exp $
 '\" 
 .so man.macros
 .TH options n 4.4 Tk "Tk Built-In Commands"
@@ -31,7 +31,7 @@ command
 .CS
 \&\fB.a.b.c\0\0configure\0\0\-foreground black\fR
 .CE
-may be used to specify the value \fBblack\fR for the option in the
+may be used to specify the value \fBblack\fR for the option in
 the widget \fB.a.b.c\fR.  Command-line switches may be abbreviated,
 as long as the abbreviation is unambiguous.
 ``Database Name'' refers to the option's name in the option database (e.g.

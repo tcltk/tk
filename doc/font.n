@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: font.n,v 1.5 2004/06/18 21:42:16 dkf Exp $
+'\" RCS: @(#) $Id: font.n,v 1.6 2004/08/20 14:15:29 dkf Exp $
 '\" 
 .so man.macros
 .TH font n 8.0 Tk "Tk Built-In Commands"
@@ -76,7 +76,7 @@ Measures the amount of space the string \fItext\fR would use in the given
 \fIfont\fR when displayed in \fIwindow\fR.  \fIfont\fR is a font description;
 see FONT DESCRIPTIONS below.  If the \fIwindow\fR argument is omitted, it
 defaults to the main window.  The return value is the total width in pixels
-of \fItext\fR, not including the extra pixels used by highly exagerrated
+of \fItext\fR, not including the extra pixels used by highly exaggerated
 characters such as cursive ``f''.  If the string contains newlines or tabs,
 those characters are not expanded or treated specially when measuring the
 string.
