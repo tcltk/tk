@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk panedwindow widgets and
 # provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: panedwindow.tcl,v 1.4 2002/02/23 01:36:45 hobbs Exp $
+# RCS: @(#) $Id: panedwindow.tcl,v 1.5 2002/02/26 01:06:55 hobbs Exp $
 #
 
 bind PanedWindow <Button-1> { ::tk::panedwindow::MarkSash %W %x %y 1 }
@@ -41,6 +41,9 @@ proc ::tk::panedwindow::MarkSash {w x y proxy} {
 	if { !$::tk_strictMotif || [string equal $which "handle"] } {
 	    if {!$proxy} { $w sash mark $index $x $y }
 	    set ::tk::Priv(sash) $index
+	    foreach {sx sy} [$w sash coord $index] break
+	    set ::tk::Priv(dx) [expr {$sx-$x}]
+	    set ::tk::Priv(dy) [expr {$sy-$y}]
 	}
     }
 }
@@ -60,10 +63,11 @@ proc ::tk::panedwindow::MarkSash {w x y proxy} {
 proc ::tk::panedwindow::DragSash {w x y proxy} {
     if { [info exists ::tk::Priv(sash)] } {
 	if {$proxy} {
-	    $w proxy place $x $y
+	    $w proxy place \
+		    [expr {$x+$::tk::Priv(dx)}] [expr {$y+$::tk::Priv(dy)}]
 	} else {
-	    $w sash dragto $::tk::Priv(sash) $x $y
-	    $w sash mark $::tk::Priv(sash) $x $y
+	    $w sash place $::tk::Priv(sash) \
+		    [expr {$x+$::tk::Priv(dx)}] [expr {$y+$::tk::Priv(dy)}]
 	}
     }
 }
@@ -83,11 +87,9 @@ proc ::tk::panedwindow::ReleaseSash {w proxy} {
 	if {$proxy} {
 	    foreach {x y} [$w proxy coord] break
 	    $w sash place $::tk::Priv(sash) $x $y
-	    unset ::tk::Priv(sash)
 	    $w proxy forget
-	} else {
-	    unset ::tk::Priv(sash)
 	}
+	unset ::tk::Priv(sash) ::tk::Priv(dx) ::tk::Priv(dy)
     }
 }
 
