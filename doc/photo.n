@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: photo.n,v 1.9 2002/03/02 23:37:13 hobbs Exp $
+'\" RCS: @(#) $Id: photo.n,v 1.10 2002/03/14 10:19:40 dkf Exp $
 '\" 
 .so man.macros
 .TH photo n 4.0 Tk "Tk Built-In Commands"
@@ -321,7 +321,7 @@ the photo image.  Several subcommands are available:
 \fIimageName \fBtransparency get \fIx y\fR
 Returns a boolean indicating if the pixel at (\fIx\fR,\fIy\fR) is
 transparent.
-\fIimageName \fBtransparency get \fIx y boolean\fR
+\fIimageName \fBtransparency set \fIx y boolean\fR
 Makes the pixel at (\fIx\fR,\fIy\fR) transparent if \fIboolean\fR is
 true, and makes that pixel opaque otherwise.
 .RE
