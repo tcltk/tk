@@ -12,7 +12,7 @@
 # Copyright (c) 2001 Tomasoft Engineering.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.49 2001/12/03 10:42:31 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.50 2002/02/01 23:20:29 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -204,6 +204,7 @@ TCLIMPLIB	= $(INSTALLDIR)\lib\$(TCLIMPLIBNAME)
 TCL_LIBRARY	= $(INSTALLDIR)\lib
 TCLREGLIB	= $(INSTALLDIR)\lib\$(TCLREGLIBNAME)
 TCLDDELIB	= $(INSTALLDIR)\lib\$(TCLDDELIBNAME)
+TCLTMP_DIR	= \must\have\tcl\sources\to\build\this\target
 !else
 TCLSH		= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLNAMEPREFIX)sh$(VERSION)$(SUFX).exe
 TCLSTUBLIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLSTUBLIBNAME)
@@ -211,6 +212,7 @@ TCLIMPLIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLIMPLIBNAME)
 TCL_LIBRARY	= $(TCLDIR)\library
 TCLREGLIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLREGLIBNAME)
 TCLDDELIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLDDELIBNAME)
+TCLTMP_DIR	= $(TCLDIR)\win\$(TMP_DIR:tk=tcl)
 !endif
 
 WISH 		= $(OUT_DIR)\$(WISHNAMEPREFIX)$(VERSION)$(SUFX).exe
@@ -245,7 +247,7 @@ TKTESTOBJS = \
 	$(TMP_DIR)\tkSquare.obj \
 	$(TMP_DIR)\testMain.obj \
 	$(TMP_DIR)\tkWinTest.obj \
-	$(TCLLIBDIR)\tclThreadTest.obj
+	$(TCLTMP_DIR)\tclThreadTest.obj
 
 XLIBOBJS = \
 	$(TMP_DIR)\xcolors.obj \
