@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: focus.test,v 1.1.4.6 1999/04/06 18:05:57 hershey Exp $
+# RCS: @(#) $Id: focus.test,v 1.1.4.7 1999/04/07 02:32:09 surles Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -537,7 +537,7 @@ if {[catch {send $app set a 0} msg] == 1} {
     }
 }
 cleanupbg
-
+setupbg
 test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} \
 	{unixOnly testwrapper secureServer} {
     focusSetup
@@ -549,7 +549,7 @@ test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} \
     focus .t.b2
     update
     lappend result [focus]
-} {.t .t {}}
+} {.t {} {}}
 
 catch {destroy .t}
 bind all <FocusIn> {}
