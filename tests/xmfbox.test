@@ -10,7 +10,7 @@
 # Contributions from Don Porter, NIST, 2002.  (not subject to US copyright)
 # All rights reserved.
 #
-# RCS: @(#) $Id: xmfbox.test,v 1.8 2003/04/01 21:07:05 dgp Exp $
+# RCS: @(#) $Id: xmfbox.test,v 1.9 2004/05/23 17:34:50 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -141,15 +141,3 @@ test xmfbox-2.6 {tk::MotifFDialog_ActivateFList, ~ in file names} {unixOnly} {
 cleanup
 cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-

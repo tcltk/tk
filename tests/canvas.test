@@ -6,7 +6,7 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.17 2003/04/01 21:06:19 dgp Exp $
+# RCS: @(#) $Id: canvas.test,v 1.18 2004/05/23 17:34:48 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -20,12 +20,13 @@ pack .c
 update
 set i 1
 foreach test {
-    {-background #ff0000 #ff0000 non-existent
-	    {unknown color name "non-existent"}}
+    {-background #ff0000 #ff0000
+	    non-existent {unknown color name "non-existent"}}
     {-bg #ff0000 #ff0000 non-existent {unknown color name "non-existent"}}
     {-bd 4 4 badValue {bad screen distance "badValue"}}
     {-borderwidth 1.3 1 badValue {bad screen distance "badValue"}}
-    {-closeenough 24 24.0 bogus {expected floating-point number but got "bogus"}}
+    {-closeenough 24 24.0
+	    bogus {expected floating-point number but got "bogus"}}
     {-confine true 1 silly {expected boolean value but got "silly"}}
     {-cursor arrow arrow badValue {bad cursor spec "badValue"}}
     {-height 2.1 2 x42 {bad screen distance "x42"}}
@@ -37,7 +38,8 @@ foreach test {
     {-insertofftime 100 100 3.2 {expected integer but got "3.2"}}
     {-insertontime 100 100 3.2 {expected integer but got "3.2"}}
     {-insertwidth 1.3 1 6x {bad screen distance "6x"}}
-    {-relief groove groove 1.5 {bad relief type "1.5": must be flat, groove, raised, ridge, solid, or sunken}}
+    {-relief groove groove
+	    1.5 {bad relief type "1.5": must be flat, groove, raised, ridge, solid, or sunken}}
     {-selectbackground #110022 #110022 bogus {unknown color name "bogus"}}
     {-selectborderwidth 1.3 1 badValue {bad screen distance "badValue"}}
     {-selectforeground #654321 #654321 bogus {unknown color name "bogus"}}
@@ -46,16 +48,16 @@ foreach test {
     {-xscrollcommand {Some command} {Some command} {} {}}
     {-yscrollcommand {Another command} {Another command} {} {}}
 } {
-    set name [lindex $test 0]
-    test canvas-1.$i {configuration options} {
-	.c configure $name [lindex $test 1]
+    lassign $test name goodValue goodResult badValue badResult
+    test canvas-1.$i "configuration options: good value for $name" {
+	.c configure $name $goodValue
 	lindex [.c configure $name] 4
-    } [lindex $test 2]
+    } $goodResult
     incr i
-    if {[lindex $test 3] != ""} {
-	test canvas-1.$i {configuration options} {
-	    list [catch {.c configure $name [lindex $test 3]} msg] $msg
-	} [list 1 [lindex $test 4]]
+    if {$badValue ne ""} {
+	test canvas-1.$i "configuration options: bad value for $name" -body {
+	    .c configure $name $badValue
+	} -returnCodes error -result $badResult
     }
     .c configure $name [lindex [.c configure $name] 3]
     incr i
@@ -454,15 +456,18 @@ proc create {w type args} {
     eval [list $w create $type] $args
 }
 foreach type {arc bitmap image line oval polygon rect text window} {
-    test canvas-15.[incr i] "basic types check: $type" {
+    incr i
+    test canvas-15.$i "basic types check: $type requires coords" -setup {
 	destroy .c; canvas .c
-	list [catch {.c create $type} msg] $msg
-    } [format {1 {wrong # args: should be ".c create %s coords ?arg arg ...?"}} $type]
-    test canvas-15.[incr i] "basic coords check: $type" {
+    } -body {
+	.c create $type
+    } -returnCodes error -result [format {wrong # args: should be ".c create %s coords ?arg arg ...?"} $type]
+    incr i
+    test canvas-15.$i "basic coords check: $type coords are paired" -setup {
 	destroy .c; canvas .c
-	list [catch {.c create $type 0} msg] \
-		[string match "wrong # coordinates: expected*" $msg]
-    } {1 1}
+    } -match glob -body {
+	.c create $type 0
+    } -returnCodes error -result "wrong # coordinates: expected*"
 }
 
 test canvas-16.1 {arc coords check} {

@@ -5,7 +5,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bell.test,v 1.7 2003/04/01 21:06:15 dgp Exp $
+# RCS: @(#) $Id: bell.test,v 1.8 2004/05/23 17:34:48 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -46,16 +46,3 @@ test bell-1.8 {bell command} {
 # cleanup
 cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.15 2003/05/30 11:03:02 vincentdarley Exp $
+# RCS: @(#) $Id: menu.test,v 1.16 2004/05/23 17:34:48 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2041,23 +2041,23 @@ test menu-20.6 {CloneMenu - hooking up bookeeping ptrs} {
     catch {destroy .m2}
     menu .m1
     list [catch {.m1 clone .m2} msg] $msg [destroy .m1]
- } {0 {} {}}
- test menu-20.7 {CloneMenu - hooking up bookeeping ptrs - multiple children} {
+} {0 {} {}}
+test menu-20.7 {CloneMenu - hooking up bookeeping ptrs - multiple children} {
     catch {destroy .m1}
     catch {destroy .m2}
     catch {destroy .m3}
     menu .m1
     .m1 clone .m2
     list [catch {.m1 clone .m3} msg] $msg [destroy .m1]
- } {0 {} {}}
- test menu-20.8 {CloneMenu - cascade entries} {
+} {0 {} {}}
+test menu-20.8 {CloneMenu - cascade entries} {
     catch {destroy .m1}
     catch {destroy .foo}
     menu .m1
     .m1 add cascade -menu .m2
     list [catch {.m1 clone .foo} msg] $msg [destroy .m1]
- } {0 {} {}}
- test menu-20.9 {CloneMenu - cascades entries} {
+} {0 {} {}}
+test menu-20.9 {CloneMenu - cascades entries} {
     catch {destroy .m1}
     catch {destroy .m2}
     catch {destroy .foo}
@@ -2065,7 +2065,7 @@ test menu-20.6 {CloneMenu - hooking up bookeeping ptrs} {
     .m1 add cascade -menu .m2
     menu .m2
     list [catch {.m1 clone .foo} msg] $msg [destroy .m1 .m2]
- } {0 {} {}}
+} {0 {} {}}
 test menu-20.10 {CloneMenu - tearoff fields} {
     catch {destroy .m1}
     catch {destroy .m2}
