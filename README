@@ -1,10 +1,10 @@
 The Tk Toolkit
 
-SCCS: %Z% $Id: README,v 1.2 1998/06/29 23:03:54 welch Exp $ 
+SCCS: %Z% $Id: README,v 1.3 1998/07/06 15:09:10 welch Exp $ 
 
 0. Preface
 ----------
-This is a pre-release of 8.0.3, tk_patchLevel "8.0.3-1"
+This is a pre-release of 8.0.3, tk_patchLevel "8.0.3-2"
 we expect the 8.0.3 release to continue to change with the adoption
 of more patches, etc.  This release is being made early to help
 with the Consortium CD project.  Please do not advertise or
@@ -120,7 +120,8 @@ Before trying to compile Tk you should do the following things:
 	applied to Tk 8.0p1 to produce Tk 8.0p2, and so on. To apply an
 	uncompressed patch file such as tk8.0p1.patch, invoke a shell
 	command like the following from the directory containing this
-	file:
+	file (you may need to replace "patch -p" with "patch -p0"
+	depending on your version of the patch program):
 	    patch -p < tk8.0p1.patch
 	If the patch file has a .gz extension, it was compressed with
 	gzip.  To apply it, invoke a command like the following:
