@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.20 2001/04/04 06:40:35 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.21 2001/08/28 20:58:42 hobbs Exp $
  *
  */
 
@@ -109,6 +109,7 @@ typedef struct ChooseDir {
 				 * the default dialog proc stores a '\0' in 
 				 * it, since, of course, no _file_ was 
 				 * selected. */
+    OPENFILENAME *ofnPtr;	/* pointer to the OFN structure */
 } ChooseDir;
 
 /*
@@ -1652,6 +1653,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
 
     cd.interp = interp;
+    cd.ofnPtr = &ofn;
 
     ofn.lStructSize		= sizeof(ofn);
     ofn.hwndOwner		= hWnd;
@@ -1800,30 +1802,19 @@ ChooseDirectoryHookProc(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     OPENFILENAME *ofnPtr;
-
-    /*
-     * GWL_USERDATA keeps track of ofnPtr.
-     */
-    
-#ifdef _WIN64
-    ofnPtr = (OPENFILENAME *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
-#else
-    ofnPtr = (OPENFILENAME *) GetWindowLong(hwnd, GWL_USERDATA);
-#endif
+    ChooseDir *cdPtr;
 
     if (message == WM_INITDIALOG) {
-        ChooseDir *cdPtr;
-
-#ifdef _WIN64
-	SetWindowLongPtr(hwnd, GWLP_USERDATA, lParam);
-#else
-	SetWindowLong(hwnd, GWL_USERDATA, lParam);
-#endif
 	ofnPtr = (OPENFILENAME *) lParam;
 	cdPtr = (ChooseDir *) ofnPtr->lCustData;
 	cdPtr->lastCtrl = 0;
 	cdPtr->lastIdx = 1000;
 	cdPtr->path[0] = '\0';
+#ifdef _WIN64
+	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR) cdPtr);
+#else
+	SetWindowLong(hwnd, GWL_USERDATA, (LONG) cdPtr);
+#endif
 
 	if (ofnPtr->lpstrInitialDir == NULL) {
 	    GetCurrentDirectory(MAX_PATH, cdPtr->path);
@@ -1838,9 +1829,20 @@ ChooseDirectoryHookProc(
 	}
 	return 0;
     }
-    if (ofnPtr == NULL) {
+
+    /*
+     * GWL_USERDATA keeps track of cdPtr.
+     */
+    
+#ifdef _WIN64
+    cdPtr = (ChooseDir *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
+#else
+    cdPtr = (ChooseDir *) GetWindowLong(hwnd, GWL_USERDATA);
+#endif
+    if (cdPtr == NULL) {
 	return 0;
     }
+    ofnPtr = cdPtr->ofnPtr;
 
     if (message == tsdPtr->WM_LBSELCHANGED) {
 	/*
@@ -1849,12 +1851,10 @@ ChooseDirectoryHookProc(
 	 * If directory was already open, return selected directory.
 	 */
 
-        ChooseDir *cdPtr;
 	int idCtrl, thisItem;
 
 	idCtrl = (int) wParam;
         thisItem = LOWORD(lParam);
-	cdPtr = (ChooseDir *) ofnPtr->lCustData;
 
 	GetCurrentDirectory(MAX_PATH, cdPtr->path);
 	if (idCtrl == lst2) {
@@ -1867,12 +1867,10 @@ ChooseDirectoryHookProc(
 	SetDlgItemText(hwnd, edt10, cdPtr->path);
 	SendDlgItemMessage(hwnd, edt10, EM_SETSEL, 0, -1);
     } else if (message == WM_COMMAND) {
-        ChooseDir *cdPtr;
 	int idCtrl, notifyCode;
 
 	idCtrl = LOWORD(wParam);
 	notifyCode = HIWORD(wParam);
-	cdPtr = (ChooseDir *) ofnPtr->lCustData;
 
 	if ((idCtrl != IDOK) || (notifyCode != BN_CLICKED)) {
 	    /*
@@ -1921,7 +1919,7 @@ ChooseDirectoryHookProc(
 		     * Directory must exist.  Complain, then rehighlight text.
 		     */
 
-		    wsprintf(tmp, _T("Cannot change directory to \"%.200s\"."), 
+		    wsprintf(tmp, _T("Cannot change directory to \"%.200s\"."),
 			    cdPtr->path);
 		    MessageBox(hwnd, tmp, NULL, MB_OK);
 		    SendDlgItemMessage(hwnd, edt10, EM_SETSEL, 0, -1);
