@@ -4128,8 +4128,11 @@ Apple Universal Headers V. 3.0 so we can compile with CW Pro 2.0 (JI)
 
 ----------------- Released 8.0p2, 11/25/97 -----------------------
 
-6/3/97 (bug fix) Fixed bugs in the tk_getOpenFile under Unix.
+6/3/98 (bug fix) Fixed bugs in the tk_getOpenFile under Unix.
  1) If the -initialdir option was "." the result would be "././foo.tcl"
     instead of an absolute path, like the Windows interface.  
  2) There is a traceVar on the data(selectPath) where the script was
     assumes the window exists. (BS)
+
+6/12/98 (feature change) Focus -force now sets the foreground window
+on Windows platforms in addition to moving the focus. (SS)
