@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.10 2000/04/19 23:12:56 hobbs Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.11 2001/08/04 00:29:43 hobbs Exp $
  */
 
 #include <tk.h>
@@ -32,7 +32,7 @@
  */
 
 static void		setargv _ANSI_ARGS_((int *argcPtr, char ***argvPtr));
-static void		WishPanic _ANSI_ARGS_(TCL_VARARGS(char *,format));
+static void		WishPanic _ANSI_ARGS_(TCL_VARARGS(CONST char *,format));
 
 #ifdef TK_TEST
 extern int		Tktest_Init(Tcl_Interp *interp);
@@ -237,13 +237,13 @@ error:
  */
 
 void
-WishPanic TCL_VARARGS_DEF(char *,arg1)
+WishPanic TCL_VARARGS_DEF(CONST char *,arg1)
 {
     va_list argList;
     char buf[1024];
-    char *format;
+    CONST char *format;
     
-    format = TCL_VARARGS_START(char *,arg1,argList);
+    format = TCL_VARARGS_START(CONST char *,arg1,argList);
     vsprintf(buf, format, argList);
 
     MessageBeep(MB_ICONEXCLAMATION);
