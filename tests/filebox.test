@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: filebox.test,v 1.7 1999/11/12 23:55:16 wart Exp $
+# RCS: @(#) $Id: filebox.test,v 1.8 1999/11/30 00:02:20 hobbs Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
@@ -275,14 +275,10 @@ foreach mode $modes {
 	    } $pathName
 	}
 
-	#
-	# The rest of the tests need to be executed on Unix only. The test whether
-	# the dialog box widgets were implemented correctly. These tests are not
+	# The rest of the tests need to be executed on Unix only.
+	# The test whether the dialog box widgets were implemented correctly.
+	# These tests are not
 	# needed on the other platforms because they use native file dialogs.
-	#
-
-
-
 
 	# end inner if
     }
@@ -295,16 +291,3 @@ set tk_strictMotif $tk_strictMotif_old
 # cleanup
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
