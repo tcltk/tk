@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.83 2004/12/20 15:30:43 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.84 2004/12/21 05:58:20 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -7796,7 +7796,11 @@ long TkpWinToplevelIsControlledByWm(winPtr)
     TkWindow *winPtr;
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    return ((wmPtr->width != -1) && (wmPtr->height != -1))? 1:0;
+    if(wmPtr) {
+	return ((wmPtr->width != -1) && (wmPtr->height != -1))? 1:0;
+    } else {
+	return 0;
+    }
 }
 
 /*
@@ -7821,10 +7825,10 @@ long TkpWinToplevelMove(winPtr, x, y)
     int x, y;
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    if(!TkpWinToplevelIsControlledByWm(winPtr) && x >= 0 && y >= 0) {
+    if(wmPtr && x >= 0 && y >= 0 && !TkpWinToplevelIsControlledByWm(winPtr)) {
 	Tk_MoveToplevelWindow((Tk_Window)winPtr, x, y);
     }
-    return ((wmPtr->x << 16) & 0xffff0000) | (wmPtr->y & 0x0000ffff);
+    return ((winPtr->changes.x << 16) & 0xffff0000) | (winPtr->changes.y & 0xffff);
 }
 
 /*
