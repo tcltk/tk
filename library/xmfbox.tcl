@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.11 2000/03/24 19:38:57 ericm Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.11.2.1 2001/10/16 23:39:16 hobbs Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Scriptics Corporation
@@ -422,7 +422,8 @@ proc tkMotifFDialog_Update {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
     $data(fEnt) delete 0 end
-    $data(fEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) $data(filter)]
+    $data(fEnt) insert 0 \
+            [::tk::dialog::file::JoinFile $data(selectPath) $data(filter)]
     $data(sEnt) delete 0 end
     $data(sEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) \
 	    $data(selectFile)]
@@ -455,32 +456,34 @@ proc tkMotifFDialog_LoadFiles {w} {
 	return
     }
 
-    # Make the dir list
+    # Make the dir and file lists
     #
-    foreach f [lsort -dictionary [glob -nocomplain .* *]] {
-	if {[file isdir ./$f]} {
-	    $data(dList) insert end $f
-	}
-    }
-    # Make the file list
+    # For speed we only have one glob, which reduces the file system
+    # calls (good for slow NFS networks).
     #
-    if {[string equal $data(filter) *]} {
-	set files [lsort -dictionary [glob -nocomplain .* *]]
-    } else {
-	set files [lsort -dictionary \
-	    [glob -nocomplain $data(filter)]]
-    }
-
+    # We also do two smaller sorts (files + dirs) instead of one large sort,
+    # which gives a small speed increase.
+    #
     set top 0
-    foreach f $files {
-	if {![file isdir ./$f]} {
-	    regsub {^[.]/} $f "" f
-	    $data(fList) insert end $f
-	    if {[string match .* $f]} {
-		incr top
+    set dlist ""
+    set flist ""
+    foreach f [glob -nocomplain .* *] {
+	if {[file isdir ./$f]} {
+	    lappend dlist $f
+	} else {
+            foreach pat $data(filter) {
+                if {[string match $pat $f]} {
+		if {[string match .* $f]} {
+		    incr top
+		}
+		lappend flist $f
+                    break
 	    }
+            }
 	}
     }
+    eval [list $data(dList) insert end] [lsort -dictionary $dlist]
+    eval [list $data(fList) insert end] [lsort -dictionary $flist]
 
     # The user probably doesn't want to see the . files. We adjust the view
     # so that the listbox displays all the non-dot files
