@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkClipboard.c,v 1.10 2002/06/19 19:37:54 mdejong Exp $
+ * RCS: @(#) $Id: tkClipboard.c,v 1.11 2002/06/19 20:40:55 mdejong Exp $
  */
 
 #include "tkInt.h"
@@ -652,6 +652,7 @@ TkClipCleanup(dispPtr)
 
 	Tk_DestroyWindow(dispPtr->clipWindow);
 	Tcl_Release((ClientData) dispPtr->clipWindow);
+	dispPtr->clipWindow = NULL;
     }
 }
 

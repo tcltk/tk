@@ -1,5 +1,12 @@
 2002-06-19  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* generic/tkClipboard.c (TkClipCleanup): Add code
+	to set dispPtr->clipWindow to NULL, this was
+	accidently removed by last commit. Fixes
+	a crash while running the tests under win32.
+
+2002-06-19  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* generic/tkBind.c (TkBindDeadWindow):
 	Handle case where Tk_DestroyWindow is invoked
 	on clipboard and send windows.
