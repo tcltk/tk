@@ -1,3 +1,10 @@
+2003-02-18  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* doc/entry.n:
+	* doc/text.n: Update double and triple click
+	docs to match implementation changes made on
+	2002-02-14.
+	
 2003-02-19  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.pbproj/project.pbxproj:

@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: entry.n,v 1.10 2003/02/09 06:24:07 hobbs Exp $
+'\" RCS: @(#) $Id: entry.n,v 1.11 2003/02/19 18:52:13 mdejong Exp $
 '\" 
 .so man.macros
 .TH entry n 8.3 Tk "Tk Built-In Commands"
@@ -440,12 +440,12 @@ Dragging with mouse button 1 strokes out a selection between
 the insertion cursor and the character under the mouse.
 .IP [2]
 Double-clicking with mouse button 1 selects the word under the mouse
-and positions the insertion cursor at the beginning of the word.
+and positions the insertion cursor at the end of the word.
 Dragging after a double click will stroke out a selection consisting
 of whole words.
 .IP [3]
 Triple-clicking with mouse button 1 selects all of the text in the
-entry and positions the insertion cursor before the first character.
+entry and positions the insertion cursor at the end of the line.
 .IP [4]
 The ends of the selection can be adjusted by dragging with mouse
 button 1 while the Shift key is down;  this will adjust the end
