@@ -7,11 +7,14 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grab.test,v 1.1 2000/08/04 00:46:33 ericm Exp $
+# RCS: @(#) $Id: grab.test,v 1.2 2002/07/13 21:52:34 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 # There's currently no way to test the actual grab effect, per se,
 # in an automated test.  Therefore, this test suite only covers the
@@ -177,3 +180,6 @@ test grab-5.2 {Tk_GrabObjCmd, grab set} {
     grab release .
     set result
 } [list "." "global"]
+
+tcltest::cleanupTests
+return

@@ -109,6 +109,8 @@ testConstraint altDisplay [info exists env(TK_ALT_DISPLAY)]
 testConstraint noExceed [expr {![testConstraint unix]
 			|| [catch {font actual "\{xyz"}]}]
 testConstraint testImageType [expr {[lsearch [image types] test] >= 0}]
+testConstraint testembed [llength [info commands testembed]]
+testConstraint testwrapper [llength [info commands testwrapper]]
 testConstraint fonts 1
 destroy .e
 entry .e -width 0 -font {Helvetica -12} -bd 1
