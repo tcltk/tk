@@ -1,3 +1,10 @@
+2001-07-04  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* README:
+	* mac/README:
+	* unix/README:
+	* win/README: updated READMEs with purls
+
 2001-07-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* tests/canvas.test:
