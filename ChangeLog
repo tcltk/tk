@@ -1,5 +1,12 @@
 2002-12-01  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* tests/event.test (_keypress, _text_ind_to_x_y):
+	Force focus to widget in _keypress method to
+	avoid problems with window managers that
+	use focus follows mouse. [Bug 526209]
+
+2002-12-01  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* tests/wm.test: Add wm-transient-6.3 to
 	check that a transient remains withdrawn
 	when it is first withdrawn and then turned
