@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacPort.h,v 1.8 1999/08/01 21:25:23 hobbs Exp $
+ * RCS: @(#) $Id: tkMacPort.h,v 1.9 2000/04/17 02:17:05 jingham Exp $
  */
 
 #ifndef _TKMACPORT
@@ -73,11 +73,14 @@ extern int errno;
 #ifndef panic	/* In a stubs-aware setting, this could confuse the #define */
 extern void 		panic  _ANSI_ARGS_(TCL_VARARGS(char *, string));
 #endif
+#ifndef strcasecmp
 extern int		strcasecmp _ANSI_ARGS_((CONST char *s1,
 			    CONST char *s2));
+#endif
+#ifndef strncasecmp			    
 extern int		strncasecmp _ANSI_ARGS_((CONST char *s1,
 			    CONST char *s2, size_t n));
-
+#endif
 /*
  * Defines for X functions that are used by Tk but are treated as
  * no-op functions on the Macintosh.
