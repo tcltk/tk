@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.21 2003/01/28 20:39:19 jenglish Exp $
+# RCS: @(#) $Id: wm.test,v 1.22 2003/03/12 00:25:41 mdejong Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -663,12 +663,84 @@ test wm-maxsize-1.5 {usage} {
 test wm-maxsize-1.6 {usage} {
     catch {destroy .t2}
     toplevel .t2
-    wm maxsize .t2 200 150
+    wm maxsize .t2 300 200
     set result [wm maxsize .t2]
     destroy .t2
     set result
+} {300 200}
+
+test wm-maxsize-1.7 {maxsize must be <= screen size} {
+    destroy .t
+    toplevel .t
+    foreach {t_width t_height} [wm maxsize .t] break
+    set s_width [winfo screenwidth .t]
+    set s_height [winfo screenheight .t]
+    expr {($t_width <= $s_width) && ($t_height <= $s_height)}
+} 1
+
+test wm-maxsize-2.1 {setting the maxsize to a value smaller
+        than the current size will resize a toplevel} {
+    destroy .t
+    toplevel .t -width 300 -height 300
+    update
+    wm maxsize .t 200 150
+    # UpdateGeometryInfo invoked at idle
+    update
+    lrange [split [wm geom .t] x+] 0 1
 } {200 150}
 
+test wm-maxsize-2.2 {setting the maxsize to a value smaller
+        than the current size will resize a gridded toplevel} {
+    destroy .t
+    toplevel .t
+    wm grid .t 0 0 50 50
+    wm geometry .t 6x6
+    update
+    wm maxsize .t 4 3
+    # UpdateGeometryInfo invoked at idle
+    update
+    lrange [split [wm geom .t] x+] 0 1
+} {4 3}
+
+test wm-maxsize-2.3 {attempting to resize to a value
+        bigger than the current maxsize will
+        set it to the max size} {
+    destroy .t
+    toplevel .t -width 200 -height 200
+    wm maxsize .t 300 250
+    update
+    wm geom .t 400x300
+    update
+    lrange [split [wm geom .t] x+] 0 1
+} {300 250}
+
+test wm-maxsize-2.4 {attempting to resize to a value
+        bigger than the current maxsize will
+        set it to the max size when gridded} {
+    destroy .t
+    toplevel .t
+    wm grid .t 1 1 50 50
+    wm geom .t 4x4
+    wm maxsize .t 6 5
+    update
+    wm geom .t 8x6
+    update
+    lrange [split [wm geom .t] x+] 0 1
+} {6 5}
+
+test wm-maxsize-2.5 {Use max size if window size is not
+        explicitly set and the reqWidth/reqHeight are
+        bigger than the max size} {
+    destroy .t
+    toplevel .t
+    pack [frame .t.f -width 400 -height 400]
+    update idletasks
+    set req [list [winfo reqwidth .t] \
+                      [winfo reqheight .t]]
+    wm maxsize .t 300 300
+    update
+    list $req [lrange [split [wm geom .t] x+] 0 1]
+} {{400 400} {300 300}}
 
 test wm-minsize-1.1 {usage} {
     list [catch {wm minsize} msg]  $msg
@@ -693,12 +765,75 @@ test wm-minsize-1.5 {usage} {
 test wm-minsize-1.6 {usage} {
     catch {destroy .t2}
     toplevel .t2
-    wm minsize .t2 200 150
+    wm minsize .t2 300 200
     set result [wm minsize .t2]
     destroy .t2
     set result
-} {200 150}
+} {300 200}
 
+test wm-minsize-2.1 {setting the minsize to a value larger
+        than the current size will resize a toplevel} {
+    destroy .t
+    toplevel .t -width 200 -height 200
+    update
+    wm minsize .t 400 300
+    # UpdateGeometryInfo invoked at idle
+    update
+    lrange [split [wm geom .t] x+] 0 1
+} {400 300}
+
+test wm-minsize-2.2 {setting the minsize to a value larger
+        than the current size will resize a gridded toplevel} {
+    destroy .t
+    toplevel .t
+    wm grid .t 1 1 50 50
+    wm geom .t 4x4
+    update
+    wm minsize .t 8 8
+    # UpdateGeometryInfo invoked at idle
+    update
+    lrange [split [wm geom .t] x+] 0 1
+} {8 8}
+
+test wm-minsize-2.3 {attempting to resize to a value
+        smaller than the current minsize will set
+        it to the minsize} {
+    destroy .t
+    toplevel .t -width 400 -height 400
+    wm minsize .t 300 300
+    update
+    wm geom .t 200x200
+    update
+    lrange [split [wm geom .t] x+] 0 1
+} {300 300}
+
+test wm-minsize-2.4 {attempting to resize to a value
+        smaller than the current minsize will set
+        it to the minsize when gridded} {
+    destroy .t
+    toplevel .t
+    wm grid .t 1 1 50 50
+    wm geom .t 8x8
+    wm minsize .t 6 6
+    update
+    wm geom .t 4x4
+    update
+    lrange [split [wm geom .t] x+] 0 1
+} {6 6}
+
+test wm-minsize-2.5 {Use min size if window size is not
+        explicitly set and the reqWidth/reqHeight are
+        smaller than the min size} {
+    destroy .t
+    toplevel .t
+    pack [frame .t.f -width 250 -height 250]
+    update idletasks
+    set req [list [winfo reqwidth .t] \
+                      [winfo reqheight .t]]
+    wm minsize .t 300 300
+    update
+    list $req [lrange [split [wm geom .t] x+] 0 1]
+} {{250 250} {300 300}}
 
 test wm-overrideredirect-1.1 {usage} {
     list [catch {wm overrideredirect} msg]  $msg
