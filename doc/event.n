@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: event.n,v 1.4 1999/12/14 06:51:44 hobbs Exp $
+'\" RCS: @(#) $Id: event.n,v 1.5 2000/01/13 02:07:08 hobbs Exp $
 '\" 
 .so man.macros
 .TH event n 8.3 Tk "Tk Built-In Commands"
@@ -243,7 +243,8 @@ Corresponds to the \fB%t\fR substitution for binding scripts.
 \fIboolean\fR must be a boolean value;  it specifies whether
 the screen pointer should be warped as well.
 Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
-\fBButtonRelease\fR, and \fBMotion\fR events.
+\fBButtonRelease\fR, and \fBMotion\fR events.  The pointer will
+only warp to a window if it is mapped.
 .TP
 \fB\-width\fI size\fR
 \fISize\fR must be a screen distance;  it specifies the \fIwidth\fR field
