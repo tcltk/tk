@@ -1,3 +1,49 @@
+2002-04-12  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tkUnixFont.c (FontPkgCleanup): cleanup thread specific font
+	resources on thread exit.
+
+	* mac/tkMacXStubs.c (TkpOpenDisplay): memset the initial display
+	structures to 0.
+
+	* generic/tkOption.c (OptionThreadExitProc): freed tsd option
+	stacks on thread exit.
+	(Tk_GetOption): free mem used to get Tk_Uid
+
+	* generic/tkMenu.c (ConfigureMenu): freed saved options in all
+	error cases.
+
+	* win/tkWinInt.h: declaration for TkWinGetUnicodeEncoding
+	* win/tkWinDialog.c (GetFileNameW): use TkWinGetUnicodeEncoding
+	* win/tkWinInit.c (TkpDisplayWarning): use TkWinGetUnicodeEncoding
+	* win/tkWinFont.c: use TkWinGetUnicodeEncoding instead of static
+	unicodeEncoding.
+
+	* win/tkWinX.c (Tk_SetCaretPos): remove WM_IME_STARTCOMPOSITION
+	and place the IME position within Tk_SetCaretPos.  Cache results in
+	Tk_SetCaretPos to reduce unnecessary repositioning.  Also call
+	DestroyCaret if we receive WM_KILLFOCUS.
+	(TkpOpenDisplay): ZeroMemory the initial display structures.
+	(TkWinGetUnicodeEncoding): Added so that Windows only needs to
+	cache this value one, and then free it in TkWinXCleanup.
+	(HandleIMEComposition): add support for Win98 and ATOK13
+	IME. (yamamoto)
+
+	* generic/tkConsole.c (ConsoleCmd): correct return that should
+	have just set result code.
+
+	* generic/tkImgPhoto.c: Added PhotoFormatThreadExitProc to clean
+	up on thread exit. (Tk_PhotoPutBlock) slight code updates
+
+	* generic/tkPanedWindow.c (DestroyPanedWindow, ConfigureSlaves):
+	fix mem leaks in not freeing slave info
+
+	* win/configure:
+	* win/tcl.m4: Enabled COFF as well as CV style debug info with
+	--enable-symbols to allow Dr. Watson users to see function info.
+	More info on debugging levels can be obtained at:
+	http://msdn.microsoft.com/library/en-us/dnvc60/html/gendepdebug.asp
+
 2002-04-10  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* doc/wm.n:
