@@ -1,3 +1,39 @@
+2001-09-21  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinX.c (TkGetServerInfo): added recognition of Win64.
+
+	* xlib/X11/X.h: made XID __int64 type for Win64.
+
+	* unix/tkUnixPort.h:
+	* mac/tkMacPort.h: add (int*) cast to TkpScanWindowId.
+	These may need to be changed to Window* (ulong).
+
+	* generic/tkCmds.c (Tk_WinfoObjCmd):
+	* generic/tkBind.c (NameToWindow):
+	correct Window id's to be of type Window
+
+	* generic/tkIntDecls.h:
+	* generic/tkIntPlatDecls.h:
+	* generic/tkInt.decls (TkpScanWindowId): changed decl to use
+	Window* instead of int*.
+
+	* xlib/xcolors.c:
+	* generic/tkPack.c,tkWindow.c:
+	* win/tkWinFont.c,tkWinMenu.c:
+	* unix/tkUnixScale.c: minor cast fixes to prevent 64bit warnings.
+
+	* tests/scrollbar.test (scrollbar-6.27): marked knownBug because
+	it is skewed by bad dimensions returned by Windows.
+
+	* tests/textDisp.test (textDisp-4.12): corrected test to work
+	properly on Windows.
+
+	* tests/id.test,macFont.test,macMenu.test,macscrollbar.test:
+	* tests/send.test,winClipboard.test,winDialog.test,winFont.test:
+	improved use of test constraints
+
+	* win/tkWinWm.c (WinSetIcon): fixed SetClassLong for 64bit support.
+
 2001-09-20  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/configure: regen'ed
