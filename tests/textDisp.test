@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.23 2003/12/04 12:10:07 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.24 2004/04/21 15:16:45 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -3385,6 +3385,7 @@ test textDisp-30.1 {elidden text complications} {knownBug} {
     # Each logical line must have its own DLines
     .t2.t count -displaylines 1.0 end
 } {1}
+catch {destroy .t2}
 
 .t configure -height 1
 update

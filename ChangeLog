@@ -1,3 +1,9 @@
+2004-04-21  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* tests/textDisp.test: Get rid of windows that are no longer
+	needed so single-proc tests don't have extra windows hanging
+	around unexpectedly.
+
 2004-04-21  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
 
 	Mac OS X: Fix several problems with Icelandic (and Faroese) keyboards
