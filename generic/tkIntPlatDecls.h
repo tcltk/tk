@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.17 2004/03/17 18:15:43 das Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.18 2004/09/21 19:13:57 mdejong Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -224,6 +224,11 @@ EXTERN int		TkWinGetPlatformId _ANSI_ARGS_((void));
 #define TkWinSetHINSTANCE_TCL_DECLARED
 /* 34 */
 EXTERN void		TkWinSetHINSTANCE _ANSI_ARGS_((HINSTANCE hInstance));
+#endif
+#ifndef TkWinGetPlatformTheme_TCL_DECLARED
+#define TkWinGetPlatformTheme_TCL_DECLARED
+/* 35 */
+EXTERN int		TkWinGetPlatformTheme _ANSI_ARGS_((void));
 #endif
 #endif /* __WIN32__ */
 #ifdef MAC_OSX_TK
@@ -605,6 +610,7 @@ typedef struct TkIntPlatStubs {
     Tcl_Obj * (*tkWinGetMenuSystemDefault) _ANSI_ARGS_((Tk_Window tkwin, CONST char * dbName, CONST char * className)); /* 32 */
     int (*tkWinGetPlatformId) _ANSI_ARGS_((void)); /* 33 */
     void (*tkWinSetHINSTANCE) _ANSI_ARGS_((HINSTANCE hInstance)); /* 34 */
+    int (*tkWinGetPlatformTheme) _ANSI_ARGS_((void)); /* 35 */
 #endif /* __WIN32__ */
 #ifdef MAC_OSX_TK
     void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow * winPtr, int active)); /* 0 */
@@ -830,6 +836,10 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #ifndef TkWinSetHINSTANCE
 #define TkWinSetHINSTANCE \
 	(tkIntPlatStubsPtr->tkWinSetHINSTANCE) /* 34 */
+#endif
+#ifndef TkWinGetPlatformTheme
+#define TkWinGetPlatformTheme \
+	(tkIntPlatStubsPtr->tkWinGetPlatformTheme) /* 35 */
 #endif
 #endif /* __WIN32__ */
 #ifdef MAC_OSX_TK
