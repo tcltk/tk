@@ -1,3 +1,9 @@
+2002-09-30  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* doc/bind.n: Doc-fix to mention that %A substitutes UNICODE
+	characters rather than ASCII ones.  Tk's done this ever since 8.1
+	in any case; after all, it is the right thing to do.
+
 2002-09-27  Don Porter <dgp@users.sf.net>
 
 	* README:		Bumped to version 8.4.1 to avoid confusion
