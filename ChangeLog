@@ -1,3 +1,10 @@
+2004-07-22  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/tkfbox.tcl (::tk::dialog::file::Update): use -directory
+	[pwd] (instead of .) to get around some VFS edge case bugs.
+	Correct args passes to tk_messageBox when failing to cd.
+	Add -force back to namespace import of msgcat.
+
 2004-07-20  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkEvent.c (InvokeInputMethods): ensure IC focus is set
@@ -35,11 +42,11 @@
 
 2004-07-14  Jim Ingham  <jingham@apple.com>
 
-        * macosx/tkMacOSXCursor.c (TkpSetCursor): The code to not
-        reset the cursor more often than necessary was getting fooled
-        when the current cursor was nulled out when the current cursor
-        gets freed.  So in the case where the input cursor was NULL, we
-        have to just always set it. [Bug #894550]
+	* macosx/tkMacOSXCursor.c (TkpSetCursor): The code to not
+	reset the cursor more often than necessary was getting fooled
+	when the current cursor was nulled out when the current cursor
+	gets freed.  So in the case where the input cursor was NULL, we
+	have to just always set it. [Bug #894550]
 
 2004-07-13  Don Porter  <dgp@users.sourceforge.net>
 
