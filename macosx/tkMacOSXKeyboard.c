@@ -9,15 +9,14 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.1.2.2 2002/07/18 23:45:18 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.1.2.3 2002/07/19 09:22:34 vincentdarley Exp $
  */
 
 #include "tkInt.h"
 #include "X11/Xlib.h"
 #include "X11/keysym.h"
 #include <Carbon/Carbon.h>
-
-extern Tcl_Encoding macRomanEncoding;
+#include "tkMacOSXInt.h"
 
 typedef struct {
     short keycode;		/* Macintosh keycode */
@@ -249,7 +248,8 @@ TkpGetString(
 	    len = 0;
 	}
     }
-    return Tcl_ExternalToUtfDString(macRomanEncoding, string, len, dsPtr);
+    return Tcl_ExternalToUtfDString(TkMacOSXCarbonEncoding, string, 
+				    len, dsPtr);
 }
 
 /*

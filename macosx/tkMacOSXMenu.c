@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.1.2.6 2002/07/18 23:45:18 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.1.2.7 2002/07/19 09:22:34 vincentdarley Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -24,8 +24,6 @@
 #include <Carbon/Carbon.h>
 #include "tkMacOSXDebug.h"
 #include <CoreFoundation/CFString.h>
-
-extern Tcl_Encoding macRomanEncoding;
 
 typedef struct MacMenu {
     MenuRef menuHdl;		/* The Menu Manager data structure. */
@@ -3809,9 +3807,14 @@ TkpMenuInit(void)
     tkThemeMenuItemDrawingUPP 
             = NewMenuItemDrawingUPP(tkThemeMenuItemDrawingProc);
             				
-    Tcl_ExternalToUtf(NULL, macRomanEncoding, "\311", /* ellipsis character */
-        -1, 0, NULL, elipsisString,
-        TCL_UTF_MAX + 1, NULL, NULL, NULL);
+    /* 
+     * We should just hardcode the utf-8 ellipsis character into 
+     * 'elipsisString' here 
+     */
+    Tcl_ExternalToUtf(NULL, Tcl_GetEncoding(NULL, "macRoman"), 
+		      "\311", /* ellipsis character */
+		      -1, 0, NULL, elipsisString,
+		      TCL_UTF_MAX + 1, NULL, NULL, NULL);
         
     useMDEFVar = Tcl_NewStringObj("::tk::mac::useCustomMDEF", -1);
 }

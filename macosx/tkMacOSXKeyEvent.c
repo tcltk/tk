@@ -55,8 +55,6 @@
 #include "tkPort.h"
 #include "tkMacOSXEvent.h"
 
-extern Tcl_Encoding macRomanEncoding;
-
 typedef struct {
     WindowRef   whichWindow;
     Point       global;
@@ -100,7 +98,7 @@ int TkMacOSXProcessKeyboardEvent(
         TkMacOSXEvent * eventPtr, 
         MacEventStatus * statusPtr)
 {
-    UInt32 savedKeyCode = 0;
+    static UInt32 savedKeyCode = 0;
     OSStatus     status;
     KeyEventData keyEventData;
     Window    window;
@@ -243,7 +241,8 @@ GenerateKeyEvent( EventKind eKind,
     }
     byte = (e->message&charCodeMask);
     if ((savedKeyCode == 0) && 
-            (Tcl_ExternalToUtf(NULL, macRomanEncoding, (char *) &byte, 1, 0, NULL, 
+            (Tcl_ExternalToUtf(NULL, TkMacOSXCarbonEncoding, 
+			       (char *) &byte, 1, 0, NULL, 
                         buf, sizeof(buf), NULL, NULL, NULL) != TCL_OK)) {
         /*
          * This event specifies a lead byte.  Wait for the second byte

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.1.2.4 2002/07/18 23:45:18 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.1.2.5 2002/07/19 09:22:34 vincentdarley Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -905,8 +905,12 @@ NavServicesGetFile(
                                 pathValid = 1;
                             }
                             if (pathValid) {
-                                /* Tested this and NULL=utf-8 encoding is good here */
-                                Tcl_ExternalToUtfDString(NULL, pathPtr, -1, &fileName);
+                                /* 
+                                 * Tested this and NULL=utf-8 encoding is
+                                 * good here
+                                 */
+                                Tcl_ExternalToUtfDString(NULL, pathPtr, -1, 
+							 &fileName);
                                 if (multiple) {
                                     Tcl_ListObjAppendElement(interp, theResult, 
                                         Tcl_NewStringObj(Tcl_DStringValue(&fileName), 

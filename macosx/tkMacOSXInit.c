@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.1.2.5 2002/07/18 23:45:18 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.1.2.6 2002/07/19 09:22:34 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -22,7 +22,55 @@
  */
 #include "tkInitScript.h"
 
-Tcl_Encoding macRomanEncoding = NULL;
+/*
+ * The following structures are used to map the script/language codes of a
+ * font to the name that should be passed to Tcl_GetEncoding() to obtain
+ * the encoding for that font.  The set of numeric constants is fixed and
+ * defined by Apple.
+ */
+
+typedef struct Map {
+    int numKey;
+    char *strKey;
+} Map;
+
+static Map scriptMap[] = {
+    {smRoman,		"macRoman"},
+    {smJapanese,	"macJapan"},
+    {smTradChinese,	"macChinese"},
+    {smKorean,		"macKorean"},
+    {smArabic,		"macArabic"},
+    {smHebrew,		"macHebrew"},
+    {smGreek,		"macGreek"},
+    {smCyrillic,	"macCyrillic"},
+    {smRSymbol,		"macRSymbol"},
+    {smDevanagari,	"macDevanagari"},
+    {smGurmukhi,	"macGurmukhi"},
+    {smGujarati,	"macGujarati"},
+    {smOriya,		"macOriya"},
+    {smBengali,		"macBengali"},
+    {smTamil,		"macTamil"},
+    {smTelugu,		"macTelugu"},
+    {smKannada,		"macKannada"},
+    {smMalayalam,	"macMalayalam"},
+    {smSinhalese,	"macSinhalese"},
+    {smBurmese,		"macBurmese"},
+    {smKhmer,		"macKhmer"},
+    {smThai,		"macThailand"},
+    {smLaotian,		"macLaos"},
+    {smGeorgian,	"macGeorgia"},
+    {smArmenian,	"macArmenia"},
+    {smSimpChinese,	"macSimpChinese"},
+    {smTibetan,		"macTIbet"},
+    {smMongolian,	"macMongolia"},
+    {smGeez,		"macEthiopia"},
+    {smEastEurRoman,	"macCentEuro"},
+    {smVietnamese,	"macVietnam"},
+    {smExtArabic,	"macSindhi"},
+    {NULL,		NULL}
+};
+
+Tcl_Encoding TkMacOSXCarbonEncoding = NULL;
 
 
 /*
@@ -50,12 +98,10 @@ TkpInit(interp)
     char tkLibPath[1024];
     int result;
     static int menusInitialized = false;
+    static int carbonEncodingInitialized = false;
 
-    if (macRomanEncoding == NULL) {
-	macRomanEncoding = Tcl_GetEncoding(NULL, "macRoman");
-    }
-    
-    /* Since it is possible for TkInit to be called multiple times
+    /* 
+     * Since it is possible for TkInit to be called multiple times
      * and we don't want to do the menu initialization multiple times
      * we protect against doing it more than once.
      */
@@ -66,6 +112,30 @@ TkpInit(interp)
         TkMacOSXInitAppleEvents(interp);
         TkMacOSXInitMenus(interp);
     }
+ 
+    if (carbonEncodingInitialized == false) {
+	CFStringEncoding encoding;
+	char *encodingStr = NULL;
+	int  i;
+	
+	encoding = CFStringGetSystemEncoding();
+	
+	for (i = 0; scriptMap[i].strKey != NULL; i++) {
+	    if (scriptMap[i].numKey == encoding) {
+		encodingStr = scriptMap[i].strKey;
+		break;
+	    }
+	}
+	if (encodingStr == NULL) {
+	    encodingStr = "macRoman";
+	}
+	
+	TkMacOSXCarbonEncoding = Tcl_GetEncoding (NULL, encodingStr);
+	if (TkMacOSXCarbonEncoding == NULL) {
+	    TkMacOSXCarbonEncoding = Tcl_GetEncoding (NULL, NULL);
+	}
+    }
+    
     Tcl_SetVar2(interp, "tcl_platform", "windowingsystem", 
             "aqua", TCL_GLOBAL_ONLY);
     

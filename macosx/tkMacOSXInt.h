@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.1.2.2 2002/07/19 09:22:34 vincentdarley Exp $
  */
 
 #ifndef _TKMACINT
@@ -134,6 +134,8 @@ extern int tkPictureIsOpen;             /* If this is 1, we are drawing to a pic
                                          */
 extern TkMacOSXWindowList *tkMacOSXWindowListPtr;
 					/* The list of toplevels */
+
+extern Tcl_Encoding TkMacOSXCarbonEncoding;
 
 #include "tkIntPlatDecls.h"
 
