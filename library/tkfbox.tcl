@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.28 2001/08/01 21:11:41 dgp Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.29 2001/08/09 00:47:09 dgp Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -700,7 +700,6 @@ proc ::tk::IconList_KeyPress {w key} {
 proc ::tk::IconList_Goto {w text} {
     upvar ::tk::$w data
     upvar ::tk::$w:textList textList
-    variable ::tk::Priv
     
     if {![info exists data(list)]} {
 	return
@@ -857,7 +856,7 @@ proc ::tk::dialog::file:: {type args} {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    vwait tk::Priv(selectFilePath)
+    vwait ::tk::Priv(selectFilePath)
 
     ::tk::RestoreFocusGrab $w $data(ent) withdraw
 
