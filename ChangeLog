@@ -1,3 +1,8 @@
+2002-03-19  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkOldConfig.c (Tk_ConfigureValue): prevent leaving
+	interp->result as NULL.
+
 2002-03-07  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/text.tcl (TextPasteSelection): Renaming of TextPaste to
