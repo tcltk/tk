@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.4 1999/04/16 01:51:13 stanton Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.5 1999/08/13 17:52:12 redman Exp $
  */
 
 #include "tkPort.h"
@@ -421,7 +421,7 @@ Tk_DeleteGenericHandler(proc, clientData)
  */
 
 void
-TkEventInit(void)
+TkEventInit _ANSI_ARGS_((void))
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
