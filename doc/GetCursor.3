@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetCursor.3,v 1.3 1999/04/16 01:51:08 stanton Exp $
+'\" RCS: @(#) $Id: GetCursor.3,v 1.4 1999/12/16 21:57:11 hobbs Exp $
 '\" 
 .so man.macros
 .TH Tk_AllocCursorFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -138,6 +138,11 @@ This form is similar to the one above, except that the source is
 used as mask also.  This means that the cursor's background is
 transparent.  This form of the command will not work on Macintosh
 or Windows computers.
+.TP
+\fB@\fIsourceName\fR
+This form only works on Windows, and will load a Windows system
+cursor (\fB.ani\fR or \fB.cur\fR) from the file specified in
+\fIsourceName\fR.
 .PP
 .VS 8.1
 \fBTk_GetCursor\fR is identical to \fBTk_AllocCursorFromObj\fR except

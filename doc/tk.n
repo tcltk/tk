@@ -5,10 +5,10 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: tk.n,v 1.2 1998/09/14 18:23:00 stanton Exp $
+'\" RCS: @(#) $Id: tk.n,v 1.3 1999/12/16 21:57:12 hobbs Exp $
 '\" 
 .so man.macros
-.TH tk n 4.0 Tk "Tk Built-In Commands"
+.TH tk n 8.3 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
@@ -43,7 +43,6 @@ be able to find some options for the application.
 If sends have been disabled by deleting the \fBsend\fR command,
 this command will reenable them and recreate the \fBsend\fR
 command.
-.VS
 .TP
 \fBtk scaling \fR?\fB\-displayof \fIwindow\fR? ?\fInumber\fR?
 .
@@ -67,6 +66,17 @@ after the scaling factor is changed will use the new scaling factor, but it
 is undefined whether existing widgets will resize themselves dynamically to
 accomodate the new scaling factor.
 .RE
+.VS 8.3
+.TP
+\fBtk useinputmethods \fR?\fB\-displayof \fIwindow\fR? ?\fIboolean\fR?
+.
+Sets and queries the state of whether Tk should use XIM (X Input Methods)
+for filtering events.  The resulting state is returned.  XIM is used in
+some locales (ie: Japanese, Korean), to handle special input devices.  This
+feature is only significant on X.  If XIM support is not available, this
+will always return 0.  If the \fIwindow\fR argument is omitted, it defaults
+to the main window.  If the \fIboolean\fR argument is omitted, the current
+state is returned.
 .VE
 .SH KEYWORDS
 application name, send
