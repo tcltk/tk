@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.89 2003/09/25 05:36:08 das Exp $
+# RCS: @(#) $Id: configure.in,v 1.90 2003/10/06 15:34:18 dgp Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.57)
@@ -100,6 +100,12 @@ if test "${TCL_THREADS}" = 1; then
     AC_DEFINE(TCL_THREADS)
     AC_DEFINE(_REENTRANT)
     AC_DEFINE(_THREAD_SAFE)
+fi
+
+if test "${TCL_VERSION}" != "${TK_VERSION}"; then
+    AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}.])
 fi
 
 #--------------------------------------------------------------------
