@@ -1,3 +1,9 @@
+2002-06-13  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* tests/unixWm.test:
+	* tests/wm.test: Move wm minsize and wm maxsize
+	usage tests into the cross platform wm tests.
+
 2002-06-13  Don Porter <dgp@users.sf.net>
 
 	* tests/cursor.test:  corrected error after cursor-2.2.
