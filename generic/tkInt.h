@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: %Z% $Id: tkInt.h,v 1.3 1998/07/27 17:29:44 rjohnson Exp $ 
+ * SCCS: %Z% $Id: tkInt.h,v 1.4 1998/07/28 17:28:33 stanton Exp $ 
  */
 
 #ifndef _TKINT
@@ -934,13 +934,13 @@ EXTERN void		TkpWmSetState _ANSI_ARGS_((TkWindow *winPtr,
 			    int state));
 EXTERN void		TkQueueEventForAllChildren _ANSI_ARGS_((
 			    TkWindow *winPtr, XEvent *eventPtr));
-#ifndef TkRectInRegion
 EXTERN int		TkReadBitmapFile _ANSI_ARGS_((Display* display,
 			    Drawable d, CONST char* filename,
 			    unsigned int* width_return,
 			    unsigned int* height_return,
 			    Pixmap* bitmap_return,
 			    int* x_hot_return, int* y_hot_return));
+#ifndef TkRectInRegion
 EXTERN int		TkRectInRegion _ANSI_ARGS_((TkRegion rgn,
 			    int x, int y, unsigned int width,
 			    unsigned int height));
