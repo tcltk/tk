@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacXStubs.c,v 1.13 2002/04/12 07:31:20 hobbs Exp $
+ * RCS: @(#) $Id: tkMacXStubs.c,v 1.14 2002/06/17 20:09:01 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -811,8 +811,8 @@ TkGetDefaultScreenName(
  *
  * Tk_SetCaretPos --
  *
- *	This indicates the cursor position to Tk.  This is not used
- *	on the Mac currently.
+ *	This indicates the cursor position to Tk.
+ *	This is currently a noop stub for MacX.
  *
  *----------------------------------------------------------------------
  */
@@ -820,5 +820,10 @@ TkGetDefaultScreenName(
 void
 Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
 {
-    return;
+    TkCaret *caretPtr = &(((TkWindow *) tkwin)->dispPtr->caret);
+
+    caretPtr->winPtr = ((TkWindow *) tkwin);
+    caretPtr->x = x;
+    caretPtr->y = y;
+    caretPtr->height = height;
 }

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.21 2002/04/12 07:19:13 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.22 2002/06/17 20:09:01 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1582,8 +1582,22 @@ void
 Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
 {
     static HWND caretHWND = NULL;
-    static int lastX = -1, lastY = -1;
+    TkCaret *caretPtr = &(((TkWindow *) tkwin)->dispPtr->caret);
     Window win;
+
+    /*
+     * Prevent processing anything if the values haven't changed.
+     * Windows only has one display, so we can do this with statics.
+     */
+    if ((caretPtr->winPtr == ((TkWindow *) tkwin))
+	    && (caretPtr->x == x) && (caretPtr->y == y)) {
+	return;
+    }
+
+    caretPtr->winPtr = ((TkWindow *) tkwin);
+    caretPtr->x = x;
+    caretPtr->y = y;
+    caretPtr->height = height;
 
     /*
      * We adjust to the toplevel to get the coords right, as setting
@@ -1604,16 +1618,6 @@ Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
     if (win) {
 	HIMC hIMC;
 	HWND hwnd = Tk_GetHWND(win);
-
-	if ((hwnd == caretHWND) && (lastX == x) && (lastY == y)) {
-	    /*
-	     * Prevent processing anything if the values haven't changed.
-	     */
-	    return;
-	}
-
-	lastX = x;
-	lastY = y;
 
 	if (hwnd != caretHWND) {
 	    DestroyCaret();
@@ -1642,6 +1646,5 @@ Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
 	    ImmSetCompositionWindow(hIMC, &cform);
 	    ImmReleaseContext(hwnd, hIMC);
 	}
-
     }
 }

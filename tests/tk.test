@@ -3,9 +3,9 @@
 #
 # Copyright (c) 1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
-# All rights reserved.
+# Copyright (c) 2002 ActiveState Corporation.
 #
-# RCS: @(#) $Id: tk.test,v 1.5 2000/10/31 00:52:11 hobbs Exp $
+# RCS: @(#) $Id: tk.test,v 1.6 2002/06/17 20:09:01 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -16,7 +16,7 @@ test tk-1.1 {tk command: general} {
 } {1 {wrong # args: should be "tk option ?arg?"}}
 test tk-1.2 {tk command: general} {
     list [catch {tk xyz} msg] $msg
-} {1 {bad option "xyz": must be appname, scaling, or useinputmethods}}
+} {1 {bad option "xyz": must be appname, caret, scaling, or useinputmethods}}
 
 set appname [tk appname]
 test tk-2.1 {tk command: appname} {
@@ -109,6 +109,25 @@ test tk-4.7 {tk command: useinputmethods: set new} {macOrPc} {
     tk useinputmethods 1
 } 0
 tk useinputmethods $useim
+
+test tk-5.1 {tk caret} {
+    list [catch {tk caret} msg] $msg
+} {1 {wrong # args: should be "tk caret window ?-x x? ?-y y? ?-height height?"}}
+test tk-5.2 {tk caret} {
+    list [catch {tk caret bogus} msg] $msg
+} {1 {bad window path name "bogus"}}
+test tk-5.3 {tk caret} {
+    list [catch {tk caret . -foo} msg] $msg
+} {1 {bad caret option "-foo": must be -x, -y, or -height}}
+test tk-5.4 {tk caret} {
+    list [catch {tk caret . -x 0 -y} msg] $msg
+} {1 {wrong # args: should be "tk caret window ?-x x? ?-y y? ?-height height?"}}
+test tk-5.5 {tk caret} {
+    list [catch {tk caret . -x 10 -y 11 -h 12; tk caret .} msg] $msg
+} {0 {-height 12 -x 10 -y 11}}
+test tk-5.6 {tk caret} {
+    list [catch {tk caret . -x 20 -y 25 -h 30; tk caret . -hei} msg] $msg
+} {0 30}
 
 # cleanup
 ::tcltest::cleanupTests
