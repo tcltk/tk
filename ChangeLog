@@ -11,6 +11,7 @@
 	way to do this for the TOT, but this is simple and will do for the
 	8.4 branch.
 	* library/text.tcl: Ditto.
+	* doc/bind.n: Update the docs to reflect the changes.
 	
 2004-02-15  Jim Ingham  <jingham@apple.com>
 
