@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.60 2003/10/08 21:49:56 patthoyts Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.61 2004/04/24 06:00:20 das Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -89,8 +89,13 @@ TCL_BIN_DIR		= @TCL_BIN_DIR@
 # The directory containing the Tcl sources and headers appropriate
 # for this version of Tk ("srcdir" will be replaced or has already
 # been replaced by the configure script):
-TCL_GENERIC_DIR	= @TCL_SRC_DIR@/generic
-TCL_TOOL_DIR = @TCL_SRC_DIR@/tools
+TCL_GENERIC_DIR		= @TCL_SRC_DIR@/generic
+
+# The directory containing the platform specific Tcl sources and headers
+# appropriate for this version of Tk:
+TCL_PLATFORM_DIR	= @TCL_SRC_DIR@/win
+
+TCL_TOOL_DIR		= @TCL_SRC_DIR@/tools
 
 # Converts a POSIX path to a Windows native path.
 CYGPATH			= @CYGPATH@
@@ -114,6 +119,7 @@ GENERIC_DIR_NATIVE 	= $(shell $(CYGPATH) '$(GENERIC_DIR)')
 BITMAP_DIR_NATIVE	= $(shell $(CYGPATH) '$(ROOT_DIR)/bitmaps')
 XLIB_DIR_NATIVE		= $(shell $(CYGPATH) '$(ROOT_DIR)/xlib')
 TCL_GENERIC_NATIVE	= $(shell $(CYGPATH) '$(TCL_GENERIC_DIR)')
+TCL_PLATFORM_NATIVE	= $(shell $(CYGPATH) '$(TCL_PLATFORM_DIR)')
 TCL_SRC_DIR_NATIVE      = $(shell $(CYGPATH) '$(TCL_SRC_DIR)')
 RC_DIR_NATIVE      	= $(shell $(CYGPATH) '$(RC_DIR)')
 
@@ -201,7 +207,7 @@ TCL_EXE			= tclsh
 CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I"${GENERIC_DIR_NATIVE}" -I"${WIN_DIR_NATIVE}" \
 -I"${XLIB_DIR_NATIVE}" -I"${BITMAP_DIR_NATIVE}" \
- -I"${TCL_GENERIC_NATIVE}" ${AC_FLAGS}
+-I"${TCL_GENERIC_NATIVE}" -I"${TCL_PLATFORM_NATIVE}" ${AC_FLAGS}
 
 CC_OBJNAME = @CC_OBJNAME@
 CC_EXENAME = @CC_EXENAME@
@@ -588,7 +594,7 @@ tkSquare.$(OBJEXT): tkSquare.c
 	$(CC) -c $(STUB_CC_SWITCHES) -DBUILD_tk @DEPARG@ $(CC_OBJNAME)
 
 .rc.$(RES):
-	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_DEFINES@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_GENERIC_NATIVE)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" @DEPARG@
+	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_DEFINES@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_GENERIC_NATIVE)" @RC_INCLUDE@ "$(TCL_PLATFORM_NATIVE)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" @DEPARG@
 
 depend:
 
