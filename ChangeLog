@@ -1,3 +1,17 @@
+2002-02-22  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkPanedWindow.c (PanedWindowWidgetObjCmd): fixed returns
+	that should have been breaks instead.  Corrected .pw configure
+	handling for insufficient args.  [Patch #521436] (boudaillier)
+
+	* mac/tkMacDefault.h:
+	* unix/tkUnixDefault.h:
+	* win/tkWinDefault.h: changed panedwindow default relief to flat,
+	a more natural outer relief.
+
+	* library/panedwindow.tcl (ReleaseSash): changed to not pass x and
+	y args at all (they aren't used).
+
 2002-02-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/demos/widget: New section "Paned Windows"
@@ -12,13 +26,13 @@
 
 2002-02-21  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* doc/panedwindow.n (new file):
-	* generic/tkPanedWindow.c (new file):
+	* doc/panedwindow.n (new):
+	* generic/tkPanedWindow.c (new):
 	* generic/tkInt.h:
 	* generic/tkWindow.c:
-	* library/panedwindow.tcl (new file):
+	* library/panedwindow.tcl (new):
 	* mac/tkMacDefault.h:
-	* tests/panedwindow.test (new file):
+	* tests/panedwindow.test (new):
 	* unix/Makefile.in:
 	* unix/tkUnixDefault.h:
 	* win/Makefile.in:
@@ -31,6 +45,7 @@
 
 	* unix/configure: regenerated
 	* unix/tcl.m4: updated to sync with Tcl's tcl.m4
+	Added --enable-64bit support for AIX-4 using IBM's xlc (-q64 flag).
 
 2002-02-19  Don Porter  <dgp@users.sourceforge.net>
 
