@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menuDraw.test,v 1.6 2003/04/01 21:06:43 dgp Exp $
+# RCS: @(#) $Id: menuDraw.test,v 1.7 2004/03/17 18:15:49 das Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -346,14 +346,6 @@ test menuDraw-13.2 {TkMenuEventProc - ConfigureNotify} {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [wm geometry $tearoff 200x100] [update] [destroy .m1]
 } {{} {} {}}
-test menuDraw-13.3 {TkMenuEventProc - ActivateNotify} {macOnly} {
-    catch {destroy .t2}
-    toplevel .t2 -menu .t2.m1
-    menu .t2.m1
-    .t2.m1 add command -label foo
-    tk::TearOffMenu .t2.m1 40 40
-    list [catch {update} msg] $msg [destroy .t2]
-} {0 {} {}}
 # Testing deletes is hard, and I am going to do my best. Don't know how
 # to test the case where we have already cleared the tkwin field in the
 # menuPtr.

@@ -8,19 +8,14 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xutil.c,v 1.2 1998/09/14 18:24:03 stanton Exp $
+ * RCS: @(#) $Id: xutil.c,v 1.3 2004/03/17 18:15:50 das Exp $
  */
 
 #include <stdlib.h>
 #include <tk.h>
 
-#ifdef MAC_TCL
-#       include <Xutil.h>
-#       include <Xatom.h>
-#else
-#       include <X11/Xutil.h>
-#       include <X11/Xatom.h>
-#endif
+#include <X11/Xutil.h>
+#include <X11/Xatom.h>
 
 /*
  *----------------------------------------------------------------------

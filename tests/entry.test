@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.15 2003/04/01 21:06:22 dgp Exp $
+# RCS: @(#) $Id: entry.test,v 1.16 2004/03/17 18:15:49 das Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1201,7 +1201,7 @@ test entry-13.10 {GetEntryIndex procedure} {unixOnly} {
 
     list [catch {.e index sel.first} msg] $msg
 } {1 {selection isn't in widget .e}}
-test entry-13.11 {GetEntryIndex procedure} {macOrPc} {
+test entry-13.11 {GetEntryIndex procedure} {pcOnly} {
     # On mac and pc, when selection is cleared, entry widget remembers
     # last selected range.  When selection ownership is restored to 
     # entry, the old range will be rehighlighted.
@@ -1211,10 +1211,10 @@ test entry-13.11 {GetEntryIndex procedure} {macOrPc} {
 test entry-13.12 {GetEntryIndex procedure} {unixOnly} {
     list [catch {.e index sbogus} msg] $msg
 } {1 {selection isn't in widget .e}}
-test entry-13.13 {GetEntryIndex procedure} {macOrPc} {
+test entry-13.13 {GetEntryIndex procedure} {pcOnly} {
     list [catch {.e index sbogus} msg] $msg
 } {1 {bad entry index "sbogus"}}
-test entry-13.14 {GetEntryIndex procedure} {macOrPc} {
+test entry-13.14 {GetEntryIndex procedure} {pcOnly} {
     list [catch {selection get}] [catch {.e index sbogus}]
 } {1 1}
 test entry-13.15 {GetEntryIndex procedure} {

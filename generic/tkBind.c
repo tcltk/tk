@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.31 2004/02/18 02:22:11 hobbs Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.32 2004/03/17 18:15:42 das Exp $
  */
 
 #include "tkPort.h"
@@ -21,7 +21,7 @@
 #include "tkWinInt.h"
 #endif
 
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)) /* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* UNIX */
 #include "tkUnixInt.h"
 #endif
 

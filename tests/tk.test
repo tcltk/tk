@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 2002 ActiveState Corporation.
 #
-# RCS: @(#) $Id: tk.test,v 1.10 2003/04/01 21:06:55 dgp Exp $
+# RCS: @(#) $Id: tk.test,v 1.11 2004/03/17 18:15:50 das Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -103,7 +103,7 @@ test tk-4.6 {tk command: useinputmethods: set new} {unixOnly} {
     }
     set useim
 } $useim
-test tk-4.7 {tk command: useinputmethods: set new} {macOrPc} {
+test tk-4.7 {tk command: useinputmethods: set new} {pcOnly} {
     # Mac and Windows don't have X Input Methods, so this should
     # always return 0
     tk useinputmethods 1

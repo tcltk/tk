@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.78 2004/03/02 00:49:13 hobbs Exp $
+ * RCS: @(#) $Id: tk.h,v 1.79 2004/03/17 18:15:42 das Exp $
  */
 
 #ifndef _TK
@@ -34,7 +34,6 @@ extern "C" {
  * unix/configure.in	(2 LOC Major, 2 LOC minor, 1 LOC patch)
  * win/configure.in	(as above)
  * README		(sections 0 and 1)
- * mac/README		(not patchlevel)
  * macosx/Wish.pbproj/project.pbxproj
  * 			(14 LOC total, 4 LOC patch)
  * win/README		(not patchlevel)
@@ -59,7 +58,7 @@ extern "C" {
  * compilers.  We use this method because there is no autoconf equivalent.
  */
 
-#if defined(MAC_TCL) || defined(MAC_OSX_TK)
+#if defined(MAC_OSX_TK)
 #   ifndef REDO_KEYSYM_LOOKUP
 #	define REDO_KEYSYM_LOOKUP
 #   endif
@@ -85,10 +84,7 @@ extern "C" {
 #ifndef RC_INVOKED
     
 #ifndef _XLIB_H
-#   if defined (MAC_TCL)
-#	include <Xlib.h>
-#	include <X.h>
-#   elif defined(MAC_OSX_TK)
+#   if defined(MAC_OSX_TK)
 #	include <X11/Xlib.h>
 #	include <X11/X.h>
 #   else

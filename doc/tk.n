@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: tk.n,v 1.7 2002/09/02 22:00:37 hobbs Exp $
+'\" RCS: @(#) $Id: tk.n,v 1.8 2004/03/17 18:15:42 das Exp $
 '\" 
 .so man.macros
 .TH tk n 8.4 Tk "Tk Built-In Commands"
@@ -98,7 +98,7 @@ state is returned.  This is turned on by default for the main display.
 .
 Returns the current Tk windowing system, one of
 \fBx11\fR (X11-based), \fBwin32\fR (MS Windows),
-\fBclassic\fR (Mac OS Classic), or \fBaqua\fR (Mac OS X Aqua).
+or \fBaqua\fR (Mac OS X Aqua).
 .VE
 .SH KEYWORDS
 application name, send

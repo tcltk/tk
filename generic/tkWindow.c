@@ -12,13 +12,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.62 2004/01/13 02:06:01 davygrvy Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.63 2004/03/17 18:15:44 das Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
 
-#if !( defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
+#if !( defined(__WIN32__) || defined(MAC_OSX_TK))
 #include "tkUnixInt.h"
 #endif
 
@@ -136,7 +136,7 @@ static TkCmd commands[] = {
     {"selection",	NULL,			Tk_SelectionObjCmd,	0, 1},
     {"tk",		NULL,			Tk_TkObjCmd,		1, 1},
     {"tkwait",		NULL,			Tk_TkwaitObjCmd,	1, 1},
-#if defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)
+#if defined(__WIN32__) || defined(MAC_OSX_TK)
     {"tk_chooseColor",  NULL,			Tk_ChooseColorObjCmd,	0, 1},
     {"tk_chooseDirectory", NULL,		Tk_ChooseDirectoryObjCmd, 0, 1},
     {"tk_getOpenFile",  NULL,			Tk_GetOpenFileObjCmd,	0, 1},
@@ -175,7 +175,7 @@ static TkCmd commands[] = {
      * Misc.
      */
 
-#if defined(MAC_TCL) || defined(MAC_OSX_TK)
+#if defined(MAC_OSX_TK)
     {"::tk::unsupported::MacWindowStyle",
 	    		TkUnsupported1Cmd,	NULL,			1, 1},
 #endif
@@ -1442,7 +1442,7 @@ Tk_DestroyWindow(tkwin)
 	TkWmRemoveFromColormapWindows(winPtr);
     }
     if (winPtr->window != None) {
-#if defined(MAC_TCL) || defined(MAC_OSX_TK) || defined(__WIN32__)
+#if defined(MAC_OSX_TK) || defined(__WIN32__)
 	XDestroyWindow(winPtr->display, winPtr->window);
 #else
 	if ((winPtr->flags & TK_TOP_HIERARCHY)
@@ -1551,7 +1551,7 @@ Tk_DestroyWindow(tkwin)
              * display now and relinquish its data structures.
              */
 
-#if !defined(WIN32) && !defined(MAC_TCL) && defined(NOT_YET)
+#if !defined(WIN32) && defined(NOT_YET)
             if (dispPtr->refCount <= 0) {
                 /*
                  * I have disabled this code because on Windows there are
@@ -2086,7 +2086,7 @@ Tk_DefineCursor(tkwin, cursor)
 {
     register TkWindow *winPtr = (TkWindow *) tkwin;
 
-#if defined(MAC_TCL) || defined(MAC_OSX_TK)
+#if defined(MAC_OSX_TK)
     winPtr->atts.cursor = (XCursor) cursor;
 #else
     winPtr->atts.cursor = (Cursor) cursor;
