@@ -1,3 +1,9 @@
+2002-01-29  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
+
+	* win/tkWinInit.c (TkpGetAppName): TIP 27 fixup. The code now does
+	  not write into the CONST path returned by "argv0" and
+	  Tcl_SplitPath anymore.
+
 2002-01-28  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/configure: Regen.
