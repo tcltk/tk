@@ -1,3 +1,12 @@
+2002-06-13  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* tests/cursor.test (cursor-2.[34]): Tests added to ensure that
+	cursor specs really are well-behaved lists.  Also some general
+	clean-up...
+	* win/tkWinCursor.c (TkGetCursorByName): Undone Jeff's back-off
+	and fixed things so that they should work now.  Cursor specs are
+	lists first and foremost.
+
 2002-06-12  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* changes: Clearly label wm transient changes as
