@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.6 1999/11/23 23:52:13 hobbs Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.7 2000/04/25 01:02:30 hobbs Exp $
  */
 
 /*
@@ -891,8 +891,10 @@ DoObjConfig(interp, recordPtr, optionPtr, valuePtr, tkwin, savedOptionPtr)
 	    break;
 	}
 	default: {
-	    sprintf(interp->result, "bad config table: unknown type %d",
+	    char buf[40+TCL_INTEGER_SPACE];
+	    sprintf(buf, "bad config table: unknown type %d",
 		    optionPtr->specPtr->type);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	    return TCL_ERROR;
 	}
     }
