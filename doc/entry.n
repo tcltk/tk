@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: entry.n,v 1.11 2003/02/19 18:52:13 mdejong Exp $
+'\" RCS: @(#) $Id: entry.n,v 1.12 2003/12/08 18:47:23 hobbs Exp $
 '\" 
 .so man.macros
 .TH entry n 8.3 Tk "Tk Built-In Commands"
@@ -156,11 +156,11 @@ or -1 for focus, forced or textvariable validation.
 .IP \fB%i\fR 5
 Index of char string to be inserted/deleted, if any, otherwise -1.
 .IP \fB%P\fR 5
-The value of the entry should edition occur.  If you are configuring the
+The value of the entry if the edit is allowed.  If you are configuring the
 entry widget to have a new textvariable, this will be the value of that
 textvariable.
 .IP \fB%s\fR 5
-The current value of entry before edition.
+The current value of entry prior to editing.
 .IP \fB%S\fR 5
 The text string being inserted/deleted, if any, {} otherwise.
 .IP \fB%v\fR 5
