@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.25 2004/08/29 09:27:35 dkf Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.26 2004/11/11 11:33:56 rmax Exp $
  */
 
 #include "tkPort.h"
@@ -390,6 +390,11 @@ CreateXIMSpotMethods(winPtr)
  *   insist.  Create the input context for the window if
  *   it hasn't already been done (XFilterEvent needs this
  *   context).
+ *
+ *   When the event is a FocusIn event, set the input context
+ *   focus to the receiving window. This is needed for certain
+ *   versions of Solaris, but we are still not sure whether it
+ *   is being done in the right way.
  * 
  * Results: 
  *      1 when we are done with the event.
@@ -408,8 +413,8 @@ InvokeInputMethods(winPtr,eventPtr)
 {
     TkDisplay *dispPtr = winPtr->dispPtr;
     if ((dispPtr->flags & TK_DISPLAY_USE_IM)) {
+       long im_event_mask = 0L;
 	if (!(winPtr->flags & (TK_CHECKED_IC|TK_ALREADY_DEAD))) {
-	    long im_event_mask = 0L;
 	    winPtr->flags |= TK_CHECKED_IC;
 	    if (dispPtr->inputMethod != NULL) {
 #if TK_XIM_SPOT
@@ -425,14 +430,15 @@ InvokeInputMethods(winPtr,eventPtr)
 		    NULL);
 #endif
 	    }
-	    if (winPtr->inputContext != NULL) {
-		XGetICValues(winPtr->inputContext,
-			XNFilterEvents, &im_event_mask, NULL);
-		if (im_event_mask != 0L) {
-		    XSelectInput(winPtr->display, winPtr->window,
-			    winPtr->atts.event_mask | im_event_mask);
-		    XSetICFocus(winPtr->inputContext);
-		}
+	}
+	if (winPtr->inputContext != NULL &&
+	    (eventPtr->xany.type == FocusIn)) {
+	    XGetICValues(winPtr->inputContext,
+			 XNFilterEvents, &im_event_mask, NULL);
+	    if (im_event_mask != 0L) {
+		XSelectInput(winPtr->display, winPtr->window,
+			     winPtr->atts.event_mask | im_event_mask);
+		XSetICFocus(winPtr->inputContext);
 	    }
 	}
 	if (XFilterEvent(eventPtr, None)) {
