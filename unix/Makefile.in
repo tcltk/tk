@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.11.4.2 1999/03/06 23:07:52 stanton Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.11.4.3 1999/03/07 02:13:04 redman Exp $
 
 # Current Tk version;  used in various names.
 
@@ -137,12 +137,11 @@ TK_STUB_LIB_FILE = @TK_STUB_LIB_FILE@
 TK_STUB_LIB_FLAG = @TK_STUB_LIB_FLAG@
 #TK_STUB_LIB_FLAG = -ltkstub
 
-TCL_STUB_FLAGS = @TCL_STUB_FLAGS@
-#TCL_STUB_FLAGS = -DUSE_TCL_STUBS
+
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
-LIBS =  @TCL_BUILD_STUB_LIB_SPEC@ @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@ -lc
+LIBS =  @TCL_BUILD_LIB_SPEC@ @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@ -lc
 
 
 # If your X server is X11R4 or earlier, then you may wish to reverse
@@ -221,21 +220,21 @@ CC_SWITCHES =	${CFLAGS} ${CFLAGS_WARNING} ${TK_SHLIB_CFLAGS} \
 -I${UNIX_DIR} -I${GENERIC_DIR} \
 -I${BMAP_DIR} -I${TCL_GENERIC_DIR} ${X11_INCLUDES} \
 ${AC_FLAGS} ${PROTO_FLAGS} \
-${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
-${TCL_STUB_FLAGS}
+${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS}
+
 
 STUB_CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I${UNIX_DIR} -I${GENERIC_DIR} \
 -I${BMAP_DIR} -I${TCL_GENERIC_DIR} ${X11_INCLUDES} \
 ${AC_FLAGS} ${PROTO_FLAGS} \
-${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} ${TCL_STUB_FLAGS} \
+${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
  -DTK_SHLIB_EXT=\"${SHLIB_SUFFIX}\"
 
 DEPEND_SWITCHES = ${CFLAGS} -I${UNIX_DIR} -I${GENERIC_DIR} \
 -I${BMAP_DIR} \
 -I${TCL_GENERIC_DIR} ${X11_INCLUDES} \
 ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} \
-${KEYSYM_FLAGS} $(TCL_STUB_FLAGS) -DTK_SHLIB_EXT=\"${SHLIB_SUFFIX}\"
+${KEYSYM_FLAGS} -DTK_SHLIB_EXT=\"${SHLIB_SUFFIX}\"
 
 WISH_OBJS = tkAppInit.o
 
@@ -261,7 +260,7 @@ UNIXOBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixCursor.o \
 	tkUnixSelect.o tkUnixSend.o tkUnixWm.o tkUnixXId.o tkStubInit.o
 
 STUB_LIB_OBJS = tkStubs.o tkIntStubs.o tkIntPlatStubs.o tkPlatStubs.o \
-	tkIntXlibStubs.o
+	tkIntXlibStubs.o tkStubLib.o
 
 OBJS =  tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkClipboard.o tkCmds.o \
 	tkColor.o tkConfig.o tkCursor.o tkError.o tkEvent.o \
@@ -814,7 +813,7 @@ tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixXId.c
 
 tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
-	$(CC) -c $(C__SWITCHES) $(GENERIC_DIR)/tkStubInit.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubInit.c
 
 
 # Stub library binaries, these must be compiled for use in a shared library
