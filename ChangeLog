@@ -1,3 +1,11 @@
+2002-05-20  Daniel Steffen  <das@users.sourceforge.net>
+
+	* mac/tkMacInit.c:
+	* library/console.tcl:
+	* library/tk.tcl: fix tk.tcl not sourcing library files
+	that define bindings at startup on mac. (independent of
+	tk library files being in resources or on auto_path)
+
 2002-05-08  Don Porter  <dgp@users.sourceforge.net>
 
 	* library/bgerror.tcl:

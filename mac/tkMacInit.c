@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacInit.c,v 1.8 2002/02/08 02:57:11 dgp Exp $
+ * RCS: @(#) $Id: tkMacInit.c,v 1.9 2002/05/20 10:21:31 das Exp $
  */
 
 #include <Resources.h>
@@ -75,22 +75,14 @@ proc sourcePath {file} {\n\
   error $msg\n\
 }\n\
 sourcePath tk\n\
-sourcePath button\n\
 sourcePath dialog\n\
-sourcePath entry\n\
 sourcePath focus\n\
-sourcePath listbox\n\
-sourcePath menu\n\
 sourcePath optMenu\n\
 sourcePath palette\n\
-sourcePath scale\n\
-sourcePath scrlbar\n\
 sourcePath tearoff\n\
-sourcePath text\n\
 sourcePath bgerror\n\
 sourcePath msgbox\n\
 sourcePath comdlg\n\
-sourcePath spinbox\n\
 rename sourcePath {}\n\
 rename tkInit {}\n\
 } }\n\
