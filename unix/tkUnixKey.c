@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixKey.c,v 1.8 2002/06/15 01:54:09 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixKey.c,v 1.9 2002/06/15 02:08:12 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -95,7 +95,7 @@ TkpGetString(winPtr, eventPtr, dsPtr)
     Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
 
 #ifdef TK_USE_INPUT_METHODS
-    if (winPtr->dispPtr->useInputMethods
+    if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)
 	    && (winPtr->inputContext != NULL)
 	    && (eventPtr->type == KeyPress)) {
 #if TK_XIM_SPOT
