@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.72 2004/09/18 22:51:26 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.73 2004/09/19 00:11:26 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -2103,9 +2103,11 @@ UpdateWrapper(winPtr)
 
 	TkInstallFrameMenu((Tk_Window) winPtr);
 
-	if (oldWrapper && (oldWrapper != wmPtr->wrapper)) {
+	if (oldWrapper && (oldWrapper != wmPtr->wrapper)
+		&& !(wmPtr->exStyle & WS_EX_TOPMOST)) {
 	    /*
 	     * We will adjust wrapper to have the same Z order as oldWrapper
+	     * if it isn't a TOPMOST window.
 	     */
 	    nextHWND = GetNextWindow(oldWrapper, GW_HWNDPREV);
 	}
@@ -2840,7 +2842,6 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
     LONG style, exStyle, styleBit, *stylePtr;
     char *string;
     int i, boolean, length;
-    double alpha;
 
     if (objc < 3) {
         configArgs:
@@ -2854,7 +2855,6 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
     }
     exStyle = wmPtr->exStyleConfig;
     style   = wmPtr->styleConfig;
-    alpha   = wmPtr->alpha;
     if (objc == 3) {
 	Tcl_Obj *objPtr = Tcl_NewObj();
 	Tcl_ListObjAppendElement(NULL, objPtr,
@@ -2959,17 +2959,30 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 	}
     }
     if ((wmPtr->styleConfig != style) || (wmPtr->exStyleConfig != exStyle)) {
-	wmPtr->styleConfig = style;
-	wmPtr->exStyleConfig = exStyle;
 	/*
-	 * We could possibly avoid the UpdateWrapper with a SetWindowPos call
-	 * with SWP_FRAMECHANGED, but we need to handle the current styles
-	 * and the Config styles together.
-	SetWindowPos(wmPtr->wrapper, NULL, 0, 0, 0, 0,
-		SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING
-		|SWP_NOZORDER|SWP_FRAMECHANGED);
+	 * Only the change of TOPMOST or LAYERED bits require UpdateWrapper.
+	 * Using SetWindowPos prevents the toplevel "blink", but requires the
+	 * current style info, as *Config only contains a few configurable
+	 * bits which changed.
 	 */
-	UpdateWrapper(winPtr);
+	if ((wmPtr->exStyleConfig ^ exStyle) & (WS_EX_TOPMOST|WS_EX_LAYERED)) {
+	    wmPtr->styleConfig = style;
+	    wmPtr->exStyleConfig = exStyle;
+	    UpdateWrapper(winPtr);
+	} else {
+	    LONG curStyle, curExStyle;
+	    curExStyle = (LONG) GetWindowLongPtr(wmPtr->wrapper, GWL_EXSTYLE);
+	    curStyle   = (LONG) GetWindowLongPtr(wmPtr->wrapper, GWL_STYLE);
+	    curExStyle = (curExStyle & ~(wmPtr->exStyleConfig)) | exStyle;
+	    curStyle   = (curStyle & ~(wmPtr->styleConfig)) | style;
+	    wmPtr->styleConfig = style;
+	    wmPtr->exStyleConfig = exStyle;
+	    SetWindowLongPtr(wmPtr->wrapper, GWL_EXSTYLE,(LONG_PTR)curExStyle);
+	    SetWindowLongPtr(wmPtr->wrapper, GWL_STYLE, (LONG_PTR) curStyle);
+	    SetWindowPos(wmPtr->wrapper, NULL, 0, 0, 0, 0,
+		    SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING
+		    |SWP_NOZORDER|SWP_FRAMECHANGED);
+	}
     }
     return TCL_OK;
 }
