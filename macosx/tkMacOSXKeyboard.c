@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.8 2003/12/15 16:15:44 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.9 2003/12/15 16:37:39 cc_benny Exp $
  */
 
 #include "tkInt.h"
@@ -22,10 +22,15 @@
 
 /*
  * A couple of simple definitions to make code a bit more self-explaining.
+ *
+ * For the assignments of Mod1==alt==command and Mod2==meta==option, see also
+ * tkMacOSXMouseEvent.c.
  */
 
 #define LATIN1_MAX       255
 #define MAC_KEYCODE_MAX  0x7F
+#define ALT_MASK         Mod1Mask
+#define OPTION_MASK      Mod2Mask
 
 
 /*
@@ -220,12 +225,15 @@ XKeycodeToKeysym(
     }
 
     /* 
-     * Add in the Mac modifier flag for shift.
+     * Add in the Mac modifier flags for shift and option.
      */
 
     newKeycode = virtualKey;
     if (index & 1) {
         newKeycode |= shiftKey;
+    }
+    if (index & 2) {
+        newKeycode |= optionKey;
     }
 
     newChar = 0;
@@ -295,6 +303,8 @@ XGetModifierMapping(
     Display* display)
 { 
     XModifierKeymap * modmap;
+
+    (void) display; /*unused*/
 
     /*
      * MacOSX doesn't use the key codes for the modifiers for anything, and
@@ -393,6 +403,8 @@ XKeysymToKeycode(
     KeyCode keycode = 0;
     char virtualKeyCode = 0;
     
+    (void) display; /*unused*/
+
     if ((keysym >= XK_space) && (XK_asciitilde)) {
         if (keysym == 'a') {
             virtualKeyCode = 0x00;
@@ -461,10 +473,7 @@ TkpSetKeycodeAndState(
                     eventPtr->xkey.state |= ShiftMask;
                 }
                 if (state & 2) {
-                    TkDisplay *dispPtr;
-
-                    dispPtr = ((TkWindow *) tkwin)->dispPtr; 
-                    eventPtr->xkey.state |= dispPtr->modeModMask;
+                    eventPtr->xkey.state |= OPTION_MASK;
                 }
                 break;
             }
@@ -549,12 +558,12 @@ TkpGetKeySym(
      */
 
     index = 0;
-    if (eventPtr->xkey.state & dispPtr->modeModMask) {
+    if (eventPtr->xkey.state & OPTION_MASK) {
         index |= 2;
     }
     if ((eventPtr->xkey.state & ShiftMask)
-            || ((dispPtr->lockUsage != LU_IGNORE)
-                    && (eventPtr->xkey.state & LockMask))) {
+            || (/* (dispPtr->lockUsage != LU_IGNORE)
+                   && */ (eventPtr->xkey.state & LockMask))) {
         index |= 1;
     }
 
@@ -571,10 +580,16 @@ TkpGetKeySym(
      */
 
     if ((index & 1) && !(eventPtr->xkey.state & ShiftMask)
-            && (dispPtr->lockUsage == LU_CAPS)) {
-        if (!(((sym >= XK_A) && (sym <= XK_Z))
-                    || ((sym >= XK_Agrave) && (sym <= XK_Odiaeresis))
-                    || ((sym >= XK_Ooblique) && (sym <= XK_Thorn)))) {
+            /*&& (dispPtr->lockUsage == LU_CAPS)*/ ) {
+
+        /*
+         * FIXME: Keysyms are only identical to Unicode for ASCII and
+         * Latin-1, so we can't use Tcl_UniCharIsUpper() for keysyms outside
+         * that range.  This may be a serious problem here.
+         */
+
+        if ((sym == NoSymbol) || (sym > LATIN1_MAX)
+                || !Tcl_UniCharIsUpper(sym)) {
             index &= ~1;
             sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
                     index);
@@ -616,109 +631,30 @@ TkpInitKeymapInfo(
     TkDisplay *dispPtr)         /* Display for which to recompute keymap
                                  * information. */
 {
-    XModifierKeymap *modMapPtr;
-    KeyCode *codePtr;
-    KeySym keysym;
-    int count, i, j, max, arraySize;
-#define KEYCODE_ARRAY_SIZE 20
-
     dispPtr->bindInfoStale = 0;
-    modMapPtr = XGetModifierMapping(dispPtr->display);
 
     /*
-     * Check the keycodes associated with the Lock modifier.  If any of them
-     * is associated with the XK_Shift_Lock modifier, then Lock has to be
-     * interpreted as Shift Lock, not Caps Lock.
+     * Behaviours that are variable on X11 are defined constant on MacOSX.
+     * lockUsage is only used above in TkpGetKeySym(), nowhere else
+     * currently.  There is no offical "Mode_switch" key.
      */
 
-    dispPtr->lockUsage = LU_IGNORE;
-    codePtr = modMapPtr->modifiermap + modMapPtr->max_keypermod*LockMapIndex;
-    for (count = modMapPtr->max_keypermod; count > 0; count--, codePtr++) {
-        if (*codePtr == 0) {
-            continue;
-        }
-        keysym = XKeycodeToKeysym(dispPtr->display, *codePtr, 0);
-        if (keysym == XK_Shift_Lock) {
-            dispPtr->lockUsage = LU_SHIFT;
-            break;
-        }
-        if (keysym == XK_Caps_Lock) {
-            dispPtr->lockUsage = LU_CAPS;
-            break;
-        }
-    }
-
-    /*
-     * Look through the keycodes associated with modifiers to see if the the
-     * "mode switch", "meta", or "alt" keysyms are associated with any
-     * modifiers.  If so, remember their modifier mask bits.
-     */
-
+    dispPtr->lockUsage = LU_CAPS;
     dispPtr->modeModMask = 0;
-    dispPtr->metaModMask = 0;
-    dispPtr->altModMask = 0;
-    codePtr = modMapPtr->modifiermap;
-    max = 8*modMapPtr->max_keypermod;
-    for (i = 0; i < max; i++, codePtr++) {
-        if (*codePtr == 0) {
-            continue;
-        }
-        keysym = XKeycodeToKeysym(dispPtr->display, *codePtr, 0);
-        if (keysym == XK_Mode_switch) {
-            dispPtr->modeModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
-        }
-        if ((keysym == XK_Meta_L) || (keysym == XK_Meta_R)) {
-            dispPtr->metaModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
-        }
-        if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R)) {
-            dispPtr->altModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
-        }
-    }
+    dispPtr->altModMask = ALT_MASK;
+    dispPtr->metaModMask = OPTION_MASK;
 
     /*
-     * Create an array of the keycodes for all modifier keys.
+     * MacOSX doesn't use the keycodes for the modifiers for anything, and we
+     * don't generate them either (the keycodes actually given in the
+     * simulated modifier events are bogus).  So there is no modifier map.
+     * If we ever want to simulate real modifier keycodes, the list will be
+     * constant on Carbon.
      */
 
     if (dispPtr->modKeyCodes != NULL) {
         ckfree((char *) dispPtr->modKeyCodes);
     }
     dispPtr->numModKeyCodes = 0;
-    arraySize = KEYCODE_ARRAY_SIZE;
-    dispPtr->modKeyCodes = (KeyCode *) ckalloc((unsigned)
-            (KEYCODE_ARRAY_SIZE * sizeof(KeyCode)));
-    for (i = 0, codePtr = modMapPtr->modifiermap; i < max; i++, codePtr++) {
-        if (*codePtr == 0) {
-            continue;
-        }
-
-        /*
-         * Make sure that the keycode isn't already in the array.
-         */
-
-        for (j = 0; j < dispPtr->numModKeyCodes; j++) {
-            if (dispPtr->modKeyCodes[j] == *codePtr) {
-                goto nextModCode;
-            }
-        }
-        if (dispPtr->numModKeyCodes >= arraySize) {
-            KeyCode *new;
-
-            /*
-             * Ran out of space in the array; grow it.
-             */
-
-            arraySize *= 2;
-            new = (KeyCode *) ckalloc((unsigned)
-                    (arraySize * sizeof(KeyCode)));
-            memcpy((VOID *) new, (VOID *) dispPtr->modKeyCodes,
-                    (dispPtr->numModKeyCodes * sizeof(KeyCode)));
-            ckfree((char *) dispPtr->modKeyCodes);
-            dispPtr->modKeyCodes = new;
-        }
-        dispPtr->modKeyCodes[dispPtr->numModKeyCodes] = *codePtr;
-        dispPtr->numModKeyCodes++;
-    nextModCode:
-        continue;
-    }
-    XFreeModifiermap(modMapPtr);
+    dispPtr->modKeyCodes = NULL;
 }
