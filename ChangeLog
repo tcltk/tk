@@ -1,3 +1,16 @@
+2002-03-20  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkButton.c (ButtonTextVarProc,ButtonVarProc): 
+	* generic/tkCmds.c (WaitVariableProc):
+	* generic/tkEntry.c (EntryTextVarProc):
+	* generic/tkListbox.c (ListboxListVarProc):
+	* generic/tkMenu.c (MenuVarProc):
+	* generic/tkMenubutton.c (MenuButtonTextVarProc): 
+	* generic/tkMessage.c (MessageTextVarProc): 
+	* generic/tkScale.c (ScaleVarProc): Updates to handle change in
+	type of part2 argument of Tcl_VarTraceProc typedef. [TIP 27]
+	[Patch 532644].
+
 2002-03-19  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkOldConfig.c (Tk_ConfigureValue): prevent leaving
