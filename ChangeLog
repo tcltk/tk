@@ -1,3 +1,10 @@
+2002-05-20  Daniel Steffen  <das@users.sourceforge.net>
+
+	* mac/tkMacInit.c:
+	* mac/tkMacResource.r: include msgcat package in resources
+	as bgerror depends on it. Restores ability of mac static
+	build to run standalone (except for encoding file issues).
+
 2002-04-26  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/configure:

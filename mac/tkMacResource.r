@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacResource.r,v 1.6.2.3 2001/10/19 19:40:18 das Exp $
+ * RCS: @(#) $Id: tkMacResource.r,v 1.6.2.4 2002/05/20 12:29:40 das Exp $
  */
 
 /*
@@ -94,6 +94,8 @@ read 'TEXT' (TK_LIBRARY_RESOURCES+16, "msgbox", purgeable)
 	"::library:msgbox.tcl";
 read 'TEXT' (TK_LIBRARY_RESOURCES+17, "comdlg", purgeable) 
 	"::library:comdlg.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+18, "msgcat", purgeable) 
+	":::tcl:library:msgcat:msgcat.tcl";
 
 
 /*

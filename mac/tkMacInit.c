@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacInit.c,v 1.3.12.2 2001/10/19 19:40:18 das Exp $
+ * RCS: @(#) $Id: tkMacInit.c,v 1.3.12.3 2002/05/20 12:29:37 das Exp $
  */
 
 #include <Resources.h>
@@ -66,7 +66,7 @@ TkpInit(
     static char initCmd[] = "\
 proc sourcePath {file} {\n\
   global tk_library\n\
-  if {[catch {uplevel #0 [list source $tk_library:$file.tcl]}] == 0} {\n\
+  if {[catch {uplevel #0 [list source [file join $tk_library $file.tcl]]}] == 0} {\n\
     return\n\
   }\n\
   if {[catch {uplevel #0 [list source -rsrc $file]}] == 0} {\n\
@@ -91,6 +91,7 @@ sourcePath scale\n\
 sourcePath scrlbar\n\
 sourcePath tearoff\n\
 sourcePath text\n\
+if {[catch {package require msgcat}]} {sourcePath msgcat}\n\
 sourcePath bgerror\n\
 sourcePath msgbox\n\
 sourcePath comdlg\n\
