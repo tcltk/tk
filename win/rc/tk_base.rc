@@ -1,4 +1,4 @@
-// RCS: @(#) $Id: tk_base.rc,v 1.1.2.2 2000/07/25 01:55:28 davidg Exp $
+// RCS: @(#) $Id: tk_base.rc,v 1.1.2.3 2000/07/25 02:06:10 davidg Exp $
 //
 //  Base resources needed by Tk whether it's a DLL or a static library.
 //
@@ -9,9 +9,6 @@
 
 tk                      ICON    DISCARDABLE     "tk.ico"
 
-
-#include <windows.h>
-#define RESOURCE_INCLUDED
 #include <dlgs.h>
 
 FILEOPENORD DIALOG DISCARDABLE  36, 24, 218, 138
