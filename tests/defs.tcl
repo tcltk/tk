@@ -11,7 +11,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: defs.tcl,v 1.7 1999/12/14 06:53:12 hobbs Exp $
+# RCS: @(#) $Id: defs.tcl,v 1.8 2001/10/19 17:43:35 hobbs Exp $
 
 # Initialize wish shell
 
@@ -96,7 +96,6 @@ namespace eval tcltest {
 
     variable ::tcltest::mainThread 1
     if {[info commands testthread] != {}} {
-	puts "Tk with threads enabled is known to have problems with X"
 	set ::tcltest::mainThread [testthread names]
     }
 }
