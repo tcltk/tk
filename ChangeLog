@@ -1,41 +1,4 @@
-2001-07-05  Mo DeJong  <mdejong@redhat.com>
-
-	* win/Makefile.in: Subst DEPARG directly instead
-	of relying on a variable. This will make Cygwin
-	build faster since an extra exec will be avoided.
-	* win/configure: Regen.
-	* win/configure.in: Subst DEPARG.
-	* win/tcl.m4: Update from Tcl.
-
-2001-07-04  Jeff Hobbs  <jeffh@ActiveState.com>
-
-	* README:
-	* mac/README:
-	* unix/README:
-	* win/README: updated READMEs with purls
-
-2001-07-03  Jeff Hobbs  <jeffh@ActiveState.com>
-
-	* tests/canvas.test:
-	* generic/tkCanvPoly.c (PolygonToArea): Added patch that respects
-	the polygon difference of including points in the polygon even
-	when fill is empty.  [Bug #226357]
-
-2001-07-03  Mo DeJong  <mdejong@redhat.com>
-
-	* win/Makefile.in: Remove PATHTYPE variable.
-	* win/configure: Regen.
-	* win/configure.in: Don't subst PATHTYPE.
-	* win/tcl.m4: Update from Tcl.
-
-2001-07-03  Mo DeJong  <mdejong@redhat.com>
-
-	* win/Makefile.in: Don't use VPSEP, instead just use :
-	in the VPATH.
-	* win/configure: Regen.
-	* win/configure.in: Don't subst VPSEP.
-
-2001-07-03  Don Porter  <dgp@users.sourceforge.net>
+2001-07-16  Don Porter  <dgp@users.sourceforge.net>
 
 	BRANCH dgp-privates-into-namespace:
 	* ChangeLog:
@@ -61,6 +24,7 @@
 	* generic/tkEntry.c:
 	* generic/tkFrame.c:
 	* generic/tkImage.c:
+	* generic/tkImgBmap.c:
 	* generic/tkImgGIF.c:
 	* generic/tkImgPhoto.c:
 	* generic/tkInt.h:
@@ -139,6 +103,43 @@
 	* win/tkWinMenu.c:
 	* win/tkWinWm.c:
 	* win/tkWinX.c: Merged in updates from HEAD branch.
+
+2001-07-05  Mo DeJong  <mdejong@redhat.com>
+
+	* win/Makefile.in: Subst DEPARG directly instead
+	of relying on a variable. This will make Cygwin
+	build faster since an extra exec will be avoided.
+	* win/configure: Regen.
+	* win/configure.in: Subst DEPARG.
+	* win/tcl.m4: Update from Tcl.
+
+2001-07-04  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* README:
+	* mac/README:
+	* unix/README:
+	* win/README: updated READMEs with purls
+
+2001-07-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/canvas.test:
+	* generic/tkCanvPoly.c (PolygonToArea): Added patch that respects
+	the polygon difference of including points in the polygon even
+	when fill is empty.  [Bug #226357]
+
+2001-07-03  Mo DeJong  <mdejong@redhat.com>
+
+	* win/Makefile.in: Remove PATHTYPE variable.
+	* win/configure: Regen.
+	* win/configure.in: Don't subst PATHTYPE.
+	* win/tcl.m4: Update from Tcl.
+
+2001-07-03  Mo DeJong  <mdejong@redhat.com>
+
+	* win/Makefile.in: Don't use VPSEP, instead just use :
+	in the VPATH.
+	* win/configure: Regen.
+	* win/configure.in: Don't subst VPSEP.
 
 2001-07-03  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
