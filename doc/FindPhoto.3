@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: FindPhoto.3,v 1.6 2002/08/05 04:30:38 dgp Exp $
+'\" RCS: @(#) $Id: FindPhoto.3,v 1.7 2003/03/06 15:35:51 dkf Exp $
 '\"
 .so man.macros
 .TH Tk_FindPhoto 3 8.0 Tk "Tk Library Procedures"
@@ -22,16 +22,17 @@ Tk_FindPhoto, Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock, Tk_PhotoGetImage, Tk_Pho
 \fB#include <tkPhoto.h>\fR
 .sp
 Tk_PhotoHandle
-.VS 8.0 br
 \fBTk_FindPhoto\fR(\fIinterp, imageName\fR)
-.VE
 .sp
-void
-\fBTk_PhotoPutBlock\fR(\fIhandle, blockPtr, x, y, width, height, compRule\fR)
+.VS 8.5
+int
+\fBTk_PhotoPutBlock\fR(\fIinterp, handle, blockPtr, x, y, width, height,\
+compRule\fR)
 .sp
-void
-\fBTk_PhotoPutZoomedBlock\fR(\fIhandle, blockPtr, x, y, width, height,\
+int
+\fBTk_PhotoPutZoomedBlock\fR(\fIinterp, handle, blockPtr, x, y, width, height,\
 zoomX, zoomY, subsampleX, subsampleY, compRule\fR)
+.VE 8.5
 .sp
 int
 \fBTk_PhotoGetImage\fR(\fIhandle, blockPtr\fR)
@@ -39,20 +40,23 @@ int
 void
 \fBTk_PhotoBlank\fR(\fIhandle\fR)
 .sp
-void
-\fBTk_PhotoExpand\fR(\fIhandle, width, height\fR)
+.VS 8.5
+int
+\fBTk_PhotoExpand\fR(\fIinterp, handle, width, height\fR)
+.VE 8.5
 .sp
 void
 \fBTk_PhotoGetSize\fR(\fIhandle, widthPtr, heightPtr\fR)
 .sp
-void
-\fBTk_PhotoSetSize\fR(\fIhandle, width, height\fR)
+.VS 8.5
+int
+\fBTk_PhotoSetSize\fR(\fIinterp. handle, width, height\fR)
+.VE 8.5
 .SH ARGUMENTS
 .AS Tk_PhotoImageBlock window_path
 .AP Tcl_Interp *interp in
-.VS
-Interpreter in which image was created.
-.VE
+Interpreter in which image was created and in which error reporting is
+to be done.
 .AP "CONST char" *imageName in
 Name of the photo image.
 .AP Tk_PhotoHandle handle in
@@ -69,7 +73,6 @@ to be placed within the image.
 Specifies the width of the image area to be affected (for
 \fBTk_PhotoPutBlock\fR) or the desired image width (for
 \fBTk_PhotoExpand\fR and \fBTk_PhotoSetSize\fR).
-.VS 8.4
 .AP int compRule in
 Specifies the compositing rule used when combining transparent pixels
 in a block of data with a photo image.  Must be one of
@@ -78,7 +81,6 @@ of the existing photo image, with the previous contents showing
 through in the transparent bits) or TK_PHOTO_COMPOSITE_SET (which
 discards the existing photo image contents in the rectangle covered by
 the data block.)
-.VE 8.4
 .AP int height in
 Specifies the height of the image area to be affected (for
 \fBTk_PhotoPutBlock\fR) or the desired image height (for
@@ -145,7 +147,6 @@ to the addresses of the bytes containing the red, green, blue and alpha
 have other values, e.g., for images that are stored as separate red,
 green and blue planes.
 .PP
-.VS 8.4
 The \fIcompRule\fR parameter to \fBTk_PhotoPutBlock\fR specifies a
 compositing rule that says what to do with transparent pixels.  The
 value TK_PHOTO_COMPOSITE_OVERLAY says that the previous contents of
@@ -154,7 +155,6 @@ TK_PHOTO_COMPOSITE_SET says that the previous contents of the photo
 image should be completely ignored, and the values from the block be
 copied directly across.  The behavior in Tk8.3 and earlier was
 equivalent to having TK_PHOTO_COMPOSITE_OVERLAY as a compositing rule.
-.VE 8.4
 .PP
 The value given for the \fIwidth\fR and \fIheight\fR parameters to
 \fBTk_PhotoPutBlock\fR do not have to correspond to the values specified
@@ -163,6 +163,13 @@ sub-block from the image data supplied.  If they are larger, the data
 given are replicated (in a tiled fashion) to fill the specified area.
 These rules operate independently in the horizontal and vertical
 directions.
+.PP
+.VS 8.5
+\fBTk_PhotoPutBlock\fR normally returns TCL_OK, though if it cannot
+allocate sufficient memory to hold the resulting image, TCL_ERROR is
+returned instead and, if the \fIinterp\fR argument is non-NULL, an
+error message is placed in the interpreter's result.
+.VE 8.5
 .PP
 \fBTk_PhotoPutZoomedBlock\fR works like \fBTk_PhotoPutBlock\fR except that
 the image can be reduced or enlarged for display.  The
@@ -203,6 +210,13 @@ are being supplied in many small blocks, it is more efficient to use
 allowing the image to expand in many small increments as image blocks
 are supplied.
 .PP
+.VS 8.5
+\fBTk_PhotoExpand\fR normally returns TCL_OK, though if it cannot
+allocate sufficient memory to hold the resulting image, TCL_ERROR is
+returned instead and, if the \fIinterp\fR argument is non-NULL, an
+error message is placed in the interpreter's result.
+.VE 8.5
+.PP
 \fBTk_PhotoSetSize\fR specifies the size of the image, as if the user
 had specified the given \fIwidth\fR and \fIheight\fR values to the
 \fB\-width\fR and \fB\-height\fR configuration options.  A value of
@@ -211,11 +225,17 @@ or height, but allows the width or height to be changed by subsequent
 calls to \fBTk_PhotoPutBlock\fR, \fBTk_PhotoPutZoomedBlock\fR or
 \fBTk_PhotoExpand\fR.
 .PP
+.VS 8.5
+\fBTk_PhotoSetSize\fR normally returns TCL_OK, though if it cannot
+allocate sufficient memory to hold the resulting image, TCL_ERROR is
+returned instead and, if the \fIinterp\fR argument is non-NULL, an
+error message is placed in the interpreter's result.
+.VE 8.5
+.PP
 \fBTk_PhotoGetSize\fR returns the dimensions of the image in
 *\fIwidthPtr\fR and *\fIheightPtr\fR.
 
 .SH PORTABILITY
-.VS 8.4
 .PP
 In Tk 8.3 and earlier, \fBTk_PhotoPutBlock\fR and
 \fBTk_PhotoPutZoomedBlock\fR had different signatures. If you want to
@@ -223,7 +243,16 @@ compile code that uses the old interface against 8.4 without updating
 your code, compile it with the flag
 -DUSE_COMPOSITELESS_PHOTO_PUT_BLOCK.  Code linked using Stubs against
 older versions of Tk will continue to work.
-.VE 8.4
+.PP
+.VS 8.5
+In Tk 8.4, \fBTk_PhotoPutBlock\fR, \fBTk_PhotoPutZoomedBlock\fR,
+\fBTk_PhotoExpand\fR and \fBTk_PhotoSetSize\fR did not take an
+\fIinterp\fR argument or return any result code.  If insufficient
+memory was available for an image, Tk would panic.  This behaviour is
+still supported if you compile your extension with the additional flag
+-DUSE_PANIC_ON_PHOTO_ALLOC_FAILURE.  Code linked using Stubs against
+older versions of Tk will continue to work.
+.VE 8.5
 
 .SH CREDITS
 .PP
