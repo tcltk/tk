@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.11 2000/06/15 15:54:50 ericm Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.12 2000/06/15 16:01:04 ericm Exp $
  *
  */
 
@@ -669,7 +669,6 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	     * path.
 	     */
 	    char *dir;
-	    int dirlen;
 	    char *p;
 	    char *file;
 	    WCHAR *files;
