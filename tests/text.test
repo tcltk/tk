@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.24 2003/11/07 15:36:27 vincentdarley Exp $
+# RCS: @(#) $Id: text.test,v 1.25 2003/11/08 17:22:46 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -706,6 +706,30 @@ test text-0.2.50 {counting with tag priority eliding} {
     lappend res [.t count -displaychars 1.2 1.5]
     lappend res [.t count -displaychars 1.3 1.5]
 } {0 0 0 0 3 2 1 1}
+test text-0.2.51 {counting with tag priority eliding} {
+    set res {}
+    .t delete 1.0 end
+    .t tag configure WELCOME -elide 1
+    .t tag configure SYSTEM -elide 0
+    .t tag configure TRAFFIC -elide 1
+    .t insert end "\n" {SYSTEM TRAFFIC}
+    .t insert end "\n" WELCOME
+    lappend res [.t count -displaychars 1.0 end]
+    lappend res [.t count -displaychars 1.0 end-1c]
+    lappend res [.t count -displaychars 1.0 1.2]
+    lappend res [.t count -displaychars 2.0 end]
+    lappend res [.t count -displaychars 2.0 end-1c]
+    lappend res [.t index "1.0 +1 indices"]
+    lappend res [.t index "1.0 +1 display indices"]
+    lappend res [.t index "1.0 +1 display chars"]
+    lappend res [.t index end] 
+    lappend res [.t index "end -1 indices"]
+    lappend res [.t index "end -1 display indices"]
+    lappend res [.t index "end -1 display chars"]
+    lappend res [.t index "end -2 indices"]
+    lappend res [.t index "end -2 display indices"]
+    lappend res [.t index "end -2 display chars"]
+} {1 0 0 1 0 2.0 4.0 4.0 4.0 3.0 3.0 3.0 2.0 1.0 1.0}
 
 .t delete 1.0 end
 .t insert end $current

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.18 2003/11/07 15:36:26 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.19 2003/11/08 17:22:46 vincentdarley Exp $
  */
 
 #ifndef _TKTEXT
@@ -827,13 +827,16 @@ typedef int TkTextCountType;
 
 #define LOTSA_TAGS 1000
 typedef struct TkTextElideInfo {
-    int numTags;
-    int elide;
-    int elidePriority;
-    int deftagCnts[LOTSA_TAGS];
+    int numTags;                /* Total tags in widget */
+    int elide;                  /* Is the state currently elided */
+    int elidePriority;          /* Tag priority controlling elide state */ 
+    TkTextSegment *segPtr;      /* Segment to look at next */
+    int deftagCnts[LOTSA_TAGS]; 
     TkTextTag *deftagPtrs[LOTSA_TAGS];
-    int *tagCnts;
-    TkTextTag **tagPtrs;
+    int *tagCnts;               /* 0 or 1 depending if the tag with
+                                 * that priority is on or off */
+    TkTextTag **tagPtrs;        /* Only filled with a tagPtr if the
+                                 * corresponding tagCnt is 1 */
 } TkTextElideInfo;
 
 /*

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.15 2003/11/07 12:06:47 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.16 2003/11/08 17:22:46 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -181,6 +181,20 @@ test textDisp-0.4 {double tag elide transition} {
     .txt tag configure SYSTEM -elide 0
     .txt tag configure TRAFFIC -elide 1
     .txt insert end "\n" {SYSTEM TRAFFIC}
+    # Crash was here.
+    update
+    destroy .txt
+} {}
+
+test textDisp-0.5 {double tag elide transition} {
+    catch {destroy .txt}
+    pack [text .txt]
+    .txt tag configure WELCOME -elide 1
+    .txt tag configure SYSTEM -elide 0
+    .txt tag configure TRAFFIC -elide 1
+
+    .txt insert end "\n" {SYSTEM TRAFFIC}
+    .txt insert end "\n" WELCOME
     # Crash was here.
     update
     destroy .txt

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.24 2003/11/07 15:36:26 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.25 2003/11/08 17:22:46 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -957,9 +957,7 @@ LayoutDLine(textPtr, indexPtr)
     elide = TkTextIsElided(textPtr, indexPtr, &info);
     if (elide && indexPtr->byteIndex==0) {
 	maxBytes = 0;
-	for (segPtr = indexPtr->linePtr->segPtr;
-	     segPtr != NULL;
-	     segPtr = segPtr->nextPtr) {
+	for (segPtr = info.segPtr; segPtr != NULL; segPtr = segPtr->nextPtr) {
 	    if (segPtr->size > 0) {
 		if (elide == 0) {
 		    /*
@@ -977,19 +975,45 @@ LayoutDLine(textPtr, indexPtr)
 	    } else if ((segPtr->typePtr == &tkTextToggleOffType)
 		       || (segPtr->typePtr == &tkTextToggleOnType)) {
 		TkTextTag *tagPtr = segPtr->body.toggle.tagPtr;
-		if (tagPtr->elideString != NULL 
-		  && (tagPtr->priority >= info.elidePriority)) {
-		    elide = ((segPtr->typePtr == &tkTextToggleOffType)
-			     ^ tagPtr->elide);
-		    if (!elide && tagPtr->priority == info.elidePriority) {
-			/* Find previous elide tag, if any */
-			while (--info.elidePriority > 0) {
-			    if (info.tagCnts[info.elidePriority] & 1) {
-				break;
+		/*
+		 * The elide state only changes if this tag is
+		 * either the current highest priority tag
+		 * (and is therefore being toggled off), or it's
+		 * a new tag with higher priority.
+		 */
+		if (tagPtr->elideString != NULL) {
+		    info.tagCnts[tagPtr->priority]++;
+		    if (info.tagCnts[tagPtr->priority] & 1) {
+			info.tagPtrs[tagPtr->priority] = tagPtr;
+		    }
+		    if (tagPtr->priority >= info.elidePriority) {
+			if (segPtr->typePtr == &tkTextToggleOffType) {
+			    /* 
+			     * If it is being toggled off, and it has
+			     * an elide string, it must actually be the
+			     * current highest priority tag, so this
+			     * check is redundant:
+			     */
+			    if (tagPtr->priority != info.elidePriority) {
+				panic("Bad tag priority being toggled off");
 			    }
+			    
+			    /* 
+			     * Find previous elide tag, if any (if not
+			     * then elide will be zero, of course).
+			     */
+			    elide = 0;
+			    while (--info.elidePriority > 0) {
+				if (info.tagCnts[info.elidePriority] & 1) {
+				    elide = info.tagPtrs[info.elidePriority]
+								     ->elide;
+				    break;
+				}
+			    }
+			} else {
+			    elide = tagPtr->elide;
+			    info.elidePriority = tagPtr->priority;
 			}
-		    } else {
-			info.elidePriority = tagPtr->priority;
 		    }
 		}
 	    }
@@ -5223,7 +5247,8 @@ GetXView(interp, textPtr, report)
     dInfoPtr->xScrollLast = last;
     if (textPtr->xScrollCmd != NULL) {
 	listObj = Tcl_NewStringObj(textPtr->xScrollCmd, -1);
-	code = Tcl_ListObjAppendElement(interp, listObj, Tcl_NewDoubleObj(first));
+	code = Tcl_ListObjAppendElement(interp, listObj, 
+					Tcl_NewDoubleObj(first));
 	if (code == TCL_OK) {
 	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewDoubleObj(last));
 	    code = Tcl_EvalObjEx(interp, listObj, 
