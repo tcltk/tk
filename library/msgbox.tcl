@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.27 2004/03/17 18:15:44 das Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.28 2004/05/13 23:19:57 dkf Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -145,6 +145,7 @@ proc ::tk::MessageBox {args} {
     #
     set specs {
 	{-default "" "" ""}
+	{-detail "" "" ""}
         {-icon "" "" "info"}
         {-message "" "" ""}
         {-parent "" "" .}
@@ -269,19 +270,26 @@ proc ::tk::MessageBox {args} {
 	$w.top configure -relief raised -bd 1
     }
 
-    # 4. Fill the top part with bitmap and message (use the option
-    # database for -wraplength and -font so that they can be
+    # 4. Fill the top part with bitmap, message and detail (use the
+    # option database for -wraplength and -font so that they can be
     # overridden by the caller).
 
     option add *Dialog.msg.wrapLength 3i widgetDefault
+    option add *Dialog.dtl.wrapLength 3i widgetDefault
     if {[string equal [tk windowingsystem] "aqua"]} {
 	option add *Dialog.msg.font system widgetDefault
+	option add *Dialog.dtl.font system widgetDefault
     } else {
-	option add *Dialog.msg.font {Times 18} widgetDefault
+	option add *Dialog.msg.font {Times 14} widgetDefault
+	option add *Dialog.dtl.font {Times 10} widgetDefault
     }
 
     label $w.msg -anchor nw -justify left -text $data(-message) \
 	    -background $bg
+    if {$data(-detail) ne ""} {
+	label $w.dtl -anchor nw -justify left -text $data(-detail) \
+		-background $bg
+    }
     if {[string compare $data(-icon) ""]} {
 	if {[string equal [tk windowingsystem] "aqua"]
 		|| ([winfo depth $w] < 4) || $tk_strictMotif} {
@@ -324,7 +332,12 @@ proc ::tk::MessageBox {args} {
     }
     grid $w.bitmap $w.msg -in $w.top -sticky news -padx 2m -pady 2m
     grid columnconfigure $w.top 1 -weight 1
-    grid rowconfigure $w.top 0 -weight 1
+    if {$data(-detail) ne ""} {
+	grid ^ $w.dtl -in $w.top -sticky news -padx 2m -pady {0 2m}
+	grid rowconfigure $w.top 1 -weight 1
+    } else {
+	grid rowconfigure $w.top 0 -weight 1
+    }
 
     # 5. Create a row of buttons at the bottom of the dialog.
 
