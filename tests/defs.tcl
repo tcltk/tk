@@ -11,7 +11,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: defs.tcl,v 1.9 2002/06/13 15:31:39 dgp Exp $
+# RCS: @(#) $Id: defs.tcl,v 1.10 2002/06/18 08:24:15 dkf Exp $
 
 # Initialize wish shell
 
@@ -801,6 +801,7 @@ proc ::tcltest::makeFile {contents name {directory {}}} {
     if {[lsearch -exact $::tcltest::filesMade $fullName] == -1} {
 	lappend ::tcltest::filesMade $fullName
     }
+    return $fullName
 }
 
 proc ::tcltest::removeFile {name} {
