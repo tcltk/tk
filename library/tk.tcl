@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.20.2.2 2001/10/19 17:33:00 hobbs Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.20.2.3 2002/07/25 20:36:05 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -128,8 +128,12 @@ proc ::tk::SetFocusGrab {grab {focus {}}} {
 #
 proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
     set index "$grab,$focus"
-    foreach {oldFocus oldGrab oldStatus} $::tk::FocusGrab($index) { break }
-    unset ::tk::FocusGrab($index)
+    if {[info exists ::tk::FocusGrab($index)]} {
+	foreach {oldFocus oldGrab oldStatus} $::tk::FocusGrab($index) { break }
+	unset ::tk::FocusGrab($index)
+    } else {
+	set oldGrab ""
+    }
 
     catch {focus $oldFocus}
     grab release $grab
