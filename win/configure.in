@@ -2,7 +2,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.3 1999/06/16 22:36:51 surles Exp $
+# RCS: @(#) $Id: configure.in,v 1.4 1999/06/16 23:28:46 surles Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -101,6 +101,7 @@ AC_SUBST(TK_DLL_FILE)
 AC_SUBST(TK_STUB_LIB_FILE)
 AC_SUBST(TK_SRC_DIR)
 AC_SUBST(TK_BIN_DIR)
+
 AC_SUBST(TCL_VERSION)
 AC_SUBST(TCL_MAJOR_VERSION)
 AC_SUBST(TCL_MINOR_VERSION)
