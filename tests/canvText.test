@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvText.test,v 1.4 1999/04/16 01:51:35 stanton Exp $
+# RCS: @(#) $Id: canvText.test,v 1.5 1999/04/20 22:28:52 rjohnson Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -238,6 +238,19 @@ test canvText-7.7 {DisplayText procedure: selected text different color} {
 } {}
 test canvText-7.8 {DisplayText procedure: not selected} {
     .c select clear
+    update
+} {}
+test canvText-7.9 {DisplayText procedure: select end} {
+    catch {destroy .t}
+    toplevel .t
+    canvas .t.c
+    pack .t.c
+    set id [.t.c create text 0 0 -text Dummy -anchor nw]
+    update
+    .t.c select from $id 0
+    .t.c select to $id end
+    update
+    #catch {destroy .t}
     update
 } {}
 
