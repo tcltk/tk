@@ -1,3 +1,9 @@
+1999-05-18    <stanton@scriptics.com>
+
+	* tests/winClipboard.test: 
+	* win/tkWinClipboard.c: Fixed clipboard code so it handles Unicode
+	data properly on Windows NT and 95. [Bug: 1791]
+
 1999-05-07    <stanton@scriptics.com>
 
 	* library/menu.tcl: Fixed bug where tk_popup fails when called too
