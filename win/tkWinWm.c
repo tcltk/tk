@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.8 2004/09/17 23:36:16 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.9 2004/09/18 22:48:55 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -2089,9 +2089,11 @@ UpdateWrapper(winPtr)
 	    /*
 	     * The user supplies a double from [0..1], but Windows wants an
 	     * int (transparent) 0..255 (opaque), so do the translation.
+	     * Add the 0.5 to round the value.
 	     */
 	    setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
-		    (COLORREF) NULL, (BYTE) (wmPtr->alpha * 255), LWA_ALPHA);
+		    (COLORREF) NULL, (BYTE) (wmPtr->alpha * 255 + 0.5),
+		    LWA_ALPHA);
 	}
 
 	place.length = sizeof(WINDOWPLACEMENT);
@@ -2838,7 +2840,6 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
     LONG style, exStyle, styleBit, *stylePtr;
     char *string;
     int i, boolean, length;
-    double alpha;
 
     if (objc < 3) {
         configArgs:
@@ -2852,7 +2853,6 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
     }
     exStyle = wmPtr->exStyleConfig;
     style   = wmPtr->styleConfig;
-    alpha   = wmPtr->alpha;
     if (objc == 3) {
 	Tcl_Obj *objPtr = Tcl_NewObj();
 	Tcl_ListObjAppendElement(NULL, objPtr,
@@ -2929,19 +2929,15 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 		    } else {
 			*stylePtr &= ~styleBit;
 		    }
-		    if ((dval > 0) && (alpha > 0)) {
-			/*
-			 * If we are just changing transparency level, just
-			 * adjust the window setting (no UpdateWrapper).
-			 * The user supplies (opaque) 0..100 (transparent),
-			 * but Windows wants (transparent) 0..255 (opaque), so
-			 * do the translation.
-			 */
-			alpha = wmPtr->alpha;
-			setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
-				(COLORREF) NULL, (BYTE) (wmPtr->alpha * 255),
-				LWA_ALPHA);
-		    }
+		    /*
+		     * Set the window directly regardless of UpdateWrapper.
+		     * The user supplies (opaque) 0..100 (transparent), but
+		     * Windows wants (transparent) 0..255 (opaque), so do the
+		     * translation. Add the 0.5 to round the value.
+		     */
+		    setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
+			    (COLORREF) NULL, (BYTE) (wmPtr->alpha * 255 + 0.5),
+			    LWA_ALPHA);
 		}
 	    }
 	} else {
@@ -2959,8 +2955,7 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 	    }
 	}
     }
-    if ((wmPtr->styleConfig != style) || (wmPtr->alpha != alpha) ||
-	    (wmPtr->exStyleConfig != exStyle)) {
+    if ((wmPtr->styleConfig != style) || (wmPtr->exStyleConfig != exStyle)) {
 	wmPtr->styleConfig = style;
 	wmPtr->exStyleConfig = exStyle;
 	/*
