@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.8 2000/04/08 06:59:19 hobbs Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.9 2000/04/17 17:40:27 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -575,8 +575,15 @@ Tk_GridCmd(clientData, interp, argc, argv)
 	if (Tcl_GetBoolean(interp, argv[3], &propagate) != TCL_OK) {
 	    return TCL_ERROR;
 	}
+	
+	/* Only request a relayout if the propagation bit changes */
+	
 	if ((!propagate) ^ (masterPtr->flags&DONT_PROPAGATE)) {
-	    masterPtr->flags  ^= DONT_PROPAGATE;
+	    if (propagate) {
+		masterPtr->flags &= ~DONT_PROPAGATE;
+	    } else {
+		masterPtr->flags |= DONT_PROPAGATE;
+	    }
       
 	    /*
 	     * Re-arrange the master to allow new geometry information to
