@@ -1,5 +1,10 @@
 2001-06-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* doc/selection.n: 
+	* doc/clipboard.n: added SEE ALSOs to cross-reference selection
+	and clipboard, with extra note for clipboard command in selection
+	docs.  [Patch #422256]
+
 	* unix/tkUnixFont.c: Corrected support for iso10646 (X11 Unicode)
 	fonts on Unix. This adds a ucs-2be (UCS-2 Big Endian) encoding in
 	Tk on Unix that is used for those fonts (X11 requires
