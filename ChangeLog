@@ -1,5 +1,8 @@
 2003-07-17  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* doc/panedwindow.n: Removed warning invalidated by fix from Bug
+	738143. [Bug 747814]
+
 	* generic/tkImgPhoto.c (ImgPhotoCmd): Rewrote subcommand processing
 	to never jump to the end of the switch.  I find that confusing as
 	I can't see whether there's processing still to be done from a
