@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: SetOptions.3,v 1.11 2004/09/19 16:05:36 dkf Exp $
+'\" RCS: @(#) $Id: SetOptions.3,v 1.12 2004/11/12 09:03:19 das Exp $
 '\" 
 .so man.macros
 .TH Tk_SetOptions 3 8.1 Tk "Tk Library Procedures"
@@ -265,7 +265,7 @@ typedef struct {
 } Tk_OptionSpec;
 .CE
 The \fItype\fR field indicates what kind of configuration option this is
-(e.g. \fBTK_OPTION_COLOR\fB for a color value, or \fBTK_OPTION_INT\fR for
+(e.g. \fBTK_OPTION_COLOR\fR for a color value, or \fBTK_OPTION_INT\fR for
 an integer value).  \fIType\fR determines how the
 value of the option is parsed (more on this below).
 The \fIoptionName\fR field is a string such as \fB\-font\fR or \fB\-bg\fR;

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.30 2004/10/28 12:25:53 dkf Exp $
+'\" RCS: @(#) $Id: text.n,v 1.31 2004/11/12 09:03:19 das Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -55,8 +55,8 @@ in the font given by the \fB\-font\fR option.
 Must be at least one.
 .OP \-inactiveselectionbackground inactiveSelectionBackground Foreground
 .VS 8.5
-Specifies the colour to use for the selection (the \fB\sel\fR tag) when
-the window does not have the input focus.  If empty, \fB\{}\fR, then no
+Specifies the colour to use for the selection (the \fBsel\fR tag) when
+the window does not have the input focus.  If empty, \fB{}\fR, then no
 selection is shown when the window does not have the focus.
 .VE 8.5
 .OP \-maxundo maxUndo MaxUndo
@@ -703,7 +703,7 @@ the window is destroyed.
 .VS 8.5
 Similarly if the text widget as a whole is deleted, then the window is
 destroyed.
-.vE 8.5
+.VE 8.5
 .PP
 When an embedded window is added to a text widget with the
 \fBwindow create\fR widget command, several configuration
@@ -1408,7 +1408,7 @@ This command is used to create and query widget peers.  It has
 two forms, depending on \fIoption\fR:
 .RS
 .TP
-\fIpathName \fBpeer create \fInewPathName\fR ?fIoptions\fR?
+\fIpathName \fBpeer create \fInewPathName\fR ?\fIoptions\fR?
 Creates a peer text widget with the given \fInewPathName\fR, and any
 optional standard configuration options (as for the \fItext\fR command).
 By default the peer will have the same start and end line as the
@@ -1418,6 +1418,7 @@ configuration options.
 \fIpathName \fBpeer names\fR
 Returns a list of peers of this widget (this does not include the widget
 itself).  The order within this list is undefined.
+.RE
 .TP
 \fIpathName \fBreplace\fR \fIindex1 index2 chars\fR ?\fItagList chars tagList ...\fR?
 Replaces the range of characters between \fIindex1\fR and \fIindex2\fR 
