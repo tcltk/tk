@@ -1,3 +1,8 @@
+2000-07-17  Eric Melski  <ericm@scriptics.com>
+
+	* library/msgs/it.msg: Italian message catalog, from Paolo
+	Brutti. [RFE: 6012].
+
 2000-07-07  Eric Melski  <ericm@ajubasolutions.com>
 
 	* library/msgs/el.msg: Greek message catalog, from George Petasis.
