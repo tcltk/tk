@@ -1,3 +1,8 @@
+2003-10-28  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* library/tk.tcl (::tk::PlaceWindow): Added check for empty string
+	first when determining placement strategy. [Bug 819284]
+
 2003-10-23  Jim Ingham  <jingham@apple.com>
 
 	* macosx/tkMacOSXDialog.c (NavServicesGetFile): Minor cleanups.
