@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.5 2002/05/27 17:33:26 mdejong Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.6 2002/06/22 08:37:25 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -638,10 +638,12 @@ EmbedWindowDeleted(winPtr)
      * Find the Container structure for this window work.  Delete the
      * information about the embedded application and free the container's
      * record.
+     * The main container may be null. [Bug #476176]
      */
 
     prevPtr = NULL;
     containerPtr = tsdPtr->firstContainerPtr;
+    if (containerPtr == NULL) return;
     while (1) {
 	if (containerPtr->embeddedPtr == winPtr) {
 	    containerPtr->embeddedHWnd = NULL;
