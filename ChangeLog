@@ -1,7 +1,19 @@
 2001-01-02  Andreas Kupries  <a.kupries@westend.com>
 
-	* win/tkWinWm.c:
-	* doc/wm.n: Applied patch #102833 (TIP #8).
+	* Everything below belongs together and implements TIP #8
+	  (SF patch #102833).
+
+	* win/tkWinWm.c (line 56f): Added icon structures.
+	* win/tkWinWm.c (struct WmInfo, line 242): Added reference to
+	  optional icon for titlebar.
+	* win/tkWinWm.c (struct ThreadSpecificData, line 335): Added
+	  reference to optional default icon for toplevel windows.
+	* win/tkWinWm.c (line 387 ... 1169): All the new functions required
+	  to deal with icon specifications, 'InitWm' changed.
+	* win/tkWinWm.c (TkWmNewWindow, UpdateWrapper, TkWmDeadWindow, Tk_WmCmd):
+	  Added initialization and handling of the new fields.
+	* doc/wm.n: Documentation updated to explain the newly available
+	  functionality. 
 
 2000-12-13  jeff hobbs  <jhobbs@interwoven.com>
 
