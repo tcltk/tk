@@ -1,3 +1,9 @@
+2002-08-12  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/demos/image2.tcl: Tweaked the behaviour of the directory
+	box on resize, as resizing of the overall window tends to be
+	common given the sample images.
+
 2002-08-08  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/tkUnixWm.c (WmTransientCmd): Apply fix for
