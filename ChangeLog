@@ -1,3 +1,9 @@
+2004-10-26  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinRegion.c (TkpBuildRegionFromAlphaData): Fixed syntax error
+	* generic/tkImgPhoto.c (Tk_PhotoPutBlock): Removed unreferences vars.
+	
+
 2004-10-26  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* macosx/tkMacOSXRegion.c (TkpBuildRegionFromAlphaData):
