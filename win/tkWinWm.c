@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.22.2.4 2001/08/04 00:30:54 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.22.2.5 2001/10/13 01:22:53 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -767,7 +767,7 @@ InitWm(void)
  *
  *----------------------------------------------------------------------
  */
-int
+static int
 WinSetIcon(interp, titlebaricon, tkw)
     Tcl_Interp *interp;
     WinIconPtr titlebaricon;
@@ -1092,10 +1092,12 @@ BlockOfIconImagesPtr ReadIconFromICOFile(Tcl_Interp* interp, char* fileName){
     }
     if (Tcl_SetChannelOption(interp, channel, "-translation", "binary")
 	    != TCL_OK) {
+	Tcl_Close(NULL, channel);
 	return NULL;
     }
     if (Tcl_SetChannelOption(interp, channel, "-encoding", "binary")
 	    != TCL_OK) {
+	Tcl_Close(NULL, channel);
 	return NULL;
     }
     /*  Allocate memory for the resource structure */
