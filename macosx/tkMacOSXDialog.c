@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.1.2.2 2001/10/24 06:00:04 wolfsuit Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -923,7 +923,7 @@ OpenFileFilterProc(
     NavFilterModes filterMode )
 {
     OpenFileData *ofdPtr = (OpenFileData *) callBackUD;
-    if (!ofdPtr->usePopup) {
+    if (!ofdPtr || !ofdPtr->usePopup) {
         return true;
     } else {
         if (ofdPtr->fl.numFilters == 0) {
