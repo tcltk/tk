@@ -2,7 +2,7 @@
 #
 # This demonstration script creates message boxes of various type
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.2 1998/09/14 18:23:29 stanton Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.3 2003/08/22 22:44:15 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -18,13 +18,10 @@ positionWindow $w
 label $w.msg -font $font -wraplength 4i -justify left -text "Choose the icon and type option of the message box. Then press the \"Message Box\" button to see the message box."
 pack $w.msg -side top
 
-frame $w.buttons
-pack $w.buttons -side bottom -fill x -pady 2m
-button $w.buttons.dismiss -text Dismiss -command "destroy $w"
-button $w.buttons.code -text "See Code" -command "showCode $w"
-button $w.buttons.vars -text "Message Box"  \
-    -command "showMessageBox $w"
-pack $w.buttons.dismiss $w.buttons.code $w.buttons.vars -side left -expand 1
+pack [addSeeDismiss $w.buttons $w {} {
+    button $w.buttons.vars -text "Message Box" -command "showMessageBox $w"
+}] -side bottom -fill x
+#pack $w.buttons.dismiss $w.buttons.code $w.buttons.vars -side left -expand 1
 
 frame $w.left 
 frame $w.right
