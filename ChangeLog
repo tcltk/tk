@@ -1,3 +1,9 @@
+2003-10-30  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkImgPhoto.c (ImgPhotoBlendComplexAlpha): add alpha
+	blending for images with partial transparency.  Only operates for
+	15bpp+ display. [Bug 809157]
+
 2003-10-29  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* unix/tkUnixRFont.c: Some cleaning up to get the file more in
