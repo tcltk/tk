@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.1.4.6 1999/03/10 07:13:38 stanton Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.1.4.7 1999/03/27 02:14:19 redman Exp $
  */
 
 #include "tk.h"
@@ -421,6 +421,7 @@ ConsoleCmd(clientData, interp, argc, argv)
     int length;
     int result;
     Tcl_Interp *consoleInterp;
+    Tcl_DString dString;
 
     if (argc < 2) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
@@ -433,20 +434,20 @@ ConsoleCmd(clientData, interp, argc, argv)
     result = TCL_OK;
     consoleInterp = info->consoleInterp;
     Tcl_Preserve((ClientData) consoleInterp);
+    Tcl_DStringInit(&dString);
+
     if ((c == 't') && (strncmp(argv[1], "title", length)) == 0) {
-	Tcl_DString dString;
-	
-	Tcl_DStringInit(&dString);
 	Tcl_DStringAppend(&dString, "wm title . ", -1);
 	if (argc == 3) {
 	    Tcl_DStringAppendElement(&dString, argv[2]);
 	}
 	Tcl_Eval(consoleInterp, Tcl_DStringValue(&dString));
-	Tcl_DStringFree(&dString);
     } else if ((c == 'h') && (strncmp(argv[1], "hide", length)) == 0) {
-	Tcl_Eval(consoleInterp, "wm withdraw .");
+	Tcl_DStringAppend(&dString, "wm withdraw . ", -1);
+	Tcl_Eval(consoleInterp, Tcl_DStringValue(&dString));
     } else if ((c == 's') && (strncmp(argv[1], "show", length)) == 0) {
-	Tcl_Eval(consoleInterp, "wm deiconify .");
+	Tcl_DStringAppend(&dString, "wm deiconify . ", -1);
+	Tcl_Eval(consoleInterp, Tcl_DStringValue(&dString));
     } else if ((c == 'e') && (strncmp(argv[1], "eval", length)) == 0) {
 	if (argc == 3) {
 	    result = Tcl_Eval(consoleInterp, argv[2]);
@@ -463,6 +464,7 @@ ConsoleCmd(clientData, interp, argc, argv)
 		(char *) NULL);
         result = TCL_ERROR;
     }
+    Tcl_DStringFree(&dString);
     Tcl_Release((ClientData) consoleInterp);
     return result;
 }
@@ -578,9 +580,13 @@ ConsoleEventProc(clientData, eventPtr)
 {
     ConsoleInfo *info = (ConsoleInfo *) clientData;
     Tcl_Interp *consoleInterp;
+    Tcl_DString dString;
     
     if (eventPtr->type == DestroyNotify) {
-        consoleInterp = info->consoleInterp;
+
+	Tcl_DStringInit(&dString);
+  
+	consoleInterp = info->consoleInterp;
 
         /*
          * It is possible that the console interpreter itself has
@@ -593,7 +599,9 @@ ConsoleEventProc(clientData, eventPtr)
             return;
         }
         Tcl_Preserve((ClientData) consoleInterp);
-	Tcl_Eval(consoleInterp, "tkConsoleExit");
+	Tcl_DStringAppend(&dString, "tkConsoleExit", -1);
+	Tcl_Eval(consoleInterp, Tcl_DStringValue(&dString));
+	Tcl_DStringFree(&dString);
         Tcl_Release((ClientData) consoleInterp);
     }
 }
