@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.36 2002/04/16 11:41:53 bagnonm Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.37 2002/04/26 16:39:07 bagnonm Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -15,6 +15,11 @@
 # Insist on running with compatible versions of Tcl and Tk.
 package require -exact Tk 8.4
 package require -exact Tcl 8.4
+
+# Create a ::tk namespace
+
+namespace eval ::tk {
+}
 
 if { ![interp issafe] } {
     if {[catch {package require msgcat}]} {
@@ -64,11 +69,6 @@ set ::tk_strictMotif 0
 # We catch this because safe interpreters may not allow the call.
 
 catch {tk useinputmethods 1}
-
-# Create a ::tk namespace
-
-namespace eval ::tk {
-}
 
 # ::tk::PlaceWindow --
 #   place a toplevel at a particular position
