@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: entry.tcl,v 1.1.4.2 1998/09/30 02:17:32 stanton Exp $
+# RCS: @(#) $Id: entry.tcl,v 1.1.4.3 1999/04/06 03:01:17 stanton Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -32,16 +32,14 @@
 # The code below creates the default class bindings for entries.
 #-------------------------------------------------------------------------
 bind Entry <<Cut>> {
-    if {![catch {set data [string range [%W get] [%W index sel.first]\
-	    [expr {[%W index sel.last] - 1}]]}]} {
+    if {![catch {set data [tkEntryGetSelection %W]}]} {
 	clipboard clear -displayof %W
 	clipboard append -displayof %W $data
 	%W delete sel.first sel.last
     }
 }
 bind Entry <<Copy>> {
-    if {![catch {set data [string range [%W get] [%W index sel.first]\
-	    [expr {[%W index sel.last] - 1}]]}]} {
+    if {![catch {set data [tkEntryGetSelection %W]}]} {
 	clipboard clear -displayof %W
 	clipboard append -displayof %W $data
     }
@@ -608,3 +606,18 @@ proc tkEntryPreviousWord {w start} {
     return $pos
 }
 
+# tkEntryGetSelection --
+#
+# Returns the selected text of the entry with respect to the -show option.
+#
+# Arguments:
+# w -         The entry window from which the text to get
+
+proc tkEntryGetSelection {w} {
+    set entryString [string range [$w get] [$w index sel.first] \
+                       [expr [$w index sel.last] - 1]]
+    if {[$w cget -show] != ""} {
+      regsub -all . $entryString [string index [$w cget -show] 0] entryString
+    }
+    return $entryString
+}
