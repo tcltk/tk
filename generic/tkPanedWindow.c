@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.13.2.2 2003/07/17 20:49:00 dkf Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.13.2.3 2003/07/18 09:53:16 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -424,6 +424,14 @@ Tk_PanedWindowObjCmd(clientData, interp, objc, objv)
     }
 
     pwPtr->proxywin = Tk_CreateAnonymousWindow(interp, parent, (char *) NULL);
+    /*
+     * The proxy window has to be able to share GCs with the main
+     * panedwindow despite being children of windows with potentially
+     * different characteristics, and it looks better that way too.
+     * [Bug 702230]
+     */
+    Tk_SetWindowVisual(pwPtr->proxywin,
+	    Tk_Visual(tkwin), Tk_Depth(tkwin), Tk_Colormap(tkwin));
     Tk_CreateEventHandler(pwPtr->proxywin, ExposureMask, ProxyWindowEventProc,
 	    (ClientData) pwPtr);
 
