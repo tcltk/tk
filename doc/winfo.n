@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: winfo.n,v 1.4 2004/03/25 14:33:33 dkf Exp $
+'\" RCS: @(#) $Id: winfo.n,v 1.5 2004/06/18 22:31:18 dkf Exp $
 '\" 
 .so man.macros
 .TH winfo n 4.3 Tk "Tk Built-In Commands"
@@ -327,6 +327,18 @@ Returns a decimal string giving the y-coordinate, in \fIwindow\fR's
 parent, of the
 upper-left corner of \fIwindow\fR's border (or \fIwindow\fR if it
 has no border).
+.SH EXAMPLE
+Print where the mouse pointer is and what window it is currently over:
+.CS
+lassign [\fBwinfo\fR pointerxy .] x y
+puts -nonewline "Mouse pointer at ($x,$y) which is "
+set win [\fBwinfo\fR containing $x $y]
+if {$win eq ""} {
+    puts "over no window"
+} else {
+    puts "over $win"
+}
+.CE
 
 .SH KEYWORDS
 atom, children, class, geometry, height, identifier, information, interpreters,
