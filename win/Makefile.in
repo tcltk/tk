@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.35 2000/11/03 17:28:00 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.36 2001/03/30 21:53:12 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -400,7 +400,7 @@ runtest: tktest
 
 install: all install-binaries install-libraries install-doc install-demos
 
-install-binaries:
+install-binaries: binaries
 	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) ; \
 	    do \
 	    if [ ! -d $$i ] ; then \
@@ -429,7 +429,7 @@ install-binaries:
 	    fi; \
         fi
 
-install-libraries:
+install-libraries: libraries
 	@for i in $(INSTALL_ROOT)$(prefix)/lib \
 		$(INCLUDE_INSTALL_DIR) $(INCLUDE_INSTALL_DIR)/X11 \
 		$(SCRIPT_INSTALL_DIR) $(SCRIPT_INSTALL_DIR)/images; \
@@ -497,7 +497,7 @@ install-demos:
 		fi; \
 	    done;
 
-install-doc:
+install-doc: doc
 
 
 $(WISH): $(TK_LIB_FILE) $(WISH_OBJS) wish.$(RES)
