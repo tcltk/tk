@@ -1,3 +1,24 @@
+2001-10-12  Todd M. Helfter <tmh@purdue.edu>
+
+	* ChangeLog:
+	* doc/menu.n:
+	* generic/tkMenu.c:
+	* generic/tkMenu.h:
+	* generic/tkMenubutton.c:
+	* generic/tkMenubutton.h:
+	* mac/tkMacDefault.h:
+	* mac/tkMacMenu.c:
+	* mac/tkMacMenubutton.c:
+	* tests/menu.test:
+	* unix/tkUnixDefault.h:
+	* unix/tkUnixMenu.c:
+	* win/makefile.vc:
+	* win/tkWinDefault.h:
+	* win/tkWinMenu.c:
+	* win/tkWinWm.c: Implementation of TIP #63, the addition of
+	a -compound option to menu entries allowing text and an image to
+	be displayed at the same time.
+
 2001-10-09  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/console.tcl: added more smarts extracted from tkcon to

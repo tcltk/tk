@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.7 2001/08/29 23:22:24 hobbs Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.8 2001/10/12 13:30:31 tmh Exp $
  */
 
 #include "tkMenubutton.h"
@@ -38,7 +38,7 @@ static char *stateStrings[] = {
 
 /*
  * The following table defines the legal values for the -compound option.
- * It is used with the "enum compound" declaration in tkButton.h
+ * It is used with the "enum compound" declaration in tkMenuButton.h
  */
 
 static char *compoundStrings[] = {

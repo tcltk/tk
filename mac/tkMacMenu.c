@@ -8,12 +8,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.19 2001/08/01 16:21:11 dgp Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.20 2001/10/12 13:30:31 tmh Exp $
  */
 
 #include "tkMacInt.h"
-#include "tkMenuButton.h"
 #include "tkMenu.h"
+#include "tkMenuButton.h"
 #include "tkColor.h"
 #include "tkMacInt.h"
 #undef Status
@@ -707,9 +707,9 @@ GetEntryText(
     Tcl_DStringInit(dStringPtr);
     if (mePtr->type == TEAROFF_ENTRY) {
     	Tcl_DStringAppend(dStringPtr, "(Tear-off)", -1);
-    } else if (mePtr->imagePtr != NULL) {
+    } else if ((mePtr->imagePtr != NULL) && (mePtr->compound == COMPOUND_NONE)) {
     	Tcl_DStringAppend(dStringPtr, "(Image)", -1);
-    } else if (mePtr->bitmapPtr != NULL) {
+    } else if ((mePtr->bitmapPtr != NULL) && (mePtr->compound == COMPOUND_NONE)) {
     	Tcl_DStringAppend(dStringPtr, "(Pixmap)", -1);
     } else if (mePtr->labelPtr == NULL || mePtr->labelLength == 0) {
 	/*
@@ -3945,39 +3945,117 @@ DrawMenuEntryLabel(
     int width,				/* width of entry */
     int height)				/* height of entry */
 {
-    int baseline;
     int indicatorSpace =  mePtr->indicatorSpace;
     int leftEdge = x + indicatorSpace;
     int imageHeight, imageWidth;
+    int textHeight, textWidth;
+    int haveImage = 0, haveText = 0;
+    int imageXOffset = 0, imageYOffset = 0;
+    int textXOffset = 0, textYOffset = 0;
     
     /*
-     * Draw label or bitmap or image for entry.
+     * Work out what we will need to draw first.
      */
 
-    baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
+    if (mePtr->image != NULL) {
+    	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
+	haveImage = 1;
+    } else if (mePtr->bitmapPtr != NULL) {
+	Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr);
+	Tk_SizeOfBitmap(menuPtr->display, bitmap, &imageWidth, &imageHeight);
+	haveImage = 1;
+    }
+    if (!haveImage || (mePtr->compound != COMPOUND_NONE)) {
+	if (mePtr->labelLength > 0) {
+	    Tcl_DString itemTextDString;
+	    textHeight = fmPtr->linespace;
+	    GetEntryText(mePtr, &itemTextDString);
+	    textWidth = Tk_TextWidth(tkfont, 
+		    Tcl_DStringValue(&itemTextDString),
+		    Tcl_DStringLength(&itemTextDString));
+	    Tcl_DStringFree(&itemTextDString);
+	    haveText = 1;
+	}
+    }
+    
+    /*
+     * Now work out what the relative positions are.
+     */
+
+    if (haveImage && haveText) {
+	int fullWidth = (imageWidth > textWidth ? imageWidth : textWidth);
+	switch ((enum compound) mePtr->compound) {
+	    case COMPOUND_TOP: {
+		textXOffset = (fullWidth - textWidth)/2;
+		textYOffset = imageHeight/2 + 2;
+		imageXOffset = (fullWidth - imageWidth)/2;
+		imageYOffset = -textHeight/2;
+		break;
+	    }
+	    case COMPOUND_BOTTOM: {
+		textXOffset = (fullWidth - textWidth)/2;
+		textYOffset = -imageHeight/2;
+		imageXOffset = (fullWidth - imageWidth)/2;
+		imageYOffset = textHeight/2 + 2;
+		break;
+	    }
+	    case COMPOUND_LEFT: {
+		textXOffset = imageWidth + 2;
+		textYOffset = 0;
+		imageXOffset = 0;
+		imageYOffset = 0;
+		break;
+	    }
+	    case COMPOUND_RIGHT: {
+		textXOffset = 0;
+		textYOffset = 0;
+		imageXOffset = textWidth + 2;
+		imageYOffset = 0;
+		break;
+	    }
+	    case COMPOUND_CENTER: {
+		textXOffset = (fullWidth - textWidth)/2;
+		textYOffset = 0;
+		imageXOffset = (fullWidth - imageWidth)/2;
+		imageYOffset = 0;
+		break;
+	    }
+	    case COMPOUND_NONE: {break;}
+	}
+    } else {
+	textXOffset = 0;
+	textYOffset = 0;
+	imageXOffset = 0;
+	imageYOffset = 0;
+    }
+    
+    /*
+     * Draw label and/or bitmap or image for entry.
+     */
+
     if (mePtr->image != NULL) {
     	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
     	if ((mePtr->selectImage != NULL)
 	    	&& (mePtr->entryFlags & ENTRY_SELECTED)) {
 	    Tk_RedrawImage(mePtr->selectImage, 0, 0,
-		    imageWidth, imageHeight, d, leftEdge,
-	            (int) (y + (mePtr->height - imageHeight)/2));
+		    imageWidth, imageHeight, d, leftEdge + imageXOffset,
+		    (int) (y + (mePtr->height - imageHeight)/2 + imageYOffset));
     	} else {
 	    Tk_RedrawImage(mePtr->image, 0, 0, imageWidth,
-		    imageHeight, d, leftEdge,
-		    (int) (y + (mePtr->height - imageHeight)/2));
+		    imageHeight, d, leftEdge + imageXOffset,
+		    (int) (y + (mePtr->height - imageHeight)/2 + imageYOffset));
     	}
     } else if (mePtr->bitmapPtr != NULL) {
-    	int width, height;
     	Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr);
-        Tk_SizeOfBitmap(menuPtr->display,
-	        bitmap, &width, &height);
     	XCopyPlane(menuPtr->display, bitmap, d, gc, 0, 0, 
-    		(unsigned) width, (unsigned) height, leftEdge,
-	    	(int) (y + (mePtr->height - height)/2), 1);
-    } else {
+		(unsigned) imageWidth, (unsigned) imageHeight, 
+		leftEdge + imageXOffset,
+		(int) (y + (mePtr->height - imageHeight)/2 + imageYOffset), 1);
+    }
+    if ((mePtr->compound != COMPOUND_NONE) || !haveImage) {
     	if (mePtr->labelLength > 0) {
     	    Tcl_DString itemTextDString, convertedTextDString;
+	    int baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
     	    
     	    GetEntryText(mePtr, &itemTextDString);
     	    
@@ -3987,7 +4065,8 @@ DrawMenuEntryLabel(
     	       exactly is going on, this will have to do: */
     	    
             TkMacSetUpGraphicsPort(gc);
-	    MoveTo((short) leftEdge, (short) baseline);
+	    MoveTo((short) leftEdge + textXOffset, 
+		   (short) baseline + textYOffset);
 	    Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&itemTextDString), 
 	            Tcl_DStringLength(&itemTextDString), &convertedTextDString);
 	    DrawText(Tcl_DStringValue(&convertedTextDString), 0, 
@@ -4011,8 +4090,8 @@ DrawMenuEntryLabel(
 	} else if ((mePtr->image != NULL) 
 		&& (menuPtr->disabledImageGC != None)) {
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledImageGC,
-		    leftEdge,
-		    (int) (y + (mePtr->height - imageHeight)/2),
+		    leftEdge + imageXOffset,
+		    (int) (y + (mePtr->height - imageHeight)/2 + imageYOffset),
 		    (unsigned) imageWidth, (unsigned) imageHeight);
 	}
     }
@@ -4090,25 +4169,72 @@ GetMenuLabelGeometry(
 					 * portion */
 {
     TkMenu *menuPtr = mePtr->menuPtr;
+    int haveImage = 0, haveText = 0;
  
     if (mePtr->image != NULL) {
     	Tk_SizeOfImage(mePtr->image, widthPtr, heightPtr);
+	haveImage = 1;
     } else if (mePtr->bitmapPtr != NULL) {
     	Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr);
     	Tk_SizeOfBitmap(menuPtr->display, bitmap, widthPtr, heightPtr);
+	haveImage = 1;
     } else {
-    	*heightPtr = fmPtr->linespace;
+	*heightPtr = 0;
+	*widthPtr = 0;
+    }
     	
+    if (haveImage && (mePtr->compound == COMPOUND_NONE)) {
+	/* We don't care about the text in this case */
+    } else {
+	/* Either it is compound or we don't have an image */
     	if (mePtr->labelPtr != NULL) {
     	    Tcl_DString itemTextDString;
-    	    
+	    int textWidth;
     	    GetEntryText(mePtr, &itemTextDString);
-    	    *widthPtr = Tk_TextWidth(tkfont, 
+	    textWidth = Tk_TextWidth(tkfont, 
     	    	    Tcl_DStringValue(&itemTextDString),
     	    	    Tcl_DStringLength(&itemTextDString));
     	    Tcl_DStringFree(&itemTextDString);
+	
+	    if ((mePtr->compound != COMPOUND_NONE) && haveImage) {
+		switch ((enum compound) mePtr->compound) {
+		    case COMPOUND_TOP:
+		    case COMPOUND_BOTTOM: {
+			if (textWidth > *widthPtr) {
+			    *widthPtr = textWidth;
+			}
+			/* Add text and padding */
+			*heightPtr += fmPtr->linespace + 2;
+			break;
+		    }
+		    case COMPOUND_LEFT:
+		    case COMPOUND_RIGHT: {
+			if (fmPtr->linespace > *heightPtr) {
+			    *heightPtr = fmPtr->linespace;
+			}
+			/* Add text and padding */
+			*widthPtr += textWidth + 2;
+			break;
+		    }
+		    case COMPOUND_CENTER: {
+			if (fmPtr->linespace > *heightPtr) {
+			    *heightPtr = fmPtr->linespace;
+			}
+			if (textWidth > *widthPtr) {
+			    *widthPtr = textWidth;
+			}
+			break;
+		    }
+		    case COMPOUND_NONE: {break;}
+		}
     	} else {
-    	    *widthPtr = 0;
+		/* We don't have an image or we're not compound */
+		*heightPtr = fmPtr->linespace;
+		*widthPtr = textWidth;
+	    }
+	} else {
+	    /* An empty entry still has this height */
+	    *heightPtr = fmPtr->linespace;
     	}
     }
     *heightPtr += 1;
