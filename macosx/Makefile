@@ -3,7 +3,7 @@
 # Simple makefile for building on Mac OS X with the
 # Project Builder command line tool 'pbxbuild'
 #
-# RCS: @(#) $Id: Makefile,v 1.6 2002/10/16 23:56:02 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.7 2003/02/19 16:44:16 das Exp $
 #
 ################################################################################
 
@@ -25,7 +25,7 @@ DEPBUILD	= ${BUILD} -buildstyle "${DEPBUILDSTYLE}"
 
 INSTALLOPTS	= INSTALL_ROOT="${INSTALL_ROOT}"
 
-EMBEDDEDOPTS	= DYLIB_INSTALL_PATH="@executable_path/../Frameworks"
+EMBEDDEDOPTS	= EMBEDDED_BUILD=1
 
 ################################################################################
 
@@ -35,7 +35,7 @@ install: install-develop install-deploy
 
 embedded: embedded-deploy
 
-install-embedded: install-embedded-deploy cleanup-embedded forceRelink forceRelinkTcl
+install-embedded: install-embedded-deploy cleanup-embedded
 
 clean: clean-develop clean-deploy
 
@@ -53,10 +53,10 @@ install-develop:
 install-deploy:
 	${DEPBUILD} install ${INSTALLOPTS}
 
-embedded-develop: forceRelink
+embedded-develop:
 	${DEVBUILD} ${EMBEDDEDOPTS}
 
-embedded-deploy: forceRelink
+embedded-deploy:
 	${DEPBUILD} ${EMBEDDEDOPTS}
 
 install-embedded-develop:
@@ -77,15 +77,8 @@ forceRelink:
 	@-cd ${BUILD_DIR}; \
 	rm -rf Tk.framework Wish\ Shell.app libtkstub8.4.a
 
-forceRelinkTcl:
-	@-cd ${BUILD_DIR}; \
-	rm -rf Tcl.framework \
-	Development.build/Tcl.build/Tcl Deployment.build/Tcl.build/Tcl
-
 cleanup-embedded:
 	@-cd ${INSTALL_ROOT}; \
-	rm -f Frameworks; \
-	rm -rf @executable_path; \
 	chmod -RH u+w Library/Frameworks/Tcl.framework; \
 	rm -rf Library/Frameworks/Tcl.framework; \
 	chmod -RH u+w Library/Frameworks/Tk.framework; \
