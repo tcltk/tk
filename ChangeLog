@@ -1,3 +1,15 @@
+2004-07-16  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/Makefile.in, unix/tcl.m4:     move (C|LD)FLAGS after their
+	* unix/configure.in, unix/configure: _DEFAULT to allow for env
+	setting to override m4 switches.
+	Consolidate header checks to limit redundancy in configure.
+	(CFLAGS_WARNING): Remove -Wconversion
+	(SC_ENABLE_THREADS): Set m4 to force threaded build when built
+	against a threaded Tcl core.
+	Reorder configure.in for better 64-bit build configuration,
+	replacing EXTRA_CFLAGS with CFLAGS.  [Bug #874058]
+
 2004-07-14  Jim Ingham  <jingham@apple.com>
 
         * macosx/tkMacOSXCursor.c (TkpSetCursor): The code to not
