@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.31 2003/07/18 19:50:20 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.32 2003/07/28 22:12:33 patthoyts Exp $
  *
  */
 
@@ -173,6 +173,55 @@ static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam,
 static UINT APIENTRY	OFNHookProcW(HWND hdlg, UINT uMsg, WPARAM wParam, 
 			    LPARAM lParam);
 static void		SetTkDialog(ClientData clientData);
+
+
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * EatSpuriousMessageBugFix --
+ *
+ *	In the file open/save dialog, double clicking on a list item
+ *	causes the dialog box to close, but an unwanted WM_LBUTTONUP
+ * 	message is sent to the window underneath. If the window underneath
+ * 	happens to be a windows control (eg a button) then it will be
+ * 	activated by accident.
+ *
+ * 	This problem does not occur in dialog boxes, because windows
+ * 	must do some special processing to solve the problem. (separate
+ * 	message processing functions are used to cope with keyboard
+ * 	navigation of controls.)
+ *
+ * 	Here is one solution. After returning, we poll the message queue
+ * 	for 1/4s looking for WM_LBUTTON up messages. If we see one it's
+ * 	consumed. If we get a WM_LBUTTONDOWN message, then we exit early,
+ * 	since the user must be doing something new. This fix only works
+ * 	for the current application, so the problem will still occur if
+ * 	the open dialog happens to be over another applications button.
+ * 	However this is a fairly rare occurrance.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Consumes an unwanted BUTTON messages.
+ *
+ *-------------------------------------------------------------------------
+ */
+
+static void EatSpuriousMessageBugFix( void )
+{
+    MSG msg;
+    DWORD nTime = GetTickCount() + 250;
+    while( GetTickCount() < nTime )
+    {
+	if( PeekMessage(&msg,0,WM_LBUTTONDOWN,WM_LBUTTONDOWN,PM_NOREMOVE) )
+	    break;
+	PeekMessage(&msg,0,WM_LBUTTONUP,WM_LBUTTONUP,PM_REMOVE);
+    }
+}
+
+
 
 /*
  *-------------------------------------------------------------------------
@@ -733,6 +782,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	winCode = GetSaveFileNameW(&ofn);
     }
     Tcl_SetServiceMode(oldMode);
+    EatSpuriousMessageBugFix();
 
     /*
      * Ensure that hWnd is enabled, because it can happen that we
@@ -1217,6 +1267,7 @@ GetFileNameA(clientData, interp, objc, objv, open)
 	winCode = GetSaveFileName(&ofn);
     }
     Tcl_SetServiceMode(oldMode);
+    EatSpuriousMessageBugFix();
     SetCurrentDirectory(savePath);
 
     /*
