@@ -1,3 +1,18 @@
+2002-11-14  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* generic/tkWindow.c (Tk_DestroyWindow,
+	DeleteWindowsExitProc): Add TkHalfdeadWindow
+	type and halfdeadWindowList to keep track
+	of windows that were only partially deallocated
+	before a call to exit. Finnish cleaning up
+	these windows in DeleteWindowsExitProc.
+	Keep track of cleanup status in Tk_DestroyWindow
+	so that a window with a Destroy binding which
+	calls exit will get fully destroyed.
+	* tests/window.test: Add Tk_DestroyWindow tests
+	for an assortment of half dead window cases.
+	[Bug 630533]
+
 2002-11-10  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.pbproj/project.pbxproj: fixed erroneous
