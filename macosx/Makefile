@@ -3,11 +3,13 @@
 # Simple makefile for building on Mac OS X with the
 # Project Builder command line tool 'pbxbuild'
 #
-# RCS: @(#) $Id: Makefile,v 1.1.2.1 2002/08/30 18:18:16 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.1.2.2 2002/08/30 19:18:00 das Exp $
 #
 ################################################################################
 
 INSTALL_ROOT	=
+
+BUILD_DIR	= ../../build
 
 TARGET		= Wish
 
@@ -16,8 +18,12 @@ DEPBUILDSTYLE	= Deployment
 
 PBXBUILD	= /usr/bin/pbxbuild
 
-DEVBUILD	= ${PBXBUILD} -target "${TARGET}" -buildstyle "${DEVBUILDSTYLE}"
-DEPBUILD	= ${PBXBUILD} -target "${TARGET}" -buildstyle "${DEPBUILDSTYLE}"
+BUILD		= ${PBXBUILD} SYMROOT="${BUILD_DIR}" -target "${TARGET}"
+
+DEVBUILD	= ${BUILD} -buildstyle "${DEVBUILDSTYLE}"
+DEPBUILD	= ${BUILD} -buildstyle "${DEPBUILDSTYLE}"
+
+INSTALLOPTS	= INSTALL_ROOT="${INSTALL_ROOT}"
 
 ################################################################################
 
@@ -36,10 +42,10 @@ deploy:
 	${DEPBUILD}
 
 install-develop: 
-	${DEVBUILD} install INSTALL_ROOT="${INSTALL_ROOT}"
+	${DEVBUILD} install ${INSTALLOPTS}
 
 install-deploy:
-	${DEPBUILD} install INSTALL_ROOT="${INSTALL_ROOT}"
+	${DEPBUILD} install ${INSTALLOPTS}
 
 clean-develop:
 	${DEVBUILD} clean
