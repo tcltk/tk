@@ -1,5 +1,9 @@
 2004-05-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* tests/panedwindow.test: panedwindow-25.1
+	* generic/tkPanedWindow.c (Unlink): clean up -before/-after refs
+	to a slave when removing it. [Bug #928413] (griffin)
+
 	* generic/tkImgPhoto.c (ImgPhotoConfigureMaster): force -data into
 	ByteArray and -format into String to correctly handle them if they
 	have been shimmered or created as some other object type.
@@ -40,7 +44,7 @@
 	(XMoveWindow): Generate configure notify events for child
 	widgets on move.
 	(XMoveResizeWindow): Ditto.
-	
+
 2004-03-17  Jim Ingham  <jingham@apple.com>
 
 	* macosx/tkMacOSXHLEvents.c (ApplicationCarbonEventsHandler): New 
@@ -54,14 +58,14 @@
 	Hide command to work, and the Apple HIG explicitly reserves them.
 	* macosx/tkMacOSXMenus.c (TkMacOSXInitMenus): Stop putting a Quit
 	menu item in the File menu.  It doesn't belong there.
-	
-2004-03-01  Don Porter  <dgp@users.sourceforge.net>
+
+2004-03-01  Don Porter	<dgp@users.sourceforge.net>
 
 	*** 8.4.6 TAGGED FOR RELEASE ***
 
-        * unix/tcl.m4 (SC_CONFIG_CFLAGS):       Allow 64-bit enabling on
-        IRIX64-6.5* systems.  [Bug 218561]
-        * unix/configure:       autoconf-2.13
+	* unix/tcl.m4 (SC_CONFIG_CFLAGS):	Allow 64-bit enabling on
+	IRIX64-6.5* systems.  [Bug 218561]
+	* unix/configure:	autoconf-2.13
 
 2004-02-23  Daniel Steffen  <das@users.sourceforge.net>
 
