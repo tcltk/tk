@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.29 2002/08/14 15:31:21 vincentdarley Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.30 2003/01/14 01:20:55 mdejong Exp $
  *
  */
 
@@ -1666,8 +1666,6 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     TCHAR saveDir[MAX_PATH];
     Tcl_DString titleString;	/* UTF Title */
     Tcl_DString initDirString;	/* Initial directory */
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     static CONST char *optionStrings[] = {
         "-initialdir", "-mustexist",  "-parent",  "-title", (char *) NULL
     };
@@ -1915,7 +1913,7 @@ ChooseDirectoryValidateProc (
                     /*
                      * User HAS to select a valid directory.
                      */
-                    wsprintf(selDir, _T("Directory '%.200s' does not exist,\nplease select or enter an existing directory."), chooseDirSharedData->utfRetDir);
+                    wsprintf(selDir, TEXT("Directory '%.200s' does not exist,\nplease select or enter an existing directory."), chooseDirSharedData->utfRetDir);
                     MessageBox(NULL, selDir, NULL, MB_ICONEXCLAMATION|MB_OK);
                     return 1;
                 }
@@ -2444,7 +2442,8 @@ Tk_MessageBoxObjCmd(clientData, interp, objc, objv)
     HWND hWnd;
     char *message, *title;
     int defaultBtn, icon, type;
-    int i, oldMode, flags, winCode;
+    int i, oldMode, winCode;
+    UINT flags;
     Tcl_DString messageString, titleString;
     Tcl_Encoding unicodeEncoding = TkWinGetUnicodeEncoding();
     static CONST char *optionStrings[] = {

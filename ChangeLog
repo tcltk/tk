@@ -1,3 +1,12 @@
+2003-01-13  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWinDialog.c (Tk_ChooseDirectoryObjCmd,
+	ChooseDirectoryValidateProc, Tk_MessageBoxObjCmd):
+	Remove unused tsdPtr variable. Use TEXT macro
+	instead of _T macro since _T does not work
+	under Cygwin. Declare flags as UINT to avoid
+	compiler warning when compiling with mingw.
+
 2003-01-12  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/Makefile.in: Add TCL_DEFS to AC_FLAGS
