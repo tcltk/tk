@@ -17,6 +17,7 @@
 	verify that's what we have.  [Bug 749088]
 
 	* unix/configure:	autoconf (2.13)
+	* unix/mkLinks:		make mklinks
 
 2003-10-03  Don Porter  <dgp@users.sourceforge.net>
 
