@@ -1,7 +1,9 @@
 2001-04-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	** Start changes for improved mac build (steffen)  **
-	
+
+	* mac/tkMacShLib.exp: removed file
+
 	* generic/tkInt.decls: removed superfluous declarations.
 	* generic/tkIntDecls.h:
 	* generic/tkIntPlatDecls.h:
