@@ -1,3 +1,10 @@
+2000-04-18    <redman@HILO>
+
+	* win/tk.rc:
+	* win/wish.rc:
+	* win/wish.ico:  Modified copyright dates in Windows resource
+	files.  Updated the icon for wish.exe.
+
 2000-04-17  Eric Melski  <ericm@scriptics.com>
 
 	* library/text.tcl: Tweaked double-/triple-click selection;

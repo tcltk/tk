@@ -1,4 +1,4 @@
-// RCS: @(#) $Id: tk.rc,v 1.4 1999/04/30 22:49:57 stanton Exp $
+// RCS: @(#) $Id: tk.rc,v 1.5 2000/04/18 23:28:01 redman Exp $
 //
 // Version
 //
@@ -27,7 +27,7 @@ BEGIN
             VALUE "OriginalFilename", "tk" STRINGIFY(TK_MAJOR_VERSION) STRINGIFY(TK_MINOR_VERSION) ".dll\0"
             VALUE "CompanyName", "Scriptics Corporation\0"
             VALUE "FileVersion", TK_PATCH_LEVEL
-            VALUE "LegalCopyright", "Copyright \251 1999 by Scriptics Corporation\0"
+            VALUE "LegalCopyright", "Copyright \251 2000 by Scriptics Corporation\0"
             VALUE "ProductName", "Tk " TK_VERSION " for Windows\0"
             VALUE "ProductVersion", TK_PATCH_LEVEL
         END
