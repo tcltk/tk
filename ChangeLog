@@ -1,3 +1,8 @@
+2003-05-13  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXInit.c (TkpInit): use new versioned bundle 
+	resource API to get tk runtime library for TK_VERSION. [Bug 736774]
+
 2003-05-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkCanvPoly.c (PolygonToPostscript):
