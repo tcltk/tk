@@ -1,5 +1,12 @@
 1999-02-04    <stanton@GASPODE>
 
+	* win/tkWinMenu.c (TkpDestroyMenu): Changed so modalMenuPtr is
+	cleared when it is being destroyed.
+
+	* generic/tkImgPhoto.c: Changed so color tables are freed
+	immediately instead of being delayed.  This ensures that color
+	tables are properly disposed at process exit.
+
 	* library/prolog.ps: Changed string that determines font height to
 	include European character with an umlaut.
 
@@ -7,7 +14,7 @@
 	mask changed but ended up with the same XID, the GC failed to be
 	updated and so the new mask was not used. [Bug: 970]
 
-	* generic/tkFocus.c (SetFocus): Changed to focus window is always
+	* generic/tkFocus.c (SetFocus): Changed o focus window is always
 	set if -force is specified.  This fixes the problem on Windows
 	where Tk does not activate the window if it already has focus.
 
