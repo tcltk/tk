@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.16 2004/12/03 00:46:11 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.64.2.17 2004/12/03 23:01:30 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5739,5 +5739,8 @@ lines, not logical lines in text widget (darley)
 
 2004-12-01 (bug fix)[979239] Fix clipping of partially transparent images
 on buttons on unix to avoid X error (hobbs, petasis)
+
+2004-12-03 (bug fix)[848161] Fix Tk_PhotoPut(Zoomed)Block overlay
+compositing of partially transparent areas.
 
 --- Released 8.4.9, December 6, 2004 --- See ChangeLog for details ---

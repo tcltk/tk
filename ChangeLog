@@ -1,13 +1,13 @@
 2004-12-03  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	*** 8.4.9 TAGGED FOR RELEASE ***
+
 	* generic/tkImgPhoto.c (Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock):
 	Make overlay compositing where the target is empty no longer set
 	the target to magical gray, and also make sure that the
 	complex-alpha flag is toggled when necessary. [Patch 848161]
 
 2004-12-02  Jeff Hobbs  <jeffh@ActiveState.com>
-
-	*** 8.4.9 TAGGED FOR RELEASE ***
 
 	* changes: updated for 8.4.9 release
 
