@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.20.2.2 2003/04/26 02:53:47 hobbs Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.20.2.3 2003/10/10 00:03:57 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -560,15 +560,15 @@ TkpDisplayButton(clientData)
 		y += offset;
 	    }
 	    imageXOffset += x;
-	    imageXOffset += y;
+	    imageYOffset += y;
 	    if (butPtr->image != NULL) {
 		if ((butPtr->selectImage != NULL) &&
 			(butPtr->flags & SELECTED)) {
 		    Tk_RedrawImage(butPtr->selectImage, 0, 0, width, height,
-			    pixmap, x, y);
+			    pixmap, imageXOffset, imageYOffset);
 		} else {
 		    Tk_RedrawImage(butPtr->image, 0, 0, width, height, pixmap,
-			    x, y);
+			    imageXOffset, imageYOffset);
 		}
 	    } else {
 		XSetClipOrigin(butPtr->display, gc, x, y);
