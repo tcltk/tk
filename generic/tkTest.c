@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.14 2000/09/29 17:55:31 ericm Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.15 2000/10/30 20:04:16 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -784,7 +784,7 @@ TestobjconfigObjCmd(clientData, interp, objc, objv)
 		{TK_OPTION_CUSTOM,
 		        "-custom", (char *) NULL, (char *) NULL,
 		        "", Tk_Offset(TypesRecord, customPtr), -1,
-  		        TK_CONFIG_NULL_OK, &CustomOption, 0x4000},
+  		        TK_CONFIG_NULL_OK, (ClientData)&CustomOption, 0x4000},
 		{TK_OPTION_SYNONYM,
 			"-synonym", (char *) NULL, (char *) NULL,
 			(char *) NULL, 0, -1, 0, (ClientData) "-color",
@@ -1100,7 +1100,7 @@ TestobjconfigObjCmd(clientData, interp, objc, objv)
 		{TK_OPTION_CUSTOM,
 		        "-custom", (char *) NULL, (char *) NULL,
 		        "", -1, Tk_Offset(InternalRecord, custom),
-		        TK_CONFIG_NULL_OK, &CustomOption, 0x4000},
+		        TK_CONFIG_NULL_OK, (ClientData)&CustomOption, 0x4000},
 		{TK_OPTION_SYNONYM,
 			"-synonym", (char *) NULL, (char *) NULL,
 			(char *) NULL, -1, -1, 0, (ClientData) "-color",
