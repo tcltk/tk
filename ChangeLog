@@ -12,6 +12,10 @@
 	tk's contents file into Tcl's using some special winhlp32.exe
 	switches.  [Bug 533862 527941]
 
+	* win/makefile.vc:  Tk helpfile is now installing itself into Tcl's
+	contents file as part of the install target and rebuilding the
+	contents table as desired.  [Bug 527941]
+
 2002-03-26  Andreas Kupries  <andreask_kupries@users.sourceforge.net>
 
 	* unix/tkUnixFont.c: Added inclusion of <arpa/inet.h>. This fixes
