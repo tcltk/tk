@@ -1,6 +1,12 @@
 2001-06-22  Mo DeJong  <mdejong@redhat.com>
 
 	* win/configure: Regen.
+	* win/configure.in: Use RC_DEFINE flag from tcl.m4.
+	* win/tcl.m4: Update from Tcl.
+
+2001-06-22  Mo DeJong  <mdejong@redhat.com>
+
+	* win/configure: Regen.
 	* win/tcl.m4: Update from Tcl.
 
 2001-06-22  Mo DeJong  <mdejong@redhat.com>
