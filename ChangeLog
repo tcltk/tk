@@ -1,5 +1,8 @@
 2004-02-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkBind.c (HandleEventGenerate): only modify root[xy]
+	with [xy] when they haven't been otherwise set.
+
 	* doc/checkbutton.n: TIP#110 implementation
 	* doc/radiobutton.n: Tristate Checkbutton and Radiobuttons
 	* generic/tkButton.c:
