@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.2 2002/08/31 06:12:30 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.3 2002/09/09 23:52:02 hobbs Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -188,7 +188,7 @@ static int inPostMenu;		/* We cannot be re-entrant like X
 				 * windows. */
 static short lastMenuID;	/* To pass to NewMenu; need to figure out
 				 * a good way to do this. */
-static unsigned char lastCascadeID;
+static short lastCascadeID;
 				/* Cascades have to have ids that are
 				 * less than 256. */
 static MacDrawable macMDEFDrawable;
@@ -390,6 +390,11 @@ TkMacOSXUseMenuID(
  *	the fly. We use the id as a key into a hash table; if there
  *	is no hash entry, we know that we can use the id.
  *
+ *	Carbon allows a much larger number of menus than the old APIs.
+ *	I believe this is 32768, but am not sure.  This code just uses
+ *	2000 as the upper limit.  Unfortunately tk leaks menus when
+ *	cloning, under some circumstances (see bug on sourceforge).
+ *
  * Results:
  *	Returns TCL_OK if succesful; TCL_ERROR if there are no more
  *	ids of the appropriate type to allocate. menuIDPtr contains
@@ -448,8 +453,8 @@ int
     	 * dealt with separately.
     	 */
     
-    	unsigned char curID = lastCascadeID + 1;
-        if (curID == 236) {
+    	short curID = lastCascadeID + 1;
+        if (curID == 2000) {
     	    curID = 0;
     	}
     	
@@ -463,7 +468,7 @@ int
     	    	break;
     	    }
     	    curID++;
-    	    if (curID == 236) {
+    	    if (curID == 2000) {
     	    	curID = 0;
     	    }
     	}
