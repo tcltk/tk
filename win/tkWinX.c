@@ -593,6 +593,11 @@ Tk_TranslateWinEvent(hwnd, message, wParam, lParam, resultPtr)
 	case WM_KEYUP:
  	    GenerateXEvent(hwnd, message, wParam, lParam);
 	    return 1;
+	case WM_MENUCHAR:
+	    GenerateXEvent(hwnd, message, wParam, lParam);
+	    /* MNC_CLOSE is the only one that looks right.  This is a hack. */
+	    *resultPtr = MAKELONG (0, MNC_CLOSE);
+	    return 1;
     }
     return 0;
 }
@@ -893,10 +898,19 @@ GetTranslatedKey(xkey)
 
     while (xkey->nchars < XMaxTransChars
 	    && PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-	if (msg.message == WM_CHAR) {
+	if ((msg.message == WM_CHAR) || (msg.message == WM_SYSCHAR)) {
 	    xkey->trans_chars[xkey->nchars] = (char) msg.wParam;
 	    xkey->nchars++;
 	    GetMessage(&msg, NULL, 0, 0);
+
+	    /*
+	     * If this is a normal character message, we may need to strip
+	     * off the Alt modifier (e.g. Alt-digits).  Note that we don't
+	     * want to do this for system messages, because those were
+	     * presumably generated as an Alt-char sequence (e.g. accelerator
+	     * keys).
+	     */
+
 	    if ((msg.message == WM_CHAR) && (msg.lParam & 0x20000000)) {
 		xkey->state = 0;
 	    }
