@@ -1,7 +1,7 @@
-# $Id: tk.spec,v 1.14 2002/09/27 18:09:53 dgp Exp $
+# $Id: tk.spec,v 1.15 2003/02/15 02:21:00 hobbs Exp $
 # This file is the basis for a binary Tk Linux RPM.
 
-%define version 8.4.1
+%define version 8.4.2
 %define directory /usr/local
 
 Summary: Tk graphical toolkit for the Tcl scripting language.
@@ -14,7 +14,7 @@ Source: http://prdownloads.sourceforge.net/tcl/tk%{version}-src.tar.gz
 URL: http://www.tcl.tk/
 Packager: Carina
 Buildroot: /var/tmp/%{name}%{version}
-Requires: XFree86-libs >= 3.3.3, XFree86-devel >= 3.3.3, tcl = 8.4.1
+Requires: XFree86-libs >= 3.3.3, XFree86-devel >= 3.3.3, tcl = 8.4.2
 
 %description
 The Tcl (Tool Command Language) provides a powerful platform for
