@@ -3,7 +3,7 @@
 #	Some functions needed for the common dialog boxes. Probably need to go
 #	in a different file.
 #
-# RCS: @(#) $Id: comdlg.tcl,v 1.8 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: comdlg.tcl,v 1.9 2003/02/21 13:32:14 dkf Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -281,13 +281,21 @@ proc ::tk::FDGetFileTypes {string} {
 
 	set name "$label ("
 	set sep ""
+	set doAppend 1
 	foreach ext $fileTypes($label) {
 	    if {[string equal $ext ""]} {
 		continue
 	    }
 	    regsub {^[.]} $ext "*." ext
 	    if {![info exists hasGotExt($label,$ext)]} {
-		append name $sep$ext
+		if {$doAppend} {
+		    if {[string length $sep] && [string length $name]>40} {
+			set doAppend 0
+			append name $sep...
+		    } else {
+			append name $sep$ext
+		    }
+		}
 		lappend exts $ext
 		set hasGotExt($label,$ext) 1
 	    }
