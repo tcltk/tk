@@ -5,29 +5,18 @@
 
 2004-09-10  Vince Darley  <vincentdarley@users.sourceforge.net>
 
-	* doc/text.n
-	* generic/tkTest.c
-	* generic/tkText.c
-	* generic/tkText.h
-	* generic/tkTextBTree.c
-	* generic/tkTextDisp.c
-	* generic/tkTextImage.c
-	* generic/tkTextIndex.c
-	* generic/tkTextMark.c
-	* generic/tkTextTag.c
-	* generic/tkTextWind.c
-	* generic/tkUndo.c
-	* generic/tkUndo.h
-	* library/text.tcl
-	* library/demos/twind.tcl
-	* library/demos/widget
-	* tests/text.test
-	* tests/textImage.test
-	* tests/textIndex.test
+	TIP#169 IMPLEMENTATION
+
+	* doc/text.n, generic/tkTest.c, generic/tkText.c, generic/tkText.h:
+	* generic/tkTextBTree.c, generic/tkTextDisp.c, generic/tkTextImage.c:
+	* generic/tkTextIndex.c, generic/tkTextMark.c, generic/tkTextTag.c:
+	* generic/tkTextWind.c, generic/tkUndo.c, generic/tkUndo.h:
+	* library/text.tcl, library/demos/twind.tcl, library/demos/widget:
+	* tests/text.test, tests/textImage.test, tests/textIndex.test:
 	* tests/textWind.test: implementation of TIP#169, which provides
 	the new '$text peer' widget subcommand.  This includes new
 	documentation, tests, and an extension to the text widget demos
-	to illustrate some of the new features.  Many thanks also to 
+	to illustrate some of the new features.  Many thanks also to
 	Brian Griffin for the initial implementation.
 
 2004-09-09  Jeff Hobbs  <jeffh@ActiveState.com>
