@@ -58,7 +58,7 @@ AC_DEFUN(SC_PATH_TCLCONFIG, [
 
 	    # check in a few common install locations
 	    if test x"${ac_cv_c_tclconfig}" = x ; then
-		for i in `ls -d ${prefix}/lib 2>/dev/null` \
+		for i in `ls -d ${exec_prefix}/lib 2>/dev/null` \
 			`ls -d /usr/local/lib 2>/dev/null` \
 			`ls -d /usr/contrib/lib 2>/dev/null` \
 			`ls -d /usr/lib 2>/dev/null` \
@@ -153,7 +153,7 @@ AC_DEFUN(SC_PATH_TKCONFIG, [
 	    fi
 	    # check in a few common install locations
 	    if test x"${ac_cv_c_tkconfig}" = x ; then
-		for i in `ls -d ${prefix}/lib 2>/dev/null` \
+		for i in `ls -d ${exec_prefix}/lib 2>/dev/null` \
 			`ls -d /usr/local/lib 2>/dev/null` \
 			`ls -d /usr/contrib/lib 2>/dev/null` \
 			`ls -d /usr/lib 2>/dev/null` \
@@ -219,16 +219,43 @@ AC_DEFUN(SC_LOAD_TCLCONFIG, [
     fi
 
     #
-    # The eval is required to do the TCL_DBGX substitution in the
-    # TCL_LIB_FILE variable
+    # If the TCL_BIN_DIR is the build directory (not the install directory),
+    # then set the common variable name to the value of the build variables.
+    # For example, the variable TCL_LIB_SPEC will be set to the value
+    # of TCL_BUILD_LIB_SPEC. An extension should make use of TCL_LIB_SPEC
+    # instead of TCL_BUILD_LIB_SPEC since it will work with both an
+    # installed and uninstalled version of Tcl.
     #
 
-    eval TCL_LIB_FILE=${TCL_LIB_FILE}
-    eval TCL_LIB_FLAG=${TCL_LIB_FLAG}
+    if test -f $TCL_BIN_DIR/Makefile ; then
+        TCL_LIB_SPEC=${TCL_BUILD_LIB_SPEC}
+        TCL_STUB_LIB_SPEC=${TCL_BUILD_STUB_LIB_SPEC}
+        TCL_STUB_LIB_PATH=${TCL_BUILD_STUB_LIB_PATH}
+    fi
 
+    #
+    # eval is required to do the TCL_DBGX substitution
+    #
+
+    eval "TCL_LIB_FILE=\"${TCL_LIB_FILE}\""
+    eval "TCL_LIB_FLAG=\"${TCL_LIB_FLAG}\""
+    eval "TCL_LIB_SPEC=\"${TCL_LIB_SPEC}\""
+
+    eval "TCL_STUB_LIB_FILE=\"${TCL_STUB_LIB_FILE}\""
+    eval "TCL_STUB_LIB_FLAG=\"${TCL_STUB_LIB_FLAG}\""
+    eval "TCL_STUB_LIB_SPEC=\"${TCL_STUB_LIB_SPEC}\""
+
+    AC_SUBST(TCL_VERSION)
     AC_SUBST(TCL_BIN_DIR)
     AC_SUBST(TCL_SRC_DIR)
+
     AC_SUBST(TCL_LIB_FILE)
+    AC_SUBST(TCL_LIB_FLAG)
+    AC_SUBST(TCL_LIB_SPEC)
+
+    AC_SUBST(TCL_STUB_LIB_FILE)
+    AC_SUBST(TCL_STUB_LIB_FLAG)
+    AC_SUBST(TCL_STUB_LIB_SPEC)
 ])
 
 #------------------------------------------------------------------------
@@ -394,8 +421,14 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 	    else
 		AC_CHECK_LIB(c,pthread_mutex_init,tcl_ok=yes,tcl_ok=no)
 	    	if test "$tcl_ok" = "no"; then
-	    	    TCL_THREADS=0
-		    AC_MSG_WARN("Don t know how to find pthread lib on your system - you must disable thread support or edit the LIBS in the Makefile...")
+		    AC_CHECK_LIB(c_r,pthread_mutex_init,tcl_ok=yes,tcl_ok=no)
+		    if test "$tcl_ok" = "yes"; then
+			# The space is needed
+			THREADS_LIBS=" -pthread"
+		    else
+			TCL_THREADS=0
+			AC_MSG_WARN("Don t know how to find pthread lib on your system - you must disable thread support or edit the LIBS in the Makefile...")
+		    fi
 	    	fi
 	    fi
 	fi
@@ -530,7 +563,6 @@ AC_DEFUN(SC_ENABLE_SYMBOLS, [
 #			Flags used when running the compiler in debug mode
 #	CFLAGS_OPTIMIZE -
 #			Flags used when running the compiler in optimize mode
-#
 #	EXTRA_CFLAGS
 #
 #	Subst's the following vars:
@@ -601,7 +633,6 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     # Step 3: set configuration options based on system name and version.
 
     do64bit_ok=no
-    fullSrcDir=`cd $srcdir; pwd`
     EXTRA_CFLAGS=""
     TCL_EXPORT_FILE_SUFFIX=""
     UNSHARED_LIB_SUFFIX=""
@@ -651,6 +682,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 		LD_SEARCH_FLAGS='-R${LIB_RUNTIME_DIR}'
 	    fi
 
+	    # Check to enable 64-bit flags for compiler/linker
 	    if test "$do64bit" = "yes" ; then
 		if test "$GCC" = "yes" ; then
 		    AC_MSG_WARN("64bit mode not supported with GCC on $system")
@@ -704,6 +736,17 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    	MATH_LIBS="$MATH_LIBS -lbsd"
 	    	AC_DEFINE(USE_DELTA_FOR_TZ)
 	    fi
+
+	    # Check to enable 64-bit flags for compiler/linker
+	    if test "$do64bit" = "yes" ; then
+		if test "$GCC" = "yes" ; then
+		    AC_MSG_WARN("64bit mode not supported with GCC on $system")
+		else
+		    do64bit_ok=yes
+		    EXTRA_CFLAGS="-q64"
+		    LDFLAGS="-q64"
+		fi
+	    fi
 	    ;;
 	BSD/OS-2.1*|BSD/OS-3*)
 	    SHLIB_CFLAGS=""
@@ -736,6 +779,9 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    LD_SEARCH_FLAGS=""
 	    ;;
 	HP-UX-*.11.*)
+	    # Use updated header definitions where possible
+	    AC_DEFINE(_XOPEN_SOURCE_EXTENDED)
+
 	    SHLIB_SUFFIX=".sl"
 	    AC_CHECK_LIB(dld, shl_load, tcl_ok=yes, tcl_ok=no)
 	    if test "$tcl_ok" = yes; then
@@ -747,6 +793,8 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 		LDFLAGS="-Wl,-E"
 		LD_SEARCH_FLAGS='-Wl,+s,+b,${LIB_RUNTIME_DIR}:.'
 	    fi
+
+	    # Check to enable 64-bit flags for compiler/linker
 	    if test "$do64bit" = "yes" ; then
 		if test "$GCC" = "yes" ; then
 		    AC_MSG_WARN("64bit mode not supported with GCC on $system")
@@ -818,7 +866,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    ;;
 	IRIX64-6.*)
 	    SHLIB_CFLAGS=""
-	    SHLIB_LD="ld -32 -shared -rdata_shared"
+	    SHLIB_LD="ld -n32 -shared -rdata_shared"
 	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
@@ -954,22 +1002,30 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    # FreeBSD 3.* and greater have ELF.
 	    SHLIB_CFLAGS="-fPIC"
 	    SHLIB_LD="ld -Bshareable -x"
-	    SHLIB_LD_LIBS=""
+	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
 	    LDFLAGS="-export-dynamic"
 	    LD_SEARCH_FLAGS=""
-	    # FreeBSD doesn't handle version numbers with dots.
-	    UNSHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.a'
-	    SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.so'
-	    TCL_LIB_VERSIONS_OK=nodots
+	    if test "${TCL_THREADS}" = "1" ; then
+		EXTRA_CFLAGS="-pthread"
+	    	LDFLAGS="$LDFLAGS -pthread"
+	    fi
+	    case $system in
+	    FreeBSD-3.*)
+	    	# FreeBSD-3 doesn't handle version numbers with dots.
+	    	UNSHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.a'
+	    	SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.so'
+	    	TCL_LIB_VERSIONS_OK=nodots
+		;;
+	    esac
 	    ;;
 	Rhapsody-*|Darwin-*)
 	    SHLIB_CFLAGS="-fno-common"
 	    SHLIB_LD="cc -dynamiclib \${LDFLAGS}"
 	    TCL_SHLIB_LD_EXTRAS="-compatibility_version ${TCL_MAJOR_VERSION} -current_version \${VERSION} -install_name \${LIB_RUNTIME_DIR}/\${TCL_LIB_FILE} -prebind -seg1addr a000000"
-	    SHLIB_LD_LIBS="${LIBS}"
+	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".dylib"
 	    DL_OBJS="tclLoadDyld.o"
 	    DL_LIBS=""
@@ -1030,9 +1086,10 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    fi
 	    # see pthread_intro(3) for pthread support on osf1, k.furukawa
 	    if test "${TCL_THREADS}" = "1" ; then
+		EXTRA_CFLAGS="${EXTRA_CFLAGS} -DHAVE_PTHREAD_ATTR_SETSTACKSIZE"
 		EXTRA_CFLAGS="${EXTRA_CFLAGS} -DTCL_THREAD_STACK_MIN=PTHREAD_STACK_MIN*64"
+		LIBS=`echo $LIBS | sed s/-lpthreads//`
 		if test "$GCC" = "yes" ; then
-		    LIBS=`echo $LIBS | sed s/-lpthreads//`
 		    LIBS="$LIBS -lpthread -lmach -lexc"
 		else
 		    EXTRA_CFLAGS="${EXTRA_CFLAGS} -pthread"
@@ -1117,6 +1174,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    # won't define thread-safe library routines.
 
 	    AC_DEFINE(_REENTRANT)
+	    AC_DEFINE(_POSIX_PTHREAD_SEMANTICS)
 
 	    SHLIB_CFLAGS="-KPIC"
 	    SHLIB_LD="/usr/ccs/bin/ld -G -z text"
@@ -1129,7 +1187,11 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
 	    LDFLAGS=""
-	    LD_SEARCH_FLAGS='-Wl,-R,${LIB_RUNTIME_DIR}'
+	    if test "$GCC" = "yes" ; then
+		LD_SEARCH_FLAGS='-Wl,-R,${LIB_RUNTIME_DIR}'
+	    else
+		LD_SEARCH_FLAGS='-R ${LIB_RUNTIME_DIR}'
+	    fi
 	    ;;
 	SunOS-5*)
 
@@ -1137,11 +1199,13 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    # won't define thread-safe library routines.
 
 	    AC_DEFINE(_REENTRANT)
+	    AC_DEFINE(_POSIX_PTHREAD_SEMANTICS)
 
 	    SHLIB_CFLAGS="-KPIC"
 	    SHLIB_LD="/usr/ccs/bin/ld -G -z text"
 	    LDFLAGS=""
     
+	    # Check to enable 64-bit flags for compiler/linker
 	    if test "$do64bit" = "yes" ; then
 		arch=`isainfo`
 		if test "$arch" = "sparcv9 sparc" ; then

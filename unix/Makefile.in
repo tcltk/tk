@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.45.2.4 2001/10/03 22:04:52 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.45.2.5 2002/03/26 02:31:44 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -192,8 +192,9 @@ TK_LIB_FILE		= @TK_LIB_FILE@
 TK_LIB_FLAG		= @TK_LIB_FLAG@
 #TK_LIB_FLAG		= -ltk
 
-#TCL_LIB_SPEC		= @TCL_BUILD_LIB_SPEC@
 TCL_LIB_SPEC		= @TCL_LIB_SPEC@
+TCL_STUB_LIB_SPEC	= @TCL_STUB_LIB_SPEC@
+TCL_STUB_LIB_FLAG	= @TCL_STUB_LIB_FLAG@
 TK_EXP_FILE		= @TK_EXP_FILE@
 TK_BUILD_EXP_FILE	= @TK_BUILD_EXP_FILE@
 
@@ -201,8 +202,8 @@ TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
-LIBS = @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@ -lc
-WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@ -lc
+LIBS = @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@
+WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@
 
 # The symbol below provides support for dynamic loading and shared
 # libraries.  See configure.in for a description of what it means.
@@ -439,6 +440,28 @@ runtest: tktest
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
 	./tktest
 
+# This target can be used to run wish from the build directory
+# via `make shell` or `make shell SCRIPT=/tmp/foo.tcl`
+shell: wish
+	LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}; \
+	export LD_LIBRARY_PATH; \
+	LIBPATH=`pwd`:${TCL_BIN_DIR}:${LIBPATH}; export LIBPATH; \
+	SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}; \
+	export SHLIB_PATH; \
+	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
+	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
+	./wish $(SCRIPT)
+
+# This target can be used to run wish inside either gdb or insight
+gdb: wish
+	@echo "set env LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}" > gdb.run
+	@echo "set env LIBPATH=`pwd`:${TCL_BIN_DIR}:${LIBPATH}" >> gdb.run
+	@echo "set env SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}" >> gdb.run
+	@echo "set env TCL_LIBRARY=@TCL_SRC_DIR@/library" >> gdb.run
+	@echo "set env TK_LIBRARY=@TK_SRC_DIR@/library" >> gdb.run
+	gdb ./wish --command=gdb.run
+	rm gdb.run
+
 install: all install-binaries install-libraries install-demos install-doc
 
 # Note: before running ranlib below, must cd to target directory because
@@ -496,7 +519,7 @@ install-libraries:
 	    fi
 	@echo "Installing header files";
 	@for i in $(GENERIC_DIR)/tk.h $(GENERIC_DIR)/tkPlatDecls.h \
-		$(GENERIC_DIR)/tkDecls.h $(GENERIC_DIR)/tkIntXlibDecls.h ; \
+		$(GENERIC_DIR)/tkDecls.h ; \
 	    do \
 	    $(INSTALL_DATA) $$i $(INCLUDE_INSTALL_DIR); \
 	    done;
