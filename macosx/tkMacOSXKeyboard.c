@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.4 2002/10/16 11:29:50 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.5 2003/02/19 19:27:47 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -17,6 +17,8 @@
 #include "X11/keysym.h"
 #include <Carbon/Carbon.h>
 #include "tkMacOSXInt.h"
+#include "tkMacOSXEvent.h"      /* TkMacOSXKeycodeToUnicode() FIXME: That
+                                 * function should probably move here */
 
 typedef struct {
     int keycode;		/* Macintosh keycode */
@@ -66,7 +68,6 @@ static int initialized = 0;
 static Tcl_HashTable keycodeTable;	/* keyArray hashed by keycode value. */
 static Tcl_HashTable vkeyTable;		/* vituralkeyArray hashed by virtual
 					   keycode value. */
-static Ptr KCHRPtr;			/* Pointer to 'KCHR' resource. */
 
 /*
  * Prototypes for static functions used in this file.
@@ -109,10 +110,6 @@ InitKeyMaps()
 		&dummy);
 	Tcl_SetHashValue(hPtr, kPtr->keysym);
     }
-    KCHRPtr = (Ptr) GetScriptManagerVariable(smKCHRCache);
-    if (!KCHRPtr){
-        fprintf(stderr,"GetScriptManagerVariable failed\n");
-    }
     initialized = 1;
 }
 
@@ -143,7 +140,7 @@ XKeycodeToKeysym(
     int c;
     int virtualKey;
     int newKeycode;
-    unsigned long dummy, newChar;
+    UniChar newChar;
 
     if (!initialized) {
 	InitKeyMaps();
@@ -184,15 +181,21 @@ XKeycodeToKeysym(
      * TODO: The index may also specify the NUM_LOCK.
      */
     newKeycode = virtualKey;
-       if (index & 0x01) {
+    if (index & 0x01) {
 	newKeycode += 0x0200;
     }
-    dummy = 0;
-    newChar = KeyTranslate(KCHRPtr, (short) newKeycode, &dummy);
-    c = newChar & charCodeMask;
 
-    if (c >= XK_space && c < XK_asciitilde) {
-  	return c;
+    newChar = 0;
+    TkMacOSXKeycodeToUnicode(
+            &newChar, 1, kEventRawKeyDown,
+            newKeycode & 0x00FF, newKeycode & 0xFF00, NULL);
+
+    /*
+     * X11 keysyms are identical to Unicode for ASCII and Latin-1.  Give up
+     * for other characters for now.
+     */
+    if (newChar >= XK_space && newChar <= 0x255) {
+  	return newChar;
     }
 
     return NoSymbol; 
