@@ -1,3 +1,25 @@
+2001-10-17 Daniel Steffen <das@users.sourceforge.net>
+
+	Backport of mac specific changes added to 8.4 since 8.3.3:
+	
+	* generic/tkConsole.c: crashing bug fix when printing to console
+	at program exit after the console has already been closed.
+	Now setting gStdoutInterp=NULL in ConsoleClose().
+
+	* mac/tkMacInit.c: correct use of Tcl_JoinPath in tk_library
+	initialization
+
+	* mac/tkMacMenu.c: special MDEF_PROC_OFFSET only needed for
+	exactly one specifc version of the MWERKS 68k compiler .
+
+	* mac/tkMacApplication.r:
+	* mac/tkMacLibrary.r:
+	* mac/tkMacResource.r: updated copyrights/dates in version
+	strings; reorganized resources among these files to avoid 
+	multiple copies in applications and shared libraries, the script
+	libraries/Xcursors etc are now no longer duplicated in Wish but
+	are only included in the resources of Tk.shlb.
+
 2001-10-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/tkUnixXId.c (TkpScanWindowId): added specific char* cast to
@@ -90,6 +112,7 @@
 
 	* library/bgerror.tcl: back-ported bgerror dialog from 8.4 (that
 	used Windows-esque "Details" button).
+	Replaced ::tk::unsupported::MacWindowStyle by unsupported1 (das)
 
 2001-10-03  Jeff Hobbs  <jeffh@ActiveState.com>
 

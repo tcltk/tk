@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.11.2.1 2001/04/04 07:57:16 hobbs Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.11.2.2 2001/10/17 19:29:51 das Exp $
  */
 
 #include "tk.h"
@@ -476,6 +476,9 @@ ConsoleClose(instanceData, interp)
     ClientData instanceData;	/* Unused. */
     Tcl_Interp *interp;		/* Unused. */
 {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    tsdPtr->gStdoutInterp = NULL;
     return 0;
 }
 

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.18.2.1 2001/04/04 21:39:49 hobbs Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.18.2.2 2001/10/17 19:29:51 das Exp $
  */
 
 #include "tkMacInt.h"
@@ -4336,7 +4336,7 @@ TkpMenuNotifyToplevelCreate(
  *----------------------------------------------------------------------
  */
 
-#if __MWERKS__ < 0x2400
+#if __MWERKS__ != 0x2400
 #define MDEF_PROC_OFFSET 0x24
 #else
 #define MDEF_PROC_OFFSET 0x20

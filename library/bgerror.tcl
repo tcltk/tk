@@ -9,7 +9,7 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.8.2.1 2001/10/05 01:13:33 hobbs Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.8.2.2 2001/10/17 19:29:51 das Exp $
 
 package require msgcat
 
@@ -143,7 +143,7 @@ proc ::bgerror err {
     wm transient .bgerrorDialog .bgerrorDialog
 
     if {$tcl_platform(platform) == "macintosh"} {
-	::tk::unsupported::MacWindowStyle style .bgerrorDialog dBoxProc
+	unsupported1 style .bgerrorDialog dBoxProc
     }
 
     frame .bgerrorDialog.bot
