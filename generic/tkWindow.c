@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.54 2002/09/02 19:16:23 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.55 2002/11/14 17:30:20 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -22,6 +22,23 @@
 #include "tkUnixInt.h"
 #endif
 
+/* 
+ * Type used to keep track of Window objects that were
+ * only partically deallocated by Tk_DestroyWindow.
+ */
+
+#define HD_CLEANUP		1
+#define HD_FOCUS		2
+#define HD_MAIN_WIN		4
+#define HD_DESTROY_COUNT	8
+#define HD_DESTROY_EVENT	0x10
+
+typedef struct TkHalfdeadWindow {
+    int flags;
+    struct TkWindow *winPtr;
+    struct TkHalfdeadWindow *nextPtr;
+} TkHalfdeadWindow;
+
 
 typedef struct ThreadSpecificData {
     int numMainWindows;    /* Count of numver of main windows currently
@@ -29,6 +46,9 @@ typedef struct ThreadSpecificData {
     TkMainInfo *mainWindowList;
                            /* First in list of all main windows managed
 			    * by this thread. */
+    TkHalfdeadWindow *halfdeadWindowList;
+                           /* First in list of partially deallocated
+			    * windows. */
     TkDisplay *displayList;
                            /* List of all displays currently in use by 
 			    * the current thread. */
@@ -1207,7 +1227,9 @@ Tk_CreateWindowFromPath(interp, tkwin, pathName, screenName)
  * Tk_DestroyWindow --
  *
  *	Destroy an existing window.  After this call, the caller
- *	should never again use the token.
+ *	should never again use the token. Note that this function
+ *	can be reentered to destroy a window that was only
+ *	partially destroyed before a call to exit.
  *
  * Results:
  *	None.
@@ -1226,6 +1248,7 @@ Tk_DestroyWindow(tkwin)
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
     XEvent event;
+    TkHalfdeadWindow *halfdeadPtr, *prev_halfdeadPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -1240,6 +1263,24 @@ Tk_DestroyWindow(tkwin)
     winPtr->flags |= TK_ALREADY_DEAD;
 
     /*
+     * Unless we are cleaning up a half dead
+     * window from DeleteWindowsExitProc,
+     * add this window to the half dead list.
+     */
+
+    if (tsdPtr->halfdeadWindowList &&
+	    (tsdPtr->halfdeadWindowList->flags & HD_CLEANUP) &&
+	    (tsdPtr->halfdeadWindowList->winPtr == winPtr)) {
+	halfdeadPtr = tsdPtr->halfdeadWindowList;
+    } else {
+	halfdeadPtr = (TkHalfdeadWindow *) ckalloc(sizeof(TkHalfdeadWindow));
+	halfdeadPtr->flags = 0;
+	halfdeadPtr->winPtr = winPtr;
+	halfdeadPtr->nextPtr = tsdPtr->halfdeadWindowList;
+	tsdPtr->halfdeadWindowList = halfdeadPtr;
+    }
+
+    /*
      * Some cleanup needs to be done immediately, rather than later,
      * because it needs information that will be destoyed before we
      * get to the main cleanup point.  For example, TkFocusDeadWindow
@@ -1248,28 +1289,28 @@ Tk_DestroyWindow(tkwin)
      * field will be NULL before the main cleanup point is reached.
      */
 
-    TkFocusDeadWindow(winPtr);
+    if (!(halfdeadPtr->flags & HD_FOCUS)) {
+	halfdeadPtr->flags |= HD_FOCUS;
+	TkFocusDeadWindow(winPtr);
+    }
 
     /*
      * If this is a main window, remove it from the list of main
      * windows.  This needs to be done now (rather than later with
      * all the other main window cleanup) to handle situations where
      * a destroy binding for a window calls "exit".  In this case
-     * the child window cleanup isn't complete when exit is called,
-     * so the reference count of its application doesn't go to zero
-     * when exit calls Tk_DestroyWindow on ".", so the main window
-     * doesn't get removed from the list and exit loops infinitely.
-     * Even worse, if "destroy ." is called by the destroy binding
-     * before calling "exit", "exit" will attempt to destroy
-     * mainPtr->winPtr, which no longer exists, and there may be a
-     * core dump.
+     * the child window cleanup isn't complete when exit is called.
+     * This situation is dealt with using the half dead window
+     * list. Windows that are half dead gets cleaned up during exit.
      *
      * Also decrement the display refcount so that if this is the
      * last Tk application in this process on this display, the display
      * can be closed and its data structures deleted.
      */
 
-    if (winPtr->mainPtr != NULL && winPtr->mainPtr->winPtr == winPtr) {
+    if (!(halfdeadPtr->flags & HD_MAIN_WIN) &&
+	    winPtr->mainPtr != NULL && winPtr->mainPtr->winPtr == winPtr) {
+	halfdeadPtr->flags |= HD_MAIN_WIN;
         dispPtr->refCount--;
 	if (tsdPtr->mainWindowList == winPtr->mainPtr) {
 	    tsdPtr->mainWindowList = winPtr->mainPtr->nextPtr;
@@ -1287,10 +1328,17 @@ Tk_DestroyWindow(tkwin)
     }
 
     /*
-     * Recursively destroy children.
+     * Recursively destroy children. Note that this child
+     * window block may need to be run multiple times
+     * in the case where a child window has a Destroy
+     * binding that calls exit.
      */
 
-    dispPtr->destroyCount++;
+    if (!(halfdeadPtr->flags & HD_DESTROY_COUNT)) {
+	halfdeadPtr->flags |= HD_DESTROY_COUNT;
+	dispPtr->destroyCount++;
+    }
+
     while (winPtr->childList != NULL) {
 	TkWindow *childPtr;
 	childPtr = winPtr->childList;
@@ -1300,8 +1348,8 @@ Tk_DestroyWindow(tkwin)
 	    /*
 	     * The child didn't remove itself from the child list, so
 	     * let's remove it here.  This can happen in some strange
-	     * conditions, such as when a Delete event handler for a
-	     * window deletes the window's parent.
+	     * conditions, such as when a Destroy event handler for a
+	     * window destroys the window's parent.
 	     */
 
 	    winPtr->childList = childPtr->nextPtr;
@@ -1342,7 +1390,10 @@ Tk_DestroyWindow(tkwin)
      * or generate the event.
      */
 
-    if (winPtr->pathName != NULL && !(winPtr->flags & TK_ANONYMOUS_WINDOW)) {
+    if (!(halfdeadPtr->flags & HD_DESTROY_EVENT) &&
+	    winPtr->pathName != NULL &&
+	    !(winPtr->flags & TK_ANONYMOUS_WINDOW)) {
+	halfdeadPtr->flags |= HD_DESTROY_EVENT;
 	if (winPtr->window == None) {
 	    Tk_MakeWindowExist(tkwin);
 	}
@@ -1355,6 +1406,30 @@ Tk_DestroyWindow(tkwin)
 	event.xdestroywindow.window = winPtr->window;
 	Tk_HandleEvent(&event);
     }
+
+    /*
+     * No additional bindings that could call exit
+     * should be invoked from this point on,
+     * so it is safe to remove this window
+     * from the half dead list.
+     */
+
+    for (prev_halfdeadPtr = NULL,
+	    halfdeadPtr = tsdPtr->halfdeadWindowList;
+	    halfdeadPtr != NULL; ) {
+	if (halfdeadPtr->winPtr == winPtr) {
+	    if (prev_halfdeadPtr == NULL)
+	        tsdPtr->halfdeadWindowList = halfdeadPtr->nextPtr;
+	    else
+	        prev_halfdeadPtr->nextPtr = halfdeadPtr->nextPtr;
+	    ckfree((char *) halfdeadPtr);
+	    break;
+	}
+	prev_halfdeadPtr = halfdeadPtr;
+	halfdeadPtr = halfdeadPtr->nextPtr;
+    }
+    if (halfdeadPtr == NULL)
+        panic("window not found on half dead list");
 
     /*
      * Cleanup the data structures associated with this window.
@@ -2612,7 +2687,10 @@ Tk_GetNumMainWindows()
  * DeleteWindowsExitProc --
  *
  *	This procedure is invoked as an exit handler.  It deletes all
- *	of the main windows in the process.
+ *	of the main windows in the current thread. We really should
+ *	be using a thread local exit handler to delete windows and a
+ *	process exit handler to close the display but Tcl does
+ *	not provide support for this usage.
  *
  * Results:
  *	None.
@@ -2632,17 +2710,33 @@ DeleteWindowsExitProc(clientData)
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    while (tsdPtr->mainWindowList != NULL) {
-        /*
-         * We must protect the interpreter while deleting the window,
-         * because of <Destroy> bindings which could destroy the interpreter
-         * while the window is being deleted. This would leave frames on
-         * the call stack pointing at deleted memory, causing core dumps.
-         */
-        
-        interp = tsdPtr->mainWindowList->winPtr->mainPtr->interp;
+    /*
+     * Finish destroying any windows that are in a
+     * half-dead state. We must protect the interpreter
+     * while destroying the window, because of <Destroy>
+     * bindings which could destroy the interpreter
+     * while the window is being deleted. This would
+     * leave frames on the call stack pointing at
+     * deleted memory, causing core dumps.
+     */
+
+    while (tsdPtr->halfdeadWindowList != NULL) {
+        interp = tsdPtr->halfdeadWindowList->winPtr->mainPtr->interp;
         Tcl_Preserve((ClientData) interp);
-	Tk_DestroyWindow((Tk_Window) tsdPtr->mainWindowList->winPtr);
+        tsdPtr->halfdeadWindowList->flags |= HD_CLEANUP;
+        tsdPtr->halfdeadWindowList->winPtr->flags &= ~TK_ALREADY_DEAD;
+        Tk_DestroyWindow((Tk_Window) tsdPtr->halfdeadWindowList->winPtr);
+        Tcl_Release((ClientData) interp);
+    }
+
+    /*
+     * Destroy any remaining main windows.
+     */
+
+    while (tsdPtr->mainWindowList != NULL) {        
+        interp = tsdPtr->mainWindowList->interp;
+        Tcl_Preserve((ClientData) interp);
+        Tk_DestroyWindow((Tk_Window) tsdPtr->mainWindowList->winPtr);
         Tcl_Release((ClientData) interp);
     }
 
