@@ -1,3 +1,8 @@
+2001-10-16  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkWindow.c (OpenIM): Added simple XIM patch to enable
+	basic XIM input on Unix. [Patch #412727] (fabian)
+
 2001-10-15  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/configure:
