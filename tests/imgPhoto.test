@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.14 2002/07/14 15:45:23 dgp Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.15 2002/10/18 00:48:22 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -78,6 +78,15 @@ test imgPhoto-1.7 {options for photo images} {
 test imgPhoto-1.8 {options for photo images} {
     list [catch {image create photo -blah blah} err] $err
 } {1 {unknown option "-blah"}}
+test imgPhoto-1.9 {options for photo images - error case} {
+    list [catch {image create photo -format} err] $err
+} {1 {value for "-format" missing}}
+test imgPhoto-1.10 {options for photo images - error case} {
+    list [catch {image create photo -data} err] $err
+} {1 {value for "-data" missing}}
+test imgPhoto-1.11 {options for photo images - error case} {
+    list [catch {image create photo p1 -format} err] $err
+} {1 {value for "-format" missing}}
 
 test imgPhoto-2.1 {ImgPhotoCreate procedure} {
     eval image delete [image names]
