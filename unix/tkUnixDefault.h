@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDefault.h,v 1.13 2002/02/22 02:41:17 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixDefault.h,v 1.14 2002/02/22 21:07:05 hobbs Exp $
  */
 
 #ifndef _TKUNIXDEFAULT
@@ -366,7 +366,7 @@
 #define DEF_PANEDWINDOW_HEIGHT		""
 #define DEF_PANEDWINDOW_OPAQUERESIZE	"0"
 #define DEF_PANEDWINDOW_ORIENT		"horizontal"
-#define DEF_PANEDWINDOW_RELIEF		"raised"
+#define DEF_PANEDWINDOW_RELIEF		"flat"
 #define DEF_PANEDWINDOW_SASHCURSOR	""
 #define DEF_PANEDWINDOW_SASHPAD		"2"
 #define DEF_PANEDWINDOW_SASHRELIEF	"raised"
