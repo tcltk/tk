@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.27 2000/10/31 01:12:38 hobbs Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.28 2001/03/30 07:04:35 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -291,7 +291,10 @@ switch $tcl_platform(platform) {
 	    switch $tcl_platform(os) {
 		"IRIX"  -
 		"Linux" { event add <<PrevWindow>> <ISO_Left_Tab> }
-		"HP-UX" { event add <<PrevWindow>> <hpBackTab> }
+		"HP-UX" {
+		    # This seems to be correct on *some* HP systems.
+		    catch { event add <<PrevWindow>> <hpBackTab> }
+		}
 	    }
 	}
 	trace variable tk_strictMotif w tkEventMotifBindings
