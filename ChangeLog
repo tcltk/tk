@@ -1,5 +1,11 @@
 2001-10-29  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* library/demos/browse: Changes up-ported from core-8-3-1-branch
+	to make the script much more robust, particularly when neither the
+	current version of wish or the script are on the path.
+
+	* library/demos/hello: Added emacs trailing tag-line.
+
 	* library/demos/tcolor: Changes up-ported from core-8-3-1-branch
 	to make the script compliant with current good practise, as well
 	as extensive use of the new labelframe widget.
