@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.22 2003/05/19 13:04:23 vincentdarley Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.23 2003/09/29 23:15:19 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -291,7 +291,7 @@ static int		FindArea _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkCanvas *canvasPtr, Tcl_Obj *CONST *argv, Tk_Uid uid,
 			    int enclosed));
 static double		GridAlign _ANSI_ARGS_((double coord, double spacing));
-CONST char**	        GetStringsFromObjs _ANSI_ARGS_((int argc,
+CONST char**		TkGetStringsFromObjs _ANSI_ARGS_((int argc,
 			    Tcl_Obj *CONST *objv));
 static void		InitCanvas _ANSI_ARGS_((void));
 #ifdef USE_OLD_TAG_SEARCH
@@ -900,7 +900,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 		result = (*itemPtr->typePtr->coordProc)(interp,
 			(Tk_Canvas) canvasPtr, itemPtr, objc-3, objv+3);
 	      } else {
-		CONST char **args = GetStringsFromObjs(objc-3, objv+3);
+		CONST char **args = TkGetStringsFromObjs(objc-3, objv+3);
 		result = (*itemPtr->typePtr->coordProc)(interp,
 			(Tk_Canvas) canvasPtr, itemPtr, objc-3, (Tcl_Obj **) args);
 		if (args) ckfree((char *) args);
@@ -967,7 +967,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    result = (*typePtr->createProc)(interp, (Tk_Canvas) canvasPtr,
 		    itemPtr, objc-3, objv+3);
 	} else {
-	    CONST char **args = GetStringsFromObjs(objc-3, objv+3);
+	    CONST char **args = TkGetStringsFromObjs(objc-3, objv+3);
 	    result = (*typePtr->createProc)(interp, (Tk_Canvas) canvasPtr,
 		    itemPtr, objc-3, (Tcl_Obj **) args);
 	    if (args) ckfree((char *) args);
@@ -1445,7 +1445,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 			(Tk_Canvas) canvasPtr, itemPtr, objc-3, objv+3,
 			TK_CONFIG_ARGV_ONLY);
 		} else {
-		CONST char **args = GetStringsFromObjs(objc-3, objv+3);
+		CONST char **args = TkGetStringsFromObjs(objc-3, objv+3);
 		result = (*itemPtr->typePtr->configProc)(interp,
 			(Tk_Canvas) canvasPtr, itemPtr, objc-3, (Tcl_Obj **) args,
 			TK_CONFIG_ARGV_ONLY);
@@ -1534,7 +1534,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	break;
       }
       case CANV_POSTSCRIPT: {
-	CONST char **args = GetStringsFromObjs(objc, objv);
+	CONST char **args = TkGetStringsFromObjs(objc, objv);
 	result = TkCanvPostscriptCmd(canvasPtr, interp, objc, args);
 	if (args) ckfree((char *) args);
 	break;
@@ -1827,7 +1827,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 		    - canvasPtr->inset, canvasPtr->scrollX1,
 		    canvasPtr->scrollX2));
 	} else {
-	    CONST char **args = GetStringsFromObjs(objc, objv);
+	    CONST char **args = TkGetStringsFromObjs(objc, objv);
 	    type = Tk_GetScrollInfo(interp, objc, args, &fraction, &count);
 	    if (args) ckfree((char *) args);
 	    switch (type) {
@@ -1871,7 +1871,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 		    - canvasPtr->inset, canvasPtr->scrollY1,
 		    canvasPtr->scrollY2));
 	} else {
-	    CONST char **args = GetStringsFromObjs(objc, objv);
+	    CONST char **args = TkGetStringsFromObjs(objc, objv);
 	    type = Tk_GetScrollInfo(interp, objc, args, &fraction, &count);
 	    if (args) ckfree((char *) args);
 	    switch (type) {
@@ -5482,7 +5482,7 @@ CanvasSetOrigin(canvasPtr, xOrigin, yOrigin)
 /*
  *----------------------------------------------------------------------
  *
- * GetStringsFromObjs
+ * TkGetStringsFromObjs --
  *
  * Results:
  *	Converts object list into string list.
@@ -5495,7 +5495,7 @@ CanvasSetOrigin(canvasPtr, xOrigin, yOrigin)
  */
 /* ARGSUSED */
 CONST char **
-GetStringsFromObjs(argc, objv)
+TkGetStringsFromObjs(argc, objv)
     int argc;
     Tcl_Obj *CONST objv[];
 {

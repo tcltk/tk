@@ -1,3 +1,10 @@
+2003-09-30  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* generic/tkCanvas.c (TkGetStringsFromObjs): 
+	* generic/tkPanedWindow.c (PanedWindowWorldChanged): Private
+	functions should be either static or prefixed with 'Tk' (thanks to
+	George Staplin for spotting this.)
+
 2003-09-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/makefile.vc:    Implementation of TIP #150, "Provide

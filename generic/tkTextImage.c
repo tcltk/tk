@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.7 2003/05/19 14:37:20 dkf Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.8 2003/09/29 23:15:20 dkf Exp $
  */
 
 #include "tk.h"
@@ -314,7 +314,7 @@ EmbImageConfigure(textPtr, eiPtr, objc, objv)
     unsigned int len;		/* length of image name */
     CONST char **argv;
    
-    argv = GetStringsFromObjs(objc, objv);
+    argv = TkGetStringsFromObjs(objc, objv);
     if (Tk_ConfigureWidget(textPtr->interp, textPtr->tkwin, configSpecs,
 	    objc, argv, (char *) &eiPtr->body.ei,TK_CONFIG_ARGV_ONLY)
 	    != TCL_OK) {
