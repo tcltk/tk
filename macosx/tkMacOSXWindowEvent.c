@@ -75,8 +75,6 @@ static RgnHandle visRgn;
 static int GenerateUpdateEvent( Window window);
 static void GenerateUpdates( RgnHandle updateRgn, TkWindow *winPtr);
 static int GenerateActivateEvents( Window window, int activeFlag);
-static int GenerateFocusEvent( Window window, int activeFlag);
-
 
 
 /*
@@ -172,11 +170,11 @@ TkMacOSXProcessWindowEvent(
     switch (eventPtr->eKind) {
         case kEventWindowActivated:
             eventFound |= GenerateActivateEvents(window, 1);
-            eventFound |= GenerateFocusEvent(window, 1);
+            eventFound |= TkMacOSXGenerateFocusEvent(window, 1);
             break;
         case kEventWindowDeactivated:
             eventFound |= GenerateActivateEvents(window, 0);
-            eventFound |= GenerateFocusEvent(window, 0);
+            eventFound |= TkMacOSXGenerateFocusEvent(window, 0);
             break;
         case kEventWindowUpdate:
             if (GenerateUpdateEvent(window)) {
@@ -382,7 +380,7 @@ GenerateActivateEvents(
 /*         
  *----------------------------------------------------------------------
  *                      
- * GenerateFocusEvent --
+ * TkMacOSXGenerateFocusEvent --
  *                      
  *      Given a Macintosh window activate event this function generates all the
  *      X Focus events needed by Tk.
@@ -397,7 +395,7 @@ GenerateActivateEvents(
  */     
 
 int
-GenerateFocusEvent(
+TkMacOSXGenerateFocusEvent(
     Window window,              /* Root X window for event. */
     int    activeFlag )
 {
