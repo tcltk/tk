@@ -1,3 +1,9 @@
+2003-02-21  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* tests/panedwindow.test (panedwindow-30.1): 
+	* generic/tkPanedWindow.c (DisplayPanedWindow, DisplayProxyWindow): 
+	Use the window's depth, not the screen's default depth. [Bug #671122]
+
 2003-02-20  Daniel Steffen  <das@users.sourceforge.net>
 
 	* library/console.tcl: (aqua & macintosh) added missing <Cmd-q>

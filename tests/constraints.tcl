@@ -159,6 +159,7 @@ testConstraint pseudocolor8 [expr {([catch {
                         toplevel .t -visual {pseudocolor 8} -colormap new
                         }] == 0) && ([winfo depth .t] == 8)}]
 destroy .t
+testConstraint haveTruecolor24 [expr {[lsearch [winfo visualsavailable .] {truecolor 24}] != -1}]
 setupbg
 set app [dobg {tk appname}]
 testConstraint secureserver 0

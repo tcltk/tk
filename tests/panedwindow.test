@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.7 2003/02/21 01:57:51 hobbs Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.8 2003/02/21 11:48:56 dkf Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -2460,6 +2460,19 @@ test panedwindow-29.2 {resizing height} {
     }
     -cleanup {destroy .p .f1 .f2}
     -result {100 110}
+}
+
+test panedwindow-30.1 {display on depths other than the default one} {
+    -constraints {pseudocolor8 haveTruecolor24}
+    -body {
+	toplevel .t -visual {truecolor 24}
+	pack [panedwindow .t.p]
+	.t.p add [frame .t.p.f1] [frame .t.p.f2]
+	update
+	# If we got here, we didn't crash and that's good
+    }
+    -cleanup {destroy .t}
+    -result {}
 }
 
 # cleanup

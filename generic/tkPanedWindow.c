@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.12 2003/02/21 01:57:51 hobbs Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.13 2003/02/21 11:48:54 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1364,8 +1364,7 @@ DisplayPanedWindow(clientData)
      */
 
     pixmap = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
-	    Tk_Width(tkwin), Tk_Height(tkwin),
-	    DefaultDepthOfScreen(Tk_Screen(tkwin)));
+	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
 
     /*
      * Redraw the widget's background and border.
@@ -2434,8 +2433,7 @@ DisplayProxyWindow(clientData)
      */
 
     pixmap = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
-	    Tk_Width(tkwin), Tk_Height(tkwin),
-	    DefaultDepthOfScreen(Tk_Screen(tkwin)));
+	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
 
     /*
      * Redraw the widget's background and border.
