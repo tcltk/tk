@@ -60,7 +60,7 @@ typedef struct {
     Point       global;
     Point       local;
     int         state;
-    char        ch;
+    unsigned char ch;
     UInt32      keyCode;
     UInt32      keyModifiers;
     UInt32      message;  
@@ -68,6 +68,8 @@ typedef struct {
 
 static Tk_Window gGrabWinPtr = NULL;     /* Current grab window, NULL if no grab. */
 static Tk_Window gKeyboardWinPtr = NULL; /* Current keyboard grab window. */
+
+static UInt32 deadKeyState = 0;
 
 /*
  * Declarations for functions used only in this file.
@@ -78,6 +80,22 @@ static int GenerateKeyEvent _ANSI_ARGS_(( EventKind eKind,
         Window window, 
         UInt32 savedKeyCode,
         UInt32 savedModifiers));
+
+
+static int GetKeyboardLayout (
+	Ptr * resource );
+
+static int DecodeViaUnicodeResource(
+	Ptr uchr,
+	EventKind eKind,
+	const KeyEventData * e,
+	XEvent * event );
+static int DecodeViaKCHRResource(
+	Ptr kchr,
+	const KeyEventData * e,
+	XEvent * event );
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -232,7 +250,7 @@ int TkMacOSXProcessKeyboardEvent(
  *----------------------------------------------------------------------
  */
 
-int
+static int
 GenerateKeyEvent( EventKind eKind, 
         KeyEventData * e, 
         Window window, 
@@ -241,8 +259,6 @@ GenerateKeyEvent( EventKind eKind,
 {
     Tk_Window tkwin;
     XEvent event;
-    unsigned char byte;
-    char buf[16];
     TkDisplay *dispPtr;
     
     /*
@@ -264,33 +280,18 @@ GenerateKeyEvent( EventKind eKind,
         fprintf(stderr,"tkwin == NULL, %d\n", __LINE__);
         return -1;
     }
-    byte = (e->message&charCodeMask);
-    if (byte == 0) {
-        /* 
-         * Either we have a pure-modifier change, or perhaps
-         * a dead-key (e.g. opt-e) was pressed.  In the former case we do
-         * want to generate an event, in the latter I'm not sure
-         * what to do.
-         */
-        if (eKind == kEventRawKeyModifiersChanged) {
-            /* Drop through to the event code below */
+
+    event.xkey.trans_chars[0] = 0;
+
+    if (0 != e->ch) {
+	Ptr resource = NULL;
+	if (GetKeyboardLayout(&resource)) {
+	    if (0 == DecodeViaUnicodeResource(resource,eKind,e,&event))
+		return 0;
         } else {
-	    /* 
-	     * What shall we do here?  We certainly aren't dealing
-	     * with deadkeys at present.  Is this where they come?
-	     */
+	    if (0 == DecodeViaKCHRResource(resource,e,&event))
             return 0;
         }
-    } else if ((savedKeyCode == 0) &&
-            (Tcl_ExternalToUtf(NULL, TkMacOSXCarbonEncoding, 
-			       (char *) &byte, 1, 0, NULL, 
-                        buf, sizeof(buf), NULL, NULL, NULL) != TCL_OK)) {
-        /*
-         * This event specifies a lead byte.  Wait for the second byte
-         * to come in before sending the XEvent.
-         */
-        fprintf(stderr,"Failed %02x\n", byte);
-        return 0;
     }   
 
     event.xany.send_event = False;
@@ -327,7 +328,7 @@ GenerateKeyEvent( EventKind eKind,
      * 
      * Help needed!
      */
-    event.xkey.keycode = byte |
+    event.xkey.keycode = e->ch |
         ((savedKeyCode & charCodeMask) << 8) |
         ((e->message&keyCodeMask) << 8);
    
@@ -371,6 +372,218 @@ GenerateKeyEvent( EventKind eKind,
         default:
             break;
     } 
+    return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetKeyboardLayout --
+ *
+ *	Queries the OS for a pointer to a keyboard resource.
+ *
+ *	NB (benny): This function is supposed to work with the
+ *	keyboard layout switch menu that we have in 10.2.  Currently
+ *	the menu is not enabled at all for wish, so I can not really
+ *	test it.  We will probably have to use real TSM-style event
+ *	handling to get all those goodies, but I haven't figured out
+ *	those bits yet.
+ *
+ * Results:
+ *	1 if there is returned a Unicode 'uchr' resource in
+ *	"*resource", 0 if it is a classic 'KCHR' resource.
+ *
+ * Side effects:
+ *	Sets some internal static variables.
+ *
+ *----------------------------------------------------------------------
+ */
+static int
+GetKeyboardLayout ( Ptr * resource )
+{
+    static SInt16 lastKeyLayoutID = -1; /* should be safe */
+    static Handle uchrHnd = NULL;
+    static Handle KCHRHnd = NULL;
+
+    SInt16 keyScript;
+    SInt16 keyLayoutID;
+
+    keyScript = GetScriptManagerVariable(smKeyScript);
+    keyLayoutID = GetScriptVariable(keyScript,smScriptKeys);
+
+    if (lastKeyLayoutID != keyLayoutID) {
+	deadKeyState = 0;
+	lastKeyLayoutID = keyLayoutID;
+	uchrHnd = GetResource('uchr',keyLayoutID);
+	if (NULL == uchrHnd) {
+	    KCHRHnd = GetResource('KCHR',keyLayoutID);
+	}
+    }
+
+    if (NULL != uchrHnd) {
+	*resource = *uchrHnd;
+	return 1;
+    } else {
+	*resource = *KCHRHnd;
+	return 0;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DecodeViaUnicodeResource --
+ *
+ *        Given MacOS key event data this function generates the UTF-8
+ *        characters.  It does this using a 'uchr' and the
+ *        UCKeyTranslate API.
+ *
+ *	  NB (benny): This function is not tested at all, because my
+ *	  system does not actually return a 'uchr' resource in
+ *	  GetKeyboardLayout currently.  We probably need to do
+ *	  TSM-style event handling to get keyboard layout switching
+ *	  first.
+ *
+ * Results:
+ *        1 if the data was generated, 0 if we are waiting for another
+ *        byte of a dead-key sequence.
+ *
+ * Side effects:
+ *        Sets the trans_chars array in the XEvent->xkey structure.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+DecodeViaUnicodeResource(
+	Ptr uchr,
+	EventKind eKind,
+	const KeyEventData * e,
+	XEvent * event )
+{
+    /* input of UCKeyTranslate */
+    unsigned vkey;
+    int action;
+    unsigned modifiers;
+    unsigned long keyboardType;
+
+    /* output of UCKeyTranslate */
+    enum { BUFFER_SIZE = 16 };
+    UniChar unistring[BUFFER_SIZE];
+    UniCharCount actuallength; 
+    OSStatus status;
+
+    /* for converting the result */
+    char utf8buffer[sizeof(event->xkey.trans_chars)+4];
+    int s, d;
+
+    vkey = ((e->message) >> 8) & 0xFF;
+    modifiers = ((e->keyModifiers) >> 8) & 0xFF;
+    keyboardType = LMGetKbdType();
+
+    switch(eKind) {	
+	default: /* keep compilers happy */
+	case kEventRawKeyDown:	 action = kUCKeyActionDown; break;
+	case kEventRawKeyUp:	 action = kUCKeyActionUp; break;
+	case kEventRawKeyRepeat: action = kUCKeyActionAutoKey; break;
+    }
+
+    status = UCKeyTranslate(
+	    (const UCKeyboardLayout *)uchr,
+	    vkey, action, modifiers, keyboardType,
+	    0, &deadKeyState, BUFFER_SIZE, &actuallength, unistring);
+
+    if (0 != deadKeyState)
+	return 0; /* more data later */
+
+    if (noErr != status) {
+	fprintf(stderr,"UCKeyTranslate failed: %d", (int) status);
+	actuallength = 0;
+    }
+    s = 0;
+    d = 0;
+    while (s<actuallength) {
+	int newd = d + Tcl_UniCharToUtf(unistring[s],utf8buffer+d);
+	if (newd > (sizeof(event->xkey.trans_chars)-1)) {
+	    break;
+	}
+	d = newd;
+	++s;
+    }
+    utf8buffer[d] = 0;
+    strcpy(event->xkey.trans_chars, utf8buffer);
+
+    return 1;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DecodeViaKCHRResource --
+ *
+ *        Given MacOS key event data this function generates the UTF-8
+ *        characters.  It does this using a 'KCHR' and the
+ *        KeyTranslate API.
+ *
+ *	  NB (benny): The function is not actually tested with double
+ *	  byte encodings yet.
+ *
+ * Results:
+ *        1 if the data was generated, 0 if we are waiting for another
+ *        byte of a dead-key sequence.
+ *
+ * Side effects:
+ *        Sets the trans_chars array in the XEvent->xkey structure.
+ *
+ *----------------------------------------------------------------------
+ */
+static int
+DecodeViaKCHRResource(
+	Ptr kchr,
+	const KeyEventData * e,
+	XEvent * event )
+{
+    /* input and output of KeyTranslate */
+    UInt16 keycode;
+    UInt32 result;
+
+    /* for converting the result */
+    char macbuff[2];
+    char * macstr;
+    int maclen;
+
+    keycode = e->keyCode | e->keyModifiers;
+    result = KeyTranslate(kchr, keycode, &deadKeyState);
+
+    if (0 != deadKeyState)
+	return 0; /* more data later */
+
+    macbuff[0] = (char) (result >> 16);
+    macbuff[1] = (char)  result;
+
+    if (0 != macbuff[0]) {
+	/* if the first byte is valid, the second is too */
+	macstr = macbuff;
+	maclen = 2;
+    } else if (0 != macbuff[1]) {
+	/* only the second is valid */
+	macstr = macbuff+1;
+	maclen = 1;
+    } else {
+	/* no valid bytes at all */
+	macstr = NULL;
+	maclen = 0;
+    }
+
+    if (maclen > 0) {
+	int result = Tcl_ExternalToUtf(
+		NULL, TkMacOSXCarbonEncoding,
+		macstr, maclen, 0, NULL,
+		event->xkey.trans_chars, sizeof(event->xkey.trans_chars),
+		NULL, NULL, NULL);
+    }
+
     return 1;
 }
 

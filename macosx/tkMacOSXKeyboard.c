@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.3 2002/09/09 23:52:02 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.4 2002/10/16 11:29:50 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -156,7 +156,7 @@ XKeycodeToKeysym(
         return NoSymbol;
     }
     
-    virtualKey = (char) (keycode >> 16);    
+    virtualKey = keycode >> 16;
     c = (keycode) & 0xffff;
     if (c > 255) {
         return NoSymbol;
@@ -166,7 +166,7 @@ XKeycodeToKeysym(
      * When determining what keysym to produce we first check to see if
      * the key is a function key.  We then check to see if the character
      * is another non-printing key.  Finally, we return the key syms
-     * for all ASCI chars.
+     * for all ASCII chars.
      */
     if (c == 0x10) {
 	hPtr = Tcl_FindHashEntry(&vkeyTable, (char *) virtualKey);
@@ -222,42 +222,9 @@ TkpGetString(
     Tcl_DString *dsPtr)		/* Uninitialized or empty string to hold
 				 * result. */
 {
-    register Tcl_HashEntry *hPtr;
-    char string[3];
-    int virtualKey;
-    int c, len;
-
-    if (!initialized) {
-	InitKeyMaps();
-    }
-
+    (void) winPtr; /*unused*/
     Tcl_DStringInit(dsPtr);
-    
-    virtualKey = (char) (eventPtr->xkey.keycode >> 16);    
-    c = (eventPtr->xkey.keycode) & 0xffff;
-    
-    if (c < 256) {
-        string[0] = (char) c;
-        len = 1;
-    } else {
-        string[0] = (char) (c >> 8);
-        string[1] = (char) c;
-        len = 2;
-    }    
-    /*
-     * Just return NULL if the character is a function key or another
-     * non-printing key.
-     */
-    if (c == 0x10 || (eventPtr->xany.send_event == -1)) {
-	len = 0;
-    } else {
-	hPtr = Tcl_FindHashEntry(&keycodeTable, (char *) virtualKey);
-	if (hPtr != NULL) {
-	    len = 0;
-	}
-    }
-    return Tcl_ExternalToUtfDString(TkMacOSXCarbonEncoding, string, 
-				    len, dsPtr);
+    return Tcl_DStringAppend(dsPtr, eventPtr->xkey.trans_chars, -1);
 }
 
 /*
