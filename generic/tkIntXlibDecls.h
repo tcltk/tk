@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.6 1999/04/24 01:50:49 stanton Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.7 1999/04/30 22:49:55 stanton Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
@@ -799,7 +799,13 @@ typedef struct TkIntXlibStubs {
 #endif /* MAC_TCL */
 } TkIntXlibStubs;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern TkIntXlibStubs *tkIntXlibStubsPtr;
+#ifdef __cplusplus
+}
+#endif
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
 

@@ -1,3 +1,34 @@
+1999-04-30    <stanton@scriptics.com>
+
+	* Merged changes from 8.1.0 branch:
+
+	* generic/tkDecls.h: 
+	* generic/tkIntDecls.h: 
+	* generic/tkIntPlatDecls.h: 
+	* generic/tkIntXlibDecls.h: 
+	* generic/tkPlatDecls.h: 
+	* generic/tkStubInit.c: Changed to avoid the need for forward
+	declarations in stub initializers.  Added extern "C" blocks around
+	stub table pointer declarations so the stubs can be used from C++
+	code. [Bug: 1934]
+
+	* generic/tkInt.decls: Added TkClipBox, XDrawSegments, and
+	XForceScreenSaver to stubs.
+
+	* generic/tkStubLib.c: Reordered declarations to avoid
+	circularities and forward references.
+
+	* generic/tkStubInit.c: Added includes for Mac.
+
+	* generic/tkMenubutton.c: lint
+
+	* generic/tkEntry.c: Fixed bad option table entry.
+
+	* generic/tkImgBmap.c:
+	* generic/tkImgPPM.c:
+	* generic/tkImgPhoto.c: Set the -translation and -encoding options
+	to binary for image files. (reported by Marco Gazzetta)
+	
 1999-04-23    <stanton@scriptics.com>
 
 	* generic/tkInt.decls: Added TkClipBox, XDrawSegments, and
@@ -18,7 +49,7 @@
 	* generic/tkImgPPM.c:
 	* generic/tkImgPhoto.c: Set the -translation and -encoding options
 	to binary for image files. (reported by Marco Gazzetta)
-	
+
 1999-04-20    <redman@scriptics.com>
 
 	* xlib/X11/Xlib.h: changed definition of Status type to use a

@@ -1,7 +1,8 @@
-// RCS: @(#) $Id: wish.rc,v 1.2 1998/09/14 18:24:02 stanton Exp $
+// RCS: @(#) $Id: wish.rc,v 1.3 1999/04/30 22:49:57 stanton Exp $
 //
 // Version
 //
+#include <windows.h>
 
 #define RESOURCE_INCLUDED
 #include <tk.h>
@@ -24,9 +25,9 @@ BEGIN
         BEGIN
             VALUE "FileDescription", "Wish Application\0"
             VALUE "OriginalFilename", "wish" STRINGIFY(TK_MAJOR_VERSION) STRINGIFY(TK_MINOR_VERSION) ".exe\0"
-            VALUE "CompanyName", "Sun Microsystems, Inc.\0"
+            VALUE "CompanyName", "Scriptics Corporation\0"
             VALUE "FileVersion", TK_PATCH_LEVEL
-            VALUE "LegalCopyright", "Copyright \251 1995-1996\0"
+            VALUE "LegalCopyright", "Copyright \251 1999 by Scriptics Corporation\0"
             VALUE "ProductName", "Tk " TK_VERSION " for Windows\0"
             VALUE "ProductVersion", TK_PATCH_LEVEL
         END
