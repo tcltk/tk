@@ -1,9 +1,17 @@
 2003-07-19  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* win/tkWinCursor.c (TkGetCursorByName): Fix bug 420510 to provide
+	consistency between unix and windows -cursor option.
+
 	* library/scale.tcl: Fix for bug 706765 to correctly handle the 
 	-sliderrelief option while moving the thumb.
 
 2003-07-18  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tkUnixFont.c (Tk_DrawChars): do not make XGetGeometry call
+	that prevents overwidth lines as it requires a roundtrip call to
+	the X server for every string drawn.  Hard-code max width to 32768
+	until a beter solution to get max width is made.
 
 	* library/panedwindow.tcl: use widget-specific Priv slots for
 	pwAfterId and panecursor items to correctly handle cursor changes
@@ -12,13 +20,6 @@
 	* generic/tkEvent.c (Tk_HandleEvent): correct XCreateIC call for
 	TK_XIM_SPOT usage. [Bug 742660] (takahashi)
 
-2003-07-19  Pat Thoyts  <patthoyts@users.sourceforge.net>
-
-	* win/tkWinCursor.c (TkGetCursorByName): Fix bug 420510 to provide
-	consistency between unix and windows -cursor option.
-	
-2003-07-18  Jeff Hobbs  <jeffh@ActiveState.com>
-
 	* win/tkWinDialog.c: doubled the TK_MULTI_MAX_PATH value to ~10K.
 	This is a short-term solution until the -multiple option is
 	extended.  [Bug 641261]
@@ -26,15 +27,15 @@
 2003-07-18  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkWindow.c:
-        * macosx/tkMacOSXDialog.c: added native tk_messageBox command,
-        (Tk_MessageBoxObjCmd) for MacOS X platform.
+	* macosx/tkMacOSXDialog.c: added native tk_messageBox command,
+	(Tk_MessageBoxObjCmd) for MacOS X platform.
 
-        * macosx/tkMacOSXMenu.c: corrected encoding conversion for
-        torn-off menu entries (but many other display problems still
-        exist with these)
+	* macosx/tkMacOSXMenu.c: corrected encoding conversion for
+	torn-off menu entries (but many other display problems still
+	exist with these)
 
-        * macosx/tkMacOSXMouseEvent.c: improved handling of events in the
-        presence of grabs, particularly activation events.
+	* macosx/tkMacOSXMouseEvent.c: improved handling of events in the
+	presence of grabs, particularly activation events.
 
 2003-07-18  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
