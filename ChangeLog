@@ -1,3 +1,14 @@
+1999-04-23    <stanton@scriptics.com>
+
+	* generic/tkStubLib.c: Reordered declarations to avoid
+	circularities and forward references.
+
+	* generic/tkStubInit.c: Added includes for Mac.
+
+	* generic/tkMenubutton.c: lint
+
+	* generic/tkEntry.c: Fixed bad option table entry.
+
 1999-04-22    <redman@scriptics.com>
 
 	* generic/tkImgBmap.c:
