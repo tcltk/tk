@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.8 2003/01/19 07:46:43 hobbs Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.9 2004/03/04 00:06:06 hobbs Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
@@ -653,8 +653,8 @@ Returns the type of the menu entry given by \fIindex\fR.
 This is the \fItype\fR argument passed to the \fBadd\fR widget
 command when the entry was created, such as \fBcommand\fR
 or \fBseparator\fR, or \fBtearoff\fR for a tear-off entry.
-.TP
 .VS
+.TP
 \fIpathName \fBunpost\fR
 Unmap the window so that it is no longer displayed.  If a
 lower-level cascaded menu is posted, unpost that menu.  Returns an
