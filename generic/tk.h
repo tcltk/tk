@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.16 1998/10/14 00:59:14 rjohnson Exp $
+ * RCS: @(#) $Id: tk.h,v 1.17 1998/10/16 17:22:59 escoffon Exp $
  */
 
 #ifndef _TK
@@ -26,6 +26,7 @@
  * unix/configure.in
  * win/makefile.bc	(Not for patch release updates)
  * win/makefile.vc	(Not for patch release updates)
+ * win/README
  * library/tk.tcl
  *
  * The release level should be  0 for alpha, 1 for beta, and 2 for
