@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.30 2004/06/15 15:37:31 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.31 2004/06/15 21:37:00 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -698,7 +698,8 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    object = (ClientData) Tk_GetUid(Tcl_GetString(objv[2]));
 	}
 #else /* USE_OLD_TAG_SEARCH */
-	if ((result = TagSearchScan(canvasPtr, objv[2], &searchPtr)) != TCL_OK) {
+	result = TagSearchScan(canvasPtr, objv[2], &searchPtr);
+	if (result != TCL_OK) {
 	    goto done;
 	}
 	if (searchPtr->type == SEARCH_TYPE_ID) {
@@ -919,7 +920,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 		    result = (*itemPtr->typePtr->coordProc)(interp,
 			    (Tk_Canvas) canvasPtr, itemPtr, objc-3,
 			    (Tcl_Obj **) args);
-		    if (args) {
+		    if (args != NULL) {
 			ckfree((char *) args);
 		    }
 		}
@@ -987,7 +988,9 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    CONST char **args = TkGetStringsFromObjs(objc-3, objv+3);
 	    result = (*typePtr->createProc)(interp, (Tk_Canvas) canvasPtr,
 		    itemPtr, objc-3, (Tcl_Obj **) args);
-	    if (args) ckfree((char *) args);
+	    if (args != NULL) {
+		ckfree((char *) args);
+	    }
 	}
 	if (result != TCL_OK) {
 	    ckfree((char *) itemPtr);
@@ -1029,22 +1032,26 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 		continue;
 	    }
 	    if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-		result = itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
-			itemPtr, (char *) objv[3], &first);
+		result = itemPtr->typePtr->indexProc(interp,
+			(Tk_Canvas) canvasPtr, itemPtr, (char *) objv[3],
+			&first);
 	    } else {
-		result = itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
-			itemPtr, Tcl_GetString(objv[3]), &first);
+		result = itemPtr->typePtr->indexProc(interp,
+			(Tk_Canvas) canvasPtr, itemPtr, Tcl_GetString(objv[3]),
+			&first);
 	    }
 	    if (result != TCL_OK) {
 		goto done;
 	    }
 	    if (objc == 5) {
 		if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-		    result = itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
-			    itemPtr, (char *) objv[4], &last);
+		    result = itemPtr->typePtr->indexProc(interp,
+			    (Tk_Canvas) canvasPtr, itemPtr, (char *) objv[4],
+			    &last);
 		} else {
-		    result = itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
-			    itemPtr, Tcl_GetString(objv[4]), &last);
+		    result = itemPtr->typePtr->indexProc(interp,
+			    (Tk_Canvas) canvasPtr, itemPtr,
+			    Tcl_GetString(objv[4]), &last);
 		}
 		if (result != TCL_OK) {
 		    goto done;
@@ -1232,11 +1239,13 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 		goto done;
 	    }
 	    if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-		result = itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
-			itemPtr, (char *) objv[3], &index);
+		result = itemPtr->typePtr->indexProc(interp,
+			(Tk_Canvas) canvasPtr, itemPtr, (char *) objv[3],
+			&index);
 	    } else {
-		result = itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
-			itemPtr, Tcl_GetString(objv[3]), &index);
+		result = itemPtr->typePtr->indexProc(interp,
+			(Tk_Canvas) canvasPtr, itemPtr, Tcl_GetString(objv[3]),
+			&index);
 	    }
 	    if (result != TCL_OK) {
 		goto done;
@@ -1299,11 +1308,13 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 		continue;
 	    }
 	    if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-		result = itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
-			itemPtr, (char *) objv[3], &beforeThis);
+		result = itemPtr->typePtr->indexProc(interp,
+			(Tk_Canvas) canvasPtr, itemPtr, (char *) objv[3],
+			&beforeThis);
 	    } else {
-		result = itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
-			itemPtr, Tcl_GetString(objv[3]), &beforeThis);
+		result = itemPtr->typePtr->indexProc(interp,
+			(Tk_Canvas) canvasPtr, itemPtr, Tcl_GetString(objv[3]),
+			&beforeThis);
 	    }
 	    if (result != TCL_OK) {
 		goto done;
@@ -1367,15 +1378,17 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    } else {
 		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
 		if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-		result = (*itemPtr->typePtr->configProc)(interp,
-			(Tk_Canvas) canvasPtr, itemPtr, objc-3, objv+3,
-			TK_CONFIG_ARGV_ONLY);
+		    result = (*itemPtr->typePtr->configProc)(interp,
+			    (Tk_Canvas) canvasPtr, itemPtr, objc-3, objv+3,
+			    TK_CONFIG_ARGV_ONLY);
 		} else {
-		CONST char **args = TkGetStringsFromObjs(objc-3, objv+3);
-		result = (*itemPtr->typePtr->configProc)(interp,
-			(Tk_Canvas) canvasPtr, itemPtr, objc-3, (Tcl_Obj **) args,
-			TK_CONFIG_ARGV_ONLY);
-		if (args) ckfree((char *) args);
+		    CONST char **args = TkGetStringsFromObjs(objc-3, objv+3);
+		    result = (*itemPtr->typePtr->configProc)(interp,
+			    (Tk_Canvas) canvasPtr, itemPtr, objc-3,
+			    (Tcl_Obj **) args, TK_CONFIG_ARGV_ONLY);
+		    if (args != NULL) {
+			ckfree((char *) args);
+		    }
 		}
 		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
 		canvasPtr->flags |= REPICK_NEEDED;
@@ -1413,9 +1426,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 #ifdef USE_OLD_TAG_SEARCH
 	RelinkItems(canvasPtr, objv[2], itemPtr);
 #else /* USE_OLD_TAG_SEARCH */
-	if ((result = RelinkItems(canvasPtr, objv[2], itemPtr, &searchPtr)) != TCL_OK) {
-	    goto done;
-	}
+	result = RelinkItems(canvasPtr, objv[2], itemPtr, &searchPtr);
 #endif /* USE_OLD_TAG_SEARCH */
 	break;
     }
@@ -1446,7 +1457,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	CONST char **args = TkGetStringsFromObjs(objc, objv);
 
 	result = TkCanvPostscriptCmd(canvasPtr, interp, objc, args);
-	if (args) {
+	if (args != NULL) {
 	    ckfree((char *) args);
 	}
 	break;
@@ -1483,9 +1494,6 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	RelinkItems(canvasPtr, objv[2], prevPtr);
 #else /* USE_OLD_TAG_SEARCH */
 	result = RelinkItems(canvasPtr, objv[2], prevPtr, &searchPtr);
-	if (result != TCL_OK) {
-	    goto done;
-	}
 #endif /* USE_OLD_TAG_SEARCH */
 	break;
     }
@@ -1595,18 +1603,20 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	}
 	if (objc == 5) {
 	    if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-		result = itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
-			itemPtr, (char *) objv[4], &index);
+		result = itemPtr->typePtr->indexProc(interp,
+			(Tk_Canvas) canvasPtr, itemPtr, (char *) objv[4],
+			&index);
 	    } else {
-		result = itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
-			itemPtr, Tcl_GetString(objv[4]), &index);
+		result = itemPtr->typePtr->indexProc(interp,
+			(Tk_Canvas) canvasPtr, itemPtr, Tcl_GetString(objv[4]),
+			&index);
 	    }
 	    if (result != TCL_OK) {
 		goto done;
 	    }
 	}
-	if (Tcl_GetIndexFromObj(interp, objv[2], optionStrings, "select option", 0,
-		&optionindex) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[2], optionStrings,
+		"select option", 0, &optionindex) != TCL_OK) {
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -1699,7 +1709,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	} else {
 	    CONST char **args = TkGetStringsFromObjs(objc, objv);
 	    type = Tk_GetScrollInfo(interp, objc, args, &fraction, &count);
-	    if (args) {
+	    if (args != NULL) {
 		ckfree((char *) args);
 	    }
 	    switch (type) {
@@ -1745,7 +1755,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	} else {
 	    CONST char **args = TkGetStringsFromObjs(objc, objv);
 	    type = Tk_GetScrollInfo(interp, objc, args, &fraction, &count);
-	    if (args) {
+	    if (args != NULL) {
 		ckfree((char *) args);
 	    }
 	    switch (type) {
@@ -1846,7 +1856,7 @@ DestroyCanvas(memPtr)
 	TagSearchExprDestroy(expr);
 	expr = next;
     }
-#endif
+#endif /* USE_OLD_TAG_SEARCH */
     Tcl_DeleteTimerHandler(canvasPtr->insertBlinkHandler);
     if (canvasPtr->bindingTable != NULL) {
 	Tk_DeleteBindingTable(canvasPtr->bindingTable);
