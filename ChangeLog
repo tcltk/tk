@@ -1,3 +1,8 @@
+2004-08-26  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/text.tcl (::tk::TextTranspose): Ensure that Transpose is
+	an atomic op to undo.  Replace 'string compare' with 'ne'.
+
 2004-08-19  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinDialog.c (EatSpuriousMessageBugFix): Fix a problem with
