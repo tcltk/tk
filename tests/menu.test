@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.1.4.4 1999/03/11 18:50:59 hershey Exp $
+# RCS: @(#) $Id: menu.test,v 1.1.4.5 1999/03/24 01:16:57 hershey Exp $
 
 if {[lsearch [image types] test] < 0} {
     puts "This application hasn't been compiled with the \"test\" image"
@@ -14,18 +14,8 @@ if {[lsearch [image types] test] < 0} {
     return
 }
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-if {$tcl_platform(platform) == "windows" && ![info exists INTERACTIVE]} {
-    puts " Some tests were skipped because they could not be performed"
-    puts " automatically on this platform. If you wish to execute them"
-    puts " interactively, set the TCL variable INTERACTIVE and re-run"
-    puts " the test."
-    set ::test::testConfig(menuInteractive) 0
-} else {
-    set ::test::testConfig(menuInteractive) 1
 }
 
 proc deleteWindows {} {
@@ -537,7 +527,7 @@ test menu-3.1 {MenuWidgetCmd procedure} {
     menu .m1
     list [catch {.m1} msg] $msg [destroy .m1]
 } {1 {wrong # args: should be ".m1 option ?arg arg ...?"} {}}
-test menu-3.2 {MenuWidgetCmd, Tcl_Preserve and Tcl_Release} {menuInteractive} {
+test menu-3.2 {MenuWidgetCmd, Tcl_Preserve and Tcl_Release} {pcOnly interactive} {
     catch {destroy .m1}
     menu .m1 -postcommand "destroy .m1"
     .m1 add command -label "menu-3.2: Hit Escape"
@@ -808,7 +798,7 @@ test menu-3.49 {MenuWidgetCmd procedure, "post" option} {
     menu .m1
     list [catch {.m1 post 40 bar} msg] $msg [destroy .m1]
 } {1 {expected integer but got "bar"} {}}
-test menu-3.50 {MenuWidgetCmd procedure, "post" option} {menuInteractive} {
+test menu-3.50 {MenuWidgetCmd procedure, "post" option} {pcOnly interactive} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "menu-3.53: hit Escape" -command "puts hello"
@@ -824,7 +814,7 @@ test menu-3.52 {MenuWidgetCmd procedure, "postcascade" option} {
     menu .m1
     list [catch {.m1 postcascade foo} msg] $msg [destroy .m1]
 } {1 {bad menu entry index "foo"} {}}
-test menu-3.53 {MenuWidgetCmd procedure, "postcascade" option} {menuInteractive} {
+test menu-3.53 {MenuWidgetCmd procedure, "postcascade" option} {pcOnly interactive} {
     catch {destroy .m1}
     catch {destroy .m2}
     menu .m1
@@ -893,7 +883,7 @@ test menu-3.63 {MenuWidgetCmd procedure, "unpost" option} {
     menu .m1
     list [catch {.m1 unpost foo} msg] $msg [destroy .m1]
 } {1 {wrong # args: should be ".m1 unpost"} {}}
-test menu-3.64 {MenuWidgetCmd procedure, "unpost" option} {menuInteractive} {
+test menu-3.64 {MenuWidgetCmd procedure, "unpost" option} {pcOnly interactive} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "menu-3.68 - hit Escape"
@@ -2001,13 +1991,13 @@ test menu-18.4 {TkActivateMenuEntry} {
     list [catch {.m1 activate 1} msg] $msg [destroy .m1]
 } {0 {} {}}
 
-test menu-19.1 {TkPostCommand} {menuInteractive} {
+test menu-19.1 {TkPostCommand} {pcOnly interactive} {
     catch {destroy .m1}
     menu .m1 -postcommand "set menu_test menu-19.1"
     .m1 add command -label "menu-19.1 - hit Escape"
     list [catch {.m1 post 40 40} msg] $msg [.m1 unpost] [set menu_test] [destroy .m1]
 } {0 menu-19.1 {} menu-19.1 {}}
-test menu-19.2 {TkPostCommand} {menuInteractive} {
+test menu-19.2 {TkPostCommand} {pcOnly interactive} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "menu-19.2 - hit Escape"
@@ -2444,5 +2434,17 @@ test menu-33.1 {menu vs command hiding} {
 
 # cleanup
 deleteWindows
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

@@ -9,9 +9,9 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.1.4.3 1999/03/11 18:50:55 hershey Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.1.4.4 1999/03/24 01:16:52 hershey Exp $
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -29,8 +29,8 @@ update
 
 # temporarily copy the README fiel from testsDir to tmpDir
 if {![file exists README]} {
-    set newREADME [file join $::test::tmpDir README]
-    file copy [file join $::test::testsDir README] $newREADME
+    set newREADME [file join $::tcltest::tmpDir README]
+    file copy [file join $::tcltest::testsDir README] $newREADME
     set removeREADME 1
 }
 
@@ -40,7 +40,7 @@ if {![file exists README]} {
 # skip this file if you can't find the teapot.ppm file.
 set teapotPhotoFile [file join $tk_library demos images teapot.ppm]
 if {![file exists $teapotPhotoFile]} {
-    set newLib [file dirname $::test::testsDir]
+    set newLib [file dirname $::tcltest::testsDir]
     set teapotPhotoFile \
 	[file join $newLib library demos images teapot.ppm]
     if {![file exists $teapotPhotoFile]} {
@@ -443,5 +443,17 @@ eval image delete [image names]
 if {[info exists removeREADME]} {
     catch {file delete -force $newREADME}
 }
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

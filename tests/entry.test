@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.1.4.4 1999/03/11 18:50:47 hershey Exp $
+# RCS: @(#) $Id: entry.test,v 1.1.4.5 1999/03/24 01:16:43 hershey Exp $
 
 if {[lsearch [image types] test] < 0} {
     puts "This application hasn't been compiled with the \"test\""
@@ -15,7 +15,7 @@ if {[lsearch [image types] test] < 0} {
     return
 }
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -723,7 +723,7 @@ test entry-6.9 {EntryComputeGeometry procedure} {fonts} {
     update
     list [winfo reqwidth .e] [winfo reqheight .e]
 } {25 39}
-test entry-6.10 {EntryComputeGeometry procedure} {unix && fonts} {
+test entry-6.10 {EntryComputeGeometry procedure} {unixOnly fonts} {
     catch {destroy .e}
     entry .e -bd 1 -relief raised -width 0 -show .
     .e insert 0 12345
@@ -1165,26 +1165,26 @@ test entry-13.9 {GetEntryIndex procedure} {
     list [.e index sel.first] [.e index sel.last]
 } {1 6}
 selection clear .e
-test entry-13.10 {GetEntryIndex procedure} {unix} {
+test entry-13.10 {GetEntryIndex procedure} {unixOnly} {
     # On unix, when selection is cleared, entry widget's internal 
     # selection range is reset.
 
     list [catch {.e index sel.first} msg] $msg
 } {1 {selection isn't in entry}}
-test entry-13.11 {GetEntryIndex procedure} {!unix} {
+test entry-13.11 {GetEntryIndex procedure} {macOrPc} {
     # On mac and pc, when selection is cleared, entry widget remembers
     # last selected range.  When selection ownership is restored to 
     # entry, the old range will be rehighlighted.
 
     list [catch {selection get}] [.e index sel.first]
 } {1 1}
-test entry-13.12 {GetEntryIndex procedure} {unix} {
+test entry-13.12 {GetEntryIndex procedure} {unixOnly} {
     list [catch {.e index sbogus} msg] $msg
 } {1 {selection isn't in entry}}
-test entry-13.13 {GetEntryIndex procedure} {!unix} {
+test entry-13.13 {GetEntryIndex procedure} {macOrPc} {
     list [catch {.e index sbogus} msg] $msg
 } {1 {bad entry index "sbogus"}}
-test entry-13.14 {GetEntryIndex procedure} {!unix} {
+test entry-13.14 {GetEntryIndex procedure} {macOrPc} {
     list [catch {selection get}] [catch {.e index sbogus}]
 } {1 1}
 test entry-13.15 {GetEntryIndex procedure} {
@@ -1285,7 +1285,7 @@ test entry-16.1 {EntryVisibleRange procedure} {fonts} {
     .e insert 0 .............................
     .e xview
 } {0 0.827586}
-test entry-15.2 {EntryVisibleRange procedure} {unix && fonts} {
+test entry-15.2 {EntryVisibleRange procedure} {unixOnly fonts} {
     .e configure -show X
     .e delete 0 end
     .e insert 0 .............................
@@ -1360,5 +1360,17 @@ test entry-18.1 {Entry widget vs hiding} {
 option clear
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

@@ -6,9 +6,9 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.1.4.2 1999/03/11 18:50:55 hershey Exp $
+# RCS: @(#) $Id: listbox.test,v 1.1.4.3 1999/03/24 01:16:52 hershey Exp $
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -1657,5 +1657,17 @@ catch {destroy .partial}
 option clear
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

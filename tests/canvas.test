@@ -6,9 +6,9 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.1.4.4 1999/03/11 18:50:42 hershey Exp $
+# RCS: @(#) $Id: canvas.test,v 1.1.4.5 1999/03/24 01:16:38 hershey Exp $
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -245,5 +245,17 @@ test canvas-9.1 {canvas id creation and deletion} {
 } {}
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

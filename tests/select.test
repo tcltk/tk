@@ -6,14 +6,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: select.test,v 1.1.4.2 1999/03/11 18:51:07 hershey Exp $
+# RCS: @(#) $Id: select.test,v 1.1.4.3 1999/03/24 01:17:05 hershey Exp $
 
 #
 # Note: Multiple display selection handling will only be tested if the
 # environment variable TK_ALT_DISPLAY is set to an alternate display.
 #
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -448,10 +448,10 @@ test select-5.10 {Tk_GetSelection procedure} {unixOnly} {
     set selInfo ""
     selection own .f1
     set result ""
-    fileevent $::test::fd readable {}
-    puts $::test::fd {catch {selection get TEST} msg; update; puts $msg; flush stdout}
-    flush $::test::fd
-    lappend result [gets $::test::fd]
+    fileevent $::tcltest::fd readable {}
+    puts $::tcltest::fd {catch {selection get TEST} msg; update; puts $msg; flush stdout}
+    flush $::tcltest::fd
+    lappend result [gets $::tcltest::fd]
     cleanupbg
     lappend result $selInfo
 } {{selection owner didn't respond} {}}
@@ -813,14 +813,14 @@ test select-10.1 {ConvertSelection procedure, race with selection clear} {unixOn
     set selInfo ""
     selection handle .f1 {handler STRING}
     update
-    puts $::test::fd {puts "[catch {selection get} msg] $msg"; puts **DONE**; flush stdout}
-    flush $::test::fd
+    puts $::tcltest::fd {puts "[catch {selection get} msg] $msg"; puts **DONE**; flush stdout}
+    flush $::tcltest::fd
     after 200
     selection own .
-    set ::test::bgData {}
-    tkwait variable ::test::bgDone
+    set ::tcltest::bgData {}
+    tkwait variable ::tcltest::bgDone
     cleanupbg
-    list $::test::bgData $selInfo
+    list $::tcltest::bgData $selInfo
 } {{1 PRIMARY selection doesn't exist or form "STRING" not defined} {}}
 test select-10.2 {ConvertSelection procedure} {unixOnly} {
     setup
@@ -985,5 +985,17 @@ test select-13.1 {SelectionSize procedure, handler deleted} {unixOnly} {
 catch {rename weirdHandler {}}
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

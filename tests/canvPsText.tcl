@@ -2,7 +2,7 @@
 # for text in canvases.  It is part of the Tk visual test suite,
 # which is invoked via the "visual" script.
 #
-# RCS: @(#) $Id: canvPsText.tcl,v 1.1.4.1 1998/09/30 02:18:29 stanton Exp $
+# RCS: @(#) $Id: canvPsText.tcl,v 1.1.4.2 1999/03/24 01:16:36 hershey Exp $
 
 catch {destroy .t}
 toplevel .t
@@ -81,3 +81,15 @@ proc setStipple c {
     global stipple
     $c itemconfigure text -stipple $stipple
 }
+
+
+
+
+
+
+
+
+
+
+
+

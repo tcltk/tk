@@ -7,9 +7,9 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: oldpack.test,v 1.1.4.2 1999/03/11 18:51:02 hershey Exp $
+# RCS: @(#) $Id: oldpack.test,v 1.1.4.3 1999/03/24 01:17:00 hershey Exp $
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -507,5 +507,17 @@ test pack-9.3 {information output} {
 catch {destroy .pack}
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

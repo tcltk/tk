@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menuDraw.test,v 1.1.4.3 1999/03/11 18:51:00 hershey Exp $
+# RCS: @(#) $Id: menuDraw.test,v 1.1.4.4 1999/03/24 01:16:57 hershey Exp $
 
 if {[lsearch [image types] test] < 0} {
     puts "This application hasn't been compiled with the \"test\" image"
@@ -14,7 +14,7 @@ if {[lsearch [image types] test] < 0} {
     return
 }
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -27,16 +27,6 @@ proc deleteWindows {} {
 deleteWindows
 wm geometry . {}
 raise .
-
-if {$tcl_platform(platform) == "windows" && ![info exists INTERACTIVE]} {
-    puts " Some tests were skipped because they could not be performed"
-    puts " automatically on this platform. If you wish to execute them"
-    puts " interactively, set the TCL variable INTERACTIVE and re-run"
-    puts " the test."
-    set ::test::testConfig(menuInteractive) 0
-} else {
-    set ::test::testConfig(menuInteractive) 1
-}
 
 test menuDraw-1.1 {TkMenuInitializeDrawingFields} {
     catch {destroy .m1}
@@ -190,7 +180,7 @@ test menuDraw-7.2 {TkEventuallyRecomputeMenu - update pending} {
 } {{} {}}
 
 
-test menuDraw-8.1 {TkRecomputeMenu} {menuInteractive} {
+test menuDraw-8.1 {TkRecomputeMenu} {pcOnly interactive} {
     catch {destroy .m1}
     menu .m1
     .m1 configure -postcommand [.m1 add command -label foo]
@@ -505,7 +495,7 @@ test menuDraw-16.5 {TkPostSubMenu} {unixOnly} {
     set tearoff [tkTearOffMenu .m1 40 40]
     list [catch {$tearoff postcascade test} msg] $msg [destroy .m1] [destroy .m2]
 } {1 {invalid command name "glorp"} {} {}}
-test menuDraw-16.6 {TkPostSubMenu} {menuInteractive} {
+test menuDraw-16.6 {TkPostSubMenu} {pcOnly interactive} {
     catch {destroy .m1}
     catch {destroy .m2}
     menu .m1
@@ -531,7 +521,7 @@ test menuDraw-17.1 {AdjustMenuCoords - menubar} {unixOnly} {
     }
     list [$w postcascade 0] [. configure -menu ""] [destroy .m1] [destroy .m2]
 } {{} {} {} {}}
-test menuDraw-17.2 {AdjustMenuCoords - menu} {menuInteractive} {
+test menuDraw-17.2 {AdjustMenuCoords - menu} {pcOnly interactive} {
     catch {destroy .m1}
     catch {destroy .m2}
     menu .m1
@@ -544,5 +534,17 @@ test menuDraw-17.2 {AdjustMenuCoords - menu} {menuInteractive} {
 
 # cleanup
 deleteWindows
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

@@ -5,9 +5,9 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: cmds.test,v 1.1.4.2 1999/03/11 18:50:43 hershey Exp $
+# RCS: @(#) $Id: cmds.test,v 1.1.4.3 1999/03/24 01:16:40 hershey Exp $
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -42,5 +42,17 @@ test cmds-1.5 {tkwait visibility, window gets deleted} {
 } {1 {window ".f.b" was deleted before its visibility changed} deleted}
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

@@ -5,10 +5,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: msgbox.test,v 1.1.4.4 1999/03/11 18:51:01 hershey Exp $
+# RCS: @(#) $Id: msgbox.test,v 1.1.4.5 1999/03/24 01:16:59 hershey Exp $
 #
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -65,11 +65,10 @@ if {[info commands tkMessageBox] == ""} {
     set isNative 0
 }
 
-if {$isNative && ![info exists INTERACTIVE]} {
+if {$isNative && ![info exists tcl_interactive]} {
     puts " Some tests were skipped because they could not be performed"
     puts " automatically on this platform. If you wish to execute them"
-    puts " interactively, set the TCL variable INTERACTIVE and re-run"
-    puts " the test"
+    puts " run them in an tcl_interactive shell."
     return
 }
 
@@ -156,5 +155,17 @@ foreach spec $specs {
 }
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

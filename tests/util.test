@@ -6,9 +6,9 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: util.test,v 1.1.4.2 1999/03/11 18:51:18 hershey Exp $
+# RCS: @(#) $Id: util.test,v 1.1.4.3 1999/03/24 01:17:15 hershey Exp $
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -70,5 +70,17 @@ test util-1.12 {Tk_GetScrollInfo procedure} {
 } {1 {unknown option "dropdead": must be moveto or scroll}}
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

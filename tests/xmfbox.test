@@ -9,16 +9,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: xmfbox.test,v 1.1.2.3 1999/03/11 18:51:25 hershey Exp $
+# RCS: @(#) $Id: xmfbox.test,v 1.1.2.4 1999/03/24 01:17:22 hershey Exp $
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-if {$tcl_platform(platform) != "unix"} {
-    # This test is needed only on Unix platforms. Windows and Mac
-    # have their own Native file dialogs.
-    return
 }
 
 set testPWD [pwd]
@@ -65,14 +59,14 @@ proc cleanup {} {
     catch {destroy .foo}
 }
 
-test xmfbox-1.1 {tkMotifFDialog_Create, -parent switch} {
+test xmfbox-1.1 {tkMotifFDialog_Create, -parent switch} {unixOnly} {
     catch {unset foo}
     set x [tkMotifFDialog_Create foo open {-parent .}]
     catch {destroy $x}
     set x
 } .foo
 
-test xmfbox-1.2 {tkMotifFDialog_Create, -parent switch} {
+test xmfbox-1.2 {tkMotifFDialog_Create, -parent switch} {unixOnly} {
     catch {unset foo}
     toplevel .bar
     set x [tkMotifFDialog_Create foo open {-parent .bar}]
@@ -81,7 +75,7 @@ test xmfbox-1.2 {tkMotifFDialog_Create, -parent switch} {
     set x
 } .bar.foo
 
-test xmfbox-2.1 {tkMotifFDialog_InterpFilter, ~ in dir names} {
+test xmfbox-2.1 {tkMotifFDialog_InterpFilter, ~ in dir names} {unixOnly} {
     cleanup
     file mkdir ./~nosuchuser1
     set x [tkMotifFDialog_Create foo open {}]
@@ -90,7 +84,7 @@ test xmfbox-2.1 {tkMotifFDialog_InterpFilter, ~ in dir names} {
     set kk [tkMotifFDialog_InterpFilter $x]
 } [list $testPWD/~nosuchuser1 *]
 
-test xmfbox-2.2 {tkMotifFDialog_InterpFilter, ~ in file names} {
+test xmfbox-2.2 {tkMotifFDialog_InterpFilter, ~ in file names} {unixOnly} {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tkMotifFDialog_Create foo open {}]
@@ -99,7 +93,7 @@ test xmfbox-2.2 {tkMotifFDialog_InterpFilter, ~ in file names} {
     set kk [tkMotifFDialog_InterpFilter $x]
 } [list $testPWD ./~nosuchuser1]
 
-test xmfbox-2.3 {tkMotifFDialog_Update, ~ in file names} {
+test xmfbox-2.3 {tkMotifFDialog_Update, ~ in file names} {unixOnly} {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tkMotifFDialog_Create foo open {}]
@@ -110,7 +104,7 @@ test xmfbox-2.3 {tkMotifFDialog_Update, ~ in file names} {
     $foo(fList) get end
 } ~nosuchuser1
 
-test xmfbox-2.4 {tkMotifFDialog_LoadFile, ~ in file names} {
+test xmfbox-2.4 {tkMotifFDialog_LoadFile, ~ in file names} {unixOnly} {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tkMotifFDialog_Create foo open {}]
@@ -118,7 +112,7 @@ test xmfbox-2.4 {tkMotifFDialog_LoadFile, ~ in file names} {
     expr {$i >= 0}
 } 1
 
-test xmfbox-2.5 {tkMotifFDialog_BrowseFList, ~ in file names} {
+test xmfbox-2.5 {tkMotifFDialog_BrowseFList, ~ in file names} {unixOnly} {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tkMotifFDialog_Create foo open {}]
@@ -129,7 +123,7 @@ test xmfbox-2.5 {tkMotifFDialog_BrowseFList, ~ in file names} {
     $foo(sEnt) get
 } $testPWD/~nosuchuser1
 
-test xmfbox-2.5 {tkMotifFDialog_ActivateFList, ~ in file names} {
+test xmfbox-2.5 {tkMotifFDialog_ActivateFList, ~ in file names} {unixOnly} {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tkMotifFDialog_Create foo open {}]
@@ -143,5 +137,16 @@ test xmfbox-2.5 {tkMotifFDialog_ActivateFList, ~ in file names} {
 
 # cleanup
 cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: filebox.test,v 1.1.4.5 1999/03/11 23:51:26 hershey Exp $
+# RCS: @(#) $Id: filebox.test,v 1.1.4.6 1999/03/24 01:16:45 hershey Exp $
 #
 
 set tk_strictMotif_old $tk_strictMotif
@@ -89,7 +89,7 @@ proc SendButtonPress {parent btn type} {
 #
 #----------------------------------------------------------------------
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -160,7 +160,7 @@ foreach mode $modes {
 	    set isNative 0
 	}
 
-	if {$isNative && ![info exists INTERACTIVE]} {
+	if {$isNative && ![info exists tcl_interactive]} {
 	    continue
 	}
 
@@ -288,13 +288,24 @@ foreach mode $modes {
 
 set tk_strictMotif $tk_strictMotif_old
 
-if {$isNative && ![info exists INTERACTIVE]} {
+if {$isNative && ![info exists tcl_interactive]} {
     puts " Some tests were skipped because they could not be performed"
     puts " automatically on this platform. If you wish to execute them"
-    puts " interactively, set the TCL variable INTERACTIVE and re-run"
-    puts " the test."
+    puts " run them in an interactive shell."
 }
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

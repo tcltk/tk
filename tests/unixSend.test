@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixSend.test,v 1.1.2.3 1999/03/11 18:51:17 hershey Exp $
+# RCS: @(#) $Id: unixSend.test,v 1.1.2.4 1999/03/24 01:17:14 hershey Exp $
 
 if {$tcl_platform(platform) == "macintosh"} {
     puts "send is not available on the Mac - skipping tests"
@@ -22,7 +22,7 @@ if {[auto_execok xhost] == ""} {
     return
 }
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -580,11 +580,11 @@ test unixSend-12.2 {TimeoutProc procedure} {
     update
     setupbg
     puts $fd {after 10 {after 5000; exit}; puts [tk appname]; puts **DONE**; flush stdout}
-    set ::test::bgDone 0
-    set ::test::bgData {}
+    set ::tcltest::bgDone 0
+    set ::tcltest::bgData {}
     flush $fd
-    tkwait variable ::test::bgDone
-    set app $::test::bgData
+    tkwait variable ::tcltest::bgDone
+    set app $::tcltest::bgData
     after 200
     set result [list [catch {send $app foo} msg] $msg]
     close $fd
@@ -658,5 +658,17 @@ if $gotTestCmds {
 rename newApp {}
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

@@ -5,10 +5,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clrpick.test,v 1.1.4.3 1999/03/11 18:50:43 hershey Exp $
+# RCS: @(#) $Id: clrpick.test,v 1.1.4.4 1999/03/24 01:16:39 hershey Exp $
 #
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -50,16 +50,10 @@ test clrpick-1.7 {tk_chooseColor command} {
 
 if {[info commands tkColorDialog] == ""} {
     set isNative 1
+    set ::tcltest::testConfig(tkDialog) 0
 } else {
     set isNative 0
-}
-
-if {$isNative && ![info exists INTERACTIVE]} {
-    puts " Some tests were skipped because they could not be performed"
-    puts " automatically on this platform. If you wish to execute them"
-    puts " interactively, set the TCL variable INTERACTIVE and re-run"
-    puts " the test."
-    return
+    set ::tcltest::testConfig(tkDialog) 1
 }
 
 proc ToPressButton {parent btn} {
@@ -140,8 +134,9 @@ set verylongstring $verylongstring$verylongstring
 
 # let's soak up a bunch of colors...so that
 # machines with small color palettes still fail.
+# some tests will be skipped if there are no more colors
 set numcolors 32
-set nomorecolors 0
+set ::tcltest::testConfig(colorsLeftover) 1
 set i 0
 canvas .c
 pack .c -expand 1 -fill both
@@ -159,7 +154,7 @@ while {$i<$numcolors} {
 	set g [expr $g/256]
 	set b [expr $b/256]
 	if {"$color" != "#[format %02x%02x%02x $r $g $b]"} {
-	    set nomorecolors 1
+	    set ::tcltest::testConfig(colorsLeftover) 0
 	}
     }
     .c delete $i
@@ -168,51 +163,61 @@ while {$i<$numcolors} {
 
 destroy .c
 
-if {!$nomorecolors} {
-    set color #404040
-    test clrpick-2.1 {tk_chooseColor command} {
-	ToPressButton $parent ok
-	tk_chooseColor -title "Press Ok $verylongstring" -initialcolor $color -parent $parent
-    } "$color"
+set color #404040
+test clrpick-2.1 {tk_chooseColor command} \
+	{interactive colorsLeftover tkDialog} {
+    ToPressButton $parent ok
+    tk_chooseColor -title "Press Ok $verylongstring" -initialcolor $color \
+	    -parent $parent
+} "$color"
     
-    set color #808040
-    test clrpick-2.2 {tk_chooseColor command} {
-	if {$tcl_platform(platform) == "macintosh"} {
-	    set colors "32768 32768 16384"
-	} else {
-	    set colors "128 128 64"
-	}
-	ToChooseColorByKey $parent 128 128 64
-	tk_chooseColor -parent $parent -title "choose $colors"
-    } "$color"
+set color #808040
+test clrpick-2.2 {tk_chooseColor command} \
+	{interactive colorsLeftover tkDialog} {
+    if {$tcl_platform(platform) == "macintosh"} {
+	set colors "32768 32768 16384"
+    } else {
+	set colors "128 128 64"
+    }
+    ToChooseColorByKey $parent 128 128 64
+    tk_chooseColor -parent $parent -title "choose $colors"
+} "$color"
     
-    test clrpick-2.3 {tk_chooseColor command} {
-	ToPressButton $parent ok
-	tk_chooseColor -parent $parent -title "Press OK"
-    } "$color"
-} else {
-    puts "Skipped tests clrpick2.1, clrpick2.2 and clrpick2.3 because"
-    puts "you ran out of colors in your color palette, and this would"
-    puts "have caused the tests to generate errors."
-}
+test clrpick-2.3 {tk_chooseColor command} \
+	{interactive colorsLeftover tkDialog} {
+    ToPressButton $parent ok
+    tk_chooseColor -parent $parent -title "Press OK"
+} "$color"
     
-test clrpick-2.4 {tk_chooseColor command} {
+test clrpick-2.4 {tk_chooseColor command} {interactive tkDialog} {
     ToPressButton $parent cancel
     tk_chooseColor -parent $parent -title "Press Cancel"
 } ""
 
 set color #000000
-test clrpick-3.1 {tk_chooseColor: background events} {
+test clrpick-3.1 {tk_chooseColor: background events} {interactive tkDialog} {
     after 1 {set x 53}
     ToPressButton $parent ok
     tk_chooseColor -parent $parent -title "Press OK" -initialcolor $color
 } "#000000"
-test clrpick-3.2 {tk_chooseColor: background events} {
+test clrpick-3.2 {tk_chooseColor: background events} {interactive tkDialog} {
     after 1 {set x 53}
     ToPressButton $parent cancel
     tk_chooseColor -parent $parent -title "Press Cancel"
 } ""
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

@@ -5,14 +5,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: color.test,v 1.1.4.3 1999/03/11 18:50:44 hershey Exp $
+# RCS: @(#) $Id: color.test,v 1.1.4.4 1999/03/24 01:16:41 hershey Exp $
 
 if {[info commands testcolor] != "testcolor"} {
     puts "testcolor command not available; skipping tests"
     return
 }
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -277,5 +277,17 @@ test color-4.1 {FreeColorObjProc} {
 destroy .t
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

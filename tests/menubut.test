@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menubut.test,v 1.1.4.3 1999/03/11 18:51:01 hershey Exp $
+# RCS: @(#) $Id: menubut.test,v 1.1.4.4 1999/03/24 01:16:58 hershey Exp $
 
 # XXX This test file is woefully incomplete right now.  If any part
 # XXX of a procedure has tests then the whole procedure has tests,
@@ -19,7 +19,7 @@ if {[lsearch [image types] test] < 0} {
     return
 }
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -313,7 +313,7 @@ test menubutton-7.13 {ComputeMenuButtonGeometry procedure} {fonts} {
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } {78 28}
-test menubutton-7.14 {ComputeMenuButtonGeometry procedure} {unix nonPortable} {
+test menubutton-7.14 {ComputeMenuButtonGeometry procedure} {unixOnly nonPortable} {
     # The following test is non-portable because the indicator's pixel
     # size varies to maintain constant absolute size.
 
@@ -350,5 +350,17 @@ eval destroy [winfo children .]
 option clear
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

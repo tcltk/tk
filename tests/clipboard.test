@@ -6,14 +6,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clipboard.test,v 1.1.4.2 1999/03/11 18:50:42 hershey Exp $
+# RCS: @(#) $Id: clipboard.test,v 1.1.4.3 1999/03/24 01:16:39 hershey Exp $
 
 #
 # Note: Multiple display clipboard handling will only be tested if the
 # environment variable TK_ALT_DISPLAY is set to an alternate display.
 #
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -233,5 +233,17 @@ test clipboard-7.14 {Tk_ClipboardCmd procedure} {
 } {1 {bad option "error": must be clear or append}}
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

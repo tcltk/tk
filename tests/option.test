@@ -6,9 +6,9 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: option.test,v 1.1.4.2 1999/03/11 18:51:03 hershey Exp $
+# RCS: @(#) $Id: option.test,v 1.1.4.3 1999/03/24 01:17:00 hershey Exp $
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -186,13 +186,13 @@ test option-14.12 {error conditions} {
 } {1 {bad window path name ".gorp.gorp"}}
 
 if {$tcl_platform(os) == "Win32s"} {
-    set option1 [file join $::test::testsDir OPTION~2.FIL]
-    set option2 [file join $::test::testsDir OPTION~1.FIL]
-    set option3 [file join $::test::testsDir OPTION~3.FIL]
+    set option1 [file join $::tcltest::testsDir OPTION~2.FIL]
+    set option2 [file join $::tcltest::testsDir OPTION~1.FIL]
+    set option3 [file join $::tcltest::testsDir OPTION~3.FIL]
 } else {
-    set option1 [file join $::test::testsDir option.file1]
-    set option2 [file join $::test::testsDir option.file2]
-    set option3 [file join $::test::testsDir option.file3]
+    set option1 [file join $::tcltest::testsDir option.file1]
+    set option2 [file join $::tcltest::testsDir option.file2]
+    set option3 [file join $::tcltest::testsDir option.file3]
 }
 
 test option-15.1 {database files} {
@@ -231,5 +231,17 @@ catch {destroy .op1}
 catch {destroy .op2}
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

@@ -7,9 +7,9 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: geometry.test,v 1.1.4.2 1999/03/11 18:50:51 hershey Exp $
+# RCS: @(#) $Id: geometry.test,v 1.1.4.3 1999/03/24 01:16:48 hershey Exp $
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -250,5 +250,17 @@ test geometry-4.10 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} {
 catch {destroy .t}
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

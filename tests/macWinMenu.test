@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: macWinMenu.test,v 1.1.4.2 1999/03/11 18:50:58 hershey Exp $
+# RCS: @(#) $Id: macWinMenu.test,v 1.1.4.3 1999/03/24 01:16:55 hershey Exp $
 
 if {$tcl_platform(platform) == "unix"} {
     puts "skipping: Unix only tests..."
@@ -20,7 +20,7 @@ if {[lsearch [image types] test] < 0} {
     return
 }
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -34,11 +34,10 @@ deleteWindows
 wm geometry . {}
 raise .
 
-if {$tcl_platform(platform) == "windows" && ![info exists INTERACTIVE]} {
+if {$tcl_platform(platform) == "windows" && ![info exists tcl_interactive]} {
     puts " Some tests were skipped because they could not be performed"
     puts " automatically on this platform. If you wish to execute them"
-    puts " interactively, set the TCL variable INTERACTIVE and re-run"
-    puts " the test."
+    puts " run them in an tcl_interactive shell."
 }
 
 test macWinMenu-1.1 {PreprocessMenu} {
@@ -47,7 +46,7 @@ test macWinMenu-1.1 {PreprocessMenu} {
     .m1 add command -label "macWinMenu-1.1: Hit Escape"
     list [catch {.m1 post 40 40} msg] $msg
 } {0 {}}
-if {$tcl_platform(platform) != "windows" || [info exists INTERACTIVE]} {
+if {$tcl_platform(platform) != "windows" || [info exists tcl_interactive]} {
     test macWinMenu-1.2 {PreprocessMenu} {
 	catch {destroy .m1}
 	catch {destroy .m2}
@@ -104,7 +103,7 @@ test macWinMenu-1.5 {PreprocessMenu} {
     list [catch {.m1 post 40 40} msg] $msg [destroy .m1 .m2]
 } {1 {invalid command name "glorp"} {}}
 
-if {$tcl_platform(platform) != "windows" || [info exists INTERACTIVE]} {
+if {$tcl_platform(platform) != "windows" || [info exists tcl_interactive]} {
     test macWinMenu-2.1 {TkPreprocessMenu} {
 	catch {destroy .m1}
 	set foo test
@@ -116,5 +115,17 @@ if {$tcl_platform(platform) != "windows" || [info exists INTERACTIVE]} {
 
 # cleanup
 deleteWindows
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+

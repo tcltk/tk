@@ -6,14 +6,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: font.test,v 1.1.4.3 1999/03/11 18:50:50 hershey Exp $
+# RCS: @(#) $Id: font.test,v 1.1.4.4 1999/03/24 01:16:46 hershey Exp $
 
 if {[info commands testfont] != "testfont"} {
     puts "testfont command not available; skipping tests"
     return
 }
 
-if {[lsearch [namespace children] ::test] == -1} {
+if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
@@ -140,7 +140,7 @@ test font-4.8 {font command: actual: all attributes} {
     # not (objc > 3) so objPtr = NULL
     lindex [font actual {-family times}] 0
 } {-family}
-test font-4.9 {font command: actual} {unix || mac} {
+test font-4.9 {font command: actual} {macOrUnix} {
     # (objc > 3) so objPtr = objv[3 + skip]
     string tolower [font actual {-family times} -family]
 } {times}
@@ -1371,5 +1371,17 @@ setup
 destroy .b
 
 # cleanup
-::test::cleanupTests
+::tcltest::cleanupTests
 return
+
+
+
+
+
+
+
+
+
+
+
+
