@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.1.4.20 1999/03/30 02:30:19 redman Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.1.4.21 1999/04/01 21:58:52 redman Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -208,6 +208,7 @@ TKOBJS = \
 	$(TMPDIR)\tkUtil.obj \
 	$(TMPDIR)\tkVisual.obj \
 	$(TMPDIR)\tkStubInit.obj \
+	$(TMPDIR)\tkStubLib.obj \
 	$(TMPDIR)\tkWindow.obj
 
 TKSTUBOBJS = $(TMPDIR)\tkStubLib.obj \

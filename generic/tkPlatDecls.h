@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.2.2.2 1999/03/30 02:08:02 redman Exp $
+ * RCS: @(#) $Id: tkPlatDecls.h,v 1.2.2.3 1999/04/01 21:58:49 redman Exp $
  */
 
 #ifndef _TKPLATDECLS
@@ -48,10 +48,6 @@ EXTERN void		Tk_PointerEvent _ANSI_ARGS_((HWND hwnd, int x, int y));
 EXTERN int		Tk_TranslateWinEvent _ANSI_ARGS_((HWND hwnd, 
 				UINT message, WPARAM wParam, LPARAM lParam, 
 				LRESULT * result));
-/* 6 */
-EXTERN int		Tk_DdeObjCmd _ANSI_ARGS_((ClientData clientData, 
-				Tcl_Interp * interp, int objc, 
-				Tcl_Obj *CONST objv[]));
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* 0 */
@@ -99,7 +95,6 @@ typedef struct TkPlatStubs {
     Tk_Window (*tk_HWNDToWindow) _ANSI_ARGS_((HWND hwnd)); /* 3 */
     void (*tk_PointerEvent) _ANSI_ARGS_((HWND hwnd, int x, int y)); /* 4 */
     int (*tk_TranslateWinEvent) _ANSI_ARGS_((HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT * result)); /* 5 */
-    int (*tk_DdeObjCmd) _ANSI_ARGS_((ClientData clientData, Tcl_Interp * interp, int objc, Tcl_Obj *CONST objv[])); /* 6 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     void (*tk_MacSetEmbedHandler) _ANSI_ARGS_((Tk_MacEmbedRegisterWinProc * registerWinProcPtr, Tk_MacEmbedGetGrafPortProc * getPortProcPtr, Tk_MacEmbedMakeContainerExistProc * containerExistProcPtr, Tk_MacEmbedGetClipProc * getClipProc, Tk_MacEmbedGetOffsetInParentProc * getOffsetProc)); /* 0 */
@@ -148,10 +143,6 @@ extern TkPlatStubs *tkPlatStubsPtr;
 #ifndef Tk_TranslateWinEvent
 #define Tk_TranslateWinEvent \
 	(tkPlatStubsPtr->tk_TranslateWinEvent) /* 5 */
-#endif
-#ifndef Tk_DdeObjCmd
-#define Tk_DdeObjCmd \
-	(tkPlatStubsPtr->tk_DdeObjCmd) /* 6 */
 #endif
 #endif /* __WIN32__ */
 #ifdef MAC_TCL

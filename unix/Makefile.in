@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.1.4.10 1999/03/30 02:08:03 redman Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.1.4.11 1999/04/01 21:58:51 redman Exp $
 
 # Current Tk version;  used in various names.
 
@@ -265,7 +265,7 @@ UNIXOBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
 	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o \
 	tkUnixFocus.o tkUnixFont.o tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
-	tkUnixSend.o tkUnixWm.o tkUnixXId.o tkStubInit.o
+	tkUnixSend.o tkUnixWm.o tkUnixXId.o tkStubInit.o tkStubLib.o
 
 STUB_LIB_OBJS = tkStubLib.o
 
@@ -317,6 +317,7 @@ SRCS = \
 	$(GENERIC_DIR)/tkTextTag.c $(GENERIC_DIR)/tkTextWind.c \
 	$(GENERIC_DIR)/tkOldConfig.c \
 	$(GENERIC_DIR)/tkSquare.c $(GENERIC_DIR)/tkTest.c \
+	$(GENERIC_DIR)/tkStubInit.c $(GENERIC_DIR)/tkStubLib.c \
 	$(UNIX_DIR)/tkAppInit.c $(UNIX_DIR)/tkUnix.c \
 	$(UNIX_DIR)/tkUnix3d.c \
 	$(UNIX_DIR)/tkUnixButton.c $(UNIX_DIR)/tkUnixColor.c \
@@ -775,8 +776,7 @@ tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
 # even though they will be placed in a static archive
 
 tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
-	$(CC) -c $(CC_SWITCHES_NO_STUBS) $(GENERIC_DIR)/tkStubLib.c
-
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubLib.c
 
 tkUnix.o: $(UNIX_DIR)/tkUnix.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnix.c

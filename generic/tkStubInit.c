@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.2.2.3 1999/03/30 04:12:58 stanton Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.2.2.4 1999/04/01 21:58:50 redman Exp $
  */
 
 #include "tkInt.h"
@@ -258,8 +258,6 @@ TkStubs tkStubs = {
     Tk_SetOptions, /* 214 */
 };
 
-TkStubs *tkStubsPtr = &tkStubs;
-
 TkIntStubs tkIntStubs = {
     TCL_STUB_MAGIC,
     NULL,
@@ -377,8 +375,6 @@ TkIntStubs tkIntStubs = {
     TkpGetSystemDefault, /* 111 */
     TkpMenuThreadInit, /* 112 */
 };
-
-TkIntStubs *tkIntStubsPtr = &tkIntStubs;
 
 TkIntPlatStubs tkIntPlatStubs = {
     TCL_STUB_MAGIC,
@@ -510,8 +506,6 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkMacGetHostToplevel, /* 71 */
 #endif /* MAC_TCL */
 };
-
-TkIntPlatStubs *tkIntPlatStubsPtr = &tkIntPlatStubs;
 
 TkIntXlibStubs tkIntXlibStubs = {
     TCL_STUB_MAGIC,
@@ -664,8 +658,6 @@ TkIntXlibStubs tkIntXlibStubs = {
 #endif /* MAC_TCL */
 };
 
-TkIntXlibStubs *tkIntXlibStubsPtr = &tkIntXlibStubs;
-
 TkPlatStubs tkPlatStubs = {
     TCL_STUB_MAGIC,
     NULL,
@@ -676,7 +668,6 @@ TkPlatStubs tkPlatStubs = {
     Tk_HWNDToWindow, /* 3 */
     Tk_PointerEvent, /* 4 */
     Tk_TranslateWinEvent, /* 5 */
-    Tk_DdeObjCmd, /* 6 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     Tk_MacSetEmbedHandler, /* 0 */
@@ -692,8 +683,6 @@ TkPlatStubs tkPlatStubs = {
     TkMacGetDrawablePort, /* 10 */
 #endif /* MAC_TCL */
 };
-
-TkPlatStubs *tkPlatStubsPtr = &tkPlatStubs;
 
 static TkStubHooks tkStubHooks = {
     &tkPlatStubs,

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.1.4.14 1999/03/18 00:43:01 stanton Exp $
+ * RCS: @(#) $Id: tk.h,v 1.1.4.15 1999/04/01 21:58:49 redman Exp $
  */
 
 #ifndef _TK
@@ -1158,6 +1158,15 @@ struct Tk_PhotoImageFormat {
 /* Removed Tk_Main, use macro instead */
 #define Tk_Main(argc, argv, proc) \
     Tk_MainEx(argc, argv, proc, Tcl_CreateInterp())
+
+char *Tk_InitStubs _ANSI_ARGS_((Tcl_Interp *interp, char *version, int exact));
+
+#ifndef USE_TK_STUBS
+
+#define Tk_InitStubs(interp, version, exact) \
+    Tcl_PkgRequire(interp, "Tk", version, exact)
+
+#endif
 
 
 /*

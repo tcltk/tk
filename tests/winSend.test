@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winSend.test,v 1.1.2.6 1999/03/26 00:08:12 hershey Exp $
+# RCS: @(#) $Id: winSend.test,v 1.1.2.7 1999/04/01 21:58:51 redman Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -15,6 +15,12 @@ if {[lsearch [namespace children] ::tcltest] == -1} {
 
 if {$tcl_platform(platform) != "windows"} {
     puts "skipping: Windows only tests..."
+    ::tcltest::cleanupTests
+    return
+}
+
+if {[info commands send] != "send"} {
+    puts "skipping: Unimplemented send command"
     ::tcltest::cleanupTests
     return
 }

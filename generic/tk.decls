@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.2.2.2 1999/03/30 04:12:55 stanton Exp $
+# RCS: @(#) $Id: tk.decls,v 1.2.2.3 1999/04/01 21:58:49 redman Exp $
 
 library tk
 
@@ -1066,13 +1066,6 @@ declare 4 win {
 declare 5 win {
     int Tk_TranslateWinEvent (HWND hwnd, \
 	    UINT message, WPARAM wParam, LPARAM lParam, LRESULT *result)
-}
-
-# new for 8.1
-
-declare 6 win {
-    int Tk_DdeObjCmd (ClientData clientData, Tcl_Interp *interp, \
-	    int objc, Tcl_Obj *CONST objv[])
 }
 
 # Mac specific functions

@@ -1,3 +1,25 @@
+1999-04-01    <redman@scriptics.com>
+
+	* generic/tk.decls:
+	* generic/tk.h:
+	* generic/tkStubInit.c:
+	* generic/tkWindow.c:
+	* unix/Makefile.in:
+	* win/makefile.vc: Tk now uses its own stub library to store
+	pointers to its own stubs table.
+
+	* generic/tk.decls:
+	* tests/winSend.test:
+	* generic/tkPlatDecls.h:
+	* win/tkWinSend.c:  Removed the DDE-based send and dde commands,
+	they were causing Tk to lock up when any window on the system was
+	not processing its message queue (more importantly, windows in Tcl
+	and Tk).  The send command needs to be rewritten to prevent the
+	deadlock situation (soon).  The dde command is being pushed into
+	its own package and will provide almost all of the capabilities
+	that send did before (using a "dde eval" command), not yet
+	completed.
+
 1999-03-31    <redman@scriptics.com>
 
 	* win/tkWinSend.c: Modified dde/send code to work properly on
