@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.31 2001/09/17 14:12:18 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.32 2001/12/14 14:56:46 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -959,12 +959,10 @@ proc ::tk::dialog::file::Config {dataName type argList} {
     # like "yes") so we can use it in tests more easily.
     if {![string compare $type save]} {
 	set data(-multiple) 0
+    } elseif {$data(-multiple)} { 
+	set data(-multiple) 1 
     } else {
-	if {$data(-multiple)} { 
-	    set data(-multiple) 1 
-	} else {
-	    set data(-multiple) 0
-	}
+	set data(-multiple) 0
     }
 }
 
@@ -1364,6 +1362,29 @@ proc ::tk::dialog::file::SetFilter {w type} {
 
     set data(filter) [lindex $type 1]
     $data(typeMenuBtn) config -text [lindex $type 0] -indicatoron 1
+
+    # If we aren't using a default extension, use the one suppled
+    # by the filter.
+    if {![info exists data(extUsed)]} {
+	if {[string length $data(-defaultextension)]} {
+	    set data(extUsed) 1
+	} else {
+	    set data(extUsed) 0
+	}
+    }
+
+    if {!$data(extUsed)} {
+	# Get the first extension in the list that matches {^\*\.\w+$}
+	# and remove all * from the filter.
+	set index [lsearch -regexp $data(filter) {^\*\.\w+$}]
+	if {$index >= 0} {
+	    set data(-defaultextension) \
+		    [string trimleft [lindex $data(filter) $index] "*"]
+	} else {
+	    # Couldn't find anything!  Reset to a safe default...
+	    set data(-defaultextension) ""
+	}
+    }
 
     $icons(sbar) set 0.0 0.0
     
