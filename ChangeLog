@@ -1,10 +1,17 @@
+2000-11-28  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* doc/image.n: 
+	* generic/tkImage.c (Tk_ImageObjCmd): Backed out previous change.
+	  Bug #120819 is back again in force.  Left the test in there
+	  though.
+
 2000-11-23  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* doc/image.n: 
 	* tests/image.test (image-1.10):
 	* generic/tkImage.c (Tk_ImageObjCmd): Prohibited image names that
-	start with "." since they can cause some really obscure crashes.
-	Fixes Bug #120819.  [POTENTIAL INCOMPATABILITY]
+	  start with "." since they can cause some really obscure
+	  crashes.  Fixes Bug #120819.
 
 2000-11-21  Eric Melski  <ericm@ajubasolutions.com>
 
