@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.33 2004/09/10 12:13:42 vincentdarley Exp $
+# RCS: @(#) $Id: text.tcl,v 1.34 2004/09/24 14:04:03 vincentdarley Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -452,8 +452,19 @@ set ::tk::Priv(prevPos) {}
 # on other platforms.  We must be careful not to round -ve values of %D
 # down to zero.
 
+# We must make sure that positive and negative movements are rounded
+# equally to integers, avoiding the problem that 
+#     (int)1/3 = 0, 
+# but
+#     (int)-1/3 = -1
+# The following code ensure equal +/- behaviour.
 bind Text <MouseWheel> {
-    %W yview scroll [expr {-%D}] pixels
+    puts stderr %D
+    if {%D >= 0} {
+	%W yview scroll [expr {-%D/3}] pixels
+    } else {
+	%W yview scroll [expr {(2-%D)/3}] pixels
+    }
 }
 if {[string equal [tk windowingsystem] "aqua"]} {
 bind Text <Option-MouseWheel> {
