@@ -6,7 +6,7 @@
 # at the window to make sure it appears as expected.  Individual tests
 # are kept in separate ".tcl" files in this directory.
 #
-# RCS: @(#) $Id: visual,v 1.2 1998/09/14 18:23:53 stanton Exp $
+# RCS: @(#) $Id: visual,v 1.1.4.1 1998/09/30 02:19:04 stanton Exp $
 
 set auto_path ". $auto_path"
 wm title . "Visual Tests for Tk"
