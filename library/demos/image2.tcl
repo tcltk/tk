@@ -3,7 +3,7 @@
 # This demonstration script creates a simple collection of widgets
 # that allow you to select and view images in a Tk label.
 #
-# RCS: @(#) $Id: image2.tcl,v 1.4 2001/11/15 14:02:47 dkf Exp $
+# RCS: @(#) $Id: image2.tcl,v 1.5 2001/11/15 14:13:13 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -25,7 +25,7 @@ proc loadDir w {
     }
 }
 
-# loadDir --
+# selectAndLoadDir --
 # This procedure pops up a dialog to ask for a directory to load into
 # the listobx and (if the user presses OK) reloads the directory
 # listbox from the directory named in the demo's entry.
