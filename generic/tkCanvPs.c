@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.10 2002/08/05 04:30:38 dgp Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.11 2002/10/10 07:25:24 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -21,6 +21,20 @@
 /*
  * See tkCanvas.h for key data structures used to implement canvases.
  */
+
+/*
+ * The following definition is used in generating postscript for images
+ * and windows.
+ */
+
+typedef struct TkColormapData {	/* Hold color information for a window */
+    int separated;		/* Whether to use separate color bands */
+    int color;			/* Whether window is color or black/white */
+    int ncolors;		/* Number of color values stored */
+    XColor *colors;		/* Pixel value -> RGB mappings */
+    int red_mask, green_mask, blue_mask;	/* Masks and shifts for each */
+    int red_shift, green_shift, blue_shift;	/* color band */
+} TkColormapData;
 
 /*
  * One of the following structures is created to keep track of Postscript
@@ -458,12 +472,13 @@ TkCanvPostscriptCmd(canvasPtr, interp, argc, argv)
     /*
      * Insert the prolog
      */
-    Tcl_AppendResult(interp, Tcl_GetVar(interp,"::tk::ps_preamable",TCL_GLOBAL_ONLY), (char *) NULL);
+    Tcl_AppendResult(interp, Tcl_GetVar(interp,"::tk::ps_preamable",
+	    TCL_GLOBAL_ONLY), (char *) NULL);
+
     if (psInfo.chan != NULL) {
         Tcl_Write(psInfo.chan, Tcl_GetStringResult(interp), -1);
 	Tcl_ResetResult(canvasPtr->interp);
     }
-    
 
     /*
      *-----------------------------------------------------------
@@ -1118,13 +1133,24 @@ TkImageGetColor(cdata, pixel, red, green, blue)
 	int r = (pixel & cdata->red_mask) >> cdata->red_shift;
 	int g = (pixel & cdata->green_mask) >> cdata->green_shift;
 	int b = (pixel & cdata->blue_mask) >> cdata->blue_shift;
-	*red = cdata->colors[r].red / 65535.0;
+#ifdef WIN32
+	/*
+	 * Because XQueryColors is an empty stub on Windows, we need
+	 * to just make this simple calculation.  The TkColormapData
+	 * XColor data is otherwise bogus on Windows.  -- hobbs
+	 */
+	*red   = (double)r / 255.0;
+	*green = (double)g / 255.0;
+	*blue  = (double)b / 255.0;
+#else
+	*red   = cdata->colors[r].red / 65535.0;
 	*green = cdata->colors[g].green / 65535.0;
-	*blue = cdata->colors[b].blue / 65535.0;
+	*blue  = cdata->colors[b].blue / 65535.0;
+#endif
     } else {
-	*red = cdata->colors[pixel].red / 65535.0;
+	*red   = cdata->colors[pixel].red / 65535.0;
 	*green = cdata->colors[pixel].green / 65535.0;
-	*blue = cdata->colors[pixel].blue / 65535.0;
+	*blue  = cdata->colors[pixel].blue / 65535.0;
     }
 }
 
@@ -1218,7 +1244,6 @@ TkPostscriptImage(interp, tkwin, psInfo, ximage, x, y, width, height)
     else
 	cdata.color = 1;
 
-
     XQueryColors(Tk_Display(tkwin), cmap, cdata.colors, ncolors);
 
     /*
@@ -1241,8 +1266,7 @@ TkPostscriptImage(interp, tkwin, psInfo, ximage, x, y, width, height)
      * Postscript interpreter).
      */
 
-    switch (level)
-    {
+    switch (level) {
 	case 0: bytesPerLine = (width + 7) / 8;  maxWidth = 240000;  break;
 	case 1: bytesPerLine = width;  maxWidth = 60000;  break;
 	case 2: bytesPerLine = 3 * width;  maxWidth = 20000;  break;
@@ -1323,9 +1347,7 @@ TkPostscriptImage(interp, tkwin, psInfo, ximage, x, y, width, height)
 			TkImageGetColor(&cdata, XGetPixel(ximage, xx, yy),
 					&red, &green, &blue);
 			sprintf(buffer, "%02X", (int) floor(0.5 + 255.0 *
-							    (0.30 * red +
-							     0.59 * green +
-							     0.11 * blue)));
+				(0.30 * red + 0.59 * green + 0.11 * blue)));
 			Tcl_AppendResult(interp, buffer, (char *) NULL);
 			lineLen += 2;
 			if (lineLen > 60) {
@@ -1340,7 +1362,7 @@ TkPostscriptImage(interp, tkwin, psInfo, ximage, x, y, width, height)
 		     * Finally, color mode.  Here, just output the red, green,
 		     * and blue values directly.
 		     */
-			for (xx = x; xx < x+width; xx++) {
+		    for (xx = x; xx < x+width; xx++) {
 			TkImageGetColor(&cdata, XGetPixel(ximage, xx, yy),
 				&red, &green, &blue);
 			sprintf(buffer, "%02X%02X%02X",
