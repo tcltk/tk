@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.13 2001/08/21 20:21:36 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.14 2001/08/22 19:59:49 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -2391,6 +2391,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
     int defaultColumnSpan = 1;	/* default number of columns */
     char *lastWindow;		/* use this window to base current
 				 * Row/col on */
+    int numSkip;		/* number of 'x' found */
     static char *optionStrings[] = {
 	"-column", "-columnspan", "-in", "-ipadx", "-ipady",
 	"-padx", "-pady", "-row", "-rowspan", "-sticky",
@@ -2720,16 +2721,21 @@ ConfigureSlaves(interp, tkwin, objc, objv)
     /* Now look for all the "^"'s. */
 
     lastWindow = NULL;
+    numSkip = 0;
     for (j = 0; j < numWindows; j++) {
 	struct Gridder *otherPtr;
 	int match;			/* found a match for the ^ */
-	int lastRow, lastColumn;		/* implied end of table */
+	int lastRow, lastColumn;	/* implied end of table */
 
 	string = Tcl_GetString(objv[j]);
     	firstChar = string[0];
 
     	if (firstChar == '.') {
 	    lastWindow = string;
+	    numSkip = 0;
+	}
+	if (firstChar == REL_SKIP) {
+	    numSkip++;
 	}
 	if (firstChar != REL_VERT) {
 	    continue;
@@ -2766,6 +2772,8 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	    lastColumn = otherPtr->column + otherPtr->numCols;
 	}
 
+	lastColumn += numSkip;
+
 	for (match=0, slavePtr = masterPtr->slavePtr; slavePtr != NULL;
 					 slavePtr = slavePtr->nextPtr) {
 
@@ -2776,6 +2784,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 		    match++;
 		    j += slavePtr->numCols - 1;
 		    lastWindow = Tk_PathName(slavePtr->tkwin);
+		    numSkip = 0;
 		    break;
 		}
 	    }
@@ -2785,7 +2794,6 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 		    (char *) NULL);
 	    return TCL_ERROR;
 	}
-/*	j += width - 1; */
     }
 
     if (masterPtr == NULL) {
