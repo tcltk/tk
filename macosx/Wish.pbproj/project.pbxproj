@@ -3534,7 +3534,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 		F5DF093A016CD3F901DC9062 = {
 			isa = PBXFileReference;
 			name = prolog.ps;
-			path = ../library/prolog.ps;
+			path = ../generic/prolog.ps;
 			refType = 2;
 		};
 		F5DF093B016CD3F901DC9062 = {
