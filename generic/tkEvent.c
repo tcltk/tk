@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.24 2004/07/29 21:48:07 georgeps Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.25 2004/08/29 09:27:35 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1281,7 +1281,7 @@ Tk_HandleEvent(eventPtr)
     Tcl_Interp *interp = (Tcl_Interp *) NULL;
 
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
   
     UpdateButtonEventState (eventPtr);
@@ -1291,21 +1291,21 @@ Tk_HandleEvent(eventPtr)
      * and can return.
      */
     if (InvokeGenericHandlers (tsdPtr, eventPtr)) {
-        return;
+	goto releaseUserData;
     }
     
     if (RefreshKeyboardMappingIfNeeded (eventPtr)) {
-        /*
+	/*
 	 * We are done with a MappingNotify event.
 	 */
-        return;
+	goto releaseUserData;
     }
 
     mask = GetEventMaskFromXEvent(eventPtr);
     winPtr = GetTkWindowFromXEvent(eventPtr);
 
     if (winPtr == NULL) {
-        return;
+	goto releaseUserData;
     }
 
     /*
@@ -1319,7 +1319,7 @@ Tk_HandleEvent(eventPtr)
 
     if ((winPtr->flags & TK_ALREADY_DEAD)
 	    && (eventPtr->type != DestroyNotify)) {
-	return;
+	goto releaseUserData;
     }
 
     if (winPtr->mainPtr != NULL) {
@@ -1328,24 +1328,24 @@ Tk_HandleEvent(eventPtr)
 	interp = winPtr->mainPtr->interp;
 
 	/*
-         * Protect interpreter for this window from possible deletion
-         * while we are dealing with the event for this window. Thus,
-         * widget writers do not have to worry about protecting the
-         * interpreter in their own code.
-         */
+	 * Protect interpreter for this window from possible deletion
+	 * while we are dealing with the event for this window. Thus,
+	 * widget writers do not have to worry about protecting the
+	 * interpreter in their own code.
+	 */
 	Tcl_Preserve((ClientData) interp);
 
 	result = ((InvokeFocusHandlers(&winPtr, mask, eventPtr)) 
-	   || (InvokeMouseHandlers(winPtr, mask, eventPtr)));
+		|| (InvokeMouseHandlers(winPtr, mask, eventPtr)));
 
 	if (result) {
-	    goto done;
+	    goto releaseInterpreter;
 	}
     }
 
 #ifdef TK_USE_INPUT_METHODS
     if (InvokeInputMethods(winPtr, eventPtr)) {
-	goto done;
+	goto releaseInterpreter;
     }
 #endif
     /*
@@ -1377,7 +1377,7 @@ Tk_HandleEvent(eventPtr)
 		    Tk_InternAtom((Tk_Window) winPtr, "WM_PROTOCOLS")) {
 		TkWmProtocolEventProc(winPtr, eventPtr);
 	    } else {
-       	        InvokeClientMessageHandlers(tsdPtr, (Tk_Window)winPtr, eventPtr);
+		InvokeClientMessageHandlers(tsdPtr, (Tk_Window)winPtr, eventPtr);
 	    }
 	}
     } else {
@@ -1410,15 +1410,32 @@ Tk_HandleEvent(eventPtr)
 	}
     }
     tsdPtr->pendingPtr = ip.nextPtr;
-done:
 
     /*
      * Release the interpreter for this window so that it can be potentially
      * deleted if requested.
      */
     
+releaseInterpreter:
     if (interp != (Tcl_Interp *) NULL) {
-        Tcl_Release((ClientData) interp);
+	Tcl_Release((ClientData) interp);
+    }
+
+    /*
+     * Release the user_data from the event (if it is a virtual event
+     * and the field was non-NULL in the first place.)  Note that this
+     * is done using a Tcl_Obj interface, and we set the field back to
+     * NULL afterwards out of paranoia.
+     */
+
+releaseUserData:
+    if (eventPtr->type == VirtualEvent) {
+	XVirtualEvent *vePtr = (XVirtualEvent *) eventPtr;
+
+	if (vePtr->user_data != NULL) {
+	    Tcl_DecrRefCount(vePtr->user_data);
+	    vePtr->user_data = NULL;
+	}
     }
 }
 

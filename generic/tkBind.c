@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.34 2004/07/05 21:21:52 dkf Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.35 2004/08/29 09:27:35 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -2392,6 +2392,14 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		    } else {
 			string = "";
 		    }
+		} else if (flags & VIRTUAL) {
+		    XVirtualEvent *vePtr = (XVirtualEvent *) eventPtr;
+
+		    if (vePtr->user_data != NULL) {
+			string = Tcl_GetString(vePtr->user_data);
+		    } else {
+			string = "";
+		    }
 		}
 		goto doString;
 	    case 'f':
@@ -3323,10 +3331,11 @@ HandleEventGenerate(interp, mainWin, objc, objv)
     Tk_Window tkwin, tkwin2;
     TkWindow *mainPtr;
     unsigned long eventMask;
+    Tcl_Obj *userDataObj;
     static CONST char *fieldStrings[] = {
 	"-when",	"-above",	"-borderwidth",	"-button",
-	"-count",	"-delta",	"-detail",	"-focus",
-	"-height",
+	"-count",	"-data",	"-delta",	"-detail",
+	"-focus",	"-height",
 	"-keycode",	"-keysym",	"-mode",	"-override",
 	"-place",	"-root",	"-rootx",	"-rooty",
 	"-sendevent",	"-serial",	"-state",	"-subwindow",
@@ -3335,8 +3344,8 @@ HandleEventGenerate(interp, mainWin, objc, objv)
     };
     enum field {
 	EVENT_WHEN,	EVENT_ABOVE,	EVENT_BORDER,	EVENT_BUTTON,
-	EVENT_COUNT,	EVENT_DELTA,	EVENT_DETAIL,	EVENT_FOCUS,
-	EVENT_HEIGHT,
+	EVENT_COUNT,	EVENT_DATA,	EVENT_DELTA,	EVENT_DETAIL,
+	EVENT_FOCUS,	EVENT_HEIGHT,
 	EVENT_KEYCODE,	EVENT_KEYSYM,	EVENT_MODE,	EVENT_OVERRIDE,
 	EVENT_PLACE,	EVENT_ROOT,	EVENT_ROOTX,	EVENT_ROOTY,
 	EVENT_SEND,	EVENT_SERIAL,	EVENT_STATE,	EVENT_SUBWINDOW,
@@ -3366,6 +3375,7 @@ HandleEventGenerate(interp, mainWin, objc, objv)
 
     p = name;
     eventMask = 0;
+    userDataObj = NULL;
     count = ParseEventDescription(interp, &p, &pat, &eventMask);
     if (count == 0) {
 	return TCL_ERROR;
@@ -3519,6 +3529,18 @@ HandleEventGenerate(interp, mainWin, objc, objv)
 		}
 		break;
 	    }
+	    case EVENT_DATA:
+		if (flags & VIRTUAL) {
+		    /*
+		     * Do not increment reference count until after
+		     * parsing completes and we know that the event
+		     * generation is really going to happen.
+		     */
+		    userDataObj = valuePtr;
+		} else {
+		    goto badopt;
+		}
+		break;
 	    case EVENT_DELTA: {
 		if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		    return TCL_ERROR;
@@ -3845,6 +3867,19 @@ HandleEventGenerate(interp, mainWin, objc, objv)
 	Tcl_AppendResult(interp, name, " event doesn't accept \"",
 		Tcl_GetStringFromObj(optionPtr, NULL), "\" option", NULL);
 	return TCL_ERROR;
+    }
+    if (userDataObj != NULL) {
+	XVirtualEvent *vePtr = (XVirtualEvent *) &event;
+
+	/*
+	 * Must be virtual event to set that variable to non-NULL.
+	 * Now we want to install the object into the event.  Note
+	 * that we must incr the refcount before firing it into the
+	 * low-level event subsystem; the refcount will be decremented
+	 * once the event has been processed.
+	 */
+	vePtr->user_data = userDataObj;
+	Tcl_IncrRefCount(userDataObj);
     }
     if (synch != 0) {
 	Tk_HandleEvent(&event);

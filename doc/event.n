@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: event.n,v 1.9 2004/08/20 10:56:36 dkf Exp $
+'\" RCS: @(#) $Id: event.n,v 1.10 2004/08/29 09:27:35 dkf Exp $
 '\" 
 .so man.macros
 .TH event n 8.3 Tk "Tk Built-In Commands"
@@ -107,6 +107,13 @@ Corresponds to the \fB%b\fR substitution for binding scripts.
 \fINumber\fR must be an integer;  it specifies the \fIcount\fR field
 for the event.  Valid for \fBExpose\fR events.
 Corresponds to the \fB%c\fR substitution for binding scripts.
+.VS 8.5
+.TP
+\fB\-data\fI string\fR
+\fIString\fR may be any value; it specifies the \fIuser_data\fR field
+for the event.  Only valid for virtual events.  Corresponds to the
+\fB%d\fR substitution for virtual events in binding scripts.
+.VE 8.5
 .TP
 \fB\-delta\fI number\fR
 \fINumber\fR must be an integer;  it specifies the \fIdelta\fR field
