@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bind.test,v 1.17 2004/09/01 10:00:03 dkf Exp $
+# RCS: @(#) $Id: bind.test,v 1.18 2004/12/07 10:07:41 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2365,107 +2365,97 @@ test bind-24.14 {FindSequence procedure: no binding} {
     list [catch {.b.f bind $i <a>} msg] $msg
 } {0 {}}
 
-test bind-25.1 {ParseEventDescription procedure} {
-    list [catch {bind .b \x7 test} msg] $msg
-} {1 {bad ASCII character 0x7}}
-test bind-25.2 {ParseEventDescription procedure} {
-    list [catch {bind .b "\x7f" test} msg] $msg
-} {1 {bad ASCII character 0x7f}}
-test bind-25.3 {ParseEventDescription procedure} {
-    list [catch {bind .b "\x4" test} msg] $msg
-} {1 {bad ASCII character 0x4}}
-test bind-25.4 {ParseEventDescription procedure} {
+test bind-25.1 {ParseEventDescription procedure} -setup {
     setup
+} -body {
     bind .b.f a test
     bind .b.f a
-} {test}
-test bind-25.5 {ParseEventDescription procedure: virtual} {
-    list [catch {bind .b <<>> foo} msg] $msg
-} {1 {virtual event "<<>>" is badly formed}}
-test bind-25.6 {ParseEventDescription procedure: virtual} {
-    list [catch {bind .b <<Paste foo} msg] $msg
-} {1 {missing ">" in virtual binding}}
-test bind-25.7 {ParseEventDescription procedure: virtual} {
-    list [catch {bind .b <<Paste> foo} msg] $msg
-} {1 {missing ">" in virtual binding}}
-test bind-25.8 {ParseEventDescription procedure: correctly terminate virtual} {
-    list [catch {bind .b <<Paste>>h foo} msg] $msg
-} {1 {virtual events may not be composed}}
-test bind-25.9 {ParseEventDescription procedure} {
-    list [catch {bind .b <> test} msg] $msg
-} {1 {no event type or button # or keysym}}
-test bind-25.10 {ParseEventDescription procedure: misinterpreted modifier} {
+} -result test
+test bind-25.2 {ParseEventDescription procedure: misinterpreted modifier} -setup {
     button .x
+} -body {
     bind .x <Control-M> a
     bind .x <M-M> b
-    set x [lsort [bind .x]]
+    lsort [bind .x]
+} -cleanup {
     destroy .x
-    set x
-} {<Control-Key-M> <Meta-Key-M>}
-test bind-25.11 {ParseEventDescription procedure} {
+} -result {<Control-Key-M> <Meta-Key-M>}
+test bind-25.3 {ParseEventDescription procedure} -setup {
     catch {destroy .b.f}
     frame .b.f -class Test -width 150 -height 100
+} -body {
     bind .b.f <a---> {nothing}
     bind .b.f
-} a
-test bind-25.12 {ParseEventDescription procedure} {
-    list [catch {bind .b <a-- test} msg] $msg
-} {1 {missing ">" in binding}}
-test bind-25.13 {ParseEventDescription procedure} {
-    list [catch {bind .b <a-b> test} msg] $msg
-} {1 {extra characters after detail in binding}}
-test bind-25.14 {ParseEventDescription} {
+} -result a
+test bind-25.4 {ParseEventDescription} -setup {
     setup
-    list [catch {bind .b <<abc {puts hi}} msg] $msg
-} {1 {missing ">" in virtual binding}}
-test bind-25.15 {ParseEventDescription} {
-    setup
-    list [catch {bind .b <<abc> {puts hi}} msg] $msg
-} {1 {missing ">" in virtual binding}}
-test bind-25.16 {ParseEventDescription} {
-    setup
+} -body {
     bind .b <<Shift-Paste>> {puts hi}
     bind .b
-} {<<Shift-Paste>>}
-test bind-25.17 {ParseEventDescription} {
-    setup
-    list [catch {event add <<xyz>> <<abc>>} msg] $msg
-} {1 {virtual event not allowed in definition of another virtual event}}
-foreach check {
-    {bind-25.1  {<Control- a>} <Control-Key-a>}
-    {bind-25.2  <Shift-a>   <Shift-Key-a>}
-    {bind-25.3  <Lock-a>    <Lock-Key-a>}
-    {bind-25.4  <Meta---a>  <Meta-Key-a>}
-    {bind-25.5  <M-a>       <Meta-Key-a>}
-    {bind-25.6  <Alt-a>     <Alt-Key-a>}
-    {bind-25.7  <B1-a>      <B1-Key-a>}
-    {bind-25.8  <B2-a>      <B2-Key-a>}
-    {bind-25.9  <B3-a>      <B3-Key-a>}
-    {bind-25.10 <B4-a>      <B4-Key-a>}
-    {bind-25.11 <B5-a>      <B5-Key-a>}
-    {bind-25.12 <Button1-a> <B1-Key-a>}
-    {bind-25.13 <Button2-a> <B2-Key-a>}
-    {bind-25.14 <Button3-a> <B3-Key-a>}
-    {bind-25.15 <Button4-a> <B4-Key-a>}
-    {bind-25.16 <Button5-a> <B5-Key-a>}
-    {bind-25.17 <M1-a>      <Mod1-Key-a>}
-    {bind-25.18 <M2-a>      <Mod2-Key-a>}
-    {bind-25.19 <M3-a>      <Mod3-Key-a>}
-    {bind-25.20 <M4-a>      <Mod4-Key-a>}
-    {bind-25.21 <M5-a>      <Mod5-Key-a>}
-    {bind-25.22 <Mod1-a>    <Mod1-Key-a>}
-    {bind-25.23 <Mod2-a>    <Mod2-Key-a>}
-    {bind-25.24 <Mod3-a>    <Mod3-Key-a>}
-    {bind-25.25 <Mod4-a>    <Mod4-Key-a>}
-    {bind-25.26 <Mod5-a>    <Mod5-Key-a>}
-    {bind-25.27 <Double-a>  <Double-Key-a>}
-    {bind-25.28 <Triple-a>  <Triple-Key-a>}
-    {bind-25.29 {<Double 1>} <Double-Button-1>}
-    {bind-25.30 <Triple-1>  <Triple-Button-1>}
-    {bind-25.31 {<M1-M2 M3-M4 B1-Control-a>} <Control-B1-Mod1-Mod2-Mod3-Mod4-Key-a>}
-    {bind-25.32 <Extended-Return> <Extended-Key-Return>}
+} -result {<<Shift-Paste>>}
+# Assorted error cases in event sequence parsing
+foreach {testname testinfo} {
+    bind-25.5  {\x7        {bad ASCII character 0x7}}
+    bind-25.6  {\x7f       {bad ASCII character 0x7f}}
+    bind-25.7  {\x4        {bad ASCII character 0x4}}
+    bind-25.8  {<<>>       {virtual event "<<>>" is badly formed}}
+    bind-25.9  {<<Paste    {missing ">" in virtual binding}}
+    bind-25.10 {<<Paste>   {missing ">" in virtual binding}}
+    bind-25.11 {<<Paste>>h {virtual events may not be composed}}
+    bind-25.12 {<>         "no event type or button # or keysym"}
+    bind-25.13 {<a--       {missing ">" in binding}}
+    bind-25.14 {<a-b>      {extra characters after detail in binding}}
+    bind-25.15 {<<abc      {missing ">" in virtual binding}}
+    bind-25.16 {<<abc>     {missing ">" in virtual binding}}
 } {
-    lassign $check name shortBind longBind
+    lassign $testinfo sequence errorMessage
+    test $testname {ParseEventDescription procedure error cases} \
+	-setup { setup } \
+	-body [list bind .b $sequence {puts hi}] \
+	-returnCodes error -result $errorMessage
+}
+test bind-25.17 {ParseEventDescription} -setup {
+    setup
+} -returnCodes error -body {
+    event add <<xyz>> <<abc>>
+} -result {virtual event not allowed in definition of another virtual event}
+# Modifier canonicalization tests
+foreach {name check} {
+    bind-25.18 {{<Control- a>} <Control-Key-a>}
+    bind-25.19 {<Shift-a>   <Shift-Key-a>}
+    bind-25.20 {<Lock-a>    <Lock-Key-a>}
+    bind-25.21 {<Meta---a>  <Meta-Key-a>}
+    bind-25.22 {<M-a>       <Meta-Key-a>}
+    bind-25.23 {<Alt-a>     <Alt-Key-a>}
+    bind-25.24 {<B1-a>      <B1-Key-a>}
+    bind-25.25 {<B2-a>      <B2-Key-a>}
+    bind-25.26 {<B3-a>      <B3-Key-a>}
+    bind-25.27 {<B4-a>      <B4-Key-a>}
+    bind-25.28 {<B5-a>      <B5-Key-a>}
+    bind-25.29 {<Button1-a> <B1-Key-a>}
+    bind-25.30 {<Button2-a> <B2-Key-a>}
+    bind-25.31 {<Button3-a> <B3-Key-a>}
+    bind-25.32 {<Button4-a> <B4-Key-a>}
+    bind-25.33 {<Button5-a> <B5-Key-a>}
+    bind-25.34 {<M1-a>      <Mod1-Key-a>}
+    bind-25.35 {<M2-a>      <Mod2-Key-a>}
+    bind-25.36 {<M3-a>      <Mod3-Key-a>}
+    bind-25.37 {<M4-a>      <Mod4-Key-a>}
+    bind-25.38 {<M5-a>      <Mod5-Key-a>}
+    bind-25.39 {<Mod1-a>    <Mod1-Key-a>}
+    bind-25.40 {<Mod2-a>    <Mod2-Key-a>}
+    bind-25.41 {<Mod3-a>    <Mod3-Key-a>}
+    bind-25.42 {<Mod4-a>    <Mod4-Key-a>}
+    bind-25.43 {<Mod5-a>    <Mod5-Key-a>}
+    bind-25.44 {<Double-a>  <Double-Key-a>}
+    bind-25.45 {<Triple-a>  <Triple-Key-a>}
+    bind-25.46 {{<Double 1>} <Double-Button-1>}
+    bind-25.47 {<Triple-1>  <Triple-Button-1>}
+    bind-25.48 {{<M1-M2 M3-M4 B1-Control-a>}
+	<Control-B1-Mod1-Mod2-Mod3-Mod4-Key-a>}
+    bind-25.49 {<Extended-Return> <Extended-Key-Return>}
+} {
+    lassign $check shortBind longBind
     test $name {modifier names} -setup {
 	catch {destroy .b.f}
 	frame .b.f -class Test -width 150 -height 100

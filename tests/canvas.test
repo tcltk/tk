@@ -6,7 +6,7 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.21 2004/08/20 08:03:46 dkf Exp $
+# RCS: @(#) $Id: canvas.test,v 1.22 2004/12/07 10:07:41 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -19,57 +19,63 @@ canvas .c
 pack .c
 update
 set i 1
-foreach test {
-    {-background #ff0000 #ff0000
-	    non-existent {unknown color name "non-existent"}}
-    {-bg #ff0000 #ff0000 non-existent {unknown color name "non-existent"}}
-    {-bd 4 4 badValue {bad screen distance "badValue"}}
-    {-borderwidth 1.3 1 badValue {bad screen distance "badValue"}}
-    {-closeenough 24 24.0
-	    bogus {expected floating-point number but got "bogus"}}
-    {-confine true 1 silly {expected boolean value but got "silly"}}
-    {-cursor arrow arrow badValue {bad cursor spec "badValue"}}
-    {-height 2.1 2 x42 {bad screen distance "x42"}}
-    {-highlightbackground #112233 #112233 ugly {unknown color name "ugly"}}
-    {-highlightcolor #110022 #110022 bogus {unknown color name "bogus"}}
-    {-highlightthickness 18 18 badValue {bad screen distance "badValue"}}
-    {-insertbackground #110022 #110022 bogus {unknown color name "bogus"}}
-    {-insertborderwidth 1.3 1 2.6x {bad screen distance "2.6x"}}
-    {-insertofftime 100 100 3.2 {expected integer but got "3.2"}}
-    {-insertontime 100 100 3.2 {expected integer but got "3.2"}}
-    {-insertwidth 1.3 1 6x {bad screen distance "6x"}}
-    {-relief groove groove
-	    1.5 {bad relief type "1.5": must be flat, groove, raised, ridge, solid, or sunken}}
-    {-selectbackground #110022 #110022 bogus {unknown color name "bogus"}}
-    {-selectborderwidth 1.3 1 badValue {bad screen distance "badValue"}}
-    {-selectforeground #654321 #654321 bogus {unknown color name "bogus"}}
-    {-takefocus "any string" "any string" {} {}}
-    {-width 402 402 xyz {bad screen distance "xyz"}}
-    {-xscrollcommand {Some command} {Some command} {} {}}
-    {-yscrollcommand {Another command} {Another command} {} {}}
+foreach {testname testinfo} {
+    canvas-1.1 {-background #ff0000 #ff0000
+	non-existent {unknown color name "non-existent"}}
+    canvas-1.2 {-bg #ff0000 #ff0000
+	non-existent {unknown color name "non-existent"}}
+    canvas-1.3 {-bd 4 4 badValue {bad screen distance "badValue"}}
+    canvas-1.4 {-borderwidth 1.3 1 badValue {bad screen distance "badValue"}}
+    canvas-1.5 {-closeenough 24 24.0
+	bogus {expected floating-point number but got "bogus"}}
+    canvas-1.6 {-confine true 1 silly {expected boolean value but got "silly"}}
+    canvas-1.7 {-cursor arrow arrow badValue {bad cursor spec "badValue"}}
+    canvas-1.8 {-height 2.1 2 x42 {bad screen distance "x42"}}
+    canvas-1.9 {-highlightbackground #112233 #112233
+	ugly {unknown color name "ugly"}}
+    canvas-1.10 {-highlightcolor #110022 #110022
+	bogus {unknown color name "bogus"}}
+    canvas-1.11 {-highlightthickness 18 18
+	badValue {bad screen distance "badValue"}}
+    canvas-1.12 {-insertbackground #110022 #110022
+	bogus {unknown color name "bogus"}}
+    canvas-1.13 {-insertborderwidth 1.3 1 2.6x {bad screen distance "2.6x"}}
+    canvas-1.14 {-insertofftime 100 100 3.2 {expected integer but got "3.2"}}
+    canvas-1.15 {-insertontime 100 100 3.2 {expected integer but got "3.2"}}
+    canvas-1.16 {-insertwidth 1.3 1 6x {bad screen distance "6x"}}
+    canvas-1.17 {-relief groove groove
+	1.5 {bad relief type "1.5": must be flat, groove, raised, ridge, solid, or sunken}}
+    canvas-1.18 {-selectbackground #110022 #110022
+	bogus {unknown color name "bogus"}}
+    canvas-1.19 {-selectborderwidth 1.3 1
+	badValue {bad screen distance "badValue"}}
+    canvas-1.20 {-selectforeground #654321 #654321
+	bogus {unknown color name "bogus"}}
+    canvas-1.21 {-takefocus "any string" "any string" {} {}}
+    canvas-1.22 {-width 402 402 xyz {bad screen distance "xyz"}}
+    canvas-1.23 {-xscrollcommand {Some command} {Some command} {} {}}
+    canvas-1.24 {-yscrollcommand {Another command} {Another command} {} {}}
 } {
-    lassign $test name goodValue goodResult badValue badResult
-    test canvas-1.$i "configuration options: good value for $name" {
+    lassign $testinfo name goodValue goodResult badValue badResult
+    test $testname-good "configuration options: good value for $name" {
 	.c configure $name $goodValue
 	lindex [.c configure $name] 4
     } $goodResult
     incr i
     if {$badValue ne ""} {
-	test canvas-1.$i "configuration options: bad value for $name" -body {
+	test $testname-bad "configuration options: bad value for $name" -body {
 	    .c configure $name $badValue
 	} -returnCodes error -result $badResult
     }
     .c configure $name [lindex [.c configure $name] 3]
     incr i
 }
-
-test canvas-1.40 {configure throws error on bad option} {
+test canvas-1.25 {configure throws error on bad option} {
     set res [list [catch {.c configure -gorp foo}]]
     .c create rect 10 10 100 100
     lappend res [catch {.c configure -gorp foo}]
     set res
 } [list 1 1]
-
 
 catch {destroy .c}
 canvas .c -width 60 -height 40 -scrollregion {0 0 200 150} -bd 0 \
@@ -191,20 +197,22 @@ test canvas-6.5 {CanvasSetOrigin procedure} {
     .c canvasy 0
 } {55.0}
 
-set l [interp hidden]
 deleteWindows
 
-test canvas-7.1 {canvas widget vs hidden commands} {
+set l [lsort [interp hidden]]
+test canvas-7.1 {canvas widget vs hidden commands} -setup {
     catch {destroy .c}
+} -body {
     canvas .c
     interp hide {} .c
     destroy .c
-    list [winfo children .] [interp hidden]
-} [list {} $l]
+    list [winfo children .] [lsort [interp hidden]]
+} -result [list {} $l]
 
-test canvas-8.1 {canvas arc bbox} {
+test canvas-8.1 {canvas arc bbox} -setup {
     catch {destroy .c}
     canvas .c
+} -body {
     .c create arc -100 10 100 210 -start 10 -extent 50 -style arc -tags arc1
     set arcBox [.c bbox arc1]
     .c create arc 100 10 300 210 -start 10 -extent 50 -style chord -tags arc2
@@ -212,21 +220,23 @@ test canvas-8.1 {canvas arc bbox} {
     .c create arc 300 10 500 210 -start 10 -extent 50 -style pieslice -tags arc3
     set pieBox [.c bbox arc3]
     list $arcBox $coordBox $pieBox
-} {{48 21 100 94} {248 21 300 94} {398 21 500 112}}
-test canvas-9.1 {canvas id creation and deletion} {
+} -result {{48 21 100 94} {248 21 300 94} {398 21 500 112}}
+
+test canvas-9.1 {canvas id creation and deletion} -setup {
+    catch {destroy .c}
+    canvas .c
+} -body {
     # With Tk 8.0.4 the ids are now stored in a hash table.  You
     # can use this test as a performance test with older versions
     # by changing the value of size.
     set size 15
 
-    catch {destroy .c}
-    set c [canvas .c]
     for {set i 0} {$i < $size} {incr i} {
 	set x [expr {-10 + 3*$i}]
 	for {set j 0; set y -10} {$j < 10} {incr j; incr y 3} {
-	    $c create rect ${x}c ${y}c [expr $x+2]c [expr $y+2]c \
+	    .c create rect ${x}c ${y}c [expr $x+2]c [expr $y+2]c \
 		    -outline black -fill blue -tags rect
-	    $c create text [expr $x+1]c [expr $y+1]c -text "$i,$j" \
+	    .c create text [expr $x+1]c [expr $y+1]c -text "$i,$j" \
 		    -anchor center -tags text
 	}
     }
@@ -235,136 +245,141 @@ test canvas-9.1 {canvas id creation and deletion} {
     # table changes.
 
     set time [lindex [time {
-	foreach id [$c find withtag all] {
-	    $c lower $id
-	    $c raise $id
-	    $c find withtag $id
-	    $c bind <Return> $id {}
-	    $c delete $id
+	foreach id [.c find withtag all] {
+	    .c lower $id
+	    .c raise $id
+	    .c find withtag $id
+	    .c bind <Return> $id {}
+	    .c delete $id
 	}
     }] 0]
 	
     set x ""
 } {}
-test canvas-10.1 {find items using tag expressions} {
-      catch {destroy .c}
-      canvas .c
-      .c create oval 20 20 40 40 -fill red -tag [list a b c d]
-      .c create oval 20 60 40 80 -fill yellow -tag [list b a]
-      .c create oval 20 100 40 120 -fill green -tag [list c b]
-      .c create oval 20 140 40 160 -fill blue -tag [list b]
-      .c create oval 20 180 40 200 -fill bisque -tag [list a d e]
-      .c create oval 20 220 40 240 -fill bisque -tag b
-      .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
-      set res {}
-      lappend res [.c find withtag {!a}]
-      lappend res [.c find withtag {b&&c}]
-      lappend res [.c find withtag {b||c}]
-      lappend res [.c find withtag {a&&!b}]
-      lappend res [.c find withtag {!b&&!c}]
-      lappend res [.c find withtag {d&&a&&c&&b}]
-      lappend res [.c find withtag {b^a}]
-      lappend res [.c find withtag {(a&&!b)||(!a&&b)}]
-      lappend res [.c find withtag { ( a && ! b ) || ( ! a && b ) }]
-      lappend res [.c find withtag {a&&!(c||d)}]
-      lappend res [.c find withtag {d&&"tag with spaces"}]
-      lappend res [.c find withtag "tag with spaces"]
-} {{3 4 6 7} {1 3} {1 2 3 4 6} 5 {5 7} 1 {3 4 5 6} {3 4 5 6} {3 4 5 6} 2 7 7}
-test canvas-10.2 {check errors from tag expressions} {
-      catch {destroy .c}
-      canvas .c
-      .c create oval 20 20 40 40 -fill red -tag [list a b c d]
-      .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
-      catch {.c find withtag {&&c}} err
-      set err
-} {Unexpected operator in tag search expression}
-test canvas-10.3 {check errors from tag expressions} {
-      catch {destroy .c}
-      canvas .c
-      .c create oval 20 20 40 40 -fill red -tag [list a b c d]
-      .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
-      catch {.c find withtag {!!c}} err
-      set err
-} {Too many '!' in tag search expression}
-test canvas-10.4 {check errors from tag expressions} {
-      catch {destroy .c}
-      canvas .c
-      .c create oval 20 20 40 40 -fill red -tag [list a b c d]
-      .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
-      catch {.c find withtag {b||}} err
-      set err
-} {Missing tag in tag search expression}
-test canvas-10.5 {check errors from tag expressions} {
-      catch {destroy .c}
-      canvas .c
-      .c create oval 20 20 40 40 -fill red -tag [list a b c d]
-      .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
-      catch {.c find withtag {b&&(c||)}} err
-      set err
-} {Unexpected operator in tag search expression}
-test canvas-10.6 {check errors from tag expressions} {
-      catch {destroy .c}
-      canvas .c
-      .c create oval 20 20 40 40 -fill red -tag [list a b c d]
-      .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
-      catch {.c find withtag {d&&""}} err
-      set err
-} {Null quoted tag string in tag search expression}
-test canvas-10.7 {check errors from tag expressions} {
-      catch {destroy .c}
-      canvas .c
-      .c create oval 20 20 40 40 -fill red -tag [list a b c d]
-      .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
-      catch {.c find withtag "d&&\"tag with spaces"} err
-      set err
-} {Missing endquote in tag search expression}
-test canvas-10.8 {check errors from tag expressions} {
-      catch {destroy .c}
-      canvas .c
-      .c create oval 20 20 40 40 -fill red -tag [list a b c d]
-      .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
-      catch {.c find withtag {a&&"tag with spaces"z}} err
-      set err
-} {Invalid boolean operator in tag search expression}
-test canvas-10.9 {check errors from tag expressions} {
-      catch {destroy .c}
-      canvas .c
-      .c create oval 20 20 40 40 -fill red -tag [list a b c d]
-      .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
-      catch {.c find withtag {a&&b&c}} err
-      set err
-} {Singleton '&' in tag search expression}
-test canvas-10.10 {check errors from tag expressions} {
-      catch {destroy .c}
-      canvas .c
-      .c create oval 20 20 40 40 -fill red -tag [list a b c d]
-      .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
-      catch {.c find withtag {a||b|c}} err
-      set err
-} {Singleton '|' in tag search expression}
-test canvas-10.11 {backward compatility - strange tags that are not expressions} {
-      catch {destroy .c}
-      canvas .c
-      .c create oval 20 20 40 40 -fill red -tag [list { strange tag(xxx&yyy|zzz) " && \" || ! ^ " }]
-      .c find withtag { strange tag(xxx&yyy|zzz) " && \" || ! ^ " }
-} {1}
-test canvas-10.12 {multple events bound to same tag expr} {
-      catch {destroy .c}
-      canvas .c
-      .c bind {a && b} <Enter> {puts Enter}
-      .c bind {a && b} <Leave> {puts Leave}
-} {}
+test canvas-10.1 {find items using tag expressions} -setup {
+    catch {destroy .c}
+    canvas .c
+} -body {
+    .c create oval 20 20 40 40 -fill red -tag [list a b c d]
+    .c create oval 20 60 40 80 -fill yellow -tag [list b a]
+    .c create oval 20 100 40 120 -fill green -tag [list c b]
+    .c create oval 20 140 40 160 -fill blue -tag [list b]
+    .c create oval 20 180 40 200 -fill bisque -tag [list a d e]
+    .c create oval 20 220 40 240 -fill bisque -tag b
+    .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
+    set res {}
+    lappend res [.c find withtag {!a}]
+    lappend res [.c find withtag {b&&c}]
+    lappend res [.c find withtag {b||c}]
+    lappend res [.c find withtag {a&&!b}]
+    lappend res [.c find withtag {!b&&!c}]
+    lappend res [.c find withtag {d&&a&&c&&b}]
+    lappend res [.c find withtag {b^a}]
+    lappend res [.c find withtag {(a&&!b)||(!a&&b)}]
+    lappend res [.c find withtag { ( a && ! b ) || ( ! a && b ) }]
+    lappend res [.c find withtag {a&&!(c||d)}]
+    lappend res [.c find withtag {d&&"tag with spaces"}]
+    lappend res [.c find withtag "tag with spaces"]
+} -result {{3 4 6 7} {1 3} {1 2 3 4 6} 5 {5 7} 1 {3 4 5 6} {3 4 5 6} {3 4 5 6} 2 7 7}
+test canvas-10.2 {check errors from tag expressions} -setup {
+    catch {destroy .c}
+    canvas .c
+    .c create oval 20 20 40 40 -fill red -tag [list a b c d]
+    .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
+} -body {
+    .c find withtag {&&c}
+} -returnCodes error -result {Unexpected operator in tag search expression}
+test canvas-10.3 {check errors from tag expressions} -setup {
+    catch {destroy .c}
+    canvas .c
+    .c create oval 20 20 40 40 -fill red -tag [list a b c d]
+    .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
+} -body {
+    .c find withtag {!!c}
+} -returnCodes error -result {Too many '!' in tag search expression}
+test canvas-10.4 {check errors from tag expressions} -setup {
+    catch {destroy .c}
+    canvas .c
+    .c create oval 20 20 40 40 -fill red -tag [list a b c d]
+    .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
+} -body {
+    .c find withtag {b||}
+} -returnCodes error -result {Missing tag in tag search expression}
+test canvas-10.5 {check errors from tag expressions} -setup {
+    catch {destroy .c}
+    canvas .c
+    .c create oval 20 20 40 40 -fill red -tag [list a b c d]
+    .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
+} -body {
+    .c find withtag {b&&(c||)}
+} -returnCodes error -result {Unexpected operator in tag search expression}
+test canvas-10.6 {check errors from tag expressions} -setup {
+    catch {destroy .c}
+    canvas .c
+    .c create oval 20 20 40 40 -fill red -tag [list a b c d]
+    .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
+} -body {
+    .c find withtag {d&&""}
+} -returnCodes error -result {Null quoted tag string in tag search expression}
+test canvas-10.7 {check errors from tag expressions} -setup {
+    catch {destroy .c}
+    canvas .c
+    .c create oval 20 20 40 40 -fill red -tag [list a b c d]
+    .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
+} -body {
+    .c find withtag "d&&\"tag with spaces"
+} -returnCodes error -result {Missing endquote in tag search expression}
+test canvas-10.8 {check errors from tag expressions} -setup {
+    catch {destroy .c}
+    canvas .c
+    .c create oval 20 20 40 40 -fill red -tag [list a b c d]
+    .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
+} -body {
+    .c find withtag {a&&"tag with spaces"z}
+} -returnCodes error -result {Invalid boolean operator in tag search expression}
+test canvas-10.9 {check errors from tag expressions} -setup {
+    catch {destroy .c}
+    canvas .c
+    .c create oval 20 20 40 40 -fill red -tag [list a b c d]
+    .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
+} -body {
+    .c find withtag {a&&b&c}
+} -returnCodes error -result {Singleton '&' in tag search expression}
+test canvas-10.10 {check errors from tag expressions} -setup {
+    catch {destroy .c}
+    canvas .c
+    .c create oval 20 20 40 40 -fill red -tag [list a b c d]
+    .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
+} -body {
+    .c find withtag {a||b|c}
+} -returnCodes error -result {Singleton '|' in tag search expression}
+test canvas-10.11 {backward compatility - strange tags that are not expressions} -setup {
+    catch {destroy .c}
+    canvas .c
+    .c create oval 20 20 40 40 -fill red -tag [list { strange tag(xxx&yyy|zzz) " && \" || ! ^ " }]
+} -body {
+    .c find withtag { strange tag(xxx&yyy|zzz) " && \" || ! ^ " }
+} -result 1
+test canvas-10.12 {multple events bound to same tag expr} -setup {
+    catch {destroy .c}
+    canvas .c
+} -body {
+    .c bind {a && b} <Enter> {puts Enter}
+    .c bind {a && b} <Leave> {puts Leave}
+} -result {}
 
-test canvas-11.1 {canvas poly fill check, bug 5783} {
-    # This would crash in 8.3.0 and 8.3.1
+test canvas-11.1 {canvas poly fill check, bug 5783} -setup {
     destroy .c
     pack [canvas .c]
+} -body {
+    # This would crash in 8.3.0 and 8.3.1
     .c create polygon 0 0 100 100 200 50 \
 	    -fill {} -stipple gray50 -outline black
-} 1
-test canvas-11.2 {canvas poly overlap fill check, bug 226357} {
+} -result 1
+test canvas-11.2 {canvas poly overlap fill check, bug 226357} -setup {
     destroy .c
     pack [canvas .c]
+} -body {
     set result {}
     .c create poly 30 30 90 90 30 90 90 30
     lappend result [.c find over 40 40 45 45]; # rect region inc. edge
@@ -380,27 +395,29 @@ test canvas-11.2 {canvas poly overlap fill check, bug 226357} {
     lappend result [.c find over 45 50 45 50]; # outside poly
     .c itemconfig 1 -width 8
     lappend result [.c find over 45 50 45 50]; # outside poly
-} {1 1 {} 1 {} 1 1 {} 1 {} 1}
+} -result {1 1 {} 1 {} 1 1 {} 1 {} 1}
 
-test canvas-12.1 {canvas mm obj, patch SF-403327, 102471} {
+test canvas-12.1 {canvas mm obj, patch SF-403327, 102471} -setup {
     destroy .c
     pack [canvas .c]
+} -body {
     set qx [expr {1.+1.}] 
     # qx has type double and no string representation 
     .c scale all $qx 0 1. 1.
     # qx has now type MMRep and no string representation 
     list $qx [string length $qx]
-} {2.0 3}
-test canvas-12.2 {canvas mm obj, patch SF-403327, 102471} {
+} -result {2.0 3}
+test canvas-12.2 {canvas mm obj, patch SF-403327, 102471} -setup {
     destroy .c
     pack [canvas .c]
+} -body {
     set val 10
     incr val
     # qx has type double and no string representation 
     .c scale all $val 0 1 1
     # qx has now type MMRep and no string representation 
     incr val
-} {12}
+} -result 12
 
 proc kill_canvas {w} {
     destroy $w
@@ -426,30 +443,42 @@ test canvas-13.1 {canvas delete during event, SF bug-228024} {
     set ::x
 } okokokokokokokokokokokokokokokokokokokokokokokokokokokokokok
 
-test canvas-14.1 {canvas scan SF bug 581560} {
-    destroy .c; canvas .c
-    list [catch {.c scan} msg] $msg
-} {1 {wrong # args: should be ".c scan mark|dragto x y ?dragGain?"}}
-test canvas-14.2 {canvas scan} {
-    destroy .c; canvas .c
-    list [catch {.c scan bogus} msg] $msg
-} {1 {wrong # args: should be ".c scan mark|dragto x y ?dragGain?"}}
-test canvas-14.3 {canvas scan} {
-    destroy .c; canvas .c
-    list [catch {.c scan mark} msg] $msg
-} {1 {wrong # args: should be ".c scan mark|dragto x y ?dragGain?"}}
-test canvas-14.4 {canvas scan} {
-    destroy .c; canvas .c
-    list [catch {.c scan mark 10 10} msg] $msg
-} {0 {}}
-test canvas-14.5 {canvas scan} {
-    destroy .c; canvas .c
-    list [catch {.c scan mark 10 10 5} msg] $msg
-} {1 {wrong # args: should be ".c scan mark x y"}}
-test canvas-14.6 {canvas scan} {
-    destroy .c; canvas .c
-    list [catch {.c scan dragto 10 10 5} msg] $msg
-} {0 {}}
+test canvas-14.1 {canvas scan SF bug 581560} -setup {
+    destroy .c
+    canvas .c
+} -body {
+    .c scan
+} -returnCodes error -result {wrong # args: should be ".c scan mark|dragto x y ?dragGain?"}
+test canvas-14.2 {canvas scan} -setup {
+    destroy .c
+    canvas .c
+} -body {
+    .c scan bogus
+} -returnCodes error -result {wrong # args: should be ".c scan mark|dragto x y ?dragGain?"}
+test canvas-14.3 {canvas scan} -setup {
+    destroy .c
+    canvas .c
+} -body {
+    .c scan mark
+} -returnCodes error -result {wrong # args: should be ".c scan mark|dragto x y ?dragGain?"}
+test canvas-14.4 {canvas scan} -setup {
+    destroy .c
+    canvas .c
+} -body {
+    .c scan mark 10 10
+} -result {}
+test canvas-14.5 {canvas scan} -setup {
+    destroy .c
+    canvas .c
+} -body {
+    .c scan mark 10 10 5
+} -returnCodes error -result {wrong # args: should be ".c scan mark x y"}
+test canvas-14.6 {canvas scan} -setup {
+    destroy .c
+    canvas .c
+} -body {
+    .c scan dragto 10 10 5
+} -result {}
 
 set i 0
 proc create {w type args} {
@@ -458,26 +487,32 @@ proc create {w type args} {
 foreach type {arc bitmap image line oval polygon rect text window} {
     incr i
     test canvas-15.$i "basic types check: $type requires coords" -setup {
-	destroy .c; canvas .c
+	destroy .c
+	canvas .c
     } -body {
 	.c create $type
     } -returnCodes error -result [format {wrong # args: should be ".c create %s coords ?arg arg ...?"} $type]
     incr i
     test canvas-15.$i "basic coords check: $type coords are paired" -setup {
-	destroy .c; canvas .c
+	destroy .c
+	canvas .c
     } -match glob -body {
 	.c create $type 0
     } -returnCodes error -result "wrong # coordinates: expected*"
 }
 
-test canvas-16.1 {arc coords check} {
-    destroy .c; canvas .c
+test canvas-16.1 {arc coords check} -setup {
+    destroy .c
+    canvas .c
+} -body {
     set id [.c create arc {0 10 20 30} -start 33]
     .c itemcget $id -start
-} {33.0}
+} -result {33.0}
 
-test canvas-17.1 {default smooth method handling} {
-    destroy .c; canvas .c
+test canvas-17.1 {default smooth method handling} -setup {
+    destroy .c
+    canvas .c
+} -body {
     set id [.c create line {0 0 1 1 2 2 3 3 4 4 5 5 6 6}]
     set result [.c itemcget $id -smooth]
     foreach smoother {yes 1 bezier raw r b} {
@@ -485,7 +520,7 @@ test canvas-17.1 {default smooth method handling} {
 	lappend result [.c itemcget $id -smooth]
     }
     set result
-} {0 true true true raw raw true}
+} -result {0 true true true raw raw true}
 
 destroy .c
 
