@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.14 2001/06/23 02:15:18 mdejong Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.15 2001/09/21 21:26:09 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -96,8 +96,14 @@ TkGetServerInfo(interp, tkwin)
 
     os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     GetVersionEx(&os);
-    sprintf(buffer, "Windows %d.%d %d Win32", os.dwMajorVersion,
-	    os.dwMinorVersion, os.dwBuildNumber);
+    sprintf(buffer, "Windows %d.%d %d %s", os.dwMajorVersion,
+	    os.dwMinorVersion, os.dwBuildNumber,
+#ifdef _WIN64
+	    "Win64"
+#else
+	    "Win32"
+#endif
+	);
     Tcl_SetResult(interp, buffer, TCL_VOLATILE);
 }
 
@@ -351,7 +357,7 @@ TkpOpenDisplay(display_name)
     twdPtr->window.winPtr = NULL;
     twdPtr->window.handle = NULL;
     screen->root = (Window)twdPtr;
- 
+
     /*
      * On windows, when creating a color bitmap, need two pieces of 
      * information: the number of color planes and the number of 
