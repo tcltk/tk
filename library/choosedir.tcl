@@ -6,7 +6,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.3 2000/02/14 22:00:17 ericm Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.4 2000/03/02 03:02:13 ericm Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -63,6 +63,10 @@ proc ::tk::dialog::chooseDir::tkChooseDirectory { args } {
     }
     if {[string equal $opts(-parent) "."]} {
 	set opts(-parent) ""
+    }
+
+    if { [string equal $opts(-initialdir) ""] } {
+	set opts(-initialdir) [pwd]
     }
 
     set w [toplevel $opts(-parent).choosedirectory]

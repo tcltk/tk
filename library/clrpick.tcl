@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# RCS: @(#) $Id: clrpick.tcl,v 1.7 1999/11/24 20:59:06 hobbs Exp $
+# RCS: @(#) $Id: clrpick.tcl,v 1.8 2000/03/02 03:02:13 ericm Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -59,10 +59,16 @@ proc tkColorDialog {args} {
     tkColorDialog_Config $w $args
     tkColorDialog_InitValues $w
 
-    if {![winfo exists $w]} {
-	toplevel $w -class tkColorDialog
+    set sc [$data(-parent) cget -screen]
+    set winExists [winfo exists $w]
+    if {!$winExists || [string compare $sc [$w cget -screen]]} {
+	if {$winExists} {
+	    destroy $w
+	}
+	toplevel $w -class tkColorDialog -screen $sc
 	tkColorDialog_BuildDialog $w
     }
+
     wm transient $w $data(-parent)
 
     # 5. Withdraw the window, then update all the geometry information
@@ -82,7 +88,7 @@ proc tkColorDialog {args} {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    tkwait variable tkPriv(selectColor)
+    vwait tkPriv(selectColor)
     ::tk::RestoreFocusGrab $w $data(okBtn)
     unset data
 

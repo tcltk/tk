@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clrpick.test,v 1.4 1999/11/30 00:02:20 hobbs Exp $
+# RCS: @(#) $Id: clrpick.test,v 1.5 2000/03/02 03:02:13 ericm Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
@@ -198,7 +198,7 @@ test clrpick-2.4 {tk_chooseColor command} {nonUnixUserInteraction} {
     tk_chooseColor -parent $parent -title "Press Cancel"
 } ""
 
-set color #000000
+set color "#000000"
 test clrpick-3.1 {tk_chooseColor: background events} {nonUnixUserInteraction} {
     after 1 {set x 53}
     ToPressButton $parent ok
@@ -209,6 +209,13 @@ test clrpick-3.2 {tk_chooseColor: background events} {nonUnixUserInteraction} {
     ToPressButton $parent cancel
     tk_chooseColor -parent $parent -title "Press Cancel"
 } ""
+
+test clrpick-4.1 {tk_chooseColor: screen is inherited from parent} unixOnly {
+    after 50 {set ::scr [winfo screen .__tk__color]}
+    ToPressButton $parent cancel
+    tk_chooseColor -parent $parent
+    set ::scr
+} [winfo screen $parent]
 
 # cleanup
 ::tcltest::cleanupTests
