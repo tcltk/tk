@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.26 2004/11/07 22:41:11 dkf Exp $
+# RCS: @(#) $Id: widget,v 1.27 2004/11/08 21:57:53 dkf Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
@@ -331,6 +331,7 @@ addDemoSection "Animation" {
     anilabel	"Animated labels"
     aniwave	"Animated wave"
     pendulum	"Pendulum simulation"
+    goldberg	"A celebration of Rube Goldberg"
 }
 addDemoSection "Miscellaneous" {
     bitmap	"The built-in bitmaps"
