@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.14 2001/04/04 18:37:18 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.15 2001/09/21 21:34:10 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -481,7 +481,7 @@ GetEntryText(mePtr)
 		Tcl_DStringAppend(&itemString, "&", 1);
 	    }
 	    next = Tcl_UtfNext(p);
-	    Tcl_DStringAppend(&itemString, p, next - p);
+	    Tcl_DStringAppend(&itemString, p, (int) (next - p));
 	}
         if (mePtr->accelLength > 0) {
 	    Tcl_DStringAppend(&itemString, "\t", 1);
@@ -490,7 +490,7 @@ GetEntryText(mePtr)
 		    Tcl_DStringAppend(&itemString, "&", 1);
 		}
 		next = Tcl_UtfNext(p);
-		Tcl_DStringAppend(&itemString, p, next - p);
+		Tcl_DStringAppend(&itemString, p, (int) (next - p));
 	    }
 	} 	    
 
@@ -1716,7 +1716,7 @@ DrawMenuUnderline(
     	Tk_UnderlineChars(menuPtr->display, d,
     		gc, tkfont, label, x + mePtr->indicatorSpace,
     		y + (height + fmPtr->ascent - fmPtr->descent) / 2, 
-		start - label, end - label);
+		(int) (start - label), (int) (end - label));
     }		
 }
 

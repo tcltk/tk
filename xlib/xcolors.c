@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xcolors.c,v 1.3 2000/03/02 23:53:26 hobbs Exp $
+ * RCS: @(#) $Id: xcolors.c,v 1.4 2001/09/21 21:34:10 hobbs Exp $
  */
 
 #include <tkInt.h>
@@ -887,7 +887,7 @@ XParseColor(display, map, spec, colorPtr)
 	char fmt[16];
 	int i, red, green, blue;
 
-	if ((i = strlen(spec+1))%3) {
+	if ((i = (int) strlen(spec+1))%3) {
 	    return 0;
 	}
 	i /= 3;

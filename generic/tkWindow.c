@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.35 2001/08/21 20:21:36 pspjuth Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.36 2001/09/21 21:34:10 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1121,7 +1121,7 @@ Tk_CreateWindowFromPath(interp, tkwin, pathName, screenName)
 		"\"", (char *) NULL);
 	return NULL;
     }
-    numChars = p-pathName;
+    numChars = (int) (p-pathName);
     if (numChars > FIXED_SPACE) {
 	p = (char *) ckalloc((unsigned) (numChars+1));
     } else {
