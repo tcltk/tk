@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.14 2001/11/23 02:04:44 das Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.15 2002/01/15 18:19:14 dgp Exp $
  */
 
 #include "tk.h"
@@ -61,7 +61,7 @@ static int	InterpreterCmd _ANSI_ARGS_((ClientData clientData,
 static int	ConsoleInput _ANSI_ARGS_((ClientData instanceData,
 		    char *buf, int toRead, int *errorCode));
 static int	ConsoleOutput _ANSI_ARGS_((ClientData instanceData,
-		    char *buf, int toWrite, int *errorCode));
+		    CONST char *buf, int toWrite, int *errorCode));
 static int	ConsoleClose _ANSI_ARGS_((ClientData instanceData,
 		    Tcl_Interp *interp));
 static void	ConsoleWatch _ANSI_ARGS_((ClientData instanceData,
@@ -408,7 +408,7 @@ Tk_CreateConsoleWindow(interp)
 static int
 ConsoleOutput(instanceData, buf, toWrite, errorCode)
     ClientData instanceData;		/* Indicates which device to use. */
-    char *buf;				/* The data buffer. */
+    CONST char *buf;			/* The data buffer. */
     int toWrite;			/* How many bytes to write? */
     int *errorCode;			/* Where to store error code. */
 {
@@ -778,7 +778,7 @@ TkConsolePrint(interp, devId, buffer, size)
     Tcl_Interp *interp;		/* Main interpreter. */
     int devId;			/* TCL_STDOUT for stdout, TCL_STDERR for
                                  * stderr. */
-    char *buffer;		/* Text buffer. */
+    CONST char *buffer;		/* Text buffer. */
     long size;			/* Size of text buffer. */
 {
     Tcl_DString command, output;
