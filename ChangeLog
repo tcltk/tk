@@ -1,3 +1,9 @@
+2004-11-12  Daniel Steffen  <das@users.sourceforge.net>
+
+        * macosx/tkMacOSXFont.c (Tk_MeasureChars,Tk_DrawChars,etc): Make
+        sure that the lastSubFontPtr remains valid even when the subfont
+        array is reallocated. [Bug 618872]
+
 2004-11-11  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkMain.c:
