@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.10 2002/06/14 13:35:49 dkf Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.11 2002/07/11 13:01:30 dkf Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -653,6 +653,13 @@ hciva9/Ovbv37+BzBgEEADs=
     catch {file delete -force $filename}
     set result
 } 1
+
+test imgPhoto-15.1 {photo images can fail to allocate memory gracefully} \
+	{nonPortable} {
+    # This is not portable to very large machines with more around
+    # 3GB of free memory available...
+    list [catch {image create photo -width 32000 -height 32000} msg] $msg
+} {1 {not enough free memory for image buffer}}
 
 destroy .c
 eval image delete [image names]

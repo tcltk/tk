@@ -16,7 +16,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.32 2002/06/14 14:07:51 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.33 2002/07/11 13:01:30 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -282,7 +282,14 @@ static char *optionNames[] = {
 };
 
 /*
- * The type record for photo images:
+ * Message to generate when an attempt to resize an image fails due
+ * to memory problems.
+ */
+#define TK_PHOTO_ALLOC_FAILURE_MESSAGE \
+	"not enough free memory for image buffer"
+
+/*
+ * Functions used in the type record for photo images.
  */
 
 static int		ImgPhotoCreate _ANSI_ARGS_((Tcl_Interp *interp,
@@ -302,6 +309,10 @@ static int		ImgPhotoPostscript _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psInfo, int x, int y, int width,
 			    int height, int prepass));
+
+/*
+ * The type record itself for photo images:
+ */
 
 Tk_ImageType tkPhotoImageType = {
     "photo",			/* name */
@@ -378,7 +389,7 @@ static int		ImgPhotoConfigureMaster _ANSI_ARGS_((
 			    int objc, Tcl_Obj *CONST objv[], int flags));
 static void		ImgPhotoConfigureInstance _ANSI_ARGS_((
 			    PhotoInstance *instancePtr));
-static void		ImgPhotoSetSize _ANSI_ARGS_((PhotoMaster *masterPtr,
+static int		ImgPhotoSetSize _ANSI_ARGS_((PhotoMaster *masterPtr,
 			    int width, int height));
 static void		ImgPhotoInstanceSetSize _ANSI_ARGS_((
 			    PhotoInstance *instancePtr));
@@ -849,7 +860,13 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	 */
 
 	if (options.options & OPT_SHRINK) {
-	    ImgPhotoSetSize(masterPtr, options.toX2, options.toY2);
+	    if (ImgPhotoSetSize(masterPtr, options.toX2,
+		    options.toY2) != TCL_OK) {
+		Tcl_ResetResult(interp);
+		Tcl_AppendStringsToObj(Tcl_GetObjResult(interp),
+			TK_PHOTO_ALLOC_FAILURE_MESSAGE, (char *) NULL);
+		return TCL_ERROR;
+	    }
 	}
 
 	/*
@@ -1197,8 +1214,13 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	 */
 
 	if (options.options & OPT_SHRINK) {
-	    ImgPhotoSetSize(masterPtr, options.toX + width,
-		    options.toY + height);
+	    if (ImgPhotoSetSize(masterPtr, options.toX + width,
+		    options.toY + height) != TCL_OK) {
+		Tcl_ResetResult(interp);
+		Tcl_AppendStringsToObj(Tcl_GetObjResult(interp),
+			TK_PHOTO_ALLOC_FAILURE_MESSAGE, (char *) NULL);
+		return TCL_ERROR;
+	    }
 	}
 
 	/*
@@ -1844,8 +1866,18 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
      */
 
     oldFileString = masterPtr->fileString;
-    oldData = (oldFileString == NULL) ? masterPtr->dataString: NULL;
+    if (oldFileString == NULL) {
+	oldData = masterPtr->dataString;
+	if (oldData != NULL) {
+	    Tcl_IncrRefCount(oldData);
+	}
+    } else {
+	oldData = NULL;
+    }
     oldFormat = masterPtr->format;
+    if (oldFormat != NULL) {
+	Tcl_IncrRefCount(oldFormat);
+    }
     oldPaletteString = masterPtr->palette;
     oldGamma = masterPtr->gamma;
 
@@ -1856,7 +1888,7 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
     if (Tk_ConfigureWidget(interp, Tk_MainWindow(interp), configSpecs,
 	    j, args, (char *) masterPtr, flags) != TCL_OK) {
 	ckfree((char *) args);
-	return TCL_ERROR;
+	goto errorExit;
     }
     ckfree((char *) args);
 
@@ -1898,7 +1930,13 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
      * and make sure storage is correctly allocated for this image.
      */
 
-    ImgPhotoSetSize(masterPtr, masterPtr->width, masterPtr->height);
+    if (ImgPhotoSetSize(masterPtr, masterPtr->width,
+	    masterPtr->height) != TCL_OK) {
+	Tcl_ResetResult(interp);
+	Tcl_AppendStringsToObj(Tcl_GetObjResult(interp),
+		TK_PHOTO_ALLOC_FAILURE_MESSAGE, (char *) NULL);
+	goto errorExit;
+    }
 
     /*
      * Read in the image from the file or string if the user has
@@ -1914,14 +1952,16 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
          */
 
         if (Tcl_IsSafe(interp)) {
-            Tcl_AppendResult(interp, "can't get image from a file in a",
-                    " safe interpreter", (char *) NULL);
-            return TCL_ERROR;
+	    Tcl_ResetResult(interp);
+            Tcl_AppendStringsToObj(Tcl_GetObjResult(interp),
+		    "can't get image from a file in a safe interpreter",
+		    (char *) NULL);
+	    goto errorExit;
         }
         
 	chan = Tcl_OpenFileChannel(interp, masterPtr->fileString, "r", 0);
 	if (chan == NULL) {
-	    return TCL_ERROR;
+	    goto errorExit;
 	}
 	/*
 	 * -translation binary also sets -encoding binary
@@ -1932,9 +1972,16 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
 			masterPtr->format, &imageFormat, &imageWidth,
 			&imageHeight, &oldformat) != TCL_OK)) {
 	    Tcl_Close(NULL, chan);
-	    return TCL_ERROR;
+	    goto errorExit;
 	}
-	ImgPhotoSetSize(masterPtr, imageWidth, imageHeight);
+	result = ImgPhotoSetSize(masterPtr, imageWidth, imageHeight);
+	if (result != TCL_OK) {
+	    Tcl_Close(NULL, chan);
+	    Tcl_ResetResult(interp);
+	    Tcl_AppendStringsToObj(Tcl_GetObjResult(interp),
+		    TK_PHOTO_ALLOC_FAILURE_MESSAGE, (char *) NULL);
+	    goto errorExit;
+	}
 	tempformat = masterPtr->format;
 	if (oldformat && tempformat) {
 	    tempformat = (Tcl_Obj *) Tcl_GetString(tempformat);
@@ -1945,7 +1992,7 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
 		imageWidth, imageHeight, 0, 0);
 	Tcl_Close(NULL, chan);
 	if (result != TCL_OK) {
-	    return TCL_ERROR;
+	    goto errorExit;
 	}
 
 	Tcl_ResetResult(interp);
@@ -1959,9 +2006,14 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
 	if (MatchStringFormat(interp, masterPtr->dataString,
 		masterPtr->format, &imageFormat, &imageWidth,
 		&imageHeight, &oldformat) != TCL_OK) {
-	    return TCL_ERROR;
+	    goto errorExit;
 	}
-	ImgPhotoSetSize(masterPtr, imageWidth, imageHeight);
+	if (ImgPhotoSetSize(masterPtr, imageWidth, imageHeight) != TCL_OK) {
+	    Tcl_ResetResult(interp);
+	    Tcl_AppendStringsToObj(Tcl_GetObjResult(interp),
+		    TK_PHOTO_ALLOC_FAILURE_MESSAGE, (char *) NULL);
+	    goto errorExit;
+	}
 	tempformat = masterPtr->format;
 	tempdata = masterPtr->dataString;
 	if (oldformat) {
@@ -1973,7 +2025,7 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
 	if ((*imageFormat->stringReadProc)(interp, tempdata,
 		tempformat, (Tk_PhotoHandle) masterPtr,
 		0, 0, imageWidth, imageHeight, 0, 0) != TCL_OK) {
-	    return TCL_ERROR;
+	    goto errorExit;
 	}
 
 	Tcl_ResetResult(interp);
@@ -2013,7 +2065,22 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
 	    masterPtr->height, masterPtr->width, masterPtr->height);
     masterPtr->flags &= ~IMAGE_CHANGED;
 
+    if (oldData != NULL) {
+	Tcl_DecrRefCount(oldData);
+    }
+    if (oldFormat != NULL) {
+	Tcl_DecrRefCount(oldFormat);
+    }
     return TCL_OK;
+
+  errorExit:
+    if (oldData != NULL) {
+	Tcl_DecrRefCount(oldData);
+    }
+    if (oldFormat != NULL) {
+	Tcl_DecrRefCount(oldFormat);
+    }
+    return TCL_ERROR;
 }
 
 /*
@@ -2550,7 +2617,8 @@ ImgPhotoCmdDeletedProc(clientData)
  *	image's size to `width' x `height' pixels.
  *
  * Results:
- *	None.
+ *	TCL_OK if successful, TCL_ERROR if failure occurred (currently
+ *	just with memory allocation.)
  *
  * Side effects:
  *	Storage gets reallocated, for the master and all its instances.
@@ -2558,12 +2626,12 @@ ImgPhotoCmdDeletedProc(clientData)
  *----------------------------------------------------------------------
  */
 
-static void
+static int
 ImgPhotoSetSize(masterPtr, width, height)
     PhotoMaster *masterPtr;
     int width, height;
 {
-    unsigned char *newPix24;
+    unsigned char *newPix24 = NULL;
     int h, offset, pitch;
     unsigned char *srcPtr, *destPtr;
     XRectangle validBox, clipBox;
@@ -2575,6 +2643,21 @@ ImgPhotoSetSize(masterPtr, width, height)
     }
     if (masterPtr->userHeight > 0) {
 	height = masterPtr->userHeight;
+    }
+
+    pitch = width * 4;
+
+    /*
+     * Test if we're going to (re)allocate the main buffer now, so
+     * that any failures will leave the photo unchanged.
+     */
+    if ((width != masterPtr->width) || (height != masterPtr->height)
+	    || (masterPtr->pix24 == NULL)) {
+	newPix24 = (unsigned char *)
+		attemptckalloc((unsigned) (height * pitch));
+	if (newPix24 == NULL) {
+	    return TCL_ERROR;
+	}
     }
 
     /*
@@ -2597,17 +2680,12 @@ ImgPhotoSetSize(masterPtr, width, height)
 	TkClipBox(masterPtr->validRegion, &validBox);
     }
 
-    if ((width != masterPtr->width) || (height != masterPtr->height)
-	    || (masterPtr->pix24 == NULL)) {
-
-	/*
-	 * Reallocate storage for the 24-bit image and copy
-	 * over valid regions.
-	 */
-
-	pitch = width * 4;
-	newPix24 = (unsigned char *) ckalloc((unsigned) (height * pitch));
-
+    /*
+     * Use the reallocated storage (allocation above) for the 24-bit
+     * image and copy over valid regions.  Note that this test is true
+     * precisely when the allocation has already been done.
+     */
+    if (newPix24 != NULL) {
 	/*
 	 * Zero the new array.  The dithering code shouldn't read the
 	 * areas outside validBox, but they might be copied to another
@@ -2698,6 +2776,8 @@ ImgPhotoSetSize(masterPtr, width, height)
 	    instancePtr = instancePtr->nextPtr) {
 	ImgPhotoInstanceSetSize(instancePtr);
     }
+
+    return TCL_OK;
 }
 
 /*
@@ -3914,8 +3994,10 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height, compRule)
     xEnd = x + width;
     yEnd = y + height;
     if ((xEnd > masterPtr->width) || (yEnd > masterPtr->height)) {
-	ImgPhotoSetSize(masterPtr, MAX(xEnd, masterPtr->width),
-		MAX(yEnd, masterPtr->height));
+	if (ImgPhotoSetSize(masterPtr, MAX(xEnd, masterPtr->width),
+		MAX(yEnd, masterPtr->height)) == TCL_ERROR) {
+	    panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
+	}
     }
 
     if ((y < masterPtr->ditherY) || ((y == masterPtr->ditherY)
@@ -4212,8 +4294,10 @@ Tk_PhotoPutZoomedBlock(handle, blockPtr, x, y, width, height, zoomX, zoomY,
     yEnd = y + height;
     if ((xEnd > masterPtr->width) || (yEnd > masterPtr->height)) {
 	int sameSrc = (blockPtr->pixelPtr == masterPtr->pix24);
-	ImgPhotoSetSize(masterPtr, MAX(xEnd, masterPtr->width),
-		MAX(yEnd, masterPtr->height));
+	if (ImgPhotoSetSize(masterPtr, MAX(xEnd, masterPtr->width),
+		MAX(yEnd, masterPtr->height)) == TCL_ERROR) {
+	    panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
+	}
 	if (sameSrc) {
 	    blockPtr->pixelPtr = masterPtr->pix24;
 	}
@@ -4940,8 +5024,10 @@ Tk_PhotoExpand(handle, width, height)
 	height = masterPtr->height;
     }
     if ((width != masterPtr->width) || (height != masterPtr->height)) {
-	ImgPhotoSetSize(masterPtr, MAX(width, masterPtr->width),
-		MAX(height, masterPtr->height));
+	if (ImgPhotoSetSize(masterPtr, MAX(width, masterPtr->width),
+		MAX(height, masterPtr->height)) == TCL_ERROR) {
+	    panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
+	}
 	Tk_ImageChanged(masterPtr->tkMaster, 0, 0, 0, 0, masterPtr->width,
 		masterPtr->height);
     }
@@ -5010,8 +5096,10 @@ Tk_PhotoSetSize(handle, width, height)
 
     masterPtr->userWidth = width;
     masterPtr->userHeight = height;
-    ImgPhotoSetSize(masterPtr, ((width > 0) ? width: masterPtr->width),
-	    ((height > 0) ? height: masterPtr->height));
+    if (ImgPhotoSetSize(masterPtr, ((width > 0) ? width: masterPtr->width),
+	    ((height > 0) ? height: masterPtr->height)) == TCL_ERROR) {
+	panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
+    }
     Tk_ImageChanged(masterPtr->tkMaster, 0, 0, 0, 0,
 	    masterPtr->width, masterPtr->height);
 }

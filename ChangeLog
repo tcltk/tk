@@ -1,3 +1,17 @@
+2002-07-11  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* tests/imgPhoto.test (imgPhoto-15.1): Added test of mem-alloc
+	failure, but this is non-portable.
+	* generic/tkImgPhoto.c (ImgPhotoSetSize): Allowed this function to
+	fail when it can't allocate enough memory.  Note that not all the
+	places that call it can fail nicely without API changes; some
+	still panic but at least some of the potential failures are now
+	handled gracefully.
+
+	* tests/visual_bb.test (lpr): Stopped this from relying on
+	external files; direct piping is much more flexible for this
+	application.
+
 2002-07-09  Don Porter <dgp@users.sf.net>
 
 	* generic/tkTest.c:	Removed unused dependence on TclThread_Init()
