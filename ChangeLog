@@ -1,5 +1,47 @@
 2003-03-11  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* doc/wm.n (minimize, maximize): Remove claim
+	that the resizable command keeps scripts from
+	changing the size of windows since it is
+	not true. The resizable command only applies
+	to user sizing via user interaction.
+	* tests/unixWm.test: Replace broken tests with
+	the nonPortable constraint with new tests for
+	maxsize and minsize options. These tests
+	verify that setting the minsize and maxsize
+	will resize the window if needed, and that
+	the wm hints will be updated with the new sizes.
+	* tests/wm.test: Add an exhaustive set of tests
+	for the wm maxsize and wm minsize commands.
+	These tests verify that setting the minsize
+	and maxsize will resize the window if needed.
+	These tests have only been run under Win98
+	and Window Maker under Linux, so further tweaking
+	may be needed for other systems.
+	* unix/tkUnixWm.c (UpdateGeometryInfo, UpdateSizeHints):
+	Fixup comments and initialization for the minWidth,
+	minHeight, maxWidth, maxHeight, width, and height
+ 	members of the WmInfo struct. Check to ensure
+	that a new toplevel window size is not larger
+	than the maxsize or smaller than the minsize
+	when updating the geometry at idle time.
+	Pass new width and height values to the
+	UpdateSizeHints method so that it can properly
+	set the window min and max sizes for a window
+	that cannot be resized by the user. This fixes
+	a bug where the window resizes back to the original
+	size when the user clicks on the window border.
+	* win/tkWinWm.c (UpdateGeometryInfo):
+	Fixup comments and initialization for the minWidth,
+	minHeight, maxWidth, maxHeight, width, and height
+ 	members of the WmInfo struct. Check to ensure
+	that a new toplevel window size is not larger
+	than the maxsize or smaller than the minsize
+	when updating the geometry at idle time.
+	[Patch 568861]
+
+2003-03-11  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* generic/tkGrid.c (GridStructureProc, ConfigureSlaves):
 	Check for a NULL masterPtr and slavePtr in the
 	GridStructureProc code to ensure that a Gridder
