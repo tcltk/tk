@@ -1,3 +1,11 @@
+2003-01-27  Daniel Steffen  <das@users.sourceforge.net>
+
+        * macosx/Wish.pbproj/project.pbxproj: removed erroneous reference
+        to mkpsenc.tcl in bundle resources phase (mkpsenc.tcl is already
+        part of the copy files phase to Resources/Scripts).
+
+        * macosx/Makefile: added support for 'xcodebuild' on Mac OS X 10.3.
+
 2003-12-31  Daniel Steffen  <das@users.sourceforge.net>
 
         * macosx/Wish.pbproj/project.pbxproj: added missing private headers
