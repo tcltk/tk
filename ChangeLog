@@ -1,5 +1,20 @@
 2002-06-22  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkGrid.c (GridReqProc): check that gridPtr is not NULL
+	(may be when embedded). [Bug #548791] (halliday)
+
+	* generic/tkFont.c (TkFontPkgFree): changed panic on freeing fonts
+	to an assert, and wrapped panic in #ifdef PURIFY. [Bug #568701]
+
+	* library/menu.tcl: corrected menus from being posted offscreen
+	on Windows. [Bug #464451] (darley)
+
+	* library/console.tcl: corrected the defaultPrompt substitution
+	[Bug #553207] and made Tab a default expansion key (like Escape).
+
+	* win/tkWinEmbed.c (EmbedWindowDeleted): added a check for a null
+	containerPtr.  The core of this bug is likely elsewhere. [Bug #476176]
+
 	* doc/text.n:                             TIP #93 implementation that
 	* generic/tkText.c (TextWidgetCmd):       enhances the text get and
 	* generic/tkTextIndex.c (TkTextGetIndex): delete methods to accept
