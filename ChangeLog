@@ -1,3 +1,8 @@
+2002-09-06  Don Porter <dgp@users.sf.net>
+
+	* tests/unixWm.test (unixWm-50.3):  Constrained test that hangs
+	on Windows.
+
 2002-09-05  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.pbproj/project.pbxproj: added overlooked missing

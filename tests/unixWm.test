@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.27 2002/08/08 21:02:16 dgp Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.28 2002/09/06 16:07:37 dgp Exp $
 
 package require tcltest 2.2
 namespace import -force tcltest::configure
@@ -1760,7 +1760,7 @@ test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and 
 } {{} {} .t .t .t2 .t2 .t {}}
 test unixWm-50.3 {
 	Tk_CoordsToWindow procedure, finding a toplevel with embedding
-} -setup {
+} -constraints tempNotWin -setup {
     deleteWindows
     toplevel .t -width 300 -height 400 -bg blue
     wm geom .t +0+50
