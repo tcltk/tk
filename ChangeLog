@@ -1,3 +1,8 @@
+2002-07-25  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/tk.tcl (RestoreFocusGrab): handle the case where the
+	FocusGrab info is not set. [Bug #553283]
+
 2002-07-24  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* tests/canvas.test: added canvas-14.[1-6]
