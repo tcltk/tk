@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.34 1999/11/12 23:54:22 wart Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.35 1999/12/13 23:03:36 wart Exp $
 
 # Current Tk version;  used in various names.
 
@@ -419,7 +419,7 @@ runtest:
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
 	./tktest
 
-install: install-binaries install-libraries install-demos install-doc
+install: all install-binaries install-libraries install-demos install-doc
 
 # Note: before running ranlib below, must cd to target directory because
 # some ranlibs write to current directory, and this might not always be
