@@ -7,7 +7,7 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # Copyright (c) 2001 ActiveState Corporation.
 #
-# RCS: @(#) $Id: makefile.vc,v 1.33.2.3 2002/04/10 17:57:26 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.33.2.4 2002/04/10 18:04:17 davygrvy Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -446,7 +446,10 @@ $(TMPDIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
 $(TMPDIR)\winMain.obj: $(WINDIR)\winMain.c
 	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
 
-$(TMPDIR)\tkStubLib.obj : $(GENERICDIR)\tkStubLib.c
+$(TMPDIR)\tkStubLib.obj: $(GENERICDIR)\tkStubLib.c
+	$(cc32) $(TK_CFLAGS) -DSTATIC_BUILD -Fo$@ $?
+
+$(TMPDIR)\tkStubImg.obj: $(GENERICDIR)\tkStubImg.c
 	$(cc32) $(TK_CFLAGS) -DSTATIC_BUILD -Fo$@ $?
 
 #
