@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scale.test,v 1.8 1999/12/14 06:53:14 hobbs Exp $
+# RCS: @(#) $Id: scale.test,v 1.9 1999/12/21 23:55:55 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -810,22 +810,15 @@ test scale-17.1 {bug fix 1786} {
     set x
 } {}
 
+test scale-18.1 {DestroyScale, -cursor option [Bug: 3897]} {
+    catch {destroy .s}
+    scale .s -cursor trek
+    destroy .s
+} {}
+
 catch {destroy .s}
 option clear
 
 # cleanup
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

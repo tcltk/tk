@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.4 1999/12/14 06:53:13 hobbs Exp $
+# RCS: @(#) $Id: entry.test,v 1.5 1999/12/21 23:55:54 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1330,19 +1330,18 @@ test entry-17.3 {EntryUpdateScrollbar procedure} {
 } {0.315789 0.842105}
 test entry-17.4 {EntryUpdateScrollbar procedure} {
     catch {destroy .e}
-    catch {rename bogus {}}
     proc bgerror msg {
 	global x
 	set x $msg
     }
-    entry .e -width 5 -xscrollcommand bogus
+    entry .e -width 5 -xscrollcommand thisisnotacommand
     pack .e
     update
     rename bgerror {}
     list $x $errorInfo
-} {{invalid command name "bogus"} {invalid command name "bogus"
+} {{invalid command name "thisisnotacommand"} {invalid command name "thisisnotacommand"
     while executing
-"bogus 0 1"
+"thisisnotacommand 0 1"
     (horizontal scrolling command executed by entry)}}
 
 set l [interp hidden]
@@ -1364,16 +1363,3 @@ option clear
 # cleanup
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
