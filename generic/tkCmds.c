@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.17 2000/08/03 21:02:19 ericm Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.18 2000/08/04 00:46:32 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -349,7 +349,7 @@ Tk_BindtagsObjCmd(clientData, interp, objc, objv)
 	} else {
 	    for (i = 0; i < winPtr->numTags; i++) {
 		Tcl_ListObjAppendElement(interp, listPtr,
-			Tcl_NewStringObj(winPtr->tagPtr[i], -1));
+			Tcl_NewStringObj((char *)winPtr->tagPtr[i], -1));
 	    }
 	}
 	Tcl_SetObjResult(interp, listPtr);

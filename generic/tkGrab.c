@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.4 1999/04/16 01:51:14 stanton Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.5 2000/08/04 00:46:33 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -173,7 +173,7 @@ static void		ReleaseButtonGrab _ANSI_ARGS_((TkDisplay *dispPtr));
 /*
  *----------------------------------------------------------------------
  *
- * Tk_GrabCmd --
+ * Tk_GrabObjCmd --
  *
  *	This procedure is invoked to process the "grab" Tcl command.
  *	See the user documentation for details on what it does.
@@ -189,137 +189,192 @@ static void		ReleaseButtonGrab _ANSI_ARGS_((TkDisplay *dispPtr));
 
 	/* ARGSUSED */
 int
-Tk_GrabCmd(clientData, interp, argc, argv)
+Tk_GrabObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Main window associated with
 				 * interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    int globalGrab, c;
+    int globalGrab;
     Tk_Window tkwin;
     TkDisplay *dispPtr;
-    size_t length;
+    char *arg;
+    int index;
+    size_t len;
+    static char *optionStrings[] = { "current", "release",
+					 "set", "status", (char *) NULL };
+  
+    static char *flagStrings[] = { "-global", (char *) NULL };
 
-    if (argc < 2) {
-	badArgs:
+    enum options { GRABCMD_CURRENT, GRABCMD_RELEASE,
+		       GRABCMD_SET, GRABCMD_STATUS };
+    
+    if (objc < 2) {
+	/*
+	 * Can't use Tcl_WrongNumArgs here because we want the message to
+	 * read:
+	 * wrong # args: should be "cmd ?-global window" or "cmd option
+	 *    ?arg arg ...?"
+	 * We can fake it with Tcl_WrongNumArgs if we assume the command name
+	 * is "grab", but if it has been aliased, the message will be
+	 * incorrect.
+	 */
+	Tcl_ResetResult(interp);
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " ?-global? window\" or \"", argv[0],
-		" option ?arg arg ...?\"", (char *) NULL);
+		Tcl_GetString(objv[0]), " ?-global? window\" or \"",
+		Tcl_GetString(objv[0]), " option ?arg arg ...?\"",
+		(char *) NULL);
 	return TCL_ERROR;
     }
-    c = argv[1][0];
-    length = strlen(argv[1]);
-    if (c == '.') {
-	if (argc != 2) {
-	    goto badArgs;
+
+    /*
+     * First check for a window name or "-global" as the first argument.
+     */
+
+    arg = Tcl_GetStringFromObj(objv[1], &len);
+    if (arg[0] == '.') {
+	/* [grab window] */
+	if (objc != 2) {
+	    Tcl_WrongNumArgs(interp, 1, objv, "?-global? window");
+	    return TCL_ERROR;
 	}
-	tkwin = Tk_NameToWindow(interp, argv[1], (Tk_Window) clientData);
+	tkwin = Tk_NameToWindow(interp, arg, (Tk_Window) clientData);
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
 	}
 	return Tk_Grab(interp, tkwin, 0);
-    } else if ((c == '-') && (strncmp(argv[1], "-global", length) == 0)
-	    && (length >= 2)) {
-	if (argc != 3) {
-	    goto badArgs;
+    } else if (arg[0] == '-' && len > 1) {
+	if (Tcl_GetIndexFromObj(interp, objv[1], flagStrings, "option", 0,
+		&index) != TCL_OK) {
+	    return TCL_ERROR;
 	}
-	tkwin = Tk_NameToWindow(interp, argv[2], (Tk_Window) clientData);
+
+	/* [grab -global window] */
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 1, objv, "?-global? window");
+	    return TCL_ERROR;
+	}
+	tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]),
+		(Tk_Window) clientData);
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
 	}
 	return Tk_Grab(interp, tkwin, 1);
-    } else if ((c == 'c') && (strncmp(argv[1], "current", length) == 0)) {
-	if (argc > 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " current ?window?\"", (char *) NULL);
-	    return TCL_ERROR;
+    }
+
+    /*
+     * First argument is not a window name and not "-global", find out
+     * which option it is.
+     */
+
+    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
+	    &index) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    
+    switch ((enum options) index) {
+	case GRABCMD_CURRENT: {
+	    /* [grab current ?window?] */
+	    if (objc > 3) {
+		Tcl_WrongNumArgs(interp, 1, objv, "current ?window?");
+		return TCL_ERROR;
+	    }
+	    if (objc == 3) {
+		tkwin = Tk_NameToWindow(interp,
+			Tcl_GetString(objv[2]), (Tk_Window) clientData);
+		if (tkwin == NULL) {
+		    return TCL_ERROR;
+		}
+		dispPtr = ((TkWindow *) tkwin)->dispPtr;
+		if (dispPtr->eventualGrabWinPtr != NULL) {
+		    Tcl_SetResult(interp,
+			    dispPtr->eventualGrabWinPtr->pathName, TCL_STATIC);
+		}
+	    } else {
+		for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
+		     dispPtr = dispPtr->nextPtr) {
+		    if (dispPtr->eventualGrabWinPtr != NULL) {
+			Tcl_AppendElement(interp,
+				dispPtr->eventualGrabWinPtr->pathName);
+		    }
+		}
+	    }
+	    return TCL_OK;
 	}
-	if (argc == 3) {
-	    tkwin = Tk_NameToWindow(interp, argv[2], (Tk_Window) clientData);
+
+	case GRABCMD_RELEASE: {
+	    /* [grab release window] */
+	    if (objc != 3) {
+		Tcl_WrongNumArgs(interp, 1, objv, "release window");
+		return TCL_ERROR;
+	    }
+	    tkwin = Tk_NameToWindow(interp,
+		    Tcl_GetString(objv[2]), (Tk_Window) clientData);
+	    if (tkwin == NULL) {
+		Tcl_ResetResult(interp);
+	    } else {
+		Tk_Ungrab(tkwin);
+	    }
+	    break;
+	}
+	
+	case GRABCMD_SET: {
+	    /* [grab set ?-global? window] */
+	    if ((objc != 3) && (objc != 4)) {
+		Tcl_WrongNumArgs(interp, 1, objv, "set ?-global? window");
+		return TCL_ERROR;
+	    }
+	    if (objc == 3) {
+		globalGrab = 0;
+		tkwin = Tk_NameToWindow(interp,
+			Tcl_GetString(objv[2]), (Tk_Window) clientData);
+	    } else {
+		globalGrab = 1;
+		/*
+		 * We could just test the argument by hand instead of using
+		 * Tcl_GetIndexFromObj; the benefit of using the function is
+		 * that it sets up the error message for us, so we are
+		 * certain to be consistant with the rest of Tcl.
+		 */
+		if (Tcl_GetIndexFromObj(interp, objv[2], flagStrings, "option",
+			0, &index) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+		tkwin = Tk_NameToWindow(interp,
+			Tcl_GetString(objv[3]), (Tk_Window) clientData);
+	    }
 	    if (tkwin == NULL) {
 		return TCL_ERROR;
 	    }
-	    dispPtr = ((TkWindow *) tkwin)->dispPtr;
-	    if (dispPtr->eventualGrabWinPtr != NULL) {
-		Tcl_SetResult(interp, dispPtr->eventualGrabWinPtr->pathName,
-			TCL_STATIC);
-	    }
-	} else {
-	    for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
-		    dispPtr = dispPtr->nextPtr) {
-		if (dispPtr->eventualGrabWinPtr != NULL) {
-		    Tcl_AppendElement(interp,
-			    dispPtr->eventualGrabWinPtr->pathName);
-		}
-	    }
+	    return Tk_Grab(interp, tkwin, globalGrab);
 	}
-	return TCL_OK;
-    } else if ((c == 'r') && (strncmp(argv[1], "release", length) == 0)) {
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " release window\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	tkwin = Tk_NameToWindow(interp, argv[2], (Tk_Window) clientData);
-	if (tkwin == NULL) {
-	    Tcl_ResetResult(interp);
-	} else {
-	    Tk_Ungrab(tkwin);
-	}
-    } else if ((c == 's') && (strncmp(argv[1], "set", length) == 0)
-	    && (length >= 2)) {
-	if ((argc != 3) && (argc != 4)) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " set ?-global? window\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	if (argc == 3) {
-	    globalGrab = 0;
-	    tkwin = Tk_NameToWindow(interp, argv[2], (Tk_Window) clientData);
-	} else {
-	    globalGrab = 1;
-	    length = strlen(argv[2]);
-	    if ((strncmp(argv[2], "-global", length) != 0) || (length < 2)) {
-		Tcl_AppendResult(interp, "bad argument \"", argv[2],
-			"\": must be \"", argv[0], " set ?-global? window\"",
-			(char *) NULL);
+
+	case GRABCMD_STATUS: {
+	    /* [grab status window] */
+	    TkWindow *winPtr;
+
+	    if (objc != 3) {
+		Tcl_WrongNumArgs(interp, 1, objv, "status window");
 		return TCL_ERROR;
 	    }
-	    tkwin = Tk_NameToWindow(interp, argv[3], (Tk_Window) clientData);
+	    winPtr = (TkWindow *) Tk_NameToWindow(interp,
+		    Tcl_GetString(objv[2]), (Tk_Window) clientData);
+	    if (winPtr == NULL) {
+		return TCL_ERROR;
+	    }
+	    dispPtr = winPtr->dispPtr;
+	    if (dispPtr->eventualGrabWinPtr != winPtr) {
+		Tcl_SetResult(interp, "none", TCL_STATIC);
+	    } else if (dispPtr->grabFlags & GRAB_GLOBAL) {
+		Tcl_SetResult(interp, "global", TCL_STATIC);
+	    } else {
+		Tcl_SetResult(interp, "local", TCL_STATIC);
+	    }
+	    break;
 	}
-	if (tkwin == NULL) {
-	    return TCL_ERROR;
-	}
-	return Tk_Grab(interp, tkwin, globalGrab);
-    } else if ((c == 's') && (strncmp(argv[1], "status", length) == 0)
-	    && (length >= 2)) {
-	TkWindow *winPtr;
-
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " status window\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	winPtr = (TkWindow *) Tk_NameToWindow(interp, argv[2],
-		(Tk_Window) clientData);
-	if (winPtr == NULL) {
-	    return TCL_ERROR;
-	}
-	dispPtr = winPtr->dispPtr;
-	if (dispPtr->eventualGrabWinPtr != winPtr) {
-	    Tcl_SetResult(interp, "none", TCL_STATIC);
-	} else if (dispPtr->grabFlags & GRAB_GLOBAL) {
-	    Tcl_SetResult(interp, "global", TCL_STATIC);
-	} else {
-	    Tcl_SetResult(interp, "local", TCL_STATIC);
-	}
-    } else {
-	Tcl_AppendResult(interp, "unknown or ambiguous option \"", argv[1],
-		"\": must be current, release, set, or status",
-		(char *) NULL);
-	return TCL_ERROR;
     }
+
     return TCL_OK;
 }
 

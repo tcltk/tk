@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.30 2000/08/03 21:14:30 ericm Exp $ 
+ * RCS: $Id: tkInt.h,v 1.31 2000/08/04 00:46:33 ericm Exp $ 
  */
 
 #ifndef _TKINT
@@ -900,8 +900,10 @@ EXTERN int		Tk_ButtonObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_CanvasObjCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, Tcl_Obj *CONST objv[]));
-EXTERN int		Tk_CheckbuttonObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int argc,
+			    Tcl_Obj *CONST objv[]));
+EXTERN int		Tk_CheckbuttonObjCmd _ANSI_ARGS_((
+			    ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
 EXTERN int              Tk_ClipboardObjCmd _ANSI_ARGS_((
@@ -936,14 +938,17 @@ EXTERN int		Tk_FocusObjCmd _ANSI_ARGS_((ClientData clientData,
 EXTERN int		Tk_FontObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));
-EXTERN int              Tk_GetOpenFileObjCmd _ANSI_ARGS_((ClientData clientData,
+EXTERN int              Tk_GetOpenFileObjCmd _ANSI_ARGS_((
+			    ClientData clientData,
 			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));
-EXTERN int              Tk_GetSaveFileObjCmd _ANSI_ARGS_((ClientData clientData,
+EXTERN int              Tk_GetSaveFileObjCmd _ANSI_ARGS_((
+			    ClientData clientData,
 			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));
-EXTERN int		Tk_GrabCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_GrabObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_GridCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_ImageObjCmd _ANSI_ARGS_((ClientData clientData,
@@ -974,7 +979,8 @@ EXTERN int		Tk_PackCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_PlaceCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_RadiobuttonObjCmd _ANSI_ARGS_((ClientData clientData,
+EXTERN int		Tk_RadiobuttonObjCmd _ANSI_ARGS_((
+			    ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_RaiseObjCmd _ANSI_ARGS_((ClientData clientData,
