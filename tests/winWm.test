@@ -9,7 +9,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winWm.test,v 1.9.2.1 2004/09/17 22:45:07 hobbs Exp $
+# RCS: @(#) $Id: winWm.test,v 1.9.2.2 2004/09/17 23:45:57 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -228,22 +228,65 @@ test winWm-5.2 {UpdateGeometryInfo: menu resizing} {pcOnly} {
     set result
 } {50 50 0}
 
-test winWm-6.1 {wm attributes} {pcOnly} {
+test winWm-6.1 {wm attributes} win {
     destroy .t
     toplevel .t
     wm attributes .t
-} {-disabled 0 -toolwindow 0 -topmost 0}
-test winWm-6.2 {wm attributes} {pcOnly} {
+} {-alpha 1.0 -disabled 0 -toolwindow 0 -topmost 0}
+test winWm-6.2 {wm attributes} win {
     destroy .t
     toplevel .t
     wm attributes .t -disabled
 } {0}
-test winWm-6.3 {wm attributes} {pcOnly} {
+test winWm-6.3 {wm attributes} win {
     # This isn't quite the correct error message yet, but it works.
     destroy .t
     toplevel .t
     list [catch {wm attributes .t -foo} msg] $msg
-} {1 {wrong # args: should be "wm attributes window ?-disabled ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}}
+} {1 {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-disabled ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}}
+
+test winWm-6.4 {wm attributes -alpha} win {
+    # Expect this to return all 1.0 {} on pre-2K/XP
+    destroy .t
+    toplevel .t
+    set res [wm attributes .t -alpha]
+    # we don't return on set yet
+    lappend res [wm attributes .t -alpha 0.5]
+    lappend res [wm attributes .t -alpha]
+    lappend res [wm attributes .t -alpha -100]
+    lappend res [wm attributes .t -alpha]
+    lappend res [wm attributes .t -alpha 100]
+    lappend res [wm attributes .t -alpha]
+    set res
+} {1.0 {} 0.5 {} 0.0 {} 1.0}
+
+test winWm-6.5 {wm attributes -alpha} win {
+    destroy .t
+    toplevel .t
+    list [catch {wm attributes .t -alpha foo} msg] $msg
+} {1 {expected floating-point number but got "foo"}}
+
+test winWm-6.6 {wm attributes -alpha} win {
+    # This test is just to show off -alpha
+    destroy .t
+    toplevel .t
+    wm attributes .t -alpha 0.2
+    pack [label .t.l -text "Alpha Toplevel" -font "Helvetica 18 bold"]
+    tk::PlaceWindow .t center
+    update
+    if {$::tcl_platform(osVersion) >= 5.0} {
+	for {set i 0.2} {$i < 0.99} {set i [expr {$i+0.02}]} {
+	    wm attributes .t -alpha $i
+	    update idle
+	    after 20
+	}
+	for {set i 0.99} {$i > 0.2} {set i [expr {$i-0.02}]} {
+	    wm attributes .t -alpha $i
+	    update idle
+	    after 20
+	}
+    }
+} {}
 
 test winWm-7.1 {deiconify on an unmapped toplevel
         will raise the window and set the focus} {pcOnly} {
