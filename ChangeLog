@@ -1,3 +1,11 @@
+2002-06-23  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinWm.c (UpdateGeometryInfo): remove the check for a null
+	wrapper introduced in r1.41 on 2002-06-15 because it prevented
+	geometry setting from taking effect if the window was not on the
+	screen.  Another check may go in it's place as IsIconic and
+	IsZoomed should not be passed NULL.
+
 2002-06-22  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* tests/wm.test: Remove invalid minsize test. Add update
