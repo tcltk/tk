@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacXStubs.c,v 1.9 1999/12/22 03:09:59 hobbs Exp $
+ * RCS: @(#) $Id: tkMacXStubs.c,v 1.10 2000/02/10 09:00:31 jingham Exp $
  */
 
 #include "tkInt.h"
@@ -470,6 +470,7 @@ XClearWindow(
 {
 }
 
+/*
 void
 XDrawPoint(
     Display* display,
@@ -490,6 +491,7 @@ XDrawPoints(
     int mode)
 {
 }
+*/
 
 void
 XWarpPointer(
