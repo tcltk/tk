@@ -1,3 +1,12 @@
+2002-02-26  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/configure: Regen.
+	* unix/tcl.m4: Update from Tcl.
+
+	* generic/tkWindow.c (Tk_MainWindow, Tk_GetNumMainWindows):
+	protect against being called before Tcl stubs are init'ed.
+	[Bug #220916] (porter)
+
 2002-02-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkText.c (ConfigureText): reenable the blinking cursor
