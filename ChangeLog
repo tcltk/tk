@@ -1,6 +1,5 @@
 2004-11-19  Reinhard Max  <max@suse.de>
 
-
 	*** 8.4.8 TAGGED FOR RELEASE ***
 
 	* unix/installManPage: Classic sed doesn't support | in REs.
