@@ -1,3 +1,28 @@
+2002-08-07  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinMenu.c (TkpSetWindowMenuBar): fixed logic bug in when
+	to idle call ReconfigureWindowsMenu.
+
+	* doc/GetBitmap.3: removed doc refs to deprecated
+	Tk_GetBitmapFromData. [Bug #590379]
+
+	* generic/tkPanedWindow.c (Tk_PanedWindowObjCmd): 
+	* library/panedwindow.tcl: changed class from PanedWindow to
+	Panedwindow to not conflict with existing bwidgets, but also to be
+	more regular with other names used in the core.
+
+	* tests/panedwindow.test: added -text foobar to some test buttons
+	to enable correct testing of panedwindow across platforms.
+	[Bug #582370]
+
+	* win/tkWinDialog.c: enabled use of the updated native Windows
+	directory browser (tk_chooseDirectory).  This does require
+	shell32.dll v4.71 or greater. [Patch #468139]
+
+	* win/configure:
+	* win/tcl.m4: added shell32 to libs for updated native Windows
+	tk_chooseDirectory dialog.
+
 2002-08-06  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkPanedWindow.c (RESIZE_PENDING): Separated out flag for
