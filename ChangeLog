@@ -1,3 +1,7 @@
+2001-11-16  David Gravereaux <davygrvy@pobox.com>
+
+	* win/makefile.vc:  Install target repaired.
+
 2001-11-15  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/demos/image2.tcl: Many improvements to this
