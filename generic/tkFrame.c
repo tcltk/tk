@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.19 2005/01/09 18:28:05 chengyemao Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.20 2005/01/10 04:15:02 chengyemao Exp $
  */
 
 #include "default.h"
@@ -805,7 +805,7 @@ FrameWidgetObjCmd(clientData, interp, objc, objv)
 			&& (strncmp(arg, "-visual", length) == 0))) {
 		    if(c == 'u') {
 			CONST char*string = Tcl_GetString(objv[i+1]);
-			if(TCL_OK == TkpUseWindow(interp, framePtr->tkwin, string)) {
+			if(TCL_OK != TkpUseWindow(interp, framePtr->tkwin, string)) {
 			    result = TCL_ERROR;
 			    goto done;
 			}
