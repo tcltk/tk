@@ -14,12 +14,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.26 2002/02/26 01:58:25 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.27 2002/06/21 23:09:54 hobbs Exp $
  */
 
 #include "default.h"
 #include "tkPort.h"
 #include "tkInt.h"
+#include "tkUndo.h"
 
 #ifdef MAC_TCL
 #define Style TkStyle
@@ -90,6 +91,8 @@ static Tk_ConfigSpec configSpecs[] = {
 	DEF_TEXT_INSERT_ON_TIME, Tk_Offset(TkText, insertOnTime), 0},
     {TK_CONFIG_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
 	DEF_TEXT_INSERT_WIDTH, Tk_Offset(TkText, insertWidth), 0},
+    {TK_CONFIG_INT, "-maxundo", "maxUndo", "MaxUndo",
+	DEF_TEXT_MAX_UNDO, Tk_Offset(TkText, maxUndo), 0},
     {TK_CONFIG_PIXELS, "-padx", "padX", "Pad",
 	DEF_TEXT_PADX, Tk_Offset(TkText, padX), 0},
     {TK_CONFIG_PIXELS, "-pady", "padY", "Pad",
@@ -311,18 +314,10 @@ static void		DumpLine _ANSI_ARGS_((Tcl_Interp *interp,
 static int		DumpSegment _ANSI_ARGS_((Tcl_Interp *interp, char *key,
 			    char *value, char * command, TkTextIndex *index,
 			    int what));
-static int		TextEditUndo _ANSI_ARGS_((Tcl_Interp * interp,
-			    TkText *textPtr));
-static int		TextEditRedo _ANSI_ARGS_((Tcl_Interp * interp,
-			    TkText *textPtr));
+static int		TextEditUndo _ANSI_ARGS_((TkText *textPtr));
+static int		TextEditRedo _ANSI_ARGS_((TkText *textPtr));
 static void		TextGetText _ANSI_ARGS_((TkTextIndex * index1,
 			    TkTextIndex * index2, Tcl_DString *dsPtr));
-static void		pushStack _ANSI_ARGS_(( TkTextEditAtom ** stack, 
-			    TkTextEditAtom * elem ));
-
-static TkTextEditAtom * popStack   _ANSI_ARGS_((TkTextEditAtom ** stack));
-static void		clearStack _ANSI_ARGS_((TkTextEditAtom ** stack));
-static void		insertSeparator _ANSI_ARGS_((TkTextEditAtom ** stack));
 static void		updateDirtyFlag _ANSI_ARGS_((TkText *textPtr));
 
 /*
@@ -412,9 +407,11 @@ Tk_TextCmd(clientData, interp, argc, argv)
     TkTextSetYView(textPtr, &startIndex, 0);
     textPtr->exportSelection = 1;
     textPtr->pickEvent.type = LeaveNotify;
+    textPtr->undoStack = TkUndoInitStack(interp,0);
     textPtr->undo = 1;
     textPtr->isDirtyIncrement = 1;
     textPtr->autoSeparators = 1;
+    textPtr->lastEditMode = TK_TEXT_EDIT_OTHER;
 
     /*
      * Create the "sel" tag and the "current" and "insert" marks.
@@ -811,8 +808,7 @@ DestroyText(memPtr)
     if (textPtr->bindingTable != NULL) {
 	Tk_DeleteBindingTable(textPtr->bindingTable);
     }
-    clearStack(&(textPtr->undoStack));
-    clearStack(&(textPtr->redoStack));
+    TkUndoFreeStack(textPtr->undoStack);
 
     /*
      * NOTE: do NOT free up selBorder, selBdString, or selFgColorPtr:
@@ -863,6 +859,8 @@ ConfigureText(interp, textPtr, argc, argv, flags)
 	    argc, argv, (char *) textPtr, flags) != TCL_OK) {
 	return TCL_ERROR;
     }
+
+    TkUndoSetDepth(textPtr->undoStack, textPtr->maxUndo);
 
     /*
      * A few other options also need special processing, such as parsing
@@ -1193,7 +1191,6 @@ InsertChars(textPtr, indexPtr, string)
 {
     int lineIndex, resetView, offset;
     TkTextIndex newTop;
-    TkTextEditAtom * insertion;
     char indexBuffer[TK_POS_CHARS];
 
     /*
@@ -1229,23 +1226,59 @@ InsertChars(textPtr, indexPtr, string)
      */
 
     if ( textPtr->undo ) {
-        if (textPtr->autoSeparators && textPtr->undoStack &&
-            textPtr->undoStack->type != TK_EDIT_INSERT) {
-            insertSeparator(&(textPtr->undoStack));
+        TkTextIndex     toIndex;
+
+        Tcl_DString actionCommand;
+        Tcl_DString revertCommand;
+        
+        if (textPtr->autoSeparators &&
+            textPtr->lastEditMode != TK_TEXT_EDIT_INSERT) {
+            TkUndoInsertUndoSeparator(textPtr->undoStack);
         }
         
-        insertion = (TkTextEditAtom *) ckalloc(sizeof(TkTextEditAtom));
-        insertion->type = TK_EDIT_INSERT;
+        textPtr->lastEditMode = TK_TEXT_EDIT_INSERT;
         
+        Tcl_DStringInit(&actionCommand);
+        Tcl_DStringInit(&revertCommand);
+        
+        Tcl_DStringAppend(&actionCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
+        Tcl_DStringAppend(&actionCommand," insert ",-1);
         TkTextPrintIndex(indexPtr,indexBuffer);
-        insertion->index = (char *) ckalloc(strlen(indexBuffer) + 1);
-        strcpy(insertion->index,indexBuffer);
+        Tcl_DStringAppend(&actionCommand,indexBuffer,-1);
+        Tcl_DStringAppend(&actionCommand," ",-1);
+        Tcl_DStringAppendElement(&actionCommand,string);
+        Tcl_DStringAppend(&actionCommand,";",-1);
+        Tcl_DStringAppend(&actionCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
+        Tcl_DStringAppend(&actionCommand," mark set insert ",-1);
+        TkTextIndexForwBytes(indexPtr, (int) strlen(string),
+			&toIndex);
+        TkTextPrintIndex(&toIndex, indexBuffer);
+        Tcl_DStringAppend(&actionCommand,indexBuffer,-1);
+        Tcl_DStringAppend(&actionCommand,"; ",-1);
+        Tcl_DStringAppend(&actionCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
+        Tcl_DStringAppend(&actionCommand," see insert",-1);
         
-        insertion->string = (char *) ckalloc(strlen(string) + 1);
-        strcpy(insertion->string,string);
+        Tcl_DStringAppend(&revertCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
+        Tcl_DStringAppend(&revertCommand," delete ",-1);
+        TkTextPrintIndex(indexPtr,indexBuffer);
+        Tcl_DStringAppend(&revertCommand,indexBuffer,-1);
+        Tcl_DStringAppend(&revertCommand," ",-1);
+        TkTextPrintIndex(&toIndex, indexBuffer);
+        Tcl_DStringAppend(&revertCommand,indexBuffer,-1);
+        Tcl_DStringAppend(&revertCommand," ;",-1);
+        Tcl_DStringAppend(&revertCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
+        Tcl_DStringAppend(&revertCommand," mark set insert ",-1);
+        TkTextPrintIndex(indexPtr,indexBuffer);
+        Tcl_DStringAppend(&revertCommand,indexBuffer,-1);
+        Tcl_DStringAppend(&revertCommand,"; ",-1);
+        Tcl_DStringAppend(&revertCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
+        Tcl_DStringAppend(&revertCommand," see insert",-1);
+        
+        TkUndoPushAction(textPtr->undoStack,&actionCommand, &revertCommand);
 
-        pushStack(&(textPtr->undoStack),insertion);
-        clearStack(&(textPtr->redoStack));
+     	Tcl_DStringFree(&actionCommand);
+     	Tcl_DStringFree(&revertCommand);
+
     }
     updateDirtyFlag(textPtr);
 
@@ -1292,7 +1325,6 @@ DeleteChars(textPtr, index1String, index2String)
 {
     int line1, line2, line, byteIndex, resetView;
     TkTextIndex index1, index2;
-    TkTextEditAtom * deletion;
     char indexBuffer[TK_POS_CHARS];
 
     /*
@@ -1412,27 +1444,58 @@ DeleteChars(textPtr, index1String, index2String)
 
     if (textPtr->undo) {
 	Tcl_DString ds;
-
-	if (textPtr->autoSeparators && (textPtr->undoStack != NULL)
-		&& (textPtr->undoStack->type != TK_EDIT_DELETE)) {
-	   insertSeparator(&(textPtr->undoStack));
+        Tcl_DString actionCommand;
+        Tcl_DString revertCommand;
+    
+	if (textPtr->autoSeparators
+		&& (textPtr->lastEditMode != TK_TEXT_EDIT_DELETE)) {
+	   TkUndoInsertUndoSeparator(textPtr->undoStack);
 	}
 
-	deletion = (TkTextEditAtom *) ckalloc(sizeof(TkTextEditAtom));
-	deletion->type = TK_EDIT_DELETE;
+	textPtr->lastEditMode = TK_TEXT_EDIT_DELETE;
 
-	TkTextPrintIndex(&index1, indexBuffer);
-	deletion->index = (char *) ckalloc(strlen(indexBuffer) + 1);
-	strcpy(deletion->index, indexBuffer);
+        Tcl_DStringInit(&actionCommand);
+        Tcl_DStringInit(&revertCommand);
+
+        Tcl_DStringAppend(&actionCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
+        Tcl_DStringAppend(&actionCommand," delete ",-1);
+        TkTextPrintIndex(&index1,indexBuffer);
+        Tcl_DStringAppend(&actionCommand,indexBuffer,-1);
+        Tcl_DStringAppend(&actionCommand," ",-1);
+        TkTextPrintIndex(&index2, indexBuffer);
+        Tcl_DStringAppend(&actionCommand,indexBuffer,-1);
+        Tcl_DStringAppend(&actionCommand,"; ",-1);
+        Tcl_DStringAppend(&actionCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
+        Tcl_DStringAppend(&actionCommand," mark set insert ",-1);
+        TkTextPrintIndex(&index1,indexBuffer);
+        Tcl_DStringAppend(&actionCommand,indexBuffer,-1);
+
+        Tcl_DStringAppend(&actionCommand,"; ",-1);
+        Tcl_DStringAppend(&actionCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
+        Tcl_DStringAppend(&actionCommand," see insert",-1);
 
 	TextGetText(&index1, &index2, &ds);
-	deletion->string =
-	    (char *) ckalloc((unsigned int) Tcl_DStringLength(&ds) + 1);
-	strcpy(deletion->string, Tcl_DStringValue(&ds));
-	Tcl_DStringFree(&ds);
 
-	pushStack(&(textPtr->undoStack), deletion);
-	clearStack(&(textPtr->redoStack));
+        Tcl_DStringAppend(&revertCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
+        Tcl_DStringAppend(&revertCommand," insert ",-1);
+        TkTextPrintIndex(&index1,indexBuffer);
+        Tcl_DStringAppend(&revertCommand,indexBuffer,-1);
+        Tcl_DStringAppend(&revertCommand," ",-1);
+        Tcl_DStringAppendElement(&revertCommand,Tcl_DStringValue(&ds));
+        Tcl_DStringAppend(&revertCommand,"; ",-1);
+        Tcl_DStringAppend(&revertCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
+        Tcl_DStringAppend(&revertCommand," mark set insert ",-1);
+        TkTextPrintIndex(&index2, indexBuffer);
+        Tcl_DStringAppend(&revertCommand,indexBuffer,-1);
+        Tcl_DStringAppend(&revertCommand,"; ",-1);
+        Tcl_DStringAppend(&revertCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
+        Tcl_DStringAppend(&revertCommand," see insert",-1);
+
+        TkUndoPushAction(textPtr->undoStack,&actionCommand, &revertCommand);
+
+        Tcl_DStringFree(&actionCommand);
+        Tcl_DStringFree(&revertCommand);
+
     }
     updateDirtyFlag(textPtr);
 
@@ -2483,98 +2546,6 @@ DumpSegment(interp, key, value, command, index, what)
 }
 
 /*
- * pushStack
- *    Push elem on the stack identified by stack.
- *
- * Results:
- *    None
- *
- * Side effects:
- *    None.
- */
- 
-static void pushStack ( stack, elem )
-    TkTextEditAtom ** stack;
-    TkTextEditAtom *  elem;
-{ 
-    elem->next = *stack;
-    *stack = elem;
-}
-
-/*
- * popStack --
- *    Remove and return the top element from the stack identified by 
- *      stack.
- *
- * Results:
- *    None
- *
- * Side effects:
- *    None.
- */
- 
-static TkTextEditAtom * popStack ( stack )
-    TkTextEditAtom ** stack ;
-{ 
-    TkTextEditAtom * elem = NULL;
-    if (*stack != NULL ) {
-        elem   = *stack;
-        *stack = elem->next;
-    }
-    return elem;
-}
-
-/*
- * insertSeparator --
- *    insert a separator on the stack, indicating a border for
- *      an undo/redo chunk.
- *
- * Results:
- *    None
- *
- * Side effects:
- *    None.
- */
- 
-static void insertSeparator ( stack )
-    TkTextEditAtom ** stack;
-{
-    TkTextEditAtom * separator;
-
-    if ( *stack != NULL && (*stack)->type != TK_EDIT_SEPARATOR ) {
-        separator = (TkTextEditAtom *) ckalloc(sizeof(TkTextEditAtom));
-        separator->type = TK_EDIT_SEPARATOR;
-        pushStack(stack,separator);
-    }
-}
-
-/*
- * clearStack --
- *    Clear an entire undo or redo stack and destroy all elements in it.
- *
- * Results:
- *    None
- *
- * Side effects:
- *    None.
- */
-
-static void clearStack ( stack )
-    TkTextEditAtom ** stack;      /* An Undo or Redo stack */
-{
-    TkTextEditAtom * elem;
-
-    while ( (elem = popStack(stack)) ) {
-        if ( elem->type != TK_EDIT_SEPARATOR ) {
-            ckfree(elem->index);
-            ckfree(elem->string);
-        }
-        ckfree((char *)elem);
-    }
-    *stack = NULL;
-}
-
-/*
  * TextEditUndo --
  *    undo the last change.
  *
@@ -2585,14 +2556,10 @@ static void clearStack ( stack )
  *    None.
  */
  
-static int TextEditUndo (interp,textPtr)
-    Tcl_Interp * interp;
+static int TextEditUndo (textPtr)
     TkText     * textPtr;          /* Overall information about text widget. */
 {
-    TkTextEditAtom * elem;
-    TkTextIndex      fromIndex, toIndex;
-    char             buffer[TK_POS_CHARS];
-    char             viewIndex[TK_POS_CHARS];
+    int status;
     
     if ( ! textPtr->undo ) {
        return TCL_OK;
@@ -2602,64 +2569,15 @@ static int TextEditUndo (interp,textPtr)
 
     textPtr->undo = 0;
 
-    /* insert a separator on the redo stack */
+    /* revert one compound action */
 
-    insertSeparator(&(textPtr->redoStack));
+    status = TkUndoRevert(textPtr->undoStack);
 
-    /* Pop and skip the first separator if there is one*/
-
-    elem = popStack(&(textPtr->undoStack));
-
-    if ( elem == NULL ) {
-        textPtr->undo = 1;
-        return TCL_ERROR;
-    }
-
-    if ( ( elem != NULL ) && ( elem->type == TK_EDIT_SEPARATOR ) ) {
-        ckfree((char *) elem);
-        elem = popStack(&(textPtr->undoStack));
-    }
-    
-    while ( elem && (elem->type != TK_EDIT_SEPARATOR) ) {
-        switch ( elem->type ) {
-            case TK_EDIT_INSERT:
-                TkTextGetIndex(interp,textPtr,elem->index,&toIndex);
-                strcpy(viewIndex,elem->index);
-                TkTextIndexForwBytes(&toIndex,(int)strlen(elem->string),&toIndex);
-                TkTextPrintIndex(&toIndex,buffer);
-                textPtr->isDirtyIncrement = -1;
-                DeleteChars(textPtr,elem->index,buffer);
-                textPtr->isDirtyIncrement = 1;
-                break;
-            case TK_EDIT_DELETE: 
-                TkTextGetIndex(interp,textPtr,elem->index,&fromIndex);
-                textPtr->isDirtyIncrement = -1;
-                InsertChars(textPtr,&fromIndex,elem->string);
-                TkTextIndexForwBytes(&fromIndex,(int)strlen(elem->string),&toIndex);
-                TkTextPrintIndex(&toIndex,viewIndex);
-                textPtr->isDirtyIncrement = 1;
-                break;
-            default:
-                return TCL_ERROR;
-        }
-        pushStack(&(textPtr->redoStack),elem);
-        elem = popStack(&(textPtr->undoStack));
-    }
-    
-    /* view the last changed position */
-    
-    TkTextGetIndex(interp,textPtr,viewIndex,&toIndex);
-    TkTextSetMark(textPtr, "insert", &toIndex);
-
-    /* insert a separator on the undo stack */
-    
-    insertSeparator(&(textPtr->undoStack));
-    
     /* Turn back on the undo feature */
     
     textPtr->undo = 1;
     
-    return TCL_OK;
+    return status;
 }
 
 /*
@@ -2673,14 +2591,10 @@ static int TextEditUndo (interp,textPtr)
  *    None.
  */
 
-static int TextEditRedo (interp,textPtr)
-    Tcl_Interp * interp;
+static int TextEditRedo (textPtr)
     TkText     * textPtr;       /* Overall information about text widget. */
 {
-    TkTextEditAtom *elem;
-    TkTextIndex     fromIndex, toIndex;
-    char            buffer[TK_POS_CHARS];
-    char            viewIndex[TK_POS_CHARS];
+    int status;
 
     if (!textPtr->undo) {
        return TCL_OK;
@@ -2690,62 +2604,15 @@ static int TextEditRedo (interp,textPtr)
 
     textPtr->undo = 0;
 
-    /* insert a separator on the undo stack */
+    /* reapply one compound action */
 
-    insertSeparator(&(textPtr->undoStack));
-
-    /* Pop and skip the first separator if there is one*/
-
-    elem = popStack(&(textPtr->redoStack));
-
-    if ( elem == NULL ) {
-       textPtr->undo = 1;
-       return TCL_ERROR;
-    }
-
-    if ( ( elem != NULL ) && ( elem->type == TK_EDIT_SEPARATOR ) ) {
-        ckfree((char *) elem);
-        elem = popStack(&(textPtr->redoStack));
-    }
-
-    while ( elem && (elem->type != TK_EDIT_SEPARATOR) ) {
-        switch ( elem->type ) {
-            case TK_EDIT_INSERT:
-                TkTextGetIndex(interp, textPtr, elem->index, &fromIndex);
-                InsertChars(textPtr, &fromIndex, elem->string);
-                TkTextIndexForwBytes(&fromIndex, (int) strlen(elem->string),
-			&toIndex);
-                TkTextPrintIndex(&toIndex, viewIndex);
-                break;
-            case TK_EDIT_DELETE: 
-                TkTextGetIndex(interp, textPtr, elem->index, &toIndex);
-                strcpy(viewIndex, elem->index);
-                TkTextIndexForwBytes(&toIndex, (int) strlen(elem->string),
-			&toIndex);
-                TkTextPrintIndex(&toIndex, buffer);
-                DeleteChars(textPtr, elem->index, buffer);
-                break;
-            default:
-                return TCL_ERROR;
-        }
-        pushStack(&(textPtr->undoStack), elem);
-        elem = popStack(&(textPtr->redoStack));
-    }
-
-    /* view the last changed position */
-
-    TkTextGetIndex(interp, textPtr, viewIndex, &toIndex);
-    TkTextSetMark(textPtr, "insert", &toIndex);
-
-    /* insert a separator on the undo stack */
-    
-    insertSeparator(&(textPtr->undoStack));
+    status = TkUndoApply(textPtr->undoStack);
 
     /* Turn back on the undo feature */
     
     textPtr->undo = 1;
     
-    return TCL_OK;
+    return status;
 }
 
 /*
@@ -2823,7 +2690,7 @@ TextEditCmd(textPtr, interp, argc, argv)
 		    argv[0], " edit redo\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-        if ( TextEditRedo(interp,textPtr) ) {
+        if ( TextEditRedo(textPtr) ) {
             Tcl_AppendResult(interp, "nothing to redo", (char *) NULL);
 	    return TCL_ERROR;
         }
@@ -2834,22 +2701,21 @@ TextEditCmd(textPtr, interp, argc, argv)
 		    argv[0], " edit reset\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-        clearStack(&(textPtr->undoStack));
-        clearStack(&(textPtr->redoStack));
+        TkUndoClearStacks(textPtr->undoStack);
     } else if ((c == 's') && (strncmp(argv[2], "separator", length) == 0)) {
 	if (argc != 3) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
 		    argv[0], " edit separator\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-        insertSeparator(&(textPtr->undoStack));
+        TkUndoInsertUndoSeparator(textPtr->undoStack);
     } else if ((c == 'u') && (strncmp(argv[2], "undo", length) == 0)) {
 	if (argc != 3) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
 		    argv[0], " edit undo\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-        if ( TextEditUndo(interp,textPtr) ) {
+        if ( TextEditUndo(textPtr) ) {
             Tcl_AppendResult(interp, "nothing to undo",
 		    (char *) NULL);
 	    return TCL_ERROR;

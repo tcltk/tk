@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.11 2001/11/15 11:55:26 dkf Exp $
+'\" RCS: @(#) $Id: text.n,v 1.12 2002/06/21 23:09:55 hobbs Exp $
 '\" 
 .so man.macros
 .TH text n 4.0 Tk "Tk Built-In Commands"
@@ -32,7 +32,7 @@ text, tk_textCopy, tk_textCut, tk_textPaste \- Create and manipulate text widget
 \-highlightcolor	\-pady	\-yscrollcommand
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
-.OP \-autoseparators autoSseparators AutoSeparators
+.OP \-autoseparators autoSeparators AutoSeparators
 .VS 8.4
 Specifies a boolean that says whether separators are automatically
 inserted in the undo stack. Only meaningful when the \fB\-undo\fR
@@ -42,6 +42,9 @@ option is true.
 Specifies the desired height for the window, in units of characters
 in the font given by the \fB\-font\fR option.
 Must be at least one.
+.OP \-maxundo maxUndo MaxUndo
+Specifies the maximum number of compound undo actions on the undo
+stack. A zero or a negative value imply an unlimited undo stack.
 .OP \-spacing1 spacing1 Spacing1
 Requests additional space above each text line in the widget,
 using any of the standard forms for screen distances.
@@ -732,7 +735,7 @@ more details.
 .VS 8.4
 The text widget has an unlimited undo and redo mechanism (when the
 \fB-undo\fR widget option is true) which records every insert and
-delete action is recorded on a stack.
+delete action on a stack.
 .PP
 Boundaries (called "separators") are inserted between edit actions.
 The purpose of these separators is to group inserts and deletes into
@@ -746,13 +749,13 @@ under control.
 Separators are inserted automatically when the \fB-autoseparators\fR
 widget option is true.  You can insert separators programatically as
 well.  If a separator is already present at the top of the undo stack
-no other will inserted.  That means that two separators on the undo
+no other will be inserted.  That means that two separators on the undo
 stack are always separated by at least one insert or delete action.
 .PP
 The undo mechanism is also linked to the modified flag.  This means
 that undoing or redoing changes can take a modified text widget back
 to the unmodified state or vice versa.  The modified flag will be set
-to automatically to the appropriate state.  This automatic coupling
+automatically to the appropriate state.  This automatic coupling
 does not work when the modified flag has been set by the user, until
 the flag has been reset again.
 .PP
