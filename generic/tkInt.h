@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: %Z% $Id: tkInt.h,v 1.2 1998/07/24 16:44:01 rjohnson Exp $ 
+ * SCCS: %Z% $Id: tkInt.h,v 1.3 1998/07/27 17:29:44 rjohnson Exp $ 
  */
 
 #ifndef _TKINT
@@ -738,7 +738,7 @@ EXTERN unsigned long	TkCreateBindingProcedure _ANSI_ARGS_((
 			    TkBindEvalProc *evalProc, TkBindFreeProc *freeProc,
 			    ClientData clientData));
 EXTERN Pixmap		TkCreateBitmapFromData _ANSI_ARGS_((Display* display,
-			    Drawable d, _Xconst char* data,
+			    Drawable d, CONST char* data,
 			    unsigned int width, unsigned int height));
 EXTERN TkCursor *	TkCreateCursorFromData _ANSI_ARGS_((Tk_Window tkwin,
 			    char *source, char *mask, int width, int height,
@@ -936,7 +936,7 @@ EXTERN void		TkQueueEventForAllChildren _ANSI_ARGS_((
 			    TkWindow *winPtr, XEvent *eventPtr));
 #ifndef TkRectInRegion
 EXTERN int		TkReadBitmapFile _ANSI_ARGS_((Display* display,
-			    Drawable d, _Xconst char* filename,
+			    Drawable d, CONST char* filename,
 			    unsigned int* width_return,
 			    unsigned int* height_return,
 			    Pixmap* bitmap_return,
