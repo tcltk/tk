@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.24 2001/09/14 20:35:58 andreas_kupries Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.25 2001/12/07 04:17:25 chengyemao Exp $
  */
 
 #include "tkInt.h"
@@ -2534,6 +2534,10 @@ ImgPhotoInstanceSetSize(instancePtr)
 		(masterPtr->width > 0) ? masterPtr->width: 1,
 		(masterPtr->height > 0) ? masterPtr->height: 1,
 		instancePtr->visualInfo.depth);
+        if(!newPixmap) {
+            panic("Fail to create pixmap with Tk_GetPixmap in ImgPhotoInstanceSetSize.\n");
+            return;
+        }
 
 	/*
 	 * The following is a gross hack needed to properly support colormaps
