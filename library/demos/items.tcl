@@ -3,7 +3,7 @@
 # This demonstration script creates a canvas that displays the
 # canvas item types.
 #
-# RCS: @(#) $Id: items.tcl,v 1.3 2001/06/14 10:56:58 dkf Exp $
+# RCS: @(#) $Id: items.tcl,v 1.4 2003/08/20 23:02:18 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -20,11 +20,9 @@ set c $w.frame.c
 label $w.msg -font $font -wraplength 5i -justify left -text "This window contains a canvas widget with examples of the various kinds of items supported by canvases.  The following operations are supported:\n  Button-1 drag:\tmoves item under pointer.\n  Button-2 drag:\trepositions view.\n  Button-3 drag:\tstrokes out area.\n  Ctrl+f:\t\tprints items under area."
 pack $w.msg -side top
 
-frame $w.buttons
-pack $w.buttons -side bottom -fill x -pady 2m
-button $w.buttons.dismiss -text Dismiss -command "destroy $w"
-button $w.buttons.code -text "See Code" -command "showCode $w"
-pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
+## See Code / Dismiss buttons
+set btns [addSeeDismiss $w.buttons $w]
+pack $btns -side bottom -fill x
 
 frame $w.frame
 pack $w.frame -side top -fill both -expand yes

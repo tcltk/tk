@@ -3,7 +3,7 @@
 # This demonstration script creates a 15-puzzle game using a collection
 # of buttons.
 #
-# RCS: @(#) $Id: puzzle.tcl,v 1.4 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: puzzle.tcl,v 1.5 2003/08/20 23:02:18 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -44,11 +44,9 @@ positionWindow $w
 label $w.msg -font $font -wraplength 4i -justify left -text "A 15-puzzle appears below as a collection of buttons.  Click on any of the pieces next to the space, and that piece will slide over the space.  Continue this until the pieces are arranged in numerical order from upper-left to lower-right."
 pack $w.msg -side top
 
-frame $w.buttons
-pack $w.buttons -side bottom -fill x -pady 2m
-button $w.buttons.dismiss -text Dismiss -command "destroy $w"
-button $w.buttons.code -text "See Code" -command "showCode $w"
-pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
+## See Code / Dismiss buttons
+set btns [addSeeDismiss $w.buttons $w]
+pack $btns -side bottom -fill x
 
 # Special trick: select a darker color for the space by creating a
 # scrollbar widget and using its trough color.

@@ -4,7 +4,7 @@
 # many of the colors from the X color database.  You can click on
 # a color to change the application's palette.
 #
-# RCS: @(#) $Id: colors.tcl,v 1.2 1998/09/14 18:23:27 stanton Exp $
+# RCS: @(#) $Id: colors.tcl,v 1.3 2003/08/20 23:02:18 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -20,11 +20,9 @@ positionWindow $w
 label $w.msg -font $font -wraplength 4i -justify left -text "A listbox containing several color names is displayed below, along with a scrollbar.  You can scan the list either using the scrollbar or by dragging in the listbox window with button 2 pressed.  If you double-click button 1 on a color, then the application's color palette will be set to match that color"
 pack $w.msg -side top
 
-frame $w.buttons
-pack $w.buttons -side bottom -fill x -pady 2m
-button $w.buttons.dismiss -text Dismiss -command "destroy $w"
-button $w.buttons.code -text "See Code" -command "showCode $w"
-pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
+## See Code / Dismiss buttons
+set btns [addSeeDismiss $w.buttons $w]
+pack $btns -side bottom -fill x
 
 frame $w.frame -borderwidth 10
 pack $w.frame -side top -expand yes -fill y

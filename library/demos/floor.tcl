@@ -3,7 +3,7 @@
 # This demonstration script creates a canvas widet that displays the
 # floorplan for DEC's Western Research Laboratory.
 #
-# RCS: @(#) $Id: floor.tcl,v 1.3 2001/06/14 10:56:58 dkf Exp $
+# RCS: @(#) $Id: floor.tcl,v 1.4 2003/08/20 23:02:18 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -1301,11 +1301,9 @@ wm minsize $w 100 100
 label $w.msg -font $font -wraplength 8i -justify left  -text "This window contains a canvas widget showing the floorplan of Digital Equipment Corporation's Western Research Laboratory.  It has three levels.  At any given time one of the levels is active, meaning that you can see its room structure.  To activate a level, click the left mouse button anywhere on it.  As the mouse moves over the active level, the room under the mouse lights up and its room number appears in the \"Room:\" entry.  You can also type a room number in the entry and the room will light up."
 pack $w.msg -side top
 
-frame $w.buttons
-pack $w.buttons -side bottom -fill x -pady 2m
-button $w.buttons.dismiss -text Dismiss -command "destroy $w"
-button $w.buttons.code -text "See Code" -command "showCode $w"
-pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
+## See Code / Dismiss buttons
+set btns [addSeeDismiss $w.buttons $w]
+pack $btns -side bottom -fill x
 
 set f [frame $w.frame]
 pack $f -side top -fill both -expand yes

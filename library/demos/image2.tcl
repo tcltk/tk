@@ -3,7 +3,7 @@
 # This demonstration script creates a simple collection of widgets
 # that allow you to select and view images in a Tk label.
 #
-# RCS: @(#) $Id: image2.tcl,v 1.6 2002/08/12 13:38:48 dkf Exp $
+# RCS: @(#) $Id: image2.tcl,v 1.7 2003/08/20 23:02:18 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -68,11 +68,9 @@ positionWindow $w
 label $w.msg -font $font -wraplength 4i -justify left -text "This demonstration allows you to view images using a Tk \"photo\" image.  First type a directory name in the listbox, then type Return to load the directory into the listbox.  Then double-click on a file name in the listbox to see that image."
 pack $w.msg -side top
 
-frame $w.buttons
-pack $w.buttons -side bottom -fill x -pady 2m
-button $w.buttons.dismiss -text Dismiss -command "destroy $w"
-button $w.buttons.code -text "See Code" -command "showCode $w"
-pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
+## See Code / Dismiss buttons
+set btns [addSeeDismiss $w.buttons $w]
+pack $btns -side bottom -fill x
 
 frame $w.mid
 pack $w.mid -fill both -expand 1
