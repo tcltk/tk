@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.14 2001/03/29 11:05:49 mdejong Exp $
+# RCS: @(#) $Id: text.tcl,v 1.15 2001/07/03 01:03:16 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -260,7 +260,7 @@ bind Text <<PasteSelection>> {
     }
 }
 bind Text <Insert> {
-    catch {tkTextInsert %W [selection get -displayof %W]}
+    catch {tkTextInsert %W [::tk::GetSelection %W PRIMARY]}
 }
 bind Text <KeyPress> {
     tkTextInsert %W %A
@@ -627,7 +627,7 @@ proc tkTextKeyExtend {w index} {
 
 proc tkTextPaste {w x y} {
     $w mark set insert [tkTextClosestGap $w $x $y]
-    catch {$w insert insert [selection get -displayof $w]}
+    catch {$w insert insert [::tk::GetSelection $w PRIMARY]}
     if {[string equal [$w cget -state] "normal"]} {focus $w}
 }
 
@@ -974,7 +974,7 @@ proc tk_textPaste w {
 		$w delete sel.first sel.last
 	    }
 	}
-	$w insert insert [selection get -displayof $w -selection CLIPBOARD]
+	$w insert insert [::tk::GetSelection $w CLIPBOARD]
     }
 }
 

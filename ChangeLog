@@ -1,5 +1,28 @@
 2001-07-02  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/console.tcl:
+	* library/entry.tcl:
+	* library/spinbox.tcl:
+	* library/text.tcl:
+	* library/tk.tcl: added private ::tk::GetSelection command to
+	handle requesting selection.  This is to support requesting
+	UTF8_STRING before generic STRING on Unix.  Changed Text, Spinbox,
+	Entry and Console to use this command.
+
+	* tests/select.test:
+	* generic/tkSelect.c (Tk_CreateSelHandler, Tk_DeleteSelHandler):
+	on Unix, a UTF8_STRING handler will be created when the user
+	requests a STRING handler (in addition to the STRING handler).
+	This provides implicit support for the new UTF8_STRING selection
+	target.
+	* unix/tkUnixSelect.c (TkSelEventProc, ConvertSelection): Added
+	support for UTF8_STRING target. [RFE #418653, Patch #433283]
+
+	* generic/tkInt.h: added utf8Atom to TkDisplay structure.
+
+	* tests/listbox.test: changed 'darkblue' to 'white' in a test
+	because it isn't a portable color name.
+
 	* generic/tkEntry.c (DestroyEntry): used Tcl_EventuallyFree
 	instead of ckfree for entryPtr to prevent FMRs. [Bug #413904]
 
