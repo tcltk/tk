@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.67 2004/03/01 19:27:21 dgp Exp $
+RCS: @(#) $Id: changes,v 1.68 2004/03/03 23:27:25 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5623,3 +5623,50 @@ images with partial transparency.
 
 --- Released 8.4.6, March 1, 2004 --- See ChangeLog for details ---
 
+Changes to 8.5a1 include all changes to the 8.4 line through 8.4.6,
+plus the following, which focuses on the high-level feature changes
+in this changeset (new minor version) rather than bug fixes:
+
+ * Tk is no longer guaranteed to work for Win95 (not tested 8.5+)
+
+ * configure scripts now require autoconf 2.57 for regeneration
+
+ * added support for anti-aliased test under X11 (already existed for
+   Win/Mac) using --enable-xft
+
+ * improved speed of 'photo put' handling
+
+ * updated demos for consistency and improved look & feel
+
+ * improve 3D line drawing for sunken widgets on Windows
+
+ * [792387] reworked 'grid' to handle some tricky geometry computations
+   better
+
+ * [TIP #109] updated look of radiobuttons and checkbuttons on X11
+
+ * [TIP #110] tristate value option for checkbuttons and radiobuttons
+
+ * [TIP #116] more safety for large image creation through use of attempted
+   allocation of large memory blocks
+
+ * [TIP #137/151] add -encoding option to 'wish' executable (through
+   Tk_MainEX())
+	*** POTENTIAL INCOMPATIBILITY ***
+   For Tk embedders that build on Tk_MainEx() and make use of Tk_MainEx's
+   former ability to pass a leading "-encoding" option to interactive shell
+   operations, this will now be consumed by Tk.
+
+ * [TIP #146] added 'grid anchor' subcommand for overall grid anchoring
+
+ * [TIP #147] recognize widget names and "all" as keywords in grid's
+   'columnconfigure' and 'rowconfigure' subcommands
+
+ * [TIP #150] make 'send' available on Windows
+
+ * [TIP #155] add 'count' and 'replace' subcommands and a '-blockcursor'
+   option to text widgets and support smooth-scrolling of them
+	*** POTENTIAL INCOMPATIBILITY ***
+   Negative or decreasing tab-stops are explicitly disallowed
+
+--- Released 8.5a1, March 3, 2004 --- See ChangeLog for details ---
