@@ -1,3 +1,17 @@
+2002-10-18  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/winMain.c (WinMain, main): remove obsolete SetMessageQueue call
+
+	* win/configure: Regen. 
+	* win/tcl.m4 (SC_CONFIG_CFLAGS): Check for bug in Cygwin version
+	of windres and work around that case by passing a POSIX path
+	instead of a Windows native path. One can't always pass a POSIX
+	path because the mingw native toolchain accepts only Windows
+	native paths. (dejong)
+
+	* win/tkWinPort.h: define OPEN_MAX only if not defined.
+	[Patch #625472] (howell)
+
 2002-10-18  Daniel Steffen  <das@users.sourceforge.net>
 
 	* mac/tkMacAppInit.c: removed tcltest dependency.
