@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.4 2004/02/16 00:19:42 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.5 2004/03/21 04:07:12 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -26,7 +26,13 @@
  */
 static RgnHandle tmpRgn = NULL;
 
-static void UpdateOffsets _ANSI_ARGS_((TkWindow *winPtr, int deltaX, int deltaY));
+/*
+ * Prototypes for functions used only in this file.
+ */
+
+static void GenerateConfigureNotify (TkWindow *winPtr, int includeWin);
+static void UpdateOffsets _ANSI_ARGS_((TkWindow *winPtr, 
+        int deltaX, int deltaY));
 
 /*
  *----------------------------------------------------------------------
@@ -361,7 +367,45 @@ XResizeWindow(
 	UpdateOffsets(macWin->winPtr, deltaX, deltaY);
     }
 }
+
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * GenerateConfigureNotify --
+ *
+ *	Generates ConfigureNotify events for all the child widgets
+ *      of the widget passed in the winPtr parameter.  If includeWin
+ *      is true, also generates ConfigureNotify event for the 
+ *      widget itself.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	ConfigureNotify events will be posted.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+GenerateConfigureNotify (TkWindow *winPtr, int includeWin)
+{
+    TkWindow *childPtr;
+
+    for (childPtr = winPtr->childList; childPtr != NULL;
+                               childPtr = childPtr->nextPtr) {
+        if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
+            continue;
+        }
+        GenerateConfigureNotify(childPtr, 1);
+    }
+    if (includeWin) {
+        TkDoConfigureNotify(winPtr);
+    }
+}    
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -465,6 +509,7 @@ XMoveResizeWindow(
 	UpdateOffsets(macWin->winPtr, deltaX, deltaY);
 	TkMacOSXWinBounds(macWin->winPtr, &bounds);
 	InvalWindowRect(GetWindowFromPort(destPort),&bounds);
+        GenerateConfigureNotify(macWin->winPtr, 0);
     }
 }
 
@@ -566,6 +611,7 @@ XMoveWindow(
 	UpdateOffsets(macWin->winPtr, deltaX, deltaY);
 	TkMacOSXWinBounds(macWin->winPtr, &bounds);
 	InvalWindowRect(GetWindowFromPort(destPort),&bounds);
+        GenerateConfigureNotify(macWin->winPtr, 0);
     }
 }
 
