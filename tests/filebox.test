@@ -40,7 +40,11 @@ proc PressButton {btn} {
 
 proc EnterFileByKey {parent fileName fileDir} {
     global tk_strictMotif
-    set w .__tk_filedialog
+    if {$parent == "."} {
+	set w .__tk_filedialog
+    } else {
+	set w $parent.__tk_filedialog
+    }
     upvar #0 [winfo name $w] data
 
     if {$tk_strictMotif} {
@@ -57,7 +61,11 @@ proc EnterFileByKey {parent fileName fileDir} {
 
 proc SendButtonPress {parent btn type} {
     global tk_strictMotif
-    set w .__tk_filedialog
+    if {$parent == "."} {
+	set w .__tk_filedialog
+    } else {
+	set w $parent.__tk_filedialog
+    }
     upvar #0 [winfo name $w] data
 
     set button $data($btn\Btn)
@@ -204,6 +212,37 @@ foreach mode $modes {
 			    -parent $parent -initialdir . \
 			    -initialfile $fileName]
 	} $pathName
+
+	test filebox-2.5 "$command command" {
+	    ToPressButton $parent ok
+	    set choice [$command -title "Enter \"$fileName\" and press Ok" \
+			    -parent $parent -initialdir /badpath \
+			    -initialfile $fileName]
+	} $pathName
+
+	test filebox-2.6 "$command command" {
+	    toplevel .t1; toplevel .t2
+	    ToPressButton .t1 ok
+	    set choice {}
+	    lappend choice [$command \
+		    -title "Enter \"$fileName\" and press Ok" \
+		    -parent .t1 -initialdir $fileDir \
+		    -initialfile $fileName]
+	    ToPressButton .t2 ok
+	    lappend choice [$command \
+		    -title "Enter \"$fileName\" and press Ok" \
+		    -parent .t2 -initialdir $fileDir \
+		    -initialfile $fileName]
+	    ToPressButton .t1 ok
+	    lappend choice [$command \
+		    -title "Enter \"$fileName\" and press Ok" \
+		    -parent .t1 -initialdir $fileDir \
+		    -initialfile $fileName]
+	    destroy .t1
+	    destroy .t2
+	    set choice
+	} [list $pathName $pathName $pathName]
+ 
 
 
 	set filters(1) {}

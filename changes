@@ -4145,3 +4145,6 @@ and tk_getSaveFile to convert the specified directory to an absolute
 path and to use the current working directory if the specified
 directory does not exist. (SS)
 
+6/25/98 (bug fix) On Unix, both the Tk and the Motif file dialogs
+would fail if the -parent flag changed between two parent windows that
+had been previously used as file dialog parents. (SS)
