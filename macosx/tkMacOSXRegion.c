@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXRegion.c,v 1.2 2002/08/31 06:12:30 das Exp $
+ * RCS: @(#) $Id: tkMacOSXRegion.c,v 1.2.2.1 2004/11/11 01:26:43 das Exp $
  */
 
 #include "tkInt.h"
@@ -139,7 +139,7 @@ TkUnionRectWithRegion(
         tmpRgn = NewRgn();
     }
     SetRectRgn(tmpRgn, rectangle->x, rectangle->y,
-        rectangle->x + rectangle->width, rectangle->y + rectangle->height);
+	    rectangle->x + rectangle->width, rectangle->y + rectangle->height);
     UnionRgn(srcRgn, tmpRgn, destRgn);
 }
 
@@ -177,11 +177,11 @@ TkRectInRegion(
     SetRectRgn(rectRgn, x,  y, x + width, y + height);
     SectRgn(rgn, rectRgn, destRgn);
     if (EmptyRgn(destRgn)) {
-            result = RectangleOut;
+	result = RectangleOut;
     } else if (EqualRgn(rgn, destRgn)) {
-            result = RectangleIn;
+	result = RectangleIn;
     } else {
-            result = RectanglePart;
+	result = RectanglePart;
     }
     DisposeRgn(rectRgn);
     DisposeRgn(destRgn);

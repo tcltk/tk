@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.2 2004/03/21 03:54:59 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.3 2004/11/11 01:26:43 das Exp $
  */
 
 #include "tkInt.h"
@@ -505,8 +505,8 @@ XMoveResizeWindow(
 	    macWin->winPtr->changes.x;
 	deltaY += macParent->yOff + parentBorderwidth +
 	    macWin->winPtr->changes.y;
-            
-        UpdateOffsets(macWin->winPtr, deltaX, deltaY);
+		
+	UpdateOffsets(macWin->winPtr, deltaX, deltaY);
 	TkMacOSXWinBounds(macWin->winPtr, &bounds);
 	InvalWindowRect(GetWindowFromPort(destPort),&bounds);
         GenerateConfigureNotify(macWin->winPtr, 0);
@@ -611,7 +611,7 @@ XMoveWindow(
 	UpdateOffsets(macWin->winPtr, deltaX, deltaY);
 	TkMacOSXWinBounds(macWin->winPtr, &bounds);
 	InvalWindowRect(GetWindowFromPort(destPort),&bounds);
-        GenerateConfigureNotify(macWin->winPtr, 0);        
+	GenerateConfigureNotify(macWin->winPtr, 0);
     }
 }
 

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.2.2.2 2004/03/17 19:01:47 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.2.2.3 2004/11/11 01:26:43 das Exp $
  */
 
 #include "tk.h"
@@ -31,7 +31,6 @@
 
 #define kSourceItem             1
 #define kCloseItem              2
-#define kQuitItem               4
 
 #define EDIT_CUT                1
 #define EDIT_COPY               2
@@ -110,14 +109,6 @@ TkMacOSXHandleMenuSelect(
                     tkwin = Tk_IdToWindow(dispPtr->display, window);
                     TkGenWMDestroyEvent(tkwin);
                     break;
-                case kQuitItem:
-                    /* Exit */
-                    if (optionKeyPressed || gInterp == NULL) {
-                        Tcl_Exit(0);
-                    } else {
-                        Tcl_Eval(gInterp, "exit");
-                    }
-                    break;
             }
             break;
         case kEditMenu:
@@ -190,14 +181,7 @@ TkMacOSXInitMenus(
     AppendMenu(tkFileMenu, "\pSource…");
     AppendMenu(tkFileMenu, "\pClose/W");
 
-    /*
-     * These don't belong in the File menu on Mac OS X. 
-     */
-     
-#if 0
-    AppendMenu(tkFileMenu, "\p(-");
-    AppendMenu(tkFileMenu, "\pQuit/Q");
-#endif
+
     if (TkMacOSXUseMenuID(kEditMenu) != TCL_OK) {
             panic("Menu ID %d is already in use!", kEditMenu);
     }

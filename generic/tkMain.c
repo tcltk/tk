@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.15 2002/12/13 16:54:35 dgp Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.15.2.1 2004/11/11 01:26:42 das Exp $
  */
 
 #include <ctype.h>
@@ -30,6 +30,9 @@
 #endif
 #ifdef __WIN32__
 #include "tkWinInt.h"
+#endif
+#ifdef MAC_OSX_TK
+#include "tkMacOSXInt.h"
 #endif
 
 
@@ -127,6 +130,12 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 
 #if (defined(__WIN32__) || defined(MAC_TCL))
     Tk_InitConsoleChannels(interp);
+#endif
+
+#ifdef MAC_OSX_TK
+    if (TclGetStartupScriptFileName() == NULL) {
+        TkMacOSXDefaultStartupScript();
+    }
 #endif
     
 #ifdef TCL_MEM_DEBUG
