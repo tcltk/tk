@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.7 2004/10/08 16:16:54 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.8 2004/11/28 19:00:49 jenglish Exp $
  */
 
 #include "tkUnixInt.h"
@@ -586,6 +586,7 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
     int x, y;			/* Coordinates at which to place origin of
 				 * string when drawing. */
 {
+    const int maxCoord = 0x7FFF;	/* Xft coordinates are 16 bit values */
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
     XGCValues values;
     XColor xcolor;
@@ -623,7 +624,7 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
 	fontPtr->color.pixel = values.foreground;
     }
     nspec = 0;
-    while (numBytes > 0) {
+    while (numBytes > 0 && x <= maxCoord && y <= maxCoord) {
 	XftFont *ftFont;
 	FcChar32 c;
 	
@@ -641,7 +642,6 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
 	    specs[nspec].glyph = XftCharIndex(fontPtr->display, ftFont, c);
 	    specs[nspec].x = x;
 	    specs[nspec].y = y;
-
 	    XftGlyphExtents(fontPtr->display, ftFont, &specs[nspec].glyph, 1,
 		    &metrics);
 	    x += metrics.xOff;
