@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.8 1999/09/02 17:02:52 hobbs Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.9 2000/03/07 01:02:26 ericm Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -1092,7 +1092,12 @@ proc tkMenuFirstEntry menu {
 		&& [string compare [$menu type $i] "tearoff"]} {
 	    $menu activate $i
 	    tkGenerateMenuSelect $menu
-	    if {[string equal [$menu type $i] "cascade"]} {
+	    # Only post the cascade if the current menu is a menubar;
+	    # otherwise, if the first entry of the cascade is a cascade,
+	    # we can get an annoying cascading effect resulting in a bunch of
+	    # menus getting posted (bug 676)
+	    if {[string equal [$menu type $i] "cascade"] && \
+		[string equal [$menu cget -type] "menubar"]} {
 		set cascade [$menu entrycget $i -menu]
 		if {[string compare $cascade ""]} {
 		    $menu postcascade $i
