@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.19 2000/10/05 18:31:25 ericm Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.20 2001/09/21 21:19:02 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1391,7 +1391,7 @@ Tk_WinfoObjCmd(clientData, interp, objc, objv)
 	    return result;
 	}
 	case WIN_PATHNAME: {
-	    int id;
+	    Window id;
 
 	    skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
 	    if (skip < 0) {
@@ -1405,8 +1405,7 @@ Tk_WinfoObjCmd(clientData, interp, objc, objv)
 	    if (TkpScanWindowId(interp, string, &id) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    winPtr = (TkWindow *)
-	            Tk_IdToWindow(Tk_Display(tkwin), (Window) id);
+	    winPtr = (TkWindow *)Tk_IdToWindow(Tk_Display(tkwin), id);
 	    if ((winPtr == NULL) ||
 		    (winPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr)) {
 		Tcl_AppendStringsToObj(resultPtr, "window id \"", string,
