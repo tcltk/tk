@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.28 2004/06/15 15:09:25 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.29 2004/06/15 15:28:23 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -350,23 +350,23 @@ static Tk_ClassProcs canvasClass = {
  */
 
 #ifdef USE_OLD_TAG_SEARCH
-#define FIRST_CANVAS_ITEM_MATCHING(objPtr,errorExitClause) \
+#define FIRST_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,errorExitClause) \
     (itemPtr) = StartTagSearch(canvasPtr,(objPtr),&search)
-#define FOR_EVERY_CANVAS_ITEM_MATCHING(objPtr,errorExitClause) \
+#define FOR_EVERY_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,errorExitClause) \
     for ((itemPtr) = StartTagSearch(canvasPtr, (objPtr), &search); \
 	    (itemPtr) != NULL; (itemPtr) = NextItem(&search))
 #else /* USE_OLD_TAG_SEARCH */
-#define FIRST_CANVAS_ITEM_MATCHING(objPtr,errorExitClause) \
-    if ((result = TagSearchScan(canvasPtr,(objPtr),&searchPtr)) != TCL_OK) { \
+#define FIRST_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,errorExitClause) \
+    if ((result=TagSearchScan(canvasPtr,(objPtr),(searchPtrPtr))) != TCL_OK){ \
 	errorExitClause; \
     } \
     itemPtr = TagSearchFirst(searchPtr);
-#define FOR_EVERY_CANVAS_ITEM_MATCHING(objPtr,errorExitClause) \
-    if ((result = TagSearchScan(canvasPtr,(objPtr),&searchPtr)) != TCL_OK) { \
+#define FOR_EVERY_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,errorExitClause) \
+    if ((result=TagSearchScan(canvasPtr,(objPtr),(searchPtrPtr))) != TCL_OK){ \
 	errorExitClause; \
     } \
-    for (itemPtr = TagSearchFirst(searchPtr); \
-	    itemPtr != NULL; itemPtr = TagSearchNext(searchPtr))
+    for (itemPtr = TagSearchFirst(*(searchPtrPtr)); \
+	    itemPtr != NULL; itemPtr = TagSearchNext(*(searchPtrPtr)))
 #endif /* USE_OLD_TAG_SEARCH */
 
 
@@ -621,7 +621,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	}
 	gotAny = 0;
 	for (i = 2; i < objc; i++) {
-	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[i], goto done) {
+	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[i], &searchPtr, goto done) {
 		if ((itemPtr->x1 >= itemPtr->x2)
 			|| (itemPtr->y1 >= itemPtr->y2)) {
 		    continue;
@@ -905,7 +905,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FIRST_CANVAS_ITEM_MATCHING(objv[2], goto done);
+	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
 	if (itemPtr != NULL) {
 	    if (objc != 3) {
 		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
@@ -1023,7 +1023,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
 	    if ((itemPtr->typePtr->indexProc == NULL)
 		    || (itemPtr->typePtr->dCharsProc == NULL)) {
 		continue;
@@ -1079,7 +1079,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	Tcl_HashEntry *entryPtr;
 
 	for (i = 2; i < objc; i++) {
-	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[i], goto done) {
+	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[i], &searchPtr, goto done) {
 		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
 		if (canvasPtr->bindingTable != NULL) {
 		    Tk_DeleteAllBindings(canvasPtr->bindingTable,
@@ -1145,7 +1145,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	} else {
 	    tag = Tk_GetUid(Tcl_GetString(objv[2]));
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
 	    for (i = itemPtr->numTags-1; i >= 0; i--) {
 		if (itemPtr->tagPtr[i] == tag) {
 		    itemPtr->tagPtr[i] = itemPtr->tagPtr[itemPtr->numTags-1];
@@ -1164,8 +1164,8 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 #ifdef USE_OLD_TAG_SEARCH
 	result = FindItems(interp, canvasPtr, objc, objv, (Tcl_Obj *) NULL, 2);
 #else /* USE_OLD_TAG_SEARCH */
-	result = FindItems(interp, canvasPtr, objc, objv,
-	    (Tcl_Obj *) NULL, 2, &searchPtr);
+	result = FindItems(interp, canvasPtr, objc, objv, (Tcl_Obj *) NULL, 2,
+		&searchPtr);
 #endif /* USE_OLD_TAG_SEARCH */
 	break;
     case CANV_FOCUS:
@@ -1191,7 +1191,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    canvasPtr->textInfo.focusItemPtr = NULL;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
 	    if (itemPtr->typePtr->icursorProc != NULL) {
 		break;
 	    }
@@ -1210,7 +1210,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FIRST_CANVAS_ITEM_MATCHING(objv[2], goto done);
+	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
 	if (itemPtr != NULL) {
 	    int i;
 	    for (i = 0; i < itemPtr->numTags; i++) {
@@ -1226,7 +1226,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
 	    if ((itemPtr->typePtr->indexProc == NULL)
 		    || (itemPtr->typePtr->icursorProc == NULL)) {
 		goto done;
@@ -1259,7 +1259,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
 	    if (itemPtr->typePtr->indexProc != NULL) {
 		break;
 	    }
@@ -1293,7 +1293,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
 	    if ((itemPtr->typePtr->indexProc == NULL)
 		    || (itemPtr->typePtr->insertProc == NULL)) {
 		continue;
@@ -1342,7 +1342,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FIRST_CANVAS_ITEM_MATCHING(objv[2], goto done);
+	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
 	if (itemPtr != NULL) {
 	    result = Tk_ConfigureValue(canvasPtr->interp, canvasPtr->tkwin,
 		    itemPtr->typePtr->configSpecs, (char *) itemPtr,
@@ -1355,7 +1355,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
 	    if (objc == 3) {
 		result = Tk_ConfigureInfo(canvasPtr->interp, canvasPtr->tkwin,
 			itemPtr->typePtr->configSpecs, (char *) itemPtr,
@@ -1402,7 +1402,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	if (objc == 3) {
 	    itemPtr = NULL;
 	} else {
-	    FIRST_CANVAS_ITEM_MATCHING(objv[3], goto done);
+	    FIRST_CANVAS_ITEM_MATCHING(objv[3], &searchPtr, goto done);
 	    if (itemPtr == NULL) {
 		Tcl_AppendResult(interp, "tag \"", Tcl_GetString(objv[3]),
 			"\" doesn't match any items", (char *) NULL);
@@ -1433,7 +1433,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
 	    EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
 	    (void) (*itemPtr->typePtr->translateProc)((Tk_Canvas) canvasPtr,
 		    itemPtr,  xAmount, yAmount);
@@ -1469,7 +1469,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    prevPtr = canvasPtr->lastItemPtr;
 	} else {
 	    prevPtr = NULL;
-	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[3], goto done) {
+	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[3], &searchPtr, goto done) {
 		prevPtr = itemPtr;
 	    }
 	    if (prevPtr == NULL) {
@@ -1511,7 +1511,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
 	    EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
 	    (void) (*itemPtr->typePtr->scaleProc)((Tk_Canvas) canvasPtr,
 		    itemPtr, xOrigin, yOrigin, xScale, yScale);
@@ -1579,7 +1579,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    goto done;
 	}
 	if (objc >= 4) {
-	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[3], goto done) {
+	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[3], &searchPtr, goto done) {
 		if ((itemPtr->typePtr->indexProc != NULL)
 			&& (itemPtr->typePtr->selectionProc != NULL)){
 		    break;
@@ -1679,7 +1679,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FIRST_CANVAS_ITEM_MATCHING(objv[2], goto done);
+	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
 	if (itemPtr != NULL) {
 	    Tcl_SetResult(interp, itemPtr->typePtr->name, TCL_STATIC);
 	}
@@ -3804,14 +3804,14 @@ DoItem(interp, itemPtr, tag)
  *
  * Results:
  *	A standard Tcl return value.  If newTag is NULL, then a
- *	list of ids from all the items that match argc/argv is
+ *	list of ids from all the items that match objc/objv is
  *	returned in the interp's result.  If newTag is NULL, then
  *	the normal the interp's result is an empty string.  If an error
  *	occurs, then the interp's result will hold an error message.
  *
  * Side effects:
  *	If newTag is non-NULL, then all the items that match the
- *	information in argc/argv have that tag added to their
+ *	information in objc/objv have that tag added to their
  *	lists of tags.
  *
  *--------------------------------------------------------------
@@ -3819,16 +3819,16 @@ DoItem(interp, itemPtr, tag)
 
 static int
 #ifdef USE_OLD_TAG_SEARCH
-FindItems(interp, canvasPtr, argc, argv, newTag, first)
+FindItems(interp, canvasPtr, objc, objv, newTag, first)
 #else /* USE_OLD_TAG_SEARCH */
-FindItems(interp, canvasPtr, argc, argv, newTag, first, searchPtrPtr)
+FindItems(interp, canvasPtr, objc, objv, newTag, first, searchPtrPtr)
 #endif /* USE_OLD_TAG_SEARCH */
     Tcl_Interp *interp;			/* Interpreter for error reporting. */
     TkCanvas *canvasPtr;		/* Canvas whose items are to be
 					 * searched. */
-    int argc;				/* Number of entries in argv.  Must be
+    int objc;				/* Number of entries in argv.  Must be
 					 * greater than zero. */
-    Tcl_Obj *CONST *argv;		/* Arguments that describe what items
+    Tcl_Obj *CONST *objv;		/* Arguments that describe what items
 					 * to search for (see user doc on
 					 * "find" and "addtag" options). */
     Tcl_Obj *newTag;			/* If non-NULL, gives new tag to set
@@ -3836,7 +3836,7 @@ FindItems(interp, canvasPtr, argc, argv, newTag, first, searchPtrPtr)
 					 * ids of found items are returned
 					 * in the interp's result. */
     int first;				/* For error messages:  gives number
-					 * of elements of argv which are already
+					 * of elements of objv which are already
 					 * handled. */
 #ifndef USE_OLD_TAG_SEARCH
     TagSearch **searchPtrPtr;		/* From CanvasWidgetCmd local vars*/
@@ -3862,19 +3862,20 @@ FindItems(interp, canvasPtr, argc, argv, newTag, first, searchPtrPtr)
     } else {
 	uid = NULL;
     }
-    if (Tcl_GetIndexFromObj(interp, argv[first], optionStrings, "search command", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[first], optionStrings,
+	    "search command", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     switch ((enum options) index) {
     case CANV_ABOVE: {
 	Tk_Item *lastPtr = NULL;
 
-	if (argc != first+2) {
-	    Tcl_WrongNumArgs(interp, first+1, argv, "tagOrId");
+	if (objc != first+2) {
+	    Tcl_WrongNumArgs(interp, first+1, objv, "tagOrId");
 	    return TCL_ERROR;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(argv[first+1], return TCL_ERROR) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[first+1], searchPtrPtr,
+		return TCL_ERROR) {
 	    lastPtr = itemPtr;
 	}
 	if ((lastPtr != NULL) && (lastPtr->nextPtr != NULL)) {
@@ -3883,8 +3884,8 @@ FindItems(interp, canvasPtr, argc, argv, newTag, first, searchPtrPtr)
 	break;
     }
     case CANV_ALL:
-	if (argc != first+1) {
-	    Tcl_WrongNumArgs(interp, first+1, argv, (char *) NULL);
+	if (objc != first+1) {
+	    Tcl_WrongNumArgs(interp, first+1, objv, (char *) NULL);
 	    return TCL_ERROR;
 	}
 
@@ -3894,44 +3895,42 @@ FindItems(interp, canvasPtr, argc, argv, newTag, first, searchPtrPtr)
 	}
 	break;
 
-    case CANV_BELOW: {
-	Tk_Item *itemPtr;
-
-	if (argc != first+2) {
-	    Tcl_WrongNumArgs(interp, first+1, argv, "tagOrId");
+    case CANV_BELOW:
+	if (objc != first+2) {
+	    Tcl_WrongNumArgs(interp, first+1, objv, "tagOrId");
 	    return TCL_ERROR;
 	}
-	FIRST_CANVAS_ITEM_MATCHING(argv[first+1], return TCL_ERROR);
+	FIRST_CANVAS_ITEM_MATCHING(objv[first+1], searchPtrPtr,
+		return TCL_ERROR);
 	if (itemPtr != NULL) {
 	    if (itemPtr->prevPtr != NULL) {
 		DoItem(interp, itemPtr->prevPtr, uid);
 	    }
 	}
 	break;
-    }
     case CANV_CLOSEST: {
 	double closestDist;
 	Tk_Item *startPtr, *closestPtr;
 	double coords[2], halo;
 	int x1, y1, x2, y2;
 
-	if ((argc < first+3) || (argc > first+5)) {
-	    Tcl_WrongNumArgs(interp, first+1, argv, "x y ?halo? ?start?");
+	if ((objc < first+3) || (objc > first+5)) {
+	    Tcl_WrongNumArgs(interp, first+1, objv, "x y ?halo? ?start?");
 	    return TCL_ERROR;
 	}
-	if ((Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr, argv[first+1],
+	if ((Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr, objv[first+1],
 		&coords[0]) != TCL_OK) || (Tk_CanvasGetCoordFromObj(interp,
-		(Tk_Canvas) canvasPtr, argv[first+2], &coords[1]) != TCL_OK)) {
+		(Tk_Canvas) canvasPtr, objv[first+2], &coords[1]) != TCL_OK)) {
 	    return TCL_ERROR;
 	}
-	if (argc > first+3) {
-	    if (Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr, argv[first+3],
+	if (objc > first+3) {
+	    if (Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr, objv[first+3],
 		    &halo) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    if (halo < 0.0) {
 		Tcl_AppendResult(interp, "can't have negative halo value \"",
-			Tcl_GetString(argv[3]), "\"", (char *) NULL);
+			Tcl_GetString(objv[3]), "\"", (char *) NULL);
 		return TCL_ERROR;
 	    }
 	} else {
@@ -3943,8 +3942,9 @@ FindItems(interp, canvasPtr, argc, argv, newTag, first, searchPtrPtr)
 	 */
 
 	startPtr = canvasPtr->firstItemPtr;
-	if (argc == first+5) {
-	    FIRST_CANVAS_ITEM_MATCHING(argv[first+4], return TCL_ERROR);
+	if (objc == first+5) {
+	    FIRST_CANVAS_ITEM_MATCHING(objv[first+4], searchPtrPtr,
+		    return TCL_ERROR);
 	    if (itemPtr != NULL) {
 		startPtr = itemPtr;
 	    }
@@ -4024,23 +4024,24 @@ FindItems(interp, canvasPtr, argc, argv, newTag, first, searchPtrPtr)
 	break;
     }
     case CANV_ENCLOSED:
-	if (argc != first+5) {
-	    Tcl_WrongNumArgs(interp, first+1, argv, "x1 y1 x2 y2");
+	if (objc != first+5) {
+	    Tcl_WrongNumArgs(interp, first+1, objv, "x1 y1 x2 y2");
 	    return TCL_ERROR;
 	}
-	return FindArea(interp, canvasPtr, argv+first+1, uid, 1);
+	return FindArea(interp, canvasPtr, objv+first+1, uid, 1);
     case CANV_OVERLAPPING:
-	if (argc != first+5) {
-	    Tcl_WrongNumArgs(interp, first+1, argv, "x1 y1 x2 y2");
+	if (objc != first+5) {
+	    Tcl_WrongNumArgs(interp, first+1, objv, "x1 y1 x2 y2");
 	    return TCL_ERROR;
 	}
-	return FindArea(interp, canvasPtr, argv+first+1, uid, 0);
+	return FindArea(interp, canvasPtr, objv+first+1, uid, 0);
     case CANV_WITHTAG:
-	if (argc != first+2) {
-	    Tcl_WrongNumArgs(interp, first+1, argv, "tagOrId");
+	if (objc != first+2) {
+	    Tcl_WrongNumArgs(interp, first+1, objv, "tagOrId");
 	    return TCL_ERROR;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(argv[first+1], return TCL_ERROR) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[first+1], searchPtrPtr,
+		return TCL_ERROR) {
 	    DoItem(interp, itemPtr, uid);
 	}
     }
@@ -4058,26 +4059,26 @@ FindItems(interp, canvasPtr, argc, argv, newTag, first, searchPtrPtr)
  * Results:
  *	A standard Tcl return value.  If newTag is NULL, then a
  *	list of ids from all the items overlapping or enclosed
- *	by the rectangle given by argc is returned in the interp's result.
+ *	by the rectangle given by objc is returned in the interp's result.
  *	If newTag is NULL, then the normal the interp's result is an
  *	empty string.  If an error occurs, then the interp's result will
  *	hold an error message.
  *
  * Side effects:
  *	If uid is non-NULL, then all the items overlapping
- *	or enclosed by the area in argv have that tag added to
+ *	or enclosed by the area in objv have that tag added to
  *	their lists of tags.
  *
  *--------------------------------------------------------------
  */
 
 static int
-FindArea(interp, canvasPtr, argv, uid, enclosed)
+FindArea(interp, canvasPtr, objv, uid, enclosed)
     Tcl_Interp *interp;			/* Interpreter for error reporting
 					 * and result storing. */
     TkCanvas *canvasPtr;		/* Canvas whose items are to be
 					 * searched. */
-    Tcl_Obj *CONST *argv;		/* Array of four arguments that
+    Tcl_Obj *CONST *objv;		/* Array of four arguments that
 					 * give the coordinates of the
 					 * rectangular area to search. */
     Tk_Uid uid;				/* If non-NULL, gives new tag to set
@@ -4092,13 +4093,13 @@ FindArea(interp, canvasPtr, argv, uid, enclosed)
     int x1, y1, x2, y2;
     Tk_Item *itemPtr;
 
-    if ((Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr, argv[0],
+    if ((Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr, objv[0],
 		&rect[0]) != TCL_OK)
-	    || (Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr, argv[1],
+	    || (Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr, objv[1],
 		&rect[1]) != TCL_OK)
-	    || (Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr, argv[2],
+	    || (Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr, objv[2],
 		&rect[2]) != TCL_OK)
-	    || (Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr, argv[3],
+	    || (Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr, objv[3],
 		&rect[3]) != TCL_OK)) {
 	return TCL_ERROR;
     }
@@ -4187,7 +4188,7 @@ RelinkItems(canvasPtr, tag, prevPtr, searchPtrPtr)
      */
 
     firstMovePtr = lastMovePtr = NULL;
-    FOR_EVERY_CANVAS_ITEM_MATCHING(tag, return TCL_ERROR) {
+    FOR_EVERY_CANVAS_ITEM_MATCHING(tag, searchPtrPtr, return TCL_ERROR) {
 	if (itemPtr == prevPtr) {
 	    /*
 	     * Item after which insertion is to occur is being
@@ -5318,27 +5319,27 @@ CanvasSetOrigin(canvasPtr, xOrigin, yOrigin)
  *	Converts object list into string list.
  *
  * Side effects:
- *	Memory is allocated for the argv array, which must
+ *	Memory is allocated for the objv array, which must
  *	be freed using ckfree() when no longer needed.
  *
  *----------------------------------------------------------------------
  */
 /* ARGSUSED */
 static CONST char **
-TkGetStringsFromObjs(argc, objv)
-    int argc;
+TkGetStringsFromObjs(objc, objv)
+    int objc;
     Tcl_Obj *CONST objv[];
 {
     register int i;
     CONST char **argv;
-    if (argc <= 0) {
+    if (objc <= 0) {
 	return NULL;
     }
-    argv = (CONST char **) ckalloc((argc+1) * sizeof(char *));
-    for (i = 0; i < argc; i++) {
+    argv = (CONST char **) ckalloc((objc+1) * sizeof(char *));
+    for (i = 0; i < objc; i++) {
 	argv[i] = Tcl_GetString(objv[i]);
     }
-    argv[argc] = 0;
+    argv[objc] = 0;
     return argv;
 }
 
