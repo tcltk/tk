@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.13 2001/08/29 23:22:24 hobbs Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.14 2001/12/28 01:23:47 hobbs Exp $
  */
 
 #include "tkButton.h"
@@ -942,9 +942,9 @@ static void
 DestroyButton(butPtr)
     TkButton *butPtr;		/* Info about button widget. */
 {
+    butPtr->flags |= BUTTON_DELETED;
     TkpDestroyButton(butPtr);
 
-    butPtr->flags |= BUTTON_DELETED;
     if (butPtr->flags & REDRAW_PENDING) {
 	Tcl_CancelIdleCall(TkpDisplayButton, (ClientData) butPtr);
     }
@@ -1624,6 +1624,10 @@ ButtonTextVarProc(clientData, interp, name1, name2, flags)
     TkButton *butPtr = (TkButton *) clientData;
     char *name;
     Tcl_Obj *valuePtr;
+
+    if (butPtr->flags & BUTTON_DELETED) {
+	return (char *) NULL;
+    }
 
     name = Tcl_GetString(butPtr->textVarNamePtr);
 

@@ -1,11 +1,21 @@
-2001-12-28  Daniel Steffen <das@users.sourceforge.net>
+2001-12-27  Daniel Steffen <das@users.sourceforge.net>
 
-	* mac/mac/tkMacInit.c:
-	* mac/mac/tkMacResource.r: synced up tkInit features to unix/win:
+	* mac/tkMacInit.c:
+	* mac/tkMacResource.r: synced up tkInit features to unix/win:
 	use existing tkInit proc if defined. Added spinbox.tcl resource.
 	Used TclGetEnv() instead of Tcl_GetVar2(interp, env)
 	* mac/tkMacApplication.r:
 	* mac/tkMacLibrary.r: minor version resources cleanup
+
+2001-12-27  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkButton.c (ButtonTextVarProc): guard against being
+	called while the *button/label is being deleted. [Bug #490051]
+
+	* library/entry.tcl: 
+	* library/spinbox.tcl: 
+	* library/text.tcl: added extra checks against bug #220269 and
+	made spinbox reuse more of the entry procedure code.
 
 2001-12-20  Mo DeJong  <mdejong@users.sourceforge.net>
 
@@ -34,6 +44,13 @@
 	* tests/event.test (event-click-drag-1.2): Corrected test that
 	failed on Solaris/CDE due to text scrolling.  [Bug 413735]
 
+2001-12-18  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/spinbox.tcl (ButtonDown): added catch to ignore
+	possible error in after cancel when Priv(afterId) isn't defined.
+
+	* doc/spinbox.n: corrected spin(up|down) -> button(up|down)
+
 2001-12-14  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* doc/getOpenFile.n: Documented change.
@@ -41,6 +58,10 @@
 	default extension from whatever value was selected in the
 	filetypes option menu.  Adapted from code by Chris Nelson
 	submitted in Patch #492220.
+
+2001-12-12  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tkUnixWm.c (TkWmStackorderToplevelWrapperMap): added static
 
 2001-12-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
