@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.10 2000/11/02 22:55:16 hobbs Exp $
+# RCS: @(#) $Id: console.tcl,v 1.11 2001/07/03 01:03:16 hobbs Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -350,7 +350,7 @@ proc tkConsoleBind {win} {
 	}
     }
     bind $win <Insert> {
-	catch {tkConsoleInsert %W [selection get -displayof %W]}
+	catch {tkConsoleInsert %W [::tk::GetSelection %W PRIMARY]}
 	break
     }
     bind $win <KeyPress> {
@@ -397,7 +397,7 @@ proc tkConsoleBind {win} {
     }
     bind $win <<Paste>> {
 	catch {
-	    set clip [selection get -displayof %W -selection CLIPBOARD]
+	    set clip [::tk::GetSelection %W CLIPBOARD]
 	    set list [split $clip \n\r]
 	    tkConsoleInsert %W [lindex $list 0]
 	    foreach x [lrange $list 1 end] {
