@@ -235,7 +235,7 @@ Tk_GetBitmap(interp, tkwin, string)
 		    panic("native bitmap creation failed");
 		}
 	    } else {
-		bitmap = TkCreateBitmapFromData(Tk_Display(tkwin),
+		bitmap = XCreateBitmapFromData(Tk_Display(tkwin),
 		    RootWindowOfScreen(nameKey.screen), predefPtr->source,
 		    (unsigned) width, (unsigned) height);
 	    }
@@ -587,59 +587,6 @@ BitmapInit()
 /*
  *----------------------------------------------------------------------
  *
- * TkCreateBitmapFromData --
- *
- *	Construct a single plane pixmap from bitmap data.  This function
- *	is equivelent to the XCreateBitmapFromData funtion - except that
- *	it is cross platform.
- *
- * Results:
- *	Returns a new Pixmap.
- *
- * Side effects:
- *	Allocates a new bitmap and drawable.
- *
- *----------------------------------------------------------------------
- */
-
-Pixmap
-TkCreateBitmapFromData(display, d, data, width, height)
-    Display* display;
-    Drawable d;
-    CONST char* data;
-    unsigned int width;
-    unsigned int height;
-{
-    XImage ximage;
-    GC gc;
-    Pixmap pix;
-
-    pix = Tk_GetPixmap(display, d, width, height, 1);
-    gc = XCreateGC(display, pix, 0, NULL);
-    if (gc == NULL) {
-	return None;
-    }
-    ximage.height = height;
-    ximage.width = width;
-    ximage.depth = 1;
-    ximage.bits_per_pixel = 1;
-    ximage.xoffset = 0;
-    ximage.format = XYBitmap;
-    ximage.data = (char *)data;
-    ximage.byte_order = LSBFirst;
-    ximage.bitmap_unit = 8;
-    ximage.bitmap_bit_order = LSBFirst;
-    ximage.bitmap_pad = 8;
-    ximage.bytes_per_line = (width+7)/8;
-
-    TkPutImage(NULL, 0, display, pix, gc, &ximage, 0, 0, 0, 0, width, height);
-    XFreeGC(display, gc);
-    return pix;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkReadBitmapFile --
  *
  *	Loads a bitmap image in X bitmap format into the specified
@@ -675,7 +622,7 @@ TkReadBitmapFile(display, d, filename, width_return, height_return,
 	return BitmapFileInvalid;
     }
 
-    *bitmap_return = TkCreateBitmapFromData(display, d, data, *width_return,
+    *bitmap_return = XCreateBitmapFromData(display, d, data, *width_return,
 	    *height_return);
 
     ckfree(data);

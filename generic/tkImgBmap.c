@@ -31,10 +31,10 @@ typedef struct BitmapMaster {
 				 * deleted. */
     int width, height;		/* Dimensions of image. */
     char *data;			/* Data comprising bitmap (suitable for
-				 * input to TkCreateBitmapFromData).   May
+				 * input to XCreateBitmapFromData).   May
 				 * be NULL if no data.  Malloc'ed. */
     char *maskData;		/* Data for bitmap's mask (suitable for
-				 * input to TkCreateBitmapFromData).
+				 * input to XCreateBitmapFromData).
 				 * Malloc'ed. */
     Tk_Uid fgUid;		/* Value of -foreground option (malloc'ed). */
     Tk_Uid bgUid;		/* Value of -background option (malloc'ed). */
@@ -375,7 +375,7 @@ ImgBmapConfigureInstance(instancePtr)
 	instancePtr->bitmap = None;
     }
     if (masterPtr->data != NULL) {
-	instancePtr->bitmap = TkCreateBitmapFromData(
+	instancePtr->bitmap = XCreateBitmapFromData(
 		Tk_Display(instancePtr->tkwin),
 		RootWindowOfScreen(Tk_Screen(instancePtr->tkwin)),
 		masterPtr->data, (unsigned) masterPtr->width,
@@ -387,7 +387,7 @@ ImgBmapConfigureInstance(instancePtr)
 	instancePtr->mask = None;
     }
     if (masterPtr->maskData != NULL) {
-	instancePtr->mask = TkCreateBitmapFromData(
+	instancePtr->mask = XCreateBitmapFromData(
 		Tk_Display(instancePtr->tkwin),
 		RootWindowOfScreen(Tk_Screen(instancePtr->tkwin)),
 		masterPtr->maskData, (unsigned) masterPtr->width,
