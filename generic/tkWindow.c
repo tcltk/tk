@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.65 2004/12/17 14:27:18 chengyemao Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.66 2005/01/07 11:14:39 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -479,6 +479,7 @@ GetScreen(interp, screenName, screenPtr)
 	     */
 	    dispPtr = TkpOpenDisplay(screenName);
 	    if (dispPtr == NULL) {
+		Tcl_ResetResult(interp);
 		Tcl_AppendResult(interp, "couldn't connect to display \"",
 			screenName, "\"", (char *) NULL);
 		return (TkDisplay *) NULL;
