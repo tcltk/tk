@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# SCCS: %Z% $Id: makefile.vc,v 1.9 1998/07/30 12:34:55 escoffon Exp $ 
+# SCCS: %Z% $Id: makefile.vc,v 1.10 1998/08/03 15:48:31 escoffon Exp $ 
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -50,12 +50,14 @@ VERSION = 80
 
 BINROOT		= .
 !IF "$(NODEBUG)" == "1"
-TMPDIR		= $(BINROOT)\Release
+TMPDIRNAME	= Release
 DBGX		=
 !ELSE
-TMPDIR		= $(BINROOT)\Debug
+TMPDIRNAME	= Debug
 DBGX		= d
 !ENDIF
+TMPDIR		= $(BINROOT)\$(TMPDIRNAME)
+OUTDIRNAME	= $(TMPDIRNAME)
 OUTDIR		= $(TMPDIR)
 
 TCLLIB 		= $(TCLNAMEPREFIX)$(VERSION)$(DBGX).lib
@@ -191,7 +193,7 @@ WINDIR          = $(ROOT)\win
 GENERICDIR	= $(ROOT)\generic
 XLIBDIR		= $(ROOT)\xlib
 BITMAPDIR	= $(ROOT)\bitmaps
-TCLLIBDIR       = $(TCLDIR)\win\$(OUTDIR)
+TCLLIBDIR       = $(TCLDIR)\win\$(OUTDIRNAME)
 RCDIR		= $(WINDIR)\rc
 
 TK_INCLUDES	= -I$(WINDIR) -I$(GENERICDIR) -I$(BITMAPDIR) -I$(XLIBDIR) \
