@@ -4,11 +4,13 @@
 # permitted input is constrained in some way.  It also shows off a
 # password entry.
 #
-# RCS: @(#) $Id: entry3.tcl,v 1.3 2004/06/28 22:36:18 dkf Exp $
+# RCS: @(#) $Id: entry3.tcl,v 1.4 2004/12/21 11:56:35 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
+
+package require Tk
 
 set w .entry3
 catch {destroy $w}
