@@ -1,3 +1,7 @@
+2004-03-30  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tclets.r (removed): obsolete holdover from mac classic.
+
 2004-03-26  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkImgPPM.c (ReadPPMStringHeader): Code to read PPM/PGM data
