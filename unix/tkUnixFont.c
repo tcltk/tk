@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.1.4.3 1998/11/25 21:16:41 stanton Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.1.4.4 1998/11/25 23:12:14 stanton Exp $
  */
  
 #include "tkUnixInt.h"
@@ -1057,7 +1057,7 @@ CreateClosestFont(tkwin, faPtr, xaPtr)
 	want.fa.family = Tk_GetUid("fixed");
     }
     want.fa.size = -TkFontGetPixels(tkwin, faPtr->size);
-    if (want.xa.charset == NULL) {
+    if (want.xa.charset == NULL || *want.xa.charset == '\0') {
 	want.xa.charset = Tk_GetUid("iso8859-1");	/* locale. */
     }
 
@@ -1777,7 +1777,7 @@ FontMapLoadPage(subFontPtr, row)
 				 * the cache. */
 {
     char src[TCL_UTF_MAX], buf[16];
-    int minHi, maxHi, minLo, maxLo, scale;
+    int minHi, maxHi, minLo, maxLo, scale, checkLo;
     int i, end, bitOffset, isTwoByteFont, n;
     Tcl_Encoding encoding;
     XFontStruct *fontStructPtr;
@@ -1800,10 +1800,11 @@ FontMapLoadPage(subFontPtr, row)
     minLo	= fontStructPtr->min_char_or_byte2;
     maxLo	= fontStructPtr->max_char_or_byte2;
     scale	= maxLo - minLo + 1;
+    checkLo	= minLo;
 
-    if (isTwoByteFont == 0) {
+    if (! isTwoByteFont) {
 	if (minLo < 32) {
-	    minLo = 32;
+	    checkLo = 32;
 	}
     }
 
@@ -1823,7 +1824,7 @@ FontMapLoadPage(subFontPtr, row)
 	    hi = 0;
 	    lo = ((unsigned char *) buf)[0];
 	}
-	if ((hi < minHi) || (hi > maxHi) || (lo < minLo) || (lo > maxLo)) {
+	if ((hi < minHi) || (hi > maxHi) || (lo < checkLo) || (lo > maxLo)) {
 	    continue;
 	}
 	n = (hi - minHi) * scale + lo - minLo;
@@ -2421,6 +2422,7 @@ GetFontAttributes(display, fontStructPtr, faPtr)
     } else {
 	TkInitFontAttributes(&faPtr->fa);
 	TkInitXLFDAttributes(&faPtr->xa);
+	faPtr->xa.family = Tk_GetUid("");
 	faPtr->xa.foundry = Tk_GetUid("");
 	faPtr->xa.charset = Tk_GetUid("");
     }
