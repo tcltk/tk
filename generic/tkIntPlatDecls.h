@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.18 2004/09/21 19:13:57 mdejong Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.19 2004/10/27 00:56:33 davygrvy Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -190,7 +190,7 @@ EXTERN void		TkWinWmCleanup _ANSI_ARGS_((HINSTANCE hInstance));
 #ifndef TkWinXCleanup_TCL_DECLARED
 #define TkWinXCleanup_TCL_DECLARED
 /* 28 */
-EXTERN void		TkWinXCleanup _ANSI_ARGS_((HINSTANCE hInstance));
+EXTERN void		TkWinXCleanup _ANSI_ARGS_((ClientData clientData));
 #endif
 #ifndef TkWinXInit_TCL_DECLARED
 #define TkWinXInit_TCL_DECLARED
@@ -603,7 +603,7 @@ typedef struct TkIntPlatStubs {
     void (*tkWinSetMenu) _ANSI_ARGS_((Tk_Window tkwin, HMENU hMenu)); /* 25 */
     void (*tkWinSetWindowPos) _ANSI_ARGS_((HWND hwnd, HWND siblingHwnd, int pos)); /* 26 */
     void (*tkWinWmCleanup) _ANSI_ARGS_((HINSTANCE hInstance)); /* 27 */
-    void (*tkWinXCleanup) _ANSI_ARGS_((HINSTANCE hInstance)); /* 28 */
+    void (*tkWinXCleanup) _ANSI_ARGS_((ClientData clientData)); /* 28 */
     void (*tkWinXInit) _ANSI_ARGS_((HINSTANCE hInstance)); /* 29 */
     void (*tkWinSetForegroundWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 30 */
     void (*tkWinDialogDebug) _ANSI_ARGS_((int debug)); /* 31 */
