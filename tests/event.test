@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: event.test,v 1.12 2002/12/02 03:42:28 mdejong Exp $
+# RCS: @(#) $Id: event.test,v 1.13 2003/02/18 06:22:44 mdejong Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -649,6 +649,21 @@ test event-triple-click-drag-1.1 { Triple click and drag across lines in
 } [list "LINE THREE\n" "LINE TWO\nLINE THREE\n" \
         "LINE ONE\nLINE TWO\nLINE THREE\n"]
 
+test event-button-state-1.1 { button press in a window that is then
+        destroyed, when the mouse is moved into another window it
+        should not generate a <B1-motion> event since the mouse
+        was not pressed down in that window. } {
+    destroy .t
+    set t [toplevel .t]
+
+    event generate $t <ButtonPress-1>
+    destroy $t
+    set t [toplevel .t]
+    set motion nomotion
+    bind $t <B1-Motion> {set motion inmotion}
+    event generate $t <Motion>
+    set motion
+} nomotion
 
 # cleanup
 

@@ -1,3 +1,14 @@
+2003-02-14  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* generic/tkEvent.c (Tk_HandleEvent): Fixup button
+	press state saving code, it was incorrectly converting
+	normal motion events into button press and motion
+	events in some cases.
+	* generic/tkInt.h: Add mouseButtonWindow member
+	to the TkDisplay structure.
+	* tests/event.test: Add test case for faulty
+	button motion logic.
+
 2003-02-14  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* README:             Bumped to 8.4.2.
