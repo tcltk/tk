@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.28 2002/04/05 08:43:22 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.29 2002/07/24 18:30:55 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1897,11 +1897,11 @@ DisplayEntry(clientData)
     if ((entryPtr->state == STATE_NORMAL) && (entryPtr->flags & GOT_FOCUS)) {
 	Tk_CharBbox(entryPtr->textLayout, entryPtr->insertPos, &cursorX, NULL,
 		NULL, NULL);
+	cursorX += entryPtr->layoutX;
+	cursorX -= (entryPtr->insertWidth)/2;
 	Tk_SetCaretPos(entryPtr->tkwin, cursorX, baseY - fm.ascent,
 		fm.ascent + fm.descent);
 	if (entryPtr->insertPos >= entryPtr->leftIndex) {
-	    cursorX += entryPtr->layoutX;
-	    cursorX -= (entryPtr->insertWidth)/2;
 	    if (cursorX < xBound) {
 		if (entryPtr->flags & CURSOR_ON) {
 		    Tk_Fill3DRectangle(tkwin, pixmap, entryPtr->insertBorder,
