@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.45 2001/11/11 03:21:24 mdejong Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.46 2001/11/25 06:43:44 mdejong Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -84,6 +84,7 @@ TCL_BIN_DIR		= @TCL_BIN_DIR@
 # for this version of Tk ("srcdir" will be replaced or has already
 # been replaced by the configure script):
 TCL_GENERIC_DIR	= @TCL_SRC_DIR@/generic
+TCL_TOOL_DIR = @TCL_SRC_DIR@/tools
 
 # Converts a POSIX path to a Windows native path.
 CYGPATH			= @CYGPATH@
@@ -185,6 +186,13 @@ RM		= rm -f
 COPY		= cp
 
 TCLSH_PROG	= @TCLSH_PROG@
+
+# TCL_EXE is the name of a tclsh executable that is available *BEFORE*
+# running make for the first time. Certain build targets (make genstubs)
+# need it to be available on the PATH. This executable should *NOT* be
+# required just to do a normal build although it can be required to run
+# make dist.
+TCL_EXE			= tclsh
 
 CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I"${GENERIC_DIR_NATIVE}" -I"${WIN_DIR_NATIVE}" \
@@ -592,3 +600,17 @@ distclean: clean
 
 Makefile: $(SRC_DIR)/Makefile.in
 	./config.status
+
+#
+# Regenerate the stubs files.
+#
+
+$(GENERIC_DIR)/tkStubInit.c: $(GENERIC_DIR)/tk.decls \
+		$(GENERIC_DIR)/tkInt.decls
+	@echo "Warning: run \"make genstubs\" to regenerate tkStubInit.c"
+
+genstubs:
+	$(TCL_EXE) "$(TCL_TOOL_DIR}\genStubs.tcl" \
+	    "$(GENERIC_DIR_NATIVE)" \
+	    "$(GENERIC_DIR_NATIVE)\tk.decls" \
+            "$(GENERIC_DIR_NATIVE)\tkInt.decls"
