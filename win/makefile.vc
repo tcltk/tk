@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.14 1998/09/14 18:23:58 stanton Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.15 1998/09/30 22:09:23 escoffon Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -322,18 +322,21 @@ $(TKPLUGINDLL): $(TKOBJS) $(TMPDIR)\tk.res $(TMPDIR)\plugin.def
 
 $(WISH): $(WISHOBJS) $(TKLIB) $(TMPDIR)\wish.res
 	set LIB=$(TOOLS32)\lib
-	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -out:$@ \
+	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -stack:2300000 \
+		-out:$@ \
 		$(guilibsdll) $(TCLLIBDIR)\$(TCLLIB) $(TKLIB) $(WISHOBJS) 
 
 $(WISHP): $(WISHOBJS) $(TKPLUGINLIB) $(TMPDIR)\wish.res
 	set LIB=$(TOOLS32)\lib
-	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -out:$@ \
+	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -stack:2300000 \
+		-out:$@ \
 		$(guilibsdll) $(TCLLIBDIR)\$(TCLPLUGINLIB) \
 		$(TKPLUGINLIB) $(WISHOBJS) 
 
 $(TKTEST): $(TKTESTOBJS) $(TKLIB) $(TMPDIR)\wish.res
 	set LIB=$(TOOLS32)\lib
-	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -out:$@ \
+	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -stack:2300000 \
+		-out:$@ \
 		$(guilibsdll) $(TCLLIBDIR)\$(TCLLIB) $(TKLIB) $(TKTESTOBJS)
 
 $(TMPDIR)\tk.def: $(DUMPEXTS) $(TKOBJS)
