@@ -453,9 +453,6 @@ GeneratePollingEvents(MouseEventData * medPtr)
     Tk_UpdatePointer(tkwin, medPtr->global.h, medPtr->global.v,
             medPtr->state);
     
-
-    TkMacOSXInstallCursor(0);
-
     return true;
 }
 
