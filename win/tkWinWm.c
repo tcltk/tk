@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.71 2004/09/17 23:26:21 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.72 2004/09/18 22:51:26 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -2089,9 +2089,11 @@ UpdateWrapper(winPtr)
 	    /*
 	     * The user supplies a double from [0..1], but Windows wants an
 	     * int (transparent) 0..255 (opaque), so do the translation.
+	     * Add the 0.5 to round the value.
 	     */
 	    setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
-		    (COLORREF) NULL, (BYTE) (wmPtr->alpha * 255), LWA_ALPHA);
+		    (COLORREF) NULL, (BYTE) (wmPtr->alpha * 255 + 0.5),
+		    LWA_ALPHA);
 	}
 
 	place.length = sizeof(WINDOWPLACEMENT);
@@ -2929,19 +2931,15 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 		    } else {
 			*stylePtr &= ~styleBit;
 		    }
-		    if ((dval > 0) && (alpha > 0)) {
-			/*
-			 * If we are just changing transparency level, just
-			 * adjust the window setting (no UpdateWrapper).
-			 * The user supplies (opaque) 0..100 (transparent),
-			 * but Windows wants (transparent) 0..255 (opaque), so
-			 * do the translation.
-			 */
-			alpha = wmPtr->alpha;
-			setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
-				(COLORREF) NULL, (BYTE) (wmPtr->alpha * 255),
-				LWA_ALPHA);
-		    }
+		    /*
+		     * Set the window directly regardless of UpdateWrapper.
+		     * The user supplies (opaque) 0..100 (transparent), but
+		     * Windows wants (transparent) 0..255 (opaque), so do the
+		     * translation. Add the 0.5 to round the value.
+		     */
+		    setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
+			    (COLORREF) NULL, (BYTE) (wmPtr->alpha * 255 + 0.5),
+			    LWA_ALPHA);
 		}
 	    }
 	} else {
@@ -2960,8 +2958,7 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 	    }
 	}
     }
-    if ((wmPtr->styleConfig != style) || (wmPtr->alpha != alpha) ||
-	    (wmPtr->exStyleConfig != exStyle)) {
+    if ((wmPtr->styleConfig != style) || (wmPtr->exStyleConfig != exStyle)) {
 	wmPtr->styleConfig = style;
 	wmPtr->exStyleConfig = exStyle;
 	/*
