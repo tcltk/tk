@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.17 2002/02/26 01:07:29 hobbs Exp $
+# RCS: @(#) $Id: listbox.test,v 1.18 2002/06/21 02:38:54 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -73,6 +73,7 @@ resetGridInfo
 set i 1
 
 foreach test {
+    {-activestyle under underline foo {bad activestyle "foo": must be dotbox, none, or underline}}
     {-background #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"}}
     {-bd 4 4 badValue {bad screen distance "badValue"}}
@@ -241,7 +242,7 @@ test listbox-3.22 {ListboxWidgetCmd procedure, "cget" option} {
 } {0}
 test listbox-3.23 {ListboxWidgetCmd procedure, "configure" option} {
     llength [.l configure]
-} {26}
+} {27}
 test listbox-3.24 {ListboxWidgetCmd procedure, "configure" option} {
     list [catch {.l configure -gorp} msg] $msg
 } {1 {unknown option "-gorp"}}
@@ -2116,6 +2117,22 @@ test listbox-27.1 {widget deletion while active} {
     update idle
     winfo exists .l
 } 0
+
+test listbox-28.1 {listbox -activestyle} {
+    catch {destroy .l}
+    listbox .l -activ non
+    .l cget -activestyle
+} none
+test listbox-28.2 {listbox -activestyle} {
+    catch {destroy .l}
+    listbox .l
+    .l cget -activestyle
+} underline
+test listbox-28.3 {listbox -activestyle} {
+    catch {destroy .l}
+    listbox .l -activestyle dot
+    .l cget -activestyle
+} dotbox
 
 resetGridInfo
 eval destroy [winfo children .]
