@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.21.2.2 2004/10/05 22:27:27 hobbs Exp $
+# RCS: @(#) $Id: wm.test,v 1.21.2.3 2004/10/29 22:34:06 mdejong Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -134,7 +134,15 @@ test wm-attributes-1.2.1 {usage} {pcOnly} {
     list [catch {wm attributes . _} err] $err
 } {1 {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-disabled ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}}
 
-test wm-attributes-1.2.2 {usage} {macOrUnix} {
+test wm-attributes-1.2.2 {usage} {pcOnly} {
+    list [catch {wm attributes . -alpha 1.0 -disabled} err] $err
+} {1 {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-disabled ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}}
+
+test wm-attributes-1.2.3 {usage} {pcOnly} {
+    list [catch {wm attributes . -to} err] $err
+} {1 {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-disabled ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}}
+
+test wm-attributes-1.2.4 {usage} {macOrUnix} {
     list [catch {wm attributes . _} err] $err
 } {1 {wrong # args: should be "wm attributes window"}}
 
@@ -1624,6 +1632,13 @@ test wm-state-2.17 {state change after map} {
     wm state .t
 } {normal}
 
+test wm-state-2.18 {state change after map} {pcOnly} {
+    deleteWindows
+    toplevel .t
+    update
+    wm state .t zoomed
+    wm state .t
+} {zoomed}
 
 test wm-withdraw-1.1 {usage} {
     list [catch {wm withdraw} err] $err
