@@ -1,3 +1,8 @@
+2004-09-09  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/wish.1: Added note that the -use option is linked to the
+	frame's -container option to help with [Bug 1024364]
+
 2004-09-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/tkfbox.tcl (::tk::dialog::file::Create): use label
