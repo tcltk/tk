@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.32 2002/10/02 21:23:10 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.33 2003/02/18 21:53:59 hobbs Exp $
  */
 
 #include "default.h"
@@ -618,7 +618,7 @@ TextWidgetCmd(clientData, interp, argc, argv)
 		 * handle partial and fully overlapping ranges.  We have to
 		 * do this with multiple passes.
 		 */
-		TkTextIndex *indices, *ixStart, *ixEnd, *lastStart, *lastEnd;
+		TkTextIndex *indices, *ixStart, *ixEnd, *lastStart;
 		char *useIdx;
 
 		argc -= 2;
@@ -653,7 +653,7 @@ TextWidgetCmd(clientData, interp, argc, argv)
 		 */
 		qsort((VOID *) indices, (unsigned) (argc / 2),
 			2 * sizeof(TkTextIndex), TextIndexSortProc);
-		lastStart = lastEnd = NULL;
+		lastStart = NULL;
 		/*
 		 * Second pass will handle bogus ranges (end < start) and
 		 * overlapping ranges.
@@ -684,7 +684,6 @@ TextWidgetCmd(clientData, interp, argc, argv)
 			}
 		    }
 		    lastStart = ixStart;
-		    lastEnd   = ixEnd;
 		    useIdx[i]   = 1;
 		}
 		/*
