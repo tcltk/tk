@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.13 2001/10/09 23:11:02 hobbs Exp $
+# RCS: @(#) $Id: console.tcl,v 1.13.2.1 2001/10/15 09:22:00 wolfsuit Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -42,6 +42,8 @@ interp alias {} EvalAttached {} consoleinterp eval
 # Arguments:
 # 	None.
 
+package require msgcat
+
 proc ::tk::ConsoleInit {} {
     global tcl_platform
 
@@ -49,10 +51,11 @@ proc ::tk::ConsoleInit {} {
 	wm withdraw .
     }
 
-    if {[string compare $tcl_platform(platform) "macintosh"]} {
-	set mod "Ctrl"
-    } else {
+    if {[string equal $tcl_platform(platform) "macintosh"]
+            || [string equal $tcl_platform(windowingsystem) "aqua"]} {
 	set mod "Cmd"
+    } else {
+	set mod "Ctrl"
     }
 
     if {[catch {menu .menubar} err]} { bgerror "INIT: $err" }
@@ -63,15 +66,16 @@ proc ::tk::ConsoleInit {} {
     .menubar.file add command -label [::msgcat::mc "Source..."] \
 	    -underline 0 -command tk::ConsoleSource
     .menubar.file add command -label [::msgcat::mc "Hide Console"] \
-	    -underline 0 -command {wm withdraw .}
+	    -underline 0  -command {wm withdraw .}
     .menubar.file add command -label [::msgcat::mc "Clear Console"] \
 	    -underline 0 -command {.console delete 1.0 "promptEnd linestart"}
-    if {[string compare $tcl_platform(platform) "macintosh"]} {
-	.menubar.file add command -label [::msgcat::mc "Exit"] \
-		-underline 1 -command exit
-    } else {
+   if {[string equal $tcl_platform(platform) "macintosh"]
+           || [string equal $tcl_platform(windowingsystem) "aqua"]} {
 	.menubar.file add command -label [::msgcat::mc "Quit"] \
 		-command exit -accel Cmd-Q
+    } else {
+	.menubar.file add command -label [::msgcat::mc "Exit"] \
+		-underline 1 -command exit
     }
 
     menu .menubar.edit -tearoff 0
@@ -108,6 +112,11 @@ proc ::tk::ConsoleInit {} {
 	"windows" {
 	    $con configure -font systemfixed
 	}
+        "unix" {
+            if {[string equal $tcl_platform(windowingsystem) "aqua"]} {
+	        $con configure -font {Monaco 9 normal} -highlightthickness 0
+            }
+        }
     }
 
     ConsoleBind $con

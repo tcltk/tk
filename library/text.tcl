@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.17 2001/08/27 01:44:48 dgp Exp $
+# RCS: @(#) $Id: text.tcl,v 1.17.2.1 2001/10/15 09:22:00 wolfsuit Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -276,7 +276,8 @@ bind Text <Meta-KeyPress> {# nothing}
 bind Text <Control-KeyPress> {# nothing}
 bind Text <Escape> {# nothing}
 bind Text <KP_Enter> {# nothing}
-if {[string equal $tcl_platform(platform) "macintosh"]} {
+if {[string equal $tcl_platform(windowingsystem) "classic"]
+        || [string equal $tcl_platform(windowingsystem) "aqua"]} {
     bind Text <Command-KeyPress> {# nothing}
 }
 
@@ -385,7 +386,8 @@ bind Text <Meta-Delete> {
 # Macintosh only bindings:
 
 # if text black & highlight black -> text white, other text the same
-if {[string equal $tcl_platform(platform) "macintosh"]} {
+if {[string equal $tcl_platform(windowingsystem) "classic"]
+        || [string equal $tcl_platform(windowingsystem) "aqua"]} {
 bind Text <FocusIn> {
     %W tag configure sel -borderwidth 0
     %W configure -selectbackground systemHighlight -selectforeground systemHighlightText
@@ -460,7 +462,7 @@ bind Text <MouseWheel> {
     %W yview scroll [expr {- (%D / 120) * 4}] units
 }
 
-if {[string equal "unix" $tcl_platform(platform)]} {
+if {[string equal "x11" $tcl_platform(windowingsystem)]} {
     # Support for mousewheels on Linux/Unix commonly comes through mapping
     # the wheel to the extended buttons.  If you have a mousewheel, find
     # Linux configuration info at:
@@ -585,6 +587,7 @@ proc ::tk::TextSelectTo {w x y {extend 0}} {
 	$w tag remove sel 0.0 end
 	$w mark set insert $cur
 	$w tag add sel $first $last
+	$w tag remove sel $last end
 	update idletasks
     }
 }
@@ -966,7 +969,7 @@ proc ::tk_textCut w {
 proc ::tk_textPaste w {
     global tcl_platform
     catch {
-	if {[string compare $tcl_platform(platform) "unix"]} {
+	if {[string compare $tcl_platform(windowingsystem) "x11"]} {
 	    catch {
 		$w delete sel.first sel.last
 	    }

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixInit.c,v 1.4 1999/04/16 01:51:46 stanton Exp $
+ * RCS: @(#) $Id: tkUnixInit.c,v 1.4.18.1 2001/10/15 09:22:00 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -44,6 +44,7 @@ int
 TkpInit(interp)
     Tcl_Interp *interp;
 {
+    Tcl_SetVar2(interp, "tcl_platform", "windowingsystem", "x11", TCL_GLOBAL_ONLY);
     TkCreateXEventSource();
     return Tcl_Eval(interp, initScript);
 }

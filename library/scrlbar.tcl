@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scrollbar widgets.
 # It also provides procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: scrlbar.tcl,v 1.9 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: scrlbar.tcl,v 1.9.2.1 2001/10/15 09:22:00 wolfsuit Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -17,8 +17,7 @@
 #-------------------------------------------------------------------------
 
 # Standard Motif bindings:
-if {[string compare $tcl_platform(platform) "windows"] && \
-	[string compare $tcl_platform(platform) "macintosh"]} {
+if {[string equal $tcl_platform(windowingsystem) "x11"]} {
 
 bind Scrollbar <Enter> {
     if {$tk_strictMotif} {

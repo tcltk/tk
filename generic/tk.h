@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.57 2001/09/26 20:25:17 pspjuth Exp $
+ * RCS: @(#) $Id: tk.h,v 1.57.2.1 2001/10/15 09:22:00 wolfsuit Exp $
  */
 
 #ifndef _TK
@@ -39,7 +39,7 @@ extern "C" {
  * win/README		(not patchlevel)
  * unix/README		(not patchlevel)
  * unix/tk.spec		(3 LOC Major/Minor, 2 LOC patch)
- * win/tcl.m4		(not patchlevel)
+ * win/tcl.m4	        (not patchlevel)
  *
  * You may also need to update some of these files when the numbers change
  * for the version of Tcl that this release of Tk is compiled against.
@@ -58,7 +58,7 @@ extern "C" {
  * compilers.  We use this method because there is no autoconf equivalent.
  */
 
-#ifdef MAC_TCL
+#if  defined(MAC_TCL) || defined(MAC_OSX_TCL)
 #   ifndef REDO_KEYSYM_LOOKUP
 #	define REDO_KEYSYM_LOOKUP
 #   endif
@@ -76,9 +76,12 @@ extern "C" {
 #ifndef RESOURCE_INCLUDED
 
 #ifndef _XLIB_H
-#   ifdef MAC_TCL
-#	include <Xlib.h>
-#	include <X.h>
+#   if defined (MAC_TCL)
+#      include <Xlib.h>
+#      include <X.h>
+#   elif defined(MAC_OSX_TCL)
+#	include <X11/Xlib.h>
+#	include <X11/X.h>
 #   else
 #	include <X11/Xlib.h>
 #   endif

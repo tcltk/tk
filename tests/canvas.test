@@ -6,7 +6,7 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.13 2001/07/04 00:40:11 hobbs Exp $
+# RCS: @(#) $Id: canvas.test,v 1.13.2.1 2001/10/15 09:22:00 wolfsuit Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -366,6 +366,8 @@ test canvas-11.1 {canvas poly fill check, bug 5783} {
     .c create polygon 0 0 100 100 200 50 \
 	    -fill {} -stipple gray50 -outline black
 } 1
+<<<<<<< canvas.test
+=======
 test canvas-11.2 {canvas poly overlap fill check, bug 226357} {
     destroy .c
     pack [canvas .c]
@@ -429,6 +431,7 @@ test canvas-13.1 {canvas delete during event, SF bug-228024} {
     }
     set ::x
 } okokokokokokokokokokokokokokokokokokokokokokokokokokokokokok
+>>>>>>> 1.13
 
 # cleanup
 ::tcltest::cleanupTests

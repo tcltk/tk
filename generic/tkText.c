@@ -14,14 +14,14 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.18 2000/11/22 01:49:38 ericm Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.18.4.1 2001/10/15 09:22:00 wolfsuit Exp $
  */
 
 #include "default.h"
 #include "tkPort.h"
 #include "tkInt.h"
 
-#ifdef MAC_TCL
+#if defined(MAC_TCL) || defined(MAC_OSX_TCL)
 #define Style TkStyle
 #define DInfo TkDInfo
 #endif

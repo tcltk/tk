@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.17 2001/08/06 18:29:41 dgp Exp $
-# $Id: bgerror.tcl,v 1.17 2001/08/06 18:29:41 dgp Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.17.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+# $Id: bgerror.tcl,v 1.17.2.1 2001/10/15 09:22:00 wolfsuit Exp $
 
 option add *ErrorDialog.function.text [::msgcat::mc "Save To Log"] \
 	widgetDefault
@@ -92,7 +92,8 @@ proc ::bgerror err {
 
     # Ok the application's tkerror either failed or was not found
     # we use the default dialog then :
-    if {$tcl_platform(platform) == "macintosh"} {
+    if {[sting equal $tcl_platform(platform) "macintosh"]
+             || [string equal $tcl_platform(windowingsystem) "aqua"]} {
 	set ok		[::msgcat::mc "Ok"]
 	set messageFont	system
 	set textRelief	"flat"
@@ -142,13 +143,14 @@ proc ::bgerror err {
     # The following, though surprising, works.
     wm transient .bgerrorDialog .bgerrorDialog
 
-    if {$tcl_platform(platform) == "macintosh"} {
+    if {[string equal $tcl_platform(platform) "macintosh"] 
+            || [string equal $tcl_platform(windowingsystem) "aqua"]} {
 	::tk::unsupported::MacWindowStyle style .bgerrorDialog dBoxProc
     }
 
     frame .bgerrorDialog.bot
     frame .bgerrorDialog.top
-    if {$tcl_platform(platform) == "unix"} {
+    if {[string equal $tcl_platform(windowingsystem) "x11"]} {
 	.bgerrorDialog.bot configure -relief raised -bd 1
 	.bgerrorDialog.top configure -relief raised -bd 1
     }
@@ -178,7 +180,8 @@ proc ::bgerror err {
     # 2. Fill the top part with bitmap and message
 
     label .bgerrorDialog.msg -justify left -text $text -font $messageFont
-    if { [string equal $tcl_platform(platform) "macintosh"] } {
+    if {[string equal $tcl_platform(platform) "macintosh"]
+            || [string equal $tcl_platform(windowingsystem) "aqua"]} {
 	# On the Macintosh, use the stop bitmap
 	label .bgerrorDialog.bitmap -bitmap stop
     } else {
@@ -213,7 +216,8 @@ proc ::bgerror err {
 		-padx 10
 	grid columnconfigure .bgerrorDialog.bot $i -weight 1
 	# We boost the size of some Mac buttons for l&f
-	if {$tcl_platform(platform) == "macintosh"} {
+        if {[string equal $tcl_platform(platform) "macintosh"]
+             || [string equal $tcl_platform(windowingsystem) "aqua"]} {
 	    if {($name == "ok") || ($name == "dismiss")} {
 		grid columnconfigure .bgerrorDialog.bot $i -minsize 79
 	    }

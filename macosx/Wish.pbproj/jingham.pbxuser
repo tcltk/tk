@@ -1,0 +1,194 @@
+// !$*UTF8*$!
+{
+	F537552A016C352C01DC9062 = {
+		activeBuildStyle = F537552D016C352C01DC9062;
+		activeTarget = F53756A0016C4DD401DC9062;
+		addToTargets = (
+			F53755DF016C38D201DC9062,
+			F53756A0016C4DD401DC9062,
+		);
+		breakpoints = (
+			F5B2CDC10175829501DC9062,
+			F571FE470179562E01DC9062,
+			F571FE4A0179695001DC9062,
+			F571FE4B01796A1201DC9062,
+			F571FE4C01796B1101DC9062,
+			F571FE4D01796CAF01DC9062,
+			F571FE4E01796F9201DC9062,
+			F571FE4F0179702301DC9062,
+			F571FE500179702301DC9062,
+		);
+		perUserDictionary = {
+			PBXWorkspaceConfiguration = {
+				ContentSize = "{938, 678}";
+				LeftSlideOut = {
+					ActiveTab = 0;
+					Frame = "{{0, 23}, {938, 655}}";
+					Split0 = {
+						ActiveTab = 3;
+						Frame = "{{322, 0}, {616, 655}}";
+						Split0 = {
+							Frame = "{{0, 320}, {616, 335}}";
+						};
+						SplitCount = 1;
+						Tab0 = {
+							Debugger = {
+								ActiveTab = 0;
+								Frame = "{{0, 0}, {663, 264}}";
+								Split0 = {
+									Frame = "{{0, 207}, {663, 57}}";
+									Split0 = {
+										Frame = "{{0, 0}, {175, 57}}";
+									};
+									Split1 = {
+										Frame = "{{184, 0}, {479, 57}}";
+									};
+									SplitCount = 2;
+								};
+								SplitCount = 1;
+								Tab0 = {
+									Frame = "{{0, 0}, {663, 182}}";
+								};
+								Tab1 = {
+									Frame = "{{0, 0}, {616, 238}}";
+								};
+								TabCount = 2;
+							};
+							Frame = "{{0, 0}, {663, 264}}";
+							LauncherConfigVersion = 4;
+						};
+						Tab1 = {
+							Frame = "{{0, 0}, {615, 133}}";
+							LauncherConfigVersion = 3;
+							Runner = {
+								Frame = "{{0, 0}, {615, 133}}";
+							};
+						};
+						Tab2 = {
+							BuildMessageFrame = "{{0, 0}, {618, 47}}";
+							BuildTranscriptFrame = "{{0, 56}, {618, 132}}";
+							Frame = "{{0, 0}, {616, 186}}";
+						};
+						Tab3 = {
+							Frame = "{{0, 0}, {616, 295}}";
+						};
+						TabCount = 4;
+					};
+					SplitCount = 1;
+					Tab0 = {
+						Frame = "{{0, 0}, {297, 655}}";
+					};
+					Tab1 = {
+						ClassesFrame = "{{0, 0}, {202, 56}}";
+						Frame = "{{0, 0}, {200, 100}}";
+						MembersFrame = "{{0, 65}, {202, 35}}";
+						OptionsSetName = "Default Options";
+					};
+					Tab2 = {
+						Frame = "{{0, 0}, {200, 644}}";
+					};
+					Tab3 = {
+						Frame = "{{0, 0}, {200, 644}}";
+						Split0 = {
+							Frame = "{{0, 0}, {200, 312}}";
+						};
+						Split1 = {
+							Frame = "{{0, 321}, {200, 323}}";
+						};
+						SplitCount = 2;
+					};
+					Tab4 = {
+						Frame = "{{0, 0}, {250, 655}}";
+					};
+					TabCount = 5;
+				};
+			};
+		};
+		wantsIndex = 1;
+		wantsSCM = -1;
+	};
+	F53755DF016C38D201DC9062 = {
+		activeExec = 0;
+		customExecs = {
+		};
+	};
+	F53756A0016C4DD401DC9062 = {
+		activeExec = 0;
+		customExecs = {
+		};
+		targetExecs = {
+			macosx = (
+				F53756AB016C4DD401DC9062,
+			);
+		};
+	};
+	F53756AB016C4DD401DC9062 = {
+		activeArgIndex = 2147483647;
+		argumentStrings = (
+		);
+		debuggerPlugin = GDBDebugging;
+		dylibVariantSuffix = "";
+		enableDebugStr = 1;
+		environmentEntries = (
+		);
+		isa = PBXExecutable;
+		shlibInfoDictList = (
+		);
+		sourceDirectories = (
+		);
+	};
+	F571FE470179562E01DC9062 = {
+		fileReference = F5375583016C389901DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 1711;
+		state = 2;
+	};
+	F571FE4A0179695001DC9062 = {
+		fileReference = F5375558016C376E01DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 176;
+		state = 2;
+	};
+	F571FE4B01796A1201DC9062 = {
+		fileReference = F5375548016C376E01DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 278;
+		state = 2;
+	};
+	F571FE4C01796B1101DC9062 = {
+		fileReference = F5375558016C376E01DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 173;
+		state = 2;
+	};
+	F571FE4D01796CAF01DC9062 = {
+		fileReference = F5375558016C376E01DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 230;
+		state = 2;
+	};
+	F571FE4E01796F9201DC9062 = {
+		fileReference = F53755C8016C389901DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 408;
+		state = 2;
+	};
+	F571FE4F0179702301DC9062 = {
+		fileReference = F537559A016C389901DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 444;
+		state = 2;
+	};
+	F571FE500179702301DC9062 = {
+		fileReference = F537559A016C389901DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 469;
+		state = 2;
+	};
+	F5B2CDC10175829501DC9062 = {
+		fileReference = F5375583016C389901DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 2584;
+		state = 2;
+	};
+}

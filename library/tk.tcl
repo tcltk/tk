@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.31 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.31.2.1 2001/10/15 09:22:00 wolfsuit Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -13,9 +13,9 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Insist on running with compatible versions of Tcl and Tk.
+
 package require -exact Tk 8.4
 package require -exact Tcl 8.4
-
 if { ![interp issafe] } {
     package require msgcat
     ::msgcat::mcload [file join $::tk_library msgs]
@@ -232,7 +232,7 @@ proc ::tk::ScreenChanged screen {
 	selectMode	char
     }
     set Priv(screen) $screen
-    set Priv(tearoff) [string equal $tcl_platform(platform) "unix"]
+    set Priv(tearoff) [string equal $tcl_platform(windowingsystem) "x11"]
     set Priv(window) {}
 }
 
@@ -307,8 +307,8 @@ if {[string equal [info command tk_chooseDirectory] ""]} {
 # Define the set of common virtual events.
 #----------------------------------------------------------------------
 
-switch $::tcl_platform(platform) {
-    "unix" {
+switch $tcl_platform(windowingsystem) {
+    "x11" {
 	event add <<Cut>> <Control-Key-x> <Key-F20> 
 	event add <<Copy>> <Control-Key-c> <Key-F16>
 	event add <<Paste>> <Control-Key-v> <Key-F18>
@@ -323,22 +323,29 @@ switch $::tcl_platform(platform) {
 	    switch $tcl_platform(os) {
 		"IRIX"  -
 		"Linux" { event add <<PrevWindow>> <ISO_Left_Tab> }
-		"HP-UX" {
-		    # This seems to be correct on *some* HP systems.
-		    catch { event add <<PrevWindow>> <hpBackTab> }
-		}
+                "HP-UX" {
+                    # This seems to be correct on *some* HP systems.
+                    catch { event add <<PrevWindow>> <hpBackTab> }
+                }
 	    }
 	}
 	trace variable ::tk_strictMotif w ::tk::EventMotifBindings
 	set ::tk_strictMotif $::tk_strictMotif
     }
-    "windows" {
+    "win32" {
 	event add <<Cut>> <Control-Key-x> <Shift-Key-Delete>
 	event add <<Copy>> <Control-Key-c> <Control-Key-Insert>
 	event add <<Paste>> <Control-Key-v> <Shift-Key-Insert>
 	event add <<PasteSelection>> <ButtonRelease-2>
     }
-    "macintosh" {
+    "aqua" {
+	event add <<Cut>> <Control-Key-x> <Key-F2> 
+	event add <<Copy>> <Control-Key-c> <Key-F3>
+	event add <<Paste>> <Control-Key-v> <Key-F4>
+	event add <<PasteSelection>> <ButtonRelease-2>
+	event add <<Clear>> <Clear>
+    }
+    "classic" {
 	event add <<Cut>> <Control-Key-x> <Key-F2> 
 	event add <<Copy>> <Control-Key-c> <Key-F3>
 	event add <<Paste>> <Control-Key-v> <Key-F4>
@@ -346,12 +353,12 @@ switch $::tcl_platform(platform) {
 	event add <<Clear>> <Clear>
     }
 }
+
 # ----------------------------------------------------------------------
 # Read in files that define all of the class bindings.
 # ----------------------------------------------------------------------
-
-if {[string compare $::tcl_platform(platform) "macintosh"] && \
-	[string compare {} $::tk_library]} {
+if {[string compare $tcl_platform(platform) "macintosh"] && \
+	[string compare {} $tk_library]} {
     source [file join $::tk_library button.tcl]
     source [file join $::tk_library entry.tcl]
     source [file join $::tk_library listbox.tcl]
@@ -361,6 +368,7 @@ if {[string compare $::tcl_platform(platform) "macintosh"] && \
     source [file join $::tk_library spinbox.tcl]
     source [file join $::tk_library text.tcl]
 }
+
 # ----------------------------------------------------------------------
 # Default bindings for keyboard traversal.
 # ----------------------------------------------------------------------
@@ -399,3 +407,10 @@ proc ::tk::TabToWindow {w} {
     focus $w
 }
 
+# For now, turn off the custom mdef proc for the mac:
+
+if {[string equal $tcl_platform(windowingsystem) "aqua"]} {
+    namespace eval ::tk::mac {
+        set useCustomMDEF 0
+    }
+}

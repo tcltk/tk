@@ -4,7 +4,7 @@
 # checkbutton, and radiobutton widgets and provides procedures
 # that help in implementing those bindings.
 #
-# RCS: @(#) $Id: button.tcl,v 1.11 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: button.tcl,v 1.11.2.1 2001/10/15 09:22:00 wolfsuit Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -17,7 +17,8 @@
 # The code below creates the default class bindings for buttons.
 #-------------------------------------------------------------------------
 
-if {[string match "macintosh" $tcl_platform(platform)]} {
+if {[string equal $tcl_platform(windowingsystem) "classic"]
+        || [string equal $tcl_platform(windowingsystem) "aqua"]} {
     bind Radiobutton <Enter> {
 	tk::ButtonEnter %W
     }
@@ -67,7 +68,7 @@ if {[string match "windows" $tcl_platform(platform)]} {
 	tk::CheckRadioEnter %W
     }
 }
-if {[string match "unix" $tcl_platform(platform)]} {
+if {[string match "x11" $tcl_platform(windowingsystem)]} {
     bind Checkbutton <Return> {
 	if {!$tk_strictMotif} {
 	    tk::CheckRadioInvoke %W
@@ -303,7 +304,7 @@ proc ::tk::ButtonUp w {
 
 }
 
-if {[string match "unix" $tcl_platform(platform)]} {
+if {[string match "x11" $tcl_platform(windowingsystem)]} {
 
 #####################
 # Unix implementation
@@ -438,7 +439,8 @@ proc ::tk::ButtonUp w {
 
 }
 
-if {[string match "macintosh" $tcl_platform(platform)]} {
+if {[string equal $tcl_platform(windowingsystem) "classic"]
+        || [string equal $tcl_platform(windowingsystem) "aqua"]} {
 
 ####################
 # Mac implementation

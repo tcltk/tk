@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.20 2001/09/21 21:19:02 hobbs Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.20.2.1 2001/10/15 09:22:00 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -22,6 +22,8 @@
 #include "tkWinInt.h"
 #elif defined(MAC_TCL)
 #include "tkMacInt.h"
+#elif defined(MAC_OSX_TCL) 
+#include "tkMacOSXInt.h"
 #else
 #include "tkUnixInt.h"
 #endif
@@ -305,7 +307,6 @@ TkBindEventProc(winPtr, eventPtr)
  *
  *----------------------------------------------------------------------
  */
-
 int
 Tk_BindtagsObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Main window associated with interpreter. */
@@ -390,7 +391,7 @@ Tk_BindtagsObjCmd(clientData, interp, objc, objv)
     }
     return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *

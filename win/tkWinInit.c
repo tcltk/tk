@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInit.c,v 1.4 2000/03/31 09:24:27 hobbs Exp $
+ * RCS: @(#) $Id: tkWinInit.c,v 1.4.8.1 2001/10/15 09:22:01 wolfsuit Exp $
  */
 
 #include "tkWinInt.h"
@@ -48,6 +48,7 @@ TkpInit(interp)
      * otherwise because TkWinXInit flips a static bit to do
      * its work just once.
      */
+    Tcl_SetVar2(interp, "tcl_platform", "windowingsystem", "win32", TCL_GLOBAL_ONLY);
     TkWinXInit(GetModuleHandle(NULL));
     return Tcl_Eval(interp, initScript);
 }

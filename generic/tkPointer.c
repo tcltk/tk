@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPointer.c,v 1.4 1999/04/16 01:51:21 stanton Exp $
+ * RCS: @(#) $Id: tkPointer.c,v 1.4.18.1 2001/10/15 09:22:00 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -20,7 +20,7 @@
 #include "tkWinInt.h"
 #endif
 
-#ifdef MAC_TCL
+#if defined(MAC_TCL) || defined(MAC_OSX_TCL)
 #define Cursor XCursor
 #endif
 

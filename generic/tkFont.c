@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.12 2001/08/15 15:44:36 dkf Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.12.2.1 2001/10/15 09:22:00 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -3683,3 +3683,31 @@ TkDebugFont(tkwin, name)
     }
     return resultPtr;
 }
+
+int
+Tk_GetFirstTextLayout(
+    Tk_TextLayout layout,	/* Layout information, from a previous call
+				 * to Tk_ComputeTextLayout(). */
+    Tk_Font * font,
+    char    * dst
+)
+{
+    TextLayout  *layoutPtr;
+    LayoutChunk *chunkPtr;
+    int numDisplayChars;
+
+    layoutPtr = (TextLayout *)layout;
+    if (layoutPtr==NULL) {
+        return 0;
+    }
+    if (layoutPtr->numChunks==0) {
+        return 0;
+    }
+    chunkPtr = layoutPtr->chunks;
+    numDisplayChars = chunkPtr->numDisplayChars;
+    strncpy(dst, chunkPtr->start, numDisplayChars);
+    *font = layoutPtr->tkfont;
+    return numDisplayChars;
+}
+
+

@@ -9,12 +9,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnix3d.c,v 1.5 2000/04/14 01:36:35 ericm Exp $
+ * RCS: @(#) $Id: tkUnix3d.c,v 1.5.8.1 2001/10/15 09:22:00 wolfsuit Exp $
  */
 
 #include <tk3d.h>
 
-#if !defined(__WIN32__) && !defined(MAC_TCL)
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))
 #include "tkUnixInt.h"
 #endif
 

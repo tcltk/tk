@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacInit.c,v 1.3 1999/04/16 01:51:31 stanton Exp $
+ * RCS: @(#) $Id: tkMacInit.c,v 1.3.18.1 2001/10/15 09:22:00 wolfsuit Exp $
  */
 
 #include <Resources.h>
@@ -82,6 +82,7 @@ TkpInit(
 	    error $msg\n\
 	}";
 
+    Tcl_SetVar2(interp, "tcl_platform", "windowingsystem", "classic", TCL_GLOBAL_ONLY);
     Tcl_DStringInit(&path);
 
     /*

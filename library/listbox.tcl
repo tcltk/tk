@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: listbox.tcl,v 1.12 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: listbox.tcl,v 1.12.2.1 2001/10/15 09:22:00 wolfsuit Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -183,7 +183,7 @@ bind Listbox <MouseWheel> {
     %W yview scroll [expr {- (%D / 120) * 4}] units
 }
 
-if {[string equal "unix" $tcl_platform(platform)]} {
+if {[string equal "x11" $tcl_platform(windowingsystem)]} {
     # Support for mousewheels on Linux/Unix commonly comes through mapping
     # the wheel to the extended buttons.  If you have a mousewheel, find
     # Linux configuration info at:

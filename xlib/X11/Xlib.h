@@ -27,12 +27,18 @@
 
 #define XlibSpecificationRelease 5
 
+#if !defined(MAC_TCL) && !defined(MAC_OSX_TCL)
+#   include <X11/X.h>
+#endif
 #ifdef MAC_TCL
 #   include <X.h>
 #   define Cursor XCursor
 #   define Region XRegion
-#else
+#endif
+#ifdef MAC_OSX_TCL
 #   include <X11/X.h>
+#   define Cursor XCursor
+#   define Region XRegion
 #endif
 
 /* applications should not depend on these two headers being included! */
@@ -58,7 +64,8 @@ typedef unsigned long wchar_t;
 typedef char *XPointer;
 
 #define Bool int
-#ifdef MAC_TCL
+#if defined(MAC_TCL) || defined(MAC_OSX_TCL)
+/* Use define rather than typedef, since may need to undefine this later */
 #define Status int
 #else
 typedef int Status;
@@ -1199,7 +1206,7 @@ _XFUNCPROTOBEGIN
 
 _XFUNCPROTOEND
 
-#ifdef MAC_TCL
+#if defined(MAC_TCL) || defined(MAC_OSX_TCL)
 #   undef Cursor
 #   undef Region
 #endif

@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.15 2001/09/26 20:25:17 pspjuth Exp $
+# RCS: @(#) $Id: tk.decls,v 1.15.2.1 2001/10/15 09:22:00 wolfsuit Exp $
 
 library tk
 
@@ -1245,3 +1245,62 @@ declare 10 mac {
     GWorldPtr TkMacGetDrawablePort (Drawable drawable)
 }
 
+# Mac OS X specific functions
+
+declare 0 macosx {
+    void Tk_MacOSXSetEmbedHandler ( \
+	    Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr, \
+	    Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr, \
+	    Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr, \
+	    Tk_MacOSXEmbedGetClipProc *getClipProc, \
+	    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
+}
+ 
+declare 1 macosx {
+    void Tk_MacOSXTurnOffMenus (void)
+}
+
+declare 2 macosx {
+    void Tk_MacOSXTkOwnsCursor (int tkOwnsIt)
+}
+
+declare 3 macosx {
+    void TkMacOSXInitMenus (Tcl_Interp *interp)
+}
+
+declare 4 macosx {
+    void TkMacOSXInitAppleEvents (Tcl_Interp *interp)
+}
+
+declare 5 macosx {
+    void TkGenWMConfigureEvent (Tk_Window tkwin, \
+	    int x, int y, int width, int height, int flags)
+}
+
+declare 6 macosx {
+    void TkMacOSXInvalClipRgns (TkWindow *winPtr)
+}
+
+declare 7 macosx {
+    GWorldPtr TkMacOSXGetDrawablePort (Drawable drawable)
+}
+
+declare 8 macosx {
+    ControlRef TkMacOSXGetRootControl (Drawable drawable)
+}
+
+declare 9 macosx {
+    int Tk_MacOSXOpenBundleResources (Tcl_Interp *interp, \
+        char *bundleName, \
+        char *libraryPath, \
+        int  maxPathLen, \
+        int hasResourceFile)
+}
+
+declare 10 macosx {
+    void Tk_MacOSXSetupTkNotifier (void)
+}
+
+declare 11 macosx {
+    int Tk_MacOSXIsAppInFront (void)
+}

@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk spinbox widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: spinbox.tcl,v 1.3 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: spinbox.tcl,v 1.3.2.1 2001/10/15 09:22:00 wolfsuit Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -55,7 +55,7 @@ bind Spinbox <<Copy>> {
 bind Spinbox <<Paste>> {
     global tcl_platform
     catch {
-	if {[string compare $tcl_platform(platform) "unix"]} {
+	if {[string compare $tcl_platform(windowingsystem) "x11"]} {
 	    catch {
 		%W delete sel.first sel.last
 	    }
@@ -210,7 +210,8 @@ bind Spinbox <Escape> {# nothing}
 bind Spinbox <Return> {# nothing}
 bind Spinbox <KP_Enter> {# nothing}
 bind Spinbox <Tab> {# nothing}
-if {[string equal $tcl_platform(platform) "macintosh"]} {
+if {[string equal $tcl_platform(windowingsystem) "classic"]
+        || [string equal $tcl_platform(windowingsystem) "aqua"]} {
 	bind Spinbox <Command-KeyPress> {# nothing}
 }
 

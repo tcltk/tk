@@ -9,13 +9,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.6 2000/09/06 19:02:16 hobbs Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.6.6.1 2001/10/15 09:22:00 wolfsuit Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
 
-#if !defined(__WIN32__) && !defined(MAC_TCL)
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))
 #include "tkUnixInt.h"
 #endif
 
@@ -432,7 +432,6 @@ Tk_Grab(interp, tkwin, grabGlobal)
 	}
 	Tk_Ungrab((Tk_Window) dispPtr->eventualGrabWinPtr);
     }
-
     Tk_MakeWindowExist(tkwin);
     if (!grabGlobal) {
 	Window dummy1, dummy2;
@@ -480,7 +479,7 @@ Tk_Grab(interp, tkwin, grabGlobal)
 
 	grabResult = 0;			/* Needed only to prevent gcc
 					 * compiler warnings. */
-	for (numTries = 0; numTries < 10; numTries++) {
+    	for (numTries = 0; numTries < 10; numTries++) {
 	    grabResult = XGrabPointer(dispPtr->display, winPtr->window,
 		    True, ButtonPressMask|ButtonReleaseMask|ButtonMotionMask
 		    |PointerMotionMask, GrabModeAsync, GrabModeAsync, None,
