@@ -1,3 +1,12 @@
+2002-07-04  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/bgerror.tcl (bgerror): Stopped the bgerror dialog from
+	getting wider than the screen; in theory really long messages
+	could make it become taller than the screen now, but that's much
+	less likely to happen.  Also trimmed a little bit of internal
+	space so that the icon-message gap is the same as the icon-frame
+	and message-frame gaps.
+
 2002-07-01  Don Porter <dgp@users.sf.net>
 
 	* unix/configure:
