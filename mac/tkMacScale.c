@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacScale.c,v 1.3 1999/05/22 06:35:05 jingham Exp $
+ * RCS: @(#) $Id: tkMacScale.c,v 1.4 1999/12/22 20:01:10 hobbs Exp $
  */
 
 #include "tkScale.h"
@@ -146,7 +146,8 @@ TkpDisplayScale(clientData)
     CGrafPtr saveWorld;
     GDHandle saveDevice;
     MacDrawable *macDraw;
-    
+
+    scalePtr->flags &= ~REDRAW_PENDING;
     if ((scalePtr->tkwin == NULL) || !Tk_IsMapped(scalePtr->tkwin)) {
 	goto done;
     }
@@ -168,7 +169,7 @@ TkpDisplayScale(clientData)
 	Tcl_Release((ClientData) interp);
     }
     scalePtr->flags &= ~INVOKE_COMMAND;
-    if (scalePtr->tkwin == NULL) {
+    if (scalePtr->flags & SCALE_DELETED) {
 	Tcl_Release((ClientData) scalePtr);
 	return;
     }
@@ -183,12 +184,9 @@ TkpDisplayScale(clientData)
     if (scalePtr->highlightWidth != 0) {
 	GC gc;
     
-	if (scalePtr->flags & GOT_FOCUS) {
-	    gc = Tk_GCForColor(scalePtr->highlightColorPtr, Tk_WindowId(tkwin));
-	} else {
-	    gc = Tk_GCForColor(scalePtr->highlightColorPtr, Tk_WindowId(tkwin));
-	}
-	Tk_DrawFocusHighlight(tkwin, gc, scalePtr->highlightWidth, Tk_WindowId(tkwin));
+	gc = Tk_GCForColor(scalePtr->highlightColorPtr, Tk_WindowId(tkwin));
+	Tk_DrawFocusHighlight(tkwin, gc, scalePtr->highlightWidth,
+		Tk_WindowId(tkwin));
     }
     Tk_Draw3DRectangle(tkwin, Tk_WindowId(tkwin), scalePtr->bgBorder,
 	    scalePtr->highlightWidth, scalePtr->highlightWidth,

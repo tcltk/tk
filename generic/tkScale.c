@@ -18,7 +18,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.9 1999/12/21 23:55:11 hobbs Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.10 1999/12/22 20:01:07 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1084,6 +1084,7 @@ ScaleCmdDeletedProc(clientData)
      */
 
     if (!(scalePtr->flags & SCALE_DELETED)) {
+	scalePtr->flags |= SCALE_DELETED;
 	Tk_DestroyWindow(tkwin);
     }
 }
@@ -1114,11 +1115,11 @@ TkEventuallyRedrawScale(scalePtr, what)
 				 * or REDRAW_ALL. */
 {
     if ((what == 0) || (scalePtr->tkwin == NULL)
-	    || (scalePtr->flags & SCALE_DELETED)
 	    || !Tk_IsMapped(scalePtr->tkwin)) {
 	return;
     }
-    if ((scalePtr->flags & REDRAW_ALL) == 0) {
+    if (!(scalePtr->flags & REDRAW_PENDING)) {
+	scalePtr->flags |= REDRAW_PENDING;
 	Tcl_DoWhenIdle(TkpDisplayScale, (ClientData) scalePtr);
     }
     scalePtr->flags |= what;
