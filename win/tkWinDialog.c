@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.7 2000/03/16 03:20:52 sven Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.8 2000/03/31 09:24:26 hobbs Exp $
  *
  */
 
@@ -110,12 +110,17 @@ static UINT APIENTRY	ChooseDirectoryHookProc(HWND hdlg, UINT uMsg,
 			    WPARAM wParam, LPARAM lParam);
 static UINT CALLBACK	ColorDlgHookProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
-static int 		GetFileName(ClientData clientData, 
+static int 		GetFileNameA(ClientData clientData, 
+			    Tcl_Interp *interp, int objc, 
+			    Tcl_Obj *CONST objv[], int isOpen);
+static int 		GetFileNameW(ClientData clientData, 
 			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[], int isOpen);
 static int 		MakeFilter(Tcl_Interp *interp, char *string, 
 			    Tcl_DString *dsPtr);
 static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam, 
+			    LPARAM lParam);
+static UINT APIENTRY	OFNHookProcW(HWND hdlg, UINT uMsg, WPARAM wParam, 
 			    LPARAM lParam);
 static void		SetTkDialog(ClientData clientData);
 static int		TrySetDirectory(HWND hwnd, const TCHAR *dir);
@@ -384,7 +389,11 @@ Tk_GetOpenFileObjCmd(clientData, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    return GetFileName(clientData, interp, objc, objv, 1);
+    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
+	return GetFileNameW(clientData, interp, objc, objv, 1);
+    } else {
+	return GetFileNameA(clientData, interp, objc, objv, 1);
+    }
 }
 
 /*
@@ -411,13 +420,17 @@ Tk_GetSaveFileObjCmd(clientData, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    return GetFileName(clientData, interp, objc, objv, 0);
+    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
+	return GetFileNameW(clientData, interp, objc, objv, 0);
+    } else {
+	return GetFileNameA(clientData, interp, objc, objv, 0);
+    }
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * GetFileName --
+ * GetFileNameW --
  *
  *	Calls GetOpenFileName() or GetSaveFileName().
  *
@@ -431,7 +444,314 @@ Tk_GetSaveFileObjCmd(clientData, interp, objc, objv)
  */
 
 static int 
-GetFileName(clientData, interp, objc, objv, open)
+GetFileNameW(clientData, interp, objc, objv, open)
+    ClientData clientData;	/* Main window associated with interpreter. */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
+    int open;			/* 1 to call GetOpenFileName(), 0 to 
+				 * call GetSaveFileName(). */
+{
+    Tcl_Encoding unicodeEncoding = Tcl_GetEncoding(NULL, "unicode");
+    OPENFILENAMEW ofn;
+    WCHAR file[MAX_PATH];
+    int result, winCode, oldMode, i;
+    char *extension, *filter, *title;
+    Tk_Window tkwin;
+    HWND hWnd;
+    Tcl_DString utfFilterString, utfDirString;
+    Tcl_DString extString, filterString, dirString, titleString;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    static char *optionStrings[] = {
+	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
+	"-parent",	"-title",	NULL
+    };
+    enum options {
+	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR,	FILE_INITFILE,
+	FILE_PARENT,	FILE_TITLE
+    };
+
+    result = TCL_ERROR;
+    file[0] = '\0';
+
+    /*
+     * Parse the arguments.
+     */
+
+    extension = NULL;
+    filter = NULL;
+    Tcl_DStringInit(&utfFilterString);
+    Tcl_DStringInit(&utfDirString);
+    tkwin = (Tk_Window) clientData;
+    title = NULL;
+
+    for (i = 1; i < objc; i += 2) {
+	int index;
+	char *string;
+	Tcl_Obj *optionPtr, *valuePtr;
+
+	optionPtr = objv[i];
+	valuePtr = objv[i + 1];
+
+	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings, "option", 
+		0, &index) != TCL_OK) {
+	    goto end;
+	}
+	if (i + 1 == objc) {
+	    string = Tcl_GetStringFromObj(optionPtr, NULL);
+	    Tcl_AppendResult(interp, "value for \"", string, "\" missing", 
+		    (char *) NULL);
+	    goto end;
+	}
+
+	string = Tcl_GetStringFromObj(valuePtr, NULL);
+	switch ((enum options) index) {
+	    case FILE_DEFAULT: {
+		if (string[0] == '.') {
+		    string++;
+		}
+		extension = string;
+		break;
+	    }
+	    case FILE_TYPES: {
+		Tcl_DStringFree(&utfFilterString);
+		if (MakeFilter(interp, string, &utfFilterString) != TCL_OK) {
+		    goto end;
+		}
+		filter = Tcl_DStringValue(&utfFilterString);
+		break;
+	    }
+	    case FILE_INITDIR: {
+		Tcl_DStringFree(&utfDirString);
+		if (Tcl_TranslateFileName(interp, string, 
+			&utfDirString) == NULL) {
+		    goto end;
+		}
+		break;
+	    }
+	    case FILE_INITFILE: {
+		Tcl_DString ds;
+
+		if (Tcl_TranslateFileName(interp, string, &ds) == NULL) {
+		    goto end;
+		}
+		Tcl_UtfToExternal(NULL, unicodeEncoding, Tcl_DStringValue(&ds), 
+			Tcl_DStringLength(&ds), 0, NULL, (char *) file, 
+			sizeof(file), NULL, NULL, NULL);
+		break;
+	    }
+	    case FILE_PARENT: {
+		tkwin = Tk_NameToWindow(interp, string, tkwin);
+		if (tkwin == NULL) {
+		    goto end;
+		}
+		break;
+	    }
+	    case FILE_TITLE: {
+		title = string;
+		break;
+	    }
+	}
+    }
+
+    if (filter == NULL) {
+	if (MakeFilter(interp, "", &utfFilterString) != TCL_OK) {
+	    goto end;
+	}
+    }
+
+    Tk_MakeWindowExist(tkwin);
+    hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
+
+    ofn.lStructSize		= sizeof(ofn);
+    ofn.hwndOwner		= hWnd;
+    ofn.hInstance		= (HINSTANCE) GetWindowLong(ofn.hwndOwner, 
+					GWL_HINSTANCE);
+    ofn.lpstrFilter		= NULL;
+    ofn.lpstrCustomFilter	= NULL;
+    ofn.nMaxCustFilter		= 0;
+    ofn.nFilterIndex		= 0;
+    ofn.lpstrFile		= (WCHAR *) file;
+    ofn.nMaxFile		= MAX_PATH;
+    ofn.lpstrFileTitle		= NULL;
+    ofn.nMaxFileTitle		= 0;
+    ofn.lpstrInitialDir		= NULL;
+    ofn.lpstrTitle		= NULL;
+    ofn.Flags			= OFN_HIDEREADONLY | OFN_PATHMUSTEXIST 
+				  | OFN_NOCHANGEDIR | OFN_EXPLORER;
+    ofn.nFileOffset		= 0;
+    ofn.nFileExtension		= 0;
+    ofn.lpstrDefExt		= NULL;
+    ofn.lpfnHook		= OFNHookProcW;
+    ofn.lCustData		= (LPARAM) interp;
+    ofn.lpTemplateName		= NULL;
+
+    if (open != 0) {
+	ofn.Flags |= OFN_FILEMUSTEXIST;
+    } else {
+	ofn.Flags |= OFN_OVERWRITEPROMPT;
+    }
+
+    if (tsdPtr->debugFlag != 0) {
+	ofn.Flags |= OFN_ENABLEHOOK;
+    }
+
+    if (extension != NULL) {
+	Tcl_UtfToExternalDString(unicodeEncoding, extension, -1, &extString);
+	ofn.lpstrDefExt = (WCHAR *) Tcl_DStringValue(&extString);
+    }
+
+    Tcl_UtfToExternalDString(unicodeEncoding, Tcl_DStringValue(&utfFilterString),
+	    Tcl_DStringLength(&utfFilterString), &filterString);
+    ofn.lpstrFilter = (WCHAR *) Tcl_DStringValue(&filterString);
+
+    if (Tcl_DStringValue(&utfDirString)[0] != '\0') {
+	Tcl_UtfToExternalDString(unicodeEncoding, Tcl_DStringValue(&utfDirString),
+		Tcl_DStringLength(&utfDirString), &dirString);
+        ofn.lpstrInitialDir = (WCHAR *) Tcl_DStringValue(&dirString);
+    }
+
+    if (title != NULL) {
+	Tcl_UtfToExternalDString(unicodeEncoding, title, -1, &titleString);
+	ofn.lpstrTitle = (WCHAR *) Tcl_DStringValue(&titleString);
+    }
+
+    /*
+     * Popup the dialog.
+     */
+
+    oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
+    if (open != 0) {
+	winCode = GetOpenFileNameW(&ofn);
+    } else {
+	winCode = GetSaveFileNameW(&ofn);
+    }
+    Tcl_SetServiceMode(oldMode);
+
+    /*
+     * Ensure that hWnd is enabled, because it can happen that we
+     * have updated the wrapper of the parent, which causes us to
+     * leave this child disabled (Windows loses sync).
+     */
+    EnableWindow(hWnd, 1);
+
+    /*
+     * Clear the interp result since anything may have happened during the
+     * modal loop.
+     */
+
+    Tcl_ResetResult(interp);
+
+    /*
+     * Process the results.
+     */
+
+    if (winCode != 0) {
+	char *p;
+	Tcl_DString ds;
+
+	Tcl_ExternalToUtfDString(unicodeEncoding, (char *) ofn.lpstrFile, -1, &ds);
+	for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
+	    /*
+	     * Change the pathname to the Tcl "normalized" pathname, where
+	     * back slashes are used instead of forward slashes
+	     */
+	    if (*p == '\\') {
+		*p = '/';
+	    }
+	}
+	Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
+	Tcl_DStringFree(&ds);
+    }
+
+    if (ofn.lpstrTitle != NULL) {
+	Tcl_DStringFree(&titleString);
+    }
+    if (ofn.lpstrInitialDir != NULL) {
+	Tcl_DStringFree(&dirString);
+    }
+    Tcl_DStringFree(&filterString);
+    if (ofn.lpstrDefExt != NULL) {
+	Tcl_DStringFree(&extString);
+    }
+    result = TCL_OK;
+
+    end:
+    Tcl_DStringFree(&utfDirString);
+    Tcl_DStringFree(&utfFilterString);
+
+    return result;
+}
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * OFNHookProcW --
+ *
+ *	Hook procedure called only if debugging is turned on.  Sets
+ *	the "tk_dialog" variable when the dialog is ready to receive
+ *	messages.
+ *
+ * Results:
+ *	Returns 0 to allow default processing of messages to occur.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------------
+ */
+
+static UINT APIENTRY 
+OFNHookProcW(
+    HWND hdlg,		// handle to child dialog window
+    UINT uMsg,		// message identifier
+    WPARAM wParam,	// message parameter
+    LPARAM lParam) 	// message parameter
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    OPENFILENAMEW *ofnPtr;
+
+    if (uMsg == WM_INITDIALOG) {
+	SetWindowLong(hdlg, GWL_USERDATA, lParam);
+    } else if (uMsg == WM_WINDOWPOSCHANGED) {
+	/*
+	 * This message is delivered at the right time to enable Tk
+	 * to set the debug information.  Unhooks itself so it 
+	 * won't set the debug information every time it gets a 
+	 * WM_WINDOWPOSCHANGED message.
+	 */
+
+        ofnPtr = (OPENFILENAMEW *) GetWindowLong(hdlg, GWL_USERDATA);
+	if (ofnPtr != NULL) {
+	    hdlg = GetParent(hdlg);
+	    tsdPtr->debugInterp = (Tcl_Interp *) ofnPtr->lCustData;
+	    Tcl_DoWhenIdle(SetTkDialog, (ClientData) hdlg);
+	    SetWindowLong(hdlg, GWL_USERDATA, (LPARAM) NULL);
+	}
+    }
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetFileNameA --
+ *
+ *	Calls GetOpenFileName() or GetSaveFileName().
+ *
+ * Results:
+ *	See user documentation.
+ *
+ * Side effects:
+ *	See user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int 
+GetFileNameA(clientData, interp, objc, objv, open)
     ClientData clientData;	/* Main window associated with interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int objc;			/* Number of arguments. */
@@ -565,23 +885,13 @@ GetFileName(clientData, interp, objc, objv, open)
     ofn.lpstrInitialDir		= NULL;
     ofn.lpstrTitle		= NULL;
     ofn.Flags			= OFN_HIDEREADONLY | OFN_PATHMUSTEXIST 
-				  | OFN_NOCHANGEDIR;
+				  | OFN_NOCHANGEDIR | OFN_EXPLORER;
     ofn.nFileOffset		= 0;
     ofn.nFileExtension		= 0;
     ofn.lpstrDefExt		= NULL;
     ofn.lpfnHook		= OFNHookProc;
     ofn.lCustData		= (LPARAM) interp;
     ofn.lpTemplateName		= NULL;
-
-    if (LOBYTE(LOWORD(GetVersion())) >= 4) {
-	/*
-	 * Use the "explorer" style file selection box on platforms that
-	 * support it (Win95 and NT4.0 both have a major version number
-	 * of 4).
-	 */
-
-	ofn.Flags |= OFN_EXPLORER;
-    }
 
     if (open != 0) {
 	ofn.Flags |= OFN_FILEMUSTEXIST;
@@ -988,7 +1298,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     ofn.nMaxFileTitle		= 0;
     ofn.lpstrInitialDir		= NULL;
     ofn.lpstrTitle		= NULL;
-    ofn.Flags			= OFN_HIDEREADONLY  
+    ofn.Flags			= OFN_HIDEREADONLY
 				  | OFN_ENABLEHOOK | OFN_ENABLETEMPLATE;
     ofn.nFileOffset		= 0;
     ofn.nFileExtension		= 0;

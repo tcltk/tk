@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinScrlbr.c,v 1.4 2000/01/13 02:07:27 hobbs Exp $
+ * RCS: @(#) $Id: tkWinScrlbr.c,v 1.5 2000/03/31 09:24:27 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -177,11 +177,7 @@ UpdateScrollbar(scrollPtr)
     scrollInfo.nMin = 0;
     scrollInfo.nMax = MAX_SCROLL;
     thumbSize = (scrollPtr->info.lastFraction - scrollPtr->info.firstFraction);
-    if (tkpIsWin32s) {
-	scrollInfo.nPage = 0;
-    } else {
-	scrollInfo.nPage = ((UINT) (thumbSize * (double) MAX_SCROLL)) + 1;
-    } 
+    scrollInfo.nPage = ((UINT) (thumbSize * (double) MAX_SCROLL)) + 1;
     if (thumbSize < 1.0) {
 	scrollInfo.nPos = (int)
 	    ((scrollPtr->info.firstFraction / (1.0-thumbSize))

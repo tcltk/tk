@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.8 2000/03/02 23:52:37 hobbs Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.9 2000/03/31 09:24:27 hobbs Exp $
  */
 
 #ifndef _TKWININT
@@ -48,6 +48,7 @@
 
 typedef struct TkWinDCState {
     HPALETTE palette;
+    int bkmode;
 } TkWinDCState;
 
 /*
@@ -122,13 +123,6 @@ typedef struct {
 
 #define TK_WIN_TOPLEVEL_CLASS_NAME "TkTopLevel"
 #define TK_WIN_CHILD_CLASS_NAME "TkChild"
-
-/*
- * The following variable indicates whether we are restricted to Win32s
- * GDI calls.
- */
-
-extern int tkpIsWin32s;
 
 /*
  * The following variable is a translation table between X gc functions and

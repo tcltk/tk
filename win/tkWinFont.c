@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.8 2000/02/08 10:01:16 hobbs Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.9 2000/03/31 09:24:27 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -180,7 +180,6 @@ static Tcl_ThreadDataKey dataKey;
  * Information cached about the system at startup time.
  */
  
-static int platformId;
 static Tcl_Encoding unicodeEncoding;
 static Tcl_Encoding systemEncoding;
 
@@ -233,7 +232,7 @@ static int CALLBACK	WinFontFamilyEnumProc(ENUMLOGFONT *lfPtr,
  *
  *	This procedure is called when an application is created.  It
  *	initializes all the structures that are used by the 
- *	platform-dependant code on a per application basis.
+ *	platform-dependent code on a per application basis.
  *
  * Results:
  *	None.  
@@ -249,13 +248,8 @@ void
 TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
-    OSVERSIONINFO os;
-
-    os.dwOSVersionInfoSize = sizeof(os);
-    GetVersionEx(&os);
-    platformId = os.dwPlatformId;
     unicodeEncoding = Tcl_GetEncoding(NULL, "unicode");
-    if (platformId == VER_PLATFORM_WIN32_NT) {
+    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	/*
 	 * If running NT, then we will be calling some Unicode functions 
 	 * explictly.  So, even if the Tcl system encoding isn't Unicode, 
@@ -493,7 +487,7 @@ TkpGetFontFamilies(
      * EnumFontFamilies because it only exists under NT.
      */
 
-    if (platformId == VER_PLATFORM_WIN32_NT) {
+    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	EnumFontFamiliesW(hdc, NULL, (FONTENUMPROCW) WinFontFamilyEnumProc,
 		(LPARAM) interp);
     } else {
@@ -1051,7 +1045,7 @@ InitFont(
      * version of GetTextFace because it only exists under NT.
      */
 
-    if (platformId == VER_PLATFORM_WIN32_NT) {
+    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	GetTextFaceW(hdc, LF_FACESIZE, (WCHAR *) buf);
     } else {
 	GetTextFaceA(hdc, LF_FACESIZE, (char *) buf);
@@ -1228,7 +1222,7 @@ AllocFontFamily(
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     hFont = SelectObject(hdc, hFont);
-    if (platformId == VER_PLATFORM_WIN32_NT) {
+    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	GetTextFaceW(hdc, LF_FACESIZE, (WCHAR *) buf);
     } else {
 	GetTextFaceA(hdc, LF_FACESIZE, (char *) buf);
@@ -1493,7 +1487,7 @@ FindSubFontForChar(
     canUse.nameTriedPtr = &ds;
     canUse.ch = ch;
     canUse.subFontPtr = NULL;
-    if (platformId == VER_PLATFORM_WIN32_NT) {
+    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	EnumFontFamiliesW(hdc, NULL, (FONTENUMPROCW) WinFontCanUseProc,
 		(LPARAM) &canUse);
     } else {
@@ -1960,7 +1954,7 @@ GetScreenFont(
 	Tcl_DStringSetLength(&ds, LF_FACESIZE);
     }
 
-    if (platformId == VER_PLATFORM_WIN32_NT) {
+    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	Tcl_UniChar *src, *dst;
 	src = (Tcl_UniChar *) Tcl_DStringValue(&ds);
 	dst = (Tcl_UniChar *) lf.lfFaceName;
@@ -2030,7 +2024,7 @@ FamilyExists(
      * non-zero value.
      */
 
-    if (platformId == VER_PLATFORM_WIN32_NT) {
+    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	result = EnumFontFamiliesW(hdc, (WCHAR *) Tcl_DStringValue(&faceString),
 		(FONTENUMPROCW) WinFontExistProc, 0);
     } else {

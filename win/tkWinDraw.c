@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.7 1999/12/14 06:53:54 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.8 2000/03/31 09:24:26 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -173,6 +173,7 @@ TkWinGetDrawableDC(display, d, state)
 	cmap = twdPtr->bitmap.colormap;
     }
     state->palette = TkWinSelectPalette(dc, cmap);
+    state->bkmode  = GetBkMode(dc);
     return dc;
 }
 
@@ -199,6 +200,7 @@ TkWinReleaseDrawableDC(d, dc, state)
     TkWinDCState *state;
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
+    SetBkMode(dc, state->bkmode);
     SelectPalette(dc, state->palette, TRUE);
     RealizePalette(dc);
     if (twdPtr->type == TWD_WINDOW) {
@@ -563,33 +565,7 @@ TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x,
 	
 	infoPtr->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	infoPtr->bmiHeader.biWidth = image->width;
-
-	/*
-	 * The following code works around a bug in Win32s.  CreateDIBitmap
-	 * fails under Win32s for top-down images.  So we have to reverse the
-	 * order of the scanlines.  If we are not running under Win32s, we can
-	 * just declare the image to be top-down.
-	 */
-
-	if (tkpIsWin32s) {
-	    int y;
-	    char *srcPtr, *dstPtr, *temp;
-
-	    temp = ckalloc((unsigned) image->bytes_per_line);
-	    srcPtr = image->data;
-	    dstPtr = image->data+(image->bytes_per_line * (image->height - 1));
-	    for (y = 0; y < (image->height/2); y++) {
-		memcpy(temp, srcPtr, image->bytes_per_line);
-		memcpy(srcPtr, dstPtr, image->bytes_per_line);
-		memcpy(dstPtr, temp, image->bytes_per_line);
-		srcPtr += image->bytes_per_line;
-		dstPtr -= image->bytes_per_line;
-	    }
-	    ckfree(temp);
-	    infoPtr->bmiHeader.biHeight = image->height; /* Bottom-up order */
-	} else {
-	    infoPtr->bmiHeader.biHeight = -image->height; /* Top-down order */
-	}
+	infoPtr->bmiHeader.biHeight = -image->height; /* Top-down order */
 	infoPtr->bmiHeader.biPlanes = 1;
 	infoPtr->bmiHeader.biBitCount = image->bits_per_pixel;
 	infoPtr->bmiHeader.biCompression = BI_RGB;
@@ -890,6 +866,7 @@ XDrawLines(display, d, gc, points, npoints, mode)
     dc = TkWinGetDrawableDC(display, d, &state);
 
     pen = SetUpGraphicsPort(gc);
+    SetBkMode(dc, TRANSPARENT);
     RenderObject(dc, gc, points, npoints, mode, pen, Polyline);
     DeleteObject(pen);
     
@@ -976,6 +953,7 @@ XDrawRectangle(display, d, gc, x, y, width, height)
     dc = TkWinGetDrawableDC(display, d, &state);
 
     pen = SetUpGraphicsPort(gc);
+    SetBkMode(dc, TRANSPARENT);
     oldPen = SelectObject(dc, pen);
     oldBrush = SelectObject(dc, GetStockObject(NULL_BRUSH));
     SetROP2(dc, tkpWinRopModes[gc->function]);
@@ -1146,6 +1124,7 @@ DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, fill)
 	 * it's only supported under Windows NT.
 	 */
 
+	SetBkMode(dc, TRANSPARENT);
 	Arc(dc, x, y, x+width+1, y+height+1, xstart, ystart, xend, yend);
     } else {
 	brush = CreateSolidBrush(gc->foreground);
@@ -1210,10 +1189,7 @@ SetUpGraphicsPort(gc)
     } else {
 	style = PS_SOLID;
     }
-    if (tkpIsWin32s || (gc->line_width < 2)) {
-	if (gc->line_width > 1) {
-	    style = PS_SOLID;
-	}
+    if (gc->line_width < 2) {
 	return CreatePen(style, gc->line_width, gc->foreground);
     } else {
 	LOGBRUSH lb;

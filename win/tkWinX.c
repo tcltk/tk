@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.7 1999/11/19 22:00:19 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.8 2000/03/31 09:24:27 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -22,12 +22,6 @@
 #include <zmouse.h>
 
 /*
- * Definitions of extern variables supplied by this file.
- */
-
-int tkpIsWin32s = -1;
-
-/*
  * Declarations of static variables used in this file.
  */
 
@@ -35,6 +29,7 @@ static char winScreenName[] = ":0"; /* Default name of windows display. */
 static HINSTANCE tkInstance;        /* Application instance handle. */
 static int childClassInitialized;   /* Registered child class? */
 static WNDCLASS childClass;	    /* Window class for child windows. */
+static int tkPlatformId;	    /* version of Windows platform */
 
 TCL_DECLARE_MUTEX(winXMutex)
 
@@ -84,16 +79,14 @@ TkGetServerInfo(interp, tkwin)
     Tk_Window tkwin;		/* Token for window;  this selects a
 				 * particular display and server. */
 {
-    char buffer[50];
-    OSVERSIONINFO info;
+    char buffer[60];
+    OSVERSIONINFO os;
 
-    info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx(&info);
-    sprintf(buffer, "Windows %d.%d %d ", info.dwMajorVersion,
-	    info.dwMinorVersion, info.dwBuildNumber);
-    Tcl_AppendResult(interp, buffer,
-	    (info.dwPlatformId == VER_PLATFORM_WIN32s) ? "Win32s" : "Win32",
-	    (char *) NULL);
+    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    GetVersionEx(&os);
+    sprintf(buffer, "Windows %d.%d %d Win32", os.dwMajorVersion,
+	    os.dwMinorVersion, os.dwBuildNumber);
+    Tcl_SetResult(interp, buffer, TCL_VOLATILE);
 }
 
 /*
@@ -138,11 +131,7 @@ void
 TkWinXInit(hInstance)
     HINSTANCE hInstance;
 {
-    OSVERSIONINFO info;
-
-    info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx(&info);
-    tkpIsWin32s = (info.dwPlatformId == VER_PLATFORM_WIN32s);
+    OSVERSIONINFO os;
 
     if (childClassInitialized != 0) {
 	return;
@@ -150,6 +139,10 @@ TkWinXInit(hInstance)
     childClassInitialized = 1;
 
     tkInstance = hInstance;
+
+    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    GetVersionEx(&os);
+    tkPlatformId = os.dwPlatformId;
 
     /*
      * When threads are enabled, we cannot use CLASSDC because
@@ -220,6 +213,32 @@ TkWinXCleanup(hInstance)
      */
     
     TkWinWmCleanup(hInstance);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinGetPlatformId --
+ *
+ *	Determines whether running under NT, 95, or Win32s, to allow 
+ *	runtime conditional code.
+ *
+ * Results:
+ *	The return value is one of:
+ *	    VER_PLATFORM_WIN32s		Win32s on Windows 3.1. 
+ *	    VER_PLATFORM_WIN32_WINDOWS	Win32 on Windows 95.
+ *	    VER_PLATFORM_WIN32_NT	Win32 on Windows NT
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int		
+TkWinGetPlatformId()
+{
+    return tkPlatformId;
 }
 
 /*

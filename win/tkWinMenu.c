@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.6 1999/09/15 22:35:42 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.7 2000/03/31 09:24:27 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -73,9 +73,6 @@ typedef struct ThreadSpecificData {
 				/* Need this to map HMENUs back to menuPtrs */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
-
-static OSVERSIONINFO versionInfo;
-				/* So we don't have to keep doing this */
 
 /*
  * The following are default menu value strings.
@@ -1527,8 +1524,7 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr, x,
 	    rect.right = mePtr->indicatorSpace + x;
 
 	    if ((mePtr->state == ENTRY_DISABLED)
-		    && (menuPtr->disabledFgPtr != NULL)
-		    && (versionInfo.dwMajorVersion >= 4)) {
+		    && (menuPtr->disabledFgPtr != NULL)) {
 		RECT hilightRect;
 		COLORREF oldFgColor = whichGC->foreground;
 	    
@@ -1544,13 +1540,6 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr, x,
 
 	    DrawWindowsSystemBitmap(menuPtr->display, d, whichGC, &rect, 
 		    OBM_CHECK, 0);
-
-	    if ((mePtr->state == ENTRY_DISABLED) 
-		    && (menuPtr->disabledImageGC != None)
-		    && (versionInfo.dwMajorVersion < 4)) {
-		XFillRectangle(menuPtr->display, d, menuPtr->disabledImageGC,
-			rect.left, rect.top, rect.right, rect.bottom);
-	    }
 	}
     }    
 }
@@ -1605,41 +1594,31 @@ DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 
     if ((mePtr->state == ENTRY_DISABLED) && (menuPtr->disabledFgPtr != NULL)
 	    && ((mePtr->accelPtr != NULL)
-	    || ((mePtr->type == CASCADE_ENTRY) && drawArrow))) {
-	if (versionInfo.dwMajorVersion >= 4) {
-	    COLORREF oldFgColor = gc->foreground;
-	    
-	    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
-	    if (mePtr->accelPtr != NULL) {
-		Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel,
-			mePtr->accelLength, leftEdge + 1, baseline + 1);
-	    }
+		    || ((mePtr->type == CASCADE_ENTRY) && drawArrow))) {
+	COLORREF oldFgColor = gc->foreground;
 
-	    if (mePtr->type == CASCADE_ENTRY) {
-		RECT rect;
-
-		rect.top = y + GetSystemMetrics(SM_CYBORDER) + 1;
-		rect.bottom = y + height - GetSystemMetrics(SM_CYBORDER) + 1;
-		rect.left = x + mePtr->indicatorSpace + mePtr->labelWidth + 1;
-		rect.right = x + width;
-		DrawWindowsSystemBitmap(menuPtr->display, d, gc, &rect, 
-			OBM_MNARROW, ALIGN_BITMAP_RIGHT);
-	    }
-	    gc->foreground = oldFgColor;
+	gc->foreground = GetSysColor(COLOR_3DHILIGHT);
+	if (mePtr->accelPtr != NULL) {
+	    Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel,
+		    mePtr->accelLength, leftEdge + 1, baseline + 1);
 	}
+
+	if (mePtr->type == CASCADE_ENTRY) {
+	    RECT rect;
+
+	    rect.top = y + GetSystemMetrics(SM_CYBORDER) + 1;
+	    rect.bottom = y + height - GetSystemMetrics(SM_CYBORDER) + 1;
+	    rect.left = x + mePtr->indicatorSpace + mePtr->labelWidth + 1;
+	    rect.right = x + width;
+	    DrawWindowsSystemBitmap(menuPtr->display, d, gc, &rect, 
+		    OBM_MNARROW, ALIGN_BITMAP_RIGHT);
+	}
+	gc->foreground = oldFgColor;
     }
 
     if (mePtr->accelPtr != NULL) {
 	Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel, 
 		mePtr->accelLength, leftEdge, baseline);
-    }
-
-    if ((mePtr->state == ENTRY_DISABLED) 
-	    && (menuPtr->disabledImageGC != None)
-	    && (versionInfo.dwMajorVersion < 4)) {
-	XFillRectangle(menuPtr->display, d, menuPtr->disabledImageGC,
-		leftEdge, y, width - mePtr->labelWidth 
-		- mePtr->indicatorSpace, height);
     }
 
     if ((mePtr->type == CASCADE_ENTRY) && drawArrow) {
@@ -1651,12 +1630,6 @@ DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 	rect.right = x + width - 1;
 	DrawWindowsSystemBitmap(menuPtr->display, d, gc, &rect, OBM_MNARROW, 
 		ALIGN_BITMAP_RIGHT);
-	if ((mePtr->state == ENTRY_DISABLED) 
-		&& (menuPtr->disabledImageGC != None)
-		&& (versionInfo.dwMajorVersion < 4)) {
-	    XFillRectangle(menuPtr->display, d, menuPtr->disabledImageGC,
-		    rect.left, rect.top, rect.right, rect.bottom);
-	}
     }
 }
 
@@ -2673,19 +2646,7 @@ SetDefaults(
     TEXTMETRIC tm;
     int pointSize;
     HFONT menuFont;
-
-
-    versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);
-
-    /*
-     * If GetVersionEx fails, it means that the version info record
-     * is too big for what is compiled. Should never happen, but if
-     * it does, we are later than Windows 95 or NT 4.0.
-     */
-
-    if (!GetVersionEx(&versionInfo)) {
-	versionInfo.dwMajorVersion = 4;
-    }
+    NONCLIENTMETRICS ncMetrics;
 
     /*
      * Set all of the default options. The loop will terminate when we run 
@@ -2697,23 +2658,16 @@ SetDefaults(
 	defaultBorderWidth = GetSystemMetrics(SM_CYBORDER);
     }
 
-
     scratchDC = CreateDC("DISPLAY", NULL, NULL, NULL);
     if (!firstTime) {
 	Tcl_DStringFree(&menuFontDString);
     }
     Tcl_DStringInit(&menuFontDString);
 
-    if (versionInfo.dwMajorVersion >= 4) {
-	NONCLIENTMETRICS ncMetrics;
-
-	ncMetrics.cbSize = sizeof(ncMetrics);
-	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncMetrics),
-		&ncMetrics, 0);
-	menuFont = CreateFontIndirect(&ncMetrics.lfMenuFont);
-    } else {
-	menuFont = GetStockObject(SYSTEM_FONT);
-    }
+    ncMetrics.cbSize = sizeof(ncMetrics);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncMetrics),
+	    &ncMetrics, 0);
+    menuFont = CreateFontIndirect(&ncMetrics.lfMenuFont);
     SelectObject(scratchDC, menuFont);
     GetTextMetrics(scratchDC, &tm);
     GetTextFace(scratchDC, LF_FACESIZE, faceName);
@@ -2757,7 +2711,7 @@ SetDefaults(
      * documented.
      */
 
-    if (versionInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
+    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_WINDOWS) {
 	indicatorDimensions[0] = GetSystemMetrics(SM_CYMENUCHECK);
 	indicatorDimensions[1] = ((GetSystemMetrics(SM_CXFIXEDFRAME) +
 		GetSystemMetrics(SM_CXBORDER) 
