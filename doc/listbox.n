@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: listbox.n,v 1.4 1999/12/16 21:57:12 hobbs Exp $
+'\" RCS: @(#) $Id: listbox.n,v 1.5 1999/12/21 23:54:17 hobbs Exp $
 '\" 
 .so man.macros
 .TH listbox n 8.0 Tk "Tk Built-In Commands"
@@ -215,12 +215,12 @@ element given by \fIindex\fR.  If \fIindex\fR is specified as
 \fBend\fR then the new elements are added to the end of the
 list.  Returns an empty string.
 .TP
-\fIpathName \fBitemcget \fIindex \foption
+\fIpathName \fBitemcget \fIindex option\fR
 Returns the current value of the item configuration option given
 by \fIoption\fR. \fIOption\fR may have any of the values accepted 
 by the \fBlistbox itemconfigure\fR command.
 .TP
-\fIpathName \fBitemconfigure \fIindex ?\fIoption\fR? ?\fIvalue? ?option value ...\fR?
+\fIpathName \fBitemconfigure \fIindex\fR ?\fIoption\fR? ?\fIvalue\fR? ?\fIoption value ...\fR?
 Query or modify the configuration options of an item in the listbox.
 If no \fIoption\fR is specified, returns a list describing all of
 the available options for the item (see \fBTk_ConfigureInfo\fR for
