@@ -1,3 +1,8 @@
+2004-06-15  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
+
+	* win/tkWinButton.c: Add a 3D highlight to disabled *buttons and
+	labels, the same way as it's now done for disabled menu entries.
+
 2004-06-15  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/image.n: Enhanced the documentation to take into account the

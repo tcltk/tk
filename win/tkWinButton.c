@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.25 2004/02/18 00:40:24 hobbs Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.26 2004/06/16 19:53:40 a_kovalenko Exp $
  */
 
 #define OEMRESOURCE
@@ -544,6 +544,19 @@ TkpDisplayButton(clientData)
 		    imageXOffset, imageYOffset, 1);
 	    XSetClipOrigin(butPtr->display, gc, 0, 0);
 	}
+	if ((butPtr->state == STATE_DISABLED) &&
+	       	(butPtr->disabledFg != NULL)) {
+	    COLORREF oldFgColor = gc->foreground;
+	    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
+	    Tk_DrawTextLayout(butPtr->display, pixmap, gc,
+		    butPtr->textLayout, x + textXOffset + 1,
+		    y + textYOffset + 1, 0, -1);
+	    Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
+		    butPtr->textLayout, x + textXOffset + 1,
+		    y + textYOffset + 1,
+		    butPtr->underline);
+	    gc->foreground = oldFgColor;
+	}
 
 	Tk_DrawTextLayout(butPtr->display, pixmap, gc,
 		butPtr->textLayout, x + textXOffset, y + textYOffset, 0, -1);
@@ -593,6 +606,17 @@ TkpDisplayButton(clientData)
 	    if (relief == TK_RELIEF_SUNKEN) {
 		x += offset;
 		y += offset;
+	    }
+	    if ((butPtr->state == STATE_DISABLED) &&
+		    (butPtr->disabledFg != NULL)) {
+		COLORREF oldFgColor = gc->foreground;
+		gc->foreground = GetSysColor(COLOR_3DHILIGHT);
+		Tk_DrawTextLayout(butPtr->display, pixmap, gc,
+		       	butPtr->textLayout,
+			x + 1, y + 1, 0, -1);
+		Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
+			butPtr->textLayout, x + 1, y + 1, butPtr->underline);
+		gc->foreground = oldFgColor;
 	    }
 	    Tk_DrawTextLayout(butPtr->display, pixmap, gc, butPtr->textLayout,
 		    x, y, 0, -1);
