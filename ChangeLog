@@ -1,3 +1,8 @@
+2000-07-18  Eric Melski  <ericm@ajubasolutions.com>
+
+	* unix/configure.in (MAKE_LIB): Corrected definition of MAKE_LIB
+	for shared builds, with patch from Mike Hopkirk.
+	
 2000-07-18  Mo DeJong  <mdejong@redhat.com>
 
 	* win/Makefile.in: Fix TCL_GENERIC_DIR variable
