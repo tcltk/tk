@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.12 2002/08/26 14:32:18 dgp Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.13 2002/09/27 00:48:06 hobbs Exp $
  */
 
 #include <tk.h>
@@ -354,8 +354,8 @@ setargv(argcPtr, argvPtr)
     *argcPtr = argc;
     *argvPtr = argv;
 }
-
 
+#if !defined(__GNUC__) || defined(TK_TEST)
 /*
  *----------------------------------------------------------------------
  *
@@ -404,4 +404,5 @@ int main(int argc, char **argv)
     Tk_Main(argc, argv, Tcl_AppInit);
     return 0;
 }
+#endif /* !__GNUC__ || TK_TEST */
 
