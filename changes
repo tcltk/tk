@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.23 1998/10/13 18:13:05 rjohnson Exp $
+RCS: @(#) $Id: changes,v 1.24 1998/10/16 00:46:18 rjohnson Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4266,3 +4266,8 @@ almost constant time which improves certain canvas operations
 (exspecially for canvases with large number items).  Thanks to Mark
 Weissman <weissman@gte.com> and Jan Nijtmans <Jan.Nijtmans@wxs.nl>
 for submitting this improvement.  (RJ)
+
+10/15/98 (bug fix) The -fill option to text items in the canvas did
+not allow the empty string as an argument (meaning transparent) even
+though every other item type did.  Thanks to Sebastian Wangnick
+<sebastian.wangnick@eurocontrol.be> for supplying this patch. (RJ)
