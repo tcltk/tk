@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.15 2002/01/15 18:19:14 dgp Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.16 2002/01/15 20:48:29 dgp Exp $
  */
 
 #include "tk.h"
@@ -47,9 +47,6 @@ TCL_DECLARE_MUTEX(consoleMutex)
  * The first three will be used in the tk app shells...
  */
  
-void	TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
-			    int devId, char *buffer, long size));
-
 static int	ConsoleCmd _ANSI_ARGS_((ClientData clientData,
 		    Tcl_Interp *interp, int argc, char **argv));
 static void	ConsoleDeleteProc _ANSI_ARGS_((ClientData clientData));
