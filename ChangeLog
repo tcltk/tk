@@ -1,3 +1,9 @@
+2003-01-19  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkImage.c (DeleteImage): delete the image's entry in the
+	image table correctly when there are no more instances.  This
+	reopens bug 220891. [Bug #669759]
+
 2003-01-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* doc/loadTk.n: note that ::safe::loadTk has a prereq on
