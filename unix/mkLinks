@@ -607,6 +607,10 @@ if test -r IdToWindow.3; then
     rm -f Tk_IdToWindow.3
     ln IdToWindow.3 Tk_IdToWindow.3
 fi
+if test -r HWNDToWindow.3; then
+    rm -f Tk_HWNDToWindow.3
+    ln HWNDToWindow.3 Tk_HWNDToWindow.3
+fi
 if test -r ImgChanged.3; then
     rm -f Tk_ImageChanged.3
     ln ImgChanged.3 Tk_ImageChanged.3
