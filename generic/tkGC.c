@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGC.c,v 1.3 1999/04/16 01:51:14 stanton Exp $
+ * RCS: @(#) $Id: tkGC.c,v 1.4 2002/04/12 10:02:40 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -84,7 +84,7 @@ Tk_GetGC(tkwin, valueMask, valuePtr)
     Drawable d, freeDrawable;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (!dispPtr->gcInit) {
+    if (dispPtr->gcInit <= 0) {
 	GCInit(dispPtr);
     }
 
@@ -300,6 +300,14 @@ Tk_FreeGC(display, gc)
     if (!dispPtr->gcInit) {
 	panic("Tk_FreeGC called before Tk_GetGC");
     }
+    if (dispPtr->gcInit < 0) {
+	/*
+	 * The GCCleanup has been called, and remaining GCs have been
+	 * freed.  This may still get called by other things shutting
+	 * down, but the GCs should no longer be in use.
+	 */
+	return;
+    }
 
     idHashPtr = Tcl_FindHashEntry(&dispPtr->gcIdTable, (char *) gc);
     if (idHashPtr == NULL) {
@@ -314,6 +322,51 @@ Tk_FreeGC(display, gc)
 	Tcl_DeleteHashEntry(idHashPtr);
 	ckfree((char *) gcPtr);
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGCCleanup --
+ *
+ *	Frees the structures used for GC management.
+ *	We need to have it called near the end, when other cleanup that
+ *	calls Tk_FreeGC is all done.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	GC resources are freed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkGCCleanup(dispPtr)
+    TkDisplay *dispPtr;	/* display to clean up resources in */
+{
+    Tcl_HashEntry *entryPtr;
+    Tcl_HashSearch search;
+    TkGC *gcPtr;
+
+    for (entryPtr = Tcl_FirstHashEntry(&dispPtr->gcIdTable, &search);
+	 entryPtr != NULL;
+	 entryPtr = Tcl_NextHashEntry(&search)) {
+	gcPtr = (TkGC *) Tcl_GetHashValue(entryPtr);
+	/*
+	 * This call is not needed, as it is only used on Unix to restore
+	 * the Id to the stack pool, and we don't want to use them anymore.
+	 *   Tk_FreeXId(gcPtr->display, (XID) XGContextFromGC(gcPtr->gc));
+	 */
+	XFreeGC(gcPtr->display, gcPtr->gc);
+	Tcl_DeleteHashEntry(gcPtr->valueHashPtr);
+	Tcl_DeleteHashEntry(entryPtr);
+	ckfree((char *) gcPtr);
+    }
+    Tcl_DeleteHashTable(&dispPtr->gcValueTable);
+    Tcl_DeleteHashTable(&dispPtr->gcIdTable);
+    dispPtr->gcInit = -1;
 }
 
 /*
@@ -336,6 +389,9 @@ static void
 GCInit(dispPtr)
     TkDisplay *dispPtr;
 {
+    if (dispPtr->gcInit < 0) {
+	panic("called GCInit after GCCleanup");
+    }
     dispPtr->gcInit = 1;
     Tcl_InitHashTable(&dispPtr->gcValueTable, sizeof(ValueKey)/sizeof(int));
     Tcl_InitHashTable(&dispPtr->gcIdTable, TCL_ONE_WORD_KEYS);
