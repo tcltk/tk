@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.54 2004/12/09 10:13:28 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.55 2005/01/31 16:22:14 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -450,19 +450,15 @@ static void		PhotoOptionCleanupProc _ANSI_ARGS_((
 /*
  *----------------------------------------------------------------------
  *
- * Tk_CreateOldPhotoImageFormat, Tk_CreatePhotoImageFormat --
+ * PhotoFormatThreadExitProc --
  *
- *	This procedure is invoked by an image file handler to register
- *	a new photo image format and the procedures that handle the
- *	new format.  The procedure is typically invoked during
- *	Tcl_AppInit.
+ *	Clean up the registered list of photo formats.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The new image file format is entered into a table used in the
- *	photo image "read" and "write" subcommands.
+ *	The thread's linked lists of photo image formats is deleted.
  *
  *----------------------------------------------------------------------
  */

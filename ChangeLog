@@ -1,5 +1,9 @@
 2005-01-31  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
+	* generic/tkImgPhoto.c (PhotoFormatThreadExitProc): Made the
+	comments in the code more relevant to the function they were
+	documenting! [Bug 1110553]
+
 	* library/msgs/es_ES.msg: Added more localization for Spanish
 	Spanish. [Bug 1111213]
 
