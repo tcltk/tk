@@ -1,3 +1,75 @@
+2000-11-21  Eric Melski  <ericm@ajubasolutions.com>
+
+	Overall change:  Implemented TIP 5, which exports
+	TkClassProcs/TkSetClassProcs as Tk_ClassProcs/Tk_SetClassProcs,
+	adding a size field to Tk_ClassProcs to allow for future
+	expansion, and renaming the geometryProc to worldChangedProc,
+	which is more in keeping with the actual use of the callback.
+
+	* unix/mkLinks: Added link for Tk_SetClassProcs.
+
+	* doc/SetClassProcs.3: Documentation for
+	Tk_ClassProcs/Tk_SetClassProcs.
+
+	* generic/tkCanvas.c:
+	* generic/tkEntry.c:
+	* generic/tkFrame.c:
+	* generic/tkListbox.c:
+	* generic/tkMenu.c:
+	* generic/tkMessage.c:
+	* generic/tkScale.c:
+	* generic/tkText.c: Updated to use Tk_ClassProcs/Tk_SetClassProcs
+	instead of TkClassProcs/TkSetClassProcs.
+
+	* generic/tkMenubutton.c:
+	* generic/tkScrollbar.c:
+	* generic/tkButton.c: Updated to use Tk_SetClassProcs instead of
+	TkSetClassProcs.
+
+	* generic/tkMenubutton.h:
+	* generic/tkScrollbar.h:
+	* generic/tkButton.h:
+	* win/tkWinButton.c:
+	* win/tkWinScrlbr.c:
+	* mac/tkMacButton.c:
+	* mac/tkMacMenubutton.c:
+	* mac/tkMacScrlbr.c:
+	* unix/tkUnixButton.c:
+	* unix/tkUnixMenubu.c:
+	* unix/tkUnixScrlbr.c: Updated to use Tk_ClassProcs instead of
+	TkClassProcs.
+
+	* generic/tkDecls.h:
+	* generic/tkStubInit.c:
+	* generic/tkIntDecls.h: Regenned from tk.decls, tkInt.decls.
+	
+	* generic/tk.h: Added declaration of Tk_ClassProcs, with size
+	field.  Added typedef's for Tk_ClassCreateProc,
+	Tk_ClassWorldChangedProc, Tk_ClassModalProc.  Added definition of
+	Tk_GetClassProc macro, shorthand for extracting a member of the
+	Tk_ClassProcs structure.
+
+	* generic/tkInt.h: Removed declaration of TkClassProcs,
+	TkClassGeometryProc, etc.
+
+	* generic/tkBind.c (Tk_BindEvent): Updated to use Tk_GetClassProc
+	macro to extract modalProc; added check that the modalProc is non-NULL.
+
+	* generic/tkFont.c (RecomputeWidgets): Updated to use
+	Tk_GetClassProc macro to extract worldChangedProc; added comment
+	about the choice of a recursive versus iterative algorithm for
+	propagating world changed messages.
+
+	* generic/tkWindow.c (Tk_MakeWindowExist): Updated to use
+	Tk_GetClassProc macro to extract createProc from Tk_ClassProcs.
+
+	* generic/tk.decls: Added declaration for Tk_SetClassProcs.
+
+	* generic/tkInt.decls: Commented out declaration for
+	TkSetClassProcs, which is made public by this change.  The entry
+	is left in place, but commented, so that future developers will
+	know not to reuse it's stub number.
+
 2000-11-21  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* doc/ConfigWidg.3: Added deprecation note from Bug #120944 - use

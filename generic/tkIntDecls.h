@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.11 2000/11/21 16:18:05 dkf Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.12 2000/11/22 01:49:38 ericm Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -289,10 +289,7 @@ EXTERN void		TkSelEventProc _ANSI_ARGS_((Tk_Window tkwin,
 EXTERN void		TkSelInit _ANSI_ARGS_((Tk_Window tkwin));
 /* 83 */
 EXTERN void		TkSelPropProc _ANSI_ARGS_((XEvent * eventPtr));
-/* 84 */
-EXTERN void		TkSetClassProcs _ANSI_ARGS_((Tk_Window tkwin, 
-				TkClassProcs * procs, 
-				ClientData instanceData));
+/* Slot 84 is reserved */
 /* 85 */
 EXTERN void		TkSetWindowMenuBar _ANSI_ARGS_((Tcl_Interp * interp, 
 				Tk_Window tkwin, char * oldMenuName, 
@@ -606,7 +603,7 @@ typedef struct TkIntStubs {
     void (*tkSelEventProc) _ANSI_ARGS_((Tk_Window tkwin, XEvent * eventPtr)); /* 81 */
     void (*tkSelInit) _ANSI_ARGS_((Tk_Window tkwin)); /* 82 */
     void (*tkSelPropProc) _ANSI_ARGS_((XEvent * eventPtr)); /* 83 */
-    void (*tkSetClassProcs) _ANSI_ARGS_((Tk_Window tkwin, TkClassProcs * procs, ClientData instanceData)); /* 84 */
+    void *reserved84;
     void (*tkSetWindowMenuBar) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Window tkwin, char * oldMenuName, char * menuName)); /* 85 */
     KeySym (*tkStringToKeysym) _ANSI_ARGS_((char * name)); /* 86 */
     int (*tkThickPolyLineToArea) _ANSI_ARGS_((double * coordPtr, int numPoints, double width, int capStyle, int joinStyle, double * rectPtr)); /* 87 */
@@ -1175,10 +1172,7 @@ extern TkIntStubs *tkIntStubsPtr;
 #define TkSelPropProc \
 	(tkIntStubsPtr->tkSelPropProc) /* 83 */
 #endif
-#ifndef TkSetClassProcs
-#define TkSetClassProcs \
-	(tkIntStubsPtr->tkSetClassProcs) /* 84 */
-#endif
+/* Slot 84 is reserved */
 #ifndef TkSetWindowMenuBar
 #define TkSetWindowMenuBar \
 	(tkIntStubsPtr->tkSetWindowMenuBar) /* 85 */

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenubu.c,v 1.4 1999/09/21 06:43:01 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixMenubu.c,v 1.5 2000/11/22 01:49:38 ericm Exp $
  */
 
 #include "tkMenubutton.h"
@@ -19,10 +19,9 @@
  * procedures that can be invoked from generic window code.
  */
 
-TkClassProcs tkpMenubuttonClass = {
-    NULL,			/* createProc. */
-    TkMenuButtonWorldChanged,	/* geometryProc. */
-    NULL			/* modalProc. */
+Tk_ClassProcs tkpMenubuttonClass = {
+    sizeof(Tk_ClassProcs),	/* size */
+    TkMenuButtonWorldChanged,	/* worldChangedProc */
 };
 
 /*

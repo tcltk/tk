@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacButton.c,v 1.13 2000/05/17 21:17:21 ericm Exp $
+ * RCS: @(#) $Id: tkMacButton.c,v 1.14 2000/11/22 01:49:38 ericm Exp $
  */
 
 #include "tkButton.h"
@@ -104,10 +104,9 @@ static void	ButtonExitProc _ANSI_ARGS_((ClientData clientData));
  * The class procedure table for the button widgets.
  */
 
-TkClassProcs tkpButtonProcs = { 
-    NULL,			/* createProc. */
-    TkButtonWorldChanged,	/* geometryProc. */
-    NULL			/* modalProc. */
+Tk_ClassProcs tkpButtonProcs = { 
+    sizeof(Tk_ClassProcs),	/* size */
+    TkButtonWorldChanged,	/* worldChangedProc */
 };
 
 /*

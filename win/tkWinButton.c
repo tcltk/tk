@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.11 2000/11/03 01:22:16 hobbs Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.12 2000/11/22 01:49:38 ericm Exp $
  */
 
 #define OEMRESOURCE
@@ -89,10 +89,10 @@ static void		InitBoxes _ANSI_ARGS_((void));
  * The class procedure table for the button widgets.
  */
 
-TkClassProcs tkpButtonProcs = { 
-    CreateProc,			/* createProc. */
-    TkButtonWorldChanged,	/* geometryProc. */
-    NULL			/* modalProc. */ 
+Tk_ClassProcs tkpButtonProcs = { 
+    sizeof(Tk_ClassProcs),	/* size */
+    TkButtonWorldChanged,	/* worldChangedProc */
+    CreateProc,			/* createProc */
 };
 
 

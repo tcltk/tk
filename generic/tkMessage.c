@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMessage.c,v 1.8 2000/09/06 19:02:01 hobbs Exp $
+ * RCS: @(#) $Id: tkMessage.c,v 1.9 2000/11/22 01:49:38 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -195,17 +195,16 @@ static void		DisplayMessage _ANSI_ARGS_((ClientData clientData));
  * that can be invoked from generic window code.
  */
 
-static TkClassProcs messageClass = {
-    NULL,			/* createProc. */
-    MessageWorldChanged,	/* geometryProc. */
-    NULL			/* modalProc. */
+static Tk_ClassProcs messageClass = {
+    sizeof(Tk_ClassProcs),	/* size */
+    MessageWorldChanged,	/* worldChangedProc */
 };
 
 
 /*
  *--------------------------------------------------------------
  *
- * Tk_MessageCmd --
+ * Tk_MessageObjCmd --
  *
  *	This procedure is invoked to process the "message" Tcl
  *	command.  See the user documentation for details on what
@@ -282,7 +281,7 @@ Tk_MessageObjCmd(clientData, interp, objc, objv)
     msgPtr->cursor		= None;
 
     Tk_SetClass(msgPtr->tkwin, "Message");
-    TkSetClassProcs(msgPtr->tkwin, &messageClass, (ClientData) msgPtr);
+    Tk_SetClassProcs(msgPtr->tkwin, &messageClass, (ClientData) msgPtr);
     Tk_CreateEventHandler(msgPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    MessageEventProc, (ClientData) msgPtr);

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.11 2000/10/01 21:35:27 ericm Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.12 2000/11/22 01:49:37 ericm Exp $
  */
 
 #include "tkButton.h"
@@ -658,7 +658,7 @@ ButtonCreate(clientData, interp, objc, objv, type)
     Tk_SetClass(tkwin, classNames[type]);
     butPtr = TkpCreateButton(tkwin);
 
-    TkSetClassProcs(tkwin, &tkpButtonProcs, (ClientData) butPtr);
+    Tk_SetClassProcs(tkwin, &tkpButtonProcs, (ClientData) butPtr);
 
     /*
      * Initialize the data structure for the button.

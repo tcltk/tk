@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.10 2000/02/03 21:27:26 ericm Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.11 2000/11/22 01:49:38 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -831,10 +831,30 @@ static void
 RecomputeWidgets(winPtr)
     TkWindow *winPtr;		/* Window to which command is sent. */
 {
-    if ((winPtr->classProcsPtr != NULL)
-	    && (winPtr->classProcsPtr->geometryProc != NULL)) {
-	(*winPtr->classProcsPtr->geometryProc)(winPtr->instanceData);
+    Tk_ClassWorldChangedProc *proc;
+    proc = Tk_GetClassProc(winPtr->classProcsPtr, worldChangedProc);
+    if (proc != NULL) {
+	(*proc)(winPtr->instanceData);
     }
+
+    /*
+     * Notify all the descendants of this window that the world has changed.
+     *
+     * This could be done recursively or iteratively.  The recursive version
+     * is easier to implement and understand, and typically, windows with a
+     * -font option will be leaf nodes in the widget heirarchy (buttons,
+     * labels, etc.), so the recursion depth will be shallow.
+     *
+     * However, the additional overhead of the recursive calls may become
+     * a performance problem if typical usage alters such that -font'ed widgets
+     * appear high in the heirarchy, causing deep recursion.  This could happen
+     * with text widgets, or more likely with the (not yet existant) labeled
+     * frame widget.  With these widgets it is possible, even likely, that a
+     * -font'ed widget (text or labeled frame) will not be a leaf node, but
+     * will instead have many descendants.  If this is ever found to cause
+     * a performance problem, it may be worth investigating an iterative
+     * version of the code below.
+     */
     for (winPtr = winPtr->childList; winPtr != NULL; winPtr = winPtr->nextPtr) {
 	RecomputeWidgets(winPtr);
     }

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinScrlbr.c,v 1.6 2000/11/03 01:22:17 hobbs Exp $
+ * RCS: @(#) $Id: tkWinScrlbr.c,v 1.7 2000/11/22 01:49:38 ericm Exp $
  */
 
 #include "tkWinInt.h"
@@ -87,9 +87,10 @@ static void		UpdateScrollbarMetrics _ANSI_ARGS_((void));
  * The class procedure table for the scrollbar widget.
  */
 
-TkClassProcs tkpScrollbarProcs = {
+Tk_ClassProcs tkpScrollbarProcs = {
+    sizeof(Tk_ClassProcs),	/* size */
+    NULL,			/* worldChangedProc */
     CreateProc,			/* createProc */
-    NULL,			/* geometryProc */
     ModalLoopProc,		/* modalProc */
 };
 

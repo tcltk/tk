@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.6 2000/02/10 08:52:32 hobbs Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.7 2000/11/22 01:49:38 ericm Exp $
  */
 
 #include "default.h"
@@ -451,7 +451,7 @@ CreateFrame(clientData, interp, objc, objv, toplevel, appName)
     /*
      * Store backreference to frame widget in window structure.
      */
-    TkSetClassProcs(new, NULL, (ClientData) framePtr);
+    Tk_SetClassProcs(new, NULL, (ClientData) framePtr);
 
     mask = ExposureMask | StructureNotifyMask | FocusChangeMask;
     if (toplevel) {

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.4 1999/04/24 01:50:49 stanton Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.5 2000/11/22 01:49:38 ericm Exp $
  */
 
 #include "tkMenubutton.h"
@@ -240,7 +240,7 @@ Tk_MenubuttonObjCmd(clientData, interp, objc, objv)
     Tk_SetClass(tkwin, "Menubutton");
     mbPtr = TkpCreateMenuButton(tkwin);
 
-    TkSetClassProcs(tkwin, &tkpMenubuttonClass, (ClientData) mbPtr);
+    Tk_SetClassProcs(tkwin, &tkpMenubuttonClass, (ClientData) mbPtr);
 
     /*
      * Initialize the data structure for the button.

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixScrlbr.c,v 1.2 1998/09/14 18:23:57 stanton Exp $
+ * RCS: @(#) $Id: tkUnixScrlbr.c,v 1.3 2000/11/22 01:49:38 ericm Exp $
  */
 
 #include "tkScrollbar.h"
@@ -32,13 +32,13 @@ typedef struct UnixScrollbar {
 } UnixScrollbar;
 
 /*
- * The class procedure table for the scrollbar widget.
+ * The class procedure table for the scrollbar widget.  All fields except
+ * size are left initialized to NULL, which should happen automatically
+ * since the variable is declared at this scope.
  */
 
-TkClassProcs tkpScrollbarProcs = { 
-    NULL,			/* createProc. */
-    NULL,			/* geometryProc. */
-    NULL			/* modalProc. */
+Tk_ClassProcs tkpScrollbarProcs = {
+    sizeof(Tk_ClassProcs)	/* size */
 };
 
 

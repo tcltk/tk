@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.18 2000/11/21 16:18:05 dkf Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.19 2000/11/22 01:49:38 ericm Exp $
 
 library tk
 
@@ -396,10 +396,11 @@ declare 83 generic {
     void TkSelPropProc (XEvent *eventPtr)
 }
 
-declare 84 generic {
-    void TkSetClassProcs (Tk_Window tkwin, \
-	    TkClassProcs *procs, ClientData instanceData)
-}
+# Exported publically as Tk_SetClassProcs in 8.4a2
+#declare 84 generic {
+#    void TkSetClassProcs (Tk_Window tkwin, \
+#	    TkClassProcs *procs, ClientData instanceData)
+#}
 
 declare 85 generic {
     void TkSetWindowMenuBar (Tcl_Interp *interp, \
