@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.8.2.1 2001/04/05 22:02:20 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.8.2.2 2001/04/05 22:09:13 hobbs Exp $
  */
  
 #include "tkUnixInt.h"
@@ -189,7 +189,7 @@ static EncodingAlias encodingAliases[] = {
     {"tis620",		"tis620*"},
     {"ksc5601",		"ksc5601*"},
     {"dingbats",	"*dingbats"},
-    {"ucs-2be",		"iso10646*"},
+    {"ucs-2be",		"iso10646-1"},
     {NULL,		NULL}
 };
 
@@ -306,7 +306,7 @@ TkpFontPkgInit(mainPtr)
 	}
 
 	/*
-	 * UCS2BE is unicode in big-endian format.
+	 * UCS-2BE is unicode in big-endian format.
 	 * It is used in iso10646 fonts.
 	 */
 
