@@ -537,7 +537,7 @@ else
 fi
 
 
-# RCS: @(#) $Id: configure.in,v 1.56 2001/04/02 02:08:55 hobbs Exp $
+# RCS: @(#) $Id: configure.in,v 1.57 2001/04/25 20:52:48 mdejong Exp $
 
 TK_VERSION=8.4
 TK_MAJOR_VERSION=8
@@ -4128,7 +4128,7 @@ TCL_STUB_LIB_SPEC='-L$(TCL_BIN_DIR) $(TCL_STUB_LIB_FLAG)'
 if test "${SHARED_BUILD}" = "1" -a "${SHLIB_SUFFIX}" != ""; then
     TK_SHLIB_CFLAGS="${SHLIB_CFLAGS}"
     TK_LIB_FILE=libtk${TK_SHARED_LIB_SUFFIX}
-    MAKE_LIB="\${SHLIB_LD} -o \${TK_LIB_FILE} \${OBJS} \$(TK_LD_SEARCH_FLAGS) ${TCL_STUB_LIB_SPEC} \${SHLIB_LD_LIBS}"
+    MAKE_LIB="\${SHLIB_LD} -o \$@ \${OBJS} \$(TK_LD_SEARCH_FLAGS) ${TCL_STUB_LIB_SPEC} \${SHLIB_LD_LIBS}"
     RANLIB=":"
 
 #    TCL_STUB_FLAGS="-DUSE_TCL_STUBS"
@@ -4136,7 +4136,7 @@ if test "${SHARED_BUILD}" = "1" -a "${SHLIB_SUFFIX}" != ""; then
 else
     TK_SHLIB_CFLAGS=""
     TK_LIB_FILE=libtk${TK_UNSHARED_LIB_SUFFIX}
-    MAKE_LIB="ar cr \${TK_LIB_FILE} \${OBJS}"
+    MAKE_LIB="ar cr \$@ \${OBJS}"
 
     TCL_STUB_FLAGS=""
 fi
@@ -4177,11 +4177,10 @@ TK_SHARED_BUILD=${SHARED_BUILD}
 #--------------------------------------------------------------------
 
 # Replace ${VERSION} with contents of ${TK_VERSION}
-eval "STUB_LIB_FILE=libtkstub${TK_UNSHARED_LIB_SUFFIX}"
+eval "TK_STUB_LIB_FILE=libtkstub${TK_UNSHARED_LIB_SUFFIX}"
 
-MAKE_STUB_LIB="ar cr \${STUB_LIB_FILE} \${STUB_LIB_OBJS}"
-
-TK_STUB_LIB_FILE=${STUB_LIB_FILE}
+# FIXME: Why don't we use MAKE_STUB_LIB from tclConfig.sh here?
+MAKE_STUB_LIB="ar cr \$@ \${STUB_LIB_OBJS}"
 
 if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
     eval TK_STUB_LIB_FLAG="-ltkstub${TK_VERSION}\${TK_DBGX}"
