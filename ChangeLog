@@ -1,3 +1,12 @@
+2001-10-30  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/demos/rolodex: Changes up-ported from core-8-3-1-branch
+	to make the script use more 8.*-isms, but not menus due to the way
+	the context help system works.
+
+	* library/demos/ixset: Changed to use the labelframe widget and
+	the grid geometry manager.
+
 2001-10-29  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/demos/browse: Changes up-ported from core-8-3-1-branch
