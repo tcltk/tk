@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.3 1998/09/30 19:01:20 rjohnson Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.4 1999/02/04 21:43:14 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -357,7 +357,8 @@ static int		IsValidPalette _ANSI_ARGS_((PhotoInstance *instancePtr,
 			    char *palette));
 static int		CountBits _ANSI_ARGS_((pixel mask));
 static void		GetColorTable _ANSI_ARGS_((PhotoInstance *instancePtr));
-static void		FreeColorTable _ANSI_ARGS_((ColorTable *colorPtr));
+static void		FreeColorTable _ANSI_ARGS_((ColorTable *colorPtr,
+			    int force));
 static void		AllocateColors _ANSI_ARGS_((ColorTable *colorPtr));
 static void		DisposeColorTable _ANSI_ARGS_((ClientData clientData));
 static void		DisposeInstance _ANSI_ARGS_((ClientData clientData));
@@ -1482,7 +1483,7 @@ ImgPhotoConfigureInstance(instancePtr)
 
 	if (colorTablePtr != NULL) {
 	    colorTablePtr->liveRefCount -= 1;
-	    FreeColorTable(colorTablePtr);
+	    FreeColorTable(colorTablePtr, 0);
 	}
 	GetColorTable(instancePtr);
 
@@ -1642,7 +1643,7 @@ ImgPhotoGet(tkwin, masterData)
 
 		Tcl_CancelIdleCall(DisposeInstance, (ClientData) instancePtr);
 		if (instancePtr->colorTablePtr != NULL) {
-		    FreeColorTable(instancePtr->colorTablePtr);
+		    FreeColorTable(instancePtr->colorTablePtr, 0);
 		}
 		GetColorTable(instancePtr);
 	    }
@@ -2480,15 +2481,22 @@ GetColorTable(instancePtr)
  */
 
 static void
-FreeColorTable(colorPtr)
+FreeColorTable(colorPtr, force)
     ColorTable *colorPtr;	/* Pointer to the color table which is
 				 * no longer required by an instance. */
+    int force;			/* Force free to happen immediately. */
 {
     colorPtr->refCount--;
     if (colorPtr->refCount > 0) {
 	return;
     }
-    if ((colorPtr->flags & DISPOSE_PENDING) == 0) {
+    if (force) {
+	if ((colorPtr->flags & DISPOSE_PENDING) != 0) {
+	    Tcl_CancelIdleCall(DisposeColorTable, (ClientData) colorPtr);
+	    colorPtr->flags &= ~DISPOSE_PENDING;
+	}
+	DisposeColorTable((ClientData) colorPtr);
+    } else if ((colorPtr->flags & DISPOSE_PENDING) == 0) {
 	Tcl_DoWhenIdle(DisposeColorTable, (ClientData) colorPtr);
 	colorPtr->flags |= DISPOSE_PENDING;
     }
@@ -2954,7 +2962,7 @@ DisposeInstance(clientData)
 	ckfree((char *) instancePtr->error);
     }
     if (instancePtr->colorTablePtr != NULL) {
-	FreeColorTable(instancePtr->colorTablePtr);
+	FreeColorTable(instancePtr->colorTablePtr, 1);
     }
 
     if (instancePtr->masterPtr->instancePtr == instancePtr) {
