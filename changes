@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.42.2.4 2002/02/18 06:31:08 dgp Exp $
+RCS: @(#) $Id: changes,v 1.42.2.5 2002/02/20 02:54:14 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4848,6 +4848,9 @@ then widget was destroyed (hobbs)
 
 2000-03-02 (feature enhancement) added %V substitution to entry widget
 validation to clarify type of validation occuring (hobbs)
+
+2000-03-07 (feature enhancement) added -disabledforeground/-state to labels
+(melski)
 
 2000-03-29 (config enhancement) improved build support for gcc/mingw on
 Windows (nijtmans, hobbs) and added RPM target (melski)
