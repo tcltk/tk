@@ -1,3 +1,9 @@
+1999-12-09  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* generic/tkImgGIF.c: updated casting
+
+	* win/makefile.vc: removed 16bit stuff, simplified makefile.
+
 1999-12-06  Scott Redman  <redman@scriptics.com>
 
 	* generic/tkMain.c: need to include tclInt.h for new hook
