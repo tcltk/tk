@@ -1,3 +1,18 @@
+2003-12-05  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* tests/text.test:
+	* generic/tkText.c: after debate on sf, allow decreasing tab-stops, 
+	hence removing any potential backwards incompatibility, even for
+	buggy code. Added new test. [Bug 852949]
+	
+	* generic/tkText.h: 
+	* generic/tkTextDisp.c: 
+	* generic/tkTextTag.c: fix to performance problems in the text
+	widget when inserting lines which wrap thousands of times 
+	[Bug 853003].  Note that the text widget must now perform additional
+	calculations (pixel heights) compared to Tk <= 8.4, and so some
+	actions will be slower, be necessity.
+
 2003-12-05  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
 
 	* win/tkWinFont.c (Tk_MeasureChars): Fix indentation.  Fix memory

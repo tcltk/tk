@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.36 2003/12/04 12:28:37 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.37 2003/12/05 17:19:06 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -292,6 +292,9 @@ typedef struct TextDInfo {
 				 * contained in the widget and update
 				 * their geometry calculations, if they
 				 * are out of date.  */
+    TkTextIndex metricIndex;
+    int metricPixelHeight;
+    int metricEpoch;
     int lastMetricUpdateLine;   /* When the current update line reaches
 				 * this line, we are done and should
 				 * stop the asychronous callback
@@ -512,7 +515,10 @@ TkTextCreateDInfo(textPtr)
     dInfoPtr->currentMetricUpdateLine = -1;
     dInfoPtr->lastMetricUpdateLine = -1;
     dInfoPtr->lineMetricUpdateEpoch = 1;
-
+    dInfoPtr->metricEpoch = -1;
+    dInfoPtr->metricIndex.textPtr = NULL;
+    dInfoPtr->metricIndex.linePtr = NULL;
+    
     /* Add a refCount for each of the idle call-backs */
     textPtr->refCount++;
     dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(0, 
@@ -2642,12 +2648,56 @@ TkTextUpdateLineMetrics(textPtr, lineNum, endLine, doThisMuch)
 	    /* Now update the line's metrics if necessary */
 	    if (linePtr->pixelCalculationEpoch 
 		!= textPtr->dInfoPtr->lineMetricUpdateEpoch) {
-		/* 
-		 * Update the line and update the counter, counting
-		 * 10 for each line we actually re-layout.
-		 */
-		TkTextUpdateOneLine(textPtr, linePtr);
-		count += 10;
+		if (doThisMuch == -1) {
+		    count += 8 * TkTextUpdateOneLine(textPtr, linePtr, 
+						     0, NULL);
+		} else {
+		    TkTextIndex index;
+		    TkTextIndex *indexPtr;
+		    int pixelHeight;
+		    
+		    /* 
+		     * If the metric epoch is the same as the widget's 
+		     * epoch, then we know that indexPtrs are still
+		     * valid, and if the cached metricIndex (if any) is
+		     * for the same line as we wish to examine, then
+		     * we are looking at a long line wrapped many
+		     * times, which we will examine in pieces.
+		     */
+		    if (textPtr->dInfoPtr->metricEpoch == textPtr->stateEpoch 
+		      && textPtr->dInfoPtr->metricIndex.linePtr == linePtr) {
+			indexPtr = &textPtr->dInfoPtr->metricIndex;
+			pixelHeight = textPtr->dInfoPtr->metricPixelHeight;
+		    } else {
+			index.tree = textPtr->tree;
+			index.linePtr = linePtr;
+			index.byteIndex = 0;
+			index.textPtr = NULL;
+			indexPtr = &index;
+			pixelHeight = 0;
+		    }
+		    /* 
+		     * Update the line and update the counter, counting
+		     * 8 for each display line we actually re-layout.
+		     */
+		    count += 8 * TkTextUpdateOneLine(textPtr, linePtr, 
+						     pixelHeight, indexPtr);
+		    
+		    if (indexPtr->linePtr == linePtr) {
+			/* 
+			 * We didn't complete the logical line, because it
+			 * produced very many display lines -- it must be a
+			 * long line wrapped many times.  So we must
+			 * cache as far as we got for next time around.
+			 */
+			if (pixelHeight == 0) {
+			    textPtr->dInfoPtr->metricIndex = index;
+			    textPtr->dInfoPtr->metricEpoch = textPtr->stateEpoch;
+			}
+			textPtr->dInfoPtr->metricPixelHeight = linePtr->pixelHeight;
+			break;
+		    }
+		}
 	    }
 	} else {
 	    /* 
@@ -3094,18 +3144,32 @@ TkTextIndexYPixels(textPtr, indexPtr)
  */
 
 int
-TkTextUpdateOneLine(textPtr, linePtr)
+TkTextUpdateOneLine(textPtr, linePtr, pixelHeight, indexPtr)
     TkText *textPtr;        /* Widget record for text widget. */
     TkTextLine *linePtr;    /* The line of which to calculate the
                              * height. */
+    int pixelHeight;        /* If indexPtr is non-NULL, then this
+                             * is the number of pixels in the logical
+                             * line linePtr, up to the index which
+                             * has been given. */
+    TkTextIndex *indexPtr;  /* Either NULL or an index at the start of
+                             * a display line belonging to linePtr,
+                             * up to which we have already calculated. */
 {
     TkTextIndex index;
-    int pixelHeight, displayLines;
+    int displayLines, partialCalc;
     
-    index.tree = textPtr->tree;
-    index.linePtr = linePtr;
-    index.byteIndex = 0;
-    index.textPtr = NULL;
+    if (indexPtr == NULL) {
+	index.tree = textPtr->tree;
+	index.linePtr = linePtr;
+	index.byteIndex = 0;
+	index.textPtr = NULL;
+	indexPtr = &index;
+	pixelHeight = 0;
+	partialCalc = 0; 
+    } else {
+	partialCalc = 1; 
+    }
     
     /* 
      * Iterate through all display-lines corresponding to the
@@ -3114,7 +3178,6 @@ TkTextUpdateOneLine(textPtr, linePtr)
      * total is, therefore, the height of the logical line.
      */
 
-    pixelHeight = 0;
     displayLines = 0;
     
     while (1) {
@@ -3128,37 +3191,52 @@ TkTextUpdateOneLine(textPtr, linePtr)
 	 * specifically the 'linePtr->pixelHeight == pixelHeight' test 
 	 * below this while loop.
 	 */
-	height = CalculateDisplayLineHeight(textPtr, &index, &bytes);
+	height = CalculateDisplayLineHeight(textPtr, indexPtr, &bytes);
 	
 	if (height > 0) {
 	    pixelHeight += height;
 	    displayLines++;
 	}
 	
-	if (TkTextIndexForwBytes(&index, bytes, &index)) {
+	if (TkTextIndexForwBytes(indexPtr, bytes, indexPtr)) {
             break;
         }
 
-	if (index.linePtr != linePtr) {
+	if (indexPtr->linePtr != linePtr) {
+	    /* 
+	     * If we reached the end of the logical line, then
+	     * either way we don't have a partial calculation.
+	     */
+	    partialCalc = 0;
+	    break;
+	}
+	if (partialCalc && displayLines > 50) {
+	    /* 
+	     * Only calculate 50 display lines at a time, to 
+	     * avoid huge delays.  In any case it is very rare
+	     * that a single line wraps 50 times!
+	     */
 	    break;
 	}
     }
     
-    /* 
-     * Mark the logical line as being up to date (caution: it isn't
-     * yet up to date, that will happen in TkBTreeAdjustPixelHeight
-     * just below).
-     */
-    linePtr->pixelCalculationEpoch = textPtr->dInfoPtr->lineMetricUpdateEpoch;
+    if (!partialCalc) {
+	/* 
+	 * Mark the logical line as being up to date (caution: it isn't
+	 * yet up to date, that will happen in TkBTreeAdjustPixelHeight
+	 * just below).
+	 */
+	linePtr->pixelCalculationEpoch = textPtr->dInfoPtr->lineMetricUpdateEpoch;
 
-    if (linePtr->pixelHeight == pixelHeight) {
-	return displayLines;
+	if (linePtr->pixelHeight == pixelHeight) {
+	    return displayLines;
+	}
     }
-
+    
     /* 
-     * We now use the resulting 'pixelHeight' to refer to the
-     * height of the entire widget, which may be used just below
-     * for reporting/debugging purposes
+     * We set the line's height, but the return value is now the height
+     * of the entire widget, which may be used just below for
+     * reporting/debugging purposes.
      */
     pixelHeight = TkBTreeAdjustPixelHeight(linePtr, pixelHeight);
     

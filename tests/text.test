@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.26 2003/12/04 12:28:37 vincentdarley Exp $
+# RCS: @(#) $Id: text.test,v 1.27 2003/12/05 17:19:06 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2911,11 +2911,23 @@ test text-27.2 {tabs - must be positive and must be increasing} {
     list [catch {.t configure -tabs {-5}} msg] $msg
 } {1 {tab stop "-5" is not at a positive distance}}
 
-test text-27.3 {tabs - must be positive and must be increasing} {
+test text-27.3 {tabs - must be positive and must be increasing} {knownBug} {
+    # This bug will be fixed in Tk 9.0, when we can allow a minor
+    # incompatibility with Tk 8.x
     destroy .t
     pack [text .t -wrap none]
     list [catch {.t configure -tabs {10c 5c}} msg] $msg
 } {1 {tabs must be monotonically increasing, but "5c" is smaller than or equal to the previous tab}}
+
+test text-27.4 {tabs - must be positive and must be increasing} {
+    destroy .t
+    pack [text .t -wrap none]
+    .t insert end "a\tb\tc\td\te"
+    catch {.t configure -tabs {10c 5c}}
+    update ; update ; update
+    # This test must simply not go into an infinite loop to succeed
+    set result 1
+} {1}
 
 deleteWindows
 option clear

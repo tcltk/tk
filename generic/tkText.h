@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.22 2003/11/21 18:51:18 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.23 2003/12/05 17:19:06 vincentdarley Exp $
  */
 
 #ifndef _TKTEXT
@@ -970,7 +970,7 @@ EXTERN int		TkTextGetObjIndex _ANSI_ARGS_((Tcl_Interp *interp,
 EXTERN CONST TkTextIndex* TkTextGetIndexFromObj _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkText *textPtr, Tcl_Obj *objPtr));
 EXTERN TkTextTabArray *	TkTextGetTabs _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_Window tkwin, Tcl_Obj *stringPtr));
+			    TkText *textPtr, Tcl_Obj *stringPtr));
 EXTERN void             TkTextFindDisplayLineEnd _ANSI_ARGS_((
 			    TkText *textPtr, TkTextIndex *indexPtr, 
 			    int end, int *xOffset));
@@ -1025,7 +1025,8 @@ EXTERN void             TkTextInvalidateLineMetrics _ANSI_ARGS_((TkText *textPtr
 EXTERN int              TkTextUpdateLineMetrics _ANSI_ARGS_((TkText *textPtr,
 			    int lineNum, int endLine, int doThisMuch));
 EXTERN int              TkTextUpdateOneLine _ANSI_ARGS_((TkText *textPtr, 
-			    TkTextLine *linePtr));
+			    TkTextLine *linePtr, int pixelHeight, 
+			    TkTextIndex *indexPtr));
 EXTERN int		TkTextMarkCmd _ANSI_ARGS_((TkText *textPtr,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
 EXTERN int		TkTextMarkNameToIndex _ANSI_ARGS_((TkText *textPtr,
