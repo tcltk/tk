@@ -1,3 +1,12 @@
+1999-03-17    <stanton@scriptics.com>
+
+	* win/makefile.vc: 
+	* win/makefile.bc: 
+	* win/README: 
+	* unix/configure.in: 
+	* generic/tk.h: 
+	* README: Updated version to 8.1b3.
+
 1999-03-14    <stanton@GASPODE>
 
 	* unix/configure.in: Added missing stub related definitions.
