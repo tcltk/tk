@@ -1,3 +1,10 @@
+2003-03-22  Kevin Kenny  <kennykb@acm.org>
+
+	* win/makefile.vc:
+	* win/rules.vc: Corrected several problems that prevented
+	OPTS=symbols from building properly. [Patch 707792] Thanks
+	to Joe Mistachkin for the fixes.
+	
 2003-03-18  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/unixWm.test (unixWm-41.2): Corrected typo in 2003-03-13
