@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winDialog.test,v 1.1.2.3 1999/03/11 18:51:21 hershey Exp $
+# RCS: @(#) $Id: winDialog.test,v 1.1.2.4 1999/03/14 01:22:53 hershey Exp $
 
 if {$tcl_platform(os) != "Windows NT"} {
     puts "skipping: Windows NT only tests..."
@@ -179,7 +179,7 @@ append a $a
 append a $a
 append a $a
 append a $a
-test winDialog-5.16 {GetFileName: initial file: long name} {
+test winDialog-5.16 {GetFileName: initial file: long name} {knownBug} {
     start {set x [tk_getSaveFile -initialfile $a -title Long]}
     then {
 	Click 1

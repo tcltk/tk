@@ -7,18 +7,13 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: all.tcl,v 1.1.2.2 1999/03/11 23:51:26 hershey Exp $
-
-# extra files: arc.tcl bugs.tcl butGeom2.tcl \
-#	canvPsBmap.tcl canvPsText.tcl bevel.tcl butGeom.tcl \
-#	canvPsArc.tcl canvPsGrph.tcl cmap.tcl filebox.test \
-#	visual
-
-# trouble files: unixWm.test filebox.test
+# RCS: @(#) $Id: all.tcl,v 1.1.2.3 1999/03/14 01:22:52 hershey Exp $
 
 if {[lsearch ::test [namespace children]] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
+set ::test::testSingleFile false
+
 puts stdout "Tk 8.1 tests running in interp:  [info nameofexecutable]"
 puts stdout "Tests running in working dir:  $::test::tmpDir"
 if {[llength $::test::skippingTests] > 0} {
@@ -51,9 +46,10 @@ if {[llength $fileList] < 1} {
     puts "Error: no files found matching $globPattern"
     exit
 }
-
 set timeCmd {clock format [clock seconds]}
 puts stdout "Tests began at [eval $timeCmd]"
+
+# source each of the specified tests
 foreach file [lsort $fileList] {
     set tail [file tail $file]
     if {[string match l.*.test $tail]} {
@@ -65,7 +61,10 @@ foreach file [lsort $fileList] {
 	puts stdout $msg
     }
 }
-puts stdout "\nTests ended at [eval $timeCmd]"
 
-catch {destroy .}
+# cleanup
+puts stdout "\nTests ended at [eval $timeCmd]"
+::test::cleanupTests 1
+#catch {destroy .}
 exit
+#return
