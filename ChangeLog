@@ -1,3 +1,9 @@
+2005-04-04  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* generic/tkText.c: 
+	* tests/text.test: fix to elide searching problems [Bug 1174269]
+	and disappearing cursor with insertofftime 0 [Bug 1169429].
+
 2005-04-03  Peter Spjuth  <peter.spjuth@space.se>
 
 	* tests/grid.test:
