@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.26 2002/01/25 21:09:37 dgp Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.27 2002/03/20 22:55:16 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -694,7 +694,7 @@ static void		EntrySetValue _ANSI_ARGS_((Entry *entryPtr,
 static void		EntrySelectTo _ANSI_ARGS_((
 			    Entry *entryPtr, int index));
 static char *		EntryTextVarProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, char *name1, char *name2,
+			    Tcl_Interp *interp, char *name1, CONST char *name2,
 			    int flags));
 static void		EntryUpdateScrollbar _ANSI_ARGS_((Entry *entryPtr));
 static int		EntryValidate _ANSI_ARGS_((Entry *entryPtr,
@@ -3277,7 +3277,7 @@ EntryTextVarProc(clientData, interp, name1, name2, flags)
     ClientData clientData;	/* Information about button. */
     Tcl_Interp *interp;		/* Interpreter containing variable. */
     char *name1;		/* Not used. */
-    char *name2;		/* Not used. */
+    CONST char *name2;		/* Not used. */
     int flags;			/* Information about what happened. */
 {
     Entry *entryPtr = (Entry *) clientData;
