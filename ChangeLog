@@ -1,3 +1,8 @@
+2001-12-05  Daniel Steffen <das@users.sourceforge.net>
+
+	* mac/tkMacWm.c: mac implementation of wm stackorder
+	(patch 481148, TIP 74)
+
 2001-12-03  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	Add TK patch 481148 to implement TIP 74, the
