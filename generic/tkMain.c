@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.15 2002/12/13 16:54:35 dgp Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.16 2003/09/05 22:44:39 dgp Exp $
  */
 
 #include <ctype.h>
@@ -99,10 +99,11 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 					 * to execute commands. */
     Tcl_Interp *interp;
 {
+    Tcl_Obj *path;
+    CONST char *encodingName;
     char *args;
     char buf[TCL_INTEGER_SPACE];
     int code;
-    size_t length;
     Tcl_Channel inChannel, outChannel;
     Tcl_DString argString;
     ThreadSpecificData *tsdPtr;
@@ -134,24 +135,37 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 #endif
 
     /*
-     * Parse command-line arguments.  A leading "-file" argument is
-     * ignored (a historical relic from the distant past).  If the
-     * next argument doesn't start with a "-" then strip it off and
-     * use it as the name of a script file to process.
+     * If the application has not already set a startup script, parse
+     * the first few command line arguments to determine the script
+     * path and encoding.
      */
 
-    if (argc > 1) {
-	length = strlen(argv[1]);
-	if ((length >= 2) && (strncmp(argv[1], "-file", length) == 0)) {
+    if (NULL == Tcl_GetStartupScript(NULL)) {
+	size_t length;
+
+	/* Check whether first 3 args (argv[1] - argv[3]) look like
+	 * 	-encoding ENCODING FILENAME
+	 * or like
+	 * 	FILENAME
+	 * or like
+	 *	-file FILENAME		(ancient history support only)
+	 */
+
+	if ((argc > 3) && (0 == strcmp("-encoding", argv[1]))
+		&& ('-' != argv[3][0])) {
+	    Tcl_SetStartupScript(Tcl_NewStringObj(argv[3], -1), argv[2]);
+	    argc -= 3;
+	    argv += 3;
+	} else if ((argc > 1) && ('-' != argv[1][0])) {
+	    Tcl_SetStartupScript(Tcl_NewStringObj(argv[1], -1), NULL);
 	    argc--;
 	    argv++;
-	}
-    }
-    if (TclGetStartupScriptFileName() == NULL) {
-	if ((argc > 1) && (argv[1][0] != '-')) {
-	    TclSetStartupScriptFileName(argv[1]);
-	    argc--;
-	    argv++;
+	} else if ((argc > 2) && (length = strlen(argv[1]))
+		&& (length > 1) && (0 == strncmp("-file", argv[1], length))
+		&& ('-' != argv[2][0])) {
+	    Tcl_SetStartupScript(Tcl_NewStringObj(argv[2], -1), NULL);
+	    argc -= 2;
+	    argv += 2;
 	}
     }
     
@@ -167,11 +181,15 @@ Tk_MainEx(argc, argv, appInitProc, interp)
     ckfree(args);
     sprintf(buf, "%d", argc-1);
 
-    if (TclGetStartupScriptFileName() == NULL) {
+    path = Tcl_GetStartupScript(&encodingName);
+    if (NULL == path) {
 	Tcl_ExternalToUtfDString(NULL, argv[0], -1, &argString);
     } else {
-	TclSetStartupScriptFileName(Tcl_ExternalToUtfDString(NULL,
-		TclGetStartupScriptFileName(), -1, &argString));
+	int numBytes;
+        CONST char *pathName = Tcl_GetStringFromObj(path, &numBytes);
+        Tcl_ExternalToUtfDString(NULL, pathName, numBytes, &argString);
+        path = Tcl_NewStringObj(Tcl_DStringValue(&argString), -1);
+        Tcl_SetStartupScript(path, encodingName);
     }
     Tcl_SetVar(interp, "argc", buf, TCL_GLOBAL_ONLY);
     Tcl_SetVar(interp, "argv0", Tcl_DStringValue(&argString), TCL_GLOBAL_ONLY);
@@ -212,8 +230,7 @@ Tk_MainEx(argc, argv, appInitProc, interp)
     tsdPtr->tty = isatty(0);
 #endif
     Tcl_SetVar(interp, "tcl_interactive",
-	    ((TclGetStartupScriptFileName() == NULL) 
-		    && tsdPtr->tty) ? "1" : "0", TCL_GLOBAL_ONLY);
+	    ((path == NULL) && tsdPtr->tty) ? "1" : "0", TCL_GLOBAL_ONLY);
 
     /*
      * Invoke application-specific initialization.
@@ -226,11 +243,13 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 
     /*
      * Invoke the script specified on the command line, if any.
+     * Must fetch it again, as the appInitProc might have reset it.
      */
 
-    if (TclGetStartupScriptFileName() != NULL) {
+    path = Tcl_GetStartupScript(&encodingName);
+    if (path != NULL) {
 	Tcl_ResetResult(interp);
-	code = Tcl_EvalFile(interp, TclGetStartupScriptFileName());
+	code = Tcl_FSEvalFileEx(interp, path, encodingName);
 	if (code != TCL_OK) {
 	    /*
 	     * The following statement guarantees that the errorInfo
@@ -282,6 +301,7 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 
     Tk_MainLoop();
     Tcl_DeleteInterp(interp);
+    Tcl_SetStartupScript(NULL, NULL);
     Tcl_Exit(0);
 }
 

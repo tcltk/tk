@@ -1,3 +1,15 @@
+2003-09-05  Don Porter  <dgp@users.sourceforge.net>
+
+	* doc/wish.1:			Implementation of TIPs 137/151.
+	* generic/tkMain.c (Tk_MainEx):	Added recognition of the -encoding
+	* tests/main.test:		command line option by Tk_MainEx()
+	and thus by wish, and any other program built on Tk_MainEx().
+	[Patch 800139].
+        This is a ***POTENTIAL INCOMPATIBILITY*** only for those C programs
+        that embed Tcl and Tk, build on Tk_MainEx(), and make use of
+	Tk_MainEx's former ability to pass a leading "-encoding" option to
+	interactive shell operations.
+
 2003-08-27  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkListbox.c (ListboxSelect): Remove unused variable
