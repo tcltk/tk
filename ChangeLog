@@ -1,3 +1,8 @@
+2002-10-18  Daniel Steffen  <das@users.sourceforge.net>
+
+	* mac/tkMacAppInit.c: removed tcltest dependency.
+	[Bug #592639] (porter)
+
 2002-10-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* tests/imgPhoto.test:

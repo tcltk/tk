@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacAppInit.c,v 1.14 2002/04/08 09:04:34 das Exp $
+ * RCS: @(#) $Id: tkMacAppInit.c,v 1.15 2002/10/18 03:01:33 das Exp $
  */
 
 #include <Gestalt.h>
@@ -30,13 +30,6 @@
 #ifdef TK_TEST
 extern int		Tktest_Init _ANSI_ARGS_((Tcl_Interp *interp));
 #endif /* TK_TEST */
-
-#ifdef TCL_TEST
-extern int		Procbodytest_Init _ANSI_ARGS_((Tcl_Interp *interp));
-extern int		Procbodytest_SafeInit _ANSI_ARGS_((Tcl_Interp *interp));
-extern int		TclObjTest_Init _ANSI_ARGS_((Tcl_Interp *interp));
-extern int		Tcltest_Init _ANSI_ARGS_((Tcl_Interp *interp));
-#endif /* TCL_TEST */
 
 Tcl_Interp *gStdoutInterp = NULL;
 
@@ -151,22 +144,6 @@ Tcl_AppInit(
      *
      * where "Mod" is the name of the module.
      */
-
-#ifdef TCL_TEST
-    if (Tcltest_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-    Tcl_StaticPackage(interp, "Tcltest", Tcltest_Init,
-            (Tcl_PackageInitProc *) NULL);
-    if (TclObjTest_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-    if (Procbodytest_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-    Tcl_StaticPackage(interp, "procbodytest", Procbodytest_Init,
-            Procbodytest_SafeInit);
-#endif /* TCL_TEST */
 
 #ifdef TK_TEST
     if (Tktest_Init(interp) == TCL_ERROR) {
