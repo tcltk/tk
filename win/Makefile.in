@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.53 2002/06/26 02:38:26 dgp Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.54 2002/06/27 20:09:55 andreas_kupries Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -443,12 +443,12 @@ install-binaries: binaries
 	    done
 	@echo "Creating package index $(PKG_INDEX)"; 
 	@$(RM) $(PKG_INDEX);
-	@echo "if {[package vcompare \\" > $(PKG_INDEX); \
-	@echo "    [package provide Tcl] \\" >> $(PKG_INDEX); \
-	@echo "    $(TCLVERSION)] != 0} {return}" >> $(PKG_INDEX); \
-	@echo "package ifneeded Tk $(VERSION) \\" >> $(PKG_INDEX); \
-	@echo "    [list load [file join \$$dir .. \\" >> $(PKG_INDEX); \
-	@echo "    $(TK_DLL_FILE)] Tk]" >> $(PKG_INDEX); \
+	@echo "if {[package vcompare \\" > $(PKG_INDEX);
+	@echo "    [package provide Tcl] \\" >> $(PKG_INDEX);
+	@echo "    $(TCLVERSION)] != 0} {return}" >> $(PKG_INDEX);
+	@echo "package ifneeded Tk $(VERSION) \\" >> $(PKG_INDEX);
+	@echo "    [list load [file join \$$dir .. \\" >> $(PKG_INDEX);
+	@echo "    $(TK_DLL_FILE)] Tk]" >> $(PKG_INDEX);
 	@for i in tkConfig.sh $(TK_LIB_FILE) $(TK_STUB_LIB_FILE); \
 	    do \
 	    if [ -f $$i ]; then \
