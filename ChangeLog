@@ -1,3 +1,11 @@
+2000-10-18  Eric Melski  <ericm@ajubasolutions.com>
+
+	* win/tkWinDialog.c (GetFileNameW, GetFileNameA, 
+	Tk_ChooseColorObjCmd, Tk_ChooseDirectoryObjCmd): Added error
+	checking for the return value from the common dialog functions, so
+	that the commands will not silently fail if the common dialog
+	returns an error. [Bug: 6369].
+
 2000-10-10  Eric Melski  <ericm@ajubasolutions.com>
 
 	* generic/tkConfig.c (Tk_InitOptions): Added
