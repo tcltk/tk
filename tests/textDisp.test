@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.22 2003/11/21 18:51:18 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.23 2003/12/04 12:10:07 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -3578,6 +3578,29 @@ test textDisp-33.4 {one line longer than fits in the widget} {
     .tt debug 0
     set result
 } {ok}
+destroy .tt
+test textDisp-33.5 {bold or italic fonts} {winOnly} {
+    destroy .tt
+    pack [text .tt -wrap char -font {{MS Sans Serif} 15}]
+    font create no -family [lindex [.tt cget -font] 0] -size 24
+    font create bi -family [lindex [.tt cget -font] 0] -size 24
+    font configure bi -weight bold -slant italic
+    .tt tag configure bi -font bi
+    .tt tag configure no -font no
+    .tt insert end abcd no efgh bi ijkl\n no
+    update
+    set bb {}
+    for {set i 0} {$i < 12} {incr i 4} {
+	lappend bb [lindex [.tt bbox 1.$i] 0]
+    }
+    foreach {a b c} $bb {}
+    unset bb
+    if {($b - $a) * 1.5 < ($c - $b)} {
+	set result "italic font has much too much space"
+    } else {
+	set result "italic font measurement ok"
+    }
+} {italic font measurement ok}
 destroy .tt
 
 deleteWindows
