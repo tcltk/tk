@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.3 1999/04/16 01:51:47 stanton Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.4 1999/05/25 20:40:55 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -55,6 +55,10 @@ typedef struct IncrInfo {
 				 * changes. */
     struct IncrInfo *nextPtr;	/* Next in list of all INCR-style
 				 * retrievals currently pending. */
+    Tcl_EncodingState state;	/* State info for encoding conversions
+				 * that span multiple buffers. */
+    int flags;			/* Encoding flags, set to TCL_ENCODING_START
+				 * at the beginning of an INCR transfer. */
 } IncrInfo;
 
 
@@ -150,7 +154,9 @@ TkSelGetSelection(interp, tkwin, selection, target, proc, clientData)
     retr.clientData = clientData;
     retr.result = -1;
     retr.idleTime = 0;
+    retr.encFlags = TCL_ENCODING_START;
     retr.nextPtr = pendingRetrievals;
+    Tcl_DStringInit(&retr.buf);
     pendingRetrievals = &retr;
 
     /*
@@ -195,6 +201,7 @@ TkSelGetSelection(interp, tkwin, selection, target, proc, clientData)
 	    }
 	}
     }
+    Tcl_DStringFree(&retr.buf);
     return retr.result;
 }
 
@@ -383,6 +390,7 @@ TkSelEventProc(tkwin, eventPtr)
 	Atom type;
 	int format, result;
 	unsigned long numItems, bytesAfter;
+	Tcl_DString ds;
 
 	for (retrPtr = pendingRetrievals; ; retrPtr = retrPtr->nextPtr) {
 	    if (retrPtr == NULL) {
@@ -426,6 +434,7 @@ TkSelEventProc(tkwin, eventPtr)
 	}
 	if ((type == XA_STRING) || (type == dispPtr->textAtom)
 		|| (type == dispPtr->compoundTextAtom)) {
+	    Tcl_Encoding encoding;
 	    if (format != 8) {
 		char buf[64 + TCL_INTEGER_SPACE];
 		
@@ -438,9 +447,30 @@ TkSelEventProc(tkwin, eventPtr)
 	    }
             interp = retrPtr->interp;
             Tcl_Preserve((ClientData) interp);
+
+	    /*
+	     * Convert the X selection data into UTF before passing it
+	     * to the selection callback.  Note that the COMPOUND_TEXT
+	     * uses a modified iso2022 encoding, not the current system
+	     * encoding.  For now we'll just blindly apply the iso2022
+	     * encoding.  This is probably wrong, but it's a placeholder
+	     * until we figure out what we're really supposed to do.
+	     */
+
+	    if (type == dispPtr->compoundTextAtom) {
+		encoding = Tcl_GetEncoding(NULL, "iso2022");
+	    } else {
+		encoding = NULL;
+	    }
+	    Tcl_ExternalToUtfDString(encoding, propInfo, (int)numItems, &ds);
+	    if (encoding) {
+		Tcl_FreeEncoding(encoding);
+	    }
+
 	    retrPtr->result = (*retrPtr->proc)(retrPtr->clientData,
-		    interp, propInfo);
-            Tcl_Release((ClientData) interp);
+		    interp, Tcl_DStringValue(&ds));
+	    Tcl_DStringFree(&ds);
+	    Tcl_Release((ClientData) interp);
 	} else if (type == dispPtr->incrAtom) {
 
 	    /*
@@ -873,11 +903,13 @@ SelRcvIncrProc(clientData, eventPtr)
     register XEvent *eventPtr;		/* X PropertyChange event. */
 {
     register TkSelRetrievalInfo *retrPtr = (TkSelRetrievalInfo *) clientData;
-    char *propInfo;
+    char *propInfo, *dst, *src;
     Atom type;
-    int format, result;
+    int format, result, srcLen, dstLen, srcRead, dstWrote, soFar;
     unsigned long numItems, bytesAfter;
+    Tcl_DString *dstPtr, temp;
     Tcl_Interp *interp;
+    Tcl_Encoding encoding;
 
     if ((eventPtr->xproperty.atom != retrPtr->property)
 	    || (eventPtr->xproperty.state != PropertyNewValue)
@@ -898,9 +930,7 @@ SelRcvIncrProc(clientData, eventPtr)
 	retrPtr->result = TCL_ERROR;
 	goto done;
     }
-    if (numItems == 0) {
-	retrPtr->result = TCL_OK;
-    } else if ((type == XA_STRING)
+    if ((type == XA_STRING)
 	    || (type == retrPtr->winPtr->dispPtr->textAtom)
 	    || (type == retrPtr->winPtr->dispPtr->compoundTextAtom)) {
 	if (format != 8) {
@@ -915,11 +945,94 @@ SelRcvIncrProc(clientData, eventPtr)
 	}
         interp = retrPtr->interp;
         Tcl_Preserve((ClientData) interp);
-	result = (*retrPtr->proc)(retrPtr->clientData, interp, propInfo);
+
+	if (type == retrPtr->winPtr->dispPtr->compoundTextAtom) {
+	    encoding = Tcl_GetEncoding(NULL, "iso2022");
+	} else {
+	    encoding = NULL;
+	}
+
+	/*
+	 * Check to see if there is any data left over from the previous
+	 * chunk.  If there is, copy the old data and the new data into
+	 * a new buffer.
+	 */
+
+	Tcl_DStringInit(&temp);
+	if (Tcl_DStringLength(&retrPtr->buf) > 0) {
+	    Tcl_DStringAppend(&temp, Tcl_DStringValue(&retrPtr->buf),
+		    Tcl_DStringLength(&retrPtr->buf));
+	    if (numItems > 0) {
+		Tcl_DStringAppend(&temp, propInfo, (int)numItems);
+	    }
+	    src = Tcl_DStringValue(&temp);
+	    srcLen = Tcl_DStringLength(&temp);
+	} else if (numItems == 0) {
+	    /*
+	     * There is no new data, so we're done.
+	     */
+
+	    retrPtr->result = TCL_OK;
+	    goto done;
+	} else {
+	    src = propInfo;
+	    srcLen = numItems;
+	}
+	
+	/*
+	 * Set up the destination buffer so we can use as much space as
+	 * is available.
+	 */
+
+	dstPtr = &retrPtr->buf;
+	dst = Tcl_DStringValue(dstPtr);
+	dstLen = dstPtr->spaceAvl - 1;
+
+	/*
+	 * Now convert the data, growing the destination buffer as needed.
+	 */
+
+	while (1) {
+	    result = Tcl_ExternalToUtf(NULL, encoding, src, srcLen,
+		    retrPtr->encFlags, &retrPtr->encState,
+		    dst, dstLen, &srcRead, &dstWrote, NULL);
+	    soFar = dst + dstWrote - Tcl_DStringValue(dstPtr);
+	    retrPtr->encFlags &= ~TCL_ENCODING_START;
+	    src += srcRead;
+	    srcLen -= srcRead;
+	    if (result != TCL_CONVERT_NOSPACE) {
+		Tcl_DStringSetLength(dstPtr, soFar);
+		break;
+	    }
+	    if (Tcl_DStringLength(dstPtr) == 0) {
+		Tcl_DStringSetLength(dstPtr, dstLen);
+	    }
+	    Tcl_DStringSetLength(dstPtr, 2 * Tcl_DStringLength(dstPtr) + 1);
+	    dst = Tcl_DStringValue(dstPtr) + soFar;
+	    dstLen = Tcl_DStringLength(dstPtr) - soFar - 1;
+	}
+
+	result = (*retrPtr->proc)(retrPtr->clientData, interp,
+		Tcl_DStringValue(dstPtr));
         Tcl_Release((ClientData) interp);
+
+	/*
+	 * Copy any unused data into the destination buffer so we can
+	 * pick it up next time around.
+	 */
+
+	Tcl_DStringSetLength(dstPtr, 0);
+	Tcl_DStringAppend(dstPtr, src, srcLen);
+
+	Tcl_DStringFree(&temp);
+	if (encoding) {
+	    Tcl_FreeEncoding(encoding);
+	}
 	if (result != TCL_OK) {
 	    retrPtr->result = result;
 	}
+    } else if (numItems == 0) {
+	retrPtr->result = TCL_OK;
     } else {
 	char *string;
 

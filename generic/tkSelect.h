@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.h,v 1.3 1999/04/16 01:51:22 stanton Exp $
+ * RCS: @(#) $Id: tkSelect.h,v 1.4 1999/05/25 20:40:54 stanton Exp $
  */
 
 #ifndef _TKSELECT
@@ -95,6 +95,10 @@ typedef struct TkSelRetrievalInfo {
     int idleTime;		/* Number of seconds that have gone by
 				 * without hearing anything from the
 				 * selection owner. */
+    Tcl_EncodingState encState;	/* Holds intermediate state during translations
+				 * of data that cross buffer boundaries. */
+    int encFlags;		/* Encoding translation state flags. */
+    Tcl_DString buf;		/* Buffer to hold translation data. */
     struct TkSelRetrievalInfo *nextPtr;
 				/* Next in list of all pending
 				 * selection retrievals.  NULL means
