@@ -1,3 +1,8 @@
+2002-06-14  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
+
+	* unix/tkAppInit.c: Removed now unneeded and erroneous reference
+	  to 'matherr'. See Tcl ChangeLog entry 2002-05-31 Don Porter.
+
 2002-06-14  David Gravereaux <davygrvy@pobox.com>
 
 	*win/rules.vc: The test for compiler optimizations was in error.
