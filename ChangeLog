@@ -14,6 +14,9 @@
 
 2001-11-09  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/clrpick.tcl: changed a few parameters so that the full
+	0..255 range could be accessed via the mouse. [Bug #478498]
+
 	* unix/configure:
 	* unix/tcl.m4: added -lc to AIX libs, fixed path to ldAix
 
