@@ -1,3 +1,8 @@
+2003-12-10  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/CrtImgType.3: Fixed line-transposition error found by Eric
+	Raymond. [Bug 857159]
+
 2003-12-03  Don Porter	<dgp@users.sourceforge.net>
 
 	* generic/tk.h:		Bumped patch level to 8.4.5.1 to distinguish
