@@ -1,5 +1,12 @@
 2004-05-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkClipboard.c:   Move TkClipCleanup from tkClipboard.c
+	* macosx/tkMacOSXXStubs.c: to being implemented in a platform
+	* unix/tkUnixEvent.c:      specific manner.  The cleanup order was
+	* win/tkWinX.c:            bad at least on Windows, where we
+	reset/cleared display info that was still needed for the clipboard
+	to render. [Bug #939389, #822002, #732662]
+
 	* library/panedwindow.tcl (MarkSash): call DragSash to stop sash
 	jump when B1 is pressed and released without moving. [Bug #932155]
 
