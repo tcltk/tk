@@ -1,3 +1,14 @@
+2003-03-20  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXApplication.r (removed):
+	* macosx/tkMacOSXLibrary.r (removed):
+	* macosx/tkMacOSXResource.r (removed):
+	* macosx/Wish.pbproj/project.pbxproj:
+	* macosx/tkAboutDlg.r: updated copyrights, cleaned up about box,
+	removed obsolete unused resource files.
+
+	* macosx/buildTkConfig.tcl: TK_DEFS space fix.
+
 2003-03-18  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/tkConfig.sh.in: Add TK_DLL_FILE entry
