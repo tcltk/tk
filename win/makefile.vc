@@ -12,7 +12,7 @@
 # Copyright (c) 2001 Tomasoft Engineering.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.45 2001/11/13 04:26:48 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.46 2001/11/13 06:55:18 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -67,7 +67,7 @@ the environment.  Jump to this line to read the new instructions.
 #		Sets where to install Tcl from the built binaries.
 #		C:\Progra~1\Tcl is assumed when not specified.
 #
-#	OPTS=static,msvcrt,threads,symbols,profile,none
+#	OPTS=static,msvcrt,linkexten,threads,symbols,profile,none
 #		Sets special options for the core.  The default is for none.
 #		Any combination of the above may be used (comma separated).
 #		'none' will over-ride everything to nothing.
@@ -128,19 +128,6 @@ the environment.  Jump to this line to read the new instructions.
 #       Targeting Windows pre64 RETAIL
 #       c:\tk_src\win\>nmake -f makefile.vc MACHINE=IA64
 #
-#     I've found the following batchfile useful for building everything:
-#
-#	if "%MSVCDir%" == "" call c:\progra~1\micros~1\vc98\bin\vcvars32.bat
-#	set INSTALLDIR=C:\tclTestArea
-#	nmake -nologo -f makefile.vc release winhelp
-#	nmake -nologo -f makefile.vc release   OPTS=static,linkexten      TCLDIR=%1
-#	nmake -nologo -f makefile.vc core dlls OPTS=static,msvcrt         TCLDIR=%1
-#	nmake -nologo -f makefile.vc core      OPTS=static,threads        TCLDIR=%1
-#	nmake -nologo -f makefile.vc core      OPTS=static,msvcrt,threads TCLDIR=%1
-#	nmake -nologo -f makefile.vc shell     OPTS=threads               TCLDIR=%1
-#	pause
-#
-#
 #------------------------------------------------------------------------------
 #==============================================================================
 ###############################################################################
@@ -172,7 +159,9 @@ PROJECT	= tk
 TCLINSTALL	= 1
 TCLDIR		= $(INSTALLDIR)
 !else
-!error Don't know where tcl.h is.  Set the TCLDIR macro.
+MSG=^
+Don't know where tcl.h is.  Set the TCLDIR macro.
+!error $(MSG)
 !endif
 !else
 !if exist($(TCLDIR)\include\tcl.h)
@@ -180,7 +169,9 @@ TCLINSTALL	= 1
 !elseif exist($(TCLDIR)\generic\tcl.h)
 TCLINSTALL	= 0
 !else
-!error Don't know where tcl.h is.  the TCLDIR macro doesn't appear correct.
+MSG =^
+Don't know where tcl.h is.  the TCLDIR macro doesn't appear correct.
+!error $(MSG)
 !endif
 !endif
 
@@ -196,6 +187,9 @@ TCLIMPLIBNAME	= tcl$(VERSION)$(SUFX).lib
 TCLLIBNAME	= tcl$(VERSION)$(SUFX).$(EXT)
 TCLSTUBLIBNAME	= tclstub$(VERSION).lib
 
+TCLREGLIBNAME	= tclreg10$(SUFX:t=).lib
+TCLDDELIBNAME	= tcldde12$(SUFX:t=).lib
+
 TKIMPLIB	= $(OUT_DIR)\$(PROJECT)$(VERSION)$(SUFX).lib
 TKLIBNAME	= $(PROJECT)$(VERSION)$(SUFX).$(EXT)
 TKLIB		= $(OUT_DIR)\$(TKLIBNAME)
@@ -208,11 +202,15 @@ TCLSH		= $(INSTALLDIR)\bin\$(TCLNAMEPREFIX)sh$(VERSION)$(SUFX).exe
 TCLSTUBLIB	= $(INSTALLDIR)\lib\$(TCLSTUBLIBNAME)
 TCLIMPLIB	= $(INSTALLDIR)\lib\$(TCLIMPLIBNAME)
 TCL_LIBRARY	= $(INSTALLDIR)\lib
+TCLREGLIB	= $(INSTALLDIR)\lib\$(TCLREGLIBNAME)
+TCLDDELIB	= $(INSTALLDIR)\lib\$(TCLDDELIBNAME)
 !else
 TCLSH		= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLNAMEPREFIX)sh$(VERSION)$(SUFX).exe
 TCLSTUBLIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLSTUBLIBNAME)
 TCLIMPLIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLIMPLIBNAME)
 TCL_LIBRARY	= $(TCLDIR)\library
+TCLREGLIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLREGLIBNAME)
+TCLDDELIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLDDELIBNAME)
 !endif
 
 WISH 		= $(OUT_DIR)\$(WISHNAMEPREFIX)$(VERSION)$(SUFX).exe
@@ -231,11 +229,15 @@ RM		= del
 LIB_INSTALL_DIR		= $(INSTALLDIR)\lib
 BIN_INSTALL_DIR		= $(INSTALLDIR)\bin
 DOC_INSTALL_DIR		= $(INSTALLDIR)\doc
-SCRIPT_INSTALL_DIR	= $(INSTALLDIR)\lib\tcl$(DOTVERSION)
+SCRIPT_INSTALL_DIR	= $(INSTALLDIR)\lib\tk$(DOTVERSION)
 INCLUDE_INSTALL_DIR	= $(INSTALLDIR)\include
 
 WISHOBJS = \
 	$(TMP_DIR)\winMain.obj \
+!if $(TCL_LINKWITHEXTENSIONS)
+	$(TCLDDELIB) \
+	$(TCLREGLIB) \
+!endif
 	$(TMP_DIR)\wish.res
 
 TKTESTOBJS = \
@@ -608,7 +610,11 @@ genstubs:
 #---------------------------------------------------------------------
 
 $(TMP_DIR)\testMain.obj: $(WINDIR)\winMain.c
+!if $(TCL_LINKWITHEXTENSIONS)
+	$(cc32) $(WISH_CFLAGS) -DTK_TEST -DTCL_LINKWITHEXTENSIONS -Fo$@ $?
+!else
 	$(cc32) $(WISH_CFLAGS) -DTK_TEST -Fo$@ $?
+!endif
 
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
 	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
@@ -620,7 +626,11 @@ $(TMP_DIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
 	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
 
 $(TMP_DIR)\winMain.obj: $(WINDIR)\winMain.c
+!if $(TCL_LINKWITHEXTENSIONS)
+	$(cc32) $(WISH_CFLAGS) -DTCL_LINKWITHEXTENSIONS -Fo$@ $?
+!else
 	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
+!endif
 
 # The following objects are part of the stub library and should not
 # be built as DLL objects but none of the symbols should be exported
