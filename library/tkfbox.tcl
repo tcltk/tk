@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.17 2000/03/29 00:09:06 ericm Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.18 2000/03/31 09:24:12 hobbs Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -298,7 +298,7 @@ proc tkIconList_Arrange {w} {
 	set data(itemsPerColumn) 1
     }
 
-    if {[string compare $data(curItem) {}]} {
+    if {$data(curItem) != ""} {
 	tkIconList_Select $w [lindex [lindex $data(list) $data(curItem)] 2] 0
     }
 }
@@ -309,7 +309,7 @@ proc tkIconList_Arrange {w} {
 proc tkIconList_Invoke {w} {
     upvar #0 $w data
 
-    if {[string compare $data(-command) ""] && [info exists data(selected)]} {
+    if {$data(-command) != "" && [info exists data(selected)]} {
 	uplevel #0 $data(-command)
     }
 }
@@ -397,7 +397,7 @@ proc tkIconList_Select {w rTag {callBrowse 1}} {
     set data(curItem) $serial
     set data(selected) $text
 
-    if {$callBrowse && [string compare $data(-browsecmd) ""]} {
+    if {$callBrowse && $data(-browsecmd) != ""} {
 	eval $data(-browsecmd) [list $text]
     }
 }
@@ -571,7 +571,7 @@ proc tkIconList_Goto {w text} {
 	return
     }
 
-    if {[string equal $data(curItem) {}] || $data(curItem) == 0} {
+    if {$data(curItem) == "" || $data(curItem) == 0} {
 	set start  0
     } else {
 	set start  $data(curItem)
@@ -586,7 +586,7 @@ proc tkIconList_Goto {w text} {
 
     # Search forward until we find a filename whose prefix is an exact match
     # with $text
-    while 1 {
+    while {1} {
 	set sub [string range $textList($i) 0 $len0]
 	if {[string equal $text $sub]} {
 	    set theIndex $i
@@ -603,7 +603,7 @@ proc tkIconList_Goto {w text} {
 
     if {$theIndex > -1} {
 	set rTag [lindex [lindex $data(list) $theIndex] 2]
-	tkIconList_Select $w $rTag 0
+	tkIconList_Select $w $rTag
 	tkIconList_See $w $rTag
     }
 }

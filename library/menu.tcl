@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.10 2000/03/10 22:16:36 ericm Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.11 2000/03/31 09:24:11 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -405,7 +405,7 @@ proc tkMenuUnpost menu {
 	    # including the top-level torn-off one) and deactivate the
 	    # top-level torn off menu if there is one.
 
-	    while 1 {
+	    while {1} {
 		set parent [winfo parent $menu]
 		if {[string compare [winfo class $parent] "Menu"] \
 			|| ![winfo ismapped $parent]} {
@@ -651,8 +651,8 @@ proc tkMenuInvoke {w buttonRelease} {
 	set menu [$w entrycget active -menu]
 	tkMenuFirstEntry $menu
     } elseif {[string equal [$w type active] "tearoff"]} {
-	tkMenuUnpost $w
 	tkTearOffMenu $w
+	tkMenuUnpost $w
     } elseif {[string equal [$w cget -type] "menubar"]} {
 	$w postcascade none
 	$w activate none
@@ -795,7 +795,7 @@ proc tkMenuNextMenu {menu direction} {
     set buttons [winfo children [winfo parent $w]]
     set length [llength $buttons]
     set i [expr {[lsearch -exact $buttons $w] + $count}]
-    while 1 {
+    while {1} {
 	while {$i < 0} {
 	    incr i $length
 	}
@@ -841,7 +841,7 @@ proc tkMenuNextEntry {menu count} {
     } else {
 	set i [expr {$active + $count}]
     }
-    while 1 {
+    while {1} {
 	if {$quitAfter <= 0} {
 	    # We've tried every entry in the menu.  Either there are
 	    # none, or they're all disabled.  Just give up.

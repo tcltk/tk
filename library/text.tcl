@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.10 2000/02/10 08:52:50 hobbs Exp $
+# RCS: @(#) $Id: text.tcl,v 1.11 2000/03/31 09:24:11 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -829,7 +829,7 @@ proc tkTextUpDownLine {w n} {
 
 proc tkTextPrevPara {w pos} {
     set pos [$w index "$pos linestart"]
-    while 1 {
+    while {1} {
 	if {([string equal [$w get "$pos - 1 line"] "\n"] \
 		&& [string compare [$w get $pos] "\n"]) \
 		|| [string equal $pos "1.0"]} {
