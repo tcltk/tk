@@ -1,3 +1,8 @@
+1998-11-30    <stanton@GASPODE>
+
+	* generic/tkButton.c (ConfigureButton): The error result was
+	getting lost when restoring configuration options. [Bug: 619]
+
 1998-11-25    <stanton@GASPODE>
 
 	* unix/tkUnixFont.c (GetFontAttributes): Initialize an unspecified
