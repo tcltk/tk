@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.49 2005/01/13 09:54:04 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.50 2005/01/13 10:16:14 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -38,9 +38,10 @@ proc ::tk::IconList {w args} {
 }
 
 proc ::tk::IconList_Index {w i} {
-    upvar #0 ::tk::$w data
-    upvar #0 ::tk::$w:itemList itemList
-    if {![info exists data(list)]} {set data(list) {}}
+    upvar #0 ::tk::$w data ::tk::$w:itemList itemList
+    if {![info exists data(list)]} {
+	set data(list) {}
+    }
     switch -regexp -- $i {
 	"^-?[0-9]+$" {
 	    if { $i < 0 } {
@@ -64,7 +65,8 @@ proc ::tk::IconList_Index {w i} {
 	    foreach {x y} [scan $i "@%d,%d"] {
 		break
 	    }
-	    set item [$data(canvas) find closest $x $y]
+	    set item [$data(canvas) find closest \
+		    [$data(canvas) canvasx $x] [$data(canvas) canvasy $y]]
 	    return [lindex [$data(canvas) itemcget $item -tags] 1]
 	}
     }
@@ -261,6 +263,8 @@ proc ::tk::IconList_Create {w} {
 	    [list tk::IconList_Double1 $w %x %y]
 
     bind $data(canvas) <Control-B1-Motion> {;}
+    bind $data(canvas) <Shift-B1-Motion> \
+	    [list tk::IconList_ShiftMotion1 $w %x %y]
 
     bind $data(canvas) <Up>		[list tk::IconList_UpDown $w -1]
     bind $data(canvas) <Down>		[list tk::IconList_UpDown $w  1]
@@ -540,9 +544,7 @@ proc ::tk::IconList_Btn1 {w x y} {
     upvar ::tk::$w data
 
     focus $data(canvas)
-    set x [expr {int([$data(canvas) canvasx $x])}]
-    set y [expr {int([$data(canvas) canvasy $y])}]
-    set i [IconList_Index $w @${x},${y}]
+    set i [IconList_Index $w @$x,$y]
     if {$i eq ""} return
     IconList_Selection $w clear 0 end
     IconList_Selection $w set $i
@@ -554,9 +556,7 @@ proc ::tk::IconList_CtrlBtn1 {w x y} {
     
     if { $data(-multiple) } {
 	focus $data(canvas)
-	set x [expr {int([$data(canvas) canvasx $x])}]
-	set y [expr {int([$data(canvas) canvasy $y])}]
-	set i [IconList_Index $w @${x},${y}]
+	set i [IconList_Index $w @$x,$y]
 	if {$i eq ""} return
 	if { [IconList_Selection $w includes $i] } {
 	    IconList_Selection $w clear $i
@@ -572,9 +572,7 @@ proc ::tk::IconList_ShiftBtn1 {w x y} {
     
     if { $data(-multiple) } {
 	focus $data(canvas)
-	set x [expr {int([$data(canvas) canvasx $x])}]
-	set y [expr {int([$data(canvas) canvasy $y])}]
-	set i [IconList_Index $w @${x},${y}]
+	set i [IconList_Index $w @$x,$y]
 	if {$i eq ""} return
 	set a [IconList_Index $w anchor]
 	if { [string equal $a ""] } {
@@ -588,16 +586,24 @@ proc ::tk::IconList_ShiftBtn1 {w x y} {
 # Gets called on button-1 motions
 #
 proc ::tk::IconList_Motion1 {w x y} {
+    variable ::tk::Priv
+    set Priv(x) $x
+    set Priv(y) $y
+    set i [IconList_Index $w @$x,$y]
+    if {$i eq ""} return
+    IconList_Selection $w clear 0 end
+    IconList_Selection $w set $i
+}
+
+proc ::tk::IconList_ShiftMotion1 {w x y} {
     upvar ::tk::$w data
     variable ::tk::Priv
     set Priv(x) $x
     set Priv(y) $y
-    set x [expr {int([$data(canvas) canvasx $x])}]
-    set y [expr {int([$data(canvas) canvasy $y])}]
-    set i [IconList_Index $w @${x},${y}]
+    set i [IconList_Index $w @$x,$y]
     if {$i eq ""} return
     IconList_Selection $w clear 0 end
-    IconList_Selection $w set $i
+    IconList_Selection $w set anchor $i
 }
 
 proc ::tk::IconList_Double1 {w x y} {
