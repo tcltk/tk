@@ -5,13 +5,13 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: WindowId.3,v 1.4 1999/04/21 21:53:22 rjohnson Exp $
+'\" RCS: @(#) $Id: WindowId.3,v 1.5 2000/01/21 03:54:20 hobbs Exp $
 '\" 
 .so man.macros
 .TH Tk_WindowId 3 "" Tk "Tk Library Procedures"
 .BS
 .SH NAME
-Tk_WindowId, Tk_Parent, Tk_Display, Tk_DisplayName, Tk_ScreenNumber, Tk_Screen, Tk_X, Tk_Y, Tk_Width, Tk_Height, Tk_Changes, Tk_Attributes, Tk_IsMapped, Tk_IsTopLevel, Tk_ReqWidth, Tk_ReqHeight, Tk_InternalBorderWidth, Tk_Visual, Tk_Depth, Tk_Colormap  \- retrieve information from Tk's local data structure
+Tk_WindowId, Tk_Parent, Tk_Display, Tk_DisplayName, Tk_ScreenNumber, Tk_Screen, Tk_X, Tk_Y, Tk_Width, Tk_Height, Tk_Changes, Tk_Attributes, Tk_IsContainer, Tk_IsEmbedded, Tk_IsMapped, Tk_IsTopLevel, Tk_ReqWidth, Tk_ReqHeight, Tk_InternalBorderWidth, Tk_Visual, Tk_Depth, Tk_Colormap  \- retrieve information from Tk's local data structure
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
@@ -51,6 +51,12 @@ XWindowChanges *
 .sp
 XSetWindowAttributes *
 \fBTk_Attributes\fR(\fItkwin\fR)
+.sp
+int
+\fBTk_IsContainer\fR(\fItkwin\fR)
+.sp
+int
+\fBTk_IsEmbedded\fR(\fItkwin\fR)
 .sp
 int
 \fBTk_IsMapped\fR(\fItkwin\fR)
@@ -119,6 +125,14 @@ as it is changed by the application).  Note: it is essential that
 applications use Tk procedures like \fBTk_ResizeWindow\fR instead
 of X procedures like \fBXResizeWindow\fR, so that Tk can keep its
 data structures up-to-date.
+.PP
+\fBTk_IsContainer\fR returns a non-zero value if \fItkwin\fR
+is a container, and that some other application may be embedding
+itself inside \fItkwin\fR.
+.PP
+\fBTk_IsEmbedded\fR returns a non-zero value if \fItkwin\fR
+is is not a free-standing window, but rather is embedded in some
+other application.
 .PP
 \fBTk_IsMapped\fR returns a non-zero value if \fItkwin\fR
 is mapped and zero if \fItkwin\fR isn't mapped.

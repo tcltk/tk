@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.4 2000/01/06 02:18:54 hobbs Exp $
+'\" RCS: @(#) $Id: text.n,v 1.5 2000/01/21 03:54:21 hobbs Exp $
 '\" 
 .so man.macros
 .TH text n 4.0 Tk "Tk Built-In Commands"
@@ -506,8 +506,8 @@ If a mark has left gravity, then the mark is treated as if it
 were attached to the character on its left, so the mark will
 remain to the left of any text inserted at the mark position.
 If the mark has right gravity, new text inserted at the mark
-position will appear to the right of the mark.  The gravity
-for a mark defaults to \fBright\fR.
+position will appear to the left of the mark (so that the mark
+remains rightmost).  The gravity for a mark defaults to \fBright\fR.
 .PP
 The name space for marks is different from that for tags:  the
 same name may be used for both a mark and a tag, but they will refer
@@ -825,7 +825,7 @@ One or more of the following switches (or abbreviations thereof)
 may be specified to control the dump:
 .TP
 \fB\-all\fR
-Return information about all elements: text, marks, tags, and windows.
+Return information about all elements: text, marks, tags, images and windows.
 This is the default.
 .TP
 \fB\-command \fIcommand\fR
@@ -834,13 +834,16 @@ invoke the \fIcommand\fR on each element of the text widget within the range.
 The command has three arguments appended to it before it is evaluated:
 the \fIkey\fP, \fIvalue\fP, and \fIindex\fP.
 .TP
+\fB\-image\fR
+Include information about images in the dump results.
+.TP
 \fB\-mark\fR
 Include information about marks in the dump results.
 .TP
 \fB\-tag\fR
-Include information about tag transitions in the dump results. Tag information is
-returned as \fBtagon\fP and \fBtagoff\fP elements that indicate the
-begin and end of each range of each tag, respectively.
+Include information about tag transitions in the dump results. Tag
+information is returned as \fBtagon\fP and \fBtagoff\fP elements that
+indicate the begin and end of each range of each tag, respectively.
 .TP
 \fB\-text\fR
 Include information about text in the dump results.  The value is the
@@ -1438,9 +1441,8 @@ This command used to be used for scrolling, but now it is obsolete.
 .PP
 Tk automatically creates class bindings for texts that give them
 the following default behavior.
-In the descriptions below, ``word'' refers to a contiguous group
-of letters, digits, or ``_'' characters, or any single character
-other than these.
+In the descriptions below, ``word'' is dependent on the value of
+the \fBtcl_wordchars\fR variable.  See tclvars(n).
 .IP [1]
 Clicking mouse button 1 positions the insertion cursor
 just before the character underneath the mouse cursor, sets the
