@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.8 2003/10/31 09:02:12 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.9 2003/11/07 15:36:27 vincentdarley Exp $
  */
 
 #include "tk.h"
@@ -292,7 +292,7 @@ TkTextWindowCmd(textPtr, interp, objc, objv)
 	    if (EmbWinConfigure(textPtr, ewPtr, objc-4, objv+4) != TCL_OK) {
 		TkTextIndex index2;
 
-		TkTextIndexForwChars(&index, 1, &index2, COUNT_INDICES);
+		TkTextIndexForwChars(NULL,&index, 1, &index2, COUNT_INDICES);
 		TkBTreeDeleteChars(&index, &index2);
 		return TCL_ERROR;
 	    }

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextMark.c,v 1.9 2003/10/31 09:02:11 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextMark.c,v 1.10 2003/11/07 15:36:26 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -274,7 +274,7 @@ TkTextSetMark(textPtr, name, indexPtr)
 	if (markPtr == textPtr->insertMarkPtr) {
 	    TkTextIndex index, index2;
 	    TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
-	    TkTextIndexForwChars(&index, 1, &index2, COUNT_INDICES);
+	    TkTextIndexForwChars(NULL,&index, 1, &index2, COUNT_INDICES);
 	    /* 
 	     * While we wish to redisplay, no heights have changed, so
 	     * no need to call TkTextInvalidateLineMetrics.
@@ -282,7 +282,7 @@ TkTextSetMark(textPtr, name, indexPtr)
 	    TkTextChanged(textPtr, &index, &index2);
 	    if (TkBTreeLineIndex(indexPtr->linePtr)
 		    == TkBTreeNumLines(textPtr->tree))  {
-		TkTextIndexBackChars(indexPtr, 1, &insertIndex, COUNT_INDICES);
+		TkTextIndexBackChars(NULL,indexPtr, 1, &insertIndex, COUNT_INDICES);
 		indexPtr = &insertIndex;
 	    }
 	}
@@ -307,7 +307,7 @@ TkTextSetMark(textPtr, name, indexPtr)
     if (markPtr == textPtr->insertMarkPtr) {
 	TkTextIndex index2;
 
-	TkTextIndexForwChars(indexPtr, 1, &index2, COUNT_INDICES);
+	TkTextIndexForwChars(NULL,indexPtr, 1, &index2, COUNT_INDICES);
 	/* 
 	 * While we wish to redisplay, no heights have changed, so
 	 * no need to call TkTextInvalidateLineMetrics
