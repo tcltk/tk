@@ -1,3 +1,15 @@
+1999-03-19    <redman@scriptics.com>
+
+	* generic/tkBitmap.c:
+	* generic/tkCursor.c:
+	* generic/tkGC.c: When creating hash tables that key off of XID
+ 	handles, make sure to pass TCL_ONE_WORD_KEYS.  XIDs are guaranteed
+ 	to be 32bit numbers, although on some 64bit systems (including 64bit
+ 	Solaris 7) they are packed into a 64bit value where the upper 32bits
+ 	are zero. The normal method of sizeof(XID)/sizeof(int) causes the
+ 	hash table code to assume that the XID is a pointer to an array of 
+	two ints, which it is not.  Tk now supports 64bit Solaris 7.
+
 1999-03-17    <stanton@scriptics.com>
 
 	* win/makefile.vc: 
