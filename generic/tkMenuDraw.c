@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenuDraw.c,v 1.3.20.1 2003/07/15 13:59:06 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMenuDraw.c,v 1.3.20.2 2003/11/12 00:04:53 hobbs Exp $
  */
 
 #include "tkMenu.h"
@@ -986,7 +986,7 @@ TkPostSubmenu(interp, menuPtr, mePtr)
 	 */
 
 	TkEventuallyRedrawMenu(menuPtr, (TkMenuEntry *) NULL);
-	result = Tcl_VarEval(interp, name, " unpost", (char *) NULL);
+	result = Tcl_VarEval(interp, "{", name, "} unpost", (char *) NULL);
 	menuPtr->postedCascade = NULL;
 	if (result != TCL_OK) {
 	    return result;
@@ -1009,7 +1009,7 @@ TkPostSubmenu(interp, menuPtr, mePtr)
 	name = Tcl_GetStringFromObj(mePtr->namePtr, NULL);
 	Tk_GetRootCoords(menuPtr->tkwin, &x, &y);
 	AdjustMenuCoords(menuPtr, mePtr, &x, &y, string);
-	result = Tcl_VarEval(interp, name, " post ", string, (char *) NULL);
+	result = Tcl_VarEval(interp, "{", name, "} post ", string, (char *) NULL);
 	if (result != TCL_OK) {
 	    return result;
 	}
