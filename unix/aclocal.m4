@@ -741,7 +741,17 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 		DL_LIBS=""
 		LDFLAGS=""
 		LD_SEARCH_FLAGS=""
-		SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.so.1.0'
+		AC_MSG_CHECKING(for ELF)
+		AC_EGREP_CPP(yes, [
+#ifdef __ELF__
+	yes
+#endif
+		],
+		    AC_MSG_RESULT(yes)
+		    SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.so',
+		    AC_MSG_RESULT(no)
+		    SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.so.1.0'
+		)
 	    ], [
 		SHLIB_CFLAGS=""
 		SHLIB_LD="echo tclLdAout $CC \{$SHLIB_CFLAGS\} | `pwd`/tclsh -r"
