@@ -1,3 +1,10 @@
+2001-09-30  Peter Spjuth <peter.spjuth@space.se>
+
+	* doc/grid.n:
+	* generic/tkGrid.c:
+	* tests/grid.test: Added -uniform option to grid's row/column-
+	configure. [TIP 37] [Patch 459343]
+	
 2001-09-26  Peter Spjuth <peter.spjuth@space.se>
 
 	* win/tkWinFont.c (Tk_DrawChars): Added support for clipping text.
