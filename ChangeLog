@@ -1,3 +1,10 @@
+2003-11-20  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* win/tkWinSend.c:
+	* win/tkWinSendCom.c: ensure object is not shared before lappend
+	(fix for crash in Windows test suite), and clean up of files to 
+	bring them closer to Tcl standards.
+	
 2003-11-20  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
 
 	* macosx/tkMacOSXKeyboard.c: Add PowerBook keycode 0x34 as <Return>.
