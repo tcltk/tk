@@ -4,7 +4,7 @@ by Scott Stanton
 Scriptics Corporation
 scott.stanton@scriptics.com
 
-RCS: @(#) $Id: README,v 1.7 1999/01/04 19:25:28 rjohnson Exp $
+RCS: @(#) $Id: README,v 1.8 1999/02/09 03:46:27 stanton Exp $
 
 1. Introduction
 ---------------
@@ -22,12 +22,12 @@ common source release.  The binary distribution is a self-extracting
 archive with a built-in installation script.
 
 Look for the binary release in the same location as the source release
-(ftp.scriptics.com:/pub/tcl/tcl8_0 or any of the mirror sites).  For most users,
-the binary release will be much easier to install and use.  You only
-need the source release if you plan to modify the core of Tcl, or if
-you need to compile with a different compiler.  With the addition of
-the dynamic loading interface, it is no longer necessary to have the
-source distribution in order to build and use extensions.
+(ftp.scriptics.com:/pub/tcl/tcl8_0 or any of the mirror sites).  For
+most users, the binary release will be much easier to install and use.
+You only need the source release if you plan to modify the core of
+Tcl, or if you need to compile with a different compiler.  With the
+addition of the dynamic loading interface, it is no longer necessary
+to have the source distribution in order to build and use extensions.
 
 3. Compiling Tk
 ----------------
@@ -62,21 +62,16 @@ find them.  Tk looks in one of two places for the library files:
 	2) In the lib\tk8.0 directory under the Tcl installation directory
 	   as specified in the registry:
 
-		For Windows NT & 95:
-		    HKEY_LOCAL_MACHINE\SOFTWARE\Scriptics\Tcl\8.0
-			Value Name is "Root"
-
-		For Win32s:
-		    HKEY_CLASSES_ROOT\SOFTWARE\Scriptics\Tcl\8.0\
+		HKEY_LOCAL_MACHINE\SOFTWARE\Scriptics\Tcl\8.0
+		Value Name is "Root"
 
 	2) Relative to the directory containing the current .exe.
 	    Tk will look for a directory "..\lib\tk8.0" relative to the
 	    directory containing the currently running .exe.
 
 Note that in order to run wish80.exe, you must ensure that tcl80.dll,
-tclpip80.dll (plus tcl1680.dll under Win32s), and tk80.dll are on your
-path, in the system directory, or in the directory containing
-wish80.exe.
+tclpip80.dll, and tk80.dll are on your path, in the system directory,
+or in the directory containing wish80.exe.
 
 4. Test suite
 -------------
@@ -100,7 +95,6 @@ Windows beta version of Tk:
 - Some "wm" functions don't map to Windows and aren't implemented;
   others should map, but just aren't implemented.  The worst offenders
   are the icon manipulation routines.
-- Under Win32s, you can only start one instance of Wish at a time.
 - Color management on some displays doesn't work properly resulting in
   Tk switching to monochrome mode.
 - Tk seems to fail to draw anything on some Matrox Millenium cards.

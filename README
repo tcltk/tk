@@ -1,13 +1,13 @@
 The Tk Toolkit
 
-RCS: @(#) $Id: README,v 1.10 1999/01/04 19:25:26 rjohnson Exp $
+RCS: @(#) $Id: README,v 1.11 1999/02/09 03:46:27 stanton Exp $
 
 1. Introduction
 ---------------
 
 This directory and its descendants contain the sources and documentation
 for Tk, an X11 toolkit implemented with the Tcl scripting language.  The
-information here corresponds to Tk 8.0.5, which is the third patch update
+information here corresponds to Tk 8.0.5, which is the fifth patch update
 for Tk 8.0.  This release is designed to work with Tcl 8.0.5 and may not
 work with any other version of Tcl.
 
@@ -88,36 +88,6 @@ Before trying to compile Tk you should do the following things:
 	if it has been updated with patches.  Patch releases fix bugs
 	without changing any features, so you should normally use the
 	latest patch release for the version of Tk that you want. 
-	Patch releases are available in two forms.  A file like
-	tk8.0p1.tar.Z is a complete release for patch level 1 of Tk
-	version 8.0.  If there is a file with a higher patch level than
-	this release, just fetch the file with the highest patch level
-	and use it.
-
-	Patches are also available in the form of patch files that just
-	contain the changes from one patch level to another.  These
-	files have names like tk8.0p1.patch, tk8.0p2.patch, etc.  They
-	may also have .gz or .Z extensions to indicate compression.  To
-	use one of these files, you apply it to an existing release with
-	the "patch" program.  Patches must be applied in order:
-	tk8.0p1.patch must be applied to an unpatched Tk 8.0 release
-	to produce a Tk 8.0p1 release;  tk8.0p2.patch can then be
-	applied to Tk 8.0p1 to produce Tk 8.0p2, and so on. To apply an
-	uncompressed patch file such as tk8.0p1.patch, invoke a shell
-	command like the following from the directory containing this
-	file (you may need to replace "patch -p" with "patch -p0"
-	depending on your version of the patch program):
-	    patch -p < tk8.0p1.patch
-	If the patch file has a .gz extension, it was compressed with
-	gzip.  To apply it, invoke a command like the following:
-	    gunzip -c tk8.0p1.patch.gz | patch -p
-	If the patch file has a .Z extension, it was compressed with
-	compress.  To apply it, invoke a command like the following:
-	    zcat tk8.0p1.patch.Z | patch -p
-	If you're applying a patch to a release that has already been
-	compiled, then before applying the patch you should cd to the
-	"unix" subdirectory and type "make distclean" to restore the
-	directory to a pristine state.
 
 Once you've done this, change to the "unix" subdirectory if you're
 compiling under UNIX, "win" if you're compiling under Windows, or
