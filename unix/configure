@@ -4538,6 +4538,15 @@ echo "$as_me: WARNING: \"64bit mode not supported with GCC on $system\"" >&2;}
 		fi
 	    fi
 	    ;;
+	BeOS*)
+	    SHLIB_CFLAGS="-fPIC"
+	    SHLIB_LD="${CC} -nostart"
+	    SHLIB_LD_LIBS='${LIBS}'
+	    SHLIB_SUFFIX=".so"
+	    DL_OBJS="tclLoadDl.o"
+	    DL_LIBS="-ldl"
+	    LDFLAGS=""
+	    ;;
 	BSD/OS-2.1*|BSD/OS-3*)
 	    SHLIB_CFLAGS=""
 	    SHLIB_LD="shlicc -r"
