@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.16 2002/07/25 21:35:23 pspjuth Exp $
+# RCS: @(#) $Id: wm.test,v 1.17 2002/08/08 22:32:11 jenglish Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -1369,6 +1369,62 @@ test wm-transient-6.2 { a withdrawn transient does not track
     lappend results [wm state .subject]
 } {withdrawn normal withdrawn normal}
 
+
+# wm-transient-7.*: See SF Tk Bug #592201 "wm transient fails with two masters"
+# wm-transient-7.3 through 7.5 all caused panics on Unix in Tk 8.4b1.
+# 7.1 and 7.2 added to catch (potential) future errors.
+#
+test wm-transient-7.1 {Destroying transient} {
+    toplevel .t 
+    toplevel .transient 
+    wm transient .transient .t
+    destroy .transient
+    destroy .t
+    # OK: the above did not cause a panic.
+} {}
+
+test wm-transient-7.2 {Destroying master} {
+    toplevel .t
+    toplevel .transient 
+    wm transient .transient .t
+    destroy .t
+    set result [wm transient .transient]
+    destroy .transient
+    set result
+} {}
+
+test wm-transient-7.3 {Reassign transient, destroy old master} {
+    toplevel .t1 
+    toplevel .t2 
+    toplevel .transient
+    wm transient .transient .t1
+    wm transient .transient .t2
+    destroy .t1	;# Caused panic in 8.4b1
+    destroy .t2 
+    destroy .transient
+} {}
+
+test wm-transient-7.4 {Reassign transient, destroy new master} {
+    toplevel .t1 
+    toplevel .t2 
+    toplevel .transient
+    wm transient .transient .t1
+    wm transient .transient .t2
+    destroy .t2 	;# caused panic in 8.4b1
+    destroy .t1
+    destroy .transient
+} {}
+
+test wm-transient-7.5 {Reassign transient, destroy transient} {
+    toplevel .t1 
+    toplevel .t2 
+    toplevel .transient
+    wm transient .transient .t1
+    wm transient .transient .t2
+    destroy .transient
+    destroy .t2 	;# caused panic in 8.4b1
+    destroy .t1		;# so did this
+} {}
 
 test wm-state-1.1 {usage} {
     list [catch {wm state} err] $err
