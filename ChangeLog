@@ -1,3 +1,8 @@
+2003-06-26  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* library/menu.tcl: workaround problem on some Windows systems
+        by trying to avoid posting a menu offscreen.
+
 2003-06-09  Joe English  <jenglish@users.sourceforge.net>
 	* unix/tkUnixRFont.c: fix for [Bug#751553] "Xft: 
 	[font configure] does not update in-use fonts".
