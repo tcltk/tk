@@ -1,15 +1,23 @@
-2001-05-21  Todd M. Helfter  <tmh@purdue.edu
+2001-05-21  Jeff Hobbs  <jeffh@ActiveState.com>
 
-        Implementation of TIP #11, the addition of  a -compound
-	option to the menubutton allowing text and an image to
-	be displayed at the same time.  This behavior is identical
-	to the behavior of the button widget.
-	* doc/menubutton.n
-	* generic/tkMenubutton.c
-	* generic/tkMenubutton.h
-	* mac/tkMacMenubutton.c
-	* tests/menubut.test
-	* unix/tkUnixMenubu.c
+	* unix/tcl.m4: sync'ed up wih Tcl tcl.m4. [Bug #419812]
+
+	* doc/TkInitStubs.3:
+	* generic/tk.h:
+	* generic/tkStubLib.c: CONST'ified Tk_InitStubs to match CONST
+	changes to Tcl_PkgRequireEx.
+
+2001-05-21  Todd M. Helfter  <tmh@purdue.edu>
+
+	* doc/menubutton.n:
+	* generic/tkMenubutton.c:
+	* generic/tkMenubutton.h:
+	* mac/tkMacMenubutton.c:
+	* tests/menubut.test:
+	* unix/tkUnixMenubu.c: Implementation of TIP #11, the addition of
+	a -compound option to the menubutton allowing text and an image to
+	be displayed at the same time.  This behavior is identical to the
+	behavior of the button widget.
 
 2001-05-16  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
