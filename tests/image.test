@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: image.test,v 1.3 1999/04/16 01:51:38 stanton Exp $
+# RCS: @(#) $Id: image.test,v 1.4 2000/05/15 18:21:47 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -36,7 +36,7 @@ test image-1.1 {Tk_ImageCmd procedure, "create" option} {
 } {1 {wrong # args: should be "image option ?args?"}}
 test image-1.2 {Tk_ImageCmd procedure, "create" option} {
     list [catch {image gorp} msg] $msg
-} {1 {bad option "gorp": must be create, delete, height, names, type, types, or width}}
+} {1 {bad option "gorp": must be create, delete, height, inuse, names, type, types, or width}}
 test image-1.3 {Tk_ImageCmd procedure, "create" option} {
     list [catch {image create} msg] $msg
 } {1 {wrong # args: should be "image create type ?name? ?options?"}}
@@ -178,7 +178,21 @@ test image-7.4 {Tk_ImageCmd procedure, "width" option} {
     list $x [image width myimage]
 } {30 60}
 
-test image-8.1 {Tk_ImageChanged procedure} {
+test image-8.1 {Tk_ImageCmd procedure, "inuse" option} {
+    catch {image delete myimage2}
+    image create test myimage2
+    set res {}
+    lappend res [image inuse myimage2]
+    catch {destroy .b}
+    button .b -image myimage2
+    lappend res [image inuse myimage2]
+    catch {destroy .b}
+    image delete myimage2
+    set res
+} [list 0 1]
+    
+
+test image-9.1 {Tk_ImageChanged procedure} {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -189,7 +203,7 @@ test image-8.1 {Tk_ImageChanged procedure} {
     update
     set x
 } {{foo display 5 6 7 8 30 30}}
-test image-8.2 {Tk_ImageChanged procedure} {
+test image-9.2 {Tk_ImageChanged procedure} {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -202,10 +216,10 @@ test image-8.2 {Tk_ImageChanged procedure} {
     set x
 } {{foo display 5 6 25 9 30 30} {foo display 0 0 12 14 65 74}}
 
-test image-9.1 {Tk_GetImage procedure} {
+test image-10.1 {Tk_GetImage procedure} {
     list [catch {.c create image 100 10 -image bad_name} msg] $msg
 } {1 {image "bad_name" doesn't exist}}
-test image-9.2 {Tk_GetImage procedure} {
+test image-10.2 {Tk_GetImage procedure} {
     image create test mytest
     catch {destroy .l}
     label .l -image mytest
@@ -215,7 +229,7 @@ test image-9.2 {Tk_GetImage procedure} {
     set result
 } {1 {image "mytest" doesn't exist}}
 
-test image-10.1 {Tk_FreeImage procedure} {
+test image-11.1 {Tk_FreeImage procedure} {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -229,7 +243,7 @@ test image-10.1 {Tk_FreeImage procedure} {
     update
     list [image names] $x
 } {foo {{foo free} {foo display 0 0 30 15 103 121}}}
-test image-10.2 {Tk_FreeImage procedure} {
+test image-11.2 {Tk_FreeImage procedure} {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -247,7 +261,7 @@ test image-10.2 {Tk_FreeImage procedure} {
 
 # Non-portable, apparently due to differences in rounding:
 
-test image-11.1 {Tk_RedrawImage procedure, redisplay area clipping} \
+test image-12.1 {Tk_RedrawImage procedure, redisplay area clipping} \
 	{nonPortable} {
     .c delete all
     eval image delete [image names]
@@ -259,7 +273,7 @@ test image-11.1 {Tk_RedrawImage procedure, redisplay area clipping} \
     update
     set x
 } {{foo display 0 0 5 5 50 50}}
-test image-11.2 {Tk_RedrawImage procedure, redisplay area clipping} \
+test image-12.2 {Tk_RedrawImage procedure, redisplay area clipping} \
 	{nonPortable} {
     .c delete all
     eval image delete [image names]
@@ -271,7 +285,7 @@ test image-11.2 {Tk_RedrawImage procedure, redisplay area clipping} \
     update
     set x
 } {{foo display 10 0 20 5 30 50}}
-test image-11.3 {Tk_RedrawImage procedure, redisplay area clipping} \
+test image-12.3 {Tk_RedrawImage procedure, redisplay area clipping} \
 	{nonPortable} {
     .c delete all
     eval image delete [image names]
@@ -283,7 +297,7 @@ test image-11.3 {Tk_RedrawImage procedure, redisplay area clipping} \
     update
     set x
 } {{foo display 10 10 20 5 30 30}}
-test image-11.4 {Tk_RedrawImage procedure, redisplay area clipping} \
+test image-12.4 {Tk_RedrawImage procedure, redisplay area clipping} \
 	{nonPortable} {
     .c delete all
     eval image delete [image names]
@@ -295,7 +309,7 @@ test image-11.4 {Tk_RedrawImage procedure, redisplay area clipping} \
     update
     set x
 } {{foo display 0 10 5 5 50 30}}
-test image-11.5 {Tk_RedrawImage procedure, redisplay area clipping} \
+test image-12.5 {Tk_RedrawImage procedure, redisplay area clipping} \
 	{nonPortable} {
     .c delete all
     eval image delete [image names]
@@ -307,7 +321,7 @@ test image-11.5 {Tk_RedrawImage procedure, redisplay area clipping} \
     update
     set x
 } {{foo display 0 0 30 15 70 70}}
-test image-11.6 {Tk_RedrawImage procedure, redisplay area clipping} \
+test image-12.6 {Tk_RedrawImage procedure, redisplay area clipping} \
 	{nonPortable} {
     .c delete all
     eval image delete [image names]
@@ -320,7 +334,7 @@ test image-11.6 {Tk_RedrawImage procedure, redisplay area clipping} \
     set x
 } {{foo display 5 5 20 5 30 30}}
 
-test image-12.1 {Tk_SizeOfImage procedure} {
+test image-13.1 {Tk_SizeOfImage procedure} {
     eval image delete [image names]
     image create test foo -variable x
     set result [list [image width foo] [image height foo]]
@@ -328,7 +342,7 @@ test image-12.1 {Tk_SizeOfImage procedure} {
     lappend result [image width foo] [image height foo]
 } {30 15 85 60}
 
-test image-12.2 {DeleteImage procedure} {
+test image-13.2 {DeleteImage procedure} {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -345,7 +359,7 @@ catch {image delete hidden}
 set l [image names]
 set h [interp hidden]
 
-test image-13.1 {image command vs hidden commands} {
+test image-14.1 {image command vs hidden commands} {
     catch {image delete hidden}
     image create photo hidden
     interp hide {} hidden
@@ -359,6 +373,8 @@ eval image delete [image names]
 # cleanup
 ::tcltest::cleanupTests
 return
+
+
 
 
 

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.6 2000/04/25 01:03:06 hobbs Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.7 2000/05/15 18:21:47 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -157,11 +157,11 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument strings. */
 {
     static char *imageOptions[] = {
-	"create", "delete", "height", "names", "type", "types", "width",
-	(char *) NULL
+	"create", "delete", "height", "inuse", "names", "type", "types",
+	    "width", (char *) NULL
     };
     enum options {
-	IMAGE_CREATE, IMAGE_DELETE, IMAGE_HEIGHT, IMAGE_NAMES,
+	IMAGE_CREATE, IMAGE_DELETE, IMAGE_HEIGHT, IMAGE_INUSE, IMAGE_NAMES,
 	IMAGE_TYPE, IMAGE_TYPES, IMAGE_WIDTH
     };
     TkWindow *winPtr = (TkWindow *) clientData;
@@ -344,18 +344,46 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 	    Tcl_SetIntObj(Tcl_GetObjResult(interp), masterPtr->height);
 	    break;
 	}
+
+	case IMAGE_INUSE: {
+	    int count = 0;
+	    char *arg;
+	    if (objc != 3) {
+		Tcl_WrongNumArgs(interp, 2, objv, "name");
+		return TCL_ERROR;
+	    }
+	    arg = Tcl_GetString(objv[2]);
+	    hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->imageTable, arg);
+	    if (hPtr == NULL) {
+		Tcl_AppendResult(interp, "image \"", arg,
+			"\" doesn't exist", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+	    if (masterPtr->typePtr != NULL) {
+		for (imagePtr = masterPtr->instancePtr; imagePtr != NULL;
+		     imagePtr = imagePtr->nextPtr) {
+		    count = 1;
+		    break;
+		}
+	    }
+	    Tcl_SetBooleanObj(Tcl_GetObjResult(interp), count);
+	    break;
+	}
+
 	case IMAGE_NAMES: {
 	    if (objc != 2) {
 		Tcl_WrongNumArgs(interp, 2, objv, NULL);
 		return TCL_ERROR;
 	    }
-	    for (hPtr = Tcl_FirstHashEntry(&winPtr->mainPtr->imageTable, &search);
-		 hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
+	    hPtr = Tcl_FirstHashEntry(&winPtr->mainPtr->imageTable, &search);
+	    for ( ; hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
 		Tcl_AppendElement(interp, Tcl_GetHashKey(
 		    &winPtr->mainPtr->imageTable, hPtr));
 	    }
 	    break;
 	}
+	
 	case IMAGE_TYPE: {
 	    char *arg;
 	    if (objc != 3) {

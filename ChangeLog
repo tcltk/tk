@@ -1,3 +1,13 @@
+2000-05-15  Eric Melski  <ericm@scriptics.com>
+
+	* doc/image.n: Added documentation for [image inuse] command.
+
+	* tests/image.test: Added tests for [image inuse] command.
+
+	* generic/tkImage.c (Tk_ImageObjCmd): Added [image inuse] command,
+	which provides a means for programmers to determine if a given
+	image is in use by any widgets. [RFE: 3327].
+
 2000-05-14  Eric Melski  <ericm@scriptics.com>
 
 	* doc/clipboard.n: Added documentation for "clipboard get".
