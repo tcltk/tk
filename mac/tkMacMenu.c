@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.15 1999/12/07 03:09:58 hobbs Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.16 1999/12/07 03:51:10 hobbs Exp $
  */
 
 #include "tkMacInt.h"
@@ -4204,7 +4204,8 @@ RecursivelyClearActiveMenu(
  */
 
 void
-InvalidateMDEFRgns(void) {
+InvalidateMDEFRgns(void)
+{
     GDHandle saveDevice;
     GWorldPtr saveWorld, destPort;
     Point scratch;
@@ -4252,7 +4253,8 @@ InvalidateMDEFRgns(void) {
  */
 
 void
-TkMacClearMenubarActive(void) {
+TkMacClearMenubarActive(void)
+{
     TkMenuReferences *menuBarRefPtr;
     
     if (currentMenuBarName != NULL) {
@@ -4443,15 +4445,24 @@ TkpMenuThreadInit()
  */
 
 void
-TkpPreprocessMacMenu()
+TkMacPreprocessMenu()
 {
-    TkMenuReferences *menuBarRefPtr;
+    TkMenuReferences *mbRefPtr;
+    int code;
 
-    if ( currentMenuBarName != NULL ) {
-        menuBarRefPtr = TkFindMenuReferences(currentMenuBarInterp,
+    if ((currentMenuBarName != NULL) && (currentMenuBarInterp != NULL)) {
+        mbRefPtr = TkFindMenuReferences(currentMenuBarInterp,
 		currentMenuBarName);
-        if ( (menuBarRefPtr != NULL) && (menuBarRefPtr->menuPtr != NULL) ) {
-	    TkPreprocessMenu(menuBarRefPtr->menuPtr->masterMenuPtr);
+        if ((mbRefPtr != NULL) && (mbRefPtr->menuPtr != NULL)) {
+	    Tcl_Preserve((ClientData)currentMenuBarInterp);
+	    code = TkPreprocessMenu(mbRefPtr->menuPtr->masterMenuPtr);
+	    if ((code != TCL_OK) && (code != TCL_CONTINUE)
+		    && (code != TCL_BREAK)) {
+		Tcl_AddErrorInfo(currentMenuBarInterp,
+			"\n    (menu preprocess)");
+		Tcl_BackgroundError(currentMenuBarInterp);
+	    }
+	    Tcl_Release((ClientData)currentMenuBarInterp);
         }
     }
 }
