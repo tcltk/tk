@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacAppInit.c,v 1.12 2000/02/10 08:53:06 jingham Exp $
+ * RCS: @(#) $Id: tkMacAppInit.c,v 1.12.2.1 2002/04/08 09:00:22 das Exp $
  */
 
 #include <Gestalt.h>
@@ -25,6 +25,7 @@
 #include "tkMacInt.h"
 #include "tclInt.h"
 #include "tclMac.h"
+#include "tclMacInt.h"
 
 #ifdef TK_TEST
 extern int		Tktest_Init _ANSI_ARGS_((Tcl_Interp *interp));
@@ -49,20 +50,21 @@ void			RemoveConsole _ANSI_ARGS_((void));
 long			WriteCharsToConsole _ANSI_ARGS_((char *buff, long n));
 long			ReadCharsFromConsole _ANSI_ARGS_((char *buff, long n));
 extern char *		__ttyname _ANSI_ARGS_((long fildes));
+int				kbhit _ANSI_ARGS_((void));
+int				getch _ANSI_ARGS_((void));
+void			clrscr _ANSI_ARGS_((void));
 short			SIOUXHandleOneEvent _ANSI_ARGS_((EventRecord *event));
 
-/*
- * Prototypes for functions from the tkConsole.c file.
- */
- 
-EXTERN void		TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
-			    int devId, char *buffer, long size));
 /*
  * Forward declarations for procedures defined later in this file:
  */
 
 static int		MacintoshInit _ANSI_ARGS_((void));
 static int		SetupMainInterp _ANSI_ARGS_((Tcl_Interp *interp));
+static void		SetupSIOUX _ANSI_ARGS_((void));
+
+static int inMacExit = 0;
+static pascal void NoMoreOutput() { inMacExit = 1; }
 
 /*
  *----------------------------------------------------------------------
@@ -325,6 +327,8 @@ SetupMainInterp(
 	if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
 	    goto error;
 	}
+	SetupSIOUX();
+	TclMacInstallExitToShellPatch(NoMoreOutput);
     }
 
     /*
@@ -374,8 +378,15 @@ RemoveConsole(void)
 long 
 WriteCharsToConsole(char *buffer, long n)
 {
-    TkConsolePrint(gStdoutInterp, TCL_STDOUT, buffer, n);
-    return n;
+    if (!inMacExit) {
+    	Tcl_DString	ds;
+    	Tcl_ExternalToUtfDString(NULL, buffer, n, &ds);
+	    TkConsolePrint(gStdoutInterp, TCL_STDOUT, Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
+	    Tcl_DStringFree(&ds);
+	    return n;
+    } else {
+    	return 0;
+    }
 }
 
 long 
@@ -396,8 +407,38 @@ __ttyname(long fildes)
     return (0L);
 }
 
+int kbhit(void)
+{
+    return 0; 
+}
+
+int getch(void)
+{
+    return 0; 
+}
+
+void clrscr(void)
+{
+    return;
+}
+
 short
 SIOUXHandleOneEvent(EventRecord *event)
 {
     return 0;
+}
+
+static void SetupSIOUX(void) {
+#ifndef STATIC_BUILD
+	extern DLLIMPORT void SetupConsolePlugins(void*, void*, void*, void*,
+									void*, void*, void*, void*);
+	SetupConsolePlugins(	&InstallConsole,
+							&RemoveConsole,
+							&WriteCharsToConsole,
+							&ReadCharsFromConsole,
+							&__ttyname,
+							&kbhit,
+							&getch,
+							&clrscr);
+#endif
 }
