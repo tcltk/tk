@@ -1,3 +1,10 @@
+2005-02-22  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXDialog.c (Tk_GetSaveFileObjCmd, NavServicesGetFile):
+	fixed encoding problems with -initialfile & -filetypes and
+	corrected potential buffer overrun with -initialdir/-initialfile.
+	[Bug 1146057]
+
 2005-02-16  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* doc/wm.n: Add documentation for -fullscreen attribute.
