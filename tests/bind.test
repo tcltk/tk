@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bind.test,v 1.16 2004/08/29 09:27:35 dkf Exp $
+# RCS: @(#) $Id: bind.test,v 1.17 2004/09/01 10:00:03 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2218,7 +2218,7 @@ foreach check {
     {bind-22.161 <Reparent> %y {-y 2i} {[winfo pixels .b.f 2i]}}
     {bind-22.162 <Map> %y      {-y 2i} {{1 {<Map> event doesn't accept "-y" option}}}}
 
-    {bind-22.163 <Key> %k      {-xyz 1} {{1 {bad option "-xyz": must be -when, -above, -borderwidth, -button, -count, -delta, -detail, -focus, -height, -keycode, -keysym, -mode, -override, -place, -root, -rootx, -rooty, -sendevent, -serial, -state, -subwindow, -time, -warp, -width, -window, -x, or -y}}}}
+    {bind-22.163 <Key> %k      {-xyz 1} {{1 {bad option "-xyz": must be -when, -above, -borderwidth, -button, -count, -data, -delta, -detail, -focus, -height, -keycode, -keysym, -mode, -override, -place, -root, -rootx, -rooty, -sendevent, -serial, -state, -subwindow, -time, -warp, -width, -window, -x, or -y}}}}
 } {
     lassign $check name event substitution generator result
     test $name "HandleEventGenerate: options $event $generator" {
@@ -2231,6 +2231,9 @@ foreach check {
 	set x
     } [eval set x $result]
 }
+# Note that the -data option is tested in bind-32.* because it has
+# more demanding requirements in memory handling
+
 test bind-23.1 {GetVirtualEventUid procedure} {
     list [catch {event info <<asd} msg] $msg
 } {1 {virtual event "<<asd" is badly formed}}
