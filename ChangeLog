@@ -1,9 +1,15 @@
 2002-06-14  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkInt.h:
+	* generic/tkCmds.c (Tk_WmObjCmd): 
+	* unix/tkUnixWm.c (Tk_WmCmd): 
+	* win/tkWinWm.c (Tk_WmCmd): changed wmTracing from being an int to
+	just a bit in the flags variable (TK_DISPLAY_WM_TRACING)
+
 	* generic/tkEvent.c (Tk_HandleEvent): 
 	* unix/tkUnixEvent.c (OpenIM): 
 	* unix/tkUnixKey.c (TkpGetString): 
-	* generic/tkInt.h: added TK_USE_XIM_SPOT flag bit for TkDisplay
+	* generic/tkInt.h: added TK_DISPLAY_XIM_SPOT flag bit for TkDisplay
 	and used this to allow a runtime check to see if over-the-spot XIM
 	is possible.  If not it will try and fallback to the old-style
 	input context, which handles things like dead keys input.

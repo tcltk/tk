@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.40 2002/06/14 22:25:12 jenglish Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.41 2002/06/15 01:54:48 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -103,10 +103,10 @@ typedef struct {
 	DWORD	dwImageOffset;        /*  where in the file is this image */
 } ICONDIRENTRY, *LPICONDIRENTRY;
 typedef struct {
-	WORD			idReserved;   /*  Reserved */
-	WORD			idType;       /*  resource type (1 for icons) */
-	WORD			idCount;      /*  how many images? */
-	ICONDIRENTRY	idEntries[1];         /*  the entries for each image */
+	WORD		idReserved;   /*  Reserved */
+	WORD		idType;       /*  resource type (1 for icons) */
+	WORD		idCount;      /*  how many images? */
+	ICONDIRENTRY	idEntries[1]; /*  the entries for each image */
 } ICONDIR, *LPICONDIR;
 
 /* 
@@ -225,6 +225,8 @@ typedef struct TkWmInfo {
 				 * to eliminate redundant resize operations. */
     HMENU hMenu;		/* the hMenu associated with this menu */
     DWORD style, exStyle;	/* Style flags for the wrapper window. */
+    LONG styleConfig;		/* Extra user requested style bits */
+    LONG exStyleConfig;		/* Extra user requested extended style bits */
 
     /*
      * List of children of the toplevel which have private colormaps.
@@ -1398,12 +1400,13 @@ TkWmNewWindow(winPtr)
     register WmInfo *wmPtr;
 
     wmPtr = (WmInfo *) ckalloc(sizeof(WmInfo));
+
+    /*
+     * Initialize full structure, then set what isn't NULL
+     */
+    ZeroMemory(wmPtr, sizeof(WmInfo));
     winPtr->wmInfoPtr = wmPtr;
     wmPtr->winPtr = winPtr;
-    wmPtr->wrapper = NULL;
-    wmPtr->titleUid = NULL;
-    wmPtr->iconName = NULL;
-    wmPtr->masterPtr = NULL;
     wmPtr->hints.flags = InputHint | StateHint;
     wmPtr->hints.input = True;
     wmPtr->hints.initial_state = NormalState;
@@ -1412,23 +1415,16 @@ TkWmNewWindow(winPtr)
     wmPtr->hints.icon_x = wmPtr->hints.icon_y = 0;
     wmPtr->hints.icon_mask = None;
     wmPtr->hints.window_group = None;
-    wmPtr->leaderName = NULL;
-    wmPtr->icon = NULL;
-    wmPtr->iconFor = NULL;
-    wmPtr->sizeHintsFlags = 0;
 
     /*
      * Default the maximum dimensions to the size of the display.
      */
 
     wmPtr->defMinWidth = wmPtr->defMinHeight = 0;
-    wmPtr->defMaxWidth = DisplayWidth(winPtr->display,
-	    winPtr->screenNum);
-    wmPtr->defMaxHeight = DisplayHeight(winPtr->display,
-	    winPtr->screenNum);
+    wmPtr->defMaxWidth = DisplayWidth(winPtr->display, winPtr->screenNum);
+    wmPtr->defMaxHeight = DisplayHeight(winPtr->display, winPtr->screenNum);
     wmPtr->minWidth = wmPtr->minHeight = 1;
     wmPtr->maxWidth = wmPtr->maxHeight = 0;
-    wmPtr->gridWin = NULL;
     wmPtr->widthInc = wmPtr->heightInc = 1;
     wmPtr->minAspect.x = wmPtr->minAspect.y = 1;
     wmPtr->maxAspect.x = wmPtr->maxAspect.y = 1;
@@ -1436,23 +1432,12 @@ TkWmNewWindow(winPtr)
     wmPtr->gravity = NorthWestGravity;
     wmPtr->width = -1;
     wmPtr->height = -1;
-    wmPtr->hMenu = NULL;
     wmPtr->x = winPtr->changes.x;
     wmPtr->y = winPtr->changes.y;
-    wmPtr->borderWidth = 0;
-    wmPtr->borderHeight = 0;
-    
-    wmPtr->cmapList = NULL;
-    wmPtr->cmapCount = 0;
-    wmPtr->numTransients = 0;
 
     wmPtr->configWidth = -1;
     wmPtr->configHeight = -1;
-    wmPtr->protPtr = NULL;
-    wmPtr->cmdArgv = NULL;
-    wmPtr->clientMachine = NULL;
     wmPtr->flags = WM_NEVER_MAPPED;
-    wmPtr->iconPtr = NULL;
     wmPtr->nextPtr = winPtr->dispPtr->firstWmPtr;
     winPtr->dispPtr->firstWmPtr = wmPtr;
 
@@ -1552,6 +1537,9 @@ UpdateWrapper(winPtr)
 	    wmPtr->style = WM_TOPLEVEL_STYLE;
 	    wmPtr->exStyle = EX_TOPLEVEL_STYLE;
 	}
+
+	wmPtr->style   |= wmPtr->styleConfig;
+	wmPtr->exStyle |= wmPtr->exStyleConfig;
 
 	if ((wmPtr->flags & WM_WIDTH_NOT_RESIZABLE)
 		&& (wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE)) {
@@ -2110,17 +2098,27 @@ Tk_WmCmd(clientData, interp, argc, argv)
     length = strlen(argv[1]);
     if ((c == 't') && (strncmp(argv[1], "tracing", length) == 0)
 	    && (length >= 3)) {
+	int wmTracing;
 	if ((argc != 2) && (argc != 3)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
 		    argv[0], " tracing ?boolean?\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
 	if (argc == 2) {
-	    Tcl_SetResult(interp, ((dispPtr->wmTracing) ? "on" : "off"),
+	    Tcl_SetResult(interp,
+		    ((dispPtr->flags & TK_DISPLAY_WM_TRACING) ? "on" : "off"),
 		    TCL_STATIC);
 	    return TCL_OK;
 	}
-	return Tcl_GetBoolean(interp, argv[2], &dispPtr->wmTracing);
+	if (Tcl_GetBoolean(interp, argv[2], &wmTracing) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (wmTracing) {
+	    dispPtr->flags |= TK_DISPLAY_WM_TRACING;
+	} else {
+	    dispPtr->flags &= ~TK_DISPLAY_WM_TRACING;
+	}
+	return TCL_OK;
     }
 
     if (argc < 3) {
@@ -2136,7 +2134,81 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
     wmPtr = winPtr->wmInfoPtr;
-    if ((c == 'a') && (strncmp(argv[1], "aspect", length) == 0)) {
+    if ((c == 'a') && (strncmp(argv[1], "attributes", length) == 0)
+	    && (length >= 2)) {
+	LONG style, exStyle, styleBit, *stylePtr;
+	char buf[TCL_INTEGER_SPACE];
+	int i, boolean;
+
+	if (argc < 3) {
+	    configArgs:
+	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
+		    argv[0], " attributes window",
+		    " ?-disabled ?bool??",
+		    " ?-toolwindow ?bool??",
+		    " ?-topmost ?bool??\"",
+		    (char *) NULL);
+	    return TCL_ERROR;
+	}
+	exStyle = wmPtr->exStyleConfig;
+	style   = wmPtr->styleConfig;
+	if (argc == 3) {
+	    sprintf(buf, "%d", ((style & WS_DISABLED) != 0));
+            Tcl_AppendResult(interp, "-disabled ", buf, (char *) NULL);
+	    sprintf(buf, "%d", ((exStyle & WS_EX_TOOLWINDOW) != 0));
+            Tcl_AppendResult(interp, " -toolwindow ", buf, (char *) NULL);
+	    sprintf(buf, "%d", ((exStyle & WS_EX_TOPMOST) != 0));
+            Tcl_AppendResult(interp, " -topmost ", buf, (char *) NULL);
+	    return TCL_OK;
+	}
+	for (i = 3; i < argc; i += 2) {
+	    length = strlen(argv[i]);
+	    if ((length < 2) || (argv[i][0] != '-')) {
+		goto configArgs;
+	    }
+	    if ((i < argc-1) &&
+		    (Tcl_GetBoolean(interp, argv[i+1], &boolean) != TCL_OK)) {
+		return TCL_ERROR;
+	    }
+	    if (strncmp(argv[i], "-disabled", length) == 0) {
+		stylePtr = &style;
+		styleBit = WS_DISABLED;
+	    } else if ((strncmp(argv[i], "-toolwindow", length) == 0)
+		    && (length >= 3)) {
+		stylePtr = &exStyle;
+		styleBit = WS_EX_TOOLWINDOW;
+	    } else if ((strncmp(argv[i], "-topmost", length) == 0)
+		    && (length >= 3)) {
+		stylePtr = &exStyle;
+		styleBit = WS_EX_TOPMOST;
+		if ((i < argc-1) &&
+			(winPtr->flags & TK_EMBEDDED)) {
+		    Tcl_AppendResult(interp, "can't set topmost flag on ",
+			    winPtr->pathName, ": it is an embedded window",
+			    (char *) NULL);
+		    return TCL_ERROR;
+		}
+	    } else {
+		goto configArgs;
+	    }
+	    if (i == argc-1) {
+		Tcl_SetIntObj(Tcl_GetObjResult(interp),
+			((*stylePtr & styleBit) != 0));
+	    } else if (boolean) {
+		*stylePtr |= styleBit;
+	    } else {
+		*stylePtr &= ~styleBit;
+	    }
+	}
+	if ((wmPtr->styleConfig != style) ||
+		(wmPtr->exStyleConfig != exStyle)) {
+	    wmPtr->styleConfig = style;
+	    wmPtr->exStyleConfig = exStyle;
+	    UpdateWrapper(winPtr);
+	}
+	return TCL_OK;
+    } else if ((c == 'a') && (strncmp(argv[1], "aspect", length) == 0)
+	    && (length >= 2)) {
 	int numer1, denom1, numer2, denom2;
 
 	if ((argc != 3) && (argc != 7)) {
@@ -3675,7 +3747,7 @@ TopLevelReqProc(dummy, tkwin)
     WmInfo *wmPtr;
 
     wmPtr = winPtr->wmInfoPtr;
-    if (winPtr->flags & TK_EMBEDDED) {
+    if ((winPtr->flags & TK_EMBEDDED) && (wmPtr->wrapper != NULL)) {
 	SendMessage(wmPtr->wrapper, TK_GEOMETRYREQ, Tk_ReqWidth(tkwin),
 	    Tk_ReqHeight(tkwin));
     }
@@ -3726,7 +3798,8 @@ UpdateGeometryInfo(clientData)
      * state of the window changes.
      */
 
-    if (IsIconic(wmPtr->wrapper) || IsZoomed(wmPtr->wrapper)) {
+    if ((wmPtr->wrapper == NULL)
+	    || IsIconic(wmPtr->wrapper) || IsZoomed(wmPtr->wrapper)) {
 	return;
     }
 

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.22 2002/06/14 22:25:12 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.23 2002/06/15 01:54:47 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -886,17 +886,27 @@ Tk_WmCmd(clientData, interp, argc, argv)
     length = strlen(argv[1]);
     if ((c == 't') && (strncmp(argv[1], "tracing", length) == 0)
 	    && (length >= 3)) {
+	int wmTracing;
 	if ((argc != 2) && (argc != 3)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
 		    argv[0], " tracing ?boolean?\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
 	if (argc == 2) {
-	    Tcl_SetResult(interp, ((dispPtr->wmTracing) ? "on" : "off"), 
+	    Tcl_SetResult(interp,
+		    ((dispPtr->flags & TK_DISPLAY_WM_TRACING) ? "on" : "off"), 
                     TCL_STATIC);
 	    return TCL_OK;
 	}
-	return Tcl_GetBoolean(interp, argv[2], &dispPtr->wmTracing);
+	if (Tcl_GetBoolean(interp, argv[2], &wmTracing) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (wmTracing) {
+	    dispPtr->flags |= TK_DISPLAY_WM_TRACING;
+	} else {
+	    dispPtr->flags &= ~TK_DISPLAY_WM_TRACING;
+	}
+	return TCL_OK;
     }
 
     if (argc < 3) {
@@ -2403,7 +2413,7 @@ ConfigureEvent(wmPtr, configEventPtr)
     if (((wrapperPtr->changes.width != configEventPtr->width)
 	    || (wrapperPtr->changes.height != configEventPtr->height))
 	    && !(wmPtr->flags & WM_SYNC_PENDING)){
-	if (dispPtr->wmTracing) {
+	if (dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 	    printf("TopLevelEventProc: user changed %s size to %dx%d\n",
 		    winPtr->pathName, configEventPtr->width,
 		    configEventPtr->height);
@@ -2467,7 +2477,7 @@ ConfigureEvent(wmPtr, configEventPtr)
 	wmPtr->configHeight = configEventPtr->height;
     }
 
-    if (dispPtr->wmTracing) {
+    if (dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 	printf("ConfigureEvent: %s x = %d y = %d, width = %d, height = %d\n",
 		winPtr->pathName, configEventPtr->x, configEventPtr->y,
 		configEventPtr->width, configEventPtr->height);
@@ -2497,7 +2507,7 @@ ConfigureEvent(wmPtr, configEventPtr)
      * there is a parent shrink-wrapped around the window.
      */
 
-    if (dispPtr->wmTracing) {
+    if (dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 	printf("    %s parent == %p, above %p\n",
 		winPtr->pathName, (void *) wmPtr->reparent,
 		(void *) configEventPtr->above);
@@ -2606,7 +2616,7 @@ ReparentEvent(wmPtr, reparentEventPtr)
 	    && (actualType == XA_WINDOW))) {
 	if ((actualFormat == 32) && (numItems == 1)) {
 	    vRoot = wmPtr->vRoot = *virtualRootPtr;
-	} else if (dispPtr->wmTracing) {
+	} else if (dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 	    printf("%s format %d numItems %ld\n",
 		    "ReparentEvent got bogus VROOT property:", actualFormat,
 		    numItems);
@@ -2615,7 +2625,7 @@ ReparentEvent(wmPtr, reparentEventPtr)
     }
     Tk_DeleteErrorHandler(handler);
 
-    if (dispPtr->wmTracing) {
+    if (dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 	printf("ReparentEvent: %s (%p) reparented to 0x%x, vRoot = 0x%x\n",
 		wmPtr->winPtr->pathName, wmPtr->winPtr,
 		(unsigned int) reparentEventPtr->parent, (unsigned int) vRoot);
@@ -2781,7 +2791,7 @@ ComputeReparentGeometry(wmPtr)
 
     wrapperPtr->changes.x = x + wmPtr->xInParent;
     wrapperPtr->changes.y = y + wmPtr->yInParent;
-    if (dispPtr->wmTracing) {
+    if (dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 	printf("wrapperPtr %p coords %d,%d\n",
 		wrapperPtr, wrapperPtr->changes.x, wrapperPtr->changes.y);
 	printf("     wmPtr %p coords %d,%d, offsets %d %d\n",
@@ -2835,7 +2845,7 @@ WrapperEventProc(clientData, eventPtr)
 	    Tk_DestroyWindow((Tk_Window) wmPtr->winPtr);
 	    Tk_DeleteErrorHandler(handler);
 	}
-	if (dispPtr->wmTracing) {
+	if (dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 	    printf("TopLevelEventProc: %s deleted\n", wmPtr->winPtr->pathName);
 	}
     } else if (eventPtr->type == ConfigureNotify) {
@@ -3099,7 +3109,7 @@ UpdateGeometryInfo(clientData)
 	}
 	wmPtr->configWidth = width;
 	wmPtr->configHeight = height;
-	if (winPtr->dispPtr->wmTracing) {
+	if (winPtr->dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 	   printf("UpdateGeometryInfo moving to %d %d, resizing to %d x %d,\n",
                    x, y, width, height);
 	}
@@ -3120,7 +3130,7 @@ UpdateGeometryInfo(clientData)
 	}
 	wmPtr->configWidth = width;
 	wmPtr->configHeight = height;
-	if (winPtr->dispPtr->wmTracing) {
+	if (winPtr->dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 	    printf("UpdateGeometryInfo resizing %p to %d x %d\n",
 		    (void *)wmPtr->wrapperPtr->window, width, height);
 	}
@@ -3321,7 +3331,7 @@ WaitForConfigureNotify(winPtr, serial)
 	code = WaitForEvent(winPtr->display, wmPtr, ConfigureNotify, &event);
 	wmPtr->flags &= ~WM_SYNC_PENDING;
 	if (code != TCL_OK) {
-	    if (winPtr->dispPtr->wmTracing) {
+	    if (winPtr->dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 		printf("WaitForConfigureNotify giving up on %s\n",
 			winPtr->pathName);
 	    }
@@ -3333,7 +3343,7 @@ WaitForConfigureNotify(winPtr, serial)
 	}
     }
     wmPtr->flags &= ~WM_MOVE_PENDING;
-    if (winPtr->dispPtr->wmTracing) {
+    if (winPtr->dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 	printf("WaitForConfigureNotify finished with %s, serial %ld\n",
 		winPtr->pathName, serial);
     }
@@ -3510,14 +3520,14 @@ WaitForMapNotify(winPtr, mapped)
 	     * just quit.
 	     */
 
-	    if (winPtr->dispPtr->wmTracing) {
+	    if (winPtr->dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 		printf("WaitForMapNotify giving up on %s\n", winPtr->pathName);
 	    }
 	    break;
 	}
     }
     wmPtr->flags &= ~WM_MOVE_PENDING;
-    if (winPtr->dispPtr->wmTracing) {
+    if (winPtr->dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 	printf("WaitForMapNotify finished with %s (winPtr %p, wmPtr %p)\n",
 		winPtr->pathName, winPtr, wmPtr);
     }
@@ -4039,7 +4049,7 @@ UpdateVRootGeometry(wmPtr)
 	    (unsigned int *) &wmPtr->vRootWidth,
 	    (unsigned int *) &wmPtr->vRootHeight, (unsigned int *) &bd,
 	    &dummy);
-    if (winPtr->dispPtr->wmTracing) {
+    if (winPtr->dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 	printf("UpdateVRootGeometry: x = %d, y = %d, width = %d, ",
 		wmPtr->vRootX, wmPtr->vRootY, wmPtr->vRootWidth);
 	printf("height = %d, status = %d\n", wmPtr->vRootHeight, status);
