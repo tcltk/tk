@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.4 1999/02/04 20:57:18 stanton Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.4.4.1 1999/03/06 23:18:05 stanton Exp $
  */
 
 #include <tk.h>
@@ -23,7 +23,6 @@
  * interfaces are available for use, but are not supported.
  */
 
-EXTERN void		TkConsoleCreate(void);
 EXTERN int		TkConsoleInit(Tcl_Interp *interp);
 
 /*
@@ -84,14 +83,6 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
      * the queue.
      */
     SetMessageQueue(64);
-
-    /*
-     * Create the console channels and install them as the standard
-     * channels.  All I/O will be discarded until TkConsoleInit is
-     * called to attach the console to a text widget.
-     */
-
-    TkConsoleCreate();
 
     setargv(&argc, &argv);
 

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.2.4.1 1999/03/06 23:07:51 stanton Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.2.4.2 1999/03/06 23:18:05 stanton Exp $
  */
 
 #include <ctype.h>
@@ -124,7 +124,7 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 
 
 #if (defined(__WIN32__) || defined(MAC_TCL))
-    TkConsoleCreate();
+    TkConsoleCreate_();
 #endif
     
 #ifdef TCL_MEM_DEBUG
