@@ -5,6 +5,28 @@
 	};
 	objectVersion = 38;
 	objects = {
+		4C3B4CF6040B18B200C916F0 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			path = tkMacOSXAETE.r;
+			refType = 4;
+		};
+		4C3B4CF7040B18B200C916F0 = {
+			fileRef = 4C3B4CF6040B18B200C916F0;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//4C0
+//4C1
+//4C2
+//4C3
+//4C4
+//F50
+//F51
+//F52
+//F53
+//F54
 		F50D96120196176E01DC9062 = {
 			isa = PBXFrameworkReference;
 			name = ApplicationServices.framework;
@@ -305,6 +327,7 @@
 		F5375532016C376E01DC9062 = {
 			children = (
 				F5375533016C376E01DC9062,
+				4C3B4CF6040B18B200C916F0,
 				F5375534016C376E01DC9062,
 				F5375535016C376E01DC9062,
 				F5375536016C376E01DC9062,
@@ -3014,6 +3037,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 		F53756AA016C4DD401DC9062 = {
 			buildActionMask = 2147483647;
 			files = (
+				4C3B4CF7040B18B200C916F0,
 			);
 			isa = PBXRezBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
