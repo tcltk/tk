@@ -1,3 +1,9 @@
+2003-11-05  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* library/demos/nl.msg: Dutch messages from Arjen Markus [Patch 836368]
+	* library/demos/widget: Added mechanism to support some l10n of
+	the actual hotkeys used.
+
 2003-11-04  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* tests/textDisp.test:
