@@ -8,11 +8,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacApplication.r,v 1.3 1999/08/16 00:09:09 jingham Exp $
+ * RCS: @(#) $Id: tkMacApplication.r,v 1.4 2000/02/10 08:48:00 jingham Exp $
  */
 
 #include <Types.r>
 #include <SysTypes.r>
+#include <Balloons.r>
+#include <BalloonTypes.r>
 #include <AEUserTermTypes.r>
 
 /*
@@ -43,7 +45,7 @@ resource 'vers' (1) {
 	TK_MAJOR_VERSION, MINOR_VERSION,
 	RELEASE_LEVEL, 0x00, verUS,
 	TK_PATCH_LEVEL,
-	TK_PATCH_LEVEL ", by Ray Johnson & Jim Ingham "\n© 1993-1997 Sun Microsystems" "\n  1998-1999 Scriptics Inc."
+	TK_PATCH_LEVEL ", by Ray Johnson & Jim Ingham" "\n" "© 1993-1997 Sun Microsystems" "\n" "1998-2000 Scriptics Inc."
 };
 
 resource 'vers' (2) {
@@ -108,6 +110,17 @@ resource 'kind' (TK_APP_RESOURCES, "Tcl kind", purgeable) {
 		'APPL', "Wish",
 		'TEXT', "Tcl/Tk Script"
 	}
+};
+
+#define kIconHelpString 256
+
+resource 'hfdr' (-5696, purgeable) {
+   HelpMgrVersion, hmDefaultOptions, 0, 0,
+   {HMSTRResItem {kIconHelpString}}
+};
+resource 'STR ' (kIconHelpString, purgeable) {
+   "This is the interpreter for Tcl & Tk scripts"
+   " running on Macintosh computers."
 };
 
 /*
