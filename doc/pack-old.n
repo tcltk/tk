@@ -5,14 +5,14 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: pack-old.n,v 1.2 1998/09/14 18:22:58 stanton Exp $
+'\" RCS: @(#) $Id: pack-old.n,v 1.3 2004/11/19 10:22:06 rmax Exp $
 '\" 
 .so man.macros
 .TH pack-old n 4.0 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-pack \- Obsolete syntax for packer geometry manager
+pack-old \- Obsolete syntax for packer geometry manager
 .SH SYNOPSIS
 \fBpack after \fIsibling \fIwindow options\fR ?\fIwindow options \fR...?
 .sp
