@@ -8,11 +8,20 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin32Dll.c,v 1.8 2003/12/26 04:14:38 mdejong Exp $
+ * RCS: @(#) $Id: tkWin32Dll.c,v 1.9 2004/03/05 07:32:54 mdejong Exp $
  */
 
 #include "tkWinInt.h"
 #ifndef STATIC_BUILD
+
+#if defined(HAVE_NO_SEH) && defined(TCL_MEM_DEBUG)
+static void *INITIAL_ESP,
+            *INITIAL_EBP,
+            *INITIAL_HANDLER,
+            *RESTORED_ESP,
+            *RESTORED_EBP,
+            *RESTORED_HANDLER;
+#endif /* HAVE_NO_SEH && TCL_MEM_DEBUG */
 
 /*
  * The following declaration is for the VC++ DLL entry point.

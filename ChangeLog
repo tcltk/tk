@@ -1,3 +1,9 @@
+2004-03-04  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWin32Dll.c: Add variables needed when
+	compiling with mem debug under Mingw. This
+	fixes the checking from 2003-12-25.
+
 2004-03-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	*** 8.5a1 TAGGED FOR RELEASE ***
