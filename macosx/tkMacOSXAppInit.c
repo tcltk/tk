@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.1.2.7 2002/07/19 09:22:34 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.1.2.8 2002/07/19 09:28:15 vincentdarley Exp $
  */
 #include <pthread.h>
 #include "tk.h"
@@ -258,7 +258,10 @@ Tcl_AppInit(interp)
         if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
             goto error;
         }
-        Tcl_Eval(interp, "console show");
+	/* Only show the console if we don't have a startup script */
+        if (TclGetStartupScriptPath() == NULL) {
+            Tcl_Eval(interp, "console show");
+        }
     }
     
     /*
