@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.16 2004/10/24 17:22:55 dkf Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.17 2004/10/25 15:22:16 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -76,7 +76,7 @@ foreach {testName testData} {
     panedwindow-1a.9 {-stretch alw always foo {bad stretch "foo": must be one of always, first, last, middle, or never}}
     panedwindow-1a.10 {-width 10 10 badValue {bad screen distance "badValue"}}
 } {
-    lassign $test testName optionName goodIn goodOut badIn badOut
+    lassign $testData optionName goodIn goodOut badIn badOut
     test ${testName}(good) "configuration options: $optionName" {
 	.p paneconfigure .b $optionName $goodIn
 	list [lindex [.p paneconfigure .b $optionName] 4] \
