@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.29 2000/11/22 01:49:38 ericm Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.30 2001/05/28 16:56:02 pspjuth Exp $
  */
 
 #include "tkPort.h"
@@ -137,7 +137,7 @@ static TkCmd commands[] = {
     {"canvas",		NULL,			Tk_CanvasObjCmd,	1, 1},
     {"checkbutton",	NULL,			Tk_CheckbuttonObjCmd,	1, 0},
     {"entry",		NULL,                   Tk_EntryObjCmd,		1, 0},
-    {"frame",		NULL,			Tk_FrameObjCmd,		1, 1},
+    {"frame",		NULL,			Tk_FrameObjCmd,		1, 0},
     {"label",		NULL,			Tk_LabelObjCmd,		1, 0},
     {"listbox",		NULL,			Tk_ListboxObjCmd,	1, 0},
     {"menubutton",	NULL,                   Tk_MenubuttonObjCmd,	1, 0},
@@ -147,7 +147,7 @@ static TkCmd commands[] = {
     {"scrollbar",	Tk_ScrollbarCmd,	NULL,			1, 1},
     {"spinbox",		NULL,                   Tk_SpinboxObjCmd,	1, 0},
     {"text",		Tk_TextCmd,		NULL,			1, 1},
-    {"toplevel",	NULL,			Tk_ToplevelObjCmd,	0, 1},
+    {"toplevel",	NULL,			Tk_ToplevelObjCmd,	0, 0},
 
     /*
      * Misc.
