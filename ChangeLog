@@ -1,5 +1,7 @@
 2004-02-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	*** 8.4.6 TAGGED FOR RELEASE ***
+
 	* generic/tkBind.c (HandleEventGenerate): only modify root[xy]
 	with [xy] when they haven't been otherwise set.
 
