@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.4 2003/11/11 18:21:48 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.5 2004/02/16 00:19:42 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -66,7 +66,7 @@ TkSelGetSelection(
          * Get the scrap from the Macintosh global clipboard.
          */
          
-        err=GetCurrentScrap(&scrapRef);
+        err = GetCurrentScrap(&scrapRef);
         if (err != noErr) {
             Tcl_AppendResult(interp, Tk_GetAtomName(tkwin, selection),
                 " GetCurrentScrap failed.", (char *) NULL);
@@ -340,10 +340,11 @@ TkSuspendClipboard()
 
         ClearCurrentScrap();
         GetCurrentScrap(&scrapRef);
-        Tcl_UtfToExternalDString(TkMacOSXCarbonEncoding, buffer,
-		length, &encodedText);
-        PutScrapFlavor(scrapRef, 'TEXT', 0, Tcl_DStringLength(&encodedText),
-		Tcl_DStringValue(&encodedText));
+        Tcl_UtfToExternalDString(TkMacOSXCarbonEncoding, buffer, 
+                length, &encodedText);
+        PutScrapFlavor(scrapRef, 'TEXT', 0, 
+                Tcl_DStringLength(&encodedText), 
+                Tcl_DStringValue(&encodedText) );
         Tcl_DStringFree(&encodedText);
 
 	/*

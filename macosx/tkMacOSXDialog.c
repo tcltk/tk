@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.7 2004/02/14 01:26:49 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.8 2004/02/16 00:19:42 wolfsuit Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -869,7 +869,7 @@ NavServicesGetFile(
      * Most commands assume that the file dialogs return a single
      * item, not a list.  So only build a list if multiple is true...
      */
-    if (err==noErr) {
+    if (err == noErr) {
         if (multiple) {
             theResult = Tcl_NewListObj(0, NULL);
         } else {
@@ -879,7 +879,7 @@ NavServicesGetFile(
             err = memFullErr;
         }
     }
-    if (theReply.validRecord && err==noErr) {
+    if (theReply.validRecord && err == noErr) {
         AEDesc resultDesc;
         long count;
         Tcl_DString fileName;
@@ -974,7 +974,7 @@ NavServicesGetFile(
      
     if (menuItemNames) {
         int i;
-        for (i=0;i < ofdPtr->fl.numFilters;i++) {
+        for (i = 0;i < ofdPtr->fl.numFilters; i++) {
             CFRelease(menuItemNames[i]);
         }
         ckfree((void *)menuItemNames);
@@ -1033,7 +1033,6 @@ OpenFileFilterProc(
                                 &uniFileName, NULL, NULL);
                         
                         if (err == noErr) {
-                            int numChars;
                             Tcl_UniCharToUtfDString (
                                     (Tcl_UniChar *) uniFileName.unicode, 
                                     uniFileName.length,
@@ -1130,7 +1129,7 @@ OpenEventProc(
 static Boolean
 MatchOneType(
     StringPtr fileNamePtr,        /* Name of the file */
-    OSType    fileType,         /* Type of the file */ 
+    OSType    fileType,         /* Type of the file, 0 means there was no specified type.  */ 
     OpenFileData * ofdPtr,        /* Information about this file dialog */
     FileFilter * filterPtr)        /* Match the file described by pb against
                                  * this filter */
@@ -1154,7 +1153,8 @@ MatchOneType(
      * considered an error.
      */
 
-    for (clausePtr=filterPtr->clauses; clausePtr; clausePtr=clausePtr->next) {
+    for (clausePtr = filterPtr->clauses; clausePtr; 
+            clausePtr = clausePtr->next) {
         int macMatched  = 0;
         int globMatched = 0;
         GlobPattern * globPtr;
@@ -1167,7 +1167,8 @@ MatchOneType(
             macMatched = 1;
         }
 
-        for (globPtr=clausePtr->patterns; globPtr; globPtr=globPtr->next) {
+        for (globPtr = clausePtr->patterns; globPtr; 
+                globPtr = globPtr->next) {
             char *q, *ext;
         
             if (fileNamePtr == NULL) {
@@ -1180,7 +1181,8 @@ MatchOneType(
                  * We don't want any extensions: OK if the filename doesn't
                  * have "." in it
                  */
-                for (q=fileNamePtr; *q; q++) {
+
+                for (q = fileNamePtr; *q; q++) {
                     if (*q == '.') {
                         goto glob_unmatched;
                     }
@@ -1202,14 +1204,24 @@ MatchOneType(
             break;
         }
 
-        for (mfPtr=clausePtr->macTypes; mfPtr; mfPtr=mfPtr->next) {
+        for (mfPtr = clausePtr->macTypes; mfPtr; mfPtr = mfPtr->next) {
             if (fileType == mfPtr->type) {
                 macMatched = 1;
                 break;
             }
         }
 
-        if (globMatched && macMatched) {
+	/* 
+         * On Mac OS X, it is not uncommon for files to have NO
+	 * file type.  But folks with Tcl code on Classic MacOS pretty
+	 * much assume that a generic file will have type TEXT.  So
+	 * if we were strict about matching types when the source file
+	 * had NO type set, they would have to add another rule always
+	 * with no fileType.  To avoid that, we pass the macMatch side
+	 * of the test if no fileType is set.  
+         */
+
+        if (globMatched && (macMatched || (fileType == 0))) {
             return MATCHED;
         }
     }
@@ -1247,7 +1259,7 @@ TkAboutDlg()
         return;
     }
         
-    windowRef=GetDialogWindow(aboutDlog);
+    windowRef = GetDialogWindow(aboutDlog);
     SelectWindow(windowRef);
         
     while (itemHit != 1) {
@@ -1450,7 +1462,7 @@ Tk_MessageBoxObjCmd(
 		result = TCL_ERROR;
 		goto end;
 	    }
-	    haveParentOption= true;
+	    haveParentOption = true;
 	    break;
 	    
 	    case ALERT_TITLE:
@@ -1553,8 +1565,9 @@ Tk_MessageBoxObjCmd(
 	data.windowRef = windowRef;
 	data.buttonIndex = 1;
 	handler = NewEventHandlerUPP( AlertHandler );
-	InstallEventHandler( notifyTarget, handler, GetEventTypeCount(kEvents), 
-            &kEvents, &data, NULL );
+	InstallEventHandler(notifyTarget, handler, 
+                GetEventTypeCount(kEvents), 
+                kEvents, &data, NULL );
 	osError = ShowSheetWindow( GetDialogWindow(dialogRef), windowRef );
 	if(osError != noErr) {
 	    result = TCL_ERROR;

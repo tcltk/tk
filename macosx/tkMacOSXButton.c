@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.7 2003/10/10 20:19:51 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.8 2004/02/16 00:19:41 wolfsuit Exp $
  */
 
 #include "tkButton.h"
@@ -149,16 +149,16 @@ TkpCreateButton(
     macButtonPtr = (MacButton *) ckalloc(sizeof(MacButton));
     Tk_CreateEventHandler(tkwin, ActivateMask,
             ButtonEventProc, (ClientData) macButtonPtr);
-    macButtonPtr->id=bCount++;
-    macButtonPtr->usingControl=0;
-    macButtonPtr->flags=0;
-    macButtonPtr->userPaneBackground.red=0;
-    macButtonPtr->userPaneBackground.green=0;
-    macButtonPtr->userPaneBackground.blue=~0;
-    macButtonPtr->userPane=NULL;
-    macButtonPtr->control=NULL;
-    macButtonPtr->controlTitle[0]=
-    macButtonPtr->controlTitle[1]=0;
+    macButtonPtr->id = bCount++;
+    macButtonPtr->usingControl = 0;
+    macButtonPtr->flags = 0;
+    macButtonPtr->userPaneBackground.red = 0;
+    macButtonPtr->userPaneBackground.green = 0;
+    macButtonPtr->userPaneBackground.blue = ~0;
+    macButtonPtr->userPane = NULL;
+    macButtonPtr->control = NULL;
+    macButtonPtr->controlTitle[0] = 0;
+    macButtonPtr->controlTitle[1] = 0;
     macButtonPtr->picParams.version = -2;
     macButtonPtr->picParams.hRes = 0x00480000;
     macButtonPtr->picParams.vRes = 0x00480000;
@@ -222,15 +222,15 @@ TkpDisplayButton(
     wasUsingControl = macButtonPtr->usingControl;
 
     if (TkMacOSXComputeDrawParams(butPtr, &drawParams) ) {
-        macButtonPtr->usingControl=1;
+        macButtonPtr->usingControl = 1;
         if (butPtr->type == TYPE_BUTTON) {
             macButtonPtr->useTkText = 0;
         } else {
             macButtonPtr->useTkText = 1;
         }
     } else {
-        macButtonPtr->usingControl=0;
-        macButtonPtr->useTkText=1;
+        macButtonPtr->usingControl = 0;
+        macButtonPtr->useTkText = 1;
     }
    
     /* 
@@ -821,14 +821,14 @@ TkMacOSXInitControl (
      * Set up the user pane
      */
 
-    initiallyVisible=false;
-    initialValue=kControlSupportsEmbedding|   
+    initiallyVisible = false;
+    initialValue = kControlSupportsEmbedding|   
         kControlHasSpecialBackground;
-    minValue=0;
-    maxValue=1;
-    procID=kControlUserPaneProc;
-    controlReference=(SInt32)mbPtr;
-    mbPtr->userPane=NewControl(mbPtr->windowRef,
+    minValue = 0;
+    maxValue = 1;
+    procID = kControlUserPaneProc;
+    controlReference = (SInt32)mbPtr;
+    mbPtr->userPane = NewControl(mbPtr->windowRef,
         paneRect, "\p",
         initiallyVisible,
         initialValue,
@@ -842,7 +842,7 @@ TkMacOSXInitControl (
         return 1;
     }
     
-    if ((status=EmbedControl(mbPtr->userPane,rootControl))!=noErr) {
+    if ((status=EmbedControl(mbPtr->userPane,rootControl)) != noErr) {
         fprintf(stderr,"Failed to embed user pane control %d\n", status);
         return 1;
     }
@@ -850,9 +850,9 @@ TkMacOSXInitControl (
     SetUserPaneSetUpSpecialBackgroundProc(mbPtr->userPane,
         UserPaneBackgroundProc);
     SetUserPaneDrawProc(mbPtr->userPane,UserPaneDraw);
-    initiallyVisible=false;
+    initiallyVisible = false;
     TkMacOSXComputeControlParams(butPtr,&mbPtr->params);
-    mbPtr->control=NewControl(mbPtr->windowRef,
+    mbPtr->control = NewControl(mbPtr->windowRef,
         cntrRect, "\p",
         initiallyVisible,
         mbPtr->params.initialValue,
@@ -871,7 +871,7 @@ TkMacOSXInitControl (
         return 1;
     }
     
-    mbPtr->flags|=(1 + 2);
+    mbPtr->flags |= (1 + 2);
     return 0;
 }
 
@@ -909,28 +909,26 @@ TkMacOSXDrawControl(
     TkWindow * winPtr;
     Rect       paneRect;
     Rect       cntrRect;
-    int        hilitePart = -1;
 
-
-    winPtr=(TkWindow *)butPtr->tkwin;
+    winPtr = (TkWindow *)butPtr->tkwin;
    
     paneRect.left = winPtr->privatePtr->xOff;
     paneRect.top = winPtr->privatePtr->yOff;
     paneRect.right = paneRect.left + Tk_Width(butPtr->tkwin);
     paneRect.bottom = paneRect.top + Tk_Height(butPtr->tkwin);
 
-    cntrRect=paneRect;
+    cntrRect = paneRect;
 
 /*
-    cntrRect.left+=butPtr->inset;
-    cntrRect.top+=butPtr->inset;
-    cntrRect.right-=butPtr->inset;
-    cntrRect.bottom-=butPtr->inset;
+    cntrRect.left += butPtr->inset;
+    cntrRect.top += butPtr->inset;
+    cntrRect.right -= butPtr->inset;
+    cntrRect.bottom -= butPtr->inset;
 */
-    cntrRect.left+=DEF_INSET_LEFT;
-    cntrRect.top+=DEF_INSET_TOP;
-    cntrRect.right-=DEF_INSET_RIGHT;
-    cntrRect.bottom-=DEF_INSET_BOTTOM;
+    cntrRect.left += DEF_INSET_LEFT;
+    cntrRect.top += DEF_INSET_TOP;
+    cntrRect.right -= DEF_INSET_RIGHT;
+    cntrRect.bottom -= DEF_INSET_BOTTOM;
 
     /* 
      * The control has been previously initialised
@@ -1139,7 +1137,7 @@ SetupBevelButton(
     ClosePicture();
     tkPictureIsOpen = 0;
     
-    if ( (err=SetControlData(controlHandle, kControlButtonPart,
+    if ((err = SetControlData(controlHandle, kControlButtonPart,
             kControlBevelButtonContentTag,
             sizeof(ControlButtonContentInfo),
             (char *) &mbPtr->bevelButtonContent)) != noErr ) {
@@ -1167,7 +1165,7 @@ SetupBevelButton(
         theAlignment = kControlBevelButtonAlignCenter;
     }
 
-    if ((err=SetControlData(controlHandle, kControlButtonPart,
+    if ((err = SetControlData(controlHandle, kControlButtonPart,
             kControlBevelButtonGraphicAlignTag,
             sizeof(ControlButtonGraphicAlignment),
             (char *) &theAlignment)) != noErr ) {
@@ -1187,7 +1185,7 @@ SetupBevelButton(
         } else if (butPtr->compound == COMPOUND_RIGHT) {
             thePlacement = kControlBevelButtonPlaceToLeftOfGraphic;
         }
-        if ((err=SetControlData(controlHandle, kControlButtonPart,
+        if ((err = SetControlData(controlHandle, kControlButtonPart,
                 kControlBevelButtonTextPlaceTag,
                 sizeof(ControlButtonTextPlacement),
                 (char *) &thePlacement)) != noErr ) {
