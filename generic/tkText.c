@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.1.4.5 1999/02/16 11:39:32 lfb Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.1.4.6 1999/04/02 23:51:48 stanton Exp $
  */
 
 #include "default.h"
@@ -1760,6 +1760,8 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	}
 	do {
 	    int thisLength;
+	    Tcl_UniChar ch;
+
 	    if (exact) {
 		p = strstr(startOfLine + firstByte,	/* INTL: Native. */
 			pattern); 
@@ -1790,7 +1792,7 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	    }
 	    matchByte = i;
 	    matchLength = thisLength;
-	    firstByte = matchByte + 1;
+	    firstByte += Tcl_UtfToUniChar(startOfLine + matchByte, &ch);
 	} while (backwards);
 
 	/*
@@ -1800,6 +1802,15 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	 */
 
 	if (matchByte >= 0) {
+	    int numChars;
+
+	    /*
+	     * Convert the byte length to a character count.
+	     */
+
+	    numChars = Tcl_NumUtfChars(startOfLine + matchByte,
+		    matchLength);
+
 	    /*
 	     * The index information returned by the regular expression
 	     * parser only considers textual information:  it doesn't
@@ -1819,7 +1830,7 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	    for (leftToScan += matchLength; leftToScan > 0;
 		    segPtr = segPtr->nextPtr) {
 		if (segPtr->typePtr != &tkTextCharType) {
-		    matchLength += segPtr->size;
+		    numChars += segPtr->size;
 		    continue;
 		}
 		leftToScan -= segPtr->size;
@@ -1834,7 +1845,7 @@ TextSearchCmd(textPtr, interp, argc, argv)
 		}
 	    }
 	    if (varName != NULL) {
-		sprintf(buffer, "%d", matchLength);
+		sprintf(buffer, "%d", numChars);
 		if (Tcl_SetVar(interp, varName, buffer, TCL_LEAVE_ERR_MSG)
 			== NULL) {
 		    code = TCL_ERROR;
@@ -1913,6 +1924,7 @@ TkTextGetTabs(interp, tkwin, string)
     char **argv;
     TkTextTabArray *tabArrayPtr;
     TkTextTab *tabPtr;
+    Tcl_UniChar ch;
 
     if (Tcl_SplitList(interp, string, &argc, &argv) != TCL_OK) {
 	return NULL;
@@ -1955,11 +1967,12 @@ TkTextGetTabs(interp, tkwin, string)
 	if ((i+1) == argc) {
 	    continue;
 	}
-	c = UCHAR(argv[i+1][0]);
-	if (!isalpha(c)) {
+	Tcl_UtfToUniChar(argv[i+1], &ch);
+	if (!Tcl_UniCharIsAlpha(ch)) {
 	    continue;
 	}
 	i += 1;
+	c = argv[i][0];
 	if ((c == 'l') && (strncmp(argv[i], "left",
 		strlen(argv[i])) == 0)) {
 	    tabPtr->alignment = LEFT;
