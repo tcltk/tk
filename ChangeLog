@@ -1,3 +1,9 @@
+2003-12-09  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/configure:
+	* unix/tcl.m4: updated OpenBSD build configuration based on
+	[Patch #775246] (cassoff)
+
 2003-12-09  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* win/tkWinWm.c: fix to memory leak on certain error cases.
