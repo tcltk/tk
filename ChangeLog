@@ -1,5 +1,11 @@
 2002-07-16  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* generic/tkFont.c (TkFontPkgFree): Call panic instead
+	of assert since assert is not used in the rest of Tk.
+	[Tk bug 579651]
+
+2002-07-16  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* unix/Makefile.in:
 	* win/Makefile.in: Add a more descriptive warning
 	in the event `make genstubs` needs to be rerun.
