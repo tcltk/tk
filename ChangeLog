@@ -1,3 +1,8 @@
+2003-08-20  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* generic/tkCanvPs.c (Tk_PostscriptFont): Use Tcl_Obj-based
+	interfaces for working with user-supplied font maps.
+
 2003-08-19  Joe English  <jenglish@users.sourceforge.net>
 	* generic/tkPanedWindow.c(PanedWindowWorldChanged):
 	Set window background from the -background resource.
