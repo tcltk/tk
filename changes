@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.11 2004/07/26 20:16:08 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.64.2.12 2004/07/26 21:24:07 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5655,7 +5655,7 @@ option work as per the docs, and call DragSash to stop sash jump when B1 is
 pressed and released without moving. (hobbs)
 
 2004-05-05 (bug fix)[618872] Fix Tk_MeasureChars and Tk_DrawChars to handle
-reallocation of subfonts in when unicode chars require extra fonts.
+reallocation of subfonts when unicode chars require extra fonts.
 (dkf, hobbs)
 
 2004-05-14 (enhancement) reduce Tk tk_messageBox default font size to
