@@ -1,5 +1,8 @@
 2002-02-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkText.c (ConfigureText): reenable the blinking cursor
+	on state change where necessary. [Bug #503772]
+
 	* tests/listbox.test:
 	* generic/tkListbox.c: corrected error handling when setting to an
 	invalid listvar value. [Bug #503613]
