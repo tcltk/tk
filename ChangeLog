@@ -1,3 +1,9 @@
+2003-12-12  David Gravereaux <davygrvy@pobox.com>
+
+	* win/tkWinEmbed.c (TkWinEmbeddedEventProc) : for loop dereferences
+	containerPtr but can't get to the if (containerPtr == NULL) test due
+	to the unhandled read memory exception for when it really is NULL.
+
 2003-12-10  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* tests/textWind.test: fixed 2 tests so they run on Windows as well
