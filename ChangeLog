@@ -1,3 +1,15 @@
+1999-06-01    <stanton@scriptics.com>
+
+	* unix/tkUnixSelect.c: Improved I18N selection support.
+	COMPOUND_TEXT is converted to/from iso2022, and STRING is
+	converted to/from iso8859-1.  There are still a few loose ends to
+	tie up before this is completely done.
+
+	* unix/tkUnixFont.c: Eliminated redundant case folding code.
+
+	* generic/tkFont.c: Eliminated use of isupper/tolower in favor of
+	Unicode variants.
+
 1999-05-24    <stanton@scriptics.com>
 
 	* generic/tkStubLib.c: 
