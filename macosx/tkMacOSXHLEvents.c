@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.5.2.3 2004/03/17 19:01:46 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.5.2.4 2004/03/17 19:35:41 wolfsuit Exp $
  */
 
 #include "tkMacOSXPort.h"
@@ -73,13 +73,13 @@ OSStatus ApplicationCarbonEventsHandler (EventHandlerCallRef inHandlerCallRef,
          * the show preferences procedure doesn't exist.
          */
      
+            toggleHide = 1;
             if ((interp == NULL) || 
                     (Tcl_GetCommandInfo(interp, 
                     "::tk::mac::OnHide", &dummy)) == 0) {
                 return eventNotHandledErr;
             }
             Tcl_GlobalEval(interp, "::tk::mac::OnHide");
-            toggleHide = 1;
             break;
         case kEventAppShown:
             if (toggleHide == 1) {
