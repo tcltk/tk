@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.28 2002/08/08 01:42:44 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.29 2002/08/14 15:31:21 vincentdarley Exp $
  *
  */
 
@@ -25,6 +25,21 @@
 #define USE_NEW_CHOOSEDIR 1
 #ifdef USE_NEW_CHOOSEDIR
 #include <shlobj.h>     /* includes SHBrowseForFolder */
+
+/* These needed for compilation with VC++ 5.2 */
+#ifndef BIF_EDITBOX
+#define BIF_EDITBOX 0x10
+#endif
+#ifndef BIF_VALIDATE
+#define BIF_VALIDATE 0x0020
+#endif
+#ifndef BFFM_VALIDATEFAILED
+#ifdef UNICODE
+#define BFFM_VALIDATEFAILED 4
+#else
+#define BFFM_VALIDATEFAILED 3
+#endif
+#endif 
 
 /*
  * The following structure is used by the new Tk_ChooseDirectoryObjCmd
