@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.2 1999/04/16 01:51:20 stanton Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.3 2000/12/13 19:44:15 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -501,46 +501,52 @@ SetMMFromAny(interp, objPtr)
     int units;
     MMRep *mmPtr;
 
-    string = Tcl_GetStringFromObj(objPtr, NULL);
+    if (objPtr->typePtr == &tclDoubleType) {
+	/* optimize for speed reasons */
+	Tcl_GetDoubleFromObj(interp, objPtr, &d);
+	units = -1;
+    } else {
+	string = Tcl_GetStringFromObj(objPtr, NULL);
 
-    d = strtod(string, &rest);
-    if (rest == string) {
-	/*
-	 * Must copy string before resetting the result in case a caller
-	 * is trying to convert the interpreter's result to mms.
-	 */
+	d = strtod(string, &rest);
+	if (rest == string) {
+	    /*
+	     * Must copy string before resetting the result in case a caller
+	     * is trying to convert the interpreter's result to mms.
+	     */
 
-	error:
-	Tcl_AppendResult(interp, "bad screen distance \"", string,
-		"\"", (char *) NULL);
-	return TCL_ERROR;
-    }
-    while ((*rest != '\0') && isspace(UCHAR(*rest))) {
-	rest++;
-    }
-    switch (*rest) {
-	case '\0':
-	    units = -1;
-	    break;
+	    error:
+            Tcl_AppendResult(interp, "bad screen distance \"", string,
+                    "\"", (char *) NULL);
+            return TCL_ERROR;
+        }
+        while ((*rest != '\0') && isspace(UCHAR(*rest))) {
+            rest++;
+        }
+        switch (*rest) {
+	    case '\0':
+		units = -1;
+		break;
 
-	case 'c':
-	    units = 0;
-	    break;
+	    case 'c':
+		units = 0;
+		break;
 
-	case 'i':
-	    units = 1;
-	    break;
+	    case 'i':
+		units = 1;
+		break;
 
-	case 'm':
-	    units = 2;
-	    break;
+	    case 'm':
+		units = 2;
+		break;
 
-	case 'p':
-	    units = 3;
-	    break;
+	    case 'p':
+		units = 3;
+		break;
 
-	default:
-	    goto error;
+	    default:
+		goto error;
+	}
     }
 
     /*
@@ -552,14 +558,16 @@ SetMMFromAny(interp, objPtr)
 	(*typePtr->freeIntRepProc)(objPtr);
     }
 
-    objPtr->typePtr = &mmObjType;
+    objPtr->typePtr	= &mmObjType;
 
-    mmPtr = (MMRep *) ckalloc(sizeof(MMRep));
-    mmPtr->value = d;
-    mmPtr->units = units;
-    mmPtr->tkwin = NULL;
-    mmPtr->returnValue = d;
+    mmPtr		= (MMRep *) ckalloc(sizeof(MMRep));
+    mmPtr->value	= d;
+    mmPtr->units	= units;
+    mmPtr->tkwin	= NULL;
+    mmPtr->returnValue	= d;
+
     objPtr->internalRep.otherValuePtr = (VOID *) mmPtr;
+
     return TCL_OK;
 }
 
