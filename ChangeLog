@@ -1,3 +1,8 @@
+2003-10-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/console.tcl: Avoid including the console in the list
+	of interpreters exposed by [winfo interps].
+
 2003-10-01  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.pbproj/project.pbxproj:
