@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.1.4.15 1999/03/11 19:02:10 hershey Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.1.4.16 1999/03/11 23:48:11 hershey Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -100,7 +100,8 @@ TKTESTOBJS = \
 	$(TMPDIR)\tkTest.obj \
 	$(TMPDIR)\tkSquare.obj \
 	$(TMPDIR)\testMain.obj \
-	$(TMPDIR)\tkThreadTest.obj
+# the tkThreadTest.c file has not been checked it yet.
+#	$(TMPDIR)\tkThreadTest.obj
 
 XLIBOBJS = \
 	$(TMPDIR)\xcolors.obj \
@@ -336,11 +337,11 @@ install: install-binaries install-libraries
 plugin:	setup $(TKPLUGINDLL) $(WISHP)
 tktest: setup $(TKTEST) $(CAT32)
 test:	setup $(TKTEST) $(TKLIB) $(CAT32)
-	copy $(TCLDIR)\bin\pkgIndex.tcl $(OUTDIR)
 	set TCL_LIBRARY=$(TCLDIR)/library
-	$(TKTEST) << | $(CAT32)
-		source ../tests/all.tcl
-<<
+	set PATH=$(TCLDIR)\win\$(TMPDIRNAME);$(PATH)
+	$(TKTEST) $(ROOT)/tests/all.tcl
+
+#       copy $(TCLDIR)\bin\pkgIndex.tcl $(OUTDIR)
 
 console-wish : all $(WISHC)
 
@@ -452,13 +453,13 @@ genstubs:
 #
 
 $(TMPDIR)\testMain.obj: $(ROOT)\win\winMain.c
-	$(cc32) $(TK_CFLAGS) -DTK_TEST -Fo$@ $?
+	$(cc32) $(WISH_CFLAGS) -DTK_TEST -Fo$@ $?
 
 $(TMPDIR)\tkTest.obj: $(ROOT)\generic\tkTest.c
-	$(cc32) $(TK_CFLAGS) -Fo$@ $?
+	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
 
 $(TMPDIR)\tkSquare.obj: $(ROOT)\generic\tkSquare.c
-	$(cc32) $(TK_CFLAGS) -Fo$@ $?
+	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
 
 $(TMPDIR)\winMain.obj: $(ROOT)\win\winMain.c
 	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
