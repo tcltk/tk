@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.47 2005/02/14 23:00:44 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.48 2005/03/15 14:07:47 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -1804,6 +1804,11 @@ UpdateDisplayInfo(textPtr)
      */
 
     if (y < maxY) {
+	/*
+	 * This counts how many vertical pixels we have left to fill
+	 * by pulling in more display pixels either from the first
+	 * currently displayed, or the lines above it.
+	 */
 	int spaceLeft = maxY - y;
 	
 	if (spaceLeft <= dInfoPtr->newTopPixelOffset) {
@@ -1918,16 +1923,27 @@ UpdateDisplayInfo(textPtr)
 		bytesToCount = INT_MAX;
 	    }
 	    /*
-	     * We've filled in the space we wanted to, and we
-	     * need to store any extra overlap we've just
-	     * created for the top line.
+	     * We've either filled in the space we wanted to or we've
+	     * run out of display lines at the top of the text.  Note
+	     * that we already set dInfoPtr->newTopPixelOffset to zero
+	     * above.
 	     */
-	    if (lineNum >= 0) {
+	    if (spaceLeft < 0) {
+		/* 
+		 * We've laid out a few too many vertical pixels at or
+		 * above the first line.  Therefore we only want to show
+		 * part of the first displayed line, so that the last
+		 * displayed line just fits in the window.
+		 */
 		dInfoPtr->newTopPixelOffset = -spaceLeft;
-		if (spaceLeft > 0 ||
-		  dInfoPtr->newTopPixelOffset >= dInfoPtr->dLinePtr->height) {
-		    /* Bad situation */
-		    Tcl_Panic("Pixel height problem while laying out text widget");
+		if (dInfoPtr->newTopPixelOffset >= dInfoPtr->dLinePtr->height) {
+		    /* 
+		     * Somehow the entire first line we laid out is
+		     * shorter than the new offset.  This should not
+		     * occur and would indicate a bad problem in the
+		     * logic above.
+		     */
+		    Tcl_Panic("Error in pixel height consistency while filling in spacesLeft");
 		}
 	    }
 	}
