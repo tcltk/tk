@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.1.4.11 1999/04/01 21:58:50 redman Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.1.4.12 1999/04/06 18:20:49 redman Exp $
  */
 
 #include "tkPort.h"
@@ -41,7 +41,7 @@ static Tcl_ThreadDataKey dataKey;
  * The Mutex below is used to lock access to the Tk_Uids above. 
  */
 
-TCL_DECLARE_MUTEX(windowMutex);
+TCL_DECLARE_MUTEX(windowMutex)
 
 /*
  * Default values for "changes" and "atts" fields of TkWindows.  Note
