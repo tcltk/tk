@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.1 2001/12/04 03:07:43 mdejong Exp $
+# RCS: @(#) $Id: wm.test,v 1.2 2002/01/19 00:36:02 mdejong Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -262,16 +262,7 @@ test wm-stackorder-4.4 {wm stackorder isabove|isbelow} {
 
 deleteWindows
 
-test wm-stackorder-5.1 {overrideredirect does not change stackorder} {
-    catch {destroy .t}
-    toplevel .t
-    wm overrideredirect .t 1
-    update
-    raise .
-    wm stackorder . isabove .t
-} {1}
-
-test wm-stackorder-5.2 {a menu is not a toplevel} {
+test wm-stackorder-5.1 {a menu is not a toplevel} {
     catch {destroy .t}
     toplevel .t
     menu .t.m -type menubar
@@ -281,6 +272,26 @@ test wm-stackorder-5.2 {a menu is not a toplevel} {
     raise .
     wm stackorder .
 } {.t .}
+
+test wm-stackorder-5.2 {A normal toplevel can't be
+        raised above an overrideredirect toplevel } {
+    catch {destroy .t}
+    toplevel .t
+    wm overrideredirect .t 1
+    raise .
+    update
+    wm stackorder . isabove .t
+} 0
+
+test wm-stackorder-5.3 {An overrideredirect window
+        can be explicitly lowered } {
+    catch {destroy .t}
+    toplevel .t
+    wm overrideredirect .t 1
+    lower .t
+    update
+    wm stackorder .t isbelow .
+} 1
 
 
 deleteWindows

@@ -1,3 +1,9 @@
+2002-01-18  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* tests/wm.test: Rewrite stackorder tests that
+	deal with toplevels that have the overrideredirect
+	flag set. [Tk bug 492259]
+
 2002-01-18  Don Porter  <dgp@users.sourceforge.net>
 
 	* win/tkWinDialog.c: Overlooked Tcl_GetIndexFromObj callers.
