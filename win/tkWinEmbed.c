@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.4 2000/07/06 03:17:44 mo Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.5 2002/05/27 17:33:26 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -148,6 +148,7 @@ TkpUseWindow(interp, tkwin, string)
 				 * for tkwin;  must be an integer value. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *usePtr;
     int id;
     HWND hwnd;
     Container *containerPtr;
@@ -175,6 +176,15 @@ TkpUseWindow(interp, tkwin, string)
                     "\" doesn't exist", (char *) NULL);
         }
         return TCL_ERROR;
+    }
+
+    usePtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
+    if (usePtr != NULL) {
+        if (!(usePtr->flags & TK_CONTAINER)) {
+	    Tcl_AppendResult(interp, "window \"", usePtr->pathName,
+                    "\" doesn't have -container option set", (char *) NULL);
+	    return TCL_ERROR;
+	}
     }
 
     /*
