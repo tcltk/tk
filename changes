@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.85 2005/01/09 18:50:12 chengyemao Exp $
+RCS: @(#) $Id: changes,v 1.86 2005/01/19 02:25:17 chengyemao Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5923,11 +5923,11 @@ fine with Windows 98. But having a problem when invoked with a mouse click
 may show as a blank window at the pull-down time and require the mouse 
 moves over the menu items to complete display. (chengyemao)
 
-2005-1-3 (feature implementation of embedded/embedding Tk of Windows) Added
+2005-01-03 (feature implementation of embedded/embedding Tk of Windows) Added
 a separated window handler for an embedded menu; solved the problem of 
 a blank menu display with a mouse click in XP. (chengyemao)
 
-2005-1-7 (feature implementation of embedded/embedding Tk of Window) Added
+2005-01-07 (feature implementation of embedded/embedding Tk of Window) Added
 TK_STATE message (Windows) to support {wm state} for embedded windows; forced
 redraw of container after the embedded window detached; removed unnecessary
 panic in using embedded window; embeded toplevel menu of an embedded window
@@ -5936,16 +5936,24 @@ UpdateWrapper, TkpWmGetState (added) in tkWinWm.c; TkpUseWindow,
 TkWinEmbeddedEventProc in tkWinEmbed.c; TkWinChildProc in tkWinX.c. 
 (chengyemao) 
 
-2005-1-8 (bug fix)[1098625] Wrong toplevel geometry when created with a menu;
+2005-01-08 (bug fix)[1098625] Wrong toplevel geometry when created with a menu;
 [637653] Deleting a popup menu crashes wish (chengyemao)
 
-2005-1-9 (bug fix)[1098779] TkParsePadAmount (tkPack.c) did not properly 
+2005-01-09 (bug fix)[1098779] TkParsePadAmount (tkPack.c) did not properly 
 handle list. The bug was due to fail to handle leading spaces. Skipping the 
 leading spaces fixes the bug (chengyemao).
 
-2005-1-9 (feature implementation of embedded/embedding Tk) Changed 
+2005-01-09 (feature implementation of embedded/embedding Tk of Windows) Changed 
 FrameWidgetObjCmd (tkFrame.c), TkpUseWindow (tkMacOSXEmbed.c, tkUnixEmbed.c, 
 tkWinEmbed.c) to make implementation ready for a configurable toplevel -use
 option and completed the implementation for Windows (tkWinWm.c, tkWinEmbed.c, 
 tkWinInt.h). Embedding with a frame container needs further debugging
 (chengyemao).
+
+2005-01-18 (feature implementation of embedded/embedding Tk of Windows) Simplified
+TkpUseWindow, added Tk_DetachEmbeddedWindow and got rid of code for saving an 
+embedded window object which is never used. Fixed a bug in TkWinHandleMenuEvent 
+for processing WM_MENUSELECT. Wish crashed due to an invalid index in a case 
+of MF_POPUP. The -use option of a toplevel can be configured after the toplevel
+is created.
+
