@@ -1,5 +1,10 @@
 2002-02-19  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* generic/tkImgPhoto.c (MatchFileFormat):  Tcl_Seek takes
+	Tcl_WideInt offset (three places.)
+	* generic/tkImgPPM.c (FileReadPPM): Tcl_Seek takes Tcl_WideInt offset.
+	* generic/tkFrame.c (ConfigureFrame): Stop GCC warning.
+
 	* generic/tkImgGIF.c: Made file meet the formatting rules from the
 	Tcl Engineering Manual better; mostly differences in whitespace.
 
