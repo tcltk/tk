@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.66 2002/06/14 22:25:12 jenglish Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.67 2002/06/14 23:10:42 jenglish Exp $
 
 # Current Tk version;  used in various names.
 
@@ -138,12 +138,6 @@ PROTO_FLAGS		=
 MEM_DEBUG_FLAGS		=
 #MEM_DEBUG_FLAGS	= -DTCL_MEM_DEBUG
 
-# To disable window-manager enablers, reverse the comment characters
-# on the following two lines.
-
-WM_ENABLER_FLAGS	= -DWM_ENABLERS
-#WM_ENABLER_FLAGS	= 
-
 # If your X server is X11R4 or earlier, then you may wish to reverse
 # the comment characters on the following two lines.  This will enable
 # extra code to speed up XStringToKeysym.  In X11R5 and later releases
@@ -254,8 +248,7 @@ CC_SWITCHES_NO_STUBS = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I${UNIX_DIR} -I${GENERIC_DIR} \
 -I${BMAP_DIR} -I${TCL_GENERIC_DIR} ${X11_INCLUDES} \
 ${AC_FLAGS} ${PROTO_FLAGS} \
-${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} ${NO_DEPRECATED_FLAGS} \
-${WM_ENABLER_FLAGS}
+${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} ${NO_DEPRECATED_FLAGS}
 
 CC_SWITCHES = ${CC_SWITCHES_NO_STUBS} ${TCL_STUB_FLAGS} 
 
@@ -263,7 +256,7 @@ DEPEND_SWITCHES = ${CFLAGS} -I${UNIX_DIR} -I${GENERIC_DIR} \
 -I${BMAP_DIR} \
 -I${TCL_GENERIC_DIR} ${X11_INCLUDES} \
 ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} \
-${WM_ENABLER_FLAGS} ${KEYSYM_FLAGS}
+${KEYSYM_FLAGS}
 
 WISH_OBJS = tkAppInit.o
 
