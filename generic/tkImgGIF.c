@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.6 1999/11/30 07:26:53 hobbs Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.7 1999/11/30 07:34:13 hobbs Exp $
  */
 
 /*
@@ -1853,7 +1853,7 @@ static void rl_flush_withtable(count)
     repleft = 1 + compute_triangle_count(leftover,max_ocodes);
   }
  if (VERBOSE) printf("rl_flush_withtable repmax=%d leftover=%d repleft=%d\n",repmax,leftover,repleft);
- if (1+compute_triangle_count(count,max_ocodes) < repmax+repleft)
+ if (1+(int)compute_triangle_count(count,max_ocodes) < repmax+repleft)
   { output(code_clear);
     did_clear();
     rl_flush_fromclear(count);
