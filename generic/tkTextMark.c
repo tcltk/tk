@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextMark.c,v 1.7 2003/05/19 13:04:23 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextMark.c,v 1.8 2003/05/19 14:37:20 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -156,9 +156,10 @@ TkTextMarkCmd(textPtr, interp, objc, objv)
 	    }
 	    str = Tcl_GetStringFromObj(objv[4],&length);
 	    c = str[0];
-	    if ((c == 'l') && (strncmp(str, "left", length) == 0)) {
+	    if ((c == 'l') && (strncmp(str, "left", (unsigned)length) == 0)) {
 		newTypePtr = &tkTextLeftMarkType;
-	    } else if ((c == 'r') && (strncmp(str, "right", length) == 0)) {
+	    } else if ((c == 'r') &&
+		    (strncmp(str, "right", (unsigned)length) == 0)) {
 		newTypePtr = &tkTextRightMarkType;
 	    } else {
 		Tcl_AppendResult(interp, "bad mark gravity \"", str, 

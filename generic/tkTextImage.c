@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.6 2003/05/19 13:04:23 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.7 2003/05/19 14:37:20 dkf Exp $
  */
 
 #include "tk.h"
@@ -136,19 +136,26 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 				 * parsed this command enough to know that
 				 * objv[1] is "image". */
 {
-    int length;
+    int idx;
     register TkTextSegment *eiPtr;
-    CONST char *str;
+    TkTextIndex index;
+    static CONST char *optionStrings[] = {
+	"cget", "configure", "create", "names", NULL
+    };
+    enum opts {
+	CMD_CGET, CMD_CONF, CMD_CREATE, CMD_NAMES
+    };
     
     if (objc < 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
-    str = Tcl_GetStringFromObj(objv[2],&length);
-    if ((strncmp(str, "cget", length) == 0) && (length >= 2)) {
-	TkTextIndex index;
-	TkTextSegment *eiPtr;
-
+    if (Tcl_GetIndexFromObj(interp, objv[2], optionStrings, "option", 0,
+	    &idx) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    switch ((enum opts) idx) {
+    case CMD_CGET:
 	if (objc != 5) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "index option");
 	    return TCL_ERROR;
@@ -164,10 +171,7 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 	}
 	return Tk_ConfigureValue(interp, textPtr->tkwin, configSpecs,
 		(char *) &eiPtr->body.ei, Tcl_GetString(objv[4]), 0);
-    } else if ((strncmp(str, "configure", length) == 0) && (length >= 2)) {
-	TkTextIndex index;
-	TkTextSegment *eiPtr;
-
+    case CMD_CONF:
 	if (objc < 4) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "index ?option value ...?");
 	    return TCL_ERROR;
@@ -191,8 +195,7 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 	    TkTextChanged(textPtr, &index, &index);
 	    return EmbImageConfigure(textPtr, eiPtr, objc-4, objv+4);
 	}
-    } else if ((strncmp(str, "create", length) == 0) && (length >= 2)) {
-	TkTextIndex index;
+    case CMD_CREATE: {
 	int lineIndex;
 
 	/*
@@ -249,7 +252,9 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 	    TkBTreeDeleteChars(&index, &index2);
 	    return TCL_ERROR;
 	}
-    } else if (strncmp(str, "names", length) == 0) {
+	return TCL_OK;
+    }
+    case CMD_NAMES: {
 	Tcl_HashSearch search;
 	Tcl_HashEntry *hPtr;
 
@@ -262,13 +267,12 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 	    Tcl_AppendElement(interp,
 		    Tcl_GetHashKey(&textPtr->markTable, hPtr));
 	}
-    } else {
-	Tcl_AppendResult(interp, "bad image option \"", str,
-		"\": must be cget, configure, create, or names",
-		(char *) NULL);
-	return TCL_ERROR;
+	return TCL_OK;
     }
-    return TCL_OK;
+    default:
+	panic("unexpected switch fallthrough");
+    }
+    return TCL_ERROR;
 }
 
 /*
