@@ -2,7 +2,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.23 2000/09/06 19:05:16 hobbs Exp $
+# RCS: @(#) $Id: configure.in,v 1.24 2000/10/31 01:28:26 davidg Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -145,6 +145,27 @@ CFG_TK_SHARED_LIB_SUFFIX=${TK_SHARED_LIB_SUFFIX}
 CFG_TK_UNSHARED_LIB_SUFFIX=${TK_UNSHARED_LIB_SUFFIX}
 CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 
+#--------------------------------------------------------------------
+# Adjust the defines for how the resources are built depending
+# on symbols and static vs. shared.
+#--------------------------------------------------------------------
+
+if test "$SHARED_BUILD" = 0 -o $TCL_NEEDS_EXP_FILE = 0; then
+    if test "${DBGX}" = "d"; then
+        RC_DEFINES="-d STATIC_BUILD -d DEBUG"
+    else
+        RC_DEFINES="-d STATIC_BUILD"
+    fi
+    TK_RES=""
+else
+    if test "${DBGX}" = "d"; then
+        RC_DEFINES="-d DEBUG"
+    else
+        RC_DEFINES=""
+    fi
+    TK_RES=tk.res
+fi
+
 AC_SUBST(TK_VERSION)
 AC_SUBST(TK_MAJOR_VERSION)
 AC_SUBST(TK_MINOR_VERSION)
@@ -200,6 +221,8 @@ AC_SUBST(RC)
 AC_SUBST(RC_OUT)
 AC_SUBST(RC_TYPE)
 AC_SUBST(RC_INCLUDE)
+AC_SUBST(RC_DEFINES)
+AC_SUBST(TK_RES)
 AC_SUBST(RES)
 AC_SUBST(LIBS)
 AC_SUBST(LIBS_GUI)

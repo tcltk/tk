@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.33 2000/10/31 00:52:28 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.34 2000/10/31 01:28:26 davidg Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -171,6 +171,7 @@ RANLIB		= @RANLIB@
 CC		= @CC@
 RC		= @RC@
 RES		= @RES@
+TK_RES		= @TK_RES@
 AC_FLAGS	= @EXTRA_CFLAGS@ @DEFS@
 CPPFLAGS	= @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@
@@ -524,9 +525,9 @@ ${TK_STUB_LIB_FILE}: ${STUB_OBJS}
 	@MAKE_LIB@ ${STUB_OBJS}
 	@POST_MAKE_LIB@
 
-${TK_DLL_FILE}: ${TK_OBJS} tk.$(RES)
+${TK_DLL_FILE}: ${TK_OBJS} $(TK_RES)
 	@$(RM) ${TK_DLL_FILE}
-	@MAKE_DLL@ ${TK_OBJS} tk.$(RES) $(SHLIB_LD_LIBS)
+	@MAKE_DLL@ ${TK_OBJS} $(TK_RES) $(SHLIB_LD_LIBS)
 
 ${TK_LIB_FILE}: ${TK_OBJS}
 	@$(RM) ${TK_LIB_FILE}
@@ -565,7 +566,7 @@ tclThreadTest.$(OBJEXT): $(TCL_BIN_DIR)/tclThreadTest.$(OBJEXT)
 	$(CC) -c $(STUB_CC_SWITCHES) -DBUILD_tk ${DEPARG} $(CC_OBJNAME)
 
 .rc.$(RES):
-	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_GENERIC_NATIVE)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" $(DEPARG)
+	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_DEFINES@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_GENERIC_NATIVE)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" $(DEPARG)
 
 depend:
 

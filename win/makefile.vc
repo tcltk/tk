@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.37 2000/09/02 01:18:24 ericm Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.38 2000/10/31 01:28:26 davidg Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -457,7 +457,11 @@ $(TMPDIR)\tkStubLib.obj : $(GENERICDIR)\tkStubLib.c
 
 {$(RCDIR)}.rc{$(TMPDIR)}.res:
 	$(rc32) -fo $@ -r -i "$(GENERICDIR)" -i "$(TOOLS32)\include" \
-		-i "$(TCLDIR)\generic" $<
+		-i "$(TCLDIR)\generic" \
+!if "$(NODEBUG)" == "0"
+		-d DEBUG \
+!endif
+		$<
 
 clean:
         -@del $(OUTDIR)\*.exp 
