@@ -1,3 +1,9 @@
+2004-07-13  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* README, macosx/Wish.pbproj/project.pbxproj:      bumped to
+	* unix/configure, unix/configure.in, unix/tk.spec: patchlevel 8.4.7
+	* win/configure, win/configure.in:
+
 2004-07-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/tkfbox.tcl (::tk::dialog::file::Create): Watch out for
@@ -41,9 +47,9 @@
 
 2004-05-12  Chengye Mao <chengye.geo@yahoo.com>
 
-        * generic/tkBind.c <HandleEventGenerate>: Modified to fix wish
-        crach due to incorrectly generate <Destroy> event. This bug was
-        reported in comp.lang.tcl but not logged.
+	* generic/tkBind.c (HandleEventGenerate): Modified to fix wish
+	crach due to incorrectly generate <Destroy> event. This bug was
+	reported in comp.lang.tcl but not logged.
 
 2004-05-10  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
