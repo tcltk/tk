@@ -1,3 +1,7 @@
+2004-05-10  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/makefile.vc: Apply fix from tcl bug #950049 for make docs.
+
 2004-05-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinFont.c (Tk_MeasureChars,Tk_DrawChars,etc): Make sure
