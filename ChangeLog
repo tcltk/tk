@@ -1,3 +1,8 @@
+2004-05-24  Jim Ingham  <jingham@apple.com>
+
+	* tkMacOSXDialog.c (Tk_MessageBoxObjCmd): Turn on the
+	-finemessage option for Mac OS X.
+	
 2004-05-23  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* ChangeLog.2002: Split older ChangeLog entries off into a
