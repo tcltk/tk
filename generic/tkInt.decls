@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.17 2000/04/10 22:43:11 ericm Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.18 2000/11/21 16:18:05 dkf Exp $
 
 library tk
 
@@ -630,6 +630,10 @@ declare 138 generic {
 
 declare 139 generic {
     void TkpInitKeymapInfo (TkDisplay *dispPtr)
+}
+
+declare 140 generic {
+    TkRegion TkPhotoGetValidRegion (Tk_PhotoHandle handle)
 }
 
 ##############################################################################

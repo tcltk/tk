@@ -1,3 +1,10 @@
+2000-11-21  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* generic/tkImgPhoto.c (TkPhotoGetValidRegion): Applied patch to
+	create this function and add it to tkInt stubs.  Should now be
+	possible to write an extension that accesses the transparency data
+	in a photo image.  Bug #120930
+
 2000-11-03  Jeff Hobbs  <hobbs@ajubasolutions.com>
 
 	8.4a2 RELEASE
