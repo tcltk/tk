@@ -1195,19 +1195,6 @@ _XFUNCPROTOBEGIN
 
 
 
-extern void XFillRectangle(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    Drawable		/* d */,
-    GC			/* gc */,
-    int			/* x */,
-    int			/* y */,
-    unsigned int	/* width */,
-    unsigned int	/* height */
-#endif
-);
-
-
 #include "tkIntXlibDecls.h"
 
 _XFUNCPROTOEND
