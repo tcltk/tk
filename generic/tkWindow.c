@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.64 2004/03/26 14:45:07 dkf Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.65 2004/12/17 14:27:18 chengyemao Exp $
  */
 
 #include "tkPort.h"
@@ -355,12 +355,6 @@ CreateTopLevelWindow(interp, parent, name, screenName, flags)
 	Tk_CreatePhotoImageFormat(&tkImgFmtGIF);
 	Tk_CreatePhotoImageFormat(&tkImgFmtPPM);
 
-	/*
-	 * Create exit handler to delete all windows when the application
-	 * exits.
-	 */
-
-	TkCreateExitHandler(DeleteWindowsExitProc, (ClientData) tsdPtr);
     }
 
     if ((parent != NULL) && (screenName != NULL) && (screenName[0] == '\0')) {
@@ -3161,6 +3155,17 @@ Initialize(interp)
      */
 
     code = TkpInit(interp);
+    if(code != TCL_OK) {
+	goto done;
+    }
+
+    /*
+     * Create exit handler to delete all windows when the application
+     * exits. This handler needs to be invoked before other platform
+     * specific cleanups take place to avoid panics in finalization.
+     */
+
+    TkCreateExitHandler(DeleteWindowsExitProc, (ClientData) tsdPtr);
 
     done:
     if (argv != NULL) {
