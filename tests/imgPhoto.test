@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.8 2000/07/05 23:30:07 ericm Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.9 2002/02/01 14:27:30 dkf Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -134,7 +134,7 @@ test imgPhoto-4.1 {ImgPhotoCmd procedure} {
 } {1 {wrong # args: should be "p1 option ?arg arg ...?"}}
 test imgPhoto-4.2 {ImgPhotoCmd procedure} {
     list [catch {p1 blah} err] $err
-} {1 {bad option "blah": must be blank, cget, configure, copy, data, get, put, read, redither, or write}}
+} {1 {bad option "blah": must be blank, cget, configure, copy, data, get, put, read, redither, transparency, or write}}
 test imgPhoto-4.3 {ImgPhotoCmd procedure: blank option} {
     p1 blank
     list [catch {p1 blank x} err] $err
@@ -277,6 +277,147 @@ test imgPhoto-4.38 {ImgPhotoCmd procedure: write option} {
 test imgPhoto-4.39 {ImgPhotoCmd procedure: write option} {
     list [catch {p1 write teapot.tmp -format bogus} err] $err
 } {1 {image file format "bogus" is unknown}}
+eval image delete [image names]
+image create photo p1
+test imgPhoto-4.40 {ImgPhotoCmd procedure: transparency option} {
+    list [catch {p1 transparency} err] $err
+} {1 {wrong # args: should be "p1 transparency option ?arg arg ...?"}}
+test imgPhoto-4.41 {ImgPhotoCmd procedure: transparency get option} {
+    list [catch {p1 transparency get} err] $err
+} {1 {wrong # args: should be "p1 transparency get x y"}}
+test imgPhoto-4.42 {ImgPhotoCmd procedure: transparency get option} {
+    list [catch {p1 transparency get 0} err] $err
+} {1 {wrong # args: should be "p1 transparency get x y"}}
+test imgPhoto-4.43 {ImgPhotoCmd procedure: transparency get option} {
+    list [catch {p1 transparency get 0 0 0} err] $err
+} {1 {wrong # args: should be "p1 transparency get x y"}}
+test imgPhoto-4.44 {ImgPhotoCmd procedure: transparency get option} {
+    list [catch {p1 transparency get bogus 0} err] $err
+} {1 {expected integer but got "bogus"}}
+test imgPhoto-4.45 {ImgPhotoCmd procedure: transparency get option} {
+    list [catch {p1 transparency get 0 bogus} err] $err
+} {1 {expected integer but got "bogus"}}
+test imgPhoto-4.46 {ImgPhotoCmd procedure: transparency get option} {
+    p1 put white
+    p1 transparency get 0 0
+} 0
+test imgPhoto-4.47 {ImgPhotoCmd procedure: transparency get option} {
+    list [catch {p1 transparency get 1 0} err] $err
+} {1 {p1 transparency get: coordinates out of range}}
+test imgPhoto-4.48 {ImgPhotoCmd procedure: transparency get option} {
+    list [catch {p1 transparency get -1 0} err] $err
+} {1 {p1 transparency get: coordinates out of range}}
+test imgPhoto-4.49 {ImgPhotoCmd procedure: transparency get option} {
+    list [catch {p1 transparency get 0 1} err] $err
+} {1 {p1 transparency get: coordinates out of range}}
+test imgPhoto-4.50 {ImgPhotoCmd procedure: transparency get option} {
+    list [catch {p1 transparency get 0 -1} err] $err
+} {1 {p1 transparency get: coordinates out of range}}
+test imgPhoto-4.51 {ImgPhotoCmd procedure: transparency get option} {
+    p1 blank
+    p1 transparency get 0 0
+} 1
+test imgPhoto-4.52 {ImgPhotoCmd procedure: transparency set option} {
+    list [catch {p1 transparency set} err] $err
+} {1 {wrong # args: should be "p1 transparency set x y boolean"}}
+test imgPhoto-4.53 {ImgPhotoCmd procedure: transparency set option} {
+    list [catch {p1 transparency set 0} err] $err
+} {1 {wrong # args: should be "p1 transparency set x y boolean"}}
+test imgPhoto-4.54 {ImgPhotoCmd procedure: transparency set option} {
+    list [catch {p1 transparency set 0 0} err] $err
+} {1 {wrong # args: should be "p1 transparency set x y boolean"}}
+test imgPhoto-4.55 {ImgPhotoCmd procedure: transparency set option} {
+    list [catch {p1 transparency set 0 0 0 0} err] $err
+} {1 {wrong # args: should be "p1 transparency set x y boolean"}}
+test imgPhoto-4.56 {ImgPhotoCmd procedure: transparency set option} {
+    list [catch {p1 transparency set bogus 0 0} err] $err
+} {1 {expected integer but got "bogus"}}
+test imgPhoto-4.57 {ImgPhotoCmd procedure: transparency set option} {
+    list [catch {p1 transparency set 0 bogus 0} err] $err
+} {1 {expected integer but got "bogus"}}
+test imgPhoto-4.58 {ImgPhotoCmd procedure: transparency set option} {
+    list [catch {p1 transparency set 0 0 bogus} err] $err
+} {1 {expected boolean value but got "bogus"}}
+test imgPhoto-4.59 {ImgPhotoCmd procedure: transparency set option} {
+    list [catch {p1 transparency set 1 0 0} err] $err
+} {1 {p1 transparency set: coordinates out of range}}
+test imgPhoto-4.60 {ImgPhotoCmd procedure: transparency set option} {
+    list [catch {p1 transparency set -1 0 0} err] $err
+} {1 {p1 transparency set: coordinates out of range}}
+test imgPhoto-4.61 {ImgPhotoCmd procedure: transparency set option} {
+    list [catch {p1 transparency set 0 1 0} err] $err
+} {1 {p1 transparency set: coordinates out of range}}
+test imgPhoto-4.62 {ImgPhotoCmd procedure: transparency set option} {
+    list [catch {p1 transparency set 0 -1 0} err] $err
+} {1 {p1 transparency set: coordinates out of range}}
+test imgPhoto-4.63 {ImgPhotoCmd procedure: transparency set option} {
+    p1 transparency set 0 0 false
+    p1 transparency get 0 0
+} 0
+test imgPhoto-4.64 {ImgPhotoCmd procedure: transparency set option} {
+    p1 transparency set 0 0 true
+    p1 transparency get 0 0
+} 1
+# Now for some heftier testing, checking that setting and resetting of
+# pixels' transparency status doesn't "leak" with any one-off errors.
+proc checkImgTrans {img width height} {
+    set result {}
+    for {set x 0} {$x<$width} {incr x} {
+	for {set y 0} {$y<$height} {incr y} {
+	    if {[$img transparency get $x $y]} {
+		lappend result $x $y
+	    }
+	}
+    }
+    return $result
+}
+test imgPhoto-4.65 {ImgPhotoCmd procedure: transparency get option} {
+    p1 put white -to 0 0 3 3
+    checkImgTrans p1 3 3
+} {}
+test imgPhoto-4.66 {ImgPhotoCmd procedure: transparency get option} {
+    p1 blank
+    checkImgTrans p1 3 3
+} {0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2}
+proc checkImgTransLoopSetReset {img width height} {
+    set result {}
+    for {set x 0} {$x<$width} {incr x} {
+	for {set y 0} {$y<$height} {incr y} {
+	    $img put white -to 0 0 3 3
+	    $img transparency set $x $y 1
+	    set result [concat $result [checkImgTrans $img $width $height]]
+	    lappend result ,
+	    $img transparency set $x $y 0
+	    set result [concat $result [checkImgTrans $img $width $height]]
+	    lappend result .
+	}
+    }
+    return $result
+}
+test imgPhoto-4.67 {ImgPhotoCmd procedure: transparency set option} {
+    checkImgTransLoopSetReset p1 3 3
+} {0 0 , . 0 1 , . 0 2 , . 1 0 , . 1 1 , . 1 2 , . 2 0 , . 2 1 , . 2 2 , .}
+proc checkImgTransLoopResetSet {img width height} {
+    set result {}
+    for {set x 0} {$x<$width} {incr x} {
+	for {set y 0} {$y<$height} {incr y} {
+	    $img blank
+	    $img transparency set $x $y 0
+	    set result [concat $result [checkImgTrans $img $width $height]]
+	    lappend result ,
+	    $img transparency set $x $y 1
+	    set result [concat $result [checkImgTrans $img $width $height]]
+	    lappend result .
+	}
+    }
+    return $result
+}
+test imgPhoto-4.68 {ImgPhotoCmd procedure: transparency set option} {
+    checkImgTransLoopResetSet p1 3 3
+} {0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 2 1 0 1 1 1 2 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 1 0 1 1 1 2 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 1 1 2 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 0 1 2 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 0 1 1 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 0 1 1 1 2 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 .}
+catch {rename checkImgTrans {}}
+catch {rename checkImgTransLoopSetReset {}}
+catch {rename checkImgTransLoopResetSet {}}
 
 test imgPhoto-5.1 {ImgPhotoGet/Free procedures, shared instances} {
     eval image delete [image names]

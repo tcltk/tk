@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: photo.n,v 1.7 2001/02/13 21:52:45 ericm Exp $
+'\" RCS: @(#) $Id: photo.n,v 1.8 2002/02/01 14:27:30 dkf Exp $
 '\" 
 .so man.macros
 .TH photo n 4.0 Tk "Tk Built-In Commands"
@@ -31,7 +31,11 @@ can be supplied from
 C code through a procedural interface.  At present, only GIF and PPM/PGM
 formats are supported, but an interface exists to allow additional
 image file formats to be added easily.  A photo image is transparent
-in regions where no image data has been supplied.
+in regions where no image data has been supplied
+.VS 8.4
+or where it has been set transparent by the \fBtransparency set\fB
+subcommand.
+.VE 8.4
 
 .SH "CREATING PHOTOS"
 .PP
@@ -308,6 +312,21 @@ not noticeable, but if it is a problem, this command can be used to
 recalculate the dithered image in each window where the image is
 displayed.
 .TP
+\fIimageName \fBtransparency \fIsubcommand ?arg arg ...?\fR
+.VS 8.4
+Allows examination and manipulation of the transparency information in
+the photo image.  Several subcommands are available:
+.RS
+.TP
+\fIimageName \fBtransparency get \fIx y\fR
+Returns a boolean indicating if the pixel at (\fIx\fR,\fIy\fR) is
+transparent.
+\fIimageName \fBtransparency get \fIx y boolean\fR
+Makes the pixel at (\fIx\fR,\fIy\fR) transparent if \fIboolean\fR is
+true, and makes that pixel opaque otherwise.
+.RE
+.VE 8.4
+.TP
 \fIimageName \fBwrite \fIfilename\fR ?\fIoption value(s) ...\fR?
 Writes image data from \fIimageName\fR to a file named \fIfilename\fR.
 The following options may be specified:
@@ -367,6 +386,10 @@ for the \fB\-format\fR option must begin with the complete name of the
 requested handler, and may contain additional information following
 that, which the handler can use, for example, to specify which variant
 to use of the formats supported by the handler.
+.VS 8.4
+Note that not all image handlers may support writing transparency data
+to a file, even where the target image format does.
+.VE 8.4
 
 .SH "COLOR ALLOCATION"
 .PP
