@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.21 2004/12/20 15:30:43 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.22 2005/01/09 18:28:06 chengyemao Exp $
  */
 
 #ifndef _TKWININT
@@ -230,6 +230,6 @@ void	TkpWinToplevelDeiconify		_ANSI_ARGS_((TkWindow *winPtr));
 long	TkpWinToplevelIsControlledByWm	_ANSI_ARGS_((TkWindow *winPtr));
 long	TkpWinToplevelMove		_ANSI_ARGS_((TkWindow *winPtr, int x, int y));
 long	TkpWinToplevelOverrideRedirect	_ANSI_ARGS_((TkWindow *winPtr, int reqValue));
-
+void	TkpWinToplevelDetachWindow	_ANSI_ARGS_((TkWindow *winPtr));
 #endif /* _TKWININT */
 
