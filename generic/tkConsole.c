@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.8 1999/06/17 00:39:18 wart Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.9 1999/06/17 01:03:28 wart Exp $
  */
 
 #include "tk.h"
@@ -700,7 +700,7 @@ TkConsolePrint(interp, devId, buffer, size)
     Tcl_DStringAppend(&output, buffer, size);
 
     Tcl_DStringInit(&command);
-    Tcl_DStringAppend(&command, cmd, strlen(cmd));
+    Tcl_DStringAppend(&command, cmd, (int) strlen(cmd));
     Tcl_DStringAppendElement(&command, output.string);
 
     consoleInterp = info->consoleInterp;
