@@ -1,3 +1,10 @@
+2002-09-22  Jim Ingham <jingham@apple.com>
+
+	* macosx/tkMacOSXScrlbr.c (UpdateControlValue): HiliteControl
+	doesn't give the proper "nothing to scroll" look on Mac OS X.
+	You have to set the min value greater than the max value to
+	get this.
+	
 2002-09-15  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/configure: Regen.
