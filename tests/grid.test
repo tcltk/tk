@@ -5,11 +5,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.15 2001/09/30 19:01:58 pspjuth Exp $
+# RCS: @(#) $Id: grid.test,v 1.16 2002/07/13 21:52:34 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 # helper routine to return "." to a sane state after a test
 # The variable GRID_VERBOSE can be used to "look" at the result
