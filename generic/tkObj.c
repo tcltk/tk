@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.7 2001/08/21 14:43:08 dkf Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.8 2003/01/28 20:39:16 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -56,12 +56,14 @@ typedef struct MMRep {
 
 /*
  * The following structure is the internal representation for window objects.
+ * A WindowRep caches name-to-window lookups.  The cache is invalid
+ * if tkwin is NULL or if mainPtr->deletionEpoch does not match epoch.
  */
- 
 typedef struct WindowRep {
-    Tk_Window tkwin;
-    Tk_Window mainwin;
-    long epoch;
+    Tk_Window tkwin;		/* Cached window; NULL if not found */
+    TkMainInfo *mainPtr;	/* MainWindow associated with tkwin */
+    long epoch;			/* Value of mainPtr->deletionEpoch at last
+				 * successful lookup.  */
 } WindowRep;
 
 /*
@@ -221,6 +223,7 @@ FreePixelInternalRep(objPtr)
 	ckfree((char *) pixelPtr);
     }
     SET_SIMPLEPIXEL(objPtr, 0);
+    objPtr->typePtr = NULL;
 }
 
 /*
@@ -447,6 +450,7 @@ FreeMMInternalRep(objPtr)
 {
     ckfree((char *) objPtr->internalRep.otherValuePtr);
     objPtr->internalRep.otherValuePtr = NULL;
+    objPtr->typePtr = NULL;
 }
 
 /*
@@ -679,41 +683,38 @@ int
 TkGetWindowFromObj(interp, tkwin, objPtr, windowPtr)
     Tcl_Interp *interp; 	/* Used for error reporting if not NULL. */
     Tk_Window tkwin;		/* A token to get the main window from. */
-    Tcl_Obj *objPtr;		/* The object from which to get boolean. */
+    Tcl_Obj *objPtr;		/* The object from which to get window. */
     Tk_Window *windowPtr;	/* Place to store resulting window. */
 {
+    TkMainInfo *mainPtr = ((TkWindow *)tkwin)->mainPtr;
     register WindowRep *winPtr;
-    TkDisplay *dispPtr = ((TkWindow *)tkwin)->dispPtr;
-    Tk_Window foundWindow;
+    int result;
 
-    if (objPtr->typePtr != &windowObjType) {
-	register int result = SetWindowFromAny(interp, objPtr);
-	if (result != TCL_OK) {
-	    return result;
-	}
+    result = Tcl_ConvertToType(interp, objPtr, &windowObjType);
+    if (result != TCL_OK) {
+	return result;
     }
 
     winPtr = (WindowRep *) objPtr->internalRep.otherValuePtr;
-    if (winPtr == NULL) {
-	winPtr = (WindowRep *) ckalloc(sizeof(WindowRep));
-	objPtr->internalRep.otherValuePtr = (VOID *) winPtr;
-	goto parseWindowString;
-
-    } else if (tkwin != winPtr->mainwin ||
-	       dispPtr->deletionEpoch != winPtr->epoch) {
-    parseWindowString:
-	foundWindow = Tk_NameToWindow(interp,
+    if (    winPtr->tkwin == NULL
+	 || winPtr->mainPtr == NULL
+	 || winPtr->mainPtr != mainPtr 
+	 || winPtr->epoch != mainPtr->deletionEpoch) 
+    {
+	/* Cache is invalid.
+	 */
+	winPtr->tkwin = Tk_NameToWindow(interp,
 		Tcl_GetStringFromObj(objPtr, NULL), tkwin);
-	if (foundWindow == NULL) {
-	    return TCL_ERROR;
-	}
-
-	winPtr->tkwin = foundWindow;
-	winPtr->mainwin = tkwin;
-	winPtr->epoch = dispPtr->deletionEpoch;
+	winPtr->mainPtr = mainPtr;
+	winPtr->epoch = mainPtr ? mainPtr->deletionEpoch : 0;
     }
 
     *windowPtr = winPtr->tkwin;
+
+    if (winPtr->tkwin == NULL) {
+	/* ASSERT: Tk_NameToWindow has left error message in interp */
+	return TCL_ERROR;
+    }
     return TCL_OK;
 }
 
@@ -721,18 +722,17 @@ TkGetWindowFromObj(interp, tkwin, objPtr, windowPtr)
  *----------------------------------------------------------------------
  *
  * SetWindowFromAny --
- *
- *	Attempt to generate a Tk_Window internal form for the Tcl object
- *	"objPtr".
+ *	Generate a windowObj internal form for the Tcl object "objPtr".
  *
  * Results:
- *	The return value is a standard Tcl result. If an error occurs during
- *	conversion, an error message is left in the interpreter's result
- *	unless "interp" is NULL.
+ *	Always returns TCL_OK. 
  *
  * Side effects:
- *	If no error occurs, a standard window value is stored as "objPtr"s
- *	internal representation and the type of "objPtr" is set to Tk_Window.
+ *	Sets objPtr's internal representation to an uninitialized
+ *	windowObj. Frees the old internal representation, if any.
+ *
+ * See also:
+ * 	TkGetWindowFromObj, which initializes the WindowRep cache.
  *
  *----------------------------------------------------------------------
  */
@@ -743,6 +743,7 @@ SetWindowFromAny(interp, objPtr)
     register Tcl_Obj *objPtr;	/* The object to convert. */
 {
     Tcl_ObjType *typePtr;
+    WindowRep *winPtr;
 
     /*
      * Free the old internalRep before setting the new one. 
@@ -753,8 +754,14 @@ SetWindowFromAny(interp, objPtr)
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	(*typePtr->freeIntRepProc)(objPtr);
     }
+
+    winPtr = (WindowRep *) ckalloc(sizeof(WindowRep));
+    winPtr->tkwin = NULL;
+    winPtr->mainPtr = NULL;
+    winPtr->epoch = 0;
+
+    objPtr->internalRep.otherValuePtr = (VOID*)winPtr;
     objPtr->typePtr = &windowObjType;
-    objPtr->internalRep.otherValuePtr = NULL;
 
     return TCL_OK;
 }
@@ -784,17 +791,13 @@ DupWindowInternalRep(srcPtr, copyPtr)
 {
     register WindowRep *oldPtr, *newPtr;
 
-    copyPtr->typePtr = srcPtr->typePtr;
     oldPtr = srcPtr->internalRep.otherValuePtr;
-    if (oldPtr == NULL) {
-	copyPtr->internalRep.otherValuePtr = NULL;
-    } else {
-	newPtr = (WindowRep *) ckalloc(sizeof(WindowRep));
-	newPtr->tkwin = oldPtr->tkwin;
-	newPtr->mainwin = oldPtr->mainwin;
-	newPtr->epoch = oldPtr->epoch;
-	copyPtr->internalRep.otherValuePtr = (VOID *)newPtr;
-    }
+    newPtr = (WindowRep *) ckalloc(sizeof(WindowRep));
+    newPtr->tkwin = oldPtr->tkwin;
+    newPtr->mainPtr = oldPtr->mainPtr;
+    newPtr->epoch = oldPtr->epoch;
+    copyPtr->internalRep.otherValuePtr = (VOID *)newPtr;
+    copyPtr->typePtr = srcPtr->typePtr;
 }
 
 /*
@@ -819,10 +822,9 @@ static void
 FreeWindowInternalRep(objPtr)
     Tcl_Obj *objPtr;		/* Window object with internal rep to free. */
 {
-    if (objPtr->internalRep.otherValuePtr != NULL) {
-	ckfree((char *) objPtr->internalRep.otherValuePtr);
-	objPtr->internalRep.otherValuePtr = NULL;
-    }
+    ckfree((char *) objPtr->internalRep.otherValuePtr);
+    objPtr->internalRep.otherValuePtr = NULL;
+    objPtr->typePtr = NULL;
 }
 
 /*
