@@ -1,3 +1,9 @@
+2004-09-06  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/tkfbox.tcl (::tk::dialog::file::Create): use label
+	instead of button for "File of type", as it properly handles
+	-state disabled now.
+
 2004-09-06  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/makefile.vc: Set TK_LIBRARY when execing Tk apps (test, 
