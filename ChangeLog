@@ -1,3 +1,9 @@
+2004-05-05  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* win/tkWinFont.c (Tk_MeasureChars,Tk_DrawChars,etc): Make sure
+	that the lastSubFontPtr remains valid even when the subfont array
+	is reallocated. [Bug 618872]
+
 2004-05-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/tkUnixButton.c (TkpDrawCheckIndicator): allow radiobuttons
