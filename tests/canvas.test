@@ -6,7 +6,7 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.10 2000/06/06 04:18:13 ericm Exp $
+# RCS: @(#) $Id: canvas.test,v 1.11 2001/03/30 07:11:44 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -366,6 +366,26 @@ test canvas-11.1 {canvas poly fill check, bug 5783} {
     .c create polygon 0 0 100 100 200 50 \
 	    -fill {} -stipple gray50 -outline black
 } 1
+
+test canvas-12.1 {canvas mm obj, patch SF-403327, 102471} {
+    destroy .c
+    pack [canvas .c]
+    set qx [expr {1.+1.}] 
+    # qx has type double and no string representation 
+    .c scale all $qx 0 1. 1.
+    # qx has now type MMRep and no string representation 
+    list $qx [string length $qx]
+} {2.0 3}
+test canvas-12.2 {canvas mm obj, patch SF-403327, 102471} {
+    destroy .c
+    pack [canvas .c]
+    set val 10
+    incr val
+    # qx has type double and no string representation 
+    .c scale all $val 0 1 1
+    # qx has now type MMRep and no string representation 
+    incr val
+} {12}
 
 # cleanup
 ::tcltest::cleanupTests
