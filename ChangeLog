@@ -1,3 +1,9 @@
+2003-02-24  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
+
+	* tkMacOSXDialog.c (NavServicesGetFile): Fix bug with
+	kNavCtlSetSelection - control data should be a pointer
+	not a handle.
+	
 2003-02-21  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/clrpick.tcl (color::BuildDialog): 
