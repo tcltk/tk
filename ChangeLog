@@ -1,3 +1,8 @@
+2003-08-21  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWin3d.c: Applied Tk patch 791273 from Jeremy Collins which
+	improves the 3d lines for sunken widgets under windows.
+
 2003-08-20  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/demos/widget:      Redo code view dialog, use named fonts,
