@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.41 2002/01/15 20:48:30 dgp Exp $ 
+ * RCS: $Id: tkInt.h,v 1.42 2002/02/22 02:41:16 hobbs Exp $ 
  */
 
 #ifndef _TKINT
@@ -981,6 +981,10 @@ EXTERN int              Tk_MessageBoxObjCmd _ANSI_ARGS_((ClientData clientData,
                             Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_MessageObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
+EXTERN int		Tk_PanedWindowObjCmd _ANSI_ARGS_((
+			    ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_OptionObjCmd _ANSI_ARGS_((ClientData clientData,
