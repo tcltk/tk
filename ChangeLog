@@ -1,3 +1,8 @@
+2003-02-25  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkMenu.c (TkMenuCleanup): make sure to reset static
+	menusInitialized on finalize. [Bug #548729]
+
 2003-02-25  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXHLEvents.c: fixed conversion of apple event
