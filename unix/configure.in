@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 AC_INIT(../generic/tk.h)
-# RCS: @(#) $Id: configure.in,v 1.25 1999/01/29 00:32:40 rjohnson Exp $
+# RCS: @(#) $Id: configure.in,v 1.26 1999/02/04 21:00:29 stanton Exp $
 
 TK_VERSION=8.0
 TK_MAJOR_VERSION=8
@@ -267,7 +267,18 @@ fi
 # variable LIB_RUNTIME_DIR.
 
 eval "TK_CC_SEARCH_FLAGS=\"$TCL_LD_SEARCH_FLAGS\""
-TK_LD_SEARCH_FLAGS=`echo ${TK_CC_SEARCH_FLAGS} |sed -e "s|-Wl,||g" -e "s|,| |g"`
+
+# The following case handles the differences between linking with "ld"
+# and the compiler
+
+case $SHLIB_LD in
+    *ld*)
+      TK_LD_SEARCH_FLAGS=`echo ${TK_CC_SEARCH_FLAGS} |sed -e "s|-Wl,||g" -e "s|,| |g"`
+      ;;
+    *)
+      TK_LD_SEARCH_FLAGS="${TK_CC_SEARCH_FLAGS}"
+      ;;
+esac
 
 #--------------------------------------------------------------------
 #	Check for the existence of various libraries.  The order here
