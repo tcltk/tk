@@ -537,12 +537,12 @@ else
 fi
 
 
-# RCS: @(#) $Id: configure.in,v 1.62 2001/07/11 01:36:41 mdejong Exp $
+# RCS: @(#) $Id: configure,v 1.12 2001/08/07 01:14:19 hobbs Exp $
 
 TK_VERSION=8.4
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=4
-TK_PATCH_LEVEL="a3"
+TK_PATCH_LEVEL="a4"
 VERSION=${TK_VERSION}
 LOCALES="de en es fr"
 
