@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.40 2004/01/13 02:06:00 davygrvy Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.41 2004/06/04 10:51:18 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -4402,7 +4402,7 @@ TkTextSetYView(textPtr, indexPtr, pickPlace)
 	indexPtr = &rounded;
     }
 
-    if (pickPlace == -2) {
+    if (pickPlace == TK_TEXT_NOPIXELADJUST) {
 	if (textPtr->topIndex.linePtr == indexPtr->linePtr 
 	    && textPtr->topIndex.byteIndex == indexPtr->byteIndex) {
 	    pickPlace = dInfoPtr->topPixelOffset;
@@ -4411,7 +4411,7 @@ TkTextSetYView(textPtr, indexPtr, pickPlace)
 	}
     }
     
-    if (pickPlace != -1) {
+    if (pickPlace != TK_TEXT_PICKPLACE) {
 	/*
 	 * The specified position must go at the top of the screen.
 	 * Just leave all the DLine's alone: we may be able to reuse
@@ -5195,6 +5195,7 @@ TkTextYviewCmd(textPtr, interp, objc, objv)
 	    return TCL_ERROR;
 	case TKTEXT_SCROLL_MOVETO: {
 	    int numPixels = TkBTreeNumPixels(textPtr->tree);
+	    int topMostPixel;
 	    if (numPixels == 0) {
 		/* 
 		 * If the window is totally empty no scrolling is
@@ -5209,15 +5210,24 @@ TkTextYviewCmd(textPtr, interp, objc, objv)
 	    if (fraction < 0) {
 		fraction = 0;
 	    }
-	    fraction *= (numPixels - 1);
+	    /* 
+	     * Calculate the pixel count for the new topmost pixel
+	     * in the topmost line of the window.  Note that the
+	     * interpretation of 'fraction' is that it counts from
+	     * 0 (top pixel in buffer) to 1.0 (one pixel past the
+	     * last pixel in buffer).
+	     */
+	    topMostPixel = (int) (0.5 + fraction * numPixels);
+	    if (topMostPixel >= numPixels) {
+		topMostPixel = numPixels -1;
+	    }
 	    /*
 	     * This function returns the number of pixels by which the
 	     * given line should overlap the top of the visible screen.
 	     * 
 	     * This is then used to provide smooth scrolling.
 	     */
-	    pixels = TkTextMakePixelIndex(textPtr,
-		    (int) (0.5 + fraction), &index);
+	    pixels = TkTextMakePixelIndex(textPtr, topMostPixel, &index);
 	    TkTextSetYView(textPtr, &index, pixels);
 	    break;
 	}
@@ -5473,6 +5483,10 @@ GetXView(interp, textPtr, report)
  *
  * Results:
  *	The number of pixels.
+ *	
+ *	This value has a valid range between '0' (the very top of the
+ *	widget) and the number of pixels in the total widget minus the
+ *	pixel-height of the last line.
  *
  * Side effects:
  *	None.
@@ -5632,7 +5646,9 @@ GetYView(interp, textPtr, report)
 
 	/* 
 	 * Add on the total number of visible pixels to get the count to
-	 * the last visible pixel.
+	 * one pixel _past_ the last visible pixel.  This is how the
+	 * 'yview' command is documented, and also explains why we are
+	 * dividing by 'totalPixels' and not 'totalPixels-1'.
 	 */
 	while (1) {
 	    int extra;
@@ -5689,7 +5705,7 @@ GetYView(interp, textPtr, report)
 	    count = totalPixels;
 	}
 	
-	last = ((double) (count))/((double)totalPixels);
+	last = ((double) count)/((double)totalPixels);
     }
 
     if (!report) {
