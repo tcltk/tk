@@ -1634,7 +1634,6 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 		F53755E1016C38D301DC9062 = {
 			buildActionMask = 2147483647;
 			files = (
-				F5C2EA34034D71B2016F146B,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3544,12 +3543,6 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			name = mkpsenc.tcl;
 			path = ../library/mkpsenc.tcl;
 			refType = 2;
-		};
-		F5C2EA34034D71B2016F146B = {
-			fileRef = F5C2EA33034D71B2016F146B;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F5C2EA35034D7212016F146B = {
 			fileRef = F5C2EA33034D71B2016F146B;
