@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: image.test,v 1.9 2003/04/01 21:06:36 dgp Exp $
+# RCS: @(#) $Id: image.test,v 1.10 2003/05/08 09:35:41 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -158,8 +158,8 @@ test image-5.5 {Tk_ImageCmd procedure, "type" option} testImageType {
     image create test myimage
     .c create image 50 50 -image myimage
     image delete myimage
-    image type myimage
-} {}
+    list [catch {image type myimage} msg] $msg
+} {1 {image "myimage" doesn't exist}}
 
 test image-6.1 {Tk_ImageCmd procedure, "types" option} {
     list [catch {image types x} msg] $msg
@@ -254,16 +254,17 @@ test image-11.2 {Tk_FreeImage procedure} testImageType {
     eval image delete [image names]
     image create test foo -variable x
     .c create image 50 50 -image foo -tags i1
+    set names [image names]
     image delete foo
     update
-    set names [image names]
+    set names2 [image names]
     set x {}
     .c delete i1
     pack forget .c
     pack .c
     update
-    list $names [image names] $x
-} {foo {} {}}
+    list $names $names2 [image names] $x
+} {foo {} {} {}}
 
 # Non-portable, apparently due to differences in rounding:
 
@@ -356,10 +357,8 @@ test image-13.2 {DeleteImage procedure} testImageType {
     .c create image 90 100 -image foo -tags i2
     set x {}
     image delete foo
-    lappend x | [image names] |
-    image delete foo
-    lappend x | [image names] |
-} {{foo free} {foo free} {foo delete} | foo | | foo |}
+    lappend x | [image names] | [catch {image delete foo} msg] | $msg | [image names] |
+} {{foo free} {foo free} {foo delete} | {} | 1 | {image "foo" doesn't exist} | {} |}
 
 catch {image delete hidden}
 set l [image names]
@@ -372,6 +371,20 @@ test image-14.1 {image command vs hidden commands} {
     image delete hidden
     list [image names] [interp hidden]
 } [list $l $h]
+
+eval image delete [image names]
+test image-15.1 {deleting image does not make widgets forget about it} {
+    .c delete all
+    image create photo foo -width 10 -height 10
+    .c create image 10 10 -image foo -tags i1 -anchor nw
+    update
+    set x [.c bbox i1]
+    lappend x [image names]
+    image delete foo
+    lappend x [image names]
+    image create photo foo -width 20 -height 20
+    lappend x [.c bbox i1] [image names]
+} {10 10 20 20 foo {} {10 10 30 30} foo}
     
 destroy .c
 eval image delete [image names]

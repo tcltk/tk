@@ -1,3 +1,13 @@
+2003-05-08  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* tests/image.test (image-15.1): Test to ensure that widgets pick
+	up image information even if the image is deleted and recreated.
+	* generic/tkImage.c (Tk_ImageObjCmd): Use the ImageMaster's
+	deleted flag to stop deleted images from showing up in the various
+	[image *] operations.  Can't delete directly from the table
+	because that makes us lose the information about what widgets want
+	to use the image.  [Bug #634864]
+	
 2003-04-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* macosx/tkMacOSXButton.c (TkpDisplayButton): correct typo for
