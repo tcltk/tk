@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvArc.c,v 1.4 1999/04/16 01:51:11 stanton Exp $
+ * RCS: @(#) $Id: tkCanvArc.c,v 1.5 1999/04/17 01:09:33 rjohnson Exp $
  */
 
 #include <stdio.h>
@@ -749,8 +749,14 @@ ArcToPoint(canvas, itemPtr, pointPtr)
 
     vertex[0] = (arcPtr->bbox[0] + arcPtr->bbox[2])/2.0;
     vertex[1] = (arcPtr->bbox[1] + arcPtr->bbox[3])/2.0;
-    t1 = (pointPtr[1] - vertex[1])/(arcPtr->bbox[3] - arcPtr->bbox[1]);
-    t2 = (pointPtr[0] - vertex[0])/(arcPtr->bbox[2] - arcPtr->bbox[0]);
+    t1 = arcPtr->bbox[3] - arcPtr->bbox[1];
+    if (t1 != 0.0) {
+	t1 = (pointPtr[1] - vertex[1]) / t1;
+    }
+    t2 = arcPtr->bbox[2] - arcPtr->bbox[0];
+    if (t2 != 0.0) {
+	t2 = (pointPtr[0] - vertex[0]) / t2;
+    }
     if ((t1 == 0.0) && (t2 == 0.0)) {
 	pointAngle = 0;
     } else {
