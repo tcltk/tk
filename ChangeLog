@@ -1,3 +1,30 @@
+2000-04-14  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* generic/tkCanvas.c (CanvasEventProc:2451): corrected cast
+
+	* generic/tkEntry.c (Tk_EntryObjCmd): adjusted finishing error
+	cases and changed TK_CONFIG_NULL_OK to TK_OPTION_NULL_OK
+
+	* tests/scale.test:
+	* generic/tkScale.c:
+	* generic/tkScale.h:
+	* unix/tkUnixScale.c:
+	* mac/tkMacScale.c: moved (PixelToValue|ValueToPixel|SetScaleValue)
+	to tkScale.c.  Caused an associated variable to be immediately set
+	[Bug: 4833]
+
+	* library/scale.tcl (tkScaleActivate): reduced number of scale
+	redisplays by checking current value of state before setting it
+	again.  [Bug: 4191]
+
+	* tests/winDialog.test: tk_chooseDirectory seems to get a noop
+	from GetOpenFileName in the static build, hanging some tests.
+	The tests were fixed to timeout (noop cause unknown).
+
+	* unix/aclocal.m4 (SC_ENABLE_THREADS): enhanced the detection of
+	pthread_mutex_init [Bug: 4359] and (SC_CONFIG_CFLAGS) added
+	--enable-64bit-vis switch for Sparc VIS compilation [Bug: 4995]
+
 2000-04-13  Eric Melski  <ericm@scriptics.com>
 
 	* win/tkWinKey.c: Added smarts to check whether the left or right
@@ -18,6 +45,19 @@
 
 	* generic/tkCanvas.c: Applied patch from [Bug: 4202]; adds a check
 	for NULL tkwin in Tk_CanvasEventuallyRedraw.
+
+2000-04-12  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* test/winClipboard.test:
+	* win/tkWinInt.h:
+	* win/tkWinClipboard.c (UpdateClipboard):
+	* win/tkWinX.c (GenerateXEvent): added updatingClipboard tsd and
+	TkWinUpdatingClipboard accessor function to allow us to flag
+	ourselves when we are the ones updating the clipboard.  This
+	corrected inability to create our own clipboard types within a Tk
+	application.  [Bug: 2338 4318]
+	* win/tkWinTest.c (TestclipboardCmd): improved TestclipboardCmd
+	with better error handling and obj'ification
 
 2000-04-11  Eric Melski  <ericm@scriptics.com>
 
