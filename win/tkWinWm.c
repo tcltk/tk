@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.3 2004/09/10 04:59:38 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.4 2004/09/10 18:47:21 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -7226,11 +7226,16 @@ ActivateWindow(
     winPtr = ((ActivateEvent *) evPtr)->winPtr;
 
     /*
-     * Ensure that the window is not excluded by a grab.
+     * If the window is excluded by a grab, call SetFocus on the
+     * grabbed window instead. [Bug 220908]
      */
 
-    if (winPtr && (TkGrabState(winPtr) != TK_GRAB_EXCLUDED)) {
-	SetFocus(Tk_GetHWND(winPtr->window));
+    if (winPtr) {
+	if (TkGrabState(winPtr) != TK_GRAB_EXCLUDED) {
+	    SetFocus(Tk_GetHWND(winPtr->window));
+	} else {
+	    SetFocus(Tk_GetHWND(winPtr->dispPtr->grabWinPtr->window));
+	}
     }
 
     return 1;
