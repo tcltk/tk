@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.38 2003/02/21 14:13:26 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.39 2003/10/29 09:36:42 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -238,6 +238,12 @@ proc ::tk::IconList_Create {w} {
     set data(noScroll) 1
     set data(selection) {}
     set data(index,anchor) ""
+    set fg [option get $data(canvas) foreground Foreground]
+    if {$fg eq ""} {
+	set data(fill) black
+    } else {
+	set data(fill) $fg
+    }
 
     # Creates the event bindings.
     #
@@ -342,7 +348,7 @@ proc ::tk::IconList_Add {w image items} {
 	set iTag [$data(canvas) create image 0 0 -image $image -anchor nw \
 		-tags [list icon $data(numItems) item$data(numItems)]]
 	set tTag [$data(canvas) create text  0 0 -text  $text  -anchor nw \
-		-font $data(font) \
+		-font $data(font) -fill $data(fill) \
 		-tags [list text $data(numItems) item$data(numItems)]]
 	set rTag [$data(canvas) create rect  0 0 0 0 -fill "" -outline "" \
 		-tags [list rect $data(numItems) item$data(numItems)]]
