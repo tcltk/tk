@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.17 2003/05/29 21:57:56 jenglish Exp $
+'\" RCS: @(#) $Id: text.n,v 1.18 2003/10/06 22:14:26 jenglish Exp $
 '\" 
 .so man.macros
 .TH text n 8.4 Tk "Tk Built-In Commands"
@@ -1658,8 +1658,6 @@ The Next and Prior keys move the insertion cursor forward or backwards
 by one screenful and clear any selection in the text.
 If the Shift key is held down while Next or Prior is typed, then
 the selection is extended to include the new character.
-Control-v moves the view down one screenful without moving the
-insertion cursor or adjusting the selection.
 .IP [12]
 Control-Next and Control-Prior scroll the view right or left by one page
 without moving the insertion cursor or affecting the selection.
@@ -1738,7 +1736,8 @@ front of the insertion cursor without moving the insertion cursor.
 Meta-backspace and Meta-Delete delete the word to the left of the
 insertion cursor.
 .IP [30]
-Control-x deletes whatever is selected in the text widget.
+Control-x deletes whatever is selected in the text widget
+after copying it to the clipboard.
 .IP [31]
 Control-t reverses the order of the two characters to the right of
 the insertion cursor. 
