@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: geometry.test,v 1.5 2003/04/01 21:06:34 dgp Exp $
+# RCS: @(#) $Id: geometry.test,v 1.6 2004/05/23 17:34:48 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -249,16 +249,3 @@ catch {destroy .t}
 # cleanup
 cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

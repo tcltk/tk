@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.18 2004/02/17 20:39:52 dgp Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.19 2004/05/23 17:34:48 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -34,7 +34,7 @@ if {![file exists $teapotPhotoFile]} {
     set newLib [file dirname [testsDirectory]]
     set teapotPhotoFile [file join $newLib library demos images teapot.ppm]
     if {![file exists $teapotPhotoFile]} {
-	testConstraint hasTeapotPhoto
+	testConstraint hasTeapotPhoto 0
     }
 }
 

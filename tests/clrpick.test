@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clrpick.test,v 1.9 2004/03/17 18:15:49 das Exp $
+# RCS: @(#) $Id: clrpick.test,v 1.10 2004/05/23 17:34:48 dkf Exp $
 #
 
 package require tcltest 2.1
@@ -21,10 +21,10 @@ regsub -all ,      $msg "" options
 regsub \"-foo\" $options "" options
 
 foreach option $options {
-    if {[string index $option 0] == "-"} {
-	test clrpick-1.2 {tk_chooseColor command} {
-	    list [catch {tk_chooseColor $option} msg] $msg
-	} [list 1 "value for \"$option\" missing"]
+    if {[string index $option 0] eq "-"} {
+	test clrpick-1.2$option {tk_chooseColor command} -body {
+	    tk_chooseColor $option
+	} -returnCodes error -result "value for \"$option\" missing"
     }
 }
 
@@ -48,11 +48,7 @@ test clrpick-1.7 {tk_chooseColor command} {
     list [catch {tk_chooseColor -initialcolor ##badbadbaadcolor} msg] $msg
 } {1 {invalid color name "##badbadbaadcolor"}}
 
-if {[info commands tk::dialog::color::] == ""} {
-    set isNative 1
-} else {
-    set isNative 0
-}
+set isNative [expr {[info commands tk::dialog::color::] eq ""}]
 
 proc ToPressButton {parent btn} {
     global isNative

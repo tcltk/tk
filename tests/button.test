@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: button.test,v 1.15 2004/02/18 00:40:24 hobbs Exp $
+# RCS: @(#) $Id: button.test,v 1.16 2004/05/23 17:34:48 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -42,7 +42,9 @@ foreach test {
 	    {unknown color name "non-existent"} {1 1 1 1}}
     {-activeforeground #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"} {1 1 1 1}}
-    {-anchor nw nw bogus {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, or center} {1 1 1 1}}
+    {-anchor nw nw bogus
+	    {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, or center}
+	    {1 1 1 1}}
     {-background #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"} {1 1 1 1}}
     {-bd 4 4 badValue {bad screen distance "badValue"} {1 1 1 1}}
@@ -52,7 +54,9 @@ foreach test {
 	    {1 1 1 1}}
     {-borderwidth 1.3 1.3 badValue {bad screen distance "badValue"} {1 1 1 1}}
     {-command "set x" {set x} {} {} {0 1 1 1}}
-    {-compound left left bogus {bad compound "bogus": must be bottom, center, left, none, right, or top} {1 1 1 1}}
+    {-compound left left bogus
+	    {bad compound "bogus": must be bottom, center, left, none, right, or top}
+	    {1 1 1 1}}
     {-cursor arrow arrow badValue {bad cursor spec "badValue"} {1 1 1 1}}
     {-default active active huh?
 	    {bad default "huh?": must be active, disabled, or normal}
@@ -72,47 +76,57 @@ foreach test {
     {-image image1 image1 bogus {image "bogus" doesn't exist} {1 1 1 1}}
     {-indicatoron yes 1 no_way {expected boolean value but got "no_way"}
 	    {0 0 1 1}}
-    {-justify right right bogus {bad justification "bogus": must be left, right, or center} {1 1 1 1}}
-    {-offrelief flat flat 1.5 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken} {0 0 1 1}}
+    {-justify right right bogus
+	    {bad justification "bogus": must be left, right, or center}
+	    {1 1 1 1}}
+    {-offrelief flat flat 1.5
+	    {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+	    {0 0 1 1}}
     {-offvalue lousy lousy {} {} {0 0 1 0}}
     {-onvalue fantastic fantastic {} {} {0 0 1 0}}
-    {-overrelief "" "" 1.5 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken} {0 1 1 1}}
+    {-overrelief "" "" 1.5
+	    {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+	    {0 1 1 1}}
     {-padx 12m 12m 420x {bad screen distance "420x"} {1 1 1 1}}
     {-pady 12m 12m 420x {bad screen distance "420x"} {1 1 1 1}}
     {-repeatdelay 100 100 foo {expected integer but got "foo"} {0 1 0 0}}
     {-repeatinterval 100 100 foo {expected integer but got "foo"} {0 1 0 0}}
-    {-relief flat flat 1.5 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken} {1 1 1 1}}
+    {-relief flat flat 1.5
+	    {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+	    {1 1 1 1}}
     {-selectcolor #110022 #110022 bogus {unknown color name "bogus"} {0 0 1 1}}
     {-selectimage image1 image1 bogus {image "bogus" doesn't exist} {0 0 1 1}}
-    {-state normal normal bogus {bad state "bogus": must be active, disabled, or normal} {1 1 1 1}}
+    {-state normal normal bogus
+	    {bad state "bogus": must be active, disabled, or normal}
+	    {1 1 1 1}}
     {-takefocus "any string" "any string" {} {} {1 1 1 1}}
     {-text "Sample text" {Sample text} {} {} {1 1 1 1}}
     {-textvariable i i {} {} {1 1 1 1}}
-    {-tristateimage image1 image1 bogus {image "bogus" doesn't exist} {0 0 1 1}}
+    {-tristateimage image1 image1 bogus {image "bogus" doesn't exist}
+	    {0 0 1 1}}
     {-tristatevalue unknowable unknowable {} {} {0 0 1 1}}
     {-underline 5 5 3p {expected integer but got "3p"} {1 1 1 1}}
     {-value anyString anyString {} {} {0 0 0 1}}
     {-width 402 402 3p {expected integer but got "3p"} {1 1 1 1}}
     {-wraplength 100 100 6x {bad screen distance "6x"} {1 1 1 1}}
 } {
-    set name [lindex $test 0]
-    set classes [lindex $test 5]
-    foreach w {.l .b .c .r} hasOption [lindex $test 5] {
-	if $hasOption {
+    lassign $test name value okResult badValue badResult classes
+    foreach w {.l .b .c .r} hasOption $classes {
+	if {$hasOption} {
 	    test button-1.$i {configuration options} testImageType {
-		$w configure $name [lindex $test 1]
+		$w configure $name $value
 		lindex [$w configure $name] 4
-	    } [lindex $test 2]
+	    } $okResult
 	    incr i
-	    if {[lindex $test 3] != ""} {
+	    if {$badValue ne ""} {
 		test button-1.$i {configuration options} testImageType {
-		    list [catch {$w configure $name [lindex $test 3]} msg] $msg
-		} [list 1 [lindex $test 4]]
+		    list [catch {$w configure $name $badValue} msg] $msg
+		} [list 1 $badResult]
 	    }
 	    $w configure $name [lindex [$w configure $name] 3]
 	} else {
 	    test button-1.$i {configuration options} testImageType {
-		list [catch {$w configure $name [lindex $test 1]} msg] $msg
+		list [catch {$w configure $name $value} msg] $msg
 	    } "1 {unknown option \"$name\"}"
 	}
     }
