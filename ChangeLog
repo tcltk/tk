@@ -1,3 +1,16 @@
+2003-02-25  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXHLEvents.c: fixed conversion of apple event
+	parameters to posix style path names.
+	[Bug #621672] (steffen, Benjamin Riefenstahl) 
+
+	* macosx/tkMacOSXDialog.c: 
+	* macosx/tkMacOSXWm.c:
+	* macosx/Wish.pbproj/project.pbxproj:
+	* macosx/tkMacOSXUtil.c (removed):
+	* macosx/tkMacOSXUtil.h (removed): removed all references to
+	tkMacOSXUtil.{c,h}, made obsolete by the patch above. [Bug #621672]
+	
 2003-02-24  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/tkUnixFont.c (CreateClosestFont, CanUseFallback): use the
