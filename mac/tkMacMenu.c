@@ -241,7 +241,7 @@ static void		DrawTearoffEntry _ANSI_ARGS_((TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Drawable d, GC gc, 
 			    Tk_Font tkfont, CONST Tk_FontMetrics *fmPtr, 
 			    int x, int y, int width, int height));
-static void		FixMDEF _ANSI_ARGS_((void));
+static Handle		FixMDEF _ANSI_ARGS_((void));
 static void		GetMenuAccelGeometry _ANSI_ARGS_((TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Tk_Font tkfont,
 			    CONST Tk_FontMetrics *fmPtr, int *modWidthPtr,
@@ -501,9 +501,8 @@ TkpNewMenu(
     macMenuHdl = NewMenu(menuID, itemText);
 #ifdef GENERATINGCFM
     {
-        Handle mdefProc = GetResource('MDEF', 591);
-        Handle sicnHandle = GetResource('SICN', SICN_RESOURCE_NUMBER);
-	if ((mdefProc != NULL) && (sicnHandle != NULL)) {
+        Handle mdefProc = FixMDEF();
+        if ((mdefProc != NULL)) {
     	    (*macMenuHdl)->menuProc = mdefProc;
     	}
     }
@@ -3917,7 +3916,8 @@ TkMacClearMenubarActive(void) {
     	if ((menuBarRefPtr != NULL) && (menuBarRefPtr->menuPtr != NULL)) {
     	    TkMenu *menuPtr;
     	    
-    	    for (menuPtr = menuBarRefPtr->menuPtr->masterMenuPtr; menuPtr != NULL;
+    	    for (menuPtr = menuBarRefPtr->menuPtr->masterMenuPtr; 
+                    menuPtr != NULL;
     	    	    menuPtr = menuPtr->nextInstancePtr) {
     	    	if (menuPtr->menuType == MENUBAR) {
     	    	    RecursivelyClearActiveMenu(menuPtr);
@@ -3975,15 +3975,15 @@ TkpMenuNotifyToplevelCreate(
  * 	figure it out. 
  *
  * Results:
- *	None.
+ *	Returns the MDEF handle.
  *
  * Side effects:
- *	Allcates a hash table.
+ *	The MDEF is read in and massaged.
  *
  *----------------------------------------------------------------------
  */
 
-static void
+static Handle
 FixMDEF(void)
 {
 #ifdef GENERATINGCFM
@@ -3991,10 +3991,17 @@ FixMDEF(void)
     Handle SICNHandle = GetResource('SICN', SICN_RESOURCE_NUMBER);
     if ((MDEFHandle != NULL) && (SICNHandle != NULL)) {
         HLock(MDEFHandle);
-    	HLock(MDEFHandle);
-    	menuDefProc = TkNewMenuDefProc(MenuDefProc);
+    	HLock(SICNHandle);
+	if (menuDefProc == NULL) {
+    	    menuDefProc = TkNewMenuDefProc(MenuDefProc);
+	}
     	memmove((void *) (((long) (*MDEFHandle)) + 0x24), &menuDefProc, 4);
+        return MDEFHandle;
+    } else {
+        return NULL;
     }
+#else
+    return NULL;
 #endif
 }
 
