@@ -2,7 +2,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.2 1999/06/16 20:11:30 surles Exp $
+# RCS: @(#) $Id: configure.in,v 1.3 1999/06/16 22:36:51 surles Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -30,7 +30,6 @@ AC_PROG_MAKE_SET
 # These two macros perform additinal compiler test.
 #--------------------------------------------------------------------
 
-AC_PROG_CC
 AC_CYGWIN
 
 #--------------------------------------------------------------------
