@@ -3,7 +3,7 @@
 # This file defines several procedures for managing the input
 # focus.
 #
-# RCS: @(#) $Id: focus.tcl,v 1.5 1999/09/02 17:02:52 hobbs Exp $
+# RCS: @(#) $Id: focus.tcl,v 1.6 2000/03/02 23:52:45 hobbs Exp $
 #
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
 #
@@ -136,7 +136,7 @@ proc tkFocusOK w {
 	} elseif {$value == 1} {
 	    return [winfo viewable $w]
 	} else {
-	    set value [uplevel #0 $value $w]
+	    set value [uplevel #0 [list $value $w]]
 	    if {[string compare $value ""]} {
 		return $value
 	    }
