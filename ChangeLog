@@ -1,5 +1,9 @@
 2004-05-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tkWinX.c:                fix drawing of unicode chars in menu
+	* win/tkWinInt.h (TkWinProcs): titles. [Bug #904371] (riefenstahl)
+	* win/tkWinMenu.c (ReconfigureWindowsMenu):
+
 	* generic/tkClipboard.c:   Move TkClipCleanup from tkClipboard.c
 	* macosx/tkMacOSXXStubs.c: to being implemented in a platform
 	* unix/tkUnixEvent.c:      specific manner.  The cleanup order was
