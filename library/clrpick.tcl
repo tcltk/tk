@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# SCCS: @(#) clrpick.tcl 1.3 96/09/05 09:59:24
+# RCS: @(#) $Id: clrpick.tcl,v 1.3 1998/09/14 18:23:22 stanton Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #

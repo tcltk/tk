@@ -4,7 +4,7 @@ by Ray Johnson
 Sun Microsystems Laboratories
 rjohnson@eng.sun.com
 
-SCCS: @(#) bugs.doc 1.10 97/11/03 17:16:00
+RCS: @(#) $Id: bugs.doc,v 1.2 1998/09/14 18:23:33 stanton Exp $
 
 We are now very close to passing the test suite for Tk.  We are very
 interested in finding remaining bugs that still linger.  Please let us

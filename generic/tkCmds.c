@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkCmds.c 1.125 97/05/20 16:16:33
+ * RCS: @(#) $Id: tkCmds.c,v 1.3 1998/09/14 18:23:08 stanton Exp $
  */
 
 #include "tkPort.h"

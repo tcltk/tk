@@ -8,7 +8,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) winMenu.test 1.19 97/07/02 11:29:57
+# RCS: @(#) $Id: winMenu.test,v 1.2 1998/09/14 18:23:53 stanton Exp $
 
 if {$tcl_platform(platform) != "windows"} {
     return

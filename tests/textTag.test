@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) textTag.test 1.30 97/11/06 16:57:02
+# RCS: @(#) $Id: textTag.test,v 1.2 1998/09/14 18:23:52 stanton Exp $
 
 if {[string compare test [info procs test]] == 1} then \
   {source defs}

@@ -8,7 +8,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) macMenu.test 1.23 97/07/10 13:35:52
+# RCS: @(#) $Id: macMenu.test,v 1.2 1998/09/14 18:23:48 stanton Exp $
 
 if {$tcl_platform(platform) != "macintosh"} {
     return

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS:@(#) tkMacFont.c 1.52 97/11/20 18:29:51 
+ * RCS: @(#) $Id: tkMacFont.c,v 1.2 1998/09/14 18:23:35 stanton Exp $
  */
  
 #include <Windows.h>

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkFont.h 1.11 97/05/07 14:44:13
+ * RCS: @(#) $Id: tkFont.h,v 1.4 1998/09/14 18:23:10 stanton Exp $
  */
 
 #ifndef _TKFONT

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tk.h 1.211 97/11/20 12:44:45
+ * RCS: @(#) $Id: tk.h,v 1.12 1998/09/14 18:23:02 stanton Exp $
  */
 
 #ifndef _TK

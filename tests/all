@@ -2,7 +2,7 @@
 # tests.  Execute it by invoking "source all" when running tclTest
 # in this directory.
 #
-# SCCS: @(#) all 1.23 97/08/06 18:50:18
+# RCS: @(#) $Id: all,v 1.2 1998/09/14 18:23:42 stanton Exp $
 
 switch $tcl_platform(platform) {
     "windows" {

@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) unixEmbed.test 1.7 97/08/13 11:13:21
+# RCS: @(#) $Id: unixEmbed.test,v 1.3 1998/09/14 18:23:52 stanton Exp $
 
 if {$tcl_platform(platform) != "unix"} {
     return

@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) textDisp.test 1.55 97/07/24 15:15:43
+# RCS: @(#) $Id: textDisp.test,v 1.2 1998/09/14 18:23:50 stanton Exp $
 
 if {[string compare test [info procs test]] == 1} {
     source defs

@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) filebox.test 1.5 97/10/10 11:03:21
+# RCS: @(#) $Id: filebox.test,v 1.4 1998/09/14 18:23:46 stanton Exp $
 #
 
 set tk_strictMotif_old $tk_strictMotif

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) winMain.c 1.33 96/12/17 12:56:14
+ * RCS: @(#) $Id: winMain.c,v 1.3 1998/09/14 18:24:02 stanton Exp $
  */
 
 #include <tk.h>

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkTextDisp.c 1.124 97/07/11 18:01:03
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.2 1998/09/14 18:23:18 stanton Exp $
  */
 
 #include "tkPort.h"

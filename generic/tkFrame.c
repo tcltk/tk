@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkFrame.c 1.82 97/08/08 17:26:26
+ * RCS: @(#) $Id: tkFrame.c,v 1.2 1998/09/14 18:23:10 stanton Exp $
  */
 
 #include "default.h"

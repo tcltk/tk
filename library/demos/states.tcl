@@ -3,7 +3,7 @@
 # This demonstration script creates a listbox widget that displays
 # the names of the 50 states in the United States of America.
 #
-# SCCS: @(#) states.tcl 1.4 97/03/02 16:27:37
+# RCS: @(#) $Id: states.tcl,v 1.2 1998/09/14 18:23:30 stanton Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

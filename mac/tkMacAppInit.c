@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacAppInit.c 1.35 97/07/28 11:18:55
+ * RCS: @(#) $Id: tkMacAppInit.c,v 1.3 1998/09/14 18:23:34 stanton Exp $
  */
 
 #include <Gestalt.h>

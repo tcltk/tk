@@ -8,7 +8,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) bind.test 1.39 97/07/01 18:01:05
+# RCS: @(#) $Id: bind.test,v 1.3 1998/09/14 18:23:42 stanton Exp $
 
 if {[string compare test [info procs test]] != 0} {
     source defs

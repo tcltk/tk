@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacCursor.c 1.20 97/09/17 19:33:13
+ * RCS: @(#) $Id: tkMacCursor.c,v 1.3 1998/09/14 18:23:34 stanton Exp $
  */
 
 #include "tkPort.h"

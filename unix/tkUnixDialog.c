@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixDialog.c 1.5 96/08/28 21:21:01
+ * RCS: @(#) $Id: tkUnixDialog.c,v 1.2 1998/09/14 18:23:55 stanton Exp $
  *
  */
  

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacSubwindows.c 1.81 97/10/29 11:46:54
+ * RCS: @(#) $Id: tkMacSubwindows.c,v 1.4 1998/09/14 18:23:39 stanton Exp $
  */
 
 #include "tkInt.h"

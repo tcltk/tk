@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacResource.r 1.35 97/11/03 17:16:34
+ * RCS: @(#) $Id: tkMacResource.r,v 1.3 1998/09/14 18:23:39 stanton Exp $
  */
 
 /*

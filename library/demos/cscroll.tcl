@@ -3,7 +3,7 @@
 # This demonstration script creates a simple canvas that can be
 # scrolled in two dimensions.
 #
-# SCCS: @(#) cscroll.tcl 1.6 97/03/02 16:20:45
+# RCS: @(#) $Id: cscroll.tcl,v 1.2 1998/09/14 18:23:27 stanton Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

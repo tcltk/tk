@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) main.test 1.2 97/09/10 17:49:20
+# RCS: @(#) $Id: main.test,v 1.2 1998/09/14 18:23:48 stanton Exp $
 
 if {[info procs test] != "test"} {
     source defs

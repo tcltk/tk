@@ -11,7 +11,7 @@
 #
 # The information in this file is specific to a single platform.
 #
-# SCCS: @(#) tkConfig.sh.in 1.11 97/10/30 13:29:13
+# RCS: @(#) $Id: tkConfig.sh.in,v 1.6 1998/09/14 18:23:55 stanton Exp $
 
 # Tk's version number.
 TK_VERSION='@TK_VERSION@'

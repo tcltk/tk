@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) ximage.c 1.6 96/07/23 16:59:10
+ * RCS: @(#) $Id: ximage.c,v 1.3 1998/09/14 18:24:03 stanton Exp $
  */
 
 #include "tkInt.h"

@@ -2,7 +2,7 @@
 #
 # This demonstration script creates message boxes of various type
 #
-# SCCS: @(#) msgbox.tcl 1.3 97/03/02 16:26:07
+# RCS: @(#) $Id: msgbox.tcl,v 1.2 1998/09/14 18:23:29 stanton Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

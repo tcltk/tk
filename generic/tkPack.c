@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkPack.c 1.64 96/05/03 10:51:52
+ * RCS: @(#) $Id: tkPack.c,v 1.2 1998/09/14 18:23:15 stanton Exp $
  */
 
 #include "tkPort.h"

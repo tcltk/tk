@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWindow.c 1.233 97/10/31 09:55:23
+ * RCS: @(#) $Id: tkWindow.c,v 1.3 1998/09/14 18:23:20 stanton Exp $
  */
 
 #include "tkPort.h"

@@ -1,5 +1,5 @@
 @echo off
-rem SCCS: %Z% $Id: rmd.bat,v 1.1 1998/07/01 18:32:09 escoffon Exp $ 
+rem RCS: @(#) $Id: rmd.bat,v 1.2 1998/09/14 18:23:59 stanton Exp $
 
 if not exist %1 goto end
 

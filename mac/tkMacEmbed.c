@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  SCCS: @(#) tkMacEmbed.c 1.6 97/10/31 17:20:22
+ *  RCS: @(#) $Id: tkMacEmbed.c,v 1.3 1998/09/14 18:23:35 stanton Exp $
  */
 
 #include "tkInt.h"

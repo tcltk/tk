@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkTrig.c 1.27 97/03/07 11:34:35
+ * RCS: @(#) $Id: tkTrig.c,v 1.2 1998/09/14 18:23:20 stanton Exp $
  */
 
 #include <stdio.h>

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixSelect.c 1.5 96/03/29 14:14:31
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.2 1998/09/14 18:23:57 stanton Exp $
  */
 
 #include "tkInt.h"

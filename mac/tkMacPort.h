@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacPort.h 1.52 97/07/28 11:18:59
+ * RCS: @(#) $Id: tkMacPort.h,v 1.2 1998/09/14 18:23:38 stanton Exp $
  */
 
 #ifndef _TKMACPORT

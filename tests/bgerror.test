@@ -6,7 +6,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) bgerror.test 1.1 97/08/06 09:28:30
+# RCS: @(#) $Id: bgerror.test,v 1.2 1998/09/14 18:23:42 stanton Exp $
 
 if {[info commands test] == ""} {
     source defs

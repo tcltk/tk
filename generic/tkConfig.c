@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkConfig.c 1.53 96/04/26 10:29:31
+ * RCS: @(#) $Id: tkConfig.c,v 1.2 1998/09/14 18:23:08 stanton Exp $
  */
 
 #include "tkPort.h"

@@ -6,7 +6,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) grid.test 1.22 97/10/10 10:07:31
+# RCS: @(#) $Id: grid.test,v 1.2 1998/09/14 18:23:47 stanton Exp $
 
 if {[string compare test [info procs test]] == 1} then \
   {source ../tests/defs}

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixCursor.c 1.4 96/10/08 09:33:08
+ * RCS: @(#) $Id: tkUnixCursor.c,v 1.3 1998/09/14 18:23:55 stanton Exp $
  */
 
 #include "tkPort.h"

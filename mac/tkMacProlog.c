@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacProlog.c 1.6 97/05/21 10:01:07
+ * RCS: @(#) $Id: tkMacProlog.c,v 1.2 1998/09/14 18:23:38 stanton Exp $
  */
 
 #include "tkInt.h"

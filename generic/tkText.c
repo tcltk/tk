@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkText.c 1.104 97/10/13 15:18:24
+ * RCS: @(#) $Id: tkText.c,v 1.2 1998/09/14 18:23:17 stanton Exp $
  */
 
 #include "default.h"

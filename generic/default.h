@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) default.h 1.4 96/02/07 17:33:39
+ * RCS: @(#) $Id: default.h,v 1.2 1998/09/14 18:23:02 stanton Exp $
  */
 
 #ifndef _DEFAULT

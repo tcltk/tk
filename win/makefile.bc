@@ -5,7 +5,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) makefile.bc 1.73 97/11/05 16:12:27
+# RCS: @(#) $Id: makefile.bc,v 1.6 1998/09/14 18:23:58 stanton Exp $
 
 
 #

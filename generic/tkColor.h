@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkColor.h 1.1 96/10/22 16:53:09
+ * RCS: @(#) $Id: tkColor.h,v 1.4 1998/09/14 18:23:08 stanton Exp $
  */
 
 #ifndef _TKCOLOR

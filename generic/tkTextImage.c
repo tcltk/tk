@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkTextImage.c 1.7 97/08/25 15:47:27
+ * RCS: @(#) $Id: tkTextImage.c,v 1.2 1998/09/14 18:23:19 stanton Exp $
  */
 
 #include "tk.h"

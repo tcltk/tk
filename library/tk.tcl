@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# SCCS: @(#) tk.tcl 1.98 97/10/28 15:21:04
+# RCS: @(#) $Id: tk.tcl,v 1.4 1998/09/14 18:23:25 stanton Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.

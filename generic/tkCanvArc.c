@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkCanvArc.c 1.34 97/04/25 16:50:56
+ * RCS: @(#) $Id: tkCanvArc.c,v 1.3 1998/09/14 18:23:04 stanton Exp $
  */
 
 #include <stdio.h>

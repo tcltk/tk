@@ -8,7 +8,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) send.test 1.26 96/12/09 17:26:42
+# RCS: @(#) $Id: send.test,v 1.2 1998/09/14 18:23:50 stanton Exp $
 
 if {$tcl_platform(platform) == "macintosh"} {
     puts "send is not available on the Mac - skipping tests"

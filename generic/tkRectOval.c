@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkRectOval.c 1.40 96/05/03 10:52:21
+ * RCS: @(#) $Id: tkRectOval.c,v 1.2 1998/09/14 18:23:16 stanton Exp $
  */
 
 #include <stdio.h>

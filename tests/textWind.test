@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) textWind.test 1.25 97/07/01 18:16:38
+# RCS: @(#) $Id: textWind.test,v 1.2 1998/09/14 18:23:52 stanton Exp $
 
 if {[string compare test [info procs test]] == 1} then \
   {source defs}

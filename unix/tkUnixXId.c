@@ -17,7 +17,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixXId.c 1.22 97/06/25 13:16:47
+ * RCS: @(#) $Id: tkUnixXId.c,v 1.2 1998/09/14 18:23:58 stanton Exp $
  */
 
 /*

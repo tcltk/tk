@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnix3d.c 1.3 96/11/20 14:24:38
+ * RCS: @(#) $Id: tkUnix3d.c,v 1.2 1998/09/14 18:23:55 stanton Exp $
  */
 
 #include <tk3d.h>

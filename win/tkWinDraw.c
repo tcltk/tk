@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinDraw.c 1.30 97/03/21 11:20:05
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.2 1998/09/14 18:24:00 stanton Exp $
  */
 
 #include "tkWinInt.h"

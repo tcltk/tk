@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) xgc.c 1.8 96/10/11 14:59:39
+ * RCS: @(#) $Id: xgc.c,v 1.2 1998/09/14 18:24:03 stanton Exp $
  */
 
 #include <tkInt.h>

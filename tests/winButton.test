@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) winButton.test 1.3 97/07/01 18:11:44
+# RCS: @(#) $Id: winButton.test,v 1.3 1998/09/14 18:23:53 stanton Exp $
 
 if {$tcl_platform(platform)!="windows"} {
     return

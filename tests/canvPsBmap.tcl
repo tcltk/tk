@@ -2,7 +2,7 @@
 # for bitmaps in canvases.  It is part of the Tk visual test suite,
 # which is invoked via the "visual" script.
 #
-# SCCS: @(#) canvPsBmap.tcl 1.5 96/07/25 15:54:14
+# RCS: @(#) $Id: canvPsBmap.tcl,v 1.2 1998/09/14 18:23:44 stanton Exp $
 
 catch {destroy .t}
 toplevel .t

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacApplication.r 1.3 97/11/03 17:16:24
+ * RCS: @(#) $Id: tkMacApplication.r,v 1.2 1998/09/14 18:23:34 stanton Exp $
  */
 
 #include <Types.r>

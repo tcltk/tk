@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkTest.c 1.50 97/11/06 16:56:32
+ * RCS: @(#) $Id: tkTest.c,v 1.3 1998/09/14 18:23:17 stanton Exp $
  */
 
 #include "tkInt.h"

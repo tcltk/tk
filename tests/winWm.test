@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) winWm.test 1.5 97/08/13 15:42:46
+# RCS: @(#) $Id: winWm.test,v 1.2 1998/09/14 18:23:53 stanton Exp $
 
 if {$tcl_platform(platform) != "windows"} {
     return

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixButton.c 1.4 97/06/06 11:21:40
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.2 1998/09/14 18:23:55 stanton Exp $
  */
 
 #include "tkButton.h"

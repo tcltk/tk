@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacRegion.c 1.9 96/12/03 11:46:50
+ * RCS: @(#) $Id: tkMacRegion.c,v 1.2 1998/09/14 18:23:39 stanton Exp $
  */
 
 #include "tkInt.h"

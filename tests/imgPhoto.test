@@ -10,7 +10,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# SCCS: @(#) imgPhoto.test 1.23 97/08/08 11:29:25
+# RCS: @(#) $Id: imgPhoto.test,v 1.2 1998/09/14 18:23:47 stanton Exp $
 
 if {[info procs test] != "test"} {
     source defs

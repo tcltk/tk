@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinMenu.c 1.102 97/10/28 13:56:58
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.3 1998/09/14 18:24:00 stanton Exp $
  */
 
 #define OEMRESOURCE

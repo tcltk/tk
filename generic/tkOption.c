@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkOption.c 1.57 96/10/17 15:16:45
+ * RCS: @(#) $Id: tkOption.c,v 1.2 1998/09/14 18:23:15 stanton Exp $
  */
 
 #include "tkPort.h"

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacMenu.r 1.1 97/07/11 18:06:27
+ * RCS: @(#) $Id: tkMacMenu.r,v 1.3 1998/09/14 18:23:38 stanton Exp $
  */
 
 #include <Types.r>

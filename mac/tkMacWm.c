@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacWm.c 1.72 97/10/29 13:27:30
+ * RCS: @(#) $Id: tkMacWm.c,v 1.4 1998/09/14 18:23:40 stanton Exp $
  */
 
 #include <Gestalt.h>

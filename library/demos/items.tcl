@@ -3,7 +3,7 @@
 # This demonstration script creates a canvas that displays the
 # canvas item types.
 #
-# SCCS: @(#) items.tcl 1.16 97/03/02 16:25:05
+# RCS: @(#) $Id: items.tcl,v 1.2 1998/09/14 18:23:29 stanton Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkGeometry.c 1.31 96/02/15 18:53:32
+ * RCS: @(#) $Id: tkGeometry.c,v 1.2 1998/09/14 18:23:11 stanton Exp $
  */
 
 #include "tkPort.h"

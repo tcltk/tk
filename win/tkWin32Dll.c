@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWin32Dll.c 1.9 96/08/06 15:59:08
+ * RCS: @(#) $Id: tkWin32Dll.c,v 1.2 1998/09/14 18:23:59 stanton Exp $
  */
 
 #include "tkPort.h"

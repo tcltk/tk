@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkSelect.c 1.57 96/05/03 10:52:40
+ * RCS: @(#) $Id: tkSelect.c,v 1.2 1998/09/14 18:23:17 stanton Exp $
  */
 
 #include "tkInt.h"

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixColor.c 1.1 96/10/22 16:52:31
+ * RCS: @(#) $Id: tkUnixColor.c,v 1.2 1998/09/14 18:23:55 stanton Exp $
  */
 
 #include <tkColor.h>

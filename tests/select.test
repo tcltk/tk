@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) select.test 1.17 96/12/09 17:25:48
+# RCS: @(#) $Id: select.test,v 1.2 1998/09/14 18:23:50 stanton Exp $
 
 #
 # Note: Multiple display selection handling will only be tested if the

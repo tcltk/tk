@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMenu.h 1.60 97/06/20 14:43:21
+ * RCS: @(#) $Id: tkMenu.h,v 1.4 1998/09/14 18:23:14 stanton Exp $
  */
 
 #ifndef _TKMENU

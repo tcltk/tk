@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) canvText.test 1.8 97/06/24 13:34:16
+# RCS: @(#) $Id: canvText.test,v 1.2 1998/09/14 18:23:44 stanton Exp $
 
 if {"[info procs test]" != "test"} {
     source defs

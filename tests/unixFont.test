@@ -13,7 +13,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) unixFont.test 1.7 97/06/24 13:34:24
+# RCS: @(#) $Id: unixFont.test,v 1.2 1998/09/14 18:23:52 stanton Exp $
 
 if {$tcl_platform(platform)!="unix"} {
     return

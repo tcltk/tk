@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMenubutton.c 1.94 97/07/31 09:10:37
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.2 1998/09/14 18:23:14 stanton Exp $
  */
 
 #include "tkMenubutton.h"

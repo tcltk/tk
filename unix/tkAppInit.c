@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkAppInit.c 1.22 96/05/29 09:47:08
+ * RCS: @(#) $Id: tkAppInit.c,v 1.2 1998/09/14 18:23:54 stanton Exp $
  */
 
 #include "tk.h"

@@ -4,7 +4,7 @@
 # checkbutton, and radiobutton widgets and provides procedures
 # that help in implementing those bindings.
 #
-# SCCS: @(#) button.tcl 1.22 96/11/14 14:49:11
+# RCS: @(#) $Id: button.tcl,v 1.3 1998/09/14 18:23:22 stanton Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.

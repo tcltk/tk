@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkTextTag.c 1.39 97/02/07 13:51:52
+ * RCS: @(#) $Id: tkTextTag.c,v 1.2 1998/09/14 18:23:19 stanton Exp $
  */
 
 #include "default.h"

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkFont.c 1.74 97/10/10 14:34:11
+ * RCS: @(#) $Id: tkFont.c,v 1.2 1998/09/14 18:23:10 stanton Exp $
  */
 
 #include "tkInt.h"

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacLibrary.r 1.9 97/11/20 18:31:20
+ * RCS: @(#) $Id: tkMacLibrary.r,v 1.3 1998/09/14 18:23:37 stanton Exp $
  */
 
 /*

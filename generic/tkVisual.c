@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkVisual.c 1.19 97/04/25 16:52:17
+ * RCS: @(#) $Id: tkVisual.c,v 1.2 1998/09/14 18:23:20 stanton Exp $
  */
 
 #include "tkInt.h"
