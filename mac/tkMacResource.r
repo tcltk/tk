@@ -97,8 +97,6 @@ read 'TEXT' (23, "tkerror", purgeable, preload) "::library:bgerror.tcl";
 read 'TEXT' (24, "Console", purgeable, preload) "::library:console.tcl";
 read 'TEXT' (25, "msgbox", purgeable, preload) "::library:msgbox.tcl";
 read 'TEXT' (26, "comdlg", purgeable, preload) "::library:comdlg.tcl";
-read 'TEXT' (27, "prolog", purgeable, preload) "::library:prolog.ps";
-
 
 /*
  * The following resource is used when creating the 'env' variable in

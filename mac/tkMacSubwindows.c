@@ -27,7 +27,7 @@ static RgnHandle tmpRgn = NULL;
 
 static void UpdateOffsets _ANSI_ARGS_((TkWindow *winPtr, int deltaX, int deltaY));
 
-void MacMoveWindow _ANSI_ARGS_((WindowRef window, int x, int y));
+void tkMacMoveWindow _ANSI_ARGS_((WindowRef window, int x, int y));
 
 /*
  *----------------------------------------------------------------------
@@ -405,7 +405,7 @@ XMoveResizeWindow(
 	
 	SizeWindow((WindowRef) destPort,
 		(short) width, (short) height, false);
-	MacMoveWindow((WindowRef) destPort, x, y);
+	tkMacMoveWindow((WindowRef) destPort, x, y);
 	
 	/* TODO: is the following right? */
 	TkMacInvalidateWindow(macWin, TK_WINDOW_ONLY);
@@ -507,7 +507,7 @@ XMoveWindow(
 	 * region.  It is currently assumed that Tk will need
 	 * to completely redraw anway.
 	 */
-	MacMoveWindow((WindowRef) destPort, x, y);
+	tkMacMoveWindow((WindowRef) destPort, x, y);
 
 	/* TODO: is the following right? */
 	TkMacInvalidateWindow(macWin, TK_WINDOW_ONLY);
@@ -1050,7 +1050,7 @@ TkMacWinBounds(
 /*
  *----------------------------------------------------------------------
  *
- * MacMoveWindow --
+ * tkMacMoveWindow --
  *
  *	A replacement for the Macintosh MoveWindow function.  This
  *	function adjusts the inputs to MoveWindow to offset the root of 
@@ -1067,7 +1067,7 @@ TkMacWinBounds(
  */
 
 void 
-MacMoveWindow(
+tkMacMoveWindow(
     WindowRef window,
     int x,
     int y)

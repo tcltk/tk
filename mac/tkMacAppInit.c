@@ -18,6 +18,7 @@
 #include <Dialogs.h>
 #include <SegLoad.h>
 #include <Traps.h>
+#include <Appearance.h>
 
 #include "tk.h"
 #include "tkInt.h"
@@ -220,6 +221,17 @@ MacintoshInit()
      * variable.  Which in turn allows Tk to be used in code resources.
      */
     tcl_macQdPtr = &qd;
+
+    /*
+     * If appearance is present, then register Tk as an Appearance client
+     * This means that the mapping from non-Appearance to Appearance cdefs
+     * will be done for Tk regardless of the setting in the Appearance
+     * control panel.  
+     */
+     
+     if (TkMacHaveAppearance()) {
+         RegisterAppearanceClient();
+     }
 
     InitGraf(&tcl_macQdPtr->thePort);
     InitFonts();

@@ -83,7 +83,6 @@ TkGetInterpNames
 TkGetMenuHashTable
 TkGetMenuIndex
 TkGetMiterPoints
-TkGetNativeProlog
 TkGetPointerCoords
 TkGetProlog
 TkGetServerInfo

@@ -73,7 +73,8 @@ EXTERN int	TkMacConvertTkEvent _ANSI_ARGS_((EventRecord *eventPtr,
 EXTERN void	TkGenWMConfigureEvent _ANSI_ARGS_((Tk_Window tkwin,
 			    int x, int y, int width, int height, int flags));
 EXTERN void	TkMacInvalClipRgns _ANSI_ARGS_((TkWindow *winPtr));
-
+EXTERN int	TkMacHaveAppearance _ANSI_ARGS_((void));
+EXTERN GWorldPtr 	TkMacGetDrawablePort _ANSI_ARGS_((Drawable drawable));
 
 #pragma export reset
 

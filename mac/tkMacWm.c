@@ -27,14 +27,12 @@
 #include "tkScrollbar.h"
 
 /*
- * If HAVE_APPEARANCE is defined in MW_TkHeader.pch then we must have the
- * Appearance manager header & library.  If so we can use these new API's to
- * have the iconify code do the right thing.
+ * We now require the Appearance headers.  They come with CodeWarrior Pro,
+ * and are on the SDK CD.  However, we do not require the Appearance 
+ * extension
  */
-
-#ifdef HAVE_APPEARANCE
-#   include <Appearance.h>
-#endif
+ 
+#include <Appearance.h>
 
 /*
  * A data structure of the following type holds information for
@@ -308,13 +306,12 @@ static Tk_GeomMgr wmMgrType = {
 static Tcl_HashTable windowTable;
 static int windowHashInit = false;
 
-void MacMoveWindow(WindowRef window, int x, int y);
+void tkMacMoveWindow(WindowRef window, int x, int y);
 
 /*
  * Forward declarations for procedures defined in this file:
  */
 
-static int		HaveAppearance _ANSI_ARGS_((void));
 static void		InitialWindowBounds _ANSI_ARGS_((TkWindow *winPtr, 
 			    Rect *geometry));
 static int		ParseGeometry _ANSI_ARGS_((Tcl_Interp *interp,
@@ -3911,7 +3908,7 @@ TkMacMakeRealWindowExist(
     tkMacWindowListPtr = listPtr;
     
     macWin->portPtr = (GWorldPtr) newWindow;
-    MacMoveWindow(newWindow, (int) geometry.left, (int) geometry.top);
+    tkMacMoveWindow(newWindow, (int) geometry.left, (int) geometry.top);
     SetPort((GrafPtr) newWindow);
 	
     if (!windowHashInit) {
@@ -4170,8 +4167,7 @@ TkpWmSetState(winPtr, state)
 	Tk_UnmapWindow((Tk_Window) winPtr);
     } else if (state == IconicState) {
 	Tk_UnmapWindow((Tk_Window) winPtr);
-#ifdef HAVE_APPEARANCE
-	if (HaveAppearance()) {
+	if (TkMacHaveAppearance()) {
 	    /*
 	     * The window always gets unmapped.  However, if we can show the
 	     * icon version of the window (collapsed) we make the window visable
@@ -4185,14 +4181,11 @@ TkpWmSetState(winPtr, state)
 		CollapseWindow((WindowPtr) macWin, true);
 	    }
 	}
-#endif
     } else if (state == NormalState) {
 	Tk_MapWindow((Tk_Window) winPtr);
-#ifdef HAVE_APPEARANCE
-	if (HaveAppearance()) {
+	if (TkMacHaveAppearance()) {
 	    CollapseWindow((WindowPtr) macWin, false);
 	}
-#endif
     } else if (state == ZoomState) {
 	/* TODO: need to support zoomed windows */
     }
@@ -4200,7 +4193,7 @@ TkpWmSetState(winPtr, state)
 /*
  *----------------------------------------------------------------------
  *
- * HaveAppearance --
+ * TkMacHaveAppearance --
  *
  *	Determine if the appearance manager is available on this Mac.
  *	We cache the result so future calls are fast.
@@ -4214,22 +4207,20 @@ TkpWmSetState(winPtr, state)
  *----------------------------------------------------------------------
  */
 
-static int
-HaveAppearance()
+int
+TkMacHaveAppearance()
 {
     static initialized = false;
-    static int haveAppearance = false;
+    static int TkMacHaveAppearance = false;
     long response = 0;
     OSErr err = noErr;
     
-#ifdef HAVE_APPEARANCE
     if (!initialized) {
 	err = Gestalt(gestaltAppearanceAttr, &response);
 	if (err == noErr) {
-	    haveAppearance = true;
+	    TkMacHaveAppearance = true;
 	}
     }
-#endif
 
-    return haveAppearance;
+    return TkMacHaveAppearance;
 }

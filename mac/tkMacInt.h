@@ -251,6 +251,7 @@ extern int		TkMacGrowToplevel _ANSI_ARGS_((WindowRef whichWindow,
 			    Point start));
 extern void 		TkMacHandleMenuSelect _ANSI_ARGS_((long mResult,
 			    int optionKeyPressed));
+extern int		TkMacHaveAppearance _ANSI_ARGS_((void));
 extern void		TkMacInitAppleEvents _ANSI_ARGS_((Tcl_Interp *interp));
 extern void 		TkMacInitMenus _ANSI_ARGS_((Tcl_Interp 	*interp));
 extern void		TkMacInvalidateWindow _ANSI_ARGS_((MacDrawable *macWin, int flag));

@@ -118,8 +118,6 @@ read 'TEXT' (TK_LIBRARY_RESOURCES+16, "msgbox", purgeable, preload)
 	"::library:msgbox.tcl";
 read 'TEXT' (TK_LIBRARY_RESOURCES+17, "comdlg", purgeable, preload) 
 	"::library:comdlg.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+18, "prolog", purgeable, preload) 
-	"::library:prolog.ps";
 
 /*
  * The following two resources define the default "About Box" for Mac Tk.
