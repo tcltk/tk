@@ -1,3 +1,9 @@
+2000-02-05  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* unix/tkUnixScale.c (TkpDestroyScale): changed ckfree to
+	Tcl_EventuallyFree to behave with Tcl_Preserve in TkpDisplayScale
+	(prevents possible segfault).
+
 2000-02-03  Eric Melski  <ericm@scriptics.com>
 
 	* tests/text.test: 
