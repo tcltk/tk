@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.7 1999/04/28 18:18:07 redman Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.8 1999/05/25 01:31:06 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -218,6 +218,125 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_TCL
     TkUnionRectWithRegion, /* 119 */
 #endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 120 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    NULL, /* 120 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkGenerateActivateEvents, /* 120 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 121 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    NULL, /* 121 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkpCreateNativeBitmap, /* 121 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 122 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    NULL, /* 122 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkpDefineNativeBitmaps, /* 122 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 123 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    NULL, /* 123 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkpGetMS, /* 123 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 124 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    NULL, /* 124 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkpGetNativeAppBitmap, /* 124 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 125 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    NULL, /* 125 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkPointerDeadWindow, /* 125 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 126 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    NULL, /* 126 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkpSetCapture, /* 126 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 127 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    NULL, /* 127 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkpSetCursor, /* 127 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 128 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    NULL, /* 128 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkpWmSetState, /* 128 */
+#endif /* MAC_TCL */
+    NULL, /* 129 */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 130 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    NULL, /* 130 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkGetTransientMaster, /* 130 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 131 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    NULL, /* 131 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkGenerateButtonEvent, /* 131 */
+#endif /* MAC_TCL */
+    NULL, /* 132 */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 133 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    NULL, /* 133 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkGenWMDestroyEvent, /* 133 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 134 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    NULL, /* 134 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkGenWMConfigureEvent, /* 134 */
+#endif /* MAC_TCL */
 };
 
 TkIntPlatStubs tkIntPlatStubs = {
@@ -274,18 +393,18 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkpCreateNativeBitmap, /* 1 */
     TkpDefineNativeBitmaps, /* 2 */
     TkpGetMS, /* 3 */
-    TkpGetNativeAppBitmap, /* 4 */
+    NULL, /* 4 */
     TkPointerDeadWindow, /* 5 */
     TkpSetCapture, /* 6 */
     TkpSetCursor, /* 7 */
     TkpWmSetState, /* 8 */
-    HandleWMEvent, /* 9 */
+    NULL, /* 9 */
     TkAboutDlg, /* 10 */
-    TkCreateMacEventSource, /* 11 */
-    TkFontList, /* 12 */
+    NULL, /* 11 */
+    NULL, /* 12 */
     TkGetTransientMaster, /* 13 */
     TkGenerateButtonEvent, /* 14 */
-    TkGetCharPositions, /* 15 */
+    NULL, /* 15 */
     TkGenWMDestroyEvent, /* 16 */
     TkGenWMConfigureEvent, /* 17 */
     TkMacButtonKeyState, /* 18 */
@@ -295,10 +414,10 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkMacInstallCursor, /* 22 */
     TkMacConvertTkEvent, /* 23 */
     TkMacHandleTearoffMenu, /* 24 */
-    tkMacInstallMWConsole, /* 25 */
+    NULL, /* 25 */
     TkMacInvalClipRgns, /* 26 */
     TkMacDoHLEvent, /* 27 */
-    TkMacFontInfo, /* 28 */
+    NULL, /* 28 */
     TkMacGenerateTime, /* 29 */
     TkMacGetDrawablePort, /* 30 */
     TkMacGetScrollbarGrowWindow, /* 31 */
@@ -315,7 +434,7 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkMacMenuClick, /* 42 */
     TkMacRegisterOffScreenWindow, /* 43 */
     TkMacResizable, /* 44 */
-    TkMacSetEmbedRgn, /* 45 */
+    NULL, /* 45 */
     TkMacSetHelpMenuItemCount, /* 46 */
     TkMacSetScrollbarGrow, /* 47 */
     TkMacSetUpClippingRgn, /* 48 */
@@ -326,11 +445,11 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkMacVisableClipRgn, /* 53 */
     TkMacWinBounds, /* 54 */
     TkMacWindowOffset, /* 55 */
-    TkResumeClipboard, /* 56 */
+    NULL, /* 56 */
     TkSetMacColor, /* 57 */
     TkSetWMName, /* 58 */
     TkSuspendClipboard, /* 59 */
-    TkWMGrowToplevel, /* 60 */
+    NULL, /* 60 */
     TkMacZoomToplevel, /* 61 */
     Tk_TopCoordsToWindow, /* 62 */
     TkMacContainerId, /* 63 */

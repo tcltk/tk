@@ -10,8 +10,19 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.4 1999/04/24 01:50:50 stanton Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.5 1999/05/25 01:31:06 stanton Exp $
  */
+
+/*
+ * Because of problems with pre-compiled headers on the Mac, we need to
+ * do these includes before we add the stubs defines.  This a hack.
+ */
+
+#ifdef MAC_TCL
+#include "tkMacInt.h"
+#include "tkInt.h"
+#include "tkPort.h"
+#endif /* MAC_TCL */
 
 /*
  * We need to ensure that we use the stub macros so that this file contains
@@ -19,7 +30,6 @@
  * to build an extension that references Tk_InitStubs but doesn't end up
  * including the rest of the stub functions.
  */
-
 
 #ifndef USE_TCL_STUBS
 #define USE_TCL_STUBS
@@ -31,15 +41,16 @@
 #endif
 #undef USE_TK_STUB_PROCS
 
+#ifndef MAC_TCL
+
 #include "tkPort.h"
 #include "tkInt.h"
 
 #ifdef __WIN32__
 #include "tkWinInt.h"
 #endif
-#ifdef MAC_TCL
-#include "tkMacInt.h"
-#endif
+
+#endif /* !MAC_TCL */
 
 #include "tkDecls.h"
 #include "tkIntDecls.h"
@@ -79,6 +90,10 @@ TkIntXlibStubs *tkIntXlibStubsPtr;
  *
  *----------------------------------------------------------------------
  */
+
+#ifdef Tk_InitStubs
+#undef Tk_InitStubs
+#endif
 
 char *
 Tk_InitStubs(interp, version, exact)

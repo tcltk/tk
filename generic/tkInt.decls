@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.6 1999/04/24 01:50:48 stanton Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.7 1999/05/25 01:31:05 stanton Exp $
 
 library tk
 
@@ -525,65 +525,92 @@ declare 112 generic {
     void TkpMenuThreadInit (void)
 }
 
-declare 113 win {
+declare 113 {mac win}  {
     void TkClipBox (TkRegion rgn, XRectangle* rect_return)
 }
 
-declare 113 mac {
-    void TkClipBox (TkRegion rgn, XRectangle* rect_return)
-}
-
-declare 114 win {
+declare 114 {mac win}  {
     TkRegion TkCreateRegion (void)
 }
 
-declare 114 mac {
-    TkRegion TkCreateRegion (void)
-}
-
-declare 115 win {
+declare 115 {mac win} {
     void TkDestroyRegion (TkRegion rgn)
 }
 
-declare 115 mac {
-    void TkDestroyRegion (TkRegion rgn)
-}
-
-declare 116 win {
+declare 116 {mac win} {
     void TkIntersectRegion (TkRegion sra, TkRegion srcb, TkRegion dr_return)
 }
 
-declare 116 mac {
-    void TkIntersectRegion (TkRegion sra, TkRegion srcb, TkRegion dr_return)
-}
-
-declare 117 win {
+declare 117 {mac win} {
     int TkRectInRegion (TkRegion rgn, int x, int y, unsigned int width, \
 	    unsigned int height)
 }
 
-declare 117 mac {
-    int TkRectInRegion (TkRegion rgn, int x, int y, unsigned int width, \
-	    unsigned int height)
-}
-
-declare 118 win {
+declare 118 {mac win} {
     void TkSetRegion (Display* display, GC gc, TkRegion rgn)
 }
 
-declare 118 mac {
-    void TkSetRegion (Display* display, GC gc, TkRegion rgn)
-}
-
-declare 119 win {
+declare 119 {mac win} {
     void TkUnionRectWithRegion (XRectangle* rect, \
 	    TkRegion src, TkRegion dr_return)
 }
 
-declare 119 mac {
-    void TkUnionRectWithRegion (XRectangle* rect, \
-	    TkRegion src, TkRegion dr_return)
+declare 120 mac {
+    void TkGenerateActivateEvents (TkWindow *winPtr, int active)
 }
+
+declare 121 mac {
+    Pixmap TkpCreateNativeBitmap (Display *display, char * source)
+}
+
+declare 122 mac {
+    void TkpDefineNativeBitmaps (void)
+}
+
+declare 123 mac {
+    unsigned long TkpGetMS (void)
+}
+
+declare 124 mac {
+    Pixmap TkpGetNativeAppBitmap (Display *display, \
+ 	    CONST char *name, int *width, int *height)
+}
+
+declare 125 mac {
+    void TkPointerDeadWindow (TkWindow *winPtr)
+}
+
+declare 126 mac {
+    void TkpSetCapture (TkWindow *winPtr)
+}
+
+declare 127 mac {
+    void TkpSetCursor (TkpCursor cursor)
+}
+
+declare 128 mac {
+    void TkpWmSetState (TkWindow *winPtr, int state)
+}
+
+declare 130 mac {
+    Window  TkGetTransientMaster (TkWindow *winPtr)
+}
+
+declare 131 mac {
+    int  TkGenerateButtonEvent (int x, int y, \
+ 	    Window window, unsigned int state)
+}
+
+declare 133 mac {
+    void  TkGenWMDestroyEvent (Tk_Window tkwin)
+}
+
+declare 134 mac {
+    void  TkGenWMConfigureEvent (Tk_Window tkwin, int x, int y, \
+ 	    int width, int height, int flags)
+}
+
+
 
 ##############################################################################
 
@@ -791,11 +818,6 @@ declare 3 mac {
     unsigned long TkpGetMS (void)
 }
 
-declare 4 mac {
-    Pixmap TkpGetNativeAppBitmap (Display *display, \
-	    char *name, int *width, int *height)
-}
-
 declare 5 mac {
     void TkPointerDeadWindow (TkWindow *winPtr)
 }
@@ -812,20 +834,8 @@ declare 8 mac {
     void TkpWmSetState (TkWindow *winPtr, int state)
 }
 
-declare 9 mac {
-    int  HandleWMEvent (EventRecord *theEvent)
-}
-
 declare 10 mac {
     void   TkAboutDlg (void)
-}
-
-declare 11 mac {
-    void  TkCreateMacEventSource (void)
-}
-
-declare 12 mac {
-    void   TkFontList (Tcl_Interp *interp, Display *display)
 }
 
 declare 13 mac {
@@ -835,11 +845,6 @@ declare 13 mac {
 declare 14 mac {
     int  TkGenerateButtonEvent (int x, int y, \
 	    Window window, unsigned int state)
-}
-
-declare 15 mac {
-    int   TkGetCharPositions (XFontStruct *font_struct, char *string, \
-	    int count, short *buffer)
 }
 
 declare 16 mac {
@@ -879,21 +884,12 @@ declare 24 mac {
     void  TkMacHandleTearoffMenu (void)
 }
 
-declare 25 mac {
-    void  tkMacInstallMWConsole (Tcl_Interp *interp)
-}
-
 declare 26 mac {
     void  TkMacInvalClipRgns (TkWindow *winPtr)
 }
 
 declare 27 mac {
     void  TkMacDoHLEvent (EventRecord *theEvent)
-}
-
-declare 28 mac {
-    void   TkMacFontInfo (Font fontId, short *family, \
-	    short *style, short *size)
 }
 
 declare 29 mac {
@@ -960,10 +956,6 @@ declare 44 mac {
     int  TkMacResizable (TkWindow *winPtr)
 }
 
-declare 45 mac {
-    void  TkMacSetEmbedRgn (TkWindow *winPtr, RgnHandle rgn)
-}
-
 declare 46 mac {
     void  TkMacSetHelpMenuItemCount (void)
 }
@@ -1004,10 +996,6 @@ declare 55 mac {
     void  TkMacWindowOffset (WindowRef wRef, int *xOffset, int *yOffset)
 }
 
-declare 56 mac {
-    void  TkResumeClipboard (void)
-}
-
 declare 57 mac {
     int   TkSetMacColor (unsigned long pixel, RGBColor *macColor)
 }
@@ -1018,10 +1006,6 @@ declare 58 mac {
 
 declare 59 mac {
     void  TkSuspendClipboard (void)
-}
-
-declare 60 mac {
-    int  TkWMGrowToplevel (WindowRef whichWindow, Point start)
 }
 
 declare 61 mac {
@@ -1584,7 +1568,7 @@ declare 13 mac {
 }
 
 declare 14 mac {
-    void XChangeProperty (Display* d, Window w, Atom a, Atom a, int i1, \
+    void XChangeProperty (Display* d, Window w, Atom a1, Atom a2, int i1, \
 	    int i2, _Xconst unsigned char* c, int i3)
 }
 

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.6 1999/04/28 18:18:06 redman Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.7 1999/05/25 01:31:05 stanton Exp $
  */
 
 #include "tk.h"
@@ -127,9 +127,20 @@ Tk_InitConsoleChannels(interp)
 	
 	/*
 	 * check for STDIN, otherwise create it
+	 *
+	 * Don't do this check on the Mac, because it is hard to prevent
+	 * callbacks from the SIOUX layer from opening stdout & stdin, but
+	 * we don't want to use the SIOUX console.  Since the console is not
+	 * actually created till something is written to the channel, it is
+	 * okay to just ignore it here.
+	 *
+	 * This is still a bit of a hack, however, and should be cleaned up
+	 * when we have a better abstraction for the console.
 	 */
 
+#ifndef MAC_TCL
 	if (Tcl_GetStdChannel(TCL_STDIN) == NULL) {
+#endif
 	    consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console0",
 		    (ClientData) TCL_STDIN, TCL_READABLE);
 	    if (consoleChannel != NULL) {
@@ -141,13 +152,17 @@ Tk_InitConsoleChannels(interp)
 			"-encoding", "utf-8");
 	    }
 	    Tcl_SetStdChannel(consoleChannel, TCL_STDIN);
+#ifndef MAC_TCL
 	}
+#endif
 
 	/*
 	 * check for STDOUT, otherwise create it
 	 */
 	
+#ifndef MAC_TCL
 	if (Tcl_GetStdChannel(TCL_STDOUT) == NULL) {
+#endif
 	    consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console1",
 		    (ClientData) TCL_STDOUT, TCL_WRITABLE);
 	    if (consoleChannel != NULL) {
@@ -159,13 +174,17 @@ Tk_InitConsoleChannels(interp)
 			"-encoding", "utf-8");
 	    }
 	    Tcl_SetStdChannel(consoleChannel, TCL_STDOUT);
+#ifndef MAC_TCL
 	}
+#endif
 	
 	/*
 	 * check for STDERR, otherwise create it
 	 */
 	
+#ifndef MAC_TCL
 	if (Tcl_GetStdChannel(TCL_STDERR) == NULL) {
+#endif
 	    consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console2",
 		    (ClientData) TCL_STDERR, TCL_WRITABLE);
 	    if (consoleChannel != NULL) {
@@ -177,7 +196,9 @@ Tk_InitConsoleChannels(interp)
 			"-encoding", "utf-8");
 	    }
 	    Tcl_SetStdChannel(consoleChannel, TCL_STDERR);
+#ifndef MAC_TCL
 	}
+#endif
     }
     Tcl_MutexUnlock(&consoleMutex);
 }
