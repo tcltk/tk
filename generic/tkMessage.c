@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMessage.c,v 1.7 2000/08/10 00:21:07 ericm Exp $
+ * RCS: @(#) $Id: tkMessage.c,v 1.8 2000/09/06 19:02:01 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -328,7 +328,8 @@ MessageWidgetObjCmd(clientData, interp, objc, objv)
     register Message *msgPtr = (Message *) clientData;
     static char *optionStrings[] = { "cget", "configure", (char *) NULL };
     enum options { MESSAGE_CGET, MESSAGE_CONFIGURE };
-    int index, result;
+    int index;
+    int result = TCL_OK;
     Tcl_Obj *objPtr;
     
     if (objc < 2) {
