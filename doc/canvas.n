@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.4 1999/12/14 06:51:44 hobbs Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.5 1999/12/22 23:01:33 hobbs Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -165,13 +165,13 @@ item or a tag that selects zero or more items.
 \fItagOrId\fR may contain a logical expressions of
 tags by using operators: '&&', '||', '^' '!', and parenthezised
 subexpressions.  For example:
-.nf
+.CS
       .c find withtag {(a&&!b)|(!a&&b)}
-.fo
+.CE
 or equivalently:
-.nf
+.CS
       .c find withtag {a^b}
-.fo
+.CE
 will find only those items with either "a" or "b" tags, but not both.
 .PP
 Some widget commands only operate on a single item at a
