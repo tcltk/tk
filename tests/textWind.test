@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textWind.test,v 1.8 2003/09/30 08:45:46 patthoyts Exp $
+# RCS: @(#) $Id: textWind.test,v 1.9 2003/10/31 09:02:17 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -630,7 +630,7 @@ test textWind-13.1 {EmbWinBboxProc procedure} {
     update
     list [winfo geom .f] [.t bbox .f]
 } {5x5+21+6 {21 6 5 5}}
-test textWind-13.2 {EmbWinBboxProc procedure} {
+test textWind-13.2 {EmbWinBboxProc procedure} {fonts} {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     frame .f -width 5 -height 5 -bg $color
@@ -686,7 +686,7 @@ test textWind-13.8 {EmbWinBboxProc procedure} {fonts} {
     update
     list [winfo geom .f] [.t bbox .f]
 } {5x11+21+6 {21 6 5 11}}
-test textWind-13.9 {EmbWinBboxProc procedure, spacing options} {
+test textWind-13.9 {EmbWinBboxProc procedure, spacing options} {fonts} {
     .t configure -spacing1 5 -spacing3 2
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
@@ -736,7 +736,7 @@ test textWind-14.3 {EmbWinDelayedUnmap procedure} {
     update
     .t yview 2.0
     set result [winfo ismapped .f]
-    update
+    update ; after 10
     list $result [winfo ismapped .f]
 } {1 0}
 test textWind-14.4 {EmbWinDelayedUnmap procedure} {

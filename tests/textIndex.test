@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textIndex.test,v 1.9 2003/05/19 13:04:24 vincentdarley Exp $
+# RCS: @(#) $Id: textIndex.test,v 1.10 2003/10/31 09:02:17 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -694,6 +694,96 @@ test testIndex-18.1 {Object indices don't cache mark names} {
     catch {destroy .t2}
     set res
 } {3.4 3.0 1.0}
+
+frame .f -width 100 -height 20
+pack append . .f left
+
+set fixedFont {Courier -12}
+set fixedHeight [font metrics $fixedFont -linespace]
+set fixedWidth [font measure $fixedFont m]
+
+set varFont {Times -14}
+set bigFont {Helvetica -24}
+destroy .t
+text .t -font $fixedFont -width 20 -height 10 -wrap char
+pack append . .t {top expand fill}
+.t tag configure big -font $bigFont
+.t debug on
+wm geometry . {}
+
+# The statements below reset the main window;  it's needed if the window
+# manager is mwm to make mwm forget about a previous minimum size setting.
+
+wm withdraw .
+wm minsize . 1 1
+wm positionfrom . user
+wm deiconify .
+update
+
+# Some window managers (like olwm under SunOS 4.1.3) misbehave in a way
+# that tends to march windows off the top and left of the screen.  If
+# this happens, some tests will fail because parts of the window will
+# not need to be displayed (because they're off-screen).  To keep this
+# from happening, move the window if it's getting near the left or top
+# edges of the screen.
+
+if {([winfo rooty .] < 50) || ([winfo rootx .] < 50)} {
+    wm geom . +50+50
+}
+
+set str [string repeat "hello " 20]
+
+.t insert end "$str one two three four five six seven height nine ten\n"
+.t insert end "$str one two three four five six seven height nine ten\n"
+.t insert end "$str one two three four five six seven height nine ten\n"
+
+test testIndex-19.1 {Display lines} {
+    .t index "2.7 displaylinestart"
+} {2.0}
+
+test testIndex-19.2 {Display lines} {
+    .t index "2.7 displaylineend"
+} {2.19}
+
+test testIndex-19.3 {Display lines} {
+    .t index "2.30 displaylinestart"
+} {2.20}
+
+test testIndex-19.4 {Display lines} {
+    .t index "2.30 displaylineend"
+} {2.39}
+
+test testIndex-19.5 {Display lines} {
+    .t index "2.40 displaylinestart"
+} {2.40}
+
+test testIndex-19.6 {Display lines} {
+    .t index "2.40 displaylineend"
+} {2.59}
+
+test testIndex-19.7 {Display lines} {
+    .t index "2.7 +1displaylines"
+} {2.27}
+
+test testIndex-19.8 {Display lines} {
+    .t index "2.7 -1displaylines"
+} {1.167}
+
+test testIndex-19.9 {Display lines} {
+    .t index "2.30 +1displaylines"
+} {2.50}
+
+test testIndex-19.10 {Display lines} {
+    .t index "2.30 -1displaylines"
+} {2.10}
+
+test testIndex-19.11 {Display lines} {
+    .t index "2.40 +1displaylines"
+} {2.60}
+
+test testIndex-19.12 {Display lines} {
+    .t index "2.40 -1displaylines"
+} {2.20}
 
 # cleanup
 rename textimage {}
