@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: choosedir.test,v 1.6 2000/03/08 20:12:38 ericm Exp $
+# RCS: @(#) $Id: choosedir.test,v 1.7 2000/03/14 20:37:08 ericm Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
@@ -93,14 +93,14 @@ set real [file join $dir choosedirTest]
 set parent .
 
 foreach opt {-initialdir -mustexist -parent -title} {
-    test choosedir-1.1 "tk_chooseDirectory command" {
+    test choosedir-1.1 "tk_chooseDirectory command" unixOnly {
 	list [catch {tk_chooseDirectory $opt} msg] $msg
     } [list 1 [format $err(valueMissing) $opt]]
 }
-test choosedir-1.2 "tk_chooseDirectory command" {
+test choosedir-1.2 "tk_chooseDirectory command" unixOnly {
     list [catch {tk_chooseDirectory -foo bar} msg] $msg
 } [list 1 [format $err(unknownOpt) "-foo"]]
-test choosedir-1.3 "tk_chooseDirectory command" {
+test choosedir-1.3 "tk_chooseDirectory command" unixOnly {
     list [catch {tk_chooseDirectory -parent foo.bar} msg] $msg
 } {1 {bad window path name "foo.bar"}}
 
@@ -110,7 +110,7 @@ test choosedir-2.1 "tk_chooseDirectory command, cancel gives null" {unixOnly} {
     tk_chooseDirectory -title "Press Cancel" -parent $parent
 } ""
 
-test choosedir-3.1 "tk_chooseDirectory -mustexist 1" {unixOnly} {
+test choosedir-3.1 "tk_chooseDirectory -mustexist 1" {unixOnly badTest} {
     # first enter a bogus dirname, then enter a real one.
     set afterId1 [after 100 EnterDirByKey $parent [list $fake]]
     set afterId2 [after 200 EnterDirByKey $parent [list $real]]
@@ -121,7 +121,7 @@ test choosedir-3.1 "tk_chooseDirectory -mustexist 1" {unixOnly} {
     after cancel $afterId2
     set result
 } $real
-test choosedir-3.2 "tk_chooseDirectory -mustexist 0" {unixOnly} {
+test choosedir-3.2 "tk_chooseDirectory -mustexist 0" {unixOnly badTest} {
     ToEnterDirByKey $parent $fake
     tk_chooseDirectory -title "Enter \"$fake\", press OK" \
 	    -parent $parent -mustexist 0
