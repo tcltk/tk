@@ -1,3 +1,8 @@
+2003-11-21  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
+
+	* macosx/tkMacOSXKeyboard.c: Add PowerBook keycode 0x34 as
+    	<Return>. (Merge from trunk)
+
 2003-11-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	*** 8.4.5 TAGGED FOR RELEASE ***
