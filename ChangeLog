@@ -1,3 +1,8 @@
+2003-07-19  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/scale.tcl: Fix for bug 706765 to correctly handle the 
+	-sliderrelief option while moving the thumb.
+
 2003-07-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkEvent.c (Tk_HandleEvent): correct XCreateIC call for

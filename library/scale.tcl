@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scale widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: scale.tcl,v 1.9 2002/02/26 01:07:08 hobbs Exp $
+# RCS: @(#) $Id: scale.tcl,v 1.9.2.1 2003/07/19 01:15:32 patthoyts Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -139,6 +139,10 @@ proc ::tk::ScaleButtonDown {w x y} {
     variable ::tk::Priv
     set Priv(dragging) 0
     set el [$w identify $x $y]
+
+    # save the relief
+    set Priv($w,relief) [$w cget -sliderrelief]
+
     if {[string equal $el "trough1"]} {
 	ScaleIncrement $w up little initial
     } elseif {[string equal $el "trough2"]} {
@@ -149,7 +153,10 @@ proc ::tk::ScaleButtonDown {w x y} {
 	set coords [$w coords]
 	set Priv(deltaX) [expr {$x - [lindex $coords 0]}]
 	set Priv(deltaY) [expr {$y - [lindex $coords 1]}]
-	$w configure -sliderrelief sunken
+        switch -exact -- $Priv($w,relief) {
+            "raised" { $w configure -sliderrelief sunken }
+            "ridge"  { $w configure -sliderrelief groove }
+        }
     }
 }
 
@@ -181,7 +188,8 @@ proc ::tk::ScaleDrag {w x y} {
 proc ::tk::ScaleEndDrag {w} {
     variable ::tk::Priv
     set Priv(dragging) 0
-    $w configure -sliderrelief raised
+    $w configure -sliderrelief $Priv($w,relief)
+    unset Priv($w,relief)
 }
 
 # ::tk::ScaleIncrement --
