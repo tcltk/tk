@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.18 2000/02/10 08:55:47 jingham Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.19 2001/08/01 16:21:11 dgp Exp $
  */
 
 #include "tkMacInt.h"
@@ -3340,7 +3340,7 @@ TkMacHandleTearoffMenu(void)
     	
     	if (windowPart != inMenuBar) {
     	    Tcl_DStringInit(&tearoffCmdStr);
-    	    Tcl_DStringAppendElement(&tearoffCmdStr, "tkTearOffMenu");
+    	    Tcl_DStringAppendElement(&tearoffCmdStr, "tk::TearOffMenu");
     	    Tcl_DStringAppendElement(&tearoffCmdStr, 
     		    Tk_PathName(tearoffStruct.menuPtr->tkwin));
 	    sprintf(intString, "%d", tearoffStruct.point.h);

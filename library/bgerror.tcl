@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.15 2001/06/14 10:56:58 dkf Exp $
-# $Id: bgerror.tcl,v 1.15 2001/06/14 10:56:58 dkf Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.16 2001/08/01 16:21:11 dgp Exp $
+# $Id: bgerror.tcl,v 1.16 2001/08/01 16:21:11 dgp Exp $
 
 option add *ErrorDialog.function.text [::msgcat::mc "Save To Log"] \
 	widgetDefault
@@ -73,7 +73,7 @@ proc ::tk::dialog::error::Destroy {w} {
     }
 }
 
-# bgerror --
+# ::bgerror --
 # This is the default version of bgerror. 
 # It tries to execute tkerror, if that fails it posts a dialog box containing
 # the error message and gives the user a chance to ask to see a stack
@@ -81,7 +81,7 @@ proc ::tk::dialog::error::Destroy {w} {
 # Arguments:
 # err -			The error message.
 
-proc bgerror err {
+proc ::bgerror err {
     global errorInfo tcl_platform
     set butvar ::tk::dialog::error::button
 
@@ -262,7 +262,7 @@ proc bgerror err {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    tkwait variable $butvar
+    vwait $butvar
     set button $::tk::dialog::error::button; # Save a copy...
     catch {focus $oldFocus}
     catch {destroy .bgerrorDialog}

@@ -7,11 +7,11 @@
 #	The "TK" standard file selection dialog box is similar to the
 #	file selection dialog box on Win95(TM). The user can navigate
 #	the directories by clicking on the folder icons or by
-#	selectinf the "Directory" option menu. The user can select
+#	selecting the "Directory" option menu. The user can select
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.26 2001/07/19 20:15:55 drh Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.27 2001/08/01 16:21:11 dgp Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -24,24 +24,22 @@
 #		      I C O N   L I S T
 #
 # This is a pseudo-widget that implements the icon list inside the 
-# tkFDialog dialog box.
+# ::tk::dialog::file:: dialog box.
 #
 #----------------------------------------------------------------------
 
-# tkIconList --
+# ::tk::IconList --
 #
 #	Creates an IconList widget.
 #
-proc tkIconList {w args} {
-    upvar #0 $w data
-
-    tkIconList_Config $w $args
-    tkIconList_Create $w
+proc ::tk::IconList {w args} {
+    IconList_Config $w $args
+    IconList_Create $w
 }
 
-proc tkIconList_Index {w i} {
-    upvar #0 $w data
-    upvar #0 $w:itemList itemList
+proc ::tk::IconList_Index {w i} {
+    upvar #0 ::tk::$w data
+    upvar #0 ::tk::$w:itemList itemList
     if {![info exists data(list)]} {set data(list) {}}
     switch -regexp -- $i {
 	"^-?[0-9]+$" {
@@ -72,12 +70,12 @@ proc tkIconList_Index {w i} {
     }
 }
 
-proc tkIconList_Selection {w op args} {
-    upvar #0 $w data
+proc ::tk::IconList_Selection {w op args} {
+    upvar ::tk::$w data
     switch -exact -- $op {
 	"anchor" {
 	    if { [llength $args] == 1 } {
-		set data(index,anchor) [tkIconList_Index $w [lindex $args 0]]
+		set data(index,anchor) [tk::IconList_Index $w [lindex $args 0]]
 	    } else {
 		return $data(index,anchor)
 	    }
@@ -90,11 +88,11 @@ proc tkIconList_Selection {w op args} {
 	    } elseif { [llength $args] == 1 } {
 		set first [set last [lindex $args 0]]
 	    } else {
-		error "wrong # args: should be tkIconList_Selection path\
+		error "wrong # args: should be [lindex [info level 0] 0] path\
 			clear first ?last?"
 	    }
-	    set first [tkIconList_Index $w $first]
-	    set last [tkIconList_Index $w $last]
+	    set first [IconList_Index $w $first]
+	    set last [IconList_Index $w $last]
 	    if { $first > $last } {
 		set tmp $first
 		set first $last
@@ -121,7 +119,7 @@ proc tkIconList_Selection {w op args} {
 	    }
 	    set data(selection) [lreplace $data(selection) $first $last]
 	    event generate $w <<ListboxSelect>>
-	    tkIconList_DrawSelection $w
+	    IconList_DrawSelection $w
 	}
 	"includes" {
 	    set index [lsearch -exact $data(selection) [lindex $args 0]]
@@ -135,12 +133,12 @@ proc tkIconList_Selection {w op args} {
 	    } elseif { [llength $args] == 1 } {
 		set last [set first [lindex $args 0]]
 	    } else {
-		error "wrong # args: should be tkIconList_Selection path\
+		error "wrong # args: should be [lindex [info level 0] 0] path\
 			set first ?last?"
 	    }
 
-	    set first [tkIconList_Index $w $first]
-	    set last [tkIconList_Index $w $last]
+	    set first [IconList_Index $w $first]
+	    set last [IconList_Index $w $last]
 	    if { $first > $last } {
 		set tmp $first
 		set first $last
@@ -151,19 +149,19 @@ proc tkIconList_Selection {w op args} {
 	    }
 	    set data(selection) [lsort -integer -unique $data(selection)]
 	    event generate $w <<ListboxSelect>>
-	    tkIconList_DrawSelection $w
+	    IconList_DrawSelection $w
 	}
     }
 }
 
-proc tkIconList_Curselection {w} {
-    upvar #0 $w data
+proc ::tk::IconList_Curselection {w} {
+    upvar ::tk::$w data
     return $data(selection)
 }
 
-proc tkIconList_DrawSelection {w} {
-    upvar #0 $w data
-    upvar #0 $w:itemList itemList
+proc ::tk::IconList_DrawSelection {w} {
+    upvar ::tk::$w data
+    upvar ::tk::$w:itemList itemList
 
     $data(canvas) delete selection
     foreach item $data(selection) {
@@ -180,9 +178,9 @@ proc tkIconList_DrawSelection {w} {
     return
 }
 
-proc tkIconList_Get {w item} {
-    upvar #0 $w data
-    upvar #0 $w:itemList itemList
+proc ::tk::IconList_Get {w item} {
+    upvar ::tk::$w data
+    upvar ::tk::$w:itemList itemList
     set rTag [lindex [lindex $data(list) $item] 2]
     foreach {iTag tTag text serial} $itemList($rTag) {
 	break
@@ -190,13 +188,12 @@ proc tkIconList_Get {w item} {
     return $text
 }
 
-# tkIconList_Config --
+# ::tk::IconList_Config --
 #
 #	Configure the widget variables of IconList, according to the command
 #	line arguments.
 #
-proc tkIconList_Config {w argList} {
-    upvar #0 $w data
+proc ::tk::IconList_Config {w argList} {
 
     # 1: the configuration specs
     #
@@ -207,17 +204,17 @@ proc tkIconList_Config {w argList} {
 
     # 2: parse the arguments
     #
-    tclParseConfigSpec $w $specs "" $argList
+    tclParseConfigSpec ::tk::$w $specs "" $argList
 }
 
-# tkIconList_Create --
+# ::tk::IconList_Create --
 #
 #	Creates an IconList widget by assembling a canvas widget and a
 #	scrollbar widget. Sets all the bindings necessary for the IconList's
 #	operations.
 #
-proc tkIconList_Create {w} {
-    upvar #0 $w data
+proc ::tk::IconList_Create {w} {
+    upvar ::tk::$w data
 
     frame $w
     set data(sbar)   [scrollbar $w.sbar -orient horizontal \
@@ -244,34 +241,34 @@ proc tkIconList_Create {w} {
 
     # Creates the event bindings.
     #
-    bind $data(canvas) <Configure>	[list tkIconList_Arrange $w]
+    bind $data(canvas) <Configure>	[list tk::IconList_Arrange $w]
 
-    bind $data(canvas) <1>		[list tkIconList_Btn1 $w %x %y]
-    bind $data(canvas) <B1-Motion>	[list tkIconList_Motion1 $w %x %y]
-    bind $data(canvas) <B1-Leave>	[list tkIconList_Leave1 $w %x %y]
-    bind $data(canvas) <Control-1>	[list tkIconList_CtrlBtn1 $w %x %y]
-    bind $data(canvas) <Shift-1>	[list tkIconList_ShiftBtn1 $w %x %y]
-    bind $data(canvas) <B1-Enter>	[list tkCancelRepeat]
-    bind $data(canvas) <ButtonRelease-1> [list tkCancelRepeat]
+    bind $data(canvas) <1>		[list tk::IconList_Btn1 $w %x %y]
+    bind $data(canvas) <B1-Motion>	[list tk::IconList_Motion1 $w %x %y]
+    bind $data(canvas) <B1-Leave>	[list tk::IconList_Leave1 $w %x %y]
+    bind $data(canvas) <Control-1>	[list tk::IconList_CtrlBtn1 $w %x %y]
+    bind $data(canvas) <Shift-1>	[list tk::IconList_ShiftBtn1 $w %x %y]
+    bind $data(canvas) <B1-Enter>	[list tk::CancelRepeat]
+    bind $data(canvas) <ButtonRelease-1> [list tk::CancelRepeat]
     bind $data(canvas) <Double-ButtonRelease-1> \
-	    [list tkIconList_Double1 $w %x %y]
+	    [list tk::IconList_Double1 $w %x %y]
 
-    bind $data(canvas) <Up>		[list tkIconList_UpDown $w -1]
-    bind $data(canvas) <Down>		[list tkIconList_UpDown $w  1]
-    bind $data(canvas) <Left>		[list tkIconList_LeftRight $w -1]
-    bind $data(canvas) <Right>		[list tkIconList_LeftRight $w  1]
-    bind $data(canvas) <Return>		[list tkIconList_ReturnKey $w]
-    bind $data(canvas) <KeyPress>	[list tkIconList_KeyPress $w %A]
+    bind $data(canvas) <Up>		[list tk::IconList_UpDown $w -1]
+    bind $data(canvas) <Down>		[list tk::IconList_UpDown $w  1]
+    bind $data(canvas) <Left>		[list tk::IconList_LeftRight $w -1]
+    bind $data(canvas) <Right>		[list tk::IconList_LeftRight $w  1]
+    bind $data(canvas) <Return>		[list tk::IconList_ReturnKey $w]
+    bind $data(canvas) <KeyPress>	[list tk::IconList_KeyPress $w %A]
     bind $data(canvas) <Control-KeyPress> ";"
     bind $data(canvas) <Alt-KeyPress>	";"
 
-    bind $data(canvas) <FocusIn>	[list tkIconList_FocusIn $w]
-    bind $data(canvas) <FocusOut>	[list tkIconList_FocusOut $w]
+    bind $data(canvas) <FocusIn>	[list tk::IconList_FocusIn $w]
+    bind $data(canvas) <FocusOut>	[list tk::IconList_FocusOut $w]
 
     return $w
 }
 
-# tkIconList_AutoScan --
+# ::tk::IconList_AutoScan --
 #
 # This procedure is invoked when the mouse leaves an entry window
 # with button 1 down.  It scrolls the window up, down, left, or
@@ -282,13 +279,13 @@ proc tkIconList_Create {w} {
 # Arguments:
 # w -		The IconList window.
 #
-proc tkIconList_AutoScan {w} {
-    upvar #0 $w data
-    global tkPriv
+proc ::tk::IconList_AutoScan {w} {
+    upvar ::tk::$w data
+    variable ::tk::Priv
 
     if {![winfo exists $w]} return
-    set x $tkPriv(x)
-    set y $tkPriv(y)
+    set x $Priv(x)
+    set y $Priv(y)
 
     if {$data(noScroll)} {
 	return
@@ -305,16 +302,16 @@ proc tkIconList_AutoScan {w} {
 	return
     }
 
-    tkIconList_Motion1 $w $x $y
-    set tkPriv(afterId) [after 50 [list tkIconList_AutoScan $w]]
+    IconList_Motion1 $w $x $y
+    set Priv(afterId) [after 50 [list tk::IconList_AutoScan $w]]
 }
 
 # Deletes all the items inside the canvas subwidget and reset the IconList's
 # state.
 #
-proc tkIconList_DeleteAll {w} {
-    upvar #0 $w data
-    upvar #0 $w:itemList itemList
+proc ::tk::IconList_DeleteAll {w} {
+    upvar ::tk::$w data
+    upvar ::tk::$w:itemList itemList
 
     $data(canvas) delete all
     catch {unset data(selected)}
@@ -336,10 +333,10 @@ proc tkIconList_DeleteAll {w} {
 
 # Adds an icon into the IconList with the designated image and text
 #
-proc tkIconList_Add {w image items} {
-    upvar #0 $w data
-    upvar #0 $w:itemList itemList
-    upvar #0 $w:textList textList
+proc ::tk::IconList_Add {w image items} {
+    upvar ::tk::$w data
+    upvar ::tk::$w:itemList itemList
+    upvar ::tk::$w:textList textList
 
     foreach text $items {
 	set iTag [$data(canvas) create image 0 0 -image $image -anchor nw \
@@ -384,8 +381,8 @@ proc tkIconList_Add {w image items} {
 
 # Places the icons in a column-major arrangement.
 #
-proc tkIconList_Arrange {w} {
-    upvar #0 $w data
+proc ::tk::IconList_Arrange {w} {
+    upvar ::tk::$w data
 
     if {![info exists data(list)]} {
 	if {[info exists data(canvas)] && [winfo exists $data(canvas)]} {
@@ -462,28 +459,28 @@ proc tkIconList_Arrange {w} {
     }
 
     if {$data(curItem) != ""} {
-	tkIconList_Select $w [lindex [lindex $data(list) $data(curItem)] 2] 0
+	IconList_Select $w [lindex [lindex $data(list) $data(curItem)] 2] 0
     }
 }
 
 # Gets called when the user invokes the IconList (usually by double-clicking
 # or pressing the Return key).
 #
-proc tkIconList_Invoke {w} {
-    upvar #0 $w data
+proc ::tk::IconList_Invoke {w} {
+    upvar ::tk::$w data
 
     if {$data(-command) != "" && [llength $data(selection)]} {
 	uplevel #0 $data(-command)
     }
 }
 
-# tkIconList_See --
+# ::tk::IconList_See --
 #
 #	If the item is not (completely) visible, scroll the canvas so that
 #	it becomes visible.
-proc tkIconList_See {w rTag} {
-    upvar #0 $w data
-    upvar #0 $w:itemList itemList
+proc ::tk::IconList_See {w rTag} {
+    upvar ::tk::$w data
+    upvar ::tk::$w:itemList itemList
 
     if {$data(noScroll)} {
 	return
@@ -529,103 +526,103 @@ proc tkIconList_See {w rTag} {
     }
 }
 
-proc tkIconList_Btn1 {w x y} {
-    upvar #0 $w data
+proc ::tk::IconList_Btn1 {w x y} {
+    upvar ::tk::$w data
 
     focus $data(canvas)
     set x [expr {int([$data(canvas) canvasx $x])}]
     set y [expr {int([$data(canvas) canvasy $y])}]
-    set i [tkIconList_Index $w @${x},${y}]
-    tkIconList_Selection $w clear 0 end
-    tkIconList_Selection $w set $i
-    tkIconList_Selection $w anchor $i
+    set i [IconList_Index $w @${x},${y}]
+    IconList_Selection $w clear 0 end
+    IconList_Selection $w set $i
+    IconList_Selection $w anchor $i
 }
 
-proc tkIconList_CtrlBtn1 {w x y} {
-    upvar #0 $w data
+proc ::tk::IconList_CtrlBtn1 {w x y} {
+    upvar ::tk::$w data
     
     if { $data(-multiple) } {
 	focus $data(canvas)
 	set x [expr {int([$data(canvas) canvasx $x])}]
 	set y [expr {int([$data(canvas) canvasy $y])}]
-	set i [tkIconList_Index $w @${x},${y}]
-	if { [tkIconList_Selection $w includes $i] } {
-	    tkIconList_Selection $w clear $i
+	set i [IconList_Index $w @${x},${y}]
+	if { [IconList_Selection $w includes $i] } {
+	    IconList_Selection $w clear $i
 	} else {
-	    tkIconList_Selection $w set $i
-	    tkIconList_Selection $w anchor $i
+	    IconList_Selection $w set $i
+	    IconList_Selection $w anchor $i
 	}
     }
 }
 
-proc tkIconList_ShiftBtn1 {w x y} {
-    upvar #0 $w data
+proc ::tk::IconList_ShiftBtn1 {w x y} {
+    upvar ::tk::$w data
     
     if { $data(-multiple) } {
 	focus $data(canvas)
 	set x [expr {int([$data(canvas) canvasx $x])}]
 	set y [expr {int([$data(canvas) canvasy $y])}]
-	set i [tkIconList_Index $w @${x},${y}]
-	set a [tkIconList_Index $w anchor]
+	set i [IconList_Index $w @${x},${y}]
+	set a [IconList_Index $w anchor]
 	if { [string equal $a ""] } {
 	    set a $i
 	}
-	tkIconList_Selection $w clear 0 end
-	tkIconList_Selection $w set $a $i
+	IconList_Selection $w clear 0 end
+	IconList_Selection $w set $a $i
     }
 }
 
 # Gets called on button-1 motions
 #
-proc tkIconList_Motion1 {w x y} {
-    upvar #0 $w data
-    global tkPriv
-    set tkPriv(x) $x
-    set tkPriv(y) $y
+proc ::tk::IconList_Motion1 {w x y} {
+    upvar ::tk::$w data
+    variable ::tk::Priv
+    set Priv(x) $x
+    set Priv(y) $y
     set x [expr {int([$data(canvas) canvasx $x])}]
     set y [expr {int([$data(canvas) canvasy $y])}]
-    set i [tkIconList_Index $w @${x},${y}]
-    tkIconList_Selection $w clear 0 end
-    tkIconList_Selection $w set $i
+    set i [IconList_Index $w @${x},${y}]
+    IconList_Selection $w clear 0 end
+    IconList_Selection $w set $i
 }
 
-proc tkIconList_Double1 {w x y} {
-    upvar #0 $w data
+proc ::tk::IconList_Double1 {w x y} {
+    upvar ::tk::$w data
 
     if {[llength $data(selection)]} {
-	tkIconList_Invoke $w
+	IconList_Invoke $w
     }
 }
 
-proc tkIconList_ReturnKey {w} {
-    tkIconList_Invoke $w
+proc ::tk::IconList_ReturnKey {w} {
+    IconList_Invoke $w
 }
 
-proc tkIconList_Leave1 {w x y} {
-    global tkPriv
+proc ::tk::IconList_Leave1 {w x y} {
+    variable ::tk::Priv
 
-    set tkPriv(x) $x
-    set tkPriv(y) $y
-    tkIconList_AutoScan $w
+    set Priv(x) $x
+    set Priv(y) $y
+    IconList_AutoScan $w
 }
 
-proc tkIconList_FocusIn {w} {
-    upvar #0 $w data
+proc ::tk::IconList_FocusIn {w} {
+    upvar ::tk::$w data
 
     if {![info exists data(list)]} {
 	return
     }
 
     if {[llength $data(selection)]} {
-	tkIconList_DrawSelection $w
+	IconList_DrawSelection $w
     }
 }
 
-proc tkIconList_FocusOut {w} {
-    tkIconList_Selection $w clear 0 end
+proc ::tk::IconList_FocusOut {w} {
+    IconList_Selection $w clear 0 end
 }
 
-# tkIconList_UpDown --
+# ::tk::IconList_UpDown --
 #
 # Moves the active element up or down by one element
 #
@@ -633,27 +630,27 @@ proc tkIconList_FocusOut {w} {
 # w -		The IconList widget.
 # amount -	+1 to move down one item, -1 to move back one item.
 #
-proc tkIconList_UpDown {w amount} {
-    upvar #0 $w data
+proc ::tk::IconList_UpDown {w amount} {
+    upvar ::tk::$w data
 
     if {![info exists data(list)]} {
 	return
     }
 
-    set curr [tkIconList_Curselection $w]
+    set curr [tk::IconList_Curselection $w]
     if { [llength $curr] == 0 } {
 	set i 0
     } else {
-	set i [tkIconList_Index $w anchor]
+	set i [tk::IconList_Index $w anchor]
 	incr i $amount
     }
-    tkIconList_Selection $w clear 0 end
-    tkIconList_Selection $w set $i
-    tkIconList_Selection $w anchor $i
-    tkIconList_See $w $i
+    IconList_Selection $w clear 0 end
+    IconList_Selection $w set $i
+    IconList_Selection $w anchor $i
+    IconList_See $w $i
 }
 
-# tkIconList_LeftRight --
+# ::tk::IconList_LeftRight --
 #
 # Moves the active element left or right by one column
 #
@@ -661,49 +658,49 @@ proc tkIconList_UpDown {w amount} {
 # w -		The IconList widget.
 # amount -	+1 to move right one column, -1 to move left one column.
 #
-proc tkIconList_LeftRight {w amount} {
-    upvar #0 $w data
+proc ::tk::IconList_LeftRight {w amount} {
+    upvar ::tk::$w data
 
     if {![info exists data(list)]} {
 	return
     }
 
-    set curr [tkIconList_Curselection $w]
+    set curr [IconList_Curselection $w]
     if { [llength $curr] == 0 } {
 	set i 0
     } else {
-	set i [tkIconList_Index $w anchor]
+	set i [IconList_Index $w anchor]
 	incr i [expr {$amount*$data(itemsPerColumn)}]
     }
-    tkIconList_Selection $w clear 0 end
-    tkIconList_Selection $w set $i
-    tkIconList_Selection $w anchor $i
-    tkIconList_See $w $i
+    IconList_Selection $w clear 0 end
+    IconList_Selection $w set $i
+    IconList_Selection $w anchor $i
+    IconList_See $w $i
 }
 
 #----------------------------------------------------------------------
 #		Accelerator key bindings
 #----------------------------------------------------------------------
 
-# tkIconList_KeyPress --
+# ::tk::IconList_KeyPress --
 #
 #	Gets called when user enters an arbitrary key in the listbox.
 #
-proc tkIconList_KeyPress {w key} {
-    global tkPriv
+proc ::tk::IconList_KeyPress {w key} {
+    variable ::tk::Priv
 
-    append tkPriv(ILAccel,$w) $key
-    tkIconList_Goto $w $tkPriv(ILAccel,$w)
+    append Priv(ILAccel,$w) $key
+    IconList_Goto $w $Priv(ILAccel,$w)
     catch {
-	after cancel $tkPriv(ILAccel,$w,afterId)
+	after cancel $Priv(ILAccel,$w,afterId)
     }
-    set tkPriv(ILAccel,$w,afterId) [after 500 [list tkIconList_Reset $w]]
+    set Priv(ILAccel,$w,afterId) [after 500 [list tk::IconList_Reset $w]]
 }
 
-proc tkIconList_Goto {w text} {
-    upvar #0 $w data
-    upvar #0 $w:textList textList
-    global tkPriv
+proc ::tk::IconList_Goto {w text} {
+    upvar ::tk::$w data
+    upvar ::tk::$w:textList textList
+    variable ::tk::Priv
     
     if {![info exists data(list)]} {
 	return
@@ -744,17 +741,17 @@ proc tkIconList_Goto {w text} {
     }
 
     if {$theIndex > -1} {
-	tkIconList_Selection $w clear 0 end
-	tkIconList_Selection $w set $theIndex
-	tkIconList_Selection $w anchor $theIndex
-	tkIconList_See $w $theIndex
+	IconList_Selection $w clear 0 end
+	IconList_Selection $w set $theIndex
+	IconList_Selection $w anchor $theIndex
+	IconList_See $w $theIndex
     }
 }
 
-proc tkIconList_Reset {w} {
-    global tkPriv
+proc ::tk::IconList_Reset {w} {
+    variable ::tk::Priv
 
-    catch {unset tkPriv(ILAccel,$w)}
+    catch {unset Priv(ILAccel,$w)}
 }
 
 #----------------------------------------------------------------------
@@ -766,7 +763,7 @@ proc tkIconList_Reset {w} {
 namespace eval ::tk::dialog {}
 namespace eval ::tk::dialog::file {}
 
-# ::tk::dialog::file::tkFDialog --
+# ::tk::dialog::file:: --
 #
 #	Implements the TK file selection dialog. This dialog is used when
 #	the tk_strictMotif flag is set to false. This procedure shouldn't
@@ -777,8 +774,8 @@ namespace eval ::tk::dialog::file {}
 #	args		Options parsed by the procedure.
 #
 
-proc ::tk::dialog::file::tkFDialog {type args} {
-    global tkPriv
+proc ::tk::dialog::file:: {type args} {
+    variable ::tk::Priv
     set dataName __tk_filedialog
     upvar ::tk::dialog::file::$dataName data
 
@@ -860,7 +857,7 @@ proc ::tk::dialog::file::tkFDialog {type args} {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    tkwait variable tkPriv(selectFilePath)
+    vwait tk::Priv(selectFilePath)
 
     ::tk::RestoreFocusGrab $w $data(ent) withdraw
 
@@ -872,7 +869,7 @@ proc ::tk::dialog::file::tkFDialog {type args} {
     }
     $data(dirMenuBtn) configure -textvariable {}
 
-    return $tkPriv(selectFilePath)
+    return $Priv(selectFilePath)
 }
 
 # ::tk::dialog::file::Config --
@@ -947,7 +944,7 @@ proc ::tk::dialog::file::Config {dataName type argList} {
 
     # 5. Parse the -filetypes option
     #
-    set data(-filetypes) [tkFDGetFileTypes $data(-filetypes)]
+    set data(-filetypes) [::tk::FDGetFileTypes $data(-filetypes)]
 
     if {![winfo exists $data(-parent)]} {
 	error "bad window path name \"$data(-parent)\""
@@ -969,7 +966,8 @@ proc ::tk::dialog::file::Config {dataName type argList} {
 proc ::tk::dialog::file::Create {w class} {
     set dataName [lindex [split $w .] end]
     upvar ::tk::dialog::file::$dataName data
-    global tk_library tkPriv
+    variable ::tk::Priv
+    global tk_library
 
     toplevel $w -class $class
 
@@ -980,8 +978,8 @@ proc ::tk::dialog::file::Create {w class} {
     set data(dirMenuBtn) $f1.menu
     set data(dirMenu) [tk_optionMenu $f1.menu [format %s(selectPath) ::tk::dialog::file::$dataName] ""]
     set data(upBtn) [button $f1.up]
-    if {![info exists tkPriv(updirImage)]} {
-	set tkPriv(updirImage) [image create bitmap -data {
+    if {![info exists Priv(updirImage)]} {
+	set Priv(updirImage) [image create bitmap -data {
 #define updir_width 28
 #define updir_height 16
 static char updir_bits[] = {
@@ -992,7 +990,7 @@ static char updir_bits[] = {
    0x10, 0xfe, 0x07, 0x01, 0x10, 0x00, 0x00, 0x01, 0x10, 0x00, 0x00, 0x01,
    0xf0, 0xff, 0xff, 0x01};}]
     }
-    $data(upBtn) config -image $tkPriv(updirImage)
+    $data(upBtn) config -image $Priv(updirImage)
 
     $f1.menu config -takefocus 1 -highlightthickness 2
  
@@ -1019,7 +1017,7 @@ static char updir_bits[] = {
 	set fCaptionWidth [string length $fNameCaption]
 	set iconListCommand [list ::tk::dialog::file::chooseDir::DblClick $w]
     }
-    set data(icons) [tkIconList $w.icons \
+    set data(icons) [::tk::IconList $w.icons \
 	    -command	$iconListCommand \
 	    -multiple	$data(-multiple)]
     bind $data(icons) <<ListboxSelect>> \
@@ -1034,8 +1032,7 @@ static char updir_bits[] = {
 
     # The font to use for the icons. The default Canvas font on Unix
     # is just deviant.
-    global $w.icons
-    set $w.icons(font) [$data(ent) cget -font]
+    set ::tk::$w.icons(font) [$data(ent) cget -font]
 
     # f3: the frame with the cancel button and the file types field
     #
@@ -1100,8 +1097,8 @@ static char updir_bits[] = {
     wm protocol $w WM_DELETE_WINDOW [list ::tk::dialog::file::CancelCmd $w]
     $data(upBtn)     config -command [list ::tk::dialog::file::UpDirCmd $w]
     $data(cancelBtn) config -command [list ::tk::dialog::file::CancelCmd $w]
-    bind $w <KeyPress-Escape> [list tkButtonInvoke $data(cancelBtn)]
-    bind $w <Alt-c> [list tkButtonInvoke $data(cancelBtn)]
+    bind $w <KeyPress-Escape> [list tk::ButtonInvoke $data(cancelBtn)]
+    bind $w <Alt-c> [list tk::ButtonInvoke $data(cancelBtn)]
     bind $w <Alt-d> [list focus $data(dirMenuBtn)]
 
     # Set up event handlers specific to File or Directory Dialogs
@@ -1123,14 +1120,14 @@ static char updir_bits[] = {
 	bind $data(ent) <Return> $okCmd
 	$data(okBtn) config -command $okCmd
 	bind $w <Alt-s> [list focus $data(ent)]
-	bind $w <Alt-o> [list tkButtonInvoke $data(okBtn)]
+	bind $w <Alt-o> [list tk::ButtonInvoke $data(okBtn)]
     }
 
     # Build the focus group for all the entries
     #
-    tkFocusGroup_Create $w
-    tkFocusGroup_BindIn $w  $data(ent) [list ::tk::dialog::file::EntFocusIn $w]
-    tkFocusGroup_BindOut $w $data(ent) [list ::tk::dialog::file::EntFocusOut $w]
+    ::tk::FocusGroup_Create $w
+    ::tk::FocusGroup_BindIn $w  $data(ent) [list ::tk::dialog::file::EntFocusIn $w]
+    ::tk::FocusGroup_BindOut $w $data(ent) [list ::tk::dialog::file::EntFocusOut $w]
 }
 
 # ::tk::dialog::file::SetSelectMode --
@@ -1155,7 +1152,7 @@ proc ::tk::dialog::file::SetSelectMode {w multi} {
     set fNameUnder 5
     set iconListCommand [list ::tk::dialog::file::OkCmd $w]
     $w.f2.lab configure -text $fNameCaption -under $fNameUnder
-    tkIconList_Config $data(icons) \
+    ::tk::IconList_Config $data(icons) \
 	    [list -multiple $multi -command $iconListCommand]
     return
 }
@@ -1198,19 +1195,20 @@ proc ::tk::dialog::file::Update {w} {
 
     set dataName [winfo name $w]
     upvar ::tk::dialog::file::$dataName data
-    global tk_library tkPriv
+    variable ::tk::Priv
+    global tk_library
     catch {unset data(updateId)}
 
-    if {![info exists tkPriv(folderImage)]} {
-	set tkPriv(folderImage) [image create photo -data {
+    if {![info exists Priv(folderImage)]} {
+	set Priv(folderImage) [image create photo -data {
 R0lGODlhEAAMAKEAAAD//wAAAPD/gAAAACH5BAEAAAAALAAAAAAQAAwAAAIghINhyycvVFsB
 QtmS3rjaH1Hg141WaT5ouprt2HHcUgAAOw==}]
-	set tkPriv(fileImage)   [image create photo -data {
+	set Priv(fileImage)   [image create photo -data {
 R0lGODlhDAAMAKEAALLA3AAAAP//8wAAACH5BAEAAAAALAAAAAAMAAwAAAIgRI4Ha+IfWHsO
 rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     }
-    set folder $tkPriv(folderImage)
-    set file   $tkPriv(fileImage)
+    set folder $Priv(folderImage)
+    set file   $Priv(fileImage)
 
     set appPWD [pwd]
     if {[catch {
@@ -1236,7 +1234,7 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     $w         config -cursor watch
     update idletasks
     
-    tkIconList_DeleteAll $data(icons)
+    ::tk::IconList_DeleteAll $data(icons)
 
     # Make the dir list
     #
@@ -1253,7 +1251,7 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	    lappend dirList $f
 	}
     }
-    tkIconList_Add $data(icons) $folder $dirList
+    ::tk::IconList_Add $data(icons) $folder $dirList
     if { [string equal $class TkFDialog] } {
 	# Make the file list if this is a File Dialog
 	#
@@ -1276,10 +1274,10 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 		lappend fileList $f
 	    }
 	}
-	tkIconList_Add $data(icons) $file $fileList
+	::tk::IconList_Add $data(icons) $file $fileList
     }
 
-    tkIconList_Arrange $data(icons)
+    ::tk::IconList_Arrange $data(icons)
 
     # Update the Directory: option menu
     #
@@ -1357,7 +1355,7 @@ proc ::tk::dialog::file::SetPath {w name1 name2 op} {
 #
 proc ::tk::dialog::file::SetFilter {w type} {
     upvar ::tk::dialog::file::[winfo name $w] data
-    upvar \#0 $data(icons) icons
+    upvar ::tk::$data(icons) icons
 
     set data(filter) [lindex $type 1]
     $data(typeMenuBtn) config -text [lindex $type 0] -indicatoron 1
@@ -1593,7 +1591,7 @@ proc ::tk::dialog::file::InvokeBtn {w key} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
     if {[string equal [$data(okBtn) cget -text] $key]} {
-	tkButtonInvoke $data(okBtn)
+	::tk::ButtonInvoke $data(okBtn)
     }
 }
 
@@ -1624,8 +1622,8 @@ proc ::tk::dialog::file::OkCmd {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
     set text {}
-    foreach item [tkIconList_Curselection $data(icons)] {
-	lappend text [tkIconList_Get $data(icons) $item]
+    foreach item [::tk::IconList_Curselection $data(icons)] {
+	lappend text [::tk::IconList_Get $data(icons) $item]
     }
 
     if {([llength $text] && !$data(-multiple)) || \
@@ -1645,9 +1643,9 @@ proc ::tk::dialog::file::OkCmd {w} {
 #
 proc ::tk::dialog::file::CancelCmd {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
-    global tkPriv
+    variable ::tk::Priv
 
-    set tkPriv(selectFilePath) ""
+    set Priv(selectFilePath) ""
 }
 
 # Gets called when user browses the IconList widget (dragging mouse, arrow
@@ -1657,8 +1655,8 @@ proc ::tk::dialog::file::ListBrowse {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
     set text {}
-    foreach item [tkIconList_Curselection $data(icons)] {
-	lappend text [tkIconList_Get $data(icons) $item]
+    foreach item [::tk::IconList_Curselection $data(icons)] {
+	lappend text [::tk::IconList_Get $data(icons) $item]
     }
     if {[llength $text] == 0} {
 	return
@@ -1733,13 +1731,13 @@ proc ::tk::dialog::file::ListInvoke {w text} {
 #
 #	Gets called when user has input a valid filename.  Pops up a
 #	dialog box to confirm selection when necessary. Sets the
-#	tkPriv(selectFilePath) variable, which will break the "tkwait"
-#	loop in tkFDialog and return the selected filename to the
+#	tk::Priv(selectFilePath) variable, which will break the "vwait"
+#	loop in ::tk::dialog::file:: and return the selected filename to the
 #	script that calls tk_getOpenFile or tk_getSaveFile
 #
 proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
     upvar ::tk::dialog::file::[winfo name $w] data
-    global tkPriv
+    variable ::tk::Priv
 
     if {[string equal $selectFilePath ""]} {
 	if {$data(-multiple)} {
@@ -1753,8 +1751,8 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
 		    $data(selectPath) $data(selectFile)]
 	}
 	
-	set tkPriv(selectFile)     $data(selectFile)
-	set tkPriv(selectPath)     $data(selectPath)
+	set Priv(selectFile)     $data(selectFile)
+	set Priv(selectPath)     $data(selectPath)
 
 	if {[string equal $data(type) save]} {
 	    if {[file exists $selectFilePath]} {
@@ -1767,5 +1765,5 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
 	    }
 	}
     }
-    set tkPriv(selectFilePath) $selectFilePath
+    set Priv(selectFilePath) $selectFilePath
 }
