@@ -1,5 +1,11 @@
 2002-06-14  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkCmds.c (Tk_TkObjCmd): 
+	* unix/tkUnixKey.c (TkpGetString): 
+	* generic/tkEvent.c (Tk_HandleEvent): 
+	* generic/tkInt.h: changed useInputMethods boolean from int to a
+	bit in the flags variable (TK_DISPLAY_USE_IM)
+
 	* generic/tkInt.h:
 	* generic/tkCmds.c (Tk_WmObjCmd): 
 	* unix/tkUnixWm.c (Tk_WmCmd): 
