@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacHLEvents.c,v 1.3 1999/04/16 01:51:31 stanton Exp $
+ * RCS: @(#) $Id: tkMacHLEvents.c,v 1.4 1999/12/21 23:55:36 hobbs Exp $
  */
 
 #include "tcl.h"
@@ -310,6 +310,7 @@ ScriptHandler(
 	theErr = -1771;
     } else {
 	if (theDesc.descriptorType == (DescType)'TEXT') {
+	    Tcl_DString encodedText;
 	    short length, i;
 	    
 	    length = GetHandleSize(theDesc.dataHandle);
@@ -322,7 +323,10 @@ ScriptHandler(
 	    }
 
 	    HLock(theDesc.dataHandle);
-	    tclErr = Tcl_GlobalEval(interp, *theDesc.dataHandle);
+	    Tcl_ExternalToUtfDString(NULL, *theDesc.dataHandle, length,
+		    &encodedText);
+	    tclErr = Tcl_GlobalEval(interp, Tcl_DStringValue(&encodedText));
+	    Tcl_DStringFree(&encodedText);
 	    HUnlock(theDesc.dataHandle);
 	} else if (theDesc.descriptorType == (DescType)'alis') {
 	    Boolean dummy;
