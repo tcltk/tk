@@ -5,8 +5,11 @@
 	* generic/tkBind.c: fixed deletion order bug where a crash would
 	result if a binding deleted "."
 
-	* unix/tkUnixMenu.c: hidemargin option was not honored properly in
-	menus [Bug: 859]
+	* generic/tkMenu.c (MenuWidgetObjCmd): disabled menu entries were
+	getting reenabled whenever the mouse passed over the entry [Bug: 860]
+
+	* unix/tkUnixMenu.c (TkpComputeStandardMenuGeometry): hidemargin
+	option was not honored properly in menus [Bug: 859]
 
 1998-11-24    <stanton@GASPODE>
 
