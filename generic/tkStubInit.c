@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.38 2002/08/31 06:12:27 das Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.39 2002/10/09 11:57:09 das Exp $
  */
 
 #include "tkInt.h"
@@ -714,6 +714,7 @@ TkIntXlibStubs tkIntXlibStubs = {
     XWarpPointer, /* 87 */
     XQueryColor, /* 88 */
     XQueryColors, /* 89 */
+    XQueryTree, /* 90 */
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
     XSetDashes, /* 0 */
@@ -806,6 +807,7 @@ TkIntXlibStubs tkIntXlibStubs = {
     XWarpPointer, /* 87 */
     XQueryColor, /* 88 */
     XQueryColors, /* 89 */
+    XQueryTree, /* 90 */
 #endif /* MAC_OSX_TK */
 };
 

@@ -1,3 +1,23 @@
+2002-10-09  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkInt.decls(tkIntXlib): added XQueryTree declaration for
+	mac & aqua, since it's now called from ParentXId via Tk_HandleEvent.
+	* generic/tkIntXlibDecls.h:
+	* generic/tkStubInit.c: regen.
+	* mac/tkMacXStubs.c: added XQueryTree stub
+
+	* mac/tkMacEmbed.c (TkpUseWindow): check that container window
+	has -container option set (sync with other platforms).
+
+	* mac/tkMacBitmap.c:
+	* mac/tkMacFont.c: 
+	* mac/tkMacSend.c: 
+	* mac/tkMacTest.c: 
+	* mac/tkMacWm.c: CONSTification.
+
+	* mac/tkMacProjects.sea.hqx: added tkStyle.c and tkUndo.c to
+	tk library projects.
+
 2002-10-09  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkImgPhoto.c (ImgPhotoSetSize): Only error-out if we
@@ -108,10 +128,10 @@
 	Use tcl headers from built Tcl.framework instead of from tcl
 	source directory.	
 
-        * macosx/tkMacOSXPort.h: added missing standard unix includes 
-        and defines, similarly to tkUnixPort.h.
-        * macosx/tkMacOSXNotify.c: removed dependency on internal tcl
-        header "tclPort.h"
+	* macosx/tkMacOSXPort.h: added missing standard unix includes 
+	and defines, similarly to tkUnixPort.h.
+	* macosx/tkMacOSXNotify.c: removed dependency on internal tcl
+	header "tclPort.h"
 
 	* unix/Makefile.in:
 	* unix/install-sh: copied support for 'install-strip' target

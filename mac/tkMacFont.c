@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacFont.c,v 1.7 2002/01/17 03:35:01 dgp Exp $
+ * RCS: @(#) $Id: tkMacFont.c,v 1.8 2002/10/09 11:56:43 das Exp $
  */
  
 #include <Windows.h>
@@ -241,7 +241,7 @@ static FontFamily *	AllocFontFamily(CONST MacFont *fontPtr, int family);
 static SubFont *	CanUseFallback(MacFont *fontPtr,
 			    CONST char *fallbackName, int ch);
 static SubFont *	CanUseFallbackWithAliases(MacFont *fontPtr, 
-			    char *faceName, int ch, Tcl_DString *nameTriedPtr);
+			    CONST char *faceName, int ch, Tcl_DString *nameTriedPtr);
 static SubFont *	FindSubFontForChar(MacFont *fontPtr, int ch);
 static void		FontMapInsert(SubFont *subFontPtr, int ch);
 static void		FontMapLoadPage(SubFont *subFontPtr, int row);
@@ -484,7 +484,8 @@ TkpGetFontFromAttributes(
 {
     short faceNum, style;
     int i, j;
-    char *faceName, *fallback;
+    CONST char *faceName;
+    char *fallback;
     char ***fallbacks;
     MacFont *fontPtr;
         
@@ -1498,7 +1499,7 @@ FindSubFontForChar(
     int ch)			/* The Unicode character to be displayed. */
 {
     int i, j, k;
-    char *fallbackName;
+    CONST char *fallbackName;
     char **aliases;
     SubFont *subFontPtr;
     FontNameMap *mapPtr;
@@ -1831,7 +1832,7 @@ static SubFont *
 CanUseFallbackWithAliases(
     MacFont *fontPtr,		/* The font object that will own the new
 				 * screen font. */
-    char *faceName,		/* Desired face name for new screen font. */
+    CONST char *faceName,		/* Desired face name for new screen font. */
     int ch,			/* The Unicode character that the new
 				 * screen font must be able to display. */
     Tcl_DString *nameTriedPtr)	/* Records face names that have already

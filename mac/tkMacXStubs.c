@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacXStubs.c,v 1.15 2002/06/19 19:37:55 mdejong Exp $
+ * RCS: @(#) $Id: tkMacXStubs.c,v 1.16 2002/10/09 11:57:05 das Exp $
  */
 
 #include "tkInt.h"
@@ -523,6 +523,19 @@ XQueryColors(
     XColor* defs_in_out,
     int ncolors)
 {
+}
+
+int   
+XQueryTree(display, w, root_return, parent_return, children_return,
+        nchildren_return)
+    Display* display;
+    Window w;
+    Window* root_return;
+    Window* parent_return;
+    Window** children_return;
+    unsigned int* nchildren_return;
+{
+    return 0;
 }
 
 int

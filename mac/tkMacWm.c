@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.22 2002/08/31 06:12:28 das Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.23 2002/10/09 11:57:01 das Exp $
  */
 
 #include <Gestalt.h>
@@ -589,7 +589,7 @@ TkWmMapWindow(
 
 	if (!Tk_IsEmbedded(winPtr)) {
 	    TkSetWMName(winPtr, ((wmPtr->title != NULL) ?
-		    wmPtr->title : winPtr->nameUid);
+		    wmPtr->title : winPtr->nameUid));
 	}
 
 	TkWmSetClass(winPtr);
@@ -1626,7 +1626,7 @@ WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv)
     }
     if (objc == 3) {
 	if (wmPtr->hints.flags & IconPixmapHint) {
-	    Tcl_SetResult(interp,
+	    Tcl_SetResult(interp, (char *)
 		    Tk_NameOfBitmap(winPtr->display, wmPtr->hints.icon_pixmap),
 		    TCL_STATIC);
 	}
@@ -1740,7 +1740,7 @@ WmIconmaskCmd(tkwin, winPtr, interp, objc, objv)
     }
     if (objc == 3) {
 	if (wmPtr->hints.flags & IconMaskHint) {
-	    Tcl_SetResult(interp,
+	    Tcl_SetResult(interp, (char *)
 		    Tk_NameOfBitmap(winPtr->display, wmPtr->hints.icon_mask),
 		    TCL_STATIC);
 	}
@@ -2645,7 +2645,7 @@ WmTitleCmd(tkwin, winPtr, interp, objc, objv)
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	Tcl_SetResult(interp,
+	Tcl_SetResult(interp, (char *)
 		((wmPtr->title != NULL) ? wmPtr->title : winPtr->nameUid),
 		TCL_STATIC);
 	return TCL_OK;
@@ -4663,7 +4663,7 @@ TkMacGrowToplevel(
 void
 TkSetWMName(
     TkWindow *winPtr,
-    char *title)
+    CONST char *title)
 {
     Str255  pTitle;
     GWorldPtr macWin;
