@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.59 2003/07/18 11:04:58 vincentdarley Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.60 2003/07/18 13:24:19 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -142,7 +142,7 @@ static TkCmd commands[] = {
     {"tk_getOpenFile",  NULL,			Tk_GetOpenFileObjCmd,	0, 1},
     {"tk_getSaveFile",  NULL,			Tk_GetSaveFileObjCmd,	0, 1},
 #endif
-#ifdef defined(__WIN32__) || defined(MAC_OSX_TK)
+#if defined(__WIN32__) || defined(MAC_OSX_TK)
     {"tk_messageBox",   NULL,			Tk_MessageBoxObjCmd,	0, 1},
 #endif
     {"update",		NULL,			Tk_UpdateObjCmd,	1, 1},
