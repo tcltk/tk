@@ -1,5 +1,11 @@
 1999-11-23  Eric Melski  <ericm@scriptics.com>
 
+	* tests/listbox.test: Added a test to check that the topIndex is
+	update when items are removed from the listvar variable.
+
+	* generic/tkListbox.c: Added a check the updates the topIndex when
+	items are removed from the listvar variable.
+
 	* tests/listbox.test: Added a test to check that the vertical
 	scrollbar is updated when the listvar changes.
 
