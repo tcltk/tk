@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.42 2000/03/02 23:53:07 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.43 2000/03/30 19:02:31 ericm Exp $
 
 # Current Tk version;  used in various names.
 
@@ -384,7 +384,13 @@ wish: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE)
 		@TK_BUILD_LIB_SPEC@ \
 		$(WISH_LIBS) $(TK_CC_SEARCH_FLAGS) -o wish
 
-tktest: $(TKTEST_OBJS) $(TK_LIB_FILE)
+# This rule is executed if the user tried to run tktest without first
+# building tcltest in the Tcl bin directory. Just do it for them.
+${TCL_BIN_DIR}/tcltest:
+	cd ${TCL_BIN_DIR} ; \
+	make tcltest
+
+tktest: ${TCL_BIN_DIR}/tcltest $(TKTEST_OBJS) $(TK_LIB_FILE)
 	${CC} @LDFLAGS@ $(TKTEST_OBJS) \
 		@TK_BUILD_LIB_SPEC@ \
 		$(WISH_LIBS) $(TK_CC_SEARCH_FLAGS) -o tktest
@@ -409,7 +415,7 @@ test: tktest
 	./tktest $(TOP_DIR)/tests/all.tcl -geometry +0+0 $(TCLTESTARGS)
 
 # Useful target to launch a built tktest with the proper path,...
-runtest:
+runtest: tktest
 	LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}; \
 	export LD_LIBRARY_PATH; \
 	LIBPATH=`pwd`:${TCL_BIN_DIR}:${LIBPATH}; export LIBPATH; \
