@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: entry.n,v 1.14 2004/10/28 10:22:51 dkf Exp $
+'\" RCS: @(#) $Id: entry.n,v 1.15 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH entry n 8.3 Tk "Tk Built-In Commands"
@@ -27,26 +27,20 @@ entry \- Create and manipulate entry widgets
 \-highlightcolor	\-relief
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
-.VS 8.4
 .OP \-disabledbackground disabledBackground DisabledBackground
 Specifies the background color to use when the entry is disabled.  If
 this option is the empty string, the normal background color is used.
 .OP \-disabledforeground disabledForeground DisabledForeground
 Specifies the foreground color to use when the entry is disabled.  If
 this option is the empty string, the normal foreground color is used.
-.VE 8.4
-.VS 8.3
 .OP "\-invalidcommand or \-invcmd" invalidCommand InvalidCommand
 Specifies a script to eval when \fBvalidateCommand\fR returns 0.
 Setting it to {} disables this feature (the default).  The best use
 of this option is to set it to \fIbell\fR.  See \fBValidation\fR
 below for more information.
-.VE
-.VS 8.4
 .OP \-readonlybackground readonlyBackground ReadonlyBackground
 Specifies the background color to use when the entry is readonly.  If
 this option is the empty string, the normal background color is used.
-.VE
 .OP \-show show Show
 If this option is specified, then the true contents of the entry
 are not displayed in the window.
@@ -57,7 +51,6 @@ a password.
 If characters in the entry are selected and copied elsewhere, the
 information copied will be what is displayed, not the true contents
 of the entry.
-.VS 8.4
 .OP \-state state State
 Specifies one of three states for the entry:  \fBnormal\fR,
 \fBdisabled\fR, or \fBreadonly\fR.  If the entry is readonly, then the
@@ -68,8 +61,6 @@ disabled, the value may not be changed, no insertion cursor will be
 displayed, the contents will not be selectable, and the entry may
 be displayed in a different color, depending on the values of the
 \fB-disabledforeground\fR and \fB-disabledbackground\fR options.
-.VE 8.4
-.VS 8.3
 .OP \-validate validate Validate
 Specifies the mode in which validation should operate: \fBnone\fR,
 \fBfocus\fR, \fBfocusin\fR, \fBfocusout\fR, \fBkey\fR, or \fBall\fR.
@@ -83,7 +74,6 @@ the valid Tcl boolean equivalent) then it means you reject the new edition
 and it will not occur and the \fBinvalidCommand\fR will be evaluated if it
 is set. If it returns 1, then the new edition occurs.
 See \fBValidation\fR below for more information.
-.VE
 .OP \-width width Width
 Specifies an integer value indicating the desired width of the entry window,
 in average-size characters of the widget's font.
@@ -124,7 +114,6 @@ the standard \fBxScrollCommand\fR mechanism for interacting with
 scrollbars (see the description of the \fBxScrollCommand\fR option
 for details).  They also support scanning, as described below.
 .SH VALIDATION
-.VS 8.3
 .PP
 Validation works by setting the \fBvalidateCommand\fR
 option to a script which will be evaluated according to the \fBvalidate\fR
@@ -196,7 +185,6 @@ in the \fBvalidateCommand\fR or \fBinvalidCommand\fR (whichever one you
 were editing the entry widget from).  It is also recommended to not set an
 associated \fBtextVariable\fR during validation, as that can cause the
 entry widget to become out of sync with the \fBtextVariable\fR.
-.VE
 .SH "WIDGET COMMAND"
 .PP
 The \fBentry\fR command creates a new Tcl command whose
@@ -375,14 +363,12 @@ If the selection isn't in this widget then a new selection is
 created using the most recent anchor point specified for the widget.
 Returns an empty string.
 .RE
-.VS 8.3
 .TP
 \fIpathName \fBvalidate\fR
 This command is used to force an evaluation of the \fBvalidateCommand\fR
 independent of the conditions specified by the \fBvalidate\fR option.
 This is done by temporarily setting the \fBvalidate\fR option to \fBall\fR.
 It returns 0 or 1.
-.VE
 .TP
 \fIpathName \fBxview \fIargs\fR
 This command is used to query and change the horizontal position of the
@@ -533,11 +519,9 @@ If the entry is disabled using the \fB\-state\fR option, then the entry's
 view can still be adjusted and text in the entry can still be selected,
 but no insertion cursor will be displayed and no text modifications will
 take place
-.VS
 except if the entry is linked to a variable using the \fB\-textvariable\fR
 option, in which case any changes to the variable are reflected by the
 entry whatever the value of its \fB\-state\fR option.
-.VE
 .PP
 The behavior of entries can be changed by defining new bindings for
 individual widgets or by redefining the class bindings.

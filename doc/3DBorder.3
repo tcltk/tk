@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: 3DBorder.3,v 1.5 2004/09/19 16:05:36 dkf Exp $
+'\" RCS: @(#) $Id: 3DBorder.3,v 1.6 2005/04/06 21:11:53 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_Alloc3DBorderFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -16,7 +16,6 @@ Tk_Alloc3DBorderFromObj, Tk_Get3DBorder, Tk_Get3DBorderFromObj, Tk_Draw3DRectang
 .nf
 \fB#include <tk.h>\fR
 .sp
-.VS 8.1
 Tk_3DBorder
 \fBTk_Alloc3DBorderFromObj(\fIinterp, tkwin, objPtr\fB)\fR
 .sp
@@ -25,7 +24,6 @@ Tk_3DBorder
 .sp
 Tk_3DBorder
 \fBTk_Get3DBorderFromObj(\fItkwin, objPtr\fB)\fR
-.VE
 .sp
 void
 \fBTk_Draw3DRectangle(\fItkwin, drawable, border, x, y, width, height, borderWidth, relief\fB)\fR
@@ -57,9 +55,7 @@ XColor *
 GC *
 \fBTk_3DBorderGC(\fItkwin, border, which\fB)\fR
 .sp
-.VS 8.1
 \fBTk_Free3DBorderFromObj(\fItkwin, objPtr\fB)\fR
-.VE
 .sp
 \fBTk_Free3DBorder(\fIborder\fB)\fR
 .SH ARGUMENTS
@@ -70,14 +66,12 @@ Interpreter to use for error reporting.
 Token for window (for all procedures except \fBTk_Get3DBorder\fR,
 must be the window for which the border was allocated).
 .AP Tcl_Obj *objPtr in
-.VS 8.1
 Pointer to object whose value describes color corresponding to
 background (flat areas).  Illuminated edges will be brighter than
 this and shadowed edges will be darker than this.
 .AP char *colorName in
 Same as \fIobjPtr\fR except value is supplied as a string rather
 than an object.
-.VE
 .AP Drawable drawable in
 X token for window or pixmap;  indicates where graphics are to be drawn.
 Must either be the X window for \fItkwin\fR or a pixmap with the
@@ -147,7 +141,6 @@ Must be \fBTK_3D_FLAT_GC\fR, \fBTK_3D_LIGHT_GC\fR, or \fBTK_3D_DARK_GC\fR.
 .PP
 These procedures provide facilities for drawing window borders in a
 way that produces a three-dimensional appearance.
-.VS 8.1
 \fBTk_Alloc3DBorderFromObj\fR
 allocates colors and Pixmaps needed to draw a border in the window
 given by the \fItkwin\fR argument.  The value of \fIobjPtr\fR
@@ -181,7 +174,6 @@ already have been created with a previous call to
 value is cached in \fIobjPtr\fR, which speeds up
 future calls to \fBTk_Get3DBorderFromObj\fR with the same \fIobjPtr\fR
 and \fItkwin\fR.
-.VE
 .PP
 Once a border structure has been created, \fBTk_Draw3DRectangle\fR may be
 invoked to draw the border.
@@ -288,7 +280,6 @@ The argument \fIwhich\fR selects which one of the three possible GC's:
 \fBTK_3D_LIGHT_GC\fR returns the context for light shadows,
 and \fBTK_3D_DARK_GC\fR returns the context for dark shadows.
 .PP
-.VS 8.1
 When a border is no longer needed, \fBTk_Free3DBorderFromObj\fR
 or \fBTk_Free3DBorder\fR should
 be called to release the resources associated with it.
@@ -299,7 +290,6 @@ with the Tk_3DBorder token for the border.
 There should be exactly one call to \fBTk_Free3DBorderFromObj\fR or
 \fBTk_Free3DBorder\fR for each call to \fBTk_Alloc3DBorderFromObj\fR
 or \fBTk_Get3DBorder\fR.
-.VE
 
 .SH KEYWORDS
 3D, background, border, color, depressed, illumination, object, polygon, raised, shadow, three-dimensional effect

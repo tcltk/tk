@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: checkbutton.n,v 1.9 2004/10/28 10:22:51 dkf Exp $
+'\" RCS: @(#) $Id: checkbutton.n,v 1.10 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH checkbutton n 4.4 Tk "Tk Built-In Commands"
@@ -43,7 +43,6 @@ Specifies whether or not the indicator should be drawn.  Must be a
 proper boolean value.  If false, the \fBrelief\fR option is
 ignored and the widget's relief is always sunken if the widget is
 selected and raised otherwise.
-.VS 8.4
 .OP \-offrelief offRelief OffRelief
 Specifies the relief for the checkbutton when the indicator is not drawn and
 the checkbutton is off.  The default value is "raised".  By setting this option
@@ -53,14 +52,12 @@ of having a flat button that raises on mouse-over and which is
 depressed when activated.  This is the behavior typically exhibited by
 the Bold, Italic, and Underline checkbuttons on the toolbar of a 
 word-processor, for example.
-.VE 8.4
 .OP \-offvalue offValue Value
 Specifies value to store in the button's associated variable whenever
 this button is deselected.  Defaults to ``0''.
 .OP \-onvalue onValue Value
 Specifies value to store in the button's associated variable whenever
 this button is selected.  Defaults to ``1''.
-.VS 8.4
 .OP \-overrelief overRelief OverRelief
 Specifies an alternative relief for the checkbutton, to be used when the
 mouse cursor is over the widget.  This option can be used to make
@@ -68,7 +65,6 @@ toolbar buttons, by configuring \fB\-relief flat \-overrelief
 raised\fR.  If the value of this option is the empty string, then no
 alternative relief is used when the mouse cursor is over the checkbutton.
 The empty string is the default value.
-.VE 8.4
 .OP \-selectcolor selectColor Background
 Specifies a background color to use when the button is selected.
 If \fBindicatorOn\fR is true then the color applies to the indicator.
@@ -245,7 +241,6 @@ modifying its associated variable to reflect the new state.
 .PP
 Tk automatically creates class bindings for checkbuttons that give them
 the following default behavior:
-.VS
 .IP [1]
 On Unix systems, a checkbutton activates whenever the mouse passes
 over it and deactivates whenever the mouse leaves the checkbutton.  On
@@ -253,17 +248,14 @@ Mac and Windows systems, when mouse button 1 is pressed over a
 checkbutton, the button activates whenever the mouse pointer is inside
 the button, and deactivates whenever the mouse pointer leaves the
 button.
-.VE
 .IP [2]
 When mouse button 1 is pressed over a checkbutton, it is invoked (its
 selection state toggles and the command associated with the button is
 invoked, if there is one).
-.VS
 .IP [3]
 When a checkbutton has the input focus, the space key causes the checkbutton
 to be invoked.  Under Windows, there are additional key bindings; plus
 (+) and equal (=) select the button, and minus (-) deselects the button.
-.VE
 .PP
 If the checkbutton's state is \fBdisabled\fR then none of the above
 actions occur:  the checkbutton is completely non-responsive.
