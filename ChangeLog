@@ -1,5 +1,8 @@
 2005-02-11  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tkWinWm.c (TkWinGetIcon): fix toplevel retrieval for
+	determining icon ref (potential crash). [Bug 1105738]
+
 	* generic/tkCanvBmap.c (ConfigureBitmap, ComputeBitmapBbox): Fixed
 	possible crash with disabled bmap and bbox handling [Bug 1119460]
 	(BitmapToPostscript): made aware of various bitmap types
@@ -40,6 +43,7 @@
 	Keith Nash <k.j.nash@usa.net>
 
 2005-01-14  Joe English  <jenglish@users.sourceforge.net>
+
 	* unix/tkUnixWm.c: Sync with CVS HEAD (r1.47):
 	Fixes: #959973 "wm title bug" (support Unicode titles)
 	Fixes: #742882 "Potential division by zero in gridded wm geometry"

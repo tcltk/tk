@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.17 2005/01/04 01:28:51 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.18 2005/02/11 20:35:09 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1130,9 +1130,8 @@ WinSetIcon(interp, titlebaricon, tkw)
  *----------------------------------------------------------------------
  */
 HICON
-TkWinGetIcon(Tk_Window tkw, DWORD iconsize)
+TkWinGetIcon(Tk_Window tkwin, DWORD iconsize)
 {
-    TkWindow *winPtr;
     WmInfo *wmPtr;
     HICON icon;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
@@ -1145,17 +1144,19 @@ TkWinGetIcon(Tk_Window tkw, DWORD iconsize)
 	return GetIcon(tsdPtr->iconPtr, iconsize);
     }
 
-    if (Tk_WindowId(tkw) == None) {
-	Tk_MakeWindowExist(tkw);
+    /* ensure we operate on the toplevel, that has the icon refs */
+    while (!Tk_IsTopLevel(tkwin)) {
+	tkwin = Tk_Parent(tkwin);
+	if (tkwin == NULL) {
+	    return NULL;
+	}
     }
 
-    winPtr = (TkWindow *)tkw;
-    if (!(Tk_IsTopLevel(tkw))) {
-	winPtr = GetTopLevel(Tk_GetHWND(Tk_WindowId(tkw)));
+    if (Tk_WindowId(tkwin) == None) {
+	Tk_MakeWindowExist(tkwin);
     }
-    /* We must get the window's wrapper, not the window itself */
-    wmPtr = winPtr->wmInfoPtr;
 
+    wmPtr = ((TkWindow *) tkwin)->wmInfoPtr;
     if (wmPtr->iconPtr != NULL) {
 	/*
 	 * return window toplevel icon
