@@ -1,6 +1,17 @@
-2004-02-18  Peter Spjuth  <peter.spjuth@space.se>
+2004-02-23  Daniel Steffen  <das@users.sourceforge.net>
 
 	*** 8.4.6 TAGGED FOR RELEASE ***
+
+	* macosx/tkMacOSXDraw.c:
+	* macosx/tkMacOSXXStubs.c:
+	* xlib/ximage.c: fixed MacOSX XGetImage/XPutImage and related 
+	functions to deal properly with XImages copied from screen.
+	* generic/tkCanvPs.c (TkImageGetColor): MacOSX fix.
+	* generic/tkImgPhoto.c (ImgPhotoDisplay): enabled alpha blending
+	for images with partial transparency on MacOSX.
+	[Bug 809157]
+
+2004-02-18  Peter Spjuth  <peter.spjuth@space.se>
 
 	* tests/grid.test:
 	* generic/tkGrid.c: Fixed a bug in grid geometry calculations for
