@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.9 2000/02/10 08:57:11 jingham Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.10 2000/04/25 01:02:13 hobbs Exp $
  */
 
 #include <Gestalt.h>
@@ -810,7 +810,7 @@ Tk_WmCmd(
 	    && (length >= 3)) {
 	TkWindow **cmapList;
 	TkWindow *winPtr2;
-	int i, windowArgc, gotToplevel;
+	int i, windowArgc, gotToplevel = 0;
 	char **windowArgv;
 
 	if ((argc != 3) && (argc != 4)) {
