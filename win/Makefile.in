@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.23 2000/04/25 22:29:55 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.24 2000/04/25 22:30:42 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -367,7 +367,7 @@ winhelp: $(TCL_SRC_DIR_NATIVE)/../tools/man2help.tcl $(MAN2TCL)
 	$(TCLSH_PROG) "$(TCL_SRC_DIR_NATIVE)"/../tools/man2help.tcl tcl "$(VER)" $(CORE_DOCS)
 	$(COPY) "$(TCL_BIN_DIR)"/tcl.hpj ./
 	hcw /c /e tcl.hpj
-	$(COPY) ./tcl$(VER).cnt ./TCL$(VER).HLP $(TCL_SRC_DIR_NATIVE)/../tools/
+	$(COPY) ./tcl$(VER).cnt ./TCL$(VER).HLP "$(TCL_SRC_DIR_NATIVE)"/../tools/
 
 $(MAN2TCL): $(TCL_SRC_DIR_NATIVE)/../tools/man2tcl.c
 	$(CC) $(CFLAGS_OPTIMIZE) $(MAN2TCLFLAGS) -o $(MAN2TCL) "$(TCL_SRC_DIR_NATIVE)"/../tools/man2tcl.c
