@@ -1,3 +1,8 @@
+2001-10-04  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/bgerror.tcl: back-ported bgerror dialog from 8.4 (that
+	used Windows-esque "Details" button).
+
 2001-10-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* README:
