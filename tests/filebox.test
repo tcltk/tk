@@ -198,6 +198,14 @@ foreach mode $modes {
 			    -parent $parent -initialdir $fileDir]
 	} $pathName
 
+	test filebox-2.4 "$command command" {
+	    ToPressButton $parent ok
+	    set choice [$command -title "Enter \"$fileName\" and press Ok" \
+			    -parent $parent -initialdir . \
+			    -initialfile $fileName]
+	} $pathName
+
+
 	set filters(1) {}
 
 	set filters(2) {
