@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.1.4.3 1998/10/06 03:27:37 stanton Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.1.4.4 1998/11/20 02:35:15 stanton Exp $
  */
 
 #include "tkWinInt.h"
@@ -941,8 +941,6 @@ GetTranslatedKey(xkey)
     while ((xkey->nbytes < XMaxTransChars)
 	    && PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
 	if ((msg.message == WM_CHAR) || (msg.message == WM_SYSCHAR)) {
-	    xkey->trans_chars[xkey->nbytes] = (char) msg.wParam;
-	    xkey->nbytes++;
 	    GetMessage(&msg, NULL, 0, 0);
 
 	    /*

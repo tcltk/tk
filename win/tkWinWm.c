@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.1.4.3 1998/11/10 19:04:51 stanton Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.1.4.4 1998/11/20 02:35:12 stanton Exp $
  */
 
 #include "tkWinInt.h"
@@ -643,6 +643,7 @@ UpdateWrapper(winPtr)
     HWND child = TkWinGetHWND(winPtr->window);
     int x, y, width, height, state;
     WINDOWPLACEMENT place;
+    Tcl_DString titleString;
 
     parentHWND = NULL;
     child = TkWinGetHWND(winPtr->window); 
@@ -715,10 +716,12 @@ UpdateWrapper(winPtr)
 	 */
 
 	createWindow = winPtr;
+	Tcl_UtfToExternalDString(NULL, wmPtr->titleUid, -1, &titleString);
 	wmPtr->wrapper = CreateWindowEx(wmPtr->exStyle,
 		TK_WIN_TOPLEVEL_CLASS_NAME,
-		wmPtr->titleUid, wmPtr->style, x, y, width, height,
-		parentHWND, NULL, Tk_GetHINSTANCE(), NULL);
+		Tcl_DStringValue(&titleString), wmPtr->style, x, y, width, 
+		height, parentHWND, NULL, Tk_GetHINSTANCE(), NULL);
+	Tcl_DStringFree(&titleString);
 	SetWindowLong(wmPtr->wrapper, GWL_USERDATA, (LONG) winPtr);
 	createWindow = NULL;
 
@@ -2037,7 +2040,11 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	} else {
 	    wmPtr->titleUid = Tk_GetUid(argv[3]);
 	    if (!(wmPtr->flags & WM_NEVER_MAPPED) && wmPtr->wrapper != NULL) {
-		SetWindowText(wmPtr->wrapper, wmPtr->titleUid);
+		Tcl_DString titleString;
+		Tcl_UtfToExternalDString(NULL, wmPtr->titleUid, -1, 
+			&titleString);
+		SetWindowText(wmPtr->wrapper, Tcl_DStringValue(&titleString));
+		Tcl_DStringFree(&titleString);
 	    }
 	}
     } else if ((c == 't') && (strncmp(argv[1], "transient", length) == 0)
