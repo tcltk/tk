@@ -1,3 +1,11 @@
+2004-08-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* library/tkfbox.tcl (ResolveFile): Added some environment
+	variable handling; this isn't perfect, but should do what most
+	people want most of the time. [FRQ 979101]
+	* library/xmfbox.tcl (MotifFDialog_BuildUI): Fix [Bug 987169] in
+	the Motif file dialogs as well.
+
 2004-08-10  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tkUnixWm.c: Fix for #1006686 "wm resizable command 

@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.44 2004/07/22 22:22:39 hobbs Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.45 2004/08/11 21:24:25 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -1384,11 +1384,14 @@ proc ::tk::dialog::file::SetFilter {w type} {
 #	(2) resolve all instances of . and ..
 #	(3) check for non-existent files/directories
 #	(4) check for chdir permissions
+#	(5) conversion of environment variable references to their
+#	    contents (once only)
 #
 # Arguments:
 #	context:  the current directory you are in
 #	text:	  the text entered by the user
 #	defaultext: the default extension to add to files with no extension
+#	expandEnv: whether to expand environment variables (yes by default)
 #
 # Return vaue:
 #	[list $flag $directory $file]
@@ -1407,8 +1410,7 @@ proc ::tk::dialog::file::SetFilter {w type} {
 #	directory may not be the same as context, because text may contain
 #	a subdirectory name
 #
-proc ::tk::dialog::file::ResolveFile {context text defaultext} {
-
+proc ::tk::dialog::file::ResolveFile {context text defaultext {expandEnv 1}} {
     set appPWD [pwd]
 
     set path [::tk::dialog::file::JoinFile $context $text]
@@ -1419,7 +1421,6 @@ proc ::tk::dialog::file::ResolveFile {context text defaultext} {
     if {![file isdirectory $path] && [string equal [file ext $path] ""]} {
 	set path "$path$defaultext"
     }
-
 
     if {[catch {file exists $path}]} {
 	# This "if" block can be safely removed if the following code
@@ -1455,17 +1456,31 @@ proc ::tk::dialog::file::ResolveFile {context text defaultext} {
 		return [list CHDIR $dirname ""]
 	    }
 	    set directory [pwd]
+	    cd $appPWD
 	    set file [file tail $path]
-	    if {[regexp {[*]|[?]} $file]} {
+	    # It's nothing else, so check to see if it is an env-reference
+	    if {$expandEnv && [string match {$*} $file]} {
+		set var [string range $file 1 end]
+		if {[info exist ::env($var)]} {
+		    return [ResolveFile $context $::env($var) $defaultext 0]
+		}
+	    }
+	    if {[regexp {[*?]} $file]} {
 		set flag PATTERN
 	    } else {
 		set flag FILE
 	    }
-	    cd $appPWD
 	} else {
 	    set directory $dirname
 	    set file [file tail $path]
 	    set flag PATH
+	    # It's nothing else, so check to see if it is an env-reference
+	    if {$expandEnv && [string match {$*} $file]} {
+		set var [string range $file 1 end]
+		if {[info exist ::env($var)]} {
+		    return [ResolveFile $context $::env($var) $defaultext 0]
+		}
+	    }
 	}
     }
 
