@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.29 2002/11/07 22:27:04 mdejong Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.30 2003/03/12 00:25:41 mdejong Exp $
 
 package require tcltest 2.2
 namespace import -force tcltest::configure
@@ -988,35 +988,83 @@ test unixWm-27.7 {Tk_WmCmd procedure, "iconwindow" option, withdrawing icon} {
     set result
 } {normal 1 icon 0}
 
-test unixWm-28.1 {Tk_WmCmd procedure, "maxsize" option} {nonPortable} {
-    wm maxsize .t
-}  {1137 870}
-
-test unixWm-28.2 {Tk_WmCmd procedure, "maxsize" option} {nonPortable} {
-    # Not portable, because some window managers let applications override
-    # minsize and maxsize.
-
-    wm maxsize .t 200 150
-    wm geom .t 300x200
-    update
-    list [winfo width .t] [winfo height .t]
-} {200 150}
-
 catch {destroy .t}
 catch {destroy .icon}
 toplevel .t -width 100 -height 50
 wm geom .t +0+0
 update
 
-test unixWm-29.1 {Tk_WmCmd procedure, "minsize" option} {nonPortable} {
-    # Not portable, because some window managers let applications override
-    # minsize and maxsize.
-
-    wm minsize .t 150 100
-    wm geom .t 50x50
+test unixWm-28.1 {Tk_WmCmd procedure, "maxsize" option, setting the
+        maxsize should update WM_NORMAL_HINTS} {
+    destroy .t
+    toplevel .t
+    wm maxsize .t 300 300
     update
-    list [winfo width .t] [winfo height .t]
-} {150 100}
+    set hints [testprop [testwrapper .t] WM_NORMAL_HINTS]
+    format {%d %d} [lindex $hints 7] [lindex $hints 8]
+} {300 300}
+
+test unixWm-28.2 {Tk_WmCmd procedure, "maxsize" option, setting the
+        maxsize to a value smaller than the current size should
+        set the maxsize in WM_NORMAL_HINTS} {
+    destroy .t
+    toplevel .t
+    wm geom .t 400x400
+    wm maxsize .t 300 300
+    update
+    set hints [testprop [testwrapper .t] WM_NORMAL_HINTS]
+    format {%d %d} [lindex $hints 7] [lindex $hints 8]
+} {300 300}
+
+test unixWm-28.3 {Tk_WmCmd procedure, "maxsize" option, setting the
+        maxsize to a value smaller than the current size should
+        set the maxsize in WM_NORMAL_HINTS even if the
+        interactive resizable flag is set to 0} {
+    destroy .t
+    toplevel .t
+    wm geom .t 400x400
+    wm resizable .t 0 0
+    wm maxsize .t 300 300
+    update
+    set hints [testprop [testwrapper .t] WM_NORMAL_HINTS]
+    format {%d %d} [lindex $hints 7] [lindex $hints 8]
+} {300 300}
+
+test unixWm-29.1 {Tk_WmCmd procedure, "minsize" option, setting the
+        minsize should update WM_NORMAL_HINTS} {
+    destroy .t
+    toplevel .t
+    wm minsize .t 300 300
+    update
+    set hints [testprop [testwrapper .t] WM_NORMAL_HINTS]
+    format {%d %d} [lindex $hints 5] [lindex $hints 6]
+} {300 300}
+
+test unixWm-29.2 {Tk_WmCmd procedure, "minsize" option, setting the
+        minsize to a value larger than the current size should
+        set the maxsize in WM_NORMAL_HINTS} {
+    destroy .t
+    toplevel .t
+    wm geom .t 200x200
+    wm minsize .t 300 300
+    update
+    set hints [testprop [testwrapper .t] WM_NORMAL_HINTS]
+    format {%d %d} [lindex $hints 5] [lindex $hints 6]
+} {300 300}
+
+test unixWm-29.3 {Tk_WmCmd procedure, "minsize" option, setting the
+        minsize to a value larger than the current size should
+        set the minsize in WM_NORMAL_HINTS even if the
+        interactive resizable flag is set to 0} {
+    destroy .t
+    toplevel .t
+    wm geom .t 200x200
+    wm resizable .t 0 0
+    wm minsize .t 300 300
+    update
+    set hints [testprop [testwrapper .t] WM_NORMAL_HINTS]
+    format {%d %d} [lindex $hints 5] [lindex $hints 6]
+} {300 300}
 
 catch {destroy .t}
 catch {destroy .icon}

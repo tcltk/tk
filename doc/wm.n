@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.11 2002/07/16 18:06:41 vincentdarley Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.12 2003/03/12 00:25:41 mdejong Exp $
 '\" 
 .so man.macros
 .TH wm n 8.4 Tk "Tk Built-In Commands"
@@ -312,8 +312,6 @@ specified, then the command returns an empty string.  Otherwise
 it returns a Tcl list with two elements, which are the
 maximum width and height currently in effect.
 The maximum size defaults to the size of the screen.
-If resizing has been disabled with the \fBwm resizable\fR command,
-then this command has no effect.
 See the sections on geometry management below for more information.
 .TP
 \fBwm minsize \fIwindow\fR ?\fIwidth height\fR?
@@ -328,8 +326,6 @@ specified, then the command returns an empty string.  Otherwise
 it returns a Tcl list with two elements, which are the
 minimum width and height currently in effect.
 The minimum size defaults to one pixel in each dimension.
-If resizing has been disabled with the \fBwm resizable\fR command,
-then this command has no effect.
 See the sections on geometry management below for more information.
 .TP
 \fBwm overrideredirect \fIwindow\fR ?\fIboolean\fR?

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.36 2002/12/27 21:23:04 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.37 2003/03/12 00:25:41 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -108,9 +108,9 @@ typedef struct TkWmInfo {
 				 * window is gridded;  otherwise it isn't
 				 * gridded. */
     int minWidth, minHeight;	/* Minimum dimensions of window, in
-				 * grid units, not pixels. */
+				 * pixels or grid units. */
     int maxWidth, maxHeight;	/* Maximum dimensions of window, in
-				 * grid units, not pixels. */
+				 * pixels or grid units. 0 to default.*/
     Tk_Window gridWin;		/* Identifies the window that controls
 				 * gridding for this top-level, or NULL if
 				 * the top-level isn't currently gridded. */
@@ -131,7 +131,7 @@ typedef struct TkWmInfo {
      */
 
     int width, height;		/* Desired dimensions of window, specified
-				 * in grid units.  These values are
+				 * in pixels or grid units.  These values are
 				 * set by the "wm geometry" command and by
 				 * ConfigureNotify events (for when wm
 				 * resizes window).  -1 means user hasn't
@@ -332,7 +332,8 @@ static void		UpdateCommand _ANSI_ARGS_((TkWindow *winPtr));
 static void		UpdateGeometryInfo _ANSI_ARGS_((
 			    ClientData clientData));
 static void		UpdateHints _ANSI_ARGS_((TkWindow *winPtr));
-static void		UpdateSizeHints _ANSI_ARGS_((TkWindow *winPtr));
+static void		UpdateSizeHints _ANSI_ARGS_((TkWindow *winPtr,
+			    int newWidth, int newHeight));
 static void		UpdateVRootGeometry _ANSI_ARGS_((WmInfo *wmPtr));
 static void		UpdateWmProtocols _ANSI_ARGS_((WmInfo *wmPtr));
 static void		WaitForConfigureNotify _ANSI_ARGS_((TkWindow *winPtr,
@@ -537,13 +538,15 @@ TkWmNewWindow(winPtr)
     wmPtr->hints.icon_x = wmPtr->hints.icon_y = 0;
     wmPtr->hints.icon_mask = None;
     wmPtr->hints.window_group = None;
-    wmPtr->minWidth = wmPtr->minHeight = 1;
 
     /*
      * Default the maximum dimensions to the size of the display, minus
      * a guess about how space is needed for window manager decorations.
      */
 
+    wmPtr->gridWin = NULL;
+    wmPtr->minWidth = wmPtr->minHeight = 1;
+    wmPtr->maxWidth = wmPtr->maxHeight = 0;
     wmPtr->widthInc = wmPtr->heightInc = 1;
     wmPtr->minAspect.x = wmPtr->minAspect.y = 1;
     wmPtr->maxAspect.x = wmPtr->maxAspect.y = 1;
@@ -3955,7 +3958,7 @@ UpdateGeometryInfo(clientData)
 {
     register TkWindow *winPtr = (TkWindow *) clientData;
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int x, y, width, height;
+    int x, y, width, height, min, max;
     unsigned long serial;
 
     wmPtr->flags &= ~WM_UPDATE_PENDING;
@@ -3966,9 +3969,10 @@ UpdateGeometryInfo(clientData)
      * requested depends on (a) the size requested internally
      * by the window's widgets, (b) the size requested by the
      * user in a "wm geometry" command or via wm-based interactive
-     * resizing (if any), and (c) whether or not the window is
-     * gridded.  Don't permit sizes <= 0 because this upsets
-     * the X server.
+     * resizing (if any), (c) whether or not the window is
+     * gridded, and (d) the current min or max size for
+     * the toplevel. Don't permit sizes <= 0 because this
+     * upsets the X server.
      */
 
     if (wmPtr->width == -1) {
@@ -3982,6 +3986,28 @@ UpdateGeometryInfo(clientData)
     if (width <= 0) {
 	width = 1;
     }
+    /*
+     * Account for window max/min width
+     */
+    if (wmPtr->gridWin != NULL) {
+	min = winPtr->reqWidth
+		+ (wmPtr->minWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
+	if (wmPtr->maxWidth > 0) {
+	    max = winPtr->reqWidth
+		+ (wmPtr->maxWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
+	} else {
+	    max = 0;
+	}
+    } else {
+	min = wmPtr->minWidth;
+	max = wmPtr->maxWidth;
+    }
+    if (width < min) {
+	width = min;
+    } else if ((max > 0) && (width > max)) {
+	width = max;
+    }
+
     if (wmPtr->height == -1) {
 	height = winPtr->reqHeight;
     } else if (wmPtr->gridWin != NULL) {
@@ -3992,6 +4018,27 @@ UpdateGeometryInfo(clientData)
     }
     if (height <= 0) {
 	height = 1;
+    }
+    /*
+     * Account for window max/min height
+     */
+    if (wmPtr->gridWin != NULL) {
+	min = winPtr->reqHeight
+		+ (wmPtr->minHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
+	if (wmPtr->maxHeight > 0) {
+	    max = winPtr->reqHeight
+		+ (wmPtr->maxHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
+	} else {
+	    max = 0;
+	}
+    } else {
+	min = wmPtr->minHeight;
+	max = wmPtr->maxHeight;
+    }
+    if (height < min) {
+	height = min;
+    } else if ((max > 0) && (height > max)) {
+	height = max;
     }
 
     /*
@@ -4029,7 +4076,7 @@ UpdateGeometryInfo(clientData)
 	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     }
     if (wmPtr->flags & WM_UPDATE_SIZE_HINTS) {
-	UpdateSizeHints(winPtr);
+	UpdateSizeHints(winPtr, width, height);
     }
 
     /*
@@ -4163,8 +4210,10 @@ UpdateGeometryInfo(clientData)
  */
 
 static void
-UpdateSizeHints(winPtr)
+UpdateSizeHints(winPtr, newWidth, newHeight)
     TkWindow *winPtr;
+    int newWidth;
+    int newHeight;
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     XSizeHints *hintsPtr;
@@ -4226,20 +4275,11 @@ UpdateSizeHints(winPtr)
      */
 
     if (wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
-	if (wmPtr->width >= 0) {
-	    hintsPtr->min_width = wmPtr->width;
-	} else {
-	    hintsPtr->min_width = winPtr->reqWidth;
-	}
-	hintsPtr->max_width = hintsPtr->min_width;
+	hintsPtr->max_width = hintsPtr->min_width = newWidth;
     }
     if (wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
-	if (wmPtr->height >= 0) {
-	    hintsPtr->min_height = wmPtr->height;
-	} else {
-	    hintsPtr->min_height = winPtr->reqHeight + wmPtr->menuHeight;
-	}
-	hintsPtr->max_height = hintsPtr->min_height;
+	hintsPtr->max_height = hintsPtr->min_height =
+	    newHeight + wmPtr->menuHeight;
     }
 
     XSetWMNormalHints(winPtr->display, wmPtr->wrapperPtr->window, hintsPtr);
