@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.14 2002/08/31 06:12:22 das Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.15 2002/12/13 16:54:35 dgp Exp $
  */
 
 #include <ctype.h>
@@ -100,7 +100,6 @@ Tk_MainEx(argc, argv, appInitProc, interp)
     Tcl_Interp *interp;
 {
     char *args;
-    CONST char *fileName;
     char buf[TCL_INTEGER_SPACE];
     int code;
     size_t length;
@@ -141,8 +140,6 @@ Tk_MainEx(argc, argv, appInitProc, interp)
      * use it as the name of a script file to process.
      */
 
-    fileName = TclGetStartupScriptFileName();
-
     if (argc > 1) {
 	length = strlen(argv[1]);
 	if ((length >= 2) && (strncmp(argv[1], "-file", length) == 0)) {
@@ -150,9 +147,9 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 	    argv++;
 	}
     }
-    if (fileName == NULL) {
+    if (TclGetStartupScriptFileName() == NULL) {
 	if ((argc > 1) && (argv[1][0] != '-')) {
-	    fileName = argv[1];
+	    TclSetStartupScriptFileName(argv[1]);
 	    argc--;
 	    argv++;
 	}
@@ -170,10 +167,11 @@ Tk_MainEx(argc, argv, appInitProc, interp)
     ckfree(args);
     sprintf(buf, "%d", argc-1);
 
-    if (fileName == NULL) {
+    if (TclGetStartupScriptFileName() == NULL) {
 	Tcl_ExternalToUtfDString(NULL, argv[0], -1, &argString);
     } else {
-	fileName = Tcl_ExternalToUtfDString(NULL, fileName, -1, &argString);
+	TclSetStartupScriptFileName(Tcl_ExternalToUtfDString(NULL,
+		TclGetStartupScriptFileName(), -1, &argString));
     }
     Tcl_SetVar(interp, "argc", buf, TCL_GLOBAL_ONLY);
     Tcl_SetVar(interp, "argv0", Tcl_DStringValue(&argString), TCL_GLOBAL_ONLY);
@@ -214,7 +212,8 @@ Tk_MainEx(argc, argv, appInitProc, interp)
     tsdPtr->tty = isatty(0);
 #endif
     Tcl_SetVar(interp, "tcl_interactive",
-	    ((fileName == NULL) && tsdPtr->tty) ? "1" : "0", TCL_GLOBAL_ONLY);
+	    ((TclGetStartupScriptFileName() == NULL) 
+		    && tsdPtr->tty) ? "1" : "0", TCL_GLOBAL_ONLY);
 
     /*
      * Invoke application-specific initialization.
@@ -229,9 +228,9 @@ Tk_MainEx(argc, argv, appInitProc, interp)
      * Invoke the script specified on the command line, if any.
      */
 
-    if (fileName != NULL) {
+    if (TclGetStartupScriptFileName() != NULL) {
 	Tcl_ResetResult(interp);
-	code = Tcl_EvalFile(interp, fileName);
+	code = Tcl_EvalFile(interp, TclGetStartupScriptFileName());
 	if (code != TCL_OK) {
 	    /*
 	     * The following statement guarantees that the errorInfo
