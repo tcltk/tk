@@ -1,3 +1,9 @@
+2003-07-17  Peter Spjuth  <peter.spjuth@space.se>
+
+	* tests/frame.test:
+	* generic/tkFrame.c (CreateFrame): Make sure all options can be set
+	to their default value. [Bug #697652]
+
 2003-07-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkWindow.c (Initialize): do not free uninit'ed dstring.

@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: frame.test,v 1.8 2003/04/01 21:06:34 dgp Exp $
+# RCS: @(#) $Id: frame.test,v 1.9 2003/07/16 23:16:52 pspjuth Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -86,8 +86,21 @@ test frame-1.7 {frame configuration options} {
     destroy .f
     set result
 } {1 {can't modify -container option after widget is created}}
+test frame-1.8 {frame configuration options} {
+    # Make sure all options can be set to the default value
+    frame .f
+    set opts {}
+    foreach opt [.f configure] {
+        if {[llength $opt] == 5} {
+            lappend opts [lindex $opt 0] [lindex $opt 4]
+        }
+    }
+    eval frame .g $opts
+    destroy .f .g
+} {}
+
 frame .f
-set i 8
+set i 9
 foreach test {
     {-background #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"}}
@@ -186,12 +199,24 @@ test frame-2.10 {toplevel configuration options} {
     destroy .t .x
     set result
 } {1 {A window cannot have both the -use and the -container option set.}}
+test frame-2.11 {toplevel configuration options} {
+    # Make sure all options can be set to the default value
+    toplevel .f
+    set opts {}
+    foreach opt [.f configure] {
+        if {[llength $opt] == 5} {
+            lappend opts [lindex $opt 0] [lindex $opt 4]
+        }
+    }
+    eval toplevel .g $opts
+    destroy .f .g
+} {}
 
 catch {destroy .t}
 toplevel .t -width 300 -height 150
 wm geometry .t +0+0
 update
-set i 11
+set i 12
 foreach test {
     {-background #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"}}
