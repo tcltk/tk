@@ -1,3 +1,10 @@
+2005-02-10  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/Makefile.in: remove SHLIB_LD_FLAGS (only for AIX, inlined
+	* unix/tcl.m4:      into SHLIB_LD).  Combine AIX-* and AIX-5
+	* unix/configure:   branches in SC_CONFIG_CFLAGS.
+	Correct gcc builds for AIX-4+ and HP-UX-11.
+
 2005-01-31  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/msgs/es_ES.msg: Added more localization for Spanish
