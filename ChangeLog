@@ -1,5 +1,12 @@
 1999-08-10  Jeff Hobbs  <hobbs@scriptics.com>
 
+	* win/tkWinWm.c: changed "wm deiconify" on Windows to raise and
+	force the focus on the deiconified window (behavioral change from
+	8.1 to comply better with Windows style) [Bug: 1609]
+	* doc/wm.n: clarified behavior of "wm deiconify".
+	* generic/tkInt.decls: added TkSetFocusWin
+	* generic/tkFocus.c: changed static SetFocus to TkSetFocusWin
+
 	* library/clrpick.tcl:
 	* library/console.tcl:
 	* library/tk.tcl: fixed code where abbreviations where used
