@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# SCCS: %Z% $Id: makefile.vc,v 1.6 1998/07/27 00:49:58 rjohnson Exp $ 
+# SCCS: %Z% $Id: makefile.vc,v 1.7 1998/07/28 17:42:20 welch Exp $ 
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -44,7 +44,7 @@ NODEBUG = 1
 ######################################################################
 
 TCLNAMEPREFIX = tcl
-TKNAMEPREFIX = tcl
+TKNAMEPREFIX = tk
 WISHNAMEPREFIX = wish
 VERSION = 80
 
