@@ -1,3 +1,15 @@
+2003-04-18  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/configure: regen
+	* win/configure.in (SHELL): force it to /bin/sh as autoconf 2.5x
+	uses /bin/bash, which can fail to find exes in the path (ie: lib).
+
+	* generic/tkCanvBmap.c: s/CreateBitmap/TkcCreateBitmap as Windows
+	has a CreateBitmap function already.
+
+	* generic/tkCursor.c: s/GetCursor/TkcGetCursor as Windows has a
+	GetCursor func already, which causes compiler warnings.
+
 2003-04-14  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/tkWinMenu.c (TkpInitializeMenuBindings):
