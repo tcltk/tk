@@ -1,3 +1,11 @@
+2004-09-17  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinWm.c (UpdateWrapper): Ensure that we maintain Z order
+	* tests/winWm.test:              and focus of preexisting window
+	when replacing the wrapper window.
+	* win/tkWinWm.c (WmIconwindowCmd): Replace bogus call to
+	XWithdrawWindow with proper code. (mdejong)
+
 2004-09-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkMenu.c (MenuWorldChanged): ensure that we recompute
