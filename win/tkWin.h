@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin.h,v 1.11 2004/12/28 08:45:31 chengyemao Exp $
+ * RCS: @(#) $Id: tkWin.h,v 1.12 2005/01/07 15:18:03 chengyemao Exp $
  */
 
 #ifndef _TKWIN
@@ -49,6 +49,7 @@
 #define TK_GETFRAMEWID	    (WM_USER+9)	    /* an embedded window requests a frame window id */
 #define TK_OVERRIDEREDIRECT (WM_USER+10)    /* an embedded window requests to overrideredirect */
 #define TK_SETMENU	    (WM_USER+11)    /* an embedded window requests to setup menu */
+#define TK_STATE	    (WM_USER+12)    /* an embedded window sets/gets state */
 
 /*
  *--------------------------------------------------------------
