@@ -6,43 +6,83 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.1 2000/01/27 00:23:10 ericm Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.2 2000/02/01 23:23:21 ericm Exp $
 
-package require opt
+# Make sure the tk::dialog namespace, in which all dialogs should live, exists
+namespace eval ::tk::dialog {}
 
-namespace eval ::tkChooseDirectory {
+# Make the chooseDir namespace inside the dialog namespace
+namespace eval ::tk::dialog::chooseDir {
+    # value is an array that holds the current selection value for each dialog
     variable value
 }
 
-::tcl::OptProc ::tkChooseDirectory::tk_chooseDirectory {
-    {-initialdir -string ""  
-            "Initial directory for browser"}
-    {-mustexist              
-            "If specified, user can't type in a new directory"}
-    {-parent     -string "."
-            "Parent window for browser"}
-    {-title      -string "Choose Directory"
-            "Title for browser window"}
-} {
-    # Handle default directory
-    if {[string length $initialdir] == 0} {
-	set initialdir [pwd]
-    }
+proc ::tk::dialog::chooseDir::tkChooseDirectory { args } {
+    variable value
 
+    # Error messages
+    append err(usage) "tk_chooseDirectory "
+    append err(usage) "?-initialdir directory? ?-mustexist? "
+    append err(usage) "?-parent window? ?-title title?"
+
+    set err(wrongNumArgs) "wrong # args: should be \"$err(usage)\""
+    set err(valueMissing) "value for \"%s\" missing: should be \"$err(usage)\""
+    set err(unknownOpt)   "unknown option \"%s\": should be \"$err(usage)\""
+
+    # Default values
+    set opts(-initialdir)	[pwd]
+    set opts(-mustexist)	0
+    set opts(-parent)		.
+    set opts(-title)		"Choose Directory"
+
+    # Process args
+    set len [llength $args]
+    for { set i 0 } { $i < $len } {incr i} {
+	set flag [lindex $args $i]
+	incr i
+	switch -glob -- $flag {
+	    "-initialdir" {
+		if { $i >= $len } {
+		    error [format $err(valueMissing) $flag]
+		}
+		set opts($flag) [lindex $args $i]
+	    }
+	    "-mustexist" {
+		set opts($flag) 1
+		incr i -1
+	    }
+	    "-parent" {
+		if { $i >= $len } {
+		    error [format $err(valueMissing) $flag]
+		}
+		set opts($flag) [lindex $args $i]
+	    }
+	    "-title" {
+		if { $i >= $len } {
+		    error [format $err(valueMissing) $flag]
+		}
+		set opts($flag) [lindex $args $i]
+	    }
+	    default {
+		error [format $err(unknownOpt) [lindex $args $i]]
+	    }
+	}
+    }
+	    
     # Handle default parent window
-    if {[string compare $parent "."] == 0} {
-	set parent ""
+    if {[string equal $opts(-parent) "."]} {
+	set opts(-parent) ""
     }
 
-    set w [toplevel $parent.choosedirectory]
-    wm title $w $title
+    set w [toplevel $opts(-parent).choosedirectory]
+    wm title $w $opts(-title)
 
     # Commands for various bindings (which follow)
     set okCommand  [namespace code \
-	    [list Done $w ok ::tkChooseDirectory::value($w)]]
+	    [list Done $w ok $opts(-mustexist)]]
 
     set cancelCommand  [namespace code \
-	    [list Done $w cancel ::tkChooseDirectory::value($w)]]
+	    [list Done $w cancel $opts(-mustexist)]]
 
     # Create controls.
     set lbl  [label $w.l -text "Directory name:" -anchor w]
@@ -80,7 +120,7 @@ namespace eval ::tkChooseDirectory {
     grid columnconfigure . 0 -weight 1
     grid columnconfigure . 1 -weight 1
 
-    $ent insert end $initialdir
+    $ent insert end $opts(-initialdir)
 
     # Set bindings
     # <Return> is the same as OK
@@ -93,7 +133,7 @@ namespace eval ::tkChooseDirectory {
     wm protocol $w WM_DELETE_WINDOW $cancelCommand
     
     # Fill listbox and bind for browsing
-    Refresh $lst $initialdir
+    Refresh $lst $opts(-initialdir)
     
     bind $lst <Return> [namespace code [list Update $ent $lst]]
     bind $lst <Double-ButtonRelease-1> [namespace code [list Update $ent $lst]]
@@ -113,13 +153,13 @@ namespace eval ::tkChooseDirectory {
 
     grab release $w
     
-    set dir $::tkChooseDirectory::value($w)
-    unset ::tkChooseDirectory::value($w)
+    set dir $value($w)
+    unset value($w)
     return $dir
 }
 # tkChooseDirectory::tk_chooseDirectory
 
-proc ::tkChooseDirectory::MinSize { w } {
+proc ::tk::dialog::chooseDir::MinSize { w } {
     set geometry [wm geometry $w]
 
     regexp {([0-9]*)x([0-9]*)\+} geometry whole width height
@@ -127,13 +167,21 @@ proc ::tkChooseDirectory::MinSize { w } {
     wm minsize $w $width $height
 }
 
-proc ::tkChooseDirectory::Done { w why varName } {
+proc ::tk::dialog::chooseDir::Done { w why mustexist } {
     variable value
 
     switch -- $why {
 	ok {
-	    # If mustexist, validate with [cd]
+	    # If mustexist, validate value
 	    set value($w) [$w.e get]
+	    if { $mustexist } {
+		if { ![file exists $value($w)] } {
+		    return
+		}
+		if { ![file isdirectory $value($w)] } {
+		    return
+		}
+	    }
 	}
 	cancel {
 	    set value($w) ""
@@ -143,7 +191,7 @@ proc ::tkChooseDirectory::Done { w why varName } {
     destroy $w
 }
 
-proc ::tkChooseDirectory::Refresh { listbox dir } {
+proc ::tk::dialog::chooseDir::Refresh { listbox dir } {
     $listbox delete 0 end
 
     # Find the parent directory; if it is different (ie, we're not
@@ -161,13 +209,13 @@ proc ::tkChooseDirectory::Refresh { listbox dir } {
     }
 }
 
-proc ::tkChooseDirectory::Update { entry listbox } {
+proc ::tk::dialog::chooseDir::Update { entry listbox } {
     set sel [$listbox curselection]
     if { [string equal $sel ""] } {
 	return
     }
     set subdir [$listbox get $sel]
-    if {[string compare $subdir ".."] == 0} {
+    if {[string equal $subdir ".."]} {
 	set fullpath [file dirname [$entry get]]
 	if { [string equal $fullpath [$entry get]] } {
 	    return
@@ -178,19 +226,4 @@ proc ::tkChooseDirectory::Update { entry listbox } {
     $entry delete 0 end
     $entry insert end $fullpath
     Refresh $listbox $fullpath
-}
-
-# Some test code
-if {[string compare [info script] $argv0] == 0} {
-    catch {rename ::tk_chooseDirectory tk_chooseDir}
-    
-    proc tk_chooseDirectory { args } {
-	uplevel ::tkChooseDirectory::tk_chooseDirectory $args
-    }
-
-    wm withdraw .
-    set dir [tk_chooseDirectory -initialdir [pwd] \
-	    -title "Choose a directory"]
-    tk_messageBox -message "dir:<<$dir>>"
-    exit
 }
