@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.7 1999/11/19 22:00:19 hobbs Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.8 2000/03/02 23:52:37 hobbs Exp $
  */
 
 #ifndef _TKWININT
@@ -151,8 +151,20 @@ extern int tkpWinRopModes[];
 
 #include "tkIntPlatDecls.h"
 
-extern LRESULT CALLBACK	TkWinChildProc _ANSI_ARGS_((HWND hwnd, UINT message,
+/*
+ * We need to specially add the TkWinChildProc because of the special
+ * prototype it has (doesn't fit into stubs schema)
+ */
+#ifdef BUILD_tk
+#undef TCL_STORAGE_CLASS
+#define TCL_STORAGE_CLASS DLLEXPORT
+#endif
+
+EXTERN LRESULT CALLBACK	TkWinChildProc _ANSI_ARGS_((HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam));
+
+#undef TCL_STORAGE_CLASS
+#define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKWININT */
 

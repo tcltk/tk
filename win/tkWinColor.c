@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinColor.c,v 1.3 1999/04/16 01:51:49 stanton Exp $
+ * RCS: @(#) $Id: tkWinColor.c,v 1.4 2000/03/02 23:52:36 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -373,9 +373,9 @@ XAllocColor(display, colormap, color)
 	
 	if ((index >= cmap->size) || (newPixel != closePixel)) {
 	    if (cmap->size == sizePalette) {
-		color->red = closeEntry.peRed << 8;
-		color->green = closeEntry.peGreen << 8;
-		color->blue = closeEntry.peBlue << 8;
+		color->red   = (closeEntry.peRed << 8) | closeEntry.peRed;
+		color->green = (closeEntry.peGreen << 8) | closeEntry.peGreen;
+		color->blue  = (closeEntry.peBlue << 8) | closeEntry.peBlue;
 		entry = closeEntry;
 		if (index >= cmap->size) {
 		    OutputDebugString("XAllocColor: Colormap is bigger than we thought");
@@ -404,9 +404,12 @@ XAllocColor(display, colormap, color)
 	
 	color->pixel = GetNearestColor(dc,
 		RGB(entry.peRed, entry.peGreen, entry.peBlue));
-	color->red = (GetRValue(color->pixel) << 8);
-	color->green = (GetGValue(color->pixel) << 8);
-	color->blue = (GetBValue(color->pixel) << 8);
+	color->red    = GetRValue(color->pixel);
+	color->red   |= (color->red << 8);
+	color->green  = GetGValue(color->pixel);
+	color->green |= (color->green << 8);
+	color->blue   = GetBValue(color->pixel);
+	color->blue  |= (color->blue << 8);
     }
 
     ReleaseDC(NULL, dc);
