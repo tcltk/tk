@@ -1,3 +1,25 @@
+2005-03-14  Jim Ingham  <jingham@apple.com>
+
+	* macosx/tkMacOSXScrlbr.c (ThumbActionProc): No need to use 
+	"update idletasks" here, TclServiceIdle will do as well and it
+	is simpler.
+
+	These changes implement a change on the Mac OS X side.  When we
+	unmap a window we mark all its children as unmapped (not following
+	toplevels.  But we preserve whether they had been mapped before,
+	and when the parent is remapped, we remap the children as well.
+	[Bug 940117]
+	* macosx/tkMacOSXInt.h: Added TK_MAPPED_IN_PARENT
+	* macosx/tkMacOSXSubwindows.c (FixMappingFlags): New function.
+	(XMapWindow): Call FixMappingFlags.
+	(XUnMapWindow): Ditto.
+
+	* tkMacOSXSubWindows.c (XMoveResizeWindow): Update the xOff & yOff 
+	data in the Macdrawable even if the native window hasn't been 
+	created yet.  [Bug 700305]
+	(XMoveWindow): Ditto.
+	(XResizeWindow): Ditto.
+
 2005-03-15  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* unix/tcl.m4:    Updated the OpenBSD configuration and regenerated
