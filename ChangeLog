@@ -1,5 +1,10 @@
 2003-10-29  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* unix/tkUnixRFont.c: Some cleaning up to get the file more in
+	lines with the general style guidelines.  [Bug 832091]  Still many
+	comments needed (from someone who knows the code!) for the style
+	guide to be satisfied, so bug still open.
+
 	* library/tkfbox.tcl (IconList_Create,IconList_Add): Added option
 	munging to allow some control of foreground colours on Unix in the
 	same way that you can influence the background.  [Bug 795717]
