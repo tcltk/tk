@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: clipboard.n,v 1.7 2004/06/18 21:16:21 dkf Exp $
+'\" RCS: @(#) $Id: clipboard.n,v 1.8 2004/06/18 21:27:38 dkf Exp $
 '\" 
 .so man.macros
 .TH clipboard n 8.4 Tk "Tk Built-In Commands"
@@ -79,7 +79,7 @@ with a \fB\-\fR.
 .RE
 .VS 8.4
 .TP
-\fBclipboard get\fR ?\fB\-displayof\fR \fIwindow\fR? ?\fB\-type\fR?
+\fBclipboard get\fR ?\fB\-displayof\fR \fIwindow\fR? ?\fB\-type\fR \fItype\fR?
 Retrieve data from the clipboard on \fIwindow\fR's display.
 \fIwindow\fR defaults to ".".  \fIType\fR specifies the form in which
 the data is to be returned and should be an atom name such as STRING
