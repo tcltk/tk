@@ -421,13 +421,20 @@ AC_DEFUN(SC_ENABLE_THREADS, [
     AC_ARG_ENABLE(threads, [  --enable-threads        build with threads],
 	[tcl_ok=$enableval], [tcl_ok=no])
 
-    if test "$tcl_ok" = "yes"; then
-	AC_MSG_RESULT(yes)
+    if test "$tcl_ok" = "yes" -o "${TCL_THREADS}" = 1; then
+	if test "${TCL_THREADS}" = 1; then
+	    AC_MSG_RESULT([yes (threaded core)])
+	else
+	    AC_MSG_RESULT([yes])
+	fi
 	TCL_THREADS=1
 	AC_DEFINE(TCL_THREADS)
 	# USE_THREAD_ALLOC tells us to try the special thread-based
 	# allocator that significantly reduces lock contention
 	AC_DEFINE(USE_THREAD_ALLOC)
+	# USE_THREAD_STORAGE tells us to use the new generic thread 
+	# storage subsystem. 
+	AC_DEFINE(USE_THREAD_STORAGE)
 	AC_DEFINE(_REENTRANT)
 	AC_DEFINE(_THREAD_SAFE)
 	AC_CHECK_LIB(pthread,pthread_mutex_init,tcl_ok=yes,tcl_ok=no)
@@ -469,6 +476,16 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 	ac_saved_libs=$LIBS
 	LIBS="$LIBS $THREADS_LIBS"
 	AC_CHECK_FUNCS(pthread_attr_setstacksize)
+	AC_CHECK_FUNCS(pthread_attr_get_np pthread_getattr_np)
+	AC_MSG_CHECKING([for pthread_getattr_np declaration])
+	AC_CACHE_VAL(tcl_cv_grep_pthread_getattr_np,
+	    AC_EGREP_HEADER(pthread_getattr_np, pthread.h,
+		tcl_cv_grep_pthread_getattr_np=present,
+		tcl_cv_grep_pthread_getattr_np=missing))
+	AC_MSG_RESULT($tcl_cv_grep_pthread_getattr_np)
+	if test $tcl_cv_grep_pthread_getattr_np = missing ; then
+	    AC_DEFINE(GETATTRNP_NOT_DECLARED)
+	fi
 	LIBS=$ac_saved_libs
 	AC_CHECK_FUNCS(readdir_r)
     else
@@ -730,7 +747,7 @@ AC_DEFUN(SC_CONFIG_MANPAGES, [
 #			Flags used when running the compiler in debug mode
 #	CFLAGS_OPTIMIZE -
 #			Flags used when running the compiler in optimize mode
-#	EXTRA_CFLAGS
+#	CFLAGS
 #
 #--------------------------------------------------------------------
 
@@ -800,7 +817,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     # Step 3: set configuration options based on system name and version.
 
     do64bit_ok=no
-    EXTRA_CFLAGS=""
+    LDFLAGS_ORIG="$LDFLAGS"
     TCL_EXPORT_FILE_SUFFIX=""
     UNSHARED_LIB_SUFFIX=""
     TCL_TRIM_DOTS='`echo ${VERSION} | tr -d .`'
@@ -809,7 +826,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     CFLAGS_DEBUG=-g
     CFLAGS_OPTIMIZE=-O
     if test "$GCC" = "yes" ; then
-	CFLAGS_WARNING="-Wall -Wconversion -Wno-implicit-int -fno-strict-aliasing"
+	CFLAGS_WARNING="-Wall -Wno-implicit-int -fno-strict-aliasing"
     else
 	CFLAGS_WARNING=""
     fi
@@ -843,7 +860,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 
 	    DL_OBJS="tclLoadDl.o"
-	    LDFLAGS=""
 
 	    LD_LIBRARY_PATH_VAR="LIBPATH"
 
@@ -853,8 +869,8 @@ dnl AC_CHECK_TOOL(AR, ar)
 		    AC_MSG_WARN("64bit mode not supported with GCC on $system")
 		else 
 		    do64bit_ok=yes
-		    EXTRA_CFLAGS="-q64"
-		    LDFLAGS="-q64"
+		    CFLAGS="$CFLAGS -q64"
+		    LDFLAGS="$LDFLAGS -q64"
 		    RANLIB="${RANLIB} -X64"
 		    AR="${AR} -X64"
 		    SHLIB_LD_FLAGS="-b64"
@@ -895,7 +911,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
-	    LDFLAGS=""
 	    CC_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
 	    LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
 	    LD_LIBRARY_PATH_VAR="LIBPATH"
@@ -914,8 +929,8 @@ dnl AC_CHECK_TOOL(AR, ar)
 		    AC_MSG_WARN("64bit mode not supported with GCC on $system")
 		else 
 		    do64bit_ok=yes
-		    EXTRA_CFLAGS="-q64"
-		    LDFLAGS="-q64"
+		    CFLAGS="$CFLAGS -q64"
+		    LDFLAGS="$LDFLAGS -q64"
 		    RANLIB="${RANLIB} -X64"
 		    AR="${AR} -X64"
 		    SHLIB_LD_FLAGS="-b64"
@@ -948,7 +963,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
-	    LDFLAGS=""
 
 	    #-----------------------------------------------------------
 	    # Check for inet_ntoa in -lbind, for BeOS (which also needs
@@ -964,7 +978,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
-	    LDFLAGS=""
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
@@ -975,7 +988,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
-	    LDFLAGS="-export-dynamic"
+	    LDFLAGS="$LDFLAGS -export-dynamic"
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
@@ -986,7 +999,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
-	    LDFLAGS=""
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
@@ -1004,7 +1016,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 		SHLIB_LD_LIBS='${LIBS}'
 		DL_OBJS="tclLoadShl.o"
 		DL_LIBS="-ldld"
-		LDFLAGS="-Wl,-E"
+		LDFLAGS="$LDFLAGS -Wl,-E"
 		CC_SEARCH_FLAGS='-Wl,+s,+b,${LIB_RUNTIME_DIR}:.'
 		LD_SEARCH_FLAGS='+s +b ${LIB_RUNTIME_DIR}:.'
 		LD_LIBRARY_PATH_VAR="SHLIB_PATH"
@@ -1017,7 +1029,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    fi
 
 	    # Users may want PA-RISC 1.1/2.0 portable code - needs HP cc
-	    #EXTRA_CFLAGS="+DAportable"
+	    #CFLAGS="$CFLAGS +DAportable"
 
 	    # Check to enable 64-bit flags for compiler/linker
 	    if test "$do64bit" = "yes" ; then
@@ -1038,13 +1050,8 @@ dnl AC_CHECK_TOOL(AR, ar)
 		    esac
 		else
 		    do64bit_ok=yes
-		    if test "`uname -m`" = "ia64" ; then
-			EXTRA_CFLAGS="+DD64"
-			LDFLAGS="+DD64 $LDFLAGS"
-		    else
-			EXTRA_CFLAGS="+DA2.0W"
-			LDFLAGS="+DA2.0W $LDFLAGS"
-		    fi
+		    CFLAGS="$CFLAGS +DD64"
+		    LDFLAGS="$LDFLAGS +DD64"
 		fi
 	    fi
 	    ;;
@@ -1057,7 +1064,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 		SHLIB_LD_LIBS=""
 		DL_OBJS="tclLoadShl.o"
 		DL_LIBS="-ldld"
-		LDFLAGS="-Wl,-E"
+		LDFLAGS="$LDFLAGS -Wl,-E"
 		CC_SEARCH_FLAGS='-Wl,+s,+b,${LIB_RUNTIME_DIR}:.'
 		LD_SEARCH_FLAGS='+s +b ${LIB_RUNTIME_DIR}:.'
 		LD_LIBRARY_PATH_VAR="SHLIB_PATH"
@@ -1070,7 +1077,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_LD_LIBS='${LIBS}'
 	    DL_OBJS="tclLoadAout.o"
 	    DL_LIBS=""
-	    LDFLAGS="-Wl,-D,08000000"
+	    LDFLAGS="$LDFLAGS -Wl,-D,08000000"
 	    CC_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
 	    LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
 	    SHARED_LIB_SUFFIX='${VERSION}\$\{DBGX\}.a'
@@ -1084,8 +1091,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    DL_LIBS=""
 	    CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
 	    LD_SEARCH_FLAGS='-rpath ${LIB_RUNTIME_DIR}'
-	    EXTRA_CFLAGS=""
-	    LDFLAGS=""
 	    ;;
 	IRIX-6.*)
 	    SHLIB_CFLAGS=""
@@ -1097,19 +1102,19 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
 	    LD_SEARCH_FLAGS='-rpath ${LIB_RUNTIME_DIR}'
 	    if test "$GCC" = "yes" ; then
-		EXTRA_CFLAGS="-mabi=n32"
-		LDFLAGS="-mabi=n32"
+		CFLAGS="$CFLAGS -mabi=n32"
+		LDFLAGS="$LDFLAGS -mabi=n32"
 	    else
 		case $system in
 		    IRIX-6.3)
 			# Use to build 6.2 compatible binaries on 6.3.
-			EXTRA_CFLAGS="-n32 -D_OLD_TERMIOS"
+			CFLAGS="$CFLAGS -n32 -D_OLD_TERMIOS"
 			;;
 		    *)
-			EXTRA_CFLAGS="-n32"
+			CFLAGS="$CFLAGS -n32"
 			;;
 		esac
-		LDFLAGS="-n32"
+		LDFLAGS="$LDFLAGS -n32"
 	    fi
 	    ;;
 	IRIX64-6.*)
@@ -1119,7 +1124,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
-	    LDFLAGS=""
 	    CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
 	    LD_SEARCH_FLAGS='-rpath ${LIB_RUNTIME_DIR}'
 
@@ -1131,8 +1135,8 @@ dnl AC_CHECK_TOOL(AR, ar)
 	        else
 	            do64bit_ok=yes
 	            SHLIB_LD="ld -64 -shared -rdata_shared"
-	            EXTRA_CFLAGS="-64"
-	            LDFLAGS="-64"
+	            CFLAGS="$CFLAGS -64"
+	            LDFLAGS="$LDFLAGS -64"
 	        fi
 	    fi
 	    ;;
@@ -1151,7 +1155,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 		SHLIB_LD="${CC} -shared"
 		DL_OBJS="tclLoadDl.o"
 		DL_LIBS="-ldl"
-		LDFLAGS="-Wl,--export-dynamic"
+		LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
 		CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
 		LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
 	    else
@@ -1159,12 +1163,11 @@ dnl AC_CHECK_TOOL(AR, ar)
 		    SHLIB_LD="ld -shared"
 		    DL_OBJS="tclLoadDld.o"
 		    DL_LIBS="-ldld"
-		    LDFLAGS=""
 		    CC_SEARCH_FLAGS=""
 		    LD_SEARCH_FLAGS=""])
 	    fi
 	    if test "`uname -m`" = "alpha" ; then
-		EXTRA_CFLAGS="-mieee"
+		CFLAGS="$CFLAGS -mieee"
 	    fi
 
 	    # The combo of gcc + glibc has a bug related
@@ -1175,7 +1178,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    # Disable inlining only when one of the
 	    # files in compat/*.c is being linked in.
 	    if test x"${USE_COMPAT}" != x ; then
-	        EXTRA_CFLAGS="${EXTRA_CFLAGS} -fno-inline"
+	        CFLAGS="$CFLAGS -fno-inline"
 	    fi
 
 	    # XIM peeking works under XFree86.
@@ -1191,7 +1194,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 		SHLIB_LD="${CC} -shared"
 		DL_OBJS=""
 		DL_LIBS="-ldl"
-		LDFLAGS="-Wl,--export-dynamic"
+		LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
 		CC_SEARCH_FLAGS=""
 		LD_SEARCH_FLAGS=""
 	    else
@@ -1199,12 +1202,11 @@ dnl AC_CHECK_TOOL(AR, ar)
 		    SHLIB_LD="ld -shared"
 		    DL_OBJS=""
 		    DL_LIBS="-ldld"
-		    LDFLAGS=""
 		    CC_SEARCH_FLAGS=""
 		    LD_SEARCH_FLAGS=""])
 	    fi
 	    if test "`uname -m`" = "alpha" ; then
-		EXTRA_CFLAGS="-mieee"
+		CFLAGS="$CFLAGS -mieee"
 	    fi
 	    ;;
 	MP-RAS-02*)
@@ -1214,7 +1216,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
-	    LDFLAGS=""
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
@@ -1225,7 +1226,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
-	    LDFLAGS="-Wl,-Bexport"
+	    LDFLAGS="$LDFLAGS -Wl,-Bexport"
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
@@ -1239,7 +1240,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 		SHLIB_SUFFIX=".so"
 		DL_OBJS="tclLoadDl.o"
 		DL_LIBS=""
-		LDFLAGS=""
 		CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
 		LD_SEARCH_FLAGS='-rpath ${LIB_RUNTIME_DIR}'
 		AC_MSG_CHECKING(for ELF)
@@ -1260,7 +1260,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 		SHLIB_SUFFIX=".a"
 		DL_OBJS="tclLoadAout.o"
 		DL_LIBS=""
-		LDFLAGS=""
 		CC_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
 		LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
 		SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.a'
@@ -1277,7 +1276,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
-	    LDFLAGS=""
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    AC_MSG_CHECKING(for ELF)
@@ -1304,13 +1302,13 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
-	    LDFLAGS="-export-dynamic"
+	    LDFLAGS="$LDFLAGS -export-dynamic"
 	    CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
 	    LD_SEARCH_FLAGS='-rpath ${LIB_RUNTIME_DIR}'
 	    if test "${TCL_THREADS}" = "1" ; then
 		# The -pthread needs to go in the CFLAGS, not LIBS
 		LIBS=`echo $LIBS | sed s/-pthread//`
-		EXTRA_CFLAGS="-pthread"
+		CFLAGS="$CFLAGS -pthread"
 	    	LDFLAGS="$LDFLAGS -pthread"
 	    fi
 	    case $system in
@@ -1332,7 +1330,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    DL_OBJS="tclLoadDyld.o"
 	    PLAT_OBJS="tclMacOSXBundle.o tclMacOSXFCmd.o"
 	    DL_LIBS=""
-	    LDFLAGS="-prebind"
+	    LDFLAGS="$LDFLAGS -prebind"
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    CFLAGS_OPTIMIZE="-Os"
@@ -1350,7 +1348,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadNext.o"
 	    DL_LIBS=""
-	    LDFLAGS=""
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
@@ -1367,7 +1364,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadOSF.o"
 	    DL_LIBS=""
-	    LDFLAGS=""
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
@@ -1383,7 +1379,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
-	    LDFLAGS=""
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
@@ -1399,24 +1394,23 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
-	    LDFLAGS=""
 	    CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
 	    LD_SEARCH_FLAGS='-rpath ${LIB_RUNTIME_DIR}'
 	    if test "$GCC" = "yes" ; then
-		EXTRA_CFLAGS="-mieee"
+		CFLAGS="$CFLAGS -mieee"
             else
-		EXTRA_CFLAGS="-DHAVE_TZSET -std1 -ieee"
+		CFLAGS="$CFLAGS -DHAVE_TZSET -std1 -ieee"
 	    fi
 	    # see pthread_intro(3) for pthread support on osf1, k.furukawa
 	    if test "${TCL_THREADS}" = "1" ; then
-		EXTRA_CFLAGS="${EXTRA_CFLAGS} -DHAVE_PTHREAD_ATTR_SETSTACKSIZE"
-		EXTRA_CFLAGS="${EXTRA_CFLAGS} -DTCL_THREAD_STACK_MIN=PTHREAD_STACK_MIN*64"
+		CFLAGS="$CFLAGS -DHAVE_PTHREAD_ATTR_SETSTACKSIZE"
+		CFLAGS="$CFLAGS -DTCL_THREAD_STACK_MIN=PTHREAD_STACK_MIN*64"
 		LIBS=`echo $LIBS | sed s/-lpthreads//`
 		if test "$GCC" = "yes" ; then
 		    LIBS="$LIBS -lpthread -lmach -lexc"
 		else
-		    EXTRA_CFLAGS="${EXTRA_CFLAGS} -pthread"
-		    LDFLAGS="-pthread"
+		    CFLAGS="$CFLAGS -pthread"
+		    LDFLAGS="$LDFLAGS -pthread"
 		fi
 	    fi
 
@@ -1431,7 +1425,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    DL_OBJS="tclLoadDl.o"
 	    # dlopen is in -lc on QNX
 	    DL_LIBS=""
-	    LDFLAGS=""
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
@@ -1442,7 +1435,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".a"
 	    DL_OBJS="tclLoadAout.o"
 	    DL_LIBS=""
-	    LDFLAGS="-Wl,-D,08000000"
+	    LDFLAGS="$LDFLAGS -Wl,-D,08000000"
 	    CC_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
 	    LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
 	    ;;
@@ -1452,10 +1445,10 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    # below.
 	    if test "$GCC" = "yes" ; then
 	    	SHLIB_CFLAGS="-fPIC -melf"
-	    	LDFLAGS="-melf -Wl,-Bexport"
+	    	LDFLAGS="$LDFLAGS -melf -Wl,-Bexport"
 	    else
 	    	SHLIB_CFLAGS="-Kpic -belf"
-	    	LDFLAGS="-belf -Wl,-Bexport"
+	    	LDFLAGS="$LDFLAGS -belf -Wl,-Bexport"
 	    fi
 	    SHLIB_LD="ld -G"
 	    SHLIB_LD_LIBS=""
@@ -1472,7 +1465,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
-	    LDFLAGS=""
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
@@ -1483,7 +1475,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
-	    LDFLAGS=""
 	    CC_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
 	    LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
 
@@ -1513,7 +1504,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
-	    LDFLAGS=""
 	    if test "$GCC" = "yes" ; then
 		SHLIB_LD="$CC -shared"
 		CC_SEARCH_FLAGS='-Wl,-R,${LIB_RUNTIME_DIR}'
@@ -1533,7 +1523,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    AC_DEFINE(_POSIX_PTHREAD_SEMANTICS)
 
 	    SHLIB_CFLAGS="-KPIC"
-	    LDFLAGS=""
     
 	    # Check to enable 64-bit flags for compiler/linker
 	    if test "$do64bit" = "yes" ; then
@@ -1544,11 +1533,11 @@ dnl AC_CHECK_TOOL(AR, ar)
 			else
 			    do64bit_ok=yes
 			    if test "$do64bitVIS" = "yes" ; then
-				EXTRA_CFLAGS="-xarch=v9a"
-			    	LDFLAGS="-xarch=v9a"
+				CFLAGS="$CFLAGS -xarch=v9a"
+			    	LDFLAGS="$LDFLAGS -xarch=v9a"
 			    else
-				EXTRA_CFLAGS="-xarch=v9"
-			    	LDFLAGS="-xarch=v9"
+				CFLAGS="$CFLAGS -xarch=v9"
+			    	LDFLAGS="$LDFLAGS -xarch=v9"
 			    fi
 			fi
 		else
@@ -1580,11 +1569,11 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_LD_LIBS='${LIBS}'
 	    DL_OBJS="tclLoadAout.o"
 	    DL_LIBS=""
-	    LDFLAGS="-Wl,-D,08000000"
+	    LDFLAGS="$LDFLAGS -Wl,-D,08000000"
 	    CC_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
 	    LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
 	    if test "$GCC" != "yes" ; then
-		EXTRA_CFLAGS="-DHAVE_TZSET -std1"
+		CFLAGS="$CFLAGS -DHAVE_TZSET -std1"
 	    fi
 	    ;;
 	UNIX_SV* | UnixWare-5*)
@@ -1598,15 +1587,10 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    # that don't grok the -Bexport option.  Test that it does.
 	    hold_ldflags=$LDFLAGS
 	    AC_MSG_CHECKING(for ld accepts -Bexport flag)
-	    LDFLAGS="${LDFLAGS} -Wl,-Bexport"
-	    AC_TRY_LINK(, [int i;], found=yes, found=no)
-	    LDFLAGS=$hold_ldflags
+	    LDFLAGS="$LDFLAGS -Wl,-Bexport"
+	    AC_TRY_LINK(, [int i;], [found=yes],
+			[LDFLAGS=$hold_ldflags found=no])
 	    AC_MSG_RESULT($found)
-	    if test $found = yes; then
-	    LDFLAGS="-Wl,-Bexport"
-	    else
-	    LDFLAGS=""
-	    fi
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
@@ -1715,7 +1699,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 	SHLIB_SUFFIX=""
 	DL_OBJS="tclLoadNone.o"
 	DL_LIBS=""
-	LDFLAGS=""
+	LDFLAGS="$LDFLAGS_ORIG"
 	CC_SEARCH_FLAGS=""
 	LD_SEARCH_FLAGS=""
 	BUILD_DLTEST=""
@@ -1818,7 +1802,6 @@ dnl        esac
     AC_SUBST(CFLAGS_DEBUG)
     AC_SUBST(CFLAGS_OPTIMIZE)
     AC_SUBST(CFLAGS_WARNING)
-    AC_SUBST(EXTRA_CFLAGS)
 
     AC_SUBST(LDFLAGS)
     AC_SUBST(LDFLAGS_DEBUG)
@@ -1981,12 +1964,11 @@ int main() {
 #		NO_DIRENT_H
 #		NO_ERRNO_H
 #		NO_VALUES_H
-#		NO_LIMITS_H
+#		HAVE_LIMITS_H or NO_LIMITS_H
 #		NO_STDLIB_H
 #		NO_STRING_H
 #		NO_SYS_WAIT_H
 #		NO_DLFCN_H
-#		HAVE_UNISTD_H
 #		HAVE_SYS_PARAM_H
 #
 #		HAVE_STRING_H ?
@@ -2024,7 +2006,8 @@ closedir(d);
     AC_CHECK_HEADER(errno.h, , [AC_DEFINE(NO_ERRNO_H)])
     AC_CHECK_HEADER(float.h, , [AC_DEFINE(NO_FLOAT_H)])
     AC_CHECK_HEADER(values.h, , [AC_DEFINE(NO_VALUES_H)])
-    AC_CHECK_HEADER(limits.h, , [AC_DEFINE(NO_LIMITS_H)])
+    AC_CHECK_HEADER(limits.h,
+	[AC_DEFINE(HAVE_LIMITS_H)], [AC_DEFINE(NO_LIMITS_H)])
     AC_CHECK_HEADER(stdlib.h, tcl_ok=1, tcl_ok=0)
     AC_EGREP_HEADER(strtol, stdlib.h, , tcl_ok=0)
     AC_EGREP_HEADER(strtoul, stdlib.h, , tcl_ok=0)
@@ -2047,9 +2030,7 @@ closedir(d);
     AC_CHECK_HEADER(dlfcn.h, , [AC_DEFINE(NO_DLFCN_H)])
 
     # OS/390 lacks sys/param.h (and doesn't need it, by chance).
-
-    AC_HAVE_HEADERS(unistd.h sys/param.h)
-
+    AC_HAVE_HEADERS(sys/param.h)
 ])
 
 #--------------------------------------------------------------------
@@ -2480,9 +2461,9 @@ AC_DEFUN(SC_TCL_64BIT_FLAGS, [
 	# See if we should use long anyway  Note that we substitute in the
 	# type that is our current guess for a 64-bit type inside this check
 	# program, so it should be modified only carefully...
-	AC_TRY_RUN([#include <unistd.h>
-	    int main() {exit(!(sizeof(]${tcl_type_64bit}[) > sizeof(long)));}
-	    ], tcl_cv_type_64bit=${tcl_type_64bit},:,:)])
+        AC_TRY_COMPILE(,[switch (0) { 
+            case 1: case (sizeof(]${tcl_type_64bit}[)==sizeof(long)): ; 
+        }],tcl_cv_type_64bit=${tcl_type_64bit})])
     if test "${tcl_cv_type_64bit}" = none ; then
 	AC_DEFINE(TCL_WIDE_INT_IS_LONG)
 	AC_MSG_RESULT(using long)

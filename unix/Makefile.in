@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.93 2004/04/24 06:00:18 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.94 2004/07/16 23:40:29 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -117,12 +117,12 @@ CFLAGS_OPTIMIZE		= @CFLAGS_OPTIMIZE@
 #CFLAGS			= $(CFLAGS_DEBUG)
 #CFLAGS			= $(CFLAGS_OPTIMIZE)
 #CFLAGS			= $(CFLAGS_DEBUG) $(CFLAGS_OPTIMIZE)
-CFLAGS			= @CFLAGS@ @CFLAGS_DEFAULT@
+CFLAGS			= @CFLAGS_DEFAULT@ @CFLAGS@
 
 # Flags to pass to the linker
 LDFLAGS_DEBUG		= @LDFLAGS_DEBUG@
 LDFLAGS_OPTIMIZE	= @LDFLAGS_OPTIMIZE@
-LDFLAGS			= @LDFLAGS@ @LDFLAGS_DEFAULT@
+LDFLAGS			= @LDFLAGS_DEFAULT@ @LDFLAGS@
 
 # A "-I" switch that can be used when compiling to make all of the
 # X11 include files accessible (the configure script will try to
@@ -262,7 +262,7 @@ XFT_LIBS		= @XFT_LIBS@
 # modify any of this stuff by hand.
 #----------------------------------------------------------------
 
-AC_FLAGS		= @EXTRA_CFLAGS@ @DEFS@
+AC_FLAGS		= @DEFS@
 AR			= @AR@
 RANLIB			= @RANLIB@
 SRC_DIR			= @srcdir@/..

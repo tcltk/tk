@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.94 2004/03/26 19:57:37 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.95 2004/07/16 23:40:29 hobbs Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.57)
@@ -61,11 +61,9 @@ fi
 
 AC_PROG_CC
 
-#------------------------------------------------------------------------
-# I'm not sure why these need to come before all of the other tests
-#------------------------------------------------------------------------
-
-AC_HAVE_HEADERS(unistd.h limits.h)
+# limits header checks must come early to prevent
+# an autoconf bug that throws errors on configure
+AC_HAVE_HEADERS([limits.h])
 
 #------------------------------------------------------------------------------
 # If we're using GCC, see if the compiler understands -pipe.  If so, use it.
@@ -84,29 +82,14 @@ if test -n "$GCC"; then
 fi  
 fi
 
-#--------------------------------------------------------------------
-#	Detect what compiler flags to set for 64-bit support.
-#--------------------------------------------------------------------
-
-SC_TCL_EARLY_FLAGS
-
-SC_TCL_64BIT_FLAGS
-
 #------------------------------------------------------------------------
-# Threads support
+# Threads support - this auto-enables if Tcl was compiled threaded
 #------------------------------------------------------------------------
 
-dnl Removed call to SC_ENABLE_THREADS since Tk needs to use
-dnl the thread configuration provided by Tcl.
-dnl SC_ENABLE_THREADS
+SC_ENABLE_THREADS
 
-if test "${TCL_THREADS}" = 1; then
-    # FIXME: It seems like these defines should be covered by
-    # the TCL_DEFS entry in tclConfig.sh. Why are they not?
-    AC_DEFINE(TCL_THREADS)
-    AC_DEFINE(_REENTRANT)
-    AC_DEFINE(_THREAD_SAFE)
-fi
+# Add the threads support libraries
+LIBS="$LIBS$THREADS_LIBS"
 
 #--------------------------------------------------------------------
 # Recompute the necessary flags to run the compiler
@@ -118,14 +101,22 @@ SC_CONFIG_CFLAGS
 
 SC_ENABLE_SYMBOLS
 
-LIB_RUNTIME_DIR='${LIB_RUNTIME_DIR}'
-
 TK_DBGX=${DBGX}
+
+#--------------------------------------------------------------------
+#	Detect what compiler flags to set for 64-bit support.
+#--------------------------------------------------------------------
+
+SC_TCL_EARLY_FLAGS
+
+SC_TCL_64BIT_FLAGS
 
 #------------------------------------------------------------------------
 # If Tcl and Tk are installed in different places, adjust the library
 # search path to reflect this.
 #------------------------------------------------------------------------
+
+LIB_RUNTIME_DIR='${LIB_RUNTIME_DIR}'
 
 if test "$TCL_EXEC_PREFIX" != "$exec_prefix"; then
     LIB_RUNTIME_DIR="${LIB_RUNTIME_DIR}:${TCL_EXEC_PREFIX}/lib"
@@ -448,4 +439,4 @@ AC_SUBST(XLIBSW)
 AC_SUBST(TK_SHARED_BUILD)
 AC_SUBST(LOCALES)
 
-AC_OUTPUT(Makefile tkConfig.sh)
+AC_OUTPUT([Makefile tkConfig.sh])
