@@ -1,3 +1,19 @@
+2001-08-20  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* generic/tkObj.c (TkGetWindowFromObj): Rewrote window code to
+	reuse a previously worked-out set of window information exactly
+	when the reference window is the same and no window deletions have
+	occurred since the object was allocated (display has same epoch
+	counter.)  Required changing the internal rep of the window quite
+	a bit as now need to save three words-worth of information in the
+	internal rep (this window, reference window, display epoch.)
+	* generic/tkObj.c (SetWindowFromAny, DupWindowInternalRep,
+	FreeWindowInternalRep): Code to support new internal rep for
+	window objects.
+	* generic/tkInt.h: Added epoch counter to TkDisplay structure
+	* generic/tkWindow.c (GetScreen, Tk_DestroyWindow): Epoch counter
+	is incremented every time a window is deleted.
+
 2001-08-18  Peter Spjuth <peter.spjuth@space.se>
 	* doc/grid.n:
 	* tests/grid.test:

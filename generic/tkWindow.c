@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.33 2001/08/15 15:44:36 dkf Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.34 2001/08/21 14:43:08 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -470,6 +470,7 @@ GetScreen(interp, screenName, screenPtr)
 	    dispPtr->useInputMethods = 0;
 	    OpenIM(dispPtr);
 	    TkInitXId(dispPtr);
+	    dispPtr->deletionEpoch = 0L;
 
 	    tsdPtr->displayList = dispPtr;
 	    break;
@@ -1387,6 +1388,10 @@ Tk_DestroyWindow(tkwin)
 		    (ClientData) winPtr->pathName);
 	    Tcl_DeleteHashEntry(Tcl_FindHashEntry(&winPtr->mainPtr->nameTable,
 		    winPtr->pathName));
+	    /*
+	     * Invalidate all objects referring to windows on this display.
+	     */
+	    dispPtr->deletionEpoch++;
 	}
 	winPtr->mainPtr->refCount--;
 	if (winPtr->mainPtr->refCount == 0) {

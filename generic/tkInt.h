@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.36 2001/08/15 15:44:36 dkf Exp $ 
+ * RCS: $Id: tkInt.h,v 1.37 2001/08/21 14:43:08 dkf Exp $ 
  */
 
 #ifndef _TKINT
@@ -474,6 +474,11 @@ typedef struct TkDisplay {
     int warpX;
     int warpY;
     int useInputMethods;	/* Whether to use input methods */
+
+    /*
+     * The following field(s) were all added for Tk8.4
+     */
+    long deletionEpoch;		/* Incremented by window deletions */
 } TkDisplay;
 
 /*
