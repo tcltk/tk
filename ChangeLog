@@ -1,3 +1,7 @@
+2003-11-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tclWinSend.c: Fixed an error returning the registered name.
+
 2003-11-08  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* tests/textDisp.test:
