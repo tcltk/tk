@@ -1,3 +1,8 @@
+2002-06-20  Peter Spjuth  <peter.spjuth@space.se>
+
+	* generic/tkGrid.c: Corrected the test for grid propagate change.
+	[Bug #571433]
+
 2002-06-19  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* tests/panedwindow.test:

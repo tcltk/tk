@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.21 2002/06/14 22:25:12 jenglish Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.22 2002/06/20 21:18:32 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -767,7 +767,7 @@ GridPropagateCommand(tkwin, interp, objc, objv)
 {
     Tk_Window master;
     Gridder *masterPtr;
-    int propagate;
+    int propagate, old;
     
     if (objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?boolean?");
@@ -789,7 +789,8 @@ GridPropagateCommand(tkwin, interp, objc, objv)
     
     /* Only request a relayout if the propagation bit changes */
     
-    if ((!propagate) ^ (masterPtr->flags&DONT_PROPAGATE)) {
+    old = !(masterPtr->flags & DONT_PROPAGATE);
+    if (propagate != old) {
 	if (propagate) {
 	    masterPtr->flags &= ~DONT_PROPAGATE;
 	} else {
