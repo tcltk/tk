@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: unixSelect.test,v 1.4 2002/07/13 20:28:36 dgp Exp $
+# RCS: @(#) $Id: unixSelect.test,v 1.5 2002/09/30 13:42:25 dkf Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -233,6 +233,69 @@ test unixSelect-1.10 {TkSelGetSelection procedure: INCR i18n text} {unixOnly} {
     list [string equal [string repeat x 3999]\u00fc[string repeat x 4000] $x] \
 	    [string length $x] [string bytelength $x]
 } {1 8000 8001}
+# Now some tests to make sure that the right thing is done when
+# transferring UTF8 selections, to prevent [Bug 614650] and its ilk
+# from rearing its ugly head again.
+test unixSelect-1.11 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixOnly} {
+    setupbg
+    dobg {
+	entry .e; pack .e; update
+	.e insert 0 [string repeat x 3999]\u00fc
+	.e selection range 0 end
+    }
+    set x [selection get -type UTF8_STRING]
+    cleanupbg
+    list [string equal [string repeat x 3999]\u00fc $x] \
+	    [string length $x] [string bytelength $x]
+} {1 4000 4001}
+test unixSelect-1.12 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixOnly} {
+    setupbg
+    dobg {
+	entry .e; pack .e; update
+	.e insert 0 \u00fc[string repeat x 3999]
+	.e selection range 0 end
+    }
+    set x [selection get -type UTF8_STRING]
+    cleanupbg
+    list [string equal \u00fc[string repeat x 3999] $x] \
+	    [string length $x] [string bytelength $x]
+} {1 4000 4001}
+test unixSelect-1.13 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixOnly} {
+    setupbg
+    dobg {
+	entry .e; pack .e; update
+	.e insert 0 [string repeat x 3999]\u00fc[string repeat x 4000]
+	.e selection range 0 end
+    }
+    set x [selection get -type UTF8_STRING]
+    cleanupbg
+    list [string equal [string repeat x 3999]\u00fc[string repeat x 4000] $x] \
+	    [string length $x] [string bytelength $x]
+} {1 8000 8001}
+test unixSelect-1.14 {TkSelGetSelection procedure: simple i18n text, utf-8} {unixOnly} {
+    setupbg
+    entry .e
+    pack .e
+    update
+    .e insert 0 [encoding convertfrom identity \u00fcber\u0444]
+    .e selection range 0 end
+    set result [dobg {string bytelength [selection get -type UTF8_STRING]}]
+    cleanupbg
+    destroy .e
+    set result
+} {5}
+test unixSelect-1.15 {TkSelGetSelection procedure: simple i18n text, utf-8} {unixOnly} {
+    setupbg
+    dobg {
+	entry .e; pack .e; update
+	.e insert 0 \u00fc\u0444
+	.e selection range 0 end
+    }
+    set x [selection get -type UTF8_STRING]
+    cleanupbg
+    list [string equal \u00fc\u0444 $x] \
+	    [string length $x] [string bytelength $x]
+} {1 2 4}
 
 # cleanup
 ::tcltest::cleanupTests
