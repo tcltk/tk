@@ -1,3 +1,7 @@
+2002-02-19  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes: First draft of updated changes for 8.4a4 release.
+
 2002-02-19  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkImgPhoto.c (MatchFileFormat):  Tcl_Seek takes
