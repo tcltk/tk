@@ -1,3 +1,8 @@
+2004-05-29  Joe English  <jenglish@users.sourceforge.net>
+
+	* doc/messageBox.n: Fix minor markup errors (backslash 
+	is \e, not \b).
+
 2004-05-24  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/messageBox.n: Added documentation for the -detail option.
