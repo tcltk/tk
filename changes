@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.44 2000/06/05 23:31:08 ericm Exp $
+RCS: @(#) $Id: changes,v 1.45 2000/11/04 00:02:58 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4944,3 +4944,62 @@ improved one (fellows, melski)
 
 --- Released 8.4a1, June 6, 2000 --- See ChangeLog for details ---
 
+2000-05-15 (bug fix) changed wm deiconify from using idle callback to
+calling restack and focus code immediately. (hobbs)
+
+2000-07 (build cleanup) cleanup of defines in tkConfig.sh, and cleanup
+in make and configure files to better handle .rc files across
+builds. (welch)
+
+2000-07 (build improvements) cleanup of the makefiles and configure scripts
+to correct support for building under gcc for Windows. (dejong)
+
+2000-08 (feature enhancements) for Windows, corrected drawing of separator
+menu entries, disable menu entries and the height for separator
+bars. (melski)
+
+2000-08 (bug fix) fixed calling of takeFocus proc with arg bearing
+functions. (nemethi)
+
+2000-08 (bug fix) For text widgets, added a test for a NULL segment pointer
+when doing backwards searches for "", correct searching over elided chars,
+and corrected search combining -regexp and -nocase. (melski)
+
+2000-08 (bug fix) Corrected code for using 'place', cursors, colors and 3D
+borders on multiple screens simultaneously. (hobbs, hipp)
+
+--- Released 8.3.2, August 9, 2000 --- See ChangeLog for details ---
+
+ * Added support for mingw (gcc on Windows), AIX-5 and Win64 builds
+   (dejong, hobbs)
+
+ * Added -multiple option to tk_getOpenFile (melski)
+
+ * Introduced some localization support to Tk dialogs (duperval, et al)
+
+ * Improved support for static builds on Windows (gravereaux)
+
+ * New -state option for listbox, better native color defaults (melski)
+
+ * Tcl_Obj'ified clipboard, message, tkwait, bindtags, grab. place,
+   selection commands (melski)
+
+ * More correct GNU configure support (no more --enable-gcc) (dejong)
+
+ * Corrected Windows menu indicator drawing (oberhumer)
+
+ * Added tkPlatDecls.h to default install (melski)
+
+ * Added TK_OPTION_CUSTOM type, similar to TK_CONFIG_CUSTOM (melski)
+
+ * Several fixes for multi-display uses of Tk (hipp, hobbs)
+
+ * New Tk_CreateAnonymousWindow C API to create anonymous Tk windows
+   controllable from C (melski)
+
+ * Improved error checking in Windows native dialogs (melski, hobbs)
+
+ * Made 'tk useinputmethods 1' the default in tk.tcl, for users of XIM and
+   "dead" keys (hobbs)
+
+--- Released 8.4a2, November 3, 2000 --- See ChangeLog for details ---
