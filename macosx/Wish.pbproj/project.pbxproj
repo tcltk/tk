@@ -3333,7 +3333,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright �
 	<key>CFBundleExecutable</key>
 	<string>Wish Shell</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Wish Shell 8.5, Copyright © 2003 Tcl Core Team.
+	<string>Wish Shell 8.5, Copyright © 2004 Tcl Core Team.
 MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright © 2001-2002, Apple Computer, Inc.</string>
 	<key>CFBundleIconFile</key>
 	<string>Wish.icns</string>
