@@ -1,5 +1,10 @@
 2004-11-07  Peter Spjuth  <peter.spjuth@space.se>
 
+	* doc/frame.n: Added some info for -width/-height options.
+	[Bug 1055423]
+
+2004-11-07  Peter Spjuth  <peter.spjuth@space.se>
+
 	* tests/grid.test:
 	* generic/tkGrid.c: Made handling of ^ a bit more consistent in
 	corner cases.  This makes ^ work without any widgets in the same
