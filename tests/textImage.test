@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textImage.test,v 1.6 2003/04/01 21:06:54 dgp Exp $
+# RCS: @(#) $Id: textImage.test,v 1.7 2003/05/19 21:19:52 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -32,7 +32,7 @@ test textImage-1.2 {basic argument checking} {
 	text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
 	pack .t
 	list [catch {.t image c} msg] $msg
-} {1 {bad image option "c": must be cget, configure, create, or names}}
+} {1 {ambiguous option "c": must be cget, configure, create, or names}}
 
 test textImage-1.3 {cget argument checking} {
 	catch {destroy .t}
@@ -132,7 +132,7 @@ test textImage-1.14 {basic argument checking} {
 	text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
 	pack .t
 	list [catch {.t image huh} msg] $msg
-} {1 {bad image option "huh": must be cget, configure, create, or names}}
+} {1 {bad option "huh": must be cget, configure, create, or names}}
 
 test textImage-1.15 {align argument checking} {
 	catch {
