@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.3 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.4 2002/08/08 01:43:44 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -337,7 +337,7 @@ test panedwindow-9.5 {sash dragto subcommand, errors} {
     
 test panedwindow-10.1 {sash mark/sash dragto interaction} {
     panedwindow .p -borderwidth 0 -sashpad 0 -sashwidth 4 -showhandle false
-    .p add [frame .f -width 20 -height 20] [button .c]
+    .p add [frame .f -width 20 -height 20] [button .c -text foobar]
     .p sash mark 0 10 10
     .p sash dragto 0 20 10
     set result [.p sash coord 0]
@@ -347,7 +347,7 @@ test panedwindow-10.1 {sash mark/sash dragto interaction} {
 test panedwindow-10.2 {sash mark/sash dragto interaction} {
     panedwindow .p -borderwidth 0 -sashpad 0 -sashwidth 4 -orient vertical \
             -showhandle false
-    .p add [frame .p.f -width 20 -height 20] [button .p.c]
+    .p add [frame .p.f -width 20 -height 20] [button .p.c -text foobar]
     .p sash mark 0 10 10
     .p sash dragto 0 10 20
     set result [.p sash coord 0]
@@ -423,7 +423,7 @@ test panedwindow-11.8 {sash place subcommand, respects minsize} {
 
 test panedwindow-12.1 {moving sash changes size of pane to left} {
     panedwindow .p -borderwidth 0 -sashpad 0 -sashwidth 4 -showhandle false
-    .p add [frame .f -width 20 -height 20] [button .c] -sticky nsew
+    .p add [frame .f -width 20 -height 20] [button .c -text foobar] -sticky nsew
     .p sash place 0 30 0
     pack .p
     update
@@ -454,7 +454,7 @@ test panedwindow-12.3 {moving sash does not change reqsize of panedwindow} {
 test panedwindow-12.4 {moving sash changes size of pane above} {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 4 \
             -orient vertical
-    .p add [frame .f -width 20 -height 10] [button .c] -sticky nsew
+    .p add [frame .f -width 20 -height 10] [button .c -text foobar] -sticky nsew
     .p sash place 0 0 20
     pack .p
     update
