@@ -1,3 +1,11 @@
+1999-03-31    <redman@scriptics.com>
+
+	* win/tkWinSend.c: Modified dde/send code to work properly on
+	Win95/Win98. String lengths are not returned properly by DDE, so
+	NULL terminate all strings going in and ignore the string length
+	coming back out.  Do not destroy handles until all necessary work
+	on those handles (and child handles) is done.
+
 1999-03-30    <stanton@scriptics.com>
 
 	* generic/tkWindow.c (Tk_DestroyWindow): Image handlers are now
