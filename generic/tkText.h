@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.12 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.13 2002/12/27 23:43:38 davygrvy Exp $
  */
 
 #ifndef _TKTEXT
@@ -34,7 +34,7 @@
  * file:
  */
 
-typedef struct TkTextBTree *TkTextBTree;
+typedef struct TkTextBTree_ *TkTextBTree;
 
 /*
  * The data structure below defines a single line of text (from newline

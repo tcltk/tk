@@ -1,3 +1,8 @@
+2002-12-27  David Gravereaux <davygrvy@pobox.com>
+
+	* generic/tkText.h: ANSI unfriendly typedef for TkTextBTree
+	repaired for C++ compilers.
+
 2002-12-27  Joe English  <jenglish@users.sourceforge.net>
 	* unix/tkUnixWm.c (WaitForEvent): process Map and Unmap events
 	as well as Configure events during WaitFor{Configure|Map}Notify.
