@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.34 2002/01/25 21:09:37 dgp Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.35 2002/04/10 19:39:01 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -3073,7 +3073,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	if ((argc != 3) && (argc != 5)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
 		    argv[0],
-		    " stackorder window ?isabove|isbelow? ?window?\"",
+		    " stackorder window ?isabove|isbelow window?\"",
 		    (char *) NULL);
 	    return TCL_ERROR;
 	}
