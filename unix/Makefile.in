@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.64 2002/03/05 19:44:43 davygrvy Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.65 2002/03/06 18:54:16 davygrvy Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1074,9 +1074,12 @@ dist:   $(UNIX_DIR)/configure
 	cp -p $(TOP_DIR)/win/README $(DISTDIR)/win
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/win
 	mkdir $(DISTDIR)/win/rc
+	cp -p $(TOP_DIR)/win/rc/wish.exe.manifest $(TOP_DIR)/win/rc/
 	cp -p $(TOP_DIR)/win/rc/*.rc $(TOP_DIR)/win/rc/*.cur \
 		$(TOP_DIR)/win/rc/*.ico $(TOP_DIR)/win/rc/*.bmp \
 		$(DISTDIR)/win/rc
+	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/rc/*.rc
+	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/rc/wish.exe.manifest
 	mkdir $(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/tkMacProjects.sea.hqx $(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/*.c $(TOP_DIR)/mac/*.h $(TOP_DIR)/mac/*.r \
