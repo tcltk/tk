@@ -1,3 +1,9 @@
+2004-05-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkImgPhoto.c (ImgPhotoConfigureMaster): force -data into
+	ByteArray and -format into String to correctly handle them if they
+	have been shimmered or created as some other object type.
+
 2004-04-24  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkPort.h:
