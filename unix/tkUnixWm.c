@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.15 2002/04/12 10:01:13 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.16 2002/05/23 19:55:18 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -4253,7 +4253,8 @@ TkWmStackorderToplevelWrapperMap(winPtr, table)
     Window wrapper;
     int newEntry;
 
-    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr)) {
+    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr) &&
+            !Tk_IsEmbedded(winPtr)) {
         wrapper = (winPtr->wmInfoPtr->reparent != None)
             ? winPtr->wmInfoPtr->reparent
             : winPtr->wmInfoPtr->wrapperPtr->window;

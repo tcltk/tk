@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.15 2002/04/10 19:39:01 mdejong Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.16 2002/05/23 19:55:18 mdejong Exp $
  */
 
 #include <Gestalt.h>
@@ -3047,7 +3047,8 @@ TkWmStackorderToplevelWrapperMap(winPtr, table)
     WindowPeek wrapper;
     int newEntry;
 
-    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr)) {
+    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr) &&
+            !Tk_IsEmbedded(winPtr)) {
         wrapper = (WindowPeek) TkMacGetDrawablePort(winPtr->window);
 
         hPtr = Tcl_CreateHashEntry(table,
