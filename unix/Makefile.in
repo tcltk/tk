@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.48 2000/09/02 01:18:24 ericm Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.49 2000/09/29 21:40:54 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -408,6 +408,9 @@ xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE)
 # Note, in the target below TCL_LIBRARY needs to be set or else
 # "make test" won't work in the case where the compilation directory
 # isn't the same as the source directory.
+# Specifying TESTFLAGS on the command line is the standard way to pass
+# args to tcltest, ie:
+#	% make test TESTFLAGS="-verbose bps -file fileName.test"
 
 test: tktest
 	LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}; \
@@ -417,7 +420,8 @@ test: tktest
 	export SHLIB_PATH; \
 	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
-	./tktest $(TOP_DIR)/tests/all.tcl -geometry +0+0 $(TCLTESTARGS)
+	./tktest $(TOP_DIR)/tests/all.tcl -geometry +0+0 \
+	$(TESTFLAGS) $(TCLTESTARGS)
 
 # Tests with different languages
 testlang: tktest
@@ -431,7 +435,8 @@ testlang: tktest
 	for lang in $(LOCALES) ;  \
 	do \
 	LANG=$(lang); export LANG; \
-	./tktest $(TOP_DIR)/tests/all.tcl -geometry +0+0 $(TCLTESTARGS); \
+	./tktest $(TOP_DIR)/tests/all.tcl -geometry +0+0 \
+	$(TESTFLAGS) $(TCLTESTARGS); \
 	done
 
 # Useful target to launch a built tktest with the proper path,...

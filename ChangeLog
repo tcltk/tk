@@ -1,3 +1,9 @@
+2000-09-29  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* win/Makefile.in: commented use of TESTFLAGS
+	* unix/Makefile.in: added TESTFLAGS to test and testlang targets to
+	conform with Windows makefile and TEA style.
+
 2000-09-29  Eric Melski  <ericm@ajubasolutions.com>
 
 	* generic/tkTest.c: Fixed tests to use updated API.
