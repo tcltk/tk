@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCursor.c,v 1.8 2001/10/23 08:40:47 dkf Exp $
+ * RCS: @(#) $Id: tkCursor.c,v 1.9 2002/08/05 04:30:38 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -26,8 +26,8 @@
  */
 
 typedef struct {
-    char *source;		/* Cursor bits. */
-    char *mask;			/* Mask bits. */
+    CONST char *source;		/* Cursor bits. */
+    CONST char *mask;		/* Mask bits. */
     int width, height;		/* Dimensions of cursor (and data
 				 * and mask). */
     int xHot, yHot;		/* Location of cursor hot-spot. */
@@ -45,7 +45,7 @@ static void		DupCursorObjProc _ANSI_ARGS_((Tcl_Obj *srcObjPtr,
 static void		FreeCursor _ANSI_ARGS_((TkCursor *cursorPtr));
 static void		FreeCursorObjProc _ANSI_ARGS_((Tcl_Obj *objPtr));
 static TkCursor *	GetCursor _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_Window tkwin, char *name));
+			    Tk_Window tkwin, CONST char *name));
 static TkCursor *	GetCursorFromObj _ANSI_ARGS_((Tk_Window tkwin,
 			    Tcl_Obj *objPtr));
 static void		InitCursorObj _ANSI_ARGS_((Tcl_Obj *objPtr));
@@ -189,7 +189,7 @@ Tk_Cursor
 Tk_GetCursor(interp, tkwin, string)
     Tcl_Interp *interp;		/* Interpreter to use for error reporting. */
     Tk_Window tkwin;		/* Window in which cursor will be used. */
-    char *string;		/* Description of cursor.  See manual entry
+    Tk_Uid string;		/* Description of cursor.  See manual entry
 				 * for details on legal syntax. */
 {
     TkCursor *cursorPtr = GetCursor(interp, tkwin, string);
@@ -230,7 +230,7 @@ static TkCursor *
 GetCursor(interp, tkwin, string)
     Tcl_Interp *interp;		/* Interpreter to use for error reporting. */
     Tk_Window tkwin;		/* Window in which cursor will be used. */
-    char *string;		/* Description of cursor.  See manual entry
+    CONST char *string;		/* Description of cursor.  See manual entry
 				 * for details on legal syntax. */
 {
     Tcl_HashEntry *nameHashPtr;
@@ -318,8 +318,8 @@ Tk_GetCursorFromData(interp, tkwin, source, mask, width, height,
 	xHot, yHot, fg, bg)
     Tcl_Interp *interp;		/* Interpreter to use for error reporting. */
     Tk_Window tkwin;		/* Window in which cursor will be used. */
-    char *source;		/* Bitmap data for cursor shape. */
-    char *mask;			/* Bitmap data for cursor mask. */
+    CONST char *source;		/* Bitmap data for cursor shape. */
+    CONST char *mask;		/* Bitmap data for cursor mask. */
     int width, height;		/* Dimensions of cursor. */
     int xHot, yHot;		/* Location of hot-spot in cursor. */
     Tk_Uid fg;			/* Foreground color for cursor. */
@@ -418,7 +418,7 @@ Tk_GetCursorFromData(interp, tkwin, source, mask, width, height,
  *--------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_NameOfCursor(display, cursor)
     Display *display;		/* Display for which cursor was allocated. */
     Tk_Cursor cursor;		/* Identifier for cursor whose name is

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.12 2002/01/17 05:13:11 dgp Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.13 2002/08/05 04:30:38 dgp Exp $
  */
 
 #include "tk3d.h"
@@ -186,7 +186,7 @@ Tk_Get3DBorder(interp, tkwin, colorName)
     Tcl_Interp *interp;		/* Place to store an error message. */
     Tk_Window tkwin;		/* Token for window in which border will
 				 * be drawn. */
-    char *colorName;		/* String giving name of color
+    Tk_Uid colorName;		/* String giving name of color
 				 * for window background. */
 {
     Tcl_HashEntry *hashPtr;
@@ -324,7 +324,7 @@ Tk_Draw3DRectangle(tkwin, drawable, border, x, y, width, height,
  *--------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_NameOf3DBorder(border)
     Tk_3DBorder border;		/* Token for border. */
 {
@@ -652,7 +652,7 @@ Tk_GetReliefFromObj(interp, objPtr, resultPtr)
 int
 Tk_GetRelief(interp, name, reliefPtr)
     Tcl_Interp *interp;		/* For error messages. */
-    char *name;			/* Name of a relief type. */
+    CONST char *name;		/* Name of a relief type. */
     int *reliefPtr;		/* Where to store converted relief. */
 {
     char c;
@@ -703,7 +703,7 @@ Tk_GetRelief(interp, name, reliefPtr)
  *--------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_NameOfRelief(relief)
     int relief;		/* One of TK_RELIEF_FLAT, TK_RELIEF_RAISED,
 			 * or TK_RELIEF_SUNKEN. */

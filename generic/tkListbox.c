@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.27 2002/06/21 02:38:54 hobbs Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.28 2002/08/05 04:30:39 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -442,8 +442,8 @@ static void		ListboxWorldChanged _ANSI_ARGS_((
 static int		NearestListboxElement _ANSI_ARGS_((Listbox *listPtr,
 			    int y));
 static char *		ListboxListVarProc _ANSI_ARGS_ ((ClientData clientData,
-	                    Tcl_Interp *interp, char *name1, CONST char *name2,
- 	                    int flags));
+	                    Tcl_Interp *interp, CONST char *name1,
+			    CONST char *name2, int flags));
 static void		MigrateHashEntries _ANSI_ARGS_ ((Tcl_HashTable *table,
 			    int first, int last, int offset));
 /*
@@ -3303,7 +3303,7 @@ static char *
 ListboxListVarProc(clientData, interp, name1, name2, flags)
     ClientData clientData;      /* Information about button. */
     Tcl_Interp *interp;         /* Interpreter containing variable. */
-    char *name1;                /* Not used. */
+    CONST char *name1;          /* Not used. */
     CONST char *name2;          /* Not used. */
     int flags;                  /* Information about what happened. */
 {

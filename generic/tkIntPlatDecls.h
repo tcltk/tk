@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.12 2002/05/27 19:49:32 mdejong Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.13 2002/08/05 04:30:39 dgp Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -150,8 +150,8 @@ EXTERN void		TkWinSetForegroundWindow _ANSI_ARGS_((
 EXTERN void		TkWinDialogDebug _ANSI_ARGS_((int debug));
 /* 32 */
 EXTERN Tcl_Obj *	TkWinGetMenuSystemDefault _ANSI_ARGS_((
-				Tk_Window tkwin, char * dbName, 
-				char * className));
+				Tk_Window tkwin, CONST char * dbName, 
+				CONST char * className));
 /* 33 */
 EXTERN int		TkWinGetPlatformId _ANSI_ARGS_((void));
 #endif /* __WIN32__ */
@@ -344,7 +344,7 @@ typedef struct TkIntPlatStubs {
     void (*tkWinXInit) _ANSI_ARGS_((HINSTANCE hInstance)); /* 29 */
     void (*tkWinSetForegroundWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 30 */
     void (*tkWinDialogDebug) _ANSI_ARGS_((int debug)); /* 31 */
-    Tcl_Obj * (*tkWinGetMenuSystemDefault) _ANSI_ARGS_((Tk_Window tkwin, char * dbName, char * className)); /* 32 */
+    Tcl_Obj * (*tkWinGetMenuSystemDefault) _ANSI_ARGS_((Tk_Window tkwin, CONST char * dbName, CONST char * className)); /* 32 */
     int (*tkWinGetPlatformId) _ANSI_ARGS_((void)); /* 33 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL

@@ -1,3 +1,108 @@
+2002-08-05  Don Porter <dgp@users.sf.net>
+
+	* doc/3DBorder.3:	Applied companion patch for Tcl Patch 585105,
+	* doc/BindTable.3:	updating Tk to use Tcl 8.4's fully CONST-ified
+	* doc/ConfigWidg.3:	interface, and fully CONSTifying Tk at the
+	* doc/CrtImgType.3:	same time.
+	* doc/CrtWindow.3:
+	* doc/DeleteImg.3:	This patch includes purging Tk of its last
+	* doc/FindPhoto.3:	direct access to interp->result.  [Bug 589853]
+	* doc/GetAnchor.3:
+	* doc/GetBitmap.3:	The substantial changes include copying
+	* doc/GetCapStyl.3:	event sequence strings into Tcl_DStrings
+	* doc/GetClrmap.3:	in tkBind.c, and copying [text] indices into
+	* doc/GetColor.3:	Tcl_DStrings because parsing them involved
+	* doc/GetCursor.3:	overwriting them.  If this causes performance
+	* doc/GetFont.3:	trouble, that can be resolved by further
+	* doc/GetImage.3:	converting them to Tcl_Obj's.
+	* doc/GetJoinStl.3:
+	* doc/GetJustify.3:	The #defines USE_NON_CONST and USE_COMPAT_CONST
+	* doc/GetOption.3:	have the same effect for Tk as they do for Tcl.
+	* doc/GetRelief.3:	(They actually change tcl.h)
+	* doc/GetScroll.3:
+	* doc/GetVisual.3:
+	* doc/InternAtom.3:
+	* doc/NameOfImg.3:
+	* doc/SetAppName.3:
+	* doc/WindowId.3:
+	* generic/tk.decls:
+	* generic/tk.h:
+	* generic/tk3d.c:
+	* generic/tkAtom.c:
+	* generic/tkBind.c:
+	* generic/tkBitmap.c:
+	* generic/tkButton.c:
+	* generic/tkCanvArc.c:
+	* generic/tkCanvBmap.c:
+	* generic/tkCanvImg.c:
+	* generic/tkCanvLine.c:
+	* generic/tkCanvPoly.c:
+	* generic/tkCanvPs.c:
+	* generic/tkCanvText.c:
+	* generic/tkCanvUtil.c:
+	* generic/tkCanvWind.c:
+	* generic/tkCanvas.c:
+	* generic/tkCanvas.h:
+	* generic/tkClipboard.c:
+	* generic/tkCmds.c:
+	* generic/tkColor.c:
+	* generic/tkConfig.c:
+	* generic/tkConsole.c:
+	* generic/tkCursor.c:
+	* generic/tkDecls.h:
+	* generic/tkEntry.c:
+	* generic/tkFont.c:
+	* generic/tkFrame.c:
+	* generic/tkGet.c:
+	* generic/tkGrid.c:
+	* generic/tkImage.c:
+	* generic/tkImgBmap.c:
+	* generic/tkImgPhoto.c:
+	* generic/tkInt.decls:
+	* generic/tkInt.h:
+	* generic/tkIntDecls.h:
+	* generic/tkIntPlatDecls.h:	
+	* generic/tkListbox.c:
+	* generic/tkMenu.c:
+	* generic/tkMenubutton.c:
+	* generic/tkMessage.c:
+	* generic/tkOldConfig.c:
+	* generic/tkOption.c:
+	* generic/tkRectOval.c:
+	* generic/tkScale.c:
+	* generic/tkScrollbar.c:
+	* generic/tkSelect.c:
+	* generic/tkStyle.c:
+	* generic/tkTest.c:
+	* generic/tkText.c:
+	* generic/tkText.h:
+	* generic/tkTextBTree.c:
+	* generic/tkTextDisp.c:
+	* generic/tkTextImage.c:
+	* generic/tkTextIndex.c:
+	* generic/tkTextMark.c:
+	* generic/tkTextTag.c:
+	* generic/tkTextWind.c:
+	* generic/tkUtil.c:
+	* generic/tkVisual.c:
+	* generic/tkWindow.c:
+	* mac/tkMacConfig.c:
+	* mac/tkMacCursor.c:
+	* mac/tkMacEmbed.c:
+	* mac/tkMacSend.c:
+	* unix/tkUnixConfig.c:
+	* unix/tkUnixCursor.c:
+	* unix/tkUnixEmbed.c:
+	* unix/tkUnixFont.c:
+	* unix/tkUnixSelect.c:
+	* unix/tkUnixSend.c:
+	* unix/tkUnixWm.c:
+	* win/tkWinConfig.c:
+	* win/tkWinCursor.c:
+	* win/tkWinEmbed.c:
+	* win/tkWinMenu.c:
+	* win/tkWinSend.c:
+
 2002-08-02  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkPanedWindow.c (DestroyPanedWindow): Idle calls need to

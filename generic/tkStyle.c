@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStyle.c,v 1.2 2002/06/26 22:53:13 davygrvy Exp $
+ * RCS: @(#) $Id: tkStyle.c,v 1.3 2002/08/05 04:30:40 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -128,7 +128,8 @@ static Tcl_ThreadDataKey dataKey;
  */
 
 /* TODO: sort alpha. */
-static int		CreateElement _ANSI_ARGS_((char *name, int create));
+static int		CreateElement _ANSI_ARGS_((CONST char *name,
+			    int create));
 static void		DupStyleObjProc _ANSI_ARGS_((Tcl_Obj *srcObjPtr,
 			    Tcl_Obj *dupObjPtr));
 static void		FreeElement _ANSI_ARGS_((Element *elementPtr));
@@ -316,7 +317,7 @@ TkStylePkgFree(mainPtr)
 
 Tk_StyleEngine
 Tk_RegisterStyleEngine(name, parent)
-    char *name;			/* Name of the engine to create. NULL or empty
+    CONST char *name;		/* Name of the engine to create. NULL or empty
 				 * means the default system engine. */
     Tk_StyleEngine parent;	/* The engine's parent. NULL means the default 
 				 * system engine. */
@@ -467,7 +468,7 @@ FreeStyleEngine(enginePtr)
 
 Tk_StyleEngine
 Tk_GetStyleEngine(name)
-    char *name;			/* Name of the engine to retrieve. NULL or
+    CONST char *name;		/* Name of the engine to retrieve. NULL or
 				 * empty means the default system engine. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
@@ -615,7 +616,7 @@ FreeStyledElement(elementPtr)
 
 static int
 CreateElement(name, create)
-    char *name;		/* Name of the element. */
+    CONST char *name;	/* Name of the element. */
     int create;		/* Boolean, whether the element is being created 
 			 * explicitly (being registered) or implicitly (by a 
 			 * derived element). */
@@ -702,7 +703,7 @@ CreateElement(name, create)
 
 int
 Tk_GetElementId(name)
-    char *name;		/* Name of the element. */
+    CONST char *name;		/* Name of the element. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));

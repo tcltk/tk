@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.29 2002/08/02 15:12:23 dgp Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.30 2002/08/05 04:30:41 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -605,7 +605,7 @@ TkWmMapWindow(winPtr)
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     XTextProperty textProp;
-    char *string;
+    Tk_Uid string;
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	Tcl_DString ds;
@@ -1856,7 +1856,7 @@ WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv)
     }
     if (objc == 3) {
 	if (wmPtr->hints.flags & IconPixmapHint) {
-	    Tcl_SetResult(interp,
+	    Tcl_SetResult(interp, (char *)
 		    Tk_NameOfBitmap(winPtr->display, wmPtr->hints.icon_pixmap),
 		    TCL_STATIC);
 	}
@@ -1976,7 +1976,7 @@ WmIconmaskCmd(tkwin, winPtr, interp, objc, objv)
     }
     if (objc == 3) {
 	if (wmPtr->hints.flags & IconMaskHint) {
-	    Tcl_SetResult(interp,
+	    Tcl_SetResult(interp, (char *)
 		    Tk_NameOfBitmap(winPtr->display, wmPtr->hints.icon_mask),
 		    TCL_STATIC);
 	}
@@ -2928,7 +2928,7 @@ WmTitleCmd(tkwin, winPtr, interp, objc, objv)
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	Tcl_SetResult(interp,
+	Tcl_SetResult(interp, (char *)
 		((wmPtr->title != NULL) ? wmPtr->title : winPtr->nameUid),
 		TCL_STATIC);
 	return TCL_OK;
@@ -5261,7 +5261,7 @@ TkWmProtocolEventProc(winPtr, eventPtr)
     register ProtocolHandler *protPtr;
     Atom protocol;
     int result;
-    char *protocolName;
+    CONST char *protocolName;
     Tcl_Interp *interp;
 
     wmPtr = winPtr->wmInfoPtr;

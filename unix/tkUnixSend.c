@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.9 2002/07/18 16:02:48 rmax Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.10 2002/08/05 04:30:41 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -85,7 +85,7 @@ typedef struct PendingCommand {
     int serial;			/* Serial number expected in
 				 * result. */
     TkDisplay *dispPtr;		/* Display being used for communication. */
-    char *target;		/* Name of interpreter command is
+    CONST char *target;		/* Name of interpreter command is
 				 * being sent to. */
     Window commWindow;		/* Target's communication window. */
     Tcl_Interp *interp;		/* Interpreter from which the send
@@ -224,12 +224,12 @@ static void		AppendPropCarefully _ANSI_ARGS_((Display *display,
 			    int length, PendingCommand *pendingPtr));
 static void		DeleteProc _ANSI_ARGS_((ClientData clientData));
 static void		RegAddName _ANSI_ARGS_((NameRegistry *regPtr,
-			    char *name, Window commWindow));
+			    CONST char *name, Window commWindow));
 static void		RegClose _ANSI_ARGS_((NameRegistry *regPtr));
 static void		RegDeleteName _ANSI_ARGS_((NameRegistry *regPtr,
-			    char *name));
+			    CONST char *name));
 static Window		RegFindName _ANSI_ARGS_((NameRegistry *regPtr,
-			    char *name));
+			    CONST char *name));
 static NameRegistry *	RegOpen _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkDisplay *dispPtr, int lock));
 static void		SendEventProc _ANSI_ARGS_((ClientData clientData,
@@ -241,7 +241,7 @@ static Tk_RestrictAction SendRestrictProc _ANSI_ARGS_((ClientData clientData,
 static int		ServerSecure _ANSI_ARGS_((TkDisplay *dispPtr));
 static void		UpdateCommWindow _ANSI_ARGS_((TkDisplay *dispPtr));
 static int		ValidateName _ANSI_ARGS_((TkDisplay *dispPtr,
-			    char *name, Window commWindow, int oldOK));
+			    CONST char *name, Window commWindow, int oldOK));
 
 /*
  *----------------------------------------------------------------------
@@ -365,7 +365,7 @@ static Window
 RegFindName(regPtr, name)
     NameRegistry *regPtr;	/* Pointer to a registry opened with a
 				 * previous call to RegOpen. */
-    char *name;			/* Name of an application. */
+    CONST char *name;		/* Name of an application. */
 {
     char *p, *entry;
     unsigned int id;
@@ -416,7 +416,7 @@ static void
 RegDeleteName(regPtr, name)
     NameRegistry *regPtr;	/* Pointer to a registry opened with a
 				 * previous call to RegOpen. */
-    char *name;			/* Name of an application. */
+    CONST char *name;		/* Name of an application. */
 {
     char *p, *entry, *entryName;
     int count;
@@ -476,7 +476,7 @@ static void
 RegAddName(regPtr, name, commWindow)
     NameRegistry *regPtr;	/* Pointer to a registry opened with a
 				 * previous call to RegOpen. */
-    char *name;			/* Name of an application.  The caller
+    CONST char *name;		/* Name of an application.  The caller
 				 * must ensure that this name isn't
 				 * already registered. */
     Window commWindow;		/* X identifier for comm. window of
@@ -590,7 +590,7 @@ static int
 ValidateName(dispPtr, name, commWindow, oldOK)
     TkDisplay *dispPtr;		/* Display for which to perform the
 				 * validation. */
-    char *name;			/* The name of an application. */
+    CONST char *name;		/* The name of an application. */
     Window commWindow;		/* X identifier for the application's
 				 * comm. window. */
     int oldOK;			/* Non-zero means that we should consider
@@ -735,12 +735,12 @@ ServerSecure(dispPtr)
  *--------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_SetAppName(tkwin, name)
     Tk_Window tkwin;		/* Token for any window in the application
 				 * to be named:  it is just used to identify
 				 * the application and the display.  */
-    char *name;			/* The name that will be used to
+    CONST char *name;		/* The name that will be used to
 				 * refer to the interpreter in later
 				 * "send" commands.  Must be globally
 				 * unique. */
@@ -751,7 +751,7 @@ Tk_SetAppName(tkwin, name)
     TkDisplay *dispPtr = winPtr->dispPtr;
     NameRegistry *regPtr;
     Tcl_Interp *interp;
-    char *actualName;
+    CONST char *actualName;
     Tcl_DString dString;
     int offset, i;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
@@ -816,15 +816,17 @@ Tk_SetAppName(tkwin, name)
 					 * set" compiler warnings. */
     for (i = 1; ; i++) {
 	if (i > 1) {
+	    char *copy;
 	    if (i == 2) {
 		Tcl_DStringInit(&dString);
 		Tcl_DStringAppend(&dString, name, -1);
 		Tcl_DStringAppend(&dString, " #", 2);
 		offset = Tcl_DStringLength(&dString);
-		Tcl_DStringSetLength(&dString, offset+10);
-		actualName = Tcl_DStringValue(&dString);
+		Tcl_DStringSetLength(&dString, offset+TCL_INTEGER_SPACE);
+		copy = Tcl_DStringValue(&dString);
+		actualName = copy;
 	    }
-	    sprintf(actualName + offset, "%d", i);
+	    sprintf(copy + offset, "%d", i);
 	}
 	w = RegFindName(regPtr, actualName);
 	if (w == None) {
@@ -896,13 +898,13 @@ Tk_SendCmd(clientData, interp, argc, argv)
 					 * dispPtr field is used). */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
     TkWindow *winPtr;
     Window commWindow;
     PendingCommand pending;
     register RegisteredInterp *riPtr;
-    char *destName;
+    CONST char *destName;
     int result, c, async, i, firstArg;
     size_t length;
     Tk_RestrictProc *prevRestrictProc;

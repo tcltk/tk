@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.8 2002/04/12 09:21:49 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.9 2002/08/05 04:30:41 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -1497,7 +1497,7 @@ SelCvtFromX(propPtr, numValues, type, tkwin)
 {
     char *result;
     int resultSpace, curSize, fieldSize;
-    char *atomName;
+    CONST char *atomName;
 
     /*
      * Convert each long in the property to a string value, which is

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.11 2002/06/21 23:09:54 hobbs Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.12 2002/08/05 04:30:40 dgp Exp $
  */
 
 #ifndef _TKTEXT
@@ -795,7 +795,7 @@ EXTERN TkTextLine *	TkBTreeFindLine _ANSI_ARGS_((TkTextBTree tree,
 EXTERN TkTextTag **	TkBTreeGetTags _ANSI_ARGS_((TkTextIndex *indexPtr,
 			    int *numTagsPtr));
 EXTERN void		TkBTreeInsertChars _ANSI_ARGS_((TkTextIndex *indexPtr,
-			    char *string));
+			    CONST char *string));
 EXTERN int		TkBTreeLineIndex _ANSI_ARGS_((TkTextLine *linePtr));
 EXTERN void		TkBTreeLinkSegment _ANSI_ARGS_((TkTextSegment *segPtr,
 			    TkTextIndex *indexPtr));
@@ -836,7 +836,7 @@ EXTERN void		TkTextFreeDInfo _ANSI_ARGS_((TkText *textPtr));
 EXTERN void		TkTextFreeTag _ANSI_ARGS_((TkText *textPtr,
 			    TkTextTag *tagPtr));
 EXTERN int		TkTextGetIndex _ANSI_ARGS_((Tcl_Interp *interp,
-			    TkText *textPtr, char *string,
+			    TkText *textPtr, CONST char *string,
 			    TkTextIndex *indexPtr));
 EXTERN TkTextTabArray *	TkTextGetTabs _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window tkwin, char *string));
@@ -872,9 +872,9 @@ EXTERN TkTextIndex *	TkTextMakeByteIndex _ANSI_ARGS_((TkTextBTree tree,
 			    int lineIndex, int byteIndex,
 			    TkTextIndex *indexPtr));
 EXTERN int		TkTextMarkCmd _ANSI_ARGS_((TkText *textPtr,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 EXTERN int		TkTextMarkNameToIndex _ANSI_ARGS_((TkText *textPtr,
-			    char *name, TkTextIndex *indexPtr));
+			    CONST char *name, TkTextIndex *indexPtr));
 EXTERN void		TkTextMarkSegToIndex _ANSI_ARGS_((TkText *textPtr,
 			    TkTextSegment *markPtr, TkTextIndex *indexPtr));
 EXTERN void		TkTextEventuallyRepick _ANSI_ARGS_((TkText *textPtr));
@@ -891,30 +891,30 @@ EXTERN void		TkTextRedrawTag _ANSI_ARGS_((TkText *textPtr,
 			    TkTextTag *tagPtr, int withTag));
 EXTERN void		TkTextRelayoutWindow _ANSI_ARGS_((TkText *textPtr));
 EXTERN int		TkTextScanCmd _ANSI_ARGS_((TkText *textPtr,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 EXTERN int		TkTextSeeCmd _ANSI_ARGS_((TkText *textPtr,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 EXTERN int		TkTextSegToOffset _ANSI_ARGS_((
 			    CONST TkTextSegment *segPtr,
 			    CONST TkTextLine *linePtr));
-EXTERN TkTextSegment *	TkTextSetMark _ANSI_ARGS_((TkText *textPtr, char *name,
-			    TkTextIndex *indexPtr));
+EXTERN TkTextSegment *	TkTextSetMark _ANSI_ARGS_((TkText *textPtr,
+			    CONST char *name, TkTextIndex *indexPtr));
 EXTERN void		TkTextSetYView _ANSI_ARGS_((TkText *textPtr,
 			    TkTextIndex *indexPtr, int pickPlace));
 EXTERN int		TkTextTagCmd _ANSI_ARGS_((TkText *textPtr,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 EXTERN int		TkTextImageCmd _ANSI_ARGS_((TkText *textPtr,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 EXTERN int		TkTextImageIndex _ANSI_ARGS_((TkText *textPtr,
-			    char *name, TkTextIndex *indexPtr));
+			    CONST char *name, TkTextIndex *indexPtr));
 EXTERN int		TkTextWindowCmd _ANSI_ARGS_((TkText *textPtr,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 EXTERN int		TkTextWindowIndex _ANSI_ARGS_((TkText *textPtr,
-			    char *name, TkTextIndex *indexPtr));
+			    CONST char *name, TkTextIndex *indexPtr));
 EXTERN int		TkTextXviewCmd _ANSI_ARGS_((TkText *textPtr,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 EXTERN int		TkTextYviewCmd _ANSI_ARGS_((TkText *textPtr,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLIMPORT

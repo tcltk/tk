@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.8 2001/07/04 00:40:11 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvPoly.c,v 1.9 2002/08/05 04:30:38 dgp Exp $
  */
 
 #include <stdio.h>
@@ -451,8 +451,8 @@ ConfigurePolygon(interp, canvas, itemPtr, objc, objv, flags)
     Tk_State state;
 
     tkwin = Tk_CanvasTkwin(canvas);
-    if (Tk_ConfigureWidget(interp, tkwin, configSpecs, objc, (char **) objv,
-	    (char *) polyPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
+    if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
+	    (CONST char **) objv, (char *) polyPtr, flags|TK_CONFIG_OBJS)) {
 	return TCL_ERROR;
     }
 

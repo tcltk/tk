@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.9 2002/06/25 16:27:43 a_kovalenko Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.10 2002/08/05 04:30:38 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -146,7 +146,7 @@ TkCanvPostscriptCmd(canvasPtr, interp, argc, argv)
     TkCanvas *canvasPtr;		/* Information about canvas widget. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings.  Caller has
+    CONST char **argv;			/* Argument strings.  Caller has
 					 * already parsed this command enough
 					 * to know that argv[1] is
 					 * "postscript". */
@@ -739,7 +739,7 @@ Tk_PostscriptFont(interp, psInfo, tkfont)
 	int argc;
 	double size;
 	CONST char **argv;
-	char *name;
+	CONST char *name;
 
 	name = Tk_NameOfFont(tkfont);
 	list = Tcl_GetVar2(interp, psInfoPtr->fontVar, name, 0);

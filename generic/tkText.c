@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.29 2002/07/24 18:31:10 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.30 2002/08/05 04:30:40 dgp Exp $
  */
 
 #include "default.h"
@@ -163,8 +163,8 @@ int tkTextDebug = 0;
  */
 
 static int		WrapModeParseProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, Tk_Window tkwin, char *value,
-			    char *widgRec, int offset));
+			    Tcl_Interp *interp, Tk_Window tkwin,
+			    CONST char *value, char *widgRec, int offset));
 static char *		WrapModePrintProc _ANSI_ARGS_((ClientData clientData,
 			    Tk_Window tkwin, char *widgRec, int offset,
 			    Tcl_FreeProc **freeProcPtr));
@@ -198,7 +198,7 @@ WrapModeParseProc(clientData, interp, tkwin, value, widgRec, offset)
     ClientData clientData;		/* some flags.*/
     Tcl_Interp *interp;			/* Used for reporting errors. */
     Tk_Window tkwin;			/* Window containing canvas widget. */
-    char *value;			/* Value of option (list of tag
+    CONST char *value;			/* Value of option (list of tag
 					 * names). */
     char *widgRec;			/* Pointer to record for item. */
     int offset;				/* Offset into item. */
@@ -285,13 +285,14 @@ WrapModePrintProc(clientData, tkwin, widgRec, offset, freeProcPtr)
  */
 
 static int		ConfigureText _ANSI_ARGS_((Tcl_Interp *interp,
-			    TkText *textPtr, int argc, char **argv, int flags));
+			    TkText *textPtr, int argc, CONST char **argv,
+			    int flags));
 static int		DeleteChars _ANSI_ARGS_((TkText *textPtr,
-			    char *index1String, char *index2String,
+			    CONST char *index1String, CONST char *index2String,
 			    TkTextIndex *indexPtr1, TkTextIndex *indexPtr2));
 static void		DestroyText _ANSI_ARGS_((char *memPtr));
 static void		InsertChars _ANSI_ARGS_((TkText *textPtr,
-			    TkTextIndex *indexPtr, char *string));
+			    TkTextIndex *indexPtr, CONST char *string));
 static void		TextBlinkProc _ANSI_ARGS_((ClientData clientData));
 static void		TextCmdDeletedProc _ANSI_ARGS_((
 			    ClientData clientData));
@@ -302,21 +303,22 @@ static int		TextFetchSelection _ANSI_ARGS_((ClientData clientData,
 static int		TextIndexSortProc _ANSI_ARGS_((CONST VOID *first,
 			    CONST VOID *second));
 static int		TextSearchCmd _ANSI_ARGS_((TkText *textPtr,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 static int		TextEditCmd _ANSI_ARGS_((TkText *textPtr,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 static int		TextWidgetCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 static void		TextWorldChanged _ANSI_ARGS_((
 			    ClientData instanceData));
 static int		TextDumpCmd _ANSI_ARGS_((TkText *textPtr,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 static void		DumpLine _ANSI_ARGS_((Tcl_Interp *interp, 
 			    TkText *textPtr, int what, TkTextLine *linePtr,
-			    int start, int end, int lineno, char *command));
+			    int start, int end, int lineno,
+			    CONST char *command));
 static int		DumpSegment _ANSI_ARGS_((Tcl_Interp *interp, char *key,
-			    char *value, char * command, TkTextIndex *index,
-			    int what));
+			    char *value, CONST char * command,
+			    TkTextIndex *index, int what));
 static int		TextEditUndo _ANSI_ARGS_((TkText *textPtr));
 static int		TextEditRedo _ANSI_ARGS_((TkText *textPtr));
 static void		TextGetText _ANSI_ARGS_((TkTextIndex * index1,
@@ -357,7 +359,7 @@ Tk_TextCmd(clientData, interp, argc, argv)
 				 * interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    CONST char **argv;		/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     Tk_Window new;
@@ -471,7 +473,7 @@ TextWidgetCmd(clientData, interp, argc, argv)
     ClientData clientData;	/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    CONST char **argv;		/* Argument strings. */
 {
     register TkText *textPtr = (TkText *) clientData;
     int c, result = TCL_OK;
@@ -519,7 +521,7 @@ TextWidgetCmd(clientData, interp, argc, argv)
     } else if ((c == 'c') && (strncmp(argv[1], "compare", length) == 0)
 	    && (length >= 3)) {
 	int relation, value;
-	char *p;
+	CONST char *p;
 
 	if (argc != 5) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -607,7 +609,7 @@ TextWidgetCmd(clientData, interp, argc, argv)
 		 * Simple case requires no predetermination of indices.
 		 */
 		result = DeleteChars(textPtr, argv[2],
-			(argc == 4) ? argv[3] : (char *) NULL, NULL, NULL);
+			(argc == 4) ? argv[3] : NULL, NULL, NULL);
 	    } else {
 		/*
 		 * Multi-index pair case requires that we prevalidate the
@@ -1022,7 +1024,7 @@ ConfigureText(interp, textPtr, argc, argv, flags)
     register TkText *textPtr;	/* Information about widget;  may or may
 				 * not already have values for some fields. */
     int argc;			/* Number of valid entries in argv. */
-    char **argv;		/* Arguments. */
+    CONST char **argv;		/* Arguments. */
     int flags;			/* Flags to pass to Tk_ConfigureWidget. */
 {
     int oldExport = textPtr->exportSelection;
@@ -1358,7 +1360,7 @@ InsertChars(textPtr, indexPtr, string)
     TkText *textPtr;		/* Overall information about text widget. */
     TkTextIndex *indexPtr;	/* Where to insert new characters.  May be
 				 * modified and/or invalidated. */
-    char *string;		/* Null-terminated string containing new
+    CONST char *string;		/* Null-terminated string containing new
 				 * information to add to text. */
 {
     int lineIndex, resetView, offset;
@@ -1488,9 +1490,9 @@ InsertChars(textPtr, indexPtr, string)
 static int
 DeleteChars(textPtr, index1String, index2String, indexPtr1, indexPtr2)
     TkText *textPtr;		/* Overall information about text widget. */
-    char *index1String;		/* String describing location of first
+    CONST char *index1String;	/* String describing location of first
 				 * character to delete. */
-    char *index2String;		/* String describing location of last
+    CONST char *index2String;	/* String describing location of last
 				 * character to delete.  NULL means just
 				 * delete the one character given by
 				 * index1String. */
@@ -1971,14 +1973,14 @@ TextSearchCmd(textPtr, interp, argc, argv)
     TkText *textPtr;		/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    CONST char **argv;		/* Argument strings. */
 {
     int backwards, exact, searchElide, c, i, argsLeft, noCase, leftToScan;
     size_t length;
     int numLines, startingLine, startingByte, lineNum, firstByte, lastByte;
     int code, matchLength, matchByte, passes, stopLine, searchWholeText;
     int patLength;
-    char *arg, *pattern, *varName, *p, *startOfLine;
+    CONST char *arg, *pattern, *varName, *p, *startOfLine;
     char buffer[20];
     TkTextIndex index, stopIndex;
     Tcl_DString line, patDString;
@@ -2064,8 +2066,8 @@ TextSearchCmd(textPtr, interp, argc, argv)
     if (noCase && exact) {
 	Tcl_DStringInit(&patDString);
 	Tcl_DStringAppend(&patDString, pattern, -1);
+	Tcl_UtfToLower(Tcl_DStringValue(&patDString));
 	pattern = Tcl_DStringValue(&patDString);
-	Tcl_UtfToLower(pattern);
     }
 
     Tcl_DStringInit(&line);
@@ -2490,7 +2492,7 @@ TextDumpCmd(textPtr, interp, argc, argv)
     register TkText *textPtr;	/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings.  Someone else has already
+    CONST char **argv;		/* Argument strings.  Someone else has already
 				 * parsed this command enough to know that
 				 * argv[1] is "dump". */
 {
@@ -2500,7 +2502,7 @@ TextDumpCmd(textPtr, interp, argc, argv)
     int what = 0;		/* bitfield to select segment types */
     int atEnd;			/* True if dumping up to logical end */
     TkTextLine *linePtr;
-    char *command = NULL;	/* Script callback to apply to segments */
+    CONST char *command = NULL;	/* Script callback to apply to segments */
 #define TK_DUMP_TEXT	0x1
 #define TK_DUMP_MARK	0x2
 #define TK_DUMP_TAG	0x4
@@ -2613,7 +2615,7 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
     TkTextLine *linePtr;	/* The current line */
     int startByte, endByte;	/* Byte range to dump */
     int lineno;			/* Line number for indices dump */
-    char *command;		/* Script to apply to the segment */
+    CONST char *command;	/* Script to apply to the segment */
 {
     int offset;
     TkTextSegment *segPtr;
@@ -2707,13 +2709,13 @@ DumpSegment(interp, key, value, command, index, what)
     Tcl_Interp *interp;
     char *key;			/* Segment type key */
     char *value;		/* Segment value */
-    char *command;		/* Script callback */
+    CONST char *command;	/* Script callback */
     TkTextIndex *index;         /* index with line/byte position info */
     int what;			/* Look for TK_DUMP_INDEX bit */
 {
     char buffer[TCL_INTEGER_SPACE*2];
     TkTextPrintIndex(index, buffer);
-    if (command == (char *) NULL) {
+    if (command == NULL) {
 	Tcl_AppendElement(interp, key);
 	Tcl_AppendElement(interp, value);
 	Tcl_AppendElement(interp, buffer);
@@ -2725,7 +2727,7 @@ DumpSegment(interp, key, value, command, index, what)
 	argv[0] = key;
 	argv[1] = value;
 	argv[2] = buffer;
-	argv[3] = (char *) NULL;
+	argv[3] = NULL;
 	list = Tcl_Merge(3, argv);
 	result = Tcl_VarEval(interp, command, " ", list, (char *) NULL);
 	ckfree(list);
@@ -2823,7 +2825,7 @@ TextEditCmd(textPtr, interp, argc, argv)
     TkText *textPtr;          /* Information about text widget. */
     Tcl_Interp *interp;       /* Current interpreter. */
     int argc;                 /* Number of arguments. */
-    char **argv;              /* Argument strings. */
+    CONST char **argv;        /* Argument strings. */
 {
     int      c, setModified;
     size_t   length;
