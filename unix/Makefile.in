@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.79 2002/08/08 11:43:08 rmax Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.80 2002/08/16 07:52:23 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -511,15 +511,15 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	@if test ! -x $(UNIX_DIR)/install-sh; then \
 	    chmod +x $(UNIX_DIR)/install-sh; \
 	    fi
-	@if test "$(TK_SHARED_BUILD)"; then \
+	@if test "x$(TK_SHARED_BUILD)" = "x1"; then \
 	    echo "Creating package index $(PKG_INDEX)"; \
 	    rm -f $(PKG_INDEX); \
-	    echo "if {[package vcompare \\" > $(PKG_INDEX); \
-	    echo "    [package provide Tcl] \\" >> $(PKG_INDEX); \
-	    echo "    $(TCLVERSION)] != 0} {return}" >> $(PKG_INDEX); \
-	    echo "package ifneeded Tk $(VERSION) \\" >> $(PKG_INDEX); \
-	    echo "    [list load [file join \$$dir .. \\" >> $(PKG_INDEX); \
-	    echo "    $(TK_LIB_FILE)] Tk]" >> $(PKG_INDEX); \
+	    (\
+	    echo "if {[package vcompare [package provide Tcl]\
+		$(TCLVERSION)] != 0} { return }";\
+	    echo "package ifneeded Tk $(VERSION)\
+		[list load [file join \$$dir .. $(TK_LIB_FILE)] Tk]";\
+	    ) > $(PKG_INDEX); \
 	    fi
 	@echo "Installing $(LIB_FILE) to $(LIB_INSTALL_DIR)/"
 	@@INSTALL_LIB@
