@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.35 2004/11/15 13:09:08 vincentdarley Exp $
+# RCS: @(#) $Id: text.test,v 1.36 2004/11/20 15:45:35 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -65,6 +65,7 @@ foreach test {
     {-highlightbackground #123 #123 bogus}
     {-highlightcolor #234 #234 bogus}
     {-highlightthickness -2 0 bad}
+    {-inactiveselectbackground #ffff01234567 #ffff01234567 bogus}
     {-insertbackground green green <bogus>}
     {-insertborderwidth 45 45 bogus}
     {-insertofftime 100 100 2.4}
@@ -114,7 +115,7 @@ test text-1.[incr i] {text options} {
 	lappend result [lindex $i 4]
     }
     set result
-} {1 blue {} {} 0 7 watch {} 0 {} fixed #012 5 #123 #234 0 {} green 45 100 47 2 5 3 82 raised #ffff01234567 21 yellow 0 0 0 0 {} disabled {1i 2i 3i 4i} {any old thing} 1 73 word {x scroll command} {test command}}
+} {1 blue {} {} 0 7 watch {} 0 {} fixed #012 5 #123 #234 0 #ffff01234567 green 45 100 47 2 5 3 82 raised #ffff01234567 21 yellow 0 0 0 0 {} disabled {1i 2i 3i 4i} {any old thing} 1 73 word {x scroll command} {test command}}
 
 test text-2.1 {Tk_TextCmd procedure} {
     list [catch {text} msg] $msg

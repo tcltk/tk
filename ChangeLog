@@ -1,3 +1,8 @@
+2004-11-20  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* tests/text.test: fix to test's platform sensitivities 
+	[Bug 1025871]
+
 2004-11-19  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.pbproj/project.pbxproj: reverted earlier changes for
