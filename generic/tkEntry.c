@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.10 2000/03/02 21:52:40 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.11 2000/03/07 22:27:46 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -390,7 +390,7 @@ static char *selCommandNames[] = {
 };
 
 enum selcommand {
-    SELECTION_ADJUST, SELECTION_CLEAR, SELECTION_FROM, 
+    SELECTION_ADJUST, SELECTION_CLEAR, SELECTION_FROM,
     SELECTION_PRESENT, SELECTION_RANGE, SELECTION_TO
 };
 
@@ -433,8 +433,8 @@ static int		EntryValidate _ANSI_ARGS_((Entry *entryPtr,
 static int		EntryValidateChange _ANSI_ARGS_((Entry *entryPtr,
 			    char *change, char *new, int index, int type));
 static void		ExpandPercents _ANSI_ARGS_((Entry *entryPtr,
-			    char *before, char *change, char *new, int index,
-			    int type, Tcl_DString *dsPtr));
+			    char *before, char *change, char *new,
+			    int index, int type, Tcl_DString *dsPtr));
 #endif /* ENTRY_VALIDATE */
 static void		EntryValueChanged _ANSI_ARGS_((Entry *entryPtr));
 static void		EntryVisibleRange _ANSI_ARGS_((Entry *entryPtr,
@@ -667,7 +667,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	    char buf[TCL_INTEGER_SPACE * 4];
 
 	    if (objc != 3) {
-	        Tcl_WrongNumArgs(interp, 1, objv, "bbox index");
+	        Tcl_WrongNumArgs(interp, 2, objv, "index");
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]), 
@@ -687,7 +687,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	
         case COMMAND_CGET: {
 	    if (objc != 3) {
-	        Tcl_WrongNumArgs(interp, 1, objv, "cget option");
+	        Tcl_WrongNumArgs(interp, 2, objv, "option");
 		goto error;
 	    }
 	    
@@ -722,8 +722,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	    int first, last;
 
 	    if ((objc < 3) || (objc > 4)) {
-	        Tcl_WrongNumArgs(interp, 1, objv, 
-                        "delete firstIndex ?lastIndex?");
+	        Tcl_WrongNumArgs(interp, 2, objv, "firstIndex ?lastIndex?");
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]), 
@@ -746,7 +745,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 
         case COMMAND_GET: {
 	    if (objc != 2) {
-	        Tcl_WrongNumArgs(interp, 1, objv, "get");
+	        Tcl_WrongNumArgs(interp, 2, objv, (char *) NULL);
 		goto error;
 	    }
 	    Tcl_SetResult(interp, entryPtr->string, TCL_STATIC);
@@ -755,7 +754,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 
         case COMMAND_ICURSOR: {
 	    if (objc != 3) {
-	        Tcl_WrongNumArgs(interp, 1, objv, "icursor pos");
+	        Tcl_WrongNumArgs(interp, 2, objv, "pos");
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
@@ -768,18 +767,16 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	
         case COMMAND_INDEX: {
 	    int index;
-	    char buf[TCL_INTEGER_SPACE];
 
 	    if (objc != 3) {
-	        Tcl_WrongNumArgs(interp, 1, objv, "index string");
+	        Tcl_WrongNumArgs(interp, 2, objv, "string");
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]), 
                     &index) != TCL_OK) {
 	        goto error;
 	    }
-	    sprintf(buf, "%d", index);
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	    Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
 	    break;
 	}
 
@@ -787,7 +784,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	    int index;
 
 	    if (objc != 4) {
-	        Tcl_WrongNumArgs(interp, 1, objv, "insert index text");
+	        Tcl_WrongNumArgs(interp, 2, objv, "index text");
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]), 
@@ -805,7 +802,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	    char *minorCmd;
 
 	    if (objc != 4) {
-	        Tcl_WrongNumArgs(interp, 1, objv, "scan mark|dragto x");
+	        Tcl_WrongNumArgs(interp, 2, objv, "mark|dragto x");
 		goto error;
 	    }
 	    if (Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK) {
@@ -833,7 +830,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	    int index, index2;
 
 	    if (objc < 3) {
-	        Tcl_WrongNumArgs(interp, 1, objv, "select option ?index?");
+	        Tcl_WrongNumArgs(interp, 2, objv, "option ?index?");
 		goto error;
 	    }
 
@@ -851,8 +848,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	    switch(selIndex) {
 	        case SELECTION_ADJUST: {
 		    if (objc != 4) {
-		        Tcl_WrongNumArgs(interp, 1, objv, 
-                                "selection adjust index");
+		        Tcl_WrongNumArgs(interp, 3, objv, "index");
 			goto error;
 		    }
 		    if (GetEntryIndex(interp, entryPtr, 
@@ -883,7 +879,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 
 	        case SELECTION_CLEAR: {
 		    if (objc != 3) {
-		        Tcl_WrongNumArgs(interp, 1, objv, "selection clear");
+		        Tcl_WrongNumArgs(interp, 3, objv, (char *) NULL);
 			goto error;
 		    }
 		    if (entryPtr->selectFirst >= 0) {
@@ -896,8 +892,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 
 	        case SELECTION_FROM: {
 		    if (objc != 4) {
-		        Tcl_WrongNumArgs(interp, 1, objv, 
-			        "selection from index");
+		        Tcl_WrongNumArgs(interp, 3, objv, "index");
 			goto error;
 		    }
 		    if (GetEntryIndex(interp, entryPtr, 
@@ -910,7 +905,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 
 	        case SELECTION_PRESENT: {
 		    if (objc != 3) {
-		        Tcl_WrongNumArgs(interp, 1, objv, "selection present");
+		        Tcl_WrongNumArgs(interp, 3, objv, (char *) NULL);
 			goto error;
 		    }
 		    if (entryPtr->selectFirst < 0) {
@@ -923,8 +918,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 
 	        case SELECTION_RANGE: {
 		    if (objc != 5) {
-		        Tcl_WrongNumArgs(interp, 1, objv, 
-                                "selection range start end");
+		        Tcl_WrongNumArgs(interp, 3, objv, "start end");
 			goto error;
 		    }
 		    if (GetEntryIndex(interp, entryPtr, 
@@ -954,8 +948,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 		
 	        case SELECTION_TO: {
 		    if (objc != 4) {
-		        Tcl_WrongNumArgs(interp, 1, objv, 
-                                "selection to index");
+		        Tcl_WrongNumArgs(interp, 3, objv, "index");
 			goto error;
 		    }
 		    if (GetEntryIndex(interp, entryPtr, 
@@ -974,7 +967,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	    int code;
 
 	    if (objc != 2) {
-		Tcl_WrongNumArgs(interp, 1, objv, "validate");
+		Tcl_WrongNumArgs(interp, 2, objv, (char *) NULL);
 		goto error;
 	    }
 	    selIndex = entryPtr->validate;
@@ -1203,11 +1196,15 @@ ConfigureEntry(interp, entryPtr, objc, objv, flags)
 
 	/*
 	 * Restart the cursor timing sequence in case the on-time or 
-	 * off-time just changed.
+	 * off-time just changed.  Set validate temporarily to none,
+	 * so the configure doesn't cause it to be triggered.
 	 */
 
 	if (entryPtr->flags & GOT_FOCUS) {
-	  EntryFocusProc(entryPtr, 1);
+	    int validate = entryPtr->validate;
+	    entryPtr->validate = VALIDATE_NONE;
+	    EntryFocusProc(entryPtr, 1);
+	    entryPtr->validate = validate;
 	}
 
 	/*
@@ -1964,18 +1961,29 @@ EntrySetValue(entryPtr, value)
 {
     char *oldSource;
 #ifdef ENTRY_VALIDATE
-    int code;
+    int code, valueLen, malloced = 0;
 
     if (strcmp(value, entryPtr->string) == 0) {
 	return;
     }
+    valueLen = strlen(value);
 
     if (entryPtr->flags & VALIDATE_VAR) {
 	entryPtr->flags |= VALIDATE_ABORT;
     } else {
+	/*
+	 * If we validate, we create a copy of the value, as it may
+	 * point to volatile memory, like the value of the -textvar
+	 * which may get freed during validation
+	 */
+	oldSource = (char *) ckalloc((unsigned) (valueLen + 1));
+	strcpy(oldSource, value);
+	value = oldSource;
+	malloced = 1;
+
 	entryPtr->flags |= VALIDATE_VAR;
 	code = EntryValidateChange(entryPtr, (char *) NULL, value, -1,
-				   VALIDATE_FORCED);
+		VALIDATE_FORCED);
 	entryPtr->flags &= ~VALIDATE_VAR;
 	/*
 	 * If VALIDATE_ABORT has been set, then this operation should be
@@ -1983,19 +1991,23 @@ EntrySetValue(entryPtr, value)
 	 */
 	if (entryPtr->flags & VALIDATE_ABORT) {
 	    entryPtr->flags &= ~VALIDATE_ABORT;
+	    ckfree(value);
 	    return;
 	}
     }
 #endif /* ENTRY_VALIDATE */
 
     oldSource = entryPtr->string;
-
     ckfree(entryPtr->string);
-    entryPtr->numBytes = strlen(value);
-    entryPtr->numChars = Tcl_NumUtfChars(value, entryPtr->numBytes);
-    entryPtr->string =
-	    (char *) ckalloc((unsigned) (entryPtr->numBytes + 1));
-    strcpy(entryPtr->string, value);
+
+    if (malloced) {
+	entryPtr->string = value;
+    } else {
+	entryPtr->string   = (char *) ckalloc((unsigned) (valueLen + 1));
+	strcpy(entryPtr->string, value);
+    }
+    entryPtr->numBytes = valueLen;
+    entryPtr->numChars = Tcl_NumUtfChars(value, valueLen);
 
     if (entryPtr->displayString == oldSource) {
 	entryPtr->displayString = entryPtr->string;
@@ -2767,7 +2779,7 @@ EntryValidate(entryPtr, cmd)
     register Tcl_Interp *interp = entryPtr->interp;
     int code, bool;
 
-    code = Tcl_GlobalEval(interp, cmd);
+    code = Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_GLOBAL | TCL_EVAL_DIRECT);
 
     if (code != TCL_OK && code != TCL_RETURN) {
 	Tcl_AddErrorInfo(interp,
@@ -2779,13 +2791,13 @@ EntryValidate(entryPtr, cmd)
     if (Tcl_GetBooleanFromObj(interp, Tcl_GetObjResult(interp),
 			      &bool) != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
-		 "\nValid Tcl Boolean not returned by validation command");
+		 "\nvalid boolean not returned by validation command");
 	Tcl_BackgroundError(interp);
-	Tcl_SetObjLength(Tcl_GetObjResult(interp), 0);
+	Tcl_SetResult(interp, NULL, 0);
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjLength(Tcl_GetObjResult(interp), 0);
+    Tcl_SetResult(interp, NULL, 0);
     return (bool ? TCL_OK : TCL_BREAK);
 }
 
@@ -2846,7 +2858,7 @@ EntryValidateChange(entryPtr, change, new, index, type)
 
     Tcl_DStringInit(&script);
     ExpandPercents(entryPtr, entryPtr->validateCmd,
-		   change, new, index, type, &script);
+	    change, new, index, type, &script);
     Tcl_DStringAppend(&script, "", 1);
 
     p = Tcl_DStringValue(&script);
@@ -2887,7 +2899,8 @@ EntryValidateChange(entryPtr, change, new, index, type)
 			   change, new, index, type, &script);
 	    Tcl_DStringAppend(&script, "", 1);
 	    p = Tcl_DStringValue(&script);
-	    if (Tcl_GlobalEval(entryPtr->interp, p) != TCL_OK) {
+	    if (Tcl_EvalEx(entryPtr->interp, p, -1,
+		    TCL_EVAL_GLOBAL | TCL_EVAL_DIRECT) != TCL_OK) {
 		Tcl_AddErrorInfo(entryPtr->interp,
 				 "\n\t(in invalidcommand executed by entry)");
 		Tcl_BackgroundError(entryPtr->interp);
@@ -2927,12 +2940,12 @@ ExpandPercents(entryPtr, before, change, new, index, type, dsPtr)
      register Entry *entryPtr;	/* Entry that needs validation. */
      register char *before;	/* Command containing percent
 				 * expressions to be replaced. */
-     char *change; 		/* Characters to added/deleted
+     char *change;		/* Characters to added/deleted
 				 * (NULL-terminated string). */
-     char *new;                 /* Potential new value of entry string */
-     int index;                 /* index of insert/delete */
-     int type;                  /* INSERT or DELETE */
-     Tcl_DString *dsPtr;        /* Dynamic string in which to append
+     char *new;			/* Potential new value of entry string */
+     int index;			/* index of insert/delete */
+     int type;			/* INSERT or DELETE */
+     Tcl_DString *dsPtr;	/* Dynamic string in which to append
 				 * new command. */
 {
     int spaceNeeded, cvtFlags;	/* Used to substitute string as proper Tcl
@@ -3028,10 +3041,10 @@ ExpandPercents(entryPtr, before, change, new, index, type, dsPtr)
 	    break;
 	}
 
-	spaceNeeded = Tcl_ScanElement(string, &cvtFlags);
+	spaceNeeded = Tcl_ScanCountedElement(string, -1, &cvtFlags);
 	length = Tcl_DStringLength(dsPtr);
 	Tcl_DStringSetLength(dsPtr, length + spaceNeeded);
-	spaceNeeded = Tcl_ConvertElement(string,
+	spaceNeeded = Tcl_ConvertCountedElement(string, -1,
 		Tcl_DStringValue(dsPtr) + length,
 		cvtFlags | TCL_DONT_USE_BRACES);
 	Tcl_DStringSetLength(dsPtr, length + spaceNeeded);

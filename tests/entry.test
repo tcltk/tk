@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.6 2000/03/02 21:52:26 hobbs Exp $
+# RCS: @(#) $Id: entry.test,v 1.7 2000/03/07 22:27:50 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -338,7 +338,7 @@ test entry-3.46 {EntryWidgetCmd procedure, "scan" widget command} {fonts} {
 } {2}
 test entry-3.47 {EntryWidgetCmd procedure, "select" widget command} {
     list [catch {.e select} msg] $msg
-} {1 {wrong # args: should be ".e select option ?index?"}}
+} {1 {wrong # args: should be ".e selection option ?index?"}}
 test entry-3.48 {EntryWidgetCmd procedure, "select" widget command} {
     list [catch {.e select foo} msg] $msg
 } {1 {bad selection option "foo": must be adjust, clear, from, present, range, or to}}
