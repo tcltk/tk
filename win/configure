@@ -1053,6 +1053,7 @@ EOF
 	TCL_THREADS=0
 	echo "$ac_t""no (default)" 1>&6
     fi
+    
 
 
 #--------------------------------------------------------------------
@@ -1062,7 +1063,7 @@ EOF
 
 
     echo $ac_n "checking how to build libraries""... $ac_c" 1>&6
-echo "configure:1066: checking how to build libraries" >&5
+echo "configure:1067: checking how to build libraries" >&5
     # Check whether --enable-shared or --disable-shared was given.
 if test "${enable_shared+set}" = set; then
   enableval="$enable_shared"
@@ -1101,11 +1102,9 @@ EOF
 
 
     # Step 0: Enable 64 bit support?
-    # Currently Tk requires no extra flags for 64bit support.
-    # It just needs to find the right compiler, which is up to the user.
 
     echo $ac_n "checking if 64bit support is requested""... $ac_c" 1>&6
-echo "configure:1109: checking if 64bit support is requested" >&5
+echo "configure:1108: checking if 64bit support is requested" >&5
     # Check whether --enable-64bit or --disable-64bit was given.
 if test "${enable_64bit+set}" = set; then
   enableval="$enable_64bit"
@@ -1117,7 +1116,7 @@ fi
     echo "$ac_t""$do64bit" 1>&6
 
     echo $ac_n "checking compiler flags""... $ac_c" 1>&6
-echo "configure:1121: checking compiler flags" >&5
+echo "configure:1120: checking compiler flags" >&5
 
     # Set some defaults (may get changed below)
     EXTRA_CFLAGS=""
@@ -1188,7 +1187,7 @@ echo "configure:1121: checking compiler flags" >&5
 	    fi
 
 	    echo $ac_n "checking whether $ld_prog supports -shared option""... $ac_c" 1>&6
-echo "configure:1192: checking whether $ld_prog supports -shared option" >&5
+echo "configure:1191: checking whether $ld_prog supports -shared option" >&5
 
 	    # now the ad-hoc check to see if GNU ld supports --shared.
 	    if "$LD" --shared 2>&1 | egrep ': -shared not supported' >/dev/null; then
@@ -1284,6 +1283,10 @@ echo "configure:1192: checking whether $ld_prog supports -shared option" >&5
 	# built -- Console vs. Window.
 	LDFLAGS_CONSOLE="-link -subsystem:console"
 	LDFLAGS_WINDOW="-link -subsystem:windows"
+
+	if test "$do64bit" = "yes" ; then
+	    EXTRA_CFLAGS="$EXTRA_CFLAGS -DUSE_TCLALLOC=0"
+	fi
     fi
 
 
@@ -1292,7 +1295,7 @@ echo "configure:1192: checking whether $ld_prog supports -shared option" >&5
 #--------------------------------------------------------------------
 
 echo $ac_n "checking how to run the C preprocessor""... $ac_c" 1>&6
-echo "configure:1296: checking how to run the C preprocessor" >&5
+echo "configure:1299: checking how to run the C preprocessor" >&5
 # On Suns, sometimes $CPP names a directory.
 if test -n "$CPP" && test -d "$CPP"; then
   CPP=
@@ -1307,13 +1310,13 @@ else
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp.
   cat > conftest.$ac_ext <<EOF
-#line 1311 "configure"
+#line 1314 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1317: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1320: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1324,13 +1327,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -E -traditional-cpp"
   cat > conftest.$ac_ext <<EOF
-#line 1328 "configure"
+#line 1331 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1334: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1337: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1341,13 +1344,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -nologo -E"
   cat > conftest.$ac_ext <<EOF
-#line 1345 "configure"
+#line 1348 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1351: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1354: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1373,17 +1376,17 @@ echo "$ac_t""$CPP" 1>&6
 
 ac_safe=`echo "errno.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for errno.h""... $ac_c" 1>&6
-echo "configure:1377: checking for errno.h" >&5
+echo "configure:1380: checking for errno.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1382 "configure"
+#line 1385 "configure"
 #include "confdefs.h"
 #include <errno.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1387: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1390: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1415,7 +1418,7 @@ fi
 
 
     echo $ac_n "checking for build with symbols""... $ac_c" 1>&6
-echo "configure:1419: checking for build with symbols" >&5
+echo "configure:1422: checking for build with symbols" >&5
     # Check whether --enable-symbols or --disable-symbols was given.
 if test "${enable_symbols+set}" = set; then
   enableval="$enable_symbols"
@@ -1448,7 +1451,7 @@ TK_DBGX=${DBGX}
 
 
     echo $ac_n "checking the location of tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1452: checking the location of tclConfig.sh" >&5
+echo "configure:1455: checking the location of tclConfig.sh" >&5
 
     if test -d ../../tcl8.4$TK_PATCH_LEVEL/win;  then
 	TCL_BIN_DIR_DEFAULT=../../tcl8.4$TK_PATCH_LEVEL/win
@@ -1474,7 +1477,7 @@ fi
 
 
     echo $ac_n "checking for existence of $TCL_BIN_DIR/tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1478: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
+echo "configure:1481: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
     if test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
         echo "$ac_t""loading" 1>&6
@@ -1496,7 +1499,7 @@ echo "configure:1478: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
 
     echo $ac_n "checking for tclsh""... $ac_c" 1>&6
-echo "configure:1500: checking for tclsh" >&5
+echo "configure:1503: checking for tclsh" >&5
 
     if eval "test \"`echo '$''{'ac_cv_path_tclsh'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1814,6 +1817,7 @@ s%@RC@%$RC%g
 s%@SET_MAKE@%$SET_MAKE%g
 s%@OBJEXT@%$OBJEXT%g
 s%@EXEEXT@%$EXEEXT%g
+s%@TCL_THREADS@%$TCL_THREADS%g
 s%@CPP@%$CPP%g
 s%@MAN2TCLFLAGS@%$MAN2TCLFLAGS%g
 s%@TCL_BIN_DIR@%$TCL_BIN_DIR%g

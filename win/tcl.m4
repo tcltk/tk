@@ -224,6 +224,7 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 	TCL_THREADS=0
 	AC_MSG_RESULT([no (default)])
     fi
+    AC_SUBST(TCL_THREADS)
 ])
 
 #------------------------------------------------------------------------
@@ -321,8 +322,6 @@ AC_DEFUN(SC_ENABLE_SYMBOLS, [
 AC_DEFUN(SC_CONFIG_CFLAGS, [
 
     # Step 0: Enable 64 bit support?
-    # Currently Tk requires no extra flags for 64bit support.
-    # It just needs to find the right compiler, which is up to the user.
 
     AC_MSG_CHECKING([if 64bit support is requested])
     AC_ARG_ENABLE(64bit,[  --enable-64bit          enable 64bit support (where applicable)], [do64bit=$enableval], [do64bit=no])
@@ -494,6 +493,10 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	# built -- Console vs. Window.
 	LDFLAGS_CONSOLE="-link -subsystem:console"
 	LDFLAGS_WINDOW="-link -subsystem:windows"
+
+	if test "$do64bit" = "yes" ; then
+	    EXTRA_CFLAGS="$EXTRA_CFLAGS -DUSE_TCLALLOC=0"
+	fi
     fi
 ])
 
