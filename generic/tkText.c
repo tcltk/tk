@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.52 2004/09/10 12:13:40 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.53 2004/09/10 13:42:45 rmax Exp $
  */
 
 #include "default.h"
@@ -1637,7 +1637,7 @@ TextPeerCmd(textPtr, interp, objc, objv)
 	return TCL_ERROR;
     }
     
-    switch ((enum editOptions)index) {
+    switch ((enum peerOptions)index) {
 	case PEER_CREATE: {
 	    if (objc < 4) {
 		Tcl_WrongNumArgs(interp, 3, objv, "pathName ?options?");
