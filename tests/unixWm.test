@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.16 2002/06/12 19:02:49 mdejong Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.17 2002/06/13 21:35:09 mdejong Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -994,29 +994,11 @@ test unixWm-27.7 {Tk_WmCmd procedure, "iconwindow" option, withdrawing icon} {
     set result
 } {normal 1 icon 0}
 
-test unixWm-28.1 {Tk_WmCmd procedure, "maxsize" option} {
-    list [catch {wm maxsize} msg]  $msg
-} {1 {wrong # args: should be "wm option window ?arg ...?"}}
-test unixWm-28.2 {Tk_WmCmd procedure, "maxsize" option} {
-    list [catch {wm maxsize . a} msg]  $msg
-} {1 {wrong # arguments: must be "wm maxsize window ?width height?"}}
-test unixWm-28.3 {Tk_WmCmd procedure, "maxsize" option} {
-    list [catch {wm maxsize . a b c} msg]  $msg
-} {1 {wrong # arguments: must be "wm maxsize window ?width height?"}}
-test unixWm-28.4 {Tk_WmCmd procedure, "maxsize" option} {nonPortable} {
+test unixWm-28.1 {Tk_WmCmd procedure, "maxsize" option} {nonPortable} {
     wm maxsize .t
 }  {1137 870}
-test unixWm-28.5 {Tk_WmCmd procedure, "maxsize" option} {
-    list [catch {wm maxsize . x 100} msg]  $msg
-} {1 {expected integer but got "x"}}
-test unixWm-28.6 {Tk_WmCmd procedure, "maxsize" option} {
-    list [catch {wm maxsize . 100 bogus} msg]  $msg
-} {1 {expected integer but got "bogus"}}
-test unixWm-28.7 {Tk_WmCmd procedure, "maxsize" option} {
-    wm maxsize .t 200 150
-    wm maxsize .t
-} {200 150}
-test unixWm-28.8 {Tk_WmCmd procedure, "maxsize" option} {nonPortable} {
+
+test unixWm-28.2 {Tk_WmCmd procedure, "maxsize" option} {nonPortable} {
     # Not portable, because some window managers let applications override
     # minsize and maxsize.
 
@@ -1032,29 +1014,7 @@ toplevel .t -width 100 -height 50
 wm geom .t +0+0
 update
 
-test unixWm-29.1 {Tk_WmCmd procedure, "minsize" option} {
-    list [catch {wm minsize} msg]  $msg
-} {1 {wrong # args: should be "wm option window ?arg ...?"}}
-test unixWm-29.2 {Tk_WmCmd procedure, "minsize" option} {
-    list [catch {wm minsize . a} msg]  $msg
-} {1 {wrong # arguments: must be "wm minsize window ?width height?"}}
-test unixWm-29.3 {Tk_WmCmd procedure, "minsize" option} {
-    list [catch {wm minsize . a b c} msg]  $msg
-} {1 {wrong # arguments: must be "wm minsize window ?width height?"}}
-test unixWm-29.4 {Tk_WmCmd procedure, "minsize" option} {
-    wm minsize .t
-}  {1 1}
-test unixWm-29.5 {Tk_WmCmd procedure, "minsize" option} {
-    list [catch {wm minsize . x 100} msg]  $msg
-} {1 {expected integer but got "x"}}
-test unixWm-29.6 {Tk_WmCmd procedure, "minsize" option} {
-    list [catch {wm minsize . 100 bogus} msg]  $msg
-} {1 {expected integer but got "bogus"}}
-test unixWm-29.7 {Tk_WmCmd procedure, "minsize" option} {
-    wm minsize .t 200 150
-    wm minsize .t
-} {200 150}
-test unixWm-29.8 {Tk_WmCmd procedure, "minsize" option} {nonPortable} {
+test unixWm-29.1 {Tk_WmCmd procedure, "minsize" option} {nonPortable} {
     # Not portable, because some window managers let applications override
     # minsize and maxsize.
 
