@@ -12,8 +12,9 @@
 
 2004-11-07  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
-	* library/demos/anilabel.tcl: Added a simple demonstration of how
-	to do animation using Tcl/Tk to the widget demo.
+	* library/demos/pendulum.tcl:	Added demonstrations of how to do
+	* library/demos/aniwave.tcl:	animations using Tcl/Tk to the
+	* library/demos/anilabel.tcl:	widget demo.
 
 2004-11-03  Don Porter  <dgp@users.sourceforge.net>
 
