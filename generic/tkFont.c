@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.4 1999/06/01 18:44:51 stanton Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.5 1999/06/02 18:15:54 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -3255,7 +3255,7 @@ TkFontParseXLFD(string, faPtr, xaPtr)
     for (i = 0; *src != '\0'; src++) {
 	if (!(*src & 0x80)
 		&& Tcl_UniCharIsUpper(UCHAR(*src))) {
-	    *src = Tcl_UniCharToLower(UCHAR(*src));
+	    *src = (char) Tcl_UniCharToLower(UCHAR(*src));
 	}
 	if (*src == '-') {
 	    i++;

@@ -9,13 +9,17 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.8 1999/05/25 01:31:06 stanton Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.9 1999/06/02 18:15:54 stanton Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
 #define _TKINTXLIBDECLS
 
+#ifdef MAC_TCL
+#include "Xutil.h"
+#else
 #include "X11/Xutil.h"
+#endif
 
 #ifdef BUILD_tk
 #undef TCL_STORAGE_CLASS

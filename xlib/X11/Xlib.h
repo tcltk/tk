@@ -58,7 +58,11 @@ typedef unsigned long wchar_t;
 typedef char *XPointer;
 
 #define Bool int
+#ifdef MAC_TCL
+#define Status int
+#else
 typedef int Status;
+#endif
 #define True 1
 #define False 0
 
