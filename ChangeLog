@@ -1,3 +1,8 @@
+2001-06-22  Mo DeJong  <mdejong@redhat.com>
+
+	* win/configure:
+	* win/tcl.m4: Update From Tcl.
+
 2001-06-21  eric melski  <ericm@interwoven.com>
 
 	* doc/colors.n: Corrected bogus documentation with respect to
