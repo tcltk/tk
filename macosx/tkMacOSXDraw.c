@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.3 2004/07/25 02:19:22 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.4 2004/07/27 18:58:33 das Exp $
  */
 
 #include "tclInt.h"
@@ -76,7 +76,7 @@ TkMacOSXInitCGDrawing(interp, enable, limit)
         
         if (Tcl_LinkVar(interp, "::tk::mac::CGAntialiasLimit",
                 (char *) &tkMacOSXCGAntiAliasLimit, 
-                TCL_LINK_BOOLEAN) != TCL_OK) {
+                TCL_LINK_INT) != TCL_OK) {
             Tcl_ResetResult(interp);
         }
         tkMacOSXCGAntiAliasLimit = limit;

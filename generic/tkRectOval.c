@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkRectOval.c,v 1.10 2003/02/09 07:48:22 hobbs Exp $
+ * RCS: @(#) $Id: tkRectOval.c,v 1.10.2.1 2004/07/27 18:58:33 das Exp $
  */
 
 #include <stdio.h>
@@ -672,7 +672,14 @@ ComputeRectOvalBbox(canvas, rectOvalPtr)
 	bloat = 0;
 #endif
     } else {
+#ifdef MAC_OSX_TK
+	/* Mac OS X CoreGraphics needs correct rounding here 
+	 * otherwise it will draw outside the bounding box.
+	 * Probably correct on other platforms as well? */
+	bloat = (int) (width+1.5)/2;
+#else
 	bloat = (int) (width+1)/2;
+#endif
     }
 
     /*
