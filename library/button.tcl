@@ -4,7 +4,7 @@
 # checkbutton, and radiobutton widgets and provides procedures
 # that help in implementing those bindings.
 #
-# RCS: @(#) $Id: button.tcl,v 1.4 1999/04/16 01:51:26 stanton Exp $
+# RCS: @(#) $Id: button.tcl,v 1.5 1999/08/09 16:52:06 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -142,10 +142,9 @@ if {[string match "windows" $tcl_platform(platform)]} {
 
 proc tkButtonEnter w {
     global tkPriv
-    if {[string compare [$w cget -state] "disabled"]} {
-      if {![string compare $tkPriv(buttonWindow) $w]} {
-	    $w configure -state active -relief sunken
-	}
+    if {[string compare [$w cget -state] "disabled"] \
+	    && ![string compare $tkPriv(buttonWindow) $w]} {
+	$w configure -state active -relief sunken
     }
     set tkPriv(window) $w
 }
@@ -163,7 +162,7 @@ proc tkButtonEnter w {
 proc tkButtonLeave w {
     global tkPriv
     if {[string compare [$w cget -state] "disabled"]} {
-	$w config -state normal
+	$w configure -state normal
     }
     if {![string compare $tkPriv(buttonWindow) $w]} {
 	$w configure -relief $tkPriv(relief)
@@ -182,10 +181,9 @@ proc tkButtonLeave w {
 
 proc tkCheckRadioEnter w {
     global tkPriv
-    if {[string compare [$w cget -state] "disabled"]} {
-      if {![string compare $tkPriv(buttonWindow) $w]} {
-	    $w configure -state active
-	}
+    if {[string compare [$w cget -state] "disabled"] \
+	    && ![string compare $tkPriv(buttonWindow) $w]} {
+	$w configure -state active
     }
     set tkPriv(window) $w
 }
@@ -201,10 +199,10 @@ proc tkCheckRadioEnter w {
 
 proc tkButtonDown w {
     global tkPriv
-    set tkPriv(relief) [lindex [$w conf -relief] 4]
+    set tkPriv(relief) [$w cget -relief]
     if {[string compare [$w cget -state] "disabled"]} {
 	set tkPriv(buttonWindow) $w
-	$w config -relief sunken -state active
+	$w configure -relief sunken -state active
     }
 }
 
@@ -219,10 +217,10 @@ proc tkButtonDown w {
 
 proc tkCheckRadioDown w {
     global tkPriv
-    set tkPriv(relief) [lindex [$w conf -relief] 4]
+    set tkPriv(relief) [$w cget -relief]
     if {[string compare [$w cget -state] "disabled"]} {
 	set tkPriv(buttonWindow) $w
-	$w config -state active
+	$w configure -state active
     }
 }
 
@@ -238,9 +236,10 @@ proc tkButtonUp w {
     global tkPriv
     if {![string compare $tkPriv(buttonWindow) $w]} {
 	set tkPriv(buttonWindow) ""
-      if {![string compare $tkPriv(window) $w]
+	$w configure -relief $tkPriv(relief)
+	if {![string compare $tkPriv(window) $w]
               && [string compare [$w cget -state] "disabled"]} {
-	    $w config -relief $tkPriv(relief) -state normal
+	    $w configure -state normal
 	    uplevel #0 [list $w invoke]
 	}
     }
@@ -265,8 +264,8 @@ if {[string match "unix" $tcl_platform(platform)]} {
 proc tkButtonEnter {w} {
     global tkPriv
     if {[string compare [$w cget -state] "disabled"]} {
-	$w config -state active
-      if {![string compare $tkPriv(buttonWindow) $w]} {
+	$w configure -state active
+	if {![string compare $tkPriv(buttonWindow) $w]} {
 	    $w configure -state active -relief sunken
 	}
     }
@@ -286,7 +285,7 @@ proc tkButtonEnter {w} {
 proc tkButtonLeave w {
     global tkPriv
     if {[string compare [$w cget -state] "disabled"]} {
-	$w config -state normal
+	$w configure -state normal
     }
     if {![string compare $tkPriv(buttonWindow) $w]} {
 	$w configure -relief $tkPriv(relief)
@@ -305,10 +304,10 @@ proc tkButtonLeave w {
 
 proc tkButtonDown w {
     global tkPriv
-    set tkPriv(relief) [lindex [$w config -relief] 4]
+    set tkPriv(relief) [$w cget -relief]
     if {[string compare [$w cget -state] "disabled"]} {
 	set tkPriv(buttonWindow) $w
-	$w config -relief sunken
+	$w configure -relief sunken
     }
 }
 
@@ -324,9 +323,9 @@ proc tkButtonUp w {
     global tkPriv
     if {![string compare $w $tkPriv(buttonWindow)]} {
 	set tkPriv(buttonWindow) ""
-	$w config -relief $tkPriv(relief)
-      if {![string compare $w $tkPriv(window)]
-              && [string compare [$w cget -state] "disabled"]} {
+	$w configure -relief $tkPriv(relief)
+	if {![string compare $w $tkPriv(window)] \
+		&& [string compare [$w cget -state] "disabled"]} {
 	    uplevel #0 [list $w invoke]
 	}
     }
@@ -389,7 +388,7 @@ proc tkButtonDown w {
     global tkPriv
     if {[string compare [$w cget -state] "disabled"]} {
 	set tkPriv(buttonWindow) $w
-	$w config -state active
+	$w configure -state active
     }
 }
 
@@ -404,9 +403,9 @@ proc tkButtonDown w {
 proc tkButtonUp w {
     global tkPriv
     if {![string compare $w $tkPriv(buttonWindow)]} {
-	$w config -state normal
+	$w configure -state normal
 	set tkPriv(buttonWindow) ""
-      if {![string compare $w $tkPriv(window)]
+	if {![string compare $w $tkPriv(window)]
               && [string compare [$w cget -state] "disabled"]} {
 	    uplevel #0 [list $w invoke]
 	}

@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: listbox.tcl,v 1.5 1999/04/16 01:51:26 stanton Exp $
+# RCS: @(#) $Id: listbox.tcl,v 1.6 1999/08/09 16:52:06 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -234,10 +234,14 @@ proc tkListboxMotion {w el} {
 	    $w selection clear 0 end
 	    $w selection set $el
 	    set tkPriv(listboxPrev) $el
-          event generate $w <<ListboxSelect>>
+	    event generate $w <<ListboxSelect>>
 	}
 	extended {
 	    set i $tkPriv(listboxPrev)
+	    if {[string equal {} $i]} {
+		set i $el
+		$w selection set $el
+	    }
 	    if {[$w selection includes anchor]} {
 		$w selection clear $i $el
 		$w selection set anchor $el
@@ -258,7 +262,7 @@ proc tkListboxMotion {w el} {
 		incr i -1
 	    }
 	    set tkPriv(listboxPrev) $el
-          event generate $w <<ListboxSelect>>
+	    event generate $w <<ListboxSelect>>
 	}
     }
 }

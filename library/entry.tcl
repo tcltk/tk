@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: entry.tcl,v 1.6 1999/04/16 01:51:26 stanton Exp $
+# RCS: @(#) $Id: entry.tcl,v 1.7 1999/08/09 16:52:06 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -26,22 +26,25 @@
 #			char, word, or line.
 # x, y -		Last known mouse coordinates for scanning
 #			and auto-scanning.
+# data -		Used for Cut and Copy
 #-------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------
 # The code below creates the default class bindings for entries.
 #-------------------------------------------------------------------------
 bind Entry <<Cut>> {
-    if {![catch {set data [tkEntryGetSelection %W]}]} {
+    if {![catch {tkEntryGetSelection %W} tkPriv(data)]} {
 	clipboard clear -displayof %W
-	clipboard append -displayof %W $data
+	clipboard append -displayof %W $tkPriv(data)
 	%W delete sel.first sel.last
+	unset tkPriv(data)
     }
 }
 bind Entry <<Copy>> {
-    if {![catch {set data [tkEntryGetSelection %W]}]} {
+    if {![catch {tkEntryGetSelection %W} tkPriv(data)]} {
 	clipboard clear -displayof %W
-	clipboard append -displayof %W $data
+	clipboard append -displayof %W $tkPriv(data)
+	unset tkPriv(data)
     }
 }
 bind Entry <<Paste>> {
