@@ -11,11 +11,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.12 2004/12/18 20:35:16 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.13 2004/12/19 18:14:26 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
-
+extern TkWinProcs *tkWinProcs;
 
 /*
  * One of the following structures exists for each container in this
@@ -121,11 +121,19 @@ TkpTestembedCmd(clientData, interp, argc, argv)
  *	application to specify the window in which the application is
  *	embedded.
  *
+ *	This procesure sends a TK_ATTACHWINDOW message to the window to 
+ *	use. The returned value is either 0 (the window to use is already 
+ *	in use) or the hwnd of the window to use (the window to use is 
+ *	ready to serve as a container) or other values (the window to use 
+ *	needs to be confirmed since this protocol was not used before Tk85).
+ *
  * Results:
  *	The return value is normally TCL_OK. If an error occurred (such as
- *	if the argument does not identify a legal Windows window handle),
- *	the return value is TCL_ERROR and an error message is left in the
- *	the interp's result if interp is not NULL.
+ *	if the argument does not identify a legal Windows window handle or
+ *	it is already in use or a cancel button is pressed by a user in 
+ *	confirming the use window as a Tk container) the return value is 
+ *	TCL_ERROR and an error message is left in the the interp's result 
+ *	if interp is not NULL.
  *
  * Side effects:
  *	None.
@@ -179,6 +187,22 @@ TkpUseWindow(interp, tkwin, string)
 	    Tcl_AppendResult(interp, "window \"", usePtr->pathName,
                     "\" doesn't have -container option set", (char *) NULL);
 	    return TCL_ERROR;
+	}
+    } 
+
+    id = SendMessage(hwnd, TK_ATTACHWINDOW, 0, 0);
+    if(id == 0 || id != (long)hwnd) {
+	char msg[256];
+	if(id == 0) {
+	    sprintf(msg, "The window \"%s\" is already in use", string);
+	    Tcl_SetResult(interp, msg, TCL_VOLATILE);
+	    return TCL_ERROR;
+	} else {
+	    sprintf(msg, "The window \"%s\" failed to identify itself as a Tk container.\nPress Ok to proceed or Cancel to abort attaching.", string);
+	    if(IDCANCEL == MessageBox(hwnd, msg, "Tk Warning", MB_OKCANCEL | MB_ICONWARNING)) {
+	        Tcl_SetResult(interp, "Operation has been canceled", TCL_STATIC); 
+	        return TCL_ERROR;
+	    }
 	}
     }
 
@@ -353,6 +377,7 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
     WPARAM wParam;
     LPARAM lParam;
 {
+    int result = 1;
     Container *containerPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -374,11 +399,19 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	     * another application) is trying to attach to this container.
 	     * We attach it only if this container is not yet containing any
 	     * window.
+	     *
+	     * wParam - a handle of an embedded window
+	     *
+	     * An embedded window may send this message with a wParam of NULL
+	     * to test if a window is able to provide embedding service. The 
+	     * container returns its window handle for accepting the attachment 
+	     * and identifying itself or a zero for being already in use.
 	     */
 	    if (containerPtr->embeddedHWnd == NULL) {
 		containerPtr->embeddedHWnd = (HWND)wParam;
+		result =  (long)containerPtr->parentHWnd;
 	    } else {
-		return 0;
+		result = 0;
 	    }
 	    break;
 
@@ -388,11 +421,63 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	    break;
 
 	    case TK_GEOMETRYREQ:
+	    /*
+	     * wParam - window width
+	     * lParam - window height
+	     */
 	    EmbedGeometryRequest(containerPtr, (int) wParam, lParam);
 	    break;
+
+	    case TK_RAISEWINDOW:
+	    /*
+	     * wParam - a window handle as a z-order stack reference 
+	     * lParam - a flag of above-below: 0 - above; 1 or others: - below
+	     */
+	    TkWinSetWindowPos(GetParent(containerPtr->parentHWnd), (HWND)wParam, (int)lParam);
+	    break;
+
+	    case TK_TITLE:
+	    /*
+	     * lParam - a pointer to a unicode string
+	     */
+	    (*tkWinProcs->setWindowText)(GetParent(containerPtr->parentHWnd), (LPCTSTR)lParam);
+	    break;
+
+	    case TK_CLAIMFOCUS:
+	    /* 
+	     * wParam - a flag of forcing focus 
+	     */
+	    if(!SetFocus(containerPtr->embeddedHWnd) && wParam) {
+		/*
+		 * forcing focus TBD
+		 */
+	    }
+	    break;
+
+	    /*
+	     * Return 0 since the current Tk container implementation 
+	     * is unable to provide these services.
+	     *  
+	     */
+	    case TK_ICONIFY:
+	    case TK_DEICONIFY:
+	    case TK_WITHDRAW:
+	    result = 0;  
+	    break;
+
+	    case TK_MOVEWINDOW:
+	    /*
+	     *	wParam - x value of the frame's upper left;
+	     *	lParam - y value of the frame's upper left;
+	     */
+	    result = 0;  
+	    break;
 	}
+    } else {
+	result = 0;
     }
-    return 1;
+
+    return result;
 }
 
 /*

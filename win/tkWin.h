@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin.h,v 1.7 2004/12/18 20:21:09 chengyemao Exp $
+ * RCS: @(#) $Id: tkWin.h,v 1.8 2004/12/19 18:14:26 chengyemao Exp $
  */
 
 #ifndef _TKWIN
@@ -30,13 +30,23 @@
 
 /*
  * The following messages are used to communicate between a Tk toplevel
- * and its container window.
+ * and its container window. A zero should be returned if a Tk container
+ * is not able to provide a requested service. A Tk container may not be
+ * able to provide service to all of the following requests at the moment.
+ * But an embedded Tk window will send out these requests to support 
+ * external Tk container application.
  */
 
 #define TK_CLAIMFOCUS	(WM_USER)   /* an embedded window requests to focus */
 #define TK_GEOMETRYREQ	(WM_USER+1) /* an embedded window requests to change size */
 #define TK_ATTACHWINDOW	(WM_USER+2) /* an embedded window requests to attach */
 #define TK_DETACHWINDOW	(WM_USER+3) /* an embedded window requests to detach */
+#define TK_MOVEWINDOW	(WM_USER+4) /* an embedded window requests to move */
+#define TK_RAISEWINDOW	(WM_USER+5) /* an embedded window requests to raise */
+#define TK_ICONIFY	(WM_USER+6) /* an embedded window requests to iconify */
+#define TK_DEICONIFY	(WM_USER+7) /* an embedded window requests to deiconify */
+#define TK_WITHDRAW	(WM_USER+8) /* an embedded window requests to withdraw */
+#define TK_TITLE	(WM_USER+9) /* an embedded window requests to set title */
 
 
 /*
