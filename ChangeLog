@@ -1,5 +1,10 @@
 1999-06-16    <wart@scriptics.com>
 
+	* unix/configure.in:
+	* unix/Makefile.in:
+	* unix/aclocal.m4: Numerous build changes to make Tk conform to
+	the proposed TEA spec
+
 	* tkConsole.c: changed some variable types from (int) to (size_t)
 	to prevent compiler warnings.  Cast return value from strlen()
 	to (int) in one place for the same reason.
