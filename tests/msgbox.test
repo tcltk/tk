@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: msgbox.test,v 1.8 2004/05/23 17:34:49 dkf Exp $
+# RCS: @(#) $Id: msgbox.test,v 1.9 2004/05/24 21:23:23 dkf Exp $
 #
 
 package require tcltest 2.1
@@ -14,10 +14,10 @@ tcltest::loadTestedCommands
 
 test msgbox-1.1 {tk_messageBox command} {
     list [catch {tk_messageBox -foo} msg] $msg
-} {1 {bad option "-foo": must be -default, -icon, -message, -parent, -title, or -type}}
+} {1 {bad option "-foo": must be -default, -detail, -icon, -message, -parent, -title, or -type}}
 test msgbox-1.2 {tk_messageBox command} {
     list [catch {tk_messageBox -foo bar} msg] $msg
-} {1 {bad option "-foo": must be -default, -icon, -message, -parent, -title, or -type}}
+} {1 {bad option "-foo": must be -default, -detail, -icon, -message, -parent, -title, or -type}}
 
 catch {tk_messageBox -foo bar} msg
 regsub -all ,      $msg "" options

@@ -1,7 +1,14 @@
+2004-05-24  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/messageBox.n: Added documentation for the -detail option.
+	* tests/msgbox.test: Updated test suite with correct list of options.
+	* win/tkWinDialog.c (Tk_MessageBoxObjCmd): Added "support" for the
+	-detail option by concatenating it onto the end of the message.
+
 2004-05-24  Jim Ingham  <jingham@apple.com>
 
-	* tkMacOSXDialog.c (Tk_MessageBoxObjCmd): Turn on the
-	-finemessage option for Mac OS X.
+	* tkMacOSXDialog.c (Tk_MessageBoxObjCmd): Turn on the -detail
+	option for Mac OS X.
 	
 2004-05-23  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
