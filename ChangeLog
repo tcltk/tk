@@ -1,5 +1,7 @@
 2004-10-29  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* win/makefile.vc (DOTVERSION): Was installing 8.4 relabelled as 8.5
+
 	* library/tk.tcl (::tk::PlaceWindow): Backported the fix from 
 	#533519 to handle window placement on multi-monitor Windows.
 
