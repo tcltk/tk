@@ -1,3 +1,10 @@
+2003-07-18  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* tests/panedwindow.test (panedwindow-30.2): 
+	* generic/tkPanedWindow.c (Tk_PanedWindowObjCmd): Ensure that we
+	can share GCs between a panedwindow and its sash proxy, even if
+	the panedwindow is in a toplevel with a different visual. [Bug 702230]
+
 2003-07-17  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Makefile: Changes for new tcl buildsystem.
