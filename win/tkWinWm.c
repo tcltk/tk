@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.21 2000/02/26 03:11:07 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.22 2000/04/15 17:38:13 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -4282,9 +4282,18 @@ WmProc(hwnd, message, wParam, lParam)
 	    ActivateEvent *eventPtr;
 	    winPtr = GetTopLevel((HWND) wParam);
 
+	    if (winPtr && (TkGrabState(winPtr) != TK_GRAB_EXCLUDED)) {
+		/*
+		 * This allows us to pass the message onto the
+		 * native menus [Bug: 2272]
+		 */
+		result = DefWindowProc(hwnd, message, wParam, lParam);
+		goto done;
+	    }
+
 	    /*
-	     * Don't activate the window yet since there may be grabs
-	     * that should take precedence.  Instead we need to queue
+	     * Don't activate the window yet since there is a grab
+	     * that takes precedence.  Instead we need to queue
 	     * an event so we can check the grab state right before we
 	     * handle the mouse event.
 	     */

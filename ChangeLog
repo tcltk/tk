@@ -13,6 +13,10 @@
 
 2000-04-14  Jeff Hobbs  <hobbs@scriptics.com>
 
+	* win/tkWinWm.c (WmProc): added check in WM_MOUSEACTIVATE so we
+	correctly activate native menus when clicking in when we didn't
+	have focus [Bug: 2272]
+
 	* generic/tkCanvas.c (CanvasEventProc:2451): corrected cast
 
 	* generic/tkEntry.c (Tk_EntryObjCmd): adjusted finishing error
