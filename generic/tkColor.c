@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.c,v 1.3 1999/04/16 01:51:12 stanton Exp $
+ * RCS: @(#) $Id: tkColor.c,v 1.4 1999/04/16 18:30:27 surles Exp $
  */
 
 #include "tkColor.h"
@@ -403,8 +403,7 @@ Tk_NameOfColor(colorPtr)
 GC
 Tk_GCForColor(colorPtr, drawable)
     XColor *colorPtr;		/* Color for which a GC is desired. Must
-				 * have been allocated by Tk_GetColor or
-				 * Tk_GetColorByName. */
+				 * have been allocated by Tk_GetColor. */
     Drawable drawable;		/* Drawable in which the color will be
 				 * used (must have same screen and depth
 				 * as the one for which the color was

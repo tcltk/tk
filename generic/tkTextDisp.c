@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.4 1999/04/16 01:51:23 stanton Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.5 1999/04/16 18:30:28 surles Exp $
  */
 
 #include "tkPort.h"
@@ -4936,7 +4936,7 @@ NextTabStop(tkfont, x, tabOrigin)
  *
  *	Determine the number of characters from the string that will fit
  *	in the given horizontal span.  The measurement is done under the
- *	assumption that Tk_DisplayChars will be used to actually display
+ *	assumption that Tk_DrawTextLayout will be used to actually display
  *	the characters.
  *
  *	If tabs are encountered in the string, they will be expanded

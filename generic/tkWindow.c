@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.6 1999/04/16 01:51:25 stanton Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.7 1999/04/16 18:30:29 surles Exp $
  */
 
 #include "tkPort.h"
@@ -38,7 +38,7 @@ typedef struct ThreadSpecificData {
 static Tcl_ThreadDataKey dataKey;
 
 /* 
- * The Mutex below is used to lock access to the Tk_Uids above. 
+ * The Mutex below is used to lock access to the Tk_Uid structs above. 
  */
 
 TCL_DECLARE_MUTEX(windowMutex)

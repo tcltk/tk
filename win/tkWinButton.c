@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.3 1999/04/16 01:51:49 stanton Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.4 1999/04/16 18:29:02 surles Exp $
  */
 
 #define OEMRESOURCE
@@ -66,7 +66,7 @@ enum {
 
 /*
  * Cached information about the boxes bitmap, and the default border 
- * width for a button in string form for use in Tk_OptionSpecs for 
+ * width for a button in string form for use in Tk_OptionSpec for 
  * the various button widget classes.
  */
 

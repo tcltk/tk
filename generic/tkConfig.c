@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.3 1999/04/16 01:51:12 stanton Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.4 1999/04/16 18:30:27 surles Exp $
  */
 
 /*
@@ -39,7 +39,7 @@
 
 /*
  * The following two structures are used along with Tk_OptionSpec
- * structures to manage configuration options.  Tk_OptionSpecs are
+ * structures to manage configuration options.  Tk_OptionSpec is
  * static templates that are compiled into the code of a widget
  * or other object manager.  However, to look up options efficiently
  * we need to supplement the static information with additional

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.3 1999/04/16 01:51:20 stanton Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.4 1999/04/16 18:30:28 surles Exp $
  */
 
 #include "tkPort.h"
@@ -839,7 +839,7 @@ RecomputePlacement(clientData)
 	/*
 	 * Step 5: reconfigure the window and map it if needed.  If the
 	 * slave is a child of the master, we do this ourselves.  If the
-	 * slave isn't a child of the master, let Tk_MaintainWindow do
+	 * slave isn't a child of the master, let Tk_MaintainGeometry do
 	 * the work (it will re-adjust things as relevant windows map,
 	 * unmap, and move).
 	 */

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.3 1999/04/16 01:51:24 stanton Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.4 1999/04/16 18:30:28 surles Exp $
  */
 
 #include "tkInt.h"
@@ -72,7 +72,7 @@ TkDrawInsetFocusHighlight(tkwin, gc, width, drawable, padding)
      * two things to worry about:
      *
      * 1) The widget must draw the background color covering
-     *    the focus ring area before calling Tk_DrawFocus.
+     *    the focus ring area before calling Tk_DrawFocusHighlight.
      * 2) It is impossible to draw a focus ring of width 1.
      *    (For the Macintosh Look & Feel use width of 3)
      */

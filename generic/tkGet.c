@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGet.c,v 1.3 1999/04/16 01:51:14 stanton Exp $
+ * RCS: @(#) $Id: tkGet.c,v 1.4 1999/04/16 18:30:27 surles Exp $
  */
 
 #include "tkInt.h"
@@ -22,8 +22,8 @@
 /*
  * One of these structures is created per thread to store 
  * thread-specific data.  In this case, it is used to house the 
- * Tk_Uids used by each thread.  The "dataKey" below is used to 
- * locate the ThreadSpecificData for the current thread.
+ * Tk_Uid structs used by each thread.  The "dataKey" below is 
+ * used to locate the ThreadSpecificData for the current thread.
  */
 
 typedef struct ThreadSpecificData {
@@ -200,7 +200,7 @@ Tk_NameOfAnchor(anchor)
  *
  * Tk_GetJoinStyle --
  *
- *	Given a string, return the corresponding Tk_JoinStyle.
+ *	Given a string, return the corresponding Tk JoinStyle.
  *
  * Results:
  *	The return value is a standard Tcl return result.  If
@@ -252,7 +252,7 @@ Tk_GetJoinStyle(interp, string, joinPtr)
  *
  * Tk_NameOfJoinStyle --
  *
- *	Given a Tk_JoinStyle, return the string that corresponds
+ *	Given a Tk JoinStyle, return the string that corresponds
  *	to it.
  *
  * Results:
@@ -282,7 +282,7 @@ Tk_NameOfJoinStyle(join)
  *
  * Tk_GetCapStyle --
  *
- *	Given a string, return the corresponding Tk_CapStyle.
+ *	Given a string, return the corresponding Tk CapStyle.
  *
  * Results:
  *	The return value is a standard Tcl return result.  If
@@ -334,7 +334,7 @@ Tk_GetCapStyle(interp, string, capPtr)
  *
  * Tk_NameOfCapStyle --
  *
- *	Given a Tk_CapStyle, return the string that corresponds
+ *	Given a Tk CapStyle, return the string that corresponds
  *	to it.
  *
  * Results:

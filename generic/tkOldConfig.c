@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.2 1999/04/16 01:51:20 stanton Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.3 1999/04/16 18:30:28 surles Exp $
  */
 
 #include "tkPort.h"
@@ -99,8 +99,8 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
 
     /*
      * Pass one:  scan through all the option specs, replacing strings
-     * with Tk_Uids (if this hasn't been done already) and clearing
-     * the TK_CONFIG_OPTION_SPECIFIED flags.
+     * with Tk_Uid structs (if this hasn't been done already) and
+     * clearing the TK_CONFIG_OPTION_SPECIFIED flags.
      */
 
     for (specPtr = specs; specPtr->type != TK_CONFIG_END; specPtr++) {

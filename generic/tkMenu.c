@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.3 1999/04/16 01:51:19 stanton Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.4 1999/04/16 18:30:28 surles Exp $
  */
 
 /*
@@ -1204,7 +1204,7 @@ DestroyMenuInstance(menuPtr)
 
     /*
      * Free up all the stuff that requires special handling, then
-     * let Tk_FreeConfigurationOptions handle all the standard option-related
+     * let Tk_FreeConfigOptions handle all the standard option-related
      * stuff.
      */
 
@@ -1403,7 +1403,7 @@ DestroyMenuEntry(memPtr)
 
     /*
      * Free up all the stuff that requires special handling, then
-     * let Tk_FreeConfigurationOptions handle all the standard option-related
+     * let Tk_FreeConfigOptions handle all the standard option-related
      * stuff.
      */
 

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.10 1999/04/16 01:51:15 stanton Exp $ 
+ * RCS: $Id: tkInt.h,v 1.11 1999/04/16 18:30:27 surles Exp $ 
  */
 
 #ifndef _TKINT
@@ -86,7 +86,7 @@ typedef struct TkCursor {
 				 * disposal and retrieval of cursors. */
     int resourceRefCount;	/* Number of active uses of this cursor (each
 				 * active use corresponds to a call to
-				 * Tk_AllocPreserveFromObj or Tk_GetPreserve).
+				 * Tk_AllocPreserveFromObj or Tk_Preserve).
 				 * If this count is 0, then this structure
 				 * is no longer valid and it isn't present
 				 * in a hash table: it is being kept around
@@ -293,7 +293,7 @@ typedef struct TkDisplay {
      * Information used by tkGet.c only:
      */
   
-    Tcl_HashTable uidTable;     /* Stores all Tk_Uids used in a thread. */
+    Tcl_HashTable uidTable;     /* Stores all Tk_Uid  used in a thread. */
     int uidInit;                /* 0 means uidTable needs initializing. */
 
     /*
@@ -550,7 +550,7 @@ typedef struct TkEventHandler {
 
 /*
  * Tk keeps one of the following data structures for each main
- * window (created by a call to Tk_CreateMainWindow).  It stores
+ * window (created by a call to TkCreateMainWindow).  It stores
  * information that is shared by all of the windows associated
  * with a particular main window.
  */

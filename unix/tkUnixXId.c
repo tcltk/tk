@@ -17,7 +17,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixXId.c,v 1.3 1999/04/16 01:51:48 stanton Exp $
+ * RCS: @(#) $Id: tkUnixXId.c,v 1.4 1999/04/16 18:26:58 surles Exp $
  */
 
 /*
@@ -69,7 +69,7 @@ static void		WindowIdCleanup2 _ANSI_ARGS_((ClientData clientData));
  *	None.
  *
  * Side effects:
- *	The official allocator for the display is set up to be Tk_AllocXID.
+ *	The official allocator for the display is set up to be AllocXId.
  *
  *----------------------------------------------------------------------
  */

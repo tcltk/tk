@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.21 1999/04/16 01:51:09 stanton Exp $
+ * RCS: @(#) $Id: tk.h,v 1.22 1999/04/16 18:30:26 surles Exp $
  */
 
 #ifndef _TK
@@ -193,9 +193,9 @@ typedef struct Tk_OptionSpec {
 #define TK_OPTION_NULL_OK		1
 
 /*
- * Macro to use to fill in "offset" fields of Tk_OptionSpecs.
- * Computes number of bytes from beginning of structure to a
- * given field.
+ * Macro to use to fill in "offset" fields of the Tk_OptionSpec.
+ * struct.  Computes number of bytes from beginning of structure
+ * to a given field.
  */
 
 #ifdef offsetof

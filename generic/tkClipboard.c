@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkClipboard.c,v 1.3 1999/04/16 01:51:12 stanton Exp $
+ * RCS: @(#) $Id: tkClipboard.c,v 1.4 1999/04/16 18:30:27 surles Exp $
  */
 
 #include "tkInt.h"
@@ -222,7 +222,7 @@ ClipboardLostSel(clientData)
  *
  *	Take control of the clipboard and clear out the previous
  *	contents.  This procedure must be invoked before any
- *	calls to Tk_AppendToClipboard.
+ *	calls to Tk_ClipboardAppend.
  *
  * Results:
  *	A standard Tcl result.  If an error occurs, an error message is
@@ -233,7 +233,7 @@ ClipboardLostSel(clientData)
  *	directed to the clipboard manager routines associated with
  *	clipWindow for the display of tkwin.  In order to guarantee
  *	atomicity, no event handling should occur between
- *	Tk_ClipboardClear and the following Tk_AppendToClipboard
+ *	Tk_ClipboardClear and the following Tk_ClipboardAppend
  *	calls.  This procedure may cause a user-defined LostSel command 
  * 	to be invoked when the CLIPBOARD is claimed, so any calling
  *	function should be reentrant at the point Tk_ClipboardClear is
@@ -307,7 +307,7 @@ Tk_ClipboardClear(interp, tkwin)
  *	be returned.  Tk_ClipboardClear must be called before a sequence
  *	of Tk_ClipboardAppend calls can be issued.  In order to guarantee
  *	atomicity, no event handling should occur between Tk_ClipboardClear
- *	and the following Tk_AppendToClipboard calls.
+ *	and the following Tk_ClipboardAppend calls.
  *
  * Results:
  *	A standard Tcl result.  If an error is returned, an error message

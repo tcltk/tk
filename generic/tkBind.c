@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.6 1999/04/16 01:51:10 stanton Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.7 1999/04/16 18:30:27 surles Exp $
  */
 
 #include "tkPort.h"
@@ -825,7 +825,7 @@ TkBindFree(mainPtr)
  *
  * Results:
  *	The return value is a token for the new table, which must
- *	be passed to procedures like Tk_CreatBinding.
+ *	be passed to procedures like Tk_CreateBinding.
  *
  * Side effects:
  *	Memory is allocated for the new table.
@@ -2976,7 +2976,7 @@ DeleteVirtualEvent(interp, vetPtr, virtString, eventString)
 		} else {
 		    for ( ; ; prevPtr = prevPtr->nextSeqPtr) {
 			if (prevPtr == NULL) {
-			    panic("Tk_DeleteVirtualEvent couldn't find on hash chain");
+			    panic("DeleteVirtualEvent couldn't find on hash chain");
 			}
 			if (prevPtr->nextSeqPtr == psPtr) {
 			    prevPtr->nextSeqPtr = psPtr->nextSeqPtr;
