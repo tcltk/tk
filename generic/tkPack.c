@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.16.2.1 2003/07/17 03:17:08 dgp Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.16.2.1.2.1 2005/01/19 02:03:45 chengyemao Exp $
  */
 
 #include "tkPort.h"
@@ -1079,7 +1079,7 @@ TkParsePadAmount(interp, tkwin, specObj, halfPtr, allPtr)
     int sepChar = 0;		/* Character used as the separator */
     int firstInt, secondInt;    /* The two components of the padding */
     char *padSpec = Tcl_GetString(specObj);
-
+    while(*padSpec && isspace(UCHAR(*padSpec))) padSpec++; 
     for (secondPart=padSpec;
 	    (*secondPart != '\0') && !isspace(UCHAR(*secondPart));
 	    secondPart++)

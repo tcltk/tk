@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.25.2.5.2.1 2005/01/04 05:07:03 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.25.2.5.2.2 2005/01/19 02:03:51 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -831,6 +831,8 @@ TkWinChildProc(hwnd, message, wParam, lParam)
 	case TK_GETFRAMEWID:
 	case TK_OVERRIDEREDIRECT:
 	case TK_SETMENU:
+	case TK_STATE:
+	case TK_INFO:
 	    result =  TkWinEmbeddedEventProc(hwnd, message, wParam, lParam);
 	    break;
 

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.15.2.1.2.1 2005/01/04 05:07:42 chengyemao Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.15.2.1.2.2 2005/01/19 02:03:40 chengyemao Exp $
  */
 
 #include "default.h"
@@ -591,6 +591,7 @@ CreateFrame(clientData, interp, objc, objv, type, appName)
 	}
     }
     Tk_SetClass(new, className);
+
     if (useOption == NULL) {
 	useOption = Tk_GetOption(new, "use", "Use");
     }
@@ -599,6 +600,7 @@ CreateFrame(clientData, interp, objc, objv, type, appName)
 	    goto error;
 	}
     }
+
     if (visualName == NULL) {
 	visualName = Tk_GetOption(new, "visual", "Visual");
     }
@@ -803,10 +805,18 @@ FrameWidgetObjCmd(clientData, interp, objc, objv)
 			&& (strncmp(arg, "-use", length) == 0))
 			|| ((c == 'v')
 			&& (strncmp(arg, "-visual", length) == 0))) {
-		    Tcl_AppendResult(interp, "can't modify ", arg,
+		    if(c == 'u') {
+			CONST char*string = Tcl_GetString(objv[i+1]);
+			if(TCL_OK != TkpUseWindow(interp, framePtr->tkwin, string)) {
+			    result = TCL_ERROR;
+			    goto done;
+			}
+		    } else {
+			Tcl_AppendResult(interp, "can't modify ", arg,
 			    " option after widget is created", (char *) NULL);
-		    result = TCL_ERROR;
-		    goto done;
+			result = TCL_ERROR;
+			goto done;
+		    }
 		}
 	    }
 	    result = ConfigureFrame(interp, framePtr, objc-2, objv+2);
@@ -1054,7 +1064,22 @@ ConfigureFrame(interp, framePtr, objc, objv)
 	    }
 	}
     }
-
+/*
+    {
+	CONST char *useOption = NULL;
+	Tcl_Obj *namePtr = Tcl_NewStringObj("-use", -1);
+	Tcl_Obj *objPtr = Tk_GetOptionValue(interp, (char*)framePtr, 
+	    framePtr->optionTable, namePtr, framePtr->tkwin);
+	Tcl_DecrRefCount(namePtr);
+	useOption = Tcl_GetString(objPtr);
+	
+	if ((useOption != NULL)) {
+	    if (TkpUseWindow(interp, framePtr->tkwin, useOption) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	}
+    }
+*/
     FrameWorldChanged((ClientData) framePtr);
 
     return TCL_OK;

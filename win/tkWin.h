@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin.h,v 1.6.24.1 2005/01/04 05:07:03 chengyemao Exp $
+ * RCS: @(#) $Id: tkWin.h,v 1.6.24.2 2005/01/19 02:03:48 chengyemao Exp $
  */
 
 #ifndef _TKWIN
@@ -48,7 +48,16 @@
 #define TK_WITHDRAW	    (WM_USER+8)	    /* an embedded window requests to withdraw */
 #define TK_GETFRAMEWID	    (WM_USER+9)	    /* an embedded window requests a frame window id */
 #define TK_OVERRIDEREDIRECT (WM_USER+10)    /* an embedded window requests to overrideredirect */
-#define TK_SETMENU	    (WM_USER+11)    /* am embedded widnow requests to set menu */
+#define TK_SETMENU	    (WM_USER+11)    /* an embedded widnow requests to set menu */
+#define TK_STATE	    (WM_USER+12)    /* an embedded window sets/gets state */
+#define TK_INFO		    (WM_USER+13)    /* an embedded window requests a container's info */
+
+/*
+ * The following are sub-messages (wParam) for TK_INFO 
+ */
+#define TK_CONTAINER_VERIFY	    0x01
+#define TK_CONTAINER_ISAVAILABLE    0x02
+
 
 /*
  *--------------------------------------------------------------
