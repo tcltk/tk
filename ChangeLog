@@ -1,3 +1,8 @@
+2002-07-08  David Gravereaux <davygrvy@pobox.com>
+
+	* unix/Makefile.in: Added missing win/lamp.bmp to the dist
+	target.
+
 2002-07-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	*** 8.4b1 TAGGED FOR RELEASE ***
