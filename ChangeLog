@@ -1,8 +1,13 @@
+1999-03-26    <suresh@scriptics.com>
+        * unix/configure.in
+        --nameble-shared is now the default and builds Tk as a shared
+        library; specify --disable-shared to build a static Tk library
+        and shell.
+
 1999-03-26    <surles@scriptics.com>
 	* library/menu.tcl: Fixed bug reported by Bryan Oakley in the
 	menubutton bindings.  There was a false assumption that there was
 	always a menu attached to the button.  [Bug 1116] 
-
 
 	* unix/configure.in: Removed --enable-tcl-stub.  Linking Tk to Tcl
  	stubs is causing too many problems when linking executables like wish.

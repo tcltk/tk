@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.1.4.11 1999/03/26 19:42:57 surles Exp $
+RCS: @(#) $Id: changes,v 1.1.4.12 1999/03/26 20:03:21 suresh Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4546,3 +4546,7 @@ to be too generic and likely to create conflits.
 menubutton bindings.  There was a false assumption that there was
 always a menu attached to the button.  [Bug 1116] (surles)
 
+3/26/99 (feature change) --nameble-shared is now the default and builds
+Tk as a shared library; specify --disable-shared to build a static Tk
+library and shell.
+*** POTENTIAL INCOMPATIBILITY ***
