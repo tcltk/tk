@@ -12,13 +12,13 @@
 
 2002-02-21  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* doc/panedwindow.n:
-	* generic/tkPanedWindow.c:
+	* doc/panedwindow.n (new file):
+	* generic/tkPanedWindow.c (new file):
 	* generic/tkInt.h:
 	* generic/tkWindow.c:
-	* library/panedwindow.tcl:
+	* library/panedwindow.tcl (new file):
 	* mac/tkMacDefault.h:
-	* tests/panedwindow.test:
+	* tests/panedwindow.test (new file):
 	* unix/Makefile.in:
 	* unix/tkUnixDefault.h:
 	* win/Makefile.in:
