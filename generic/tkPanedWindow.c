@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.9 2002/09/30 18:55:57 hobbs Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.10 2002/10/08 19:57:48 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -389,10 +389,16 @@ Tk_PanedWindowObjCmd(clientData, interp, objc, objv)
     pwPtr->cursor	= None;
     pwPtr->sashCursor	= None;
 
+    /*
+     * Keep a hold of the associated tkwin until we destroy the widget,
+     * otherwise Tk might free it while we still need it.
+     */
+
+    Tcl_Preserve((ClientData) pwPtr->tkwin);
+
     if (Tk_InitOptions(interp, (char *) pwPtr, pwOpts->pwOptions,
 	    tkwin) != TCL_OK) {
 	Tk_DestroyWindow(pwPtr->tkwin);
-	ckfree((char *) pwPtr);
 	return TCL_ERROR;
     }
 
@@ -416,11 +422,10 @@ Tk_PanedWindowObjCmd(clientData, interp, objc, objv)
     pwPtr->proxywin = Tk_CreateAnonymousWindow(interp, parent, (char *) NULL);
     Tk_CreateEventHandler(pwPtr->proxywin, ExposureMask, ProxyWindowEventProc,
 	    (ClientData) pwPtr);
-    
+
     if (ConfigurePanedWindow(interp, pwPtr, objc - 2, objv + 2) != TCL_OK) {
 	Tk_DestroyWindow(pwPtr->proxywin);
 	Tk_DestroyWindow(pwPtr->tkwin);
-	ckfree((char *) pwPtr);
 	return TCL_ERROR;
     }
 
@@ -1466,18 +1471,19 @@ DestroyPanedWindow(pwPtr)
     if (pwPtr->slaves) {
 	ckfree((char *) pwPtr->slaves);
     }
-	
+
     /*
      * Remove the widget command from the interpreter.
      */
 
     Tcl_DeleteCommandFromToken(pwPtr->interp, pwPtr->widgetCmd);
-    
+
     /*
      * Let Tk_FreeConfigOptions clean up the rest.
      */
-    
+
     Tk_FreeConfigOptions((char *) pwPtr, pwPtr->optionTable, pwPtr->tkwin);
+    Tcl_Release((ClientData) pwPtr->tkwin);
     pwPtr->tkwin = NULL;
 
     Tcl_EventuallyFree((ClientData) pwPtr, TCL_DYNAMIC);
