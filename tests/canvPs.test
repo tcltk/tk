@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvPs.test,v 1.5 2002/10/10 07:25:24 hobbs Exp $
+# RCS: @(#) $Id: canvPs.test,v 1.5.2.1 2003/05/11 00:57:10 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -124,22 +124,16 @@ test canvPs-3.2 {test ps generation with an embedded window not mapped} {} {
     file exists bar.ps
 } 1
 
+test canvPs-4.1 {test ps generation with single-point uncolored poly, bug 734498} {} {
+    destroy .c
+    pack [canvas .c]
+    .c create poly 10 20 10 20
+    catch {.c postscript}
+} 0
+
 # cleanup
 removeFile foo.ps
 removeFile bar.ps
 deleteWindows
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
