@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.54 2002/08/31 06:12:20 das Exp $ 
+ * RCS: $Id: tkInt.h,v 1.55 2003/01/28 20:39:15 jenglish Exp $ 
  */
 
 #ifndef _TKINT
@@ -500,7 +500,6 @@ typedef struct TkDisplay {
     /*
      * The following field(s) were all added for Tk8.4
      */
-    long deletionEpoch;		/* Incremented by window deletions */
     unsigned int flags;		/* Various flag values:  these are all
 				 * defined in below. */
     TkCaret caret;		/* information about the caret for this
@@ -601,6 +600,7 @@ typedef struct TkMainInfo {
     Tcl_HashTable nameTable;	/* Hash table mapping path names to TkWindow
 				 * structs for all windows related to this
 				 * main window.  Managed by tkWindow.c. */
+    long deletionEpoch;		/* Incremented by window deletions */
     Tk_BindingTable bindingTable;
 				/* Used in conjunction with "bind" command
 				 * to bind events to Tcl commands. */
