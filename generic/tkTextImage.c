@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.13 2004/03/16 19:53:09 hobbs Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.14 2004/09/10 12:13:41 vincentdarley Exp $
  */
 
 #include "tk.h"
@@ -32,7 +32,8 @@ static TkTextSegment *	EmbImageCleanupProc _ANSI_ARGS_((TkTextSegment *segPtr,
 			    TkTextLine *linePtr));
 static void		EmbImageCheckProc _ANSI_ARGS_((TkTextSegment *segPtr,
 			    TkTextLine *linePtr));
-static void		EmbImageBboxProc _ANSI_ARGS_((TkTextDispChunk *chunkPtr,
+static void		EmbImageBboxProc _ANSI_ARGS_((TkText *textPtr,
+			    TkTextDispChunk *chunkPtr,
 			    int index, int y, int lineHeight, int baseline,
 			    int *xPtr, int *yPtr, int *widthPtr,
 			    int *heightPtr));
@@ -40,7 +41,7 @@ static int		EmbImageConfigure _ANSI_ARGS_((TkText *textPtr,
 			    TkTextSegment *eiPtr, int objc, Tcl_Obj *CONST objv[]));
 static int		EmbImageDeleteProc _ANSI_ARGS_((TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone));
-static void		EmbImageDisplayProc _ANSI_ARGS_((
+static void		EmbImageDisplayProc _ANSI_ARGS_((TkText *textPtr,
 			    TkTextDispChunk *chunkPtr, int x, int y,
 			    int lineHeight, int baseline, Display *display,
 			    Drawable dst, int screenY));
@@ -200,13 +201,14 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 		return TCL_OK;
 	    }
 	} else {
-	    TkTextChanged(textPtr, &index, &index);
+	    TkTextChanged(textPtr->sharedTextPtr, NULL, &index, &index);
 	    /* 
 	     * It's probably not true that all window configuration
 	     * can change the line height, so we could be more
 	     * efficient here and only call this when necessary.
 	     */
-	    TkTextInvalidateLineMetrics(textPtr, index.linePtr, 0,
+	    TkTextInvalidateLineMetrics(textPtr->sharedTextPtr, NULL, 
+					index.linePtr, 0,
 					TK_TEXT_INVALIDATE_ONLY);
 	    return EmbImageConfigure(textPtr, eiPtr, objc-4, objv+4);
 	}
@@ -231,10 +233,11 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 	 * Don't allow insertions on the last (dummy) line of the text.
 	 */
     
-	lineIndex = TkBTreeLineIndex(index.linePtr);
-	if (lineIndex == TkBTreeNumLines(textPtr->tree)) {
+	lineIndex = TkBTreeLinesTo(textPtr, index.linePtr);
+	if (lineIndex == TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr)) {
 	    lineIndex--;
-	    TkTextMakeByteIndex(textPtr->tree, lineIndex, 1000000, &index);
+	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, 
+				lineIndex, 1000000, &index);
 	}
 
 	/*
@@ -244,7 +247,7 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 	eiPtr = (TkTextSegment *) ckalloc(EI_SEG_SIZE);
 	eiPtr->typePtr = &tkTextEmbImageType;
 	eiPtr->size = 1;
-	eiPtr->body.ei.textPtr = textPtr;
+	eiPtr->body.ei.sharedTextPtr = textPtr->sharedTextPtr;
 	eiPtr->body.ei.linePtr = NULL;
 	eiPtr->body.ei.imageName = NULL;
 	eiPtr->body.ei.imageString = NULL;
@@ -260,16 +263,17 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 	 * it again if the configuration fails).
 	 */
 
-	TkTextChanged(textPtr, &index, &index);
+	TkTextChanged(textPtr->sharedTextPtr, NULL, &index, &index);
 	TkBTreeLinkSegment(eiPtr, &index);
 	if (EmbImageConfigure(textPtr, eiPtr, objc-4, objv+4) != TCL_OK) {
 	    TkTextIndex index2;
 
 	    TkTextIndexForwChars(NULL, &index, 1, &index2, COUNT_INDICES);
-	    TkBTreeDeleteChars(&index, &index2);
+	    TkBTreeDeleteChars(textPtr->sharedTextPtr->tree, &index, &index2);
 	    return TCL_ERROR;
 	}
-	TkTextInvalidateLineMetrics(textPtr, index.linePtr, 0,
+	TkTextInvalidateLineMetrics(textPtr->sharedTextPtr, NULL, 
+				    index.linePtr, 0,
 				    TK_TEXT_INVALIDATE_ONLY);
 	return TCL_OK;
     }
@@ -281,10 +285,10 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	    return TCL_ERROR;
 	}
-	for (hPtr = Tcl_FirstHashEntry(&textPtr->imageTable, &search);
+	for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->imageTable, &search);
 		hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
 	    Tcl_AppendElement(interp,
-		    Tcl_GetHashKey(&textPtr->markTable, hPtr));
+		    Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr));
 	}
 	return TCL_OK;
     }
@@ -382,12 +386,12 @@ EmbImageConfigure(textPtr, eiPtr, objc, objv)
 	return TCL_ERROR;
     }
     len = strlen(name);
-    for (hPtr = Tcl_FirstHashEntry(&textPtr->imageTable, &search);
+    for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->imageTable, &search);
 	    hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	char *haveName = Tcl_GetHashKey(&textPtr->imageTable, hPtr);
+	char *haveName = Tcl_GetHashKey(&textPtr->sharedTextPtr->imageTable, hPtr);
 	if (strncmp(name, haveName, len) == 0) {
 	    new = 0;
-	    sscanf(haveName+len,"#%d",&new);
+	    sscanf(haveName+len, "#%d", &new);
 	    if (new > count) {
 		count = new;
 	    }
@@ -402,11 +406,11 @@ EmbImageConfigure(textPtr, eiPtr, objc, objv)
 
     if (conflict) {
     	char buf[4 + TCL_INTEGER_SPACE];
-	sprintf(buf, "#%d",count+1);
-	Tcl_DStringAppend(&newName,buf, -1);
+	sprintf(buf, "#%d", count+1);
+	Tcl_DStringAppend(&newName, buf, -1);
     }
     name = Tcl_DStringValue(&newName);
-    hPtr = Tcl_CreateHashEntry(&textPtr->imageTable, name, &new);
+    hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->imageTable, name, &new);
     Tcl_SetHashValue(hPtr, eiPtr);
     Tcl_AppendResult(textPtr->interp, name , (char *) NULL);
     eiPtr->body.ei.name = ckalloc((unsigned) Tcl_DStringLength(&newName)+1);
@@ -446,7 +450,7 @@ EmbImageDeleteProc(eiPtr, linePtr, treeGone)
     Tcl_HashEntry *hPtr;
 
     if (eiPtr->body.ei.image != NULL) {
-	hPtr = Tcl_FindHashEntry(&eiPtr->body.ei.textPtr->imageTable,
+	hPtr = Tcl_FindHashEntry(&eiPtr->body.ei.sharedTextPtr->imageTable,
 		eiPtr->body.ei.name);
 	if (hPtr != NULL) {
 	    /*
@@ -459,8 +463,12 @@ EmbImageDeleteProc(eiPtr, linePtr, treeGone)
 	}
 	Tk_FreeImage(eiPtr->body.ei.image);
     }
+    /* 
+     * No need to supply a tkwin argument, since we have no
+     * window-specific options.
+     */
     Tk_FreeConfigOptions((char *) &eiPtr->body.ei, eiPtr->body.ei.optionTable,
-			 eiPtr->body.ei.textPtr->tkwin);
+			 NULL);
     ckfree((char *) eiPtr);
     return 0;
 }
@@ -632,7 +640,9 @@ EmbImageCheckProc(eiPtr, linePtr)
  */
 
 static void
-EmbImageDisplayProc(chunkPtr, x, y, lineHeight, baseline, display, dst, screenY)
+EmbImageDisplayProc(textPtr, chunkPtr, x, y, lineHeight, baseline, display, 
+		    dst, screenY)
+    TkText *textPtr;
     TkTextDispChunk *chunkPtr;		/* Chunk that is to be drawn. */
     int x;				/* X-position in dst at which to
 					 * draw this chunk (differs from
@@ -666,7 +676,7 @@ EmbImageDisplayProc(chunkPtr, x, y, lineHeight, baseline, display, dst, screenY)
      * into account the align value for the image.
      */
 
-    EmbImageBboxProc(chunkPtr, 0, y, lineHeight, baseline, &lineX,
+    EmbImageBboxProc(textPtr, chunkPtr, 0, y, lineHeight, baseline, &lineX,
 	    &imageY, &width, &height);
     imageX = lineX - chunkPtr->x + x;
 
@@ -698,8 +708,9 @@ EmbImageDisplayProc(chunkPtr, x, y, lineHeight, baseline, display, dst, screenY)
  */
 
 static void
-EmbImageBboxProc(chunkPtr, index, y, lineHeight, baseline, xPtr, yPtr,
+EmbImageBboxProc(textPtr, chunkPtr, index, y, lineHeight, baseline, xPtr, yPtr,
 	widthPtr, heightPtr)
+    TkText *textPtr;
     TkTextDispChunk *chunkPtr;		/* Chunk containing desired char. */
     int index;				/* Index of desired character within
 					 * the chunk. */
@@ -771,12 +782,12 @@ TkTextImageIndex(textPtr, name, indexPtr)
     Tcl_HashEntry *hPtr;
     TkTextSegment *eiPtr;
 
-    hPtr = Tcl_FindHashEntry(&textPtr->imageTable, name);
+    hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->imageTable, name);
     if (hPtr == NULL) {
 	return 0;
     }
     eiPtr = (TkTextSegment *) Tcl_GetHashValue(hPtr);
-    indexPtr->tree = textPtr->tree;
+    indexPtr->tree = textPtr->sharedTextPtr->tree;
     indexPtr->linePtr = eiPtr->body.ei.linePtr;
     indexPtr->byteIndex = TkTextSegToOffset(eiPtr, indexPtr->linePtr);
     return 1;
@@ -812,15 +823,15 @@ EmbImageProc(clientData, x, y, width, height, imgWidth, imgHeight)
     TkTextSegment *eiPtr = (TkTextSegment *) clientData;
     TkTextIndex index;
 
-    index.tree = eiPtr->body.ei.textPtr->tree;
+    index.tree = eiPtr->body.ei.sharedTextPtr->tree;
     index.linePtr = eiPtr->body.ei.linePtr;
     index.byteIndex = TkTextSegToOffset(eiPtr, eiPtr->body.ei.linePtr);
-    TkTextChanged(eiPtr->body.ei.textPtr, &index, &index);
+    TkTextChanged(eiPtr->body.ei.sharedTextPtr, NULL, &index, &index);
     /* 
      * It's probably not true that all image changes
      * can change the line height, so we could be more
      * efficient here and only call this when necessary.
      */
-    TkTextInvalidateLineMetrics(eiPtr->body.ei.textPtr, 
+    TkTextInvalidateLineMetrics(eiPtr->body.ei.sharedTextPtr, NULL, 
 				index.linePtr, 0, TK_TEXT_INVALIDATE_ONLY);
 }
