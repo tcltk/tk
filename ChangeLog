@@ -1,3 +1,8 @@
+2005-01-07  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkWindow.c (GetScreen): Make sure the result is reset on
+	all error paths to stop strange errors. [Bug 697915]
+
 2005-01-05  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/loadTk.n, doc/toplevel.n: Convert to other form of emacs
