@@ -1,3 +1,9 @@
+2003-07-18  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinDialog.c: doubled the TK_MULTI_MAX_PATH value to ~10K.
+	This is a short-term solution until the -multiple option is
+	extended.  [Bug 641261]
+
 2003-07-18  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* tests/panedwindow.test (panedwindow-30.2): 
