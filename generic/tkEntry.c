@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.4 1999/04/24 01:50:47 stanton Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.5 1999/08/10 05:05:48 jingham Exp $
  */
 
 #include "tkInt.h"
@@ -1405,14 +1405,17 @@ DisplayEntry(clientData)
 		entryPtr->borderWidth, entryPtr->relief);
     }
     if (entryPtr->highlightWidth != 0) {
-	GC gc;
+	GC fgGC, bgGC;
 
+	bgGC = Tk_GCForColor(entryPtr->highlightBgColorPtr, pixmap);
 	if (entryPtr->flags & GOT_FOCUS) {
-	    gc = Tk_GCForColor(entryPtr->highlightColorPtr, pixmap);
+	    fgGC = Tk_GCForColor(entryPtr->highlightColorPtr, pixmap);
+	    TkpDrawHighlightBorder(tkwin, fgGC, bgGC, 
+	            entryPtr->highlightWidth, pixmap);
 	} else {
-	    gc = Tk_GCForColor(entryPtr->highlightBgColorPtr, pixmap);
+	    TkpDrawHighlightBorder(tkwin, bgGC, bgGC, 
+	            entryPtr->highlightWidth, pixmap);
 	}
-	Tk_DrawFocusHighlight(tkwin, gc, entryPtr->highlightWidth, pixmap);
     }
 
     /*

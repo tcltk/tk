@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMessage.c,v 1.3 1999/04/16 01:51:20 stanton Exp $
+ * RCS: @(#) $Id: tkMessage.c,v 1.4 1999/08/10 05:06:59 jingham Exp $
  */
 
 #include "tkPort.h"
@@ -670,15 +670,17 @@ DisplayMessage(clientData)
 		msgPtr->borderWidth, msgPtr->relief);
     }
     if (msgPtr->highlightWidth != 0) {
-	GC gc;
+	GC fgGC, bgGC;
 
+	bgGC = Tk_GCForColor(msgPtr->highlightBgColorPtr, Tk_WindowId(tkwin));
 	if (msgPtr->flags & GOT_FOCUS) {
-	    gc = Tk_GCForColor(msgPtr->highlightColorPtr, Tk_WindowId(tkwin));
+	    fgGC = Tk_GCForColor(msgPtr->highlightColorPtr, Tk_WindowId(tkwin));
+	    TkpDrawHighlightBorder(tkwin, fgGC, bgGC, msgPtr->highlightWidth,
+		    Tk_WindowId(tkwin));
 	} else {
-	    gc = Tk_GCForColor(msgPtr->highlightBgColorPtr, Tk_WindowId(tkwin));
+	    TkpDrawHighlightBorder(tkwin, bgGC, bgGC, msgPtr->highlightWidth,
+		    Tk_WindowId(tkwin));
 	}
-	Tk_DrawFocusHighlight(tkwin, gc, msgPtr->highlightWidth,
-		Tk_WindowId(tkwin));
     }
 }
 

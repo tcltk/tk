@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.10 1999/07/31 03:36:49 hobbs Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.11 1999/08/10 05:07:06 jingham Exp $
  */
 
 #include "tkInt.h"
@@ -337,6 +337,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_TCL
     TkGenWMConfigureEvent, /* 134 */
 #endif /* MAC_TCL */
+    TkpDrawHighlightBorder, /* 135 */
 };
 
 TkIntPlatStubs tkIntPlatStubs = {

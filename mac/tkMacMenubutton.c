@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenubutton.c,v 1.4 1999/05/22 06:33:38 jingham Exp $
+ * RCS: @(#) $Id: tkMacMenubutton.c,v 1.5 1999/08/10 05:05:02 jingham Exp $
  */
 
 #include "tkMenubutton.h"
@@ -223,15 +223,17 @@ TkpDisplayMenuButton(
     }
     
     if (mbPtr->highlightWidth != 0) {
-	GC gc;
+	GC fgGC, bgGC;
 
+	bgGC = Tk_GCForColor(mbPtr->highlightBgColorPtr, Tk_WindowId(tkwin));
 	if (mbPtr->flags & GOT_FOCUS) {
-	    gc = Tk_GCForColor(mbPtr->highlightColorPtr, Tk_WindowId(tkwin));
+	    fgGC = Tk_GCForColor(mbPtr->highlightColorPtr, Tk_WindowId(tkwin));
+	    TkpDrawHighlightBorder(tkwin, fgGC, bgGC, mbPtr->highlightWidth,
+		    Tk_WindowId(tkwin));
 	} else {
-	    gc = Tk_GCForColor(mbPtr->highlightBgColorPtr, Tk_WindowId(tkwin));
+	    TkpDrawHighlightBorder(tkwin, bgGC, bgGC, mbPtr->highlightWidth,
+		    Tk_WindowId(tkwin));
 	}
-	Tk_DrawFocusHighlight(tkwin, gc, mbPtr->highlightWidth,
-		Tk_WindowId(tkwin));
     }
 
     SetGWorld(saveWorld, saveDevice);

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.4 1999/04/16 01:51:51 stanton Exp $
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.5 1999/08/10 05:04:56 jingham Exp $
  */
 
 #include "tkWinInt.h"
@@ -1269,3 +1269,37 @@ TkWinFillRect(dc, x, y, width, height, pixel)
     ExtTextOut(dc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
     SetBkColor(dc, oldColor);
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpDrawHighlightBorder --
+ *
+ *	This procedure draws a rectangular ring around the outside of
+ *	a widget to indicate that it has received the input focus.
+ *
+ *      On Windows, we just draw the simple inset ring.  On other sytems,
+ *      e.g. the Mac, the focus ring is a little more complicated, so we
+ *      need this abstraction.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	A rectangle "width" pixels wide is drawn in "drawable",
+ *	corresponding to the outer area of "tkwin".
+ *
+ *----------------------------------------------------------------------
+ */
+
+void 
+TkpDrawHighlightBorder (
+        Tk_Window tkwin, 
+        GC fgGC, 
+        GC bgGC, 
+        int highlightWidth,
+        Drawable drawable)
+{
+    TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth, drawable, 0);
+}
+        

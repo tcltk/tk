@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.3 1999/04/16 01:51:14 stanton Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.4 1999/08/10 05:06:01 jingham Exp $
  */
 
 #include "default.h"
@@ -694,7 +694,6 @@ DisplayFrame(clientData)
 {
     register Frame *framePtr = (Frame *) clientData;
     register Tk_Window tkwin = framePtr->tkwin;
-    GC gc;
 
     framePtr->flags &= ~REDRAW_PENDING;
     if ((framePtr->tkwin == NULL) || !Tk_IsMapped(tkwin)
@@ -711,15 +710,19 @@ DisplayFrame(clientData)
 		framePtr->borderWidth, framePtr->relief);
     }
     if (framePtr->highlightWidth != 0) {
+        GC fgGC, bgGC;
+        
+	bgGC = Tk_GCForColor(framePtr->highlightBgColorPtr,
+		Tk_WindowId(tkwin));
 	if (framePtr->flags & GOT_FOCUS) {
-	    gc = Tk_GCForColor(framePtr->highlightColorPtr,
+	    fgGC = Tk_GCForColor(framePtr->highlightColorPtr,
+		    Tk_WindowId(tkwin));
+	    TkpDrawHighlightBorder(tkwin, fgGC, bgGC, framePtr->highlightWidth,
 		    Tk_WindowId(tkwin));
 	} else {
-	    gc = Tk_GCForColor(framePtr->highlightBgColorPtr,
+	    TkpDrawHighlightBorder(tkwin, bgGC, bgGC, framePtr->highlightWidth,
 		    Tk_WindowId(tkwin));
 	}
-	Tk_DrawFocusHighlight(tkwin, gc, framePtr->highlightWidth,
-		Tk_WindowId(tkwin));
     }
 }
 

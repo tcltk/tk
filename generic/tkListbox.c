@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.3 1999/04/16 01:51:19 stanton Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.4 1999/08/10 05:06:47 jingham Exp $
  */
 
 #include "tkPort.h"
@@ -1272,14 +1272,17 @@ DisplayListbox(clientData)
 	    Tk_Height(tkwin) - 2*listPtr->highlightWidth,
 	    listPtr->borderWidth, listPtr->relief);
     if (listPtr->highlightWidth > 0) {
-	GC gc;
+	GC fgGC, bgGC;
 
+	bgGC = Tk_GCForColor(listPtr->highlightBgColorPtr, pixmap);
 	if (listPtr->flags & GOT_FOCUS) {
-	    gc = Tk_GCForColor(listPtr->highlightColorPtr, pixmap);
+	    fgGC = Tk_GCForColor(listPtr->highlightColorPtr, pixmap);
+	    TkpDrawHighlightBorder(tkwin, fgGC, bgGC, 
+	            listPtr->highlightWidth, pixmap);
 	} else {
-	    gc = Tk_GCForColor(listPtr->highlightBgColorPtr, pixmap);
+	    TkpDrawHighlightBorder(tkwin, bgGC, bgGC, 
+	            listPtr->highlightWidth, pixmap);
 	}
-	Tk_DrawFocusHighlight(tkwin, gc, listPtr->highlightWidth, pixmap);
     }
     XCopyArea(listPtr->display, pixmap, Tk_WindowId(tkwin),
 	    listPtr->textGC, 0, 0, (unsigned) Tk_Width(tkwin),

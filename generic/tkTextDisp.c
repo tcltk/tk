@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.6 1999/04/21 21:53:28 rjohnson Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.7 1999/08/10 05:07:36 jingham Exp $
  */
 
 #include "tkPort.h"
@@ -2241,17 +2241,19 @@ DisplayText(clientData)
 		Tk_Height(textPtr->tkwin) - 2*textPtr->highlightWidth,
 		textPtr->borderWidth, textPtr->relief);
 	if (textPtr->highlightWidth != 0) {
-	    GC gc;
+	    GC fgGC, bgGC;
     
+	    bgGC = Tk_GCForColor(textPtr->highlightBgColorPtr,
+			Tk_WindowId(textPtr->tkwin));
 	    if (textPtr->flags & GOT_FOCUS) {
-		gc = Tk_GCForColor(textPtr->highlightColorPtr,
+		fgGC = Tk_GCForColor(textPtr->highlightColorPtr,
 			Tk_WindowId(textPtr->tkwin));
+	        TkpDrawHighlightBorder(textPtr->tkwin, fgGC, bgGC, 
+		        textPtr->highlightWidth, Tk_WindowId(textPtr->tkwin));
 	    } else {
-		gc = Tk_GCForColor(textPtr->highlightBgColorPtr,
-			Tk_WindowId(textPtr->tkwin));
+	        TkpDrawHighlightBorder(textPtr->tkwin, bgGC, bgGC, 
+		        textPtr->highlightWidth, Tk_WindowId(textPtr->tkwin));
 	    }
-	    Tk_DrawFocusHighlight(textPtr->tkwin, gc, textPtr->highlightWidth,
-		    Tk_WindowId(textPtr->tkwin));
 	}
 	borders = textPtr->borderWidth + textPtr->highlightWidth;
 	if (textPtr->padY > 0) {

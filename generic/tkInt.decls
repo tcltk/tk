@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.9 1999/07/31 03:36:49 hobbs Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.10 1999/08/10 05:06:14 jingham Exp $
 
 library tk
 
@@ -610,7 +610,10 @@ declare 134 mac {
  	    int width, int height, int flags)
 }
 
-
+declare 135 generic {
+    void TkpDrawHighlightBorder (Tk_Window tkwin, GC fgGC, GC bgGC, \
+        int highlightWidth, Drawable drawable)
+}
 
 ##############################################################################
 

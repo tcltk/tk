@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDraw.c,v 1.5 1999/05/22 06:32:50 jingham Exp $
+ * RCS: @(#) $Id: tkMacDraw.c,v 1.6 1999/08/10 05:04:53 jingham Exp $
  */
 
 #include "tkInt.h"
@@ -1129,3 +1129,46 @@ InvertByte(
     }
     return result;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpDrawpHighlightBorder --
+ *
+ *	This procedure draws a rectangular ring around the outside of
+ *	a widget to indicate that it has received the input focus.
+ *
+ *      On the Macintosh, this puts a 1 pixel border in the bgGC color
+ *      between the widget and the focus ring, except in the case where 
+ *      highlightWidth is 1, in which case the border is left out.
+ *
+ *      For proper Mac L&F, use highlightWidth of 3.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	A rectangle "width" pixels wide is drawn in "drawable",
+ *	corresponding to the outer area of "tkwin".
+ *
+ *----------------------------------------------------------------------
+ */
+
+void 
+TkpDrawHighlightBorder (
+        Tk_Window tkwin, 
+        GC fgGC, 
+        GC bgGC, 
+        int highlightWidth,
+        Drawable drawable)
+{
+    if (highlightWidth == 1) {
+        TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth, drawable, 0);
+    } else {
+        TkDrawInsetFocusHighlight (tkwin, bgGC, highlightWidth, drawable, 0);
+        if (fgGC != bgGC) {
+            TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth - 1, drawable, 0);
+        }
+    }
+}
+        
