@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6 2003/02/19 19:27:48 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.7 2003/03/08 02:15:46 wolfsuit Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -180,10 +180,6 @@ static Tk_Window currentMenuBarOwner;
 static char elipsisString[TCL_UTF_MAX + 1];
 				/* The UTF representation of the elipsis (...) 
 				 * character. */
-static int helpItemCount;	/* The number of items in the help menu. 
-				 * -1 means that the help menu is
-				 * unavailable. This does not include
-				 * the automatically generated separator. */
 static int inPostMenu;		/* We cannot be re-entrant like X
 				 * windows. */
 static short lastMenuID;	/* To pass to NewMenu; need to figure out
@@ -640,8 +636,8 @@ TkpDestroyMenu(
     		&& (helpMenuHdl != NULL)) {
     	    int i, count = CountMenuItems(helpMenuHdl);
     	    
-    	    for (i = helpItemCount; i <= count; i++) {
-    	    	DeleteMenuItem(helpMenuHdl, helpItemCount);
+    	    for (i = helpIndex; i <= count; i++) {
+    	    	DeleteMenuItem(helpMenuHdl, helpIndex);
     	    }
     	}
     	currentHelpMenuID = 0;
@@ -1036,7 +1032,8 @@ ReconfigureIndividualMenu(
     				 * be the help menu. */
     int base)			/* The last index that we do not want
     				 * touched. 0 for normal menus;
-    				 * helpMenuItemCount for help menus. */
+    				 * # of system help menu items
+                                 * for help menus. */
 {
     int count;
     int index;
@@ -1290,7 +1287,8 @@ ReconfigureMacintoshMenu(
         MenuItemIndex helpIndex;
     	HMGetHelpMenu(&helpMenuHdl,&helpIndex);
     	if (helpMenuHdl != NULL) {
-    	    ReconfigureIndividualMenu(menuPtr, helpMenuHdl, helpItemCount);
+    	    ReconfigureIndividualMenu(menuPtr, helpMenuHdl, 
+	            helpIndex - 1);
     	}
     }
 
@@ -2109,7 +2107,10 @@ TkMacOSXDispatchMenuEvent(
     	    		helpMenuName);
     	    	ckfree(helpMenuName);
     	    	if ((helpMenuRef != NULL) && (helpMenuRef->menuPtr != NULL)) {
-    	    	    int newIndex = index - helpItemCount - 1;
+		    MenuRef outHelpMenu;
+		    MenuItemIndex itemIndex;
+		    HMGetHelpMenu(&outHelpMenu, &itemIndex);
+    	    	    int newIndex = index - itemIndex;
     	    	    result = TkInvokeMenu(currentMenuBarInterp,
     	    	    	    helpMenuRef->menuPtr, newIndex);
     	    	}
@@ -2881,12 +2882,15 @@ DrawTearoffEntry(
  *	Has to be called after the first call to InsertMenu. Sets
  *	up the global variable for the number of items in the
  *	unmodified help menu.
+ *      NB. Nobody uses this any more, since you can get the number
+ *      of system help items from HMGetHelpMenu trivially.
+ *      But it is in the stubs table...
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Sets the global helpItemCount.
+ *	Nothing.
  *
  *----------------------------------------------------------------------
  */
@@ -2894,16 +2898,6 @@ DrawTearoffEntry(
 void 
 TkMacOSXSetHelpMenuItemCount()
 {
-    MenuRef helpMenuHandle;
-    MenuItemIndex itemIndex;
-    
-    if ((HMGetHelpMenu(&helpMenuHandle,&itemIndex) != noErr) 
-    	    || (helpMenuHandle == NULL)) {
-    	helpItemCount = -1;
-    } else {
-    	helpItemCount = CountMenuItems(helpMenuHandle);
-        DeleteMenuItem(helpMenuHandle, helpItemCount);
-    }
 }
 
 /*

@@ -1,3 +1,14 @@
+2003-03-07  Jim Ingham  <jingham@apple.com>
+
+	* macosx/tkMacOSXMenus.c (TkMacOSXInitMenus): No longer need
+	to call TkMacOSXSetHelpMenuItemCount.
+	* macosx/tkMacOSXMenu.c (TkMacOSXHelpMenuItemCount): Stub out
+	since it is no longer need (but is in the stubs table...).
+	(TkMacOSXDispatchMenuEvent): Get the number of system help 
+	menu items from HMGetHelpMenu.
+	(ReconfigureMacintoshMenu): Ditto.
+	(TkpDestroyMenu): Ditto.
+	
 2003-03-06  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* doc/FindPhoto.3: Documentation of the photo API changes due to
