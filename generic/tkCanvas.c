@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.11 2000/01/12 11:45:02 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.12 2000/03/29 00:09:06 ericm Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -876,18 +876,6 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	} else {
 	    result = ConfigureCanvas(interp, canvasPtr, argc-2, argv+2,
 		    TK_CONFIG_ARGV_ONLY);
-	    for (itemPtr = canvasPtr->firstItemPtr;
-		itemPtr != NULL; itemPtr = itemPtr->nextPtr) {
-		if (itemPtr->state != TK_STATE_NULL) {
-		    continue;
-		}
-		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
-		result = (*itemPtr->typePtr->configProc)(interp,
-			(Tk_Canvas) canvasPtr, itemPtr, 0, (Tcl_Obj **) NULL,
-			TK_CONFIG_ARGV_ONLY);
-		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
-		canvasPtr->flags |= REPICK_NEEDED;
-	    }
 	}
 	break;
       }

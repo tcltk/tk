@@ -1,3 +1,23 @@
+2000-03-28  Eric Melski  <ericm@scriptics.com>
+
+	* library/tkfbox.tcl: Moved an overlooked tkFDialog* function in
+	::tk::dialog::file namespace.
+
+	* tests/unixWm.test: Added tests for memory leak conditions in
+	tkUnixWm.c.
+
+	* tests/canvas.test: Added test for bad configuration options on
+	empty and non-empty canvas.
+
+	* generic/tkCanvas.c: Removed bad code in CANV_CONFIGURE block of
+	CanvasWidgetCmd; this was causing non-empty canvases to improperly
+	handle bad configuration options [Bug: 4456].
+
+2000-03-27  Eric Melski  <ericm@scriptics.com>
+
+	* unix/tkUnixWm.c: Applied patch from [Bug: 4405]; fixes memory
+	leak in Unix wm command.
+
 2000-03-24  Eric Melski  <ericm@scriptics.com>
 
 	* tests/filebox.test: 

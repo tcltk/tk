@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.7 2000/03/02 21:52:25 hobbs Exp $
+# RCS: @(#) $Id: canvas.test,v 1.8 2000/03/29 00:09:06 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -66,6 +66,13 @@ foreach test {
     .c configure $name [lindex [.c configure $name] 3]
     incr i
 }
+
+test canvas-1.40 {configure throws error on bad option} {
+    set res [list [catch {.c configure -gorp foo}]]
+    .c create rect 10 10 100 100
+    lappend res [catch {.c configure -gorp foo}]
+    set res
+} [list 1 1]
 
 
 catch {destroy .c}
