@@ -1169,6 +1169,32 @@ else
 fi
 
 
+    # Check for a bug in gcc's windres that causes the
+    # compile to fail when a Windows native path is
+    # passed into windres. The mingw toolchain requires
+    # Windows native paths while Cygwin should work
+    # with both. Avoid the bug by passing a POSIX
+    # path when using the Cygwin toolchain.
+
+    if test "$GCC" = "yes" && test "$CYGPATH" != "echo" ; then
+	conftest=/tmp/conftest.rc
+	echo "STRINGTABLE BEGIN" > $conftest
+	echo "101 \"name\"" >> $conftest
+	echo "END" >> $conftest
+
+	echo $ac_n "checking for Windows native path bug in windres""... $ac_c" 1>&6
+echo "configure:1187: checking for Windows native path bug in windres" >&5
+	cyg_conftest=`$CYGPATH $conftest`
+	if { ac_try='$RC -o conftest.res.o $cyg_conftest'; { (eval echo configure:1189: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } ; then
+	    echo "$ac_t""no" 1>&6
+	else
+	    echo "$ac_t""yes" 1>&6
+	    CYGPATH=echo
+	fi
+	conftest=
+	cyg_conftest=
+    fi
+
     if test "$CYGPATH" = "echo" || test "$ac_cv_cygwin" = "yes"; then
         DEPARG='"$<"'
     else
@@ -1178,7 +1204,7 @@ fi
     # set various compiler flags depending on whether we are using gcc or cl
 
     echo $ac_n "checking compiler flags""... $ac_c" 1>&6
-echo "configure:1182: checking compiler flags" >&5
+echo "configure:1208: checking compiler flags" >&5
     if test "${GCC}" = "yes" ; then
 	if test "$do64bit" = "yes" ; then
 	    echo "configure: warning: "64bit mode not supported with GCC on Windows"" 1>&2
@@ -1388,7 +1414,7 @@ echo "configure:1182: checking compiler flags" >&5
 #--------------------------------------------------------------------
 
 echo $ac_n "checking how to run the C preprocessor""... $ac_c" 1>&6
-echo "configure:1392: checking how to run the C preprocessor" >&5
+echo "configure:1418: checking how to run the C preprocessor" >&5
 # On Suns, sometimes $CPP names a directory.
 if test -n "$CPP" && test -d "$CPP"; then
   CPP=
@@ -1403,13 +1429,13 @@ else
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp.
   cat > conftest.$ac_ext <<EOF
-#line 1407 "configure"
+#line 1433 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1413: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1439: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1420,13 +1446,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -E -traditional-cpp"
   cat > conftest.$ac_ext <<EOF
-#line 1424 "configure"
+#line 1450 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1430: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1456: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1437,13 +1463,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -nologo -E"
   cat > conftest.$ac_ext <<EOF
-#line 1441 "configure"
+#line 1467 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1447: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1473: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1469,17 +1495,17 @@ echo "$ac_t""$CPP" 1>&6
 
 ac_safe=`echo "errno.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for errno.h""... $ac_c" 1>&6
-echo "configure:1473: checking for errno.h" >&5
+echo "configure:1499: checking for errno.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1478 "configure"
+#line 1504 "configure"
 #include "confdefs.h"
 #include <errno.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1483: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1509: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1511,7 +1537,7 @@ fi
 
 
     echo $ac_n "checking for build with symbols""... $ac_c" 1>&6
-echo "configure:1515: checking for build with symbols" >&5
+echo "configure:1541: checking for build with symbols" >&5
     # Check whether --enable-symbols or --disable-symbols was given.
 if test "${enable_symbols+set}" = set; then
   enableval="$enable_symbols"
@@ -1561,7 +1587,7 @@ TK_DBGX=${DBGX}
 
 
     echo $ac_n "checking the location of tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1565: checking the location of tclConfig.sh" >&5
+echo "configure:1591: checking the location of tclConfig.sh" >&5
 
     if test -d ../../tcl8.4$TK_PATCH_LEVEL/win;  then
 	TCL_BIN_DIR_DEFAULT=../../tcl8.4$TK_PATCH_LEVEL/win
@@ -1589,7 +1615,7 @@ fi
 
 
     echo $ac_n "checking for existence of $TCL_BIN_DIR/tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1593: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
+echo "configure:1619: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
     if test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
         echo "$ac_t""loading" 1>&6
@@ -1640,7 +1666,7 @@ echo "configure:1593: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
 
     echo $ac_n "checking for tclsh""... $ac_c" 1>&6
-echo "configure:1644: checking for tclsh" >&5
+echo "configure:1670: checking for tclsh" >&5
 
     if eval "test \"`echo '$''{'ac_cv_path_tclsh'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
