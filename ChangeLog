@@ -1,3 +1,8 @@
+2004-08-18  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkPanedWindow.c (optionSpecs): Add missing GEOMETRY flag
+	to -handlepad option. [Bug 1010938]
+
 2004-08-10  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tkUnixWm.c: Fix for #1006686 "wm resizable command 
