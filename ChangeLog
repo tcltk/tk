@@ -1,3 +1,10 @@
+1999-06-03    <stanton@scriptics.com>
+
+	* unix/tkUnixSelect.c: 
+	* tests/unixSelect.test: 
+	* generic/tkSelect.c: Fixed selection code to handle Unicode data
+	in COMPOUND_TEXT and STRING selections. [Bug: 1791]
+
 1999-06-02    <stanton@scriptics.com>
 
 	* generic/tkIntXlibDecls.h: 
