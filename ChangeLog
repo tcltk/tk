@@ -1,3 +1,9 @@
+2002-06-27  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
+
+	* win/Makefile.in (install-binaries): Fix of troubled Makefile
+	  quoting introduced by [Patch 521356] causing the installed to
+	  fail.
+
 2002-06-25  Don Porter <dgp@users.sf.net>
 
 	* unix/tkUnixFont.c: (Tk_DrawChars) silence compiler warning.
