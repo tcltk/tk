@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.19 2002/09/02 23:32:35 hobbs Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.20 2002/09/03 01:05:11 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -896,10 +896,12 @@ TkpComputeButtonGeometry(butPtr)
 	    width  -= 10;
 	    height -= 10;
 
-	    /*
-	     * Extra inset for the focus ring.
-	     */
-	    butPtr->inset += 1;
+	    if (!haveImage) {
+		/*
+		 * Extra inset for the focus ring.
+		 */
+		butPtr->inset += 1;
+	    }
 	    break;
 	}
 
