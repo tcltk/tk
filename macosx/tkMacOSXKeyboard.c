@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.9 2003/12/15 16:37:39 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.10 2003/12/15 16:47:12 cc_benny Exp $
  */
 
 #include "tkInt.h"
@@ -29,6 +29,7 @@
 
 #define LATIN1_MAX       255
 #define MAC_KEYCODE_MAX  0x7F
+#define MAC_KEYCODE_MASK 0x7F
 #define ALT_MASK         Mod1Mask
 #define OPTION_MASK      Mod2Mask
 
@@ -106,11 +107,16 @@ static Tcl_HashTable keycodeTable;      /* keyArray hashed by keycode value. */
 static Tcl_HashTable vkeyTable;         /* virtualkeyArray hashed by virtual
                                          * keycode value. */
 
+static int latin1Table[LATIN1_MAX+1];   /* Reverse mapping table for
+                                         * controls, ASCII and Latin-1.  */
+
 /*
  * Prototypes for static functions used in this file.
  */
 
 static void     InitKeyMaps (void);
+static void     InitLatin1Table(Display *display);
+static int      XKeysymToMacKeycode(Display *display, KeySym keysym);
 
 
 /*
@@ -153,6 +159,80 @@ InitKeyMaps()
         Tcl_SetHashValue(hPtr, kPtr->keysym);
     }
     initialized = 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * InitLatin1Table --
+ *
+ *      Creates a simple table to be used for mapping from keysyms to
+ *      keycodes.  Always needs to be called before using latin1Table,
+ *      because the keyboard layout may have changed, and than the table must
+ *      be re-computed.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Sets the global latin1Table.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+InitLatin1Table(
+    Display *display)
+{
+    static Boolean initialized = false;
+    static SInt16 lastKeyLayoutID = -1;
+
+    SInt16 keyScript;
+    SInt16 keyLayoutID;
+
+    keyScript = GetScriptManagerVariable(smKeyScript);
+    keyLayoutID = GetScriptVariable(keyScript,smScriptKeys);
+
+    if (!initialized || (lastKeyLayoutID != keyLayoutID)) {
+        int keycode;
+        KeySym keysym;
+        int state;
+        int modifiers;
+
+        initialized = true;
+        memset(latin1Table, 0, sizeof(latin1Table));
+        
+        /*
+         * In the common X11 implementations, a keymap has four columns
+         * "plain", "Shift", "Mode_switch" and "Mode_switch + Shift".  We
+         * don't use "Mode_switch", but we use "Option" instead.  (This is
+         * similar to Apple's X11 implementation, where "Mode_switch" is used
+         * as an alias for "Option".)
+         *
+         * So here we go through all 4 columns of the keymap and find all
+         * Latin-1 compatible keycodes.  We go through the columns
+         * back-to-front from the more exotic columns to the more simple, so
+         * that simple keycode-modifier combinations are preferred in the
+         * resulting table.
+         */
+
+        for (state = 3; state >= 0; state--) {
+            modifiers = 0;
+            if (state & 1) {
+                modifiers |= shiftKey;
+            }
+            if (state & 2) {
+                modifiers |= optionKey;
+            }
+
+            for (keycode = 0; keycode <= MAC_KEYCODE_MAX; keycode++) {
+                keysym = XKeycodeToKeysym(display,keycode,state);
+                if (keysym <= LATIN1_MAX) {
+                    latin1Table[keysym] = keycode | modifiers;
+                }
+            }
+        }
+    }
 }
 
 /*
@@ -379,6 +459,70 @@ XStringToKeysym(
 /*
  *----------------------------------------------------------------------
  *
+ * XKeysymToMacKeycode --
+ *
+ *      An internal function like XKeysymToKeycode but only generating the
+ *      Mac specific keycode plus the modifiers Shift and Option.
+ *
+ * Results:
+ *      A Mac keycode with the actual keycode in the low byte and Mac-style
+ *      modifier bits in the high byte.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+XKeysymToMacKeycode(
+    Display *display,
+    KeySym keysym)
+{
+    if (keysym <= LATIN1_MAX) {
+
+        /*
+         * Handle keysyms in the Latin-1 range where keysym and Unicode
+         * character code point are the same.
+         */
+
+        InitLatin1Table(display);
+        return latin1Table[keysym];
+
+    } else {
+
+        /*
+         * Handle special keys from our exception tables.  Don't mind if this
+         * is slow, neither the test suite nor [event generate] need to be
+         * optimized (we hope).
+         */
+
+        KeyInfo *kPtr;
+                
+        for (kPtr = keyArray; kPtr->keycode != 0; kPtr++) {
+            if (kPtr->keysym == keysym) {
+                return kPtr->keycode;
+            }
+        }
+        for (kPtr = virtualkeyArray; kPtr->keycode != 0; kPtr++) {
+            if (kPtr->keysym == keysym) {
+                return kPtr->keycode;
+            }
+        }
+
+        /*
+         * For other keysyms (not Latin-1 and not special keys), we'd need a
+         * generic keysym-to-unicode table.  We don't have that, so we give
+         * up here.
+         */
+
+        return 0;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XKeysymToKeycode --
  *
  *      The function XKeysymToKeycode takes an X11 keysym and converts it
@@ -386,8 +530,8 @@ XStringToKeysym(
  *      not used anywhere in the core.
  *
  * Results:
- *      A 32 bit keycode with the the mac keycode but without modifiers in
- *      the higher 16 bits and the keysym in the lower 16 bits.
+ *      A 32 bit keycode with the the mac keycode (without modifiers) in the
+ *      higher 16 bits and the keysym in the lower 16 bits.
  *
  * Side effects:
  *      None.
@@ -400,10 +544,17 @@ XKeysymToKeycode(
     Display* display,
     KeySym keysym)
 {
-    KeyCode keycode = 0;
-    char virtualKeyCode = 0;
+    int macKeycode = XKeysymToMacKeycode(display, keysym);
     
-    (void) display; /*unused*/
+    /*
+     * See also TkpSetKeycodeAndState.
+     */
+
+    return (0xFFFF & keysym) | ((macKeycode & MAC_KEYCODE_MASK) << 16);
+}
+
+/*
+NB: Keep this commented code for a moment for reference.
 
     if ((keysym >= XK_space) && (XK_asciitilde)) {
         if (keysym == 'a') {
@@ -426,7 +577,7 @@ XKeysymToKeycode(
     }
 
     return keycode;
-}
+*/
 
 /*
  *----------------------------------------------------------------------
@@ -455,31 +606,28 @@ TkpSetKeycodeAndState(
     KeySym keysym,
     XEvent *eventPtr)
 {
-    Display *display;
-    int state;
-    KeyCode keycode;
-    
-    display = Tk_Display(tkwin);
-    
     if (keysym == NoSymbol) {
-        keycode = 0;
+        eventPtr->xkey.keycode = 0;
+        eventPtr->xkey.state = 0;
     } else {
-        keycode = XKeysymToKeycode(display, keysym);
-    }
-    if (keycode != 0) {
-        for (state = 0; state < 4; state++) {
-            if (XKeycodeToKeysym(display, keycode, state) == keysym) {
-                if (state & 1) {
-                    eventPtr->xkey.state |= ShiftMask;
-                }
-                if (state & 2) {
-                    eventPtr->xkey.state |= OPTION_MASK;
-                }
-                break;
-            }
+        Display *display = Tk_Display(tkwin);
+        int macKeycode = XKeysymToMacKeycode(display, keysym);
+
+        /*
+         * See also XKeysymToKeycode.
+         */
+
+        eventPtr->xkey.keycode =
+            (0xFFFF & keysym) | ((macKeycode & MAC_KEYCODE_MASK) << 16);
+
+        eventPtr->xkey.state = 0;
+        if (shiftKey & macKeycode) {
+            eventPtr->xkey.state |= ShiftMask;
+        }
+        if (optionKey & macKeycode) {
+            eventPtr->xkey.state |= OPTION_MASK;
         }
     }
-    eventPtr->xkey.keycode = keycode;
 }
 
 /*
@@ -649,7 +797,7 @@ TkpInitKeymapInfo(
      * don't generate them either (the keycodes actually given in the
      * simulated modifier events are bogus).  So there is no modifier map.
      * If we ever want to simulate real modifier keycodes, the list will be
-     * constant on Carbon.
+     * constant in the Carbon implementation.
      */
 
     if (dispPtr->modKeyCodes != NULL) {
