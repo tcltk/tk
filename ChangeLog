@@ -1,3 +1,12 @@
+2003-11-15  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* macosx/tkMacOSXScrlbr.c: [Bug 842952] correct scrollbar
+	tracking with mouse.  Also increased scrollbar resolution for
+	better scrolling in very large text widgets.
+	
+	* generic/tkTextDisp.c: cleanup and clarify some comments
+	* doc/text.n: cleanup some of the markup.
+	
 2003-11-15  David Gravereaux <davygrvy@pobox.com>
 
 	* win/makefile.vc: Fixes pkgIndex.tcl generation so a symbols build
