@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.12 2001/03/30 23:50:18 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.13 2001/05/30 22:41:29 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -29,7 +29,7 @@ static char winScreenName[] = ":0"; /* Default name of windows display. */
 static HINSTANCE tkInstance;        /* Application instance handle. */
 static int childClassInitialized;   /* Registered child class? */
 static WNDCLASS childClass;	    /* Window class for child windows. */
-static int tkPlatformId;	    /* version of Windows platform */
+static int tkPlatformId = 0;	    /* version of Windows platform */
 static Tcl_Encoding keyInputEncoding = NULL;/* The current character
 				     * encoding for keyboard input */
 static int keyInputCharset = -1;    /* The Win32 CHARSET for the keyboard
@@ -137,18 +137,12 @@ void
 TkWinXInit(hInstance)
     HINSTANCE hInstance;
 {
-    OSVERSIONINFO os;
-
     if (childClassInitialized != 0) {
 	return;
     }
     childClassInitialized = 1;
 
     tkInstance = hInstance;
-
-    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx(&os);
-    tkPlatformId = os.dwPlatformId;
 
     /*
      * When threads are enabled, we cannot use CLASSDC because
@@ -227,7 +221,7 @@ TkWinXCleanup(hInstance)
  * TkWinGetPlatformId --
  *
  *	Determines whether running under NT, 95, or Win32s, to allow 
- *	runtime conditional code.
+ *	runtime conditional code.  Win32s is no longer supported.
  *
  * Results:
  *	The return value is one of:
@@ -244,6 +238,13 @@ TkWinXCleanup(hInstance)
 int		
 TkWinGetPlatformId()
 {
+    if (tkPlatformId == 0) {
+	OSVERSIONINFO os;
+
+	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	GetVersionEx(&os);
+	tkPlatformId = os.dwPlatformId;
+    }
     return tkPlatformId;
 }
 
@@ -1198,7 +1199,7 @@ HandleIMEComposition(hwnd, lParam)
     char * buff;
     TkWindow *winPtr;
 
-    if (tkPlatformId != VER_PLATFORM_WIN32_NT) {
+    if (TkWinGetPlatformId() != VER_PLATFORM_WIN32_NT) {
         /*
          * The ImmGetCompositionStringW function works only on WinNT.
          */
