@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: InitStubs.3,v 1.1.2.1 1999/04/28 19:25:50 kenj Exp $
+'\" RCS: @(#) $Id: InitStubs.3,v 1.1.2.2 1999/04/29 02:19:11 stanton Exp $
 '\" 
 .so man.macros
 .TH Tk_InitStubs 3 8.1 Tk "Tk Library Procedures"
@@ -43,16 +43,16 @@ See the \fBTcl_InitStubs\fR page for more information.
 .PP
 Enabling the stubs mechanism for a Tcl/Tk extension requires the following
 steps:
-.IP 1) 0.5i
+.IP 1) 5
 Call \fBTcl_InitStubs\fR in the extension before calling any other
 Tcl functions.
-.IP 2) 0.5i
+.IP 2) 5
 Call \fBTk_InitStubs\fR if the extension before calling any other
 Tk functions.
-.IP 2) 0.5i
+.IP 2) 5
 Define the USE_TCL_STUBS symbol.  Typically, you would include the
 -DUSE_TCL_STUBS flag when compiling the extension.
-.IP 3) 0.5i
+.IP 3) 5
 Link the extension with the Tcl and Tk stubs libraries instead of
 the standard Tcl and Tk libraries.  On Unix platforms, the library
 names are \fIlibtclstub8.1.a\fR and \fIlibtkstub8.1.a\fR; on Windows
