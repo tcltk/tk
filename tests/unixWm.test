@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.24 2002/07/15 16:56:32 dgp Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.25 2002/07/15 18:10:47 dgp Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -2111,7 +2111,7 @@ test unixWm-53.2 {TkWmRemoveFromColormapWindows procedure} {
     wm colormap .t
 } {}
 
-test unixWm-54.1 {TkpMakeMenuWindow procedure, setting save_under} {
+test unixWm-54.1 {TkpMakeMenuWindow procedure, setting save_under} unix {
     catch {destroy .t}
     catch {destroy .m}
     toplevel .t -width 300 -height 200 -bd 2 -relief raised
@@ -2128,7 +2128,7 @@ test unixWm-54.1 {TkpMakeMenuWindow procedure, setting save_under} {
     destroy .m
     set x
 } {no event}
-test unixWm-54.2 {TkpMakeMenuWindow procedure, setting override_redirect} {
+test unixWm-54.2 {TkpMakeMenuWindow procedure, setting override_redirect} unix {
     catch {destroy .m}
     menu .m
     .m add command -label First

@@ -1,6 +1,6 @@
 2002-07-15  Don Porter <dgp@users.sf.net>
 
-	* Fixes for [Bug 581627].
+	* Fixes for [Bug 581627, 581795].
 	* generic/tkTest.c:		Test commands not supported on non-Unix
 	  platforms should not be defined there in the first place.
 	* tests/constraints.tcl:	Fixed "secureserver" constraint.
