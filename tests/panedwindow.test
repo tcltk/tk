@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.12 2003/07/18 10:02:03 dkf Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.13 2004/05/03 19:16:11 hobbs Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2145,7 +2145,7 @@ test panedwindow-24.22 {ConfigurePanes, slave specified multiple times} {
     destroy .p .a .b .c
     set result
 } {.a .b .c}
-test panedwindow-22.23 {ConfigurePanes, slave specified multiple times} {
+test panedwindow-24.23 {ConfigurePanes, slave specified multiple times} {
     # This test should not cause a core dump
 
     panedwindow .p
@@ -2159,14 +2159,14 @@ test panedwindow-22.23 {ConfigurePanes, slave specified multiple times} {
     destroy .p .a .b .c
     set result
 } {.c .a .b}
-test panedwindow-22.24 {ConfigurePanes, panedwindow cannot manage toplevels} {
+test panedwindow-24.24 {ConfigurePanes, panedwindow cannot manage toplevels} {
     panedwindow .p
     toplevel .t
     set result [list [catch {.p add .t} msg] $msg]
     destroy .p .t
     set result
 } [list 1 "can't add toplevel .t to .p"]
-test panedwindow-22.25 {ConfigurePanes, restrict possible panes} {
+test panedwindow-24.25 {ConfigurePanes, restrict possible panes} {
     panedwindow .p
     frame .f
     button .f.b
@@ -2174,7 +2174,7 @@ test panedwindow-22.25 {ConfigurePanes, restrict possible panes} {
     destroy .p .f .f.b
     set result
 } [list 1 "can't add .f.b to .p"]
-test panedwindow-22.26 {ConfigurePanes, restrict possible panes} {
+test panedwindow-24.26 {ConfigurePanes, restrict possible panes} {
     frame .f
     panedwindow .f.p
     button .b
@@ -2182,14 +2182,14 @@ test panedwindow-22.26 {ConfigurePanes, restrict possible panes} {
     destroy .f.p .f .b
     set result
 } [list 0 ""]
-test panedwindow-22.27 {ConfigurePanes, restrict possible panes} {
+test panedwindow-24.27 {ConfigurePanes, restrict possible panes} {
     panedwindow .p
     button .p.b
     set result [list [catch {.p add .p.b} msg] $msg]
     destroy .p .p.b
     set result
 } [list 0 ""]
-test panedwindow-22.28 {ConfigurePanes, restrict possible panes} {
+test panedwindow-24.28 {ConfigurePanes, restrict possible panes} {
     frame .f
     frame .f.f
     frame .f.f.f
@@ -2199,6 +2199,25 @@ test panedwindow-22.28 {ConfigurePanes, restrict possible panes} {
     destroy .f .f.f .f.f.f .f.f.f.p .b
     set result
 } [list 0 ""]
+
+test panedwindow-25.1 {Unlink, remove a paned with -before/-after refs} {
+    # Bug 928413
+    set result {}
+    panedwindow .pw
+    label .pw.l1 -text Label1
+    label .pw.l2 -text Label2
+    label .pw.l3 -text Label3
+    .pw add .pw.l1
+    .pw add .pw.l3
+    .pw add .pw.l2 -before .pw.l3
+    lappend result [.pw panecget .pw.l2 -before]
+    destroy .pw.l3
+    lappend result [.pw panecget .pw.l2 -before]
+    .pw paneconfigure .pw.l2 -before .pw.l1
+    lappend result [.pw panecget .pw.l2 -before]
+    destroy .pw
+    set result
+} {.pw.l3 {} .pw.l1}
 
 test panedwindow-26.1 {DestroyPanedWindow} {
     # This test should not result in any memory leaks.
