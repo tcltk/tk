@@ -1,3 +1,15 @@
+2004-07-02  George Peter Staplin <GeorgePS@XMission.com>
+
+	* generic/tkEvent.c: Tk_HandleEvent was refactored to be more
+	readable, and during this process two bugs were found.  
+	1) Button 4 and 5 masks will now be synchronized with the
+	 TkDisplay.
+	2) ClientMessage handlers will use the proper last pointer rather
+	 than writing to the last GenericHandler pointer.
+
+	Thanks to Joe English for his help and encouragement, and DKF for
+	review.
+
 2004-07-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/place.n, doc/pack.n: Doc fixes. [Tcl Bug 983146]
