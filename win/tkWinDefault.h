@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDefault.h,v 1.3 1999/04/16 01:51:50 stanton Exp $
+ * RCS: @(#) $Id: tkWinDefault.h,v 1.4 1999/11/17 02:40:55 ericm Exp $
  */
 
 #ifndef _TKWINDEFAULT
@@ -204,6 +204,7 @@
 #define DEF_LISTBOX_HIGHLIGHT_WIDTH	"1"
 #define DEF_LISTBOX_RELIEF		"sunken"
 #define DEF_LISTBOX_SCROLL_COMMAND	""
+#define DEF_LISTBOX_LIST_VARIABLE	""
 #define DEF_LISTBOX_SELECT_COLOR	SELECT_BG
 #define DEF_LISTBOX_SELECT_MONO		BLACK
 #define DEF_LISTBOX_SELECT_BD		"1"

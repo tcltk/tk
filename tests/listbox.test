@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.3 1999/04/16 01:51:38 stanton Exp $
+# RCS: @(#) $Id: listbox.test,v 1.4 1999/11/17 02:40:55 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -88,7 +88,7 @@ foreach test {
     {-highlightcolor #123456 #123456 bogus {unknown color name "bogus"}}
     {-highlightthickness 6 6 bogus {bad screen distance "bogus"}}
     {-highlightthickness -2 0 {} {}}
-    {-relief groove groove 1.5 {bad relief type "1.5": must be flat, groove, raised, ridge, solid, or sunken}}
+    {-relief groove groove 1.5 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}}
     {-selectbackground #110022 #110022 bogus {unknown color name "bogus"}}
     {-selectborderwidth 1.3 1 badValue {bad screen distance "badValue"}}
     {-selectforeground #654321 #654321 bogus {unknown color name "bogus"}}
@@ -98,6 +98,7 @@ foreach test {
     {-width 45 45 3p {expected integer but got "3p"}}
     {-xscrollcommand {Some command} {Some command} {} {}}
     {-yscrollcommand {Another command} {Another command} {} {}}
+    {-listvar testVariable testVariable {} {}}
 } {
     set name [lindex $test 0]
     test listbox-1.$i {configuration options} {
@@ -238,7 +239,7 @@ test listbox-3.22 {ListboxWidgetCmd procedure, "cget" option} {
 } {0}
 test listbox-3.23 {ListboxWidgetCmd procedure, "configure" option} {
     llength [.l configure]
-} {23}
+} {24}
 test listbox-3.24 {ListboxWidgetCmd procedure, "configure" option} {
     list [catch {.l configure -gorp} msg] $msg
 } {1 {unknown option "-gorp"}}
@@ -335,10 +336,10 @@ test listbox-3.41 {ListboxWidgetCmd procedure, "delete" option} {
 } {el0 el1 el2 el3 el4 el5 el6 el7}
 test listbox-3.42 {ListboxWidgetCmd procedure, "get" option} {
     list [catch {.l get} msg] $msg
-} {1 {wrong # args: should be ".l get first ?last?"}}
+} {1 {wrong # args: should be ".l get firstIndex ?lastIndex?"}}
 test listbox-3.43 {ListboxWidgetCmd procedure, "get" option} {
     list [catch {.l get a b c} msg] $msg
-} {1 {wrong # args: should be ".l get first ?last?"}}
+} {1 {wrong # args: should be ".l get firstIndex ?lastIndex?"}}
 test listbox-3.44 {ListboxWidgetCmd procedure, "get" option} {
     list [catch {.l get 2.4} msg] $msg
 } {1 {bad listbox index "2.4": must be active, anchor, end, @x,y, or a number}}
@@ -481,7 +482,7 @@ test listbox-3.78 {ListboxWidgetCmd procedure, "scan" option} {fonts} {
 } {{0.249364 0.427481} {0.0714286 0.428571}}
 test listbox-3.79 {ListboxWidgetCmd procedure, "scan" option} {
     list [catch {.l scan foo 2 4} msg] $msg
-} {1 {bad scan option "foo": must be mark or dragto}}
+} {1 {bad option "foo": must be mark or dragto}}
 test listbox-3.80 {ListboxWidgetCmd procedure, "see" option} {
     list [catch {.l see} msg] $msg
 } {1 {wrong # args: should be ".l see index"}}
@@ -618,7 +619,7 @@ test listbox-3.110 {ListboxWidgetCmd procedure, "selection" option} {
 } {2 5 6 7}
 test listbox-3.111 {ListboxWidgetCmd procedure, "selection" option} {
     list [catch {.l selection badOption 0 0} msg] $msg
-} {1 {bad selection option "badOption": must be anchor, clear, includes, or set}}
+} {1 {bad option "badOption": must be anchor, clear, includes, or set}}
 test listbox-3.112 {ListboxWidgetCmd procedure, "size" option} {
     list [catch {.l size a} msg] $msg
 } {1 {wrong # args: should be ".l size"}}
@@ -743,16 +744,16 @@ test listbox-3.133 {ListboxWidgetCmd procedure, "xview" option} {
 } {1 {bad option "whoknows": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, nearest, scan, see, selection, size, xview, or yview}}
 test listbox-3.134 {ListboxWidgetCmd procedure, "xview" option} {
     list [catch {.l c} msg] $msg
-} {1 {bad option "c": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, nearest, scan, see, selection, size, xview, or yview}}
+} {1 {ambiguous option "c": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, nearest, scan, see, selection, size, xview, or yview}}
 test listbox-3.135 {ListboxWidgetCmd procedure, "xview" option} {
     list [catch {.l in} msg] $msg
-} {1 {bad option "in": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, nearest, scan, see, selection, size, xview, or yview}}
+} {1 {ambiguous option "in": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, nearest, scan, see, selection, size, xview, or yview}}
 test listbox-3.136 {ListboxWidgetCmd procedure, "xview" option} {
     list [catch {.l s} msg] $msg
-} {1 {bad option "s": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, nearest, scan, see, selection, size, xview, or yview}}
+} {1 {ambiguous option "s": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, nearest, scan, see, selection, size, xview, or yview}}
 test listbox-3.137 {ListboxWidgetCmd procedure, "xview" option} {
     list [catch {.l se} msg] $msg
-} {1 {bad option "se": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, nearest, scan, see, selection, size, xview, or yview}}
+} {1 {ambiguous option "se": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, nearest, scan, see, selection, size, xview, or yview}}
 
 # No tests for DestroyListbox:  I can't come up with anything to test
 # in this procedure.
@@ -1659,16 +1660,3 @@ option clear
 # cleanup
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
