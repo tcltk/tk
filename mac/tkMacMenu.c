@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.1.4.6 1999/02/16 11:39:34 lfb Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.1.4.7 1999/03/10 18:28:13 redman Exp $
  */
 
 #include <Menus.h>
@@ -4386,4 +4386,29 @@ TkpMenuInit(void)
     
     Tcl_ExternalToUtf(NULL, NULL, "É", -1, 0, NULL, elipsisString,
 	    TCL_UTF_MAX + 1, NULL, NULL, NULL);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpMenuThreadInit --
+ *
+ *	Does platform-specific initialization of thread-specific
+ *      menu state.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpMenuThreadInit()
+{
+    /*
+     * Nothing to do.
+     */
 }
