@@ -1,3 +1,10 @@
+2004-11-15  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* unix/tcl.m4, unix/configure.in: Expanded all AC_DEFINE calls to
+	the three-argument form and ported recent changes to the tcl.m4
+	from the Tcl distribution. *No* call to AC_CONFIG_HEADERS has been
+	added; this change should be virtually entirely cosmetic.
+
 2004-11-12  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXXStubs.c: implemented XGetGeometry().
