@@ -1,5 +1,14 @@
 2003-04-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkButton.h:                         Rewrote the handling
+	* generic/tkButton.c (TkButtonWorldChanged):  of compound *buttons
+	* mac/tkMacButton.c (TkpDisplayButton):       to correctly display
+	* macosx/tkMacOSXButton.c (TkpDisplayButton): mixture of disabledfg,
+	* unix/tkUnixButton.c (TkpDisplayButton):     selectcolor, indicator,
+	* win/tkWinButton.c (TkpDisplayButton):       etc.  *buttons will
+	now only stipple the image, unless no disabledfg is given, in which 
+	case it will stipple the whole button.
+
 	* library/bgerror.tcl: make bgerror dialog topmost on Windows to
 	prevent it being covered by other windows.
 
