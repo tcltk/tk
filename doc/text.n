@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.24 2003/12/22 22:16:48 jenglish Exp $
+'\" RCS: @(#) $Id: text.n,v 1.25 2004/03/04 00:17:07 hobbs Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -894,9 +894,9 @@ this case the command returns an empty string.
 command.
 .VS 8.5
 .TP
-\fIpathName \fBcount \fI?options\fI? \fIindex1 \fIindex2\fR
+\fIpathName \fBcount\fR \fI?options\fR? \fIindex1 index2\fR
 Counts the number of relevant things between the two indices.
-If \fIindex1\fP is after \fIindex2\fP, the result will be a negative number 
+If \fIindex1\fR is after \fIindex2\fR, the result will be a negative number 
 (and this holds for each of the possible options).
 The actual items which are counted depend on the
 options given.  The result is a list of integers, one for the result of
@@ -1116,7 +1116,7 @@ option is false.
 .RE
 .VE 8.4
 .TP
-\fIpathName \fBget \fI?-displaychars?\fR \fI--fR \fIindex1 \fR?\fIindex2 ...\fR?
+\fIpathName \fBget\fR \fI?-displaychars?\fR \fI-- index1\fR ?\fIindex2 ...\fR?
 Return a range of characters from the text.
 The return value will be all the characters in the text starting
 with the one whose index is \fIindex1\fR and ending just before
@@ -1269,7 +1269,7 @@ returned by future calls to ``\fIpathName \fBmark names\fR''.
 This command returns an empty string.
 .RE
 .TP
-\fIpathName \fBreplace \fIindex1 \fIindex2 chars \fR?\fItagList chars tagList ...\fR?
+\fIpathName \fBreplace\fR \fIindex1 index2 chars\fR ?\fItagList chars tagList ...\fR?
 Replaces the range of characters between \fIindex1\fR and \fIindex2\fR 
 with the given characters and tags.  See the section on \fIpathName
 \fBinsert\fR for an explanation of the handling of the \fItagList...\fR
