@@ -1,7 +1,13 @@
-// RCS: @(#) $Id: tk_base.rc,v 1.1.2.1 2000/07/23 04:48:23 welch Exp $
+// RCS: @(#) $Id: tk_base.rc,v 1.1.2.2 2000/07/25 01:55:28 davidg Exp $
 //
 //  Base resources needed by Tk whether it's a DLL or a static library.
 //
+
+//
+//  Tk Icon
+//
+
+tk                      ICON    DISCARDABLE     "tk.ico"
 
 
 #include <windows.h>
