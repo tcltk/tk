@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.10 2000/11/02 22:55:16 hobbs Exp $
+# RCS: @(#) $Id: console.tcl,v 1.10.4.1 2001/02/28 23:29:56 dgp Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -15,13 +15,13 @@
 
 # TODO: history - remember partially written command
 
-# tkConsoleInit --
+# ::tk::ConsoleInit --
 # This procedure constructs and configures the console windows.
 #
 # Arguments:
 # 	None.
 
-proc tkConsoleInit {} {
+proc ::tk::ConsoleInit {} {
     global tcl_platform
 
     if {![consoleinterp eval {set tcl_interactive}]} {
@@ -40,7 +40,7 @@ proc tkConsoleInit {} {
 
     menu .menubar.file -tearoff 0
     .menubar.file add command -label [::msgcat::mc "Source..."] \
-	    -underline 0 -command tkConsoleSource
+	    -underline 0 -command tk::ConsoleSource
     .menubar.file add command -label [::msgcat::mc "Hide Console"] \
 	    -underline 0  -command {wm withdraw .}
     if {[string compare $tcl_platform(platform) "macintosh"]} {
@@ -69,7 +69,7 @@ proc tkConsoleInit {} {
 	.menubar add cascade -label Help -menu .menubar.help -underline 0
 	menu .menubar.help -tearoff 0
 	.menubar.help add command -label [::msgcat::mc "About..."] \
-		-underline 0 -command tkConsoleAbout
+		-underline 0 -command tk::ConsoleAbout
     }
 
     . configure -menu .menubar
@@ -87,7 +87,7 @@ proc tkConsoleInit {} {
 	}
     }
 
-    tkConsoleBind .console
+    ConsoleBind .console
 
     .console tag configure stderr -foreground red
     .console tag configure stdin -foreground blue
@@ -98,19 +98,19 @@ proc tkConsoleInit {} {
     wm title . [::msgcat::mc "Console"]
     flush stdout
     .console mark set output [.console index "end - 1 char"]
-    tkTextSetCursor .console end
+    tk::TextSetCursor .console end
     .console mark set promptEnd insert
     .console mark gravity promptEnd left
 }
 
-# tkConsoleSource --
+# ::tk::ConsoleSource --
 #
 # Prompts the user for a file to source in the main interpreter.
 #
 # Arguments:
 # None.
 
-proc tkConsoleSource {} {
+proc ::tk::ConsoleSource {} {
     set filename [tk_getOpenFile -defaultextension .tcl -parent . \
 		      -title [::msgcat::mc "Select a file to source"] \
 		      -filetypes [list \
@@ -119,12 +119,12 @@ proc tkConsoleSource {} {
     if {[string compare $filename ""]} {
     	set cmd [list source $filename]
 	if {[catch {consoleinterp eval $cmd} result]} {
-	    tkConsoleOutput stderr "$result\n"
+	    ConsoleOutput stderr "$result\n"
 	}
     }
 }
 
-# tkConsoleInvoke --
+# ::tk::ConsoleInvoke --
 # Processes the command line input.  If the command is complete it
 # is evaled in the main interpreter.  Otherwise, the continuation
 # prompt is added and more input may be added.
@@ -132,7 +132,7 @@ proc tkConsoleSource {} {
 # Arguments:
 # None.
 
-proc tkConsoleInvoke {args} {
+proc ::tk::ConsoleInvoke {args} {
     set ranges [.console tag ranges input]
     set cmd ""
     if {[llength $ranges]} {
@@ -145,7 +145,7 @@ proc tkConsoleInvoke {args} {
 	}
     }
     if {[string equal $cmd ""]} {
-	tkConsolePrompt
+	ConsolePrompt
     } elseif {[info complete $cmd]} {
 	.console mark set output end
 	.console tag delete input
@@ -153,26 +153,26 @@ proc tkConsoleInvoke {args} {
 	if {[string compare $result ""]} {
 	    puts $result
 	}
-	tkConsoleHistory reset
-	tkConsolePrompt
+	ConsoleHistory reset
+	ConsolePrompt
     } else {
-	tkConsolePrompt partial
+	ConsolePrompt partial
     }
     .console yview -pickplace insert
 }
 
-# tkConsoleHistory --
+# ::tk::ConsoleHistory --
 # This procedure implements command line history for the
 # console.  In general is evals the history command in the
-# main interpreter to obtain the history.  The global variable
-# histNum is used to store the current location in the history.
+# main interpreter to obtain the history.  The variable
+# ::tk::histNum is used to store the current location in the history.
 #
 # Arguments:
 # cmd -	Which action to take: prev, next, reset.
 
-set histNum 1
-proc tkConsoleHistory {cmd} {
-    global histNum
+set ::tk::histNum 1
+proc ::tk::ConsoleHistory {cmd} {
+    variable histNum
     
     switch $cmd {
     	prev {
@@ -211,7 +211,7 @@ proc tkConsoleHistory {cmd} {
     }
 }
 
-# tkConsolePrompt --
+# ::tk::ConsolePrompt --
 # This procedure draws the prompt.  If tcl_prompt1 or tcl_prompt2
 # exists in the main interpreter it will be called to generate the 
 # prompt.  Otherwise, a hard coded default prompt is printed.
@@ -219,7 +219,7 @@ proc tkConsoleHistory {cmd} {
 # Arguments:
 # partial -	Flag to specify which prompt to print.
 
-proc tkConsolePrompt {{partial normal}} {
+proc ::tk::ConsolePrompt {{partial normal}} {
     if {[string equal $partial "normal"]} {
 	set temp [.console index "end - 1 char"]
 	.console mark set output end
@@ -239,12 +239,12 @@ proc tkConsolePrompt {{partial normal}} {
     }
     flush stdout
     .console mark set output $temp
-    tkTextSetCursor .console end
+    ::tk::TextSetCursor .console end
     .console mark set promptEnd insert
     .console mark gravity promptEnd left
 }
 
-# tkConsoleBind --
+# ::tk::ConsoleBind --
 # This procedure first ensures that the default bindings for the Text
 # class have been defined.  Then certain bindings are overridden for
 # the class.
@@ -252,7 +252,7 @@ proc tkConsolePrompt {{partial normal}} {
 # Arguments:
 # None.
 
-proc tkConsoleBind {win} {
+proc ::tk::ConsoleBind {win} {
     bindtags $win "$win Text . all"
 
     # Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
@@ -267,14 +267,14 @@ proc tkConsoleBind {win} {
     bind $win <KP_Enter> {# nothing}
 
     bind $win <Tab> {
-	tkConsoleInsert %W \t
+	tk::ConsoleInsert %W \t
 	focus %W
 	break
     }
     bind $win <Return> {
 	%W mark set insert {end - 1c}
-	tkConsoleInsert %W "\n"
-	tkConsoleInvoke
+	tk::ConsoleInsert %W "\n"
+	tk::ConsoleInvoke
 	break
     }
     bind $win <Delete> {
@@ -294,16 +294,16 @@ proc tkConsoleBind {win} {
     foreach left {Control-a Home} {
 	bind $win <$left> {
 	    if {[%W compare insert < promptEnd]} {
-		tkTextSetCursor %W {insert linestart}
+		tk::TextSetCursor %W {insert linestart}
 	    } else {
-		tkTextSetCursor %W promptEnd
+		tk::TextSetCursor %W promptEnd
             }
 	    break
 	}
     }
     foreach right {Control-e End} {
 	bind $win <$right> {
-	    tkTextSetCursor %W {insert lineend}
+	    tk::TextSetCursor %W {insert lineend}
 	    break
 	}
     }
@@ -339,22 +339,22 @@ proc tkConsoleBind {win} {
     }
     foreach prev {Control-p Up} {
 	bind $win <$prev> {
-	    tkConsoleHistory prev
+	    tk::ConsoleHistory prev
 	    break
 	}
     }
     foreach prev {Control-n Down} {
 	bind $win <$prev> {
-	    tkConsoleHistory next
+	    tk::ConsoleHistory next
 	    break
 	}
     }
     bind $win <Insert> {
-	catch {tkConsoleInsert %W [selection get -displayof %W]}
+	catch {tk::ConsoleInsert %W [selection get -displayof %W]}
 	break
     }
     bind $win <KeyPress> {
-	tkConsoleInsert %W %A
+	tk::ConsoleInsert %W %A
 	break
     }
     foreach left {Control-b Left} {
@@ -362,13 +362,13 @@ proc tkConsoleBind {win} {
 	    if {[%W compare insert == promptEnd]} {
 		break
 	    }
-	    tkTextSetCursor %W insert-1c
+	    tk::TextSetCursor %W insert-1c
 	    break
 	}
     }
     foreach right {Control-f Right} {
 	bind $win <$right> {
-	    tkTextSetCursor %W insert+1c
+	    tk::TextSetCursor %W insert+1c
 	    break
 	}
     }
@@ -399,19 +399,19 @@ proc tkConsoleBind {win} {
 	catch {
 	    set clip [selection get -displayof %W -selection CLIPBOARD]
 	    set list [split $clip \n\r]
-	    tkConsoleInsert %W [lindex $list 0]
+	    tk::ConsoleInsert %W [lindex $list 0]
 	    foreach x [lrange $list 1 end] {
 		%W mark set insert {end - 1c}
-		tkConsoleInsert %W "\n"
-		tkConsoleInvoke
-		tkConsoleInsert %W $x
+		tk::ConsoleInsert %W "\n"
+		tk::ConsoleInvoke
+		tk::ConsoleInsert %W $x
 	    }
 	}
 	break
     }
 }
 
-# tkConsoleInsert --
+# ::tk::ConsoleInsert --
 # Insert a string into a text at the point of the insertion cursor.
 # If there is a selection in the text, and it covers the point of the
 # insertion cursor, then delete the selection before inserting.  Insertion
@@ -421,7 +421,7 @@ proc tkConsoleBind {win} {
 # w -		The text window in which to insert the string
 # s -		The string to insert (usually just a single character)
 
-proc tkConsoleInsert {w s} {
+proc ::tk::ConsoleInsert {w s} {
     if {[string equal $s ""]} {
 	return
     }
@@ -439,7 +439,7 @@ proc tkConsoleInsert {w s} {
     $w see insert
 }
 
-# tkConsoleOutput --
+# ::tk::ConsoleOutput --
 #
 # This routine is called directly by ConsolePutsCmd to cause a string
 # to be displayed in the console.
@@ -448,12 +448,12 @@ proc tkConsoleInsert {w s} {
 # dest -	The output tag to be used: either "stderr" or "stdout".
 # string -	The string to be displayed.
 
-proc tkConsoleOutput {dest string} {
+proc ::tk::ConsoleOutput {dest string} {
     .console insert output $string $dest
     .console see insert
 }
 
-# tkConsoleExit --
+# ::tk::ConsoleExit --
 #
 # This routine is called by ConsoleEventProc when the main window of
 # the application is destroyed.  Don't call exit - that probably already
@@ -462,18 +462,18 @@ proc tkConsoleOutput {dest string} {
 # Arguments:
 # None.
 
-proc tkConsoleExit {} {
+proc ::tk::ConsoleExit {} {
     destroy .
 }
 
-# tkConsoleAbout --
+# ::tk::ConsoleAbout --
 #
 # This routine displays an About box to show Tcl/Tk version info.
 #
 # Arguments:
 # None.
 
-proc tkConsoleAbout {} {
+proc ::tk::ConsoleAbout {} {
     global tk_patchLevel
     tk_messageBox -type ok -message "[::msgcat::mc {Tcl for Windows}]
 Copyright \251 2000 Ajuba Solutions
@@ -484,4 +484,4 @@ Tk $tk_patchLevel"
 
 # now initialize the console
 
-tkConsoleInit
+::tk::ConsoleInit

@@ -1,3 +1,53 @@
+2001-02-28  Don Porter  <dgp@users.sourceforge.net>
+
+	BRANCH dgp-privates-into-namespace:  Feature branch to move all
+	of Tk's private commands and variable into the ::tk namespace
+	and its children.
+
+	* doc/tkvars.n:  Documented private variable tkPriv renamed tk::Priv.
+
+	* generic/tkBind.c:
+	* generic/tkMenu.c:
+	* generic/tkTextDisp.c:
+	* library/bgerror.tcl:
+	* library/button.tcl:
+	* library/choosedir.tcl:
+	* library/clrpick.tcl:
+	* library/comdlg.tcl:
+	* library/console.tcl:
+	* library/dialog.tcl:
+	* library/entry.tcl:
+	* library/focus.tcl:
+	* library/listbox.tcl:
+	* library/menu.tcl:
+	* library/msgbox.tcl:
+	* library/optMenu.tcl:
+	* library/palette.tcl:
+	* library/scale.tcl:
+	* library/scrlbar.tcl:
+	* library/spinbox.tcl:
+	* library/tclIndex:
+	* library/tearoff.tcl:
+	* library/text.tcl:
+	* library/tk.tcl:
+	* library/tkfbox.tcl:
+	* library/xmfbox.tcl:
+	* mac/tkMacMenu.c:
+	* tests/clrpick.test:
+	* tests/filebox.test:
+	* tests/macMenu.test:
+	* tests/menu.test:
+	* tests/menuDraw.test:
+	* tests/msgbox.test:
+	* tests/text.test:
+	* tests/textDisp.test:
+	* tests/unixMenu.test:
+	* tests/winMenu.test:
+	* tests/xmfbox.test:
+	* unix/tkUnixDialog.c:  All Tk commands matching ::tk[A-Z]* and
+	all Tk private variables in the global namespace were renamed to
+	live in the namespace ::tk or one of its children.  
+
 2001-02-13  Eric Melski  <ericm@interwoven.com>
 
 	* doc/photo.n: [Bug 132213] Added clarification on interpretation

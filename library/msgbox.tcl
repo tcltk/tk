@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.12 2000/06/30 06:38:38 ericm Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.12.4.1 2001/02/28 23:29:56 dgp Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -114,7 +114,7 @@ static unsigned char w3_bits[] = {
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};"
 
-# tkMessageBox --
+# ::tk::MessageBox --
 #
 #	Pops up a messagebox with an application-supplied message with
 #	an icon and a list of buttons. This procedure will be called
@@ -130,11 +130,12 @@ static unsigned char w3_bits[] = {
 #
 #	See the user documentation for details on what tk_messageBox does.
 #
-proc tkMessageBox {args} {
-    global tkPriv tcl_platform tk_strictMotif
+proc ::tk::MessageBox {args} {
+    global tcl_platform tk_strictMotif
+    variable ::tk::Priv
 
-    set w tkPrivMsgBox
-    upvar #0 $w data
+    set w ::tk::PrivMsgBox
+    upvar $w data
 
     #
     # The default value of the title is space (" ") not the empty string
@@ -364,7 +365,7 @@ proc tkMessageBox {args} {
 	    set opts [list -text $capName]
 	}
 
-	eval button [list $w.$name] $opts [list -command [list set tkPriv(button) $name]]
+	eval button [list $w.$name] $opts [list -command [list set tk::Priv(button) $name]]
 
 	if {[string equal $name $data(-default)]} {
 	    $w.$name configure -default active
@@ -399,7 +400,7 @@ proc tkMessageBox {args} {
 
     bind $w <Return> {
 	if {[string equal Button [winfo class %W]]} {
-	    tkButtonInvoke %W
+	    tk::ButtonInvoke %W
 	}
     }
 
@@ -424,9 +425,9 @@ proc tkMessageBox {args} {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    tkwait variable tkPriv(button)
+    vwait ::tk::Priv(button)
 
     ::tk::RestoreFocusGrab $w $focus
 
-    return $tkPriv(button)
+    return $Priv(button)
 }

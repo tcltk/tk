@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.14 2000/11/22 01:49:37 ericm Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.14.2.1 2001/02/28 23:29:55 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -293,7 +293,7 @@ typedef struct PhysicalsOwned {
  * One of the following structures exists for each interpreter.  This
  * structure keeps track of the current display and screen in the
  * interpreter, so that a script can be invoked whenever the display/screen
- * changes (the script does things like point tkPriv at a display-specific
+ * changes (the script does things like point tk::Priv at a display-specific
  * structure).
  */
 
@@ -2545,16 +2545,16 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
  *
  *	This procedure is invoked whenever the current screen changes
  *	in an application.  It invokes a Tcl procedure named
- *	"tkScreenChanged", passing it the screen name as argument.
- *	tkScreenChanged does things like making the tkPriv variable
+ *	"tk::ScreenChanged", passing it the screen name as argument.
+ *	tk::ScreenChanged does things like making the tk::Priv variable
  *	point to an array for the current display.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Depends on what tkScreenChanged does.  If an error occurs
- *	them tkError will be invoked.
+ *	Depends on what tk::ScreenChanged does.  If an error occurs
+ *	them bgerror will be invoked.
  *
  *----------------------------------------------------------------------
  */
@@ -2571,7 +2571,7 @@ ChangeScreen(interp, dispName, screenIndex)
     char screen[TCL_INTEGER_SPACE];
 
     Tcl_DStringInit(&cmd);
-    Tcl_DStringAppend(&cmd, "tkScreenChanged ", 16);
+    Tcl_DStringAppend(&cmd, "tk::ScreenChanged ", 18);
     Tcl_DStringAppend(&cmd, dispName, -1);
     sprintf(screen, ".%d", screenIndex);
     Tcl_DStringAppend(&cmd, screen, -1);
