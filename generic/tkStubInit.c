@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.35 2002/06/14 14:08:23 dkf Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.36 2002/06/15 00:21:42 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -898,6 +898,7 @@ TkStubs tkStubs = {
     Tk_SetCaretPos, /* 245 */
     Tk_PhotoPutBlock, /* 246 */
     Tk_PhotoPutZoomedBlock, /* 247 */
+    Tk_CollapseMotionEvents, /* 248 */
 };
 
 /* !END!: Do not edit above this line. */
