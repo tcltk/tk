@@ -4237,4 +4237,12 @@ WS_EX_NOPARENTNOTIFY on TkChild windows. (SS)
 8/6/98 (feature change) Changed tkInitScript.h to use the new
 tcl_findLibrary procedure to locate its script library. (BW)
 
--------- Released 8.0.3 to the Tcl Consortium CD-ROM project, 8/7/98 ------
+8/10/98 (bug fix) Added special case to font code to limit the
+length of displayed strings to avoid wrap-around bugs in some
+PC X servers when the pixel length of the string exceeds 0x7fff. (SS)
+
+8/11/98 (bug fix) Macintosh, lock down some of the resources
+associated with menus to try and stabilise the menu system
+on memory limited machines. (JI)
+
+-------- Released 8.0.3 to the Tcl Consortium CD-ROM project, 8/12/98 ------
