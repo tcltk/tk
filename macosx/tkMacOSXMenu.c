@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.1.2.3 2002/02/06 07:02:04 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.1.2.4 2002/07/16 14:32:30 vincentdarley Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -23,6 +23,7 @@
 
 #include <Carbon/Carbon.h>
 #include "tkMacOSXDebug.h"
+#include <CoreFoundation/CFString.h>
 
 typedef struct MacMenu {
     MenuRef menuHdl;		/* The Menu Manager data structure. */
@@ -177,7 +178,7 @@ static char *currentMenuBarName;
 static Tk_Window currentMenuBarOwner;
 				/* Which window owns the current menu bar. */
 static char elipsisString[TCL_UTF_MAX + 1];
-				/* The UTF representation of the elipsis (ƒ) 
+				/* The UTF representation of the elipsis (...) 
 				 * character. */
 static int helpItemCount;	/* The number of items in the help menu. 
 				 * -1 means that the help menu is
@@ -725,7 +726,7 @@ TkpDestroyMenuEntry(
  *	Given a menu entry, gives back the text that should go in it.
  *	Separators should be done by the caller, as they have to be
  *	handled specially. This is primarily used to do a substitution
- *	between "..." and "ƒ".
+ *	between "..." and the ellipsis character which looks nicer.
  *
  * Results:
  *	itemText points to the new text for the item.
@@ -792,8 +793,8 @@ GetEntryText(
  * 	'' - Check mark character		(\022)
  * 	'¥' - Mac Bullet character		(\245)
  * 	'' - Filled diamond			(\023)
- * 	'×' - Hollow diamond			(\327)
- * 	'Ñ' = Mac Long dash ("em dash")	(\321)
+ * 	'—' - Hollow diamond			(\327)
+ * 	'‘' = Mac Long dash ("em dash")	(\321)
  * 	'-' = short dash (minus, "en dash");
  *
  * Results:
@@ -833,7 +834,8 @@ FindMarkCharacter(
     	markChar = '\022';	/* Check mark */
     }
     return markChar;
-}
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -864,6 +866,53 @@ mySetMenuTitle(
     menuTitle [ 0 ] = strlen ( title ) + 1;
     strcpy ( menuTitle + 1, title );
     SetMenuTitle ( menuHdl, menuTitle );
+}
+static int ParseAccelerators(char **accelStringPtr) {
+    char *accelString = *accelStringPtr;
+    int flags = 0;
+    while (1) {
+	if ((0 == strncasecmp("Control", accelString, 6))
+		&& (('-' == accelString[6]) || ('+' == accelString[6]))) {
+	    flags |= ENTRY_CONTROL_ACCEL;
+	    accelString += 7;
+	} else if ((0 == strncasecmp("Ctrl", accelString, 4))
+		&& (('-' == accelString[4]) || ('+' == accelString[4]))) {
+	    flags |= ENTRY_CONTROL_ACCEL;
+	    accelString += 5;
+	} else if ((0 == strncasecmp("Shift", accelString, 5))
+		&& (('-' == accelString[5]) || ('+' == accelString[5]))) {
+	    flags |= ENTRY_SHIFT_ACCEL;
+	    accelString += 6;
+	} else if ((0 == strncasecmp("Option", accelString, 6))
+		&& (('-' == accelString[6]) || ('+' == accelString[6]))) {
+	    flags |= ENTRY_OPTION_ACCEL;
+	    accelString += 7;
+	} else if ((0 == strncasecmp("Opt", accelString, 3))
+		&& (('-' == accelString[3]) || ('+' == accelString[3]))) {
+	    flags |= ENTRY_OPTION_ACCEL;
+	    accelString += 4;
+	} else if ((0 == strncasecmp("Command", accelString, 7))
+		&& (('-' == accelString[7]) || ('+' == accelString[7]))) {
+	    flags |= ENTRY_COMMAND_ACCEL;
+	    accelString += 8;
+	} else if ((0 == strncasecmp("Cmd", accelString, 3))
+		&& (('-' == accelString[3]) || ('+' == accelString[3]))) {
+	    flags |= ENTRY_COMMAND_ACCEL;
+	    accelString += 4;
+	} else if ((0 == strncasecmp("Alt", accelString, 3))
+		&& (('-' == accelString[3]) || ('+' == accelString[3]))) {
+	    flags |= ENTRY_OPTION_ACCEL;
+	    accelString += 4;
+	} else if ((0 == strncasecmp("Meta", accelString, 4))
+		&& (('-' == accelString[4]) || ('+' == accelString[4]))) {
+	    flags |= ENTRY_COMMAND_ACCEL;
+	    accelString += 5;
+	} else {
+	    break;
+	}
+    }
+    *accelStringPtr = accelString;
+    return flags;
 }
 
 /*
@@ -936,48 +985,8 @@ TkpConfigureMenuEntry(
 	char *accel = accelString;
 	mePtr->entryFlags |= ~ENTRY_ACCEL_MASK;
 	    
-	while (1) {
-	    if ((0 == strncasecmp("Control", accelString, 6))
-	    	    && (('-' == accelString[6]) || ('+' == accelString[6]))) {
-	  	mePtr->entryFlags |= ENTRY_CONTROL_ACCEL;
-	  	accelString += 7;
-	    } else if ((0 == strncasecmp("Ctrl", accelString, 4))
-	    	    && (('-' == accelString[4]) || ('+' == accelString[4]))) {
-	  	mePtr->entryFlags |= ENTRY_CONTROL_ACCEL;
-	  	accelString += 5;
-	    } else if ((0 == strncasecmp("Shift", accelString, 5))
-	    	    && (('-' == accelString[5]) || ('+' == accelString[5]))) {
-	  	mePtr->entryFlags |= ENTRY_SHIFT_ACCEL;
-	  	accelString += 6;
-	    } else if ((0 == strncasecmp("Option", accelString, 6))
-	    	    && (('-' == accelString[6]) || ('+' == accelString[6]))) {
-	  	mePtr->entryFlags |= ENTRY_OPTION_ACCEL;
-	  	accelString += 7;
-	    } else if ((0 == strncasecmp("Opt", accelString, 3))
-	    	    && (('-' == accelString[3]) || ('+' == accelString[3]))) {
-	  	mePtr->entryFlags |= ENTRY_OPTION_ACCEL;
-	  	accelString += 4;
-	    } else if ((0 == strncasecmp("Command", accelString, 7))
-	    	    && (('-' == accelString[7]) || ('+' == accelString[7]))) {
-	  	mePtr->entryFlags |= ENTRY_COMMAND_ACCEL;
-	  	accelString += 8;
-	    } else if ((0 == strncasecmp("Cmd", accelString, 3))
-	    	    && (('-' == accelString[3]) || ('+' == accelString[3]))) {
-	  	mePtr->entryFlags |= ENTRY_COMMAND_ACCEL;
-	  	accelString += 4;
-	    } else if ((0 == strncasecmp("Alt", accelString, 3))
-	    	    && (('-' == accelString[3]) || ('+' == accelString[3]))) {
-	  	mePtr->entryFlags |= ENTRY_OPTION_ACCEL;
-	  	accelString += 4;
-	    } else if ((0 == strncasecmp("Meta", accelString, 4))
-	    	    && (('-' == accelString[4]) || ('+' == accelString[4]))) {
-	  	mePtr->entryFlags |= ENTRY_COMMAND_ACCEL;
-	  	accelString += 5;
-	    } else {
-	  	break;
-	    }
-	}
-	    
+	mePtr->entryFlags |= ParseAccelerators(&accelString);
+	
 	((EntryGeometry *)mePtr->platformEntryData)->accelTextStart 
 		= ((long) accelString - (long) accel);
     }
@@ -989,6 +998,7 @@ TkpConfigureMenuEntry(
     
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -1064,16 +1074,13 @@ ReconfigureIndividualMenu(
     	} else {
     	    Tcl_DString itemTextDString;
     	    int destWrote;
-    	    
+            CFStringRef cf;    	    
 	    GetEntryText(mePtr, &itemTextDString);
-	    Tcl_UtfToExternal(NULL, NULL, Tcl_DStringValue(&itemTextDString),
-	    	    Tcl_DStringLength(&itemTextDString), 0, NULL, 
-	    	    (char *) &itemText[1],
-	    	    231, NULL, &destWrote, NULL);
-	    itemText[0] = destWrote;
-	    
+            cf = CFStringCreateWithCString(NULL,
+                  Tcl_DStringValue(&itemTextDString), kCFStringEncodingUTF8);
 	    AppendMenu(macMenuHdl, "\px");
-	    SetMenuItemText(macMenuHdl, base + index, itemText);
+            SetMenuItemTextWithCFString(macMenuHdl, base + index, cf);
+            CFRelease(cf);
 	    Tcl_DStringFree(&itemTextDString);
 	
     	    /*
@@ -1136,11 +1143,56 @@ ReconfigureIndividualMenu(
 	    }
 	    
     	    if ((mePtr->type != CASCADE_ENTRY) 
-    	    	    && (ENTRY_COMMAND_ACCEL
-			    == (mePtr->entryFlags & ENTRY_ACCEL_MASK))) {
-    	    	char *accel = Tcl_GetStringFromObj(mePtr->accelPtr, NULL);
-	    	SetItemCmd(macMenuHdl, base + index, accel[((EntryGeometry *)
-	    		mePtr->platformEntryData)->accelTextStart]);
+    	    	    && (0 != (mePtr->entryFlags & ENTRY_ACCEL_MASK))) {
+                int accelLen;
+		int modifiers = 0;
+		int offset = ((EntryGeometry *)mePtr->platformEntryData)->accelTextStart;
+    	    	char *accel = Tcl_GetStringFromObj(mePtr->accelPtr, &accelLen);
+                accelLen -= offset;
+		accel+= offset;
+		
+                if (accelLen == 1) {
+                    SetItemCmd(macMenuHdl, base + index, accel[0]);
+                } else {
+		    /* 
+		     * Now we need to convert from various textual names
+		     * to Carbon codes
+		     */
+		    char glyph = 0x0;
+		    if ((accel[0] == 'f' || accel[0] == 'F') 
+			&& (accel[1] > '0' && accel[1] <= '9')) {
+			int fkey = accel[1] - '0';
+			if (accel[2] > '0' && accel[2] <= '9') {
+			    fkey = 10*fkey + (accel[2] - '0');
+			}
+			if (fkey > 0 && fkey < 16) {
+			    glyph = 0x6e + fkey;
+			}
+		    }
+		    if (glyph != 0x0) {
+			SetMenuItemKeyGlyph(macMenuHdl, base + index, glyph);
+			modifiers |= kMenuNoCommandModifier;
+		    }
+                }
+		if (mePtr->entryFlags & ENTRY_OPTION_ACCEL) {
+		    modifiers |= kMenuOptionModifier;
+		}
+		if (mePtr->entryFlags & ENTRY_SHIFT_ACCEL) {
+		    modifiers |= kMenuShiftModifier;
+		}
+		if (mePtr->entryFlags & ENTRY_CONTROL_ACCEL) {
+		    modifiers |= kMenuControlModifier;
+		}
+		if (mePtr->entryFlags & ENTRY_COMMAND_ACCEL) {
+		    /* modifiers |= kMenuCommandModifier; */
+		}
+		if (modifiers != 0 && modifiers != kMenuShiftModifier) {
+		    if (!(mePtr->entryFlags & ENTRY_COMMAND_ACCEL)) {
+		        modifiers |= kMenuNoCommandModifier;
+		    }
+		}
+		
+		SetMenuItemModifiers(macMenuHdl, base + index, modifiers);
 	    }
     	}
     }
@@ -3712,7 +3764,7 @@ TkpMenuInit(void)
     tkThemeMenuItemDrawingUPP 
             = NewMenuItemDrawingUPP(tkThemeMenuItemDrawingProc);
             				
-    Tcl_ExternalToUtf(NULL, NULL, "\311", /* É */
+    Tcl_ExternalToUtf(NULL, NULL, "\311", /* ellipsis character */
         -1, 0, NULL, elipsisString,
         TCL_UTF_MAX + 1, NULL, NULL, NULL);
         
