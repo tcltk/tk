@@ -1,3 +1,10 @@
+2004-02-13  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinFont.c (Tk_MeasureChars): backport fixes to bold/italic
+	font handling. [Patch 852669] [Bug 478568]
+	* tests/textDisp.test: added test for the font measurement 
+	problem.
+
 2004-02-13  Jim Ingham  <jingham@apple.com>
 
 	* tkMacOSXDialog.c (Tk_GetOpenFileObjCmd): Use CFStringRef for
