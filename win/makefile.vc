@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.1.4.12 1999/03/09 01:34:50 lfb Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.1.4.13 1999/03/09 02:48:44 lfb Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -91,7 +91,8 @@ WISHOBJS = \
 TKTESTOBJS = \
 	$(TMPDIR)\tkTest.obj \
 	$(TMPDIR)\tkSquare.obj \
-	$(TMPDIR)\testMain.obj
+	$(TMPDIR)\testMain.obj \
+	$(TMPDIR)\tkThreadTest.obj
 
 XLIBOBJS = \
 	$(TMPDIR)\xcolors.obj \

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.1.4.10 1999/03/09 01:47:27 lfb Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.1.4.11 1999/03/09 02:48:44 lfb Exp $
  */
 
 #include "tkWinInt.h"
@@ -351,9 +351,9 @@ InitWm(void)
      */
 
 #ifdef TCL_THREADS
-	    childClass.style = CS_HREDRAW | CS_VREDRAW;
+	    classPtr->style = CS_HREDRAW | CS_VREDRAW;
 #else
-	    childClass.style = CS_HREDRAW | CS_VREDRAW | CS_CLASSDC;
+	    classPtr->style = CS_HREDRAW | CS_VREDRAW | CS_CLASSDC;
 #endif
 	    classPtr->cbClsExtra = 0;
 	    classPtr->cbWndExtra = 0;
