@@ -1,5 +1,11 @@
 2000-04-13  Eric Melski  <ericm@scriptics.com>
 
+	* win/tkWinMenu.c: Corrected code that created separator items on
+	menus; originally, it requested that the system be responsible for
+	drawing those items, so it would ignore configuration items like
+	the widget background.  Now, we draw the separators ourselves (as
+	we do with every other kind of menu item already). [Bug: 1166].
+
 	* win/tkWin3d.c: 
 	* unix/tkUnix3d.c: Applied patch from [RFE: 2501]: adds more
 	sophisticated smarts to TkpGetShadows, so that the highlight of a

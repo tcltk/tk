@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.7 2000/03/31 09:24:27 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.8 2000/04/13 20:51:55 ericm Exp $
  */
 
 #define OEMRESOURCE
@@ -570,98 +570,93 @@ ReconfigureWindowsMenu(
 	    continue;
 	}
 
-	if (mePtr->type == SEPARATOR_ENTRY) {
-	    flags |= MF_SEPARATOR;
+	itemText = GetEntryText(mePtr);
+	if ((menuPtr->menuType == MENUBAR)
+		|| (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
+	    Tcl_UtfToExternalDString(NULL, itemText, -1, &translatedText);
+	    lpNewItem = Tcl_DStringValue(&translatedText);
 	} else {
-	    itemText = GetEntryText(mePtr);
-	    if ((menuPtr->menuType == MENUBAR)
-		    || (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
-		Tcl_UtfToExternalDString(NULL, itemText, -1, &translatedText);
-		lpNewItem = Tcl_DStringValue(&translatedText);
-	    } else {
-		lpNewItem = (LPCTSTR) mePtr;
-		flags |= MF_OWNERDRAW;
+	    lpNewItem = (LPCTSTR) mePtr;
+	    flags |= MF_OWNERDRAW;
+	}
+	
+	/*
+	 * Set enabling and disabling correctly.
+	 */
+	
+	if (mePtr->state == ENTRY_DISABLED) {
+	    flags |= MF_DISABLED;
+	}
+	
+	/*
+	 * Set the check mark for check entries and radio entries.
+	 */
+	
+	if (((mePtr->type == CHECK_BUTTON_ENTRY)
+		|| (mePtr->type == RADIO_BUTTON_ENTRY))
+		&& (mePtr->entryFlags & ENTRY_SELECTED)) {
+	    flags |= MF_CHECKED;
+	}
+	
+	if (mePtr->columnBreak) {
+	    flags |= MF_MENUBREAK;
+	}
+	
+	itemID = (int) mePtr->platformEntryData;
+	if ((mePtr->type == CASCADE_ENTRY)
+		&& (mePtr->childMenuRefPtr != NULL)
+		&& (mePtr->childMenuRefPtr->menuPtr != NULL)) {
+	    HMENU childMenuHdl = (HMENU) mePtr->childMenuRefPtr->menuPtr
+		->platformData;
+	    if (childMenuHdl != NULL) {
+		itemID = (UINT) childMenuHdl;
+		flags |= MF_POPUP;
 	    }
-
-    	    /*
-    	     * Set enabling and disabling correctly.
-    	     */
-
-	    if (mePtr->state == ENTRY_DISABLED) {
-		flags |= MF_DISABLED;
-	    }
-    	    
-    	    /*
-    	     * Set the check mark for check entries and radio entries.
-    	     */
-	    
-	    if (((mePtr->type == CHECK_BUTTON_ENTRY)
-		    || (mePtr->type == RADIO_BUTTON_ENTRY))
-		    && (mePtr->entryFlags & ENTRY_SELECTED)) {
-		flags |= MF_CHECKED;
-	    }
-
-	    if (mePtr->columnBreak) {
-		flags |= MF_MENUBREAK;
-	    }
-
-	    itemID = (int) mePtr->platformEntryData;
-	    if ((mePtr->type == CASCADE_ENTRY)
-		    && (mePtr->childMenuRefPtr != NULL)
-		    && (mePtr->childMenuRefPtr->menuPtr != NULL)) {
-		HMENU childMenuHdl = (HMENU) mePtr->childMenuRefPtr->menuPtr
-		    ->platformData;
-		if (childMenuHdl != NULL) {
-		    itemID = (UINT) childMenuHdl;
-		    flags |= MF_POPUP;
-		}
-		if ((menuPtr->menuType == MENUBAR) 
-			&& !(mePtr->childMenuRefPtr->menuPtr->menuFlags
-				& MENU_SYSTEM_MENU)) {
-		    Tcl_DString ds;
-		    TkMenuReferences *menuRefPtr;
-		    TkMenu *systemMenuPtr = mePtr->childMenuRefPtr
-			->menuPtr;
-
-		    Tcl_DStringInit(&ds);
-		    Tcl_DStringAppend(&ds,
-			    Tk_PathName(menuPtr->masterMenuPtr->tkwin), -1);
-		    Tcl_DStringAppend(&ds, ".system", 7);
-
-		    menuRefPtr = TkFindMenuReferences(menuPtr->interp,
-			    Tcl_DStringValue(&ds));
-		    
-		    Tcl_DStringFree(&ds);
-
-		    if ((menuRefPtr != NULL) 
-			    && (menuRefPtr->menuPtr != NULL)
-			    && (menuPtr->parentTopLevelPtr != NULL)
-			    && (systemMenuPtr->masterMenuPtr
-				    == menuRefPtr->menuPtr)) {
-			HMENU systemMenuHdl = 
-			    (HMENU) systemMenuPtr->platformData;
-			HWND wrapper = TkWinGetWrapperWindow(menuPtr
-				->parentTopLevelPtr);
-			if (wrapper != NULL) {
-			    DestroyMenu(systemMenuHdl);
-			    systemMenuHdl = GetSystemMenu(wrapper, FALSE);
-			    systemMenuPtr->menuFlags |= MENU_SYSTEM_MENU;
-			    systemMenuPtr->platformData = 
-				(TkMenuPlatformData) systemMenuHdl;
-			    if (!(systemMenuPtr->menuFlags 
-				    & MENU_RECONFIGURE_PENDING)) {
-				systemMenuPtr->menuFlags 
-				    |= MENU_RECONFIGURE_PENDING;
-				Tcl_DoWhenIdle(ReconfigureWindowsMenu,
-					(ClientData) systemMenuPtr);
-			    }
+	    if ((menuPtr->menuType == MENUBAR) 
+		    && !(mePtr->childMenuRefPtr->menuPtr->menuFlags
+			    & MENU_SYSTEM_MENU)) {
+		Tcl_DString ds;
+		TkMenuReferences *menuRefPtr;
+		TkMenu *systemMenuPtr = mePtr->childMenuRefPtr->menuPtr;
+		
+		Tcl_DStringInit(&ds);
+		Tcl_DStringAppend(&ds,
+			Tk_PathName(menuPtr->masterMenuPtr->tkwin), -1);
+		Tcl_DStringAppend(&ds, ".system", 7);
+		
+		menuRefPtr = TkFindMenuReferences(menuPtr->interp,
+			Tcl_DStringValue(&ds));
+		
+		Tcl_DStringFree(&ds);
+		
+		if ((menuRefPtr != NULL) 
+			&& (menuRefPtr->menuPtr != NULL)
+			&& (menuPtr->parentTopLevelPtr != NULL)
+			&& (systemMenuPtr->masterMenuPtr
+				== menuRefPtr->menuPtr)) {
+		    HMENU systemMenuHdl = 
+			(HMENU) systemMenuPtr->platformData;
+		    HWND wrapper = TkWinGetWrapperWindow(menuPtr
+			    ->parentTopLevelPtr);
+		    if (wrapper != NULL) {
+			DestroyMenu(systemMenuHdl);
+			systemMenuHdl = GetSystemMenu(wrapper, FALSE);
+			systemMenuPtr->menuFlags |= MENU_SYSTEM_MENU;
+			systemMenuPtr->platformData = 
+			    (TkMenuPlatformData) systemMenuHdl;
+			if (!(systemMenuPtr->menuFlags 
+				& MENU_RECONFIGURE_PENDING)) {
+			    systemMenuPtr->menuFlags 
+				|= MENU_RECONFIGURE_PENDING;
+			    Tcl_DoWhenIdle(ReconfigureWindowsMenu,
+				    (ClientData) systemMenuPtr);
 			}
 		    }
 		}
-		if (mePtr->childMenuRefPtr->menuPtr->menuFlags 
-			& MENU_SYSTEM_MENU) {
-		    systemMenu++;
-		}
+	    }
+	    if (mePtr->childMenuRefPtr->menuPtr->menuFlags
+		    & MENU_SYSTEM_MENU) {
+		systemMenu++;
 	    }
 	}
 	if (!systemMenu) {
