@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.98 2004/11/18 13:22:47 rmax Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.99 2004/12/07 00:35:03 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1121,7 +1121,8 @@ dist:   $(UNIX_DIR)/configure
 		$(DISTDIR)/generic
 	cp -p $(GENERIC_DIR)/*.decls $(DISTDIR)/generic
 	cp -p $(GENERIC_DIR)/README $(DISTDIR)/generic
-	cp -p $(TOP_DIR)/changes $(TOP_DIR)/ChangeLog $(TOP_DIR)/README \
+	cp -p $(TOP_DIR)/changes $(TOP_DIR)/ChangeLog \
+		$(TOP_DIR)/ChangeLog.2??? $(TOP_DIR)/README \
 		$(TOP_DIR)/license.terms $(DISTDIR)
 	rm -f $(DISTDIR)/generic/blt*.[ch]
 	mkdir $(DISTDIR)/win
