@@ -7,7 +7,7 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # Copyright (c) 2001 ActiveState Corporation.
 #
-# RCS: @(#) $Id: makefile.vc,v 1.33.2.2 2001/10/03 22:04:53 hobbs Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.33.2.3 2002/04/10 17:57:26 davygrvy Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -358,6 +358,7 @@ install-binaries:
 	copy $(WISH) "$(BIN_INSTALL_DIR)"
 	@mkd "$(LIB_INSTALL_DIR)"
 	copy $(TKLIB) "$(LIB_INSTALL_DIR)"
+	copy $(TKSTUBLIB) "$(LIB_INSTALL_DIR)"
 
 install-libraries:
 	@mkd "$(INCLUDE_INSTALL_DIR)"
