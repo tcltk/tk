@@ -1,3 +1,7 @@
+2004-11-16  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* doc/text.n: clarified documentation on use of -tabs option.
+
 2004-11-16  Don Porter  <dgp@users.sourceforge.net>
 
         * library/msgs/it.msg:  Updated Italian message catalog.
