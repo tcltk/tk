@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.50 2004/06/04 10:51:18 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.51 2004/06/09 22:39:08 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -4612,7 +4612,7 @@ SearchCore(interp, searchSpecPtr, patObj)
 		 */
 		if (!match 
 		    || ((info.extendStart == info.matches[0].start) 
-			&& (info.matches[0].end == lastOffset))) {
+			&& (info.matches[0].end == (lastOffset - firstOffset)))) {
 		    int extraLines = 1;
 		    int prevFullLine;
 		    /* 

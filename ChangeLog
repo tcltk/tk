@@ -1,3 +1,10 @@
+2004-06-09  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* generic/tkText.c: 
+	* tests/text.test: fix to multi-line regexp search bugs in text
+	widget (reported against Alphatk editor, not on sf).  
+	Addded 3 new tests.
+
 2004-06-09  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkUndo.c (TkUndoSetDepth): Delete the unlinked element and
