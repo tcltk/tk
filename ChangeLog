@@ -1,3 +1,6 @@
+2003-09-18  Chengye Mao <chengye.geo@yahoo.com>
+        * generic/tkConsole.c: Fixed memroy leak [Bug 802435]
+
 2003-09-18  Peter Spjuth  <peter.spjuth@space.se>
 	* doc/grid.n:
 	* tests/grid.test:
