@@ -11,10 +11,13 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.9 2003/02/19 16:13:15 dkf Exp $
+# RCS: @(#) $Id: widget,v 1.10 2003/05/19 14:44:04 dkf Exp $
 
 eval destroy [winfo child .]
-wm title . "Widget Demonstration"
+package require msgcat
+::msgcat::mcload [file join $tk_library demos]
+namespace import ::msgcat::mc
+wm title . [mc "Widget Demonstration"]
 if {$tcl_platform(platform) eq "unix"} {
     # This won't work everywhere, but there's no other way in core Tk
     # at the moment to display a coloured icon.
@@ -22,7 +25,7 @@ if {$tcl_platform(platform) eq "unix"} {
 	    -file [file join $tk_library images logo64.gif]
     wm iconwindow . [toplevel ._iconWindow]
     pack [label ._iconWindow.i -image TclPowered]
-    wm iconname . "tkWidgetDemo"
+    wm iconname . [mc "tkWidgetDemo"]
 }
 
 array set widgetFont {
@@ -43,24 +46,26 @@ set font $widgetFont(main)
 #----------------------------------------------------------------
 
 menu .menuBar -tearoff 0
-.menuBar add cascade -menu .menuBar.file -label "File" -underline 0
+# This is a tk-internal procedure to make i18n easier
+::tk::AmpMenuArgs .menuBar add cascade -label [mc "&File"] -menu .menuBar.file
 menu .menuBar.file -tearoff 0
 
 # On the Mac use the specia .apple menu for the about item
-if {[string equal [tk windowingsystem] "classic"]} {
+if {[tk windowingsystem] eq "classic"} {
     .menuBar add cascade -menu .menuBar.apple
     menu .menuBar.apple -tearoff 0
-    .menuBar.apple add command -label "About..." -command "aboutBox"
+    .menuBar.apple add command -label [mc "About..."] -command {aboutBox}
 } else {
-    .menuBar.file add command -label "About..." -command "aboutBox" \
-	-underline 0 -accelerator "<F1>"
+    ::tk::AmpMenuArgs .menuBar.file add command -label [mc "&About..."] \
+	    -command {aboutBox} -accelerator [mc "<F1>"]
     .menuBar.file add sep
 }
 
-.menuBar.file add command -label "Quit" -command "exit" -underline 0 \
-    -accelerator "Meta-Q"
+::tk::AmpMenuArgs .menuBar.file add command -label [mc "&Quit"] \
+	-command {exit} -accelerator [mc "Meta-Q"]
 . configure -menu .menuBar
-bind . <F1> aboutBox
+bind . <F1>     {aboutBox}
+bind . <Meta-q> {exit}
 
 frame .statusBar
 label .statusBar.lab -text "   " -relief sunken -bd 1 \
@@ -125,7 +130,7 @@ set lastLine ""
 }
 .t tag bind demo <Motion> {
     set newLine [.t index {@%x,%y linestart}]
-    if {[string compare $newLine $lastLine] != 0} {
+    if {$newLine ne $lastLine} {
 	.t tag remove hot 1.0 end
 	set lastLine $newLine
 
@@ -140,25 +145,78 @@ set lastLine ""
 
 # Create the text for the text widget.
 
+# addFormattedText --
+#
+#	Add formatted text (but not hypertext) to the text widget after
+#	first passing it through the message catalog to allow for
+#	localization.  Lines starting with @@ are formatting directives
+#	(begin newline, or change style) and all other lines are literal
+#	strings to be inserted.  Blank lines are ignored.
+#
+proc addFormattedText {formattedText} {
+    set style normal
+    set isNL 1
+    foreach line [split [mc $formattedText] \n] {
+	set line [string trim $line]
+	if {$line eq ""} {
+	    continue
+	}
+	if {$line eq "@@newline"} {
+	    .t insert end \n $style
+	    set isNL 1
+	    continue
+	}
+	if {[string match @@* $line]} {
+	    set style [string range $line 1 end]
+	    continue
+	}
+	if {!$isNL} {
+	    .t insert end " " $style
+	}
+	set isNL 0
+	.t insert end $line $style
+    }
+}
+
+# addDemoSection --
+#
+#	Add a new section of demos with a title and a (stride-2) list of
+#	demo files and their descriptions.  Titles and descriptions are
+#	passed through the message catalog to allow for localization.
+#
 proc addDemoSection {title demos} {
-    .t insert end "\n" {} $title title " \n " demospace
+    .t insert end "\n" {} [mc $title] title " \n " demospace
     set num 0
     foreach {name description} $demos {
-	.t insert end "[incr num]. $description." [list demo demo-$name]
+	.t insert end "[incr num]. [mc $description]." [list demo demo-$name]
 	.t insert end " \n " demospace
     }
 }
 
-.t insert end "Tk Widget Demonstrations\n" title
-.t insert end "\nThis application provides a front end for several short\
-	scripts that demonstrate what you can do with Tk widgets.  Each of\
-	the numbered lines below describes a demonstration;  you can click\
-	on it to invoke the demonstration.  Once the demonstration window\
-	appears, you can click the " {} "See Code" bold " button to see the\
-	Tcl/Tk code that created the demonstration.  If you wish, you can\
-	edit the code and click the " {} "Rerun Demo" bold " button in the\
-	code window to reinvoke the demonstration with the modified code.\n"
+addFormattedText {
+    @@title
+    Tk Widget Demonstrations
+    @@newline
+    @@normal
+    @@newline
 
+    This application provides a front end for several short scripts
+    that demonstrate what you can do with Tk widgets.  Each of the
+    numbered lines below describes a demonstration;  you can click on
+    it to invoke the demonstration.  Once the demonstration window
+    appears, you can click the
+    @@bold
+    See Code
+    @@normal
+    button to see the Tcl/Tk code that created the demonstration.  If
+    you wish, you can edit the code and click the
+    @@bold
+    Rerun Demo
+    @@normal
+    button in the code window to reinvoke the demonstration with the
+    modified code.
+    @@newline
+}
 addDemoSection "Labels, buttons, checkbuttons, and radiobuttons" {
     label	"Labels (text and bitmaps)"
     unicodeout	"Labels and UNICODE text"
@@ -248,8 +306,8 @@ proc showVars {w args} {
     global widgetFont
     catch {destroy $w}
     toplevel $w
-    wm title $w "Variable values"
-    label $w.title -text "Variable values:" -width 20 -anchor center \
+    wm title $w [mc "Variable values"]
+    label $w.title -text [mc "Variable values:"] -width 20 -anchor center \
 	    -font $widgetFont(vars)
     pack $w.title -side top -fill x
     set len 1
@@ -266,8 +324,9 @@ proc showVars {w args} {
 	pack $w.$i.value -side left -expand 1 -fill x
 	pack $w.$i -side top -anchor w -fill x
     }
-    button $w.ok -text OK -command "destroy $w" -default active
-    bind $w <Return> "tkButtonInvoke $w.ok"
+    button $w.ok -text [mc "OK"] -command [list destroy $w] -default active
+    bind $w <Return> [list tkButtonInvoke $w.ok]
+    bind $w <Escape> [list tkButtonInvoke $w.ok]
     pack $w.ok -side bottom -pady 2
 }
 
@@ -311,10 +370,10 @@ proc showStatus index {
 	set newcursor xterm
     } else {
 	set demo [string range [lindex $tags $i] 5 end]
-	.statusBar.lab config -text "Run the \"$demo\" sample program"
+	.statusBar.lab config -text [mc "Run the \"%s\" sample program" $demo]
 	set newcursor hand2
     }
-    if [string compare $cursor $newcursor] {
+    if {$cursor ne $newcursor} {
 	.t config -cursor $newcursor
     }
 }
@@ -331,27 +390,27 @@ proc showStatus index {
 proc showCode w {
     global tk_library
     set file [string range $w 1 end].tcl
-    if ![winfo exists .code] {
+    if {![winfo exists .code]} {
 	toplevel .code
 	frame .code.buttons
 	pack .code.buttons -side bottom -fill x
-	button .code.buttons.dismiss -text Dismiss \
-            -default active -command "destroy .code"
-	button .code.buttons.rerun -text "Rerun Demo" -command {
+	button .code.buttons.dismiss -text [mc "Dismiss"] \
+		-default active -command {destroy .code}
+	button .code.buttons.rerun -text [mc "Rerun Demo"] -command {
 	    eval [.code.text get 1.0 end]
 	}
 	pack .code.buttons.dismiss .code.buttons.rerun -side left \
-	    -expand 1 -pady 2
+		-expand 1 -pady 2
 	frame .code.frame
 	pack  .code.frame -expand yes -fill both -padx 1 -pady 1
-	text .code.text -height 40 -wrap word\
-	    -xscrollcommand ".code.xscroll set" \
-	    -yscrollcommand ".code.yscroll set" \
-	    -setgrid 1 -highlightthickness 0 -pady 2 -padx 3
-	scrollbar .code.xscroll -command ".code.text xview" \
-	    -highlightthickness 0 -orient horizontal
-	scrollbar .code.yscroll -command ".code.text yview" \
-	    -highlightthickness 0 -orient vertical
+	text .code.text -height 40 -wrap word \
+		-xscrollcommand {.code.xscroll set} \
+		-yscrollcommand {.code.yscroll set} \
+		-setgrid 1 -highlightthickness 0 -pady 2 -padx 3
+	scrollbar .code.xscroll -command {.code.text xview} \
+		-highlightthickness 0 -orient horizontal
+	scrollbar .code.yscroll -command {.code.text yview} \
+		-highlightthickness 0 -orient vertical
 
 	grid .code.text -in .code.frame -padx 1 -pady 1 \
 	    -row 0 -column 0 -rowspan 1 -columnspan 1 -sticky news
@@ -365,7 +424,7 @@ proc showCode w {
 	wm deiconify .code
 	raise .code
     }
-    wm title .code "Demo code: [file join $tk_library demos $file]"
+    wm title .code [mc "Demo code: %s" [file join $tk_library demos $file]]
     wm iconname .code $file
     set id [open [file join $tk_library demos $file]]
     .code.text delete 1.0 end
@@ -379,14 +438,12 @@ proc showCode w {
 #	Pops up a message box with an "about" message
 #
 proc aboutBox {} {
-    tk_messageBox -icon info -type ok -title "About Widget Demo" -message \
-"Tk widget demonstration
+    tk_messageBox -icon info -type ok -title [mc "About Widget Demo"] \
+	    -message "[mc {Tk widget demonstration application}]
 
-Copyright (c) 1996-1997 Sun Microsystems, Inc.
-
-Copyright (c) 1997-2000 Ajuba Solutions, Inc.
-
-Copyright (c) 2001-2002 Donal K. Fellows"
+[mc {Copyright (c) %s} {1996-1997 Sun Microsystems, Inc.}]
+[mc {Copyright (c) %s} {1997-2000 Ajuba Solutions, Inc.}]
+[mc {Copyright (c) %s} {2001-2003 Donal K. Fellows}]"
 }
 
 # Local Variables:

@@ -1,5 +1,12 @@
 2003-05-19  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* library/demos/en.msg: Base catalog for the widget demo.
+	* library/demos/widget: Added message-catalog support.
+	* library/console.tcl: Reworked to use tk::AmpMenuArgs and be more
+	"in style".
+	* library/tk.tcl (tk::AmpMenuArgs): New procedure for doing
+	tk::AmpWidget-like processing for menus.
+
 	* generic/tkTextMark.c:		Removed complaints about signed vs.
 	* generic/tkTextImage.c:	unsigned in arguments to strncmp() by
 	* generic/tkText.c:		using Tcl_GetIndexFromObj() more.
