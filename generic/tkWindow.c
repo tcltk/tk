@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.53 2002/08/31 06:12:28 das Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.54 2002/09/02 19:16:23 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -114,7 +114,7 @@ static TkCmd commands[] = {
     {"place",		NULL,			Tk_PlaceObjCmd,		1, 0},
     {"raise",		NULL,			Tk_RaiseObjCmd,		1, 1},
     {"selection",	NULL,			Tk_SelectionObjCmd,	0, 1},
-    {"tk",		NULL,			Tk_TkObjCmd,		0, 1},
+    {"tk",		NULL,			Tk_TkObjCmd,		1, 1},
     {"tkwait",		NULL,			Tk_TkwaitObjCmd,	1, 1},
 #if defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)
     {"tk_chooseColor",  NULL,			Tk_ChooseColorObjCmd,	0, 1},
