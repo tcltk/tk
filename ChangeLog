@@ -1,3 +1,23 @@
+2005-01-03 Chengye Mao <chengye.geo@yahoo.com>
+
+	*** created 8-4-9-branch ***
+	Changes were made for bug fix (crashes/panics in finalization/exit)
+	and feature implementation (embedding/embedded Tk (Windows)) to 
+	the following files:
+
+	* generic/tkFrame.c
+	* generic/tkIntPlatDecls.h
+	* generic/tkPlatDecls.h
+	* generic/tkStubInit.c
+	* generic/tkWindow.c
+	* win/tkWin.h
+	* win/tkWinEmbed.c
+	* win/tkWinInt.h
+	* win/tkWinMenu.c
+	* win/tkWinX.c
+
+	For details see Tk 8.5 changes (2004-12-17 to 2005-01-03)
+
 2004-12-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	*** 8.4.9 TAGGED FOR RELEASE ***
