@@ -1,5 +1,8 @@
 2001-09-21  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkWindow.c (Tk_CreateAnonymousWindow): 
+	* generic/tkEntry.c (GetSpinboxElement): fixed unreachable returns.
+
 	* win/tkWinX.c (TkGetServerInfo): added recognition of Win64.
 
 	* xlib/X11/X.h: made XID __int64 type for Win64.

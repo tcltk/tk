@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.22 2001/08/29 23:22:24 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.23 2001/09/21 22:08:19 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -4344,8 +4344,6 @@ GetSpinboxElement(sbPtr, x, y)
 	} else {
 	    return SEL_BUTTONUP;
 	}
-    } else {
-	return SEL_ENTRY;
     }
     return SEL_ENTRY;
 }

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.36 2001/09/21 21:34:10 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.37 2001/09/21 22:08:19 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1049,8 +1049,6 @@ Tk_CreateAnonymousWindow(interp, parent, screenName)
 	if (NameWindow(interp, winPtr, parentPtr, (char *)NULL) != TCL_OK) {
 	    Tk_DestroyWindow((Tk_Window) winPtr);
 	    return NULL;
-	} else {
-            return (Tk_Window) winPtr;
 	}
 	return (Tk_Window) winPtr;
     } else {
