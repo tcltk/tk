@@ -1,3 +1,28 @@
+2000-05-14  Eric Melski  <ericm@scriptics.com>
+
+	* library/entry.tcl: Adjusted Button-1 binding to set focus to the
+	entry when it is readonly or normal.
+
+	* doc/entry.n: Added documentation for readonly state,
+	-disabledforeground, -disabledbackground.
+
+	* tests/entry.test: Added tests for readonly state.
+
+	* generic/tkEntry.c: Added support for "readonly" state, and
+	redefined "disabled" state.  A disabled entry will display its
+	text in a dimmed color and possibly with a different background,
+	and will be completely unusable (no selection, no editing).  A
+	readonly entry will look like a normal entry, but it will not be
+	editable; selection is still allowed. [RFE: 4239].  To support the
+	new disabled state properly, "-disabledforeground" and
+	"-disabledbackground" options were added.
+	*** THIS IS A BACKWARDS INCOMPATIBLE BEHAVIOR CHANGE ***
+
+	* win/tkWinDefault.h:
+	* mac/tkMacDefault.h:
+	* unix/tkUnixDefault.h: Added DEF_ENTRY_DISABLED_FG,
+	DEF_ENTRY_DISABLED_BG_COLOR, DEF_ENTRY_DISABLED_BG_MONO.
+
 2000-05-12  Eric Melski  <ericm@scriptics.com>
 
 	* unix/tkUnixButton.c (TkpDisplayButton, TkpComputeButtonGeometry): 

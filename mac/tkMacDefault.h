@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDefault.h,v 1.5 2000/05/13 00:39:08 ericm Exp $
+ * RCS: @(#) $Id: tkMacDefault.h,v 1.6 2000/05/14 20:45:38 ericm Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -139,6 +139,9 @@
 /* #define DEF_ENTRY_BORDER_WIDTH		"2" */
 #define DEF_ENTRY_BORDER_WIDTH		"1"
 #define DEF_ENTRY_CURSOR		"xterm"
+#define DEF_ENTRY_DISABLED_BG_COLOR	NORMAL_BG
+#define DEF_ENTRY_DISABLED_BG_MONO	WHITE
+#define DEF_ENTRY_DISABLED_FG		DISABLED
 #define DEF_ENTRY_EXPORT_SELECTION	"1"
 #define DEF_ENTRY_FONT			"Helvetica 12"
 #define DEF_ENTRY_FG			BLACK

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.14 2000/04/21 04:06:26 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.15 2000/05/14 20:45:37 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -72,12 +72,16 @@ typedef struct {
 
     Tk_3DBorder normalBorder;	/* Used for drawing border around whole
 				 * window, plus used for background. */
+    Tk_3DBorder disabledBorder;	/* Used for drawing  border around whole
+				 * window in disabled state, plus used for
+				 * background. */
     int borderWidth;		/* Width of 3-D border around window. */
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
     int exportSelection;	/* Non-zero means tie internal entry selection
 				 * to X selection. */
     Tk_Font tkfont;		/* Information about text font, or NULL. */
     XColor *fgColorPtr;		/* Text color in normal mode. */
+    XColor *dfgColorPtr;	/* Text color in disabled mode. */
     XColor *highlightBgColorPtr;/* Color for drawing traversal highlight
 				 * area when highlight is off. */
     XColor *highlightColorPtr;	/* Color for drawing traversal highlight. */
@@ -146,6 +150,7 @@ typedef struct {
 				/* Timer handler used to blink cursor on and
 				 * off. */
     GC textGC;			/* For drawing normal text. */
+    GC disabledTextGC;		/* For drawing disabled text. */
     GC selTextGC;		/* For drawing selected text. */
     GC highlightGC;		/* For drawing traversal highlight. */
     int avgWidth;		/* Width of average character. */
@@ -211,11 +216,11 @@ typedef struct {
  */
 
 enum state {
-    STATE_DISABLED, STATE_NORMAL
+    STATE_DISABLED, STATE_NORMAL, STATE_READONLY
 };
 
 static char *stateStrings[] = {
-    "disabled", "normal", (char *) NULL
+    "disabled", "normal", "readonly", (char *) NULL
 };
 
 /*
@@ -254,6 +259,13 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_ENTRY_CURSOR, -1, Tk_Offset(Entry, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_BORDER, "-disabledbackground", "disabledBackground",
+	 "DisabledBackground", DEF_ENTRY_DISABLED_BG_COLOR, -1,
+	 Tk_Offset(Entry, disabledBorder), TK_OPTION_NULL_OK,
+	 (ClientData) DEF_ENTRY_DISABLED_BG_MONO, 0},
+    {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
+	 "DisabledForeground", DEF_ENTRY_DISABLED_FG, -1,
+	 Tk_Offset(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
         "ExportSelection", DEF_ENTRY_EXPORT_SELECTION, -1, 
         Tk_Offset(Entry, exportSelection), 0, 0, 0},
@@ -521,11 +533,13 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
     entryPtr->scanMarkIndex	= 0;
 
     entryPtr->normalBorder	= NULL;
+    entryPtr->disabledBorder	= NULL;
     entryPtr->borderWidth	= 0;
     entryPtr->cursor		= None;
     entryPtr->exportSelection	= 1;
     entryPtr->tkfont		= NULL;
     entryPtr->fgColorPtr	= NULL;
+    entryPtr->dfgColorPtr	= NULL;
     entryPtr->highlightBgColorPtr	= NULL;
     entryPtr->highlightColorPtr	= NULL;
     entryPtr->highlightWidth	= 0;
@@ -557,6 +571,7 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
     entryPtr->leftIndex		= 0;
     entryPtr->insertBlinkHandler	= (Tcl_TimerToken) NULL;
     entryPtr->textGC		= None;
+    entryPtr->disabledTextGC	= None;
     entryPtr->selTextGC		= None;
     entryPtr->highlightGC	= None;
     entryPtr->avgWidth		= 1;
@@ -799,21 +814,29 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	    int index, index2;
 
 	    if (objc < 3) {
-	        Tcl_WrongNumArgs(interp, 2, objv, "option ?index?");
+		Tcl_WrongNumArgs(interp, 2, objv, "option ?index?");
 		goto error;
 	    }
-
+	    
 	    /* 
 	     * Parse the selection sub-command, using the command
 	     * table "selCommandNames" defined above.
 	     */
 	    
 	    result = Tcl_GetIndexFromObj(interp, objv[2], selCommandNames,
-                    "selection option", 0, &selIndex);
+		    "selection option", 0, &selIndex);
 	    if (result != TCL_OK) {
-	        goto error;
+		goto error;
 	    }
+	    
+	    /*
+	     * Disabled entries don't allow the selection to be modified.
+	     */
 
+	    if (entryPtr->state == STATE_DISABLED) {
+		goto done;
+	    }
+	    
 	    switch(selIndex) {
 	        case SELECTION_ADJUST: {
 		    if (objc != 4) {
@@ -1065,6 +1088,9 @@ DestroyEntry(memPtr)
     if (entryPtr->textGC != None) {
 	Tk_FreeGC(entryPtr->display, entryPtr->textGC);
     }
+    if (entryPtr->disabledTextGC != None) {
+	Tk_FreeGC(entryPtr->display, entryPtr->disabledTextGC);
+    }
     if (entryPtr->selTextGC != None) {
 	Tk_FreeGC(entryPtr->display, entryPtr->selTextGC);
     }
@@ -1111,6 +1137,7 @@ ConfigureEntry(interp, entryPtr, objc, objv, flags)
 {
     Tk_SavedOptions savedOptions;
     Tcl_Obj *errorResult = NULL;
+    Tk_3DBorder border;
     int error;
     int oldExport;
 
@@ -1152,7 +1179,13 @@ ConfigureEntry(interp, entryPtr, objc, objv, flags)
 	 * the geometry and setting the background from a 3-D border.
 	 */
 
-	Tk_SetBackgroundFromBorder(entryPtr->tkwin, entryPtr->normalBorder);
+	if (entryPtr->state == STATE_DISABLED &&
+		entryPtr->disabledBorder != NULL) {
+	    border = entryPtr->disabledBorder;
+	} else {
+	    border = entryPtr->normalBorder;
+	}
+	Tk_SetBackgroundFromBorder(entryPtr->tkwin, border);
 
 	if (entryPtr->insertWidth <= 0) {
 	    entryPtr->insertWidth = 2;
@@ -1268,7 +1301,10 @@ EntryWorldChanged(instanceData)
 	entryPtr->avgWidth = 1;
     }
 
-    if (entryPtr->normalBorder != NULL) {
+    if (entryPtr->state == STATE_DISABLED &&
+	    entryPtr->disabledBorder != NULL) {
+	Tk_SetBackgroundFromBorder(entryPtr->tkwin, entryPtr->disabledBorder);
+    } else if (entryPtr->normalBorder != NULL) {
 	Tk_SetBackgroundFromBorder(entryPtr->tkwin, entryPtr->normalBorder);
     }
 
@@ -1290,6 +1326,20 @@ EntryWorldChanged(instanceData)
 	Tk_FreeGC(entryPtr->display, entryPtr->selTextGC);
     }
     entryPtr->selTextGC = gc;
+
+    if (entryPtr->dfgColorPtr != NULL) {
+	gcValues.foreground = entryPtr->dfgColorPtr->pixel;
+	gcValues.font = Tk_FontId(entryPtr->tkfont);
+	gcValues.graphics_exposures = False;
+	mask = GCForeground | GCFont | GCGraphicsExposures;
+	gc = Tk_GetGC(entryPtr->tkwin, mask, &gcValues);
+    } else {
+	gc = None;
+    }
+    if (entryPtr->disabledTextGC != None) {
+	Tk_FreeGC(entryPtr->display, entryPtr->disabledTextGC);
+    }
+    entryPtr->disabledTextGC = gc;
 
     /*
      * Recompute the window's geometry and arrange for it to be
@@ -1328,7 +1378,9 @@ DisplayEntry(clientData)
     Tk_FontMetrics fm;
     Pixmap pixmap;
     int showSelection;
-
+    GC textGC;
+    Tk_3DBorder border;
+    
     entryPtr->flags &= ~REDRAW_PENDING;
     if ((entryPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	return;
@@ -1380,10 +1432,16 @@ DisplayEntry(clientData)
      * insertion cursor background.
      */
 
-    Tk_Fill3DRectangle(tkwin, pixmap, entryPtr->normalBorder,
-		0, 0, Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
+    if (entryPtr->state == STATE_DISABLED &&
+	    entryPtr->disabledBorder != NULL) {
+	border = entryPtr->disabledBorder;
+    } else {
+	border = entryPtr->normalBorder;
+    }
+    Tk_Fill3DRectangle(tkwin, pixmap, border,
+	    0, 0, Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
 
-    if (showSelection
+    if (showSelection && entryPtr->state != STATE_DISABLED
 	    && (entryPtr->selectLast > entryPtr->leftIndex)) {
 	if (entryPtr->selectFirst <= entryPtr->leftIndex) {
 	    selStartX = entryPtr->leftX;
@@ -1428,7 +1486,7 @@ DisplayEntry(clientData)
 			fm.ascent + fm.descent, entryPtr->insertBorderWidth,
 			TK_RELIEF_RAISED);
 	    } else if (entryPtr->insertBorder == entryPtr->selBorder) {
-		Tk_Fill3DRectangle(tkwin, pixmap, entryPtr->normalBorder,
+		Tk_Fill3DRectangle(tkwin, pixmap, border,
 			cursorX, baseY - fm.ascent, entryPtr->insertWidth,
 			fm.ascent + fm.descent, 0, TK_RELIEF_FLAT);
 	    }
@@ -1440,12 +1498,17 @@ DisplayEntry(clientData)
      * selected portion on top of it.
      */
 
-    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+    if (entryPtr->state == STATE_DISABLED && entryPtr->dfgColorPtr != NULL) {
+	textGC = entryPtr->disabledTextGC;
+    } else {
+	textGC = entryPtr->textGC;
+    }
+    Tk_DrawTextLayout(entryPtr->display, pixmap, textGC,
 	    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
 	    entryPtr->leftIndex, entryPtr->numChars);
 
-    if (showSelection
-	    && (entryPtr->selTextGC != entryPtr->textGC)
+    if (showSelection && entryPtr->state != STATE_DISABLED
+	    && (entryPtr->selTextGC != textGC)
 	    && (entryPtr->selectFirst < entryPtr->selectLast)) {
 	int selFirst;
 
@@ -1465,7 +1528,7 @@ DisplayEntry(clientData)
      */
 
     if (entryPtr->relief != TK_RELIEF_FLAT) {
-	Tk_Draw3DRectangle(tkwin, pixmap, entryPtr->normalBorder,
+	Tk_Draw3DRectangle(tkwin, pixmap, border,
 		entryPtr->highlightWidth, entryPtr->highlightWidth,
 		Tk_Width(tkwin) - 2 * entryPtr->highlightWidth,
 		Tk_Height(tkwin) - 2 * entryPtr->highlightWidth,
@@ -1490,7 +1553,7 @@ DisplayEntry(clientData)
      * and free up the pixmap.
      */
 
-    XCopyArea(entryPtr->display, pixmap, Tk_WindowId(tkwin), entryPtr->textGC,
+    XCopyArea(entryPtr->display, pixmap, Tk_WindowId(tkwin), textGC,
 	    0, 0, (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin),
 	    0, 0);
     Tk_FreePixmap(entryPtr->display, pixmap);
@@ -2569,6 +2632,7 @@ EntryBlinkProc(clientData)
     Entry *entryPtr = (Entry *) clientData;
 
     if ((entryPtr->state == STATE_DISABLED) ||
+	    (entryPtr->state == STATE_READONLY) ||
 	    !(entryPtr->flags & GOT_FOCUS) || (entryPtr->insertOffTime == 0)) {
 	return;
     }

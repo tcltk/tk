@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDefault.h,v 1.5 2000/05/13 00:39:09 ericm Exp $
+ * RCS: @(#) $Id: tkWinDefault.h,v 1.6 2000/05/14 20:45:39 ericm Exp $
  */
 
 #ifndef _TKWINDEFAULT
@@ -142,6 +142,9 @@
 #define DEF_ENTRY_BG_MONO		WHITE
 #define DEF_ENTRY_BORDER_WIDTH		"2"
 #define DEF_ENTRY_CURSOR		"xterm"
+#define DEF_ENTRY_DISABLED_BG_COLOR	"SystemButtonFace"
+#define DEF_ENTRY_DISABLED_BG_MONO	WHITE
+#define DEF_ENTRY_DISABLED_FG		DISABLED
 #define DEF_ENTRY_EXPORT_SELECTION	"1"
 #define DEF_ENTRY_FONT			CTL_FONT
 #define DEF_ENTRY_FG			TEXT_FG

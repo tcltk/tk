@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDefault.h,v 1.5 2000/05/13 00:39:09 ericm Exp $
+ * RCS: @(#) $Id: tkUnixDefault.h,v 1.6 2000/05/14 20:45:39 ericm Exp $
  */
 
 #ifndef _TKUNIXDEFAULT
@@ -136,6 +136,9 @@
 #define DEF_ENTRY_BG_MONO		WHITE
 #define DEF_ENTRY_BORDER_WIDTH		"2"
 #define DEF_ENTRY_CURSOR		"xterm"
+#define DEF_ENTRY_DISABLED_BG_COLOR	NORMAL_BG
+#define DEF_ENTRY_DISABLED_BG_MONO	WHITE
+#define DEF_ENTRY_DISABLED_FG		DISABLED
 #define DEF_ENTRY_EXPORT_SELECTION	"1"
 #define DEF_ENTRY_FONT			"Helvetica -12"
 #define DEF_ENTRY_FG			BLACK
@@ -178,6 +181,7 @@
 #define DEF_FRAME_HIGHLIGHT_BG		NORMAL_BG
 #define DEF_FRAME_HIGHLIGHT		BLACK
 #define DEF_FRAME_HIGHLIGHT_WIDTH	"0"
+#define DEF_FRAME_LABEL			""
 #define DEF_FRAME_RELIEF		"flat"
 #define DEF_FRAME_TAKE_FOCUS		"0"
 #define DEF_FRAME_USE			""

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.7 2000/03/07 22:27:50 hobbs Exp $
+# RCS: @(#) $Id: entry.test,v 1.8 2000/05/14 20:45:38 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -55,11 +55,15 @@ update
 set i 1
 foreach test {
     {-background #ff0000 #ff0000 non-existent
-	    {unknown color name "non-existent"}}
+	{unknown color name "non-existent"}}
     {-bd 4 4 badValue {bad screen distance "badValue"}}
     {-bg #ff0000 #ff0000 non-existent {unknown color name "non-existent"}}
     {-borderwidth 1.3 1 badValue {bad screen distance "badValue"}}
     {-cursor arrow arrow badValue {bad cursor spec "badValue"}}
+    {-disabledbackground green green non-existent 
+	{unknown color name "non-existent"}}
+    {-disabledforeground blue blue non-existent 
+	{unknown color name "non-existent"}}
     {-exportselection yes 1 xyzzy {expected boolean value but got "xyzzy"}}
     {-fg #110022 #110022 bogus {unknown color name "bogus"}}
     {-font -Adobe-Helvetica-Medium-R-Normal--*-120-*-*-*-*-*-*
@@ -80,7 +84,8 @@ foreach test {
     {-selectborderwidth 1.3 1 badValue {bad screen distance "badValue"}}
     {-selectforeground #654321 #654321 bogus {unknown color name "bogus"}}
     {-show * * {} {}}
-    {-state n normal bogus {bad state "bogus": must be disabled or normal}}
+    {-state n normal bogus 
+	{bad state "bogus": must be disabled, normal, or readonly}}
     {-takefocus "any string" "any string" {} {}}
     {-textvariable i i {} {}}
     {-width 402 402 3p {expected integer but got "3p"}}
@@ -191,7 +196,7 @@ test entry-3.14 {EntryWidgetCmd procedure, "cget" widget command} {
 } {4}
 test entry-3.15 {EntryWidgetCmd procedure, "configure" widget command} {
     llength [.e configure]
-} {33}
+} {35}
 test entry-3.16 {EntryWidgetCmd procedure, "configure" widget command} {
     list [catch {.e configure -foo} msg] $msg
 } {1 {unknown option "-foo"}}
@@ -254,6 +259,14 @@ test entry-3.26 {EntryWidgetCmd procedure, "delete" widget command} {
     .e configure -state normal
     .e get
 } {01234567890}
+test entry-3.27 {EntryWidgetCmd procedure, "delete" widget command} {
+    .e delete 0 end
+    .e insert end "01234567890"
+    .e configure -state readonly
+    .e delete 2 8
+    .e configure -state normal
+    .e get
+} {01234567890}
 test entry-3.27 {EntryWidgetCmd procedure, "get" widget command} {
     list [catch {.e get foo} msg] $msg
 } {1 {wrong # args: should be ".e get"}}
@@ -306,6 +319,14 @@ test entry-3.40 {EntryWidgetCmd procedure, "insert" widget command} {
     .e delete 0 end
     .e insert end "01234567890"
     .e configure -state disabled
+    .e insert 3 xxx
+    .e configure -state normal
+    .e get
+} {01234567890}
+test entry-3.40 {EntryWidgetCmd procedure, "insert" widget command} {
+    .e delete 0 end
+    .e insert end "01234567890"
+    .e configure -state readonly
     .e insert 3 xxx
     .e configure -state normal
     .e get
@@ -430,6 +451,24 @@ test entry-3.63 {EntryWidgetCmd procedure, "selection range" widget command} {
     .e select range 2 9
     list [.e index sel.first] [.e index sel.last] [.e index anchor]
 } {2 9 3}
+test entry-3.64 {EntryWidgetCmd procedure, "selection" widget command} {
+    .e delete 0 end
+    .e insert end 0123456789
+    .e selection range 0 end
+    .e configure -state disabled
+    .e selection range 2 4
+    .e configure -state normal
+    list [.e index sel.first] [.e index sel.last]
+} {0 10}
+test entry-3.64 {EntryWidgetCmd procedure, "selection" widget command} {
+    .e delete 0 end
+    .e insert end 0123456789
+    .e selection range 0 end
+    .e configure -state readonly
+    .e selection range 2 4
+    .e configure -state normal
+    list [.e index sel.first] [.e index sel.last]
+} {2 4}
 .e delete 0 end
 .e insert end "This is quite a long text string, so long that it "
 .e insert end "runs off the end of the window quite a bit."
