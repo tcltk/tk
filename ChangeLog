@@ -9,6 +9,9 @@
 	* win/tkWinImage.c (XGetImage, XGetImageZPixmap): added support
 	for generating ps for embedded windows on canvases.
 
+	* library/tk.tcl: simplified the adding of extra <ISO_Left_Tab>
+	and <hpBackTab> events to <<PrevWindow>>.
+
 2002-10-09  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/README: doc'ed --enable-symbols options.
