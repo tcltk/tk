@@ -1,5 +1,10 @@
 2002-07-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* tests/spinbox.test: added spinbox-22.[1-3]
+	* generic/tkEntry.c (ConfigureEntry): made the textvariable value
+	take precedence over changed -from/-to values, unless it must be
+	constrained.  [Bug #559078]
+
 	* library/spinbox.tcl (MouseSelect): when not in the entry, just
 	return instead of invoking - ButtonUp handles invoking already.
 	[Bug #499168]

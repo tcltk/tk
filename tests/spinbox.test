@@ -4,7 +4,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: spinbox.test,v 1.3 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: spinbox.test,v 1.4 2002/07/25 21:19:01 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -1556,6 +1556,21 @@ test spinbox-21.1 {spinbox button, out of range checking} {
     lappend out [.e get]; # 20
 
 } {-10 20 20 -10 -10 -10 20 20 18 -10 -10 -8 -10 -8 -10 20 18 20}
+
+test spinbox-22.1 {spinbox config, -from changes SF bug 559078} {
+    set val 5
+    destroy .s
+    spinbox .s -from 1 -to 10 -textvariable val
+    set val
+} {5}
+test spinbox-22.2 {spinbox config, -from changes SF bug 559078} {
+    .s configure -from 3 -to 10
+    set val
+} {5}
+test spinbox-22.3 {spinbox config, -from changes SF bug 559078} {
+    .s configure -from 6 -to 10
+    set val
+} {6}
 
 destroy .e
 catch {unset ::e ::vVals}
