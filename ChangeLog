@@ -1,3 +1,14 @@
+2005-01-25  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXInit.c (TkpInit): set tcl_interactive to 1 to show
+	console at startup instead of directly calling [console show].
+	
+	* unix/tcl.m4 (Darwin): fixed bug with static build linking to
+	dynamic library in /usr/lib etc instead of linking to static library
+	earlier in search path. [Tcl Bug 956908]
+	Removed obsolete references to Rhapsody. 
+	* unix/configure: autoconf-2.57
+
 2005-01-18  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/demos/menu.tcl: Reworked to make dialogs children of the
