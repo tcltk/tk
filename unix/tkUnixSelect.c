@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.12 2004/01/13 02:06:01 davygrvy Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.13 2004/03/16 19:52:52 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -247,7 +247,8 @@ TkSelPropProc(eventPtr)
 {
     register IncrInfo *incrPtr;
     register TkSelHandler *selPtr;
-    int i, length, numItems;
+    int length, numItems;
+    unsigned long i;
     Atom target, formatType;
     long buffer[TK_SEL_WORDS_AT_ONCE];
     TkDisplay *dispPtr = TkGetDisplay(eventPtr->xany.display);
@@ -802,7 +803,7 @@ ConvertSelection(winPtr, eventPtr)
     IncrInfo incr;			/* State of selection conversion. */
     Atom singleInfo[2];			/* incr.multAtoms points here except
 					 * for multiple conversions. */
-    int i;
+    unsigned long i;
     Tk_ErrorHandler errorHandler;
     TkSelectionInfo *infoPtr;
     TkSelInProgress ip;

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.12 2004/01/13 02:06:00 davygrvy Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.13 2004/03/16 19:53:09 hobbs Exp $
  */
 
 #include "tk.h"
@@ -391,7 +391,7 @@ EmbImageConfigure(textPtr, eiPtr, objc, objv)
 	    if (new > count) {
 		count = new;
 	    }
-	    if (len == (int) strlen(haveName)) {
+	    if (len == strlen(haveName)) {
 	    	conflict = 1;
 	    }
 	}
