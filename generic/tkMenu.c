@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.5 1999/04/21 21:53:26 rjohnson Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.6 2000/02/10 08:52:35 hobbs Exp $
  */
 
 /*
@@ -1178,11 +1178,17 @@ DestroyMenuInstance(menuPtr)
 		    parentMasterMenuPtr->entries[cascadePtr->index];
 	    newObjv[0] = menuNamePtr;
 	    newObjv[1] = parentMasterEntryPtr->namePtr;
-	    Tcl_IncrRefCount(newObjv[0]);
-	    Tcl_IncrRefCount(newObjv[1]);
-    	    ConfigureMenuEntry(cascadePtr, 2, newObjv);
-	    Tcl_DecrRefCount(newObjv[0]);
-	    Tcl_DecrRefCount(newObjv[1]);
+	    /*
+	     * It is possible that the menu info is out of sync, and
+	     * these things point to NULL, so verify existence [Bug: 3402]
+	     */
+	    if (newObjv[0] && newObjv[1]) {
+		Tcl_IncrRefCount(newObjv[0]);
+		Tcl_IncrRefCount(newObjv[1]);
+		ConfigureMenuEntry(cascadePtr, 2, newObjv);
+		Tcl_DecrRefCount(newObjv[0]);
+		Tcl_DecrRefCount(newObjv[1]);
+	    }
     	} else {
     	    ConfigureMenuEntry(cascadePtr, 0, (Tcl_Obj **) NULL);
     	}

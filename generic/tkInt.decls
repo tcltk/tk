@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.15 2000/02/09 02:13:50 hobbs Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.16 2000/02/10 08:52:34 hobbs Exp $
 
 library tk
 
@@ -1912,4 +1912,31 @@ declare 82 mac {
 declare 83 mac {
     void XFillRectangle (Display* display, Drawable d, GC gc, \
 	    int x, int y, unsigned int width, unsigned int height)
+}
+declare 84 mac {
+    void XClearWindow (Display* d, Window w)
+}
+
+declare 85 mac {
+    void XDrawPoint (Display* display, Drawable d, GC gc, int x, int y)
+}
+
+declare 86 mac {
+    void XDrawPoints (Display* display, Drawable d, GC gc, XPoint *points, \
+	    int npoints, int mode)
+}
+
+declare 87 mac {
+    void XWarpPointer (Display* display, Window src_w, Window dest_w, \
+	    int src_x, int src_y, unsigned int src_width, \
+	    unsigned int src_height, int dest_x, int dest_y)
+}
+
+declare 88 mac {
+    void XQueryColor (Display *display, Colormap colormap, XColor *def_in_out)
+}
+
+declare 89 mac {
+    void XQueryColors (Display *display, Colormap colormap, \
+	    XColor *defs_in_out, int ncolors)
 }

@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.11 2000/02/08 11:31:33 hobbs Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.12 2000/02/10 08:52:33 hobbs Exp $
  */
 
 /*
@@ -391,7 +391,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	     * marginally improve the speed of the less frequent case, I chose
 	     * to maintain high performance for the common case.
 	     */
-	    if (ReadImage(interp, trashBuffer, chan, fileWidth,
+	    if (ReadImage(interp, (char *) trashBuffer, chan, fileWidth,
 			  fileHeight, colorMap, 0, 0, 0, 0, 0, -1) != TCL_OK) {
 	      goto error;
 	    }

@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.12 1999/12/14 06:52:29 hobbs Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.13 2000/02/10 08:52:34 hobbs Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
@@ -629,6 +629,28 @@ EXTERN void		XDrawLine _ANSI_ARGS_((Display* d, Drawable dr, GC g,
 EXTERN void		XFillRectangle _ANSI_ARGS_((Display* display, 
 				Drawable d, GC gc, int x, int y, 
 				unsigned int width, unsigned int height));
+/* 84 */
+EXTERN void		XClearWindow _ANSI_ARGS_((Display* d, Window w));
+/* 85 */
+EXTERN void		XDrawPoint _ANSI_ARGS_((Display* display, Drawable d, 
+				GC gc, int x, int y));
+/* 86 */
+EXTERN void		XDrawPoints _ANSI_ARGS_((Display* display, 
+				Drawable d, GC gc, XPoint * points, 
+				int npoints, int mode));
+/* 87 */
+EXTERN void		XWarpPointer _ANSI_ARGS_((Display* display, 
+				Window src_w, Window dest_w, int src_x, 
+				int src_y, unsigned int src_width, 
+				unsigned int src_height, int dest_x, 
+				int dest_y));
+/* 88 */
+EXTERN void		XQueryColor _ANSI_ARGS_((Display * display, 
+				Colormap colormap, XColor * def_in_out));
+/* 89 */
+EXTERN void		XQueryColors _ANSI_ARGS_((Display * display, 
+				Colormap colormap, XColor * defs_in_out, 
+				int ncolors));
 #endif /* MAC_TCL */
 
 typedef struct TkIntXlibStubs {
@@ -829,6 +851,12 @@ typedef struct TkIntXlibStubs {
     void (*xForceScreenSaver) _ANSI_ARGS_((Display* display, int mode)); /* 81 */
     void (*xDrawLine) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int x1, int y1, int x2, int y2)); /* 82 */
     void (*xFillRectangle) _ANSI_ARGS_((Display* display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height)); /* 83 */
+    void (*xClearWindow) _ANSI_ARGS_((Display* d, Window w)); /* 84 */
+    void (*xDrawPoint) _ANSI_ARGS_((Display* display, Drawable d, GC gc, int x, int y)); /* 85 */
+    void (*xDrawPoints) _ANSI_ARGS_((Display* display, Drawable d, GC gc, XPoint * points, int npoints, int mode)); /* 86 */
+    void (*xWarpPointer) _ANSI_ARGS_((Display* display, Window src_w, Window dest_w, int src_x, int src_y, unsigned int src_width, unsigned int src_height, int dest_x, int dest_y)); /* 87 */
+    void (*xQueryColor) _ANSI_ARGS_((Display * display, Colormap colormap, XColor * def_in_out)); /* 88 */
+    void (*xQueryColors) _ANSI_ARGS_((Display * display, Colormap colormap, XColor * defs_in_out, int ncolors)); /* 89 */
 #endif /* MAC_TCL */
 } TkIntXlibStubs;
 
@@ -1609,6 +1637,30 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #ifndef XFillRectangle
 #define XFillRectangle \
 	(tkIntXlibStubsPtr->xFillRectangle) /* 83 */
+#endif
+#ifndef XClearWindow
+#define XClearWindow \
+	(tkIntXlibStubsPtr->xClearWindow) /* 84 */
+#endif
+#ifndef XDrawPoint
+#define XDrawPoint \
+	(tkIntXlibStubsPtr->xDrawPoint) /* 85 */
+#endif
+#ifndef XDrawPoints
+#define XDrawPoints \
+	(tkIntXlibStubsPtr->xDrawPoints) /* 86 */
+#endif
+#ifndef XWarpPointer
+#define XWarpPointer \
+	(tkIntXlibStubsPtr->xWarpPointer) /* 87 */
+#endif
+#ifndef XQueryColor
+#define XQueryColor \
+	(tkIntXlibStubsPtr->xQueryColor) /* 88 */
+#endif
+#ifndef XQueryColors
+#define XQueryColors \
+	(tkIntXlibStubsPtr->xQueryColors) /* 89 */
 #endif
 #endif /* MAC_TCL */
 

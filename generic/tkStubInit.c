@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.17 2000/02/09 02:13:51 hobbs Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.18 2000/02/10 08:52:36 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -664,6 +664,12 @@ TkIntXlibStubs tkIntXlibStubs = {
     XForceScreenSaver, /* 81 */
     XDrawLine, /* 82 */
     XFillRectangle, /* 83 */
+    XClearWindow, /* 84 */
+    XDrawPoint, /* 85 */
+    XDrawPoints, /* 86 */
+    XWarpPointer, /* 87 */
+    XQueryColor, /* 88 */
+    XQueryColors, /* 89 */
 #endif /* MAC_TCL */
 };
 

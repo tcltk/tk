@@ -13,12 +13,8 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.10 2000/02/08 11:31:34 hobbs Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.11 2000/02/10 08:52:36 hobbs Exp $
  */
-
-#ifdef MAC_TCL
-#define USE_OLD_IMAGE
-#endif
 
 #include "tkInt.h"
 #include "tkPort.h"
