@@ -1,3 +1,8 @@
+2005-03-15  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* generic/tkTextDisp.c: fix for [Bug 1143776] in adjusting
+        displayed lines when running into the bottom of the window.
+
 2005-03-14  Jim Ingham  <jingham@apple.com>
 
 	* macosx/tkMacOSXScrlbr.c (ThumbActionProc): No need to use 
