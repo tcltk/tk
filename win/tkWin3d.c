@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin3d.c,v 1.3 1999/04/16 01:51:49 stanton Exp $
+ * RCS: @(#) $Id: tkWin3d.c,v 1.4 2000/04/13 18:25:44 ericm Exp $
  */
 
 #include "tkWinInt.h"
@@ -342,6 +342,7 @@ TkpGetShadows(borderPtr, tkwin)
 {
     XColor lightColor, darkColor;
     int tmp1, tmp2;
+    int r, g, b;
     XGCValues gcValues;
 
     if (borderPtr->lightGC != None) {
@@ -392,42 +393,81 @@ TkpGetShadows(borderPtr, tkwin)
 	/*
 	 * This is a color display with lots of colors.  For the dark
 	 * shadow, cut 40% from each of the background color components.
+	 * But if the background is already very dark, make the
+	 * dark color a little lighter than the background by increasing
+	 * each color component 1/4th of the way to MAX_INTENSITY.
+	 *
 	 * For the light shadow, boost each component by 40% or half-way
 	 * to white, whichever is greater (the first approach works
 	 * better for unsaturated colors, the second for saturated ones).
-	 */
-
-	darkColor.red = (60 * (int) borderPtr->bgColorPtr->red)/100;
-	darkColor.green = (60 * (int) borderPtr->bgColorPtr->green)/100;
-	darkColor.blue = (60 * (int) borderPtr->bgColorPtr->blue)/100;
-	borderPtr->darkColorPtr = Tk_GetColorByValue(tkwin, &darkColor);
-	gcValues.foreground = borderPtr->darkColorPtr->pixel;
-	borderPtr->darkGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
-
-	/*
+	 * But if the background is already very bright, instead choose a
+	 * slightly darker color for the light shadow by reducing each
+	 * color component by 10%.
+	 *
 	 * Compute the colors using integers, not using lightColor.red
 	 * etc.: these are shorts and may have problems with integer
 	 * overflow.
 	 */
 
-	tmp1 = (14 * (int) borderPtr->bgColorPtr->red)/10;
-	if (tmp1 > MAX_INTENSITY) {
-	    tmp1 = MAX_INTENSITY;
+	/*
+	 * Compute the dark shadow color
+	 */
+
+	r = (int) borderPtr->bgColorPtr->red;
+	g = (int) borderPtr->bgColorPtr->green;
+	b = (int) borderPtr->bgColorPtr->blue;
+
+	if (r*0.5*r + g*1.0*g + b*0.28*b < MAX_INTENSITY*0.05*MAX_INTENSITY) {
+	    darkColor.red = (MAX_INTENSITY + 3*r)/4;
+	    darkColor.green = (MAX_INTENSITY + 3*g)/4;
+	    darkColor.blue = (MAX_INTENSITY + 3*b)/4;
+	} else {
+	    darkColor.red = (60 * r)/100;
+	    darkColor.green = (60 * g)/100;
+	    darkColor.blue = (60 * b)/100;
 	}
-	tmp2 = (MAX_INTENSITY + (int) borderPtr->bgColorPtr->red)/2;
-	lightColor.red = (tmp1 > tmp2) ? tmp1 : tmp2;
-	tmp1 = (14 * (int) borderPtr->bgColorPtr->green)/10;
-	if (tmp1 > MAX_INTENSITY) {
-	    tmp1 = MAX_INTENSITY;
+
+	/*
+	 * Allocate the dark shadow color and its GC
+	 */
+
+	borderPtr->darkColorPtr = Tk_GetColorByValue(tkwin, &darkColor);
+	gcValues.foreground = borderPtr->darkColorPtr->pixel;
+	borderPtr->darkGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
+
+	/*
+	 * Compute the light shadow color
+	 */
+
+	if (g > MAX_INTENSITY*85/100) {
+	    lightColor.red = (90 * r)/100;
+	    lightColor.green = (90 * g)/100;
+	    lightColor.blue = (90 * b)/100;
+	} else {
+	    tmp1 = (14 * r)/10;
+	    if (tmp1 > MAX_INTENSITY) {
+		tmp1 = MAX_INTENSITY;
+	    }
+	    tmp2 = (MAX_INTENSITY + r)/2;
+	    lightColor.red = (tmp1 > tmp2) ? tmp1 : tmp2;
+	    tmp1 = (14 * g)/10;
+	    if (tmp1 > MAX_INTENSITY) {
+		tmp1 = MAX_INTENSITY;
+	    }
+	    tmp2 = (MAX_INTENSITY + g)/2;
+	    lightColor.green = (tmp1 > tmp2) ? tmp1 : tmp2;
+	    tmp1 = (14 * b)/10;
+	    if (tmp1 > MAX_INTENSITY) {
+		tmp1 = MAX_INTENSITY;
+	    }
+	    tmp2 = (MAX_INTENSITY + b)/2;
+	    lightColor.blue = (tmp1 > tmp2) ? tmp1 : tmp2;
 	}
-	tmp2 = (MAX_INTENSITY + (int) borderPtr->bgColorPtr->green)/2;
-	lightColor.green = (tmp1 > tmp2) ? tmp1 : tmp2;
-	tmp1 = (14 * (int) borderPtr->bgColorPtr->blue)/10;
-	if (tmp1 > MAX_INTENSITY) {
-	    tmp1 = MAX_INTENSITY;
-	}
-	tmp2 = (MAX_INTENSITY + (int) borderPtr->bgColorPtr->blue)/2;
-	lightColor.blue = (tmp1 > tmp2) ? tmp1 : tmp2;
+	
+       /*
+        * Allocate the light shadow color and its GC
+        */
+
 	borderPtr->lightColorPtr = Tk_GetColorByValue(tkwin, &lightColor);
 	gcValues.foreground = borderPtr->lightColorPtr->pixel;
 	borderPtr->lightGC = Tk_GetGC(tkwin, GCForeground, &gcValues);

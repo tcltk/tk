@@ -1,5 +1,12 @@
 2000-04-13  Eric Melski  <ericm@scriptics.com>
 
+	* win/tkWin3d.c: 
+	* unix/tkUnix3d.c: Applied patch from [RFE: 2501]: adds more
+	sophisticated smarts to TkpGetShadows, so that the highlight of a
+	very bright color is actually distinguishable from the color, and
+	the shadow of a very dark color is similarly distinguishable from
+	the color.
+
 	* generic/tkCanvas.c: Applied patch from [Bug: 4202]; adds a check
 	for NULL tkwin in Tk_CanvasEventuallyRedraw.
 
