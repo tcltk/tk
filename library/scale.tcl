@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scale widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: scale.tcl,v 1.7 2000/04/14 08:33:31 hobbs Exp $
+# RCS: @(#) $Id: scale.tcl,v 1.7.4.1 2002/04/06 01:02:01 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -20,74 +20,82 @@
 
 bind Scale <Enter> {
     if {$tk_strictMotif} {
-	set tkPriv(activeBg) [%W cget -activebackground]
+	set tk::Priv(activeBg) [%W cget -activebackground]
 	%W config -activebackground [%W cget -background]
     }
-    tkScaleActivate %W %x %y
+    tk::ScaleActivate %W %x %y
 }
 bind Scale <Motion> {
-    tkScaleActivate %W %x %y
+    tk::ScaleActivate %W %x %y
 }
 bind Scale <Leave> {
     if {$tk_strictMotif} {
-	%W config -activebackground $tkPriv(activeBg)
+	%W config -activebackground $tk::Priv(activeBg)
     }
     if {[string equal [%W cget -state] "active"]} {
 	%W configure -state normal
     }
 }
 bind Scale <1> {
-    tkScaleButtonDown %W %x %y
+    tk::ScaleButtonDown %W %x %y
 }
 bind Scale <B1-Motion> {
-    tkScaleDrag %W %x %y
+    tk::ScaleDrag %W %x %y
 }
 bind Scale <B1-Leave> { }
 bind Scale <B1-Enter> { }
 bind Scale <ButtonRelease-1> {
-    tkCancelRepeat
-    tkScaleEndDrag %W
-    tkScaleActivate %W %x %y
+    tk::CancelRepeat
+    tk::ScaleEndDrag %W
+    tk::ScaleActivate %W %x %y
 }
 bind Scale <2> {
-    tkScaleButton2Down %W %x %y
+    tk::ScaleButton2Down %W %x %y
 }
 bind Scale <B2-Motion> {
-    tkScaleDrag %W %x %y
+    tk::ScaleDrag %W %x %y
 }
 bind Scale <B2-Leave> { }
 bind Scale <B2-Enter> { }
 bind Scale <ButtonRelease-2> {
-    tkCancelRepeat
-    tkScaleEndDrag %W
-    tkScaleActivate %W %x %y
+    tk::CancelRepeat
+    tk::ScaleEndDrag %W
+    tk::ScaleActivate %W %x %y
+}
+if {[string equal $tcl_platform(platform) "windows"]} {
+    # On Windows do the same with button 3, as that is the right mouse button
+    bind Scale <3>		[bind Scale <2>]
+    bind Scale <B3-Motion>	[bind Scale <B2-Motion>]
+    bind Scale <B3-Leave>	[bind Scale <B2-Leave>]
+    bind Scale <B3-Enter>	[bind Scale <B2-Enter>]
+    bind Scale <ButtonRelease-3> [bind Scale <ButtonRelease-2>]
 }
 bind Scale <Control-1> {
-    tkScaleControlPress %W %x %y
+    tk::ScaleControlPress %W %x %y
 }
 bind Scale <Up> {
-    tkScaleIncrement %W up little noRepeat
+    tk::ScaleIncrement %W up little noRepeat
 }
 bind Scale <Down> {
-    tkScaleIncrement %W down little noRepeat
+    tk::ScaleIncrement %W down little noRepeat
 }
 bind Scale <Left> {
-    tkScaleIncrement %W up little noRepeat
+    tk::ScaleIncrement %W up little noRepeat
 }
 bind Scale <Right> {
-    tkScaleIncrement %W down little noRepeat
+    tk::ScaleIncrement %W down little noRepeat
 }
 bind Scale <Control-Up> {
-    tkScaleIncrement %W up big noRepeat
+    tk::ScaleIncrement %W up big noRepeat
 }
 bind Scale <Control-Down> {
-    tkScaleIncrement %W down big noRepeat
+    tk::ScaleIncrement %W down big noRepeat
 }
 bind Scale <Control-Left> {
-    tkScaleIncrement %W up big noRepeat
+    tk::ScaleIncrement %W up big noRepeat
 }
 bind Scale <Control-Right> {
-    tkScaleIncrement %W down big noRepeat
+    tk::ScaleIncrement %W down big noRepeat
 }
 bind Scale <Home> {
     %W set [%W cget -from]
@@ -96,7 +104,7 @@ bind Scale <End> {
     %W set [%W cget -to]
 }
 
-# tkScaleActivate --
+# ::tk::ScaleActivate --
 # This procedure is invoked to check a given x-y position in the
 # scale and activate the slider if the x-y position falls within
 # the slider.
@@ -105,7 +113,7 @@ bind Scale <End> {
 # w -		The scale widget.
 # x, y -	Mouse coordinates.
 
-proc tkScaleActivate {w x y} {
+proc ::tk::ScaleActivate {w x y} {
     if {[string equal [$w cget -state] "disabled"]} {
 	return
     }
@@ -119,7 +127,7 @@ proc tkScaleActivate {w x y} {
     }
 }
 
-# tkScaleButtonDown --
+# ::tk::ScaleButtonDown --
 # This procedure is invoked when a button is pressed in a scale.  It
 # takes different actions depending on where the button was pressed.
 #
@@ -127,25 +135,25 @@ proc tkScaleActivate {w x y} {
 # w -		The scale widget.
 # x, y -	Mouse coordinates of button press.
 
-proc tkScaleButtonDown {w x y} {
-    global tkPriv
-    set tkPriv(dragging) 0
+proc ::tk::ScaleButtonDown {w x y} {
+    variable ::tk::Priv
+    set Priv(dragging) 0
     set el [$w identify $x $y]
     if {[string equal $el "trough1"]} {
-	tkScaleIncrement $w up little initial
+	ScaleIncrement $w up little initial
     } elseif {[string equal $el "trough2"]} {
-	tkScaleIncrement $w down little initial
+	ScaleIncrement $w down little initial
     } elseif {[string equal $el "slider"]} {
-	set tkPriv(dragging) 1
-	set tkPriv(initValue) [$w get]
+	set Priv(dragging) 1
+	set Priv(initValue) [$w get]
 	set coords [$w coords]
-	set tkPriv(deltaX) [expr {$x - [lindex $coords 0]}]
-	set tkPriv(deltaY) [expr {$y - [lindex $coords 1]}]
+	set Priv(deltaX) [expr {$x - [lindex $coords 0]}]
+	set Priv(deltaY) [expr {$y - [lindex $coords 1]}]
 	$w configure -sliderrelief sunken
     }
 }
 
-# tkScaleDrag --
+# ::tk::ScaleDrag --
 # This procedure is called when the mouse is dragged with
 # mouse button 1 down.  If the drag started inside the slider
 # (i.e. the scale is active) then the scale's value is adjusted
@@ -155,28 +163,28 @@ proc tkScaleButtonDown {w x y} {
 # w -		The scale widget.
 # x, y -	Mouse coordinates.
 
-proc tkScaleDrag {w x y} {
-    global tkPriv
-    if {!$tkPriv(dragging)} {
+proc ::tk::ScaleDrag {w x y} {
+    variable ::tk::Priv
+    if {!$Priv(dragging)} {
 	return
     }
-    $w set [$w get [expr {$x-$tkPriv(deltaX)}] [expr {$y-$tkPriv(deltaY)}]]
+    $w set [$w get [expr {$x-$Priv(deltaX)}] [expr {$y-$Priv(deltaY)}]]
 }
 
-# tkScaleEndDrag --
+# ::tk::ScaleEndDrag --
 # This procedure is called to end an interactive drag of the
 # slider.  It just marks the drag as over.
 #
 # Arguments:
 # w -		The scale widget.
 
-proc tkScaleEndDrag {w} {
-    global tkPriv
-    set tkPriv(dragging) 0
+proc ::tk::ScaleEndDrag {w} {
+    variable ::tk::Priv
+    set Priv(dragging) 0
     $w configure -sliderrelief raised
 }
 
-# tkScaleIncrement --
+# ::tk::ScaleIncrement --
 # This procedure is invoked to increment the value of a scale and
 # to set up auto-repeating of the action if that is desired.  The
 # way the value is incremented depends on the "dir" and "big"
@@ -192,8 +200,8 @@ proc tkScaleEndDrag {w} {
 #		first action in an auto-repeat sequence, and "again"
 #		means this is the second repetition or later.
 
-proc tkScaleIncrement {w dir big repeat} {
-    global tkPriv
+proc ::tk::ScaleIncrement {w dir big repeat} {
+    variable ::tk::Priv
     if {![winfo exists $w]} return
     if {[string equal $big "big"]} {
 	set inc [$w cget -bigincrement]
@@ -212,18 +220,18 @@ proc tkScaleIncrement {w dir big repeat} {
     $w set [expr {[$w get] + $inc}]
 
     if {[string equal $repeat "again"]} {
-	set tkPriv(afterId) [after [$w cget -repeatinterval] \
-		[list tkScaleIncrement $w $dir $big again]]
+	set Priv(afterId) [after [$w cget -repeatinterval] \
+		[list tk::ScaleIncrement $w $dir $big again]]
     } elseif {[string equal $repeat "initial"]} {
 	set delay [$w cget -repeatdelay]
 	if {$delay > 0} {
-	    set tkPriv(afterId) [after $delay \
-		    [list tkScaleIncrement $w $dir $big again]]
+	    set Priv(afterId) [after $delay \
+		    [list tk::ScaleIncrement $w $dir $big again]]
 	}
     }
 }
 
-# tkScaleControlPress --
+# ::tk::ScaleControlPress --
 # This procedure handles button presses that are made with the Control
 # key down.  Depending on the mouse position, it adjusts the scale
 # value to one end of the range or the other.
@@ -232,7 +240,7 @@ proc tkScaleIncrement {w dir big repeat} {
 # w -		The scale widget.
 # x, y -	Mouse coordinates where the button was pressed.
 
-proc tkScaleControlPress {w x y} {
+proc ::tk::ScaleControlPress {w x y} {
     set el [$w identify $x $y]
     if {[string equal $el "trough1"]} {
 	$w set [$w cget -from]
@@ -241,7 +249,7 @@ proc tkScaleControlPress {w x y} {
     }
 }
 
-# tkScaleButton2Down
+# ::tk::ScaleButton2Down
 # This procedure is invoked when button 2 is pressed over a scale.
 # It sets the value to correspond to the mouse position and starts
 # a slider drag.
@@ -250,17 +258,17 @@ proc tkScaleControlPress {w x y} {
 # w -		The scrollbar widget.
 # x, y -	Mouse coordinates within the widget.
 
-proc tkScaleButton2Down {w x y} {
-    global tkPriv
+proc ::tk::ScaleButton2Down {w x y} {
+    variable ::tk::Priv
 
     if {[string equal [$w cget -state] "disabled"]} {
       return
     }
     $w configure -state active
     $w set [$w get $x $y]
-    set tkPriv(dragging) 1
-    set tkPriv(initValue) [$w get]
+    set Priv(dragging) 1
+    set Priv(initValue) [$w get]
     set coords "$x $y"
-    set tkPriv(deltaX) 0
-    set tkPriv(deltaY) 0
+    set Priv(deltaX) 0
+    set Priv(deltaY) 0
 }

@@ -3,7 +3,7 @@
 # This file contains procedures that change the color palette used
 # by Tk.
 #
-# RCS: @(#) $Id: palette.tcl,v 1.5 1999/09/02 17:02:53 hobbs Exp $
+# RCS: @(#) $Id: palette.tcl,v 1.5.4.1 2002/04/06 01:02:01 hobbs Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 #
@@ -11,7 +11,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
 
-# tk_setPalette --
+# ::tk_setPalette --
 # Changes the default color scheme for a Tk application by setting
 # default colors in the option database and by modifying all of the
 # color options for existing widgets that have the default value.
@@ -23,13 +23,11 @@
 # option names and values.  The name for an option is the one used
 # for the option database, such as activeForeground, not -activeforeground.
 
-proc tk_setPalette {args} {
+proc ::tk_setPalette {args} {
     if {[winfo depth .] == 1} {
 	# Just return on monochrome displays, otherwise errors will occur
 	return
     }
-
-    global tkPalette
 
     # Create an array that has the complete new palette.  If some colors
     # aren't specified, compute them from other colors that are specified.
@@ -42,10 +40,18 @@ proc tk_setPalette {args} {
     if {![info exists new(background)]} {
 	error "must specify a background color"
     }
-    if {![info exists new(foreground)]} {
-	set new(foreground) black
-    }
     set bg [winfo rgb . $new(background)]
+    if {![info exists new(foreground)]} {
+	# Note that the range of each value in the triple returned by
+	# [winfo rgb] is 0-65535, and your eyes are more sensitive to
+	# green than to red, and more to red than to blue.
+	foreach {r g b} $bg {break}
+	if {$r+1.5*$g+0.5*$b > 100000} {
+	    set new(foreground) black
+	} else {
+	    set new(foreground) white
+	}
+    }
     set fg [winfo rgb . $new(foreground)]
     set darkerBg [format #%02x%02x%02x [expr {(9*[lindex $bg 0])/2560}] \
 	    [expr {(9*[lindex $bg 1])/2560}] [expr {(9*[lindex $bg 2])/2560}]]
@@ -100,15 +106,18 @@ proc tk_setPalette {args} {
     # defaults are currently for this platform.
     toplevel .___tk_set_palette
     wm withdraw .___tk_set_palette
-    foreach q {button canvas checkbutton entry frame label listbox \
-	    menubutton menu message radiobutton scale scrollbar text} {
+    foreach q {
+	button canvas checkbutton entry frame label labelframe
+	listbox menubutton menu message radiobutton scale scrollbar
+	spinbox text
+    } {
 	$q .___tk_set_palette.$q
     }
 
     # Walk the widget hierarchy, recoloring all existing windows.
     # The option database must be set according to what we do here, 
     # but it breaks things if we set things in the database while 
-    # we are changing colors...so, tkRecolorTree now returns the
+    # we are changing colors...so, ::tk::RecolorTree now returns the
     # option database changes that need to be made, and they
     # need to be evalled here to take effect.
     # We have to walk the whole widget tree instead of just 
@@ -117,7 +126,7 @@ proc tk_setPalette {args} {
     # of widgets that we don't currently know about, so we'll
     # walk the whole hierarchy just in case.
 
-    eval [tkRecolorTree . new]
+    eval [tk::RecolorTree . new]
 
     catch {destroy .___tk_set_palette}
 
@@ -128,13 +137,13 @@ proc tk_setPalette {args} {
 	option add *$option $new($option) widgetDefault
     }
 
-    # Save the options in the global variable tkPalette, for use the
+    # Save the options in the variable ::tk::Palette, for use the
     # next time we change the options.
 
-    array set tkPalette [array get new]
+    array set ::tk::Palette [array get new]
 }
 
-# tkRecolorTree --
+# ::tk::RecolorTree --
 # This procedure changes the colors in a window and all of its
 # descendants, according to information provided by the colors
 # argument. This looks at the defaults provided by the option 
@@ -149,18 +158,25 @@ proc tk_setPalette {args} {
 #			is named after a widget configuration option, and
 #			each value is the value for that option.
 
-proc tkRecolorTree {w colors} {
-    global tkPalette
+proc ::tk::RecolorTree {w colors} {
     upvar $colors c
     set result {}
+    set prototype .___tk_set_palette.[string tolower [winfo class $w]]
+    if {![winfo exists $prototype]} {
+	unset prototype
+    }
     foreach dbOption [array names c] {
 	set option -[string tolower $dbOption]
+	set class [string replace $dbOption 0 0 [string toupper \
+		[string index $dbOption 0]]]
 	if {![catch {$w config $option} value]} {
 	    # if the option database has a preference for this
 	    # dbOption, then use it, otherwise use the defaults
 	    # for the widget.
-	    set defaultcolor [option get $w $dbOption widgetDefault]
-	    if {[string match {} $defaultcolor]} {
+	    set defaultcolor [option get $w $dbOption $class]
+	    if {[string match {} $defaultcolor] || \
+		    ([info exists prototype] && \
+		    [$prototype cget $option] ne "$defaultcolor")} {
 		set defaultcolor [winfo rgb . [lindex $value 3]]
 	    } else {
 		set defaultcolor [winfo rgb . $defaultcolor]
@@ -176,12 +192,12 @@ proc tkRecolorTree {w colors} {
 	}
     }
     foreach child [winfo children $w] {
-	append result ";\n[tkRecolorTree $child c]"
+	append result ";\n[::tk::RecolorTree $child c]"
     }
     return $result
 }
 
-# tkDarken --
+# ::tk::Darken --
 # Given a color name, computes a new color value that darkens (or
 # brightens) the given color by a given percent.
 #
@@ -191,7 +207,7 @@ proc tkRecolorTree {w colors} {
 #		percent: 50 means darken by 50%, 110 means brighten
 #		by 10%.
 
-proc tkDarken {color percent} {
+proc ::tk::Darken {color percent} {
     foreach {red green blue} [winfo rgb . $color] {
 	set red [expr {($red/256)*$percent/100}]
 	set green [expr {($green/256)*$percent/100}]
@@ -210,13 +226,13 @@ proc tkDarken {color percent} {
     return [format "#%02x%02x%02x" $red $green $blue]
 }
 
-# tk_bisque --
+# ::tk_bisque --
 # Reset the Tk color palette to the old "bisque" colors.
 #
 # Arguments:
 # None.
 
-proc tk_bisque {} {
+proc ::tk_bisque {} {
     tk_setPalette activeBackground #e6ceb1 activeForeground black \
 	    background #ffe4c4 disabledForeground #b0b0b0 foreground black \
 	    highlightBackground #ffe4c4 highlightColor black \

@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.12 2000/04/17 19:32:00 ericm Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.12.4.1 2002/04/06 01:02:01 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -15,13 +15,13 @@
 #
 
 #-------------------------------------------------------------------------
-# Elements of tkPriv that are used in this file:
+# Elements of tk::Priv that are used in this file:
 #
 # cursor -		Saves the -cursor option for the posted menubutton.
 # focus -		Saves the focus during a menu selection operation.
 #			Focus gets restored here when the menu is unposted.
-# grabGlobal -		Used in conjunction with tkPriv(oldGrab):  if
-#			tkPriv(oldGrab) is non-empty, then tkPriv(grabGlobal)
+# grabGlobal -		Used in conjunction with tk::Priv(oldGrab):  if
+#			tk::Priv(oldGrab) is non-empty, then tk::Priv(grabGlobal)
 #			contains either an empty string or "-global" to
 #			indicate whether the old grab was a local one or
 #			a global one.
@@ -62,14 +62,14 @@
 # can be used:
 #
 # 1. As a pulldown from a menubutton. In this style, the variable 
-#    tkPriv(postedMb) identifies the posted menubutton.
+#    tk::Priv(postedMb) identifies the posted menubutton.
 # 2. As a torn-off menu copied from some other menu.  In this style
-#    tkPriv(postedMb) is empty, and menu's type is "tearoff".
+#    tk::Priv(postedMb) is empty, and menu's type is "tearoff".
 # 3. As an option menu, triggered from an option menubutton.  In this
-#    style tkPriv(postedMb) identifies the posted menubutton.
-# 4. As a popup menu.  In this style tkPriv(postedMb) is empty and
+#    style tk::Priv(postedMb) identifies the posted menubutton.
+# 4. As a popup menu.  In this style tk::Priv(postedMb) is empty and
 #    the top-level menu's type is "normal".
-# 5. As a pulldown from a menubar. The variable tkPriv(menubar) has
+# 5. As a pulldown from a menubar. The variable tk::Priv(menubar) has
 #    the owning menubar, and the menu itself is of type "normal".
 #
 # The various binding procedures use the  state described above to
@@ -84,28 +84,28 @@
 
 bind Menubutton <FocusIn> {}
 bind Menubutton <Enter> {
-    tkMbEnter %W
+    tk::MbEnter %W
 }
 bind Menubutton <Leave> {
-    tkMbLeave %W
+    tk::MbLeave %W
 }
 bind Menubutton <1> {
-    if {[string compare $tkPriv(inMenubutton) ""]} {
-	tkMbPost $tkPriv(inMenubutton) %X %Y
+    if {[string compare $tk::Priv(inMenubutton) ""]} {
+	tk::MbPost $tk::Priv(inMenubutton) %X %Y
     }
 }
 bind Menubutton <Motion> {
-    tkMbMotion %W up %X %Y
+    tk::MbMotion %W up %X %Y
 }
 bind Menubutton <B1-Motion> {
-    tkMbMotion %W down %X %Y
+    tk::MbMotion %W down %X %Y
 }
 bind Menubutton <ButtonRelease-1> {
-    tkMbButtonUp %W
+    tk::MbButtonUp %W
 }
 bind Menubutton <space> {
-    tkMbPost %W
-    tkMenuFirstEntry [%W cget -menu]
+    tk::MbPost %W
+    tk::MenuFirstEntry [%W cget -menu]
 }
 
 # Must set focus when mouse enters a menu, in order to allow
@@ -118,7 +118,7 @@ bind Menubutton <space> {
 bind Menu <FocusIn> {}
 
 bind Menu <Enter> {
-    set tkPriv(window) %W
+    set tk::Priv(window) %W
     if {[string equal [%W cget -type] "tearoff"]} {
 	if {[string compare "%m" "NotifyUngrab"]} {
 	    if {[string equal $tcl_platform(platform) "unix"]} {
@@ -126,44 +126,44 @@ bind Menu <Enter> {
 	    }
 	}
     }
-    tkMenuMotion %W %x %y %s
+    tk::MenuMotion %W %x %y %s
 }
 
 bind Menu <Leave> {
-    tkMenuLeave %W %X %Y %s
+    tk::MenuLeave %W %X %Y %s
 }
 bind Menu <Motion> {
-    tkMenuMotion %W %x %y %s
+    tk::MenuMotion %W %x %y %s
 }
 bind Menu <ButtonPress> {
-    tkMenuButtonDown %W
+    tk::MenuButtonDown %W
 }
 bind Menu <ButtonRelease> {
-   tkMenuInvoke %W 1
+   tk::MenuInvoke %W 1
 }
 bind Menu <space> {
-    tkMenuInvoke %W 0
+    tk::MenuInvoke %W 0
 }
 bind Menu <Return> {
-    tkMenuInvoke %W 0
+    tk::MenuInvoke %W 0
 }
 bind Menu <Escape> {
-    tkMenuEscape %W
+    tk::MenuEscape %W
 }
 bind Menu <Left> {
-    tkMenuLeftArrow %W
+    tk::MenuLeftArrow %W
 }
 bind Menu <Right> {
-    tkMenuRightArrow %W
+    tk::MenuRightArrow %W
 }
 bind Menu <Up> {
-    tkMenuUpArrow %W
+    tk::MenuUpArrow %W
 }
 bind Menu <Down> {
-    tkMenuDownArrow %W
+    tk::MenuDownArrow %W
 }
 bind Menu <KeyPress> {
-    tkTraverseWithinMenu %W %A
+    tk::TraverseWithinMenu %W %A
 }
 
 # The following bindings apply to all windows, and are used to
@@ -171,54 +171,54 @@ bind Menu <KeyPress> {
 
 if {[string equal $tcl_platform(platform) "unix"]} {
     bind all <Alt-KeyPress> {
-	tkTraverseToMenu %W %A
+	tk::TraverseToMenu %W %A
     }
 
     bind all <F10> {
-	tkFirstMenu %W
+	tk::FirstMenu %W
     }
 } else {
     bind Menubutton <Alt-KeyPress> {
-	tkTraverseToMenu %W %A
+	tk::TraverseToMenu %W %A
     }
 
     bind Menubutton <F10> {
-	tkFirstMenu %W
+	tk::FirstMenu %W
     }
 }
 
-# tkMbEnter --
+# ::tk::MbEnter --
 # This procedure is invoked when the mouse enters a menubutton
 # widget.  It activates the widget unless it is disabled.  Note:
 # this procedure is only invoked when mouse button 1 is *not* down.
-# The procedure tkMbB1Enter is invoked if the button is down.
+# The procedure ::tk::MbB1Enter is invoked if the button is down.
 #
 # Arguments:
 # w -			The  name of the widget.
 
-proc tkMbEnter w {
-    global tkPriv
+proc ::tk::MbEnter w {
+    variable ::tk::Priv
 
-    if {[string compare $tkPriv(inMenubutton) ""]} {
-	tkMbLeave $tkPriv(inMenubutton)
+    if {[string compare $Priv(inMenubutton) ""]} {
+	MbLeave $Priv(inMenubutton)
     }
-    set tkPriv(inMenubutton) $w
+    set Priv(inMenubutton) $w
     if {[string compare [$w cget -state] "disabled"]} {
 	$w configure -state active
     }
 }
 
-# tkMbLeave --
+# ::tk::MbLeave --
 # This procedure is invoked when the mouse leaves a menubutton widget.
 # It de-activates the widget, if the widget still exists.
 #
 # Arguments:
 # w -			The  name of the widget.
 
-proc tkMbLeave w {
-    global tkPriv
+proc ::tk::MbLeave w {
+    variable ::tk::Priv
 
-    set tkPriv(inMenubutton) {}
+    set Priv(inMenubutton) {}
     if {![winfo exists $w]} {
 	return
     }
@@ -227,7 +227,7 @@ proc tkMbLeave w {
     }
 }
 
-# tkMbPost --
+# ::tk::MbPost --
 # Given a menubutton, this procedure does all the work of posting
 # its associated menu and unposting any other menu that is currently
 # posted.
@@ -239,12 +239,13 @@ proc tkMbLeave w {
 #			option menus.  If not specified, then the center
 #			of the menubutton is used for an option menu.
 
-proc tkMbPost {w {x {}} {y {}}} {
-    global tkPriv errorInfo
+proc ::tk::MbPost {w {x {}} {y {}}} {
+    global errorInfo
+    variable ::tk::Priv
     global tcl_platform
 
     if {[string equal [$w cget -state] "disabled"] || \
-	    [string equal $w $tkPriv(postedMb)]} {
+	    [string equal $w $Priv(postedMb)]} {
 	return
     }
     set menu [$w cget -menu]
@@ -256,19 +257,19 @@ proc tkMbPost {w {x {}} {y {}}} {
     if {[string first $w $menu] != 0} {
 	error "can't post $menu:  it isn't a descendant of $w (this is a new requirement in Tk versions 3.0 and later)"
     }
-    set cur $tkPriv(postedMb)
+    set cur $Priv(postedMb)
     if {[string compare $cur ""]} {
-	tkMenuUnpost {}
+	MenuUnpost {}
     }
-    set tkPriv(cursor) [$w cget -cursor]
-    set tkPriv(relief) [$w cget -relief]
+    set Priv(cursor) [$w cget -cursor]
+    set Priv(relief) [$w cget -relief]
     $w configure -cursor arrow
     $w configure -relief raised
 
-    set tkPriv(postedMb) $w
-    set tkPriv(focus) [focus]
+    set Priv(postedMb) $w
+    set Priv(focus) [focus]
     $menu activate none
-    tkGenerateMenuSelect $menu
+    GenerateMenuSelect $menu
 
     # If this looks like an option menubutton then post the menu so
     # that the current entry is on top of the mouse.  Otherwise post
@@ -290,7 +291,7 @@ proc tkMbPost {w {x {}} {y {}}} {
     	    left {
     	    	set x [expr {[winfo rootx $w] - [winfo reqwidth $menu]}]
     	    	set y [expr {(2 * [winfo rooty $w] + [winfo height $w]) / 2}]
-    	    	set entry [tkMenuFindName $menu [$w cget -text]]
+    	    	set entry [MenuFindName $menu [$w cget -text]]
     	    	if {[$w cget -indicatoron]} {
 		    if {$entry == [$menu index last]} {
 		    	incr y [expr {-([$menu yposition $entry] \
@@ -303,13 +304,13 @@ proc tkMbPost {w {x {}} {y {}}} {
     	    	$menu post $x $y
 		if {[string compare $entry {}] && [string compare [$menu entrycget $entry -state] "disabled"]} {
     	    	    $menu activate $entry
-		    tkGenerateMenuSelect $menu
+		    GenerateMenuSelect $menu
     	    	}
     	    }
     	    right {
     	    	set x [expr {[winfo rootx $w] + [winfo width $w]}]
     	    	set y [expr {(2 * [winfo rooty $w] + [winfo height $w]) / 2}]
-    	    	set entry [tkMenuFindName $menu [$w cget -text]]
+    	    	set entry [MenuFindName $menu [$w cget -text]]
     	    	if {[$w cget -indicatoron]} {
 		    if {$entry == [$menu index last]} {
 		    	incr y [expr {-([$menu yposition $entry] \
@@ -322,7 +323,7 @@ proc tkMbPost {w {x {}} {y {}}} {
     	    	$menu post $x $y
 		if {[string compare $entry {}] && [string compare [$menu entrycget $entry -state] "disabled"]} {
     	    	    $menu activate $entry
-		    tkGenerateMenuSelect $menu
+		    GenerateMenuSelect $menu
     	    	}
     	    }
     	    default {
@@ -331,7 +332,7 @@ proc tkMbPost {w {x {}} {y {}}} {
 			set x [expr {[winfo rootx $w] + [winfo width $w]/2}]
 			set y [expr {[winfo rooty $w] + [winfo height $w]/2}]
 	    	    }
-	            tkPostOverPoint $menu $x $y [tkMenuFindName $menu [$w cget -text]]
+	            PostOverPoint $menu $x $y [MenuFindName $menu [$w cget -text]]
 		} else {
 	    	    $menu post [winfo rootx $w] [expr {[winfo rooty $w]+[winfo height $w]}]
     	    	}  
@@ -342,22 +343,22 @@ proc tkMbPost {w {x {}} {y {}}} {
 	# reflect the error.
 	
 	set savedInfo $errorInfo
-	tkMenuUnpost {}
+	MenuUnpost {}
 	error $msg $savedInfo
 
     }
 
-    set tkPriv(tearoff) $tearoff
+    set Priv(tearoff) $tearoff
     if {$tearoff != 0} {
     	focus $menu
 	if {[winfo viewable $w]} {
-	    tkSaveGrabInfo $w
+	    SaveGrabInfo $w
 	    grab -global $w
 	}
     }
 }
 
-# tkMenuUnpost --
+# ::tk::MenuUnpost --
 # This procedure unposts a given menu, plus all of its ancestors up
 # to (and including) a menubutton, if any.  It also restores various
 # values to what they were before the menu was posted, and releases
@@ -373,17 +374,17 @@ proc tkMbPost {w {x {}} {y {}}} {
 # menu -		Name of a menu to unpost.  Ignored if there
 #			is a posted menubutton.
 
-proc tkMenuUnpost menu {
+proc ::tk::MenuUnpost menu {
     global tcl_platform
-    global tkPriv
-    set mb $tkPriv(postedMb)
+    variable ::tk::Priv
+    set mb $Priv(postedMb)
 
     # Restore focus right away (otherwise X will take focus away when
     # the menu is unmapped and under some window managers (e.g. olvwm)
     # we'll lose the focus completely).
 
-    catch {focus $tkPriv(focus)}
-    set tkPriv(focus) ""
+    catch {focus $Priv(focus)}
+    set Priv(focus) ""
 
     # Unpost menu(s) and restore some stuff that's dependent on
     # what was posted.
@@ -392,12 +393,12 @@ proc tkMenuUnpost menu {
 	if {[string compare $mb ""]} {
 	    set menu [$mb cget -menu]
 	    $menu unpost
-	    set tkPriv(postedMb) {}
-	    $mb configure -cursor $tkPriv(cursor)
-	    $mb configure -relief $tkPriv(relief)
-	} elseif {[string compare $tkPriv(popup) ""]} {
-	    $tkPriv(popup) unpost
-	    set tkPriv(popup) {}
+	    set Priv(postedMb) {}
+	    $mb configure -cursor $Priv(cursor)
+	    $mb configure -relief $Priv(relief)
+	} elseif {[string compare $Priv(popup) ""]} {
+	    $Priv(popup) unpost
+	    set Priv(popup) {}
 	} elseif {[string compare [$menu cget -type] "menubar"] \
 		&& [string compare [$menu cget -type] "tearoff"]} {
 	    # We're in a cascaded sub-menu from a torn-off menu or popup.
@@ -413,7 +414,7 @@ proc tkMenuUnpost menu {
 		}
 		$parent activate none
 		$parent postcascade none
-		tkGenerateMenuSelect $parent
+		GenerateMenuSelect $parent
 		set type [$parent cget -type]
 		if {[string equal $type "menubar"] || \
 			[string equal $type "tearoff"]} {
@@ -427,7 +428,7 @@ proc tkMenuUnpost menu {
 	}
     }
 
-    if {($tkPriv(tearoff) != 0) || [string compare $tkPriv(menuBar) ""]} {
+    if {($Priv(tearoff) != 0) || [string compare $Priv(menuBar) ""]} {
     	# Release grab, if any, and restore the previous grab, if there
     	# was one.
 	if {[string compare $menu ""]} {
@@ -436,18 +437,18 @@ proc tkMenuUnpost menu {
 		grab release $grab
 	    }
 	}
-	tkRestoreOldGrab
-	if {[string compare $tkPriv(menuBar) ""]} {
-	    $tkPriv(menuBar) configure -cursor $tkPriv(cursor)
-	    set tkPriv(menuBar) {}
+	RestoreOldGrab
+	if {[string compare $Priv(menuBar) ""]} {
+	    $Priv(menuBar) configure -cursor $Priv(cursor)
+	    set Priv(menuBar) {}
 	}
 	if {[string compare $tcl_platform(platform) "unix"]} {
-	    set tkPriv(tearoff) 0
+	    set Priv(tearoff) 0
 	}
     }
 }
 
-# tkMbMotion --
+# ::tk::MbMotion --
 # This procedure handles mouse motion events inside menubuttons, and
 # also outside menubuttons when a menubutton has a grab (e.g. when a
 # menu selection operation is in progress).
@@ -458,33 +459,33 @@ proc tkMenuUnpost menu {
 #			it isn't.
 # rootx, rooty -	Coordinates of mouse, in (virtual?) root window.
 
-proc tkMbMotion {w upDown rootx rooty} {
-    global tkPriv
+proc ::tk::MbMotion {w upDown rootx rooty} {
+    variable ::tk::Priv
 
-    if {[string equal $tkPriv(inMenubutton) $w]} {
+    if {[string equal $Priv(inMenubutton) $w]} {
 	return
     }
     set new [winfo containing $rootx $rooty]
-    if {[string compare $new $tkPriv(inMenubutton)] \
+    if {[string compare $new $Priv(inMenubutton)] \
 	    && ([string equal $new ""] \
 	    || [string equal [winfo toplevel $new] [winfo toplevel $w]])} {
-	if {[string compare $tkPriv(inMenubutton) ""]} {
-	    tkMbLeave $tkPriv(inMenubutton)
+	if {[string compare $Priv(inMenubutton) ""]} {
+	    MbLeave $Priv(inMenubutton)
 	}
 	if {[string compare $new ""] \
 		&& [string equal [winfo class $new] "Menubutton"] \
 		&& ([$new cget -indicatoron] == 0) \
 		&& ([$w cget -indicatoron] == 0)} {
 	    if {[string equal $upDown "down"]} {
-		tkMbPost $new $rootx $rooty
+		MbPost $new $rootx $rooty
 	    } else {
-		tkMbEnter $new
+		MbEnter $new
 	    }
 	}
     }
 }
 
-# tkMbButtonUp --
+# ::tk::MbButtonUp --
 # This procedure is invoked to handle button 1 releases for menubuttons.
 # If the release happens inside the menubutton then leave its menu
 # posted with element 0 activated.  Otherwise, unpost the menu.
@@ -492,23 +493,23 @@ proc tkMbMotion {w upDown rootx rooty} {
 # Arguments:
 # w -			The name of the menubutton widget.
 
-proc tkMbButtonUp w {
-    global tkPriv
+proc ::tk::MbButtonUp w {
+    variable ::tk::Priv
     global tcl_platform
 
     set menu [$w cget -menu]
     set tearoff [expr {[string equal $tcl_platform(platform) "unix"] || \
 	    ([string compare $menu {}] && \
 	    [string equal [$menu cget -type] "tearoff"])}]
-    if {($tearoff != 0) && [string equal $tkPriv(postedMb) $w] \
-	    && [string equal $tkPriv(inMenubutton) $w]} {
-	tkMenuFirstEntry [$tkPriv(postedMb) cget -menu]
+    if {($tearoff != 0) && [string equal $Priv(postedMb) $w] \
+	    && [string equal $Priv(inMenubutton) $w]} {
+	MenuFirstEntry [$Priv(postedMb) cget -menu]
     } else {
-	tkMenuUnpost {}
+	MenuUnpost {}
     }
 }
 
-# tkMenuMotion --
+# ::tk::MenuMotion --
 # This procedure is called to handle mouse motion events for menus.
 # It does two things.  First, it resets the active element in the
 # menu, if the mouse is over the menu.  Second, if a mouse button
@@ -521,18 +522,18 @@ proc tkMbButtonUp w {
 # y -			The y position of the mouse.
 # state -		Modifier state (tells whether buttons are down).
 
-proc tkMenuMotion {menu x y state} {
-    global tkPriv
-    if {[string equal $menu $tkPriv(window)]} {
+proc ::tk::MenuMotion {menu x y state} {
+    variable ::tk::Priv
+    if {[string equal $menu $Priv(window)]} {
 	if {[string equal [$menu cget -type] "menubar"]} {
-	    if {[info exists tkPriv(focus)] && \
-		    [string compare $menu $tkPriv(focus)]} {
+	    if {[info exists Priv(focus)] && \
+		    [string compare $menu $Priv(focus)]} {
 		$menu activate @$x,$y
-		tkGenerateMenuSelect $menu
+		GenerateMenuSelect $menu
 	    }
 	} else {
 	    $menu activate @$x,$y
-	    tkGenerateMenuSelect $menu
+	    GenerateMenuSelect $menu
 	}
     }
     if {($state & 0x1f00) != 0} {
@@ -540,7 +541,7 @@ proc tkMenuMotion {menu x y state} {
     }
 }
 
-# tkMenuButtonDown --
+# ::tk::MenuButtonDown --
 # Handles button presses in menus.  There are a couple of tricky things
 # here:
 # 1. Change the posted cascade entry (if any) to match the mouse position.
@@ -555,17 +556,17 @@ proc tkMenuMotion {menu x y state} {
 # Arguments:
 # menu -		The menu window.
 
-proc tkMenuButtonDown menu {
-    global tkPriv
+proc ::tk::MenuButtonDown menu {
+    variable ::tk::Priv
     global tcl_platform
 
     if {![winfo viewable $menu]} {
         return
     }
     $menu postcascade active
-    if {[string compare $tkPriv(postedMb) ""] && \
-	    [winfo viewable $tkPriv(postedMb)]} {
-	grab -global $tkPriv(postedMb)
+    if {[string compare $Priv(postedMb) ""] && \
+	    [winfo viewable $Priv(postedMb)]} {
+	grab -global $Priv(postedMb)
     } else {
 	while {[string equal [$menu cget -type] "normal"] \
 		&& [string equal [winfo class [winfo parent $menu]] "Menu"] \
@@ -573,9 +574,9 @@ proc tkMenuButtonDown menu {
 	    set menu [winfo parent $menu]
 	}
 
-	if {[string equal $tkPriv(menuBar) {}]} {
-	    set tkPriv(menuBar) $menu
-	    set tkPriv(cursor) [$menu cget -cursor]
+	if {[string equal $Priv(menuBar) {}]} {
+	    set Priv(menuBar) $menu
+	    set Priv(cursor) [$menu cget -cursor]
 	    $menu configure -cursor arrow
         }
 
@@ -585,7 +586,7 @@ proc tkMenuButtonDown menu {
 	# anymore.
 
 	if {[string compare $menu [grab current $menu]]} {
-	    tkSaveGrabInfo $menu
+	    SaveGrabInfo $menu
 	}
 
 	# Must re-grab even if the grab window hasn't changed, in order
@@ -597,7 +598,7 @@ proc tkMenuButtonDown menu {
     }
 }
 
-# tkMenuLeave --
+# ::tk::MenuLeave --
 # This procedure is invoked to handle Leave events for a menu.  It
 # deactivates everything unless the active element is a cascade element
 # and the mouse is now over the submenu.
@@ -607,9 +608,9 @@ proc tkMenuButtonDown menu {
 # rootx, rooty -	Root coordinates of mouse.
 # state -		Modifier state.
 
-proc tkMenuLeave {menu rootx rooty state} {
-    global tkPriv
-    set tkPriv(window) {}
+proc ::tk::MenuLeave {menu rootx rooty state} {
+    variable ::tk::Priv
+    set Priv(window) {}
     if {[string equal [$menu index active] "none"]} {
 	return
     }
@@ -619,10 +620,10 @@ proc tkMenuLeave {menu rootx rooty state} {
 	return
     }
     $menu activate none
-    tkGenerateMenuSelect $menu
+    GenerateMenuSelect $menu
 }
 
-# tkMenuInvoke --
+# ::tk::MenuInvoke --
 # This procedure is invoked when button 1 is released over a menu.
 # It invokes the appropriate menu action and unposts the menu if
 # it came from a menubutton.
@@ -632,10 +633,10 @@ proc tkMenuLeave {menu rootx rooty state} {
 # buttonRelease -	1 means this procedure is called because of
 #			a button release;  0 means because of keystroke.
 
-proc tkMenuInvoke {w buttonRelease} {
-    global tkPriv
+proc ::tk::MenuInvoke {w buttonRelease} {
+    variable ::tk::Priv
 
-    if {$buttonRelease && [string equal $tkPriv(window) {}]} {
+    if {$buttonRelease && [string equal $Priv(window) {}]} {
 	# Mouse was pressed over a menu without a menu button, then
 	# dragged off the menu (possibly with a cascade posted) and
 	# released.  Unpost everything and quit.
@@ -643,16 +644,16 @@ proc tkMenuInvoke {w buttonRelease} {
 	$w postcascade none
 	$w activate none
 	event generate $w <<MenuSelect>>
-	tkMenuUnpost $w
+	MenuUnpost $w
 	return
     }
     if {[string equal [$w type active] "cascade"]} {
 	$w postcascade active
 	set menu [$w entrycget active -menu]
-	tkMenuFirstEntry $menu
+	MenuFirstEntry $menu
     } elseif {[string equal [$w type active] "tearoff"]} {
-	tkTearOffMenu $w
-	tkMenuUnpost $w
+	::tk::TearOffMenu $w
+	MenuUnpost $w
     } elseif {[string equal [$w cget -type] "menubar"]} {
 	$w postcascade none
 	set active [$w index active]
@@ -667,7 +668,7 @@ proc tkMenuInvoke {w buttonRelease} {
 	    event generate $w <<MenuSelect>>
 	}
 
-	tkMenuUnpost $w
+	MenuUnpost $w
 
 	# If the active item is not a cascade, invoke it.  This enables
 	# the use of checkbuttons/commands/etc. on menubars (which is legal,
@@ -677,12 +678,12 @@ proc tkMenuInvoke {w buttonRelease} {
 	    uplevel #0 [list $w invoke $active]
 	}
     } else {
-	tkMenuUnpost $w
+	MenuUnpost $w
 	uplevel #0 [list $w invoke active]
     }
 }
 
-# tkMenuEscape --
+# ::tk::MenuEscape --
 # This procedure is invoked for the Cancel (or Escape) key.  It unposts
 # the given menu and, if it is the top-level menu for a menu button,
 # unposts the menu button as well.
@@ -690,54 +691,54 @@ proc tkMenuInvoke {w buttonRelease} {
 # Arguments:
 # menu -		Name of the menu window.
 
-proc tkMenuEscape menu {
+proc ::tk::MenuEscape menu {
     set parent [winfo parent $menu]
     if {[string compare [winfo class $parent] "Menu"]} {
-	tkMenuUnpost $menu
+	MenuUnpost $menu
     } elseif {[string equal [$parent cget -type] "menubar"]} {
-	tkMenuUnpost $menu
-	tkRestoreOldGrab
+	MenuUnpost $menu
+	RestoreOldGrab
     } else {
-	tkMenuNextMenu $menu left
+	MenuNextMenu $menu left
     }
 }
 
 # The following routines handle arrow keys. Arrow keys behave
 # differently depending on whether the menu is a menu bar or not.
 
-proc tkMenuUpArrow {menu} {
+proc ::tk::MenuUpArrow {menu} {
     if {[string equal [$menu cget -type] "menubar"]} {
-	tkMenuNextMenu $menu left
+	MenuNextMenu $menu left
     } else {
-	tkMenuNextEntry $menu -1
+	MenuNextEntry $menu -1
     }
 }
 
-proc tkMenuDownArrow {menu} {
+proc ::tk::MenuDownArrow {menu} {
     if {[string equal [$menu cget -type] "menubar"]} {
-	tkMenuNextMenu $menu right
+	MenuNextMenu $menu right
     } else {
-	tkMenuNextEntry $menu 1
+	MenuNextEntry $menu 1
     }
 }
 
-proc tkMenuLeftArrow {menu} {
+proc ::tk::MenuLeftArrow {menu} {
     if {[string equal [$menu cget -type] "menubar"]} {
-	tkMenuNextEntry $menu -1
+	MenuNextEntry $menu -1
     } else {
-	tkMenuNextMenu $menu left
+	MenuNextMenu $menu left
     }
 }
 
-proc tkMenuRightArrow {menu} {
+proc ::tk::MenuRightArrow {menu} {
     if {[string equal [$menu cget -type] "menubar"]} {
-	tkMenuNextEntry $menu 1
+	MenuNextEntry $menu 1
     } else {
-	tkMenuNextMenu $menu right
+	MenuNextMenu $menu right
     }
 }
 
-# tkMenuNextMenu --
+# ::tk::MenuNextMenu --
 # This procedure is invoked to handle "left" and "right" traversal
 # motions in menus.  It traverses to the next menu in a menu bar,
 # or into or out of a cascaded menu.
@@ -747,8 +748,8 @@ proc tkMenuRightArrow {menu} {
 #			event.
 # direction -		Direction in which to move: "left" or "right"
 
-proc tkMenuNextMenu {menu direction} {
-    global tkPriv
+proc ::tk::MenuNextMenu {menu direction} {
+    variable ::tk::Priv
 
     # First handle traversals into and out of cascaded menus.
 
@@ -760,7 +761,7 @@ proc tkMenuNextMenu {menu direction} {
 	    $menu postcascade active
 	    set m2 [$menu entrycget active -menu]
 	    if {[string compare $m2 ""]} {
-		tkMenuFirstEntry $m2
+		MenuFirstEntry $m2
 	    }
 	    return
 	} else {
@@ -769,7 +770,7 @@ proc tkMenuNextMenu {menu direction} {
 		if {[string equal [winfo class $parent] "Menu"] \
 			&& [string equal [$parent cget -type] "menubar"]} {
 		    tk_menuSetFocus $parent
-		    tkMenuNextEntry $parent 1
+		    MenuNextEntry $parent 1
 		    return
 		}
 		set parent [winfo parent $parent]
@@ -779,16 +780,13 @@ proc tkMenuNextMenu {menu direction} {
 	set count -1
 	set m2 [winfo parent $menu]
 	if {[string equal [winfo class $m2] "Menu"]} {
+	    $menu activate none
+	    GenerateMenuSelect $menu
+	    tk_menuSetFocus $m2
+
+	    $m2 postcascade none
+
 	    if {[string compare [$m2 cget -type] "menubar"]} {
-		$menu activate none
-		tkGenerateMenuSelect $menu
-		tk_menuSetFocus $m2
-		
-		# This code unposts any posted submenu in the parent.
-		
-		set tmp [$m2 index active]
-		$m2 activate none
-		$m2 activate $tmp
 		return
 	    }
 	}
@@ -801,12 +799,12 @@ proc tkMenuNextMenu {menu direction} {
     if {[string equal [winfo class $m2] "Menu"]} {
 	if {[string equal [$m2 cget -type] "menubar"]} {
 	    tk_menuSetFocus $m2
-	    tkMenuNextEntry $m2 -1
+	    MenuNextEntry $m2 -1
 	    return
 	}
     }
 
-    set w $tkPriv(postedMb)
+    set w $Priv(postedMb)
     if {[string equal $w ""]} {
 	return
     }
@@ -832,11 +830,11 @@ proc tkMenuNextMenu {menu direction} {
 	}
 	incr i $count
     }
-    tkMbPost $mb
-    tkMenuFirstEntry [$mb cget -menu]
+    MbPost $mb
+    MenuFirstEntry [$mb cget -menu]
 }
 
-# tkMenuNextEntry --
+# ::tk::MenuNextEntry --
 # Activate the next higher or lower entry in the posted menu,
 # wrapping around at the ends.  Disabled entries are skipped.
 #
@@ -845,8 +843,7 @@ proc tkMenuNextMenu {menu direction} {
 # count -			1 means go to the next lower entry,
 #				-1 means go to the next higher entry.
 
-proc tkMenuNextEntry {menu count} {
-    global tkPriv
+proc ::tk::MenuNextEntry {menu count} {
 
     if {[string equal [$menu index last] "none"]} {
 	return
@@ -873,7 +870,9 @@ proc tkMenuNextEntry {menu count} {
 	    incr i -$length
 	}
 	if {[catch {$menu entrycget $i -state} state] == 0} {
-	    if {[string compare $state "disabled"]} {
+	    if {$state!="disabled" && 
+		($i!=0 || [$menu cget -type]!="tearoff" 
+			|| [$menu type 0]!="tearoff")} {
 		break
 	    }
 	}
@@ -884,20 +883,22 @@ proc tkMenuNextEntry {menu count} {
 	incr quitAfter -1
     }
     $menu activate $i
-    tkGenerateMenuSelect $menu
-    if {[string equal [$menu type $i] "cascade"]} {
+    GenerateMenuSelect $menu
+
+    if {[string equal [$menu type $i] "cascade"] \
+	    && [string equal [$menu cget -type] "menubar"]} {
 	set cascade [$menu entrycget $i -menu]
 	if {[string compare $cascade ""]} {
 	    # Here we auto-post a cascade.  This is necessary when
 	    # we traverse left/right in the menubar, but undesirable when
 	    # we traverse up/down in a menu.
 	    $menu postcascade $i
-	    tkMenuFirstEntry $cascade
+	    MenuFirstEntry $cascade
 	}
     }
 }
 
-# tkMenuFind --
+# ::tk::MenuFind --
 # This procedure searches the entire window hierarchy under w for
 # a menubutton that isn't disabled and whose underlined character
 # is "char" or an entry in a menubar that isn't disabled and whose
@@ -913,8 +914,7 @@ proc tkMenuNextEntry {menu count} {
 #				may be either upper or lower case, and
 #				will match either upper or lower case.
 
-proc tkMenuFind {w char} {
-    global tkPriv
+proc ::tk::MenuFind {w char} {
     set char [string tolower $char]
     set windowlist [winfo child $w]
 
@@ -965,7 +965,7 @@ proc tkMenuFind {w char} {
 	    }
 
 	    default {
-		set match [tkMenuFind $child $char]
+		set match [MenuFind $child $char]
 		if {[string compare $match ""]} {
 		    return $match
 		}
@@ -975,7 +975,7 @@ proc tkMenuFind {w char} {
     return {}
 }
 
-# tkTraverseToMenu --
+# ::tk::TraverseToMenu --
 # This procedure implements keyboard traversal of menus.  Given an
 # ASCII character "char", it looks for a menubutton with that character
 # underlined.  If one is found, it posts the menubutton's menu
@@ -987,14 +987,14 @@ proc tkMenuFind {w char} {
 #				is ignored.  If an empty string, nothing
 #				happens.
 
-proc tkTraverseToMenu {w char} {
-    global tkPriv
+proc ::tk::TraverseToMenu {w char} {
+    variable ::tk::Priv
     if {[string equal $char ""]} {
 	return
     }
     while {[string equal [winfo class $w] "Menu"]} {
 	if {[string compare [$w cget -type] "menubar"] \
-		&& [string equal $tkPriv(postedMb) ""]} {
+		&& [string equal $Priv(postedMb) ""]} {
 	    return
 	}
 	if {[string equal [$w cget -type] "menubar"]} {
@@ -1002,22 +1002,22 @@ proc tkTraverseToMenu {w char} {
 	}
 	set w [winfo parent $w]
     }
-    set w [tkMenuFind [winfo toplevel $w] $char]
+    set w [MenuFind [winfo toplevel $w] $char]
     if {[string compare $w ""]} {
 	if {[string equal [winfo class $w] "Menu"]} {
 	    tk_menuSetFocus $w
-	    set tkPriv(window) $w
-	    tkSaveGrabInfo $w
+	    set Priv(window) $w
+	    SaveGrabInfo $w
 	    grab -global $w
-	    tkTraverseWithinMenu $w $char
+	    TraverseWithinMenu $w $char
 	} else {
-	    tkMbPost $w
-	    tkMenuFirstEntry [$w cget -menu]
+	    MbPost $w
+	    MenuFirstEntry [$w cget -menu]
 	}
     }
 }
 
-# tkFirstMenu --
+# ::tk::FirstMenu --
 # This procedure traverses to the first menubutton in the toplevel
 # for a given window, and posts that menubutton's menu.
 #
@@ -1025,23 +1025,24 @@ proc tkTraverseToMenu {w char} {
 # w -				Name of a window.  Selects which toplevel
 #				to search for menubuttons.
 
-proc tkFirstMenu w {
-    set w [tkMenuFind [winfo toplevel $w] ""]
+proc ::tk::FirstMenu w {
+    variable ::tk::Priv
+    set w [MenuFind [winfo toplevel $w] ""]
     if {[string compare $w ""]} {
 	if {[string equal [winfo class $w] "Menu"]} {
 	    tk_menuSetFocus $w
-	    set tkPriv(window) $w
-	    tkSaveGrabInfo $w
+	    set Priv(window) $w
+	    SaveGrabInfo $w
 	    grab -global $w
-	    tkMenuFirstEntry $w
+	    MenuFirstEntry $w
 	} else {
-	    tkMbPost $w
-	    tkMenuFirstEntry [$w cget -menu]
+	    MbPost $w
+	    MenuFirstEntry [$w cget -menu]
 	}
     }
 }
 
-# tkTraverseWithinMenu
+# ::tk::TraverseWithinMenu
 # This procedure implements keyboard traversal within a menu.  It
 # searches for an entry in the menu that has "char" underlined.  If
 # such an entry is found, it is invoked and the menu is unposted.
@@ -1052,7 +1053,7 @@ proc tkFirstMenu w {
 #				ignored.  If the string is empty then
 #				nothing happens.
 
-proc tkTraverseWithinMenu {w char} {
+proc ::tk::TraverseWithinMenu {w char} {
     if {[string equal $char ""]} {
 	return
     }
@@ -1073,10 +1074,10 @@ proc tkTraverseWithinMenu {w char} {
 		event generate $w <<MenuSelect>>
 		set m2 [$w entrycget $i -menu]
 		if {[string compare $m2 ""]} {
-		    tkMenuFirstEntry $m2
+		    MenuFirstEntry $m2
 		}
 	    } else {
-		tkMenuUnpost $w
+		MenuUnpost $w
 		uplevel #0 [list $w invoke $i]
 	    }
 	    return
@@ -1084,18 +1085,18 @@ proc tkTraverseWithinMenu {w char} {
     }
 }
 
-# tkMenuFirstEntry --
+# ::tk::MenuFirstEntry --
 # Given a menu, this procedure finds the first entry that isn't
 # disabled or a tear-off or separator, and activates that entry.
 # However, if there is already an active entry in the menu (e.g.,
-# because of a previous call to tkPostOverPoint) then the active
+# because of a previous call to tk::PostOverPoint) then the active
 # entry isn't changed.  This procedure also sets the input focus
 # to the menu.
 #
 # Arguments:
 # menu -		Name of the menu window (possibly empty).
 
-proc tkMenuFirstEntry menu {
+proc ::tk::MenuFirstEntry menu {
     if {[string equal $menu ""]} {
 	return
     }
@@ -1112,7 +1113,7 @@ proc tkMenuFirstEntry menu {
 		&& [string compare $state "disabled"] \
 		&& [string compare [$menu type $i] "tearoff"]} {
 	    $menu activate $i
-	    tkGenerateMenuSelect $menu
+	    GenerateMenuSelect $menu
 	    # Only post the cascade if the current menu is a menubar;
 	    # otherwise, if the first entry of the cascade is a cascade,
 	    # we can get an annoying cascading effect resulting in a bunch of
@@ -1122,7 +1123,7 @@ proc tkMenuFirstEntry menu {
 		set cascade [$menu entrycget $i -menu]
 		if {[string compare $cascade ""]} {
 		    $menu postcascade $i
-		    tkMenuFirstEntry $cascade
+		    MenuFirstEntry $cascade
 		}
 	    }
 	    return
@@ -1130,7 +1131,7 @@ proc tkMenuFirstEntry menu {
     }
 }
 
-# tkMenuFindName --
+# ::tk::MenuFindName --
 # Given a menu and a text string, return the index of the menu entry
 # that displays the string as its label.  If there is no such entry,
 # return an empty string.  This procedure is tricky because some names
@@ -1141,7 +1142,7 @@ proc tkMenuFirstEntry menu {
 # menu -		Name of the menu widget.
 # s -			String to look for.
 
-proc tkMenuFindName {menu s} {
+proc ::tk::MenuFindName {menu s} {
     set i ""
     if {![regexp {^active$|^last$|^none$|^[0-9]|^@} $s]} {
 	catch {set i [$menu index $s]}
@@ -1161,7 +1162,7 @@ proc tkMenuFindName {menu s} {
     return ""
 }
 
-# tkPostOverPoint --
+# ::tk::PostOverPoint --
 # This procedure posts a given menu such that a given entry in the
 # menu is centered over a given point in the root window.  It also
 # activates the given entry.
@@ -1173,7 +1174,7 @@ proc tkMenuFindName {menu s} {
 #			If omitted or specified as {}, then the menu's
 #			upper-left corner goes at (x,y).
 
-proc tkPostOverPoint {menu x y {entry {}}}  {
+proc ::tk::PostOverPoint {menu x y {entry {}}}  {
     global tcl_platform
     
     if {[string compare $entry {}]} {
@@ -1190,71 +1191,71 @@ proc tkPostOverPoint {menu x y {entry {}}}  {
     if {[string compare $entry {}] \
 	    && [string compare [$menu entrycget $entry -state] "disabled"]} {
 	$menu activate $entry
-	tkGenerateMenuSelect $menu
+	GenerateMenuSelect $menu
     }
 }
 
-# tkSaveGrabInfo --
-# Sets the variables tkPriv(oldGrab) and tkPriv(grabStatus) to record
+# ::tk::SaveGrabInfo --
+# Sets the variables tk::Priv(oldGrab) and tk::Priv(grabStatus) to record
 # the state of any existing grab on the w's display.
 #
 # Arguments:
 # w -			Name of a window;  used to select the display
 #			whose grab information is to be recorded.
 
-proc tkSaveGrabInfo w {
-    global tkPriv
-    set tkPriv(oldGrab) [grab current $w]
-    if {[string compare $tkPriv(oldGrab) ""]} {
-	set tkPriv(grabStatus) [grab status $tkPriv(oldGrab)]
+proc tk::SaveGrabInfo w {
+    variable ::tk::Priv
+    set Priv(oldGrab) [grab current $w]
+    if {[string compare $Priv(oldGrab) ""]} {
+	set Priv(grabStatus) [grab status $Priv(oldGrab)]
     }
 }
 
-# tkRestoreOldGrab --
+# ::tk::RestoreOldGrab --
 # Restores the grab to what it was before TkSaveGrabInfo was called.
 #
 
-proc tkRestoreOldGrab {} {
-    global tkPriv
+proc ::tk::RestoreOldGrab {} {
+    variable ::tk::Priv
 
-    if {[string compare $tkPriv(oldGrab) ""]} {
+    if {[string compare $Priv(oldGrab) ""]} {
 
     	# Be careful restoring the old grab, since it's window may not
 	# be visible anymore.
 
 	catch {
-          if {[string equal $tkPriv(grabStatus) "global"]} {
-		grab set -global $tkPriv(oldGrab)
+          if {[string equal $Priv(grabStatus) "global"]} {
+		grab set -global $Priv(oldGrab)
 	    } else {
-		grab set $tkPriv(oldGrab)
+		grab set $Priv(oldGrab)
 	    }
 	}
-	set tkPriv(oldGrab) ""
+	set Priv(oldGrab) ""
     }
 }
 
-proc tk_menuSetFocus {menu} {
-    global tkPriv
-    if {![info exists tkPriv(focus)] || [string equal $tkPriv(focus) {}]} {
-	set tkPriv(focus) [focus]
+proc ::tk_menuSetFocus {menu} {
+    variable ::tk::Priv
+    if {![info exists Priv(focus)] || [string equal $Priv(focus) {}]} {
+	set Priv(focus) [focus]
     }
     focus $menu
 }
     
-proc tkGenerateMenuSelect {menu} {
-    global tkPriv
+proc ::tk::GenerateMenuSelect {menu} {
+    variable ::tk::Priv
 
-    if {[string equal $tkPriv(activeMenu) $menu] \
-          && [string equal $tkPriv(activeItem) [$menu index active]]} {
+    if {[string equal $Priv(activeMenu) $menu] \
+          && [string equal $Priv(activeItem) [$menu index active]]} {
 	return
     }
 
-    set tkPriv(activeMenu) $menu
-    set tkPriv(activeItem) [$menu index active]
+    set Priv(activeMenu) $menu
+    set Priv(activeItem) [$menu index active]
     event generate $menu <<MenuSelect>>
 }
 
-# tk_popup --
+# ::tk_popup --
 # This procedure pops up a menu and sets things up for traversing
 # the menu and its submenus.
 #
@@ -1266,19 +1267,19 @@ proc tkGenerateMenuSelect {menu} {
 #			If omitted or specified as {}, then menu's
 #			upper-left corner goes at (x,y).
 
-proc tk_popup {menu x y {entry {}}} {
-    global tkPriv
+proc ::tk_popup {menu x y {entry {}}} {
+    variable ::tk::Priv
     global tcl_platform
-    if {[string compare $tkPriv(popup) ""] \
-	    || [string compare $tkPriv(postedMb) ""]} {
-	tkMenuUnpost {}
+    if {[string compare $Priv(popup) ""] \
+	    || [string compare $Priv(postedMb) ""]} {
+	tk::MenuUnpost {}
     }
-    tkPostOverPoint $menu $x $y $entry
+    tk::PostOverPoint $menu $x $y $entry
     if {[string equal $tcl_platform(platform) "unix"] \
 	    && [winfo viewable $menu]} {
-        tkSaveGrabInfo $menu
+        tk::SaveGrabInfo $menu
 	grab -global $menu
-	set tkPriv(popup) $menu
+	set Priv(popup) $menu
 	tk_menuSetFocus $menu
     }
 }
