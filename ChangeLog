@@ -1,3 +1,8 @@
+2001-12-27  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinInit.c (TkpDisplayWarning): Use MessageBoxW in case the
+	error displayed has unicode chars. [Bug #485986]
+
 2001-12-27  Daniel Steffen <das@users.sourceforge.net>
 
 	* mac/tkMacInit.c:
