@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.19 2002/03/07 02:08:32 mdejong Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.20 2002/04/05 08:40:35 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -607,6 +607,27 @@ TkWinChildProc(hwnd, message, wParam, lParam)
 	    UpdateInputLanguage(wParam);
 	    result = 1;
 	    break;
+
+        case WM_IME_STARTCOMPOSITION: {
+	    /*
+	     * Position the IME composition window according the known
+	     * cursor (caret) position.
+	     */
+
+	    HIMC hIMC;
+	    POINT pt;
+	    hIMC = ImmGetContext(hwnd);
+	    if (hIMC && GetCaretPos(&pt)) {
+		COMPOSITIONFORM cform;
+
+		cform.dwStyle = CFS_POINT;
+		cform.ptCurrentPos = pt;
+		result = ImmSetCompositionWindow(hIMC, &cform);
+	    } else {
+		result = DefWindowProc(hwnd, message, wParam, lParam);
+	    }
+	    break;
+	}
 
         case WM_IME_COMPOSITION:
             result = 0;
@@ -1477,4 +1498,69 @@ TkWinUpdatingClipboard(int mode)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     tsdPtr->updatingClipboard = mode;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_SetCaretPos --
+ *
+ *	This enables correct movement of focus in the MS Magnifier, as well
+ *	as allowing us to correctly position the IME Window.  The following
+ *	Win32 APIs are used to work with MS caret:
+ *
+ *	CreateCaret	DestroyCaret	SetCaretPos	GetCaretPos
+ *
+ *	Only one instance of caret can be active at any time
+ *	(e.g. DestroyCaret API does not take any argument such as handle).
+ *	Since do-it-right approach requires to track the create/destroy
+ *	caret status all the time in a global scope among windows (or
+ *	widgets), we just implement this minimal setup to get the job done.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	Sets the global Windows caret position.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
+{
+    static HWND caretHWND = NULL;
+    Window win;
+    HWND   hwnd;
+
+    /*
+     * We adjust to the toplevel to get the coords right, as setting
+     * the IME composition window is based on the toplevel hwnd, so
+     * ignore height.
+     */
+
+    while (!Tk_IsTopLevel(tkwin)) {
+	x += Tk_X(tkwin);
+	y += Tk_Y(tkwin);
+	tkwin = Tk_Parent(tkwin);
+	if (tkwin == NULL) {
+	    return;
+	}
+    }
+
+    win = Tk_WindowId(tkwin);
+    if (win) {
+	hwnd = Tk_GetHWND(win);
+	if (hwnd != caretHWND) {
+	    DestroyCaret();
+	    if (CreateCaret(hwnd, NULL, 0, 0)) {
+		caretHWND = hwnd;
+	    }
+	}
+
+	if (!SetCaretPos(x, y) && CreateCaret(hwnd, NULL, 0, 0)) {
+	    caretHWND = hwnd;
+	    SetCaretPos(x, y);
+	}
+    }
 }
