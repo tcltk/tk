@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.32 2004/02/18 21:25:41 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.33 2004/03/16 19:53:28 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -952,6 +952,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
     string = Tcl_GetString(objv[1]);
     masterPtr = GetGrid(master);
     slotType = (*string == 'c') ? COLUMN : ROW;
+    first = last = 0; /* lint */
 
     if ((objc == 4) || (objc == 5)) {
 	if (lObjc != 1) {
