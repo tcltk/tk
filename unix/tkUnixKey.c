@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixKey.c,v 1.6 2002/04/05 08:38:41 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixKey.c,v 1.7 2002/06/15 01:09:36 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -123,11 +123,13 @@ TkpGetString(winPtr, eventPtr, dsPtr)
 	/*
 	 * Adjust the XIM caret position.
 	 */
-	spot.x = caretX; spot.y = caretY;
-	preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
-	XSetICValues(winPtr->inputContext,
-		XNPreeditAttributes, preedit_attr, NULL);
-	XFree(preedit_attr);
+	if (winPtr->dispPtr->flags & TK_USE_XIM_SPOT) {
+	    spot.x = caretX; spot.y = caretY;
+	    preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
+	    XSetICValues(winPtr->inputContext,
+		    XNPreeditAttributes, preedit_attr, NULL);
+	    XFree(preedit_attr);
+	}
 #endif
     } else {
 	len = XLookupString(&eventPtr->xkey, Tcl_DStringValue(&buf),

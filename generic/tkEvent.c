@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.12 2002/06/15 00:21:42 hobbs Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.13 2002/06/15 01:09:36 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -866,41 +866,42 @@ Tk_HandleEvent(eventPtr)
 	    winPtr->flags |= TK_CHECKED_IC;
 	    if (dispPtr->inputMethod != NULL) {
 #if TK_XIM_SPOT
-		XVaNestedList preedit_attr;
-		XPoint spot = {0, 0};
+		if (dispPtr->flags & TK_USE_XIM_SPOT) {
+		    XVaNestedList preedit_attr;
+		    XPoint spot = {0, 0};
 
-		if (dispPtr->inputXfs == NULL) {
-		    /*
-		     * We only need to create one XFontSet
-		     */
-		    char      **missing_list;
-		    int       missing_count;
-		    char      *def_string;
+		    if (dispPtr->inputXfs == NULL) {
+			/*
+			 * We only need to create one XFontSet
+			 */
+			char      **missing_list;
+			int       missing_count;
+			char      *def_string;
 
-		    dispPtr->inputXfs = XCreateFontSet(dispPtr->display,
-			    "-*-*-*-R-Normal--14-130-75-75-*-*",
-			    &missing_list, &missing_count, &def_string);
-		    if (missing_count > 0) {
-			XFreeStringList(missing_list);
+			dispPtr->inputXfs = XCreateFontSet(dispPtr->display,
+				"-*-*-*-R-Normal--14-130-75-75-*-*",
+				&missing_list, &missing_count, &def_string);
+			if (missing_count > 0) {
+			    XFreeStringList(missing_list);
+			}
 		    }
-		}
 
-		preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot,
-			XNFontSet, dispPtr->inputXfs, NULL);
-		winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
-			XNInputStyle, XIMPreeditPosition | XIMStatusNothing,
-			XNClientWindow, winPtr->window,
-			XNFocusWindow, winPtr->window,
-			XNPreeditAttributes, preedit_attr,
-			NULL);
-		XFree(preedit_attr);
-#else
-		winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
-			XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
-			XNClientWindow, winPtr->window,
-			XNFocusWindow, winPtr->window,
-			NULL);
+		    preedit_attr = XVaCreateNestedList(0, XNSpotLocation,
+			    &spot, XNFontSet, dispPtr->inputXfs, NULL);
+		    winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
+			    XNInputStyle, XIMPreeditPosition|XIMStatusNothing,
+			    XNClientWindow, winPtr->window,
+			    XNFocusWindow, winPtr->window,
+			    XNPreeditAttributes, preedit_attr,
+			    NULL);
+		    XFree(preedit_attr);
+		} else
 #endif
+		    winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
+			    XNInputStyle, XIMPreeditNothing|XIMStatusNothing,
+			    XNClientWindow, winPtr->window,
+			    XNFocusWindow, winPtr->window,
+			    NULL);
 	    }
 	}
 	if (XFilterEvent(eventPtr, None)) {
