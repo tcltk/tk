@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.93 2005/01/13 01:48:03 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.94 2005/01/16 00:23:13 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -2241,7 +2241,7 @@ UpdateWrapper(winPtr)
      */
 
     if (winPtr->flags & TK_EMBEDDED) {
-	if(state != SendMessage(wmPtr->wrapper, TK_STATE, state, 0)) {
+	if(state+1 != SendMessage(wmPtr->wrapper, TK_STATE, state, 0)) {
 	    TkpWmSetState(winPtr, NormalState);
 	    wmPtr->hints.initial_state = NormalState;
 	}
@@ -4341,7 +4341,7 @@ WmOverrideredirectCmd(tkwin, winPtr, interp, objc, objv)
 	return TCL_ERROR;
     }
     if(winPtr->flags & TK_EMBEDDED) {
-	curValue = SendMessage(wmPtr->wrapper, TK_OVERRIDEREDIRECT, -1, -1);
+	curValue = SendMessage(wmPtr->wrapper, TK_OVERRIDEREDIRECT, -1, -1)-1;
 	if(curValue < 0) {
 	    Tcl_AppendResult(interp, "Container does not support overrideredirect", NULL);
 	    return TCL_ERROR;
@@ -4849,7 +4849,7 @@ WmStateCmd(tkwin, winPtr, interp, objc, objv)
 		break;
 	    }
 
-	    if(state != SendMessage(wmPtr->wrapper, TK_STATE, state, 0)) {
+	    if(state+1 != SendMessage(wmPtr->wrapper, TK_STATE, state, 0)) {
 	        Tcl_AppendResult(interp, "can't change state of ",
 		    winPtr->pathName, ": the container does not support the request",
 		    (char *) NULL);
@@ -4894,7 +4894,7 @@ WmStateCmd(tkwin, winPtr, interp, objc, objv)
 	} else {
 	    int state;
 	    if(winPtr->flags & TK_EMBEDDED) 
-		state = SendMessage(wmPtr->wrapper, TK_STATE, -1, -1);
+		state = SendMessage(wmPtr->wrapper, TK_STATE, -1, -1)-1;
 	    else
 		state = wmPtr->hints.initial_state;
 	    switch (state) {
@@ -7976,7 +7976,7 @@ void TkpWinToplevelDetachWindow(winPtr)
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     if(winPtr->flags & TK_EMBEDDED) {
-	int state = SendMessage(wmPtr->wrapper, TK_STATE, -1, -1);
+	int state = SendMessage(wmPtr->wrapper, TK_STATE, -1, -1)-1;
         SendMessage(wmPtr->wrapper, TK_SETMENU, 0, 0);
         SendMessage(wmPtr->wrapper, TK_DETACHWINDOW, 0, 0);
         winPtr->flags &= ~TK_EMBEDDED;
