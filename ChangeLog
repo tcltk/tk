@@ -1,4 +1,32 @@
-2001-07-04  Don Porter  <dgp@users.sourceforge.net>
+2001-07-04  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* README:
+	* mac/README:
+	* unix/README:
+	* win/README: updated READMEs with purls
+
+2001-07-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/canvas.test:
+	* generic/tkCanvPoly.c (PolygonToArea): Added patch that respects
+	the polygon difference of including points in the polygon even
+	when fill is empty.  [Bug #226357]
+
+2001-07-03  Mo DeJong  <mdejong@redhat.com>
+
+	* win/Makefile.in: Remove PATHTYPE variable.
+	* win/configure: Regen.
+	* win/configure.in: Don't subst PATHTYPE.
+	* win/tcl.m4: Update from Tcl.
+
+2001-07-03  Mo DeJong  <mdejong@redhat.com>
+
+	* win/Makefile.in: Don't use VPSEP, instead just use :
+	in the VPATH.
+	* win/configure: Regen.
+	* win/configure.in: Don't subst VPSEP.
+
+2001-07-03  Don Porter  <dgp@users.sourceforge.net>
 
 	BRANCH dgp-privates-into-namespace:
 	* ChangeLog:
@@ -81,6 +109,7 @@
 	* tests/winClipboard.test:
 	* tests/winDialog.test:
 	* unix/Makefile.in:
+	* unix/README:
 	* unix/configure:
 	* unix/configure.in:
 	* unix/tcl.m4:

@@ -6,11 +6,11 @@ UNIX versions of Tk.  This directory also contains source files for Tk
 that are specific to UNIX.
 
 The information in this file is maintained at:
-	http://dev.scriptics.com/doc/howto/compile.html
+	http://www.purl.org/tcl/home/doc/howto/compile.html
 
 For information on platforms where Tcl/Tk is known to compile, along
 with any porting notes for getting it to work on those platforms, see:
-	http://dev.scriptics.com/software/tcltk/platforms.html
+	http://www.purl.org/tcl/home/software/tcltk/platforms.html
 
 The rest of this file contains instructions on how to do this.  The
 release should compile and run either "out of the box" or with trivial
@@ -20,7 +20,7 @@ SGI, as well as PCs running Linux, BSDI, and SCO UNIX.  To compile for
 a PC running Windows, see the README file in the directory ../win.  To
 compile for a Macintosh, see the README file in the directory ../mac.
 
-RCS: @(#) $Id: README,v 1.11 2000/08/25 05:55:05 mo Exp $
+RCS: @(#) $Id: README,v 1.11.4.1 2001/07/05 19:14:13 dgp Exp $
 
 How To Compile And Install Tk:
 ------------------------------
@@ -65,7 +65,7 @@ How To Compile And Install Tk:
     to use gcc after configure is run.
 
     Note: be sure to use only absolute path names (those starting with "/")
-    in the --prefix and --exec_prefix options.
+    in the --prefix and --exec-prefix options.
 
 (e) Type "make".  This will create a library archive called
     "libtk<version>.a" or "libtk<version>.so" and an interpreter
@@ -83,7 +83,7 @@ How To Compile And Install Tk:
     standard places.  You'll need write permission on the installation
     directoryies to do this.  The installation directories are
     determined by the "configure" script and may be specified with
-    the --prefix and --exec_prefix options to "configure".  See the
+    the --prefix and --exec-prefix options to "configure".  See the
     Makefile for information on what directories were chosen; you
     can override these choices by modifying the "prefix" and
     "exec_prefix" variables in the Makefile.
