@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.8 2003/03/12 05:56:21 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.9 2003/07/18 11:04:59 vincentdarley Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -3427,6 +3427,8 @@ DrawMenuEntryLabel(
             GDHandle saveDevice;
             GWorldPtr destPort;
 #ifdef USE_ATSU
+            int xLocation;
+            int yLocation;
             int runLengths;
             CFStringRef stringRef;
             ATSUTextLayout textLayout;
@@ -3472,7 +3474,8 @@ DrawMenuEntryLabel(
 #ifdef USE_ATSU
             runLengths = 1;
             length = Tcl_DStringLength(&itemTextDString);
-            stringRef = CFStringCreateWithCString(NULL, Tcl_DStringValue(&itemTextDString), GetApplicationTextEncoding());
+            stringRef = CFStringCreateWithCString(NULL, Tcl_DStringValue(&itemTextDString), 
+						  kCFStringEncodingUTF8);
             if (!stringRef) {
                 fprintf(stderr,"CFStringCreateWithCString failed\n");
             }
@@ -3494,7 +3497,7 @@ DrawMenuEntryLabel(
             TkMacOSXSetUpGraphicsPort(gc, destPort);
 
 	    MoveTo((short) leftEdge, (short) baseline);
-	    Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&itemTextDString), 
+	    Tcl_UtfToExternalDString(TkMacOSXCarbonEncoding, Tcl_DStringValue(&itemTextDString), 
 	            Tcl_DStringLength(&itemTextDString), &convertedTextDString);
 #ifdef USE_ATSU
             xLocation = leftEdge<<16;

@@ -1,3 +1,16 @@
+2003-07-18  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* generic/tkWindow.c:
+        * macosx/tkMacOSXDialog.c: added native tk_messageBox command,
+        (Tk_MessageBoxObjCmd) for MacOS X platform.
+
+        * macosx/tkMacOSXMenu.c: corrected encoding conversion for
+        torn-off menu entries (but many other display problems still
+        exist with these)
+
+        * macosx/tkMacOSXMouseEvent.c: improved handling of events in the
+        presence of grabs, particularly activation events.
+
 2003-07-18  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* tests/panedwindow.test (panedwindow-30.2): 
