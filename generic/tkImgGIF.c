@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.		|
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.23 2003/02/18 14:03:46 dkf Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.24 2003/02/20 15:28:40 dkf Exp $
  */
 
 /*
@@ -743,8 +743,6 @@ DoExtension(chan, label, transparent)
     return count;
 }
 
-static int ZeroDataBlock = 0;
-
 static int
 GetDataBlock(chan, buf)
     Tcl_Channel chan;
@@ -755,8 +753,6 @@ GetDataBlock(chan, buf)
     if (! ReadOK(chan, &count,1)) {
 	return -1;
     }
-
-    ZeroDataBlock = count == 0;
 
     if ((count != 0) && (! ReadOK(chan, buf, count))) {
 	return -1;

@@ -1,5 +1,8 @@
 2003-02-20  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* generic/tkImgGIF.c (GetDataBlock): Removed pointless static
+	variable ZeroDataBlock [Bug #664788]
+
 	* unix/tkUnixFont.c (CanUseFallback): Added argument, passed
 	through from callers to FindSubFontForChar(), so that pointers
 	into the old subfont table to be updated when that table is
