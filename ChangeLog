@@ -1,3 +1,8 @@
+2003-10-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/dialog.tcl (tk_dialog): Constrain the dialog to be
+	fairly sensibly sized and placed.  [Bug 827535]
+
 2003-10-15  Joe English  <jenglish@users.sourceforge.net>
 	* unix/tkUnixWm.c, tests/unixWm.test: Delete WM_TRANSIENT_FOR
 	property instead of setting it to None when making a window
