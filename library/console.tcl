@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.20 2002/06/22 08:50:43 hobbs Exp $
+# RCS: @(#) $Id: console.tcl,v 1.21 2002/08/31 06:12:28 das Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -49,10 +49,11 @@ proc ::tk::ConsoleInit {} {
 	wm withdraw .
     }
 
-    if {[string compare $tcl_platform(platform) "macintosh"]} {
-	set mod "Ctrl"
-    } else {
+    if {[string equal $tcl_platform(platform) "macintosh"]
+	    || [string equal [tk windowingsystem] "aqua"]} {
 	set mod "Cmd"
+    } else {
+	set mod "Ctrl"
     }
 
     if {[catch {menu .menubar} err]} { bgerror "INIT: $err" }
@@ -66,12 +67,13 @@ proc ::tk::ConsoleInit {} {
 	    -underline 0 -command {wm withdraw .}
     .menubar.file add command -label [mc "Clear Console"] \
 	    -underline 0 -command {.console delete 1.0 "promptEnd linestart"}
-    if {[string compare $tcl_platform(platform) "macintosh"]} {
-	.menubar.file add command -label [mc "Exit"] \
-		-underline 1 -command exit
-    } else {
+   if {[string equal $tcl_platform(platform) "macintosh"]
+	   || [string equal [tk windowingsystem] "aqua"]} {
 	.menubar.file add command -label [mc "Quit"] \
 		-command exit -accel Cmd-Q
+    } else {
+	.menubar.file add command -label [mc "Exit"] \
+		-underline 1 -command exit
     }
 
     menu .menubar.edit -tearoff 0
@@ -107,6 +109,11 @@ proc ::tk::ConsoleInit {} {
 	}
 	"windows" {
 	    $con configure -font systemfixed
+	}
+	"unix" {
+	    if {[string equal [tk windowingsystem] "aqua"]} {
+		$con configure -font {Monaco 9 normal} -highlightthickness 0
+	    }
 	}
     }
 

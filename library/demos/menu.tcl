@@ -3,7 +3,7 @@
 # This demonstration script creates a window with a bunch of menus
 # and cascaded menus using menubars.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.3 2001/11/12 15:01:33 dkf Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.4 2002/08/31 06:12:28 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -17,7 +17,8 @@ wm iconname $w "menu"
 positionWindow $w
 
 label $w.msg -font $font -wraplength 4i -justify left 
-if {$tcl_platform(platform) == "macintosh"} {
+if {[string equal [tk windowingsystem] "classic"]
+	|| [string equal [tk windowingsystem] "aqua"]} {
     $w.msg configure -text "This window contains a menubar with cascaded menus.  You can invoke entries with an accelerator by typing Command+x, where \"x\" is the character next to the command key symbol. The rightmost menu can be torn off into a palette by dragging outside of its bounds and releasing the mouse."
 } else {
     $w.msg configure -text "This window contains a menubar with cascaded menus.  You can post a menu from the keyboard by typing Alt+x, where \"x\" is the character underlined on the menu.  You can then traverse among the menus using the arrow keys.  When a menu is posted, you can invoke the current entry by typing space, or you can invoke any entry by typing its underlined character.  If a menu entry has an accelerator, you can invoke the entry without posting the menu just by typing the accelerator. The rightmost menu can be torn off into a palette by selecting the first item in the menu."
@@ -55,7 +56,8 @@ set m $w.menu.basic
 $w.menu add cascade -label "Basic" -menu $m -underline 0
 menu $m -tearoff 0
 $m add command -label "Long entry that does nothing"
-if {$tcl_platform(platform) == "macintosh"} {
+if {[string equal [tk windowingsystem] "classic"] 
+	|| [string equal [tk windowingsystem] "aqua"]} {
     set modifier Command
 } elseif {$tcl_platform(platform) == "windows"} {
     set modifier Control

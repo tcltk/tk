@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.22 2002/07/04 09:25:45 dkf Exp $
-# $Id: bgerror.tcl,v 1.22 2002/07/04 09:25:45 dkf Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.23 2002/08/31 06:12:28 das Exp $
+# $Id: bgerror.tcl,v 1.23 2002/08/31 06:12:28 das Exp $
 
 namespace eval ::tk {
     namespace eval dialog {
@@ -92,7 +92,8 @@ proc ::tk::dialog::error::bgerror err {
 
     # Ok the application's tkerror either failed or was not found
     # we use the default dialog then :
-    if {$tcl_platform(platform) eq "macintosh"} {
+    if {($tcl_platform(platform) eq "macintosh")
+             || ([tk windowingsystem] eq "aqua")} {
 	set ok		[mc Ok]
 	set messageFont	system
 	set textRelief	flat
@@ -139,13 +140,14 @@ proc ::tk::dialog::error::bgerror err {
     wm iconname .bgerrorDialog ErrorDialog
     wm protocol .bgerrorDialog WM_DELETE_WINDOW { }
 
-    if {$tcl_platform(platform) eq "macintosh"} {
+    if {($tcl_platform(platform) eq "macintosh") 
+            || ([tk windowingsystem] eq "aqua")} {
 	::tk::unsupported::MacWindowStyle style .bgerrorDialog dBoxProc
     }
 
     frame .bgerrorDialog.bot
     frame .bgerrorDialog.top
-    if {$tcl_platform(platform) eq "unix"} {
+    if {[tk windowingsystem] eq "x11"} {
 	.bgerrorDialog.bot configure -relief raised -bd 1
 	.bgerrorDialog.top configure -relief raised -bd 1
     }
@@ -181,7 +183,8 @@ proc ::tk::dialog::error::bgerror err {
     set wrapwidth [expr {$wrapwidth-60-[winfo pixels .bgerrorDialog 9m]}]
     label .bgerrorDialog.msg -justify left -text $text -font $messageFont \
 	    -wraplength $wrapwidth
-    if { $tcl_platform(platform) eq "macintosh" } {
+    if {($tcl_platform(platform) eq "macintosh")
+            || ([tk windowingsystem] eq "aqua")} {
 	# On the Macintosh, use the stop bitmap
 	label .bgerrorDialog.bitmap -bitmap stop
     } else {
@@ -216,7 +219,8 @@ proc ::tk::dialog::error::bgerror err {
 		-padx 10
 	grid columnconfigure .bgerrorDialog.bot $i -weight 1
 	# We boost the size of some Mac buttons for l&f
-	if {$tcl_platform(platform) eq "macintosh"} {
+	if {($tcl_platform(platform) eq "macintosh")
+	    || ([tk windowingsystem] eq "aqua")} {
 	    if {($name eq "ok") || ($name eq "dismiss")} {
 		grid columnconfigure .bgerrorDialog.bot $i -minsize 79
 	    }

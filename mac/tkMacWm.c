@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.21 2002/07/25 22:12:29 pspjuth Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.22 2002/08/31 06:12:28 das Exp $
  */
 
 #include <Gestalt.h>
@@ -5002,7 +5002,7 @@ TkUnsupported1Cmd(
 				 * interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int argc,			/* Number of arguments. */
-    char **argv)		/* Argument strings. */
+    CONST char **argv)		/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     TkWindow *winPtr;

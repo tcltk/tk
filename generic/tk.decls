@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.23 2002/08/05 04:30:38 dgp Exp $
+# RCS: @(#) $Id: tk.decls,v 1.24 2002/08/31 06:12:19 das Exp $
 
 library tk
 
@@ -1331,3 +1331,54 @@ declare 10 mac {
     GWorldPtr TkMacGetDrawablePort (Drawable drawable)
 }
 
+# Mac OS X specific functions
+
+declare 0 aqua {
+    void Tk_MacOSXSetEmbedHandler ( \
+	    Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr, \
+	    Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr, \
+	    Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr, \
+	    Tk_MacOSXEmbedGetClipProc *getClipProc, \
+	    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
+}
+ 
+declare 1 aqua {
+    void Tk_MacOSXTurnOffMenus (void)
+}
+
+declare 2 aqua {
+    void Tk_MacOSXTkOwnsCursor (int tkOwnsIt)
+}
+
+declare 3 aqua {
+    void TkMacOSXInitMenus (Tcl_Interp *interp)
+}
+
+declare 4 aqua {
+    void TkMacOSXInitAppleEvents (Tcl_Interp *interp)
+}
+
+declare 5 aqua {
+    void TkGenWMConfigureEvent (Tk_Window tkwin, \
+	    int x, int y, int width, int height, int flags)
+}
+
+declare 6 aqua {
+    void TkMacOSXInvalClipRgns (TkWindow *winPtr)
+}
+
+declare 7 aqua {
+    GWorldPtr TkMacOSXGetDrawablePort (Drawable drawable)
+}
+
+declare 8 aqua {
+    ControlRef TkMacOSXGetRootControl (Drawable drawable)
+}
+
+declare 9 aqua {
+    void Tk_MacOSXSetupTkNotifier (void)
+}
+
+declare 10 aqua {
+    int Tk_MacOSXIsAppInFront (void)
+}

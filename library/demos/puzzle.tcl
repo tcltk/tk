@@ -3,7 +3,7 @@
 # This demonstration script creates a 15-puzzle game using a collection
 # of buttons.
 #
-# RCS: @(#) $Id: puzzle.tcl,v 1.3 2001/06/14 10:56:58 dkf Exp $
+# RCS: @(#) $Id: puzzle.tcl,v 1.4 2002/08/31 06:12:28 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -54,8 +54,19 @@ pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
 # scrollbar widget and using its trough color.
 
 scrollbar $w.s
-frame $w.frame -width 120 -height 120 -borderwidth 2 -relief sunken \
-	-bg [$w.s cget -troughcolor]
+
+# The button metrics are a bit bigger in Aqua, and since we are
+# using place which doesn't autosize, then we need to have a 
+# slightly larger frame here...
+
+if {[string equal [tk windowingsystem] aqua]} {
+    set frameSize 160
+} else {
+    set frameSize 120
+}
+
+frame $w.frame -width $frameSize -height $frameSize -borderwidth 2\
+	-relief sunken -bg [$w.s cget -troughcolor]
 pack $w.frame -side top -pady 1c -padx 1c
 destroy $w.s
 
