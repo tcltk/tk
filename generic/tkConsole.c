@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.16 2002/01/15 20:48:29 dgp Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.17 2002/04/12 06:51:50 hobbs Exp $
  */
 
 #include "tk.h"
@@ -602,7 +602,7 @@ ConsoleCmd(clientData, interp, argc, argv)
 	} else {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
 		    " eval command\"", (char *) NULL);
-	    return TCL_ERROR;
+	    result = TCL_ERROR;
 	}
     } else {
 	Tcl_AppendResult(interp, "bad option \"", argv[1],
