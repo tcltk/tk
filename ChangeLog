@@ -1,3 +1,11 @@
+2001-10-17  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/configure: regened
+	* unix/configure.in: added preset CFLAGS check from HEAD to
+	prevent --enable-gcc from adding "-g -O2"
+
+	* win/configure: regened from dgp's changes
+
 2001-10-16  Don Porter <dgp@users.sourceforge.net>
 
 	* unix/tcl.m4:
