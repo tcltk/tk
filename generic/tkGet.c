@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGet.c,v 1.7 2002/01/17 05:13:11 dgp Exp $
+ * RCS: @(#) $Id: tkGet.c,v 1.8 2002/01/25 21:09:37 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -548,7 +548,7 @@ Tk_GetScreenMM(interp, tkwin, string, doublePtr)
     Tk_Window tkwin;		/* Window whose screen determines conversion
 				 * from centimeters and other absolute
 				 * units. */
-    char *string;		/* String describing a screen distance. */
+    CONST char *string;		/* String describing a screen distance. */
     double *doublePtr;		/* Place to store converted result. */
 {
     char *end;
@@ -624,7 +624,7 @@ Tk_GetPixels(interp, tkwin, string, intPtr)
     Tk_Window tkwin;		/* Window whose screen determines conversion
 				 * from centimeters and other absolute
 				 * units. */
-    char *string;		/* String describing a number of pixels. */
+    CONST char *string;		/* String describing a number of pixels. */
     int *intPtr;		/* Place to store converted result. */
 {
     double d;

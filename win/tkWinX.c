@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.17 2001/12/28 23:43:24 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.18 2002/01/25 21:09:37 dgp Exp $
  */
 
 #include "tkWinInt.h"
@@ -325,10 +325,10 @@ TkWinGetPlatformId()
  *----------------------------------------------------------------------
  */
 
-char *
+CONST char *
 TkGetDefaultScreenName(interp, screenName)
     Tcl_Interp *interp;		/* Not used. */
-    char *screenName;		/* If NULL, use default string. */
+    CONST char *screenName;	/* If NULL, use default string. */
 {
     if ((screenName == NULL) || (screenName[0] == '\0')) {
 	screenName = winScreenName;
@@ -355,7 +355,7 @@ TkGetDefaultScreenName(interp, screenName)
 
 TkDisplay *
 TkpOpenDisplay(display_name)
-    char *display_name;
+    CONST char *display_name;
 {
     Screen *screen;
     HDC dc;

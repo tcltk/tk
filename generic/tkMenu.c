@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.14 2002/01/17 05:13:11 dgp Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.15 2002/01/25 21:09:37 dgp Exp $
  */
 
 /*
@@ -2469,7 +2469,7 @@ MenuVarProc(clientData, interp, name1, name2, flags)
 {
     TkMenuEntry *mePtr = (TkMenuEntry *) clientData;
     TkMenu *menuPtr;
-    char *value;
+    CONST char *value;
     char *name = Tcl_GetStringFromObj(mePtr->namePtr, NULL);
     char *onValue;
 

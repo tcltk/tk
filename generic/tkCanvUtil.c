@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvUtil.c,v 1.5 1999/12/16 21:57:35 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvUtil.c,v 1.6 2002/01/25 21:09:36 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -189,7 +189,7 @@ int
 Tk_CanvasGetCoord(interp, canvas, string, doublePtr)
     Tcl_Interp *interp;		/* Interpreter for error reporting. */
     Tk_Canvas canvas;		/* Canvas to which coordinate applies. */
-    char *string;		/* Describes coordinate (any screen
+    CONST char *string;		/* Describes coordinate (any screen
 				 * coordinate form may be used here). */
     double *doublePtr;		/* Place to store converted coordinate. */
 {
@@ -376,7 +376,7 @@ Tk_CanvasTagsParseProc(clientData, interp, tkwin, value, widgRec, offset)
 {
     register Tk_Item *itemPtr = (Tk_Item *) widgRec;
     int argc, i;
-    char **argv;
+    CONST char **argv;
     Tk_Uid *newPtr;
 
     /*
@@ -454,7 +454,7 @@ Tk_CanvasTagsPrintProc(clientData, tkwin, widgRec, offset, freeProcPtr)
 	return (char *) itemPtr->tagPtr[0];
     }
     *freeProcPtr = TCL_DYNAMIC;
-    return Tcl_Merge(itemPtr->numTags, (char **) itemPtr->tagPtr);
+    return Tcl_Merge(itemPtr->numTags, (CONST char **) itemPtr->tagPtr);
 }
 
 
@@ -777,7 +777,7 @@ Tk_GetDash(interp, value, dash)
 				 * store dash information. */
 {
     int argc, i;
-    char **largv, **argv = NULL;
+    CONST char **largv, **argv = NULL;
     char *pt;
 
     if ((value==(char *) NULL) || (*value==0) ) {

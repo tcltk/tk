@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.25 2002/01/17 05:13:11 dgp Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.26 2002/01/25 21:09:37 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -45,7 +45,7 @@ typedef struct {
      * Fields that are set by widget commands other than "configure".
      */
      
-    char *string;		/* Pointer to storage for string;
+    CONST char *string;		/* Pointer to storage for string;
 				 * NULL-terminated;  malloc-ed. */
     int insertPos;		/* Character index before which next typed
 				 * character will be inserted. */
@@ -134,7 +134,7 @@ typedef struct {
      * configuration settings above.
      */
 
-    char *displayString;	/* String to use when displaying.  This may
+    CONST char *displayString;	/* String to use when displaying.  This may
 				 * be a pointer to string, or a pointer to
 				 * malloced memory with the same character
 				 * length as string but whose characters
@@ -690,7 +690,7 @@ static void		EntryLostSelection _ANSI_ARGS_((
 static void		EventuallyRedraw _ANSI_ARGS_((Entry *entryPtr));
 static void		EntryScanTo _ANSI_ARGS_((Entry *entryPtr, int y));
 static void		EntrySetValue _ANSI_ARGS_((Entry *entryPtr,
-			    char *value));
+			    CONST char *value));
 static void		EntrySelectTo _ANSI_ARGS_((
 			    Entry *entryPtr, int index));
 static char *		EntryTextVarProc _ANSI_ARGS_((ClientData clientData,
@@ -700,12 +700,13 @@ static void		EntryUpdateScrollbar _ANSI_ARGS_((Entry *entryPtr));
 static int		EntryValidate _ANSI_ARGS_((Entry *entryPtr,
 			    char *cmd));
 static int		EntryValidateChange _ANSI_ARGS_((Entry *entryPtr,
-			    char *change, char *new, int index, int type));
+			    char *change, CONST char *new, int index,
+			    int type));
 static void		ExpandPercents _ANSI_ARGS_((Entry *entryPtr,
-			    CONST char *before, char *change, char *new,
+			    CONST char *before, char *change, CONST char *new,
 			    int index, int type, Tcl_DString *dsPtr));
 static void		EntryValueChanged _ANSI_ARGS_((Entry *entryPtr,
-			    char *newValue));
+			    CONST char *newValue));
 static void		EntryVisibleRange _ANSI_ARGS_((Entry *entryPtr,
 			    double *firstPtr, double *lastPtr));
 static int		EntryWidgetObjCmd _ANSI_ARGS_((ClientData clientData,
@@ -770,6 +771,7 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
     register Entry *entryPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
+    char *tmp;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
@@ -807,8 +809,9 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
 	    (ClientData) entryPtr, EntryCmdDeletedProc);
     entryPtr->optionTable	= optionTable;
     entryPtr->type		= TK_ENTRY;
-    entryPtr->string		= (char *) ckalloc(1);
-    entryPtr->string[0]		= '\0';
+    tmp				= (char *) ckalloc(1);
+    tmp[0]			= '\0';
+    entryPtr->string		= tmp;
     entryPtr->selectFirst	= -1;
     entryPtr->selectLast	= -1;
 
@@ -984,7 +987,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	        Tcl_WrongNumArgs(interp, 2, objv, (char *) NULL);
 		goto error;
 	    }
-	    Tcl_SetResult(interp, entryPtr->string, TCL_STATIC);
+	    Tcl_SetStringObj(Tcl_GetObjResult(interp), entryPtr->string, -1);
 	    break;
 	}
 
@@ -1325,7 +1328,7 @@ DestroyEntry(memPtr)
      * stuff.
      */
 
-    ckfree(entryPtr->string);
+    ckfree((char *)entryPtr->string);
     if (entryPtr->textVarName != NULL) {
 	Tcl_UntraceVar(entryPtr->interp, entryPtr->textVarName,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
@@ -1339,7 +1342,7 @@ DestroyEntry(memPtr)
     }
     Tcl_DeleteTimerHandler(entryPtr->insertBlinkHandler);
     if (entryPtr->displayString != entryPtr->string) {
-	ckfree(entryPtr->displayString);
+	ckfree((char *)entryPtr->displayString);
     }
     if (entryPtr->type == TK_SPINBOX) {
 	Spinbox *sbPtr = (Spinbox *) entryPtr;
@@ -1634,7 +1637,7 @@ ConfigureEntry(interp, entryPtr, objc, objv, flags)
      */
 
     if (entryPtr->textVarName != NULL) {
-	char *value;
+	CONST char *value;
 
 	value = Tcl_GetVar(interp, entryPtr->textVarName, TCL_GLOBAL_ONLY);
 	if (value == NULL) {
@@ -2081,7 +2084,7 @@ EntryComputeGeometry(entryPtr)
     char *p;
 
     if (entryPtr->displayString != entryPtr->string) {
-	ckfree(entryPtr->displayString);
+	ckfree((char *)entryPtr->displayString);
 	entryPtr->displayString = entryPtr->string;
 	entryPtr->numDisplayBytes = entryPtr->numBytes;
     }
@@ -2107,10 +2110,9 @@ EntryComputeGeometry(entryPtr)
 	size = Tcl_UniCharToUtf(ch, buf);
 
 	entryPtr->numDisplayBytes = entryPtr->numChars * size;
-	entryPtr->displayString =
-		(char *) ckalloc((unsigned) (entryPtr->numDisplayBytes + 1));
+	p = (char *) ckalloc((unsigned) (entryPtr->numDisplayBytes + 1));
+	entryPtr->displayString = p;
 
-	p = entryPtr->displayString;
 	for (i = entryPtr->numChars; --i >= 0; ) {
 	    p += Tcl_UniCharToUtf(ch, p);
 	}
@@ -2214,7 +2216,8 @@ InsertChars(entryPtr, index, value)
 				 * string). */
 {
     int byteIndex, byteCount, oldChars, charsAdded, newByteCount;
-    char *new, *string;
+    CONST char *string;
+    char *new;
 
     string = entryPtr->string;
     byteIndex = Tcl_UtfAtIndex(string, index) - string;
@@ -2237,7 +2240,7 @@ InsertChars(entryPtr, index, value)
 	return;
     }
 
-    ckfree(string);
+    ckfree((char *)string);
     entryPtr->string = new;
 
     /*
@@ -2311,7 +2314,8 @@ DeleteChars(entryPtr, index, count)
     int count;			/* How many characters to delete. */
 {
     int byteIndex, byteCount, newByteCount;
-    char *new, *string, *todelete;
+    CONST char *string;
+    char *new, *todelete;
 
     if ((index + count) > entryPtr->numChars) {
 	count = entryPtr->numChars - index;
@@ -2343,7 +2347,7 @@ DeleteChars(entryPtr, index, count)
     }
 
     ckfree(todelete);
-    ckfree(entryPtr->string);
+    ckfree((char *)entryPtr->string);
     entryPtr->string = new;
     entryPtr->numChars -= count;
     entryPtr->numBytes -= byteCount;
@@ -2423,7 +2427,7 @@ DeleteChars(entryPtr, index, count)
 static void
 EntryValueChanged(entryPtr, newValue)
     Entry *entryPtr;		/* Entry whose value just changed. */
-    char *newValue;		/* If this value is not NULL, we first
+    CONST char *newValue;	/* If this value is not NULL, we first
 				 * force the value of the entry to this */
 {
     if (newValue != NULL) {
@@ -2483,9 +2487,9 @@ EntryValueChanged(entryPtr, newValue)
 static void
 EntrySetValue(entryPtr, value)
     Entry *entryPtr;		/* Entry whose value is to be changed. */
-    char *value;		/* New text to display in entry. */
+    CONST char *value;		/* New text to display in entry. */
 {
-    char *oldSource;
+    CONST char *oldSource;
     int code, valueLen, malloced = 0;
 
     if (strcmp(value, entryPtr->string) == 0) {
@@ -2501,9 +2505,9 @@ EntrySetValue(entryPtr, value)
 	 * point to volatile memory, like the value of the -textvar
 	 * which may get freed during validation
 	 */
-	oldSource = (char *) ckalloc((unsigned) (valueLen + 1));
-	strcpy(oldSource, value);
-	value = oldSource;
+	char *tmp = (char *) ckalloc((unsigned) (valueLen + 1));
+	strcpy(tmp, value);
+	value = tmp;
 	malloced = 1;
 
 	entryPtr->flags |= VALIDATE_VAR;
@@ -2516,19 +2520,20 @@ EntrySetValue(entryPtr, value)
 	 */
 	if (entryPtr->flags & VALIDATE_ABORT) {
 	    entryPtr->flags &= ~VALIDATE_ABORT;
-	    ckfree(value);
+	    ckfree((char *)value);
 	    return;
 	}
     }
 
     oldSource = entryPtr->string;
-    ckfree(entryPtr->string);
+    ckfree((char *)entryPtr->string);
 
     if (malloced) {
 	entryPtr->string = value;
     } else {
-	entryPtr->string   = (char *) ckalloc((unsigned) (valueLen + 1));
-	strcpy(entryPtr->string, value);
+	char *tmp = (char *) ckalloc((unsigned) (valueLen + 1));
+	strcpy(tmp, value);
+	entryPtr->string = tmp;
     }
     entryPtr->numBytes = valueLen;
     entryPtr->numChars = Tcl_NumUtfChars(value, valueLen);
@@ -2955,7 +2960,7 @@ EntryFetchSelection(clientData, offset, buffer, maxBytes)
 {
     Entry *entryPtr = (Entry *) clientData;
     int byteCount;
-    char *string;
+    CONST char *string;
     CONST char *selStart, *selEnd;
 
     if ((entryPtr->selectFirst < 0) || !(entryPtr->exportSelection)) {
@@ -3276,7 +3281,7 @@ EntryTextVarProc(clientData, interp, name1, name2, flags)
     int flags;			/* Information about what happened. */
 {
     Entry *entryPtr = (Entry *) clientData;
-    char *value;
+    CONST char *value;
 
     /*
      * If the variable is unset, then immediately recreate it unless
@@ -3393,7 +3398,7 @@ EntryValidateChange(entryPtr, change, new, index, type)
      register Entry *entryPtr;	/* Entry that needs validation. */
      char *change;		/* Characters to be added/deleted
 				 * (NULL-terminated string). */
-     char *new;                 /* Potential new value of entry string */
+     CONST char *new;           /* Potential new value of entry string */
      int index;                 /* index of insert/delete, -1 otherwise */
      int type;                  /* forced, delete, insert,
 				 * focusin or focusout */
@@ -3532,7 +3537,7 @@ ExpandPercents(entryPtr, before, change, new, index, type, dsPtr)
 				 * expressions to be replaced. */
      char *change;		/* Characters to added/deleted
 				 * (NULL-terminated string). */
-     char *new;			/* Potential new value of entry string */
+     CONST char *new;		/* Potential new value of entry string */
      int index;			/* index of insert/delete */
      int type;			/* INSERT or DELETE */
      Tcl_DString *dsPtr;	/* Dynamic string in which to append
@@ -3695,6 +3700,7 @@ Tk_SpinboxObjCmd(clientData, interp, objc, objv)
     register Spinbox *sbPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
+    char *tmp;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
@@ -3733,8 +3739,9 @@ Tk_SpinboxObjCmd(clientData, interp, objc, objv)
 	    (ClientData) sbPtr, EntryCmdDeletedProc);
     entryPtr->optionTable	= optionTable;
     entryPtr->type		= TK_SPINBOX;
-    entryPtr->string		= (char *) ckalloc(1);
-    entryPtr->string[0]		= '\0';
+    tmp				= (char *) ckalloc(1);
+    tmp[0]			= '\0';
+    entryPtr->string		= tmp;
     entryPtr->selectFirst	= -1;
     entryPtr->selectLast	= -1;
 
@@ -3929,7 +3936,7 @@ SpinboxWidgetObjCmd(clientData, interp, objc, objv)
 	        Tcl_WrongNumArgs(interp, 2, objv, (char *) NULL);
 		goto error;
 	    }
-	    Tcl_SetResult(interp, entryPtr->string, TCL_STATIC);
+	    Tcl_SetStringObj(Tcl_GetObjResult(interp), entryPtr->string, -1);
 	    break;
 	}
 
@@ -4217,7 +4224,7 @@ SpinboxWidgetObjCmd(clientData, interp, objc, objv)
 	    if (objc == 3) {
 		EntryValueChanged(entryPtr, Tcl_GetString(objv[2]));
 	    }
-	    Tcl_SetResult(interp, entryPtr->string, TCL_STATIC);
+	    Tcl_SetStringObj(Tcl_GetObjResult(interp), entryPtr->string, -1);
 	    break;
 	}
 

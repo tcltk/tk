@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.13 2001/12/05 01:30:44 das Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.14 2002/01/25 21:09:37 dgp Exp $
  */
 
 #include <Gestalt.h>
@@ -194,7 +194,7 @@ typedef struct TkWmInfo {
     ProtocolHandler *protPtr;	/* First in list of protocol handlers for
 				 * this window (NULL means none). */
     int cmdArgc;		/* Number of elements in cmdArgv below. */
-    char **cmdArgv;		/* Array of strings to store in the
+    CONST char **cmdArgv;	/* Array of strings to store in the
 				 * WM_COMMAND property.  NULL means nothing
 				 * available. */
     char *clientMachine;	/* String to store in WM_CLIENT_MACHINE
@@ -814,7 +814,7 @@ Tk_WmCmd(
 	TkWindow **cmapList;
 	TkWindow *winPtr2;
 	int i, windowArgc, gotToplevel = 0;
-	char **windowArgv;
+	CONST char **windowArgv;
 
 	if ((argc != 3) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
@@ -880,7 +880,7 @@ Tk_WmCmd(
     } else if ((c == 'c') && (strncmp(argv[1], "command", length) == 0)
 	    && (length >= 3)) {
 	int cmdArgc;
-	char **cmdArgv;
+	CONST char **cmdArgv;
 
 	if ((argc != 3) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
@@ -4231,7 +4231,7 @@ TkUnsupported1Cmd(
 	    } else {
 	        int foundOne = 0;
 	        int attrArgc, i;
-	        char **attrArgv = NULL;
+	        CONST char **attrArgv = NULL;
 	        
 	        if (Tcl_SplitList(interp, argv[4], &attrArgc, &attrArgv) != TCL_OK) {
 	            wmPtr->macClass = oldClass;

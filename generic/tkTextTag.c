@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.6 2001/11/13 00:19:05 hobbs Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.7 2002/01/25 21:09:37 dgp Exp $
  */
 
 #include "default.h"
@@ -250,7 +250,7 @@ TkTextTagCmd(textPtr, interp, argc, argv)
 	    command = Tk_GetBinding(interp, textPtr->bindingTable,
 		    (ClientData) tagPtr, argv[4]);
 	    if (command == NULL) {
-		char *string = Tcl_GetStringResult(interp); 
+		CONST char *string = Tcl_GetStringResult(interp); 
 
 		/*
 		 * Ignore missing binding errors.  This is a special hack
@@ -804,7 +804,7 @@ TkTextTagCmd(textPtr, interp, argc, argv)
 TkTextTag *
 TkTextCreateTag(textPtr, tagName)
     TkText *textPtr;		/* Widget in which tag is being used. */
-    char *tagName;		/* Name of desired tag. */
+    CONST char *tagName;	/* Name of desired tag. */
 {
     register TkTextTag *tagPtr;
     Tcl_HashEntry *hPtr;
