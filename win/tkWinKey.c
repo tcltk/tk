@@ -72,6 +72,16 @@ static Keys keymap[] = {
     VK_F24, XK_F24,
     VK_NUMLOCK, XK_Num_Lock, 
     VK_SCROLL, XK_Scroll_Lock,
+
+    /*
+     * The following support the new keys in the Microsoft keyboard.
+     * Win_L and Win_R have the windows logo.  App has the menu.
+     */
+
+    VK_LWIN, XK_Win_L,
+    VK_RWIN, XK_Win_R,
+    VK_APPS, XK_App,
+
     0, NoSymbol
 };
 
