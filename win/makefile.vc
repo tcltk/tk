@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.18 1999/02/04 21:02:58 stanton Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.19 1999/02/12 00:51:12 stanton Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -254,7 +254,13 @@ guilibsdll = $(libcdll) $(winlibs)
 ######################################################################
 
 !IF "$(NODEBUG)" == "1"
-cdebug = -O2 -Gs -GD
+!IF "$(MACHINE)" == "ALPHA"
+# MSVC on Alpha doesn't understand -Ot
+cdebug = -O2i -Gs -GD
+!ELSE
+# NOTE: Due to a bug in MSVC, we cannot use -O2 here or Tk starts to misbehave.
+cdebug = -Oti -Gs -GD
+!ENDIF
 !ELSE
 cdebug = -Z7 -Od -WX
 !ENDIF
