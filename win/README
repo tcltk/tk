@@ -4,7 +4,7 @@ by Scott Stanton
 Scriptics Corporation
 scott.stanton@scriptics.com
 
-RCS: @(#) $Id: README,v 1.1.4.6 1999/03/17 22:06:29 stanton Exp $
+RCS: @(#) $Id: README,v 1.1.4.7 1999/03/25 00:33:26 rjohnson Exp $
 
 1. Introduction
 ---------------
@@ -69,9 +69,10 @@ find them.  Tk looks in one of two places for the library files:
 	    directory containing the currently running .exe.
 
 Note that in order to run wish81.exe, you must ensure that tcl81.dll,
-tclpip81.dll (plus tcl1681.dll under Win32s), and tk81.dll are on your
-path, in the system directory, or in the directory containing
-wish81.exe.
+tclpip81.dll, and tk81.dll are on your path, in the system directory, 
+or in the directory containing wish81.exe.
+
+Note that Tk no longer supports Win32s.
 
 4. Test suite
 -------------
@@ -95,7 +96,6 @@ Windows beta version of Tk:
 - Some "wm" functions don't map to Windows and aren't implemented;
   others should map, but just aren't implemented.  The worst offenders
   are the icon manipulation routines.
-- Under Win32s, you can only start one instance of Wish at a time.
 - Color management on some displays doesn't work properly resulting in
   Tk switching to monochrome mode.
 - Tk seems to fail to draw anything on some Matrox Millenium cards.
