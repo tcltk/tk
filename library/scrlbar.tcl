@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scrollbar widgets.
 # It also provides procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: scrlbar.tcl,v 1.10 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: scrlbar.tcl,v 1.10.2.1 2004/02/17 07:17:17 das Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -129,6 +129,21 @@ bind Scrollbar <Home> {
 bind Scrollbar <End> {
     tk::ScrollToPos %W 1
 }
+}
+if {[string equal [tk windowingsystem] "classic"]
+	|| [string equal [tk windowingsystem] "aqua"]} {
+    bind Scrollbar <MouseWheel> {
+        tk::ScrollByUnits %W v [expr {- (%D)}]
+    }
+    bind Scrollbar <Option-MouseWheel> {
+        tk::ScrollByUnits %W v [expr {-10 * (%D)}]
+    }
+    bind Scrollbar <Shift-MouseWheel> {
+        tk::ScrollByUnits %W h [expr {- (%D)}]
+    }
+    bind Scrollbar <Shift-Option-MouseWheel> {
+        tk::ScrollByUnits %W h [expr {-10 * (%D)}]
+    }
 }
 # tk::ScrollButtonDown --
 # This procedure is invoked when a button is pressed in a scrollbar.

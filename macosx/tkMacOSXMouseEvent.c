@@ -608,6 +608,7 @@ GenerateMouseWheelEvent(MouseEventData * medPtr)
     winPtr = ( TkWindow *)tkwin;
     xEvent.type = MouseWheelEvent;
     xEvent.xkey.keycode = medPtr->delta;
+    xEvent.xbutton.state = TkMacOSXButtonKeyState();
     xEvent.xany.serial = LastKnownRequestProcessed(winPtr->display);
     xEvent.xany.send_event = false;
     xEvent.xany.display = winPtr->display;
