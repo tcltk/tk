@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.2.2.1 2003/05/13 02:42:57 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.2.2.2 2004/03/17 19:01:47 wolfsuit Exp $
  */
 
 #include "tk.h"
@@ -189,9 +189,15 @@ TkMacOSXInitMenus(
     InsertMenu(tkFileMenu, 0);
     AppendMenu(tkFileMenu, "\pSource…");
     AppendMenu(tkFileMenu, "\pClose/W");
+
+    /*
+     * These don't belong in the File menu on Mac OS X. 
+     */
+     
+#if 0
     AppendMenu(tkFileMenu, "\p(-");
     AppendMenu(tkFileMenu, "\pQuit/Q");
-
+#endif
     if (TkMacOSXUseMenuID(kEditMenu) != TCL_OK) {
             panic("Menu ID %d is already in use!", kEditMenu);
     }
