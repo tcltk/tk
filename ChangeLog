@@ -1,5 +1,18 @@
 1998-11-25    <stanton@GASPODE>
 
+	* unix/tkUnixFont.c (GetFontAttributes): Initialize an unspecified
+	family to an empty string.
+	(FontMapLoadPage): if the font included characters below 32, the
+	index computation was incorrect because the range was shifted up
+	to 32.
+	(CreateClosestFont): check for empty locale as well as NULL.
+
+	* generic/tkFont.c (TkFontParseXLFD): initialize charset to
+	iso8859-1 if no charset is specified.
+
+	* mac/tkMacHLEvents.c (OdocHandler): added conversion from
+	external string to UTF [Bug: 869]
+
 	* integrated tk8.0.4 changes.
 	
 	* generic/tkBind.c: fixed deletion order bug where a crash would
