@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.5 2003/10/29 10:03:32 dkf Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.6 2003/11/17 23:48:47 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -98,7 +98,8 @@ InitFont(tkwin, pattern, fontPtr)
     char *family;
     int weight, slant, spacing, i;
     double size;
-    FcFontSet *set, *charset;
+    FcFontSet *set;
+    FcCharSet *charset;
     FcResult result;
     XftFont *ftFont;
     
