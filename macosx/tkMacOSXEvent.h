@@ -62,7 +62,7 @@ enum {
 };
 
 typedef struct {
-    int handledByTk;
+    int stopProcessing;
     int err;
     char errMsg[1024];
 } MacEventStatus;
@@ -82,5 +82,12 @@ int TkMacOSXProcessMouseEvent(TkMacOSXEvent * e, MacEventStatus * statusPtr);
 int TkMacOSXProcessWindowEvent(TkMacOSXEvent * e, MacEventStatus * statusPtr);
 int TkMacOSXProcessKeyboardEvent(TkMacOSXEvent * e, MacEventStatus * statusPtr);
 int TkMacOSXProcessApplicationEvent(TkMacOSXEvent * e, MacEventStatus * statusPtr);
+
+int TkMacOSXKeycodeToUnicode(
+        UniChar * uniChars, int maxChars,
+        EventKind eKind,
+        UInt32 keycode, UInt32 modifiers,
+        UInt32 * deadKeyStatePtr);
+
 
 #endif

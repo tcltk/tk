@@ -1,3 +1,87 @@
+2003-02-19  Benjamin Riefenstahl <Benjamin.Riefenstahl@epost.de>
+	       & Jim Ingham <jingham@apple.com>
+
+	This patch changes the default Tk behavior so that events
+	are by default routed to the standard event handlers after
+	Tk has looked at them.
+	
+        * macosx/tkMacOSXEvent.h: Rename "handledByTk" into
+	"stopProcessing".
+	
+	* macosx/tkMacOSXEvent.c: Update erroneous comments and
+	remove unused includes.
+	(TkMacOSXProcessAppleEvent): Don't declare events
+	handled that we didn't even look at.
+	(TkMacOSXProcessEvent): Add a comment on policy for
+	"stopProcessing".
+	(TkMacOSXProcessEvent): Remove "handling" of events that	
+	are not our business.
+	(TkMacOSXProcessEvent): Rename "handledByTk" into
+	"stopProcessing".
+	(ReceiveAndProcessEvent): Ditto.
+	(ReceiveAndProcessEvent): Tune error production of
+	message.
+	
+	* macosx/tkMacOSXKeyEvent.c (TkMacOSXProcessKeyboardEvent):
+	Rename "handledByTk" into "stopProcessing".
+	
+	* macosx/tkMacOSXWindowEvent.c: Ditto.
+
+	* macosx/tkMacOSXMouseEvent.c: Remove setting of
+	"handledByTk".
+	(TkMacOSXProcessMouseEvent): Handle clicks in the "traffic
+	lights" in the window title when the window (or app) is
+	in the background.
+
+
+	This patch changes the key event handling to use the MacOS
+	translation mechanisms.  It also improves dead key handling.
+	
+        * macosx/tkMacOSXKeyEvent.c (InitKeyData): Add.
+        (InitKeyEvent): Add.
+        (DecodeViaUnicodeResource): Rename
+        KeycodeToUnicodeViaUnicodeResource.
+        (DecodeViaKCHRResource): Rename KeycodeToUnicodeViaKCHRResource.
+        (GetKeyboardLayout): Use a boolean flag instead of a special
+        layout id.
+
+        (KeycodeToUnicodeViaUnicodeResource): Change interface and
+        implementation to return a Unicode string instead of directly
+        filling an XEvent.
+        (KeycodeToUnicodeViaKCHRResource): Ditto.
+        (KeycodeToUnicodeViaUnicodeResource): Add handling for callers
+        that don't want deadkey processing (i.e. XKeycodeToKeysym).
+        (KeycodeToUnicodeViaKCHRResource): Ditto.
+        (KeycodeToUnicodeViaUnicodeResource): Clear deadKeyState if a
+        character was produced.
+        (KeycodeToUnicodeViaKCHRResource): Use CFString and current
+        keyboard encoding instead of Tcl Tcl_ExternalToUtf() and fixed
+        TkMacOSXCarbonEncoding.
+        (TkMacOSXKeycodeToUnicode): Add.
+        
+        (TkMacOSXProcessKeyboardEvent): Add some heuristics to improve
+        keyup events.
+        (deadKeyState): Split into deadKeyStateUp and deadKeyStateDown.
+        (GenerateKeyEvent): Change interface and implementation to accept
+        a Unicode string instead of individual characters.
+        (GenerateKeyEvent): Don't generate string representations for
+        special characters. 
+
+        * macosx/tkMacOSXEvent.h (TkMacOSXKeycodeToUnicode): Add
+        prototype. 
+
+        * macosx/tkMacOSXKeyboard.c (KCHRPtr): Remove.
+        (XKeycodeToKeysym): Use TkMacOSXKeycodeToUnicode instead of
+        KeyTranslate.
+        (XKeycodeToKeysym): Support latin-1 keysyms.
+
+	This patch reverts the hack to put icons in menus that Vince put
+	in yesterday (but preserves the bug fix in that submission.)
+
+	* macosx/tkMacOSXMenu.c (SetMenuTitle): revert treating 
+	"<bullet> number" as a request to put icon number <number> in
+	the menu.
+	
 2003-02-18  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* doc/entry.n:

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.5 2003/02/18 14:43:45 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6 2003/02/19 19:27:48 wolfsuit Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -865,35 +865,15 @@ mySetMenuTitle(
     MenuRef menuHdl,		/* The menu we are setting the title of. */
     Tcl_Obj *titlePtr)	        /* The C string to set the title to. */
 {
-    char localBuffer[7]; 
-    Boolean success; 
     char *title = (titlePtr == NULL) ? ""
 	    : Tcl_GetStringFromObj(titlePtr, NULL);
     CFStringRef cf = CFStringCreateWithCString(NULL,
 			    title, kCFStringEncodingUTF8);
 
-    success = CFStringGetCString(cf, localBuffer, 7, kCFStringEncodingMacRoman); 
-    if (success && (localBuffer[0] == '\245')) {
-	OSErr err;
-	IconSuiteRef ref;
-	int iconId = atoi(localBuffer + 1);
-	/* 
-	 * Until images/icons are properly supported on MacOS X, 
-	 * we allow the user to specify a bullet followed by
-	 * a resource id to use an icon as a menu title
-	 */
-	err = GetIconSuite( &ref, iconId, kSelectorAllAvailableData );       
-	if (err == noErr) {
-	    SetMenuTitleIcon(menuHdl,kMenuIconSuiteType,ref);
-	    /* DisposeIconSuite(ref,true); */
-	} else {
-	    SetMenuTitleWithCFString(menuHdl, cf);
-	}
-    } else {
-	SetMenuTitleWithCFString(menuHdl, cf);
-    }
+    SetMenuTitleWithCFString(menuHdl, cf);
     CFRelease(cf);
 }
+
 static int ParseAccelerators(char **accelStringPtr) {
     char *accelString = *accelStringPtr;
     int flags = 0;

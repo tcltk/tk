@@ -101,7 +101,6 @@ TkMacOSXProcessApplicationEvent(
         TkMacOSXEvent *eventPtr, 
         MacEventStatus *statusPtr)
 {
-    statusPtr->handledByTk = 1;
     switch (eventPtr->eKind) {
         case kEventAppActivated:
             tkMacOSXAppInFront = true;
@@ -155,11 +154,9 @@ TkMacOSXProcessWindowEvent(
         case kEventWindowUpdate:
             break;
         default:
-            statusPtr->handledByTk = 1;
             return 0;
             break;
     }
-    statusPtr->handledByTk = 1;
     status = GetEventParameter(eventPtr->eventRef,
             kEventParamDirectObject,
             typeWindowRef, NULL,
@@ -184,8 +181,6 @@ TkMacOSXProcessWindowEvent(
         case kEventWindowUpdate:
             if (GenerateUpdateEvent(window)) {
                 eventFound = true;
-            } else {
-                statusPtr->handledByTk = 0;
             }
             break;
     }
