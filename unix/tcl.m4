@@ -575,7 +575,6 @@ AC_DEFUN(SC_ENABLE_LANGINFO, [
 #			Flags used when running the compiler in debug mode
 #	CFLAGS_OPTIMIZE -
 #			Flags used when running the compiler in optimize mode
-#
 #	EXTRA_CFLAGS
 #
 #	Subst's the following vars:
@@ -695,6 +694,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 		LD_SEARCH_FLAGS='-R${LIB_RUNTIME_DIR}'
 	    fi
 
+	    # Check to enable 64-bit flags for compiler/linker
 	    if test "$do64bit" = "yes" ; then
 		if test "$GCC" = "yes" ; then
 		    AC_MSG_WARN("64bit mode not supported with GCC on $system")
@@ -748,6 +748,17 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    	MATH_LIBS="$MATH_LIBS -lbsd"
 	    	AC_DEFINE(USE_DELTA_FOR_TZ)
 	    fi
+
+	    # Check to enable 64-bit flags for compiler/linker
+	    if test "$do64bit" = "yes" ; then
+		if test "$GCC" = "yes" ; then
+		    AC_MSG_WARN("64bit mode not supported with GCC on $system")
+		else 
+		    do64bit_ok=yes
+		    EXTRA_CFLAGS="-q64"
+		    LDFLAGS="-q64"
+		fi
+	    fi
 	    ;;
 	BSD/OS-2.1*|BSD/OS-3*)
 	    SHLIB_CFLAGS=""
@@ -791,6 +802,8 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 		LDFLAGS="-Wl,-E"
 		LD_SEARCH_FLAGS='-Wl,+s,+b,${LIB_RUNTIME_DIR}:.'
 	    fi
+
+	    # Check to enable 64-bit flags for compiler/linker
 	    if test "$do64bit" = "yes" ; then
 		if test "$GCC" = "yes" ; then
 		    AC_MSG_WARN("64bit mode not supported with GCC on $system")
@@ -1004,12 +1017,18 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    DL_LIBS=""
 	    LDFLAGS="-export-dynamic"
 	    LD_SEARCH_FLAGS=""
-
-	    # FreeBSD doesn't handle version numbers with dots.
-
-	    UNSHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.a'
-	    SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.so'
-	    TCL_LIB_VERSIONS_OK=nodots
+	    if test "${TCL_THREADS}" = "1" ; then
+		EXTRA_CFLAGS="-pthread"
+	    	LDFLAGS="$LDFLAGS -pthread"
+	    fi
+	    case $system in
+	    FreeBSD-3.*)
+	    	# FreeBSD-3 doesn't handle version numbers with dots.
+	    	UNSHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.a'
+	    	SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.so'
+	    	TCL_LIB_VERSIONS_OK=nodots
+		;;
+	    esac
 	    ;;
 	Rhapsody-*|Darwin-*)
 	    SHLIB_CFLAGS="-fno-common"
@@ -1164,6 +1183,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    # won't define thread-safe library routines.
 
 	    AC_DEFINE(_REENTRANT)
+	    AC_DEFINE(_POSIX_PTHREAD_SEMANTICS)
 
 	    SHLIB_CFLAGS="-KPIC"
 	    SHLIB_LD="/usr/ccs/bin/ld -G -z text"
@@ -1188,11 +1208,13 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    # won't define thread-safe library routines.
 
 	    AC_DEFINE(_REENTRANT)
+	    AC_DEFINE(_POSIX_PTHREAD_SEMANTICS)
 
 	    SHLIB_CFLAGS="-KPIC"
 	    SHLIB_LD="/usr/ccs/bin/ld -G -z text"
 	    LDFLAGS=""
     
+	    # Check to enable 64-bit flags for compiler/linker
 	    if test "$do64bit" = "yes" ; then
 		arch=`isainfo`
 		if test "$arch" = "sparcv9 sparc" ; then
@@ -1415,7 +1437,9 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 #
 #	Determine which interface to use to talk to the serial port.
 #	Note that #include lines must begin in leftmost column for
-#	some compilers to recognize them as preprocessor directives.
+#	some compilers to recognize them as preprocessor directives,
+#	and some build environments have stdin not pointing at a
+#	pseudo-terminal (usually /dev/null instead.)
 #
 # Arguments:
 #	none
@@ -1431,12 +1455,11 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 
 AC_DEFUN(SC_SERIAL_PORT, [
     AC_MSG_CHECKING([termios vs. termio vs. sgtty])
-
+    AC_CACHE_VAL(tcl_cv_api_serial, [
     AC_TRY_RUN([
 #include <termios.h>
 
-main()
-{
+int main() {
     struct termios t;
     if (tcgetattr(0, &t) == 0) {
 	cfsetospeed(&t, 0);
@@ -1444,32 +1467,25 @@ main()
 	return 0;
     }
     return 1;
-}], tk_ok=termios, tk_ok=no, tk_ok=no)
-
-    if test $tk_ok = termios; then
-	AC_DEFINE(USE_TERMIOS)
-    else
+}], tcl_cv_api_serial=termios, tcl_cv_api_serial=no, tcl_cv_api_serial=no)
+    if test $tcl_cv_api_serial = no ; then
 	AC_TRY_RUN([
 #include <termio.h>
 
-main()
-{
+int main() {
     struct termio t;
     if (ioctl(0, TCGETA, &t) == 0) {
 	t.c_cflag |= CBAUD | PARENB | PARODD | CSIZE | CSTOPB;
 	return 0;
     }
     return 1;
-    }], tk_ok=termio, tk_ok=no, tk_ok=no)
-
-    if test $tk_ok = termio; then
-	AC_DEFINE(USE_TERMIO)
-    else
+}], tcl_cv_api_serial=termio, tcl_cv_api_serial=no, tcl_cv_api_serial=no)
+    fi
+    if test $tcl_cv_api_serial = no ; then
 	AC_TRY_RUN([
 #include <sgtty.h>
 
-main()
-{
+int main() {
     struct sgttyb t;
     if (ioctl(0, TIOCGETP, &t) == 0) {
 	t.sg_ospeed = 0;
@@ -1477,17 +1493,14 @@ main()
 	return 0;
     }
     return 1;
-}], tk_ok=sgtty, tk_ok=none, tk_ok=none)
-
-    if test $tk_ok = sgtty; then
-	AC_DEFINE(USE_SGTTY)
-    else
+}], tcl_cv_api_serial=sgtty, tcl_cv_api_serial=none, tcl_cv_api_serial=none)
+    fi
+    if test $tcl_cv_api_serial = no ; then
 	AC_TRY_RUN([
 #include <termios.h>
 #include <errno.h>
 
-main()
-{
+int main() {
     struct termios t;
     if (tcgetattr(0, &t) == 0
 	|| errno == ENOTTY || errno == ENXIO || errno == EINVAL) {
@@ -1496,17 +1509,14 @@ main()
 	return 0;
     }
     return 1;
-}], tk_ok=termios, tk_ok=no, tk_ok=no)
-
-    if test $tk_ok = termios; then
-	AC_DEFINE(USE_TERMIOS)
-    else
+}], tcl_cv_api_serial=termios, tcl_cv_api_serial=no, tcl_cv_api_serial=no)
+    fi
+    if test $tcl_cv_api_serial = no; then
 	AC_TRY_RUN([
 #include <termio.h>
 #include <errno.h>
 
-main()
-{
+int main() {
     struct termio t;
     if (ioctl(0, TCGETA, &t) == 0
 	|| errno == ENOTTY || errno == ENXIO || errno == EINVAL) {
@@ -1514,17 +1524,14 @@ main()
 	return 0;
     }
     return 1;
-    }], tk_ok=termio, tk_ok=no, tk_ok=no)
-
-    if test $tk_ok = termio; then
-	AC_DEFINE(USE_TERMIO)
-    else
+    }], tcl_cv_api_serial=termio, tcl_cv_api_serial=no, tcl_cv_api_serial=no)
+    fi
+    if test $tcl_cv_api_serial = no; then
 	AC_TRY_RUN([
 #include <sgtty.h>
 #include <errno.h>
 
-main()
-{
+int main() {
     struct sgttyb t;
     if (ioctl(0, TIOCGETP, &t) == 0
 	|| errno == ENOTTY || errno == ENXIO || errno == EINVAL) {
@@ -1533,17 +1540,14 @@ main()
 	return 0;
     }
     return 1;
-}], tk_ok=sgtty, tk_ok=none, tk_ok=none)
-
-    if test $tk_ok = sgtty; then
-	AC_DEFINE(USE_SGTTY)
-    fi
-    fi
-    fi
-    fi
-    fi
-    fi
-    AC_MSG_RESULT($tk_ok)
+}], tcl_cv_api_serial=sgtty, tcl_cv_api_serial=none, tcl_cv_api_serial=none)
+    fi])
+    case $tcl_cv_api_serial in
+	termios) AC_DEFINE(USE_TERMIOS);;
+	termio)  AC_DEFINE(USE_TERMIO);;
+	sgtty)   AC_DEFINE(USE_SGTTY);;
+    esac
+    AC_MSG_RESULT($tcl_cv_api_serial)
 ])
 
 #--------------------------------------------------------------------
@@ -1817,46 +1821,53 @@ AC_DEFUN(SC_TIME_HANDLER, [
     AC_CHECK_FUNCS(gmtime_r localtime_r)
 
     AC_MSG_CHECKING([tm_tzadj in struct tm])
-    AC_TRY_COMPILE([#include <time.h>], [struct tm tm; tm.tm_tzadj;],
-	    [AC_DEFINE(HAVE_TM_TZADJ)
-	    AC_MSG_RESULT(yes)],
-	    AC_MSG_RESULT(no))
+    AC_CACHE_VAL(tcl_cv_member_tm_tzadj,
+	AC_TRY_COMPILE([#include <time.h>], [struct tm tm; tm.tm_tzadj;],
+	    tcl_cv_member_tm_tzadj=yes, tcl_cv_member_tm_tzadj=no))
+    AC_MSG_RESULT($tcl_cv_member_tm_tzadj)
+    if test $tcl_cv_member_tm_tzadj = yes ; then
+	AC_DEFINE(HAVE_TM_TZADJ)
+    fi
 
     AC_MSG_CHECKING([tm_gmtoff in struct tm])
-    AC_TRY_COMPILE([#include <time.h>], [struct tm tm; tm.tm_gmtoff;],
-	    [AC_DEFINE(HAVE_TM_GMTOFF)
-	    AC_MSG_RESULT(yes)],
-	    AC_MSG_RESULT(no))
+    AC_CACHE_VAL(tcl_cv_member_tm_gmtoff,
+	AC_TRY_COMPILE([#include <time.h>], [struct tm tm; tm.tm_gmtoff;],
+	    tcl_cv_member_tm_gmtoff=yes, tcl_cv_member_tm_gmtoff=no))
+    AC_MSG_RESULT($tcl_cv_member_tm_gmtoff)
+    if test $tcl_cv_member_tm_gmtoff = yes ; then
+	AC_DEFINE(HAVE_TM_GMTOFF)
+    fi
 
     #
     # Its important to include time.h in this check, as some systems
     # (like convex) have timezone functions, etc.
     #
-    have_timezone=no
     AC_MSG_CHECKING([long timezone variable])
-    AC_TRY_COMPILE([#include <time.h>],
+    AC_CACHE_VAL(tcl_cv_var_timezone,
+	AC_TRY_COMPILE([#include <time.h>],
 	    [extern long timezone;
 	    timezone += 1;
 	    exit (0);],
-	    [have_timezone=yes
+	    tcl_cv_timezone_long=yes, tcl_cv_timezone_long=no))
+    AC_MSG_RESULT($tcl_cv_timezone_long)
+    if test $tcl_cv_timezone_long = yes ; then
+	AC_DEFINE(HAVE_TIMEZONE_VAR)
+    else
+	#
+	# On some systems (eg IRIX 6.2), timezone is a time_t and not a long.
+	#
+	AC_MSG_CHECKING([time_t timezone variable])
+	AC_CACHE_VAL(tcl_cv_timezone_time,
+	    AC_TRY_COMPILE([#include <time.h>],
+		[extern time_t timezone;
+		timezone += 1;
+		exit (0);],
+		tcl_cv_timezone_time=yes, tcl_cv_timezone_time=no))
+	AC_MSG_RESULT($tcl_cv_timezone_time)
+	if test $tcl_cv_timezone_time = yes ; then
 	    AC_DEFINE(HAVE_TIMEZONE_VAR)
-	    AC_MSG_RESULT(yes)],
-	    AC_MSG_RESULT(no))
-
-    #
-    # On some systems (eg IRIX 6.2), timezone is a time_t and not a long.
-    #
-    if test "$have_timezone" = no; then
-    AC_MSG_CHECKING([time_t timezone variable])
-    AC_TRY_COMPILE([#include <time.h>],
-	    [extern time_t timezone;
-	    timezone += 1;
-	    exit (0);],
-	    [AC_DEFINE(HAVE_TIMEZONE_VAR)
-	    AC_MSG_RESULT(yes)],
-	    AC_MSG_RESULT(no))
+	fi
     fi
-
 ])
 
 #--------------------------------------------------------------------
