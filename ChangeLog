@@ -1,3 +1,22 @@
+2000-06-03  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* doc/CrtCmHdlr.3: new doc for ClientMessage handler procs
+	* generic/tk.h: added typdef for Tk_ClientMessageProc
+	* generic/tkStubInit.c:
+	* generic/tkDecls.h:
+	* generic/tk.decls: Added Tk_CreateClientMessageHandler and
+	Tk_DeleteClientMessageHandler declarations.
+	* generic/tkEvent.c (Tk_HandleEvent): Added
+	Tk_CreateClientMessageHandler and Tk_DeleteClientMessageHandler to
+	allow adding event handlers that invoke for ClientMessage events.
+	This is necessary to support unix dnd protocols.
+
+2000-06-02  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* canvas.test: added test for 5783.
+	* generic/tkCanvPoly.c (DisplayPolygon): added checks for the
+	polygon fillGC not being empty to prevent segfault. [Bug: 5783]
+
 2000-05-31  Eric Melski  <ericm@scriptics.com>
 
 	* library/bgerror.tcl: Improved bgerror based on work by Donal
