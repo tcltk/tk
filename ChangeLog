@@ -1,3 +1,10 @@
+2002-04-22  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkTextDisp.c (DisplayLineBackground): 
+	* unix/tkUnix3d.c (Tk_3DHorizontalBevel): 
+	* unix/tkUnixFont.c (Tk_DrawChars): applied fixes to not overrun
+	the X window 16-bit size limit. [Patch #541999] (bonfield)
+
 2002-04-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkTextDisp.c (GetXView,GetYView): Comparison with

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.11 2002/04/12 07:35:42 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.12 2002/04/23 00:20:35 hobbs Exp $
  */
  
 #include "tkUnixInt.h"
@@ -1155,21 +1155,40 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
     SubFont *thisSubFontPtr, *lastSubFontPtr;
     Tcl_DString runString;
     CONST char *p, *end, *next;
-    int xStart, needWidth;
+    int xStart, needWidth, window_width;
     Tcl_UniChar ch;
     FontFamily *familyPtr;
+    int rx, ry, width, height, border_width, depth;
+    Drawable root;
 
     fontPtr = (UnixFont *) tkfont;
     lastSubFontPtr = &fontPtr->subFontArray[0];
 
     xStart = x;
 
+    /*
+     * Get the window width so we can abort drawing outside of the window
+     */
+    if (XGetGeometry(display, drawable, &root, &rx, &ry, &width, &height,
+	    &border_width, &depth) == False) {
+	window_width = INT_MAX;
+    } else {
+	window_width = width;
+    }
+
     end = source + numBytes;
+    needWidth = fontPtr->font.fa.underline + fontPtr->font.fa.overstrike;
     for (p = source; p < end; ) {
 	next = p + Tcl_UtfToUniChar(p, &ch);
 	thisSubFontPtr = FindSubFontForChar(fontPtr, ch);
-	if (thisSubFontPtr != lastSubFontPtr) {
+	if ((thisSubFontPtr != lastSubFontPtr)
+		|| (p == end-1) || (p-source > 200)) {
+	    if (p == end-1) {
+		p++;
+	    }
 	    if (p > source) {
+	        int do_width = (needWidth || (p != end-1)) ? 1 : 0;
+
 		familyPtr = lastSubFontPtr->familyPtr;
 		Tcl_UtfToExternalDString(familyPtr->encoding, source,
 			p - source, &runString);
@@ -1177,52 +1196,31 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
 		    XDrawString16(display, drawable, gc, x, y, 
 			    (XChar2b *) Tcl_DStringValue(&runString),
 			    Tcl_DStringLength(&runString) / 2);
-			    
-		    x += XTextWidth16(lastSubFontPtr->fontStructPtr,
-			    (XChar2b *) Tcl_DStringValue(&runString),
-			    Tcl_DStringLength(&runString) / 2);
+		    if (do_width) {
+			x += XTextWidth16(lastSubFontPtr->fontStructPtr,
+				(XChar2b *) Tcl_DStringValue(&runString),
+				Tcl_DStringLength(&runString) / 2);
+		    }
 		} else {
 		    XDrawString(display, drawable, gc, x, y,
 			    Tcl_DStringValue(&runString),
 			    Tcl_DStringLength(&runString));
-		    x += XTextWidth(lastSubFontPtr->fontStructPtr,
-			    Tcl_DStringValue(&runString),
-			    Tcl_DStringLength(&runString));
+		    if (do_width) {
+			x += XTextWidth(lastSubFontPtr->fontStructPtr,
+				Tcl_DStringValue(&runString),
+				Tcl_DStringLength(&runString));
+		    }
 		}
 		Tcl_DStringFree(&runString);
 	    }
 	    lastSubFontPtr = thisSubFontPtr;
 	    source = p;
 	    XSetFont(display, gc, lastSubFontPtr->fontStructPtr->fid);
+	    if (x > window_width) {
+	        break;
+	    }
 	}
 	p = next;
-    }
-
-    needWidth = fontPtr->font.fa.underline + fontPtr->font.fa.overstrike;
-    if (p > source) {
-	familyPtr = lastSubFontPtr->familyPtr;
-	Tcl_UtfToExternalDString(familyPtr->encoding, source, p - source,
-		&runString);
-	if (familyPtr->isTwoByteFont) {
-	    XDrawString16(display, drawable, gc, x, y, 
-		    (XChar2b *) Tcl_DStringValue(&runString),
-		    Tcl_DStringLength(&runString) >> 1);
-	    if (needWidth) {
-		x += XTextWidth16(lastSubFontPtr->fontStructPtr,
-			(XChar2b *) Tcl_DStringValue(&runString),
-			Tcl_DStringLength(&runString) >> 1);
-	    }
-	} else {
-	    XDrawString(display, drawable, gc, x, y, 
-		    Tcl_DStringValue(&runString),
-		    Tcl_DStringLength(&runString));
-	    if (needWidth) {
-		x += XTextWidth(lastSubFontPtr->fontStructPtr,
-			Tcl_DStringValue(&runString),
-			Tcl_DStringLength(&runString));
-	    }
-	}
-	Tcl_DStringFree(&runString);
     }
 
     if (lastSubFontPtr != &fontPtr->subFontArray[0]) {
