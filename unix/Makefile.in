@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.53 2001/07/11 01:36:41 mdejong Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.54 2001/08/07 20:17:13 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1013,8 +1013,8 @@ dist:   $(UNIX_DIR)/configure
 	cp -p $(UNIX_DIR)/*.c $(UNIX_DIR)/*.h $(DISTDIR)/unix
 	cp $(TOP_DIR)/license.terms $(UNIX_DIR)/Makefile.in $(DISTDIR)/unix
 	chmod 664 $(DISTDIR)/unix/Makefile.in
-	cp $(UNIX_DIR)/configure $(UNIX_DIR)/configure.in \
-		$(UNIX_DIR)/aclocal.m4 $(UNIX_DIR)/tk.spec \
+	cp $(UNIX_DIR)/configure $(UNIX_DIR)/configure.in $(UNIX_DIR)/tk.spec \
+		$(UNIX_DIR)/aclocal.m4 $(UNIX_DIR)/tcl.m4 \
 		$(UNIX_DIR)/tkConfig.sh.in $(TCLDIR)/unix/install-sh \
 		$(UNIX_DIR)/README $(DISTDIR)/unix
 	chmod 775 $(DISTDIR)/unix/configure $(DISTDIR)/unix/configure.in
@@ -1042,7 +1042,7 @@ dist:   $(UNIX_DIR)/configure
 	cp $(TOP_DIR)/win/configure.in \
 		$(TOP_DIR)/win/configure \
 		$(TOP_DIR)/win/tkConfig.sh.in \
-		$(TOP_DIR)/win/aclocal.m4 \
+		$(TOP_DIR)/win/aclocal.m4 $(TOP_DIR)/win/tcl.m4 \
 		$(DISTDIR)/win
 	cp -p $(TOP_DIR)/win/*.c $(TOP_DIR)/win/*.h $(DISTDIR)/win
 	cp -p $(TOP_DIR)/win/*.bat $(DISTDIR)/win
@@ -1079,6 +1079,12 @@ dist:   $(UNIX_DIR)/configure
 		$(DISTDIR)/library
 	mkdir $(DISTDIR)/library/images
 	@(cd $(TOP_DIR); for i in library/images/* ; do \
+	    if [ -f $$i ] ; then \
+		cp $$i $(DISTDIR)/$$i; \
+	    fi; \
+	done;)
+	mkdir $(DISTDIR)/library/msgs
+	@(cd $(TOP_DIR); for i in library/msgs/*.msg ; do \
 	    if [ -f $$i ] ; then \
 		cp $$i $(DISTDIR)/$$i; \
 	    fi; \
