@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacInit.c,v 1.7 2002/01/27 11:10:53 das Exp $
+ * RCS: @(#) $Id: tkMacInit.c,v 1.8 2002/02/08 02:57:11 dgp Exp $
  */
 
 #include <Resources.h>
@@ -121,11 +121,9 @@ tkInit";
 	    argv[1] = "Tool Command Language";	    
 	    Tcl_DStringInit(&libPath);
 	    Tcl_DStringAppend(&libPath, "tk", -1);
-	    Tcl_DStringAppend(&libPath, TK_VERSION, -1);
-	    argv[2] = Tcl_DStringValue(&libPath);
-	    Tcl_JoinPath(3, argv, &path);
+	    argv[2] = Tcl_DStringAppend(&libPath, TK_VERSION, -1);
+	    libDir = Tcl_JoinPath(3, argv, &path);
 	    Tcl_DStringFree(&libPath);
-	    libDir = Tcl_DStringValue(&path);
 	}
     }
     if (libDir == NULL) {
