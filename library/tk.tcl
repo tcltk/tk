@@ -3,11 +3,11 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.26 2000/10/31 00:52:11 hobbs Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.27 2000/10/31 01:12:38 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-2000 Scriptics Corporation.
+# Copyright (c) 1998-2000 Ajuba Solutions.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -34,8 +34,9 @@ if {[info exists auto_path] && [string compare {} $tk_library] && \
 set tk_strictMotif 0
 
 # Turn on useinputmethods (X Input Methods) by default.
+# We catch this because safe interpreters may not allow the call.
 
-tk useinputmethods 1
+catch {tk useinputmethods 1}
 
 # Create a ::tk namespace
 
