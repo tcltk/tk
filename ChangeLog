@@ -1,3 +1,13 @@
+1999-04-5     <redman@scriptics.com>
+
+	* generic/tkInt.decls:
+	* generic/tkIntXlibDecls.h:
+	* generic/tkStubInit.c:
+	* xlib/xgc.c:
+	* xlib/X11/Xlib.h:
+	* xlib/X11/Xutil.h: Added more X functions to the Win & Mac stubs
+	tables.
+	
 1999-04-05    <stanton@scriptics.com>
 
 	* unix/configure.in:

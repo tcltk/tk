@@ -9,11 +9,13 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.2.2.4 1999/03/30 04:12:57 stanton Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.2.2.5 1999/04/06 02:48:28 redman Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
 #define _TKINTXLIBDECLS
+
+#include "X11/Xutil.h"
 
 #ifdef BUILD_tk
 #undef TCL_STORAGE_CLASS
@@ -282,6 +284,69 @@ EXTERN void		TkPutImage _ANSI_ARGS_((unsigned long * colors,
 EXTERN Status		XParseColor _ANSI_ARGS_((Display * display, 
 				Colormap map, _Xconst char* spec, 
 				XColor * colorPtr));
+/* 83 */
+EXTERN GC		XCreateGC _ANSI_ARGS_((Display* display, Drawable d, 
+				unsigned long valuemask, XGCValues* values));
+/* 84 */
+EXTERN void		XFreeGC _ANSI_ARGS_((Display* display, GC gc));
+/* 85 */
+EXTERN Atom		XInternAtom _ANSI_ARGS_((Display* display, 
+				_Xconst char* atom_name, Bool only_if_exists));
+/* 86 */
+EXTERN void		XSetBackground _ANSI_ARGS_((Display* display, GC gc, 
+				unsigned long foreground));
+/* 87 */
+EXTERN void		XSetForeground _ANSI_ARGS_((Display* display, GC gc, 
+				unsigned long foreground));
+/* 88 */
+EXTERN void		XSetClipMask _ANSI_ARGS_((Display* display, GC gc, 
+				Pixmap pixmap));
+/* 89 */
+EXTERN void		XSetClipOrigin _ANSI_ARGS_((Display* display, GC gc, 
+				int clip_x_origin, int clip_y_origin));
+/* 90 */
+EXTERN void		XSetTSOrigin _ANSI_ARGS_((Display* display, GC gc, 
+				int ts_x_origin, int ts_y_origin));
+/* 91 */
+EXTERN void		XChangeGC _ANSI_ARGS_((Display * d, GC gc, 
+				unsigned long mask, XGCValues * values));
+/* 92 */
+EXTERN void		XSetFont _ANSI_ARGS_((Display * display, GC gc, 
+				Font font));
+/* 93 */
+EXTERN void		XSetArcMode _ANSI_ARGS_((Display * display, GC gc, 
+				int arc_mode));
+/* 94 */
+EXTERN void		XSetStipple _ANSI_ARGS_((Display * display, GC gc, 
+				Pixmap stipple));
+/* 95 */
+EXTERN void		XSetFillRule _ANSI_ARGS_((Display * display, GC gc, 
+				int fill_rule));
+/* 96 */
+EXTERN void		XSetFillStyle _ANSI_ARGS_((Display * display, GC gc, 
+				int fill_style));
+/* 97 */
+EXTERN void		XSetFunction _ANSI_ARGS_((Display * display, GC gc, 
+				int function));
+/* 98 */
+EXTERN void		XSetLineAttributes _ANSI_ARGS_((Display * display, 
+				GC gc, unsigned int line_width, 
+				int line_style, int cap_style, 
+				int join_style));
+/* 99 */
+EXTERN int		_XInitImageFuncPtrs _ANSI_ARGS_((XImage * image));
+/* 100 */
+EXTERN XIC		XCreateIC _ANSI_ARGS_((void));
+/* 101 */
+EXTERN XVisualInfo *	XGetVisualInfo _ANSI_ARGS_((Display* display, 
+				long vinfo_mask, XVisualInfo* vinfo_template, 
+				int* nitems_return));
+/* 102 */
+EXTERN void		XSetWMClientMachine _ANSI_ARGS_((Display* display, 
+				Window w, XTextProperty* text_prop));
+/* 103 */
+EXTERN Status		XStringListToTextProperty _ANSI_ARGS_((char** list, 
+				int count, XTextProperty* text_prop_return));
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* Slot 0 is reserved */
@@ -466,6 +531,69 @@ EXTERN void		TkPutImage _ANSI_ARGS_((unsigned long * colors,
 EXTERN Status		XParseColor _ANSI_ARGS_((Display * display, 
 				Colormap map, _Xconst char* spec, 
 				XColor * colorPtr));
+/* 59 */
+EXTERN GC		XCreateGC _ANSI_ARGS_((Display* display, Drawable d, 
+				unsigned long valuemask, XGCValues* values));
+/* 60 */
+EXTERN void		XFreeGC _ANSI_ARGS_((Display* display, GC gc));
+/* 61 */
+EXTERN Atom		XInternAtom _ANSI_ARGS_((Display* display, 
+				_Xconst char* atom_name, Bool only_if_exists));
+/* 62 */
+EXTERN void		XSetBackground _ANSI_ARGS_((Display* display, GC gc, 
+				unsigned long foreground));
+/* 63 */
+EXTERN void		XSetForeground _ANSI_ARGS_((Display* display, GC gc, 
+				unsigned long foreground));
+/* 64 */
+EXTERN void		XSetClipMask _ANSI_ARGS_((Display* display, GC gc, 
+				Pixmap pixmap));
+/* 65 */
+EXTERN void		XSetClipOrigin _ANSI_ARGS_((Display* display, GC gc, 
+				int clip_x_origin, int clip_y_origin));
+/* 66 */
+EXTERN void		XSetTSOrigin _ANSI_ARGS_((Display* display, GC gc, 
+				int ts_x_origin, int ts_y_origin));
+/* 67 */
+EXTERN void		XChangeGC _ANSI_ARGS_((Display * d, GC gc, 
+				unsigned long mask, XGCValues * values));
+/* 68 */
+EXTERN void		XSetFont _ANSI_ARGS_((Display * display, GC gc, 
+				Font font));
+/* 69 */
+EXTERN void		XSetArcMode _ANSI_ARGS_((Display * display, GC gc, 
+				int arc_mode));
+/* 70 */
+EXTERN void		XSetStipple _ANSI_ARGS_((Display * display, GC gc, 
+				Pixmap stipple));
+/* 71 */
+EXTERN void		XSetFillRule _ANSI_ARGS_((Display * display, GC gc, 
+				int fill_rule));
+/* 72 */
+EXTERN void		XSetFillStyle _ANSI_ARGS_((Display * display, GC gc, 
+				int fill_style));
+/* 73 */
+EXTERN void		XSetFunction _ANSI_ARGS_((Display * display, GC gc, 
+				int function));
+/* 74 */
+EXTERN void		XSetLineAttributes _ANSI_ARGS_((Display * display, 
+				GC gc, unsigned int line_width, 
+				int line_style, int cap_style, 
+				int join_style));
+/* 75 */
+EXTERN int		_XInitImageFuncPtrs _ANSI_ARGS_((XImage * image));
+/* 76 */
+EXTERN XIC		XCreateIC _ANSI_ARGS_((void));
+/* 77 */
+EXTERN XVisualInfo *	XGetVisualInfo _ANSI_ARGS_((Display* display, 
+				long vinfo_mask, XVisualInfo* vinfo_template, 
+				int* nitems_return));
+/* 78 */
+EXTERN void		XSetWMClientMachine _ANSI_ARGS_((Display* display, 
+				Window w, XTextProperty* text_prop));
+/* 79 */
+EXTERN Status		XStringListToTextProperty _ANSI_ARGS_((char** list, 
+				int count, XTextProperty* text_prop_return));
 #endif /* MAC_TCL */
 
 typedef struct TkIntXlibStubs {
@@ -556,6 +684,27 @@ typedef struct TkIntXlibStubs {
     void (*tkPutImage) _ANSI_ARGS_((unsigned long * colors, int ncolors, Display* display, Drawable d, GC gc, XImage* image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 80 */
     void *reserved81;
     Status (*xParseColor) _ANSI_ARGS_((Display * display, Colormap map, _Xconst char* spec, XColor * colorPtr)); /* 82 */
+    GC (*xCreateGC) _ANSI_ARGS_((Display* display, Drawable d, unsigned long valuemask, XGCValues* values)); /* 83 */
+    void (*xFreeGC) _ANSI_ARGS_((Display* display, GC gc)); /* 84 */
+    Atom (*xInternAtom) _ANSI_ARGS_((Display* display, _Xconst char* atom_name, Bool only_if_exists)); /* 85 */
+    void (*xSetBackground) _ANSI_ARGS_((Display* display, GC gc, unsigned long foreground)); /* 86 */
+    void (*xSetForeground) _ANSI_ARGS_((Display* display, GC gc, unsigned long foreground)); /* 87 */
+    void (*xSetClipMask) _ANSI_ARGS_((Display* display, GC gc, Pixmap pixmap)); /* 88 */
+    void (*xSetClipOrigin) _ANSI_ARGS_((Display* display, GC gc, int clip_x_origin, int clip_y_origin)); /* 89 */
+    void (*xSetTSOrigin) _ANSI_ARGS_((Display* display, GC gc, int ts_x_origin, int ts_y_origin)); /* 90 */
+    void (*xChangeGC) _ANSI_ARGS_((Display * d, GC gc, unsigned long mask, XGCValues * values)); /* 91 */
+    void (*xSetFont) _ANSI_ARGS_((Display * display, GC gc, Font font)); /* 92 */
+    void (*xSetArcMode) _ANSI_ARGS_((Display * display, GC gc, int arc_mode)); /* 93 */
+    void (*xSetStipple) _ANSI_ARGS_((Display * display, GC gc, Pixmap stipple)); /* 94 */
+    void (*xSetFillRule) _ANSI_ARGS_((Display * display, GC gc, int fill_rule)); /* 95 */
+    void (*xSetFillStyle) _ANSI_ARGS_((Display * display, GC gc, int fill_style)); /* 96 */
+    void (*xSetFunction) _ANSI_ARGS_((Display * display, GC gc, int function)); /* 97 */
+    void (*xSetLineAttributes) _ANSI_ARGS_((Display * display, GC gc, unsigned int line_width, int line_style, int cap_style, int join_style)); /* 98 */
+    int (*_XInitImageFuncPtrs) _ANSI_ARGS_((XImage * image)); /* 99 */
+    XIC (*xCreateIC) _ANSI_ARGS_((void)); /* 100 */
+    XVisualInfo * (*xGetVisualInfo) _ANSI_ARGS_((Display* display, long vinfo_mask, XVisualInfo* vinfo_template, int* nitems_return)); /* 101 */
+    void (*xSetWMClientMachine) _ANSI_ARGS_((Display* display, Window w, XTextProperty* text_prop)); /* 102 */
+    Status (*xStringListToTextProperty) _ANSI_ARGS_((char** list, int count, XTextProperty* text_prop_return)); /* 103 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     void *reserved0;
@@ -617,6 +766,27 @@ typedef struct TkIntXlibStubs {
     void (*xUnmapWindow) _ANSI_ARGS_((Display* d, Window w)); /* 56 */
     void (*tkPutImage) _ANSI_ARGS_((unsigned long * colors, int ncolors, Display* display, Drawable d, GC gc, XImage* image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 57 */
     Status (*xParseColor) _ANSI_ARGS_((Display * display, Colormap map, _Xconst char* spec, XColor * colorPtr)); /* 58 */
+    GC (*xCreateGC) _ANSI_ARGS_((Display* display, Drawable d, unsigned long valuemask, XGCValues* values)); /* 59 */
+    void (*xFreeGC) _ANSI_ARGS_((Display* display, GC gc)); /* 60 */
+    Atom (*xInternAtom) _ANSI_ARGS_((Display* display, _Xconst char* atom_name, Bool only_if_exists)); /* 61 */
+    void (*xSetBackground) _ANSI_ARGS_((Display* display, GC gc, unsigned long foreground)); /* 62 */
+    void (*xSetForeground) _ANSI_ARGS_((Display* display, GC gc, unsigned long foreground)); /* 63 */
+    void (*xSetClipMask) _ANSI_ARGS_((Display* display, GC gc, Pixmap pixmap)); /* 64 */
+    void (*xSetClipOrigin) _ANSI_ARGS_((Display* display, GC gc, int clip_x_origin, int clip_y_origin)); /* 65 */
+    void (*xSetTSOrigin) _ANSI_ARGS_((Display* display, GC gc, int ts_x_origin, int ts_y_origin)); /* 66 */
+    void (*xChangeGC) _ANSI_ARGS_((Display * d, GC gc, unsigned long mask, XGCValues * values)); /* 67 */
+    void (*xSetFont) _ANSI_ARGS_((Display * display, GC gc, Font font)); /* 68 */
+    void (*xSetArcMode) _ANSI_ARGS_((Display * display, GC gc, int arc_mode)); /* 69 */
+    void (*xSetStipple) _ANSI_ARGS_((Display * display, GC gc, Pixmap stipple)); /* 70 */
+    void (*xSetFillRule) _ANSI_ARGS_((Display * display, GC gc, int fill_rule)); /* 71 */
+    void (*xSetFillStyle) _ANSI_ARGS_((Display * display, GC gc, int fill_style)); /* 72 */
+    void (*xSetFunction) _ANSI_ARGS_((Display * display, GC gc, int function)); /* 73 */
+    void (*xSetLineAttributes) _ANSI_ARGS_((Display * display, GC gc, unsigned int line_width, int line_style, int cap_style, int join_style)); /* 74 */
+    int (*_XInitImageFuncPtrs) _ANSI_ARGS_((XImage * image)); /* 75 */
+    XIC (*xCreateIC) _ANSI_ARGS_((void)); /* 76 */
+    XVisualInfo * (*xGetVisualInfo) _ANSI_ARGS_((Display* display, long vinfo_mask, XVisualInfo* vinfo_template, int* nitems_return)); /* 77 */
+    void (*xSetWMClientMachine) _ANSI_ARGS_((Display* display, Window w, XTextProperty* text_prop)); /* 78 */
+    Status (*xStringListToTextProperty) _ANSI_ARGS_((char** list, int count, XTextProperty* text_prop_return)); /* 79 */
 #endif /* MAC_TCL */
 } TkIntXlibStubs;
 
@@ -955,6 +1125,90 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #define XParseColor \
 	(tkIntXlibStubsPtr->xParseColor) /* 82 */
 #endif
+#ifndef XCreateGC
+#define XCreateGC \
+	(tkIntXlibStubsPtr->xCreateGC) /* 83 */
+#endif
+#ifndef XFreeGC
+#define XFreeGC \
+	(tkIntXlibStubsPtr->xFreeGC) /* 84 */
+#endif
+#ifndef XInternAtom
+#define XInternAtom \
+	(tkIntXlibStubsPtr->xInternAtom) /* 85 */
+#endif
+#ifndef XSetBackground
+#define XSetBackground \
+	(tkIntXlibStubsPtr->xSetBackground) /* 86 */
+#endif
+#ifndef XSetForeground
+#define XSetForeground \
+	(tkIntXlibStubsPtr->xSetForeground) /* 87 */
+#endif
+#ifndef XSetClipMask
+#define XSetClipMask \
+	(tkIntXlibStubsPtr->xSetClipMask) /* 88 */
+#endif
+#ifndef XSetClipOrigin
+#define XSetClipOrigin \
+	(tkIntXlibStubsPtr->xSetClipOrigin) /* 89 */
+#endif
+#ifndef XSetTSOrigin
+#define XSetTSOrigin \
+	(tkIntXlibStubsPtr->xSetTSOrigin) /* 90 */
+#endif
+#ifndef XChangeGC
+#define XChangeGC \
+	(tkIntXlibStubsPtr->xChangeGC) /* 91 */
+#endif
+#ifndef XSetFont
+#define XSetFont \
+	(tkIntXlibStubsPtr->xSetFont) /* 92 */
+#endif
+#ifndef XSetArcMode
+#define XSetArcMode \
+	(tkIntXlibStubsPtr->xSetArcMode) /* 93 */
+#endif
+#ifndef XSetStipple
+#define XSetStipple \
+	(tkIntXlibStubsPtr->xSetStipple) /* 94 */
+#endif
+#ifndef XSetFillRule
+#define XSetFillRule \
+	(tkIntXlibStubsPtr->xSetFillRule) /* 95 */
+#endif
+#ifndef XSetFillStyle
+#define XSetFillStyle \
+	(tkIntXlibStubsPtr->xSetFillStyle) /* 96 */
+#endif
+#ifndef XSetFunction
+#define XSetFunction \
+	(tkIntXlibStubsPtr->xSetFunction) /* 97 */
+#endif
+#ifndef XSetLineAttributes
+#define XSetLineAttributes \
+	(tkIntXlibStubsPtr->xSetLineAttributes) /* 98 */
+#endif
+#ifndef _XInitImageFuncPtrs
+#define _XInitImageFuncPtrs \
+	(tkIntXlibStubsPtr->_XInitImageFuncPtrs) /* 99 */
+#endif
+#ifndef XCreateIC
+#define XCreateIC \
+	(tkIntXlibStubsPtr->xCreateIC) /* 100 */
+#endif
+#ifndef XGetVisualInfo
+#define XGetVisualInfo \
+	(tkIntXlibStubsPtr->xGetVisualInfo) /* 101 */
+#endif
+#ifndef XSetWMClientMachine
+#define XSetWMClientMachine \
+	(tkIntXlibStubsPtr->xSetWMClientMachine) /* 102 */
+#endif
+#ifndef XStringListToTextProperty
+#define XStringListToTextProperty \
+	(tkIntXlibStubsPtr->xStringListToTextProperty) /* 103 */
+#endif
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* Slot 0 is reserved */
@@ -1189,6 +1443,90 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #ifndef XParseColor
 #define XParseColor \
 	(tkIntXlibStubsPtr->xParseColor) /* 58 */
+#endif
+#ifndef XCreateGC
+#define XCreateGC \
+	(tkIntXlibStubsPtr->xCreateGC) /* 59 */
+#endif
+#ifndef XFreeGC
+#define XFreeGC \
+	(tkIntXlibStubsPtr->xFreeGC) /* 60 */
+#endif
+#ifndef XInternAtom
+#define XInternAtom \
+	(tkIntXlibStubsPtr->xInternAtom) /* 61 */
+#endif
+#ifndef XSetBackground
+#define XSetBackground \
+	(tkIntXlibStubsPtr->xSetBackground) /* 62 */
+#endif
+#ifndef XSetForeground
+#define XSetForeground \
+	(tkIntXlibStubsPtr->xSetForeground) /* 63 */
+#endif
+#ifndef XSetClipMask
+#define XSetClipMask \
+	(tkIntXlibStubsPtr->xSetClipMask) /* 64 */
+#endif
+#ifndef XSetClipOrigin
+#define XSetClipOrigin \
+	(tkIntXlibStubsPtr->xSetClipOrigin) /* 65 */
+#endif
+#ifndef XSetTSOrigin
+#define XSetTSOrigin \
+	(tkIntXlibStubsPtr->xSetTSOrigin) /* 66 */
+#endif
+#ifndef XChangeGC
+#define XChangeGC \
+	(tkIntXlibStubsPtr->xChangeGC) /* 67 */
+#endif
+#ifndef XSetFont
+#define XSetFont \
+	(tkIntXlibStubsPtr->xSetFont) /* 68 */
+#endif
+#ifndef XSetArcMode
+#define XSetArcMode \
+	(tkIntXlibStubsPtr->xSetArcMode) /* 69 */
+#endif
+#ifndef XSetStipple
+#define XSetStipple \
+	(tkIntXlibStubsPtr->xSetStipple) /* 70 */
+#endif
+#ifndef XSetFillRule
+#define XSetFillRule \
+	(tkIntXlibStubsPtr->xSetFillRule) /* 71 */
+#endif
+#ifndef XSetFillStyle
+#define XSetFillStyle \
+	(tkIntXlibStubsPtr->xSetFillStyle) /* 72 */
+#endif
+#ifndef XSetFunction
+#define XSetFunction \
+	(tkIntXlibStubsPtr->xSetFunction) /* 73 */
+#endif
+#ifndef XSetLineAttributes
+#define XSetLineAttributes \
+	(tkIntXlibStubsPtr->xSetLineAttributes) /* 74 */
+#endif
+#ifndef _XInitImageFuncPtrs
+#define _XInitImageFuncPtrs \
+	(tkIntXlibStubsPtr->_XInitImageFuncPtrs) /* 75 */
+#endif
+#ifndef XCreateIC
+#define XCreateIC \
+	(tkIntXlibStubsPtr->xCreateIC) /* 76 */
+#endif
+#ifndef XGetVisualInfo
+#define XGetVisualInfo \
+	(tkIntXlibStubsPtr->xGetVisualInfo) /* 77 */
+#endif
+#ifndef XSetWMClientMachine
+#define XSetWMClientMachine \
+	(tkIntXlibStubsPtr->xSetWMClientMachine) /* 78 */
+#endif
+#ifndef XStringListToTextProperty
+#define XStringListToTextProperty \
+	(tkIntXlibStubsPtr->xStringListToTextProperty) /* 79 */
 #endif
 #endif /* MAC_TCL */
 

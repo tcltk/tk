@@ -1,4 +1,4 @@
-# tkInt.decls --
+	# tkInt.decls --
 #
 #	This file contains the declarations for all unsupported
 #	functions that are exported by the Tk library.  This file
@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.2.2.4 1999/03/30 04:12:25 stanton Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.2.2.5 1999/04/06 02:48:27 redman Exp $
 
 library tk
 
@@ -1418,9 +1418,104 @@ declare 80 win {
 #      XSetClipRectangles(Display *display, GC gc, int clip_x_origin, \
 #  	    int clip_y_origin, XRectangle rectangles[], int n, int ordering)
 #  }
+
 declare 82 win {
     Status XParseColor (Display *display, Colormap map, \
           _Xconst char* spec, XColor *colorPtr)
+}
+
+declare 83 win {
+    GC XCreateGC(Display* display, Drawable d, \
+	    unsigned long valuemask, XGCValues* values)
+}
+
+declare 84 win {
+    void XFreeGC(Display* display, GC gc)
+}
+
+declare 85 win {
+    Atom XInternAtom(Display* display,_Xconst char* atom_name, \
+	    Bool only_if_exists)
+}
+
+declare 86 win {
+    void XSetBackground(Display* display, GC gc, \
+	    unsigned long foreground)
+}
+
+declare 87 win {
+    void XSetForeground(Display* display, GC gc, \
+	    unsigned long foreground)
+}
+
+declare 88 win {
+    void XSetClipMask(Display* display, GC gc, Pixmap pixmap)
+}
+
+declare 89 win {
+    void XSetClipOrigin(Display* display, GC gc, \
+	    int clip_x_origin, int clip_y_origin)
+}
+
+declare 90 win {
+    void XSetTSOrigin(Display* display, GC gc, \
+	    int ts_x_origin, int ts_y_origin)
+}
+
+declare 91 win {
+    void XChangeGC(Display * d, GC gc, unsigned long mask, XGCValues *values)
+}
+
+declare 92 win {
+    void XSetFont(Display *display, GC gc, Font font)
+}
+
+declare 93 win {
+    void XSetArcMode(Display *display, GC gc, int arc_mode)
+}
+
+declare 94 win {
+    void XSetStipple(Display *display, GC gc, Pixmap stipple)
+}
+
+declare 95 win {
+    void XSetFillRule(Display *display, GC gc, int fill_rule)
+}
+
+declare 96 win {
+    void XSetFillStyle(Display *display, GC gc, int fill_style)
+}
+
+declare 97 win {
+    void XSetFunction(Display *display, GC gc, int function)
+}
+
+declare 98 win {
+    void XSetLineAttributes(Display *display, GC gc, \
+	    unsigned int line_width, int line_style, \
+	    int cap_style, int join_style)
+}
+
+declare 99 win {
+    int _XInitImageFuncPtrs(XImage *image)
+}
+
+declare 100 win {
+    XIC XCreateIC(void)
+}
+
+declare 101 win {
+    XVisualInfo *XGetVisualInfo(Display* display, long vinfo_mask, \
+	    XVisualInfo* vinfo_template, int* nitems_return)
+}
+
+declare 102 win {
+    void XSetWMClientMachine(Display* display, Window w, XTextProperty* text_prop)
+}
+
+declare 103 win {
+    Status XStringListToTextProperty(char** list, int count, \
+	    XTextProperty* text_prop_return)
 }
 
 # X functions for Mac
@@ -1693,3 +1788,96 @@ declare 58 mac {
           _Xconst char* spec, XColor *colorPtr)
 }
 
+declare 59 mac {
+    GC XCreateGC(Display* display, Drawable d, \
+	    unsigned long valuemask, XGCValues* values)
+}
+
+declare 60 mac {
+    void XFreeGC(Display* display, GC gc)
+}
+
+declare 61 mac {
+    Atom XInternAtom(Display* display,_Xconst char* atom_name, \
+	    Bool only_if_exists)
+}
+
+declare 62 mac {
+    void XSetBackground(Display* display, GC gc, \
+	    unsigned long foreground)
+}
+
+declare 63 mac {
+    void XSetForeground(Display* display, GC gc, \
+	    unsigned long foreground)
+}
+
+declare 64 mac {
+    void XSetClipMask(Display* display, GC gc, Pixmap pixmap)
+}
+
+declare 65 mac {
+    void XSetClipOrigin(Display* display, GC gc, \
+	    int clip_x_origin, int clip_y_origin)
+}
+
+declare 66 mac {
+    void XSetTSOrigin(Display* display, GC gc, \
+	    int ts_x_origin, int ts_y_origin)
+}
+
+declare 67 mac {
+    void XChangeGC(Display * d, GC gc, unsigned long mask, XGCValues *values)
+}
+
+declare 68 mac {
+    void XSetFont(Display *display, GC gc, Font font)
+}
+
+declare 69 mac {
+    void XSetArcMode(Display *display, GC gc, int arc_mode)
+}
+
+declare 70 mac {
+    void XSetStipple(Display *display, GC gc, Pixmap stipple)
+}
+
+declare 71 mac {
+    void XSetFillRule(Display *display, GC gc, int fill_rule)
+}
+
+declare 72 mac {
+    void XSetFillStyle(Display *display, GC gc, int fill_style)
+}
+
+declare 73 mac {
+    void XSetFunction(Display *display, GC gc, int function)
+}
+
+declare 74 mac {
+    void XSetLineAttributes(Display *display, GC gc, \
+	    unsigned int line_width, int line_style, \
+	    int cap_style, int join_style)
+}
+
+declare 75 mac {
+    int _XInitImageFuncPtrs(XImage *image)
+}
+
+declare 76 mac {
+    XIC XCreateIC(void)
+}
+
+declare 77 mac {
+    XVisualInfo *XGetVisualInfo(Display* display, long vinfo_mask, \
+	    XVisualInfo* vinfo_template, int* nitems_return)
+}
+
+declare 78 mac {
+    void XSetWMClientMachine(Display* display, Window w, XTextProperty* text_prop)
+}
+
+declare 79 mac {
+    Status XStringListToTextProperty(char** list, int count, \
+	    XTextProperty* text_prop_return)
+}

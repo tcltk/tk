@@ -1190,24 +1190,6 @@ typedef int (*XErrorHandler) (	    /* WARNING, this type not in Xlib spec */
 _XFUNCPROTOBEGIN
 
 
-extern Atom XInternAtom(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    _Xconst char*	/* atom_name */,
-    Bool		/* only_if_exists */		 
-#endif
-);
-
-
-extern GC XCreateGC(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    Drawable		/* d */,
-    unsigned long	/* valuemask */,
-    XGCValues*		/* values */
-#endif
-);
-
 
 extern void XDrawLine(
 #if NeedFunctionPrototypes
@@ -1231,48 +1213,6 @@ extern void XFillRectangle(
     int			/* y */,
     unsigned int	/* width */,
     unsigned int	/* height */
-#endif
-);
-
-extern void XFreeGC(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    GC			/* gc */
-#endif
-);
-
-extern void XSetClipMask(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    GC			/* gc */,
-    Pixmap		/* pixmap */
-#endif
-);
-
-
-extern void XSetClipOrigin(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    GC			/* gc */,
-    int			/* clip_x_origin */,
-    int			/* clip_y_origin */
-#endif
-);
-
-extern void XSetForeground(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    GC			/* gc */,
-    unsigned long	/* foreground */
-#endif
-);
-
-extern void XSetTSOrigin(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    GC			/* gc */,
-    int			/* ts_x_origin */,
-    int			/* ts_y_origin */
 #endif
 );
 

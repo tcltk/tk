@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.2.2.4 1999/04/01 21:58:50 redman Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.2.2.5 1999/04/06 02:48:29 redman Exp $
  */
 
 #include "tkInt.h"
@@ -594,6 +594,27 @@ TkIntXlibStubs tkIntXlibStubs = {
     TkPutImage, /* 80 */
     NULL, /* 81 */
     XParseColor, /* 82 */
+    XCreateGC, /* 83 */
+    XFreeGC, /* 84 */
+    XInternAtom, /* 85 */
+    XSetBackground, /* 86 */
+    XSetForeground, /* 87 */
+    XSetClipMask, /* 88 */
+    XSetClipOrigin, /* 89 */
+    XSetTSOrigin, /* 90 */
+    XChangeGC, /* 91 */
+    XSetFont, /* 92 */
+    XSetArcMode, /* 93 */
+    XSetStipple, /* 94 */
+    XSetFillRule, /* 95 */
+    XSetFillStyle, /* 96 */
+    XSetFunction, /* 97 */
+    XSetLineAttributes, /* 98 */
+    _XInitImageFuncPtrs, /* 99 */
+    XCreateIC, /* 100 */
+    XGetVisualInfo, /* 101 */
+    XSetWMClientMachine, /* 102 */
+    XStringListToTextProperty, /* 103 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     NULL, /* 0 */
@@ -655,6 +676,27 @@ TkIntXlibStubs tkIntXlibStubs = {
     XUnmapWindow, /* 56 */
     TkPutImage, /* 57 */
     XParseColor, /* 58 */
+    XCreateGC, /* 59 */
+    XFreeGC, /* 60 */
+    XInternAtom, /* 61 */
+    XSetBackground, /* 62 */
+    XSetForeground, /* 63 */
+    XSetClipMask, /* 64 */
+    XSetClipOrigin, /* 65 */
+    XSetTSOrigin, /* 66 */
+    XChangeGC, /* 67 */
+    XSetFont, /* 68 */
+    XSetArcMode, /* 69 */
+    XSetStipple, /* 70 */
+    XSetFillRule, /* 71 */
+    XSetFillStyle, /* 72 */
+    XSetFunction, /* 73 */
+    XSetLineAttributes, /* 74 */
+    _XInitImageFuncPtrs, /* 75 */
+    XCreateIC, /* 76 */
+    XGetVisualInfo, /* 77 */
+    XSetWMClientMachine, /* 78 */
+    XStringListToTextProperty, /* 79 */
 #endif /* MAC_TCL */
 };
 
