@@ -8,11 +8,12 @@
  *
  * Copyright (c) 1991-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.2 1998/09/14 18:23:58 stanton Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.3 1998/09/30 23:46:17 rjohnson Exp $
  */
 
 #include "tkPort.h"
@@ -1324,6 +1325,9 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    interp->result = (wmPtr->iconName != NULL) ? wmPtr->iconName : "";
 	    return TCL_OK;
 	} else {
+	    if (wmPtr->iconName != NULL) {
+		ckfree(wmPtr->iconName);
+	    }
 	    wmPtr->iconName = ckalloc((unsigned) (strlen(argv[3]) + 1));
 	    strcpy(wmPtr->iconName, argv[3]);
 	    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
@@ -1723,6 +1727,9 @@ Tk_WmCmd(clientData, interp, argc, argv)
 		    : winPtr->nameUid;
 	    return TCL_OK;
 	} else {
+	    if (wmPtr->title != NULL) {
+		ckfree(wmPtr->title);
+	    }
 	    wmPtr->title = ckalloc((unsigned) (strlen(argv[3]) + 1));
 	    strcpy(wmPtr->title, argv[3]);
 	    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
