@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.5 2000/05/27 01:43:46 ericm Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.6 2000/05/27 01:49:37 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -439,9 +439,9 @@ Tk_GetOption(tkwin, name, className)
     if (masqName != NULL) {
 	/*
 	 * This option is masquerading with a different window class.
-	 * Instead of using the current level, search the stack to the
-	 * current level - 1, then do a direct probe on the option database
-	 * to get the extra bits.
+	 * Search the stack to the depth it was before the current window's
+	 * information was pushed (the value for which is stored in the bases
+	 * field).
 	 */
 	levelPtr = &tsdPtr->levels[tsdPtr->curLevel];
 	nameId = Tk_GetUid(masqName+1);
