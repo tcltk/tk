@@ -608,41 +608,6 @@ AC_DEFUN(SC_CONFIG_MANPAGES, [
 	AC_SUBST(MKLINKS_FLAGS)
 ])
 
-#------------------------------------------------------------------------
-# SC_ENABLE_MEMDEBUG --
-#
-#	Specify if the memory debugging code should be used
-#
-# Arguments:
-#	none
-#	
-#	Requires the following vars to be set in the Makefile:
-#		None.
-#	
-# Results:
-#
-#	Adds the following arguments to configure:
-#		--enable-memdebug
-#
-#	Defines the following @vars@:
-#		MEM_DEBUG_FLAGS	Sets to -DTCL_MEM_DEBUG if true
-#				Sets to "" if false
-#
-#------------------------------------------------------------------------
-
-AC_DEFUN(SC_ENABLE_MEMDEBUG, [
-    AC_MSG_CHECKING([for build with memory debugging])
-    AC_ARG_ENABLE(memdebug, [  --enable-memdebug       build with memory debugging [--disable-memdebug]],    [tcl_ok=$enableval], [tcl_ok=no])
-    if test "$tcl_ok" = "yes"; then
-	MEM_DEBUG_FLAGS=-DTCL_MEM_DEBUG
-	AC_MSG_RESULT([yes])
-    else
-	MEM_DEBUG_FLAGS=""
-	AC_MSG_RESULT([no])
-    fi
-    AC_SUBST(MEM_DEBUG_FLAGS)
-])
-
 
 #--------------------------------------------------------------------
 # SC_CONFIG_CFLAGS
@@ -840,24 +805,34 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    LIBS="$LIBS -lc"
 	    # AIX-5 uses ELF style dynamic libraries
 	    SHLIB_CFLAGS=""
-	    SHLIB_LD="/usr/ccs/bin/ld -G -z text"
+	    SHLIB_LD_LIBS='${LIBS}'
+	    SHLIB_SUFFIX=".so"
+	    if test "`uname -m`" = "ia64" ; then
+		# AIX-5 uses ELF style dynamic libraries on IA-64, but not PPC
+		SHLIB_LD="/usr/ccs/bin/ld -G -z text"
+		# AIX-5 has dl* in libc.so
+		DL_LIBS=""
+		if test "$GCC" = "yes" ; then
+		    CC_SEARCH_FLAGS='-Wl,-R,${LIB_RUNTIME_DIR}'
+		else
+		    CC_SEARCH_FLAGS='-R${LIB_RUNTIME_DIR}'
+		fi
+		LD_SEARCH_FLAGS='-R ${LIB_RUNTIME_DIR}'
+	    else
+		SHLIB_LD="${TCL_SRC_DIR}/unix/ldAix /bin/ld -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+		DL_LIBS="-ldl"
+		CC_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
+		LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
+		TCL_NEEDS_EXP_FILE=1
+		TCL_EXPORT_FILE_SUFFIX='${VERSION}\$\{DBGX\}.exp'
+	    fi
 
 	    # Note: need the LIBS below, otherwise Tk won't find Tcl's
 	    # symbols when dynamically loaded into tclsh.
 
-	    SHLIB_LD_LIBS='${LIBS}'
-	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
-	    # AIX-5 has dl* in libc.so
-	    DL_LIBS=""
 	    LDFLAGS=""
 
-	    if test "$GCC" = "yes" ; then
-	        CC_SEARCH_FLAGS='-Wl,-R,${LIB_RUNTIME_DIR}'
-	    else
-	        CC_SEARCH_FLAGS='-R ${LIB_RUNTIME_DIR}'
-	    fi
-	    LD_SEARCH_FLAGS='-R ${LIB_RUNTIME_DIR}'
 	    LD_LIBRARY_PATH_VAR="LIBPATH"
 
 	    # Check to enable 64-bit flags for compiler/linker
@@ -1098,7 +1073,6 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	            LDFLAGS="-64"
 	        fi
 	    fi
-
 	    ;;
 	Linux*)
 	    SHLIB_CFLAGS="-fPIC"
