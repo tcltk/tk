@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.1.4.3 1998/10/06 03:27:36 stanton Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.1.4.4 1998/11/20 02:36:27 stanton Exp $
  */
 
 #define OEMRESOURCE
@@ -441,12 +441,13 @@ GetEntryText(mePtr)
 	itemText = ckalloc(sizeof("( )"));
 	strcpy(itemText, "( )");
     } else {
-	int size = mePtr->labelLength + 1;
-	int i, j;
+	int i;
 	char *label = (mePtr->labelPtr == NULL) ? "" 
 		: Tcl_GetStringFromObj(mePtr->labelPtr, NULL);
 	char *accel = (mePtr->accelPtr == NULL) ? "" 
 		: Tcl_GetStringFromObj(mePtr->accelPtr, NULL);
+	char *p, *next;
+	Tcl_DString itemString;
 
 	/*
 	 * We have to construct the string with an ampersand
@@ -455,57 +456,32 @@ GetEntryText(mePtr)
 	 * ampersands in the string.
 	 */
 
-	for (i = 0; i < mePtr->labelLength; i++) {
-	    if (label[i] == '&') {
-		size++;
+	Tcl_DStringInit(&itemString);
+
+	for (p = label, i = 0; *p != '\0'; i++, p = next) {
+	    if (i == mePtr->underline) {
+		Tcl_DStringAppend(&itemString, "&", 1);
 	    }
-	}
-
-	if (mePtr->underline >= 0) {
-	    size++;
-	    if (label[mePtr->underline] == '&') {
-		size++;
+	    if (*p == '&') {
+		Tcl_DStringAppend(&itemString, "&", 1);
 	    }
+	    next = Tcl_UtfNext(p);
+	    Tcl_DStringAppend(&itemString, p, next - p);
 	}
-
-	if (mePtr->accelLength > 0) {
-	    size += mePtr->accelLength + 1;
-	}
-
-	for (i = 0; i < mePtr->accelLength; i++) {
-	    if (accel[i] == '&') {
-		size++;
-	    }
-	}
-
-	itemText = ckalloc(size);
-	
-	if (mePtr->labelLength == 0) {
-	    itemText[0] = 0;
-	} else {
-	    for (i = 0, j = 0; i < mePtr->labelLength; i++, j++) {
-		if (label[i] == '&') {
-		    itemText[j++] = '&';
+        if (mePtr->accelLength > 0) {
+	    Tcl_DStringAppend(&itemString, "\t", 1);
+	    for (p = accel, i = 0; *p != '\0'; i++, p = next) {
+		if (*p == '&') {
+		    Tcl_DStringAppend(&itemString, "&", 1);
 		}
-		if (i == mePtr->underline) {
-		    itemText[j++] = '&';
-		}
-		itemText[j] = label[i];
+		next = Tcl_UtfNext(p);
+		Tcl_DStringAppend(&itemString, p, next - p);
 	    }
-	    itemText[j] = '\0';
-	}
+	} 	    
 
-	if (mePtr->accelLength > 0) {
-	    strcat(itemText, "\t");
-	    for (i = 0, j = strlen(itemText); i < mePtr->accelLength;
-		    i++, j++) {
-		if (accel[i] == '&') {
-		    itemText[j++] = '&';
-		}
-		itemText[j] = accel[i];
-	    }
-	    itemText[j] = '\0';
-	}
+	itemText = ckalloc(Tcl_DStringLength(&itemString) + 1);
+	strcpy(itemText, Tcl_DStringValue(&itemString));
+	Tcl_DStringFree(&itemString);
     }
     return itemText;
 }
@@ -540,7 +516,8 @@ ReconfigureWindowsMenu(
     UINT itemID;
     int i, count, systemMenu = 0, base;
     int width, height;
-
+    Tcl_DString translatedText;
+  
     if (NULL == winMenuHdl) {
     	return;
     }
@@ -569,6 +546,7 @@ ReconfigureWindowsMenu(
 	lpNewItem = NULL;
 	flags = MF_BYPOSITION;
 	itemID = 0;
+	Tcl_DStringInit(&translatedText);
 
 	if ((menuPtr->menuType == MENUBAR) && (mePtr->type == TEAROFF_ENTRY)) {
 	    continue;
@@ -582,7 +560,8 @@ ReconfigureWindowsMenu(
 	    itemText = GetEntryText(mePtr);
 	    if ((menuPtr->menuType == MENUBAR)
 		    || (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
-		lpNewItem = itemText;
+		Tcl_UtfToExternalDString(NULL, itemText, -1, &translatedText);
+		lpNewItem = Tcl_DStringValue(&translatedText);
 	    } else {
 		lpNewItem = (LPCTSTR) mePtr;
 		flags |= MF_OWNERDRAW;
@@ -670,6 +649,7 @@ ReconfigureWindowsMenu(
 	if (!systemMenu) {
 	    InsertMenu(winMenuHdl, 0xFFFFFFFF, flags, itemID, lpNewItem);
 	}
+	Tcl_DStringFree(&translatedText);
 	if (itemText != NULL) {
 	    ckfree(itemText);
 	    itemText = NULL;
@@ -909,7 +889,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		if (!inPostMenu) {
 		    Tcl_Interp *interp;
 		    int code;
- 
+
 		    interp = menuPtr->interp;
 		    Tcl_Preserve((ClientData)interp);
 		    code = TkPreprocessMenu(menuPtr);
