@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.15 2004/11/11 01:24:32 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.16 2005/03/23 22:17:31 wolfsuit Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -56,6 +56,12 @@ static Tk_GeomMgr wmMgrType = {
 };
 
 /*
+ * The following keeps state for Aqua dock icon bounce notification.
+ */
+
+int tkMacOSXWmAttrNotifyVal = 0;
+
+/*
  * Hash table for Mac Window -> TkWindow mapping.
  */
 
@@ -91,6 +97,8 @@ static void		WmAttrGetModifiedStatus(WindowRef macWindow, Tcl_Obj
 static void		WmAttrGetTitlePath(WindowRef macWindow, Tcl_Obj
 				    *result);
 static void		WmAttrGetAlpha(WindowRef macWindow, Tcl_Obj *result);
+static void		WmAttrGetNotifyStatus(Tcl_Obj *result);
+static void		WmAttrSetNotifyStatus(int state);
 static int 		WmClientCmd _ANSI_ARGS_((Tk_Window tkwin,
                                       TkWindow *winPtr, Tcl_Interp *interp, int objc,
                                       Tcl_Obj *CONST objv[]));
@@ -177,6 +185,10 @@ static int 		WmWithdrawCmd _ANSI_ARGS_((Tk_Window tkwin,
                                         Tcl_Obj *CONST objv[]));
 static void		WmUpdateGeom _ANSI_ARGS_((WmInfo *wmPtr,
                                        TkWindow *winPtr));
+static int 		TkMacOSXWinStyle _ANSI_ARGS_((Tcl_Interp *interp,
+				    TkWindow *winPtr, int objc, Tcl_Obj * CONST
+				    objv[]));
+
 
 /*
  *--------------------------------------------------------------
@@ -775,18 +787,20 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 	"-modified",
 	"-titlepath",
 	"-alpha",
+	"-notify",
 	(char *)NULL
     };
     enum optionIdx {
 	WmAttrModifiedIdx,
 	WmAttrTitlePathIdx,
 	WmAttrAlphaIdx,
+	WmAttrNotifyIdx,
     };
 
     /* Must have objc >= 3 at this point. */
     if (objc < 3) {
 	Tcl_WrongNumArgs(interp, 1, objv,
-	    "attributes window ?-modified ?bool?? ?-titlepath ?path?? ?-alpha ?double??");
+	    "attributes window ?-modified ?bool?? ?-titlepath ?path?? ?-alpha ?double?? ?-notify ?bool??");
 	return TCL_ERROR;
     }
 
@@ -800,6 +814,8 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 	WmAttrGetTitlePath(macWindow, result);
 	Tcl_AppendToObj(result, " -alpha ", -1);
 	WmAttrGetAlpha(macWindow, result);
+	Tcl_AppendToObj(result, " -notify ", -1);
+	WmAttrGetNotifyStatus(result);
 	Tcl_SetObjResult(interp, result);
         return TCL_OK;
     }
@@ -819,6 +835,9 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 	    case WmAttrAlphaIdx:
 		WmAttrGetAlpha(macWindow, result);
 		break;
+	    case WmAttrNotifyIdx:
+	      WmAttrGetNotifyStatus(result);
+	      break;
 	}
 	Tcl_SetObjResult(interp, result);
 	return TCL_OK;
@@ -885,6 +904,14 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 		result = Tcl_NewDoubleObj(dval);
 		SetWindowAlpha(macWindow, dval);
 		break;
+	    case WmAttrNotifyIdx:
+		if (Tcl_GetBooleanFromObj(interp, objv[i+1], &boolean) !=
+		    TCL_OK) {
+		    return TCL_ERROR;
+		}
+		result = Tcl_NewBooleanObj(boolean);
+	        WmAttrSetNotifyStatus(boolean);
+                break;
 	}
     }
     Tcl_SetObjResult(interp, result);
@@ -976,6 +1003,64 @@ static void WmAttrGetAlpha(WindowRef macWindow, Tcl_Obj *result)
     Tcl_AppendObjToObj(result, Tcl_NewDoubleObj(fval));
 }
 
+/*
+ *----------------------------------------------------------------------
+ * WmAttrGetNotifyStatus --
+ *
+ *	Helper procedure to retrieve the -notify option for the wm
+ *	attributes command.
+ *
+ * Results:
+ *	Nothing.
+ * 
+ * Side effects:
+ *	Appends the notify status of the given window to the Tcl_Obj 
+ * 	passed in.
+ *
+ *----------------------------------------------------------------------
+ */
+static void WmAttrGetNotifyStatus(Tcl_Obj *result)
+{
+    Tcl_AppendObjToObj(result, 
+            Tcl_NewBooleanObj((tkMacOSXWmAttrNotifyVal != 0)));
+}
+/*
+ *----------------------------------------------------------------------
+ * WmAttrGetNotifyStatus --
+ *
+ *	Helper procedure to set the -notify option for the wm
+ *	attributes command.
+ *
+ * Results:
+ *	Nothing.
+ * 
+ * Side effects:
+ *	Sets the notify status.
+ *
+ *----------------------------------------------------------------------
+ */
+static void WmAttrSetNotifyStatus(int state)
+{
+  static NMRec notifyRec;
+  
+  if (state) {
+    if (tkMacOSXWmAttrNotifyVal == 0) {
+      notifyRec.qType = nmType;
+      notifyRec.nmMark = 1;
+      notifyRec.nmSound = NULL;
+      notifyRec.nmStr = NULL;
+      notifyRec.nmResp = NULL;
+      notifyRec.nmRefCon = 0;
+      NMInstall(&notifyRec);
+      tkMacOSXWmAttrNotifyVal = 1;
+    }
+  } else {
+    if (tkMacOSXWmAttrNotifyVal != 0) {
+      NMRemove(&notifyRec);
+      tkMacOSXWmAttrNotifyVal = 0;
+    }
+  }
+}
 /*
  *----------------------------------------------------------------------
  *
@@ -1814,7 +1899,6 @@ WmIconphotoCmd(tkwin, winPtr, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_PhotoHandle photo;
     int i, width, height, isDefault = 0;
 
@@ -2612,7 +2696,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
                                  (char *) NULL);
                 return TCL_ERROR;
             }
-            if (wmPtr->master != NULL) {
+            if (wmPtr->master != None) {
                 Tcl_AppendResult(interp, "can't iconify \"",
                                  winPtr->pathName,
                                  "\": it is a transient", (char *) NULL);
@@ -4676,7 +4760,8 @@ TkMacOSXZoomToplevel(
  *	This procedure is invoked to process the 
  *      "::tk::unsupported::MacWindowStyle" Tcl command.
  *	This command allows you to set the style of decoration
- *	for a Macintosh window.
+ *	for a Macintosh window, and to manipulate Mac specific window
+ *	types.
  *
  * Results:
  *	A standard Tcl result.
@@ -4689,338 +4774,241 @@ TkMacOSXZoomToplevel(
 
 	/* ARGSUSED */
 int
-TkUnsupported1Cmd(
+TkUnsupported1ObjCmd(
     ClientData clientData,	/* Main window associated with
 				 * interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    CONST char **argv)		/* Argument strings. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj * CONST objv[])	/* Argument objects. */
 {
+    static CONST char *subcmds[] = {
+	"style", NULL
+    };
+    enum SubCmds {
+	STYLE
+    };
     Tk_Window tkwin = (Tk_Window) clientData;
     TkWindow *winPtr;
-    WmInfo *wmPtr;
-    int c;
-    size_t length;
+    int index;
 
-    if (argc < 3) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " option window ?arg ...?\"", (char *) NULL);
+    if (objc < 3) {
+	Tcl_WrongNumArgs(interp, 1, objv,
+	        "option window ?arg ...?");
 	return TCL_ERROR;
     }
 
-    winPtr = (TkWindow *) Tk_NameToWindow(interp, argv[2], tkwin);
+    winPtr = (TkWindow *) Tk_NameToWindow(interp, 
+            Tcl_GetString(objv[2]), tkwin);
     if (winPtr == NULL) {
 	return TCL_ERROR;
     }
     if (!(winPtr->flags & TK_TOP_LEVEL)) {
+	Tcl_ResetResult(interp);
 	Tcl_AppendResult(interp, "window \"", winPtr->pathName,
-		"\" isn't a top-level window", (char *) NULL);
+                "\" isn't a top-level window", (char *) NULL);
 	return TCL_ERROR;
     }
-    wmPtr = winPtr->wmInfoPtr;
-    c = argv[1][0];
-    length = strlen(argv[1]);
-    if ((c == 's')  && (strncmp(argv[1], "style", length) == 0)) {
-        if ((argc < 3) || (argc > 5)) {
-            Tcl_AppendResult(interp, "wrong # arguments: must be \"",
-                    argv[0], " style window ?windowStyle?\"",
-                    " or \"", argv[0], "style window ?class attributes?\"",
-                    (char *) NULL);
-            return TCL_ERROR;
-        }
-	
-	if (argc == 3) {
-	    int appearanceSpec = 0;
-	    
-	    switch (wmPtr->style) {
-	        case -1:
-	            appearanceSpec = 1;
-	            break;
-		case noGrowDocProc:
-		case documentProc:
-		    Tcl_SetResult(interp, "documentProc", TCL_STATIC);
-		    break;
-		case dBoxProc:
-		    Tcl_SetResult(interp, "dBoxProc", TCL_STATIC);
-		    break;
-		case plainDBox:
-		    Tcl_SetResult(interp, "plainDBox", TCL_STATIC);
-		    break;
-		case altDBoxProc:
-		    Tcl_SetResult(interp, "altDBoxProc", TCL_STATIC);
-		    break;
-		case movableDBoxProc:
-		    Tcl_SetResult(interp, "movableDBoxProc", TCL_STATIC);
-		    break;
-		case zoomDocProc:
-		case zoomNoGrow:
-		    Tcl_SetResult(interp, "zoomDocProc", TCL_STATIC);
-		    break;
-                    /* Not supported in Carbon
-		case rDocProc:
-		    Tcl_SetResult(interp, "rDocProc", TCL_STATIC);
-		    break;
-                    */
-		case floatProc:
-		case floatGrowProc:
-		    Tcl_SetResult(interp, "floatProc", TCL_STATIC);
-		    break;
-		case floatZoomProc:
-		case floatZoomGrowProc:
-		    Tcl_SetResult(interp, "floatZoomProc", TCL_STATIC);
-		    break;
-		case floatSideProc:
-		case floatSideGrowProc:
-		    Tcl_SetResult(interp, "floatSideProc", TCL_STATIC);
-		    break;
-		case floatSideZoomProc:
-		case floatSideZoomGrowProc:
-		    Tcl_SetResult(interp, "floatSideZoomProc", TCL_STATIC);
-		    break;
-		default:
-		   Tcl_Panic("invalid style");
-	    }
-	    if (appearanceSpec) {
-	        Tcl_Obj *attributeList, *newResult = NULL;
-	        
-	        switch (wmPtr->macClass) {
-	            case kAlertWindowClass:
-	                newResult = Tcl_NewStringObj("alert", -1);
-	                break;
-	            case kMovableAlertWindowClass:
-	                newResult = Tcl_NewStringObj("moveableAlert", -1);
-	                break;
-	            case kModalWindowClass:
-	                newResult = Tcl_NewStringObj("modal", -1);
-	                break;
-	            case kMovableModalWindowClass:
-	                newResult = Tcl_NewStringObj("moveableModal", -1);
-	                break;
-	            case kFloatingWindowClass:
-	                newResult = Tcl_NewStringObj("floating", -1);
-	                break;
-	            case kDocumentWindowClass:
-	                newResult = Tcl_NewStringObj("document", -1);
-	                break;
-                    case kHelpWindowClass:
-                        newResult = Tcl_NewStringObj("help", -1);
-                        break;
-                    case kToolbarWindowClass:
-                        newResult = Tcl_NewStringObj("toolbar", -1);
-                        break;
-                    default:
-                        Tcl_Panic("invalid class");
-                }
 
- 	        attributeList = Tcl_NewListObj(0, NULL);
-                if (wmPtr->attributes == kWindowNoAttributes) {
-                    Tcl_ListObjAppendElement(interp, attributeList, 
-                            Tcl_NewStringObj("none", -1));
-                } else if (wmPtr->attributes == kWindowStandardDocumentAttributes) {
-                     Tcl_ListObjAppendElement(interp, attributeList, 
-                            Tcl_NewStringObj("standardDocument", -1));
-                } else if (wmPtr->attributes == kWindowStandardFloatingAttributes) {
-                     Tcl_ListObjAppendElement(interp, attributeList, 
-                            Tcl_NewStringObj("standardFloating", -1));                  
-                } else {
-                    if (wmPtr->attributes & kWindowCloseBoxAttribute) {
-                        Tcl_ListObjAppendElement(interp, attributeList, 
-                                Tcl_NewStringObj("closeBox", -1));
-                    }
-                    if (wmPtr->attributes & kWindowHorizontalZoomAttribute) {
-                        Tcl_ListObjAppendElement(interp, attributeList, 
-                                Tcl_NewStringObj("horizontalZoom", -1));
-                    }
-                    if (wmPtr->attributes & kWindowVerticalZoomAttribute) {
-                        Tcl_ListObjAppendElement(interp, attributeList, 
-                                Tcl_NewStringObj("verticalZoom", -1));
-                    }
-                    if (wmPtr->attributes & kWindowCollapseBoxAttribute) {
-                        Tcl_ListObjAppendElement(interp, attributeList, 
-                                Tcl_NewStringObj("collapseBox", -1));
-                    }
-                    if (wmPtr->attributes & kWindowResizableAttribute) {
-                        Tcl_ListObjAppendElement(interp, attributeList, 
-                                Tcl_NewStringObj("resizable", -1));
-                    }
-                    if (wmPtr->attributes & kWindowSideTitlebarAttribute) {
-                        Tcl_ListObjAppendElement(interp, attributeList, 
-                                Tcl_NewStringObj("sideTitlebar", -1));
-                    }
-                    if (wmPtr->attributes & kWindowNoUpdatesAttribute) {
-                        Tcl_ListObjAppendElement(interp, attributeList, 
-                                Tcl_NewStringObj("noUpdates", -1));
-                    }
-                    if (wmPtr->attributes & kWindowNoActivatesAttribute) {
-                        Tcl_ListObjAppendElement(interp, attributeList, 
-                                Tcl_NewStringObj("noActivates", -1));
-                    }
-                }
-                Tcl_ListObjAppendElement(interp, newResult, attributeList);
-                Tcl_SetObjResult(interp, newResult);       
-	    }
-	    return TCL_OK;
-        } else if (argc == 4) {
-	if (strcmp(argv[3], "documentProc") == 0) {
-	    wmPtr->style = documentProc;
-	} else if (strcmp(argv[3], "noGrowDocProc") == 0) {
-	    wmPtr->style = documentProc;
-	} else if (strcmp(argv[3], "dBoxProc") == 0) {
-	    wmPtr->style = dBoxProc;
-	} else if (strcmp(argv[3], "plainDBox") == 0) {
-	    wmPtr->style = plainDBox;
-	} else if (strcmp(argv[3], "altDBoxProc") == 0) {
-	    wmPtr->style = altDBoxProc;
-	} else if (strcmp(argv[3], "movableDBoxProc") == 0) {
-	    wmPtr->style = movableDBoxProc;
-	} else if (strcmp(argv[3], "zoomDocProc") == 0) {
-	    wmPtr->style = zoomDocProc;
-	} else if (strcmp(argv[3], "zoomNoGrow") == 0) {
-	    wmPtr->style = zoomNoGrow;
-	}
-        /*
-         else
-         if (strcmp(argv[3], "rDocProc") == 0) {
-	    wmPtr->style = rDocProc;
-	}
-        */
-         else if (strcmp(argv[3], "floatProc") == 0) {
-	    wmPtr->style = floatGrowProc;
-	} else if (strcmp(argv[3], "floatGrowProc") == 0) {
-	    wmPtr->style = floatGrowProc;
-	} else if (strcmp(argv[3], "floatZoomProc") == 0) {
-	    wmPtr->style = floatZoomGrowProc;
-	} else if (strcmp(argv[3], "floatZoomGrowProc") == 0) {
-	    wmPtr->style = floatZoomGrowProc;
-	} else if (strcmp(argv[3], "floatSideProc") == 0) {
-	    wmPtr->style = floatSideGrowProc;
-	} else if (strcmp(argv[3], "floatSideGrowProc") == 0) {
-	    wmPtr->style = floatSideGrowProc;
-	} else if (strcmp(argv[3], "floatSideZoomProc") == 0) {
-	    wmPtr->style = floatSideZoomGrowProc;
-	} else if (strcmp(argv[3], "floatSideZoomGrowProc") == 0) {
-	    wmPtr->style = floatSideZoomGrowProc;
-	} else {
-	    Tcl_AppendResult(interp, "bad style: should be documentProc, ",
-	    	    "dBoxProc, plainDBox, altDBoxProc, movableDBoxProc, ",
-	    	    "zoomDocProc, rDocProc, floatProc, floatZoomProc, ",
-		    "floatSideProc, or floatSideZoomProc",
-		    (char *) NULL);
+    if (Tcl_GetIndexFromObj(interp, objv[1], subcmds, "option",
+            0, &index) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    switch ((enum SubCmds) index) {
+    case STYLE:
+	if ((objc < 3) || (objc > 5)) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "window ?class attributes?");
 	    return TCL_ERROR;
 	}
-	} else if (argc == 5) {
-	    int oldClass = wmPtr->macClass;
-	    int oldAttributes = wmPtr->attributes;
-	    
-	    if (strcmp(argv[3], "alert") == 0) {
-	        wmPtr->macClass = kAlertWindowClass;
-	    } else if (strcmp(argv[3], "moveableAlert") == 0) {
-	        wmPtr->macClass = kMovableAlertWindowClass;
-	    } else if (strcmp(argv[3], "modal") == 0) {
-	        wmPtr->macClass = kModalWindowClass;
-	    } else if (strcmp(argv[3], "moveableModal") == 0) {
-	        wmPtr->macClass = kMovableModalWindowClass;
-	    } else if (strcmp(argv[3], "floating") == 0) {
-	        wmPtr->macClass = kFloatingWindowClass;
-            } else if (strcmp(argv[3], "document") == 0) {
-                wmPtr->macClass = kDocumentWindowClass;
-            } else if (strcmp(argv[3], "help") == 0) {
-                wmPtr->macClass = kHelpWindowClass;
-            } else if (strcmp(argv[3], "toolbar") == 0) {
-                wmPtr->macClass = kToolbarWindowClass;
-	    } else {
-	        wmPtr->macClass = oldClass;
-	        Tcl_AppendResult(interp, "bad class: should be alert, ",
-	    	        "moveableAlert, modal, moveableModal, floating, ",
-	    	        "help, or document",
-		        (char *) NULL);
-	        return TCL_ERROR;
-	    }
-	    
-	    if (strcmp(argv[4], "none") == 0) {
-	        wmPtr->attributes = kWindowNoAttributes;
-	    } else if (strcmp(argv[4], "standardDocument") == 0) {
-	        wmPtr->attributes = kWindowStandardDocumentAttributes;
-	    } else if (strcmp(argv[4], "standardFloating") == 0) {
-	        wmPtr->attributes = kWindowStandardFloatingAttributes;
-	    } else {
-	        int foundOne = 0;
-	        int attrArgc, i;
-	        CONST char **attrArgv = NULL;
-	        
-	        if (Tcl_SplitList(interp, argv[4], &attrArgc, &attrArgv) != TCL_OK) {
-	            wmPtr->macClass = oldClass;
-	            Tcl_AppendResult(interp, "Ill-formed attributes list: \"",
-	                argv[4], "\".", (char *) NULL);
-	            return TCL_ERROR;
-	        }
-	        	        
-	        wmPtr->attributes = kWindowNoAttributes;
-	        
-	        for (i = 0; i < attrArgc; i++) {
-	            if ((*attrArgv[i] == 'c') 
-	                    && (strcmp(attrArgv[i], "closeBox")  == 0)) {
-	                wmPtr->attributes |= kWindowCloseBoxAttribute;
-	                foundOne = 1;
-	            } else if ((*attrArgv[i] == 'h') 
-	                    && (strcmp(attrArgv[i], "horizontalZoom")  == 0)) {
-	                wmPtr->attributes |= kWindowHorizontalZoomAttribute;
-	                foundOne = 1;
-	            } else if ((*attrArgv[i] == 'v') 
-	                    && (strcmp(attrArgv[i], "verticalZoom")  == 0)) {
-	                wmPtr->attributes |= kWindowVerticalZoomAttribute;
-	                foundOne = 1;
-	            } else if ((*attrArgv[i] == 'c') 
-	                    && (strcmp(attrArgv[i], "collapseBox")  == 0)) {
-	                wmPtr->attributes |= kWindowCollapseBoxAttribute;
-	                foundOne = 1;
-	            } else if ((*attrArgv[i] == 'r') 
-	                    && (strcmp(attrArgv[i], "resizable")  == 0)) {
-	                wmPtr->attributes |= kWindowResizableAttribute;
-	                foundOne = 1;
-	            } else if ((*attrArgv[i] == 's') 
-	                    && (strcmp(attrArgv[i], "sideTitlebar")  == 0)) {
-	                wmPtr->attributes |= kWindowSideTitlebarAttribute;
-			foundOne = 1;
-		    } else if ((*attrArgv[i] == 'n') 
-			       && (strcmp(attrArgv[i], "noActivates")  == 0)) {
-			wmPtr->attributes |= kWindowNoActivatesAttribute;
-			foundOne = 1;
-		    } else if ((*attrArgv[i] == 'n') 
-			       && (strcmp(attrArgv[i], "noUpdates")  == 0)) {
-			wmPtr->attributes |= kWindowNoUpdatesAttribute;
-	                foundOne = 1;
-	            } else {
-	                foundOne = 0;
-	                break;
-	            }
-	        }
-	        
-	        if (attrArgv != NULL) {
-	            ckfree ((char *) attrArgv);
-	        }
-	        
-	        if (foundOne != 1) {
-	            wmPtr->macClass = oldClass;
-	            wmPtr->attributes = oldAttributes;
-	            
-	            Tcl_AppendResult(interp, "bad attribute: \"", argv[4], 
-	                    "\", should be standardDocument, ",
-	    	            "standardFloating, or some combination of ",
-	    	            "closeBox, horizontalZoom, verticalZoom, ",
-	    	            "collapseBox, resizable, or sideTitlebar.",
-		            (char *) NULL);
-	            return TCL_ERROR;
-	        }
-	    }
-	    
-	    wmPtr->style = -1;
-	}
-    } else {
-	Tcl_AppendResult(interp, "unknown or ambiguous option \"", argv[1],
-		"\": must be style",
-		(char *) NULL);
+	return TkMacOSXWinStyle(interp, winPtr, objc, objv);
+    default:
+	Tcl_ResetResult(interp);
+	Tcl_AppendResult(interp, "unknown or ambiguous option \"", 
+                Tcl_GetString(objv[1]),
+                "\": must be style",
+                (char *) NULL);
 	return TCL_ERROR;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXWinStyle --
+ *
+ *	This procedure is invoked to process the 
+ *      "::tk::unsupported::MacWindowStyle style" subcommand.
+ *	This command allows you to set the style of decoration
+ *	for a Macintosh window.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	Changes the style of a new Mac window.
+ *
+ *----------------------------------------------------------------------
+ */
+int
+TkMacOSXWinStyle(
+    Tcl_Interp *interp,		/* Current interpreter. */
+    TkWindow *winPtr,		/* Window to be manipulated. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj * CONST objv[])	/* Argument objects. */
+{
+    struct StrIntMap {
+	char *strValue;
+	int  intValue;
+    };
+    static CONST struct StrIntMap styleMap[] = {
+	{ "documentProc",               documentProc            },
+	{ "noGrowDocProc",              documentProc            },
+	{ "dBoxProc",                   dBoxProc                },
+	{ "plainDBox",                  plainDBox               },
+	{ "altDBoxProc",                altDBoxProc             },
+	{ "movableDBoxProc",            movableDBoxProc         },
+	{ "zoomDocProc",                zoomDocProc             },
+	{ "zoomNoGrow",                 zoomNoGrow              },
+	{ "floatProc",                  floatGrowProc           },
+	{ "floatGrowProc",              floatGrowProc           },
+	{ "floatZoomProc",              floatZoomGrowProc       },
+	{ "floatZoomGrowProc",          floatZoomGrowProc       },
+	{ "floatSideProc",              floatSideGrowProc       },
+	{ "floatSideGrowProc",          floatSideGrowProc       },
+	{ "floatSideZoomProc",          floatSideZoomGrowProc   },
+	{ "floatSideZoomGrowProc",      floatSideZoomGrowProc   },
+	{ NULL,                         0                       }
+    };
+    static CONST struct StrIntMap classMap[] = {
+	{ "alert",                      kAlertWindowClass       },
+	{ "moveableAlert",              kMovableAlertWindowClass },
+	{ "modal",                      kModalWindowClass       },
+	{ "moveableModal",              kMovableModalWindowClass },
+	{ "floating",                   kFloatingWindowClass    },
+	{ "document",                   kDocumentWindowClass    },
+	{ "help",                       kHelpWindowClass        },
+        { "sheet",                      kSheetWindowClass       },
+	{ "toolbar",                    kToolbarWindowClass     },
+        { "plain",                      kPlainWindowClass       },
+        { "overlay",                    kOverlayWindowClass     },
+        { "sheetAlert",                 kSheetAlertWindowClass  },
+        { "altPlain",                   kAltPlainWindowClass    },
+	{ "drawer",                     kDrawerWindowClass      },
+	{ NULL,                         0                       }
+    };
+    static CONST struct StrIntMap compositeAttrMap[] = {
+	{ "none",               kWindowNoAttributes             },
+	{ "standardDocument",   kWindowStandardDocumentAttributes },
+	{ "standardFloating",   kWindowStandardFloatingAttributes },
+	{ NULL,                 0                               }
+    };
+    static CONST struct StrIntMap attrMap[] = {
+	{ "closeBox",           kWindowCloseBoxAttribute        },
+	{ "horizontalZoom",     kWindowHorizontalZoomAttribute  },
+	{ "verticalZoom",       kWindowVerticalZoomAttribute    },
+	{ "collapseBox",        kWindowCollapseBoxAttribute     },
+	{ "resizable",          kWindowResizableAttribute       },
+	{ "sideTitlebar",       kWindowSideTitlebarAttribute    },
+	{ "toolbarButton",      kWindowToolbarButtonAttribute   },
+        { "metal",              kWindowMetalAttribute           },
+	{ "noActivates",        kWindowNoActivatesAttribute     },
+	{ "noUpdates",          kWindowNoUpdatesAttribute       },
+        { "compositing",        kWindowCompositingAttribute     },
+        { "noShadow",           kWindowNoShadowAttribute        },
+        { "hideOnSuspend",      kWindowHideOnSuspendAttribute   },
+        { "standardHandler",    kWindowStandardHandlerAttribute },
+        { "hideOnFullScreen",   kWindowHideOnFullScreenAttribute},
+	{ NULL,                 0                               }
+    };
+    int index, i;
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+
+    if (objc == 3) {
+	if (wmPtr->style != -1) {
+	    for (i = 0; styleMap[i].strValue != NULL; i++) {
+		if (wmPtr->style == styleMap[i].intValue) {
+		    Tcl_SetObjResult(interp, 
+                            Tcl_NewStringObj(styleMap[i].strValue, -1));
+		    return TCL_OK;
+		}
+	    }
+	    Tcl_Panic("invalid style");
+	} else {
+	    Tcl_Obj *attributeList, *newResult = NULL;
+            int usesComposite;
+
+	    for (i = 0; classMap[i].strValue != NULL; i++) {
+		if (wmPtr->macClass == classMap[i].intValue) {
+		    newResult = Tcl_NewStringObj(classMap[i].strValue, -1);
+		    break;
+		}
+	    }
+	    if (newResult == NULL) {
+		Tcl_Panic("invalid class");
+	    }
+
+	    attributeList = Tcl_NewListObj(0, NULL);
+            usesComposite = 0;
+            
+	    for (i = 0; compositeAttrMap[i].strValue != NULL; i++) {
+		if (wmPtr->attributes == compositeAttrMap[i].intValue) {
+		    Tcl_ListObjAppendElement(interp, attributeList,
+                            Tcl_NewStringObj(compositeAttrMap[i].strValue, -1));
+                    usesComposite = 1;
+                    break;
+		}
+	    }
+            if (!usesComposite) {
+	        for (i = 0; attrMap[i].strValue != NULL; i++) {
+		    if (wmPtr->attributes & attrMap[i].intValue) {
+		        Tcl_ListObjAppendElement(interp, attributeList,
+                                Tcl_NewStringObj(attrMap[i].strValue, -1));
+		    }
+	        }
+            }
+	    Tcl_ListObjAppendElement(interp, newResult, attributeList);
+	    Tcl_SetObjResult(interp, newResult);       
+	}
+    } else if (objc == 4) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[3], styleMap,
+	    sizeof(struct StrIntMap), "style", 0, &index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	wmPtr->style = styleMap[index].intValue;
+    } else if (objc == 5) {
+	int attrObjc;
+	Tcl_Obj **attrObjv = NULL;
+	int oldClass = wmPtr->macClass;
+	int oldAttributes = wmPtr->attributes;
+
+	if (Tcl_GetIndexFromObjStruct(interp, objv[3], classMap,
+	    sizeof(struct StrIntMap), "class", 0, &index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	wmPtr->macClass = classMap[index].intValue;
+	if (Tcl_ListObjGetElements(interp, objv[4], &attrObjc, &attrObjv) !=
+	    TCL_OK) {
+	    wmPtr->macClass = oldClass;
+	    return TCL_ERROR;
+	}
+	wmPtr->attributes = kWindowNoAttributes;
+	for (i = 0; i < attrObjc; i++) {
+	    if (Tcl_GetIndexFromObjStruct(interp, attrObjv[i], compositeAttrMap,
+		    sizeof(struct StrIntMap), "attribute", 0, &index) 
+		    == TCL_OK) {
+                wmPtr->attributes |= compositeAttrMap[index].intValue;
+            } else if (Tcl_GetIndexFromObjStruct(interp, attrObjv[i], 
+                    attrMap,
+		    sizeof(struct StrIntMap), "attribute", 0, &index) 
+		    == TCL_OK) {
+                    Tcl_ResetResult (interp);
+                wmPtr->attributes |= attrMap[index].intValue;
+            } else {
+		wmPtr->macClass = oldClass;
+		wmPtr->attributes = oldAttributes;
+		return TCL_ERROR;
+	    }
+	}
+	wmPtr->style = -1;
     }
     
     return TCL_OK;

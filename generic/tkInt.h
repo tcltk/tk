@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.65 2005/01/11 10:35:27 dkf Exp $ 
+ * RCS: $Id: tkInt.h,v 1.66 2005/03/23 22:17:00 wolfsuit Exp $ 
  */
 
 #ifndef _TKINT
@@ -1190,8 +1190,9 @@ EXTERN int		TkParsePadAmount _ANSI_ARGS_((Tcl_Interp *interp,
 /* 
  * Unsupported commands.
  */
-EXTERN int		TkUnsupported1Cmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, CONST char **argv));
+EXTERN int		TkUnsupported1ObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, Tcl_Obj * CONST
+			    objv[]));
 
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLIMPORT
