@@ -438,6 +438,10 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 	AC_DEFINE(USE_THREAD_STORAGE, 1,
 	    [Use the generic thread storage subsystem?])
 	AC_DEFINE(_REENTRANT, 1, [Do we want the reentrant OS API?])
+	if test "`uname -s`" = "SunOS" ; then
+	    AC_DEFINE(_POSIX_PTHREAD_SEMANTICS, 1,
+		    [Do we really want to follow the standard? Yes we do!])
+	fi
 	AC_DEFINE(_THREAD_SAFE, 1, [Do we want the thread-safe OS API?])
 	AC_CHECK_LIB(pthread,pthread_mutex_init,tcl_ok=yes,tcl_ok=no)
 	if test "$tcl_ok" = "no"; then
@@ -511,6 +515,42 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 	fi
 	LIBS=$ac_saved_libs
 	AC_CHECK_FUNCS(readdir_r)
+	if test "x$ac_cv_func_readdir_r" = "xyes"; then
+            AC_MSG_CHECKING([how many args readdir_r takes])
+	    # IRIX 5.3 has a 2 arg version of readdir_r
+	    # while other systems have a 3 arg version.
+	    AC_CACHE_VAL(tcl_cv_two_arg_readdir_r,
+	        AC_TRY_COMPILE([#include <stdlib.h>
+#include <sys/types.h>
+#ifdef NO_DIRENT_H
+# include <sys/dir.h>  /* logic from tcl/compat/dirent.h *
+# define dirent direct  *                                */
+#else
+# include <dirent.h>
+#endif
+], [readdir_r(NULL, NULL);],
+	        tcl_cv_two_arg_readdir_r=yes, tcl_cv_two_arg_readdir_r=no))
+	    AC_CACHE_VAL(tcl_cv_three_arg_readdir_r,
+	        AC_TRY_COMPILE([#include <stdlib.h>
+#include <sys/types.h>
+#ifdef NO_DIRENT_H
+# include <sys/dir.h>  /* logic from tcl/compat/dirent.h *
+# define dirent direct  *                                */
+#else
+# include <dirent.h>
+#endif
+], [readdir_r(NULL, NULL, NULL);],
+	        tcl_cv_three_arg_readdir_r=yes, tcl_cv_three_arg_readdir_r=no))
+	    if test "x$tcl_cv_two_arg_readdir_r" = "xyes" ; then
+                AC_MSG_RESULT([2])
+	        AC_DEFINE(HAVE_TWO_ARG_READDIR_R)
+	    elif test "x$tcl_cv_three_arg_readdir_r" = "xyes" ; then
+                AC_MSG_RESULT([3])
+	        AC_DEFINE(HAVE_THREE_ARG_READDIR_R)
+	    else
+	        AC_MSG_ERROR([unknown number of args for readdir_r])
+	    fi
+	fi
     else
 	TCL_THREADS=0
 	AC_MSG_RESULT([no (default)])
@@ -865,6 +905,10 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 
     do64bit_ok=no
     LDFLAGS_ORIG="$LDFLAGS"
+    # When ld needs options to work in 64-bit mode, put them in
+    # LDFLAGS_ARCH so they eventually end up in LDFLAGS even if [load]
+    # is disabled by the user. [Bug 1016796]
+    LDFLAGS_ARCH=""
     TCL_EXPORT_FILE_SUFFIX=""
     UNSHARED_LIB_SUFFIX=""
     TCL_TRIM_DOTS='`echo ${VERSION} | tr -d .`'
@@ -873,7 +917,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     CFLAGS_DEBUG=-g
     CFLAGS_OPTIMIZE=-O
     if test "$GCC" = "yes" ; then
-	CFLAGS_WARNING="-Wall -Wno-implicit-int -fno-strict-aliasing"
+	CFLAGS_WARNING="-Wall -Wno-implicit-int"
     else
 	CFLAGS_WARNING=""
     fi
@@ -917,7 +961,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 		else 
 		    do64bit_ok=yes
 		    CFLAGS="$CFLAGS -q64"
-		    LDFLAGS="$LDFLAGS -q64"
+		    LDFLAGS_ARCH="-q64"
 		    RANLIB="${RANLIB} -X64"
 		    AR="${AR} -X64"
 		    SHLIB_LD_FLAGS="-b64"
@@ -977,7 +1021,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 		else 
 		    do64bit_ok=yes
 		    CFLAGS="$CFLAGS -q64"
-		    LDFLAGS="$LDFLAGS -q64"
+		    LDFLAGS_ARCH="-q64"
 		    RANLIB="${RANLIB} -X64"
 		    AR="${AR} -X64"
 		    SHLIB_LD_FLAGS="-b64"
@@ -1098,7 +1142,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 		else
 		    do64bit_ok=yes
 		    CFLAGS="$CFLAGS +DD64"
-		    LDFLAGS="$LDFLAGS +DD64"
+		    LDFLAGS_ARCH="+DD64"
 		fi
 	    fi
 	    ;;
@@ -1183,7 +1227,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 	            do64bit_ok=yes
 	            SHLIB_LD="ld -64 -shared -rdata_shared"
 	            CFLAGS="$CFLAGS -64"
-	            LDFLAGS="$LDFLAGS -64"
+	            LDFLAGS_ARCH="-64"
 	        fi
 	    fi
 	    ;;
@@ -1585,10 +1629,10 @@ dnl AC_CHECK_TOOL(AR, ar)
 			    do64bit_ok=yes
 			    if test "$do64bitVIS" = "yes" ; then
 				CFLAGS="$CFLAGS -xarch=v9a"
-			    	LDFLAGS="$LDFLAGS -xarch=v9a"
+			    	LDFLAGS_ARCH="-xarch=v9a"
 			    else
 				CFLAGS="$CFLAGS -xarch=v9"
-			    	LDFLAGS="$LDFLAGS -xarch=v9"
+			    	LDFLAGS_ARCH="-xarch=v9"
 			    fi
 			fi
 		else
@@ -1758,6 +1802,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 	LD_SEARCH_FLAGS=""
 	BUILD_DLTEST=""
     fi
+    LDFLAGS="$LDFLAGS $LDFLAGS_ARCH"
 
     # If we're running gcc, then change the C flags for compiling shared
     # libraries to the right flags for gcc, instead of those for the
@@ -1871,6 +1916,8 @@ dnl        esac
     AC_SUBST(SHLIB_LD_LIBS)
     AC_SUBST(SHLIB_CFLAGS)
     AC_SUBST(SHLIB_SUFFIX)
+    AC_DEFINE_UNQUOTED(TCL_SHLIB_EXT,"${SHLIB_SUFFIX}",
+	[What is the default extension for shared libraries?])
 
     AC_SUBST(MAKE_LIB)
     AC_SUBST(MAKE_STUB_LIB)
@@ -2264,7 +2311,7 @@ AC_DEFUN(SC_TIME_HANDLER, [
     AC_HEADER_TIME
     AC_STRUCT_TIMEZONE
 
-    AC_CHECK_FUNCS(gmtime_r localtime_r)
+    AC_CHECK_FUNCS(gmtime_r localtime_r mktime)
 
     AC_MSG_CHECKING([tm_tzadj in struct tm])
     AC_CACHE_VAL(tcl_cv_member_tm_tzadj,
@@ -2549,15 +2596,22 @@ AC_DEFUN(SC_TCL_64BIT_FLAGS, [
 	fi
 	AC_MSG_RESULT(${tcl_cv_struct_stat64})
 
+	AC_CHECK_FUNCS(open64 lseek64)
 	AC_MSG_CHECKING([for off64_t])
 	AC_CACHE_VAL(tcl_cv_type_off64_t,[
 	    AC_TRY_COMPILE([#include <sys/types.h>],[off64_t offset;
 ],
 		tcl_cv_type_off64_t=yes,tcl_cv_type_off64_t=no)])
-	if test "x${tcl_cv_type_off64_t}" = "xyes" ; then
+	dnl Define HAVE_TYPE_OFF64_T only when the off64_t type and the
+	dnl functions lseek64 and open64 are defined.
+	if test "x${tcl_cv_type_off64_t}" = "xyes" && \
+	        test "x${ac_cv_func_lseek64}" = "xyes" && \
+	        test "x${ac_cv_func_open64}" = "xyes" ; then
 	    AC_DEFINE(HAVE_TYPE_OFF64_T, 1, [Is off64_t in <sys/types.h>?])
+	    AC_MSG_RESULT(yes)
+	else
+	    AC_MSG_RESULT(no)
 	fi
-	AC_MSG_RESULT(${tcl_cv_type_off64_t})
     fi])
 
 #--------------------------------------------------------------------
@@ -2587,6 +2641,42 @@ AC_DEFUN(SC_TCL_CFG_ENCODING, [
 	AC_DEFINE(TCL_CFGVAL_ENCODING,"iso8859-1",
 	    [What encoding should be used for embedded configuration info?])
     fi])
+
+#--------------------------------------------------------------------
+# SC_TCL_CHECK_BROKEN_FUNC
+#
+#	Declare the encoding to use for embedded configuration information.
+#
+# Arguments:
+#	funcName - function to test for
+#	advancedTest - the advanced test to run if the function is present
+#
+# Results:
+#	Might cause compatability versions of the function to be used.
+#	Might affect the following vars:
+#		USE_COMPAT	(implicit)
+#
+#--------------------------------------------------------------------
+
+AC_DEFUN(SC_TCL_CHECK_BROKEN_FUNC,[
+    AC_CHECK_FUNC($1, tcl_ok=1, tcl_ok=0)
+    if test ["$tcl_ok"] = 1; then
+	AC_MSG_CHECKING([proper ]$1[ implementation])
+	AC_CACHE_VAL([tcl_cv_]$1[_unbroken],
+	    AC_TRY_RUN([[int main() {]$2[}]],[tcl_cv_]$1[_unbroken]=ok,
+		[tcl_cv_]$1[_unbroken]=broken,[tcl_cv_]$1[_unbroken]=unknown))
+	AC_MSG_RESULT([$tcl_cv_]$1[_unbroken])
+	if test ["$tcl_cv_]$1[_unbroken"] = "ok"; then
+	    tcl_ok=1
+	else
+	    tcl_ok=0
+	fi
+    fi
+    if test ["$tcl_ok"] = 0; then
+	AC_LIBOBJ($1)
+	USE_COMPAT=1
+    fi])
+
 
 # Local Variables:
 # mode: autoconf
