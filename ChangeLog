@@ -1,3 +1,7 @@
+2004-05-23  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkVisual.c (Tk_GetVisual): Minor fix for error message.
+
 2004-05-14  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/msgbox.tcl (MessageBox): Added TIP#152's -detail option
