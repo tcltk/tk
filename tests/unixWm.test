@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.12 2000/03/29 00:09:07 ericm Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.13 2001/03/28 17:27:10 dgp Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1832,7 +1832,7 @@ test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} {
     wm geometry .t +0+0
     tkwait visibility .t
     interp create slave
-    load {} tk slave
+    load {} Tk slave
     slave eval {wm geometry . 200x200+0+0; tkwait visibility .}
     set result [list [winfo containing 100 100] \
 	    [slave eval {winfo containing 100 100}]]
