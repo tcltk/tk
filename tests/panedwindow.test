@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.4 2002/08/08 01:43:44 hobbs Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.5 2002/09/30 18:55:57 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -44,7 +44,7 @@ foreach test {
     } [list [lindex $test 2] [lindex $test 2]]
     incr i
     if {[lindex $test 3] != ""} {
-	test entry-1.$i {configuration options} {
+	test panedwindow-1.$i {configuration options} {
 	    list [catch {.p configure $name [lindex $test 3]} msg] $msg
 	} [list 1 [lindex $test 4]]
     }
@@ -70,7 +70,7 @@ foreach test {
     } [list [lindex $test 2] [lindex $test 2]]
     incr i
     if {[lindex $test 3] != ""} {
-	test entry-1.$i {configuration options} {
+	test panedwindow-1.$i {configuration options} {
 	    list [catch {.p paneconfigure .b $name [lindex $test 3]} msg] $msg
 	} [list 1 [lindex $test 4]]
     }
@@ -2385,8 +2385,17 @@ test panedwindow-27.26 {PanedWindowIdentifyCoords} {
     destroy .p .f .f2 .f3
     set result
 } {1 sash}
-    
-    
+
+test panedwindow-28.1 {destroy the window cleanly on error [Bug #616589]} {
+    list [catch {panedwindow .p -bogusopt bogus} msg] $msg
+} {1 {unknown option "-bogusopt"}}
+test panedwindow-28.2 {destroy the window cleanly on rename [Bug #616589]} {
+    destroy .p
+    panedwindow .p
+    rename .p {}
+    winfo exists .p
+} {0}
+
 # cleanup
 ::tcltest::cleanupTests
 return
