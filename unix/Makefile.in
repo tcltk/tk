@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.23 1999/07/13 22:19:06 redman Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.24 1999/07/16 21:43:28 redman Exp $
 
 # Current Tk version;  used in various names.
 
@@ -463,7 +463,7 @@ install-libraries:
 	    echo "Installing $$i"; \
 	    $(INSTALL_DATA) $$i $(INCLUDE_INSTALL_DIR); \
 	    done;
-	for i in $(SRC_DIR)/library/*.tcl $(SRC_DIR)/library/prolog.ps \
+	for i in $(SRC_DIR)/library/*.tcl $(GENERIC_DIR)/prolog.ps \
 	        $(SRC_DIR)/library/tclIndex $(UNIX_DIR)/tkAppInit.c; \
 	    do \
 	    echo "Installing $$i"; \

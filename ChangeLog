@@ -1,3 +1,12 @@
+1999-07-16    <redman@scriptics.com>
+
+	* unix/Makefile.in:
+	* win/Makefile.in:  Copy the prolog.ps from the generic directory
+	for install-libraries.
+
+	* unix/aclocal.m4: Check for Alpha/Linux to set the IEEE flag to
+	the compiler to be -mieee.  Patch from Don Porter.
+
 1999-07-08    <stanton@scriptics.com>
 
 	* tests/unixSelect.test: Fixed broken test.
