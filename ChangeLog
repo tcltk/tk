@@ -1,5 +1,9 @@
 2004-08-19  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tkWinDialog.c (EatSpuriousMessageBugFix): Fix a problem with
+	double clicks in file dialogs falling through to the window
+	underneath in win32. [Patch #611615]
+
 	* win/tkWinDialog.c (Tk_MessageBoxObjCmd): Inherit the icon from
 	* win/tkWinInt.h:                          the -parent window for
 	* win/tkWinWm.c (TkWinGetIcon):            the MessageBox.
