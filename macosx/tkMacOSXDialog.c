@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.4 2003/02/25 16:09:23 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.4.2.1 2004/02/14 01:08:28 wolfsuit Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -70,7 +70,7 @@ static void             InitFileDialogs();
 static int              NavServicesGetFile(Tcl_Interp *interp, OpenFileData *ofd,
                             AEDesc *initialDescPtr,
                             unsigned char *initialFile, AEDescList *selectDescPtr,
-                            StringPtr title, StringPtr message, int multiple, int isOpen);
+                            CFStringRef title, CFStringRef message, int multiple, int isOpen);
 static int              HandleInitialDirectory (Tcl_Interp *interp,
                                                 char *initialFile, char *initialDir,
                                                 FSRef *dirRef,
@@ -254,7 +254,7 @@ Tk_GetOpenFileObjCmd(
     int i, result, multiple;
     OpenFileData ofd;
     Tk_Window parent;
-    Str255 message, title;
+    CFStringRef message, title;
     AEDesc initialDesc = {typeNull, NULL};
     FSRef dirRef;
     AEDesc *initialPtr = NULL;
@@ -280,8 +280,8 @@ Tk_GetOpenFileObjCmd(
     result = TCL_ERROR;    
     parent = (Tk_Window) clientData; 
     multiple = false;
-    title[0] = 0;
-    message[0] = 0;   
+    title = NULL;
+    message = NULL;   
 
     TkInitFileFilters(&ofd.fl);
     
@@ -293,7 +293,6 @@ Tk_GetOpenFileObjCmd(
         char *choice;
         int index, choiceLen;
         char *string;
-        int srcRead, dstWrote;
 
         if (Tcl_GetIndexFromObj(interp, objv[i], openOptionStrings, "option",
                 TCL_EXACT, &index) != TCL_OK) {
@@ -327,10 +326,8 @@ Tk_GetOpenFileObjCmd(
                 break;
             case OPEN_MESSAGE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, choice, choiceLen, 
-                        0, NULL, StrBody(message), 255, 
-                        &srcRead, &dstWrote, NULL);
-                message[0] = dstWrote;
+                message = CFStringCreateWithBytes(NULL, choice, choiceLen, 
+                        kCFStringEncodingUTF8, false);
                 break;
             case OPEN_MULTIPLE:
                 if (Tcl_GetBooleanFromObj(interp, objv[i + 1], &multiple) 
@@ -349,10 +346,8 @@ Tk_GetOpenFileObjCmd(
                 break;
             case OPEN_TITLE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, choice, choiceLen, 
-                        0, NULL, StrBody(title), 255, 
-                        &srcRead, &dstWrote, NULL);
-                title[0] = dstWrote;
+                title = CFStringCreateWithBytes(NULL, choice, choiceLen, 
+                        kCFStringEncodingUTF8, false);
                 break;
         }
     }
@@ -374,6 +369,12 @@ Tk_GetOpenFileObjCmd(
     TkFreeFileFilters(&ofd.fl);
     AEDisposeDesc(&initialDesc);
     AEDisposeDesc(&selectDesc);
+    if (title != NULL) {
+        CFRelease(title);
+    }
+    if (message != NULL) {
+        CFRelease(message);
+    }
     
     return result;
 }
@@ -407,7 +408,7 @@ Tk_GetSaveFileObjCmd(
     AEDesc initialDesc = {typeNull, NULL};
     AEDesc *initialPtr = NULL;
     FSRef dirRef;
-    Str255 title, message;
+    CFStringRef title, message;
     OpenFileData ofd;
     static CONST char *saveOptionStrings[] = {
             "-defaultextension", "-filetypes", "-initialdir", "-initialfile", 
@@ -425,8 +426,8 @@ Tk_GetSaveFileObjCmd(
     result = TCL_ERROR;    
     parent = (Tk_Window) clientData;    
     StrLength(initialFile) = 0;
-    title[0] = 0;
-    message[0] = 0;   
+    title = NULL;
+    message = NULL;   
 
     for (i = 1; i < objc; i += 2) {
         char *choice;
@@ -473,10 +474,8 @@ Tk_GetSaveFileObjCmd(
                 break;
             case SAVE_MESSAGE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, choice, choiceLen, 
-                        0, NULL, StrBody(message), 255, 
-                        &srcRead, &dstWrote, NULL);
-                StrLength(message) = (unsigned char) dstWrote;
+                message = CFStringCreateWithBytes(NULL, choice, choiceLen, 
+                        kCFStringEncodingUTF8, false);
                 break;
             case SAVE_PARENT:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
@@ -488,10 +487,8 @@ Tk_GetSaveFileObjCmd(
                 break;
             case SAVE_TITLE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, choice, choiceLen, 
-                        0, NULL, StrBody(title), 255, 
-                        &srcRead, &dstWrote, NULL);
-                StrLength(title) = (unsigned char) dstWrote;
+                title = CFStringCreateWithBytes(NULL, choice, choiceLen, 
+                        kCFStringEncodingUTF8, false);
                 break;
         }
     }
@@ -508,6 +505,12 @@ Tk_GetSaveFileObjCmd(
     end:
     
     AEDisposeDesc(&initialDesc);
+    if (title != NULL) {
+        CFRelease(title);
+    }
+    if (message != NULL) {
+        CFRelease(message);
+    }
     
     return result;
 }
@@ -543,8 +546,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     AEDesc initialDesc = {typeNull, NULL};
     AEDesc *initialPtr = NULL;
     FSRef dirRef;
-    Str255 message, title;
-    int srcRead, dstWrote;
+    CFStringRef message, title;
     OpenFileData ofd;
     static CONST char *chooseOptionStrings[] = {
             "-initialdir", "-message", "-mustexist", "-parent", "-title", NULL
@@ -564,8 +566,8 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     }
     result = TCL_ERROR;    
     parent = (Tk_Window) clientData;    
-    title[0] = 0;
-    message[0] = 0;   
+    title = NULL;
+    message = NULL;   
 
     for (i = 1; i < objc; i += 2) {
         char *choice;
@@ -593,10 +595,8 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
                 break;
             case CHOOSE_MESSAGE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, choice, choiceLen, 
-                        0, NULL, StrBody(message), 255, 
-                        &srcRead, &dstWrote, NULL);
-                StrLength(message) = (unsigned char) dstWrote;
+                message = CFStringCreateWithBytes(NULL, choice, choiceLen, 
+                        kCFStringEncodingUTF8, false);
                 break;
             case CHOOSE_PARENT:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
@@ -608,10 +608,8 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
                 break;
             case CHOOSE_TITLE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, choice, choiceLen, 
-                        0, NULL, StrBody(title), 255, 
-                        &srcRead, &dstWrote, NULL);
-                StrLength(title) = (unsigned char) dstWrote;
+                title = CFStringCreateWithBytes(NULL, choice, choiceLen, 
+                        kCFStringEncodingUTF8, false);
                 break;
         }
     }
@@ -628,6 +626,12 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
 
     end:
     AEDisposeDesc(&initialDesc);
+    if (title != NULL) {
+        CFRelease(title);
+    }
+    if (message != NULL) {
+        CFRelease(message);
+    }
     
     return result;
 }
@@ -720,8 +724,8 @@ NavServicesGetFile(
     AEDesc *initialDescPtr,
     unsigned char *initialFile,
     AEDescList *selectDescPtr,
-    StringPtr title,
-    StringPtr message,
+    CFStringRef title,
+    CFStringRef message,
     int multiple,
     int isOpen)
 {
@@ -785,21 +789,13 @@ NavServicesGetFile(
     diagOptions.optionFlags += kNavSupportPackages;
     
     diagOptions.clientName = CFStringCreateWithCString(NULL, "Wish", encoding);
-    if (message == NULL) {
-        diagOptions.message = NULL;
-    } else {
-        diagOptions.message = CFStringCreateWithPascalString(NULL, message, encoding);
-    }
+    diagOptions.message = message;
+    diagOptions.windowTitle = title;
     if ((initialFile != NULL) && (initialFile[0] != 0)) {
         diagOptions.saveFileName = CFStringCreateWithPascalString(NULL,
                 initialFile, encoding);
     } else {
         diagOptions.saveFileName = NULL;
-    }
-    if (title == NULL) {
-        diagOptions.windowTitle = NULL;
-    } else {
-        diagOptions.windowTitle = CFStringCreateWithPascalString(NULL, title, encoding);
     }
     
     diagOptions.actionButtonLabel = NULL;
