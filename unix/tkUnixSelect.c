@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.1.4.2 1998/09/30 02:19:22 stanton Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.1.4.3 1998/12/13 08:14:40 lfb Exp $
  */
 
 #include "tkInt.h"
@@ -57,9 +57,12 @@ typedef struct IncrInfo {
 				 * retrievals currently pending. */
 } IncrInfo;
 
-static IncrInfo *pendingIncrs = NULL;
-				/* List of all incr structures
+
+typedef struct ThreadSpecificData {
+    IncrInfo *pendingIncrs;     /* List of all incr structures
 				 * currently active. */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Largest property that we'll accept when sending or receiving the
@@ -230,6 +233,8 @@ TkSelPropProc(eventPtr)
     int numItems;
     char *propPtr;
     Tk_ErrorHandler errorHandler;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * See if this event announces the deletion of a property being
@@ -240,7 +245,7 @@ TkSelPropProc(eventPtr)
     if (eventPtr->xproperty.state != PropertyDelete) {
 	return;
     }
-    for (incrPtr = pendingIncrs; incrPtr != NULL;
+    for (incrPtr = tsdPtr->pendingIncrs; incrPtr != NULL;
 	    incrPtr = incrPtr->nextPtr) {
 	if (incrPtr->reqWindow != eventPtr->xproperty.window) {
 	    continue;
@@ -269,12 +274,12 @@ TkSelPropProc(eventPtr)
 		    } else {
 			TkSelInProgress ip;
 			ip.selPtr = selPtr;
-			ip.nextPtr = pendingPtr;
-			pendingPtr = &ip;
+			ip.nextPtr = TkSelGetInProgress();
+			TkSelSetInProgress(&ip);
 			numItems = (*selPtr->proc)(selPtr->clientData,
 				incrPtr->offsets[i], (char *) buffer,
 				TK_SEL_BYTES_AT_ONCE);
-			pendingPtr = ip.nextPtr;
+			TkSelSetInProgress(ip.nextPtr);
 			if (ip.selPtr == NULL) {
 			    /*
 			     * The selection handler deleted itself.
@@ -586,6 +591,8 @@ ConvertSelection(winPtr, eventPtr)
     Tk_ErrorHandler errorHandler;
     TkSelectionInfo *infoPtr;
     TkSelInProgress ip;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     errorHandler = Tk_CreateErrorHandler(eventPtr->display, -1, -1,-1,
 	    (int (*)()) NULL, (ClientData) NULL);
@@ -700,12 +707,12 @@ ConvertSelection(winPtr, eventPtr)
 	    }
 	} else {
 	    ip.selPtr = selPtr;
-	    ip.nextPtr = pendingPtr;
-	    pendingPtr = &ip;
+	    ip.nextPtr = TkSelGetInProgress();
+	    TkSelSetInProgress(&ip);
 	    type = selPtr->format;
 	    numItems = (*selPtr->proc)(selPtr->clientData, 0,
 		    (char *) buffer, TK_SEL_BYTES_AT_ONCE);
-	    pendingPtr = ip.nextPtr;
+	    TkSelSetInProgress(ip.nextPtr);
 	    if ((ip.selPtr == NULL) || (numItems < 0)) {
 		incr.multAtoms[2*i + 1] = None;
 		continue;
@@ -767,8 +774,8 @@ ConvertSelection(winPtr, eventPtr)
 	incr.idleTime = 0;
 	incr.reqWindow = reply.requestor;
 	incr.time = infoPtr->time;
-	incr.nextPtr = pendingIncrs;
-	pendingIncrs = &incr;
+	incr.nextPtr = tsdPtr->pendingIncrs;
+	tsdPtr->pendingIncrs = &incr;
     }
     if (multiple) {
 	XChangeProperty(reply.display, reply.requestor, reply.property,
@@ -804,10 +811,10 @@ ConvertSelection(winPtr, eventPtr)
 		-1, -1,-1, (int (*)()) NULL, (ClientData) NULL);
 	XSelectInput(reply.display, reply.requestor, 0L);
 	Tk_DeleteErrorHandler(errorHandler);
-	if (pendingIncrs == &incr) {
-	    pendingIncrs = incr.nextPtr;
+	if (tsdPtr->pendingIncrs == &incr) {
+	    tsdPtr->pendingIncrs = incr.nextPtr;
 	} else {
-	    for (incrPtr2 = pendingIncrs; incrPtr2 != NULL;
+	    for (incrPtr2 = tsdPtr->pendingIncrs; incrPtr2 != NULL;
 		    incrPtr2 = incrPtr2->nextPtr) {
 		if (incrPtr2->nextPtr == &incr) {
 		    incrPtr2->nextPtr = incr.nextPtr;
@@ -974,8 +981,8 @@ SelectionSize(selPtr)
 
     size = TK_SEL_BYTES_AT_ONCE;
     ip.selPtr = selPtr;
-    ip.nextPtr = pendingPtr;
-    pendingPtr = &ip;
+    ip.nextPtr = TkSelGetInProgress();
+    TkSelSetInProgress(&ip);
     do {
 	chunkSize = (*selPtr->proc)(selPtr->clientData, size,
 			(char *) buffer, TK_SEL_BYTES_AT_ONCE);
@@ -985,7 +992,7 @@ SelectionSize(selPtr)
 	}
 	size += chunkSize;
     } while (chunkSize == TK_SEL_BYTES_AT_ONCE);
-    pendingPtr = ip.nextPtr;
+    TkSelSetInProgress(ip.nextPtr);
     return size;
 }
 

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.1.4.2 1998/09/30 02:19:17 stanton Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.1.4.3 1998/12/13 08:14:38 lfb Exp $
  */
 
 #include "tkInt.h"
@@ -17,10 +17,14 @@
 #include <signal.h>
 
 /*
- * The following static indicates whether this module has been initialized.
+ * The following static indicates whether this module has been initialized
+ * in the current thread.
  */
 
-static int initialized = 0;
+typedef struct ThreadSpecificData {
+    int initialized;
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Prototypes for procedures that are referenced only in this file:
@@ -57,8 +61,11 @@ static void		TransferXEventsToTcl _ANSI_ARGS_((Display *display));
 void
 TkCreateXEventSource()
 {
-    if (!initialized) {
-	initialized = 1;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (!tsdPtr->initialized) {
+	tsdPtr->initialized = 1;
 	Tcl_CreateEventSource(DisplaySetupProc, DisplayCheckProc, NULL);
 	Tcl_CreateExitHandler(DisplayExitHandler, NULL);
     }
@@ -85,8 +92,11 @@ static void
 DisplayExitHandler(clientData)
     ClientData clientData;	/* Not used. */
 {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
     Tcl_DeleteEventSource(DisplaySetupProc, DisplayCheckProc, NULL);
-    initialized = 0;
+    tsdPtr->initialized = 0;
 }
 
 /*
@@ -187,7 +197,7 @@ DisplaySetupProc(clientData, flags)
 	return;
     }
 
-    for (dispPtr = tkDisplayList; dispPtr != NULL;
+    for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
 	 dispPtr = dispPtr->nextPtr) {
 
 	/*
@@ -269,7 +279,7 @@ DisplayCheckProc(clientData, flags)
 	return;
     }
 
-    for (dispPtr = tkDisplayList; dispPtr != NULL;
+    for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
 	 dispPtr = dispPtr->nextPtr) {
 	XFlush(dispPtr->display);
 	TransferXEventsToTcl(dispPtr->display);
@@ -414,7 +424,7 @@ TkUnixDoOneXEvent(timePtr)
      */
 
     memset((VOID *) readMask, 0, MASK_SIZE*sizeof(fd_mask));
-    for (dispPtr = tkDisplayList; dispPtr != NULL;
+    for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
 	 dispPtr = dispPtr->nextPtr) {
 	XFlush(dispPtr->display);
 	if (QLength(dispPtr->display) > 0) {
@@ -445,7 +455,7 @@ TkUnixDoOneXEvent(timePtr)
      * Process any new events on the display connections.
      */
 
-    for (dispPtr = tkDisplayList; dispPtr != NULL;
+    for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
 	 dispPtr = dispPtr->nextPtr) {
 	fd = ConnectionNumber(dispPtr->display);
 	index = fd/(NBBY*sizeof(fd_mask));

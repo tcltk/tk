@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.1.4.5 1998/11/25 23:31:05 stanton Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.1.4.6 1998/12/13 08:14:39 lfb Exp $
  */
  
 #include "tkUnixInt.h"
@@ -154,20 +154,19 @@ typedef struct FontAttributes {
     TkXLFDAttributes xa;
 } FontAttributes;
 
-/*
- * The list of font families that are currently loaded.  As screen fonts
- * are loaded, this list grows to hold information about what characters
- * exist in each font family.
- */
 
-static FontFamily *fontFamilyList = NULL;
-
-/*
- * FontFamily used to handle control character expansions.  The encoding
- * of this FontFamily converts UTF-8 to backslashed escape sequences.
- */
- 
-static FontFamily controlFamily;
+typedef struct ThreadSpecificData {
+    FontFamily *fontFamilyList; /* The list of font families that are 
+				 * currently loaded.  As screen fonts
+				 * are loaded, this list grows to hold 
+				 * information about what characters
+				 * exist in each font family. */
+    FontFamily controlFamily;   /* FontFamily used to handle control 
+				 * character expansions.  The encoding
+				 * of this FontFamily converts UTF-8 to 
+				 * backslashed escape sequences. */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * The set of builtin encoding alises to convert the XLFD names for the
@@ -268,11 +267,13 @@ void
 TkpFontPkgInit(mainPtr)
     TkMainInfo *mainPtr;	/* The application being created. */
 {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tcl_EncodingType type;
     SubFont dummy;
     int i;
     
-    if (controlFamily.encoding == NULL) {
+    if (tsdPtr->controlFamily.encoding == NULL) {
 	type.encodingName = "X11ControlChars";
 	type.toUtfProc = ControlUtfProc;
 	type.fromUtfProc = ControlUtfProc;
@@ -280,12 +281,12 @@ TkpFontPkgInit(mainPtr)
 	type.clientData = NULL;
 	type.nullSize = 0;
 	
-	controlFamily.refCount = 2;
-	controlFamily.encoding = Tcl_CreateEncoding(&type);
-	controlFamily.isTwoByteFont = 0;
+	tsdPtr->controlFamily.refCount = 2;
+	tsdPtr->controlFamily.encoding = Tcl_CreateEncoding(&type);
+	tsdPtr->controlFamily.isTwoByteFont = 0;
 
-	dummy.familyPtr = &controlFamily;
-	dummy.fontMap = controlFamily.fontMap;
+	dummy.familyPtr = &tsdPtr->controlFamily;
+	dummy.fontMap = tsdPtr->controlFamily.fontMap;
 	for (i = 0x00; i < 0x20; i++) {
 	    FontMapInsert(&dummy, i);
 	    FontMapInsert(&dummy, i + 0x80);
@@ -1166,6 +1167,8 @@ InitFont(tkwin, fontStructPtr, fontPtr)
     UnixFont *fontPtr;		/* Filled with information constructed from
 				 * the above arguments. */
 {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     unsigned long value;
     int minHi, maxHi, minLo, maxLo, fixed, width, limit, i, n;
     FontAttributes fa;
@@ -1232,8 +1235,8 @@ InitFont(tkwin, fontStructPtr, fontPtr)
     subFontPtr			= FindSubFontForChar(fontPtr, '0');
     controlPtr			= &fontPtr->controlSubFont;
     controlPtr->fontStructPtr	= subFontPtr->fontStructPtr;
-    controlPtr->familyPtr	= &controlFamily;
-    controlPtr->fontMap		= controlFamily.fontMap;
+    controlPtr->familyPtr	= &tsdPtr->controlFamily;
+    controlPtr->fontMap		= tsdPtr->controlFamily.fontMap;
     
     pageMap = fontPtr->subFontArray[0].fontMap[0];
     for (i = 0; i < 256; i++) {
@@ -1421,11 +1424,13 @@ AllocFontFamily(display, fontStructPtr, base)
     FontFamily *familyPtr;
     FontAttributes fa;
     Tcl_Encoding encoding;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     GetFontAttributes(display, fontStructPtr, &fa);
     encoding = Tcl_GetEncoding(NULL, GetEncodingAlias(fa.xa.charset));
 
-    familyPtr = fontFamilyList;
+    familyPtr = tsdPtr->fontFamilyList;
     for (; familyPtr != NULL; familyPtr = familyPtr->nextPtr) {
 	if ((familyPtr->faceName == fa.fa.family)
 		&& (familyPtr->foundry == fa.xa.foundry)
@@ -1438,8 +1443,8 @@ AllocFontFamily(display, fontStructPtr, base)
 
     familyPtr = (FontFamily *) ckalloc(sizeof(FontFamily));
     memset(familyPtr, 0, sizeof(FontFamily));
-    familyPtr->nextPtr = fontFamilyList;
-    fontFamilyList = familyPtr;
+    familyPtr->nextPtr = tsdPtr->fontFamilyList;
+    tsdPtr->fontFamilyList = familyPtr;
 
     /* 
      * Set key for this FontFamily. 
@@ -1483,6 +1488,8 @@ FreeFontFamily(familyPtr)
     FontFamily *familyPtr;	/* The FontFamily to delete. */
 {
     FontFamily **familyPtrPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     int i;
 
     if (familyPtr == NULL) {
@@ -1503,7 +1510,7 @@ FreeFontFamily(familyPtr)
      * Delete from list. 
      */
          
-    for (familyPtrPtr = &fontFamilyList; ; ) {
+    for (familyPtrPtr = &tsdPtr->fontFamilyList; ; ) {
         if (*familyPtrPtr == familyPtr) {
   	    *familyPtrPtr = familyPtr->nextPtr;
 	    break;
@@ -1782,11 +1789,13 @@ FontMapLoadPage(subFontPtr, row)
     Tcl_Encoding encoding;
     XFontStruct *fontStructPtr;
     XCharStruct *widths;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     subFontPtr->fontMap[row] = (char *) ckalloc(FONTMAP_BITSPERPAGE / 8);
     memset(subFontPtr->fontMap[row], 0, FONTMAP_BITSPERPAGE / 8);
 
-    if (subFontPtr->familyPtr == &controlFamily) {
+    if (subFontPtr->familyPtr == &tsdPtr->controlFamily) {
 	return;
     }
 

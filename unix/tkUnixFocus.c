@@ -9,14 +9,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFocus.c,v 1.1.4.1 1998/09/30 02:19:17 stanton Exp $
+ * RCS: @(#) $Id: tkUnixFocus.c,v 1.1.4.2 1998/12/13 08:14:39 lfb Exp $
  */
 
 #include "tkInt.h"
 #include "tkPort.h"
 #include "tkUnixInt.h"
 
-extern int tclFocusDebug;
 
 /*
  *----------------------------------------------------------------------

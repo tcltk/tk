@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.1.4.2 1998/09/30 02:19:23 stanton Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.1.4.3 1998/12/13 08:14:41 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -266,20 +266,9 @@ typedef struct TkWmInfo {
 
 /*
  * This module keeps a list of all top-level windows, primarily to
- * simplify the job of Tk_CoordsToWindow.
+ * simplify the job of Tk_CoordsToWindow.  The list is called 
+ * firstWmPtr and is stored in the TkDisplay structure.
  */
-
-static WmInfo *firstWmPtr = NULL;	/* Points to first top-level window. */
-
-
-/*
- * The variable below is used to enable or disable tracing in this
- * module.  If tracing is enabled, then information is printed on
- * standard output about interesting interactions with the window
- * manager.
- */
-
-static int wmTracing = 0;
 
 /*
  * The following structures are the official type records for geometry
@@ -378,6 +367,7 @@ TkWmNewWindow(winPtr)
     TkWindow *winPtr;		/* Newly-created top-level window. */
 {
     register WmInfo *wmPtr;
+    TkDisplay *dispPtr = winPtr->dispPtr;
 
     wmPtr = (WmInfo *) ckalloc(sizeof(WmInfo));
     wmPtr->winPtr = winPtr;
@@ -433,8 +423,8 @@ TkWmNewWindow(winPtr)
     wmPtr->cmdArgv = NULL;
     wmPtr->clientMachine = NULL;
     wmPtr->flags = WM_NEVER_MAPPED;
-    wmPtr->nextPtr = firstWmPtr;
-    firstWmPtr = wmPtr;
+    wmPtr->nextPtr = (WmInfo *) dispPtr->firstWmPtr;
+    (WmInfo *) dispPtr->firstWmPtr = wmPtr;
     winPtr->wmInfoPtr = wmPtr;
 
     UpdateVRootGeometry(wmPtr);
@@ -639,12 +629,13 @@ TkWmDeadWindow(winPtr)
     if (wmPtr == NULL) {
 	return;
     }
-    if (firstWmPtr == wmPtr) {
-	firstWmPtr = wmPtr->nextPtr;
+    if ((WmInfo *) winPtr->dispPtr->firstWmPtr == wmPtr) {
+	(WmInfo *) winPtr->dispPtr->firstWmPtr = wmPtr->nextPtr;
     } else {
 	register WmInfo *prevPtr;
 
-	for (prevPtr = firstWmPtr; ; prevPtr = prevPtr->nextPtr) {
+	for (prevPtr = (WmInfo *) winPtr->dispPtr->firstWmPtr; ; 
+                prevPtr = prevPtr->nextPtr) {
 	    if (prevPtr == NULL) {
 		panic("couldn't unlink window in TkWmDeadWindow");
 	    }
@@ -795,6 +786,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
     register WmInfo *wmPtr;
     int c;
     size_t length;
+    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     if (argc < 2) {
 	wrongNumArgs:
@@ -812,10 +804,11 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    return TCL_ERROR;
 	}
 	if (argc == 2) {
-	    Tcl_SetResult(interp, ((wmTracing) ? "on" : "off"), TCL_STATIC);
+	    Tcl_SetResult(interp, ((dispPtr->wmTracing) ? "on" : "off"), 
+                    TCL_STATIC);
 	    return TCL_OK;
 	}
-	return Tcl_GetBoolean(interp, argv[2], &wmTracing);
+	return Tcl_GetBoolean(interp, argv[2], &dispPtr->wmTracing);
     }
 
     if (argc < 3) {
@@ -2080,6 +2073,7 @@ ConfigureEvent(wmPtr, configEventPtr)
 {
     TkWindow *wrapperPtr = wmPtr->wrapperPtr;
     TkWindow *winPtr = wmPtr->winPtr;
+    TkDisplay *dispPtr = wmPtr->winPtr->dispPtr;
 
     /* 
      * Update size information from the event.  There are a couple of
@@ -2097,7 +2091,7 @@ ConfigureEvent(wmPtr, configEventPtr)
     if (((wrapperPtr->changes.width != configEventPtr->width)
 	    || (wrapperPtr->changes.height != configEventPtr->height))
 	    && !(wmPtr->flags & WM_SYNC_PENDING)){
-	if (wmTracing) {
+	if (dispPtr->wmTracing) {
 	    printf("TopLevelEventProc: user changed %s size to %dx%d\n",
 		    winPtr->pathName, configEventPtr->width,
 		    configEventPtr->height);
@@ -2161,7 +2155,7 @@ ConfigureEvent(wmPtr, configEventPtr)
 	wmPtr->configHeight = configEventPtr->height;
     }
 
-    if (wmTracing) {
+    if (dispPtr->wmTracing) {
 	printf("ConfigureEvent: %s x = %d y = %d, width = %d, height = %d",
 		winPtr->pathName, configEventPtr->x, configEventPtr->y,
 		configEventPtr->width, configEventPtr->height);
@@ -2264,6 +2258,7 @@ ReparentEvent(wmPtr, reparentEventPtr)
     unsigned long numItems, bytesAfter;
     unsigned int dummy;
     Tk_ErrorHandler handler;
+    TkDisplay *dispPtr = wmPtr->winPtr->dispPtr;
 
     /*
      * Identify the root window for wrapperPtr.  This is tricky because of
@@ -2289,7 +2284,7 @@ ReparentEvent(wmPtr, reparentEventPtr)
 	    && (actualType == XA_WINDOW))) {
 	if ((actualFormat == 32) && (numItems == 1)) {
 	    vRoot = wmPtr->vRoot = *virtualRootPtr;
-	} else if (wmTracing) {
+	} else if (dispPtr->wmTracing) {
 	    printf("%s format %d numItems %ld\n",
 		    "ReparentEvent got bogus VROOT property:", actualFormat,
 		    numItems);
@@ -2298,7 +2293,7 @@ ReparentEvent(wmPtr, reparentEventPtr)
     }
     Tk_DeleteErrorHandler(handler);
 
-    if (wmTracing) {
+    if (dispPtr->wmTracing) {
 	printf("ReparentEvent: %s reparented to 0x%x, vRoot = 0x%x\n",
 		wmPtr->winPtr->pathName,
 		(unsigned int) reparentEventPtr->parent, (unsigned int) vRoot);
@@ -2395,6 +2390,7 @@ ComputeReparentGeometry(wmPtr)
     Window dummy2;
     Status status;
     Tk_ErrorHandler handler;
+    TkDisplay *dispPtr = wmPtr->winPtr->dispPtr;
 
     handler = Tk_CreateErrorHandler(wrapperPtr->display, -1, -1, -1,
 	    (Tk_ErrorProc *) NULL, (ClientData) NULL);
@@ -2461,7 +2457,7 @@ ComputeReparentGeometry(wmPtr)
 
     wmPtr->wrapperPtr->changes.x = x + wmPtr->xInParent;
     wmPtr->wrapperPtr->changes.y = y + wmPtr->yInParent;
-    if (wmTracing) {
+    if (dispPtr->wmTracing) {
 	printf("wrapperPtr coords %d,%d, wmPtr coords %d,%d, offsets %d %d\n",
 		wrapperPtr->changes.x, wrapperPtr->changes.y,
 		wmPtr->x, wmPtr->y, wmPtr->xInParent, wmPtr->yInParent);
@@ -2494,6 +2490,7 @@ WrapperEventProc(clientData, eventPtr)
 {
     WmInfo *wmPtr = (WmInfo *) clientData;
     XEvent mapEvent;
+    TkDisplay *dispPtr = wmPtr->winPtr->dispPtr;
 
     wmPtr->flags |= WM_VROOT_OFFSET_STALE;
     if (eventPtr->type == DestroyNotify) {
@@ -2513,7 +2510,7 @@ WrapperEventProc(clientData, eventPtr)
 	    Tk_DestroyWindow((Tk_Window) wmPtr->winPtr);
 	    Tk_DeleteErrorHandler(handler);
 	}
-	if (wmTracing) {
+	if (dispPtr->wmTracing) {
 	    printf("TopLevelEventProc: %s deleted\n", wmPtr->winPtr->pathName);
 	}
     } else if (eventPtr->type == ConfigureNotify) {
@@ -2776,7 +2773,7 @@ UpdateGeometryInfo(clientData)
 	}
 	wmPtr->configWidth = width;
 	wmPtr->configHeight = height;
-	if (wmTracing) {
+	if (winPtr->dispPtr->wmTracing) {
 	   printf("UpdateGeometryInfo moving to %d %d, resizing to %d x %d,\n",
                    x, y, width, height);
 	}
@@ -2797,7 +2794,7 @@ UpdateGeometryInfo(clientData)
 	}
 	wmPtr->configWidth = width;
 	wmPtr->configHeight = height;
-	if (wmTracing) {
+	if (winPtr->dispPtr->wmTracing) {
 	    printf("UpdateGeometryInfo resizing to %d x %d\n", width, height);
 	}
 	XResizeWindow(winPtr->display, wmPtr->wrapperPtr->window,
@@ -2998,7 +2995,7 @@ WaitForConfigureNotify(winPtr, serial)
 		ConfigureNotify, &event);
 	wmPtr->flags &= ~WM_SYNC_PENDING;
 	if (code != TCL_OK) {
-	    if (wmTracing) {
+	    if (winPtr->dispPtr->wmTracing) {
 		printf("WaitForConfigureNotify giving up on %s\n",
 			winPtr->pathName);
 	    }
@@ -3010,7 +3007,7 @@ WaitForConfigureNotify(winPtr, serial)
 	}
     }
     wmPtr->flags &= ~WM_MOVE_PENDING;
-    if (wmTracing) {
+    if (winPtr->dispPtr->wmTracing) {
 	printf("WaitForConfigureNotify finished with %s, serial %ld\n",
 		winPtr->pathName, serial);
     }
@@ -3186,14 +3183,14 @@ WaitForMapNotify(winPtr, mapped)
 	     * just quit.
 	     */
 
-	    if (wmTracing) {
+	    if (winPtr->dispPtr->wmTracing) {
 		printf("WaitForMapNotify giving up on %s\n", winPtr->pathName);
 	    }
 	    break;
 	}
     }
     wmPtr->flags &= ~WM_MOVE_PENDING;
-    if (wmTracing) {
+    if (winPtr->dispPtr->wmTracing) {
 	printf("WaitForMapNotify finished with %s\n", winPtr->pathName);
     }
 }
@@ -3492,6 +3489,7 @@ Tk_CoordsToWindow(rootX, rootY, tkwin)
     int x, y, childX, childY, tmpx, tmpy, bd;
     WmInfo *wmPtr;
     TkWindow *winPtr, *childPtr, *nextPtr;
+    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     /*
      * Step 1: scan the list of toplevel windows to see if there is a
@@ -3503,7 +3501,7 @@ Tk_CoordsToWindow(rootX, rootY, tkwin)
     parent = window = RootWindowOfScreen(Tk_Screen(tkwin));
     x = rootX;
     y = rootY;
-    for (wmPtr = firstWmPtr; wmPtr != NULL; wmPtr = wmPtr->nextPtr) {
+    for (wmPtr = (WmInfo *) dispPtr->firstWmPtr; wmPtr != NULL; wmPtr = wmPtr->nextPtr) {
 	if (Tk_Screen(wmPtr->winPtr) != Tk_Screen(tkwin)) {
 	    continue;
 	}
@@ -3538,7 +3536,8 @@ Tk_CoordsToWindow(rootX, rootY, tkwin)
 	if (child == None) {
 	    return NULL;
 	}
-	for (wmPtr = firstWmPtr; wmPtr != NULL; wmPtr = wmPtr->nextPtr) {
+	for (wmPtr = (WmInfo *) dispPtr->firstWmPtr; wmPtr != NULL; 
+                wmPtr = wmPtr->nextPtr) {
 	    if (wmPtr->reparent == child) {
 		goto gotToplevel;
 	    }
@@ -3695,7 +3694,7 @@ UpdateVRootGeometry(wmPtr)
 	    (unsigned int *) &wmPtr->vRootWidth,
 	    (unsigned int *) &wmPtr->vRootHeight, (unsigned int *) &bd,
 	    &dummy);
-    if (wmTracing) {
+    if (winPtr->dispPtr->wmTracing) {
 	printf("UpdateVRootGeometry: x = %d, y = %d, width = %d, ",
 		wmPtr->vRootX, wmPtr->vRootY, wmPtr->vRootWidth);
 	printf("height = %d, status = %d\n", wmPtr->vRootHeight, status);
