@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDraw.c,v 1.6 1999/08/10 05:04:53 jingham Exp $
+ * RCS: @(#) $Id: tkMacDraw.c,v 1.7 1999/09/02 17:03:08 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1129,7 +1129,7 @@ InvertByte(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1171,4 +1171,3 @@ TkpDrawHighlightBorder (
         }
     }
 }
-        
