@@ -7,11 +7,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bind.test,v 1.9 2001/03/30 21:52:28 hobbs Exp $
+# RCS: @(#) $Id: bind.test,v 1.10 2002/07/14 05:48:45 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 catch {destroy .b}
 toplevel .b -width 100 -height 50
@@ -214,13 +217,7 @@ test bind-5.1 {Tk_CreateBindingTable procedure} {
     .b.c bind foo
 } {}
 
-
-if {[string compare testcbind [info commands testcbind]] != 0} {
-    puts "This application hasn't been compiled with the testcbind command,"
-    puts "therefore I am skipping all of these tests."
-    ::tcltest::cleanupTests
-    return
-}
+testConstraint testcbind [llength [info commands testcbind]]
 
 test bind-6.1 {Tk_DeleteBindTable procedure} {
     catch {destroy .b.c}
@@ -230,7 +227,7 @@ test bind-6.1 {Tk_DeleteBindTable procedure} {
     .b.c bind 1 <2> {string 2}
     destroy .b.c
 } {}
-test bind-6.2 {Tk_DeleteBindTable procedure: pending bindings deleted later} {
+test bind-6.2 {Tk_DeleteBindTable procedure: pending bindings deleted later} testcbind {
     catch {interp delete foo}
     interp create foo
     foo eval {
@@ -258,7 +255,7 @@ test bind-7.1 {Tk_CreateBinding procedure: bad binding} {
     canvas .b.c
     list [catch {.b.c bind foo <} msg] $msg
 } {1 {no event type or button # or keysym}}
-test bind-7.2 {Tk_CreateBinding procedure: replace existing C binding} {
+test bind-7.2 {Tk_CreateBinding procedure: replace existing C binding} testcbind {
     catch {destroy .b.f}
     frame .b.f
     testcbind .b.f <1> "xyz" "lappend x bye.1"
@@ -282,10 +279,10 @@ test bind-7.4 {Tk_CreateBinding procedure: append to non-existing} {
     .b.c bind foo <1>
 } {button 1}
 
-test bind-8.1 {TkCreateBindingProcedure: error} {
+test bind-8.1 {TkCreateBindingProcedure: error} testcbind {
     list [catch {testcbind . <xyz> "xyz"} msg] $msg
 } {1 {bad event type or keysym "xyz"}}
-test bind-8.2 {TkCreateBindingProcedure: new binding} {
+test bind-8.2 {TkCreateBindingProcedure: new binding} testcbind {
     catch {destroy .b.f}
     frame .b.f
     testcbind .b.f <1> "lappend x 1" "lappend x bye.1"
@@ -294,7 +291,7 @@ test bind-8.2 {TkCreateBindingProcedure: new binding} {
     destroy .b.f
     set x
 } {bye.1}
-test bind-8.3 {TkCreateBindingProcedure: replace existing} {
+test bind-8.3 {TkCreateBindingProcedure: replace existing} testcbind {
     catch {destroy .b.f}
     frame .b.f
     pack .b.f
@@ -303,7 +300,7 @@ test bind-8.3 {TkCreateBindingProcedure: replace existing} {
     testcbind .b.f <1> "lappend x new1" "lappend x bye.new1"
     set x
 } {bye.old1}
-test bind-8.4 {TkCreateBindingProcedure: replace existing while pending} {
+test bind-8.4 {TkCreateBindingProcedure: replace existing while pending} testcbind {
     catch {destroy .b.f}
     frame .b.f
     pack .b.f
@@ -347,7 +344,7 @@ test bind-9.3 {Tk_DeleteBinding procedure} {
     }
     set result
 } {{<Button-1> <Double-Alt-Button-1> <Meta-Button-1>} {<Button-1> <Meta-Button-1>} <Meta-Button-1> {}}
-test bind-9.4 {Tk_DeleteBinding procedure: pending bindings delete later} {
+test bind-9.4 {Tk_DeleteBinding procedure: pending bindings delete later} testcbind {
     catch {destroy .b.f}
     frame .b.f
     pack .b.f
@@ -375,7 +372,7 @@ test bind-10.2 {Tk_GetBinding procedure} {
     .b.c bind foo a Test
     .b.c bind foo a
 } {Test}
-test bind-10.3 {Tk_GetBinding procedure: C binding} {
+test bind-10.3 {Tk_GetBinding procedure: C binding} testcbind {
     catch {destroy .b.f}
     frame .b.f
     testcbind .b.f <1> "foo"
@@ -421,7 +418,7 @@ test bind-12.2 {Tk_DeleteAllBindings procedure} {
     }
     destroy .b.f
 } {}
-test bind-12.3 {Tk_DeleteAllBindings procedure: pending bindings deleted later} {
+test bind-12.3 {Tk_DeleteAllBindings procedure: pending bindings deleted later} testcbind {
     catch {destroy .b.f}
     frame .b.f
     pack .b.f
@@ -731,7 +728,7 @@ test bind-13.31 {Tk_BindEvent procedure: match} {
     event gen .b.f <Button-2>
     set x
 } {Button-2}
-test bind-13.32 {Tk_BindEvent procedure: many C bindings cause realloc} {
+test bind-13.32 {Tk_BindEvent procedure: many C bindings cause realloc} testcbind {
     setup
     bindtags .b.f {a b c d e f g h i j k l m n o p}
     foreach p [bindtags .b.f] {
@@ -753,14 +750,14 @@ test bind-13.33 {Tk_BindEvent procedure: multiple tags} {
     bind Test <Button-2> {}
     set x
 } {.b.f Button}
-test bind-13.34 {Tk_BindEvent procedure: execute C binding} {
+test bind-13.34 {Tk_BindEvent procedure: execute C binding} testcbind {
     setup
     testcbind .b.f <1> {lappend x 1}
     set x {}
     event gen .b.f <1>
     set x
 } {1}
-test bind-13.35 {Tk_BindEvent procedure: pending list marked deleted} {
+test bind-13.35 {Tk_BindEvent procedure: pending list marked deleted} testcbind {
     setup
     testcbind Test <1> {lappend x Test} {lappend x Deleted}
     bind .b.f <1> {lappend x .b.f; destroy .b.f}
@@ -770,7 +767,7 @@ test bind-13.35 {Tk_BindEvent procedure: pending list marked deleted} {
     bind Test <1> {}
     set y
 } {.b.f <Button-1>}
-test bind-13.36 {Tk_BindEvent procedure: C binding marked deleted} {
+test bind-13.36 {Tk_BindEvent procedure: C binding marked deleted} testcbind {
     setup
     testcbind Test <1> {lappend x Test} {lappend x Deleted}
     bind .b.f <1> {lappend x .b.f; bind Test <1> {}; lappend x after}
@@ -778,7 +775,7 @@ test bind-13.36 {Tk_BindEvent procedure: C binding marked deleted} {
     event gen .b.f <1>
     set x
 } {.b.f after Deleted}
-test bind-13.37 {Tk_BindEvent procedure: C binding gets to run} {
+test bind-13.37 {Tk_BindEvent procedure: C binding gets to run} testcbind {
     setup
     testcbind Test <1> {lappend x Test}
     bind .b.f <1> {lappend x .b.f}
@@ -787,14 +784,14 @@ test bind-13.37 {Tk_BindEvent procedure: C binding gets to run} {
     bind Test <1> {}
     set x
 } {.b.f Test}
-test bind-13.38 {Tk_BindEvent procedure: C binding deleted, refcount == 0} {
+test bind-13.38 {Tk_BindEvent procedure: C binding deleted, refcount == 0} testcbind {
     setup
     testcbind .b.f <1> {lappend x hi; bind .b.f <1> {}} {lappend x bye}
     set x {}
     event gen .b.f <1>
     set x
 } {hi bye}
-test bind-13.39 {Tk_BindEvent procedure: C binding deleted, refcount != 0} {
+test bind-13.39 {Tk_BindEvent procedure: C binding deleted, refcount != 0} testcbind {
     setup
     testcbind .b.f <1> {
 	lappend x before$n
@@ -820,7 +817,7 @@ test bind-13.40 {Tk_BindEvent procedure: continue in script} {
     bind Test <Button-2> {}
     set x
 } {b1 B1}
-test bind-13.41 {Tk_BindEvent procedure: continue in script} {
+test bind-13.41 {Tk_BindEvent procedure: continue in script} testcbind {
     setup
     testcbind .b.f <Button-2> {lappend x b1; continue; lappend x b2}
     testcbind Test <Button-2> {lappend x B1; continue; lappend x B2}
@@ -838,7 +835,7 @@ test bind-13.42 {Tk_BindEvent procedure: break in script} {
     bind Test <Button-2> {}
     set x
 } {b1}
-test bind-13.43 {Tk_BindEvent procedure: break in script} {
+test bind-13.43 {Tk_BindEvent procedure: break in script} testcbind {
     setup
     testcbind .b.f <Button-2> {lappend x b1; break; lappend x b2}
     testcbind Test <Button-2> {lappend x B1; break; lappend x B2}
@@ -862,7 +859,7 @@ test bind-13.44 {Tk_BindEvent procedure: error in script} {
     bind Test <Button-2> {}
     set x
 } {b1 {invalid command name "blap"}}
-test bind-13.45 {Tk_BindEvent procedure: error in script} {
+test bind-13.45 {Tk_BindEvent procedure: error in script} testcbind {
     setup
     testcbind .b.f <Button-2> {lappend x b1; blap}
     testcbind Test <Button-2> {lappend x B1}
@@ -873,13 +870,13 @@ test bind-13.45 {Tk_BindEvent procedure: error in script} {
     set x
 } {b1 {invalid command name "blap"}}
 
-test bind-14.1 {TkBindDeadWindow: no C bindings pending} {
+test bind-14.1 {TkBindDeadWindow: no C bindings pending} testcbind {
     setup
     bind .b.f <1> x
     testcbind .b.f <2> y
     destroy .b.f
 } {}
-test bind-14.2 {TkBindDeadWindow: is called after <Destroy>} {
+test bind-14.2 {TkBindDeadWindow: is called after <Destroy>} testcbind {
     setup
     testcbind .b.f <Destroy> "lappend x .b.f"
     testcbind Test <Destroy> "lappend x Test"
@@ -888,7 +885,7 @@ test bind-14.2 {TkBindDeadWindow: is called after <Destroy>} {
     bind Test <Destroy> {}
     set x
 } {.b.f Test}
-test bind-14.3 {TkBindDeadWindow: pending C bindings} {
+test bind-14.3 {TkBindDeadWindow: pending C bindings} testcbind {
     setup
     bindtags .b.f {a b c d}
     testcbind a <1> "lappend x a1" "lappend x bye.a1"

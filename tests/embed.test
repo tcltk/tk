@@ -4,17 +4,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: embed.test,v 1.1 2002/05/27 17:33:26 mdejong Exp $
+# RCS: @(#) $Id: embed.test,v 1.2 2002/07/14 05:48:46 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-proc deleteWindows {} {
-    foreach i [winfo children .] {
-    	destroy $i
-    }
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 test embed-1.1 {TkpUseWindow procedure, bad window identifier} {
     deleteWindows
@@ -49,3 +46,6 @@ test embed-1.5 {TkpUseWindow procedure, -container must be set} {
 
 # FIXME: test cases common to unixEmbed.test and macEmbed.test should
 # be moved here.
+
+tcltest::cleanupTests
+return

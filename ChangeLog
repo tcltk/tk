@@ -1,3 +1,10 @@
+2002-07-13  Don Porter <dgp@users.sf.net>
+
+	* tests/all.tcl:		Completed conversion of Tk test suite
+	* tests/constraints.tcl:	to use tcltest.
+	* tests/[b-v]*.test:
+	* unix/Makefile.in:
+
 2002-07-12  Don Porter <dgp@users.sf.net>
 
 	* tests/constraints.tcl:	Converted more files to tcltest and

@@ -6,23 +6,18 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: event.test,v 1.9 2002/02/15 05:48:08 mdejong Exp $
+# RCS: @(#) $Id: event.test,v 1.10 2002/07/14 05:48:46 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 # XXX This test file is woefully incomplete.  Right now it only tests
 # a few of the procedures in tkEvent.c.  Please add more tests whenever
 # possible.
-
-
 
 # Setup table used to query key events.
 

@@ -10,7 +10,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: macFont.test,v 1.5 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: macFont.test,v 1.6 2002/07/14 05:48:46 dgp Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -128,7 +128,7 @@ test macFont-5.1 {TkpGetFontFamilies} {macOnly} {
     expr {[lsearch [font families] Geneva] > 0}
 } {1}
 
-test macFont-6.1 {TkpGetSubFonts} {gothic macOnly} {
+test macFont-6.1 {TkpGetSubFonts} {testfont gothic macOnly} {
     .b.l config -text "abc\u4e4e" 
     update
     set x [testfont subfonts $fixed]

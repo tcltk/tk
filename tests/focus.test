@@ -6,15 +6,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: focus.test,v 1.7 2001/03/28 17:27:10 dgp Exp $
+# RCS: @(#) $Id: focus.test,v 1.8 2002/07/14 05:48:46 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-eval destroy [winfo children .]
-wm geometry . {}
-raise .
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 button .b -text .b -relief raised -bd 2
 pack .b
@@ -59,8 +58,7 @@ proc focusClear {} {
 }
 
 focusSetup
-set ::tcltest::testConfig(altDisplay) [info exists env(TK_ALT_DISPLAY)]
-if {$::tcltest::testConfig(altDisplay)} {
+if {[testConstraint altDisplay]} {
     focusSetupAlt
 }
 update
@@ -187,11 +185,6 @@ test focus-1.24 {Tk_FocusCmd procedure, -lastfor option} {unixOnly} {
 test focus-1.25 {Tk_FocusCmd procedure} {unixOnly} {
     list [catch {focus -unknown} msg] $msg
 } {1 {bad option "-unknown": must be -displayof, -force, or -lastfor}}
-
-# Some tests require the testwrapper command
-
-set ::tcltest::testConfig(testwrapper) \
-	[expr {[info commands testwrapper] != {}}]
 
 test focus-2.1 {TkFocusFilterEvent procedure} {unixOnly nonPortable testwrapper} {
     focus -force .b
@@ -524,21 +517,9 @@ test focus-4.4 {TkFocusDeadWindow procedure} {unixOnly testwrapper} {
 # I don't know how to test most of the remaining procedures of this file
 # explicitly;  they've already been exercised by the preceding tests.
 
-# If send is disabled because of inadequate security, don't run any
-# of these tests at all.
-
-setupbg
-set app [dobg {tk appname}]
-set ::tcltest::testConfig(secureServer) 1
-if {[catch {send $app set a 0} msg] == 1} {
-    if [string match "X server insecure *" $msg] {
-	set ::tcltest::testConfig(secureServer) 0
-    }
-}
-cleanupbg
 setupbg
 test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} \
-	{unixOnly testwrapper secureServer} {
+	{unixOnly testwrapper secureserver} {
     focusSetup
     focus -force .t
     update
@@ -657,7 +638,7 @@ test focus-6.2 {miscellaneous - embedded application in different process} \
     set result
 } {{.t.f2.e1 {} {focus out .t.f2.e1 NotifyNonlinear} {focus out .t.f2 NotifyNonlinearVirtual} {focus in .t.f1 NotifyNonlinear} | {focus out .t.f1 NotifyNonlinear} {focus in .t.f2 NotifyNonlinearVirtual} {focus in .t.f2.e1 NotifyNonlinear}} {{focus in . NotifyVirtual} {focus in .e1 NotifyAncestor} | {focus out .e1 NotifyAncestor} {focus out . NotifyVirtual}}}
 
-eval destroy [winfo children .]
+deleteWindows
 bind all <FocusIn> {}
 bind all <FocusOut> {}
 
