@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.9 1999/06/17 01:03:28 wart Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.10 1999/07/30 02:09:25 redman Exp $
  */
 
 #include "tk.h"
@@ -85,6 +85,106 @@ static Tcl_ChannelType consoleChannelType = {
     ConsoleWatch,		/* Watch for events on console. */
     ConsoleHandle,		/* Get a handle from the device. */
 };
+
+
+#ifdef __WIN32__
+
+#include <windows.h>
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ShouldUseConsoleChannel
+ *
+ * 	Check to see if console window should be used for a given
+ *      standard channel
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Creates the console channel and installs it as the standard
+ *	channels.
+ *
+ *----------------------------------------------------------------------
+ */
+static int ShouldUseConsoleChannel(type)
+    int type;
+{
+    DWORD handleId;		/* Standard handle to retrieve. */
+    DCB dcb;
+    DWORD consoleParams;
+    DWORD fileType;
+    int mode;
+    char *bufMode;
+    HANDLE handle;
+
+    switch (type) {
+	case TCL_STDIN:
+	    handleId = STD_INPUT_HANDLE;
+	    mode = TCL_READABLE;
+	    bufMode = "line";
+	    break;
+	case TCL_STDOUT:
+	    handleId = STD_OUTPUT_HANDLE;
+	    mode = TCL_WRITABLE;
+	    bufMode = "line";
+	    break;
+	case TCL_STDERR:
+	    handleId = STD_ERROR_HANDLE;
+	    mode = TCL_WRITABLE;
+	    bufMode = "none";
+	    break;
+	default:
+	    return 0;
+	    break;
+    }
+
+    handle = GetStdHandle(handleId);
+
+    /*
+     * Note that we need to check for 0 because Windows will return 0 if this
+     * is not a console mode application, even though this is not a valid
+     * handle. 
+     */
+
+    if ((handle == INVALID_HANDLE_VALUE) || (handle == 0)) {
+	return 1;
+    }
+    fileType = GetFileType(handle);
+
+    /*
+     * If the file is a character device, we need to try to figure out
+     * whether it is a serial port, a console, or something else.  We
+     * test for the console case first because this is more common.
+     */
+
+    if (fileType == FILE_TYPE_CHAR) {
+	dcb.DCBlength = sizeof( DCB ) ;
+	if (!GetConsoleMode(handle, &consoleParams) &&
+		!GetCommState(handle, &dcb)) {
+	    /*
+	     * Don't use a CHAR type channel for stdio, otherwise Tk
+	     * runs into trouble with the MS DevStudio debugger.
+	     */
+	    
+	    return 1;
+	}
+    } else if (fileType == FILE_TYPE_UNKNOWN) {
+	return 1;
+    } else if (Tcl_GetStdChannel(type) == NULL) {
+	return 1;
+    }
+
+    return 0;
+}
+#else
+/*
+ * Mac should always use a console channel, Unix should if it's trying to
+ */
+
+#define ShouldUseConsoleChannel(chan) (1)
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -138,9 +238,7 @@ Tk_InitConsoleChannels(interp)
 	 * when we have a better abstraction for the console.
 	 */
 
-#ifndef MAC_TCL
-	if (Tcl_GetStdChannel(TCL_STDIN) == NULL) {
-#endif
+	if (ShouldUseConsoleChannel(TCL_STDIN)) {
 	    consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console0",
 		    (ClientData) TCL_STDIN, TCL_READABLE);
 	    if (consoleChannel != NULL) {
@@ -152,17 +250,13 @@ Tk_InitConsoleChannels(interp)
 			"-encoding", "utf-8");
 	    }
 	    Tcl_SetStdChannel(consoleChannel, TCL_STDIN);
-#ifndef MAC_TCL
 	}
-#endif
 
 	/*
 	 * check for STDOUT, otherwise create it
 	 */
 	
-#ifndef MAC_TCL
-	if (Tcl_GetStdChannel(TCL_STDOUT) == NULL) {
-#endif
+	if (ShouldUseConsoleChannel(TCL_STDOUT)) {
 	    consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console1",
 		    (ClientData) TCL_STDOUT, TCL_WRITABLE);
 	    if (consoleChannel != NULL) {
@@ -174,17 +268,13 @@ Tk_InitConsoleChannels(interp)
 			"-encoding", "utf-8");
 	    }
 	    Tcl_SetStdChannel(consoleChannel, TCL_STDOUT);
-#ifndef MAC_TCL
 	}
-#endif
 	
 	/*
 	 * check for STDERR, otherwise create it
 	 */
 	
-#ifndef MAC_TCL
-	if (Tcl_GetStdChannel(TCL_STDERR) == NULL) {
-#endif
+	if (ShouldUseConsoleChannel(TCL_STDERR)) {
 	    consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console2",
 		    (ClientData) TCL_STDERR, TCL_WRITABLE);
 	    if (consoleChannel != NULL) {
@@ -196,9 +286,7 @@ Tk_InitConsoleChannels(interp)
 			"-encoding", "utf-8");
 	    }
 	    Tcl_SetStdChannel(consoleChannel, TCL_STDERR);
-#ifndef MAC_TCL
 	}
-#endif
     }
     Tcl_MutexUnlock(&consoleMutex);
 }

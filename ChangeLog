@@ -1,5 +1,10 @@
 1999-07-29    <redman@scriptics.com>
 
+	* generic/tkConsole.c: Allow tcl to open CON and NUL, even for std
+	channels.  Checking for bad/unusable std channels was moved to Tk
+	since its only purpose was to check whether to use the Tk Console
+	Window for the std channels.  [Bug: 2393 2392 2209 2458]
+
 	* win/Makefile.in: Corrected building threaded tktest.exe on
 	Windows.  Needed to link in .obj files from Tcl, needs to change
 	later so that code is in Tk and doesn't require a Tcl build.
