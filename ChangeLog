@@ -1,3 +1,22 @@
+2000-04-16  Jim Ingham   <jingham@cygnus.com>
+
+        * mac/tkMacPort.h: protect against strncasecmp already defined - it is in
+        the Pro5 version of MSL.
+        
+        * mac/tkMacWindowMgr.c (GenerateKeyEvent): Check for a null tkWin.  If the 
+        hidden window we use for double-buffering controls manages to percolate to 
+        the top (should never happen, but...) this will keep us from crashing.
+        
+        * mac/tkMacButton.c (InitSampleControls): Hide the double-buffering window 
+        BEHIND the first "." window you can find.  This will keep it from ever being
+        the front window, and thus a black hole for events.
+        * mac/tkMacButton.c (ButtonEventProc): Disable the controls when the window is
+        in the background.  This is required by the MacOS HIG.  This doesn't always get
+        called when it should, it still needs more work.
+        
+        * mac/tkMacDialog.c: Pretty substantial rewrite to include Navigation Services
+        support for systems which have it.
+        
 2000-04-14  Eric Melski  <ericm@scriptics.com>
 
 	* win/tkWinKey.c: Added check for ASCII delete character in
