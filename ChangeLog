@@ -1,3 +1,8 @@
+2004-09-09  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinWm.c (ReadIconFromFile): when using SHGetFileInfo to
+	retrieve icon, get regular icon as well for correct Alt-Tab icon.
+
 2004-09-09  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/wish.1: Added note that the -use option is linked to the
