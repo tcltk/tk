@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.18 2004/09/21 19:13:58 mdejong Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.19 2004/09/23 01:08:11 hobbs Exp $
  */
 
 #ifndef _TKWININT
@@ -170,6 +170,11 @@ EXTERN void	TkWinUpdatingClipboard(int mode);
  * Used by tkWinDialog.c to associate the right icon with tk_messageBox
  */
 EXTERN HICON	TkWinGetIcon(Tk_Window tkw, DWORD iconsize);
+
+/*
+ * Used by tkWinX.c on for certain system display change messages
+ */
+EXTERN void	TkWinDisplayChanged(Display *display);
 
 /*
  * The following structure keeps track of whether we are using the 
