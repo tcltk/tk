@@ -12,6 +12,10 @@
 	* generic/tkSelect.c (Tk_SelectionObjCmd): Tcl_Obj'ified
 	[selection] command.
 
+2000-08-07  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* doc/cursors.n: changed .SS to more compatible macros.
+
 2000-08-05  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* library/safetk.tcl: rationalized the setting of tk_library when
