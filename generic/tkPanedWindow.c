@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.13.2.3 2003/07/18 09:53:16 dkf Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.13.2.4 2003/08/19 21:00:13 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -1224,7 +1224,7 @@ PanedWindowWorldChanged(instanceData)
 
     /*
      * Allocated a graphics context for drawing the paned window widget
-     * elements (background, sashes, etc.).
+     * elements (background, sashes, etc.) and set the window background.
      */
     
     gcValues.background = Tk_3DBorderColor(pwPtr->background)->pixel;
@@ -1233,6 +1233,7 @@ PanedWindowWorldChanged(instanceData)
 	Tk_FreeGC(pwPtr->display, pwPtr->gc);
     }
     pwPtr->gc = newGC;
+    Tk_SetWindowBackground(pwPtr->tkwin, gcValues.background);
 
     /*
      * Issue geometry size requests to Tk.

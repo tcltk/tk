@@ -1,3 +1,8 @@
+2003-08-19  Joe English  <jenglish@users.sourceforge.net>
+	* generic/tkPanedWindow.c(PanedWindowWorldChanged):
+	Set window background from the -background resource.
+	Fixes [BUG #791500 "PanedWindow refresh glitches on X"]
+
 2003-08-13  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/scale.tcl: Fix for bug #787065 for Button-2 press.
