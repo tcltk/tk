@@ -4,7 +4,7 @@
 # checkbutton, and radiobutton widgets and provides procedures
 # that help in implementing those bindings.
 #
-# RCS: @(#) $Id: button.tcl,v 1.7 2000/05/13 00:39:08 ericm Exp $
+# RCS: @(#) $Id: button.tcl,v 1.8 2000/05/17 21:17:21 ericm Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -142,9 +142,17 @@ if {[string match "windows" $tcl_platform(platform)]} {
 
 proc tkButtonEnter w {
     global tkPriv
-    if {[string compare [$w cget -state] "disabled"] \
-	    && [string equal $tkPriv(buttonWindow) $w]} {
-	$w configure -state active -relief sunken
+    if {[string compare [$w cget -state] "disabled"] } {
+
+	# If the mouse button is down, set the relief to sunken on entry.
+	# Overwise, if there's an -overrelief value, set the relief to that.
+
+	if {[string equal $tkPriv(buttonWindow) $w]} {
+	    $w configure -state active -relief sunken
+	} elseif { [string compare [$w cget -overrelief] ""] } {
+	    set tkPriv(relief) [$w cget -relief]
+	    $w configure -relief [$w cget -overrelief]
+	}
     }
     set tkPriv(window) $w
 }
@@ -164,9 +172,15 @@ proc tkButtonLeave w {
     if {[string compare [$w cget -state] "disabled"]} {
 	$w configure -state normal
     }
-    if {[string equal $tkPriv(buttonWindow) $w]} {
+
+    # Restore the original button relief if the mouse button is down
+    # or there is an -overrelief value.
+
+    if {[string equal $tkPriv(buttonWindow) $w] || \
+	    [string compare [$w cget -overrelief] ""] } {
 	$w configure -relief $tkPriv(relief)
     }
+
     set tkPriv(window) ""
 }
 
@@ -199,7 +213,14 @@ proc tkCheckRadioEnter w {
 
 proc tkButtonDown w {
     global tkPriv
-    set tkPriv(relief) [$w cget -relief]
+    # Only save the button's relief if it has no -overrelief value.  If there
+    # is an overrelief setting, tkPriv(relief) will already have been set, and
+    # the current value of the -relief option will be incorrect.
+
+    if { [string equal [$w cget -overrelief] ""] } {
+	set tkPriv(relief) [$w cget -relief]
+    }
+
     if {[string compare [$w cget -state] "disabled"]} {
 	set tkPriv(buttonWindow) $w
 	$w configure -relief sunken -state active
@@ -244,7 +265,21 @@ proc tkButtonUp w {
     global tkPriv
     if {[string equal $tkPriv(buttonWindow) $w]} {
 	set tkPriv(buttonWindow) ""
-	$w configure -relief $tkPriv(relief)
+	# Restore the button's relief.  If there is no overrelief, the
+	# button relief goes back to its original value.  If there is an
+	# overrelief, the relief goes to the overrelief (since the cursor is
+	# still over the button).
+
+	set relief [$w cget -overrelief]
+	if { [string equal $relief  ""] } {
+	    set relief $tkPriv(relief)
+	}
+	$w configure -relief $relief
+
+	# Clean up the after event from the auto-repeater
+
+	after cancel $tkPriv(afterId)
+
 	if {[string equal $tkPriv(window) $w]
               && [string compare [$w cget -state] "disabled"]} {
 	    $w configure -state normal
@@ -278,10 +313,18 @@ proc tkButtonEnter {w} {
     global tkPriv
     if {[string compare [$w cget -state] "disabled"]} {
 	$w configure -state active
+
+	# If the mouse button is down, set the relief to sunken on entry.
+	# Overwise, if there's an -overrelief value, set the relief to that.
+
 	if {[string equal $tkPriv(buttonWindow) $w]} {
 	    $w configure -state active -relief sunken
+	} elseif { [string compare [$w cget -overrelief] ""] } {
+	    set tkPriv(relief) [$w cget -relief]
+	    $w configure -relief [$w cget -overrelief]
 	}
     }
+
     set tkPriv(window) $w
 }
 
@@ -300,9 +343,15 @@ proc tkButtonLeave w {
     if {[string compare [$w cget -state] "disabled"]} {
 	$w configure -state normal
     }
-    if {[string equal $tkPriv(buttonWindow) $w]} {
+    
+    # Restore the original button relief if the mouse button is down
+    # or there is an -overrelief value.
+
+    if {[string equal $tkPriv(buttonWindow) $w] || \
+	    [string compare [$w cget -overrelief] ""] } {
 	$w configure -relief $tkPriv(relief)
     }
+
     set tkPriv(window) ""
 }
 
@@ -317,7 +366,15 @@ proc tkButtonLeave w {
 
 proc tkButtonDown w {
     global tkPriv
-    set tkPriv(relief) [$w cget -relief]
+
+    # Only save the button's relief if it has no -overrelief value.  If there
+    # is an overrelief setting, tkPriv(relief) will already have been set, and
+    # the current value of the -relief option will be incorrect.
+
+    if { [string equal [$w cget -overrelief] ""] } {
+	set tkPriv(relief) [$w cget -relief]
+    }
+
     if {[string compare [$w cget -state] "disabled"]} {
 	set tkPriv(buttonWindow) $w
 	$w configure -relief sunken
@@ -344,8 +401,21 @@ proc tkButtonUp w {
     global tkPriv
     if {[string equal $w $tkPriv(buttonWindow)]} {
 	set tkPriv(buttonWindow) ""
-	$w configure -relief $tkPriv(relief)
+
+	# Restore the button's relief.  If there is no overrelief, the
+	# button relief goes back to its original value.  If there is an
+	# overrelief, the relief goes to the overrelief (since the cursor is
+	# still over the button).
+
+	set relief [$w cget -overrelief]
+	if { [string equal $relief  ""] } {
+	    set relief $tkPriv(relief)
+	}
+	$w configure -relief $relief
+
+	# Clean up the after event from the auto-repeater
 	after cancel $tkPriv(afterId)
+
 	if {[string equal $w $tkPriv(window)] \
 		&& [string compare [$w cget -state] "disabled"]} {
 
@@ -377,8 +447,11 @@ if {[string match "macintosh" $tcl_platform(platform)]} {
 proc tkButtonEnter {w} {
     global tkPriv
     if {[string compare [$w cget -state] "disabled"]} {
-      if {[string equal $w $tkPriv(buttonWindow)]} {
+	if {[string equal $w $tkPriv(buttonWindow)]} {
 	    $w configure -state active
+	} elseif { [string compare [$w cget -overrelief] ""] } {
+	    set tkPriv(relief) [$w cget -relief]
+	    $w configure -relief [$w cget -overrelief]
 	}
     }
     set tkPriv(window) $w
@@ -399,6 +472,9 @@ proc tkButtonLeave w {
     if {[string equal $w $tkPriv(buttonWindow)]} {
 	$w configure -state normal
     }
+    if { [string compare [$w cget -overrelief] ""] } {
+	$w configure -relief $tkPriv(relief)
+    }
     set tkPriv(window) ""
 }
 
@@ -413,6 +489,7 @@ proc tkButtonLeave w {
 
 proc tkButtonDown w {
     global tkPriv
+
     if {[string compare [$w cget -state] "disabled"]} {
 	set tkPriv(buttonWindow) $w
 	$w configure -state active
@@ -440,6 +517,14 @@ proc tkButtonUp w {
     if {[string equal $w $tkPriv(buttonWindow)]} {
 	$w configure -state normal
 	set tkPriv(buttonWindow) ""
+
+	if { [string compare [$w cget -overrelief] ""] } {
+	    $w configure -relief [$w cget -overrelief]
+	}
+
+	# Clean up the after event from the auto-repeater
+	after cancel $tkPriv(afterId)
+
 	if {[string equal $w $tkPriv(window)]
               && [string compare [$w cget -state] "disabled"]} {
 	    # Only invoke the command if it wasn't already invoked by the

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.8 2000/05/10 00:09:39 ericm Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.9 2000/05/17 21:17:20 ericm Exp $
  */
 
 /*
@@ -804,34 +804,15 @@ DoObjConfig(interp, recordPtr, optionPtr, valuePtr, tkwin, savedOptionPtr)
 	}
 	case TK_OPTION_RELIEF: {
 	    int new;
-	    char *valueStr;
-	    
-	    if (Tk_GetReliefFromObj(interp, valuePtr, &new) != TCL_OK) {
-		/*
-		 * In order that error messages be handled properly, we let
-		 * GetReliefFromObj do the first pass check on the relief
-		 * string.  If it fails there, and the option spec doesn't
-		 * allow for LINK relief, return an error.  If the option spec
-		 * does allow LINK relief, see if the string matches "link".
-		 */
-		if ((specPtr->flags & TK_OPTION_LINK_OK) == 0) {
+
+	    if (nullOK && ObjectIsEmpty(valuePtr)) {
+		valuePtr = NULL;
+		new = TK_RELIEF_NULL;
+	    } else {
+		if (Tk_GetReliefFromObj(interp, valuePtr, &new) != TCL_OK) {
 		    return TCL_ERROR;
-		} else {
-		    valueStr = Tcl_GetString(valuePtr);
-		    if (valueStr[0] == 'l' && strcmp(valueStr, "link") == 0) {
-			new = TK_RELIEF_LINK;
-			Tcl_ResetResult(interp);
-		    } else {
-			Tcl_ResetResult(interp);
-			Tcl_AppendResult(interp, "bad relief \"",
-				valueStr, "\": must be flat, groove, link, "
-				"raised, ridge, solid, or sunken",
-				(char *)NULL);
-			return TCL_ERROR;
-		    }
 		}
 	    }
-		    
 	    if (internalPtr != NULL) {
 		*((int *) oldInternalPtr) = *((int *) internalPtr);
 		*((int *) internalPtr) = new;

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDefault.h,v 1.6 2000/05/14 20:45:38 ericm Exp $
+ * RCS: @(#) $Id: tkMacDefault.h,v 1.7 2000/05/17 21:17:21 ericm Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -72,6 +72,7 @@
 #define DEF_BUTTON_JUSTIFY		"center"
 #define DEF_BUTTON_OFF_VALUE		"0"
 #define DEF_BUTTON_ON_VALUE		"1"
+#define DEF_BUTTON_OVER_RELIEF		""
 #define DEF_BUTTON_PADX			"7"
 #define DEF_LABCHKRAD_PADX		"1"
 #define DEF_BUTTON_PADY			"3"

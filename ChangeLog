@@ -1,3 +1,40 @@
+2000-05-17  Eric Melski  <ericm@scriptics.com>
+
+	Overall change:  changed implementation of "link" relief for
+	buttons.  Instead of a new relief style (-relief link), there is a
+	new option, -overrelief, which if set is used when the mouse is
+	over the button.
+
+	* doc/SetOptions.3: Added information about TK_OPTION_NULL_OK with
+	TK_OPTION_RELIEF.
+
+	* win/tkWinButton.c: Removed bits about TK_RELIEF_LINK.
+
+	* tests/button.test: Added tests for -overrelief; removed tests
+	for -relief link.
+
+	* mac/tkMacButton.c: Removed bits about TK_RELIEF_LINK.
+
+	* generic/tkOldConfig.c: Removed bits about TK_RELIEF_LINK.
+
+	* generic/tkConfig.c: Removed bits about TK_RELIEF_LINK; added
+	support for TK_OPTION_NULL_OK for TK_OPTION_RELIEF.
+
+	* library/button.tcl: Added binding support for -overrelief.
+
+	* generic/tk3d.c (Tk_GetRelief): Added branch for TK_RELIEF_NULL.
+
+	* generic/tkButton.c: Added -overrelief option; removed
+	Enter/Leave EventProc masks and handlers.
+
+	* generic/tk.h: Added TK_RELIEF_NULL definition, removed
+	TK_RELIEF_LINK.
+
+	* mac/tkMacDefault.h (DEF_BUTTON_OVER_RELIEF): 
+	* win/tkWinDefault.h (DEF_BUTTON_OVER_RELIEF): 
+	* unix/tkUnixDefault.h (DEF_BUTTON_OVER_RELIEF): Added default
+	value for the -overrelief option.
+
 2000-05-16  Eric Melski  <ericm@scriptics.com>
 
 	* win/tkWinMenu.c (ReconfigureWindowsMenu): Added code to add the

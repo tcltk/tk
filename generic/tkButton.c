@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.6 2000/05/13 00:39:07 ericm Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.7 2000/05/17 21:17:20 ericm Exp $
  */
 
 #include "tkButton.h"
@@ -198,6 +198,9 @@ static Tk_OptionSpec buttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_BUTTON_JUSTIFY, -1, Tk_Offset(TkButton, justify), 0, 0, 0},
+    {TK_OPTION_RELIEF, "-overrelief", "overRelief", "OverRelief",
+	 DEF_BUTTON_OVER_RELIEF, -1, Tk_Offset(TkButton, overRelief),
+	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	DEF_BUTTON_PADX, Tk_Offset(TkButton, padXPtr),
 	Tk_Offset(TkButton, padX), 0, 0, 0},
@@ -206,7 +209,7 @@ static Tk_OptionSpec buttonOptionSpecs[] = {
 	Tk_Offset(TkButton, padY), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_BUTTON_RELIEF, -1, Tk_Offset(TkButton, relief),
-	 TK_OPTION_LINK_OK, 0, 0},
+	 0, 0, 0},
     {TK_OPTION_INT, "-repeatdelay", "repeatDelay", "RepeatDelay",
 	 DEF_BUTTON_REPEAT_DELAY, -1, Tk_Offset(TkButton, repeatDelay),
 	 0, 0, 0},
@@ -713,7 +716,7 @@ ButtonCreate(clientData, interp, objc, objv, type)
     butPtr->flags = 0;
 
     Tk_CreateEventHandler(butPtr->tkwin,
-	    ExposureMask|StructureNotifyMask|FocusChangeMask|EnterWindowMask|LeaveWindowMask,
+	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    ButtonEventProc, (ClientData) butPtr);
 
     if (Tk_InitOptions(interp, (char *) butPtr, optionTable, tkwin)
@@ -1397,12 +1400,6 @@ ButtonEventProc(clientData, eventPtr)
 		goto redraw;
 	    }
 	}
-    } else if (eventPtr->type == EnterNotify) {
-	butPtr->flags |= MOUSE_IN_BUTTON;
-	goto redraw;
-    } else if (eventPtr->type == LeaveNotify) {
-	butPtr->flags &= ~MOUSE_IN_BUTTON;
-	goto redraw;
     }
     return;
 

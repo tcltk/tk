@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.9 2000/05/13 00:39:07 ericm Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.10 2000/05/17 21:17:20 ericm Exp $
  */
 
 #include "tk3d.h"
@@ -720,8 +720,8 @@ Tk_NameOfRelief(relief)
 	return "ridge";
     } else if (relief == TK_RELIEF_SOLID) {
 	return "solid";
-    } else if (relief == TK_RELIEF_LINK) {
-	return "link";
+    } else if (relief == TK_RELIEF_NULL) {
+	return "";
     } else {
 	return "unknown relief";
     }

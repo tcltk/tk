@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacButton.c,v 1.12 2000/05/13 00:39:08 ericm Exp $
+ * RCS: @(#) $Id: tkMacButton.c,v 1.13 2000/05/17 21:17:21 ericm Exp $
  */
 
 #include "tkButton.h"
@@ -232,19 +232,6 @@ TkpDisplayButton(
 	}
     }
 
-    /*
-     * LINK relief means that the button has a raised relief when it is
-     * active, and a flat relief otherwise (like toolbar buttons).  It
-     * is supported for true buttons only.
-     */
-
-    if ((butPtr->type == TYPE_BUTTON) && butPtr->relief == TK_RELIEF_LINK) {
-	if ((butPtr->flags & MOUSE_IN_BUTTON) == MOUSE_IN_BUTTON) {
-	    relief = TK_RELIEF_RAISED;
-	} else {
-	    relief = TK_RELIEF_FLAT;
-	}
-    }
     /*
      * See the comment in UpdateControlColors as to why we use the 
      * highlightbackground for the border of Macintosh buttons.
