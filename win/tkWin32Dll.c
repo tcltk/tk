@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin32Dll.c,v 1.9 2004/03/05 07:32:54 mdejong Exp $
+ * RCS: @(#) $Id: tkWin32Dll.c,v 1.10 2004/10/28 19:51:37 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -23,12 +23,37 @@ static void *INITIAL_ESP,
             *RESTORED_HANDLER;
 #endif /* HAVE_NO_SEH && TCL_MEM_DEBUG */
 
+#ifdef HAVE_NO_SEH
+static
+__attribute__ ((cdecl))
+EXCEPTION_DISPOSITION
+_except_dllmain_detach_handler(
+    struct _EXCEPTION_RECORD *ExceptionRecord,
+    void *EstablisherFrame,
+    struct _CONTEXT *ContextRecord,
+    void *DispatcherContext);
+#endif /* HAVE_NO_SEH */
+
+#ifdef HAVE_NO_SEH
+
+/* Need to add noinline flag to DllMain declaration so that gcc -O3
+ * does not inline asm code into DllEntryPoint and cause a
+ * compile time error because of redefined local labels.
+ */
+
+BOOL APIENTRY		DllMain(HINSTANCE hInst, DWORD reason, 
+				LPVOID reserved)
+                        __attribute__ ((noinline));
+
+#else
+
 /*
  * The following declaration is for the VC++ DLL entry point.
  */
 
 BOOL APIENTRY		DllMain _ANSI_ARGS_((HINSTANCE hInst,
 			    DWORD reason, LPVOID reserved));
+#endif /* HAVE_NO_SEH */
 
 /*
  *----------------------------------------------------------------------
@@ -112,12 +137,14 @@ DllMain(hInstance, reason, reserved)
               "=m"(INITIAL_EBP),
               "=r"(INITIAL_HANDLER) );
 # endif /* TCL_MEM_DEBUG */
-
+            
     __asm__ __volatile__ (
-            "pushl %ebp" "\n\t"
-            "pushl $__except_dllmain_detach_handler" "\n\t"
-            "pushl %fs:0" "\n\t"
-            "movl  %esp, %fs:0");
+            "pushl %%ebp" "\n\t"
+            "pushl %0" "\n\t"
+            "pushl %%fs:0" "\n\t"
+            "movl  %%esp, %%fs:0"
+            :
+            : "r" (_except_dllmain_detach_handler) );
 #else
 	__try {
 #endif /* HAVE_NO_SEH */
@@ -170,6 +197,21 @@ DllMain(hInstance, reason, reserved)
     }
     return TRUE;
 }
+/*
+ *----------------------------------------------------------------------
+ *
+ * _except_dllmain_detach_handler --
+ *
+ *	SEH exception handler for DllMain.
+ *
+ * Results:
+ *	See DllMain.
+ *
+ * Side effects:
+ *	See DllMain.
+ *
+ *----------------------------------------------------------------------
+ */
 #ifdef HAVE_NO_SEH
 static
 __attribute__ ((cdecl))
@@ -182,8 +224,6 @@ _except_dllmain_detach_handler(
 {
     __asm__ __volatile__ (
             "jmp dllmain_detach_reentry");
-    /* Nuke compiler warning about unused static function */
-    _except_dllmain_detach_handler(NULL, NULL, NULL, NULL);
     return 0; /* Function does not return */
 }
 #endif /* HAVE_NO_SEH */
