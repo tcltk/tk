@@ -1,3 +1,40 @@
+2000-01-12  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* generic/tkCanvas.c: fixed mem leak with TagSearchExprInit
+	[Bug: 3977]
+
+	* generic/tkStubInit.c:
+	* generic/tkDecls.h: remove non-existent
+	Tk_(Get|Create)CanvasVisitor prototypes
+
+	* generic/tkText.c:
+	* generic/tkEntry.c: fixed cursor to not blink when widget was
+	disabled [Bug: 1807]
+
+	* generic/tkRectOval.c: added note about change to bloat for
+	RectOval bounds calculation for WIN32 only
+
+	* library/dialog.tcl: improved handling of $default arg to allow
+	for name of given button, as well as bounds checking
+
+	* doc/wm.n:
+	* tests/winWm.test:
+	* tests/unixWm.test:
+	* mac/tkMacWm.c:
+	* unix/tkUnixWm.c: fixed possible X error being raised [Bug: 3377]
+	* win/tkWinWm.c: wm deiconify in zoom state [Bug: 2077],
+	fixed possible flashing of unmapped toplevel in deiconify [Bug: 3338]
+	and fixed mapping of transient window [Bug: 572]
+	Also, for all wm's, extended 'wm state' command to allow setting
+	of the state, and added official support of 'zoomed' state on Win.
+
+	* unix/aclocal.m4: strtod bug on Tru64 [Bug: 3378]
+
+	* unix/Makefile.in: added tests to prevent unnecessary chmod +x
+	in source dirs while installing [Bug: 3367]
+
+	* unix/configure.in: properly sub'ed in TK_SHARED_BUILD [Bug: 3385]
+
 2000-01-05  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* doc/text.n:
@@ -11,15 +48,15 @@
 
 	* mac/tkMacClipboard.c: fixed i18n problems with clipboard [Bug: 3544]
 
-	* entry.tcl:
-	* focus.tcl:
-	* listbox.tcl:
-	* scale.tcl:
-	* scrlbar.tcl:
-	* tearoff.tcl:
-	* text.tcl:
-	* tkfbox.tcl:
-	* xmfbox.tcl: fixed unprotected arg parsing through eval/after
+	* library/entry.tcl:
+	* library/focus.tcl:
+	* library/listbox.tcl:
+	* library/scale.tcl:
+	* library/scrlbar.tcl:
+	* library/tearoff.tcl:
+	* library/text.tcl:
+	* library/tkfbox.tcl:
+	* library/xmfbox.tcl: fixed unprotected arg parsing through eval/after
 	[Bug: 3943]
 
 	* unix/Makefile.in: added unix/aclocal.m4 to distribution [Bug: 3938]
