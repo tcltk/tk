@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixEmbed.test,v 1.13 2004/05/23 17:34:49 dkf Exp $
+# RCS: @(#) $Id: unixEmbed.test,v 1.14 2004/12/04 00:04:42 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -199,7 +199,7 @@ test unixEmbed-3.2 {ContainerEventProc procedure, set size on creation} unix {
     update
     wm geometry .t2
 } {200x200+0+0}
-test unixEmbed-3.2 {ContainerEventProc procedure, disallow position changes} unix {
+test unixEmbed-3.2a {ContainerEventProc procedure, disallow position changes} unix {
     deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     pack .f1

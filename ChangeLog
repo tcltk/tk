@@ -1,3 +1,7 @@
+2004-12-04  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* tests/*.test: Resolve duplicate test names. [Bug 1078648]
+
 2004-12-03  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkImgPhoto.c (Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock):
