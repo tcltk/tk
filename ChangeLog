@@ -1,3 +1,13 @@
+1999-11-24  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* library/clrpick.tcl:
+	* library/msgbox.tcl:
+	* library/tk.tcl:
+	* library/tkfbox.tcl:
+	* library/xmfbox.tcl: fixed dialogs to center over -parent,
+	added utility functions ::tk::PlaceWindow, ::tk::SetFocusGrab,
+	::tk::RestoreFocusGrab to tk.tcl to help
+
 1999-11-23  Eric Melski  <ericm@scriptics.com>
 
 	* tests/listbox.test: Added a test to check that the topIndex is
