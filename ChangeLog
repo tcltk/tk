@@ -1,3 +1,8 @@
+2005-02-24  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSX.h: fixed incorrect inclusion of internal header.
+	* macosx/tkMacOSXNotify.c: corrected included headers.
+
 2005-02-22  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXDialog.c (Tk_GetSaveFileObjCmd, NavServicesGetFile):
