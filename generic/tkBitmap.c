@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.1.4.3 1998/12/13 08:16:01 lfb Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.1.4.4 1999/03/20 01:27:51 redman Exp $
  */
 
 #include "tkPort.h"
@@ -1049,8 +1049,10 @@ BitmapInit(dispPtr)
 	 * machines.
 	 */
 
-	Tcl_InitHashTable(&dispPtr->bitmapIdTable, sizeof(Pixmap) 
-                /sizeof(int));
+	/*
+	 * The comment above doesn't make sense...
+	 */
+	Tcl_InitHashTable(&dispPtr->bitmapIdTable, TCL_ONE_WORD_KEYS);
     }
 }
 

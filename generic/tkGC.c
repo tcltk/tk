@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGC.c,v 1.1.4.2 1998/12/13 08:16:05 lfb Exp $
+ * RCS: @(#) $Id: tkGC.c,v 1.1.4.3 1999/03/20 01:27:51 redman Exp $
  */
 
 #include "tkPort.h"
@@ -338,5 +338,5 @@ GCInit(dispPtr)
 {
     dispPtr->gcInit = 1;
     Tcl_InitHashTable(&dispPtr->gcValueTable, sizeof(ValueKey)/sizeof(int));
-    Tcl_InitHashTable(&dispPtr->gcIdTable, sizeof(GC)/sizeof(int));
+    Tcl_InitHashTable(&dispPtr->gcIdTable, TCL_ONE_WORD_KEYS);
 }
