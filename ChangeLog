@@ -1,3 +1,10 @@
+2000-06-13  Eric Melski  <ericm@scriptics.com>
+
+	* win/aclocal.m4: 
+	* win/configure.in: 
+	* win/Makefile.in: Applied patch from [RFE: 5844], to provide
+	support for the mingw compile environment for Windows.
+
 2000-06-06  Jeff Hobbs  <hobbs@scriptics.com>
 
 	8.4a1 RELEASE
