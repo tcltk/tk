@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.1.4.3 1998/11/25 21:16:34 stanton Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.1.4.4 1999/04/06 03:17:12 stanton Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -1074,6 +1074,14 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     # Restore the PWD to the application's PWD
     #
     cd $appPWD
+
+    # Restore the Open/Save Button
+    #
+    if {![string compare $data(type) open]} {
+        $data(okBtn) config -text "Open"
+    } else {
+        $data(okBtn) config -text "Save"
+    }
 
     # turn off the busy cursor.
     #

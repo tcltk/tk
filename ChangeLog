@@ -1,5 +1,9 @@
 1999-04-05    <stanton@scriptics.com>
 
+	* library/tkfbox.tcl: Change to restore button text after an
+	action to avoid the sticky "Open" button in a save dialog.
+	[Bug: 1640]
+
 	* library/entry.tcl: Fixed so selection is returned using the
 	-show character during cut and paste operations. [Bug: 1687]
 	
