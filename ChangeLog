@@ -1,3 +1,8 @@
+2003-11-01  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/msgs/nl.msg: Updated messages from Arjen Markus and
+	Pascal Scheffers.  Thanks!  [Patch 820519]
+
 2003-10-31  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkImgPhoto.c (ImgPhotoBlendComplexAlpha): OS X uses
