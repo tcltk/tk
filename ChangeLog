@@ -1,3 +1,49 @@
+2002-06-14  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* tests/imgPhoto.test: Added tests of -compositingrule
+
+	* doc/photo.n: Added documentation for "-compositingrule".
+	* generic/tkImgPhoto.c (ImgPhotoCmd,ParseSubcommandOptions): New
+	"-compositingrule" option for [$photo copy] subcommand, using
+	OPT_COMPOSITE flag and compositingRule field in SubcommandOptions
+	structure.
+
+	* doc/FindPhoto.3: Documented the extra argument for the
+	compositing rule and the action to take if anyone wants to
+	maintain total backward-compatability.
+
+	* generic/tk.h (TK_PHOTO_COMPOSITE_*): Defined values for use as
+	compositing rules. 
+	(USE_OLD_PHOTO_PUT_BLOCK): Added a way for users to select the old
+	interface to Tk_PhotoPutBlock to provide an easier upgrade path.
+
+	* generic/tk.decls: Alter Tk_PhotoPut*Block to Tk_PhotoPut*Block_Old
+	and introduce new slots for the old name of function with an extra
+	argument at the end for the compositing rule.
+
+	* generic/tkImgPhoto.c (ImgPhotoCmd): Updated "transparency set"
+	subcommand to use TkSubtractRegion().
+
+	* win/tkWinRegion.c (TkSubtractRegion): 
+	* mac/tkMacRegion.c (TkSubtractRegion): 
+	* generic/tkInt.decls (TkSubtractRegion): 
+	* unix/tkUnixPort.h (TkSubtractRegion): Added function to perform
+	the set-difference operation on regions; it seems all platforms
+	can support it, and it makes removing rectangular bits from
+	regions much easier.
+
+	* generic/tkImgPPM.c (FileReadPPM): Reading a PPM/PGM always uses
+	the SET compositing rule because it is faster and the format does
+	not have any transparency information.
+
+	* generic/tkImgGIF.c (FileReadGIF): Reading a GIF always uses the
+	SET compositing rule because GIF files model transparency as a
+	single special colour.
+
+	* generic/tkImgPhoto.c (Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock):
+	Added a compositing rule to allow better control over what happens
+	to transparent pixels when inserting data into a photo image.
+
 2002-06-13  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* tests/winfo.test: Add basic tests for winfo ismapped.
