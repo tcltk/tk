@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.1.2.2 2001/10/17 07:04:22 wolfsuit Exp $
  */
 #include <pthread.h>
 #include "tk.h"
@@ -269,11 +269,15 @@ Tcl_AppInit(interp)
 #endif /* TK_TEST */
 
     /*
-     * This doesn't work yet, still this is roughly what we want to do...
+     * If we don't have a TTY, then use the Tk based console
+     * interpreter instead.
      */
 
     if (ttyname(0) == NULL) {
         Tk_InitConsoleChannels(interp);
+        Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDIN));
+        Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDOUT));
+        Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
         if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
             goto error;
         }
