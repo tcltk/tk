@@ -1,6 +1,11 @@
 2001-06-22  Mo DeJong  <mdejong@redhat.com>
 
 	* win/configure: Regen.
+	* win/tcl.m4: Update from Tcl.
+
+2001-06-22  Mo DeJong  <mdejong@redhat.com>
+
+	* win/configure: Regen.
 	* win/tcl.m4 (SC_CONFIG_CFLAGS): Link to the
 	imm32 library when building with mingw gcc.
 	* win/tkWinX.c: Include the imm.h header
