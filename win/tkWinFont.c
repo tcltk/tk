@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.13 2001/09/21 21:34:10 hobbs Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.14 2001/09/26 21:36:19 pspjuth Exp $
  */
 
 #include "tkWinInt.h"
@@ -826,6 +826,11 @@ Tk_DrawChars(
     dc = TkWinGetDrawableDC(display, drawable, &state);
 
     SetROP2(dc, tkpWinRopModes[gc->function]);
+    
+    if ((gc->clip_mask != None) && 
+            ((TkpClipMask*)gc->clip_mask)->type == TKP_CLIP_REGION) {
+        SelectClipRgn(dc, (HRGN)((TkpClipMask*)gc->clip_mask)->value.region);
+    }
 
     if ((gc->fill_style == FillStippled
 	    || gc->fill_style == FillOpaqueStippled)

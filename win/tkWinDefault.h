@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDefault.h,v 1.9 2000/07/28 16:34:56 ericm Exp $
+ * RCS: @(#) $Id: tkWinDefault.h,v 1.10 2001/09/26 21:36:19 pspjuth Exp $
  */
 
 #ifndef _TKWINDEFAULT
@@ -32,14 +32,14 @@
 #define NORMAL_BG	"SystemButtonFace"
 #define NORMAL_FG	"SystemButtonText"
 #define ACTIVE_BG	NORMAL_BG
-#define TEXT_FG	"SystemWindowText"
+#define TEXT_FG		"SystemWindowText"
 #define SELECT_BG	"SystemHighlight"
 #define SELECT_FG	"SystemHighlightText"
 #define TROUGH		"SystemScrollbar"
 #define INDICATOR	"SystemWindow"
 #define DISABLED	"SystemDisabledText"
-#define MENU_BG	"SystemMenu"
-#define MENU_FG	"SystemMenuText"
+#define MENU_BG		"SystemMenu"
+#define MENU_FG		"SystemMenuText"
 #define HIGHLIGHT	"SystemWindowFrame"
 
 /*
@@ -190,11 +190,24 @@
 #define DEF_FRAME_HIGHLIGHT_BG		NORMAL_BG
 #define DEF_FRAME_HIGHLIGHT		HIGHLIGHT
 #define DEF_FRAME_HIGHLIGHT_WIDTH	"0"
+#define DEF_FRAME_PADX			"0"
+#define DEF_FRAME_PADY			"0"
 #define DEF_FRAME_RELIEF		"flat"
 #define DEF_FRAME_TAKE_FOCUS		"0"
-#define DEF_FRAME_USE			""
 #define DEF_FRAME_VISUAL		""
 #define DEF_FRAME_WIDTH			"0"
+
+/*
+ * Defaults for labelframes:
+ */
+
+#define DEF_LABELFRAME_BORDER_WIDTH	"2"
+#define DEF_LABELFRAME_CLASS		"Labelframe"
+#define DEF_LABELFRAME_RELIEF		"groove"
+#define DEF_LABELFRAME_FG		NORMAL_FG
+#define DEF_LABELFRAME_FONT		CTL_FONT
+#define DEF_LABELFRAME_TEXT		""
+#define DEF_LABELFRAME_LABELANCHOR	"nw"
 
 /*
  * Defaults for listboxes:
@@ -467,5 +480,6 @@
 #define DEF_TOPLEVEL_CLASS		"Toplevel"
 #define DEF_TOPLEVEL_MENU		""
 #define DEF_TOPLEVEL_SCREEN		""
+#define DEF_TOPLEVEL_USE		""
 
 #endif /* _TKWINDEFAULT */

@@ -5,20 +5,22 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: toplevel.n,v 1.4 2001/09/26 21:36:19 pspjuth Exp $
+'\"
+'\" RCS: @(#) $Id: labelframe.n,v 1.1 2001/09/26 21:36:19 pspjuth Exp $
 '\" 
 .so man.macros
-.TH toplevel n 8.4 Tk "Tk Built-In Commands"
+.TH labelframe n 8.4 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-toplevel \- Create and manipulate toplevel widgets
+labelframe \- Create and manipulate labelframe widgets
 .SH SYNOPSIS
-\fBtoplevel\fR \fIpathName \fR?\fIoptions\fR?
+\fBlabelframe\fR \fIpathName\fR ?\fIoptions\fR?
 .SO
-\-borderwidth	\-highlightcolor	\-pady
-\-cursor	\-highlightthickness	\-relief
-\-highlightbackground	\-padx	\-takefocus
+\-borderwidth	\-highlightbackground	\-pady
+\-cursor	\-highlightcolor	\-relief
+\-font	\-highlightthickness	\-takefocus
+\-foreground	\-padx	\-text
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-background background Background
@@ -42,7 +44,7 @@ window (which must be on the same screen and have the same visual
 as \fIpathName\fR), in which case the new window will use the colormap
 from the specified window.
 If the \fBcolormap\fR option is not specified, the new window
-uses the default colormap of its screen.
+uses the same colormap as its parent.
 This option may not be changed with the \fBconfigure\fR
 widget command.
 .OP \-container container Container
@@ -59,35 +61,23 @@ Specifies the desired height for the window in any of the forms
 acceptable to \fBTk_GetPixels\fR.
 If this option is less than or equal to zero then the window will
 not request any size at all.
-.OP \-menu menu Menu
-Specifies a menu widget to be used as a menubar. On the Macintosh, the
-menubar will be displayed accross the top of the main monitor. On
-Microsoft Windows and all UNIX platforms, the menu will appear accross
-the toplevel window as part of the window dressing maintained by the
-window manager.
-.OP \-screen "" ""
-Specifies the screen on which to place the new window.
-Any valid screen name may be used, even one associated with a
-different display.
-Defaults to the same screen as its parent.
-This option is special in that it may not be specified via the option
-database, and it may not be modified with the \fBconfigure\fR
-widget command.
-.OP \-use use Use
-This option is used for embedding. If the value isn't an empty string,
-it must be the the window identifier of a container window, specified as
-a hexadecimal string like the ones returned by the \fBwinfo id\fR
-command. The toplevel widget will be created as a child of the given
-container instead of the root window for the screen.  If the container
-window is in a Tk application, it must be a frame or toplevel widget for
-which the \fB\-container\fR option was specified.
-This option may not be changed with the \fBconfigure\fR
-widget command.
+.OP \-labelanchor labelAnchor LabelAnchor
+Specifies where to place the label. A label is only displayed if the
+\fB\-text\fR option is not the empty string.
+Valid values for this option are (listing them clockwise)
+\fBnw\fR, \fBn\fR, \fBne\fR, \fBen\fR, \fBe\fR, \fBes\fR,
+\fBse\fR, \fBs\fR,\fBsw\fR, \fBws\fR, \fBw\fR and \fBwn\fR.
+The default value is \fBnw\fR.
+.OP \-labelwidget labelWidget LabelWidget
+Specifies a widget to use as label. This overrides any \fB\-text\fR
+option. The widget must exist before being used as \fB\-labelwidget\fR
+and if it is not a descendant of this window, it will be raised
+above it in the stacking order.
 .OP \-visual visual Visual
 Specifies visual information for the new window in any of the
 forms accepted by \fBTk_GetVisual\fR.
-If this option is not specified, the new window will use the default
-visual for its screen.
+If this option is not specified, the new window will use the same
+visual as its parent.
 The \fBvisual\fR option may not be modified with the \fBconfigure\fR
 widget command.
 .OP \-width width Width
@@ -99,43 +89,39 @@ not request any size at all.
 
 .SH DESCRIPTION
 .PP
-The \fBtoplevel\fR command creates a new toplevel widget (given
-by the \fIpathName\fR argument).  Additional
+The \fBlabelframe\fR command creates a new window (given by the
+\fIpathName\fR argument) and makes it into a labelframe widget.
+Additional
 options, described above, may be specified on the command line
 or in the option database
-to configure aspects of the toplevel such as its background color
-and relief.  The \fBtoplevel\fR command returns the
+to configure aspects of the labelframe such as its background color
+and relief.  The \fBlabelframe\fR command returns the
 path name of the new window.
 .PP
-A toplevel is similar to a frame except that it is created as a
-top-level window:  its X parent is the root window of a screen
-rather than the logical parent from its path name.  The primary
-purpose of a toplevel is to serve as a container for dialog boxes
-and other collections of widgets.  The only visible features
-of a toplevel are its background color and an optional 3-D border
-to make the toplevel appear raised or sunken.
-
+A labelframe is a simple widget.  Its primary purpose is to act as a
+spacer or container for complex window layouts.  It has the features
+of a \fBframe\fR plus the ability to display a label.
 .SH "WIDGET COMMAND"
 .PP
-The \fBtoplevel\fR command creates a new Tcl command whose
-name is the same as the path name of the toplevel's window.  This
+The \fBlabelframe\fR command creates a new Tcl command whose
+name is the same as the path name of the labelframe's window.  This
 command may be used to invoke various
 operations on the widget.  It has the following general form:
 .CS
 \fIpathName option \fR?\fIarg arg ...\fR?
 .CE
 \fIPathName\fR is the name of the command, which is the same as
-the toplevel widget's path name.  \fIOption\fR and the \fIarg\fRs
+the labelframe widget's path name.  \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
-commands are possible for toplevel widgets:
+commands are possible for frame widgets:
 .TP
 \fIpathName \fBcget\fR \fIoption\fR
 Returns the current value of the configuration option given
 by \fIoption\fR.
-\fIOption\fR may have any of the values accepted by the \fBtoplevel\fR
+\fIOption\fR may have any of the values accepted by the \fBlabelframe\fR
 command.
 .TP
-\fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
+\fIpathName \fBconfigure\fR ?\fIoption\fR? \fI?value option value ...\fR?
 Query or modify the configuration options of the widget.
 If no \fIoption\fR is specified, returns a list describing all of
 the available options for \fIpathName\fR (see \fBTk_ConfigureInfo\fR for
@@ -146,16 +132,16 @@ sublist of the value returned if no \fIoption\fR is specified).  If
 one or more \fIoption\-value\fR pairs are specified, then the command
 modifies the given widget option(s) to have the given value(s);  in
 this case the command returns an empty string.
-\fIOption\fR may have any of the values accepted by the \fBtoplevel\fR
+\fIOption\fR may have any of the values accepted by the \fBlabelframe\fR
 command.
 
 .SH BINDINGS
 .PP
-When a new toplevel is created, it has no default event bindings:
-toplevels are not intended to be interactive.
+When a new labelframe is created, it has no default event bindings:
+labelframes are not intended to be interactive.
 
 .SH "SEE ALSO"
-frame(n)
+frame(n), label(n)
 
 .SH KEYWORDS
-toplevel, widget
+labelframe, widget

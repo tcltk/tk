@@ -1,5 +1,29 @@
 2001-09-26  Peter Spjuth <peter.spjuth@space.se>
 
+	* win/tkWinFont.c (Tk_DrawChars): Added support for clipping text.
+
+	* doc/frame.n:
+	* doc/labelframe.n:
+	* doc/toplevel.n:
+	* generic/tkFrame.c:
+	* generic/tkInt.h:
+	* generic/tkWindow.c:
+	* library/demos/radio.tcl:
+	* library/demos/labelframe.tcl:
+	* library/demos/widget:
+	* mac/tkMacDefault.h:
+	* tests/frame.test:
+	* unix/tkUnixDefault.h:
+	* win/tkWinDefault.h: Added labelframe widget. Added -padx/y
+	options to frame and toplevel.
+
+	* tests/grid.test:
+	* tests/pack.test:
+	* tests/place.test: Used labelframe to test geometry manager changes.
+	[TIP 18] [Patch 429164]
+	
+2001-09-26  Peter Spjuth <peter.spjuth@space.se>
+
 	* doc/GeomReq.3:
 	* doc/WindowId.3:
 	* generic/tk.decls:

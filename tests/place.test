@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: place.test,v 1.5 2000/08/10 00:21:08 ericm Exp $
+# RCS: @(#) $Id: place.test,v 1.6 2001/09/26 21:36:19 pspjuth Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -352,6 +352,23 @@ test place-12.1 {PlaceObjCmd, forget command} {
     destroy .foo
     set res
 } [list 1 0]
+
+test place-13.1 {test respect for internalborder} {
+    toplevel .pack
+    wm geometry .pack 200x200
+    frame .pack.l -width 15 -height 10
+    labelframe .pack.lf -labelwidget .pack.l
+    pack .pack.lf -fill both -expand 1
+    frame .pack.lf.f
+    place .pack.lf.f -x 0 -y 0 -relwidth 1.0 -relheight 1.0
+    update
+    set res [list [winfo geometry .pack.lf.f]]
+    .pack.lf configure -labelanchor e -padx 3 -pady 5
+    update
+    lappend res [winfo geometry .pack.lf.f]
+    destroy .pack
+    set res
+} {196x188+2+10 177x186+5+7}
 
 catch {destroy .t}
 
