@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.17 2002/06/13 21:35:09 mdejong Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.18 2002/06/14 22:52:04 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -2343,7 +2343,7 @@ argumentNumber18
 
 # Test exit processing and cleanup:
 
-test unixWm-58.1 {exit processing} {
+test unixWm-59.1 {exit processing} {
     catch {removeFile script}
     set fd [open script w]
     puts $fd {
@@ -2358,7 +2358,7 @@ test unixWm-58.1 {exit processing} {
     }
     list $error $msg
 } {0 {}}
-test unixWm-58.2 {exit processing} {
+test unixWm-59.2 {exit processing} {
     catch {removeFile script}
     set fd [open script w]
     puts $fd {
@@ -2377,7 +2377,7 @@ test unixWm-58.2 {exit processing} {
     }
     list $error $msg
 } {0 {}}
-test unixWm-58.3 {exit processing} {
+test unixWm-59.3 {exit processing} {
     catch {removeFile script}
     set fd [open script w]
     puts $fd {
