@@ -1,3 +1,11 @@
+2001-08-28  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tkUnixWm.c (TkWmRestackToplevel): reworked how
+	ConfigureNotify requests were handled in relation to the parent to
+	avoid the problem with potential 'raise' delays on some wms.
+	[Bug #220260] (baker) wms that were affected should notice the
+	difference in tests unixWm-51.* not failing that failed before.
+
 2001-08-26  Don Porter  <dgp@users.sourceforge.net>
 
 	* library/text.tcl (<Shift-Up> binding):  Corrected TIP 44 typo
