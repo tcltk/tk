@@ -1,5 +1,8 @@
 2002-07-14  Don Porter <dgp@users.sf.net>
 
+	* tests/event.test:	Fixes to enable testing of only userInteraction
+	* tests/visual_bb.test:	tests.
+
 	* README:		Bumped HEAD to version 8.4b2 in order to 
 	* generic/tk.h:		distinguish it from the 8.4b1 release.
 	* unix/configure*:	Also extended LOCALES to cover all message
