@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.1.4.6 1999/03/24 01:17:15 hershey Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.1.4.7 1999/03/24 02:55:09 hershey Exp $
 
 if {$tcl_platform(platform) != "unix"} {
     puts "skipping: Unix only tests..."
@@ -2389,6 +2389,7 @@ catch {destroy .t}
 catch {removeFile script}
 ::tcltest::cleanupTests
 return
+
 
 
 

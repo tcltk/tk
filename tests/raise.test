@@ -8,7 +8,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: raise.test,v 1.1.4.3 1999/03/24 01:17:02 hershey Exp $
+# RCS: @(#) $Id: raise.test,v 1.1.4.4 1999/03/24 02:54:57 hershey Exp $
 
 if {[info commands testmakeexist] == {}} {
     puts "This application hasn't been compiled with the \"testmakeexist\""
@@ -301,6 +301,7 @@ foreach i [winfo child .] {
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

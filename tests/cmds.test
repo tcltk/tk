@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: cmds.test,v 1.1.4.3 1999/03/24 01:16:40 hershey Exp $
+# RCS: @(#) $Id: cmds.test,v 1.1.4.4 1999/03/24 02:54:35 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -44,6 +44,7 @@ test cmds-1.5 {tkwait visibility, window gets deleted} {
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

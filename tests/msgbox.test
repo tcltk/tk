@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: msgbox.test,v 1.1.4.5 1999/03/24 01:16:59 hershey Exp $
+# RCS: @(#) $Id: msgbox.test,v 1.1.4.6 1999/03/24 02:54:53 hershey Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
@@ -157,6 +157,7 @@ foreach spec $specs {
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

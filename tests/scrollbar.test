@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scrollbar.test,v 1.1.4.3 1999/03/24 01:17:04 hershey Exp $
+# RCS: @(#) $Id: scrollbar.test,v 1.1.4.4 1999/03/24 02:54:59 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -665,6 +665,7 @@ catch {destroy .t}
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clipboard.test,v 1.1.4.3 1999/03/24 01:16:39 hershey Exp $
+# RCS: @(#) $Id: clipboard.test,v 1.1.4.4 1999/03/24 02:54:34 hershey Exp $
 
 #
 # Note: Multiple display clipboard handling will only be tested if the
@@ -235,6 +235,7 @@ test clipboard-7.14 {Tk_ClipboardCmd procedure} {
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

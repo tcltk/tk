@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: window.test,v 1.1.4.3 1999/03/24 01:17:21 hershey Exp $
+# RCS: @(#) $Id: window.test,v 1.1.4.4 1999/03/24 02:55:15 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -138,6 +138,7 @@ test window-5.1 {Tk_MakeWindowExist procedure, stacking order and menubars} unix
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

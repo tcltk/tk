@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: macMenu.test,v 1.1.4.3 1999/03/24 01:16:54 hershey Exp $
+# RCS: @(#) $Id: macMenu.test,v 1.1.4.4 1999/03/24 02:54:49 hershey Exp $
 
 if {$tcl_platform(platform) != "macintosh"} {
     puts "skipping: Mac only tests..."
@@ -1565,6 +1565,7 @@ test macMenu-45.1 {TkpMenuInit - called at boot time} {} {}
 deleteWindows
 ::tcltest::cleanupTests
 return
+
 
 
 

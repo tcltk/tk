@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: font.test,v 1.1.4.4 1999/03/24 01:16:46 hershey Exp $
+# RCS: @(#) $Id: font.test,v 1.1.4.5 1999/03/24 02:54:41 hershey Exp $
 
 if {[info commands testfont] != "testfont"} {
     puts "testfont command not available; skipping tests"
@@ -1373,6 +1373,7 @@ destroy .b
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: macWinMenu.test,v 1.1.4.3 1999/03/24 01:16:55 hershey Exp $
+# RCS: @(#) $Id: macWinMenu.test,v 1.1.4.4 1999/03/24 02:54:50 hershey Exp $
 
 if {$tcl_platform(platform) == "unix"} {
     puts "skipping: Unix only tests..."
@@ -117,6 +117,7 @@ if {$tcl_platform(platform) != "windows" || [info exists tcl_interactive]} {
 deleteWindows
 ::tcltest::cleanupTests
 return
+
 
 
 

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: cursor.test,v 1.1.2.4 1999/03/24 01:16:42 hershey Exp $
+# RCS: @(#) $Id: cursor.test,v 1.1.2.5 1999/03/24 02:54:37 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -100,6 +100,7 @@ destroy .t
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

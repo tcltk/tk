@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: imgPPM.test,v 1.1.4.3 1999/03/24 01:16:51 hershey Exp $
+# RCS: @(#) $Id: imgPPM.test,v 1.1.4.4 1999/03/24 02:54:46 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -157,6 +157,7 @@ eval image delete [image names]
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

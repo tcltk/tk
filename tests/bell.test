@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bell.test,v 1.1.4.3 1999/03/24 01:16:28 hershey Exp $
+# RCS: @(#) $Id: bell.test,v 1.1.4.4 1999/03/24 02:54:21 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -34,6 +34,7 @@ test bell-1.4 {bell command} {
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

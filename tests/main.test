@@ -8,7 +8,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: main.test,v 1.1.4.5 1999/03/24 01:16:56 hershey Exp $
+# RCS: @(#) $Id: main.test,v 1.1.4.6 1999/03/24 02:54:51 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -34,6 +34,7 @@ test main-1.1 {StdinProc} {unixOnly} {
 catch {removeFile script}
 ::tcltest::cleanupTests
 return
+
 
 
 

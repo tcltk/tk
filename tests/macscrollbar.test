@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: macscrollbar.test,v 1.1.4.3 1999/03/24 01:16:56 hershey Exp $
+# RCS: @(#) $Id: macscrollbar.test,v 1.1.4.4 1999/03/24 02:54:51 hershey Exp $
 
 # Only run this test on the Macintosh
 if {$tcl_platform(platform) != "macintosh"} {
@@ -104,6 +104,7 @@ foreach i [winfo children .] {
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

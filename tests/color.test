@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: color.test,v 1.1.4.4 1999/03/24 01:16:41 hershey Exp $
+# RCS: @(#) $Id: color.test,v 1.1.4.5 1999/03/24 02:54:36 hershey Exp $
 
 if {[info commands testcolor] != "testcolor"} {
     puts "testcolor command not available; skipping tests"
@@ -279,6 +279,7 @@ destroy .t
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

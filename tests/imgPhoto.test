@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.1.4.4 1999/03/24 01:16:52 hershey Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.1.4.5 1999/03/24 02:54:47 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -29,7 +29,7 @@ update
 
 # temporarily copy the README fiel from testsDir to tmpDir
 if {![file exists README]} {
-    set newREADME [file join $::tcltest::tmpDir README]
+    set newREADME [file join $::tcltest::workingDir README]
     file copy [file join $::tcltest::testsDir README] $newREADME
     set removeREADME 1
 }
@@ -445,6 +445,7 @@ if {[info exists removeREADME]} {
 }
 ::tcltest::cleanupTests
 return
+
 
 
 

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: event.test,v 1.1.4.3 1999/03/24 01:16:44 hershey Exp $
+# RCS: @(#) $Id: event.test,v 1.1.4.4 1999/03/24 02:54:39 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -42,6 +42,7 @@ test event-1.1 {Tk_HandleEvent procedure, filter events for dead windows} {
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

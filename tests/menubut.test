@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menubut.test,v 1.1.4.4 1999/03/24 01:16:58 hershey Exp $
+# RCS: @(#) $Id: menubut.test,v 1.1.4.5 1999/03/24 02:54:53 hershey Exp $
 
 # XXX This test file is woefully incomplete right now.  If any part
 # XXX of a procedure has tests then the whole procedure has tests,
@@ -352,6 +352,7 @@ option clear
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

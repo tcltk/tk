@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clrpick.test,v 1.1.4.4 1999/03/24 01:16:39 hershey Exp $
+# RCS: @(#) $Id: clrpick.test,v 1.1.4.5 1999/03/24 02:54:34 hershey Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
@@ -209,6 +209,7 @@ test clrpick-3.2 {tk_chooseColor: background events} {interactive tkDialog} {
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

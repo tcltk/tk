@@ -10,7 +10,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: macFont.test,v 1.1.4.4 1999/03/24 01:16:54 hershey Exp $
+# RCS: @(#) $Id: macFont.test,v 1.1.4.5 1999/03/24 02:54:49 hershey Exp $
 
 if {$tcl_platform(platform)!="macintosh"} {
     puts "skipping: Mac only tests..."
@@ -286,6 +286,7 @@ destroy .b
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

@@ -2,7 +2,7 @@
 # for some of the graphical objects in canvases.  It is part of the Tk
 # visual test suite, which is invoked via the "visual" script.
 #
-# RCS: @(#) $Id: canvPsGrph.tcl,v 1.1.4.2 1999/03/24 01:16:36 hershey Exp $
+# RCS: @(#) $Id: canvPsGrph.tcl,v 1.1.4.3 1999/03/24 02:54:29 hershey Exp $
 
 catch {destroy .t}
 toplevel .t
@@ -85,6 +85,7 @@ proc mkObjs c {
 }
 
 mkObjs $c
+
 
 
 

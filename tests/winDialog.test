@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winDialog.test,v 1.1.2.5 1999/03/24 01:17:18 hershey Exp $
+# RCS: @(#) $Id: winDialog.test,v 1.1.2.6 1999/03/24 02:55:12 hershey Exp $
 
 if {[info command testwinevent] == ""} {
     puts "skipping: tests require the testwinevent command"
@@ -321,6 +321,7 @@ testwinevent debug 0
 # cleanup
 ::tcltest::cleanupTests
 return
+
 
 
 

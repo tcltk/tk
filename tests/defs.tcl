@@ -11,7 +11,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: defs.tcl,v 1.1.2.4 1999/03/24 01:37:59 hershey Exp $
+# RCS: @(#) $Id: defs.tcl,v 1.1.2.5 1999/03/24 02:54:37 hershey Exp $
 
 # Initialize wish shell
 if {[info exists tk_version]} {
@@ -22,12 +22,11 @@ if {[info exists tk_version]} {
     set auto_path [list [info library]]
 }
 
-# create the "test" namespace for all testing variables and procedures
+# create the "tcltest" namespace for all testing variables and procedures
 namespace eval tcltest {
     set procList [list test cleanupTests dotests saveState restoreState \
 	    normalizeMsg makeFile removeFile makeDirectory removeDirectory \
-	    viewFile bytestring set_iso8859_1_locale restore_locale \
-	    setTmpDir]
+	    viewFile bytestring set_iso8859_1_locale restore_locale]
     if {[info exists tk_version]} {
 	lappend procList setupbg dobg bgReady cleanupbg fixfocus
     }
@@ -67,10 +66,10 @@ namespace eval tcltest {
     variable failFiles {}
 
     # Tests should remove all files they create.  The test suite will
-    # check tmpDir for files created by the tests.  ::tcltest::filesMade
-    # keeps track of such files created using the ::tcltest::makeFile and
-    # ::tcltest::makeDirectory procedures.  ::tcltest::filesExisted stores
-    # the names of pre-existing files.
+    # check the current working dir for files created by the tests.
+    # ::tcltest::filesMade keeps track of such files created using the
+    # ::tcltest::makeFile and ::tcltest::makeDirectory procedures.
+    # ::tcltest::filesExisted stores the names of pre-existing files.
 
     variable filesMade {}
     variable filesExisted {}
@@ -308,49 +307,9 @@ proc ::tcltest::initConfig {} {
 ::tcltest::initConfig
 
 
-# ::tcltest::setTmpDir --
-#
-#	Set the ::tcltest::tmpDir to the specified value.  If the path
-#	is relative, make it absolute.  If the file exists but is not
-#	a dir, then return an error.  If the dir does not already
-#	exist, create it.  If you cannot create it, then return an error.
-#
-# Arguments:
-#	value	the new value of ::tcltest::tmpDir
-#
-# Results:
-#	::tcltest::tmpDir is set to <value> and created if it didn't already
-#	exist.  The working dir is changed to ::tcltest::tmpDir.
-
-proc ::tcltest::setTmpDir {value} {
-
-    set ::tcltest::tmpDir $value
-
-    if {[string compare [file pathtype $::tcltest::tmpDir] absolute] != 0} {
-	set ::tcltest::tmpDir [file join [pwd] $::tcltest::tmpDir]
-    }
-    if {[file exists $::tcltest::tmpDir]} {
-	if {![file isdir $::tcltest::tmpDir]} {
-	    puts stderr "Error:  bad argument \"$value\" to -tmpdir:"
-	    puts stderr "            \"$::tcltest::tmpDir\""
-	    puts stderr "        is not a directory"
-	    exit
-	}
-    } else {
-	file mkdir $::tcltest::tmpDir
-    }
-
-    # change the working dir to tmpDir and add the existing files in
-    # tmpDir to the filesExisted list.
-    cd $::tcltest::tmpDir
-    foreach file [glob -nocomplain [file join [pwd] *]] {
-	lappend ::tcltest::filesExisted $file
-    }
-}
-
 # ::tcltest::processCmdLineArgs --
 #
-#	Use command line args to set the tmpDir, verbose, skippingTests, and
+#	Use command line args to set the verbose, skippingTests, and
 #	matchingTests variables.
 #
 # Arguments:
@@ -376,10 +335,10 @@ proc ::tcltest::processCmdLineArgs {} {
 	exit
     }
     
-    # Allow for 1-char abbreviations, where applicable (e.g., -tmpdir == -t).
+    # Allow for 1-char abbreviations, where applicable (e.g., -match == -m).
     # Note that -verbose cannot be abbreviated to -v in wish because it conflicts
     # with the wish option -visual.
-    foreach arg {-verbose -match -skip -constraints -tmpdir} {
+    foreach arg {-verbose -match -skip -constraints} {
 	set abbrev [string range $arg 0 1]
 	if {([info exists flag($abbrev)]) && \
 		([lsearch -exact $flagArray $arg] < \
@@ -388,15 +347,10 @@ proc ::tcltest::processCmdLineArgs {} {
 	}
     }
 
-    # Set ::tcltest::tmpDir to the arg of the -tmpdir flag, if given.
-    # ::tcltest::tmpDir defaults to [pwd].
-    # Save the names of files that already exist in ::tcltest::tmpDir.
-    if {[info exists flag(-tmpdir)]} {
-	::tcltest::setTmpDir $flag(-tmpdir)
-    } else {
-	set ::tcltest::tmpDir [pwd]
-    }
-    foreach file [glob -nocomplain [file join $::tcltest::tmpDir *]] {
+    # Set ::tcltest::workingDir to [pwd].
+    # Save the names of files that already exist in ::tcltest::workingDir.
+    set ::tcltest::workingDir [pwd]
+    foreach file [glob -nocomplain [file join $::tcltest::workingDir *]] {
 	lappend ::tcltest::filesExisted [file tail $file]
     }
 
@@ -482,11 +436,11 @@ proc ::tcltest::cleanupTests {{calledFromAllFile 0}} {
 	    }
 	}
 
-	# report the names of files in ::tcltest::tmpDir that were not
+	# report the names of files in ::tcltest::workingDir that were not
 	# pre-existing.
 
 	set currentFiles {}
-	foreach file [glob -nocomplain [file join $::tcltest::tmpDir *]] {
+	foreach file [glob -nocomplain [file join $::tcltest::workingDir *]] {
 	    lappend currentFiles [file tail $file]
 	}
 	set filesNew {}
@@ -1012,3 +966,4 @@ if {[info exists tk_version]} {
 # Need to catch the import because it fails if defs.tcl is sourced
 # more than once.
 catch {namespace import ::tcltest::*}
+
