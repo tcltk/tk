@@ -1,3 +1,9 @@
+2002-06-09  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* library/bgerror.tcl (tk::dialog::error::bgerror):
+	Don't set the bgerror dialog as a transient of
+	itself since this operation is ill defined.
+
 2002-06-06  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* win/tkWinCursor.c (TkGetCursorByName): Fixed so that the reading
