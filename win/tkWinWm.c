@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.9 1999/07/01 00:39:48 redman Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.10 1999/08/10 16:58:52 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1390,6 +1390,12 @@ Tk_WmCmd(clientData, interp, argc, argv)
             return TCL_ERROR;
         }
 	TkpWmSetState(winPtr, NormalState);
+	/*
+	 * Follow Windows-like style here:
+	 * raise the window to the top and force the focus on it
+	 */
+	Tk_RestackWindow(tkwin, Above, NULL);
+	TkSetFocusWin(winPtr, 1);
     } else if ((c == 'f') && (strncmp(argv[1], "focusmodel", length) == 0)
 	    && (length >= 2)) {
 	if ((argc != 3) && (argc != 4)) {
