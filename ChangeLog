@@ -1,5 +1,13 @@
 2002-10-17  Daniel Steffen  <das@users.sourceforge.net>
 
+	* macosx/README: info specific to building and running
+	TclTk on Mac OS X, answers to tcl-mac list FAQs.
+	* macosx/Makefile: permission fix after embedded install.
+	* macosx/Wish.pbproj/project.pbxproj: after install, fix
+	permissions of uninstalled products.
+
+2002-10-17  Daniel Steffen  <das@users.sourceforge.net>
+
 	* macosx/Wish.pbproj/project.pbxproj: added TEXT document
 	type to plist so that files can be dragged onto Wish Shell.
 
