@@ -1,8 +1,15 @@
-2001-10-18  Jeff Hobbs  <jeffh@ActiveState.com>
+2001-10-19  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	************************
 	****  8.3.4 TAGGED  ****
 	************************
+
+	* library/tk.tcl: added tk::GetSelection from 8.4 for console.
+
+	* library/console.tcl: fixed a few errors where namespace command
+	names were used that were not back-ported from 8.4.
+
+2001-10-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/configure: regend
 	* unix/tcl.m4 (SC_ENABLE_GCC): enabled better recognition of gcc.
