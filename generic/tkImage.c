@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.19.2.1 2003/07/07 09:43:01 dkf Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.19.2.2 2003/09/17 23:45:05 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -233,9 +233,12 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 	     */
 
 	    if ((objc == 3) || (*(arg = Tcl_GetString(objv[3])) == '-')) {
-		dispPtr->imageId++;
-		sprintf(idString, "image%d", dispPtr->imageId);
-		name = idString;
+                Tcl_CmdInfo dummy;
+                do {
+		    dispPtr->imageId++;
+		    sprintf(idString, "image%d", dispPtr->imageId);
+		    name = idString;
+                } while (Tcl_GetCommandInfo(interp, name, &dummy) != 0);
 		firstOption = 3;
 	    } else {
 		TkWindow *topWin;
