@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.13 2003/08/20 23:47:44 hobbs Exp $
+# RCS: @(#) $Id: widget,v 1.14 2003/08/21 00:02:56 hobbs Exp $
 
 eval destroy [winfo child .]
 package require msgcat
@@ -40,7 +40,7 @@ if {[lsearch -exact [font names] defaultFont] == -1} {
 set widgetDemo 1
 set font mainFont
 
-image create photo ::img::refresh -format GIF -data {
+image create photo ::img::refresh -height 16 -format GIF -data {
     R0lGODlhEAAQAPMAAMz/zCpnKdb/1z9mPypbKBtLGy9NMPL/9Or+6+P+4j1Y
     PwQKBP7//xMLFAYBCAEBASH5BAEAAAAALAAAAAAQABAAAwR0EAD3Gn0Vyw0e
     ++CncU7IIAezMA/nhUqSLJizvSdCEEjy2ZIV46AwDAoDHwPYGSoEiUJAAGJ6
@@ -48,14 +48,14 @@ image create photo ::img::refresh -format GIF -data {
     KSAthiaOjBMPDhQONBiXABEAOw==
 }
 
-image create photo ::img::view -format GIF -data {
+image create photo ::img::view -height 16 -format GIF -data {
     R0lGODlhEAAQAPMAAMz/zP///8DAwICAgH9/fwAAAAAAAAAAAAAAAAAAAAAA
     AAAAAAAAAAAAAAAAAAAAACH5BAEAAAAALAAAAAAQABAAAwRIcMhJB7h3hM33
     KFjWdQQYap1QrCaGBmrRrS4nj5b53jOgbwXBKGACoYLDIuAoHCmZyYvR1rT5
     RMAq8LqcIYGsrjPsW1XOmFUEADs=
 }
 
-image create photo ::img::delete -format GIF -data {
+image create photo ::img::delete -height 16 -format GIF -data {
     R0lGODlhEAAOAKEAAIQAAO/n3v///////yH5BAEKAAIALAAAAAAQAA4AAAIm
     lI9pAKHbIHNoVhYhTdjlJ2AWKG2g+CldmB6rxo2uybYhbS80eRQAOw==
 }
@@ -481,8 +481,10 @@ proc showCode w {
 	grid rowconfigure $top 0 -weight 1
 	grid columnconfig $top 0 -weight 1
 
-	bind $top <Return> [list $btns.dismiss invoke]
-	bind $top <Escape> [list $btns.dismiss invoke]
+	bind $top <Return> {
+	    if {[winfo class %W] ne "Text"} { .code.btns.dismiss invoke }
+	}
+	bind $top <Escape> [bind $top <Return>]
     } else {
 	wm deiconify $top
 	raise $top
