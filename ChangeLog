@@ -1,5 +1,8 @@
 2001-04-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tkWinMenu.c (TkWinHandleMenuEvent): corrected reseting of
+	service mode to only occur when it was set. [Bug #220948]
+
 	* README:
 	* mac/README: updated patchlevel to 8.3.3 and corrected links and
 	notes.
