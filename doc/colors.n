@@ -2,7 +2,7 @@
 '\" Copyright (c) 1998-2000 by Scriptics Corporation.
 '\" All rights reserved.
 '\" 
-'\" RCS: @(#) $Id: colors.n,v 1.1 2000/04/27 18:28:54 ericm Exp $
+'\" RCS: @(#) $Id: colors.n,v 1.1.2.1 2000/06/30 20:33:44 ericm Exp $
 '\" 
 '\"
 .so man.macros
@@ -11,7 +11,7 @@
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
 colors \- symbolic color names recognized by Tk
-
+.BE
 .SH DESCRIPTION
 .PP
 Tk recognizes many symbolic color names (eg, \fBred\fR) when
@@ -218,6 +218,8 @@ gray12                      31    31    31
 gray13                      33    33    33
 gray14                      36    36    36
 gray15                      38    38    38
+.CE
+.CS
 gray16                      41    41    41
 gray17                      43    43    43
 gray18                      46    46    46
@@ -418,6 +420,8 @@ honeydew2                  224   238   238
 honeydew3                  193   205   205
 honeydew4                  131   139   139
 hot pink                   255   105   105
+.CE
+.CS
 HotPink                    255   105   105
 HotPink1                   255   110   110
 HotPink2                   238   106   106
@@ -618,6 +622,8 @@ PaleTurquoise1             187   255   255
 PaleTurquoise2             174   238   238
 PaleTurquoise3             150   205   205
 PaleTurquoise4             102   139   139
+.CE
+.CS
 PaleVioletRed              219   112   112
 PaleVioletRed1             255   130   130
 PaleVioletRed2             238   121   121

@@ -2,15 +2,16 @@
 '\" Copyright (c) 1998-2000 by Scriptics Corporation.
 '\" All rights reserved.
 '\" 
-'\" RCS: @(#) $Id: keysyms.n,v 1.2 2000/04/28 00:46:04 ericm Exp $
+'\" RCS: @(#) $Id: keysyms.n,v 1.2.2.1 2000/06/30 20:33:44 ericm Exp $
 '\" 
 '\"
 .so man.macros
-.TH colors n 8.3 Tk "Tk Built-In Commands"
+.TH keysyms n 8.3 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
 keysyms \- keysyms recognized by Tk
+.BE
 
 .SH DESCRIPTION
 .PP
@@ -223,6 +224,8 @@ Scaron                             425     0x01a9
 Scedilla                           426     0x01aa
 Tcaron                             427     0x01ab
 Zacute                             428     0x01ac
+.CE
+.CS
 Zcaron                             430     0x01ae
 Zabovedot                          431     0x01af
 aogonek                            433     0x01b1
@@ -423,6 +426,8 @@ Arabic_qaf                        1506     0x05e2
 Arabic_kaf                        1507     0x05e3
 Arabic_lam                        1508     0x05e4
 Arabic_meem                       1509     0x05e5
+.CE
+.CS
 Arabic_noon                       1510     0x05e6
 Arabic_heh                        1511     0x05e7
 Arabic_waw                        1512     0x05e8
@@ -623,6 +628,8 @@ botvertsummationconnector         2228     0x08b4
 toprightsummation                 2229     0x08b5
 botrightsummation                 2230     0x08b6
 rightmiddlesummation              2231     0x08b7
+.CE
+.CS
 lessthanequal                     2236     0x08bc
 notequal                          2237     0x08bd
 greaterthanequal                  2238     0x08be
@@ -824,6 +831,8 @@ End                              65367     0xff57
 Begin                            65368     0xff58
 Win_L                            65371     0xff5b
 Win_R                            65372     0xff5c
+.CE
+.CS
 App                              65373     0xff5d
 Select                           65376     0xff60
 Print                            65377     0xff61
