@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: font.test,v 1.6 2000/03/02 23:52:56 hobbs Exp $
+# RCS: @(#) $Id: font.test,v 1.7 2002/06/26 08:22:54 a_kovalenko Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1118,40 +1118,40 @@ test font-32.1 {Tk_TextLayoutToPostscript: ensure buffer doesn't overflow} {
     .b.c insert text end "end"
     set x [.b.c postscript]
     set i [string first "(qwerty" $x] 
-    string range $x $i [expr {$i + 213}]
-} {(qwertyuiopasdfghjklzxcvbnm1234qwertyuiopasdfghjklzxcvbnm)
-(qwertyuiopasdfghjklzxcvbnm1234qwertyuiopasdfghjklzxcvbnm)
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-()
-(end)
+    string range $x $i [expr {$i + 278}]
+} {(qwertyuiopasdfghjklzxcvbnm1234qwertyuiopasdfghjklzxcvbnm)]
+[(qwertyuiopasdfghjklzxcvbnm1234qwertyuiopasdfghjklzxcvbnm)]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[()]
+[(end)]
 }
 
 test font-33.1 {Tk_TextWidth procedure} {
