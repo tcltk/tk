@@ -1,3 +1,8 @@
+2003-02-05  Fred Fish  <fnf@intrinsity.com>
+
+	* macosx/tkMacOSXWm.c (Tk_SetGrid): Fix precedence problem with
+	* mac/tkMacWm.c (Tk_SetGrid):       '==' and '|'.
+
 2003-02-08  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkCanvArc.c (CreateArc):       Rework canvas create item
