@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.13 2000/01/12 11:46:19 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.14 2000/01/14 03:25:59 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -164,6 +164,7 @@ typedef struct TkWmInfo {
     char *clientMachine;	/* String to store in WM_CLIENT_MACHINE
 				 * property, or NULL. */
     int flags;			/* Miscellaneous flags, defined below. */
+    int numTransients;		/* number of transients on this window */
     struct TkWmInfo *nextPtr;	/* Next in list of all top-level windows. */
 } WmInfo;
 
@@ -309,6 +310,8 @@ static void		UpdateGeometryInfo _ANSI_ARGS_((
 static void		UpdateWrapper _ANSI_ARGS_((TkWindow *winPtr));
 static LRESULT CALLBACK	WmProc _ANSI_ARGS_((HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam));
+static void		WmWaitVisibilityProc _ANSI_ARGS_((
+			    ClientData clientData, XEvent *eventPtr));
 
 /*
  *----------------------------------------------------------------------
@@ -615,6 +618,7 @@ TkWmNewWindow(winPtr)
     
     wmPtr->cmapList = NULL;
     wmPtr->cmapCount = 0;
+    wmPtr->numTransients = 0;
 
     wmPtr->configWidth = -1;
     wmPtr->configHeight = -1;
@@ -675,7 +679,7 @@ UpdateWrapper(winPtr)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     parentHWND = NULL;
-    child = TkWinGetHWND(winPtr->window); 
+    child = TkWinGetHWND(winPtr->window);
 
     if (winPtr->flags & TK_EMBEDDED) {
 	wmPtr->wrapper = (HWND) winPtr->privatePtr;
@@ -691,7 +695,7 @@ UpdateWrapper(winPtr)
 	 * Pick the decorative frame style.  Override redirect windows get
 	 * created as undecorated popups.  Transient windows get a modal
 	 * dialog frame.  Neither override, nor transient windows appear in
-	 * the Win95 taskbar.  Note that a transient window does not resize
+	 * the Windows taskbar.  Note that a transient window does not resize
 	 * by default, so we need to explicitly add the WS_THICKFRAME style
 	 * if we want it to be resizeable.
 	 */
@@ -825,6 +829,22 @@ UpdateWrapper(winPtr)
 	wmPtr->flags &= ~WM_SYNC_PENDING;
     }
 
+    if (wmPtr->numTransients > 0) {
+	/*
+	 * Reset all transient children for whom this is the master
+	 */
+	WmInfo *wmPtr2;
+
+	for (wmPtr2 = winPtr->dispPtr->firstWmPtr; wmPtr2 != NULL;
+	     wmPtr2 = wmPtr2->nextPtr) {
+	    if (wmPtr2->masterPtr == winPtr) {
+		if (!(wmPtr2->flags & WM_NEVER_MAPPED)) {
+		    UpdateWrapper(wmPtr2->winPtr);
+		}
+	    }
+	}
+    }
+
     /*
      * If this is the first window created by the application, then
      * we should activate the initial window.
@@ -949,7 +969,8 @@ TkpWmSetState(winPtr, state)
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int cmd;
 
-    if (wmPtr->flags & WM_NEVER_MAPPED) {
+    if ((wmPtr->flags & WM_NEVER_MAPPED) ||
+	    (wmPtr->masterPtr && !Tk_IsMapped(wmPtr->masterPtr))) {
 	wmPtr->hints.initial_state = state;
 	return;
     }
@@ -2186,6 +2207,16 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    }
 	    return TCL_OK;
 	}
+	if (wmPtr->masterPtr != NULL) {
+	    /*
+	     * If we had a master, tell them that we aren't tied
+	     * to them anymore
+	     */
+	    wmPtr->masterPtr->wmInfoPtr->numTransients--;
+	    Tk_DeleteEventHandler((Tk_Window) masterPtr,
+		    VisibilityChangeMask,
+		    WmWaitVisibilityProc, (ClientData) winPtr);
+	}
 	if (argv[3][0] == '\0') {
 	    wmPtr->masterPtr = NULL;
 	} else {
@@ -2196,6 +2227,8 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    if (masterPtr == winPtr) {
 		wmPtr->masterPtr = NULL;
 	    } else {
+		WmInfo *masterWmPtr;
+
 		Tk_MakeWindowExist((Tk_Window)masterPtr);
 
 		/*
@@ -2206,24 +2239,34 @@ Tk_WmCmd(clientData, interp, argc, argv)
 		    masterPtr = masterPtr->parentPtr;
 		}
 		wmPtr->masterPtr = masterPtr;
+		masterWmPtr = masterPtr->wmInfoPtr;
+		masterWmPtr->numTransients++;
 
 		/*
 		 * If the master is mapped, the transient window should
 		 * maintain its state, unless it was Iconic, in which case
 		 * we switch it to Withdrawn.  If the master is not mapped,
-		 * then the transient should be Withdrawn.
+		 * then the transient should be Withdrawn.  If the master
+		 * has never been mapped, then we set an event to trigger
+		 * when
 		 */
 
-		if (masterPtr->flags & TK_MAPPED) {
+		Tk_CreateEventHandler((Tk_Window) masterPtr,
+			VisibilityChangeMask,
+			WmWaitVisibilityProc, (ClientData) winPtr);
+#if 0
+		if (Tk_IsMapped(masterPtr)) {
 		    if (wmPtr->hints.initial_state == IconicState) {
 			TkpWmSetState(winPtr, WithdrawnState);
 		    }
+		} else if (masterPtr->wmInfoPtr->flags & WM_NEVER_MAPPED) {
 		} else {
-		    TkpWmSetState(winPtr, WithdrawnState);
+		    ShowWindow(hwnd, SW_HIDE);
 		}
+#endif
 	    }
 	}
-	if (!(wmPtr->flags & (WM_NEVER_MAPPED)
+	if (!((wmPtr->flags & WM_NEVER_MAPPED)
 		&& !(winPtr->flags & TK_EMBEDDED))) {
 	    UpdateWrapper(winPtr);
 	}
@@ -2259,6 +2302,30 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
     return TCL_OK;
+}
+	/*ARGSUSED*/
+static void
+WmWaitVisibilityProc(clientData, eventPtr)
+    ClientData clientData;	/* Pointer to window. */
+    XEvent *eventPtr;		/* Information about event. */
+{
+    TkWindow *winPtr = (TkWindow *) clientData;
+    TkWindow *masterPtr = winPtr->wmInfoPtr->masterPtr;
+
+    if ((eventPtr->type == VisibilityNotify) && (masterPtr != NULL)) {
+	int state = masterPtr->wmInfoPtr->hints.initial_state;
+
+	if ((state == NormalState) || (state == ZoomState)) {
+	    state = winPtr->wmInfoPtr->hints.initial_state;
+	    if ((state == NormalState) || (state == ZoomState)) {
+		TkpWmSetState(winPtr, state);
+		UpdateWrapper(winPtr);
+		Tk_DeleteEventHandler((Tk_Window) masterPtr,
+			VisibilityChangeMask,
+			WmWaitVisibilityProc, (ClientData) winPtr);
+	    }
+	}
+    }
 }
 
 /*
