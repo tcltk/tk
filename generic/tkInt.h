@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.59 2003/10/10 15:56:22 dkf Exp $ 
+ * RCS: $Id: tkInt.h,v 1.60 2003/10/13 03:41:37 hobbs Exp $ 
  */
 
 #ifndef _TKINT
@@ -1115,9 +1115,6 @@ EXTERN char *		TkCanvasDashPrintProc _ANSI_ARGS_((
 EXTERN int		TkGetDoublePixels _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window tkwin, CONST char *string,
 			    double *doublePtr));
-EXTERN CONST Tk_OptionSpec *
-			TkGetOptionSpec _ANSI_ARGS_((CONST char *name,
-			    Tk_OptionTable optionTable));
 EXTERN int		TkOffsetParseProc _ANSI_ARGS_((
 			    ClientData clientData, Tcl_Interp *interp,
 			    Tk_Window tkwin, CONST char *value, char *widgRec,
