@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: config.test,v 1.3 2000/03/02 21:52:25 hobbs Exp $
+# RCS: @(#) $Id: config.test,v 1.4 2000/09/17 21:02:40 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -50,7 +50,7 @@ test config-1.1 {Tk_CreateOptionTable - reference counts} {
     lappend x [testobjconfig info alltypes]
     eval destroy [winfo children .]
     set x
-} {{1 15 -boolean} {2 15 -boolean}}
+} {{1 16 -boolean} {2 16 -boolean}}
 test config-1.2 {Tk_CreateOptionTable - synonym initialization} {
     eval destroy [winfo children .]
     testobjconfig alltypes .a -synonym green
@@ -458,9 +458,11 @@ test config-4.64 {DoObjConfig - releasing old values} {
 
     catch {rename .foo {}}
     testobjconfig alltypes .foo -string {Test string} -color yellow \
-	    -font {Courier 18} -bitmap questhead -border green -cursor cross
+	    -font {Courier 18} -bitmap questhead -border green -cursor cross \
+	    -custom foobar
     .foo configure -string {new string} -color brown \
-	    -font {Times 8} -bitmap gray75 -border pink -cursor watch
+	    -font {Times 8} -bitmap gray75 -border pink -cursor watch \
+	    -custom barbaz
     concat {}
 } {}
 test config-4.65 {DoObjConfig - releasing old values} {
@@ -470,11 +472,26 @@ test config-4.65 {DoObjConfig - releasing old values} {
 
     catch {rename .foo {}}
     testobjconfig internal .foo -string {Test string} -color yellow \
-	    -font {Courier 18} -bitmap questhead -border green -cursor cross
+	    -font {Courier 18} -bitmap questhead -border green -cursor cross \
+	    -custom foobar
     .foo configure -string {new string} -color brown \
-	    -font {Times 8} -bitmap gray75 -border pink -cursor watch
+	    -font {Times 8} -bitmap gray75 -border pink -cursor watch \
+	    -custom barbaz
     concat {}
 } {}
+test config-4.66 {DoObjConfig - custom} {
+    catch {destroy .foo}
+    list [catch {testobjconfig alltypes .foo -custom test} msg] $msg [catch {.foo cget -custom} result] $result [destroy .foo]
+} {0 .foo 0 TEST {}}
+test config-4.67 {DoObjConfig - null custom} {
+    catch {destroy .foo}
+    list [catch {testobjconfig alltypes .foo -custom {}} msg] $msg [catch {.foo cget -custom} result] $result [destroy .foo]
+} {0 .foo 0 {} {}}
+test config-4.68 {DoObjConfig - custom internal value} {
+    catch {rename .foo {}}
+    testobjconfig internal .foo -custom "this is a test"
+    .foo cget -custom
+} {THIS IS A TEST}
 
 test config-5.1 {ObjectIsEmpty - object is already string} {
     catch {destroy .foo}
@@ -550,6 +567,12 @@ test config-7.7 {Tk_SetOptions - synonym name in error message} {
 test config-7.8 {Tk_SetOptions - returning mask} {
     format %x [.a configure -color red -int 7 -relief raised -double 3.14159]
 } {226}
+test config-7.9 {Tk_SetOptions - error in DoObjConfig with custom option} {
+    list [catch {.a configure -custom bad} msg] $msg $errorInfo
+} {1 {expected good value, got "BAD"} {expected good value, got "BAD"
+    (processing "-custom" option)
+    invoked from within
+".a configure -custom bad"}}
 
 test config-8.1 {Tk_RestoreSavedOptions - restore in proper order} {
     eval destroy [winfo children .]
@@ -636,6 +659,11 @@ test config-8.16 {Tk_RestoreSavedOptions - window internal form} {
     testobjconfig internal .a -window .a
     list [catch {.a csave -window .a -color bogus}] [.a cget -window]
 } {1 .a}
+test config-8.17 {Tk_RestoreSavedOptions - custom internal form} {
+    eval destroy [winfo children .]
+    testobjconfig internal .a -custom "foobar"
+    list [catch {.a csave -custom "barbaz" -color bogus}] [.a cget -custom]
+} {1 FOOBAR}
 
 # Most of the tests below will cause memory leakage if there is a
 # problem.  This may not be evident unless the tests are run in
@@ -713,6 +741,12 @@ test config-9.12 {Tk_FreeConfigOptions/FreeResources - not special} {
     .foo configure -integer [format 27]
     destroy .foo
 } {}
+test config-9.13 {Tk_FreeConfigOptions/FreeResources - custom internal form} {
+    catch {destroy .fpp}
+    testobjconfig internal .foo
+    .foo configure -custom "foobar"
+    destroy .foo
+} {}
 
 test config-10.1 {Tk_GetOptionInfo - one item} {
     catch {destroy .foo}
@@ -730,7 +764,7 @@ test config-10.3 {Tk_GetOptionInfo - all items} {
     catch {destroy .foo}
     testobjconfig alltypes .foo -font {Helvetica 18} -integer 13563
     .foo configure
-} {{-boolean boolean Boolean 1 1} {-integer integer Integer 7 13563} {-double double Double 3.14159 3.14159} {-string string String foo foo} {-stringtable StringTable stringTable one one} {-color color Color red red} {-font font Font {Helvetica 12} {Helvetica 18}} {-bitmap bitmap Bitmap gray50 gray50} {-border border Border blue blue} {-relief relief Relief raised raised} {-cursor cursor Cursor xterm xterm} {-justify {} {} left left} {-anchor anchor Anchor {} {}} {-pixel pixel Pixel 1 1} {-synonym -color}}
+} {{-boolean boolean Boolean 1 1} {-integer integer Integer 7 13563} {-double double Double 3.14159 3.14159} {-string string String foo foo} {-stringtable StringTable stringTable one one} {-color color Color red red} {-font font Font {Helvetica 12} {Helvetica 18}} {-bitmap bitmap Bitmap gray50 gray50} {-border border Border blue blue} {-relief relief Relief raised raised} {-cursor cursor Cursor xterm xterm} {-justify {} {} left left} {-anchor anchor Anchor {} {}} {-pixel pixel Pixel 1 1} {-custom {} {} {} {}} {-synonym -color}}
 test config-10.4 {Tk_GetOptionInfo - chaining through tables} {
     catch {destroy .foo}
     testobjconfig chain2 .foo -one asdf -three xyzzy
@@ -811,12 +845,16 @@ test config-12.15 {GetObjectForOption - window} {
     .a configure -window .a
     .a cget -window
 } {.a}
-test config-12.16 {GetObjectForOption - null values} {
+test config-12.16 {GetObjectForOption -custom} {
+    .a configure -custom foobar
+    .a cget -custom
+} {FOOBAR}
+test config-12.17 {GetObjectForOption - null values} {
     .a configure -string {} -color {} -font {} -bitmap {} -border {} \
-	    -cursor {} -window {}
+	    -cursor {} -window {} -custom {}
     list [.a cget -string] [.a cget -color] [.a cget -font] \
-	    [.a cget -string] [.a cget -bitmap] [.a cget -border] \
-	    [.a cget -cursor] [.a cget -window]
+	    [.a cget -bitmap] [.a cget -border] [.a cget -cursor] \
+	    [.a cget -window] [.a cget -custom]
 } {{} {} {} {} {} {} {} {}}
 
 test config-13.1 {proper cleanup of options with widget destroy} {

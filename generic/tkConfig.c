@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.10 2000/08/10 00:21:07 ericm Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.11 2000/09/17 21:02:39 ericm Exp $
  */
 
 /*
@@ -66,6 +66,7 @@ typedef struct TkOption {
 					 * use on monochrome displays. */
 	struct TkOption *synonymPtr;	/* For synonym options, this points to
 					 * the master entry. */
+	struct Tk_ObjCustomOption *custom;  /* For TK_OPTION_CUSTOM. */
     } extra;
     int flags;				/* Miscellaneous flag values; see
 					 * below for definitions. */
@@ -279,6 +280,14 @@ Tk_CreateOptionTable(interp, templatePtr)
 			Tcl_NewStringObj((char *) specPtr->clientData, -1);
 		Tcl_IncrRefCount(optionPtr->extra.monoColorPtr);
 	    }
+
+	    if (specPtr->type == TK_OPTION_CUSTOM) {
+		/*
+		 * Get the custom parsing, etc., functions.
+		 */
+		optionPtr->extra.custom =
+		    (Tk_ObjCustomOption *)specPtr->clientData;
+	    }
 	}
 	if (((specPtr->type == TK_OPTION_STRING)
 		&& (specPtr->internalOffset >= 0))
@@ -286,7 +295,8 @@ Tk_CreateOptionTable(interp, templatePtr)
 		|| (specPtr->type == TK_OPTION_FONT)
 		|| (specPtr->type == TK_OPTION_BITMAP)
 		|| (specPtr->type == TK_OPTION_BORDER)
-		|| (specPtr->type == TK_OPTION_CURSOR)) {
+		|| (specPtr->type == TK_OPTION_CURSOR)
+		|| (specPtr->type == TK_OPTION_CUSTOM)) {
 	    optionPtr->flags |= OPTION_NEEDS_FREEING;
 	}
     }
@@ -905,6 +915,16 @@ DoObjConfig(interp, recordPtr, optionPtr, valuePtr, tkwin, savedOptionPtr)
 	    }
 	    break;
 	}
+	case TK_OPTION_CUSTOM: {
+	    Tk_ObjCustomOption *custom = optionPtr->extra.custom;
+	    if (custom->setProc(custom->clientData, interp, tkwin,
+		    &valuePtr, (char *)internalPtr, (char *)oldInternalPtr,
+		    optionPtr->specPtr->flags) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    break;
+	}
+	    
 	default: {
 	    char buf[40+TCL_INTEGER_SPACE];
 	    sprintf(buf, "bad config table: unknown type %d",
@@ -1409,6 +1429,13 @@ Tk_RestoreSavedOptions(savePtr)
 			    = *((Tk_Window *) &savePtr->items[i].internalForm);
 		    break;
 		}
+		case TK_OPTION_CUSTOM: {
+		    Tk_ObjCustomOption *custom = optionPtr->extra.custom;
+		    custom->restoreProc(custom->clientData, savePtr->tkwin,
+			    internalPtr,
+			    (char *)&savePtr->items[i].internalForm);
+		    break;
+		}
 		default: {
 		    panic("bad option type in Tk_RestoreSavedOptions");
 		}
@@ -1619,6 +1646,13 @@ FreeResources(optionPtr, objPtr, internalPtr, tkwin)
 		Tk_FreeCursorFromObj(tkwin, objPtr);
 	    }
 	    break;
+	case TK_OPTION_CUSTOM: {
+	    Tk_ObjCustomOption *custom = optionPtr->extra.custom;
+	    if (internalFormExists && custom->freeProc != NULL) {
+		custom->freeProc(custom->clientData, tkwin, internalPtr);
+	    }
+	    break;
+	}
 	default:
 	    break;
     }
@@ -1901,6 +1935,11 @@ GetObjectForOption(recordPtr, optionPtr, tkwin)
 	    if (tkwin != NULL) {
 		objPtr = Tcl_NewStringObj(Tk_PathName(tkwin), -1);
 	    }
+	    break;
+	}
+	case TK_OPTION_CUSTOM: {
+	    Tk_ObjCustomOption *custom = optionPtr->extra.custom;
+	    objPtr = custom->getProc(custom->clientData, tkwin, internalPtr);
 	    break;
 	}
 	default: {
