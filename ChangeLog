@@ -1,9 +1,13 @@
 2004-10-08  Joe English  <jenglish@users.sourceforge.net>
 
+	TIP#205 IMPLEMENTATION
+
 	* unix/tkUnixRFont.c: TIP #205 "Use pkgconfig Database to 
 	Register Xft Support".
 
 2004-10-05  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	TIP#159 IMPLEMENTATION
 
 	* doc/wm.n (iconphoto):           added support for Tk photo
 	* generic/tkInt.h (TkDisplay):    images as titlebar icons. TIP #159
@@ -93,6 +97,8 @@
 	-toolwindow attr changes.
 
 2004-09-17  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	TIP#222 IMPLEMENTATION
 
 	* doc/wm.n:
 	* tests/winWm.test: Add 'wm attributes -alpha' to control toplevel
