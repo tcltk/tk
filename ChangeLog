@@ -1,7 +1,7 @@
 2001-11-23  Daniel Steffen <das@users.sourceforge.net>
 
-	**  upport to 8.4 of mac code changes for 8.3.3 & various new
-	**  changes for 8.4, some already backported to 8.3.4 (patch #435660)
+	Up-port to 8.4 of mac code changes for 8.3.3 & various new
+	changes for 8.4, some already backported to 8.3.4 (patch #435660)
 
 	* library/tk.tcl: added <Key-F1> binding for <<Undo>> on the mac (TIP26)
 
@@ -56,14 +56,14 @@
 	* mac/widget.r: new resource file for 'Widget Demos'
 
 	* mac/tkMacProjects.sea.hqx: updated mac build project files:
-	- build support for CodeWarrior Pro6, UnivIntf 3.4 & shared runtime
+	build support for CodeWarrior Pro6, UnivIntf 3.4 & shared runtime
 	libraries (see Tcl ChangeLog for details).
-	- changed weak linking so that CFM68k binaries now work on all OS
+	changed weak linking so that CFM68k binaries now work on all OS
 	versions from the free 7.5.5 onwards, with or without AppearanceMgr
 	and/or NavigationMgr installed.
-	- added target to automatically build 'Widget Demos'
-	- included XML versions of the projects for CW Pro5 or Pro7 users.
-	- use compat/strtod.c instead of MSL's strtod()
+	added target to automatically build 'Widget Demos'
+	included XML versions of the projects for CW Pro5 or Pro7 users.
+	use compat/strtod.c instead of MSL's strtod()
 
 	* generic/tkInt.decls:
 	* generic/tkIntDecls.h:
