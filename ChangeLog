@@ -1,3 +1,9 @@
+2001-09-20  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/configure: regen'ed
+	* unix/aclocal.m4: added --enable-64bit support for HP-11 with the
+	64-bit kernel.
+
 2001-09-15  Don Porter <dgp@users.sourceforge.net>
 
 	* doc/getOpenFile.n: Removed docs for the -multiple and
