@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.8 1999/07/29 23:01:43 redman Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.9 1999/08/26 18:24:18 wart Exp $
 
 TCLVERSION = @TCL_VERSION@
 VERSION = @TK_VERSION@
@@ -335,7 +335,10 @@ binaries: @LIBRARIES@ $(WISH)
 
 libraries:
 
-doc:
+$(ROOT_DIR)/doc/man.macros:
+	$(INSTALL_DATA) @TCL_SRC_DIR@/../doc/man.macros $(ROOT_DIR)/doc/man.macros
+
+doc: $(ROOT_DIR)/doc/man.macros
 
 test: binaries $(TKTEST)
 	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/../library"; export TCL_LIBRARY; \
