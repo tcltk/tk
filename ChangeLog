@@ -1,5 +1,7 @@
 2001-11-12  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* library/demos/menu.tcl: Show off -compound support in menus.
+
 	* library/demos/radio.tcl: Added some code to both show off the
 	extra capabilities of the buttons and also show what can be done
 	with compound images on the sly.
