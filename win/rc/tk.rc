@@ -1,4 +1,4 @@
-// RCS: @(#) $Id: tk.rc,v 1.5.2.1 2000/07/23 04:48:22 welch Exp $
+// RCS: @(#) $Id: tk.rc,v 1.5.2.2 2000/07/25 01:59:23 davidg Exp $
 //
 // Version
 //
@@ -37,9 +37,3 @@ BEGIN
         VALUE "Translation", 0x409, 1200
     END
 END
-
-//
-// Icons
-//
-
-tk                      ICON    DISCARDABLE     "tk.ico"
