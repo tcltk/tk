@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.9 2002/02/01 14:27:30 dkf Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.10 2002/06/14 13:35:49 dkf Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -27,7 +27,7 @@ canvas .c
 pack .c
 update
 
-# temporarily copy the README fiel from testsDir to tmpDir
+# temporarily copy the README file from testsDir to tmpDir
 if {![file exists README]} {
     set newREADME [file join $::tcltest::workingDir README]
     file copy [file join $::tcltest::testsDir README] $newREADME
@@ -95,7 +95,7 @@ test imgPhoto-2.2 {ImgPhotoCreate procedure} {
     eval image delete [image names]
     image create photo image1
     list [info commands image1] [image names] \
-	[image width image1] [image height image1]
+	    [image width image1] [image height image1]
 } {image1 image1 0 0}
 # test imgPhoto-2.3 {ImgPhotoCreate procedure: creation failure} {
 #     image create photo p1
@@ -167,13 +167,13 @@ test imgPhoto-4.10 {ImgPhotoCmd procedure: copy option} {
 } {256 256 {169 117 90}}
 test imgPhoto-4.11 {ImgPhotoCmd procedure: copy option} {
     list [catch {p1 copy} msg] $msg
-} {1 {wrong # args: should be "p1 copy source-image ?-from x1 y1 x2 y2? ?-to x1 y1 x2 y2? ?-zoom x y? ?-subsample x y?"}}
+} {1 {wrong # args: should be "p1 copy source-image ?-compositingrule rule? ?-from x1 y1 x2 y2? ?-to x1 y1 x2 y2? ?-zoom x y? ?-subsample x y?"}}
 test imgPhoto-4.12 {ImgPhotoCmd procedure: copy option} {
     list [catch {p1 copy blah} msg] $msg
 } {1 {image "blah" doesn't exist or is not a photo image}}
 test imgPhoto-4.13 {ImgPhotoCmd procedure: copy option} {
     list [catch {p1 copy p2 -blah} msg] $msg
-} {1 {unrecognized option "-blah": must be -from, -shrink, -subsample, -to, or -zoom}}
+} {1 {unrecognized option "-blah": must be -compositingrule, -from, -shrink, -subsample, -to, or -zoom}}
 test imgPhoto-4.14 {ImgPhotoCmd procedure: copy option} {
     list [catch {p1 copy p2 -from -to} msg] $msg
 } {1 {the "-from" option requires one to four integer values}}
@@ -415,9 +415,46 @@ proc checkImgTransLoopResetSet {img width height} {
 test imgPhoto-4.68 {ImgPhotoCmd procedure: transparency set option} {
     checkImgTransLoopResetSet p1 3 3
 } {0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 2 1 0 1 1 1 2 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 1 0 1 1 1 2 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 1 1 2 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 0 1 2 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 0 1 1 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 0 1 1 1 2 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 .}
-catch {rename checkImgTrans {}}
 catch {rename checkImgTransLoopSetReset {}}
 catch {rename checkImgTransLoopResetSet {}}
+# Test the compositing rules for copying images
+image create photo p1 -width 3 -height 3
+image create photo p2 -width 2 -height 2
+test imgPhoto-4.68 {ImgPhotoCmd procedure: copy with -compositingrule} {
+    list [catch {p1 copy p2 -to 1 1 -compositingrule} msg] $msg
+} {1 {the "-compositingrule" option requires a value}}
+test imgPhoto-4.69 {ImgPhotoCmd procedure: copy with -compositingrule} {
+    list [catch {p1 copy p2 -to 1 1 -compositingrule BAD} msg] $msg
+} {1 {bad compositing rule "BAD": must be overlay or set}}
+test imgPhoto-4.70 {ImgPhotoCmd procedure: copy with -compositingrule} {
+    # Tests default compositing rule
+    p1 blank
+    p2 blank
+    p1 put white -to 0 0 2 2
+    p2 put white -to 0 0 2 2
+    p2 transparency set 0 0 true
+    p1 copy p2 -to 1 1
+    checkImgTrans p1 3 3
+} {0 2 2 0}
+test imgPhoto-4.71 {ImgPhotoCmd procedure: copy with -compositingrule} {
+    p1 blank
+    p2 blank
+    p1 put white -to 0 0 2 2
+    p2 put white -to 0 0 2 2
+    p2 transparency set 0 0 true
+    p1 copy p2 -to 1 1 -compositingrule overlay
+    checkImgTrans p1 3 3
+} {0 2 2 0}
+test imgPhoto-4.72 {ImgPhotoCmd procedure: copy with -compositingrule} {
+    p1 blank
+    p2 blank
+    p1 put white -to 0 0 2 2
+    p2 put white -to 0 0 2 2
+    p2 transparency set 0 0 true
+    p1 copy p2 -to 1 1 -compositingrule set
+    checkImgTrans p1 3 3
+} {0 2 1 1 2 0}
+catch {rename checkImgTrans {}}
 
 test imgPhoto-5.1 {ImgPhotoGet/Free procedures, shared instances} {
     eval image delete [image names]

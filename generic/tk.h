@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.58 2002/03/06 15:36:17 dkf Exp $
+ * RCS: @(#) $Id: tk.h,v 1.59 2002/06/14 13:35:47 dkf Exp $
  */
 
 #ifndef _TK
@@ -1270,6 +1270,15 @@ typedef struct Tk_PhotoImageBlock {
 } Tk_PhotoImageBlock;
 
 /*
+ * The following values control how blocks are combined into photo
+ * images when the alpha component of a pixel is not 255, a.k.a. the
+ * compositing rule.
+ */
+
+#define TK_PHOTO_COMPOSITE_OVERLAY	0
+#define TK_PHOTO_COMPOSITE_SET		1
+
+/*
  * Procedure prototypes and structures used in reading and
  * writing photo images:
  */
@@ -1457,6 +1466,26 @@ typedef int (Tk_SelectionProc) _ANSI_ARGS_((ClientData clientData,
  */
 
 #include "tkDecls.h"
+
+/*
+ * Allow users to say that they don't want to alter their source to
+ * add the extra argument to Tk_PhotoPutBlock(); DO NOT DEFINE THIS
+ * WHEN BUILDING TK.
+ *
+ * This goes after the inclusion of the stubbed-decls so that the
+ * declarations of what is actually there can be correct.
+ */
+
+#ifdef USE_OLD_PHOTO_PUT_BLOCK
+#   ifdef Tk_PhotoPutBlock
+#	undef Tk_PhotoPutBlock
+#   endif
+#   define Tk_PhotoPutBlock		Tk_PhotoPutBlock_Old
+#   ifdef Tk_PhotoPutZoomedBlock
+#	undef Tk_PhotoPutZoomedBlock
+#   endif
+#   define Tk_PhotoPutZoomedBlock	Tk_PhotoPutZoomedBlock_Old
+#endif /* USE_OLD_PHOTO_PUT_BLOCK */
 
 /*
  * Tcl commands exported by Tk:

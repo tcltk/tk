@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.18 2002/04/05 08:38:22 hobbs Exp $
+# RCS: @(#) $Id: tk.decls,v 1.19 2002/06/14 13:35:47 dkf Exp $
 
 library tk
 
@@ -708,13 +708,13 @@ declare 143 generic {
 }
 
 declare 144 generic {
-    void Tk_PhotoPutBlock (Tk_PhotoHandle handle, \
+    void Tk_PhotoPutBlock_Old (Tk_PhotoHandle handle, \
 	    Tk_PhotoImageBlock *blockPtr, int x, int y, \
 	    int width, int height)
 }
 
 declare 145 generic {
-    void Tk_PhotoPutZoomedBlock (Tk_PhotoHandle handle, \
+    void Tk_PhotoPutZoomedBlock_Old (Tk_PhotoHandle handle, \
 	    Tk_PhotoImageBlock *blockPtr, int x, int y, \
 	    int width, int height, int zoomX, int zoomY, \
 	    int subsampleX, int subsampleY)
@@ -1162,6 +1162,18 @@ declare 244 generic {
 #
 declare 245 generic {
     void Tk_SetCaretPos (Tk_Window tkwin, int x, int y, int height)
+}
+
+declare 246 generic {
+    void Tk_PhotoPutBlock (Tk_PhotoHandle handle,
+	    Tk_PhotoImageBlock *blockPtr, int x, int y,
+	    int width, int height, int compRule)
+}
+declare 247 generic {
+    void Tk_PhotoPutZoomedBlock (Tk_PhotoHandle handle,
+	    Tk_PhotoImageBlock *blockPtr, int x, int y,
+	    int width, int height, int zoomX, int zoomY,
+	    int subsampleX, int subsampleY, int compRule)
 }
 
 # Define the platform specific public Tk interface.  These functions are

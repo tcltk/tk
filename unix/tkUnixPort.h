@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixPort.h,v 1.7 2001/09/25 16:25:20 dgp Exp $
+ * RCS: @(#) $Id: tkUnixPort.h,v 1.8 2002/06/14 13:35:49 dkf Exp $
  */
 
 #ifndef _UNIXPORT
@@ -145,6 +145,8 @@ extern int errno;
 	(Region) b, (Region) r)
 #define TkRectInRegion(r, x, y, w, h) XRectInRegion((Region) r, x, y, w, h)
 #define TkSetRegion(d, gc, rgn) XSetRegion(d, gc, (Region) rgn)
+#define TkSubtractRegion(a, b, r) XSubtractRegion((Region) a, \
+	(Region) b, (Region) r)
 #define TkUnionRectWithRegion(rect, src, ret) XUnionRectWithRegion(rect, \
 	(Region) src, (Region) ret)
 
