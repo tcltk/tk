@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.h,v 1.8 2001/10/12 13:30:31 tmh Exp $
+ * RCS: @(#) $Id: tkMenubutton.h,v 1.9 2003/11/17 23:12:44 hobbs Exp $
  */
 
 #ifndef _TKMENUBUTTON
@@ -124,12 +124,9 @@ typedef struct {
 				 * means use normalTextGC). */
     Pixmap gray;		/* Pixmap for displaying disabled text/icon if
 				 * disabledFg is NULL. */
-    GC disabledGC;		/* Used to produce disabled effect.  If
-				 * disabledFg isn't NULL, this GC is used to
-				 * draw button text or icon.  Otherwise
-				 * text or icon is drawn with normalGC and
-				 * this GC is used to stipple background
-				 * across it. */
+    GC disabledGC;		/* Used to produce disabled effect for text. */
+    GC stippleGC;		/* Used to produce disabled stipple effect
+				 * for images when disabled. */
     int leftBearing;		/* Distance from text origin to leftmost drawn
 				 * pixel (positive means to right). */
     int rightBearing;		/* Amount text sticks right from its origin. */
