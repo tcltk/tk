@@ -1,5 +1,12 @@
 2004-01-07  Vince Darley <vincentdarley@users.sourceforge.net>
 
+	* generic/tkTextIndex.c:
+	* tests/textIndex.test: fixed bug in which 'wordstart' and 
+	'wordend' were not utf-8 aware (they haven't been changed since
+	Tk 8.0), and added tests.
+	
+2004-01-07  Vince Darley <vincentdarley@users.sourceforge.net>
+
 	* win/tkWinMenu.c: only provide a submenu handle when the
 	MF_POPUP flag is given, fixing a recently-introduced crash
 	when submenus are disabled.  Also better error checking for

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textIndex.test,v 1.10 2003/10/31 09:02:17 vincentdarley Exp $
+# RCS: @(#) $Id: textIndex.test,v 1.11 2004/01/07 15:20:53 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -645,7 +645,7 @@ test textIndex-15.15 {StartEnd} {
     list [catch {.t index {2.12 word}} msg] $msg
 } {1 {bad text index "2.12 word"}}
 
-test testIndex-16.1 {TkTextPrintIndex} {
+test textIndex-16.1 {TkTextPrintIndex} {
     set t [text .t2]
     $t insert end \n
     $t window create end -window [button $t.b]
@@ -654,7 +654,7 @@ test testIndex-16.1 {TkTextPrintIndex} {
     catch {destroy $t}
 } 0
 
-test testIndex-16.2 {TkTextPrintIndex} {
+test textIndex-16.2 {TkTextPrintIndex} {
     set t [text .t2]
     $t insert end \n
     $t window create end -window [button $t.b]
@@ -663,7 +663,7 @@ test testIndex-16.2 {TkTextPrintIndex} {
     catch {destroy $t}
 } 0
 
-test testIndex-17.1 {Object indices} {
+test textIndex-17.1 {Object indices} {
     set res {}
     set t [text .t2 -height 20]
     for {set i 0} {$i < 100} {incr i} {
@@ -681,7 +681,7 @@ test testIndex-17.1 {Object indices} {
     list $res
 } {{@0,0 1.0 @0,0 37.0}}
 
-test testIndex-18.1 {Object indices don't cache mark names} {
+test textIndex-18.1 {Object indices don't cache mark names} {
     set res {}
     text .t2
     .t2 insert 1.0 1234\n1234\n1234
@@ -737,53 +737,134 @@ set str [string repeat "hello " 20]
 .t insert end "$str one two three four five six seven height nine ten\n"
 .t insert end "$str one two three four five six seven height nine ten\n"
 
-test testIndex-19.1 {Display lines} {
+test textIndex-19.1 {Display lines} {
     .t index "2.7 displaylinestart"
 } {2.0}
 
-test testIndex-19.2 {Display lines} {
+test textIndex-19.2 {Display lines} {
     .t index "2.7 displaylineend"
 } {2.19}
 
-test testIndex-19.3 {Display lines} {
+test textIndex-19.3 {Display lines} {
     .t index "2.30 displaylinestart"
 } {2.20}
 
-test testIndex-19.4 {Display lines} {
+test textIndex-19.4 {Display lines} {
     .t index "2.30 displaylineend"
 } {2.39}
 
-test testIndex-19.5 {Display lines} {
+test textIndex-19.5 {Display lines} {
     .t index "2.40 displaylinestart"
 } {2.40}
 
-test testIndex-19.6 {Display lines} {
+test textIndex-19.6 {Display lines} {
     .t index "2.40 displaylineend"
 } {2.59}
 
-test testIndex-19.7 {Display lines} {
+test textIndex-19.7 {Display lines} {
     .t index "2.7 +1displaylines"
 } {2.27}
 
-test testIndex-19.8 {Display lines} {
+test textIndex-19.8 {Display lines} {
     .t index "2.7 -1displaylines"
 } {1.167}
 
-test testIndex-19.9 {Display lines} {
+test textIndex-19.9 {Display lines} {
     .t index "2.30 +1displaylines"
 } {2.50}
 
-test testIndex-19.10 {Display lines} {
+test textIndex-19.10 {Display lines} {
     .t index "2.30 -1displaylines"
 } {2.10}
 
-test testIndex-19.11 {Display lines} {
+test textIndex-19.11 {Display lines} {
     .t index "2.40 +1displaylines"
 } {2.60}
 
-test testIndex-19.12 {Display lines} {
+test textIndex-19.12 {Display lines} {
     .t index "2.40 -1displaylines"
 } {2.20}
+
+proc text_test_word {startend chars start} {
+    destroy .t
+    text .t
+    .t insert end $chars
+    if {[regexp {end} $start]} {
+	set start [.t index "${start}chars -2c"]
+    } else {
+	set start [.t index "1.0 + ${start}chars"]
+    }
+    if {[.t compare $start >= "end-1c"]} {
+	set start "end-2c"
+    }
+    set res [.t index "$start $startend"]
+    .t count 1.0 $res
+}
+
+# Following tests copied from tests from string wordstart/end in Tcl
+
+test textIndex-21.4 {text index wordend} {
+    text_test_word wordend abc. -1
+} 3
+test textIndex-21.5 {text index wordend} {
+    text_test_word wordend abc. 100
+} 4
+test textIndex-21.6 {text index wordend} {
+    text_test_word wordend "word_one two three" 2
+} 8
+test textIndex-21.7 {text index wordend} {
+    text_test_word wordend "one .&# three" 5
+} 6
+test textIndex-21.8 {text index wordend} {
+    text_test_word worde "x.y" 0
+} 1
+test textIndex-21.9 {text index wordend} {
+    text_test_word worde "x.y" end-1
+} 2
+test textIndex-21.10 {text index wordend, unicode} {
+    text_test_word wordend "xyz\u00c7de fg" 0
+} 6
+test textIndex-21.11 {text index wordend, unicode} {
+    text_test_word wordend "xyz\uc700de fg" 0
+} 6
+test textIndex-21.12 {text index wordend, unicode} {
+    text_test_word wordend "xyz\u203fde fg" 0
+} 6
+test textIndex-21.13 {text index wordend, unicode} {
+    text_test_word wordend "xyz\u2045de fg" 0
+} 3
+test textIndex-21.14 {text index wordend, unicode} {
+    text_test_word wordend "\uc700\uc700 abc" 8
+} 6
+
+test textIndex-22.5 {text index wordstart} {
+    text_test_word wordstart "one two three_words" 400
+} 8
+test textIndex-22.6 {text index wordstart} {
+    text_test_word wordstart "one two three_words" 2
+} 0
+test textIndex-22.7 {text index wordstart} {
+    text_test_word wordstart "one two three_words" -2
+} 0
+test textIndex-22.8 {text index wordstart} {
+    text_test_word wordstart "one .*&^ three" 6
+} 6
+test textIndex-22.9 {text index wordstart} {
+    text_test_word wordstart "one two three" 4
+} 4
+test textIndex-22.10 {text index wordstart} {
+    text_test_word wordstart "one two three" end-5
+} 7
+test textIndex-22.11 {text index wordstart, unicode} {
+    text_test_word wordstart "one tw\u00c7o three" 7
+} 4
+test textIndex-22.12 {text index wordstart, unicode} {
+    text_test_word wordstart "ab\uc700\uc700 cdef ghi" 12
+} 10
+test textIndex-22.13 {text index wordstart, unicode} {
+    text_test_word wordstart "\uc700\uc700 abc" 8
+} 3
+
 
 # cleanup
 rename textimage {}

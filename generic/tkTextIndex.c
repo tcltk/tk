@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.13 2003/12/15 11:51:06 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.14 2004/01/07 15:21:02 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -1957,7 +1957,6 @@ StartEnd(textPtr, string, indexPtr)
     TkTextIndex *indexPtr;	/* Index to modify based on string. */
 {
     CONST char *p;
-    int c, offset;
     size_t length;
     register TkTextSegment *segPtr;
     int modifier;
@@ -2024,6 +2023,7 @@ StartEnd(textPtr, string, indexPtr)
     } else if ((*string == 'w') && (strncmp(string, "wordend", length) == 0)
 	    && (length >= 5)) {
 	int firstChar = 1;
+	int offset;
 
 	/*
 	 * If the current character isn't part of a word then just move
@@ -2037,15 +2037,17 @@ StartEnd(textPtr, string, indexPtr)
 	}
 	segPtr = TkTextIndexToSeg(indexPtr, &offset);
 	while (1) {
+	    int chSize = 1;
 	    if (segPtr->typePtr == &tkTextCharType) {
-		c = segPtr->body.chars[offset];
-		if (!isalnum(UCHAR(c)) && (c != '_')) {
+		Tcl_UniChar ch;
+		chSize = TclUtfToUniChar(segPtr->body.chars + offset, &ch);
+		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}
 		firstChar = 0;
 	    }
-	    offset += 1;
-	    indexPtr->byteIndex += sizeof(char);
+	    offset += chSize;
+	    indexPtr->byteIndex += chSize;
 	    if (offset >= segPtr->size) {
 		segPtr = TkTextIndexToSeg(indexPtr, &offset);
 	    }
@@ -2062,6 +2064,7 @@ StartEnd(textPtr, string, indexPtr)
     } else if ((*string == 'w') && (strncmp(string, "wordstart", length) == 0)
 	    && (length >= 5)) {
 	int firstChar = 1;
+	int offset;
 
 	if (modifier == TKINDEX_DISPLAY) {
 	    TkTextIndexForwChars(NULL, indexPtr, 0, indexPtr, 
@@ -2076,15 +2079,23 @@ StartEnd(textPtr, string, indexPtr)
 
 	segPtr = TkTextIndexToSeg(indexPtr, &offset);
 	while (1) {
+	    int chSize = 1;
 	    if (segPtr->typePtr == &tkTextCharType) {
-		c = segPtr->body.chars[offset];
-		if (!isalnum(UCHAR(c)) && (c != '_')) {
+		Tcl_UniChar ch;
+		TclUtfToUniChar(segPtr->body.chars + offset, &ch);
+		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}
+		if (offset > 0) {
+		    chSize = (segPtr->body.chars + offset 
+			      - Tcl_UtfPrev(segPtr->body.chars + offset, 
+					    segPtr->body.chars));
+		}
 		firstChar = 0;
+	    } else {
 	    }
-	    offset -= 1;
-	    indexPtr->byteIndex -= sizeof(char);
+	    offset -= chSize;
+	    indexPtr->byteIndex -= chSize;
 	    if (offset < 0) {
 		if (indexPtr->byteIndex < 0) {
 		    indexPtr->byteIndex = 0;
