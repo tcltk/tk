@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDefault.h,v 1.20 2004/02/18 00:40:24 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixDefault.h,v 1.21 2004/10/24 17:22:55 dkf Exp $
  */
 
 #ifndef _TKUNIXDEFAULT
@@ -406,6 +406,8 @@
 #define DEF_PANEDWINDOW_PANE_PADY	"0"
 #define DEF_PANEDWINDOW_PANE_STICKY	"nsew"
 #define DEF_PANEDWINDOW_PANE_WIDTH	""
+#define DEF_PANEDWINDOW_PANE_HIDE	"0"
+#define DEF_PANEDWINDOW_PANE_STRETCH	"last"
 
 /*
  * Defaults for scales:
