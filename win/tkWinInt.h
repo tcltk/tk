@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.14.2.3 2004/09/17 23:36:16 hobbs Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.14.2.4 2004/09/23 00:56:15 mdejong Exp $
  */
 
 #ifndef _TKWININT
@@ -209,6 +209,12 @@ EXTERN TkWinProcs *tkWinProcs;
 
 extern Tcl_Encoding TkWinGetKeyInputEncoding _ANSI_ARGS_((void));
 extern Tcl_Encoding TkWinGetUnicodeEncoding _ANSI_ARGS_((void));
+
+/*
+ * Values returned by TkWinGetPlatformTheme.
+ */
+#define TK_THEME_WIN_CLASSIC    1
+#define TK_THEME_WIN_XP         2
 
 #endif /* _TKWININT */
 
