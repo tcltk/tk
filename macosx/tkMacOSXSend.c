@@ -32,7 +32,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSend.c,v 1.1.2.2 2002/08/20 20:27:11 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSend.c,v 1.1.2.3 2002/08/30 18:18:16 das Exp $
  */
 
 #include <Carbon/Carbon.h>
@@ -191,6 +191,8 @@ int tkSendSerial = 0;
  * Forward declarations for procedures defined later in this file:
  */
 
+static int		SendInit _ANSI_ARGS_((Tcl_Interp *interp));
+/*
 static int		AppendErrorProc _ANSI_ARGS_((ClientData clientData,
 				XErrorEvent *errorPtr));
 static void		DeleteProc _ANSI_ARGS_((ClientData clientData));
@@ -205,13 +207,13 @@ static NameRegistry *	RegOpen _ANSI_ARGS_((Tcl_Interp *interp,
 			     TkWindow *winPtr, int lock));
 static void		SendEventProc _ANSI_ARGS_((ClientData clientData,
 							   XEvent *eventPtr));
-static int		SendInit _ANSI_ARGS_((Tcl_Interp *interp));
 static Bool		SendRestrictProc _ANSI_ARGS_((Display *display,
 			      XEvent *eventPtr, char *arg));
 static int		ServerSecure _ANSI_ARGS_((TkDisplay *dispPtr));
 static void		TimeoutProc _ANSI_ARGS_((ClientData clientData));
 static int		ValidateName _ANSI_ARGS_((TkDisplay *dispPtr,
 			     char *name, Window commWindow, int oldOK));
+*/
 
 /*
  *--------------------------------------------------------------
@@ -252,7 +254,7 @@ Tk_SetAppName(
     Tcl_Interp *interp = winPtr->mainPtr->interp;
     int i, suffix, offset, result;
     RegisteredInterp *riPtr, *prevPtr;
-    char *actualName;
+    CONST char *actualName;
     Tcl_DString dString;
     Tcl_Obj *resultObjPtr, *interpNamePtr;
     char *interpName;
@@ -309,7 +311,7 @@ Tk_SetAppName(
 		actualName = Tcl_DStringValue(&dString);
 	    }
 	    suffix++;
-	    sprintf(actualName + offset, "%d", suffix);
+	    sprintf(Tcl_DStringValue(&dString) + offset, "%d", suffix);
 	    i = 0;
 	} else {
 	    i++;
@@ -364,13 +366,13 @@ Tk_SendObjCmd(
     int objc,			/* Number of arguments */
     Tcl_Obj *CONST objv[])	/* The arguments */
 {
-    static char *sendOptions[] = {"-async", "-displayof", "-", (char *) NULL};
+    CONST char *sendOptions[] = {"-async", "-displayof", "-", (char *) NULL};
     char *stringRep, *destName;
     int async = 0;
     int i, index, firstArg;
     RegisteredInterp *riPtr;
     Tcl_Obj *resultPtr, *listObjPtr;
-    int result;
+    int result = TCL_OK;
 
     for (i = 1; i < (objc - 1); ) {
 	stringRep = Tcl_GetStringFromObj(objv[i], NULL);

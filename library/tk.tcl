@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.31.2.5 2002/08/21 12:28:55 das Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.31.2.6 2002/08/30 18:18:14 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -257,7 +257,7 @@ proc ::tk::ScreenChanged screen {
 	selectMode	char
     }
     set Priv(screen) $screen
-    set Priv(tearoff) [string equal $tcl_platform(windowingsystem) "x11"]
+    set Priv(tearoff) [string equal [tk windowingsystem] "x11"]
     set Priv(window) {}
 }
 
@@ -333,7 +333,7 @@ if {[string equal [info command tk_chooseDirectory] ""]} {
 # Define the set of common virtual events.
 #----------------------------------------------------------------------
 
-switch $tcl_platform(windowingsystem) {
+switch [tk windowingsystem] {
     "x11" {
 	event add <<Cut>> <Control-Key-x> <Key-F20> 
 	event add <<Copy>> <Control-Key-c> <Key-F16>
@@ -568,7 +568,7 @@ proc ::tk::mcmaxamp {args} {
 }
 # For now, turn off the custom mdef proc for the mac:
 
-if {[string equal $tcl_platform(windowingsystem) "aqua"]} {
+if {[string equal [tk windowingsystem] "aqua"]} {
     namespace eval ::tk::mac {
 	set useCustomMDEF 0
     }

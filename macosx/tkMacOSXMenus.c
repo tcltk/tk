@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.1.2.2 2002/02/05 02:25:17 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.1.2.3 2002/08/30 18:18:16 das Exp $
  */
 
 #include "tk.h"
@@ -175,7 +175,9 @@ TkMacOSXInitMenus(
     InsertMenu(tkAppleMenu, 0);
     AppendMenu(tkAppleMenu, "\pAbout Tcl & Tk…");
     AppendMenu(tkAppleMenu, "\p(-");
+    /* Not necessary in Carbon:
     AppendResMenu(tkAppleMenu, 'DRVR');
+    */
 
     if (TkMacOSXUseMenuID(kFileMenu) != TCL_OK) {
             panic("Menu ID %d is already in use!", kFileMenu);
@@ -302,8 +304,8 @@ static void
 SourceDialog()
 {
     int result;
-    char *path;
-    char openCmd[] = "tk_getOpenFile -filetypes {\
+    CONST char *path;
+    CONST char *openCmd = "tk_getOpenFile -filetypes {\
             {{TCL Scripts} {.tcl} TEXT} {{Text Files} {} TEXT}}";
     
     if (gInterp == NULL) {

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.1.2.7 2002/07/22 04:08:26 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.1.2.8 2002/08/30 18:18:16 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -124,7 +124,7 @@ Tk_ChooseColorObjCmd(
     ColorPickerInfo cpinfo;
     static int inited = 0;
     static RGBColor in;
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
         "-initialcolor",    "-parent",            "-title",            NULL
     };
     enum options {
@@ -261,7 +261,7 @@ Tk_GetOpenFileObjCmd(
     AEDesc *initialPtr = NULL;
     AEDescList selectDesc = {typeNull, NULL};
     char *initialFile = NULL, *initialDir = NULL;
-    static char *openOptionStrings[] = {
+    static CONST char *openOptionStrings[] = {
             "-defaultextension", "-filetypes", 
             "-initialdir", "-initialfile", 
             "-message", "-multiple",
@@ -410,7 +410,7 @@ Tk_GetSaveFileObjCmd(
     FSRef dirRef;
     Str255 title, message;
     OpenFileData ofd;
-    static char *saveOptionStrings[] = {
+    static CONST char *saveOptionStrings[] = {
             "-defaultextension", "-filetypes", "-initialdir", "-initialfile", 
             "-message", "-parent",        "-title",         NULL
     };
@@ -547,7 +547,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     Str255 message, title;
     int srcRead, dstWrote;
     OpenFileData ofd;
-    static char *chooseOptionStrings[] = {
+    static CONST char *chooseOptionStrings[] = {
             "-initialdir", "-message", "-mustexist", "-parent", "-title", NULL
     };
     enum chooseOptions {
@@ -731,7 +731,7 @@ NavServicesGetFile(
     NavDialogRef dialogRef = NULL;
     CFStringRef * menuItemNames = NULL;
     OSErr err;
-    Tcl_Obj *theResult;
+    Tcl_Obj *theResult = NULL;
     int result;
     TextEncoding encoding;
 
@@ -772,7 +772,7 @@ NavServicesGetFile(
                     filterPtr->name, encoding);
         }
         diagOptions.popupExtension = CFArrayCreate(NULL, 
-                (void **)menuItemNames, ofdPtr->fl.numFilters, NULL);;
+                (const void **)menuItemNames, ofdPtr->fl.numFilters, NULL);;
     } else {        
         diagOptions.optionFlags += kNavNoTypePopup; 
         diagOptions.popupExtension = NULL;

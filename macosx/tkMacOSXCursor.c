@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.1.2.2 2002/08/20 20:27:11 das Exp $
+ * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.1.2.3 2002/08/30 18:18:16 das Exp $
  */
 
 #include "tkPort.h"
@@ -79,7 +79,7 @@ static int gTkOwnsCursor = true;             /* A boolean indicating whether
  */
 
 static  void FindCursorByName _ANSI_ARGS_ ((TkMacOSXCursor *macCursorPtr,
-                     char *string));
+                    CONST char *string));
 
 /*
  *----------------------------------------------------------------------
@@ -104,7 +104,7 @@ static  void FindCursorByName _ANSI_ARGS_ ((TkMacOSXCursor *macCursorPtr,
 void 
 FindCursorByName(
     TkMacOSXCursor *macCursorPtr,
-    char *string)
+    CONST char *string)
 {
     Handle resource;
     Str255 curName;
@@ -199,7 +199,7 @@ TkGetCursorByName(
         FindCursorByName(macCursorPtr, string);
 
         if (macCursorPtr->macCursor == NULL) {
-            char **argv;
+            CONST char **argv;
             int argc, err;
             
             /*

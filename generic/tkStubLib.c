@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.6.2.4 2002/08/20 20:27:07 das Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.6.2.5 2002/08/30 18:18:13 das Exp $
  */
 
 
@@ -20,18 +20,6 @@
  * to build an extension that references Tk_InitStubs but doesn't end up
  * including the rest of the stub functions.
  */
-
-/*
- * Because of problems with pre-compiled headers on the Mac, we need to
- * do these includes before we add the stubs defines.  This a hack.
- */
-
-#if defined(MAC_OSX_TK)
-#include "tkMacOSXInt.h"
-
-#include "tkInt.h"
-#include "tkPort.h"
-#endif /* MAC_OSX_TK */
 
 #ifndef USE_TCL_STUBS
 #define USE_TCL_STUBS
@@ -52,6 +40,10 @@
 
 #ifdef MAC_TCL
 #include "tkMacInt.h"
+#endif
+
+#ifdef MAC_OSX_TK
+#include "tkMacOSXInt.h"
 #endif
 
 #include "tkDecls.h"

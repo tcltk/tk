@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacBitmap.c,v 1.4 1999/05/22 06:32:12 jingham Exp $
+ * RCS: @(#) $Id: tkMacBitmap.c,v 1.4.16.1 2002/08/30 18:18:14 das Exp $
  */
 
 #include "tkPort.h"
@@ -142,7 +142,7 @@ TkpDefineNativeBitmaps()
 Pixmap
 TkpCreateNativeBitmap(
     Display *display,
-    char * source)		/* Info about the icon to build. */
+    CONST char * source)		/* Info about the icon to build. */
 {
     Pixmap pix;
     GWorldPtr destPort;

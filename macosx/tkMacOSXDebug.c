@@ -291,7 +291,7 @@ char * CarbonEventKindToAscii(EventRef eventRef, char * buf )
    EventKind  eventKind;
    MyEventNameList * list = eventNameList;
    MyEventName     * names = NULL;
-   int               found;
+   int               found = 0;
    eventClass = GetEventClass(eventRef);
    eventKind = GetEventKind(eventRef);
    while (list->names && (!names) ) {

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXBitmap.c,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXBitmap.c,v 1.1.2.2 2002/08/30 18:18:16 das Exp $
  */
 
 #include "tkPort.h"
@@ -101,7 +101,7 @@ TkpDefineNativeBitmaps()
     int new;
     Tcl_HashEntry *predefHashPtr;
     TkPredefBitmap *predefPtr;
-    char * name;
+    CONST char * name;
     BuiltInIcon *builtInPtr;
     NativeIcon *nativeIconPtr;
     Tcl_HashTable *tablePtr;
@@ -146,7 +146,7 @@ TkpDefineNativeBitmaps()
 Pixmap
 TkpCreateNativeBitmap(
     Display *display,
-    char * source)                /* Info about the icon to build. */
+    CONST char * source)                /* Info about the icon to build. */
 {
     Pixmap pix;
     GWorldPtr destPort;
@@ -216,7 +216,7 @@ TkpGetNativeAppBitmap(
     GWorldPtr destPort;
     Rect destRect;
     Handle resource;
-    int type, destWrote;
+    int type = -1, destWrote;
     Str255 nativeName;
     
     /*

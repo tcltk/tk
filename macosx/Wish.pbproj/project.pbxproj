@@ -45,6 +45,7 @@
 				F51D9048018149FD01DC9062,
 			);
 			isa = PBXCopyFilesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F51D9040018149FD01DC9062 = {
 			fileRef = F53755CE016C389901DC9062;
@@ -100,6 +101,19 @@
 			settings = {
 			};
 		};
+		F52D38C5031F4259016F146B = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			neededFileNames = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"${BUILD_STYLE}\" = \"Development\" ]; then\n\t# keep copy of debug library around, so that\n\t# Deployment build can be installed on top\n\t# of Development build without overwriting it\n\tcd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}\"\n\tcp -fp \"${PRODUCT_NAME}\" \"${PRODUCT_NAME}_debug\"\n\n\t# force Deployment build to be relinked next time\n\tif [ -f \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nelse\n\t# force Development build to be relinked next time\n\tif [ -f \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nfi";
+		};
 		F537552A016C352C01DC9062 = {
 			buildStyles = (
 				F537552C016C352C01DC9062,
@@ -125,8 +139,8 @@
 				F537553C016C376E01DC9062,
 				F53755C9016C389901DC9062,
 				F53755CC016C389901DC9062,
-				F53755DD016C38D201DC9062,
 				F537567C016C3ADB01DC9062,
+				F53755DD016C38D201DC9062,
 			);
 			isa = PBXGroup;
 			refType = 4;
@@ -135,8 +149,8 @@
 			buildRules = (
 			);
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				OTHER_LDFLAGS = "\U0001-prebind";
+				TEMP_DIR = "${OBJROOT}/Development.build/$(PROJECT_NAME).build/$(TARGET_NAME).build";
+				UNSTRIPPED_PRODUCT = YES;
 			};
 			isa = PBXBuildStyle;
 			name = Development;
@@ -145,9 +159,9 @@
 			buildRules = (
 			);
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				OPTIMIZATION_CFLAGS = "-O3";
-				OTHER_LDFLAGS = "\U0001-prebind";
+				DEBUGGING_SYMBOLS = NO;
+				OPTIMIZATION_CFLAGS = "-Os";
+				TEMP_DIR = "${OBJROOT}/Deployment.build/$(PROJECT_NAME).build/$(TARGET_NAME).build";
 			};
 			isa = PBXBuildStyle;
 			name = Deployment;
@@ -1330,6 +1344,7 @@
 		};
 		F53755DF016C38D201DC9062 = {
 			buildPhases = (
+				F5877FB7031F97ED016F146B,
 				F53755E0016C38D201DC9062,
 				F53755E1016C38D301DC9062,
 				F53755E2016C38D301DC9062,
@@ -1338,6 +1353,8 @@
 				F5B1FC08016FFE3501DC9062,
 				F51D903F018149BD01DC9062,
 				F548F8C80313C9E0016F146B,
+				F52D38C5031F4259016F146B,
+				F5877FBC031FA968016F146B,
 				F5C1D51901B88F9A01DC9062,
 			);
 			buildSettings = {
@@ -1345,12 +1362,13 @@
 				DYLIB_CURRENT_VERSION = 8.4;
 				FRAMEWORK_SEARCH_PATHS = "\"$(SYMROOT)\"";
 				FRAMEWORK_VERSION = 8.4;
+				GLOBAL_CFLAGS = "`source \"${SYMROOT}/Tcl.framework/Resources/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
 				HEADER_SEARCH_PATHS = "../../tcl/generic ../../tcl/unix ../bitmaps ../generic ../xlib";
 				INSTALL_PATH = /Library/Frameworks;
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "-DMAC_OSX_TCL -DMAC_OSX_TK -DTCL_DEFAULT_ENCODING=\\\"utf-8\\\"  -DHAVE_UNISTD_H=1 -DHAVE_LIMITS_H=1 -DTCL_THREADS=1 -DUSE_THREAD_ALLOC=1 -D_THREAD_SAFE=1 -DHAVE_PTHREAD_ATTR_SETSTACKSIZE=1 -DTCL_WIDE_INT_TYPE=\"long long\" -DWORDS_BIGENDIAN=1 -DHAVE_GETCWD=1 -DHAVE_OPENDIR=1 -DHAVE_STRSTR=1 -DHAVE_STRTOL=1 -DHAVE_TMPNAM=1 -DHAVE_WAITPID=1 -DNO_VALUES_H=1 -DNO_DLFCN_H=1 -DHAVE_UNISTD_H=1 -DHAVE_SYS_PARAM_H=1 -DHAVE_SYS_TIME_H=1 -DTIME_WITH_SYS_TIME=1 -DHAVE_TM_ZONE=1 -DHAVE_TM_GMTOFF=1 -DHAVE_ST_BLKSIZE=1 -DSTDC_HEADERS=1 -DHAVE_SIGNED_CHAR=1 -DHAVE_SYS_IOCTL_H=1 -DHAVE_SYS_FILIO_H=1-DTIME_WITH_SYS_TIME=1 -DHAVE_TM_ZONE=1 -DHAVE_TM_GMTOFF=1 -DHAVE_ST_BLKSIZE=1 -DSTDC_HEADERS=1 -DNEED_MATHERR=1 -DHAVE_SIGNED_CHAR=1 -DHAVE_SYS_IOCTL_H=1 -DHAVE_SYS_FILIO_H=1";
-				OTHER_LDFLAGS = "-seg1addr 0x400000";
+				OTHER_CFLAGS = "-DMAC_OSX_TK -DTCL_WIDE_INT_TYPE=\"long long\"";
+				OTHER_LDFLAGS = "-seg1addr 0xb000000";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "-i \"../../tcl/generic\" -i \"../generic\"";
 				PRINCIPAL_CLASS = "";
@@ -1360,7 +1378,7 @@
 				TK_MINOR_VERSION = 4;
 				TK_PATCH_LEVEL = b3;
 				USE_GCC3_PFE_SUPPORT = NO;
-				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas -Wno-unused-variable";
 				WRAPPER_EXTENSION = framework;
 			};
 			dependencies = (
@@ -1372,8 +1390,8 @@
 			productName = TkLibrary;
 			productReference = F53755DE016C38D201DC9062;
 			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<!DOCTYPE plist SYSTEM \"file://localhost/System/Library/DTDs/PropertyList.dtd\">
-<plist version=\"0.9\">
+<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
@@ -1461,12 +1479,14 @@ Copyright Apple Computer, Inc 2001</string>
 				F5BFE59002F8C45B01DC9062,
 			);
 			isa = PBXHeadersBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53755E1016C38D301DC9062 = {
 			buildActionMask = 2147483647;
 			files = (
 			);
 			isa = PBXResourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53755E2016C38D301DC9062 = {
 			buildActionMask = 2147483647;
@@ -1583,6 +1603,7 @@ Copyright Apple Computer, Inc 2001</string>
 				F5BFE58E02F8C41501DC9062,
 			);
 			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53755E3016C38D301DC9062 = {
 			buildActionMask = 2147483647;
@@ -1592,6 +1613,7 @@ Copyright Apple Computer, Inc 2001</string>
 				F50D96130196176E01DC9062,
 			);
 			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53755E4016C38D301DC9062 = {
 			buildActionMask = 2147483647;
@@ -1602,6 +1624,7 @@ Copyright Apple Computer, Inc 2001</string>
 				F5375682016C3ADB01DC9062,
 			);
 			isa = PBXRezBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53755E5016C390401DC9062 = {
 			fileRef = F5375569016C37A601DC9062;
@@ -2708,20 +2731,22 @@ Copyright Apple Computer, Inc 2001</string>
 		};
 		F53756A0016C4DD401DC9062 = {
 			buildPhases = (
+				F5877FB8031F982D016F146B,
 				F53756A1016C4DD401DC9062,
 				F53756A2016C4DD401DC9062,
 				F53756A4016C4DD401DC9062,
 				F53756A6016C4DD401DC9062,
 				F53756AA016C4DD401DC9062,
-				F5FBD6E30173513601DC9062,
+				F5877FBD031FAC6A016F146B,
 			);
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "\"$(SYMROOT)\"";
+				GLOBAL_CFLAGS = "`source \"${SYMROOT}/Tcl.framework/Resources/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
 				HEADER_SEARCH_PATHS = "../../tcl/generic ../../tcl/unix ../generic ../xlib";
+				INSTALL_PATH = /Applications/Utilities;
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "-DMAC_OSX_TCL -DMAC_OSX_TK -DTCL_DEFAULT_ENCODING=\\\"utf-8\\\"  -DHAVE_UNISTD_H=1 -DHAVE_LIMITS_H=1 -DTCL_THREADS=1 -DUSE_THREAD_ALLOC=1 -D_THREAD_SAFE=1 -DHAVE_PTHREAD_ATTR_SETSTACKSIZE=1 -DTCL_WIDE_INT_TYPE=\"long long\" -DWORDS_BIGENDIAN=1 -DHAVE_GETCWD=1 -DHAVE_OPENDIR=1 -DHAVE_STRSTR=1 -DHAVE_STRTOL=1 -DHAVE_TMPNAM=1 -DHAVE_WAITPID=1 -DNO_VALUES_H=1 -DNO_DLFCN_H=1 -DHAVE_UNISTD_H=1 -DHAVE_SYS_PARAM_H=1 -DHAVE_SYS_TIME_H=1 -DTIME_WITH_SYS_TIME=1 -DHAVE_TM_ZONE=1 -DHAVE_TM_GMTOFF=1 -DHAVE_ST_BLKSIZE=1 -DSTDC_HEADERS=1 -DHAVE_SIGNED_CHAR=1 -DHAVE_SYS_IOCTL_H=1 -DHAVE_SYS_FILIO_H=1-DTIME_WITH_SYS_TIME=1 -DHAVE_TM_ZONE=1 -DHAVE_TM_GMTOFF=1 -DHAVE_ST_BLKSIZE=1 -DSTDC_HEADERS=1 -DNEED_MATHERR=1 -DHAVE_SIGNED_CHAR=1 -DHAVE_SYS_IOCTL_H=1 -DHAVE_SYS_FILIO_H=1";
-				OTHER_LDFLAGS = "";
+				OTHER_CFLAGS = "-DMAC_OSX_TK -DTCL_WIDE_INT_TYPE=\"long long\"";
 				OTHER_REZFLAGS = "-i \"../../tcl/generic\" -i \"../generic\"";
 				PRODUCT_NAME = "Wish Shell";
 				SECTORDER_FLAGS = "";
@@ -2733,13 +2758,13 @@ Copyright Apple Computer, Inc 2001</string>
 				F53756B2016C525F01DC9062,
 			);
 			isa = PBXApplicationTarget;
-			name = "Wish Shell";
-			productInstallPath = "$(USER_APPS_DIR)";
+			name = Wish;
+			productInstallPath = /Applications/Utilities;
 			productName = "Wish Shell";
 			productReference = F537569F016C4DD401DC9062;
 			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<!DOCTYPE plist SYSTEM \"file://localhost/System/Library/DTDs/PropertyList.dtd\">
-<plist version=\"0.9\">
+<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
@@ -2779,15 +2804,15 @@ Copyright Apple Computer, Inc 2002</string>
 				F53756AE016C4E1D01DC9062,
 			);
 			isa = PBXHeadersBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53756A2016C4DD401DC9062 = {
 			buildActionMask = 2147483647;
 			files = (
 				F53756A3016C4DD401DC9062,
-				F5C8865E017D625C01DC9062,
-				F5C8865F017D625C01DC9062,
 			);
 			isa = PBXResourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53756A3016C4DD401DC9062 = {
 			fileRef = F537553B016C376E01DC9062;
@@ -2801,6 +2826,7 @@ Copyright Apple Computer, Inc 2002</string>
 				F53756A5016C4DD401DC9062,
 			);
 			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53756A5016C4DD401DC9062 = {
 			fileRef = F5375548016C376E01DC9062;
@@ -2815,8 +2841,10 @@ Copyright Apple Computer, Inc 2002</string>
 				F5875C7D016FEF1D01DC9062,
 				F53756A7016C4DD401DC9062,
 				F50D96140196176E01DC9062,
+				F5877FB9031F9F49016F146B,
 			);
 			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53756A7016C4DD401DC9062 = {
 			fileRef = F53755DE016C38D201DC9062;
@@ -2835,6 +2863,7 @@ Copyright Apple Computer, Inc 2002</string>
 			files = (
 			);
 			isa = PBXRezBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53756AC016C4E1D01DC9062 = {
 			fileRef = F537556B016C37A601DC9062;
@@ -2863,15 +2892,17 @@ Copyright Apple Computer, Inc 2002</string>
 			dstPath = "Versions/$(FRAMEWORK_VERSION)";
 			dstSubfolderSpec = 1;
 			files = (
-				F548F8D40313CFC8016F146B,
+				F5877FBA031F9F4B016F146B,
 			);
 			isa = PBXCopyFilesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F548F8CA0313CEF0016F146B = {
 			buildActionMask = 2147483647;
 			files = (
 			);
 			isa = PBXHeadersBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F548F8CB0313CEF0016F146B = {
 			buildActionMask = 2147483647;
@@ -2880,18 +2911,21 @@ Copyright Apple Computer, Inc 2002</string>
 				F548F8D00313CF11016F146B,
 			);
 			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F548F8CC0313CEF0016F146B = {
 			buildActionMask = 2147483647;
 			files = (
 			);
 			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F548F8CD0313CEF0016F146B = {
 			buildActionMask = 2147483647;
 			files = (
 			);
 			isa = PBXRezBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F548F8CE0313CEF0016F146B = {
 			buildPhases = (
@@ -2901,13 +2935,15 @@ Copyright Apple Computer, Inc 2002</string>
 				F548F8CD0313CEF0016F146B,
 			);
 			buildSettings = {
+				GLOBAL_CFLAGS = "`source \"${SYMROOT}/Tcl.framework/Resources/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
 				HEADER_SEARCH_PATHS = "../../tcl/generic ../../tcl/unix ../generic ../xlib";
 				LIBRARY_STYLE = STATIC;
 				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "-DMAC_OSX_TCL -DMAC_OSX_TK -DTCL_DEFAULT_ENCODING=\\\"utf-8\\\"  -DHAVE_UNISTD_H=1 -DHAVE_LIMITS_H=1 -DTCL_THREADS=1 -DUSE_THREAD_ALLOC=1 -D_THREAD_SAFE=1 -DHAVE_PTHREAD_ATTR_SETSTACKSIZE=1 -DTCL_WIDE_INT_TYPE=\"long long\" -DWORDS_BIGENDIAN=1 -DHAVE_GETCWD=1 -DHAVE_OPENDIR=1 -DHAVE_STRSTR=1 -DHAVE_STRTOL=1 -DHAVE_TMPNAM=1 -DHAVE_WAITPID=1 -DNO_VALUES_H=1 -DNO_DLFCN_H=1 -DHAVE_UNISTD_H=1 -DHAVE_SYS_PARAM_H=1 -DHAVE_SYS_TIME_H=1 -DTIME_WITH_SYS_TIME=1 -DHAVE_TM_ZONE=1 -DHAVE_TM_GMTOFF=1 -DHAVE_ST_BLKSIZE=1 -DSTDC_HEADERS=1 -DHAVE_SIGNED_CHAR=1 -DHAVE_SYS_IOCTL_H=1 -DHAVE_SYS_FILIO_H=1-DTIME_WITH_SYS_TIME=1 -DHAVE_TM_ZONE=1 -DHAVE_TM_GMTOFF=1 -DHAVE_ST_BLKSIZE=1 -DSTDC_HEADERS=1 -DNEED_MATHERR=1 -DHAVE_SIGNED_CHAR=1 -DHAVE_SYS_IOCTL_H=1 -DHAVE_SYS_FILIO_H=1";
+				OTHER_CFLAGS = "-DMAC_OSX_TK -DTCL_WIDE_INT_TYPE=\"long long\"";
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
-				PRODUCT_NAME = libtclstub8.4.a;
+				PRODUCT_NAME = libtkstub8.4.a;
+				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
 			};
@@ -2922,7 +2958,7 @@ Copyright Apple Computer, Inc 2002</string>
 		};
 		F548F8CF0313CEF0016F146B = {
 			isa = PBXLibraryReference;
-			path = libtclstub8.4.a;
+			path = libtkstub8.4.a;
 			refType = 3;
 		};
 		F548F8D00313CF11016F146B = {
@@ -2940,12 +2976,6 @@ Copyright Apple Computer, Inc 2002</string>
 		F548F8D20313CF93016F146B = {
 			isa = PBXTargetDependency;
 			target = F548F8CE0313CEF0016F146B;
-		};
-		F548F8D40313CFC8016F146B = {
-			fileRef = F548F8CF0313CEF0016F146B;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F55BC46802B2D38B01DC9062 = {
 			isa = PBXFileReference;
@@ -2981,6 +3011,70 @@ Copyright Apple Computer, Inc 2002</string>
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		F5877FB7031F97ED016F146B = {
+			buildActionMask = 8;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			neededFileNames = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "# ensure we can overwrite a previous install\nif [ -d \"${INSTALL_ROOT}${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\" ]; then\n    chmod -RH u+w \"${INSTALL_ROOT}${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\"\nfi";
+		};
+		F5877FB8031F982D016F146B = {
+			buildActionMask = 8;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			neededFileNames = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "# ensure we can overwrite a previous install\nif [ -d \"${INSTALL_ROOT}${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\" ]; then\n    chmod -RH u+w \"${INSTALL_ROOT}${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\"\nfi";
+		};
+		F5877FB9031F9F49016F146B = {
+			fileRef = F548F8CF0313CEF0016F146B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5877FBA031F9F4B016F146B = {
+			fileRef = F548F8CF0313CEF0016F146B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5877FBC031FA968016F146B = {
+			buildActionMask = 8;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			neededFileNames = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "# redo prebinding\nif [ ! -d \"${INSTALL_ROOT}/usr/lib\" ]; then ln -fs /usr/lib \"${INSTALL_ROOT}/usr/\"; RM_USRLIB=1; fi\nif [ ! -d \"${INSTALL_ROOT}/System\" ]; then ln -fs /System \"${INSTALL_ROOT}/\"; RM_SYSTEM=1; fi\nredo_prebinding -r \"${INSTALL_ROOT}\" \"${INSTALL_ROOT}${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}/${PRODUCT_NAME}\"\nif [ -n \"${RM_USRLIB:-}\" ]; then rm -f \"${INSTALL_ROOT}/usr/lib\"; fi\nif [ -n \"${RM_SYSTEM:-}\" ]; then rm -f ${INSTALL_ROOT}/System; fi";
+		};
+		F5877FBD031FAC6A016F146B = {
+			buildActionMask = 8;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			neededFileNames = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "# redo prebinding\nif [ ! -d \"${INSTALL_ROOT}/usr/lib\" ]; then ln -fs /usr/lib \"${INSTALL_ROOT}/usr/\"; RM_USRLIB=1; fi\nif [ ! -d \"${INSTALL_ROOT}/System\" ]; then ln -fs /System \"${INSTALL_ROOT}/\"; RM_SYSTEM=1; fi\nredo_prebinding -r \"${INSTALL_ROOT}\" \"${INSTALL_ROOT}${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/MacOS/${PRODUCT_NAME}\"\nif [ -n \"${RM_USRLIB:-}\" ]; then rm -f \"${INSTALL_ROOT}/usr/lib\"; fi\nif [ -n \"${RM_SYSTEM:-}\" ]; then rm -f ${INSTALL_ROOT}/System; fi";
 		};
 		F5B1FC08016FFE3501DC9062 = {
 			buildActionMask = 2147483647;
@@ -3020,6 +3114,7 @@ Copyright Apple Computer, Inc 2002</string>
 				F5B1FC26016FFE3501DC9062,
 			);
 			isa = PBXCopyFilesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F5B1FC09016FFE3501DC9062 = {
 			fileRef = F5DF0928016CD3F901DC9062;
@@ -3246,8 +3341,9 @@ Copyright Apple Computer, Inc 2002</string>
 			isa = PBXShellScriptBuildPhase;
 			neededFileNames = (
 			);
+			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "source buildConfig";
+			shellScript = "#source buildConfig";
 		};
 		F5C88659017D625C01DC9062 = {
 			children = (
@@ -3269,18 +3365,6 @@ Copyright Apple Computer, Inc 2002</string>
 			name = tkInt.decls;
 			path = ../generic/tkInt.decls;
 			refType = 2;
-		};
-		F5C8865E017D625C01DC9062 = {
-			fileRef = F5C8865A017D625C01DC9062;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C8865F017D625C01DC9062 = {
-			fileRef = F5C8865B017D625C01DC9062;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F5DF07A7016CD03801DC9062 = {
 			children = (
@@ -3502,18 +3586,6 @@ Copyright Apple Computer, Inc 2002</string>
 			name = xmfbox.tcl;
 			path = ../library/xmfbox.tcl;
 			refType = 2;
-		};
-		F5FBD6E30173513601DC9062 = {
-			buildActionMask = 2147483647;
-			files = (
-			);
-			generatedFileNames = (
-			);
-			isa = PBXShellScriptBuildPhase;
-			neededFileNames = (
-			);
-			shellPath = /bin/sh;
-			shellScript = pwd;
 		};
 	};
 	rootObject = F537552A016C352C01DC9062;

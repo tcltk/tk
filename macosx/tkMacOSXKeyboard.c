@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.1.2.3 2002/07/19 09:22:34 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.1.2.4 2002/08/30 18:18:16 das Exp $
  */
 
 #include "tkInt.h"
@@ -19,7 +19,7 @@
 #include "tkMacOSXInt.h"
 
 typedef struct {
-    short keycode;		/* Macintosh keycode */
+    int keycode;		/* Macintosh keycode */
     KeySym keysym;		/* X windows Keysym */
 } KeyInfo;
 
@@ -141,7 +141,7 @@ XKeycodeToKeysym(
 {
     register Tcl_HashEntry *hPtr;
     int c;
-    char virtualKey;
+    int virtualKey;
     int newKeycode;
     unsigned long dummy, newChar;
 
@@ -216,7 +216,7 @@ TkpGetString(
 {
     register Tcl_HashEntry *hPtr;
     char string[3];
-    char virtualKey;
+    int virtualKey;
     int c, len;
 
     if (!initialized) {

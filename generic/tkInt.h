@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.40.2.3 2002/08/20 20:27:05 das Exp $ 
+ * RCS: $Id: tkInt.h,v 1.40.2.4 2002/08/30 18:18:12 das Exp $ 
  */
 
 #ifndef _TKINT
@@ -1169,7 +1169,7 @@ EXTERN char *		TkTilePrintProc _ANSI_ARGS_((
  * Unsupported commands.
  */
 EXTERN int		TkUnsupported1Cmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLIMPORT

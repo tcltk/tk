@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.28.2.6 2002/08/20 20:27:07 das Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.28.2.7 2002/08/30 18:18:13 das Exp $
  */
 
 #include "tkInt.h"
@@ -440,8 +440,8 @@ TkIntPlatStubs tkIntPlatStubs = {
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
     TkGenerateActivateEvents, /* 0 */
-    TkpCreateNativeBitmap, /* 1 */
-    TkpDefineNativeBitmaps, /* 2 */
+    NULL, /* 1 */
+    NULL, /* 2 */
     TkPointerDeadWindow, /* 3 */
     TkpSetCapture, /* 4 */
     TkpSetCursor, /* 5 */
@@ -452,14 +452,14 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXDispatchMenuEvent, /* 10 */
     TkMacOSXInstallCursor, /* 11 */
     TkMacOSXHandleTearoffMenu, /* 12 */
-    TkMacOSXInvalClipRgns, /* 13 */
+    NULL, /* 13 */
     TkMacOSXDoHLEvent, /* 14 */
-    TkMacOSXGetDrawablePort, /* 15 */
+    NULL, /* 15 */
     TkMacOSXGetXWindow, /* 16 */
     TkMacOSXGrowToplevel, /* 17 */
     TkMacOSXHandleMenuSelect, /* 18 */
-    TkMacOSXInitAppleEvents, /* 19 */
-    TkMacOSXInitMenus, /* 20 */
+    NULL, /* 19 */
+    NULL, /* 20 */
     TkMacOSXInvalidateWindow, /* 21 */
     TkMacOSXIsCharacterMissing, /* 22 */
     TkMacOSXMakeRealWindowExist, /* 23 */
@@ -491,7 +491,7 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkGetTransientMaster, /* 49 */
     TkGenerateButtonEvent, /* 50 */
     TkGenWMDestroyEvent, /* 51 */
-    TkGenWMConfigureEvent, /* 52 */
+    NULL, /* 52 */
     TkpGetMS, /* 53 */
 #endif /* MAC_OSX_TK */
 #if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)) /* X11 */

@@ -3,7 +3,7 @@
 # This demonstration script creates a 15-puzzle game using a collection
 # of buttons.
 #
-# RCS: @(#) $Id: puzzle.tcl,v 1.3.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+# RCS: @(#) $Id: puzzle.tcl,v 1.3.2.2 2002/08/30 18:18:14 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -59,7 +59,7 @@ scrollbar $w.s
 # using place which doesn't autosize, then we need to have a 
 # slightly larger frame here...
 
-if {[string equal $tcl_platform(windowingsystem) aqua]} {
+if {[string equal [tk windowingsystem] aqua]} {
     set frameSize 160
 } else {
     set frameSize 120

@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.9.2.5 2002/08/20 20:27:05 das Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.9.2.6 2002/08/30 18:18:12 das Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -262,11 +262,8 @@ EXTERN int		TkpIsWindowFloating _ANSI_ARGS_((WindowRef window));
 /* 0 */
 EXTERN void		TkGenerateActivateEvents _ANSI_ARGS_((
 				TkWindow * winPtr, int active));
-/* 1 */
-EXTERN Pixmap		TkpCreateNativeBitmap _ANSI_ARGS_((Display * display, 
-				char * source));
-/* 2 */
-EXTERN void		TkpDefineNativeBitmaps _ANSI_ARGS_((void));
+/* Slot 1 is reserved */
+/* Slot 2 is reserved */
 /* 3 */
 EXTERN void		TkPointerDeadWindow _ANSI_ARGS_((TkWindow * winPtr));
 /* 4 */
@@ -290,14 +287,11 @@ EXTERN void		TkMacOSXInstallCursor _ANSI_ARGS_((
 				int resizeOverride));
 /* 12 */
 EXTERN void		TkMacOSXHandleTearoffMenu _ANSI_ARGS_((void));
-/* 13 */
-EXTERN void		TkMacOSXInvalClipRgns _ANSI_ARGS_((TkWindow * winPtr));
+/* Slot 13 is reserved */
 /* 14 */
 EXTERN int		TkMacOSXDoHLEvent _ANSI_ARGS_((
 				EventRecord * theEvent));
-/* 15 */
-EXTERN GWorldPtr	TkMacOSXGetDrawablePort _ANSI_ARGS_((
-				Drawable drawable));
+/* Slot 15 is reserved */
 /* 16 */
 EXTERN Window		TkMacOSXGetXWindow _ANSI_ARGS_((WindowRef macWinPtr));
 /* 17 */
@@ -306,11 +300,8 @@ EXTERN int		TkMacOSXGrowToplevel _ANSI_ARGS_((
 /* 18 */
 EXTERN void		TkMacOSXHandleMenuSelect _ANSI_ARGS_((long mResult, 
 				int optionKeyPressed));
-/* 19 */
-EXTERN void		TkMacOSXInitAppleEvents _ANSI_ARGS_((
-				Tcl_Interp * interp));
-/* 20 */
-EXTERN void		TkMacOSXInitMenus _ANSI_ARGS_((Tcl_Interp * interp));
+/* Slot 19 is reserved */
+/* Slot 20 is reserved */
 /* 21 */
 EXTERN void		TkMacOSXInvalidateWindow _ANSI_ARGS_((
 				MacDrawable * macWin, int flag));
@@ -391,10 +382,7 @@ EXTERN int		TkGenerateButtonEvent _ANSI_ARGS_((int x, int y,
 				Window window, unsigned int state));
 /* 51 */
 EXTERN void		TkGenWMDestroyEvent _ANSI_ARGS_((Tk_Window tkwin));
-/* 52 */
-EXTERN void		TkGenWMConfigureEvent _ANSI_ARGS_((Tk_Window tkwin, 
-				int x, int y, int width, int height, 
-				int flags));
+/* Slot 52 is reserved */
 /* 53 */
 EXTERN unsigned long	TkpGetMS _ANSI_ARGS_((void));
 #endif /* MAC_OSX_TK */
@@ -543,8 +531,8 @@ typedef struct TkIntPlatStubs {
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
     void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow * winPtr, int active)); /* 0 */
-    Pixmap (*tkpCreateNativeBitmap) _ANSI_ARGS_((Display * display, char * source)); /* 1 */
-    void (*tkpDefineNativeBitmaps) _ANSI_ARGS_((void)); /* 2 */
+    void *reserved1;
+    void *reserved2;
     void (*tkPointerDeadWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 3 */
     void (*tkpSetCapture) _ANSI_ARGS_((TkWindow * winPtr)); /* 4 */
     void (*tkpSetCursor) _ANSI_ARGS_((TkpCursor cursor)); /* 5 */
@@ -555,14 +543,14 @@ typedef struct TkIntPlatStubs {
     int (*tkMacOSXDispatchMenuEvent) _ANSI_ARGS_((int menuID, int index)); /* 10 */
     void (*tkMacOSXInstallCursor) _ANSI_ARGS_((int resizeOverride)); /* 11 */
     void (*tkMacOSXHandleTearoffMenu) _ANSI_ARGS_((void)); /* 12 */
-    void (*tkMacOSXInvalClipRgns) _ANSI_ARGS_((TkWindow * winPtr)); /* 13 */
+    void *reserved13;
     int (*tkMacOSXDoHLEvent) _ANSI_ARGS_((EventRecord * theEvent)); /* 14 */
-    GWorldPtr (*tkMacOSXGetDrawablePort) _ANSI_ARGS_((Drawable drawable)); /* 15 */
+    void *reserved15;
     Window (*tkMacOSXGetXWindow) _ANSI_ARGS_((WindowRef macWinPtr)); /* 16 */
     int (*tkMacOSXGrowToplevel) _ANSI_ARGS_((WindowRef whichWindow, Point start)); /* 17 */
     void (*tkMacOSXHandleMenuSelect) _ANSI_ARGS_((long mResult, int optionKeyPressed)); /* 18 */
-    void (*tkMacOSXInitAppleEvents) _ANSI_ARGS_((Tcl_Interp * interp)); /* 19 */
-    void (*tkMacOSXInitMenus) _ANSI_ARGS_((Tcl_Interp * interp)); /* 20 */
+    void *reserved19;
+    void *reserved20;
     void (*tkMacOSXInvalidateWindow) _ANSI_ARGS_((MacDrawable * macWin, int flag)); /* 21 */
     int (*tkMacOSXIsCharacterMissing) _ANSI_ARGS_((Tk_Font tkfont, unsigned int searchChar)); /* 22 */
     void (*tkMacOSXMakeRealWindowExist) _ANSI_ARGS_((TkWindow * winPtr)); /* 23 */
@@ -594,7 +582,7 @@ typedef struct TkIntPlatStubs {
     Window (*tkGetTransientMaster) _ANSI_ARGS_((TkWindow * winPtr)); /* 49 */
     int (*tkGenerateButtonEvent) _ANSI_ARGS_((int x, int y, Window window, unsigned int state)); /* 50 */
     void (*tkGenWMDestroyEvent) _ANSI_ARGS_((Tk_Window tkwin)); /* 51 */
-    void (*tkGenWMConfigureEvent) _ANSI_ARGS_((Tk_Window tkwin, int x, int y, int width, int height, int flags)); /* 52 */
+    void *reserved52;
     unsigned long (*tkpGetMS) _ANSI_ARGS_((void)); /* 53 */
 #endif /* MAC_OSX_TK */
 #if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)) /* X11 */
@@ -978,14 +966,8 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkGenerateActivateEvents \
 	(tkIntPlatStubsPtr->tkGenerateActivateEvents) /* 0 */
 #endif
-#ifndef TkpCreateNativeBitmap
-#define TkpCreateNativeBitmap \
-	(tkIntPlatStubsPtr->tkpCreateNativeBitmap) /* 1 */
-#endif
-#ifndef TkpDefineNativeBitmaps
-#define TkpDefineNativeBitmaps \
-	(tkIntPlatStubsPtr->tkpDefineNativeBitmaps) /* 2 */
-#endif
+/* Slot 1 is reserved */
+/* Slot 2 is reserved */
 #ifndef TkPointerDeadWindow
 #define TkPointerDeadWindow \
 	(tkIntPlatStubsPtr->tkPointerDeadWindow) /* 3 */
@@ -1026,18 +1008,12 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkMacOSXHandleTearoffMenu \
 	(tkIntPlatStubsPtr->tkMacOSXHandleTearoffMenu) /* 12 */
 #endif
-#ifndef TkMacOSXInvalClipRgns
-#define TkMacOSXInvalClipRgns \
-	(tkIntPlatStubsPtr->tkMacOSXInvalClipRgns) /* 13 */
-#endif
+/* Slot 13 is reserved */
 #ifndef TkMacOSXDoHLEvent
 #define TkMacOSXDoHLEvent \
 	(tkIntPlatStubsPtr->tkMacOSXDoHLEvent) /* 14 */
 #endif
-#ifndef TkMacOSXGetDrawablePort
-#define TkMacOSXGetDrawablePort \
-	(tkIntPlatStubsPtr->tkMacOSXGetDrawablePort) /* 15 */
-#endif
+/* Slot 15 is reserved */
 #ifndef TkMacOSXGetXWindow
 #define TkMacOSXGetXWindow \
 	(tkIntPlatStubsPtr->tkMacOSXGetXWindow) /* 16 */
@@ -1050,14 +1026,8 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkMacOSXHandleMenuSelect \
 	(tkIntPlatStubsPtr->tkMacOSXHandleMenuSelect) /* 18 */
 #endif
-#ifndef TkMacOSXInitAppleEvents
-#define TkMacOSXInitAppleEvents \
-	(tkIntPlatStubsPtr->tkMacOSXInitAppleEvents) /* 19 */
-#endif
-#ifndef TkMacOSXInitMenus
-#define TkMacOSXInitMenus \
-	(tkIntPlatStubsPtr->tkMacOSXInitMenus) /* 20 */
-#endif
+/* Slot 19 is reserved */
+/* Slot 20 is reserved */
 #ifndef TkMacOSXInvalidateWindow
 #define TkMacOSXInvalidateWindow \
 	(tkIntPlatStubsPtr->tkMacOSXInvalidateWindow) /* 21 */
@@ -1179,10 +1149,7 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkGenWMDestroyEvent \
 	(tkIntPlatStubsPtr->tkGenWMDestroyEvent) /* 51 */
 #endif
-#ifndef TkGenWMConfigureEvent
-#define TkGenWMConfigureEvent \
-	(tkIntPlatStubsPtr->tkGenWMConfigureEvent) /* 52 */
-#endif
+/* Slot 52 is reserved */
 #ifndef TkpGetMS
 #define TkpGetMS \
 	(tkIntPlatStubsPtr->tkpGetMS) /* 53 */

@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.13.2.5 2002/08/21 12:28:55 das Exp $
+# RCS: @(#) $Id: console.tcl,v 1.13.2.6 2002/08/30 18:18:13 das Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -50,7 +50,7 @@ proc ::tk::ConsoleInit {} {
     }
 
     if {[string equal $tcl_platform(platform) "macintosh"]
-	    || [string equal $tcl_platform(windowingsystem) "aqua"]} {
+	    || [string equal [tk windowingsystem] "aqua"]} {
 	set mod "Cmd"
     } else {
 	set mod "Ctrl"
@@ -68,7 +68,7 @@ proc ::tk::ConsoleInit {} {
     .menubar.file add command -label [mc "Clear Console"] \
 	    -underline 0 -command {.console delete 1.0 "promptEnd linestart"}
    if {[string equal $tcl_platform(platform) "macintosh"]
-	   || [string equal $tcl_platform(windowingsystem) "aqua"]} {
+	   || [string equal [tk windowingsystem] "aqua"]} {
 	.menubar.file add command -label [mc "Quit"] \
 		-command exit -accel Cmd-Q
     } else {
@@ -111,7 +111,7 @@ proc ::tk::ConsoleInit {} {
 	    $con configure -font systemfixed
 	}
 	"unix" {
-	    if {[string equal $tcl_platform(windowingsystem) "aqua"]} {
+	    if {[string equal [tk windowingsystem] "aqua"]} {
 		$con configure -font {Monaco 9 normal} -highlightthickness 0
 	    }
 	}

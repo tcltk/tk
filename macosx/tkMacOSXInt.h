@@ -9,15 +9,28 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.1.2.2 2002/07/19 09:22:34 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.1.2.3 2002/08/30 18:18:16 das Exp $
  */
 
 #ifndef _TKMACINT
 #define _TKMACINT
 
+#ifndef _TKINT
 #include "tkInt.h"
+#endif
 
+/*
+ * Include platform specific public interfaces.
+ */
+
+#ifndef _TKMAC
 #include "tkMacOSX.h"
+#endif
+
+#ifndef _TKPORT
+#include "tkPort.h"
+#endif
+
 #include <Carbon/Carbon.h>
 
 struct TkWindowPrivate {

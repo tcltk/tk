@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.1.2.4 2002/08/20 20:27:11 das Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.1.2.5 2002/08/30 18:18:16 das Exp $
  */
 
 #include "tkInt.h"
@@ -95,7 +95,7 @@ TkpOpenDisplay(
     Display *display;
     Screen *screen;
     GDHandle graphicsDevice;
-    int      fd;
+    int      fd = 0;
     if (gMacDisplay != NULL) {
 	if (strcmp(gMacDisplay->display->display_name, display_name) == 0) {
 	    return gMacDisplay;

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.20.2.5 2002/08/20 20:27:03 das Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.20.2.6 2002/08/30 18:18:11 das Exp $
  */
 
 #include "tkPort.h"
@@ -621,10 +621,11 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
     Tk_Window tkwin;
     static CONST char *optionStrings[] = {
 	"appname",	"caret",	"scaling",	"useinputmethods",
-	NULL
+	"windowingsystem",		NULL
     };
     enum options {
-	TK_APPNAME,	TK_CARET,	TK_SCALING,	TK_USE_IM
+	TK_APPNAME,	TK_CARET,	TK_SCALING,	TK_USE_IM,
+	TK_WINDOWINGSYSTEM
     };
 
     tkwin = (Tk_Window) clientData;
@@ -809,6 +810,25 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 	    }
 	    Tcl_SetBooleanObj(Tcl_GetObjResult(interp),
 		    (int) (dispPtr->flags & TK_DISPLAY_USE_IM));
+	    break;
+	}
+        case TK_WINDOWINGSYSTEM: {
+	    CONST char *windowingsystem;
+	    
+	    if (objc != 2) {
+	        Tcl_WrongNumArgs(interp, 2, objv, NULL);
+		return TCL_ERROR;
+	    }
+	    #if defined(__WIN32__) || defined(_WIN32)	    
+	    windowingsystem = "win32";
+	    #elif defined(MAC_TCL)
+	    windowingsystem = "classic";
+	    #elif defined(MAC_OSX_TK)
+	    windowingsystem = "aqua";
+	    #else
+	    windowingsystem = "x11";
+	    #endif
+	    Tcl_SetStringObj(Tcl_GetObjResult(interp), windowingsystem, -1);
 	    break;
 	}
     }

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.1.2.7 2002/08/21 12:28:56 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.1.2.8 2002/08/30 18:18:16 das Exp $
  */
 
 #include "tkInt.h"
@@ -135,9 +135,6 @@ TkpInit(interp)
 	    TkMacOSXCarbonEncoding = Tcl_GetEncoding (NULL, NULL);
 	}
     }
-    
-    Tcl_SetVar2(interp, "tcl_platform", "windowingsystem", 
-            "aqua", TCL_GLOBAL_ONLY);
     
     /*
      * When Tk is in a framework, force tcl_findLibrary to look in the 

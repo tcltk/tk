@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.1.2.4 2002/08/21 12:28:56 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.1.2.5 2002/08/30 18:18:16 das Exp $
  */
 
 #include "tkButton.h"
@@ -511,7 +511,7 @@ void
 TkpComputeButtonGeometry(
     TkButton *butPtr)        /* Button whose geometry may have changed. */
 {
-    int width, height, avgWidth, haveImage = 0, haveText;
+    int width, height, avgWidth, haveImage = 0, haveText = 0;
     int xInset, yInset;
     int txtWidth, txtHeight;
     Tk_FontMetrics fm;

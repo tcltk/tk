@@ -103,7 +103,7 @@ typedef struct TkWmInfo {
 				 * value None. */
     Tk_Uid titleUid;		/* Title to display in window caption.  If
 				 * NULL, use name of widget. */
-    Tk_Uid iconName;		/* Name to display in icon. */
+    char *iconName;		/* Name to display in icon. */
     Window master;		/* Master window for TRANSIENT_FOR property,
 				 * or None. */
     XWMHints hints;		/* Various pieces of information for
@@ -222,7 +222,7 @@ typedef struct TkWmInfo {
     ProtocolHandler *protPtr;	/* First in list of protocol handlers for
 				 * this window (NULL means none). */
     int cmdArgc;		/* Number of elements in cmdArgv below. */
-    char **cmdArgv;		/* Array of strings to store in the
+    CONST char **cmdArgv;		/* Array of strings to store in the
 				 * WM_COMMAND property.  NULL means nothing
 				 * available. */
     char *clientMachine;	/* String to store in WM_CLIENT_MACHINE

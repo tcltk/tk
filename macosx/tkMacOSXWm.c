@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.1.2.6 2002/08/20 20:27:11 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.1.2.7 2002/08/30 18:18:16 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -1435,7 +1435,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
     if (objc == 3) {
         if (wmPtr->hints.flags & IconPixmapHint) {
             Tcl_SetResult(interp,
-                          Tk_NameOfBitmap(winPtr->display, wmPtr->hints.icon_pixmap),
+                          (char *) Tk_NameOfBitmap(winPtr->display, wmPtr->hints.icon_pixmap),
                           TCL_STATIC);
         }
         return TCL_OK;
@@ -1565,7 +1565,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
     if (objc == 3) {
         if (wmPtr->hints.flags & IconMaskHint) {
             Tcl_SetResult(interp,
-                          Tk_NameOfBitmap(winPtr->display, wmPtr->hints.icon_mask),
+                          (char *) Tk_NameOfBitmap(winPtr->display, wmPtr->hints.icon_mask),
                           TCL_STATIC);
         }
         return TCL_OK;
@@ -1613,7 +1613,7 @@ int objc;			/* Number of arguments. */
 Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    char *argv3;
+    CONST char *argv3;
     int length;
 
     if (objc > 4) {
@@ -1622,7 +1622,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
     }
     if (objc == 3) {
         Tcl_SetResult(interp,
-                      ((wmPtr->iconName != NULL) ? wmPtr->iconName : ""),
+                      (char *) ((wmPtr->iconName != NULL) ? wmPtr->iconName : ""),
                       TCL_STATIC);
         return TCL_OK;
     } else {
@@ -2470,7 +2470,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
     }
     if (objc == 3) {
         Tcl_SetResult(interp,
-                      ((wmPtr->titleUid != NULL) ? wmPtr->titleUid : winPtr->nameUid),
+                      (char *) ((wmPtr->titleUid != NULL) ? wmPtr->titleUid : winPtr->nameUid),
                       TCL_STATIC);
         return TCL_OK;
     } else {
@@ -4472,7 +4472,7 @@ TkUnsupported1Cmd(
 				 * interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int argc,			/* Number of arguments. */
-    char **argv)		/* Argument strings. */
+    CONST char **argv)		/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     TkWindow *winPtr;
@@ -4559,7 +4559,7 @@ TkUnsupported1Cmd(
 		   panic("invalid style");
 	    }
 	    if (appearanceSpec) {
-	        Tcl_Obj *attributeList, *newResult;
+	        Tcl_Obj *attributeList, *newResult = NULL;
 	        
 	        switch (wmPtr->macClass) {
 	            case kAlertWindowClass:
@@ -4724,7 +4724,7 @@ TkUnsupported1Cmd(
 	    } else {
 	        int foundOne = 0;
 	        int attrArgc, i;
-	        char **attrArgv = NULL;
+	        CONST char **attrArgv = NULL;
 	        
 	        if (Tcl_SplitList(interp, argv[4], &attrArgc, &attrArgv) != TCL_OK) {
 	            wmPtr->macClass = oldClass;

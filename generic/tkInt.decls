@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.21.2.5 2002/08/20 20:27:05 das Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.21.2.6 2002/08/30 18:18:12 das Exp $
 
 library tk
 
@@ -563,7 +563,7 @@ declare 119 {mac aqua win} {
 #}
 
 declare 121 {mac aqua} {
-    Pixmap TkpCreateNativeBitmap (Display *display, char * source)
+    Pixmap TkpCreateNativeBitmap (Display *display, CONST char * source) 
 }
 
 declare 122 {mac aqua} {
@@ -882,7 +882,7 @@ declare 0 mac {
 
 # removed duplicates from tkInt table
 #declare 1 mac {
-#    Pixmap TkpCreateNativeBitmap (Display *display, char * source)
+#    Pixmap TkpCreateNativeBitmap (Display *display, CONST char * source)
 #}
 #
 #declare 2 mac {
@@ -1121,13 +1121,14 @@ declare 0 aqua {
     void TkGenerateActivateEvents (TkWindow *winPtr, int active)
 }
 
-declare 1 aqua {
-    Pixmap TkpCreateNativeBitmap (Display *display, char * source)
-}
-
-declare 2 aqua {
-    void TkpDefineNativeBitmaps (void)
-}
+# removed duplicates from tkInt table
+#declare 1 aqua {
+#    Pixmap TkpCreateNativeBitmap (Display *display, CONST char * source)
+#}
+#
+#declare 2 aqua {
+#    void TkpDefineNativeBitmaps (void)
+#}
 
 declare 3 aqua {
     void TkPointerDeadWindow (TkWindow *winPtr)
@@ -1169,17 +1170,19 @@ declare 12 aqua {
     void  TkMacOSXHandleTearoffMenu (void)
 }
 
-declare 13 aqua {
-    void  TkMacOSXInvalClipRgns (TkWindow *winPtr)
-}
+# removed duplicate from tkPlat table (tk.decls)
+#declare 13 aqua {
+#    void  TkMacOSXInvalClipRgns (TkWindow *winPtr)
+#}
 
 declare 14 aqua {
     int  TkMacOSXDoHLEvent (EventRecord *theEvent)
 }
 
-declare 15 aqua {
-    GWorldPtr  TkMacOSXGetDrawablePort (Drawable drawable)
-}
+# removed duplicate from tkPlat table (tk.decls)
+#declare 15 aqua {
+#    GWorldPtr  TkMacOSXGetDrawablePort (Drawable drawable)
+#}
 
 declare 16 aqua {
     Window   TkMacOSXGetXWindow (WindowRef macWinPtr)
@@ -1193,13 +1196,14 @@ declare 18 aqua {
     void   TkMacOSXHandleMenuSelect (long mResult, int optionKeyPressed)
 }
 
-declare 19 aqua {
-    void  TkMacOSXInitAppleEvents (Tcl_Interp *interp)
-}
-
-declare 20 aqua {
-    void   TkMacOSXInitMenus (Tcl_Interp  *interp)
-}
+# removed duplicates from tkPlat table (tk.decls)
+#declare 19 aqua {
+#    void  TkMacOSXInitAppleEvents (Tcl_Interp *interp)
+#}
+#
+#declare 20 aqua {
+#    void   TkMacOSXInitMenus (Tcl_Interp  *interp)
+#}
 
 declare 21 aqua {
     void  TkMacOSXInvalidateWindow (MacDrawable *macWin, int flag)
@@ -1323,10 +1327,11 @@ declare 51 aqua {
     void  TkGenWMDestroyEvent (Tk_Window tkwin)
 }
 
-declare 52 aqua {
-    void  TkGenWMConfigureEvent (Tk_Window tkwin, int x, int y, \
- 	    int width, int height, int flags)
-}
+# removed duplicate from tkPlat table (tk.decls)
+#declare 52 aqua {
+#    void  TkGenWMConfigureEvent (Tk_Window tkwin, int x, int y, \
+# 	    int width, int height, int flags)
+#}
 
 declare 53 aqua {
     unsigned long TkpGetMS (void)
