@@ -1,3 +1,9 @@
+2004-07-27  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkImgGIF.c (FileReadGIF): fix crash reported by Reinhard Max:
+	in case of premature end of image data, return error instead of
+	passing nil buffer to Tk_PhotoPutBlock().
+
 2004-07-22  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/tkfbox.tcl (::tk::dialog::file::Update): use -directory
