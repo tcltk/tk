@@ -1,4 +1,10 @@
-2000-08-05  Jeff Hobbs  <hobbs@scriptics.com>
+2000-08-08  Jeff Hobbs  <hobbs@ajubasolutions.com>
+
+	8.3.2 RELEASE finalized
+
+	* changes: updated for release notes version of ChangeLog
+
+2000-08-05  Jeff Hobbs  <hobbs@ajubasolutions.com>
 
 	* win/Makefile.in (cat32.${OBJEXT}): corrected where to find cat.c
 	given the change in default def'n of TCL_SRC_DIR.
@@ -9,7 +15,7 @@
 	* library/safetk.tcl: rationalized the setting of tk_library when
 	initialized Tk in a safe interpreter.
 
-2000-08-04  Jeff Hobbs  <hobbs@scriptics.com>
+2000-08-04  Jeff Hobbs  <hobbs@ajubasolutions.com>
 
 	* BACKPORTED FROM 8.4 (HEAD) BRANCH:
 
