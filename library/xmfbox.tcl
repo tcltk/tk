@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.11 2000/03/24 19:38:57 ericm Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.12 2000/06/23 00:22:28 ericm Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Scriptics Corporation
@@ -26,10 +26,14 @@ namespace eval ::tk::dialog::file {}
 #	args		Options parsed by the procedure.
 #
 # Results:
-#	A list of two members. The first member is the absolute
-#	pathname of the selected file or "" if user hits cancel. The
-#	second member is the name of the selected file type, or ""
-#	which stands for "default file type"
+#	When -multiple is set to 0, this returns the absolute pathname
+#	of the selected file. (NOTE: This is not the same as a single
+#	element list.)
+# 
+#	When -multiple is set to > 0, this returns a Tcl list of absolute
+#       pathnames. The argument for -multiple is ignored, but for consistency
+#       with Windows it defines the maximum amount of memory to allocate for
+#       the returned filenames.
 
 proc tkMotifFDialog {type args} {
     global tkPriv
@@ -102,9 +106,11 @@ proc tkMotifFDialog_Create {dataName type argList} {
 	set data(filterBtn) $w.bot.filter
 	set data(cancelBtn) $w.bot.cancel
     }
+    tkMotifFDialog_SetListMode $w
 
     wm transient $w $data(-parent)
 
+    tkMotifFDialog_FileTypes $w
     tkMotifFDialog_Update $w
 
     # Withdraw the window, then update all the geometry information
@@ -115,6 +121,74 @@ proc tkMotifFDialog_Create {dataName type argList} {
     wm title $w $data(-title)
 
     return $w
+}
+
+# tkMotifFDialog_FileTypes --
+#
+#	Checks the -filetypes option. If present this adds a list of radio-
+#	buttons to pick the file types from.
+#
+# Arguments:
+#	w		Pathname of the tk_get*File dialogue.
+#
+# Results:
+#	none
+
+proc tkMotifFDialog_FileTypes {w} {
+    upvar ::tk::dialog::file::[winfo name $w] data
+
+    set f $w.top.f3.types
+    catch {destroy $f}
+
+    # No file types: use "*" as the filter and display no radio-buttons
+    if {$data(-filetypes) == ""} {
+	set data(filter) *
+	return
+    }
+
+    # The filetypes radiobuttons
+    # set data(fileType) $data(-defaulttype)
+    set data(fileType) 0
+
+    tkMotifFDialog_SetFilter $w [lindex $data(-filetypes) $data(fileType)]
+
+    #don't produce radiobuttons for only one filetype
+    if {[llength $data(-filetypes)] == 1} {
+	return
+    }
+
+    frame $f
+    set cnt 0
+    if {$data(-filetypes) != {}} {
+	foreach type $data(-filetypes) {
+	    set title  [lindex [lindex $type 0] 0]
+	    set filter [lindex $type 1]
+	    radiobutton $f.b$cnt \
+		-text $title \
+		-variable [winfo name $w](fileType) \
+		-value $cnt \
+		-command "[list tkMotifFDialog_SetFilter $w $type]"
+	    pack $f.b$cnt -side left
+	    incr cnt
+	}
+    }
+    $f.b$data(fileType) invoke
+
+    pack $f -side bottom -fill both
+
+    return
+}
+
+# This proc gets called whenever data(filter) is set
+#
+proc tkMotifFDialog_SetFilter {w type} {
+    upvar ::tk::dialog::file::[winfo name $w] data
+    global tkpriv
+
+    set data(filter) [lindex $type 1]
+    set tkpriv(selectFileType) [lindex [lindex $type 0] 0]
+
+    tkMotifFDialog_Update $w
 }
 
 # tkMotifFDialog_Config --
@@ -143,6 +217,7 @@ proc tkMotifFDialog_Config {dataName type argList} {
 	{-initialfile "" "" ""}
 	{-parent "" "" "."}
 	{-title "" "" ""}
+	{-multiple "" "" "0"}
     }
 
     # 2: default values depending on the type of the dialog
@@ -159,7 +234,11 @@ proc tkMotifFDialog_Config {dataName type argList} {
 
     if {[string equal $data(-title) ""]} {
 	if {[string equal $type "open"]} {
-	    set data(-title) "Open"
+	    if {$data(-multiple) != 0} {
+		set data(-title) "Open Multiple Files"
+	    } else {
+		set data(-title) "Open"
+	    }
 	} else {
 	    set data(-title) "Save As"
 	}
@@ -170,7 +249,7 @@ proc tkMotifFDialog_Config {dataName type argList} {
     #
     if {[string compare $data(-initialdir) ""]} {
 	if {[file isdirectory $data(-initialdir)]} {
-	    set data(selectPath) [glob $data(-initialdir)]
+	    set data(selectPath) [lindex [glob $data(-initialdir)] 0]
 	} else {
 	    set data(selectPath) [pwd]
 	}
@@ -290,6 +369,18 @@ proc tkMotifFDialog_BuildUI {w} {
     wm protocol $w WM_DELETE_WINDOW [list tkMotifFDialog_CancelCmd $w]
 }
 
+proc tkMotifFDialog_SetListMode {w} {
+    upvar ::tk::dialog::file::[winfo name $w] data
+
+    if {$data(-multiple) != 0} {
+	set selectmode extended
+    } else {
+	set selectmode browse
+    }
+    set f $w.top.f2.b
+    $f.l configure -selectmode $selectmode
+}
+
 # tkMotifFDialog_MakeSList --
 #
 #	Create a scrolled-listbox and set the keyboard accelerator
@@ -307,7 +398,7 @@ proc tkMotifFDialog_BuildUI {w} {
 
 proc tkMotifFDialog_MakeSList {w f label under cmdPrefix} {
     label $f.lab -text $label -under $under -anchor w
-    listbox $f.l -width 12 -height 5 -selectmode browse -exportselection 0\
+    listbox $f.l -width 12 -height 5 -exportselection 0\
 	-xscrollcommand [list $f.h set]	-yscrollcommand [list $f.v set]
     scrollbar $f.v -orient vertical   -takefocus 0 -command [list $f.l yview]
     scrollbar $f.h -orient horizontal -takefocus 0 -command [list $f.l xview]
@@ -324,14 +415,10 @@ proc tkMotifFDialog_MakeSList {w f label under cmdPrefix} {
     # bindings for the listboxes
     #
     set list $f.l
-    bind $list <Up>		[list tkMotifFDialog_Browse$cmdPrefix $w]
-    bind $list <Down>		[list tkMotifFDialog_Browse$cmdPrefix $w]
-    bind $list <space>		[list tkMotifFDialog_Browse$cmdPrefix $w]
-    bind $list <1>		[list tkMotifFDialog_Browse$cmdPrefix $w]
-    bind $list <B1-Motion>	[list tkMotifFDialog_Browse$cmdPrefix $w]
+    bind $list <<ListboxSelect>> [list tkMotifFDialog_Browse$cmdPrefix $w]
     bind $list <Double-ButtonRelease-1> \
 	    [list tkMotifFDialog_Activate$cmdPrefix $w]
-    bind $list <Return>    "tkMotifFDialog_Browse$cmdPrefix [list $w]; \
+    bind $list <Return>	"tkMotifFDialog_Browse$cmdPrefix [list $w]; \
 	    tkMotifFDialog_Activate$cmdPrefix [list $w]"
 
     bindtags $list [list Listbox $list [winfo toplevel $list] all]
@@ -455,32 +542,31 @@ proc tkMotifFDialog_LoadFiles {w} {
 	return
     }
 
-    # Make the dir list
+    # Make the dir and file lists
     #
-    foreach f [lsort -dictionary [glob -nocomplain .* *]] {
-	if {[file isdir ./$f]} {
-	    $data(dList) insert end $f
-	}
-    }
-    # Make the file list
+    # For speed we only have one glob, which reduces the file system
+    # calls (good for slow NFS networks).
     #
-    if {[string equal $data(filter) *]} {
-	set files [lsort -dictionary [glob -nocomplain .* *]]
-    } else {
-	set files [lsort -dictionary \
-	    [glob -nocomplain $data(filter)]]
-    }
-
+    # We also do two smaller sorts (files + dirs) instead of one large sort,
+    # which gives a small speed increase.
+    #
     set top 0
-    foreach f $files {
-	if {![file isdir ./$f]} {
-	    regsub {^[.]/} $f "" f
-	    $data(fList) insert end $f
-	    if {[string match .* $f]} {
-		incr top
+    set dlist ""
+    set flist ""
+    foreach f [glob -nocomplain .* *] {
+	if {[file isdir ./$f]} {
+	    lappend dlist $f
+	} else {
+	    if {[string match $data(filter) $f]} {
+		if {[string match .* $f]} {
+		    incr top
+		}
+		lappend flist $f
 	    }
 	}
     }
+    eval $data(dList) insert end [lsort -dictionary $dlist]
+    eval $data(fList) insert end [lsort -dictionary $flist]
 
     # The user probably doesn't want to see the . files. We adjust the view
     # so that the listbox displays all the non-dot files
@@ -489,7 +575,7 @@ proc tkMotifFDialog_LoadFiles {w} {
     cd $appPWD
 }
 
-# tkMotifFDialog_BrowseFList --
+# tkMotifFDialog_BrowseDList --
 #
 #	This procedure is called when the directory list is browsed
 #	(clicked-over) by the user.
@@ -598,23 +684,30 @@ proc tkMotifFDialog_BrowseFList {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
     focus $data(fList)
-    if {[string equal [$data(fList) curselection] ""]} {
-	return
+    set data(selectFile) ""
+    foreach item [$data(fList) curselection] {
+	lappend data(selectFile) [$data(fList) get $item]
     }
-    set data(selectFile) [$data(fList) get [$data(fList) curselection]]
-    if {[string equal $data(selectFile) ""]} {
+    if {[llength $data(selectFile)] == 0} {
 	return
     }
 
     $data(dList) selection clear 0 end
 
     $data(fEnt) delete 0 end
-    $data(fEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) $data(filter)]
+    $data(fEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) \
+	    $data(filter)]
     $data(fEnt) xview end
  
+    # if it's a multiple selection box, just put in the filenames 
+    # otherwise put in the full path as usual 
     $data(sEnt) delete 0 end
-    $data(sEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) \
-	    $data(selectFile)]
+    if {$data(-multiple) != 0} {
+	$data(sEnt) insert 0 $data(selectFile)
+    } else {
+	$data(sEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) \
+				  [lindex $data(selectFile) 0]]
+    }
     $data(sEnt) xview end
 }
 
@@ -683,55 +776,64 @@ proc tkMotifFDialog_ActivateSEnt {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
     set selectFilePath [string trim [$data(sEnt) get]]
-    set selectFile     [file tail    $selectFilePath]
-    set selectPath     [file dirname $selectFilePath]
 
     if {[string equal $selectFilePath ""]} {
 	tkMotifFDialog_FilterCmd $w
 	return
     }
 
-    if {[file isdirectory $selectFilePath]} {
-	set data(selectPath) [glob $selectFilePath]
+    if {$data(-multiple) == 0} {
+	set selectFilePath [list $selectFilePath]
+    }
+
+    if {[file isdirectory [lindex $selectFilePath 0]]} {
+	set data(selectPath) [lindex [glob $selectFilePath] 0]
 	set data(selectFile) ""
 	tkMotifFDialog_Update $w
 	return
     }
 
-    if {[string compare [file pathtype $selectFilePath] "absolute"]} {
-	tk_messageBox -icon warning -type ok \
-	    -message "\"$selectFilePath\" must be an absolute pathname"
-	return
-    }
-
-    if {![file exists $selectPath]} {
-	tk_messageBox -icon warning -type ok \
-	    -message "Directory \"$selectPath\" does not exist."
-	return
-    }
-
-    if {![file exists $selectFilePath]} {
-	if {[string equal $data(type) open]} {
+    set newFileList ""
+    foreach item $selectFilePath {
+	if {[string compare [file pathtype $item] "absolute"]} {
+	    set item [file join $data(selectPath) $item]
+	} elseif {![file exists [file dirname $item]]} {
 	    tk_messageBox -icon warning -type ok \
-		-message "File \"$selectFilePath\" does not exist."
+		-message "Directory \"[file dirname $item]\" does not exist."
 	    return
 	}
-    } else {
-	if {[string equal $data(type) save]} {
-	    set message [format %s%s \
-		"File \"$selectFilePath\" already exists.\n\n" \
-		"Replace existing file?"]
-	    set answer [tk_messageBox -icon warning -type yesno \
-		-message $message]
-	    if {[string equal $answer "no"]} {
+
+	if {![file exists $item]} {
+	    if {[string equal $data(type) open]} {
+		tk_messageBox -icon warning -type ok \
+		    -message "File \"$item\" does not exist."
 		return
 	    }
+	} else {
+	    if {[string equal $data(type) save]} {
+		set message [format %s%s \
+				 "File \"$item\" already exists.\n\n" \
+				 "Replace existing file?"]
+		set answer [tk_messageBox -icon warning -type yesno \
+				-message $message]
+		if {[string equal $answer "no"]} {
+		    return
+		}
+	    }
 	}
+	
+	lappend newFileList $item
     }
 
-    set tkPriv(selectFilePath) $selectFilePath
-    set tkPriv(selectFile)     $selectFile
-    set tkPriv(selectPath)     $selectPath
+    if {$data(-multiple) != 0} {
+	set tkPriv(selectFilePath) $newFileList
+    } else {
+	set tkPriv(selectFilePath) [lindex $newFileList 0]
+    }
+
+    # Set selectFile and selectPath to first item in list
+    set tkPriv(selectFile)     [file tail    [lindex $newFileList 0]]
+    set tkPriv(selectPath)     [file dirname [lindex $newFileList 0]]
 }
 
 
@@ -786,6 +888,9 @@ proc tkListBoxKeyAccel_Unset {w} {
 proc tkListBoxKeyAccel_Key {w key} {
     global tkPriv
 
+    if { $key == "" } {
+	return
+    }
     append tkPriv(lbAccel,$w) $key
     tkListBoxKeyAccel_Goto $w $tkPriv(lbAccel,$w)
     catch {
@@ -818,6 +923,7 @@ proc tkListBoxKeyAccel_Goto {w string} {
 	$w selection set $theIndex $theIndex
 	$w activate $theIndex
 	$w see $theIndex
+	event generate $w <<ListboxSelect>>
     }
 }
 
@@ -827,3 +933,9 @@ proc tkListBoxKeyAccel_Reset {w} {
     catch {unset tkPriv(lbAccel,$w)}
 }
 
+
+proc tk_getFileType {} {
+    global tkpriv
+
+    return $tkpriv(selectFileType)
+}

@@ -5,7 +5,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.7 2000/04/19 23:12:56 hobbs Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.8 2000/06/23 00:22:28 ericm Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -138,6 +138,11 @@ proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
 	set data(-title) "Choose Directory"
     }
 
+    # Stub out the -multiple value for the dialog; it doesn't make sense for
+    # choose directory dialogs, but we have to have something there because we
+    # share so much code with the file dialogs.
+    set data(-multiple) 0
+
     # 4: set the default directory and selection according to the -initial
     #    settings
     #
@@ -177,8 +182,9 @@ proc ::tk::dialog::file::chooseDir::OkCmd {w} {
     # 4b.   If the value is different from the current directory, change to
     #       that directory.
 
-    set iconText [tkIconList_Get $data(icons)]
-    if { ![string equal $iconText ""] } {
+    set selection [tkIconList_Curselection $data(icons)]
+    if { [llength $selection] != 0 } {
+	set iconText [tkIconList_Get $data(icons) [lindex $selection 0]]
 	set iconText [file join $data(selectPath) $iconText]
 	::tk::dialog::file::chooseDir::Done $w $iconText
     } else {
@@ -214,8 +220,9 @@ proc ::tk::dialog::file::chooseDir::OkCmd {w} {
 
 proc ::tk::dialog::file::chooseDir::DblClick {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
-    set text [tkIconList_Get $data(icons)]
-    if {[string compare $text ""]} {
+    set selection [tkIconList_Curselection $data(icons)]
+    if { [llength $selection] != 0 } {
+	set text [tkIconList_Get $data(icons) [lindex $selection 0]]
 	set file $data(selectPath)
 	if {[file isdirectory $file]} {
 	    ::tk::dialog::file::ListInvoke $w $text

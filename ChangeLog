@@ -1,3 +1,24 @@
+2000-06-22  Eric Melski  <ericm@ajubasolutions.com>
+
+	* doc/getOpenFile.n: Updated with information about -multiple.
+
+	* library/choosedir.tcl: Tweaked to handle modified tkIconList API's.
+
+	* library/tkfbox.tcl: Preliminary implementation of multiple
+	selection; based on patch from [RFE: 604].  Some of the tkIconList
+	functions changed to support this and to make the dialog faster.
+
+	* library/xmfbox.tcl: Added support for multiple selection, from
+	patch in [RFE: 4999].
+
+2000-06-21  Eric Melski  <ericm@scriptics.com>
+
+	* library/text.tcl: Corrected behavior of text widget with respect
+	to this sequence of events:  click, shift-click.  Previously, the
+	shift-click just moved the cursor and anchor; now, the shift-click
+	will select the text between the click and the shift-click, which
+	is the behavior most users expect. [Bug: 5929].
+
 2000-06-19  Eric Melski  <ericm@scriptics.com>
 
 	* library/bgerror.tcl: Added auto-truncation for long error
@@ -6,7 +27,8 @@
 
 2000-06-15  Eric Melski  <ericm@scriptics.com>
 
-	* win/tkWinDialog.c: Patched to support tk_getOpenFile -multiple.
+	* win/tkWinDialog.c: Patched to support tk_getOpenFile
+	-multiple. [RFE: 604].
 
 2000-06-13  Eric Melski  <ericm@scriptics.com>
 

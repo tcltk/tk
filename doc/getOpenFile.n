@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: getOpenFile.n,v 1.6 2000/04/23 03:47:13 jingham Exp $
+'\" RCS: @(#) $Id: getOpenFile.n,v 1.7 2000/06/23 00:22:28 ericm Exp $
 '\" 
 .so man.macros
 .TH tk_getOpenFile n 4.2 Tk "Tk Built-In Commands"
@@ -72,8 +72,8 @@ option is ignored on the Macintosh platform.
 .TP
 \fB\-multiple\fR
 Allows the user to choose multiple files from the Open dialog.
-This is only available on the Macintosh, and only when Navigation
-Services are installed.
+On the Macintosh, this is only available when Navigation Services are
+installed.
 .TP
 \fB\-message\fR
 Specifies a message to include in the client area of the dialog.

@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.19 2000/04/19 23:12:56 hobbs Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.20 2000/06/23 00:22:28 ericm Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -39,6 +39,150 @@ proc tkIconList {w args} {
     tkIconList_Create $w
 }
 
+proc tkIconList_Index {w i} {
+    upvar #0 $w data
+    upvar #0 $w:itemList itemList
+    switch -regexp -- $i {
+	"^[0-9]+$" {
+	    return $i
+	}
+	"^active$" {
+	    return $data(index,active)
+	}
+	"^anchor$" {
+	    return $data(index,anchor)
+	}
+	"^end$" {
+	    return [llength $data(list)]
+	}
+	"@-?[0-9]+,-?[0-9]+" {
+	    foreach {x y} [scan $i "@%d,%d"] {
+		break
+	    }
+	    set item [$data(canvas) find closest $x $y]
+	    return [lindex [$data(canvas) itemcget $item -tags] 1]
+	}
+    }
+}
+
+proc tkIconList_Selection {w op args} {
+    upvar #0 $w data
+    switch -exact -- $op {
+	"anchor" {
+	    if { [llength $args] == 1 } {
+		set data(index,anchor) [lindex $args 0]
+	    } else {
+		return $data(index,anchor)
+	    }
+	}
+	"clear" {
+	    if { [llength $args] == 2 } {
+		foreach {first last} $args {
+		    break
+		}
+	    } elseif { [llength $args] == 1 } {
+		set first [set last [lindex $args 0]]
+	    } else {
+		error "wrong # args: should be tkIconList_Selection path\
+			clear first ?last?"
+	    }
+	    set first [tkIconList_Index $w $first]
+	    set last [tkIconList_Index $w $last]
+	    if { $first > $last } {
+		set tmp $first
+		set first $last
+		set last $tmp
+	    }
+	    set ind 0
+	    foreach item $data(selection) {
+		if { $item >= $first } {
+		    set first $ind
+		    break
+		}
+	    }
+	    set ind [expr {[llength $data(selection)] - 1}]
+	    for {} {$ind >= 0} {incr ind -1} {
+		set item [lindex $data(selection) $ind]
+		if { $item <= $last } {
+		    set last $ind
+		    break
+		}
+	    }
+
+	    if { $first > $last } {
+		return
+	    }
+	    set data(selection) [lreplace $data(selection) $first $last]
+	    event generate $w <<ListboxSelect>>
+	    tkIconList_DrawSelection $w
+	}
+	"includes" {
+	    set index [lsearch -exact $data(selection) [lindex $args 0]]
+	    return [expr {$index != -1}]
+	}
+	"set" {
+	    if { [llength $args] == 2 } {
+		foreach {first last} $args {
+		    break
+		}
+	    } elseif { [llength $args] == 1 } {
+		set last [set first [lindex $args 0]]
+	    } else {
+		error "wrong # args: should be tkIconList_Selection path\
+			set first ?last?"
+	    }
+
+	    set first [tkIconList_Index $w $first]
+	    set last [tkIconList_Index $w $last]
+	    if { $first > $last } {
+		set tmp $first
+		set first $last
+		set last $tmp
+	    }
+	    for {set i $first} {$i <= $last} {incr i} {
+		lappend data(selection) $i
+	    }
+	    set data(selection) [lsort -integer -unique $data(selection)]
+	    event generate $w <<ListboxSelect>>
+	    tkIconList_DrawSelection $w
+	}
+    }
+}
+
+proc tkIconList_Curselection {w} {
+    upvar #0 $w data
+    return $data(selection)
+}
+
+proc tkIconList_DrawSelection {w} {
+    upvar #0 $w data
+    upvar #0 $w:itemList itemList
+
+    $data(canvas) delete selection
+    foreach item $data(selection) {
+	set rTag [lindex [lindex $data(list) $item] 2]
+	foreach {iTag tTag text serial} $itemList($rTag) {
+	    break
+	}
+
+	set bbox [$data(canvas) bbox $tTag]
+        $data(canvas) create rect $bbox -fill \#a0a0ff -outline \#a0a0ff \
+		-tags selection
+    }
+    $data(canvas) lower selection
+    return
+}
+
+proc tkIconList_Get {w item} {
+    upvar #0 $w data
+    upvar #0 $w:itemList itemList
+    set rTag [lindex [lindex $data(list) $item] 2]
+    foreach {iTag tTag text serial} $itemList($rTag) {
+	break
+    }
+    return $text
+}
+
 # tkIconList_Config --
 #
 #	Configure the widget variables of IconList, according to the command
@@ -50,8 +194,8 @@ proc tkIconList_Config {w argList} {
     # 1: the configuration specs
     #
     set specs {
-	{-browsecmd "" "" ""}
 	{-command "" "" ""}
+	{-multiple "" "" "0"}
     }
 
     # 2: parse the arguments
@@ -88,6 +232,8 @@ proc tkIconList_Create {w} {
     set data(numItems) 0
     set data(curItem)  {}
     set data(noScroll) 1
+    set data(selection) {}
+    set data(index,anchor) ""
 
     # Creates the event bindings.
     #
@@ -96,6 +242,8 @@ proc tkIconList_Create {w} {
     bind $data(canvas) <1>		[list tkIconList_Btn1 $w %x %y]
     bind $data(canvas) <B1-Motion>	[list tkIconList_Motion1 $w %x %y]
     bind $data(canvas) <B1-Leave>	[list tkIconList_Leave1 $w %x %y]
+    bind $data(canvas) <Control-1>	[list tkIconList_CtrlBtn1 $w %x %y]
+    bind $data(canvas) <Shift-1>	[list tkIconList_ShiftBtn1 $w %x %y]
     bind $data(canvas) <B1-Enter>	[list tkCancelRepeat]
     bind $data(canvas) <ButtonRelease-1> [list tkCancelRepeat]
     bind $data(canvas) <Double-ButtonRelease-1> \
@@ -111,6 +259,7 @@ proc tkIconList_Create {w} {
     bind $data(canvas) <Alt-KeyPress>	";"
 
     bind $data(canvas) <FocusIn>	[list tkIconList_FocusIn $w]
+    bind $data(canvas) <FocusOut>	[list tkIconList_FocusOut $w]
 
     return $w
 }
@@ -172,46 +321,57 @@ proc tkIconList_DeleteAll {w} {
     set data(numItems) 0
     set data(curItem)  {}
     set data(noScroll) 1
+    set data(selection) {}
+    set data(index,anchor) ""
     $data(sbar) set 0.0 1.0
     $data(canvas) xview moveto 0
 }
 
 # Adds an icon into the IconList with the designated image and text
 #
-proc tkIconList_Add {w image text} {
+proc tkIconList_Add {w image items} {
     upvar #0 $w data
     upvar #0 $w:itemList itemList
     upvar #0 $w:textList textList
 
-    set iTag [$data(canvas) create image 0 0 -image $image -anchor nw]
-    set tTag [$data(canvas) create text  0 0 -text  $text  -anchor nw \
-	-font $data(font)]
-    set rTag [$data(canvas) create rect  0 0 0 0 -fill "" -outline ""]
+    foreach text $items {
+	set iTag [$data(canvas) create image 0 0 -image $image -anchor nw \
+		-tags [list icon $data(numItems)]]
+	set tTag [$data(canvas) create text  0 0 -text  $text  -anchor nw \
+		-font $data(font) -tags [list text $data(numItems)]]
+	set rTag [$data(canvas) create rect  0 0 0 0 -fill "" -outline "" \
+		-tags [list rect $data(numItems)]]
+	
+	foreach {x1 y1 x2 y2} [$data(canvas) bbox $iTag] {
+	    break
+	}
+	set iW [expr {$x2 - $x1}]
+	set iH [expr {$y2 - $y1}]
+	if {$data(maxIW) < $iW} {
+	    set data(maxIW) $iW
+	}
+	if {$data(maxIH) < $iH} {
+	    set data(maxIH) $iH
+	}
     
-    set b [$data(canvas) bbox $iTag]
-    set iW [expr {[lindex $b 2]-[lindex $b 0]}]
-    set iH [expr {[lindex $b 3]-[lindex $b 1]}]
-    if {$data(maxIW) < $iW} {
-	set data(maxIW) $iW
-    }
-    if {$data(maxIH) < $iH} {
-	set data(maxIH) $iH
-    }
+	foreach {x1 y1 x2 y2} [$data(canvas) bbox $tTag] {
+	    break
+	}
+	set tW [expr {$x2 - $x1}]
+	set tH [expr {$y2 - $y1}]
+	if {$data(maxTW) < $tW} {
+	    set data(maxTW) $tW
+	}
+	if {$data(maxTH) < $tH} {
+	    set data(maxTH) $tH
+	}
     
-    set b [$data(canvas) bbox $tTag]
-    set tW [expr {[lindex $b 2]-[lindex $b 0]}]
-    set tH [expr {[lindex $b 3]-[lindex $b 1]}]
-    if {$data(maxTW) < $tW} {
-	set data(maxTW) $tW
+	lappend data(list) [list $iTag $tTag $rTag $iW $iH $tW \
+		$tH $data(numItems)]
+	set itemList($rTag) [list $iTag $tTag $text $data(numItems)]
+	set textList($data(numItems)) [string tolower $text]
+	incr data(numItems)
     }
-    if {$data(maxTH) < $tH} {
-	set data(maxTH) $tH
-    }
-    
-    lappend data(list) [list $iTag $tTag $rTag $iW $iH $tW $tH $data(numItems)]
-    set itemList($rTag) [list $iTag $tTag $text $data(numItems)]
-    set textList($data(numItems)) [string tolower $text]
-    incr data(numItems)
 }
 
 # Places the icons in a column-major arrangement.
@@ -252,19 +412,14 @@ proc tkIconList_Arrange {w} {
     set usedColumn 0
     foreach sublist $data(list) {
 	set usedColumn 1
-	set iTag [lindex $sublist 0]
-	set tTag [lindex $sublist 1]
-	set rTag [lindex $sublist 2]
-	set iW   [lindex $sublist 3]
-	set iH   [lindex $sublist 4]
-	set tW   [lindex $sublist 5]
-	set tH   [lindex $sublist 6]
+	foreach {iTag tTag rTag iW iH tW tH} $sublist {
+	    break
+	}
 
 	set i_dy [expr {($dy - $iH)/2}]
 	set t_dy [expr {($dy - $tH)/2}]
 
 	$data(canvas) coords $iTag $x                    [expr {$y + $i_dy}]
-	$data(canvas) coords $tTag [expr {$x + $shift}]  [expr {$y + $t_dy}]
 	$data(canvas) coords $tTag [expr {$x + $shift}]  [expr {$y + $t_dy}]
 	$data(canvas) coords $rTag $x $y [expr {$x+$dx}] [expr {$y+$dy}]
 
@@ -309,7 +464,7 @@ proc tkIconList_Arrange {w} {
 proc tkIconList_Invoke {w} {
     upvar #0 $w data
 
-    if {$data(-command) != "" && [info exists data(selected)]} {
+    if {$data(-command) != "" && [llength $data(selection)]} {
 	uplevel #0 $data(-command)
     }
 }
@@ -367,88 +522,70 @@ proc tkIconList_See {w rTag} {
     }
 }
 
-proc tkIconList_SelectAtXY {w x y} {
-    upvar #0 $w data
-
-    tkIconList_Select $w [$data(canvas) find closest \
-	    [$data(canvas) canvasx $x] [$data(canvas) canvasy $y]]
-}
-
-proc tkIconList_Select {w rTag {callBrowse 1}} {
-    upvar #0 $w data
-    upvar #0 $w:itemList itemList
-
-    if {![info exists itemList($rTag)]} {
-	return
-    }
-    set iTag   [lindex $itemList($rTag) 0]
-    set tTag   [lindex $itemList($rTag) 1]
-    set text   [lindex $itemList($rTag) 2]
-    set serial [lindex $itemList($rTag) 3]
-
-    if {![info exists data(rect)]} {
-        set data(rect) [$data(canvas) create rect 0 0 0 0 \
-		-fill #a0a0ff -outline #a0a0ff]
-    }
-    $data(canvas) lower $data(rect)
-    set bbox [$data(canvas) bbox $tTag]
-    eval [list $data(canvas) coords $data(rect)] $bbox
-
-    set data(curItem) $serial
-    set data(selected) $text
-
-    if {$callBrowse && $data(-browsecmd) != ""} {
-	eval $data(-browsecmd) [list $text]
-    }
-}
-
-proc tkIconList_Unselect {w} {
-    upvar #0 $w data
-
-    if {[info exists data(rect)]} {
-	$data(canvas) delete $data(rect)
-	unset data(rect)
-    }
-    if {[info exists data(selected)]} {
-	unset data(selected)
-    }
-    #set data(curItem)  {}
-}
-
-# Returns the selected item
-#
-proc tkIconList_Get {w} {
-    upvar #0 $w data
-
-    if {[info exists data(selected)]} {
-	return $data(selected)
-    } else {
-	return ""
-    }
-}
-
-
 proc tkIconList_Btn1 {w x y} {
     upvar #0 $w data
 
     focus $data(canvas)
-    tkIconList_SelectAtXY $w $x $y
+    set x [expr {int([$data(canvas) canvasx $x])}]
+    set y [expr {int([$data(canvas) canvasy $y])}]
+    set i [tkIconList_Index $w @${x},${y}]
+    tkIconList_Selection $w clear 0 end
+    tkIconList_Selection $w set $i
+    tkIconList_Selection $w anchor $i
+}
+
+proc tkIconList_CtrlBtn1 {w x y} {
+    upvar #0 $w data
+    
+    if { $data(-multiple) } {
+	focus $data(canvas)
+	set x [expr {int([$data(canvas) canvasx $x])}]
+	set y [expr {int([$data(canvas) canvasy $y])}]
+	set i [tkIconList_Index $w @${x},${y}]
+	if { [tkIconList_Selection $w includes $i] } {
+	    tkIconList_Selection $w clear $i
+	} else {
+	    tkIconList_Selection $w set $i
+	    tkIconList_Selection $w anchor $i
+	}
+    }
+}
+
+proc tkIconList_ShiftBtn1 {w x y} {
+    upvar #0 $w data
+    
+    if { $data(-multiple) } {
+	focus $data(canvas)
+	set x [expr {int([$data(canvas) canvasx $x])}]
+	set y [expr {int([$data(canvas) canvasy $y])}]
+	set i [tkIconList_Index $w @${x},${y}]
+	set a [tkIconList_Index $w anchor]
+	if { [string equal $a ""] } {
+	    set a $i
+	}
+	tkIconList_Selection $w clear 0 end
+	tkIconList_Selection $w set $a $i
+    }
 }
 
 # Gets called on button-1 motions
 #
 proc tkIconList_Motion1 {w x y} {
+    upvar #0 $w data
     global tkPriv
     set tkPriv(x) $x
     set tkPriv(y) $y
-
-    tkIconList_SelectAtXY $w $x $y
+    set x [expr {int([$data(canvas) canvasx $x])}]
+    set y [expr {int([$data(canvas) canvasy $y])}]
+    set i [tkIconList_Index $w @${x},${y}]
+    tkIconList_Selection $w clear 0 end
+    tkIconList_Selection $w set $i
 }
 
 proc tkIconList_Double1 {w x y} {
     upvar #0 $w data
 
-    if {[string compare $data(curItem) {}]} {
+    if {[llength $data(selection)]} {
 	tkIconList_Invoke $w
     }
 }
@@ -472,9 +609,13 @@ proc tkIconList_FocusIn {w} {
 	return
     }
 
-    if {[string compare $data(curItem) {}]} {
-	tkIconList_Select $w [lindex [lindex $data(list) $data(curItem)] 2] 1
+    if {[llength $data(selection)]} {
+	tkIconList_DrawSelection $w
     }
+}
+
+proc tkIconList_FocusOut {w} {
+    tkIconList_Selection $w clear 0 end
 }
 
 # tkIconList_UpDown --
@@ -665,6 +806,7 @@ proc ::tk::dialog::file::tkFDialog {type args} {
 	set data(typeMenu) $data(typeMenuBtn).m
 	set data(okBtn) $w.f2.ok
 	set data(cancelBtn) $w.f3.cancel
+	::tk::dialog::file::SetSelectMode $w $data(-multiple)
     }
     wm transient $w $data(-parent)
 
@@ -759,6 +901,12 @@ proc ::tk::dialog::file::Config {dataName type argList} {
 	{-title "" "" ""}
     }
 
+    # The "-multiple" option is only available for the "open" file dialog.
+    #
+    if { [string equal $type "open"] } {
+	lappend specs {-multiple "" "" "0"}
+    }
+
     # 2: default values depending on the type of the dialog
     #
     if {![info exists data(selectPath)]} {
@@ -802,6 +950,18 @@ proc ::tk::dialog::file::Config {dataName type argList} {
     if {![winfo exists $data(-parent)]} {
 	error "bad window path name \"$data(-parent)\""
     }
+
+    # Set -multiple to a one or zero value (not other boolean types
+    # like "yes") so we can use it in tests more easily.
+    if {![string compare $type save]} {
+	set data(-multiple) 0
+    } else {
+	if {$data(-multiple)} { 
+	    set data(-multiple) 1 
+	} else {
+	    set data(-multiple) 0
+	}
+    }
 }
 
 proc ::tk::dialog::file::Create {w class} {
@@ -841,7 +1001,11 @@ static char updir_bits[] = {
     # data(icons): the IconList that list the files and directories.
     #
     if { [string equal $class TkFDialog] } {
-	set fNameCaption "File name:"
+	if { $data(-multiple) } {
+	    set fNameCaption "File names:"
+	} else {
+	    set fNameCaption "File name:"
+	}
 	set fNameUnder 5
 	set iconListCommand [list ::tk::dialog::file::OkCmd $w]
     } else {
@@ -850,8 +1014,10 @@ static char updir_bits[] = {
 	set iconListCommand [list ::tk::dialog::file::chooseDir::DblClick $w]
     }
     set data(icons) [tkIconList $w.icons \
-	-browsecmd [list ::tk::dialog::file::ListBrowse $w] \
-	-command   $iconListCommand]
+	    -command	$iconListCommand \
+	    -multiple	$data(-multiple)]
+    bind $data(icons) <<ListboxSelect>> \
+	    [list ::tk::dialog::file::ListBrowse $w]
 
     # f2: the frame with the OK button and the "file name" field
     #
@@ -959,6 +1125,33 @@ static char updir_bits[] = {
     tkFocusGroup_BindOut $w $data(ent) [list ::tk::dialog::file::EntFocusOut $w]
 }
 
+# ::tk::dialog::file::SetSelectMode --
+#
+#	Set the select mode of the dialog to single select or multi-select.
+#
+# Arguments:
+#	w		The dialog path.
+#	multi		1 if the dialog is multi-select; 0 otherwise.
+#
+# Results:
+#	None.
+
+proc ::tk::dialog::file::SetSelectMode {w multi} {
+    set dataName __tk_filedialog
+    upvar ::tk::dialog::file::$dataName data
+    if { $multi } {
+	set fNameCaption "File names:"
+    } else {
+	set fNameCaption "File name:"
+    }
+    set fNameUnder 5
+    set iconListCommand [list ::tk::dialog::file::OkCmd $w]
+    $w.f2.lab configure -text $fNameCaption -under $fNameUnder
+    tkIconList_Config $data(icons) \
+	    [list -multiple $multi -command $iconListCommand]
+    return
+}
+
 # ::tk::dialog::file::UpdateWhenIdle --
 #
 #	Creates an idle event handler which updates the dialog in idle
@@ -1039,7 +1232,9 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 
     # Make the dir list
     #
-    foreach f [lsort -dictionary [glob -nocomplain .* *]] {
+    set completeFileList [lsort -dictionary -unique [glob -nocomplain .* *]]
+    set dirList {}
+    foreach f $completeFileList {
 	if {[string equal $f .]} {
 	    continue
 	}
@@ -1047,31 +1242,30 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	    continue
 	}
 	if {[file isdir ./$f]} {
-	    if {![info exists hasDoneDir($f)]} {
-		tkIconList_Add $data(icons) $folder $f
-		set hasDoneDir($f) 1
-	    }
+	    lappend dirList $f
 	}
     }
+    tkIconList_Add $data(icons) $folder $dirList
     if { [string equal $class TkFDialog] } {
 	# Make the file list if this is a File Dialog
 	#
 	if {[string equal $data(filter) *]} {
-	    set files [lsort -dictionary \
-		    [glob -nocomplain .* *]]
+	    set files $completeFileList
 	} else {
-	    set files [lsort -dictionary \
-		    [eval glob -nocomplain $data(filter)]]
-	}
-	
-	foreach f $files {
-	    if {![file isdir ./$f]} {
-		if {![info exists hasDoneFile($f)]} {
-		    tkIconList_Add $data(icons) $file $f
-		    set hasDoneFile($f) 1
+	    set files {}
+	    foreach f $completeFileList {
+		if { [string match $data(filter) $f] } {
+		    lappend files $f
 		}
 	    }
 	}
+	set fileList {}
+	foreach f $files {
+	    if {![file isdir ./$f]} {
+		lappend fileList $f
+	    }
+	}
+	tkIconList_Add $data(icons) $file $fileList
     }
 
     tkIconList_Arrange $data(icons)
@@ -1264,8 +1458,6 @@ proc ::tk::dialog::file::EntFocusIn {w} {
 	$data(ent) selection clear
     }
 
-    tkIconList_Unselect $data(icons)
-
     if { [string equal [winfo class $w] TkFDialog] } {
 	# If this is a File Dialog, make sure the buttons are labeled right.
 	if {[string equal $data(type) open]} {
@@ -1287,13 +1479,28 @@ proc ::tk::dialog::file::EntFocusOut {w} {
 #
 proc ::tk::dialog::file::ActivateEnt {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
+    
+    set text [$data(ent) get]
+    if {$data(-multiple)} {
+	set data(selectFile) ""
+	foreach fname $text {
+	    ::tk::dialog::file::VerifyFileName $w $fname
+	}
+    } else {
+	::tk::dialog::file::VerifyFileName $w $text
+    }
+}
 
-    set text [string trim [$data(ent) get]]
-    set list [::tk::dialog::file::ResolveFile $data(selectPath) $text \
-		  $data(-defaultextension)]
-    set flag [lindex $list 0]
-    set path [lindex $list 1]
-    set file [lindex $list 2]
+# Verification procedure
+#
+proc ::tk::dialog::file::VerifyFileName {w filename} {
+    upvar ::tk::dialog::file::[winfo name $w] data
+
+    set list [::tk::dialog::file::ResolveFile $data(selectPath) $filename \
+	    $data(-defaultextension)]
+    foreach {flag path file} $list {
+	break
+    }
 
     switch -- $flag {
 	OK {
@@ -1303,7 +1510,11 @@ proc ::tk::dialog::file::ActivateEnt {w} {
 		$data(ent) delete 0 end
 	    } else {
 		::tk::dialog::file::SetPathSilently $w $path
-		set data(selectFile) $file
+		if {$data(-multiple)} {
+		    lappend data(selectFile) $file
+		} else {
+		    set data(selectFile) $file
+		}
 		::tk::dialog::file::Done $w
 	    }
 	}
@@ -1319,7 +1530,11 @@ proc ::tk::dialog::file::ActivateEnt {w} {
 		$data(ent) icursor end
 	    } else {
 		::tk::dialog::file::SetPathSilently $w $path
-		set data(selectFile) $file
+		if {$data(-multiple)} {
+		    lappend data(selectFile) $file
+		} else {
+		    set data(selectFile) $file
+		}
 		::tk::dialog::file::Done $w
 	    }
 	}
@@ -1377,15 +1592,18 @@ proc ::tk::dialog::file::JoinFile {path file} {
     }
 }
 
-
-
 # Gets called when user presses the "OK" button
 #
 proc ::tk::dialog::file::OkCmd {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    set text [tkIconList_Get $data(icons)]
-    if {[string compare $text ""]} {
+    set text {}
+    foreach item [tkIconList_Curselection $data(icons)] {
+	lappend text [tkIconList_Get $data(icons) $item]
+    }
+
+    if {[llength $text] && !$data(-multiple)} {
+	set text [lindex $text 0]
 	set file [::tk::dialog::file::JoinFile $data(selectPath) $text]
 	if {[file isdirectory $file]} {
 	    ::tk::dialog::file::ListInvoke $w $text
@@ -1408,15 +1626,32 @@ proc ::tk::dialog::file::CancelCmd {w} {
 # Gets called when user browses the IconList widget (dragging mouse, arrow
 # keys, etc)
 #
-proc ::tk::dialog::file::ListBrowse {w text} {
+proc ::tk::dialog::file::ListBrowse {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    if {[string equal $text ""]} {
+    set text {}
+    foreach item [tkIconList_Curselection $data(icons)] {
+	lappend text [tkIconList_Get $data(icons) $item]
+    }
+    if {[llength $text] == 0} {
 	return
     }
-
-    set file [::tk::dialog::file::JoinFile $data(selectPath) $text]
-    if {![file isdirectory $file]} {
+    if { [llength $text] > 1 } {
+	set newtext {}
+	foreach file $text {
+	    set fullfile [::tk::dialog::file::JoinFile $data(selectPath) $file]
+	    if { ![file isdirectory $fullfile] } {
+		lappend newtext $file
+	    }
+	}
+	set text $newtext
+	set isDir 0
+    } else {
+	set text [lindex $text 0]
+	set file [::tk::dialog::file::JoinFile $data(selectPath) $text]
+	set isDir [file isdirectory $file]
+    }
+    if {!$isDir} {
 	$data(ent) delete 0 end
 	$data(ent) insert 0 $text
 
@@ -1440,11 +1675,13 @@ proc ::tk::dialog::file::ListBrowse {w text} {
 proc ::tk::dialog::file::ListInvoke {w text} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    if {[string equal $text ""]} {
+    if {[llength $text] == 0} {
 	return
     }
 
-    set file [::tk::dialog::file::JoinFile $data(selectPath) $text]
+    set file [::tk::dialog::file::JoinFile $data(selectPath) \
+	    [lindex $text 0]]
+    
     set class [winfo class $w]
     if {[string equal $class TkChooseDir] || [file isdirectory $file]} {
 	set appPWD [pwd]
@@ -1457,7 +1694,11 @@ proc ::tk::dialog::file::ListInvoke {w text} {
 	    set data(selectPath) $file
 	}
     } else {
-	set data(selectFile) $file
+	if {$data(-multiple)} {
+	    set data(selectFile) $text
+	} else {
+	    set data(selectFile) $file
+	}
 	::tk::dialog::file::Done $w
     }
 }
@@ -1475,18 +1716,29 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
     global tkPriv
 
     if {[string equal $selectFilePath ""]} {
-	set selectFilePath [::tk::dialog::file::JoinFile $data(selectPath) \
-		$data(selectFile)]
+	if {$data(-multiple)} {
+	    set selectFilePath {}
+	    foreach f $data(selectFile) {
+		lappend selectFilePath [::tk::dialog::file::JoinFile \
+		    $data(selectPath) $f]
+	    }
+	} else {
+	    set selectFilePath [::tk::dialog::file::JoinFile \
+		    $data(selectPath) $data(selectFile)]
+	}
+	
 	set tkPriv(selectFile)     $data(selectFile)
 	set tkPriv(selectPath)     $data(selectPath)
 
-	if {[file exists $selectFilePath] && [string equal $data(type) save]} {
-	    set reply [tk_messageBox -icon warning -type yesno\
-		    -parent $w -message "File\
-		    \"$selectFilePath\" already exists.\nDo\
-		    you want to overwrite it?"]
-	    if {[string equal $reply "no"]} {
-		return
+	if {[string equal $data(type) save]} {
+	    if {[file exists $selectFilePath]} {
+		set reply [tk_messageBox -icon warning -type yesno\
+			-parent $w -message "File\
+			\"$selectFilePath\" already exists.\nDo\
+			you want to overwrite it?"]
+		if {[string equal $reply "no"]} {
+		    return
+		}
 	    }
 	}
     }
