@@ -121,6 +121,7 @@ switch $tcl_platform(platform) {
 	event add <<Cut>> <Control-Key-x> <Key-F20> 
 	event add <<Copy>> <Control-Key-c> <Key-F16>
 	event add <<Paste>> <Control-Key-v> <Key-F18>
+	event add <<PasteSelection>> <ButtonRelease-2>
 	trace variable tk_strictMotif w tkEventMotifBindings
 	set tk_strictMotif $tk_strictMotif
     }
@@ -128,11 +129,13 @@ switch $tcl_platform(platform) {
 	event add <<Cut>> <Control-Key-x> <Shift-Key-Delete>
 	event add <<Copy>> <Control-Key-c> <Control-Key-Insert>
 	event add <<Paste>> <Control-Key-v> <Shift-Key-Insert>
+	event add <<PasteSelection>> <ButtonRelease-2>
     }
     "macintosh" {
 	event add <<Cut>> <Control-Key-x> <Key-F2> 
 	event add <<Copy>> <Control-Key-c> <Key-F3>
 	event add <<Paste>> <Control-Key-v> <Key-F4>
+	event add <<PasteSelection>> <ButtonRelease-2>
 	event add <<Clear>> <Clear>
     }
 }
