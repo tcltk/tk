@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.34 2005/02/11 21:04:37 hobbs Exp $
+'\" RCS: @(#) $Id: text.n,v 1.35 2005/02/14 23:02:52 vincentdarley Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -2160,15 +2160,6 @@ The display line with the insert cursor is redrawn each time the
 cursor blinks, which causes a steady stream of graphics traffic.
 Set the \fBinsertOffTime\fP attribute to 0 avoid this.
 .SH "KNOWN BUGS"
-The \fB\-elide\fP tag attribute, introduced in Tk 8.3, has one known
-limitation.  Newlines which have this attribute are only actually elided
-if their entire logical line is also elided.  Where there is a logical
-line which begins un-elided but terminates with an elided newline, that
-newline will still actually cause a line-break in the display.  The basic
-limitation is that while a single logical line can result in multiple
-display lines, a single display line cannot be derived from multiple
-logical lines.  This does mean, however, that logical lines which are
-completely elided have no problems.
 .VS 8.5
 .PP
 The \fBsearch \-regexp\fR sub-command attempts to perform sophisticated

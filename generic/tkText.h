@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.25 2004/09/10 12:13:41 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.26 2005/02/14 23:00:44 vincentdarley Exp $
  */
 
 #ifndef _TKTEXT
@@ -1000,7 +1000,8 @@ EXTERN Tk_SegType	tkTextToggleOffType;
  */
   
 EXTERN int		TkBTreeAdjustPixelHeight _ANSI_ARGS_((CONST TkText *textPtr,
-			    TkTextLine *linePtr, int newPixelHeight));
+			    TkTextLine *linePtr, int newPixelHeight,
+			    int mergedLogicalLines));
 EXTERN int		TkBTreeCharTagged _ANSI_ARGS_((CONST TkTextIndex *indexPtr,
 			    TkTextTag *tagPtr));
 EXTERN void		TkBTreeCheck _ANSI_ARGS_((TkTextBTree tree));
@@ -1095,7 +1096,7 @@ EXTERN TkTextTabArray *	TkTextGetTabs _ANSI_ARGS_((Tcl_Interp *interp,
 EXTERN void             TkTextFindDisplayLineEnd _ANSI_ARGS_((
 			    TkText *textPtr, TkTextIndex *indexPtr, 
 			    int end, int *xOffset));
-EXTERN void		TkTextIndexBackBytes _ANSI_ARGS_((CONST TkText *textPtr, 
+EXTERN int		TkTextIndexBackBytes _ANSI_ARGS_((CONST TkText *textPtr, 
 			    CONST TkTextIndex *srcPtr, int count,
 			    TkTextIndex *dstPtr));
 EXTERN void		TkTextIndexBackChars _ANSI_ARGS_((
@@ -1150,7 +1151,7 @@ EXTERN int              TkTextUpdateLineMetrics _ANSI_ARGS_((TkText *textPtr,
 			    int lineNum, int endLine, int doThisMuch));
 EXTERN int              TkTextUpdateOneLine _ANSI_ARGS_((TkText *textPtr, 
 			    TkTextLine *linePtr, int pixelHeight, 
-			    TkTextIndex *indexPtr));
+			    TkTextIndex *indexPtr, int partialCalc));
 EXTERN int		TkTextMarkCmd _ANSI_ARGS_((TkText *textPtr,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
 EXTERN int		TkTextMarkNameToIndex _ANSI_ARGS_((TkText *textPtr,
