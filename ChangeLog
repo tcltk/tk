@@ -4,6 +4,22 @@
 	* generic/tkTextDisp.c: fix to another version of [Bug 833627]
 	(crash in tkchat), adding two new tests. 
 	
+	* generic/tkText.c
+	* generic/tkTextIndex.c
+	* generic/tkTextDisp.c
+	* generic/tkTextWind.c
+	* generic/tkTextImage.c
+	* generic/tkTextTag.c
+	* generic/tkTextMark.c
+	* generic/tkTextBTree.c
+	* generic/tkText.h         
+	* doc/text.n
+	* tests/text.test
+	* tests/textWind.test: better handling of 'elide' tags, especially
+	during line layout, counting and forward/backward index movement.
+	Added new tests to ensure correct behaviour with multiple tags of
+	multiple priorities.
+
 2003-11-05  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/demos/nl.msg: Dutch messages from Arjen Markus [Patch 836368]

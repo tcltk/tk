@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.17 2003/10/31 09:02:09 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.18 2003/11/07 15:36:26 vincentdarley Exp $
  */
 
 #ifndef _TKTEXT
@@ -814,9 +814,27 @@ typedef int TkTextCountType;
 #define COUNT_CHARS 0
 #define COUNT_INDICES 1
 #define COUNT_DISPLAY 2
-#define COUNT_IS_ELIDED 4
 #define COUNT_DISPLAY_CHARS (COUNT_CHARS | COUNT_DISPLAY)
 #define COUNT_DISPLAY_INDICES (COUNT_INDICES | COUNT_DISPLAY)
+
+/*
+ * The following structure is used to keep track of elided text
+ * taking account of different tag priorities, it is need for
+ * quick calculations of whether a single index is elided, and
+ * to start at a given index and maintain a correct elide state
+ * as we move or count forwards or backwards.
+ */
+
+#define LOTSA_TAGS 1000
+typedef struct TkTextElideInfo {
+    int numTags;
+    int elide;
+    int elidePriority;
+    int deftagCnts[LOTSA_TAGS];
+    TkTextTag *deftagPtrs[LOTSA_TAGS];
+    int *tagCnts;
+    TkTextTag **tagPtrs;
+} TkTextElideInfo;
 
 /*
  * The constant below is used to specify a line when what is really
@@ -951,6 +969,7 @@ EXTERN void		TkTextIndexBackBytes _ANSI_ARGS_((
 			    CONST TkTextIndex *srcPtr, int count,
 			    TkTextIndex *dstPtr));
 EXTERN void		TkTextIndexBackChars _ANSI_ARGS_((
+			    CONST TkText *textPtr, 
 			    CONST TkTextIndex *srcPtr, int count,
 			    TkTextIndex *dstPtr, TkTextCountType type));
 EXTERN int		TkTextIndexCmp _ANSI_ARGS_((
@@ -964,6 +983,7 @@ EXTERN int		TkTextIndexForwBytes _ANSI_ARGS_((
 			    CONST TkTextIndex *srcPtr, int count,
 			    TkTextIndex *dstPtr));
 EXTERN void		TkTextIndexForwChars _ANSI_ARGS_((
+			    CONST TkText *textPtr, 
 			    CONST TkTextIndex *srcPtr, int count,
 			    TkTextIndex *dstPtr, TkTextCountType type));
 EXTERN void             TkTextIndexOfX _ANSI_ARGS_((TkText *textPtr, 
@@ -984,7 +1004,8 @@ EXTERN TkTextIndex *	TkTextMakeCharIndex _ANSI_ARGS_((TkTextBTree tree,
 EXTERN int		TkTextMeasureDown _ANSI_ARGS_((TkText *textPtr,
 			    TkTextIndex *srcPtr, int distance));
 EXTERN int		TkTextIsElided _ANSI_ARGS_((CONST TkText *textPtr,
-			    CONST TkTextIndex *indexPtr));
+			    CONST TkTextIndex *indexPtr, 
+			    TkTextElideInfo *infoPtr));
 EXTERN TkTextIndex *	TkTextMakeByteIndex _ANSI_ARGS_((TkTextBTree tree,
 			    int lineIndex, int byteIndex,
 			    TkTextIndex *indexPtr));

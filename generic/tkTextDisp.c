@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.23 2003/11/07 12:06:47 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.24 2003/11/07 15:36:26 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -934,7 +934,8 @@ LayoutDLine(textPtr, indexPtr)
 					 * of the line. */
     int byteOffset, ascent, descent, code, elide, elidesize;
     StyleValues *sValuePtr;
-
+    TkTextElideInfo info;               /* Keep track of elide state */
+    
     /*
      * Create and initialize a new DLine structure.
      */
@@ -953,9 +954,8 @@ LayoutDLine(textPtr, indexPtr)
     /*
      * Special case entirely elide line as there may be 1000s or more
      */
-    elide = TkTextIsElided(textPtr, indexPtr);		/* save a malloc */
+    elide = TkTextIsElided(textPtr, indexPtr, &info);
     if (elide && indexPtr->byteIndex==0) {
-	int tagElidePriority = -1;
 	maxBytes = 0;
 	for (segPtr = indexPtr->linePtr->segPtr;
 	     segPtr != NULL;
@@ -974,20 +974,22 @@ LayoutDLine(textPtr, indexPtr)
 		 * Reset tag elide priority, since we're on a new
 		 * character.
 		 */
-		tagElidePriority = -1;
 	    } else if ((segPtr->typePtr == &tkTextToggleOffType)
 		       || (segPtr->typePtr == &tkTextToggleOnType)) {
 		TkTextTag *tagPtr = segPtr->body.toggle.tagPtr;
-		if (tagPtr->elideString != NULL) {
-		    /* 
-		     * Only update the elide status if this tag has
-		     * higher priority than any other we've so far
-		     * seen at this index.
-		     */
-		    if (tagPtr->priority > tagElidePriority) {
-			elide = ((segPtr->typePtr == &tkTextToggleOffType)
-				 ^ tagPtr->elide);
-			tagElidePriority = tagPtr->priority;
+		if (tagPtr->elideString != NULL 
+		  && (tagPtr->priority >= info.elidePriority)) {
+		    elide = ((segPtr->typePtr == &tkTextToggleOffType)
+			     ^ tagPtr->elide);
+		    if (!elide && tagPtr->priority == info.elidePriority) {
+			/* Find previous elide tag, if any */
+			while (--info.elidePriority > 0) {
+			    if (info.tagCnts[info.elidePriority] & 1) {
+				break;
+			    }
+			}
+		    } else {
+			info.elidePriority = tagPtr->priority;
 		    }
 		}
 	    }
@@ -4188,7 +4190,7 @@ TkTextSetYView(textPtr, indexPtr, pickPlace)
 
     lineIndex = TkBTreeLineIndex(indexPtr->linePtr);
     if (lineIndex == TkBTreeNumLines(indexPtr->tree)) {
-	TkTextIndexBackChars(indexPtr, 1, &rounded, COUNT_INDICES);
+	TkTextIndexBackChars(NULL,indexPtr, 1, &rounded, COUNT_INDICES);
 	indexPtr = &rounded;
     }
 
@@ -4541,7 +4543,7 @@ TkTextSeeCmd(textPtr, interp, objc, objv)
      */
 
     if (TkBTreeLineIndex(index.linePtr) == TkBTreeNumLines(index.tree)) {
-	TkTextIndexBackChars(&index, 1, &index, COUNT_INDICES);
+	TkTextIndexBackChars(NULL,&index, 1, &index, COUNT_INDICES);
     }
 
     /*
@@ -5669,7 +5671,7 @@ DlineIndexOfX(textPtr, dlPtr, x, indexPtr)
 	    chunkPtr = chunkPtr->nextPtr) {
 	if (chunkPtr->nextPtr == NULL) {
 	    indexPtr->byteIndex += chunkPtr->numBytes;
-	    TkTextIndexBackChars(indexPtr, 1, indexPtr, COUNT_INDICES);
+	    TkTextIndexBackChars(NULL, indexPtr, 1, indexPtr, COUNT_INDICES);
 	    return;
 	}
     }
