@@ -12,7 +12,7 @@
 # Copyright (c) 2001 Tomasoft Engineering.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.48 2001/11/28 01:13:16 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.49 2001/12/03 10:42:31 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -453,9 +453,9 @@ TESTFLAGS   = -file $(TESTPAT)
 # Project specific targets
 #---------------------------------------------------------------------
 
-release:  setup $(WISH)
+release:  setup $(TKSTUBLIB) $(WISH)
 all:	  release $(CAT32)
-core:	  setup $(TKLIB)
+core:	  setup $(TKSTUBLIB) $(TKLIB)
 install:  install-binaries install-libraries
 tktest:	  setup $(TKTEST) $(CAT32)
 
@@ -533,33 +533,22 @@ $(CAT32): $(TCLDIR)\win\cat.c
 	$(link32) $(conlflags) -out:$@ -stack:16384 $(TMP_DIR)\cat.obj $(baselibs)
 
 install-binaries:
-	@$(MKDIR) "$(BIN_INSTALL_DIR)"
-	copy $(WISH) "$(BIN_INSTALL_DIR)"
-	@$(MKDIR) "$(LIB_INSTALL_DIR)"
-	@copy "$(TKLIB)" "$(BIN_INSTALL_DIR)"
+	@xcopy /i /y "$(WISH)" "$(BIN_INSTALL_DIR)\"
 !if "$(TKLIB)" != "$(TKIMPLIB)"
-	@copy $(TKIMPLIB) "$(LIB_INSTALL_DIR)"
+	@xcopy /i /y "$(TKLIB)" "$(BIN_INSTALL_DIR)\"
 !endif
-#	@if exist $(TKHLP) $(MKDIR) "$(DOC_INSTALL_DIR)"
-#	@if exist $(TKHLP) copy "$(TKHLP)" "$(DOC_INSTALL_DIR)"
-#	@if exist $(TKHLPCNT) copy "$(TKHLPCNT)" "$(DOC_INSTALL_DIR)"
+	@xcopy /i /y "$(TKIMPLIB)" "$(LIB_INSTALL_DIR)\"
+	@xcopy /i /y "$(TKSTUBLIB)" "$(LIB_INSTALL_DIR)\"
 
 install-libraries:
-	@$(MKDIR) "$(INCLUDE_INSTALL_DIR)"
-	@$(MKDIR) "$(INCLUDE_INSTALL_DIR)\X11"
-	copy "$(GENERICDIR)\tk.h"             "$(INCLUDE_INSTALL_DIR)"
-	copy "$(GENERICDIR)\tkDecls.h"        "$(INCLUDE_INSTALL_DIR)"
-	copy "$(GENERICDIR)\tkPlatDecls.h"    "$(INCLUDE_INSTALL_DIR)"
-	copy "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)"
-	xcopy "$(XLIBDIR)\X11\*.h"            "$(INCLUDE_INSTALL_DIR)\X11"
-	@$(MKDIR) "$(SCRIPT_INSTALL_DIR)"
-	@$(MKDIR) "$(SCRIPT_INSTALL_DIR)\images"
-	@$(MKDIR) "$(SCRIPT_INSTALL_DIR)\demos"
-	@$(MKDIR) "$(SCRIPT_INSTALL_DIR)\demos\images"
-	xcopy "$(ROOT)\library"              "$(SCRIPT_INSTALL_DIR)"
-	xcopy "$(ROOT)\library\images"       "$(SCRIPT_INSTALL_DIR)\images"
-	xcopy "$(ROOT)\library\demos"        "$(SCRIPT_INSTALL_DIR)\demos"
-	xcopy "$(ROOT)\library\demos\images" "$(SCRIPT_INSTALL_DIR)\demos\images"
+	@xcopy /i /y "$(GENERICDIR)\tk.h" "$(INCLUDE_INSTALL_DIR)\"
+	@xcopy /i /y "$(GENERICDIR)\tkDecls.h" "$(INCLUDE_INSTALL_DIR)\"
+	@xcopy /i /y "$(GENERICDIR)\tkPlatDecls.h" "$(INCLUDE_INSTALL_DIR)\"
+	@xcopy /i /y "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)\"
+	@xcopy /i /y "$(XLIBDIR)\X11\*.h" "$(INCLUDE_INSTALL_DIR)\X11\"
+	@xcopy /i /y "$(ROOT)\library" "$(SCRIPT_INSTALL_DIR)\" /s /exclude:<<
+CVS
+<<
 
 
 #---------------------------------------------------------------------
