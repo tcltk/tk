@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: event.test,v 1.5.2.1 2001/04/04 07:57:17 hobbs Exp $
+# RCS: @(#) $Id: event.test,v 1.5.2.2 2001/12/19 01:32:51 dgp Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -365,7 +365,7 @@ test event-click-drag-1.2 { click and drag in an entry widget, this
     pack $e
     tkwait visibility $e
     focus -force $e
-    _keypress_string $e "A Tcl/Tk selection test!"
+    _keypress_string $e "A Tcl/Tk selection!"
     set anchor 6
     set selend 18
 
@@ -420,7 +420,7 @@ test event-click-drag-1.2 { click and drag in an entry widget, this
     # Save the highlighted text
     lappend result [selection get]
 
-} {{A Tcl/Tk selection test!} 6 18 {Tk selection} 2 {Tcl/Tk selection}}
+} {{A Tcl/Tk selection!} 6 18 {Tk selection} 2 {Tcl/Tk selection}}
 
 # cleanup
 

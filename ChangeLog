@@ -1,3 +1,8 @@
+2001-12-18  Don Porter  <dgp@users.sourceforge.net>
+
+	* tests/event.test (event-click-drag-1.2): Corrected test that
+	failed on Solaris/CDE due to text scrolling.  [Bug 413735]
+
 2001-10-19  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	************************
