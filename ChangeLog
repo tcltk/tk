@@ -1,3 +1,11 @@
+2003-05-27  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* generic/tkText.c
+	* generic/tkTextTag.c
+	* generic/tkTextDisp.c
+	* generic/tkText.h: refactoring of text widget cleanup code 
+	to ensure all resources are freed.  [Bug#741179]
+	
 2003-05-23  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/mkLinks: Set the var S to "" at the top

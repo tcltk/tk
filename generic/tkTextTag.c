@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.9 2003/05/19 13:04:24 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.10 2003/05/27 15:35:53 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -1187,7 +1187,7 @@ TkTextBindProc(clientData, eventPtr)
 	TkTextPickCurrent(textPtr, eventPtr);
     }
     if ((textPtr->numCurTags > 0) && (textPtr->bindingTable != NULL)
-	    && (textPtr->tkwin != NULL)) {
+	    && (textPtr->tkwin != NULL) && !(textPtr->flags & DESTROYED)) {
 	Tk_BindEvent(textPtr->bindingTable, eventPtr, textPtr->tkwin,
 		textPtr->numCurTags, (ClientData *) textPtr->curTagArrayPtr);
     }
@@ -1359,7 +1359,8 @@ TkTextPickCurrent(textPtr, eventPtr)
     oldArrayPtr = textPtr->curTagArrayPtr;
     textPtr->curTagArrayPtr = newArrayPtr;
     if (numOldTags != 0) {
-	if ((textPtr->bindingTable != NULL) && (textPtr->tkwin != NULL)) {
+	if ((textPtr->bindingTable != NULL) && (textPtr->tkwin != NULL)
+	  && !(textPtr->flags & DESTROYED)) {
 	    event = textPtr->pickEvent;
 	    event.type = LeaveNotify;
 
@@ -1387,7 +1388,8 @@ TkTextPickCurrent(textPtr, eventPtr)
 	    textPtr->pickEvent.xcrossing.y, &index);
     TkTextSetMark(textPtr, "current", &index);
     if (numNewTags != 0) {
-	if ((textPtr->bindingTable != NULL) && (textPtr->tkwin != NULL)) {
+	if ((textPtr->bindingTable != NULL) && (textPtr->tkwin != NULL)
+	  && !(textPtr->flags & DESTROYED)) {
 	    event = textPtr->pickEvent;
 	    event.type = EnterNotify;
 	    event.xcrossing.detail = NotifyAncestor;

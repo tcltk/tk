@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.15 2003/05/19 13:04:23 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.16 2003/05/27 15:35:53 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -2188,7 +2188,7 @@ DisplayText(clientData)
 				 * compiler warnings. */
     Tcl_Interp *interp;
 
-    if (textPtr->tkwin == NULL) {
+    if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
 
 	/*
 	 * The widget has been deleted.  Don't do anything.
@@ -2205,7 +2205,7 @@ DisplayText(clientData)
                 TCL_GLOBAL_ONLY);
     }
 
-    if (textPtr->tkwin == NULL) {
+    if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
 
 	/*
 	 * The widget has been deleted.  Don't do anything.
@@ -2226,7 +2226,7 @@ DisplayText(clientData)
                 TCL_GLOBAL_ONLY);
     }
 
-    if (textPtr->tkwin == NULL) {
+    if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
 
 	/*
 	 * The widget has been deleted.  Don't do anything.
@@ -2244,12 +2244,14 @@ DisplayText(clientData)
      */
 
     while (dInfoPtr->flags & REPICK_NEEDED) {
+	int flags = textPtr->flags;
+	
 	Tcl_Preserve((ClientData) textPtr);
 	dInfoPtr->flags &= ~REPICK_NEEDED;
 	TkTextPickCurrent(textPtr, &textPtr->pickEvent);
 	tkwin = textPtr->tkwin;
 	Tcl_Release((ClientData) textPtr);
-	if (tkwin == NULL) {
+	if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
 	    goto end;
 	}
     }
@@ -2494,7 +2496,7 @@ DisplayText(clientData)
 		    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
 	}
 
-        if (textPtr->tkwin == NULL) {
+        if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
 
 	    /*
              * The widget has been deleted.  Don't do anything.
@@ -2524,7 +2526,7 @@ DisplayText(clientData)
 	    GetYView(textPtr->interp, textPtr, 1);
 	}
 
-        if (textPtr->tkwin == NULL) {
+        if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
 
 	    /*
              * The widget has been deleted.  Don't do anything.
