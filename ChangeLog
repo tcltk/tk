@@ -1,3 +1,24 @@
+2001-03-29  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/canvas.test: added test case to check obj conversion
+	* generic/tkObj.c (UpdateStringOfMM, SetMMFromAny): better
+	obj-aware screen distances.  (pgbaum, hobbs) [Patch #403327]
+
+	* library/bgerror.tcl (bgerror): allow focus into details window
+	for Windows C&P to work. [Bug #220929]
+
+	* library/tk.tcl: put a catch around adding <hpBackTab> to the
+	<<PrevWindow>> virtual event as it doesn't seem to work on all HP
+	systems. [Bug #411669]
+
+	* library/tkfbox.tcl: fixed selecting directories and single files
+	with spaces using tk_getOpenFile -multiple 1. [Bug #411640]
+
+	* win/tkWinDialog.c (GetFileNameA): added support for -multiple to
+	ascii-based tk_getOpenFile (Win9*). (haneef) [Patch #403047]
+	(GetFileNameW): increased number of files that could be returned
+	by tk_getOpenFile -multiple. [Patch #412042]
+
 2001-03-29  Mo DeJong  <mdejong@redhat.com>
 
 	* library/entry.tcl (tkEntryMouseSelect):
