@@ -1,3 +1,8 @@
+2004-03-25  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/winfo.n: Clarified the range of colour intensities returned
+	by [winfo rgb].  [Bug 922610]
+
 2004-03-22  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/ConfigWidg.3: Converted malloc/free to Tcl_Alloc/Tcl_Free to
