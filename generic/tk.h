@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.72 2002/09/27 18:09:53 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.73 2002/10/09 19:35:37 dgp Exp $
  */
 
 #ifndef _TK
@@ -36,6 +36,8 @@ extern "C" {
  * win/makefile.vc	(not patchlevel)
  * README		(sections 0 and 1)
  * mac/README		(not patchlevel)
+ * macosx/Wish.pbproj/project.pbxproj
+ * 			(14 LOC total, 4 LOC patch)
  * win/README		(not patchlevel)
  * unix/README		(not patchlevel)
  * unix/tk.spec		(3 LOC Major/Minor, 2 LOC patch)
