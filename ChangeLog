@@ -1,3 +1,7 @@
+2005-03-27  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* tests/textDisp.test: added test for fix of 2005-03-15.
+
 2005-03-24  Jim Ingham  <jingham@apple.com>
 
 	* macosx/tkMacOSXEntry.c (TkpDrawEntryBorderAndFocus): Dopey

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.34 2005/02/14 23:03:25 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.35 2005/03/27 15:03:47 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1741,6 +1741,36 @@ test textDisp-15.7 {ScrollByLines procedure, scrolling forwards} {
     .t yview scroll 4 units
     .t index @0,0
 } {50.40}
+
+test textDisp-15.8 {Scrolling near end of window} {
+    set textheight 12
+    set textwidth 30
+
+    toplevel .tf
+    frame .tf.f -relief sunken -borderwidth 2
+    pack .tf.f -padx 10 -pady 10
+
+    text .tf.f.t -font {Courier 9} -height $textheight \
+      -width $textwidth -yscrollcommand ".tf.f.sb set"
+    scrollbar .tf.f.sb -command ".tf.f.t yview"
+    pack .tf.f.t -side left -expand 1 -fill both
+    pack .tf.f.sb -side right -fill y
+
+    .tf.f.t tag configure Header -font {Helvetica 14 bold italic} \
+      -wrap word -spacing1 12 -spacing3 4
+
+    .tf.f.t insert end "Foo" Header
+    for {set i 1} {$i < $textheight} {incr i} {
+	.tf.f.t insert end "\nLine $i"
+    }
+    update ; after 1000 ; update
+    # Should scroll and should not crash!
+    .tf.f.t yview scroll 1 unit
+    # Check that it has scrolled
+    set res [.tf.f.t index @0,[expr [winfo height .tf.f.t] - 15]]
+    destroy .tf
+    set res
+} {12.0}
 
 .t configure -wrap char
 .t delete 1.0 end
@@ -3517,7 +3547,6 @@ test textDisp-31.7 {line update index shifting, elided} {
     lappend res [.t count -ypixels 1.0 end]
     set res
 } [list [expr {$fixedHeight * 1}] [expr {$fixedHeight * 3}] [expr {$fixedHeight * 3}] [expr {$fixedHeight * 2}] [expr {$fixedHeight * 1}] [expr {$fixedHeight * 1}]]
-return
 
 test textDisp-32.0 {everything elided} {
     # Must not crash
