@@ -1,3 +1,10 @@
+2004-08-22  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/SetOptions.3, doc/SetClassProcs.3, doc/MeasureChar.3:
+	* doc/GetVRoot.3, doc/GetHWND.3, doc/GetDash.3, doc/GetBitmap.3:
+	* doc/FontId.3, doc/CrtItemType.3, doc/ConfigWidg.3, doc/GetCursor.3:
+	More doc fixes from Mikhail Kolesnitchenko. [Patch 1013520]
+
 2004-08-20  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/TkInitStubs.3, doc/photo.n, doc/ParseArgv.3, doc/options.n: 
