@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.7 2002/05/27 19:49:33 mdejong Exp $
+# RCS: @(#) $Id: wm.test,v 1.8 2002/05/27 22:54:42 mdejong Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -344,6 +344,42 @@ test wm-transient-1.6 {usage} {
     toplevel .dummy
     list [catch {wm transient .dummy .icon} msg] $msg
 } {1 {can't make ".icon" a master: it is an icon for .top}}
+
+test wm-transient-1.7 {usage} {
+    deleteWindows
+    toplevel .master
+    list [catch {wm transient .master .master} err] $err
+} {1 {can't make ".master" its own master}}
+
+test wm-transient-1.8 {usage} {
+    deleteWindows
+    toplevel .master
+    frame .master.f
+    list [catch {wm transient .master .master.f} err] $err
+} {1 {can't make ".master" its own master}}
+
+test wm-transient-2.1 { basic get/set of master } {
+    deleteWindows
+    set results [list]    
+    toplevel .master
+    toplevel .subject
+    lappend results [wm transient .subject]
+    wm transient .subject .master
+    lappend results [wm transient .subject]
+    wm transient .subject {}
+    lappend results [wm transient .subject]
+    set results
+} {{} .master {}}
+
+test wm-transient-2.2 { first toplevel parent of
+        non-toplevel master is used } {
+    deleteWindows
+    toplevel .master
+    frame .master.f
+    toplevel .subject
+    wm transient .subject .master.f
+    wm transient .subject
+} {.master}
 
 
 
