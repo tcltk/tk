@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.22 2002/07/13 20:28:36 dgp Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.23 2002/07/13 21:52:34 dgp Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -376,8 +376,6 @@ test unixWm-8.10.2 {test for memory leaks} unix {
     wm group .t .
     set x 1
 } 1
-
-testConstraint testwrapper [llength [info commands testwrapper]]
 
 test unixWm-9.1 {TkWmMapWindow procedure, client property} {unix testwrapper} {
     catch {destroy .t}
