@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.18 2000/01/27 05:03:05 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.19 2000/01/27 18:03:34 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -675,6 +675,7 @@ UpdateWrapper(winPtr)
     int x, y, width, height, state;
     WINDOWPLACEMENT place;
     Tcl_DString titleString;
+    int *childStateInfo = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -786,6 +787,26 @@ UpdateWrapper(winPtr)
 	    && (oldWrapper != GetDesktopWindow())) {
 	SetWindowLong(oldWrapper, GWL_USERDATA, (LONG) NULL);
 
+	if (wmPtr->numTransients > 0) {
+	    /*
+	     * Unset the current wrapper as the parent for all transient
+	     * children for whom this is the master
+	     */
+	    WmInfo *wmPtr2;
+
+	    childStateInfo = (int *)ckalloc((unsigned) wmPtr->numTransients
+		* sizeof(int));
+	    state = 0;
+	    for (wmPtr2 = winPtr->dispPtr->firstWmPtr; wmPtr2 != NULL;
+		 wmPtr2 = wmPtr2->nextPtr) {
+		if (wmPtr2->masterPtr == winPtr) {
+		    if (!(wmPtr2->flags & WM_NEVER_MAPPED)) {
+			childStateInfo[state++] = wmPtr2->hints.initial_state;
+			SetParent(TkWinGetHWND(wmPtr2->winPtr->window), NULL);
+		    }
+		}
+	    }
+	}
 	/*
 	 * Remove the menubar before destroying the window so the menubar
 	 * isn't destroyed.
@@ -829,20 +850,26 @@ UpdateWrapper(winPtr)
 	wmPtr->flags &= ~WM_SYNC_PENDING;
     }
 
-    if (wmPtr->numTransients > 0) {
-	/*
-	 * Reset all transient children for whom this is the master
-	 */
-	WmInfo *wmPtr2;
+    if (childStateInfo) {
+	if (wmPtr->numTransients > 0) {
+	    /*
+	     * Reset all transient children for whom this is the master
+	     */
+	    WmInfo *wmPtr2;
 
-	for (wmPtr2 = winPtr->dispPtr->firstWmPtr; wmPtr2 != NULL;
-	     wmPtr2 = wmPtr2->nextPtr) {
-	    if (wmPtr2->masterPtr == winPtr) {
-		if (!(wmPtr2->flags & WM_NEVER_MAPPED)) {
-		    UpdateWrapper(wmPtr2->winPtr);
+	    state = 0;
+	    for (wmPtr2 = winPtr->dispPtr->firstWmPtr; wmPtr2 != NULL;
+		 wmPtr2 = wmPtr2->nextPtr) {
+		if (wmPtr2->masterPtr == winPtr) {
+		    if (!(wmPtr2->flags & WM_NEVER_MAPPED)) {
+			UpdateWrapper(wmPtr2->winPtr);
+			TkpWmSetState(wmPtr2->winPtr, childStateInfo[state++]);
+		    }
 		}
 	    }
 	}
+
+	ckfree((char *) childStateInfo);
     }
 
     /*
@@ -1641,8 +1668,8 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	if (argc == 3) {
 	    if (wmPtr->hints.flags & IconPixmapHint) {
 		Tcl_SetResult(interp,
-			Tk_NameOfBitmap(winPtr->display, wmPtr->hints.icon_pixmap),
-			TCL_STATIC);
+			Tk_NameOfBitmap(winPtr->display,
+				wmPtr->hints.icon_pixmap), TCL_STATIC);
 	    }
 	    return TCL_OK;
 	}
@@ -2068,7 +2095,10 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	} else {
 	    wmPtr->flags |= WM_HEIGHT_NOT_RESIZABLE;
 	}
-	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
+	if (!((wmPtr->flags & WM_NEVER_MAPPED)
+		&& !(winPtr->flags & TK_EMBEDDED))) {
+	    UpdateWrapper(winPtr);
+	}
 	goto updateGeom;
     } else if ((c == 's') && (strncmp(argv[1], "sizefrom", length) == 0)
 	    && (length >= 2)) {
@@ -2314,7 +2344,6 @@ WmWaitVisibilityProc(clientData, eventPtr)
 	if ((state == NormalState) || (state == ZoomState)) {
 	    state = winPtr->wmInfoPtr->hints.initial_state;
 	    if ((state == NormalState) || (state == ZoomState)) {
-		TkpWmSetState(winPtr, state);
 		UpdateWrapper(winPtr);
 	    }
 	}
