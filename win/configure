@@ -1252,8 +1252,15 @@ echo "configure:1180: checking compiler flags" >&5
 
 	# Specify linker flags depending on the type of app being 
 	# built -- Console vs. Window.
+	#
+	# We need to pass -e _WinMain@16 so that ld will use
+	# WinMain() instead of main() as the entry point. We can't
+	# use autoconf to check for this case since it would need
+	# to run an executable and that does not work when
+	# cross compiling. Remove this -e workaround once we
+	# require a gcc that does not have this bug.
 	LDFLAGS_CONSOLE="-mconsole ${extra_ldflags}"
-	LDFLAGS_WINDOW="-mwindows ${extra_ldflags}"
+	LDFLAGS_WINDOW="-mwindows -e _WinMain@16 ${extra_ldflags}"
     else
 	SHLIB_LD="link -dll -nologo -incremental:no"
 	SHLIB_LD_LIBS="user32.lib advapi32.lib"
@@ -1321,7 +1328,7 @@ echo "configure:1180: checking compiler flags" >&5
 #--------------------------------------------------------------------
 
 echo $ac_n "checking how to run the C preprocessor""... $ac_c" 1>&6
-echo "configure:1325: checking how to run the C preprocessor" >&5
+echo "configure:1332: checking how to run the C preprocessor" >&5
 # On Suns, sometimes $CPP names a directory.
 if test -n "$CPP" && test -d "$CPP"; then
   CPP=
@@ -1336,13 +1343,13 @@ else
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp.
   cat > conftest.$ac_ext <<EOF
-#line 1340 "configure"
+#line 1347 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1346: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1353: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1353,13 +1360,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -E -traditional-cpp"
   cat > conftest.$ac_ext <<EOF
-#line 1357 "configure"
+#line 1364 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1363: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1370: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1370,13 +1377,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -nologo -E"
   cat > conftest.$ac_ext <<EOF
-#line 1374 "configure"
+#line 1381 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1380: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1387: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1402,17 +1409,17 @@ echo "$ac_t""$CPP" 1>&6
 
 ac_safe=`echo "errno.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for errno.h""... $ac_c" 1>&6
-echo "configure:1406: checking for errno.h" >&5
+echo "configure:1413: checking for errno.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1411 "configure"
+#line 1418 "configure"
 #include "confdefs.h"
 #include <errno.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1416: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1423: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1444,7 +1451,7 @@ fi
 
 
     echo $ac_n "checking for build with symbols""... $ac_c" 1>&6
-echo "configure:1448: checking for build with symbols" >&5
+echo "configure:1455: checking for build with symbols" >&5
     # Check whether --enable-symbols or --disable-symbols was given.
 if test "${enable_symbols+set}" = set; then
   enableval="$enable_symbols"
@@ -1475,7 +1482,7 @@ TK_DBGX=${DBGX}
 
 
     echo $ac_n "checking the location of tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1479: checking the location of tclConfig.sh" >&5
+echo "configure:1486: checking the location of tclConfig.sh" >&5
 
     if test -d ../../tcl8.4$TK_PATCH_LEVEL/win;  then
 	TCL_BIN_DIR_DEFAULT=../../tcl8.4$TK_PATCH_LEVEL/win
@@ -1501,7 +1508,7 @@ fi
 
 
     echo $ac_n "checking for existence of $TCL_BIN_DIR/tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1505: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
+echo "configure:1512: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
     if test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
         echo "$ac_t""loading" 1>&6
@@ -1523,7 +1530,7 @@ echo "configure:1505: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
 
     echo $ac_n "checking for tclsh""... $ac_c" 1>&6
-echo "configure:1527: checking for tclsh" >&5
+echo "configure:1534: checking for tclsh" >&5
 
     if eval "test \"`echo '$''{'ac_cv_path_tclsh'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
