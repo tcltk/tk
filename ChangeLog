@@ -1,3 +1,12 @@
+2003-03-18  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.pbproj/project.pbxproj:
+	* macosx/Makefile:
+	* macosx/README: added support for giving 'make' the location
+	of Tcl.framework and tclsh to build and link against.
+
+	* macosx/tkMacOSXXStubs.c: fixed crash in [winfo server].
+
 2003-03-14  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/msgbox.tcl (Tk::MessageBox): Stop buttons from being
@@ -5,10 +14,10 @@
 
 2003-03-13  Don Porter  <dgp@users.sourceforge.net>
 
-        * tests/unixWm.test:  Constrained all tests older than revision 1.21
-        to run only on Unix.  Alternative approach did not match maintainer
-        habits.
-        * tests/spinbox.test (spinbox-17.4): Avoid long failure message.
+	* tests/unixWm.test:  Constrained all tests older than revision 1.21
+	to run only on Unix.  Alternative approach did not match maintainer
+	habits.
+	* tests/spinbox.test (spinbox-17.4): Avoid long failure message.
 
 2003-03-13  Kevin Kenny  <kennykb@users.sourceforge.net>
 
