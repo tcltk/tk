@@ -6,17 +6,11 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvPs.test,v 1.5 2002/10/10 07:25:24 hobbs Exp $
+# RCS: @(#) $Id: canvPs.test,v 1.6 2003/04/01 21:06:18 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
-
-namespace import -force tcltest::makeFile
-namespace import -force tcltest::removeFile
 
 canvas .c -width 400 -height 300 -bd 2 -relief sunken
 .c create rectangle 20 20 80 80 -fill red
@@ -128,7 +122,7 @@ test canvPs-3.2 {test ps generation with an embedded window not mapped} {} {
 removeFile foo.ps
 removeFile bar.ps
 deleteWindows
-::tcltest::cleanupTests
+cleanupTests
 return
 
 

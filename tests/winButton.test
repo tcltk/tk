@@ -8,13 +8,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winButton.test,v 1.9 2002/10/08 20:21:23 hobbs Exp $
+# RCS: @(#) $Id: winButton.test,v 1.10 2003/04/01 21:07:00 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 proc bogusTrace args {
@@ -146,5 +143,5 @@ test winbutton-1.9 {TkpComputeButtonGeometry procedure} {pcOnly} {
 
 # cleanup
 deleteWindows
-::tcltest::cleanupTests
+cleanupTests
 return

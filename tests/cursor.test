@@ -6,13 +6,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: cursor.test,v 1.8 2002/09/03 00:22:37 hobbs Exp $
+# RCS: @(#) $Id: cursor.test,v 1.9 2003/04/01 21:06:22 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 testConstraint testcursor [llength [info commands testcursor]]
@@ -83,8 +80,8 @@ set wincur(data_binary) {}
 foreach wincur(num) $wincur(data_octal) {
     append wincur(data_binary) [binary format c 0$wincur(num)]
 }
-set wincur(dir) [::tcltest::makeDirectory {dir with spaces}]
-set wincur(file) [::tcltest::makeFile $wincur(data_binary) "test file.cur" $wincur(dir)]
+set wincur(dir) [makeDirectory {dir with spaces}]
+set wincur(file) [makeFile $wincur(data_binary) "test file.cur" $wincur(dir)]
 test cursor-2.3 {Tk_GetCursor procedure: cursor specs are lists} {pcOnly} {
     destroy .b1
     button .b1 -cursor [list @$wincur(file)]
@@ -93,7 +90,7 @@ test cursor-2.4 {Tk_GetCursor procedure: cursor specs are lists} {pcOnly} {
     destroy .b1
     button .b1 -cursor @[regsub -all {[][ \\{}""$#]} $wincur(file) {\\&}]
 } {.b1}
-::tcltest::removeDirectory $wincur(dir)
+removeDirectory $wincur(dir)
 unset wincur
 
 test cursor-3.1 {Tk_FreeCursorFromObj - reference counts} {testcursor} {
@@ -135,5 +132,5 @@ test cursor-4.1 {FreeCursorObjProc} {testcursor} {
 destroy .t
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return

@@ -6,13 +6,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.14 2003/02/25 00:46:41 hobbs Exp $
+# RCS: @(#) $Id: entry.test,v 1.15 2003/04/01 21:06:22 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 proc scroll args {
@@ -1621,5 +1618,5 @@ destroy .e
 option clear
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return

@@ -5,17 +5,12 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: choosedir.test,v 1.10 2002/07/14 05:48:46 dgp Exp $
+# RCS: @(#) $Id: choosedir.test,v 1.11 2003/04/01 21:06:19 dgp Exp $
 #
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
-
-namespace import -force tcltest::makeDirectory
 
 #----------------------------------------------------------------------
 #
@@ -150,5 +145,5 @@ test choosedir-5.1 "tk_chooseDirectory, handles {} entry text" {unixOnly} {
 } $real
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return

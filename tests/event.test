@@ -6,13 +6,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: event.test,v 1.13 2003/02/18 06:22:44 mdejong Exp $
+# RCS: @(#) $Id: event.test,v 1.14 2003/04/01 21:06:23 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # XXX This test file is woefully incomplete.  Right now it only tests
@@ -677,6 +674,6 @@ rename _pause {}
 rename _text_ind_to_x_y {}
 rename _get_selection {}
 
-::tcltest::cleanupTests
+cleanupTests
 return
 

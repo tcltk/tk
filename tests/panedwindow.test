@@ -6,13 +6,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.8 2003/02/21 11:48:56 dkf Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.9 2003/04/01 21:06:49 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 set i 1
@@ -2476,5 +2473,5 @@ test panedwindow-30.1 {display on depths other than the default one} {
 }
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return
