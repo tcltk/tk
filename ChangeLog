@@ -1,6 +1,14 @@
-2004-11-18  Don Porter	<dgp@users.sourceforge.net>
+2004-11-19  Reinhard Max  <max@suse.de>
+
 
 	*** 8.4.8 TAGGED FOR RELEASE ***
+
+	* unix/installManPage: Classic sed doesn't support | in REs.
+
+	* doc/pack-old.n: Changed the internal name of the man page to
+	pack-old to avoid a name clash in the installed man pages.
+
+2004-11-18  Don Porter	<dgp@users.sourceforge.net>
 
         * changes:      Final updates for Tcl 8.4.8 release.
 
