@@ -2,6 +2,7 @@
 
 	* library/tkfbox.tcl (IconList_Selection, IconList_Create):
 	(IconList_Arrange): Assorted tk_getOpenFile fixes. [part of Bug 600313]
+	(IconList_ShiftMotion1): Also fix shift-drag.
 
 2005-01-12  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
