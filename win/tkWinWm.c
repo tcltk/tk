@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54 2002/12/06 23:29:37 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.1 2004/05/15 04:07:15 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -1803,7 +1803,7 @@ UpdateWrapper(winPtr)
     TkWindow *winPtr;		/* Top-level window to redecorate. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    HWND parentHWND, oldWrapper;
+    HWND parentHWND, oldWrapper = wmPtr->wrapper;
     HWND child;
     int x, y, width, height, state;
     WINDOWPLACEMENT place;
@@ -1944,7 +1944,7 @@ UpdateWrapper(winPtr)
 	SetWindowLong(child, GWL_WNDPROC, (LONG) TopLevelProc);
 #endif
     }
-    oldWrapper = SetParent(child, wmPtr->wrapper);
+    SetParent(child, wmPtr->wrapper);
     if (oldWrapper) {
 	hSmallIcon = (HICON) SendMessage(oldWrapper, WM_GETICON, ICON_SMALL,
 		(LPARAM) NULL);
