@@ -1,3 +1,8 @@
+2002-02-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* unix/tkUnixMenu.c (GetMenuLabelGeometry,DrawMenuEntryLabel):
+	Stop meaningless GCC warnings.
+
 2002-02-21  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* doc/panedwindow.n:
