@@ -2,6 +2,10 @@
 
 	*** 8.4.7 TAGGED FOR RELEASE ***
 
+	* generic/tkImgGIF.c (FileReadGIF): fix crash reported by Reinhard Max:
+	in case of premature end of image data, return error instead of
+	passing nil buffer to Tk_PhotoPutBlock().
+
 	* generic/tkRectOval.c (ComputeRectOvalBbox): Mac OS X specific
 	fix to rounding in bounding box 'bloat' calculation to avoid drawing
 	outside of bounding box when CG drawing enabled. Fix probably
