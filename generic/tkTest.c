@@ -13,10 +13,8 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.7 1999/10/29 03:57:57 hobbs Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.8 1999/12/06 01:54:24 hobbs Exp $
  */
-
-#define USE_OLD_IMAGE
 
 #include "tkInt.h"
 #include "tkPort.h"
@@ -64,7 +62,7 @@ typedef struct TImageInstance {
  */
 
 static int		ImageCreate _ANSI_ARGS_((Tcl_Interp *interp,
-			    char *name, int argc, char **argv,
+			    char *name, int argc, Tcl_Obj *CONST objv[],
 			    Tk_ImageType *typePtr, Tk_ImageMaster master,
 			    ClientData *clientDataPtr));
 static ClientData	ImageGet _ANSI_ARGS_((Tk_Window tkwin,
@@ -1559,12 +1557,12 @@ TestfontObjCmd(clientData, interp, objc, objv)
 
 	/* ARGSUSED */
 static int
-ImageCreate(interp, name, argc, argv, typePtr, master, clientDataPtr)
+ImageCreate(interp, name, objc, objv, typePtr, master, clientDataPtr)
     Tcl_Interp *interp;		/* Interpreter for application containing
 				 * image. */
     char *name;			/* Name to use for image. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings for options (doesn't
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument strings for options (doesn't
 				 * include image name or type). */
     Tk_ImageType *typePtr;	/* Pointer to our type record (not used). */
     Tk_ImageMaster master;	/* Token for image, to be used by us in
@@ -1577,18 +1575,18 @@ ImageCreate(interp, name, argc, argv, typePtr, master, clientDataPtr)
     int i;
 
     varName = "log";
-    for (i = 0; i < argc; i += 2) {
-	if (strcmp(argv[i], "-variable") != 0) {
-	    Tcl_AppendResult(interp, "bad option name \"", argv[i],
-		    "\"", (char *) NULL);
+    for (i = 0; i < objc; i += 2) {
+	if (strcmp(Tcl_GetString(objv[i]), "-variable") != 0) {
+	    Tcl_AppendResult(interp, "bad option name \"",
+		    Tcl_GetString(objv[i]), "\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	if ((i+1) == argc) {
-	    Tcl_AppendResult(interp, "no value given for \"", argv[i],
-		    "\" option", (char *) NULL);
+	if ((i+1) == objc) {
+	    Tcl_AppendResult(interp, "no value given for \"",
+		    Tcl_GetString(objv[i]), "\" option", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	varName = argv[i+1];
+	varName = Tcl_GetString(objv[i+1]);
     }
     timPtr = (TImageMaster *) ckalloc(sizeof(TImageMaster));
     timPtr->master = master;
