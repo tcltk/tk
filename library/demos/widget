@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.21 2003/12/04 12:28:37 vincentdarley Exp $
+# RCS: @(#) $Id: widget,v 1.22 2004/02/25 13:22:32 cc_benny Exp $
 
 package require Tcl	8.4
 package require Tk	8.4
@@ -220,7 +220,7 @@ proc addFormattedText {formattedText} {
 	    continue
 	}
 	if {[string match @@* $line]} {
-	    set style [string range $line 1 end]
+	    set style [string range $line 2 end]
 	    continue
 	}
 	if {!$isNL} {
