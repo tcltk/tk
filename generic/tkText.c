@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.37 2003/05/21 09:21:57 dkf Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.38 2003/05/27 15:35:52 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -1336,32 +1336,36 @@ TextEventProc(clientData, eventPtr)
 	    textPtr->prevHeight = Tk_Height(textPtr->tkwin);
 	}
     } else if (eventPtr->type == DestroyNotify) {
-	if (textPtr->tkwin != NULL) {
-	    /*
-	     * NOTE: we must zero out selBorder, selBorderWidthPtr and
-	     * selFgColorPtr: they are duplicates of information in the
-	     * "sel" tag, which will be freed up when we delete all tags.
-	     * Hence we don't want the automatic config options freeing
-	     * process to delete them as well.
-	     */
+	/*
+	 * NOTE: we must zero out selBorder, selBorderWidthPtr and
+	 * selFgColorPtr: they are duplicates of information in the
+	 * "sel" tag, which will be freed up when we delete all tags.
+	 * Hence we don't want the automatic config options freeing
+	 * process to delete them as well.
+	 */
 
-	    textPtr->selBorder = NULL;
-	    textPtr->selBorderWidthPtr = NULL;
-	    textPtr->selBorderWidth = 0;
-	    textPtr->selFgColorPtr = NULL;
-	    if (textPtr->setGrid) {
-		Tk_UnsetGrid(textPtr->tkwin);
-	    }
+	textPtr->selBorder = NULL;
+	textPtr->selBorderWidthPtr = NULL;
+	textPtr->selBorderWidth = 0;
+	textPtr->selFgColorPtr = NULL;
+	if (textPtr->setGrid) {
+	    Tk_UnsetGrid(textPtr->tkwin);
+	    textPtr->setGrid = 0;
+	}
+	if (!(textPtr->flags & OPTIONS_FREED)) {
 	    Tk_FreeConfigOptions((char *) textPtr, textPtr->optionTable,
 				 textPtr->tkwin);
-	    /* 
-	     * We don't delete the associated Tcl command yet, because
-	     * that will cause textPtr->tkWin to be nulled out, and that
-	     * is needed inside DestroyText to clean up certain tags
-	     * which might have been created (e.g. in the text widget
-	     * styles demo).
-	     */
+	    textPtr->flags |= OPTIONS_FREED;
 	}
+	textPtr->flags |= DESTROYED;
+	
+	/* 
+	 * We don't delete the associated Tcl command yet, because
+	 * that will cause textPtr->tkWin to be nulled out, and that
+	 * is needed inside DestroyText to clean up certain tags
+	 * which might have been created (e.g. in the text widget
+	 * styles demo).
+	 */
 	Tcl_EventuallyFree((ClientData) textPtr, DestroyText);
     } else if ((eventPtr->type == FocusIn) || (eventPtr->type == FocusOut)) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
@@ -1418,16 +1422,17 @@ TextCmdDeletedProc(clientData)
 
     /*
      * This procedure could be invoked either because the window was
-     * destroyed and the command was then deleted (in which case tkwin
-     * is NULL) or because the command was deleted, and then this procedure
-     * destroys the widget.
+     * destroyed and the command was then deleted (in which this flag is
+     * already set) or because the command was deleted, and then this
+     * procedure destroys the widget.
      */
 
-    if (tkwin != NULL) {
+    if (!(textPtr->flags & DESTROYED)) {
 	if (textPtr->setGrid) {
 	    Tk_UnsetGrid(textPtr->tkwin);
+	    textPtr->setGrid = 0;
 	}
-	textPtr->tkwin = NULL;
+	textPtr->flags |= DESTROYED;
 	Tk_DestroyWindow(tkwin);
     }
 }
