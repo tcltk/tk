@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.13 2000/01/26 17:02:27 ericm Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.14 2000/01/26 21:11:00 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -3760,7 +3760,13 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height)
     destLinePtr = masterPtr->pix24 + (y * masterPtr->width + x) * 4;
     pitch = masterPtr->width * 4;
 
-    if ((blockPtr->pixelSize == 4) && (greenOffset == 1) && (blueOffset == 2) && (alphaOffset == 0)
+    /*
+     * This test is probably too restrictive.  We should also be able to
+     * do a memcpy if pixelSize == 3 and alphaOffset == 0.  Maybe other cases
+     * too.
+     */
+    if ((blockPtr->pixelSize == 4)
+	    && (greenOffset == 1) && (blueOffset == 2) && (alphaOffset == 3)
 	    && (width <= blockPtr->width) && (height <= blockPtr->height)
 	    && ((height == 1) || ((x == 0) && (width == masterPtr->width)
 		&& (blockPtr->pitch == pitch)))) {
@@ -3811,7 +3817,25 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height)
 
   if (alphaOffset) {
     int x1, y1, end;
-
+    
+    /*
+     * This block is grossly inefficient.  For each row in the image, it
+     * finds each continguous string of transparent pixels, then marks those
+     * areas as invalid in the validRegion mask.  This makes drawing very
+     * efficient, because of the way we use X:  we just say, here's your
+     * mask, and here's your data.  We need not worry about the current
+     * background color, etc.  But this costs us a lot on the image setup.
+     * Still, image setup only happens once, whereas the drawing happens
+     * many times, so this might be the best way to go.
+     *
+     * An alternative might be to not set up this mask, and instead, at
+     * drawing time, for each transparent pixel, set its color to the
+     * color of the background behind that pixel.  This is what I suspect
+     * most of programs do.  However, they don't have to deal with the canvas,
+     * which could have many different background colors.  Determining the
+     * correct bg color for a given pixel might be expensive.
+     */
+     
     destLinePtr = masterPtr->pix24 + (y * masterPtr->width + x) * 4 + 3;
     for (y1 = 0; y1 < height; y1++) {
 	x1 = 0;

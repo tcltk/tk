@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.8 1999/12/09 14:46:33 hobbs Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.9 2000/01/26 21:11:00 ericm Exp $
  */
 
 /*
@@ -717,6 +717,41 @@ GetDataBlock(chan, buf)
 }
 
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ReadImage --
+ *
+ *	Process a GIF image from a given source, with a given height,
+ *      width, transparency, etc.
+ *
+ *      This code is based on the code found in the ImageMagick GIF decoder,
+ *      which is (c) 2000 ImageMagick Studio.
+ *
+ *      Some thoughts on our implementation:
+ *      We currently have implementations for two separate GIF decoders in
+ *      this source.  One is here, in ReadImage; the other is in LWZReadByte.
+ *      This is an artifact of our original implementation.  Ideally, we
+ *      should remove all vestiges of LWZReadByte, which is slow and poorly
+ *      documented.  However, that would require some additional effort to
+ *      collapse the calling layers of this system:  Instead of
+ *      FileReadGIF -> ReadImage, it would change to FileReadGIF.
+ *
+ *      Possible further optimizations:  we could pull the GetCode function
+ *      directly into ReadImage, which would improve our speed.  The reason
+ *      I have not yet done so is because GetCode is still used by LWZReadByte,
+ *      and I don't want to duplicate the code.
+ *
+ * Results:
+ *	Processes a GIF image and loads the pixel data into a memory array.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static int
 ReadImage(interp, imagePtr, chan, len, rows, cmap,
 	width, height, srcX, srcY, interlace, transparent)
@@ -730,26 +765,28 @@ ReadImage(interp, imagePtr, chan, len, rows, cmap,
      int interlace;
      int transparent;
 {
-    unsigned char c;
+    unsigned char initialCodeSize;
     int v;
-    int xpos = 0, ypos = 0, pass = 0;
+    int xpos = 0, ypos = 0, pass = 0, i;
     char *pixelPtr;
-
-
+    const static int interlaceStep[] = { 8, 8, 4, 2 };
+    const static int interlaceStart[] = { 0, 4, 2, 1 };
+    unsigned short prefix[(1 << MAX_LWZ_BITS)];
+    unsigned char  append[(1 << MAX_LWZ_BITS)];
+    unsigned char  stack[(1 << MAX_LWZ_BITS)*2];
+    unsigned char *top;
+    int codeSize, clearCode, inCode, endCode, oldCode, maxCode,
+	code, firstCode;
+    
+    
     /*
-     *  Initialize the Compression routines
+     *  Initialize the decompression routines
      */
-    if (! ReadOK(chan, &c, 1))  {
+    if (! ReadOK(chan, &initialCodeSize, 1))  {
 	Tcl_AppendResult(interp, "error reading GIF image: ",
 		Tcl_PosixError(interp), (char *) NULL);
 	return TCL_ERROR;
     }
-
-    if (LWZReadByte(chan, 1, c) < 0) {
-	Tcl_SetResult(interp, "format error in GIF image", TCL_STATIC);
-	return TCL_ERROR;
-    }
-
     if (transparent!=-1) {
 	cmap[transparent][CM_RED] = 0;
 	cmap[transparent][CM_GREEN] = 0;
@@ -758,52 +795,154 @@ ReadImage(interp, imagePtr, chan, len, rows, cmap,
     }
 
     pixelPtr = imagePtr;
-    while ((v = LWZReadByte(chan, 0, c)) >= 0 ) {
 
-	if ((xpos>=srcX) && (xpos<srcX+len) &&
-		(ypos>=srcY) && (ypos<srcY+rows)) {
+    /* Initialize the decoder */
+    /* Set values for "special" numbers:
+     * clear code	reset the decoder
+     * end code		stop decoding
+     * code size	size of the next code to retrieve
+     * max code		next available table position
+     */
+    clearCode   = 1 << (int) initialCodeSize;
+    endCode     = clearCode + 1;
+    codeSize    = (int) initialCodeSize + 1;
+    maxCode     = clearCode + 2;
+    oldCode     = -1;
+    firstCode   = -1;
+    
+    memset((void *)prefix, 0, (1 << MAX_LWZ_BITS) * sizeof(short));
+    memset((void *)append, 0, (1 << MAX_LWZ_BITS) * sizeof(char));
+    for (i = 0; i < clearCode; i++) {
+	append[i] = i;
+    }
+    top = stack;
+
+    GetCode(chan, 0, 1);
+
+    /* Read until we finish the image */
+    for (i = 0, ypos = 0; i < rows; i++) {
+	for (xpos = 0; xpos < len; ) {
+
+	    if (top == stack) {
+		/* Bummer -- our stack is empty.  Now we have to work! */
+		code = GetCode(chan, codeSize, 0);
+		if (code < 0) {
+		    return TCL_OK;
+		}
+
+		if (code > maxCode || code == endCode) {
+		    /*
+		     * If we're doing things right, we should never
+		     * receive a code that is greater than our current
+		     * maximum code.  If we do, bail, because our decoder
+		     * does not yet have that code set up.
+		     *
+		     * If the code is the magic endCode value, quit.
+		     */
+		    return TCL_OK;
+		}
+
+		if (code == clearCode) {
+		    /* Reset the decoder */
+		    codeSize    = initialCodeSize + 1;
+		    maxCode     = clearCode + 2;
+		    oldCode     = -1;
+		    continue;
+		}
+		
+		if (oldCode == -1) {
+		    /*
+		     * Last pass reset the decoder, so the first code we
+		     * see must be a singleton.  Seed the stack with it,
+		     * and set up the old/first code pointers for
+		     * insertion into the string table.  We can't just
+		     * roll this into the clearCode test above, because
+		     * at that point we have not yet read the next code.
+		     */
+		    *top++=append[code];
+		    oldCode = code;
+		    firstCode = code;
+		    continue;
+		}
+		
+		inCode = code;
+
+		if (code == maxCode) {
+		    /*
+		     * maxCode is always one bigger than our highest assigned
+		     * code.  If the code we see is equal to maxCode, then
+		     * we are about to add a new string to the table. ???
+		     */
+		    *top++ = firstCode;
+		    code = oldCode;
+		}
+
+		while (code > clearCode) {
+		    /*
+		     * Populate the stack by tracing the string in the
+		     * string table from its tail to its head
+		     */
+		    *top++ = append[code];
+		    code = prefix[code];
+		}
+		firstCode = append[code];
+
+		/*
+		 * If there's no more room in our string table, quit.
+		 * Otherwise, add a new string to the table
+		 */
+		if (maxCode >= (1 << MAX_LWZ_BITS)) {
+		    return TCL_OK;
+		}
+
+		/* Push the head of the string onto the stack */
+		*top++ = firstCode;
+
+		/* Add a new string to the string table */
+		prefix[maxCode] = oldCode;
+		append[maxCode] = firstCode;
+		maxCode++;
+
+		/* maxCode tells us the maximum code value we can accept.
+		 * If we see that we need more bits to represent it than
+		 * we are requesting from the unpacker, we need to increase
+		 * the number we ask for.
+		 */
+		if ((maxCode >= (1 << codeSize))
+			&& (maxCode < (1<<MAX_LWZ_BITS))) {
+		    codeSize++;
+		}
+		oldCode = inCode;
+	    }
+
+	    /* Pop the next color index off the stack */
+	    v = *(--top);
+	    if (v < 0) {
+		return TCL_OK;
+	    }
 	    *pixelPtr++ = cmap[v][CM_RED];
 	    *pixelPtr++ = cmap[v][CM_GREEN];
 	    *pixelPtr++ = cmap[v][CM_BLUE];
 	    if (transparent >= 0) {
 		*pixelPtr++ = cmap[v][CM_ALPHA];
 	    }
+	    xpos++;
 	}
 
-	++xpos;
-	if (xpos == width) {
-	    xpos = 0;
-	    if (interlace) {
-		switch (pass) {
-		    case 0:
-		    case 1:
-			ypos += 8; break;
-		    case 2:
-			ypos += 4; break;
-		    case 3:
-			ypos += 2; break;
+	/* If interlacing, the next ypos is not just +1 */
+	if (interlace) {
+	    ypos += interlaceStep[pass];
+	    while (ypos >= height) {
+		pass++;
+		if (pass > 3) {
+		    return TCL_OK;
 		}
-		
-		while (ypos >= height) {
-		    ++pass;
-		    switch (pass) {
-			case 1:
-			    ypos = 4; break;
-			case 2:
-			    ypos = 2; break;
-			case 3:
-			    ypos = 1; break;
-			default:
-			    return TCL_OK;
-		    }
-		}
-	    } else {
-		++ypos;
+		ypos = interlaceStart[pass];
 	    }
-	    pixelPtr = imagePtr + (ypos-srcY) * len * ((transparent>=0)?4:3);
+	} else {
+	    ypos++;
 	}
-	if (ypos >= height)
-	    break;
+	pixelPtr = imagePtr + (ypos) * len * ((transparent>=0)?4:3);
     }
     return TCL_OK;
 }
@@ -820,7 +959,8 @@ LWZReadByte(chan, flag, input_code_size)
     static int max_code, max_code_size;
     static int firstcode, oldcode;
     static int clear_code, end_code;
-    static int table[2][(1<< MAX_LWZ_BITS)];
+    static int prefix[(1 << MAX_LWZ_BITS)];
+    static int append[(1 << MAX_LWZ_BITS)];
     static int stack[(1<<(MAX_LWZ_BITS))*2], *sp;
     register int    i;
 
@@ -832,26 +972,31 @@ LWZReadByte(chan, flag, input_code_size)
 	max_code_size = 2*clear_code;
 	max_code = clear_code+2;
 
+	/* Init the lwz unpacker */
 	GetCode(chan, 0, 1);
 
 	fresh = 1;
 
+	/* Initialize prefix and append tables */
+	memset((void *)prefix, 0, (1 << MAX_LWZ_BITS) * sizeof(int));
+	memset((void *)append, 0, (1 << MAX_LWZ_BITS) * sizeof(int));
 	for (i = 0; i < clear_code; ++i) {
-	    table[0][i] = 0;
-	    table[1][i] = i;
+	    append[i] = i;
 	}
-	for (; i < (1<<MAX_LWZ_BITS); ++i) {
-	    table[0][i] = table[1][0] = 0;
-	}
-
 	sp = stack;
 
 	return 0;
     } else if (fresh) {
+	/*
+	 * find the first "real" code and return that.  Because of
+	 * how LWZ works, it will necessarily refer to a single char,
+	 * so we need not bother with the stack
+	 */
 	fresh = 0;
 	do {
-	    firstcode = oldcode = GetCode(chan, code_size, 0);
+	    firstcode = GetCode(chan, code_size, 0);
 	} while (firstcode == clear_code);
+	oldcode = firstcode;
 	return firstcode;
     }
 
@@ -861,13 +1006,10 @@ LWZReadByte(chan, flag, input_code_size)
 
     while ((code = GetCode(chan, code_size, 0)) >= 0) {
 	if (code == clear_code) {
+	    memset((void *)prefix, 0, (1 << MAX_LWZ_BITS) * sizeof(int));
+	    memset((void *)append, 0, (1 << MAX_LWZ_BITS) * sizeof(int));
 	    for (i = 0; i < clear_code; ++i) {
-		table[0][i] = 0;
-		table[1][i] = i;
-	    }
-	    
-	    for (; i < (1<<MAX_LWZ_BITS); ++i) {
-		table[0][i] = table[1][i] = 0;
+		append[i] = i;
 	    }
 
 	    code_size = set_code_size+1;
@@ -901,8 +1043,8 @@ LWZReadByte(chan, flag, input_code_size)
 	}
 
 	while (code >= clear_code) {
-	    *sp++ = table[1][code];
-	    if (code == table[0][code]) {
+	    *sp++ = append[code];
+	    if (code == prefix[code]) {
 		return -2;
 
 		/*
@@ -911,14 +1053,14 @@ LWZReadByte(chan, flag, input_code_size)
 		 printf("circular table entry BIG ERROR\n");
 		 */
 	    }
-	    code = table[0][code];
+	    code = prefix[code];
 	}
 
-	*sp++ = firstcode = table[1][code];
+	*sp++ = firstcode = append[code];
 
 	if ((code = max_code) <(1<<MAX_LWZ_BITS)) {
-	    table[0][code] = oldcode;
-	    table[1][code] = firstcode;
+	    prefix[code] = oldcode;
+	    append[code] = firstcode;
 	    ++max_code;
 	    if ((max_code>=max_code_size) && (max_code_size < (1<<MAX_LWZ_BITS))) {
 		max_code_size *= 2;
@@ -934,6 +1076,35 @@ LWZReadByte(chan, flag, input_code_size)
 	return code;
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetCode --
+ *
+ *      Extract the next compression code from the file.  In GIF's, the
+ *      compression codes are between 3 and 12 bits long and are then
+ *      packed into 8 bit bytes, left to right, for example:
+ *                 bbbaaaaa
+ *                 dcccccbb
+ *                 eeeedddd
+ *                 ...
+ *      We use a byte buffer read from the file and a sliding window
+ *      to unpack the bytes.  Thanks to ImageMagick for the sliding window
+ *      idea.
+ *      args:  chan         the channel to read from
+ *             code_size    size of the code to extract
+ *             flag         boolean indicating whether the extractor
+ *                          should be reset or not
+ *
+ * Results:
+ *	code                the next compression code
+ *
+ * Side effects:
+ *	May consume more input from chan.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static int
 GetCode(chan, code_size, flag)
@@ -942,46 +1113,51 @@ GetCode(chan, code_size, flag)
      int flag;
 {
     static unsigned char buf[280];
-    static int curbit, lastbit, done, last_byte;
-    int i, j, ret;
-    unsigned char count;
+    static int bytes = 0, done;
+    static unsigned char *c;
 
+    static unsigned int window;
+    static int bitsInWindow = 0;
+    int ret;
+    
     if (flag) {
-	curbit = 0;
-	lastbit = 0;
+	/* Initialize the decoder */
+	bitsInWindow = 0;
+	bytes = 0;
+	window = 0;
 	done = 0;
+	c = NULL;
 	return 0;
     }
 
-
-    if ( (curbit+code_size) >= lastbit) {
+    while (bitsInWindow < code_size) {
+	/* Not enough bits in our window to cover the request */
 	if (done) {
-	    /* ran off the end of my bits */
 	    return -1;
 	}
-	if (last_byte >= 2) {
-	    buf[0] = buf[last_byte-2];
+	if (bytes == 0) {
+	    /* Not enough bytes in our buffer to add to the window */
+	    bytes = GetDataBlock(chan, buf);
+	    c = buf;
+	    if (bytes <= 0) {
+		done = 1;
+		break;
+	    }
 	}
-	if (last_byte >= 1) {
-	    buf[1] = buf[last_byte-1];
-	}
-
-	if ((count = GetDataBlock(chan, &buf[2])) == 0) {
-	    done = 1;
-	}
-
-	last_byte = 2 + count;
-	curbit = (curbit - lastbit) + 16;
-	lastbit = (2+count)*8 ;
+	/* Tack another byte onto the window, see if that's enough */
+	window += (*c) << bitsInWindow;
+	c++;
+	bitsInWindow += 8;
+	bytes--;
     }
 
-    ret = 0;
-    for (i = curbit, j = 0; j < code_size; ++i, ++j) {
-	ret |= ((buf[ i / 8 ] & (1 << (i % 8))) != 0) << j;
-    }
 
-    curbit += code_size;
-
+    /* The next code will always be the last code_size bits of the window */
+    ret = window & ((1 << code_size) - 1);
+    
+    /* Shift data in the window to put the next code at the end */
+    window >>= code_size;
+    bitsInWindow -= code_size;
     return ret;
 }
 

@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: photo.n,v 1.3 1999/10/29 03:57:40 hobbs Exp $
+'\" RCS: @(#) $Id: photo.n,v 1.4 2000/01/26 21:11:00 ericm Exp $
 '\" 
 .so man.macros
 .TH photo n 4.0 Tk "Tk Built-In Commands"
@@ -40,7 +40,8 @@ command.
 Photos support the following \fIoptions\fR:
 .TP
 \fB\-data \fIstring\fR
-Specifies the contents of the image as a string.  The format of the
+Specifies the contents of the image as a string.  The string can
+contain base64 encoded data or binary data.  The format of the
 string must be one of those for which there is an image file format
 handler that will accept string data.  If both the \fB\-data\fR
 and \fB\-file\fR options are specified, the \fB\-file\fR option takes

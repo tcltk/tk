@@ -1,3 +1,18 @@
+2000-01-26  Eric Melski  <ericm@scriptics.com>
+
+	* generic/tkImgPhoto.c: Added some comments regarding slow
+	processing of transparent images.
+
+	* generic/tkImgGIF.c: Improved GIF decoder for ~60% speed
+	increase.  Added some comments on how to further improve the
+	implementation, time permitting.
+
+	* doc/photo.n: Added a description of what the -data string can
+	contain (base64 or binary data).
+
+	* generic/tkImgPhoto.c: Fixed bug with use of binary data for
+	"-data" option to "image create" command.
+
 2000-01-21  Eric Melski  <ericm@scriptics.com>
 
 	* library/tkfbox.tcl: Fixed bug relating to incorrect parent
