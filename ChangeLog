@@ -1,5 +1,9 @@
 1999-04-06    <stanton@scriptics.com>
 
+	* generic/tkMain.c (Tk_MainEx): Changed to reset result before
+	calling Tcl_EvalFile.  The ensures that error messages will be
+	generated cleanly.
+
 	* tests/winfo.test: Enabled tests that previously failed.
 
 1999-04-05    <stanton@scriptics.com>
