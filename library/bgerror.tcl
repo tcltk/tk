@@ -9,24 +9,20 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.26 2004/03/17 18:15:44 das Exp $
-# $Id: bgerror.tcl,v 1.26 2004/03/17 18:15:44 das Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.27 2004/04/17 03:53:55 hobbs Exp $
+# $Id: bgerror.tcl,v 1.27 2004/04/17 03:53:55 hobbs Exp $
 
-namespace eval ::tk {
-    namespace eval dialog {
-	namespace eval error {
-	    namespace import ::tk::msgcat::*
-	    namespace export bgerror
-	    option add *ErrorDialog.function.text [mc "Save To Log"] \
-		    widgetDefault
-	    option add *ErrorDialog.function.command [namespace code SaveToLog]
-	}
-    }
+namespace eval ::tk::dialog::error {
+    namespace import -force ::tk::msgcat::*
+    namespace export bgerror
+    option add *ErrorDialog.function.text [mc "Save To Log"] \
+	widgetDefault
+    option add *ErrorDialog.function.command [namespace code SaveToLog]
 }
 
 proc ::tk::dialog::error::Return {} {
     variable button
-    
+
     .bgerrorDialog.ok configure -state active -relief sunken
     update idletasks
     after 100
@@ -40,8 +36,8 @@ proc ::tk::dialog::error::Details {} {
     if { ($caption eq "") || ($command eq "") } {
 	grid forget $w.function
     }
-    $w.function configure -text $caption -command \
-	"$command [list [.bgerrorDialog.top.info.text get 1.0 end]]"
+    lappend command [.bgerrorDialog.top.info.text get 1.0 end-1c]
+    $w.function configure -text $caption -command $command
     grid $w.top.info - -sticky nsew -padx 3m -pady 3m
 }
 
@@ -74,7 +70,7 @@ proc ::tk::dialog::error::Destroy {w} {
 }
 
 # ::tk::dialog::error::bgerror --
-# This is the default version of bgerror. 
+# This is the default version of bgerror.
 # It tries to execute tkerror, if that fails it posts a dialog box containing
 # the error message and gives the user a chance to ask to see a stack
 # trace.
@@ -135,13 +131,11 @@ proc ::tk::dialog::error::bgerror err {
 
     catch {destroy .bgerrorDialog}
     toplevel .bgerrorDialog -class ErrorDialog
+    wm withdraw .bgerrorDialog
     wm title .bgerrorDialog $title
     wm iconname .bgerrorDialog ErrorDialog
     wm protocol .bgerrorDialog WM_DELETE_WINDOW { }
 
-    if {$tcl_platform(platform) eq "windows"} {
-	wm attributes .bgerrorDialog -topmost 1
-    }
     if {[tk windowingsystem] eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style .bgerrorDialog dBoxProc
     }
@@ -210,7 +204,7 @@ proc ::tk::dialog::error::bgerror err {
 	button .bgerrorDialog.$name	\
 		-text $caption		\
 		-default normal		\
-		-command [namespace code "set button $i"]
+	    -command [namespace code [list set button $i]]
 	grid .bgerrorDialog.$name	\
 		-in .bgerrorDialog.bot	\
 		-column $i		\
@@ -233,34 +227,26 @@ proc ::tk::dialog::error::bgerror err {
     bind .bgerrorDialog <Destroy>	[namespace code [list Destroy %W]]
     .bgerrorDialog.function configure -command [namespace code Details]
 
-    # 6. Withdraw the window, then update all the geometry information
-    # so we know how big it wants to be, then center the window in the
-    # display and de-iconify it.
+    # 6. Place the window (centered in the display) and deiconify it.
 
-    wm withdraw .bgerrorDialog
-    update idletasks
-    set parent [winfo parent	.bgerrorDialog]
-    set width  [winfo reqwidth	.bgerrorDialog]
-    set height [winfo reqheight	.bgerrorDialog]
-    set x [expr {([winfo screenwidth .bgerrorDialog]  - $width )/2 - \
-	    [winfo vrootx $parent]}]
-    set y [expr {([winfo screenheight .bgerrorDialog] - $height)/2 - \
-	    [winfo vrooty $parent]}]
-    .bgerrorDialog configure -width $width
-    wm geometry .bgerrorDialog +$x+$y
-    wm deiconify .bgerrorDialog
+    ::tk::PlaceWindow .bgerrorDialog
 
-    # 7. Set a grab and claim the focus too.
+    # 7. Ensure that we are topmost.
 
-    set oldFocus [focus]
-    set oldGrab [grab current .bgerrorDialog]
-    if {$oldGrab != ""} {
-	set grabStatus [grab status $oldGrab]
+    raise .bgerrorDialog
+    if {$tcl_platform(platform) eq "windows"} {
+	# Place it topmost if we aren't at the top of the stacking
+	# order to ensure that it's seen
+	if {[lindex [wm stackorder .] end] ne ".bgerrorDialog"} {
+	    wm attributes .bgerrorDialog -topmost 1
+	}
     }
-    grab .bgerrorDialog
-    focus .bgerrorDialog.ok
 
-    # 8. Wait for the user to respond, then restore the focus and
+    # 8. Set a grab and claim the focus too.
+
+    ::tk::SetFocusGrab .bgerrorDialog .bgerrorDialog.ok
+
+    # 9. Wait for the user to respond, then restore the focus and
     # return the index of the selected button.  Restore the focus
     # before deleting the window, since otherwise the window manager
     # may take the focus away so we can't redirect it.  Finally,
@@ -268,15 +254,8 @@ proc ::tk::dialog::error::bgerror err {
 
     vwait [namespace which -variable button]
     set copy $button; # Save a copy...
-    catch {focus $oldFocus}
-    catch {destroy .bgerrorDialog}
-    if {$oldGrab ne ""} {
-	if {$grabStatus eq "global"} {
-	    grab -global $oldGrab
-	} else {
-	    grab $oldGrab
-	}
-    }
+
+    ::tk::RestoreFocusGrab .bgerrorDialog .bgerrorDialog.ok destroy
 
     if {$copy == 1} {
 	return -code break
