@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.53 2004/12/03 13:09:39 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.54 2004/12/09 10:13:28 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -4590,7 +4590,9 @@ Tk_PhotoPutBlock(interp, handle, blockPtr, x, y, width, height, compRule)
      * Check if display code needs alpha blending...
      */
 
-    ToggleComplexAlphaIfNeeded(masterPtr);
+    if (alphaOffset != 0 || masterPtr->flags & COMPLEX_ALPHA) {
+	ToggleComplexAlphaIfNeeded(masterPtr);
+    }
 
     /*
      * Update each instance.
@@ -4890,7 +4892,9 @@ Tk_PhotoPutZoomedBlock(interp, handle, blockPtr, x, y, width, height,
      * Check if display code needs alpha blending...
      */
 
-    ToggleComplexAlphaIfNeeded(masterPtr);
+    if (alphaOffset != 0 || masterPtr->flags & COMPLEX_ALPHA) {
+	ToggleComplexAlphaIfNeeded(masterPtr);
+    }
 
     /*
      * Update each instance.
