@@ -1,3 +1,10 @@
+1999-03-30    <stanton@scriptics.com>
+
+	* generic/tkWindow.c (Tk_DestroyWindow): Image handlers are now
+	finalized before the font subsystem since complex image handlers
+	may contain references to fonts (e.g. Tix compound images).
+	[Bug: 1603]
+
 1999-03-29    <stanton@scriptics.com>
 
 	* doc/MeasureChar.3: 
