@@ -1,3 +1,9 @@
+2000-12-13  jeff hobbs  <jhobbs@interwoven.com>
+
+	* generic/tkObj.c (SetMMFromAny): Added ability to recognize
+	double type object to speed up canvas coord calculations.
+	[Patch #102471]
+
 2000-12-12  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* doc/entry.n: Improved documentation of interplay between the
