@@ -1,10 +1,19 @@
 2003-11-11  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkButton.c (ConfigureButton): abort option processing if
+	the button was deleted. [Bug #824479]
+
+	* generic/tkMenuDraw.c (TkPostSubmenu): add {} around menu name in
+	case it has spaces when calling Tcl_VarEval.  This is a hack until
+	this is rewritten for proper Tcl_Obj handling. [Bug #723856]
+
 	* library/tkfbox.tcl (::tk::dialog::file::Update): optimize the
 	dir/files list separation by using the -tails, -directory and
 	-type option of 'glob'.  Also passes the glob the -filetypes
 	filters instead of calling string match over each file.
 	[Patch #833819]
+	(::tk::dialog::file::ActivateEnt): allow typing filename into
+	entry when tk_getOpenFile -multiple 1 is specified. [Bug #788069]
 
 	* generic/tkListbox.c (ListboxDeleteSubCmd, ListboxListVarProc):
 	free itemconfig data when removing it from table. [Bug #836483]
