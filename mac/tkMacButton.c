@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacButton.c,v 1.8 2000/02/10 08:49:29 jingham Exp $
+ * RCS: @(#) $Id: tkMacButton.c,v 1.9 2000/02/10 08:51:43 jingham Exp $
  */
 
 #include "tkButton.h"
@@ -874,9 +874,9 @@ DrawBufferedControl(
     } else {	  
 	(**controlHandle).contrlVis = 0;
     }	  
-#if 0    
-    LMSetWindowList((WindowRef) ((CWindowPeek) windowRef)->nextWindow);
-#endif
+    if (!TkMacHaveAppearance()) {    
+        LMSetWindowList((WindowRef) ((CWindowPeek) windowRef)->nextWindow);
+    }
 }
 
 /*
