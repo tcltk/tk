@@ -1,3 +1,37 @@
+2000-02-01  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* doc/text.n: clarified docs on what happens during a search with
+	-count when images/windows are embedded
+
+	* win/Makefile.in (install-*): reduced verbosity of install
+
+	* win/tkWinPixmap.c (XGetGeometry): added support for windows in
+	XGetGeometry [Bug: 4069]
+
+	* win/tkWinFont.c (GetScreenFont): fixed possible mem overrun with
+	long font names [Bug: 4108]
+
+	* win/tkWinDialog.c: added EnableWindow calls to dialogs to
+	correct for possible loss of control in parent Tk toplevel
+	[Bug: 1212 et al]
+
+	* generic/tkRectOval.c (ConfigureRectOval): 
+	* generic/tkCanvLine.c (ConfigureLine): 
+	* generic/tkCanvPoly.c (ConfigurePoly): 
+	* generic/tkCanvArc.c (Configure/DisplayArc): fixed handling for
+	negative dash values [Bug: 4104]
+
+	* generic/tkScale.c (TkRoundToResolution): fixed incorrect
+	assumption that (N+1)*delta = N*delta + delta with floating point
+	math [Bug: 3689, 4099]
+	(DestroyScale) Fixed check for cancelling TkpDisplayScale (was
+	REDRAW_ALL, is now REDRAW_PENDING)
+
+	* tests/listbox.test: corrected test case for listbox itemconfigure
+
+	* unix/aclocal.m4: added *BSD ELF recognition for
+	SHARED_LIB_SUFFIX determination (from Tcl's tcl.m4)
+
 2000-01-26  Eric Melski  <ericm@scriptics.com>
 
 	* doc/getOpenFile.n: 
