@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.24.2.1 2003/03/14 21:30:58 dkf Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.24.2.2 2004/05/13 23:28:34 dkf Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -280,7 +280,7 @@ proc ::tk::MessageBox {args} {
 	    || [string equal [tk windowingsystem] "aqua"]} {
 	option add *Dialog.msg.font system widgetDefault
     } else {
-	option add *Dialog.msg.font {Times 18} widgetDefault
+	option add *Dialog.msg.font {Times 14} widgetDefault
     }
 
     label $w.msg -anchor nw -justify left -text $data(-message) \
