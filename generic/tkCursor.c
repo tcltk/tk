@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCursor.c,v 1.5 2000/05/11 22:37:06 hobbs Exp $
+ * RCS: @(#) $Id: tkCursor.c,v 1.6 2000/07/06 06:38:09 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -276,6 +276,7 @@ GetCursor(interp, tkwin, string)
     cursorPtr->objRefCount = 0;
     cursorPtr->otherTable = &dispPtr->cursorNameTable;
     cursorPtr->hashPtr = nameHashPtr;
+	cursorPtr->nextPtr = NULL;
     cursorPtr->idHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorIdTable, 
             (char *) cursorPtr->cursor, &new);
     if (!new) {

@@ -7,19 +7,23 @@
 	* win/tkWinColor.c (GetColorByName, GetColorByValue): Remove unused
 	function declarations.
 	* win/tkWinDialog.c (TrySetDirectory): Remove unused function declaration.
-	* win/tkWinEmbed.c (TkWinEmbeddedEventProc): Cast to match function prototype.
+	* win/tkWinEmbed.c (TkWinEmbeddedEventProc): Cast to match function 
+	prototype.
 	* win/tkWinMenu.c (winMenuMutex, MenuExitProc): Remove unused declaration.
 	* win/tkWinWindow.c (StackWindow): Remove unused declaration.
 	* win/tkWinWm.c (ConfigureEvent): Remove unused declaration.
 	* win/tkWinX.c (winXMutex): Remove unused declaration.
 	* xlib/ximage.c (XCreateBitmapFromData): Cast to match function prototype.
 
-2000-07-05  Eric Melski  <ericm@scriptics.com>
+2000-07-05  Eric Melski  <ericm@ajubasolutions.com>
 
 	* tests/imgPhoto.test: Added test for GIF writing code [Bug: 5823].
 
 	* generic/tkImgGIF.c: Applied patch from Jan Nijtmans to fix a
 	problem with the GIF writing code [Bug:	5823].
+
+	* generic/tkCursor.c: Added initialization for nextPtr field of TkCursor,
+	patch from Nijtmans/Howlett.
 
 2000-07-05  Eric Melski  <ericm@ajubasolutions.com>
 
