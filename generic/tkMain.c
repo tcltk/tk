@@ -13,13 +13,14 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.6 1999/12/02 02:05:34 redman Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.7 1999/12/08 00:11:54 redman Exp $
  */
 
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <tcl.h>
+#include <tclInt.h>
 #include <tk.h>
 #include "tkInt.h"
 #ifdef NO_STDLIB_H
