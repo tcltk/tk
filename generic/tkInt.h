@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.32 2000/08/07 21:49:16 ericm Exp $ 
+ * RCS: $Id: tkInt.h,v 1.33 2000/08/08 19:21:19 ericm Exp $ 
  */
 
 #ifndef _TKINT
@@ -977,8 +977,9 @@ EXTERN int		Tk_OptionObjCmd _ANSI_ARGS_((ClientData clientData,
 	                    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_PackCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_PlaceCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_PlaceObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_RadiobuttonObjCmd _ANSI_ARGS_((
 			    ClientData clientData,
 			    Tcl_Interp *interp, int objc,

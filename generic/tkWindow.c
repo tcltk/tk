@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.24 2000/08/07 21:49:16 ericm Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.25 2000/08/08 19:21:20 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -111,7 +111,7 @@ static TkCmd commands[] = {
     {"lower",		NULL,			Tk_LowerObjCmd,		1, 1},
     {"option",		NULL,			Tk_OptionObjCmd,	1, 1},
     {"pack",		Tk_PackCmd,		NULL,			1, 1},
-    {"place",		Tk_PlaceCmd,		NULL,			1, 1},
+    {"place",		NULL,			Tk_PlaceObjCmd,		1, 0},
     {"raise",		NULL,			Tk_RaiseObjCmd,		1, 1},
     {"selection",	NULL,			Tk_SelectionObjCmd,	0, 1},
     {"tk",		NULL,			Tk_TkObjCmd,		0, 1},
