@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.20 2002/08/31 06:12:27 das Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.21 2002/09/02 19:14:04 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -2257,7 +2257,8 @@ TestsendCmd(clientData, interp, argc, argv)
 		Tcl_DString tmp;
 
 		Tcl_DStringInit(&tmp);
-		for (p = Tcl_DStringAppend(&tmp, argv[4], strlen(argv[4]));
+		for (p = Tcl_DStringAppend(&tmp, argv[4],
+			(int) strlen(argv[4]));
 			*p != 0; p++) {
 		    if (*p == '\n') {
 			*p = 0;
