@@ -3,7 +3,7 @@ README:  Tk
 	Tk is maintained, enhanced, and distributed freely as a
 	service to the Tcl community by Scriptics Corporation.
 
-RCS: @(#) $Id: README,v 1.1.4.5 1999/02/17 02:34:24 hershey Exp $
+RCS: @(#) $Id: README,v 1.1.4.6 1999/03/17 22:06:27 stanton Exp $
 
 Contents
 --------
@@ -25,7 +25,7 @@ Contents
 
 This directory contains the sources and documentation for Tk, an X11
 toolkit implemented with the Tcl scripting language.  The information
-here corresponds to release 8.1b2, which is the second beta release
+here corresponds to release 8.1b3, which is the third beta release
 for Tk 8.1.  This release is mostly feature complete but may have bugs
 and be missing some minor features.  This release is for early
 adopters who are willing to help us find and fix problems.  Please let
