@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.35 2002/12/01 23:37:53 mdejong Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.36 2002/12/27 21:23:04 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -4281,8 +4281,9 @@ UpdateSizeHints(winPtr)
  *	   operations outstanding at a time (e.g. two different resizes
  *	   of the top-level window:  it's hard to tell which of the
  *	   ConfigureNotify events coming back is for which request).
- *	While waiting, all events covered by StructureNotifyMask are
- *	processed and all others are deferred.
+ *	While waiting, some events covered by StructureNotifyMask are
+ *	processed (ConfigureNotify, MapNotify, and UnmapNotify) 
+ *	and all others are deferred.
  *
  *----------------------------------------------------------------------
  */
@@ -4348,8 +4349,9 @@ WaitForConfigureNotify(winPtr, serial)
  *	arrive, then TCL_ERROR is returned.
  *
  * Side effects:
- *	While waiting for the desired event to occur, Configurenotify
- *	events for window are processed, as are all ReparentNotify events,
+ *	While waiting for the desired event to occur, Configurenotify,
+ *	MapNotify, and UnmapNotify events for window are processed, 
+ *	as are all ReparentNotify events.
  *
  *----------------------------------------------------------------------
  */
@@ -4407,8 +4409,8 @@ WaitForEvent(display, wmInfoPtr, type, eventPtr)
  * Results:
  *	Returns TK_PROCESS_EVENT if the right event is found.  Also
  *	returns TK_PROCESS_EVENT if any ReparentNotify event is found
- *	for window or if the event is a ConfigureNotify for window.
- *	Otherwise returns TK_DEFER_EVENT.
+ *	or if the event is a ConfigureNotify, MapNotify, or UnmapNotify
+ *	for window.  Otherwise returns TK_DEFER_EVENT.
  *
  * Side effects:
  *	An event may get stored in the area indicated by the caller
@@ -4437,7 +4439,9 @@ WaitRestrictProc(clientData, eventPtr)
 	infoPtr->foundEvent = 1;
 	return TK_PROCESS_EVENT;
     }
-    if (eventPtr->type == ConfigureNotify) {
+    if (eventPtr->type == ConfigureNotify 
+	   || eventPtr->type == MapNotify
+	   || eventPtr->type == UnmapNotify) {
 	return TK_PROCESS_EVENT;
     }
     return TK_DEFER_EVENT;
@@ -4463,7 +4467,7 @@ WaitRestrictProc(clientData, eventPtr)
  *	manager first starts managing the window (as opposed to those
  *	requested interactively by the user later).  See the comments
  *	for WaitForConfigureNotify and WM_SYNC_PENDING.  While waiting,
- *	all events covered by StructureNotifyMask are processed and all
+ *	some events covered by StructureNotifyMask are processed and all
  *	others are deferred.
  *
  *----------------------------------------------------------------------
