@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.7 1999/11/30 07:34:13 hobbs Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.8 1999/12/09 14:46:33 hobbs Exp $
  */
 
 /*
@@ -498,8 +498,8 @@ StringMatchGIF(dataObj, format, widthPtr, heightPtr, interp)
 
     /* Check whether the data is Base64 encoded */
 
-    if ((strncmp("\107\111\106\70\67\141", data, 6) != 0) && 
-	(strncmp("\107\111\106\70\71\141", data, 6) != 0)) {
+    if ((strncmp("\107\111\106\70\67\141", (char *) data, 6) != 0) && 
+	(strncmp("\107\111\106\70\71\141", (char *) data, 6) != 0)) {
       /* Try interpreting the data as Base64 encoded */
       mInit((unsigned char *) data, &handle);
       got = Mread(header, 10, 1, &handle);
@@ -554,21 +554,23 @@ StringReadGIF(interp, dataObj, format, imageHandle,
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tcl_Channel dataSrc;
     char *data;
-    /* Check whether the data is Base64 encoded */
-    data = Tcl_GetByteArrayFromObj(dataObj, NULL);
+
+    /*
+     * Check whether the data is Base64 encoded
+     */
+    data = (char *) Tcl_GetByteArrayFromObj(dataObj, NULL);
     if ((strncmp("\107\111\106\70\67\141", data, 6) != 0) && 
 	    (strncmp("\107\111\106\70\71\141", data, 6) != 0)) {
-	mInit((unsigned char *)data,&handle);
+	mInit((unsigned char *)data, &handle);
 	tsdPtr->fromData = 1;
 	dataSrc = (Tcl_Channel) &handle;
     } else {
 	tsdPtr->fromData = 2;
-	mInit((unsigned char *)data,&handle);
+	mInit((unsigned char *)data, &handle);
 	dataSrc = (Tcl_Channel) &handle;
     }
     result = FileReadGIF(interp, dataSrc, "inline data",
-	    format, imageHandle, destX, destY, width, height,
-            srcX, srcY);
+	    format, imageHandle, destX, destY, width, height, srcX, srcY);
     tsdPtr->fromData = 0;
     return(result);
 }
@@ -1660,7 +1662,7 @@ static void write_block()
   }
  c = oblen;
  Tcl_Write(ofile, (char *) &c, 1);
- Tcl_Write(ofile, &oblock[0], oblen);
+ Tcl_Write(ofile, (char *) &oblock[0], oblen);
  oblen = 0;
 }
 
