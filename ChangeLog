@@ -1,3 +1,17 @@
+2001-08-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/configure: regenerated
+	* win/tcl.m4: fixed DLLSUFFIX definition to always be ${DBGX}.dll.
+	This is necessary for TEA compliant builds that build shared
+	against a static-built Tk.
+	* win/Makefile.in ($(WISH)): added $(TK_STUB_LIB_FILE) to build
+	target, otherwise it wouldn't get generated in a static build.
+
+2001-05-21  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/aclocal.m4: sync'ed up IRIX config with tcl changes.
+	[Bug #424748]
+
 2001-05-04  Daniel Steffen <das@users.sourceforge.net>
 
         ** Mac 8.3.3 binary release
@@ -100,6 +114,7 @@
 	* mac/tkMacWindowMgr.c: added/fixed AppearanceMgr checks; override
 	AppearanceMgr version detection on static 68k to ensure static 68k Wish
 	runs on PPCs with recent AppearanceMgr
+
 2001-04-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* tests/canvas.test: marked canvas-13.1 knownBug

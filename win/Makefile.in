@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.24.2.5 2001/04/04 07:57:18 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.24.2.6 2001/08/04 00:32:53 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -410,24 +410,20 @@ install-binaries: binaries
 		else true; \
 		fi; \
 	    done;
-	@echo "Installing $(TK_LIB_FILE) to $(LIB_INSTALL_DIR)/"
-	@$(INSTALL_DATA) $(TK_LIB_FILE) $(LIB_INSTALL_DIR)/$(TK_LIB_FILE)
-	@echo "Installing $(WISH) as $(BIN_INSTALL_DIR)/wish$(VERSION)"
-	@$(INSTALL_PROGRAM) $(WISH) $(BIN_INSTALL_DIR)/$(WISH)
-	@echo "Installing tkConfig.sh to $(LIB_INSTALL_DIR)/"
-	@$(INSTALL_DATA) tkConfig.sh $(LIB_INSTALL_DIR)/tkConfig.sh
-	@if test "$(DLLSUFFIX)" != "" ; then \
-	    echo "Installing $(TK_DLL_FILE) to $(LIB_INSTALL_DIR)/" ; \
-	    $(INSTALL_PROGRAM) $(TK_DLL_FILE) \
-		$(BIN_INSTALL_DIR)/$(TK_DLL_FILE) ; \
-	fi
-	@if test "$(TK_STUB_LIB_FILE)" != "" ; then \
-	    if [ -f $(TK_STUB_LIB_FILE) ]; then \
-	        echo "Installing $(TK_STUB_LIB_FILE) to $(LIB_INSTALL_DIR)/"; \
-	        $(INSTALL_DATA) $(TK_STUB_LIB_FILE) \
-			 $(LIB_INSTALL_DIR)/$(TK_STUB_LIB_FILE); \
+	@for i in $(TK_DLL_FILE) $(WISH); \
+	    do \
+	    if [ -f $$i ]; then \
+		echo "Installing $$i to $(BIN_INSTALL_DIR)/"; \
+		$(COPY) $$i "$(BIN_INSTALL_DIR)"; \
 	    fi; \
-        fi
+	    done
+	@for i in tkConfig.sh $(TK_LIB_FILE) $(TK_STUB_LIB_FILE); \
+	    do \
+	    if [ -f $$i ]; then \
+		echo "Installing $$i to $(LIB_INSTALL_DIR)/"; \
+		$(COPY) $$i "$(LIB_INSTALL_DIR)"; \
+	    fi; \
+	    done
 
 install-libraries: libraries
 	@for i in $(INSTALL_ROOT)$(prefix)/lib \
@@ -441,7 +437,7 @@ install-libraries: libraries
 		else true; \
 		fi; \
 	    done;
-	@echo "Installing header files";
+	@echo "Installing header files to $(INCLUDE_INSTALL_DIR)/";
 	@for i in $(GENERIC_DIR)/tk.h $(GENERIC_DIR)/tkPlatDecls.h \
 		$(GENERIC_DIR)/tkIntXlibDecls.h $(GENERIC_DIR)/tkDecls.h ; \
 	    do \
