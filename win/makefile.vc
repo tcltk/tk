@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.67 2003/02/14 20:30:36 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.67.2.1 2003/03/11 23:48:26 kennykb Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -165,7 +165,7 @@ PROJECT	= tk
 !endif
 
 STUBPREFIX = $(PROJECT)stub
-DOTVERSION = 8.4
+DOTVERSION = 8.5
 VERSION = $(DOTVERSION:.=)
 WISHNAMEPREFIX = wish
 
@@ -520,6 +520,13 @@ install-binaries:
 !endif
 	@$(CPY) "$(TKIMPLIB)" "$(LIB_INSTALL_DIR)\"
 	@$(CPY) "$(TKSTUBLIB)" "$(LIB_INSTALL_DIR)\"
+!if !$(STATIC_BUILD)
+	@echo Creating package index "$(SCRIPT_INSTALL_DIR)\pkgIndex.tcl"
+	-del "$(SCRIPT_INSTALL_DIR)\pkgIndex.tcl"
+	echo if {[package vcompare [package provide Tcl] $(TCL_DOTVERSION)] != 0} { return } > "$(OUT_DIR)\pkgIndex.tcl"
+	echo package ifneeded Tk $(DOTVERSION) [list load [file join $$dir .. .. bin $(TKLIBNAME)] Tk] >>"$(OUT_DIR)\pkgIndex.tcl"
+	$(CPY) "$(OUT_DIR)\pkgIndex.tcl" "$(SCRIPT_INSTALL_DIR)\"
+!endif
 
 install-libraries:
 	@$(CPY) "$(GENERICDIR)\tk.h" "$(INCLUDE_INSTALL_DIR)\"
