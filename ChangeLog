@@ -1,3 +1,22 @@
+2000-11-02  Jeff Hobbs  <hobbs@ajubasolutions.com>
+
+	* win/tkWinButton.c:
+	* win/tkWinDialog.c:
+	* win/tkWinScrlbr.c:
+	* win/tkWinWm.c: fixed up code for Win64 support.  This mostly
+	remains in _WIN64 #ifdef's, until updated compilers are standard.
+
+	* win/tcl.m4:
+	* win/makefile.vc: updated for Win64 compile support
+
+	* unix/configure:
+	* win/configure: checked in configure scripts so people doing
+	CVS checkouts aren't required to have autoconf.  Changes to
+	configure.in in the future will require the corresponding
+	configure script to also be re-autoconf'ed and checked in.
+
+	* doc/event.n: added note that key events require window focus.
+
 2000-11-01  Jeff Hobbs  <hobbs@ajubasolutions.com>
 
 	* win/tkWinDialog.c (GetFileNameW, GetFileNameA,
