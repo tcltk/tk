@@ -1360,11 +1360,12 @@
 			buildSettings = {
 				DYLIB_COMPATIBILITY_VERSION = 8.4;
 				DYLIB_CURRENT_VERSION = 8.4;
+				DYLIB_INSTALL_PATH = /Library/Frameworks;
 				FRAMEWORK_SEARCH_PATHS = "\"$(SYMROOT)\"";
 				FRAMEWORK_VERSION = 8.4;
 				GLOBAL_CFLAGS = "`source \"${SYMROOT}/Tcl.framework/Resources/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
 				HEADER_SEARCH_PATHS = "../../tcl/generic ../../tcl/unix ../bitmaps ../generic ../xlib";
-				INSTALL_PATH = /Library/Frameworks;
+				INSTALL_PATH = "${DYLIB_INSTALL_PATH}";
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "-DMAC_OSX_TK -DTCL_WIDE_INT_TYPE=\"long long\"";
@@ -2737,6 +2738,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				F53756A6016C4DD401DC9062,
 				F53756AA016C4DD401DC9062,
 				F5EEA7050324680B016F146B,
+				F55A164E032A11B1016F146B,
 				F5877FBD031FAC6A016F146B,
 			);
 			buildSettings = {
@@ -2976,6 +2978,19 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			isa = PBXTargetDependency;
 			target = F548F8CE0313CEF0016F146B;
 		};
+		F55A164E032A11B1016F146B = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			neededFileNames = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# if we are embedding frameworks, copy them into the app\nif [ `echo \"${DYLIB_INSTALL_PATH:-}\" | grep -c \"@executable_path\"` -gt 0 ]; then\nrm -rf \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\nmkdir -p \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\nif [ \"${DEPLOYMENT_LOCATION:-}\" = \"YES\" ]; then\n    FWKDIR=\"${INSTALL_ROOT}/Library/Frameworks\"\nelse\n    FWKDIR=\"${TARGET_BUILD_DIR}\"\nfi\ncp -fRP \"${FWKDIR}/Tcl.framework\" \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\ncp -fRP \"${FWKDIR}/Tk.framework\" \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\nfi";
+		};
 		F55BC46802B2D38B01DC9062 = {
 			isa = PBXFileReference;
 			name = tkPanedWindow.c;
@@ -3022,7 +3037,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "# ensure we can overwrite a previous install\nif [ -d \"${INSTALL_ROOT}${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\" ]; then\n    chmod -RH u+w \"${INSTALL_ROOT}${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\"\nfi";
+			shellScript = "# ensure we can overwrite a previous install\nif [ -d \"${INSTALL_ROOT}/${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\" ]; then\n    chmod -RH u+w \"${INSTALL_ROOT}/${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\"\nfi\n\n# if we are embedding frameworks, fix things so that install works with the embedding INSTALL_PATH\nif [ `echo \"${DYLIB_INSTALL_PATH:-}\" | grep -c \"@executable_path\"` -gt 0 ]; then\n    cd \"${INSTALL_ROOT}\"\n    if [ ! -d \"Library/Frameworks/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\" ]; then\n    mkdir -p Library/Frameworks\n    mv \"Frameworks/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\" Library/Frameworks\n    fi\n    rm -r Frameworks\n    ln -fs Library/Frameworks\nfi";
 		};
 		F5877FB8031F982D016F146B = {
 			buildActionMask = 8;
@@ -3060,7 +3075,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "# redo prebinding\nif [ ! -d \"${INSTALL_ROOT}/usr/lib\" ]; then ln -fs /usr/lib \"${INSTALL_ROOT}/usr/\"; RM_USRLIB=1; fi\nif [ ! -d \"${INSTALL_ROOT}/System\" ]; then ln -fs /System \"${INSTALL_ROOT}/\"; RM_SYSTEM=1; fi\nredo_prebinding -r \"${INSTALL_ROOT}\" \"${INSTALL_ROOT}${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}/${PRODUCT_NAME}\"\nif [ -n \"${RM_USRLIB:-}\" ]; then rm -f \"${INSTALL_ROOT}/usr/lib\"; fi\nif [ -n \"${RM_SYSTEM:-}\" ]; then rm -f ${INSTALL_ROOT}/System; fi";
+			shellScript = "# redo prebinding\ncd \"${INSTALL_ROOT}\"\nif [ ! -d usr/lib ]; then mkdir -p usr; ln -fs /usr/lib usr/; RM_USRLIB=1; fi\nif [ ! -d System ]; then ln -fs /System .; RM_SYSTEM=1; fi\nredo_prebinding -r . \"./${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}/${PRODUCT_NAME}\"\nif [ -n \"${RM_USRLIB:-}\" ]; then rm -f usr/lib; rmdir -p usr; fi\nif [ -n \"${RM_SYSTEM:-}\" ]; then rm -f System; fi";
 		};
 		F5877FBD031FAC6A016F146B = {
 			buildActionMask = 8;
@@ -3073,7 +3088,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "# redo prebinding\nif [ ! -d \"${INSTALL_ROOT}/usr/lib\" ]; then ln -fs /usr/lib \"${INSTALL_ROOT}/usr/\"; RM_USRLIB=1; fi\nif [ ! -d \"${INSTALL_ROOT}/System\" ]; then ln -fs /System \"${INSTALL_ROOT}/\"; RM_SYSTEM=1; fi\nredo_prebinding -r \"${INSTALL_ROOT}\" \"${INSTALL_ROOT}${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/MacOS/${PRODUCT_NAME}\"\nif [ -n \"${RM_USRLIB:-}\" ]; then rm -f \"${INSTALL_ROOT}/usr/lib\"; fi\nif [ -n \"${RM_SYSTEM:-}\" ]; then rm -f ${INSTALL_ROOT}/System; fi";
+			shellScript = "# redo prebinding\ncd \"${INSTALL_ROOT}\"\nif [ ! -d usr/lib ]; then mkdir -p usr; ln -fs /usr/lib usr/; RM_USRLIB=1; fi\nif [ ! -d System ]; then ln -fs /System .; RM_SYSTEM=1; fi\nredo_prebinding -r . \"./${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/MacOS/${PRODUCT_NAME}\"\nif [ -n \"${RM_USRLIB:-}\" ]; then rm -f usr/lib; rmdir -p usr; fi\nif [ -n \"${RM_SYSTEM:-}\" ]; then rm -f System; fi";
 		};
 		F5B1FC08016FFE3501DC9062 = {
 			buildActionMask = 2147483647;
