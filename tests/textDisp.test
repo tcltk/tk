@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.18 2003/11/15 02:33:51 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.19 2003/11/15 12:47:15 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -3089,7 +3089,16 @@ test textDisp-26.13 {AdjustForTab procedure, not enough space} {textfonts} {
     .t tag add x 1.0 end
     list [lindex [.t bbox 1.4] 0] [lindex [.t bbox 1.8] 0] \
 	    [lindex [.t bbox 1.12] 0] [lindex [.t bbox 1.16] 0]
-} [list 28 56 84 120]
+} [list 28 56 120 190]
+test textDisp-26.14 {AdjustForTab procedure, not enough space} {textfonts} {
+    .t delete 1.0 end
+    .t insert end "a \tb \tc \td \te \tf \tg\n"
+    .t insert end "Watch the \tX and the \t\t\tY\n"
+    .t tag configure moop -tabs [expr {8*$fixedWidth}]
+    .t insert end "Watch the \tX and the \t\t\tY\n" moop
+    list [lindex [.t bbox 2.11] 0] [lindex [.t bbox 2.24] 0] \
+	    [lindex [.t bbox 3.11] 0] [lindex [.t bbox 3.24] 0]
+} [list 112 56 112 56]
 
 .t configure -width 20 -bd 2 -highlightthickness 2 -relief sunken -tabs {} \
 	-wrap char
@@ -3145,7 +3154,8 @@ test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential
     .t insert 1.0 a\tb\tc\td\te\n012345678934567890a\tbb\tcc\tdd
     update
     .t bbox 2.24
-} [list 172 [expr {$fixedDiff + 18}] 7 $fixedHeight]
+} [list 200 [expr {$fixedDiff + 18}] 7 $fixedHeight]
+
 .t configure -wrap char -tabs {} -width 20
 update
 test textDisp-27.8 {SizeOfTab procedure, right alignment} {textfonts} {

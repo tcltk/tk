@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.30 2003/11/15 02:49:36 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.31 2003/11/15 12:47:15 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -429,8 +429,8 @@ static void		YScrollByLines _ANSI_ARGS_((TkText *textPtr,
 static void		YScrollByPixels _ANSI_ARGS_((TkText *textPtr,
 			    int offset));
 static int		SizeOfTab _ANSI_ARGS_((TkText *textPtr,
-			    TkTextTabArray *tabArrayPtr, int index, int x,
-			    int maxX));
+			    TkTextTabArray *tabArrayPtr, int *indexPtr, 
+			    int x, int maxX));
 static void		TextInvalidateRegion _ANSI_ARGS_((TkText *textPtr,
 			    TkRegion region));
 static int              TextCalculateDisplayLineHeight _ANSI_ARGS_((
@@ -1239,9 +1239,8 @@ LayoutDLine(textPtr, indexPtr)
 		AdjustForTab(textPtr, tabArrayPtr, tabIndex, tabChunkPtr);
 		x = chunkPtr->x + chunkPtr->width;
 	    }
-	    tabIndex++;
 	    tabChunkPtr = chunkPtr;
-	    tabSize = SizeOfTab(textPtr, tabArrayPtr, tabIndex, x, maxX);
+	    tabSize = SizeOfTab(textPtr, tabArrayPtr, &tabIndex, x, maxX);
 	    if ((maxX >= 0) && (tabSize >= maxX - x)) {
 		break;
 	    }
@@ -6663,10 +6662,14 @@ AdjustForTab(textPtr, tabArrayPtr, index, chunkPtr)
  *
  * Results:
  *	The return value is the minimum number of pixels that will
- *	be occupied by the index'th tab of tabArrayPtr, assuming that
+ *	be occupied by the next tab of tabArrayPtr, assuming that
  *	the current position on the line is x and the end of the
- *	line is maxX.  For numeric tabs, this is a conservative
- *	estimate.  The return value is always >= 0.
+ *	line is maxX.  The 'next tab' is determined by a combination
+ *	of the current position (x) which it must be equal to or
+ *	beyond, and the tab count in indexPtr.
+ *	
+ *	For numeric tabs, this is a conservative estimate.  The return
+ *	value is always >= 0.
  *
  * Side effects:
  *	None.
@@ -6675,45 +6678,70 @@ AdjustForTab(textPtr, tabArrayPtr, index, chunkPtr)
  */
 
 static int
-SizeOfTab(textPtr, tabArrayPtr, index, x, maxX)
+SizeOfTab(textPtr, tabArrayPtr, indexPtr, x, maxX)
     TkText *textPtr;			/* Information about the text widget as
 					 * a whole. */
     TkTextTabArray *tabArrayPtr;	/* Information about the tab stops
 					 * that apply to this line.  NULL
 					 * means use default tabbing (every
 					 * 8 chars.) */
-    int index;				/* Index of current tab stop. */
-    int x;				/* Current x-location in line. Only
-					 * used if tabArrayPtr == NULL. */
+    int *indexPtr;			/* Contains index of previous tab 
+                  			 * stop, will be updated to
+                  			 * reflect the number of stops
+                  			 * used. */
+    int x;				/* Current x-location in line. */
     int maxX;				/* X-location of pixel just past the
 					 * right edge of the line. */
 {
-    int tabX, prev, result, spaceWidth;
+    int tabX, prev, result, index, spaceWidth;
     TkTextTabAlign alignment;
-
+    
     if ((tabArrayPtr == NULL) || (tabArrayPtr->numTabs == 0)) {
 	tabX = NextTabStop(textPtr->tkfont, x, 0);
+	/* 
+	 * We used up one tab stop.
+	 */
+	*indexPtr = (*indexPtr)+1;
 	return tabX - x;
     }
-    if (index < tabArrayPtr->numTabs) {
-	tabX = tabArrayPtr->tabs[index].location;
-	alignment = tabArrayPtr->tabs[index].alignment;
-    } else {
-	/*
-	 * Ran out of tab stops;  compute a tab position by extrapolating
-	 * from the last two tab positions.
-	 */
 
-	if (tabArrayPtr->numTabs > 1) {
-	    prev = tabArrayPtr->tabs[tabArrayPtr->numTabs-2].location;
+    index = *indexPtr;
+    do {
+	/* 
+	 * We were given the count before this tabs, so increment it
+	 * first.
+	 */
+	index++;
+	if (index < tabArrayPtr->numTabs) {
+	    tabX = tabArrayPtr->tabs[index].location;
+	    alignment = tabArrayPtr->tabs[index].alignment;
 	} else {
-	    prev = 0;
+	    /*
+	     * Ran out of tab stops;  compute a tab position by extrapolating
+	     * from the last two tab positions.
+	     */
+	    
+	    if (tabArrayPtr->numTabs > 1) {
+		prev = tabArrayPtr->tabs[tabArrayPtr->numTabs-2].location;
+	    } else {
+		prev = 0;
+	    }
+	    tabX = tabArrayPtr->tabs[tabArrayPtr->numTabs-1].location
+	      + (index + 1 - tabArrayPtr->numTabs)
+	      * (tabArrayPtr->tabs[tabArrayPtr->numTabs-1].location - prev);
+	    alignment = tabArrayPtr->tabs[tabArrayPtr->numTabs-1].alignment;
 	}
-	tabX = tabArrayPtr->tabs[tabArrayPtr->numTabs-1].location
-		+ (index + 1 - tabArrayPtr->numTabs)
-		* (tabArrayPtr->tabs[tabArrayPtr->numTabs-1].location - prev);
-	alignment = tabArrayPtr->tabs[tabArrayPtr->numTabs-1].alignment;
-    }
+	/* 
+	 * If this tab stop is before the current x position, then we
+	 * must obviously continue until we reach the text tab stop.
+	 */
+    } while (tabX < x);
+    
+    /* 
+     * Inform our caller of how many tab stops we've used up.
+     */
+    *indexPtr = index;
+    
     if (alignment == CENTER) {
 	/*
 	 * Be very careful in the arithmetic below, because maxX may
