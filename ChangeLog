@@ -1,3 +1,7 @@
+2004-12-20  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/panedwindow.n: Fix silly typo. [Bug 1087842]
+
 2004-12-09  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkImgPhoto.c (Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock):
