@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenus.c,v 1.5 2000/02/10 08:56:03 jingham Exp $
+ * RCS: @(#) $Id: tkMacMenus.c,v 1.6 2000/04/23 03:47:32 jingham Exp $
  */
 
 #include "tcl.h"
@@ -329,29 +329,26 @@ GenerateEditEvent(
 static void 
 SourceDialog()
 {
-    StandardFileReply reply;
-    OSType fileTypes[1];
-    OSErr err;
-    int length, result;
-    Handle path;
+    int result;
+    char *path;
+    char openCmd[] = "tk_getOpenFile -filetypes {\
+            {{TCL Scripts} {.tcl} TEXT} {{Text Files} {} TEXT}}";
     
     if (gInterp == NULL) {
 	return;
     }
     
-    fileTypes[0] = 'TEXT';
-    StandardGetFile(NULL, 1, fileTypes, &reply);
-    if (reply.sfGood == false) {
+    if (Tcl_Eval(gInterp, openCmd) != TCL_OK) {
 	return;
     }
     
-    err = FSpPathFromLocation(&reply.sfFile, &length, &path);
-    if (err == noErr) {
-	HLock(path);
-	result = Tcl_EvalFile(gInterp, *path);
-	HUnlock(path);
-	DisposeHandle(path);
+    path = Tcl_GetStringResult(gInterp);
+    
+    if (strlen(path) == 0) {
+        return;
     }
+    
+    result = Tcl_EvalFile(gInterp, path);
     if (result == TCL_ERROR) {
 	Tcl_BackgroundError(gInterp);
     }	   

@@ -1,3 +1,20 @@
+2000-04-22  Jim Ingham  <jingham@cygnus.com>
+
+        * mac/tkMacDialog.c (Tk_MacGetOpenFile): Add empty bodies for the 
+        "-initialfile" and "-defaultextension" options.
+        
+        * mac/tkMacDialog.c (NavServicesGetFile): Only cons the result up into
+        a list if multiple is true.
+        
+        * mac/tkMacMenus.c (SourceDialog): Use the "tk_getOpenFile" instead of hand-coding 
+        the dialog with StandardGetFile.  This way we get the Navigation dialogs for
+        free.
+        
+        * doc/getOpenFile.n: Document the -multiple and -message flags which are only
+        implemented on the Mac.  Also note that the -title works on the Mac with
+        Nav Services installed.
+        
+        
 2000-04-19  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* win/aclocal.m4: made SC_PROG_TCLSH search specifically for

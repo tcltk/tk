@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDialog.c,v 1.5 2000/04/17 02:16:50 jingham Exp $
+ * RCS: @(#) $Id: tkMacDialog.c,v 1.6 2000/04/23 03:47:24 jingham Exp $
  */
 
 #include <Gestalt.h>
@@ -305,11 +305,15 @@ Tk_GetOpenFileObjCmd(
     AEDesc initialDesc = {typeNull, NULL};
     FSSpec dirSpec;
     static char *openOptionStrings[] = {
-	    "-filetypes", "-initialdir", "-message", "-multiple",
+	    "-defaultextension", "-filetypes", 
+	    "-initialdir", "-initialfile", 
+	    "-message", "-multiple",
 	    "-parent",	"-title", 	NULL
     };
     enum openOptions {
-	    OPEN_TYPES,	OPEN_INITDIR, OPEN_MESSAGE, OPEN_MULTIPLE, 
+	    OPEN_DEFAULT, OPEN_TYPES,	
+	    OPEN_INITDIR, OPEN_INITFILE,
+	    OPEN_MESSAGE, OPEN_MULTIPLE, 
 	    OPEN_PARENT, OPEN_TITLE
     };
     
@@ -349,6 +353,8 @@ Tk_GetOpenFileObjCmd(
 	}
 	
 	switch (index) {
+	    case OPEN_DEFAULT:
+	        break;
 	    case OPEN_TYPES:
 	        choice = Tcl_GetStringFromObj(objv[i + 1], NULL);
                 if (TkGetFileFilters(interp, &ofd.fl, choice, 0) 
@@ -364,6 +370,8 @@ Tk_GetOpenFileObjCmd(
                     result = TCL_ERROR;
                     goto end;
                 }
+	        break;
+	    case OPEN_INITFILE:
 	        break;
 	    case OPEN_MESSAGE:
 	        choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
@@ -898,7 +906,17 @@ NavServicesGetFile(
                 openFileEventUPP, NULL, NULL);
     }
     
-    theResult = Tcl_NewListObj(0, NULL);
+                        
+    /*
+     * Most commands assume that the file dialogs return a single
+     * item, not a list.  So only build a list if multiple is true...
+     */
+                         
+    if (multiple) {
+        theResult = Tcl_NewListObj(0, NULL);
+    } else {
+        theResult = Tcl_NewObj();
+    }
            
     if ( theReply.validRecord && err == noErr ) {
         AEDesc resultDesc;
@@ -921,9 +939,15 @@ NavServicesGetFile(
                                 &length, &pathHandle);
                         HLock(pathHandle);
                         Tcl_ExternalToUtfDString(NULL, (char *) *pathHandle, -1, &fileName);
-                        Tcl_ListObjAppendElement(interp, theResult, 
-                                Tcl_NewStringObj(Tcl_DStringValue(&fileName), 
-                                Tcl_DStringLength(&fileName)));
+                        if (multiple) {
+                            Tcl_ListObjAppendElement(interp, theResult, 
+                                    Tcl_NewStringObj(Tcl_DStringValue(&fileName), 
+                                    Tcl_DStringLength(&fileName)));
+                        } else {
+                            Tcl_SetStringObj(theResult, Tcl_DStringValue(&fileName), 
+                                    Tcl_DStringLength(&fileName));
+                        }
+                        
                         Tcl_DStringFree(&fileName);
                         HUnlock(pathHandle);
                         DisposeHandle(pathHandle);
