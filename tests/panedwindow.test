@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.1 2002/02/22 02:41:17 hobbs Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.2 2002/06/19 23:17:17 hobbs Exp $
 
 if {[info tclversion] < 8.4} {
     puts "panedwindow requires Tk 8.4"
@@ -241,6 +241,27 @@ test panedwindow-6.7 {sash coord subcommand, sashes correctly placed} {
     destroy .p .p.f .p.f2 .p.f3
     set result
 } [list 0 50]
+test panedwindow-6.8 {sash coord subcommand, errors} {
+    panedwindow .p
+    set result [list \
+	    [catch {.p sash coord -1} msg] $msg \
+	    [catch {.p sash coord  0} msg] $msg \
+	    [catch {.p sash coord  1} msg] $msg \
+	    ]
+    destroy .p
+    set result
+} [list 1 "invalid sash index" 1 "invalid sash index" 1 "invalid sash index"]
+test panedwindow-6.9 {sash coord subcommand, errors} {
+    panedwindow .p
+    .p add [frame .p.f]
+    set result [list \
+	    [catch {.p sash coord -1} msg] $msg \
+	    [catch {.p sash coord  0} msg] \
+	    [catch {.p sash coord  1} msg] $msg \
+	    ]
+    destroy .p
+    set result
+} [list 1 "invalid sash index" 0 1 "invalid sash index"]
 
 test panedwindow-8.1 {sash mark subcommand, errors} {
     panedwindow .p
