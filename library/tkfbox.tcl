@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.21 2000/06/30 06:38:38 ericm Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.22 2000/07/19 00:20:02 ericm Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -43,7 +43,13 @@ proc tkIconList_Index {w i} {
     upvar #0 $w data
     upvar #0 $w:itemList itemList
     switch -regexp -- $i {
-	"^[0-9]+$" {
+	"^-?[0-9]+$" {
+	    if { $i < 0 } {
+		set i 0
+	    }
+	    if { $i >= [llength $data(list)] } {
+		set i [expr {[llength $data(list)] - 1}]
+	    }
 	    return $i
 	}
 	"^active$" {
@@ -70,7 +76,7 @@ proc tkIconList_Selection {w op args} {
     switch -exact -- $op {
 	"anchor" {
 	    if { [llength $args] == 1 } {
-		set data(index,anchor) [lindex $args 0]
+		set data(index,anchor) [tkIconList_Index $w [lindex $args 0]]
 	    } else {
 		return $data(index,anchor)
 	    }
@@ -336,11 +342,12 @@ proc tkIconList_Add {w image items} {
 
     foreach text $items {
 	set iTag [$data(canvas) create image 0 0 -image $image -anchor nw \
-		-tags [list icon $data(numItems)]]
+		-tags [list icon $data(numItems) item$data(numItems)]]
 	set tTag [$data(canvas) create text  0 0 -text  $text  -anchor nw \
-		-font $data(font) -tags [list text $data(numItems)]]
+		-font $data(font) \
+		-tags [list text $data(numItems) item$data(numItems)]]
 	set rTag [$data(canvas) create rect  0 0 0 0 -fill "" -outline "" \
-		-tags [list rect $data(numItems)]]
+		-tags [list rect $data(numItems) item$data(numItems)]]
 	
 	foreach {x1 y1 x2 y2} [$data(canvas) bbox $iTag] {
 	    break
@@ -485,12 +492,11 @@ proc tkIconList_See {w rTag} {
 	return
     }
 
-    if {![info exists itemList($rTag)]} {
+    if { $rTag < 0 || $rTag >= [llength $data(list)] } {
 	return
     }
 
-
-    set bbox [$data(canvas) bbox $rTag]
+    set bbox [$data(canvas) bbox item$rTag]
     set pad [expr {[$data(canvas) cget -highlightthickness] + \
 	    [$data(canvas) cget -bd]}]
 
@@ -633,20 +639,17 @@ proc tkIconList_UpDown {w amount} {
 	return
     }
 
-    if {[string equal $data(curItem) {}]} {
-	set rTag [lindex [lindex $data(list) 0] 2]
+    set curr [tkIconList_Curselection $w]
+    if { [llength $curr] == 0 } {
+	set i 0
     } else {
-	set oldRTag [lindex [lindex $data(list) $data(curItem)] 2]
-	set rTag [lindex [lindex $data(list) [expr {$data(curItem)+$amount}]] 2]
-	if {[string equal $rTag ""]} {
-	    set rTag $oldRTag
-	}
+	set i [tkIconList_Index $w anchor]
+	incr i $amount
     }
-
-    if {[string compare $rTag ""]} {
-	tkIconList_Select $w $rTag
-	tkIconList_See $w $rTag
-    }
+    tkIconList_Selection $w clear 0 end
+    tkIconList_Selection $w set $i
+    tkIconList_Selection $w anchor $i
+    tkIconList_See $w $i
 }
 
 # tkIconList_LeftRight --
@@ -663,21 +666,18 @@ proc tkIconList_LeftRight {w amount} {
     if {![info exists data(list)]} {
 	return
     }
-    if {[string equal $data(curItem) {}]} {
-	set rTag [lindex [lindex $data(list) 0] 2]
-    } else {
-	set oldRTag [lindex [lindex $data(list) $data(curItem)] 2]
-	set newItem [expr {$data(curItem)+($amount*$data(itemsPerColumn))}]
-	set rTag [lindex [lindex $data(list) $newItem] 2]
-	if {[string equal $rTag ""]} {
-	    set rTag $oldRTag
-	}
-    }
 
-    if {[string compare $rTag ""]} {
-	tkIconList_Select $w $rTag
-	tkIconList_See $w $rTag
+    set curr [tkIconList_Curselection $w]
+    if { [llength $curr] == 0 } {
+	set i 0
+    } else {
+	set i [tkIconList_Index $w anchor]
+	incr i [expr {$amount*$data(itemsPerColumn)}]
     }
+    tkIconList_Selection $w clear 0 end
+    tkIconList_Selection $w set $i
+    tkIconList_Selection $w anchor $i
+    tkIconList_See $w $i
 }
 
 #----------------------------------------------------------------------
@@ -743,9 +743,10 @@ proc tkIconList_Goto {w text} {
     }
 
     if {$theIndex > -1} {
-	set rTag [lindex [lindex $data(list) $theIndex] 2]
-	tkIconList_Select $w $rTag
-	tkIconList_See $w $rTag
+	tkIconList_Selection $w clear 0 end
+	tkIconList_Selection $w set $theIndex
+	tkIconList_Selection $w anchor $theIndex
+	tkIconList_See $w $theIndex
     }
 }
 
