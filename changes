@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.77 2004/12/28 09:04:43 chengyemao Exp $
+RCS: @(#) $Id: changes,v 1.78 2004/12/30 21:39:22 chengyemao Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5900,24 +5900,25 @@ and potential crashes in exit). (chengyemao)
 2004-12-17 (platform support) Added TkWinClenupContainerList into stublib. 
 (chengyemao)
 
-2004-12-18 (buf fix)[222677] Close the embedded window (of a different process)
-when its container is destroyed. (chengyemao)
+2004-12-18 (buf fix)[222677] Close the embedded window (of a different 
+process) when its container is destroyed. (chengyemao)
 
-2004-12-19 (feature implementation of embedded/embedding Tk and bug fix)
-Implemented container identification, focus, raise, set title of and move window 
-so that an embedded widget is able to identify a container, to get focus and to
-receive key press input. Fixed bugs include [1024364] and an incorrect wm
-overrideredirect for an embedded window. (chengyemao)
+2004-12-19 (Windows feature implementation of embedded/embedding 
+Tk and bug fix) Implemented container identification, focus, raise, set 
+title of and move window so that an embedded widget is able to identify 
+a container, to get focus and to receive key press input. Fixed bugs include 
+[1024364] and an incorrect wm overrideredirect for an embedded window. 
+(chengyemao)
 
-2004-12-20 (feature implementation of embedded/embedding Tk) Implemented 
-overrideredirect for an embedded toplevel; correctly updated a frame's upper left
-x and y of an embedded toplevel after its container (of another process) moved.
-(chengyemao) 
+2004-12-20 (Windows feature implementation of embedded/embedding Tk) 
+Implemented overrideredirect for an embedded toplevel; correctly updated a 
+frame's upper left x and y of an embedded toplevel after its container 
+(of another process) moved. (chengyemao) 
 
 2004-12-28 (feature implementatoin of embedded/embedding Tk) Implemented
 embedded/embedding toplevel menu. A menu may be embedded in a container of 
-either the same process of a different process. Need to improve drawing 
-an embedded menu in an different process. Currently, if an embedded menu
-is in a different process, the menu items may not draw at pull-down time
-and require the mouse moves over the menu items to complete display. 
-(chengyemao)
+either the same process or a different process. Working fine with Windows 98.
+But having a problem when invoked with a mouse click (Windows XP): if an 
+embedded menu is in a different process, the menu items may show as a blank 
+window at the pull-down time and require the mouse moves over the menu items 
+to complete display. (chengyemao)
