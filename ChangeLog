@@ -1,3 +1,12 @@
+2003-11-17  Don Porter	<dgp@users.sourceforge.net>
+
+	* tests/constraints.tcl:When running the test suite in a process
+	* tests/image.test:	where Tk has been [load]ed, there's no
+	* tests/select.test:	guarantee that child processes created by
+	* tests/unixWm.test:	[exec [interpreter]] will have Tk in them.
+	* tests/window.test:	Made modifications to force a [load] of Tk
+				in those situations.
+
 2003-11-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkMenubutton.h: fixed compound menubutton handling like
