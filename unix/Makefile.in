@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.24 1999/07/16 21:43:28 redman Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.25 1999/07/22 01:32:20 redman Exp $
 
 # Current Tk version;  used in various names.
 
@@ -946,6 +946,7 @@ dist:   $(UNIX_DIR)/configure
 	mkdir $(DISTDIR)/win
 	cp $(TOP_DIR)/win/Makefile.in $(DISTDIR)/win
 	cp $(TOP_DIR)/win/configure.in \
+		$(TOP_DIR)/win/configure \
 		$(TOP_DIR)/win/tkConfig.sh.in \
 		$(TOP_DIR)/win/aclocal.m4 \
 		$(DISTDIR)/win

@@ -1,3 +1,7 @@
+1999-07-21    <redman@scriptics.com>
+
+	* unix/Makefile.in: Add Windows configure script to distribution.
+
 1999-07-16    <redman@scriptics.com>
 
 	* unix/Makefile.in:
