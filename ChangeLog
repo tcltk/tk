@@ -1,5 +1,12 @@
 2001-10-01  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tkWinTest.c: better error reporting from testclipboard
+
+	* win/tkWinDialog.c: minor cast changes to support Win64
+
+	* win/tkWinWindow.c: made use of standard Tk_GetHWND instead of
+	older, private TkWinGetHWND.
+
 	* win/configure: regen'ed
 	* win/tcl.m4:
 	* win/makefile.vc: updated for Win64 SDK RC1 compilation support
