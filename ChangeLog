@@ -1,3 +1,17 @@
+2000-10-27  Jeff Hobbs  <hobbs@ajubasolutions.com>
+
+	* unix/tcl.m4: added support for AIX-5.
+
+	* tests/tk.test: 
+	* doc/tk.n: updated to reflect default on status of useinputmethods.
+	* library/tk.tcl: tk useinputmethods is set to 1 by default.  This
+	enables Kanji and dead-char input by default.  Intro'd in
+	1999-12-16 with default off to avoid some problems with older X
+	servers that would slow down widget creation over time.
+
+	* win/Makefile.in (test, winhelp, tktest): corrected the
+	TCL_LIBRARY path specification.
+
 2000-10-18  Eric Melski  <ericm@ajubasolutions.com>
 
 	* win/tkWinDraw.c (RenderObject): Applied patch from [Bug: 6368],
