@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacAppInit.c,v 1.10 1999/05/22 06:32:08 jingham Exp $
+ * RCS: @(#) $Id: tkMacAppInit.c,v 1.11 1999/06/16 05:33:58 jingham Exp $
  */
 
 #include <Gestalt.h>
@@ -23,6 +23,7 @@
 #include "tk.h"
 #include "tkInt.h"
 #include "tkMacInt.h"
+#include "tclInt.h"
 #include "tclMac.h"
 
 #ifdef TK_TEST
@@ -95,6 +96,15 @@ main(
     argc = 1;
     newArgv[0] = "Wish";
     newArgv[1] = NULL;
+    
+    /* Tk_Main is actually #defined to 
+     *     Tk_MainEx(argc, argv, Tcl_AppInit, Tcl_CreateInterp())
+     * Unfortunately, you also HAVE to call Tcl_FindExecutable
+     * BEFORE creating the first interp, or the tcl_library will not
+     * get set properly.  So we call it by hand here...
+     */
+    
+    Tcl_FindExecutable(newArgv[0]);
     Tk_Main(argc, newArgv, Tcl_AppInit);
 }
 
