@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.27 2004/06/15 15:02:53 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.28 2004/06/15 15:09:25 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -3847,7 +3847,7 @@ FindItems(interp, canvasPtr, argc, argv, newTag, first, searchPtrPtr)
 #endif /* USE_OLD_TAG_SEARCH */
     Tk_Item *itemPtr;
     Tk_Uid uid;
-    int index;
+    int index, result;
     static CONST char *optionStrings[] = {
 	"above", "all", "below", "closest",
 	"enclosed", "overlapping", "withtag", NULL
@@ -4178,6 +4178,7 @@ RelinkItems(canvasPtr, tag, prevPtr, searchPtrPtr)
     TagSearch search;
 #endif /* USE_OLD_TAG_SEARCH */
     Tk_Item *firstMovePtr, *lastMovePtr;
+    int result;
 
     /*
      * Find all of the items to be moved and remove them from
