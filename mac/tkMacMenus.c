@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenus.c,v 1.7 2001/11/23 02:06:11 das Exp $
+ * RCS: @(#) $Id: tkMacMenus.c,v 1.8 2002/01/27 11:11:02 das Exp $
  */
 
 #include "tcl.h"
@@ -330,7 +330,7 @@ static void
 SourceDialog()
 {
     int result;
-    char *path;
+    CONST char *path;
     char openCmd[] = "tk_getOpenFile -filetypes {\
             {{TCL Scripts} {.tcl} TEXT} {{Text Files} {} TEXT}}";
     
