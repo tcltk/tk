@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.18 2000/04/25 01:03:06 hobbs Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.19 2000/08/18 17:02:10 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -2123,6 +2123,7 @@ ImgPhotoGet(tkwin, masterData)
 
     /*
      * Set configuration options and finish the initialization of the instance.
+     * This will also dither the image if necessary.
      */
 
     ImgPhotoConfigureInstance(instancePtr);
@@ -2134,16 +2135,6 @@ ImgPhotoGet(tkwin, masterData)
     if (instancePtr->nextPtr == NULL) {
 	Tk_ImageChanged(masterPtr->tkMaster, 0, 0, 0, 0,
 		masterPtr->width, masterPtr->height);
-    }
-
-    /*
-     * Dither the image to fill in this instance's pixmap.
-     */
-
-    TkClipBox(masterPtr->validRegion, &validBox);
-    if ((validBox.width > 0) && (validBox.height > 0)) {
-	DitherInstance(instancePtr, validBox.x, validBox.y, validBox.width,
-		validBox.height);
     }
 
     return (ClientData) instancePtr;

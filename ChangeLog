@@ -1,3 +1,10 @@
+2000-08-18  Eric Melski  <ericm@ajubasolutions.com>
+
+	* generic/tkImgPhoto.c (ImgPhotoGet): Removed redundant call to
+	DitherInstance; this call was formerly being made from
+	ImgPhotoGet->ImgPhotoConfigureInstance->DitherInstance, and
+	ImgPhotoGet->DitherInstance.  The second call was removed.
+
 2000-08-10  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* doc/SetOptions.3: added missing ')'.
