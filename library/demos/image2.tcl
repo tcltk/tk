@@ -3,7 +3,7 @@
 # This demonstration script creates a simple collection of widgets
 # that allow you to select and view images in a Tk label.
 #
-# RCS: @(#) $Id: image2.tcl,v 1.7 2003/08/20 23:02:18 hobbs Exp $
+# RCS: @(#) $Id: image2.tcl,v 1.8 2003/11/03 15:31:18 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -76,7 +76,8 @@ frame $w.mid
 pack $w.mid -fill both -expand 1
 
 labelframe $w.dir -text "Directory:"
-set dirName [file join $tk_library demos images]
+# Main widget program sets variable tk_demoDirectory
+set dirName [file join $tk_demoDirectory images]
 entry $w.dir.e -width 30 -textvariable dirName
 button $w.dir.b -pady 0 -padx 2m -text "Select Dir." \
 	-command "selectAndLoadDir $w"
