@@ -1,3 +1,11 @@
+1999-08-13  Jim Ingham  <jingham@cygnus.com>
+
+        * mac/tkMacMenu.c: Tk_DrawChars ends up setting the menu background
+        wrong.  There is no clean way to stop it, so I use lower level routines
+        here to draw the text.
+        * mac/tkMacProjects.sea.hqx: Rearrange the projects so that the build 
+        directory is separate from the sources.  Much more convenient! 
+        
 1999-08-10  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* win/tkWinWm.c: changed "wm deiconify" on Windows to raise and
