@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.7 1999/04/28 18:18:07 redman Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.8 1999/11/10 02:56:42 hobbs Exp $
  */
 
 #include <tk.h>
@@ -171,7 +171,11 @@ Tcl_AppInit(interp)
     return TCL_OK;
 
 error:
-    WishPanic(Tcl_GetStringResult(interp));
+    MessageBeep(MB_ICONEXCLAMATION);
+    MessageBox(NULL, Tcl_GetStringResult(interp), "Error in Wish",
+	    MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+    ExitProcess(1);
+    /* we won't reach this, but we need the return */
     return TCL_ERROR;
 }
 
