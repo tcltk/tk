@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.14 2002/06/22 08:21:51 hobbs Exp $
+'\" RCS: @(#) $Id: text.n,v 1.15 2003/02/19 18:52:14 mdejong Exp $
 '\" 
 .so man.macros
 .TH text n 8.4 Tk "Tk Built-In Commands"
@@ -1578,12 +1578,12 @@ Dragging with mouse button 1 strokes out a selection between
 the insertion cursor and the character under the mouse.
 .IP [2]
 Double-clicking with mouse button 1 selects the word under the mouse
-and positions the insertion cursor at the beginning of the word.
+and positions the insertion cursor at the end of the word.
 Dragging after a double click will stroke out a selection consisting
 of whole words.
 .IP [3]
 Triple-clicking with mouse button 1 selects the line under the mouse
-and positions the insertion cursor at the beginning of the line.
+and positions the insertion cursor at the end of the line.
 Dragging after a triple click will stroke out a selection consisting
 of whole lines.
 .IP [4]
