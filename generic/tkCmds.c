@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.31.2.1 2004/06/29 23:20:26 hobbs Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.31.2.2 2004/11/12 23:54:54 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -755,12 +755,11 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 		return TCL_ERROR;
 	    }
 
-	    screenPtr = Tk_Screen(tkwin);
-
 	    skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
 	    if (skip < 0) {
 		return TCL_ERROR;
 	    }
+	    screenPtr = Tk_Screen(tkwin);
 	    if (objc - skip == 2) {
 		d = 25.4 / 72;
 		d *= WidthOfScreen(screenPtr);
@@ -789,7 +788,7 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 	    break;
 	}
 	case TK_USE_IM: {
-	    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
+	    TkDisplay *dispPtr;
 	    int skip;
 
 	    if (Tcl_IsSafe(interp)) {
@@ -802,9 +801,8 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 	    skip = TkGetDisplayOf(interp, objc-2, objv+2, &tkwin);
 	    if (skip < 0) {
 		return TCL_ERROR;
-	    } else if (skip) {
-		dispPtr = ((TkWindow *) tkwin)->dispPtr;
 	    }
+	    dispPtr = ((TkWindow *) tkwin)->dispPtr;
 	    if ((objc - skip) == 3) {
 		/*
 		 * In the case where TK_USE_INPUT_METHODS is not defined,
