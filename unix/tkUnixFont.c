@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.16 2002/10/17 23:38:01 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.17 2003/02/20 10:23:13 dkf Exp $
  */
  
 #include "tkUnixInt.h"
@@ -202,10 +202,12 @@ static void		FontPkgCleanup _ANSI_ARGS_((ClientData clientData));
 static FontFamily *	AllocFontFamily _ANSI_ARGS_((Display *display,
 			    XFontStruct *fontStructPtr, int base));
 static SubFont *	CanUseFallback _ANSI_ARGS_((UnixFont *fontPtr,
-			    CONST char *fallbackName, int ch));
+			    CONST char *fallbackName, int ch,
+			    SubFont **fixSubFontPtrPtr));
 static SubFont *	CanUseFallbackWithAliases _ANSI_ARGS_((
 			    UnixFont *fontPtr, char *fallbackName,
-			    int ch, Tcl_DString *nameTriedPtr));
+			    int ch, Tcl_DString *nameTriedPtr,
+			    SubFont **fixSubFontPtrPtr));
 static int		ControlUtfProc _ANSI_ARGS_((ClientData clientData,
 			    CONST char *src, int srcLen, int flags,
 			    Tcl_EncodingState *statePtr, char *dst,
@@ -215,7 +217,7 @@ static XFontStruct *	CreateClosestFont _ANSI_ARGS_((Tk_Window tkwin,
 			    CONST TkFontAttributes *faPtr,
 			    CONST TkXLFDAttributes *xaPtr));
 static SubFont *	FindSubFontForChar _ANSI_ARGS_((UnixFont *fontPtr,
-			    int ch));
+			    int ch, SubFont **fixSubFontPtrPtr));
 static void		FontMapInsert _ANSI_ARGS_((SubFont *subFontPtr,
 			    int ch));
 static void		FontMapLoadPage _ANSI_ARGS_((SubFont *subFontPtr,
@@ -987,7 +989,7 @@ Tk_MeasureChars(tkfont, source, numBytes, maxLength, flags, lengthPtr)
 	end = source + numBytes;
 	for (p = source; p < end; ) {
 	    next = p + Tcl_UtfToUniChar(p, &ch);
-	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch);
+	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	    if (thisSubFontPtr != lastSubFontPtr) {
 		familyPtr = lastSubFontPtr->familyPtr;
 		Tcl_UtfToExternalDString(familyPtr->encoding, source,
@@ -1046,7 +1048,7 @@ Tk_MeasureChars(tkfont, source, numBytes, maxLength, flags, lengthPtr)
 	    if ((ch < BASE_CHARS) && (fontPtr->widths[ch] != 0)) {
 		newX += fontPtr->widths[ch];
 	    } else {
-		lastSubFontPtr = FindSubFontForChar(fontPtr, ch);
+		lastSubFontPtr = FindSubFontForChar(fontPtr, ch, NULL);
 		familyPtr = lastSubFontPtr->familyPtr;
 		Tcl_UtfToExternal(NULL, familyPtr->encoding, p, next - p,
 			0, NULL, buf, sizeof(buf), NULL, &dstWrote, NULL);
@@ -1184,7 +1186,7 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
     for (p = source; p <= end; ) {
 	if (p < end) {
 	    next = p + Tcl_UtfToUniChar(p, &ch);
-	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch);
+	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	} else {
 	    next = p + 1;
 	    thisSubFontPtr = lastSubFontPtr;
@@ -1474,7 +1476,7 @@ InitFont(tkwin, fontStructPtr, fontPtr)
     InitSubFont(display, fontStructPtr, 1, &fontPtr->subFontArray[0]);
 
     fontPtr->controlSubFont	= fontPtr->subFontArray[0];
-    subFontPtr			= FindSubFontForChar(fontPtr, '0');
+    subFontPtr			= FindSubFontForChar(fontPtr, '0', NULL);
     controlPtr			= &fontPtr->controlSubFont;
     controlPtr->fontStructPtr	= subFontPtr->fontStructPtr;
     controlPtr->familyPtr	= &tsdPtr->controlFamily;
@@ -1791,16 +1793,20 @@ FreeFontFamily(familyPtr)
  * Side effects:
  *	The contents of fontPtr are modified to cache the results
  *	of the lookup and remember any SubFonts that were dynamically 
- *	loaded.
+ *	loaded.  The table of SubFonts might be extended, and if a non-NULL
+ *	reference to a subfont pointer is available, it is updated if it
+ *	previously pointed into the old subfont table.
  *
  *-------------------------------------------------------------------------
  */
 
 static SubFont *
-FindSubFontForChar(fontPtr, ch)
+FindSubFontForChar(fontPtr, ch, fixSubFontPtrPtr)
     UnixFont *fontPtr;		/* The font object with which the character
 				 * will be displayed. */
     int ch;			/* The Unicode character to be displayed. */
+    SubFont **fixSubFontPtrPtr;	/* Subfont reference to fix up if we
+				 * reallocate our subfont table. */
 {
     int i, j, k, numNames;
     Tk_Uid faceName; 
@@ -1840,7 +1846,7 @@ FindSubFontForChar(fontPtr, ch)
      
     faceName = fontPtr->font.fa.family;
     if (SeenName(faceName, &ds) == 0) {
-	subFontPtr = CanUseFallback(fontPtr, faceName, ch);
+	subFontPtr = CanUseFallback(fontPtr, faceName, ch, fixSubFontPtrPtr);
 	if (subFontPtr != NULL) {
 	    goto end;
 	}
@@ -1880,7 +1886,8 @@ FindSubFontForChar(fontPtr, ch)
 	 */
 
 	for (j = 0; (fallback = fontFallbacks[i][j]) != NULL; j++) {
-	    subFontPtr = CanUseFallbackWithAliases(fontPtr, fallback, ch, &ds);
+	    subFontPtr = CanUseFallbackWithAliases(fontPtr, fallback, ch, &ds,
+		    fixSubFontPtrPtr);
 	    if (subFontPtr != NULL) {
 		goto end;
 	    }
@@ -1893,7 +1900,8 @@ FindSubFontForChar(fontPtr, ch)
 
     anyFallbacks = TkFontGetGlobalClass();
     for (i = 0; (fallback = anyFallbacks[i]) != NULL; i++) {
-	subFontPtr = CanUseFallbackWithAliases(fontPtr, fallback, ch, &ds);
+	subFontPtr = CanUseFallbackWithAliases(fontPtr, fallback, ch, &ds,
+		fixSubFontPtrPtr);
 	if (subFontPtr != NULL) {
 	    goto end;
 	}
@@ -1909,7 +1917,8 @@ FindSubFontForChar(fontPtr, ch)
 	fallback = strchr(nameList[i] + 1, '-') + 1;
 	strchr(fallback, '-')[0] = '\0';
 	if (SeenName(fallback, &ds) == 0) {
-	    subFontPtr = CanUseFallback(fontPtr, fallback, ch);
+	    subFontPtr = CanUseFallback(fontPtr, fallback, ch,
+		    fixSubFontPtrPtr);
 	    if (subFontPtr != NULL) {
 		XFreeFontNames(nameList);
 		goto end;
@@ -2113,13 +2122,16 @@ FontMapLoadPage(subFontPtr, row)
  * Side effects:
  *	If the name and/or one of its aliases was rejected, the
  *	rejected string is recorded in nameTriedPtr so that it won't
- *	be tried again.
+ *	be tried again.  The table of SubFonts might be extended, and if
+ *	a non-NULL reference to a subfont pointer is available, it is
+ *	updated if it previously pointed into the old subfont table.
  *
  *---------------------------------------------------------------------------
  */
 
 static SubFont *
-CanUseFallbackWithAliases(fontPtr, faceName, ch, nameTriedPtr)
+CanUseFallbackWithAliases(fontPtr, faceName, ch, nameTriedPtr,
+	fixSubFontPtrPtr)
     UnixFont *fontPtr;		/* The font object that will own the new
 				 * screen font. */
     char *faceName;		/* Desired face name for new screen font. */
@@ -2129,13 +2141,15 @@ CanUseFallbackWithAliases(fontPtr, faceName, ch, nameTriedPtr)
 				 * been tried.  It is possible for the same
 				 * face name to be queried multiple times when
 				 * trying to find a suitable screen font. */
+    SubFont **fixSubFontPtrPtr;	/* Subfont reference to fix up if we
+				 * reallocate our subfont table. */
 {
     SubFont *subFontPtr;
     char **aliases;
     int i;
     
     if (SeenName(faceName, nameTriedPtr) == 0) {
-	subFontPtr = CanUseFallback(fontPtr, faceName, ch);
+	subFontPtr = CanUseFallback(fontPtr, faceName, ch, fixSubFontPtrPtr);
 	if (subFontPtr != NULL) {
 	    return subFontPtr;
 	}
@@ -2144,7 +2158,8 @@ CanUseFallbackWithAliases(fontPtr, faceName, ch, nameTriedPtr)
     if (aliases != NULL) {
 	for (i = 0; aliases[i] != NULL; i++) {
 	    if (SeenName(aliases[i], nameTriedPtr) == 0) {
-		subFontPtr = CanUseFallback(fontPtr, aliases[i], ch);
+		subFontPtr = CanUseFallback(fontPtr, aliases[i], ch,
+			fixSubFontPtrPtr);
 		if (subFontPtr != NULL) {
 		    return subFontPtr;
 		}
@@ -2214,18 +2229,23 @@ SeenName(name, dsPtr)
  *
  * Side effects:				       
  *	The font object's subFontArray is updated to contain a reference
- *	to the newly allocated SubFont.
+ *	to the newly allocated SubFont.  The table of SubFonts might be
+ *	extended, and if a non-NULL reference to a subfont pointer is
+ *	available, it is updated if it previously pointed into the old
+ *	subfont table.
  *
  *-------------------------------------------------------------------------
  */
 
 static SubFont *
-CanUseFallback(fontPtr, faceName, ch)
+CanUseFallback(fontPtr, faceName, ch, fixSubFontPtrPtr)
     UnixFont *fontPtr;		/* The font object that will own the new
 				 * screen font. */
     CONST char *faceName;	/* Desired face name for new screen font. */
     int ch;			/* The Unicode character that the new
 				 * screen font must be able to display. */
+    SubFont **fixSubFontPtrPtr;	/* Subfont reference to fix up if we
+				 * reallocate our subfont table. */
 {
     int i, nameIdx, numNames, srcLen;
     Tk_Uid hateFoundry;
@@ -2420,6 +2440,14 @@ CanUseFallback(fontPtr, faceName, ch)
 	newPtr = (SubFont *) ckalloc(sizeof(SubFont) * (fontPtr->numSubFonts + 1));
 	memcpy((char *) newPtr, fontPtr->subFontArray,
 		fontPtr->numSubFonts * sizeof(SubFont));
+	if (fixSubFontPtrPtr != NULL) {
+	    register SubFont *fixSubFontPtr = *fixSubFontPtrPtr;
+
+	    if (fixSubFontPtr != &fontPtr->controlSubFont) {
+		*fixSubFontPtrPtr =
+			newPtr + (fixSubFontPtr - fontPtr->subFontArray);
+	    }
+	}
 	if (fontPtr->subFontArray != fontPtr->staticSubFonts) {
 	    ckfree((char *) fontPtr->subFontArray);
 	}
@@ -2827,5 +2855,3 @@ GetEncodingAlias(name)
     }
     return name;
 }
-
-
