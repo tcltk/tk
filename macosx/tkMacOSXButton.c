@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.10 2004/11/09 12:46:10 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.11 2005/03/12 00:27:15 wolfsuit Exp $
  */
 
 #include "tkButton.h"
@@ -197,9 +197,6 @@ TkpDisplayButton(
     MacButton *macButtonPtr = (MacButton *)clientData;
     TkButton  *butPtr       = (TkButton *) clientData;
     Tk_Window tkwin         = butPtr->tkwin;
-    int x = 0;                  /* Initialization only needed to stop
-                                 * compiler warning. */
-    int y;
     int width, height, fullWidth, fullHeight;
     int textXOffset, textYOffset;
     int haveImage = 0, haveText = 0;
@@ -234,10 +231,14 @@ TkpDisplayButton(
     }
    
     /* 
-     * set up clipping region 
+     * set up clipping region.  Make sure the we are using the port
+     * for this button, or we will set the wrong window's clip. 
      */
     
+    destPort = TkMacOSXGetDrawablePort(pixmap);
+    SetGWorld(destPort, NULL);
     TkMacOSXSetUpClippingRgn(pixmap);
+
 
     /*
      * See the comment in UpdateControlColors as to why we use the 
@@ -262,13 +263,6 @@ TkpDisplayButton(
 
     if (macButtonPtr->usingControl) {
         borderWidth = 0;
-        /*
-         * This part uses Macintosh rather than Tk calls to draw
-         * to the screen.  Make sure the ports etc. are set correctly.
-         */
-         
-        destPort = TkMacOSXGetDrawablePort(pixmap);
-        SetGWorld(destPort, NULL);
         TkMacOSXDrawControl(macButtonPtr, destPort, dpPtr->gc, pixmap);
     } else {
        if (wasUsingControl && macButtonPtr->userPane) {
@@ -304,6 +298,8 @@ TkpDisplayButton(
 
         haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
         if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
+            int x;
+            int y;
             textXOffset = 0;
             textYOffset = 0;
             fullWidth = 0;
@@ -411,6 +407,9 @@ TkpDisplayButton(
             y += fullHeight/2;
         } else {
             if (haveImage) {
+                int x = 0;
+                int y;
+
                 TkComputeAnchor(butPtr->anchor, tkwin, 0, 0,
                         butPtr->indicatorSpace + width, height, &x, &y);
                 x += butPtr->indicatorSpace;
@@ -448,19 +447,16 @@ TkpDisplayButton(
                     XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
                 }
                 y += height/2;
-            } else {
+            } else if (macButtonPtr->useTkText) {
+                int x = 0;
+                int y;
                 TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX,
                         butPtr->padY,
                         butPtr->indicatorSpace + butPtr->textWidth,
-                        butPtr->textHeight, &x, &y);
-                
-                x += butPtr->indicatorSpace;
-                
-                if (macButtonPtr->useTkText) {
-                    Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc,
+                        butPtr->textHeight, &x, &y);                
+                x += butPtr->indicatorSpace;                
+                Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc,
                         butPtr->textLayout, x, y, 0, -1);
-                }
-                y += butPtr->textHeight/2;
             }
         }
     }
@@ -1058,12 +1054,12 @@ TkMacOSXDrawControl(
     }
 
     if (mbPtr->flags&2) {
-        ShowControl(mbPtr->control);
         ShowControl(mbPtr->userPane);
+        ShowControl(mbPtr->control);
         mbPtr->flags ^= 2;
     } else {
-        Draw1Control(mbPtr->userPane);
         SetControlVisibility(mbPtr->control, true, true);
+        Draw1Control(mbPtr->userPane);
     }
  
     if (mbPtr->params.isBevel) {
