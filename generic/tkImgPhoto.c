@@ -16,7 +16,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.1 2003/07/17 09:58:14 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.2 2003/07/17 13:05:53 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1067,6 +1067,12 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 		break;
 	    }
 	    if (y == 0) {
+		if (listArgc == 0) {
+		    /*
+		     * Lines must be non-empty...
+		     */
+		    break;
+		}
 		dataWidth = listArgc;
 		pixelPtr = (unsigned char *)
 			ckalloc((unsigned) dataWidth * dataHeight * 3);
@@ -2663,13 +2669,16 @@ ImgPhotoSetSize(masterPtr, width, height)
 	 */
 	unsigned /*long*/ newPixSize = (unsigned /*long*/) (height * pitch);
 
-	newPix32 = (unsigned char *) attemptckalloc(newPixSize);
 	/*
-	 * The result could validly be NULL if the number of bytes
-	 * requested was 0. [Bug 619544]
+	 * Some mallocs() really hate allocating zero bytes. [Bug 619544]
 	 */
-	if (newPix32 == NULL && newPixSize != 0) {
-	    return TCL_ERROR;
+	if (newPixSize == 0) {
+	    newPix32 = NULL;
+	} else {
+	    newPix32 = (unsigned char *) attemptckalloc(newPixSize);
+	    if (newPix32 == NULL) {
+		return TCL_ERROR;
+	    }
 	}
     }
 
@@ -2867,30 +2876,34 @@ ImgPhotoInstanceSetSize(instancePtr)
 	    || (instancePtr->height != masterPtr->height)
 	    || (instancePtr->error == NULL)) {
 
-	newError = (schar *) ckalloc((unsigned)
-		(masterPtr->height * masterPtr->width * 3 * sizeof(schar)));
+	if (masterPtr->height > 0 && masterPtr->width > 0) {
+	    newError = (schar *) ckalloc((unsigned)
+		    masterPtr->height * masterPtr->width * 3 * sizeof(schar));
 
-	/*
-	 * Zero the new array so that we don't get bogus error values
-	 * propagating into areas we dither later.
-	 */
+	    /*
+	     * Zero the new array so that we don't get bogus error
+	     * values propagating into areas we dither later.
+	     */
 
-	if ((instancePtr->error != NULL)
-	    && ((instancePtr->width == masterPtr->width)
-		|| (validBox.width == masterPtr->width))) {
-	    if (validBox.y > 0) {
+	    if ((instancePtr->error != NULL)
+		    && ((instancePtr->width == masterPtr->width)
+		    || (validBox.width == masterPtr->width))) {
+		if (validBox.y > 0) {
+		    memset((VOID *) newError, 0, (size_t)
+			    validBox.y * masterPtr->width * 3 * sizeof(schar));
+		}
+		h = validBox.y + validBox.height;
+		if (h < masterPtr->height) {
+		    memset((VOID *) (newError + h * masterPtr->width * 3), 0,
+			    (size_t) (masterPtr->height - h)
+			    * masterPtr->width * 3 * sizeof(schar));
+		}
+	    } else {
 		memset((VOID *) newError, 0, (size_t)
-			(validBox.y * masterPtr->width * 3 * sizeof(schar)));
-	    }
-	    h = validBox.y + validBox.height;
-	    if (h < masterPtr->height) {
-		memset((VOID *) (newError + h * masterPtr->width * 3), 0,
-			(size_t) ((masterPtr->height - h)
-			    * masterPtr->width * 3 * sizeof(schar)));
+			masterPtr->height * masterPtr->width * 3 * sizeof(schar));
 	    }
 	} else {
-	    memset((VOID *) newError, 0, (size_t)
-		    (masterPtr->height * masterPtr->width * 3 * sizeof(schar)));
+	    newError = NULL;
 	}
 
 	if (instancePtr->error != NULL) {
