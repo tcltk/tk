@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.97 2005/02/17 00:06:09 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.98 2005/03/08 21:54:33 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1182,7 +1182,7 @@ TkWinGetIcon(Tk_Window tkwin, DWORD iconsize)
     if (icon == (HICON) NULL) {
 #ifdef _WIN64
 	icon = (HICON) GetClassLongPtr(wmPtr->wrapper,
-		(iconsize == ICON_BIG) ? GCLP_HICON : GCLP_ICONSM);
+		(iconsize == ICON_BIG) ? GCLP_HICON : GCLP_HICONSM);
 #else
 	icon = (HICON) GetClassLong(wmPtr->wrapper,
 		(iconsize == ICON_BIG) ? GCL_HICON : GCL_HICONSM);
