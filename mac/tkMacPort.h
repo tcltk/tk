@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacPort.h,v 1.9.2.1 2001/04/04 21:39:49 hobbs Exp $
+ * RCS: @(#) $Id: tkMacPort.h,v 1.9.2.2 2001/10/13 01:25:10 hobbs Exp $
  */
 
 #ifndef _TKMACPORT
@@ -120,6 +120,7 @@ EXTERN int		strncasecmp _ANSI_ARGS_((CONST char *s1,
 
 /*
  * This macro stores a representation of the window handle in a string.
+ * This should perhaps use the real size of an XID.
  */
 
 #define TkpPrintWindowId(buf,w) \
@@ -130,7 +131,7 @@ EXTERN int		strncasecmp _ANSI_ARGS_((CONST char *s1,
  */
 
 #define TkpScanWindowId(i,s,wp) \
-	Tcl_GetInt((i),(s),(wp))
+	Tcl_GetInt((i),(s),(int *)(wp))
 
 /*
  * Magic pixel values for dynamic (or active) colors.

@@ -17,7 +17,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixXId.c,v 1.5 1999/04/21 21:53:32 rjohnson Exp $
+ * RCS: @(#) $Id: tkUnixXId.c,v 1.5.12.1 2001/10/13 01:25:10 hobbs Exp $
  */
 
 /*
@@ -533,4 +533,37 @@ TkpWindowWasRecentlyDeleted(win, dispPtr)
         }
     }
     return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpScanWindowId --
+ *
+ *	Given a string, produce the corresponding Window Id.
+ *
+ * Results:
+ *      The return value is normally TCL_OK;  in this case *idPtr
+ *      will be set to the Window value equivalent to string.  If
+ *      string is improperly formed then TCL_ERROR is returned and
+ *      an error message will be left in the interp's result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpScanWindowId(interp, string, idPtr)
+    Tcl_Interp *interp;	
+    CONST char *string;
+    Window *idPtr;
+{
+    int value;
+    if (Tcl_GetInt(interp, string, &value) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    *idPtr = (Window) value;
+    return TCL_OK;
 }

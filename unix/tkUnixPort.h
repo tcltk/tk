@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixPort.h,v 1.5 1999/04/16 01:51:47 stanton Exp $
+ * RCS: @(#) $Id: tkUnixPort.h,v 1.5.12.1 2001/10/13 01:25:10 hobbs Exp $
  */
 
 #ifndef _UNIXPORT
@@ -200,17 +200,11 @@ extern int errno;
 
 /*
  * This macro stores a representation of the window handle in a string.
+ * This should perhaps use the real size of an XID.
  */
 
 #define TkpPrintWindowId(buf,w) \
-	sprintf((buf), "0x%x", (unsigned int) (w))
-	    
-/*
- * TkpScanWindowId is just an alias for Tcl_GetInt on Unix.
- */
-
-#define TkpScanWindowId(i,s,wp) \
-	Tcl_GetInt((i),(s),(wp))
+	sprintf((buf), "%#08lx", (unsigned long) (w))
 	    
 /*
  * This macro indicates that entry and text widgets should display

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.13.2.1 2001/04/04 07:57:16 hobbs Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.13.2.2 2001/10/13 01:25:10 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -19,6 +19,10 @@
 
 #ifdef __WIN32__
 #include "tkWinInt.h"
+#endif
+
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#include "tkUnixInt.h"
 #endif
 
 /*
@@ -2295,7 +2299,7 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 	    /* Empty loop body. */
 	}
 	if (string != before) {
-	    Tcl_DStringAppend(dsPtr, before, string-before);
+	    Tcl_DStringAppend(dsPtr, before, (int) (string-before));
 	    before = string;
 	}
 	if (*before == 0) {
@@ -3712,7 +3716,7 @@ NameToWindow(interp, mainWin, objPtr, tkwinPtr)
 {
     char *name;
     Tk_Window tkwin;
-    int id;
+    Window id;
     
     name = Tcl_GetStringFromObj(objPtr, NULL);
     if (name[0] == '.') {
@@ -3728,7 +3732,7 @@ NameToWindow(interp, mainWin, objPtr, tkwinPtr)
 	 */
 
 	if ((TkpScanWindowId(NULL, name, &id) != TCL_OK) ||
-		((*tkwinPtr = Tk_IdToWindow(Tk_Display(mainWin), (Window) id))
+		((*tkwinPtr = Tk_IdToWindow(Tk_Display(mainWin), id))
 			== NULL)) {
 	    Tcl_AppendResult(interp, "bad window name/identifier \"",
 		    name, "\"", (char *) NULL);

@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.7.2.1 2001/04/04 21:39:48 hobbs Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.7.2.2 2001/10/13 01:25:10 hobbs Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -52,6 +52,9 @@ EXTERN int		TkUnixDoOneXEvent _ANSI_ARGS_((Tcl_Time * timePtr));
 /* 7 */
 EXTERN void		TkUnixSetMenubar _ANSI_ARGS_((Tk_Window tkwin, 
 				Tk_Window menubar));
+/* 8 */
+EXTERN int		TkpScanWindowId _ANSI_ARGS_((Tcl_Interp * interp, 
+				CONST char * string, Window * idPtr));
 #endif /* UNIX */
 #ifdef __WIN32__
 /* 0 */
@@ -70,7 +73,7 @@ EXTERN void		TkpPrintWindowId _ANSI_ARGS_((char * buf,
 				Window window));
 /* 6 */
 EXTERN int		TkpScanWindowId _ANSI_ARGS_((Tcl_Interp * interp, 
-				char * string, int * idPtr));
+				CONST char * string, Window * idPtr));
 /* 7 */
 EXTERN void		TkpSetCapture _ANSI_ARGS_((TkWindow * winPtr));
 /* 8 */
@@ -293,6 +296,7 @@ typedef struct TkIntPlatStubs {
     Window (*tkUnixContainerId) _ANSI_ARGS_((TkWindow * winPtr)); /* 5 */
     int (*tkUnixDoOneXEvent) _ANSI_ARGS_((Tcl_Time * timePtr)); /* 6 */
     void (*tkUnixSetMenubar) _ANSI_ARGS_((Tk_Window tkwin, Tk_Window menubar)); /* 7 */
+    int (*tkpScanWindowId) _ANSI_ARGS_((Tcl_Interp * interp, CONST char * string, Window * idPtr)); /* 8 */
 #endif /* UNIX */
 #ifdef __WIN32__
     char * (*tkAlignImageData) _ANSI_ARGS_((XImage * image, int alignment, int bitOrder)); /* 0 */
@@ -301,7 +305,7 @@ typedef struct TkIntPlatStubs {
     unsigned long (*tkpGetMS) _ANSI_ARGS_((void)); /* 3 */
     void (*tkPointerDeadWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 4 */
     void (*tkpPrintWindowId) _ANSI_ARGS_((char * buf, Window window)); /* 5 */
-    int (*tkpScanWindowId) _ANSI_ARGS_((Tcl_Interp * interp, char * string, int * idPtr)); /* 6 */
+    int (*tkpScanWindowId) _ANSI_ARGS_((Tcl_Interp * interp, CONST char * string, Window * idPtr)); /* 6 */
     void (*tkpSetCapture) _ANSI_ARGS_((TkWindow * winPtr)); /* 7 */
     void (*tkpSetCursor) _ANSI_ARGS_((TkpCursor cursor)); /* 8 */
     void (*tkpWmSetState) _ANSI_ARGS_((TkWindow * winPtr, int state)); /* 9 */
@@ -447,6 +451,10 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #ifndef TkUnixSetMenubar
 #define TkUnixSetMenubar \
 	(tkIntPlatStubsPtr->tkUnixSetMenubar) /* 7 */
+#endif
+#ifndef TkpScanWindowId
+#define TkpScanWindowId \
+	(tkIntPlatStubsPtr->tkpScanWindowId) /* 8 */
 #endif
 #endif /* UNIX */
 #ifdef __WIN32__
