@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.1.4.2 1998/09/30 02:16:36 stanton Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.1.4.3 1998/11/24 21:43:21 stanton Exp $
  */
 
 #include "tk3d.h"
@@ -65,7 +65,7 @@ static Tcl_ObjType borderObjType = {
 /*
  *----------------------------------------------------------------------
  *
- * Tk_AllocBorderFromObj --
+ * Tk_Alloc3DBorderFromObj --
  *
  *	Given a Tcl_Obj *, map the value to a corresponding
  *	Tk_3DBorder structure based on the tkwin given.
