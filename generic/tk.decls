@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.20 2002/06/14 14:07:50 dkf Exp $
+# RCS: @(#) $Id: tk.decls,v 1.21 2002/06/15 00:21:41 hobbs Exp $
 
 library tk
 
@@ -1174,6 +1174,10 @@ declare 247 generic {
 	    Tk_PhotoImageBlock *blockPtr, int x, int y,
 	    int width, int height, int zoomX, int zoomY,
 	    int subsampleX, int subsampleY, int compRule)
+}
+
+declare 248 generic {
+    int Tk_CollapseMotionEvents (Display *display, int collapse)
 }
 
 # Define the platform specific public Tk interface.  These functions are
