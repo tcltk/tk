@@ -1,3 +1,8 @@
+2000-12-12  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* doc/entry.n: Improved documentation of interplay between the
+	  -state and -textvariable options.
+
 2000-11-29  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* tests/image.test (image-1.10): Improved this test, which
