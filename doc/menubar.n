@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menubar.n,v 1.2 1998/09/14 18:22:57 stanton Exp $
+'\" RCS: @(#) $Id: menubar.n,v 1.3 2004/06/21 14:45:52 dkf Exp $
 '\" 
 .so man.macros
 .TH tk_menuBar n "" Tk "Tk Built-In Commands"
@@ -28,6 +28,13 @@ longer needed.  Stubs for these procedures have been retained for
 backward compatibility, but they have no effect.  You should remove
 calls to these procedures from your code, since eventually the
 procedures will go away.
+.PP
+From Tk 8.0 onwards, you should instead construct your menubar as a
+normal \fBmenu\fR and then attach it to the \fBtoplevel\fR of your
+choice using the \fB\-menu\fR option of that widget.
+
+.SH "SEE ALSO"
+menu(n), toplevel(n)
 
 .SH KEYWORDS
 keyboard traversal, menu, menu bar, post
