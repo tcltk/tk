@@ -5,11 +5,11 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 2002 ActiveState Corporation.
 #
-# RCS: @(#) $Id: tk.test,v 1.6 2002/06/17 20:09:01 hobbs Exp $
+# RCS: @(#) $Id: tk.test,v 1.7 2002/07/12 21:08:49 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::test
+eval tcltest::configure $argv
 
 test tk-1.1 {tk command: general} {
     list [catch {tk} msg] $msg
