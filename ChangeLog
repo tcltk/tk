@@ -1,3 +1,11 @@
+2001-12-14  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* doc/getOpenFile.n: Documented change.
+	* library/tkfbox.tcl (SetFilter): Added code to guess the correct
+	default extension from whatever value was selected in the
+	filetypes option menu.  Adapted from code by Chris Nelson
+	submitted in Patch #492220.
+
 2001-12-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkText.c:
