@@ -1,3 +1,8 @@
+2003-10-14  Joe English  <jenglish@users.sourceforge.net>
+	* unix/tkUnixPort.h(TkPutImage): changed macro argument names
+	to match function argument names ('dest' and 'src' were
+	swapped, which was confusing) [GPS]
+
 2003-10-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/makefile.vc:  Applied patches from tcl bug #801467 from
