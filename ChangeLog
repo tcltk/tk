@@ -1,3 +1,8 @@
+2003-12-10  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/CrtImgType.3: Fixed line-transposition error found by Eric
+	Raymond. [Bug 857159]
+
 2003-12-09  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/configure:
