@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.18 2002/01/25 21:09:36 dgp Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.19 2002/07/24 19:41:38 hobbs Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -1388,7 +1388,8 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
       case CANV_ITEMCGET: {
 	if (argc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, argv, "tagOrId option");
-	    return TCL_ERROR;
+	    result = TCL_ERROR;
+	    goto done;
 	}
 #ifdef USE_OLD_TAG_SEARCH
 	itemPtr = StartTagSearch(canvasPtr, argv[2], &search);
@@ -1623,26 +1624,22 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	    "mark", "dragto", NULL
 	};
 
-	if (Tcl_GetIndexFromObj(interp, argv[2], optionStrings, "scan option", 0,
-		&index) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-
-	if ((argc != 5) && (argc != 5+index)) {
+	if (argc < 5) {
+	    Tcl_WrongNumArgs(interp, 2, argv, "mark|dragto x y ?dragGain?");
+	    result = TCL_ERROR;
+	} else if (Tcl_GetIndexFromObj(interp, argv[2], optionStrings,
+		"scan option", 0, &index) != TCL_OK) {
+	    result = TCL_ERROR;
+	} else if ((argc != 5) && (argc != 5+index)) {
 	    Tcl_WrongNumArgs(interp, 3, argv, index?"x y ?gain?":"x y");
 	    result = TCL_ERROR;
-	    goto done;
-	}
-	if ((Tcl_GetIntFromObj(interp, argv[3], &x) != TCL_OK)
+	} else if ((Tcl_GetIntFromObj(interp, argv[3], &x) != TCL_OK)
 		|| (Tcl_GetIntFromObj(interp, argv[4], &y) != TCL_OK)){
 	    result = TCL_ERROR;
-	    goto done;
-	}
-	if ((argc == 6) && (Tcl_GetIntFromObj(interp, argv[5], &gain) != TCL_OK)) {
+	} else if ((argc == 6) &&
+		(Tcl_GetIntFromObj(interp, argv[5], &gain) != TCL_OK)) {
 	    result = TCL_ERROR;
-            goto done;
-	}
-	if (!index) {
+	} else if (!index) {
 	    canvasPtr->scanX = x;
 	    canvasPtr->scanXOrigin = canvasPtr->xOrigin;
 	    canvasPtr->scanY = y;
@@ -1717,7 +1714,8 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	}
 	if (Tcl_GetIndexFromObj(interp, argv[2], optionStrings, "select option", 0,
 		&optionindex) != TCL_OK) {
-	    return TCL_ERROR;
+	    result = TCL_ERROR;
+	    goto done;
 	}
 	switch ((enum options) optionindex) {
 	  case CANV_ADJUST: {
