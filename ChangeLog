@@ -1,3 +1,26 @@
+2002-06-19  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* generic/tkStyle.c: TIP#48 style engine.
+	See http://purl.org/tcl/tip/48.html for details.
+
+	* generic/tkConfig.c (GetOptionFromObj): Split to allow for access
+	to option tables via name as well as via object.
+	(TkGetOptionSpec): Semi-public interface to GetOption functionality.
+	(DoObjConfig, Tk_RestoreSavedOptions, FreeResources)
+	(GetObjectForOption): Basic style support for configure.
+
+	* generic/tkWindow.c (TkCreateMainWindow, Tk_DestroyWindow): Added
+	calls to set up and tear down the style subsystem.
+
+	* generic/tk.decls, generic/tk.h: Many declarations forming TIP#48
+	public interface.
+
+	* generic/tkInt.decls (TkStylePkgInit,TkStylePkgFree): 
+	* generic/tkInt.h (TkGetOptionSpec): Supporting declarations.
+
+	* unix/Makefile.in, win/Makefile.in, win/makefile.vc: Added
+	tkStyle.c to list of generic source files.
+
 2002-06-18  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* tests/defs.tcl (makeFile): Defined the return value of this
