@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.5 2002/04/05 08:41:24 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.6 2002/04/12 10:20:05 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -130,10 +130,9 @@ TkpOpenDisplay(display_name)
 	return NULL;
     }
     dispPtr = (TkDisplay *) ckalloc(sizeof(TkDisplay));
+    memset(dispPtr, 0, sizeof(TkDisplay));
     dispPtr->display = display;
 #ifdef TK_USE_INPUT_METHODS
-    dispPtr->inputMethod = NULL;
-    dispPtr->inputXfs    = NULL;
     OpenIM(dispPtr);
 #endif
     Tcl_CreateFileHandler(ConnectionNumber(display), TCL_READABLE,
@@ -152,39 +151,42 @@ TkpOpenDisplay(display_name)
  *	None.
  *
  * Side effects:
- *	Deallocates the displayPtr.
+ *	Deallocates the displayPtr and unix-specific resources.
  *
  *----------------------------------------------------------------------
  */
 
 void
-TkpCloseDisplay(displayPtr)
-    TkDisplay *displayPtr;
+TkpCloseDisplay(dispPtr)
+    TkDisplay *dispPtr;
 {
-    TkDisplay *dispPtr = (TkDisplay *) displayPtr;
+    TkSendCleanup(dispPtr);
 
-    if (dispPtr->display != 0) {
-        Tcl_DeleteFileHandler(ConnectionNumber(dispPtr->display));
-	
+    TkFreeXId(dispPtr);
+
+    TkWmCleanup(dispPtr);
+
 #ifdef TK_USE_INPUT_METHODS
 #if TK_XIM_SPOT
-	if (dispPtr->inputXfs) {
-	    XFreeFontSet(dispPtr->display, dispPtr->inputXfs);
-	}
+    if (dispPtr->inputXfs) {
+	XFreeFontSet(dispPtr->display, dispPtr->inputXfs);
+    }
 #endif
-	if (dispPtr->inputMethod) {
-	    /*
-	     * This causes core dumps on some systems (e.g. Solaris 2.3 as of
-	     * 1/6/95), but is OK with X11R6
-	     */
-#if ! defined (SOLARIS2) || defined (HAVE_X11R6)
-	    XCloseIM(dispPtr->inputMethod);
+#if ! defined(SOLARIS2) || defined(HAVE_X11R6)
+    if (dispPtr->inputMethod) {
+	/*
+	 * This causes core dumps on some systems (e.g. Solaris 2.3 as of
+	 * 1/6/95), but is OK with X11R6
+	 */
+	XCloseIM(dispPtr->inputMethod);
+    }
 #endif
-	}
 #endif
 
-        (void) XSync(dispPtr->display, False);
-        (void) XCloseDisplay(dispPtr->display);
+    if (dispPtr->display != 0) {
+	Tcl_DeleteFileHandler(ConnectionNumber(dispPtr->display));
+	(void) XSync(dispPtr->display, False);
+	(void) XCloseDisplay(dispPtr->display);
     }
 
     ckfree((char *) dispPtr);
@@ -255,7 +257,6 @@ DisplaySetupProc(clientData, flags)
  *----------------------------------------------------------------------
  */
 
-
 static void
 TransferXEventsToTcl(display)
     Display *display;
@@ -310,8 +311,6 @@ DisplayCheckProc(clientData, flags)
 	TransferXEventsToTcl(dispPtr->display);
     }
 }
-
-
 
 /*
  *----------------------------------------------------------------------
