@@ -1,3 +1,14 @@
+2001-11-12  David Gravereaux <davygrvy@pobox.com>
+
+	* win/mkd.bat:
+	* win/rmd.bat:  Removed -kb CVS attribute and added changes
+	from Llyod Lim for better stability.  [Patch #456761]
+
+	* win/rules.vc(new):
+	* win/buildall.vc.bat(new):
+	* win/makefile.vc:  large rewrite following Tcl's makefile.vc as
+	a guide and Patch #456761.  Appears BugFree(tm).
+
 2001-11-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* doc/text.n:
