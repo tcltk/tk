@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPointer.c,v 1.7 2002/08/31 06:12:25 das Exp $
+ * RCS: @(#) $Id: tkPointer.c,v 1.8 2003/11/25 08:45:30 a_kovalenko Exp $
  */
 
 #include "tkInt.h"
@@ -366,7 +366,7 @@ Tk_UpdatePointer(tkwin, x, y, state)
 	     * If we still have a target window, send the event.
 	     */
 
-	    if (winPtr != NULL) {
+	    if (targetWinPtr != NULL) {
 		InitializeEvent(&event, targetWinPtr, type, x, y,
 			tsdPtr->lastState, b);
 		Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
