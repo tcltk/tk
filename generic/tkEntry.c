@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.3 1999/04/16 01:51:13 stanton Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.3.4.1 1999/04/24 00:10:49 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -271,7 +271,7 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	DEF_ENTRY_SELECT_FG_COLOR, -1, Tk_Offset(Entry, selFgColorPtr),
 	0, (ClientData) DEF_ENTRY_SELECT_FG_MONO, 0},
-    {TK_CONFIG_STRING, "-show", "show", "Show",
+    {TK_OPTION_STRING, "-show", "show", "Show",
         DEF_ENTRY_SHOW, -1, Tk_Offset(Entry, showChar), 
         TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",

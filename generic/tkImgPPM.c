@@ -13,7 +13,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPPM.c,v 1.3 1999/04/16 01:51:15 stanton Exp $
+ * RCS: @(#) $Id: tkImgPPM.c,v 1.3.4.1 1999/04/23 16:16:49 redman Exp $
  */
 
 #include "tkInt.h"
@@ -269,6 +269,15 @@ FileWritePPM(interp, fileName, formatString, blockPtr)
 	return TCL_ERROR;
     }
 
+    if (Tcl_SetChannelOption(interp, chan, "-translation", "binary")
+	    != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (Tcl_SetChannelOption(interp, chan, "-encoding", "binary")
+	    != TCL_OK) {
+	return TCL_ERROR;
+    }
+    
     sprintf(header, "P6\n%d %d\n255\n", blockPtr->width, blockPtr->height);
     Tcl_Write(chan, header, -1);
 	

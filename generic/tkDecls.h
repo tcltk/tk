@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.3 1999/04/16 01:51:13 stanton Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.3.4.1 1999/04/27 21:09:41 stanton Exp $
  */
 
 #ifndef _TKDECLS
@@ -971,7 +971,13 @@ typedef struct TkStubs {
     int (*tk_SetOptions) _ANSI_ARGS_((Tcl_Interp * interp, char * recordPtr, Tk_OptionTable optionTable, int objc, Tcl_Obj *CONST objv[], Tk_Window tkwin, Tk_SavedOptions * savePtr, int * maskPtr)); /* 214 */
 } TkStubs;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern TkStubs *tkStubsPtr;
+#ifdef __cplusplus
+}
+#endif
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
 

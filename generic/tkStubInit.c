@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.5 1999/04/16 01:51:22 stanton Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.5.4.4 1999/04/27 21:09:43 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -16,6 +16,9 @@
 
 #ifdef __WIN32__
 #include "tkWinInt.h"
+#endif
+#ifdef MAC_TCL
+#include "tkMacInt.h"
 #endif
 
 #include "tkDecls.h"
@@ -36,7 +39,532 @@
 
 /* !BEGIN!: Do not edit below this line. */
 
-static TkStubHooks tkStubHooks;
+TkIntStubs tkIntStubs = {
+    TCL_STUB_MAGIC,
+    NULL,
+    TkAllocWindow, /* 0 */
+    TkBezierPoints, /* 1 */
+    TkBezierScreenPoints, /* 2 */
+    TkBindDeadWindow, /* 3 */
+    TkBindEventProc, /* 4 */
+    TkBindFree, /* 5 */
+    TkBindInit, /* 6 */
+    TkChangeEventWindow, /* 7 */
+    TkClipInit, /* 8 */
+    TkComputeAnchor, /* 9 */
+    TkCopyAndGlobalEval, /* 10 */
+    TkCreateBindingProcedure, /* 11 */
+    TkCreateCursorFromData, /* 12 */
+    TkCreateFrame, /* 13 */
+    TkCreateMainWindow, /* 14 */
+    TkCurrentTime, /* 15 */
+    TkDeleteAllImages, /* 16 */
+    TkDoConfigureNotify, /* 17 */
+    TkDrawInsetFocusHighlight, /* 18 */
+    TkEventDeadWindow, /* 19 */
+    TkFillPolygon, /* 20 */
+    TkFindStateNum, /* 21 */
+    TkFindStateString, /* 22 */
+    TkFocusDeadWindow, /* 23 */
+    TkFocusFilterEvent, /* 24 */
+    TkFocusKeyEvent, /* 25 */
+    TkFontPkgInit, /* 26 */
+    TkFontPkgFree, /* 27 */
+    TkFreeBindingTags, /* 28 */
+    TkpFreeCursor, /* 29 */
+    TkGetBitmapData, /* 30 */
+    TkGetButtPoints, /* 31 */
+    TkGetCursorByName, /* 32 */
+    TkGetDefaultScreenName, /* 33 */
+    TkGetDisplay, /* 34 */
+    TkGetDisplayOf, /* 35 */
+    TkGetFocusWin, /* 36 */
+    TkGetInterpNames, /* 37 */
+    TkGetMiterPoints, /* 38 */
+    TkGetPointerCoords, /* 39 */
+    TkGetServerInfo, /* 40 */
+    TkGrabDeadWindow, /* 41 */
+    TkGrabState, /* 42 */
+    TkIncludePoint, /* 43 */
+    TkInOutEvents, /* 44 */
+    TkInstallFrameMenu, /* 45 */
+    TkKeysymToString, /* 46 */
+    TkLineToArea, /* 47 */
+    TkLineToPoint, /* 48 */
+    TkMakeBezierCurve, /* 49 */
+    TkMakeBezierPostscript, /* 50 */
+    TkOptionClassChanged, /* 51 */
+    TkOptionDeadWindow, /* 52 */
+    TkOvalToArea, /* 53 */
+    TkOvalToPoint, /* 54 */
+    TkpChangeFocus, /* 55 */
+    TkpCloseDisplay, /* 56 */
+    TkpClaimFocus, /* 57 */
+    TkpDisplayWarning, /* 58 */
+    TkpGetAppName, /* 59 */
+    TkpGetOtherWindow, /* 60 */
+    TkpGetWrapperWindow, /* 61 */
+    TkpInit, /* 62 */
+    TkpInitializeMenuBindings, /* 63 */
+    TkpMakeContainer, /* 64 */
+    TkpMakeMenuWindow, /* 65 */
+    TkpMakeWindow, /* 66 */
+    TkpMenuNotifyToplevelCreate, /* 67 */
+    TkpOpenDisplay, /* 68 */
+    TkPointerEvent, /* 69 */
+    TkPolygonToArea, /* 70 */
+    TkPolygonToPoint, /* 71 */
+    TkPositionInTree, /* 72 */
+    TkpRedirectKeyEvent, /* 73 */
+    TkpSetMainMenubar, /* 74 */
+    TkpUseWindow, /* 75 */
+    TkpWindowWasRecentlyDeleted, /* 76 */
+    TkQueueEventForAllChildren, /* 77 */
+    TkReadBitmapFile, /* 78 */
+    TkScrollWindow, /* 79 */
+    TkSelDeadWindow, /* 80 */
+    TkSelEventProc, /* 81 */
+    TkSelInit, /* 82 */
+    TkSelPropProc, /* 83 */
+    TkSetClassProcs, /* 84 */
+    TkSetWindowMenuBar, /* 85 */
+    TkStringToKeysym, /* 86 */
+    TkThickPolyLineToArea, /* 87 */
+    TkWmAddToColormapWindows, /* 88 */
+    TkWmDeadWindow, /* 89 */
+    TkWmFocusToplevel, /* 90 */
+    TkWmMapWindow, /* 91 */
+    TkWmNewWindow, /* 92 */
+    TkWmProtocolEventProc, /* 93 */
+    TkWmRemoveFromColormapWindows, /* 94 */
+    TkWmRestackToplevel, /* 95 */
+    TkWmSetClass, /* 96 */
+    TkWmUnmapWindow, /* 97 */
+    TkDebugBitmap, /* 98 */
+    TkDebugBorder, /* 99 */
+    TkDebugCursor, /* 100 */
+    TkDebugColor, /* 101 */
+    TkDebugConfig, /* 102 */
+    TkDebugFont, /* 103 */
+    TkFindStateNumObj, /* 104 */
+    TkGetBitmapPredefTable, /* 105 */
+    TkGetDisplayList, /* 106 */
+    TkGetMainInfoList, /* 107 */
+    TkGetWindowFromObj, /* 108 */
+    TkpGetString, /* 109 */
+    TkpGetSubFonts, /* 110 */
+    TkpGetSystemDefault, /* 111 */
+    TkpMenuThreadInit, /* 112 */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 113 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    TkClipBox, /* 113 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkClipBox, /* 113 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 114 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    TkCreateRegion, /* 114 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkCreateRegion, /* 114 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 115 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    TkDestroyRegion, /* 115 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkDestroyRegion, /* 115 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 116 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    TkIntersectRegion, /* 116 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkIntersectRegion, /* 116 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 117 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    TkRectInRegion, /* 117 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkRectInRegion, /* 117 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 118 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    TkSetRegion, /* 118 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkSetRegion, /* 118 */
+#endif /* MAC_TCL */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 119 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    TkUnionRectWithRegion, /* 119 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkUnionRectWithRegion, /* 119 */
+#endif /* MAC_TCL */
+};
+
+TkIntPlatStubs tkIntPlatStubs = {
+    TCL_STUB_MAGIC,
+    NULL,
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    TkCreateXEventSource, /* 0 */
+    TkFreeWindowId, /* 1 */
+    TkInitXId, /* 2 */
+    TkpCmapStressed, /* 3 */
+    TkpSync, /* 4 */
+    TkUnixContainerId, /* 5 */
+    TkUnixDoOneXEvent, /* 6 */
+    TkUnixSetMenubar, /* 7 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    TkAlignImageData, /* 0 */
+    NULL, /* 1 */
+    TkGenerateActivateEvents, /* 2 */
+    TkpGetMS, /* 3 */
+    TkPointerDeadWindow, /* 4 */
+    TkpPrintWindowId, /* 5 */
+    TkpScanWindowId, /* 6 */
+    TkpSetCapture, /* 7 */
+    TkpSetCursor, /* 8 */
+    TkpWmSetState, /* 9 */
+    TkSetPixmapColormap, /* 10 */
+    TkWinCancelMouseTimer, /* 11 */
+    TkWinClipboardRender, /* 12 */
+    TkWinEmbeddedEventProc, /* 13 */
+    TkWinFillRect, /* 14 */
+    TkWinGetBorderPixels, /* 15 */
+    TkWinGetDrawableDC, /* 16 */
+    TkWinGetModifierState, /* 17 */
+    TkWinGetSystemPalette, /* 18 */
+    TkWinGetWrapperWindow, /* 19 */
+    TkWinHandleMenuEvent, /* 20 */
+    TkWinIndexOfColor, /* 21 */
+    TkWinReleaseDrawableDC, /* 22 */
+    TkWinResendEvent, /* 23 */
+    TkWinSelectPalette, /* 24 */
+    TkWinSetMenu, /* 25 */
+    TkWinSetWindowPos, /* 26 */
+    TkWinWmCleanup, /* 27 */
+    TkWinXCleanup, /* 28 */
+    TkWinXInit, /* 29 */
+    TkWinSetForegroundWindow, /* 30 */
+    TkWinDialogDebug, /* 31 */
+    TkWinGetMenuSystemDefault, /* 32 */
+    TkWinGetPlatformId, /* 33 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkGenerateActivateEvents, /* 0 */
+    TkpCreateNativeBitmap, /* 1 */
+    TkpDefineNativeBitmaps, /* 2 */
+    TkpGetMS, /* 3 */
+    TkpGetNativeAppBitmap, /* 4 */
+    TkPointerDeadWindow, /* 5 */
+    TkpSetCapture, /* 6 */
+    TkpSetCursor, /* 7 */
+    TkpWmSetState, /* 8 */
+    HandleWMEvent, /* 9 */
+    TkAboutDlg, /* 10 */
+    TkCreateMacEventSource, /* 11 */
+    TkFontList, /* 12 */
+    TkGetTransientMaster, /* 13 */
+    TkGenerateButtonEvent, /* 14 */
+    TkGetCharPositions, /* 15 */
+    TkGenWMDestroyEvent, /* 16 */
+    TkGenWMConfigureEvent, /* 17 */
+    TkMacButtonKeyState, /* 18 */
+    TkMacClearMenubarActive, /* 19 */
+    TkMacConvertEvent, /* 20 */
+    TkMacDispatchMenuEvent, /* 21 */
+    TkMacInstallCursor, /* 22 */
+    TkMacConvertTkEvent, /* 23 */
+    TkMacHandleTearoffMenu, /* 24 */
+    tkMacInstallMWConsole, /* 25 */
+    TkMacInvalClipRgns, /* 26 */
+    TkMacDoHLEvent, /* 27 */
+    TkMacFontInfo, /* 28 */
+    TkMacGenerateTime, /* 29 */
+    TkMacGetDrawablePort, /* 30 */
+    TkMacGetScrollbarGrowWindow, /* 31 */
+    TkMacGetXWindow, /* 32 */
+    TkMacGrowToplevel, /* 33 */
+    TkMacHandleMenuSelect, /* 34 */
+    TkMacHaveAppearance, /* 35 */
+    TkMacInitAppleEvents, /* 36 */
+    TkMacInitMenus, /* 37 */
+    TkMacInvalidateWindow, /* 38 */
+    TkMacIsCharacterMissing, /* 39 */
+    TkMacMakeRealWindowExist, /* 40 */
+    TkMacMakeStippleMap, /* 41 */
+    TkMacMenuClick, /* 42 */
+    TkMacRegisterOffScreenWindow, /* 43 */
+    TkMacResizable, /* 44 */
+    TkMacSetEmbedRgn, /* 45 */
+    TkMacSetHelpMenuItemCount, /* 46 */
+    TkMacSetScrollbarGrow, /* 47 */
+    TkMacSetUpClippingRgn, /* 48 */
+    TkMacSetUpGraphicsPort, /* 49 */
+    TkMacUpdateClipRgn, /* 50 */
+    TkMacUnregisterMacWindow, /* 51 */
+    TkMacUseMenuID, /* 52 */
+    TkMacVisableClipRgn, /* 53 */
+    TkMacWinBounds, /* 54 */
+    TkMacWindowOffset, /* 55 */
+    TkResumeClipboard, /* 56 */
+    TkSetMacColor, /* 57 */
+    TkSetWMName, /* 58 */
+    TkSuspendClipboard, /* 59 */
+    TkWMGrowToplevel, /* 60 */
+    TkMacZoomToplevel, /* 61 */
+    Tk_TopCoordsToWindow, /* 62 */
+    TkMacContainerId, /* 63 */
+    TkMacGetHostToplevel, /* 64 */
+#endif /* MAC_TCL */
+};
+
+TkIntXlibStubs tkIntXlibStubs = {
+    TCL_STUB_MAGIC,
+    NULL,
+#ifdef __WIN32__
+    NULL, /* 0 */
+    XGetModifierMapping, /* 1 */
+    XCreateImage, /* 2 */
+    XGetImage, /* 3 */
+    XGetAtomName, /* 4 */
+    XKeysymToString, /* 5 */
+    XCreateColormap, /* 6 */
+    XCreatePixmapCursor, /* 7 */
+    XCreateGlyphCursor, /* 8 */
+    XGContextFromGC, /* 9 */
+    XListHosts, /* 10 */
+    XKeycodeToKeysym, /* 11 */
+    XStringToKeysym, /* 12 */
+    XRootWindow, /* 13 */
+    XSetErrorHandler, /* 14 */
+    XIconifyWindow, /* 15 */
+    XWithdrawWindow, /* 16 */
+    XGetWMColormapWindows, /* 17 */
+    XAllocColor, /* 18 */
+    XBell, /* 19 */
+    XChangeProperty, /* 20 */
+    XChangeWindowAttributes, /* 21 */
+    XClearWindow, /* 22 */
+    XConfigureWindow, /* 23 */
+    XCopyArea, /* 24 */
+    XCopyPlane, /* 25 */
+    XCreateBitmapFromData, /* 26 */
+    XDefineCursor, /* 27 */
+    XDeleteProperty, /* 28 */
+    XDestroyWindow, /* 29 */
+    XDrawArc, /* 30 */
+    XDrawLines, /* 31 */
+    XDrawRectangle, /* 32 */
+    XFillArc, /* 33 */
+    XFillPolygon, /* 34 */
+    XFillRectangles, /* 35 */
+    XForceScreenSaver, /* 36 */
+    XFreeColormap, /* 37 */
+    XFreeColors, /* 38 */
+    XFreeCursor, /* 39 */
+    XFreeModifiermap, /* 40 */
+    XGetGeometry, /* 41 */
+    XGetInputFocus, /* 42 */
+    XGetWindowProperty, /* 43 */
+    XGetWindowAttributes, /* 44 */
+    XGrabKeyboard, /* 45 */
+    XGrabPointer, /* 46 */
+    XKeysymToKeycode, /* 47 */
+    XLookupColor, /* 48 */
+    XMapWindow, /* 49 */
+    XMoveResizeWindow, /* 50 */
+    XMoveWindow, /* 51 */
+    XNextEvent, /* 52 */
+    XPutBackEvent, /* 53 */
+    XQueryColors, /* 54 */
+    XQueryPointer, /* 55 */
+    XQueryTree, /* 56 */
+    XRaiseWindow, /* 57 */
+    XRefreshKeyboardMapping, /* 58 */
+    XResizeWindow, /* 59 */
+    XSelectInput, /* 60 */
+    XSendEvent, /* 61 */
+    XSetCommand, /* 62 */
+    XSetIconName, /* 63 */
+    XSetInputFocus, /* 64 */
+    XSetSelectionOwner, /* 65 */
+    XSetWindowBackground, /* 66 */
+    XSetWindowBackgroundPixmap, /* 67 */
+    XSetWindowBorder, /* 68 */
+    XSetWindowBorderPixmap, /* 69 */
+    XSetWindowBorderWidth, /* 70 */
+    XSetWindowColormap, /* 71 */
+    XTranslateCoordinates, /* 72 */
+    XUngrabKeyboard, /* 73 */
+    XUngrabPointer, /* 74 */
+    XUnmapWindow, /* 75 */
+    XWindowEvent, /* 76 */
+    XDestroyIC, /* 77 */
+    XFilterEvent, /* 78 */
+    XmbLookupString, /* 79 */
+    TkPutImage, /* 80 */
+    NULL, /* 81 */
+    XParseColor, /* 82 */
+    XCreateGC, /* 83 */
+    XFreeGC, /* 84 */
+    XInternAtom, /* 85 */
+    XSetBackground, /* 86 */
+    XSetForeground, /* 87 */
+    XSetClipMask, /* 88 */
+    XSetClipOrigin, /* 89 */
+    XSetTSOrigin, /* 90 */
+    XChangeGC, /* 91 */
+    XSetFont, /* 92 */
+    XSetArcMode, /* 93 */
+    XSetStipple, /* 94 */
+    XSetFillRule, /* 95 */
+    XSetFillStyle, /* 96 */
+    XSetFunction, /* 97 */
+    XSetLineAttributes, /* 98 */
+    _XInitImageFuncPtrs, /* 99 */
+    XCreateIC, /* 100 */
+    XGetVisualInfo, /* 101 */
+    XSetWMClientMachine, /* 102 */
+    XStringListToTextProperty, /* 103 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    NULL, /* 0 */
+    XGetModifierMapping, /* 1 */
+    XCreateImage, /* 2 */
+    XGetImage, /* 3 */
+    XGetAtomName, /* 4 */
+    XKeysymToString, /* 5 */
+    XCreateColormap, /* 6 */
+    XGContextFromGC, /* 7 */
+    XKeycodeToKeysym, /* 8 */
+    XStringToKeysym, /* 9 */
+    XRootWindow, /* 10 */
+    XSetErrorHandler, /* 11 */
+    XAllocColor, /* 12 */
+    XBell, /* 13 */
+    XChangeProperty, /* 14 */
+    XChangeWindowAttributes, /* 15 */
+    XConfigureWindow, /* 16 */
+    XCopyArea, /* 17 */
+    XCopyPlane, /* 18 */
+    XCreateBitmapFromData, /* 19 */
+    XDefineCursor, /* 20 */
+    XDestroyWindow, /* 21 */
+    XDrawArc, /* 22 */
+    XDrawLines, /* 23 */
+    XDrawRectangle, /* 24 */
+    XFillArc, /* 25 */
+    XFillPolygon, /* 26 */
+    XFillRectangles, /* 27 */
+    XFreeColormap, /* 28 */
+    XFreeColors, /* 29 */
+    XFreeModifiermap, /* 30 */
+    XGetGeometry, /* 31 */
+    XGetWindowProperty, /* 32 */
+    XGrabKeyboard, /* 33 */
+    XGrabPointer, /* 34 */
+    XKeysymToKeycode, /* 35 */
+    XMapWindow, /* 36 */
+    XMoveResizeWindow, /* 37 */
+    XMoveWindow, /* 38 */
+    XQueryPointer, /* 39 */
+    XRaiseWindow, /* 40 */
+    XRefreshKeyboardMapping, /* 41 */
+    XResizeWindow, /* 42 */
+    XSelectInput, /* 43 */
+    XSendEvent, /* 44 */
+    XSetIconName, /* 45 */
+    XSetInputFocus, /* 46 */
+    XSetSelectionOwner, /* 47 */
+    XSetWindowBackground, /* 48 */
+    XSetWindowBackgroundPixmap, /* 49 */
+    XSetWindowBorder, /* 50 */
+    XSetWindowBorderPixmap, /* 51 */
+    XSetWindowBorderWidth, /* 52 */
+    XSetWindowColormap, /* 53 */
+    XUngrabKeyboard, /* 54 */
+    XUngrabPointer, /* 55 */
+    XUnmapWindow, /* 56 */
+    TkPutImage, /* 57 */
+    XParseColor, /* 58 */
+    XCreateGC, /* 59 */
+    XFreeGC, /* 60 */
+    XInternAtom, /* 61 */
+    XSetBackground, /* 62 */
+    XSetForeground, /* 63 */
+    XSetClipMask, /* 64 */
+    XSetClipOrigin, /* 65 */
+    XSetTSOrigin, /* 66 */
+    XChangeGC, /* 67 */
+    XSetFont, /* 68 */
+    XSetArcMode, /* 69 */
+    XSetStipple, /* 70 */
+    XSetFillRule, /* 71 */
+    XSetFillStyle, /* 72 */
+    XSetFunction, /* 73 */
+    XSetLineAttributes, /* 74 */
+    _XInitImageFuncPtrs, /* 75 */
+    XCreateIC, /* 76 */
+    XGetVisualInfo, /* 77 */
+    XSetWMClientMachine, /* 78 */
+    XStringListToTextProperty, /* 79 */
+    XDrawSegments, /* 80 */
+    XForceScreenSaver, /* 81 */
+#endif /* MAC_TCL */
+};
+
+TkPlatStubs tkPlatStubs = {
+    TCL_STUB_MAGIC,
+    NULL,
+#ifdef __WIN32__
+    Tk_AttachHWND, /* 0 */
+    Tk_GetHINSTANCE, /* 1 */
+    Tk_GetHWND, /* 2 */
+    Tk_HWNDToWindow, /* 3 */
+    Tk_PointerEvent, /* 4 */
+    Tk_TranslateWinEvent, /* 5 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    Tk_MacSetEmbedHandler, /* 0 */
+    Tk_MacTurnOffMenus, /* 1 */
+    Tk_MacTkOwnsCursor, /* 2 */
+    TkMacInitMenus, /* 3 */
+    TkMacInitAppleEvents, /* 4 */
+    TkMacConvertEvent, /* 5 */
+    TkMacConvertTkEvent, /* 6 */
+    TkGenWMConfigureEvent, /* 7 */
+    TkMacInvalClipRgns, /* 8 */
+    TkMacHaveAppearance, /* 9 */
+    TkMacGetDrawablePort, /* 10 */
+#endif /* MAC_TCL */
+};
+
+static TkStubHooks tkStubHooks = {
+    &tkPlatStubs,
+    &tkIntStubs,
+    &tkIntPlatStubs,
+    &tkIntXlibStubs
+};
 
 TkStubs tkStubs = {
     TCL_STUB_MAGIC,
@@ -257,481 +785,5 @@ TkStubs tkStubs = {
     Tk_RestoreSavedOptions, /* 213 */
     Tk_SetOptions, /* 214 */
 };
-
-TkIntStubs tkIntStubs = {
-    TCL_STUB_MAGIC,
-    NULL,
-    TkAllocWindow, /* 0 */
-    TkBezierPoints, /* 1 */
-    TkBezierScreenPoints, /* 2 */
-    TkBindDeadWindow, /* 3 */
-    TkBindEventProc, /* 4 */
-    TkBindFree, /* 5 */
-    TkBindInit, /* 6 */
-    TkChangeEventWindow, /* 7 */
-    TkClipInit, /* 8 */
-    TkComputeAnchor, /* 9 */
-    TkCopyAndGlobalEval, /* 10 */
-    TkCreateBindingProcedure, /* 11 */
-    TkCreateCursorFromData, /* 12 */
-    TkCreateFrame, /* 13 */
-    TkCreateMainWindow, /* 14 */
-    TkCurrentTime, /* 15 */
-    TkDeleteAllImages, /* 16 */
-    TkDoConfigureNotify, /* 17 */
-    TkDrawInsetFocusHighlight, /* 18 */
-    TkEventDeadWindow, /* 19 */
-    TkFillPolygon, /* 20 */
-    TkFindStateNum, /* 21 */
-    TkFindStateString, /* 22 */
-    TkFocusDeadWindow, /* 23 */
-    TkFocusFilterEvent, /* 24 */
-    TkFocusKeyEvent, /* 25 */
-    TkFontPkgInit, /* 26 */
-    TkFontPkgFree, /* 27 */
-    TkFreeBindingTags, /* 28 */
-    TkpFreeCursor, /* 29 */
-    TkGetBitmapData, /* 30 */
-    TkGetButtPoints, /* 31 */
-    TkGetCursorByName, /* 32 */
-    TkGetDefaultScreenName, /* 33 */
-    TkGetDisplay, /* 34 */
-    TkGetDisplayOf, /* 35 */
-    TkGetFocusWin, /* 36 */
-    TkGetInterpNames, /* 37 */
-    TkGetMiterPoints, /* 38 */
-    TkGetPointerCoords, /* 39 */
-    TkGetServerInfo, /* 40 */
-    TkGrabDeadWindow, /* 41 */
-    TkGrabState, /* 42 */
-    TkIncludePoint, /* 43 */
-    TkInOutEvents, /* 44 */
-    TkInstallFrameMenu, /* 45 */
-    TkKeysymToString, /* 46 */
-    TkLineToArea, /* 47 */
-    TkLineToPoint, /* 48 */
-    TkMakeBezierCurve, /* 49 */
-    TkMakeBezierPostscript, /* 50 */
-    TkOptionClassChanged, /* 51 */
-    TkOptionDeadWindow, /* 52 */
-    TkOvalToArea, /* 53 */
-    TkOvalToPoint, /* 54 */
-    TkpChangeFocus, /* 55 */
-    TkpCloseDisplay, /* 56 */
-    TkpClaimFocus, /* 57 */
-    TkpDisplayWarning, /* 58 */
-    TkpGetAppName, /* 59 */
-    TkpGetOtherWindow, /* 60 */
-    TkpGetWrapperWindow, /* 61 */
-    TkpInit, /* 62 */
-    TkpInitializeMenuBindings, /* 63 */
-    TkpMakeContainer, /* 64 */
-    TkpMakeMenuWindow, /* 65 */
-    TkpMakeWindow, /* 66 */
-    TkpMenuNotifyToplevelCreate, /* 67 */
-    TkpOpenDisplay, /* 68 */
-    TkPointerEvent, /* 69 */
-    TkPolygonToArea, /* 70 */
-    TkPolygonToPoint, /* 71 */
-    TkPositionInTree, /* 72 */
-    TkpRedirectKeyEvent, /* 73 */
-    TkpSetMainMenubar, /* 74 */
-    TkpUseWindow, /* 75 */
-    TkpWindowWasRecentlyDeleted, /* 76 */
-    TkQueueEventForAllChildren, /* 77 */
-    TkReadBitmapFile, /* 78 */
-    TkScrollWindow, /* 79 */
-    TkSelDeadWindow, /* 80 */
-    TkSelEventProc, /* 81 */
-    TkSelInit, /* 82 */
-    TkSelPropProc, /* 83 */
-    TkSetClassProcs, /* 84 */
-    TkSetWindowMenuBar, /* 85 */
-    TkStringToKeysym, /* 86 */
-    TkThickPolyLineToArea, /* 87 */
-    TkWmAddToColormapWindows, /* 88 */
-    TkWmDeadWindow, /* 89 */
-    TkWmFocusToplevel, /* 90 */
-    TkWmMapWindow, /* 91 */
-    TkWmNewWindow, /* 92 */
-    TkWmProtocolEventProc, /* 93 */
-    TkWmRemoveFromColormapWindows, /* 94 */
-    TkWmRestackToplevel, /* 95 */
-    TkWmSetClass, /* 96 */
-    TkWmUnmapWindow, /* 97 */
-    TkDebugBitmap, /* 98 */
-    TkDebugBorder, /* 99 */
-    TkDebugCursor, /* 100 */
-    TkDebugColor, /* 101 */
-    TkDebugConfig, /* 102 */
-    TkDebugFont, /* 103 */
-    TkFindStateNumObj, /* 104 */
-    TkGetBitmapPredefTable, /* 105 */
-    TkGetDisplayList, /* 106 */
-    TkGetMainInfoList, /* 107 */
-    TkGetWindowFromObj, /* 108 */
-    TkpGetString, /* 109 */
-    TkpGetSubFonts, /* 110 */
-    TkpGetSystemDefault, /* 111 */
-    TkpMenuThreadInit, /* 112 */
-};
-
-TkIntPlatStubs tkIntPlatStubs = {
-    TCL_STUB_MAGIC,
-    NULL,
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
-    TkCreateXEventSource, /* 0 */
-    TkFreeWindowId, /* 1 */
-    TkInitXId, /* 2 */
-    TkpCmapStressed, /* 3 */
-    TkpSync, /* 4 */
-    TkUnixContainerId, /* 5 */
-    TkUnixDoOneXEvent, /* 6 */
-    TkUnixSetMenubar, /* 7 */
-#endif /* UNIX */
-#ifdef __WIN32__
-    TkAlignImageData, /* 0 */
-    TkClipBox, /* 1 */
-    TkCreateRegion, /* 2 */
-    TkDestroyRegion, /* 3 */
-    TkGenerateActivateEvents, /* 4 */
-    TkIntersectRegion, /* 5 */
-    TkpGetMS, /* 6 */
-    TkPointerDeadWindow, /* 7 */
-    TkpPrintWindowId, /* 8 */
-    TkpScanWindowId, /* 9 */
-    TkpSetCapture, /* 10 */
-    TkpSetCursor, /* 11 */
-    TkpWmSetState, /* 12 */
-    TkRectInRegion, /* 13 */
-    TkSetPixmapColormap, /* 14 */
-    TkSetRegion, /* 15 */
-    TkUnionRectWithRegion, /* 16 */
-    TkWinCancelMouseTimer, /* 17 */
-    TkWinClipboardRender, /* 18 */
-    TkWinEmbeddedEventProc, /* 19 */
-    TkWinFillRect, /* 20 */
-    TkWinGetBorderPixels, /* 21 */
-    TkWinGetDrawableDC, /* 22 */
-    TkWinGetModifierState, /* 23 */
-    TkWinGetSystemPalette, /* 24 */
-    TkWinGetWrapperWindow, /* 25 */
-    TkWinHandleMenuEvent, /* 26 */
-    TkWinIndexOfColor, /* 27 */
-    TkWinReleaseDrawableDC, /* 28 */
-    TkWinResendEvent, /* 29 */
-    TkWinSelectPalette, /* 30 */
-    TkWinSetMenu, /* 31 */
-    TkWinSetWindowPos, /* 32 */
-    TkWinWmCleanup, /* 33 */
-    TkWinXCleanup, /* 34 */
-    TkWinXInit, /* 35 */
-    TkWinSetForegroundWindow, /* 36 */
-    TkWinDialogDebug, /* 37 */
-    TkWinGetMenuSystemDefault, /* 38 */
-    TkWinGetPlatformId, /* 39 */
-#endif /* __WIN32__ */
-#ifdef MAC_TCL
-    TkClipBox, /* 0 */
-    TkCreateRegion, /* 1 */
-    TkDestroyRegion, /* 2 */
-    TkGenerateActivateEvents, /* 3 */
-    TkIntersectRegion, /* 4 */
-    TkpCreateNativeBitmap, /* 5 */
-    TkpDefineNativeBitmaps, /* 6 */
-    TkpGetMS, /* 7 */
-    TkpGetNativeAppBitmap, /* 8 */
-    TkPointerDeadWindow, /* 9 */
-    TkpSetCapture, /* 10 */
-    TkpSetCursor, /* 11 */
-    TkpWmSetState, /* 12 */
-    TkRectInRegion, /* 13 */
-    TkSetRegion, /* 14 */
-    TkUnionRectWithRegion, /* 15 */
-    HandleWMEvent, /* 16 */
-    TkAboutDlg, /* 17 */
-    TkCreateMacEventSource, /* 18 */
-    TkFontList, /* 19 */
-    TkGetTransientMaster, /* 20 */
-    TkGenerateButtonEvent, /* 21 */
-    TkGetCharPositions, /* 22 */
-    TkGenWMDestroyEvent, /* 23 */
-    TkGenWMConfigureEvent, /* 24 */
-    TkMacButtonKeyState, /* 25 */
-    TkMacClearMenubarActive, /* 26 */
-    TkMacConvertEvent, /* 27 */
-    TkMacDispatchMenuEvent, /* 28 */
-    TkMacInstallCursor, /* 29 */
-    TkMacConvertTkEvent, /* 30 */
-    TkMacHandleTearoffMenu, /* 31 */
-    tkMacInstallMWConsole, /* 32 */
-    TkMacInvalClipRgns, /* 33 */
-    TkMacDoHLEvent, /* 34 */
-    TkMacFontInfo, /* 35 */
-    TkMacGenerateTime, /* 36 */
-    TkMacGetDrawablePort, /* 37 */
-    TkMacGetScrollbarGrowWindow, /* 38 */
-    TkMacGetXWindow, /* 39 */
-    TkMacGrowToplevel, /* 40 */
-    TkMacHandleMenuSelect, /* 41 */
-    TkMacHaveAppearance, /* 42 */
-    TkMacInitAppleEvents, /* 43 */
-    TkMacInitMenus, /* 44 */
-    TkMacInvalidateWindow, /* 45 */
-    TkMacIsCharacterMissing, /* 46 */
-    TkMacMakeRealWindowExist, /* 47 */
-    TkMacMakeStippleMap, /* 48 */
-    TkMacMenuClick, /* 49 */
-    TkMacRegisterOffScreenWindow, /* 50 */
-    TkMacResizable, /* 51 */
-    TkMacSetEmbedRgn, /* 52 */
-    TkMacSetHelpMenuItemCount, /* 53 */
-    TkMacSetScrollbarGrow, /* 54 */
-    TkMacSetUpClippingRgn, /* 55 */
-    TkMacSetUpGraphicsPort, /* 56 */
-    TkMacUpdateClipRgn, /* 57 */
-    TkMacUnregisterMacWindow, /* 58 */
-    TkMacUseMenuID, /* 59 */
-    TkMacVisableClipRgn, /* 60 */
-    TkMacWinBounds, /* 61 */
-    TkMacWindowOffset, /* 62 */
-    TkResumeClipboard, /* 63 */
-    TkSetMacColor, /* 64 */
-    TkSetWMName, /* 65 */
-    TkSuspendClipboard, /* 66 */
-    TkWMGrowToplevel, /* 67 */
-    TkMacZoomToplevel, /* 68 */
-    Tk_TopCoordsToWindow, /* 69 */
-    TkMacContainerId, /* 70 */
-    TkMacGetHostToplevel, /* 71 */
-#endif /* MAC_TCL */
-};
-
-TkIntXlibStubs tkIntXlibStubs = {
-    TCL_STUB_MAGIC,
-    NULL,
-#ifdef __WIN32__
-    NULL, /* 0 */
-    XGetModifierMapping, /* 1 */
-    XCreateImage, /* 2 */
-    XGetImage, /* 3 */
-    XGetAtomName, /* 4 */
-    XKeysymToString, /* 5 */
-    XCreateColormap, /* 6 */
-    XCreatePixmapCursor, /* 7 */
-    XCreateGlyphCursor, /* 8 */
-    XGContextFromGC, /* 9 */
-    XListHosts, /* 10 */
-    XKeycodeToKeysym, /* 11 */
-    XStringToKeysym, /* 12 */
-    XRootWindow, /* 13 */
-    XSetErrorHandler, /* 14 */
-    XIconifyWindow, /* 15 */
-    XWithdrawWindow, /* 16 */
-    XGetWMColormapWindows, /* 17 */
-    XAllocColor, /* 18 */
-    XBell, /* 19 */
-    XChangeProperty, /* 20 */
-    XChangeWindowAttributes, /* 21 */
-    XClearWindow, /* 22 */
-    XConfigureWindow, /* 23 */
-    XCopyArea, /* 24 */
-    XCopyPlane, /* 25 */
-    XCreateBitmapFromData, /* 26 */
-    XDefineCursor, /* 27 */
-    XDeleteProperty, /* 28 */
-    XDestroyWindow, /* 29 */
-    XDrawArc, /* 30 */
-    XDrawLines, /* 31 */
-    XDrawRectangle, /* 32 */
-    XFillArc, /* 33 */
-    XFillPolygon, /* 34 */
-    XFillRectangles, /* 35 */
-    XForceScreenSaver, /* 36 */
-    XFreeColormap, /* 37 */
-    XFreeColors, /* 38 */
-    XFreeCursor, /* 39 */
-    XFreeModifiermap, /* 40 */
-    XGetGeometry, /* 41 */
-    XGetInputFocus, /* 42 */
-    XGetWindowProperty, /* 43 */
-    XGetWindowAttributes, /* 44 */
-    XGrabKeyboard, /* 45 */
-    XGrabPointer, /* 46 */
-    XKeysymToKeycode, /* 47 */
-    XLookupColor, /* 48 */
-    XMapWindow, /* 49 */
-    XMoveResizeWindow, /* 50 */
-    XMoveWindow, /* 51 */
-    XNextEvent, /* 52 */
-    XPutBackEvent, /* 53 */
-    XQueryColors, /* 54 */
-    XQueryPointer, /* 55 */
-    XQueryTree, /* 56 */
-    XRaiseWindow, /* 57 */
-    XRefreshKeyboardMapping, /* 58 */
-    XResizeWindow, /* 59 */
-    XSelectInput, /* 60 */
-    XSendEvent, /* 61 */
-    XSetCommand, /* 62 */
-    XSetIconName, /* 63 */
-    XSetInputFocus, /* 64 */
-    XSetSelectionOwner, /* 65 */
-    XSetWindowBackground, /* 66 */
-    XSetWindowBackgroundPixmap, /* 67 */
-    XSetWindowBorder, /* 68 */
-    XSetWindowBorderPixmap, /* 69 */
-    XSetWindowBorderWidth, /* 70 */
-    XSetWindowColormap, /* 71 */
-    XTranslateCoordinates, /* 72 */
-    XUngrabKeyboard, /* 73 */
-    XUngrabPointer, /* 74 */
-    XUnmapWindow, /* 75 */
-    XWindowEvent, /* 76 */
-    XDestroyIC, /* 77 */
-    XFilterEvent, /* 78 */
-    XmbLookupString, /* 79 */
-    TkPutImage, /* 80 */
-    NULL, /* 81 */
-    XParseColor, /* 82 */
-    XCreateGC, /* 83 */
-    XFreeGC, /* 84 */
-    XInternAtom, /* 85 */
-    XSetBackground, /* 86 */
-    XSetForeground, /* 87 */
-    XSetClipMask, /* 88 */
-    XSetClipOrigin, /* 89 */
-    XSetTSOrigin, /* 90 */
-    XChangeGC, /* 91 */
-    XSetFont, /* 92 */
-    XSetArcMode, /* 93 */
-    XSetStipple, /* 94 */
-    XSetFillRule, /* 95 */
-    XSetFillStyle, /* 96 */
-    XSetFunction, /* 97 */
-    XSetLineAttributes, /* 98 */
-    _XInitImageFuncPtrs, /* 99 */
-    XCreateIC, /* 100 */
-    XGetVisualInfo, /* 101 */
-    XSetWMClientMachine, /* 102 */
-    XStringListToTextProperty, /* 103 */
-#endif /* __WIN32__ */
-#ifdef MAC_TCL
-    NULL, /* 0 */
-    XGetModifierMapping, /* 1 */
-    XCreateImage, /* 2 */
-    XGetImage, /* 3 */
-    XGetAtomName, /* 4 */
-    XKeysymToString, /* 5 */
-    XCreateColormap, /* 6 */
-    XGContextFromGC, /* 7 */
-    XKeycodeToKeysym, /* 8 */
-    XStringToKeysym, /* 9 */
-    XRootWindow, /* 10 */
-    XSetErrorHandler, /* 11 */
-    XAllocColor, /* 12 */
-    XBell, /* 13 */
-    XChangeProperty, /* 14 */
-    XChangeWindowAttributes, /* 15 */
-    XConfigureWindow, /* 16 */
-    XCopyArea, /* 17 */
-    XCopyPlane, /* 18 */
-    XCreateBitmapFromData, /* 19 */
-    XDefineCursor, /* 20 */
-    XDestroyWindow, /* 21 */
-    XDrawArc, /* 22 */
-    XDrawLines, /* 23 */
-    XDrawRectangle, /* 24 */
-    XFillArc, /* 25 */
-    XFillPolygon, /* 26 */
-    XFillRectangles, /* 27 */
-    XFreeColormap, /* 28 */
-    XFreeColors, /* 29 */
-    XFreeModifiermap, /* 30 */
-    XGetGeometry, /* 31 */
-    XGetWindowProperty, /* 32 */
-    XGrabKeyboard, /* 33 */
-    XGrabPointer, /* 34 */
-    XKeysymToKeycode, /* 35 */
-    XMapWindow, /* 36 */
-    XMoveResizeWindow, /* 37 */
-    XMoveWindow, /* 38 */
-    XQueryPointer, /* 39 */
-    XRaiseWindow, /* 40 */
-    XRefreshKeyboardMapping, /* 41 */
-    XResizeWindow, /* 42 */
-    XSelectInput, /* 43 */
-    XSendEvent, /* 44 */
-    XSetIconName, /* 45 */
-    XSetInputFocus, /* 46 */
-    XSetSelectionOwner, /* 47 */
-    XSetWindowBackground, /* 48 */
-    XSetWindowBackgroundPixmap, /* 49 */
-    XSetWindowBorder, /* 50 */
-    XSetWindowBorderPixmap, /* 51 */
-    XSetWindowBorderWidth, /* 52 */
-    XSetWindowColormap, /* 53 */
-    XUngrabKeyboard, /* 54 */
-    XUngrabPointer, /* 55 */
-    XUnmapWindow, /* 56 */
-    TkPutImage, /* 57 */
-    XParseColor, /* 58 */
-    XCreateGC, /* 59 */
-    XFreeGC, /* 60 */
-    XInternAtom, /* 61 */
-    XSetBackground, /* 62 */
-    XSetForeground, /* 63 */
-    XSetClipMask, /* 64 */
-    XSetClipOrigin, /* 65 */
-    XSetTSOrigin, /* 66 */
-    XChangeGC, /* 67 */
-    XSetFont, /* 68 */
-    XSetArcMode, /* 69 */
-    XSetStipple, /* 70 */
-    XSetFillRule, /* 71 */
-    XSetFillStyle, /* 72 */
-    XSetFunction, /* 73 */
-    XSetLineAttributes, /* 74 */
-    _XInitImageFuncPtrs, /* 75 */
-    XCreateIC, /* 76 */
-    XGetVisualInfo, /* 77 */
-    XSetWMClientMachine, /* 78 */
-    XStringListToTextProperty, /* 79 */
-#endif /* MAC_TCL */
-};
-
-TkPlatStubs tkPlatStubs = {
-    TCL_STUB_MAGIC,
-    NULL,
-#ifdef __WIN32__
-    Tk_AttachHWND, /* 0 */
-    Tk_GetHINSTANCE, /* 1 */
-    Tk_GetHWND, /* 2 */
-    Tk_HWNDToWindow, /* 3 */
-    Tk_PointerEvent, /* 4 */
-    Tk_TranslateWinEvent, /* 5 */
-#endif /* __WIN32__ */
-#ifdef MAC_TCL
-    Tk_MacSetEmbedHandler, /* 0 */
-    Tk_MacTurnOffMenus, /* 1 */
-    Tk_MacTkOwnsCursor, /* 2 */
-    TkMacInitMenus, /* 3 */
-    TkMacInitAppleEvents, /* 4 */
-    TkMacConvertEvent, /* 5 */
-    TkMacConvertTkEvent, /* 6 */
-    TkGenWMConfigureEvent, /* 7 */
-    TkMacInvalClipRgns, /* 8 */
-    TkMacHaveAppearance, /* 9 */
-    TkMacGetDrawablePort, /* 10 */
-#endif /* MAC_TCL */
-};
-
-static TkStubHooks tkStubHooks = {
-    &tkPlatStubs,
-    &tkIntStubs,
-    &tkIntPlatStubs,
-    &tkIntXlibStubs
-};
-
 
 /* !END!: Do not edit above this line. */

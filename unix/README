@@ -1,6 +1,12 @@
+Tk UNIX README
+--------------
+
 This is the directory where you configure, compile, test, and install
 UNIX versions of Tk.  This directory also contains source files for Tk
 that are specific to UNIX.
+
+The information in this file is maintained at:
+    http://www.scriptics.com/support/howto/compile.html
 
 The rest of this file contains instructions on how to do this.  The
 release should compile and run either "out of the box" or with trivial
@@ -10,13 +16,13 @@ SGI, as well as PCs running Linux, BSDI, and SCO UNIX.  To compile for
 a PC running Windows, see the README file in the directory ../win.  To
 compile for a Macintosh, see the README file in the directory ../mac.
 
-RCS: @(#) $Id: README,v 1.4 1999/04/16 01:51:45 stanton Exp $
+RCS: @(#) $Id: README,v 1.4.4.1 1999/04/22 23:06:00 welch Exp $
 
 How To Compile And Install Tk:
 ------------------------------
 
 (a) Make sure that the Tcl 8.1 release is present in the directory
-    ../../tcl8.1a2 (or else use the "--with-tcl" switch described below). 
+    ../../tcl8.1 (or else use the "--with-tcl" switch described below). 
     This release of Tk will only work with Tcl 8.1. Also, be sure that
     you have configured Tcl before you configure Tk.
 

@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.32 1999/04/16 01:51:07 stanton Exp $
+RCS: @(#) $Id: changes,v 1.32.4.1 1999/04/28 21:20:43 welch Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4581,4 +4581,17 @@ selection instead of the widget contents, which can be different if the
 -show option is used to hide the display. (stanton)
 
 --------------- Released 8.1b3, April 6, 1999 ----------------------
+
+4/20/99 (compiler fix) changed definition of Status type to use a
+typedef instead of a #define to avoid conflicting with the cygwin win32
+headers. (redman)
+
+4/22/99 (bug fix) Set the -translation and -encoding options to binary
+for image files. (redman)
+
+4/27 (bug fix) Changed to avoid the need for forward declarations in
+stub initializers.  Added extern "C" blocks around stub table pointer
+declarations so the stubs can be used from C++ code. (stanton)
+
+--------------- Released 8.1 final, April 29, 1999 ----------------------
 
