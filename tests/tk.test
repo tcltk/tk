@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: tk.test,v 1.4 1999/12/16 21:58:29 hobbs Exp $
+# RCS: @(#) $Id: tk.test,v 1.5 2000/10/31 00:52:11 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -101,9 +101,8 @@ test tk-4.6 {tk command: useinputmethods: set new} {unixOnly} {
     if {[tk useinputmethods 1] == 0} {
 	puts "this wish doesn't have XIM (X Input Methods) support"
     }
-    # We should always start with XIM support off
     set useim
-} 0
+} $useim
 test tk-4.7 {tk command: useinputmethods: set new} {macOrPc} {
     # Mac and Windows don't have X Input Methods, so this should
     # always return 0
