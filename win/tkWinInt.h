@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.10 2000/04/12 18:51:11 hobbs Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.10.6.1 2001/07/03 20:01:10 dgp Exp $
  */
 
 #ifndef _TKWININT
@@ -166,6 +166,8 @@ EXTERN void	TkWinUpdatingClipboard(int mode);
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
+
+extern Tcl_Encoding TkWinGetKeyInputEncoding _ANSI_ARGS_((void));
 
 #endif /* _TKWININT */
 

@@ -3,7 +3,7 @@
 # This demonstration script creates a canvas that displays the
 # canvas item types.
 #
-# RCS: @(#) $Id: items.tcl,v 1.2 1998/09/14 18:23:29 stanton Exp $
+# RCS: @(#) $Id: items.tcl,v 1.2.22.1 2001/07/03 20:01:09 dgp Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -271,7 +271,7 @@ proc itemDrag {c x y} {
     global lastX lastY
     set x [$c canvasx $x]
     set y [$c canvasy $y]
-    $c move current [expr $x-$lastX] [expr $y-$lastY]
+    $c move current [expr {$x-$lastX}] [expr {$y-$lastY}]
     set lastX $x
     set lastY $y
 }

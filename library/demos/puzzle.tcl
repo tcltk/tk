@@ -3,7 +3,7 @@
 # This demonstration script creates a 15-puzzle game using a collection
 # of buttons.
 #
-# RCS: @(#) $Id: puzzle.tcl,v 1.2 1998/09/14 18:23:29 stanton Exp $
+# RCS: @(#) $Id: puzzle.tcl,v 1.2.22.1 2001/07/03 20:01:09 dgp Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -60,10 +60,10 @@ pack $w.frame -side top -pady 1c -padx 1c
 destroy $w.s
 
 set order {3 1 6 2 5 7 15 13 4 11 8 9 14 10 12}
-for {set i 0} {$i < 15} {set i [expr $i+1]} {
+for {set i 0} {$i < 15} {set i [expr {$i+1}]} {
     set num [lindex $order $i]
-    set xpos($num) [expr ($i%4)*.25]
-    set ypos($num) [expr ($i/4)*.25]
+    set xpos($num) [expr {($i%4)*.25}]
+    set ypos($num) [expr {($i/4)*.25}]
     button $w.frame.$num -relief raised -text $num -highlightthickness 0 \
 	    -command "puzzleSwitch $w $num"
     place $w.frame.$num -relx $xpos($num) -rely $ypos($num) \

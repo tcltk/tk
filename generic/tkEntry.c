@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.18 2000/11/22 01:49:37 ericm Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.18.2.1 2001/07/03 20:01:08 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -837,6 +837,13 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
     entryPtr->avgWidth		= 1;
     entryPtr->validate		= VALIDATE_NONE;
 
+    /*
+     * Keep a hold of the associated tkwin until we destroy the listbox,
+     * otherwise Tk might free it while we still need it.
+     */
+
+    Tcl_Preserve((ClientData) entryPtr->tkwin);
+
     Tk_SetClass(entryPtr->tkwin, "Entry");
     Tk_SetClassProcs(entryPtr->tkwin, &entryClass, (ClientData) entryPtr);
     Tk_CreateEventHandler(entryPtr->tkwin,
@@ -851,7 +858,7 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
 	Tk_DestroyWindow(entryPtr->tkwin);
 	return TCL_ERROR;
     }
-    
+
     Tcl_SetResult(interp, Tk_PathName(entryPtr->tkwin), TCL_STATIC);
     return TCL_OK;
 }
@@ -889,7 +896,6 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
-    Tcl_Preserve((ClientData) entryPtr);
 
     /* 
      * Parse the widget command by looking up the second token in
@@ -902,6 +908,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	return result;
     }
 
+    Tcl_Preserve((ClientData) entryPtr);
     switch ((enum entryCmd) cmdIndex) {
         case COMMAND_BBOX: {
 	    int index, x, y, width, height;
@@ -1323,12 +1330,6 @@ DestroyEntry(memPtr)
     char *memPtr;		/* Info about entry widget. */
 {
     Entry *entryPtr = (Entry *) memPtr;
-    entryPtr->flags |= ENTRY_DELETED;
-
-    Tcl_DeleteCommandFromToken(entryPtr->interp, entryPtr->widgetCmd);
-    if (entryPtr->flags & REDRAW_PENDING) {
-	Tcl_CancelIdleCall(DisplayEntry, (ClientData) entryPtr);
-    }
 
     /*
      * Free up all the stuff that requires special handling, then
@@ -1366,7 +1367,9 @@ DestroyEntry(memPtr)
     Tk_FreeTextLayout(entryPtr->textLayout);
     Tk_FreeConfigOptions((char *) entryPtr, entryPtr->optionTable,
 	    entryPtr->tkwin);
+    Tcl_Release((ClientData) entryPtr->tkwin);
     entryPtr->tkwin = NULL;
+
     ckfree((char *) entryPtr);
 }
 
@@ -1794,7 +1797,7 @@ DisplayEntry(clientData)
     Tk_3DBorder border;
 
     entryPtr->flags &= ~REDRAW_PENDING;
-    if ((entryPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
+    if ((entryPtr->flags & ENTRY_DELETED) || !Tk_IsMapped(tkwin)) {
 	return;
     }
 
@@ -1806,7 +1809,20 @@ DisplayEntry(clientData)
 
     if (entryPtr->flags & UPDATE_SCROLLBAR) {
 	entryPtr->flags &= ~UPDATE_SCROLLBAR;
+
+        /*
+	 * Preserve/Release because updating the scrollbar can have
+	 * the side-effect of destroying or unmapping the entry widget.
+	 */
+
+	Tcl_Preserve((ClientData) entryPtr);
 	EntryUpdateScrollbar(entryPtr);
+
+	if ((entryPtr->flags & ENTRY_DELETED) || !Tk_IsMapped(tkwin)) {
+	    Tcl_Release((ClientData) entryPtr);
+	    return;
+	}
+	Tcl_Release((ClientData) entryPtr);
     }
 
     /*
@@ -2606,6 +2622,7 @@ EntryEventProc(clientData, eventPtr)
 		Tk_UndefineCursor(entryPtr->tkwin);
 	    }
 	}
+	return;
     }
 
     switch (eventPtr->type) {
@@ -2614,7 +2631,15 @@ EntryEventProc(clientData, eventPtr)
 	    entryPtr->flags |= BORDER_NEEDED;
 	    break;
 	case DestroyNotify:
-	    DestroyEntry((char *) clientData);
+	    if (!(entryPtr->flags & ENTRY_DELETED)) {
+		entryPtr->flags |= (ENTRY_DELETED | VALIDATE_ABORT);
+		Tcl_DeleteCommandFromToken(entryPtr->interp,
+			entryPtr->widgetCmd);
+		if (entryPtr->flags & REDRAW_PENDING) {
+		    Tcl_CancelIdleCall(DisplayEntry, clientData);
+		}
+		Tcl_EventuallyFree(clientData, DestroyEntry);
+	    }
 	    break;
 	case ConfigureNotify:
 	    Tcl_Preserve((ClientData) entryPtr);
@@ -3027,7 +3052,7 @@ static void
 EventuallyRedraw(entryPtr)
     Entry *entryPtr;		/* Information about widget. */
 {
-    if ((entryPtr->tkwin == NULL) || !Tk_IsMapped(entryPtr->tkwin)) {
+    if ((entryPtr->flags & ENTRY_DELETED) || !Tk_IsMapped(entryPtr->tkwin)) {
 	return;
     }
 
@@ -3424,15 +3449,27 @@ EntryValidateChange(entryPtr, change, new, index, type)
      * it means that a loop condition almost occured.  Do not allow
      * this validation result to finish.
      */
+
     if (entryPtr->validate == VALIDATE_NONE
 	    || (!varValidate && (entryPtr->flags & VALIDATE_VAR))) {
 	code = TCL_ERROR;
     }
+
+    /*
+     * It's possible that the user deleted the entry during validation.
+     * In that case, abort future validation and return an error.
+     */
+
+    if (entryPtr->flags & ENTRY_DELETED) {
+	return TCL_ERROR;
+    }
+
     /*
      * If validate will return ERROR, then disallow further validations
      * Otherwise, if it didn't accept the new string (returned TCL_BREAK)
      * then eval the invalidCmd (if it's set)
      */
+
     if (code == TCL_ERROR) {
 	entryPtr->validate = VALIDATE_NONE;
     } else if (code == TCL_BREAK) {
@@ -3444,6 +3481,7 @@ EntryValidateChange(entryPtr, change, new, index, type)
 	 * may want to do entry manipulation which the setting of the
 	 * var will later wipe anyway.
 	 */
+
 	if (varValidate) {
 	    entryPtr->validate = VALIDATE_NONE;
 	} else if (entryPtr->invalidCmd != NULL) {
@@ -3461,6 +3499,15 @@ EntryValidateChange(entryPtr, change, new, index, type)
 		entryPtr->validate = VALIDATE_NONE;
 	    }
 	    Tcl_DStringFree(&script);
+
+	    /*
+	     * It's possible that the user deleted the entry during validation.
+	     * In that case, abort future validation and return an error.
+	     */
+
+	    if (entryPtr->flags & ENTRY_DELETED) {
+		return TCL_ERROR;
+	    }
 	}
     }
 
@@ -3738,6 +3785,13 @@ Tk_SpinboxObjCmd(clientData, interp, objc, objv)
     sbPtr->bdRelief		= TK_RELIEF_FLAT;
     sbPtr->buRelief		= TK_RELIEF_FLAT;
 
+    /*
+     * Keep a hold of the associated tkwin until we destroy the listbox,
+     * otherwise Tk might free it while we still need it.
+     */
+
+    Tcl_Preserve((ClientData) entryPtr->tkwin);
+
     Tk_SetClass(entryPtr->tkwin, "Spinbox");
     Tk_SetClassProcs(entryPtr->tkwin, &entryClass, (ClientData) entryPtr);
     Tk_CreateEventHandler(entryPtr->tkwin,
@@ -3797,7 +3851,6 @@ SpinboxWidgetObjCmd(clientData, interp, objc, objv)
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
-    Tcl_Preserve((ClientData) entryPtr);
 
     /*
      * Parse the widget command by looking up the second token in
@@ -3810,6 +3863,7 @@ SpinboxWidgetObjCmd(clientData, interp, objc, objv)
 	return result;
     }
 
+    Tcl_Preserve((ClientData) entryPtr);
     switch ((enum sbCmd) cmdIndex) {
         case SB_CMD_BBOX: {
 	    int index, x, y, width, height;

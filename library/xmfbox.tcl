@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"::tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.14.4.1 2001/02/28 23:29:56 dgp Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.14.4.2 2001/07/03 20:01:09 dgp Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Scriptics Corporation
@@ -346,8 +346,8 @@ proc ::tk::MotifFDialog_BuildUI {w} {
 
     # The buttons
     #
-	set maxWidth [::msgcat::mcmax OK Filter Cancel]
-	set maxWidth [expr $maxWidth<6?6:$maxWidth]
+    set maxWidth [::msgcat::mcmax OK Filter Cancel]
+    set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
     set data(okBtn) [button $bot.ok -text [::msgcat::mc "OK"] \
 	    -width $maxWidth -under 0 \
 	    -command [list tk::MotifFDialog_OkCmd $w]]
@@ -824,7 +824,7 @@ proc ::tk::MotifFDialog_ActivateSEnt {w} {
 	    if {[string equal $data(type) save]} {
 	    set message [format %s%s \
 		[::msgcat::mc {File "%1$s" already exists.\n\n} \
-		    $selectFilePath ]
+		    $selectFilePath ] \
 		[::msgcat::mc {Replace existing file?}]]
 		set answer [tk_messageBox -icon warning -type yesno \
 				-message $message]

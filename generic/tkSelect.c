@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.6 2000/08/07 21:49:16 ericm Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.6.4.1 2001/07/03 20:01:09 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -177,6 +177,48 @@ Tk_CreateSelHandler(tkwin, selection, target, proc, clientData, format)
     } else {
 	selPtr->size = 32;
     }
+
+    if ((target == XA_STRING) && (winPtr->dispPtr->utf8Atom != (Atom) NULL)) {
+	/*
+	 * If the user asked for a STRING handler and we understand
+	 * UTF8_STRING, we implicitly create a UTF8_STRING handler for them.
+	 */
+
+	target = winPtr->dispPtr->utf8Atom;
+	for (selPtr = winPtr->selHandlerList; ;
+	     selPtr = selPtr->nextPtr) {
+	    if (selPtr == NULL) {
+		selPtr = (TkSelHandler *) ckalloc(sizeof(TkSelHandler));
+		selPtr->nextPtr = winPtr->selHandlerList;
+		winPtr->selHandlerList = selPtr;
+		selPtr->selection = selection;
+		selPtr->target = target;
+		selPtr->format = target; /* We want UTF8_STRING format */
+		selPtr->proc = proc;
+		if (selPtr->proc == HandleTclCommand) {
+		    /*
+		     * The clientData is selection controlled memory, so
+		     * we should make a copy for this selPtr.
+		     */
+		    selPtr->clientData =
+			(ClientData) ckalloc(sizeof(clientData));
+		    memcpy(selPtr->clientData, clientData, sizeof(clientData));
+		} else {
+		    selPtr->clientData = clientData;
+		}
+		selPtr->size = 8;
+		break;
+	    }
+	    if ((selPtr->selection == selection)
+		    && (selPtr->target == target)) {
+		/*
+		 * Looks like we had a utf-8 target already.  Leave it alone.
+		 */
+
+		break;
+	    }
+	}
+    }
 }
 
 /*
@@ -247,6 +289,36 @@ Tk_DeleteSelHandler(tkwin, selection, target)
     } else {
 	prevPtr->nextPtr = selPtr->nextPtr;
     }
+
+    if ((target == XA_STRING) && (winPtr->dispPtr->utf8Atom != (Atom) NULL)) {
+	/*
+	 * If the user asked for a STRING handler and we understand
+	 * UTF8_STRING, we may have implicitly created a UTF8_STRING handler
+	 * for them.  Look for it and delete it as necessary.
+	 */
+	TkSelHandler *utf8selPtr;
+
+	target = winPtr->dispPtr->utf8Atom;
+	for (utf8selPtr = winPtr->selHandlerList; utf8selPtr != NULL;
+	     utf8selPtr = utf8selPtr->nextPtr) {
+	    if ((utf8selPtr->selection == selection)
+		    && (utf8selPtr->target == target)) {
+		break;
+	    }
+	}
+	if (utf8selPtr != NULL) {
+	    if ((utf8selPtr->format == target)
+		    && (utf8selPtr->proc == selPtr->proc)
+		    && (utf8selPtr->size == selPtr->size)) {
+		/*
+		 * This recursive call is OK, because we've
+		 * changed the value of 'target'
+		 */
+		Tk_DeleteSelHandler(tkwin, selection, target);
+	    }
+	}
+    }
+
     if (selPtr->proc == HandleTclCommand) {
 	/*
 	 * Mark the CommandInfo as deleted and free it if we can.
@@ -524,8 +596,8 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
 	TkSelInProgress ip;
 
 	for (selPtr = ((TkWindow *) infoPtr->owner)->selHandlerList;
-		selPtr != NULL; selPtr = selPtr->nextPtr) {
-	    if ((selPtr->target == target)
+	     selPtr != NULL; selPtr = selPtr->nextPtr) {
+	    if  ((selPtr->target == target)
 		    && (selPtr->selection == selection)) {
 		break;
 	    }
@@ -851,10 +923,9 @@ Tk_SelectionObjCmd(clientData, interp, objc, objv)
 	    register LostCommand *lostPtr;
 	    char *script = NULL;
 	    int cmdLength;
-	    static char *ownOptionStrings[] = { "-command",
-						    "-displayof",
-						    "-selection",
-						    (char *) NULL };
+	    static char *ownOptionStrings[] = {
+		"-command", "-displayof", "-selection", (char *) NULL
+	    };
 	    enum ownOptions { OWN_COMMAND, OWN_DISPLAYOF, OWN_SELECTION };
 	    int ownIndex;
 	    
@@ -1047,7 +1118,7 @@ TkSelDeadWindow(winPtr)
 	}
 	if (selPtr->proc == HandleTclCommand) {
 	    /*
-	     * Mark the CommandInfo as deleted and free it if we can.
+	     * Mark the CommandInfo as deleted and free it when we can.
 	     */
 
 	    ((CommandInfo*)selPtr->clientData)->interp = NULL;
@@ -1106,15 +1177,29 @@ TkSelInit(tkwin)
      * Fetch commonly-used atoms.
      */
 
-    dispPtr->multipleAtom = Tk_InternAtom(tkwin, "MULTIPLE");
-    dispPtr->incrAtom = Tk_InternAtom(tkwin, "INCR");
-    dispPtr->targetsAtom = Tk_InternAtom(tkwin, "TARGETS");
-    dispPtr->timestampAtom = Tk_InternAtom(tkwin, "TIMESTAMP");
-    dispPtr->textAtom = Tk_InternAtom(tkwin, "TEXT");
-    dispPtr->compoundTextAtom = Tk_InternAtom(tkwin, "COMPOUND_TEXT");
-    dispPtr->applicationAtom = Tk_InternAtom(tkwin, "TK_APPLICATION");
-    dispPtr->windowAtom = Tk_InternAtom(tkwin, "TK_WINDOW");
-    dispPtr->clipboardAtom = Tk_InternAtom(tkwin, "CLIPBOARD");
+    dispPtr->multipleAtom	= Tk_InternAtom(tkwin, "MULTIPLE");
+    dispPtr->incrAtom		= Tk_InternAtom(tkwin, "INCR");
+    dispPtr->targetsAtom	= Tk_InternAtom(tkwin, "TARGETS");
+    dispPtr->timestampAtom	= Tk_InternAtom(tkwin, "TIMESTAMP");
+    dispPtr->textAtom		= Tk_InternAtom(tkwin, "TEXT");
+    dispPtr->compoundTextAtom	= Tk_InternAtom(tkwin, "COMPOUND_TEXT");
+    dispPtr->applicationAtom	= Tk_InternAtom(tkwin, "TK_APPLICATION");
+    dispPtr->windowAtom		= Tk_InternAtom(tkwin, "TK_WINDOW");
+    dispPtr->clipboardAtom	= Tk_InternAtom(tkwin, "CLIPBOARD");
+
+    /*
+     * Using UTF8_STRING instead of the XA_UTF8_STRING macro allows us
+     * to support older X servers that didn't have UTF8_STRING yet.
+     * This is necessary on Unix systems.
+     * For more information, see:
+     *    http://www.cl.cam.ac.uk/~mgk25/unicode.html#x11
+     */
+
+#if !defined(__WIN32__) && !defined(MAC_TCL)
+    dispPtr->utf8Atom		= Tk_InternAtom(tkwin, "UTF8_STRING");
+#else
+    dispPtr->utf8Atom		= (Atom) NULL;
+#endif
 }
 
 /*

@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.12.4.1 2001/02/28 23:29:56 dgp Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.12.4.2 2001/07/03 20:01:09 dgp Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -171,8 +171,8 @@ proc ::tk::MessageBox {args} {
 
     switch -- $data(-type) {
 	abortretryignore {
-		set maxWidth [::msgcat::mcmax Abort Retry Ignore]
-		set maxWidth [expr $maxWidth<6?6:$maxWidth]
+	    set maxWidth [::msgcat::mcmax Abort Retry Ignore]
+	    set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
 	    set buttons [list \
 		[list abort  -width $maxWidth -text [::msgcat::mc "Abort"] \
 		    -under 0]\
@@ -192,8 +192,8 @@ proc ::tk::MessageBox {args} {
 	    }
 	}
 	okcancel {
-		set maxWidth [::msgcat::mcmax OK Cancel]
-		set maxWidth [expr $maxWidth<6?6:$maxWidth]
+	    set maxWidth [::msgcat::mcmax OK Cancel]
+	    set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
 	    set buttons [list \
 		[list ok     -width $maxWidth \
 		    -text [::msgcat::mc "OK"]     -under 0] \
@@ -202,8 +202,8 @@ proc ::tk::MessageBox {args} {
 	    ]
 	}
 	retrycancel {
-		set maxWidth [::msgcat::mcmax Retry Cancel]
-		set maxWidth [expr $maxWidth<6?6:$maxWidth]
+	    set maxWidth [::msgcat::mcmax Retry Cancel]
+	    set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
 	    set buttons [list \
 		[list retry  -width $maxWidth \
 		    -text [::msgcat::mc "Retry"]  -under 0] \
@@ -212,8 +212,8 @@ proc ::tk::MessageBox {args} {
 	    ]
 	}
 	yesno {
-		set maxWidth [::msgcat::mcmax Yes No]
-		set maxWidth [expr $maxWidth<6?6:$maxWidth]
+	    set maxWidth [::msgcat::mcmax Yes No]
+	    set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
 	    set buttons [list \
 		[list yes    -width $maxWidth \
 		    -text [::msgcat::mc "Yes"] -under 0]\
@@ -222,8 +222,8 @@ proc ::tk::MessageBox {args} {
 	    ]
 	}
 	yesnocancel {
-		set maxWidth [::msgcat::mcmax Yes No Cancel]
-		set maxWidth [expr $maxWidth<6?6:$maxWidth]
+	    set maxWidth [::msgcat::mcmax Yes No Cancel]
+	    set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
 	    set buttons [list \
 		[list yes    -width $maxWidth \
 		    -text [::msgcat::mc "Yes"] -under 0]\

@@ -4,10 +4,10 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: TkInitStubs.3,v 1.1 1999/05/05 21:46:27 hershey Exp $
+'\" RCS: @(#) $Id: TkInitStubs.3,v 1.1.16.1 2001/07/03 20:01:07 dgp Exp $
 '\" 
 .so man.macros
-.TH Tk_InitStubs 3 8.1 Tk "Tk Library Procedures"
+.TH Tk_InitStubs 3 8.4 Tk "Tk Library Procedures"
 .BS
 .SH NAME
 Tk_InitStubs \- initialize the Tk stubs mechanism
@@ -15,7 +15,7 @@ Tk_InitStubs \- initialize the Tk stubs mechanism
 .nf
 \fB#include <tk.h>\fR
 .sp
-char *
+CONST char *
 \fBTk_InitStubs\fR(\fIinterp, version, exact\fR)
 .SH ARGUMENTS
 .AS Tcl_Interp *interp in
@@ -55,9 +55,9 @@ Define the USE_TCL_STUBS symbol.  Typically, you would include the
 .IP 3) 5
 Link the extension with the Tcl and Tk stubs libraries instead of
 the standard Tcl and Tk libraries.  On Unix platforms, the library
-names are \fIlibtclstub8.1.a\fR and \fIlibtkstub8.1.a\fR; on Windows
-platforms, the library names are
-\fItclstub81.lib\fR and \fItkstub81.lib\fR.
+names are \fIlibtclstub8.4.a\fR and \fIlibtkstub8.4.a\fR; on Windows
+platforms, the library names are \fItclstub84.lib\fR and \fItkstub84.lib\fR
+(adjust names with appropriate version number).
 .SH DESCRIPTION
 \fBTk_InitStubs\fR attempts to initialize the Tk stub table pointers
 and ensure that the correct version of Tk is loaded.  In addition

@@ -31,7 +31,7 @@ AC_DEFUN(SC_PATH_TCLCONFIG, [
 	AC_MSG_CHECKING([for Tcl configuration])
 	AC_CACHE_VAL(ac_cv_c_tclconfig,[
 
-	    # First check to see if --with-tclconfig was specified.
+	    # First check to see if --with-tcl was specified.
 	    if test x"${with_tclconfig}" != x ; then
 		if test -f "${with_tclconfig}/tclConfig.sh" ; then
 		    ac_cv_c_tclconfig=`(cd ${with_tclconfig}; pwd)`
@@ -59,7 +59,10 @@ AC_DEFUN(SC_PATH_TCLCONFIG, [
 	    # check in a few common install locations
 	    if test x"${ac_cv_c_tclconfig}" = x ; then
 		for i in `ls -d ${prefix}/lib 2>/dev/null` \
-			`ls -d /usr/local/lib 2>/dev/null` ; do
+			`ls -d /usr/local/lib 2>/dev/null` \
+			`ls -d /usr/contrib/lib 2>/dev/null` \
+			`ls -d /usr/lib 2>/dev/null` \
+			; do
 		    if test -f "$i/tclConfig.sh" ; then
 			ac_cv_c_tclconfig=`(cd $i; pwd)`
 			break
@@ -68,7 +71,7 @@ AC_DEFUN(SC_PATH_TCLCONFIG, [
 	    fi
 
 	    # check in a few other private locations
-	    if test x"${ac_cv_c_tcliconfig}" = x ; then
+	    if test x"${ac_cv_c_tclconfig}" = x ; then
 		for i in \
 			${srcdir}/../tcl \
 			`ls -dr ${srcdir}/../tcl[[8-9]].[[0-9]]* 2>/dev/null` ; do
@@ -151,7 +154,10 @@ AC_DEFUN(SC_PATH_TKCONFIG, [
 	    # check in a few common install locations
 	    if test x"${ac_cv_c_tkconfig}" = x ; then
 		for i in `ls -d ${prefix}/lib 2>/dev/null` \
-			`ls -d /usr/local/lib 2>/dev/null` ; do
+			`ls -d /usr/local/lib 2>/dev/null` \
+			`ls -d /usr/contrib/lib 2>/dev/null` \
+			`ls -d /usr/lib 2>/dev/null` \
+			; do
 		    if test -f "$i/tkConfig.sh" ; then
 			ac_cv_c_tkconfig=`(cd $i; pwd)`
 			break
@@ -242,10 +248,10 @@ AC_DEFUN(SC_LOAD_TCLCONFIG, [
 #------------------------------------------------------------------------
 
 AC_DEFUN(SC_LOAD_TKCONFIG, [
-    AC_MSG_CHECKING([for existence of $TCLCONFIG])
+    AC_MSG_CHECKING([for existence of $TK_BIN_DIR/tkConfig.sh])
 
     if test -f "$TK_BIN_DIR/tkConfig.sh" ; then
-        AC_MSG_CHECKING([loading $TK_BIN_DIR/tkConfig.sh])
+        AC_MSG_RESULT([loading])
 	. $TK_BIN_DIR/tkConfig.sh
     else
         AC_MSG_RESULT([could not find $TK_BIN_DIR/tkConfig.sh])
@@ -369,6 +375,7 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 	TCL_THREADS=0
 	AC_MSG_RESULT([no (default)])
     fi
+    AC_SUBST(TCL_THREADS)
 ])
 
 #------------------------------------------------------------------------
@@ -379,7 +386,7 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 # Arguments:
 #	none
 #	
-#	Requires the following vars to be set:
+#	Requires the following vars to be set in the Makefile:
 #		CFLAGS_DEBUG
 #		CFLAGS_OPTIMIZE
 #		LDFLAGS_DEBUG
@@ -391,10 +398,10 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 #		--enable-symbols
 #
 #	Defines the following vars:
-#		CFLAGS_DEFAULT	Sets to CFLAGS_DEBUG if true
-#				Sets to CFLAGS_OPTIMIZE if false
-#		LDFLAGS_DEFAULT	Sets to LDFLAGS_DEBUG if true
-#				Sets to LDFLAGS_OPTIMIZE if false
+#		CFLAGS_DEFAULT	Sets to $(CFLAGS_DEBUG) if true
+#				Sets to $(CFLAGS_OPTIMIZE) if false
+#		LDFLAGS_DEFAULT	Sets to $(LDFLAGS_DEBUG) if true
+#				Sets to $(LDFLAGS_OPTIMIZE) if false
 #		DBGX		Debug library extension
 #
 #------------------------------------------------------------------------
@@ -402,14 +409,15 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 AC_DEFUN(SC_ENABLE_SYMBOLS, [
     AC_MSG_CHECKING([for build with symbols])
     AC_ARG_ENABLE(symbols, [  --enable-symbols        build with debugging symbols [--disable-symbols]],    [tcl_ok=$enableval], [tcl_ok=no])
+# FIXME: Currently, LDFLAGS_DEFAULT is not used, it should work like CFLAGS_DEFAULT.
     if test "$tcl_ok" = "yes"; then
-	CFLAGS_DEFAULT="${CFLAGS_DEBUG}"
-	LDFLAGS_DEFAULT="${LDFLAGS_DEBUG}"
+	CFLAGS_DEFAULT='$(CFLAGS_DEBUG)'
+	LDFLAGS_DEFAULT='$(LDFLAGS_DEBUG)'
 	DBGX=g
 	AC_MSG_RESULT([yes])
     else
-	CFLAGS_DEFAULT="${CFLAGS_OPTIMIZE}"
-	LDFLAGS_DEFAULT="${LDFLAGS_OPTIMIZE}"
+	CFLAGS_DEFAULT='$(CFLAGS_OPTIMIZE)'
+	LDFLAGS_DEFAULT='$(LDFLAGS_OPTIMIZE)'
 	DBGX=""
 	AC_MSG_RESULT([no])
     fi
@@ -586,7 +594,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     TCL_EXP_FILE=""
     STLIB_LD="ar cr"
     case $system in
-	AIX-5*)
+	AIX-5.*)
 	    if test "${TCL_THREADS}" = "1" -a "$using_gcc" = "no" ; then
 		# AIX requires the _r compiler when gcc isn't being used
 		if test "${CC}" != "cc_r" ; then
@@ -720,7 +728,18 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    LD_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
 	    SHARED_LIB_SUFFIX='${VERSION}\$\{DBGX\}.a'
 	    ;;
-	IRIX-5.*|IRIX-6.*|IRIX64-6.5*)
+	IRIX-5.*)
+	    SHLIB_CFLAGS=""
+	    SHLIB_LD="ld -shared -rdata_shared"
+	    SHLIB_LD_LIBS='${LIBS}'
+	    SHLIB_SUFFIX=".so"
+	    DL_OBJS="tclLoadDl.o"
+	    DL_LIBS=""
+	    LD_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
+	    EXTRA_CFLAGS=""
+	    LDFLAGS=""
+	    ;;
+	IRIX-6.*|IRIX64-6.5*)
 	    SHLIB_CFLAGS=""
 	    SHLIB_LD="ld -n32 -shared -rdata_shared"
 	    SHLIB_LD_LIBS='${LIBS}'
@@ -975,6 +994,12 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    TCL_LIB_VERSIONS_OK=nodots
 	    ;;
 	SunOS-5.[[0-6]]*)
+
+	    # Note: If _REENTRANT isn't defined, then Solaris
+	    # won't define thread-safe library routines.
+
+	    AC_DEFINE(_REENTRANT)
+
 	    SHLIB_CFLAGS="-KPIC"
 	    SHLIB_LD="/usr/ccs/bin/ld -G -z text"
 
@@ -989,6 +1014,12 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    LD_SEARCH_FLAGS='-Wl,-R,${LIB_RUNTIME_DIR}'
 	    ;;
 	SunOS-5*)
+
+	    # Note: If _REENTRANT isn't defined, then Solaris
+	    # won't define thread-safe library routines.
+
+	    AC_DEFINE(_REENTRANT)
+
 	    SHLIB_CFLAGS="-KPIC"
 	    SHLIB_LD="/usr/ccs/bin/ld -G -z text"
 	    LDFLAGS=""
@@ -1174,7 +1205,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     if test "$DL_OBJS" != "tclLoadNone.o" ; then
 	if test "$using_gcc" = "yes" ; then
 	    case $system in
-		AIX-[[1-4]]*)
+		AIX-*)
 		    ;;
 		BSD/OS*)
 		    ;;
@@ -1276,8 +1307,68 @@ main()
     }
     return 1;
 }], tk_ok=sgtty, tk_ok=none, tk_ok=none)
+
     if test $tk_ok = sgtty; then
 	AC_DEFINE(USE_SGTTY)
+    else
+	AC_TRY_RUN([
+#include <termios.h>
+#include <errno.h>
+
+main()
+{
+    struct termios t;
+    if (tcgetattr(0, &t) == 0
+	|| errno == ENOTTY || errno == ENXIO || errno == EINVAL) {
+	cfsetospeed(&t, 0);
+	t.c_cflag |= PARENB | PARODD | CSIZE | CSTOPB;
+	return 0;
+    }
+    return 1;
+}], tk_ok=termios, tk_ok=no, tk_ok=no)
+
+    if test $tk_ok = termios; then
+	AC_DEFINE(USE_TERMIOS)
+    else
+	AC_TRY_RUN([
+#include <termio.h>
+#include <errno.h>
+
+main()
+{
+    struct termio t;
+    if (ioctl(0, TCGETA, &t) == 0
+	|| errno == ENOTTY || errno == ENXIO || errno == EINVAL) {
+	t.c_cflag |= CBAUD | PARENB | PARODD | CSIZE | CSTOPB;
+	return 0;
+    }
+    return 1;
+    }], tk_ok=termio, tk_ok=no, tk_ok=no)
+
+    if test $tk_ok = termio; then
+	AC_DEFINE(USE_TERMIO)
+    else
+	AC_TRY_RUN([
+#include <sgtty.h>
+#include <errno.h>
+
+main()
+{
+    struct sgttyb t;
+    if (ioctl(0, TIOCGETP, &t) == 0
+	|| errno == ENOTTY || errno == ENXIO || errno == EINVAL) {
+	t.sg_ospeed = 0;
+	t.sg_flags |= ODDP | EVENP | RAW;
+	return 0;
+    }
+    return 1;
+}], tk_ok=sgtty, tk_ok=none, tk_ok=none)
+
+    if test $tk_ok = sgtty; then
+	AC_DEFINE(USE_SGTTY)
+    fi
+    fi
+    fi
     fi
     fi
     fi
@@ -1552,6 +1643,8 @@ AC_DEFUN(SC_TIME_HANDLER, [
     AC_HEADER_TIME
     AC_STRUCT_TIMEZONE
 
+    AC_CHECK_FUNCS(gmtime_r localtime_r)
+
     AC_MSG_CHECKING([tm_tzadj in struct tm])
     AC_TRY_COMPILE([#include <time.h>], [struct tm tm; tm.tm_tzadj;],
 	    [AC_DEFINE(HAVE_TM_TZADJ)
@@ -1592,6 +1685,7 @@ AC_DEFUN(SC_TIME_HANDLER, [
 	    AC_MSG_RESULT(yes)],
 	    AC_MSG_RESULT(no))
     fi
+
 ])
 
 #--------------------------------------------------------------------

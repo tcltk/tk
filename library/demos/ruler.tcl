@@ -3,7 +3,7 @@
 # This demonstration script creates a canvas widget that displays a ruler
 # with tab stops that can be set, moved, and deleted.
 #
-# RCS: @(#) $Id: ruler.tcl,v 1.2 1998/09/14 18:23:29 stanton Exp $
+# RCS: @(#) $Id: ruler.tcl,v 1.2.22.1 2001/07/03 20:01:09 dgp Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -19,8 +19,8 @@ if {![info exists widgetDemo]} {
 
 proc rulerMkTab {c x y} {
     upvar #0 demo_rulerInfo v
-    $c create polygon $x $y [expr $x+$v(size)] [expr $y+$v(size)] \
-	    [expr $x-$v(size)] [expr $y+$v(size)]
+    $c create polygon $x $y [expr {$x+$v(size)}] [expr {$y+$v(size)}] \
+	    [expr {$x-$v(size)}] [expr {$y+$v(size)}]
 }
 
 set w .ruler
@@ -63,7 +63,7 @@ if {[winfo depth $c] > 1} {
 
 $c create line 1c 0.5c 1c 1c 13c 1c 13c 0.5c -width 1
 for {set i 0} {$i < 12} {incr i} {
-    set x [expr $i+1]
+    set x [expr {$i+1}]
     $c create line ${x}c 1c ${x}c 0.6c -width 1
     $c create line $x.25c 1c $x.25c 0.8c -width 1
     $c create line $x.5c 1c $x.5c 0.7c -width 1
@@ -110,7 +110,7 @@ proc rulerNewTab {c x y} {
 proc rulerSelectTab {c x y} {
     upvar #0 demo_rulerInfo v
     set v(x) [$c canvasx $x $v(grid)]
-    set v(y) [expr $v(top)+2]
+    set v(y) [expr {$v(top)+2}]
     $c addtag active withtag current
     eval "$c itemconf active $v(activeStyle)"
     $c raise active
@@ -139,13 +139,13 @@ proc rulerMoveTab {c x y} {
 	set cx $v(right)
     }
     if {($cy >= $v(top)) && ($cy <= $v(bottom))} {
-	set cy [expr $v(top)+2]
+	set cy [expr {$v(top)+2}]
 	eval "$c itemconf active $v(activeStyle)"
     } else {
-	set cy [expr $cy-$v(size)-2]
+	set cy [expr {$cy-$v(size)-2}]
 	eval "$c itemconf active $v(deleteStyle)"
     }
-    $c move active [expr $cx-$v(x)] [expr $cy-$v(y)]
+    $c move active [expr {$cx-$v(x)}] [expr {$cy-$v(y)}]
     set v(x) $cx
     set v(y) $cy
 }
@@ -164,7 +164,7 @@ proc rulerReleaseTab c {
     if {[$c find withtag active] == {}} {
 	return
     }
-    if {$v(y) != [expr $v(top)+2]} {
+    if {$v(y) != $v(top)+2} {
 	$c delete active
     } else {
 	eval "$c itemconf active $v(normalStyle)"

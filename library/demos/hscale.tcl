@@ -2,7 +2,7 @@
 #
 # This demonstration script shows an example with a horizontal scale.
 #
-# RCS: @(#) $Id: hscale.tcl,v 1.2 1998/09/14 18:23:28 stanton Exp $
+# RCS: @(#) $Id: hscale.tcl,v 1.2.22.1 2001/07/03 20:01:09 dgp Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -38,7 +38,7 @@ $w.frame.scale set 75
 
 proc setWidth {w width} {
     incr width 21
-    set x2 [expr $width - 30]
+    set x2 [expr {$width - 30}]
     if {$x2 < 21} {
 	set x2 21
     }

@@ -6,7 +6,7 @@
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
 #
-# RCS: @(#) $Id: makefile.vc,v 1.39 2000/11/03 01:16:30 hobbs Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.39.4.1 2001/07/03 20:01:10 dgp Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -317,7 +317,8 @@ libcdll = msvcrt$(DBGX).lib oldnames.lib
 !ENDIF
 
 baselibs   = kernel32.lib $(optlibs) advapi32.lib
-winlibs    = $(baselibs) user32.lib gdi32.lib comdlg32.lib winspool.lib
+winlibs    = $(baselibs) user32.lib gdi32.lib comdlg32.lib winspool.lib \
+             imm32.lib
 guilibs	   = $(libc) $(winlibs)
 conlibs    = $(libc) $(baselibs)
 guilibsdll = $(libcdll) $(winlibs)

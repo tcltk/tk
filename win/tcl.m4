@@ -135,10 +135,10 @@ AC_DEFUN(SC_LOAD_TCLCONFIG, [
 #------------------------------------------------------------------------
 
 AC_DEFUN(SC_LOAD_TKCONFIG, [
-    AC_MSG_CHECKING([for existence of $TCLCONFIG])
+    AC_MSG_CHECKING([for existence of $TK_BIN_DIR/tkConfig.sh])
 
     if test -f "$TK_BIN_DIR/tkConfig.sh" ; then
-        AC_MSG_CHECKING([loading $TK_BIN_DIR/tkConfig.sh])
+        AC_MSG_RESULT([loading])
 	. $TK_BIN_DIR/tkConfig.sh
     else
         AC_MSG_RESULT([could not find $TK_BIN_DIR/tkConfig.sh])
@@ -224,6 +224,7 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 	TCL_THREADS=0
 	AC_MSG_RESULT([no (default)])
     fi
+    AC_SUBST(TCL_THREADS)
 ])
 
 #------------------------------------------------------------------------
@@ -234,7 +235,7 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 # Arguments:
 #	none
 #	
-#	Requires the following vars to be set:
+#	Requires the following vars to be set in the Makefile:
 #		CFLAGS_DEBUG
 #		CFLAGS_OPTIMIZE
 #	
@@ -244,10 +245,10 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 #		--enable-symbols
 #
 #	Defines the following vars:
-#		CFLAGS_DEFAULT	Sets to CFLAGS_DEBUG if true
-#				Sets to CFLAGS_OPTIMIZE if false
-#		LDFLAGS_DEFAULT	Sets to LDFLAGS_DEBUG if true
-#				Sets to LDFLAGS_OPTIMIZE if false
+#		CFLAGS_DEFAULT	Sets to $(CFLAGS_DEBUG) if true
+#				Sets to $(CFLAGS_OPTIMIZE) if false
+#		LDFLAGS_DEFAULT	Sets to $(LDFLAGS_DEBUG) if true
+#				Sets to $(LDFLAGS_OPTIMIZE) if false
 #		DBGX		Debug library extension
 #
 #------------------------------------------------------------------------
@@ -257,13 +258,13 @@ AC_DEFUN(SC_ENABLE_SYMBOLS, [
     AC_ARG_ENABLE(symbols, [  --enable-symbols        build with debugging symbols [--disable-symbols]],    [tcl_ok=$enableval], [tcl_ok=no])
 
     if test "$tcl_ok" = "yes"; then
-	CFLAGS_DEFAULT="${CFLAGS_DEBUG}"
-	LDFLAGS_DEFAULT="${LDFLAGS_DEBUG}"
+	CFLAGS_DEFAULT='$(CFLAGS_DEBUG)'
+	LDFLAGS_DEFAULT='$(LDFLAGS_DEBUG)'
 	DBGX=d
 	AC_MSG_RESULT([yes])
     else
-	CFLAGS_DEFAULT="${CFLAGS_OPTIMIZE}"
-	LDFLAGS_DEFAULT="${LDFLAGS_OPTIMIZE}"
+	CFLAGS_DEFAULT='$(CFLAGS_OPTIMIZE)'
+	LDFLAGS_DEFAULT='$(LDFLAGS_OPTIMIZE)'
 	DBGX=""
 	AC_MSG_RESULT([no])
     fi
@@ -321,8 +322,6 @@ AC_DEFUN(SC_ENABLE_SYMBOLS, [
 AC_DEFUN(SC_CONFIG_CFLAGS, [
 
     # Step 0: Enable 64 bit support?
-    # Currently Tk requires no extra flags for 64bit support.
-    # It just needs to find the right compiler, which is up to the user.
 
     AC_MSG_CHECKING([if 64bit support is requested])
     AC_ARG_ENABLE(64bit,[  --enable-64bit          enable 64bit support (where applicable)], [do64bit=$enableval], [do64bit=no])
@@ -345,11 +344,12 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	SHLIB_LD=""
 	SHLIB_LD_LIBS=""
 	LIBS=""
-	LIBS_GUI="-lgdi32 -lcomdlg32"
+	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32"
 	STLIB_LD="${AR}"
 	RC_OUT=-o
 	RC_TYPE=
 	RC_INCLUDE=--include
+	RC_DEFINE=--define
 	RES=res.o
 	MAKE_LIB="\${AR} crv \[$]@"
 	POST_MAKE_LIB="\${RANLIB} \[$]@"
@@ -385,39 +385,21 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    # dynamic
             AC_MSG_RESULT([using shared flags])
 
-	    # check to see if ld supports --shared. Libtool does a much
-	    # more extensive test, but not really needed in this case.
-	    if test -z "$LD"; then
-		ld_prog="`(${CC} -print-prog-name=ld) 2>/dev/null`"
-		if test -z "$ld_prog"; then
-		  ld_prog=ld
-		else
-		  # get rid of the potential '\r' from ld_prog.
-		  ld_prog="`(echo $ld_prog | tr -d '\015' | sed 's,\\\\,\\/,g')`"
-		fi
-		LD="$ld_prog"
+	    # ad-hoc check to see if CC supports -shared.
+	    if "${CC}" -shared 2>&1 | egrep ': -shared not supported' >/dev/null; then
+		AC_MSG_ERROR([${CC} does not support the -shared option.
+                You will need to upgrade to a newer version of the toolchain.])
 	    fi
-
-	    AC_MSG_CHECKING([whether $ld_prog supports -shared option])
-
-	    # now the ad-hoc check to see if GNU ld supports --shared.
-	    if "$LD" --shared 2>&1 | egrep ': -shared not supported' >/dev/null; then
-		ld_supports_shared="no"
-		SHLIB_LD="${DLLWRAP-dllwrap}"
-	    else
-		ld_supports_shared="yes"
-		SHLIB_LD="${CC} -shared"
-	    fi
-	    AC_MSG_RESULT([$ld_supports_shared])
 
 	    runtime=
+	    # Link with gcc since ld does not link to default libs like
+	    # -luser32 and -lmsvcrt by default. Make sure CFLAGS is
+	    # included so -mno-cygwin passed the correct libs to the linker.
+	    SHLIB_LD='${CC} -shared ${CFLAGS}'
 	    # Add SHLIB_LD_LIBS to the Make rule, not here.
-	    MAKE_DLL="\${SHLIB_LD} \$(LDFLAGS) -o \[$]@ ${extra_ldflags}"
-	    if test "${ld_supports_shared}" = "yes"; then
-	        MAKE_DLL="${MAKE_DLL} -Wl,--out-implib,\$(patsubst %.dll,lib%.a,\[$]@)"
-	    else
-	        MAKE_DLL="${MAKE_DLL} --output-lib \$(patsubst %.dll,lib%.a,\[$]@)"
-	    fi
+	    MAKE_DLL="\${SHLIB_LD} \$(LDFLAGS) -o \[$]@ ${extra_ldflags} \
+	        -Wl,--out-implib,\$(patsubst %.dll,lib%.a,\[$]@)"
+
 	    LIBSUFFIX="\${DBGX}.a"
 	    DLLSUFFIX="\${DBGX}.dll"
 	    EXESUFFIX="\${DBGX}.exe"
@@ -429,8 +411,8 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	CFLAGS_DEBUG=-g
 	CFLAGS_OPTIMIZE=-O
 	CFLAGS_WARNING="-Wall -Wconversion"
-	LDFLAGS_DEBUG=-g
-	LDFLAGS_OPTIMIZE=-O
+	LDFLAGS_DEBUG=
+	LDFLAGS_OPTIMIZE=
 
 	# Specify the CC output file names based on the target name
 	CC_OBJNAME="-o \[$]@"
@@ -441,16 +423,17 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	LDFLAGS_CONSOLE="-mconsole ${extra_ldflags}"
 	LDFLAGS_WINDOW="-mwindows ${extra_ldflags}"
     else
-	SHLIB_LD="link -dll -nologo"
+	SHLIB_LD="link -dll -nologo -incremental:no"
 	SHLIB_LD_LIBS="user32.lib advapi32.lib"
 	LIBS="user32.lib advapi32.lib"
-	LIBS_GUI="gdi32.lib comdlg32.lib"
+	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib"
 	AR="lib -nologo"
 	STLIB_LD="lib -nologo"
 	RC="rc"
 	RC_OUT=-fo
 	RC_TYPE=-r
 	RC_INCLUDE=-i
+	RC_DEFINE=-d
 	RES=res
 	MAKE_LIB="\${AR} -out:\[$]@"
 	POST_MAKE_LIB=
@@ -494,6 +477,10 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	# built -- Console vs. Window.
 	LDFLAGS_CONSOLE="-link -subsystem:console"
 	LDFLAGS_WINDOW="-link -subsystem:windows"
+
+	if test "$do64bit" = "yes" ; then
+	    EXTRA_CFLAGS="$EXTRA_CFLAGS -DUSE_TCLALLOC=0"
+	fi
     fi
 ])
 

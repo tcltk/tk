@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.13.4.1 2001/02/28 23:29:56 dgp Exp $
+# RCS: @(#) $Id: text.tcl,v 1.13.4.2 2001/07/03 20:01:09 dgp Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -260,7 +260,7 @@ bind Text <<PasteSelection>> {
     }
 }
 bind Text <Insert> {
-    catch {tk::TextInsert %W [selection get -displayof %W]}
+    catch {tk::TextInsert %W [::tk::GetSelection %W PRIMARY]}
 }
 bind Text <KeyPress> {
     tk::TextInsert %W %A
@@ -582,15 +582,9 @@ proc ::tk::TextSelectTo {w x y {extend 0}} {
 	}
     }
     if {$Priv(mouseMoved) || [string compare $Priv(selectMode) "char"]} {
-	if {[string compare $tcl_platform(platform) "unix"] \
-		&& [$w compare $cur < anchor]} {
-	    $w mark set insert $first
-	} else {
-	    $w mark set insert $last
-	}
-	$w tag remove sel 0.0 $first
+	$w tag remove sel 0.0 end
+	$w mark set insert $cur
 	$w tag add sel $first $last
-	$w tag remove sel $last end
 	update idletasks
     }
 }
@@ -633,7 +627,7 @@ proc ::tk::TextKeyExtend {w index} {
 
 proc ::tk::TextPaste {w x y} {
     $w mark set insert [TextClosestGap $w $x $y]
-    catch {$w insert insert [selection get -displayof $w]}
+    catch {$w insert insert [::tk::GetSelection $w PRIMARY]}
     if {[string equal [$w cget -state] "normal"]} {focus $w}
 }
 
@@ -977,7 +971,7 @@ proc ::tk_textPaste w {
 		$w delete sel.first sel.last
 	    }
 	}
-	$w insert insert [selection get -displayof $w -selection CLIPBOARD]
+	$w insert insert [::tk::GetSelection $w CLIPBOARD]
     }
 }
 

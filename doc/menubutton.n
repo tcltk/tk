@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menubutton.n,v 1.3 2000/08/25 06:58:32 ericm Exp $
+'\" RCS: @(#) $Id: menubutton.n,v 1.3.4.1 2001/07/03 20:01:07 dgp Exp $
 '\" 
 .so man.macros
 .TH menubutton n 4.0 Tk "Tk Built-In Commands"
@@ -26,6 +26,14 @@ menubutton \- Create and manipulate menubutton widgets
 \-disabledforeground	\-padx
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
+.OP \-compound compound Compound
+Specifies whether the menubutton should display both an image and text,
+and if so, where the image should be placed relative to the text.
+Valid values for this option are \fBbottom\fR, \fBcenter\fR,
+\fBleft\fR, \fBnone\fR, \fBright\fR and \fBtop\fR.  The default value
+is \fBnone\fR, meaning that the menubutton will display either an image or
+text, depending on the values of the \fB\-image\fR and \fB\-bitmap\fR
+options.
 .VS
 .OP \-direction direction Height
 Specifies where the menu is going to be popup up. \fBabove\fR tries to
