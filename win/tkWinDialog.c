@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.5 1999/04/21 21:53:32 rjohnson Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.6 2000/02/01 11:41:43 hobbs Exp $
  *
  */
 
@@ -177,6 +177,7 @@ Tk_ChooseColorObjCmd(clientData, interp, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     Tk_Window tkwin, parent;
+    HWND hWnd;
     int i, oldMode, winCode;
     CHOOSECOLOR chooseColor;
     static inited = 0;
@@ -206,11 +207,11 @@ Tk_ChooseColorObjCmd(clientData, interp, objc, objv)
     tkwin = (Tk_Window) clientData;
 
     parent			= tkwin;
-    chooseColor.lStructSize	= sizeof(CHOOSECOLOR) ;
-    chooseColor.hwndOwner	= 0;			
-    chooseColor.hInstance	= 0;
+    chooseColor.lStructSize	= sizeof(CHOOSECOLOR);
+    chooseColor.hwndOwner	= NULL;			
+    chooseColor.hInstance	= NULL;
     chooseColor.rgbResult	= oldColor;
-    chooseColor.lpCustColors	= dwCustColors ;
+    chooseColor.lpCustColors	= dwCustColors;
     chooseColor.Flags		= CC_RGBINIT | CC_FULLOPEN | CC_ENABLEHOOK;
     chooseColor.lCustData	= (LPARAM) NULL;
     chooseColor.lpfnHook	= ColorDlgHookProc;
@@ -263,11 +264,18 @@ Tk_ChooseColorObjCmd(clientData, interp, objc, objv)
     }
 
     Tk_MakeWindowExist(parent);
-    chooseColor.hwndOwner = Tk_GetHWND(Tk_WindowId(parent));
+    chooseColor.hwndOwner = hWnd = Tk_GetHWND(Tk_WindowId(parent));
 
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
     winCode = ChooseColor(&chooseColor);
     (void) Tcl_SetServiceMode(oldMode);
+
+    /*
+     * Ensure that hWnd is enabled, because it can happen that we
+     * have updated the wrapper of the parent, which causes us to
+     * leave this child disabled (Windows loses sync).
+     */
+    EnableWindow(hWnd, 1);
 
     /*
      * Clear the interp result since anything may have happened during the
@@ -436,6 +444,7 @@ GetFileName(clientData, interp, objc, objv, open)
     int result, winCode, oldMode, i;
     char *extension, *filter, *title;
     Tk_Window tkwin;
+    HWND hWnd;
     Tcl_DString utfFilterString, utfDirString;
     Tcl_DString extString, filterString, dirString, titleString;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
@@ -539,9 +548,10 @@ GetFileName(clientData, interp, objc, objv, open)
     }
 
     Tk_MakeWindowExist(tkwin);
+    hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
 
     ofn.lStructSize		= sizeof(ofn);
-    ofn.hwndOwner		= Tk_GetHWND(Tk_WindowId(tkwin));
+    ofn.hwndOwner		= hWnd;
     ofn.hInstance		= (HINSTANCE) GetWindowLong(ofn.hwndOwner, 
 					GWL_HINSTANCE);
     ofn.lpstrFilter		= NULL;
@@ -614,6 +624,13 @@ GetFileName(clientData, interp, objc, objv, open)
     }
     Tcl_SetServiceMode(oldMode);
     SetCurrentDirectory(savePath);
+
+    /*
+     * Ensure that hWnd is enabled, because it can happen that we
+     * have updated the wrapper of the parent, which causes us to
+     * leave this child disabled (Windows loses sync).
+     */
+    EnableWindow(hWnd, 1);
 
     /*
      * Clear the interp result since anything may have happened during the
@@ -877,6 +894,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     ChooseDir cd;
     int result, mustExist, code, mode, i;
     Tk_Window tkwin;
+    HWND hWnd;
     char *utfTitle;
     Tcl_DString utfDirString;
     Tcl_DString titleString, dirString;
@@ -952,11 +970,12 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     }
 
     Tk_MakeWindowExist(tkwin);
+    hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
 
     cd.interp = interp;
 
     ofn.lStructSize		= sizeof(ofn);
-    ofn.hwndOwner		= Tk_GetHWND(Tk_WindowId(tkwin));
+    ofn.hwndOwner		= hWnd;
     ofn.hInstance		= (HINSTANCE) GetWindowLong(ofn.hwndOwner, 
 					GWL_HINSTANCE);
     ofn.lpstrFilter		= NULL;
@@ -1001,6 +1020,13 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     code = GetOpenFileName(&ofn);
     Tcl_SetServiceMode(mode);
     SetCurrentDirectory(savePath);
+
+    /*
+     * Ensure that hWnd is enabled, because it can happen that we
+     * have updated the wrapper of the parent, which causes us to
+     * leave this child disabled (Windows loses sync).
+     */
+    EnableWindow(hWnd, 1);
 
     Tcl_ResetResult(interp);
     if (code != 0) {
@@ -1398,7 +1424,7 @@ Tk_MessageBoxObjCmd(clientData, interp, objc, objv)
 	}
 	flags = buttonFlagMap[defaultBtnIdx];
     }
-    
+
     flags |= icon | type | MB_SYSTEMMODAL;
 
     Tcl_UtfToExternalDString(NULL, message, -1, &messageString);
@@ -1408,6 +1434,13 @@ Tk_MessageBoxObjCmd(clientData, interp, objc, objv)
     winCode = MessageBox(hWnd, Tcl_DStringValue(&messageString),
 		Tcl_DStringValue(&titleString), flags);
     (void) Tcl_SetServiceMode(oldMode);
+
+    /*
+     * Ensure that hWnd is enabled, because it can happen that we
+     * have updated the wrapper of the parent, which causes us to
+     * leave this child disabled (Windows loses sync).
+     */
+    EnableWindow(hWnd, 1);
 
     Tcl_DStringFree(&messageString);
     Tcl_DStringFree(&titleString);

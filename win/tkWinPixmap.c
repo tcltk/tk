@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPixmap.c,v 1.2 1998/09/14 18:24:01 stanton Exp $
+ * RCS: @(#) $Id: tkWinPixmap.c,v 1.3 2000/02/01 11:41:44 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -138,7 +138,7 @@ TkSetPixmapColormap(pixmap, colormap)
  *
  *	Retrieve the geometry of the given drawable.  Note that
  *	this is a degenerate implementation that only returns the
- *	size of a pixmap.
+ *	size of a pixmap or window.
  *
  * Results:
  *	Returns 0.
@@ -163,22 +163,36 @@ XGetGeometry(display, d, root_return, x_return, y_return, width_return,
     unsigned int* depth_return;
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
-    HDC dc;
-    BITMAPINFO info;
 
-    if ((twdPtr->type != TWD_BITMAP) || (twdPtr->bitmap.handle == NULL)) {
-	panic("XGetGeometry: invalid pixmap");
-    }
-    dc = GetDC(NULL);
-    info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    info.bmiHeader.biBitCount = 0;
-    if (!GetDIBits(dc, twdPtr->bitmap.handle, 0, 0, NULL, &info,
-	    DIB_RGB_COLORS)) {
-	panic("XGetGeometry: unable to get bitmap size");
-    }
-    ReleaseDC(NULL, dc);
+    if (twdPtr->type == TWD_BITMAP) {
+	HDC dc;
+	BITMAPINFO info;
 
-    *width_return = info.bmiHeader.biWidth;
-    *height_return = info.bmiHeader.biHeight;
+	if (twdPtr->bitmap.handle == NULL) {
+            panic("XGetGeometry: invalid pixmap");
+        }
+        dc = GetDC(NULL);
+        info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        info.bmiHeader.biBitCount = 0;
+        if (!GetDIBits(dc, twdPtr->bitmap.handle, 0, 0, NULL, &info,
+                DIB_RGB_COLORS)) {
+            panic("XGetGeometry: unable to get bitmap size");
+        }
+        ReleaseDC(NULL, dc);
+
+        *width_return = info.bmiHeader.biWidth;
+        *height_return = info.bmiHeader.biHeight;
+    } else if (twdPtr->type == TWD_WINDOW) {
+	RECT rect;
+
+        if (twdPtr->window.handle == NULL) {
+            panic("XGetGeometry: invalid window");
+        }
+        GetClientRect(twdPtr->window.handle, &rect);
+        *width_return = rect.right - rect.left;
+        *height_return = rect.bottom - rect.top;
+    } else {
+        panic("XGetGeometry: invalid window");
+    }
     return 1;
 }

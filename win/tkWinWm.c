@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.19 2000/01/27 18:03:34 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.20 2000/02/01 11:41:44 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -184,7 +184,7 @@ typedef struct TkWmInfo {
  *				pixels up from bottom of screen, rather than
  *				down from top.
  * WM_UPDATE_SIZE_HINTS -	non-zero means that new size hints need to be
- *				propagated to window manager.
+ *				propagated to window manager. Not used on Win.
  * WM_SYNC_PENDING -		set to non-zero while waiting for the window
  *				manager to respond to some state change.
  * WM_MOVE_PENDING -		non-zero means the application has requested
@@ -815,6 +815,7 @@ UpdateWrapper(winPtr)
 	SetMenu(oldWrapper, NULL);
 	DestroyWindow(oldWrapper);
     }
+
     wmPtr->flags &= ~WM_NEVER_MAPPED;
     SendMessage(wmPtr->wrapper, TK_ATTACHWINDOW, (WPARAM) child, 0);
 
@@ -1054,8 +1055,8 @@ TkWmDeadWindow(winPtr)
 	winPtr->dispPtr->firstWmPtr = wmPtr->nextPtr;
     } else {
 	register WmInfo *prevPtr;
-	for (prevPtr = winPtr->dispPtr->firstWmPtr; ; prevPtr
-		 = prevPtr->nextPtr) {
+	for (prevPtr = winPtr->dispPtr->firstWmPtr; ;
+	     prevPtr = prevPtr->nextPtr) {
 	    if (prevPtr == NULL) {
 		panic("couldn't unlink window in TkWmDeadWindow");
 	    }
@@ -1070,8 +1071,8 @@ TkWmDeadWindow(winPtr)
      * Reset all transient windows whose master is the dead window.
      */
 
-    for (wmPtr2 = winPtr->dispPtr->firstWmPtr; wmPtr2 != NULL; wmPtr2
-	     = wmPtr2->nextPtr) {
+    for (wmPtr2 = winPtr->dispPtr->firstWmPtr; wmPtr2 != NULL;
+	 wmPtr2 = wmPtr2->nextPtr) {
 	if (wmPtr2->masterPtr == winPtr) {
 	    wmPtr2->masterPtr = NULL;
 	    if ((wmPtr2->wrapper != None)
@@ -2268,7 +2269,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    }
 	    if (masterPtr == winPtr) {
 		wmPtr->masterPtr = NULL;
-	    } else {
+	    } else if (masterPtr != wmPtr->masterPtr) {
 		Tk_MakeWindowExist((Tk_Window)masterPtr);
 
 		/*
@@ -2639,11 +2640,6 @@ UpdateGeometryInfo(clientData)
 	return;
     }
 
-    if (wmPtr->flags & WM_UPDATE_SIZE_HINTS) {
-	wmPtr->flags &= ~WM_UPDATE_SIZE_HINTS;
-	UpdateWrapper(winPtr);
-    }
-	   
     /*
      * Compute the border size for the current window style.  This
      * size will include the resize handles, the title bar and the

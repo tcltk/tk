@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.6 1999/12/16 21:59:35 hobbs Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.7 2000/02/01 11:41:44 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1953,7 +1953,14 @@ GetScreenFont(
 
     Tcl_UtfToExternalDString(systemEncoding, faceName, -1, &ds);
 
-    if (platformId == VER_PLATFORM_WIN32_NT) {    
+    /*
+     * We can only store up to LF_FACESIZE characters
+     */
+    if (Tcl_DStringLength(&ds) >= LF_FACESIZE) {
+	Tcl_DStringSetLength(&ds, LF_FACESIZE);
+    }
+
+    if (platformId == VER_PLATFORM_WIN32_NT) {
 	Tcl_UniChar *src, *dst;
 	src = (Tcl_UniChar *) Tcl_DStringValue(&ds);
 	dst = (Tcl_UniChar *) lf.lfFaceName;
