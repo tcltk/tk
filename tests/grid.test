@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.5 1999/11/12 23:55:16 wart Exp $
+# RCS: @(#) $Id: grid.test,v 1.6 1999/11/13 01:23:01 wart Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1208,7 +1208,7 @@ test grid-17.1 {forget and pending idle handlers} {
     grid forget .t.f
     destroy .t
 
-    toplevel .t -geometry +0+0
+    toplevel .t
     frame .t.f
     label .t.f.l -text foobar
     grid .t.f.l
