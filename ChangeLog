@@ -1,3 +1,8 @@
+2005-03-15  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* unix/tcl.m4:    Updated for OpenBSD and regenerated the configure
+	* unix/configure: script
+
 2005-03-11  Jim Ingham  <jingham@apple.com>
 
 	* macosx/tkMacOSXButton.c (TkpDisplayButton): Set the port to
