@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.21 2003/11/15 02:33:50 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.22 2003/11/21 18:51:18 vincentdarley Exp $
  */
 
 #ifndef _TKTEXT
@@ -474,6 +474,12 @@ typedef struct TkTextTab {
 
 typedef struct TkTextTabArray {
     int numTabs;			/* Number of tab stops. */
+    double lastTab;                     /* The accurate fractional pixel 
+                                         * position of the last tab. */
+    double tabIncrement;                /* The accurate fractional pixel
+                                         * increment between interpolated 
+                                         * tabs we have to create when
+                                         * we exceed numTabs. */
     TkTextTab tabs[1];			/* Array of tabs.  The actual size
 					 * will be numTabs.  THIS FIELD MUST
 					 * BE THE LAST IN THE STRUCTURE. */

@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.44 2003/11/15 02:33:50 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.45 2003/11/21 18:51:18 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -3310,6 +3310,7 @@ TkTextGetTabs(interp, tkwin, stringPtr)
     TkTextTabArray *tabArrayPtr;
     TkTextTab *tabPtr;
     Tcl_UniChar ch;
+    double prevStop, lastStop;
 
     /* Map these strings to TkTextTabAlign values */
     
@@ -3342,6 +3343,8 @@ TkTextGetTabs(interp, tkwin, stringPtr)
     tabArrayPtr = (TkTextTabArray *) ckalloc((unsigned)
 	    (sizeof(TkTextTabArray) + (count-1)*sizeof(TkTextTab)));
     tabArrayPtr->numTabs = 0;
+    prevStop = 0.0;
+    lastStop = 0.0;
     for (i = 0, tabPtr = &tabArrayPtr->tabs[0]; i  < objc; i++, tabPtr++) {
 	int index;
 	
@@ -3349,6 +3352,14 @@ TkTextGetTabs(interp, tkwin, stringPtr)
 		!= TCL_OK) {
 	    goto error;
 	}
+	
+	prevStop = lastStop;
+	if (Tk_GetMMFromObj(interp, tkwin, objv[i], &lastStop) != TCL_OK) {
+	    goto error;
+	}
+	lastStop *= WidthOfScreen(Tk_Screen(tkwin));
+	lastStop /= WidthMMOfScreen(Tk_Screen(tkwin));
+	
 	tabArrayPtr->numTabs++;
 
 	/*
@@ -3373,6 +3384,15 @@ TkTextGetTabs(interp, tkwin, stringPtr)
 	}
 	tabPtr->alignment = ((TkTextTabAlign)index);
     }
+    
+    /*
+     * For when we need to interpolate tab stops, store
+     * these two so we know the tab stop size to very
+     * high precision.
+     */
+    tabArrayPtr->lastTab = lastStop;
+    tabArrayPtr->tabIncrement = lastStop - prevStop;
+    
     return tabArrayPtr;
 
     error:

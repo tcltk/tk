@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.34 2003/11/21 17:29:13 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.35 2003/11/21 18:51:18 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -6596,7 +6596,7 @@ AdjustForTab(textPtr, tabArrayPtr, index, chunkPtr)
     int x, desired, delta, width, decimal, i, gotDigit;
     TkTextDispChunk *chunkPtr2, *decimalChunkPtr;
     CharInfo *ciPtr;
-    int tabX, prev, spaceWidth;
+    int tabX, spaceWidth;
     char *p;
     TkTextTabAlign alignment;
 
@@ -6633,15 +6633,10 @@ AdjustForTab(textPtr, tabArrayPtr, index, chunkPtr)
 	 * from the last two tab positions.
 	 */
 
-	if (tabArrayPtr->numTabs > 1) {
-	    prev = tabArrayPtr->tabs[tabArrayPtr->numTabs-2].location;
-	} else {
-	    prev = 0;
-	}
+	tabX = (int) (tabArrayPtr->lastTab 
+		      + (index + 1 - tabArrayPtr->numTabs) 
+		      * tabArrayPtr->tabIncrement + 0.5);
 	alignment = tabArrayPtr->tabs[tabArrayPtr->numTabs-1].alignment;
-	tabX = tabArrayPtr->tabs[tabArrayPtr->numTabs-1].location
-		+ (index + 1 - tabArrayPtr->numTabs)
-		* (tabArrayPtr->tabs[tabArrayPtr->numTabs-1].location - prev);
     }
 
     if (alignment == LEFT) {
@@ -6780,7 +6775,7 @@ SizeOfTab(textPtr, tabArrayPtr, indexPtr, x, maxX)
     int maxX;				/* X-location of pixel just past the
 					 * right edge of the line. */
 {
-    int tabX, prev, result, index, spaceWidth;
+    int tabX, result, index, spaceWidth;
     TkTextTabAlign alignment;
     
     index = *indexPtr;
@@ -6796,7 +6791,7 @@ SizeOfTab(textPtr, tabArrayPtr, indexPtr, x, maxX)
 
     do {
 	/* 
-	 * We were given the count before this tabs, so increment it
+	 * We were given the count before this tab, so increment it
 	 * first.
 	 */
 	index++;
@@ -6805,18 +6800,12 @@ SizeOfTab(textPtr, tabArrayPtr, indexPtr, x, maxX)
 	    alignment = tabArrayPtr->tabs[index].alignment;
 	} else {
 	    /*
-	     * Ran out of tab stops;  compute a tab position by extrapolating
-	     * from the last two tab positions.
+	     * Ran out of tab stops; compute a tab position by
+	     * extrapolating.
 	     */
-	    
-	    if (tabArrayPtr->numTabs > 1) {
-		prev = tabArrayPtr->tabs[tabArrayPtr->numTabs-2].location;
-	    } else {
-		prev = 0;
-	    }
-	    tabX = tabArrayPtr->tabs[tabArrayPtr->numTabs-1].location
-	      + (index + 1 - tabArrayPtr->numTabs)
-	      * (tabArrayPtr->tabs[tabArrayPtr->numTabs-1].location - prev);
+	    tabX = (int) (tabArrayPtr->lastTab 
+			  + (index + 1 - tabArrayPtr->numTabs) 
+			  * tabArrayPtr->tabIncrement + 0.5);
 	    alignment = tabArrayPtr->tabs[tabArrayPtr->numTabs-1].alignment;
 	}
 	/* 
