@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# SCCS: %Z% $Id: makefile.vc,v 1.7 1998/07/28 17:42:20 welch Exp $ 
+# SCCS: %Z% $Id: makefile.vc,v 1.8 1998/07/29 13:14:52 escoffon Exp $ 
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -302,7 +302,7 @@ $(TKLIB): $(TKDLL)
 
 $(TKDLL): $(TKOBJS) $(TMPDIR)\tk.res $(TMPDIR)\tk.def
 	set LIB=$(TOOLS32)\lib
-        $(link32) $(ldebug) $(dlllflags) -def:$(TMPDIR)\tk.def \
+       $(link32) $(ldebug) $(dlllflags) -def:$(TMPDIR)\tk.def \
 		-out:$@ $(TMPDIR)\tk.res $(TCLLIBDIR)\$(TCLLIB) \
 		$(guilibsdll) @<<
 			$(TKOBJS)
@@ -357,21 +357,33 @@ $(DUMPEXTS): $(TCLDIR)\win\winDumpExts.c
 $(TMPDIR)\testMain.obj: $(ROOT)\win\winMain.c
 	$(cc32) $(TK_CFLAGS) -DTK_TEST -Fo$@ $?
 
+$(TMPDIR)\tkConsole.obj: $(ROOT)\generic\tkConsole.c
+	$(cc32) $(TK_CFLAGS) -Fo$@ $?
+
+$(TMPDIR)\tkTest.obj: $(ROOT)\generic\tkTest.c
+	$(cc32) $(TK_CFLAGS) -Fo$@ $?
+
+$(TMPDIR)\tkSquare.obj: $(ROOT)\generic\tkSquare.c
+	$(cc32) $(TK_CFLAGS) -Fo$@ $?
+
+$(TMPDIR)\winMain.obj: $(ROOT)\win\winMain.c
+	$(cc32) $(TK_CFLAGS) -Fo$@ $?
+
 #
 # Implicit rules
 #
 
 {$(XLIBDIR)}.c{$(TMPDIR)}.obj:
-	$(cc32) $(TK_CFLAGS) -Fo$(TMPDIR)\ $<
+	$(cc32) -DDLL_BUILD -DBUILD_tk $(TK_CFLAGS) -Fo$(TMPDIR)\ $<
 
 {$(GENERICDIR)}.c{$(TMPDIR)}.obj:
-	$(cc32) $(TK_CFLAGS) -Fo$(TMPDIR)\ $<
+	$(cc32) -DDLL_BUILD -DBUILD_tk $(TK_CFLAGS) -Fo$(TMPDIR)\ $<
 
 {$(WINDIR)}.c{$(TMPDIR)}.obj:
-	$(cc32) $(TK_CFLAGS) -Fo$(TMPDIR)\ $<
+	$(cc32) -DDLL_BUILD -DBUILD_tk $(TK_CFLAGS) -Fo$(TMPDIR)\ $<
 
 {$(ROOT)\unix}.c{$(TMPDIR)}.obj:
-	$(cc32) $(TK_CFLAGS) -Fo$(TMPDIR)\ $<
+	$(cc32) -DDLL_BUILD -DBUILD_tk $(TK_CFLAGS) -Fo$(TMPDIR)\ $<
 
 {$(RCDIR)}.rc{$(TMPDIR)}.res:
 	$(rc32) -fo $@ -r -i $(GENERICDIR) $<
