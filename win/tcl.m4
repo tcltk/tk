@@ -83,8 +83,7 @@ AC_DEFUN(SC_PATH_TKCONFIG, [
 #------------------------------------------------------------------------
 # SC_LOAD_TCLCONFIG --
 #
-#	Load the tclConfig.sh file
-#	Currently a no-op for Windows
+#	Load the tclConfig.sh file.
 #
 # Arguments:
 #	
@@ -148,6 +147,8 @@ AC_DEFUN(SC_LOAD_TCLCONFIG, [
     AC_SUBST(TCL_STUB_LIB_FILE)
     AC_SUBST(TCL_STUB_LIB_FLAG)
     AC_SUBST(TCL_STUB_LIB_SPEC)
+
+    AC_SUBST(TCL_DEFS)
 ])
 
 #------------------------------------------------------------------------
@@ -253,6 +254,9 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 	AC_MSG_RESULT(yes)
 	TCL_THREADS=1
 	AC_DEFINE(TCL_THREADS)
+	# USE_THREAD_ALLOC tells us to try the special thread-based
+	# allocator that significantly reduces lock contention
+	AC_DEFINE(USE_THREAD_ALLOC)
     else
 	TCL_THREADS=0
 	AC_MSG_RESULT([no (default)])
@@ -264,6 +268,8 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 # SC_ENABLE_SYMBOLS --
 #
 #	Specify if debugging symbols should be used
+#	Memory (TCL_MEM_DEBUG) and compile (TCL_COMPILE_DEBUG) debugging
+#	can also be enabled.
 #
 # Arguments:
 #	none
@@ -310,9 +316,14 @@ AC_DEFUN(SC_ENABLE_SYMBOLS, [
 	AC_DEFINE(TCL_MEM_DEBUG)
     fi
 
+    if test "$tcl_ok" = "compile" -o "$tcl_ok" = "all"; then
+	AC_DEFINE(TCL_COMPILE_DEBUG)
+	AC_DEFINE(TCL_COMPILE_STATS)
+    fi
+
     if test "$tcl_ok" != "yes" -a "$tcl_ok" != "no"; then
 	if test "$tcl_ok" = "all"; then
-	    AC_MSG_RESULT([enabled symbols mem debugging])
+	    AC_MSG_RESULT([enabled symbols mem compile debugging])
 	else
 	    AC_MSG_RESULT([enabled $tcl_ok debugging])
 	fi
@@ -694,7 +705,12 @@ AC_DEFUN(SC_PROG_TCLSH, [
     ])
 
     if test -f "$ac_cv_path_tclsh" ; then
-	TCLSH_PROG=$ac_cv_path_tclsh
+	TCLSH_PROG="$ac_cv_path_tclsh"
+	AC_MSG_RESULT($TCLSH_PROG)
+    elif test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
+	# One-tree build.
+	ac_cv_path_tclsh="$TCL_BIN_DIR/tclsh"
+	TCLSH_PROG="$ac_cv_path_tclsh"
 	AC_MSG_RESULT($TCLSH_PROG)
     else
 	AC_MSG_ERROR(No tclsh found in PATH:  $search_path)
