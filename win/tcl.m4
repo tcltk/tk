@@ -257,6 +257,9 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 	# USE_THREAD_ALLOC tells us to try the special thread-based
 	# allocator that significantly reduces lock contention
 	AC_DEFINE(USE_THREAD_ALLOC)
+	# USE_THREAD_STORAGE tells us to use the new generic thread 
+	# storage subsystem. 
+	AC_DEFINE(USE_THREAD_STORAGE)
     else
 	TCL_THREADS=0
 	AC_MSG_RESULT([no (default)])
@@ -516,7 +519,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	EXTRA_CFLAGS="${extra_cflags}"
 
 	CFLAGS_DEBUG=-g
-	CFLAGS_OPTIMIZE=-O
+	CFLAGS_OPTIMIZE="-O2 -fomit-frame-pointer"
 	CFLAGS_WARNING="-Wall -Wconversion"
 	LDFLAGS_DEBUG=
 	LDFLAGS_OPTIMIZE=
@@ -592,17 +595,20 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	-I${MSSDK}/Include"
 	    RC="${MSSDK}/bin/rc.exe"
 	    CFLAGS_DEBUG="-nologo -Zi -Od ${runtime}d"
-	    CFLAGS_OPTIMIZE="-nologo -O2 -Gs ${runtime}"
+	    CFLAGS_OPTIMIZE="-nologo -O2 ${runtime}"
 	    lflags="-MACHINE:IA64 -LIBPATH:${MSSDK}/Lib/IA64 \
 	-LIBPATH:${MSSDK}/Lib/Prerelease/IA64"
 	    STLIB_LD="${MSSDK}/bin/win64/lib.exe -nologo ${lflags}"
 	    LINKBIN="${MSSDK}/bin/win64/link.exe ${lflags}"
 	else
 	    RC="rc"
+	    # -Od - no optimization
+	    # -WX - warnings as errors
 	    CFLAGS_DEBUG="-nologo -Z7 -Od -WX ${runtime}d"
-	    CFLAGS_OPTIMIZE="-nologo -Oti -Gs -GD ${runtime}"
-	    STLIB_LD="lib -nologo"
-	    LINKBIN="link -link50compat"
+	    # -O2 - create fast code (/Og /Oi /Ot /Oy /Ob2 /Gs /GF /Gy)
+	    CFLAGS_OPTIMIZE="-nologo -O2 ${runtime}"
+	    STLIB_LD="link -lib -nologo"
+	    LINKBIN="link"
 	fi
 
 	SHLIB_LD="${LINKBIN} -dll -nologo -incremental:no"
@@ -618,7 +624,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	MAKE_EXE="\${CC} -Fe\[$]@"
 	LIBPREFIX=""
 
-	EXTRA_CFLAGS="-YX"
+	EXTRA_CFLAGS=""
 	CFLAGS_WARNING="-W3"
 	LDFLAGS_DEBUG="-debug:full -debugtype:both"
 	LDFLAGS_OPTIMIZE="-release"
