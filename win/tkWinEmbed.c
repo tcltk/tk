@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.7 2002/08/05 04:30:41 dgp Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.7.2.1 2004/10/27 00:37:38 davygrvy Exp $
  */
 
 #include "tkWinInt.h"
@@ -208,7 +208,7 @@ TkpUseWindow(interp, tkwin, string)
      */
 
     if (tsdPtr->firstContainerPtr == (Container *) NULL) {
-        Tcl_CreateExitHandler(CleanupContainerList, (ClientData) NULL);
+        TkCreateExitHandler(CleanupContainerList, (ClientData) NULL);
     }
     
     /*
@@ -284,7 +284,7 @@ TkpMakeContainer(tkwin)
      */
 
     if (tsdPtr->firstContainerPtr == (Container *) NULL) {
-        Tcl_CreateExitHandler(CleanupContainerList, (ClientData) NULL);
+        TkCreateExitHandler(CleanupContainerList, (ClientData) NULL);
     }
     
     /*
@@ -385,11 +385,13 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
      */
 
     for (containerPtr = tsdPtr->firstContainerPtr;
-	    containerPtr->parentHWnd != hwnd;
+	    containerPtr && containerPtr->parentHWnd != hwnd;
 	    containerPtr = containerPtr->nextPtr) {
-	if (containerPtr == NULL) {
-	    panic("TkWinContainerProc couldn't find Container record");
-	}
+	/* empty loop body */
+    }
+
+    if (containerPtr == NULL) {
+	Tcl_Panic("TkWinContainerProc couldn't find Container record");
     }
 
     switch (message) {
