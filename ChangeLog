@@ -1,5 +1,9 @@
 2004-05-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* unix/tkUnixButton.c (TkpDrawCheckIndicator): allow radiobuttons
+	to be drawn when disabledforeground and/or selectcolor are NULL.
+	[Bug #826850] (griffin)
+
 	* win/tkWinMenu.c, unix/tkUnixMenu.c (DrawMenuEntryLabel): place
 	images of compound menu entries in indicator space if not a radio
 	of checkbutton. [Bug #756952] (eserte)
