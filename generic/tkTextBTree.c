@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.9 2003/11/07 15:36:26 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.10 2003/11/08 17:22:46 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -2682,13 +2682,22 @@ TkBTreeGetTags(indexPtr, numTagsPtr)
  * TkTextIsElided --
  *
  *	Special case to just return information about elided attribute.
- *	Specialized from TkBTreeGetTags(indexPtr, numTagsPtr)
- *	and GetStyle(textPtr, indexPtr).
- *	Just need to keep track of invisibility settings for each priority,
- *	pick highest one active at end
+ *	Specialized from TkBTreeGetTags(indexPtr, numTagsPtr) and
+ *	GetStyle(textPtr, indexPtr).  Just need to keep track of
+ *	invisibility settings for each priority, pick highest one active
+ *	at end.
+ *	
+ *	Note that this returns all elide information up to and including
+ *	the given index (quite obviously).  However, this does mean that
+ *	indexPtr is a line-start and one then iterates from the beginning
+ *	of that line forwards, one will actually revisit the segPtrs of
+ *	size zero (for tag toggling, for example) which have already been
+ *	seen here.
  *
  * Results:
  *	Returns whether this text should be elided or not.
+ *	
+ *	Optionally returns more detailed information in elideInfo.
  *
  * Side effects:
  *	None.
@@ -2754,6 +2763,11 @@ TkTextIsElided(textPtr, indexPtr, elideInfo)
 	    }
 	}
     }
+    /* 
+     * Store the first segPtr we haven't examined completely
+     * so that our caller knows where to start.
+     */
+    infoPtr->segPtr = segPtr;
 
     /*
      * Record toggles for tags in lines that are predecessors of
@@ -2817,6 +2831,7 @@ TkTextIsElided(textPtr, indexPtr, elideInfo)
 	    }
 #endif
 	    infoPtr->elide = infoPtr->tagPtrs[i]->elide;
+	    /* Note: i == infoPtr->tagPtrs[i]->priority */
 	    infoPtr->elidePriority = i;
 	    break;
 	}
