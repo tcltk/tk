@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.5 2000/09/30 18:46:04 drh Exp $
+# RCS: @(#) $Id: menu.test,v 1.5.4.1 2001/02/28 23:29:56 dgp Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1066,20 +1066,20 @@ test menu-5.6 {DestroyMenuInstance - cascades of cloned menus} {
 test menu-5.7 {DestroyMenuInstance - basic clones} {
     catch {destroy .m1}
     menu .m1
-    set tearoff [tkTearOffMenu .m1]
+    set tearoff [tk::TearOffMenu .m1]
     list [catch {destroy $tearoff} msg] $msg [destroy .m1]
 } {0 {} {}}
 test menu-5.8 {DestroyMenuInstance - multiple clones} {
     catch {destroy .m1}
     menu .m1
-    set tearoff1 [tkTearOffMenu .m1]
-    set tearoff2 [tkTearOffMenu .m1]
+    set tearoff1 [tk::TearOffMenu .m1]
+    set tearoff2 [tk::TearOffMenu .m1]
     list [catch {destroy $tearoff1} msg] $msg [destroy .m1]
 } {0 {} {}}
 test menu-5.9 {DestroyMenuInstace - master menu} {
     catch {destroy .m1}
     menu .m1
-    tkTearOffMenu .m1
+    tk::TearOffMenu .m1
     list [catch {destroy .m1} msg] $msg
 } {0 {}}
 test menu-5.10 {DestroyMenuInstance - freeing entries} {
@@ -1105,7 +1105,7 @@ test menu-5.13 {DestroyMenuInstance - clones when mismatched tearoffs} {
     menu .m1
     menu .m2
     .m1 add cascade -menu .m2
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [destroy .m2] [destroy .m1]
 } {{} {}}
 
@@ -1899,7 +1899,7 @@ test menu-16.16 {MenuAddOrInsert} {
     catch {destroy .m2}
     menu .m1
     menu .m2
-    set tearoff [tkTearOffMenu .m2]
+    set tearoff [tk::TearOffMenu .m2]
     list [catch {.m2 add cascade -menu .m1} msg] $msg [$tearoff unpost] [catch {destroy .m1} msg2] $msg2 [catch {destroy .m2} msg3] $msg3
 } {0 {} {} 0 {} 0 {}}
 test menu-16.17 {MenuAddOrInsert} {
@@ -1908,7 +1908,7 @@ test menu-16.17 {MenuAddOrInsert} {
     menu .m1
     menu .container
     . configure -menu .container
-    set tearoff [tkTearOffMenu .container]
+    set tearoff [tk::TearOffMenu .container]
     list [catch {.container add cascade -label "File" -menu .m1} msg] $msg [. configure -menu ""] [destroy .m1 .container]
 } {0 {} {} {}}
 test menu-16.18 {MenuAddOrInsert} {

@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixMenu.test,v 1.4 1999/05/25 20:40:54 stanton Exp $
+# RCS: @(#) $Id: unixMenu.test,v 1.4.14.1 2001/02/28 23:29:56 dgp Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -88,13 +88,13 @@ test unixMenu-8.1 {GetMenuIndicatorGeometry - indicator off} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label foo -indicatoron 0
-    list [catch {tkTearOffMenu .m1 40 40}] [destroy .m1]
+    list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
 test unixMenu-8.2 {GetMenuIndicatorGeometry - not checkbutton or radio} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
-    list [catch {tkTearOffMenu .m1 40 40}] [destroy .m1]
+    list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
 test unixMenu-8.3 {GetMenuIndicatorGeometry - checkbutton image} {
     catch {destroy .m1}
@@ -103,21 +103,21 @@ test unixMenu-8.3 {GetMenuIndicatorGeometry - checkbutton image} {
     image create test image1
     .m1 add checkbutton -image image1 -label foo
     .m1 invoke foo
-    list [catch {tkTearOffMenu .m1 40 40}] [destroy .m1] [image delete image1]
+    list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1] [image delete image1]
 } {0 {} {}}
 test unixMenu-8.4 {GetMenuIndicatorGeometry - checkbutton bitmap} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -bitmap questhead -label foo
     .m1 invoke foo
-    list [catch {tkTearOffMenu .m1 40 40}] [destroy .m1]
+    list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
 test unixMenu-8.5 {GetMenuIndicatorGeometry - checkbutton} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label foo
     .m1 invoke foo
-    list [catch {tkTearOffMenu .m1 40 40}] [destroy .m1]
+    list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
 test unixMenu-8.6 {GetMenuIndicatorGeometry - radiobutton image} {
     catch {destroy .m1}
@@ -126,47 +126,47 @@ test unixMenu-8.6 {GetMenuIndicatorGeometry - radiobutton image} {
     image create test image1
     .m1 add radiobutton -image image1 -label foo
     .m1 invoke foo
-    list [catch {tkTearOffMenu .m1 40 40}] [destroy .m1] [image delete image1]
+    list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1] [image delete image1]
 } {0 {} {}}
 test unixMenu-8.7 {GetMenuIndicatorGeometry - radiobutton bitmap} {
     catch {destroy .m1}
     menu .m1
     .m1 add radiobutton -bitmap questhead -label foo
     .m1 invoke foo
-    list [catch {tkTearOffMenu .m1 40 40}] [destroy .m1]
+    list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
 test unixMenu-8.8 {GetMenuIndicatorGeometry - radiobutton} {
     catch {destroy .m1}
     menu .m1
     .m1 add radiobutton -label foo
     .m1 invoke foo
-    list [catch {tkTearOffMenu .m1 40 40}] [destroy .m1]
+    list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
 test unixMenu-8.9 {GetMenuIndicatorGeometry - hideMargin} {
     catch {destroy .m1}
     menu .m1
     .m1 add radiobutton -label foo -hidemargin 1
     .m1 invoke foo
-    list [catch {tkTearOffMenu .m1 40 40}] [destroy .m1]
+    list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
 
 test unixMenu-9.1 {GetMenuAccelGeometry - cascade entry} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -label foo
-    list [catch {tkTearOffMenu .m1 40 40}] [destroy .m1]
+    list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
 test unixMenu-9.2 {GetMenuAccelGeometry - non-null label} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -accel "Ctrl+S"
-    list [catch {tkTearOffMenu .m1 40 40}] [destroy .m1]
+    list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
 test unixMenu-9.3 {GetMenuAccelGeometry - null label} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
-    list [catch {tkTearOffMenu .m1 40 40}] [destroy .m1]
+    list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
 
 test unixMenu-10.1 {DrawMenuEntryBackground - active menubar} {
@@ -181,7 +181,7 @@ test unixMenu-10.2 {DrawMenuEntryBackground - active} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     $tearoff activate 0
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
@@ -189,7 +189,7 @@ test unixMenu-10.3 {DrawMenuEntryBackground - non-active} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 
@@ -205,21 +205,21 @@ test unixMenu-11.2 {DrawMenuEntryAccelerator - cascade entry} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 test unixMenu-11.3 {DrawMenuEntryAccelerator - normal entry} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -accel "Ctrl+U"
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 test unixMenu-11.4 {DrawMenuEntryAccelerator - null entry} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 
@@ -227,21 +227,21 @@ test unixMenu-12.1 {DrawMenuEntryIndicator - non-check or radio} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 test unixMenu-12.2 {DrawMenuEntryIndicator - checkbutton - indicator off} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label foo -indicatoron 0
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 test unixMenu-12.3 {DrawMenuEntryIndicator - checkbutton - not selected} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 test unixMenu-12.4 {DrawMenuEntryIndicator - checkbutton - selected} {
@@ -249,21 +249,21 @@ test unixMenu-12.4 {DrawMenuEntryIndicator - checkbutton - selected} {
     menu .m1
     .m1 add checkbutton -label foo
     .m1 invoke 1
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 test unixMenu-12.5 {DrawMenuEntryIndicator - radiobutton - indicator off} {
     catch {destroy .m1}
     menu .m1
     .m1 add radiobutton -label foo -indicatoron 0
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 test unixMenu-12.6 {DrawMenuEntryIndicator - radiobutton - not selected} {
     catch {destroy .m1}
     menu .m1
     .m1 add radiobutton -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 test unixMenu-12.7 {DrawMenuEntryIndicator - radiobutton - selected} {
@@ -271,7 +271,7 @@ test unixMenu-12.7 {DrawMenuEntryIndicator - radiobutton - selected} {
     menu .m1
     .m1 add radiobutton -label foo
     .m1 invoke 1
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 
@@ -286,7 +286,7 @@ test unixMenu-13.2 {DrawMenuSepartor - normal menu} {
     catch {destroy .m1}
     menu .m1
     .m1 add separator
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 
@@ -294,7 +294,7 @@ test unixMenu-14.1 {DrawMenuEntryLabel} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 
@@ -309,7 +309,7 @@ test unixMenu-15.2 {DrawMenuUnderline - no menubar} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -underline 0
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 
@@ -317,14 +317,14 @@ test unixMenu-16.1 {TkpPostMenu} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
-    list [catch {tkTearOffMenu .m1 40 40}] [destroy .m1]
+    list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
 
 test unixMenu-17.1 {GetMenuSeparatorGeometry} {
     catch {destroy .m1}
     menu .m1
     .m1 add separator
-    list [catch {tkTearOffMenu .m1 40 40}] [destroy .m1]
+    list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
 
 test unixMenu-18.1 {GetTearoffEntryGeometry} {
@@ -334,7 +334,7 @@ test unixMenu-18.1 {GetTearoffEntryGeometry} {
     .mb.m add command -label test
     pack .mb
     raise .
-    list [catch {tkMbPost .mb} msg] $msg [tkMenuUnpost .mb.m] [destroy .mb]
+    list [catch {tk::MbPost .mb} msg] $msg [tk::MenuUnpost .mb.m] [destroy .mb]
 } {0 {} {} {}}
 
 # Don't know how to reproduce the case where the tkwin has been deleted.
@@ -624,7 +624,7 @@ test unixMenu-23.1 {TkpDrawMenuEntry - gc for active and not strict motif} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } {{} {}}
@@ -632,7 +632,7 @@ test unixMenu-23.2 {TkpDrawMenuEntry - gc for active menu item with its own gc} 
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -activeforeground red
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } {{} {}}
@@ -641,7 +641,7 @@ test unixMenu-23.3 {TkpDrawMenuEntry - gc for active and strict motif} {
     menu .m1
     set tk_strictMotif 1
     .m1 add command -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1] [set tk_strictMotif 0]
 } {{} {} 0}
@@ -649,35 +649,35 @@ test unixMenu-23.4 {TkpDrawMenuEntry - gc for disabled with disabledfg and custo
     catch {destroy .m1}
     menu .m1 -disabledforeground blue
     .m1 add command -label foo -state disabled -background red
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
 test unixMenu-23.5 {TkpDrawMenuEntry - gc for disabled with disabledFg} {
     catch {destroy .m1}
     menu .m1 -disabledforeground blue
     .m1 add command -label foo -state disabled
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
 test unixMenu-23.6 {TkpDrawMenuEntry - gc for disabled - no disabledFg} {
     catch {destroy .m1}
     menu .m1 -disabledforeground ""
     .m1 add command -label foo -state disabled
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
 test unixMenu-23.7 {TkpDrawMenuEntry - gc for normal - custom entry} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -foreground red
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
 test unixMenu-23.8 {TkpDrawMenuEntry - gc for normal} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
 test unixMenu-23.9 {TkpDrawMenuEntry - gc for indicator - custom entry} {
@@ -685,7 +685,7 @@ test unixMenu-23.9 {TkpDrawMenuEntry - gc for indicator - custom entry} {
     menu .m1
     .m1 add checkbutton -label foo -selectcolor orange
     .m1 invoke 1
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
 test unixMenu-23.10 {TkpDrawMenuEntry - gc for indicator} {
@@ -693,14 +693,14 @@ test unixMenu-23.10 {TkpDrawMenuEntry - gc for indicator} {
     menu .m1
     .m1 add checkbutton -label foo
     .m1 invoke 1
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
 test unixMenu-23.11 {TkpDrawMenuEntry - border - custom entry} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -activebackground green
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } {{} {}}
@@ -708,7 +708,7 @@ test unixMenu-23.12 {TkpDrawMenuEntry - border} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } {{} {}}
@@ -717,7 +717,7 @@ test unixMenu-23.13 {TkpDrawMenuEntry - active border - strict motif} {
     set tk_strictMotif 1
     menu .m1
     .m1 add command -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1] [set tk_strictMotif 0]
 } {{} {} 0}
@@ -725,7 +725,7 @@ test unixMenu-23.14 {TkpDrawMenuEntry - active border - custom entry} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -activeforeground yellow
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } {{} {}}
@@ -733,7 +733,7 @@ test unixMenu-23.15 {TkpDrawMenuEntry - active border} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } {{} {}}
@@ -741,28 +741,28 @@ test unixMenu-23.16 {TkpDrawMenuEntry - font - custom entry} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -font "Helvectica 72"
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
 test unixMenu-23.17 {TkpDrawMenuEntry - font} {
     catch {destroy .m1}
     menu .m1 -font "Courier 72"
     .m1 add command -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
 test unixMenu-23.18 {TkpDrawMenuEntry - separator} {
     catch {destroy .m1}
     menu .m1
     .m1 add separator
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
 test unixMenu-23.19 {TkpDrawMenuEntry - standard} {
     catch {destroy .mb}
     menu .m1
     .m1 add command -label foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
 test unixMenu-23.20 {TkpDrawMenuEntry - disabled cascade item} {
@@ -772,7 +772,7 @@ test unixMenu-23.20 {TkpDrawMenuEntry - disabled cascade item} {
     menu .m1.file
     .m1.file add command -label foo
     .m1 entryconfigure File -state disabled
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
 test unixMenu-23.21 {TkpDrawMenuEntry - indicator} {
@@ -780,7 +780,7 @@ test unixMenu-23.21 {TkpDrawMenuEntry - indicator} {
     menu .m1
     .m1 add checkbutton -label Foo
     .m1 invoke Foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
 test unixMenu-23.22 {TkpDrawMenuEntry - hide margin} {
@@ -788,7 +788,7 @@ test unixMenu-23.22 {TkpDrawMenuEntry - hide margin} {
     menu .m1
     .m1 add checkbutton -label Foo -hidemargin 1
     .m1 invoke Foo
-    set tearoff [tkTearOffMenu .m1 40 40]
+    set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
 
@@ -849,8 +849,8 @@ test unixMenu-25.5 {TkpComputeStandardMenuGeometry - tearoff entry} {unixOnly} {
     menu .mb.m
     .mb.m add command -label test
     pack .mb
-    catch {tkMbPost .mb}
-    list [update] [tkMenuUnpost .mb.m] [destroy .mb]
+    catch {tk::MbPost .mb}
+    list [update] [tk::MenuUnpost .mb.m] [destroy .mb]
 } {{} {} {}}
 test unixMenu-25.6 {TkpComputeStandardMenuGeometry - standard label geometry} {
     catch {destroy .m1}

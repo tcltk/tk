@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: tkvars.n,v 1.2 1998/09/14 18:23:00 stanton Exp $
+'\" RCS: @(#) $Id: tkvars.n,v 1.2.22.1 2001/02/28 23:29:55 dgp Exp $
 '\" 
 .so man.macros
 .TH tkvars n 4.1 Tk "Tk Built-In Commands"
@@ -44,9 +44,9 @@ Contains a decimal integer giving the current patch level for Tk.
 The patch level is incremented for each new release or patch, and
 it uniquely identifies an official version of Tk.
 .TP
-\fBtkPriv\fR
+\fBtk::Priv\fR
 This variable is an array containing several pieces of information
-that are private to Tk.  The elements of \fBtkPriv\fR are used by
+that are private to Tk.  The elements of \fBtk::Priv\fR are used by
 Tk library procedures and default bindings.
 They should not be accessed by any code outside Tk.
 .TP
