@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.45 2000/06/03 08:58:15 hobbs Exp $
+ * RCS: @(#) $Id: tk.h,v 1.46 2000/08/03 21:14:30 ericm Exp $
  */
 
 #ifndef _TK
@@ -1298,7 +1298,6 @@ EXTERN void		Tk_CreateOldPhotoImageFormat _ANSI_ARGS_((
 
 /* Additional stuff that has moved to Tcl: */
 
-#define Tk_AfterCmd		Tcl_AfterCmd
 #define Tk_EventuallyFree	Tcl_EventuallyFree
 #define Tk_FreeProc		Tcl_FreeProc
 #define Tk_Preserve		Tcl_Preserve
