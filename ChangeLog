@@ -1,3 +1,16 @@
+2005-02-28  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinX.c (GenerateXEvent): correct %A translation on
+	MouseWheel [Bug 1118340]
+
+2005-02-25  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tkUnixFont.c (FontMapLoadPage): swap decl of char arrays to
+	avoid aligment issues in Tcl_UtfToExternal. [Bug 1122671]
+
+	* unix/configure, unix/configure.in: add AC_C_BIGENDIAN check
+	which defines WORDS_BIGENDIAN on BE machines.
+
 2005-02-24  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSX.h: fixed incorrect inclusion of internal header.
