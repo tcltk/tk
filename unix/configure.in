@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 AC_INIT(../generic/tk.h)
-# RCS: @(#) $Id: configure.in,v 1.21 1998/10/14 00:59:15 rjohnson Exp $
+# RCS: @(#) $Id: configure.in,v 1.22 1998/10/20 20:02:38 rjohnson Exp $
 
 TK_VERSION=8.0
 TK_MAJOR_VERSION=8
@@ -85,6 +85,7 @@ DL_LIBS=$TCL_DL_LIBS
 LD_FLAGS=$TCL_LD_FLAGS
 CFLAGS_DEBUG=$TCL_CFLAGS_DEBUG
 CFLAGS_OPTIMIZE=$TCL_CFLAGS_OPTIMIZE
+EXTRA_CFLAGS=$TCL_EXTRA_CFLAGS
 
 LIB_RUNTIME_DIR='${LIB_RUNTIME_DIR}'
 
@@ -411,6 +412,7 @@ AC_SUBST(CFLAGS_OPTIMIZE)
 AC_SUBST(CFLAGS_WARNING)
 AC_SUBST(TK_DBGX)
 AC_SUBST(DL_LIBS)
+AC_SUBST(EXTRA_CFLAGS)
 AC_SUBST(LD_FLAGS)
 AC_SUBST(MATH_LIBS)
 AC_SUBST(MAKE_LIB)

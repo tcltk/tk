@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.24 1998/10/16 00:46:18 rjohnson Exp $
+RCS: @(#) $Id: changes,v 1.25 1998/10/20 20:02:36 rjohnson Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4271,3 +4271,9 @@ for submitting this improvement.  (RJ)
 not allow the empty string as an argument (meaning transparent) even
 though every other item type did.  Thanks to Sebastian Wangnick
 <sebastian.wangnick@eurocontrol.be> for supplying this patch. (RJ)
+
+10/20/98 (feature change) The Makefile and configure scripts have been
+changed for IRIX to build n32 binaries instead of the old 32 abi
+format.  If you have extensions built with the o32 abi's you will need
+to update them to n32 for them to work with Tcl.  (RJ)
+*** POTENTIAL INCOMPATIBILITY ***
