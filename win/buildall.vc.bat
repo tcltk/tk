@@ -4,7 +4,7 @@
 ::  edit this (or make your own) for your needs and wants using
 ::  the instructions for calling makefile.vc found in makefile.vc
 ::
-::  RCS: @(#) $Id: buildall.vc.bat,v 1.4 2002/11/04 07:49:43 davygrvy Exp $
+::  RCS: @(#) $Id: buildall.vc.bat,v 1.5 2004/03/09 03:35:08 davygrvy Exp $
 
 echo Sit back and have a cup of coffee while this grinds through ;)
 echo You asked for *everything*, remember?
@@ -12,8 +12,8 @@ echo.
 
 title Building Tk, please wait...
 
-if "%MSVCDir%" == "" call c:\dev\devstudio60\vc98\bin\vcvars32.bat
-::if "%MSVCDir%" == "" call "C:\Program Files\Microsoft Developer Studio\vc98\bin\vcvars32.bat"
+if "%MSDevDir%" == "" call c:\dev\devstudio60\vc98\bin\vcvars32.bat
+::if "%MSDevDir%" == "" call "C:\Program Files\Microsoft Developer Studio\vc98\bin\vcvars32.bat"
 
 set INSTALLDIR=C:\Program Files\Tcl
 
