@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.9 2001/10/12 13:30:31 tmh Exp $
+# RCS: @(#) $Id: menu.test,v 1.10 2001/11/17 22:35:50 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -2426,7 +2426,8 @@ test menu-32.7 {DeleteMenuCloneEntries - one entry} {
     .m1 add command -label Hello
     list [catch {.m1 delete Hello} msg] $msg [destroy .m1]
 } {0 {} {}}
-test menu-32.8 {Ensure all menu clone commands are deleted} {
+test menu-32.8 {Ensure all menu clone commands are deleted} {knownBug} {
+    # SF bug #465324
     catch {destroy .menubar}
     catch {destroy .menubar.test}
     menu .menubar
