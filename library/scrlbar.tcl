@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scrollbar widgets.
 # It also provides procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: scrlbar.tcl,v 1.5 1999/04/16 01:51:27 stanton Exp $
+# RCS: @(#) $Id: scrlbar.tcl,v 1.5.6.1 1999/10/30 09:36:09 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -163,9 +163,12 @@ proc tkScrollButtonDown {w x y} {
 proc tkScrollButtonUp {w x y} {
     global tkPriv
     tkCancelRepeat
-    $w configure -activerelief $tkPriv(relief)
-    tkScrollEndDrag $w $x $y
-    $w activate [$w identify $x $y]
+    if {[info exists tkPriv(relief)]} {
+	# Avoid error due to spurious release events
+	$w configure -activerelief $tkPriv(relief)
+	tkScrollEndDrag $w $x $y
+	$w activate [$w identify $x $y]
+    }
 }
 
 # tkScrollSelect --

@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: entry.tcl,v 1.7 1999/08/09 16:52:06 hobbs Exp $
+# RCS: @(#) $Id: entry.tcl,v 1.7.4.1 1999/10/30 09:36:08 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -515,9 +515,8 @@ proc tkEntrySeeInsert w {
 	return
     }
     set x [winfo width $w]
-    while {([$w index @$x] <= $c) && ($left < $c)} {
-	incr left
-	$w xview $left
+    if {$c > [$w index @[winfo width $w]]} {
+	$w xview insert
     }
 }
 
