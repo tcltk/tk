@@ -1,7 +1,7 @@
 TclTkAqua README 
 ----------------
 
-RCS: @(#) $Id: README,v 1.10 2004/11/11 01:24:32 das Exp $
+RCS: @(#) $Id: README,v 1.11 2005/03/09 19:40:52 wolfsuit Exp $
 
 This is the README file for the Mac OS X native versions of Tcl & Tk.
 
@@ -131,6 +131,10 @@ name.  So, for instance this code will spin the spinner:
     }
 This was added in Tk 8.4.2
 
+- If you want to use Remote Debugging with Xcode 1.5 or 2.0, then you need to set
+the environment variable XCNOSTDIN to 1 in the Executable editor for Wish Shell.  That
+will cause us to force closing stdin & stdout.  Otherwise, given how Xcode launches
+Wish remotely, they will be left open and then Wish & gdb will fight for stdin...
 
 3. Building TclTkAqua
 ---------------------
