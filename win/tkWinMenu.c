@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.30 2003/12/28 23:11:10 mdejong Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.31 2004/01/07 13:25:56 vincentdarley Exp $
  */
 
 #define OEMRESOURCE
@@ -129,7 +129,7 @@ static void		DrawWindowsSystemBitmap _ANSI_ARGS_((
 			    Display *display, Drawable drawable, 
 			    GC gc, CONST RECT *rectPtr, int bitmapID,
 			    int alignFlags));
-static void		FreeID _ANSI_ARGS_((int commandID));
+static void		FreeID _ANSI_ARGS_((WORD commandID));
 static TCHAR *		GetEntryText _ANSI_ARGS_((TkMenuEntry *mePtr));
 static void		GetMenuAccelGeometry _ANSI_ARGS_((TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Tk_Font tkfont,
@@ -151,7 +151,7 @@ static void		GetTearoffEntryGeometry _ANSI_ARGS_((TkMenu *menuPtr,
 			    CONST Tk_FontMetrics *fmPtr, int *widthPtr,
 			    int *heightPtr));
 static int		GetNewID _ANSI_ARGS_((TkMenuEntry *mePtr,
-			    int *menuIDPtr));
+			    WORD *menuIDPtr));
 static int		TkWinMenuKeyObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));
@@ -190,7 +190,7 @@ static LRESULT CALLBACK	TkWinMenuProc _ANSI_ARGS_((HWND hwnd,
 static int
 GetNewID(mePtr, menuIDPtr)
     TkMenuEntry *mePtr;		/* The menu we are working with */
-    int *menuIDPtr;		/* The resulting id */
+    WORD *menuIDPtr;		/* The resulting id */
 {
     int found = 0;
     int newEntry;
@@ -219,7 +219,7 @@ GetNewID(mePtr, menuIDPtr)
 
     if (found) {
     	Tcl_SetHashValue(commandEntryPtr, (char *) mePtr);
-    	*menuIDPtr = (int) returnID;
+    	*menuIDPtr = returnID;
     	tsdPtr->lastCommandID = returnID;
     	return TCL_OK;
     } else {
@@ -245,7 +245,7 @@ GetNewID(mePtr, menuIDPtr)
 
 static void
 FreeID(commandID)
-    int commandID;
+    WORD commandID;
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -418,7 +418,7 @@ TkpDestroyMenuEntry(mePtr)
 	    Tcl_DoWhenIdle(ReconfigureWindowsMenu, (ClientData) menuPtr);
 	}
     }
-    FreeID((int) mePtr->platformEntryData);
+    FreeID((WORD) mePtr->platformEntryData);
     mePtr->platformEntryData = NULL;
 }
 
@@ -616,18 +616,26 @@ ReconfigureWindowsMenu(
 	    flags |= MF_MENUBREAK;
 	}
 	
-	itemID = (int) mePtr->platformEntryData;
+	itemID = (UINT) mePtr->platformEntryData;
 	if ((mePtr->type == CASCADE_ENTRY)
 		&& (mePtr->childMenuRefPtr != NULL)
 		&& (mePtr->childMenuRefPtr->menuPtr != NULL)) {
 	    HMENU childMenuHdl = (HMENU) mePtr->childMenuRefPtr->menuPtr
 		->platformData;
 	    if (childMenuHdl != NULL) {
-		itemID = (UINT) childMenuHdl;
-		/* Win32 draws the popup arrow in the wrong color    *
-		 * for a disabled cascade menu, so do it by hand.    */
+		/* 
+		 * Win32 draws the popup arrow in the wrong color 
+		 * for a disabled cascade menu, so do it by hand.
+		 * Given it is disabled, there's no need for it to
+		 * be connected to its child.
+		 */
 		if (mePtr->state != ENTRY_DISABLED) {
 		    flags |= MF_POPUP;
+		    /*
+		     * If the MF_POPUP flag is set, then the id
+		     * is interpreted as the handle of a submenu.
+		     */
+		    itemID = (UINT) childMenuHdl;
 		}	
 	    }
 	    if ((menuPtr->menuType == MENUBAR) 
@@ -827,7 +835,7 @@ int
 TkpMenuNewEntry(mePtr)
     TkMenuEntry *mePtr;
 {
-    int commandID;
+    WORD commandID;
     TkMenu *menuPtr = mePtr->menuPtr;
 
     if (GetNewID(mePtr, &commandID) != TCL_OK) {
@@ -1167,6 +1175,9 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		    if ((mePtr == NULL) || (mePtr->state == ENTRY_DISABLED)) {
 			TkActivateMenuEntry(menuPtr, -1);
 		    } else {
+			if (mePtr->index >= menuPtr->numEntries) {
+			    Tcl_Panic("Trying to activate an entry which doesn't exist.");
+			}
 			TkActivateMenuEntry(menuPtr, mePtr->index);
 		    }
 		    MenuSelectEvent(menuPtr);
