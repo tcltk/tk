@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.18 2004/03/16 19:55:12 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.19 2004/05/04 00:39:51 hobbs Exp $
  */
 
 #include "tkButton.h"
@@ -165,9 +165,16 @@ TkpDrawCheckIndicator(tkwin, display, d, x, y, bgBorder, indicatorColor,
      */
 
     if (tkwin == NULL || display == None || d == None || bgBorder == NULL
-	    || indicatorColor == NULL || selectColor == NULL
-	    || disableColor == NULL) {
+	    || indicatorColor == NULL) {
 	return;
+    }
+
+    if (disableColor == NULL) {
+	disableColor = bg_brdr->bgColorPtr;
+    }
+
+    if (selectColor == NULL) {
+	selectColor = bg_brdr->bgColorPtr;
     }
 
     depth = Tk_Depth(tkwin);
@@ -249,8 +256,6 @@ TkpDrawCheckIndicator(tkwin, display, d, x, y, bgBorder, indicatorColor,
 	WhitePixelOfScreen(bg_brdr->screen);
     imgColors[3 /*D*/] =
 	    Tk_GetColorByValue(tkwin, selectColor)->pixel;
-    imgColors[4 /*E*/] =
-	    Tk_GetColorByValue(tkwin, bg_brdr->darkColorPtr)->pixel;
     imgColors[4 /*E*/] = (bg_brdr->darkColorPtr != NULL) ? 
 	Tk_GetColorByValue(tkwin, bg_brdr->darkColorPtr)->pixel :
 	BlackPixelOfScreen(bg_brdr->screen);
