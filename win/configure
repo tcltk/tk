@@ -1368,9 +1368,7 @@ echo "configure:1226: checking compiler flags" >&5
 	    if test "x${MSSDK}x" = "xx" ; then
 		MSSDK="C:/Progra~1/Microsoft SDK"
 	    fi
-	    # In order to work in the tortured autoconf environment,
-	    # we need to ensure that this path has no spaces
-	    MSSDK=$(cygpath -w -s "$MSSDK" | sed -e 's!\\!/!g')
+	    MSSDK=`echo "$MSSDK" | sed -e 's!\\\!/!g'`
 	    if test ! -d "${MSSDK}/bin/win64" ; then
 		echo "configure: warning: "could not find 64-bit SDK to enable 64bit mode"" 1>&2
 		do64bit="no"
@@ -1379,18 +1377,21 @@ echo "configure:1226: checking compiler flags" >&5
 
 	if test "$do64bit" = "yes" ; then
 	    # All this magic is necessary for the Win64 SDK RC1 - hobbs
-	    CC="${MSSDK}/Bin/Win64/cl.exe \
-	-I${MSSDK}/Include/prerelease \
-	-I${MSSDK}/Include/Win64/crt \
-	-I${MSSDK}/Include/Win64/crt/sys \
-	-I${MSSDK}/Include"
-	    RC="${MSSDK}/bin/rc.exe"
+	    # The space-based-path will work for the Makefile, but will
+	    # not work if AC_TRY_COMPILE is called.  TEA has the
+	    # TEA_PATH_NOSPACE to avoid this issue.
+	    CC="\"${MSSDK}/Bin/Win64/cl.exe\" \
+		-I\"${MSSDK}/Include/prerelease\" \
+		-I\"${MSSDK}/Include/Win64/crt\" \
+		-I\"${MSSDK}/Include/Win64/crt/sys\" \
+		-I\"${MSSDK}/Include\""
+	    RC="\"${MSSDK}/bin/rc.exe\""
 	    CFLAGS_DEBUG="-nologo -Zi -Od ${runtime}d"
-	    CFLAGS_OPTIMIZE="-nologo -O2 ${runtime}"
-	    lflags="-MACHINE:IA64 -LIBPATH:${MSSDK}/Lib/IA64 \
-	-LIBPATH:${MSSDK}/Lib/Prerelease/IA64"
-	    STLIB_LD="${MSSDK}/bin/win64/lib.exe -nologo ${lflags}"
-	    LINKBIN="${MSSDK}/bin/win64/link.exe ${lflags}"
+	    # Do not use -O2 for Win64 - this has proved buggy in code gen.
+	    CFLAGS_OPTIMIZE="-nologo -O1 ${runtime}"
+	    lflags="-MACHINE:IA64 -LIBPATH:\"${MSSDK}/Lib/IA64\" \
+		-LIBPATH:\"${MSSDK}/Lib/Prerelease/IA64\" -nologo"
+	    LINKBIN="\"${MSSDK}/bin/win64/link.exe\""
 	else
 	    RC="rc"
 	    # -Od - no optimization
@@ -1398,13 +1399,15 @@ echo "configure:1226: checking compiler flags" >&5
 	    CFLAGS_DEBUG="-nologo -Z7 -Od -WX ${runtime}d"
 	    # -O2 - create fast code (/Og /Oi /Ot /Oy /Ob2 /Gs /GF /Gy)
 	    CFLAGS_OPTIMIZE="-nologo -O2 ${runtime}"
-	    STLIB_LD="link -lib -nologo"
+	    lflags="-nologo"
 	    LINKBIN="link"
 	fi
 
-	SHLIB_LD="${LINKBIN} -dll -nologo -incremental:no"
 	LIBS="user32.lib advapi32.lib"
 	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib"
+	SHLIB_LD="${LINKBIN} -dll -incremental:no ${lflags}"
+	# link -lib only works when -lib is the first arg
+	STLIB_LD="${LINKBIN} -lib ${lflags}"
 	RC_OUT=-fo
 	RC_TYPE=-r
 	RC_INCLUDE=-i
@@ -1417,7 +1420,7 @@ echo "configure:1226: checking compiler flags" >&5
 
 	EXTRA_CFLAGS=""
 	CFLAGS_WARNING="-W3"
-	LDFLAGS_DEBUG="-debug:full -debugtype:both"
+	LDFLAGS_DEBUG="-debug:full"
 	LDFLAGS_OPTIMIZE="-release"
 	
 	# Specify the CC output file names based on the target name
@@ -1442,7 +1445,7 @@ echo "configure:1226: checking compiler flags" >&5
 #--------------------------------------------------------------------
 
 echo $ac_n "checking how to run the C preprocessor""... $ac_c" 1>&6
-echo "configure:1446: checking how to run the C preprocessor" >&5
+echo "configure:1449: checking how to run the C preprocessor" >&5
 # On Suns, sometimes $CPP names a directory.
 if test -n "$CPP" && test -d "$CPP"; then
   CPP=
@@ -1457,13 +1460,13 @@ else
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp.
   cat > conftest.$ac_ext <<EOF
-#line 1461 "configure"
+#line 1464 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1467: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1470: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1474,13 +1477,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -E -traditional-cpp"
   cat > conftest.$ac_ext <<EOF
-#line 1478 "configure"
+#line 1481 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1484: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1487: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1491,13 +1494,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -nologo -E"
   cat > conftest.$ac_ext <<EOF
-#line 1495 "configure"
+#line 1498 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1501: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1504: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1523,17 +1526,17 @@ echo "$ac_t""$CPP" 1>&6
 
 ac_safe=`echo "errno.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for errno.h""... $ac_c" 1>&6
-echo "configure:1527: checking for errno.h" >&5
+echo "configure:1530: checking for errno.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1532 "configure"
+#line 1535 "configure"
 #include "confdefs.h"
 #include <errno.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1537: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1540: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1565,7 +1568,7 @@ fi
 
 
     echo $ac_n "checking for build with symbols""... $ac_c" 1>&6
-echo "configure:1569: checking for build with symbols" >&5
+echo "configure:1572: checking for build with symbols" >&5
     # Check whether --enable-symbols or --disable-symbols was given.
 if test "${enable_symbols+set}" = set; then
   enableval="$enable_symbols"
@@ -1626,7 +1629,7 @@ TK_DBGX=${DBGX}
 
 
     echo $ac_n "checking the location of tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1630: checking the location of tclConfig.sh" >&5
+echo "configure:1633: checking the location of tclConfig.sh" >&5
 
     if test -d ../../tcl8.4$TK_PATCH_LEVEL/win;  then
 	TCL_BIN_DIR_DEFAULT=../../tcl8.4$TK_PATCH_LEVEL/win
@@ -1654,7 +1657,7 @@ fi
 
 
     echo $ac_n "checking for existence of $TCL_BIN_DIR/tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1658: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
+echo "configure:1661: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
     if test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
         echo "$ac_t""loading" 1>&6
@@ -1707,7 +1710,7 @@ echo "configure:1658: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
 
     echo $ac_n "checking for tclsh""... $ac_c" 1>&6
-echo "configure:1711: checking for tclsh" >&5
+echo "configure:1714: checking for tclsh" >&5
 
     if eval "test \"`echo '$''{'ac_cv_path_tclsh'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
