@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.6 2000/02/08 11:31:32 hobbs Exp $
+# RCS: @(#) $Id: tk.decls,v 1.7 2000/02/09 02:13:50 hobbs Exp $
 
 library tk
 
@@ -1033,92 +1033,92 @@ declare 214 generic {
 }
 
 declare 215 generic {
-    void Tk_InitConsoleChannels(Tcl_Interp *interp)
+    void Tk_InitConsoleChannels (Tcl_Interp *interp)
 }
 
 declare 216 generic {
-    int Tk_CreateConsoleWindow(Tcl_Interp *interp)
+    int Tk_CreateConsoleWindow (Tcl_Interp *interp)
 }
 
 declare 217 generic {
-    void Tk_CreateSmoothMethod(Tcl_Interp *interp, Tk_SmoothMethod *method)
+    void Tk_CreateSmoothMethod (Tcl_Interp *interp, Tk_SmoothMethod *method)
 }
 
 #declare 218 generic {
-#    void Tk_CreateCanvasVisitor(Tcl_Interp *interp, VOID *typePtr)
+#    void Tk_CreateCanvasVisitor (Tcl_Interp *interp, VOID *typePtr)
 #}
 
 #declare 219 generic {
-#    VOID *Tk_GetCanvasVisitor(Tcl_Interp *interp, CONST char *name)
+#    VOID *Tk_GetCanvasVisitor (Tcl_Interp *interp, CONST char *name)
 #}
 
 declare 220 generic {
-    int Tk_GetDash(Tcl_Interp *interp, CONST char *value, Tk_Dash *dash)
+    int Tk_GetDash (Tcl_Interp *interp, CONST char *value, Tk_Dash *dash)
 }
 declare 221 generic {
-    void Tk_CreateOutline(Tk_Outline *outline)
+    void Tk_CreateOutline (Tk_Outline *outline)
 }
 declare 222 generic {
-    void Tk_DeleteOutline(Display *display, Tk_Outline *outline)
+    void Tk_DeleteOutline (Display *display, Tk_Outline *outline)
 }
 declare 223 generic {
-    int Tk_ConfigOutlineGC(XGCValues *gcValues, Tk_Canvas canvas, \
+    int Tk_ConfigOutlineGC (XGCValues *gcValues, Tk_Canvas canvas, \
 	    Tk_Item *item, Tk_Outline *outline)
 }
 declare 224 generic {
-    int Tk_ChangeOutlineGC(Tk_Canvas canvas, Tk_Item *item, \
+    int Tk_ChangeOutlineGC (Tk_Canvas canvas, Tk_Item *item, \
 	    Tk_Outline *outline)
 }
 declare 225 generic {
-    int Tk_ResetOutlineGC(Tk_Canvas canvas, Tk_Item *item, \
+    int Tk_ResetOutlineGC (Tk_Canvas canvas, Tk_Item *item, \
 	    Tk_Outline *outline)
 }
 declare 226 generic {
-    int Tk_CanvasPsOutline(Tk_Canvas canvas, Tk_Item *item, \
+    int Tk_CanvasPsOutline (Tk_Canvas canvas, Tk_Item *item, \
 	    Tk_Outline *outline)
 }
 declare 227 generic {
-    void Tk_SetTSOrigin(Tk_Window tkwin, GC gc, int x, int y)
+    void Tk_SetTSOrigin (Tk_Window tkwin, GC gc, int x, int y)
 }
 declare 228 generic {
-    int Tk_CanvasGetCoordFromObj(Tcl_Interp *interp, Tk_Canvas canvas, \
+    int Tk_CanvasGetCoordFromObj (Tcl_Interp *interp, Tk_Canvas canvas, \
 	    Tcl_Obj *obj, double *doublePtr)
 }
 declare 229 generic {
-    void Tk_CanvasSetOffset(Tk_Canvas canvas, GC gc, Tk_TSOffset *offset)
+    void Tk_CanvasSetOffset (Tk_Canvas canvas, GC gc, Tk_TSOffset *offset)
 }
 declare 230 generic {
-    void Tk_DitherPhoto(Tk_PhotoHandle handle, int x, int y, int width, \
+    void Tk_DitherPhoto (Tk_PhotoHandle handle, int x, int y, int width, \
 	    int height)
 }
 declare 231 generic {
-    int Tk_PostscriptBitmap(Tcl_Interp *interp, Tk_Window tkwin, \
+    int Tk_PostscriptBitmap (Tcl_Interp *interp, Tk_Window tkwin, \
 	    Tk_PostscriptInfo psInfo, Pixmap bitmap, int startX, \
 	    int startY, int width, int height)
 }
 declare 232 generic {
-    int Tk_PostscriptColor(Tcl_Interp *interp, Tk_PostscriptInfo psInfo, \
+    int Tk_PostscriptColor (Tcl_Interp *interp, Tk_PostscriptInfo psInfo, \
 	    XColor *colorPtr)
 }
 declare 233 generic {
-    int Tk_PostscriptFont(Tcl_Interp *interp, Tk_PostscriptInfo psInfo, \
+    int Tk_PostscriptFont (Tcl_Interp *interp, Tk_PostscriptInfo psInfo, \
 	    Tk_Font font)
 }
 declare 234 generic {
-    int Tk_PostscriptImage(Tk_Image image, Tcl_Interp *interp, \
+    int Tk_PostscriptImage (Tk_Image image, Tcl_Interp *interp, \
 	    Tk_Window tkwin, Tk_PostscriptInfo psinfo, int x, int y, \
 	    int width, int height, int prepass)
 }
 declare 235 generic {
-    void Tk_PostscriptPath(Tcl_Interp *interp, Tk_PostscriptInfo psInfo, \
+    void Tk_PostscriptPath (Tcl_Interp *interp, Tk_PostscriptInfo psInfo, \
 	    double *coordPtr, int numPoints)
 }
 declare 236 generic {
-    int Tk_PostscriptStipple(Tcl_Interp *interp, Tk_Window tkwin, \
+    int Tk_PostscriptStipple (Tcl_Interp *interp, Tk_Window tkwin, \
 	    Tk_PostscriptInfo psInfo, Pixmap bitmap)
 }
 declare 237 generic {
-    double Tk_PostscriptY(double y, Tk_PostscriptInfo psInfo)
+    double Tk_PostscriptY (double y, Tk_PostscriptInfo psInfo)
 }
 
 # Define the platform specific public Tk interface.  These functions are

@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.14 2000/01/12 11:45:03 hobbs Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.15 2000/02/09 02:13:50 hobbs Exp $
 
 library tk
 
@@ -618,6 +618,16 @@ declare 135 generic {
 declare 136 generic {
     void TkSetFocusWin (TkWindow *winPtr, int force) 
 }
+
+declare 137 generic {
+    void TkpSetKeycodeAndState (Tk_Window tkwin, KeySym keySym, \
+            XEvent *eventPtr)
+}
+
+declare 138 generic {
+    KeySym TkpGetKeySym (TkDisplay *dispPtr, XEvent *eventPtr)
+}
+
 
 ##############################################################################
 

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.16 2000/02/08 11:31:33 hobbs Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.17 2000/02/09 02:13:51 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -344,6 +344,8 @@ TkIntStubs tkIntStubs = {
 #endif /* MAC_TCL */
     TkpDrawHighlightBorder, /* 135 */
     TkSetFocusWin, /* 136 */
+    TkpSetKeycodeAndState, /* 137 */
+    TkpGetKeySym, /* 138 */
 };
 
 TkIntPlatStubs tkIntPlatStubs = {

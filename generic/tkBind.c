@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.10 2000/01/13 02:07:10 hobbs Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.11 2000/02/09 02:13:50 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -665,8 +665,6 @@ static PatSeq *		FindSequence _ANSI_ARGS_((Tcl_Interp *interp,
 static void		GetAllVirtualEvents _ANSI_ARGS_((Tcl_Interp *interp,
 			    VirtualEventTable *vetPtr));
 static char *		GetField _ANSI_ARGS_((char *p, char *copy, int size));
-static KeySym		GetKeySym _ANSI_ARGS_((TkDisplay *dispPtr,
-			    XEvent *eventPtr));
 static void		GetPatternString _ANSI_ARGS_((PatSeq *psPtr,
 			    Tcl_DString *dsPtr));
 static int		GetVirtualEvent _ANSI_ARGS_((Tcl_Interp *interp,
@@ -676,7 +674,6 @@ static Tk_Uid		GetVirtualEventUid _ANSI_ARGS_((Tcl_Interp *interp,
 static int		HandleEventGenerate _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window main, int objc,
 			    Tcl_Obj *CONST objv[]));
-static void		InitKeymapInfo _ANSI_ARGS_((TkDisplay *dispPtr));
 static void		InitVirtualEventTable _ANSI_ARGS_((
 			    VirtualEventTable *vetPtr));
 static PatSeq *		MatchPatterns _ANSI_ARGS_((TkDisplay *dispPtr,
@@ -689,8 +686,6 @@ static int		NameToWindow _ANSI_ARGS_((Tcl_Interp *interp,
 static int		ParseEventDescription _ANSI_ARGS_((Tcl_Interp *interp,
 			    char **eventStringPtr, Pattern *patPtr,
 			    unsigned long *eventMaskPtr));
-static void		SetKeycodeAndState _ANSI_ARGS_((Tk_Window tkwin,
-			    KeySym keySym, XEvent *eventPtr));
 static void		DoWarp _ANSI_ARGS_((ClientData clientData));
 
 /*
@@ -1537,7 +1532,7 @@ Tk_BindEvent(bindingTable, eventPtr, tkwin, numObjects, objectPtr)
     detail.clientData = 0;
     flags = flagArray[ringPtr->type];
     if (flags & KEY) {
-	detail.keySym = GetKeySym(dispPtr, ringPtr);
+	detail.keySym = TkpGetKeySym(dispPtr, ringPtr);
 	if (detail.keySym == NoSymbol) {
 	    detail.keySym = 0;
 	}
@@ -3257,7 +3252,7 @@ HandleEventGenerate(interp, mainWin, objc, objv)
     if (flags & (KEY_BUTTON_MOTION_VIRTUAL)) {
 	event.xkey.state = pat.needMods;
 	if ((flags & KEY) && (event.xany.type != MouseWheelEvent)) {
-	    SetKeycodeAndState(tkwin, pat.detail.keySym, &event);
+	    TkpSetKeycodeAndState(tkwin, pat.detail.keySym, &event);
 	} else if (flags & BUTTON) {
 	    event.xbutton.button = pat.detail.button;
 	} else if (flags & VIRTUAL) {
@@ -3440,7 +3435,7 @@ HandleEventGenerate(interp, mainWin, objc, objv)
 		    return TCL_ERROR;
 		}
 
-		SetKeycodeAndState(tkwin, keysym, &event);
+		TkpSetKeycodeAndState(tkwin, keysym, &event);
 		if (event.xkey.keycode == 0) {
 		    Tcl_AppendResult(interp, "no keycode for keysym \"", value,
 			    "\"", (char *) NULL);
@@ -3736,50 +3731,6 @@ NameToWindow(interp, mainWin, objPtr, tkwinPtr)
 	*tkwinPtr = Tk_IdToWindow(Tk_Display(mainWin), (Window) id);
     }
     return TCL_OK;
-}
-
-/*
- * When mapping from a keysym to a keycode, need
- * information about the modifier state that should be used
- * so that when they call XKeycodeToKeysym taking into
- * account the xkey.state, they will get back the original
- * keysym.
- */
-
-static void
-SetKeycodeAndState(tkwin, keySym, eventPtr)
-    Tk_Window tkwin;
-    KeySym keySym;
-    XEvent *eventPtr;
-{
-    Display *display;
-    int state;
-    KeyCode keycode;
-    
-    display = Tk_Display(tkwin);
-    
-    if (keySym == NoSymbol) {
-	keycode = 0;
-    } else {
-	keycode = XKeysymToKeycode(display, keySym);
-    }
-    if (keycode != 0) {
-	for (state = 0; state < 4; state++) {
-	    if (XKeycodeToKeysym(display, keycode, state) == keySym) {
-		if (state & 1) {
-		    eventPtr->xkey.state |= ShiftMask;
-		}
-		if (state & 2) {
-		    TkDisplay *dispPtr;
-
-		    dispPtr = ((TkWindow *) tkwin)->dispPtr; 
-		    eventPtr->xkey.state |= dispPtr->modeModMask;
-		}
-		break;
-	    }
-	}
-    }
-    eventPtr->xkey.keycode = keycode;
 }
 
 /*
@@ -4428,220 +4379,6 @@ GetPatternString(psPtr, dsPtr)
 	}
 	Tcl_DStringAppend(dsPtr, ">", 1);
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * GetKeySym --
- *
- *	Given an X KeyPress or KeyRelease event, map the
- *	keycode in the event into a KeySym.
- *
- * Results:
- *	The return value is the KeySym corresponding to
- *	eventPtr, or NoSymbol if no matching Keysym could be
- *	found.
- *
- * Side effects:
- *	In the first call for a given display, keycode-to-
- *	KeySym maps get loaded.
- *
- *----------------------------------------------------------------------
- */
-
-static KeySym
-GetKeySym(dispPtr, eventPtr)
-    TkDisplay *dispPtr;	/* Display in which to
-					 * map keycode. */
-    XEvent *eventPtr;		/* Description of X event. */
-{
-    KeySym sym;
-    int index;
-
-    /*
-     * Refresh the mapping information if it's stale
-     */
-
-    if (dispPtr->bindInfoStale) {
-	InitKeymapInfo(dispPtr);
-    }
-
-    /*
-     * Figure out which of the four slots in the keymap vector to
-     * use for this key.  Refer to Xlib documentation for more info
-     * on how this computation works.
-     */
-
-    index = 0;
-    if (eventPtr->xkey.state & dispPtr->modeModMask) {
-	index = 2;
-    }
-    if ((eventPtr->xkey.state & ShiftMask)
-	    || ((dispPtr->lockUsage != LU_IGNORE)
-	    && (eventPtr->xkey.state & LockMask))) {
-	index += 1;
-    }
-    sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode, index);
-
-    /*
-     * Special handling:  if the key was shifted because of Lock, but
-     * lock is only caps lock, not shift lock, and the shifted keysym
-     * isn't upper-case alphabetic, then switch back to the unshifted
-     * keysym.
-     */
-
-    if ((index & 1) && !(eventPtr->xkey.state & ShiftMask)
-	    && (dispPtr->lockUsage == LU_CAPS)) {
-	if (!(((sym >= XK_A) && (sym <= XK_Z))
-		|| ((sym >= XK_Agrave) && (sym <= XK_Odiaeresis))
-		|| ((sym >= XK_Ooblique) && (sym <= XK_Thorn)))) {
-	    index &= ~1;
-	    sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
-		    index);
-	}
-    }
-
-    /*
-     * Another bit of special handling:  if this is a shifted key and there
-     * is no keysym defined, then use the keysym for the unshifted key.
-     */
-
-    if ((index & 1) && (sym == NoSymbol)) {
-	sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
-		    index & ~1);
-    }
-    return sym;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * InitKeymapInfo --
- *
- *	This procedure is invoked to scan keymap information
- *	to recompute stuff that's important for binding, such
- *	as the modifier key (if any) that corresponds to "mode
- *	switch".
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Keymap-related information in dispPtr is updated.
- *
- *--------------------------------------------------------------
- */
-
-static void
-InitKeymapInfo(dispPtr)
-    TkDisplay *dispPtr;		/* Display for which to recompute keymap
-				 * information. */
-{
-    XModifierKeymap *modMapPtr;
-    KeyCode *codePtr;
-    KeySym keysym;
-    int count, i, j, max, arraySize;
-#define KEYCODE_ARRAY_SIZE 20
-
-    dispPtr->bindInfoStale = 0;
-    modMapPtr = XGetModifierMapping(dispPtr->display);
-
-    /*
-     * Check the keycodes associated with the Lock modifier.  If
-     * any of them is associated with the XK_Shift_Lock modifier,
-     * then Lock has to be interpreted as Shift Lock, not Caps Lock.
-     */
-
-    dispPtr->lockUsage = LU_IGNORE;
-    codePtr = modMapPtr->modifiermap + modMapPtr->max_keypermod*LockMapIndex;
-    for (count = modMapPtr->max_keypermod; count > 0; count--, codePtr++) {
-	if (*codePtr == 0) {
-	    continue;
-	}
-	keysym = XKeycodeToKeysym(dispPtr->display, *codePtr, 0);
-	if (keysym == XK_Shift_Lock) {
-	    dispPtr->lockUsage = LU_SHIFT;
-	    break;
-	}
-	if (keysym == XK_Caps_Lock) {
-	    dispPtr->lockUsage = LU_CAPS;
-	    break;
-	}
-    }
-
-    /*
-     * Look through the keycodes associated with modifiers to see if
-     * the the "mode switch", "meta", or "alt" keysyms are associated
-     * with any modifiers.  If so, remember their modifier mask bits.
-     */
-
-    dispPtr->modeModMask = 0;
-    dispPtr->metaModMask = 0;
-    dispPtr->altModMask = 0;
-    codePtr = modMapPtr->modifiermap;
-    max = 8*modMapPtr->max_keypermod;
-    for (i = 0; i < max; i++, codePtr++) {
-	if (*codePtr == 0) {
-	    continue;
-	}
-	keysym = XKeycodeToKeysym(dispPtr->display, *codePtr, 0);
-	if (keysym == XK_Mode_switch) {
-	    dispPtr->modeModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
-	}
-	if ((keysym == XK_Meta_L) || (keysym == XK_Meta_R)) {
-	    dispPtr->metaModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
-	}
-	if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R)) {
-	    dispPtr->altModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
-	}
-    }
-
-    /*
-     * Create an array of the keycodes for all modifier keys.
-     */
-
-    if (dispPtr->modKeyCodes != NULL) {
-	ckfree((char *) dispPtr->modKeyCodes);
-    }
-    dispPtr->numModKeyCodes = 0;
-    arraySize = KEYCODE_ARRAY_SIZE;
-    dispPtr->modKeyCodes = (KeyCode *) ckalloc((unsigned)
-	    (KEYCODE_ARRAY_SIZE * sizeof(KeyCode)));
-    for (i = 0, codePtr = modMapPtr->modifiermap; i < max; i++, codePtr++) {
-	if (*codePtr == 0) {
-	    continue;
-	}
-
-	/*
-	 * Make sure that the keycode isn't already in the array.
-	 */
-
-	for (j = 0; j < dispPtr->numModKeyCodes; j++) {
-	    if (dispPtr->modKeyCodes[j] == *codePtr) {
-		goto nextModCode;
-	    }
-	}
-	if (dispPtr->numModKeyCodes >= arraySize) {
-	    KeyCode *new;
-
-	    /*
-	     * Ran out of space in the array;  grow it.
-	     */
-
-	    arraySize *= 2;
-	    new = (KeyCode *) ckalloc((unsigned)
-		    (arraySize * sizeof(KeyCode)));
-	    memcpy((VOID *) new, (VOID *) dispPtr->modKeyCodes,
-		    (dispPtr->numModKeyCodes * sizeof(KeyCode)));
-	    ckfree((char *) dispPtr->modKeyCodes);
-	    dispPtr->modKeyCodes = new;
-	}
-	dispPtr->modKeyCodes[dispPtr->numModKeyCodes] = *codePtr;
-	dispPtr->numModKeyCodes++;
-	nextModCode: continue;
-    }
-    XFreeModifiermap(modMapPtr);
 }
 
 /*

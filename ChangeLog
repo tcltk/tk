@@ -1,5 +1,46 @@
 2000-02-08  Jeff Hobbs  <hobbs@scriptics.com>
 
+	* generic/tk.decls:
+	* generic/tkBind.c:
+	* generic/tkInt.decls:
+	* generic/tkIntDecls.h:
+	* generic/tkStubInit.c:
+	* mac/tkMacKeyboard.c:
+	* unix/tkUnixKey.c:
+	* win/tkWinKey.c: Fix for keyboard handling of "dead" keys and
+	caps lock from Peter Spjuth.
+	Split functions into platform specific files:
+	Static functions GetKeySym(), SetKeycodeAndState() and InitKeymapInfo()
+	from tkBind.c moved into platform files tkWinKey.c tkUnixKey.c and
+	tkMacKeyboard.c.  GetKeySym() and SetKeycodeAndState() renamed to 
+	Tkp* and made public (as private functions) in tkInt.decls.
+
+	Step 2, fixes in tkWinKey.c
+	New static function: KeycodeToKeysym(), based on XKeycodeToKeysym()
+	but with different arguments, and a lot of improvements.
+	TkpGetString() changed to use KeycodeToKeysym() + other fixes.
+	TkpGetKeySym() changed to use KeycodeToKeysym() + other fixes.
+	InitKeymapInfo() changed to use KeycodeToKeysym().
+	TkpSetKeycodeAndState() rewritten, mostly by copying code from
+	XKeysymToKeycode().
+	XKeycodeToKeysym() rewritten. Preferably it should be removed.
+
+	EXPLANATION: The main problem is ToAscii() which has a lot of side
+	effects, and also that XKeycodeToKeysym() is not provided enough
+	input to do a proper job.  The changes' main goal is to avoid
+	calling ToAscii() if not necessary, and to provide it with as
+	correct information as possible when called.  Also some attempts
+	to clean up what ToAscii() did are done.  See the code for details.
+
+	BUGS FIXED: Typing shifted (and AltGr) dead keys did not work.
+	Keyboard lock lamps did not work on Win98.
+	Events regarding AltGr-keys behaved badly.
+	Example: On a Swedish keyboard, $ is typed with AltGr-4.
+	That keyboard event would get the keysym '4' not 'dollar'.
+	Also, doing [event generete . <Key-dollar>] would send keysym '4'.
+	Translation to ascii in TkpGetString did not handle return and
+	tab correctly. I.e. [event generate . <Key-Return>] gave wrong %A
+
 	* generic/tkDecls.h:
 	* generic/tk.decls:
 	* generic/tk.h: moved new public functions created in dash patch
