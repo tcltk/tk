@@ -1,3 +1,27 @@
+2000-09-17  Eric Melski  <ericm@ajubasolutions.com>
+
+	* generic/tk.h: Added declaration of Tk_ObjCustomOption structure,
+	used for TK_OPTION_CUSTOM, and typedef's of the functions
+	Tk_CustomOptionSetProc, Tk_CustomOptionGetProc,
+	Tk_CustomOptionRestoreProc, and Tk_CustomOptionFreeProc, used for
+	TK_OPTION_CUSTOM.
+
+	* doc/SetOptions.3: Added documentation of TK_OPTION_CUSTOM, and
+	section "CUSTOM OPTION TYPES" explaining how to create and use
+	custom options.
+
+	* tests/config.test: Added tests for custom option type.
+
+	* generic/tkTest.c: Added test support for TK_OPTION_CUSTOM to
+	TestobjconfigObjCmd.  Added CustomOption* functions to implement a
+	test custom option.
+
+	* generic/tkConfig.c: Added new option type TK_OPTION_CUSTOM,
+	which allows the definition of custom option types by creating
+	parsing, printing, freeing, and restoring procedures for a custom
+	option.  This is needed by the text and canvas widgets if they are
+	to be fully objectified.
+
 2000-09-07  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* doc/Tk_Init.3:
@@ -5,6 +29,18 @@
 	* doc/loadTk.n: minor doc cleanup
 
 2000-09-06  Eric Melski  <ericm@ajubasolutions.com>
+
+	* doc/HWNDToWindow.3: 
+	* doc/GetHWND.3: Changed synopsis to indicate the tkPlatDecls.h
+	should be included, not tk.h.
+
+	* generic/tkPlatDecls.h: Removed #include <windows.h> for Windows,
+	a better solution for now is to update the docs and have extension
+	authors #include <tkPlatDecls.h>.
+
+	* generic/tk.h: Removed '#include "tkPlatDecls.h"', as the
+	incorrect inclusion order between windows.h/tkPlatDecls.h causes
+	build conflicts on Windows.
 
 	* generic/tkPlatDecls.h: Added #include <windows.h> for Windows,
 	so that HWND, etc., are defined properly.

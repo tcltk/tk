@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.49 2000/09/07 00:28:38 ericm Exp $
+ * RCS: @(#) $Id: tk.h,v 1.50 2000/09/17 21:02:39 ericm Exp $
  */
 
 #ifndef _TK
@@ -145,7 +145,8 @@ typedef enum {
     TK_OPTION_SYNONYM,
     TK_OPTION_PIXELS,
     TK_OPTION_WINDOW,
-    TK_OPTION_END
+    TK_OPTION_END,
+    TK_OPTION_CUSTOM
 } Tk_OptionType;
 
 /*
@@ -203,6 +204,39 @@ typedef struct Tk_OptionSpec {
 
 #define TK_OPTION_NULL_OK		(1 << 0)
 #define TK_OPTION_DONT_SET_DEFAULT	(1 << 3)
+
+/*
+ * The following structure and function types are used by TK_OPTION_CUSTOM
+ * options; the structure holds pointers to the functions needed by the Tk
+ * option config code to handle a custom option.
+ */
+
+typedef int (Tk_CustomOptionSetProc) _ANSI_ARGS_((ClientData clientData,
+	Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj **value,
+	char *internalPtr, char *saveInternalPtr, int flags));
+typedef Tcl_Obj *(Tk_CustomOptionGetProc) _ANSI_ARGS_((ClientData clientData,
+	Tk_Window tkwin, char *internalPtr));
+typedef void (Tk_CustomOptionRestoreProc) _ANSI_ARGS_((ClientData clientData,
+	Tk_Window tkwin, char *internalPtr, char *saveInternalPtr));
+typedef void (Tk_CustomOptionFreeProc) _ANSI_ARGS_((ClientData clientData,
+	Tk_Window tkwin, char *internalPtr));
+    
+typedef struct Tk_ObjCustomOption {
+    char *name;				/* Name of the custom option. */
+    Tk_CustomOptionSetProc *setProc;	/* Function to use to set a record's
+					 * option value from a Tcl_Obj */
+    Tk_CustomOptionGetProc *getProc;	/* Function to use to get a Tcl_Obj
+					 * representation from an internal
+					 * representation of an option. */
+    Tk_CustomOptionRestoreProc *restoreProc;	/* Function to use to restore a
+						 * saved value for the internal
+						 * representation. */
+    Tk_CustomOptionFreeProc *freeProc;	/* Function to use to free the internal
+					 * representation of an option. */
+    ClientData clientData;		/* Arbitrary one-word value passed to
+					 * the handling procs. */
+} Tk_ObjCustomOption;
+
 
 /*
  * Macro to use to fill in "offset" fields of the Tk_OptionSpec.

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.12 2000/04/04 08:09:15 hobbs Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.13 2000/09/17 21:02:40 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -188,6 +188,17 @@ static int		TestmetricsCmd _ANSI_ARGS_((ClientData dummy,
 static int		TestobjconfigObjCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * CONST objv[]));
+static int	CustomOptionSet _ANSI_ARGS_((ClientData clientData,
+			Tcl_Interp *interp, Tk_Window tkwin,
+			Tcl_Obj **value, char *internalPtr,
+			char *saveInternalPtr, int flags));
+static Tcl_Obj *CustomOptionGet _ANSI_ARGS_((ClientData clientData,
+			Tk_Window tkwin, char *internalPtr));
+static void	CustomOptionRestore _ANSI_ARGS_((ClientData clientData,
+			Tk_Window tkwin, char *internalPtr,
+			char *saveInternalPtr));
+static void	CustomOptionFree _ANSI_ARGS_((ClientData clientData,
+			Tk_Window tkwin, char *internalPtr));
 static int		TestpropCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Interp *interp, int argc, char **argv));
 static int		TestsendCmd _ANSI_ARGS_((ClientData dummy,
@@ -639,6 +650,14 @@ TestobjconfigObjCmd(clientData, interp, objc, objv)
 					 * created by commands below; indexed
 					 * with same values as "options"
 					 * array. */
+    static Tk_ObjCustomOption CustomOption = {
+	"custom option",
+	    CustomOptionSet,
+	    CustomOptionGet,
+	    CustomOptionRestore,
+	    CustomOptionFree,
+	    (ClientData) 1
+    };
     Tk_Window mainWin = (Tk_Window) clientData;
     Tk_Window tkwin;
     int index, result = TCL_OK;
@@ -696,6 +715,7 @@ TestobjconfigObjCmd(clientData, interp, objc, objv)
 		Tcl_Obj *anchorPtr;
 		Tcl_Obj *pixelPtr;
 		Tcl_Obj *mmPtr;
+		Tcl_Obj *customPtr;
 	    } TypesRecord;
 	    TypesRecord *recordPtr;
 	    static char *stringTable[] = {"one", "two", "three", "four", 
@@ -761,6 +781,10 @@ TestobjconfigObjCmd(clientData, interp, objc, objv)
 			"-pixel", "pixel", "Pixel",
 			"1", Tk_Offset(TypesRecord, pixelPtr), -1,
 			TK_CONFIG_NULL_OK, 0, 0x2000},
+		{TK_OPTION_CUSTOM,
+		        "-custom", (char *) NULL, (char *) NULL,
+		        "", Tk_Offset(TypesRecord, customPtr), -1,
+  		        TK_CONFIG_NULL_OK, &CustomOption, 0x4000},
 		{TK_OPTION_SYNONYM,
 			"-synonym", (char *) NULL, (char *) NULL,
 			(char *) NULL, 0, -1, 0, (ClientData) "-color",
@@ -798,6 +822,7 @@ TestobjconfigObjCmd(clientData, interp, objc, objv)
 	    recordPtr->pixelPtr = NULL;
 	    recordPtr->mmPtr = NULL;
 	    recordPtr->stringTablePtr = NULL;
+	    recordPtr->customPtr = NULL;
 	    result = Tk_InitOptions(interp, (char *) recordPtr, optionTable,
 		    tkwin);
 	    if (result == TCL_OK) {
@@ -1005,6 +1030,7 @@ TestobjconfigObjCmd(clientData, interp, objc, objv)
 		int pixels;
 		double mm;
 		Tk_Window tkwin;
+		char *custom;
 	    } InternalRecord;
 	    InternalRecord *recordPtr;
 	    static char *internalStringTable[] = {
@@ -1071,6 +1097,10 @@ TestobjconfigObjCmd(clientData, interp, objc, objv)
 			"-window", "window", "Window",
 			(char *) NULL, -1, Tk_Offset(InternalRecord, tkwin),
 			TK_CONFIG_NULL_OK, 0, 0},
+		{TK_OPTION_CUSTOM,
+		        "-custom", (char *) NULL, (char *) NULL,
+		        "", -1, Tk_Offset(InternalRecord, custom),
+		        TK_CONFIG_NULL_OK, &CustomOption, 0x4000},
 		{TK_OPTION_SYNONYM,
 			"-synonym", (char *) NULL, (char *) NULL,
 			(char *) NULL, -1, -1, 0, (ClientData) "-color",
@@ -1108,6 +1138,7 @@ TestobjconfigObjCmd(clientData, interp, objc, objv)
 	    recordPtr->pixels = 0;
 	    recordPtr->mm = 0.0;
 	    recordPtr->tkwin = NULL;
+	    recordPtr->custom = NULL;
 	    result = Tk_InitOptions(interp, (char *) recordPtr, optionTable,
 		    tkwin);
 	    if (result == TCL_OK) {
@@ -2381,3 +2412,120 @@ TestwrapperCmd(clientData, interp, argc, argv)
     return TCL_OK;
 }
 #endif
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CustomOptionSet, CustomOptionGet, CustomOptionRestore, CustomOptionFree --
+ *
+ *	Handlers for object-based custom configuration options.  See
+ *	Testobjconfigcommand.
+ *
+ * Results:
+ *	See user documentation for expected results from these functions.
+ *		CustomOptionSet		Standard Tcl Result.
+ *		CustomOptionGet		Tcl_Obj * containing value.
+ *		CustomOptionRestore	None.
+ *		CustomOptionFree	None.
+ *
+ * Side effects:
+ *	Depends on the function.
+ *		CustomOptionSet		Sets option value to new setting.
+ *		CustomOptionGet		Creates a new Tcl_Obj.
+ *		CustomOptionRestore	Resets option value to original value.
+ *		CustomOptionFree	Free storage for internal rep of
+ *					option.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+CustomOptionSet(clientData,interp, tkwin, value, internalPtr,
+	saveInternalPtr, flags)
+    ClientData clientData;
+    Tcl_Interp *interp;
+    Tk_Window tkwin;
+    Tcl_Obj **value;
+    char *internalPtr;
+    char *saveInternalPtr;
+    int flags;
+{
+    int objEmpty, length;
+    char *new, *string;
+    
+    objEmpty = 0;
+    /*
+     * See if the object is empty.
+     */
+    if (value == NULL) {
+	objEmpty = 1;
+    } else {
+	if ((*value)->bytes != NULL) {
+	    objEmpty = ((*value)->length == 0);
+	} else {
+	    Tcl_GetStringFromObj((*value), &length);
+	    objEmpty = (length == 0);
+	}
+    }
+    
+    if ((flags & TK_OPTION_NULL_OK) && objEmpty) {
+	*value = NULL;
+    } else {
+	string = Tcl_GetStringFromObj((*value), &length);
+	Tcl_UtfToUpper(string);
+	if (objEmpty) {
+	    Tcl_SetResult(interp, "expected good value, got \"\"", TCL_STATIC);
+	    return TCL_ERROR;
+	}
+	if (strncmp(string, "BAD", (size_t)length) == 0) {
+	    Tcl_SetResult(interp, "expected good value, got \"BAD\"",
+		    TCL_STATIC);
+	    return TCL_ERROR;
+	}
+    }
+    if (internalPtr != NULL) {
+	if ((*value) != NULL) {
+	    string = Tcl_GetStringFromObj((*value), &length);
+	    new = ckalloc((size_t) (length + 1));
+	    strcpy(new, string);
+	} else {
+	    new = NULL;
+	}
+	*((char **) saveInternalPtr) = *((char **) internalPtr);
+	*((char **) internalPtr) = new;
+    }
+
+    return TCL_OK;
+}
+
+static Tcl_Obj *
+CustomOptionGet(clientData, tkwin, internalPtr)
+    ClientData clientData;
+    Tk_Window tkwin;
+    char *internalPtr;
+{
+    return (Tcl_NewStringObj(*(char **)internalPtr, -1));
+}
+
+static void
+CustomOptionRestore(clientData, tkwin, internalPtr, saveInternalPtr)
+    ClientData clientData;
+    Tk_Window tkwin;
+    char *internalPtr;
+    char *saveInternalPtr;
+{
+    *(char **)internalPtr = *(char **)saveInternalPtr;
+    return;
+}
+
+static void
+CustomOptionFree(clientData, tkwin, internalPtr)
+    ClientData clientData;
+    Tk_Window tkwin;
+    char *internalPtr;
+{
+    if (*(char **)internalPtr != NULL) {
+	ckfree(*(char **)internalPtr);
+    }
+}
+
