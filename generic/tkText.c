@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.56 2005/02/14 23:00:29 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.57 2005/04/04 22:00:05 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -249,7 +249,8 @@ struct SearchSpec;	/* Forward declaration. */
 
 typedef ClientData      SearchAddLineProc _ANSI_ARGS_((int lineNum,
 			    struct SearchSpec *searchSpecPtr, 
-			    Tcl_Obj *theLine, int *lenPtr));
+			    Tcl_Obj *theLine, int *lenPtr, 
+			    int *extraLinesPtr));
 typedef int             SearchMatchProc _ANSI_ARGS_((int lineNum, 
 			    struct SearchSpec *searchSpecPtr, 
 			    ClientData clientData, Tcl_Obj *theLine, 
@@ -3380,6 +3381,15 @@ TextBlinkProc(clientData)
 
     if ((textPtr->state == TK_TEXT_STATE_DISABLED) ||
 	    !(textPtr->flags & GOT_FOCUS) || (textPtr->insertOffTime == 0)) {
+	if ((textPtr->insertOffTime == 0) && !(textPtr->flags & INSERT_ON)) {
+	    /*
+	     * The widget was configured to have zero offtime while
+	     * the insertion point was not displayed.  We have to
+	     * display it once.
+	     */
+	    textPtr->flags |= INSERT_ON;
+	    goto redrawInsert;
+	}
 	return;
     }
     if (textPtr->flags & INSERT_ON) {
@@ -3391,6 +3401,7 @@ TextBlinkProc(clientData)
 	textPtr->insertBlinkHandler = Tcl_CreateTimerHandler(
 		textPtr->insertOnTime, TextBlinkProc, (ClientData) textPtr);
     }
+  redrawInsert:
     TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
     if (TkTextCharBbox(textPtr, &index, &x, &y, &w, &h, &charWidth) == 0) {
 	if (textPtr->insertCursorType) {
@@ -3833,6 +3844,11 @@ TextSearchIndexInLine(searchSpecPtr, linePtr, byteIndex)
  *	'theLine' (not just what we added to it, but the length including
  *	what was already in there).  This is in bytes for an exact search
  *	and in chars for a regexp search.
+ *	
+ *	Also 'extraLinesPtr' (if non-NULL) will have its value 
+ *	incremented by 1 for each additional logical line we have 
+ *	added because a newline is elided (this will only ever happen
+ *	if we have chosen not to search elided text, of course).
  *
  * Side effects:
  *	Memory may be allocated or re-allocated for theLine's string
@@ -3842,16 +3858,23 @@ TextSearchIndexInLine(searchSpecPtr, linePtr, byteIndex)
  */
 
 static ClientData 
-TextSearchAddNextLine(lineNum, searchSpecPtr, theLine, lenPtr)
+TextSearchAddNextLine(lineNum, searchSpecPtr, theLine, lenPtr, extraLinesPtr)
     int lineNum;                     /* Line we must add */
     SearchSpec *searchSpecPtr;       /* Search parameters */
     Tcl_Obj *theLine;                /* Object to append to */
     int *lenPtr;                     /* For returning the total length */
+    int *extraLinesPtr;              /* If non-NULL, will have its value
+                                      * incremented by the number of
+                                      * additional logical lines which are
+                                      * merged into this one by newlines
+                                      * being elided */
 {
-    TkTextLine *linePtr;
+    TkTextLine *linePtr, *thisLinePtr;
     TkTextIndex curIndex;
     TkTextSegment *segPtr;
     TkText *textPtr = (TkText*)(searchSpecPtr->clientData);
+    int nothingYet = 1;
+    
     /*
      * Extract the text from the line. 
      */
@@ -3861,17 +3884,50 @@ TextSearchAddNextLine(lineNum, searchSpecPtr, theLine, lenPtr)
 	return NULL;
     }
     curIndex.tree = textPtr->sharedTextPtr->tree;
-    curIndex.linePtr = linePtr; curIndex.byteIndex = 0;
-    for (segPtr = linePtr->segPtr; segPtr != NULL;
-	    curIndex.byteIndex += segPtr->size, segPtr = segPtr->nextPtr) {
-	if ((segPtr->typePtr != &tkTextCharType)
-	  || (!searchSpecPtr->searchElide 
-	      && TkTextIsElided(textPtr, &curIndex, NULL))) {
-	    continue;
-	}
-	Tcl_AppendToObj(theLine, segPtr->body.chars, segPtr->size);
-    }
+    thisLinePtr = linePtr;
     
+    while (thisLinePtr != NULL) {
+	int elideWraps = 0;
+	curIndex.linePtr = thisLinePtr;
+	curIndex.byteIndex = 0;
+	for (segPtr = thisLinePtr->segPtr; segPtr != NULL;
+		curIndex.byteIndex += segPtr->size, segPtr = segPtr->nextPtr) {
+	    if (!searchSpecPtr->searchElide 
+	      && TkTextIsElided(textPtr, &curIndex, NULL)) {
+		/* 
+		 * If we reach the end of the logical line, and if we
+		 * have at least one character in the string, then we
+		 * continue wrapping to the next logical line.  If
+		 * there are no characters yet, then the entire line
+		 * of characters is elided and there's no need to 
+		 * complicate matters by wrapping - we'll look at the
+		 * next line in due course.
+		 */
+		if (segPtr->nextPtr == NULL && !nothingYet) {
+		    elideWraps = 1;
+		}
+		continue;
+	    }
+	    if (segPtr->typePtr != &tkTextCharType) {
+		continue;
+	    }
+	    Tcl_AppendToObj(theLine, segPtr->body.chars, segPtr->size);
+	    nothingYet = 0;
+	}
+	if (!elideWraps) {
+	    break;
+	}
+	lineNum++;
+	if (lineNum >= searchSpecPtr->numLines) {
+	    break;
+	}
+	thisLinePtr = TkBTreeNextLine(textPtr, thisLinePtr);
+	if (thisLinePtr != NULL && extraLinesPtr != NULL) {
+	    /* Tell our caller we have an extra line merged in */
+	    *extraLinesPtr = (*extraLinesPtr) + 1;
+	}
+    }
+        
     /*
      * If we're ignoring case, convert the line to lower case.
      * There is no need to do this for regexp searches, since
@@ -3982,23 +4038,56 @@ TextSearchFoundMatch(lineNum, searchSpecPtr, clientData, theLine,
     }
     
     curIndex.tree = textPtr->sharedTextPtr->tree;
-    curIndex.linePtr = linePtr; curIndex.byteIndex = 0;
     /* Find the starting point */
-    for (segPtr = linePtr->segPtr, leftToScan = matchOffset;
-	    leftToScan >= 0 && segPtr; segPtr = segPtr->nextPtr) {
-	if (segPtr->typePtr != &tkTextCharType) {
-	    matchOffset += segPtr->size;
-	} else if (!searchSpecPtr->searchElide 
-		   && TkTextIsElided(textPtr, &curIndex, NULL)) {
-	    if (searchSpecPtr->exact) {
+    leftToScan = matchOffset;
+    while (1) {
+	curIndex.linePtr = linePtr; 
+	curIndex.byteIndex = 0;
+	/* 
+	 * Note that we allow leftToScan to be zero because we want
+	 * to skip over any preceding non-textual items.
+	 */
+	for (segPtr = linePtr->segPtr;
+		leftToScan >= 0 && segPtr; segPtr = segPtr->nextPtr) {
+	    if (segPtr->typePtr != &tkTextCharType) {
 		matchOffset += segPtr->size;
+	    } else if (!searchSpecPtr->searchElide 
+		       && TkTextIsElided(textPtr, &curIndex, NULL)) {
+		if (searchSpecPtr->exact) {
+		    matchOffset += segPtr->size;
+		} else {
+		    matchOffset += Tcl_NumUtfChars(segPtr->body.chars, -1);
+		}
 	    } else {
-		matchOffset += Tcl_NumUtfChars(segPtr->body.chars, -1);
+		leftToScan -= segPtr->size;
 	    }
-	} else {
-	    leftToScan -= segPtr->size;
+	    curIndex.byteIndex += segPtr->size;
 	}
-	curIndex.byteIndex += segPtr->size;
+	if (segPtr == NULL && leftToScan >= 0) {
+	    /* This will only happen if we are eliding newlines */
+	    linePtr = TkBTreeNextLine(textPtr, linePtr);
+	    if (linePtr == NULL) {
+		/* 
+		 * If we reach the end of the text, we have a serious
+		 * problem, unless there's actually nothing left to look
+		 * for.
+		 */
+		if (leftToScan == 0) {
+		    break;
+		} else {
+		    Tcl_Panic("Reached end of text in a match");
+		}
+	    }
+	    /* 
+	     * We've wrapped to the beginning of the next logical line,
+	     * which has been merged with the previous one whose newline
+	     * was elided.
+	     */
+	    lineNum++;
+	    matchOffset = 0;
+	} else {
+	    break;
+	}
     }
     /* Calculate and store the found index in the result */
     if (searchSpecPtr->exact) {
@@ -5121,7 +5210,8 @@ SearchCore(interp, searchSpecPtr, patObj)
     for (passes = 0; passes < 2; ) {
 	ClientData lineInfo;
 	int linesSearched = 1;
-
+	int extraLinesSearched = 0;
+	
 	if (lineNum >= searchSpecPtr->numLines) {
 	    /*
 	     * Don't search the dummy last line of the text.
@@ -5138,7 +5228,7 @@ SearchCore(interp, searchSpecPtr, patObj)
 	 */
 
 	lineInfo = (*searchSpecPtr->addLineProc)(lineNum,
-		searchSpecPtr, theLine, &lastOffset);
+		searchSpecPtr, theLine, &lastOffset, &linesSearched);
 
 	if (lineInfo == NULL) {
 	    /* 
@@ -5305,10 +5395,10 @@ SearchCore(interp, searchSpecPtr, patObj)
 			    if (extraLines > maxExtraLines) {
 				if ((*searchSpecPtr->addLineProc)(lineNum
 					+ extraLines, searchSpecPtr, theLine,
-					&lastTotal) == NULL) {
+					&lastTotal, &extraLines) == NULL) {
 				    p = NULL;
 				    if (!searchSpecPtr->backwards) {
-					linesSearched = extraLines + 1;
+					extraLinesSearched = extraLines;
 				    }
 				    break;
 				}
@@ -5354,7 +5444,8 @@ SearchCore(interp, searchSpecPtr, patObj)
 			if (p == NULL) {
 			    break;
 			}
-			linesSearched = extraLines;
+			/* We've found a multi-line match */
+			extraLinesSearched = extraLines - 1;
 		    }
 		}
 		backwardsMatch:
@@ -5441,7 +5532,7 @@ SearchCore(interp, searchSpecPtr, patObj)
 		if (!match 
 		    || ((info.extendStart == info.matches[0].start) 
 			&& (info.matches[0].end == (lastOffset - firstOffset)))) {
-		    int extraLines = 1;
+		    int extraLines = 0;
 		    int prevFullLine;
 		    /* 
 		     * If we find a match that overlaps more than one
@@ -5481,7 +5572,7 @@ SearchCore(interp, searchSpecPtr, patObj)
 			     */
 			    if (!match && !searchSpecPtr->backwards
 			      && (firstOffset == 0)) {
-				linesSearched = extraLines + 1;
+				extraLinesSearched = extraLines;
 			    }
 			    break;
 			}
@@ -5495,13 +5586,13 @@ SearchCore(interp, searchSpecPtr, patObj)
 			if (extraLines > maxExtraLines) {
 			    if ((*searchSpecPtr->addLineProc)(lineNum
 				    + extraLines, searchSpecPtr, theLine,
-				    &lastTotal) == NULL) {
+				    &lastTotal, &extraLines) == NULL) {
 				/*
 				 * There are no more acceptable lines, so
 				 * we can say we have searched all of these
 				 */
 				if (!match && !searchSpecPtr->backwards) {
-				    linesSearched = extraLines + 1;
+				    extraLinesSearched = extraLines;
 				}
 				break;
 			    }
@@ -5557,7 +5648,7 @@ SearchCore(interp, searchSpecPtr, patObj)
 			}
 			if (match && ((firstOffset + info.matches[0].end) 
 				      >= prevFullLine)) {
-			    linesSearched = extraLines;
+			    extraLinesSearched = extraLines - 1;
 			    lastFullLine = prevFullLine;
 			}
 			/*
@@ -5588,7 +5679,7 @@ SearchCore(interp, searchSpecPtr, patObj)
 		    }
 
 		    if (lastBackwardsLineMatch != -1) {
-			if ((lineNum + linesSearched) 
+			if ((lineNum + linesSearched + extraLinesSearched) 
 			    == lastBackwardsLineMatch) {
 			    /* Possible overlap or inclusion */
 			    int thisOffset = firstOffset + info.matches[0].end 
@@ -5628,7 +5719,7 @@ SearchCore(interp, searchSpecPtr, patObj)
 				/* No overlap */
 				goto recordBackwardsMatch;
 			    }
-			} else if (lineNum + linesSearched 
+			} else if (lineNum + linesSearched + extraLinesSearched 
 				   < lastBackwardsLineMatch) {
 			    /* No overlap */
 			    goto recordBackwardsMatch;
@@ -5833,7 +5924,8 @@ SearchCore(interp, searchSpecPtr, patObj)
 	 */
 
       nextLine:
-
+        linesSearched += extraLinesSearched;
+	
 	while (linesSearched-- > 0) {
 	    /*
 	     * If we have just completed the 'stopLine', we are done
