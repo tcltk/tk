@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.1.4.4 1998/11/25 21:16:31 stanton Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.1.4.5 1998/11/25 23:06:42 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -3351,6 +3351,8 @@ TkFontParseXLFD(string, faPtr, xaPtr)
 
     if (FieldSpecified(field[XLFD_CHARSET])) {
 	xaPtr->charset = Tk_GetUid(field[XLFD_CHARSET]);
+    } else {
+	xaPtr->charset = Tk_GetUid("iso8859-1");
     }
     Tcl_DStringFree(&ds);
     return TCL_OK;
