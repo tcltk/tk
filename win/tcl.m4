@@ -301,7 +301,7 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 #	Defines the following vars:
 #		CFLAGS_DEFAULT	Sets to $(CFLAGS_DEBUG) if true
 #				Sets to $(CFLAGS_OPTIMIZE) if false
-#		LDFLAGS_DEFAULT	Sets to $(LDFLAGS_DEBUG) if true
+#		LDFLAGS_DEFAULT Sets to $(LDFLAGS_DEBUG) if true
 #				Sets to $(LDFLAGS_OPTIMIZE) if false
 #		DBGX		Debug library extension
 #
@@ -386,13 +386,13 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     AC_CHECK_PROG(CYGPATH, cygpath, cygpath -w, echo)
 
     if test "$CYGPATH" = "echo" || test "$ac_cv_cygwin" = "yes"; then
-        DEPARG='"$<"'
+	DEPARG='"$<"'
     else
-        DEPARG='"$(shell $(CYGPATH) $<)"'
+	DEPARG='"$(shell $(CYGPATH) $<)"'
     fi
 
     # set various compiler flags depending on whether we are using gcc or cl
-
+    
     AC_MSG_CHECKING([compiler flags])
     if test "${GCC}" = "yes" ; then
 	if test "$do64bit" = "yes" ; then
@@ -436,7 +436,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    # ad-hoc check to see if CC supports -shared.
 	    if "${CC}" -shared 2>&1 | egrep ': -shared not supported' >/dev/null; then
 		AC_MSG_ERROR([${CC} does not support the -shared option.
-                You will need to upgrade to a newer version of the toolchain.])
+		 You will need to upgrade to a newer version of the toolchain.])
 	    fi
 
 	    runtime=
@@ -446,7 +446,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    SHLIB_LD='${CC} -shared ${CFLAGS}'
 	    # Add SHLIB_LD_LIBS to the Make rule, not here.
 	    MAKE_DLL="\${SHLIB_LD} \$(LDFLAGS) -o \[$]@ ${extra_ldflags} \
-	        -Wl,--out-implib,\$(patsubst %.dll,lib%.a,\[$]@)"
+		-Wl,--out-implib,\$(patsubst %.dll,lib%.a,\[$]@)"
 
 	    LIBSUFFIX="\${DBGX}.a"
 	    EXESUFFIX="\${DBGX}.exe"
@@ -557,7 +557,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	CFLAGS_WARNING="-W3"
 	LDFLAGS_DEBUG="-debug:full -debugtype:cv"
 	LDFLAGS_OPTIMIZE="-release"
-	
+
 	# Specify the CC output file names based on the target name
 	CC_OBJNAME="-Fo\[$]@"
 	CC_EXENAME="-Fe\"\$(shell \$(CYGPATH) '\[$]@')\""
@@ -567,6 +567,12 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	LDFLAGS_CONSOLE="-link -subsystem:console ${lflags}"
 	LDFLAGS_WINDOW="-link -subsystem:windows ${lflags}"
     fi
+
+    # DL_LIBS is empty, but then we match the Unix version
+    AC_SUBST(DL_LIBS)
+    AC_SUBST(CFLAGS_DEBUG)
+    AC_SUBST(CFLAGS_OPTIMIZE)
+    AC_SUBST(CFLAGS_WARNING)
 ])
 
 #------------------------------------------------------------------------

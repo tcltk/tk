@@ -1,3 +1,8 @@
+2001-10-16  Don Porter <dgp@users.sourceforge.net>
+
+	* unix/tcl.m4:
+	* win/tcl.m4: Copied updates from Tcl for 8.3.4 release.
+
 2001-10-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkWindow.c (OpenIM): Added simple XIM patch to enable

@@ -251,7 +251,7 @@ AC_DEFUN(SC_LOAD_TKCONFIG, [
     AC_MSG_CHECKING([for existence of $TK_BIN_DIR/tkConfig.sh])
 
     if test -f "$TK_BIN_DIR/tkConfig.sh" ; then
-        AC_MSG_RESULT([loading])
+	AC_MSG_RESULT([loading])
 	. $TK_BIN_DIR/tkConfig.sh
     else
         AC_MSG_RESULT([could not find $TK_BIN_DIR/tkConfig.sh])
@@ -428,7 +428,7 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 #	Defines the following vars:
 #		CFLAGS_DEFAULT	Sets to $(CFLAGS_DEBUG) if true
 #				Sets to $(CFLAGS_OPTIMIZE) if false
-#		LDFLAGS_DEFAULT	Sets to $(LDFLAGS_DEBUG) if true
+#		LDFLAGS_DEFAULT Sets to $(LDFLAGS_DEBUG) if true
 #				Sets to $(LDFLAGS_OPTIMIZE) if false
 #		DBGX		Debug library extension
 #
@@ -478,8 +478,8 @@ AC_DEFUN(SC_ENABLE_SYMBOLS, [
 #       MAKE_LIB -      Command to execute to build the Tcl library;
 #                       differs depending on whether or not Tcl is being
 #                       compiled as a shared library.
-#       STLIB_LD -      Base command to use for combining object files
-#                       into a static library.
+#	STLIB_LD -	Base command to use for combining object files
+#			into a static library.
 #       SHLIB_CFLAGS -  Flags to pass to cc when compiling the components
 #                       of a shared library (may request position-independent
 #                       code, among other things).
@@ -547,7 +547,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	do64bit=no
     fi
     AC_MSG_RESULT($do64bit)
- 
+
     # Step 0.b: Enable Solaris 64 bit VIS support?
 
     AC_MSG_CHECKING([if 64bit Sparc VIS support is requested])
@@ -648,7 +648,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    if test "$do64bit" = "yes" ; then
 		if test "$GCC" = "yes" ; then
 		    AC_MSG_WARN("64bit mode not supported with GCC on $system")
-		else 
+		else
 		    do64bit_ok=yes
 		    EXTRA_CFLAGS="-q64"
 		    LDFLAGS="-q64"
@@ -848,16 +848,16 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 		EXTRA_CFLAGS="-mieee"
 	    fi
 
-	    # The combo of gcc + glibc has a bug related
-	    # to inlining of functions like strtod(). The
-	    # -fno-builtin flag should address this problem
-	    # but it does not work. The -fno-inline flag
-	    # is kind of overkill but it works.
-	    # Disable inlining only when one of the
-	    # files in compat/*.c is being linked in.
-	    if test x"${LIBOBJS}" != x ; then
-	        EXTRA_CFLAGS="${EXTRA_CFLAGS} -fno-inline"
-	    fi
+            # The combo of gcc + glibc has a bug related
+            # to inlining of functions like strtod(). The
+            # -fno-builtin flag should address this problem
+            # but it does not work. The -fno-inline flag
+            # is kind of overkill but it works.
+            # Disable inlining only when one of the
+            # files in compat/*.c is being linked in.
+            if test x"${LIBOBJS}" != x ; then
+                EXTRA_CFLAGS="${EXTRA_CFLAGS} -fno-inline"
+            fi
 
 	    ;;
 	GNU*)
@@ -953,12 +953,23 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    DL_LIBS=""
 	    LDFLAGS="-export-dynamic"
 	    LD_SEARCH_FLAGS=""
-
 	    # FreeBSD doesn't handle version numbers with dots.
-
 	    UNSHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.a'
 	    SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.so'
 	    TCL_LIB_VERSIONS_OK=nodots
+	    ;;
+	Rhapsody-*|Darwin-*)
+	    SHLIB_CFLAGS="-fno-common"
+	    SHLIB_LD="cc -dynamiclib \${LDFLAGS}"
+	    TCL_SHLIB_LD_EXTRAS="-compatibility_version ${TCL_MAJOR_VERSION} -current_version \${VERSION} -install_name \${LIB_RUNTIME_DIR}/\${TCL_LIB_FILE} -prebind -seg1addr a000000"
+	    SHLIB_LD_LIBS="${LIBS}"
+	    SHLIB_SUFFIX=".dylib"
+	    DL_OBJS="tclLoadDyld.o"
+	    DL_LIBS=""
+	    LDFLAGS="-prebind"
+	    LD_SEARCH_FLAGS=""
+	    CFLAGS_OPTIMIZE="-O3"
+	    EXTRA_CFLAGS="-arch ppc -pipe"
 	    ;;
 	NEXTSTEP-*)
 	    SHLIB_CFLAGS=""
@@ -1021,6 +1032,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 		    LDFLAGS="-pthread"
 		fi
 	    fi
+
 	    ;;
 	QNX-6*)
 	    # QNX RTP
@@ -1128,7 +1140,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 		if test "$arch" = "sparcv9 sparc" ; then
 			if test "$GCC" = "yes" ; then
 			    AC_MSG_WARN("64bit mode not supported with GCC on $system")
-			else 
+			else
 			    do64bit_ok=yes
 			    if test "$do64bitVIS" = "yes" ; then
 				EXTRA_CFLAGS="-xarch=v9a"
@@ -1142,7 +1154,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 		    AC_MSG_WARN("64bit mode only supported sparcv9 system")
 		fi
 	    fi
-
+	    
 	    # Note: need the LIBS below, otherwise Tk won't find Tcl's
 	    # symbols when dynamically loaded into tclsh.
 
@@ -1311,6 +1323,8 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 		IRIX*)
 		    ;;
 		NetBSD-*|FreeBSD-*|OpenBSD-*)
+		    ;;
+		Rhapsody-*|Darwin-*)
 		    ;;
 		RISCos-*)
 		    ;;
