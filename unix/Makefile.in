@@ -159,6 +159,12 @@ TK_SHLIB_CFLAGS = @TK_SHLIB_CFLAGS@
 TK_LIB_FILE = @TK_LIB_FILE@
 #TK_LIB_FILE = libtk.a
 
+TK_LIB_FLAG = @TK_LIB_FLAG@
+#TK_LIB_FLAG = -ltk
+
+TCL_LIB_FLAG = @TCL_LIB_FLAG@
+#TCL_LIB_FLAG = -ltcl
+
 # The symbol below provides support for dynamic loading and shared
 # libraries.  See configure.in for a description of what it means.
 # The values of the symbolis normally set by the configure script.
@@ -295,10 +301,10 @@ all: wish
 
 # The following target is configured by autoconf to generate either
 # a shared library or non-shared library for Tk.
-@TK_LIB_FILE@: ${OBJS}
-	rm -f @TK_LIB_FILE@
+${TK_LIB_FILE}: ${OBJS}
+	rm -f ${TK_LIB_FILE}
 	@MAKE_LIB@
-	$(RANLIB) @TK_LIB_FILE@
+	$(RANLIB) ${TK_LIB_FILE}
 
 # Make target which outputs the list of the .o contained in the Tk lib
 # usefull to build a single big shared library containing Tcl/Tk and other

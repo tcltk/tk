@@ -369,13 +369,13 @@ if test "$ok" = "yes" -a "${SHLIB_SUFFIX}" != ""; then
     TK_SHARED_BUILD=1
     TK_SHLIB_CFLAGS="${SHLIB_CFLAGS}"
     eval "TK_LIB_FILE=libtk${TCL_SHARED_LIB_SUFFIX}"
-    MAKE_LIB="\${SHLIB_LD} -o ${TK_LIB_FILE} \${OBJS} \$(TK_LD_SEARCH_FLAGS) ${SHLIB_LD_LIBS}"
+    MAKE_LIB="\${SHLIB_LD} -o \${TK_LIB_FILE} \${OBJS} \$(TK_LD_SEARCH_FLAGS) ${SHLIB_LD_LIBS}"
     RANLIB=":"
 else
     TK_SHARED_BUILD=0
     TK_SHLIB_CFLAGS=""
     eval "TK_LIB_FILE=libtk${TCL_UNSHARED_LIB_SUFFIX}"
-    MAKE_LIB="ar cr ${TK_LIB_FILE} \${OBJS}"
+    MAKE_LIB="ar cr \${TK_LIB_FILE} \${OBJS}"
 fi
 
 # Note:  in the following variable, it's important to use the absolute
@@ -384,12 +384,12 @@ fi
 # up the Tcl library.
 
 if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-    TK_BUILD_LIB_SPEC="-L`pwd` -ltk${VERSION}\${DBGX}"
-    TK_LIB_SPEC="-L${exec_prefix}/lib -ltk${VERSION}\${DBGX}"
+    TK_LIB_FLAG="-ltk${VERSION}\${DBGX}"
 else
-    TK_BUILD_LIB_SPEC="-L`pwd` -ltk`echo ${VERSION} | tr -d .`\${DBGX}"
-    TK_LIB_SPEC="-L${exec_prefix}/lib -ltk`echo ${VERSION} | tr -d .`\${DBGX}"
+    TK_LIB_FLAG="-ltk`echo ${VERSION} | tr -d .`\${DBGX}"
 fi
+TK_BUILD_LIB_SPEC="-L`pwd` \${TK_LIB_FLAG}"
+TK_LIB_SPEC="-L${exec_prefix}/lib \${TK_LIB_FLAG}"
 
 AC_SUBST(CFLAGS_DEBUG)
 AC_SUBST(CFLAGS_DEFAULT)
@@ -406,12 +406,14 @@ AC_SUBST(SHLIB_SUFFIX)
 AC_SUBST(SHLIB_VERSION)
 AC_SUBST(TCL_BIN_DIR)
 AC_SUBST(TCL_BUILD_LIB_SPEC)
+AC_SUBST(TCL_LIB_FLAG)
 AC_SUBST(TCL_SRC_DIR)
 AC_SUBST(TCL_VERSION)
 AC_SUBST(TK_BUILD_LIB_SPEC)
 AC_SUBST(TK_CC_SEARCH_FLAGS)
 AC_SUBST(TK_LD_SEARCH_FLAGS)
 AC_SUBST(TK_LIB_FILE)
+AC_SUBST(TK_LIB_FLAG)
 AC_SUBST(TK_LIB_SPEC)
 AC_SUBST(TK_MAJOR_VERSION)
 AC_SUBST(TK_MINOR_VERSION)
