@@ -235,7 +235,7 @@ Tk_GetBitmap(interp, tkwin, string)
 		    panic("native bitmap creation failed");
 		}
 	    } else {
-		bitmap = XCreateBitmapFromData(Tk_Display(tkwin),
+		bitmap = TkCreateBitmapFromData(Tk_Display(tkwin),
 		    RootWindowOfScreen(nameKey.screen), predefPtr->source,
 		    (unsigned) width, (unsigned) height);
 	    }
@@ -582,4 +582,102 @@ BitmapInit()
     TkpDefineNativeBitmaps();
 
     Tcl_DeleteInterp(dummy);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkCreateBitmapFromData --
+ *
+ *	Construct a single plane pixmap from bitmap data.  This function
+ *	is equivelent to the XCreateBitmapFromData funtion - except that
+ *	it is cross platform.
+ *
+ * Results:
+ *	Returns a new Pixmap.
+ *
+ * Side effects:
+ *	Allocates a new bitmap and drawable.
+ *
+ *----------------------------------------------------------------------
+ */
+
+Pixmap
+TkCreateBitmapFromData(display, d, data, width, height)
+    Display* display;
+    Drawable d;
+    _Xconst char* data;
+    unsigned int width;
+    unsigned int height;
+{
+    XImage ximage;
+    GC gc;
+    Pixmap pix;
+
+    pix = Tk_GetPixmap(display, d, width, height, 1);
+    gc = XCreateGC(display, pix, 0, NULL);
+    if (gc == NULL) {
+	return None;
+    }
+    ximage.height = height;
+    ximage.width = width;
+    ximage.depth = 1;
+    ximage.bits_per_pixel = 1;
+    ximage.xoffset = 0;
+    ximage.format = XYBitmap;
+    ximage.data = (char *)data;
+    ximage.byte_order = LSBFirst;
+    ximage.bitmap_unit = 8;
+    ximage.bitmap_bit_order = LSBFirst;
+    ximage.bitmap_pad = 8;
+    ximage.bytes_per_line = (width+7)/8;
+
+    TkPutImage(NULL, 0, display, pix, gc, &ximage, 0, 0, 0, 0, width, height);
+    XFreeGC(display, gc);
+    return pix;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkReadBitmapFile --
+ *
+ *	Loads a bitmap image in X bitmap format into the specified
+ *	drawable.  This is equivelent to the XReadBitmapFile in X.
+ *
+ * Results:
+ *	Sets the size, hotspot, and bitmap on success.
+ *
+ * Side effects:
+ *	Creates a new bitmap from the file data.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkReadBitmapFile(display, d, filename, width_return, height_return,
+	bitmap_return, x_hot_return, y_hot_return) 
+    Display* display;
+    Drawable d;
+    _Xconst char* filename;
+    unsigned int* width_return;
+    unsigned int* height_return;
+    Pixmap* bitmap_return;
+    int* x_hot_return;
+    int* y_hot_return;
+{
+    char *data;
+
+    data = TkGetBitmapData(NULL, NULL, (char *) filename,
+	    (int *) width_return, (int *) height_return, x_hot_return,
+	    y_hot_return);
+    if (data == NULL) {
+	return BitmapFileInvalid;
+    }
+
+    *bitmap_return = XCreateBitmapFromData(display, d, data, *width_return,
+	    *height_return);
+
+    ckfree(data);
+    return BitmapSuccess;
 }
