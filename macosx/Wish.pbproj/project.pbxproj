@@ -149,6 +149,7 @@
 			buildRules = (
 			);
 			buildSettings = {
+				OTHER_LDFLAGS = "\U0001-prebind";
 				TEMP_DIR = "${OBJROOT}/Development.build/$(PROJECT_NAME).build/$(TARGET_NAME).build";
 				UNSTRIPPED_PRODUCT = YES;
 			};
@@ -161,6 +162,7 @@
 			buildSettings = {
 				DEBUGGING_SYMBOLS = NO;
 				OPTIMIZATION_CFLAGS = "-Os";
+				OTHER_LDFLAGS = "\U0001-prebind";
 				TEMP_DIR = "${OBJROOT}/Deployment.build/$(PROJECT_NAME).build/$(TARGET_NAME).build";
 			};
 			isa = PBXBuildStyle;
@@ -2989,7 +2991,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# if we are embedding frameworks, copy them into the app\nif [ `echo \"${DYLIB_INSTALL_PATH:-}\" | grep -c \"@executable_path\"` -gt 0 ]; then\nrm -rf \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\nmkdir -p \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\nif [ \"${DEPLOYMENT_LOCATION:-}\" = \"YES\" ]; then\n    FWKDIR=\"${INSTALL_ROOT}/Library/Frameworks\"\nelse\n    FWKDIR=\"${TARGET_BUILD_DIR}\"\nfi\ncp -fRP \"${FWKDIR}/Tcl.framework\" \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\ncp -fRP \"${FWKDIR}/Tk.framework\" \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\nfi";
+			shellScript = "# if we are embedding frameworks, copy them into the app\nif [ `echo \"${DYLIB_INSTALL_PATH:-}\" | grep -c \"@executable_path\"` -gt 0 ]; then\nrm -rf \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\nmkdir -p \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\nif [ \"${DEPLOYMENT_LOCATION:-}\" = \"YES\" -o \"${ACTION}\" = \"install\" ]; then\n    FWKDIR=\"${INSTALL_ROOT}/Library/Frameworks\"\nelse\n    FWKDIR=\"${TARGET_BUILD_DIR}\"\nfi\ncp -fRP \"${FWKDIR}/Tcl.framework\" \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\ncp -fRP \"${FWKDIR}/Tk.framework\" \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\nfi";
 		};
 		F55BC46802B2D38B01DC9062 = {
 			isa = PBXFileReference;
