@@ -3,7 +3,7 @@
 # This demonstration script creates a toplevel window containing
 # a paned window that separates two windows vertically.
 #
-# RCS: @(#) $Id: paned2.tcl,v 1.1 2002/02/22 14:07:01 dkf Exp $
+# RCS: @(#) $Id: paned2.tcl,v 1.2 2003/08/20 23:02:18 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -19,11 +19,9 @@ positionWindow $w
 label $w.msg -font $font -wraplength 4i -justify left -text "The sash between the two scrolled windows below can be used to divide the area between them.  Use the left mouse button to resize without redrawing by just moving the sash, and use the middle mouse button to resize opaquely (always redrawing the windows in each position.)"
 pack $w.msg -side top
 
-frame $w.buttons
-pack $w.buttons -side bottom -fill x -pady 2m
-button $w.buttons.dismiss -text Dismiss -command "destroy $w"
-button $w.buttons.code -text "See Code" -command "showCode $w"
-pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
+## See Code / Dismiss buttons
+set btns [addSeeDismiss $w.buttons $w]
+pack $btns -side bottom -fill x
 
 # Create the pane itself
 panedwindow $w.pane -orient vertical
@@ -63,7 +61,7 @@ pack $f.list -fill both -expand 1
 # The bottom window is a text widget with scrollbar
 set f [frame $w.pane.bottom]
 text $f.text -xscrollcommand "$f.xscr set" -yscrollcommand "$f.yscr set" \
-	-width 30 -wrap none
+	-width 30 -height 8 -wrap none
 scrollbar $f.xscr -orient horizontal -command "$f.text xview"
 scrollbar $f.yscr -orient vertical -command "$f.text yview"
 grid $f.text $f.yscr -sticky nsew

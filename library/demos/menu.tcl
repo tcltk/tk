@@ -3,7 +3,7 @@
 # This demonstration script creates a window with a bunch of menus
 # and cascaded menus using menubars.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.4 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.5 2003/08/20 23:02:18 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -31,11 +31,9 @@ label $w.statusBar.label -textvariable menustatus -relief sunken -bd 1 -font "He
 pack $w.statusBar.label -side left -padx 2 -expand yes -fill both
 pack $w.statusBar -side bottom -fill x -pady 2
 
-frame $w.buttons
-pack $w.buttons -side bottom -fill x -pady 2m
-button $w.buttons.dismiss -text Dismiss -command "destroy $w"
-button $w.buttons.code -text "See Code" -command "showCode $w"
-pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
+## See Code / Dismiss buttons
+set btns [addSeeDismiss $w.buttons $w]
+pack $btns -side bottom -fill x
 
 menu $w.menu -tearoff 0
 

@@ -3,7 +3,7 @@
 # This demonstration script creates several entry widgets without
 # scrollbars.
 #
-# RCS: @(#) $Id: entry1.tcl,v 1.2 1998/09/14 18:23:28 stanton Exp $
+# RCS: @(#) $Id: entry1.tcl,v 1.3 2003/08/20 23:02:18 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -19,11 +19,9 @@ positionWindow $w
 label $w.msg -font $font -wraplength 5i -justify left -text "Three different entries are displayed below.  You can add characters by pointing, clicking and typing.  The normal Motif editing characters are supported, along with many Emacs bindings.  For example, Backspace and Control-h delete the character to the left of the insertion cursor and Delete and Control-d delete the chararacter to the right of the insertion cursor.  For entries that are too large to fit in the window all at once, you can scan through the entries by dragging with mouse button2 pressed."
 pack $w.msg -side top
 
-frame $w.buttons
-pack $w.buttons -side bottom -fill x -pady 2m
-button $w.buttons.dismiss -text Dismiss -command "destroy $w"
-button $w.buttons.code -text "See Code" -command "showCode $w"
-pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
+## See Code / Dismiss buttons
+set btns [addSeeDismiss $w.buttons $w]
+pack $btns -side bottom -fill x
 
 entry $w.e1
 entry $w.e2

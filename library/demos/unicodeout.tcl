@@ -3,7 +3,7 @@
 # This demonstration script shows how you can produce output (in label
 # widgets) using many different alphabets.
 #
-# RCS: @(#) $Id: unicodeout.tcl,v 1.2 2003/02/21 13:05:06 dkf Exp $
+# RCS: @(#) $Id: unicodeout.tcl,v 1.3 2003/08/20 23:02:18 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -16,7 +16,7 @@ wm title $w "Unicode Label Demonstration"
 wm iconname $w "unicodeout"
 positionWindow $w
 
-label $w.msg -font $font -wraplength 4i -justify left \
+label $w.msg -font $font -wraplength 4i -anchor w -justify left \
 	-text "This is a sample of Tk's support for languages that use\
 	non-Western character sets.  However, what you will actually see\
 	below depends largely on what character sets you have installed,\
@@ -26,11 +26,9 @@ label $w.msg -font $font -wraplength 4i -justify left \
 	portable fashion."
 pack $w.msg -side top
 
-frame $w.buttons
-pack $w.buttons -side bottom -fill x -pady 2m
-button $w.buttons.dismiss -text Dismiss -command "destroy $w"
-button $w.buttons.code -text "See Code" -command "showCode $w"
-pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
+## See Code / Dismiss buttons
+set btns [addSeeDismiss $w.buttons $w]
+pack $btns -side bottom -fill x
 
 pack [label $w.wait -text "Please wait while loading fonts..." \
 	-font {Helvetica 12 italic}]
