@@ -2,7 +2,9 @@
 
 	* generic/tkTextDisp.c: 
 	* tests/textDisp.test: fixes to one more old Tk [Bug 422411]
-	this time concerning inconsistent tab interpretation.
+	this time concerning inconsistent tab interpretation.  Also
+	fixed an unreported new problem if a single logical line wraps
+	to fill more than the entire display.
 	
 2003-11-14  Joe English  <jenglish@users.sourceforge.net>
 	* doc/text.n: Fix markup errors.

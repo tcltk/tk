@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.19 2003/11/15 12:47:15 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.20 2003/11/15 16:57:57 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -3491,6 +3491,27 @@ test textDisp-32.1 {everything elided} {
     update ; update ; update ; update
     destroy .tt
 } {}
+
+test textDisp-33.0 {one line longer than fits in the widget} {
+    pack [text .tt -wrap char]
+    .tt insert 1.0 [string repeat "hello there " 2500]
+    update ; update ; update
+    .tt see 1.0
+    lindex [.tt yview] 0
+} {0.0}
+
+test textDisp-33.1 {one line longer than fits in the widget} {
+    destroy .tt
+    pack [text .tt -wrap char]
+    .tt insert 1.0 [string repeat "hello there " 2500]
+    update ; update ; update
+    .tt yview "1.0 +1 displaylines"
+    if {[lindex [.tt yview] 0] > 0.1} {
+	set result "bad result"
+    } else {
+	set result "ok"
+    }
+} {ok}
 
 deleteWindows
 option clear
