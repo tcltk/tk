@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.9 2000/10/24 23:51:33 ericm Exp $
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.10 2001/12/07 00:02:57 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -588,6 +588,10 @@ TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x,
 	bitmap = CreateDIBitmap(dc, &infoPtr->bmiHeader, CBM_INIT,
 		image->data, infoPtr, DIB_RGB_COLORS);
 	ckfree((char *) infoPtr);
+    }
+    if(!bitmap) {
+	panic("Fail to allocate bitmap\n");
+	return
     }
     bitmap = SelectObject(dcMem, bitmap);
     BitBlt(dc, dest_x, dest_y, width, height, dcMem, src_x, src_y, SRCCOPY);
