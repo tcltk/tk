@@ -1,3 +1,11 @@
+2003-01-08  D. Richard Hipp <drh@hwaci.com>
+
+	* generic/tkCanvLine.c:
+	* generic/tkCanvas.h:
+	* generic/tkCanvUtil.c: Clip long lines so that they will display
+	properly even on windowing systems where coordinates are expressed
+	as 16-bit numbers.  [But #663981]
+
 2003-01-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkFrame.c (CreateFrame): throw a Tcl error instead of a
