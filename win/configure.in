@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.53 2003/04/03 02:01:07 mdejong Exp $
+# RCS: @(#) $Id: configure.in,v 1.54 2003/04/03 02:31:31 mdejong Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.57)
@@ -175,7 +175,7 @@ eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}"
 # I left out the other vars that also need to get defined here.
 # we also need to double check about including DBGX in lib names
 # and spaces in file or directory names for the eval
-eval "TK_STUB_LIB_FLAG=\"-ltkstub${VER}${TCL_DBGX}\""
+eval "TK_STUB_LIB_FLAG=\"-ltkstub${VER}${LIBFLAGSUFFIX}\""
 eval "TK_BUILD_STUB_LIB_SPEC=\"-L`pwd` ${TK_STUB_LIB_FLAG}\""
 
 eval "DLLSUFFIX=${DLLSUFFIX}"

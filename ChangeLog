@@ -1,6 +1,14 @@
 2003-04-02  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/configure: Regen.
+	* win/configure.in: Set stub lib flag based
+	on new LIBFLAGSUFFIX variable.
+	* win/tcl.m4: Update from Tcl to get new
+	LIBFLAGSUFFIX variable.
+
+2003-04-02  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/configure: Regen.
 	* win/configure.in: Don't set TCL_DLL_FILE,
 	TCL_LIB_FILE, TCL_STUB_LIB_FILE, TCL_STUB_LIB_FLAG,
 	and TCL_BUILD_STUB_LIB_SPEC. These variables are
