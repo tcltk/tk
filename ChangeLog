@@ -1,5 +1,24 @@
 2002-09-02  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* tests/button.test: added button-14.1
+	* win/tkWinButton.c (TkpComputeButtonGeometry): correct Win button
+	sizing to be equal for one-line buttons with -height of 0 or 1, as
+	well as -height 0 buttons with empty text and no image, which
+	should be the same as single-line text buttons. [Bug #565485]
+
+	* library/button.tcl (::tk::ButtonLeave): correctly restore state
+	of button to normal for unix bindings. [Bug #597920]
+
+	* doc/tk.n: added tk windowingsystem docs.
+
+	* tests/wm.test:
+	* unix/tkUnixWm.c: remove possible 2-second delay in 'raise'.
+	[Patch #601518] (english) TIP #107
+
+	* unix/tcl.m4: add support for 64-bit builds on HP-11 with gcc.
+	* unix/configure.in: make sure to substitute LD_LIBRARY_PATH_VAR.
+	* unix/configure: regend
+
 	* README:		Bumped version number to 8.4.0
 	* generic/tk.h:
 	* unix/configure:
