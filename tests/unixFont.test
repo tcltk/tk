@@ -12,7 +12,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixFont.test,v 1.1.4.7 1999/04/02 18:06:45 hershey Exp $
+# RCS: @(#) $Id: unixFont.test,v 1.1.4.8 1999/04/06 05:07:53 rjohnson Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -230,7 +230,7 @@ test unixfont-8.3 {AllocFont procedure: can't parse info from name} {
     # check that font actual returns the correct attributes.
     # the values of those attributes are system dependent.
     array set fontArray [font actual a12biluc]
-    set result [lsort [array get fontArray]]
+    set result [lsort [array names fontArray]]
     catch {unset fontArray}
     set result
 } {-family -overstrike -size -slant -underline -weight}
