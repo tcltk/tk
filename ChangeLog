@@ -1,3 +1,7 @@
+2003-12-08  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/entry.n: clean up usage of 'edition' as a verb.
+
 2003-12-05  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* tests/text.test:
