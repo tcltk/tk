@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.25.2.5.2.2 2005/01/19 02:03:51 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.25.2.5.2.3 2005/01/31 04:09:49 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -54,6 +54,7 @@ static TkWinProcs asciiProcs = {
 	    HINSTANCE hInstance, LPVOID lpParam)) CreateWindowExA,
     (BOOL (WINAPI *)(HMENU hMenu, UINT uPosition, UINT uFlags,
 	    UINT uIDNewItem, LPCTSTR lpNewItem)) InsertMenuA,
+    (int (WINAPI *)(HWND hWnd, LPCTSTR lpString, int nMaxCount)) GetWindowTextA,
 };
 
 static TkWinProcs unicodeProcs = {
@@ -71,6 +72,7 @@ static TkWinProcs unicodeProcs = {
 	    HINSTANCE hInstance, LPVOID lpParam)) CreateWindowExW,
     (BOOL (WINAPI *)(HMENU hMenu, UINT uPosition, UINT uFlags,
 	    UINT uIDNewItem, LPCTSTR lpNewItem)) InsertMenuW,
+    (int (WINAPI *)(HWND hWnd, LPCTSTR lpString, int nMaxCount)) GetWindowTextW,
 };
 
 TkWinProcs *tkWinProcs;
