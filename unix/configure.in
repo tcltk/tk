@@ -33,10 +33,10 @@ AC_HAVE_HEADERS(unistd.h limits.h)
 
 # set the warning flags depending on whether or not we are using gcc
 if test "${GCC}" = "yes" ; then
-    # leave -Wconversion out, the X libs generate so many of these warnings
+    # leave -Wimplicit-int out, the X libs generate so many of these warnings
     # that they obscure everything else.
 
-    CFLAGS_WARNING="-Wall"
+    CFLAGS_WARNING="-Wall -Wconversion -Wno-implicit-int"
 else
     CFLAGS_WARNING=""
 fi
