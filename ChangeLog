@@ -1,3 +1,34 @@
+2000-01-20  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* library/text.tcl: fixed double-click selection behavior where
+	there were embedded windows/widgets in the same line. [Bug: 3989]
+
+	* win/tkWinWm.c (TkWmProtocolEventProc): cached atom name as the
+	window could get destroyed during eval [Bug: 2513]
+
+	* generic/tkCanvLine.c (LineCoords): fixed segfault when too few
+	coords were passed to a line with certain options set (it should
+	always have thrown an error anyway). [Bug: 4042]
+
+	* tests/text.test:
+	* generic/tkText.c: fixed missing " in error case and missing
+	'dump' in subcommand listing [Bug: 4036]
+
+	* generic/tkListbox.c: adjusted use of basic string concatenation
+	in (non-K&R behavior) [Bug: 4027]
+	Swapped bg/fg class for -select(bg|fg) for listbox and their
+	items [Bug: 4039]
+
+	* unix/mkLinks:
+	* doc/WindowId.3: added docs for Tk_IsContainer and Tk_IsEmbedded
+
+	* doc/text.n: clarified mark gravity definition and usage of
+	``word'' in binding definitions.  [Bug: 2004 2277 1388]
+
+	* generic/tkInt.h: moved new TkDisplay useInputMethods structure
+	element to end to not disturb position of previous elements in
+	the structure (as compared to Tk <=8.2).
+
 2000-01-20  Eric Melski  <ericm@scriptics.com>
 
 	* tests/grid.test: Added a test for the consecutive ^ and multiple
@@ -16,7 +47,6 @@
 	* library/tk.tcl: Created a virtual event <<PrevWindow>> for
 	reverse tab traversals, with one default binding <Shift-Tab>, and
 	OS specific bindings for Linux, HP-UX, and IRIX. (bug #3163)
-	
 
 2000-01-13  Jeff Hobbs  <hobbs@scriptics.com>
 
