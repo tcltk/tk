@@ -1,3 +1,10 @@
+2002-02-18  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/configure: regen'd
+	* unix/tcl.m4:
+	* unix/configure.in: added macros and calls to SC_TCL_EARLY_FLAGS
+	and SC_TCL_64BIT_FLAGS, part of TIP #72.
+
 2002-02-14  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* library/entry.tcl:
