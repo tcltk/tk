@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinImage.c,v 1.6 2002/10/10 21:01:18 hobbs Exp $
+ * RCS: @(#) $Id: tkWinImage.c,v 1.7 2003/07/17 01:02:32 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -621,7 +621,7 @@ XGetImage(display, d, x, y, width, height, plane_mask, format)
 	infoPtr->bmiHeader.biPlanes		= 1;
 	infoPtr->bmiHeader.biBitCount		= 1;
 	infoPtr->bmiHeader.biCompression	= BI_RGB;
-	infoPtr->bmiHeader.biCompression	= 0;
+	infoPtr->bmiHeader.biSizeImage		= 0;
 	infoPtr->bmiHeader.biXPelsPerMeter	= 0;
 	infoPtr->bmiHeader.biYPelsPerMeter	= 0;
 	infoPtr->bmiHeader.biClrUsed		= 0;
