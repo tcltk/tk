@@ -5,10 +5,10 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.13 2002/06/21 23:22:24 hobbs Exp $
+'\" RCS: @(#) $Id: text.n,v 1.14 2002/06/22 08:21:51 hobbs Exp $
 '\" 
 .so man.macros
-.TH text n 4.0 Tk "Tk Built-In Commands"
+.TH text n 8.4 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
@@ -843,7 +843,7 @@ to the lists of indices that are redrawn.  The values of these variables
 are tested by Tk's test suite.
 .VE 8.4
 .TP
-\fIpathName \fBdelete \fIindex1 \fR?\fIindex2\fR?
+\fIpathName \fBdelete \fIindex1 \fR?\fIindex2 ...\fR?
 Delete a range of characters from the text.
 If both \fIindex1\fR and \fIindex2\fR are specified, then delete
 all the characters starting with the one given by \fIindex1\fR
@@ -856,6 +856,16 @@ If \fIindex2\fR isn't specified then the single character at
 It is not allowable to delete characters in a way that would leave
 the text without a newline as the last character.
 The command returns an empty string.
+.VS 8.4
+If more indices are given, multiple ranges of text will be deleted.
+All indices are first checked for validity before any deletions are made.
+They are sorted and the text is removed from the last range to the
+first range to deleted text does not cause a undesired index shifting
+side-effects.  If multiple ranges with the same start index are given,
+then the longest range is used.  If overlapping ranges are given, then
+they will be merged into spans that do not cause deletion of text
+outside the given ranges due to text shifted during deletion.
+.VE 8.4
 .TP
 \fIpathName \fBdlineinfo \fIindex\fR
 Returns a list with five elements describing the area occupied
@@ -969,7 +979,7 @@ option is false.
 .RE
 .VE 8.4
 .TP
-\fIpathName \fBget \fIindex1 \fR?\fIindex2\fR?
+\fIpathName \fBget \fIindex1 \fR?\fIindex2 ...\fR?
 Return a range of characters from the text.
 The return value will be all the characters in the text starting
 with the one whose index is \fIindex1\fR and ending just before
@@ -982,6 +992,11 @@ is past the end of the file or \fIindex2\fR is less than or equal
 to \fIindex1\fR) then an empty string is returned.
 If the specified range contains embedded windows, no information
 about them is included in the returned string.
+.VS 8.4
+If multiple index pairs are given, multiple ranges of text will be returned
+in a list.  Invalid ranges will not be represented with empty strings in
+the list.  The ranges are returned in the order passed to \fBget\fR.
+.VE 8.4
 .TP
 \fIpathName \fBimage \fIoption \fR?\fIarg arg ...\fR?
 This command is used to manipulate embedded images.
