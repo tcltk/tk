@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.15 2000/01/14 19:35:13 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.16 2000/01/21 03:55:26 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -2177,9 +2177,8 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    return TCL_ERROR;
 	}
 	if (argc == 3) {
-	    Tcl_SetResult(interp,
-		    ((wmPtr->titleUid != NULL) ? wmPtr->titleUid : winPtr->nameUid),
-		    TCL_STATIC);
+	    Tcl_SetResult(interp, ((wmPtr->titleUid != NULL) ?
+		    wmPtr->titleUid : winPtr->nameUid), TCL_STATIC);
 	    return TCL_OK;
 	} else {
 	    wmPtr->titleUid = Tk_GetUid(argv[3]);
@@ -2193,7 +2192,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	}
     } else if ((c == 't') && (strncmp(argv[1], "transient", length) == 0)
 	    && (length >= 3)) {
-	TkWindow *masterPtr;
+	TkWindow *masterPtr = wmPtr->masterPtr;
 
 	if ((argc != 3) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
@@ -2201,19 +2200,18 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    return TCL_ERROR;
 	}
 	if (argc == 3) {
-	    if (wmPtr->masterPtr != NULL) {
-		Tcl_SetResult(interp, Tk_PathName(wmPtr->masterPtr),
-			TCL_STATIC);
+	    if (masterPtr != NULL) {
+		Tcl_SetResult(interp, Tk_PathName(masterPtr), TCL_STATIC);
 	    }
 	    return TCL_OK;
 	}
-	if (wmPtr->masterPtr != NULL) {
+	if (masterPtr != NULL) {
 	    /*
 	     * If we had a master, tell them that we aren't tied
 	     * to them anymore
 	     */
-	    wmPtr->masterPtr->wmInfoPtr->numTransients--;
-	    Tk_DeleteEventHandler((Tk_Window) wmPtr->masterPtr,
+	    masterPtr->wmInfoPtr->numTransients--;
+	    Tk_DeleteEventHandler((Tk_Window) masterPtr,
 		    VisibilityChangeMask,
 		    WmWaitVisibilityProc, (ClientData) winPtr);
 	}
@@ -2227,8 +2225,6 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    if (masterPtr == winPtr) {
 		wmPtr->masterPtr = NULL;
 	    } else {
-		WmInfo *masterWmPtr;
-
 		Tk_MakeWindowExist((Tk_Window)masterPtr);
 
 		/*
@@ -2239,31 +2235,17 @@ Tk_WmCmd(clientData, interp, argc, argv)
 		    masterPtr = masterPtr->parentPtr;
 		}
 		wmPtr->masterPtr = masterPtr;
-		masterWmPtr = masterPtr->wmInfoPtr;
-		masterWmPtr->numTransients++;
+		masterPtr->wmInfoPtr->numTransients++;
 
 		/*
-		 * If the master is mapped, the transient window should
-		 * maintain its state, unless it was Iconic, in which case
-		 * we switch it to Withdrawn.  If the master is not mapped,
-		 * then the transient should be Withdrawn.  If the master
-		 * has never been mapped, then we set an event to trigger
-		 * when
+		 * Bind a visibility event handler to the master window,
+		 * to ensure that when it is mapped, the children will
+		 * have their state set properly.
 		 */
 
 		Tk_CreateEventHandler((Tk_Window) masterPtr,
 			VisibilityChangeMask,
 			WmWaitVisibilityProc, (ClientData) winPtr);
-#if 0
-		if (Tk_IsMapped(masterPtr)) {
-		    if (wmPtr->hints.initial_state == IconicState) {
-			TkpWmSetState(winPtr, WithdrawnState);
-		    }
-		} else if (masterPtr->wmInfoPtr->flags & WM_NEVER_MAPPED) {
-		} else {
-		    ShowWindow(hwnd, SW_HIDE);
-		}
-#endif
 	    }
 	}
 	if (!((wmPtr->flags & WM_NEVER_MAPPED)
@@ -3189,14 +3171,19 @@ TkWmProtocolEventProc(winPtr, eventPtr)
     for (protPtr = wmPtr->protPtr; protPtr != NULL;
 	    protPtr = protPtr->nextPtr) {
 	if (protocol == protPtr->protocol) {
+	    /*
+	     * Cache atom name, as we might destroy the window as a
+	     * result of the eval.
+	     */
+	    char *name = Tk_GetAtomName((Tk_Window) winPtr, protocol);
+
 	    Tcl_Preserve((ClientData) protPtr);
             interp = protPtr->interp;
             Tcl_Preserve((ClientData) interp);
 	    result = Tcl_GlobalEval(interp, protPtr->command);
 	    if (result != TCL_OK) {
 		Tcl_AddErrorInfo(interp, "\n    (command for \"");
-		Tcl_AddErrorInfo(interp,
-			Tk_GetAtomName((Tk_Window) winPtr, protocol));
+		Tcl_AddErrorInfo(interp, name);
 		Tcl_AddErrorInfo(interp, "\" window manager protocol)");
 		Tcl_BackgroundError(interp);
 	    }
@@ -4527,6 +4514,10 @@ RaiseWinWhenIdle(clientData)
 {
     register TkWindow *winPtr = (TkWindow *) clientData;
 
+    if (winPtr->wmInfoPtr->flags & WM_UPDATE_PENDING) {
+	Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData) winPtr);
+	UpdateGeometryInfo((ClientData) winPtr);
+    }
     TkWmRestackToplevel(winPtr, Above, NULL);
     if (!(Tk_Attributes((Tk_Window) winPtr)->override_redirect)) {
 	TkSetFocusWin(winPtr, 1);
