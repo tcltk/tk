@@ -1,5 +1,8 @@
 2002-10-02  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkText.c (TextBlinkProc): don't blink the cursor unless
+	it is visible. [Bug #616791] [Patch #614474] (bonfield)
+
 	* tests/entry.test: added entry-20.7
 	* generic/tkEntry.c (EntryTextVarProc): check if the entry if
 	being deleted before handling an associated textvariable.
