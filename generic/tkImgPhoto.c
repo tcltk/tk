@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.11 1999/12/14 06:52:28 hobbs Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.12 1999/12/15 19:27:27 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -399,6 +399,8 @@ static Tcl_ObjCmdProc *	PhotoOptionFind _ANSI_ARGS_((Tcl_Interp * interp,
 			    Tcl_Obj *obj));
 static void		DitherInstance _ANSI_ARGS_((PhotoInstance *instancePtr,
 			    int x, int y, int width, int height));
+static void		PhotoOptionCleanupProc _ANSI_ARGS_((
+			    ClientData clientData, Tcl_Interp *interp));
 
 #undef MIN
 #define MIN(a, b)	((a) < (b)? (a): (b))
