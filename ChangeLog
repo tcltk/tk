@@ -1,5 +1,10 @@
 2000-06-30  Eric Melski  <ericm@scriptics.com>
 
+	* doc/keysyms.n: 
+	* doc/colors.n: Added extra .CE/.CS pairs to break up the large
+	text block, so that the generated Windows help file could
+	accomodate the manual entry. [Bug: 5862]
+
 	* tests/filebox.test: Adjusted tests to accomodate -multiple.
 
 	* library/xmfbox.tcl: Adjusted arguments list construction such
