@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.15 2002/04/12 07:18:49 hobbs Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.16 2002/08/05 14:01:15 dgp Exp $
  */
 
 #include "tkWinInt.h"
@@ -352,7 +352,7 @@ TkpGetFontFromAttributes(
     Window window;
     WinFont *fontPtr;
     char ***fontFallbacks;
-    char *faceName, *fallback, *actualName;
+    Tk_Uid faceName, fallback, actualName;
 
     tkwin   = (Tk_Window) ((TkWindow *) tkwin)->mainPtr->winPtr;
     window  = Tk_WindowId(tkwin);
