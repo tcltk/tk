@@ -6,11 +6,12 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textIndex.test,v 1.14 2004/09/10 12:13:43 vincentdarley Exp $
+# RCS: @(#) $Id: textIndex.test,v 1.15 2005/02/14 23:03:26 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+namespace import -force tcltest::test
 
 catch {destroy .t}
 text .t -font {Courier -12} -width 20 -height 10
