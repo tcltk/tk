@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.39 2001/09/26 21:36:19 pspjuth Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.40 2001/10/16 21:45:28 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -2571,6 +2571,11 @@ OpenIM(dispPtr)
 #else
     unsigned short i;
     XIMStyles *stylePtr;
+    char *modifier_list;
+
+    if ((modifier_list = XSetLocaleModifiers("")) == NULL) {
+	goto error;
+    }
 
     dispPtr->inputMethod = XOpenIM(dispPtr->display, NULL, NULL, NULL);
     if (dispPtr->inputMethod == NULL) {
