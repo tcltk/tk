@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.11 2002/01/17 03:35:00 dgp Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.12 2002/04/05 08:43:22 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -828,6 +828,8 @@ DisplayCanvText(canvas, itemPtr, display, drawable, x, y, width, height)
 			    - (textInfoPtr->insertWidth / 2)),
 		    (double) (textPtr->header.y1 + y),
 		    &drawableX, &drawableY);
+	    Tk_SetCaretPos(Tk_CanvasTkwin(canvas), drawableX, drawableY,
+		    height);
 	    if (textInfoPtr->cursorOn) {
 		Tk_Fill3DRectangle(Tk_CanvasTkwin(canvas), drawable,
 			textInfoPtr->insertBorder,
