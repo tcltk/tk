@@ -199,9 +199,7 @@ WishPanic TCL_VARARGS_DEF(char *,arg1)
     MessageBox(NULL, buf, "Fatal Error in Wish",
 	    MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
 #ifdef _MSC_VER
-    _asm {
-        int 3
-    }
+    DebugBreak();
 #endif
     ExitProcess(1);
 }
