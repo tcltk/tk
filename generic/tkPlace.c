@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.13 2002/11/07 19:10:30 pspjuth Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.13.2.1 2004/09/16 18:22:21 pspjuth Exp $
  */
 
 #include "tkPort.h"
@@ -49,6 +49,8 @@ typedef struct Slave {
 				 * master was deleted or never assigned. */
     struct Slave *nextPtr;	/* Next in list of windows placed relative
 				 * to same master (NULL for end of list). */
+    Tk_OptionTable optionTable;	/* Table that defines configuration options
+				 * available for this command. */
     /*
      * Geometry information for window;  where there are both relative
      * and absolute values for the same attribute (e.g. x and relX) only
@@ -170,7 +172,9 @@ static int		ConfigureSlave _ANSI_ARGS_((Tcl_Interp *interp,
 			    int objc, Tcl_Obj *CONST objv[]));
 static int		PlaceInfoCommand _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window tkwin));
-static Slave *		CreateSlave _ANSI_ARGS_((Tk_Window tkwin));
+static Slave *		CreateSlave _ANSI_ARGS_((Tk_Window tkwin,
+			    Tk_OptionTable table));
+static void             FreeSlave _ANSI_ARGS_((Slave *slavePtr));
 static Slave *		FindSlave _ANSI_ARGS_((Tk_Window tkwin));
 static Master *		CreateMaster _ANSI_ARGS_((Tk_Window tkwin));
 static Master *		FindMaster _ANSI_ARGS_((Tk_Window tkwin));
@@ -325,7 +329,7 @@ Tk_PlaceObjCmd(clientData, interp, objc, objv)
 		    SlaveStructureProc,	(ClientData) slavePtr);
 	    Tk_ManageGeometry(tkwin, (Tk_GeomMgr *) NULL, (ClientData) NULL);
 	    Tk_UnmapWindow(tkwin);
-	    ckfree((char *) slavePtr);
+	    FreeSlave(slavePtr);
 	    break;
 	}
 	
@@ -379,8 +383,9 @@ Tk_PlaceObjCmd(clientData, interp, objc, objv)
  */
 
 static Slave *
-CreateSlave(tkwin)
+CreateSlave(tkwin, table)
     Tk_Window tkwin;		/* Token for desired slave. */
+    Tk_OptionTable table;
 {
     Tcl_HashEntry *hPtr;
     register Slave *slavePtr;
@@ -395,6 +400,7 @@ CreateSlave(tkwin)
 	slavePtr->inTkwin	= None;
 	slavePtr->anchor	= TK_ANCHOR_NW;
 	slavePtr->borderMode	= BM_INSIDE;
+	slavePtr->optionTable   = table;
 	Tcl_SetHashValue(hPtr, slavePtr);
 	Tk_CreateEventHandler(tkwin, StructureNotifyMask, SlaveStructureProc,
 		(ClientData) slavePtr);
@@ -404,6 +410,32 @@ CreateSlave(tkwin)
     }
     return slavePtr;
 }
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * FreeSlave --
+ *
+ *	Frees the resources held by a Slave structure.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	Memory are freed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+FreeSlave(Slave *slavePtr)
+{
+    Tk_FreeConfigOptions((char *) slavePtr, slavePtr->optionTable,
+	    slavePtr->tkwin);
+    ckfree((char *) slavePtr);
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -600,9 +632,9 @@ ConfigureSlave(interp, tkwin, table, objc, objv)
 	return TCL_ERROR;
     }
 
-    slavePtr = CreateSlave(tkwin);
-    
-    if (Tk_SetOptions(interp, (char *)slavePtr, table, objc, objv,
+    slavePtr = CreateSlave(tkwin, table);
+
+    if (Tk_SetOptions(interp, (char *) slavePtr, table, objc, objv,
 	    slavePtr->tkwin, &savedOptions, &mask) != TCL_OK) {
 	Tk_RestoreSavedOptions(&savedOptions);
 	result = TCL_ERROR;
@@ -1077,7 +1109,7 @@ SlaveStructureProc(clientData, eventPtr)
 	UnlinkSlave(slavePtr);
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->slaveTable,
 		(char *) slavePtr->tkwin));
-	ckfree((char *) slavePtr);
+	FreeSlave(slavePtr);
     }
 }
 
@@ -1159,5 +1191,5 @@ PlaceLostSlaveProc(clientData, tkwin)
             (char *) tkwin));
     Tk_DeleteEventHandler(tkwin, StructureNotifyMask, SlaveStructureProc,
 	    (ClientData) slavePtr);
-    ckfree((char *) slavePtr);
+    FreeSlave(slavePtr);
 }
