@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.8 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: widget,v 1.9 2003/02/19 16:13:15 dkf Exp $
 
 eval destroy [winfo child .]
 wm title . "Widget Demonstration"
@@ -161,6 +161,7 @@ proc addDemoSection {title demos} {
 
 addDemoSection "Labels, buttons, checkbuttons, and radiobuttons" {
     label	"Labels (text and bitmaps)"
+    unicodeout	"Labels and UNICODE text"
     button	"Buttons"
     check	"Check-buttons (select any of a group)"
     radio	"Radio-buttons (select one of a group)"

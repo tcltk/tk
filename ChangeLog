@@ -1,3 +1,8 @@
+2003-02-19  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/demos/widget:		New part for the widget demo showing
+	* library/demos/unicodeout.tcl: Tk's UNICODE output. [Patch #627453]
+
 2003-02-18  Andreas Kupries  <andreask@activestate.com>
 
 	* unix/configure: Regen.
