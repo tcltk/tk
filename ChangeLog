@@ -1,3 +1,8 @@
+2004-02-17  Don Porter	<dgp@users.sourceforge.net>
+
+	* tests/imgPhoto.test (imgPhoto-16.1):	Corrected incorrect
+	variable name [Bug 899010].
+
 2004-02-17  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXMouseEvent.c: fixed modifiers for MouseWheel events.
