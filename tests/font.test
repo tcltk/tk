@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: font.test,v 1.11 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: font.test,v 1.12 2004/06/24 12:45:42 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -134,11 +134,11 @@ test font-4.8 {font command: actual: all attributes} {
     # not (objc > 3) so objPtr = NULL
     lindex [font actual {-family times}] 0
 } {-family}
-test font-4.9 {font command: actual} {unixOnly noExceed} {
+test font-4.9 {font command: actual} {unix noExceed} {
     # (objc > 3) so objPtr = objv[3 + skip]
     string tolower [font actual {-family times} -family]
 } {times}
-test font-4.10 {font command: actual} {pcOnly} {
+test font-4.10 {font command: actual} win {
     # (objc > 3) so objPtr = objv[3 + skip]
     font actual {-family times} -family
 } {Times New Roman}
@@ -496,12 +496,12 @@ test font-15.6 {Tk_AllocFontFromObj procedure: not a named font} {
     setup
     .b.f config -font {times 20}
 } {}
-test font-15.7 {Tk_AllocFontFromObj procedure: get native font} {unixOnly} {
+test font-15.7 {Tk_AllocFontFromObj procedure: get native font} unix {
     # not (fontPtr == NULL) 
     setup
     .b.f config -font fixed
 } {}
-test font-15.8 {Tk_AllocFontFromObj procedure: get native font} {pcOnly} {
+test font-15.8 {Tk_AllocFontFromObj procedure: get native font} win {
     # not (fontPtr == NULL) 
     setup
     .b.f config -font oemfixed
@@ -642,7 +642,7 @@ proc psfontname {name} {
     set start [string first "gsave" $post]
     return [string range $post [expr $start+7] end]
 }
-test font-21.1 {Tk_PostscriptFontName procedure: native} {unixOnly} {
+test font-21.1 {Tk_PostscriptFontName procedure: native} unix {
     set x [font actual {{itc avant garde} 10} -family]
     if {[string match *avant*garde $x]} {
 	psfontname "{itc avant garde} 10"
@@ -650,16 +650,16 @@ test font-21.1 {Tk_PostscriptFontName procedure: native} {unixOnly} {
 	set x {AvantGarde-Book}
     }
 } {AvantGarde-Book}
-test font-21.2 {Tk_PostscriptFontName procedure: native} {pcOnly} {
+test font-21.2 {Tk_PostscriptFontName procedure: native} win {
     psfontname "arial 10"
 } {Helvetica}
-test font-21.3 {Tk_PostscriptFontName procedure: native} {pcOnly} {
+test font-21.3 {Tk_PostscriptFontName procedure: native} win {
     psfontname "{times new roman} 10"
 } {Times-Roman}
-test font-21.4 {Tk_PostscriptFontName procedure: native} {pcOnly} {
+test font-21.4 {Tk_PostscriptFontName procedure: native} win {
     psfontname "{courier new} 10"
 } {Courier}
-test font-21.8 {Tk_PostscriptFontName procedure: spaces} {unixOnly} {
+test font-21.8 {Tk_PostscriptFontName procedure: spaces} unix {
     set x [font actual {{lucida bright} 10} -family]
     if {[string match lucida*bright $x]} {
 	psfontname "{lucida bright} 10"
@@ -667,7 +667,7 @@ test font-21.8 {Tk_PostscriptFontName procedure: spaces} {unixOnly} {
 	set x {LucidaBright}
     }
 } {LucidaBright}
-test font-21.9 {Tk_PostscriptFontName procedure: spaces} {unixOnly} {
+test font-21.9 {Tk_PostscriptFontName procedure: spaces} unix {
     psfontname "{new century schoolbook} 10"
 } {NewCenturySchlbk-Roman}
 set i 10
@@ -697,7 +697,7 @@ foreach p {
 	    ZapfDingbats ZapfDingbats ZapfDingbats ZapfDingbats}
 } {
     set values [lassign $p testName family]
-    test $testName {Tk_PostscriptFontName procedure: exhaustive} unixOnly {
+    test $testName {Tk_PostscriptFontName procedure: exhaustive} unix {
 	set x {}
 	set j 0
 	foreach slant {roman italic} {
@@ -727,7 +727,7 @@ foreach p {
 	    Times-Roman Times-Bold Times-Italic Times-BoldItalic}
 } {
     set values [lassign $p testName family]
-    test $testName {Tk_PostscriptFontName procedure: exhaustive} pcOnly {
+    test $testName {Tk_PostscriptFontName procedure: exhaustive} win {
 	set x {}
 	foreach slant {roman italic} {
 	    foreach weight {normal bold} {
@@ -1322,10 +1322,10 @@ tk scaling $oldscale
 test font-45.1 {TkFontGetAliasList: no match} {
     font actual {snarky 10} -family
 } [font actual {-size 10} -family]
-test font-45.3 {TkFontGetAliasList: match} {pcOnly} {
+test font-45.3 {TkFontGetAliasList: match} win {
     font actual {times 10} -family
 } {Times New Roman}
-test font-45.4 {TkFontGetAliasList: match} {unixOnly noExceed} {
+test font-45.4 {TkFontGetAliasList: match} {unix noExceed} {
     # can fail on Unix systems that have a real "times new roman" font
     font actual {{times new roman} 10} -family
 } [font actual {times 10} -family]

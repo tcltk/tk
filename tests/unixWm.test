@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.38 2004/06/17 22:38:57 dkf Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.39 2004/06/24 12:45:44 dkf Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -691,7 +691,7 @@ test unixWm-19.5 {Tk_WmCmd procedure, "geometry" option} {unix nonPortable} {
     update
     lappend result [wm geometry .t]
 } {150x300+5+6 100x50+5+6}
-test unixWm-19.6 {Tk_WmCmd procedure, "geometry" option} {unix} {
+test unixWm-19.6 {Tk_WmCmd procedure, "geometry" option} unix {
     list [catch {wm geometry .t qrs} msg] $msg
 } {1 {bad geometry specifier "qrs"}}
 

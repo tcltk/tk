@@ -8,7 +8,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winButton.test,v 1.10 2003/04/01 21:07:00 dgp Exp $
+# RCS: @(#) $Id: winButton.test,v 1.11 2004/06/24 12:45:44 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -31,7 +31,7 @@ radiobutton .r -text Radiobutton
 pack .l .b .c .r
 update
 
-test winbutton-1.1 {TkpComputeButtonGeometry procedure} {testImageType pcOnly} {
+test winbutton-1.1 {TkpComputeButtonGeometry procedure} {testImageType win} {
     deleteWindows
     image create test image1
     image1 changed 0 0 0 0 60 40
@@ -48,7 +48,7 @@ test winbutton-1.1 {TkpComputeButtonGeometry procedure} {testImageType pcOnly} {
 	    [winfo reqwidth .b3] [winfo reqheight .b3] \
 	    [winfo reqwidth .b4] [winfo reqheight .b4]
 } {68 48 70 50 90 52 90 52}
-test winbutton-1.2 {TkpComputeButtonGeometry procedure} {pcOnly} {
+test winbutton-1.2 {TkpComputeButtonGeometry procedure} win {
     deleteWindows
     label .b1 -bitmap question -bd 3 -padx 0 -pady 2
     button .b2 -bitmap question -bd 3 -padx 0 -pady 2
@@ -63,7 +63,7 @@ test winbutton-1.2 {TkpComputeButtonGeometry procedure} {pcOnly} {
 	    [winfo reqwidth .b3] [winfo reqheight .b3] \
 	    [winfo reqwidth .b4] [winfo reqheight .b4]
 } {23 33 25 35 45 37 45 37}
-test winbutton-1.3 {TkpComputeButtonGeometry procedure} {pcOnly} {
+test winbutton-1.3 {TkpComputeButtonGeometry procedure} win {
     deleteWindows
     label .b1 -bitmap question -bd 3 -highlightthickness 4
     button .b2 -bitmap question -bd 3 -highlightthickness 0
@@ -79,7 +79,7 @@ test winbutton-1.3 {TkpComputeButtonGeometry procedure} {pcOnly} {
 	    [winfo reqwidth .b3] [winfo reqheight .b3] \
 	    [winfo reqwidth .b4] [winfo reqheight .b4]
 } {31 41 23 33 27 37 27 37}
-test winbutton-1.4 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
+test winbutton-1.4 {TkpComputeButtonGeometry procedure} {win nonPortable} {
     deleteWindows
     label .b1 -text Xagqpim -bd 2 -padx 0 -pady 2 -font {{MS Sans Serif} 8}
     button .b2 -text Xagqpim -bd 2 -padx 0 -pady 2 -font {{MS Sans Serif} 8}
@@ -92,21 +92,21 @@ test winbutton-1.4 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
 	    [winfo reqwidth .b3] [winfo reqheight .b3] \
 	    [winfo reqwidth .b4] [winfo reqheight .b4]
 } {58 24 67 33 88 30 90 28} 
-test winbutton-1.5 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
+test winbutton-1.5 {TkpComputeButtonGeometry procedure} {win nonPortable} {
     deleteWindows
     label .l1 -text "This is a long string that will wrap around on several lines.\n\nIt also has a blank line (above)." -wraplength 1.5i -padx 0 -pady 0
     pack .l1
     update
     list [winfo reqwidth .l1] [winfo reqheight .l1]
 } {178 84}
-test winbutton-1.6 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
+test winbutton-1.6 {TkpComputeButtonGeometry procedure} {win nonPortable} {
     deleteWindows
     label .l1 -text "This is a long string without wrapping.\n\nIt also has a blank line (above)." -padx 0 -pady 0
     pack .l1
     update
     list [winfo reqwidth .l1] [winfo reqheight .l1]
 } {222 52}
-test winbutton-1.7 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
+test winbutton-1.7 {TkpComputeButtonGeometry procedure} {win nonPortable} {
     deleteWindows
     label .b1 -text Xagqpim -bd 2 -padx 0 -pady 2 -width 10
     button .b2 -text Xagqpim -bd 2 -padx 0 -pady 2 -height 5
@@ -119,7 +119,7 @@ test winbutton-1.7 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
 	    [winfo reqwidth .b3] [winfo reqheight .b3] \
 	    [winfo reqwidth .b4] [winfo reqheight .b4]
 } {74 24 67 97 174 46 64 28}
-test winbutton-1.8 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
+test winbutton-1.8 {TkpComputeButtonGeometry procedure} {win nonPortable} {
     deleteWindows
     label .b1 -text Xagqpim -bd 2 -padx 0 -pady 2 \
 	-highlightthickness 4
@@ -135,7 +135,7 @@ test winbutton-1.8 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
 	    [winfo reqwidth .b3] [winfo reqheight .b3] \
 	    [winfo reqwidth .b4] [winfo reqheight .b4]
 } {66 32 65 31 69 31 71 29}
-test winbutton-1.9 {TkpComputeButtonGeometry procedure} {pcOnly} {
+test winbutton-1.9 {TkpComputeButtonGeometry procedure} win {
     deleteWindows
     button .b2 -bitmap question -default normal
     list [winfo reqwidth .b2] [winfo reqheight .b2]

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.30 2004/06/09 22:39:08 vincentdarley Exp $
+# RCS: @(#) $Id: text.test,v 1.31 2004/06/24 12:45:43 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1252,7 +1252,7 @@ test text-18.5 {TextFetchSelection procedure, long selections} {
     selection get
 } $x\n
 
-test text-19.1 {TkTextLostSelection procedure} {unixOnly} {
+test text-19.1 {TkTextLostSelection procedure} unix {
     catch {destroy .t2}
     text .t2
     .t2 insert 1.0 "abc\ndef\nghijk\n1234"
@@ -1260,7 +1260,7 @@ test text-19.1 {TkTextLostSelection procedure} {unixOnly} {
     .t.e select to 1
     .t2 tag ranges sel
 } {}
-test text-19.2 {TkTextLostSelection procedure} {pcOnly} {
+test text-19.2 {TkTextLostSelection procedure} win {
     catch {destroy .t2}
     text .t2
     .t2 insert 1.0 "abc\ndef\nghijk\n1234"

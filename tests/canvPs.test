@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvPs.test,v 1.8 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: canvPs.test,v 1.9 2004/06/24 12:45:42 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -59,7 +59,7 @@ test canvPs-2.2 {test writing to channel, idempotency} {unixOrPc} {
     }
     set status
 } ok
-test canvPs-2.3 {test writing to channel and file, same output} {unixOnly} {
+test canvPs-2.3 {test writing to channel and file, same output} unix {
     removeFile foo.ps
     removeFile bar.ps
     set c1 [open foo.ps w]
@@ -73,7 +73,7 @@ test canvPs-2.3 {test writing to channel and file, same output} {unixOnly} {
     }
     set status
 } ok
-test canvPs-2.4 {test writing to channel and file, same output} {pcOnly} {
+test canvPs-2.4 {test writing to channel and file, same output} win {
     removeFile foo.ps
     removeFile bar.ps
     set c1 [open foo.ps w]

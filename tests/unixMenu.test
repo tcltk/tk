@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixMenu.test,v 1.8 2003/04/01 21:06:56 dgp Exp $
+# RCS: @(#) $Id: unixMenu.test,v 1.9 2004/06/24 12:45:44 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -819,7 +819,7 @@ test unixMenu-25.4 {TkpComputeStandardMenuGeometry - separator} unix {
     .m1 add separator
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test unixMenu-25.5 {TkpComputeStandardMenuGeometry - tearoff entry} {unixOnly} {
+test unixMenu-25.5 {TkpComputeStandardMenuGeometry - tearoff entry} unix {
     catch {destroy .m1}
     menubutton .mb -text "test" -menu .mb.m
     menu .mb.m
@@ -892,7 +892,7 @@ test unixMenu-25.14 {TkpComputeStandardMenuGeometry - second indicator less or e
     .m1 invoke 2
     list [update idletasks] [destroy .m1] [image delete image1]
 } {{} {} {}}
-test unixMenu-25.15 {TkpComputeStandardMenuGeometry - second indicator larger } {unixOnly testImageType} {
+test unixMenu-25.15 {TkpComputeStandardMenuGeometry - second indicator larger } {unix testImageType} {
     catch {destroy .m1}
     catch {image delete image1}
     image create test image1

@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: unixSelect.test,v 1.9 2003/04/01 21:06:57 dgp Exp $
+# RCS: @(#) $Id: unixSelect.test,v 1.10 2004/06/24 12:45:44 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -106,7 +106,7 @@ foreach i {a b c d e f g j h i j k l m o p q r s t u v w x y z} {
     append longValue A$j B$j C$j D$j E$j F$j G$j H$j I$j K$j L$j M$j N$j
 }
 
-test unixSelect-1.1 {TkSelGetSelection procedure: simple i18n text} {unixOnly} {
+test unixSelect-1.1 {TkSelGetSelection procedure: simple i18n text} unix {
     setupbg
     entry .e
     pack .e
@@ -118,7 +118,7 @@ test unixSelect-1.1 {TkSelGetSelection procedure: simple i18n text} {unixOnly} {
     destroy .e
     set result
 } {5}
-test unixSelect-1.2 {TkSelGetSelection procedure: simple i18n text, iso8859-1} {unixOnly} {
+test unixSelect-1.2 {TkSelGetSelection procedure: simple i18n text, iso8859-1} unix {
     setupbg
     dobg {
 	entry .e; pack .e; update
@@ -130,7 +130,7 @@ test unixSelect-1.2 {TkSelGetSelection procedure: simple i18n text, iso8859-1} {
     list [string equal \u00fc? $x] \
 	    [string length $x] [string bytelength $x]
 } {1 2 3}
-test unixSelect-1.4 {TkSelGetSelection procedure: simple i18n text, iso2022} {unixOnly} {
+test unixSelect-1.4 {TkSelGetSelection procedure: simple i18n text, iso2022} unix {
     setupbg
     setup
     selection handle -type COMPOUND_TEXT -format COMPOUND_TEXT . \
@@ -146,7 +146,7 @@ test unixSelect-1.4 {TkSelGetSelection procedure: simple i18n text, iso2022} {un
     cleanupbg
     lappend result $selInfo
 } {1 2 4 {COMPOUND_TEXT 0 4000}}
-test unixSelect-1.5 {TkSelGetSelection procedure: INCR i18n text, iso2022} {unixOnly} {
+test unixSelect-1.5 {TkSelGetSelection procedure: INCR i18n text, iso2022} unix {
 
     # This test is subtle.  The selection ends up getting fetched twice by
     # Tk:  once to compute the length, and again to actually send the data.
@@ -169,7 +169,7 @@ test unixSelect-1.5 {TkSelGetSelection procedure: INCR i18n text, iso2022} {unix
     cleanupbg
     lappend result $selInfo
 } {1 8000 8002 {COMPOUND_TEXT 0 4000 COMPOUND_TEXT 4000 3999 COMPOUND_TEXT 7998 4000 COMPOUND_TEXT 0 4000 COMPOUND_TEXT 4000 3998 COMPOUND_TEXT 7997 4000}}
-test unixSelect-1.6 {TkSelGetSelection procedure: simple i18n text, iso2022} {unixOnly} {
+test unixSelect-1.6 {TkSelGetSelection procedure: simple i18n text, iso2022} unix {
     setupbg
     setup
     selection handle -type COMPOUND_TEXT -format COMPOUND_TEXT . \
@@ -185,7 +185,7 @@ test unixSelect-1.6 {TkSelGetSelection procedure: simple i18n text, iso2022} {un
     cleanupbg
     lappend result $selInfo
 } {1 2 4 {COMPOUND_TEXT 0 4000}}
-test unixSelect-1.7 {TkSelGetSelection procedure: INCR i18n text} {unixOnly} {
+test unixSelect-1.7 {TkSelGetSelection procedure: INCR i18n text} unix {
     setupbg
     dobg "entry .e; pack .e; update
     .e insert 0 \[encoding convertfrom identity \\u00fcber\]$longValue
@@ -194,7 +194,7 @@ test unixSelect-1.7 {TkSelGetSelection procedure: INCR i18n text} {unixOnly} {
     cleanupbg
     set result
 } [expr {5 + [string bytelength $longValue]}]
-test unixSelect-1.8 {TkSelGetSelection procedure: INCR i18n text} {unixOnly} {
+test unixSelect-1.8 {TkSelGetSelection procedure: INCR i18n text} unix {
     setupbg
     dobg {
 	entry .e; pack .e; update
@@ -206,7 +206,7 @@ test unixSelect-1.8 {TkSelGetSelection procedure: INCR i18n text} {unixOnly} {
     list [string equal [string repeat x 3999]\u00fc $x] \
 	    [string length $x] [string bytelength $x]
 } {1 4000 4001}
-test unixSelect-1.9 {TkSelGetSelection procedure: INCR i18n text} {unixOnly} {
+test unixSelect-1.9 {TkSelGetSelection procedure: INCR i18n text} unix {
     setupbg
     dobg {
 	entry .e; pack .e; update
@@ -218,7 +218,7 @@ test unixSelect-1.9 {TkSelGetSelection procedure: INCR i18n text} {unixOnly} {
     list [string equal \u00fc[string repeat x 3999] $x] \
 	    [string length $x] [string bytelength $x]
 } {1 4000 4001}
-test unixSelect-1.10 {TkSelGetSelection procedure: INCR i18n text} {unixOnly} {
+test unixSelect-1.10 {TkSelGetSelection procedure: INCR i18n text} unix {
     setupbg
     dobg {
 	entry .e; pack .e; update
@@ -233,7 +233,7 @@ test unixSelect-1.10 {TkSelGetSelection procedure: INCR i18n text} {unixOnly} {
 # Now some tests to make sure that the right thing is done when
 # transferring UTF8 selections, to prevent [Bug 614650] and its ilk
 # from rearing its ugly head again.
-test unixSelect-1.11 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixOnly} {
+test unixSelect-1.11 {TkSelGetSelection procedure: INCR i18n text, utf-8} unix {
     setupbg
     dobg {
 	entry .e; pack .e; update
@@ -245,7 +245,7 @@ test unixSelect-1.11 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixO
     list [string equal [string repeat x 3999]\u00fc $x] \
 	    [string length $x] [string bytelength $x]
 } {1 4000 4001}
-test unixSelect-1.12 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixOnly} {
+test unixSelect-1.12 {TkSelGetSelection procedure: INCR i18n text, utf-8} unix {
     setupbg
     dobg {
 	entry .e; pack .e; update
@@ -257,7 +257,7 @@ test unixSelect-1.12 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixO
     list [string equal \u00fc[string repeat x 3999] $x] \
 	    [string length $x] [string bytelength $x]
 } {1 4000 4001}
-test unixSelect-1.13 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixOnly} {
+test unixSelect-1.13 {TkSelGetSelection procedure: INCR i18n text, utf-8} unix {
     setupbg
     dobg {
 	entry .e; pack .e; update
@@ -269,7 +269,7 @@ test unixSelect-1.13 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixO
     list [string equal [string repeat x 3999]\u00fc[string repeat x 4000] $x] \
 	    [string length $x] [string bytelength $x]
 } {1 8000 8001}
-test unixSelect-1.14 {TkSelGetSelection procedure: simple i18n text, utf-8} {unixOnly} {
+test unixSelect-1.14 {TkSelGetSelection procedure: simple i18n text, utf-8} unix {
     setupbg
     entry .e
     pack .e
@@ -281,7 +281,7 @@ test unixSelect-1.14 {TkSelGetSelection procedure: simple i18n text, utf-8} {uni
     destroy .e
     set result
 } {5}
-test unixSelect-1.15 {TkSelGetSelection procedure: simple i18n text, utf-8} {unixOnly} {
+test unixSelect-1.15 {TkSelGetSelection procedure: simple i18n text, utf-8} unix {
     setupbg
     dobg {
 	entry .e; pack .e; update
@@ -293,7 +293,7 @@ test unixSelect-1.15 {TkSelGetSelection procedure: simple i18n text, utf-8} {uni
     list [string equal \u00fc\u0444 $x] \
 	    [string length $x] [string bytelength $x]
 } {1 2 4}
-test unixSelect-1.16 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixOnly} {
+test unixSelect-1.16 {TkSelGetSelection procedure: INCR i18n text, utf-8} unix {
     setupbg
     dobg {
 	entry .e; pack .e; update
@@ -305,7 +305,7 @@ test unixSelect-1.16 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixO
     list [string equal [string repeat [string repeat \u00c4\u00e4 50]\n 21] $x] \
 	    [string length $x] [string bytelength $x]
 } {1 2121 4221}
-test unixSelect-1.17 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixOnly} {
+test unixSelect-1.17 {TkSelGetSelection procedure: INCR i18n text, utf-8} unix {
     setupbg
     dobg {
 	entry .e; pack .e; update
@@ -317,7 +317,7 @@ test unixSelect-1.17 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixO
     list [string equal i[string repeat [string repeat \u00c4\u00e4 50]\n 21] $x] \
 	    [string length $x] [string bytelength $x]
 } {1 2122 4222}
-test unixSelect-1.18 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixOnly} {
+test unixSelect-1.18 {TkSelGetSelection procedure: INCR i18n text, utf-8} unix {
     setupbg
     dobg {
 	text .t; pack .t; update
@@ -331,7 +331,7 @@ test unixSelect-1.18 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixO
     list [string equal [string repeat [string repeat \u00c4\u00e4 50]\n 21] $x] \
 	    [string length $x] [string bytelength $x]
 } {1 2121 4221}
-test unixSelect-1.19 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixOnly} {
+test unixSelect-1.19 {TkSelGetSelection procedure: INCR i18n text, utf-8} unix {
     setupbg
     dobg {
 	text .t; pack .t; update
@@ -345,7 +345,7 @@ test unixSelect-1.19 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixO
     list [string equal i[string repeat [string repeat \u00c4\u00e4 50]\n 21] $x] \
 	    [string length $x] [string bytelength $x]
 } {1 2122 4222}
-test unixSelect-1.20 {Automatic UTF8_STRING support for selection handle} {unixOnly} {
+test unixSelect-1.20 {Automatic UTF8_STRING support for selection handle} unix {
     # See Bug #666346 "Selection handling crashes under KDE 3.0"
     label .l 
     selection handle .l  [list handler STRING]

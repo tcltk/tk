@@ -9,7 +9,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winWm.test,v 1.10 2003/04/01 21:07:02 dgp Exp $
+# RCS: @(#) $Id: winWm.test,v 1.11 2004/06/24 12:45:44 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -32,7 +32,7 @@ update
 set menuheight [expr $menuheight - [winfo y .t]]
 destroy .t
 
-test winWm-1.1 {TkWmMapWindow} {pcOnly} {
+test winWm-1.1 {TkWmMapWindow} win {
     toplevel .t
     wm override .t 1
     wm geometry .t +0+0
@@ -41,7 +41,7 @@ test winWm-1.1 {TkWmMapWindow} {pcOnly} {
     destroy .t
     set result
 } {0 0}
-test winWm-1.2 {TkWmMapWindow} {pcOnly} {
+test winWm-1.2 {TkWmMapWindow} win {
     toplevel .t
     wm transient .t .
     update
@@ -53,7 +53,7 @@ test winWm-1.2 {TkWmMapWindow} {pcOnly} {
     destroy .t
     set msg
 } {can't iconify ".t": it is a transient}
-test winWm-1.3 {TkWmMapWindow} {pcOnly} {
+test winWm-1.3 {TkWmMapWindow} win {
     toplevel .t
     update
     toplevel .t2
@@ -62,7 +62,7 @@ test winWm-1.3 {TkWmMapWindow} {pcOnly} {
     destroy .t .t2
     set result
 } 1
-test winWm-1.4 {TkWmMapWindow} {pcOnly} {
+test winWm-1.4 {TkWmMapWindow} win {
     toplevel .t
     wm geometry .t +10+10
     update
@@ -73,7 +73,7 @@ test winWm-1.4 {TkWmMapWindow} {pcOnly} {
     destroy .t .t2
     set result
 } {10 40}
-test winWm-1.5 {TkWmMapWindow} {pcOnly} {
+test winWm-1.5 {TkWmMapWindow} win {
     toplevel .t
     wm iconify .t
     update
@@ -82,7 +82,7 @@ test winWm-1.5 {TkWmMapWindow} {pcOnly} {
     set result
 } iconic
 
-test winWm-2.1 {TkpWmSetState} {pcOnly} {
+test winWm-2.1 {TkpWmSetState} win {
     toplevel .t
     wm geometry .t 150x50+10+10
     update
@@ -96,7 +96,7 @@ test winWm-2.1 {TkpWmSetState} {pcOnly} {
     destroy .t
     set result
 } {normal iconic normal}
-test winWm-2.2 {TkpWmSetState} {pcOnly} {
+test winWm-2.2 {TkpWmSetState} win {
     toplevel .t
     wm geometry .t 150x50+10+10
     update
@@ -113,7 +113,7 @@ test winWm-2.2 {TkpWmSetState} {pcOnly} {
     destroy .t
     set result
 } {normal withdrawn iconic normal}
-test winWm-2.2 {TkpWmSetState} {pcOnly} {
+test winWm-2.2 {TkpWmSetState} win {
     toplevel .t
     wm geometry .t 150x50+10+10
     update
@@ -130,7 +130,7 @@ test winWm-2.2 {TkpWmSetState} {pcOnly} {
     destroy .t
     set result
 } {normal withdrawn iconic normal}
-test winWm-2.4 {TkpWmSetState} {pcOnly} {
+test winWm-2.4 {TkpWmSetState} win {
     set result {}
     toplevel .t
     wm geometry .t 150x50+10+10
@@ -149,7 +149,7 @@ test winWm-2.4 {TkpWmSetState} {pcOnly} {
     set result
 } {{normal 150x50+10+10} {iconic 150x50+10+10} {iconic 150x50+10+10} {normal 200x50+10+10}}
 
-test winWm-3.1 {ConfigureTopLevel: window geometry propagation} {pcOnly} {
+test winWm-3.1 {ConfigureTopLevel: window geometry propagation} win {
     toplevel .t
     wm geometry .t +0+0
     button .t.b
@@ -168,7 +168,7 @@ test winWm-3.1 {ConfigureTopLevel: window geometry propagation} {pcOnly} {
     set x
 } 1
 
-test winWm-4.1 {ConfigureTopLevel: menu resizing} {pcOnly} {
+test winWm-4.1 {ConfigureTopLevel: menu resizing} win {
     set result {}
     toplevel .t
     frame .t.f -width 150 -height 50 -bg red
@@ -185,7 +185,7 @@ test winWm-4.1 {ConfigureTopLevel: menu resizing} {pcOnly} {
     set result
 } [expr $menuheight + 1]
 
-test winWm-5.1 {UpdateGeometryInfo: menu resizing} {pcOnly} {
+test winWm-5.1 {UpdateGeometryInfo: menu resizing} win {
     set result {}
     toplevel .t
     frame .t.f -width 150 -height 50 -bg red
@@ -204,7 +204,7 @@ test winWm-5.1 {UpdateGeometryInfo: menu resizing} {pcOnly} {
     destroy .t
     set result
 } {50 50 50}
-test winWm-5.2 {UpdateGeometryInfo: menu resizing} {pcOnly} {
+test winWm-5.2 {UpdateGeometryInfo: menu resizing} win {
     set result {}
     toplevel .t
     frame .t.f -width 150 -height 50 -bg red
@@ -225,17 +225,17 @@ test winWm-5.2 {UpdateGeometryInfo: menu resizing} {pcOnly} {
     set result
 } {50 50 0}
 
-test winWm-6.1 {wm attributes} {pcOnly} {
+test winWm-6.1 {wm attributes} win {
     destroy .t
     toplevel .t
     wm attributes .t
 } {-disabled 0 -toolwindow 0 -topmost 0}
-test winWm-6.2 {wm attributes} {pcOnly} {
+test winWm-6.2 {wm attributes} win {
     destroy .t
     toplevel .t
     wm attributes .t -disabled
 } {0}
-test winWm-6.3 {wm attributes} {pcOnly} {
+test winWm-6.3 {wm attributes} win {
     # This isn't quite the correct error message yet, but it works.
     destroy .t
     toplevel .t
@@ -244,8 +244,8 @@ test winWm-6.3 {wm attributes} {pcOnly} {
 
 destroy .t
 
-test winWm-6.1 {deiconify on an unmapped toplevel
-        will raise the window and set the focus} {pcOnly} {
+test winWm-6.1 {deiconify on an unmapped toplevel\
+        will raise the window and set the focus} win {
     destroy .t
     toplevel .t
     lower .t
@@ -255,8 +255,8 @@ test winWm-6.1 {deiconify on an unmapped toplevel
     list [wm stackorder .t isabove .] [focus]
 } {1 .t}
 
-test winWm-6.2 {deiconify on an already mapped toplevel
-        will raise the window and set the focus} {pcOnly} {
+test winWm-6.2 {deiconify on an already mapped toplevel\
+        will raise the window and set the focus} win {
     destroy .t
     toplevel .t
     lower .t

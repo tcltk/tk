@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menuDraw.test,v 1.8 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: menuDraw.test,v 1.9 2004/06/24 12:45:43 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -163,7 +163,7 @@ test menuDraw-7.2 {TkEventuallyRecomputeMenu - update pending} {
 } {{} {}}
 
 
-test menuDraw-8.1 {TkRecomputeMenu} {pcOnly userInteraction} {
+test menuDraw-8.1 {TkRecomputeMenu} {win userInteraction} {
     catch {destroy .m1}
     menu .m1
     .m1 configure -postcommand [.m1 add command -label foo]
@@ -254,7 +254,7 @@ test menuDraw-11.3 {TkMenuSelectImageProc - entry not selected} testImageType {
 } {{} {} {}}
 
 #Don't know how to test missing tkwin in DisplayMenu
-test menuDraw-12.1 {DisplayMenu - menubar background} {unixOnly} {
+test menuDraw-12.1 {DisplayMenu - menubar background} unix {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -label foo -menu .m2
@@ -312,7 +312,7 @@ test menuDraw.12.7 {DisplayMenu - three columns} {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
-test menuDraw-12.6 {Display menu - testing for extra space and menubars} {unixOnly} {
+test menuDraw-12.6 {Display menu - testing for extra space and menubars} unix {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -label foo
@@ -422,7 +422,7 @@ test menuDraw-15.6 {TkPostTearoffMenu - tearoff off right} {
 } {0 {}}
 
 
-test menuDraw-16.1 {TkPostSubmenu} {unixOnly} {
+test menuDraw-16.1 {TkPostSubmenu} unix {
     catch {destroy .m1}
     catch {destroy .m2}
     menu .m1
@@ -433,7 +433,7 @@ test menuDraw-16.1 {TkPostSubmenu} {unixOnly} {
     $tearoff postcascade 0
     list [$tearoff postcascade 0] [destroy .m1] [destroy .m2]
 } {{} {} {}}
-test menuDraw-16.2 {TkPostSubMenu} {unixOnly} {
+test menuDraw-16.2 {TkPostSubMenu} unix {
     catch {destroy .m1}
     catch {destroy .m2}
     catch {destroy .m3}
@@ -461,7 +461,7 @@ test menuDraw-16.4 {TkPostSubMenu} {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [$tearoff postcascade 0] [destroy .m1]
 } {{} {}}
-test menuDraw-16.5 {TkPostSubMenu} {unixOnly} {
+test menuDraw-16.5 {TkPostSubMenu} unix {
     catch {destroy .m1}
     catch {destroy .m2}
     menu .m1
@@ -470,7 +470,7 @@ test menuDraw-16.5 {TkPostSubMenu} {unixOnly} {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {$tearoff postcascade test} msg] $msg [destroy .m1] [destroy .m2]
 } {1 {invalid command name "glorp"} {} {}}
-test menuDraw-16.6 {TkPostSubMenu} {pcOnly userInteraction} {
+test menuDraw-16.6 {TkPostSubMenu} {win userInteraction} {
     catch {destroy .m1}
     catch {destroy .m2}
     menu .m1
@@ -481,7 +481,7 @@ test menuDraw-16.6 {TkPostSubMenu} {pcOnly userInteraction} {
     list [$tearoff postcascade 0] [destroy .m1] [destroy .m2]
 } {{} {} {}}
 
-test menuDraw-17.1 {AdjustMenuCoords - menubar} {unixOnly} {
+test menuDraw-17.1 {AdjustMenuCoords - menubar} unix {
     catch {destroy .m1}
     catch {destroy .m2}
     menu .m1 -tearoff 0
@@ -496,7 +496,7 @@ test menuDraw-17.1 {AdjustMenuCoords - menubar} {unixOnly} {
     }
     list [$w postcascade 0] [. configure -menu ""] [destroy .m1] [destroy .m2]
 } {{} {} {} {}}
-test menuDraw-17.2 {AdjustMenuCoords - menu} {pcOnly userInteraction} {
+test menuDraw-17.2 {AdjustMenuCoords - menu} {win userInteraction} {
     catch {destroy .m1}
     catch {destroy .m2}
     menu .m1

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.27 2004/06/17 22:38:57 dkf Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.28 2004/06/24 12:45:44 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -893,7 +893,7 @@ test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {nonPortabl
     destroy .f2
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 9.0 10.0} {1.0 4.0 5.0 9.0 10.0}}
-test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {unixOnly nonPortable} {
+test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {unix nonPortable} {
     # this test depends on all of the expose events being handled at once
     .t configure -wrap char
     frame .f2 -bg #ff0000
@@ -2760,7 +2760,7 @@ test textDisp-24.4 {TkTextCharLayoutProc, newline not visible} {textfonts} {
     update
     list [.t bbox 1.19] [.t bbox 1.20] [.t bbox 2.20]
 } [list [list 136 3 7 $fixedHeight] [list 143 3 0 $fixedHeight] [list 3 [expr {2*$fixedDiff + 29}] 7 $fixedHeight]]
-test textDisp-24.5 {TkTextCharLayoutProc, char doesn't fit, newline not visible} {unixOnly textfonts} {
+test textDisp-24.5 {TkTextCharLayoutProc, char doesn't fit, newline not visible} {unix textfonts} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 0\n1\n
@@ -3572,7 +3572,7 @@ test textDisp-33.4 {one line longer than fits in the widget} {
     set result
 } {ok}
 destroy .tt
-test textDisp-33.5 {bold or italic fonts} {winOnly} {
+test textDisp-33.5 {bold or italic fonts} {pc} {
     destroy .tt
     pack [text .tt -wrap char -font {{MS Sans Serif} 15}]
     font create no -family [lindex [.tt cget -font] 0] -size 24

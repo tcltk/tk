@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clipboard.test,v 1.8 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: clipboard.test,v 1.9 2004/06/24 12:45:42 dkf Exp $
 
 #
 # Note: Multiple display clipboard handling will only be tested if the
@@ -163,7 +163,7 @@ test clipboard-6.1 {Tk_ClipboardAppend procedure} {
 	clipboard get
     } msg] $msg
 } {0 {first chunk second chunk}}
-test clipboard-6.2 {Tk_ClipboardAppend procedure} {unixOnly} {
+test clipboard-6.2 {Tk_ClipboardAppend procedure} unix {
     setupbg
     clipboard clear
     clipboard append -f INTEGER -t TEST "16"
