@@ -1,3 +1,9 @@
+2003-12-10  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* tests/textWind.test: fixed 2 tests so they run on Windows as well
+	as unix, and so their results take account of -padx/-pady settings
+	for the text widget.
+	
 2003-12-10  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/CrtImgType.3: Fixed line-transposition error found by Eric

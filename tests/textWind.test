@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textWind.test,v 1.14 2003/11/24 10:36:21 vincentdarley Exp $
+# RCS: @(#) $Id: textWind.test,v 1.15 2003/12/10 12:14:05 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -374,7 +374,7 @@ test textWind-6.1 {EmbWinRequestProc procedure} {fonts} {
     lappend result [.t bbox 1.2] [.t bbox 1.3]
 } {{19 5 10 20} {29 8 7 13} {19 5 25 30} {44 13 7 13}}
 
-test textWind-7.1 {EmbWinLostSlaveProc procedure} {fonts} {
+test textWind-7.1 {EmbWinLostSlaveProc procedure} {textfonts} {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     frame .f -width 10 -height 20 -bg $color
@@ -383,8 +383,8 @@ test textWind-7.1 {EmbWinLostSlaveProc procedure} {fonts} {
     place .f -in .t -x 100 -y 50
     update
     list [winfo geom .f] [.t bbox 1.2]
-} {10x20+104+54 {19 11 0 0}}
-test textWind-7.2 {EmbWinLostSlaveProc procedure} {fonts} {
+} [list 10x20+105+55 [list 19 [expr {11+$fixedDiff/2}] 0 0]]
+test textWind-7.2 {EmbWinLostSlaveProc procedure} {textfonts} {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     frame .t.f -width 10 -height 20 -bg $color
@@ -393,7 +393,7 @@ test textWind-7.2 {EmbWinLostSlaveProc procedure} {fonts} {
     place .t.f -x 100 -y 50
     update
     list [winfo geom .t.f] [.t bbox 1.2]
-} {10x20+104+54 {19 11 0 0}}
+} [list 10x20+105+55 [list 19 [expr {11+$fixedDiff/2}] 0 0]]
 catch {destroy .f}
 catch {destroy .t.f}
 
