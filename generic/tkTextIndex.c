@@ -10,13 +10,14 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.15 2004/01/13 02:06:01 davygrvy Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.16 2004/01/27 10:09:35 das Exp $
  */
 
 #include "default.h"
 #include "tkPort.h"
 #include "tkInt.h"
 #include "tkText.h"
+#include <tclInt.h>
 
 /*
  * Index to use to select last character in line (very large integer):

@@ -1,3 +1,14 @@
+2003-01-27  Daniel Steffen  <das@users.sourceforge.net>
+
+        * generic/tkTextIndex.c: added '#include <tclInt.h>' since the 
+        code uses the TclUtfToUniChar macro from that file. [Bug 874745]
+
+        * macosx/Wish.pbproj/project.pbxproj: removed erroneous reference
+        to mkpsenc.tcl in bundle resources phase (mkpsenc.tcl is already
+        part of the copy files phase to Resources/Scripts).
+
+        * macosx/Makefile: added support for 'xcodebuild' on Mac OS X 10.3.
+
 2004-01-25  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
 
 	* macosx/tkMacOSXKeyboard.c: Fix regressions due to the last
