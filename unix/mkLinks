@@ -63,6 +63,14 @@ if test -r GetFont.3; then
     rm -f Tk_AllocFontFromObj.3
     ln GetFont.3 Tk_AllocFontFromObj.3
 fi
+if test -r Grab.3; then
+    rm -f Tk_Grab.3
+    ln Grab.3 Tk_Grab.3
+fi
+if test -r Grab.3; then
+    rm -f Tk_Ungrab.3
+    ln Grab.3 Tk_Ungrab.3
+fi
 if test -r WindowId.3; then
     rm -f Tk_Attributes.3
     ln WindowId.3 Tk_Attributes.3

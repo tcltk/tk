@@ -1,6 +1,9 @@
 2000-04-24  Eric Melski  <ericm@scriptics.com>
 
 	* unix/mkLinks: 
+	* doc/Grab.3: Man page for Tk_Grab and Tk_Ungrab [Bug: 1868, 1889]
+
+	* unix/mkLinks: 
 	* doc/MainWin.3: Added entry for Tk_GetNumMainWindows [Bug: 1865].
 
 	* unix/mkLinks: 
