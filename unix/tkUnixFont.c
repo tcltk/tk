@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.1.4.6 1998/12/13 08:14:39 lfb Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.1.4.7 1999/03/30 04:12:59 stanton Exp $
  */
  
 #include "tkUnixInt.h"
@@ -679,7 +679,7 @@ TkpGetSubFonts(interp, tkfont)
  *	the characters.
  *
  * Results:
- *	The return value is the number of characters from source that
+ *	The return value is the number of bytes from source that
  *	fit into the span that extends from 0 to maxLength.  *lengthPtr is
  *	filled with the x-coordinate of the right edge of the last
  *	character that did fit.

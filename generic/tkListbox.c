@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.1.4.2 1998/09/30 02:17:06 stanton Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.1.4.3 1999/03/30 04:12:57 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -24,7 +24,7 @@
  */
 
 typedef struct Element {
-    int textLength;		/* # non-NULL characters in text. */
+    int textLength;		/* # non-NULL bytes in text string. */
     int lBearing;		/* Distance from first character's
 				 * origin to left edge of character. */
     int pixelWidth;		/* Total width of element in pixels (including

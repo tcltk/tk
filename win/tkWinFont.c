@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.1.4.4 1999/02/11 04:13:50 stanton Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.1.4.5 1999/03/30 04:13:00 stanton Exp $
  */
 
 #include "tkWinInt.h"
@@ -567,13 +567,13 @@ TkpGetSubFonts(
  *
  *  Tk_MeasureChars --
  *
- *	Determine the number of characters from the string that will fit
+ *	Determine the number of bytes from the string that will fit
  *	in the given horizontal span.  The measurement is done under the
  *	assumption that Tk_DrawChars() will be used to actually display
  *	the characters.
  *
  * Results:
- *	The return value is the number of characters from source that
+ *	The return value is the number of bytes from source that
  *	fit into the span that extends from 0 to maxLength.  *lengthPtr is
  *	filled with the x-coordinate of the right edge of the last
  *	character that did fit.

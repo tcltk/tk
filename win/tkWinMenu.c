@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.1.4.10 1999/03/09 01:36:06 lfb Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.1.4.11 1999/03/30 04:13:01 stanton Exp $
  */
 
 #define OEMRESOURCE
@@ -1733,11 +1733,13 @@ DrawMenuUnderline(
 {
     if (mePtr->underline >= 0) {
 	char *label = Tcl_GetStringFromObj(mePtr->labelPtr, NULL);
+	char *start = Tcl_UtfAtIndex(label, mePtr->underline);
+	char *end = Tcl_UtfNext(start);
 
     	Tk_UnderlineChars(menuPtr->display, d,
     		gc, tkfont, label, x + mePtr->indicatorSpace,
     		y + (height + fmPtr->ascent - fmPtr->descent) / 2, 
-		mePtr->underline, mePtr->underline + 1);
+		start - label, end - label);
     }		
 }
 

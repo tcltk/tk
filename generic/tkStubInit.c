@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.2.2.2 1999/03/12 03:12:47 stanton Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.2.2.3 1999/03/30 04:12:58 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -598,6 +598,8 @@ TkIntXlibStubs tkIntXlibStubs = {
     XFilterEvent, /* 78 */
     XmbLookupString, /* 79 */
     TkPutImage, /* 80 */
+    NULL, /* 81 */
+    XParseColor, /* 82 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     NULL, /* 0 */
@@ -658,6 +660,7 @@ TkIntXlibStubs tkIntXlibStubs = {
     XUngrabPointer, /* 55 */
     XUnmapWindow, /* 56 */
     TkPutImage, /* 57 */
+    XParseColor, /* 58 */
 #endif /* MAC_TCL */
 };
 

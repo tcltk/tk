@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.1.4.3 1998/11/25 21:16:31 stanton Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.1.4.4 1999/03/30 04:12:55 stanton Exp $
  */
 
 #include <stdio.h>
@@ -36,8 +36,8 @@ typedef struct TextItem  {
      */
      
     double x, y;		/* Positioning point for text. */
-    int insertPos;		/* Byte index of character just before which
-				 * the insertion cursor is displayed. */
+    int insertPos;		/* Character index of character just before
+				 * which the insertion cursor is displayed. */
 
     /*
      * Configuration settings that are updated by Tk_ConfigureWidget.
@@ -57,6 +57,7 @@ typedef struct TextItem  {
      * configuration settings above.
      */
 
+    int numChars;		/* Length of text in characters. */
     int numBytes;		/* Length of text in bytes. */
     Tk_TextLayout textLayout;	/* Cached text layout information. */
     int leftEdge;		/* Pixel location of the left edge of the
@@ -231,6 +232,7 @@ CreateText(interp, canvas, itemPtr, argc, argv)
     textPtr->text	= NULL;
     textPtr->width	= 0;
 
+    textPtr->numChars	= 0;
     textPtr->numBytes	= 0;
     textPtr->textLayout = NULL;
     textPtr->leftEdge	= 0;
@@ -401,24 +403,23 @@ ConfigureText(interp, canvas, itemPtr, argc, argv, flags)
      */
 
     textPtr->numBytes = strlen(textPtr->text);
+    textPtr->numChars = Tcl_NumUtfChars(textPtr->text, textPtr->numBytes);
     if (textInfoPtr->selItemPtr == itemPtr) {
-	int numChars;
 	
-	numChars = Tcl_NumUtfChars(textPtr->text, textPtr->numBytes);
-	if (textInfoPtr->selectFirst >= numChars) {
+	if (textInfoPtr->selectFirst >= textPtr->numChars) {
 	    textInfoPtr->selItemPtr = NULL;
 	} else {
-	    if (textInfoPtr->selectLast >= numChars) {
-		textInfoPtr->selectLast = numChars - 1;
+	    if (textInfoPtr->selectLast >= textPtr->numChars) {
+		textInfoPtr->selectLast = textPtr->numChars - 1;
 	    }
 	    if ((textInfoPtr->anchorItemPtr == itemPtr)
-		    && (textInfoPtr->selectAnchor >= numChars)) {
-		textInfoPtr->selectAnchor = numChars - 1;
+		    && (textInfoPtr->selectAnchor >= textPtr->numChars)) {
+		textInfoPtr->selectAnchor = textPtr->numChars - 1;
 	    }
 	}
     }
-    if (textPtr->insertPos >= textPtr->numBytes) {
-	textPtr->insertPos = textPtr->numBytes;
+    if (textPtr->insertPos >= textPtr->numChars) {
+	textPtr->insertPos = textPtr->numChars;
     }
 
     ComputeTextBbox(canvas, textPtr);
@@ -504,7 +505,7 @@ ComputeTextBbox(canvas, textPtr)
 
     Tk_FreeTextLayout(textPtr->textLayout);
     textPtr->textLayout = Tk_ComputeTextLayout(textPtr->tkfont,
-	    textPtr->text, textPtr->numBytes, textPtr->width,
+	    textPtr->text, textPtr->numChars, textPtr->width,
 	    textPtr->justify, 0, &width, &height);
 
     /*
@@ -601,7 +602,7 @@ DisplayCanvText(canvas, itemPtr, display, drawable, x, y, width, height)
 {
     TextItem *textPtr;
     Tk_CanvasTextInfo *textInfoPtr;
-    int selFirst, selLast;
+    int selFirstChar, selLastChar;
     short drawableX, drawableY;
 
     textPtr = (TextItem *) itemPtr;
@@ -621,18 +622,17 @@ DisplayCanvText(canvas, itemPtr, display, drawable, x, y, width, height)
 	Tk_CanvasSetStippleOrigin(canvas, textPtr->gc);
     }
 
-    selFirst = -1;
-    selLast = 0;		/* lint. */
+    selFirstChar = -1;
+    selLastChar = 0;		/* lint. */
+
     if (textInfoPtr->selItemPtr == itemPtr) {
 	char *text;
-	int numChars, selFirstChar, selLastChar;
 
 	text = textPtr->text;
-	numChars = Tcl_NumUtfChars(text, textPtr->numBytes);
 	selFirstChar = textInfoPtr->selectFirst;
 	selLastChar = textInfoPtr->selectLast;
-	if (selLastChar >= numChars) {
-	    selLastChar = numChars - 1;
+	if (selLastChar >= textPtr->numChars) {
+	    selLastChar = textPtr->numChars - 1;
 	}
 	if ((selFirstChar >= 0) && (selFirstChar <= selLastChar)) {
 	    int xFirst, yFirst, hFirst;
@@ -642,12 +642,9 @@ DisplayCanvText(canvas, itemPtr, display, drawable, x, y, width, height)
 	     * Draw a special background under the selection.
 	     */
 
-	    selFirst = Tcl_UtfAtIndex(text, selFirstChar) - text;
-	    selLast = Tcl_UtfAtIndex(text, selLastChar + 1) - text;
-
-	    Tk_CharBbox(textPtr->textLayout, selFirst, &xFirst, &yFirst,
+	    Tk_CharBbox(textPtr->textLayout, selFirstChar, &xFirst, &yFirst,
 		    NULL, &hFirst);
-	    Tk_CharBbox(textPtr->textLayout, selLast, &xLast, &yLast,
+	    Tk_CharBbox(textPtr->textLayout, selLastChar, &xLast, &yLast,
 		    NULL, NULL);
 
 	    /*
@@ -732,10 +729,10 @@ DisplayCanvText(canvas, itemPtr, display, drawable, x, y, width, height)
     Tk_DrawTextLayout(display, drawable, textPtr->gc, textPtr->textLayout,
 	    drawableX, drawableY, 0, -1);
 
-    if ((selFirst >= 0) && (textPtr->selTextGC != textPtr->gc)) {
+    if ((selFirstChar >= 0) && (textPtr->selTextGC != textPtr->gc)) {
 	Tk_DrawTextLayout(display, drawable, textPtr->selTextGC,
-	    textPtr->textLayout, drawableX, drawableY, selFirst,
-	    selLast + 1);
+	    textPtr->textLayout, drawableX, drawableY, selFirstChar,
+	    selLastChar + 1);
     }
 
     if (textPtr->stipple != None) {
@@ -770,18 +767,17 @@ TextInsert(canvas, itemPtr, index, string)
     char *string;		/* New characters to be inserted. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int numChars, byteIndex, byteCount, charsAdded;
+    int byteIndex, byteCount, charsAdded;
     char *new, *text;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
     text = textPtr->text;
-    numChars = Tcl_NumUtfChars(text, textPtr->numBytes);
 
     if (index < 0) {
 	index = 0;
     }
-    if (index > numChars) {
-	index = numChars;
+    if (index > textPtr->numChars) {
+	index = textPtr->numChars;
     }
     byteIndex = Tcl_UtfAtIndex(text, index) - text;
     byteCount = strlen(string);
@@ -796,9 +792,9 @@ TextInsert(canvas, itemPtr, index, string)
 
     ckfree(text);
     textPtr->text = new;
+    charsAdded = Tcl_NumUtfChars(string, byteCount);
+    textPtr->numChars += charsAdded;
     textPtr->numBytes += byteCount;
-
-    charsAdded = Tcl_NumUtfChars(new, textPtr->numBytes) - numChars;
 
     /*
      * Inserting characters invalidates indices such as those for the
@@ -817,8 +813,8 @@ TextInsert(canvas, itemPtr, index, string)
 	    textInfoPtr->selectAnchor += charsAdded;
 	}
     }
-    if (textPtr->insertPos >= byteIndex) {
-	textPtr->insertPos += byteCount;
+    if (textPtr->insertPos >= index) {
+	textPtr->insertPos += charsAdded;
     }
     ComputeTextBbox(canvas, textPtr);
 }
@@ -851,25 +847,25 @@ TextDeleteChars(canvas, itemPtr, first, last)
 				 * delete (inclusive). */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int count, numChars, byteIndex, byteCount, charsRemoved;
+    int byteIndex, byteCount, charsRemoved;
     char *new, *text;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
     text = textPtr->text;
-    numChars = Tcl_NumUtfChars(text, textPtr->numBytes);
     if (first < 0) {
 	first = 0;
     }
-    if (last >= numChars) {
-	last = numChars - 1;
+    if (last >= textPtr->numChars) {
+	last = textPtr->numChars - 1;
     }
     if (first > last) {
 	return;
     }
-    count = last + 1 - first;
+    charsRemoved = last + 1 - first;
 
     byteIndex = Tcl_UtfAtIndex(text, first) - text;
-    byteCount = Tcl_UtfAtIndex(text + byteIndex, count) - (text + byteIndex);
+    byteCount = Tcl_UtfAtIndex(text + byteIndex, charsRemoved)
+	- (text + byteIndex);
     
     new = (char *) ckalloc((unsigned) (textPtr->numBytes + 1 - byteCount));
     memcpy(new, text, (size_t) byteIndex);
@@ -877,9 +873,8 @@ TextDeleteChars(canvas, itemPtr, first, last)
 
     ckfree(text);
     textPtr->text = new;
+    textPtr->numChars -= charsRemoved;
     textPtr->numBytes -= byteCount;
-
-    charsRemoved = numChars - Tcl_NumUtfChars(new, textPtr->numBytes);
 
     /*
      * Update indexes for the selection and cursor to reflect the
@@ -910,10 +905,10 @@ TextDeleteChars(canvas, itemPtr, first, last)
 	    }
 	}
     }
-    if (textPtr->insertPos > byteIndex) {
-	textPtr->insertPos -= byteCount;
-	if (textPtr->insertPos < byteIndex) {
-	    textPtr->insertPos = byteIndex;
+    if (textPtr->insertPos > first) {
+	textPtr->insertPos -= charsRemoved;
+	if (textPtr->insertPos < first) {
+	    textPtr->insertPos = first;
 	}
     }
     ComputeTextBbox(canvas, textPtr);
@@ -1099,11 +1094,9 @@ GetTextIndex(interp, canvas, itemPtr, string, indexPtr)
     length = strlen(string);
 
     if ((c == 'e') && (strncmp(string, "end", length) == 0)) {
-	*indexPtr = Tcl_UtfAtIndex(textPtr->text, textPtr->numBytes)
-		- textPtr->text;	
+	*indexPtr = textPtr->numChars;
     } else if ((c == 'i') && (strncmp(string, "insert", length) == 0)) {
-	*indexPtr = Tcl_UtfAtIndex(textPtr->text, textPtr->insertPos)
-		- textPtr->text;	
+	*indexPtr = textPtr->insertPos;
     } else if ((c == 's') && (strncmp(string, "sel.first", length) == 0)
 	    && (length >= 5)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
@@ -1119,7 +1112,7 @@ GetTextIndex(interp, canvas, itemPtr, string, indexPtr)
 	}
 	*indexPtr = textInfoPtr->selectLast;
     } else if (c == '@') {
-	int x, y, byteIndex;
+	int x, y;
 	double tmp;
 	char *end, *p;
 
@@ -1135,18 +1128,14 @@ GetTextIndex(interp, canvas, itemPtr, string, indexPtr)
 	    goto badIndex;
 	}
 	y = (int) ((tmp < 0) ? tmp - 0.5 : tmp + 0.5);
-	byteIndex = Tk_PointToChar(textPtr->textLayout,
+	*indexPtr = Tk_PointToChar(textPtr->textLayout,
 		x + canvasPtr->scrollX1 - textPtr->leftEdge,
 		y + canvasPtr->scrollY1 - textPtr->header.y1);
-	*indexPtr = Tcl_UtfAtIndex(textPtr->text, byteIndex) - textPtr->text;
     } else if (Tcl_GetInt(interp, string, indexPtr) == TCL_OK) {
-	int numChars;
-
-	numChars = Tcl_NumUtfChars(textPtr->text, textPtr->numBytes);
 	if (*indexPtr < 0){
 	    *indexPtr = 0;
-	} else if (*indexPtr > numChars) {
-	    *indexPtr = numChars;
+	} else if (*indexPtr > textPtr->numChars) {
+	    *indexPtr = textPtr->numChars;
 	}
     } else {
 	/*
@@ -1185,15 +1174,15 @@ SetTextCursor(canvas, itemPtr, index)
     Tk_Canvas canvas;		/* Record describing canvas widget. */
     Tk_Item *itemPtr;		/* Text item in which cursor position is to
 				 * be set. */
-    int index;			/* Byte index of character just before which
-				 * cursor is to be positioned. */
+    int index;			/* Character index of character just before
+				 * which cursor is to be positioned. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
 
     if (index < 0) {
 	textPtr->insertPos = 0;
-    } else  if (index > textPtr->numBytes) {
-	textPtr->insertPos = textPtr->numBytes;
+    } else  if (index > textPtr->numChars) {
+	textPtr->insertPos = textPtr->numChars;
     } else {
 	textPtr->insertPos = index;
     }

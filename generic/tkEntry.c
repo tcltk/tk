@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.1.4.4 1999/02/16 11:39:31 lfb Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.1.4.5 1999/03/30 04:12:56 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -580,7 +580,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 
     switch (cmdIndex) {
         case COMMAND_BBOX: {
-	    int index, byteIndex, x, y, width, height;
+	    int index, x, y, width, height;
 	    char *string;
 	    char buf[TCL_INTEGER_SPACE * 4];
 
@@ -596,8 +596,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	        index--;
 	    }
 	    string = entryPtr->displayString;
-	    byteIndex = Tcl_UtfAtIndex(string, index) - string;
-	    Tk_CharBbox(entryPtr->textLayout, byteIndex, &x, &y, 
+	    Tk_CharBbox(entryPtr->textLayout, index, &x, &y, 
                     &width, &height);
 	    sprintf(buf, "%d %d %d %d", x + entryPtr->layoutX,
 		    y + entryPtr->layoutY, width, height);
@@ -1259,7 +1258,7 @@ DisplayEntry(clientData)
     int xBound;
     Tk_FontMetrics fm;
     Pixmap pixmap;
-    int showSelection, selFirstByte, selLastByte, leftByte;
+    int showSelection;
     char *string;
 
     entryPtr->flags &= ~REDRAW_PENDING;
@@ -1322,17 +1321,13 @@ DisplayEntry(clientData)
 	if (entryPtr->selectFirst <= entryPtr->leftIndex) {
 	    selStartX = entryPtr->leftX;
 	} else {
-	    selFirstByte = Tcl_UtfAtIndex(string, entryPtr->selectFirst)
-		    - string;
-	    Tk_CharBbox(entryPtr->textLayout, selFirstByte, &selStartX, NULL,
-		    NULL, NULL);
+	    Tk_CharBbox(entryPtr->textLayout, entryPtr->selectFirst,
+		    &selStartX, NULL, NULL, NULL);
 	    selStartX += entryPtr->layoutX;
 	}
 	if ((selStartX - entryPtr->selBorderWidth) < xBound) {
-	    selLastByte = Tcl_UtfAtIndex(string, entryPtr->selectLast)
-		    - string;
-	    Tk_CharBbox(entryPtr->textLayout, selLastByte, &selEndX, NULL,
-		    NULL, NULL);
+	    Tk_CharBbox(entryPtr->textLayout, entryPtr->selectLast,
+		    &selEndX, NULL, NULL, NULL);
 	    selEndX += entryPtr->layoutX;
 	    Tk_Fill3DRectangle(tkwin, pixmap, entryPtr->selBorder,
 		    selStartX - entryPtr->selBorderWidth,
@@ -1355,11 +1350,7 @@ DisplayEntry(clientData)
     if ((entryPtr->insertPos >= entryPtr->leftIndex)
 	    && (entryPtr->state == STATE_NORMAL)
 	    && (entryPtr->flags & GOT_FOCUS)) {
-	int insertByte;
-
-	insertByte = Tcl_UtfAtIndex(string, entryPtr->insertPos)
-		- string;
-	Tk_CharBbox(entryPtr->textLayout, insertByte, &cursorX, NULL,
+	Tk_CharBbox(entryPtr->textLayout, entryPtr->insertPos, &cursorX, NULL,
 		NULL, NULL);
 	cursorX += entryPtr->layoutX;
 	cursorX -= (entryPtr->insertWidth)/2;
@@ -1382,25 +1373,23 @@ DisplayEntry(clientData)
      * selected portion on top of it.
      */
 
-    leftByte = Tcl_UtfAtIndex(string, entryPtr->leftIndex) - string;
     Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
 	    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
-	    leftByte, entryPtr->numDisplayBytes);
+	    entryPtr->leftIndex, entryPtr->numChars);
 
     if (showSelection
 	    && (entryPtr->selTextGC != entryPtr->textGC)
 	    && (entryPtr->selectFirst < entryPtr->selectLast)) {
+	int selFirst;
+
 	if (entryPtr->selectFirst < entryPtr->leftIndex) {
-	    selFirstByte = leftByte;
+	    selFirst = entryPtr->leftIndex;
 	} else {
-	    selFirstByte = Tcl_UtfAtIndex(string, entryPtr->selectFirst)
-		    - string;
+	    selFirst = entryPtr->selectFirst;
 	}
-	selLastByte = Tcl_UtfAtIndex(string, entryPtr->selectLast)
-		- string;
 	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->selTextGC,
 		entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
-		selFirstByte, selLastByte);
+		selFirst, entryPtr->selectLast);
     }
 
     /*
@@ -1463,7 +1452,7 @@ EntryComputeGeometry(entryPtr)
     Entry *entryPtr;		/* Widget record for entry. */
 {
     int totalLength, overflow, maxOffScreen, rightX;
-    int height, width, i, leftByte;
+    int height, width, i;
     Tk_FontMetrics fm;
     char *p;
 
@@ -1483,8 +1472,16 @@ EntryComputeGeometry(entryPtr)
 	char buf[TCL_UTF_MAX];
 	int size;
 
+	/*
+	 * Normalize the special character so we can safely duplicate it
+	 * in the display string.  If we didn't do this, then two malformed
+	 * characters might end up looking like one valid UTF character in
+	 * the resulting string.
+	 */
+
 	Tcl_UtfToUniChar(entryPtr->showChar, &ch);
 	size = Tcl_UniCharToUtf(ch, buf);
+
 	entryPtr->numDisplayBytes = entryPtr->numChars * size;
 	entryPtr->displayString =
 		(char *) ckalloc((unsigned) (entryPtr->numDisplayBytes + 1));
@@ -1497,7 +1494,7 @@ EntryComputeGeometry(entryPtr)
     }
     Tk_FreeTextLayout(entryPtr->textLayout);
     entryPtr->textLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
-	    entryPtr->displayString, entryPtr->numDisplayBytes, 0,
+	    entryPtr->displayString, entryPtr->numChars, 0,
 	    entryPtr->justify, TK_IGNORE_NEWLINES, &totalLength, &height);
 
     entryPtr->layoutY = (Tk_Height(entryPtr->tkwin) - height) / 2;
@@ -1538,9 +1535,8 @@ EntryComputeGeometry(entryPtr)
 	if (entryPtr->leftIndex > maxOffScreen) {
 	    entryPtr->leftIndex = maxOffScreen;
 	}
-	leftByte = Tcl_UtfAtIndex(entryPtr->displayString, entryPtr->leftIndex)
-		- entryPtr->displayString;
-	Tk_CharBbox(entryPtr->textLayout, leftByte, &rightX, NULL, NULL, NULL);
+	Tk_CharBbox(entryPtr->textLayout, entryPtr->leftIndex, &rightX,
+		NULL, NULL, NULL);
 	entryPtr->leftX = entryPtr->inset;
 	entryPtr->layoutX = entryPtr->leftX - rightX;
     }
@@ -1609,7 +1605,7 @@ InsertChars(entryPtr, index, value)
      * sequences could result in actually forming valid UTF-8 sequences;
      * the number of characters added may not be Tcl_NumUtfChars(string, -1),
      * because of context.  The actual number of characters added is how
-     * many characters were are in the string now minus the number that
+     * many characters are in the string now minus the number that
      * used to be there.
      */
 
@@ -1961,10 +1957,10 @@ EntryCmdDeletedProc(clientData)
  *	or an error.
  *
  * Results:
- *	A standard Tcl result.  If all went well, then *byteIndexPtr is
- *	filled in with the index (into entryPtr) corresponding to
+ *	A standard Tcl result.  If all went well, then *indexPtr is
+ *	filled in with the character index (into entryPtr) corresponding to
  *	string.  The index value is guaranteed to lie between 0 and
- *	the number of bytes in the string, inclusive.  If an
+ *	the number of characters in the string, inclusive.  If an
  *	error occurs then an error message is left in the interp's result.
  *
  * Side effects:
@@ -2030,7 +2026,7 @@ GetEntryIndex(interp, entryPtr, string, indexPtr)
 	    goto badIndex;
 	}
     } else if (string[0] == '@') {
-	int x, roundUp, byteIndex;
+	int x, roundUp;
 
 	if (Tcl_GetInt(interp, string + 1, &x) != TCL_OK) {
 	    goto badIndex;
@@ -2043,9 +2039,8 @@ GetEntryIndex(interp, entryPtr, string, indexPtr)
 	    x = Tk_Width(entryPtr->tkwin) - entryPtr->inset - 1;
 	    roundUp = 1;
 	}
-	byteIndex = Tk_PointToChar(entryPtr->textLayout,
+	*indexPtr = Tk_PointToChar(entryPtr->textLayout,
 		x - entryPtr->layoutX, 0);
-	*indexPtr = Tcl_NumUtfChars(entryPtr->displayString, byteIndex);
 
 	/*
 	 * Special trick:  if the x-position was off-screen to the right,
@@ -2350,28 +2345,22 @@ EntryVisibleRange(entryPtr, firstPtr, lastPtr)
     double *lastPtr;		/* Return position of char just after last
 				 * visible one. */
 {
-    int bytesInWindow, leftByte, charsInWindow;
-    char *string;
+    int charsInWindow;
 
     if (entryPtr->numChars == 0) {
 	*firstPtr = 0.0;
 	*lastPtr = 1.0;
     } else {
-	string = entryPtr->displayString;
-
-	bytesInWindow = Tk_PointToChar(entryPtr->textLayout,
+	charsInWindow = Tk_PointToChar(entryPtr->textLayout,
 		Tk_Width(entryPtr->tkwin) - entryPtr->inset
 			- entryPtr->layoutX - 1, 0);
-	if (bytesInWindow < entryPtr->numDisplayBytes) {
-	    bytesInWindow = Tcl_UtfNext(string + bytesInWindow) - string;
+	if (charsInWindow < entryPtr->numChars) {
+	    charsInWindow++;
 	}
-	bytesInWindow -= entryPtr->leftIndex;
-	if (bytesInWindow == 0) {
-	    bytesInWindow = 1;
+	charsInWindow -= entryPtr->leftIndex;
+	if (charsInWindow == 0) {
+	    charsInWindow = 1;
 	}
-
-	leftByte = Tcl_UtfAtIndex(string, entryPtr->leftIndex) - string;
-	charsInWindow = Tcl_NumUtfChars(string + leftByte, bytesInWindow);
 
 	*firstPtr = (double) entryPtr->leftIndex / entryPtr->numChars;
 	*lastPtr = (double) (entryPtr->leftIndex + charsInWindow)

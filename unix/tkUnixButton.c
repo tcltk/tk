@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.1.4.2 1998/09/30 02:19:14 stanton Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.1.4.3 1999/03/30 04:12:59 stanton Exp $
  */
 
 #include "tkButton.h"
@@ -395,11 +395,7 @@ TkpComputeButtonGeometry(butPtr)
     register TkButton *butPtr;	/* Button whose geometry may have changed. */
 {
     int width, height, avgWidth;
-    int length;
-    char *text;
     Tk_FontMetrics fm;
-
-    text = Tcl_GetStringFromObj(butPtr->textPtr, &length);
 
     butPtr->inset = butPtr->highlightWidth + butPtr->borderWidth;
 
@@ -433,9 +429,10 @@ TkpComputeButtonGeometry(butPtr)
 	goto imageOrBitmap;
     } else {
 	Tk_FreeTextLayout(butPtr->textLayout);
+
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-		 text, length, butPtr->wrapLength, butPtr->justify, 0,
-		&butPtr->textWidth, &butPtr->textHeight);
+		Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
+		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 
 	width = butPtr->textWidth;
 	height = butPtr->textHeight;

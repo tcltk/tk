@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.1.4.5 1998/11/25 23:06:42 stanton Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.1.4.6 1999/03/30 04:12:56 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -71,6 +71,7 @@ typedef struct LayoutChunk {
     CONST char *start;		/* Pointer to simple string to be displayed.
 				 * This is a pointer into the TkTextLayout's
 				 * string. */
+    int numBytes;		/* The number of bytes in this chunk. */
     int numChars;		/* The number of characters in this chunk. */
     int numDisplayChars;	/* The number of characters to display when
 				 * this chunk is displayed.  Can be less than
@@ -800,7 +801,7 @@ UpdateDependentFonts(fiPtr, tkwin, namedHashPtr)
     cacheHashPtr = Tcl_FirstHashEntry(&fiPtr->fontCache, &search);
     while (cacheHashPtr != NULL) {
 	for (fontPtr = (TkFont *) Tcl_GetHashValue(cacheHashPtr);
-		fontPtr->nextPtr != NULL; fontPtr = fontPtr->nextPtr) {
+		fontPtr != NULL; fontPtr = fontPtr->nextPtr) {
 	    if (fontPtr->namedHashPtr == namedHashPtr) {
 		TkpGetFontFromAttributes(fontPtr, tkwin, &nfPtr->fa);
 		if (fiPtr->updatePending == 0) {
@@ -1683,18 +1684,18 @@ Tk_PostscriptFontName(tkfont, dsPtr)
  */
 
 int
-Tk_TextWidth(tkfont, string, numChars)
+Tk_TextWidth(tkfont, string, numBytes)
     Tk_Font tkfont;		/* Font in which text will be measured. */
     CONST char *string;		/* String whose width will be computed. */
-    int numChars;		/* Number of characters to consider from
+    int numBytes;		/* Number of bytes to consider from
 				 * string, or < 0 for strlen(). */
 {
     int width;
 
-    if (numChars < 0) {
-	numChars = strlen(string);
+    if (numBytes < 0) {
+	numBytes = strlen(string);
     }
-    Tk_MeasureChars(tkfont, string, numChars, -1, 0, &width);
+    Tk_MeasureChars(tkfont, string, numBytes, -1, 0, &width);
     return width;
 }
 
@@ -1721,8 +1722,8 @@ Tk_TextWidth(tkfont, string, numChars)
  */
 
 void
-Tk_UnderlineChars(display, drawable, gc, tkfont, string, x, y, firstChar,
-	lastChar)
+Tk_UnderlineChars(display, drawable, gc, tkfont, string, x, y, firstByte,
+	lastByte)
     Display *display;		/* Display on which to draw. */
     Drawable drawable;		/* Window or pixmap in which to draw. */
     GC gc;			/* Graphics context for actually drawing
@@ -1734,18 +1735,17 @@ Tk_UnderlineChars(display, drawable, gc, tkfont, string, x, y, firstChar,
 				 * underlined or overstruck. */
     int x, y;			/* Coordinates at which first character of
 				 * string is drawn. */
-    int firstChar;		/* Index of first character. */
-    int lastChar;		/* Index of one after the last character. */
+    int firstByte;		/* Index of first byte of first character. */
+    int lastByte;		/* Index of first byte after the last
+				 * character. */
 {
     TkFont *fontPtr;
     int startX, endX;
 
     fontPtr = (TkFont *) tkfont;
     
-    Tk_MeasureChars(tkfont, string,
-	    (Tcl_UtfAtIndex(string, firstChar) - string), -1, 0, &startX);
-    Tk_MeasureChars(tkfont, string,
-	    (Tcl_UtfAtIndex(string, lastChar) - string), -1, 0, &endX);
+    Tk_MeasureChars(tkfont, string, firstByte, -1, 0, &startX);
+    Tk_MeasureChars(tkfont, string, lastByte, -1, 0, &endX);
 
     XFillRectangle(display, drawable, gc, x + startX,
 	    y + fontPtr->underlinePos, (unsigned int) (endX - startX),
@@ -1806,7 +1806,7 @@ Tk_ComputeTextLayout(tkfont, string, numChars, wrapLength, justify, flags,
 {
     TkFont *fontPtr;
     CONST char *start, *end, *special;
-    int n, y, charsThisChunk, maxChunks;
+    int n, y, bytesThisChunk, maxChunks;
     int baseline, height, curX, newX, maxWidth;
     TextLayout *layoutPtr;
     LayoutChunk *chunkPtr;
@@ -1823,7 +1823,7 @@ Tk_ComputeTextLayout(tkfont, string, numChars, wrapLength, justify, flags,
     height = fmPtr->ascent + fmPtr->descent;
 
     if (numChars < 0) {
-	numChars = strlen(string);
+	numChars = Tcl_NumUtfChars(string, -1);
     }
     if (wrapLength == 0) {
 	wrapLength = -1;
@@ -1846,7 +1846,7 @@ Tk_ComputeTextLayout(tkfont, string, numChars, wrapLength, justify, flags,
 
     curX = 0;
 
-    end = string + numChars;
+    end = Tcl_UtfAtIndex(string, numChars);
     special = string;
 
     flags &= TK_IGNORE_TABS | TK_IGNORE_NEWLINES;
@@ -1855,6 +1855,11 @@ Tk_ComputeTextLayout(tkfont, string, numChars, wrapLength, justify, flags,
 	if (start >= special) {
 	    /*
 	     * Find the next special character in the string.
+	     *
+	     * INTL: Note that it is safe to increment by byte, because we are
+	     * looking for 7-bit characters that will appear unchanged in
+	     * UTF-8.  At some point we may need to support the full Unicode
+	     * whitespace set.
 	     */
 
 	    for (special = start; special < end; special++) {
@@ -1878,15 +1883,15 @@ Tk_ComputeTextLayout(tkfont, string, numChars, wrapLength, justify, flags,
 
 	chunkPtr = NULL;
 	if (start < special) {
-	    charsThisChunk = Tk_MeasureChars(tkfont, start, special - start,
+	    bytesThisChunk = Tk_MeasureChars(tkfont, start, special - start,
 		    wrapLength - curX, flags, &newX);
 	    newX += curX;
 	    flags &= ~TK_AT_LEAST_ONE;
-	    if (charsThisChunk > 0) {
+	    if (bytesThisChunk > 0) {
 		chunkPtr = NewChunk(&layoutPtr, &maxChunks, start,
-			charsThisChunk, curX, newX, baseline);
+			bytesThisChunk, curX, newX, baseline);
 			
-		start += charsThisChunk;
+		start += bytesThisChunk;
 		curX = newX;
 	    }
 	}
@@ -1894,6 +1899,9 @@ Tk_ComputeTextLayout(tkfont, string, numChars, wrapLength, justify, flags,
 	if ((start == special) && (special < end)) {
 	    /*
 	     * Handle the special character.
+	     *
+	     * INTL: Special will be pointing at a 7-bit character so we
+	     * can safely treat it as a single byte.
 	     */
 
 	    chunkPtr = NULL;
@@ -1941,15 +1949,21 @@ Tk_ComputeTextLayout(tkfont, string, numChars, wrapLength, justify, flags,
 	    start++;
 	}
 	if (chunkPtr != NULL) {
+	    CONST char *end;
+
 	    /*
 	     * Append all the extra spaces on this line to the end of the
-	     * last text chunk.
+	     * last text chunk.  This is a little tricky because we are
+	     * switching back and forth between characters and bytes.
 	     */
-	    charsThisChunk = start - (chunkPtr->start + chunkPtr->numChars);
-	    if (charsThisChunk > 0) {
-		chunkPtr->numChars += Tk_MeasureChars(tkfont,
-			chunkPtr->start + chunkPtr->numChars, charsThisChunk,
+
+	    end = chunkPtr->start + chunkPtr->numBytes;
+	    bytesThisChunk = start - end;
+	    if (bytesThisChunk > 0) {
+		bytesThisChunk = Tk_MeasureChars(tkfont, end, bytesThisChunk,
 			-1, 0, &chunkPtr->totalWidth);
+		chunkPtr->numBytes += bytesThisChunk;
+		chunkPtr->numChars += Tcl_NumUtfChars(end, bytesThisChunk);
 		chunkPtr->totalWidth += curX;
 	    }
 	}
@@ -2006,6 +2020,7 @@ Tk_ComputeTextLayout(tkfont, string, numChars, wrapLength, justify, flags,
 
 	layoutPtr->numChunks = 1;
 	layoutPtr->chunks[0].start		= string;
+	layoutPtr->chunks[0].numBytes		= 0;
 	layoutPtr->chunks[0].numChars		= 0;
 	layoutPtr->chunks[0].numDisplayChars	= -1;
 	layoutPtr->chunks[0].x			= 0;
@@ -2118,6 +2133,8 @@ Tk_DrawTextLayout(display, drawable, gc, layout, x, y, firstChar, lastChar)
 {
     TextLayout *layoutPtr;
     int i, numDisplayChars, drawX;
+    CONST char *firstByte;
+    CONST char *lastByte;
     LayoutChunk *chunkPtr;
 
     layoutPtr = (TextLayout *) layout;
@@ -2135,15 +2152,18 @@ Tk_DrawTextLayout(display, drawable, gc, layout, x, y, firstChar, lastChar)
 	    if (firstChar <= 0) {
 		drawX = 0;
 		firstChar = 0;
+		firstByte = chunkPtr->start;
 	    } else {
-		Tk_MeasureChars(layoutPtr->tkfont, chunkPtr->start, firstChar,
-			-1, 0, &drawX);
+		firstByte = Tcl_UtfAtIndex(chunkPtr->start, firstChar);
+		Tk_MeasureChars(layoutPtr->tkfont, chunkPtr->start,
+			firstByte - chunkPtr->start, -1, 0, &drawX);
 	    }
 	    if (lastChar < numDisplayChars) {
 		numDisplayChars = lastChar;
 	    }
+	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
 	    Tk_DrawChars(display, drawable, gc, layoutPtr->tkfont,
-		    chunkPtr->start + firstChar, numDisplayChars - firstChar,
+		    firstByte, lastByte - firstByte,
 		    x + chunkPtr->x + drawX, y + chunkPtr->y);
 	}
 	firstChar -= chunkPtr->numChars;
@@ -2249,7 +2269,7 @@ Tk_PointToChar(layout, x, y)
     TextLayout *layoutPtr;
     LayoutChunk *chunkPtr, *lastPtr;
     TkFont *fontPtr;
-    int i, n, dummy, baseline, pos;
+    int i, n, dummy, baseline, pos, numChars;
 
     if (y < 0) {
 	/*
@@ -2267,6 +2287,7 @@ Tk_PointToChar(layout, x, y)
     layoutPtr = (TextLayout *) layout;
     fontPtr = (TkFont *) layoutPtr->tkfont;
     lastPtr = chunkPtr = layoutPtr->chunks;
+    numChars = 0;
     for (i = 0; i < layoutPtr->numChunks; i++) {
 	baseline = chunkPtr->y;
 	if (y < baseline + fontPtr->fm.descent) {
@@ -2276,7 +2297,7 @@ Tk_PointToChar(layout, x, y)
 		 * the index of the first character on this line.
 		 */
 
-		return chunkPtr->start - layoutPtr->string;
+		return numChars;
 	    }
 	    if (x >= layoutPtr->width) {
 		/*
@@ -2307,13 +2328,14 @@ Tk_PointToChar(layout, x, y)
 			 * tab or newline char.
 			 */
 
-			return chunkPtr->start - layoutPtr->string;
+			return numChars;
 		    }
 		    n = Tk_MeasureChars((Tk_Font) fontPtr, chunkPtr->start,
-			    chunkPtr->numChars, x - chunkPtr->x,
+			    chunkPtr->numBytes, x - chunkPtr->x,
 			    0, &dummy);
-		    return (chunkPtr->start + n) - layoutPtr->string;
+		    return numChars + Tcl_NumUtfChars(chunkPtr->start, n);
 		}
+		numChars += chunkPtr->numChars;
 		lastPtr = chunkPtr;
 		chunkPtr++;
 		i++;
@@ -2325,12 +2347,13 @@ Tk_PointToChar(layout, x, y)
 	     * chunk on this line.
 	     */
 
-	    pos = (lastPtr->start + lastPtr->numChars) - layoutPtr->string;
+	    pos = numChars;
 	    if (i < layoutPtr->numChunks) {
 		pos--;
 	    }
 	    return pos;
 	}
+	numChars += chunkPtr->numChars;
 	lastPtr = chunkPtr;
 	chunkPtr++;
     }
@@ -2397,6 +2420,7 @@ Tk_CharBbox(layout, index, xPtr, yPtr, widthPtr, heightPtr)
     int i, x, w;
     Tk_Font tkfont;
     TkFont *fontPtr;
+    CONST char *end;
 
     if (index < 0) {
 	return 0;
@@ -2415,12 +2439,15 @@ Tk_CharBbox(layout, index, xPtr, yPtr, widthPtr, heightPtr)
 		goto check;
 	    }
 	} else if (index < chunkPtr->numChars) {
+	    end = Tcl_UtfAtIndex(chunkPtr->start, index);
 	    if (xPtr != NULL) {
-		Tk_MeasureChars(tkfont, chunkPtr->start, index, -1, 0, &x);
+		Tk_MeasureChars(tkfont, chunkPtr->start,
+			end -  chunkPtr->start, -1, 0, &x);
 		x += chunkPtr->x;
 	    }
 	    if (widthPtr != NULL) {
-		Tk_MeasureChars(tkfont, chunkPtr->start + index, 1, -1, 0, &w);
+		Tk_MeasureChars(tkfont, end, Tcl_UtfNext(end) - end,
+			-1, 0, &w);
 	    }
 	    goto check;
 	}
@@ -2694,6 +2721,8 @@ Tk_TextLayoutToPostscript(interp, layout)
     char buf[MAXUSE+10];
     LayoutChunk *chunkPtr;
     int i, j, used, c, baseline;
+    Tcl_UniChar ch;
+    CONST char *p;
     TextLayout *layoutPtr;
 
     layoutPtr = (TextLayout *) layout;
@@ -2714,8 +2743,16 @@ Tk_TextLayoutToPostscript(interp, layout)
 		buf[used++] = 't';
 	    }
 	} else {
+	    p = chunkPtr->start;
 	    for (j = 0; j < chunkPtr->numDisplayChars; j++) {
-		c = UCHAR(chunkPtr->start[j]);
+		/*
+		 * INTL: For now we just treat the characters as binary
+		 * data and display the lower byte.  Eventually this should
+		 * be revised to handle international postscript fonts.
+		 */
+
+		p += Tcl_UtfToUniChar(p, &ch);
+		c = UCHAR(ch & 0xff);
 		if ((c == '(') || (c == ')') || (c == '\\') || (c < 0x20)
 			|| (c >= UCHAR(0x7f))) {
 		    /*
@@ -3120,18 +3157,18 @@ ParseFontNameObj(interp, tkwin, objPtr, faPtr)
  *---------------------------------------------------------------------------
  */
 static LayoutChunk *
-NewChunk(layoutPtrPtr, maxPtr, start, numChars, curX, newX, y)
+NewChunk(layoutPtrPtr, maxPtr, start, numBytes, curX, newX, y)
     TextLayout **layoutPtrPtr;
     int *maxPtr;
     CONST char *start;
-    int numChars;
+    int numBytes;
     int curX;
     int newX;
     int y;
 {
     TextLayout *layoutPtr;
     LayoutChunk *chunkPtr;
-    int maxChunks;
+    int maxChunks, numChars;
     size_t s;
     
     layoutPtr = *layoutPtrPtr;
@@ -3144,8 +3181,10 @@ NewChunk(layoutPtrPtr, maxPtr, start, numChars, curX, newX, y)
 	*layoutPtrPtr = layoutPtr;
 	*maxPtr = maxChunks;
     }
+    numChars = Tcl_NumUtfChars(start, numBytes);
     chunkPtr = &layoutPtr->chunks[layoutPtr->numChunks];
     chunkPtr->start		= start;
+    chunkPtr->numBytes		= numBytes;
     chunkPtr->numChars		= numChars;
     chunkPtr->numDisplayChars	= numChars;
     chunkPtr->x			= curX;

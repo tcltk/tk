@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMessage.c,v 1.1.4.2 1998/09/30 02:17:11 stanton Exp $
+ * RCS: @(#) $Id: tkMessage.c,v 1.1.4.3 1999/03/30 04:12:58 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -40,7 +40,7 @@ typedef struct {
 
     char *string;		/* String displayed in message. */
     int numChars;		/* Number of characters in string, not
-				 * including terminating NULL character. */
+				 * including terminating NULL. */
     char *textVarName;		/* Name of variable (malloc'ed) or NULL.
 				 * If non-NULL, message displays the contents
 				 * of this variable. */
@@ -465,7 +465,7 @@ ConfigureMessage(interp, msgPtr, argc, argv, flags)
      * that couldn't be specified to Tk_ConfigureWidget.
      */
 
-    msgPtr->numChars = strlen(msgPtr->string);
+    msgPtr->numChars = Tcl_NumUtfChars(msgPtr->string, -1);
 
     Tk_SetBackgroundFromBorder(msgPtr->tkwin, msgPtr->border);
 
@@ -834,8 +834,8 @@ MessageTextVarProc(clientData, interp, name1, name2, flags)
     if (msgPtr->string != NULL) {
 	ckfree(msgPtr->string);
     }
-    msgPtr->numChars = strlen(value);
-    msgPtr->string = (char *) ckalloc((unsigned) (msgPtr->numChars + 1));
+    msgPtr->numChars = Tcl_NumUtfChars(value, -1);
+    msgPtr->string = (char *) ckalloc((unsigned) (strlen(value) + 1));
     strcpy(msgPtr->string, value);
     ComputeMessageGeometry(msgPtr);
 

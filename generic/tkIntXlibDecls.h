@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.2.2.3 1999/03/30 02:08:01 redman Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.2.2.4 1999/03/30 04:12:57 stanton Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
@@ -277,6 +277,11 @@ EXTERN void		TkPutImage _ANSI_ARGS_((unsigned long * colors,
 				GC gc, XImage* image, int src_x, int src_y, 
 				int dest_x, int dest_y, unsigned int width, 
 				unsigned int height));
+/* Slot 81 is reserved */
+/* 82 */
+EXTERN Status		XParseColor _ANSI_ARGS_((Display * display, 
+				Colormap map, _Xconst char* spec, 
+				XColor * colorPtr));
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* Slot 0 is reserved */
@@ -457,6 +462,10 @@ EXTERN void		TkPutImage _ANSI_ARGS_((unsigned long * colors,
 				GC gc, XImage* image, int src_x, int src_y, 
 				int dest_x, int dest_y, unsigned int width, 
 				unsigned int height));
+/* 58 */
+EXTERN Status		XParseColor _ANSI_ARGS_((Display * display, 
+				Colormap map, _Xconst char* spec, 
+				XColor * colorPtr));
 #endif /* MAC_TCL */
 
 typedef struct TkIntXlibStubs {
@@ -545,6 +554,8 @@ typedef struct TkIntXlibStubs {
     Bool (*xFilterEvent) _ANSI_ARGS_((XEvent* x, Window w)); /* 78 */
     int (*xmbLookupString) _ANSI_ARGS_((XIC xi, XKeyPressedEvent* xk, char* c, int i, KeySym* k, Status* s)); /* 79 */
     void (*tkPutImage) _ANSI_ARGS_((unsigned long * colors, int ncolors, Display* display, Drawable d, GC gc, XImage* image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 80 */
+    void *reserved81;
+    Status (*xParseColor) _ANSI_ARGS_((Display * display, Colormap map, _Xconst char* spec, XColor * colorPtr)); /* 82 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     void *reserved0;
@@ -605,6 +616,7 @@ typedef struct TkIntXlibStubs {
     void (*xUngrabPointer) _ANSI_ARGS_((Display* d, Time t)); /* 55 */
     void (*xUnmapWindow) _ANSI_ARGS_((Display* d, Window w)); /* 56 */
     void (*tkPutImage) _ANSI_ARGS_((unsigned long * colors, int ncolors, Display* display, Drawable d, GC gc, XImage* image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 57 */
+    Status (*xParseColor) _ANSI_ARGS_((Display * display, Colormap map, _Xconst char* spec, XColor * colorPtr)); /* 58 */
 #endif /* MAC_TCL */
 } TkIntXlibStubs;
 
@@ -938,6 +950,11 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #define TkPutImage \
 	(tkIntXlibStubsPtr->tkPutImage) /* 80 */
 #endif
+/* Slot 81 is reserved */
+#ifndef XParseColor
+#define XParseColor \
+	(tkIntXlibStubsPtr->xParseColor) /* 82 */
+#endif
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* Slot 0 is reserved */
@@ -1168,6 +1185,10 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #ifndef TkPutImage
 #define TkPutImage \
 	(tkIntXlibStubsPtr->tkPutImage) /* 57 */
+#endif
+#ifndef XParseColor
+#define XParseColor \
+	(tkIntXlibStubsPtr->xParseColor) /* 58 */
 #endif
 #endif /* MAC_TCL */
 
