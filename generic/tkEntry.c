@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.31 2002/08/05 04:30:38 dgp Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.32 2002/10/02 20:59:26 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -3294,6 +3294,13 @@ EntryTextVarProc(clientData, interp, name1, name2, flags)
 {
     Entry *entryPtr = (Entry *) clientData;
     CONST char *value;
+
+    if (entryPtr->flags & ENTRY_DELETED) {
+	/*
+	 * Just abort early if we entered here while being deleted.
+	 */
+	return (char *) NULL;
+    }
 
     /*
      * If the variable is unset, then immediately recreate it unless

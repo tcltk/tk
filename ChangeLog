@@ -1,3 +1,10 @@
+2002-10-02  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/entry.test: added entry-20.7
+	* generic/tkEntry.c (EntryTextVarProc): check if the entry if
+	being deleted before handling an associated textvariable.
+	[Bug #607390 #617446]
+
 2002-10-01  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* tests/unixSelect.test (unixSelect-1.1[89]): Altered these tests
