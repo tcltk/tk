@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.22 2003/04/01 21:06:37 dgp Exp $
+# RCS: @(#) $Id: listbox.test,v 1.23 2003/10/13 00:54:45 hobbs Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -838,7 +838,7 @@ test listbox-4.7 {ConfigureListbox procedure} {
     catch {destroy .l}
     wm withdraw .
     listbox .l -font $fixed -width 30 -height 20 -setgrid 1
-    wm geom . +0+0
+    wm geom . +25+25
     pack .l
     update
     wm deiconify .
@@ -1526,7 +1526,7 @@ test listbox-13.3 {ListboxScanTo procedure} {fonts} {
     .l scan dragto [expr 5+$width] [expr 10+$height]
     update
     lappend x [.l xview] [.l yview]
-} {{0.8 1} {0.75 1} {0.62 0.82} {0.25 0.5}}
+} {{0.8 1} {0.75 1} {0.64 0.84} {0.25 0.5}}
 
 test listbox-14.1 {NearestListboxElement procedure, partial last line} {
     mkPartial
