@@ -1,5 +1,12 @@
 2004-02-23  Daniel Steffen  <das@users.sourceforge.net>
 
+	* macosx/tkMacOSXMouseEvent.c: fixed modifiers for MouseWheel events.
+
+	* macosx/Wish.pbproj/project.pbxproj:
+	* macosx/tkAboutDlg.r: changed year in copyright strings to 2004.
+
+2004-02-23  Daniel Steffen  <das@users.sourceforge.net>
+
 	* macosx/tkMacOSXDraw.c:
 	* macosx/tkMacOSXXStubs.c:
 	* xlib/ximage.c: fixed MacOSX XGetImage/XPutImage and related 
