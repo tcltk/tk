@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.17 2002/05/24 09:50:11 mdejong Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.18 2002/05/27 19:49:33 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -1089,13 +1089,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 		    (char *) NULL);
 	    return TCL_ERROR;
 	}
-	wmPtr->hints.initial_state = NormalState;
-	wmPtr->withdrawn = 0;
-	if (wmPtr->flags & WM_NEVER_MAPPED) {
-	    return TCL_OK;
-	}
-	UpdateHints(winPtr);
-	Tk_MapWindow((Tk_Window) winPtr);
+	(void) TkpWmSetState(winPtr, NormalState);
     } else if ((c == 'f') && (strncmp(argv[1], "focusmodel", length) == 0)
 	    && (length >= 2)) {
 	if ((argc != 3) && (argc != 4)) {
@@ -1343,23 +1337,11 @@ Tk_WmCmd(clientData, interp, argc, argv)
 		   (char *) NULL);
 	    return TCL_ERROR;
 	}
-	wmPtr->hints.initial_state = IconicState;
-	if (wmPtr->flags & WM_NEVER_MAPPED) {
-	    return TCL_OK;
-	}
-	if (wmPtr->withdrawn) {
-	    UpdateHints(winPtr);
-	    Tk_MapWindow((Tk_Window) winPtr);
-	    wmPtr->withdrawn = 0;
-	} else {
-	    if (XIconifyWindow(winPtr->display, wmPtr->wrapperPtr->window,
-		    winPtr->screenNum) == 0) {
-		Tcl_SetResult(interp,
-			"couldn't send iconify message to window manager",
-			TCL_STATIC);
-		return TCL_ERROR;
-	    }
-	    WaitForMapNotify(winPtr, 0);
+	if (TkpWmSetState(winPtr, IconicState) == 0) {
+	    Tcl_SetResult(interp,
+	            "couldn't send iconify message to window manager",
+	            TCL_STATIC);
+	    return TCL_ERROR;
 	}
     } else if ((c == 'i') && (strncmp(argv[1], "iconmask", length) == 0)
 	    && (length >= 5)) {
@@ -1909,13 +1891,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    length = strlen(argv[3]);
 
 	    if ((c == 'n') && (strncmp(argv[3], "normal", length) == 0)) {
-		wmPtr->hints.initial_state = NormalState;
-		wmPtr->withdrawn = 0;
-		if (wmPtr->flags & WM_NEVER_MAPPED) {
-		    return TCL_OK;
-		}
-		UpdateHints(winPtr);
-		Tk_MapWindow((Tk_Window) winPtr);
+		(void) TkpWmSetState(winPtr, NormalState);
 	    } else if ((c == 'i')
 		    && (strncmp(argv[3], "iconic", length) == 0)) {
 		if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
@@ -1931,38 +1907,20 @@ Tk_WmCmd(clientData, interp, argc, argv)
 			    "\": it is a transient", (char *) NULL);
 		    return TCL_ERROR;
 		}
-		wmPtr->hints.initial_state = IconicState;
-		if (wmPtr->flags & WM_NEVER_MAPPED) {
-		    return TCL_OK;
-		}
-		if (wmPtr->withdrawn) {
-		    UpdateHints(winPtr);
-		    Tk_MapWindow((Tk_Window) winPtr);
-		    wmPtr->withdrawn = 0;
-		} else {
-		    if (XIconifyWindow(winPtr->display,
-			    wmPtr->wrapperPtr->window,
-			    winPtr->screenNum) == 0) {
-			Tcl_SetResult(interp, "couldn't send iconify message to window manager", TCL_STATIC);
-			return TCL_ERROR;
-		    }
-		    WaitForMapNotify(winPtr, 0);
+		if (TkpWmSetState(winPtr, IconicState) == 0) {
+		    Tcl_SetResult(interp,
+			    "couldn't send iconify message to window manager",
+			    TCL_STATIC);
+		    return TCL_ERROR;
 		}
 	    } else if ((c == 'w')
 		    && (strncmp(argv[3], "withdrawn", length) == 0)) {
-		wmPtr->hints.initial_state = WithdrawnState;
-		wmPtr->withdrawn = 1;
-		if (wmPtr->flags & WM_NEVER_MAPPED) {
-		    return TCL_OK;
-		}
-		if (XWithdrawWindow(winPtr->display, wmPtr->wrapperPtr->window,
-			winPtr->screenNum) == 0) {
+		if (TkpWmSetState(winPtr, WithdrawnState) == 0) {
 		    Tcl_SetResult(interp,
 			    "couldn't send withdraw message to window manager",
 			    TCL_STATIC);
 		    return TCL_ERROR;
 		}
-		WaitForMapNotify(winPtr, 0);
 	    } else {
 		Tcl_AppendResult(interp, "bad argument \"", argv[3],
 			"\": must be normal, iconic or withdrawn",
@@ -2095,19 +2053,12 @@ Tk_WmCmd(clientData, interp, argc, argv)
 		    (char *) NULL);
 	    return TCL_ERROR;
 	}
-	wmPtr->hints.initial_state = WithdrawnState;
-	wmPtr->withdrawn = 1;
-	if (wmPtr->flags & WM_NEVER_MAPPED) {
-	    return TCL_OK;
-	}
-	if (XWithdrawWindow(winPtr->display, wmPtr->wrapperPtr->window,
-		winPtr->screenNum) == 0) {
+	if (TkpWmSetState(winPtr, WithdrawnState) == 0) {
 	    Tcl_SetResult(interp,
 		    "couldn't send withdraw message to window manager",
 		    TCL_STATIC);
 	    return TCL_ERROR;
 	}
-	WaitForMapNotify(winPtr, 0);
     } else {
 	Tcl_AppendResult(interp, "unknown or ambiguous option \"", argv[1],
 		"\": must be aspect, client, command, deiconify, ",
@@ -5328,4 +5279,69 @@ UpdateCommand(winPtr)
     Tcl_DStringFree(&cmds);
     ckfree((char *) cmdArgv);
     ckfree((char *) offsets);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWmSetState --
+ *
+ *	Sets the window manager state for the wrapper window of a
+ *	given toplevel window.
+ *
+ * Results:
+ *	0 on error, 1 otherwise
+ *
+ * Side effects:
+ *	May minimize, restore, or withdraw a window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpWmSetState(winPtr, state)
+     TkWindow *winPtr;		/* Toplevel window to operate on. */
+     int state;			/* One of IconicState, NormalState,
+				 * or WithdrawnState. */
+{
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+
+    if (state == WithdrawnState) {
+        wmPtr->hints.initial_state = WithdrawnState;
+        wmPtr->withdrawn = 1;
+        if (wmPtr->flags & WM_NEVER_MAPPED) {
+            return 1;
+        }
+        if (XWithdrawWindow(winPtr->display, wmPtr->wrapperPtr->window,
+                winPtr->screenNum) == 0) {
+            return 0;
+        }
+        WaitForMapNotify(winPtr, 0);
+    } else if (state == NormalState) {
+        wmPtr->hints.initial_state = NormalState;
+        wmPtr->withdrawn = 0;
+        if (wmPtr->flags & WM_NEVER_MAPPED) {
+            return 1;
+        }
+        UpdateHints(winPtr);
+        Tk_MapWindow((Tk_Window) winPtr);
+    } else if (state == IconicState) {
+        wmPtr->hints.initial_state = IconicState;
+        if (wmPtr->flags & WM_NEVER_MAPPED) {
+            return 1;
+        }
+        if (wmPtr->withdrawn) {
+            UpdateHints(winPtr);
+            Tk_MapWindow((Tk_Window) winPtr);
+            wmPtr->withdrawn = 0;
+        } else {
+            if (XIconifyWindow(winPtr->display, wmPtr->wrapperPtr->window,
+                    winPtr->screenNum) == 0) {
+                return 0;
+            }
+            WaitForMapNotify(winPtr, 0);
+        }
+    }
+
+    return 1;
 }

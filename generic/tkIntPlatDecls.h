@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.11 2002/04/12 10:10:48 hobbs Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.12 2002/05/27 19:49:32 mdejong Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -61,6 +61,9 @@ EXTERN void		TkWmCleanup _ANSI_ARGS_((TkDisplay * dispPtr));
 EXTERN void		TkSendCleanup _ANSI_ARGS_((TkDisplay * dispPtr));
 /* 11 */
 EXTERN void		TkFreeXId _ANSI_ARGS_((TkDisplay * dispPtr));
+/* 12 */
+EXTERN int		TkpWmSetState _ANSI_ARGS_((TkWindow * winPtr, 
+				int state));
 #endif /* UNIX */
 #ifdef __WIN32__
 /* 0 */
@@ -306,6 +309,7 @@ typedef struct TkIntPlatStubs {
     void (*tkWmCleanup) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 9 */
     void (*tkSendCleanup) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 10 */
     void (*tkFreeXId) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 11 */
+    int (*tkpWmSetState) _ANSI_ARGS_((TkWindow * winPtr, int state)); /* 12 */
 #endif /* UNIX */
 #ifdef __WIN32__
     char * (*tkAlignImageData) _ANSI_ARGS_((XImage * image, int alignment, int bitOrder)); /* 0 */
@@ -476,6 +480,10 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #ifndef TkFreeXId
 #define TkFreeXId \
 	(tkIntPlatStubsPtr->tkFreeXId) /* 11 */
+#endif
+#ifndef TkpWmSetState
+#define TkpWmSetState \
+	(tkIntPlatStubsPtr->tkpWmSetState) /* 12 */
 #endif
 #endif /* UNIX */
 #ifdef __WIN32__
