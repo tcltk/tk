@@ -1,10 +1,10 @@
-# entry2.tcl --
+# entry3.tcl --
 #
 # This demonstration script creates several entry widgets whose
 # permitted input is constrained in some way.  It also shows off a
 # password entry.
 #
-# RCS: @(#) $Id: entry3.tcl,v 1.2 2003/08/20 23:02:18 hobbs Exp $
+# RCS: @(#) $Id: entry3.tcl,v 1.3 2004/06/28 22:36:18 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
