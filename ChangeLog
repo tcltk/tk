@@ -1,5 +1,8 @@
 2003-02-24  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* unix/tkUnixFont.c (CreateClosestFont, CanUseFallback): use the
+	first best font match in user font path. [Bug #647497] (dal zotto)
+
 	* generic/tkListbox.c (ListboxSelectionSubCmd): 
 	* tests/listbox.test: Allow 'selection includes' to respond when
 	disabled (but only 'includes'). [Bug #632514]
