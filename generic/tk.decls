@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.16 2002/01/25 21:09:36 dgp Exp $
+# RCS: @(#) $Id: tk.decls,v 1.17 2002/01/31 04:42:00 dgp Exp $
 
 library tk
 
@@ -703,7 +703,7 @@ declare 142 generic {
 
 declare 143 generic {
     int Tk_ParseArgv (Tcl_Interp *interp, \
-	    Tk_Window tkwin, int *argcPtr, CONST char **argv, \
+	    Tk_Window tkwin, int *argcPtr, CONST84 char **argv, \
 	    Tk_ArgvInfo *argTable, int flags)
 }
 
