@@ -1,3 +1,29 @@
+2002-09-10  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	*** 8.4.0 TAGGED FOR RELEASE ***
+
+2002-09-09  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/tk.tcl: use command instead of control on Aqua bindings.
+	Force dialogs to appear below fixed native Mac menubar.
+	* macosx/tkMacOSXKeyEvent.c:
+	* macosx/tkMacOSXKeyboard.c: Keypress/release events for pure
+	modifier keys were not being passed to Tk.
+	Deadkey presses were inserting null characters into text windows.
+	Now they do nothing. (Still not ideal, but better than before!)
+	* macosx/tkMacOSXMenu.c: Allow more than 200 menus to exist -
+	increased to 2000.
+	* macosx/tkMacOSXMouseEvent.c: Bad interactions between floating
+	windows and ordinary ones.  Ensure that local<->global coordinate
+	transformations are wrt to the correct window.
+	* macosx/tkMacOSXWm.c: Better error msg for 'wm attributes'.
+	Remove crash in 'wm transient'.
+	Add 'noActivates' and 'noUpdates' flags to unsupported command.
+	[Patch #606658] (darley)
+
+	* library/xmfbox.tcl (::tk::MotifFDialog_ActivateSEnt): corrected
+	msgcat code with XPG specifier. [Patch #606719] (miller)
+
 2002-09-06  Don Porter <dgp@users.sf.net>
 
 	* tests/unixWm.test (unixWm-50.3):  Constrained test that hangs
