@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubImg.c,v 1.2 2000/07/17 23:03:20 ericm Exp $
+ * RCS: @(#) $Id: tkStubImg.c,v 1.3 2003/01/09 01:00:36 dgp Exp $
  */
 
 #include "tcl.h"
@@ -46,7 +46,7 @@ Tk_InitImageArgs(interp, argc, argvPtr)
     int argc;
     char ***argvPtr;
 {
-    static useNewImage = -1;
+    static int useNewImage = -1;
     static char **argv = NULL;
 
     if (argv) {
