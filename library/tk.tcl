@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.37 2002/04/26 16:39:07 bagnonm Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.38 2002/04/29 13:17:44 bagnonm Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -17,40 +17,34 @@ package require -exact Tk 8.4
 package require -exact Tcl 8.4
 
 # Create a ::tk namespace
-
 namespace eval ::tk {
-}
-
-if { ![interp issafe] } {
-    if {[catch {package require msgcat}]} {
-	# msgcat not found. A minimal msgcat is defined
-	# here, with fail-safe versions of the msgcat::mc and
-	# msgcat::mcmax procedures, which happen to be the msgcat 
-	# services used by tk widgets.
-	# See the msgcat package for details about the simulated
-	# procedures.
-	namespace eval msgcat {
-	    namespace export mc mcmax
-
-	    proc mc {src args} {		
-		return [eval [list format $src $args]]
-	    }
-
-	    proc mcmax {args} {
-		set max 0
-		foreach string $args {
-		    set len [string length [msgcat::mc $string]]
-		    if {$len>$max} {
-			set max $len
-		    }
-		}
-		return $max
-	    }
-
-	}
-    } else {
-	::msgcat::mcload [file join $::tk_library msgs]
+    # Set up the msgcat commands
+    namespace eval msgcat {
+	namespace export mc mcmax        
+        if {[interp issafe] || [catch {package require msgcat}]} {
+            # The msgcat package is not available.  Supply our own
+            # minimal replacement.
+            proc mc {src args} {
+                return [eval [list format $src] $args]
+            }
+            proc mcmax {args} {
+                set max 0
+                foreach string $args {
+                    set len [string length $string]
+                    if {$len>$max} {
+                        set max $len
+                    }
+                }
+                return $max
+            }
+        } else {
+            # Get the commands from the msgcat package that Tk uses.
+            namespace import ::msgcat::mc
+            namespace import ::msgcat::mcmax
+            ::msgcat::mcload [file join $::tk_library msgs]
+        }
     }
+    namespace import ::tk::msgcat::*
 }
 
 # Add Tk's directory to the end of the auto-load search path, if it

@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.17 2002/03/01 00:04:27 dgp Exp $
+# RCS: @(#) $Id: console.tcl,v 1.18 2002/04/29 13:17:44 bagnonm Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -14,7 +14,6 @@
 #
 
 # TODO: history - remember partially written command
-package require msgcat
 
 namespace eval ::tk::console {
     variable blinkTime   500 ; # msecs to blink braced range for
@@ -60,38 +59,38 @@ proc ::tk::ConsoleInit {} {
     .menubar add cascade -label Edit -menu .menubar.edit -underline 0
 
     menu .menubar.file -tearoff 0
-    .menubar.file add command -label [::msgcat::mc "Source..."] \
+    .menubar.file add command -label [mc "Source..."] \
 	    -underline 0 -command tk::ConsoleSource
-    .menubar.file add command -label [::msgcat::mc "Hide Console"] \
+    .menubar.file add command -label [mc "Hide Console"] \
 	    -underline 0 -command {wm withdraw .}
-    .menubar.file add command -label [::msgcat::mc "Clear Console"] \
+    .menubar.file add command -label [mc "Clear Console"] \
 	    -underline 0 -command {.console delete 1.0 "promptEnd linestart"}
     if {[string compare $tcl_platform(platform) "macintosh"]} {
-	.menubar.file add command -label [::msgcat::mc "Exit"] \
+	.menubar.file add command -label [mc "Exit"] \
 		-underline 1 -command exit
     } else {
-	.menubar.file add command -label [::msgcat::mc "Quit"] \
+	.menubar.file add command -label [mc "Quit"] \
 		-command exit -accel Cmd-Q
     }
 
     menu .menubar.edit -tearoff 0
-    .menubar.edit add command -label [::msgcat::mc "Cut"] -underline 2 \
+    .menubar.edit add command -label [mc "Cut"] -underline 2 \
 	    -command { event generate .console <<Cut>> } -accel "$mod+X"
-    .menubar.edit add command -label [::msgcat::mc "Copy"] -underline 0 \
+    .menubar.edit add command -label [mc "Copy"] -underline 0 \
 	    -command { event generate .console <<Copy>> } -accel "$mod+C"
-    .menubar.edit add command -label [::msgcat::mc "Paste"] -underline 1 \
+    .menubar.edit add command -label [mc "Paste"] -underline 1 \
 	    -command { event generate .console <<Paste>> } -accel "$mod+V"
 
     if {[string compare $tcl_platform(platform) "windows"]} {
-	.menubar.edit add command -label [::msgcat::mc "Clear"] -underline 2 \
+	.menubar.edit add command -label [mc "Clear"] -underline 2 \
 		-command { event generate .console <<Clear>> }
     } else {
-	.menubar.edit add command -label [::msgcat::mc "Delete"] -underline 0 \
+	.menubar.edit add command -label [mc "Delete"] -underline 0 \
 		-command { event generate .console <<Clear>> } -accel "Del"
 	
 	.menubar add cascade -label Help -menu .menubar.help -underline 0
 	menu .menubar.help -tearoff 0
-	.menubar.help add command -label [::msgcat::mc "About..."] \
+	.menubar.help add command -label [mc "About..."] \
 		-underline 0 -command tk::ConsoleAbout
     }
 
@@ -124,7 +123,7 @@ proc ::tk::ConsoleInit {} {
     focus $con
 
     wm protocol . WM_DELETE_WINDOW { wm withdraw . }
-    wm title . [::msgcat::mc "Console"]
+    wm title . [mc "Console"]
     flush stdout
     $con mark set output [$con index "end - 1 char"]
     tk::TextSetCursor $con end
@@ -141,10 +140,10 @@ proc ::tk::ConsoleInit {} {
 
 proc ::tk::ConsoleSource {} {
     set filename [tk_getOpenFile -defaultextension .tcl -parent . \
-	    -title [::msgcat::mc "Select a file to source"] \
+	    -title [mc "Select a file to source"] \
 	    -filetypes [list \
-	    [list [::msgcat::mc "Tcl Scripts"] .tcl] \
-	    [list [::msgcat::mc "All Files"] *]]]
+	    [list [mc "Tcl Scripts"] .tcl] \
+	    [list [mc "All Files"] *]]]
     if {[string compare $filename ""]} {
     	set cmd [list source $filename]
 	if {[catch {consoleinterp eval $cmd} result]} {
@@ -577,7 +576,7 @@ proc ::tk::ConsoleExit {} {
 # None.
 
 proc ::tk::ConsoleAbout {} {
-    tk_messageBox -type ok -message "[::msgcat::mc {Tcl for Windows}]
+    tk_messageBox -type ok -message "[mc {Tcl for Windows}]
 
 Tcl $::tcl_patchLevel
 Tk $::tk_patchLevel"
