@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.17 2003/03/12 00:09:36 mdejong Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.18 2003/07/17 03:19:43 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -1743,7 +1743,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 			TCL_EXACT, &side) != TCL_OK) {
 		    return TCL_ERROR;
 		}
-		slavePtr->side = side;
+		slavePtr->side = (Side) side;
 	    }
 	}
 
