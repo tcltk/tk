@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.14 2004/01/13 02:06:00 davygrvy Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.15 2004/06/08 20:28:19 dgp Exp $
  */
 
 #include <stdio.h>
@@ -858,7 +858,6 @@ DisplayLine(canvas, itemPtr, display, drawable, x, y, width, height)
     double linewidth;
     int numPoints;
     Tk_State state = itemPtr->state;
-    Pixmap stipple = linePtr->outline.stipple;
 
     if ((!linePtr->numPoints)||(linePtr->outline.gc==None)) {
 	return;
@@ -869,16 +868,10 @@ DisplayLine(canvas, itemPtr, display, drawable, x, y, width, height)
     }
     linewidth = linePtr->outline.width;
     if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
-	if (linePtr->outline.activeStipple != None) {
-	    stipple = linePtr->outline.activeStipple;
-	}
 	if (linePtr->outline.activeWidth != linewidth) {
 	    linewidth = linePtr->outline.activeWidth;
 	}
     } else if (state==TK_STATE_DISABLED) {
-	if (linePtr->outline.disabledStipple != None) {
-	    stipple = linePtr->outline.disabledStipple;
-	}
 	if (linePtr->outline.disabledWidth != linewidth) {
 	    linewidth = linePtr->outline.disabledWidth;
 	}
