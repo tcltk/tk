@@ -1,5 +1,9 @@
 2003-07-17  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* doc/photo.n: [$photo put] has been able to take rectangles of
+	pixel colours, specified as lists of lists, for years.  Now this
+	is a documented feature.  [Bug 728952]
+
 	* doc/panedwindow.n: Removed warning invalidated by fix from Bug
 	738143. [Bug 747814]
 
