@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.13 2004/09/10 12:13:42 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.14 2004/10/05 01:26:10 hobbs Exp $
  */
 
 #include "tk.h"
@@ -1306,7 +1306,6 @@ EmbWinDelayedUnmap(clientData)
 					 * be unmapped. */
 {
     TkTextEmbWindowClient *client = (TkTextEmbWindowClient*) clientData;
-    TkTextSegment *ewPtr = client->parent;
 
     if (!client->displayed && (client->tkwin != NULL)) {
 	if (client->textPtr->tkwin != Tk_Parent(client->tkwin)) {

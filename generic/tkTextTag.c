@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.18 2004/09/10 12:13:42 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.19 2004/10/05 01:26:10 hobbs Exp $
  */
 
 #include "default.h"
@@ -920,7 +920,7 @@ TkTextCreateTag(textPtr, tagName, newTag)
                                  * or 0 if already exists. */
 {
     register TkTextTag *tagPtr;
-    Tcl_HashEntry *hPtr;
+    Tcl_HashEntry *hPtr = NULL;
     int new;
     CONST char *name;
     

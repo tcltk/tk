@@ -1,6 +1,14 @@
+2004-10-04  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkTextWind.c (EmbWinDelayedUnmap): Fix init warnings
+	* generic/tkTextTag.c (TkTextCreateTag): 
+	* generic/tkTextMark.c (TkTextSetMark): 
+	* generic/tkTextIndex.c (GetIndex): 
+	* generic/tkUndo.c (EvaluateActionList): 
+
 2004-09-24  Don Porter  <dgp@users.sourceforge.net>
 
-        * generic/tkCursor.c:  Add missing initialization in debug routine.
+	* generic/tkCursor.c:  Add missing initialization in debug routine.
 
 2004-09-24  Vince Darley  <vincentdarley@users.sourceforge.net>
 
