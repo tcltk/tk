@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInit.c,v 1.9 2002/04/12 07:18:49 hobbs Exp $
+ * RCS: @(#) $Id: tkWinInit.c,v 1.10 2002/12/08 00:46:51 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -44,11 +44,10 @@ TkpInit(interp)
     Tcl_Interp *interp;
 {
     /*
-     * This is necessary for static initialization, and is ok
-     * otherwise because TkWinXInit flips a static bit to do
-     * its work just once.
+     * This is necessary for static initialization, and is ok otherwise
+     * because TkWinXInit flips a static bit to do its work just once.
      */
-    TkWinXInit(GetModuleHandle(NULL));
+    TkWinXInit(Tk_GetHINSTANCE());
     return Tcl_Eval(interp, initScript);
 }
 

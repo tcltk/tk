@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin32Dll.c,v 1.5 2002/12/06 23:29:37 hobbs Exp $
+ * RCS: @(#) $Id: tkWin32Dll.c,v 1.6 2002/12/08 00:46:51 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -52,10 +52,10 @@ DllEntryPoint(hInst, reason, reserved)
  *
  * DllMain --
  *
- *	DLL entry point.  It is not necessary to do anything here as
- *	Tk will initialize and clean up after itself through other
- *	methods, in order to be consistent whether the build is static
- *	or dynamic.
+ *	DLL entry point.  It is only necessary to specify our dll here so
+ *	that resources are found correctly.  Otherwise Tk will initialize
+ *	and clean up after itself through other methods, in order to be
+ *	consistent whether the build is static or dynamic.
  *
  * Results:
  *	Always TRUE.
@@ -72,5 +72,13 @@ DllMain(hInstance, reason, reserved)
     DWORD reason;
     LPVOID reserved;
 {
+    /*
+     * If we are attaching to the DLL from a new process, tell Tk about
+     * the hInstance to use.
+     */
+
+    if (reason == DLL_PROCESS_ATTACH) {
+	TkWinSetHINSTANCE(hInstance);
+    }
     return (TRUE);
 }
