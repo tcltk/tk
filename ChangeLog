@@ -1,3 +1,10 @@
+2004-03-31  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkImgPhoto.c:	Removed outdated #include's of the tclMath.h
+	* generic/tkScale.c:	header file.  All tk*Port.h files have long
+	had a #include <math.h>, and other parts of Tk routinely make use
+	of libm-supplied math routines.
+
 2004-03-30  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tclets.r (removed): obsolete holdover from mac classic.

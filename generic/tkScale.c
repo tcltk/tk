@@ -18,13 +18,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.17 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.18 2004/03/31 02:43:10 dgp Exp $
  */
 
 #include "tkPort.h"
 #include "default.h"
 #include "tkInt.h"
-#include "tclMath.h"
 #include "tkScale.h"
 
 /*
