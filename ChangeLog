@@ -1,3 +1,42 @@
+2002-04-05  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* mac/tkMacXStubs.c: added Tk_SetCaretPos stub (does nothing).
+	* win/tkWinX.c: added Tk_SetCaretPos code to position IME windows
+	correctly when WM_IME_STARTCOMPOSITION is received.
+	* unix/tkUnixKey.c: added Tk_SetCaretPos and code for setting
+	XIM caret in TkpGetString.
+
+	* generic/tkStubInit.c:
+	* generic/tkDecls.h:
+	* generic/tk.decls: added Tk_SetCaretPos declaration.  This command
+	allows users to indicate the cursor position and is used by XIM
+	(Unix) or IME (Windows) to place the caret box correctly.  It is
+	also part of correct Accessibility style on Windows to make the
+	magnifier jump to the focus point.
+
+	* win/tkWinButton.c (TkpDisplayButton): 
+	* generic/tkTextMark.c (TkTextInsertDisplayProc):
+	* generic/tkCanvText.c (DisplayCanvText):
+	* generic/tkEntry.c (DisplayEntry): added Tk_SetCaretPos calls
+
+	* generic/tkInt.h: added TK_XIM_SPOT #define (default 1).
+	Added XFontSet attribute to TkDisplay when TK_XIM_SPOT is true.
+	* generic/tkEvent.c (Tk_HandleEvent): made sure inputContexts are
+	not getting created on DestroyNotify events (for dead windows).
+	Added over-the-spot support if TK_XIM_SPOT is defined (default).
+	The is the nicer XIM behavior, but uses a bit more memory.
+
+	* unix/tkUnixEvent.c:
+	* generic/tkWindow.c: moved OpenIM over to tkUnixEvent.c.
+	Removed setting inputContext to null in Tk_MakeWindowExist as it
+	was redundant.
+
+	* unix/tkUnixWm.c (CreateWrapper): Removed redundat setting of
+	inputContext to null.
+
+	* win/Makefile.in: changed gdb and shell targets to properly build
+	all binaries before running (otherwise an error often occured).
+
 2002-03-28  David Gravereaux <davygrvy@pobox.com>
 
 	* win/.cvsignore (new):
