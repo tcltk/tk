@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.47 2002/06/15 00:21:42 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.48 2002/06/15 21:06:07 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -1401,6 +1401,13 @@ Tk_DestroyWindow(tkwin)
 		    (ClientData) winPtr->pathName);
 	    Tcl_DeleteHashEntry(Tcl_FindHashEntry(&winPtr->mainPtr->nameTable,
 		    winPtr->pathName));
+            /*
+             * The memory pointed to by pathName has been deallocated.
+             * Keep users from accessing it after the window has been
+             * destroyed by setting it to NULL.
+             */
+            winPtr->pathName = NULL;
+
 	    /*
 	     * Invalidate all objects referring to windows on this display.
 	     */
