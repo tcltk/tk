@@ -1,0 +1,39 @@
+// !$*UTF8*$!
+{
+	F537552A016C352C01DC9062 = {
+		activeBuildStyle = F537552C016C352C01DC9062;
+		activeExecutable = F957884F0745BB270058B6A3;
+		activeTarget = F95787DD0745BB260058B6A3;
+		executables = (
+			F957884F0745BB270058B6A3,
+		);
+		userBuildSettings = {
+			SYMROOT = "${SRCROOT}/../../build/tk";
+		};
+	};
+	F95787DD0745BB260058B6A3 = {
+		activeExec = 0;
+		executables = (
+			F957884F0745BB270058B6A3,
+		);
+	};
+	F957884F0745BB270058B6A3 = {
+		activeArgIndex = 2147483647;
+		activeArgIndices = (
+		);
+		argumentStrings = (
+		);
+		configStateDict = {
+		};
+		cppStopOnCatchEnabled = 0;
+		cppStopOnThrowEnabled = 0;
+		customDataFormattersEnabled = 1;
+		disassemblyDisplayState = 0;
+		enableDebugStr = 1;
+		isa = PBXExecutable;
+		libgmallocEnabled = 0;
+		name = Wish;
+		shlibInfoDictList = (
+		);
+	};
+}
