@@ -1,3 +1,14 @@
+1999-12-22  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* changes: updated changes file
+
+	* generic/tkScale.c:
+	* generic/tkScale.h:
+	* mac/tkMacScale.c:
+	* unix/tkUnixScale.c: fixed potential segv from patch in 3897
+
+	* tests/unixWm.test: nonPOrtable -> nonPortable
+
 1999-12-21  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* generic/tk.h:

@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.38 1999/12/22 01:51:18 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.39 1999/12/22 20:00:58 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4762,4 +4762,6 @@ to TkGetCursorByName (use -cursor @filename).
 1999-12-21 (bug fix) fixed panic in Tk_CoordsToWindow to print error
 to stderr instead (for Tix)
 
---- Released 8.3b1, December 21, 1999 --- See ChangeLog for details ---
+1999-12-21 (bug fix) fixed segv with scale widget when using -cursor
+
+--- Released 8.3b1, December 22, 1999 --- See ChangeLog for details ---
