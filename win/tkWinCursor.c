@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinCursor.c,v 1.5 2002/01/25 21:09:37 dgp Exp $
+ * RCS: @(#) $Id: tkWinCursor.c,v 1.6 2002/06/06 20:41:54 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -87,59 +87,72 @@ TkGetCursorByName(interp, tkwin, string)
 {
     struct CursorName *namePtr;
     TkWinCursor *cursorPtr;
+    int argc;
+    CONST char **argv = NULL;
 
     /*
-     * Check for the cursor in the system cursor set.
+     * All cursor names are valid lists of one element (for
+     * Unix-compatability), even unadorned system cursor names.
      */
 
-    for (namePtr = cursorNames; namePtr->name != NULL; namePtr++) {
-	if (strcmp(namePtr->name, string) == 0) {
-	    break;
-	}
+    if (Tcl_SplitList(interp, string, &argc, &argv) != TCL_OK) {
+	return NULL;
+    }
+    if (argc != 1) {
+	ckfree((char *) argv);
+	goto badCursorSpec;
     }
 
     cursorPtr = (TkWinCursor *) ckalloc(sizeof(TkWinCursor));
     cursorPtr->info.cursor = (Tk_Cursor) cursorPtr;
     cursorPtr->winCursor = NULL;
-    if (namePtr->name != NULL) {
-	cursorPtr->winCursor = LoadCursor(NULL, namePtr->id);
-	cursorPtr->system = 1;
-    }
-    if (cursorPtr->winCursor == NULL) {
-	cursorPtr->winCursor = LoadCursor(Tk_GetHINSTANCE(), string);
-	cursorPtr->system = 0;
-    }
-    if (string[0] == '@') {
-	int argc;
-	CONST char **argv = NULL;
-	if (Tcl_SplitList(interp, string, &argc, &argv) != TCL_OK) {
-	    return NULL;
-	}
+
+    if (argv[0][0] == '@') {
 	/*
 	 * Check for system cursor of type @<filename>, where only
-	 * the name is allowed.  This accepts either:
+	 * the name is allowed.  This accepts any of:
 	 *	-cursor @/winnt/cursors/globe.ani
 	 *	-cursor @C:/Winnt/cursors/E_arrow.cur
 	 *	-cursor {@C:/Program\ Files/Cursors/bart.ani}
+	 *      -cursor {{@C:/Program Files/Cursors/bart.ani}}
+	 *	-cursor [list @[file join "C:/Program Files" Cursors bart.ani]]
 	 */
-	if ((argc != 1) || (argv[0][0] != '@')) {
-	    ckfree((char *) argv);
-	    goto badCursorSpec;
-	}
+
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_AppendResult(interp, "can't get cursor from a file in",
 		    " a safe interpreter", (char *) NULL);
 	    ckfree((char *) argv);
-	    ckfree((char *)cursorPtr);
+	    ckfree((char *) cursorPtr);
 	    return NULL;
 	}
 	cursorPtr->winCursor = LoadCursorFromFile(&(argv[0][1]));
 	cursorPtr->system = 0;
-	ckfree((char *) argv);
+    } else {
+	/*
+	 * Check for the cursor in the system cursor set.
+	 */
+
+	for (namePtr = cursorNames; namePtr->name != NULL; namePtr++) {
+	    if (strcmp(namePtr->name, name[0]) == 0) {
+		/*
+		 * It is either a system cursor or one of ours!
+		 */
+		cursorPtr->winCursor = LoadCursor(NULL, namePtr->id);
+		if (cursorPtr->winCursor == NULL) {
+		    cursorPtr->winCursor =
+			    LoadCursor(Tk_GetHINSTANCE(), name[0]);
+		    cursorPtr->system = 0;
+		} else {
+		    cursorPtr->system = 1;
+		}
+	    }
+	}
     }
+    ckfree((char *) argv);
+
     if (cursorPtr->winCursor == NULL) {
-	badCursorSpec:
-	ckfree((char *)cursorPtr);
+    badCursorSpec:
+	ckfree((char *) cursorPtr);
 	Tcl_AppendResult(interp, "bad cursor spec \"", string, "\"",
 		(char *) NULL);
 	return NULL;
