@@ -1,3 +1,10 @@
+2003-11-14  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkTextDisp.c (TkTextRedrawTag): Get the correct number
+	of lines in the region to be updated.  This fix due to Vince Darley.
+	(TkTextUpdateLineMetrics): Return the correct marker value when we
+	know the update loop should terminate. [Bug 837300]
+
 2003-11-13  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* tests/event.test:
