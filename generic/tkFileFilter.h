@@ -22,6 +22,11 @@
 #define OSType long
 #endif
 
+#ifdef BUILD_tk
+# undef EXPORT
+# define EXPORT DLLEXPORT
+#endif
+
 typedef struct GlobPattern {
     struct GlobPattern * next;		/* Chains to the next glob pattern
 					 * in a glob pattern list */
@@ -80,4 +85,8 @@ EXTERN void		TkInitFileFilters _ANSI_ARGS_((
 EXTERN int		TkGetFileFilters _ANSI_ARGS_ ((Tcl_Interp *interp,
     			    FileFilterList * flistPtr, char * string,
 			    int isWindows));
+
+#undef EXPORT
+#define EXPORT DLLIMPORT
+
 #endif

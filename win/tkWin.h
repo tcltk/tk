@@ -23,6 +23,11 @@
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
 
+#ifdef BUILD_tk
+# undef EXPORT
+# define EXPORT DLLEXPORT
+#endif
+
 /*
  * The following messages are use to communicate between a Tk toplevel
  * and its container window.
@@ -52,5 +57,8 @@ EXTERN void		Tk_PointerEvent _ANSI_ARGS_((HWND hwnd,
 EXTERN int		Tk_TranslateWinEvent _ANSI_ARGS_((HWND hwnd,
 			    UINT message, WPARAM wParam, LPARAM lParam,
 			    LRESULT *result));
+
+#undef EXPORT
+#define EXPORT DLLIMPORT
 
 #endif /* _TKWIN */

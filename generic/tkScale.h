@@ -19,6 +19,11 @@
 #include "tk.h"
 #endif
 
+#ifdef BUILD_tk
+# undef EXPORT
+# define EXPORT DLLEXPORT
+#endif
+
 /*
  * A data structure of the following type is kept for each scale
  * widget managed by this file:
@@ -221,5 +226,8 @@ EXTERN void		TkpSetScaleValue _ANSI_ARGS_((TkScale *scalePtr,
 			    double value, int setVar, int invokeCommand));
 EXTERN int		TkpValueToPixel _ANSI_ARGS_((TkScale *scalePtr,
 			    double value));
+
+#undef EXPORT
+#define EXPORT DLLIMPORT
 
 #endif /* _TKSCALE */

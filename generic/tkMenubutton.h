@@ -19,6 +19,11 @@
 #include "tkInt.h"
 #endif
 
+#ifdef BUILD_tk
+# undef EXPORT
+# define EXPORT DLLEXPORT
+#endif
+
 /*
  * A data structure of the following type is kept for each
  * widget managed by this file:
@@ -203,5 +208,8 @@ EXTERN void 		TkpDestroyMenuButton _ANSI_ARGS_((
 			    TkMenuButton *mbPtr));
 EXTERN void		TkMenuButtonWorldChanged _ANSI_ARGS_((
 			    ClientData instanceData));
+
+#undef EXPORT
+#define EXPORT DLLIMPORT
 
 #endif /* _TKMENUBUTTON */

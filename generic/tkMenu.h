@@ -26,6 +26,11 @@
 #include "default.h"
 #endif
 
+#ifdef BUILD_tk
+# undef EXPORT
+# define EXPORT DLLEXPORT
+#endif
+
 /*
  * Dummy types used by the platform menu code.
  */
@@ -536,6 +541,9 @@ EXTERN int		TkpPostMenu _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkMenu *menuPtr, int x, int y));
 EXTERN void		TkpSetWindowMenuBar _ANSI_ARGS_((Tk_Window tkwin,
 			    TkMenu *menuPtr));
+
+#undef EXPORT
+#define EXPORT DLLIMPORT
 
 #endif /* _TKMENU */
 

@@ -79,6 +79,11 @@
 #   include <stddef.h>
 #endif
 
+#ifdef BUILD_tk
+# undef EXPORT
+# define EXPORT DLLEXPORT
+#endif
+
 /*
  * Decide whether or not to use input methods.
  */
@@ -1546,4 +1551,8 @@ EXTERN int		Tk_WmCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 
 #endif /* RESOURCE_INCLUDED */
+
+#undef EXPORT
+#define EXPORT DLLIMPORT
+
 #endif /* _TK */

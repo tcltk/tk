@@ -17,6 +17,11 @@
 
 #include <tkInt.h>
 
+#ifdef BUILD_tk
+# undef EXPORT
+# define EXPORT DLLEXPORT
+#endif
+
 /*
  * One of the following data structures is used to keep track of
  * each color that the color module has allocated from the X display
@@ -56,5 +61,8 @@ EXTERN TkColor *	TkpGetColor _ANSI_ARGS_((Tk_Window tkwin,
 			    Tk_Uid name));
 EXTERN TkColor *	TkpGetColorByValue _ANSI_ARGS_((Tk_Window tkwin,
 			    XColor *colorPtr));	
+
+#undef EXPORT
+#define EXPORT DLLIMPORT
 
 #endif /* _TKCOLOR */
