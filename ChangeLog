@@ -1,5 +1,9 @@
 2003-07-17  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* doc/photo.n: [$photo put] has been able to take rectangles of
+	pixel colours, specified as lists of lists, for years.  Now this
+	is a documented feature.  [Bug 728952]
+
 	* generic/tkPanedWindow.c (PanedWindowReqProc): Fix from Eric
 	Boudaillier so panedwindows get their geometry right even when
 	their children don't know their size initially. [Bug 738143]
