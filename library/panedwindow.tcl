@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk panedwindow widgets and
 # provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: panedwindow.tcl,v 1.3 2002/02/22 21:07:35 hobbs Exp $
+# RCS: @(#) $Id: panedwindow.tcl,v 1.4 2002/02/23 01:36:45 hobbs Exp $
 #
 
 bind PanedWindow <Button-1> { ::tk::panedwindow::MarkSash %W %x %y 1 }
@@ -24,12 +24,15 @@ namespace eval ::tk::panedwindow {}
 
 # ::tk::panedwindow::MarkSash --
 #
-#   ADD COMMENTS HERE
+#   Handle marking the correct sash for possible dragging
 #
 # Arguments:
-#   args	comments
+#   w		the widget
+#   x		widget local x coord
+#   y		widget local y coord
+#   proxy	whether this should be a proxy sash
 # Results:
-#   Returns ...
+#   None
 #
 proc ::tk::panedwindow::MarkSash {w x y proxy} {
     set what [$w identify $x $y]
@@ -44,12 +47,15 @@ proc ::tk::panedwindow::MarkSash {w x y proxy} {
 
 # ::tk::panedwindow::DragSash --
 #
-#   ADD COMMENTS HERE
+#   Handle dragging of the correct sash
 #
 # Arguments:
-#   args	comments
+#   w		the widget
+#   x		widget local x coord
+#   y		widget local y coord
+#   proxy	whether this should be a proxy sash
 # Results:
-#   Returns ...
+#   Moves sash
 #
 proc ::tk::panedwindow::DragSash {w x y proxy} {
     if { [info exists ::tk::Priv(sash)] } {
@@ -64,10 +70,11 @@ proc ::tk::panedwindow::DragSash {w x y proxy} {
 
 # ::tk::panedwindow::ReleaseSash --
 #
-#   ADD COMMENTS HERE
+#   Handle releasing of the sash
 #
 # Arguments:
-#   args	comments
+#   w		the widget
+#   proxy	whether this should be a proxy sash
 # Results:
 #   Returns ...
 #
@@ -86,21 +93,24 @@ proc ::tk::panedwindow::ReleaseSash {w proxy} {
 
 # ::tk::panedwindow::Motion --
 #
-#   ADD COMMENTS HERE
+#   Handle motion on the widget.  This is used to change the cursor
+#   when the user moves over the sash area.
 #
 # Arguments:
-#   args	comments
+#   w		the widget
+#   x		widget local x coord
+#   y		widget local y coord
 # Results:
-#   Returns ...
+#   May change the cursor.  Sets up a timer to verify that we are still
+#   over the widget.
 #
 proc ::tk::panedwindow::Motion {w x y} {
     variable ::tk::Priv
     set id [$w identify $x $y]
-    if { [llength $id] == 2 } {
-	if { !$::tk_strictMotif || [string equal [lindex $id 1] "handle"] } {
-	    if { ![info exists Priv(panecursor)] } {
-		set Priv(panecursor) [$w cget -cursor]
-	    }
+    if {([llength $id] == 2) && \
+	    (!$::tk_strictMotif || [string equal [lindex $id 1] "handle"])} {
+	if { ![info exists Priv(panecursor)] } {
+	    set Priv(panecursor) [$w cget -cursor]
 	    if { [string equal [$w cget -sashcursor] ""] } {
 		if { [string equal [$w cget -orient] "horizontal"] } {
 		    $w configure -cursor sb_h_double_arrow
@@ -110,8 +120,13 @@ proc ::tk::panedwindow::Motion {w x y} {
 	    } else {
 		$w configure -cursor [$w cget -sashcursor]
 	    }
-	    return
+	    if {[info exists Priv(pwAfterId)]} {
+		after cancel $Priv(pwAfterId)
+	    }
+	    set Priv(pwAfterId) [after 150 \
+		    [list ::tk::panedwindow::Cursor $w]]
 	}
+	return
     }
     if { [info exists Priv(panecursor)] } {
 	$w configure -cursor $Priv(panecursor)
@@ -119,17 +134,45 @@ proc ::tk::panedwindow::Motion {w x y} {
     }
 }
 
-# ::tk::panedwindow::Leave --
+# ::tk::panedwindow::Cursor --
 #
-#   ADD COMMENTS HERE
+#   Handles returning the normal cursor when we are no longer over the
+#   sash area.  This needs to be done this way, because the PanedWindow
+#   won't see Leave events when the mouse moves from the sash to a
+#   paned child, although the child does receive an Enter event.
 #
 # Arguments:
-#   args	comments
+#   w		the widget
 # Results:
-#   Returns ...
+#   May restore the default cursor, or schedule a timer to do it.
+#
+proc ::tk::panedwindow::Cursor {w} {
+    variable ::tk::Priv
+    if {[info exists Priv(panecursor)]} {
+	if {[winfo containing [winfo pointerx $w] [winfo pointery $w]] == $w} {
+	    set Priv(pwAfterId) [after 150 [list ::tk::panedwindow::Cursor $w]]
+	} else {
+	    $w configure -cursor $Priv(panecursor)
+	    unset Priv(panecursor)
+	    if {[info exists Priv(pwAfterId)]} {
+		after cancel $Priv(pwAfterId)
+		unset Priv(pwAfterId)
+	    }
+	}
+    }
+}
+
+# ::tk::panedwindow::Leave --
+#
+#   Return to default cursor when leaving the pw widget.
+#
+# Arguments:
+#   w		the widget
+# Results:
+#   Restores the default cursor
 #
 proc ::tk::panedwindow::Leave {w} {
-    if { [info exists ::tk::Priv(panecursor)] } {
+    if {[info exists ::tk::Priv(panecursor)]} {
         $w configure -cursor $::tk::Priv(panecursor)
         unset ::tk::Priv(panecursor)
     }

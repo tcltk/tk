@@ -11,6 +11,10 @@
 
 	* library/panedwindow.tcl (ReleaseSash): changed to not pass x and
 	y args at all (they aren't used).
+	Added proc comments.  Made configuring sash cursor more efficient.
+	Added Cursor timer that restores the default cursor when pointer
+	is no longer over the sash.  This is necessary because Leave
+	events won't be seen when moving into a paned child.
 
 2002-02-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
