@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.75 2003/03/04 23:50:41 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.76 2003/03/06 15:05:26 dkf Exp $
  */
 
 #ifndef _TK
@@ -1577,7 +1577,7 @@ typedef int (Tk_SelectionProc) _ANSI_ARGS_((ClientData clientData,
 
 /*
  * Allow users to say that they don't want to alter their source to
- * add the extra argument to Tk_PhotoPutBlock(); DO NOT DEFINE THIS
+ * add extra arguments to Tk_PhotoPutBlock() et al; DO NOT DEFINE THIS
  * WHEN BUILDING TK.
  *
  * This goes after the inclusion of the stubbed-decls so that the
@@ -1593,12 +1593,33 @@ typedef int (Tk_SelectionProc) _ANSI_ARGS_((ClientData clientData,
 #	undef Tk_PhotoPutZoomedBlock
 #   endif
 #   define Tk_PhotoPutZoomedBlock	Tk_PhotoPutZoomedBlock_NoComposite
+#   define USE_PANIC_ON_PHOTO_ALLOC_FAILURE
+#else /* !USE_COMPOSITELESS_PHOTO_PUT_BLOCK */
+#   ifdef USE_PANIC_ON_PHOTO_ALLOC_FAILURE
+#	ifdef Tk_PhotoPutBlock
+#	    undef Tk_PhotoPutBlock
+#	endif
+#	define Tk_PhotoPutBlock		Tk_PhotoPutBlock_Panic
+#	ifdef Tk_PhotoPutZoomedBlock
+#	    undef Tk_PhotoPutZoomedBlock
+#	endif
+#	define Tk_PhotoPutZoomedBlock	Tk_PhotoPutZoomedBlock_Panic
+#   endif /* USE_PANIC_ON_PHOTO_ALLOC_FAILURE */
 #endif /* USE_COMPOSITELESS_PHOTO_PUT_BLOCK */
+#ifdef USE_PANIC_ON_PHOTO_ALLOC_FAILURE
+#   ifdef Tk_PhotoExpand
+#	undef Tk_PhotoExpand
+#   endif
+#   define Tk_PhotoExpand		Tk_PhotoExpand_Panic
+#   ifdef Tk_PhotoSetSize
+#	undef Tk_PhotoSetSize
+#   endif
+#   define Tk_PhotoSetSize		Tk_PhotoSetSize_Panic
+#endif /* USE_PANIC_ON_PHOTO_ALLOC_FAILURE */
 
 /*
  * Tcl commands exported by Tk:
  */
-
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

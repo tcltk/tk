@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.23 2002/08/05 04:30:38 dgp Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.24 2003/03/06 15:05:28 dkf Exp $
  */
 
 #ifndef _TKDECLS
@@ -531,14 +531,14 @@ EXTERN int		Tk_PhotoGetImage _ANSI_ARGS_((Tk_PhotoHandle handle,
 /* 147 */
 EXTERN void		Tk_PhotoBlank _ANSI_ARGS_((Tk_PhotoHandle handle));
 /* 148 */
-EXTERN void		Tk_PhotoExpand _ANSI_ARGS_((Tk_PhotoHandle handle, 
-				int width, int height));
+EXTERN void		Tk_PhotoExpand_Panic _ANSI_ARGS_((
+				Tk_PhotoHandle handle, int width, int height));
 /* 149 */
 EXTERN void		Tk_PhotoGetSize _ANSI_ARGS_((Tk_PhotoHandle handle, 
 				int * widthPtr, int * heightPtr));
 /* 150 */
-EXTERN void		Tk_PhotoSetSize _ANSI_ARGS_((Tk_PhotoHandle handle, 
-				int width, int height));
+EXTERN void		Tk_PhotoSetSize_Panic _ANSI_ARGS_((
+				Tk_PhotoHandle handle, int width, int height));
 /* 151 */
 EXTERN int		Tk_PointToChar _ANSI_ARGS_((Tk_TextLayout layout, 
 				int x, int y));
@@ -853,11 +853,12 @@ EXTERN void		Tk_SetMinimumRequestSize _ANSI_ARGS_((
 EXTERN void		Tk_SetCaretPos _ANSI_ARGS_((Tk_Window tkwin, int x, 
 				int y, int height));
 /* 246 */
-EXTERN void		Tk_PhotoPutBlock _ANSI_ARGS_((Tk_PhotoHandle handle, 
+EXTERN void		Tk_PhotoPutBlock_Panic _ANSI_ARGS_((
+				Tk_PhotoHandle handle, 
 				Tk_PhotoImageBlock * blockPtr, int x, int y, 
 				int width, int height, int compRule));
 /* 247 */
-EXTERN void		Tk_PhotoPutZoomedBlock _ANSI_ARGS_((
+EXTERN void		Tk_PhotoPutZoomedBlock_Panic _ANSI_ARGS_((
 				Tk_PhotoHandle handle, 
 				Tk_PhotoImageBlock * blockPtr, int x, int y, 
 				int width, int height, int zoomX, int zoomY, 
@@ -916,6 +917,23 @@ EXTERN void		Tk_DrawElement _ANSI_ARGS_((Tk_Style style,
 				Tk_StyledElement element, char * recordPtr, 
 				Tk_Window tkwin, Drawable d, int x, int y, 
 				int width, int height, int state));
+/* 265 */
+EXTERN int		Tk_PhotoExpand _ANSI_ARGS_((Tcl_Interp * interp, 
+				Tk_PhotoHandle handle, int width, int height));
+/* 266 */
+EXTERN int		Tk_PhotoPutBlock _ANSI_ARGS_((Tcl_Interp * interp, 
+				Tk_PhotoHandle handle, 
+				Tk_PhotoImageBlock * blockPtr, int x, int y, 
+				int width, int height, int compRule));
+/* 267 */
+EXTERN int		Tk_PhotoPutZoomedBlock _ANSI_ARGS_((
+				Tcl_Interp * interp, Tk_PhotoHandle handle, 
+				Tk_PhotoImageBlock * blockPtr, int x, int y, 
+				int width, int height, int zoomX, int zoomY, 
+				int subsampleX, int subsampleY, int compRule));
+/* 268 */
+EXTERN int		Tk_PhotoSetSize _ANSI_ARGS_((Tcl_Interp * interp, 
+				Tk_PhotoHandle handle, int width, int height));
 
 typedef struct TkStubHooks {
     struct TkPlatStubs *tkPlatStubs;
@@ -1076,9 +1094,9 @@ typedef struct TkStubs {
     void (*tk_PhotoPutZoomedBlock_NoComposite) _ANSI_ARGS_((Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY)); /* 145 */
     int (*tk_PhotoGetImage) _ANSI_ARGS_((Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr)); /* 146 */
     void (*tk_PhotoBlank) _ANSI_ARGS_((Tk_PhotoHandle handle)); /* 147 */
-    void (*tk_PhotoExpand) _ANSI_ARGS_((Tk_PhotoHandle handle, int width, int height)); /* 148 */
+    void (*tk_PhotoExpand_Panic) _ANSI_ARGS_((Tk_PhotoHandle handle, int width, int height)); /* 148 */
     void (*tk_PhotoGetSize) _ANSI_ARGS_((Tk_PhotoHandle handle, int * widthPtr, int * heightPtr)); /* 149 */
-    void (*tk_PhotoSetSize) _ANSI_ARGS_((Tk_PhotoHandle handle, int width, int height)); /* 150 */
+    void (*tk_PhotoSetSize_Panic) _ANSI_ARGS_((Tk_PhotoHandle handle, int width, int height)); /* 150 */
     int (*tk_PointToChar) _ANSI_ARGS_((Tk_TextLayout layout, int x, int y)); /* 151 */
     int (*tk_PostscriptFontName) _ANSI_ARGS_((Tk_Font tkfont, Tcl_DString * dsPtr)); /* 152 */
     void (*tk_PreserveColormap) _ANSI_ARGS_((Display * display, Colormap colormap)); /* 153 */
@@ -1174,8 +1192,8 @@ typedef struct TkStubs {
     void (*tk_SetInternalBorderEx) _ANSI_ARGS_((Tk_Window tkwin, int left, int right, int top, int bottom)); /* 243 */
     void (*tk_SetMinimumRequestSize) _ANSI_ARGS_((Tk_Window tkwin, int minWidth, int minHeight)); /* 244 */
     void (*tk_SetCaretPos) _ANSI_ARGS_((Tk_Window tkwin, int x, int y, int height)); /* 245 */
-    void (*tk_PhotoPutBlock) _ANSI_ARGS_((Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int compRule)); /* 246 */
-    void (*tk_PhotoPutZoomedBlock) _ANSI_ARGS_((Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule)); /* 247 */
+    void (*tk_PhotoPutBlock_Panic) _ANSI_ARGS_((Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int compRule)); /* 246 */
+    void (*tk_PhotoPutZoomedBlock_Panic) _ANSI_ARGS_((Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule)); /* 247 */
     int (*tk_CollapseMotionEvents) _ANSI_ARGS_((Display * display, int collapse)); /* 248 */
     Tk_StyleEngine (*tk_RegisterStyleEngine) _ANSI_ARGS_((CONST char * name, Tk_StyleEngine parent)); /* 249 */
     Tk_StyleEngine (*tk_GetStyleEngine) _ANSI_ARGS_((CONST char * name)); /* 250 */
@@ -1193,6 +1211,10 @@ typedef struct TkStubs {
     void (*tk_GetElementBox) _ANSI_ARGS_((Tk_Style style, Tk_StyledElement element, char * recordPtr, Tk_Window tkwin, int x, int y, int width, int height, int inner, int * xPtr, int * yPtr, int * widthPtr, int * heightPtr)); /* 262 */
     int (*tk_GetElementBorderWidth) _ANSI_ARGS_((Tk_Style style, Tk_StyledElement element, char * recordPtr, Tk_Window tkwin)); /* 263 */
     void (*tk_DrawElement) _ANSI_ARGS_((Tk_Style style, Tk_StyledElement element, char * recordPtr, Tk_Window tkwin, Drawable d, int x, int y, int width, int height, int state)); /* 264 */
+    int (*tk_PhotoExpand) _ANSI_ARGS_((Tcl_Interp * interp, Tk_PhotoHandle handle, int width, int height)); /* 265 */
+    int (*tk_PhotoPutBlock) _ANSI_ARGS_((Tcl_Interp * interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int compRule)); /* 266 */
+    int (*tk_PhotoPutZoomedBlock) _ANSI_ARGS_((Tcl_Interp * interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule)); /* 267 */
+    int (*tk_PhotoSetSize) _ANSI_ARGS_((Tcl_Interp * interp, Tk_PhotoHandle handle, int width, int height)); /* 268 */
 } TkStubs;
 
 #ifdef __cplusplus
@@ -1801,17 +1823,17 @@ extern TkStubs *tkStubsPtr;
 #define Tk_PhotoBlank \
 	(tkStubsPtr->tk_PhotoBlank) /* 147 */
 #endif
-#ifndef Tk_PhotoExpand
-#define Tk_PhotoExpand \
-	(tkStubsPtr->tk_PhotoExpand) /* 148 */
+#ifndef Tk_PhotoExpand_Panic
+#define Tk_PhotoExpand_Panic \
+	(tkStubsPtr->tk_PhotoExpand_Panic) /* 148 */
 #endif
 #ifndef Tk_PhotoGetSize
 #define Tk_PhotoGetSize \
 	(tkStubsPtr->tk_PhotoGetSize) /* 149 */
 #endif
-#ifndef Tk_PhotoSetSize
-#define Tk_PhotoSetSize \
-	(tkStubsPtr->tk_PhotoSetSize) /* 150 */
+#ifndef Tk_PhotoSetSize_Panic
+#define Tk_PhotoSetSize_Panic \
+	(tkStubsPtr->tk_PhotoSetSize_Panic) /* 150 */
 #endif
 #ifndef Tk_PointToChar
 #define Tk_PointToChar \
@@ -2187,13 +2209,13 @@ extern TkStubs *tkStubsPtr;
 #define Tk_SetCaretPos \
 	(tkStubsPtr->tk_SetCaretPos) /* 245 */
 #endif
-#ifndef Tk_PhotoPutBlock
-#define Tk_PhotoPutBlock \
-	(tkStubsPtr->tk_PhotoPutBlock) /* 246 */
+#ifndef Tk_PhotoPutBlock_Panic
+#define Tk_PhotoPutBlock_Panic \
+	(tkStubsPtr->tk_PhotoPutBlock_Panic) /* 246 */
 #endif
-#ifndef Tk_PhotoPutZoomedBlock
-#define Tk_PhotoPutZoomedBlock \
-	(tkStubsPtr->tk_PhotoPutZoomedBlock) /* 247 */
+#ifndef Tk_PhotoPutZoomedBlock_Panic
+#define Tk_PhotoPutZoomedBlock_Panic \
+	(tkStubsPtr->tk_PhotoPutZoomedBlock_Panic) /* 247 */
 #endif
 #ifndef Tk_CollapseMotionEvents
 #define Tk_CollapseMotionEvents \
@@ -2262,6 +2284,22 @@ extern TkStubs *tkStubsPtr;
 #ifndef Tk_DrawElement
 #define Tk_DrawElement \
 	(tkStubsPtr->tk_DrawElement) /* 264 */
+#endif
+#ifndef Tk_PhotoExpand
+#define Tk_PhotoExpand \
+	(tkStubsPtr->tk_PhotoExpand) /* 265 */
+#endif
+#ifndef Tk_PhotoPutBlock
+#define Tk_PhotoPutBlock \
+	(tkStubsPtr->tk_PhotoPutBlock) /* 266 */
+#endif
+#ifndef Tk_PhotoPutZoomedBlock
+#define Tk_PhotoPutZoomedBlock \
+	(tkStubsPtr->tk_PhotoPutZoomedBlock) /* 267 */
+#endif
+#ifndef Tk_PhotoSetSize
+#define Tk_PhotoSetSize \
+	(tkStubsPtr->tk_PhotoSetSize) /* 268 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
