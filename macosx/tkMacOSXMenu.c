@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.14 2004/07/20 11:49:16 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.15 2004/09/03 14:09:05 dkf Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenubutton.h"
@@ -3683,6 +3683,7 @@ MenuSelectEvent(
     event.state = TkMacOSXButtonKeyState();
     event.same_screen = true;
     event.name = Tk_GetUid("MenuSelect");
+    event.user_data = NULL;
     Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
 }
 

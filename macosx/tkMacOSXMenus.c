@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.5 2004/04/01 18:33:30 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.6 2004/09/03 14:09:05 dkf Exp $
  */
 
 #include "tk.h"
@@ -254,7 +254,8 @@ GenerateEditEvent(
     event.y_root = where.v;
     event.state = TkMacOSXButtonKeyState();
     event.same_screen = true;
-    
+    event.user_data = NULL;
+
     switch (flag) {
         case EDIT_CUT:
             event.name = Tk_GetUid("Cut");

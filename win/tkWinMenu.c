@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.34 2004/08/25 22:23:33 dgp Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.35 2004/09/03 14:09:05 dkf Exp $
  */
 
 #define OEMRESOURCE
@@ -2812,6 +2812,7 @@ MenuSelectEvent(
     event.state = TkWinGetModifierState();
     event.same_screen = 1;
     event.name = Tk_GetUid("MenuSelect");
+    event.user_data = NULL;
     Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
 }
 
