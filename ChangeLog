@@ -1,3 +1,8 @@
+2002-04-10  David Gravereaux <davygrvy@pobox.com>
+
+	* win/makefile.vc: Added missing $(TKSTUBLIB) to the
+	install-binaries target.
+
 2002-04-08  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkInt.h:
