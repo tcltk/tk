@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.28 2000/06/15 15:56:48 ericm Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.29 2000/07/18 18:17:47 mo Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -83,7 +83,7 @@ TCL_BIN_DIR		= @TCL_BIN_DIR@
 # The directory containing the Tcl sources and headers appropriate
 # for this version of Tk ("srcdir" will be replaced or has already
 # been replaced by the configure script):
-TCL_GENERIC_DIR	= @TCL_SRC_DIR@/../generic
+TCL_GENERIC_DIR	= @TCL_SRC_DIR@/generic
 
 # This is a switch passed to a Cygwin script that generates file
 # names based on the platform.
