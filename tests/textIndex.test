@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textIndex.test,v 1.1.4.6 1999/03/27 02:31:40 redman Exp $
+# RCS: @(#) $Id: textIndex.test,v 1.1.4.7 1999/03/29 23:50:34 redman Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -647,9 +647,17 @@ test testIndex-16.1 {TkTextPrintIndex} {
     set result [$t index end-2c]
     pack $t
     catch {destroy $t}
+} 0
 
-    set result
-} 1.1
+
+test testIndex-16.2 {TkTextPrintIndex} {
+    set t [text .t2]
+    $t insert end \n
+    $t window create end -window [button $t.b]
+    set result [$t tag add {} end-2c]
+    pack $t
+    catch {destroy $t}
+} 0
 
 # cleanup
 rename textimage {}

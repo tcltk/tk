@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.1.4.3 1999/03/27 02:31:39 redman Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.1.4.4 1999/03/29 23:50:33 redman Exp $
  */
 
 #include "default.h"
@@ -1015,7 +1015,7 @@ TkTextIndexBackChars(srcPtr, charCount, dstPtr)
 		charCount--;
 	    }
 	} else {
-	    if (charCount < segSize) {
+	    if (charCount <= segSize) {
 		dstPtr->byteIndex -= charCount;
 		return;
 	    }
