@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.1.4.8 1999/03/13 18:28:41 welch Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.1.4.9 1999/03/14 19:26:03 stanton Exp $
 
 # Current Tk version;  used in various names.
 
@@ -461,8 +461,11 @@ install-libraries:
 		else true; \
 		fi; \
 	    done;
-	@echo "Installing tk.h"
-	@$(INSTALL_DATA) $(GENERIC_DIR)/tk.h $(INCLUDE_INSTALL_DIR)/tk.h
+	@for i in $(GENERIC_DIR)/tk.h $(GENERIC_DIR)/tkDecls.h ; \
+	    do \
+	    echo "Installing $$i"; \
+	    $(INSTALL_DATA) $$i $(INCLUDE_INSTALL_DIR); \
+	    done;
 	for i in $(SRC_DIR)/library/*.tcl $(SRC_DIR)/library/tclIndex $(UNIX_DIR)/tkAppInit.c; \
 	    do \
 	    echo "Installing $$i"; \

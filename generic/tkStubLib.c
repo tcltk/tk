@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.2.2.1 1999/03/10 07:13:46 stanton Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.2.2.2 1999/03/14 19:26:03 stanton Exp $
  */
 
 /*
@@ -20,6 +20,11 @@
  * including the rest of the stub functions.
  */
 
+
+#ifndef USE_TCL_STUBS
+#define USE_TCL_STUBS
+#endif
+#undef USE_TCL_STUB_PROCS
 
 #ifndef USE_TK_STUBS
 #define USE_TK_STUBS
