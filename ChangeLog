@@ -1,3 +1,12 @@
+2001-03-08  Don Porter  <dgp@users.sourceforge.net>
+
+	BRANCH dgp-privates-into-namespace:
+	* generic/tkTextDisp.c: 
+	* library/unsupported.tcl: 
+	* tests/textDisp.test: Restored the global variables tk_textRedraw
+	and tk_textRelayout.  Since they match tk_*, they should remain
+	publicly available until at least Tk 9.
+
 2001-03-01  Don Porter  <dgp@users.sourceforge.net>
 
 	BRANCH dgp-privates-into-namespace:

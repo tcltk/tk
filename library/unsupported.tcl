@@ -3,7 +3,7 @@
 # Commands provided by Tk without official support.  Use them at your
 # own risk.  They may change or go away without notice.
 #
-# RCS: @(#) $Id: unsupported.tcl,v 1.1.2.1 2001/03/01 18:25:45 dgp Exp $
+# RCS: @(#) $Id: unsupported.tcl,v 1.1.2.2 2001/03/09 00:00:50 dgp Exp $
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -230,8 +230,6 @@ namespace eval ::tk::unsupported {
     variable PrivateVariables
     array set PrivateVariables {
 	histNum			::tk::histNum
-	tk_textRedraw		::tk::textRedraw
-	tk_textRelayout		::tk::textRelayout
 	tkFocusIn		::tk::FocusIn
 	tkFocusOut		::tk::FocusOut
 	tkPalette		::tk::Palette
