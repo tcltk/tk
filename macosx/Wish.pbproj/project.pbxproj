@@ -1380,7 +1380,7 @@
 				SECTORDER_FLAGS = "";
 				TK_MAJOR_VERSION = 8;
 				TK_MINOR_VERSION = 4;
-				TK_PATCH_LEVEL = .0;
+				TK_PATCH_LEVEL = .1;
 				TK_VERSION = 8.4;
 				USE_GCC3_PFE_SUPPORT = YES;
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
@@ -1416,11 +1416,11 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>8.4.0</string>
+	<string>8.4.1</string>
 	<key>CFBundleSignature</key>
 	<string>WiSH</string>
 	<key>CFBundleVersion</key>
-	<string>8.4.0</string>
+	<string>8.4.1</string>
 </dict>
 </plist>
 ";
@@ -1487,6 +1487,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 		F53755E1016C38D301DC9062 = {
 			buildActionMask = 2147483647;
 			files = (
+				F5C2EA34034D71B2016F146B,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2791,11 +2792,11 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>8.4.0</string>
+	<string>8.4.1</string>
 	<key>CFBundleSignature</key>
 	<string>WiSH</string>
 	<key>CFBundleVersion</key>
-	<string>8.4.0</string>
+	<string>8.4.1</string>
 </dict>
 </plist>
 ";
@@ -3118,6 +3119,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				F5B1FC13016FFE3501DC9062,
 				F5B1FC14016FFE3501DC9062,
 				F5B1FC15016FFE3501DC9062,
+				F5C2EA35034D7212016F146B,
 				F5B1FC16016FFE3501DC9062,
 				F5B1FC17016FFE3501DC9062,
 				F5B1FC18016FFE3501DC9062,
@@ -3369,6 +3371,24 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			shellPath = /bin/sh;
 			shellScript = "# synthesize tkConfig.sh via buildTkConfig.tcl script\nexport DYLD_FRAMEWORK_PATH=${SYMROOT}\n\"${SYMROOT}/tclsh${FRAMEWORK_VERSION}\" \"${SRCROOT}/buildTkConfig.tcl\" \"${TARGET_BUILD_DIR}/Tcl.${WRAPPER_EXTENSION}/Resources/tclConfig.sh\" \"${SRCROOT}/../unix/tkConfig.sh.in\" \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Resources/tkConfig.sh\"";
 		};
+		F5C2EA33034D71B2016F146B = {
+			isa = PBXFileReference;
+			name = mkpsenc.tcl;
+			path = ../library/mkpsenc.tcl;
+			refType = 2;
+		};
+		F5C2EA34034D71B2016F146B = {
+			fileRef = F5C2EA33034D71B2016F146B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5C2EA35034D7212016F146B = {
+			fileRef = F5C2EA33034D71B2016F146B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F5C88659017D625C01DC9062 = {
 			children = (
 				F5C8865A017D625C01DC9062,
@@ -3405,6 +3425,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				F5DF0932016CD3F901DC9062,
 				F5DF0933016CD3F901DC9062,
 				F5DF0934016CD3F901DC9062,
+				F5C2EA33034D71B2016F146B,
 				F5DF0935016CD3F901DC9062,
 				F5DF0936016CD3F901DC9062,
 				F5DF0937016CD3F901DC9062,
