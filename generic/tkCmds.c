@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.27 2002/06/15 02:15:39 hobbs Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.28 2002/06/17 20:09:01 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -618,10 +618,11 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
     int index;
     Tk_Window tkwin;
     static CONST char *optionStrings[] = {
-	"appname",	"scaling",	"useinputmethods",	NULL
+	"appname",	"caret",	"scaling",	"useinputmethods",
+	NULL
     };
     enum options {
-	TK_APPNAME,	TK_SCALING,	TK_USE_IM
+	TK_APPNAME,	TK_CARET,	TK_SCALING,	TK_USE_IM
     };
 
     tkwin = (Tk_Window) clientData;
@@ -651,6 +652,85 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 		winPtr->nameUid = Tk_GetUid(Tk_SetAppName(tkwin, string));
 	    }
 	    Tcl_AppendResult(interp, winPtr->nameUid, NULL);
+	    break;
+	}
+	case TK_CARET: {
+	    Tcl_Obj *objPtr;
+	    TkCaret *caretPtr;
+	    Tk_Window window;
+	    static CONST char *caretStrings[]
+		= { "-x",	"-y", "-height", NULL };
+	    enum caretOptions
+		{ TK_CARET_X, TK_CARET_Y, TK_CARET_HEIGHT };
+
+	    if ((objc < 3) || ((objc > 4) && !(objc & 1))) {
+	        Tcl_WrongNumArgs(interp, 2, objv,
+			"window ?-x x? ?-y y? ?-height height?");
+		return TCL_ERROR;
+	    }
+	    window = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
+	    if (window == NULL) {
+		return TCL_ERROR;
+	    }
+	    caretPtr = &(((TkWindow *) window)->dispPtr->caret);
+	    if (objc == 3) {
+		/*
+		 * Return all the current values
+		 */
+		objPtr = Tcl_NewObj();
+		Tcl_ListObjAppendElement(interp, objPtr,
+			Tcl_NewStringObj("-height", 7));
+		Tcl_ListObjAppendElement(interp, objPtr,
+			Tcl_NewIntObj(caretPtr->height));
+		Tcl_ListObjAppendElement(interp, objPtr,
+			Tcl_NewStringObj("-x", 2));
+		Tcl_ListObjAppendElement(interp, objPtr,
+			Tcl_NewIntObj(caretPtr->x));
+		Tcl_ListObjAppendElement(interp, objPtr,
+			Tcl_NewStringObj("-y", 2));
+		Tcl_ListObjAppendElement(interp, objPtr,
+			Tcl_NewIntObj(caretPtr->y));
+		Tcl_SetObjResult(interp, objPtr);
+	    } else if (objc == 4) {
+		int value;
+		/*
+		 * Return the current value of the selected option
+		 */
+		if (Tcl_GetIndexFromObj(interp, objv[3], caretStrings,
+			"caret option", 0, &index) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+		if (index == TK_CARET_X) {
+		    value = caretPtr->x;
+		} else if (index == TK_CARET_Y) {
+		    value = caretPtr->y;
+		} else /* if (index == TK_CARET_HEIGHT) -- last case */ {
+		    value = caretPtr->height;
+		}
+		Tcl_SetIntObj(Tcl_GetObjResult(interp), value);
+	    } else {
+		int i, value, x = 0, y = 0, height = -1;
+
+		for (i = 3; i < objc; i += 2) {
+		    if ((Tcl_GetIndexFromObj(interp, objv[i], caretStrings,
+			    "caret option", 0, &index) != TCL_OK) ||
+			    (Tcl_GetIntFromObj(interp, objv[i+1], &value)
+				!= TCL_OK)) {
+			return TCL_ERROR;
+		    }
+		    if (index == TK_CARET_X) {
+			x = value;
+		    } else if (index == TK_CARET_Y) {
+			y = value;
+		    } else /* if (index == TK_CARET_HEIGHT) -- last case */ {
+			height = value;
+		    }
+		}
+		if (height < 0) {
+		    height = Tk_Height(window);
+		}
+		Tk_SetCaretPos(window, x, y, height);
+	    }
 	    break;
 	}
 	case TK_SCALING: {

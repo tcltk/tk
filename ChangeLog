@@ -1,3 +1,17 @@
+2002-06-17  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkCmds.c (Tk_TkObjCmd): 
+	* generic/tkInt.h (struct TkCaret): 
+	* mac/tkMacXStubs.c (Tk_SetCaretPos): 
+	* unix/tkUnixKey.c (TkpGetString, Tk_SetCaretPos): 
+	* win/tkWinX.c (Tk_SetCaretPos): 
+	* tests/tk.test:        Added 'tk caret' implementation of TIP#96
+	* doc/SetCaret.3 (new): which adds a TkCaret structure element to
+	* doc/tk.n:             TkDisplay for maintaining state.
+
+	* unix/tkUnixSend.c (TkSendCleanup): special cleanup of
+	inputContext to avoid bug in XCloseIM. (dejong)
+
 2002-06-17  Don Porter <dgp@users.sf.net>
 
 	* library/msgs/en_gb.msg:  Added catalog for UK English.
