@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.5 1999/04/21 21:53:28 rjohnson Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.6 1999/08/10 05:10:52 jingham Exp $
  */
 
 #include "tkInt.h"
@@ -64,22 +64,6 @@ TkDrawInsetFocusHighlight(tkwin, gc, width, drawable, padding)
 {
     XRectangle rects[4];
 
-    /*
-     * On the Macintosh the highlight ring needs to be "padded"
-     * out by one pixel.  Unfortunantly, none of the Tk widgets
-     * had a notion of padding between the focus ring and the
-     * widget.  So we add this padding here.  This introduces
-     * two things to worry about:
-     *
-     * 1) The widget must draw the background color covering
-     *    the focus ring area before calling Tk_DrawFocusHighlight.
-     * 2) It is impossible to draw a focus ring of width 1.
-     *    (For the Macintosh Look & Feel use width of 3)
-     */
-#ifdef MAC_TCL
-    width--;
-#endif
-
     rects[0].x = padding;
     rects[0].y = padding;
     rects[0].width = Tk_Width(tkwin) - (2 * padding);
@@ -106,6 +90,12 @@ TkDrawInsetFocusHighlight(tkwin, gc, width, drawable, padding)
  *
  *	This procedure draws a rectangular ring around the outside of
  *	a widget to indicate that it has received the input focus.
+ *
+ *      This function is now deprecated.  Use TkpDrawHighlightBorder instead,
+ *      since this function does not handle drawing the Focus ring properly
+ *      on the Macintosh - you need to know the background GC as well 
+ *      as the foreground since the Mac focus ring separated from the widget
+ *      by a 1 pixel border.
  *
  * Results:
  *	None.
