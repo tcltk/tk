@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: photo.n,v 1.16 2003/07/17 22:57:03 dkf Exp $
+'\" RCS: @(#) $Id: photo.n,v 1.17 2004/06/21 15:07:53 dkf Exp $
 '\" 
 .so man.macros
 .TH photo n 4.0 Tk "Tk Built-In Commands"
@@ -36,7 +36,6 @@ in regions where no image data has been supplied
 or where it has been set transparent by the \fBtransparency set\fR
 subcommand.
 .VE 8.4
-
 .SH "CREATING PHOTOS"
 .PP
 Like all images, photos are created using the \fBimage create\fR
@@ -93,7 +92,6 @@ Specifies the width of the image, in pixels.    This option is useful
 primarily in situations where the user wishes to build up the contents
 of the image piece by piece.  A value of zero (the default) allows the
 image to expand or shrink horizontally to fit the data stored in it.
-
 .SH "IMAGE COMMAND"
 .PP
 When a photo image is created, Tk also creates a new command
@@ -397,7 +395,6 @@ to use of the formats supported by the handler.
 Note that not all image handlers may support writing transparency data
 to a file, even where the target image format does.
 .VE 8.4
-
 .SH "COLOR ALLOCATION"
 .PP
 When a photo image is displayed in a window, the photo image code
@@ -427,12 +424,28 @@ each primary color to try to allocate.  It can also be used to force
 the image to be displayed in shades of gray, even on a color display,
 by giving a single number rather than three numbers separated by
 slashes.
-
 .SH CREDITS
 .PP
 The photo image type was designed and implemented by Paul Mackerras,
 based on his earlier photo widget and some suggestions from
 John Ousterhout.
+.SH EXAMPLE
+Load an image from a file and tile it to the size of a window, which
+is useful for producing a tiled background:
+.CS
+# These lines should be called once
+\fBimage create photo\fR untiled -file "theFile.ppm"
+\fBimage create photo\fR tiled
+
+# These lines should be called whenever .someWidget changes
+# size; a <Configure> binding is useful here
+set width  [winfo width .someWidget]
+set height [winfo height .someWidget]
+tiled \fBcopy\fR untiled \-to 0 0 $width $height \-shrink
+.CE
+
+.SH "SEE ALSO"
+image(n)
 
 .SH KEYWORDS
 photo, image, color
