@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scale.test,v 1.9 1999/12/21 23:55:55 hobbs Exp $
+# RCS: @(#) $Id: scale.test,v 1.10 2000/04/14 08:34:28 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -807,8 +807,12 @@ test scale-17.1 {bug fix 1786} {
     pack .s
     update
     .s configure -variable x   ;# CRASH! -> Floating point exception
+
+    # Bug 4833 changed the result to realize that x should pick up
+    # a value from the scale.  In an FPE occurs, it is due to the
+    # lack of errno being set to 0 by some libc's. (see bug 4942)
     set x
-} {}
+} {100}
 
 test scale-18.1 {DestroyScale, -cursor option [Bug: 3897]} {
     catch {destroy .s}
