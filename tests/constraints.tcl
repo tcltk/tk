@@ -23,10 +23,25 @@ package require tcltest 2.1
 
 namespace eval tk {
     namespace eval test {
+
+	namespace export loadTkCommand
+	proc loadTkCommand {} {
+	    set tklib {}
+	    foreach pair [info loaded {}] {
+		foreach {lib pfx} $pair break
+		if {$pfx eq "Tk"} {
+		    set tklib $lib
+		    break
+		}
+	    }
+	    return [list load $tklib Tk]
+	}
+
 	namespace eval bg {
 	    # Manage a background process.  
 	    # Replace with slave interp or thread?
 	    namespace import ::tcltest::interpreter
+	    namespace import ::tk::test::loadTkCommand
 	    namespace export setup cleanup do
 
 	    proc cleanup {} {
@@ -52,6 +67,8 @@ namespace eval tk {
 		    error "unexpected output from\
 			    background process: \"$data\""
 		}
+		puts $fd [loadTkCommand]
+		flush $fd
 		fileevent $fd readable [namespace code Ready]
 	    }
 	    proc Ready {} {

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: select.test,v 1.10 2003/04/01 21:06:51 dgp Exp $
+# RCS: @(#) $Id: select.test,v 1.11 2003/11/18 01:47:51 dgp Exp $
 
 #
 # Note: Multiple display selection handling will only be tested if the
@@ -16,6 +16,8 @@
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+namespace import -force ::tk::test:loadTkCommand
 
 global longValue selValue selInfo
 
@@ -856,7 +858,7 @@ test select-10.1 {ConvertSelection procedure, race with selection clear} {unixOn
 	lappend x [gets $fd]
     }
     set fd [open "|[list [interpreter] -geometry +0+0 -name tktest]" r+]
-    puts $fd "puts foo; flush stdout"
+    puts $fd "puts foo; [loadTkCommand]; flush stdout"
     flush $fd
     gets $fd
     fileevent $fd readable [list Ready $fd]
@@ -872,7 +874,9 @@ test select-10.1 {ConvertSelection procedure, race with selection clear} {unixOn
     vwait [namespace which -variable x]
     puts $fd {exit}
     flush $fd
-    close $fd
+    # Don't understand why, but the [loadTkCommand] above causes
+    # a "broken pipe" error when Tk was actually [load]ed in the child.
+    catch {close $fd}
     lappend x $selInfo
 } {{1 PRIMARY selection doesn't exist or form "STRING" not defined} {}}
 test select-10.2 {ConvertSelection procedure} {unixOnly} {

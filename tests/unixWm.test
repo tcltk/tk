@@ -7,11 +7,13 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.35 2003/10/15 20:04:03 jenglish Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.36 2003/11/18 01:47:51 dgp Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+namespace import -force ::tk::test:loadTkCommand
 
 proc sleep ms {
     global x
@@ -2394,14 +2396,16 @@ test unixWm-59.1 {exit processing} unix {
     list $error $msg
 } {0 {}}
 test unixWm-59.2 {exit processing} unix {
-    set script [makeFile {
+    set code [loadTkCommand]
+    append code  {
 	interp create x
 	x eval {set argc 2}
 	x eval {set argv "-geometry 10x10+0+0"}
 	x eval {load {} Tk}
 	update
 	exit
-    } script]
+    }
+    set script [makeFile $code script]
     if {[catch {exec [interpreter] $script -geometry 10x10+0+0} msg]} {
 	set error 1
     } else {
@@ -2411,7 +2415,8 @@ test unixWm-59.2 {exit processing} unix {
     list $error $msg
 } {0 {}}
 test unixWm-59.3 {exit processing} unix {
-    set script [makeFile {
+    set code [loadTkCommand]
+    append code  {
 	interp create x
 	x eval {set argc 2}
 	x eval {set argv "-geometry 10x10+0+0"}
@@ -2424,7 +2429,8 @@ test unixWm-59.3 {exit processing} unix {
 	proc destroy_x {} {interp delete x}
 	update
 	exit
-    } script]
+    }
+    set script [makeFile $code script]
     if {[catch {exec [interpreter] $script -geometry 10x10+0+0} msg]} {
 	set error 1
     } else {
