@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bind.n,v 1.11 2004/04/23 13:47:46 dkf Exp $
+'\" RCS: @(#) $Id: bind.n,v 1.12 2004/05/23 20:51:51 dkf Exp $
 '\" 
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
@@ -68,7 +68,6 @@ the binding applies to all widgets in that class;
 .IP \(bu 3
 If \fItag\fR has the value \fBall\fR,
 the binding applies to all windows in the application.
-
 .SH "EVENT PATTERNS"
 .PP
 The \fIsequence\fR argument specifies a sequence of one or more
@@ -110,7 +109,6 @@ Some widgets (e.g. \fBmenu\fR and \fBtext\fR) issue virtual events
 when their internal state is updated in some ways.  Please see the
 manual page for each widget for details.
 .VE
-
 .SS "MODIFIERS"
 .PP
 Modifiers consist of any of the following values:
@@ -159,7 +157,6 @@ pattern, all of the events must occur close together in time and without
 substantial mouse motion in between.  For example, \fB<Double-Button-1>\fR
 is equivalent to \fB<Button-1><Button-1>\fR with the extra time and space
 requirement.
-
 .SS "EVENT TYPES"
 .PP
 The \fItype\fR field may be any of the standard X event types, with a
@@ -334,7 +331,6 @@ Tk does not use \fBXCirculateSubwindows()\fP internally.
 This event type is included only for completeness;
 there is no reliable way to track changes to a window's
 position in the stacking order.
-
 .SS "EVENT DETAILS"
 .PP
 The last part of a long event specification is \fIdetail\fR.  In the
@@ -368,7 +364,6 @@ If a keysym \fIdetail\fR is given, then the
 \fItype\fR field may be omitted;  it will default to \fBKeyPress\fR.
 For example, \fB<Control-comma>\fR is equivalent to
 \fB<Control-KeyPress-comma>\fR.
-
 .SH "BINDING SCRIPTS AND SUBSTITUTIONS"
 .PP
 The \fIscript\fR argument to \fBbind\fR is a Tcl script,
@@ -582,7 +577,6 @@ This will cause the \fBinsert\fR to receive the original replacement
 string (open square bracket) as its first argument.
 If the extra backslash hadn't been added, Tcl would not have been
 able to parse the script correctly.
-
 .SH "MULTIPLE MATCHES"
 .PP
 It is possible for several bindings to match a given X event.
@@ -646,7 +640,6 @@ be invoked, but exactly which one gets invoked is undefined.
 If an X event does not match any of the existing bindings, then the
 event is ignored.
 An unbound event is not considered to be an error.
-
 .SH "MULTI-EVENT SEQUENCES AND IGNORED EVENTS"
 .PP
 When a \fIsequence\fR specified in a \fBbind\fR command contains
@@ -671,14 +664,12 @@ key, and a press of the \fBb\fR key:  the press of \fBShift\fR is
 ignored because it is a modifier key.
 Finally, if several \fBMotion\fR events occur in a row, only
 the last one is used for purposes of matching binding sequences.
-
 .SH "ERRORS"
 .PP
 If an error occurs in executing the script for a binding then the
 \fBbgerror\fR mechanism is used to report the error.
 The \fBbgerror\fR command will be executed at global level
 (outside the context of any Tcl procedure).
-
 .SH "EXAMPLES"
 Arrange for a string describing the motion of the mouse to be printed
 out when the mouse is double-clicked:
@@ -699,7 +690,7 @@ bind . <Key> {
 .CE
 
 .SH "SEE ALSO"
-bgerror(n), keysyms(n), grab(n), focus(n), bindtags(n), event(n)
+bgerror(n), bindtags(n), event(n), focus(n), grab(n), keysyms(n)
 
 .SH KEYWORDS
 binding, event
