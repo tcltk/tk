@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# SCCS: %Z% $Id: makefile.vc,v 1.11 1998/08/06 16:47:10 welch Exp $ 
+# SCCS: %Z% $Id: makefile.vc,v 1.12 1998/08/12 18:41:59 suresh Exp $ 
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -75,11 +75,9 @@ TKTEST 		= $(OUTDIR)\$(TKNAMEPREFIX)test.exe
 DUMPEXTS 	= $(TMPDIR)\dumpexts.exe
 
 WISHOBJS = \
-	$(TMPDIR)\tkConsole.obj \
 	$(TMPDIR)\winMain.obj
 
 TKTESTOBJS = \
-	$(TMPDIR)\tkConsole.obj \
 	$(TMPDIR)\tkTest.obj \
 	$(TMPDIR)\tkSquare.obj \
 	$(TMPDIR)\testMain.obj
@@ -92,6 +90,7 @@ XLIBOBJS = \
 	$(TMPDIR)\xutil.obj
 
 TKOBJS = \
+	$(TMPDIR)\tkConsole.obj \
 	$(TMPDIR)\tkUnixMenubu.obj \
 	$(TMPDIR)\tkUnixScale.obj \
 	$(XLIBOBJS) \
@@ -359,9 +358,6 @@ $(DUMPEXTS): $(TCLDIR)\win\winDumpExts.c
 
 $(TMPDIR)\testMain.obj: $(ROOT)\win\winMain.c
 	$(cc32) $(TK_CFLAGS) -DSTATIC_BUILD -DTK_TEST -Fo$@ $?
-
-$(TMPDIR)\tkConsole.obj: $(ROOT)\generic\tkConsole.c
-	$(cc32) $(TK_CFLAGS) -DSTATIC_BUILD -Fo$@ $?
 
 $(TMPDIR)\tkTest.obj: $(ROOT)\generic\tkTest.c
 	$(cc32) $(TK_CFLAGS) -DSTATIC_BUILD -Fo$@ $?
