@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: clipboard.n,v 1.8 2004/06/18 21:27:38 dkf Exp $
+'\" RCS: @(#) $Id: clipboard.n,v 1.9 2004/10/28 10:22:51 dkf Exp $
 '\" 
 .so man.macros
 .TH clipboard n 8.4 Tk "Tk Built-In Commands"
@@ -77,9 +77,9 @@ next argument will always be used as \fIdata\fR.
 This feature may be convenient if, for example, \fIdata\fR starts
 with a \fB\-\fR.
 .RE
-.VS 8.4
 .TP
 \fBclipboard get\fR ?\fB\-displayof\fR \fIwindow\fR? ?\fB\-type\fR \fItype\fR?
+.VS 8.4
 Retrieve data from the clipboard on \fIwindow\fR's display.
 \fIwindow\fR defaults to ".".  \fIType\fR specifies the form in which
 the data is to be returned and should be an atom name such as STRING
@@ -89,15 +89,15 @@ equivalent to \fBselection get -selection CLIPBOARD\fR.
 .SH EXAMPLES
 Get the current contents of the clipboard.
 .CS
-if {[catch {\fBclipboard\fR get} contents]} {
+if {[catch {\fBclipboard get\fR} contents]} {
     # There were no clipboard contents at all
 }
 .CE
 .PP
 Set the clipboard to contain a fixed string.
 .CS
-\fBclipboard\fR clear
-\fBclipboard\fR append "some fixed string"
+\fBclipboard clear\fR
+\fBclipboard append\fR "some fixed string"
 .CE
 
 .SH "SEE ALSO"

@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bind.n,v 1.17 2004/08/29 09:27:35 dkf Exp $
+'\" RCS: @(#) $Id: bind.n,v 1.18 2004/10/28 10:22:51 dkf Exp $
 '\" 
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
@@ -115,7 +115,9 @@ Modifiers consist of any of the following values:
 \fBButton4, B4\fR	\fBDouble\fR
 \fBButton5, B5\fR	\fBTriple\fR
 \fBMod1, M1\fR	\fBQuadruple\fR
+.VS
 \fBExtended\fR
+.VE
 .DE
 Where more than one value is listed, separated by commas, the values
 are equivalent.
@@ -151,6 +153,7 @@ substantial mouse motion in between.  For example, \fB<Double-Button-1>\fR
 is equivalent to \fB<Button-1><Button-1>\fR with the extra time and space
 requirement.
 .PP
+.VS 8.5
 The \fBExtended\fR modifier is, at present, specific to Windows.  It
 appears on events that are associated with the keys on the "extended
 keyboard."  On a US keyboard, the extended keys include the \fBAlt\fR
@@ -158,6 +161,7 @@ and \fBControl\fR keys at the right of the keyboard, the cursor keys
 in the cluster to the left of the numeric pad, the \fBNumLock\fR key,
 the \fBBreak\fR key, the \fBPrintScreen\fR key, and the \fB/\fR and
 \fBEnter\fR keys in the numeric keypad.
+.VE 8.5
 .SS "EVENT TYPES"
 .PP
 The \fItype\fR field may be any of the standard X event types, with a
@@ -219,13 +223,15 @@ are generated when the user presses or releases a mouse button.
 \fBMotion\fP events are generated whenever the pointer is moved.
 \fBButtonPress\fP, \fBButtonRelease\fP, and \fBMotion\fP events are 
 normally sent to the window containing the pointer.
-
+.RS
+.PP
 When a mouse button is pressed, the window containing the pointer
 automatically obtains a temporary pointer grab.
 Subsequent \fBButtonPress\fP, \fBButtonRelease\fP, and \fBMotion\fP 
 events will be sent to that window,
 regardless of which window contains the pointer,
 until all buttons have been released.
+.RE
 .IP \fBConfigure\fP 5
 A \fBConfigure\fP event is sent to a window whenever its
 size, position, or border width changes, and sometimes
@@ -233,19 +239,21 @@ when it has changed position in the stacking order.
 .IP "\fBMap\fP, \fBUnmap\fP" 5
 The \fBMap\fP and \fBUnmap\fP events are generated whenever the mapping
 state of a window changes.
-
+.RS
+.PP
 Windows are created in the unmapped state.
 Top-level windows become mapped when they transition to the
 \fBnormal\fP state, and are unmapped in the \fBwithdrawn\fP
 and \fBiconic\fP states.
 Other windows become mapped when they are placed under control
 of a geometry manager (for example \fBpack\fP or \fBgrid\fP).
-
+.PP
 A window is \fIviewable\fP only if it and all of its ancestors are mapped.
 Note that geometry managers typically do not map their children until 
 they have been mapped themselves, and unmap all children
 when they become unmapped; hence in Tk \fBMap\fP and \fBUnmap\fP
 events indicate whether or not a window is viewable.
+.RE
 .IP \fBVisibility\fP 5
 A window is said to be \fIobscured\fP when another window
 above it in the stacking order fully or partially overlaps it.
@@ -261,16 +269,19 @@ handle \fBExpose\fP events, since Tk handles them internally.
 .IP \fBDestroy\fP 5
 A \fBDestroy\fP event is delivered to a window when 
 it is destroyed.
-
+.RS
+.PP
 When the \fBDestroy\fP event is delivered
 to a widget, it is in a ``half-dead'' state: the widget still exists,
 but most operations on it will fail.
+.RE
 .IP "\fBFocusIn\fP, \fBFocusOut\fP" 5
 The \fBFocusIn\fP and \fBFocusOut\fP events are generated
 whenever the keyboard focus changes.
 A \fBFocusOut\fP event is sent to the old focus window,
 and a \fBFocusIn\fP event is sent to the new one.
-
+.RS
+.PP
 In addition,
 if the old and new focus windows do not share a common parent,
 ``virtual crossing'' focus events are sent to the intermediate
@@ -279,22 +290,25 @@ Thus a \fBFocusIn\fP event indicates
 that the target window or one of its descendants has acquired the focus,
 and a \fBFocusOut\fP event indicates that the focus 
 has been changed to a window outside the target window's hierarchy.
-
+.PP
 The keyboard focus may be changed explicitly by a call to \fBfocus\fP,
 or implicitly by the window manager.  
+.RE
 .IP "\fBEnter\fP, \fBLeave\fP" 5
 An \fBEnter\fP event is sent to a window when the pointer
 enters that window, and a \fBLeave\fP event is sent when
 the pointer leaves it.  
-
+.RS
+.PP
 If there is a pointer grab in effect, \fBEnter\fP and \fBLeave\fP
 events are only delivered to the window owning the grab.
-
+.PP
 In addition, when the pointer moves
 between two windows, \fBEnter\fP and \fBLeave\fP
 ``virtual crossing'' events are sent to intermediate windows
 in the hierarchy in the same manner as for \fBFocusIn\fP and
 \fBFocusOut\fP events.
+.RE
 .IP \fBProperty\fP
 A \fBProperty\fP event is sent to a window whenever an X property
 belonging to that window is changed or deleted.
@@ -303,13 +317,15 @@ they are handled by the Tk core.
 .IP \fBColormap\fP
 A \fBColormap\fP event is generated whenever the colormap
 associated with a window has been changed, installed, or uninstalled.
-
+.RS
+.PP
 Widgets may be assigned a private colormap by
 specifying a \fB-colormap\fP option; the window manager
 is responsible for installing and uninstalling colormaps
 as necessary.
-
+.PP
 Note that Tk provides no useful details for this event type.
+.RE
 '\" The following events were added in TIP#47
 .IP "\fBMapRequest\fP, \fBCirculateRequest\fP, \fBResizeRequest\fP, \fBConfigureRequest\fP, \fBCreate\fP" 5
 These events are not normally delivered to Tk applications.
@@ -322,7 +338,8 @@ the Tk core does not use this mask.)
 The events \fBGravity\fP and \fBReparent\fP
 are not normally delivered to Tk applications.
 They are included for completeness.
-
+.RS
+.PP
 A \fBCirculate\fP event indicates that the window has moved
 to the top or to the bottom of the stacking order as
 a result of an \fBXCirculateSubwindows\fP protocol request.
@@ -332,6 +349,7 @@ Tk does not use \fBXCirculateSubwindows()\fP internally.
 This event type is included only for completeness;
 there is no reliable way to track changes to a window's
 position in the stacking order.
+.RE
 .SS "EVENT DETAILS"
 .PP
 The last part of a long event specification is \fIdetail\fR.  In the
@@ -428,13 +446,13 @@ For \fBConfigureRequest\fR events, the string will be one of:
 Below	None
 BottomIf	TopIf\fR
 .DE
-.VS
+.VS 8.5
 For virtual events, the string will be whatever value is stored in the
 \fIuser_data\fR field when the event was created (typically with
 \fBevent generate\fR), or the empty string if the field is NULL.
 Virtual events corresponding to key sequence presses (see \fBevent
 add\fR for details) set the \fIuser_data\fR to NULL.
-.VE
+.VE 8.5
 For events other than these, the substituted string is undefined.
 .RE
 .IP \fB%f\fR 5
@@ -641,8 +659,8 @@ be picked at random:
 event add <<Paste>> <Control-y>
 event add <<Paste>> <Button-2>
 event add <<Scroll>> <Button-2>
-bind Entry <<Paste>> {puts Paste}
-bind Entry <<Scroll>> {puts Scroll}
+\fBbind\fR Entry <<Paste>> {puts Paste}
+\fBbind\fR Entry <<Scroll>> {puts Scroll}
 .CE
 If the user types Control-y, the \fB<<Paste>>\fR binding
 will be invoked, but if the user presses button 2 then one of
@@ -690,7 +708,7 @@ out when the mouse is double-clicked:
     puts "hi from (%x,%y)"
 }
 .CE
-
+.PP
 A little GUI that displays what the keysym name of the last key
 pressed is:
 .CS

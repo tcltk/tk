@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: entry.n,v 1.13 2004/08/17 22:37:24 dkf Exp $
+'\" RCS: @(#) $Id: entry.n,v 1.14 2004/10/28 10:22:51 dkf Exp $
 '\" 
 .so man.macros
 .TH entry n 8.3 Tk "Tk Built-In Commands"
@@ -123,9 +123,8 @@ may be used to change the view in the window.  Entries use
 the standard \fBxScrollCommand\fR mechanism for interacting with
 scrollbars (see the description of the \fBxScrollCommand\fR option
 for details).  They also support scanning, as described below.
-
-.VS 8.3
 .SH VALIDATION
+.VS 8.3
 .PP
 Validation works by setting the \fBvalidateCommand\fR
 option to a script which will be evaluated according to the \fBvalidate\fR
@@ -191,14 +190,13 @@ validated.  If you wish to edit the entry widget (for example set it to {})
 during validation and still have the \fBvalidate\fR option set, you should
 include the command
 .CS
-     \fIafter idle {%W config -validate %v}\fR
+after idle {%W config -validate %v}
 .CE
 in the \fBvalidateCommand\fR or \fBinvalidCommand\fR (whichever one you
 were editing the entry widget from).  It is also recommended to not set an
 associated \fBtextVariable\fR during validation, as that can cause the
 entry widget to become out of sync with the \fBtextVariable\fR.
 .VE
-
 .SH "WIDGET COMMAND"
 .PP
 The \fBentry\fR command creates a new Tcl command whose
@@ -424,7 +422,6 @@ If \fInumber\fR is negative then characters farther to the left
 become visible;  if it is positive then characters farther to the right
 become visible.
 .RE
-
 .SH "DEFAULT BINDINGS"
 .PP
 Tk automatically creates class bindings for entries that give them

@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: font.n,v 1.6 2004/08/20 14:15:29 dkf Exp $
+'\" RCS: @(#) $Id: font.n,v 1.7 2004/10/28 10:22:51 dkf Exp $
 '\" 
 .so man.macros
 .TH font n 8.0 Tk "Tk Built-In Commands"
@@ -286,11 +286,11 @@ family installed on your system:
 pack [text .t -wrap none] -fill both -expand 1
 set count 0
 set tabwidth 0
-foreach family [lsort -dictionary [\fBfont\fR families]] {
+foreach family [lsort -dictionary [\fBfont families\fR]] {
     .t tag configure f[incr count] -font [list $family 10]
     .t insert end ${family}:\\t {} \\
             "This is a simple sampler\\n" f$count
-    set w [\fBfont\fR measure [.t cget -font] ${family}:]
+    set w [\fBfont measure\fR [.t cget -font] ${family}:]
     if {$w+5 > $tabwidth} {
         set tabwidth [expr {$w+5}]
         .t configure -tabs $tabwidth

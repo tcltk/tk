@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: button.n,v 1.8 2004/08/17 22:37:24 dkf Exp $
+'\" RCS: @(#) $Id: button.n,v 1.9 2004/10/28 10:22:51 dkf Exp $
 '\" 
 .so man.macros
 .TH button n 4.4 Tk "Tk Built-In Commands"
@@ -25,7 +25,6 @@ button \- Create and manipulate button widgets
 \-compound	\-justify	\-underline
 \-cursor	\-padx	\-wraplength
 \-disabledforeground	\-pady
-
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-command command Command

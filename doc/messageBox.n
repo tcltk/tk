@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: messageBox.n,v 1.7 2004/05/29 19:00:32 jenglish Exp $
+'\" RCS: @(#) $Id: messageBox.n,v 1.8 2004/10/28 10:22:51 dkf Exp $
 '\" 
 .so man.macros
 .TH tk_messageBox n 4.2 Tk "Tk Built-In Commands"
@@ -86,12 +86,12 @@ and \fBcancel\fR.
 .PP
 .SH EXAMPLE
 .CS
-set answer [tk_messageBox \-message "Really quit?" \e
+set answer [\fBtk_messageBox\fR \-message "Really quit?" \e
         \-icon question \-type yesno \e
         \-detail "Select \e"Yes\e" to make the application exit"]
 switch -- $answer {
     yes exit
-    no {tk_messageBox \-message "I know you like this application!" \e
+    no {\fBtk_messageBox\fR \-message "I know you like this application!" \e
             \-type ok}
 }
 .CE
