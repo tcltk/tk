@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.2 2004/05/03 23:23:42 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.3 2004/09/23 00:56:15 mdejong Exp $
  */
 
 #define OEMRESOURCE
@@ -91,6 +91,11 @@ static void		DrawMenuEntryAccelerator _ANSI_ARGS_((
 			    Drawable d, GC gc, Tk_Font tkfont,
 			    CONST Tk_FontMetrics *fmPtr,
 			    Tk_3DBorder activeBorder, int x, int y,
+			    int width, int height));
+static void		DrawMenuEntryArrow _ANSI_ARGS_((
+			    TkMenu *menuPtr, TkMenuEntry *mePtr, 
+			    Drawable d, GC gc,
+			    Tk_3DBorder activeBorder, int x, int y,
 			    int width, int height, int drawArrow));
 static void		DrawMenuEntryBackground _ANSI_ARGS_((
 			    TkMenu *menuPtr, TkMenuEntry *mePtr,
@@ -124,7 +129,7 @@ static void		DrawWindowsSystemBitmap _ANSI_ARGS_((
 			    Display *display, Drawable drawable, 
 			    GC gc, CONST RECT *rectPtr, int bitmapID,
 			    int alignFlags));
-static void		FreeID _ANSI_ARGS_((int commandID));
+static void		FreeID _ANSI_ARGS_((WORD commandID));
 static TCHAR *		GetEntryText _ANSI_ARGS_((TkMenuEntry *mePtr));
 static void		GetMenuAccelGeometry _ANSI_ARGS_((TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Tk_Font tkfont,
@@ -146,7 +151,7 @@ static void		GetTearoffEntryGeometry _ANSI_ARGS_((TkMenu *menuPtr,
 			    CONST Tk_FontMetrics *fmPtr, int *widthPtr,
 			    int *heightPtr));
 static int		GetNewID _ANSI_ARGS_((TkMenuEntry *mePtr,
-			    int *menuIDPtr));
+			    WORD *menuIDPtr));
 static int		MenuKeyBindProc _ANSI_ARGS_((
 			    ClientData clientData, 
 			    Tcl_Interp *interp, XEvent *eventPtr,
@@ -186,7 +191,7 @@ static LRESULT CALLBACK	TkWinMenuProc _ANSI_ARGS_((HWND hwnd,
 static int
 GetNewID(mePtr, menuIDPtr)
     TkMenuEntry *mePtr;		/* The menu we are working with */
-    int *menuIDPtr;		/* The resulting id */
+    WORD *menuIDPtr;		/* The resulting id */
 {
     int found = 0;
     int newEntry;
@@ -215,7 +220,7 @@ GetNewID(mePtr, menuIDPtr)
 
     if (found) {
     	Tcl_SetHashValue(commandEntryPtr, (char *) mePtr);
-    	*menuIDPtr = (int) returnID;
+    	*menuIDPtr = returnID;
     	tsdPtr->lastCommandID = returnID;
     	return TCL_OK;
     } else {
@@ -241,7 +246,7 @@ GetNewID(mePtr, menuIDPtr)
 
 static void
 FreeID(commandID)
-    int commandID;
+    WORD commandID;
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -414,7 +419,7 @@ TkpDestroyMenuEntry(mePtr)
 	    Tcl_DoWhenIdle(ReconfigureWindowsMenu, (ClientData) menuPtr);
 	}
     }
-    FreeID((int) mePtr->platformEntryData);
+    FreeID((WORD) mePtr->platformEntryData);
     mePtr->platformEntryData = NULL;
 }
 
@@ -572,6 +577,7 @@ ReconfigureWindowsMenu(
 		|| (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
 	    Tcl_WinUtfToTChar(itemText, -1, &translatedText);
 	    lpNewItem = Tcl_DStringValue(&translatedText);
+	    flags |= MF_STRING;
 	} else {
 	    lpNewItem = (LPCTSTR) mePtr;
 	    flags |= MF_OWNERDRAW;
@@ -611,15 +617,27 @@ ReconfigureWindowsMenu(
 	    flags |= MF_MENUBREAK;
 	}
 	
-	itemID = (int) mePtr->platformEntryData;
+	itemID = (UINT) mePtr->platformEntryData;
 	if ((mePtr->type == CASCADE_ENTRY)
 		&& (mePtr->childMenuRefPtr != NULL)
 		&& (mePtr->childMenuRefPtr->menuPtr != NULL)) {
 	    HMENU childMenuHdl = (HMENU) mePtr->childMenuRefPtr->menuPtr
 		->platformData;
 	    if (childMenuHdl != NULL) {
-		itemID = (UINT) childMenuHdl;
-		flags |= MF_POPUP;
+		/* 
+		 * Win32 draws the popup arrow in the wrong color 
+		 * for a disabled cascade menu, so do it by hand.
+		 * Given it is disabled, there's no need for it to
+		 * be connected to its child.
+		 */
+		if (mePtr->state != ENTRY_DISABLED) {
+		    flags |= MF_POPUP;
+		    /*
+		     * If the MF_POPUP flag is set, then the id
+		     * is interpreted as the handle of a submenu.
+		     */
+		    itemID = (UINT) childMenuHdl;
+		}	
 	    }
 	    if ((menuPtr->menuType == MENUBAR) 
 		    && !(mePtr->childMenuRefPtr->menuPtr->menuFlags
@@ -815,7 +833,7 @@ int
 TkpMenuNewEntry(mePtr)
     TkMenuEntry *mePtr;
 {
-    int commandID;
+    WORD commandID;
     TkMenu *menuPtr = mePtr->menuPtr;
 
     if (GetNewID(mePtr, &commandID) != TCL_OK) {
@@ -1064,6 +1082,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 	    TkWinDrawable *twdPtr;
 	    LPDRAWITEMSTRUCT itemPtr = (LPDRAWITEMSTRUCT) *plParam;
 	    Tk_FontMetrics fontMetrics;
+	    int drawArrow = 0;
 
 	    if (itemPtr != NULL) {
 		Tk_Font tkfont;
@@ -1092,6 +1111,12 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		    } else {
 			mePtr->entryFlags &= ~ENTRY_PLATFORM_FLAG1;
 		    }
+		    /* Also, set the drawArrow flag for a disabled cascade
+		    ** menu since we need to draw the arrow ourselves.
+		    */
+		    if (mePtr->type == CASCADE_ENTRY) {
+		        drawArrow = 1;
+		    }
 		}
 
 		tkfont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
@@ -1100,7 +1125,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 			&fontMetrics, itemPtr->rcItem.left,
 			itemPtr->rcItem.top, itemPtr->rcItem.right
 			- itemPtr->rcItem.left, itemPtr->rcItem.bottom
-			- itemPtr->rcItem.top, 0, 0);
+			- itemPtr->rcItem.top, 0, drawArrow);
 
 		ckfree((char *) twdPtr);
 		*plResult = 1;
@@ -1148,6 +1173,9 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		    if ((mePtr == NULL) || (mePtr->state == ENTRY_DISABLED)) {
 			TkActivateMenuEntry(menuPtr, -1);
 		    } else {
+			if (mePtr->index >= menuPtr->numEntries) {
+			    Tcl_Panic("Trying to activate an entry which doesn't exist.");
+			}
 			TkActivateMenuEntry(menuPtr, mePtr->index);
 		    }
 		    MenuSelectEvent(menuPtr);
@@ -1464,7 +1492,7 @@ DrawWindowsSystemBitmap(display, drawable, gc, rectPtr, bitmapID, alignFlags)
     GetObject(bitmap, sizeof(BITMAP), &bm);
     ptSize.x = bm.bmWidth;
     ptSize.y = bm.bmHeight;
-    DPtoLP(hdc, &ptSize, 1);
+    DPtoLP(scratchDC, &ptSize, 1);
 
     ptOrg.y = ptOrg.x = 0;
     DPtoLP(scratchDC, &ptOrg, 1);
@@ -1571,15 +1599,17 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr, x,
  *
  * DrawMenuEntryAccelerator --
  *
- *	This procedure draws the accelerator part of a menu. We
- *	need to decide what to draw here. Should we replace strings
+ *	This procedure draws the accelerator part of a menu.
+ *	For example, the string "CTRL-Z" could be drawn to
+ *	to the right of the label text for an Undo menu entry.
+ *	Need to decide what to draw here. Should we replace strings
  *	like "Control", "Command", etc?
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Commands are output to X to display the menu in its
+ *	Commands are output to display the menu in its
  *	current mode.
  *
  *----------------------------------------------------------------------
@@ -1587,7 +1617,7 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr, x,
 
 void
 DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
-	activeBorder, x, y, width, height, drawArrow)
+	activeBorder, x, y, width, height)
     TkMenu *menuPtr;			/* The menu we are drawing */
     TkMenuEntry *mePtr;			/* The entry we are drawing */
     Drawable d;				/* What we are drawing into */
@@ -1599,10 +1629,6 @@ DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
     int y;				/* top edge */
     int width;				/* Width of menu entry */
     int height;				/* Height of menu entry */
-    int drawArrow;			/* For cascade menus, whether of not
-					 * to draw the arraw. I cannot figure
-					 * out Windows' algorithm for where
-					 * to draw this. */
 {
     int baseline;
     int leftEdge = x + mePtr->indicatorSpace + mePtr->labelWidth;
@@ -1614,45 +1640,97 @@ DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 
     baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
 
-    if ((mePtr->state == ENTRY_DISABLED) && (menuPtr->disabledFgPtr != NULL)
-	    && ((mePtr->accelPtr != NULL)
-		    || ((mePtr->type == CASCADE_ENTRY) && drawArrow))) {
-	COLORREF oldFgColor = gc->foreground;
+    /* Draw disabled 3D text highlight only with the Win95/98 look. */
 
-	gc->foreground = GetSysColor(COLOR_3DHILIGHT);
-	if (mePtr->accelPtr != NULL) {
-	    Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel,
-		    mePtr->accelLength, leftEdge + 1, baseline + 1);
+    if (TkWinGetPlatformTheme() == TK_THEME_WIN_CLASSIC) {
+	if ((mePtr->state == ENTRY_DISABLED) && (menuPtr->disabledFgPtr != NULL)
+	        && (mePtr->accelPtr != NULL)) {
+	    COLORREF oldFgColor = gc->foreground;
+
+	    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
+	    if ((mePtr->accelPtr != NULL) &&
+	            ((mePtr->entryFlags & ENTRY_PLATFORM_FLAG1) == 0)) {
+	        Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel,
+		        mePtr->accelLength, leftEdge + 1, baseline + 1);
+	    }
+	    gc->foreground = oldFgColor;
 	}
-
-	if (mePtr->type == CASCADE_ENTRY) {
-	    RECT rect;
-
-	    rect.top = y + GetSystemMetrics(SM_CYBORDER) + 1;
-	    rect.bottom = y + height - GetSystemMetrics(SM_CYBORDER) + 1;
-	    rect.left = x + mePtr->indicatorSpace + mePtr->labelWidth + 1;
-	    rect.right = x + width;
-	    DrawWindowsSystemBitmap(menuPtr->display, d, gc, &rect, 
-		    OBM_MNARROW, ALIGN_BITMAP_RIGHT);
-	}
-	gc->foreground = oldFgColor;
     }
 
     if (mePtr->accelPtr != NULL) {
 	Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel, 
 		mePtr->accelLength, leftEdge, baseline);
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DrawMenuEntryArrow --
+ *
+ *	This function draws the arrow bitmap on the right side of a
+ *	a menu entry. This function is currently unused.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 
-    if ((mePtr->type == CASCADE_ENTRY) && drawArrow) {
-	RECT rect;
+void
+DrawMenuEntryArrow(menuPtr, mePtr, d, gc,
+	activeBorder, x, y, width, height, drawArrow)
+    TkMenu *menuPtr;			/* The menu we are drawing */
+    TkMenuEntry *mePtr;			/* The entry we are drawing */
+    Drawable d;				/* What we are drawing into */
+    GC gc;				/* The gc we are drawing with */
+    Tk_3DBorder activeBorder;		/* The border when an item is active */
+    int x;				/* left edge */
+    int y;				/* top edge */
+    int width;				/* Width of menu entry */
+    int height;				/* Height of menu entry */
+    int drawArrow;			/* For cascade menus, whether of not
+					 * to draw the arraw. I cannot figure
+					 * out Windows' algorithm for where
+					 * to draw this. */
+{
+    COLORREF oldFgColor;
+    COLORREF oldBgColor;
+    RECT rect;
 
-	rect.top = y + GetSystemMetrics(SM_CYBORDER);
-	rect.bottom = y + height - GetSystemMetrics(SM_CYBORDER);
-	rect.left = x + mePtr->indicatorSpace + mePtr->labelWidth;
-	rect.right = x + width - 1;
-	DrawWindowsSystemBitmap(menuPtr->display, d, gc, &rect, OBM_MNARROW, 
-		ALIGN_BITMAP_RIGHT);
+    if (!drawArrow || (mePtr->type != CASCADE_ENTRY) ||
+            (mePtr->state != ENTRY_DISABLED))
+        return;
+
+    oldFgColor = gc->foreground;
+    oldBgColor = gc->background;
+
+    /* Set bitmap bg to highlight color if the menu is highlighted */
+    if (mePtr->entryFlags & ENTRY_PLATFORM_FLAG1) {
+        XColor *activeBgColor = Tk_3DBorderColor(Tk_Get3DBorderFromObj(
+                mePtr->menuPtr->tkwin,
+                (mePtr->activeBorderPtr == NULL) ?
+                mePtr->menuPtr->activeBorderPtr :
+                mePtr->activeBorderPtr));
+        gc->background = activeBgColor->pixel;
     }
+
+    gc->foreground = GetSysColor(COLOR_GRAYTEXT);
+
+    rect.top = y + GetSystemMetrics(SM_CYBORDER);
+    rect.bottom = y + height - GetSystemMetrics(SM_CYBORDER);
+    rect.left = x + mePtr->indicatorSpace + mePtr->labelWidth;
+    rect.right = x + width;
+
+    DrawWindowsSystemBitmap(menuPtr->display, d, gc, &rect, OBM_MNARROW,
+            ALIGN_BITMAP_RIGHT);
+
+    gc->foreground = oldFgColor;
+    gc->background = oldBgColor;
+    return;
 }
 
 /*
@@ -2045,13 +2123,26 @@ DrawMenuEntryLabel(
     	if (mePtr->labelLength > 0) {
 	    int baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
 	    char *label = Tcl_GetStringFromObj(mePtr->labelPtr, NULL);
+	    if (TkWinGetPlatformTheme() == TK_THEME_WIN_CLASSIC) {
+	        /* Win 95/98 systems draw disabled menu text with a
+	         * 3D highlight, unless the menu item is highlighted */
+	        if ((mePtr->state == ENTRY_DISABLED) &&
+	                ((mePtr->entryFlags & ENTRY_PLATFORM_FLAG1) == 0)) {
+	            COLORREF oldFgColor = gc->foreground;
+		    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
+	            Tk_DrawChars(menuPtr->display, d, gc, tkfont, label, 
+		            mePtr->labelLength, leftEdge + textXOffset + 1, 
+		            baseline + textYOffset + 1);
+		    gc->foreground = oldFgColor;
+	        }
+	    }
 	    Tk_DrawChars(menuPtr->display, d, gc, tkfont, label, 
 		    mePtr->labelLength, leftEdge + textXOffset, 
 		    baseline + textYOffset);
 	    DrawMenuUnderline(menuPtr, mePtr, d, gc, tkfont, fmPtr, 
 	            x + textXOffset, y + textYOffset,
 		    width, height);
-    	}
+	}
     }
 
     if (mePtr->state == ENTRY_DISABLED) {
@@ -2308,6 +2399,8 @@ TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
 	DrawMenuEntryLabel(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, adjustedY,
 		width, adjustedHeight);
 	DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
+		activeBorder, x, adjustedY, width, adjustedHeight);
+	DrawMenuEntryArrow(menuPtr, mePtr, d, gc,
 		activeBorder, x, adjustedY, width, adjustedHeight, drawArrow);
 	if (!mePtr->hideMargin) {
 	    DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont,

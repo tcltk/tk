@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.41.2.1 2003/10/13 03:30:05 hobbs Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.41.2.2 2004/09/23 00:56:14 mdejong Exp $
  */
 
 #include "tkInt.h"
@@ -371,6 +371,7 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkWinGetMenuSystemDefault, /* 32 */
     TkWinGetPlatformId, /* 33 */
     TkWinSetHINSTANCE, /* 34 */
+    TkWinGetPlatformTheme, /* 35 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     TkGenerateActivateEvents, /* 0 */

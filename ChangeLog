@@ -1,5 +1,63 @@
 2004-09-22  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* generic/tkInt.decls: Add decl for TkWinGetPlatformTheme.
+	It is only defined under Win32.
+	* generic/tkIntPlatDecls.h: Regen.
+	* generic/tkStubInit.c: Regen.
+	* win/tkWinInt.h: Define TK_THEME_WIN_CLASSIC and
+	TK_THEME_WIN_XP.
+	* win/tkWinMenu.c (DrawMenuEntryAccelerator, DrawMenuEntryLabel):
+	Draw a disabled 3D text highlight for the accelerator only
+	with the Win95/98 look. Same goes for the menu entry text.
+	* win/tkWinX.c (TkWinGetPlatformId, TkWinGetPlatformTheme):
+	Automatically detect the Windows theme in use and return
+	either TK_THEME_WIN_CLASSIC or TK_THEME_WIN_XP when the
+	TkWinGetPlatformTheme function is invoked.
+	[Patch 866194]
+
+2004-09-22  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* win/tkWinMenu.c: only provide a submenu handle when the
+	MF_POPUP flag is given, fixing a recently-introduced crash
+	when submenus are disabled.  Also better error checking for
+	this sort of situation in the future.
+	
+2004-09-22  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWinMenu.c (ReconfigureWindowsMenu): Fix drawing of a disabled
+	(TkWinHandleMenuEvent, DrawMenuEntryArrow): cascade menu arrow. Tk was
+	displaying a disabled cascade menu arrow in black instead of
+	gray. This was caused by a bug in the Win32 code for user drawn
+	menu items. The fix is to avoid telling Windows that the menu item
+	is a cascade type and then draw the gray arrow bitmap on our own.
+	[Patch 865842]
+
+2004-09-22  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWinMenu.c (DrawWindowsSystemBitmap): Fix a strange Win32
+	bug where the logical coordinates returned by a call to DPtoLP are
+	wrong the first time a menu is posted.  This bug manifested itself
+	by drawing the bitmap in the wrong place in a menu.  The fix was
+	to pass the newly created DC instead of the DC from the window.
+
+2004-09-22  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWinMenu.c (DrawMenuEntryAccelerator):
+	(DrawMenuEntryLabel): When drawing the label text and accelerator
+	text for a disabled menu entry be sure to draw a 3D highlight.
+	The only exception to this is when a disabled menu entry is
+	highlighted, in that case do not draw a 3D hightlight.
+
+2004-09-22  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWinMenu.c (DrawMenuEntryAccelerator, DrawMenuEntryArrow):
+	Move the unused menu arrow drawing code in
+	DrawMenuEntryAccelerator into a new function named
+	DrawMenuEntryArrow.  This makes no functional change but it will
+	make it easier to fix things in the future.
+
+2004-09-22  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* win/tkWinWm.c: Rework WS_EX_LAYERED and LWA_ALPHA
 	defines so that compiling with mingw works again.
 

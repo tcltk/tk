@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.33.2.1 2003/10/13 03:30:04 hobbs Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.33.2.2 2004/09/23 00:56:14 mdejong Exp $
 
 library tk
 
@@ -1128,6 +1128,10 @@ declare 65 mac {
 
 declare 66 mac {
     int TkpIsWindowFloating (WindowRef window)
+}
+
+declare 35 win {
+    int TkWinGetPlatformTheme (void)
 }
 
 ########################
