@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.13 2000/07/17 21:07:54 ericm Exp $
-# $Id: bgerror.tcl,v 1.13 2000/07/17 21:07:54 ericm Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.14 2001/03/30 07:04:58 hobbs Exp $
+# $Id: bgerror.tcl,v 1.14 2001/03/30 07:04:58 hobbs Exp $
 
 option add *ErrorDialog.function.text [::msgcat::mc "Save To Log"] \
 	widgetDefault
@@ -172,6 +172,7 @@ proc bgerror err {
     pack $W.text -side left -expand yes -fill both
     $W.text insert 0.0 "$err\n$info"
     $W.text mark set insert 0.0
+    bind $W.text <ButtonPress-1> { focus %W }
     $W.text configure -state disabled
 
     # 2. Fill the top part with bitmap and message
