@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: font.test,v 1.9 2003/04/01 21:06:29 dgp Exp $
+# RCS: @(#) $Id: font.test,v 1.10 2004/03/17 18:15:49 das Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -51,7 +51,6 @@ setup
 case $tcl_platform(platform) {
     unix	{set fixed "fixed"}
     windows	{set fixed "courier 12"}
-    macintosh	{set fixed "monaco 9"}
 }
 set times [font actual {times 0} -family]
 
@@ -135,7 +134,7 @@ test font-4.8 {font command: actual: all attributes} {
     # not (objc > 3) so objPtr = NULL
     lindex [font actual {-family times}] 0
 } {-family}
-test font-4.9 {font command: actual} {macOrUnix noExceed} {
+test font-4.9 {font command: actual} {unixOnly noExceed} {
     # (objc > 3) so objPtr = objv[3 + skip]
     string tolower [font actual {-family times} -family]
 } {times}
@@ -507,11 +506,6 @@ test font-15.8 {Tk_AllocFontFromObj procedure: get native font} {pcOnly} {
     setup
     .b.f config -font oemfixed
 } {}
-test font-15.9 {Tk_AllocFontFromObj procedure: get native font} {macOnly} {
-    # not (fontPtr == NULL) 
-    setup
-    .b.f config -font application
-} {}
 test font-15.10 {Tk_AllocFontFromObj procedure: get attribute font} {
     # (fontPtr == NULL) 
     list [catch {.b.f config -font {xxx yyy zzz}} msg] $msg
@@ -665,15 +659,6 @@ test font-21.3 {Tk_PostscriptFontName procedure: native} {pcOnly} {
 test font-21.4 {Tk_PostscriptFontName procedure: native} {pcOnly} {
     psfontname "{courier new} 10"
 } {Courier}
-test font-21.5 {Tk_PostscriptFontName procedure: native} {macOnly} {
-    psfontname "geneva 10"
-} {Helvetica}
-test font-21.6 {Tk_PostscriptFontName procedure: native} {macOnly} {
-    psfontname "{new york} 10"
-} {Times-Roman}
-test font-21.7 {Tk_PostscriptFontName procedure: native} {macOnly} {
-    psfontname "monaco 10"
-} {Courier}
 test font-21.8 {Tk_PostscriptFontName procedure: spaces} {unixOnly} {
     set x [font actual {{lucida bright} 10} -family]
     if {[string match lucida*bright $x]} {
@@ -733,27 +718,6 @@ foreach p {
 	    }
 	}
         incr i
-	set x
-    } [lrange $p 1 end]
-}
-foreach p {
-    {"courier" Courier Courier-Bold Courier-Oblique Courier-BoldOblique}
-    {"geneva" Helvetica Helvetica-Bold Helvetica-Oblique Helvetica-BoldOblique}
-    {"helvetica" Helvetica Helvetica-Bold Helvetica-Oblique Helvetica-BoldOblique}
-    {"monaco" Courier Courier-Bold Courier-Oblique Courier-BoldOblique}
-    {"new york" Times-Roman Times-Bold Times-Italic Times-BoldItalic}
-    {"symbol" Symbol Symbol-Bold Symbol-Italic Symbol-BoldItalic}
-    {"times" Times-Roman Times-Bold Times-Italic Times-BoldItalic}
-} {
-    test font-21.$i {Tk_PostscriptFontName procedure: exhaustive} {macOnly} {
-	set family [lindex $p 0]
-	set x {}
-	foreach slant {roman italic} {
-	    foreach weight {normal bold} {
-		lappend x [psfontname [list $family 12 $slant $weight]]
-	    }
-	}
-	incr i
 	set x
     } [lrange $p 1 end]
 }
@@ -1266,9 +1230,6 @@ test font-38.9 {ParseFontNameObj procedure: arguments} {
 test font-38.10 {ParseFontNameObj procedure: arguments} {
     list [catch {font actual {times xyz xyz}} msg] $msg
 } {1 {expected integer but got "xyz"}}
-test font-38.11 {ParseFontNameObj procedure: stylelist loop} {macOnly} {
-    lrange [font actual {times 12 bold italic overstrike underline}] 4 end
-} {-weight bold -slant italic -underline 1 -overstrike 0}
 test font-38.12 {ParseFontNameObj procedure: stylelist loop} {unixOrPc} {
     lrange [font actual {times 12 bold italic overstrike underline}] 4 end
 } {-weight bold -slant italic -underline 1 -overstrike 1}
@@ -1343,10 +1304,6 @@ tk scaling $oldscale
 test font-45.1 {TkFontGetAliasList: no match} {
     font actual {snarky 10} -family
 } [font actual {-size 10} -family]
-test font-45.2 {TkFontGetAliasList: match} {macOnly} {
-    # Result could be either "Times" or "New York"
-    font actual {{times new roman} 10} -family
-} [font actual {times 10} -family]
 test font-45.3 {TkFontGetAliasList: match} {pcOnly} {
     font actual {times 10} -family
 } {Times New Roman}

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.28 2004/01/07 16:28:45 vincentdarley Exp $
+# RCS: @(#) $Id: text.test,v 1.29 2004/03/17 18:15:50 das Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -131,9 +131,7 @@ test text-2.4 {Tk_TextCmd procedure} {
     list [catch {text .t2 -bd 2 -fg red} msg] $msg \
 	[lindex [.t2 config -bd] 4] [lindex [.t2 config -fg] 4]
 } {0 .t2 2 red}
-if {$tcl_platform(platform) == "macintosh"} {
-    set relief solid
-} elseif {$tcl_platform(platform) == "windows"} {
+if {$tcl_platform(platform) == "windows"} {
     set relief flat
 } else {
     set relief raised
@@ -1262,7 +1260,7 @@ test text-19.1 {TkTextLostSelection procedure} {unixOnly} {
     .t.e select to 1
     .t2 tag ranges sel
 } {}
-test text-19.2 {TkTextLostSelection procedure} {macOrPc} {
+test text-19.2 {TkTextLostSelection procedure} {pcOnly} {
     catch {destroy .t2}
     text .t2
     .t2 insert 1.0 "abc\ndef\nghijk\n1234"

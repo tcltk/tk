@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scrollbar.test,v 1.10 2003/04/01 21:06:50 dgp Exp $
+# RCS: @(#) $Id: scrollbar.test,v 1.11 2004/03/17 18:15:49 das Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -170,13 +170,13 @@ scrollbar .s2
 test scrollbar-3.11 {ScrollbarWidgetCmd procedure, "cget" option} {pcOnly} {
     list [catch {.s2 cget -bd} msg] $msg
 } {0 0}
-test scrollbar-3.12 {ScrollbarWidgetCmd procedure, "cget" option} {macOrUnix} {
+test scrollbar-3.12 {ScrollbarWidgetCmd procedure, "cget" option} {unixOnly} {
     list [catch {.s2 cget -bd} msg] $msg
 } {0 2}
 test scrollbar-3.13 {ScrollbarWidgetCmd procedure, "cget" option} {pcOnly} {
     list [catch {.s2 cget -highlightthickness} msg] $msg
 } {0 0}
-test scrollbar-3.14 {ScrollbarWidgetCmd procedure, "cget" option} {macOrUnix} {
+test scrollbar-3.14 {ScrollbarWidgetCmd procedure, "cget" option} {unixOnly} {
     list [catch {.s2 cget -highlightthickness} msg] $msg
 } {0 1}
 destroy .s2
@@ -269,9 +269,6 @@ test scrollbar-3.39 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetri
 	== [format %g [expr (200.0 - [testmetrics cyvscroll .s]*2 - 2) \
 			   / ($height - 1 - [testmetrics cyvscroll .s]*2)]]
 } 1
-test scrollbar-3.40 {ScrollbarWidgetCmd procedure, "fraction" option} {macOnly} {
-    .s fraction 4 178
-} {0.97006}
 
 toplevel .t -width 250 -height 100
 wm geom .t +0+0
@@ -335,9 +332,6 @@ test scrollbar-3.53 {ScrollbarWidgetCmd procedure, "identify" option} {
 test scrollbar-3.54 {ScrollbarWidgetCmd procedure, "identify" option} {unixOrPc} {
     .s identify 5 195
 } {arrow2}
-test scrollbar-3.55 {ScrollbarWidgetCmd procedure, "identify" option} {macOnly} {
-    .s identify 5 195
-} {}
 test scrollbar-3.56 {ScrollbarWidgetCmd procedure, "identify" option} {unixOnly} {
     .s identify 0 0
 } {}
@@ -438,19 +432,13 @@ update
 test scrollbar-6.1 {ScrollbarPosition procedure} {unixOnly} {
     .s identify 8 3
 } {}
-test scrollbar-6.2 {ScrollbarPosition procedure} {macOnly} {
-    .s identify 8 3
-} {arrow1}
-test scrollbar-6.3 {ScrollbarPosition procedure} {macOrUnix} {
+test scrollbar-6.3 {ScrollbarPosition procedure} {unixOnly} {
     .s identify 8 196
 } {}
 test scrollbar-6.4 {ScrollbarPosition procedure} {unixOnly} {
     .s identify 3 100
 } {}
-test scrollbar-6.5 {ScrollbarPosition procedure} {macOnly} {
-    .s identify 3 100
-} {trough2}
-test scrollbar-6.6 {ScrollbarPosition procedure} {macOrUnix} {
+test scrollbar-6.6 {ScrollbarPosition procedure} {unixOnly} {
     .s identify 19 100
 } {}
 test scrollbar-6.7 {ScrollbarPosition procedure} {
@@ -466,15 +454,12 @@ test scrollbar-6.10 {ScrollbarPosition procedure} {
     .s identify [winfo width .s] [expr [winfo height .s] / 2]
 } {}
 
-test scrollbar-6.11 {ScrollbarPosition procedure} {macOrUnix} {
+test scrollbar-6.11 {ScrollbarPosition procedure} {unixOnly} {
     .s identify 8 4
 } {arrow1}
 test scrollbar-6.12 {ScrollbarPosition procedure} {unixOnly} {
     .s identify 8 19
 } {arrow1}
-test scrollbar-6.13 {ScrollbarPosition procedure} {macOnly} {
-    .s identify 8 19
-} {trough1}
 test scrollbar-6.14 {ScrollbarPosition procedure} {pcOnly} {
     .s identify [expr [winfo width .s] / 2] 0 
 } {arrow1}
@@ -482,10 +467,10 @@ test scrollbar-6.15 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .s identify [expr [winfo width .s] / 2] [expr [testmetrics cyvscroll] - 1]
 } {arrow1}
 
-test scrollbar-6.16 {ScrollbarPosition procedure} {macOrUnix} {
+test scrollbar-6.16 {ScrollbarPosition procedure} {unixOnly} {
     .s identify 8 20
 } {trough1}
-test scrollbar-6.17 {ScrollbarPosition procedure} {macOrUnix nonPortable} {
+test scrollbar-6.17 {ScrollbarPosition procedure} {unixOnly nonPortable} {
     # Don't know why this is non-portable, but it doesn't work on
     # some platforms.
     .s identify 8 51
@@ -498,10 +483,10 @@ test scrollbar-6.19 {ScrollbarPosition procedure} {testmetrics pcOnly} {
 						+ [testmetrics cyvscroll] - 1]
 } {trough1}
 
-test scrollbar-6.20 {ScrollbarPosition procedure} {macOrUnix} {
+test scrollbar-6.20 {ScrollbarPosition procedure} {unixOnly} {
     .s identify 8 52
 } {slider}
-test scrollbar-6.21 {ScrollbarPosition procedure} {macOrUnix nonPortable} {
+test scrollbar-6.21 {ScrollbarPosition procedure} {unixOnly nonPortable} {
     # Don't know why this is non-portable, but it doesn't work on
     # some platforms.
     .s identify 8 83
@@ -515,15 +500,12 @@ test scrollbar-6.23 {ScrollbarPosition procedure} {testmetrics pcOnly} {
 						 + [testmetrics cyvscroll] - 1]
 } {slider}
 
-test scrollbar-6.24 {ScrollbarPosition procedure} {macOrUnix} {
+test scrollbar-6.24 {ScrollbarPosition procedure} {unixOnly} {
     .s identify 8 84
 } {trough2}
 test scrollbar-6.25 {ScrollbarPosition procedure} {unixOnly} {
     .s identify 8 179
 } {trough2}
-test scrollbar-6.26 {ScrollbarPosition procedure} {macOnly} {
-    .s identify 8 179
-} {arrow2}
 test scrollbar-6.27 {ScrollbarPosition procedure} {testmetrics pcOnly knownBug} {
     # This asks for 8,21, which is actually the slider, but there is a
     # bug in that GetSystemMetrics(SM_CYVTHUMB) actually returns a value
@@ -537,15 +519,12 @@ test scrollbar-6.28 {ScrollbarPosition procedure} {testmetrics pcOnly} {
 						 - [testmetrics cyvscroll] - 1]
 } {trough2}
 
-test scrollbar-6.29 {ScrollbarPosition procedure} {macOrUnix} {
+test scrollbar-6.29 {ScrollbarPosition procedure} {unixOnly} {
     .s identify 8 180
 } {arrow2}
 test scrollbar-6.30 {ScrollbarPosition procedure} {unixOnly} {
     .s identify 8 195
 } {arrow2}
-test scrollbar-6.31 {ScrollbarPosition procedure} {macOnly} {
-    .s identify 8 195
-} {}
 test scrollbar-6.32 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .s identify [expr [winfo width .s] / 2]  [expr [winfo height .s] \
 						  - [testmetrics cyvscroll]]
@@ -554,15 +533,12 @@ test scrollbar-6.33 {ScrollbarPosition procedure} {pcOnly} {
     .s identify [expr [winfo width .s] / 2] [expr [winfo height .s] - 1]
 } {arrow2}
 
-test scrollbar-6.34 {ScrollbarPosition procedure} {macOrUnix} {
+test scrollbar-6.34 {ScrollbarPosition procedure} {unixOnly} {
     .s identify 4 100
 } {trough2}
 test scrollbar-6.35 {ScrollbarPosition procedure} {unixOnly} {
     .s identify 18 100
 } {trough2}
-test scrollbar-6.36 {ScrollbarPosition procedure} {macOnly} {
-    .s identify 18 100
-} {}
 test scrollbar-6.37 {ScrollbarPosition procedure} {pcOnly} {
     .s identify 0 100
 } {trough2}
@@ -577,7 +553,7 @@ scrollbar .t.s -orient horizontal -relief sunken -bd 2 -highlightthickness 2
 place .t.s -width 200
 .t.s set .2 .4
 update
-test scrollbar-6.39 {ScrollbarPosition procedure} {macOrUnix} {
+test scrollbar-6.39 {ScrollbarPosition procedure} {unixOnly} {
     .t.s identify 4 8
 } {arrow1}
 test scrollbar-6.40 {ScrollbarPosition procedure} {pcOnly} {
@@ -586,9 +562,6 @@ test scrollbar-6.40 {ScrollbarPosition procedure} {pcOnly} {
 test scrollbar-6.41 {ScrollbarPosition procedure} {unixOnly} {
     .t.s identify 82 8
 } {slider}
-test scrollbar-6.42 {ScrollbarPosition procedure} {macOnly} {
-    .t.s identify 82 8
-} {}
 test scrollbar-6.43 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .t.s identify [expr int(.4 / [.t.s delta 1 0]) + [testmetrics cxhscroll] \
 		       - 1] [expr [winfo height .t.s] / 2] 
@@ -596,9 +569,6 @@ test scrollbar-6.43 {ScrollbarPosition procedure} {testmetrics pcOnly} {
 test scrollbar-6.44 {ScrollbarPosition procedure} {unixOnly} {
     .t.s identify 100 18
 } {trough2}
-test scrollbar-6.45 {ScrollbarPosition procedure} {macOnly} {
-    .t.s identify 100 18
-} {}
 test scrollbar-6.46 {ScrollbarPosition procedure} {pcOnly} {
     .t.s identify 100 [expr [winfo height .t.s] - 1]
 } {trough2}

@@ -9,18 +9,14 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFileFilter.h,v 1.4 1998/09/14 18:23:10 stanton Exp $
+ * RCS: @(#) $Id: tkFileFilter.h,v 1.5 2004/03/17 18:15:43 das Exp $
  *
  */
 
 #ifndef _TK_FILE_FILTER
 #define _TK_FILE_FILTER
 
-#ifdef MAC_TCL
-#include <StandardFile.h>
-#else
 #define OSType long
-#endif
 
 #ifdef BUILD_tk
 # undef TCL_STORAGE_CLASS

@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: console.n,v 1.4 2002/03/29 02:25:06 davygrvy Exp $
+'\" RCS: @(#) $Id: console.n,v 1.5 2004/03/17 18:15:42 das Exp $
 '\"
 .so man.macros
 .TH console n 8.4 Tk "Tk Built-In Commands"
@@ -30,7 +30,7 @@ a real console.  It is implemented as a separate interpreter with the
 Tk toolkit loaded, and control over this interpreter is given through
 the \fBconsole\fR command.  The behaviour of the console window is
 defined mainly through the contents of the \fIconsole.tcl\fR file in
-the Tk library (or the \fIConsole\fR resource on Macintosh systems.)
+the Tk library.
 .PP
 .TP
 \fBconsole eval \fIscript\fR

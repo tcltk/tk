@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.52 2003/10/29 01:45:41 chengyemao Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.53 2004/03/17 18:15:45 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -119,8 +119,7 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
 	} elseif {$y > ([winfo screenheight $w]-[winfo reqheight $w])} {
 	    set y [expr {[winfo screenheight $w]-[winfo reqheight $w]}]
 	}
-	if {[tk windowingsystem] eq "macintosh" \
-		|| [tk windowingsystem] eq "aqua"} {
+	if {[tk windowingsystem] eq "aqua"} {
 	    # Avoid the native menu bar which sits on top of everything.
 	    if {$y < 20} { set y 20 }
 	}
@@ -384,35 +383,15 @@ switch [tk windowingsystem] {
   	event add <<Undo>> <Command-Key-z>
 	event add <<Redo>> <Command-Key-y>
     }
-    "classic" {
-	event add <<Cut>> <Control-Key-x> <Key-F2> 
-	event add <<Copy>> <Control-Key-c> <Key-F3>
-	event add <<Paste>> <Control-Key-v> <Key-F4>
-	event add <<PasteSelection>> <ButtonRelease-2>
-	event add <<Clear>> <Clear>
-	event add <<Undo>> <Control-Key-z> <Key-F1>
-	event add <<Redo>> <Control-Key-Z>
-    }
 }
 # ----------------------------------------------------------------------
 # Read in files that define all of the class bindings.
 # ----------------------------------------------------------------------
 
 if {$::tk_library ne ""} {
-    if {[string equal $tcl_platform(platform) "macintosh"]} {
-	proc ::tk::SourceLibFile {file} {
-	    if {[catch {
-		namespace eval :: \
-			[list source [file join $::tk_library $file.tcl]]
-	    }]} {
-		namespace eval :: [list source -rsrc $file]
-	    }
-	}
-    } else {
-	proc ::tk::SourceLibFile {file} {
-	    namespace eval :: [list source [file join $::tk_library $file.tcl]]
-	}	
-    }
+    proc ::tk::SourceLibFile {file} {
+        namespace eval :: [list source [file join $::tk_library $file.tcl]]
+    }	
     namespace eval ::tk {
 	SourceLibFile button
 	SourceLibFile entry

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.23 2003/10/13 03:41:37 hobbs Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.24 2004/03/17 18:15:43 das Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -712,14 +712,6 @@ EXTERN void		TkClipBox _ANSI_ARGS_((TkRegion rgn,
 				XRectangle* rect_return));
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkClipBox_TCL_DECLARED
-#define TkClipBox_TCL_DECLARED
-/* 113 */
-EXTERN void		TkClipBox _ANSI_ARGS_((TkRegion rgn, 
-				XRectangle* rect_return));
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkClipBox_TCL_DECLARED
 #define TkClipBox_TCL_DECLARED
@@ -735,13 +727,6 @@ EXTERN void		TkClipBox _ANSI_ARGS_((TkRegion rgn,
 EXTERN TkRegion		TkCreateRegion _ANSI_ARGS_((void));
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkCreateRegion_TCL_DECLARED
-#define TkCreateRegion_TCL_DECLARED
-/* 114 */
-EXTERN TkRegion		TkCreateRegion _ANSI_ARGS_((void));
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkCreateRegion_TCL_DECLARED
 #define TkCreateRegion_TCL_DECLARED
@@ -756,13 +741,6 @@ EXTERN TkRegion		TkCreateRegion _ANSI_ARGS_((void));
 EXTERN void		TkDestroyRegion _ANSI_ARGS_((TkRegion rgn));
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkDestroyRegion_TCL_DECLARED
-#define TkDestroyRegion_TCL_DECLARED
-/* 115 */
-EXTERN void		TkDestroyRegion _ANSI_ARGS_((TkRegion rgn));
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkDestroyRegion_TCL_DECLARED
 #define TkDestroyRegion_TCL_DECLARED
@@ -778,14 +756,6 @@ EXTERN void		TkIntersectRegion _ANSI_ARGS_((TkRegion sra,
 				TkRegion srcb, TkRegion dr_return));
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkIntersectRegion_TCL_DECLARED
-#define TkIntersectRegion_TCL_DECLARED
-/* 116 */
-EXTERN void		TkIntersectRegion _ANSI_ARGS_((TkRegion sra, 
-				TkRegion srcb, TkRegion dr_return));
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkIntersectRegion_TCL_DECLARED
 #define TkIntersectRegion_TCL_DECLARED
@@ -803,15 +773,6 @@ EXTERN int		TkRectInRegion _ANSI_ARGS_((TkRegion rgn, int x,
 				unsigned int height));
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkRectInRegion_TCL_DECLARED
-#define TkRectInRegion_TCL_DECLARED
-/* 117 */
-EXTERN int		TkRectInRegion _ANSI_ARGS_((TkRegion rgn, int x, 
-				int y, unsigned int width, 
-				unsigned int height));
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkRectInRegion_TCL_DECLARED
 #define TkRectInRegion_TCL_DECLARED
@@ -829,14 +790,6 @@ EXTERN void		TkSetRegion _ANSI_ARGS_((Display* display, GC gc,
 				TkRegion rgn));
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkSetRegion_TCL_DECLARED
-#define TkSetRegion_TCL_DECLARED
-/* 118 */
-EXTERN void		TkSetRegion _ANSI_ARGS_((Display* display, GC gc, 
-				TkRegion rgn));
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkSetRegion_TCL_DECLARED
 #define TkSetRegion_TCL_DECLARED
@@ -853,14 +806,6 @@ EXTERN void		TkUnionRectWithRegion _ANSI_ARGS_((XRectangle* rect,
 				TkRegion src, TkRegion dr_return));
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkUnionRectWithRegion_TCL_DECLARED
-#define TkUnionRectWithRegion_TCL_DECLARED
-/* 119 */
-EXTERN void		TkUnionRectWithRegion _ANSI_ARGS_((XRectangle* rect, 
-				TkRegion src, TkRegion dr_return));
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkUnionRectWithRegion_TCL_DECLARED
 #define TkUnionRectWithRegion_TCL_DECLARED
@@ -870,14 +815,6 @@ EXTERN void		TkUnionRectWithRegion _ANSI_ARGS_((XRectangle* rect,
 #endif
 #endif /* MAC_OSX_TK */
 /* Slot 120 is reserved */
-#ifdef MAC_TCL
-#ifndef TkpCreateNativeBitmap_TCL_DECLARED
-#define TkpCreateNativeBitmap_TCL_DECLARED
-/* 121 */
-EXTERN Pixmap		TkpCreateNativeBitmap _ANSI_ARGS_((Display * display, 
-				CONST char * source));
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkpCreateNativeBitmap_TCL_DECLARED
 #define TkpCreateNativeBitmap_TCL_DECLARED
@@ -886,13 +823,6 @@ EXTERN Pixmap		TkpCreateNativeBitmap _ANSI_ARGS_((Display * display,
 				CONST char * source));
 #endif
 #endif /* MAC_OSX_TK */
-#ifdef MAC_TCL
-#ifndef TkpDefineNativeBitmaps_TCL_DECLARED
-#define TkpDefineNativeBitmaps_TCL_DECLARED
-/* 122 */
-EXTERN void		TkpDefineNativeBitmaps _ANSI_ARGS_((void));
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkpDefineNativeBitmaps_TCL_DECLARED
 #define TkpDefineNativeBitmaps_TCL_DECLARED
@@ -901,14 +831,6 @@ EXTERN void		TkpDefineNativeBitmaps _ANSI_ARGS_((void));
 #endif
 #endif /* MAC_OSX_TK */
 /* Slot 123 is reserved */
-#ifdef MAC_TCL
-#ifndef TkpGetNativeAppBitmap_TCL_DECLARED
-#define TkpGetNativeAppBitmap_TCL_DECLARED
-/* 124 */
-EXTERN Pixmap		TkpGetNativeAppBitmap _ANSI_ARGS_((Display * display, 
-				CONST char * name, int * width, int * height));
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkpGetNativeAppBitmap_TCL_DECLARED
 #define TkpGetNativeAppBitmap_TCL_DECLARED
@@ -992,14 +914,6 @@ EXTERN void		TkSubtractRegion _ANSI_ARGS_((TkRegion sra,
 				TkRegion srcb, TkRegion dr_return));
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkSubtractRegion_TCL_DECLARED
-#define TkSubtractRegion_TCL_DECLARED
-/* 145 */
-EXTERN void		TkSubtractRegion _ANSI_ARGS_((TkRegion sra, 
-				TkRegion srcb, TkRegion dr_return));
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkSubtractRegion_TCL_DECLARED
 #define TkSubtractRegion_TCL_DECLARED
@@ -1148,125 +1062,95 @@ typedef struct TkIntStubs {
     void (*tkpGetSubFonts) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Font tkfont)); /* 110 */
     Tcl_Obj * (*tkpGetSystemDefault) _ANSI_ARGS_((Tk_Window tkwin, CONST char * dbName, CONST char * className)); /* 111 */
     void (*tkpMenuThreadInit) _ANSI_ARGS_((void)); /* 112 */
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#if !defined(__WIN32__) /* UNIX */
     void *reserved113;
 #endif /* UNIX */
 #ifdef __WIN32__
     void (*tkClipBox) _ANSI_ARGS_((TkRegion rgn, XRectangle* rect_return)); /* 113 */
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-    void (*tkClipBox) _ANSI_ARGS_((TkRegion rgn, XRectangle* rect_return)); /* 113 */
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
     void (*tkClipBox) _ANSI_ARGS_((TkRegion rgn, XRectangle* rect_return)); /* 113 */
 #endif /* MAC_OSX_TK */
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#if !defined(__WIN32__) /* UNIX */
     void *reserved114;
 #endif /* UNIX */
 #ifdef __WIN32__
     TkRegion (*tkCreateRegion) _ANSI_ARGS_((void)); /* 114 */
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-    TkRegion (*tkCreateRegion) _ANSI_ARGS_((void)); /* 114 */
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
     TkRegion (*tkCreateRegion) _ANSI_ARGS_((void)); /* 114 */
 #endif /* MAC_OSX_TK */
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#if !defined(__WIN32__) /* UNIX */
     void *reserved115;
 #endif /* UNIX */
 #ifdef __WIN32__
     void (*tkDestroyRegion) _ANSI_ARGS_((TkRegion rgn)); /* 115 */
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-    void (*tkDestroyRegion) _ANSI_ARGS_((TkRegion rgn)); /* 115 */
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
     void (*tkDestroyRegion) _ANSI_ARGS_((TkRegion rgn)); /* 115 */
 #endif /* MAC_OSX_TK */
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#if !defined(__WIN32__) /* UNIX */
     void *reserved116;
 #endif /* UNIX */
 #ifdef __WIN32__
     void (*tkIntersectRegion) _ANSI_ARGS_((TkRegion sra, TkRegion srcb, TkRegion dr_return)); /* 116 */
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-    void (*tkIntersectRegion) _ANSI_ARGS_((TkRegion sra, TkRegion srcb, TkRegion dr_return)); /* 116 */
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
     void (*tkIntersectRegion) _ANSI_ARGS_((TkRegion sra, TkRegion srcb, TkRegion dr_return)); /* 116 */
 #endif /* MAC_OSX_TK */
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#if !defined(__WIN32__) /* UNIX */
     void *reserved117;
 #endif /* UNIX */
 #ifdef __WIN32__
     int (*tkRectInRegion) _ANSI_ARGS_((TkRegion rgn, int x, int y, unsigned int width, unsigned int height)); /* 117 */
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-    int (*tkRectInRegion) _ANSI_ARGS_((TkRegion rgn, int x, int y, unsigned int width, unsigned int height)); /* 117 */
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
     int (*tkRectInRegion) _ANSI_ARGS_((TkRegion rgn, int x, int y, unsigned int width, unsigned int height)); /* 117 */
 #endif /* MAC_OSX_TK */
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#if !defined(__WIN32__) /* UNIX */
     void *reserved118;
 #endif /* UNIX */
 #ifdef __WIN32__
     void (*tkSetRegion) _ANSI_ARGS_((Display* display, GC gc, TkRegion rgn)); /* 118 */
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-    void (*tkSetRegion) _ANSI_ARGS_((Display* display, GC gc, TkRegion rgn)); /* 118 */
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
     void (*tkSetRegion) _ANSI_ARGS_((Display* display, GC gc, TkRegion rgn)); /* 118 */
 #endif /* MAC_OSX_TK */
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#if !defined(__WIN32__) /* UNIX */
     void *reserved119;
 #endif /* UNIX */
 #ifdef __WIN32__
     void (*tkUnionRectWithRegion) _ANSI_ARGS_((XRectangle* rect, TkRegion src, TkRegion dr_return)); /* 119 */
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-    void (*tkUnionRectWithRegion) _ANSI_ARGS_((XRectangle* rect, TkRegion src, TkRegion dr_return)); /* 119 */
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
     void (*tkUnionRectWithRegion) _ANSI_ARGS_((XRectangle* rect, TkRegion src, TkRegion dr_return)); /* 119 */
 #endif /* MAC_OSX_TK */
     void *reserved120;
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#if !defined(__WIN32__) /* UNIX */
     void *reserved121;
 #endif /* UNIX */
 #ifdef __WIN32__
     void *reserved121;
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-    Pixmap (*tkpCreateNativeBitmap) _ANSI_ARGS_((Display * display, CONST char * source)); /* 121 */
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
     Pixmap (*tkpCreateNativeBitmap) _ANSI_ARGS_((Display * display, CONST char * source)); /* 121 */
 #endif /* MAC_OSX_TK */
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#if !defined(__WIN32__) /* UNIX */
     void *reserved122;
 #endif /* UNIX */
 #ifdef __WIN32__
     void *reserved122;
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-    void (*tkpDefineNativeBitmaps) _ANSI_ARGS_((void)); /* 122 */
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
     void (*tkpDefineNativeBitmaps) _ANSI_ARGS_((void)); /* 122 */
 #endif /* MAC_OSX_TK */
     void *reserved123;
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#if !defined(__WIN32__) /* UNIX */
     void *reserved124;
 #endif /* UNIX */
 #ifdef __WIN32__
     void *reserved124;
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-    Pixmap (*tkpGetNativeAppBitmap) _ANSI_ARGS_((Display * display, CONST char * name, int * width, int * height)); /* 124 */
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
     Pixmap (*tkpGetNativeAppBitmap) _ANSI_ARGS_((Display * display, CONST char * name, int * width, int * height)); /* 124 */
 #endif /* MAC_OSX_TK */
@@ -1290,15 +1174,12 @@ typedef struct TkIntStubs {
     void (*tkFocusFree) _ANSI_ARGS_((TkMainInfo * mainPtr)); /* 142 */
     void (*tkClipCleanup) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 143 */
     void (*tkGCCleanup) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 144 */
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#if !defined(__WIN32__) /* UNIX */
     void *reserved145;
 #endif /* UNIX */
 #ifdef __WIN32__
     void (*tkSubtractRegion) _ANSI_ARGS_((TkRegion sra, TkRegion srcb, TkRegion dr_return)); /* 145 */
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-    void (*tkSubtractRegion) _ANSI_ARGS_((TkRegion sra, TkRegion srcb, TkRegion dr_return)); /* 145 */
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
     void (*tkSubtractRegion) _ANSI_ARGS_((TkRegion sra, TkRegion srcb, TkRegion dr_return)); /* 145 */
 #endif /* MAC_OSX_TK */
@@ -1777,12 +1658,6 @@ extern TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkClipBox) /* 113 */
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkClipBox
-#define TkClipBox \
-	(tkIntStubsPtr->tkClipBox) /* 113 */
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkClipBox
 #define TkClipBox \
@@ -1795,12 +1670,6 @@ extern TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkCreateRegion) /* 114 */
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkCreateRegion
-#define TkCreateRegion \
-	(tkIntStubsPtr->tkCreateRegion) /* 114 */
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkCreateRegion
 #define TkCreateRegion \
@@ -1813,12 +1682,6 @@ extern TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkDestroyRegion) /* 115 */
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkDestroyRegion
-#define TkDestroyRegion \
-	(tkIntStubsPtr->tkDestroyRegion) /* 115 */
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkDestroyRegion
 #define TkDestroyRegion \
@@ -1831,12 +1694,6 @@ extern TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkIntersectRegion) /* 116 */
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkIntersectRegion
-#define TkIntersectRegion \
-	(tkIntStubsPtr->tkIntersectRegion) /* 116 */
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkIntersectRegion
 #define TkIntersectRegion \
@@ -1849,12 +1706,6 @@ extern TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkRectInRegion) /* 117 */
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkRectInRegion
-#define TkRectInRegion \
-	(tkIntStubsPtr->tkRectInRegion) /* 117 */
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkRectInRegion
 #define TkRectInRegion \
@@ -1867,12 +1718,6 @@ extern TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkSetRegion) /* 118 */
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkSetRegion
-#define TkSetRegion \
-	(tkIntStubsPtr->tkSetRegion) /* 118 */
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkSetRegion
 #define TkSetRegion \
@@ -1885,12 +1730,6 @@ extern TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkUnionRectWithRegion) /* 119 */
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkUnionRectWithRegion
-#define TkUnionRectWithRegion \
-	(tkIntStubsPtr->tkUnionRectWithRegion) /* 119 */
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkUnionRectWithRegion
 #define TkUnionRectWithRegion \
@@ -1898,24 +1737,12 @@ extern TkIntStubs *tkIntStubsPtr;
 #endif
 #endif /* MAC_OSX_TK */
 /* Slot 120 is reserved */
-#ifdef MAC_TCL
-#ifndef TkpCreateNativeBitmap
-#define TkpCreateNativeBitmap \
-	(tkIntStubsPtr->tkpCreateNativeBitmap) /* 121 */
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkpCreateNativeBitmap
 #define TkpCreateNativeBitmap \
 	(tkIntStubsPtr->tkpCreateNativeBitmap) /* 121 */
 #endif
 #endif /* MAC_OSX_TK */
-#ifdef MAC_TCL
-#ifndef TkpDefineNativeBitmaps
-#define TkpDefineNativeBitmaps \
-	(tkIntStubsPtr->tkpDefineNativeBitmaps) /* 122 */
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkpDefineNativeBitmaps
 #define TkpDefineNativeBitmaps \
@@ -1923,12 +1750,6 @@ extern TkIntStubs *tkIntStubsPtr;
 #endif
 #endif /* MAC_OSX_TK */
 /* Slot 123 is reserved */
-#ifdef MAC_TCL
-#ifndef TkpGetNativeAppBitmap
-#define TkpGetNativeAppBitmap \
-	(tkIntStubsPtr->tkpGetNativeAppBitmap) /* 124 */
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkpGetNativeAppBitmap
 #define TkpGetNativeAppBitmap \
@@ -1991,12 +1812,6 @@ extern TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkSubtractRegion) /* 145 */
 #endif
 #endif /* __WIN32__ */
-#ifdef MAC_TCL
-#ifndef TkSubtractRegion
-#define TkSubtractRegion \
-	(tkIntStubsPtr->tkSubtractRegion) /* 145 */
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef TkSubtractRegion
 #define TkSubtractRegion \

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winfo.test,v 1.10 2003/04/01 21:07:03 dgp Exp $
+# RCS: @(#) $Id: winfo.test,v 1.11 2004/03/17 18:15:50 das Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -94,7 +94,7 @@ test winfo-3.2 {"winfo colormapfull" command} {pseudocolor} {
 test winfo-3.3 {"winfo colormapfull" command} {pseudocolor} {
     list [catch {winfo colormapfull foo} msg] $msg
 } {1 {bad window path name "foo"}}
-test winfo-3.4 {"winfo colormapfull" command} {macOrUnix pseudocolor} {
+test winfo-3.4 {"winfo colormapfull" command} {unixOnly pseudocolor} {
     eatColors .t {-colormap new}
     set result [list [winfo colormapfull .] [winfo colormapfull .t]]
     .t.c delete 34

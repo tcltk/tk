@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.24 2003/10/02 23:02:36 patthoyts Exp $
+# RCS: @(#) $Id: console.tcl,v 1.25 2004/03/17 18:15:44 das Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -49,8 +49,7 @@ proc ::tk::ConsoleInit {} {
 	wm withdraw .
     }
 
-    if {$tcl_platform(platform) eq "macintosh"
-	    || [tk windowingsystem] eq "aqua"} {
+    if {[tk windowingsystem] eq "aqua"} {
 	set mod "Cmd"
     } else {
 	set mod "Ctrl"
@@ -69,8 +68,7 @@ proc ::tk::ConsoleInit {} {
 	    -command {wm withdraw .}
     AmpMenuArgs .menubar.file add command -label [mc "&Clear Console"] \
 	    -command {.console delete 1.0 "promptEnd linestart"}
-    if {$tcl_platform(platform) eq "macintosh" || \
-	    [tk windowingsystem] eq "aqua"} {
+    if {[tk windowingsystem] eq "aqua"} {
 	AmpMenuArgs .menubar.file add command \
 		-label [mc &Quit] -command {exit} -accel "Cmd-Q"
     } else {
@@ -105,9 +103,6 @@ proc ::tk::ConsoleInit {} {
     pack .sb -side right -fill both
     pack $con -fill both -expand 1 -side left
     switch -exact $tcl_platform(platform) {
-	"macintosh" {
-	    $con configure -font {Monaco 9 normal} -highlightthickness 0
-	}
 	"windows" {
 	    $con configure -font systemfixed
 	}
@@ -468,16 +463,9 @@ proc ::tk::ConsoleBind {w} {
     }
     bind Console <F9> {
 	eval destroy [winfo child .]
-	if {$tcl_platform(platform) eq "macintosh"} {
-	    if {[catch {source [file join $tk_library console.tcl]}]} {
-		source -rsrc console
-	    }
-	} else {
-	    source [file join $tk_library console.tcl]
-	}
+	source [file join $tk_library console.tcl]
     }
-    if {$::tcl_platform(platform) eq "macintosh" \
-	    || [tk windowingsystem] eq "aqua"} {
+    if {[tk windowingsystem] eq "aqua"} {
 	bind Console <Command-q> {
 	    exit
 	}

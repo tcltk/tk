@@ -1,4 +1,4 @@
-# $Id: tk.spec,v 1.17 2004/03/02 00:49:13 hobbs Exp $
+# $Id: tk.spec,v 1.18 2004/03/17 18:15:50 das Exp $
 # This file is the basis for a binary Tk Linux RPM.
 
 %define version 8.5a1
@@ -21,7 +21,7 @@ The Tcl (Tool Command Language) provides a powerful platform for
 creating integration applications that tie together diverse
 applications, protocols, devices, and frameworks.  When paired with
 the Tk toolkit, Tcl provides the fastest and most powerful way to
-create GUI applications that run on PCs, Unix, and the Macintosh.  Tcl
+create GUI applications that run on PCs, Unix, and Mac OS X.  Tcl
 can also be used for a variety of web-related tasks and for creating
 powerful command languages for applications.
 

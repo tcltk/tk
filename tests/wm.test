@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.23 2003/04/01 21:07:04 dgp Exp $
+# RCS: @(#) $Id: wm.test,v 1.24 2004/03/17 18:15:50 das Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -131,7 +131,7 @@ test wm-attributes-1.2.1 {usage} {pcOnly} {
     list [catch {wm attributes . _} err] $err
 } {1 {wrong # args: should be "wm attributes window ?-disabled ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}}
 
-test wm-attributes-1.2.2 {usage} {macOrUnix} {
+test wm-attributes-1.2.2 {usage} {unixOnly} {
     list [catch {wm attributes . _} err] $err
 } {1 {wrong # args: should be "wm attributes window"}}
 
@@ -435,7 +435,7 @@ test wm-iconbitmap-1.1 {usage} {
     list [catch {wm iconbitmap} err] $err
 } {1 {wrong # args: should be "wm option window ?arg ...?"}}
 
-test wm-iconbitmap-1.2.1 {usage} {macOrUnix} {
+test wm-iconbitmap-1.2.1 {usage} {unixOnly} {
     list [catch {wm iconbitmap .t 12 13} msg] $msg
 } {1 {wrong # args: should be "wm iconbitmap window ?bitmap?"}}
 
