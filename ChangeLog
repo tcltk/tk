@@ -1,3 +1,8 @@
+2002-10-29  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/README: added info on new package searching in
+	Frameworks directories.
+	
 2002-10-22  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	*** 8.4.1 TAGGED FOR RELEASE ***
