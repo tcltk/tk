@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUndo.c,v 1.1 2002/06/21 23:09:55 hobbs Exp $
+ * RCS: @(#) $Id: tkUndo.c,v 1.1.4.1 2004/07/14 19:07:48 hobbs Exp $
  */
 
 #include "tkUndo.h"
@@ -205,7 +205,7 @@ void TkUndoSetDepth ( stack, maxdepth )
         while ( elem ) {
            prevelem = elem;
            elem = elem->next;
-           ckfree((char *) elem);
+           ckfree((char *) prevelem);
         }
         stack->depth = stack->maxdepth;
     }
