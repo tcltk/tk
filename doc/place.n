@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: place.n,v 1.4 2004/06/21 15:21:24 dkf Exp $
+'\" RCS: @(#) $Id: place.n,v 1.5 2004/06/21 20:42:21 dkf Exp $
 '\" 
 .so man.macros
 .TH place n "" Tk "Tk Built-In Commands"
@@ -236,12 +236,12 @@ the master windows or the parents of slave windows (i.e. it doesn't
 set their requested sizes).
 To control the sizes of these windows, make them windows like
 frames and canvases that provide configuration options for this purpose.
-.SH
+.SH EXAMPLE
 Make the label occupy the middle bit of the toplevel, no matter how it
 is resized:
 .CS
 label .l \-text "In the\nMiddle!" \-bg black \-fg white
-place .l \-relwidth .3 \-relx .35 \-relheight .3 \-rely .35
+\fBplace\fR .l \-relwidth .3 \-relx .35 \-relheight .3 \-rely .35
 .CE
 
 .SH "SEE ALSO"
