@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.10 2004/03/01 19:26:12 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.11 2004/07/26 20:16:08 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5622,3 +5622,63 @@ images with partial transparency.
 2004-03-01 (platform support)[218561] Allow 64-bit configure on IRIX64-6.5*
 
 --- Released 8.4.6, March 1, 2004 --- See ChangeLog for details ---
+
+2004-03-17 (platform support) Mac OS X: Grab the Command-H &
+Command-Shift-H keys and use them for Hide and Hide Others before passing
+keystrokes on to the generic keyboard event processing.
+Stop putting a Quit menu item in the File menu. (ingham)
+
+2004-03-26 (enhancement)[540375] Add code to read and write PPM/PGM data
+from strings and/or bytearrays. (fellows)
+
+2004-03-26 (bug fix)[923555] Restored support for the stringWriteProc of
+old photo formats/ (fellows)
+
+2004-03-31 (bug fix)[Bug 220871] Report errors from invoking menu commands
+as background errors on OS X. (ingham)
+
+2004-04-20 (bug fix)[915350, 922336] Do not set min, max size in WM_HINTS
+when we shouldn't and correctly display maximize window button under
+KDE-3.2.1. (english)
+
+2004-05-03 (enhancement)[756952] Place images of compound menu entries in
+indicator space if not a radio of checkbutton on Windows. (eserte)
+
+2004-05-03 (bug fix)[904371] Fix drawing of unicode chars in menu titles.
+(riefenstahl)
+
+2004-05-03 (bug fix)[939389, 822002, 732662] Correctly post internal
+clipboard data to the Windows clipboard on exit. (hobbs)
+
+2004-05-03 (bug fix)[778893, 932155] Make the panedwindow -opaqueresize
+option work as per the docs, and call DragSash to stop sash jump when B1 is
+pressed and released without moving. (hobbs)
+
+2004-05-05 (bug fix)[618872] Fix Tk_MeasureChars and Tk_DrawChars to handle
+reallocation of subfonts in when unicode chars require extra fonts.
+(dkf, hobbs)
+
+2004-05-14 (enhancement) reduce Tk tk_messageBox default font size to
+14-point (was 18-point). (fellows)
+
+2004-07-11 (enhancement)[987169] Handle users destroying the dialog
+indirectly. (fellows)
+
+2004-07-14 (bug fix)[894550] Correctly set the cursor to the platform
+cursor on OS X when Tk asks for the "NULL" (empty) cursor.
+
+2004-07-14 (bug fix)[969358] Prevent possible segfault in -maxundo. (jiangwu)
+
+2004-07-19 (bug fix)[874058] improved build configuration on 64-bit systems.
+Corrects Tcl_StatBuf definition issues.  (hobbs)
+
+2004-07-20 (bug fix)[905830] Ensure IC focus is set after creation.  This
+corrects XIM support on Solaris. (hobbs)
+
+2003-07-23 (platform support) Mac OS X: Fix several problems with
+Icelandic (and Faroese) keyboards (riefenstahl)
+
+2003-07-24 (platform support) Mac OS X: Complete the implementation of
+the CG version of the X drawing emulation layer. (tittle, ingham)
+
+--- Released 8.4.7, July 26, 2004 --- See ChangeLog for details ---
