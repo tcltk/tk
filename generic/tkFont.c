@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.15 2002/06/25 16:27:43 a_kovalenko Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.16 2002/06/26 22:12:43 a_kovalenko Exp $
  */
 
 #include "tkPort.h"
@@ -2827,7 +2827,7 @@ Tk_TextLayoutToPostscript(interp, layout)
 			else
 			    buf[used++] = ')';
 			buf[used++] = '/';
-			while( *glyphname ) 
+			while( (*glyphname) && (used < (MAXUSE+27))) 
 			    buf[used++] = *glyphname++ ;
 			buf[used++] = '(';
 		    }

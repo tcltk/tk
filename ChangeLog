@@ -1,5 +1,12 @@
 2002-06-26  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
 
+	* generic/tkFont.c (TkTextLayoutToPostscript): fixed potential
+	buffer overflow which could be intentionally triggered from
+	within safe interpreter -- malicious applet could modify 
+	tk::psglyphs array.
+
+2002-06-26  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
+
 	* tests/font.test (font-32.1): updated this test
 	to expect the new behavior of canvas postscript.
 
