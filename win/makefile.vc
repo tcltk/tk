@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.67.2.7 2004/10/27 00:36:33 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.67.2.8 2004/10/29 11:52:42 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 !if !defined(MSDEVDIR) && !defined(MSVCDIR)
@@ -166,7 +166,7 @@ PROJECT	= tk
 
 STUBPREFIX = $(PROJECT)stub
 !if [nmakehlp -g ../generic/tk.h TK_VERSION] == 84
-DOTVERSION	= 8.5
+DOTVERSION	= 8.4
 !elseif [nmakehlp -g ../generic/tk.h TK_VERSION] == 85
 DOTVERSION	= 8.5
 !elseif [nmakehlp -g ../generic/tk.h TK_VERSION] == 86
