@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.6 1999/09/21 06:42:30 hobbs Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.7 1999/12/14 06:52:28 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1818,6 +1818,16 @@ Tk_ComputeTextLayout(tkfont, string, numChars, wrapLength, justify, flags,
     Tcl_DStringInit(&lineBuffer);
     
     fontPtr = (TkFont *) tkfont;
+    if ((fontPtr == NULL) || (string == NULL)) {
+	if (widthPtr != NULL) {
+	    *widthPtr = 0;
+	}
+	if (heightPtr != NULL) {
+	    *heightPtr = 0;
+	}
+	return NULL;
+    }
+
     fmPtr = &fontPtr->fm;
 
     height = fmPtr->ascent + fmPtr->descent;

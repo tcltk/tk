@@ -11,11 +11,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.6 1999/11/10 02:56:24 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.7 1999/12/14 06:52:27 hobbs Exp $
  */
 
 #include "tkInt.h"
 #include "default.h"
+
+#define ENTRY_VALIDATE
 
 /*
  * A data structure of the following type is kept for each entry
@@ -151,6 +153,16 @@ typedef struct {
     int avgWidth;		/* Width of average character. */
     int flags;			/* Miscellaneous flags;  see below for
 				 * definitions. */
+    Tk_TSOffset tsoffset;
+
+#ifdef ENTRY_VALIDATE
+    char *validateCmd;          /* Command prefix to use when invoking
+				 * validate command.  NULL means don't
+				 * invoke commands.  Malloc'ed. */
+    int validate;               /* Non-zero means try to validate */
+    char *invalidCmd;		/* Command called when a validation returns 0
+				 * (successfully fails), defaults to {}. */
+#endif /* ENTRY_VALIDATE */
 } Entry;
 
 /*
@@ -169,6 +181,11 @@ typedef struct {
  * UPDATE_SCROLLBAR:		Non-zero means scrollbar should be updated
  *				during next redisplay operation.
  * GOT_SELECTION:		Non-zero means we've claimed the selection.
+ * VALIDATING:                  Non-zero means we are in a validateCmd
+ * VALIDATE_VAR:                Non-zero means we are attempting to validate
+ *                              the entry's textvariable with validateCmd
+ * VALIDATE_ABORT:              Non-zero if validatecommand signals an abort
+ *                              for current procedure and make no changes
  */
 
 #define REDRAW_PENDING		1
@@ -178,6 +195,11 @@ typedef struct {
 #define UPDATE_SCROLLBAR	0x10
 #define GOT_SELECTION		0x20
 #define ENTRY_DELETED           0x40
+#ifdef ENTRY_VALIDATE
+#define VALIDATING              0x80
+#define VALIDATE_VAR            0x100
+#define VALIDATE_ABORT          0x200
+#endif /* ENTRY_VALIDATE */
 
 /*
  * The following macro defines how many extra pixels to leave on each
@@ -200,6 +222,27 @@ enum state {
 static char *stateStrings[] = {
     "disabled", "normal", (char *) NULL
 };
+
+#ifdef ENTRY_VALIDATE
+/*
+ * Definitions for -validate option values:
+ */
+
+static char *validateStrings[] = {
+    "all", "key", "focus", "focusin", "focusout", "none", (char *) NULL
+};
+enum validateType {
+    VALIDATE_ALL, VALIDATE_KEY, VALIDATE_FOCUS,
+    VALIDATE_FOCUSIN, VALIDATE_FOCUSOUT, VALIDATE_NONE,
+    /*
+     * These extra enums are for use with EntryValidateChange
+     */
+    VALIDATE_FORCED, VALIDATE_DELETE, VALIDATE_INSERT
+};
+#define DEF_ENTRY_VALIDATE	"none"
+#define DEF_ENTRY_INVALIDCMD	""
+
+#endif /* ENTRY_VALIDATE */
 
 /*
  * Information used for argv parsing.
@@ -256,6 +299,13 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
 	DEF_ENTRY_INSERT_WIDTH, -1, Tk_Offset(Entry, insertWidth), 
         0, 0, 0},
+#ifdef ENTRY_VALIDATE
+    {TK_OPTION_STRING, "-invalidcommand", "invalidCommand", "InvalidCommand",
+	DEF_ENTRY_INVALIDCMD, -1, Tk_Offset(Entry, invalidCmd),
+	0, 0, 0},
+    {TK_OPTION_SYNONYM, "-invcmd", (char *) NULL, (char *) NULL,
+	(char *) NULL, 0, -1, 0, (ClientData) "-invalidcommand", 0},
+#endif /* ENTRY_VALIDATE */
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, -1, Tk_Offset(Entry, justify), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
@@ -283,6 +333,16 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
 	DEF_ENTRY_TEXT_VARIABLE, -1, Tk_Offset(Entry, textVarName),
 	TK_CONFIG_NULL_OK, 0, 0},
+#ifdef ENTRY_VALIDATE
+    {TK_OPTION_STRING_TABLE, "-validate", "validate", "Validate",
+       DEF_ENTRY_VALIDATE, -1, Tk_Offset(Entry, validate),
+       0, (ClientData) validateStrings, 0},
+    {TK_OPTION_STRING, "-validatecommand", "validateCommand", "ValidateCommand",
+       (char *) NULL, -1, Tk_Offset(Entry, validateCmd),
+       TK_CONFIG_NULL_OK, 0, 0},
+    {TK_OPTION_SYNONYM, "-vcmd", (char *) NULL, (char *) NULL,
+	(char *) NULL, 0, -1, 0, (ClientData) "-validatecommand", 0},
+#endif /* ENTRY_VALIDATE */
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_ENTRY_WIDTH, -1, Tk_Offset(Entry, prefWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
@@ -307,13 +367,21 @@ static Tk_OptionSpec optionSpecs[] = {
 
 static char *commandNames[] = {
     "bbox", "cget", "configure", "delete", "get", "icursor", "index", 
-    "insert", "scan", "selection", "xview", (char *) NULL
+    "insert", "scan", "selection",
+#ifdef ENTRY_VALIDATE
+    "validate",
+#endif
+    "xview", (char *) NULL
 };
 
 enum command {
     COMMAND_BBOX, COMMAND_CGET, COMMAND_CONFIGURE, COMMAND_DELETE, 
     COMMAND_GET, COMMAND_ICURSOR, COMMAND_INDEX, COMMAND_INSERT, 
-    COMMAND_SCAN, COMMAND_SELECTION, COMMAND_XVIEW
+    COMMAND_SCAN, COMMAND_SELECTION,
+#ifdef ENTRY_VALIDATE
+    COMMAND_VALIDATE,
+#endif
+    COMMAND_XVIEW
 };
 
 static char *selCommandNames[] = {
@@ -358,6 +426,15 @@ static char *		EntryTextVarProc _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, char *name1, char *name2,
 			    int flags));
 static void		EntryUpdateScrollbar _ANSI_ARGS_((Entry *entryPtr));
+#ifdef ENTRY_VALIDATE
+static int		EntryValidate _ANSI_ARGS_((Entry *entryPtr,
+			    char *cmd));
+static int		EntryValidateChange _ANSI_ARGS_((Entry *entryPtr,
+			    char *change, char *new, int index, int type));
+static void		ExpandPercents _ANSI_ARGS_((Entry *entryPtr,
+			    char *before, char *change, char *new, int index,
+			    int type, Tcl_DString *dsPtr));
+#endif /* ENTRY_VALIDATE */
 static void		EntryValueChanged _ANSI_ARGS_((Entry *entryPtr));
 static void		EntryVisibleRange _ANSI_ARGS_((Entry *entryPtr,
 			    double *firstPtr, double *lastPtr));
@@ -506,6 +583,11 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
     entryPtr->highlightGC = None;
     entryPtr->avgWidth = 1;
     entryPtr->flags = 0;
+#ifdef ENTRY_VALIDATE
+    entryPtr->validateCmd	= NULL;
+    entryPtr->validate		= VALIDATE_NONE;
+    entryPtr->invalidCmd	= NULL;
+#endif /* ENTRY_VALIDATE */
 
     Tk_SetClass(entryPtr->tkwin, "Entry");
     TkSetClassProcs(entryPtr->tkwin, &entryClass, (ClientData) entryPtr);
@@ -888,6 +970,26 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	    break;
 	}
 
+#ifdef ENTRY_VALIDATE
+        case COMMAND_VALIDATE: {
+	    int code;
+
+	    if (objc != 2) {
+		Tcl_WrongNumArgs(interp, 1, objv, "validate");
+		goto error;
+	    }
+	    selIndex = entryPtr->validate;
+	    entryPtr->validate = VALIDATE_ALL;
+	    code = EntryValidateChange(entryPtr, (char *) NULL,
+				       entryPtr->string, -1, VALIDATE_FORCED);
+	    if (entryPtr->validate != VALIDATE_NONE) {
+		entryPtr->validate = selIndex;
+	    }
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj((code == TCL_OK)));
+	    break;
+	}
+#endif
+
         case COMMAND_XVIEW: {
 	    int index;
 
@@ -1192,7 +1294,7 @@ EntryWorldChanged(instanceData)
     ClientData instanceData;	/* Information about widget. */
 {
     XGCValues gcValues;
-    GC gc;
+    GC gc = None;
     unsigned long mask;
     Entry *entryPtr;
 
@@ -1201,6 +1303,10 @@ EntryWorldChanged(instanceData)
     entryPtr->avgWidth = Tk_TextWidth(entryPtr->tkfont, "0", 1);
     if (entryPtr->avgWidth == 0) {
 	entryPtr->avgWidth = 1;
+    }
+
+    if (entryPtr->normalBorder != NULL) {
+	Tk_SetBackgroundFromBorder(entryPtr->tkwin, entryPtr->normalBorder);
     }
 
     gcValues.foreground = entryPtr->fgColorPtr->pixel;
@@ -1313,7 +1419,7 @@ DisplayEntry(clientData)
      */
 
     Tk_Fill3DRectangle(tkwin, pixmap, entryPtr->normalBorder,
-	    0, 0, Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
+		0, 0, Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
 
     string = entryPtr->displayString;
     if (showSelection
@@ -1599,6 +1705,16 @@ InsertChars(entryPtr, index, value)
     strcpy(new + byteIndex, value);
     strcpy(new + byteIndex + byteCount, string + byteIndex);
 
+#ifdef ENTRY_VALIDATE
+    if ((entryPtr->validate == VALIDATE_KEY ||
+	 entryPtr->validate == VALIDATE_ALL) &&
+	EntryValidateChange(entryPtr, value, new, index,
+			    VALIDATE_INSERT) != TCL_OK) {
+	ckfree(new);
+	return;
+    }
+#endif /* ENTRY_VALIDATE */
+
     ckfree(string);
     entryPtr->string = new;
 
@@ -1674,6 +1790,9 @@ DeleteChars(entryPtr, index, count)
 {
     int byteIndex, byteCount, newByteCount;
     char *new, *string;
+#ifdef ENTRY_VALIDATE
+    char *todelete;
+#endif
 
     if ((index + count) > entryPtr->numChars) {
 	count = entryPtr->numChars - index;
@@ -1690,6 +1809,23 @@ DeleteChars(entryPtr, index, count)
     new = (char *) ckalloc((unsigned) newByteCount);
     memcpy(new, string, (size_t) byteIndex);
     strcpy(new + byteIndex, string + byteIndex + byteCount);
+
+#ifdef ENTRY_VALIDATE
+    todelete = (char *) ckalloc((unsigned) (byteCount + 1));
+    memcpy(todelete, string + byteIndex, (size_t) byteCount);
+    todelete[byteCount] = '\0';
+
+    if ((entryPtr->validate == VALIDATE_KEY ||
+	 entryPtr->validate == VALIDATE_ALL) &&
+	EntryValidateChange(entryPtr, todelete, new, index,
+			    VALIDATE_DELETE) != TCL_OK) {
+	ckfree(new);
+	ckfree(todelete);
+	return;
+    }
+
+    ckfree(todelete);
+#endif /* ENTRY_VALIDATE */
 
     ckfree(entryPtr->string);
     entryPtr->string = new;
@@ -1830,6 +1966,30 @@ EntrySetValue(entryPtr, value)
     char *value;		/* New text to display in entry. */
 {
     char *oldSource;
+#ifdef ENTRY_VALIDATE
+    int code;
+
+    if (strcmp(value, entryPtr->string) == 0) {
+	return;
+    }
+
+    if (entryPtr->flags & VALIDATE_VAR) {
+	entryPtr->flags |= VALIDATE_ABORT;
+    } else {
+	entryPtr->flags |= VALIDATE_VAR;
+	code = EntryValidateChange(entryPtr, (char *) NULL, value, -1,
+				   VALIDATE_FORCED);
+	entryPtr->flags &= ~VALIDATE_VAR;
+	/*
+	 * If VALIDATE_ABORT has been set, then this operation should be
+	 * aborted because the validatecommand did something else instead
+	 */
+	if (entryPtr->flags & VALIDATE_ABORT) {
+	    entryPtr->flags &= ~VALIDATE_ABORT;
+	    return;
+	}
+    }
+#endif /* ENTRY_VALIDATE */
 
     oldSource = entryPtr->string;
 
@@ -2489,9 +2649,25 @@ EntryFocusProc(entryPtr, gotFocus)
 		    entryPtr->insertOnTime, EntryBlinkProc,
 		    (ClientData) entryPtr);
 	}
+#ifdef ENTRY_VALIDATE
+	if (entryPtr->validate == VALIDATE_ALL ||
+	    entryPtr->validate == VALIDATE_FOCUS ||
+	    entryPtr->validate == VALIDATE_FOCUSIN) {
+	    EntryValidateChange(entryPtr, (char *) NULL,
+				entryPtr->string, -1, VALIDATE_FOCUSIN);
+	}
+#endif /* ENTRY_VALIDATE */
     } else {
 	entryPtr->flags &= ~(GOT_FOCUS | CURSOR_ON);
 	entryPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
+#ifdef ENTRY_VALIDATE
+	if (entryPtr->validate == VALIDATE_ALL ||
+	    entryPtr->validate == VALIDATE_FOCUS ||
+	    entryPtr->validate == VALIDATE_FOCUSOUT) {
+	    EntryValidateChange(entryPtr, (char *) NULL,
+				entryPtr->string, -1, VALIDATE_FOCUSOUT);
+	}
+#endif /* ENTRY_VALIDATE */
     }
     EventuallyRedraw(entryPtr);
 }
@@ -2553,8 +2729,289 @@ EntryTextVarProc(clientData, interp, name1, name2, flags)
     if (value == NULL) {
 	value = "";
     }
+#ifdef ENTRY_VALIDATE
+    EntrySetValue(entryPtr, value);
+#else
     if (strcmp(value, entryPtr->string) != 0) {
 	EntrySetValue(entryPtr, value);
     }
+#endif /* ENTRY_VALIDATE */
     return (char *) NULL;
 }
+#ifdef ENTRY_VALIDATE
+
+/*
+ *--------------------------------------------------------------
+ *
+ * EntryValidate --
+ *
+ *	This procedure is invoked when any character is added or
+ *	removed from the entry widget, or a focus has trigerred validation.
+ *
+ * Results:
+ *	TCL_OK if the validatecommand passes the new string.
+ *      TCL_BREAK if the vcmd executed OK, but rejects the string.
+ *      TCL_ERROR if an error occurred while executing the vcmd
+ *      or a valid Tcl_Bool is not returned.
+ *
+ * Side effects:
+ *      An error condition may arise
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+EntryValidate(entryPtr, cmd)
+     register Entry *entryPtr;	/* Entry that needs validation. */
+     register char *cmd;	/* Validation command (NULL-terminated
+				 * string). */
+{
+    register Tcl_Interp *interp = entryPtr->interp;
+    int code, bool;
+
+    code = Tcl_GlobalEval(interp, cmd);
+
+    if (code != TCL_OK && code != TCL_RETURN) {
+	Tcl_AddErrorInfo(interp,
+			 "\n\t(in validation command executed by entry)");
+	Tcl_BackgroundError(interp);
+	return TCL_ERROR;
+    }
+
+    if (Tcl_GetBooleanFromObj(interp, Tcl_GetObjResult(interp),
+			      &bool) != TCL_OK) {
+	Tcl_AddErrorInfo(interp,
+		 "\nValid Tcl Boolean not returned by validation command");
+	Tcl_BackgroundError(interp);
+	Tcl_SetObjLength(Tcl_GetObjResult(interp), 0);
+	return TCL_ERROR;
+    }
+
+    Tcl_SetObjLength(Tcl_GetObjResult(interp), 0);
+    return (bool ? TCL_OK : TCL_BREAK);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * EntryValidateChange --
+ *
+ *	This procedure is invoked when any character is added or
+ *	removed from the entry widget, or a focus has trigerred validation.
+ *
+ * Results:
+ *	TCL_OK if the validatecommand accepts the new string,
+ *      TCL_ERROR if any problems occured with validatecommand.
+ *
+ * Side effects:
+ *      The insertion/deletion may be aborted, and the
+ *      validatecommand might turn itself off (if an error
+ *      or loop condition arises).
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+EntryValidateChange(entryPtr, change, new, index, type)
+     register Entry *entryPtr;	/* Entry that needs validation. */
+     char *change;		/* Characters to be added/deleted
+				 * (NULL-terminated string). */
+     char *new;                 /* Potential new value of entry string */
+     int index;                 /* index of insert/delete, -1 otherwise */
+     int type;                  /* forced, delete, insert,
+				 * focusin or focusout */
+{
+    int code;
+    char *p;
+    Tcl_DString script;
+    
+    if (entryPtr->validateCmd == NULL ||
+	entryPtr->validate == VALIDATE_NONE) {
+	return (entryPtr->flags & VALIDATE_VAR) ? TCL_ERROR : TCL_OK;
+    }
+
+    /*
+     * If we're already validating, then we're hitting a loop condition
+     * Return and set validate to 0 to disallow further validations
+     * and prevent current validation from finishing
+     */
+    if (entryPtr->flags & VALIDATING) {
+	entryPtr->validate = VALIDATE_NONE;
+	return (entryPtr->flags & VALIDATE_VAR) ? TCL_ERROR : TCL_OK;
+    }
+
+    entryPtr->flags |= VALIDATING;
+
+    /*
+     * Now form command string and run through the -validatecommand
+     */
+
+    Tcl_DStringInit(&script);
+    ExpandPercents(entryPtr, entryPtr->validateCmd,
+		   change, new, index, type, &script);
+    Tcl_DStringAppend(&script, "", 1);
+
+    p = Tcl_DStringValue(&script);
+    code = EntryValidate(entryPtr, p);
+    Tcl_DStringFree(&script);
+
+    /*
+     * If e->validate has become VALIDATE_NONE during the validation,
+     * it means that a loop condition almost occured.  Do not allow
+     * this validation result to finish.
+     */
+    if (entryPtr->validate == VALIDATE_NONE ||
+	(entryPtr->flags & VALIDATE_VAR)) {
+	code = TCL_ERROR;
+    }
+    /*
+     * If validate will return ERROR, then disallow further validations
+     * Otherwise, if it didn't accept the new string (returned TCL_BREAK)
+     * then eval the invalidCmd (if it's set)
+     */
+    if (code == TCL_ERROR) {
+	entryPtr->validate = VALIDATE_NONE;
+    } else if (code == TCL_BREAK) {
+	if (entryPtr->invalidCmd != NULL) {
+	    Tcl_DStringInit(&script);
+	    ExpandPercents(entryPtr, entryPtr->invalidCmd,
+			   change, new, index, type, &script);
+	    Tcl_DStringAppend(&script, "", 1);
+	    p = Tcl_DStringValue(&script);
+	    if (Tcl_GlobalEval(entryPtr->interp, p) != TCL_OK) {
+		Tcl_AddErrorInfo(entryPtr->interp,
+				 "\n\t(in invalidcommand executed by entry)");
+		Tcl_BackgroundError(entryPtr->interp);
+		code = TCL_ERROR;
+		entryPtr->validate = VALIDATE_NONE;
+	    }
+	    Tcl_DStringFree(&script);
+	}
+    }
+
+    entryPtr->flags &= ~VALIDATING;
+
+    return code;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * ExpandPercents --
+ *
+ *	Given a command and an event, produce a new command
+ *	by replacing % constructs in the original command
+ *	with information from the X event.
+ *
+ * Results:
+ *	The new expanded command is appended to the dynamic string
+ *	given by dsPtr.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+ExpandPercents(entryPtr, before, change, new, index, type, dsPtr)
+     register Entry *entryPtr;	/* Entry that needs validation. */
+     register char *before;	/* Command containing percent
+				 * expressions to be replaced. */
+     char *change; 		/* Characters to added/deleted
+				 * (NULL-terminated string). */
+     char *new;                 /* Potential new value of entry string */
+     int index;                 /* index of insert/delete */
+     int type;                  /* INSERT or DELETE */
+     Tcl_DString *dsPtr;        /* Dynamic string in which to append
+				 * new command. */
+{
+    int spaceNeeded, cvtFlags;	/* Used to substitute string as proper Tcl
+				 * list element. */
+    int number, length;
+    register char *string;
+    Tcl_UniChar ch;
+    char numStorage[2*TCL_INTEGER_SPACE];
+
+    while (1) {
+	if (*before == '\0') {
+	    break;
+	}
+	/*
+	 * Find everything up to the next % character and append it
+	 * to the result string.
+	 */
+
+	string = before;
+	/* No need to convert '%', as it is in ascii range */
+	string = Tcl_UtfFindFirst(before, '%');
+	if (string == (char *) NULL) {
+	    Tcl_DStringAppend(dsPtr, before, -1);
+	    break;
+	} else if (string != before) {
+	    Tcl_DStringAppend(dsPtr, before, string-before);
+	    before = string;
+	}
+
+	/*
+	 * There's a percent sequence here.  Process it.
+	 */
+
+	before++; /* skip over % */
+	if (*before != '\0') {
+	    before += Tcl_UtfToUniChar(before, &ch);
+	} else {
+	    ch = '%';
+	}
+	switch (ch) {
+	case 'd': /* Type of call that caused validation */
+	    switch (type) {
+	    case VALIDATE_INSERT:
+		number = 1;
+		break;
+	    case VALIDATE_DELETE:
+		number = 0;
+		break;
+	    default:
+		number = -1;
+		break;
+	    }
+	    sprintf(numStorage, "%d", number);
+	    string = numStorage;
+	    break;
+	case 'i': /* index of insert/delete */
+	    sprintf(numStorage, "%d", index);
+	    string = numStorage;
+	    break;
+	case 'P': /* 'Peeked' new value of the string */
+	    string = new;
+	    break;
+	case 's': /* Current string value of entry */
+	    string = entryPtr->string;
+	    break;
+	case 'S': /* string to be inserted/deleted, if any */
+	    string = change;
+	    break;
+	case 'v': /* type of validation */
+	    string = validateStrings[entryPtr->validate];
+	    break;
+	case 'W': /* widget name */
+	    string = Tk_PathName(entryPtr->tkwin);
+	    break;
+	default:
+	    length = Tcl_UniCharToUtf(ch, numStorage);
+	    numStorage[length] = '\0';
+	    string = numStorage;
+	    break;
+	}
+
+	spaceNeeded = Tcl_ScanElement(string, &cvtFlags);
+	length = Tcl_DStringLength(dsPtr);
+	Tcl_DStringSetLength(dsPtr, length + spaceNeeded);
+	spaceNeeded = Tcl_ConvertElement(string,
+		Tcl_DStringValue(dsPtr) + length,
+		cvtFlags | TCL_DONT_USE_BRACES);
+	Tcl_DStringSetLength(dsPtr, length + spaceNeeded);
+    }
+}
+#endif /* ENTRY_VALIDATE */

@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.8 1999/12/12 22:51:22 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.9 1999/12/14 06:52:31 hobbs Exp $
  */
 
 #include "default.h"
@@ -27,6 +27,16 @@
 #endif
 
 #include "tkText.h"
+
+/*
+ * Custom options for handling "-state"
+ */
+
+static Tk_CustomOption stateOption = {
+    (Tk_OptionParseProc *) TkStateParseProc,
+    TkStatePrintProc,
+    (ClientData) NULL	/* only "normal" and "disabled" */
+};
 
 /*
  * Information used to parse text configuration options:
@@ -113,8 +123,8 @@ static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_PIXELS, "-spacing3", "spacing3", "Spacing",
 	DEF_TEXT_SPACING3, Tk_Offset(TkText, spacing3),
 	TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_UID, "-state", "state", "State",
-	DEF_TEXT_STATE, Tk_Offset(TkText, state), 0},
+    {TK_CONFIG_CUSTOM, "-state", "state", "State",
+	DEF_TEXT_STATE, Tk_Offset(TkText, state), 0, &stateOption},
     {TK_CONFIG_STRING, "-tabs", "tabs", "Tabs",
 	DEF_TEXT_TABS, Tk_Offset(TkText, tabOptionString), TK_CONFIG_NULL_OK},
     {TK_CONFIG_STRING, "-takefocus", "takeFocus", "TakeFocus",
@@ -122,8 +132,8 @@ static Tk_ConfigSpec configSpecs[] = {
 	TK_CONFIG_NULL_OK},
     {TK_CONFIG_INT, "-width", "width", "Width",
 	DEF_TEXT_WIDTH, Tk_Offset(TkText, width), 0},
-    {TK_CONFIG_UID, "-wrap", "wrap", "Wrap",
-	DEF_TEXT_WRAP, Tk_Offset(TkText, wrapMode), 0},
+    {TK_CONFIG_CUSTOM, "-wrap", "wrap", "Wrap",
+	DEF_TEXT_WRAP, Tk_Offset(TkText, wrapMode), 0, &textWrapModeOption},
     {TK_CONFIG_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	DEF_TEXT_XSCROLL_COMMAND, Tk_Offset(TkText, xScrollCmd),
 	TK_CONFIG_NULL_OK},
@@ -140,6 +150,128 @@ static Tk_ConfigSpec configSpecs[] = {
  */
 
 int tkTextDebug = 0;
+
+/*
+ * Custom options for handling "-wrap":
+ */
+
+static int		WrapModeParseProc _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, Tk_Window tkwin, char *value,
+			    char *widgRec, int offset));
+static char *		WrapModePrintProc _ANSI_ARGS_((ClientData clientData,
+			    Tk_Window tkwin, char *widgRec, int offset,
+			    Tcl_FreeProc **freeProcPtr));
+
+Tk_CustomOption textWrapModeOption = {
+    WrapModeParseProc,
+    WrapModePrintProc,
+    (ClientData) NULL
+};
+
+/*
+ *--------------------------------------------------------------
+ *
+ * WrapModeParseProc --
+ *
+ *	This procedure is invoked during option processing to handle
+ *	"-wrap" options for text widgets.
+ *
+ * Results:
+ *	A standard Tcl return value.
+ *
+ * Side effects:
+ *	The wrap mode for a given item gets replaced by the wrap mode
+ *	indicated in the value argument.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+WrapModeParseProc(clientData, interp, tkwin, value, widgRec, offset)
+    ClientData clientData;		/* some flags.*/
+    Tcl_Interp *interp;			/* Used for reporting errors. */
+    Tk_Window tkwin;			/* Window containing canvas widget. */
+    char *value;			/* Value of option (list of tag
+					 * names). */
+    char *widgRec;			/* Pointer to record for item. */
+    int offset;				/* Offset into item. */
+{
+    int c;
+    size_t length;
+
+    register TkWrapMode *wrapPtr = (TkWrapMode *) (widgRec + offset);
+
+    if(value == NULL || *value == 0) {
+	*wrapPtr = TEXT_WRAPMODE_NULL;
+	return TCL_OK;
+    }
+
+    c = value[0];
+    length = strlen(value);
+
+    if ((c == 'c') && (strncmp(value, "char", length) == 0)) {
+	*wrapPtr = TEXT_WRAPMODE_CHAR;
+	return TCL_OK;
+    }
+    if ((c == 'n') && (strncmp(value, "none", length) == 0)) {
+	*wrapPtr = TEXT_WRAPMODE_NONE;
+	return TCL_OK;
+    }
+    if ((c == 'w') && (strncmp(value, "word", length) == 0)) {
+	*wrapPtr = TEXT_WRAPMODE_WORD;
+	return TCL_OK;
+    }
+    Tcl_AppendResult(interp, "bad wrap mode \"", value,
+	    "\": must be char, none, or word",
+	    (char *) NULL);
+    *wrapPtr = TEXT_WRAPMODE_CHAR;
+    return TCL_ERROR;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * WrapModePrintProc --
+ *
+ *	This procedure is invoked by the Tk configuration code
+ *	to produce a printable string for the "-wrap" configuration
+ *	option for canvas items.
+ *
+ * Results:
+ *	The return value is a string describing the state for
+ *	the item referred to by "widgRec".  In addition, *freeProcPtr
+ *	is filled in with the address of a procedure to call to free
+ *	the result string when it's no longer needed (or NULL to
+ *	indicate that the string doesn't need to be freed).
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static char *
+WrapModePrintProc(clientData, tkwin, widgRec, offset, freeProcPtr)
+    ClientData clientData;		/* Ignored. */
+    Tk_Window tkwin;			/* Window containing canvas widget. */
+    char *widgRec;			/* Pointer to record for item. */
+    int offset;				/* Ignored. */
+    Tcl_FreeProc **freeProcPtr;		/* Pointer to variable to fill in with
+					 * information about how to reclaim
+					 * storage for return string. */
+{
+    register TkWrapMode *wrapPtr = (TkWrapMode *) (widgRec + offset);
+
+    if (*wrapPtr==TEXT_WRAPMODE_CHAR) {
+	return "char";
+    } else if (*wrapPtr==TEXT_WRAPMODE_NONE) {
+	return "none";
+    } else if (*wrapPtr==TEXT_WRAPMODE_WORD) {
+	return "word";
+    } else {
+	return "";
+    }
+}
 
 /*
  * Forward declarations for procedures defined later in this file:
@@ -244,7 +376,7 @@ Tk_TextCmd(clientData, interp, argc, argv)
     Tcl_InitHashTable(&textPtr->markTable, TCL_STRING_KEYS);
     Tcl_InitHashTable(&textPtr->windowTable, TCL_STRING_KEYS);
     Tcl_InitHashTable(&textPtr->imageTable, TCL_STRING_KEYS);
-    textPtr->state = Tk_GetUid("normal");
+    textPtr->state = TK_STATE_NORMAL;
     textPtr->border = NULL;
     textPtr->borderWidth = 0;
     textPtr->padX = 0;
@@ -262,7 +394,7 @@ Tk_TextCmd(clientData, interp, argc, argv)
     textPtr->spacing3 = 0;
     textPtr->tabOptionString = NULL;
     textPtr->tabArrayPtr = NULL;
-    textPtr->wrapMode = Tk_GetUid("char");
+    textPtr->wrapMode = TEXT_WRAPMODE_CHAR;
     textPtr->width = 0;
     textPtr->height = 0;
     textPtr->setGrid = 0;
@@ -480,7 +612,7 @@ TextWidgetCmd(clientData, interp, argc, argv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (textPtr->state == Tk_GetUid("normal")) {
+	if (textPtr->state == TK_STATE_NORMAL) {
 	    result = DeleteChars(textPtr, argv[2],
 		    (argc == 4) ? argv[3] : (char *) NULL);
 	}
@@ -588,7 +720,7 @@ TextWidgetCmd(clientData, interp, argc, argv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (textPtr->state == Tk_GetUid("normal")) {
+	if (textPtr->state == TK_STATE_NORMAL) {
 	    for (j = 3;  j < argc; j += 2) {
 		InsertChars(textPtr, &index1, argv[j]);
 		if (argc > (j+1)) {
@@ -764,23 +896,6 @@ ConfigureText(interp, textPtr, argc, argv, flags)
      * the geometry and setting the background from a 3-D border.
      */
 
-    if ((textPtr->state != Tk_GetUid("normal"))
-	    && (textPtr->state != Tk_GetUid("disabled"))) {
-	Tcl_AppendResult(interp, "bad state value \"", textPtr->state,
-		"\": must be normal or disabled", (char *) NULL);
-	textPtr->state = Tk_GetUid("normal");
-	return TCL_ERROR;
-    }
-
-    if ((textPtr->wrapMode != Tk_GetUid("char"))
-	    && (textPtr->wrapMode != Tk_GetUid("none"))
-	    && (textPtr->wrapMode != Tk_GetUid("word"))) {
-	Tcl_AppendResult(interp, "bad wrap mode \"", textPtr->wrapMode,
-		"\": must be char, none, or word", (char *) NULL);
-	textPtr->wrapMode = Tk_GetUid("char");
-	return TCL_ERROR;
-    }
-
     Tk_SetBackgroundFromBorder(textPtr->tkwin, textPtr->border);
 
     /*
@@ -854,8 +969,9 @@ ConfigureText(interp, textPtr, argc, argv, flags)
 	    || (textPtr->selTagPtr->spacing2String != NULL)
 	    || (textPtr->selTagPtr->spacing3String != NULL)
 	    || (textPtr->selTagPtr->tabString != NULL)
+	    || (textPtr->selTagPtr->state != TK_STATE_NULL)
 	    || (textPtr->selTagPtr->underlineString != NULL)
-	    || (textPtr->selTagPtr->wrapMode != NULL)) {
+	    || (textPtr->selTagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
 	textPtr->selTagPtr->affectsDisplay = 1;
     }
     TkTextRedrawTag(textPtr, (TkTextIndex *) NULL, (TkTextIndex *) NULL,
@@ -1403,7 +1519,7 @@ TextFetchSelection(clientData, offset, buffer, maxBytes)
 		    }
 		}
 	    }
-	    if (segPtr->typePtr == &tkTextCharType) {
+	    if (segPtr->typePtr == &tkTextCharType && !TkTextIsElided(textPtr, &textPtr->selIndex)) {
 		memcpy((VOID *) buffer, (VOID *) (segPtr->body.chars
 			+ offsetInSeg), (size_t) chunkSize);
 		buffer += chunkSize;
@@ -1544,7 +1660,7 @@ TextSearchCmd(textPtr, interp, argc, argv)
     int argc;			/* Number of arguments. */
     char **argv;		/* Argument strings. */
 {
-    int backwards, exact, c, i, argsLeft, noCase, leftToScan;
+    int backwards, exact, searchElide, c, i, argsLeft, noCase, leftToScan;
     size_t length;
     int numLines, startingLine, startingByte, lineNum, firstByte, lastByte;
     int code, matchLength, matchByte, passes, stopLine, searchWholeText;
@@ -1555,6 +1671,7 @@ TextSearchCmd(textPtr, interp, argc, argv)
     Tcl_DString line, patDString;
     TkTextSegment *segPtr;
     TkTextLine *linePtr;
+    TkTextIndex curIndex;
     Tcl_RegExp regexp = NULL;		/* Initialization needed only to
 					 * prevent compiler warning. */
 
@@ -1563,6 +1680,8 @@ TextSearchCmd(textPtr, interp, argc, argv)
      */
 
     exact = 1;
+    searchElide = 0;
+    curIndex.tree = textPtr->tree;
     backwards = 0;
     noCase = 0;
     varName = NULL;
@@ -1576,7 +1695,7 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	    badSwitch:
 	    Tcl_AppendResult(interp, "bad switch \"", arg,
 		    "\": must be -forward, -backward, -exact, -regexp, ",
-		    "-nocase, -count, or --", (char *) NULL);
+		    "-nocase, -count, -hidden, or --", (char *) NULL);
 	    return TCL_ERROR;
 	}
 	c = arg[1];
@@ -1592,12 +1711,16 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	    varName = argv[i];
 	} else if ((c == 'e') && (strncmp(argv[i], "-exact", length) == 0)) {
 	    exact = 1;
+	} else if ((c == 'e') && (strncmp(argv[i], "-elide", length) == 0)) {
+	    searchElide = 1;
 	} else if ((c == 'f') && (strncmp(argv[i], "-forwards", length) == 0)) {
 	    backwards = 0;
 	} else if ((c == 'n') && (strncmp(argv[i], "-nocase", length) == 0)) {
 	    noCase = 1;
 	} else if ((c == 'r') && (strncmp(argv[i], "-regexp", length) == 0)) {
 	    exact = 0;
+	} else if ((c == 'h') && (strncmp(argv[i], "-hidden", length) == 0)) {
+	    searchElide = 1;
 	} else if ((c == '-') && (strncmp(argv[i], "--", length) == 0)) {
 	    i++;
 	    break;
@@ -1692,9 +1815,10 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	 */
 
 	linePtr = TkBTreeFindLine(textPtr->tree, lineNum);
+	curIndex.linePtr = linePtr; curIndex.byteIndex = 0;
 	for (segPtr = linePtr->segPtr; segPtr != NULL;
-		segPtr = segPtr->nextPtr) {
-	    if (segPtr->typePtr != &tkTextCharType) {
+		curIndex.byteIndex += segPtr->size, segPtr = segPtr->nextPtr) {
+	    if (segPtr->typePtr != &tkTextCharType || (!searchElide && TkTextIsElided(textPtr, &curIndex))) {
 		continue;
 	    }
 	    Tcl_DStringAppend(&line, segPtr->body.chars, segPtr->size);

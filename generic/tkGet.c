@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGet.c,v 1.5 1999/04/21 21:53:26 rjohnson Exp $
+ * RCS: @(#) $Id: tkGet.c,v 1.6 1999/12/14 06:52:28 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -621,13 +621,56 @@ Tk_GetPixels(interp, tkwin, string, intPtr)
     Tk_Window tkwin;		/* Window whose screen determines conversion
 				 * from centimeters and other absolute
 				 * units. */
-    char *string;		/* String describing a justification style. */
+    char *string;		/* String describing a number of pixels. */
     int *intPtr;		/* Place to store converted result. */
+{
+    double d;
+
+    if (TkGetDoublePixels(interp, tkwin, string, &d) != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    if (d < 0) {
+	*intPtr = (int) (d - 0.5);
+    } else {
+	*intPtr = (int) (d + 0.5);
+    }
+    return TCL_OK;
+}
+/*
+ *--------------------------------------------------------------
+ *
+ * TkGetDoublePixels --
+ *
+ *	Given a string, returns the number of pixels corresponding
+ *	to that string.
+ *
+ * Results:
+ *	The return value is a standard Tcl return result.  If
+ *	TCL_OK is returned, then everything went well and the
+ *	pixel distance is stored at *doublePtr;  otherwise
+ *	TCL_ERROR is returned and an error message is left in
+ *	interp->result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+int
+TkGetDoublePixels(interp, tkwin, string, doublePtr)
+    Tcl_Interp *interp;		/* Use this for error reporting. */
+    Tk_Window tkwin;		/* Window whose screen determines conversion
+				 * from centimeters and other absolute
+				 * units. */
+    CONST char *string;		/* String describing a number of pixels. */
+    double *doublePtr;		/* Place to store converted result. */
 {
     char *end;
     double d;
 
-    d = strtod(string, &end);
+    d = strtod((char *) string, &end);
     if (end == string) {
 	error:
 	Tcl_AppendResult(interp, "bad screen distance \"", string,
@@ -669,11 +712,7 @@ Tk_GetPixels(interp, tkwin, string, intPtr)
     if (*end != 0) {
 	goto error;
     }
-    if (d < 0) {
-	*intPtr = (int) (d - 0.5);
-    } else {
-	*intPtr = (int) (d + 0.5);
-    }
+    *doublePtr = d;
     return TCL_OK;
 }
 

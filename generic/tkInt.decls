@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.12 1999/12/07 03:51:05 hobbs Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.13 1999/12/14 06:52:29 hobbs Exp $
 
 library tk
 
@@ -1046,10 +1046,11 @@ interface tkIntXlib
 
 # X functions for Windows
 
-# This slot is reserved for use by the dash patch:
-#  declare 0 win {
-#	XSetDashes
-#  }
+declare 0 win {
+    void XSetDashes (Display* display, GC gc, int dash_offset,
+	    _Xconst char* dash_list, int n)
+}
+
 declare 1 win {
     XModifierKeymap* XGetModifierMapping (Display* d)
 }
@@ -1520,13 +1521,17 @@ declare 106 win {
     void XFillRectangle (Display* display, Drawable d, GC gc, \
 	    int x, int y, unsigned int width, unsigned int height)
 }
+declare 105 win {
+    void XWarpPointer (Display* d, Window s,  Window dw, int sx, int sy, \
+	    unsigned int sw, unsigned int sh, int dx, int dy)
+}
 
 # X functions for Mac
 
-# This slot is reserved for use by the dash patch:
-#  declare 0 win {
-#	XSetDashes
-#  }
+declare 0 mac {
+    void XSetDashes (Display* display, GC gc, int dash_offset,
+	    _Xconst char* dash_list, int n)
+}
 
 declare 1 mac {
     XModifierKeymap* XGetModifierMapping (Display* d)

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.3 1999/04/16 01:51:23 stanton Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.4 1999/12/14 06:52:32 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -2426,6 +2426,132 @@ TkBTreeGetTags(indexPtr, numTagsPtr)
 	return NULL;
     }
     return tagInfo.tagPtrs;
+}
+
+
+/*
+   special case to just return information about elided attribute
+   specialized from TkBTreeGetTags(indexPtr, numTagsPtr) and GetStyle(textPtr, indexPtr)
+   just need to keep track of invisibility settings for each priority, pick highest one active at end
+*/
+int
+TkTextIsElided(textPtr, indexPtr)
+    TkText *textPtr;		/* Overall information about text widget. */
+    TkTextIndex *indexPtr;	/* The character in the text for which
+				 * display information is wanted. */
+{
+#define LOTSA_TAGS 1000
+	int elide = 0;		/* if nobody says otherwise, it's visible */
+
+	int deftagCnts[LOTSA_TAGS];
+	int *tagCnts = deftagCnts;
+	TkTextTag *deftagPtrs[LOTSA_TAGS];
+	TkTextTag **tagPtrs = deftagPtrs;
+	int numTags = textPtr->numTags;
+    register Node *nodePtr;
+    register TkTextLine *siblingLinePtr;
+    register TkTextSegment *segPtr;
+    register TkTextTag *tagPtr;
+    register int i, index;
+
+	/* almost always avoid malloc, so stay out of system calls */
+	if (LOTSA_TAGS < numTags) {
+	    tagCnts = (int *)ckalloc((unsigned)sizeof(int) * numTags);
+	    tagPtrs = (TkTextTag **)ckalloc((unsigned)sizeof(TkTextTag *) * numTags);
+	}
+ 
+	for (i=0; i<numTags; i++) tagCnts[i]=0;
+
+
+    /*
+     * Record tag toggles within the line of indexPtr but preceding
+     * indexPtr.
+     */
+
+    for (index = 0, segPtr = indexPtr->linePtr->segPtr;
+	    (index + segPtr->size) <= indexPtr->byteIndex;
+	    index += segPtr->size, segPtr = segPtr->nextPtr) {
+	if ((segPtr->typePtr == &tkTextToggleOnType)
+	    || (segPtr->typePtr == &tkTextToggleOffType)) {
+	    tagPtr = segPtr->body.toggle.tagPtr;
+	    if (tagPtr->state != TK_STATE_NULL) {
+		   tagPtrs[tagPtr->priority] = tagPtr;
+		   tagCnts[tagPtr->priority]++;
+	    }
+	}
+    }
+
+    /*
+     * Record toggles for tags in lines that are predecessors of
+     * indexPtr->linePtr but under the same level-0 node.
+     */
+
+    for (siblingLinePtr = indexPtr->linePtr->parentPtr->children.linePtr;
+	    siblingLinePtr != indexPtr->linePtr;
+	    siblingLinePtr = siblingLinePtr->nextPtr) {
+	for (segPtr = siblingLinePtr->segPtr; segPtr != NULL;
+		segPtr = segPtr->nextPtr) {
+	    if ((segPtr->typePtr == &tkTextToggleOnType)
+		   || (segPtr->typePtr == &tkTextToggleOffType)) {
+		   tagPtr = segPtr->body.toggle.tagPtr;
+		   if (tagPtr->state != TK_STATE_NULL) {
+			  tagPtrs[tagPtr->priority] = tagPtr;
+			  tagCnts[tagPtr->priority]++;
+		   }
+	    }
+	}
+    }
+
+    /*
+     * For each node in the ancestry of this line, record tag toggles
+     * for all siblings that precede that node.
+     */
+
+    for (nodePtr = indexPtr->linePtr->parentPtr; nodePtr->parentPtr != NULL;
+	    nodePtr = nodePtr->parentPtr) {
+	register Node *siblingPtr;
+	register Summary *summaryPtr;
+
+	for (siblingPtr = nodePtr->parentPtr->children.nodePtr; 
+		siblingPtr != nodePtr; siblingPtr = siblingPtr->nextPtr) {
+	    for (summaryPtr = siblingPtr->summaryPtr; summaryPtr != NULL;
+		    summaryPtr = summaryPtr->nextPtr) {
+		if (summaryPtr->toggleCount & 1) {
+		    tagPtr = summaryPtr->tagPtr;
+		    if (tagPtr->state != TK_STATE_NULL) {
+			   tagPtrs[tagPtr->priority] = tagPtr;
+			   tagCnts[tagPtr->priority] += summaryPtr->toggleCount;
+		    }
+		}
+	    }
+	}
+    }
+
+
+    /*
+     * Now traverse from highest priority to lowest, 
+     * take elided value from first odd count (= on)
+     */
+
+    for (i = numTags-1; i >=0; i--) {
+	   if (tagCnts[i] & 1) {
+#ifndef ALWAYS_SHOW_SELECTION
+		  /* who would make the selection elided? */
+		  if ((tagPtr == textPtr->selTagPtr) && !(textPtr->flags & GOT_FOCUS)) {
+			 continue;
+		  }
+#endif
+		  elide = (tagPtrs[i]->state == TK_STATE_HIDDEN);
+		  break;
+	   }
+    }
+
+    if (LOTSA_TAGS < numTags) {
+	   ckfree((char *) tagCnts);
+	   ckfree((char *) tagPtrs);
+    }
+
+    return elide;
 }
 
 /*

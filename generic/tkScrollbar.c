@@ -12,12 +12,22 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.c,v 1.3 1999/04/16 01:51:21 stanton Exp $
+ * RCS: @(#) $Id: tkScrollbar.c,v 1.4 1999/12/14 06:52:30 hobbs Exp $
  */
 
 #include "tkPort.h"
 #include "tkScrollbar.h"
 #include "default.h"
+
+/*
+ * Custom option for handling "-orient"
+ */
+
+static Tk_CustomOption orientOption = {
+    (Tk_OptionParseProc *) TkOrientParseProc,
+    TkOrientPrintProc,
+    (ClientData) NULL
+};
 
 /*
  * Information used for argv parsing.
@@ -63,8 +73,9 @@ Tk_ConfigSpec tkpScrollbarConfigSpecs[] = {
 	DEF_SCROLLBAR_HIGHLIGHT_WIDTH, Tk_Offset(TkScrollbar, highlightWidth), 0},
     {TK_CONFIG_BOOLEAN, "-jump", "jump", "Jump",
 	DEF_SCROLLBAR_JUMP, Tk_Offset(TkScrollbar, jump), 0},
-    {TK_CONFIG_UID, "-orient", "orient", "Orient",
-	DEF_SCROLLBAR_ORIENT, Tk_Offset(TkScrollbar, orientUid), 0},
+    {TK_CONFIG_CUSTOM, "-orient", "orient", "Orient",
+	DEF_SCROLLBAR_ORIENT, Tk_Offset(TkScrollbar, vertical), 0,
+	&orientOption},
     {TK_CONFIG_RELIEF, "-relief", "relief", "Relief",
 	DEF_SCROLLBAR_RELIEF, Tk_Offset(TkScrollbar, relief), 0},
     {TK_CONFIG_INT, "-repeatdelay", "repeatDelay", "RepeatDelay",
@@ -156,7 +167,6 @@ Tk_ScrollbarCmd(clientData, interp, argc, argv)
     scrollPtr->widgetCmd = Tcl_CreateCommand(interp,
 	    Tk_PathName(scrollPtr->tkwin), ScrollbarWidgetCmd,
 	    (ClientData) scrollPtr, ScrollbarCmdDeletedProc);
-    scrollPtr->orientUid = NULL;
     scrollPtr->vertical = 0;
     scrollPtr->width = 0;
     scrollPtr->command = NULL;
@@ -532,28 +542,15 @@ ConfigureScrollbar(interp, scrollPtr, argc, argv, flags)
     int flags;				/* Flags to pass to
 					 * Tk_ConfigureWidget. */
 {
-    size_t length;
-
     if (Tk_ConfigureWidget(interp, scrollPtr->tkwin, tkpScrollbarConfigSpecs,
 	    argc, argv, (char *) scrollPtr, flags) != TCL_OK) {
 	return TCL_ERROR;
     }
 
     /*
-     * A few options need special processing, such as parsing the
-     * orientation or setting the background from a 3-D border.
+     * A few options need special processing, such as setting the
+     * background from a 3-D border.
      */
-
-    length = strlen(scrollPtr->orientUid);
-    if (strncmp(scrollPtr->orientUid, "vertical", length) == 0) {
-	scrollPtr->vertical = 1;
-    } else if (strncmp(scrollPtr->orientUid, "horizontal", length) == 0) {
-	scrollPtr->vertical = 0;
-    } else {
-	Tcl_AppendResult(interp, "bad orientation \"", scrollPtr->orientUid,
-		"\": must be vertical or horizontal", (char *) NULL);
-	return TCL_ERROR;
-    }
 
     if (scrollPtr->command != NULL) {
 	scrollPtr->commandSize = strlen(scrollPtr->command);

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextMark.c,v 1.3 1999/04/16 01:51:24 stanton Exp $
+ * RCS: @(#) $Id: tkTextMark.c,v 1.4 1999/12/14 06:52:33 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -39,7 +39,7 @@ static void		MarkCheckProc _ANSI_ARGS_((TkTextSegment *segPtr,
 static int		MarkLayoutProc _ANSI_ARGS_((TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    int offset, int maxX, int maxChars,
-			    int noCharsYet, Tk_Uid wrapMode,
+			    int noCharsYet, TkWrapMode wrapMode,
 			    TkTextDispChunk *chunkPtr));
 static int		MarkFindNext _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkText *textPtr, char *markName));
@@ -454,7 +454,7 @@ MarkLayoutProc(textPtr, indexPtr, segPtr, offset, maxX, maxChars,
 				 * many characters. */
     int noCharsYet;		/* Non-zero means no characters have been
 				 * assigned to this line yet. */
-    Tk_Uid wrapMode;		/* Not used. */
+    TkWrapMode wrapMode;	/* Not used. */
     register TkTextDispChunk *chunkPtr;
 				/* Structure to fill in with information
 				 * about this chunk.  The x field has already

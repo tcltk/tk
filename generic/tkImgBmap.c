@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.10 1999/10/29 03:57:56 hobbs Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.11 1999/12/14 06:52:28 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -92,6 +92,10 @@ static void		ImgBmapDisplay _ANSI_ARGS_((ClientData clientData,
 static void		ImgBmapFree _ANSI_ARGS_((ClientData clientData,
 			    Display *display));
 static void		ImgBmapDelete _ANSI_ARGS_((ClientData clientData));
+static int		ImgBmapPostscript _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, Tk_Window tkwin,
+			    Tk_PostscriptInfo psinfo, int x, int y,
+			    int width, int height, int prepass));
 
 Tk_ImageType tkBitmapImageType = {
     "bitmap",			/* name */
@@ -100,6 +104,7 @@ Tk_ImageType tkBitmapImageType = {
     ImgBmapDisplay,		/* displayProc */
     ImgBmapFree,		/* freeProc */
     ImgBmapDelete,		/* deleteProc */
+    ImgBmapPostscript,		/* postscriptProc */
     (Tk_ImageType *) NULL	/* nextPtr */
 };
 
@@ -1094,4 +1099,104 @@ GetByte(chan)
     } else {
 	return buffer;
     }
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ImgBmapPostscript --
+ *
+ *	This procedure is called by the image code to create
+ *	postscript output for an image.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+ImgBmapPostscript(clientData, interp, tkwin, psinfo, x, y, width, height,
+	prepass)
+    ClientData clientData;
+    Tcl_Interp *interp;
+    Tk_Window tkwin;
+    Tk_PostscriptInfo psinfo;
+    int x, y, width, height, prepass;
+{
+    BitmapMaster *masterPtr = (BitmapMaster *) clientData;
+    int rowsAtOnce, rowsThisTime;
+    int curRow, yy;
+    char buffer[200];
+
+    if (prepass) {
+	return TCL_OK;
+    }
+    /*
+     * Color the background, if there is one.
+     */
+
+    if (masterPtr->bgUid != NULL) {
+	XColor color;
+	XParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin), masterPtr->bgUid,
+		&color);
+	sprintf(buffer,
+		"%d %d moveto %d 0 rlineto 0 %d rlineto %d %s\n",
+		x, y, width, height, -width,"0 rlineto closepath");
+	Tcl_AppendResult(interp, buffer, (char *) NULL);
+	if (Tk_PostscriptColor(interp, psinfo, &color) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	Tcl_AppendResult(interp, "fill\n", (char *) NULL);
+    }
+
+    /*
+     * Draw the bitmap, if there is a foreground color.  If the bitmap
+     * is very large, then chop it up into multiple bitmaps, each
+     * consisting of one or more rows.  This is needed because Postscript
+     * can't handle single strings longer than 64 KBytes long.
+     */
+
+    if (masterPtr->fgUid != NULL) {
+	XColor color;
+	XParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin), masterPtr->fgUid,
+		&color);
+	if (Tk_PostscriptColor(interp, psinfo, &color) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (width > 60000) {
+	    Tcl_ResetResult(interp);
+	    Tcl_AppendResult(interp, "can't generate Postscript",
+		    " for bitmaps more than 60000 pixels wide",
+		    (char *) NULL);
+	    return TCL_ERROR;
+	}
+	rowsAtOnce = 60000/width;
+	if (rowsAtOnce < 1) {
+	    rowsAtOnce = 1;
+	}
+	sprintf(buffer, "%d %d translate\n", x, y);
+	Tcl_AppendResult(interp, buffer, (char *) NULL);
+	for (curRow = y+height-1; curRow >= y; curRow -= rowsAtOnce) {
+	    rowsThisTime = rowsAtOnce;
+	    if (rowsThisTime > (curRow + 1 - y)) {
+		rowsThisTime = curRow + 1 - y;
+	    }
+	    sprintf(buffer, "%d %d", width, rowsThisTime);
+	    Tcl_AppendResult(interp, buffer, " true matrix {\n<",
+		    (char *) NULL);
+	    for (yy = curRow; yy >= (curRow - rowsThisTime + 1); yy--) {
+		sprintf(buffer, "row %d\n", yy);
+		Tcl_AppendResult(interp, buffer, (char *) NULL);
+	    }
+	    sprintf(buffer, "0 %.15g", (double) rowsThisTime);
+	    Tcl_AppendResult(interp, ">\n} imagemask\n", buffer,
+		    " translate\n", (char *) NULL);
+	}
+    }
+    return TCL_OK;
 }

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.18 1999/12/03 07:14:39 hobbs Exp $ 
+ * RCS: $Id: tkInt.h,v 1.19 1999/12/14 06:52:29 hobbs Exp $ 
  */
 
 #ifndef _TKINT
@@ -33,7 +33,6 @@
 
 typedef struct TkColormap TkColormap;
 typedef struct TkGrabEvent TkGrabEvent;
-typedef struct Tk_PostscriptInfo Tk_PostscriptInfo;
 typedef struct TkpCursor_ *TkpCursor;
 typedef struct TkRegion_ *TkRegion;
 typedef struct TkStressedCmap TkStressedCmap;
@@ -490,6 +489,12 @@ typedef struct TkDisplay {
                                  * the display when we no longer have any
                                  * Tk applications using it.
                                  */
+    int mouseButtonState;	/* current mouse button state for this
+				 * display */
+    int warpInProgress;
+    Window warpWindow;
+    int warpX;
+    int warpY;
 } TkDisplay;
 
 /*
@@ -846,15 +851,13 @@ extern TkDisplay *tkDisplayList;
  * to the outside world:
  */
 
-extern Tk_Uid			tkActiveUid;
+extern Tk_SmoothMethod		tkBezierSmoothMethod;
 extern Tk_ImageType		tkBitmapImageType;
-extern Tk_Uid			tkDisabledUid;
 extern Tk_PhotoImageFormat	tkImgFmtGIF;
 extern void			(*tkHandleEventProc) _ANSI_ARGS_((
     				    XEvent* eventPtr));
 extern Tk_PhotoImageFormat	tkImgFmtPPM;
 extern TkMainInfo		*tkMainWindowList;
-extern Tk_Uid			tkNormalUid;
 extern Tk_ImageType		tkPhotoImageType;
 extern Tcl_HashTable		tkPredefBitmapTable;
 extern int			tkSendSerial;
@@ -883,8 +886,8 @@ EXTERN int		Tk_BindtagsCmd _ANSI_ARGS_((ClientData clientData,
 EXTERN int		Tk_ButtonObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
-EXTERN int		Tk_CanvasCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_CanvasObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int argc, Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_CheckbuttonObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
@@ -910,8 +913,9 @@ EXTERN int		Tk_EventObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_FileeventCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_FrameCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_FrameObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_FocusObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));
@@ -979,8 +983,9 @@ EXTERN int		Tk_TkObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_TkwaitCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_ToplevelCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_ToplevelObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_UpdateObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));
@@ -1001,6 +1006,70 @@ EXTERN int		TkDeadAppCmd _ANSI_ARGS_((ClientData clientData,
 
 EXTERN int		TkpTestembedCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		TkCanvasGetCoordObj _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tk_Canvas canvas, Tcl_Obj *obj,
+			    double *doublePtr));
+EXTERN int		TkCanvasDashParseProc _ANSI_ARGS_((
+			    ClientData clientData, Tcl_Interp *interp,
+			    Tk_Window tkwin, CONST char *value, char *widgRec,
+			    int offset));
+EXTERN char *		TkCanvasDashPrintProc _ANSI_ARGS_((
+			    ClientData clientData, Tk_Window tkwin,
+			    char *widgRec, int offset,
+			    Tcl_FreeProc **freeProcPtr));
+EXTERN int		TkGetDoublePixels _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tk_Window tkwin, CONST char *string,
+			    double *doublePtr));
+EXTERN int		TkOffsetParseProc _ANSI_ARGS_((
+			    ClientData clientData, Tcl_Interp *interp,
+			    Tk_Window tkwin, CONST char *value, char *widgRec,
+			    int offset));
+EXTERN char *		TkOffsetPrintProc _ANSI_ARGS_((
+			    ClientData clientData, Tk_Window tkwin,
+			    char *widgRec, int offset,
+			    Tcl_FreeProc **freeProcPtr));
+EXTERN int		TkOrientParseProc _ANSI_ARGS_((
+			    ClientData clientData, Tcl_Interp *interp,
+			    Tk_Window tkwin, CONST char *value,
+			    char *widgRec, int offset));
+EXTERN char *		TkOrientPrintProc _ANSI_ARGS_((
+			    ClientData clientData, Tk_Window tkwin,
+			    char *widgRec, int offset,
+			    Tcl_FreeProc **freeProcPtr));
+EXTERN int		TkPixelParseProc _ANSI_ARGS_((
+			    ClientData clientData, Tcl_Interp *interp,
+			    Tk_Window tkwin, CONST char *value, char *widgRec,
+			    int offset));
+EXTERN char *		TkPixelPrintProc _ANSI_ARGS_((
+			    ClientData clientData, Tk_Window tkwin,
+			    char *widgRec, int offset,
+			    Tcl_FreeProc **freeProcPtr));
+EXTERN int		TkPostscriptImage _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tk_Window tkwin, Tk_PostscriptInfo psInfo,
+			    XImage *ximage, int x, int y, int width,
+			    int height));
+EXTERN int		TkSmoothParseProc _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, Tk_Window tkwin,
+			    CONST char *value, char *recordPtr, int offset));
+EXTERN char *		TkSmoothPrintProc _ANSI_ARGS_((ClientData clientData,
+			    Tk_Window tkwin, char *recordPtr, int offset,
+			    Tcl_FreeProc **freeProcPtr));
+EXTERN int		TkStateParseProc _ANSI_ARGS_((
+			    ClientData clientData, Tcl_Interp *interp,
+			    Tk_Window tkwin, CONST char *value,
+			    char *widgRec, int offset));
+EXTERN char *		TkStatePrintProc _ANSI_ARGS_((
+			    ClientData clientData, Tk_Window tkwin,
+			    char *widgRec, int offset,
+			    Tcl_FreeProc **freeProcPtr));
+EXTERN int		TkTileParseProc _ANSI_ARGS_((
+			    ClientData clientData, Tcl_Interp *interp,
+			    Tk_Window tkwin, CONST char *value, char *widgRec,
+			    int offset));
+EXTERN char *		TkTilePrintProc _ANSI_ARGS_((
+			    ClientData clientData, Tk_Window tkwin,
+			    char *widgRec, int offset,
+			    Tcl_FreeProc **freeProcPtr));
 
 /* 
  * Unsupported commands.

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.5 1999/06/17 19:58:00 surles Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.6 1999/12/14 06:52:32 hobbs Exp $
  */
 
 #ifndef _TKTEXT
@@ -274,6 +274,12 @@ struct TkTextDispChunk {
  * referred to in other structures.
  */
 
+typedef enum {	TEXT_WRAPMODE_NULL, TEXT_WRAPMODE_NONE,
+		TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_WORD
+} TkWrapMode;
+
+EXTERN Tk_CustomOption textWrapModeOption;
+
 typedef struct TkTextTag {
     char *name;			/* Name of this tag.  This field is actually
 				 * a pointer to the key from the entry in
@@ -371,13 +377,16 @@ typedef struct TkTextTag {
     int underline;		/* Non-zero means draw underline underneath
 				 * text.  Only valid if underlineString is
 				 * non-NULL. */
-    Tk_Uid wrapMode;		/* How to handle wrap-around for this tag.
-				 * Must be tkTextCharUid, tkTextNoneUid,
-				 * tkTextWordUid, or NULL to use wrapMode
-				 * for whole widget. */
+    TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
+				 * Must be TEXT_WRAPMODE_CHAR,
+				 * TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD,
+				 * or TEXT_WRAPMODE_NULL to use wrapmode for
+				 * whole widget. */
     int affectsDisplay;		/* Non-zero means that this tag affects the
 				 * way information is displayed on the screen
 				 * (so need to redisplay if tag changes). */
+    int state;			/* Must be STATE_NULL, STATE_NORMAL,
+				 * STATE_HIDDEN or STATE_DISABLED. */
 } TkTextTag;
 
 #define TK_TAG_AFFECTS_DISPLAY	0x1
@@ -475,7 +484,7 @@ typedef struct TkText {
 				 * image segment doesn't yet have an
 				 * associated image, there is no entry for
 				 * it here. */
-    Tk_Uid state;		/* Either normal or disabled. A text 
+    int state;			/* Either STATE_NORMAL or STATE_DISABLED. A text 
 				 * widget is read-only when disabled. */
 
     /*
@@ -518,9 +527,9 @@ typedef struct TkText {
      * Additional information used for displaying:
      */
 
-    Tk_Uid wrapMode;		/* How to handle wrap-around.  Must be
-				 * tkTextCharUid, tkTextNoneUid, or
-				 * tkTextWordUid. */
+    TkWrapMode wrapMode;	/* How to handle wrap-around.  Must be
+				 * TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, or
+				 * TEXT_WRAPMODE_WORD. */
     int width, height;		/* Desired dimensions for window, measured
 				 * in characters. */
     int setGrid;		/* Non-zero means pass gridding information
@@ -657,7 +666,7 @@ typedef void		Tk_SegLineChangeProc _ANSI_ARGS_((
 typedef int		Tk_SegLayoutProc _ANSI_ARGS_((struct TkText *textPtr,
 			    struct TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    int offset, int maxX, int maxChars,
-			    int noCharsYet, Tk_Uid wrapMode,
+			    int noCharsYet, TkWrapMode wrapMode,
 			    struct TkTextDispChunk *chunkPtr));
 typedef void		Tk_SegCheckProc _ANSI_ARGS_((TkTextSegment *segPtr,
 			    TkTextLine *linePtr));
@@ -716,15 +725,10 @@ typedef struct Tk_SegType {
 EXTERN int		tkBTreeDebug;
 EXTERN int		tkTextDebug;
 EXTERN Tk_SegType	tkTextCharType;
-EXTERN Tk_Uid		tkTextCharUid;
-EXTERN Tk_Uid		tkTextDisabledUid;
 EXTERN Tk_SegType	tkTextLeftMarkType;
-EXTERN Tk_Uid		tkTextNoneUid;
-EXTERN Tk_Uid 		tkTextNormalUid;
 EXTERN Tk_SegType	tkTextRightMarkType;
 EXTERN Tk_SegType	tkTextToggleOnType;
 EXTERN Tk_SegType	tkTextToggleOffType;
-EXTERN Tk_Uid		tkTextWordUid;
 
 /*
  * Declarations for procedures that are used by the text-related files
@@ -775,7 +779,7 @@ EXTERN int		TkTextCharBbox _ANSI_ARGS_((TkText *textPtr,
 EXTERN int		TkTextCharLayoutProc _ANSI_ARGS_((TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    int offset, int maxX, int maxChars, int noBreakYet,
-			    Tk_Uid wrapMode, TkTextDispChunk *chunkPtr));
+			    TkWrapMode wrapMode, TkTextDispChunk *chunkPtr));
 EXTERN void		TkTextCreateDInfo _ANSI_ARGS_((TkText *textPtr));
 EXTERN int		TkTextDLineInfo _ANSI_ARGS_((TkText *textPtr,
 			    TkTextIndex *indexPtr, int *xPtr, int *yPtr,
@@ -815,6 +819,8 @@ EXTERN void		TkTextLostSelection _ANSI_ARGS_((
 			    ClientData clientData));
 EXTERN TkTextIndex *	TkTextMakeCharIndex _ANSI_ARGS_((TkTextBTree tree,
 			    int lineIndex, int charIndex,
+			    TkTextIndex *indexPtr));
+extern int		TkTextIsElided _ANSI_ARGS_((TkText *textPtr,
 			    TkTextIndex *indexPtr));
 EXTERN TkTextIndex *	TkTextMakeByteIndex _ANSI_ARGS_((TkTextBTree tree,
 			    int lineIndex, int byteIndex,

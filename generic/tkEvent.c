@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.5 1999/08/13 17:52:12 redman Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.6 1999/12/14 06:52:27 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -466,6 +466,33 @@ Tk_HandleEvent(eventPtr)
     Tcl_Interp *interp = (Tcl_Interp *) NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    /*
+     * Hack for simulated X-events: Correct the state field
+     * of the event record to match with the ButtonPress
+     * and ButtonRelease events.
+     */
+
+    if (eventPtr->type==ButtonPress) {
+	dispPtr = TkGetDisplay(eventPtr->xbutton.display);
+	eventPtr->xbutton.state |= dispPtr->mouseButtonState;
+	switch (eventPtr->xbutton.button) {
+	    case 1: dispPtr->mouseButtonState |= Button1Mask; break; 
+	    case 2: dispPtr->mouseButtonState |= Button2Mask; break; 
+	    case 3: dispPtr->mouseButtonState |= Button3Mask; break; 
+	}
+    } else if (eventPtr->type==ButtonRelease) {
+	dispPtr = TkGetDisplay(eventPtr->xbutton.display);
+	switch (eventPtr->xbutton.button) {
+	    case 1: dispPtr->mouseButtonState &= ~Button1Mask; break; 
+	    case 2: dispPtr->mouseButtonState &= ~Button2Mask; break; 
+	    case 3: dispPtr->mouseButtonState &= ~Button3Mask; break; 
+	}
+	eventPtr->xbutton.state |= dispPtr->mouseButtonState;
+    } else if (eventPtr->type==MotionNotify) {
+	dispPtr = TkGetDisplay(eventPtr->xmotion.display);
+	eventPtr->xmotion.state |= dispPtr->mouseButtonState;
+    }
 
     /* 
      * Next, invoke all the generic event handlers (those that are

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.8 1999/04/21 21:53:23 rjohnson Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.9 1999/12/14 06:52:25 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -403,10 +403,15 @@ typedef struct {
  *			e.g. for double-clicks.
  * TRIPLE -		Non-zero means triplicate this event,
  *			e.g. for triple-clicks.
+ * QUADRUPLE -		Non-zero means quadruple this event,
+ *			e.g. for 4-fold-clicks.
+ * MULT_CLICKS -	Combination of all of above.
  */
 
 #define DOUBLE		1
 #define TRIPLE		2
+#define QUADRUPLE	4
+#define MULT_CLICKS	7
 
 /*
  * The following special modifier mask bits are defined, to indicate
@@ -448,6 +453,7 @@ static ModInfo modArray[] = {
     {"M5",		Mod5Mask,	0},
     {"Double",		0,		DOUBLE},
     {"Triple",		0,		TRIPLE},
+    {"Quadruple",	0,		QUADRUPLE},
     {"Any",		0,		0},	/* Ignored: historical relic. */
     {NULL,		0,		0}
 };
@@ -685,6 +691,7 @@ static int		ParseEventDescription _ANSI_ARGS_((Tcl_Interp *interp,
 			    unsigned long *eventMaskPtr));
 static void		SetKeycodeAndState _ANSI_ARGS_((Tk_Window tkwin,
 			    KeySym keySym, XEvent *eventPtr));
+static void		DoWarp _ANSI_ARGS_((ClientData clientData));
 
 /*
  * The following define is used as a short circuit for the callback
@@ -3170,8 +3177,8 @@ HandleEventGenerate(interp, mainWin, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     XEvent event;    
-    char *name, *p;
-    int count, flags, synch, i, number;
+    char *name, *p, *windowName;
+    int count, flags, synch, i, number, warp;
     Tcl_QueuePosition pos;
     Pattern pat;
     Tk_Window tkwin, tkwin2;
@@ -3184,8 +3191,8 @@ HandleEventGenerate(interp, mainWin, objc, objv)
 	"-keycode",	"-keysym",	"-mode",	"-override",
 	"-place",	"-root",	"-rootx",	"-rooty",
 	"-sendevent",	"-serial",	"-state",	"-subwindow",
-	"-time",	"-width",	"-window",	"-x",
-	"-y",		NULL
+	"-time",	"-warp",	"-width",	"-window",
+	"-x",		"-y",	NULL
     };
     enum field {
 	EVENT_WHEN,	EVENT_ABOVE,	EVENT_BORDER,	EVENT_BUTTON,
@@ -3194,11 +3201,14 @@ HandleEventGenerate(interp, mainWin, objc, objv)
 	EVENT_KEYCODE,	EVENT_KEYSYM,	EVENT_MODE,	EVENT_OVERRIDE,
 	EVENT_PLACE,	EVENT_ROOT,	EVENT_ROOTX,	EVENT_ROOTY,
 	EVENT_SEND,	EVENT_SERIAL,	EVENT_STATE,	EVENT_SUBWINDOW,
-	EVENT_TIME,	EVENT_WIDTH,	EVENT_WINDOW,	EVENT_X,
-	EVENT_Y
+	EVENT_TIME,	EVENT_WARP,	EVENT_WIDTH,	EVENT_WINDOW,
+	EVENT_X,	EVENT_Y
     };
 
-    if (NameToWindow(interp, mainWin, objv[0], &tkwin) != TCL_OK) {
+    windowName = Tcl_GetStringFromObj(objv[0], NULL);
+    if (!windowName[0]) {
+	tkwin = mainWin;
+    } else if (NameToWindow(interp, mainWin, objv[0], &tkwin) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -3236,7 +3246,11 @@ HandleEventGenerate(interp, mainWin, objc, objv)
     event.xany.type = pat.eventType;
     event.xany.serial = NextRequest(Tk_Display(tkwin));
     event.xany.send_event = False;
-    event.xany.window = Tk_WindowId(tkwin);
+    if (windowName[0]) {
+	event.xany.window = Tk_WindowId(tkwin);
+    } else {
+	event.xany.window = RootWindow(Tk_Display(tkwin), Tk_ScreenNumber(tkwin));
+    }
     event.xany.display = Tk_Display(tkwin);
 
     flags = flagArray[event.xany.type];
@@ -3260,6 +3274,7 @@ HandleEventGenerate(interp, mainWin, objc, objv)
      */
 
     synch = 1;
+    warp = 0;
     pos = TCL_QUEUE_TAIL;
     for (i = 2; i < objc; i += 2) {
 	Tcl_Obj *optionPtr, *valuePtr;
@@ -3287,6 +3302,15 @@ HandleEventGenerate(interp, mainWin, objc, objv)
 	}
 
 	switch ((enum field) index) {
+	    case EVENT_WARP: {
+		if (Tcl_GetBooleanFromObj(interp, valuePtr, &warp) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+		if (!(flags & (KEY_BUTTON_MOTION_VIRTUAL))) {
+		    goto badopt;
+		}
+		break;
+	    }
 	    case EVENT_WHEN: {
 		pos = (Tcl_QueuePosition) TkFindStateNumObj(interp, optionPtr, 
 			queuePosition, valuePtr);
@@ -3667,6 +3691,17 @@ HandleEventGenerate(interp, mainWin, objc, objv)
     } else {
 	Tk_QueueWindowEvent(&event, pos);
     }
+    if (warp != 0) {
+	TkDisplay *dispPtr;
+	dispPtr = TkGetDisplay(event.xmotion.display);
+	if (!dispPtr->warpInProgress) {
+	    Tcl_DoWhenIdle(DoWarp, (ClientData) dispPtr);
+	    dispPtr->warpInProgress = 1;
+	}
+	dispPtr->warpWindow = event.xany.window;
+	dispPtr->warpX = event.xkey.x;
+	dispPtr->warpY = event.xkey.y;
+    }
     Tcl_ResetResult(interp);
     return TCL_OK;
 		
@@ -3742,6 +3777,33 @@ SetKeycodeAndState(tkwin, keySym, eventPtr)
 	}
     }
     eventPtr->xkey.keycode = keycode;
+}
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * DoWarp --
+ *
+ *	Perform Warping of X pointer. Executed as an idle handler only.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	X Pointer will move to a new location.
+ *
+ *-------------------------------------------------------------------------
+ */
+static void
+DoWarp(clientData)
+    ClientData clientData;
+{
+    TkDisplay *dispPtr = (TkDisplay *) clientData;
+
+    XWarpPointer(dispPtr->display, (Window) None, (Window) dispPtr->warpWindow,
+                     0, 0, 0, 0, (int) dispPtr->warpX, (int) dispPtr->warpY);
+    XForceScreenSaver(dispPtr->display, ScreenSaverReset);
+    dispPtr->warpInProgress = 0;
 }
 
 /*
@@ -3886,19 +3948,14 @@ FindSequence(interp, patternTablePtr, object, eventString, create,
 	}
 
 	/*
-	 * Replicate events for DOUBLE and TRIPLE.
+	 * Replicate events for DOUBLE, TRIPLE, QUADRUPLE.
 	 */
 
-	if ((count > 1) && (numPats < EVENT_BUFFER_SIZE-1)) {
+	while ((count-- > 1) && (numPats < EVENT_BUFFER_SIZE-1)) {
 	    flags |= PAT_NEARBY;
 	    patPtr[-1] = patPtr[0];
 	    patPtr--;
 	    numPats++;
-	    if ((count == 3) && (numPats < EVENT_BUFFER_SIZE-1)) {
-		patPtr[-1] = patPtr[0];
-		patPtr--;
-		numPats++;
-	    }
 	}
     }
 
@@ -4117,12 +4174,10 @@ ParseEventDescription(interp, eventStringPtr, patPtr,
 	}
 	modPtr = (ModInfo *) Tcl_GetHashValue(hPtr);
 	patPtr->needMods |= modPtr->mask;
-	if (modPtr->flags & (DOUBLE|TRIPLE)) {
-	    if (modPtr->flags & DOUBLE) {
-		count = 2;
-	    } else {
-		count = 3;
-	    }
+	if (modPtr->flags & (MULT_CLICKS)) {
+	    int i = modPtr->flags & MULT_CLICKS;
+	    count = 2;
+	    while (i >>= 1) count++;
 	}
 	while ((*p == '-') || isspace(UCHAR(*p))) {
 	    p++;
@@ -4310,8 +4365,8 @@ GetPatternString(psPtr, dsPtr)
 
 	/*
 	 * It's a more general event specification.  First check
-	 * for "Double" or "Triple", then modifiers, then event type,
-	 * then keysym or button detail.
+	 * for "Double", "Triple", "Quadruple", then modifiers,
+	 * then event type, then keysym or button detail.
 	 */
 
 	Tcl_DStringAppend(dsPtr, "<", 1);
@@ -4324,7 +4379,14 @@ GetPatternString(psPtr, dsPtr)
 		    (char *) (patPtr-1), sizeof(Pattern)) == 0)) {
 		patsLeft--;
 		patPtr--;
-		Tcl_DStringAppend(dsPtr, "Triple-", 7);
+		    if ((patsLeft > 1) && (memcmp((char *) patPtr,
+			    (char *) (patPtr-1), sizeof(Pattern)) == 0)) {
+			patsLeft--;
+			patPtr--;
+			Tcl_DStringAppend(dsPtr, "Quadruple-", 10);
+		    } else {
+			Tcl_DStringAppend(dsPtr, "Triple-", 7);
+		    }
 	    } else {
 		Tcl_DStringAppend(dsPtr, "Double-", 7);
 	    }

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.4 1999/08/10 05:06:01 jingham Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.5 1999/12/14 06:52:28 hobbs Exp $
  */
 
 #include "default.h"
@@ -167,22 +167,25 @@ static Tk_ConfigSpec configSpecs[] = {
  */
 
 static int		ConfigureFrame _ANSI_ARGS_((Tcl_Interp *interp,
-			    Frame *framePtr, int argc, char **argv,
+			    Frame *framePtr, int objc, Tcl_Obj *CONST objv[],
 			    int flags));
+static int		CreateFrame _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, Tcl_Obj *CONST argv[],
+			    int toplevel, char *appName));
 static void		DestroyFrame _ANSI_ARGS_((char *memPtr));
 static void		DisplayFrame _ANSI_ARGS_((ClientData clientData));
 static void		FrameCmdDeletedProc _ANSI_ARGS_((
 			    ClientData clientData));
 static void		FrameEventProc _ANSI_ARGS_((ClientData clientData,
 			    XEvent *eventPtr));
-static int		FrameWidgetCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+static int		FrameWidgetObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
 static void		MapFrame _ANSI_ARGS_((ClientData clientData));
 
 /*
  *--------------------------------------------------------------
  *
- * Tk_FrameCmd, Tk_ToplevelCmd --
+ * Tk_FrameObjCmd, Tk_ToplevelObjCmd --
  *
  *	These procedures are invoked to process the "frame" and
  *	"toplevel" Tcl commands.  See the user documentation for
@@ -199,31 +202,31 @@ static void		MapFrame _ANSI_ARGS_((ClientData clientData));
  */
 
 int
-Tk_FrameCmd(clientData, interp, argc, argv)
+Tk_FrameObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Main window associated with
 				 * interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    return TkCreateFrame(clientData, interp, argc, argv, 0, (char *) NULL);
+    return CreateFrame(clientData, interp, objc, objv, 0, (char *) NULL);
 }
 
 int
-Tk_ToplevelCmd(clientData, interp, argc, argv)
+Tk_ToplevelObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Main window associated with
 				 * interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    return TkCreateFrame(clientData, interp, argc, argv, 1, (char *) NULL);
+    return CreateFrame(clientData, interp, objc, objv, 1, (char *) NULL);
 }
 
 /*
  *--------------------------------------------------------------
  *
- * TkFrameCreate --
+ * TkCreateFrame --
  *
  *	This procedure is invoked to process the "frame" and "toplevel"
  *	Tcl commands;  it is also invoked directly by Tk_Init to create
@@ -253,18 +256,47 @@ TkCreateFrame(clientData, interp, argc, argv, toplevel, appName)
 				 * NULL:  gives the base name to use for the
 				 * new application. */
 {
+    int result, i;
+    Tcl_Obj **objv = (Tcl_Obj **) ckalloc((argc+1) * sizeof(Tcl_Obj **));
+    for (i=0; i<argc; i++) {
+	objv[i] = Tcl_NewStringObj(argv[i], -1);
+	Tcl_IncrRefCount(objv[i]);
+    }
+    objv[argc] = NULL;
+    result = CreateFrame(clientData, interp, argc, objv, toplevel, appName);
+    for (i=0; i<argc; i++) {
+	Tcl_DecrRefCount(objv[i]);
+    }
+    ckfree((char *) objv);
+    return result;
+}
+
+static int
+CreateFrame(clientData, interp, objc, objv, toplevel, appName)
+    ClientData clientData;	/* Main window associated with interpreter.
+				 * If we're called by Tk_Init to create a
+				 * new application, then this is NULL. */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
+    int toplevel;		/* Non-zero means create a toplevel window,
+				 * zero means create a frame. */
+    char *appName;		/* Should only be non-NULL if clientData is
+				 * NULL:  gives the base name to use for the
+				 * new application. */
+{
     Tk_Window tkwin = (Tk_Window) clientData;
     Frame *framePtr;
     Tk_Window new;
     char *className, *screenName, *visualName, *colormapName, *arg, *useOption;
-    int i, c, length, depth;
+    int i, c, depth;
+    size_t length;
     unsigned int mask;
     Colormap colormap;
     Visual *visual;
 
-    if (argc < 2) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " pathName ?options?\"", (char *) NULL);
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
 	return TCL_ERROR;
     }
 
@@ -277,28 +309,27 @@ TkCreateFrame(clientData, interp, argc, argv, toplevel, appName)
 
     className = colormapName = screenName = visualName = useOption = NULL;
     colormap = None;
-    for (i = 2; i < argc; i += 2) {
-	arg = argv[i];
-	length = strlen(arg);
+    for (i = 2; i < objc; i += 2) {
+	arg = Tcl_GetStringFromObj(objv[i], (int *) &length);
 	if (length < 2) {
 	    continue;
 	}
 	c = arg[1];
-	if ((c == 'c') && (strncmp(arg, "-class", strlen(arg)) == 0)
+	if ((c == 'c') && (strncmp(arg, "-class", length) == 0)
 		&& (length >= 3)) {
-	    className = argv[i+1];
+	    className = Tcl_GetString(objv[i+1]);
 	} else if ((c == 'c')
-		&& (strncmp(arg, "-colormap", strlen(arg)) == 0)) {
-	    colormapName = argv[i+1];
+		&& (strncmp(arg, "-colormap", length) == 0)) {
+	    colormapName = Tcl_GetString(objv[i+1]);
 	} else if ((c == 's') && toplevel
-		&& (strncmp(arg, "-screen", strlen(arg)) == 0)) {
-	    screenName = argv[i+1];
+		&& (strncmp(arg, "-screen", length) == 0)) {
+	    screenName = Tcl_GetString(objv[i+1]);
 	} else if ((c == 'u') && toplevel
-		&& (strncmp(arg, "-use", strlen(arg)) == 0)) {
-	    useOption = argv[i+1];
+		&& (strncmp(arg, "-use", length) == 0)) {
+	    useOption = Tcl_GetString(objv[i+1]);
 	} else if ((c == 'v')
-		&& (strncmp(arg, "-visual", strlen(arg)) == 0)) {
-	    visualName = argv[i+1];
+		&& (strncmp(arg, "-visual", length) == 0)) {
+	    visualName = Tcl_GetString(objv[i+1]);
 	}
     }
 
@@ -321,7 +352,8 @@ TkCreateFrame(clientData, interp, argc, argv, toplevel, appName)
 	screenName = (toplevel) ? "" : NULL;
     }
     if (tkwin != NULL) {
-	new = Tk_CreateWindowFromPath(interp, tkwin, argv[1], screenName);
+	new = Tk_CreateWindowFromPath(interp, tkwin, Tcl_GetString(objv[1]),
+		screenName);
     } else {
 	/*
 	 * We were called from Tk_Init;  create a new application.
@@ -392,8 +424,8 @@ TkCreateFrame(clientData, interp, argc, argv, toplevel, appName)
     framePtr->tkwin = new;
     framePtr->display = Tk_Display(new);
     framePtr->interp = interp;
-    framePtr->widgetCmd = Tcl_CreateCommand(interp,
-	    Tk_PathName(new), FrameWidgetCmd,
+    framePtr->widgetCmd = Tcl_CreateObjCommand(interp,
+	    Tk_PathName(new), FrameWidgetObjCmd,
 	    (ClientData) framePtr, FrameCmdDeletedProc);
     framePtr->className = NULL;
     framePtr->mask = (toplevel) ? TOPLEVEL : FRAME;
@@ -426,7 +458,7 @@ TkCreateFrame(clientData, interp, argc, argv, toplevel, appName)
         mask |= ActivateMask;
     }
     Tk_CreateEventHandler(new, mask, FrameEventProc, (ClientData) framePtr);
-    if (ConfigureFrame(interp, framePtr, argc-2, argv+2, 0) != TCL_OK) {
+    if (ConfigureFrame(interp, framePtr, objc-2, objv+2, 0) != TCL_OK) {
 	goto error;
     }
     if ((framePtr->isContainer)) {
@@ -454,7 +486,7 @@ TkCreateFrame(clientData, interp, argc, argv, toplevel, appName)
 /*
  *--------------------------------------------------------------
  *
- * FrameWidgetCmd --
+ * FrameWidgetObjCmd --
  *
  *	This procedure is invoked to process the Tcl command
  *	that corresponds to a frame widget.  See the user
@@ -470,83 +502,87 @@ TkCreateFrame(clientData, interp, argc, argv, toplevel, appName)
  */
 
 static int
-FrameWidgetCmd(clientData, interp, argc, argv)
+FrameWidgetObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Information about frame widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
+    static char *frameOptions[] = {
+	"cget", "configure", (char *) NULL
+    };
+    enum options {
+	FRAME_CGET, FRAME_CONFIGURE
+    };
     register Frame *framePtr = (Frame *) clientData;
-    int result;
+    int result = TCL_OK, index;
     size_t length;
     int c, i;
 
-    if (argc < 2) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " option ?arg arg ...?\"", (char *) NULL);
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIndexFromObj(interp, objv[1], frameOptions, "option", 0,
+	    &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     Tcl_Preserve((ClientData) framePtr);
-    c = argv[1][0];
-    length = strlen(argv[1]);
-    if ((c == 'c') && (strncmp(argv[1], "cget", length) == 0)
-	    && (length >= 2)) {
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " cget option\"",
-		    (char *) NULL);
+    switch ((enum options) index) {
+      case FRAME_CGET: {
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    result = TCL_ERROR;
 	    goto done;
 	}
 	result = Tk_ConfigureValue(interp, framePtr->tkwin, configSpecs,
-		(char *) framePtr, argv[2], framePtr->mask);
-    } else if ((c == 'c') && (strncmp(argv[1], "configure", length) == 0)
-	    && (length >= 2)) {
-	if (argc == 2) {
+		(char *) framePtr, Tcl_GetString(objv[2]), framePtr->mask);
+	break;
+      }
+      case FRAME_CONFIGURE: {
+	if (objc == 2) {
 	    result = Tk_ConfigureInfo(interp, framePtr->tkwin, configSpecs,
 		    (char *) framePtr, (char *) NULL, framePtr->mask);
-	} else if (argc == 3) {
+	} else if (objc == 3) {
 	    result = Tk_ConfigureInfo(interp, framePtr->tkwin, configSpecs,
-		    (char *) framePtr, argv[2], framePtr->mask);
+		    (char *) framePtr, Tcl_GetString(objv[2]), framePtr->mask);
 	} else {
 	    /*
 	     * Don't allow the options -class, -colormap, -container,
 	     * -newcmap, -screen, -use, or -visual to be changed.
 	     */
 
-	    for (i = 2; i < argc; i++) {
-		length = strlen(argv[i]);
+	    for (i = 2; i < objc; i++) {
+		char *arg = Tcl_GetStringFromObj(objv[i], (int *) &length);
 		if (length < 2) {
 		    continue;
 		}
-		c = argv[i][1];
-		if (((c == 'c') && (strncmp(argv[i], "-class", length) == 0)
+		c = arg[1];
+		if (((c == 'c') && (strncmp(arg, "-class", length) == 0)
 			&& (length >= 2))
 			|| ((c == 'c') && (framePtr->mask == TOPLEVEL)
-			&& (strncmp(argv[i], "-colormap", length) == 0)
+			&& (strncmp(arg, "-colormap", length) == 0)
 			&& (length >= 3))
 			|| ((c == 'c')
-			&& (strncmp(argv[i], "-container", length) == 0)
+			&& (strncmp(arg, "-container", length) == 0)
 			&& (length >= 3))
 			|| ((c == 's') && (framePtr->mask == TOPLEVEL)
-			&& (strncmp(argv[i], "-screen", length) == 0))
+			&& (strncmp(arg, "-screen", length) == 0))
 			|| ((c == 'u') && (framePtr->mask == TOPLEVEL)
-			&& (strncmp(argv[i], "-use", length) == 0))
+			&& (strncmp(arg, "-use", length) == 0))
 			|| ((c == 'v') && (framePtr->mask == TOPLEVEL)
-			&& (strncmp(argv[i], "-visual", length) == 0))) {
-		    Tcl_AppendResult(interp, "can't modify ", argv[i],
+			&& (strncmp(arg, "-visual", length) == 0))) {
+		    Tcl_AppendResult(interp, "can't modify ", arg,
 			    " option after widget is created", (char *) NULL);
 		    result = TCL_ERROR;
 		    goto done;
 		}
 	    }
-	    result = ConfigureFrame(interp, framePtr, argc-2, argv+2,
+	    result = ConfigureFrame(interp, framePtr, objc-2, objv+2,
 		    TK_CONFIG_ARGV_ONLY);
 	}
-    } else {
-	Tcl_AppendResult(interp, "bad option \"", argv[1],
-		"\": must be cget or configure", (char *) NULL);
-	result = TCL_ERROR;
+	break;
+      }
     }
 
     done:
@@ -591,7 +627,7 @@ DestroyFrame(memPtr)
  *
  * ConfigureFrame --
  *
- *	This procedure is called to process an argv/argc list, plus
+ *	This procedure is called to process an objv/objc list, plus
  *	the Tk option database, in order to configure (or
  *	reconfigure) a frame widget.
  *
@@ -608,12 +644,12 @@ DestroyFrame(memPtr)
  */
 
 static int
-ConfigureFrame(interp, framePtr, argc, argv, flags)
+ConfigureFrame(interp, framePtr, objc, objv, flags)
     Tcl_Interp *interp;		/* Used for error reporting. */
     register Frame *framePtr;	/* Information about widget;  may or may
 				 * not already have values for some fields. */
-    int argc;			/* Number of valid entries in argv. */
-    char **argv;		/* Arguments. */
+    int objc;			/* Number of valid entries in objv. */
+    Tcl_Obj *CONST objv[];	/* Arguments. */
     int flags;			/* Flags to pass to Tk_ConfigureWidget. */
 {
     char *oldMenuName;
@@ -630,7 +666,8 @@ ConfigureFrame(interp, framePtr, argc, argv, flags)
     }
     
     if (Tk_ConfigureWidget(interp, framePtr->tkwin, configSpecs,
-	    argc, argv, (char *) framePtr, flags | framePtr->mask) != TCL_OK) {
+	    objc, (char **) objv, (char *) framePtr,
+	    flags | framePtr->mask | TK_CONFIG_OBJS) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -694,6 +731,8 @@ DisplayFrame(clientData)
 {
     register Frame *framePtr = (Frame *) clientData;
     register Tk_Window tkwin = framePtr->tkwin;
+    void (* drawFunction) _ANSI_ARGS_((Tk_Window, Drawable, Tk_3DBorder,
+	    int, int, int, int, int, int)) = Tk_Fill3DRectangle;
 
     framePtr->flags &= ~REDRAW_PENDING;
     if ((framePtr->tkwin == NULL) || !Tk_IsMapped(tkwin)
@@ -702,7 +741,7 @@ DisplayFrame(clientData)
     }
 
     if (framePtr->border != NULL) {
-	Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin),
+	drawFunction(tkwin, Tk_WindowId(tkwin),
 		framePtr->border, framePtr->highlightWidth,
 		framePtr->highlightWidth,
 		Tk_Width(tkwin) - 2*framePtr->highlightWidth,

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvWind.c,v 1.3 1999/04/16 01:51:12 stanton Exp $
+ * RCS: @(#) $Id: tkCanvWind.c,v 1.4 1999/12/14 06:52:26 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -41,7 +41,12 @@ typedef struct WindowItem  {
  * Information used for parsing configuration specs:
  */
 
-static Tk_CustomOption tagsOption = {Tk_CanvasTagsParseProc,
+static Tk_CustomOption stateOption = {
+    (Tk_OptionParseProc *) TkStateParseProc,
+    TkStatePrintProc, (ClientData) 2
+};
+static Tk_CustomOption tagsOption = {
+    (Tk_OptionParseProc *) Tk_CanvasTagsParseProc,
     Tk_CanvasTagsPrintProc, (ClientData) NULL
 };
 
@@ -50,6 +55,9 @@ static Tk_ConfigSpec configSpecs[] = {
 	"center", Tk_Offset(WindowItem, anchor), TK_CONFIG_DONT_SET_DEFAULT},
     {TK_CONFIG_PIXELS, "-height", (char *) NULL, (char *) NULL,
 	"0", Tk_Offset(WindowItem, height), TK_CONFIG_DONT_SET_DEFAULT},
+    {TK_CONFIG_CUSTOM, "-state", (char *) NULL, (char *) NULL,
+	(char *) NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK,
+	&stateOption},
     {TK_CONFIG_CUSTOM, "-tags", (char *) NULL, (char *) NULL,
 	(char *) NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_PIXELS, "-width", (char *) NULL, (char *) NULL,
@@ -68,10 +76,10 @@ static void		ComputeWindowBbox _ANSI_ARGS_((Tk_Canvas canvas,
 			    WindowItem *winItemPtr));
 static int		ConfigureWinItem _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
-			    char **argv, int flags));
+			    Tcl_Obj *CONST argv[], int flags));
 static int		CreateWinItem _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int argc, char **argv));
+			    int argc, Tcl_Obj *CONST argv[]));
 static void		DeleteWinItem _ANSI_ARGS_((Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display));
 static void		DisplayWinItem _ANSI_ARGS_((Tk_Canvas canvas,
@@ -84,7 +92,7 @@ static void		TranslateWinItem _ANSI_ARGS_((Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double deltaX, double deltaY));
 static int		WinItemCoords _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
-			    char **argv));
+			    Tcl_Obj *CONST argv[]));
 static void		WinItemLostSlaveProc _ANSI_ARGS_((
 			    ClientData clientData, Tk_Window tkwin));
 static void		WinItemRequestProc _ANSI_ARGS_((ClientData clientData,
@@ -93,8 +101,17 @@ static void		WinItemStructureProc _ANSI_ARGS_((
 			    ClientData clientData, XEvent *eventPtr));
 static int		WinItemToArea _ANSI_ARGS_((Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr));
+static int		WinItemToPostscript _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass));
 static double		WinItemToPoint _ANSI_ARGS_((Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *pointPtr));
+#ifdef X_GetImage
+static int		xerrorhandler _ANSI_ARGS_((ClientData clientData,
+			    XErrorEvent *e));
+#endif
+static int		CanvasPsWindow _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tk_Window tkwin, Tk_Canvas canvas, double x,
+			    double y, int width, int height));
 
 /*
  * The structure below defines the window item type by means of procedures
@@ -110,10 +127,10 @@ Tk_ItemType tkWindowType = {
     WinItemCoords,			/* coordProc */
     DeleteWinItem,			/* deleteProc */
     DisplayWinItem,			/* displayProc */
-    1,					/* alwaysRedraw */
+    1|TK_CONFIG_OBJS,			/* flags */
     WinItemToPoint,			/* pointProc */
     WinItemToArea,			/* areaProc */
-    (Tk_ItemPostscriptProc *) NULL,	/* postscriptProc */
+    WinItemToPostscript,	        /* postscriptProc */
     ScaleWinItem,			/* scaleProc */
     TranslateWinItem,			/* translateProc */
     (Tk_ItemIndexProc *) NULL,		/* indexProc */
@@ -121,7 +138,7 @@ Tk_ItemType tkWindowType = {
     (Tk_ItemSelectionProc *) NULL,	/* selectionProc */
     (Tk_ItemInsertProc *) NULL,		/* insertProc */
     (Tk_ItemDCharsProc *) NULL,		/* dTextProc */
-    (Tk_ItemType *) NULL		/* nextPtr */
+    (Tk_ItemType *) NULL,		/* nextPtr */
 };
 
 
@@ -164,11 +181,24 @@ CreateWinItem(interp, canvas, itemPtr, argc, argv)
     Tk_Item *itemPtr;			/* Record to hold new item;  header
 					 * has been initialized by caller. */
     int argc;				/* Number of arguments in argv. */
-    char **argv;			/* Arguments describing rectangle. */
+    Tcl_Obj *CONST argv[];		/* Arguments describing window. */
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
+    int i;
 
-    if (argc < 2) {
+    if (argc==1) {
+	i = 1;
+    } else {
+	char *arg = Tcl_GetStringFromObj(argv[1], NULL);
+	if (((argc>1) && (arg[0] == '-')
+		&& (arg[1] >= 'a') && (arg[1] <= 'z'))) {
+	    i = 1;
+	} else {
+	    i = 2;
+	}
+    }
+
+    if (argc < i) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
 		Tk_PathName(Tk_CanvasTkwin(canvas)), " create ",
 		itemPtr->typePtr->name, " x y ?options?\"",
@@ -190,18 +220,16 @@ CreateWinItem(interp, canvas, itemPtr, argc, argv)
      * Process the arguments to fill in the item record.
      */
 
-    if ((Tk_CanvasGetCoord(interp, canvas, argv[0], &winItemPtr->x) != TCL_OK)
-	    || (Tk_CanvasGetCoord(interp, canvas, argv[1],
-		&winItemPtr->y) != TCL_OK)) {
-	return TCL_ERROR;
+    if ((WinItemCoords(interp, canvas, itemPtr, i, argv) != TCL_OK)) {
+	goto error;
+    }
+    if (ConfigureWinItem(interp, canvas, itemPtr, argc-i, argv+i, 0) == TCL_OK) {
+	return TCL_OK;
     }
 
-    if (ConfigureWinItem(interp, canvas, itemPtr, argc-2, argv+2, 0)
-	    != TCL_OK) {
-	DeleteWinItem(canvas, itemPtr, Tk_Display(Tk_CanvasTkwin(canvas)));
-	return TCL_ERROR;
-    }
-    return TCL_OK;
+    error:
+    DeleteWinItem(canvas, itemPtr, Tk_Display(Tk_CanvasTkwin(canvas)));
+    return TCL_ERROR;
 }
 
 /*
@@ -230,19 +258,33 @@ WinItemCoords(interp, canvas, itemPtr, argc, argv)
 					 * read or modified. */
     int argc;				/* Number of coordinates supplied in
 					 * argv. */
-    char **argv;			/* Array of coordinates: x1, y1,
+    Tcl_Obj *CONST argv[];		/* Array of coordinates: x1, y1,
 					 * x2, y2, ... */
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
-    char x[TCL_DOUBLE_SPACE], y[TCL_DOUBLE_SPACE];
 
     if (argc == 0) {
-	Tcl_PrintDouble(interp, winItemPtr->x, x);
-	Tcl_PrintDouble(interp, winItemPtr->y, y);
-	Tcl_AppendResult(interp, x, " ", y, (char *) NULL);
-    } else if (argc == 2) {
-	if ((Tk_CanvasGetCoord(interp, canvas, argv[0], &winItemPtr->x)
-		!= TCL_OK) || (Tk_CanvasGetCoord(interp, canvas, argv[1],
+	Tcl_Obj *obj = Tcl_NewObj();
+	Tcl_Obj *subobj = Tcl_NewDoubleObj(winItemPtr->x);
+	Tcl_ListObjAppendElement(interp, obj, subobj);
+	subobj = Tcl_NewDoubleObj(winItemPtr->y);
+	Tcl_ListObjAppendElement(interp, obj, subobj);
+	Tcl_SetObjResult(interp, obj);
+    } else if (argc < 3) {
+	if (argc==1) {
+	    if (Tcl_ListObjGetElements(interp, argv[0], &argc,
+		    (Tcl_Obj ***) &argv) != TCL_OK) {
+		return TCL_ERROR;
+	    } else if (argc != 2) {
+		char buf[64 + TCL_INTEGER_SPACE];
+
+		sprintf(buf, "wrong # coordinates: expected 2, got %d", argc);
+		Tcl_SetResult(interp, buf, TCL_VOLATILE);
+		return TCL_ERROR;
+	    }
+	}
+	if ((Tk_CanvasGetCoordFromObj(interp, canvas, argv[0], &winItemPtr->x)
+		!= TCL_OK) || (Tk_CanvasGetCoordFromObj(interp, canvas, argv[1],
 		&winItemPtr->y) != TCL_OK)) {
 	    return TCL_ERROR;
 	}
@@ -281,7 +323,7 @@ ConfigureWinItem(interp, canvas, itemPtr, argc, argv, flags)
     Tk_Canvas canvas;		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr;		/* Window item to reconfigure. */
     int argc;			/* Number of elements in argv.  */
-    char **argv;		/* Arguments describing things to configure. */
+    Tcl_Obj *CONST argv[];	/* Arguments describing things to configure. */
     int flags;			/* Flags to pass to Tk_ConfigureWidget. */
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
@@ -290,8 +332,8 @@ ConfigureWinItem(interp, canvas, itemPtr, argc, argv, flags)
 
     oldWindow = winItemPtr->tkwin;
     canvasTkwin = Tk_CanvasTkwin(canvas);
-    if (Tk_ConfigureWidget(interp, canvasTkwin, configSpecs, argc, argv,
-	    (char *) winItemPtr, flags) != TCL_OK) {
+    if (Tk_ConfigureWidget(interp, canvasTkwin, configSpecs, argc, (char **) argv,
+	    (char *) winItemPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -417,11 +459,15 @@ ComputeWindowBbox(canvas, winItemPtr)
 					 * recomputed. */
 {
     int width, height, x, y;
+    Tk_State state = winItemPtr->header.state;
 
     x = (int) (winItemPtr->x + ((winItemPtr->x >= 0) ? 0.5 : - 0.5));
     y = (int) (winItemPtr->y + ((winItemPtr->y >= 0) ? 0.5 : - 0.5));
 
-    if (winItemPtr->tkwin == NULL) {
+    if (state == TK_STATE_NULL) {
+	state = ((TkCanvas *)canvas)->canvas_state;
+    }
+    if ((winItemPtr->tkwin == NULL) || (state == TK_STATE_HIDDEN)) {
 	/*
 	 * There is no window for this item yet.  Just give it a 1x1
 	 * bounding box.  Don't give it a 0x0 bounding box; there are
@@ -542,11 +588,18 @@ DisplayWinItem(canvas, itemPtr, display, drawable, regionX, regionY,
     int width, height;
     short x, y;
     Tk_Window canvasTkwin = Tk_CanvasTkwin(canvas);
+    Tk_State state = itemPtr->state;
 
     if (winItemPtr->tkwin == NULL) {
 	return;
     }
-
+    if(state == TK_STATE_NULL) {
+	state = ((TkCanvas *)canvas)->canvas_state;
+    }
+    if (state == TK_STATE_HIDDEN) {
+	Tk_UnmapWindow(winItemPtr->tkwin);
+	return;
+    }
     Tk_CanvasWindowCoords(canvas, (double) winItemPtr->header.x1,
 	    (double) winItemPtr->header.y1, &x, &y);
     width = winItemPtr->header.x2 - winItemPtr->header.x1;
@@ -593,7 +646,7 @@ DisplayWinItem(canvas, itemPtr, display, drawable, regionX, regionY,
  * WinItemToPoint --
  *
  *	Computes the distance from a given point to a given
- *	rectangle, in canvas units.
+ *	window, in canvas units.
  *
  * Results:
  *	The return value is 0 if the point whose x and y coordinates
@@ -622,7 +675,7 @@ WinItemToPoint(canvas, itemPtr, pointPtr)
     y2 = winItemPtr->header.y2;
 
     /*
-     * Point is outside rectangle.
+     * Point is outside window.
      */
 
     if (pointPtr[0] < x1) {
@@ -692,16 +745,203 @@ WinItemToArea(canvas, itemPtr, rectPtr)
 /*
  *--------------------------------------------------------------
  *
- * ScaleWinItem --
+ * xerrorhandler --
  *
- *	This procedure is invoked to rescale a rectangle or oval
- *	item.
+ *	This is a dummy function to catch X11 errors during an
+ *	attempt to print a canvas window.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The rectangle or oval referred to by itemPtr is rescaled
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+#ifdef X_GetImage
+static int
+xerrorhandler(clientData, e)
+    ClientData clientData;
+    XErrorEvent *e;
+{
+	return 0;
+}
+#endif
+
+
+/*
+ *--------------------------------------------------------------
+ *
+ * WinItemToPostscript --
+ *
+ *	This procedure is called to generate Postscript for
+ *	window items.
+ *
+ * Results:
+ *	The return value is a standard Tcl result.  If an error
+ *	occurs in generating Postscript then an error message is
+ *	left in interp->result, replacing whatever used to be there.
+ *	If no error occurs, then Postscript for the item is appended
+ *	to the result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+WinItemToPostscript(interp, canvas, itemPtr, prepass)
+    Tcl_Interp *interp;			/* Leave Postscript or error message
+					 * here. */
+    Tk_Canvas canvas;			/* Information about overall canvas. */
+    Tk_Item *itemPtr;			/* Item for which Postscript is
+					 * wanted. */
+    int prepass;			/* 1 means this is a prepass to
+					 * collect font information;  0 means
+					 * final Postscript is being created.*/
+{
+    WindowItem *winItemPtr = (WindowItem *)itemPtr;
+
+    double x, y;
+    int width, height;
+    Tk_Window tkwin = winItemPtr->tkwin;
+
+    if (prepass || winItemPtr->tkwin == NULL) {
+        return TCL_OK;
+    }
+    
+    width = Tk_Width(tkwin);
+    height = Tk_Height(tkwin);
+
+    /*
+     * Compute the coordinates of the lower-left corner of the window,
+     * taking into account the anchor position for the window.
+     */
+
+    x = winItemPtr->x;
+    y = Tk_CanvasPsY(canvas, winItemPtr->y);
+    
+    switch (winItemPtr->anchor) {
+	case TK_ANCHOR_NW:			y -= height;		break;
+	case TK_ANCHOR_N:	x -= width/2.0; y -= height;		break;
+	case TK_ANCHOR_NE:	x -= width;	y -= height;		break;
+	case TK_ANCHOR_E:	x -= width;	y -= height/2.0;	break;
+	case TK_ANCHOR_SE:	x -= width;				break;
+	case TK_ANCHOR_S:	x -= width/2.0;				break;
+	case TK_ANCHOR_SW:						break;
+	case TK_ANCHOR_W:			y -= height/2.0;	break;
+	case TK_ANCHOR_CENTER:	x -= width/2.0; y -= height/2.0;	break;
+    }
+
+    return CanvasPsWindow(interp, tkwin, canvas, x, y, width, height);
+}
+
+static int
+CanvasPsWindow(interp, tkwin, canvas, x, y, width, height)
+    Tcl_Interp *interp;			/* Leave Postscript or error message
+					 * here. */
+    Tk_Window tkwin;			/* window to be printed */
+    Tk_Canvas canvas;			/* Information about overall canvas. */
+    double x, y;			/* origin of window. */
+    int width, height;			/* width/height of window. */
+{
+    char buffer[256];
+    TkWindow *winPtr;
+    XImage *ximage;
+    int result;
+    Tcl_DString buffer1, buffer2;
+#ifdef X_GetImage
+    Tk_ErrorHandler	handle;
+#endif
+
+    sprintf(buffer, "\n%%%% %s item (%s, %d x %d)\n%.15g %.15g translate\n",
+	    Tk_Class(tkwin), Tk_PathName(tkwin), width, height, x, y);
+    Tcl_AppendResult(interp, buffer, (char *) NULL);
+
+    /* first try if the widget has its own "postscript" command. If it
+     * exists, this will produce much better postscript than
+     * when a pixmap is used.
+     */
+
+    Tcl_DStringInit(&buffer1);
+    Tcl_DStringInit(&buffer2);
+    Tcl_DStringGetResult(interp, &buffer2);
+    sprintf (buffer, "%s postscript -prolog 0\n", Tk_PathName(tkwin));
+    result = Tcl_Eval(interp, buffer);
+    Tcl_DStringGetResult(interp, &buffer1);
+    Tcl_DStringResult(interp, &buffer2);
+    Tcl_DStringFree(&buffer2);
+
+    if (result == TCL_OK) {
+	Tcl_AppendResult(interp,
+		"50 dict begin\nsave\ngsave\n",
+		(char *) NULL);
+	sprintf (buffer,
+		"0 %d moveto %d 0 rlineto 0 -%d rlineto -%d",
+		height, width, height, width);
+	Tcl_AppendResult(interp, buffer, (char *) NULL);
+	Tcl_AppendResult(interp, " 0 rlineto closepath\n",
+		"1.000 1.000 1.000 setrgbcolor AdjustColor\nfill\ngrestore\n",
+		Tcl_DStringValue(&buffer1), "\nrestore\nend\n\n\n",
+		(char *) NULL);
+	Tcl_DStringFree(&buffer1);
+
+	for (winPtr = ((TkWindow *) tkwin)->childList; winPtr != NULL;
+		winPtr = winPtr->nextPtr) {
+	    if (Tk_IsMapped(winPtr)) {
+/*		printf("child window: %s\n", winPtr->pathName);*/
+	    }
+	}
+	return result;
+    }
+    Tcl_DStringFree(&buffer1);
+
+    /*
+     * If the window is off the screen it will generate an BadMatch/XError
+     * We catch any BadMatch errors here
+     */
+#ifdef X_GetImage
+    handle = Tk_CreateErrorHandler(Tk_Display(tkwin), BadMatch,
+	    X_GetImage, -1, xerrorhandler, (ClientData) tkwin);
+#endif
+
+    /*
+     * Generate an XImage from the window.  We can then read pixel 
+     * values out of the XImage.
+     */
+
+    ximage = XGetImage(Tk_Display(tkwin), Tk_WindowId(tkwin), 0, 0,
+	    (unsigned int)width, (unsigned int)height, AllPlanes, ZPixmap);
+
+#ifdef X_GetImage
+    Tk_DeleteErrorHandler(handle);
+#endif
+
+    if (ximage == (XImage*) NULL) { 
+	return TCL_OK;
+    }
+
+    result = TkPostscriptImage(interp, tkwin,
+	    ((TkCanvas *)canvas)->psInfo, ximage, 0, 0, width, height);
+
+    XDestroyImage(ximage);
+    return result;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * ScaleWinItem --
+ *
+ *	This procedure is invoked to rescale a window item.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The window referred to by itemPtr is rescaled
  *	so that the following transformation is applied to all
  *	point coordinates:
  *		x' = originX + scaleX*(x-originX)
@@ -712,9 +952,9 @@ WinItemToArea(canvas, itemPtr, rectPtr)
 
 static void
 ScaleWinItem(canvas, itemPtr, originX, originY, scaleX, scaleY)
-    Tk_Canvas canvas;			/* Canvas containing rectangle. */
-    Tk_Item *itemPtr;			/* Rectangle to be scaled. */
-    double originX, originY;		/* Origin about which to scale rect. */
+    Tk_Canvas canvas;			/* Canvas containing window. */
+    Tk_Item *itemPtr;			/* Window to be scaled. */
+    double originX, originY;		/* Origin about which to scale window. */
     double scaleX;			/* Amount to scale in X direction. */
     double scaleY;			/* Amount to scale in Y direction. */
 {
@@ -736,16 +976,15 @@ ScaleWinItem(canvas, itemPtr, originX, originY, scaleX, scaleY)
  *
  * TranslateWinItem --
  *
- *	This procedure is called to move a rectangle or oval by a
- *	given amount.
+ *	This procedure is called to move a window by a given amount.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The position of the rectangle or oval is offset by
- *	(xDelta, yDelta), and the bounding box is updated in the
- *	generic part of the item structure.
+ *	The position of the window is offset by (xDelta, yDelta),
+ *	and the bounding box is updated in the generic part of the
+ *	item structure.
  *
  *--------------------------------------------------------------
  */

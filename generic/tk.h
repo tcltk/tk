@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.33 1999/11/23 23:52:13 hobbs Exp $
+ * RCS: @(#) $Id: tk.h,v 1.34 1999/12/14 06:52:25 hobbs Exp $
  */
 
 #ifndef _TK
@@ -110,6 +110,7 @@ typedef struct Tk_Font_ *Tk_Font;
 typedef struct Tk_Image__ *Tk_Image;
 typedef struct Tk_ImageMaster_ *Tk_ImageMaster;
 typedef struct Tk_OptionTable_ *Tk_OptionTable;
+typedef struct Tk_PostscriptInfo_ *Tk_PostscriptInfo;
 typedef struct Tk_TextLayout_ *Tk_TextLayout;
 typedef struct Tk_Window_ *Tk_Window;
 typedef struct Tk_3DBorder_ *Tk_3DBorder;
@@ -348,6 +349,7 @@ typedef enum {
  */
 
 #define TK_CONFIG_ARGV_ONLY	1
+#define TK_CONFIG_OBJS		0x80
 
 /*
  * Possible flag values for Tk_ConfigSpec structures.  Any bits at
@@ -771,6 +773,21 @@ typedef struct Tk_FakeWin {
  *--------------------------------------------------------------
  */
 
+typedef enum {
+    TK_STATE_NULL = -1, TK_STATE_ACTIVE, TK_STATE_DISABLED,
+    TK_STATE_NORMAL, TK_STATE_HIDDEN
+} Tk_State;
+
+typedef struct Tk_SmoothMethod {
+    char *name;
+    int (*coordProc) _ANSI_ARGS_((Tk_Canvas canvas,
+		double *pointPtr, int numPoints, int numSteps,
+		XPoint xPoints[], double dblPoints[]));
+    void (*postscriptProc) _ANSI_ARGS_((Tcl_Interp *interp,
+		Tk_Canvas canvas, double *coordPtr,
+		int numPoints, int numSteps));
+} Tk_SmoothMethod;
+
 /*
  * For each item in a canvas widget there exists one record with
  * the following structure.  Each actual item is represented by
@@ -810,9 +827,9 @@ typedef struct Tk_Item  {
 					 * items in this canvas. Later items
 					 * in list are drawn just below earlier
 					 * ones. */
-    int   reserved1;			/* This padding is for compatibility */
-    char *reserved2;			/* with Jan Nijtmans dash patch */
-    int   reserved3;
+    Tk_State state;			/* state of item */
+    char *reserved1;			/* reserved for future use */
+    int redraw_flags;			/* some flags used in the canvas */
 
     /*
      *------------------------------------------------------------------
@@ -825,11 +842,25 @@ typedef struct Tk_Item  {
 } Tk_Item;
 
 /*
+ * Flag bits for canvases (redraw_flags):
+ *
+ * TK_ITEM_STATE_DEPENDANT -	1 means that object needs to be
+ *				redrawn if the canvas state changes.
+ * TK_ITEM_DONT_REDRAW - 	1 means that the object redraw is already
+ *				been prepared, so the general canvas code
+ *				doesn't need to do that any more.
+ */
+
+#define TK_ITEM_STATE_DEPENDANT		1
+#define TK_ITEM_DONT_REDRAW		2
+
+/*
  * Records of the following type are used to describe a type of
  * item (e.g.  lines, circles, etc.) that can form part of a
  * canvas widget.
  */
 
+#ifdef USE_OLD_CANVAS
 typedef int	Tk_ItemCreateProc _ANSI_ARGS_((Tcl_Interp *interp,
 		    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
 		    char **argv));
@@ -839,6 +870,17 @@ typedef int	Tk_ItemConfigureProc _ANSI_ARGS_((Tcl_Interp *interp,
 typedef int	Tk_ItemCoordProc _ANSI_ARGS_((Tcl_Interp *interp,
 		    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
 		    char **argv));
+#else
+typedef int	Tk_ItemCreateProc _ANSI_ARGS_((Tcl_Interp *interp,
+		    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
+		    Tcl_Obj *CONST objv[]));
+typedef int	Tk_ItemConfigureProc _ANSI_ARGS_((Tcl_Interp *interp,
+		    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
+		    Tcl_Obj *CONST objv[], int flags));
+typedef int	Tk_ItemCoordProc _ANSI_ARGS_((Tcl_Interp *interp,
+		    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
+		    Tcl_Obj *CONST argv[]));
+#endif
 typedef void	Tk_ItemDeleteProc _ANSI_ARGS_((Tk_Canvas canvas,
 		    Tk_Item *itemPtr, Display *display));
 typedef void	Tk_ItemDisplayProc _ANSI_ARGS_((Tk_Canvas canvas,
@@ -890,7 +932,7 @@ typedef struct Tk_ItemType {
 					 * this type. */
     int alwaysRedraw;			/* Non-zero means displayProc should
 					 * be called even when the item has
-					 * been moved off-screen. */
+  					 * been moved off-screen. */
     Tk_ItemPointProc *pointProc;	/* Computes distance from item to
 					 * a given point. */
     Tk_ItemAreaProc *areaProc;		/* Computes whether item is inside,
@@ -971,6 +1013,80 @@ typedef struct Tk_CanvasTextInfo {
 } Tk_CanvasTextInfo;
 
 /*
+ * Structures used for Dashing and Outline.
+ */
+
+typedef struct Tk_Dash {
+    int number;
+    union {
+	char *pt;
+	char array[sizeof(char *)];
+    } pattern;
+} Tk_Dash;
+
+typedef struct Tk_TSOffset {
+    int flags;			/* flags; see below for possible values */
+    int xoffset;		/* x offset */
+    int yoffset;		/* y offset */
+} Tk_TSOffset;
+
+/*
+ * Bit fields in Tk_Offset->flags:
+ */
+
+#define TK_OFFSET_INDEX		1
+#define TK_OFFSET_RELATIVE	2
+#define TK_OFFSET_LEFT		4
+#define TK_OFFSET_CENTER	8
+#define TK_OFFSET_RIGHT		16
+#define TK_OFFSET_TOP		32
+#define TK_OFFSET_MIDDLE	64
+#define TK_OFFSET_BOTTOM	128
+
+typedef struct Tk_Outline {
+    GC gc;			/* Graphics context. */
+    double width;		/* Width of outline. */
+    double activeWidth;		/* Width of outline. */
+    double disabledWidth;	/* Width of outline. */
+    int offset;			/* Dash offset */
+    Tk_Dash dash;		/* Dash pattern */
+    Tk_Dash activeDash;		/* Dash pattern if state is active*/
+    Tk_Dash disabledDash;	/* Dash pattern if state is disabled*/
+    VOID *reserved1;		/* reserved for future expansion */
+    VOID *reserved2;
+    VOID *reserved3;
+    Tk_TSOffset tsoffset;	/* stipple offset for outline*/
+    XColor *color;		/* Outline color. */
+    XColor *activeColor;	/* Outline color if state is active. */
+    XColor *disabledColor;	/* Outline color if state is disabled. */
+    Pixmap stipple;		/* Outline Stipple pattern. */
+    Pixmap activeStipple;	/* Outline Stipple pattern if state is active. */
+    Pixmap disabledStipple;	/* Outline Stipple pattern if state is disabled. */
+} Tk_Outline;
+
+/*
+ * Some functions handy for Dashing and Outlines (in tkCanvUtil.c).
+ */
+
+EXTERN int	Tk_GetDash _ANSI_ARGS_((Tcl_Interp *interp,
+		    CONST char *value, Tk_Dash *dash));
+EXTERN void	Tk_CreateOutline _ANSI_ARGS_((Tk_Outline *outline));
+EXTERN void	Tk_DeleteOutline _ANSI_ARGS_((Display *display,
+		    Tk_Outline *outline));
+EXTERN int	Tk_ConfigOutlineGC _ANSI_ARGS_((XGCValues *gcValues,
+		    Tk_Canvas canvas ,Tk_Item *item,
+		    Tk_Outline *outline));
+EXTERN int	Tk_ChangeOutlineGC _ANSI_ARGS_((Tk_Canvas canvas,
+		    Tk_Item *item, Tk_Outline *outline));
+EXTERN int	Tk_ResetOutlineGC _ANSI_ARGS_((Tk_Canvas canvas,
+		    Tk_Item *item, Tk_Outline *outline));
+EXTERN int	Tk_CanvasPsOutline _ANSI_ARGS_((Tk_Canvas canvas,
+		    Tk_Item *item, Tk_Outline *outline));
+EXTERN void	Tk_SetTSOrigin _ANSI_ARGS_((Tk_Window tkwin, GC gc, int x,
+		    int y));
+
+
+/*
  *--------------------------------------------------------------
  *
  * Procedure prototypes and structures used for managing images:
@@ -999,6 +1115,9 @@ typedef void (Tk_ImageDeleteProc) _ANSI_ARGS_((ClientData masterData));
 typedef void (Tk_ImageChangedProc) _ANSI_ARGS_((ClientData clientData,
 	int x, int y, int width, int height, int imageWidth,
 	int imageHeight));
+typedef int (Tk_ImagePostscriptProc) _ANSI_ARGS_((ClientData clientData,
+	Tcl_Interp *interp, Tk_Window tkwin, Tk_PostscriptInfo psinfo,
+	int x, int y, int width, int height, int prepass));
 
 /*
  * The following structure represents a particular type of image
@@ -1028,6 +1147,9 @@ struct Tk_ImageType {
 				 * will not be called until after freeProc
 				 * has been called for each instance of the
 				 * image. */
+    Tk_ImagePostscriptProc *postscriptProc;
+				/* Procedure to call to produce postscript
+				 * output for the image. */
     struct Tk_ImageType *nextPtr;
 				/* Next in list of all image types currently
 				 * known.  Filled in by Tk, not by image
@@ -1237,6 +1359,44 @@ typedef Tk_RestrictAction (Tk_RestrictProc) _ANSI_ARGS_((
 typedef int (Tk_SelectionProc) _ANSI_ARGS_((ClientData clientData,
 	int offset, char *buffer, int maxBytes));
 
+/*
+ *--------------------------------------------------------------
+ *
+ * Exported procedures introduced by dash-patch.
+ *
+ *--------------------------------------------------------------
+ */
+
+EXTERN int		Tk_CanvasGetCoordFromObj _ANSI_ARGS_((
+			    Tcl_Interp *interp, Tk_Canvas canvas, Tcl_Obj *obj,
+			    double *doublePtr));
+EXTERN void		Tk_CanvasSetOffset _ANSI_ARGS_((
+			    Tk_Canvas canvas, GC gc, Tk_TSOffset *offset));
+EXTERN void		Tk_CreatePhotoOption _ANSI_ARGS_((Tcl_Interp *interp,
+			    CONST char *name, Tcl_ObjCmdProc *proc));
+EXTERN void		Tk_DitherPhoto _ANSI_ARGS_((Tk_PhotoHandle handle,
+			    int x, int y, int width, int height));
+EXTERN int		Tk_PostscriptBitmap _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tk_Window tkwin, Tk_PostscriptInfo psInfo,
+			    Pixmap bitmap, int startX, int startY,
+			    int width, int height));
+EXTERN int		Tk_PostscriptColor _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tk_PostscriptInfo psInfo, XColor *colorPtr));
+EXTERN int		Tk_PostscriptFont _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tk_PostscriptInfo psInfo, Tk_Font font));
+EXTERN int		Tk_PostscriptImage _ANSI_ARGS_((Tk_Image image,
+			    Tcl_Interp *interp, Tk_Window tkwin,
+			    Tk_PostscriptInfo psinfo, int x, int y,
+			    int width, int height, int prepass));
+EXTERN void		Tk_PostscriptPath _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tk_PostscriptInfo psInfo, double *coordPtr,
+			    int numPoints));
+EXTERN int		Tk_PostscriptStipple _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tk_Window tkwin, Tk_PostscriptInfo psInfo,
+			    Pixmap bitmap));
+EXTERN double		Tk_PostscriptY _ANSI_ARGS_((double y,
+			    Tk_PostscriptInfo psInfo));
+
 /*
  *--------------------------------------------------------------
  *

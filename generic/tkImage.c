@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.4 1999/10/29 03:57:56 hobbs Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.5 1999/12/14 06:52:28 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -186,227 +186,227 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 	return TCL_ERROR;
     }
     switch ((enum options) index) {
-      case IMAGE_CREATE: {
-	char *arg;
-	Tcl_Obj **args;
-	int oldimage = 0;
-	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "type ?name? ?options?");
-	    return TCL_ERROR;
-	}
-
-	/*
-	 * Look up the image type.
-	 */
-
-	arg = Tcl_GetString(objv[2]);
-	for (typePtr = tsdPtr->imageTypeList; typePtr != NULL;
-		typePtr = typePtr->nextPtr) {
-	    if ((*arg == typePtr->name[0])
-		    && (strcmp(arg, typePtr->name) == 0)) {
-		break;
+	case IMAGE_CREATE: {
+	    char *arg;
+	    Tcl_Obj **args;
+	    int oldimage = 0;
+	    if (objc < 3) {
+		Tcl_WrongNumArgs(interp, 2, objv, "type ?name? ?options?");
+		return TCL_ERROR;
 	    }
-	}
-	if (typePtr == NULL) {
-	    oldimage = 1;
-	    for (typePtr = tsdPtr->oldImageTypeList; typePtr != NULL;
-		    typePtr = typePtr->nextPtr) {
+
+	    /*
+	     * Look up the image type.
+	     */
+
+	    arg = Tcl_GetString(objv[2]);
+	    for (typePtr = tsdPtr->imageTypeList; typePtr != NULL;
+		 typePtr = typePtr->nextPtr) {
 		if ((*arg == typePtr->name[0])
 			&& (strcmp(arg, typePtr->name) == 0)) {
 		    break;
 		}
 	    }
-	}
-	if (typePtr == NULL) {
-	    Tcl_AppendResult(interp, "image type \"", arg,
-		    "\" doesn't exist", (char *) NULL);
-	    return TCL_ERROR;
-	}
+	    if (typePtr == NULL) {
+		oldimage = 1;
+		for (typePtr = tsdPtr->oldImageTypeList; typePtr != NULL;
+		     typePtr = typePtr->nextPtr) {
+		    if ((*arg == typePtr->name[0])
+			    && (strcmp(arg, typePtr->name) == 0)) {
+			break;
+		    }
+		}
+	    }
+	    if (typePtr == NULL) {
+		Tcl_AppendResult(interp, "image type \"", arg,
+			"\" doesn't exist", (char *) NULL);
+		return TCL_ERROR;
+	    }
 
-	/*
-	 * Figure out a name to use for the new image.
-	 */
-
-	arg = Tcl_GetString(objv[3]);
-	if ((objc == 3) || (arg[0] == '-')) {
-	    dispPtr->imageId++;
-	    sprintf(idString, "image%d", dispPtr->imageId);
-	    name = idString;
-	    firstOption = 3;
-	} else {
-	    name = arg;
-	    firstOption = 4;
-	}
-
-	/*
-	 * Create the data structure for the new image.
-	 */
-
-	hPtr = Tcl_CreateHashEntry(&winPtr->mainPtr->imageTable, name, &new);
-	if (new) {
-	    masterPtr = (ImageMaster *) ckalloc(sizeof(ImageMaster));
-	    masterPtr->typePtr = NULL;
-	    masterPtr->masterData = NULL;
-	    masterPtr->width = masterPtr->height = 1;
-	    masterPtr->tablePtr = &winPtr->mainPtr->imageTable;
-	    masterPtr->hPtr = hPtr;
-	    masterPtr->instancePtr = NULL;
-	    Tcl_SetHashValue(hPtr, masterPtr);
-	} else {
 	    /*
-	     * An image already exists by this name.  Disconnect the
-	     * instances from the master.
+	     * Figure out a name to use for the new image.
 	     */
 
-	    masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
-	    if (masterPtr->typePtr != NULL) {
-		for (imagePtr = masterPtr->instancePtr; imagePtr != NULL;
-			imagePtr = imagePtr->nextPtr) {
-		   (*masterPtr->typePtr->freeProc)(
-			   imagePtr->instanceData, imagePtr->display);
-		   (*imagePtr->changeProc)(imagePtr->widgetClientData, 0, 0,
-			masterPtr->width, masterPtr->height, masterPtr->width,
-			masterPtr->height);
-		}
-		(*masterPtr->typePtr->deleteProc)(masterPtr->masterData);
+	    if ((objc == 3) || (*(arg = Tcl_GetString(objv[3])) == '-')) {
+		dispPtr->imageId++;
+		sprintf(idString, "image%d", dispPtr->imageId);
+		name = idString;
+		firstOption = 3;
+	    } else {
+		name = arg;
+		firstOption = 4;
+	    }
+
+	    /*
+	     * Create the data structure for the new image.
+	     */
+
+	    hPtr = Tcl_CreateHashEntry(&winPtr->mainPtr->imageTable,
+		    name, &new);
+	    if (new) {
+		masterPtr = (ImageMaster *) ckalloc(sizeof(ImageMaster));
 		masterPtr->typePtr = NULL;
-	    }
-	}
+		masterPtr->masterData = NULL;
+		masterPtr->width = masterPtr->height = 1;
+		masterPtr->tablePtr = &winPtr->mainPtr->imageTable;
+		masterPtr->hPtr = hPtr;
+		masterPtr->instancePtr = NULL;
+		Tcl_SetHashValue(hPtr, masterPtr);
+	    } else {
+		/*
+		 * An image already exists by this name.  Disconnect the
+		 * instances from the master.
+		 */
 
-	/*
-	 * Call the image type manager so that it can perform its own
-	 * initialization, then re-"get" for any existing instances of
-	 * the image.
-	 */
-
-	objv += firstOption;
-	objc -= firstOption;
-	args = (Tcl_Obj **) objv;
-	if (oldimage) {
-	    int i;
-	    args = (Tcl_Obj **) ckalloc((objc+1) * sizeof(char *));
-	    for (i = 0; i < objc; i++) {
-		args[i] = (Tcl_Obj *) Tcl_GetString(objv[i]);
+		masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+		if (masterPtr->typePtr != NULL) {
+		    for (imagePtr = masterPtr->instancePtr; imagePtr != NULL;
+			 imagePtr = imagePtr->nextPtr) {
+			(*masterPtr->typePtr->freeProc)(
+			    imagePtr->instanceData, imagePtr->display);
+			(*imagePtr->changeProc)(imagePtr->widgetClientData,
+				0, 0, masterPtr->width, masterPtr->height,
+				masterPtr->width, masterPtr->height);
+		    }
+		    (*masterPtr->typePtr->deleteProc)(masterPtr->masterData);
+		    masterPtr->typePtr = NULL;
+		}
 	    }
-	    args[objc] = NULL;
-	}
-	if ((*typePtr->createProc)(interp, name, objc,
-		args, typePtr, (Tk_ImageMaster) masterPtr,
-		&masterPtr->masterData) != TCL_OK) {
-	    DeleteImage(masterPtr);
+
+	    /*
+	     * Call the image type manager so that it can perform its own
+	     * initialization, then re-"get" for any existing instances of
+	     * the image.
+	     */
+
+	    objv += firstOption;
+	    objc -= firstOption;
+	    args = (Tcl_Obj **) objv;
+	    if (oldimage) {
+		int i;
+		args = (Tcl_Obj **) ckalloc((objc+1) * sizeof(char *));
+		for (i = 0; i < objc; i++) {
+		    args[i] = (Tcl_Obj *) Tcl_GetString(objv[i]);
+		}
+		args[objc] = NULL;
+	    }
+	    if ((*typePtr->createProc)(interp, name, objc,
+		    args, typePtr, (Tk_ImageMaster) masterPtr,
+		    &masterPtr->masterData) != TCL_OK) {
+		DeleteImage(masterPtr);
+		if (oldimage) {
+		    ckfree((char *) args);
+		}
+		return TCL_ERROR;
+	    }
 	    if (oldimage) {
 		ckfree((char *) args);
 	    }
-	    return TCL_ERROR;
+	    masterPtr->typePtr = typePtr;
+	    for (imagePtr = masterPtr->instancePtr; imagePtr != NULL;
+		 imagePtr = imagePtr->nextPtr) {
+		imagePtr->instanceData = (*typePtr->getProc)(
+		    imagePtr->tkwin, masterPtr->masterData);
+	    }
+	    Tcl_SetResult(interp,
+		    Tcl_GetHashKey(&winPtr->mainPtr->imageTable, hPtr),
+		    TCL_STATIC);
+	    break;
 	}
-	if (oldimage) {
-	    ckfree((char *) args);
+	case IMAGE_DELETE: {
+	    for (i = 2; i < objc; i++) {
+		char *arg = Tcl_GetString(objv[i]);
+		hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->imageTable, arg);
+		if (hPtr == NULL) {
+		    Tcl_AppendResult(interp, "image \"", arg,
+			    "\" doesn't exist", (char *) NULL);
+		    return TCL_ERROR;
+		}
+		masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+		DeleteImage(masterPtr);
+	    }
+	    break;
 	}
-	masterPtr->typePtr = typePtr;
-	for (imagePtr = masterPtr->instancePtr; imagePtr != NULL;
-		imagePtr = imagePtr->nextPtr) {
-	   imagePtr->instanceData = (*typePtr->getProc)(
-		   imagePtr->tkwin, masterPtr->masterData);
-	}
-	Tcl_SetResult(interp,
-		Tcl_GetHashKey(&winPtr->mainPtr->imageTable, hPtr),
-		TCL_STATIC);
-	break;
-      }
-      case IMAGE_DELETE: {
-	for (i = 2; i < objc; i++) {
-	    char *arg = Tcl_GetString(objv[i]);
+	case IMAGE_HEIGHT: {	
+	    char *arg;
+	    if (objc != 3) {
+		Tcl_WrongNumArgs(interp, 2, objv, "name");
+		return TCL_ERROR;
+	    }
+	    arg = Tcl_GetString(objv[2]);
 	    hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->imageTable, arg);
 	    if (hPtr == NULL) {
-	    Tcl_AppendResult(interp, "image \"", arg,
-		    "\" doesn't exist", (char *) NULL);
+		Tcl_AppendResult(interp, "image \"", arg,
+			"\" doesn't exist", (char *) NULL);
 		return TCL_ERROR;
 	    }
 	    masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
-	    DeleteImage(masterPtr);
+	    Tcl_SetIntObj(Tcl_GetObjResult(interp), masterPtr->height);
+	    break;
 	}
-	break;
-      }
-      case IMAGE_HEIGHT: {	
-	char *arg;
-	if (objc != 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "name");
-	    return TCL_ERROR;
-	}
-	arg = Tcl_GetString(objv[2]);
-	hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->imageTable, arg);
-	if (hPtr == NULL) {
-	    Tcl_AppendResult(interp, "image \"", arg,
-		    "\" doesn't exist", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
-	Tcl_SetIntObj(Tcl_GetObjResult(interp), masterPtr->height);
-	break;
-      }
-      case IMAGE_NAMES: {
-	if (objc != 2) {
-	    Tcl_WrongNumArgs(interp, 2, objv, NULL);
-	    return TCL_ERROR;
-	}
-	for (hPtr = Tcl_FirstHashEntry(&winPtr->mainPtr->imageTable, &search);
-		hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	    Tcl_AppendElement(interp, Tcl_GetHashKey(
+	case IMAGE_NAMES: {
+	    if (objc != 2) {
+		Tcl_WrongNumArgs(interp, 2, objv, NULL);
+		return TCL_ERROR;
+	    }
+	    for (hPtr = Tcl_FirstHashEntry(&winPtr->mainPtr->imageTable, &search);
+		 hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
+		Tcl_AppendElement(interp, Tcl_GetHashKey(
 		    &winPtr->mainPtr->imageTable, hPtr));
+	    }
+	    break;
 	}
-	break;
-      }
-      case IMAGE_TYPE: {
-	char *arg;
-	if (objc != 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "name");
-	    return TCL_ERROR;
+	case IMAGE_TYPE: {
+	    char *arg;
+	    if (objc != 3) {
+		Tcl_WrongNumArgs(interp, 2, objv, "name");
+		return TCL_ERROR;
+	    }
+	    arg = Tcl_GetString(objv[2]);
+	    hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->imageTable, arg);
+	    if (hPtr == NULL) {
+		Tcl_AppendResult(interp, "image \"", arg,
+			"\" doesn't exist", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+	    if (masterPtr->typePtr != NULL) {
+		Tcl_SetResult(interp, masterPtr->typePtr->name, TCL_STATIC);
+	    }
+	    break;
 	}
-	arg = Tcl_GetString(objv[2]);
-	hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->imageTable, arg);
-	if (hPtr == NULL) {
-	    Tcl_AppendResult(interp, "image \"", arg,
-		    "\" doesn't exist", (char *) NULL);
-	    return TCL_ERROR;
+	case IMAGE_TYPES: {
+	    if (objc != 2) {
+		Tcl_WrongNumArgs(interp, 2, objv, NULL);
+		return TCL_ERROR;
+	    }
+	    for (typePtr = tsdPtr->imageTypeList; typePtr != NULL;
+		 typePtr = typePtr->nextPtr) {
+		Tcl_AppendElement(interp, typePtr->name);
+	    }
+	    for (typePtr = tsdPtr->oldImageTypeList; typePtr != NULL;
+		 typePtr = typePtr->nextPtr) {
+		Tcl_AppendElement(interp, typePtr->name);
+	    }
+	    break;
 	}
-	masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
-	if (masterPtr->typePtr != NULL) {
-	    Tcl_SetResult(interp, masterPtr->typePtr->name, TCL_STATIC);
+	case IMAGE_WIDTH: {
+	    char *arg;
+	    if (objc != 3) {
+		Tcl_WrongNumArgs(interp, 2, objv, "name");
+		return TCL_ERROR;
+	    }
+	    arg = Tcl_GetString(objv[2]);
+	    hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->imageTable, arg);
+	    if (hPtr == NULL) {
+		Tcl_AppendResult(interp, "image \"", arg,
+			"\" doesn't exist", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+	    Tcl_SetIntObj(Tcl_GetObjResult(interp), masterPtr->width);
+	    break;
 	}
-	break;
-      }
-      case IMAGE_TYPES: {
-	if (objc != 2) {
-	    Tcl_WrongNumArgs(interp, 2, objv, NULL);
-	    return TCL_ERROR;
-	}
-	for (typePtr = tsdPtr->imageTypeList; typePtr != NULL;
-		typePtr = typePtr->nextPtr) {
-	    Tcl_AppendElement(interp, typePtr->name);
-	}
-	for (typePtr = tsdPtr->oldImageTypeList; typePtr != NULL;
-		typePtr = typePtr->nextPtr) {
-	    Tcl_AppendElement(interp, typePtr->name);
-	}
-	break;
-      }
-      case IMAGE_WIDTH: {
-	char *arg;
-	if (objc != 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "name");
-	    return TCL_ERROR;
-	}
-	arg = Tcl_GetString(objv[2]);
-	hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->imageTable, arg);
-	if (hPtr == NULL) {
-	    Tcl_AppendResult(interp, "image \"", arg,
-		    "\" doesn't exist", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
-	Tcl_SetIntObj(Tcl_GetObjResult(interp), masterPtr->width);
-	break;
-      }
     }
     return TCL_OK;
 }
@@ -450,9 +450,9 @@ Tk_ImageChanged(imageMaster, x, y, width, height, imageWidth,
     masterPtr->width = imageWidth;
     masterPtr->height = imageHeight;
     for (imagePtr = masterPtr->instancePtr; imagePtr != NULL;
-	    imagePtr = imagePtr->nextPtr) {
+	 imagePtr = imagePtr->nextPtr) {
 	(*imagePtr->changeProc)(imagePtr->widgetClientData, x, y,
-	    width, height, imageWidth, imageHeight);
+		width, height, imageWidth, imageHeight);
     }
 }
 
@@ -605,6 +605,81 @@ Tk_FreeImage(image)
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_PostscriptImage --
+ *
+ *	This procedure is called by widgets that contain images in order
+ *	to redisplay an image on the screen or an off-screen pixmap.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The image's manager is notified, and it redraws the desired
+ *	portion of the image before returning.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Tk_PostscriptImage(image, interp, tkwin, psinfo, x, y, width, height, prepass)
+    Tk_Image image;		/* Token for image to redisplay. */
+    Tcl_Interp *interp;
+    Tk_Window tkwin;
+    Tk_PostscriptInfo psinfo;	/* postscript info */
+    int x, y;			/* Upper-left pixel of region in image that
+				 * needs to be redisplayed. */
+    int width, height;		/* Dimensions of region to redraw. */
+    int prepass;
+{
+    int result;
+    XImage *ximage;
+    Pixmap pmap;
+    GC newGC;
+    XGCValues gcValues;
+    if (prepass) {
+	return TCL_OK;
+    }
+
+    /*
+     * Create a Pixmap, tell the image to redraw itself there, and then
+     * generate an XImage from the Pixmap.  We can then read pixel 
+     * values out of the XImage.
+     */
+
+    pmap = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
+                        width, height, Tk_Depth(tkwin));
+
+    gcValues.foreground = WhitePixelOfScreen(Tk_Screen(tkwin));
+    newGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
+    if (newGC != None) {
+	XFillRectangle(Tk_Display(tkwin), pmap, newGC,
+		0, 0, (unsigned int)width, (unsigned int)height);
+	Tk_FreeGC(Tk_Display(tkwin), newGC);
+    }
+
+    Tk_RedrawImage(image, x, y, width, height, pmap, 0, 0);
+
+    ximage = XGetImage(Tk_Display(tkwin), pmap, 0, 0,
+	    (unsigned int)width, (unsigned int)height, AllPlanes, ZPixmap);
+
+    Tk_FreePixmap(Tk_Display(tkwin), pmap);
+    
+    if (ximage == NULL) {
+	/* The XGetImage() function is apparently not
+	 * implemented on this system. Just ignore it.
+	 */
+	return TCL_OK;
+    }
+    result = TkPostscriptImage(interp, tkwin, psinfo, ximage, x, y,
+	    width, height);
+
+    XDestroyImage(ximage);
+    return result;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -864,3 +939,39 @@ Tk_GetImageMasterData(interp, name, typePtrPtr)
     *typePtrPtr = masterPtr->typePtr;
     return masterPtr->masterData;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_SetTSOrigin --
+ *
+ *	Set the pattern origin of the tile to a common point (i.e. the
+ *	origin (0,0) of the top level window) so that tiles from two
+ *	different widgets will match up.  This done by setting the
+ *	GCTileStipOrigin field is set to the translated origin of the
+ *	toplevel window in the hierarchy.
+ *
+ * Results:
+ *	None.
+ *
+ * Side Effects:
+ *	The GCTileStipOrigin is reset in the GC.  This will cause the
+ *	tile origin to change when the GC is used for drawing.
+ *
+ *----------------------------------------------------------------------
+ */
+/*ARGSUSED*/
+void
+Tk_SetTSOrigin(tkwin, gc, x, y)
+    Tk_Window tkwin;
+    GC gc;
+    int x, y;
+{
+    while (!Tk_IsTopLevel(tkwin)) {
+	x -= Tk_X(tkwin) + Tk_Changes(tkwin)->border_width;
+	y -= Tk_Y(tkwin) + Tk_Changes(tkwin)->border_width;
+	tkwin = Tk_Parent(tkwin);
+    }
+    XSetTSOrigin(Tk_Display(tkwin), gc, x, y);
+}
+

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.5 1999/04/30 22:49:54 stanton Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.6 1999/12/14 06:52:27 hobbs Exp $
  */
 
 #ifndef _TKDECLS
@@ -748,6 +748,16 @@ EXTERN void		Tk_InitConsoleChannels _ANSI_ARGS_((
 /* 216 */
 EXTERN int		Tk_CreateConsoleWindow _ANSI_ARGS_((
 				Tcl_Interp * interp));
+/* 217 */
+EXTERN void		Tk_CreateSmoothMethod _ANSI_ARGS_((
+				Tcl_Interp * interp, 
+				Tk_SmoothMethod * method));
+/* 218 */
+EXTERN void		Tk_CreateCanvasVisitor _ANSI_ARGS_((
+				Tcl_Interp * interp, VOID * typePtr));
+/* 219 */
+EXTERN VOID *		Tk_GetCanvasVisitor _ANSI_ARGS_((Tcl_Interp * interp, 
+				CONST char * name));
 
 typedef struct TkStubHooks {
     struct TkPlatStubs *tkPlatStubs;
@@ -977,6 +987,9 @@ typedef struct TkStubs {
     int (*tk_SetOptions) _ANSI_ARGS_((Tcl_Interp * interp, char * recordPtr, Tk_OptionTable optionTable, int objc, Tcl_Obj *CONST objv[], Tk_Window tkwin, Tk_SavedOptions * savePtr, int * maskPtr)); /* 214 */
     void (*tk_InitConsoleChannels) _ANSI_ARGS_((Tcl_Interp * interp)); /* 215 */
     int (*tk_CreateConsoleWindow) _ANSI_ARGS_((Tcl_Interp * interp)); /* 216 */
+    void (*tk_CreateSmoothMethod) _ANSI_ARGS_((Tcl_Interp * interp, Tk_SmoothMethod * method)); /* 217 */
+    void (*tk_CreateCanvasVisitor) _ANSI_ARGS_((Tcl_Interp * interp, VOID * typePtr)); /* 218 */
+    VOID * (*tk_GetCanvasVisitor) _ANSI_ARGS_((Tcl_Interp * interp, CONST char * name)); /* 219 */
 } TkStubs;
 
 #ifdef __cplusplus
@@ -1860,6 +1873,18 @@ extern TkStubs *tkStubsPtr;
 #ifndef Tk_CreateConsoleWindow
 #define Tk_CreateConsoleWindow \
 	(tkStubsPtr->tk_CreateConsoleWindow) /* 216 */
+#endif
+#ifndef Tk_CreateSmoothMethod
+#define Tk_CreateSmoothMethod \
+	(tkStubsPtr->tk_CreateSmoothMethod) /* 217 */
+#endif
+#ifndef Tk_CreateCanvasVisitor
+#define Tk_CreateCanvasVisitor \
+	(tkStubsPtr->tk_CreateCanvasVisitor) /* 218 */
+#endif
+#ifndef Tk_GetCanvasVisitor
+#define Tk_GetCanvasVisitor \
+	(tkStubsPtr->tk_GetCanvasVisitor) /* 219 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.h,v 1.4 1998/09/14 18:23:17 stanton Exp $
+ * RCS: @(#) $Id: tkScrollbar.h,v 1.5 1999/12/14 06:52:30 hobbs Exp $
  */
 
 #ifndef _TKSCROLLBAR
@@ -39,8 +39,6 @@ typedef struct TkScrollbar {
 				 * freed even after tkwin has gone away. */
     Tcl_Interp *interp;		/* Interpreter associated with scrollbar. */
     Tcl_Command widgetCmd;	/* Token for scrollbar's widget command. */
-    Tk_Uid orientUid;		/* Orientation for window ("vertical" or
-				 * "horizontal"). */
     int vertical;		/* Non-zero means vertical orientation
 				 * requested, zero means horizontal. */
     int width;			/* Desired narrow dimension of scrollbar,

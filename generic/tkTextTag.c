@@ -11,17 +11,39 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.3 1999/04/16 01:51:24 stanton Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.4 1999/12/14 06:52:33 hobbs Exp $
  */
 
 #include "default.h"
 #include "tkPort.h"
-#include "tk.h"
+#include "tkInt.h"
 #include "tkText.h"
 
 /*
  * Information used for parsing tag configuration information:
  */
+
+static Tk_CustomOption stateOption = {
+    (Tk_OptionParseProc *) TkStateParseProc,
+    TkStatePrintProc, (ClientData) 2
+};
+
+/* The "-elide" is only provided for compatibility with TkMan 2.0,
+ * but might be removed in the future. The option "-state" provides
+ * the same functionality and is preferred.
+ */
+
+static int	ElideParseProc _ANSI_ARGS_((ClientData clientData,
+		    Tcl_Interp *interp, Tk_Window tkwin,
+		    CONST char *value, char *widgRec, int offset));
+static char *	ElidePrintProc _ANSI_ARGS_((ClientData clientData,
+		    Tk_Window tkwin, char *widgRec, int offset,
+		    Tcl_FreeProc **freeProcPtr));
+
+static Tk_CustomOption elideOption = {
+    (Tk_OptionParseProc *) ElideParseProc,
+    ElidePrintProc, (ClientData) 0
+};
 
 static Tk_ConfigSpec tagConfigSpecs[] = {
     {TK_CONFIG_BORDER, "-background", (char *) NULL, (char *) NULL,
@@ -31,6 +53,9 @@ static Tk_ConfigSpec tagConfigSpecs[] = {
     {TK_CONFIG_STRING, "-borderwidth", (char *) NULL, (char *) NULL,
 	"0", Tk_Offset(TkTextTag, bdString),
 		TK_CONFIG_DONT_SET_DEFAULT|TK_CONFIG_NULL_OK},
+    {TK_CONFIG_CUSTOM, "-elide", (char *) NULL, (char *) NULL,
+	(char *) NULL, Tk_Offset(TkTextTag, state),
+	TK_CONFIG_NULL_OK, &elideOption},
     {TK_CONFIG_BITMAP, "-fgstipple", (char *) NULL, (char *) NULL,
 	(char *) NULL, Tk_Offset(TkTextTag, fgStipple), TK_CONFIG_NULL_OK},
     {TK_CONFIG_FONT, "-font", (char *) NULL, (char *) NULL,
@@ -58,14 +83,17 @@ static Tk_ConfigSpec tagConfigSpecs[] = {
 	(char *) NULL, Tk_Offset(TkTextTag, spacing2String), TK_CONFIG_NULL_OK},
     {TK_CONFIG_STRING, "-spacing3", (char *) NULL, (char *) NULL,
 	(char *) NULL, Tk_Offset(TkTextTag, spacing3String), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_CUSTOM, "-state", (char *) NULL, (char *) NULL,
+	(char *) NULL, Tk_Offset(TkTextTag, state),
+	TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_STRING, "-tabs", (char *) NULL, (char *) NULL,
 	(char *) NULL, Tk_Offset(TkTextTag, tabString), TK_CONFIG_NULL_OK},
     {TK_CONFIG_STRING, "-underline", (char *) NULL, (char *) NULL,
 	(char *) NULL, Tk_Offset(TkTextTag, underlineString),
 	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_UID, "-wrap", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_CUSTOM, "-wrap", (char *) NULL, (char *) NULL,
 	(char *) NULL, Tk_Offset(TkTextTag, wrapMode),
-	TK_CONFIG_NULL_OK},
+	TK_CONFIG_NULL_OK, &textWrapModeOption},
     {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
 	(char *) NULL, 0, 0}
 };
@@ -391,15 +419,6 @@ TkTextTagCmd(textPtr, interp, argc, argv)
 		    return TCL_ERROR;
 		}
 	    }
-	    if ((tagPtr->wrapMode != NULL)
-		    && (tagPtr->wrapMode != Tk_GetUid("char"))
-		    && (tagPtr->wrapMode != Tk_GetUid("none"))
-		    && (tagPtr->wrapMode != Tk_GetUid("word"))) {
-		Tcl_AppendResult(interp, "bad wrap mode \"", tagPtr->wrapMode,
-			"\": must be char, none, or word", (char *) NULL);
-		tagPtr->wrapMode = NULL;
-		return TCL_ERROR;
-	    }
 
 	    /*
 	     * If the "sel" tag was changed, be sure to mirror information
@@ -432,7 +451,8 @@ TkTextTagCmd(textPtr, interp, argc, argv)
 		    || (tagPtr->spacing3String != NULL)
 		    || (tagPtr->tabString != NULL)
 		    || (tagPtr->underlineString != NULL)
-		    || (tagPtr->wrapMode != NULL)) {
+		    || (tagPtr->state != TK_STATE_NULL)
+		    || (tagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
 		tagPtr->affectsDisplay = 1;
 	    }
 	    TkTextRedrawTag(textPtr, (TkTextIndex *) NULL,
@@ -824,7 +844,8 @@ TkTextCreateTag(textPtr, tagName)
     tagPtr->tabArrayPtr = NULL;
     tagPtr->underlineString = NULL;
     tagPtr->underline = 0;
-    tagPtr->wrapMode = NULL;
+    tagPtr->state = TK_STATE_NULL;
+    tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
     tagPtr->affectsDisplay = 0;
     textPtr->numTags++;
     Tcl_SetHashValue(hPtr, tagPtr);
@@ -1385,5 +1406,91 @@ TkTextPickCurrent(textPtr, eventPtr)
 		    numNewTags, (ClientData *) copyArrayPtr);
 	}
 	ckfree((char *) copyArrayPtr);
+    }
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * ElideParseProc --
+ *
+ *	This procedure is invoked during option processing to handle
+ *	the "-elide" option. This option is an obsolete equivalent
+ *	of the "-state" option. It is only added for compatibility
+ *	with TkMan 2.0, but will be removed in the future.
+ *
+ * Results:
+ *	A standard Tcl return value.
+ *
+ * Side effects:
+ *	The state for a given item gets replaced by the state
+ *	indicated in the value argument.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+ElideParseProc(clientData, interp, tkwin, value, widgRec, offset)
+    ClientData clientData;		/* some flags.*/
+    Tcl_Interp *interp;			/* Used for reporting errors. */
+    Tk_Window tkwin;			/* Window containing canvas widget. */
+    CONST char *value;			/* Value of option. */
+    char *widgRec;			/* Pointer to record for item. */
+    int offset;				/* Offset into item. */
+{
+    int b;
+    register Tk_State *statePtr = (Tk_State *) (widgRec + offset);
+
+    if(value == NULL || *value == 0) {
+	*statePtr = TK_STATE_NULL;
+	return TCL_OK;
+    }
+    if (Tcl_GetBoolean(interp, (char *) value, &b) != TCL_OK) {
+	*statePtr = TK_STATE_NULL;
+	return TCL_ERROR;
+    }
+    *statePtr = b?TK_STATE_HIDDEN:TK_STATE_NORMAL;
+    return TCL_OK;
+}
+/*
+ *--------------------------------------------------------------
+ *
+ * ElidePrintProc --
+ *
+ *	This procedure is invoked by the Tk configuration code
+ *	to produce a printable string for the "-elide"
+ *	configuration option.
+ *
+ * Results:
+ *	The return value is a string describing the state for
+ *	the item referred to by "widgRec".  In addition, *freeProcPtr
+ *	is filled in with the address of a procedure to call to free
+ *	the result string when it's no longer needed (or NULL to
+ *	indicate that the string doesn't need to be freed).
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static char *
+ElidePrintProc(clientData, tkwin, widgRec, offset, freeProcPtr)
+    ClientData clientData;		/* Ignored. */
+    Tk_Window tkwin;			/* Window containing text widget. */
+    char *widgRec;			/* Pointer to record for item. */
+    int offset;				/* Offset into item. */
+    Tcl_FreeProc **freeProcPtr;		/* Pointer to variable to fill in with
+					 * information about how to reclaim
+					 * storage for return string. */
+{
+    register Tk_State *statePtr = (Tk_State *) (widgRec + offset);
+
+    if (*statePtr==TK_STATE_HIDDEN) {
+	return "1";
+    } else if (*statePtr==TK_STATE_NULL) {
+	return "";
+    } else {
+	return "0";
     }
 }

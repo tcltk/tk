@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.11 1999/07/31 03:36:49 hobbs Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.12 1999/12/14 06:52:29 hobbs Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
@@ -39,7 +39,10 @@
  */
 
 #ifdef __WIN32__
-/* Slot 0 is reserved */
+/* 0 */
+EXTERN void		XSetDashes _ANSI_ARGS_((Display* display, GC gc, 
+				int dash_offset, _Xconst char* dash_list, 
+				int n));
 /* 1 */
 EXTERN XModifierKeymap*	 XGetModifierMapping _ANSI_ARGS_((Display* d));
 /* 2 */
@@ -354,14 +357,20 @@ EXTERN Status		XStringListToTextProperty _ANSI_ARGS_((char** list,
 /* 104 */
 EXTERN void		XDrawLine _ANSI_ARGS_((Display* d, Drawable dr, GC g, 
 				int x1, int y1, int x2, int y2));
-/* Slot 105 is reserved */
+/* 105 */
+EXTERN void		XWarpPointer _ANSI_ARGS_((Display* d, Window s, 
+				Window dw, int sx, int sy, unsigned int sw, 
+				unsigned int sh, int dx, int dy));
 /* 106 */
 EXTERN void		XFillRectangle _ANSI_ARGS_((Display* display, 
 				Drawable d, GC gc, int x, int y, 
 				unsigned int width, unsigned int height));
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
-/* Slot 0 is reserved */
+/* 0 */
+EXTERN void		XSetDashes _ANSI_ARGS_((Display* display, GC gc, 
+				int dash_offset, _Xconst char* dash_list, 
+				int n));
 /* 1 */
 EXTERN XModifierKeymap*	 XGetModifierMapping _ANSI_ARGS_((Display* d));
 /* 2 */
@@ -627,7 +636,7 @@ typedef struct TkIntXlibStubs {
     struct TkIntXlibStubHooks *hooks;
 
 #ifdef __WIN32__
-    void *reserved0;
+    void (*xSetDashes) _ANSI_ARGS_((Display* display, GC gc, int dash_offset, _Xconst char* dash_list, int n)); /* 0 */
     XModifierKeymap* (*xGetModifierMapping) _ANSI_ARGS_((Display* d)); /* 1 */
     XImage * (*xCreateImage) _ANSI_ARGS_((Display* d, Visual* v, unsigned int ui1, int i1, int i2, char* cp, unsigned int ui2, unsigned int ui3, int i3, int i4)); /* 2 */
     XImage * (*xGetImage) _ANSI_ARGS_((Display* d, Drawable dr, int i1, int i2, unsigned int ui1, unsigned int ui2, unsigned long ul, int i3)); /* 3 */
@@ -732,11 +741,11 @@ typedef struct TkIntXlibStubs {
     void (*xSetWMClientMachine) _ANSI_ARGS_((Display* display, Window w, XTextProperty* text_prop)); /* 102 */
     Status (*xStringListToTextProperty) _ANSI_ARGS_((char** list, int count, XTextProperty* text_prop_return)); /* 103 */
     void (*xDrawLine) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int x1, int y1, int x2, int y2)); /* 104 */
-    void *reserved105;
+    void (*xWarpPointer) _ANSI_ARGS_((Display* d, Window s, Window dw, int sx, int sy, unsigned int sw, unsigned int sh, int dx, int dy)); /* 105 */
     void (*xFillRectangle) _ANSI_ARGS_((Display* display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height)); /* 106 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
-    void *reserved0;
+    void (*xSetDashes) _ANSI_ARGS_((Display* display, GC gc, int dash_offset, _Xconst char* dash_list, int n)); /* 0 */
     XModifierKeymap* (*xGetModifierMapping) _ANSI_ARGS_((Display* d)); /* 1 */
     XImage * (*xCreateImage) _ANSI_ARGS_((Display* d, Visual* v, unsigned int ui1, int i1, int i2, char* cp, unsigned int ui2, unsigned int ui3, int i3, int i4)); /* 2 */
     XImage * (*xGetImage) _ANSI_ARGS_((Display* d, Drawable dr, int i1, int i2, unsigned int ui1, unsigned int ui2, unsigned long ul, int i3)); /* 3 */
@@ -838,7 +847,10 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
  */
 
 #ifdef __WIN32__
-/* Slot 0 is reserved */
+#ifndef XSetDashes
+#define XSetDashes \
+	(tkIntXlibStubsPtr->xSetDashes) /* 0 */
+#endif
 #ifndef XGetModifierMapping
 #define XGetModifierMapping \
 	(tkIntXlibStubsPtr->xGetModifierMapping) /* 1 */
@@ -1252,14 +1264,20 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #define XDrawLine \
 	(tkIntXlibStubsPtr->xDrawLine) /* 104 */
 #endif
-/* Slot 105 is reserved */
+#ifndef XWarpPointer
+#define XWarpPointer \
+	(tkIntXlibStubsPtr->xWarpPointer) /* 105 */
+#endif
 #ifndef XFillRectangle
 #define XFillRectangle \
 	(tkIntXlibStubsPtr->xFillRectangle) /* 106 */
 #endif
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
-/* Slot 0 is reserved */
+#ifndef XSetDashes
+#define XSetDashes \
+	(tkIntXlibStubsPtr->xSetDashes) /* 0 */
+#endif
 #ifndef XGetModifierMapping
 #define XGetModifierMapping \
 	(tkIntXlibStubsPtr->xGetModifierMapping) /* 1 */

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTrig.c,v 1.3 1999/04/16 01:51:24 stanton Exp $
+ * RCS: @(#) $Id: tkTrig.c,v 1.4 1999/12/14 06:52:33 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -1065,6 +1065,14 @@ TkMakeBezierCurve(canvas, pointPtr, numPoints, numSteps, xPoints, dblPoints)
      * that spans the last points and the first ones.  Otherwise
      * just put the first point into the output.
      */
+
+    if (!pointPtr) {
+	/* Of pointPtr == NULL, this function returns an upper limit.
+	 * of the array size to store the coordinates. This can be
+	 * used to allocate storage, before the actual coordinates
+	 * are calculated. */
+	return 1 + numPoints * numSteps;
+    }
 
     outputPoints = 0;
     if ((pointPtr[0] == pointPtr[numCoords-2])
