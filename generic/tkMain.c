@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.1.4.2 1998/09/30 02:17:07 stanton Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.1.4.3 1998/12/11 23:32:22 stanton Exp $
  */
 
 #include <ctype.h>
@@ -133,7 +133,7 @@ Tk_Main(argc, argv, appInitProc)
 
     args = Tcl_Merge(argc-1, argv+1);
     Tcl_ExternalToUtfDString(NULL, args, -1, &argString);
-    Tcl_SetVar(interp, "argv", args, TCL_GLOBAL_ONLY);
+    Tcl_SetVar(interp, "argv", Tcl_DStringValue(&argString), TCL_GLOBAL_ONLY);
     Tcl_DStringFree(&argString);
     ckfree(args);
     sprintf(buf, "%d", argc-1);
