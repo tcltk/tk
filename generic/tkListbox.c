@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.29.2.1 2003/11/11 19:41:50 hobbs Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.29.2.2 2004/06/08 20:11:18 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -2941,7 +2941,7 @@ ListboxSelect(listPtr, first, last, select)
     int select;				/* 1 means select items, 0 means
 					 * deselect them. */
 {
-    int i, firstRedisplay, increment, oldCount;
+    int i, firstRedisplay, oldCount;
     Tcl_HashEntry *entry;
     int new;
     
@@ -2961,7 +2961,6 @@ ListboxSelect(listPtr, first, last, select)
     }
     oldCount = listPtr->numSelected;
     firstRedisplay = -1;
-    increment = select ? 1 : -1;
 
     /*
      * For each index in the range, find it in our selection hash table.
