@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.7 2000/06/27 17:15:58 ericm Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.8 2000/08/03 20:36:16 ericm Exp $
  */
 
 /*
@@ -2665,7 +2665,6 @@ CloneMenu(menuPtr, newMenuNamePtr, newMenuTypePtr)
 	    && (menuPtr->numEntries == menuRefPtr->menuPtr->numEntries)) {
     	TkMenu *newMenuPtr = menuRefPtr->menuPtr;
 	Tcl_Obj *newObjv[3];
-	char *newArgv[3];
 	int i, numElements;
 
 	/*
@@ -2692,15 +2691,18 @@ CloneMenu(menuPtr, newMenuNamePtr, newMenuTypePtr)
    	 * clone structure.
    	 */
    	
-   	newArgv[0] = "bindtags";
-   	newArgv[1] = Tk_PathName(newMenuPtr->tkwin);
-   	if (Tk_BindtagsCmd((ClientData)newMenuPtr->tkwin, 
-   		newMenuPtr->interp, 2, newArgv) == TCL_OK) {
+	newObjv[0] = Tcl_NewStringObj("bindtags", -1);
+   	newObjv[1] = Tcl_NewStringObj(Tk_PathName(newMenuPtr->tkwin), -1);
+	Tcl_IncrRefCount(newObjv[0]);
+	Tcl_IncrRefCount(newObjv[1]);
+   	if (Tk_BindtagsObjCmd((ClientData)newMenuPtr->tkwin, 
+   		newMenuPtr->interp, 2, newObjv) == TCL_OK) {
    	    char *windowName;
    	    Tcl_Obj *bindingsPtr =
 		    Tcl_DuplicateObj(Tcl_GetObjResult(newMenuPtr->interp));
    	    Tcl_Obj *elementPtr;
      
+	    Tcl_IncrRefCount(bindingsPtr);
    	    Tcl_ListObjLength(newMenuPtr->interp, bindingsPtr, &numElements);
    	    for (i = 0; i < numElements; i++) {
    	    	Tcl_ListObjIndex(newMenuPtr->interp, bindingsPtr, i,
@@ -2713,14 +2715,16 @@ CloneMenu(menuPtr, newMenuNamePtr, newMenuTypePtr)
 		    Tcl_IncrRefCount(newElementPtr);
    	    	    Tcl_ListObjReplace(menuPtr->interp, bindingsPtr,
    	    	    	    i + 1, 0, 1, &newElementPtr);
-   	    	    newArgv[2] = Tcl_GetStringFromObj(bindingsPtr, NULL);
-		    Tk_BindtagsCmd((ClientData)newMenuPtr->tkwin,
-			    menuPtr->interp, 3, newArgv);
+		    newObjv[2] = bindingsPtr;
+		    Tk_BindtagsObjCmd((ClientData)newMenuPtr->tkwin,
+			    menuPtr->interp, 3, newObjv);
    	    	    break;
    	    	}
    	    }
    	    Tcl_DecrRefCount(bindingsPtr);   	    
    	}
+	Tcl_DecrRefCount(newObjv[0]);
+	Tcl_DecrRefCount(newObjv[1]);
    	Tcl_ResetResult(menuPtr->interp);
       	
    	/*

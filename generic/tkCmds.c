@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.15 2000/08/02 23:08:20 ericm Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.16 2000/08/03 20:36:15 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -264,7 +264,7 @@ TkBindEventProc(winPtr, eventPtr)
 /*
  *----------------------------------------------------------------------
  *
- * Tk_BindtagsCmd --
+ * Tk_BindtagsObjCmd --
  *
  *	This procedure is invoked to process the "bindtags" Tcl command.
  *	See the user documentation for details on what it does.
@@ -279,60 +279,70 @@ TkBindEventProc(winPtr, eventPtr)
  */
 
 int
-Tk_BindtagsCmd(clientData, interp, argc, argv)
+Tk_BindtagsObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Main window associated with interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     TkWindow *winPtr, *winPtr2;
-    int i, tagArgc;
-    char *p, **tagArgv;
-
-    if ((argc < 2) || (argc > 3)) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		" window ?tags?\"", (char *) NULL);
+    int i, length;
+    char *p;
+    Tcl_Obj *listPtr, **tags;
+    
+    if ((objc < 2) || (objc > 3)) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window ?taglist?");
 	return TCL_ERROR;
     }
-    winPtr = (TkWindow *) Tk_NameToWindow(interp, argv[1], tkwin);
+    winPtr = (TkWindow *) Tk_NameToWindow(interp, Tcl_GetString(objv[1]),
+	    tkwin);
     if (winPtr == NULL) {
 	return TCL_ERROR;
     }
-    if (argc == 2) {
+    if (objc == 2) {
+	listPtr = Tcl_NewObj();
+	Tcl_IncrRefCount(listPtr);
 	if (winPtr->numTags == 0) {
-	    Tcl_AppendElement(interp, winPtr->pathName);
-	    Tcl_AppendElement(interp, winPtr->classUid);
-	    for (winPtr2 = winPtr;
-		    (winPtr2 != NULL) && !(winPtr2->flags & TK_TOP_LEVEL);
-		    winPtr2 = winPtr2->parentPtr) {
-		/* Empty loop body. */
+	    Tcl_ListObjAppendElement(interp, listPtr,
+		    Tcl_NewStringObj(winPtr->pathName, -1));
+	    Tcl_ListObjAppendElement(interp, listPtr,
+		    Tcl_NewStringObj(winPtr->classUid, -1));
+	    winPtr2 = winPtr;
+	    while ((winPtr2 != NULL) && !(Tk_IsTopLevel(winPtr2))) {
+		winPtr2 = winPtr2->parentPtr;
 	    }
 	    if ((winPtr != winPtr2) && (winPtr2 != NULL)) {
-		Tcl_AppendElement(interp, winPtr2->pathName);
+		Tcl_ListObjAppendElement(interp, listPtr,
+			Tcl_NewStringObj(winPtr2->pathName, -1));
 	    }
-	    Tcl_AppendElement(interp, "all");
+	    Tcl_ListObjAppendElement(interp, listPtr,
+		    Tcl_NewStringObj("all", -1));
 	} else {
 	    for (i = 0; i < winPtr->numTags; i++) {
-		Tcl_AppendElement(interp, (char *) winPtr->tagPtr[i]);
+		Tcl_ListObjAppendElement(interp, listPtr,
+			Tcl_NewStringObj(winPtr->tagPtr[i], -1));
 	    }
 	}
+	Tcl_SetObjResult(interp, listPtr);
+	Tcl_DecrRefCount(listPtr);
 	return TCL_OK;
     }
     if (winPtr->tagPtr != NULL) {
 	TkFreeBindingTags(winPtr);
     }
-    if (argv[2][0] == 0) {
-	return TCL_OK;
-    }
-    if (Tcl_SplitList(interp, argv[2], &tagArgc, &tagArgv) != TCL_OK) {
+    if (Tcl_ListObjGetElements(interp, objv[2], &length, &tags) != TCL_OK) {
 	return TCL_ERROR;
     }
-    winPtr->numTags = tagArgc;
+    if (length == 0) {
+	return TCL_OK;
+    }
+
+    winPtr->numTags = length;
     winPtr->tagPtr = (ClientData *) ckalloc((unsigned)
-	    (tagArgc * sizeof(ClientData)));
-    for (i = 0; i < tagArgc; i++) {
-	p = tagArgv[i];
+	    (length * sizeof(ClientData)));
+    for (i = 0; i < length; i++) {
+	p = Tcl_GetString(tags[i]);
 	if (p[0] == '.') {
 	    char *copy;
 
@@ -350,7 +360,6 @@ Tk_BindtagsCmd(clientData, interp, argc, argv)
 	    winPtr->tagPtr[i] = (ClientData) Tk_GetUid(p);
 	}
     }
-    ckfree((char *) tagArgv);
     return TCL_OK;
 }
 
