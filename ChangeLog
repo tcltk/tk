@@ -3,7 +3,7 @@
 	*unix/configure.in:	Reconfigured to use $TCL_PREFIX as the
 	default value of --prefix, and also added warning when a TK_PREFIX
 	value different from TCL_PREFIX is selected, since [package require Tk]
-	fails in that configuration. [Bug 765642]
+	fails in that configuration. [Bugs 428627,765642]
 
         * unix/tcl.m4 (SC_PATH_TCLCONFIG):      Corrected search path so
         that alpha and beta releases of Tcl are not favored. [Bug 608698]
