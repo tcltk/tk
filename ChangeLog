@@ -1,3 +1,7 @@
+2002-01-30  Don Porter  <dgp@users.sourceforge.net>
+
+	* win/stubs.c (XSetCommand):  Overlooked CONSTification.
+
 2002-02-01  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* doc/photo.n: Documented transparency subcommand.
