@@ -1,5 +1,10 @@
-2002-05-07  David Gravereaux  <davygrvy@pobox.com>
+2002-05-08  Don Porter  <dgp@users.sourceforge.net>
 
+	* library/bgerror.tcl:
+	* library/tclIndex:  Cleaned up namespace usage of the bgerror
+	dialog.  Completes soft dependence on msgcat.  [FR 539309]
+
+2002-05-07  David Gravereaux  <davygrvy@pobox.com>
 	* win/makefile.vc: Problem with TCLDIR macro not accepting
 	forward slash path seperators resolved.  Added the same logic
 	to INSTALLDIR, too. [Bug #553208]
