@@ -1,6 +1,6 @@
 2002-11-10  Daniel Steffen  <das@users.sourceforge.net>
 
-	* macosx/Wish.pbproj/project.pbxproj: fix erroneous
+	* macosx/Wish.pbproj/project.pbxproj: fixed erroneous
 	removal of libtkstub before Wish was built.
 
 2002-11-07  Mo DeJong  <mdejong@users.sourceforge.net>
