@@ -1,4 +1,4 @@
-2003-02-14  Mo DeJong  <mdejong@users.sourceforge.net>
+2003-02-17  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* generic/tkEvent.c (Tk_HandleEvent): Fixup button
 	press state saving code, it was incorrectly converting
