@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.3 2003/02/10 22:03:23 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.4 2003/02/11 07:26:18 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -23,9 +23,11 @@
  * The default theme cursors (listed in cursorNames below),
  * color resource cursors, & normal cursors.
  */
- 
-#define COLOR        1        /* Cursors of type crsr. */
-#define NORMAL        2        /* Cursors of type CURS. */
+
+#define THEME        0        /* Theme cursors */
+#define ANIMATED     1        /* Animated theme cursors */
+#define COLOR        2        /* Cursors of type crsr. */
+#define NORMAL       3        /* Cursors of type CURS. */
 
 /*
  * The following data structure contains the system specific data
@@ -39,6 +41,8 @@ typedef struct {
     int type;                        /* Type of Mac cursor: for theme cursors
                                       * this is the theme cursor constant,
                                       * otherwise one of crsr or CURS */
+    unsigned int count;              /* For animating cursors, the count for the
+                                        cursor. */
 } TkMacOSXCursor;
 
 /*
@@ -46,10 +50,12 @@ typedef struct {
  * to its resource identifier.
  */
 
-static struct CursorName {
+struct CursorName {
     char *name;
     int id;
-} cursorNames[] = {
+};
+
+static struct CursorName themeCursorNames[] = {
     {"ibeam",                kThemeIBeamCursor},
     {"text",                kThemeIBeamCursor},
     {"xterm",                kThemeIBeamCursor},
@@ -57,11 +63,15 @@ static struct CursorName {
     {"crosshair",        kThemeCrossCursor},
     {"cross-hair",        kThemeCrossCursor},
     {"plus",                kThemePlusCursor},
-    {"watch",                kThemeWatchCursor},
     {"arrow",                kThemeArrowCursor},
     {"closedhand",	kThemeClosedHandCursor},
     {"openhand",	kThemeOpenHandCursor},
     {"pointinghand",	kThemePointingHandCursor},
+    {NULL,                0}
+};
+
+static struct CursorName animatedThemeCursorNames[] = {
+    {"watch",                kThemeWatchCursor},
     {"countinguphand",	kThemeCountingUpHandCursor},
     {"countingdownhand",	kThemeCountingDownHandCursor},
     {"countingupanddownhand",	kThemeCountingUpAndDownHandCursor},
@@ -175,14 +185,15 @@ FindCursorByName(
 
 TkCursor *
 TkGetCursorByName(
-    Tcl_Interp *interp,                /* Interpreter to use for error reporting. */
-    Tk_Window tkwin,                /* Window in which cursor will be used. */
-    Tk_Uid string)                /* Description of cursor.  See manual entry
-                                 * for details on legal syntax. */
+    Tcl_Interp *interp,      /* Interpreter to use for error reporting. */
+    Tk_Window tkwin,         /* Window in which cursor will be used. */
+    Tk_Uid string)           /* Description of cursor.  See manual entry
+                              * for details on legal syntax. */
 {
     struct CursorName *namePtr;
     TkMacOSXCursor *macCursorPtr;
-
+    int count = -1;
+    
     macCursorPtr = (TkMacOSXCursor *) ckalloc(sizeof(TkMacOSXCursor));
     macCursorPtr->info.cursor = (Tk_Cursor) macCursorPtr;
 
@@ -192,17 +203,41 @@ TkGetCursorByName(
      * attempt to load the cursor as a named Mac resource.
      */
 
-    for (namePtr = cursorNames; namePtr->name != NULL; namePtr++) {
+    for (namePtr = themeCursorNames; namePtr->name != NULL; namePtr++) {
         if (strcmp(namePtr->name, string) == 0) {
+            macCursorPtr->count = -1;
+            macCursorPtr->macCursor = (Handle) namePtr;
+            macCursorPtr->type = THEME;
             break;
         }
     }
 
+    if (namePtr->name == NULL) {
+        for (namePtr = animatedThemeCursorNames;
+                namePtr->name != NULL; namePtr++) {
+            int namelen = strlen (namePtr->name);
+            if (strncmp(namePtr->name, string, namelen) == 0) {
+                const char *numPtr = string + namelen;
+                if (*numPtr == '\0') {
+                    count = -1;
+                } else {
+                    int result;
+                    result = Tcl_GetInt(NULL, numPtr, &count);
+                    if (result != TCL_OK) {
+                        continue;
+                    }
+                }
+                macCursorPtr->macCursor = (Handle) namePtr;
+                macCursorPtr->type = ANIMATED;
+                macCursorPtr->count = count;
+                break;
+            }
+        }
+    }
+        
 
-    if (namePtr->name != NULL) {
-            macCursorPtr->macCursor = (Handle) -1;
-            macCursorPtr->type = namePtr->id;
-    } else {
+
+    if (namePtr->name == NULL) {
         FindCursorByName(macCursorPtr, string);
 
         if (macCursorPtr->macCursor == NULL) {
@@ -301,7 +336,6 @@ TkpFreeCursor(
         gCurrentCursor = NULL;
     }
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -342,17 +376,22 @@ TkMacOSXInstallCursor(
         }
     } else if (macCursorPtr == NULL) {
         SetThemeCursor(kThemeArrowCursor);
-    } else if (macCursorPtr->macCursor == (void *) -1) {
-        OSErr err = noErr;
-        
-        if (macCursorPtr->type >= kThemeWatchCursor) {
-            err = SetAnimatedThemeCursor(macCursorPtr->type, cursorStep++);
-        }
-        if (err != noErr) {
-            SetThemeCursor(macCursorPtr->type);
-        }
     } else {
+        struct CursorName *namePtr;
         switch (macCursorPtr->type) {
+            case THEME:
+                namePtr = (struct CursorName *) macCursorPtr->macCursor;
+                SetThemeCursor(
+                        namePtr->id);
+                break;
+            case ANIMATED:
+                namePtr = (struct CursorName *) macCursorPtr->macCursor;
+                if (macCursorPtr->count == -1) {
+                    SetAnimatedThemeCursor(namePtr->id, cursorStep++);
+                } else {
+                    SetAnimatedThemeCursor(namePtr->id, macCursorPtr->count);
+                }
+                break;
             case COLOR:
                 ccursor = (CCrsrHandle) macCursorPtr->macCursor;
                 SetCCursor(ccursor);
@@ -385,16 +424,25 @@ void
 TkpSetCursor(
     TkpCursor cursor)
 {
+    int cursorChanged = 1;
+    
     if (!gTkOwnsCursor) {
         return;
     }
+    
     if (cursor == None) {
+        if (gCurrentCursor == NULL) {
+            cursorChanged = 0;
+        }
         gCurrentCursor = NULL;
     } else {
+        if (gCurrentCursor == (TkMacOSXCursor *) cursor) {
+            cursorChanged = 0;
+        }
         gCurrentCursor = (TkMacOSXCursor *) cursor;
     }
 
-    if (Tk_MacOSXIsAppInFront()) {
+    if (Tk_MacOSXIsAppInFront() && cursorChanged) {
         TkMacOSXInstallCursor(gResizeOverride);
     }
 }

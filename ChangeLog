@@ -3,7 +3,12 @@
 	* macosx/tkMacOSXCursor.c (TkMacOSXInstallCursor): Set all theme
 	cursors using SetThemeCursor or SetAnimatedThemeCursors.
 	(TkGetCursorByName): Use the theme cursors for arrow, ibeam, etc.
-
+	Allow animatedCursor{NUM} form for an animated cursor with count.
+	(TkpSetCursor): Don't reset the cursor if there is no change.
+	* macosx/tkMacOSXMouseEvent.c (GeneratePollingEvents): Don't
+	directly call TkMacOSXInstallCursor, it gets called by the call
+	to Tk_UpdatePointer immediately above.
+	
 2003-02-05  Fred Fish  <fnf@intrinsity.com>
 
 	* macosx/tkMacOSXWm.c (Tk_SetGrid): Fix precedence problem with
