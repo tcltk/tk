@@ -1,3 +1,17 @@
+2000-09-06  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* README:
+	* generic/tk.h:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in: updated to patchlevel 8.4a2
+
+	* generic/tkMessage.c (MessageWidgetObjCmd): initialized result to
+	avoid pedantic warning.
+
+	* generic/tkGrab.c (Tk_GrabObjCmd): changed len arg from size_t to
+	int to fix pedantic warning.
+
 2000-09-01  Eric Melski  <ericm@ajubasolutions.com>
 
 	* win/makefile.vc (install-libraries): 
