@@ -1,3 +1,10 @@
+2000-07-05  Eric Melski  <ericm@scriptics.com>
+
+	* tests/imgPhoto.test: Added test for GIF writing code [Bug: 5823].
+
+	* generic/tkImgGIF.c: Applied patch from Jan Nijtmans to fix a
+	problem with the GIF writing code [Bug:	5823].
+
 2000-07-05  Eric Melski  <ericm@ajubasolutions.com>
 
 	* library/msgs/nl.msg: Dutch message catalog for dialogs, from Jan

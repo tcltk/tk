@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.7 1999/12/14 06:53:13 hobbs Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.8 2000/07/05 23:30:07 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -436,6 +436,46 @@ test imgPhoto-13.1 {check separation of images in different interpreters} {
     interp delete x2
 } {}
 
+
+test imgPhoto-14.1 {GIF writes work correctly} {
+    set data "R0lGODlhYwA5APcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgAysnGy8hKzM
+hASs3MTcjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDAwP8AAAD/
+AP//AAAA//8A/wD//////ywAAAAAYwA5AAAI/wAZCBxIsKDBgwgTKlzIsKHD
+hxAjSpxIsaLFixgzatzIsaPHjyBDihxJsqTJkyhTqlzJsqXLlzBjypxJs6bN
+mzhz6tzJs6fPn0CDCh1KtKhRiwoSKEXAtGlTpUqPGkyagOmCq1edNsWalWkC
+BUSXIuDqFepBqFWtZv3KU+zYrkrBSqT6dgECtjOTbu16NwFHvV3lshRLti/J
+qlgRCE6ZuO9ik4Dt+k0ZVyZiyVIvXr77ODPEy5g9T4zMWfTEzXdNz1VbWvXn
+uqldP1TAOrbshqBb314Y2W7n3Qdpv7UNPCHpycUVbv6dnODy5sqzQldIe8H0
+hciva9/Ovbv37+BzBgEEADs=
+"
+    set photo [image create photo -data $data]
+    set filename [file join $::tcltest::workingDir imgPhoto-14.1.gif]
+    if {[file exists $filename]} {
+	catch {file delete -force $filename}
+    }
+    $photo write $filename -format gif
+    set photo2 [image create photo -file $filename]
+    set result [string equal [$photo data] [$photo2 data]]
+    image delete $photo $photo2
+    catch {file delete -force $filename}
+    set result
+} 1
+
 destroy .c
 eval image delete [image names]
 
@@ -445,16 +485,3 @@ if {[info exists removeREADME]} {
 }
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
