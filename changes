@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.48 2002/02/20 02:56:18 dgp Exp $
+RCS: @(#) $Id: changes,v 1.49 2002/02/27 04:19:21 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5121,14 +5121,6 @@ expansion to the Win/Mac console. (hobbs)
 
 --- Released 8.3.4, October 19, 2001 --- See ChangeLog for details ---
 
-2001-12-18 (bug fix)[413735] event-click-drag-1.2 test failure (porter)
-
-2002-01-31 (bug fix)[508988] logic error in menu cloning (helfter)
-
-2002-02-01 (bug fix)[511956] C99 spec: avoid 'bool' as a variable name (hobbs)
-
---- Released 8.3.5, February XX, 2002 --- See ChangeLog for details ---
-
 2001-08-14 (bug fix)[450545] Tk's Tcl_ObjTypes now registered (fellows)
 
 2001-08-20 (performance enhancement) internal use of a "window" Tcl_ObjType 
@@ -5160,6 +5152,8 @@ conform to Windows style (hobbs)
 
 2001-12 (new feature) more use of Unicode in native widgets on Windows (hobbs)
 
+2001-12-18 (bug fix)[413735] event-click-drag-1.2 test failure (porter)
+
 2001-12-28 (new feature) On Windows, buttons accept negative widths, meaning
 minimum size, enabling native L&F (hobbs)
 
@@ -5167,7 +5161,11 @@ minimum size, enabling native L&F (hobbs)
 Use -DUSE_NON_CONST to suppress source incompatibility
 	**** POTENTIAL INCOMPATABILITY ****
 
+2002-01-31 (bug fix)[508988] logic error in menu cloning (helfter)
+
 2002-02-01 (new feature)[TIP 14] [$photo transparency] (fellows)
+
+2002-02-01 (bug fix)[511956] C99 spec: avoid 'bool' as a variable name (hobbs)
 
 2002-02-19 (bug fix) updates to image code calls of Tcl_Seek/Tcl_Tell to
 address TIP 72 changes (64-bit) in Tcl (fellows)
