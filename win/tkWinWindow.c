@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWindow.c,v 1.8 2001/09/25 16:25:20 dgp Exp $
+ * RCS: @(#) $Id: tkWinWindow.c,v 1.9 2001/10/01 21:22:35 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -144,8 +144,7 @@ HWND
 Tk_GetHWND(window)
     Window window;
 {
-    TkWinDrawable *twdPtr = (TkWinDrawable *) window;
-    return twdPtr->window.handle;
+    return ((TkWinDrawable *) window)->window.handle;
 }
 
 /*
@@ -363,7 +362,7 @@ XMapWindow(display, w)
 
     display->request++;
 
-    ShowWindow(TkWinGetHWND(w), SW_SHOWNORMAL);
+    ShowWindow(Tk_GetHWND(w), SW_SHOWNORMAL);
     winPtr->flags |= TK_MAPPED;
 
     /*
@@ -476,7 +475,7 @@ XUnmapWindow(display, w)
      * it will be cleared before XUnmapWindow is called.
      */
 
-    ShowWindow(TkWinGetHWND(w), SW_HIDE);
+    ShowWindow(Tk_GetHWND(w), SW_HIDE);
     winPtr->flags &= ~TK_MAPPED;
 
     if (winPtr->flags & TK_TOP_LEVEL) {
@@ -517,7 +516,7 @@ XMoveResizeWindow(display, w, x, y, width, height)
     unsigned int height;
 {
     display->request++;
-    MoveWindow(TkWinGetHWND(w), x, y, width, height, TRUE);
+    MoveWindow(Tk_GetHWND(w), x, y, width, height, TRUE);
 }
 
 /*
@@ -547,7 +546,7 @@ XMoveWindow(display, w, x, y)
 
     display->request++;
 
-    MoveWindow(TkWinGetHWND(w), x, y, winPtr->changes.width,
+    MoveWindow(Tk_GetHWND(w), x, y, winPtr->changes.width,
 	    winPtr->changes.height, TRUE);
 }
 
@@ -578,7 +577,7 @@ XResizeWindow(display, w, width, height)
 
     display->request++;
 
-    MoveWindow(TkWinGetHWND(w), winPtr->changes.x, winPtr->changes.y, width,
+    MoveWindow(Tk_GetHWND(w), winPtr->changes.x, winPtr->changes.y, width,
 	    height, TRUE);
 }
 
@@ -603,7 +602,7 @@ XRaiseWindow(display, w)
     Display* display;
     Window w;
 {
-    HWND window = TkWinGetHWND(w);
+    HWND window = Tk_GetHWND(w);
 
     display->request++;
     SetWindowPos(window, HWND_TOPMOST, 0, 0, 0, 0,
@@ -637,7 +636,7 @@ XConfigureWindow(display, w, value_mask, values)
     XWindowChanges* values;
 {
     TkWindow *winPtr = TkWinGetWinPtr(w);
-    HWND hwnd = TkWinGetHWND(w);
+    HWND hwnd = Tk_GetHWND(w);
 
     display->request++;
 
@@ -690,7 +689,7 @@ XClearWindow(display, w)
     HBRUSH brush;
     HPALETTE oldPalette, palette;
     TkWindow *winPtr;
-    HWND hwnd = TkWinGetHWND(w);
+    HWND hwnd = Tk_GetHWND(w);
     HDC dc = GetDC(hwnd);
 
     palette = TkWinGetPalette(display->screens[0].cmap);
