@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.26 2000/11/22 01:49:38 ericm Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.27 2001/09/25 16:25:20 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -362,6 +362,7 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkUnixContainerId, /* 5 */
     TkUnixDoOneXEvent, /* 6 */
     TkUnixSetMenubar, /* 7 */
+    TkpScanWindowId, /* 8 */
 #endif /* UNIX */
 #ifdef __WIN32__
     TkAlignImageData, /* 0 */
