@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.14 2002/04/10 19:39:01 mdejong Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.15 2002/04/12 10:01:13 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -350,6 +350,68 @@ static void		WrapperEventProc _ANSI_ARGS_((ClientData clientData,
 /*
  *--------------------------------------------------------------
  *
+ * TkWmCleanup --
+ *
+ *	This procedure is invoked to cleanup remaining wm resources
+ *	associated with a display.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	All WmInfo structure resources are freed and invalidated.
+ *
+ *--------------------------------------------------------------
+ */
+
+void TkWmCleanup(dispPtr)
+    TkDisplay *dispPtr;
+{
+    WmInfo *wmPtr, *nextPtr;
+    for (wmPtr = dispPtr->firstWmPtr; wmPtr != NULL; wmPtr = nextPtr) {
+	/*
+	 * We can't assume we have access to winPtr's anymore, so some
+	 * cleanup requiring winPtr data is avoided.
+	 */
+	nextPtr = wmPtr->nextPtr;
+	if (wmPtr->title != NULL) {
+	    ckfree(wmPtr->title);
+	}
+	if (wmPtr->iconName != NULL) {
+	    ckfree(wmPtr->iconName);
+	}
+	if (wmPtr->leaderName != NULL) {
+	    ckfree(wmPtr->leaderName);
+	}
+	if (wmPtr->masterWindowName != NULL) {
+	    ckfree(wmPtr->masterWindowName);
+	}
+	if (wmPtr->menubar != NULL) {
+	    Tk_DestroyWindow(wmPtr->menubar);
+	}
+	if (wmPtr->wrapperPtr != NULL) {
+	    Tk_DestroyWindow((Tk_Window) wmPtr->wrapperPtr);
+	}
+	while (wmPtr->protPtr != NULL) {
+	    ProtocolHandler *protPtr;
+
+	    protPtr = wmPtr->protPtr;
+	    wmPtr->protPtr = protPtr->nextPtr;
+	    Tcl_EventuallyFree((ClientData) protPtr, TCL_DYNAMIC);
+	}
+	if (wmPtr->cmdArgv != NULL) {
+	    ckfree((char *) wmPtr->cmdArgv);
+	}
+	if (wmPtr->clientMachine != NULL) {
+	    ckfree((char *) wmPtr->clientMachine);
+	}
+	ckfree((char *) wmPtr);
+    }
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * TkWmNewWindow --
  *
  *	This procedure is invoked whenever a new top-level
@@ -373,10 +435,9 @@ TkWmNewWindow(winPtr)
     TkDisplay *dispPtr = winPtr->dispPtr;
 
     wmPtr = (WmInfo *) ckalloc(sizeof(WmInfo));
+    memset(wmPtr, 0, sizeof(WmInfo));
     wmPtr->winPtr = winPtr;
     wmPtr->reparent = None;
-    wmPtr->title = NULL;
-    wmPtr->iconName = NULL;
     wmPtr->master = None;
     wmPtr->hints.flags = InputHint | StateHint;
     wmPtr->hints.input = True;
@@ -386,15 +447,6 @@ TkWmNewWindow(winPtr)
     wmPtr->hints.icon_x = wmPtr->hints.icon_y = 0;
     wmPtr->hints.icon_mask = None;
     wmPtr->hints.window_group = None;
-    wmPtr->leaderName = NULL;
-    wmPtr->masterWindowName = NULL;
-    wmPtr->icon = NULL;
-    wmPtr->iconFor = NULL;
-    wmPtr->withdrawn = 0;
-    wmPtr->wrapperPtr = NULL;
-    wmPtr->menubar = NULL;
-    wmPtr->menuHeight = 0;
-    wmPtr->sizeHintsFlags = 0;
     wmPtr->minWidth = wmPtr->minHeight = 1;
 
     /*
@@ -402,9 +454,6 @@ TkWmNewWindow(winPtr)
      * a guess about how space is needed for window manager decorations.
      */
 
-    wmPtr->maxWidth = 0;
-    wmPtr->maxHeight = 0;
-    wmPtr->gridWin = NULL;
     wmPtr->widthInc = wmPtr->heightInc = 1;
     wmPtr->minAspect.x = wmPtr->minAspect.y = 1;
     wmPtr->maxAspect.x = wmPtr->maxAspect.y = 1;
@@ -418,13 +467,9 @@ TkWmNewWindow(winPtr)
 	    + 2*winPtr->changes.border_width;
     wmPtr->parentHeight = winPtr->changes.height
 	    + 2*winPtr->changes.border_width;
-    wmPtr->xInParent = wmPtr->yInParent = 0;
     wmPtr->configWidth = -1;
     wmPtr->configHeight = -1;
     wmPtr->vRoot = None;
-    wmPtr->protPtr = NULL;
-    wmPtr->cmdArgv = NULL;
-    wmPtr->clientMachine = NULL;
     wmPtr->flags = WM_NEVER_MAPPED;
     wmPtr->nextPtr = (WmInfo *) dispPtr->firstWmPtr;
     dispPtr->firstWmPtr = wmPtr;
@@ -2343,11 +2388,12 @@ ConfigureEvent(wmPtr, configEventPtr)
     }
 
     if (dispPtr->wmTracing) {
-	printf("ConfigureEvent: %s x = %d y = %d, width = %d, height = %d",
+	printf("ConfigureEvent: %s x = %d y = %d, width = %d, height = %d\n",
 		winPtr->pathName, configEventPtr->x, configEventPtr->y,
 		configEventPtr->width, configEventPtr->height);
-	printf(" send_event = %d, serial = %ld\n", configEventPtr->send_event,
-		configEventPtr->serial);
+	printf("    send_event = %d, serial = %ld (win %p, wrapper %p)\n",
+		configEventPtr->send_event, configEventPtr->serial,
+		winPtr, wrapperPtr);
     }
     wrapperPtr->changes.width = configEventPtr->width;
     wrapperPtr->changes.height = configEventPtr->height;
@@ -2370,6 +2416,12 @@ ConfigureEvent(wmPtr, configEventPtr)
      * If the window hasn't been reparented, we pretend that
      * there is a parent shrink-wrapped around the window.
      */
+
+    if (dispPtr->wmTracing) {
+	printf("    %s parent == %p, above %p\n",
+		winPtr->pathName, (void *) wmPtr->reparent,
+		(void *) configEventPtr->above);
+    }
 
     if ((wmPtr->reparent == None) || !ComputeReparentGeometry(wmPtr)) {
 	wmPtr->parentWidth = configEventPtr->width
@@ -2484,8 +2536,8 @@ ReparentEvent(wmPtr, reparentEventPtr)
     Tk_DeleteErrorHandler(handler);
 
     if (dispPtr->wmTracing) {
-	printf("ReparentEvent: %s reparented to 0x%x, vRoot = 0x%x\n",
-		wmPtr->winPtr->pathName,
+	printf("ReparentEvent: %s (%p) reparented to 0x%x, vRoot = 0x%x\n",
+		wmPtr->winPtr->pathName, wmPtr->winPtr,
 		(unsigned int) reparentEventPtr->parent, (unsigned int) vRoot);
     }
 
@@ -2527,8 +2579,8 @@ ReparentEvent(wmPtr, reparentEventPtr)
 	    (Tk_ErrorProc *) NULL, (ClientData) NULL);
     wmPtr->reparent = reparentEventPtr->parent;
     while (1) {
-	if (XQueryTree(wrapperPtr->display, wmPtr->reparent, &dummy2, &ancestor,
-		&children, &dummy) == 0) {
+	if (XQueryTree(wrapperPtr->display, wmPtr->reparent, &dummy2,
+		&ancestor, &children, &dummy) == 0) {
 	    Tk_DeleteErrorHandler(handler);
 	    goto noReparent;
 	}
@@ -2635,8 +2687,8 @@ ComputeReparentGeometry(wmPtr)
      */
 
     if (!(wmPtr->flags & WM_MOVE_PENDING)
-	    && ((wmPtr->wrapperPtr->changes.x != (x + wmPtr->xInParent))
-	    || (wmPtr->wrapperPtr->changes.y != (y + wmPtr->yInParent)))) {
+	    && ((wrapperPtr->changes.x != (x + wmPtr->xInParent))
+	    || (wrapperPtr->changes.y != (y + wmPtr->yInParent)))) {
 	wmPtr->x = x;
 	if (wmPtr->flags & WM_NEGATIVE_X) {
 	    wmPtr->x = wmPtr->vRootWidth - (wmPtr->x + wmPtr->parentWidth);
@@ -2647,12 +2699,13 @@ ComputeReparentGeometry(wmPtr)
 	}
     }
 
-    wmPtr->wrapperPtr->changes.x = x + wmPtr->xInParent;
-    wmPtr->wrapperPtr->changes.y = y + wmPtr->yInParent;
+    wrapperPtr->changes.x = x + wmPtr->xInParent;
+    wrapperPtr->changes.y = y + wmPtr->yInParent;
     if (dispPtr->wmTracing) {
-	printf("wrapperPtr coords %d,%d, wmPtr coords %d,%d, offsets %d %d\n",
-		wrapperPtr->changes.x, wrapperPtr->changes.y,
-		wmPtr->x, wmPtr->y, wmPtr->xInParent, wmPtr->yInParent);
+	printf("wrapperPtr %p coords %d,%d\n",
+		wrapperPtr, wrapperPtr->changes.x, wrapperPtr->changes.y);
+	printf("     wmPtr %p coords %d,%d, offsets %d %d\n",
+		wmPtr, wmPtr->x, wmPtr->y, wmPtr->xInParent, wmPtr->yInParent);
     }
     return 1;
 }
@@ -2988,7 +3041,8 @@ UpdateGeometryInfo(clientData)
 	wmPtr->configWidth = width;
 	wmPtr->configHeight = height;
 	if (winPtr->dispPtr->wmTracing) {
-	    printf("UpdateGeometryInfo resizing to %d x %d\n", width, height);
+	    printf("UpdateGeometryInfo resizing %p to %d x %d\n",
+		    (void *)wmPtr->wrapperPtr->window, width, height);
 	}
 	XResizeWindow(winPtr->display, wmPtr->wrapperPtr->window,
 		(unsigned) width, (unsigned) height);
@@ -3384,7 +3438,8 @@ WaitForMapNotify(winPtr, mapped)
     }
     wmPtr->flags &= ~WM_MOVE_PENDING;
     if (winPtr->dispPtr->wmTracing) {
-	printf("WaitForMapNotify finished with %s\n", winPtr->pathName);
+	printf("WaitForMapNotify finished with %s (winPtr %p, wmPtr %p)\n",
+		winPtr->pathName, winPtr, wmPtr);
     }
 }
 
@@ -4289,6 +4344,9 @@ TkWmStackorderToplevel(parentPtr)
         if ((window_ptr - windows) != table.numEntries)
             panic("num matched toplevel windows does not equal num children");
         *window_ptr = NULL;
+	if (numChildren) {
+	    XFree((char *) children);
+	}
     }
 
     done:
@@ -4336,6 +4394,7 @@ TkWmRestackToplevel(winPtr, aboveBelow, otherPtr)
     Tk_ErrorHandler handler;
     TkWindow *wrapperPtr;
 
+    memset(&changes, 0, sizeof(XWindowChanges));
     changes.stack_mode = aboveBelow;
     changes.sibling = None;
     mask = CWStackMode;
@@ -4482,22 +4541,9 @@ TkWmRestackToplevel(winPtr, aboveBelow, otherPtr)
      * the event isn't one that Tk owns.
      */
 
-    if (window == wrapperPtr->window) {
-	WaitForConfigureNotify(winPtr, serial);
-    } else {
-	XEvent event;
-	int diff;
+    WaitForConfigureNotify(winPtr, serial);
 
-	while (1) {
-	    if (WaitForEvent(winPtr->display, winPtr->wmInfoPtr,
-		    ConfigureNotify, &event) != TCL_OK) {
-		break;
-	    }
-	    diff = event.xconfigure.serial - serial;
-	    if (diff >= 0) {
-		break;
-	    }
-	}
+    if (window != wrapperPtr->window) {
 	/*
 	 * Ignore errors that occur when we are de-selecting events on
 	 * window, since it's possible that the window doesn't exist
