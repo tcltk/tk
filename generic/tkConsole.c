@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.7 1999/05/25 01:31:05 stanton Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.8 1999/06/17 00:39:18 wart Exp $
  */
 
 #include "tk.h"
@@ -459,7 +459,7 @@ ConsoleCmd(clientData, interp, argc, argv)
 {
     ConsoleInfo *info = (ConsoleInfo *) clientData;
     char c;
-    int length;
+    size_t length;
     int result;
     Tcl_Interp *consoleInterp;
     Tcl_DString dString;
@@ -536,7 +536,7 @@ InterpreterCmd(clientData, interp, argc, argv)
 {
     ConsoleInfo *info = (ConsoleInfo *) clientData;
     char c;
-    int length;
+    size_t length;
     int result;
     Tcl_Interp *otherInterp;
 
