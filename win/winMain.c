@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.16 2003/10/14 15:35:52 patthoyts Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.17 2003/12/12 00:34:06 davygrvy Exp $
  */
 
 #include <tk.h>
@@ -32,15 +32,13 @@
  */
 
 static void		setargv _ANSI_ARGS_((int *argcPtr, char ***argvPtr));
-static void		WishPanic _ANSI_ARGS_(TCL_VARARGS(CONST char *,format));
-static void		AppInitExitHandler(ClientData clientData);
+static Tcl_PanicProc	WishPanic;
 
 #ifdef TK_TEST
 extern int		Tktest_Init(Tcl_Interp *interp);
 #endif /* TK_TEST */
 
 static BOOL consoleRequired = TRUE;
-static char **argvSave = NULL;
 
 /*
  * The following #if block allows you to change the AppInit
@@ -113,11 +111,6 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
     setargv(&argc, &argv);
 
     /*
-     * Save this for later, so we can free it.
-     */
-    argvSave = argv;
-
-    /*
      * Replace argv[0] with full pathname of executable, and forward
      * slashes substituted for backslashes.
      */
@@ -169,12 +162,6 @@ Tcl_AppInit(interp)
 	goto error;
     }
     Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
-
-    /*
-     * This exit handler will be used to free the
-     * resources allocated in this file.
-     */
-    Tcl_CreateExitHandler(AppInitExitHandler, NULL);
 
     /*
      * Initialize the console only if we are running as an interactive
@@ -255,36 +242,8 @@ WishPanic TCL_VARARGS_DEF(CONST char *,arg1)
 #ifdef _MSC_VER
     DebugBreak();
 #endif
-    ExitProcess(1);
+    ExitProcess(EXIT_FAILURE);
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * AppInitExitHandler --
- *
- *	This function is called to cleanup the app init resources before
- *	Tcl is unloaded.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Frees the saved argv and deletes the async exit handler.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-AppInitExitHandler(
-    ClientData clientData)
-{
-    if (argvSave != NULL) {
-        ckfree((char *)argvSave);
-        argvSave = NULL;
-    }
-}
-
 /*
  *-------------------------------------------------------------------------
  *
@@ -340,7 +299,7 @@ setargv(argcPtr, argvPtr)
 	    }
 	}
     }
-    argSpace = (char *) ckalloc(
+    argSpace = (char *) Tcl_Alloc(
 	    (unsigned) (size * sizeof(char *) + strlen(cmdLine) + 1));
     argv = (char **) argSpace;
     argSpace += size * sizeof(char *);
