@@ -535,6 +535,10 @@ if test -r GetOption.3; then
     rm -f Tk_GetOption.3
     ln GetOption.3 Tk_GetOption.3
 fi
+if test -r AddOption.3; then
+    rm -f Tk_AddOption.3
+    ln AddOption.3 Tk_AddOption.3
+fi
 if test -r SetOptions.3; then
     rm -f Tk_GetOptionInfo.3
     ln SetOptions.3 Tk_GetOptionInfo.3

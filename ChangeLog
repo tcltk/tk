@@ -1,19 +1,37 @@
+2000-04-24  Eric Melski  <ericm@scriptics.com>
+
+	* unix/mkLinks: 
+	* doc/AddOption.3: Man page for Tk_AddOption [Bug: 1854]
+
+2000-04-19  Eric Melski  <ericm@scriptics.com>
+
+	* doc/WinViewable.3: 
+	* unix/mkLinks: Removed docs for Tk_IsViewable.
+
+	* win/tkWinDialog.c: Removed calls to Tk_IsViewable.
+
+	* generic/tkUtil.c: 
+	* generic/tkStubInit.c: 
+	* generic/tkDecls.h: 
+	* generic/tkCmds.c: 
+	* generic/tk.decls: Removed Tk_IsViewable function (it was not
+	actually needed).
+
 2000-04-22  Jim Ingham  <jingham@cygnus.com>
 
-        * mac/tkMacDialog.c (Tk_MacGetOpenFile): Add empty bodies for the 
-        "-initialfile" and "-defaultextension" options.
+	* mac/tkMacDialog.c (Tk_MacGetOpenFile): Add empty bodies for the 
+	"-initialfile" and "-defaultextension" options.
         
-        * mac/tkMacDialog.c (NavServicesGetFile): Only cons the result up into
-        a list if multiple is true.
+	* mac/tkMacDialog.c (NavServicesGetFile): Only cons the result up into
+	a list if multiple is true.
         
-        * mac/tkMacMenus.c (SourceDialog): Use the "tk_getOpenFile" instead of hand-coding 
-        the dialog with StandardGetFile.  This way we get the Navigation dialogs for
-        free.
-        
-        * doc/getOpenFile.n: Document the -multiple and -message flags which are only
-        implemented on the Mac.  Also note that the -title works on the Mac with
-        Nav Services installed.
-        
+	* mac/tkMacMenus.c (SourceDialog): Use the "tk_getOpenFile"
+	instead of hand-coding the dialog with StandardGetFile.  This way
+	we get the Navigation dialogs for free.
+	        
+	* doc/getOpenFile.n: Document the -multiple and -message flags
+	which are only implemented on the Mac.  Also note that the -title
+	works on the Mac wit Nav Services installed.
         
 2000-04-19  Jeff Hobbs  <hobbs@scriptics.com>
 
