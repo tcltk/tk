@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ConfigWidg.3,v 1.3 1999/04/16 01:51:07 stanton Exp $
+'\" RCS: @(#) $Id: ConfigWidg.3,v 1.4 1999/04/16 18:26:12 surles Exp $
 '\" 
 .so man.macros
 .TH Tk_ConfigureWidget 3 4.1 Tk "Tk Library Procedures"
@@ -258,13 +258,13 @@ will never match any arguments.
 .TP
 \fBTK_CONFIG_FONT\fR
 The value must be an ASCII string identifying a font in a form
-suitable for passing to \fBTk_GetFontStruct\fR.  The value is converted
-to an (\fBXFontStruct *\fR) by calling \fBTk_GetFontStruct\fR and the result
+suitable for passing to \fBTk_GetFont\fR.  The value is converted
+to an (\fBXFontStruct *\fR) by calling \fBTk_GetFont\fR and the result
 is stored in the target.
 If TK_CONFIG_NULL_OK is specified in \fIspecFlags\fR then the value
 may be an empty string, in which case the target will be set to NULL.
 If the previous value of the target
-wasn't NULL, then it is freed by passing it to \fBTk_FreeFontStruct\fR.
+wasn't NULL, then it is freed by passing it to \fBTk_FreeFont\fR.
 .TP
 \fBTK_CONFIG_INT\fR
 The value must be an ASCII integer string
