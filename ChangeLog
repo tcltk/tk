@@ -1,5 +1,8 @@
 2003-02-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/xmfbox.tcl (::tk::MotifFDialog_ActivateSEnt): correct
+	sub on embedded newlines. [Patch #688572] (bonfield)
+
 	* doc/colors.n: corrected B values [Bug #682714].
 
 	* win/tkWinInit.c (TkpDisplayWarning): truncate MessageBox string
