@@ -1,3 +1,8 @@
+2003-12-15  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
+
+	* macosx/tkMacOSXKeyboard.c: General cleanup.  Add support for
+	[event generate].
+
 2003-12-15  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkText.h: 
