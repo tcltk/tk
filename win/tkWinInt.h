@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.1.4.3 1999/02/11 04:13:51 stanton Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.1.4.4 1999/03/01 19:35:28 redman Exp $
  */
 
 #ifndef _TKWININT
@@ -199,7 +199,7 @@ extern void		TkWinWmStoreEmbedAssociation _ANSI_ARGS_((
 			    TkWindow *winPtr, HWND hwnd));
 extern void		TkWinXCleanup _ANSI_ARGS_((HINSTANCE hInstance));
 extern void 		TkWinXInit _ANSI_ARGS_((HINSTANCE hInstance));
-
+extern void             TkWinSetForegroundWindow _ANSI_ARGS_((TkWindow *winPtr));
 
 #endif /* _TKWININT */
 

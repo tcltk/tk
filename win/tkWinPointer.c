@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPointer.c,v 1.1.4.2 1999/02/11 04:13:51 stanton Exp $
+ * RCS: @(#) $Id: tkWinPointer.c,v 1.1.4.3 1999/03/01 19:35:28 redman Exp $
  */
 
 #include "tkWinInt.h"
@@ -442,7 +442,7 @@ TkpChangeFocus(winPtr, force)
      */
 
     if (force) {
-	SetForegroundWindow(Tk_GetHWND(winPtr->window));
+	TkWinSetForegroundWindow(winPtr);
     }
     XSetInputFocus(dispPtr->display, winPtr->window, RevertToParent,
 	    CurrentTime);
