@@ -1,3 +1,8 @@
+2002-01-16  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkListbox.c (ChangeListboxOffset): improved tracking
+	when scrolling on x axis with entry/text.  [Bug #225025] (voskuil)
+
 2002-01-16  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tk3d.c (Tk_GetReliefFromObj): 
