@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: select.test,v 1.13 2004/05/23 17:34:49 dkf Exp $
+# RCS: @(#) $Id: select.test,v 1.14 2004/06/04 19:55:31 dgp Exp $
 
 #
 # Note: Multiple display selection handling will only be tested if the
@@ -796,7 +796,7 @@ test select-8.1 {TkSelEventProc procedure} -constraints unixOnly -setup {
 test select-9.1 {SelCvtToX and SelCvtFromX procedures} -setup {
     setup
     setupbg
-} -constraint unixOnly -body {
+} -constraints unixOnly -body {
     set selValue "1024"
     set selInfo ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
