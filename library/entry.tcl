@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: entry.tcl,v 1.22 2004/03/17 18:15:44 das Exp $
+# RCS: @(#) $Id: entry.tcl,v 1.23 2004/10/19 18:56:01 jenglish Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -67,6 +67,11 @@ bind Entry <<PasteSelection>> {
 	|| !$tk::Priv(mouseMoved)} {
 	tk::EntryPaste %W %x
     }
+}
+
+bind Entry <<TraverseIn>> {
+    %W selection range 0 end 
+    %W icursor end 
 }
 
 # Standard Motif bindings:
