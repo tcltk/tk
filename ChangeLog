@@ -1,3 +1,7 @@
+2004-11-28  Joe English  <jenglish@users.sourceforge.net>
+	* unix/tkUnixRFont.c(Tk_DrawChars): Check for short integer overflow
+	in x,y coordinates [Fixes: #942320 "Tk, Xft, text and long lines"]
+
 2004-11-26  David Gravereaux  <davygrvy@pobox.com>
 
 	* win/makefile.vc: Shell targets needed more stack space.
