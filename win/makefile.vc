@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.25 1999/06/25 23:30:27 welch Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.26 1999/07/09 02:10:07 stanton Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -460,6 +460,9 @@ $(TMPDIR)\tkSquare.obj: $(ROOT)\generic\tkSquare.c
 
 $(TMPDIR)\winMain.obj: $(ROOT)\win\winMain.c
 	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
+
+$(TMPDIR)\tkStubLib.obj : $(GENERICDIR)\tkStubLib.c
+	$(cc32) $(TK_CFLAGS) -DSTATIC_BUILD -Fo$@ $?
 
 #
 # Implicit rules

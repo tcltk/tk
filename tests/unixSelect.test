@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: unixSelect.test,v 1.1 1999/06/03 18:50:46 stanton Exp $
+# RCS: @(#) $Id: unixSelect.test,v 1.2 1999/07/09 02:10:07 stanton Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -155,6 +155,12 @@ test unixSelect-1.4 {TkSelGetSelection procedure: simple i18n text, iso2022} {un
     lappend result $selInfo
 } {1 2 4 {COMPOUND_TEXT 0 4000}}
 test unixSelect-1.5 {TkSelGetSelection procedure: INCR i18n text, iso2022} {unixOnly} {
+
+    # This test is subtle.  The selection ends up getting fetched twice by
+    # Tk:  once to compute the length, and again to actually send the data.
+    # The first time through, we don't convert the data to ISO2022, so the
+    # buffer boundaries end up being different in the two passes.
+
     setupbg
     setup
     selection handle -type COMPOUND_TEXT -format COMPOUND_TEXT . \
@@ -170,7 +176,7 @@ test unixSelect-1.5 {TkSelGetSelection procedure: INCR i18n text, iso2022} {unix
     }]
     cleanupbg
     lappend result $selInfo
-} {1 8000 8002 {COMPOUND_TEXT 0 4000 COMPOUND_TEXT 0 4000 COMPOUND_TEXT 4000 3998 COMPOUND_TEXT 7997 4000}}
+} {1 8000 8002 {COMPOUND_TEXT 0 4000 COMPOUND_TEXT 4000 3999 COMPOUND_TEXT 7998 4000 COMPOUND_TEXT 0 4000 COMPOUND_TEXT 4000 3998 COMPOUND_TEXT 7997 4000}}
 test unixSelect-1.6 {TkSelGetSelection procedure: simple i18n text, iso2022} {unixOnly} {
     setupbg
     setup

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.5 1999/04/16 01:51:54 stanton Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.6 1999/07/09 02:10:07 stanton Exp $
  */
 
 #include "tkWinInt.h"
@@ -516,7 +516,6 @@ TkWinChildProc(hwnd, message, wParam, lParam)
 
 	case WM_CREATE:
 	case WM_ERASEBKGND:
-	case WM_WINDOWPOSCHANGED:
 	    result = 0;
 	    break;
 

@@ -1,3 +1,15 @@
+1999-07-08    <stanton@scriptics.com>
+
+	* tests/unixSelect.test: Fixed broken test.
+
+	* win/makefile.vc: Added special case target to ensure that 
+	tkStubLib.obj is built with -DSTATIC_BUILD.
+
+	* win/tkWinX.c (TkWinChildProc): Changed to pass
+	WM_WINDOWPOSCHANGED through to DefWindowProc to make OpenGL
+	sub-windows happy.  This allows Windows to generate the WM_SIZE
+	and WM_MOVE messages.
+
 1999-07-08    <redman@scriptics.com>
 
 	* unix/configure.in: Fix Tk stub lib file names and flags.
