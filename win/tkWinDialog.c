@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.24 2002/01/18 13:29:05 dgp Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.25 2002/02/08 02:57:11 dgp Exp $
  *
  */
 
@@ -393,9 +393,8 @@ ColorDlgHookProc(hDlg, uMsg, wParam, lParam)
 	    ccPtr = (CHOOSECOLOR *) lParam;
 	    title = (const char *) ccPtr->lCustData;
 	    if ((title != NULL) && (title[0] != '\0')) {
-		Tcl_WinUtfToTChar(title, -1, &ds);
 		(*tkWinProcs->setWindowText)(hDlg,
-			(TCHAR *) Tcl_DStringValue(&ds));
+			Tcl_WinUtfToTChar(title, -1, &ds));
 		Tcl_DStringFree(&ds);
 	    }
 	    if (tsdPtr->debugFlag) {

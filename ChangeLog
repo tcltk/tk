@@ -1,3 +1,12 @@
+2002-02-07  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkMain.c:
+	* mac/tkMacInit.c:
+	* mac/tkMacKeyboard.c:
+	* win/tkWinDialog.c:
+	* win/tkWinTest.c: modified some callers of Tcl routines that
+	were restored to return (char *) pointing into Tcl_DStrings.
+
 2002-02-03  eric melski  <ericm@interwoven.com>
 
 	* generic/tkImage.c (Tk_ImageObjCmd): Clean up bogus for loop in
