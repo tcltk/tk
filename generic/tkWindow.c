@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.1.4.9 1999/03/10 07:13:47 stanton Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.1.4.10 1999/03/30 22:32:02 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -1315,8 +1315,8 @@ Tk_DestroyWindow(tkwin)
                 
 	    Tcl_DeleteHashTable(&winPtr->mainPtr->nameTable);
 	    TkBindFree(winPtr->mainPtr);
-	    TkFontPkgFree(winPtr->mainPtr);
 	    TkDeleteAllImages(winPtr->mainPtr);
+	    TkFontPkgFree(winPtr->mainPtr);
 
             /*
              * When embedding Tk into other applications, make sure 
