@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.10 2000/08/25 06:58:31 ericm Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.11 2000/09/07 00:23:35 hobbs Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -169,7 +169,7 @@ item or a tag that selects zero or more items.
 tags by using operators: '&&', '||', '^' '!', and parenthezised
 subexpressions.  For example:
 .CS
-      .c find withtag {(a&&!b)|(!a&&b)}
+      .c find withtag {(a&&!b)||(!a&&b)}
 .CE
 or equivalently:
 .CS
