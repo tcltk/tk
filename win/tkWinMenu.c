@@ -1,7 +1,7 @@
 /* 
  * tkWinMenu.c --
  *
- *	This module implements the Mac-platform specific features of menus.
+ *	This module implements the Windows platform-specific features of menus.
  *
  * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
  *
@@ -320,33 +320,50 @@ TkpDestroyMenu(menuPtr)
 	Tcl_CancelIdleCall(ReconfigureWindowsMenu, (ClientData) menuPtr);
     }
     
-    if (NULL != winMenuHdl) {
-	if (menuPtr->menuFlags & MENU_SYSTEM_MENU) {
-	    TkMenuEntry *searchEntryPtr;
-	    Tcl_HashTable *tablePtr = TkGetMenuHashTable(menuPtr->interp);
-	    char *menuName = Tcl_GetHashKey(tablePtr, 
-		    menuPtr->menuRefPtr->hashEntryPtr);
-
-	    for (searchEntryPtr = menuPtr->menuRefPtr->parentEntryPtr;
-		    searchEntryPtr != NULL;
-		    searchEntryPtr = searchEntryPtr->nextCascadePtr) {
-		if (strcmp(searchEntryPtr->name,
-			menuName) == 0) {
-		    Tk_Window parentTopLevelPtr = searchEntryPtr
-			    ->menuPtr->parentTopLevelPtr;
-
-		    if (parentTopLevelPtr != NULL) {
-			GetSystemMenu(TkWinGetWrapperWindow(parentTopLevelPtr),
-				TRUE);
-		    }
-		    break;
-		}
-	    }
-	} else {
-    	    DestroyMenu(winMenuHdl);
-	}
-    	menuPtr->platformData = NULL;
+    if (winMenuHdl == NULL) {
+	return;
     }
+
+    if (menuPtr->menuFlags & MENU_SYSTEM_MENU) {
+	TkMenuEntry *searchEntryPtr;
+	Tcl_HashTable *tablePtr = TkGetMenuHashTable(menuPtr->interp);
+	char *menuName = Tcl_GetHashKey(tablePtr, 
+		menuPtr->menuRefPtr->hashEntryPtr);
+
+	/*
+	 * Search for the menu in the menubar, if it is present, get the
+	 * wrapper window associated with the toplevel and reset its
+	 * system menu to the default menu.
+	 */
+
+	for (searchEntryPtr = menuPtr->menuRefPtr->parentEntryPtr;
+	     searchEntryPtr != NULL;
+	     searchEntryPtr = searchEntryPtr->nextCascadePtr) {
+	    if (strcmp(searchEntryPtr->name, menuName) == 0) {
+		Tk_Window parentTopLevelPtr = searchEntryPtr
+		    ->menuPtr->parentTopLevelPtr;
+
+		if (parentTopLevelPtr != NULL) {
+		    GetSystemMenu(TkWinGetWrapperWindow(parentTopLevelPtr),
+			    TRUE);
+		}
+		break;
+	    }
+	}
+    } else {
+	Tcl_HashEntry *hashEntryPtr;
+ 
+	/*
+	 * Remove the menu from the menu hash table, then destroy the handle.
+	 */
+
+	hashEntryPtr = Tcl_FindHashEntry(&winMenuTable, (char *) winMenuHdl);
+	if (hashEntryPtr != NULL) {
+	    Tcl_DeleteHashEntry(hashEntryPtr);
+	}
+ 	DestroyMenu(winMenuHdl);
+    }
+    menuPtr->platformData = NULL;
 }
 
 /*
@@ -529,7 +546,7 @@ ReconfigureWindowsMenu(
     if ((menuPtr->menuType == MENUBAR)
 	    && (menuPtr->parentTopLevelPtr != NULL)) {
 	width = Tk_Width(menuPtr->parentTopLevelPtr);
-	height = Tk_Width(menuPtr->parentTopLevelPtr);
+	height = Tk_Height(menuPtr->parentTopLevelPtr);
     }
 
     base = (menuPtr->menuFlags & MENU_SYSTEM_MENU) ? 7 : 0;
@@ -584,62 +601,59 @@ ReconfigureWindowsMenu(
 	    }
 
 	    itemID = (int) mePtr->platformEntryData;
-	    if (mePtr->type == CASCADE_ENTRY) {
-		if ((mePtr->childMenuRefPtr != NULL)
-			&& (mePtr->childMenuRefPtr->menuPtr != NULL)) {
-		    HMENU childMenuHdl = 
-			    (HMENU) mePtr->childMenuRefPtr->menuPtr
-			    ->platformData;
-		    if (childMenuHdl != NULL) {
-			itemID = (UINT) childMenuHdl;
-			flags |= MF_POPUP;
-		    }
-		    if ((menuPtr->menuType == MENUBAR) 
-			    && !(mePtr->childMenuRefPtr->menuPtr->menuFlags
-			    & MENU_SYSTEM_MENU)) {
-			TkMenuReferences *menuRefPtr;
-			TkMenu *systemMenuPtr = mePtr->childMenuRefPtr
-				->menuPtr;
-			char *systemMenuName = ckalloc(strlen(
-				Tk_PathName(menuPtr->masterMenuPtr->tkwin))
-				+ strlen(".system") + 1);
+	    if ((mePtr->type == CASCADE_ENTRY)
+		    && (mePtr->childMenuRefPtr != NULL)
+		    && (mePtr->childMenuRefPtr->menuPtr != NULL)) {
+		HMENU childMenuHdl = (HMENU) mePtr->childMenuRefPtr->menuPtr
+		    ->platformData;
+		if (childMenuHdl != NULL) {
+		    itemID = (UINT) childMenuHdl;
+		    flags |= MF_POPUP;
+		}
+		if ((menuPtr->menuType == MENUBAR) 
+			&& !(mePtr->childMenuRefPtr->menuPtr->menuFlags
+				& MENU_SYSTEM_MENU)) {
+		    TkMenuReferences *menuRefPtr;
+		    TkMenu *systemMenuPtr = mePtr->childMenuRefPtr
+			->menuPtr;
+		    char *systemMenuName = ckalloc(strlen(
+			Tk_PathName(menuPtr->masterMenuPtr->tkwin))
+			    + strlen(".system") + 1);
 
-			strcpy(systemMenuName, 
-				Tk_PathName(menuPtr->masterMenuPtr->tkwin));
-			strcat(systemMenuName, ".system");
-			menuRefPtr = TkFindMenuReferences(menuPtr->interp,
-				systemMenuName);
-			if ((menuRefPtr != NULL) 
-				&& (menuRefPtr->menuPtr != NULL)
-				&& (menuPtr->parentTopLevelPtr != NULL)
-				&& (systemMenuPtr->masterMenuPtr
-				== menuRefPtr->menuPtr)) {
-			    HMENU systemMenuHdl = 
-				    (HMENU) systemMenuPtr->platformData;
-			    HWND wrapper = TkWinGetWrapperWindow(menuPtr
-				    ->parentTopLevelPtr);
-			    if (wrapper != NULL) {
-				DestroyMenu(systemMenuHdl);
-				systemMenuHdl = GetSystemMenu(
-				    wrapper, FALSE);
-				systemMenuPtr->menuFlags |= MENU_SYSTEM_MENU;
-				systemMenuPtr->platformData = 
-					(TkMenuPlatformData) systemMenuHdl;
-				if (!(systemMenuPtr->menuFlags 
-					& MENU_RECONFIGURE_PENDING)) {
-				    systemMenuPtr->menuFlags 
-					    |= MENU_RECONFIGURE_PENDING;
-				    Tcl_DoWhenIdle(ReconfigureWindowsMenu,
-					    (ClientData) systemMenuPtr);
-				}
+		    strcpy(systemMenuName, 
+			    Tk_PathName(menuPtr->masterMenuPtr->tkwin));
+		    strcat(systemMenuName, ".system");
+		    menuRefPtr = TkFindMenuReferences(menuPtr->interp,
+			    systemMenuName);
+		    if ((menuRefPtr != NULL) 
+			    && (menuRefPtr->menuPtr != NULL)
+			    && (menuPtr->parentTopLevelPtr != NULL)
+			    && (systemMenuPtr->masterMenuPtr
+				    == menuRefPtr->menuPtr)) {
+			HMENU systemMenuHdl = 
+			    (HMENU) systemMenuPtr->platformData;
+			HWND wrapper = TkWinGetWrapperWindow(menuPtr
+				->parentTopLevelPtr);
+			if (wrapper != NULL) {
+			    DestroyMenu(systemMenuHdl);
+			    systemMenuHdl = GetSystemMenu(wrapper, FALSE);
+			    systemMenuPtr->menuFlags |= MENU_SYSTEM_MENU;
+			    systemMenuPtr->platformData = 
+				(TkMenuPlatformData) systemMenuHdl;
+			    if (!(systemMenuPtr->menuFlags 
+				    & MENU_RECONFIGURE_PENDING)) {
+				systemMenuPtr->menuFlags 
+				    |= MENU_RECONFIGURE_PENDING;
+				Tcl_DoWhenIdle(ReconfigureWindowsMenu,
+					(ClientData) systemMenuPtr);
 			    }
 			}
-			ckfree(systemMenuName);
 		    }
-		    if (mePtr->childMenuRefPtr->menuPtr->menuFlags 
-			    & MENU_SYSTEM_MENU) {
-			systemMenu++;
-		    }
+		    ckfree(systemMenuName);
+		}
+		if (mePtr->childMenuRefPtr->menuPtr->menuFlags 
+			& MENU_SYSTEM_MENU) {
+		    systemMenu++;
 		}
 	    }
 	}
@@ -883,7 +897,18 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		    ReconfigureWindowsMenu((ClientData) menuPtr);
 		}
 		if (!inPostMenu) {
-		    TkPreprocessMenu(menuPtr);
+		    Tcl_Interp *interp;
+		    int code;
+ 
+		    interp = menuPtr->interp;
+		    Tcl_Preserve((ClientData)interp);
+		    code = TkPreprocessMenu(menuPtr);
+		    if ((code != TCL_OK) && (code != TCL_CONTINUE)
+			    && (code != TCL_BREAK)) {
+			Tcl_AddErrorInfo(interp, "\n    (menu preprocess)");
+			Tcl_BackgroundError(interp);
+		    }
+		    Tcl_Release((ClientData)interp);
 		}
 		TkActivateMenuEntry(menuPtr, -1);
 		*plResult = 0;
@@ -896,51 +921,62 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 	case WM_SYSCOMMAND:
 	case WM_COMMAND: {
 	    TkMenuInit();
-	    if (HIWORD(*pwParam) == 0) {
-		hashEntryPtr = Tcl_FindHashEntry(&commandTable,
-			(char *)LOWORD(*pwParam));
-		if (hashEntryPtr != NULL) {
-		    mePtr = (TkMenuEntry *) Tcl_GetHashValue(hashEntryPtr);
-		    if (mePtr != NULL) {
-			TkMenuReferences *menuRefPtr;
-			TkMenuEntry *parentEntryPtr;
+	    if (HIWORD(*pwParam) != 0) {
+		break;
+	    }
+	    hashEntryPtr = Tcl_FindHashEntry(&commandTable,
+		    (char *)LOWORD(*pwParam));
+	    if (hashEntryPtr == NULL) {
+		break;
+	    }
+	    mePtr = (TkMenuEntry *) Tcl_GetHashValue(hashEntryPtr);
+	    if (mePtr != NULL) {
+		TkMenuReferences *menuRefPtr;
+		TkMenuEntry *parentEntryPtr;
+		Tcl_Interp *interp;
+		int code;
+
+		/*
+		 * We have to set the parent of this menu to be active
+		 * if this is a submenu so that tearoffs will get the
+		 * correct title.
+		 */
+
+		menuPtr = mePtr->menuPtr;
+		menuRefPtr = TkFindMenuReferences(menuPtr->interp,
+			Tk_PathName(menuPtr->tkwin));
+		if ((menuRefPtr != NULL) && (menuRefPtr->parentEntryPtr 
+			!= NULL)) {
+		    for (parentEntryPtr = menuRefPtr->parentEntryPtr;
+			 strcmp(parentEntryPtr->name, 
+				 Tk_PathName(menuPtr->tkwin)) != 0; 
+			 parentEntryPtr = parentEntryPtr->nextCascadePtr) {
 
 			/*
-			 * We have to set the parent of this menu to be active
-			 * if this is a submenu so that tearoffs will get the
-			 * correct title.
+			 * Empty loop body.
 			 */
 
-			menuPtr = mePtr->menuPtr;
-    			menuRefPtr = TkFindMenuReferences(menuPtr->interp,
-    	    			Tk_PathName(menuPtr->tkwin));
-    			if ((menuRefPtr != NULL) && (menuRefPtr->parentEntryPtr 
-				!= NULL)) {
-    	    		    for (parentEntryPtr = menuRefPtr->parentEntryPtr;
-    	    	    		    strcmp(parentEntryPtr->name, 
-				    Tk_PathName(menuPtr->tkwin)) != 0; 
-				    parentEntryPtr = parentEntryPtr->nextCascadePtr) {
-
-				/*
-				 * Empty loop body.
-				 */
-
-    	    		    }
-    	    		    if (parentEntryPtr->menuPtr
-    	    		    	    ->entries[parentEntryPtr->index]->state
-    	    		    	    != tkDisabledUid) {
-			    	TkActivateMenuEntry(parentEntryPtr->menuPtr, 
-				    	parentEntryPtr->index);
-			    }
-    			}
-
-		    	TkInvokeMenu(mePtr->menuPtr->interp,
-				menuPtr, mePtr->index);
 		    }
-		    *plResult = 0;
-		    returnResult = 1;
+		    if (parentEntryPtr->menuPtr
+			    ->entries[parentEntryPtr->index]->state
+			    != tkDisabledUid) {
+			TkActivateMenuEntry(parentEntryPtr->menuPtr, 
+				parentEntryPtr->index);
+		    }
 		}
+
+		interp = menuPtr->interp;
+		Tcl_Preserve((ClientData)interp);
+		code = TkInvokeMenu(interp, menuPtr, mePtr->index);
+		if ((code != TCL_OK) && (code != TCL_CONTINUE)
+			&& (code != TCL_BREAK)) {
+		    Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
+		    Tcl_BackgroundError(interp);
+		}
+		Tcl_Release((ClientData)interp);
 	    }
+	    *plResult = 0;
+	    returnResult = 1;
 	    break;
 	}
 
@@ -961,10 +997,10 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 			    == CharUpper((LPTSTR) (unsigned char) menuPtr
 			    ->entries[i]->label[underline]))) {
 			*plResult = (2 << 16) | i;
+			returnResult = 1;
 			break;
 		    }
 		}
-		returnResult = 1;
 	    }
 	    break;
 	}
@@ -1677,6 +1713,7 @@ MenuKeyBindProc(clientData, interp, eventPtr, tkwin, keySym)
     UINT scanCode;
     UINT virtualKey;
     TkWindow *winPtr = (TkWindow *)tkwin;
+    int i;
 
     if (eventPtr->type == KeyPress) {
 	switch (keySym) {
@@ -1704,6 +1741,15 @@ MenuKeyBindProc(clientData, interp, eventPtr, tkwin, keySym)
 		CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 			WM_SYSKEYDOWN, virtualKey, ((scanCode << 16)
 			| (1 << 29)));
+		if (eventPtr->xkey.nchars > 0) {
+		    for (i = 0; i < eventPtr->xkey.nchars; i++) {
+			CallWindowProc(DefWindowProc,
+				Tk_GetHWND(Tk_WindowId(tkwin)),
+				WM_SYSCHAR,
+				eventPtr->xkey.trans_chars[i],
+				((scanCode << 16) | (1 << 29)));
+		    }
+		}
 	    }
 	}
     } else if (eventPtr->type == KeyRelease) {
