@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.16 2002/06/11 18:59:25 jenglish Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.17 2002/06/22 09:08:40 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -90,7 +90,7 @@ bind Menubutton <Leave> {
     tk::MbLeave %W
 }
 bind Menubutton <1> {
-    if {[string compare $tk::Priv(inMenubutton) ""]} {
+    if {$tk::Priv(inMenubutton) ne ""} {
 	tk::MbPost $tk::Priv(inMenubutton) %X %Y
     }
 }
@@ -119,9 +119,9 @@ bind Menu <FocusIn> {}
 
 bind Menu <Enter> {
     set tk::Priv(window) %W
-    if {[string equal [%W cget -type] "tearoff"]} {
-	if {[string compare "%m" "NotifyUngrab"]} {
-	    if {[string equal $tcl_platform(platform) "unix"]} {
+    if {[%W cget -type] eq "tearoff"} {
+	if {"%m" ne "NotifyUngrab"} {
+	    if {$tcl_platform(platform) eq "unix"} {
 		tk_menuSetFocus %W
 	    }
 	}
@@ -244,16 +244,15 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
     variable ::tk::Priv
     global tcl_platform
 
-    if {[string equal [$w cget -state] "disabled"] || \
-	    [string equal $w $Priv(postedMb)]} {
+    if {[$w cget -state] eq "disabled" || $w eq $Priv(postedMb)} {
 	return
     }
     set menu [$w cget -menu]
     if {[string equal $menu ""]} {
 	return
     }
-    set tearoff [expr {[string equal $tcl_platform(platform) "unix"] \
-	    || [string equal [$menu cget -type] "tearoff"]}]
+    set tearoff [expr {$tcl_platform(platform) eq "unix" \
+	    || [$menu cget -type] eq "tearoff"}]
     if {[string first $w $menu] != 0} {
 	error "can't post $menu:  it isn't a descendant of $w (this is a new requirement in Tk versions 3.0 and later)"
     }
@@ -281,12 +280,12 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
     	    above {
     	    	set x [winfo rootx $w]
     	    	set y [expr {[winfo rooty $w] - [winfo reqheight $menu]}]
-    	    	$menu post $x $y
+		PostOverPoint $menu $x $y
     	    }
     	    below {
     	    	set x [winfo rootx $w]
     	    	set y [expr {[winfo rooty $w] + [winfo height $w]}]
-    	    	$menu post $x $y
+		PostOverPoint $menu $x $y
     	    }
     	    left {
     	    	set x [expr {[winfo rootx $w] - [winfo reqwidth $menu]}]
@@ -301,8 +300,9 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 			        + [$menu yposition [expr {$entry+1}]])/2}]
 		    }
     	    	}
-    	    	$menu post $x $y
-		if {[string compare $entry {}] && [string compare [$menu entrycget $entry -state] "disabled"]} {
+		PostOverPoint $menu $x $y
+		if {$entry ne "" \
+			&& [$menu entrycget $entry -state] ne "disabled"} {
     	    	    $menu activate $entry
 		    GenerateMenuSelect $menu
     	    	}
@@ -320,8 +320,9 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 			        + [$menu yposition [expr {$entry+1}]])/2}]
 		    }
     	    	}
-    	    	$menu post $x $y
-		if {[string compare $entry {}] && [string compare [$menu entrycget $entry -state] "disabled"]} {
+		PostOverPoint $menu $x $y
+		if {$entry ne "" \
+			&& [$menu entrycget $entry -state] ne "disabled"} {
     	    	    $menu activate $entry
 		    GenerateMenuSelect $menu
     	    	}
@@ -334,7 +335,7 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 	    	    }
 	            PostOverPoint $menu $x $y [MenuFindName $menu [$w cget -text]]
 		} else {
-	    	    $menu post [winfo rootx $w] [expr {[winfo rooty $w]+[winfo height $w]}]
+		    PostOverPoint $menu [winfo rootx $w] [expr {[winfo rooty $w]+[winfo height $w]}]
     	    	}  
     	    }
 	}
@@ -428,7 +429,7 @@ proc ::tk::MenuUnpost menu {
 	}
     }
 
-    if {($Priv(tearoff) != 0) || [string compare $Priv(menuBar) ""]} {
+    if {($Priv(tearoff) != 0) || $Priv(menuBar) ne ""} {
     	# Release grab, if any, and restore the previous grab, if there
     	# was one.
 	if {[string compare $menu ""]} {
@@ -438,11 +439,11 @@ proc ::tk::MenuUnpost menu {
 	    }
 	}
 	RestoreOldGrab
-	if {[string compare $Priv(menuBar) ""]} {
+	if {$Priv(menuBar) ne ""} {
 	    $Priv(menuBar) configure -cursor $Priv(cursor)
 	    set Priv(menuBar) {}
 	}
-	if {[string compare $tcl_platform(platform) "unix"]} {
+	if {$tcl_platform(platform) ne "unix"} {
 	    set Priv(tearoff) 0
 	}
     }
@@ -498,11 +499,10 @@ proc ::tk::MbButtonUp w {
     global tcl_platform
 
     set menu [$w cget -menu]
-    set tearoff [expr {[string equal $tcl_platform(platform) "unix"] || \
-	    ([string compare $menu {}] && \
-	    [string equal [$menu cget -type] "tearoff"])}]
-    if {($tearoff != 0) && [string equal $Priv(postedMb) $w] \
-	    && [string equal $Priv(inMenubutton) $w]} {
+    set tearoff [expr {$tcl_platform(platform) eq "unix" || \
+	    ($menu ne "" && [$menu cget -type] eq "tearoff")}]
+    if {($tearoff != 0) && $Priv(postedMb) eq $w \
+	    && $Priv(inMenubutton) eq $w} {
 	MenuFirstEntry [$Priv(postedMb) cget -menu]
     } else {
 	MenuUnpost {}
@@ -870,9 +870,9 @@ proc ::tk::MenuNextEntry {menu count} {
 	    incr i -$length
 	}
 	if {[catch {$menu entrycget $i -state} state] == 0} {
-	    if {$state!="disabled" && 
-		($i!=0 || [$menu cget -type]!="tearoff" 
-			|| [$menu type 0]!="tearoff")} {
+	    if {$state ne "disabled" && \
+		    ($i!=0 || [$menu cget -type] ne "tearoff" \
+		    || [$menu type 0] ne "tearoff")} {
 		break
 	    }
 	}
@@ -1185,9 +1185,24 @@ proc ::tk::PostOverPoint {menu x y {entry {}}}  {
 	}
 	incr x [expr {-[winfo reqwidth $menu]/2}]
     }
+    if {$tcl_platform(platform) == "windows"} {
+	# We need to fix some problems with menu posting on Windows.
+	set yoffset [expr {[winfo screenheight $menu] \
+		- $y - [winfo reqheight $menu]}]
+	if {$yoffset < 0} {
+	    # The bottom of the menu is offscreen, so adjust upwards
+	    incr y $yoffset
+	    if {$y < 0} { set y 0 }
+	}
+	# If we're off the top of the screen (either because we were
+	# originally or because we just adjusted too far upwards),
+	# then make the menu popup on the top edge.
+	if {$y < 0} {
+	    set y 0
+	}
+    }
     $menu post $x $y
-    if {[string compare $entry {}] \
-	    && [string compare [$menu entrycget $entry -state] "disabled"]} {
+    if {$entry ne "" && [$menu entrycget $entry -state] ne "disabled"} {
 	$menu activate $entry
 	GenerateMenuSelect $menu
     }
@@ -1204,7 +1219,7 @@ proc ::tk::PostOverPoint {menu x y {entry {}}}  {
 proc tk::SaveGrabInfo w {
     variable ::tk::Priv
     set Priv(oldGrab) [grab current $w]
-    if {[string compare $Priv(oldGrab) ""]} {
+    if {$Priv(oldGrab) ne ""} {
 	set Priv(grabStatus) [grab status $Priv(oldGrab)]
     }
 }
@@ -1216,8 +1231,7 @@ proc tk::SaveGrabInfo w {
 proc ::tk::RestoreOldGrab {} {
     variable ::tk::Priv
 
-    if {[string compare $Priv(oldGrab) ""]} {
-
+    if {$Priv(oldGrab) ne ""} {
     	# Be careful restoring the old grab, since it's window may not
 	# be visible anymore.
 
@@ -1268,13 +1282,11 @@ proc ::tk::GenerateMenuSelect {menu} {
 proc ::tk_popup {menu x y {entry {}}} {
     variable ::tk::Priv
     global tcl_platform
-    if {[string compare $Priv(popup) ""] \
-	    || [string compare $Priv(postedMb) ""]} {
+    if {$Priv(popup) ne "" || $Priv(postedMb) ne ""} {
 	tk::MenuUnpost {}
     }
     tk::PostOverPoint $menu $x $y $entry
-    if {[string equal $tcl_platform(platform) "unix"] \
-	    && [winfo viewable $menu]} {
+    if {$tcl_platform(platform) eq "unix" && [winfo viewable $menu]} {
         tk::SaveGrabInfo $menu
 	grab -global $menu
 	set Priv(popup) $menu
