@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.12 1999/11/18 02:18:35 wart Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.13 1999/11/23 21:24:59 wart Exp $
 
 TCLVERSION = @TCL_VERSION@
 VERSION = @TK_VERSION@
@@ -359,7 +359,7 @@ runtest: tktest
 
 install: all install-binaries install-libraries install-doc install-demos
 
-install-binaries: installdirs
+install-binaries:
 	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) ; \
 	    do \
 	    echo "	$$i"; \
