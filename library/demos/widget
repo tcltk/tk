@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.14 2003/08/21 00:02:56 hobbs Exp $
+# RCS: @(#) $Id: widget,v 1.15 2003/08/22 22:44:15 dkf Exp $
 
 eval destroy [winfo child .]
 package require msgcat
@@ -310,7 +310,7 @@ focus .s
 # Arguments:
 # w -		The name of the frame to use.
 
-proc addSeeDismiss {w show {vars {}}} {
+proc addSeeDismiss {w show {vars {}} {extra {}}} {
     ## See Code / Dismiss buttons
     frame $w
     frame $w.sep -height 2 -relief sunken -bd 2
@@ -321,14 +321,17 @@ proc addSeeDismiss {w show {vars {}}} {
     button $w.code -text [mc "See Code"] \
 	-image ::img::view -compound left \
 	-command [list showCode $show]
+    set buttons [list x $w.code $w.dismiss]
     if {[llength $vars]} {
 	button $w.vars -text [mc "See Variables"] \
 	    -image ::img::view -compound left \
 	    -command [concat [list showVars $w.dialog] $vars]
-	grid x $w.vars $w.code $w.dismiss -padx 4 -pady 4
-    } else {
-	grid x $w.code $w.dismiss -padx 4 -pady 4
+	set buttons [linsert $buttons 1 $w.vars]
     }
+    if {$extra ne ""} {
+	set buttons [linsert $buttons 1 [uplevel 1 $extra]]
+    }
+    eval grid $buttons -padx 4 -pady 4
     grid columnconfigure $w 0 -weight 1
     return $w
 }
