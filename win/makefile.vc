@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.67.2.1 2003/03/11 23:48:26 kennykb Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.67.2.2 2003/03/13 16:41:48 kennykb Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -165,7 +165,7 @@ PROJECT	= tk
 !endif
 
 STUBPREFIX = $(PROJECT)stub
-DOTVERSION = 8.5
+DOTVERSION = 8.4
 VERSION = $(DOTVERSION:.=)
 WISHNAMEPREFIX = wish
 
