@@ -12,7 +12,7 @@
 # Copyright (c) 2001 Tomasoft Engineering.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.50 2002/02/01 23:20:29 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.51 2002/02/22 02:41:17 hobbs Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -331,6 +331,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkMenubutton.obj \
 	$(TMP_DIR)\tkMenuDraw.obj \
 	$(TMP_DIR)\tkMessage.obj \
+	$(TMP_DIR)\tkPanedWindow.obj \
 	$(TMP_DIR)\tkObj.obj \
 	$(TMP_DIR)\tkOldConfig.obj \
 	$(TMP_DIR)\tkOption.obj \
@@ -651,6 +652,7 @@ $(GENERICDIR)/tkListbox.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkMenu.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkMenubutton.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkMessage.c: $(GENERICDIR)/default.h
+$(GENERICDIR)/tkPanedWindow.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkScale.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkScrollbar.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkText.c: $(GENERICDIR)/default.h
