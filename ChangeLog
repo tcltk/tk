@@ -1,5 +1,8 @@
 2005-02-11  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/panedwindow.tcl (::tk::panedwindow::Cursor): check
+	window existence on delayed call. [Bug 949792]
+
 	* doc/text.n: note 'image' key in 'dump' command. [Bug 1115907]
 
 	* win/tkWinWm.c (TkWinGetIcon): fix toplevel retrieval for

@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk panedwindow widgets and
 # provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: panedwindow.tcl,v 1.6.2.2 2004/05/03 19:36:56 hobbs Exp $
+# RCS: @(#) $Id: panedwindow.tcl,v 1.6.2.3 2005/02/12 00:48:05 hobbs Exp $
 #
 
 bind Panedwindow <Button-1> { ::tk::panedwindow::MarkSash %W %x %y 1 }
@@ -155,7 +155,8 @@ proc ::tk::panedwindow::Motion {w x y} {
 #
 proc ::tk::panedwindow::Cursor {w} {
     variable ::tk::Priv
-    if {[info exists Priv($w,panecursor)]} {
+    # Make sure to check window existence in case it is destroyed.
+    if {[info exists Priv($w,panecursor)] && [winfo exists $w]} {
 	if {[winfo containing [winfo pointerx $w] [winfo pointery $w]] eq $w} {
 	    set Priv($w,pwAfterId) [after 150 \
 		    [list ::tk::panedwindow::Cursor $w]]
