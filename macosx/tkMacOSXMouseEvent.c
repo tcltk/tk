@@ -334,19 +334,31 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 
     switch (medPtr->windowPart) {
         case inDrag:
-            DragWindow(medPtr->whichWin, where, NULL);
-            where2.h = where2.v = 0;
-            LocalToGlobal(&where2);
-            if (EqualPt(where, where2)) {
-                return false;
+            {
+                CGrafPtr saveWorld;
+                GDHandle saveDevice;
+                GWorldPtr dstPort;
+                
+                GetGWorld(&saveWorld, &saveDevice);
+                dstPort = TkMacOSXGetDrawablePort(Tk_WindowId(tkwin));
+                SetGWorld(dstPort, NULL);
+                
+                DragWindow(medPtr->whichWin, where, NULL);
+                where2.h = where2.v = 0;
+                LocalToGlobal(&where2);
+                if (EqualPt(where, where2)) {
+                    SetGWorld (saveWorld, saveDevice);
+                    return false;
+                }
+                TkMacOSXWindowOffset(medPtr->whichWin, &xOffset, &yOffset);
+                where2.h -= xOffset;
+                where2.v -= yOffset;
+                TkGenWMConfigureEvent(tkwin, where2.h, where2.v,
+                        -1, -1, TK_LOCATION_CHANGED);
+                SetGWorld(saveWorld, saveDevice);
+                return true;
+                break;
             }
-            TkMacOSXWindowOffset(medPtr->whichWin, &xOffset, &yOffset);
-            where2.h -= xOffset;
-            where2.v -= yOffset;
-            TkGenWMConfigureEvent(tkwin, where2.h, where2.v,
-                    -1, -1, TK_LOCATION_CHANGED);
-            return true;
-            break;
         case inContent:
             return TkGenerateButtonEvent(where.h, where.v, 
                     window, medPtr->state);
