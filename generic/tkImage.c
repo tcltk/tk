@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.15 2002/06/14 22:25:12 jenglish Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.16 2002/06/18 01:00:59 mdejong Exp $
  */
 
 #include "tkInt.h"
@@ -257,6 +257,7 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 		masterPtr->instancePtr = NULL;
 		masterPtr->deleted = 0;
 		masterPtr->winPtr = winPtr->mainPtr->winPtr;
+		Tcl_Preserve((ClientData) masterPtr->winPtr);
 		Tcl_SetHashValue(hPtr, masterPtr);
 	    } else {
 		/*
@@ -910,6 +911,7 @@ DeleteImage(masterPtr)
         if ((masterPtr->winPtr->flags & TK_ALREADY_DEAD) == 0) {
 	    Tcl_DeleteHashEntry(masterPtr->hPtr);
 	}
+	Tcl_Release((ClientData) masterPtr->winPtr);
 	ckfree((char *) masterPtr);
     }
 }
