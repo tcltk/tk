@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.43 2000/06/05 23:09:17 ericm Exp $
+RCS: @(#) $Id: changes,v 1.44 2000/06/05 23:31:08 ericm Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4941,3 +4941,6 @@ different widget class (melski)
 
 2000-05-31 (feature change) replaced bgerror dialog with a new and
 improved one (fellows, melski)
+
+--- Released 8.4a1, June 6, 2000 --- See ChangeLog for details ---
+
