@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.16 2002/07/13 21:52:34 dgp Exp $
+# RCS: @(#) $Id: grid.test,v 1.17 2002/10/10 21:07:52 pspjuth Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -1496,6 +1496,26 @@ test grid-19.1 {uniform realloc} {
     grid bbox .
 } {0 0 600 20}
 grid_reset 19.1
+
+test grid-20.1 {recalculate size after removal (destroy)} {
+    label .l1 -text l1
+    grid .l1 -row 2 -column 2
+    destroy .l1
+    label .l2 -text l2
+    grid .l2
+    grid size .
+} {1 1}
+grid_reset 20.1
+
+test grid-20.2 {recalculate size after removal (forget)} {
+    label .l1 -text l1
+    grid .l1 -row 2 -column 2
+    grid forget .l1
+    label .l2 -text l2
+    grid .l2
+    grid size .
+} {1 1}
+grid_reset 20.2
 
 # cleanup
 ::tcltest::cleanupTests

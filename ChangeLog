@@ -1,3 +1,9 @@
+2002-10-10  Peter Spjuth  <peter.spjuth@space.se>
+
+	* tests/grid.test:
+	* generic/tkGrid.c: The grid size was not updated properly
+	when removing a widget from a grid. [Bug #621241] (forssen)
+	
 2002-10-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* tests/canvPs.test: tests for canvas embedded window ps generation
