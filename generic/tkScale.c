@@ -17,7 +17,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.1.4.2 1998/09/30 02:17:16 stanton Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.1.4.3 1999/01/07 02:42:51 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -95,7 +95,7 @@ static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_RELIEF, "-sliderrelief", "sliderRelief", "SliderRelief",
 	DEF_SCALE_SLIDER_RELIEF, Tk_Offset(TkScale, sliderRelief),
 	TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_UID, "-state", "state", "State",
+    {TK_CONFIG_STATE, "-state", "state", "State",
 	DEF_SCALE_STATE, Tk_Offset(TkScale, state), 0},
     {TK_CONFIG_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_SCALE_TAKE_FOCUS, Tk_Offset(TkScale, takeFocus),
@@ -222,7 +222,7 @@ Tk_ScaleCmd(clientData, interp, argc, argv)
     scalePtr->repeatInterval = 0;
     scalePtr->label = NULL;
     scalePtr->labelLength = 0;
-    scalePtr->state = tkNormalUid;
+    scalePtr->state = TK_STATE_NORMAL;
     scalePtr->borderWidth = 0;
     scalePtr->bgBorder = NULL;
     scalePtr->activeBorder = NULL;
@@ -415,7 +415,7 @@ ScaleWidgetCmd(clientData, interp, argc, argv)
 	if (Tcl_GetDouble(interp, argv[2], &value) != TCL_OK) {
 	    goto error;
 	}
-	if (scalePtr->state != tkDisabledUid) {
+	if (scalePtr->state != TK_STATE_DISABLED) {
 	    TkpSetScaleValue(scalePtr, value, 1, 1);
 	}
     } else {
@@ -596,12 +596,12 @@ ConfigureScale(interp, scalePtr, argc, argv, flags)
 	scalePtr->labelLength = 0;
     }
 
-    if ((scalePtr->state != tkNormalUid)
-	    && (scalePtr->state != tkDisabledUid)
-	    && (scalePtr->state != tkActiveUid)) {
+    if ((scalePtr->state != TK_STATE_NORMAL)
+	    && (scalePtr->state != TK_STATE_DISABLED)
+	    && (scalePtr->state != TK_STATE_ACTIVE)) {
 	Tcl_AppendResult(interp, "bad state value \"", scalePtr->state,
 		"\": must be normal, active, or disabled", (char *) NULL);
-	scalePtr->state = tkNormalUid;
+	scalePtr->state = TK_STATE_NORMAL;
 	return TCL_ERROR;
     }
 

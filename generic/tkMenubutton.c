@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.1.4.3 1998/12/13 08:16:09 lfb Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.1.4.4 1999/01/07 02:42:50 lfb Exp $
  */
 
 #include "tkMenubutton.h"
@@ -109,7 +109,7 @@ static Tk_ConfigSpec configSpecs[] = {
 	DEF_MENUBUTTON_PADY, Tk_Offset(TkMenuButton, padY), 0},
     {TK_CONFIG_RELIEF, "-relief", "relief", "Relief",
 	DEF_MENUBUTTON_RELIEF, Tk_Offset(TkMenuButton, relief), 0},
-    {TK_CONFIG_UID, "-state", "state", "State",
+    {TK_CONFIG_STATE, "-state", "state", "State",
 	DEF_MENUBUTTON_STATE, Tk_Offset(TkMenuButton, state), 0},
     {TK_CONFIG_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_MENUBUTTON_TAKE_FOCUS, Tk_Offset(TkMenuButton, takeFocus),
@@ -216,7 +216,7 @@ Tk_MenubuttonCmd(clientData, interp, argc, argv)
     mbPtr->bitmap = None;
     mbPtr->imageString = NULL;
     mbPtr->image = NULL;
-    mbPtr->state = tkNormalUid;
+    mbPtr->state = TK_STATE_NORMAL;
     mbPtr->normalBorder = NULL;
     mbPtr->activeBorder = NULL;
     mbPtr->borderWidth = 0;
@@ -458,15 +458,16 @@ ConfigureMenuButton(interp, mbPtr, argc, argv, flags)
      * defaults that couldn't be specified to Tk_ConfigureWidget.
      */
 
-    if ((mbPtr->state == tkActiveUid) && !Tk_StrictMotif(mbPtr->tkwin)) {
+    if ((mbPtr->state == TK_STATE_ACTIVE) && !Tk_StrictMotif(mbPtr->tkwin)) {
 	Tk_SetBackgroundFromBorder(mbPtr->tkwin, mbPtr->activeBorder);
     } else {
 	Tk_SetBackgroundFromBorder(mbPtr->tkwin, mbPtr->normalBorder);
-	if ((mbPtr->state != tkNormalUid) && (mbPtr->state != tkActiveUid)
-		&& (mbPtr->state != tkDisabledUid)) {
+	if ((mbPtr->state != TK_STATE_NORMAL) 
+	        && (mbPtr->state != TK_STATE_ACTIVE)
+		&& (mbPtr->state != TK_STATE_DISABLED)) {
 	    Tcl_AppendResult(interp, "bad state value \"", mbPtr->state,
 		    "\": must be normal, active, or disabled", (char *) NULL);
-	    mbPtr->state = tkNormalUid;
+	    mbPtr->state = TK_STATE_NORMAL;
 	    return TCL_ERROR;
 	}
     }

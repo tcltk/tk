@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.1.4.4 1998/11/25 21:16:36 stanton Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.1.4.5 1999/01/07 02:42:54 lfb Exp $
  */
 
 #include <Menus.h>
@@ -3231,9 +3231,9 @@ AppearanceEntryDrawWrapper(
         itemRect.bottom = itemRect.top + height;
         itemRect.right = itemRect.left + width;
     
-        if (mePtr->state == tkActiveUid) {
+        if (mePtr->state == TK_STATE_ACTIVE) {
             theState = kThemeMenuSelected;
-        } else if (mePtr->state == tkDisabledUid) {
+        } else if (mePtr->state == TK_STATE_DISABLED) {
     	    theState = kThemeMenuDisabled;
         } else {
     	    theState = kThemeMenuActive;

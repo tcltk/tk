@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.1.4.4 1998/12/30 02:52:21 lfb Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.1.4.5 1999/01/07 02:42:53 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -32,21 +32,11 @@ typedef struct ThreadSpecificData {
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
-/*
- * The variables below hold several uid's that are used in many places
- * in the toolkit.
- */
-
-Tk_Uid tkDisabledUid = NULL;
-Tk_Uid tkActiveUid = NULL;
-Tk_Uid tkNormalUid = NULL;
-
 /* 
  * The Mutex below is used to lock access to the Tk_Uids above. 
  */
 
 TCL_DECLARE_MUTEX(windowMutex);
-TCL_DECLARE_MUTEX(uidMutex);
 
 /*
  * Default values for "changes" and "atts" fields of TkWindows.  Note
@@ -259,17 +249,7 @@ CreateTopLevelWindow(interp, parent, name, screenName)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
-	if (tkNormalUid == NULL) {
-	    Tcl_MutexLock(&uidMutex);
-	    if (tkNormalUid == NULL) {
-	        tkActiveUid = Tk_GetUid("active");
-		tkDisabledUid = Tk_GetUid("disabled");
-		tkNormalUid = Tk_GetUid("normal");
-	    }
-	    Tcl_MutexUnlock(&uidMutex);
 	tsdPtr->initialized = 1;
-
-	}
 
 	/*
 	 * Create built-in image types.
@@ -2600,11 +2580,6 @@ DeleteWindowsExitProc(clientData)
     tsdPtr->numMainWindows = 0;
     tsdPtr->mainWindowList = NULL;
     tsdPtr->initialized = 0;
-    Tcl_MutexLock(&uidMutex);
-    tkDisabledUid = NULL;
-    tkActiveUid = NULL;
-    tkNormalUid = NULL;
-    Tcl_MutexUnlock(&uidMutex);
 }
 
 /*

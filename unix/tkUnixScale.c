@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixScale.c,v 1.1.4.1 1998/09/30 02:19:21 stanton Exp $
+ * RCS: @(#) $Id: tkUnixScale.c,v 1.1.4.2 1999/01/07 02:42:57 lfb Exp $
  */
 
 #include "tkScale.h"
@@ -177,7 +177,7 @@ DisplayVerticalScale(scalePtr, drawable, drawnAreaPtr)
 	    (unsigned) scalePtr->width,
 	    (unsigned) (Tk_Height(tkwin) - 2*scalePtr->inset
 		- 2*scalePtr->borderWidth));
-    if (scalePtr->state == tkActiveUid) {
+    if (scalePtr->state == TK_STATE_ACTIVE) {
 	sliderBorder = scalePtr->activeBorder;
     } else {
 	sliderBorder = scalePtr->bgBorder;
@@ -376,7 +376,7 @@ DisplayHorizontalScale(scalePtr, drawable, drawnAreaPtr)
 	    (unsigned) (Tk_Width(tkwin) - 2*scalePtr->inset
 		- 2*scalePtr->borderWidth),
 	    (unsigned) scalePtr->width);
-    if (scalePtr->state == tkActiveUid) {
+    if (scalePtr->state == TK_STATE_ACTIVE) {
 	sliderBorder = scalePtr->activeBorder;
     } else {
 	sliderBorder = scalePtr->bgBorder;

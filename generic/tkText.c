@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.1.4.2 1998/09/30 02:17:20 stanton Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.1.4.3 1999/01/07 02:42:51 lfb Exp $
  */
 
 #include "default.h"
@@ -112,7 +112,7 @@ static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_PIXELS, "-spacing3", "spacing3", "Spacing",
 	DEF_TEXT_SPACING3, Tk_Offset(TkText, spacing3),
 	TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_UID, "-state", "state", "State",
+    {TK_CONFIG_STATE, "-state", "state", "State",
 	DEF_TEXT_STATE, Tk_Offset(TkText, state), 0},
     {TK_CONFIG_STRING, "-tabs", "tabs", "Tabs",
 	DEF_TEXT_TABS, Tk_Offset(TkText, tabOptionString), TK_CONFIG_NULL_OK},

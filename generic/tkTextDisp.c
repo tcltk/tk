@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.1.4.2 1998/09/30 02:17:23 stanton Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.1.4.3 1999/01/07 02:42:52 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -1581,7 +1581,7 @@ DisplayDLine(textPtr, dlPtr, prevPtr, pixmap)
      * to its left.
      */
 
-    if (textPtr->state == tkNormalUid) {
+    if (textPtr->state == TK_STATE_NORMAL) {
 	for (chunkPtr = dlPtr->chunkPtr; (chunkPtr != NULL);
 		chunkPtr = chunkPtr->nextPtr) {
 	    x = chunkPtr->x + dInfoPtr->x - dInfoPtr->curPixelOffset;

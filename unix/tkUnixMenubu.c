@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenubu.c,v 1.1.4.1 1998/09/30 02:19:20 stanton Exp $
+ * RCS: @(#) $Id: tkUnixMenubu.c,v 1.1.4.2 1999/01/07 02:42:57 lfb Exp $
  */
 
 #include "tkMenubutton.h"
@@ -84,10 +84,11 @@ TkpDisplayMenuButton(clientData)
 	return;
     }
 
-    if ((mbPtr->state == tkDisabledUid) && (mbPtr->disabledFg != NULL)) {
+    if ((mbPtr->state == TK_STATE_DISABLED) && (mbPtr->disabledFg != NULL)) {
 	gc = mbPtr->disabledGC;
 	border = mbPtr->normalBorder;
-    } else if ((mbPtr->state == tkActiveUid) && !Tk_StrictMotif(mbPtr->tkwin)) {
+    } else if ((mbPtr->state == TK_STATE_ACTIVE) 
+            && !Tk_StrictMotif(mbPtr->tkwin)) {
 	gc = mbPtr->activeTextGC;
 	border = mbPtr->activeBorder;
     } else {
@@ -142,7 +143,7 @@ TkpDisplayMenuButton(clientData)
      * foreground color, generate the stippled effect.
      */
 
-    if ((mbPtr->state == tkDisabledUid)
+    if ((mbPtr->state == TK_STATE_DISABLED)
 	    && ((mbPtr->disabledFg == NULL) || (mbPtr->image != NULL))) {
 	XFillRectangle(mbPtr->display, pixmap, mbPtr->disabledGC,
 		mbPtr->inset, mbPtr->inset,

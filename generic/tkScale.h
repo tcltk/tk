@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.h,v 1.1.4.1 1998/09/30 02:17:17 stanton Exp $
+ * RCS: @(#) $Id: tkScale.h,v 1.1.4.2 1999/01/07 02:42:51 lfb Exp $
  */
 
 #ifndef _TKSCALE
@@ -79,8 +79,9 @@ typedef struct TkScale {
 				 * scale;  NULL means don't display a
 				 * label.  Malloc'ed. */
     int labelLength;		/* Number of non-NULL chars. in label. */
-    Tk_Uid state;		/* Normal or disabled.  Value cannot be
-				 * changed when scale is disabled. */
+    int state;		        /* TK_STATE_ACTIVE, TK_STATE_NORMAL 
+				 * or TK_STATE_DISABLED.  Value of scale 
+				 * cannot be changed when disabled. */
 
     /*
      * Information used when displaying widget:

@@ -1,3 +1,14 @@
+1999-01-06  <lfb@JUSTICE>
+
+	* generic/tk.h, generic/tkGet.c, generic/tkConfig.c, 
+	* generic/tkOldConfig.c, generic/tkEntry.c, generic/tkMenubutton.c, 
+	* generic/tkMenubutton.h, generic/tkScale.c, generic/tkScale.h, 
+	* generic/tkTextDisplay.c, generic/tkText.c, unix/tkUnixMenubu.c, 
+	* unix/tkUnixScale.c, mac/tkMacMenu.c, mac/tkMacMenubutton.c, 
+	
+	Removed global Tk_Uids dealing with "-state" configuration option
+	and added new TK_CONFIG_STATE configSpec that doesn't use 
+	Tk_Uids.
 
 1998-12-11    === Tk 8.1b1 Release ===
 	

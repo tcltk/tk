@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.1.4.2 1998/09/30 02:16:53 stanton Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.1.4.3 1999/01/07 02:42:49 lfb Exp $
  */
 
 #include "tkInt.h"
@@ -99,7 +99,7 @@ typedef struct {
     char *showChar;		/* Value of -show option.  If non-NULL, first
 				 * character is used for displaying all
 				 * characters in entry.  Malloc'ed. */
-    Tk_Uid state;		/* Normal or disabled.  Entry is read-only
+    int state;		        /* Normal or disabled.  Entry is read-only
 				 * when disabled. */
     char *textVarName;		/* Name of variable (malloc'ed) or NULL.
 				 * If non-NULL, entry's string tracks the
@@ -257,7 +257,7 @@ static Tk_ConfigSpec configSpecs[] = {
 	TK_CONFIG_MONO_ONLY},
     {TK_CONFIG_STRING, "-show", "show", "Show",
 	DEF_ENTRY_SHOW, Tk_Offset(Entry, showChar), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_UID, "-state", "state", "State",
+    {TK_CONFIG_STATE, "-state", "state", "State",
 	DEF_ENTRY_STATE, Tk_Offset(Entry, state), 0},
     {TK_CONFIG_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_ENTRY_TAKE_FOCUS, Tk_Offset(Entry, takeFocus), TK_CONFIG_NULL_OK},
@@ -420,7 +420,7 @@ Tk_EntryCmd(clientData, interp, argc, argv)
     entryPtr->selBorderWidth = 0;
     entryPtr->selFgColorPtr = NULL;
     entryPtr->showChar = NULL;
-    entryPtr->state = tkNormalUid;
+    entryPtr->state = TK_STATE_NORMAL;
     entryPtr->textVarName = NULL;
     entryPtr->takeFocus = NULL;
     entryPtr->prefWidth = 0;
@@ -564,7 +564,7 @@ EntryWidgetCmd(clientData, interp, argc, argv)
 		goto error;
 	    }
 	}
-	if ((last >= first) && (entryPtr->state == tkNormalUid)) {
+	if ((last >= first) && (entryPtr->state == TK_STATE_NORMAL)) {
 	    DeleteChars(entryPtr, first, last - first);
 	}
     } else if ((c == 'g') && (strncmp(argv[1], "get", length) == 0)) {
@@ -615,7 +615,7 @@ EntryWidgetCmd(clientData, interp, argc, argv)
 	if (GetEntryIndex(interp, entryPtr, argv[2], &index) != TCL_OK) {
 	    goto error;
 	}
-	if (entryPtr->state == tkNormalUid) {
+	if (entryPtr->state == TK_STATE_NORMAL) {
 	    InsertChars(entryPtr, index, argv[3]);
 	}
     } else if ((c == 's') && (length >= 2)
@@ -948,11 +948,11 @@ ConfigureEntry(interp, entryPtr, argc, argv, flags)
      * the geometry and setting the background from a 3-D border.
      */
 
-    if ((entryPtr->state != tkNormalUid)
-	    && (entryPtr->state != tkDisabledUid)) {
+    if ((entryPtr->state != TK_STATE_NORMAL)
+	    && (entryPtr->state != TK_STATE_DISABLED)) {
 	Tcl_AppendResult(interp, "bad state value \"", entryPtr->state,
 		"\": must be normal or disabled", (char *) NULL);
-	entryPtr->state = tkNormalUid;
+	entryPtr->state = TK_STATE_NORMAL;
 	return TCL_ERROR;
     }
 
@@ -1185,7 +1185,7 @@ DisplayEntry(clientData)
      */
 
     if ((entryPtr->insertPos >= entryPtr->leftIndex)
-	    && (entryPtr->state == tkNormalUid)
+	    && (entryPtr->state == TK_STATE_NORMAL)
 	    && (entryPtr->flags & GOT_FOCUS)) {
 	int insertByte;
 
