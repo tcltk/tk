@@ -1,3 +1,12 @@
+2000-10-01  Eric Melski  <ericm@ajubasolutions.com>
+
+	* doc/SetOptions.3: Added note that restoreProc and freeProc may
+	be NULL.
+
+	* generic/tkConfig.c (Tk_RestoreSavedOptions): For custom options,
+	added test that the restoreProc is not NULL, to allow for custom
+	options that don't care about supporting Tk_RestoreSavedOptions.
+
 2000-09-29  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* win/Makefile.in: commented use of TESTFLAGS
