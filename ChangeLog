@@ -1,6 +1,10 @@
 1999-03-17    <stanton@scriptics.com>
 
 	* win/makefile.vc: 
+	* generic/tk.h: Changed to use TCL_BETA_RELEASE macro, and fixed
+	so this works in rc files.
+	
+	* win/makefile.vc: 
 	* win/makefile.bc: 
 	* win/README: 
 	* unix/configure.in: 
