@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.9 1999/11/19 15:48:19 ericm Exp $
+# RCS: @(#) $Id: listbox.test,v 1.10 1999/11/24 00:20:14 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1885,7 +1885,17 @@ test listbox-21.14 {listbox item configurations and listvar based inserts} {
     set x [list 1 2 3 4 a b c]
     .l itemcget 0 -fg
 } red
-
+test listbox-21.15 {ListboxListVarProc, update vertical scrollbar} {
+    catch {destroy .l}
+    catch {unset x}
+    set log {}
+    listbox .l -listvar x -yscrollcommand "record y" -font fixed -height 3
+    pack .l
+    update
+    lappend x a b c d e f
+    update
+    set log
+} [list {y 0 1} {y 0 0.5}]
 # UpdateHScrollbar
 test listbox-22.1 {UpdateHScrollbar} {
     catch {destroy .l}

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.11 1999/11/23 23:52:13 hobbs Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.12 1999/11/24 00:20:13 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -3191,6 +3191,10 @@ ListboxListVarProc(clientData, interp, name1, name2, flags)
 		Tcl_DeleteHashEntry(entry);
 	    }
 	}
+    }
+
+    if (oldLength != listPtr->nElements) {
+	listPtr->flags |= UPDATE_V_SCROLLBAR;
     }
 
     /*

@@ -1,3 +1,12 @@
+1999-11-23  Eric Melski  <ericm@scriptics.com>
+
+	* tests/listbox.test: Added a test to check that the vertical
+	scrollbar is updated when the listvar changes.
+
+	* generic/tkListbox.c (ListboxListVarProc): added a check that
+	sets the UPDATE_V_SCROLLBAR flag if the length of the listvar has
+	changed.
+
 1999-11-23  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* generic/tk.h:
@@ -21,6 +30,16 @@
 	of str[n]casecmp, as cygwin uses the originals.
 	* win/tkWinX.c: changed GetCurrentTime to GetTickCount (the
 	former is deprecated).  [Bug: 2053]
+
+1999-11-19  Eric Melski  <ericm@scriptics.com>
+
+	* tests/listbox.test: Added tests for itemcget and itemconfigure.
+
+	* doc/listbox.n: Added documentation for -listvar option and for
+	itemconfigure and itemcget commands.
+
+	* generic/tkListbox.c: Added support for itemconfigure/itemcget
+	listbox subcommands (addresses rfe #936)
 
 1999-11-17  Eric Melski  <ericm@scriptics.com>
 
