@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.30 2002/08/05 04:30:41 dgp Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.31 2002/08/08 22:32:11 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -197,7 +197,6 @@ typedef struct TkWmInfo {
     char *clientMachine;	/* String to store in WM_CLIENT_MACHINE
 				 * property, or NULL. */
     int flags;			/* Miscellaneous flags, defined below. */
-    int numTransients;		/* number of transients on this window */
     struct TkWmInfo *nextPtr;	/* Next in list of all top-level windows. */
 } WmInfo;
 
@@ -528,7 +527,6 @@ TkWmNewWindow(winPtr)
     wmPtr->winPtr = winPtr;
     wmPtr->reparent = None;
     wmPtr->masterPtr = NULL;
-    wmPtr->numTransients = 0;
     wmPtr->hints.flags = InputHint | StateHint;
     wmPtr->hints.input = True;
     wmPtr->hints.initial_state = NormalState;
@@ -857,7 +855,6 @@ TkWmDeadWindow(winPtr)
     for (wmPtr2 = winPtr->dispPtr->firstWmPtr; wmPtr2 != NULL;
 	 wmPtr2 = wmPtr2->nextPtr) {
 	if (wmPtr2->masterPtr == winPtr) {
-	    wmPtr->numTransients--;
 	    Tk_DeleteEventHandler((Tk_Window) wmPtr2->masterPtr,
 	            StructureNotifyMask,
 	            WmWaitMapProc, (ClientData) wmPtr2->winPtr);
@@ -871,18 +868,12 @@ TkWmDeadWindow(winPtr)
 	    }
 	}
     }
-    if (wmPtr->numTransients != 0)
-        panic("numTransients should be 0");
 
     if (wmPtr->masterPtr != NULL) {
 	wmPtr2 = wmPtr->masterPtr->wmInfoPtr;
 	/*
-	 * If we had a master, tell them that we aren't tied
-	 * to them anymore
+	 * If we had a master, remove old map/unmap binding
 	 */
-	if (wmPtr2 != NULL) {
-	    wmPtr2->numTransients--;
-	}
 	Tk_DeleteEventHandler((Tk_Window) wmPtr->masterPtr,
 		StructureNotifyMask,
 		WmWaitMapProc, (ClientData) winPtr);
@@ -2999,11 +2990,8 @@ WmTransientCmd(tkwin, winPtr, interp, objc, objv)
     if (Tcl_GetString(objv[3])[0] == '\0') {
 	if (masterPtr != NULL) {
 	    /*
-	     * If we had a master, tell them that we aren't tied
-	     * to them anymore
+	     * If we had a master, remove old map/unmap binding
 	     */
-
-	    masterPtr->wmInfoPtr->numTransients--;
 	    Tk_DeleteEventHandler((Tk_Window) masterPtr,
 		    StructureNotifyMask,
 		    WmWaitMapProc, (ClientData) winPtr);
@@ -3063,9 +3051,7 @@ WmTransientCmd(tkwin, winPtr, interp, objc, objv)
 	     * transient states reflect the state of the master.
 	     */
 
-	    if (wmPtr->masterPtr == NULL) {
-		masterPtr->wmInfoPtr->numTransients++;
-	    } else {
+	    if (wmPtr->masterPtr != NULL) {
 		Tk_DeleteEventHandler((Tk_Window) wmPtr->masterPtr,
 			StructureNotifyMask,
 			WmWaitMapProc, (ClientData) winPtr);

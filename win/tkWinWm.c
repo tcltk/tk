@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.51 2002/08/05 14:01:15 dgp Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.52 2002/08/08 22:32:12 jenglish Exp $
  */
 
 #include "tkWinInt.h"
@@ -4625,14 +4625,14 @@ WmTransientCmd(tkwin, winPtr, interp, objc, objv)
 	     * transient states reflect the state of the master.
 	     */
 
-	    if (wmPtr->masterPtr == NULL) {
-		masterPtr->wmInfoPtr->numTransients++;
-	    } else {
+	    if (wmPtr->masterPtr != NULL) {
+		wmPtr->masterPtr->wmInfoPtr->numTransients--;
 		Tk_DeleteEventHandler((Tk_Window) wmPtr->masterPtr,
 			VisibilityChangeMask|StructureNotifyMask,
 			WmWaitVisibilityOrMapProc, (ClientData) winPtr);
 	    }
 
+	    masterPtr->wmInfoPtr->numTransients++;
 	    Tk_CreateEventHandler((Tk_Window) masterPtr,
 		    VisibilityChangeMask|StructureNotifyMask,
 		    WmWaitVisibilityOrMapProc, (ClientData) winPtr);
