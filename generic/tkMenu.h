@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMenu.h 1.71 98/01/20 16:39:03
+ * RCS: @(#) $Id: tkMenu.h,v 1.1.4.2 1998/09/30 02:17:09 stanton Exp $
  */
 
 #ifndef _TKMENU
@@ -24,6 +24,11 @@
 
 #ifndef _DEFAULT
 #include "default.h"
+#endif
+
+#ifdef BUILD_tk
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -557,6 +562,9 @@ EXTERN int		TkpPostMenu _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkMenu *menuPtr, int x, int y));
 EXTERN void		TkpSetWindowMenuBar _ANSI_ARGS_((Tk_Window tkwin,
 			    TkMenu *menuPtr));
+
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKMENU */
 

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkColor.c 1.55 97/12/24 15:52:02
+ * RCS: @(#) $Id: tkColor.c,v 1.1.4.2 1998/09/30 02:16:51 stanton Exp $
  */
 
 #include "tkColor.h"

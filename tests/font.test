@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) font.test 1.29 98/01/16 10:47:57
+# RCS: @(#) $Id: font.test,v 1.1.4.2 1998/09/30 02:18:36 stanton Exp $
 
 if {[string compare test [info procs test]] != 0} {
     source defs
@@ -31,10 +31,10 @@ proc setup {} {
     update
 }
 
-label .b.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left -text "0" -font "Helvetica -12 bold"
+label .b.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left -text "0" -font "Courier -12"
 pack .b.l
 canvas .b.c -closeenough 0 
-.b.c create text 0 0 -tags text -anchor nw -just left -font "Helvetica -12 bold"
+.b.c create text 0 0 -tags text -anchor nw -just left -font "Courier -12"
 pack .b.c
 update
 

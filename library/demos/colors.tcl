@@ -4,7 +4,7 @@
 # many of the colors from the X color database.  You can click on
 # a color to change the application's palette.
 #
-# SCCS: @(#) colors.tcl 1.4 97/03/02 16:20:29
+# RCS: @(#) $Id: colors.tcl,v 1.1.4.1 1998/09/30 02:17:43 stanton Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) config.test 1.21 98/01/09 16:47:32
+# RCS: @(#) $Id: config.test,v 1.1.2.2 1998/09/30 02:18:33 stanton Exp $
 
 if {[info command testobjconfig] != "testobjconfig"} {
     puts "This application hasn't been compiled with the \"testobjconfig\""

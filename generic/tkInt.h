@@ -6,11 +6,12 @@
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkInt.h 1.212 98/02/10 10:34:03
+ * RCS: $Id: tkInt.h,v 1.1.4.2 1998/09/30 02:17:05 stanton Exp $ 
  */
 
 #ifndef _TKINT
@@ -24,6 +25,11 @@
 #endif
 #ifndef _TKPORT
 #include <tkPort.h>
+#endif
+
+#ifdef BUILD_tk
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -755,6 +761,9 @@ EXTERN unsigned long	TkCreateBindingProcedure _ANSI_ARGS_((
 			    ClientData object, char *eventString,
 			    TkBindEvalProc *evalProc, TkBindFreeProc *freeProc,
 			    ClientData clientData));
+EXTERN Pixmap		TkCreateBitmapFromData _ANSI_ARGS_((Display* display,
+			    Drawable d, CONST char* data,
+			    unsigned int width, unsigned int height));
 EXTERN TkCursor *	TkCreateCursorFromData _ANSI_ARGS_((Tk_Window tkwin,
 			    char *source, char *mask, int width, int height,
 			    int xHot, int yHot, XColor fg, XColor bg));
@@ -970,6 +979,12 @@ EXTERN void		TkpWmSetState _ANSI_ARGS_((TkWindow *winPtr,
 			    int state));
 EXTERN void		TkQueueEventForAllChildren _ANSI_ARGS_((
 			    TkWindow *winPtr, XEvent *eventPtr));
+EXTERN int		TkReadBitmapFile _ANSI_ARGS_((Display* display,
+			    Drawable d, CONST char* filename,
+			    unsigned int* width_return,
+			    unsigned int* height_return,
+			    Pixmap* bitmap_return,
+			    int* x_hot_return, int* y_hot_return));
 #ifndef TkRectInRegion
 EXTERN int		TkRectInRegion _ANSI_ARGS_((TkRegion rgn,
 			    int x, int y, unsigned int width,
@@ -1026,5 +1041,8 @@ EXTERN int		TkXFileProc _ANSI_ARGS_((ClientData clientData,
  */
 EXTERN int		TkUnsupported1Cmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
+
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif  /* _TKINT */

@@ -17,7 +17,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkScale.c 1.89 97/11/07 21:20:16
+ * RCS: @(#) $Id: tkScale.c,v 1.1.4.2 1998/09/30 02:17:16 stanton Exp $
  */
 
 #include "tkPort.h"

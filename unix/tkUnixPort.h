@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixPort.h 1.40 98/02/10 10:33:38
+ * RCS: @(#) $Id: tkUnixPort.h,v 1.1.4.2 1998/09/30 02:19:21 stanton Exp $
  */
 
 #ifndef _UNIXPORT

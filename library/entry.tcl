@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# SCCS: @(#) entry.tcl 1.50 97/12/03 15:28:57
+# RCS: @(#) $Id: entry.tcl,v 1.1.4.2 1998/09/30 02:17:32 stanton Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -31,7 +31,6 @@
 #-------------------------------------------------------------------------
 # The code below creates the default class bindings for entries.
 #-------------------------------------------------------------------------
-
 bind Entry <<Cut>> {
     if {![catch {set data [string range [%W get] [%W index sel.first]\
 	    [expr {[%W index sel.last] - 1}]]}]} {
@@ -61,6 +60,11 @@ bind Entry <<Paste>> {
 }
 bind Entry <<Clear>> {
     %W delete sel.first sel.last
+}
+bind Entry <<PasteSelection>> {
+    if {!$tkPriv(mouseMoved) || $tk_strictMotif} {
+	tkEntryPaste %W %x
+    }
 }
 
 # Standard Motif bindings:
@@ -107,11 +111,6 @@ bind Entry <ButtonRelease-1> {
 }
 bind Entry <Control-1> {
     %W icursor @%x
-}
-bind Entry <ButtonRelease-2> {
-    if {!$tkPriv(mouseMoved) || $tk_strictMotif} {
-	tkEntryPaste %W %x
-    }
 }
 
 bind Entry <Left> {
@@ -206,8 +205,12 @@ if {$tcl_platform(platform) == "macintosh"} {
 	bind Entry <Command-KeyPress> {# nothing}
 }
 
-bind Entry <Insert> {
-    catch {tkEntryInsert %W [selection get -displayof %W]}
+# On Windows, paste is done using Shift-Insert.  Shift-Insert already
+# generates the <<Paste>> event, so we don't need to do anything here.
+if {$tcl_platform(platform) != "windows"} {
+    bind Entry <Insert> {
+	catch {tkEntryInsert %W [selection get -displayof %W]}
+    }
 }
 
 # Additional emacs-like bindings:

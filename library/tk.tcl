@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# SCCS: @(#) tk.tcl 1.101 97/12/19 16:16:40
+# RCS: @(#) $Id: tk.tcl,v 1.1.4.2 1998/09/30 02:17:38 stanton Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -155,6 +155,7 @@ switch $tcl_platform(platform) {
 	event add <<Cut>> <Control-Key-x> <Key-F20> 
 	event add <<Copy>> <Control-Key-c> <Key-F16>
 	event add <<Paste>> <Control-Key-v> <Key-F18>
+	event add <<PasteSelection>> <ButtonRelease-2>
 	trace variable tk_strictMotif w tkEventMotifBindings
 	set tk_strictMotif $tk_strictMotif
     }
@@ -162,11 +163,13 @@ switch $tcl_platform(platform) {
 	event add <<Cut>> <Control-Key-x> <Shift-Key-Delete>
 	event add <<Copy>> <Control-Key-c> <Control-Key-Insert>
 	event add <<Paste>> <Control-Key-v> <Shift-Key-Insert>
+	event add <<PasteSelection>> <ButtonRelease-2>
     }
     "macintosh" {
 	event add <<Cut>> <Control-Key-x> <Key-F2> 
 	event add <<Copy>> <Control-Key-c> <Key-F3>
 	event add <<Paste>> <Control-Key-v> <Key-F4>
+	event add <<PasteSelection>> <ButtonRelease-2>
 	event add <<Clear>> <Clear>
     }
 }

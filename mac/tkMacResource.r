@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacResource.r 1.38 98/02/10 10:38:07
+ * RCS: @(#) $Id: tkMacResource.r,v 1.1.4.2 1998/09/30 02:18:14 stanton Exp $
  */
 
 /*
@@ -92,7 +92,6 @@ read 'TEXT' (23, "tkerror", purgeable, preload) "::library:bgerror.tcl";
 read 'TEXT' (24, "Console", purgeable, preload) "::library:console.tcl";
 read 'TEXT' (25, "msgbox", purgeable, preload) "::library:msgbox.tcl";
 read 'TEXT' (26, "comdlg", purgeable, preload) "::library:comdlg.tcl";
-
 
 /*
  * The following resource is used when creating the 'env' variable in

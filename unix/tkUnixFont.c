@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixFont.c 1.22 98/02/18 17:09:20
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.1.4.2 1998/09/30 02:19:18 stanton Exp $
  */
  
 #include "tkUnixInt.h"

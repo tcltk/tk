@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkPointer.c 1.12 97/10/31 17:06:24
+ * RCS: @(#) $Id: tkPointer.c,v 1.1.4.1 1998/09/30 02:17:15 stanton Exp $
  */
 
 #include "tkInt.h"

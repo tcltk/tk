@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scale widgets and provides
 # procedures that help in implementing the bindings.
 #
-# SCCS: @(#) scale.tcl 1.13 97/12/03 15:29:03
+# RCS: @(#) $Id: scale.tcl,v 1.1.4.2 1998/09/30 02:17:36 stanton Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.

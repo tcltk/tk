@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkCanvText.c 1.70 97/11/07 21:15:29
+ * RCS: @(#) $Id: tkCanvText.c,v 1.1.4.2 1998/09/30 02:16:46 stanton Exp $
  */
 
 #include <stdio.h>

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixEvent.c 1.18 97/10/28 18:47:15
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.1.4.2 1998/09/30 02:19:17 stanton Exp $
  */
 
 #include "tkInt.h"

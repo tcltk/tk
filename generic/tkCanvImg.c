@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkCanvImg.c 1.19 97/11/07 21:14:48
+ * RCS: @(#) $Id: tkCanvImg.c,v 1.1.4.2 1998/09/30 02:16:43 stanton Exp $
  */
 
 #include <stdio.h>

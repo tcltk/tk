@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" SCCS: @(#) loadTk.n 1.8 97/11/26 10:10:07
+'\" RCS: @(#) $Id: loadTk.n,v 1.1.4.2 1998/09/30 02:16:21 stanton Exp $
 '\" 
 .so man.macros
 .TH "Safe Tk" n 8.0 Tk "Tk Built-In Commands"

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinFont.c 1.29 98/02/04 15:55:35
+ * RCS: @(#) $Id: tkWinFont.c,v 1.1.4.2 1998/09/30 02:19:33 stanton Exp $
  */
 
 #include "tkWinInt.h"
@@ -55,7 +55,7 @@ typedef struct FontFamily {
 				/* The procedure to use to draw text after
 				 * it has been converted from UTF-8 to the 
 				 * encoding of this font. */
-    BOOL (WINAPI *getTextExtentPointProc)(HDC, TCHAR *, int, LPSIZE);
+    BOOL (WINAPI *getTextExtentPoint32Proc)(HDC, TCHAR *, int, LPSIZE);
 				/* The procedure to use to measure text after
 				 * it has been converted from UTF-8 to the 
 				 * encoding of this font. */
@@ -652,7 +652,7 @@ Tk_MeasureChars(
 		familyPtr = lastSubFontPtr->familyPtr;
 		Tcl_UtfToExternalDString(familyPtr->encoding, source, 
 			p - source, &runString);
-		(*familyPtr->getTextExtentPointProc)(hdc, 
+		(*familyPtr->getTextExtentPoint32Proc)(hdc, 
 			Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString) >> familyPtr->isWideFont, 
 			&size);
@@ -668,7 +668,8 @@ Tk_MeasureChars(
 	familyPtr = lastSubFontPtr->familyPtr;
 	Tcl_UtfToExternalDString(familyPtr->encoding, source, p - source, 
 		&runString);
-	(*familyPtr->getTextExtentPointProc)(hdc, Tcl_DStringValue(&runString),
+	(*familyPtr->getTextExtentPoint32Proc)(hdc,
+		Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont, 
 		&size);
 	curX += size.cx;
@@ -689,7 +690,10 @@ Tk_MeasureChars(
 	 * every character individually.  There is a function call that
 	 * can measure multiple characters at once and return the
 	 * offset of each of them, but it only works on NT, even though
-	 * the documentation claims it works for 95. 
+	 * the documentation claims it works for 95.
+	 * TODO: verify that GetTextExtentExPoint is still broken in '95, and
+	 * possibly use it for NT anyway since it should be much faster and
+	 * more accurate.
 	 */
 
 	next = source + Tcl_UtfToUniChar(source, &ch);
@@ -711,7 +715,7 @@ Tk_MeasureChars(
 		familyPtr = lastSubFontPtr->familyPtr;
 		Tcl_UtfToExternal(NULL, familyPtr->encoding, p, next - p, 
 			0, NULL, buf, sizeof(buf), &srcRead, &dstWrote, NULL);
-		(*familyPtr->getTextExtentPointProc)(hdc, buf, 
+		(*familyPtr->getTextExtentPoint32Proc)(hdc, buf, 
 			dstWrote >> familyPtr->isWideFont, &size);
 		newX += size.cx;
 	    }
@@ -953,7 +957,7 @@ MultiFontTextOut(
 		(*familyPtr->textOutProc)(hdc, x, y, 
 			Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
-		(*familyPtr->getTextExtentPointProc)(hdc, 
+		(*familyPtr->getTextExtentPoint32Proc)(hdc, 
 			Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString) >> familyPtr->isWideFont, 
 			&size);
@@ -1283,14 +1287,14 @@ AllocFontFamily(
 	encoding = Tcl_GetEncoding(NULL, "unicode");
 	familyPtr->textOutProc =
 	    (BOOL (WINAPI *)(HDC, int, int, TCHAR *, int)) TextOutW;
-	familyPtr->getTextExtentPointProc = 
-	    (BOOL (WINAPI *)(HDC, TCHAR *, int, LPSIZE)) GetTextExtentPointW;
+	familyPtr->getTextExtentPoint32Proc = 
+	    (BOOL (WINAPI *)(HDC, TCHAR *, int, LPSIZE)) GetTextExtentPoint32W;
 	familyPtr->isWideFont = 1;
     } else {
 	familyPtr->textOutProc = 
 	    (BOOL (WINAPI *)(HDC, int, int, TCHAR *, int)) TextOutA;
-	familyPtr->getTextExtentPointProc = 
-	    (BOOL (WINAPI *)(HDC, TCHAR *, int, LPSIZE)) GetTextExtentPointA;
+	familyPtr->getTextExtentPoint32Proc = 
+	    (BOOL (WINAPI *)(HDC, TCHAR *, int, LPSIZE)) GetTextExtentPoint32A;
 	familyPtr->isWideFont = 0;
     } 
 

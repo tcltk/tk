@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkScale.h 1.5 96/07/08 12:56:56
+ * RCS: @(#) $Id: tkScale.h,v 1.1.4.1 1998/09/30 02:17:17 stanton Exp $
  */
 
 #ifndef _TKSCALE
@@ -17,6 +17,11 @@
 
 #ifndef _TK
 #include "tk.h"
+#endif
+
+#ifdef BUILD_tk
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -221,5 +226,8 @@ EXTERN void		TkpSetScaleValue _ANSI_ARGS_((TkScale *scalePtr,
 			    double value, int setVar, int invokeCommand));
 EXTERN int		TkpValueToPixel _ANSI_ARGS_((TkScale *scalePtr,
 			    double value));
+
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKSCALE */

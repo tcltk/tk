@@ -2,7 +2,7 @@
 # for text in canvases.  It is part of the Tk visual test suite,
 # which is invoked via the "visual" script.
 #
-# SCCS: @(#) canvPsText.tcl 1.3 96/06/24 16:49:12
+# RCS: @(#) $Id: canvPsText.tcl,v 1.1.4.1 1998/09/30 02:18:29 stanton Exp $
 
 catch {destroy .t}
 toplevel .t

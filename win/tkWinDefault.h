@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinDefault.h 1.35 98/01/09 09:46:28
+ * RCS: @(#) $Id: tkWinDefault.h,v 1.1.4.2 1998/09/30 02:19:30 stanton Exp $
  */
 
 #ifndef _TKWINDEFAULT

@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) xmfbox.test 1.3 98/01/07 16:44:17
+# RCS: @(#) $Id: xmfbox.test,v 1.1.2.2 1998/09/30 02:19:09 stanton Exp $
 
 if {[string compare test [info procs test]] == 1} {
     source defs

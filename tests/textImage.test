@@ -1,4 +1,4 @@
-# SCCS: @(#) textImage.test 1.8 97/07/01 18:11:54
+# RCS: @(#) $Id: textImage.test,v 1.1.4.1 1998/09/30 02:18:58 stanton Exp $
 
 if {[string compare test [info procs test]] == 1} then \
   {source ../tests/defs}

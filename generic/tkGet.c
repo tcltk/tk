@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkGet.c 1.15 97/12/22 11:04:29
+ * RCS: @(#) $Id: tkGet.c,v 1.1.4.2 1998/09/30 02:17:00 stanton Exp $
  */
 
 #include "tkInt.h"

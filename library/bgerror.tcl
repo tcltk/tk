@@ -4,7 +4,7 @@
 # posts a dialog box with the error message and gives the user a chance
 # to see a more detailed stack trace.
 #
-# SCCS: @(#) bgerror.tcl 1.17 97/12/03 15:28:53
+# RCS: @(#) $Id: bgerror.tcl,v 1.1.4.2 1998/09/30 02:17:29 stanton Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.

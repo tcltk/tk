@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) unixButton.test 1.6 97/07/01 18:11:30
+# RCS: @(#) $Id: unixButton.test,v 1.1.4.1 1998/09/30 02:19:01 stanton Exp $
 
 if {$tcl_platform(platform)!="unix"} {
     return

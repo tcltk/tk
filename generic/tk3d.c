@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tk3d.c 1.67 97/12/24 15:50:00
+ * RCS: @(#) $Id: tk3d.c,v 1.1.4.2 1998/09/30 02:16:36 stanton Exp $
  */
 
 #include "tk3d.h"

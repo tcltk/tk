@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkButton.h 1.8 98/01/09 09:48:06
+ * RCS: @(#) $Id: tkButton.h,v 1.1.4.2 1998/09/30 02:16:41 stanton Exp $
  */
 
 #ifndef _TKBUTTON
@@ -17,6 +17,11 @@
 
 #ifndef _TKINT
 #include "tkInt.h"
+#endif
+
+#ifdef BUILD_tk
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -284,5 +289,8 @@ EXTERN void 		TkpDestroyButton _ANSI_ARGS_((TkButton *butPtr));
 EXTERN void		TkpDisplayButton _ANSI_ARGS_((ClientData clientData));
 #endif
 EXTERN int		TkInvokeButton  _ANSI_ARGS_((TkButton *butPtr));
+
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKBUTTON */

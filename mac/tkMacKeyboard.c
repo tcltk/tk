@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacKeyboard.c 1.16 98/01/16 10:42:35
+ * RCS: @(#) $Id: tkMacKeyboard.c,v 1.1.4.2 1998/09/30 02:18:09 stanton Exp $
  */
 
 #include "tkInt.h"

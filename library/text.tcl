@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# SCCS: @(#) text.tcl 1.59 97/12/03 15:29:05
+# RCS: @(#) $Id: text.tcl,v 1.1.4.2 1998/09/30 02:17:37 stanton Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -85,11 +85,6 @@ bind Text <ButtonRelease-1> {
 }
 bind Text <Control-1> {
     %W mark set insert @%x,%y
-}
-bind Text <ButtonRelease-2> {
-    if {!$tkPriv(mouseMoved) || $tk_strictMotif} {
-	tkTextPaste %W %x %y
-    }
 }
 bind Text <Left> {
     tkTextSetCursor %W insert-1c
@@ -253,6 +248,11 @@ bind Text <<Paste>> {
 }
 bind Text <<Clear>> {
     catch {%W delete sel.first sel.last}
+}
+bind Text <<PasteSelection>> {
+    if {!$tkPriv(mouseMoved) || $tk_strictMotif} {
+	tkTextPaste %W %x %y
+    }
 }
 bind Text <Insert> {
     catch {tkTextInsert %W [selection get -displayof %W]}

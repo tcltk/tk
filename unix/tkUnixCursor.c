@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixCursor.c 1.7 98/02/04 13:56:12
+ * RCS: @(#) $Id: tkUnixCursor.c,v 1.1.4.2 1998/09/30 02:19:15 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -250,7 +250,7 @@ TkGetCursorByName(interp, tkwin, string)
 	if ((argc != 2) && (argc != 4)) {
 	    goto badString;
 	}
-	if (XReadBitmapFile(display,
+	if (TkReadBitmapFile(display,
 		RootWindowOfScreen(Tk_Screen(tkwin)), &argv[0][1],
 		(unsigned int *) &width, (unsigned int *) &height,
 		&source, &xHot, &yHot) != BitmapSuccess) {
@@ -273,7 +273,7 @@ TkGetCursorByName(interp, tkwin, string)
 	    cursor = XCreatePixmapCursor(display, source, source,
 		    &fg, &fg, (unsigned) xHot, (unsigned) yHot);
 	} else {
-	    if (XReadBitmapFile(display,
+	    if (TkReadBitmapFile(display,
 		    RootWindowOfScreen(Tk_Screen(tkwin)), argv[1],
 		    (unsigned int *) &maskWidth, (unsigned int *) &maskHeight,
 		    &mask, &dummy1, &dummy2) != BitmapSuccess) {

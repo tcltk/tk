@@ -2,7 +2,7 @@
 #
 # Support procs to use Tk in safe interpreters.
 #
-# SCCS: @(#) safetk.tcl 1.13 98/01/15 13:40:46
+# RCS: @(#) $Id: safetk.tcl,v 1.1.4.2 1998/09/30 02:17:36 stanton Exp $
 #
 # Copyright (c) 1997 Sun Microsystems, Inc.
 #

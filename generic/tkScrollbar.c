@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkScrollbar.c 1.95 97/11/07 21:18:28
+ * RCS: @(#) $Id: tkScrollbar.c,v 1.1.4.2 1998/09/30 02:17:17 stanton Exp $
  */
 
 #include "tkPort.h"

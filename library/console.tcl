@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# SCCS: @(#) console.tcl 1.47 98/01/02 17:42:06
+# RCS: @(#) $Id: console.tcl,v 1.1.4.2 1998/09/30 02:17:31 stanton Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 #

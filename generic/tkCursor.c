@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkCursor.c 1.35 98/01/19 11:50:15
+ * RCS: @(#) $Id: tkCursor.c,v 1.1.4.2 1998/09/30 02:16:53 stanton Exp $
  */
 
 #include "tkPort.h"

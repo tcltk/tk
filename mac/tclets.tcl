@@ -7,7 +7,7 @@
 # into a copy of a stub application (the user can pick).  The file is placed into the
 # TEXT resource named "tclshrc" which is automatically executed on startup.
 #
-# SCCS: @(#) tclets.tcl 1.2 97/08/15 09:25:56
+# RCS: @(#) $Id: tclets.tcl,v 1.1.4.1 1998/09/30 02:18:00 stanton Exp $
 #
 # Copyright (c) 1997 Sun Microsystems, Inc.
 #

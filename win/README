@@ -1,10 +1,10 @@
 Tk 8.1a2 for Windows
 
 by Scott Stanton
-Sun Microsystems Laboratories
-scott.stanton@eng.sun.com
+Scriptics Corporation
+scott.stanton@scriptics.com
 
-SCCS: @(#) README 1.22 98/02/18 18:03:07
+RCS: @(#) $Id: README,v 1.1.4.2 1998/09/30 02:19:25 stanton Exp $
 
 1. Introduction
 ---------------
@@ -22,7 +22,7 @@ common source release.  The binary distribution is a self-extracting
 archive with a built-in installation script.
 
 Look for the binary release in the same location as the source release
-(ftp.smli.com:/pub/tcl or any of the mirror sites).  For most users,
+(ftp.scriptics.com:/pub/tcl/tcl8_1 or any of the mirror sites).  For most users,
 the binary release will be much easier to install and use.  You only
 need the source release if you plan to modify the core of Tcl, or if
 you need to compile with a different compiler.  With the addition of
@@ -42,7 +42,8 @@ In order to compile Tk for Windows, you need the following items:
 	Borland C++ 4.5 or later (32-bit compiler)
 	  or
 	Visual C++ 2.x or later
-	
+
+In practice, 8.1 was built with Visual C++ 5.0
 
 In the "win" subdirectory of the source release, you will find two
 files called "makefile.bc" and "makefile.vc".  These are the makefiles
@@ -61,12 +62,7 @@ find them.  Tk looks in one of two places for the library files:
 	2) In the lib\tk8.1 directory under the Tcl installation directory
 	   as specified in the registry:
 
-		For Windows NT & 95:
-		    HKEY_LOCAL_MACHINE\SOFTWARE\Sun\Tcl\8.1
-			Value Name is "Root"
-
-		For Win32s:
-		    HKEY_CLASSES_ROOT\SOFTWARE\Sun\Tcl\8.1\
+		    HKEY_LOCAL_MACHINE\SOFTWARE\Scriptics\Tcl\8.0\
 
 	2) Relative to the directory containing the current .exe.
 	    Tk will look for a directory "..\lib\tk8.1" relative to the
@@ -107,13 +103,14 @@ Windows beta version of Tk:
 - Tk_dialog appears in the upper left corner.  This is a symptom of a
   larger problem with "wm geometry" when applied to unmapped or
   iconified windows.
-- Grabs do not affect native menus or the title bar.
 - PPM images are using the wrong translation mode for writing to
   files, resulting in CR/LF terminated PPM files.
 - Tk crashes if the display depth changes while it is running.  Tk
   also doesn't consistently track changes in the system colors.
 
 If you have comments or bug reports for the Windows version of Tk,
-please direct them to the comp.lang.tcl newsgroup or the wintcl
-mailing list (see http://sunscript.sun.com/win/wintcl-list.html for
-more information).
+please direct them to:
+
+<bugs@scriptics.com>
+
+or post them to the newsgroup comp.lang.tcl.

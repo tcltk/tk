@@ -1,7 +1,7 @@
 Tk Test Suite
 --------------
 
-SCCS: @(#) README 1.2 96/03/27 08:52:21
+RCS: @(#) $Id: README,v 1.1.4.1 1998/09/30 02:18:21 stanton Exp $
 
 This directory contains a set of validation tests for Tk.
 Each of the files whose name ends in ".test" is intended to

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacBitmap.c 1.7 98/01/22 17:00:58
+ * RCS: @(#) $Id: tkMacBitmap.c,v 1.1.4.2 1998/09/30 02:18:02 stanton Exp $
  */
 
 #include "tkPort.h"

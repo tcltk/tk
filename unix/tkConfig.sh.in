@@ -11,7 +11,7 @@
 #
 # The information in this file is specific to a single platform.
 #
-# SCCS: @(#) tkConfig.sh.in 1.11 97/10/30 13:29:13
+# RCS: @(#) $Id: tkConfig.sh.in,v 1.1.4.1 1998/09/30 02:19:13 stanton Exp $
 
 # Tk's version number.
 TK_VERSION='@TK_VERSION@'
@@ -25,8 +25,11 @@ TK_DEFS='@DEFS@'
 # Flag, 1: we built a shared lib, 0 we didn't
 TK_SHARED_BUILD=@TK_SHARED_BUILD@
 
+# This indicates if Tk was build with debugging symbols
+TK_DBGX=@TK_DBGX@
+
 # The name of the Tk library (may be either a .a file or a shared library):
-TK_LIB_FILE=@TK_LIB_FILE@
+TK_LIB_FILE='@TK_LIB_FILE@'
 
 # Additional libraries to use when linking Tk.
 TK_LIBS='@XLIBSW@ @DL_LIBS@ @LIBS@ @MATH_LIBS@'
@@ -44,6 +47,9 @@ TK_XINCLUDES='@XINCLUDES@'
 
 # Linker switch(es) to use to link with the X11 library archive.
 TK_XLIBSW='@XLIBSW@'
+
+# -l flag to pass to the linker to pick up the Tcl library
+TK_LIB_FLAG='@TK_LIB_FLAG@'
 
 # String to pass to linker to pick up the Tk library from its
 # build directory.

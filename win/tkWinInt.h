@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinInt.h 1.36 97/10/02 17:30:22
+ * RCS: @(#) $Id: tkWinInt.h,v 1.1.4.2 1998/09/30 02:19:34 stanton Exp $
  */
 
 #ifndef _TKWININT

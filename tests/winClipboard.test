@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) winClipboard.test 1.3 97/07/01 18:10:37
+# RCS: @(#) $Id: winClipboard.test,v 1.1.4.1 1998/09/30 02:19:05 stanton Exp $
 
 if {$tcl_platform(platform)!="windows"} {
     return

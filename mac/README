@@ -1,11 +1,14 @@
 Tk 8.1 for Macintosh
 
-by Ray Johnson and Jim Ingham
-Sun Microsystems Laboratories
-rjohnson@eng.sun.com
-jim.ingham@sun.com
+by Ray Johnson
+Scriptics Corporation
+rjohnson@scriptics.com
+with major help from
+Jim Ingham
+Cygnus Solutions
+jingham@cygnus.com
 
-SCCS: @(#) README 1.33 98/02/18 11:23:12
+RCS: @(#) $Id: README,v 1.1.4.2 1998/09/30 02:17:59 stanton Exp $
 
 1. Introduction
 ---------------
@@ -93,10 +96,16 @@ mactk-source-8.1.sea.hqx
     are included.  However, you must already have the More Files
     package to compile this code.
 
+UNIX Tar file distribution.
+    The standard Tcl/Tk source distribution has Mac project files
+    in it.  Be warned that the Tk project file is lacking one minor
+    change compared to the ones in the installers listed above
+    having to do with locking down the MDEF resource.
+
 5. Documentation
 ----------------
 
-Two books are currently available for Tcl.  Both provide a good
+There are now many books available for Tcl.  These two provide a good
 introduction to the language.  It is a good way to get started
 if you haven't used the language before:
 
@@ -110,6 +119,9 @@ if you haven't used the language before:
     Publisher:			Prentice Hall
     ISBN:			0-13-182007-9
 
+More books are listed at
+    http://www.scriptics.com/resource/doc/books/
+
 The "doc" subdirectory contains reference in documentation
 in the "man" format found on most UNIX machines.  Unfortunately,
 there is not a suitable way to view these pages on the Macintosh.  
@@ -118,7 +130,7 @@ developed.  We are working are having better documentation for
 the Macintosh platform in the future.  However, if you have WWW 
 access you may access the Man pages at the following URL:
 
-	http://sunscript.sun.com/man/tcl8.0/contents.html
+	http://www.scriptics.com/man/tcl8.0/contents.html
 
 Other documentation and sample Tcl scripts can be found at
 the Tcl ftp site: 
@@ -135,7 +147,7 @@ available (see below).
 In order to compile Macintosh Tk you must have the 
 following items:
 
-	CodeWarrior Pro 2 or higher
+	CodeWarrior Pro 3 or higher
 	Mac Tcl 8.1 (source)
 	  (which requires More Files 1.4.2 or 1.4.3)
 	Mac Tk 8.1 (source)
@@ -150,13 +162,8 @@ Special notes:
 * Check out the file bugs.doc for information about known bugs.
 
 * We are starting to support the new Appearance Manager that shipped
-  with MacOS 8.  wm iconify uses it, and the coloring of the
-  backgrounds of radiobuttons & checkbuttons now works under
-  Appearance.  Tk correctly checks the Gestalt for Appearance, so you
-  do not have to install it on your target machines.  However, you do
-  have to have the header and stub files to build it.  These come with
-  CWPro 2, and are also available now from Apple.
-
+  with MacOS 8.0.  The Tk 8.0.3 release is the first Tk release
+  that supports the Appearance Manager well.
 
 7. About Dialog
 ---------------
@@ -251,4 +258,4 @@ future.
 
 If you have comments or Bug reports send them to:
 Jim Ingham
-jingham@eng.sun.com
+jingham@cygnus.com

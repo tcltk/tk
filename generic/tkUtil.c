@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUtil.c 1.17 98/01/02 17:39:19
+ * RCS: @(#) $Id: tkUtil.c,v 1.1.4.2 1998/09/30 02:17:27 stanton Exp $
  */
 
 #include "tkInt.h"

@@ -2,7 +2,7 @@
 # tests.  Execute it by invoking "source all" when running tclTest
 # in this directory.
 #
-# SCCS: @(#) all 1.28 97/12/23 15:00:50
+# RCS: @(#) $Id: all,v 1.1.4.2 1998/09/30 02:18:21 stanton Exp $
 
 # These tests are not done because they cause the new configuration package 
 # to crash.

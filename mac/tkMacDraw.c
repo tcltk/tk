@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacDraw.c 1.55 97/11/20 18:28:56
+ * RCS: @(#) $Id: tkMacDraw.c,v 1.1.4.1 1998/09/30 02:18:06 stanton Exp $
  */
 
 #include "tkInt.h"

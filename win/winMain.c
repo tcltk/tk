@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) winMain.c 1.37 98/01/20 22:47:06
+ * RCS: @(#) $Id: winMain.c,v 1.1.4.2 1998/09/30 02:19:41 stanton Exp $
  */
 
 #include <tk.h>
@@ -200,9 +200,7 @@ WishPanic TCL_VARARGS_DEF(char *,arg1)
     MessageBox(NULL, buf, "Fatal Error in Wish",
 	    MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
 #ifdef _MSC_VER
-    _asm {
-        int 3
-    }
+    DebugBreak();
 #endif
     ExitProcess(1);
 }

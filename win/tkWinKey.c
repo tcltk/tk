@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinKey.c 1.11 98/01/13 20:26:49
+ * RCS: @(#) $Id: tkWinKey.c,v 1.1.4.2 1998/09/30 02:19:35 stanton Exp $
  */
 
 #include "tkWinInt.h"
@@ -72,6 +72,16 @@ static Keys keymap[] = {
     VK_F24, XK_F24,
     VK_NUMLOCK, XK_Num_Lock, 
     VK_SCROLL, XK_Scroll_Lock,
+
+    /*
+     * The following support the new keys in the Microsoft keyboard.
+     * Win_L and Win_R have the windows logo.  App has the menu.
+     */
+
+    VK_LWIN, XK_Win_L,
+    VK_RWIN, XK_Win_R,
+    VK_APPS, XK_App,
+
     0, NoSymbol
 };
 

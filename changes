@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-SCCS: @(#) changes 1.268 98/02/18 18:06:42
+RCS: @(#) $Id: changes,v 1.1.4.2 1998/09/30 02:15:13 stanton Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4161,6 +4161,96 @@ the 'correct' tk_library). (DL)
 
 ---- Shipped as part of the plugin2.0 as 8.0p2Plugin2, Jan 15th 98 ----
 
+6/3/98 (bug fix) Fixed bugs in the tk_getOpenFile under Unix.
+ 1) If the -initialdir option was "." the result would be "././foo.tcl"
+    instead of an absolute path, like the Windows interface.  
+ 2) There is a traceVar on the data(selectPath) where the script was
+    assumes the window exists. (BS)
+
+6/12/98 (feature change) Focus -force now sets the foreground window
+on Windows platforms in addition to moving the focus. (SS)
+
+6/12/98 (bug fix) Fixed bug in Windows font measurement that did not
+take kerning into account. (BS)
+
+6/24/98 (bug fix) On Unix, fixed -initialdir switch to tk_getOpenFile
+and tk_getSaveFile to convert the specified directory to an absolute
+path and to use the current working directory if the specified
+directory does not exist. (SS)
+
+6/25/98 (bug fix) On Unix, both the Tk and the Motif file dialogs
+would fail if the -parent flag changed between two parent windows that
+had been previously used as file dialog parents. (SS)
+
+6/29/98 (compatibility patch)  Added reserved fields to several Tk
+structures to match additions made by Jan Nijtmans dash patch.  This
+means that extensions can be compiled against the dash patch
+and still work with unpatched Tk, and vice versa.
+
+7/6/98 (bug fix) Added keysym definitions for the new keys on the
+Microsoft keyboards.  You can bind to <App>, <Win_L>, and <Win_R>,
+but you cannot use the Win keys as modifiers. (SS, BW)
+
+7/6/98 (new feature) Added support for the Macintosh Appearance Manager. (JI)
+
+7/24/98 (feature change) Eliminated the static variable that sets
+tk_library and simplified search order for tk.tcl.  The tk_library
+variable can now be set before calling Tk_Init to avoid doing any
+searches.  If it isn't set, then Tk checks env(TK_LIBRARY), relative
+to tcl_library, an install directory relative to the executable, a
+source directory relative to the executable, and a tk directory
+relative to the source heirarchy containing the executable.  See the
+comment at the top of generic/tkInitScript.h for more details. (SS)
+
+7/27/98 (bug fix) The bbox for coords in the canvas were incorrectly
+including the center of the coord as part of the bound area.  (RJ)
+
+8/4/98 (bug fix) Fixed memory leak in Windows menu code. (SS)
+
+8/4/98 (bug fix) Fixed bug where bgerror's were not being generated 
+from menu callbacks on Windows. (SS)
+
+8/4/98 (bug fix) Alt-key bindings were not being handled properly 
+under Windows, resulting in annoying beeps. (SS)
+
+8/4/98 (bug fix) Fixed bug in Windows menubar handling that allowed
+a shared menubar to be deleted when any window using it was deleted. (SS)
+
+8/4/98 (feature change) Introduced TkReadBitmapFile to replace
+XReadBitmapFile so that all Tk file opens go through the Tcl channel
+mechanism.  This lets us wrap applications that define their own
+bitmaps and cursors. Note that XReadBitmapFile is no longer
+emulated for non-unix platforms platforms (RJ, BW)
+
+8/5/98 (bug fix) <Insert> binding in entries was masking the virtual
+event <<Paste>> binding to Shift-Insert on Windows. (SS)
+
+8/5/98 (bug fix) wm frame would crash if the window had not been
+mapped yet on Windows. (SS)
+
+8/5/98 (bug fix) Local grabs did not exclude menus or the caption bar
+under Windows. (SS)
+
+8/5/98 (bug fix) Reduced message traffic by setting
+WS_EX_NOPARENTNOTIFY on TkChild windows. (SS)
+
+8/6/98 (feature change) Changed tkInitScript.h to use the new
+tcl_findLibrary procedure to locate its script library. (BW)
+
+8/10/98 (bug fix) Added special case to font code to limit the
+length of displayed strings to avoid wrap-around bugs in some
+PC X servers when the pixel length of the string exceeds 0x7fff. (SS)
+
+8/12/98 (bug fix) Macintosh, lock down some of the resources
+associated with menus to try and stabilise the menu system
+on memory limited machines. (JI)
+
+8/12/98 (windows build change) Moved the tkConsole.obj into the tk80.dll
+on windows.  If you build your own Tk main program, you no longer
+need to compile and link this yourself. (SKS)
+
+-------- Released 8.0.3 to the Tcl Consortium CD-ROM project, 8/13/98 ------
+
 ----------------------------------------------------------
 Changes for Tk 8.0 go above this line.
 Changes for Tk 8.1 go below this line.
@@ -4251,4 +4341,3 @@ Mac (RJ)
 XLFD (no XA_FONT attribute) would lead to dereferencing NULL. (CCS)
 
 ----------------- Released 8.1a2, Feb 20 1998 -----------------------
-

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkConfig.c 1.51 98/01/19 11:49:18
+ * RCS: @(#) $Id: tkConfig.c,v 1.1.4.2 1998/09/30 02:16:52 stanton Exp $
  */
 
 /*

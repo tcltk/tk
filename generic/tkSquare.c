@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkSquare.c 1.25 97/12/22 11:05:09
+ * RCS: @(#) $Id: tkSquare.c,v 1.1.4.2 1998/09/30 02:17:19 stanton Exp $
  */
 
 #include "tkPort.h"

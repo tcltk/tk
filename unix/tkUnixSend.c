@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixSend.c 1.76 97/11/07 21:25:10
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.1.4.2 1998/09/30 02:19:22 stanton Exp $
  */
 
 #include "tkPort.h"

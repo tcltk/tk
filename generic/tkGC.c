@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkGC.c 1.18 96/02/15 18:53:32
+ * RCS: @(#) $Id: tkGC.c,v 1.1.4.1 1998/09/30 02:16:59 stanton Exp $
  */
 
 #include "tkPort.h"

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacAppInit.c 1.36 97/11/07 21:20:46
+ * RCS: @(#) $Id: tkMacAppInit.c,v 1.1.4.2 1998/09/30 02:18:01 stanton Exp $
  */
 
 #include <Gestalt.h>
@@ -18,6 +18,7 @@
 #include <Dialogs.h>
 #include <SegLoad.h>
 #include <Traps.h>
+#include <Appearance.h>
 
 #include "tk.h"
 #include "tkInt.h"
@@ -220,6 +221,17 @@ MacintoshInit()
      * variable.  Which in turn allows Tk to be used in code resources.
      */
     tcl_macQdPtr = &qd;
+
+    /*
+     * If appearance is present, then register Tk as an Appearance client
+     * This means that the mapping from non-Appearance to Appearance cdefs
+     * will be done for Tk regardless of the setting in the Appearance
+     * control panel.  
+     */
+     
+     if (TkMacHaveAppearance()) {
+         RegisterAppearanceClient();
+     }
 
     InitGraf(&tcl_macQdPtr->thePort);
     InitFonts();

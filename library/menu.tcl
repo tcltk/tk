@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# SCCS: @(#) menu.tcl 1.104 97/12/03 15:28:59
+# RCS: @(#) $Id: menu.tcl,v 1.1.4.2 1998/09/30 02:17:33 stanton Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.

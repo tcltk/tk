@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinPixmap.c 1.18 97/08/06 15:36:23
+ * RCS: @(#) $Id: tkWinPixmap.c,v 1.1.4.1 1998/09/30 02:19:36 stanton Exp $
  */
 
 #include "tkWinInt.h"

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixConfig.c 1.3 97/10/09 10:57:51
+ * RCS: @(#) $Id: tkUnixConfig.c,v 1.1.2.2 1998/09/30 02:19:15 stanton Exp $
  */
 
 #include "tk.h"

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMenubutton.h 1.3 97/04/11 11:24:15
+ * RCS: @(#) $Id: tkMenubutton.h,v 1.1.4.1 1998/09/30 02:17:11 stanton Exp $
  */
 
 #ifndef _TKMENUBUTTON
@@ -17,6 +17,11 @@
 
 #ifndef _TKINT
 #include "tkInt.h"
+#endif
+
+#ifdef BUILD_tk
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -203,5 +208,8 @@ EXTERN void 		TkpDestroyMenuButton _ANSI_ARGS_((
 			    TkMenuButton *mbPtr));
 EXTERN void		TkMenuButtonWorldChanged _ANSI_ARGS_((
 			    ClientData instanceData));
+
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKMENUBUTTON */

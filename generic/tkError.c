@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkError.c 1.23 97/04/25 16:51:27
+ * RCS: @(#) $Id: tkError.c,v 1.1.4.1 1998/09/30 02:16:54 stanton Exp $
  */
 
 #include "tkPort.h"

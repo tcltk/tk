@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# SCCS: @(#) tkfbox.tcl 1.22 98/01/26 19:42:37
+# RCS: @(#) $Id: tkfbox.tcl,v 1.1.4.2 1998/09/30 02:17:38 stanton Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -309,7 +309,7 @@ proc tkIconList_Invoke {w} {
     upvar #0 $w data
 
     if {[string compare $data(-command) ""] && [info exists data(selected)]} {
-	eval $data(-command) [list $data(selected)]
+	eval $data(-command)
     }
 }
 
@@ -653,6 +653,17 @@ proc tkFDialog {type args} {
     } elseif {[string compare [winfo class $w] TkFDialog]} {
 	destroy $w
 	tkFDialog_Create $w
+    } else {
+	set data(dirMenuBtn) $w.f1.menu
+	set data(dirMenu) $w.f1.menu.menu
+	set data(upBtn) $w.f1.up
+	set data(icons) $w.icons
+	set data(ent) $w.f2.ent
+	set data(typeMenuLab) $w.f3.lab
+	set data(typeMenuBtn) $w.f3.menu
+	set data(typeMenu) $data(typeMenuBtn).m
+	set data(okBtn) $w.f2.ok
+	set data(cancelBtn) $w.f3.cancel
     }
     wm transient $w $data(-parent)
 
@@ -784,8 +795,15 @@ proc tkFDialog_Config {dataName type argList} {
 	if {[file isdirectory $data(-initialdir)]} {
 	    set data(selectPath) [lindex [glob $data(-initialdir)] 0]
 	} else {
-	    error "\"$data(-initialdir)\" is not a valid directory"
+	    set data(selectPath) [pwd]
 	}
+
+	# Convert the initialdir to an absolute path name.
+
+	set old [pwd]
+	cd $data(selectPath)
+	set data(selectPath) [pwd]
+	cd $old
     }
     set data(selectFile) $data(-initialfile)
 
@@ -836,7 +854,7 @@ static char updir_bits[] = {
     #
     set data(icons) [tkIconList $w.icons \
 	-browsecmd "tkFDialog_ListBrowse $w" \
-	-command   "tkFDialog_ListInvoke $w"]
+	-command   "tkFDialog_OkCmd $w"]
 
     # f2: the frame with the OK button and the "file name" field
     #
@@ -951,17 +969,17 @@ proc tkFDialog_UpdateWhenIdle {w} {
 #	directories.
 #
 proc tkFDialog_Update {w} {
-    set dataName [winfo name $w]
-    upvar #0 $dataName data
-    global tk_library tkPriv
 
     # This proc may be called within an idle handler. Make sure that the
     # window has not been destroyed before this proc is called
     if {![winfo exists $w] || [string compare [winfo class $w] TkFDialog]} {
 	return
-    } else {
-	catch {unset data(updateId)}
     }
+
+    set dataName [winfo name $w]
+    upvar #0 $dataName data
+    global tk_library tkPriv
+    catch {unset data(updateId)}
 
     if {![info exists tkPriv(folderImage)]} {
 	set tkPriv(folderImage) [image create photo -data {
@@ -1069,7 +1087,7 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 #
 proc tkFDialog_SetPathSilently {w path} {
     upvar #0 [winfo name $w] data
-
+    
     trace vdelete  data(selectPath) w "tkFDialog_SetPath $w"
     set data(selectPath) $path
     trace variable data(selectPath) w "tkFDialog_SetPath $w"
@@ -1079,8 +1097,10 @@ proc tkFDialog_SetPathSilently {w path} {
 # This proc gets called whenever data(selectPath) is set
 #
 proc tkFDialog_SetPath {w name1 name2 op} {
-    upvar #0 [winfo name $w] data
-    tkFDialog_UpdateWhenIdle $w
+    if {[winfo exists $w]} {
+	upvar #0 [winfo name $w] data
+	tkFDialog_UpdateWhenIdle $w
+    }
 }
 
 # This proc gets called whenever data(filter) is set

@@ -6,7 +6,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) msgbox.test 1.10 97/10/21 09:54:32
+# RCS: @(#) $Id: msgbox.test,v 1.1.4.2 1998/09/30 02:18:49 stanton Exp $
 #
 
 if {[string compare test [info procs test]] == 1} {

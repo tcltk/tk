@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixInit.c 1.26 98/01/02 17:45:36
+ * RCS: @(#) $Id: tkUnixInit.c,v 1.1.4.2 1998/09/30 02:19:18 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -20,13 +20,6 @@
  * defined in tkInitScript.h
  */
 #include "tkInitScript.h"
-
-
-/*
- * Default directory in which to look for libraries:
- */
-
-static char defaultLibraryDir[200] = TK_LIBRARY;
 
 
 /*
@@ -51,12 +44,6 @@ int
 TkpInit(interp)
     Tcl_Interp *interp;
 {
-    char *libDir;
-
-    libDir = Tcl_GetVar(interp, "tk_library", TCL_GLOBAL_ONLY);
-    if (libDir == NULL) {
-	Tcl_SetVar(interp, "tk_library", defaultLibraryDir, TCL_GLOBAL_ONLY);
-    }
     TkCreateXEventSource();
     return Tcl_Eval(interp, initScript);
 }

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkCanvArc.c 1.35 97/11/07 21:14:21
+ * RCS: @(#) $Id: tkCanvArc.c,v 1.1.4.2 1998/09/30 02:16:41 stanton Exp $
  */
 
 #include <stdio.h>
@@ -546,7 +546,7 @@ ComputeArcBbox(canvas, arcPtr)
     TkIncludePoint((Tk_Item *) arcPtr, arcPtr->center2);
     center[0] = (arcPtr->bbox[0] + arcPtr->bbox[2])/2;
     center[1] = (arcPtr->bbox[1] + arcPtr->bbox[3])/2;
-    if (arcPtr->style != arcUid) {
+    if (arcPtr->style == pieSliceUid) {
 	TkIncludePoint((Tk_Item *) arcPtr, center);
     }
 

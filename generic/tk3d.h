@@ -9,13 +9,18 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tk3d.h 1.4 97/12/24 15:50:02
+ * RCS: @(#) $Id: tk3d.h,v 1.1.4.2 1998/09/30 02:16:37 stanton Exp $
  */
 
 #ifndef _TK3D
 #define _TK3D
 
 #include <tkInt.h>
+
+#ifdef BUILD_tk
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
+#endif
 
 /*
  * One of the following data structures is allocated for each 3-D border
@@ -90,5 +95,8 @@ EXTERN TkBorder *	TkpGetBorder _ANSI_ARGS_((void));
 EXTERN void		TkpGetShadows _ANSI_ARGS_((TkBorder *borderPtr,
 			    Tk_Window tkwin));
 EXTERN void		TkpFreeBorder _ANSI_ARGS_((TkBorder *borderPtr));
+
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TK3D */

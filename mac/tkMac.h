@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: %Z% %M% %I% %E% %U%
+ * RCS: @(#) $Id: tkMac.h,v 1.1.4.2 1998/09/30 02:18:00 stanton Exp $
  */
 
 #ifndef _TKMAC
@@ -73,6 +73,8 @@ EXTERN int	TkMacConvertTkEvent _ANSI_ARGS_((EventRecord *eventPtr,
 EXTERN void	TkGenWMConfigureEvent _ANSI_ARGS_((Tk_Window tkwin,
 			    int x, int y, int width, int height, int flags));
 EXTERN void	TkMacInvalClipRgns _ANSI_ARGS_((TkWindow *winPtr));
+EXTERN int	TkMacHaveAppearance _ANSI_ARGS_((void));
+EXTERN GWorldPtr 	TkMacGetDrawablePort _ANSI_ARGS_((Drawable drawable));
 
 
 #pragma export reset

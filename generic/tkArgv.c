@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkArgv.c 1.22 97/11/07 21:13:03
+ * RCS: @(#) $Id: tkArgv.c,v 1.1.4.2 1998/09/30 02:16:37 stanton Exp $
  */
 
 #include "tkPort.h"

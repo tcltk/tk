@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkBind.c 1.144 98/02/18 17:08:07
+ *  RCS: @(#) $Id: tkBind.c,v 1.1.4.2 1998/09/30 02:16:38 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -3139,9 +3139,9 @@ GetAllVirtualEvents(interp, vetPtr)
  *---------------------------------------------------------------------------
  */
 static int
-HandleEventGenerate(interp, main, objc, objv)
+HandleEventGenerate(interp, mainWin, objc, objv)
     Tcl_Interp *interp;		/* Interp for errors return and name lookup. */
-    Tk_Window main;		/* Main window associated with interp. */
+    Tk_Window mainWin;		/* Main window associated with interp. */
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
@@ -3172,11 +3172,11 @@ HandleEventGenerate(interp, main, objc, objv)
 	EVENT_Y
     };
 
-    if (NameToWindow(interp, main, objv[0], &tkwin) != TCL_OK) {
+    if (NameToWindow(interp, mainWin, objv[0], &tkwin) != TCL_OK) {
 	return TCL_ERROR;
     }
 
-    mainPtr = (TkWindow *) main;
+    mainPtr = (TkWindow *) mainWin;
     if ((tkwin == NULL)
 	    || (mainPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr)) {
 	char *name;
@@ -3634,9 +3634,9 @@ HandleEventGenerate(interp, main, objc, objv)
 		
 }
 static int
-NameToWindow(interp, main, objPtr, tkwinPtr)
+NameToWindow(interp, mainWin, objPtr, tkwinPtr)
     Tcl_Interp *interp;		/* Interp for error return and name lookup. */
-    Tk_Window main;		/* Main window of application. */
+    Tk_Window mainWin;		/* Main window of application. */
     Tcl_Obj *objPtr;		/* Contains name or id string of window. */
     Tk_Window *tkwinPtr;	/* Filled with token for window. */
 {
@@ -3646,7 +3646,7 @@ NameToWindow(interp, main, objPtr, tkwinPtr)
     
     name = Tcl_GetStringFromObj(objPtr, NULL);
     if (name[0] == '.') {
-	tkwin = Tk_NameToWindow(interp, name, main);
+	tkwin = Tk_NameToWindow(interp, name, mainWin);
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
 	}
@@ -3657,7 +3657,7 @@ NameToWindow(interp, main, objPtr, tkwinPtr)
 		    name, "\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	*tkwinPtr = Tk_IdToWindow(Tk_Display(main), (Window) id);
+	*tkwinPtr = Tk_IdToWindow(Tk_Display(mainWin), (Window) id);
     }
     return TCL_OK;
 }

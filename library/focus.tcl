@@ -3,7 +3,7 @@
 # This file defines several procedures for managing the input
 # focus.
 #
-# SCCS: @(#) focus.tcl 1.18 97/12/03 15:28:58
+# RCS: @(#) $Id: focus.tcl,v 1.1.4.2 1998/09/30 02:17:33 stanton Exp $
 #
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
 #

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkCmds.c 1.130 97/11/07 21:16:34
+ * RCS: @(#) $Id: tkCmds.c,v 1.1.4.2 1998/09/30 02:16:50 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -453,7 +453,7 @@ Tk_LowerCmd(clientData, interp, argc, argv)
     int argc;			/* Number of arguments. */
     char **argv;		/* Argument strings. */
 {
-    Tk_Window main = (Tk_Window) clientData;
+    Tk_Window mainwin = (Tk_Window) clientData;
     Tk_Window tkwin, other;
 
     if ((argc != 2) && (argc != 3)) {
@@ -462,14 +462,14 @@ Tk_LowerCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
 
-    tkwin = Tk_NameToWindow(interp, argv[1], main);
+    tkwin = Tk_NameToWindow(interp, argv[1], mainwin);
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
     if (argc == 2) {
 	other = NULL;
     } else {
-	other = Tk_NameToWindow(interp, argv[2], main);
+	other = Tk_NameToWindow(interp, argv[2], mainwin);
 	if (other == NULL) {
 	    return TCL_ERROR;
 	}
@@ -508,7 +508,7 @@ Tk_RaiseCmd(clientData, interp, argc, argv)
     int argc;			/* Number of arguments. */
     char **argv;		/* Argument strings. */
 {
-    Tk_Window main = (Tk_Window) clientData;
+    Tk_Window mainwin = (Tk_Window) clientData;
     Tk_Window tkwin, other;
 
     if ((argc != 2) && (argc != 3)) {
@@ -517,14 +517,14 @@ Tk_RaiseCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
 
-    tkwin = Tk_NameToWindow(interp, argv[1], main);
+    tkwin = Tk_NameToWindow(interp, argv[1], mainwin);
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
     if (argc == 2) {
 	other = NULL;
     } else {
-	other = Tk_NameToWindow(interp, argv[2], main);
+	other = Tk_NameToWindow(interp, argv[2], mainwin);
 	if (other == NULL) {
 	    return TCL_ERROR;
 	}

@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) focus.test 1.24 97/08/11 09:39:34
+# RCS: @(#) $Id: focus.test,v 1.1.4.1 1998/09/30 02:18:36 stanton Exp $
 
 if {$tcl_platform(platform) != "unix"} {
     return
@@ -197,6 +197,12 @@ test focus-1.24 {Tk_FocusCmd procedure, -lastfor option} {
 test focus-1.25 {Tk_FocusCmd procedure} {
     list [catch {focus -unknown} msg] $msg
 } {1 {bad option "-unknown": must be -displayof, -force, or -lastfor}}
+
+if {[string compare testwrapper [info commands testwrapper]] != 0} {
+    puts "This application hasn't been compiled with the testwrapper command,"
+    puts "therefore I am skipping all of these tests."
+    return
+}
 
 test focus-2.1 {TkFocusFilterEvent procedure} {nonPortable} {
     focus -force .b

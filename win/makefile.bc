@@ -5,7 +5,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) makefile.bc 1.75 98/02/18 18:32:57
+# RCS: @(#) $Id: makefile.bc,v 1.1.4.2 1998/09/30 02:19:26 stanton Exp $
 
 
 #
@@ -80,11 +80,9 @@ LNLIBS_dll =	$(TCLLIBDIR)\$(TCLLIB) import32 cw32mti
 .path.obj=$(TMPDIR)
 
 WISHOBJS = \
-	$(TMPDIR)\tkConsole.obj \
 	$(TMPDIR)\winMain.obj
 
 TKTESTOBJS = \
-	$(TMPDIR)\tkConsole.obj \
 	$(TMPDIR)\tkTest.obj \
 	$(TMPDIR)\tkSquare.obj \
 	$(TMPDIR)\testMain.obj
@@ -97,6 +95,7 @@ XLIBOBJS = \
 	$(TMPDIR)\xutil.obj
 
 TKOBJS = \
+	$(TMPDIR)\tkConsole.obj \
 	$(TMPDIR)\tkUnixMenubu.obj \
 	$(TMPDIR)\tkUnixScale.obj \
 	$(XLIBOBJS) \

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinSend.c 1.15 98/02/19 17:04:54
+ * RCS: @(#) $Id: tkWinSend.c,v 1.1.4.2 1998/09/30 02:19:38 stanton Exp $
  */
 
 #include "tkWinInt.h"

@@ -10,11 +10,16 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkFont.h 1.16 97/12/23 15:00:07
+ * RCS: @(#) $Id: tkFont.h,v 1.1.4.2 1998/09/30 02:16:58 stanton Exp $
  */
 
 #ifndef _TKFONT
 #define _TKFONT
+
+#ifdef BUILD_tk
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
+#endif
 
 /*
  * The following structure keeps track of the attributes of a font.  It can
@@ -214,5 +219,8 @@ EXTERN void		TkpGetFontFamilies _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window tkwin));
 EXTERN TkFont *		TkpGetNativeFont _ANSI_ARGS_((Tk_Window tkwin,
 			    CONST char *name));
+
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif	/* _TKFONT */

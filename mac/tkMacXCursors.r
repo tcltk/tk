@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacXCursors.r 1.4 96/01/11 13:18:22
+ * RCS: @(#) $Id: tkMacXCursors.r,v 1.1.4.1 1998/09/30 02:18:20 stanton Exp $
  */
 
 /*

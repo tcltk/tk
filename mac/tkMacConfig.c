@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacConfig.c 1.3 97/10/08 10:07:55
+ * RCS: @(#) $Id: tkMacConfig.c,v 1.1.2.2 1998/09/30 02:18:04 stanton Exp $
  */
 
 #include "tk.h"

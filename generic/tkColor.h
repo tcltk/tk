@@ -9,13 +9,18 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkColor.h 1.6 97/12/24 15:52:05
+ * RCS: @(#) $Id: tkColor.h,v 1.1.4.2 1998/09/30 02:16:51 stanton Exp $
  */
 
 #ifndef _TKCOLOR
 #define _TKCOLOR
 
 #include <tkInt.h>
+
+#ifdef BUILD_tk
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
+#endif
 
 /*
  * One of the following data structures is used to keep track of
@@ -75,5 +80,8 @@ EXTERN TkColor *	TkpGetColor _ANSI_ARGS_((Tk_Window tkwin,
 			    Tk_Uid name));
 EXTERN TkColor *	TkpGetColorByValue _ANSI_ARGS_((Tk_Window tkwin,
 			    XColor *colorPtr));	
+
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKCOLOR */

@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) bitmap.test 1.1 97/12/24 15:17:34
+# RCS: @(#) $Id: bitmap.test,v 1.1.2.2 1998/09/30 02:18:24 stanton Exp $
 
 if {[info procs test] != "test"} {
     source defs

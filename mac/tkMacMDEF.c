@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacMDEF.c 1.5 97/07/11 %V%
+ * RCS: @(#) $Id: tkMacMDEF.c,v 1.1.4.1 1998/09/30 02:18:10 stanton Exp $
  */
 
 #define MAC_TCL

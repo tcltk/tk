@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacWm.c 1.77 98/02/18 11:03:54
+ * RCS: @(#) $Id: tkMacWm.c,v 1.1.4.2 1998/09/30 02:18:18 stanton Exp $
  */
 
 #include <Gestalt.h>
@@ -306,7 +306,7 @@ static Tk_GeomMgr wmMgrType = {
 static Tcl_HashTable windowTable;
 static int windowHashInit = false;
 
-void MacMoveWindow(WindowRef window, int x, int y);
+void tkMacMoveWindow(WindowRef window, int x, int y);
 
 /*
  * Forward declarations for procedures defined in this file:
@@ -3941,7 +3941,7 @@ TkMacMakeRealWindowExist(
     tkMacWindowListPtr = listPtr;
     
     macWin->portPtr = (GWorldPtr) newWindow;
-    MacMoveWindow(newWindow, (int) geometry.left, (int) geometry.top);
+    tkMacMoveWindow(newWindow, (int) geometry.left, (int) geometry.top);
     SetPort((GrafPtr) newWindow);
 	
     if (!windowHashInit) {

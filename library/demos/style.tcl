@@ -3,7 +3,7 @@
 # This demonstration script creates a text widget that illustrates the
 # various display styles that may be set for tags.
 #
-# SCCS: @(#) style.tcl 1.9 97/05/06 13:59:06
+# RCS: @(#) $Id: style.tcl,v 1.1.4.2 1998/09/30 02:17:54 stanton Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinDialog.c 1.11 97/10/29 10:41:59
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.1.4.2 1998/09/30 02:19:31 stanton Exp $
  *
  */
 

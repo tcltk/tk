@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacMenus.c 1.38 97/10/31 17:37:03
+ * RCS: @(#) $Id: tkMacMenus.c,v 1.1.4.1 1998/09/30 02:18:13 stanton Exp $
  */
 
 #include "tcl.h"

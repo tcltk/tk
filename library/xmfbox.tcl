@@ -4,13 +4,12 @@
 #	Unix platform. This implementation is used only if the
 #	"tk_strictMotif" flag is set.
 #
+# RCS: @(#) $Id: xmfbox.tcl,v 1.1.4.2 1998/09/30 02:17:39 stanton Exp $
+#
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# SCCS: @(#) xmfbox.tcl 1.11 97/12/23 14:11:40
-#
 
 # tkMotifFDialog --
 #
@@ -181,8 +180,15 @@ proc tkMotifFDialog_Config {dataName type argList} {
 	if {[file isdirectory $data(-initialdir)]} {
 	    set data(selectPath) [glob $data(-initialdir)]
 	} else {
-	    error "\"$data(-initialdir)\" is not a valid directory"
+	    set data(selectPath) [pwd]
 	}
+
+	# Convert the initialdir to an absolute path name.
+
+	set old [pwd]
+	cd $data(selectPath)
+	set data(selectPath) [pwd]
+	cd $old
     }
     set data(selectFile) $data(-initialfile)
 

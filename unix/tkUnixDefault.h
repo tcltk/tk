@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixDefault.h 1.106 97/12/13 15:47:22
+ * RCS: @(#) $Id: tkUnixDefault.h,v 1.1.4.2 1998/09/30 02:19:15 stanton Exp $
  */
 
 #ifndef _TKUNIXDEFAULT

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinPointer.c 1.28 97/10/31 08:40:07
+ * RCS: @(#) $Id: tkWinPointer.c,v 1.1.4.1 1998/09/30 02:19:36 stanton Exp $
  */
 
 #include "tkWinInt.h"
@@ -408,6 +408,15 @@ TkpChangeFocus(winPtr, force)
 
     if (winPtr->window == None) {
 	panic("ChangeXFocus got null X window");
+    }
+ 
+    /*
+     * Change the foreground window so the focus window is raised to the top of
+     * the system stacking order and gets the keyboard focus.
+     */
+
+    if (force) {
+	SetForegroundWindow(Tk_GetHWND(winPtr->window));
     }
     XSetInputFocus(dispPtr->display, winPtr->window, RevertToParent,
 	    CurrentTime);

@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" SCCS: @(#) grid.n 1.15 96/12/13 16:46:35
+'\" RCS: @(#) $Id: grid.n,v 1.1.4.1 1998/09/30 02:16:19 stanton Exp $
 '\" 
 .so man.macros
 .TH grid n 4.1 Tk "Tk Built-In Commands"

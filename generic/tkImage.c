@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkImage.c 1.16 97/11/07 21:17:09
+ * RCS: @(#) $Id: tkImage.c,v 1.1.4.2 1998/09/30 02:17:01 stanton Exp $
  */
 
 #include "tkInt.h"

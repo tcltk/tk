@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkTextIndex.c 1.18 98/01/12 15:33:45
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.1.4.2 1998/09/30 02:17:25 stanton Exp $
  */
 
 #include "default.h"

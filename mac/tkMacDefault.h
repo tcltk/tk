@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacDefault.h 1.49 98/01/08 13:18:41
+ * RCS: @(#) $Id: tkMacDefault.h,v 1.1.4.2 1998/09/30 02:18:05 stanton Exp $
  */
 
 #ifndef _TKMACDEFAULT

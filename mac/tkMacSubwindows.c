@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacSubwindows.c 1.84 98/02/19 14:56:28
+ * RCS: @(#) $Id: tkMacSubwindows.c,v 1.1.4.2 1998/09/30 02:18:17 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -27,7 +27,7 @@ static RgnHandle tmpRgn = NULL;
 
 static void UpdateOffsets _ANSI_ARGS_((TkWindow *winPtr, int deltaX, int deltaY));
 
-void MacMoveWindow _ANSI_ARGS_((WindowRef window, int x, int y));
+void tkMacMoveWindow _ANSI_ARGS_((WindowRef window, int x, int y));
 
 /*
  *----------------------------------------------------------------------
@@ -405,7 +405,7 @@ XMoveResizeWindow(
 	
 	SizeWindow((WindowRef) destPort,
 		(short) width, (short) height, false);
-	MacMoveWindow((WindowRef) destPort, x, y);
+	tkMacMoveWindow((WindowRef) destPort, x, y);
 	
 	/* TODO: is the following right? */
 	TkMacInvalidateWindow(macWin, TK_WINDOW_ONLY);
@@ -507,7 +507,7 @@ XMoveWindow(
 	 * region.  It is currently assumed that Tk will need
 	 * to completely redraw anway.
 	 */
-	MacMoveWindow((WindowRef) destPort, x, y);
+	tkMacMoveWindow((WindowRef) destPort, x, y);
 
 	/* TODO: is the following right? */
 	TkMacInvalidateWindow(macWin, TK_WINDOW_ONLY);
@@ -931,24 +931,21 @@ TkMacGetDrawablePort(
 	
     	if (contWinPtr != NULL) {
     	    resultPort = TkMacGetDrawablePort(
-		    (Drawable) contWinPtr->privatePtr);
+		(Drawable) contWinPtr->privatePtr);
     	} else if (gMacEmbedHandler != NULL) {
 	    resultPort = gMacEmbedHandler->getPortProc(
                     (Tk_Window) macWin->winPtr);
-	    if (resultPort == NULL) {
-		panic("Embed Handler couldn't find port");
-		return NULL;
-	    }	
-    	} else {
-	    panic("TkMacGetDrawablePort couldn't find container");
-	    return NULL;
+    	} 
+	
+	if (resultPort == NULL) {
+    	    panic("TkMacGetDrawablePort couldn't find container");
+    	    return NULL;
+    	}	
 	    
-	    /*
-	     * NOTE: Here we should handle out of process embedding.
-	     */
+	/*
+	 * NOTE: Here we should handle out of process embedding.
+	 */
 		    
-	}
-	    
     }
     return resultPort;
 }
@@ -1054,7 +1051,7 @@ TkMacWinBounds(
 /*
  *----------------------------------------------------------------------
  *
- * MacMoveWindow --
+ * tkMacMoveWindow --
  *
  *	A replacement for the Macintosh MoveWindow function.  This
  *	function adjusts the inputs to MoveWindow to offset the root of 
@@ -1071,7 +1068,7 @@ TkMacWinBounds(
  */
 
 void 
-MacMoveWindow(
+tkMacMoveWindow(
     WindowRef window,
     int x,
     int y)

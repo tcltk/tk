@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacMenu.c 1.111 98/01/21 22:04:59
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.1.4.2 1998/09/30 02:18:11 stanton Exp $
  */
 
 #include <Menus.h>
@@ -510,9 +510,8 @@ TkpNewMenu(
     macMenuHdl = NewMenu(menuID, itemText);
 #ifdef GENERATINGCFM
     {
-        Handle mdefProc = GetResource('MDEF', 591);
-        Handle sicnHandle = GetResource('SICN', SICN_RESOURCE_NUMBER);
-	if ((mdefProc != NULL) && (sicnHandle != NULL)) {
+        Handle mdefProc = FixMDEF();
+        if ((mdefProc != NULL)) {
     	    (*macMenuHdl)->menuProc = mdefProc;
     	}
     }
@@ -4067,8 +4066,8 @@ TkMacClearMenubarActive(void) {
     	if ((menuBarRefPtr != NULL) && (menuBarRefPtr->menuPtr != NULL)) {
     	    TkMenu *menuPtr;
     	    
-    	    for (menuPtr = menuBarRefPtr->menuPtr->masterMenuPtr;
-		    menuPtr != NULL;
+    	    for (menuPtr = menuBarRefPtr->menuPtr->masterMenuPtr; 
+                    menuPtr != NULL;
     	    	    menuPtr = menuPtr->nextInstancePtr) {
     	    	if (menuPtr->menuType == MENUBAR) {
     	    	    RecursivelyClearActiveMenu(menuPtr);
@@ -4126,29 +4125,33 @@ TkpMenuNotifyToplevelCreate(
  * 	figure it out. 
  *
  * Results:
- *	None.
+ *	Returns the MDEF handle.
  *
  * Side effects:
- *	Allcates a hash table.
+ *	The MDEF is read in and massaged.
  *
  *----------------------------------------------------------------------
  */
 
-static void
+static Handle
 FixMDEF(void)
 {
 #ifdef GENERATINGCFM
     Handle MDEFHandle = GetResource('MDEF', 591);
     Handle SICNHandle = GetResource('SICN', SICN_RESOURCE_NUMBER);
     if ((MDEFHandle != NULL) && (SICNHandle != NULL)) {
-        MoveHHi(MDEFHandle);
-    	HLock(MDEFHandle);
-    	if ( menuDefProc == NULL) {
-	    menuDefProc = TkNewMenuDefProc(MenuDefProc);
+        HLock(MDEFHandle);
+    	HLock(SICNHandle);
+	if (menuDefProc == NULL) {
+    	    menuDefProc = TkNewMenuDefProc(MenuDefProc);
 	}
     	memmove((void *) (((long) (*MDEFHandle)) + 0x24), &menuDefProc, 4);
+        return MDEFHandle;
+    } else {
+        return NULL;
     }
-        
+#else
+    return NULL;
 #endif
 }
 
