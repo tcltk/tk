@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.78 2002/07/28 03:23:08 mdejong Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.79 2002/08/08 11:43:08 rmax Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1053,8 +1053,8 @@ mklinks:
 #
 
 DISTROOT = /tmp/dist
-DISTNAME =	tk${TK_VERSION}${TK_PATCH_LEVEL}
-ZIPNAME =	tk${TK_MAJOR_VERSION}${TK_MINOR_VERSION}${TK_PATCH_LEVEL}.zip
+DISTNAME =	tk${VERSION}${PATCH_LEVEL}
+ZIPNAME =	tk${MAJOR_VERSION}${MINOR_VERSION}${PATCH_LEVEL}.zip
 DISTDIR =	$(DISTROOT)/$(DISTNAME)
 TCLDIR = 	@TCL_SRC_DIR@
 $(UNIX_DIR)/configure: $(UNIX_DIR)/configure.in
