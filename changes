@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.15 2004/11/18 16:19:45 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.16 2004/12/03 00:46:11 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5733,3 +5733,11 @@ the CG version of the X drawing emulation layer. (tittle, ingham)
 2004-11-18 (new feature) configure options --enable-man-suffix (max)
 
 --- Released 8.4.8, November 18, 2004 --- See ChangeLog for details ---
+
+2004-11-23 (bug fix)[1011234] Make up/down cursor keys move by display
+lines, not logical lines in text widget (darley)
+
+2004-12-01 (bug fix)[979239] Fix clipping of partially transparent images
+on buttons on unix to avoid X error (hobbs, petasis)
+
+--- Released 8.4.9, December 6, 2004 --- See ChangeLog for details ---
