@@ -9,10 +9,14 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnix3d.c,v 1.1.4.1 1998/09/30 02:19:13 stanton Exp $
+ * RCS: @(#) $Id: tkUnix3d.c,v 1.1.4.2 1999/03/10 07:13:50 stanton Exp $
  */
 
 #include <tk3d.h>
+
+#if !defined(__WIN32__) && !defined(MAC_TCL)
+#include "tkUnixInt.h"
+#endif
 
 /*
  * This structure is used to keep track of the extra colors used

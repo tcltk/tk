@@ -10,11 +10,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.1.4.5 1999/02/26 02:26:05 redman Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.1.4.6 1999/03/10 07:13:38 stanton Exp $
  */
 
 #include "tk.h"
 #include <string.h>
+
+#include "tkInt.h"
 
 /*
  * A data structure of the following type holds information for each console
@@ -27,8 +29,6 @@ typedef struct ConsoleInfo {
     Tcl_Interp *interp;		/* Interpreter to send console commands. */
 } ConsoleInfo;
 
-EXTERN void		TclInitSubsystems _ANSI_ARGS_((CONST char *argv0));
-
 typedef struct ThreadSpecificData {
     Tcl_Interp *gStdoutInterp;
 } ThreadSpecificData;
@@ -40,7 +40,7 @@ static Tcl_ThreadDataKey dataKey;
  * The first three will be used in the tk app shells...
  */
  
-void	TkConsoleCreate _ANSI_ARGS_((void));
+void	TkConsoleCreate_ _ANSI_ARGS_((void));
 int	TkConsoleInit _ANSI_ARGS_((Tcl_Interp *interp));
 void	TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
 			    int devId, char *buffer, long size));
@@ -84,7 +84,7 @@ static Tcl_ChannelType consoleChannelType = {
 /*
  *----------------------------------------------------------------------
  *
- * TkConsoleCreate --
+ * TkConsoleCreate, TkConsoleCreate_ --
  *
  * 	Create the console channels and install them as the standard
  * 	channels.  All I/O will be discarded until TkConsoleInit is
@@ -103,9 +103,18 @@ static Tcl_ChannelType consoleChannelType = {
 void
 TkConsoleCreate()
 {
-    Tcl_Channel consoleChannel;
+    /*
+     * This function is being diabled so we don't end up calling it
+     * twice.  Once from WinMain() and once from Tk_MainEx(). The real
+     * function is now tkCreateConsole_ and is only called from Tk_MainEx.
+     * All of this is an ugly hack.
+     */
+}
 
-    TclInitSubsystems(NULL);
+void
+TkConsoleCreate_()
+{
+    Tcl_Channel consoleChannel;
 
     /*
      * check for STDIN, otherwise create it

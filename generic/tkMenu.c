@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.1.4.7 1999/03/09 01:51:26 lfb Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.1.4.8 1999/03/10 07:13:44 stanton Exp $
  */
 
 /*
@@ -68,7 +68,15 @@
  *
  */
 
+#if 0
+
+/*
+ * used only to test for old config code
+ */
+
 #define __NO_OLD_CONFIG
+#endif
+
 #include "tkPort.h"
 #include "tkMenu.h"
 

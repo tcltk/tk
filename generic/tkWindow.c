@@ -12,11 +12,16 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.1.4.8 1999/02/16 11:39:34 lfb Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.1.4.9 1999/03/10 07:13:47 stanton Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
+
+#if !defined(__WIN32__) && !defined(MAC_TCL)
+#include "tkUnixInt.h"
+#endif
+
 
 typedef struct ThreadSpecificData {
     int numMainWindows;    /* Count of numver of main windows currently
@@ -2699,8 +2704,19 @@ Initialize(interp)
     int argc, code;
     char **argv, *args[20];
     Tcl_DString class;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr;
+    
+    /*
+     * Ensure that we are getting the matching version of Tcl.  This is
+     * really only an issue when Tk is loaded dynamically.
+     */
+
+    if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
+        return TCL_ERROR;
+    }
+
+    tsdPtr = (ThreadSpecificData *) 
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Start by initializing all the static variables to default acceptable
@@ -2916,7 +2932,12 @@ Initialize(interp)
 	code = TCL_ERROR;
 	goto done;
     }
-    code = Tcl_PkgProvide(interp, "Tk", TK_VERSION);
+
+    /*
+     * Provide Tk and its stub table.
+     */
+
+    code = Tcl_PkgProvideEx(interp, "Tk", TK_VERSION, (ClientData) tkStubsPtr);
     if (code != TCL_OK) {
 	goto done;
     }

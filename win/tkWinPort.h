@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPort.h,v 1.1.4.2 1998/09/30 02:19:37 stanton Exp $
+ * RCS: @(#) $Id: tkWinPort.h,v 1.1.4.3 1999/03/10 07:13:52 stanton Exp $
  */
 
 #ifndef _WINPORT
@@ -111,7 +111,8 @@ struct timezone {
     int tz_dsttime;
 };
 
-extern int gettimeofday(struct timeval *, struct timezone *);
-EXTERN void		panic _ANSI_ARGS_(TCL_VARARGS(char *,format));
+#ifndef _TCLINT
+#include <tclInt.h>
+#endif
 
 #endif /* _WINPORT */

@@ -8,11 +8,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDraw.c,v 1.1.4.1 1998/09/30 02:19:16 stanton Exp $
+ * RCS: @(#) $Id: tkUnixDraw.c,v 1.1.4.2 1999/03/10 07:13:51 stanton Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
+
+#if !defined(__WIN32__) && !defined(MAC_TCL)
+#include "tkUnixInt.h"
+#endif
 
 /*
  * The following structure is used to pass information to

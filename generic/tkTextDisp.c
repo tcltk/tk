@@ -11,12 +11,16 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.1.4.4 1999/02/16 11:39:32 lfb Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.1.4.5 1999/03/10 07:13:46 stanton Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
 #include "tkText.h"
+
+#ifdef __WIN32__
+#include "tkWinInt.h"
+#endif
 
 /*
  * The following structure describes how to display a range of characters.

@@ -9,14 +9,21 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.1.4.2 1998/09/30 02:16:52 stanton Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.1.4.3 1999/03/10 07:13:38 stanton Exp $
  */
 
 /*
  * Temporary flag for working on new config package.
  */
 
+#if 0
+
+/*
+ * used only for removing the old config code
+ */
+
 #define __NO_OLD_CONFIG
+#endif
 
 #include "tk.h"
 #include "tkInt.h"

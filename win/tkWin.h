@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin.h,v 1.1.4.2 1998/09/30 02:19:27 stanton Exp $
+ * RCS: @(#) $Id: tkWin.h,v 1.1.4.3 1999/03/10 07:13:52 stanton Exp $
  */
 
 #ifndef _TKWIN
@@ -47,19 +47,7 @@
  *--------------------------------------------------------------
  */
 
-EXTERN Window		Tk_AttachHWND _ANSI_ARGS_((Tk_Window tkwin,
-			    HWND hwnd));
-EXTERN int		Tk_DdeObjCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int objc, 
-			    Tcl_Obj *CONST objv[]));
-EXTERN HINSTANCE 	Tk_GetHINSTANCE _ANSI_ARGS_((void));
-EXTERN HWND		Tk_GetHWND _ANSI_ARGS_((Window window));
-EXTERN Tk_Window	Tk_HWNDToWindow _ANSI_ARGS_((HWND hwnd));
-EXTERN void		Tk_PointerEvent _ANSI_ARGS_((HWND hwnd,
-			    int x, int y));
-EXTERN int		Tk_TranslateWinEvent _ANSI_ARGS_((HWND hwnd,
-			    UINT message, WPARAM wParam, LPARAM lParam,
-			    LRESULT *result));
+#include "tkPlatDecls.h"
 
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLIMPORT

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacXStubs.c,v 1.1.4.2 1998/09/30 02:18:20 stanton Exp $
+ * RCS: @(#) $Id: tkMacXStubs.c,v 1.1.4.3 1999/03/10 07:13:49 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -515,6 +515,47 @@ XForceScreenSaver(
      */
     display->request++;
 }
+
+void
+Tk_FreeXId (
+    Display *display,
+    XID xid)
+{
+    /* no-op function needed for stubs implementation. */
+}
+
+void
+Tk_3DHorizontalBevel (
+    Tk_Window tkwin,
+    Drawable d,
+    Tk_3DBorder b,
+    int x,
+    int y,
+    int width,
+    int height,
+    int leftIn,
+    int rightIn,
+    int topBevel,
+    int relief)
+{
+    /* no-op function needed for stubs implementation. */
+}
+
+void
+Tk_3DVerticalBevel (
+    Tk_Window tkwin,
+    Drawable d,
+    Tk_3DBorder b,
+    int x,
+    int y,
+    int width,
+    int height,
+    int leftBevel,
+    int relief)
+{
+    /* no-op function needed for stubs implementation. */
+}
+
 
 /*
  *----------------------------------------------------------------------

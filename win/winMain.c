@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.1.4.4 1999/02/26 02:24:46 redman Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.1.4.5 1999/03/10 07:13:52 stanton Exp $
  */
 
 #include <tk.h>
@@ -19,13 +19,13 @@
 #include <malloc.h>
 #include <locale.h>
 
+#include "tkInt.h"
+
 /*
  * The following declarations refer to internal Tk routines.  These
  * interfaces are available for use, but are not supported.
  */
 
-EXTERN void		TkConsoleCreate(void);
-EXTERN int		TkConsoleInit(Tcl_Interp *interp);
 
 /*
  * Forward declarations for procedures defined later in this file:
@@ -100,7 +100,6 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
      */
 
     consoleRequired = TRUE;
-    TkConsoleCreate();
 
     Tk_Main(argc, argv, Tcl_AppInit);
     return 1;

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixPort.h,v 1.1.4.2 1998/09/30 02:19:21 stanton Exp $
+ * RCS: @(#) $Id: tkUnixPort.h,v 1.1.4.3 1999/03/10 07:13:51 stanton Exp $
  */
 
 #ifndef _UNIXPORT
@@ -179,7 +179,6 @@ extern int errno;
  * in any other header file.
  */
 
-extern void		panic _ANSI_ARGS_(TCL_VARARGS(char *, string));
 
 /*
  * These functions do nothing under Unix, so we just eliminate calls to them.
@@ -225,6 +224,8 @@ extern void		panic _ANSI_ARGS_(TCL_VARARGS(char *, string));
  * that is needed for portability reasons.
  */
 
-EXTERN void		TclpGetTime _ANSI_ARGS_((Tcl_Time *time));
+#ifndef _TCLINT
+#include <tclInt.h>
+#endif
 
 #endif /* _UNIXPORT */

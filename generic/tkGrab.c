@@ -9,11 +9,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.1.4.3 1998/12/13 08:16:06 lfb Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.1.4.4 1999/03/10 07:13:40 stanton Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
+
+#if !defined(__WIN32__) && !defined(MAC_TCL)
+#include "tkUnixInt.h"
+#endif
 
 /*
  * The grab state machine has four states: ungrabbed, button pressed,

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacAppInit.c,v 1.1.4.4 1999/02/11 04:13:48 stanton Exp $
+ * RCS: @(#) $Id: tkMacAppInit.c,v 1.1.4.5 1999/03/10 07:13:48 stanton Exp $
  */
 
 #include <Gestalt.h>
@@ -274,7 +274,6 @@ MacintoshInit()
 
 
     Tcl_MacSetEventProc(TkMacConvertEvent);
-    TkConsoleCreate();
 
     return TCL_OK;
 }

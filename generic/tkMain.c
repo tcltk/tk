@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.1.4.5 1999/02/26 02:26:05 redman Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.1.4.6 1999/03/10 07:13:44 stanton Exp $
  */
 
 #include <ctype.h>
@@ -21,6 +21,7 @@
 #include <string.h>
 #include <tcl.h>
 #include <tk.h>
+#include "tkInt.h"
 #ifdef NO_STDLIB_H
 #   include "../compat/stdlib.h"
 #else
@@ -29,6 +30,7 @@
 #ifdef __WIN32__
 #include "tkWinInt.h"
 #endif
+
 
 typedef struct ThreadSpecificData {
     Tcl_Interp *interp;         /* Interpreter for this thread. */
@@ -57,6 +59,9 @@ extern char *		strrchr _ANSI_ARGS_((CONST char *string, int c));
 #endif
 extern void		TkpDisplayWarning _ANSI_ARGS_((char *msg,
 			    char *title));
+
+extern void TkConsoleCreate_ _ANSI_ARGS_((void));
+
 /*
  * Forward declarations for procedures defined later in this file.
  */
@@ -68,7 +73,7 @@ static void		StdinProc _ANSI_ARGS_((ClientData clientData,
 /*
  *----------------------------------------------------------------------
  *
- * Tk_Main --
+ * TkMainEx --
  *
  *	Main program for Wish and most other Tk-based applications.
  *
@@ -83,15 +88,15 @@ static void		StdinProc _ANSI_ARGS_((ClientData clientData,
  *
  *----------------------------------------------------------------------
  */
-
 void
-Tk_Main(argc, argv, appInitProc)
+Tk_MainEx(argc, argv, appInitProc, interp)
     int argc;				/* Number of arguments. */
     char **argv;			/* Array of argument strings. */
     Tcl_AppInitProc *appInitProc;	/* Application-specific initialization
 					 * procedure to call after most
 					 * initialization but before starting
 					 * to execute commands. */
+    Tcl_Interp *interp;
 {
     char *args, *fileName;
     char buf[TCL_INTEGER_SPACE];
@@ -99,15 +104,30 @@ Tk_Main(argc, argv, appInitProc)
     size_t length;
     Tcl_Channel inChannel, outChannel;
     Tcl_DString argString;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    Tcl_Interp *interp;
+    ThreadSpecificData *tsdPtr;
 #ifdef __WIN32__
     HANDLE handle;
 #endif
 
+    /*
+     * Ensure that we are getting the matching version of Tcl.  This is
+     * really only an issue when Tk is loaded dynamically.
+     */
+
+    if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
+	abort();
+    }
+
+    tsdPtr = (ThreadSpecificData *) 
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    
     Tcl_FindExecutable(argv[0]);
-    interp = tsdPtr->interp = Tcl_CreateInterp();
+    tsdPtr->interp = interp;
+
+#if (defined(__WIN32__) || defined(MAC_TCL))
+    TkConsoleCreate_();
+#endif
+    
 #ifdef TCL_MEM_DEBUG
     Tcl_InitMemory(interp);
 #endif

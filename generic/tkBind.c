@@ -11,11 +11,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.1.4.6 1998/12/13 09:54:43 lfb Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.1.4.7 1999/03/10 07:13:37 stanton Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
+
+#ifdef __WIN32__
+#include "tkWinInt.h"
+#endif
 
 /*
  * File structure:

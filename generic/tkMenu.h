@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.h,v 1.1.4.4 1999/03/09 01:52:38 lfb Exp $
+ * RCS: @(#) $Id: tkMenu.h,v 1.1.4.5 1999/03/10 07:13:44 stanton Exp $
  */
 
 #ifndef _TKMENU
@@ -558,7 +558,6 @@ EXTERN void		TkpDrawMenuEntry _ANSI_ARGS_((TkMenuEntry *mePtr,
 			    int y, int width, int height, int strictMotif,
 			    int drawArrow));
 EXTERN void		TkpMenuInit _ANSI_ARGS_((void));
-EXTERN void		TkpMenuThreadInit _ANSI_ARGS_((void));
 EXTERN int		TkpMenuNewEntry _ANSI_ARGS_((TkMenuEntry *mePtr));
 EXTERN int		TkpNewMenu _ANSI_ARGS_((TkMenu *menuPtr));
 EXTERN int		TkpPostMenu _ANSI_ARGS_((Tcl_Interp *interp,
