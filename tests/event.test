@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: event.test,v 1.10 2002/07/14 05:48:46 dgp Exp $
+# RCS: @(#) $Id: event.test,v 1.11 2002/07/14 18:31:48 dgp Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -650,7 +650,7 @@ test event-triple-click-drag-1.1 { Triple click and drag across lines in
 
 destroy .t
 
-unset keypress_lookup
+unset -nocomplain keypress_lookup
 rename _init_keypress_lookup {}
 rename _keypress_lookup {}
 rename _keypress {}
