@@ -1,3 +1,9 @@
+2000-11-03  Jeff Hobbs  <hobbs@ajubasolutions.com>
+
+	* generic/tkWindow.c (Initialize): added call to Tcl_SetMainLoop.
+	This only has effect when tclsh is run (not wish), and then Tk is
+	loaded in interactively.
+
 2000-11-02  Jeff Hobbs  <hobbs@ajubasolutions.com>
 
 	* win/tkWinButton.c:
