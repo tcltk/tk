@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.15 1999/12/03 07:15:02 hobbs Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.16 2000/01/20 02:32:52 ericm Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -265,6 +265,19 @@ switch $tcl_platform(platform) {
 	event add <<Copy>> <Control-Key-c> <Key-F16>
 	event add <<Paste>> <Control-Key-v> <Key-F18>
 	event add <<PasteSelection>> <ButtonRelease-2>
+	# Some OS's define a goofy (as in, not <Shift-Tab>) keysym
+	# that is returned when the user presses <Shift-Tab>.  In order for
+	# tab traversal to work, we have to add these keysyms to the 
+	# PrevWindow event.
+	switch $tcl_platform(os) {
+	    "IRIX"  -
+	    "Linux" {
+		event add <<PrevWindow>> <ISO_Left_Tab>
+	    }
+	    "HP-UX" {
+		event add <<PrevWindow>> <hpBackTab>
+	    }
+	}
 	trace variable tk_strictMotif w tkEventMotifBindings
 	set tk_strictMotif $tk_strictMotif
     }
@@ -302,8 +315,9 @@ if {[string compare $tcl_platform(platform) "macintosh"] && \
 # Default bindings for keyboard traversal.
 # ----------------------------------------------------------------------
 
+event add <<PrevWindow>> <Shift-Tab>
 bind all <Tab> {tkTabToWindow [tk_focusNext %W]}
-bind all <Shift-Tab> {tkTabToWindow [tk_focusPrev %W]}
+bind all <<PrevWindow>> {tkTabToWindow [tk_focusPrev %W]}
 
 # tkCancelRepeat --
 # This procedure is invoked to cancel an auto-repeat action described
