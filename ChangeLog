@@ -1,3 +1,43 @@
+1999-12-16  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* doc/GetCursor.3:
+	* win/tkWinCursor.c: added support for Windows cursors to
+	TkGetCursorByName (.ani, .cur) using -cursor @<filename>
+	(Ascher) [Bug: 1350]
+
+	* win/tkWinWm.c: fixed 'wm deiconify' to update position of the
+	toplevel if event is waiting before mapping. (Mao) [Bug: 3687]
+	This removes the need for 'update idle' before 'wm deiconify' on
+	Windows.
+
+	* doc/listbox.n: added doc for <<ListboxSelect>> [Bug: 3500]
+
+	* doc/getOpenFile.n: removed note that -initialfile didn't work
+	for tk_getOpenFile
+	* library/tkfbox.tcl: updated tk_get*File to better match the
+	Windows file box it emulates, give proper support to -initialfile,
+	and fixes lack of global tkPriv call.  [Bug: 3735 3882]
+
+	* doc/tk.n: added doc for 'tk useinputmethods ...'
+	* tests/tk.test:
+	* unix/tkUnixKey.c:
+	* generic/tkCmds.c:
+	* generic/tkEvent.c:
+	* generic/tkWindow.c:
+	* generic/tkInt.h: add 'tk useinputmethods ?-display win? ?bool?'
+	call to provide support for disabling/enabling the use of XIM on
+	X.  This was previously all done at compile time, and always on.
+	Now it
+
+	* generic/tkCanvUtil.c: fixed bug in Tk_CanvasPsOutline that freed
+	mem it shouldn't.
+
+	* generic/tkFont.c: added "bitstream cyberbit" (popular Windows
+	CJK font) to list of font fallbacks. (kenny) [Bug: 2407]
+
+	* mac/tkMacMenu.c: finished bug 3075 by changing the char values of
+	what was checked (verified correctness on Mac).
+
 1999-12-13  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* doc/canvas.n: added docs for items added by dash patch (-*dash*,
