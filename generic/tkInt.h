@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.17 1999/11/17 02:38:27 ericm Exp $ 
+ * RCS: $Id: tkInt.h,v 1.18 1999/12/03 07:14:39 hobbs Exp $ 
  */
 
 #ifndef _TKINT
@@ -899,8 +899,9 @@ EXTERN int              Tk_ChooseDirectoryObjCmd _ANSI_ARGS_((
 EXTERN int              Tk_ChooseFontObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));
-EXTERN int		Tk_DestroyCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_DestroyObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_EntryObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, 
                             Tcl_Obj *CONST objv[]));
@@ -936,8 +937,9 @@ EXTERN int		Tk_LabelObjCmd _ANSI_ARGS_((ClientData clientData,
 EXTERN int		Tk_ListboxObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
-EXTERN int		Tk_LowerCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_LowerObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_MenubuttonObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));
@@ -955,8 +957,9 @@ EXTERN int		Tk_PlaceCmd _ANSI_ARGS_((ClientData clientData,
 EXTERN int		Tk_RadiobuttonObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
-EXTERN int		Tk_RaiseCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_RaiseObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_ScaleObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, 
                             Tcl_Obj *CONST objv[]));

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.11 1999/11/17 02:38:28 ericm Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.12 1999/12/03 07:14:39 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -101,18 +101,18 @@ static TkCmd commands[] = {
     {"bind",		Tk_BindCmd,		NULL,			1, 1},
     {"bindtags",	Tk_BindtagsCmd,		NULL,			1, 1},
     {"clipboard",	Tk_ClipboardCmd,	NULL,			0, 1},
-    {"destroy",		Tk_DestroyCmd,		NULL,			1, 1},
+    {"destroy",		NULL,			Tk_DestroyObjCmd,	1, 1},
     {"event",		NULL,			Tk_EventObjCmd,		1, 1},
     {"focus",		NULL,			Tk_FocusObjCmd,		1, 1},
     {"font",		NULL,			Tk_FontObjCmd,		1, 1},
     {"grab",		Tk_GrabCmd,		NULL,			0, 1},
     {"grid",		Tk_GridCmd,		NULL,			1, 1},
     {"image",		NULL,			Tk_ImageObjCmd,		1, 1},
-    {"lower",		Tk_LowerCmd,		NULL,			1, 1},
+    {"lower",		NULL,			Tk_LowerObjCmd,		1, 1},
     {"option",		Tk_OptionCmd,		NULL,			1, 1},
     {"pack",		Tk_PackCmd,		NULL,			1, 1},
     {"place",		Tk_PlaceCmd,		NULL,			1, 1},
-    {"raise",		Tk_RaiseCmd,		NULL,			1, 1},
+    {"raise",		NULL,			Tk_RaiseObjCmd,		1, 1},
     {"selection",	Tk_SelectionCmd,	NULL,			0, 1},
     {"tk",		NULL,			Tk_TkObjCmd,		0, 1},
     {"tkwait",		Tk_TkwaitCmd,		NULL,			1, 1},

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.7 1999/10/29 03:57:56 hobbs Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.8 1999/12/03 07:14:39 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -385,7 +385,7 @@ TkFreeBindingTags(winPtr)
 /*
  *----------------------------------------------------------------------
  *
- * Tk_DestroyCmd --
+ * Tk_DestroyObjCmd --
  *
  *	This procedure is invoked to process the "destroy" Tcl command.
  *	See the user documentation for details on what it does.
@@ -400,19 +400,19 @@ TkFreeBindingTags(winPtr)
  */
 
 int
-Tk_DestroyCmd(clientData, interp, argc, argv)
+Tk_DestroyObjCmd(clientData, interp, objc, objv)
     ClientData clientData;		/* Main window associated with
 				 * interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     Tk_Window window;
     Tk_Window tkwin = (Tk_Window) clientData;
     int i;
 
-    for (i = 1; i < argc; i++) {
-	window = Tk_NameToWindow(interp, argv[i], tkwin);
+    for (i = 1; i < objc; i++) {
+	window = Tk_NameToWindow(interp, Tcl_GetString(objv[i]), tkwin);
 	if (window == NULL) {
 	    Tcl_ResetResult(interp);
 	    continue;
@@ -434,7 +434,7 @@ Tk_DestroyCmd(clientData, interp, argc, argv)
 /*
  *----------------------------------------------------------------------
  *
- * Tk_LowerCmd --
+ * Tk_LowerObjCmd --
  *
  *	This procedure is invoked to process the "lower" Tcl command.
  *	See the user documentation for details on what it does.
@@ -450,37 +450,37 @@ Tk_DestroyCmd(clientData, interp, argc, argv)
 
 	/* ARGSUSED */
 int
-Tk_LowerCmd(clientData, interp, argc, argv)
+Tk_LowerObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Main window associated with
 				 * interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     Tk_Window mainwin = (Tk_Window) clientData;
     Tk_Window tkwin, other;
 
-    if ((argc != 2) && (argc != 3)) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " window ?belowThis?\"", (char *) NULL);
+    if ((objc != 2) && (objc != 3)) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window ?belowThis?");
 	return TCL_ERROR;
     }
 
-    tkwin = Tk_NameToWindow(interp, argv[1], mainwin);
+    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[1]), mainwin);
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
-    if (argc == 2) {
+    if (objc == 2) {
 	other = NULL;
     } else {
-	other = Tk_NameToWindow(interp, argv[2], mainwin);
+	other = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), mainwin);
 	if (other == NULL) {
 	    return TCL_ERROR;
 	}
     }
     if (Tk_RestackWindow(tkwin, Below, other) != TCL_OK) {
-	Tcl_AppendResult(interp, "can't lower \"", argv[1], "\" below \"",
-		argv[2], "\"", (char *) NULL);
+	Tcl_AppendResult(interp, "can't lower \"", Tcl_GetString(objv[1]),
+		"\" below \"", (other ? Tcl_GetString(objv[2]) : ""),
+		"\"", (char *) NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -489,7 +489,7 @@ Tk_LowerCmd(clientData, interp, argc, argv)
 /*
  *----------------------------------------------------------------------
  *
- * Tk_RaiseCmd --
+ * Tk_RaiseObjCmd --
  *
  *	This procedure is invoked to process the "raise" Tcl command.
  *	See the user documentation for details on what it does.
@@ -505,37 +505,37 @@ Tk_LowerCmd(clientData, interp, argc, argv)
 
 	/* ARGSUSED */
 int
-Tk_RaiseCmd(clientData, interp, argc, argv)
+Tk_RaiseObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Main window associated with
 				 * interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     Tk_Window mainwin = (Tk_Window) clientData;
     Tk_Window tkwin, other;
 
-    if ((argc != 2) && (argc != 3)) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " window ?aboveThis?\"", (char *) NULL);
+    if ((objc != 2) && (objc != 3)) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window ?aboveThis?");
 	return TCL_ERROR;
     }
 
-    tkwin = Tk_NameToWindow(interp, argv[1], mainwin);
+    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[1]), mainwin);
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
-    if (argc == 2) {
+    if (objc == 2) {
 	other = NULL;
     } else {
-	other = Tk_NameToWindow(interp, argv[2], mainwin);
+	other = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), mainwin);
 	if (other == NULL) {
 	    return TCL_ERROR;
 	}
     }
     if (Tk_RestackWindow(tkwin, Above, other) != TCL_OK) {
-	Tcl_AppendResult(interp, "can't raise \"", argv[1], "\" above \"",
-		argv[2], "\"", (char *) NULL);
+	Tcl_AppendResult(interp, "can't raise \"", Tcl_GetString(objv[1]),
+		"\" above \"", (other ? Tcl_GetString(objv[2]) : ""),
+		"\"", (char *) NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
