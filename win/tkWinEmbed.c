@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.22 2005/01/10 15:35:30 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.23 2005/01/12 02:58:29 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -171,7 +171,8 @@ TkpUseWindow(interp, tkwin, string)
     if(strcmp(string, "") == 0) {
 	if(winPtr->flags & TK_EMBEDDED) {
 	    TkpWinToplevelDetachWindow(winPtr);
-	    TkpWinToplevelOverrideRedirect(winPtr, 0);
+	    if(winPtr->flags & TK_TOP_LEVEL)
+		TkpWinToplevelOverrideRedirect(winPtr, 0);
 	}
 	return TCL_OK;
     }
@@ -277,7 +278,11 @@ TkpUseWindow(interp, tkwin, string)
     winPtr->flags |= TK_EMBEDDED;
     winPtr->flags &= (~(TK_MAPPED));
 
-    Tcl_DoWhenIdle(TkWmMapWindow, (ClientData)winPtr);
+    if(winPtr->flags & TK_TOP_LEVEL) {
+	// call this function in idle may crash because the window
+	// may be destroyed in script
+	TkWmMapWindow(winPtr);
+    }
 
     return TCL_OK;
 }
