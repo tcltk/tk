@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.7 1999/12/14 06:52:28 hobbs Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.8 1999/12/16 21:57:36 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -310,6 +310,7 @@ static char *globalFontClass[] = {
     "symbol",			/* All platforms. */
 				/* Unix. */
     "lucida sans unicode",	/* Windows. */
+    "bitstream cyberbit",	/* Windows popular CJK font */
     "chicago",			/* Mac. */
     NULL
 };

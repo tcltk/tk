@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.6 1999/12/14 06:52:27 hobbs Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.7 1999/12/16 21:57:36 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -669,19 +669,20 @@ Tk_HandleEvent(eventPtr)
      * input context for the window if it hasn't already been done
      * (XFilterEvent needs this context).
      */
-
-    if (!(winPtr->flags & TK_CHECKED_IC)) {
-	if (winPtr->dispPtr->inputMethod != NULL) {
-	    winPtr->inputContext = XCreateIC(
+    if (winPtr->dispPtr->useInputMethods) {
+	if (!(winPtr->flags & TK_CHECKED_IC)) {
+	    if (winPtr->dispPtr->inputMethod != NULL) {
+		winPtr->inputContext = XCreateIC(
 		    winPtr->dispPtr->inputMethod, XNInputStyle,
 		    XIMPreeditNothing|XIMStatusNothing,
 		    XNClientWindow, winPtr->window,
 		    XNFocusWindow, winPtr->window, NULL);
+	    }
+	    winPtr->flags |= TK_CHECKED_IC;
 	}
-	winPtr->flags |= TK_CHECKED_IC;
-    }
-    if (XFilterEvent(eventPtr, None)) {
-        goto done;
+	if (XFilterEvent(eventPtr, None)) {
+	    goto done;
+	}
     }
 #endif /* TK_USE_INPUT_METHODS */
 

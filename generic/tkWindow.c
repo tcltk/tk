@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.13 1999/12/14 06:52:34 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.14 1999/12/16 21:57:36 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -458,6 +458,7 @@ GetScreen(interp, screenName, screenPtr)
             dispPtr->refCount = 0;
 	    strncpy(dispPtr->name, screenName, length);
 	    dispPtr->name[length] = '\0';
+	    dispPtr->useInputMethods = 0;
 	    OpenIM(dispPtr);
 	    TkInitXId(dispPtr);
 

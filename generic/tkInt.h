@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.19 1999/12/14 06:52:29 hobbs Exp $ 
+ * RCS: $Id: tkInt.h,v 1.20 1999/12/16 21:57:36 hobbs Exp $ 
  */
 
 #ifndef _TKINT
@@ -482,6 +482,7 @@ typedef struct TkDisplay {
 #ifdef TK_USE_INPUT_METHODS
     XIM inputMethod;		/* Input method for this display */
 #endif /* TK_USE_INPUT_METHODS */
+    int useInputMethods;	/* Whether to use input methods */
     Tcl_HashTable winTable;	/* Maps from X window ids to TkWindow ptrs. */
 
     int refCount;		/* Reference count of how many Tk applications

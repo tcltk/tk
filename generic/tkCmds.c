@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.8 1999/12/03 07:14:39 hobbs Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.9 1999/12/16 21:57:35 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -568,10 +568,10 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
     int index;
     Tk_Window tkwin;
     static char *optionStrings[] = {
-	"appname",	"scaling",	NULL
+	"appname",	"scaling",	"useinputmethods",	NULL
     };
     enum options {
-	TK_APPNAME,	TK_SCALING
+	TK_APPNAME,	TK_SCALING,	TK_USE_IM
     };
 
     tkwin = (Tk_Window) clientData;
@@ -607,7 +607,7 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 	    Screen *screenPtr;
 	    int skip, width, height;
 	    double d;
-	    
+
 	    screenPtr = Tk_Screen(tkwin);
 
 	    skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
@@ -620,7 +620,7 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 		d /= WidthMMOfScreen(screenPtr);
 		Tcl_SetDoubleObj(Tcl_GetObjResult(interp), d);
 	    } else if (objc - skip == 3) {
-		if (Tcl_GetDoubleFromObj(interp, objv[2 + skip], &d) != TCL_OK) {
+		if (Tcl_GetDoubleFromObj(interp, objv[2+skip], &d) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		d = (25.4 / 72) / d;
@@ -639,6 +639,40 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 			"?-displayof window? ?factor?");
 		return TCL_ERROR;
 	    }
+	    break;
+	}
+	case TK_USE_IM: {
+	    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
+	    int skip;
+
+	    skip = TkGetDisplayOf(interp, objc-2, objv+2, &tkwin);
+	    if (skip < 0) {
+		return TCL_ERROR;
+	    } else if (skip) {
+		dispPtr = ((TkWindow *) tkwin)->dispPtr;
+	    }
+	    if ((objc - skip) == 3) {
+#ifdef TK_USE_INPUT_METHODS
+		/*
+		 * In the case where TK_USE_INPUT_METHODS is not defined,
+		 * this will be ignored and we will always return 0.
+		 * That will indicate to the user that input methods
+		 * are just not available.
+		 */
+		int bool;
+		if (Tcl_GetBooleanFromObj(interp, objv[2+skip], &bool)
+			!= TCL_OK) {
+		    return TCL_ERROR;
+		}
+		dispPtr->useInputMethods = bool;
+#endif /* TK_USE_INPUT_METHODS */
+	    } else if ((objc - skip) != 2) {
+		Tcl_WrongNumArgs(interp, 2, objv,
+			"?-displayof window? ?boolean?");
+		return TCL_ERROR;
+	    }
+	    Tcl_SetBooleanObj(Tcl_GetObjResult(interp),
+		    dispPtr->useInputMethods);
 	    break;
 	}
     }
@@ -1522,7 +1556,8 @@ TkGetDisplayOf(interp, objc, objv, tkwinPtr)
 	return 0;
     }
     string = Tcl_GetStringFromObj(objv[0], &length);
-    if ((length >= 2) && (strncmp(string, "-displayof", (unsigned) length) == 0)) {
+    if ((length >= 2) &&
+	    (strncmp(string, "-displayof", (unsigned) length) == 0)) {
         if (objc < 2) {
 	    Tcl_SetStringObj(Tcl_GetObjResult(interp),
 		    "value for \"-displayof\" missing", -1);
