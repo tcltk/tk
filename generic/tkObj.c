@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.4 2001/03/30 07:11:44 hobbs Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.5 2001/08/15 15:44:36 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -734,4 +734,36 @@ SetWindowFromAny(interp, objPtr)
     objPtr->internalRep.twoPtrValue.ptr2 = NULL;
 
     return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkRegisterObjTypes --
+ *
+ *	Registers Tk's Tcl_ObjType structures with the Tcl run-time.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	All instances of Tcl_ObjType structues used in Tk are registered
+ *	with Tcl.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkRegisterObjTypes()
+{
+    Tcl_RegisterObjType(&tkBorderObjType);
+    Tcl_RegisterObjType(&tkBitmapObjType);
+    Tcl_RegisterObjType(&tkColorObjType);
+    Tcl_RegisterObjType(&tkCursorObjType);
+    Tcl_RegisterObjType(&tkFontObjType);
+    Tcl_RegisterObjType(&mmObjType);
+    Tcl_RegisterObjType(&tkOptionObjType);
+    Tcl_RegisterObjType(&pixelObjType);
+    Tcl_RegisterObjType(&tkStateKeyObjType);
+    Tcl_RegisterObjType(&windowObjType);
 }
