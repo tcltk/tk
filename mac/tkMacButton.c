@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacButton.c,v 1.9 2000/02/10 08:51:43 jingham Exp $
+ * RCS: @(#) $Id: tkMacButton.c,v 1.10 2000/04/17 02:16:36 jingham Exp $
  */
 
 #include "tkButton.h"
@@ -84,6 +84,8 @@ static pascal void UserPaneBackgroundProc(ControlHandle,
  * Forward declarations for procedures defined later in this file:
  */
 
+static void		ButtonEventProc _ANSI_ARGS_((
+			    ClientData clientData, XEvent *eventPtr));
 static int	UpdateControlColors _ANSI_ARGS_((TkButton *butPtr,
 	ControlRef controlHandle, CCTabHandle ccTabHandle,
 	RGBColor *saveColorPtr));
@@ -128,7 +130,11 @@ TkButton *
 TkpCreateButton(
     Tk_Window tkwin)
 {
-    return (TkButton *) ckalloc(sizeof(TkButton));
+    TkButton *buttonPtr;
+    buttonPtr = (TkButton *) ckalloc(sizeof(TkButton));
+    Tk_CreateEventHandler(tkwin, ActivateMask,
+	    ButtonEventProc, (ClientData) buttonPtr);
+    return buttonPtr;
 }
 
 /*
@@ -773,7 +779,9 @@ DrawBufferedControl(
 	(**controlHandle).contrlValue = 0;
     }
     
-    if (butPtr->state == STATE_ACTIVE) {
+    if (!tkMacAppInFront || butPtr->state == STATE_DISABLED) {
+	(**controlHandle).contrlHilite = kControlInactivePart;
+    } else if (butPtr->state == STATE_ACTIVE) {
 	if (isBevel) {
 	    (**controlHandle).contrlHilite = kControlButtonPart;
 	} else {
@@ -789,8 +797,6 @@ DrawBufferedControl(
 		    break;
 	    }
 	}
-    } else if (butPtr->state == STATE_DISABLED) {
-	(**controlHandle).contrlHilite = kControlInactivePart;
     } else {
 	(**controlHandle).contrlHilite = kControlNoPart;
     }
@@ -902,6 +908,8 @@ InitSampleControls()
 {
     Rect geometry = {0, 0, 10, 10};
     CWindowPeek windowList;
+    GWorldPtr frontWin = NULL;
+    TkMacWindowList *winListPtr;
 
     /*
      * Create a dummy window that we can draw to.  We will
@@ -911,8 +919,25 @@ InitSampleControls()
      * on exit of the application.
      */
 
+    /* 
+     * This is a bit of a hack...  The problem is that under appearance,
+     * taking a window out of the window list causes instability, so we can't 
+     * do that.  OTOH, we need to make sure that this window is NEVER the front
+     * window, or we may inadvertently send keystrokes to it...
+     * So we put it BEHIND ".", and then we won't ever be able to destroy
+     * ALL the windows that are above it.
+     */
+      
+    for (winListPtr = tkMacWindowListPtr; winListPtr != NULL; 
+            winListPtr = winListPtr->nextPtr) {
+        frontWin = ((MacDrawable *) tkMacWindowListPtr->winPtr->privatePtr)->portPtr;
+        if (strcmp(tkMacWindowListPtr->winPtr->pathName, ".") == 0) {
+            break;
+        }
+    }
+    
     windowRef = NewCWindow(NULL, &geometry, "\pempty", false, 
-	    zoomDocProc, (WindowRef) -1, true, 0);
+	    zoomDocProc, (WindowRef) frontWin, true, 0);
     if (windowRef == NULL) {
 	panic("Can't allocate buffer window.");
     }
@@ -1409,6 +1434,42 @@ ChangeBackgroundWindowColor(
 	    break;
 	}
 	ctIndex--;
+    }
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * ButtonEventProc --
+ *
+ *	This procedure is invoked by the Tk dispatcher for various
+ *	events on buttons.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *      When it gets exposed, it is redisplayed.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+ButtonEventProc(
+    ClientData clientData,	/* Information about window. */
+    XEvent *eventPtr)		/* Information about event. */
+{
+    TkButton *buttonPtr = (TkButton *) clientData;
+
+    if (eventPtr->type == ActivateNotify
+            || eventPtr->type == DeactivateNotify) {
+        if ((buttonPtr->tkwin == NULL) || (!Tk_IsMapped(buttonPtr->tkwin))) {
+	    return;
+        }
+        if ((buttonPtr->flags & REDRAW_PENDING) == 0) {
+	    Tcl_DoWhenIdle(TkpDisplayButton, (ClientData) buttonPtr);
+	    buttonPtr->flags |= REDRAW_PENDING;
+        }
     }
 }
 
