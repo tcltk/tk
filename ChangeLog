@@ -1,3 +1,8 @@
+2002-10-21  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/README: revised according to Jim's suggestions
+	* macosx/tkMacOSXAppInit.c: use standard PATH_MAX from <limits.h>
+	
 2002-10-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/winMain.c (WinMain, main): remove obsolete SetMessageQueue call
