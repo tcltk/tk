@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.2 2002/08/31 06:12:29 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.2.2.1 2004/07/25 02:29:24 wolfsuit Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -294,7 +294,12 @@
 #define DEF_MENU_SELECT_COLOR		"SystemMenuActive"
 #define DEF_MENU_SELECT_MONO		BLACK
 #define DEF_MENU_TAKE_FOCUS		"0"
-#define DEF_MENU_TEAROFF		"1"
+
+/*
+ * FIXME: Turn the default back to 1 when we make tearoff menus work again.
+ */
+ 
+#define DEF_MENU_TEAROFF		"0"
 #define DEF_MENU_TEAROFF_CMD		(char *) NULL
 #define DEF_MENU_TITLE			""
 #define DEF_MENU_TYPE			"normal"
