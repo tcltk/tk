@@ -5,6 +5,10 @@
 
 2003-07-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/panedwindow.tcl: use widget-specific Priv slots for
+	pwAfterId and panecursor items to correctly handle cursor changes
+	with adjacant panedwindows.
+
 	* generic/tkEvent.c (Tk_HandleEvent): correct XCreateIC call for
 	TK_XIM_SPOT usage. [Bug 742660] (takahashi)
 
