@@ -1,5 +1,14 @@
 2002-06-14  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* generic/tkWindow.c (Tk_DestroyWindow): Set the pathName
+	component of a window to NULL after its memory has been
+	deallocated to avoid a possible illegal memory access
+	as a result of a call to Tk_PathName() on a Tk_Window
+	structure of a window that has already been destroyed.
+	[Tk bug 521946]
+
+2002-06-14  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* generic/tkOption.c (Tk_GetOption): Allocate
 	memory with ckalloc not malloc. This keeps
 	Tk from erroring out when built with
