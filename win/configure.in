@@ -2,7 +2,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.30 2001/06/26 20:17:22 mdejong Exp $
+# RCS: @(#) $Id: configure.in,v 1.31 2001/06/26 20:31:58 mdejong Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -30,7 +30,7 @@ fi
 # If the user did not set CFLAGS, set it now to keep
 # the AC_PROG_CC macro from adding "-g -O2".
 if test "${CFLAGS+set}" != "set" ; then
-    export CFLAGS=""
+    CFLAGS=""
 fi
 
 AC_PROG_CC
