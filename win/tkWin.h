@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin.h,v 1.12 2005/01/07 15:18:03 chengyemao Exp $
+ * RCS: @(#) $Id: tkWin.h,v 1.13 2005/01/16 00:23:11 chengyemao Exp $
  */
 
 #ifndef _TKWIN
@@ -30,11 +30,10 @@
 
 /*
  * The following messages are used to communicate between a Tk toplevel
- * and its container window. A zero should be returned if a Tk container
- * is not able to provide a requested service. A Tk container may not be
- * able to provide service to all of the following requests at the moment.
- * But an embedded Tk window will send out these requests to support 
- * external Tk container application.
+ * and its container window. A Tk container may not be able to provide 
+ * service to all of the following requests at the moment. But an embedded 
+ * Tk window will send out these requests to support external Tk container 
+ * application.
  */
 
 #define TK_CLAIMFOCUS	    (WM_USER)	    /* an embedded window requests to focus */
@@ -50,6 +49,16 @@
 #define TK_OVERRIDEREDIRECT (WM_USER+10)    /* an embedded window requests to overrideredirect */
 #define TK_SETMENU	    (WM_USER+11)    /* an embedded window requests to setup menu */
 #define TK_STATE	    (WM_USER+12)    /* an embedded window sets/gets state */
+#define TK_INFO		    (WM_USER+13)    /* an embedded window requests a container's info */
+
+/*
+ * The following are sub-messages (wParam) for TK_INFO.  An embedded window may
+ * send a TK_INFO message with one of the sub-messages to query a container 
+ * for verification and availability
+ */
+#define TK_CONTAINER_VERIFY	    0x01
+#define TK_CONTAINER_ISAVAILABLE    0x02
+
 
 /*
  *--------------------------------------------------------------

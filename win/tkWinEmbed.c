@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.24 2005/01/12 04:30:19 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.25 2005/01/16 00:23:12 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -52,6 +52,7 @@ static void		EmbedGeometryRequest _ANSI_ARGS_((
     			    Container*containerPtr, int width, int height));
 static void		EmbedWindowDeleted _ANSI_ARGS_((TkWindow *winPtr));
 static void		Tk_MapEmbeddedWindow _ANSI_ARGS_((TkWindow* winPtr));
+HWND			Tk_GetEmbeddedHWnd _ANSI_ARGS_((TkWindow* winPtr));
 
 
 /*
@@ -150,15 +151,29 @@ static void Tk_MapEmbeddedWindow(winPtr)
  *	application to specify the window in which the application is
  *	embedded.
  *
- *	This procesure sends a TK_ATTACHWINDOW message to the window to 
- *	use. The returned value is either 0 (the window to use is already 
- *	in use or unable to be used as a container) or the hwnd of the 
- *	window to use (the window to use is ready to serve as a container) 
- *	or other values	(the window to use needs to be confirmed since 
- *	this protocol was not used before Tk85). This protocol is required
- *	in order to verify if the window to use is a valid container.
- *	Without an id verification, an invalid window attachment may cause
- *	unexpected crashes/panics (see bug # 1096074).
+ *	This procedure uses a simple attachment protocol by sending 
+ *	TK_INFO messages to the window to use with two sub messages:
+ *
+ *	    TK_CONTAINER_VERIFY - if a window handles this message,
+ *		it should return either a (long)hwnd for a container or
+ *		a -(long)hwnd for a non-container. 
+ *
+ *	    TK_CONTAINER_ISAVAILABLE - a container window should return 
+ *		either a TRUE (non-zero) if it is available for use or
+ *		a FALSE (zero) othersize.
+ *
+ *	The TK_INFO messages are required in order to verify if the window 
+ *	to use is a valid container. Without an id verification, an invalid 
+ *	window attachment may cause unexpected crashes/panics (bug 1096074).
+ *	Additional sub messages may be definded/used in future for other 
+ *	needs.
+ *	
+ *	We do not enforce the above protocol for the reason of backward 
+ *	compatibility. If the window to use is unable to handle TK_INFO 
+ *	messages (e.g., legacy Tk container applications before 8.5),
+ *	a dialog box with a warning message pops up and the user is asked 
+ *	to confirm if the attachment should proceed.  However, we may have 
+ *	to enforce it in future.
  *	
  * Results:
  *	The return value is normally TCL_OK. If an error occurred (such as
@@ -225,28 +240,26 @@ TkpUseWindow(interp, tkwin, string)
         return TCL_ERROR;
     }
 
-    usePtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
-    if (usePtr != NULL) {
-        if (!(usePtr->flags & TK_CONTAINER)) {
-	    Tcl_AppendResult(interp, "window \"", usePtr->pathName,
-                    "\" doesn't have -container option set", (char *) NULL);
+    id = SendMessage(hwnd, TK_INFO, TK_CONTAINER_VERIFY, 0);
+    if(id == (long)hwnd) {
+        if(!SendMessage(hwnd, TK_INFO, TK_CONTAINER_ISAVAILABLE, 0)) {
+    	    Tcl_AppendResult(interp, "The container is already in use", NULL);
 	    return TCL_ERROR;
 	}
-    } 
-
-    id = SendMessage(hwnd, TK_ATTACHWINDOW, 0, 0);
-    if(id == 0 || id != (long)hwnd) {
-	char msg[256];
-	if(id == 0) {
-	    sprintf(msg, "The window \"%s\" is unable to be or has already been used as a container.", string);
-	    Tcl_SetResult(interp, msg, TCL_VOLATILE);
+    } else if(id == -(long)hwnd) {
+        Tcl_AppendResult(interp, "the window to use is not a Tk container", NULL);
 	    return TCL_ERROR;
-	} else {
-	    sprintf(msg, "The window \"%s\" failed to identify itself as a Tk container.\nPress Ok to proceed or Cancel to abort attaching.", string);
-	    if(IDCANCEL == MessageBox(hwnd, msg, "Tk Warning", MB_OKCANCEL | MB_ICONWARNING)) {
-	        Tcl_SetResult(interp, "Operation has been canceled", TCL_STATIC); 
-	        return TCL_ERROR;
-	    }
+    } else {
+        /*
+         * Proceed if the user decide to do so because it can be a legacy 
+         * container application.  However we may have to return a TCL_ERROR 
+         * in order to avoid bug 1096074 in future.
+         */
+        char msg[256];
+        sprintf(msg, "Unable to get information of window \"%s\".  Attach to this\nwindow may have unpredictable results if it is not a valid container.\n\nPress Ok to proceed or Cancel to abort attaching.", string);
+        if(IDCANCEL == MessageBox(hwnd, msg, "Tk Warning", MB_OKCANCEL | MB_ICONWARNING)) {
+    	    Tcl_SetResult(interp, "Operation has been canceled", TCL_STATIC); 
+	    return TCL_ERROR;
 	}
     }
 
@@ -278,10 +291,7 @@ TkpUseWindow(interp, tkwin, string)
             containerPtr != NULL; containerPtr = containerPtr->nextPtr) {
 	if (containerPtr->parentHWnd == hwnd) {
 	    winPtr->flags |= TK_BOTH_HALVES;
-	    containerPtr->parentPtr = usePtr;
-	    if(usePtr) {
-		containerPtr->parentPtr->flags |= TK_BOTH_HALVES;
-	    }
+	    containerPtr->parentPtr->flags |= TK_BOTH_HALVES;
 	    break;
 	}
     }
@@ -454,6 +464,37 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	    topwinPtr = containerPtr->parentPtr;
 	}
 	switch (message) {
+	    case TK_INFO:
+	    /* An embedded window may send this message for container
+	     * verification and availability before attach. 
+	     *
+	     * wParam - a sub message
+	     *
+	     *	    TK_CONTAINER_ISAVAILABLE - if the container is 
+	     *		available for use?
+	     *		result = 1 for yes and 0 for no;
+	     *
+	     *	    TK_CONTAINER_VERIFY - request the container to
+	     *		verify its identification
+	     *		result =  (long)hwnd if this window is a container
+	     *			 -(long)hwnd otherwise
+	     *
+	     * lParam - N/A
+	     */
+	    switch(wParam) {
+		case TK_CONTAINER_ISAVAILABLE:
+		result = containerPtr->embeddedHWnd == NULL? 1:0;
+		break;
+
+		case TK_CONTAINER_VERIFY:
+		result = (long)containerPtr->parentHWnd;
+		break;
+		
+		default:
+		result = 0;
+	    }
+	    break;
+
 	    case TK_ATTACHWINDOW:
 	    /* An embedded window (either from this application or from
 	     * another application) is trying to attach to this container.
@@ -644,13 +685,13 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	     * lParam	- N/A
 	     *
 	     * Return value:
-	     * the current value of overrideredirect if the container is
-	     * a toplevel.  Otherwise -1.
+	     * 1 + the current value of overrideredirect if the container is
+	     * a toplevel.  Otherwise 0.
 	     */
 	    if(topwinPtr) {
-		result = TkpWinToplevelOverrideRedirect(topwinPtr, wParam);
+		result = 1+TkpWinToplevelOverrideRedirect(topwinPtr, wParam);
 	    } else {
-		result = -1;
+		result = 0;
 	    }
 	    break;
 
@@ -686,15 +727,15 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	     * lParam	- N/A
 	     *
 	     * Return value
-	     * the current state or -1 if the container is not a toplevel
+	     * 1 + the current state or 0 if the container is not a toplevel
 	     */
 	    if(topwinPtr) {
 		if(wParam >= 0 && wParam <= 3) {
 		    TkpWmSetState(topwinPtr, wParam);
 		}
-		result = TkpWmGetState(topwinPtr);
+		result = 1+TkpWmGetState(topwinPtr);
 	    } else {
-		result = -1;
+		result = 0;
 	    }
 	    break;
 
@@ -708,7 +749,14 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	    break;
 	}
     } else {
-	result = 0;
+	if(message == TK_INFO && wParam == TK_CONTAINER_VERIFY) {
+	    /*
+	     * Reply the message sender: this is not a Tk container
+	     */
+	    return -(long)hwnd;
+	} else {
+	    result = 0;
+	}
     }
 
     return result;
