@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# RCS: @(#) $Id: clrpick.tcl,v 1.11 2000/06/30 06:38:38 ericm Exp $
+# RCS: @(#) $Id: clrpick.tcl,v 1.12 2001/06/14 10:56:58 dkf Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -198,7 +198,7 @@ proc tkColorDialog_BuildDialog {w} {
     set stripsFrame [frame $topFrame.colorStrip]
 
     set maxWidth [::msgcat::mcmax Red Green Blue]
-    set maxWidth [expr $maxWidth<6?6:$maxWidth]
+    set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
     set colorList [list \
 	    red		[::msgcat::mc "Red"]	\
 	    green	[::msgcat::mc "Green"]	\
@@ -276,7 +276,7 @@ proc tkColorDialog_BuildDialog {w} {
     #
     set botFrame [frame $w.bot -relief raised -bd 1]
     set maxWidth [::msgcat::mcmax OK Cancel]
-    set maxWidth [expr $maxWidth<8?8:$maxWidth]
+    set maxWidth [expr {$maxWidth<8?8:$maxWidth}]
     button $botFrame.ok     -text [::msgcat::mc "OK"]		\
 	    -width $maxWidth -under 0				\
 	    -command [list tkColorDialog_OkCmd $w]

@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.14 2001/03/30 07:04:58 hobbs Exp $
-# $Id: bgerror.tcl,v 1.14 2001/03/30 07:04:58 hobbs Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.15 2001/06/14 10:56:58 dkf Exp $
+# $Id: bgerror.tcl,v 1.15 2001/06/14 10:56:58 dkf Exp $
 
 option add *ErrorDialog.function.text [::msgcat::mc "Save To Log"] \
 	widgetDefault
@@ -238,10 +238,10 @@ proc bgerror err {
     set parent [winfo parent	.bgerrorDialog]
     set width  [winfo reqwidth	.bgerrorDialog]
     set height [winfo reqheight	.bgerrorDialog]
-    set x [expr ([winfo screenwidth .bgerrorDialog]  - $width )/2 - \
-	    [winfo vrootx $parent]]
-    set y [expr ([winfo screenheight .bgerrorDialog] - $height)/2 - \
-	    [winfo vrooty $parent]]
+    set x [expr {([winfo screenwidth .bgerrorDialog]  - $width )/2 - \
+	    [winfo vrootx $parent]}]
+    set y [expr {([winfo screenheight .bgerrorDialog] - $height)/2 - \
+	    [winfo vrooty $parent]}]
     .bgerrorDialog configure -width $width
     wm geometry .bgerrorDialog +$x+$y
     wm deiconify .bgerrorDialog
