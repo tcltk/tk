@@ -250,10 +250,10 @@ if test -r FindPhoto.3; then
 fi
 if test -r FontId.3; then
     rm -f Tk_FontId.3
-    rm -f Tk_FontMetrics.3
+    rm -f Tk_GetFontMetrics.3
     rm -f Tk_PostscriptFontName.3
     ln FontId.3 Tk_FontId.3
-    ln FontId.3 Tk_FontMetrics.3
+    ln FontId.3 Tk_GetFontMetrics.3
     ln FontId.3 Tk_PostscriptFontName.3
 fi
 if test -r FreeXId.3; then
@@ -619,6 +619,10 @@ fi
 if test -r TkInitStubs.3; then
     rm -f Tk_InitStubs.3
     ln TkInitStubs.3 Tk_InitStubs.3
+fi
+if test -r Tk_Init.3; then
+    rm -f Tk_SafeInit.3
+    ln Tk_Init.3 Tk_SafeInit.3
 fi
 if test -r WindowId.3; then
     rm -f Tk_WindowId.3
