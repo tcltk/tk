@@ -456,8 +456,8 @@
 	to a slave when removing it. [Bug #928413] (griffin)
 
 	* generic/tkImgPhoto.c (ImgPhotoConfigureMaster): force -data into
-	ByteArray and -format into String to correctly handle them if they
-	have been shimmered or created as some other object type.
+	ByteArray and -format into String to correctly handle them if they've
+	been shimmered or created as some other object type. [Bug #1027849]
 	(ImgPhotoCmd): correctly init matched to 0.
 
 2004-04-20  Joe English  <jenglish@users.sourceforge.net>
