@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.18 2003/11/03 15:30:45 dkf Exp $
+# RCS: @(#) $Id: widget,v 1.19 2003/11/04 13:26:33 dkf Exp $
 
 package require Tcl	8.4
 package require Tk	8.4
@@ -62,6 +62,34 @@ image create photo ::img::view -height 16 -format GIF -data {
 image create photo ::img::delete -height 16 -format GIF -data {
     R0lGODlhEAAOAKEAAIQAAO/n3v///////yH5BAEKAAIALAAAAAAQAA4AAAIm
     lI9pAKHbIHNoVhYhTdjlJ2AWKG2g+CldmB6rxo2uybYhbS80eRQAOw==
+}
+
+image create photo ::img::print -height 19 -format GIF -data {
+    R0lGODlhGgATAPcAACEQOTEpQjEpUkIpc0IxY0I5c0oxjEo5SlJCY1JCe1JK
+    UlpChFpCjFpGkFpSc1paa2NKc2NKnGNja2tapWtjc29KnHNanHNjc3NjrXNr
+    jHNrnHNzc3tjpXtrtXtzhICAgIRzvYSEjIZzqox7tYyEnIyMjJSEtZSEvZSM
+    lJyMtZyMvZyUlJyUrZyUvZycnKWctaWlpa2czq2lzrWtvbWtzrW1tb21xr21
+    1sa9zs693s7OztbO3tbO597W1t7W7+fe7+fn5////+/n7+/v7+/v9////wAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAACH5BAEAAEEALAAAAAAaABMAQAj/AIMIHBhkg0GC
+    CBMGIQEiQgseQT4oeCBBAokgRYYQ0JBixg8hRIiUUEBBYYmTByBwiCBCRYwH
+    CxY8cKFw4AogRXLqLAJkQ80gCBBg3BkxZswTNGh4MGqgQQUMJRHCwMkTSE+D
+    Pn8eCKBhxIMhO3ei2OHDBw6sWSlMMMoWgwwfMDZI8GBjx44NARZwEGGi5MkS
+    PcIWKRGz5YgLbAco+KkQBQoJIRgjdGEVq+SaJajqtNrzMgsPCmoIzqmDgmWE
+    KOBuUKAAwYabYTfs4OHjY0giGyhk4MAWRI4eKyRQqPgggYUXPH4A+XBAgwoK
+    DiIsCFxjA9sFEVQQCRJCAYAFDJxiKhAxvMTonEFimrhhYinTBgWiCvxLNX3M
+    DkkpsKV5OYhjBxCMYAICAigUEAA7
 }
 
 #----------------------------------------------------------------
@@ -475,11 +503,14 @@ proc showCode w {
 	button $btns.dismiss -text [mc "Dismiss"] \
 	    -default active -command [list destroy $top] \
 	    -image ::img::delete -compound left
+	button $btns.print   -text [mc "Print Code"] \
+	    -command [list printCode $text $file] \
+	    -image ::img::print -compound left
 	button $btns.rerun   -text [mc "Rerun Demo"] \
 	    -command [list evalShowCode $text] \
 	    -image ::img::refresh -compound left
 
-	grid x $btns.rerun $btns.dismiss -padx 4 -pady {6 4}
+	grid x $btns.rerun $btns.print $btns.dismiss -padx 4 -pady {6 4}
 	grid columnconfigure $btns 0 -weight 1
 
 	grid $t    -sticky news
@@ -502,6 +533,95 @@ proc showCode w {
     $top.f.text insert 1.0 [read $id]
     $top.f.text mark set insert 1.0
     close $id
+}
+
+# printCode --
+# Prints the source code currently displayed in the See Code dialog.
+# Much thanks to Arjen Markus for this.
+#
+# Arguments:
+# w -		Name of text widget containing code to print
+# file -		Name of the original file (implicitly for title)
+
+proc printCode {w file} {
+    set code [$w get 1.0 end-1c]
+
+    set dir "."
+    if {[info exists ::env(HOME)]} {
+	set dir "$::env(HOME)"
+    }
+    if {[info exists ::env(TMP)]} {
+	set dir $::env(TMP)
+    }
+    if {[info exists ::env(TEMP)]} {
+	set dir $::env(TEMP)
+    }
+
+    set filename [file join $dir "tkdemo-$file"]
+    set outfile [open $filename "w"]
+    puts $outfile $code
+    close $outfile
+
+    switch -- $::tcl_platform(platform) {
+	unix {
+	    if {[catch {exec lp -c $filename} msg]} {
+		tk_messageBox -title "Print spooling failure" \
+			-message "Print spooling probably failed: $msg"
+	    }
+	}
+	windows {
+	    if {[catch {PrintTextWin32 $filename} msg]} {
+		tk_messageBox -title "Print spooling failure" \
+			-message "Print spooling probably failed: $msg"
+	    }
+	}
+	macintosh {
+	    tk_messageBox -title "Operation not Implemented" \
+		    -message "Oops, sorry: not implemented yet!"
+	}
+	default {
+	    tk_messageBox -title "Operation not Implemented" \
+		    -message "Wow! Unknown platform: $::tcl_platform(platform)"
+	}
+    }
+
+    #
+    # Be careful to throw away the temporary file in a gentle manner ...
+    #
+    if {[file exists $filename]} {
+	catch {file delete $filename}
+    }
+}
+
+# PrintTextWin32 --
+#    Print a file under Windows using all the "intelligence" necessary
+#
+# Arguments:
+# filename -		Name of the file
+#
+# Note:
+# Taken from the Wiki page by Keith Vetter, "Printing text files
+# under Windows"
+# Note:
+# Do not execute the command in the background: that way we can dispose
+# of the file smoothly
+#
+proc PrintTextWin32 {filename} {
+    package require registry
+    set app [auto_execok notepad.exe]
+    set pcmd "$app /p %1"
+    catch {
+	set app [registry get {HKEY_CLASSES_ROOT\.txt} {}]
+	set pcmd [registry get \
+		{HKEY_CLASSES_ROOT\\$app\\shell\\print\\command} {}]
+    }
+
+    regsub -all {%1} $pcmd $filename pcmd
+    puts $pcmd
+
+    regsub -all {\\} $pcmd {\\\\} pcmd
+    set command "[auto_execok start] /min $pcmd"
+    eval exec $command
 }
 
 # aboutBox --
