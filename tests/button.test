@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: button.test,v 1.8 2000/05/17 21:17:22 ericm Exp $
+# RCS: @(#) $Id: button.test,v 1.9 2000/05/25 16:57:24 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -51,9 +51,9 @@ update
 set i 1
 foreach test {
     {-activebackground #012345 #012345 non-existent
-	    {unknown color name "non-existent"} {0 1 1 1}}
+	    {unknown color name "non-existent"} {1 1 1 1}}
     {-activeforeground #ff0000 #ff0000 non-existent
-	    {unknown color name "non-existent"} {0 1 1 1}}
+	    {unknown color name "non-existent"} {1 1 1 1}}
     {-anchor nw nw bogus {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, or center} {1 1 1 1}}
     {-background #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"} {1 1 1 1}}
@@ -87,7 +87,7 @@ foreach test {
     {-justify right right bogus {bad justification "bogus": must be left, right, or center} {1 1 1 1}}
     {-offvalue lousy lousy {} {} {0 0 1 0}}
     {-offvalue fantastic fantastic {} {} {0 0 1 0}}
-    {-overrelief "" "" 1.5 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken} {0 1 0 0}}
+    {-overrelief "" "" 1.5 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken} {0 1 1 1}}
     {-padx 12m 12m 420x {bad screen distance "420x"} {1 1 1 1}}
     {-pady 12m 12m 420x {bad screen distance "420x"} {1 1 1 1}}
     {-repeatdelay 100 100 foo {expected integer but got "foo"} {0 1 0 0}}
@@ -226,7 +226,7 @@ test button-4.13 {ButtonWidgetCmd procedure, "cget" option} {
 } {1 {unknown option "-onvalue"}}
 test button-4.14 {ButtonWidgetCmd procedure, "configure" option} {
     llength [.c configure]
-} {37}
+} {38}
 test button-4.15 {ButtonWidgetCmd procedure, "configure" option} {
     list [catch {.b configure -gorp} msg] $msg
 } {1 {unknown option "-gorp"}}

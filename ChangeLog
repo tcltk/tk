@@ -1,3 +1,30 @@
+2000-05-25  Eric Melski  <ericm@scriptics.com>
+
+	* doc/radiobutton.n: Added documentation for -overrelief option.
+
+	* doc/checkbutton.n: Added documentation for -overrelief option.
+
+	* doc/label.n: Added documentation for -state option.
+
+	* generic/tkButton.c: Added -overrelief option for checkbuttons,
+	and radiobuttons.
+
+	* library/button.tcl (tkButtonDown, macintosh version): Added
+	protection against querying the -repeatdelay option from a widget
+	that doesn't support it (ie, checkbuttons, radiobuttons, etc).
+	Other platforms use a different binding script for checkbuttons
+	and radiobuttons, so they don't have this issue.
+	(tkCheckRadioEnter, windows version):  Added code to handle
+	-overrelief for check/radiobuttons on windows.
+
+2000-05-22  Eric Melski  <ericm@scriptics.com>
+
+	* generic/tkButton.c: Added -activeforeground, -activebackground
+	for labels, for the -state option.
+
+	* doc/label.n: Added documentation for -state option,
+	-activeforeground, -activebackground.
+
 2000-05-22  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* win/Makefile.in (install-libraries): corrected to install X

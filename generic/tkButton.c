@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.7 2000/05/17 21:17:20 ericm Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.8 2000/05/25 16:57:23 ericm Exp $
  */
 
 #include "tkButton.h"
@@ -57,6 +57,12 @@ static char *compoundStrings[] = {
  */
 
 static Tk_OptionSpec labelOptionSpecs[] = {
+    {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
+	DEF_BUTTON_ACTIVE_BG_COLOR, -1, Tk_Offset(TkButton, activeBorder),
+	0, (ClientData) DEF_BUTTON_ACTIVE_BG_MONO, 0},
+    {TK_OPTION_COLOR, "-activeforeground", "activeForeground", "Background",
+	DEF_BUTTON_ACTIVE_FG_COLOR, -1, Tk_Offset(TkButton, activeFg),
+	TK_OPTION_NULL_OK, (ClientData) DEF_BUTTON_ACTIVE_FG_MONO, 0},
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	DEF_BUTTON_ANCHOR, -1, Tk_Offset(TkButton, anchor), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
@@ -303,6 +309,9 @@ static Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	DEF_BUTTON_OFF_VALUE, Tk_Offset(TkButton, offValuePtr), -1, 0, 0, 0},
     {TK_OPTION_STRING, "-onvalue", "onValue", "Value",
 	DEF_BUTTON_ON_VALUE, Tk_Offset(TkButton, onValuePtr), -1, 0, 0, 0},
+    {TK_OPTION_RELIEF, "-overrelief", "overRelief", "OverRelief",
+	 DEF_BUTTON_OVER_RELIEF, -1, Tk_Offset(TkButton, overRelief),
+	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	DEF_LABCHKRAD_PADX, Tk_Offset(TkButton, padXPtr),
 	Tk_Offset(TkButton, padX), 0, 0, 0},
@@ -404,6 +413,9 @@ static Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_BUTTON_JUSTIFY, -1, Tk_Offset(TkButton, justify), 0, 0, 0},
+    {TK_OPTION_RELIEF, "-overrelief", "overRelief", "OverRelief",
+	 DEF_BUTTON_OVER_RELIEF, -1, Tk_Offset(TkButton, overRelief),
+	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	DEF_LABCHKRAD_PADX, Tk_Offset(TkButton, padXPtr),
 	Tk_Offset(TkButton, padX), 0, 0, 0},
