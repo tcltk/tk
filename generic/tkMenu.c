@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.22 2003/12/03 04:58:09 hobbs Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.23 2003/12/03 16:38:23 dkf Exp $
  */
 
 /*
@@ -2564,7 +2564,7 @@ MenuVarProc(clientData, interp, name1, name2, flags)
 
     if (flags & TCL_TRACE_UNSETS) {
 	mePtr->entryFlags &= ~ENTRY_SELECTED;
-	if ((flags & TCL_TRACE_DESTROYED) {
+	if (flags & TCL_TRACE_DESTROYED) {
 	    Tcl_TraceVar(interp, name,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    MenuVarProc, clientData);
