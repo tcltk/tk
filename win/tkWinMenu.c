@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.38 2005/01/04 02:09:45 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.39 2005/01/09 00:26:59 chengyemao Exp $
  */
 
 #define OEMRESOURCE
@@ -538,7 +538,6 @@ ReconfigureWindowsMenu(
     UINT flags;
     UINT itemID;
     int i, count, systemMenu = 0, base;
-    int width, height;
     Tcl_DString translatedText;
   
     if (NULL == winMenuHdl) {
@@ -550,12 +549,6 @@ ReconfigureWindowsMenu(
      * problem.
      *
      */
-
-    if ((menuPtr->menuType == MENUBAR)
-	    && (menuPtr->parentTopLevelPtr != NULL)) {
-	width = Tk_Width(menuPtr->parentTopLevelPtr);
-	height = Tk_Height(menuPtr->parentTopLevelPtr);
-    }
 
     base = (menuPtr->menuFlags & MENU_SYSTEM_MENU) ? 7 : 0;
     count = GetMenuItemCount(winMenuHdl);
@@ -708,7 +701,6 @@ ReconfigureWindowsMenu(
 	if (bar) {
 	    DrawMenuBar(bar);
 	}
-	Tk_GeometryRequest(menuPtr->parentTopLevelPtr, width, height);
     }
     
     menuPtr->menuFlags &= ~(MENU_RECONFIGURE_PENDING);
