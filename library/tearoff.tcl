@@ -2,7 +2,7 @@
 #
 # This file contains procedures that implement tear-off menus.
 #
-# RCS: @(#) $Id: tearoff.tcl,v 1.4 1999/04/16 01:51:27 stanton Exp $
+# RCS: @(#) $Id: tearoff.tcl,v 1.5 1999/09/02 17:02:53 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -40,11 +40,11 @@ proc tkTearOffMenu {w {x 0} {y 0}} {
     }
 
     set parent [winfo parent $w]
-    while {[string compare [winfo toplevel $parent] $parent]
-          || ![string compare [winfo class $parent] "Menu"]} {
+    while {[string compare [winfo toplevel $parent] $parent] \
+	    || [string equal [winfo class $parent] "Menu"]} {
 	set parent [winfo parent $parent]
     }
-    if {![string compare $parent "."]} {
+    if {[string equal $parent "."]} {
 	set parent ""
     }
     for {set i 1} 1 {incr i} {
@@ -114,14 +114,14 @@ proc tkMenuDup {src dst type} {
 	if {[llength $option] == 2} {
 	    continue
 	}
-	if {[string compare [lindex $option 0] "-type"] == 0} {
+	if {[string equal [lindex $option 0] "-type"]} {
 	    continue
 	}
 	lappend cmd [lindex $option 0] [lindex $option 4]
     }
     eval $cmd
     set last [$src index last]
-    if {![string compare $last "none"]} {
+    if {[string equal $last "none"]} {
 	return
     }
     for {set i [$src cget -tearoff]} {$i <= $last} {incr i} {
@@ -140,8 +140,8 @@ proc tkMenuDup {src dst type} {
     # Copy tags to x, replacing each substring of src with dst.
 
     while {[set index [string first $src $tags]] != -1} {
-      append x [string range $tags 0 [expr {$index - 1}]]$dst
-      set tags [string range $tags [expr {$index + $srcLen}] end]
+	append x [string range $tags 0 [expr {$index - 1}]]$dst
+	set tags [string range $tags [expr {$index + $srcLen}] end]
     }
     append x $tags
 
@@ -155,9 +155,9 @@ proc tkMenuDup {src dst type} {
 	# Copy script to x, replacing each substring of event with dst.
 
 	while {[set index [string first $event $script]] != -1} {
-          append x [string range $script 0 [expr {$index - 1}]]
+	    append x [string range $script 0 [expr {$index - 1}]]
 	    append x $dst
-          set script [string range $script [expr {$index + $eventLen}] end]
+	    set script [string range $script [expr {$index + $eventLen}] end]
 	}
 	append x $script
 

@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scrollbar widgets.
 # It also provides procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: scrlbar.tcl,v 1.5 1999/04/16 01:51:27 stanton Exp $
+# RCS: @(#) $Id: scrlbar.tcl,v 1.6 1999/09/02 17:02:53 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -17,8 +17,9 @@
 #-------------------------------------------------------------------------
 
 # Standard Motif bindings:
-if {[string compare $tcl_platform(platform) "windows"] &&
-    [string compare $tcl_platform(platform) "macintosh"]} {
+if {[string compare $tcl_platform(platform) "windows"] && \
+	[string compare $tcl_platform(platform) "macintosh"]} {
+
 bind Scrollbar <Enter> {
     if {$tk_strictMotif} {
 	set tkPriv(activeBg) [%W cget -activebackground]
@@ -144,7 +145,7 @@ proc tkScrollButtonDown {w x y} {
     set tkPriv(relief) [$w cget -activerelief]
     $w configure -activerelief sunken
     set element [$w identify $x $y]
-    if {![string compare $element "slider"]} {
+    if {[string equal $element "slider"]} {
 	tkScrollStartDrag $w $x $y
     } else {
 	tkScrollSelect $w $element initial
@@ -186,16 +187,16 @@ proc tkScrollSelect {w element repeat} {
     global tkPriv
     if {![winfo exists $w]} return
     switch -- $element {
-      "arrow1"        {tkScrollByUnits $w hv -1}
-      "trough1"       {tkScrollByPages $w hv -1}
-      "trough2"       {tkScrollByPages $w hv 1}
-      "arrow2"        {tkScrollByUnits $w hv 1}
-      default         {return}
+	"arrow1"	{tkScrollByUnits $w hv -1}
+	"trough1"	{tkScrollByPages $w hv -1}
+	"trough2"	{tkScrollByPages $w hv 1}
+	"arrow2"	{tkScrollByUnits $w hv 1}
+	default		{return}
     }
-    if {![string compare $repeat "again"]} {
+    if {[string equal $repeat "again"]} {
 	set tkPriv(afterId) [after [$w cget -repeatinterval] \
 		tkScrollSelect $w $element again]
-    } elseif {![string compare $repeat "initial"]} {
+    } elseif {[string equal $repeat "initial"]} {
 	set delay [$w cget -repeatdelay]
 	if {$delay > 0} {
 	    set tkPriv(afterId) [after $delay tkScrollSelect $w $element again]
@@ -214,7 +215,7 @@ proc tkScrollSelect {w element repeat} {
 proc tkScrollStartDrag {w x y} {
     global tkPriv
 
-    if {![string compare [$w cget -command] ""]} {
+    if {[string equal [$w cget -command] ""]} {
 	return
     }
     set tkPriv(pressX) $x
@@ -223,13 +224,11 @@ proc tkScrollStartDrag {w x y} {
     set iv0 [lindex $tkPriv(initValues) 0]
     if {[llength $tkPriv(initValues)] == 2} {
 	set tkPriv(initPos) $iv0
+    } elseif {$iv0 == 0} {
+	set tkPriv(initPos) 0.0
     } else {
-	if {$iv0 == 0} {
-	    set tkPriv(initPos) 0.0
-	} else {
-	    set tkPriv(initPos) [expr {(double([lindex $tkPriv(initValues) 2])) \
-		    / [lindex $tkPriv(initValues) 0]}]
-	}
+	set tkPriv(initPos) [expr {(double([lindex $tkPriv(initValues) 2])) \
+		/ [lindex $tkPriv(initValues) 0]}]
     }
 }
 
@@ -246,7 +245,7 @@ proc tkScrollStartDrag {w x y} {
 proc tkScrollDrag {w x y} {
     global tkPriv
 
-    if {![string compare $tkPriv(initPos) ""]} {
+    if {[string equal $tkPriv(initPos) ""]} {
 	return
     }
     set delta [$w delta [expr {$x - $tkPriv(pressX)}] [expr {$y - $tkPriv(pressY)}]]
@@ -276,7 +275,7 @@ proc tkScrollDrag {w x y} {
 proc tkScrollEndDrag {w x y} {
     global tkPriv
 
-    if {![string compare $tkPriv(initPos) ""]} {
+    if {[string equal $tkPriv(initPos) ""]} {
 	return
     }
     if {[$w cget -jump]} {
@@ -300,7 +299,7 @@ proc tkScrollEndDrag {w x y} {
 
 proc tkScrollByUnits {w orient amount} {
     set cmd [$w cget -command]
-    if {![string compare $cmd ""] || ([string first \
+    if {[string equal $cmd ""] || ([string first \
 	    [string index [$w cget -orient] 0] $orient] < 0)} {
 	return
     }
@@ -325,7 +324,7 @@ proc tkScrollByUnits {w orient amount} {
 
 proc tkScrollByPages {w orient amount} {
     set cmd [$w cget -command]
-    if {![string compare $cmd ""] || ([string first \
+    if {[string equal $cmd ""] || ([string first \
 	    [string index [$w cget -orient] 0] $orient] < 0)} {
 	return
     }
@@ -349,7 +348,7 @@ proc tkScrollByPages {w orient amount} {
 
 proc tkScrollToPos {w pos} {
     set cmd [$w cget -command]
-    if {![string compare $cmd ""]} {
+    if {[string equal $cmd ""]} {
 	return
     }
     set info [$w get]
@@ -395,8 +394,7 @@ proc tkScrollTopBottom {w x y} {
 proc tkScrollButton2Down {w x y} {
     global tkPriv
     set element [$w identify $x $y]
-    if {![string compare $element "arrow1"]
-          || ![string compare $element "arrow2"]} {
+    if {[string match {arrow[12]} $element]} {
 	tkScrollButtonDown $w $x $y
 	return
     }

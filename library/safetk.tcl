@@ -2,7 +2,7 @@
 #
 # Support procs to use Tk in safe interpreters.
 #
-# RCS: @(#) $Id: safetk.tcl,v 1.4 1999/04/16 01:51:26 stanton Exp $
+# RCS: @(#) $Id: safetk.tcl,v 1.5 1999/09/02 17:02:53 hobbs Exp $
 #
 # Copyright (c) 1997 Sun Microsystems, Inc.
 #
@@ -48,7 +48,7 @@ namespace eval ::safe {
 	# of the more conventional findInAccessPath.
 	# Might be usefull for masters without Tk really loaded too.
 	::interp eval $slave [list set tk_library [::safe::interpAddToAccessPath $slave $tk_library]]
-	return $slave;
+	return $slave
     }
 
 
@@ -86,11 +86,11 @@ proc ::safe::loadTk {} {}
 	
 	# create a decorated toplevel
 	
-	::tcl::Lassign [tkTopLevel $slave $display] w use;
-	
+	::tcl::Lassign [tkTopLevel $slave $display] w use
+
 	# set our delete hook (slave arg is added by interpDelete)
 	# to clean up both window related code and tkInit(slave)
-	Set [DeleteHookName $slave] [list tkDelete {} $w];
+	Set [DeleteHookName $slave] [list tkDelete {} $w]
 
     } else {
 
@@ -205,15 +205,15 @@ proc ::safe::tkDelete {W window slave} {
     # we are going to be called for each widget... skip untill it's
     # top level
 
-    Log $slave "Called tkDelete $W $window" NOTICE;
+    Log $slave "Called tkDelete $W $window" NOTICE
     if {[::interp exists $slave]} {
 	if {[catch {::safe::interpDelete $slave} msg]} {
-	    Log $slave "Deletion error : $msg";
+	    Log $slave "Deletion error : $msg"
 	}
     }
     if {[winfo exists $window]} {
-	Log $slave "Destroy toplevel $window" NOTICE;
-	destroy $window;
+	Log $slave "Destroy toplevel $window" NOTICE
+	destroy $window
     }
     
     # clean up tkInit(slave)
@@ -222,49 +222,48 @@ proc ::safe::tkDelete {W window slave} {
 }
 
 proc ::safe::tkTopLevel {slave display} {
-    variable tkSafeId;
-    incr tkSafeId;
-    set w ".safe$tkSafeId";
+    variable tkSafeId
+    incr tkSafeId
+    set w ".safe$tkSafeId"
     if {[catch {toplevel $w -screen $display -class SafeTk} msg]} {
 	return -code error "Unable to create toplevel for\
-		safe slave \"$slave\" ($msg)";
+		safe slave \"$slave\" ($msg)"
     }
     Log $slave "New toplevel $w" NOTICE
 
     set msg "Untrusted Tcl applet ($slave)"
-    wm title $w $msg;
+    wm title $w $msg
 
     # Control frame
     set wc $w.fc
-    frame $wc -bg red -borderwidth 3 -relief ridge ;
+    frame $wc -bg red -borderwidth 3 -relief ridge
 
     # We will destroy the interp when the window is destroyed
     bindtags $wc [concat Safe$wc [bindtags $wc]]
-    bind Safe$wc <Destroy> [list ::safe::tkDelete %W $w $slave];
+    bind Safe$wc <Destroy> [list ::safe::tkDelete %W $w $slave]
 
-    label $wc.l -text $msg \
-	    -padx 2 -pady 0 -anchor w;
+    label $wc.l -text $msg -padx 2 -pady 0 -anchor w
 
     # We want the button to be the last visible item
     # (so be packed first) and at the right and not resizing horizontally
 
     # frame the button so it does not expand horizontally
     # but still have the default background instead of red one from the parent
-    frame  $wc.fb -bd 0 ;
+    frame  $wc.fb -bd 0
     button $wc.fb.b -text "Delete" \
 	    -bd 1  -padx 2 -pady 0 -highlightthickness 0 \
 	    -command [list ::safe::tkDelete $w $w $slave]
-    pack $wc.fb.b -side right -fill both ;
-    pack $wc.fb -side right -fill both -expand 1;
-    pack $wc.l -side left  -fill both -expand 1;
-    pack $wc -side bottom -fill x ;
+    pack $wc.fb.b -side right -fill both
+    pack $wc.fb -side right -fill both -expand 1
+    pack $wc.l -side left  -fill both -expand 1
+    pack $wc -side bottom -fill x
 
     # Container frame
-    frame $w.c -container 1;
-    pack $w.c -fill both -expand 1;
+    frame $w.c -container 1
+    pack $w.c -fill both -expand 1
     
     # return both the toplevel window name and the id to use for embedding
-    list $w [winfo id $w.c] ;
+    list $w [winfo id $w.c]
 }
 
 }

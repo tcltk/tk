@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.6 1999/04/16 01:51:27 stanton Exp $
+# RCS: @(#) $Id: text.tcl,v 1.7 1999/09/02 17:02:53 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -272,8 +272,8 @@ bind Text <Meta-KeyPress> {# nothing}
 bind Text <Control-KeyPress> {# nothing}
 bind Text <Escape> {# nothing}
 bind Text <KP_Enter> {# nothing}
-if {![string compare $tcl_platform(platform) "macintosh"]} {
-	bind Text <Command-KeyPress> {# nothing}
+if {[string equal $tcl_platform(platform) "macintosh"]} {
+    bind Text <Command-KeyPress> {# nothing}
 }
 
 # Additional emacs-like bindings:
@@ -381,7 +381,7 @@ bind Text <Meta-Delete> {
 # Macintosh only bindings:
 
 # if text black & highlight black -> text white, other text the same
-if {![string compare $tcl_platform(platform) "macintosh"]} {
+if {[string equal $tcl_platform(platform) "macintosh"]} {
 bind Text <FocusIn> {
     %W tag configure sel -borderwidth 0
     %W configure -selectbackground systemHighlight -selectforeground systemHighlightText
@@ -469,7 +469,7 @@ bind Text <MouseWheel> {
 proc tkTextClosestGap {w x y} {
     set pos [$w index @$x,$y]
     set bbox [$w bbox $pos]
-    if {![string compare $bbox ""]} {
+    if {[string equal $bbox ""]} {
 	return $pos
     }
     if {($x - [lindex $bbox 0]) < ([lindex $bbox 2]/2)} {
@@ -496,7 +496,7 @@ proc tkTextButton1 {w x y} {
     set tkPriv(pressX) $x
     $w mark set insert [tkTextClosestGap $w $x $y]
     $w mark set anchor insert
-    if {![string compare [$w cget -state] "normal"]} {focus $w}
+    if {[string equal [$w cget -state] "normal"]} {focus $w}
 }
 
 # tkTextSelectTo --
@@ -552,8 +552,8 @@ proc tkTextSelectTo {w x y} {
 	}
     }
     if {$tkPriv(mouseMoved) || [string compare $tkPriv(selectMode) "char"]} {
-      if {[string compare $tcl_platform(platform) "unix"]
-              && [$w compare $cur < anchor]} {
+	if {[string compare $tcl_platform(platform) "unix"] \
+		&& [$w compare $cur < anchor]} {
 	    $w mark set insert $first
 	} else {
 	    $w mark set insert $last
@@ -605,7 +605,7 @@ proc tkTextKeyExtend {w index} {
 proc tkTextPaste {w x y} {
     $w mark set insert [tkTextClosestGap $w $x $y]
     catch {$w insert insert [selection get -displayof $w]}
-    if {![string compare [$w cget -state] "normal"]} {focus $w}
+    if {[string equal [$w cget -state] "normal"]} {focus $w}
 }
 
 # tkTextAutoScan --
@@ -671,7 +671,7 @@ proc tkTextSetCursor {w pos} {
 proc tkTextKeySelect {w new} {
     global tkPriv
 
-    if {![string compare [$w tag nextrange sel 1.0 end] ""]} {
+    if {[string equal [$w tag nextrange sel 1.0 end] ""]} {
 	if {[$w compare $new < insert]} {
 	    $w tag add sel $new insert
 	} else {
@@ -712,7 +712,7 @@ proc tkTextKeySelect {w new} {
 proc tkTextResetAnchor {w index} {
     global tkPriv
 
-    if {![string compare [$w tag ranges sel] ""]} {
+    if {[string equal [$w tag ranges sel] ""]} {
 	$w mark set anchor $index
 	return
     }
@@ -759,12 +759,11 @@ proc tkTextResetAnchor {w index} {
 # s -		The string to insert (usually just a single character)
 
 proc tkTextInsert {w s} {
-    if {![string compare $s ""] ||
-          ![string compare [$w cget -state] "disabled"]} {
+    if {[string equal $s ""] || [string equal [$w cget -state] "disabled"]} {
 	return
     }
     catch {
-	if {[$w compare sel.first <= insert]
+	if {[$w compare sel.first <= insert] \
 		&& [$w compare sel.last >= insert]} {
 	    $w delete sel.first sel.last
 	}
@@ -791,7 +790,7 @@ proc tkTextUpDownLine {w n} {
 
     set i [$w index insert]
     scan $i "%d.%d" line char
-    if {[string compare $tkPriv(prevPos) $i] != 0} {
+    if {[string compare $tkPriv(prevPos) $i]} {
 	set tkPriv(char) $char
     }
     set new [$w index [expr {$line + $n}].$tkPriv(char)]
@@ -814,14 +813,14 @@ proc tkTextUpDownLine {w n} {
 proc tkTextPrevPara {w pos} {
     set pos [$w index "$pos linestart"]
     while 1 {
-      if {(![string compare [$w get "$pos - 1 line"] "\n"]
-              && [string compare [$w get $pos] "\n"])
-              || ![string compare $pos "1.0"]} {
+	if {([string equal [$w get "$pos - 1 line"] "\n"] \
+		&& [string compare [$w get $pos] "\n"]) \
+		|| [string equal $pos "1.0"]} {
 	    if {[regexp -indices {^[ 	]+(.)} [$w get $pos "$pos lineend"] \
 		    dummy index]} {
 		set pos [$w index "$pos + [lindex $index 0] chars"]
 	    }
-          if {[$w compare $pos != insert] || ![string compare $pos 1.0]} {
+	    if {[$w compare $pos != insert] || [string equal $pos 1.0]} {
 		return $pos
 	    }
 	}
@@ -846,7 +845,7 @@ proc tkTextNextPara {w start} {
 	}
 	set pos [$w index "$pos + 1 line"]
     }
-    while {![string compare [$w get $pos] "\n"]} {
+    while {[string equal [$w get $pos] "\n"]} {
 	set pos [$w index "$pos + 1 line"]
 	if {[$w compare $pos == end]} {
 	    return [$w index "end - 1c"]
@@ -874,7 +873,7 @@ proc tkTextNextPara {w start} {
 proc tkTextScrollPages {w count} {
     set bbox [$w bbox insert]
     $w yview scroll $count pages
-    if {![string compare $bbox ""]} {
+    if {[string equal $bbox ""]} {
 	return [$w index @[expr {[winfo height $w]/2}],0]
     }
     return [$w index @[lindex $bbox 0],[lindex $bbox 1]]
@@ -944,7 +943,7 @@ proc tk_textCut w {
 proc tk_textPaste w {
     global tcl_platform
     catch {
-      if {[string compare $tcl_platform(platform) "unix"]} {
+	if {[string compare $tcl_platform(platform) "unix"]} {
 	    catch {
 		$w delete sel.first sel.last
 	    }
@@ -963,7 +962,7 @@ proc tk_textPaste w {
 # w -		The text window in which the cursor is to move.
 # start -	Position at which to start search.
 
-if {![string compare $tcl_platform(platform) "windows"]}  {
+if {[string equal $tcl_platform(platform) "windows"]}  {
     proc tkTextNextWord {w start} {
 	tkTextNextPos $w [tkTextNextPos $w $start tcl_endOfWord] \
 	    tcl_startOfNextWord

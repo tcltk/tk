@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.9 1999/04/16 01:51:27 stanton Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.10 1999/09/02 17:02:53 hobbs Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -76,8 +76,8 @@ proc tkIconList_Create {w} {
     pack $data(sbar) -side bottom -fill x -padx 2
     pack $data(canvas) -expand yes -fill both
 
-    $data(sbar) config -command "$data(canvas) xview"
-    $data(canvas) config -xscrollcommand "$data(sbar) set"
+    $data(sbar) config -command [list $data(canvas) xview]
+    $data(canvas) config -xscrollcommand [list $data(sbar) set]
 
     # Initializes the max icon/text width and height and other variables
     #
@@ -91,25 +91,26 @@ proc tkIconList_Create {w} {
 
     # Creates the event bindings.
     #
-    bind $data(canvas) <Configure> "tkIconList_Arrange $w"
+    bind $data(canvas) <Configure>	[list tkIconList_Arrange $w]
 
-    bind $data(canvas) <1>         "tkIconList_Btn1 $w %x %y"
-    bind $data(canvas) <B1-Motion> "tkIconList_Motion1 $w %x %y"
-    bind $data(canvas) <B1-Leave>  "tkIconList_Leave1 $w %x %y"
-    bind $data(canvas) <B1-Enter>  "tkCancelRepeat"
-    bind $data(canvas) <ButtonRelease-1> "tkCancelRepeat"
-    bind $data(canvas) <Double-ButtonRelease-1> "tkIconList_Double1 $w %x %y"
+    bind $data(canvas) <1>		[list tkIconList_Btn1 $w %x %y]
+    bind $data(canvas) <B1-Motion>	[list tkIconList_Motion1 $w %x %y]
+    bind $data(canvas) <B1-Leave>	[list tkIconList_Leave1 $w %x %y]
+    bind $data(canvas) <B1-Enter>	[list tkCancelRepeat]
+    bind $data(canvas) <ButtonRelease-1> [list tkCancelRepeat]
+    bind $data(canvas) <Double-ButtonRelease-1> \
+	    [list tkIconList_Double1 $w %x %y]
 
-    bind $data(canvas) <Up>        "tkIconList_UpDown $w -1"
-    bind $data(canvas) <Down>      "tkIconList_UpDown $w  1"
-    bind $data(canvas) <Left>      "tkIconList_LeftRight $w -1"
-    bind $data(canvas) <Right>     "tkIconList_LeftRight $w  1"
-    bind $data(canvas) <Return>    "tkIconList_ReturnKey $w"
-    bind $data(canvas) <KeyPress>  "tkIconList_KeyPress $w %A"
+    bind $data(canvas) <Up>		[list tkIconList_UpDown $w -1]
+    bind $data(canvas) <Down>		[list tkIconList_UpDown $w  1]
+    bind $data(canvas) <Left>		[list tkIconList_LeftRight $w -1]
+    bind $data(canvas) <Right>		[list tkIconList_LeftRight $w  1]
+    bind $data(canvas) <Return>		[list tkIconList_ReturnKey $w]
+    bind $data(canvas) <KeyPress>	[list tkIconList_KeyPress $w %A]
     bind $data(canvas) <Control-KeyPress> ";"
-    bind $data(canvas) <Alt-KeyPress>  ";"
+    bind $data(canvas) <Alt-KeyPress>	";"
 
-    bind $data(canvas) <FocusIn>   "tkIconList_FocusIn $w"
+    bind $data(canvas) <FocusIn>	[list tkIconList_FocusIn $w]
 
     return $w
 }
@@ -288,7 +289,7 @@ proc tkIconList_Arrange {w} {
 	set data(noScroll) 1
     } else {
 	$data(canvas) config -scrollregion "$pad $pad $sW $H"
-	$data(sbar) config -command "$data(canvas) xview"
+	$data(sbar) config -command [list $data(canvas) xview]
 	set data(noScroll) 0
     }
 
@@ -325,7 +326,7 @@ proc tkIconList_See {w rTag} {
 	return
     }
     set sRegion [$data(canvas) cget -scrollregion]
-    if {![string compare $sRegion {}]} {
+    if {[string equal $sRegion {}]} {
 	return
     }
 
@@ -370,7 +371,7 @@ proc tkIconList_SelectAtXY {w x y} {
     upvar #0 $w data
 
     tkIconList_Select $w [$data(canvas) find closest \
-	[$data(canvas) canvasx $x] [$data(canvas) canvasy $y]]
+	    [$data(canvas) canvasx $x] [$data(canvas) canvasy $y]]
 }
 
 proc tkIconList_Select {w rTag {callBrowse 1}} {
@@ -387,7 +388,7 @@ proc tkIconList_Select {w rTag {callBrowse 1}} {
 
     if {![info exists data(rect)]} {
         set data(rect) [$data(canvas) create rect 0 0 0 0 \
-	    -fill #a0a0ff -outline #a0a0ff]
+		-fill #a0a0ff -outline #a0a0ff]
     }
     $data(canvas) lower $data(rect)
     set bbox [$data(canvas) bbox $tTag]
@@ -396,10 +397,8 @@ proc tkIconList_Select {w rTag {callBrowse 1}} {
     set data(curItem) $serial
     set data(selected) $text
     
-    if {$callBrowse} {
-	if {[string compare $data(-browsecmd) ""]} {
-	    eval $data(-browsecmd) [list $text]
-	}
+    if {$callBrowse && [string compare $data(-browsecmd) ""]} {
+	eval $data(-browsecmd) [list $text]
     }
 }
 
@@ -449,7 +448,7 @@ proc tkIconList_Motion1 {w x y} {
 proc tkIconList_Double1 {w x y} {
     upvar #0 $w data
 
-    if {$data(curItem) != {}} {
+    if {[string compare $data(curItem) {}]} {
 	tkIconList_Invoke $w
     }
 }
@@ -473,7 +472,7 @@ proc tkIconList_FocusIn {w} {
 	return
     }
 
-    if {$data(curItem) == {}} {
+    if {[string equal $data(curItem) {}]} {
 	set rTag [lindex [lindex $data(list) 0] 2]
 	tkIconList_Select $w $rTag
     }
@@ -494,12 +493,12 @@ proc tkIconList_UpDown {w amount} {
 	return
     }
 
-    if {$data(curItem) == {}} {
+    if {[string equal $data(curItem) {}]} {
 	set rTag [lindex [lindex $data(list) 0] 2]
     } else {
 	set oldRTag [lindex [lindex $data(list) $data(curItem)] 2]
 	set rTag [lindex [lindex $data(list) [expr {$data(curItem)+$amount}]] 2]
-	if {![string compare $rTag ""]} {
+	if {[string equal $rTag ""]} {
 	    set rTag $oldRTag
 	}
     }
@@ -524,13 +523,13 @@ proc tkIconList_LeftRight {w amount} {
     if {![info exists data(list)]} {
 	return
     }
-    if {$data(curItem) == {}} {
+    if {[string equal $data(curItem) {}]} {
 	set rTag [lindex [lindex $data(list) 0] 2]
     } else {
 	set oldRTag [lindex [lindex $data(list) $data(curItem)] 2]
 	set newItem [expr {$data(curItem)+($amount*$data(itemsPerColumn))}]
 	set rTag [lindex [lindex $data(list) $newItem] 2]
-	if {![string compare $rTag ""]} {
+	if {[string equal $rTag ""]} {
 	    set rTag $oldRTag
 	}
     }
@@ -569,11 +568,11 @@ proc tkIconList_Goto {w text} {
 	return
     }
 
-    if {[string length $text] == 0} {
+    if {[string equal {} $text]} {
 	return
     }
 
-    if {$data(curItem) == {} || $data(curItem) == 0} {
+    if {[string equal $data(curItem) {}] || $data(curItem) == 0} {
 	set start  0
     } else {
 	set start  $data(curItem)
@@ -590,7 +589,7 @@ proc tkIconList_Goto {w text} {
     # with $text
     while 1 {
 	set sub [string range $textList($i) 0 $len0]
-	if {[string compare $text $sub] == 0} {
+	if {[string equal $text $sub]} {
 	    set theIndex $i
 	    break
 	}
@@ -640,7 +639,7 @@ proc tkFDialog {type args} {
 
     tkFDialog_Config $dataName $type $args
 
-    if {![string compare $data(-parent) .]} {
+    if {[string equal $data(-parent) .]} {
         set w .$dataName
     } else {
         set w $data(-parent).$dataName
@@ -671,7 +670,7 @@ proc tkFDialog {type args} {
 
     # Initialize the file types menu
     #
-    if {$data(-filetypes) != {}} {
+    if {[llength $data(-filetypes)]} {
 	$data(typeMenu) delete 0 end
 	foreach type $data(-filetypes) {
 	    set title  [lindex $type 0]
@@ -708,7 +707,7 @@ proc tkFDialog {type args} {
 
     set oldFocus [focus]
     set oldGrab [grab current $w]
-    if {$oldGrab != ""} {
+    if {[string compare $oldGrab ""]} {
 	set grabStatus [grab status $oldGrab]
     }
     grab $w
@@ -729,8 +728,8 @@ proc tkFDialog {type args} {
     catch {focus $oldFocus}
     grab release $w
     wm withdraw $w
-    if {$oldGrab != ""} {
-	if {$grabStatus == "global"} {
+    if {[string compare $oldGrab ""]} {
+	if {[string equal $grabStatus "global"]} {
 	    grab -global $oldGrab
 	} else {
 	    grab $oldGrab
@@ -780,8 +779,8 @@ proc tkFDialog_Config {dataName type argList} {
     #
     tclParseConfigSpec $dataName $specs "" $argList
 
-    if {![string compare $data(-title) ""]} {
-	if {![string compare $type "open"]} {
+    if {[string equal $data(-title) ""]} {
+	if {[string equal $type "open"]} {
 	    set data(-title) "Open"
 	} else {
 	    set data(-title) "Save As"
@@ -918,31 +917,31 @@ static char updir_bits[] = {
 
     # Set up the event handlers
     #
-    bind $data(ent) <Return>  "tkFDialog_ActivateEnt $w"
+    bind $data(ent) <Return> [list tkFDialog_ActivateEnt $w]
     
-    $data(upBtn)     config -command "tkFDialog_UpDirCmd $w"
-    $data(okBtn)     config -command "tkFDialog_OkCmd $w"
-    $data(cancelBtn) config -command "tkFDialog_CancelCmd $w"
+    $data(upBtn)     config -command [list tkFDialog_UpDirCmd $w]
+    $data(okBtn)     config -command [list tkFDialog_OkCmd $w]
+    $data(cancelBtn) config -command [list tkFDialog_CancelCmd $w]
 
-    bind $w <Alt-d> "focus $data(dirMenuBtn)"
+    bind $w <Alt-d> [list focus $data(dirMenuBtn)]
     bind $w <Alt-t> [format {
-	if {"[%s cget -state]" == "normal"} {
+	if {[string equal [%s cget -state] "normal"]} {
 	    focus %s
 	}
     } $data(typeMenuBtn) $data(typeMenuBtn)]
-    bind $w <Alt-n> "focus $data(ent)"
-    bind $w <KeyPress-Escape> "tkButtonInvoke $data(cancelBtn)"
-    bind $w <Alt-c> "tkButtonInvoke $data(cancelBtn)"
-    bind $w <Alt-o> "tkFDialog_InvokeBtn $w Open"
-    bind $w <Alt-s> "tkFDialog_InvokeBtn $w Save"
+    bind $w <Alt-n> [list focus $data(ent)]
+    bind $w <KeyPress-Escape> [list tkButtonInvoke $data(cancelBtn)]
+    bind $w <Alt-c> [list tkButtonInvoke $data(cancelBtn)]
+    bind $w <Alt-o> [list tkFDialog_InvokeBtn $w Open]
+    bind $w <Alt-s> [list tkFDialog_InvokeBtn $w Save]
 
-    wm protocol $w WM_DELETE_WINDOW "tkFDialog_CancelCmd $w"
+    wm protocol $w WM_DELETE_WINDOW [list tkFDialog_CancelCmd $w]
 
     # Build the focus group for all the entries
     #
     tkFocusGroup_Create $w
-    tkFocusGroup_BindIn $w  $data(ent) "tkFDialog_EntFocusIn $w"
-    tkFocusGroup_BindOut $w $data(ent) "tkFDialog_EntFocusOut $w"
+    tkFocusGroup_BindIn $w  $data(ent) [list tkFDialog_EntFocusIn $w]
+    tkFocusGroup_BindOut $w $data(ent) [list tkFDialog_EntFocusOut $w]
 }
 
 # tkFDialog_UpdateWhenIdle --
@@ -1021,10 +1020,10 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     # Make the dir list
     #
     foreach f [lsort -dictionary [glob -nocomplain .* *]] {
-	if {![string compare $f .]} {
+	if {[string equal $f .]} {
 	    continue
 	}
-	if {![string compare $f ..]} {
+	if {[string equal $f ..]} {
 	    continue
 	}
 	if {[file isdir ./$f]} {
@@ -1036,7 +1035,7 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     }
     # Make the file list
     #
-    if {![string compare $data(filter) *]} {
+    if {[string equal $data(filter) *]} {
 	set files [lsort -dictionary \
 	    [glob -nocomplain .* *]]
     } else {
@@ -1077,7 +1076,7 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 
     # Restore the Open/Save Button
     #
-    if {![string compare $data(type) open]} {
+    if {[string equal $data(type) open]} {
         $data(okBtn) config -text "Open"
     } else {
         $data(okBtn) config -text "Save"
@@ -1096,9 +1095,9 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 proc tkFDialog_SetPathSilently {w path} {
     upvar #0 [winfo name $w] data
     
-    trace vdelete  data(selectPath) w "tkFDialog_SetPath $w"
+    trace vdelete  data(selectPath) w [list tkFDialog_SetPath $w]
     set data(selectPath) $path
-    trace variable data(selectPath) w "tkFDialog_SetPath $w"
+    trace variable data(selectPath) w [list tkFDialog_SetPath $w]
 }
 
 
@@ -1163,7 +1162,7 @@ proc tkFDialogResolveFile {context text defaultext} {
 
     set path [tkFDialog_JoinFile $context $text]
 
-    if {[file ext $path] == ""} {
+    if {[string equal [file ext $path] ""]} {
 	set path "$path$defaultext"
     }
 
@@ -1179,9 +1178,7 @@ proc tkFDialogResolveFile {context text defaultext} {
 
     if {[file exists $path]} {
 	if {[file isdirectory $path]} {
-	    if {[catch {
-		cd $path
-	    }]} {
+	    if {[catch {cd $path}]} {
 		return [list CHDIR $path ""]
 	    }
 	    set directory [pwd]
@@ -1189,9 +1186,7 @@ proc tkFDialogResolveFile {context text defaultext} {
 	    set flag OK
 	    cd $appPWD
 	} else {
-	    if {[catch {
-		cd [file dirname $path]
-	    }]} {
+	    if {[catch {cd [file dirname $path]}]} {
 		return [list CHDIR [file dirname $path] ""]
 	    }
 	    set directory [pwd]
@@ -1202,9 +1197,7 @@ proc tkFDialogResolveFile {context text defaultext} {
     } else {
 	set dirname [file dirname $path]
 	if {[file exists $dirname]} {
-	    if {[catch {
-		cd $dirname
-	    }]} {
+	    if {[catch {cd $dirname}]} {
 		return [list CHDIR $dirname ""]
 	    }
 	    set directory [pwd]
@@ -1243,7 +1236,7 @@ proc tkFDialog_EntFocusIn {w} {
 
     tkIconList_Unselect $data(icons)
 
-    if {![string compare $data(type) open]} {
+    if {[string equal $data(type) open]} {
 	$data(okBtn) config -text "Open"
     } else {
 	$data(okBtn) config -text "Save"
@@ -1271,7 +1264,7 @@ proc tkFDialog_ActivateEnt {w} {
 
     switch -- $flag {
 	OK {
-	    if {![string compare $file ""]} {
+	    if {[string equal $file ""]} {
 		# user has entered an existing (sub)directory
 		set data(selectPath) $path
 		$data(ent) delete 0 end
@@ -1286,7 +1279,7 @@ proc tkFDialog_ActivateEnt {w} {
 	    set data(filter) $file
 	}
 	FILE {
-	    if {![string compare $data(type) open]} {
+	    if {[string equal $data(type) open]} {
 		tk_messageBox -icon warning -type ok -parent $data(-parent) \
 		    -message "File \"[file join $path $file]\" does not exist."
 		$data(ent) select from 0
@@ -1329,7 +1322,7 @@ proc tkFDialog_ActivateEnt {w} {
 proc tkFDialog_InvokeBtn {w key} {
     upvar #0 [winfo name $w] data
 
-    if {![string compare [$data(okBtn) cget -text] $key]} {
+    if {[string equal [$data(okBtn) cget -text] $key]} {
 	tkButtonInvoke $data(okBtn)
     }
 }
@@ -1389,7 +1382,7 @@ proc tkFDialog_CancelCmd {w} {
 proc tkFDialog_ListBrowse {w text} {
     upvar #0 [winfo name $w] data
 
-    if {$text == ""} {
+    if {[string equal $text ""]} {
 	return
     }
 
@@ -1398,7 +1391,7 @@ proc tkFDialog_ListBrowse {w text} {
 	$data(ent) delete 0 end
 	$data(ent) insert 0 $text
 
-	if {![string compare $data(type) open]} {
+	if {[string equal $data(type) open]} {
 	    $data(okBtn) config -text "Open"
 	} else {
 	    $data(okBtn) config -text "Save"
@@ -1414,7 +1407,7 @@ proc tkFDialog_ListBrowse {w text} {
 proc tkFDialog_ListInvoke {w text} {
     upvar #0 [winfo name $w] data
 
-    if {$text == ""} {
+    if {[string equal $text ""]} {
 	return
     }
 
@@ -1448,20 +1441,20 @@ proc tkFDialog_Done {w {selectFilePath ""}} {
     upvar #0 [winfo name $w] data
     global tkPriv
 
-    if {![string compare $selectFilePath ""]} {
+    if {[string equal $selectFilePath ""]} {
 	set selectFilePath [tkFDialog_JoinFile $data(selectPath) \
 		$data(selectFile)]
 	set tkPriv(selectFile)     $data(selectFile)
 	set tkPriv(selectPath)     $data(selectPath)
 
 	if {[file exists $selectFilePath] && 
-	    ![string compare $data(type) save]} {
+	    [string equal $data(type) save]} {
 
 		set reply [tk_messageBox -icon warning -type yesno\
 			-parent $data(-parent) -message "File\
 			\"$selectFilePath\" already exists.\nDo\
 			you want to overwrite it?"]
-		if {![string compare $reply "no"]} {
+		if {[string equal $reply "no"]} {
 		    return
 		}
 	}

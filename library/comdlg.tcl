@@ -3,7 +3,7 @@
 #	Some functions needed for the common dialog boxes. Probably need to go
 #	in a different file.
 #
-# RCS: @(#) $Id: comdlg.tcl,v 1.4 1999/04/16 01:51:26 stanton Exp $
+# RCS: @(#) $Id: comdlg.tcl,v 1.5 1999/09/02 17:02:52 hobbs Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -100,7 +100,7 @@ proc tclListValidFlags {v} {
 # This procedure is used to sort strings in a case-insenstive mode.
 #
 proc tclSortNoCase {str1 str2} {
-    return [string compare [string toupper $str1] [string toupper $str2]]
+    string compare -nocase $str1 $str2
 }
 
 
@@ -142,9 +142,9 @@ proc tkFocusGroup_Create {t} {
     if {![info exists tkPriv(fg,$t)]} {
 	set tkPriv(fg,$t) 1
 	set tkPriv(focus,$t) ""
-	bind $t <FocusIn>  "tkFocusGroup_In  $t %W %d"
-	bind $t <FocusOut> "tkFocusGroup_Out $t %W %d"
-	bind $t <Destroy>  "tkFocusGroup_Destroy $t %W"
+	bind $t <FocusIn>  [list tkFocusGroup_In  $t %W %d]
+	bind $t <FocusOut> [list tkFocusGroup_Out $t %W %d]
+	bind $t <Destroy>  [list tkFocusGroup_Destroy $t %W]
     }
 }
 
@@ -184,7 +184,7 @@ proc tkFocusGroup_BindOut {t w cmd} {
 proc tkFocusGroup_Destroy {t w} {
     global tkPriv tkFocusIn tkFocusOut
 
-    if {![string compare $t $w]} {
+    if {[string equal $t $w]} {
 	unset tkPriv(fg,$t)
 	unset tkPriv(focus,$t) 
 
@@ -195,10 +195,9 @@ proc tkFocusGroup_Destroy {t w} {
 	    unset tkFocusOut($name)
 	}
     } else {
-	if {[info exists tkPriv(focus,$t)]} {
-	    if {![string compare $tkPriv(focus,$t) $w]} {
-		set tkPriv(focus,$t) ""
-	    }
+	if {[info exists tkPriv(focus,$t)] && \
+		[string equal $tkPriv(focus,$t) $w]} {
+	    set tkPriv(focus,$t) ""
 	}
 	catch {
 	    unset tkFocusIn($t,$w)
@@ -224,7 +223,7 @@ proc tkFocusGroup_In {t w detail} {
     if {![info exists tkPriv(focus,$t)]} {
 	return
     }
-    if {![string compare $tkPriv(focus,$t) $w]} {
+    if {[string equal $tkPriv(focus,$t) $w]} {
 	# This is already in focus
 	#
 	return
@@ -286,7 +285,7 @@ proc tkFDGetFileTypes {string} {
 	set name "$label ("
 	set sep ""
 	foreach ext $fileTypes($label) {
-	    if {![string compare $ext ""]} {
+	    if {[string equal $ext ""]} {
 		continue
 	    }
 	    regsub {^[.]} $ext "*." ext

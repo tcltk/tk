@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.7 1999/04/16 01:51:27 stanton Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.8 1999/09/02 17:02:53 hobbs Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -37,7 +37,7 @@ proc tkMotifFDialog {type args} {
 
     set oldFocus [focus]
     set oldGrab [grab current $w]
-    if {$oldGrab != ""} {
+    if {[string compare $oldGrab ""]} {
 	set grabStatus [grab status $oldGrab]
     }
     grab $w
@@ -55,8 +55,8 @@ proc tkMotifFDialog {type args} {
     catch {focus $oldFocus}
     grab release $w
     wm withdraw $w
-    if {$oldGrab != ""} {
-	if {$grabStatus == "global"} {
+    if {[string compare $oldGrab ""]} {
+	if {[string equal $grabStatus "global"]} {
 	    grab -global $oldGrab
 	} else {
 	    grab $oldGrab
@@ -90,7 +90,7 @@ proc tkMotifFDialog_Create {dataName type argList} {
 
     tkMotifFDialog_Config $dataName $type $argList
 
-    if {![string compare $data(-parent) .]} {
+    if {[string equal $data(-parent) .]} {
         set w .$dataName
     } else {
         set w $data(-parent).$dataName
@@ -123,10 +123,10 @@ proc tkMotifFDialog_Create {dataName type argList} {
 
     wm withdraw $w
     update idletasks
-    set x [expr [winfo screenwidth $w]/2 - [winfo reqwidth $w]/2 \
-	    - [winfo vrootx [winfo parent $w]]]
-    set y [expr [winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
-	    - [winfo vrooty [winfo parent $w]]]
+    set x [expr {[winfo screenwidth $w]/2 - [winfo reqwidth $w]/2 \
+	    - [winfo vrootx [winfo parent $w]]}]
+    set y [expr {[winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
+	    - [winfo vrooty [winfo parent $w]]}]
     wm geom $w +$x+$y
     wm deiconify $w
     wm title $w $data(-title)
@@ -174,8 +174,8 @@ proc tkMotifFDialog_Config {dataName type argList} {
     #
     tclParseConfigSpec $dataName $specs "" $argList
 
-    if {![string compare $data(-title) ""]} {
-	if {![string compare $type "open"]} {
+    if {[string equal $data(-title) ""]} {
+	if {[string equal $type "open"]} {
 	    set data(-title) "Open"
 	} else {
 	    set data(-title) "Save As"
@@ -281,30 +281,30 @@ proc tkMotifFDialog_BuildUI {w} {
     # The buttons
     #
     set data(okBtn) [button $bot.ok     -text OK     -width 6 -under 0 \
-	-command "tkMotifFDialog_OkCmd $w"]
+	-command [list tkMotifFDialog_OkCmd $w]]
     set data(filterBtn) [button $bot.filter -text Filter -width 6 -under 0 \
-	-command "tkMotifFDialog_FilterCmd $w"]
+	-command [list tkMotifFDialog_FilterCmd $w]]
     set data(cancelBtn) [button $bot.cancel -text Cancel -width 6 -under 0 \
-	-command "tkMotifFDialog_CancelCmd $w"]
+	-command [list tkMotifFDialog_CancelCmd $w]]
 
     pack $bot.ok $bot.filter $bot.cancel -padx 10 -pady 10 -expand yes \
 	-side left
 
     # Create the bindings:
     #
-    bind $w <Alt-t> "focus $data(fEnt)"
-    bind $w <Alt-d> "focus $data(dList)"
-    bind $w <Alt-l> "focus $data(fList)"
-    bind $w <Alt-s> "focus $data(sEnt)"
+    bind $w <Alt-t> [list focus $data(fEnt)]
+    bind $w <Alt-d> [list focus $data(dList)]
+    bind $w <Alt-l> [list focus $data(fList)]
+    bind $w <Alt-s> [list focus $data(sEnt)]
 
-    bind $w <Alt-o> "tkButtonInvoke $bot.ok    "
-    bind $w <Alt-f> "tkButtonInvoke $bot.filter"
-    bind $w <Alt-c> "tkButtonInvoke $bot.cancel"
+    bind $w <Alt-o> [list tkButtonInvoke $bot.ok]
+    bind $w <Alt-f> [list tkButtonInvoke $bot.filter]
+    bind $w <Alt-c> [list tkButtonInvoke $bot.cancel]
 
-    bind $data(fEnt) <Return> "tkMotifFDialog_ActivateFEnt $w"
-    bind $data(sEnt) <Return> "tkMotifFDialog_ActivateSEnt $w"
+    bind $data(fEnt) <Return> [list tkMotifFDialog_ActivateFEnt $w]
+    bind $data(sEnt) <Return> [list tkMotifFDialog_ActivateSEnt $w]
 
-    wm protocol $w WM_DELETE_WINDOW "tkMotifFDialog_CancelCmd $w"
+    wm protocol $w WM_DELETE_WINDOW [list tkMotifFDialog_CancelCmd $w]
 }
 
 # tkMotifFDialog_MakeSList --
@@ -325,12 +325,9 @@ proc tkMotifFDialog_BuildUI {w} {
 proc tkMotifFDialog_MakeSList {w f label under cmdPrefix} {
     label $f.lab -text $label -under $under -anchor w
     listbox $f.l -width 12 -height 5 -selectmode browse -exportselection 0\
-	-xscrollcommand "$f.h set" \
-	-yscrollcommand "$f.v set" 
-    scrollbar $f.v -orient vertical   -takefocus 0 \
-	-command "$f.l yview"
-    scrollbar $f.h -orient horizontal -takefocus 0 \
-	-command "$f.l xview"
+	-xscrollcommand [list $f.h set]	-yscrollcommand [list $f.v set]
+    scrollbar $f.v -orient vertical   -takefocus 0 -command [list $f.l yview]
+    scrollbar $f.h -orient horizontal -takefocus 0 -command [list $f.l xview]
     grid $f.lab -row 0 -column 0 -sticky news -rowspan 1 -columnspan 2 \
 	-padx 2 -pady 2
     grid $f.l -row 1 -column 0 -rowspan 1 -columnspan 1 -sticky news
@@ -344,16 +341,17 @@ proc tkMotifFDialog_MakeSList {w f label under cmdPrefix} {
     # bindings for the listboxes
     #
     set list $f.l
-    bind $list <Up>        "tkMotifFDialog_Browse$cmdPrefix $w"
-    bind $list <Down>      "tkMotifFDialog_Browse$cmdPrefix $w"
-    bind $list <space>     "tkMotifFDialog_Browse$cmdPrefix $w"
-    bind $list <1>         "tkMotifFDialog_Browse$cmdPrefix $w"
-    bind $list <B1-Motion> "tkMotifFDialog_Browse$cmdPrefix $w"
-    bind $list <Double-ButtonRelease-1> "tkMotifFDialog_Activate$cmdPrefix $w"
-    bind $list <Return>    "tkMotifFDialog_Browse$cmdPrefix $w; \
-	    tkMotifFDialog_Activate$cmdPrefix $w"
+    bind $list <Up>		[list tkMotifFDialog_Browse$cmdPrefix $w]
+    bind $list <Down>		[list tkMotifFDialog_Browse$cmdPrefix $w]
+    bind $list <space>		[list tkMotifFDialog_Browse$cmdPrefix $w]
+    bind $list <1>		[list tkMotifFDialog_Browse$cmdPrefix $w]
+    bind $list <B1-Motion>	[list tkMotifFDialog_Browse$cmdPrefix $w]
+    bind $list <Double-ButtonRelease-1> \
+	    [list tkMotifFDialog_Activate$cmdPrefix $w]
+    bind $list <Return>    "tkMotifFDialog_Browse$cmdPrefix [list $w]; \
+	    tkMotifFDialog_Activate$cmdPrefix [list $w]"
 
-    bindtags $list "Listbox $list [winfo toplevel $list] all"
+    bindtags $list [list Listbox $list [winfo toplevel $list] all]
     tkListBoxKeyAccel_Set $list
 
     return $f.l
@@ -382,10 +380,10 @@ proc tkMotifFDialog_InterpFilter {w} {
     # Perform tilde substitution
     #
     set badTilde 0
-    if {[string compare [string index $text 0] ~] == 0} {
+    if {[string equal [string index $text 0] ~]} {
 	set list [file split $text]
 	set tilde [lindex $list 0]
-	if [catch {set tilde [glob $tilde]}] {
+	if {[catch {set tilde [glob $tilde]}]} {
 	    set badTilde 1
 	} else {
 	    set text [eval file join [concat $tilde [lrange $list 1 end]]]
@@ -396,7 +394,7 @@ proc tkMotifFDialog_InterpFilter {w} {
     # with the current selectPath.
 
     set relative 0
-    if {[file pathtype $text] == "relative"} {
+    if {[string equal [file pathtype $text] "relative"]} {
 	set relative 1
     } elseif {$badTilde} {
 	set relative 1	
@@ -415,7 +413,7 @@ proc tkMotifFDialog_InterpFilter {w} {
 
     set resolved [tkFDialog_JoinFile [file dirname $text] [file tail $text]]
 
-    if [file isdirectory $resolved] {
+    if {[file isdirectory $resolved]} {
 	set dir $resolved
 	set fil $data(filter)
     } else {
@@ -467,9 +465,7 @@ proc tkMotifFDialog_LoadFiles {w} {
     $data(fList) delete 0 end
 
     set appPWD [pwd]
-    if [catch {
-	cd $data(selectPath)
-    }] {
+    if {[catch {cd $data(selectPath)}]} {
 	cd $appPWD
 
 	$data(dList) insert end ".."
@@ -479,13 +475,13 @@ proc tkMotifFDialog_LoadFiles {w} {
     # Make the dir list
     #
     foreach f [lsort -dictionary [glob -nocomplain .* *]] {
-	if [file isdir ./$f] {
+	if {[file isdir ./$f]} {
 	    $data(dList) insert end $f
 	}
     }
     # Make the file list
     #
-    if ![string compare $data(filter) *] {
+    if {[string equal $data(filter) *]} {
 	set files [lsort -dictionary [glob -nocomplain .* *]]
     } else {
 	set files [lsort -dictionary \
@@ -494,10 +490,10 @@ proc tkMotifFDialog_LoadFiles {w} {
 
     set top 0
     foreach f $files {
-	if ![file isdir ./$f] {
+	if {![file isdir ./$f]} {
 	    regsub {^[.]/} $f "" f
 	    $data(fList) insert end $f
-	    if [string match .* $f] {
+	    if {[string match .* $f]} {
 		incr top
 	    }
 	}
@@ -525,11 +521,11 @@ proc tkMotifFDialog_BrowseDList {w} {
     upvar #0 [winfo name $w] data
 
     focus $data(dList)
-    if {![string compare [$data(dList) curselection] ""]} {
+    if {[string equal [$data(dList) curselection] ""]} {
 	return
     }
     set subdir [$data(dList) get [$data(dList) curselection]]
-    if {![string compare $subdir ""]} {
+    if {[string equal $subdir ""]} {
 	return
     }
 
@@ -570,11 +566,11 @@ proc tkMotifFDialog_BrowseDList {w} {
 proc tkMotifFDialog_ActivateDList {w} {
     upvar #0 [winfo name $w] data
 
-    if {![string compare [$data(dList) curselection] ""]} {
+    if {[string equal [$data(dList) curselection] ""]} {
 	return
     }
     set subdir [$data(dList) get [$data(dList) curselection]]
-    if {![string compare $subdir ""]} {
+    if {[string equal $subdir ""]} {
 	return
     }
 
@@ -619,11 +615,11 @@ proc tkMotifFDialog_BrowseFList {w} {
     upvar #0 [winfo name $w] data
 
     focus $data(fList)
-    if {![string compare [$data(fList) curselection] ""]} {
+    if {[string equal [$data(fList) curselection] ""]} {
 	return
     }
     set data(selectFile) [$data(fList) get [$data(fList) curselection]]
-    if {![string compare $data(selectFile) ""]} {
+    if {[string equal $data(selectFile) ""]} {
 	return
     }
 
@@ -653,11 +649,11 @@ proc tkMotifFDialog_BrowseFList {w} {
 proc tkMotifFDialog_ActivateFList {w} {
     upvar #0 [winfo name $w] data
 
-    if {![string compare [$data(fList) curselection] ""]} {
+    if {[string equal [$data(fList) curselection] ""]} {
 	return
     }
     set data(selectFile) [$data(fList) get [$data(fList) curselection]]
-    if {![string compare $data(selectFile) ""]} {
+    if {[string equal $data(selectFile) ""]} {
 	return
     } else {
 	tkMotifFDialog_ActivateSEnt $w
@@ -707,7 +703,7 @@ proc tkMotifFDialog_ActivateSEnt {w} {
     set selectFile     [file tail    $selectFilePath]
     set selectPath     [file dirname $selectFilePath]
 
-    if {![string compare $selectFilePath ""]} {
+    if {[string equal $selectFilePath ""]} {
 	tkMotifFDialog_FilterCmd $w
 	return
     }
@@ -732,19 +728,19 @@ proc tkMotifFDialog_ActivateSEnt {w} {
     }
 
     if {![file exists $selectFilePath]} {
-	if {![string compare $data(type) open]} {
+	if {[string equal $data(type) open]} {
 	    tk_messageBox -icon warning -type ok \
 		-message "File \"$selectFilePath\" does not exist."
 	    return
 	}
     } else {
-	if {![string compare $data(type) save]} {
+	if {[string equal $data(type) save]} {
 	    set message [format %s%s \
 		"File \"$selectFilePath\" already exists.\n\n" \
 		"Replace existing file?"]
 	    set answer [tk_messageBox -icon warning -type yesno \
 		-message $message]
-	    if {![string compare $answer "no"]} {
+	    if {[string equal $answer "no"]} {
 		return
 	    }
 	}
@@ -778,8 +774,8 @@ proc tkMotifFDialog_CancelCmd {w} {
 
 proc tkListBoxKeyAccel_Set {w} {
     bind Listbox <Any-KeyPress> ""
-    bind $w <Destroy> "tkListBoxKeyAccel_Unset $w"
-    bind $w <Any-KeyPress> "tkListBoxKeyAccel_Key $w %A"
+    bind $w <Destroy> [list tkListBoxKeyAccel_Unset $w]
+    bind $w <Any-KeyPress> [list tkListBoxKeyAccel_Key $w %A]
 }
 
 proc tkListBoxKeyAccel_Unset {w} {

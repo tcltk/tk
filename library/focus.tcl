@@ -3,7 +3,7 @@
 # This file defines several procedures for managing the input
 # focus.
 #
-# RCS: @(#) $Id: focus.tcl,v 1.4 1999/04/16 01:51:26 stanton Exp $
+# RCS: @(#) $Id: focus.tcl,v 1.5 1999/09/02 17:02:52 hobbs Exp $
 #
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
 #
@@ -38,7 +38,7 @@ proc tk_focusNext w {
 	    incr i
 	    if {$i < [llength $children]} {
 		set cur [lindex $children $i]
-              if {![string compare [winfo toplevel $cur] $cur]} {
+              if {[string equal [winfo toplevel $cur] $cur]} {
 		    continue
 		} else {
 		    break
@@ -50,14 +50,14 @@ proc tk_focusNext w {
 	    # look for its next sibling.
 
 	    set cur $parent
-          if {![string compare [winfo toplevel $cur] $cur]} {
+	    if {[string equal [winfo toplevel $cur] $cur]} {
 		break
 	    }
 	    set parent [winfo parent $parent]
 	    set children [winfo children $parent]
 	    set i [lsearch -exact $children $cur]
 	}
-      if {![string compare $w $cur] || [tkFocusOK $cur]} {
+	if {[string equal $w $cur] || [tkFocusOK $cur]} {
 	    return $cur
 	}
     }
@@ -82,7 +82,7 @@ proc tk_focusPrev w {
 	# among its siblings.  Also, if the window is a top-level,
 	# then reposition to just after the last child of the window.
 
-      if {![string compare [winfo toplevel $cur] $cur]}  {
+	if {[string equal [winfo toplevel $cur] $cur]}  {
 	    set parent $cur
 	    set children [winfo children $cur]
 	    set i [llength $children]
@@ -100,7 +100,7 @@ proc tk_focusPrev w {
 	while {$i > 0} {
 	    incr i -1
 	    set cur [lindex $children $i]
-          if {![string compare [winfo toplevel $cur] $cur]} {
+	    if {[string equal [winfo toplevel $cur] $cur]} {
 		continue
 	    }
 	    set parent $cur
@@ -108,7 +108,7 @@ proc tk_focusPrev w {
 	    set i [llength $children]
 	}
 	set cur $parent
-      if {![string compare $w $cur] || [tkFocusOK $cur]} {
+	if {[string equal $w $cur] || [tkFocusOK $cur]} {
 	    return $cur
 	}
     }
@@ -137,7 +137,7 @@ proc tkFocusOK w {
 	    return [winfo viewable $w]
 	} else {
 	    set value [uplevel #0 $value $w]
-          if {[string compare $value ""]} {
+	    if {[string compare $value ""]} {
 		return $value
 	    }
 	}
@@ -146,7 +146,7 @@ proc tkFocusOK w {
 	return 0
     }
     set code [catch {$w cget -state} value]
-    if {($code == 0) && ![string compare $value "disabled"]} {
+    if {($code == 0) && [string equal $value "disabled"]} {
 	return 0
     }
     regexp Key|Focus "[bind $w] [bind [winfo class $w]]"
@@ -165,12 +165,12 @@ proc tkFocusOK w {
 proc tk_focusFollowsMouse {} {
     set old [bind all <Enter>]
     set script {
-      if {![string compare "%d" "NotifyAncestor"]
-              || ![string compare "%d" "NotifyNonlinear"]
-              || ![string compare "%d" "NotifyInferior"]} {
-          if {[tkFocusOK %W]} {
-              focus %W
-          }
+	if {[string equal "%d" "NotifyAncestor"] \
+		|| [string equal "%d" "NotifyNonlinear"] \
+		|| [string equal "%d" "NotifyInferior"]} {
+	    if {[tkFocusOK %W]} {
+		focus %W
+	    }
 	}
     }
     if {[string compare $old ""]} {

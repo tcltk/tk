@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: listbox.tcl,v 1.6 1999/08/09 16:52:06 hobbs Exp $
+# RCS: @(#) $Id: listbox.tcl,v 1.7 1999/09/02 17:02:52 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -136,7 +136,7 @@ bind Listbox <Shift-Control-End> {
     tkListboxDataExtend %W [%W index end]
 }
 bind Listbox <<Copy>> {
-    if {![string compare [selection own -displayof %W] "%W"]} {
+    if {[string equal [selection own -displayof %W] "%W"]} {
 	clipboard clear -displayof %W
 	clipboard append -displayof %W [selection get -displayof %W]
     }
@@ -162,7 +162,7 @@ bind Listbox <Control-slash> {
 bind Listbox <Control-backslash> {
     if {[string compare [%W cget -selectmode] "browse"]} {
 	%W selection clear 0 end
-      event generate %W <<ListboxSelect>>
+	event generate %W <<ListboxSelect>>
     }
 }
 
@@ -197,7 +197,7 @@ bind Listbox <MouseWheel> {
 
 proc tkListboxBeginSelect {w el} {
     global tkPriv
-    if {![string compare [$w cget -selectmode] "multiple"]} {
+    if {[string equal [$w cget -selectmode] "multiple"]} {
 	if {[$w selection includes $el]} {
 	    $w selection clear $el
 	} else {
@@ -280,7 +280,7 @@ proc tkListboxMotion {w el} {
 #		one under the pointer).  Must be in numerical form.
 
 proc tkListboxBeginExtend {w el} {
-    if {![string compare [$w cget -selectmode] "extended"]} {
+    if {[string equal [$w cget -selectmode] "extended"]} {
 	if {[$w selection includes anchor]} {
 	    tkListboxMotion $w $el
 	} else {
@@ -304,7 +304,7 @@ proc tkListboxBeginExtend {w el} {
 
 proc tkListboxBeginToggle {w el} {
     global tkPriv
-    if {![string compare [$w cget -selectmode] "extended"]} {
+    if {[string equal [$w cget -selectmode] "extended"]} {
 	set tkPriv(listboxSelection) [$w curselection]
 	set tkPriv(listboxPrev) $el
 	$w selection anchor $el
@@ -313,7 +313,7 @@ proc tkListboxBeginToggle {w el} {
 	} else {
 	    $w selection set $el
 	}
-      event generate $w <<ListboxSelect>>
+	event generate $w <<ListboxSelect>>
     }
 }
 
@@ -365,7 +365,7 @@ proc tkListboxUpDown {w amount} {
 	browse {
 	    $w selection clear 0 end
 	    $w selection set active
-          event generate $w <<ListboxSelect>>
+	    event generate $w <<ListboxSelect>>
 	}
 	extended {
 	    $w selection clear 0 end
@@ -373,7 +373,7 @@ proc tkListboxUpDown {w amount} {
 	    $w selection anchor active
 	    set tkPriv(listboxPrev) [$w index active]
 	    set tkPriv(listboxSelection) {}
-          event generate $w <<ListboxSelect>>
+	    event generate $w <<ListboxSelect>>
 	}
     }
 }
@@ -410,13 +410,13 @@ proc tkListboxExtendUpDown {w amount} {
 
 proc tkListboxDataExtend {w el} {
     set mode [$w cget -selectmode]
-    if {![string compare $mode "extended"]} {
+    if {[string equal $mode "extended"]} {
 	$w activate $el
 	$w see $el
         if {[$w selection includes anchor]} {
 	    tkListboxMotion $w $el
 	}
-    } elseif {![string compare $mode "multiple"]} {
+    } elseif {[string equal $mode "multiple"]} {
 	$w activate $el
 	$w see $el
     }
@@ -465,7 +465,7 @@ proc tkListboxCancel w {
 
 proc tkListboxSelectAll w {
     set mode [$w cget -selectmode]
-    if {![string compare $mode "single"] || ![string compare $mode "browse"]} {
+    if {[string equal $mode "single"] || [string equal $mode "browse"]} {
 	$w selection clear 0 end
 	$w selection set active
     } else {

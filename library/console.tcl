@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.6 1999/08/10 15:27:49 hobbs Exp $
+# RCS: @(#) $Id: console.tcl,v 1.7 1999/09/02 17:02:52 hobbs Exp $
 #
 # Copyright (c) 1998-1999 Scriptics Corp.
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
@@ -31,7 +31,7 @@ proc tkConsoleInit {} {
     if {[string compare $tcl_platform(platform) "macintosh"]} {
 	set mod "Ctrl"
     } else {
-      set mod "Cmd"
+	set mod "Cmd"
     }
 
     menu .menubar
@@ -40,34 +40,34 @@ proc tkConsoleInit {} {
 
     menu .menubar.file -tearoff 0
     .menubar.file add command -label "Source..." -underline 0 \
-	-command tkConsoleSource
+	    -command tkConsoleSource
     .menubar.file add command -label "Hide Console" -underline 0 \
-	-command {wm withdraw .}
+	    -command {wm withdraw .}
     if {[string compare $tcl_platform(platform) "macintosh"]} {
 	.menubar.file add command -label "Exit" -underline 1 -command exit
     } else {
-      .menubar.file add command -label "Quit" -command exit -accel Cmd-Q
+	.menubar.file add command -label "Quit" -command exit -accel Cmd-Q
     }
 
     menu .menubar.edit -tearoff 0
     .menubar.edit add command -label "Cut" -underline 2 \
-	-command { event generate .console <<Cut>> } -accel "$mod+X"
+	    -command { event generate .console <<Cut>> } -accel "$mod+X"
     .menubar.edit add command -label "Copy" -underline 0 \
-	-command { event generate .console <<Copy>> } -accel "$mod+C"
+	    -command { event generate .console <<Copy>> } -accel "$mod+C"
     .menubar.edit add command -label "Paste" -underline 1 \
-	-command { event generate .console <<Paste>> } -accel "$mod+V"
+	    -command { event generate .console <<Paste>> } -accel "$mod+V"
 
     if {[string compare $tcl_platform(platform) "windows"]} {
-      .menubar.edit add command -label "Clear" -underline 2 \
-          -command { event generate .console <<Clear>> }
+	.menubar.edit add command -label "Clear" -underline 2 \
+		-command { event generate .console <<Clear>> }
     } else {
 	.menubar.edit add command -label "Delete" -underline 0 \
-	    -command { event generate .console <<Clear>> } -accel "Del"
+		-command { event generate .console <<Clear>> } -accel "Del"
 
 	.menubar add cascade -label Help -menu .menubar.help -underline 0
 	menu .menubar.help -tearoff 0
 	.menubar.help add command -label "About..." -underline 0 \
-	    -command tkConsoleAbout
+		-command tkConsoleAbout
     }
 
     . configure -menu .menubar
@@ -76,7 +76,7 @@ proc tkConsoleInit {} {
     scrollbar .sb -command ".console yview"
     pack .sb -side right -fill both
     pack .console -fill both -expand 1 -side left
-    if {![string compare $tcl_platform(platform) "macintosh"]} {
+    if {[string equal $tcl_platform(platform) "macintosh"]} {
         .console configure -font {Monaco 9 normal} -highlightthickness 0
     }
 
@@ -128,20 +128,20 @@ proc tkConsoleInvoke {args} {
     set cmd ""
     if {[llength $ranges]} {
 	set pos 0
-      while {[string compare [lindex $ranges $pos] ""]} {
+	while {[string compare [lindex $ranges $pos] ""]} {
 	    set start [lindex $ranges $pos]
 	    set end [lindex $ranges [incr pos]]
 	    append cmd [.console get $start $end]
 	    incr pos
 	}
     }
-    if {![string compare $cmd ""]} {
+    if {[string equal $cmd ""]} {
 	tkConsolePrompt
     } elseif {[info complete $cmd]} {
 	.console mark set output end
 	.console tag delete input
 	set result [consoleinterp record $cmd]
-      if {[string compare $result ""]} {
+	if {[string compare $result ""]} {
 	    puts $result
 	}
 	tkConsoleHistory reset
@@ -190,7 +190,7 @@ proc tkConsoleHistory {cmd} {
 	    } else {
 		set cmd "history event $histNum"
 	    }
-          if {[string compare $cmd ""]} {
+	    if {[string compare $cmd ""]} {
 		catch {consoleinterp eval $cmd} cmd
 	    }
 	    .console delete promptEnd end
@@ -211,7 +211,7 @@ proc tkConsoleHistory {cmd} {
 # partial -	Flag to specify which prompt to print.
 
 proc tkConsolePrompt {{partial normal}} {
-    if {![string compare $partial "normal"]} {
+    if {[string equal $partial "normal"]} {
 	set temp [.console index "end - 1 char"]
 	.console mark set output end
     	if {[consoleinterp eval "info exists tcl_prompt1"]} {
@@ -269,21 +269,17 @@ proc tkConsoleBind {win} {
 	break
     }
     bind $win <Delete> {
-      if {[string compare [%W tag nextrange sel 1.0 end] ""]} {
+	if {[string compare [%W tag nextrange sel 1.0 end] ""]} {
 	    %W tag remove sel sel.first promptEnd
-	} else {
-	    if {[%W compare insert < promptEnd]} {
-		break
-	    }
+	} elseif {[%W compare insert < promptEnd]} {
+	    break
 	}
     }
     bind $win <BackSpace> {
-      if {[string compare [%W tag nextrange sel 1.0 end] ""]} {
+	if {[string compare [%W tag nextrange sel 1.0 end] ""]} {
 	    %W tag remove sel sel.first promptEnd
-	} else {
-	    if {[%W compare insert <= promptEnd]} {
-		break
-	    }
+	} elseif {[%W compare insert <= promptEnd]} {
+	    break
 	}
     }
     foreach left {Control-a Home} {
@@ -369,7 +365,7 @@ proc tkConsoleBind {win} {
     }
     bind $win <F9> {
 	eval destroy [winfo child .]
-      if {![string compare $tcl_platform(platform) "macintosh"]} {
+	if {[string equal $tcl_platform(platform) "macintosh"]} {
 	    source -rsrc Console
 	} else {
 	    source [file join $tk_library console.tcl]
@@ -417,7 +413,7 @@ proc tkConsoleBind {win} {
 # s -		The string to insert (usually just a single character)
 
 proc tkConsoleInsert {w s} {
-    if {![string compare $s ""]} {
+    if {[string equal $s ""]} {
 	return
     }
     catch {
