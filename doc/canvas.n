@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.17 2004/09/19 16:05:36 dkf Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.18 2004/10/28 10:22:51 dkf Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -1396,7 +1396,9 @@ irrelevant.
 .TP
 \fB\-smooth \fIsmoothMethod\fR
 \fIsmoothMethod\fR must have one of the forms accepted by
-\fBTk_GetBoolean\fR or a line smoothing method.  Only \fBtrue\fR and \fBraw\fR are
+\fBTk_GetBoolean\fR or a line smoothing method.
+.VS 8.5
+Only \fBtrue\fR and \fBraw\fR are
 supported in the core (with \fBbezier\fR being an alias for \fBtrue\fR), but more can be added at runtime.  If a boolean
 false value or empty string is given, no smoothing is applied.  A boolean
 truth value assumes \fBtrue\fR smoothing.
@@ -1414,6 +1416,7 @@ line segments can be venerated within a curve by making control points
 equal to their neighbouring knot points.  If the last point is a
 control point and not a knot point, the point is repeated (one or two
 times) so that it also becomes a knot point.
+.VE 8.5
 .TP
 \fB\-splinesteps \fInumber\fR
 Specifies the degree of smoothness desired for curves:  each spline
@@ -1525,6 +1528,7 @@ If this option isn't specified then it defaults to \fBmiter\fR.
 .TP
 \fB\-smooth \fIboolean\fR
 \fIBoolean\fR must have one of the forms accepted by \fBTk_GetBoolean\fR
+.VS 8.5
 or a line smoothing method. Only \fBtrue\fR and \fBraw\fR are
 supported in the core (with \fBbezier\fR being an alias for \fBtrue\fR), but more can be added at runtime.  If a boolean
 false value or empty string is given, no smoothing is applied.  A boolean
@@ -1544,6 +1548,7 @@ equal to their neighbouring knot points.  If the last point is not the
 second point of a pair of control points, the point is repeated (one or two
 times) so that it also becomes the second point of a pair of control
 points (the associated knot point will be the first control point).
+.VE 8.5
 .TP
 \fB\-splinesteps \fInumber\fR
 Specifies the degree of smoothness desired for curves:  each spline
@@ -1749,7 +1754,6 @@ See the documentation for \fBTk_CreateItemType\fR.
 In the current implementation, new canvases are not given any
 default behavior:  you'll have to execute explicit Tcl commands
 to give the canvas its behavior.
-
 .SH CREDITS
 .PP
 Tk's canvas widget is a blatant ripoff of ideas from Joel Bartlett's

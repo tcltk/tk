@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: grab.n,v 1.3 2004/06/21 21:19:41 dkf Exp $
+'\" RCS: @(#) $Id: grab.n,v 1.4 2004/10/28 10:22:51 dkf Exp $
 '\" 
 .so man.macros
 .TH grab n "" Tk "Tk Built-In Commands"
@@ -129,7 +129,7 @@ clicked.
 pack [button .b1 \-text "Click me! #1" \-command {destroy .b1}]
 pack [button .b2 \-text "Click me! #2" \-command {destroy .b2}]
 pack [button .b3 \-text "Click me! #3" \-command {destroy .b3}]
-grab .b2
+\fBgrab\fR .b2
 .CE
 
 .SH KEYWORDS

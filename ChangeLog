@@ -1,3 +1,7 @@
+2004-10-28  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/*.n: Assorted minor documentation fixes.
+
 2004-10-26  David Gravereaux <davygrvy@pobox.com>
 
 	* win/tkWinX.c:		     Signature for tkWinXCleanup needed to be
