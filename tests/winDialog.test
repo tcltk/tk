@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winDialog.test,v 1.4 2000/04/14 08:34:28 hobbs Exp $
+# RCS: @(#) $Id: winDialog.test,v 1.5 2000/11/02 01:19:42 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -97,7 +97,7 @@ test winDialog-5.1 {GetFileName: no arguments} {nt} {
 } {0}
 test winDialog-5.2 {GetFileName: one argument} {nt} {
     list [catch {tk_getOpenFile -foo} msg] $msg
-} {1 {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -parent, or -title}}
+} {1 {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -multiple, -parent, or -title}}
 test winDialog-5.4 {GetFileName: many arguments} {nt} {
     start {tk_getOpenFile -initialdir c:/ -parent . -title test -initialfile foo}
     then {
@@ -106,7 +106,7 @@ test winDialog-5.4 {GetFileName: many arguments} {nt} {
 } {0}
 test winDialog-5.5 {GetFileName: Tcl_GetIndexFromObj() != TCL_OK} {nt} {
     list [catch {tk_getOpenFile -foo bar -abc} msg] $msg
-} {1 {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -parent, or -title}}
+} {1 {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -multiple, -parent, or -title}}
 test winDialog-5.6 {GetFileName: Tcl_GetIndexFromObj() == TCL_OK} {nt} {
     start {tk_getOpenFile -title bar}
     then {
