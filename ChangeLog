@@ -1,5 +1,12 @@
+1999-03-26    <redman@scriptics.com>
+
+	* generic/tkConsole.c: Copy static strings into a Tcl_DString
+	before passing to Tcl_Eval, in case the compiler puts static
+	strings into read-only memory.
+
 1999-03-26    <suresh@scriptics.com>
-        * unix/configure.in
+
+        * unix/configure.in:
         --nameble-shared is now the default and builds Tk as a shared
         library; specify --disable-shared to build a static Tk library
         and shell.
