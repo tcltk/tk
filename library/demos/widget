@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.12 2003/08/20 23:23:34 hobbs Exp $
+# RCS: @(#) $Id: widget,v 1.13 2003/08/20 23:47:44 hobbs Exp $
 
 eval destroy [winfo child .]
 package require msgcat
@@ -316,7 +316,7 @@ proc addSeeDismiss {w show {vars {}}} {
     frame $w.sep -height 2 -relief sunken -bd 2
     grid $w.sep -columnspan 4 -row 0 -sticky ew -pady 2
     button $w.dismiss -text [mc "Dismiss"] \
-	-image ::img::refresh -compound left \
+	-image ::img::delete -compound left \
 	-command [list destroy [winfo toplevel $w]]
     button $w.code -text [mc "See Code"] \
 	-image ::img::view -compound left \
