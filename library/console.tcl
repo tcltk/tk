@@ -4,10 +4,10 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.9 2000/06/30 06:38:38 ericm Exp $
+# RCS: @(#) $Id: console.tcl,v 1.10 2000/11/02 22:55:16 hobbs Exp $
 #
-# Copyright (c) 1998-1999 Scriptics Corp.
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
+# Copyright (c) 1998-2000 Ajuba Solutions.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -476,7 +476,7 @@ proc tkConsoleExit {} {
 proc tkConsoleAbout {} {
     global tk_patchLevel
     tk_messageBox -type ok -message "[::msgcat::mc {Tcl for Windows}]
-Copyright \251 2000 Scriptics Corporation
+Copyright \251 2000 Ajuba Solutions
 
 Tcl [info patchlevel]
 Tk $tk_patchLevel"
