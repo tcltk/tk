@@ -12,7 +12,7 @@
 2004-09-16  David Gravereaux <davygrvy@pobox.com>
 
 	* win/makefile.vc : added VC7-safe environment check as used in the
-	Tcl makefile.vc
+	Tcl makefile.vc [Bug 1029349]
 
 2004-09-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
