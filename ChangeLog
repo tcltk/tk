@@ -1,3 +1,14 @@
+2002-12-07  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkInt.decls: add TkWinSetHINSTANCE decl
+	* generic/tkIntPlatDecls.h: regen
+	* generic/tkStubInit.c: regen
+	* win/tkWinInit.c (TkpInit):  While init and cleanup aren't correct
+	* win/tkWinX.c (TkWinXInit):  in DllMain, we had to specify the
+	* win/tkWin32Dll.c (DllMain): true HINSTANCE or the resources of a
+	dynamic Tk weren't being loaded correctly.  Created a new function
+	TkWinSetHINSTANCE for this purpose.
+
 2002-12-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinX.c (TkWinXInit):      Move cleanup into an exit handler
@@ -7,22 +18,19 @@
 
 2002-12-01  Mo DeJong  <mdejong@users.sourceforge.net>
 
-	* tests/event.test (_keypress, _text_ind_to_x_y):
-	Force focus to widget in _keypress method to
-	avoid problems with window managers that
-	use focus follows mouse. [Bug 526209]
+	* tests/event.test (_keypress, _text_ind_to_x_y): Force focus to
+	widget in _keypress method to avoid problems with window managers
+	that use focus follows mouse. [Bug 526209]
 
 2002-12-01  Mo DeJong  <mdejong@users.sourceforge.net>
 
-	* tests/wm.test: Add wm-transient-6.3 to
-	check that a transient remains withdrawn
-	when it is first withdrawn and then turned
-	into a transient.
+	* tests/wm.test: Add wm-transient-6.3 to check that a transient
+	remains withdrawn when it is first withdrawn and then turned into
+	a transient.
 	* unix/tkUnixWm.c:
-	* win/tkWinWm.c: Replace WM_TRANSIENT_WITHDRAWN
-	with WM_WITHDRAWN and set this flag whenever
-	a window is explicitly withdrawn. This fixes
-	the test case added above. [Bug 644356]
+	* win/tkWinWm.c: Replace WM_TRANSIENT_WITHDRAWN with WM_WITHDRAWN
+	and set this flag whenever a window is explicitly withdrawn. This
+	fixes the test case added above. [Bug 644356]
 
 2002-11-22  Jeff Hobbs  <jeffh@ActiveState.com>
 
@@ -46,18 +54,14 @@
 
 2002-11-14  Mo DeJong  <mdejong@users.sourceforge.net>
 
-	* generic/tkWindow.c (Tk_DestroyWindow,
-	DeleteWindowsExitProc): Add TkHalfdeadWindow
-	type and halfdeadWindowList to keep track
-	of windows that were only partially deallocated
-	before a call to exit. Finnish cleaning up
-	these windows in DeleteWindowsExitProc.
-	Keep track of cleanup status in Tk_DestroyWindow
-	so that a window with a Destroy binding which
-	calls exit will get fully destroyed.
-	* tests/window.test: Add Tk_DestroyWindow tests
-	for an assortment of half dead window cases.
-	[Bug 630533]
+	* generic/tkWindow.c (Tk_DestroyWindow, DeleteWindowsExitProc):
+	Add TkHalfdeadWindow type and halfdeadWindowList to keep track of
+	windows that were only partially deallocated before a call to
+	exit. Finnish cleaning up these windows in DeleteWindowsExitProc.
+	Keep track of cleanup status in Tk_DestroyWindow so that a window
+	with a Destroy binding which calls exit will get fully destroyed.
+	* tests/window.test: Add Tk_DestroyWindow tests for an assortment
+	of half dead window cases. [Bug 630533]
 
 2002-11-10  Daniel Steffen  <das@users.sourceforge.net>
 
