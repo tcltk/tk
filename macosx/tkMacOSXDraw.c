@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.1 2004/02/16 00:42:34 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.2 2004/02/23 10:49:29 das Exp $
  */
 
 #include "tkInt.h"
@@ -347,13 +347,15 @@ TkPutImage(
     GDHandle saveDevice;
     GWorldPtr destPort;
     const BitMap * destBits;
+    MacDrawable *dstDraw = (MacDrawable *) d;
     int i, j;
     BitMap bitmap;
     char *newData = NULL;
     Rect destRect, srcRect;
 
     destPort = TkMacOSXGetDrawablePort(d);
-    SetRect(&destRect, dest_x, dest_y, dest_x + width, dest_y + height);
+    SetRect(&destRect, dstDraw->xOff + dest_x, dstDraw->yOff + dest_y, 
+            dstDraw->xOff + dest_x + width, dstDraw->yOff + dest_y + height);
     SetRect(&srcRect, src_x, src_y, src_x + width, src_y + height);
 
     display->request++;
@@ -362,7 +364,13 @@ TkPutImage(
 
     TkMacOSXSetUpClippingRgn(d);
 
-    if (image->depth == 1) {
+    if (image->obdata) {
+        /* Image from XGetImage, copy from containing GWorld directly */
+        GWorldPtr srcPort = TkMacOSXGetDrawablePort((Drawable)image->obdata);
+        CopyBits(GetPortBitMapForCopyBits(srcPort),
+                GetPortBitMapForCopyBits (destPort),
+                &srcRect, &destRect, srcCopy, NULL);
+    } else if (image->depth == 1) {
 
         /* 
          * This code assumes a pixel depth of 1 
@@ -400,15 +408,15 @@ TkPutImage(
                 &srcRect, &destRect, srcCopy, NULL);
 
     } else {
-            /* Color image */
-            PixMap pixmap;
+        /* Color image */
+        PixMap pixmap;
             
         pixmap.bounds.left = 0;
         pixmap.bounds.top = 0;
         pixmap.bounds.right = (short) image->width;
         pixmap.bounds.bottom = (short) image->height;
         pixmap.pixelType = RGBDirect;
-        pixmap.pmVersion = 4;        /* 32bit clean */
+        pixmap.pmVersion = baseAddr32;        /* 32bit clean */
         pixmap.packType = 0;
         pixmap.packSize = 0;
         pixmap.hRes = 0x00480000;
@@ -416,7 +424,7 @@ TkPutImage(
         pixmap.pixelSize = 32;
         pixmap.cmpCount = 3;
         pixmap.cmpSize = 8;
-        pixmap.pixelFormat = 0;
+        pixmap.pixelFormat = k32ARGBPixelFormat;
         pixmap.pmTable = NULL;
         pixmap.pmExt = 0;
         pixmap.baseAddr = image->data;
