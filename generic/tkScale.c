@@ -17,7 +17,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.3 1999/04/16 01:51:21 stanton Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.4 1999/04/17 01:39:06 rjohnson Exp $
  */
 
 #include "tkPort.h"
@@ -272,7 +272,7 @@ Tk_ScaleObjCmd(clientData, interp, objc, objv)
     scalePtr->fromValue = 0.0;
     scalePtr->toValue = 0.0;
     scalePtr->tickInterval = 0.0;
-    scalePtr->resolution = 1;
+    scalePtr->resolution = 1.0;
     scalePtr->digits = 0;
     scalePtr->bigIncrement = 0.0;
     scalePtr->commandPtr = NULL;

@@ -7,12 +7,12 @@
  *
  * Copyright (c) 1991-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998 by Scriptics Corporation.
+ * Copyright (c) 1998-1999 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.4 1999/04/16 01:51:12 stanton Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.5 1999/04/17 01:39:05 rjohnson Exp $
  */
 
 #include "default.h"
@@ -2539,8 +2539,10 @@ FindItems(interp, canvasPtr, argc, argv, newTag, cmdName, option)
 	    return TCL_ERROR;
 	}
 	itemPtr = StartTagSearch(canvasPtr, argv[1], &search);
-	if (itemPtr->prevPtr != NULL) {
-	    DoItem(interp, itemPtr->prevPtr, uid);
+	if (itemPtr != NULL) {
+	    if (itemPtr->prevPtr != NULL) {
+		DoItem(interp, itemPtr->prevPtr, uid);
+	    }
 	}
     } else if ((c == 'c') && (strncmp(argv[0], "closest", length) == 0)) {
 	double closestDist;
