@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.94 2004/07/16 23:40:29 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.95 2004/07/20 10:23:51 das Exp $
 
 # Current Tk version;  used in various names.
 
@@ -62,6 +62,9 @@ SCRIPT_INSTALL_DIR	= $(INSTALL_ROOT)$(TK_LIBRARY)
 
 # Directory in which to install the include file tk.h:
 INCLUDE_INSTALL_DIR	= $(INSTALL_ROOT)$(includedir)
+
+# Directory in which to (optionally) install the private tk headers:
+PRIVATE_INCLUDE_INSTALL_DIR = $(INSTALL_ROOT)$(includedir)
 
 # Top-level directory for manual entries:
 MAN_INSTALL_DIR		= $(INSTALL_ROOT)$(mandir)
@@ -677,6 +680,28 @@ install-doc:
 	    done;
 	@echo "Cross-linking command (.n) docs";
 	@$(UNIX_DIR)/mkLinks $(MKLINKS_FLAGS) $(MANN_INSTALL_DIR)
+
+# Optional target to install private headers
+install-private-headers:
+	@for i in $(PRIVATE_INCLUDE_INSTALL_DIR); \
+	    do \
+	    if [ ! -d $$i ] ; then \
+		echo "Making directory $$i"; \
+		mkdir -p $$i; \
+		chmod 755 $$i; \
+		else true; \
+		fi; \
+	    done;
+	@if test ! -x $(UNIX_DIR)/install-sh; then \
+	    chmod +x $(UNIX_DIR)/install-sh; \
+	    fi
+	@echo "Installing private header files";
+	@for i in $(GENERIC_DIR)/tkInt.h $(GENERIC_DIR)/tkIntDecls.h \
+		$(GENERIC_DIR)/tkIntPlatDecls.h $(GENERIC_DIR)/tkPort.h \
+		$(UNIX_DIR)/tkUnixPort.h $(UNIX_DIR)/tkUnixInt.h ; \
+	    do \
+	    $(INSTALL_DATA) $$i $(PRIVATE_INCLUDE_INSTALL_DIR); \
+	    done;
 
 Makefile: $(UNIX_DIR)/Makefile.in
 	$(SHELL) config.status
