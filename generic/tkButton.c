@@ -11,11 +11,16 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.12 2000/11/22 01:49:37 ericm Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.13 2001/08/29 23:22:24 hobbs Exp $
  */
 
 #include "tkButton.h"
 #include "default.h"
+
+typedef struct ThreadSpecificData { 
+    int defaultsInitialized;
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Class names for buttons, indexed by one of the type values defined
@@ -607,8 +612,7 @@ Tk_RadiobuttonObjCmd(clientData, interp, objc, objv)
 
 static int
 ButtonCreate(clientData, interp, objc, objv, type)
-    ClientData clientData;	/* Option table for this widget class, or
-				 * NULL if not created yet. */
+    ClientData clientData;	/* NULL. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument values. */
@@ -619,25 +623,12 @@ ButtonCreate(clientData, interp, objc, objv, type)
     TkButton *butPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    optionTable = (Tk_OptionTable) clientData;
-    if (optionTable == NULL) {
-	Tcl_CmdInfo info;
-	char *name;
-
-	/*
-	 * We haven't created the option table for this widget class
-	 * yet.  Do it now and save the table as the clientData for
-	 * the command, so we'll have access to it in future
-	 * invocations of the command.
-	 */
-
+    if (!tsdPtr->defaultsInitialized) {
 	TkpButtonSetDefaults(optionSpecs[type]);
-	optionTable = Tk_CreateOptionTable(interp, optionSpecs[type]);
-	name = Tcl_GetString(objv[0]);
-	Tcl_GetCommandInfo(interp, name, &info);
-	info.objClientData = (ClientData) optionTable;
-	Tcl_SetCommandInfo(interp, name, &info);
+	tsdPtr->defaultsInitialized = 1;
     }
 
     if (objc < 2) {
@@ -654,6 +645,13 @@ ButtonCreate(clientData, interp, objc, objv, type)
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
+
+    /*
+     * Create the option table for this widget class.  If it has already
+     * been created, the cached pointer will be returned.
+     */
+
+    optionTable = Tk_CreateOptionTable(interp, optionSpecs[type]);
 
     Tk_SetClass(tkwin, classNames[type]);
     butPtr = TkpCreateButton(tkwin);

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.6 2001/05/21 14:07:33 tmh Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.7 2001/08/29 23:22:24 hobbs Exp $
  */
 
 #include "tkMenubutton.h"
@@ -205,8 +205,7 @@ static void		DestroyMenuButton _ANSI_ARGS_((char *memPtr));
 
 int
 Tk_MenubuttonObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Either NULL or pointer to 
-				 * option table. */
+    ClientData clientData;	/* NULL. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
@@ -214,25 +213,6 @@ Tk_MenubuttonObjCmd(clientData, interp, objc, objv)
     register TkMenuButton *mbPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
-
-    optionTable = (Tk_OptionTable) clientData;
-    if (optionTable == NULL) {
-	Tcl_CmdInfo info;
-	char *name;
-
-	/*
-	 * We haven't created the option table for this widget class
-	 * yet.  Do it now and save the table as the clientData for
-	 * the command, so we'll have access to it in future
-	 * invocations of the command.
-	 */
-
-	optionTable = Tk_CreateOptionTable(interp, optionSpecs);
-	name = Tcl_GetString(objv[0]);
-	Tcl_GetCommandInfo(interp, name, &info);
-	info.objClientData = (ClientData) optionTable;
-	Tcl_SetCommandInfo(interp, name, &info);
-    }
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
@@ -243,11 +223,18 @@ Tk_MenubuttonObjCmd(clientData, interp, objc, objv)
      * Create the new window.
      */
 
-    tkwin = Tk_CreateWindowFromPath(interp, 
-        Tk_MainWindow(interp), Tcl_GetString(objv[1]), (char *) NULL);
+    tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp),
+	    Tcl_GetString(objv[1]), (char *) NULL);
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
+
+    /*
+     * Create the option table for this widget class.  If it has already
+     * been created, the cached pointer will be returned.
+     */
+
+    optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
     Tk_SetClass(tkwin, "Menubutton");
     mbPtr = TkpCreateMenuButton(tkwin);
@@ -313,8 +300,7 @@ Tk_MenubuttonObjCmd(clientData, interp, objc, objv)
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    MenuButtonEventProc, (ClientData) mbPtr);
 
-    if (Tk_InitOptions(interp, (char *) mbPtr, optionTable, tkwin)
-            != TCL_OK) {
+    if (Tk_InitOptions(interp, (char *) mbPtr, optionTable, tkwin) != TCL_OK) {
 	Tk_DestroyWindow(mbPtr->tkwin);
 	return TCL_ERROR;
     }
@@ -324,8 +310,7 @@ Tk_MenubuttonObjCmd(clientData, interp, objc, objv)
 	return TCL_ERROR;
     }
 
-    Tcl_SetStringObj(Tcl_GetObjResult(interp), Tk_PathName(mbPtr->tkwin),
-            -1);
+    Tcl_SetStringObj(Tcl_GetObjResult(interp), Tk_PathName(mbPtr->tkwin), -1);
     return TCL_OK;
 }
 

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.21 2001/07/03 06:16:19 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.22 2001/08/29 23:22:24 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -762,7 +762,7 @@ static Tk_ClassProcs entryClass = {
 
 int
 Tk_EntryObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Either NULL or pointer to option table. */
+    ClientData clientData;	/* NULL. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];      /* Argument objects. */
@@ -770,25 +770,6 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
     register Entry *entryPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
-
-    optionTable = (Tk_OptionTable) clientData;
-    if (optionTable == NULL) {
-	Tcl_CmdInfo info;
-	char *name;
-
-	/*
-	 * We haven't created the option table for this widget class
-	 * yet.  Do it now and save the table as the clientData for
-	 * the command, so we'll have access to it in future
-	 * invocations of the command.
-	 */
-
-	optionTable = Tk_CreateOptionTable(interp, entryOptSpec);
-	name = Tcl_GetString(objv[0]);
-	Tcl_GetCommandInfo(interp, name, &info);
-	info.objClientData = (ClientData) optionTable;
-	Tcl_SetCommandInfo(interp, name, &info);
-    }
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
@@ -800,6 +781,13 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
+
+    /*
+     * Create the option table for this widget class.  If it has already
+     * been created, Tk will return the cached value.
+     */
+
+    optionTable = Tk_CreateOptionTable(interp, entryOptSpec);
 
     /*
      * Initialize the fields of the structure that won't be initialized
@@ -3696,7 +3684,7 @@ ExpandPercents(entryPtr, before, change, new, index, type, dsPtr)
 
 int
 Tk_SpinboxObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Either NULL or pointer to option table. */
+    ClientData clientData;	/* NULL. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];      /* Argument objects. */
@@ -3705,25 +3693,6 @@ Tk_SpinboxObjCmd(clientData, interp, objc, objv)
     register Spinbox *sbPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
-
-    optionTable = (Tk_OptionTable) clientData;
-    if (optionTable == NULL) {
-	Tcl_CmdInfo info;
-	char *name;
-
-	/*
-	 * We haven't created the option table for this widget class
-	 * yet.  Do it now and save the table as the clientData for
-	 * the command, so we'll have access to it in future
-	 * invocations of the command.
-	 */
-
-	optionTable = Tk_CreateOptionTable(interp, sbOptSpec);
-	name = Tcl_GetString(objv[0]);
-	Tcl_GetCommandInfo(interp, name, &info);
-	info.objClientData = (ClientData) optionTable;
-	Tcl_SetCommandInfo(interp, name, &info);
-    }
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
@@ -3735,6 +3704,13 @@ Tk_SpinboxObjCmd(clientData, interp, objc, objv)
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
+
+    /*
+     * Create the option table for this widget class.  If it has already
+     * been created, Tk will return the cached value.
+     */
+
+    optionTable = Tk_CreateOptionTable(interp, sbOptSpec);
 
     /*
      * Initialize the fields of the structure that won't be initialized

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.21 2001/07/03 06:16:19 hobbs Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.22 2001/08/29 23:22:24 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -460,7 +460,7 @@ static Tk_ClassProcs listboxClass = {
 
 int
 Tk_ListboxObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Either NULL or pointer to option table */
+    ClientData clientData;	/* NULL. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
@@ -469,18 +469,28 @@ Tk_ListboxObjCmd(clientData, interp, objc, objv)
     Tk_Window tkwin;
     ListboxOptionTables *optionTables;
 
-    optionTables = (ListboxOptionTables *)clientData;
-    if (optionTables == NULL) {
-	Tcl_CmdInfo info;
-	char *name;
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
+	return TCL_ERROR;
+    }
 
+    tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp),
+	    Tcl_GetString(objv[1]), (char *) NULL);
+    if (tkwin == NULL) {
+	return TCL_ERROR;
+    }
+
+    optionTables = (ListboxOptionTables *)
+	Tcl_GetAssocData(interp, "ListboxOptionTables", NULL);
+    if (optionTables == NULL) {
 	/*
 	 * We haven't created the option tables for this widget class yet.
 	 * Do it now and save the a pointer to them as the ClientData for
 	 * the command, so future invocations will have access to it.
 	 */
-	optionTables =
-	    (ListboxOptionTables *) ckalloc(sizeof(ListboxOptionTables));
+
+	optionTables = (ListboxOptionTables *)
+	    ckalloc(sizeof(ListboxOptionTables));
 	/* Set up an exit handler to free the optionTables struct */
 	Tcl_SetAssocData(interp, "ListboxOptionTables",
 		DestroyListboxOptionTables, (ClientData) optionTables);
@@ -490,23 +500,6 @@ Tk_ListboxObjCmd(clientData, interp, objc, objv)
 	    Tk_CreateOptionTable(interp, optionSpecs);
 	optionTables->itemAttrOptionTable =
 	    Tk_CreateOptionTable(interp, itemAttrOptionSpecs);
-
-	/* Store a pointer to the tables as the ClientData for the command */
-	name = Tcl_GetString(objv[0]);
-	Tcl_GetCommandInfo(interp, name, &info);
-	info.objClientData = (ClientData) optionTables;
-	Tcl_SetCommandInfo(interp, name, &info);
-    }
-
-    if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
-	return TCL_ERROR;
-    }
-
-    tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp),
-            Tcl_GetString(objv[1]), (char *) NULL);
-    if (tkwin == NULL) {
-	return TCL_ERROR;
     }
 
     /*
@@ -515,6 +508,8 @@ Tk_ListboxObjCmd(clientData, interp, objc, objv)
      * initialized already (e.g. resource pointers).
      */
     listPtr 				= (Listbox *) ckalloc(sizeof(Listbox));
+    memset((void *) listPtr, 0, (sizeof(Listbox)));
+
     listPtr->tkwin 			= tkwin;
     listPtr->display 			= Tk_Display(tkwin);
     listPtr->interp 			= interp;
@@ -523,56 +518,22 @@ Tk_ListboxObjCmd(clientData, interp, objc, objv)
 	    (ClientData) listPtr, ListboxCmdDeletedProc);
     listPtr->optionTable 		= optionTables->listboxOptionTable;
     listPtr->itemAttrOptionTable	= optionTables->itemAttrOptionTable;
-    listPtr->listVarName 		= NULL;
-    listPtr->listObj 			= NULL;
     listPtr->selection 			=
 	(Tcl_HashTable *) ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(listPtr->selection, TCL_ONE_WORD_KEYS);
     listPtr->itemAttrTable 		=
 	(Tcl_HashTable *) ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(listPtr->itemAttrTable, TCL_ONE_WORD_KEYS);
-    listPtr->nElements 			= 0;
-    listPtr->normalBorder 		= NULL;
-    listPtr->borderWidth 		= 0;
     listPtr->relief 			= TK_RELIEF_RAISED;
-    listPtr->highlightWidth 		= 0;
-    listPtr->highlightBgColorPtr 	= NULL;
-    listPtr->highlightColorPtr 		= NULL;
-    listPtr->inset 			= 0;
-    listPtr->tkfont 			= NULL;
-    listPtr->fgColorPtr 		= NULL;
-    listPtr->dfgColorPtr 		= NULL;
     listPtr->textGC 			= None;
-    listPtr->selBorder 			= NULL;
-    listPtr->selBorderWidth 		= 0;
     listPtr->selFgColorPtr 		= None;
     listPtr->selTextGC 			= None;
-    listPtr->width 			= 0;
-    listPtr->height 			= 0;
-    listPtr->lineHeight 		= 0;
-    listPtr->topIndex 			= 0;
     listPtr->fullLines 			= 1;
-    listPtr->partialLine 		= 0;
-    listPtr->setGrid 			= 0;
-    listPtr->maxWidth 			= 0;
     listPtr->xScrollUnit 		= 1;
-    listPtr->xOffset 			= 0;
-    listPtr->selectMode 		= NULL;
-    listPtr->numSelected 		= 0;
-    listPtr->selectAnchor 		= 0;
     listPtr->exportSelection 		= 1;
-    listPtr->active 			= 0;
-    listPtr->scanMarkX 			= 0;
-    listPtr->scanMarkY 			= 0;
-    listPtr->scanMarkXOffset 		= 0;
-    listPtr->scanMarkYIndex 		= 0;
     listPtr->cursor 			= None;
-    listPtr->takeFocus 			= NULL;
-    listPtr->xScrollCmd 		= NULL;
-    listPtr->yScrollCmd 		= NULL;
     listPtr->state			= STATE_NORMAL;
     listPtr->gray			= None;
-    listPtr->flags 			= 0;
 
     /*
      * Keep a hold of the associated tkwin until we destroy the listbox,

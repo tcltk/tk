@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSquare.c,v 1.3 1999/04/16 01:51:22 stanton Exp $
+ * RCS: @(#) $Id: tkSquare.c,v 1.4 2001/08/29 23:22:24 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -60,7 +60,7 @@ typedef struct {
  * Information used for argv parsing.
  */
 
-static Tk_OptionSpec configSpecs[] = {
+static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	    "#d9d9d9", Tk_Offset(Square, bgBorderPtr), -1, 0,
 	    (ClientData) "white"},
@@ -126,32 +126,14 @@ static int		SquareWidgetCmd _ANSI_ARGS_((ClientData clientData,
 
 int
 SquareObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Main window associated with
-				 * interpreter. */
+    ClientData clientData;	/* NULL. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int objc;			/* Number of arguments. */
     Tcl_Obj * CONST objv[];	/* Argument objects. */
 {
     Square *squarePtr;
     Tk_Window tkwin;
-    Tk_OptionTable optionTable = (Tk_OptionTable) clientData;
-    Tcl_CmdInfo info;
-    char *commandName;
-
-    if (optionTable == NULL) {
-	/*
-	 * The first time this procedure is invoked, optionTable will
-	 * be NULL.  We then create the option table from the template
-	 * and store the table pointer as the command's clinical so
-	 * we'll have easy access to it in the future.
-	 */
-
-	optionTable = Tk_CreateOptionTable(interp, configSpecs);
-	commandName = Tcl_GetStringFromObj(objv[0], (int *) NULL);
-	Tcl_GetCommandInfo(interp, commandName, &info);
-	info.clientData = (ClientData) optionTable;
-	Tcl_SetCommandInfo(interp, commandName, &info);
-    }
+    Tk_OptionTable optionTable;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
@@ -166,29 +148,31 @@ SquareObjCmd(clientData, interp, objc, objv)
     Tk_SetClass(tkwin, "Square");
 
     /*
-     * Allocate and initialize the widget record.
+     * Create the option table for this widget class.  If it has
+     * already been created, the refcount will get bumped and just
+     * the pointer will be returned.  The refcount getting bumped
+     * does not concern us, because Tk will ensure the table is
+     * deleted when the interpreter is destroyed.
      */
 
-    squarePtr = (Square *) ckalloc(sizeof(Square));
-    squarePtr->tkwin = tkwin;
-    squarePtr->display = Tk_Display(tkwin);
-    squarePtr->interp = interp;
-    squarePtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    optionTable = Tk_CreateOptionTable(interp, optionSpecs);
+
+    /*
+     * Allocate and initialize the widget record.  The memset allows
+     * us to set just the non-NULL/0 items.
+     */
+
+    squarePtr			= (Square *) ckalloc(sizeof(Square));
+    memset((void *) squarePtr, 0, (sizeof(Square)));
+
+    squarePtr->tkwin		= tkwin;
+    squarePtr->display		= Tk_Display(tkwin);
+    squarePtr->interp		= interp;
+    squarePtr->widgetCmd	= Tcl_CreateObjCommand(interp,
 	    Tk_PathName(squarePtr->tkwin), SquareWidgetCmd,
 	    (ClientData) squarePtr, SquareDeletedProc);
-    squarePtr->xPtr = NULL;
-    squarePtr->yPtr = NULL;
-    squarePtr->x = 0;
-    squarePtr->y = 0;
-    squarePtr->sizeObjPtr = NULL;
-    squarePtr->borderWidthPtr = NULL;
-    squarePtr->bgBorderPtr = NULL;
-    squarePtr->fgBorderPtr = NULL;
-    squarePtr->reliefPtr = NULL;
-    squarePtr->gc = None;
-    squarePtr->doubleBufferPtr = NULL;
-    squarePtr->updatePending = 0;
-    squarePtr->optionTable = optionTable;
+    squarePtr->gc		= None;
+    squarePtr->optionTable	= optionTable;
 
     if (Tk_InitOptions(interp, (char *) squarePtr, optionTable, tkwin)
 	    != TCL_OK) {
@@ -207,8 +191,8 @@ SquareObjCmd(clientData, interp, objc, objv)
 	goto error;
     }
 
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(squarePtr->tkwin),
-	    -1));
+    Tcl_SetObjResult(interp,
+	    Tcl_NewStringObj(Tk_PathName(squarePtr->tkwin), -1));
     return TCL_OK;
 
 error:
