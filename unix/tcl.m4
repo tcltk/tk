@@ -284,6 +284,7 @@ AC_DEFUN(SC_LOAD_TKCONFIG, [
         AC_MSG_RESULT([could not find $TK_BIN_DIR/tkConfig.sh])
     fi
 
+    AC_SUBST(TK_VERSION)
     AC_SUBST(TK_BIN_DIR)
     AC_SUBST(TK_SRC_DIR)
     AC_SUBST(TK_LIB_FILE)
@@ -330,6 +331,49 @@ AC_DEFUN(SC_ENABLE_SHARED, [
 	AC_MSG_RESULT([static])
 	SHARED_BUILD=0
 	AC_DEFINE(STATIC_BUILD)
+    fi
+])
+
+#------------------------------------------------------------------------
+# SC_ENABLE_FRAMEWORK --
+#
+#	Allows the building of shared libraries into frameworks
+#
+# Arguments:
+#	none
+#	
+# Results:
+#
+#	Adds the following arguments to configure:
+#		--enable-framework=yes|no
+#
+#	Sets the following vars:
+#		FRAMEWORK_BUILD	Value of 1 or 0
+#------------------------------------------------------------------------
+
+AC_DEFUN(SC_ENABLE_FRAMEWORK, [
+    AC_MSG_CHECKING([how to package libraries])
+    AC_ARG_ENABLE(framework,
+	[  --enable-framework      package shared libraries in frameworks [--disable-framework]],
+	[tcl_ok=$enableval], [tcl_ok=no])
+
+    if test "${enable_framework+set}" = set; then
+	enableval="$enable_framework"
+	tcl_ok=$enableval
+    else
+	tcl_ok=no
+    fi
+
+    if test "$tcl_ok" = "yes" ; then
+	AC_MSG_RESULT([framework])
+	FRAMEWORK_BUILD=1
+	if test "${SHARED_BUILD}" = "0" ; then
+	    AC_MSG_WARN("Frameworks can only be built if --enable-shared is yes")
+	    FRAMEWORK_BUILD=0
+	fi
+    else
+	AC_MSG_RESULT([standard shared library])
+	FRAMEWORK_BUILD=0
     fi
 ])
 
@@ -549,6 +593,42 @@ AC_DEFUN(SC_CONFIG_MANPAGES, [
 	AC_SUBST(MKLINKS_FLAGS)
 ])
 
+#------------------------------------------------------------------------
+# SC_ENABLE_MEMDEBUG --
+#
+#	Specify if the memory debugging code should be used
+#
+# Arguments:
+#	none
+#	
+#	Requires the following vars to be set in the Makefile:
+#		None.
+#	
+# Results:
+#
+#	Adds the following arguments to configure:
+#		--enable-memdebug
+#
+#	Defines the following @vars@:
+#		MEM_DEBUG_FLAGS	Sets to -DTCL_MEM_DEBUG if true
+#				Sets to "" if false
+#
+#------------------------------------------------------------------------
+
+AC_DEFUN(SC_ENABLE_MEMDEBUG, [
+    AC_MSG_CHECKING([for build with memory debugging])
+    AC_ARG_ENABLE(memdebug, [  --enable-memdebug       build with memory debugging [--disable-memdebug]],    [tcl_ok=$enableval], [tcl_ok=no])
+    if test "$tcl_ok" = "yes"; then
+	MEM_DEBUG_FLAGS=-DTCL_MEM_DEBUG
+	AC_MSG_RESULT([yes])
+    else
+	MEM_DEBUG_FLAGS=""
+	AC_MSG_RESULT([no])
+    fi
+    AC_SUBST(MEM_DEBUG_FLAGS)
+])
+
+
 #--------------------------------------------------------------------
 # SC_CONFIG_CFLAGS
 #
@@ -610,6 +690,13 @@ AC_DEFUN(SC_CONFIG_MANPAGES, [
 #       SHLIB_SUFFIX -  Suffix to use for the names of dynamically loadable
 #                       extensions.  An empty string means we don't know how
 #                       to use shared libraries on this platform.
+# TCL_SHLIB_LD_EXTRAS - Additional element which are added to SHLIB_LD_LIBS
+#  TK_SHLIB_LD_EXTRAS   for the build of Tcl and Tk, but not recorded in the
+#                       tclConfig.sh, since they are only used for the build
+#                       of Tcl and Tk. 
+#                       Examples: MacOS X records the library version and
+#                       compatibility version in the shared library.  But
+#                       of course the Tcl version of this is only used for Tcl.
 #       LIB_SUFFIX -    Specifies everything that comes after the "libfoo"
 #                       in a static or shared library name, using the $VERSION variable
 #                       to put the version in the right place.  This is used
@@ -720,6 +807,8 @@ dnl FIXME: Replace AC_CHECK_PROG with AC_CHECK_TOOL once cross compiling is fixe
 dnl AC_CHECK_TOOL(AR, ar, :)
     AC_CHECK_PROG(AR, ar, ar)
     STLIB_LD='${AR} cr'
+    LD_LIBRARY_PATH_VAR="LD_LIBRARY_PATH"
+    PLAT_OBJS=""
     case $system in
 	AIX-5.*)
 	    if test "${TCL_THREADS}" = "1" -a "$GCC" != "yes" ; then
@@ -750,6 +839,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	        CC_SEARCH_FLAGS='-R ${LIB_RUNTIME_DIR}'
 	    fi
 	    LD_SEARCH_FLAGS='-R ${LIB_RUNTIME_DIR}'
+	    LD_LIBRARY_PATH_VAR="LIBPATH"
 
 	    # Check to enable 64-bit flags for compiler/linker
 	    if test "$do64bit" = "yes" ; then
@@ -780,6 +870,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    LDFLAGS=""
 	    CC_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
 	    LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
+	    LD_LIBRARY_PATH_VAR="LIBPATH"
 	    TCL_NEEDS_EXP_FILE=1
 	    TCL_EXPORT_FILE_SUFFIX='${VERSION}\$\{DBGX\}.exp'
 
@@ -866,6 +957,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 		LDFLAGS="-Wl,-E"
 		CC_SEARCH_FLAGS='-Wl,+s,+b,${LIB_RUNTIME_DIR}:.'
 		LD_SEARCH_FLAGS='+s +b ${LIB_RUNTIME_DIR}:.'
+		LD_LIBRARY_PATH_VAR="SHLIB_PATH"
 	    fi
 
 	    # Check to enable 64-bit flags for compiler/linker
@@ -891,6 +983,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 		LDFLAGS="-Wl,-E"
 		CC_SEARCH_FLAGS='-Wl,+s,+b,${LIB_RUNTIME_DIR}:.'
 		LD_SEARCH_FLAGS='+s +b ${LIB_RUNTIME_DIR}:.'
+		LD_LIBRARY_PATH_VAR="SHLIB_PATH"
 	    fi
 	    ;;
 	IRIX-4.*)
@@ -1126,16 +1219,22 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	Rhapsody-*|Darwin-*)
 	    SHLIB_CFLAGS="-fno-common"
 	    SHLIB_LD="cc -dynamiclib \${LDFLAGS}"
-	    SHLIB_LD_FLAGS="-compatibility_version \${MAJOR_VERSION} -current_version \${VERSION} -install_name \${LIB_RUNTIME_DIR}/\${LIB_FILE} -prebind -seg1addr a000000"
+	    TCL_SHLIB_LD_EXTRAS="-compatibility_version ${TCL_VERSION} -current_version \${VERSION} -install_name \${LIB_RUNTIME_DIR}/\${TCL_LIB_FILE} -prebind -seg1addr 0xa000000"
+	    TK_SHLIB_LD_EXTRAS="-compatibility_version ${TK_VERSION} -current_version \${VERSION} -install_name \${LIB_RUNTIME_DIR}/\${TK_LIB_FILE} -prebind -seg1addr 0xb000000"
 	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".dylib"
 	    DL_OBJS="tclLoadDyld.o"
+	    PLAT_OBJS="tclMacOSXBundle.o"
 	    DL_LIBS=""
 	    LDFLAGS="-prebind"
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
-	    CFLAGS_OPTIMIZE="-O2"
-	    EXTRA_CFLAGS='-DTCL_DEFAULT_ENCODING=\"utf-8\"'
+	    CFLAGS_OPTIMIZE="-Os"
+	    LD_LIBRARY_PATH_VAR="DYLD_LIBRARY_PATH"
+	    # for compatibility with autoconf vers 2.13 :
+	    HACK=""
+	    EXTRA_CFLAGS="-DMA${HACK}C_OSX_TCL -DHAVE_CFBUNDLE -DTCL_DEFAULT_ENCODING=\\\"utf-8\\\""
+	    LIBS="$LIBS -framework CoreFoundation"
 	    ;;
 	NEXTSTEP-*)
 	    SHLIB_CFLAGS=""
@@ -1550,7 +1649,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 
     if test "${SHARED_BUILD}" = "1" && test "${SHLIB_SUFFIX}" != "" ; then
         LIB_SUFFIX=${SHARED_LIB_SUFFIX}
-        MAKE_LIB='${SHLIB_LD} -o [$]@ ${SHLIB_LD_FLAGS} ${OBJS} ${SHLIB_LD_LIBS} ${LD_SEARCH_FLAGS}'
+        MAKE_LIB='${SHLIB_LD} -o [$]@ ${SHLIB_LD_FLAGS} ${OBJS} ${SHLIB_LD_LIBS} ${TCL_SHLIB_LD_EXTRAS} ${TK_SHLIB_LD_EXTRAS} ${LD_SEARCH_FLAGS}'
         INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) $(LIB_INSTALL_DIR)/$(LIB_FILE)'
     else
         LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}
@@ -1591,6 +1690,8 @@ dnl        esac
 
     AC_SUBST(DL_LIBS)
 
+    AC_SUBST(DL_OBJS)
+    AC_SUBST(PLAT_OBJS)
     AC_SUBST(CFLAGS)
     AC_SUBST(CFLAGS_DEBUG)
     AC_SUBST(CFLAGS_OPTIMIZE)
@@ -1605,6 +1706,8 @@ dnl        esac
 
     AC_SUBST(STLIB_LD)
     AC_SUBST(SHLIB_LD)
+    AC_SUBST(TCL_SHLIB_LD_EXTRAS)
+    AC_SUBST(TK_SHLIB_LD_EXTRAS)
     AC_SUBST(SHLIB_LD_FLAGS)
     AC_SUBST(SHLIB_LD_LIBS)
     AC_SUBST(SHLIB_CFLAGS)
