@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.13 2000/07/17 21:07:54 ericm Exp $
-# $Id: bgerror.tcl,v 1.13 2000/07/17 21:07:54 ericm Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.13.2.1 2002/04/06 01:02:01 hobbs Exp $
+# $Id: bgerror.tcl,v 1.13.2.1 2002/04/06 01:02:01 hobbs Exp $
 
 option add *ErrorDialog.function.text [::msgcat::mc "Save To Log"] \
 	widgetDefault
@@ -73,7 +73,7 @@ proc ::tk::dialog::error::Destroy {w} {
     }
 }
 
-# bgerror --
+# ::bgerror --
 # This is the default version of bgerror. 
 # It tries to execute tkerror, if that fails it posts a dialog box containing
 # the error message and gives the user a chance to ask to see a stack
@@ -81,7 +81,7 @@ proc ::tk::dialog::error::Destroy {w} {
 # Arguments:
 # err -			The error message.
 
-proc bgerror err {
+proc ::bgerror err {
     global errorInfo tcl_platform
     set butvar ::tk::dialog::error::button
 
@@ -143,7 +143,7 @@ proc bgerror err {
     wm transient .bgerrorDialog .bgerrorDialog
 
     if {$tcl_platform(platform) == "macintosh"} {
-	unsupported1 style .bgerrorDialog dBoxProc
+	::tk::unsupported::MacWindowStyle style .bgerrorDialog dBoxProc
     }
 
     frame .bgerrorDialog.bot
@@ -172,6 +172,7 @@ proc bgerror err {
     pack $W.text -side left -expand yes -fill both
     $W.text insert 0.0 "$err\n$info"
     $W.text mark set insert 0.0
+    bind $W.text <ButtonPress-1> { focus %W }
     $W.text configure -state disabled
 
     # 2. Fill the top part with bitmap and message
@@ -237,10 +238,10 @@ proc bgerror err {
     set parent [winfo parent	.bgerrorDialog]
     set width  [winfo reqwidth	.bgerrorDialog]
     set height [winfo reqheight	.bgerrorDialog]
-    set x [expr ([winfo screenwidth .bgerrorDialog]  - $width )/2 - \
-	    [winfo vrootx $parent]]
-    set y [expr ([winfo screenheight .bgerrorDialog] - $height)/2 - \
-	    [winfo vrooty $parent]]
+    set x [expr {([winfo screenwidth .bgerrorDialog]  - $width )/2 - \
+	    [winfo vrootx $parent]}]
+    set y [expr {([winfo screenheight .bgerrorDialog] - $height)/2 - \
+	    [winfo vrooty $parent]}]
     .bgerrorDialog configure -width $width
     wm geometry .bgerrorDialog +$x+$y
     wm deiconify .bgerrorDialog
@@ -261,7 +262,7 @@ proc bgerror err {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    tkwait variable $butvar
+    vwait $butvar
     set button $::tk::dialog::error::button; # Save a copy...
     catch {focus $oldFocus}
     catch {destroy .bgerrorDialog}

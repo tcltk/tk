@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: listbox.tcl,v 1.11 2000/03/24 19:38:57 ericm Exp $
+# RCS: @(#) $Id: listbox.tcl,v 1.11.4.1 2002/04/06 01:02:01 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -13,7 +13,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 #--------------------------------------------------------------------------
-# tkPriv elements used in this file:
+# tk::Priv elements used in this file:
 #
 # afterId -		Token returned by "after" for autoscanning.
 # listboxPrev -		The last element to be selected or deselected
@@ -35,7 +35,7 @@
 
 bind Listbox <1> {
     if {[winfo exists %W]} {
-	tkListboxBeginSelect %W [%W index @%x,%y]
+	tk::ListboxBeginSelect %W [%W index @%x,%y]
     }
 }
 
@@ -48,40 +48,40 @@ bind Listbox <Double-1> {
 }
 
 bind Listbox <B1-Motion> {
-    set tkPriv(x) %x
-    set tkPriv(y) %y
-    tkListboxMotion %W [%W index @%x,%y]
+    set tk::Priv(x) %x
+    set tk::Priv(y) %y
+    tk::ListboxMotion %W [%W index @%x,%y]
 }
 bind Listbox <ButtonRelease-1> {
-    tkCancelRepeat
+    tk::CancelRepeat
     %W activate @%x,%y
 }
 bind Listbox <Shift-1> {
-    tkListboxBeginExtend %W [%W index @%x,%y]
+    tk::ListboxBeginExtend %W [%W index @%x,%y]
 }
 bind Listbox <Control-1> {
-    tkListboxBeginToggle %W [%W index @%x,%y]
+    tk::ListboxBeginToggle %W [%W index @%x,%y]
 }
 bind Listbox <B1-Leave> {
-    set tkPriv(x) %x
-    set tkPriv(y) %y
-    tkListboxAutoScan %W
+    set tk::Priv(x) %x
+    set tk::Priv(y) %y
+    tk::ListboxAutoScan %W
 }
 bind Listbox <B1-Enter> {
-    tkCancelRepeat
+    tk::CancelRepeat
 }
 
 bind Listbox <Up> {
-    tkListboxUpDown %W -1
+    tk::ListboxUpDown %W -1
 }
 bind Listbox <Shift-Up> {
-    tkListboxExtendUpDown %W -1
+    tk::ListboxExtendUpDown %W -1
 }
 bind Listbox <Down> {
-    tkListboxUpDown %W 1
+    tk::ListboxUpDown %W 1
 }
 bind Listbox <Shift-Down> {
-    tkListboxExtendUpDown %W 1
+    tk::ListboxExtendUpDown %W 1
 }
 bind Listbox <Left> {
     %W xview scroll -1 units
@@ -123,7 +123,7 @@ bind Listbox <Control-Home> {
     event generate %W <<ListboxSelect>>
 }
 bind Listbox <Shift-Control-Home> {
-    tkListboxDataExtend %W 0
+    tk::ListboxDataExtend %W 0
 }
 bind Listbox <Control-End> {
     %W activate end
@@ -133,7 +133,7 @@ bind Listbox <Control-End> {
     event generate %W <<ListboxSelect>>
 }
 bind Listbox <Shift-Control-End> {
-    tkListboxDataExtend %W [%W index end]
+    tk::ListboxDataExtend %W [%W index end]
 }
 bind Listbox <<Copy>> {
     if {[string equal [selection own -displayof %W] "%W"]} {
@@ -142,22 +142,22 @@ bind Listbox <<Copy>> {
     }
 }
 bind Listbox <space> {
-    tkListboxBeginSelect %W [%W index active]
+    tk::ListboxBeginSelect %W [%W index active]
 }
 bind Listbox <Select> {
-    tkListboxBeginSelect %W [%W index active]
+    tk::ListboxBeginSelect %W [%W index active]
 }
 bind Listbox <Control-Shift-space> {
-    tkListboxBeginExtend %W [%W index active]
+    tk::ListboxBeginExtend %W [%W index active]
 }
 bind Listbox <Shift-Select> {
-    tkListboxBeginExtend %W [%W index active]
+    tk::ListboxBeginExtend %W [%W index active]
 }
 bind Listbox <Escape> {
-    tkListboxCancel %W
+    tk::ListboxCancel %W
 }
 bind Listbox <Control-slash> {
-    tkListboxSelectAll %W
+    tk::ListboxSelectAll %W
 }
 bind Listbox <Control-backslash> {
     if {[string compare [%W cget -selectmode] "browse"]} {
@@ -200,7 +200,7 @@ if {[string equal "unix" $tcl_platform(platform)]} {
     }
 }
 
-# tkListboxBeginSelect --
+# ::tk::ListboxBeginSelect --
 #
 # This procedure is typically invoked on button-1 presses.  It begins
 # the process of making a selection in the listbox.  Its exact behavior
@@ -212,8 +212,8 @@ if {[string equal "unix" $tcl_platform(platform)]} {
 # el -		The element for the selection operation (typically the
 #		one under the pointer).  Must be in numerical form.
 
-proc tkListboxBeginSelect {w el} {
-    global tkPriv
+proc ::tk::ListboxBeginSelect {w el} {
+    variable ::tk::Priv
     if {[string equal [$w cget -selectmode] "multiple"]} {
 	if {[$w selection includes $el]} {
 	    $w selection clear $el
@@ -224,13 +224,13 @@ proc tkListboxBeginSelect {w el} {
 	$w selection clear 0 end
 	$w selection set $el
 	$w selection anchor $el
-	set tkPriv(listboxSelection) {}
-	set tkPriv(listboxPrev) $el
+	set Priv(listboxSelection) {}
+	set Priv(listboxPrev) $el
     }
     event generate $w <<ListboxSelect>>
 }
 
-# tkListboxMotion --
+# ::tk::ListboxMotion --
 #
 # This procedure is called to process mouse motion events while
 # button 1 is down.  It may move or extend the selection, depending
@@ -240,9 +240,9 @@ proc tkListboxBeginSelect {w el} {
 # w -		The listbox widget.
 # el -		The element under the pointer (must be a number).
 
-proc tkListboxMotion {w el} {
-    global tkPriv
-    if {$el == $tkPriv(listboxPrev)} {
+proc ::tk::ListboxMotion {w el} {
+    variable ::tk::Priv
+    if {$el == $Priv(listboxPrev)} {
 	return
     }
     set anchor [$w index anchor]
@@ -250,11 +250,11 @@ proc tkListboxMotion {w el} {
 	browse {
 	    $w selection clear 0 end
 	    $w selection set $el
-	    set tkPriv(listboxPrev) $el
+	    set Priv(listboxPrev) $el
 	    event generate $w <<ListboxSelect>>
 	}
 	extended {
-	    set i $tkPriv(listboxPrev)
+	    set i $Priv(listboxPrev)
 	    if {[string equal {} $i]} {
 		set i $el
 		$w selection set $el
@@ -266,28 +266,28 @@ proc tkListboxMotion {w el} {
 		$w selection clear $i $el
 		$w selection clear anchor $el
 	    }
-	    if {![info exists tkPriv(listboxSelection)]} {
-		set tkPriv(listboxSelection) [$w curselection]
+	    if {![info exists Priv(listboxSelection)]} {
+		set Priv(listboxSelection) [$w curselection]
 	    }
 	    while {($i < $el) && ($i < $anchor)} {
-		if {[lsearch $tkPriv(listboxSelection) $i] >= 0} {
+		if {[lsearch $Priv(listboxSelection) $i] >= 0} {
 		    $w selection set $i
 		}
 		incr i
 	    }
 	    while {($i > $el) && ($i > $anchor)} {
-		if {[lsearch $tkPriv(listboxSelection) $i] >= 0} {
+		if {[lsearch $Priv(listboxSelection) $i] >= 0} {
 		    $w selection set $i
 		}
 		incr i -1
 	    }
-	    set tkPriv(listboxPrev) $el
+	    set Priv(listboxPrev) $el
 	    event generate $w <<ListboxSelect>>
 	}
     }
 }
 
-# tkListboxBeginExtend --
+# ::tk::ListboxBeginExtend --
 #
 # This procedure is typically invoked on shift-button-1 presses.  It
 # begins the process of extending a selection in the listbox.  Its
@@ -299,18 +299,18 @@ proc tkListboxMotion {w el} {
 # el -		The element for the selection operation (typically the
 #		one under the pointer).  Must be in numerical form.
 
-proc tkListboxBeginExtend {w el} {
+proc ::tk::ListboxBeginExtend {w el} {
     if {[string equal [$w cget -selectmode] "extended"]} {
 	if {[$w selection includes anchor]} {
-	    tkListboxMotion $w $el
+	    ListboxMotion $w $el
 	} else {
 	    # No selection yet; simulate the begin-select operation.
-	    tkListboxBeginSelect $w $el
+	    ListboxBeginSelect $w $el
 	}
     }
 }
 
-# tkListboxBeginToggle --
+# ::tk::ListboxBeginToggle --
 #
 # This procedure is typically invoked on control-button-1 presses.  It
 # begins the process of toggling a selection in the listbox.  Its
@@ -322,11 +322,11 @@ proc tkListboxBeginExtend {w el} {
 # el -		The element for the selection operation (typically the
 #		one under the pointer).  Must be in numerical form.
 
-proc tkListboxBeginToggle {w el} {
-    global tkPriv
+proc ::tk::ListboxBeginToggle {w el} {
+    variable ::tk::Priv
     if {[string equal [$w cget -selectmode] "extended"]} {
-	set tkPriv(listboxSelection) [$w curselection]
-	set tkPriv(listboxPrev) $el
+	set Priv(listboxSelection) [$w curselection]
+	set Priv(listboxPrev) $el
 	$w selection anchor $el
 	if {[$w selection includes $el]} {
 	    $w selection clear $el
@@ -337,7 +337,7 @@ proc tkListboxBeginToggle {w el} {
     }
 }
 
-# tkListboxAutoScan --
+# ::tk::ListboxAutoScan --
 # This procedure is invoked when the mouse leaves an entry window
 # with button 1 down.  It scrolls the window up, down, left, or
 # right, depending on where the mouse left the window, and reschedules
@@ -347,11 +347,11 @@ proc tkListboxBeginToggle {w el} {
 # Arguments:
 # w -		The entry window.
 
-proc tkListboxAutoScan {w} {
-    global tkPriv
+proc ::tk::ListboxAutoScan {w} {
+    variable ::tk::Priv
     if {![winfo exists $w]} return
-    set x $tkPriv(x)
-    set y $tkPriv(y)
+    set x $Priv(x)
+    set y $Priv(y)
     if {$y >= [winfo height $w]} {
 	$w yview scroll 1 units
     } elseif {$y < 0} {
@@ -363,11 +363,11 @@ proc tkListboxAutoScan {w} {
     } else {
 	return
     }
-    tkListboxMotion $w [$w index @$x,$y]
-    set tkPriv(afterId) [after 50 [list tkListboxAutoScan $w]]
+    ListboxMotion $w [$w index @$x,$y]
+    set Priv(afterId) [after 50 [list tk::ListboxAutoScan $w]]
 }
 
-# tkListboxUpDown --
+# ::tk::ListboxUpDown --
 #
 # Moves the location cursor (active element) up or down by one element,
 # and changes the selection if we're in browse or extended selection
@@ -377,8 +377,8 @@ proc tkListboxAutoScan {w} {
 # w -		The listbox widget.
 # amount -	+1 to move down one item, -1 to move back one item.
 
-proc tkListboxUpDown {w amount} {
-    global tkPriv
+proc ::tk::ListboxUpDown {w amount} {
+    variable ::tk::Priv
     $w activate [expr {[$w index active] + $amount}]
     $w see active
     switch [$w cget -selectmode] {
@@ -391,14 +391,14 @@ proc tkListboxUpDown {w amount} {
 	    $w selection clear 0 end
 	    $w selection set active
 	    $w selection anchor active
-	    set tkPriv(listboxPrev) [$w index active]
-	    set tkPriv(listboxSelection) {}
+	    set Priv(listboxPrev) [$w index active]
+	    set Priv(listboxSelection) {}
 	    event generate $w <<ListboxSelect>>
 	}
     }
 }
 
-# tkListboxExtendUpDown --
+# ::tk::ListboxExtendUpDown --
 #
 # Does nothing unless we're in extended selection mode;  in this
 # case it moves the location cursor (active element) up or down by
@@ -408,22 +408,22 @@ proc tkListboxUpDown {w amount} {
 # w -		The listbox widget.
 # amount -	+1 to move down one item, -1 to move back one item.
 
-proc tkListboxExtendUpDown {w amount} {
+proc ::tk::ListboxExtendUpDown {w amount} {
+    variable ::tk::Priv
     if {[string compare [$w cget -selectmode] "extended"]} {
 	return
     }
     set active [$w index active]
-    if {![info exists tkPriv(listboxSelection)]} {
-	global tkPriv
+    if {![info exists Priv(listboxSelection)]} {
 	$w selection set $active
-	set tkPriv(listboxSelection) [$w curselection]
+	set Priv(listboxSelection) [$w curselection]
     }
     $w activate [expr {$active + $amount}]
     $w see active
-    tkListboxMotion $w [$w index active]
+    ListboxMotion $w [$w index active]
 }
 
-# tkListboxDataExtend
+# ::tk::ListboxDataExtend
 #
 # This procedure is called for key-presses such as Shift-KEndData.
 # If the selection mode isn't multiple or extend then it does nothing.
@@ -434,13 +434,13 @@ proc tkListboxExtendUpDown {w amount} {
 # w -		The listbox widget.
 # el -		An integer element number.
 
-proc tkListboxDataExtend {w el} {
+proc ::tk::ListboxDataExtend {w el} {
     set mode [$w cget -selectmode]
     if {[string equal $mode "extended"]} {
 	$w activate $el
 	$w see $el
         if {[$w selection includes anchor]} {
-	    tkListboxMotion $w $el
+	    ListboxMotion $w $el
 	}
     } elseif {[string equal $mode "multiple"]} {
 	$w activate $el
@@ -448,7 +448,7 @@ proc tkListboxDataExtend {w el} {
     }
 }
 
-# tkListboxCancel
+# ::tk::ListboxCancel
 #
 # This procedure is invoked to cancel an extended selection in
 # progress.  If there is an extended selection in progress, it
@@ -458,13 +458,13 @@ proc tkListboxDataExtend {w el} {
 # Arguments:
 # w -		The listbox widget.
 
-proc tkListboxCancel w {
-    global tkPriv
+proc ::tk::ListboxCancel w {
+    variable ::tk::Priv
     if {[string compare [$w cget -selectmode] "extended"]} {
 	return
     }
     set first [$w index anchor]
-    set last $tkPriv(listboxPrev)
+    set last $Priv(listboxPrev)
     if { [string equal $last ""] } {
 	# Not actually doing any selection right now
 	return
@@ -476,7 +476,7 @@ proc tkListboxCancel w {
     }
     $w selection clear $first $last
     while {$first <= $last} {
-	if {[lsearch $tkPriv(listboxSelection) $first] >= 0} {
+	if {[lsearch $Priv(listboxSelection) $first] >= 0} {
 	    $w selection set $first
 	}
 	incr first
@@ -484,7 +484,7 @@ proc tkListboxCancel w {
     event generate $w <<ListboxSelect>>
 }
 
-# tkListboxSelectAll
+# ::tk::ListboxSelectAll
 #
 # This procedure is invoked to handle the "select all" operation.
 # For single and browse mode, it just selects the active element.
@@ -493,7 +493,7 @@ proc tkListboxCancel w {
 # Arguments:
 # w -		The listbox widget.
 
-proc tkListboxSelectAll w {
+proc ::tk::ListboxSelectAll w {
     set mode [$w cget -selectmode]
     if {[string equal $mode "single"] || [string equal $mode "browse"]} {
 	$w selection clear 0 end

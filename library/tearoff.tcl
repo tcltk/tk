@@ -2,7 +2,7 @@
 #
 # This file contains procedures that implement tear-off menus.
 #
-# RCS: @(#) $Id: tearoff.tcl,v 1.6 2000/01/06 02:22:24 hobbs Exp $
+# RCS: @(#) $Id: tearoff.tcl,v 1.6.4.1 2002/04/06 01:02:02 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -11,7 +11,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
 
-# tkTearoffMenu --
+# ::tk::TearoffMenu --
 # Given the name of a menu, this procedure creates a torn-off menu
 # that is identical to the given menu (including nested submenus).
 # The new torn-off menu exists as a toplevel window managed by the
@@ -23,7 +23,7 @@
 # x -			x coordinate where window is created
 # y -			y coordinate where window is created
 
-proc tkTearOffMenu {w {x 0} {y 0}} {
+proc ::tk::TearOffMenu {w {x 0} {y 0}} {
     # Find a unique name to use for the torn-off menu.  Find the first
     # ancestor of w that is a toplevel but not a menu, and use this as
     # the parent of the new menu.  This guarantees that the torn off
@@ -80,12 +80,12 @@ proc tkTearOffMenu {w {x 0} {y 0}} {
 	return ""
     }
 
-    # Set tkPriv(focus) on entry:  otherwise the focus will get lost
+    # Set tk::Priv(focus) on entry:  otherwise the focus will get lost
     # after keyboard invocation of a sub-menu (it will stay on the
     # submenu).
 
     bind $menu <Enter> {
-	set tkPriv(focus) %W
+	set tk::Priv(focus) %W
     }
 
     # If there is a -tearoffcommand option for the menu, invoke it
@@ -98,7 +98,7 @@ proc tkTearOffMenu {w {x 0} {y 0}} {
     return $menu
 }
 
-# tkMenuDup --
+# ::tk::MenuDup --
 # Given a menu (hierarchy), create a duplicate menu (hierarchy)
 # in a given window.
 #
@@ -108,7 +108,7 @@ proc tkTearOffMenu {w {x 0} {y 0}} {
 # dst -			Name to use for topmost menu in duplicate
 #			hierarchy.
 
-proc tkMenuDup {src dst type} {
+proc ::tk::MenuDup {src dst type} {
     set cmd [list menu $dst -type $type]
     foreach option [$src configure] {
 	if {[llength $option] == 2} {

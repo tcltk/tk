@@ -3,7 +3,7 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# RCS: @(#) $Id: dialog.tcl,v 1.8 2000/04/18 02:18:33 ericm Exp $
+# RCS: @(#) $Id: dialog.tcl,v 1.8.4.1 2002/04/06 01:02:01 hobbs Exp $
 #
 # Copyright (c) 1992-1993 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -13,7 +13,7 @@
 #
 
 #
-# tk_dialog:
+# ::tk_dialog:
 #
 # This procedure displays a dialog box, waits for a button in the dialog
 # to be invoked, then returns the index of the selected button.  If the
@@ -29,8 +29,9 @@
 # args -	One or more strings to display in buttons across the
 #		bottom of the dialog box.
 
-proc tk_dialog {w title text bitmap default args} {
-    global tkPriv tcl_platform
+proc ::tk_dialog {w title text bitmap default args} {
+    global tcl_platform
+    variable ::tk::Priv
 
     # Check that $default was properly given
     if {[string is int $default]} {
@@ -65,12 +66,12 @@ proc tk_dialog {w title text bitmap default args} {
     }    
 
     if {[string equal $tcl_platform(platform) "macintosh"]} {
-	unsupported1 style $w dBoxProc
+	::tk::unsupported::MacWindowStyle style $w dBoxProc
     }
 
     frame $w.bot
     frame $w.top
-    if {[string equal $tcl_platform(platform) "unix"]} {
+    if {[string compare $tcl_platform(platform) "macintosh"]} {
 	$w.bot configure -relief raised -bd 1
 	$w.top configure -relief raised -bd 1
     }
@@ -103,13 +104,14 @@ proc tk_dialog {w title text bitmap default args} {
 
     set i 0
     foreach but $args {
-	button $w.button$i -text $but -command [list set tkPriv(button) $i]
+	button $w.button$i -text $but -command [list set ::tk::Priv(button) $i]
 	if {$i == $default} {
 	    $w.button$i configure -default active
 	} else {
 	    $w.button$i configure -default normal
 	}
-	grid $w.button$i -in $w.bot -column $i -row 0 -sticky ew -padx 10
+	grid $w.button$i -in $w.bot -column $i -row 0 -sticky ew \
+		-padx 10 -pady 4
 	grid columnconfigure $w.bot $i
 	# We boost the size of some Mac buttons for l&f
 	if {[string equal $tcl_platform(platform) "macintosh"]} {
@@ -129,7 +131,7 @@ proc tk_dialog {w title text bitmap default args} {
 	[list $w.button$default] configure -state active -relief sunken
 	update idletasks
 	after 100
-	set tkPriv(button) $default
+	set ::tk::Priv(button) $default
 	"
     }
 
@@ -137,7 +139,7 @@ proc tk_dialog {w title text bitmap default args} {
     # button variable to -1;  this is needed in case something happens
     # that destroys the window, such as its parent window being destroyed.
 
-    bind $w <Destroy> {set tkPriv(button) -1}
+    bind $w <Destroy> {set ::tk::Priv(button) -1}
 
     # 6. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
@@ -172,12 +174,12 @@ proc tk_dialog {w title text bitmap default args} {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    tkwait variable tkPriv(button)
+    vwait ::tk::Priv(button)
     catch {focus $oldFocus}
     catch {
 	# It's possible that the window has already been destroyed,
 	# hence this "catch".  Delete the Destroy handler so that
-	# tkPriv(button) doesn't get reset by it.
+	# Priv(button) doesn't get reset by it.
 
 	bind $w <Destroy> {}
 	destroy $w
@@ -189,5 +191,5 @@ proc tk_dialog {w title text bitmap default args} {
           grab -global $oldGrab
 	}
     }
-    return $tkPriv(button)
+    return $Priv(button)
 }
