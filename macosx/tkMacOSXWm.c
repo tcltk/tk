@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.4 2004/07/25 01:57:41 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.5 2004/10/05 22:27:26 hobbs Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -129,6 +129,9 @@ static int 		WmIconmaskCmd _ANSI_ARGS_((Tk_Window tkwin,
 static int 		WmIconnameCmd _ANSI_ARGS_((Tk_Window tkwin,
                                         TkWindow *winPtr, Tcl_Interp *interp, int objc,
                                         Tcl_Obj *CONST objv[]));
+static int 		WmIconphotoCmd _ANSI_ARGS_((Tk_Window tkwin,
+			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 static int 		WmIconpositionCmd _ANSI_ARGS_((Tk_Window tkwin,
                                             TkWindow *winPtr, Tcl_Interp *interp, int objc,
                                             Tcl_Obj *CONST objv[]));
@@ -542,7 +545,8 @@ Tk_WmObjCmd(
         "aspect", "attributes", "client", "colormapwindows",
         "command", "deiconify", "focusmodel", "frame",
         "geometry", "grid", "group", "iconbitmap",
-        "iconify", "iconmask", "iconname", "iconposition",
+        "iconify", "iconmask", "iconname",
+	"iconphoto", "iconposition",
         "iconwindow", "maxsize", "minsize", "overrideredirect",
         "positionfrom", "protocol", "resizable", "sizefrom",
         "stackorder", "state", "title", "transient",
@@ -551,7 +555,8 @@ Tk_WmObjCmd(
         WMOPT_ASPECT, WMOPT_ATTRIBUTES, WMOPT_CLIENT, WMOPT_COLORMAPWINDOWS,
         WMOPT_COMMAND, WMOPT_DEICONIFY, WMOPT_FOCUSMODEL, WMOPT_FRAME,
         WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP, WMOPT_ICONBITMAP,
-        WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME, WMOPT_ICONPOSITION,
+        WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME,
+	WMOPT_ICONPHOTO, WMOPT_ICONPOSITION,
         WMOPT_ICONWINDOW, WMOPT_MAXSIZE, WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT,
         WMOPT_POSITIONFROM, WMOPT_PROTOCOL, WMOPT_RESIZABLE, WMOPT_SIZEFROM,
         WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT,
@@ -630,6 +635,8 @@ wrongNumArgs:
             return WmIconmaskCmd(tkwin, winPtr, interp, objc, objv);
         case WMOPT_ICONNAME:
             return WmIconnameCmd(tkwin, winPtr, interp, objc, objv);
+	case WMOPT_ICONPHOTO:
+	    return WmIconphotoCmd(tkwin, winPtr, interp, objc, objv);
         case WMOPT_ICONPOSITION:
             return WmIconpositionCmd(tkwin, winPtr, interp, objc, objv);
         case WMOPT_ICONWINDOW:
@@ -1727,6 +1734,70 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
             XSetIconName(winPtr->display, winPtr->window, wmPtr->iconName);
         }
     }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmIconphotoCmd --
+ *
+ *	This procedure is invoked to process the "wm iconphoto"
+ *	Tcl command.
+ *	See the user documentation for details on what it does.
+ *	Not yet implemented for OS X.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmIconphotoCmd(tkwin, winPtr, interp, objc, objv)
+    Tk_Window tkwin;		/* Main window of the application. */
+    TkWindow *winPtr;           /* Toplevel to work with */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
+{
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    Tk_PhotoHandle photo;
+    int i, width, height, isDefault = 0;
+
+    if (objc < 4) {
+	Tcl_WrongNumArgs(interp, 2, objv,
+		"window ?-default? image1 ?image2 ...?");
+	return TCL_ERROR;
+    }
+    if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
+	isDefault = 1;
+	if (objc == 4) {
+	    Tcl_WrongNumArgs(interp, 2, objv,
+		    "window ?-default? image1 ?image2 ...?");
+	    return TCL_ERROR;
+	}
+    }
+    /*
+     * Iterate over all images to retrieve their sizes, in order to allocate a
+     * buffer large enough to hold all images.
+     */
+    for (i = 3 + isDefault; i < objc; i++) {
+	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
+	if (photo == NULL) {
+	    Tcl_AppendResult(interp, "can't use \"", Tcl_GetString(objv[i]),
+		    "\" as iconphoto: not a photo image", (char *) NULL);
+	    return TCL_ERROR;
+	}
+	Tk_PhotoGetSize(photo, &width, &height);
+    }
+    /*
+     * This requires implementation for OS X, but we silently return
+     * for now.
+     */
     return TCL_OK;
 }
 
