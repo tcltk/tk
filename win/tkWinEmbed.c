@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.23 2005/01/12 02:58:29 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.24 2005/01/12 04:30:19 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -51,6 +51,7 @@ static void		EmbeddedEventProc _ANSI_ARGS_((
 static void		EmbedGeometryRequest _ANSI_ARGS_((
     			    Container*containerPtr, int width, int height));
 static void		EmbedWindowDeleted _ANSI_ARGS_((TkWindow *winPtr));
+static void		Tk_MapEmbeddedWindow _ANSI_ARGS_((TkWindow* winPtr));
 
 
 /*
@@ -111,6 +112,33 @@ TkpTestembedCmd(clientData, interp, argc, argv)
     return TCL_OK;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_MapEmbeddedWindow --
+ *
+ *	This function is required for mapping an embedded window during
+ *	idle.  The input winPtr must be preserved using Tcl_Preserve before
+ *	call this function and will be released by this function.
+ *
+ * Results:
+ *	No return value. Map the embedded window if it is not dead.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+static void Tk_MapEmbeddedWindow(winPtr)
+    TkWindow *winPtr;		/* Top-level window that's about to
+				 * be mapped. */
+{
+    if(!(winPtr->flags & TK_ALREADY_DEAD)) {
+	TkWmMapWindow(winPtr);
+    }
+    Tcl_Release((ClientData)winPtr);
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -278,11 +306,12 @@ TkpUseWindow(interp, tkwin, string)
     winPtr->flags |= TK_EMBEDDED;
     winPtr->flags &= (~(TK_MAPPED));
 
-    if(winPtr->flags & TK_TOP_LEVEL) {
-	// call this function in idle may crash because the window
-	// may be destroyed in script
-	TkWmMapWindow(winPtr);
-    }
+    /*
+     * Preserve the winPtr and create an idle handler to 
+     * map the embedded window
+     */ 
+    Tcl_Preserve((ClientData)winPtr);
+    Tcl_DoWhenIdle(Tk_MapEmbeddedWindow,(ClientData)winPtr);
 
     return TCL_OK;
 }
