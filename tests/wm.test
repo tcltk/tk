@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.31 2005/02/09 09:32:26 dkf Exp $
+# RCS: @(#) $Id: wm.test,v 1.32 2005/02/09 10:19:31 dkf Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -54,11 +54,12 @@ test wm-1.3 {Tk_WmObjCmd procedure, miscellaneous errors} {
 test wm-1.4 {Tk_WmObjCmd procedure, miscellaneous errors} {
     list [catch {wm aspect bogus} msg] $msg
 } {1 {bad window path name "bogus"}}
-test wm-1.5 {Tk_WmObjCmd procedure, miscellaneous errors} {
-    catch {destroy .b}
+test wm-1.5 {Tk_WmObjCmd procedure, miscellaneous errors} -setup {
+    destroy .b
+} -body {
     button .b -text hello
     list [catch {wm geometry .b} msg] $msg
-} {1 {window ".b" isn't a top-level window}}
+} -result {1 {window ".b" isn't a top-level window}}
 
 
 ### wm aspect ###
@@ -159,8 +160,9 @@ test wm-colormapwindows-1.4 {usage} {
     list [catch {wm colormapwindows . foo} msg] $msg
 } {1 {bad window path name "foo"}}
 
-test wm-colormapwindows-2.1 {reading values} {
-    catch {destroy .t2}
+test wm-colormapwindows-2.1 {reading values} -setup {
+    destroy .t2
+} -body {
     toplevel .t2 -width 200 -height 200 -colormap new
     wm geom .t2 +0+0
     frame .t2.a -width 100 -height 30
@@ -172,9 +174,10 @@ test wm-colormapwindows-2.1 {reading values} {
     pack .t2.c -side top
     update
     list $x [wm colormapwindows .t2]
-} {{.t2.b .t2} {.t2.b .t2.c .t2}}
-test wm-colormapwindows-2.2 {setting and reading values} {
-    catch {destroy .t2}
+} -result {{.t2.b .t2} {.t2.b .t2.c .t2}}
+test wm-colormapwindows-2.2 {setting and reading values} -setup {
+    destroy .t2
+} -body {
     toplevel .t2 -width 200 -height 200
     wm geom .t2 +0+0
     frame .t2.a -width 100 -height 30
@@ -183,7 +186,7 @@ test wm-colormapwindows-2.2 {setting and reading values} {
     pack .t2.a .t2.b .t2.c -side top
     wm colormapwindows .t2 {.t2.b .t2.a}
     wm colormapwindows .t2
-} {.t2.b .t2.a}
+} -result {.t2.b .t2.a}
 
 
 ### wm command ###
@@ -217,31 +220,33 @@ test wm-deiconify-1.2 {usage} {
 test wm-deiconify-1.3 {usage} {
     list [catch {wm deiconify _} err] $err
 } {1 {bad window path name "_"}}
-test wm-deiconify-1.4 {usage} {
-    catch {destroy .icon}
+test wm-deiconify-1.4 {usage} -setup {
+    destroy .icon
+} -body {
     toplevel .icon -width 50 -height 50 -bg red
     wm iconwindow .t .icon
-    set result [list [catch {wm deiconify .icon} msg] $msg]
+    wm deiconify .icon
+} -returnCodes error -cleanup {
     destroy .icon
-    set result
-} {1 {can't deiconify .icon: it is an icon for .t}}
-test wm-deiconify-1.5 {usage} {
-    catch {destroy .embed}
+} -result {can't deiconify .icon: it is an icon for .t}
+test wm-deiconify-1.5 {usage} -setup {
+    destroy .embed
+} -body {
     frame .t.f -container 1
     toplevel .embed -use [winfo id .t.f]
-    set result [list [catch {wm deiconify .embed} msg] $msg]
+    wm deiconify .embed
+} -returnCodes error -cleanup {
     destroy .t.f .embed
-    set result
-} {1 {can't deiconify .embed: it is an embedded window}}
+} -result {can't deiconify .embed: it is an embedded window}
 
-test wm-deiconify-2.1 {a window that has never been mapped
+test wm-deiconify-2.1 {a window that has never been mapped\
         should not be mapped by a call to deiconify} {
     deleteWindows
     toplevel .t
     wm deiconify .t
     winfo ismapped .t
 } 0
-test wm-deiconify-2.2 {a window that has already been
+test wm-deiconify-2.2 {a window that has already been\
         mapped should be mapped by deiconify} {
     deleteWindows
     toplevel .t
@@ -250,8 +255,8 @@ test wm-deiconify-2.2 {a window that has already been
     wm deiconify .t
     winfo ismapped .t
 } 1
-test wm-deiconify-2.3 {geometry for an unmapped window
-        should not be calculated by a call to deiconify,
+test wm-deiconify-2.3 {geometry for an unmapped window\
+        should not be calculated by a call to deiconify,\
         it should be done at idle time} {
     deleteWindows
     set results {}
@@ -263,8 +268,8 @@ test wm-deiconify-2.3 {geometry for an unmapped window
     lappend results [lindex [split \
         [wm geometry .t] +] 0]
 } {1x1+0+0 1x1+0+0 200x200}
-test wm-deiconify-2.4 {invoking destroy after a deiconify
-        should not result in a crash because of a callback
+test wm-deiconify-2.4 {invoking destroy after a deiconify\
+        should not result in a crash because of a callback\
         set on the toplevel} {
     deleteWindows
     toplevel .t
@@ -434,43 +439,48 @@ test wm-iconify-1.2 {usage} {
     list [catch {wm iconify .t _} msg] $msg
 } {1 {wrong # args: should be "wm iconify window"}}
 
-test wm-iconify-2.1 {Misc errors} {
-    catch {destroy .t2}
+test wm-iconify-2.1 {Misc errors} -setup {
+    destroy .t2
+} -body {
     toplevel .t2
     wm overrideredirect .t2 1
-    set result [list [catch {wm iconify .t2} msg] $msg]
+    wm iconify .t2
+} -returnCodes error -cleanup {
     destroy .t2
-    set result
-} {1 {can't iconify ".t2": override-redirect flag is set}}
-test wm-iconify-2.2 {Misc errors} {
-    catch {destroy .t2}
+} -result {can't iconify ".t2": override-redirect flag is set}
+test wm-iconify-2.2 {Misc errors} -setup {
+    destroy .t2
+} -body {
     toplevel .t2
     wm geom .t2 +0+0
     wm transient .t2 .t
-    set result [list [catch {wm iconify .t2} msg] $msg]
+    wm iconify .t2
+} -returnCodes error -cleanup {
     destroy .t2
-    set result
-} {1 {can't iconify ".t2": it is a transient}}
-test wm-iconify-2.3 {Misc errors} {
-    catch {destroy .t2}
+} -result {can't iconify ".t2": it is a transient}
+test wm-iconify-2.3 {Misc errors} -setup {
+    destroy .t2
+} -body {
     toplevel .t2
     wm geom .t2 +0+0
     wm iconwindow .t .t2
-    set result [list [catch {wm iconify .t2} msg] $msg]
+    wm iconify .t2
+} -returnCodes error -cleanup {
     destroy .t2
-    set result
-} {1 {can't iconify .t2: it is an icon for .t}}
-test wm-iconify-2.4 {Misc errors} {
-    catch {destroy .t2}
+} -result {can't iconify .t2: it is an icon for .t}
+test wm-iconify-2.4 {Misc errors} -setup {
+    destroy .t2
+} -body {
     frame .t.f -container 1
     toplevel .t2 -use [winfo id .t.f]
-    set result [list [catch {wm iconify .t2} msg] $msg]
+    wm iconify .t2
+} -returnCodes error -cleanup {
     destroy .t2 .r.f
-    set result
-} {1 {can't iconify .t2: it is an embedded window}}
+} -result {can't iconify .t2: it is an embedded window}
 
-test wm-iconify-3.1 {} {
-    catch {destroy .t2}
+test wm-iconify-3.1 {} -setup {
+    destroy .t2
+} -body {
     toplevel .t2
     wm geom .t2 -0+0
     update
@@ -478,9 +488,9 @@ test wm-iconify-3.1 {} {
     wm iconify .t2
     update
     lappend result [winfo ismapped .t2]
+} -cleanup {
     destroy .t2
-    set result
-} {1 0}
+} -result {1 0}
 
 
 ### wm iconmask ###
@@ -577,37 +587,38 @@ test wm-iconwindow-1.2 {usage} {
 test wm-iconwindow-1.3 {usage} {
     list [catch {wm iconwindow .t bogus} msg] $msg
 } {1 {bad window path name "bogus"}}
-test wm-iconwindow-1.4 {usage} {
-    catch {destroy .b}
-    button .b -text Help
-    set result [list [catch {wm iconwindow .t .b} msg] $msg]
+test wm-iconwindow-1.4 {usage} -setup {
     destroy .b
-    set result
-} {1 {can't use .b as icon window: not at top level}}
-test wm-iconwindow-1.5 {usage} {
-    catch {destroy .icon}
+} -body {
+    button .b -text Help
+    wm iconwindow .t .b
+} -returnCodes error -cleanup {
+    destroy .b
+} -result {can't use .b as icon window: not at top level}
+test wm-iconwindow-1.5 {usage} -setup {
+    destroy .icon .t2
+} -body {
     toplevel .icon -width 50 -height 50 -bg green
-    catch {destroy .t2}
     toplevel .t2
     wm geom .t2 -0+0
     wm iconwindow .t2 .icon
-    set result [list [catch {wm iconwindow .t .icon} msg] $msg]
-    destroy .t2
-    destroy .icon
-    set result
-} {1 {.icon is already an icon for .t2}}
+    wm iconwindow .t .icon
+} -returnCodes error -cleanup {
+    destroy .t2 .icon
+} -result {.icon is already an icon for .t2}
 
-test wm-iconwindow-2.1 {setting and reading values} {
+test wm-iconwindow-2.1 {setting and reading values} -setup {
+    destroy .icon
+} -body {
     set result {}
     lappend result [wm iconwindow .t]
-    catch {destroy .icon}
     toplevel .icon -width 50 -height 50 -bg green
     wm iconwindow .t .icon
     lappend result [wm iconwindow .t]
     wm iconwindow .t {}
     destroy .icon
     lappend result [wm iconwindow .t]
-} [list {} .icon {}]
+} -result {{} .icon {}}
 
 
 ### wm maxsize ###
@@ -626,36 +637,40 @@ test wm-maxsize-1.4 {usage} {
 test wm-maxsize-1.5 {usage} {
     list [catch {wm maxsize . 100 bogus} msg]  $msg
 } {1 {expected integer but got "bogus"}}
-test wm-maxsize-1.6 {usage} {
-    catch {destroy .t2}
+test wm-maxsize-1.6 {usage} -setup {
+    destroy .t2
+} -body {
     toplevel .t2
     wm maxsize .t2 300 200
-    set result [wm maxsize .t2]
+    wm maxsize .t2
+} -cleanup {
     destroy .t2
-    set result
-} {300 200}
-test wm-maxsize-1.7 {maxsize must be <= screen size} {
+} -result {300 200}
+test wm-maxsize-1.7 {maxsize must be <= screen size} -setup {
     destroy .t
+} -body {
     toplevel .t
     foreach {t_width t_height} [wm maxsize .t] break
     set s_width [winfo screenwidth .t]
     set s_height [winfo screenheight .t]
     expr {($t_width <= $s_width) && ($t_height <= $s_height)}
-} 1
+} -result 1
 
-test wm-maxsize-2.1 {setting the maxsize to a value smaller
-        than the current size will resize a toplevel} {
+test wm-maxsize-2.1 {setting the maxsize to a value smaller\
+        than the current size will resize a toplevel} -setup {
     destroy .t
+} -body {
     toplevel .t -width 300 -height 300
     update
     wm maxsize .t 200 150
     # UpdateGeometryInfo invoked at idle
     update
     lrange [split [wm geom .t] x+] 0 1
-} {200 150}
-test wm-maxsize-2.2 {setting the maxsize to a value smaller
-        than the current size will resize a gridded toplevel} {
+} -result {200 150}
+test wm-maxsize-2.2 {setting the maxsize to a value smaller\
+        than the current size will resize a gridded toplevel} -setup {
     destroy .t
+} -body {
     toplevel .t
     wm grid .t 0 0 50 50
     wm geometry .t 6x6
@@ -664,22 +679,22 @@ test wm-maxsize-2.2 {setting the maxsize to a value smaller
     # UpdateGeometryInfo invoked at idle
     update
     lrange [split [wm geom .t] x+] 0 1
-} {4 3}
-test wm-maxsize-2.3 {attempting to resize to a value
-        bigger than the current maxsize will
-        set it to the max size} {
+} -result {4 3}
+test wm-maxsize-2.3 {attempting to resize to a value\
+        bigger than the current maxsize will set it to the max size} -setup {
     destroy .t
+} -body {
     toplevel .t -width 200 -height 200
     wm maxsize .t 300 250
     update
     wm geom .t 400x300
     update
     lrange [split [wm geom .t] x+] 0 1
-} {300 250}
-test wm-maxsize-2.4 {attempting to resize to a value
-        bigger than the current maxsize will
-        set it to the max size when gridded} {
+} -result {300 250}
+test wm-maxsize-2.4 {attempting to resize to a value bigger than the\
+	current maxsize will set it to the max size when gridded} -setup {
     destroy .t
+} -body {
     toplevel .t
     wm grid .t 1 1 50 50
     wm geom .t 4x4
@@ -688,20 +703,19 @@ test wm-maxsize-2.4 {attempting to resize to a value
     wm geom .t 8x6
     update
     lrange [split [wm geom .t] x+] 0 1
-} {6 5}
-test wm-maxsize-2.5 {Use max size if window size is not
-        explicitly set and the reqWidth/reqHeight are
-        bigger than the max size} {
+} -result {6 5}
+test wm-maxsize-2.5 {Use max size if window size is not explicitly set\
+	and the reqWidth/reqHeight are bigger than the max size} -setup {
     destroy .t
+} -body {
     toplevel .t
     pack [frame .t.f -width 400 -height 400]
     update idletasks
-    set req [list [winfo reqwidth .t] \
-                      [winfo reqheight .t]]
+    set req [list [winfo reqwidth .t] [winfo reqheight .t]]
     wm maxsize .t 300 300
     update
     list $req [lrange [split [wm geom .t] x+] 0 1]
-} {{400 400} {300 300}}
+} -result {{400 400} {300 300}}
 
 
 ### wm minsize ###
@@ -720,28 +734,31 @@ test wm-minsize-1.4 {usage} {
 test wm-minsize-1.5 {usage} {
     list [catch {wm minsize . 100 bogus} msg]  $msg
 } {1 {expected integer but got "bogus"}}
-test wm-minsize-1.6 {usage} {
-    catch {destroy .t2}
+test wm-minsize-1.6 {usage} -setup {
+    destroy .t2
+} -body {
     toplevel .t2
     wm minsize .t2 300 200
-    set result [wm minsize .t2]
+    wm minsize .t2
+} -cleanup {
     destroy .t2
-    set result
-} {300 200}
+} -result {300 200}
 
-test wm-minsize-2.1 {setting the minsize to a value larger
-        than the current size will resize a toplevel} {
+test wm-minsize-2.1 {setting the minsize to a value larger\
+        than the current size will resize a toplevel} -setup {
     destroy .t
+} -body {
     toplevel .t -width 200 -height 200
     update
     wm minsize .t 400 300
     # UpdateGeometryInfo invoked at idle
     update
     lrange [split [wm geom .t] x+] 0 1
-} {400 300}
-test wm-minsize-2.2 {setting the minsize to a value larger
-        than the current size will resize a gridded toplevel} {
+} -result {400 300}
+test wm-minsize-2.2 {setting the minsize to a value larger\
+        than the current size will resize a gridded toplevel} -setup {
     destroy .t
+} -body {
     toplevel .t
     wm grid .t 1 1 50 50
     wm geom .t 4x4
@@ -750,22 +767,22 @@ test wm-minsize-2.2 {setting the minsize to a value larger
     # UpdateGeometryInfo invoked at idle
     update
     lrange [split [wm geom .t] x+] 0 1
-} {8 8}
-test wm-minsize-2.3 {attempting to resize to a value
-        smaller than the current minsize will set
-        it to the minsize} {
+} -result {8 8}
+test wm-minsize-2.3 {attempting to resize to a value\
+        smaller than the current minsize will set it to the minsize} -setup {
     destroy .t
+} -body {
     toplevel .t -width 400 -height 400
     wm minsize .t 300 300
     update
     wm geom .t 200x200
     update
     lrange [split [wm geom .t] x+] 0 1
-} {300 300}
-test wm-minsize-2.4 {attempting to resize to a value
-        smaller than the current minsize will set
-        it to the minsize when gridded} {
+} -result {300 300}
+test wm-minsize-2.4 {attempting to resize to a value smaller than the\
+	current minsize will set it to the minsize when gridded} -setup {
     destroy .t
+} -body {
     toplevel .t
     wm grid .t 1 1 50 50
     wm geom .t 8x8
@@ -774,11 +791,11 @@ test wm-minsize-2.4 {attempting to resize to a value
     wm geom .t 4x4
     update
     lrange [split [wm geom .t] x+] 0 1
-} {6 6}
-test wm-minsize-2.5 {Use min size if window size is not
-        explicitly set and the reqWidth/reqHeight are
-        smaller than the min size} {
+} -result {6 6}
+test wm-minsize-2.5 {Use min size if window size is not explicitly set\
+	and the reqWidth/reqHeight are smaller than the min size} -setup {
     destroy .t
+} -body {
     toplevel .t
     pack [frame .t.f -width 250 -height 250]
     update idletasks
@@ -787,7 +804,7 @@ test wm-minsize-2.5 {Use min size if window size is not
     wm minsize .t 300 300
     update
     list $req [lrange [split [wm geom .t] x+] 0 1]
-} {{250 250} {300 300}}
+} -result {{250 250} {300 300}}
 
 
 ### wm overrideredirect ###
@@ -822,8 +839,9 @@ test wm-positionfrom-1.3 {usage} {
     list [catch {wm positionfrom .t none} msg]  $msg
 } {1 {bad argument "none": must be program or user}}
 
-test wm-positionfrom-2.1 {setting and reading values} {
-    catch {destroy .t2}
+test wm-positionfrom-2.1 {setting and reading values} -setup {
+    destroy .t2
+} -body {
     toplevel .t2
     set result {}
     wm positionfrom .t user
@@ -832,9 +850,9 @@ test wm-positionfrom-2.1 {setting and reading values} {
     lappend result [wm positionfrom .t]
     wm positionfrom .t {}
     lappend result [wm positionfrom .t]
+} -cleanup {
     destroy .t2
-    set result
-} {user program {}}
+} -result {user program {}}
 
 
 ### wm protocol ###
@@ -939,82 +957,91 @@ test wm-stackorder-1.5 {usage} {
 test wm-stackorder-1.6 {usage} {
     list [catch {wm stackorder . isabove _} err] $err
 } {1 {bad window path name "_"}}
-test wm-stackorder-1.7 {usage} {
-    catch {destroy .t}
+test wm-stackorder-1.7 {usage} -setup {
+    destroy .t
+} -body {
     toplevel .t
     button .t.b
-    list [catch {wm stackorder .t.b} err] $err
-} {1 {window ".t.b" isn't a top-level window}}
-test wm-stackorder-1.8 {usage} {
-    catch {destroy .t}
-    toplevel .t
-    button .t.b
-    pack .t.b
-    update
-    list [catch {wm stackorder . isabove .t.b} err] $err
-} {1 {window ".t.b" isn't a top-level window}}
-test wm-stackorder-1.9 {usage} {
-    catch {destroy .t}
+    wm stackorder .t.b
+} -returnCodes error -result {window ".t.b" isn't a top-level window}
+test wm-stackorder-1.8 {usage} -setup {
+    destroy .t
+} -body {
     toplevel .t
     button .t.b
     pack .t.b
     update
-    list [catch {wm stackorder . isbelow .t.b} err] $err
-} {1 {window ".t.b" isn't a top-level window}}
-test wm-stackorder-1.10 {usage, isabove|isbelow toplevels must be mapped} {
-    catch {destroy .t}
-    toplevel .t ; update
+    wm stackorder . isabove .t.b
+} -returnCodes error -result {window ".t.b" isn't a top-level window}
+test wm-stackorder-1.9 {usage} -setup {
+    destroy .t
+} -body {
+    toplevel .t
+    button .t.b
+    pack .t.b
+    update
+    wm stackorder . isbelow .t.b
+} -returnCodes error -result {window ".t.b" isn't a top-level window}
+test wm-stackorder-1.10 {usage, isabove|isbelow toplevels must be mapped} -setup {
+    destroy .t
+} -body {
+    toplevel .t
+    update
     wm withdraw .t
-    list [catch {wm stackorder .t isabove .} err] $err
-} {1 {window ".t" isn't mapped}}
-test wm-stackorder-1.11 {usage, isabove|isbelow toplevels must be mapped} {
-    catch {destroy .t}
-    toplevel .t ; update
+    wm stackorder .t isabove .
+} -returnCodes error -result {window ".t" isn't mapped}
+test wm-stackorder-1.11 {usage, isabove|isbelow toplevels must be mapped} -setup {
+    destroy .t
+} -body {
+    toplevel .t
+    update
     wm withdraw .t
-    list [catch {wm stackorder . isbelow .t} err] $err
-} {1 {window ".t" isn't mapped}}
+    wm stackorder . isbelow .t
+} -returnCodes error -result {window ".t" isn't mapped}
 deleteWindows
 
-test wm-stackorder-2.1 {} {
-    catch {destroy .t}
+test wm-stackorder-2.1 {} -setup {
+    destroy .t
+} -body {
     toplevel .t ; update
     wm stackorder .
-} {. .t}
-test wm-stackorder-2.2 {} {
-    catch {destroy .t}
+} -result {. .t}
+test wm-stackorder-2.2 {} -setup {
+    destroy .t
+} -body {
     toplevel .t ; update
     raise .
     raiseDelay
     wm stackorder .
-} {.t .}
-test wm-stackorder-2.3 {} {
-    catch {destroy .t}
+} -result {.t .}
+test wm-stackorder-2.3 {} -setup {
+    destroy .t .t2
+} -body {
     toplevel .t ; update
-    catch {destroy .t2}
     toplevel .t2 ; update
     raise .
     raise .t2
     raiseDelay
     wm stackorder .
-} {.t . .t2}
-test wm-stackorder-2.4 {} {
-    catch {destroy .t}
+} -result {.t . .t2}
+test wm-stackorder-2.4 {} -setup {
+    destroy .t .t2
+} -body {
     toplevel .t ; update
-    catch {destroy .t2}
     toplevel .t2 ; update
     raise .
     lower .t2
     raiseDelay
     wm stackorder .
-} {.t2 .t .}
+} -result {.t2 .t .}
 test wm-stackorder-2.5 {} {
-    catch {destroy .parent}
+    destroy .parent
     toplevel .parent ; update
-    catch {destroy .parent.child1}
+    destroy .parent.child1
     toplevel .parent.child1 ; update
-    catch {destroy .parent.child2}
+    destroy .parent.child2
     toplevel .parent.child2 ; update
-    catch {destroy .extra}
+    destroy .extra
     toplevel .extra ; update
     raise .parent
     lower .parent.child2
@@ -1022,110 +1049,121 @@ test wm-stackorder-2.5 {} {
     wm stackorder .parent
 } {.parent.child2 .parent.child1 .parent}
 deleteWindows
-test wm-stackorder-2.6 {non-toplevel widgets ignored} {
-    catch {destroy .t1}
+test wm-stackorder-2.6 {non-toplevel widgets ignored} -setup {
+    destroy .t1
+} -body {
     toplevel .t1
     button .t1.b
     pack .t1.b
     update
     wm stackorder .
-} {. .t1}
+} -result {. .t1}
 deleteWindows
 test wm-stackorder-2.7 {no children returns self} {
     wm stackorder .
 } {.}
 deleteWindows
 
-test wm-stackorder-3.1 {unmapped toplevel} {
-    catch {destroy .t1}
+test wm-stackorder-3.1 {unmapped toplevel} -setup {
+    destroy .t1 .t2
+} -body {
     toplevel .t1 ; update
-    catch {destroy .t2}
     toplevel .t2 ; update
     wm iconify .t1
     wm stackorder .
-} {. .t2}
-test wm-stackorder-3.2 {unmapped toplevel} {
-    catch {destroy .t1}
+} -result {. .t2}
+test wm-stackorder-3.2 {unmapped toplevel} -setup {
+    destroy .t1 .t2
+} -body {
     toplevel .t1 ; update
-    catch {destroy .t2}
     toplevel .t2 ; update
     wm withdraw .t2
     wm stackorder .
-} {. .t1}
-test wm-stackorder-3.3 {unmapped toplevel} {
-    catch {destroy .t1}
+} -result {. .t1}
+test wm-stackorder-3.3 {unmapped toplevel} -setup {
+    destroy .t1 .t2
+} -body {
     toplevel .t1 ; update
-    catch {destroy .t2}
     toplevel .t2 ; update
     wm withdraw .t2
     wm stackorder .t2
-} {}
-test wm-stackorder-3.4 {unmapped toplevel} {
-    catch {destroy .t1}
+} -result {}
+test wm-stackorder-3.4 {unmapped toplevel} -setup {
+    destroy .t1
+} -body {
     toplevel .t1 ; update
     toplevel .t1.t2 ; update
     wm withdraw .t1.t2
     wm stackorder .t1
-} {.t1}
-test wm-stackorder-3.5 {unmapped toplevel} {
-    catch {destroy .t1}
+} -result {.t1}
+test wm-stackorder-3.5 {unmapped toplevel} -setup {
+    destroy .t1
+} -body {
     toplevel .t1 ; update
     toplevel .t1.t2 ; update
     wm withdraw .t1
     wm stackorder .t1
-} {.t1.t2}
-test wm-stackorder-3.6 {unmapped toplevel} {
-    catch {destroy .t1}
+} -result {.t1.t2}
+test wm-stackorder-3.6 {unmapped toplevel} -setup {
+    destroy .t1
+} -body {
     toplevel .t1 ; update
     toplevel .t1.t2 ; update
     toplevel .t1.t2.t3 ; update
     wm withdraw .t1.t2
     wm stackorder .t1
-} {.t1 .t1.t2.t3}
-test wm-stackorder-3.7 {unmapped toplevel, mapped children returned} {
-    catch {destroy .t1}
+} -result {.t1 .t1.t2.t3}
+test wm-stackorder-3.7 {unmapped toplevel, mapped children returned} -setup {
+    destroy .t1
+} -body {
     toplevel .t1 ; update
     toplevel .t1.t2 ; update
     wm withdraw .t1
     wm stackorder .t1
-} {.t1.t2}
-test wm-stackorder-3.8 {toplevel mapped in idle callback } {
-    catch {destroy .t1}
+} -result {.t1.t2}
+test wm-stackorder-3.8 {toplevel mapped in idle callback } -setup {
+    destroy .t1
+} -body {
     toplevel .t1
     wm stackorder .
-} {.}
+} -result {.}
 deleteWindows
 
-test wm-stackorder-4.1 {wm stackorder isabove|isbelow} {
-    catch {destroy .t}
+test wm-stackorder-4.1 {wm stackorder isabove|isbelow} -setup {
+    destroy .t
+} -body {
     toplevel .t ; update
     raise .t
     wm stackorder . isabove .t
-} {0}
-test wm-stackorder-4.2 {wm stackorder isabove|isbelow} {
-    catch {destroy .t}
+} -result {0}
+test wm-stackorder-4.2 {wm stackorder isabove|isbelow} -setup {
+    destroy .t
+} -body {
     toplevel .t ; update
     raise .t
     wm stackorder . isbelow .t
-} {1}
-test wm-stackorder-4.3 {wm stackorder isabove|isbelow} {
-    catch {destroy .t}
+} -result {1}
+test wm-stackorder-4.3 {wm stackorder isabove|isbelow} -setup {
+    destroy .t
+} -body {
     toplevel .t ; update
     raise .
     raiseDelay
     wm stackorder .t isa .
-} {0}
-test wm-stackorder-4.4 {wm stackorder isabove|isbelow} {
-    catch {destroy .t}
+} -result {0}
+test wm-stackorder-4.4 {wm stackorder isabove|isbelow} -setup {
+    destroy .t
+} -body {
     toplevel .t ; update
     raise .
     raiseDelay
     wm stackorder .t isb .
-} {1}
+} -result {1}
 deleteWindows
 
-test wm-stackorder-5.1 {a menu is not a toplevel} {
-    catch {destroy .t}
+test wm-stackorder-5.1 {a menu is not a toplevel} -setup {
+    destroy .t
+} -body {
     toplevel .t
     menu .t.m -type menubar
     .t.m add cascade -label "File"
@@ -1134,36 +1172,39 @@ test wm-stackorder-5.1 {a menu is not a toplevel} {
     raise .
     raiseDelay
     wm stackorder .
-} {.t .}
-test wm-stackorder-5.2 {A normal toplevel can't be
-        raised above an overrideredirect toplevel } {
-    catch {destroy .t}
+} -result {.t .}
+test wm-stackorder-5.2 {A normal toplevel can't be\
+        raised above an overrideredirect toplevel} -setup {
+    destroy .t
+} -body {
     toplevel .t
     wm overrideredirect .t 1
     raise .
     update
     raiseDelay
     wm stackorder . isabove .t
-} 0
-test wm-stackorder-5.3 {An overrideredirect window
-        can be explicitly lowered } {
-    catch {destroy .t}
+} -result 0
+test wm-stackorder-5.3 {An overrideredirect window\
+        can be explicitly lowered} -setup {
+    destroy .t
+} -body {
     toplevel .t
     wm overrideredirect .t 1
     lower .t
     update
     raiseDelay
     wm stackorder .t isbelow .
-} 1
+} -result 1
 
-test wm-stackorder-6.1 {An embedded toplevel does not
-        appear in the stacking order} {
+test wm-stackorder-6.1 {An embedded toplevel does not\
+        appear in the stacking order} -setup {
     deleteWindows
+} -body {
     toplevel .real -container 1
     toplevel .embd -bg blue -use [winfo id .real]
     update
     wm stackorder .
-} {. .real}
+} -result {. .real}
 
 stdWindow
 
@@ -1633,15 +1674,16 @@ test wm-withdraw-1.2 {usage} {
     list [catch {wm withdraw . _} msg] $msg
 } {1 {wrong # args: should be "wm withdraw window"}}
 
-test wm-withdraw-2.1 {Misc errors} {
+test wm-withdraw-2.1 {Misc errors} -setup {
     deleteWindows
+} -body {
     toplevel .t
     toplevel .t2
     wm iconwindow .t .t2
-    set result [list [catch {wm withdraw .t2} msg] $msg]
+    wm withdraw .t2
+} -returnCodes error -cleanup {
     destroy .t2
-    set result
-} {1 {can't withdraw .t2: it is an icon for .t}}
+} -result {can't withdraw .t2: it is an icon for .t}
 
 test wm-withdraw-3.1 {} {
     update
@@ -1654,14 +1696,15 @@ test wm-withdraw-3.1 {} {
 
 
 ### Misc. wm tests ###
-test wm-deletion-epoch-1.1 {Deletion epoch on multiple displays} {altDisplay} {
-    # See Tk Bug #671330 "segfault when e.g. deiconifying destroyed window"
+test wm-deletion-epoch-1.1 {Deletion epoch on multiple displays} -constraints altDisplay -setup {
     deleteWindows
+} -body {
+    # See Tk Bug #671330 "segfault when e.g. deiconifying destroyed window"
     set w [toplevel .t -screen $env(TK_ALT_DISPLAY)]
     wm deiconify $w         ;# this caches the WindowRep
     destroy .t
-    list [catch {wm deiconify $w} msg] $msg
-} {1 {bad window path name ".t"}}
+    wm deiconify $w
+} -returnCodes error -result {bad window path name ".t"}
 
 # FIXME:
 
