@@ -1,3 +1,41 @@
+2000-02-10  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* generic/tkImgGIF.c (FileReadGIF): added cast for trashBuffer
+
+	* generic/tkIntXlibDecls.h:
+	* generic/tkInt.decls: declared some Xlib emulation calls for
+	the Mac
+
+	* generic/tkFrame.c (TkInstallFrameMenu): added extra panic to
+	inform user of bad call when framePtr is NULL [Bug: 2530]
+
+	* generic/tkMenu.c (DestroyMenuInstance): Placed checks around
+	menu name objects before trying to incr the ref.  [Bug: 3402]
+
+	* generic/tkTest.c: removed USE_OLD_IMAGE def for Mac
+
+	* library/listbox.tcl:
+	* library/text.tcl: added support for <4> and <5> for mousewheel
+	style scrolling on Unix for mice that map to these buttons.
+
+	* tests/scrollbar.test: fixed check of testmetrics command to
+	allow unix tests to run (testmetrics is mac/pc only)
+
+	* unix/tkUnixWm.c (Tk_CoordsToWindow): qualified delete of error
+	handler as the goto label is reached from above and below.
+
+	* unix/configure.in:
+	* unix/aclocal.m4: cleaned up macros to coincide with tcl.m4,
+	added -export-dynamic to LDFLAGS for FreeBSD-3+ [Bug: 2998]
+
+	* unix/README:
+	* unix/Makefile.in (dist): removed porting.notes and porting.old
+	from distribution and CVS.  The information was very outdated.  Now
+	refer to http://dev.scriptics.com/services/support/platforms.html
+
+	* xlib/xgc.c: #def'd out XDrawSegments for the Mac, and added
+	some extra include info for the Mac
+
 2000-02-08  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* generic/tk.decls:
@@ -8,7 +46,7 @@
 	* mac/tkMacKeyboard.c:
 	* unix/tkUnixKey.c:
 	* win/tkWinKey.c: Fix for keyboard handling of "dead" keys and
-	caps lock from Peter Spjuth.
+	caps lock from Peter Spjuth. [Bug: 4105 3359 2493]
 	Split functions into platform specific files:
 	Static functions GetKeySym(), SetKeycodeAndState() and InitKeymapInfo()
 	from tkBind.c moved into platform files tkWinKey.c tkUnixKey.c and
