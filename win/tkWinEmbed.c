@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.7.2.1.2.3 2005/01/19 02:03:48 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.7.2.1.2.4 2005/01/27 15:30:06 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -167,6 +167,7 @@ static void Tk_MapEmbeddedWindow(winPtr)
 	if(state < 0 || state > 3) {
 	    state = NormalState;
 	} 
+	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)); 
 	TkpWmSetState(winPtr, state);
 	TkWmMapWindow(winPtr);
     }
