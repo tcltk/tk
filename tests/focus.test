@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: focus.test,v 1.1.4.5 1999/03/24 02:54:40 hershey Exp $
+# RCS: @(#) $Id: focus.test,v 1.1.4.6 1999/04/06 18:05:57 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -525,8 +525,21 @@ test focus-4.4 {TkFocusDeadWindow procedure} {unixOnly testwrapper} {
 # I don't know how to test most of the remaining procedures of this file
 # explicitly;  they've already been exercised by the preceding tests.
 
+# If send is disabled because of inadequate security, don't run any
+# of these tests at all.
+
+setupbg
+set app [dobg {tk appname}]
+set ::tcltest::testConfig(secureServer) 1
+if {[catch {send $app set a 0} msg] == 1} {
+    if [string match "X server insecure *" $msg] {
+	set ::tcltest::testConfig(secureServer) 0
+    }
+}
+cleanupbg
+
 test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} \
-	{unixOnly testwrapper} {
+	{unixOnly testwrapper secureServer} {
     focusSetup
     focus -force .t
     update
