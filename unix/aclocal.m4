@@ -732,7 +732,8 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	NetBSD-*|FreeBSD-[[1-2]].*|OpenBSD-*)
 	    # Not available on all versions:  check for include file.
 	    AC_CHECK_HEADER(dlfcn.h, [
-		SHLIB_CFLAGS="-fpic"
+		# NetBSD/SPARC needs -fPIC, -fpic will not do.
+		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LD="ld -Bshareable -x"
 		SHLIB_LD_LIBS=""
 		SHLIB_SUFFIX=".so"
