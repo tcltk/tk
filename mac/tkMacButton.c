@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacButton.c,v 1.3 1998/09/14 18:23:34 stanton Exp $
+ * RCS: @(#) $Id: tkMacButton.c,v 1.3.2.1 1999/03/22 06:43:17 jingham Exp $
  */
 
 #include "tkButton.h"
@@ -897,65 +897,65 @@ DrawBufferedControl(
 static void
 InitSampleControls()
 {
-	Rect geometry = {0, 0, 10, 10};
-	CWindowPeek windowList;
+    Rect geometry = {0, 0, 10, 10};
+    CWindowPeek windowList;
 
-	/*
-	 * Create a dummy window that we can draw to.  We will
-	 * actually replace this window's bitmap with the one
-	 * we want to draw to at a later time.  This window and
-	 * the data structures attached to it are only deallocated
-	 * on exit of the application.
-	 */
+    /*
+     * Create a dummy window that we can draw to.  We will
+     * actually replace this window's bitmap with the one
+     * we want to draw to at a later time.  This window and
+     * the data structures attached to it are only deallocated
+     * on exit of the application.
+     */
 	
-	windowRef = NewCWindow(NULL, &geometry, "\pempty", false, 
-	    zoomDocProc, (WindowRef) -1, true, 0);
-	if (windowRef == NULL) {
-	    panic("Can't allocate buffer window.");
-	}
+    windowRef = NewCWindow(NULL, &geometry, "\pempty", false, 
+	zoomDocProc, (WindowRef) -1, true, 0);
+    if (windowRef == NULL) {
+	panic("Can't allocate buffer window.");
+    }
 	
-	/*
-	 * Now add the three standard controls to hidden window.  We
-	 * only create one of each and reuse them for every widget in
-	 * Tk.
-	 * Under Appearance, we have to embed the controls in a UserPane
-	 * control, so that we can color the background text in 
-	 * radiobuttons and checkbuttons.
-	 */
+    /*
+     * Now add the three standard controls to hidden window.  We
+     * only create one of each and reuse them for every widget in
+     * Tk.
+     * Under Appearance, we have to embed the controls in a UserPane
+     * control, so that we can color the background text in 
+     * radiobuttons and checkbuttons.
+     */
 	
-	SetPort(windowRef);
+    SetPort(windowRef);
 	
-        if (TkMacHaveAppearance()) {
-            
- 	    OSErr err;
- 	    ControlRef dontCare;
+    if (TkMacHaveAppearance()) {
+        OSErr err;
+ 	ControlRef dontCare;
  	    
- 	    /* Adding UserPaneBackgroundProcs to the root control does
- 	     * not seem to work, so we have to add another UserPane to 
- 	     * the root control.
- 	     */
+ 	/* 
+ 	 * Adding UserPaneBackgroundProcs to the root control does
+ 	 * not seem to work, so we have to add another UserPane to 
+ 	 * the root control.
+ 	 */
  	     
-	    err = CreateRootControl(windowRef, &dontCare);
-	    if (err != noErr) {
-	        panic("Can't create root control in DrawBufferedControl");
-	    }
+	err = CreateRootControl(windowRef, &dontCare);
+	if (err != noErr) {
+	    panic("Can't create root control in DrawBufferedControl");
+	}
 	    
-	    userPaneHandle = NewControl(windowRef, &geometry, "\p",
+	userPaneHandle = NewControl(windowRef, &geometry, "\p",
 		true, kControlSupportsEmbedding|kControlHasSpecialBackground, 
 	        0, 1, kControlUserPaneProc, (SInt32) 0);
-	    SetUserPaneSetUpSpecialBackgroundProc(userPaneHandle,
-		    UserPaneBackgroundProc);
-	    SetUserPaneDrawProc(userPaneHandle, UserPaneDraw);
+	SetUserPaneSetUpSpecialBackgroundProc(userPaneHandle,
+		UserPaneBackgroundProc);
+	SetUserPaneDrawProc(userPaneHandle, UserPaneDraw);
 
-	    buttonHandle = NewControl(windowRef, &geometry, "\p",
+	buttonHandle = NewControl(windowRef, &geometry, "\p",
 	        false, 1, 0, 1, kControlPushButtonProc, (SInt32) 0);
-	    EmbedControl(buttonHandle, userPaneHandle);
-	    checkHandle = NewControl(windowRef, &geometry, "\p",
-	    false, 1, 0, 1, kControlCheckBoxProc, (SInt32) 0);
-	    EmbedControl(checkHandle, userPaneHandle);
-	    radioHandle = NewControl(windowRef, &geometry, "\p",
+	EmbedControl(buttonHandle, userPaneHandle);
+	        checkHandle = NewControl(windowRef, &geometry, "\p",
+	        false, 1, 0, 1, kControlCheckBoxProc, (SInt32) 0);
+	EmbedControl(checkHandle, userPaneHandle);
+	        radioHandle = NewControl(windowRef, &geometry, "\p",
 	        false, 1, 0, 1, kControlRadioButtonProc, (SInt32) 0);
-	    EmbedControl(radioHandle, userPaneHandle);
+	EmbedControl(radioHandle, userPaneHandle);
         smallBevelHandle = NewControl(windowRef, &geometry, "\p",
                 false, 0, 0, 
 	        kControlBehaviorOffsetContents << 16 | kControlContentPictHandle, 
@@ -997,8 +997,8 @@ InitSampleControls()
         picParams.srcRect.top = 0;
         picParams.srcRect.left = 0;
     
-	    ((CWindowPeek) windowRef)->visible = true;
-        } else {
+	((CWindowPeek) windowRef)->visible = true;
+    } else {
 	buttonHandle = NewControl(windowRef, &geometry, "\p",
 		false, 1, 0, 1, pushButProc, (SInt32) 0);
 	checkHandle = NewControl(windowRef, &geometry, "\p",
@@ -1010,39 +1010,39 @@ InitSampleControls()
 	buttonTabHandle = (CCTabHandle) NewHandle(sizeof(CtlCTab));
 	checkTabHandle = (CCTabHandle) NewHandle(sizeof(CtlCTab));
 	radioTabHandle = (CCTabHandle) NewHandle(sizeof(CtlCTab));
-        }
+    }
 
-	/*
-	 * Remove our window from the window list.  This way our
-	 * applications and others will not be confused that this
-	 * window exists - but no one knows about it.
-	 */
+    /*
+     * Remove our window from the window list.  This way our
+     * applications ad others will not be confused that this
+     * window exists - but no one knows about it.
+     */
 
-	windowList = (CWindowPeek) LMGetWindowList();
-	if (windowList == (CWindowPeek) windowRef) {
-	    LMSetWindowList((WindowRef) windowList->nextWindow);
-	} else {
-	    while ((windowList != NULL) 
-		    && (windowList->nextWindow != (CWindowPeek) windowRef)) {
-		windowList = windowList->nextWindow;
-	    }
-	    if (windowList != NULL) {
-		windowList->nextWindow = windowList->nextWindow->nextWindow;
-	    }
+    windowList = (CWindowPeek) LMGetWindowList();
+    if (windowList == (CWindowPeek) windowRef) {
+	LMSetWindowList((WindowRef) windowList->nextWindow);
+    } else {
+	while ((windowList != NULL) 
+		&& (windowList->nextWindow != (CWindowPeek) windowRef)) {
+	    windowList = windowList->nextWindow;
 	}
-	((CWindowPeek) windowRef)->nextWindow = NULL;
+	if (windowList != NULL) {
+	    windowList->nextWindow = windowList->nextWindow->nextWindow;
+	}
+    }
+    ((CWindowPeek) windowRef)->nextWindow = NULL;
 
-	/* 
-	 * Create an exit handler to clean up this mess if we our
-	 * unloaded etc.  We need to remember the windows portPixMap
-	 * so it isn't leaked.
-	 *
-	 * TODO: The ButtonExitProc doesn't currently work and the
-	 * code it includes will crash the Mac on exit from Tk.
+    /* 
+     * Create an exit handler to clean up this mess if we our
+     * unloaded etc.  We need to remember the windows portPixMap
+     * so it isn't leaked.
+     *
+     * TODO: The ButtonExitProc doesn't currently work and the
+     * code it includes will crash the Mac on exit from Tk.
 	 
 	 oldPixPtr = ((CWindowPeek) windowRef)->port.portPixMap;
 	 Tcl_CreateExitHandler(ButtonExitProc, (ClientData) NULL);
-	 */
+     */  
 
 }
 
@@ -1306,35 +1306,36 @@ UpdateControlColors(
     if (TkMacHaveAppearance() && (butPtr->type == TYPE_BUTTON)) {
         xcolor = Tk_3DBorderColor(butPtr->highlightBorder);
     } else {
-    xcolor = Tk_3DBorderColor(butPtr->normalBorder);
+        xcolor = Tk_3DBorderColor(butPtr->normalBorder);
     }
     if (TkMacHaveAppearance()) {
          TkSetMacColor(xcolor->pixel, &gUserPaneBackground);
-     } else {
-    (**ccTabHandle).ccSeed = 0;
-    (**ccTabHandle).ccRider = 0;
-    (**ccTabHandle).ctSize = 3;
-    (**ccTabHandle).ctTable[0].value = cBodyColor;
-    TkSetMacColor(xcolor->pixel,
-	&(**ccTabHandle).ctTable[0].rgb);
-    (**ccTabHandle).ctTable[1].value = cTextColor;
-    TkSetMacColor(butPtr->normalFg->pixel,
-	&(**ccTabHandle).ctTable[1].rgb);
-    (**ccTabHandle).ctTable[2].value = cFrameColor;
-    TkSetMacColor(butPtr->highlightColorPtr->pixel,
-	&(**ccTabHandle).ctTable[2].rgb);
-    SetControlColor(controlHandle, ccTabHandle);
+    } else {
+	(**ccTabHandle).ccSeed = 0;
+        (**ccTabHandle).ccRider = 0;
+        (**ccTabHandle).ctSize = 3;
+        (**ccTabHandle).ctTable[0].value = cBodyColor;
+        TkSetMacColor(xcolor->pixel,
+		&(**ccTabHandle).ctTable[0].rgb);
+        (**ccTabHandle).ctTable[1].value = cTextColor;
+        TkSetMacColor(butPtr->normalFg->pixel,
+		&(**ccTabHandle).ctTable[1].rgb);
+        (**ccTabHandle).ctTable[2].value = cFrameColor;
+        TkSetMacColor(butPtr->highlightColorPtr->pixel,
+		&(**ccTabHandle).ctTable[2].rgb);
+        SetControlColor(controlHandle, ccTabHandle);
         
-    if (((xcolor->pixel >> 24) != CONTROL_BODY_PIXEL) && 
-	    ((butPtr->type == TYPE_CHECK_BUTTON) ||
-		    (butPtr->type == TYPE_RADIO_BUTTON))) {
-	RGBColor newColor;
+        if (((xcolor->pixel >> 24) != CONTROL_BODY_PIXEL) && 
+	        ((butPtr->type == TYPE_CHECK_BUTTON) ||
+		(butPtr->type == TYPE_RADIO_BUTTON))) {
+	    RGBColor newColor;
 	
-	TkSetMacColor(xcolor->pixel, &newColor);
-	ChangeBackgroundWindowColor((**controlHandle).contrlOwner,
-		newColor, saveColorPtr);
-	return true;
-    }
+	    if (TkSetMacColor(xcolor->pixel, &newColor)) {
+	        ChangeBackgroundWindowColor((**controlHandle).contrlOwner,
+		        newColor, saveColorPtr);
+            }
+	    return true;
+        }
     }
     
     return false;
