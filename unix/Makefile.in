@@ -82,7 +82,8 @@ TCL_GENERIC_DIR =	@TCL_SRC_DIR@/generic
 TCL_BIN_DIR =		@TCL_BIN_DIR@
 
 # Libraries built with optimization switches have this additional extension
-DBGX =			@DBGX@
+TK_DBGX =		@TK_DBGX@
+TCL_DBGX =		@TCL_DBGX@
 
 # warning flags
 CFLAGS_WARNING =	@CFLAGS_WARNING@

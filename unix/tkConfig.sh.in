@@ -25,6 +25,9 @@ TK_DEFS='@DEFS@'
 # Flag, 1: we built a shared lib, 0 we didn't
 TK_SHARED_BUILD=@TK_SHARED_BUILD@
 
+# This indicates if Tk was build with debugging symbols
+TK_DBGX=@TK_DBGX@
+
 # The name of the Tk library (may be either a .a file or a shared library):
 TK_LIB_FILE=@TK_LIB_FILE@
 

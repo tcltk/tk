@@ -70,10 +70,10 @@ AC_ARG_ENABLE(symbols, [  --enable-symbols        build with debugging symbols],
     [tcl_ok=$enableval], [tcl_ok=no])
 if test "$tcl_ok" = "yes"; then
     CFLAGS_DEFAULT=CFLAGS_DEBUG
-    DBGX=g
+    TK_DBGX=g
 else
     CFLAGS_DEFAULT=CFLAGS_OPTIMIZE
-    DBGX=""
+    TK_DBGX=""
 fi
 
 SHLIB_CFLAGS=$TCL_SHLIB_CFLAGS
@@ -395,9 +395,9 @@ fi
 # up the Tcl library.
 
 if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-    TK_LIB_FLAG="-ltk${VERSION}\${DBGX}"
+    TK_LIB_FLAG="-ltk${VERSION}\${TK_DBGX}"
 else
-    TK_LIB_FLAG="-ltk`echo ${VERSION} | tr -d .`\${DBGX}"
+    TK_LIB_FLAG="-ltk`echo ${VERSION} | tr -d .`\${TK_DBGX}"
 fi
 TK_BUILD_LIB_SPEC="-L`pwd` \${TK_LIB_FLAG}"
 TK_LIB_SPEC="-L${exec_prefix}/lib \${TK_LIB_FLAG}"
@@ -406,7 +406,7 @@ AC_SUBST(CFLAGS_DEBUG)
 AC_SUBST(CFLAGS_DEFAULT)
 AC_SUBST(CFLAGS_OPTIMIZE)
 AC_SUBST(CFLAGS_WARNING)
-AC_SUBST(DBGX)
+AC_SUBST(TK_DBGX)
 AC_SUBST(DL_LIBS)
 AC_SUBST(LD_FLAGS)
 AC_SUBST(MATH_LIBS)
@@ -418,6 +418,7 @@ AC_SUBST(SHLIB_SUFFIX)
 AC_SUBST(SHLIB_VERSION)
 AC_SUBST(TCL_BIN_DIR)
 AC_SUBST(TCL_BUILD_LIB_SPEC)
+AC_SUBST(TCL_DBGX)
 AC_SUBST(TCL_LIB_FLAG)
 AC_SUBST(TCL_SRC_DIR)
 AC_SUBST(TCL_VERSION)
