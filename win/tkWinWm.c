@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.16.2.1 2005/01/04 05:07:03 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.16.2.2 2005/01/19 02:03:49 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -2195,6 +2195,7 @@ UpdateWrapper(winPtr)
 	{
 	    SendMessage(wmPtr->wrapper, TK_GEOMETRYREQ, 
 		Tk_ReqWidth((Tk_Window)winPtr), Tk_ReqHeight((Tk_Window)winPtr));
+	    SendMessage(wmPtr->wrapper, TK_SETMENU, (WPARAM)wmPtr->hMenu, (LPARAM)Tk_GetMenuHWND((Tk_Window)winPtr));
 	}
     }
 
@@ -2212,6 +2213,7 @@ UpdateWrapper(winPtr)
 		|SWP_NOOWNERZORDER);
     }
     TkpWmSetState(winPtr, state);
+    wmPtr->hints.initial_state = state;
 
     if (hSmallIcon != NULL) {
 	SendMessage(wmPtr->wrapper,WM_SETICON,ICON_SMALL,(LPARAM)hSmallIcon);
@@ -2230,6 +2232,10 @@ UpdateWrapper(winPtr)
      */
 
     if (winPtr->flags & TK_EMBEDDED) {
+	if(state+1 != SendMessage(wmPtr->wrapper, TK_STATE, state, 0)) {
+	    TkpWmSetState(winPtr, NormalState);
+	    wmPtr->hints.initial_state = NormalState;
+	}
 	XMapWindow(winPtr->display, winPtr->window);
     }
 
@@ -2421,6 +2427,28 @@ TkpWmSetState(winPtr, state)
     wmPtr->flags &= ~WM_SYNC_PENDING;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWinGetState --
+ *
+ *	This function returns state value of a toplevel window.
+ *
+ * Results:
+ *	none
+ *
+ * Side effects:
+ *	May deiconify the toplevel window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int TkpWmGetState(winPtr)
+    TkWindow *winPtr;
+{
+    return winPtr->wmInfoPtr->hints.initial_state;
+}
+
 /*
  *--------------------------------------------------------------
  *
@@ -3281,7 +3309,7 @@ WmDeiconifyCmd(tkwin, winPtr, interp, objc, objv)
     if (winPtr->flags & TK_EMBEDDED) {
 	if(!SendMessage(wmPtr->wrapper, TK_DEICONIFY, 0, 0)) {
 	    Tcl_AppendResult(interp, "can't deiconify ", winPtr->pathName,
-		": it is an embedded window", (char *) NULL);
+		": the container does not support the request", (char *) NULL);
 	    return TCL_ERROR;
 	}
 	return TCL_OK;
@@ -3782,7 +3810,7 @@ WmIconifyCmd(tkwin, winPtr, interp, objc, objv)
     if (winPtr->flags & TK_EMBEDDED) {
 	if(!SendMessage(wmPtr->wrapper, TK_ICONIFY, 0, 0)) {
 	    Tcl_AppendResult(interp, "can't iconify ", winPtr->pathName,
-		": it is an embedded window", (char *) NULL);
+		": the container does not support the request", (char *) NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -4304,7 +4332,7 @@ WmOverrideredirectCmd(tkwin, winPtr, interp, objc, objv)
 	return TCL_ERROR;
     }
     if(winPtr->flags & TK_EMBEDDED) {
-	curValue = SendMessage(wmPtr->wrapper, TK_OVERRIDEREDIRECT, -1, -1);
+	curValue = SendMessage(wmPtr->wrapper, TK_OVERRIDEREDIRECT, -1, -1)-1;
 	if(curValue < 0) {
 	    Tcl_AppendResult(interp, "Container does not support overrideredirect", NULL);
 	    return TCL_ERROR;
@@ -4782,16 +4810,38 @@ WmStateCmd(tkwin, winPtr, interp, objc, objv)
 		    (char *) NULL);
 	    return TCL_ERROR;
 	}
-	if (winPtr->flags & TK_EMBEDDED) {
-	    Tcl_AppendResult(interp, "can't change state of ",
-		    winPtr->pathName, ": it is an embedded window",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-
 	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings, "argument", 0,
 		&index) != TCL_OK) {
 	    return TCL_ERROR;
+	}
+
+	if (winPtr->flags & TK_EMBEDDED) {
+	    int state;
+	    switch(index) {
+		case OPT_NORMAL:
+		state = NormalState;
+		break;
+
+		case OPT_ICONIC:
+		state = IconicState;
+		break;
+
+		case OPT_WITHDRAWN:
+		state = WithdrawnState;
+		break;
+
+		case OPT_ZOOMED:
+		state = ZoomState;
+		break;
+	    }
+
+	    if(state+1 != SendMessage(wmPtr->wrapper, TK_STATE, state, 0)) {
+	        Tcl_AppendResult(interp, "can't change state of ",
+		    winPtr->pathName, ": the container does not support the request",
+		    (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    return TCL_OK;
 	}
 
 	if (index == OPT_NORMAL) {
@@ -4828,7 +4878,12 @@ WmStateCmd(tkwin, winPtr, interp, objc, objv)
 	if (wmPtr->iconFor != NULL) {
 	    Tcl_SetResult(interp, "icon", TCL_STATIC);
 	} else {
-	    switch (wmPtr->hints.initial_state) {
+	    int state;
+	    if(winPtr->flags & TK_EMBEDDED) 
+		state = SendMessage(wmPtr->wrapper, TK_STATE, -1, -1)-1;
+	    else
+		state = wmPtr->hints.initial_state;
+	    switch (state) {
 	      case NormalState:
 		Tcl_SetResult(interp, "normal", TCL_STATIC);
 		break;
@@ -4888,7 +4943,7 @@ WmTitleCmd(tkwin, winPtr, interp, objc, objv)
 	wrapper = wmPtr->wrapper;
     }
     if (objc == 3) {
-	if(winPtr->flags & TK_EMBEDDED) {
+	if(wrapper) {
 	    char buf[256];
 	    GetWindowText(wrapper, buf, 256);
 	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
@@ -5042,6 +5097,40 @@ WmTransientCmd(tkwin, winPtr, interp, objc, objv)
     return TCL_OK;
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWinToplevelDetachWindow --
+ *
+ *	This procedure is invoked to detach an embedded window.
+ *
+ * Results:
+ *	void.
+ *
+ * Side effects:
+ *	An embedded window is detached from a container and ready
+ *	to have a new wrapper.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void TkpWinToplevelDetachWindow(winPtr)
+    TkWindow *winPtr;
+{
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    if(winPtr->flags & TK_EMBEDDED) {
+	int state = SendMessage(wmPtr->wrapper, TK_STATE, -1, -1)-1;
+	SendMessage(wmPtr->wrapper, TK_SETMENU, 0, 0);
+        SendMessage(wmPtr->wrapper, TK_DETACHWINDOW, 0, 0);
+        winPtr->flags &= ~TK_EMBEDDED;
+	winPtr->privatePtr = NULL;
+        wmPtr->wrapper = None;
+	if(state >= 0 && state <= 3) wmPtr->hints.initial_state = state;
+    }
+    TkpWinToplevelOverrideRedirect(winPtr, 1);
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -5081,7 +5170,11 @@ WmWithdrawCmd(tkwin, winPtr, interp, objc, objv)
     }
 
     if(winPtr->flags & TK_EMBEDDED) {
-	SendMessage(wmPtr->wrapper, TK_WITHDRAW, 0, 0);
+	if(SendMessage(wmPtr->wrapper, TK_WITHDRAW, 0, 0) < 0) {
+	    Tcl_AppendResult(interp, "can't withdraw", Tcl_GetString(objv[2]),
+		": the container does not support the request", NULL);
+	    return TCL_ERROR;
+	}
     } else {
 	wmPtr->flags |= WM_WITHDRAWN;
 	TkpWmSetState(winPtr, WithdrawnState);
@@ -7431,7 +7524,6 @@ WmProc(hwnd, message, wParam, lParam)
 	case WM_MENUSELECT:
 	case WM_ENTERIDLE:
 	case WM_INITMENUPOPUP:
-	case WM_UNINITMENUPOPUP:
 	{
 	    HWND hMenuHWnd = Tk_GetEmbeddedMenuHWND((Tk_Window)winPtr);
 	    if(hMenuHWnd) {
