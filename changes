@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.35 1999/07/13 22:17:30 redman Exp $
+RCS: @(#) $Id: changes,v 1.36 1999/08/04 21:32:32 redman Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4636,3 +4636,30 @@ allows Windows to generate the WM_SIZE and WM_MOVE messages. (stanton)
 
 --------------- Released 8.2b1, July 14, 1999 ----------------------
 
+7/16/99 (bug fix) Copy prolog.ps from the generic directory for
+install-libraries make target. (redman)
+
+7/22/99 (bug fix) Applied patch from Jeff Hobbs to fix
+library/menu.tcl. [Bug: 2425] (redman)
+
+7/22/99 (bug fix) Make install-sh have executable permissions before
+calling from the Makefile. [Bug: 2413] (redman)
+
+7/22/99 (bug fix) Block out sys/stat.h include with #if to allow
+extension writers to use the MetroWerks compiler on Windows. 
+[Bug: 2385] (redman)
+
+7/29/99 (bug fix) Allow tcl to opn CON and NUL on Windows, moved check
+to Tk Console code instead.  [Bug: 2393 2392 2209 2458] (redman)
+
+7/30/99 (bug fix) corrected the Windows build of threaded Tk from both
+sets of makefiles (nmake and gmake). (redman)
+
+7/30/99 (bug fix) Added XFillRectangle to stub table, patch from Jan
+Njitmans.  [Bug: 2446] (hobbs)
+
+8/1/99  (bug fix) Wrapped #define of panic() inside #ifndef blocks to
+avoid compiler errors on Macintosh.  Patch from Vince Darley.  
+[Bug: 2389] (hobbs)
+
+--------------- Released 8.2b2, August 5, 1999 ----------------------
