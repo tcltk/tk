@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.10 2000/04/19 09:25:53 hobbs Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.11 2000/04/27 18:28:59 ericm Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -214,17 +214,22 @@ proc tkMessageBox {args} {
 	}
     }
 
-    if {[string compare $data(-default) ""]} {
-	set valid 0
-	foreach btn $buttons {
-	    if {[string equal [lindex $btn 0] $data(-default)]} {
-		set valid 1
-		break
-	    }
+    # If no default button was specified, the default default is the 
+    # first button (Bug: 2218).
+
+    if {$data(-default) == ""} {
+	set data(-default) [lindex [lindex $buttons 0] 0]
+    }
+
+    set valid 0
+    foreach btn $buttons {
+	if {[string equal [lindex $btn 0] $data(-default)]} {
+	    set valid 1
+	    break
 	}
-	if {!$valid} {
-	    error "invalid default button \"$data(-default)\""
-	}
+    }
+    if {!$valid} {
+	error "invalid default button \"$data(-default)\""
     }
 
     # 2. Set the dialog to be a child window of $parent

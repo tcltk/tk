@@ -1,3 +1,19 @@
+2000-04-27  Eric Melski  <ericm@scriptics.com>
+
+	* doc/keysyms.n: Man page enumerating keysyms [RFE: 1645].
+
+	* doc/colors.n: Man page enumerating valid color names [RFE: 1645].
+
+	* doc/cursors.n: Man page enumerating valid cursor values [RFE: 1645].
+
+	* library/msgbox.tcl: Corrected Unix tk_messageBox implementation
+	to make the first button the default when no default is specified
+	[Bug: 2218].
+
+	* doc/messageBox.n: Updated documentation with regards to
+	selection of default button when none is specified (now it will
+	use the first button as the default in that case) [Bug: 2218].
+
 2000-04-26  Jeff Hobbs  <hobbs@scriptics.com>
 
 	8.3.1 RELEASE
