@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.15 2002/11/04 07:49:43 davygrvy Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.15.2.1 2003/12/11 03:32:05 davygrvy Exp $
  */
 
 #include <tk.h>
@@ -239,10 +239,12 @@ WishPanic TCL_VARARGS_DEF(CONST char *,arg1)
     MessageBeep(MB_ICONEXCLAMATION);
     MessageBox(NULL, buf, "Fatal Error in Wish",
 	    MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
-#ifdef _MSC_VER
     DebugBreak();
-#endif
-    ExitProcess(1);
+    __try {
+	ExitProcess(EXIT_FAILURE);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+	TerminateProcess(GetCurrentProcess(), EXIT_FAILURE);
+    }
 }
 /*
  *-------------------------------------------------------------------------
