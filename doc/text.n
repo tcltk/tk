@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.27 2004/08/17 22:37:24 dkf Exp $
+'\" RCS: @(#) $Id: text.n,v 1.28 2004/09/10 12:13:40 vincentdarley Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -44,10 +44,25 @@ Specifies a boolean that says whether the blinking insertion cursor
 should be drawn as a character-sized rectangular block.  If false 
 (the default) a thin vertical line is used for the insertion cursor.
 .VE 8.5
+.OP \-endline endLine EndLine
+.VS 8.5
+Specifies an integer line index representing the last line of the
+underlying textual data store that should be contained in the widget.
+This allows a text widget to reflect only a portion of a larger piece
+of text.   Instead of an integer, the empty string can be provided to
+this configuration option, which will configure the widget to end
+at the very last line in the textual data store.
+.VE 8.5
 .OP \-height height Height
 Specifies the desired height for the window, in units of characters
 in the font given by the \fB\-font\fR option.
 Must be at least one.
+.OP \-inactiveselectionbackground inactiveSelectionBackground Foreground
+.VS 8.5
+Specifies the colour to use for the selection (the \fB\sel\fR tag) when
+the window does not have the input focus.  If empty, \fB\{}\fR, then no
+selection is shown when the window does not have the focus.
+.VE 8.5
 .OP \-maxundo maxUndo MaxUndo
 .VS 8.4
 Specifies the maximum number of compound undo actions on the undo
@@ -74,6 +89,15 @@ If a line wraps, this option only applies to the last line
 on the display.
 This option may be overridden with \fB\-spacing3\fR options in
 tags.
+.OP \-startline startLine StartLine
+.VS 8.5
+Specifies an integer line index representing the first line of the
+underlying textual data store that should be contained in the widget.
+This allows a text widget to reflect only a portion of a larger piece
+of text.  Instead of an integer, the empty string can be provided to
+this configuration option, which will configure the widget to start
+at the very first line in the textual data store.
+.VE 8.5
 .OP \-state state State
 Specifies one of two states for the text:  \fBnormal\fR or \fBdisabled\fR.
 If the text is disabled then characters may not be inserted or deleted
@@ -174,6 +198,12 @@ See EMBEDDED IMAGES below for more details.
 The text widget also has a built-in undo/redo mechanism.
 See THE UNDO MECHANISM below for more details.
 .VE 8.4
+.PP
+.VS 8.5
+The text widget allows for the creation of peer widgets.  These are
+other text widgets which share the same underlying data (text, marks,
+tags, images, etc).  See PEER WIDGETS below for more details.
+.VE 8.5
 
 .SH INDICES
 .PP
@@ -571,10 +601,15 @@ Tag bindings can be used to give behaviors to ranges of characters;
 among other things, this allows hypertext-like
 features to be implemented.
 For details, see the description of the \fBtag bind\fR widget
-command below.
+command below.  Tag bindings are shared between all peer widgets
+(including any bindings for the special \fBsel\fR tag).
 .PP
 The third use for tags is in managing the selection.
-See THE SELECTION below.
+See THE SELECTION below.  With the exception of the special \fBsel\fR
+tag, all tags are shared between peer text widgets, and may be
+manipulated on an equal basis from any such widget.  The \fBsel\fR
+tag exists separately and independently in each peer text widget (but
+any tag bindings to \fBsel\fR are shared).
 
 .SH MARKS
 .PP
@@ -619,7 +654,9 @@ mouse position and any changes to the text in the widget (one
 exception:  \fBcurrent\fR is not updated in response to mouse
 motions if a mouse button is down;  the update will be deferred
 until all mouse buttons have been released).
-Neither of these special marks may be deleted.
+Neither of these special marks may be deleted.  With the exception of
+these two special marks, all marks are shared between peer text 
+widgets, and may be manipulated on an equal basis from any peer.
 
 .SH "EMBEDDED WINDOWS"
 .PP
@@ -639,7 +676,8 @@ in the text widget, and it may be referred to either by the name
 of its embedded window or by its position in the widget's
 index space.
 If the range of text containing the embedded window is deleted then
-the window is destroyed.
+the window is destroyed.  Similarly if the text widget as a whole
+is deleted, then the window is destroyed.
 .PP
 When an embedded window is added to a text widget with the
 \fBwindow create\fR widget command, several configuration
@@ -665,7 +703,10 @@ If no \fB\-window\fR option has been specified for the annotation
 this script will be evaluated when the annotation is about to
 be displayed on the screen.
 \fIScript\fR must create a window for the annotation and return
-the name of that window as its result.
+the name of that window as its result.  Two substitutions will be
+performed in \fIscript\fR before evaluation.  \fI%W\fR will be
+substituted by the name of the parent text widget, and \fI%%\fR
+will be substitutde by a single \fI%\fR.
 If the annotation's window should ever be deleted, \fIscript\fR
 will be evaluated again the next time the annotation is displayed.
 .TP
@@ -688,8 +729,14 @@ If the \fB\-pady\fR option has been specified as well, then the
 requested padding will be retained even if the window is
 stretched.
 .TP
-\fB\-window \fIpathName\fR
-Specifies the name of a window to display in the annotation.
+\fB\-window \fIpathName\fR 
+Specifies the name of a window to display in the annotation.  Note that
+if a \fIpathName\fR has been set, then later configuring a window to the
+empty string will not delete the widget corresponding to the old
+\fIpathName\fR. Rather it will remove the association between the old
+\fIpathName\fR and the text widget.  If multiple peer widgets are in
+use, it is usually simpler to use the \fB\-create\fR option if embedded 
+windows are desired in each peer.
 
 .SH "EMBEDDED IMAGES"
 .PP
@@ -780,13 +827,19 @@ Whenever the \fBsel\fR tag range changes a virtual event
 \fB<<Selection>>\fR is generated.
 .PP
 The \fBsel\fR tag is automatically defined when a text widget is
-created, and it may not be deleted with the ``\fIpathName \fBtag delete\fR''
-widget command.  Furthermore, the \fBselectBackground\fR,
-\fBselectBorderWidth\fR, and \fBselectForeground\fR options for
-the text widget are tied to the \fB\-background\fR,
-\fB\-borderwidth\fR, and \fB\-foreground\fR options for the \fBsel\fR
-tag:  changes in either will automatically be reflected in the
-other.
+created, and it may not be deleted with the ``\fIpathName \fBtag
+delete\fR'' widget command.  Furthermore, the \fBselectBackground\fR,
+\fBselectBorderWidth\fR, and \fBselectForeground\fR options for the text
+widget are tied to the \fB\-background\fR, \fB\-borderwidth\fR, and
+\fB\-foreground\fR options for the \fBsel\fR tag: changes in either will
+automatically be reflected in the other.  Also the
+\fB\-inactiveselectionbackground\fR option for the text widget is used
+instead of \fB-selectbackground\fR when the text widget does not have
+the focus.  This allows programmatic control over the visualization of
+the \fBsel\fR tag for foreground and background windows, or to have
+\fBsel\fR not shown at all (when \fB\-inactiveselectionbackground\fR is
+empty) for background windows.  Each peer text widget has its own
+\fBsel\fR tag which can be separately configured and set.
 
 .SH "THE INSERTION CURSOR"
 .PP
@@ -837,6 +890,64 @@ the flag has been reset again.
 See below for the \fBedit\fR widget command that controls the undo
 mechanism.
 .VE 8.4
+
+.SH "PEER WIDGETS"
+.PP
+.VS 8.5
+The text widget has a separate store of all its data concerning each
+line's textual contents, marks, tags, images and windows, and the undo
+stack.
+.PP
+While this data store cannot be accessed directly (i.e. without a text
+widget as an intermediary), multiple text widgets can be created, each
+of which present different views on the same underlying data.  Such
+text widgets are known as peer text widgets.
+.PP
+As text is added, deleted, edited and coloured in any one widget, and as
+images, marks, tags are adjusted, all such changes will be reflected in
+all peers.
+.PP
+All data and markup is shared, except for a few small details.  First,
+the \fBsel\fR tag may be set and configured (in its display style)
+differently for each peer.  Second, each peer has its own \fBinsert\fR
+and \fBcurrent\fR mark positions (but all other marks are shared).
+Third, embedded windows, which are arbitrary other widgets, cannot be
+shared between peers.  This means the \fB-window\fR option of embedded
+windows is independently set for each peer (it is advisable to use
+the \fB-create\fR script capabilities to allow each peer to create its
+own embedded windows as needed).  Fourth, all of the configuration
+options of each peer (e.g. \fB-font\fR, etc) can be set independently,
+with the exception of \fB-undo\fR, \fB-maxUndo\fR, \fB-autoSeparators\fR
+(i.e. all undo, redo and modified state issues are shared).
+.PP
+Finally any single peer need not contain all lines from the underlying
+data store.  When creating a peer, a contiguous range of lines (e.g.
+only lines 52 through 125) may be specified.  This allows a peer to
+contain just a small portion of the overall text.  The range of lines
+will expand and contract as text is inserted or deleted.  The peer will
+only ever display complete lines of text (one cannot share just part of
+a line).  If the peer's contents contracts to nothing (i.e. all complete
+lines in the peer widget have been deleted from another widget), then it
+is impossible for new lines to be inserted.  The peer will simply become
+an empty shell on which the background can be configured, but which will
+never show any content (without manual reconfiguration of the start and
+end lines).  Note that a peer which does not contain all of the
+underlying data store still has indices numbered from "1.0" to "end".
+It is simply that those indices reflect a subset of the total data, and
+data outside the contained range is not accessible to the peer.  This
+means that the command \fB$peer index end\fR may return quite different
+values in different peers.  Similarly, commands like \fB$peer tag
+ranges\fR will not return index ranges outside that which is meaningful
+to the peer.  The configuration options \fB-startline\fR and
+\fB-endline\fR may be used to control how much of the underlying data is
+contained in any given text widget.
+.PP
+Note that peers are really peers.  Deleting the 'original' text widget
+will not cause any other peers to be deleted, or otherwise affected.
+.PP
+See below for the \fBpeer\fR widget command that controls the creation
+of peer widgets.
+.VE 8.5
 
 .SH "WIDGET COMMAND"
 .PP
@@ -1269,6 +1380,22 @@ The removed marks will not be usable in indices and will not be
 returned by future calls to ``\fIpathName \fBmark names\fR''.
 This command returns an empty string.
 .RE
+.TP
+\fIpathName \fBpeer\fR \fIoption args\fR
+This command is used to create and query widget peers.  It has
+two forms, depending on \fIoption\fR:
+.RS
+.TP
+\fIpathName \fBpeer create \fInewPathName\fR ?fIoptions\fR?
+Creates a peer text widget with the given \fInewPathName\fR, and any
+optional standard configuration options (as for the \fItext\fR command).
+By default the peer will have the same start and end line as the
+parent widget, but these can be overridden with the standard
+configuration options.
+.TP
+\fIpathName \fBpeer names\fR
+Returns a list of peers of this widget (this does not include the widget
+itself).  The order within this list is undefined.
 .TP
 \fIpathName \fBreplace\fR \fIindex1 index2 chars\fR ?\fItagList chars tagList ...\fR?
 Replaces the range of characters between \fIindex1\fR and \fIindex2\fR 
