@@ -1,3 +1,13 @@
+2004-12-20  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* generic/tkFileFilter.c:
+	* generic/tkFileFilter.h: 
+	* macosx/tkMacOSXDialog.c:
+	* win/tkWinDialog.c:
+	* tests/filebox.test:
+	* tests/winDialog.test: Corrected handling of MacOS file types
+	in tk_*file dialogs [Bug 1083878].
+
 2004-12-20  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/panedwindow.n: Fix silly typo. [Bug 1087842]
