@@ -1,3 +1,8 @@
+2004-11-26  David Gravereaux  <davygrvy@pobox.com>
+
+	* win/makefile.vc: Shell targets needed more stack space.
+	[Bug 1066755]
+
 2004-11-20  Vince Darley  <vincentdarley@users.sourceforge.net>
 
 	* tests/text.test: fix to test's platform sensitivities 
