@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.10 1999/09/10 00:23:12 wart Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.11 1999/09/18 00:20:56 stanton Exp $
 
 TCLVERSION = @TCL_VERSION@
 VERSION = @TK_VERSION@
@@ -325,6 +325,8 @@ TK_OBJS = \
 
 STUB_OBJS = \
 	tkStubLib.$(OBJEXT)
+
+DEMOPROGS = browse hello ixset rmt rolodex square tcolor timer widget
 
 # Main targets.  The default target -- all -- builds the binaries, 
 # performs any post processing on libraries or documents.
