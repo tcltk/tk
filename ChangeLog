@@ -1,3 +1,8 @@
+2004-02-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/menu.tcl (::tk::MbPost): make menubuttons that post
+	above or below reverse direction when not enough space is available.
+
 2004-01-28  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinCursor.c: Backported fix for bug #776646 which makes
@@ -5,28 +10,29 @@
 
 2003-01-27  Daniel Steffen  <das@users.sourceforge.net>
 
-        * macosx/Wish.pbproj/project.pbxproj: removed erroneous reference
-        to mkpsenc.tcl in bundle resources phase (mkpsenc.tcl is already
-        part of the copy files phase to Resources/Scripts).
+	* macosx/Wish.pbproj/project.pbxproj: removed erroneous reference
+	to mkpsenc.tcl in bundle resources phase (mkpsenc.tcl is already
+	part of the copy files phase to Resources/Scripts).
 
-        * macosx/Makefile: added support for 'xcodebuild' on Mac OS X 10.3.
+	* macosx/Makefile: added support for 'xcodebuild' on Mac OS X 10.3.
 
 2003-12-31  Daniel Steffen  <das@users.sourceforge.net>
 
-        * macosx/Wish.pbproj/project.pbxproj: added missing private headers
-        to installed Tk.framework, so that tkInt.h can be included  
-        sucessfully from Tk.framework/PrivateHeaders.
+	* macosx/Wish.pbproj/project.pbxproj: added missing private headers
+	to installed Tk.framework, so that tkInt.h can be included  
+	sucessfully from Tk.framework/PrivateHeaders.
 	* generic/tkPort.h: corrected include of tkMacOSXPort.h
 
 2003-12-17  Jim Ingham <jingham@apple.com>
 
-        * macosx/tkMacOSXScrlbr.c: Reworking Vince's fix to [Bug 842952].  
-	This version is clearer, and works helps keep the mouse better pinned to the
-        scrollbar.  I also removed the glitch where the scrollbar would jump get
-	its middle over the mouse when you first moved it.
+	* macosx/tkMacOSXScrlbr.c: Reworking Vince's fix to [Bug 842952].
+	This version is clearer, and works helps keep the mouse better
+	pinned to the scrollbar.  I also removed the glitch where the
+	scrollbar would jump get its middle over the mouse when you first
+	moved it.
 	
 	Import from TOT.
-	
+
 2003-12-11  David Gravereaux <davygrvy@pobox.com>
 
 	* win/winMain.c: Backed-out yesterdays change.  Reverted to 1.15 for
