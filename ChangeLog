@@ -1,5 +1,50 @@
 2002-04-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkWindow.c (TkCloseDisplay): Added to centralize where a
+	display was closed.  This handles freeing memory associated with a
+	display and closing it.
+	(DeleteWindowsExitProc): actually close displays.  This would also
+	ideally be done in Tk_DestroyWindow when the last window on the
+	display has been closed, but that still has unresolved order of
+	cleanup problems.
+	(Tk_DestroyWindow): added TkFocusFree call.
+
+	* generic/tkStubInit.c:
+	* generic/tkIntPlatDecls.h:
+	* generic/tkIntDecls.h:
+	* generic/tkInt.decls: added TkFocusFree, TkClipCleanup and
+	TkGCCleanup generic private procs, and TkWmCleanup, TkSendCleanup
+	and TkFreeXId unix private procs.
+
+	* generic/tkInt.h:
+	* unix/tkUnixXId.c (TkFreeXId): frees XID resources.
+	Made idCleanupScheduled a Tcl_TimerToken (was int) in TkDisplay
+	structure to allow us to delete the timer scheduled for it.
+
+	* unix/tkUnixWm.c (TkWmStackorderToplevel): ensure children
+	structure is freed.
+	(ConfigureEvent, ComputeReparentGeometry): Add extra wm tracing info
+	(TkWmRestackToplevel): initialize changes to 0 to prevent UMR.
+	Use WaitForConfigureNotify on all windows.  This part still
+	requires fixing as it is the root of the 2 second raise delay on
+	some window managers (those that use extra wrapper windows of
+	their own).
+
+	* unix/tkUnixSend.c (TkSendCleanup): free send-related resources
+
+	* unix/tkUnixEvent.c (TkpCloseDisplay): call TkSendCleanup and
+	TkWmCleanup.
+
+	* unix/tkUnixSelect.c (SelRcvIncrProc): added missing Tcl_Release
+	of interp
+
+	* generic/tkGet.c (FreeUidThreadExitProc): free thread-specific
+	resources on thread exit
+
+	* generic/tkFocus.c (TkFocusFree): frees TkMainInfo data
+	* generic/tkClipboard.c (TkClipCleanup): frees TkDisplay data
+	* generic/tkGC.c (TkGCCleanup): frees TkDisplay data
+
 	* unix/tkUnixFont.c (FontPkgCleanup): cleanup thread specific font
 	resources on thread exit.
 
