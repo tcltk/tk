@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.23 2002/10/09 11:57:01 das Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.24 2003/02/09 07:51:04 hobbs Exp $
  */
 
 #include <Gestalt.h>
@@ -2861,7 +2861,7 @@ Tk_SetGrid(
 	    && (wmPtr->widthInc == widthInc)
 	    && (wmPtr->heightInc == heightInc)
 	    && ((wmPtr->sizeHintsFlags & (PBaseSize|PResizeInc))
-		    == PBaseSize|PResizeInc)) {
+		    == (PBaseSize|PResizeInc))) {
 	return;
     }
 

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.5 2002/09/23 07:21:12 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.6 2003/02/09 07:51:04 hobbs Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -2675,7 +2675,7 @@ Tk_SetGrid(
 	    && (wmPtr->widthInc == widthInc)
 	    && (wmPtr->heightInc == heightInc)
 	    && ((wmPtr->sizeHintsFlags & (PBaseSize|PResizeInc))
-		    == PBaseSize|PResizeInc)) {
+		    == (PBaseSize|PResizeInc))) {
 	return;
     }
 
