@@ -3,7 +3,7 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# RCS: @(#) $Id: dialog.tcl,v 1.15 2003/10/22 15:24:24 dkf Exp $
+# RCS: @(#) $Id: dialog.tcl,v 1.16 2004/01/25 01:29:15 pspjuth Exp $
 #
 # Copyright (c) 1992-1993 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -78,6 +78,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     }
     pack $w.bot -side bottom -fill both
     pack $w.top -side top -fill both -expand 1
+    grid anchor $w.bot center
 
     # 2. Fill the top part with bitmap and message (use the option
     # database for -wraplength and -font so that they can be
@@ -165,7 +166,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 	set y 0
     }
     wm maxsize $w [winfo screenwidth $w] [winfo screenheight $w]
-    wm geom $w +$x+$y
+    wm geometry $w +$x+$y
     wm deiconify $w
 
     # 7. Set a grab and claim the focus too.
@@ -199,10 +200,10 @@ proc ::tk_dialog {w title text bitmap default args} {
 	destroy $w
     }
     if {[string compare $oldGrab ""]} {
-      if {[string compare $grabStatus "global"]} {
+	if {[string compare $grabStatus "global"]} {
 	    grab $oldGrab
-      } else {
-          grab -global $oldGrab
+	} else {
+	    grab -global $oldGrab
 	}
     }
     return $Priv(button)

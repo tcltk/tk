@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.25 2003/03/12 16:01:02 dkf Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.26 2004/01/25 01:29:15 pspjuth Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -262,6 +262,7 @@ proc ::tk::MessageBox {args} {
     }
 
     frame $w.bot -background $bg
+    grid anchor $w.bot center
     pack $w.bot -side bottom -fill both
     frame $w.top -background $bg
     pack $w.top -side top -fill both -expand 1
