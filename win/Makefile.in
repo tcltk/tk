@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.40 2001/07/04 00:25:09 mdejong Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.41 2001/07/06 02:25:02 mdejong Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -85,7 +85,7 @@ TCL_BIN_DIR		= @TCL_BIN_DIR@
 # been replaced by the configure script):
 TCL_GENERIC_DIR	= @TCL_SRC_DIR@/generic
 
-# This program converts between Windows native and Cygwin POSIX pathnames.
+# Converts a POSIX path to a Windows native path.
 CYGPATH			= @CYGPATH@
 
 # The name of the Tcl library.
@@ -128,11 +128,6 @@ CAT32			= cat32$(EXEEXT)
 MAN2TCL			= man2tcl$(EXEEXT)
 
 @SET_MAKE@
-
-# Macro that expands to the first dependency argument with the appropriate
-# path type already resolved.
-
-DEPARG = "$(shell $(CYGPATH) $<)"
 
 # Setting the VPATH variable to a list of paths will cause the 
 # makefile to look into these paths when resolving .c to .obj
@@ -515,7 +510,7 @@ $(TKTEST): $(TK_LIB_FILE) $(TKTEST_OBJS) wish.$(RES) $(CAT32)
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 
 cat32.${OBJEXT}: $(TCL_SRC_DIR)/win/cat.c
-	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
+	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 $(CAT32): cat32.${OBJEXT}
 	$(CC) $(CFLAGS) cat32.$(OBJEXT) $(CC_EXENAME) $(LDFLAGS_CONSOLE)
@@ -540,19 +535,19 @@ ${TK_LIB_FILE}: ${TK_OBJS}
 # Special case object file targets
 
 winMain.$(OBJEXT): winMain.c
-	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
+	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 testMain.$(OBJEXT): winMain.c
-	$(CC) -c $(CC_SWITCHES) $(DEPARG) -DTK_TEST $(CC_OBJNAME)
+	$(CC) -c $(CC_SWITCHES) @DEPARG@ -DTK_TEST $(CC_OBJNAME)
 
 tkTest.$(OBJEXT): tkTest.c
-	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
+	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 tkWinTest.$(OBJEXT): tkWinTest.c
-	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
+	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 tkSquare.$(OBJEXT): tkSquare.c
-	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
+	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 tclThreadTest.$(OBJEXT): $(TCL_BIN_DIR)/tclThreadTest.$(OBJEXT)
 
@@ -566,10 +561,10 @@ tclThreadTest.$(OBJEXT): $(TCL_BIN_DIR)/tclThreadTest.$(OBJEXT)
 # Implicit rule for all object files that will end up in the Tcl library
 
 .c.$(OBJEXT):
-	$(CC) -c $(STUB_CC_SWITCHES) -DBUILD_tk ${DEPARG} $(CC_OBJNAME)
+	$(CC) -c $(STUB_CC_SWITCHES) -DBUILD_tk @DEPARG@ $(CC_OBJNAME)
 
 .rc.$(RES):
-	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_DEFINES@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_GENERIC_NATIVE)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" $(DEPARG)
+	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_DEFINES@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_GENERIC_NATIVE)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" @DEPARG@
 
 depend:
 
