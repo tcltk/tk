@@ -1,3 +1,9 @@
+2000-05-16  Eric Melski  <ericm@scriptics.com>
+
+	* win/tkWinMenu.c (ReconfigureWindowsMenu): Added code to add the
+	MF_SEPARATOR bit for SEPARATOR_ENTRY menu items.  This causes
+	separator entries on the system menu to be drawn correctly [Bug: 5451].
+
 2000-05-15  Eric Melski  <ericm@scriptics.com>
 
 	* doc/image.n: Added documentation for [image inuse] command.

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.9 2000/05/10 00:09:40 ericm Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.10 2000/05/16 17:57:32 ericm Exp $
  */
 
 #define OEMRESOURCE
@@ -579,7 +579,7 @@ ReconfigureWindowsMenu(
 	    lpNewItem = (LPCTSTR) mePtr;
 	    flags |= MF_OWNERDRAW;
 	}
-	
+
 	/*
 	 * Set enabling and disabling correctly.
 	 */
@@ -596,6 +596,18 @@ ReconfigureWindowsMenu(
 		|| (mePtr->type == RADIO_BUTTON_ENTRY))
 		&& (mePtr->entryFlags & ENTRY_SELECTED)) {
 	    flags |= MF_CHECKED;
+	}
+	
+	/*
+	 * Set the SEPARATOR bit for separator entries.  This bit is not
+	 * used by our internal drawing functions, but it is used by the
+	 * system when drawing the system menu (we do not draw the system menu
+	 * ourselves).  If this bit is not set, separator entries on the system
+	 * menu will not be drawn correctly.
+	 */
+
+	if (mePtr->type == SEPARATOR_ENTRY) {
+	    flags |= MF_SEPARATOR;
 	}
 	
 	if (mePtr->columnBreak) {
