@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.31 2004/06/15 21:37:00 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.32 2005/02/03 13:44:58 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -216,27 +216,34 @@ static Tk_ConfigSpec configSpecs[] = {
 };
 
 /*
- * List of all the item types known at present:
+ * List of all the item types known at present. This is *global* and
+ * is protected by typeListMutex.
  */
 
 static Tk_ItemType *typeList = NULL;	/* NULL means initialization hasn't
 					 * been done yet. */
+TCL_DECLARE_MUTEX(typeListMutex);
 
 #ifndef USE_OLD_TAG_SEARCH
 /*
  * Uids for operands in compiled advanced tag search expressions
- * Initialization is done by InitCanvas()
+ * Initialization is done by GetStaticUids()
  */
-static Tk_Uid allUid = NULL;
-static Tk_Uid currentUid = NULL;
-static Tk_Uid andUid = NULL;
-static Tk_Uid orUid = NULL;
-static Tk_Uid xorUid = NULL;
-static Tk_Uid parenUid = NULL;
-static Tk_Uid negparenUid = NULL;
-static Tk_Uid endparenUid = NULL;
-static Tk_Uid tagvalUid = NULL;
-static Tk_Uid negtagvalUid = NULL;
+typedef struct {
+    Tk_Uid allUid;
+    Tk_Uid currentUid;
+    Tk_Uid andUid;
+    Tk_Uid orUid;
+    Tk_Uid xorUid;
+    Tk_Uid parenUid;
+    Tk_Uid negparenUid;
+    Tk_Uid endparenUid;
+    Tk_Uid tagvalUid;
+    Tk_Uid negtagvalUid;
+} SearchUids;
+
+static Tcl_ThreadDataKey dataKey;
+static SearchUids *GetStaticUids _ANSI_ARGS((void));
 #endif /* USE_OLD_TAG_SEARCH */
 
 /*
@@ -946,11 +953,13 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	}
 	arg = Tcl_GetStringFromObj(objv[2], (int *) &length);
 	c = arg[0];
+	Tcl_MutexLock(&typeListPtr);
 	for (typePtr = typeList; typePtr != NULL; typePtr = typePtr->nextPtr) {
 	    if ((c == typePtr->name[0])
 		    && (strncmp(arg, typePtr->name, length) == 0)) {
 		if (matchPtr != NULL) {
-		    badType:
+		    Tcl_MutexUnlock(&typeListPtr);
+		badType:
 		    Tcl_AppendResult(interp,
 			    "unknown or ambiguous item type \"",
 			    arg, "\"", (char *) NULL);
@@ -960,6 +969,12 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 		matchPtr = typePtr;
 	    }
 	}
+	/*
+	 * Can unlock now because we no longer look at the fields of
+	 * the matched item type that are potentially modified by
+	 * other threads.
+	 */
+	Tcl_MutexUnlock(&typeListPtr);
 	if (matchPtr == NULL) {
 	    goto badType;
 	}
@@ -2584,6 +2599,7 @@ Tk_CreateItemType(typePtr)
      * If there's already an item type with the given name, remove it.
      */
 
+    Tcl_MutexLock(&typeListMutex);
     for (typePtr2 = typeList, prevPtr = NULL; typePtr2 != NULL;
 	    prevPtr = typePtr2, typePtr2 = typePtr2->nextPtr) {
 	if (strcmp(typePtr2->name, typePtr->name) == 0) {
@@ -2597,6 +2613,7 @@ Tk_CreateItemType(typePtr)
     }
     typePtr->nextPtr = typeList;
     typeList = typePtr;
+    Tcl_MutexUnlock(&typeListMutex);
 }
 
 /*
@@ -2605,7 +2622,9 @@ Tk_CreateItemType(typePtr)
  * Tk_GetItemTypes --
  *
  *	This procedure returns a pointer to the list of all item
- *	types.
+ *	types. Note that this is inherently thread-unsafe, but since
+ *	item types are only ever registered very rarely this is
+ *	unlikely to be a problem in practice.
  *
  * Results:
  *	The return value is a pointer to the first in the list
@@ -2627,13 +2646,13 @@ Tk_GetItemTypes()
 }
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * InitCanvas --
  *
  *	This procedure is invoked to perform once-only-ever
- *	initialization for the module, such as setting up
- *	the type table.
+ *	initialization for the module, such as setting up the type
+ *	table.
  *
  * Results:
  *	None.
@@ -2641,13 +2660,15 @@ Tk_GetItemTypes()
  * Side effects:
  *	None.
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 static void
 InitCanvas()
 {
+    Tcl_MutexLock(&typeListMutex);
     if (typeList != NULL) {
+	Tcl_MutexUnlock(&typeListMutex);
 	return;
     }
     typeList = &tkRectangleType;
@@ -2660,18 +2681,7 @@ InitCanvas()
     tkBitmapType.nextPtr = &tkArcType;
     tkArcType.nextPtr = &tkWindowType;
     tkWindowType.nextPtr = NULL;
-#ifndef USE_OLD_TAG_SEARCH
-    allUid = Tk_GetUid("all");
-    currentUid = Tk_GetUid("current");
-    andUid = Tk_GetUid("&&");
-    orUid = Tk_GetUid("||");
-    xorUid = Tk_GetUid("^");
-    parenUid = Tk_GetUid("(");
-    endparenUid = Tk_GetUid(")");
-    negparenUid = Tk_GetUid("!(");
-    tagvalUid = Tk_GetUid("!!");
-    negtagvalUid = Tk_GetUid("!");
-#endif /* USE_OLD_TAG_SEARCH */
+    Tcl_MutexUnlock(&typeListMutex);
 }
 
 #ifdef USE_OLD_TAG_SEARCH
@@ -2882,7 +2892,48 @@ NextItem(searchPtr)
     return NULL;
 }
 
-#else /* USE_OLD_TAG_SEARCH */
+#else /* !USE_OLD_TAG_SEARCH */
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetStaticUids --
+ *
+ *	This procedure is invoked to return a structure filled with
+ *	the Uids used when doing tag searching. If it was never before
+ *	called in the current thread, it initializes the structure for
+ *	that thread (uids are only ever local to one thread [Bug
+ *	1114977]).
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static SearchUids *
+GetStaticUids()
+{
+    SearchUids *searchUids = (SearchUids *)
+	    Tcl_GetThreadData(&dataKey, sizeof(SearchUids));
+
+    if (searchUids->allUid == NULL) {
+	searchUids->allUid       = Tk_GetUid("all");
+	searchUids->currentUid   = Tk_GetUid("current");
+	searchUids->andUid       = Tk_GetUid("&&");
+	searchUids->orUid        = Tk_GetUid("||");
+	searchUids->xorUid       = Tk_GetUid("^");
+	searchUids->parenUid     = Tk_GetUid("(");
+	searchUids->endparenUid  = Tk_GetUid(")");
+	searchUids->negparenUid  = Tk_GetUid("!(");
+	searchUids->tagvalUid    = Tk_GetUid("!!");
+	searchUids->negtagvalUid = Tk_GetUid("!");
+    }
+    return searchUids;
+}
+
 /*
  *--------------------------------------------------------------
  *
@@ -3081,7 +3132,7 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
 	    return TCL_ERROR;
 	}
 	searchPtr->expr->length = searchPtr->expr->index;
-    } else if (searchPtr->expr->uid == allUid) {
+    } else if (searchPtr->expr->uid == GetStaticUids()->allUid) {
 	/*
 	 * All items match.
 	 */
@@ -3157,7 +3208,10 @@ TagSearchScanExpr(interp, searchPtr, expr)
     int negate_result;		/* Pending negation of next tag value */
     char *tag;			/* tag from tag expression string */
     char c;
+    SearchUids *searchUids;	/* Collection of uids for basic search
+				 * expression terms. */
 
+    searchUids = GetStaticUids();
     negate_result = 0;
     found_tag = 0;
     looking_for_tag = 1;
@@ -3198,10 +3252,10 @@ TagSearchScanExpr(interp, searchPtr, expr)
 
 	    case '(':	/* scan (negated) subexpr recursively */
 		if (negate_result) {
-		    expr->uids[expr->index++] = negparenUid;
+		    expr->uids[expr->index++] = searchUids->negparenUid;
 		    negate_result = 0;
 		} else {
-		    expr->uids[expr->index++] = parenUid;
+		    expr->uids[expr->index++] = searchUids->parenUid;
 		}
 		if (TagSearchScanExpr(interp, searchPtr, expr) != TCL_OK) {
 		    /*
@@ -3216,10 +3270,10 @@ TagSearchScanExpr(interp, searchPtr, expr)
 
 	    case '"':	/* quoted tag string */
 		if (negate_result) {
-		    expr->uids[expr->index++] = negtagvalUid;
+		    expr->uids[expr->index++] = searchUids->negtagvalUid;
 		    negate_result = 0;
 		} else {
-		    expr->uids[expr->index++] = tagvalUid;
+		    expr->uids[expr->index++] = searchUids->tagvalUid;
 		}
 		tag = searchPtr->rewritebuffer;
 		found_endquote = 0;
@@ -3264,10 +3318,10 @@ TagSearchScanExpr(interp, searchPtr, expr)
 
 	    default:	/* unquoted tag string */
 		if (negate_result) {
-		    expr->uids[expr->index++] = negtagvalUid;
+		    expr->uids[expr->index++] = searchUids->negtagvalUid;
 		    negate_result = 0;
 		} else {
-		    expr->uids[expr->index++] = tagvalUid;
+		    expr->uids[expr->index++] = searchUids->tagvalUid;
 		}
 		tag = searchPtr->rewritebuffer;
 		*tag++ = c;
@@ -3313,7 +3367,7 @@ TagSearchScanExpr(interp, searchPtr, expr)
 			    (char *) NULL);
 		    return TCL_ERROR;
 		}
-		expr->uids[expr->index++] = andUid;
+		expr->uids[expr->index++] = searchUids->andUid;
 		looking_for_tag = 1;
 		break;
 
@@ -3325,17 +3379,17 @@ TagSearchScanExpr(interp, searchPtr, expr)
 			    (char *) NULL);
 		    return TCL_ERROR;
 		}
-		expr->uids[expr->index++] = orUid;
+		expr->uids[expr->index++] = searchUids->orUid;
 		looking_for_tag = 1;
 		break;
 
 	    case '^'  :	/* XOR operator */
-		expr->uids[expr->index++] = xorUid;
+		expr->uids[expr->index++] = searchUids->xorUid;
 		looking_for_tag = 1;
 		break;
 
 	    case ')'  :	/* end subexpression */
-		expr->uids[expr->index++] = endparenUid;
+		expr->uids[expr->index++] = searchUids->endparenUid;
 		goto breakwhile;
 
 	    default:	/* syntax error */
@@ -3385,7 +3439,10 @@ TagSearchEvalExpr(expr, itemPtr)
     int count;
     int result;			/* Value of expr so far */
     int parendepth;
+    SearchUids *searchUids;	/* Collection of uids for basic search
+				 * expression terms. */
 
+    searchUids = GetStaticUids();
     result = 0;  /* just to keep the compiler quiet */
 
     negate_result = 0;
@@ -3393,7 +3450,7 @@ TagSearchEvalExpr(expr, itemPtr)
     while (expr->index < expr->length) {
 	uid = expr->uids[expr->index++];
 	if (looking_for_tag) {
-	    if (uid == tagvalUid) {
+	    if (uid == searchUids->tagvalUid) {
 /*
  *		assert(expr->index < expr->length);
  */
@@ -3410,7 +3467,7 @@ TagSearchEvalExpr(expr, itemPtr)
 		    }
 		}
 
-	    } else if (uid == negtagvalUid) {
+	    } else if (uid == searchUids->negtagvalUid) {
 		negate_result = ! negate_result;
 /*
  *		assert(expr->index < expr->length);
@@ -3428,13 +3485,13 @@ TagSearchEvalExpr(expr, itemPtr)
 		    }
 		}
 
-	    } else if (uid == parenUid) {
+	    } else if (uid == searchUids->parenUid) {
 		/*
 		 * evaluate subexpressions with recursion
 		 */
 		result = TagSearchEvalExpr(expr, itemPtr);
 
-	    } else if (uid == negparenUid) {
+	    } else if (uid == searchUids->negparenUid) {
 		negate_result = ! negate_result;
 		/*
 		 * evaluate subexpressions with recursion
@@ -3451,7 +3508,8 @@ TagSearchEvalExpr(expr, itemPtr)
 	    }
 	    looking_for_tag = 0;
 	} else {    /* ! looking_for_tag */
-	    if (((uid == andUid) && (!result)) || ((uid == orUid) && result)) {
+	    if (((uid == searchUids->andUid) && (!result)) ||
+		    ((uid == searchUids->orUid) && result)) {
 		/*
 		 * short circuit expression evaluation
 		 *
@@ -3463,15 +3521,17 @@ TagSearchEvalExpr(expr, itemPtr)
 		parendepth = 0;
 		while (expr->index < expr->length) {
 		    uid = expr->uids[expr->index++];
-		    if (uid == tagvalUid || uid == negtagvalUid) {
+		    if (uid == searchUids->tagvalUid ||
+			    uid == searchUids->negtagvalUid) {
 			expr->index++;
 			continue;
 		    }
-		    if (uid == parenUid || uid == negparenUid) {
+		    if (uid == searchUids->parenUid ||
+			    uid == searchUids->negparenUid) {
 			parendepth++;
 			continue;
 		    } 
-		    if (uid == endparenUid) {
+		    if (uid == searchUids->endparenUid) {
 			parendepth--;
 			if (parendepth < 0) {
 			    break;
@@ -3480,14 +3540,14 @@ TagSearchEvalExpr(expr, itemPtr)
 		}
 		return result;
 
-	    } else if (uid == xorUid) {
+	    } else if (uid == searchUids->xorUid) {
 		/*
 		 * if the previous result was 1 then negate the next
 		 * result.
 		 */
 		negate_result = result;
 
-	    } else if (uid == endparenUid) {
+	    } else if (uid == searchUids->endparenUid) {
 		return result;
 /*
  *	    } else {
@@ -4413,6 +4473,9 @@ PickCurrentItem(canvasPtr, eventPtr)
     double coords[2];
     int buttonDown;
     Tk_Item *prevItemPtr;
+#ifndef USE_OLD_TAG_SEARCH
+    SearchUids *searchUids = GetStaticUids();
+#endif
 
     /*
      * Check whether or not a button is down.  If so, we'll log entry
@@ -4537,7 +4600,7 @@ PickCurrentItem(canvasPtr, eventPtr)
 #ifdef USE_OLD_TAG_SEARCH
 		if (itemPtr->tagPtr[i] == Tk_GetUid("current"))
 #else /* USE_OLD_TAG_SEARCH */
-		if (itemPtr->tagPtr[i] == currentUid)
+		if (itemPtr->tagPtr[i] == searchUids->currentUid)
 #endif /* USE_OLD_TAG_SEARCH */
 		    /* then */ {
 		    itemPtr->tagPtr[i] = itemPtr->tagPtr[itemPtr->numTags-1];
@@ -4581,7 +4644,8 @@ PickCurrentItem(canvasPtr, eventPtr)
 	DoItem((Tcl_Interp *) NULL, canvasPtr->currentItemPtr, 
 		Tk_GetUid("current"));
 #else /* USE_OLD_TAG_SEARCH */
-	DoItem((Tcl_Interp *) NULL, canvasPtr->currentItemPtr, currentUid);
+	DoItem((Tcl_Interp *) NULL, canvasPtr->currentItemPtr,
+		searchUids->currentUid);
 #endif /* USE_OLD_TAG_SEA */
 	if ((canvasPtr->currentItemPtr->redraw_flags & TK_ITEM_STATE_DEPENDANT &&
 		prevItemPtr != canvasPtr->currentItemPtr)) {
@@ -4687,6 +4751,7 @@ CanvasDoEvent(canvasPtr, eventPtr)
 #ifndef USE_OLD_TAG_SEARCH
     TagSearchExpr *expr;
     int numExprs;
+    SearchUids *searchUids = GetStaticUids();
 #endif /* not USE_OLD_TAG_SEARCH */
 
     if (canvasPtr->bindingTable == NULL) {
@@ -4749,7 +4814,7 @@ CanvasDoEvent(canvasPtr, eventPtr)
 #ifdef USE_OLD_TAG_SEARCH
     objectPtr[0] = (ClientData) Tk_GetUid("all");
 #else /* USE_OLD_TAG_SEARCH */
-    objectPtr[0] = (ClientData) allUid;
+    objectPtr[0] = (ClientData) searchUids->allUid;
 #endif /* USE_OLD_TAG_SEARCH */
     for (i = itemPtr->numTags-1; i >= 0; i--) {
 	objectPtr[i+1] = (ClientData) itemPtr->tagPtr[i];
