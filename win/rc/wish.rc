@@ -1,7 +1,8 @@
-// RCS: @(#) $Id: wish.rc,v 1.4 2000/04/18 23:28:01 redman Exp $
+// RCS: @(#) $Id: wish.rc,v 1.5 2000/10/31 01:28:27 davidg Exp $
 //
-// Version
+// Version Resource Script
 //
+
 #include <windows.h>
 
 #define RESOURCE_INCLUDED
@@ -9,14 +10,42 @@
 
 #define STRINGIFY1(x)       #x
 #define STRINGIFY(x)        STRINGIFY1(x) 
- 
+
+//
+// build-up the name suffix that defines the type of build this is.
+//
+#ifdef TCL_THREADS
+#define SUFFIX_THREADS	    "t"
+#else
+#define SUFFIX_THREADS	    ""
+#endif
+
+#ifdef STATIC_BUILD
+#define SUFFIX_STATIC	    "s"
+#else
+#define SUFFIX_STATIC	    ""
+#endif
+
+#ifdef DEBUG
+#define SUFFIX_DEBUG	    "d"
+#else
+#define SUFFIX_DEBUG	    ""
+#endif
+
+#define SUFFIX		    SUFFIX_THREADS SUFFIX_STATIC SUFFIX_DEBUG
+
+
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION    TK_MAJOR_VERSION,TK_MINOR_VERSION,TK_RELEASE_LEVEL,TK_RELEASE_SERIAL
  PRODUCTVERSION TK_MAJOR_VERSION,TK_MINOR_VERSION,TK_RELEASE_LEVEL,TK_RELEASE_SERIAL
  FILEFLAGSMASK	0x3fL
+#ifdef DEBUG
+ FILEFLAGS	VS_FF_DEBUG
+#else
  FILEFLAGS	0x0L
- FILEOS		0x4L
- FILETYPE	0x1L
+#endif
+ FILEOS		VOS__WINDOWS32
+ FILETYPE	VFT_APP
  FILESUBTYPE	0x0L
 BEGIN
     BLOCK "StringFileInfo"
@@ -24,10 +53,10 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "FileDescription", "Wish Application\0"
-            VALUE "OriginalFilename", "wish" STRINGIFY(TK_MAJOR_VERSION) STRINGIFY(TK_MINOR_VERSION) ".exe\0"
-            VALUE "CompanyName", "Scriptics Corporation\0"
+            VALUE "OriginalFilename", "wish" STRINGIFY(TK_MAJOR_VERSION) STRINGIFY(TK_MINOR_VERSION) SUFFIX ".exe\0"
+            VALUE "CompanyName", "Ajuba Solutions\0"
             VALUE "FileVersion", TK_PATCH_LEVEL
-            VALUE "LegalCopyright", "Copyright \251 2000 by Scriptics Corporation\0"
+            VALUE "LegalCopyright", "Copyright \251 2000 by Ajuba Solutions\0"
             VALUE "ProductName", "Tk " TK_VERSION " for Windows\0"
             VALUE "ProductVersion", TK_PATCH_LEVEL
         END
@@ -40,6 +69,13 @@ END
 
 //
 // Icon
+// 
+//   The icon whose name or resource ID is lexigraphically first, is used
+//   as the application's icon.
 //
 
-wish                      ICON    DISCARDABLE     "wish.ico"
+app                      ICON    DISCARDABLE     "wish.ico"
+
+#ifdef STATIC_BUILD
+#include "tk_base.rc"
+#endif
