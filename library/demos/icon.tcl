@@ -3,11 +3,13 @@
 # This demonstration script creates a toplevel window containing
 # buttons that display bitmaps instead of text.
 #
-# RCS: @(#) $Id: icon.tcl,v 1.5 2004/10/19 15:25:06 dkf Exp $
+# RCS: @(#) $Id: icon.tcl,v 1.6 2004/12/21 11:56:35 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
+
+package require Tk
 
 set w .icon
 catch {destroy $w}

@@ -1,3 +1,8 @@
+2004-12-21  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* library/demos/*.tcl: Add [package require Tk] to all the widget
+	demo scripts so they follow standard practice better. [FRQ 815118]
+
 2004-12-20  Vince Darley  <vincentdarley@users.sourceforge.net>
 
 	* generic/tkFileFilter.c:

@@ -3,11 +3,13 @@
 # This demonstration script shows how you can produce output (in label
 # widgets) using many different alphabets.
 #
-# RCS: @(#) $Id: unicodeout.tcl,v 1.3 2003/08/20 23:02:18 hobbs Exp $
+# RCS: @(#) $Id: unicodeout.tcl,v 1.4 2004/12/21 11:56:35 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
+
+package require Tk
 
 set w .unicodeout
 catch {destroy $w}
