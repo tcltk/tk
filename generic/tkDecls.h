@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.17 2002/01/31 04:42:00 dgp Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.18 2002/04/05 08:38:22 hobbs Exp $
  */
 
 #ifndef _TKDECLS
@@ -843,6 +843,9 @@ EXTERN void		Tk_SetInternalBorderEx _ANSI_ARGS_((Tk_Window tkwin,
 /* 244 */
 EXTERN void		Tk_SetMinimumRequestSize _ANSI_ARGS_((
 				Tk_Window tkwin, int minWidth, int minHeight));
+/* 245 */
+EXTERN void		Tk_SetCaretPos _ANSI_ARGS_((Tk_Window tkwin, int x, 
+				int y, int height));
 
 typedef struct TkStubHooks {
     struct TkPlatStubs *tkPlatStubs;
@@ -1100,6 +1103,7 @@ typedef struct TkStubs {
     void (*tk_SetClassProcs) _ANSI_ARGS_((Tk_Window tkwin, Tk_ClassProcs * procs, ClientData instanceData)); /* 242 */
     void (*tk_SetInternalBorderEx) _ANSI_ARGS_((Tk_Window tkwin, int left, int right, int top, int bottom)); /* 243 */
     void (*tk_SetMinimumRequestSize) _ANSI_ARGS_((Tk_Window tkwin, int minWidth, int minHeight)); /* 244 */
+    void (*tk_SetCaretPos) _ANSI_ARGS_((Tk_Window tkwin, int x, int y, int height)); /* 245 */
 } TkStubs;
 
 #ifdef __cplusplus
@@ -2089,6 +2093,10 @@ extern TkStubs *tkStubsPtr;
 #ifndef Tk_SetMinimumRequestSize
 #define Tk_SetMinimumRequestSize \
 	(tkStubsPtr->tk_SetMinimumRequestSize) /* 244 */
+#endif
+#ifndef Tk_SetCaretPos
+#define Tk_SetCaretPos \
+	(tkStubsPtr->tk_SetCaretPos) /* 245 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.30 2001/12/04 03:07:43 mdejong Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.31 2002/04/05 08:38:22 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -879,6 +879,7 @@ TkStubs tkStubs = {
     Tk_SetClassProcs, /* 242 */
     Tk_SetInternalBorderEx, /* 243 */
     Tk_SetMinimumRequestSize, /* 244 */
+    Tk_SetCaretPos, /* 245 */
 };
 
 /* !END!: Do not edit above this line. */
