@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.25 2003/11/08 17:22:46 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.26 2003/11/10 14:37:33 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -5352,76 +5352,84 @@ GetYView(interp, textPtr, report)
 
     totalPixels = TkBTreeNumPixels(textPtr->tree);
     
-    /* 
-     * Get the pixel count for the first display visible pixel of the
-     * first visible line.  If the first visible line is only partially
-     * visible, then we use 'topPixelOffset' to get the difference.
-     */
-    count = GetPixelCount(textPtr, dlPtr);
-    first = ((double) (count + dInfoPtr->topPixelOffset))/((double)totalPixels);
-
-    /* 
-     * Add on the total number of visible pixels to get the count to
-     * the last visible pixel.
-     */
-    while (1) {
-	int extra;
-	count += dlPtr->height;
-
-	extra = dlPtr->y + dlPtr->height - dInfoPtr->maxY;
-	if (extra > 0) {
-	    /*
-	     * This much of the last line is not visible, so don't
-	     * count these pixels.  Since we've reached the bottom
-	     * of the window, we break out of the loop.
-	     */
-	    count -= extra;
-	    break;
-	}
-	if (dlPtr->nextPtr == NULL) {
-	    break;
-	}
-	dlPtr = dlPtr->nextPtr;
-    }
-    
-    if (count > totalPixels) {
+    if (totalPixels == 0) {
+	first = 0.0;
+	last = 1.0;
+    } else {
 	/* 
-	 * It can be possible, if we do not update each line's
-	 * pixelHeight cache when we lay out individual DLines that
-	 * the count generated here is more up-to-date than that
-	 * maintained by the BTree.  In such a case, the best we can
-	 * do here is to fix up 'count' and continue, which might
-	 * result in small, temporary perturbations to the size of
-	 * the scrollbar.  This is basically harmless, but in a 
-	 * perfect world we would not have this problem.
-	 * 
-	 * For debugging purposes, if anyone wishes to improve the text
-	 * widget further, the following 'panic' can be activated.  In
-	 * principle it should be possible to ensure the BTree is always
-	 * at least as up to date as the display, so in the future we
-	 * might be able to leave the 'panic' in permanently when we
-	 * believe we have resolved the cache synchronisation issue.
-	 * 
-	 * However, to achieve that goal would, I think, require a 
-	 * fairly substantial refactorisation of the code in this
-	 * file so that there is much more obvious and explicit
-	 * coordination between calls to LayoutDLine and updating
-	 * of each TkTextLine's pixelHeight.  The complicated bit
-	 * is that LayoutDLine deals with individual display lines,
-	 * but pixelHeight is for a logical line.
+	 * Get the pixel count for the first display visible pixel of the
+	 * first visible line.  If the first visible line is only
+	 * partially visible, then we use 'topPixelOffset' to get the
+	 * difference.
 	 */
-#if 0
-	char buffer[200];
+	count = GetPixelCount(textPtr, dlPtr);
+	first = ((double) (count + dInfoPtr->topPixelOffset))
+	                                  /((double)totalPixels);
 
-	sprintf(buffer, 
-		"Counted more pixels (%d) than expected (%d) total pixels in text widget scroll bar calculation.", 
-		count, totalPixels);
-	panic(buffer);
-#endif
-	count = totalPixels;
+	/* 
+	 * Add on the total number of visible pixels to get the count to
+	 * the last visible pixel.
+	 */
+	while (1) {
+	    int extra;
+	    count += dlPtr->height;
+
+	    extra = dlPtr->y + dlPtr->height - dInfoPtr->maxY;
+	    if (extra > 0) {
+		/*
+		 * This much of the last line is not visible, so don't
+		 * count these pixels.  Since we've reached the bottom
+		 * of the window, we break out of the loop.
+		 */
+		count -= extra;
+		break;
+	    }
+	    if (dlPtr->nextPtr == NULL) {
+		break;
+	    }
+	    dlPtr = dlPtr->nextPtr;
+	}
+	
+	if (count > totalPixels) {
+	    /* 
+	     * It can be possible, if we do not update each line's
+	     * pixelHeight cache when we lay out individual DLines that
+	     * the count generated here is more up-to-date than that
+	     * maintained by the BTree.  In such a case, the best we can
+	     * do here is to fix up 'count' and continue, which might
+	     * result in small, temporary perturbations to the size of
+	     * the scrollbar.  This is basically harmless, but in a
+	     * perfect world we would not have this problem.
+	     * 
+	     * For debugging purposes, if anyone wishes to improve the
+	     * text widget further, the following 'panic' can be
+	     * activated.  In principle it should be possible to ensure
+	     * the BTree is always at least as up to date as the display,
+	     * so in the future we might be able to leave the 'panic' in
+	     * permanently when we believe we have resolved the cache
+	     * synchronisation issue.
+	     * 
+	     * However, to achieve that goal would, I think, require a
+	     * fairly substantial refactorisation of the code in this
+	     * file so that there is much more obvious and explicit
+	     * coordination between calls to LayoutDLine and updating of
+	     * each TkTextLine's pixelHeight.  The complicated bit is
+	     * that LayoutDLine deals with individual display lines, but
+	     * pixelHeight is for a logical line.
+	     */
+    #if 0
+	    char buffer[200];
+
+	    sprintf(buffer, 
+		    "Counted more pixels (%d) than expected (%d) total pixels in text widget scroll bar calculation.", 
+		    count, totalPixels);
+	    panic(buffer);
+    #endif
+	    count = totalPixels;
+	}
+	
+	last = ((double) (count))/((double)totalPixels);
     }
-    
-    last = ((double) (count))/((double)totalPixels);
 
     if (!report) {
 	listObj = Tcl_NewListObj(0,NULL);
