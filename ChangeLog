@@ -1,3 +1,6 @@
+2003-10-06  Joe English  <jenglish@users.sourceforge.net>
+	* generic/tkStyle.c: Fix double-free in style engine [Bug #798211]
+
 2003-10-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/configure:

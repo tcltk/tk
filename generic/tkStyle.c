@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStyle.c,v 1.3 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkStyle.c,v 1.4 2003/10/06 21:19:30 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -77,11 +77,6 @@ typedef struct StyleEngine {
  */
 
 typedef struct Style {
-    int refCount;		/* Number of active uses of this style.
-				 * If this count is 0, then this Style
-				 * structure is no longer valid. */
-    Tcl_HashEntry *hashPtr;	/* Entry in style table for this structure,
-				 * used when deleting it. */
     CONST char *name;		/* Name of style. Points to a hash key. */
     StyleEngine *enginePtr;	/* Style engine of which the style is an 
 				 * instance. */
@@ -133,7 +128,6 @@ static int		CreateElement _ANSI_ARGS_((CONST char *name,
 static void		DupStyleObjProc _ANSI_ARGS_((Tcl_Obj *srcObjPtr,
 			    Tcl_Obj *dupObjPtr));
 static void		FreeElement _ANSI_ARGS_((Element *elementPtr));
-static void		FreeStyle _ANSI_ARGS_((Style *stylePtr));
 static void		FreeStyledElement _ANSI_ARGS_((
 			    StyledElement *elementPtr));
 static void		FreeStyleEngine _ANSI_ARGS_((
@@ -149,7 +143,7 @@ static void		InitElement _ANSI_ARGS_((Element *elementPtr,
 			    CONST char *name, int id, int genericId, 
 			    int created));
 static void		InitStyle _ANSI_ARGS_((Style *stylePtr, 
-			    Tcl_HashEntry *hashPtr, CONST char *name, 
+			    CONST char *name, 
 			    StyleEngine *enginePtr, ClientData clientData));
 static void		InitStyledElement _ANSI_ARGS_((
 			    StyledElement *elementPtr));
@@ -1239,8 +1233,7 @@ Tk_DrawElement(style, element, recordPtr, tkwin, d, x, y, width, height, state)
  *	The newly allocated style.
  *
  * Side effects:
- *	Memory allocated. Data added to thread-local table. The style's
- *	refCount is incremented.
+ *	Memory allocated. Data added to thread-local table.
  *
  *---------------------------------------------------------------------------
  */
@@ -1277,10 +1270,9 @@ Tk_CreateStyle(name, engine, clientData)
      */
 
     stylePtr = (Style *) ckalloc(sizeof(Style));
-    InitStyle(stylePtr, entryPtr, Tcl_GetHashKey(&tsdPtr->styleTable, entryPtr),
+    InitStyle(stylePtr, Tcl_GetHashKey(&tsdPtr->styleTable, entryPtr),
 	    (engine?(StyleEngine *) engine:tsdPtr->defaultEnginePtr), clientData);
     Tcl_SetHashValue(entryPtr, (ClientData) stylePtr);
-    stylePtr->refCount++;
 
     return (Tk_Style) stylePtr;
 }
@@ -1330,43 +1322,17 @@ Tk_NameOfStyle(style)
  */
 
 static void
-InitStyle(stylePtr, hashPtr, name, enginePtr, clientData)
+InitStyle(stylePtr, name, enginePtr, clientData)
     Style *stylePtr;		/* Points to an uninitialized style. */
-    Tcl_HashEntry *hashPtr;	/* Hash entry for the registered style. */
     CONST char *name;		/* Name of the registered style. NULL or empty
 				 * means the default system style. Usually
 				 * points to the hash key. */
     StyleEngine *enginePtr;	/* The style engine. */
     ClientData clientData;	/* Private data passed as is to engine code. */
 {
-    stylePtr->refCount = 0;
-    stylePtr->hashPtr = hashPtr;
     stylePtr->name = name;
     stylePtr->enginePtr = enginePtr;
     stylePtr->clientData = clientData;
-}
-
-/*
- *---------------------------------------------------------------------------
- *
- * FreeStyle --
- *
- *	Free a style and its associated data.
- *
- * Results:
- *	None
- *
- * Side effects:
- *	None.
- *
- *---------------------------------------------------------------------------
- */
-
-static void
-FreeStyle(stylePtr)
-    Style *stylePtr;		/* The style to free. */
-{
-    /* Nothing to do. */
 }
 
 /*
@@ -1410,7 +1376,6 @@ Tk_GetStyle(interp, name)
 	return (Tk_Style) NULL;
     }
     stylePtr = (Style *) Tcl_GetHashValue(entryPtr);
-    stylePtr->refCount++;
 
     return (Tk_Style) stylePtr;
 }
@@ -1420,44 +1385,15 @@ Tk_GetStyle(interp, name)
  *
  * Tk_FreeStyle --
  *
- *	Free a style previously created by Tk_CreateStyle.
- *
- * Results:
- *	None
- *
- * Side effects:
- *	The style's refCount is decremented. If it reaches zero, the style
- *	is freed.
+ *	No-op.  Present only for stubs compatibility.
  *
  *---------------------------------------------------------------------------
  */
 
 void 
 Tk_FreeStyle(style)
-    Tk_Style style;		/* The style to free. */
+    Tk_Style style;
 {
-    Style *stylePtr = (Style *) style;
-
-    if (stylePtr == NULL) {
-	return;
-    }
-    stylePtr->refCount--;
-    if (stylePtr->refCount > 0) {
-	return;
-    }
-    
-    /*
-     * Keep the default style alive.
-     */
-
-    if (*stylePtr->name == '\0') {
-	stylePtr->refCount = 1;
-	return;
-    }
-
-    Tcl_DeleteHashEntry(stylePtr->hashPtr);
-    FreeStyle(stylePtr);
-    ckfree((char *) stylePtr);
 }
 
 /*
@@ -1472,12 +1408,6 @@ Tk_FreeStyle(style)
  *	The return value is a token for the style that matches objPtr, or 
  *	NULL if none found.  If NULL is returned, an error message will be 
  *	left in interp's result object.
- *
- * Side effects:
- * 	The style's reference count is incremented. For each call to this 
- *	procedure, there should eventually be a call to Tk_FreeStyle() or 
- *	Tk_FreeStyleFromObj() so that the database is cleaned up when styles
- *	aren't in use anymore.
  *
  *---------------------------------------------------------------------------
  */
@@ -1495,7 +1425,6 @@ Tk_AllocStyleFromObj(interp, objPtr)
 	stylePtr = (Style *) objPtr->internalRep.otherValuePtr;
     } else {
 	stylePtr = (Style *) objPtr->internalRep.otherValuePtr;
-	stylePtr->refCount++;
     }
 
     return (Tk_Style) stylePtr;
@@ -1536,25 +1465,14 @@ Tk_GetStyleFromObj(objPtr)
  *
  * Tk_FreeStyleFromObj -- 
  *
- *	Called to release a style inside a Tcl_Obj *.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	If the object is a style ref, the conversion will free its 
- *	internal representation. 
+ *	No-op.  Present only for stubs compatibility.
  *
  *---------------------------------------------------------------------------
  */
-
 void
 Tk_FreeStyleFromObj(objPtr)
-    Tcl_Obj *objPtr;		/* The Tcl_Obj * to be freed. */
+    Tcl_Obj *objPtr;
 {
-    if (objPtr->typePtr == &styleObjType) {
-	FreeStyleObjProc(objPtr);
-    }
 }
 
 /*
@@ -1572,7 +1490,6 @@ Tk_FreeStyleFromObj(objPtr)
  *
  * Side effects:
  *	The object is left with its typePtr pointing to styleObjType.
- *	The reference count is incremented (in Tk_GetStyle()).
  *
  *----------------------------------------------------------------------
  */
@@ -1612,9 +1529,6 @@ SetStyleFromAny(interp, objPtr)
  * Results:
  *	None.
  *
- * Side effects:
- *	The reference count is decremented (in Tk_FreeStyle()).
- *
  *---------------------------------------------------------------------------
  */
 
@@ -1622,12 +1536,8 @@ static void
 FreeStyleObjProc(objPtr)
     Tcl_Obj *objPtr;		/* The object we are releasing. */
 {
-    Style *stylePtr = (Style *) objPtr->internalRep.otherValuePtr;
-
-    if (stylePtr != NULL) {
-	Tk_FreeStyle((Tk_Style) stylePtr);
-	objPtr->internalRep.otherValuePtr = NULL;
-    }
+    objPtr->internalRep.otherValuePtr = NULL;
+    objPtr->typePtr = NULL;
 }
 
 /*
@@ -1638,13 +1548,6 @@ FreeStyleObjProc(objPtr)
  *	When a cached style object is duplicated, this is called to
  *	update the internal reps.
  *
- * Results:
- *	None.
- *
- * Side effects:
- *	The style's refCount is incremented and the internal rep of the copy 
- *	is set to point to it.
- *
  *---------------------------------------------------------------------------
  */
 
@@ -1653,12 +1556,6 @@ DupStyleObjProc(srcObjPtr, dupObjPtr)
     Tcl_Obj *srcObjPtr;		/* The object we are copying from. */
     Tcl_Obj *dupObjPtr;		/* The object we are copying to. */
 {
-    Style *stylePtr = (Style *) srcObjPtr->internalRep.otherValuePtr;
-    
     dupObjPtr->typePtr = srcObjPtr->typePtr;
-    dupObjPtr->internalRep.otherValuePtr = (VOID *) stylePtr;
-
-    if (stylePtr != NULL) {
-	stylePtr->refCount++;
-    }
+    dupObjPtr->internalRep.otherValuePtr=srcObjPtr->internalRep.otherValuePtr;
 }
