@@ -9,10 +9,10 @@
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # Copyright (c) 2001 ActiveState Corporation.
-# Copyright (c) 2001-2002 David Gravereaux.
+# Copyright (c) 2001-2003 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.76 2003/11/17 02:15:32 dgp Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.77 2003/12/23 02:59:12 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -165,16 +165,22 @@ PROJECT	= tk
 !endif
 
 STUBPREFIX = $(PROJECT)stub
-DOTVERSION = 8.5
+!if [nmakehlp -g ../generic/tk.h TK_VERSION] == 85
+DOTVERSION	= 8.5
+!elseif [nmakehlp -g ../generic/tk.h TK_VERSION] == 86
+DOTVERSION	= 8.6
+!elseif [nmakehlp -g ../generic/tk.h TK_VERSION] == 90
+DOTVERSION	= 9.0
+!elseif [nmakehlp -g ../generic/tk.h TK_VERSION] == 0
+MSG =^
+Can't get version string from ../generic/tk.h
+!error $(MSG)
+!endif
 VERSION = $(DOTVERSION:.=)
 WISHNAMEPREFIX = wish
 
 BINROOT		= .
 ROOT		= ..
-
-#TCLIMPLIBNAME	= tcl$(VERSION)$(SUFX).lib
-#TCLLIB	= tcl$(VERSION)$(SUFX).$(EXT)
-#TCLSTUBLIBNAME	= tclstub$(VERSION).lib
 
 TKIMPLIB	= "$(OUT_DIR)\$(PROJECT)$(VERSION)$(SUFX).lib"
 TKLIBNAME	= $(PROJECT)$(VERSION)$(SUFX).$(EXT)
