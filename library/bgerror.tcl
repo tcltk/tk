@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.17.2.1 2001/10/15 09:22:00 wolfsuit Exp $
-# $Id: bgerror.tcl,v 1.17.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.17.2.2 2001/10/17 06:51:28 wolfsuit Exp $
+# $Id: bgerror.tcl,v 1.17.2.2 2001/10/17 06:51:28 wolfsuit Exp $
 
 option add *ErrorDialog.function.text [::msgcat::mc "Save To Log"] \
 	widgetDefault
@@ -92,7 +92,7 @@ proc ::bgerror err {
 
     # Ok the application's tkerror either failed or was not found
     # we use the default dialog then :
-    if {[sting equal $tcl_platform(platform) "macintosh"]
+    if {[string equal $tcl_platform(platform) "macintosh"]
              || [string equal $tcl_platform(windowingsystem) "aqua"]} {
 	set ok		[::msgcat::mc "Ok"]
 	set messageFont	system
