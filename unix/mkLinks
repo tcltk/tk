@@ -663,10 +663,6 @@ if test -r MapWindow.3; then
     rm -f Tk_MapWindow.3
     ln MapWindow.3 Tk_MapWindow.3
 fi
-if test -r WinViewable.3; then
-    rm -f Tk_IsViewable.3
-    ln WinViewable.3 Tk_IsViewable.3
-fi
 if test -r MeasureChar.3; then
     rm -f Tk_MeasureChars.3
     ln MeasureChar.3 Tk_MeasureChars.3

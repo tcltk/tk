@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.9 2000/04/18 02:18:32 ericm Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.10 2000/04/19 23:11:23 ericm Exp $
  */
 
 #ifndef _TKDECLS
@@ -815,8 +815,6 @@ EXTERN int		Tk_PostscriptStipple _ANSI_ARGS_((
 /* 237 */
 EXTERN double		Tk_PostscriptY _ANSI_ARGS_((double y, 
 				Tk_PostscriptInfo psInfo));
-/* 238 */
-EXTERN int		Tk_IsViewable _ANSI_ARGS_((Tk_Window tkwin));
 
 typedef struct TkStubHooks {
     struct TkPlatStubs *tkPlatStubs;
@@ -1067,7 +1065,6 @@ typedef struct TkStubs {
     void (*tk_PostscriptPath) _ANSI_ARGS_((Tcl_Interp * interp, Tk_PostscriptInfo psInfo, double * coordPtr, int numPoints)); /* 235 */
     int (*tk_PostscriptStipple) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Window tkwin, Tk_PostscriptInfo psInfo, Pixmap bitmap)); /* 236 */
     double (*tk_PostscriptY) _ANSI_ARGS_((double y, Tk_PostscriptInfo psInfo)); /* 237 */
-    int (*tk_IsViewable) _ANSI_ARGS_((Tk_Window tkwin)); /* 238 */
 } TkStubs;
 
 #ifdef __cplusplus
@@ -2029,10 +2026,6 @@ extern TkStubs *tkStubsPtr;
 #ifndef Tk_PostscriptY
 #define Tk_PostscriptY \
 	(tkStubsPtr->tk_PostscriptY) /* 237 */
-#endif
-#ifndef Tk_IsViewable
-#define Tk_IsViewable \
-	(tkStubsPtr->tk_IsViewable) /* 238 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

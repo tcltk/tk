@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.20 2000/04/18 02:18:33 ericm Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.21 2000/04/19 23:11:24 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -948,7 +948,6 @@ TkStubs tkStubs = {
     Tk_PostscriptPath, /* 235 */
     Tk_PostscriptStipple, /* 236 */
     Tk_PostscriptY, /* 237 */
-    Tk_IsViewable, /* 238 */
 };
 
 /* !END!: Do not edit above this line. */
