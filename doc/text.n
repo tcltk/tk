@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.22 2003/11/16 14:13:09 vincentdarley Exp $
+'\" RCS: @(#) $Id: text.n,v 1.23 2003/12/04 12:28:37 vincentdarley Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -81,7 +81,9 @@ and no insertion cursor will be displayed, even if the input focus is
 in the widget.
 .OP \-tabs tabs Tabs
 Specifies a set of tab stops for the window.  The option's value consists
-of a list of screen distances giving the positions of the tab stops.  Each
+of a list of screen distances giving the positions of the tab stops,
+each of which is a distance relative to the left edge of the widget
+(excluding borders, padding, etc).  Each
 position may optionally be followed in the next list element
 by one of the keywords \fBleft\fR, \fBright\fR, \fBcenter\fR,
 or \fBnumeric\fR, which specifies how to justify
@@ -100,7 +102,9 @@ tab stops at two-centimeter intervals;  the first two use left
 justification and the third uses center justification.
 If the list of tab stops does not have enough elements to cover all
 of the tabs in a text line, then Tk extrapolates new tab stops using
-the spacing and alignment from the last tab stop in the list.
+the spacing and alignment from the last tab stop in the list.  Tab
+distances must be strictly positive, and must always increase from one 
+tab stop to the next (if not, an error is thrown).
 The value of the \fBtabs\fR option may be overridden by \fB\-tabs\fR
 options in tags.
 If no \fB\-tabs\fR option is specified, or if it is specified as
