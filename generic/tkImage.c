@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.20 2003/05/08 09:35:41 dkf Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.21 2003/07/07 09:35:58 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -87,7 +87,8 @@ static Tcl_ThreadDataKey dataKey;
  */
 
 static void	DeleteImage _ANSI_ARGS_((ImageMaster *masterPtr));
-static void	EventuallyDeleteImage _ANSI_ARGS_((ImageMaster *masterPtr));
+static void	EventuallyDeleteImage _ANSI_ARGS_((ImageMaster *masterPtr,
+				int forgetImageHashNow));
 
 /*
  *----------------------------------------------------------------------
@@ -317,7 +318,7 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 	    if ((*typePtr->createProc)(interp, name, objc,
 		    args, typePtr, (Tk_ImageMaster) masterPtr,
 		    &masterPtr->masterData) != TCL_OK) {
-		EventuallyDeleteImage(masterPtr);
+		EventuallyDeleteImage(masterPtr, 0);
 		Tcl_Release((ClientData) masterPtr);
 		if (oldimage) {
 		    ckfree((char *) args);
@@ -553,6 +554,9 @@ Tk_NameOfImage(imageMaster)
 {
     ImageMaster *masterPtr = (ImageMaster *) imageMaster;
 
+    if (masterPtr->hPtr == NULL) {
+	return NULL;
+    }
     return Tcl_GetHashKey(masterPtr->tablePtr, masterPtr->hPtr);
 }
 
@@ -677,7 +681,10 @@ Tk_FreeImage(image)
      */
 
     if ((masterPtr->typePtr == NULL) && (masterPtr->instancePtr == NULL)) {
-	Tcl_DeleteHashEntry(masterPtr->hPtr);
+	if (masterPtr->hPtr != NULL) {
+	    Tcl_DeleteHashEntry(masterPtr->hPtr);
+	}
+	Tcl_Release((ClientData) masterPtr->winPtr);
 	ckfree((char *) masterPtr);
     }
 }
@@ -952,7 +959,9 @@ DeleteImage(masterPtr)
 	(*typePtr->deleteProc)(masterPtr->masterData);
     }
     if (masterPtr->instancePtr == NULL) {
-	Tcl_DeleteHashEntry(masterPtr->hPtr);
+	if (masterPtr->hPtr != NULL) {
+	    Tcl_DeleteHashEntry(masterPtr->hPtr);
+	}
 	Tcl_Release((ClientData) masterPtr->winPtr);
 	ckfree((char *) masterPtr);
     } else {
@@ -979,9 +988,14 @@ DeleteImage(masterPtr)
  */
 
 static void
-EventuallyDeleteImage(masterPtr)
+EventuallyDeleteImage(masterPtr, forgetImageHashNow)
     ImageMaster *masterPtr;	/* Pointer to main data structure for image. */
+    int forgetImageHashNow;	/* Flag to say whether the hash table is
+				 * about to vanish. */
 {
+    if (forgetImageHashNow) {
+	masterPtr->hPtr = NULL;
+    }
     if (!masterPtr->deleted) {
 	masterPtr->deleted = 1;
 	Tcl_EventuallyFree((ClientData) masterPtr,
@@ -1018,7 +1032,7 @@ TkDeleteAllImages(mainPtr)
 
     for (hPtr = Tcl_FirstHashEntry(&mainPtr->imageTable, &search);
 	    hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	EventuallyDeleteImage((ImageMaster *) Tcl_GetHashValue(hPtr));
+	EventuallyDeleteImage((ImageMaster *) Tcl_GetHashValue(hPtr), 1);
     }
     Tcl_DeleteHashTable(&mainPtr->imageTable);
 }
