@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixKey.c,v 1.5 2000/04/10 22:43:13 ericm Exp $
+ * RCS: @(#) $Id: tkUnixKey.c,v 1.6 2002/04/05 08:38:41 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -18,7 +18,44 @@
  * Prototypes for local procedures defined in this file:
  */
 
+#ifdef TK_USE_INPUT_METHODS
+static int caretX = 0, caretY = 0;
+#endif
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_SetCaretPos --
+ *
+ *	This enables correct placement of the XIM caret.  This is called
+ *	by widgets to indicate their cursor placement, and the caret
+ *	location is used by TkpGetString to place the XIM caret.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	None
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_SetCaretPos(tkwin, x, y, height)
+    Tk_Window tkwin;
+    int	      x;
+    int	      y;
+    int	      height;
+{
+#ifdef TK_USE_INPUT_METHODS
+    /*
+     * Use height for best placement of the XIM over-the-spot box.
+     */
+    caretX = x;
+    caretY = y + height;
+#endif
+}
 
 /*
  *----------------------------------------------------------------------
@@ -56,11 +93,16 @@ TkpGetString(winPtr, eventPtr, dsPtr)
 
     Tcl_DStringInit(&buf);
     Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
-    
+
 #ifdef TK_USE_INPUT_METHODS
     if (winPtr->dispPtr->useInputMethods
 	    && (winPtr->inputContext != NULL)
 	    && (eventPtr->type == KeyPress)) {
+#if TK_XIM_SPOT
+	XVaNestedList preedit_attr;
+	XPoint spot;
+#endif
+
 	len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
 		Tcl_DStringValue(&buf), Tcl_DStringLength(&buf),
 		(KeySym *) NULL, &status);
@@ -76,6 +118,17 @@ TkpGetString(winPtr, eventPtr, dsPtr)
 	if ((status != XLookupChars) && (status != XLookupBoth)) {
 	    len = 0;
 	}
+
+#if TK_XIM_SPOT
+	/*
+	 * Adjust the XIM caret position.
+	 */
+	spot.x = caretX; spot.y = caretY;
+	preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
+	XSetICValues(winPtr->inputContext,
+		XNPreeditAttributes, preedit_attr, NULL);
+	XFree(preedit_attr);
+#endif
     } else {
 	len = XLookupString(&eventPtr->xkey, Tcl_DStringValue(&buf),
 		Tcl_DStringLength(&buf), (KeySym *) NULL,
