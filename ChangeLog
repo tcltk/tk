@@ -1,3 +1,10 @@
+2003-10-10  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* mac/tkMacButton.c (TkpDisplayButton):
+	* macosx/tkMacOSXButton.c (TkpDisplayButton):
+	* unix/tkUnixButton.c (TkpDisplayButton): correct imageYOffset for
+	buttons with just images.
+
 2003-10-10  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkObj.c (TkRegisterObjTypes): Register the type of text
