@@ -1,3 +1,8 @@
+2002-03-11  Kevin Kenny  <kennykb@users.sourceforge.net>
+
+	* win/makefile.vc: Backported the code that makes the makefile
+	build pkgIndex.tcl as part of the install step.
+	
 2003-03-07  Jim Ingham  <jingham@apple.com>
 
 	* macosx/tkMacOSXMenus.c (TkMacOSXInitMenus): No longer need
