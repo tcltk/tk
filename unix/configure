@@ -546,9 +546,9 @@ fi
 TK_VERSION=8.4
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=4
-TK_PATCH_LEVEL="b1"
+TK_PATCH_LEVEL="b2"
 VERSION=${TK_VERSION}
-LOCALES="de en es fr"
+LOCALES="cs de el en en_gb es fr it nl ru"
 
 #------------------------------------------------------------------------
 # Handle the --prefix=... option
