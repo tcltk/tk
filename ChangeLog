@@ -47,7 +47,7 @@
 
 	* macosx/tkMacOSXMenu.c: (SetMenuTitle) fix to utf encoding
 	problem when setting menu titles, and provisional support
-	for icons.
+	for icons. [Tcl Bug #625080]
 
 2003-02-18  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
