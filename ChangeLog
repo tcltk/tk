@@ -1,8 +1,10 @@
 2002-01-04  Don Porter  <dgp@users.sourceforge.net>
 
-	* generic/tkConsole.c (ConsoleOutputProc):  Updated Tk's console
-	to CONSTified channel driver interface.  [Tcl Patch 503565,
-	Tk Patch 503983]
+	* generic/tkConsole.c (ConsoleOutputProc,TkConsolePrint):  
+	* generic/tkInt.h (TkConsolePrint):
+	* mac/tkMacAppInit.c (TkConsolePrint): Updated Tk's console to
+	CONSTified channel driver interface.  [Tcl Patch 503565, Tk Patch
+	503983]
 
 2002-01-11  Mo DeJong  <mdejong@users.sourceforge.net>
 
