@@ -5,11 +5,12 @@
  *	widget.
  *
  * Copyright (c) 1996 by Sun Microsystems, Inc.
+ * Copyright (c) 1998-2000 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixScale.c,v 1.5 2000/02/05 11:11:56 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixScale.c,v 1.6 2000/04/14 08:34:49 hobbs Exp $
  */
 
 #include "tkScale.h"
@@ -109,7 +110,7 @@ DisplayVerticalScale(scalePtr, drawable, drawnAreaPtr)
 {
     Tk_Window tkwin = scalePtr->tkwin;
     int x, y, width, height, shadowWidth;
-    double tickValue;
+    double tickValue, tickInterval = scalePtr->tickInterval;
     Tk_3DBorder sliderBorder;
 
     /*
@@ -131,9 +132,22 @@ DisplayVerticalScale(scalePtr, drawable, drawnAreaPtr)
 	 * Display the tick marks.
 	 */
 
-	if (scalePtr->tickInterval != 0) {
+	if (tickInterval != 0) {
+	    double ticks, maxTicks;
+
+	    /*
+	     * Ensure that we will only draw enough of the tick values
+	     * such that they don't overlap
+	     */
+	    ticks = fabs((scalePtr->toValue - scalePtr->fromValue)
+		    / tickInterval);
+	    maxTicks = (double) Tk_Height(tkwin)
+		/ (double) scalePtr->fontHeight;
+	    if (ticks > maxTicks) {
+		tickInterval *= (ticks / maxTicks);
+	    }
 	    for (tickValue = scalePtr->fromValue; ;
-		    tickValue += scalePtr->tickInterval) {
+		 tickValue += tickInterval) {
 		/*
 		 * The TkRoundToResolution call gets rid of accumulated
 		 * round-off errors, if any.
@@ -187,7 +201,7 @@ DisplayVerticalScale(scalePtr, drawable, drawnAreaPtr)
     width = scalePtr->width;
     height = scalePtr->sliderLength/2;
     x = scalePtr->vertTroughX + scalePtr->borderWidth;
-    y = TkpValueToPixel(scalePtr, scalePtr->value) - height;
+    y = TkScaleValueToPixel(scalePtr, scalePtr->value) - height;
     shadowWidth = scalePtr->borderWidth/2;
     if (shadowWidth == 0) {
 	shadowWidth = 1;
@@ -212,7 +226,7 @@ DisplayVerticalScale(scalePtr, drawable, drawnAreaPtr)
 
 	Tk_GetFontMetrics(scalePtr->tkfont, &fm);
 	Tk_DrawChars(scalePtr->display, drawable, scalePtr->textGC,
-		scalePtr->tkfont, Tcl_GetString(scalePtr->labelPtr), 
+		scalePtr->tkfont, scalePtr->label, 
                 scalePtr->labelLength, scalePtr->vertLabelX,
                 scalePtr->inset + (3*fm.ascent)/2);
     }
@@ -255,7 +269,7 @@ DisplayVerticalValue(scalePtr, drawable, value, rightEdge)
     Tk_FontMetrics fm;
 
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
-    y = TkpValueToPixel(scalePtr, value) + fm.ascent/2;
+    y = TkScaleValueToPixel(scalePtr, value) + fm.ascent/2;
     sprintf(valueString, scalePtr->format, value);
     length = strlen(valueString);
     width = Tk_TextWidth(scalePtr->tkfont, valueString, length);
@@ -308,7 +322,7 @@ DisplayHorizontalScale(scalePtr, drawable, drawnAreaPtr)
 {
     register Tk_Window tkwin = scalePtr->tkwin;
     int x, y, width, height, shadowWidth;
-    double tickValue;
+    double tickValue, tickInterval = scalePtr->tickInterval;
     Tk_3DBorder sliderBorder;
 
     /*
@@ -330,9 +344,25 @@ DisplayHorizontalScale(scalePtr, drawable, drawnAreaPtr)
 	 * Display the tick marks.
 	 */
 
-	if (scalePtr->tickInterval != 0) {
+	if (tickInterval != 0) {
+	    char valueString[PRINT_CHARS];
+	    double ticks, maxTicks;
+
+	    /*
+	     * Ensure that we will only draw enough of the tick values
+	     * such that they don't overlap.  We base this off the width that
+	     * fromValue would take.  Not exact, but better than no constraint.
+	     */
+	    ticks = fabs((scalePtr->toValue - scalePtr->fromValue)
+		    / tickInterval);
+	    sprintf(valueString, scalePtr->format, scalePtr->fromValue);
+	    maxTicks = (double) Tk_Width(tkwin)
+		/ (double) Tk_TextWidth(scalePtr->tkfont, valueString, -1);
+	    if (ticks > maxTicks) {
+		tickInterval *= (ticks / maxTicks);
+	    }
 	    for (tickValue = scalePtr->fromValue; ;
-		    tickValue += scalePtr->tickInterval) {
+		 tickValue += tickInterval) {
 		/*
 		 * The TkRoundToResolution call gets rid of accumulated
 		 * round-off errors, if any.
@@ -386,7 +416,7 @@ DisplayHorizontalScale(scalePtr, drawable, drawnAreaPtr)
     }
     width = scalePtr->sliderLength/2;
     height = scalePtr->width;
-    x = TkpValueToPixel(scalePtr, scalePtr->value) - width;
+    x = TkScaleValueToPixel(scalePtr, scalePtr->value) - width;
     y += scalePtr->borderWidth;
     shadowWidth = scalePtr->borderWidth/2;
     if (shadowWidth == 0) {
@@ -412,7 +442,7 @@ DisplayHorizontalScale(scalePtr, drawable, drawnAreaPtr)
 
 	Tk_GetFontMetrics(scalePtr->tkfont, &fm);
 	Tk_DrawChars(scalePtr->display, drawable, scalePtr->textGC,
-		scalePtr->tkfont, Tcl_GetString(scalePtr->labelPtr), 
+		scalePtr->tkfont, scalePtr->label, 
                 scalePtr->labelLength, scalePtr->inset + fm.ascent/2, 
                 scalePtr->horizLabelY + fm.ascent);
     }
@@ -454,7 +484,7 @@ DisplayHorizontalValue(scalePtr, drawable, value, top)
     char valueString[PRINT_CHARS];
     Tk_FontMetrics fm;
 
-    x = TkpValueToPixel(scalePtr, value);
+    x = TkScaleValueToPixel(scalePtr, value);
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
     y = top + fm.ascent;
     sprintf(valueString, scalePtr->format, value);
@@ -514,14 +544,12 @@ TkpDisplayScale(clientData)
     /*
      * Invoke the scale's command if needed.
      */
-
     Tcl_Preserve((ClientData) scalePtr);
-    if ((scalePtr->flags & INVOKE_COMMAND) 
-            && (scalePtr->commandPtr != NULL)) {
+    if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->command != NULL)) {
 	Tcl_Preserve((ClientData) interp);
 	sprintf(string, scalePtr->format, scalePtr->value);
-	result = Tcl_VarEval(interp, Tcl_GetString(scalePtr->commandPtr),
-                " ", string, (char *) NULL);
+	result = Tcl_VarEval(interp, scalePtr->command, " ", string,
+		(char *) NULL);
 	if (result != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n    (command executed by scale)");
 	    Tcl_BackgroundError(interp);
@@ -531,7 +559,7 @@ TkpDisplayScale(clientData)
     scalePtr->flags &= ~INVOKE_COMMAND;
     if (scalePtr->flags & SCALE_DELETED) {
 	Tcl_Release((ClientData) scalePtr);
-	return;
+	goto done;
     }
     Tcl_Release((ClientData) scalePtr);
 
@@ -638,7 +666,7 @@ TkpScaleElement(scalePtr, x, y)
 		|| (y >= (Tk_Height(scalePtr->tkwin) - scalePtr->inset))) {
 	    return OTHER;
 	}
-	sliderFirst = TkpValueToPixel(scalePtr, scalePtr->value)
+	sliderFirst = TkScaleValueToPixel(scalePtr, scalePtr->value)
 		- scalePtr->sliderLength/2;
 	if (y < sliderFirst) {
 	    return TROUGH1;
@@ -658,7 +686,7 @@ TkpScaleElement(scalePtr, x, y)
 	    || (x >= (Tk_Width(scalePtr->tkwin) - scalePtr->inset))) {
 	return OTHER;
     }
-    sliderFirst = TkpValueToPixel(scalePtr, scalePtr->value)
+    sliderFirst = TkScaleValueToPixel(scalePtr, scalePtr->value)
 	    - scalePtr->sliderLength/2;
     if (x < sliderFirst) {
 	return TROUGH1;
@@ -667,170 +695,4 @@ TkpScaleElement(scalePtr, x, y)
 	return SLIDER;
     }
     return TROUGH2;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * TkpSetScaleValue --
- *
- *	This procedure changes the value of a scale and invokes
- *	a Tcl command to reflect the current position of a scale
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	A Tcl command is invoked, and an additional error-processing
- *	command may also be invoked.  The scale's slider is redrawn.
- *
- *--------------------------------------------------------------
- */
-
-void
-TkpSetScaleValue(scalePtr, value, setVar, invokeCommand)
-    register TkScale *scalePtr;	/* Info about widget. */
-    double value;		/* New value for scale.  Gets adjusted
-				 * if it's off the scale. */
-    int setVar;			/* Non-zero means reflect new value through
-				 * to associated variable, if any. */
-    int invokeCommand;		/* Non-zero means invoked -command option
-				 * to notify of new value, 0 means don't. */
-{
-    char string[PRINT_CHARS];
-
-    value = TkRoundToResolution(scalePtr, value);
-    if ((value < scalePtr->fromValue)
-	    ^ (scalePtr->toValue < scalePtr->fromValue)) {
-	value = scalePtr->fromValue;
-    }
-    if ((value > scalePtr->toValue)
-	    ^ (scalePtr->toValue < scalePtr->fromValue)) {
-	value = scalePtr->toValue;
-    }
-    if (scalePtr->flags & NEVER_SET) {
-	scalePtr->flags &= ~NEVER_SET;
-    } else if (scalePtr->value == value) {
-	return;
-    }
-    scalePtr->value = value;
-    if (invokeCommand) {
-	scalePtr->flags |= INVOKE_COMMAND;
-    }
-    TkEventuallyRedrawScale(scalePtr, REDRAW_SLIDER);
-
-    if (setVar && (scalePtr->varNamePtr != NULL)) {
-	sprintf(string, scalePtr->format, scalePtr->value);
-	scalePtr->flags |= SETTING_VAR;
-	Tcl_SetVar(scalePtr->interp, Tcl_GetString(scalePtr->varNamePtr), 
-	        string, TCL_GLOBAL_ONLY);
-	scalePtr->flags &= ~SETTING_VAR;
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpPixelToValue --
- *
- *	Given a pixel within a scale window, return the scale
- *	reading corresponding to that pixel.
- *
- * Results:
- *	A double-precision scale reading.  If the value is outside
- *	the legal range for the scale then it's rounded to the nearest
- *	end of the scale.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-double
-TkpPixelToValue(scalePtr, x, y)
-    register TkScale *scalePtr;		/* Information about widget. */
-    int x, y;				/* Coordinates of point within
-					 * window. */
-{
-    double value, pixelRange;
-
-    if (scalePtr->orient == ORIENT_VERTICAL) {
-	pixelRange = Tk_Height(scalePtr->tkwin) - scalePtr->sliderLength
-		- 2*scalePtr->inset - 2*scalePtr->borderWidth;
-	value = y;
-    } else {
-	pixelRange = Tk_Width(scalePtr->tkwin) - scalePtr->sliderLength
-		- 2*scalePtr->inset - 2*scalePtr->borderWidth;
-	value = x;
-    }
-
-    if (pixelRange <= 0) {
-	/*
-	 * Not enough room for the slider to actually slide:  just return
-	 * the scale's current value.
-	 */
-
-	return scalePtr->value;
-    }
-    value -= scalePtr->sliderLength/2 + scalePtr->inset
-		+ scalePtr->borderWidth;
-    value /= pixelRange;
-    if (value < 0) {
-	value = 0;
-    }
-    if (value > 1) {
-	value = 1;
-    }
-    value = scalePtr->fromValue +
-		value * (scalePtr->toValue - scalePtr->fromValue);
-    return TkRoundToResolution(scalePtr, value);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpValueToPixel --
- *
- *	Given a reading of the scale, return the x-coordinate or
- *	y-coordinate corresponding to that reading, depending on
- *	whether the scale is vertical or horizontal, respectively.
- *
- * Results:
- *	An integer value giving the pixel location corresponding
- *	to reading.  The value is restricted to lie within the
- *	defined range for the scale.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkpValueToPixel(scalePtr, value)
-    register TkScale *scalePtr;		/* Information about widget. */
-    double value;			/* Reading of the widget. */
-{
-    int y, pixelRange;
-    double valueRange;
-
-    valueRange = scalePtr->toValue - scalePtr->fromValue;
-    pixelRange = (scalePtr->orient == ORIENT_VERTICAL 
-            ? Tk_Height(scalePtr->tkwin)
-	    : Tk_Width(scalePtr->tkwin)) - scalePtr->sliderLength
-	    - 2*scalePtr->inset - 2*scalePtr->borderWidth;
-    if (valueRange == 0) {
-	y = 0;
-    } else {
-	y = (int) ((value - scalePtr->fromValue) * pixelRange
-		  / valueRange + 0.5);
-	if (y < 0) {
-	    y = 0;
-	} else if (y > pixelRange) {
-	    y = pixelRange;
-	}
-    }
-    y += scalePtr->sliderLength/2 + scalePtr->inset + scalePtr->borderWidth;
-    return y;
 }
