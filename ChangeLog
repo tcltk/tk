@@ -1,5 +1,12 @@
 2001-07-03  Mo DeJong  <mdejong@redhat.com>
 
+	* win/Makefile.in: Remove PATHTYPE variable.
+	* win/configure: Regen.
+	* win/configure.in: Don't subst PATHTYPE.
+	* win/tcl.m4: Update from Tcl.
+
+2001-07-03  Mo DeJong  <mdejong@redhat.com>
+
 	* win/Makefile.in: Don't use VPSEP, instead just use :
 	in the VPATH.
 	* win/configure: Regen.

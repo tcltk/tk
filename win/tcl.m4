@@ -297,8 +297,6 @@ AC_DEFUN(SC_ENABLE_SYMBOLS, [
 #		LDFLAGS_WINDOW
 #		CC_OBJNAME
 #		CC_EXENAME
-#		PATHTYPE
-#		VPSEP
 #		CYGPATH
 #		SHLIB_LD
 #		SHLIB_LD_LIBS
@@ -331,9 +329,8 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 
     # Set some defaults (may get changed below)
     EXTRA_CFLAGS=""
-    PATHTYPE='-w'
-    CYGPATH='cygpath'
-    VPSEP=';'
+
+    AC_CHECK_PROG(CYGPATH, cygpath, cygpath -w, echo)
 
     # set various compiler flags depending on whether we are using gcc or cl
     
@@ -351,25 +348,17 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	RC_INCLUDE=--include
 	RC_DEFINE=--define
 	RES=res.o
-	MAKE_LIB="\${AR} crv \[$]@"
+	MAKE_LIB="\${AR} cr \[$]@"
 	POST_MAKE_LIB="\${RANLIB} \[$]@"
 	MAKE_EXE="\${CC} -o \[$]@"
 	LIBPREFIX="lib"
 
 	if "$CC" -v 2>&1 | egrep '\/gcc-lib\/i[[3-6]]86[[^\/]]*-cygwin' >/dev/null; then
-	    mno_cygwin="yes"
 	    extra_cflags="-mno-cygwin"
 	    extra_ldflags="-mno-cygwin"
 	else
-	    mno_cygwin="no"
 	    extra_cflags=""
 	    extra_ldflags=""
-	fi
-
-	if test "$cross_compiling" = "yes" -o "$mno_cygwin" = "yes"; then
-	    PATHTYPE=''
-	    CYGPATH='echo '
-	    VPSEP=':'
 	fi
 
 	if test "${SHARED_BUILD}" = "0" ; then
@@ -471,7 +460,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	
 	# Specify the CC output file names based on the target name
 	CC_OBJNAME="-Fo\[$]@"
-	CC_EXENAME="-Fe\"\$(shell \$(CYGPATH) \$(PATHTYPE) '\[$]@')\""
+	CC_EXENAME="-Fe\"\$(shell \$(CYGPATH) '\[$]@')\""
 
 	# Specify linker flags depending on the type of app being 
 	# built -- Console vs. Window.

@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.39 2001/07/04 00:19:48 mdejong Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.40 2001/07/04 00:25:09 mdejong Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -85,16 +85,12 @@ TCL_BIN_DIR		= @TCL_BIN_DIR@
 # been replaced by the configure script):
 TCL_GENERIC_DIR	= @TCL_SRC_DIR@/generic
 
-# This is a switch passed to a Cygwin script that generates file
-# names based on the platform.
-PATHTYPE		= @PATHTYPE@
-
 # This program converts between Windows native and Cygwin POSIX pathnames.
 CYGPATH			= @CYGPATH@
 
 # The name of the Tcl library.
-TCL_LIB_FILE	  = "$(shell $(CYGPATH) $(PATHTYPE) '@TCL_BIN_DIR@/@TCL_LIB_FILE@')"
-TCL_STUB_LIB_FILE = "$(shell $(CYGPATH) $(PATHTYPE) '@TCL_BIN_DIR@/@TCL_STUB_LIB_FILE@')"
+TCL_LIB_FILE	  = "$(shell $(CYGPATH) '@TCL_BIN_DIR@/@TCL_LIB_FILE@')"
+TCL_STUB_LIB_FILE = "$(shell $(CYGPATH) '@TCL_BIN_DIR@/@TCL_STUB_LIB_FILE@')"
 
 SRC_DIR			= @srcdir@
 ROOT_DIR		= $(SRC_DIR)/..
@@ -105,15 +101,15 @@ BITMAP_DIR		= $(ROOT_DIR)/bitmaps
 XLIB_DIR		= $(ROOT_DIR)/xlib
 RC_DIR			= $(WIN_DIR)/rc
 
-ROOT_DIR_NATIVE	   	= $(shell $(CYGPATH) $(PATHTYPE) '$(ROOT_DIR)')
-WIN_DIR_NATIVE	   	= $(shell $(CYGPATH) $(PATHTYPE) '$(WIN_DIR)')
-GENERIC_DIR_NATIVE 	= $(shell $(CYGPATH) $(PATHTYPE) '$(GENERIC_DIR)')
-BITMAP_DIR_NATIVE	= $(shell $(CYGPATH) $(PATHTYPE) '$(ROOT_DIR)/bitmaps')
-XLIB_DIR_NATIVE		= $(shell $(CYGPATH) $(PATHTYPE) '$(ROOT_DIR)/xlib')
-TCL_GENERIC_NATIVE	= $(shell $(CYGPATH) $(PATHTYPE) '$(TCL_GENERIC_DIR)')
-TCL_SRC_DIR_NATIVE      = $(shell $(CYGPATH) $(PATHTYPE) '$(TCL_SRC_DIR)')
-TCL_BIN_DIR_NATIVE      = $(shell $(CYGPATH) $(PATHTYPE) '$(TCL_BIN_DIR)')
-RC_DIR_NATIVE      	= $(shell $(CYGPATH) $(PATHTYPE) '$(RC_DIR)')
+ROOT_DIR_NATIVE	   	= $(shell $(CYGPATH) '$(ROOT_DIR)')
+WIN_DIR_NATIVE	   	= $(shell $(CYGPATH) '$(WIN_DIR)')
+GENERIC_DIR_NATIVE 	= $(shell $(CYGPATH) '$(GENERIC_DIR)')
+BITMAP_DIR_NATIVE	= $(shell $(CYGPATH) '$(ROOT_DIR)/bitmaps')
+XLIB_DIR_NATIVE		= $(shell $(CYGPATH) '$(ROOT_DIR)/xlib')
+TCL_GENERIC_NATIVE	= $(shell $(CYGPATH) '$(TCL_GENERIC_DIR)')
+TCL_SRC_DIR_NATIVE      = $(shell $(CYGPATH) '$(TCL_SRC_DIR)')
+TCL_BIN_DIR_NATIVE      = $(shell $(CYGPATH) '$(TCL_BIN_DIR)')
+RC_DIR_NATIVE      	= $(shell $(CYGPATH) '$(RC_DIR)')
 
 DLLSUFFIX		= @DLLSUFFIX@
 LIBSUFFIX		= @LIBSUFFIX@
@@ -136,7 +132,7 @@ MAN2TCL			= man2tcl$(EXEEXT)
 # Macro that expands to the first dependency argument with the appropriate
 # path type already resolved.
 
-DEPARG = "$(shell $(CYGPATH) $(PATHTYPE) $<)"
+DEPARG = "$(shell $(CYGPATH) $<)"
 
 # Setting the VPATH variable to a list of paths will cause the 
 # makefile to look into these paths when resolving .c to .obj
