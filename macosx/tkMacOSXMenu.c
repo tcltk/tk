@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.1.2.7 2002/07/19 09:22:34 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.1.2.8 2002/08/26 21:57:44 wolfsuit Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -1079,8 +1079,14 @@ ReconfigureIndividualMenu(
             cf = CFStringCreateWithCString(NULL,
                   Tcl_DStringValue(&itemTextDString), kCFStringEncodingUTF8);
 	    AppendMenu(macMenuHdl, "\px");
-            SetMenuItemTextWithCFString(macMenuHdl, base + index, cf);
-            CFRelease(cf);
+	    if (cf != NULL) {
+	      SetMenuItemTextWithCFString(macMenuHdl, base + index, cf);
+	      CFRelease(cf);
+	    } else {
+	      cf = CFSTR ("<Error>");
+	      SetMenuItemTextWithCFString(macMenuHdl, base + index, cf);
+	    }
+	      
 	    Tcl_DStringFree(&itemTextDString);
 	
     	    /*
