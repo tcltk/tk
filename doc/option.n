@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: option.n,v 1.2 1998/09/14 18:22:58 stanton Exp $
+'\" RCS: @(#) $Id: option.n,v 1.3 2004/06/18 21:50:16 dkf Exp $
 '\" 
 .so man.macros
 .TH option n "" Tk "Tk Built-In Commands"
@@ -86,6 +86,21 @@ Any of the above keywords may be abbreviated.  In addition, priorities
 may be specified numerically using integers between 0 and 100,
 inclusive.  The numeric form is probably a bad idea except for new priority
 levels other than the ones given above.
+.SH EXAMPLES
+Instruct every button in the application to have red text on it unless
+explicitly overridden:
+.CS
+\fBoption\fR add *button.foreground red startupFile
+.CE
+.PP
+Allow users to control what happens in an entry widget when the Return
+key is pressed by specifying a script in the option database and add a
+default option for that which rings the bell:
+.CS
+entry .e
+bind .e <Return> [\fBoption\fR get .e returnCommand Command]
+\fBoption\fR add *.e.returnCommand bell widgetDefault
+.CE
 
 .SH KEYWORDS
 database, option, priority, retrieve
