@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.18 2002/06/10 00:15:42 a_kovalenko Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.19 2002/06/12 23:08:12 mdejong Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -252,7 +252,7 @@ proc ::tk::MessageBox {args} {
     # "grab"bed windows.  So only make the message box transient if the parent
     # is viewable.
     #
-    if { [winfo viewable [winfo toplevel $data(-parent)]] } {
+    if {[winfo viewable [winfo toplevel $data(-parent)]] } {
 	wm transient $w $data(-parent)
     }    
 
