@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.1.4.5 1998/11/25 22:13:20 stanton Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.1.4.6 1999/03/09 01:36:07 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -1657,3 +1657,30 @@ TkpMenuInit()
      * Nothing to do.
      */
 }
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpMenuThreadInit --
+ *
+ *	Does platform-specific initialization of thread-specific
+ *      menu state.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpMenuThreadInit()
+{
+    /*
+     * Nothing to do.
+     */
+}
+

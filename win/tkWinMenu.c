@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.1.4.9 1999/02/11 04:13:51 stanton Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.1.4.10 1999/03/09 01:36:06 lfb Exp $
  */
 
 #define OEMRESOURCE
@@ -2773,14 +2773,13 @@ SetDefaults(
  *
  * TkpMenuInit --
  *
- *	Sets up the hash tables and the variables used by the menu package.
+ *	Sets up the process-wide variables used by the menu package.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	lastMenuID gets initialized, and the parent hash and the command hash
- *	are allocated.
+ *	lastMenuID gets initialized.
  *
  *----------------------------------------------------------------------
  */
@@ -2792,8 +2791,6 @@ TkpMenuInit()
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    Tcl_InitHashTable(&tsdPtr->winMenuTable, TCL_ONE_WORD_KEYS);
-    Tcl_InitHashTable(&tsdPtr->commandTable, TCL_ONE_WORD_KEYS);
     wndClass.style = CS_OWNDC;
     wndClass.lpfnWndProc = TkWinMenuProc;
     wndClass.cbClsExtra = 0;
@@ -2811,4 +2808,30 @@ TkpMenuInit()
 
     Tcl_CreateExitHandler(MenuExitHandler, (ClientData) NULL);
     SetDefaults(1);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpMenuThreadInit --
+ *
+ *	Sets up the thread-local hash tables used by the menu module.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Hash tables winMenuTable and commandTable are initialized.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpMenuThreadInit()
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    Tcl_InitHashTable(&tsdPtr->winMenuTable, TCL_ONE_WORD_KEYS);
+    Tcl_InitHashTable(&tsdPtr->commandTable, TCL_ONE_WORD_KEYS);
 }
