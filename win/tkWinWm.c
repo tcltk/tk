@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.82 2004/12/20 01:13:12 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.83 2004/12/20 15:30:43 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -4303,7 +4303,15 @@ WmOverrideredirectCmd(tkwin, winPtr, interp, objc, objv)
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?boolean?");
 	return TCL_ERROR;
     }
-    curValue = Tk_Attributes((Tk_Window) winPtr)->override_redirect;
+    if(winPtr->flags & TK_EMBEDDED) {
+	curValue = SendMessage(wmPtr->wrapper, TK_OVERRIDEREDIRECT, -1, -1);
+	if(curValue < 0) {
+	    Tcl_AppendResult(interp, "Container does not support overrideredirect", NULL);
+	    return TCL_ERROR;
+	}
+    } else {
+	curValue = Tk_Attributes((Tk_Window) winPtr)->override_redirect;
+    }
     if (objc == 3) {
 	Tcl_SetBooleanObj(Tcl_GetObjResult(interp), curValue);
 	return TCL_OK;
@@ -4312,16 +4320,20 @@ WmOverrideredirectCmd(tkwin, winPtr, interp, objc, objv)
 	return TCL_ERROR;
     }
     if (curValue != boolean) {
-	/*
-	 * Only do this if we are really changing value, because it
-	 * causes some funky stuff to occur
-	 */
-	atts.override_redirect = (boolean) ? True : False;
-	Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect,
+	if(winPtr->flags & TK_EMBEDDED) {
+	    SendMessage(wmPtr->wrapper, TK_OVERRIDEREDIRECT, boolean, 0);
+	} else {
+	    /*
+	     * Only do this if we are really changing value, because it
+	     * causes some funky stuff to occur
+	     */
+	    atts.override_redirect = (boolean) ? True : False;
+	    Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect,
 		&atts);
-	if (!(wmPtr->flags & (WM_NEVER_MAPPED))
+	    if (!(wmPtr->flags & (WM_NEVER_MAPPED))
 		&& !(winPtr->flags & TK_EMBEDDED)) {
-	    UpdateWrapper(winPtr);
+		UpdateWrapper(winPtr);
+	    }
 	}
     }
     return TCL_OK;
@@ -7217,7 +7229,7 @@ TopLevelProc(hwnd, message, wParam, lParam)
     WPARAM wParam;
     LPARAM lParam;
 {
-    if (message == WM_WINDOWPOSCHANGED) {
+    if (message == WM_WINDOWPOSCHANGED || message == WM_WINDOWPOSCHANGING) {
 	WINDOWPOS *pos = (WINDOWPOS *) lParam;
 	TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(pos->hwnd);
 
@@ -7234,8 +7246,9 @@ TopLevelProc(hwnd, message, wParam, lParam)
 	    winPtr->changes.height = pos->cy;
 	}
 	if (!(pos->flags & SWP_NOMOVE)) {
-	    winPtr->changes.x = pos->x;
-	    winPtr->changes.y = pos->y;
+	    long result = SendMessage(winPtr->wmInfoPtr->wrapper, TK_MOVEWINDOW, -1, -1);
+	    winPtr->wmInfoPtr->x = winPtr->changes.x = result >> 16;
+	    winPtr->wmInfoPtr->y = winPtr->changes.y = result & 0xffff;
 	}
 
 	GenerateConfigureNotify(winPtr);
@@ -7812,4 +7825,47 @@ long TkpWinToplevelMove(winPtr, x, y)
 	Tk_MoveToplevelWindow((Tk_Window)winPtr, x, y);
     }
     return ((wmPtr->x << 16) & 0xffff0000) | (wmPtr->y & 0x0000ffff);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWinToplevelOverrideRedirect --
+ *
+ *	This function is to be used by a container to overrideredirect
+ *	the contaner's frame window.
+ *
+ * Results:
+ *	The current overrideredirect value
+ *
+ * Side effects:
+ *	May change the overrideredirect value of the container window
+ *
+ *----------------------------------------------------------------------
+ */
+long TkpWinToplevelOverrideRedirect(winPtr, reqValue)
+    TkWindow *winPtr;
+    int reqValue;
+{
+    int curValue;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
+
+    curValue = Tk_Attributes((Tk_Window) winPtr)->override_redirect;
+    if(reqValue < 0) return curValue;
+
+    if (curValue != reqValue) {
+	XSetWindowAttributes atts;
+        /*
+         * Only do this if we are really changing value, because it
+         * causes some funky stuff to occur
+         */
+        atts.override_redirect = reqValue ? True : False;
+        Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect,
+		&atts);
+	if (!(wmPtr->flags & (WM_NEVER_MAPPED))
+	    && !(winPtr->flags & TK_EMBEDDED)) {
+	    UpdateWrapper(winPtr);
+	}
+    }
+    return reqValue;
 }
