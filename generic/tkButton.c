@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.19 2002/08/05 04:30:38 dgp Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.20 2002/08/08 09:35:34 hobbs Exp $
  */
 
 #include "tkButton.h"
@@ -1348,6 +1348,9 @@ TkButtonWorldChanged(instanceData)
     } else {
 	gcValues.foreground = gcValues.background;
 	mask = GCForeground;
+	if (butPtr->compound != COMPOUND_NONE) {
+	    mask |= GCFont;
+	}
 	if (butPtr->gray == None) {
 	    butPtr->gray = Tk_GetBitmap(NULL, butPtr->tkwin, "gray50");
 	}
