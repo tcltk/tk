@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bind.test,v 1.7 1999/12/14 06:53:11 hobbs Exp $
+# RCS: @(#) $Id: bind.test,v 1.8 2000/08/03 20:36:17 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -84,10 +84,10 @@ test bind-1.10 {bind command} {
 
 test bind-2.1 {bindtags command} {
     list [catch {bindtags} msg] $msg
-} {1 {wrong # args: should be "bindtags window ?tags?"}}
+} {1 {wrong # args: should be "bindtags window ?taglist?"}}
 test bind-2.2 {bindtags command} {
     list [catch {bindtags a b c} msg] $msg
-} {1 {wrong # args: should be "bindtags window ?tags?"}}
+} {1 {wrong # args: should be "bindtags window ?taglist?"}}
 test bind-2.3 {bindtags command} {
     list [catch {bindtags .foo} msg] $msg
 } {1 {bad window path name ".foo"}}

@@ -1,3 +1,20 @@
+2000-08-03  Eric Melski  <ericm@ajubasolutions.com>
+
+	* tests/bind.test: Tweaked expected error messages for [bindtags]
+	to comply with updated error messages.
+
+	* generic/tkMenu.c (CloneMenu): Replaced calls to Tk_BindtagsCmd
+	with equivalent calls to Tk_BindtagsObjCmd.
+
+	* generic/tkInt.h: Replace Tk_BindtagsCmd prototype with
+	Tk_BindtagsObjCmd prototype.
+
+	* generic/tkWindow.c: Updated "bindtags" command entry to use
+	Tcl_Obj'ified command.
+
+	* generic/tkCmds.c (Tk_BindtagsObjCmd): Tcl_Obj'ified [bindtags]
+	command.
+
 2000-08-02  Eric Melski  <ericm@ajubasolutions.com>
 
 	* generic/tkCmds.c (Tk_TkwaitObjCmd): Tcl_Obj'ified [tkwait] command.
