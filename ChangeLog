@@ -1,3 +1,10 @@
+2000-07-07  Mo DeJong  <mdejong@redhat.com>
+
+	* win/configure.in: Fix subst of TK_SHARED_BUILD
+	variable in tkConfig.sh.in. Fix definition of
+	TK_SRC_DIR variable so that it matches the
+	unix version.
+
 2000-07-05  Mo DeJong  <mdejong@redhat.com>
 
 	* generic/tkFileFilter.c (AddClause): Cast to match function prototype.

@@ -2,7 +2,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.18 2000/06/13 21:07:35 ericm Exp $
+# RCS: @(#) $Id: configure.in,v 1.19 2000/07/07 11:20:33 mo Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -88,6 +88,12 @@ SC_LOAD_TCLCONFIG
 
 SC_PROG_TCLSH
 
+#------------------------------------------------------------------------
+# tkConfig.sh refers to this by a different name
+#------------------------------------------------------------------------
+
+TK_SHARED_BUILD=${SHARED_BUILD}
+
 #--------------------------------------------------------------------
 # Perform final evaluations of variables with possible substitutions.
 #--------------------------------------------------------------------
@@ -96,7 +102,7 @@ TK_SHARED_LIB_SUFFIX="\${NODOT_VERSION}${DLLSUFFIX}"
 TK_UNSHARED_LIB_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 
-eval "TK_SRC_DIR=`cd $srcdir; pwd`"
+eval "TK_SRC_DIR=`cd $srcdir/..; pwd`"
 eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub$VER${LIBSUFFIX}"
 eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
 eval "TK_LIB_FILE=${LIBPREFIX}tk$VER${LIBSUFFIX}"
@@ -138,7 +144,7 @@ AC_SUBST(TCL_DBGX)
 AC_SUBST(CFG_TK_SHARED_LIB_SUFFIX)
 AC_SUBST(CFG_TK_UNSHARED_LIB_SUFFIX)
 AC_SUBST(CFG_TK_EXPORT_FILE_SUFFIX)
-dnl AC_SUBST(TCL_SHARED_BUILD)
+AC_SUBST(TK_SHARED_BUILD)
 
 AC_SUBST(PATHTYPE)
 AC_SUBST(CYGPATH)
