@@ -7,9 +7,9 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.26 2002/07/25 21:35:23 pspjuth Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.27 2002/08/08 21:02:16 dgp Exp $
 
-package require tcltest 2.1
+package require tcltest 2.2
 namespace import -force tcltest::configure
 namespace import -force tcltest::testsDirectory
 configure -testdir [file join [pwd] [file dirname [info script]]]
@@ -1758,7 +1758,9 @@ test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and 
 	    [winfo containing [expr $x +150] [expr $y2 + 80]] \
 	    [winfo containing [expr $x +150] [expr $y + 450]]
 } {{} {} .t .t .t2 .t2 .t {}}
-test unixWm-50.3 {Tk_CoordsToWindow procedure, finding a toplevel with embedding} {
+test unixWm-50.3 {
+	Tk_CoordsToWindow procedure, finding a toplevel with embedding
+} -setup {
     deleteWindows
     toplevel .t -width 300 -height 400 -bg blue
     wm geom .t +0+50
@@ -1766,6 +1768,7 @@ test unixWm-50.3 {Tk_CoordsToWindow procedure, finding a toplevel with embedding
     place .t.f -x 150 -y 50
     tkwait visibility .t.f
     setupbg
+} -body {
     dobg "
 	wm withdraw .
 	toplevel .x -width 100 -height 80 -use [winfo id .t.f] -bg yellow
@@ -1780,8 +1783,9 @@ test unixWm-50.3 {Tk_CoordsToWindow procedure, finding a toplevel with embedding
     set y [winfo rooty .t]
     lappend result [winfo containing [expr $x + 200] [expr $y + 49]] \
 		[winfo containing [expr $x + 200] [expr $y +50]]
-} {{} .x .t .t.f}
-cleanupbg
+} -cleanup {
+    cleanupbg
+} -result {{} .x .t .t.f}
 test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} {
     catch {destroy .t}
     catch {interp delete slave}

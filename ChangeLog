@@ -1,3 +1,9 @@
+2002-08-08  Don Porter <dgp@users.sf.net>
+
+	* tests/unixWm.test:  Corrected packaging of unixWm-50.3 so that
+	[setupbg] and [cleanupbg] always balance, no matter what tests
+	are skipped.
+
 2002-08-08  Reinhard Max  <max@suse.de>
 
 	* unix/Makefile.in: Fixed typos in DISTNAME, and ZIPNAME.
