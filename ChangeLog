@@ -1,3 +1,8 @@
+2004-07-29  George Peter Staplin <georgeps@xmission.com>
+
+	* generic/tkEvent.c (TkQueueEventForAllChildren): Code from the 
+	core-8-4-branch to not queue events for unmapped windows was added.
+
 2004-07-27  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkImgGIF.c (FileReadGIF): fix crash reported by Reinhard Max:
