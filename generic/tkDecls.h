@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.20 2002/06/14 14:08:22 dkf Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.21 2002/06/15 00:21:41 hobbs Exp $
  */
 
 #ifndef _TKDECLS
@@ -857,6 +857,9 @@ EXTERN void		Tk_PhotoPutZoomedBlock _ANSI_ARGS_((
 				Tk_PhotoImageBlock * blockPtr, int x, int y, 
 				int width, int height, int zoomX, int zoomY, 
 				int subsampleX, int subsampleY, int compRule));
+/* 248 */
+EXTERN int		Tk_CollapseMotionEvents _ANSI_ARGS_((
+				Display * display, int collapse));
 
 typedef struct TkStubHooks {
     struct TkPlatStubs *tkPlatStubs;
@@ -1117,6 +1120,7 @@ typedef struct TkStubs {
     void (*tk_SetCaretPos) _ANSI_ARGS_((Tk_Window tkwin, int x, int y, int height)); /* 245 */
     void (*tk_PhotoPutBlock) _ANSI_ARGS_((Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int compRule)); /* 246 */
     void (*tk_PhotoPutZoomedBlock) _ANSI_ARGS_((Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule)); /* 247 */
+    int (*tk_CollapseMotionEvents) _ANSI_ARGS_((Display * display, int collapse)); /* 248 */
 } TkStubs;
 
 #ifdef __cplusplus
@@ -2118,6 +2122,10 @@ extern TkStubs *tkStubsPtr;
 #ifndef Tk_PhotoPutZoomedBlock
 #define Tk_PhotoPutZoomedBlock \
 	(tkStubsPtr->tk_PhotoPutZoomedBlock) /* 247 */
+#endif
+#ifndef Tk_CollapseMotionEvents
+#define Tk_CollapseMotionEvents \
+	(tkStubsPtr->tk_CollapseMotionEvents) /* 248 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

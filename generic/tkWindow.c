@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.46 2002/06/14 22:25:12 jenglish Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.47 2002/06/15 00:21:42 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -470,6 +470,11 @@ GetScreen(interp, screenName, screenPtr)
 	    dispPtr->cursorFont = None;
 	    dispPtr->warpWindow = None;
 	    dispPtr->multipleAtom = None;
+	    /*
+	     * By default we do want to collapse motion events in
+	     * Tk_QueueWindowEvent.
+	     */
+	    dispPtr->flags |= TK_DISPLAY_COLLAPSE_MOTION_EVENTS;
 
 	    Tcl_InitHashTable(&dispPtr->winTable, TCL_ONE_WORD_KEYS);
 

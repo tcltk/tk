@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.44 2002/04/12 10:06:09 hobbs Exp $ 
+ * RCS: $Id: tkInt.h,v 1.45 2002/06/15 00:21:42 hobbs Exp $ 
  */
 
 #ifndef _TKINT
@@ -493,8 +493,15 @@ typedef struct TkDisplay {
      * The following field(s) were all added for Tk8.4
      */
     long deletionEpoch;		/* Incremented by window deletions */
+    unsigned int flags;		/* Various flag values:  these are all
+				 * defined in below. */
 } TkDisplay;
 
+/*
+ * Flag values for TkDisplay flags.
+ */
+
+#define TK_DISPLAY_COLLAPSE_MOTION_EVENTS	(1 << 0)
 
 /*
  * One of the following structures exists for each error handler
