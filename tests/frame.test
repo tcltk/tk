@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: frame.test,v 1.10 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: frame.test,v 1.11 2004/06/04 19:55:31 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -273,7 +273,7 @@ test frame-3.3 {TkCreateFrame procedure} -setup {
     .t configure -class
 } -cleanup {
     destroy .t
-} {-class class Class Toplevel Toplevel}
+} -result {-class class Class Toplevel Toplevel}
 test frame-3.4 {TkCreateFrame procedure} {
     catch {destroy .t}
     toplevel .t -width 350 -class NewClass -bg black -visual default -height 90

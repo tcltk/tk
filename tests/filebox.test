@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: filebox.test,v 1.15 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: filebox.test,v 1.16 2004/06/04 19:55:31 dgp Exp $
 #
 
 package require tcltest 2.1
@@ -156,7 +156,7 @@ foreach mode $modes {
         if {[string index $option 0] eq "-"} {
 	    test filebox-1.2-$mode$option "tk_getOpenFile command" -body {
 		tk_getOpenFile $option
-	    } -returnCode error -result "value for \"$option\" missing"
+	    } -returnCodes error -result "value for \"$option\" missing"
         }
     }
 
