@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvUtil.c,v 1.10 2003/01/17 19:54:09 drh Exp $
+ * RCS: @(#) $Id: tkCanvUtil.c,v 1.11 2004/03/16 19:53:18 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -535,7 +535,7 @@ TkCanvasDashPrintProc(clientData, tkwin, widgRec, offset, freeProcPtr)
 	i = -i;
 	*freeProcPtr = TCL_DYNAMIC;
 	buffer = (char *) ckalloc((unsigned int) (i+1));
-	p = (i > sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
+	p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
 	memcpy(buffer, p, (unsigned int) i);
 	buffer[i] = 0;
 	return buffer;
@@ -546,7 +546,7 @@ TkCanvasDashPrintProc(clientData, tkwin, widgRec, offset, freeProcPtr)
     buffer = (char *)ckalloc((unsigned int) (4*i));
     *freeProcPtr = TCL_DYNAMIC;
 
-    p = (i > sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
+    p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
     sprintf(buffer, "%d", *p++ & 0xff);
     while(--i) {
 	sprintf(buffer+strlen(buffer), " %d", *p++ & 0xff);
@@ -800,7 +800,7 @@ Tk_GetDash(interp, value, dash)
 	} else {
 	    goto badDashList;
 	}
-	if (i > sizeof(char *)) {
+	if (i > (int)sizeof(char *)) {
 	    dash->pattern.pt = pt = (char *) ckalloc(strlen(value));
 	} else {
 	    pt = dash->pattern.array;
@@ -828,7 +828,7 @@ Tk_GetDash(interp, value, dash)
     if (ABS(dash->number) > sizeof(char *)) {
 	ckfree((char *) dash->pattern.pt);
     }
-    if (argc > sizeof(char *)) {
+    if (argc > (int)sizeof(char *)) {
 	dash->pattern.pt = pt = (char *) ckalloc((unsigned int) argc);
     } else {
 	pt = dash->pattern.array;
@@ -1140,14 +1140,14 @@ Tk_ChangeOutlineGC(canvas, item, outline)
 	char *q;
 	int i = -dash->number;
 
-        p = (i > sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
+        p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
 	q = (char *) ckalloc(2*(unsigned int)i);
 	i = DashConvert(q, p, i, width);
 	XSetDashes(((TkCanvas *)canvas)->display, outline->gc, outline->offset, q, i);
 	ckfree(q);
     } else if ( dash->number>2 || (dash->number==2 &&
 		(dash->pattern.array[0]!=dash->pattern.array[1]))) {
-        p = (char *) (dash->number > sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
+        p = (char *) (dash->number > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
 	XSetDashes(((TkCanvas *)canvas)->display, outline->gc, outline->offset, p, dash->number);
     }
     if (stipple!=None) {
@@ -1629,7 +1629,7 @@ TkCanvTranslatePath (canvPtr, numVertex, coordArr, closedPath, outArr)
     ** as coordArr[] requires.  Divide this space into two separate arrays
     ** a[] and b[].  Initialize a[] to be equal to coordArr[].
     */
-    if( numVertex*12 <= sizeof(staticSpace)/sizeof(staticSpace[0]) ){
+    if( numVertex*12 <= (int)(sizeof(staticSpace)/sizeof(staticSpace[0])) ){
         tempArr = staticSpace;
     } else {
         tempArr = (double*)ckalloc( numVertex*12*sizeof(tempArr[0]) );
