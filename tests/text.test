@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.7 2000/01/13 02:07:20 hobbs Exp $
+# RCS: @(#) $Id: text.test,v 1.8 2000/01/21 03:55:06 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -150,7 +150,7 @@ test text-3.1 {TextWidgetCmd procedure, basics} {
 } {1 {wrong # args: should be ".t option ?arg arg ...?"}}
 test text-3.2 {TextWidgetCmd procedure} {
     list [catch {.t gorp 1.0 z 1.2} msg] $msg
-} {1 {bad option "gorp": must be bbox, cget, compare, configure, debug, delete, dlineinfo, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
+} {1 {bad option "gorp": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
 
 test text-4.1 {TextWidgetCmd procedure, "bbox" option} {
     list [catch {.t bbox} msg] $msg
@@ -218,7 +218,7 @@ test text-6.13 {TextWidgetCmd procedure, "compare" option} {
 } {1 {bad comparison operator "z": must be <, <=, ==, >=, >, or !=}}
 test text-6.14 {TextWidgetCmd procedure, "compare" option} {
     list [catch {.t co 1.0 z 1.2} msg] $msg
-} {1 {bad option "co": must be bbox, cget, compare, configure, debug, delete, dlineinfo, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
+} {1 {bad option "co": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
 
 # "configure" option is already covered above
 
@@ -227,7 +227,7 @@ test text-7.1 {TextWidgetCmd procedure, "debug" option} {
 } {1 {wrong # args: should be ".t debug boolean"}}
 test text-7.2 {TextWidgetCmd procedure, "debug" option} {
     list [catch {.t de 0 1} msg] $msg
-} {1 {bad option "de": must be bbox, cget, compare, configure, debug, delete, dlineinfo, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
+} {1 {bad option "de": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
 test text-7.3 {TextWidgetCmd procedure, "debug" option} {
     .t debug true
     .t deb
@@ -310,7 +310,7 @@ test text-10.2 {TextWidgetCmd procedure, "index" option} {
 } {1 {wrong # args: should be ".t index index"}}
 test text-10.3 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t in a b} msg] $msg
-} {1 {bad option "in": must be bbox, cget, compare, configure, debug, delete, dlineinfo, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
+} {1 {bad option "in": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
 test text-10.4 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t index @xyz} msg] $msg
 } {1 {bad text index "@xyz"}}
@@ -854,7 +854,7 @@ test text-19.3 {TkTextLostSelection procedure} {
 .t insert end "xxyz xyz x. the\nfoo -forward bar xxxxx BaR foo\nxyz xxyzx"
 test text-20.1 {TextSearchCmd procedure, argument parsing} {
     list [catch {.t search -} msg] $msg
-} {1 {bad switch "-": must be -forward, -backward, -exact, -regexp, -nocase, -count, -elide, or --}}
+} {1 {bad switch "-": must be --, -backward, -count, -elide, -exact, -forward, -nocase, or -regexp}}
 test text-20.2 {TextSearchCmd procedure, -backwards option} {
     .t search -backwards xyz 1.4
 } {1.1}
@@ -885,10 +885,10 @@ test text-20.10 {TextSearchCmd procedure, -- option} {
 } {2.4}
 test text-20.11 {TextSearchCmd procedure, argument parsing} {
     list [catch {.t search abc} msg] $msg
-} {1 {wrong # args: should be ".t search ?switches? pattern index ?stopIndex?}}
+} {1 {wrong # args: should be ".t search ?switches? pattern index ?stopIndex?"}}
 test text-20.12 {TextSearchCmd procedure, argument parsing} {
     list [catch {.t search abc d e f} msg] $msg
-} {1 {wrong # args: should be ".t search ?switches? pattern index ?stopIndex?}}
+} {1 {wrong # args: should be ".t search ?switches? pattern index ?stopIndex?"}}
 test text-20.13 {TextSearchCmd procedure, check index} {
     list [catch {.t search abc gorp} msg] $msg
 } {1 {bad text index "gorp"}}
