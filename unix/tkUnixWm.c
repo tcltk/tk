@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.19 2002/05/27 20:34:32 mdejong Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.20 2002/05/27 22:54:42 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -2014,7 +2014,14 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	        return TCL_ERROR;
 	    }
 
-	    wmPtr->masterPtr = masterPtr;
+	    if (masterPtr == winPtr) {
+	        Tcl_AppendResult(interp, "can't make \"", Tk_PathName(winPtr),
+	                "\" its own master",
+	                (char *) NULL);
+	        return TCL_ERROR;
+	    } else if (masterPtr != wmPtr->masterPtr) {
+	        wmPtr->masterPtr = masterPtr;
+	    }
 	}
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	    Window xwin = (wmPtr->masterPtr == NULL) ? None :
