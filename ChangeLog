@@ -1,3 +1,8 @@
+2005-01-13  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* library/tkfbox.tcl (IconList_Selection, IconList_Create):
+	(IconList_Arrange): Assorted tk_getOpenFile fixes. [part of Bug 600313]
+
 2005-01-12  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/event.n: Added section on predefined virtual events. [Bug 608115]
