@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: getOpenFile.n,v 1.4 1999/12/16 21:57:11 hobbs Exp $
+'\" RCS: @(#) $Id: getOpenFile.n,v 1.5 2000/01/27 00:23:10 ericm Exp $
 '\" 
 .so man.macros
 .TH tk_getOpenFile n 4.2 Tk "Tk Built-In Commands"
@@ -151,6 +151,9 @@ if {$filename != ""} {
     # Open the file ...
 }
 .CE
+
+.SH "SEE ALSO"
+tk_chooseDirectory
 
 .SH KEYWORDS
 file selection dialog

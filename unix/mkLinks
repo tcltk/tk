@@ -959,6 +959,10 @@ if test -r chooseColor.n; then
     rm -f tk_chooseColor.n
     ln chooseColor.n tk_chooseColor.n
 fi
+if test -r chooseDirectory.n; then
+    rm -f tk_chooseDirectory.n
+    ln chooseDirectory.n tk_chooseDirectory.n
+fi
 if test -r dialog.n; then
     rm -f tk_dialog.n
     ln dialog.n tk_dialog.n

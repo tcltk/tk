@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.16 2000/01/20 02:32:52 ericm Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.17 2000/01/27 00:23:10 ericm Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -252,6 +252,11 @@ if {[string equal [info commands tk_getSaveFile] ""]} {
 if {[string equal [info commands tk_messageBox] ""]} {
     proc tk_messageBox {args} {
 	return [eval tkMessageBox $args]
+    }
+}
+if {[string equal [info command tk_chooseDirectory] ""]} {
+    proc tk_chooseDirectory {args} {
+	return [eval ::tkChooseDirectory::tk_chooseDirectory $args]
     }
 }
 	
