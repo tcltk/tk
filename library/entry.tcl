@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: entry.tcl,v 1.19 2002/03/04 07:36:39 hobbs Exp $
+# RCS: @(#) $Id: entry.tcl,v 1.20 2002/08/31 06:12:28 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -50,7 +50,7 @@ bind Entry <<Copy>> {
 bind Entry <<Paste>> {
     global tcl_platform
     catch {
-	if {[string compare $tcl_platform(platform) "unix"]} {
+	if {[string compare [tk windowingsystem] "x11"]} {
 	    catch {
 		%W delete sel.first sel.last
 	    }
@@ -203,7 +203,8 @@ bind Entry <Escape> {# nothing}
 bind Entry <Return> {# nothing}
 bind Entry <KP_Enter> {# nothing}
 bind Entry <Tab> {# nothing}
-if {[string equal $tcl_platform(platform) "macintosh"]} {
+if {[string equal [tk windowingsystem] "classic"]
+	|| [string equal [tk windowingsystem] "aqua"]} {
 	bind Entry <Command-KeyPress> {# nothing}
 }
 

@@ -1,3 +1,156 @@
+2002-08-31  Daniel Steffen  <das@users.sourceforge.net>
+
+	*** macosx-8-4-branch merged into the mainline [tcl patch #602770] ***
+
+	* generic/tk.decls:
+	* generic/tkInt.decls: added new "aqua" specific entries to the
+	stubs tables. Changed all "unix" entries to "x11" to allow us to
+	distinguish and build both "aqua" on MacOSX and "x11" on MacOSX.
+
+	* generic/tk.h: added a #ifnded RESOURCE_INCLUDED so that tk.h can
+	be passed to the resource compiler. 
+	
+	* generic/tkCmds.c (Tk_TkObjCmd): added [tk windowingsystem]
+	subcommand: returns "x11" when running on X11, "win32" on Windows,
+	"classic" on MacOS9 and "aqua" on MacOSX Aqua (i.e. Carbon)
+
+	* generic/tkFont.c (TkFontGetFirstTextLayout): new private function
+	returning the first chunk of a Tk_TextLayout, i.e. until the first
+	font change on the first line (or the whole first line if there is
+	no such font change).
+
+	* generic/tkMain.c: made Tcl_ThreadDataKey static
+
+	* library/demos/puzzle.tcl: fixed button metrics for aqua
+
+	* tests/cursor.test: check for presence of arrow cursor instead of
+	heart cursor
+
+	* xlib/xcolors.c: changed xColors static initialization to more
+	standard C
+	
+	* macosx/Wish.pbproj/jingham.pbxuser (new):
+	* macosx/Wish.pbproj/project.pbxproj (new): project for Apple's
+	ProjectBuilder IDE.
+
+	* macosx/Makefile (new): simple makefile for building the project
+	from the command line via the ProjectBuilder tool 'pbxbuild'.
+
+	* macosx/tkMacOSXAppInit.c (new): macosx specific AppInit looking
+	for a AppMain.tcl file in its bundled Resources/Scripts folder. If
+	present, argv[1] is set to that file and the Scripts folder is
+	added to the auto_path. This allows tk apps to embed scripts within
+	their bundle directory structure.
+
+	* macosx/tkMacOSXInit.c (new): macosx adapted version of
+	tkUnixInit.c: we initialize & cache the Carbon native encoding
+	(e.g. 'macRoman') and try to find the tk script library files
+	inside Tk packaged as a framework.
+
+	* macosx/tkMacOSXNotify.c (new): new macosx specific merged
+	Carbon/select-based notifier.
+
+	* macosx/tkMacOSXEvent.c (new):
+	* macosx/tkMacOSXEvent.h (new):
+	* macosx/tkMacOSXKeyEvent.c (new):
+	* macosx/tkMacOSXMouseEvent.c (new):
+	* macosx/tkMacOSXWindowEvent.c (new): new macosx specific event
+	handling functionality.
+
+	* macosx/tkMacOSX.h (new):
+	* macosx/tkMacOSXBitmap.c (new): 
+	* macosx/tkMacOSXButton.c (new):
+	* macosx/tkMacOSXClipboard.c (new):
+	* macosx/tkMacOSXColor.c (new):
+	* macosx/tkMacOSXConfig.c (new):
+	* macosx/tkMacOSXCursor.c (new):
+	* macosx/tkMacOSXDefault.h (new):
+	* macosx/tkMacOSXDialog.c (new):
+	* macosx/tkMacOSXDraw.c (new):
+	* macosx/tkMacOSXEmbed.c (new):
+	* macosx/tkMacOSXFont.c (new):
+	* macosx/tkMacOSXHLEvents.c (new):
+	* macosx/tkMacOSXInt.h (new):
+	* macosx/tkMacOSXKeyboard.c (new):
+	* macosx/tkMacOSXMenu.c (new):
+	* macosx/tkMacOSXMenubutton.c (new):
+	* macosx/tkMacOSXMenus.c (new):
+	* macosx/tkMacOSXPort.h (new):
+	* macosx/tkMacOSXRegion.c (new):
+	* macosx/tkMacOSXScale.c (new):
+	* macosx/tkMacOSXScrlbr.c (new):
+	* macosx/tkMacOSXSubwindows.c (new):
+	* macosx/tkMacOSXTest.c (new):
+	* macosx/tkMacOSXUtil.c (new):
+	* macosx/tkMacOSXUtil.h (new):
+	* macosx/tkMacOSXWm.c (new):
+	* macosx/tkMacOSXWm.h (new):
+	* macosx/tkMacOSXXStubs.c (new): macosx ports of classic mac Tk
+	implementation in tk/mac.
+
+	* macosx/tkMacOSXSend.c (new): only send to local interp
+	implemented currently.
+
+	* macosx/tkMacOSXDebug.h (new):
+	* macosx/tkMacOSXDebug.c (new): new macosx specific functions for
+	debugging MacOS events, regions, etc.
+
+	* macosx/tkAboutDlg.r (new):
+	* macosx/tkMacOSXApplication.r (new):
+	* macosx/tkMacOSXCursors.r (new):
+	* macosx/tkMacOSXLibrary.r (new):
+	* macosx/tkMacOSXMenu.r (new):
+	* macosx/tkMacOSXResource.r (new):
+	* macosx/tkMacOSXXCursors.r (new):
+	* macosx/tclets.r (new): sources for Rez resource compiler.
+
+	* macosx/Wish.icns (new): Wish application icon.
+
+	* generic/tk.h:
+	* generic/default.h:
+	* generic/tkBind.c:
+	* generic/tkCmds.c:
+	* generic/tkGrab.c:
+	* generic/tkPointer.c:
+	* generic/tkPort.h:
+	* generic/tkSelect.c:
+	* generic/tkStubLib.c:
+	* generic/tkTest.c:
+	* generic/tkText.c:
+	* generic/tkWindow.c:
+	* unix/tkUnix3d.c:
+	* xlib/xgc.c:
+	* xlib/X11/X.h:
+	* xlib/X11/Xlib.h:
+	* xlib/X11/Xutil.h: added #includes and #ifdefs for macosx
+
+	* library/bgerror.tcl:
+	* library/button.tcl:
+	* library/console.tcl:
+	* library/dialog.tcl:
+	* library/entry.tcl:
+	* library/listbox.tcl:
+	* library/menu.tcl:
+	* library/msgbox.tcl:
+	* library/scrlbar.tcl:
+	* library/spinbox.tcl:
+	* library/text.tcl:
+	* library/tk.tcl:
+	* library/demos/menu.tcl:
+	* library/demos/menubu.tcl:
+	* library/demos/widget: check [tk windowingsystem] instead of
+	and/or in addition to $tcl_platform(platform).
+
+	* generic/tkInt.h:
+	* mac/tkMacBitmap.c:
+	* mac/tkMacWm.c: added missing CONSTification
+
+	* generic/tkIntDecls.h:
+	* generic/tkIntPlatDecls.h:
+	* generic/tkIntXlibDecls.h:
+	* generic/tkPlatDecls.h:	
+	* generic/tkStubInit.c: regen
+
 2002-08-27  D. Richard Hipp <drh@hwaci.com>
 
 	* doc/checkbutton.n:      [Bug 582457] Fix the -offrelief option so

@@ -4,7 +4,7 @@
 # procedures that help in implementing those bindings.  The spinbox builds
 # off the entry widget, so it can reuse Entry bindings and procedures.
 #
-# RCS: @(#) $Id: spinbox.tcl,v 1.5 2002/07/25 20:57:33 hobbs Exp $
+# RCS: @(#) $Id: spinbox.tcl,v 1.6 2002/08/31 06:12:28 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -56,7 +56,7 @@ bind Spinbox <<Copy>> {
 bind Spinbox <<Paste>> {
     global tcl_platform
     catch {
-	if {$tcl_platform(platform) ne "unix"} {
+	if {[tk windowingsystem] ne "x11"} {
 	    catch {
 		%W delete sel.first sel.last
 	    }
@@ -212,7 +212,8 @@ bind Spinbox <Escape> {# nothing}
 bind Spinbox <Return> {# nothing}
 bind Spinbox <KP_Enter> {# nothing}
 bind Spinbox <Tab> {# nothing}
-if {[string equal $tcl_platform(platform) "macintosh"]} {
+if {[string equal [tk windowingsystem] "classic"]
+	|| [string equal [tk windowingsystem] "aqua"]} {
 	bind Spinbox <Command-KeyPress> {# nothing}
 }
 

@@ -3,7 +3,7 @@
 # This demonstration script creates a window with a bunch of menus
 # and cascaded menus using menubuttons.
 #
-# # RCS: @(#) $Id: menubu.tcl,v 1.2 1998/09/14 18:23:29 stanton Exp $
+# # RCS: @(#) $Id: menubu.tcl,v 1.3 2002/08/31 06:12:28 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -57,7 +57,8 @@ pack $body.buttons -padx 25 -pady 25
 tk_optionMenu $body.buttons.options menubuttonoptions one two three
 pack $body.buttons.options -side left -padx 25 -pady 25
 set m [tk_optionMenu $body.buttons.colors paletteColor Black red4 DarkGreen NavyBlue gray75 Red Green Blue gray50 Yellow Cyan Magenta White Brown DarkSeaGreen DarkViolet]
-if {$tcl_platform(platform) == "macintosh"} {
+if {[string equal [tk windowingsystem] "classic"]
+	|| [string equal [tk windowingsystem] "aqua"]} {
     set topBorderColor Black
     set bottomBorderColor Black
 } else {

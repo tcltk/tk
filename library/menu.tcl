@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.17 2002/06/22 09:08:40 hobbs Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.18 2002/08/31 06:12:28 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -121,7 +121,7 @@ bind Menu <Enter> {
     set tk::Priv(window) %W
     if {[%W cget -type] eq "tearoff"} {
 	if {"%m" ne "NotifyUngrab"} {
-	    if {$tcl_platform(platform) eq "unix"} {
+	    if {[tk windowingsystem] eq "x11"} {
 		tk_menuSetFocus %W
 	    }
 	}
@@ -169,7 +169,7 @@ bind Menu <KeyPress> {
 # The following bindings apply to all windows, and are used to
 # implement keyboard menu traversal.
 
-if {[string equal $tcl_platform(platform) "unix"]} {
+if {[string equal [tk windowingsystem] "x11"]} {
     bind all <Alt-KeyPress> {
 	tk::TraverseToMenu %W %A
     }
@@ -251,7 +251,7 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
     if {[string equal $menu ""]} {
 	return
     }
-    set tearoff [expr {$tcl_platform(platform) eq "unix" \
+    set tearoff [expr {[tk windowingsystem] eq "x11" \
 	    || [$menu cget -type] eq "tearoff"}]
     if {[string first $w $menu] != 0} {
 	error "can't post $menu:  it isn't a descendant of $w (this is a new requirement in Tk versions 3.0 and later)"
@@ -443,7 +443,7 @@ proc ::tk::MenuUnpost menu {
 	    $Priv(menuBar) configure -cursor $Priv(cursor)
 	    set Priv(menuBar) {}
 	}
-	if {$tcl_platform(platform) ne "unix"} {
+	if {[tk windowingsystem] ne "x11"} {
 	    set Priv(tearoff) 0
 	}
     }
@@ -499,7 +499,7 @@ proc ::tk::MbButtonUp w {
     global tcl_platform
 
     set menu [$w cget -menu]
-    set tearoff [expr {$tcl_platform(platform) eq "unix" || \
+    set tearoff [expr {[tk windowingsystem] eq "x11" || \
 	    ($menu ne "" && [$menu cget -type] eq "tearoff")}]
     if {($tearoff != 0) && $Priv(postedMb) eq $w \
 	    && $Priv(inMenubutton) eq $w} {
@@ -592,7 +592,7 @@ proc ::tk::MenuButtonDown menu {
 	# Must re-grab even if the grab window hasn't changed, in order
 	# to release the implicit grab from the button press.
 
-	if {[string equal $tcl_platform(platform) "unix"]} {
+	if {[string equal [tk windowingsystem] "x11"]} {
 	    grab -global $menu
 	}
     }
@@ -1286,7 +1286,7 @@ proc ::tk_popup {menu x y {entry {}}} {
 	tk::MenuUnpost {}
     }
     tk::PostOverPoint $menu $x $y $entry
-    if {$tcl_platform(platform) eq "unix" && [winfo viewable $menu]} {
+    if {[tk windowingsystem] eq "x11" && [winfo viewable $menu]} {
         tk::SaveGrabInfo $menu
 	grab -global $menu
 	set Priv(popup) $menu
