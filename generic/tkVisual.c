@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkVisual.c,v 1.5 2004/01/13 02:06:01 davygrvy Exp $
+ * RCS: @(#) $Id: tkVisual.c,v 1.6 2004/05/23 17:27:55 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -175,12 +175,12 @@ Tk_GetVisual(interp, tkwin, string, depthPtr, colormapPtr)
 	int visualId;
 
 	/*
-	* This is a visual ID.
-	*/
+	 * This is a visual ID.
+	 */
 
 	if (Tcl_GetInt(interp, string, &visualId) == TCL_ERROR) {
 	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "bad X identifier for visual: ",
+	    Tcl_AppendResult(interp, "bad X identifier for visual: \"",
 		    string, "\"", (char *) NULL);
 	    return NULL;
 	}
