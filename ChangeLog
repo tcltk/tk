@@ -1,3 +1,9 @@
+2003-07-24  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinCursor.c: Fix for bug #776646 for a native hand2 and
+	fleur (move) cursor under win.
+	* tests/cursor.test: Check that documented cursors are available.
+
 2003-07-20  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/buildTkConfig.tcl: fix to TK_BUILD_* ref generation
