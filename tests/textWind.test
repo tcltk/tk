@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textWind.test,v 1.17 2004/06/17 22:38:57 dkf Exp $
+# RCS: @(#) $Id: textWind.test,v 1.18 2004/09/10 12:13:43 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -190,6 +190,7 @@ test textWind-2.18 {TkTextWindowCmd procedure} {
 } {1 {unknown option "-gorp"} 0 1.0 1}
 test textWind-2.19 {TkTextWindowCmd procedure} {
     .t delete 1.0 end
+    catch {destroy .f}
     frame .f -width 10 -height 6 -bg $color
     list [catch {.t window create 1.0 -gorp -window .f stupid} msg] $msg \
 	    [winfo exists .f] [.t index 1.end] [catch {.t index .f}]
@@ -408,6 +409,7 @@ proc bgerror args {
 test textWind-10.1 {EmbWinLayoutProc procedure} {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
+    destroy .f
     .t window create 1.5 -create {
 	frame .f -width 10 -height 20 -bg $color
     }
@@ -860,6 +862,162 @@ test textWind-16.4 {EmbWinTextStructureProc procedure} {
     list [winfo ismapped .t.f] [.t bbox .t.f]
 } {1 {47 5 30 20}}
 pack .t
+
+test textWind-17.1 {peer widgets and embedded windows} {
+    catch {destroy .t .tt}
+    pack [text .t]
+    .t delete 1.0 end
+    .t insert end "Line 1"
+    frame .f -width 20 -height 10 -bg blue
+    .t window create 1.3 -window .f
+    toplevel .tt
+    pack [.t peer create .tt.t]
+    update ; update
+    destroy .t .tt
+    winfo exists .f
+} {0}
+
+test textWind-17.2 {peer widgets and embedded windows} {
+    catch {destroy .t .f}
+    pack [text .t]
+    .t delete 1.0 end
+    .t insert end "Line 1\nLine 2"
+    frame .f -width 20 -height 10 -bg blue
+    .t window create 1.4 -window .f
+    toplevel .tt
+    pack [.t peer create .tt.t]
+    update ; update
+    destroy .t
+    .tt.t insert 1.0 "foo"
+    update
+    destroy .tt
+} {}
+
+test textWind-17.3 {peer widget and -create} {
+    catch {destroy .t}
+    pack [text .t]
+    .t delete 1.0 end
+    .t insert 1.0 "Some sample text"
+    toplevel .tt
+    pack [.t peer create .tt.t]
+    update ; update
+    .t window create 1.2 -create {frame %W.f -width 10 -height 20 -bg blue}
+    update
+    destroy .t .tt
+} {}
+
+test textWind-17.4 {peer widget deleted one window shouldn't delete others} {
+    catch {destroy .t .tt}
+    pack [text .t]
+    .t delete 1.0 end
+    .t insert 1.0 "Some sample text"
+    toplevel .tt
+    pack [.t peer create .tt.t]
+    .t window create 1.2 -create {frame %W.f -width 10 -height 20 -bg blue}
+    update ; update
+    destroy .tt
+    set res {}
+    lappend res [.t get 1.2]
+    update
+    lappend res [.t get 1.2]
+} {{} {}}
+
+test textWind-17.5 {peer widget window configuration} {
+    catch {destroy .t .tt}
+    pack [text .t]
+    .t delete 1.0 end
+    .t insert 1.0 "Some sample text"
+    toplevel .tt
+    pack [.t peer create .tt.t]
+    .t window create 1.2 -create {frame %W.f -width 10 -height 20 -bg blue}
+    update ; update
+    set res [list [.t window cget 1.2 -window] [.tt.t window cget 1.2 -window]]
+    destroy .tt .t
+    set res
+} {.t.f .tt.t.f}
+
+test textWind-17.6 {peer widget window configuration} {
+    catch {destroy .t .tt}
+    pack [text .t]
+    .t delete 1.0 end
+    .t insert 1.0 "Some sample text"
+    toplevel .tt
+    pack [.t peer create .tt.t]
+    .t window create 1.2 -create {frame %W.f -width 10 -height 20 -bg blue}
+    update ; update
+    set res [list [.t window configure 1.2 -window] \
+      [.tt.t window configure 1.2 -window]]
+    destroy .tt .t
+    set res
+} {{-window {} {} {} .t.f} {-window {} {} {} .tt.t.f}}
+
+test textWind-17.7 {peer widget window configuration} {
+    catch {destroy .t .tt}
+    pack [text .t]
+    .t delete 1.0 end
+    .t insert 1.0 "Some sample text"
+    toplevel .tt
+    pack [.t peer create .tt.t]
+    .t window create 1.2 -window [frame .t.f -width 10 -height 20 -bg blue]
+    update ; update
+    set res [list [.t window cget 1.2 -window] [.tt.t window cget 1.2 -window]]
+    destroy .tt .t
+    set res
+} {.t.f {}}
+
+test textWind-17.8 {peer widget window configuration} {
+    catch {destroy .t .tt}
+    pack [text .t]
+    .t delete 1.0 end
+    .t insert 1.0 "Some sample text"
+    toplevel .tt
+    pack [.t peer create .tt.t]
+    .t window create 1.2 -window [frame .t.f -width 10 -height 20 -bg blue]
+    update ; update
+    set res [list [.t window configure 1.2 -window] \
+      [.tt.t window configure 1.2 -window]]
+    destroy .tt .t
+    set res
+} {{-window {} {} {} .t.f} {-window {} {} {} {}}}
+
+test textWind-17.8 {peer widget window configuration} {
+    catch {destroy .t .tt}
+    pack [text .t]
+    .t delete 1.0 end
+    .t insert 1.0 "Some sample text"
+    toplevel .tt
+    pack [.t peer create .tt.t]
+    .t window create 1.2 -window [frame .t.f -width 10 -height 20 -bg blue]
+    update ; update
+    .tt.t window configure 1.2 -window [frame .tt.t.f -width 10 -height 20 -bg red]
+    set res [list [.t window configure 1.2 -window] \
+      [.tt.t window configure 1.2 -window]]
+    destroy .tt .t
+    set res
+} {{-window {} {} {} .t.f} {-window {} {} {} .tt.t.f}}
+
+test textWind-17.9 {peer widget window configuration} {
+    catch {destroy .t .tt}
+    pack [text .t]
+    .t delete 1.0 end
+    .t insert 1.0 "Some sample text"
+    toplevel .tt
+    pack [.t peer create .tt.t]
+    .t window create 1.2 -window [frame .t.f -width 10 -height 20 -bg blue]
+    .tt.t window create 1.2 -window [frame .tt.t.f -width 25 -height 20 -bg blue]
+    update ; update
+    .t window configure 1.2 -create \
+      {destroy %W.f ; frame %W.f -width 50 -height 7 -bg red}
+    .tt.t window configure 1.2 -window {}
+    .t window configure 1.2 -window {}
+    set res [list [.t window configure 1.2 -window] \
+      [.tt.t window configure 1.2 -window]]
+    update
+    lappend res [.t window configure 1.2 -window] \
+      [.tt.t window configure 1.2 -window]
+    destroy .tt .t
+    set res
+} {{-window {} {} {} {}} {-window {} {} {} {}} {-window {} {} {} .t.f} {-window {} {} {} .tt.t.f}}
 
 catch {destroy .t}
 option clear
