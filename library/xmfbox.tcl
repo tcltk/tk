@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.15 2001/06/14 10:56:58 dkf Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.16 2001/07/03 14:59:25 dkf Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Scriptics Corporation
@@ -825,7 +825,7 @@ proc tkMotifFDialog_ActivateSEnt {w} {
 	    if {[string equal $data(type) save]} {
 	    set message [format %s%s \
 		[::msgcat::mc {File "%1$s" already exists.\n\n} \
-		    $selectFilePath ]
+		    $selectFilePath ] \
 		[::msgcat::mc {Replace existing file?}]]
 		set answer [tk_messageBox -icon warning -type yesno \
 				-message $message]
