@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.75 2004/12/20 01:22:00 chengyemao Exp $
+RCS: @(#) $Id: changes,v 1.76 2004/12/20 15:38:52 chengyemao Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5909,3 +5909,7 @@ so that an embedded widget is able to identify a container, to get focus and to
 receive key press input. Fixed bugs include [1024364] and an incorrect wm
 overrideredirect for an embedded window. (chengyemao)
 
+2004-12-20 (feature implementation of embedded/embedding Tk) Implemented 
+overrideredirect for an embedded toplevel; correctly updated a frame's upper left
+x and y of an embedded toplevel after its container (of another process) moved.
+(chengyemao) 
