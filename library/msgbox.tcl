@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.11 2000/04/27 18:28:59 ericm Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.12 2000/06/30 06:38:38 ericm Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -170,44 +170,67 @@ proc tkMessageBox {args} {
 
     switch -- $data(-type) {
 	abortretryignore {
-	    set buttons {
-		{abort  -width 6 -text Abort -under 0}
-		{retry  -width 6 -text Retry -under 0}
-		{ignore -width 6 -text Ignore -under 0}
-	    }
+		set maxWidth [::msgcat::mcmax Abort Retry Ignore]
+		set maxWidth [expr $maxWidth<6?6:$maxWidth]
+	    set buttons [list \
+		[list abort  -width $maxWidth -text [::msgcat::mc "Abort"] \
+		    -under 0]\
+		[list retry  -width $maxWidth -text [::msgcat::mc "Retry"] \
+		    -under 0]\
+		[list ignore -width $maxWidth -text [::msgcat::mc "Ignore"] \
+		    -under 0]\
+	    ]
 	}
 	ok {
-	    set buttons {
-		{ok -width 6 -text OK -under 0}
-	    }
+	    set buttons [list \
+		[list ok -width [::msgcat::mcmax OK] \
+		    -text [::msgcat::mc {OK}] -under 0] \
+	    ]
 	    if {[string equal $data(-default) ""]} {
 		set data(-default) "ok"
 	    }
 	}
 	okcancel {
-	    set buttons {
-		{ok     -width 6 -text OK     -under 0}
-		{cancel -width 6 -text Cancel -under 0}
-	    }
+		set maxWidth [::msgcat::mcmax OK Cancel]
+		set maxWidth [expr $maxWidth<6?6:$maxWidth]
+	    set buttons [list \
+		[list ok     -width $maxWidth \
+		    -text [::msgcat::mc "OK"]     -under 0] \
+		[list cancel -width $maxWidth \
+		    -text [::msgcat::mc "Cancel"] -under 0] \
+	    ]
 	}
 	retrycancel {
-	    set buttons {
-		{retry  -width 6 -text Retry  -under 0}
-		{cancel -width 6 -text Cancel -under 0}
-	    }
+		set maxWidth [::msgcat::mcmax Retry Cancel]
+		set maxWidth [expr $maxWidth<6?6:$maxWidth]
+	    set buttons [list \
+		[list retry  -width $maxWidth \
+		    -text [::msgcat::mc "Retry"]  -under 0] \
+		[list cancel -width $maxWidth \
+		    -text [::msgcat::mc "Cancel"] -under 0] \
+	    ]
 	}
 	yesno {
-	    set buttons {
-		{yes    -width 6 -text Yes -under 0}
-		{no     -width 6 -text No  -under 0}
-	    }
+		set maxWidth [::msgcat::mcmax Yes No]
+		set maxWidth [expr $maxWidth<6?6:$maxWidth]
+	    set buttons [list \
+		[list yes    -width $maxWidth \
+		    -text [::msgcat::mc "Yes"] -under 0]\
+		[list no     -width $maxWidth \
+		    -text [::msgcat::mc "No"]  -under 0]\
+	    ]
 	}
 	yesnocancel {
-	    set buttons {
-		{yes    -width 6 -text Yes -under 0}
-		{no     -width 6 -text No  -under 0}
-		{cancel -width 6 -text Cancel -under 0}
-	    }
+		set maxWidth [::msgcat::mcmax Yes No Cancel]
+		set maxWidth [expr $maxWidth<6?6:$maxWidth]
+	    set buttons [list \
+		[list yes    -width $maxWidth \
+		    -text [::msgcat::mc "Yes"] -under 0]\
+		[list no     -width $maxWidth \
+		    -text [::msgcat::mc "No"]  -under 0]\
+		[list cancel -width $maxWidth \
+		    -text [::msgcat::mc "Cancel"] -under 0]\
+	    ]
 	}
 	default {
 	    error "bad -type value \"$data(-type)\": must be abortretryignore, ok, okcancel, retrycancel, yesno, or yesnocancel"

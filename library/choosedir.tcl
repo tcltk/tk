@@ -5,7 +5,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.8 2000/06/23 00:22:28 ericm Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.9 2000/06/30 06:38:38 ericm Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -135,7 +135,7 @@ proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
     tclParseConfigSpec ::tk::dialog::file::$dataName $specs "" $argList
 
     if {$data(-title) == ""} {
-	set data(-title) "Choose Directory"
+	set data(-title) "[::msgcat::mc "Choose Directory"]"
     }
 
     # Stub out the -multiple value for the dialog; it doesn't make sense for

@@ -9,10 +9,11 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.11 2000/06/19 18:28:56 ericm Exp $
-# $Id: bgerror.tcl,v 1.11 2000/06/19 18:28:56 ericm Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.12 2000/06/30 06:38:38 ericm Exp $
+# $Id: bgerror.tcl,v 1.12 2000/06/30 06:38:38 ericm Exp $
 
-option add *ErrorDialog.function.text "Save To Log" widgetDefault
+option add *ErrorDialog.function.text [::msgcat::mc "Save To Log"] \
+	widgetDefault
 option add *ErrorDialog.function.command "::tk::dialog::error::saveToLog"
 
 namespace eval ::tk {}
@@ -51,11 +52,11 @@ proc ::tk::dialog::error::saveToLog {text} {
 	set allFiles "*"
     }
     set types [list	\
-	    [list "Log Files"	.log]		\
-	    [list "Text Files"	.txt]		\
-	    [list "All Files"	$allFiles]	\
+	    [list [::msgcat::mc "Log Files"]	.log]		\
+	    [list [::msgcat::mc "Text Files"]	.txt]		\
+	    [list [::msgcat::mc "All Files"]	$allFiles]	\
 	    ]
-    set filename [tk_getSaveFile -title "Select Log File" \
+    set filename [tk_getSaveFile -title [::msgcat::mc "Select Log File"] \
 	    -filetypes $types -defaultextension .log -parent .bgerrorDialog]
     if {![string length $filename]} {
 	return
@@ -92,12 +93,12 @@ proc bgerror err {
     # Ok the application's tkerror either failed or was not found
     # we use the default dialog then :
     if {$tcl_platform(platform) == "macintosh"} {
-	set ok		"Ok"
+	set ok		[::msgcat::mc "Ok"]
 	set messageFont	system
 	set textRelief	"flat"
 	set textHilight	0
     } else {
-	set ok		"OK"
+	set ok		[::msgcat::mc "OK"]
 	set messageFont	{Times -18}
 	set textRelief	"sunken"
 	set textHilight	1
@@ -124,9 +125,10 @@ proc bgerror err {
     }
 
     set w .bgerrorDialog
-    set title "Application Error"
-    set text "Error:  $displayedErr"
-    set buttons [list ok $ok dismiss "Skip Messages" function "Details >>"]
+    set title [::msgcat::mc "Application Error"]
+    set text [::msgcat::mc "Error: %1\$s" $err]
+    set buttons [list ok $ok dismiss [::msgcat::mc "Skip Messages"] \
+	    function [::msgcat::mc "Details  >>"]]
 
     # 1. Create the top-level window and divide it into top
     # and bottom parts.

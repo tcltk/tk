@@ -1,3 +1,25 @@
+2000-06-29  Eric Melski  <ericm@scriptics.com>
+
+	* library/msgs/de.msg: German message catalog.
+	
+	* library/msgs/en.msg: English message catalog.
+
+	* library/msgs/es.msg: Spanish message catalog.
+
+	* library/msgs/fr.msg: French message catalog.
+
+	* unix/Makefile.in: 
+	* unix/configure.in: 
+	* library/tk.tcl:
+	* library/clrpick.tcl:
+	* library/choosedir.tcl:
+	* library/console.tcl:
+	* library/msgbox.tcl:
+	* library/tkfbox.tcl:
+	* library/xmfbox.tcl:
+	* library/bgerror.tcl: Applied patches from Laurent Duperval to 
+	provide localization of Tk dialogs. [RFE: 2671].
+
 2000-06-27  Eric Melski  <ericm@scriptics.com>
 
 	* generic/tkMenu.c (DeleteMenuCloneEntries): Applied fix from

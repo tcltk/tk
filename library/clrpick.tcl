@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# RCS: @(#) $Id: clrpick.tcl,v 1.10 2000/04/04 08:09:24 hobbs Exp $
+# RCS: @(#) $Id: clrpick.tcl,v 1.11 2000/06/30 06:38:38 ericm Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -164,7 +164,7 @@ proc tkColorDialog_Config {w argList} {
     set specs [list \
 	    [list -initialcolor "" "" $defaultColor] \
 	    [list -parent "" "" "."] \
-	    [list -title "" "" "Color"] \
+	    [list -title "" "" [::msgcat::mc "Color"]] \
 	    ]
 
     # 2: parse the arguments
@@ -197,16 +197,21 @@ proc tkColorDialog_BuildDialog {w} {
     # StripsFrame contains the colorstrips and the individual RGB entries
     set stripsFrame [frame $topFrame.colorStrip]
 
-    foreach c { Red Green Blue } {
-	set color [string tolower $c]
-
+    set maxWidth [::msgcat::mcmax Red Green Blue]
+    set maxWidth [expr $maxWidth<6?6:$maxWidth]
+    set colorList [list \
+	    red		[::msgcat::mc "Red"]	\
+	    green	[::msgcat::mc "Green"]	\
+	    blue	[::msgcat::mc "Blue"]	\
+	    ]
+    foreach {color l} $colorList {
 	# each f frame contains an [R|G|B] entry and the equiv. color strip.
 	set f [frame $stripsFrame.$color]
 
 	# The box frame contains the label and entry widget for an [R|G|B]
 	set box [frame $f.box]
 
-	label $box.label -text $c: -width 6 -under 0 -anchor ne
+	label $box.label -text $l: -width $maxWidth -under 0 -anchor ne
 	entry $box.entry -textvariable [format %s $w]($color,intensity) \
 	    -width 4
 	pack $box.label -side left -fill y -padx 2 -pady 3
@@ -251,7 +256,8 @@ proc tkColorDialog_BuildDialog {w} {
     # selected color
     #
     set selFrame [frame $topFrame.sel]
-    set lab [label $selFrame.lab -text "Selection:" -under 0 -anchor sw]
+    set lab [label $selFrame.lab -text [::msgcat::mc "Selection:"] \
+	    -under 0 -anchor sw]
     set ent [entry $selFrame.ent -textvariable [format %s $w](selection) \
 	-width 16]
     set f1  [frame $selFrame.f1 -relief sunken -bd 2]
@@ -269,10 +275,14 @@ proc tkColorDialog_BuildDialog {w} {
     # the botFrame frame contains the buttons
     #
     set botFrame [frame $w.bot -relief raised -bd 1]
-    button $botFrame.ok     -text OK            -width 8 -under 0 \
-	-command [list tkColorDialog_OkCmd $w]
-    button $botFrame.cancel -text Cancel        -width 8 -under 0 \
-	-command [list tkColorDialog_CancelCmd $w]
+    set maxWidth [::msgcat::mcmax OK Cancel]
+    set maxWidth [expr $maxWidth<8?8:$maxWidth]
+    button $botFrame.ok     -text [::msgcat::mc "OK"]		\
+	    -width $maxWidth -under 0				\
+	    -command [list tkColorDialog_OkCmd $w]
+    button $botFrame.cancel -text [::msgcat::mc "Cancel"]	\
+	    -width $maxWidth -under 0				\
+	    -command [list tkColorDialog_CancelCmd $w]
 
     set data(okBtn)      $botFrame.ok
     set data(cancelBtn)  $botFrame.cancel
@@ -309,7 +319,7 @@ proc tkColorDialog_SetRGBValue {w color} {
     tkColorDialog_RedrawColorBars $w all
 
     # Now compute the new x value of each colorbars pointer polygon
-    foreach color { red green blue } {
+    foreach color [list red green blue ] {
 	set x [tkColorDialog_RgbToX $w $data($color,intensity)]
 	tkColorDialog_MoveSelector $w $data($color,sel) $color $x 0
     }
@@ -582,7 +592,7 @@ proc tkColorDialog_ResizeColorBars {w} {
 	set data(BARS_WIDTH) $data(NUM_COLORBARS)
     }
     tkColorDialog_InitValues $w
-    foreach color { red green blue } {
+    foreach color [list red green blue ] {
 	$data($color,col) configure -width $data(canvasWidth)
 	tkColorDialog_DrawColorScale $w $color 1
     }
@@ -617,7 +627,7 @@ proc tkColorDialog_HandleSelEntry {w} {
 proc tkColorDialog_HandleRGBEntry {w} {
     upvar #0 $w data
 
-    foreach c {red green blue} {
+    foreach c [list red green blue] {
 	if {[catch {
 	    set data($c,intensity) [expr {int($data($c,intensity))}]
 	}]} {
@@ -632,8 +642,8 @@ proc tkColorDialog_HandleRGBEntry {w} {
 	}
     }
 
-    tkColorDialog_SetRGBValue $w "$data(red,intensity) $data(green,intensity) \
-	$data(blue,intensity)"
+    tkColorDialog_SetRGBValue $w "$data(red,intensity) \
+	$data(green,intensity) $data(blue,intensity)"
 }    
 
 # mouse cursor enters a color bar

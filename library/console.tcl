@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.8 2000/04/21 04:06:37 hobbs Exp $
+# RCS: @(#) $Id: console.tcl,v 1.9 2000/06/30 06:38:38 ericm Exp $
 #
 # Copyright (c) 1998-1999 Scriptics Corp.
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
@@ -39,35 +39,37 @@ proc tkConsoleInit {} {
     .menubar add cascade -label Edit -menu .menubar.edit -underline 0
 
     menu .menubar.file -tearoff 0
-    .menubar.file add command -label "Source..." -underline 0 \
-	    -command tkConsoleSource
-    .menubar.file add command -label "Hide Console" -underline 0 \
-	    -command {wm withdraw .}
+    .menubar.file add command -label [::msgcat::mc "Source..."] \
+	    -underline 0 -command tkConsoleSource
+    .menubar.file add command -label [::msgcat::mc "Hide Console"] \
+	    -underline 0  -command {wm withdraw .}
     if {[string compare $tcl_platform(platform) "macintosh"]} {
-	.menubar.file add command -label "Exit" -underline 1 -command exit
+	.menubar.file add command -label [::msgcat::mc "Exit"] \
+		-underline 1 -command exit
     } else {
-	.menubar.file add command -label "Quit" -command exit -accel Cmd-Q
+	.menubar.file add command -label [::msgcat::mc "Quit"] \
+		-command exit -accel Cmd-Q
     }
 
     menu .menubar.edit -tearoff 0
-    .menubar.edit add command -label "Cut" -underline 2 \
+    .menubar.edit add command -label [::msgcat::mc "Cut"] -underline 2 \
 	    -command { event generate .console <<Cut>> } -accel "$mod+X"
-    .menubar.edit add command -label "Copy" -underline 0 \
+    .menubar.edit add command -label [::msgcat::mc "Copy"] -underline 0 \
 	    -command { event generate .console <<Copy>> } -accel "$mod+C"
-    .menubar.edit add command -label "Paste" -underline 1 \
+    .menubar.edit add command -label [::msgcat::mc "Paste"] -underline 1 \
 	    -command { event generate .console <<Paste>> } -accel "$mod+V"
 
     if {[string compare $tcl_platform(platform) "windows"]} {
-	.menubar.edit add command -label "Clear" -underline 2 \
+	.menubar.edit add command -label [::msgcat::mc "Clear"] -underline 2 \
 		-command { event generate .console <<Clear>> }
     } else {
-	.menubar.edit add command -label "Delete" -underline 0 \
+	.menubar.edit add command -label [::msgcat::mc "Delete"] -underline 0 \
 		-command { event generate .console <<Clear>> } -accel "Del"
-
+	
 	.menubar add cascade -label Help -menu .menubar.help -underline 0
 	menu .menubar.help -tearoff 0
-	.menubar.help add command -label "About..." -underline 0 \
-		-command tkConsoleAbout
+	.menubar.help add command -label [::msgcat::mc "About..."] \
+		-underline 0 -command tkConsoleAbout
     }
 
     . configure -menu .menubar
@@ -93,7 +95,7 @@ proc tkConsoleInit {} {
     focus .console
     
     wm protocol . WM_DELETE_WINDOW { wm withdraw . }
-    wm title . "Console"
+    wm title . [::msgcat::mc "Console"]
     flush stdout
     .console mark set output [.console index "end - 1 char"]
     tkTextSetCursor .console end
@@ -110,8 +112,10 @@ proc tkConsoleInit {} {
 
 proc tkConsoleSource {} {
     set filename [tk_getOpenFile -defaultextension .tcl -parent . \
-		      -title "Select a file to source" \
-		      -filetypes {{"Tcl Scripts" .tcl} {"All Files" *}}]
+		      -title [::msgcat::mc "Select a file to source"] \
+		      -filetypes [list \
+			  [list [::msgcat::mc "Tcl Scripts"] .tcl] \
+			  [list [::msgcat::mc "All Files"] *]]]
     if {[string compare $filename ""]} {
     	set cmd [list source $filename]
 	if {[catch {consoleinterp eval $cmd} result]} {
@@ -471,7 +475,7 @@ proc tkConsoleExit {} {
 
 proc tkConsoleAbout {} {
     global tk_patchLevel
-    tk_messageBox -type ok -message "Tcl for Windows
+    tk_messageBox -type ok -message "[::msgcat::mc {Tcl for Windows}]
 Copyright \251 2000 Scriptics Corporation
 
 Tcl [info patchlevel]
