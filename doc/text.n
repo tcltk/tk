@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.15.2.1 2004/10/28 12:25:22 dkf Exp $
+'\" RCS: @(#) $Id: text.n,v 1.15.2.2 2005/02/11 21:05:04 hobbs Exp $
 '\" 
 .so man.macros
 .TH text n 8.4 Tk "Tk Built-In Commands"
@@ -892,10 +892,10 @@ in the following format:
 \fIkey1 value1 index1 key2 value2 index2\fR ...
 .LP
 The possible \fIkey\fP values are \fBtext\fP, \fBmark\fP,
-\fBtagon\fP, \fBtagoff\fP, and \fBwindow\fP.  The corresponding
-\fIvalue\fP is the text, mark name, tag name, or window name.
+\fBtagon\fP, \fBtagoff\fP, \fBimage\fP, and \fBwindow\fP.  The corresponding
+\fIvalue\fP is the text, mark name, tag name, image name, or window name.
 The \fIindex\fP information is the index of the
-start of the text, the mark, the tag transition, or the window.
+start of the text, mark, tag transition, image or window.
 One or more of the following switches (or abbreviations thereof)
 may be specified to control the dump:
 .TP
