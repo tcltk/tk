@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: safe.test,v 1.9 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: safe.test,v 1.10 2002/09/02 19:16:24 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -38,11 +38,11 @@ tcltest::loadTestedCommands
 # The set of hidden commands is platform dependent:
 
 if {"$tcl_platform(platform)" == "macintosh"} {
-    set hidden_cmds {beep bell cd clipboard echo encoding exit fconfigure file glob grab load ls menu open pwd selection send socket source tk tk_chooseColor tk_chooseDirectory tk_getOpenFile tk_getSaveFile toplevel wm}
+    set hidden_cmds {beep bell cd clipboard echo encoding exit fconfigure file glob grab load ls menu open pwd selection send socket source tk_chooseColor tk_chooseDirectory tk_getOpenFile tk_getSaveFile toplevel wm}
 } elseif {"$tcl_platform(platform)" == "windows"} {
-    set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection socket source tk tk_chooseColor tk_chooseDirectory tk_getOpenFile tk_getSaveFile tk_messageBox toplevel wm}
+    set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection socket source tk_chooseColor tk_chooseDirectory tk_getOpenFile tk_getSaveFile tk_messageBox toplevel wm}
 } else {
-    set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection send socket source tk toplevel wm}
+    set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection send socket source toplevel wm}
 }
 
 test safe-1.1 {Safe Tk loading into an interpreter} {
@@ -91,6 +91,28 @@ test safe-2.2 {Unsafe commands not available} {
     safe::interpDelete a
     set status
 } ok
+test safe-2.3 {Unsafe subcommands not available} {
+    catch {safe::interpDelete a}
+    safe::interpCreate a
+    safe::loadTk a
+    set status broken
+    if {[catch {interp eval a {tk appname}} msg]} {
+	set status ok
+    }
+    safe::interpDelete a
+    list $status $msg
+} {ok {appname not accessible in a safe interpreter}}
+test safe-2.4 {Unsafe subcommands not available} {
+    catch {safe::interpDelete a}
+    safe::interpCreate a
+    safe::loadTk a
+    set status broken
+    if {[catch {interp eval a {tk scaling}} msg]} {
+	set status ok
+    }
+    safe::interpDelete a
+    list $status $msg
+} {ok {scaling not accessible in a safe interpreter}}
 
 test safe-3.1 {Unsafe commands are available hidden} {
     catch {safe::interpDelete a}
