@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.1.4.4 1999/03/20 01:27:51 redman Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.1.4.5 1999/03/30 04:11:56 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -113,7 +113,7 @@ static void		DupBitmapObjProc _ANSI_ARGS_((Tcl_Obj *srcObjPtr,
 static void		FreeBitmap _ANSI_ARGS_((TkBitmap *bitmapPtr));
 static void		FreeBitmapObjProc _ANSI_ARGS_((Tcl_Obj *objPtr));
 static TkBitmap *	GetBitmap _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_Window tkwin, char *name));
+			    Tk_Window tkwin, CONST char *name));
 static TkBitmap *	GetBitmapFromObj _ANSI_ARGS_((Tk_Window tkwin,
 			    Tcl_Obj *objPtr));
 static void		InitBitmapObj _ANSI_ARGS_((Tcl_Obj *objPtr));
@@ -256,7 +256,7 @@ Tk_GetBitmap(interp, tkwin, string)
     Tcl_Interp *interp;		/* Interpreter to use for error reporting,
 				 * this may be NULL. */
     Tk_Window tkwin;		/* Window in which bitmap will be used. */
-    char *string;		/* Description of bitmap.  See manual entry
+    CONST char *string;		/* Description of bitmap.  See manual entry
 				 * for details on legal syntax. */
 {
     TkBitmap *bitmapPtr = GetBitmap(interp, tkwin, string);
@@ -298,7 +298,7 @@ GetBitmap(interp, tkwin, string)
     Tcl_Interp *interp;		/* Interpreter to use for error reporting,
 				 * this may be NULL. */
     Tk_Window tkwin;		/* Window in which bitmap will be used. */
-    char *string;		/* Description of bitmap.  See manual entry
+    CONST char *string;		/* Description of bitmap.  See manual entry
 				 * for details on legal syntax. */
 {
     Tcl_HashEntry *nameHashPtr, *predefHashPtr;
@@ -338,7 +338,7 @@ GetBitmap(interp, tkwin, string)
      * defined by a call to Tk_DefineBitmap.
      */
 
-    if (*string == '@') {
+    if (*string == '@') {	/* INTL: ISO char */
 	Tcl_DString buffer;
 	int result;
 
@@ -455,7 +455,7 @@ GetBitmap(interp, tkwin, string)
 int
 Tk_DefineBitmap(interp, name, source, width, height)
     Tcl_Interp *interp;		/* Interpreter to use for error reporting. */
-    char *name;			/* Name to use for bitmap.  Must not already
+    CONST char *name;		/* Name to use for bitmap.  Must not already
 				 * be defined as a bitmap. */
     char *source;		/* Address of bits for bitmap. */
     int width;			/* Width of bitmap. */
@@ -1004,28 +1004,27 @@ BitmapInit(dispPtr)
     if (!tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
         dummy = Tcl_CreateInterp();
-	Tcl_InitHashTable(&tsdPtr->predefBitmapTable, 
-                TCL_STRING_KEYS);
+	Tcl_InitHashTable(&tsdPtr->predefBitmapTable, TCL_STRING_KEYS);
 
-        Tk_DefineBitmap(dummy, Tk_GetUid("error"), (char *) error_bits,
-	        error_width, error_height);
-        Tk_DefineBitmap(dummy, Tk_GetUid("gray75"), (char *) gray75_bits,
+        Tk_DefineBitmap(dummy, "error", (char *) error_bits,
+		error_width, error_height);
+        Tk_DefineBitmap(dummy, "gray75", (char *) gray75_bits,
                 gray75_width, gray75_height);
-        Tk_DefineBitmap(dummy, Tk_GetUid("gray50"), (char *) gray50_bits,
+        Tk_DefineBitmap(dummy, "gray50", (char *) gray50_bits,
                 gray50_width, gray50_height);
-        Tk_DefineBitmap(dummy, Tk_GetUid("gray25"), (char *) gray25_bits,
+        Tk_DefineBitmap(dummy, "gray25", (char *) gray25_bits,
                 gray25_width, gray25_height);
-        Tk_DefineBitmap(dummy, Tk_GetUid("gray12"), (char *) gray12_bits,
+        Tk_DefineBitmap(dummy, "gray12", (char *) gray12_bits,
                 gray12_width, gray12_height);
-        Tk_DefineBitmap(dummy, Tk_GetUid("hourglass"), (char *) hourglass_bits,
+        Tk_DefineBitmap(dummy, "hourglass", (char *) hourglass_bits,
                 hourglass_width, hourglass_height);
-        Tk_DefineBitmap(dummy, Tk_GetUid("info"), (char *) info_bits,
+        Tk_DefineBitmap(dummy, "info", (char *) info_bits,
 	        info_width, info_height);
-        Tk_DefineBitmap(dummy, Tk_GetUid("questhead"), (char *) questhead_bits,
+        Tk_DefineBitmap(dummy, "questhead", (char *) questhead_bits,
 	        questhead_width, questhead_height);
-        Tk_DefineBitmap(dummy, Tk_GetUid("question"), (char *) question_bits,
+        Tk_DefineBitmap(dummy, "question", (char *) question_bits,
 	        question_width, question_height);
-        Tk_DefineBitmap(dummy, Tk_GetUid("warning"), (char *) warning_bits,
+        Tk_DefineBitmap(dummy, "warning", (char *) warning_bits,
 	        warning_width, warning_height);
 
         TkpDefineNativeBitmaps();

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetBitmap.3,v 1.1.4.2 1998/09/30 02:15:53 stanton Exp $
+'\" RCS: @(#) $Id: GetBitmap.3,v 1.1.4.3 1999/03/30 04:11:56 stanton Exp $
 '\" 
 .so man.macros
 .TH Tk_AllocBitmapFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -28,9 +28,9 @@ Pixmap
 .VE
 .sp
 int
-\fBTk_DefineBitmap(\fIinterp, nameId, source, width, height\fB)\fR
+\fBTk_DefineBitmap(\fIinterp, name, source, width, height\fB)\fR
 .sp
-Tk_Uid
+char *
 \fBTk_NameOfBitmap(\fIdisplay, bitmap\fB)\fR
 .sp
 \fBTk_SizeOfBitmap(\fIdisplay, bitmap, widthPtr, heightPtr\fB)\fR
@@ -51,11 +51,11 @@ Token for window in which the bitmap will be used.
 .AP Tcl_Obj *objPtr in/out
 String value describes desired bitmap; internal rep will be
 modified to cache pointer to corresponding Pixmap.
-.AP char *info in
+.AP CONST char *info in
 Same as \fIobjPtr\fR except description of bitmap is passed as a string and
 resulting Pixmap isn't cached.
 .VE
-.AP char *name in
+.AP CONST char *name in
 Name for new bitmap to be defined.
 .AP char *source in
 Data for bitmap, in standard bitmap format.
@@ -239,22 +239,26 @@ which was created by the \fBbitmap\fR program and contains
 a stipple pattern.
 The following code uses \fBTk_DefineBitmap\fR to define a
 new bitmap named \fBfoo\fR:
+.VS
 .CS
 Pixmap bitmap;
 #include "stip.bitmap"
-Tk_DefineBitmap(interp, Tk_GetUid("foo"), stip_bits,
+Tk_DefineBitmap(interp, "foo", stip_bits,
 	stip_width, stip_height);
 \&...
-bitmap = Tk_GetBitmap(interp, tkwin, Tk_GetUid("foo"));
+bitmap = Tk_GetBitmap(interp, tkwin, "foo");
 .CE
+.VE
 This code causes the bitmap file to be read
 at compile-time and incorporates the bitmap information into
 the program's executable image.  The same bitmap file could be
 read at run-time using \fBTk_GetBitmap\fR:
+.VS
 .CS
 Pixmap bitmap;
-bitmap = Tk_GetBitmap(interp, tkwin, Tk_GetUid("@stip.bitmap"));
+bitmap = Tk_GetBitmap(interp, tkwin, "@stip.bitmap");
 .CE
+.VE
 The second form is a bit more flexible (the file could be modified
 after the program has been compiled, or a different string could be
 provided to read a different file), but it is a little slower and
