@@ -1,3 +1,7 @@
+1999-07-08    <redman@scriptics.com>
+
+	* unix/configure.in: Fix Tk stub lib file names and flags.
+
 1999-06-30    <redman@scriptics.com>
 
 	* generic/tkGrid.c: removed deprecated functions (applied patch
