@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.25 2005/01/16 00:23:12 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.26 2005/01/17 07:08:51 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -116,6 +116,33 @@ TkpTestembedCmd(clientData, interp, argc, argv)
 /*
  *----------------------------------------------------------------------
  *
+ * Tk_DetachEmbeddedWindow --
+ *
+ *	This function detaches an embedded window
+ *
+ * Results:
+ *	No return value. Detach the embedded window.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+static 
+void Tk_DetachEmbeddedWindow(winPtr, detachFlag)
+    TkWindow *winPtr;	    /* an embedded window */
+    BOOL detachFlag;	    /* a flag of truely detaching */
+{
+    TkpWinToplevelDetachWindow(winPtr);
+    if(detachFlag)
+    {
+	TkpWinToplevelOverrideRedirect(winPtr, 0);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Tk_MapEmbeddedWindow --
  *
  *	This function is required for mapping an embedded window during
@@ -126,15 +153,22 @@ TkpTestembedCmd(clientData, interp, argc, argv)
  *	No return value. Map the embedded window if it is not dead.
  *
  * Side effects:
- *	None.
+ *	The embedded window may change its state as the container's.
  *
  *----------------------------------------------------------------------
  */
-static void Tk_MapEmbeddedWindow(winPtr)
+static 
+void Tk_MapEmbeddedWindow(winPtr)
     TkWindow *winPtr;		/* Top-level window that's about to
 				 * be mapped. */
 {
     if(!(winPtr->flags & TK_ALREADY_DEAD)) {
+	HWND hwnd = (HWND)winPtr->privatePtr;
+	int state = SendMessage(hwnd, TK_STATE, -1, -1) - 1;
+	if(state < 0 || state > 3) {
+	    state = NormalState;
+	} 
+	TkpWmSetState(winPtr, state);	
 	TkWmMapWindow(winPtr);
     }
     Tcl_Release((ClientData)winPtr);
@@ -199,10 +233,8 @@ TkpUseWindow(interp, tkwin, string)
 				 * for tkwin;  must be an integer value. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
-    TkWindow *usePtr;
     int id;
     HWND hwnd;
-    Container *containerPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 /*
@@ -213,9 +245,7 @@ TkpUseWindow(interp, tkwin, string)
 */
     if(strcmp(string, "") == 0) {
 	if(winPtr->flags & TK_EMBEDDED) {
-	    TkpWinToplevelDetachWindow(winPtr);
-	    if(winPtr->flags & TK_TOP_LEVEL)
-		TkpWinToplevelOverrideRedirect(winPtr, 0);
+	    Tk_DetachEmbeddedWindow(winPtr, TRUE);
 	}
 	return TCL_OK;
     }
@@ -263,7 +293,7 @@ TkpUseWindow(interp, tkwin, string)
 	}
     }
 
-    TkpWinToplevelDetachWindow(winPtr);    
+    Tk_DetachEmbeddedWindow(winPtr, FALSE);
 
     /*
      * Store the parent window in the platform private data slot so
@@ -271,48 +301,6 @@ TkpUseWindow(interp, tkwin, string)
      */
 
     winPtr->privatePtr = (struct TkWindowPrivate*) hwnd;
-
-    /*
-     * Create an event handler to clean up the Container structure when
-     * tkwin is eventually deleted.
-     */
-
-    Tk_CreateEventHandler(tkwin, StructureNotifyMask, EmbeddedEventProc,
-	    (ClientData) winPtr);
-    
-    /*
-     * Save information about the container and the embedded window
-     * in a Container structure.  If there is already an existing
-     * Container structure, it means that both container and embedded
-     * app. are in the same process.
-     */
-
-    for (containerPtr = tsdPtr->firstContainerPtr; 
-            containerPtr != NULL; containerPtr = containerPtr->nextPtr) {
-	if (containerPtr->parentHWnd == hwnd) {
-	    winPtr->flags |= TK_BOTH_HALVES;
-	    containerPtr->parentPtr->flags |= TK_BOTH_HALVES;
-	    break;
-	}
-    }
-    if (containerPtr == NULL) {
-	containerPtr = (Container *) ckalloc(sizeof(Container));
-	containerPtr->parentPtr = NULL;
-	containerPtr->parentHWnd = hwnd;
-	containerPtr->nextPtr = tsdPtr->firstContainerPtr;
-	tsdPtr->firstContainerPtr = containerPtr;
-    }
-
-    /*
-     * embeddedHWnd is not created yet. It will be created by TkWmMapWindow(),
-     * which will send a TK_ATTACHWINDOW to the container window.
-     * TkWinEmbeddedEventProc will process this message and set the embeddedHWnd
-     * variable
-     */
-
-    containerPtr->embeddedPtr = winPtr;
-    containerPtr->embeddedHWnd = NULL;
-
     winPtr->flags |= TK_EMBEDDED;
     winPtr->flags &= (~(TK_MAPPED));
 
@@ -514,7 +502,15 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	     * hwnd - the container is ready to be used. 
 	     */
 	    if (containerPtr->embeddedHWnd == NULL) {
-		containerPtr->embeddedHWnd = (HWND)wParam;
+		if(wParam) {
+		    TkWindow* winPtr = (TkWindow*)Tk_HWNDToWindow((HWND)wParam);
+		    if(winPtr) {
+			winPtr->flags |= TK_BOTH_HALVES;
+			containerPtr->embeddedPtr = winPtr;
+			containerPtr->parentPtr->flags |= TK_BOTH_HALVES;
+		    }
+		    containerPtr->embeddedHWnd = (HWND)wParam;
+		}
 		result =  (long)containerPtr->parentHWnd;
 	    } else {
 		result = 0;
@@ -1068,12 +1064,13 @@ EmbedWindowDeleted(winPtr)
 	if (containerPtr->parentPtr == winPtr) {
 	    SendMessage(containerPtr->embeddedHWnd, WM_CLOSE, 0, 0);
 	    containerPtr->parentPtr = NULL;
+	    containerPtr->embeddedPtr = NULL;
 	    break;
 	}
 	prevPtr = containerPtr;
 	containerPtr = containerPtr->nextPtr;
 	if (containerPtr == NULL) {
-	    Tcl_Panic("EmbedWindowDeleted couldn't find window");
+	    return;
 	}
     }
     if ((containerPtr->embeddedPtr == NULL)
