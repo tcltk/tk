@@ -1,5 +1,18 @@
 2001-04-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	** Start changes for improved mac build (steffen)  **
+	
+	* mac/MWTkBuildLibHeader.h:
+	* mac/MW_TkBuildLibHeader.pch:
+	* mac/MW_TkHeaderCommon.h:
+	* mac/MW_TkOldImgStaticHeader.h:
+	* mac/MW_TkStaticHeader.h:
+	* mac/MW_TkStaticHeader.pch: new files
+
+	* mac/tkMacProjects.sea.hqx: new mac build project files.
+
+	** End changes for improved mac build (steffen) **
+
 	* win/tkWinMenu.c (TkWinHandleMenuEvent): corrected reseting of
 	service mode to only occur when it was set. [Bug #220948]
 
