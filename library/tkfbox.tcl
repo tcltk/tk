@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.22 2000/07/19 00:20:02 ericm Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.23 2000/08/29 20:17:12 ericm Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -1261,8 +1261,11 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	} else {
 	    set files {}
 	    foreach f $completeFileList {
-		if { [string match $data(filter) $f] } {
-		    lappend files $f
+		foreach pat $data(filter) {
+		    if { [string match $pat $f] } {
+			lappend files $f
+			break
+		    }
 		}
 	    }
 	}
