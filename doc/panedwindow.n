@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: panedwindow.n,v 1.5 2004/10/24 17:22:55 dkf Exp $
+'\" RCS: @(#) $Id: panedwindow.n,v 1.6 2004/10/28 12:25:53 dkf Exp $
 '\" 
 .so man.macros
 .TH panedwindow n 8.4 Tk "Tk Built-In Commands"
@@ -191,9 +191,11 @@ height may later be adjusted by the movement of sashes in the
 panedwindow.  \fISize\fR may be any value accepted by \fBTk_GetPixels\fR.
 .TP
 \fB\-hide \fIboolean\fR
+.VS 8.5
 Controls the visibility of a pane.  When the \fIboolean\fR is true
 (according to \fBTcl_GetBoolean\fR) the pane will not be visible, but
 it will still be maintained in the list of panes.
+.VE 8.5
 .TP
 \fB\-minsize \fIn\fR
 Specifies that the size of the window cannot be made less than
@@ -224,6 +226,7 @@ are specified, the window will be stretched to fill the entire height
 (or width) of its cavity.
 .TP
 \fB\-stretch \fIwhen\fR
+.VS 8.5
 Controls how extra space is allocated to each of the panes.
 \fIWhen\fR is one of \fBalways\fR, \fBfirst\fR, \fBlast\fR,
 \fBmiddle\fR, and \fBnever\fR.
@@ -251,6 +254,7 @@ Only if this pane is not the first or last pane will it stretch.
 \fBnever\fR
 This pane will never stretch.
 .RE
+.VE 8.5
 .TP
 \fB\-width \fIsize\fR
 Specify a width for the window.  The width will be the outer
