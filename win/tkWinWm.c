@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.44 2002/06/24 02:17:57 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.45 2002/06/24 05:31:35 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -3823,8 +3823,7 @@ UpdateGeometryInfo(clientData)
      * state of the window changes.
      */
 
-    if ((wmPtr->wrapper == NULL)
-	    || IsIconic(wmPtr->wrapper) || IsZoomed(wmPtr->wrapper)) {
+    if (IsIconic(wmPtr->wrapper) || IsZoomed(wmPtr->wrapper)) {
 	return;
     }
 
