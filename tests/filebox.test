@@ -6,12 +6,26 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: filebox.test,v 1.17 2004/12/08 03:02:53 dgp Exp $
+# RCS: @(#) $Id: filebox.test,v 1.18 2004/12/20 10:34:20 vincentdarley Exp $
 #
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+test fileDialog-0.1 {GetFileName: file types: MakeFilter() fails} {
+    # MacOS type that is too long
+
+    set res [list [catch {tk_getSaveFile -filetypes {{"foo" .foo {\0\0\0\0\0}}}} msg] $msg]
+    regsub -all "\0" $res {\\0}
+} {1 {bad Macintosh file type "\0\0\0\0\0"}}
+test fileDialog-0.2 {GetFileName: file types: MakeFilter() fails} {
+    # MacOS type that is too short, but looks ok in utf (4 bytes).
+
+    set x [catch {tk_getSaveFile -filetypes {{"foo" .foo {\0\0}}}} msg]
+    regsub -all "\0" $msg {\\0} msg
+    list $x $msg
+} {1 {bad Macintosh file type "\0\0"}}
 
 set tk_strictMotif_old $tk_strictMotif
 

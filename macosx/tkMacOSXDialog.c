@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.10 2004/05/24 21:21:50 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.11 2004/12/20 10:34:20 vincentdarley Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -323,8 +323,7 @@ Tk_GetOpenFileObjCmd(
             case OPEN_DEFAULT:
                 break;
             case OPEN_FILETYPES:
-                choice = Tcl_GetStringFromObj(objv[i + 1], NULL);
-                if (TkGetFileFilters(interp, &ofd.fl, choice, 0) 
+                if (TkGetFileFilters(interp, &ofd.fl, objv[i + 1], 0) 
                         != TCL_OK) {
                     result = TCL_ERROR;
                     goto end;

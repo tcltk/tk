@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.36 2004/08/20 00:58:52 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.37 2004/12/20 10:34:21 vincentdarley Exp $
  *
  */
 
@@ -175,7 +175,7 @@ static int 		GetFileNameA(ClientData clientData,
 static int 		GetFileNameW(ClientData clientData, 
 			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[], int isOpen);
-static int 		MakeFilter(Tcl_Interp *interp, char *string, 
+static int 		MakeFilter(Tcl_Interp *interp, Tcl_Obj *valuePtr, 
 			    Tcl_DString *dsPtr);
 static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam, 
 			    LPARAM lParam);
@@ -651,7 +651,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	    }
 	    case FILE_TYPES: {
 		Tcl_DStringFree(&utfFilterString);
-		if (MakeFilter(interp, string, &utfFilterString) != TCL_OK) {
+		if (MakeFilter(interp, valuePtr, &utfFilterString) != TCL_OK) {
 		    goto end;
 		}
 		filter = Tcl_DStringValue(&utfFilterString);
@@ -698,7 +698,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
     }
 
     if (filter == NULL) {
-	if (MakeFilter(interp, "", &utfFilterString) != TCL_OK) {
+	if (MakeFilter(interp, NULL, &utfFilterString) != TCL_OK) {
 	    goto end;
 	}
     }
@@ -1127,7 +1127,7 @@ GetFileNameA(clientData, interp, objc, objv, open)
 	    }
 	    case FILE_TYPES: {
 		Tcl_DStringFree(&utfFilterString);
-		if (MakeFilter(interp, string, &utfFilterString) != TCL_OK) {
+		if (MakeFilter(interp, valuePtr, &utfFilterString) != TCL_OK) {
 		    goto end;
 		}
 		filter = Tcl_DStringValue(&utfFilterString);
@@ -1174,7 +1174,7 @@ GetFileNameA(clientData, interp, objc, objv, open)
     }
 
     if (filter == NULL) {
-	if (MakeFilter(interp, "", &utfFilterString) != TCL_OK) {
+	if (MakeFilter(interp, NULL, &utfFilterString) != TCL_OK) {
 	    goto end;
 	}
     }
@@ -1516,9 +1516,9 @@ OFNHookProc(
  *----------------------------------------------------------------------
  */
 static int 
-MakeFilter(interp, string, dsPtr) 
+MakeFilter(interp, valuePtr, dsPtr) 
     Tcl_Interp *interp;		/* Current interpreter. */
-    char *string;		/* String value of the -filetypes option */
+    Tcl_Obj *valuePtr;		/* Value of the -filetypes option */
     Tcl_DString *dsPtr;		/* Filled with windows filter string. */
 {
     char *filterStr;
@@ -1528,7 +1528,7 @@ MakeFilter(interp, string, dsPtr)
     FileFilter *filterPtr;
 
     TkInitFileFilters(&flist);
-    if (TkGetFileFilters(interp, &flist, string, 1) != TCL_OK) {
+    if (TkGetFileFilters(interp, &flist, valuePtr, 1) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -1552,6 +1552,13 @@ MakeFilter(interp, string, dsPtr)
 	*p = '\0';
 
     } else {
+	int len;
+	if (valuePtr == NULL) {
+	    len = 0;
+	} else {
+	    CONST char* string = Tcl_GetStringFromObj(valuePtr, &len);
+	}
+	
 	/* We format the filetype into a string understood by Windows:
 	 * {"Text Documents" {.doc .txt} {TEXT}} becomes
 	 * "Text Documents (*.doc,*.txt)\0*.doc;*.txt\0"
@@ -1564,7 +1571,7 @@ MakeFilter(interp, string, dsPtr)
 	 * Since we may only add asterisks (*) to the filter, we need at most
 	 * twice the size of the string to format the filter
 	 */
-	filterStr = ckalloc((unsigned int) strlen(string) * 3);
+	filterStr = ckalloc((unsigned int) len * 3);
 
 	for (filterPtr = flist.filters, p = filterStr; filterPtr;
 	        filterPtr = filterPtr->next) {

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFileFilter.h,v 1.5 2004/03/17 18:15:43 das Exp $
+ * RCS: @(#) $Id: tkFileFilter.h,v 1.6 2004/12/20 10:34:20 vincentdarley Exp $
  *
  */
 
@@ -79,7 +79,7 @@ EXTERN void		TkFreeFileFilters _ANSI_ARGS_((
 EXTERN void		TkInitFileFilters _ANSI_ARGS_((
 			    FileFilterList * flistPtr));
 EXTERN int		TkGetFileFilters _ANSI_ARGS_ ((Tcl_Interp *interp,
-    			    FileFilterList * flistPtr, char * string,
+    			    FileFilterList * flistPtr, Tcl_Obj *valuePtr,
 			    int isWindows));
 
 # undef TCL_STORAGE_CLASS

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFileFilter.c,v 1.5 2002/01/27 11:10:50 das Exp $
+ * RCS: @(#) $Id: tkFileFilter.c,v 1.6 2004/12/20 10:34:20 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -17,7 +17,7 @@
 
 static int		AddClause _ANSI_ARGS_((
 			    Tcl_Interp * interp, FileFilter * filterPtr,
-			    CONST char * patternsStr, CONST char * ostypesStr,
+			    Tcl_Obj * patternsObj, Tcl_Obj * ostypesObj,
 			    int isWindows));
 static void		FreeClauses _ANSI_ARGS_((FileFilter * filterPtr));
 static void		FreeGlobPatterns _ANSI_ARGS_((
@@ -75,27 +75,29 @@ TkInitFileFilters(flistPtr)
  *	A standard TCL return value.
  *
  * Side effects:
- *	The fields in flistPtr are changed according to string.
+ *	The fields in flistPtr are changed according to 'types'.
  *----------------------------------------------------------------------
  */
 int
-TkGetFileFilters(interp, flistPtr, string, isWindows)
+TkGetFileFilters(interp, flistPtr, types, isWindows)
     Tcl_Interp *interp;		/* Interpreter to use for error reporting. */
     FileFilterList * flistPtr;	/* Stores the list of file filters. */
-    char * string;		/* Value of the -filetypes option. */
+    Tcl_Obj* types;		/* Value of the -filetypes option. */
     int isWindows;		/* True if we are running on Windows. */
 {
-    int listArgc;
-    CONST char ** listArgv = NULL;
-    CONST char ** typeInfo = NULL;
-    int code = TCL_OK;
+    int listObjc;
+    Tcl_Obj ** listObjv = NULL;
     int i;
 
-    if (Tcl_SplitList(interp, string, &listArgc, &listArgv) != TCL_OK) {
+    if (types == NULL) {
+        return TCL_OK;
+    }
+    
+    if (Tcl_ListObjGetElements(interp, types, &listObjc, &listObjv) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (listArgc == 0) {
-	goto done;
+    if (listObjc == 0) {
+	return TCL_OK;
     }
 
     /*
@@ -105,7 +107,7 @@ TkGetFileFilters(interp, flistPtr, string, isWindows)
      */
     TkFreeFileFilters(flistPtr);
 
-    for (i = 0; i<listArgc; i++) {
+    for (i = 0; i<listObjc; i++) {
 	/*
 	 * Each file type should have two or three elements: the first one
 	 * is the name of the type and the second is the filter of the type.
@@ -113,47 +115,33 @@ TkGetFileFilters(interp, flistPtr, string, isWindows)
 	 */
 	int count;
 	FileFilter * filterPtr;
+	Tcl_Obj ** typeInfo;
 
-	if (Tcl_SplitList(interp, listArgv[i], &count, &typeInfo) != TCL_OK) {
-	    code = TCL_ERROR;
-	    goto done;
+	if (Tcl_ListObjGetElements(interp, listObjv[i], &count, 
+				   &typeInfo) != TCL_OK) {
+	    return TCL_ERROR;
 	}
 	
 	if (count != 2 && count != 3) {
-	    Tcl_AppendResult(interp, "bad file type \"", listArgv[i], "\", ",
+	    Tcl_AppendResult(interp, "bad file type \"", 
+		Tcl_GetString(listObjv[i]), "\", ",
 		"should be \"typeName {extension ?extensions ...?} ",
 		"?{macType ?macTypes ...?}?\"",	NULL);
-	    code = TCL_ERROR;
-	    goto done;
+	    return TCL_ERROR;
 	}
 
-	filterPtr = GetFilter(flistPtr, typeInfo[0]);
+	filterPtr = GetFilter(flistPtr, Tcl_GetString(typeInfo[0]));
 
 	if (count == 2) {
-	    code = AddClause(interp, filterPtr, typeInfo[1], NULL,
-		isWindows);
+	    return AddClause(interp, filterPtr, typeInfo[1], 
+			     NULL, isWindows);
 	} else {
-	    code = AddClause(interp, filterPtr, typeInfo[1], typeInfo[2],
-		isWindows);
+	    return AddClause(interp, filterPtr, typeInfo[1], 
+			     typeInfo[2], isWindows);
 	}
-	if (code != TCL_OK) {
-	    goto done;
-	}
-
-        if (typeInfo) {
-	    ckfree((char*)typeInfo);
-	}
-	typeInfo = NULL;
     }
 
-  done:
-    if (typeInfo) {
-       ckfree((char*)typeInfo);
-    }
-    if (listArgv) {
-	ckfree((char*)listArgv);
-    }
-    return code;
+    return TCL_OK;
 }
 
 /*
@@ -203,38 +191,77 @@ TkFreeFileFilters(flistPtr)
  *----------------------------------------------------------------------
  */
 
-static int AddClause(interp, filterPtr, patternsStr, ostypesStr, isWindows)
+static int AddClause(interp, filterPtr, patternsObj, ostypesObj, isWindows)
     Tcl_Interp * interp;	/* Interpreter to use for error reporting. */
     FileFilter * filterPtr;	/* Stores the new filter clause */
-    CONST char * patternsStr;		/* A TCL list of glob patterns. */
-    CONST char * ostypesStr;		/* A TCL list of Mac OSType strings. */
+    Tcl_Obj * patternsObj;	/* A Tcl list of glob patterns. */
+    Tcl_Obj * ostypesObj;	/* A Tcl list of Mac OSType strings. */
     int isWindows;		/* True if we are running on Windows; False
 				 * if we are running on the Mac; Glob
 				 * patterns need to be processed differently
 				 * on these two platforms */
 {
-    CONST char ** globList = NULL;
+    Tcl_Obj ** globList = NULL;
     int globCount;
-    CONST char ** ostypeList = NULL;
+    Tcl_Obj ** ostypeList = NULL;
     int ostypeCount;
     FileFilterClause * clausePtr;
     int i;
     int code = TCL_OK;
-
-    if (Tcl_SplitList(interp, patternsStr, &globCount, &globList)!= TCL_OK) {
+    Tcl_Encoding macRoman = NULL;
+    
+    if (Tcl_ListObjGetElements(interp, patternsObj, &globCount, &globList)
+	    != TCL_OK) {
 	code = TCL_ERROR;
 	goto done;
     }
-    if (ostypesStr != NULL) {
-	if (Tcl_SplitList(interp, ostypesStr, &ostypeCount, &ostypeList)
+    if (ostypesObj != NULL) {
+	if (Tcl_ListObjGetElements(interp, ostypesObj, &ostypeCount, &ostypeList)
 		!= TCL_OK) {
 	    code = TCL_ERROR;
 	    goto done;
 	}
+	/* 
+	 * Might be cleaner to use 'Tcl_GetOSTypeFromObj' but that is
+	 * actually static to the MacOS X/Darwin version of Tcl, and
+	 * would therefore require further code refactoring.
+	 */
 	for (i=0; i<ostypeCount; i++) {
-	    if (strlen(ostypeList[i]) != 4) {
+	    int len;
+	    CONST char *strType = Tcl_GetStringFromObj(ostypeList[i], &len);
+	    /* 
+	     * If len is < 4, it is definitely an error.  If equal or
+	     * longer, we need to use the macRoman encoding to determine
+	     * the correct length (assuming there may be non-ascii
+	     * characters, eg., embedded nulls or accented characters in
+	     * the string, the macRoman length will be different).
+	     */
+	    if (len >= 4) {
+		if (macRoman == NULL) {
+		    macRoman = Tcl_GetEncoding(NULL, "macRoman");
+		}
+		/* 
+		 * If we couldn't load the encoding, then we can't
+		 * actually check the correct length.  But here we
+		 * assume we're probably operating on unix/windows
+		 * with a minimal set of encodings and so don't
+		 * care about MacOS types.  So we won't signal
+		 * an error.
+		 */
+		if (macRoman != NULL) {
+		    Tcl_DString osTypeDS;
+		    /* 
+		     * Convert utf to macRoman, since MacOS types are 
+		     * defined to be 4 macRoman characters long
+		     */
+		    Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
+		    len = Tcl_DStringLength(&osTypeDS);
+		    Tcl_DStringFree(&osTypeDS);
+		}
+	    }
+	    if (len != 4) {
 		Tcl_AppendResult(interp, "bad Macintosh file type \"",
-		    ostypeList[i], "\"", NULL);
+		    Tcl_GetString(ostypeList[i]), "\"", NULL);
 		code = TCL_ERROR;
 		goto done;
 	    }
@@ -264,22 +291,23 @@ static int AddClause(interp, filterPtr, patternsStr, ostypesStr, isWindows)
 	    GlobPattern * globPtr = (GlobPattern*)ckalloc(sizeof(GlobPattern));
 	    int len;
 	    
-	    len = (strlen(globList[i]) + 1) * sizeof(char);
+	    CONST char *str = Tcl_GetStringFromObj(globList[i], &len);
+	    len = (len + 1) * sizeof(char);
 
-	    if (globList[i][0] && globList[i][0] != '*') {
+	    if (str[0] && str[0] != '*') {
 		/*
 		 * Prepend a "*" to patterns that do not have a leading "*"
 		 */
 		globPtr->pattern = (char*)ckalloc((unsigned int) len+1);
 		globPtr->pattern[0] = '*';
-		strcpy(globPtr->pattern+1, globList[i]);
+		strcpy(globPtr->pattern+1, str);
 	    }
 	    else if (isWindows) {
-		if (strcmp(globList[i], "*") == 0) {
+		if (strcmp(str, "*") == 0) {
 		    globPtr->pattern = (char*)ckalloc(4*sizeof(char));
 		    strcpy(globPtr->pattern, "*.*");
 		}
-		else if (strcmp(globList[i], "") == 0) {
+		else if (strcmp(str, "") == 0) {
 		    /*
 		     * An empty string means "match all files with no
 		     * extensions"
@@ -290,11 +318,11 @@ static int AddClause(interp, filterPtr, patternsStr, ostypesStr, isWindows)
 		}
 		else {
 		    globPtr->pattern = (char*)ckalloc((unsigned int) len);
-		    strcpy(globPtr->pattern, globList[i]);
+		    strcpy(globPtr->pattern, str);
 		}
 	    } else {
 		globPtr->pattern = (char*)ckalloc((unsigned int) len);
-		strcpy(globPtr->pattern, globList[i]);
+		strcpy(globPtr->pattern, str);
 	    }
 
 	    /*
@@ -311,10 +339,23 @@ static int AddClause(interp, filterPtr, patternsStr, ostypesStr, isWindows)
 	}
     }
     if (ostypeCount > 0 && ostypeList != NULL) {
+	if (macRoman == NULL) {
+	    macRoman = Tcl_GetEncoding(NULL, "macRoman");
+	}
 	for (i=0; i<ostypeCount; i++) {
+	    Tcl_DString osTypeDS;
+	    int len;
 	    MacFileType * mfPtr = (MacFileType*)ckalloc(sizeof(MacFileType));
+	    CONST char *strType = Tcl_GetStringFromObj(ostypeList[i], &len);
 
-	    memcpy(&mfPtr->type, ostypeList[i], sizeof(OSType));
+	    /* 
+	     * Convert utf to macRoman, since MacOS types are 
+	     * defined to be 4 macRoman characters long
+	     */
+	    Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
+
+	    memcpy(&mfPtr->type, Tcl_DStringValue(&osTypeDS), sizeof(OSType));
+	    Tcl_DStringFree(&osTypeDS);
 
 	    /*
 	     * Add the Mac type pattern into the list of Mac types
@@ -330,13 +371,10 @@ static int AddClause(interp, filterPtr, patternsStr, ostypesStr, isWindows)
     }
 
   done:
-    if (globList) {
-	ckfree((char*)globList);
-    }
-    if (ostypeList) {
-	ckfree((char*)ostypeList);
-    }
 
+    if (macRoman != NULL) {
+	Tcl_FreeEncoding(macRoman);
+    }
     return code;
 }	
 
