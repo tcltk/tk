@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.15 2000/10/30 20:04:16 ericm Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.16 2002/01/17 05:13:11 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -631,7 +631,7 @@ TestobjconfigObjCmd(clientData, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    static char *options[] = {"alltypes", "chain1", "chain2",
+    static CONST char *options[] = {"alltypes", "chain1", "chain2",
 	    "configerror", "delete", "info", "internal", "new",
 	    "notenoughparams", "twowindows", (char *) NULL};
     enum {
@@ -1354,7 +1354,9 @@ TrivialConfigObjCmd(clientData, interp, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     int result = TCL_OK;
-    static char *options[] = {"cget", "configure", "csave", (char *) NULL};
+    static CONST char *options[] = {
+	"cget", "configure", "csave", (char *) NULL
+    };
     enum {
 	CGET, CONFIGURE, CSAVE
     };
@@ -1538,7 +1540,7 @@ TestfontObjCmd(clientData, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    static char *options[] = {"counts", "subfonts", (char *) NULL};
+    static CONST char *options[] = {"counts", "subfonts", (char *) NULL};
     enum option {COUNTS, SUBFONTS};
     int index;
     Tk_Window tkwin;

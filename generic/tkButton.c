@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.14 2001/12/28 01:23:47 hobbs Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.15 2002/01/17 05:13:11 dgp Exp $
  */
 
 #include "tkButton.h"
@@ -481,7 +481,7 @@ static Tk_OptionSpec *optionSpecs[] = {
  * into a single enumerated type used to dispatch the widget command.
  */
 
-static char *commandNames[][8] = {
+static CONST char *commandNames[][8] = {
     {"cget", "configure", (char *) NULL},
     {"cget", "configure", "flash", "invoke", (char *) NULL},
     {"cget", "configure", "deselect", "flash", "invoke", "select",

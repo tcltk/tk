@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.24 2002/01/17 03:35:00 dgp Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.25 2002/01/17 05:13:11 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -597,7 +597,7 @@ static Tk_OptionSpec sbOptSpec[] = {
  * enumerated types used to dispatch the entry widget command.
  */
 
-static char *entryCmdNames[] = {
+static CONST char *entryCmdNames[] = {
     "bbox", "cget", "configure", "delete", "get", "icursor", "index", 
     "insert", "scan", "selection", "validate", "xview", (char *) NULL
 };
@@ -608,7 +608,7 @@ enum entryCmd {
     COMMAND_SCAN, COMMAND_SELECTION, COMMAND_VALIDATE, COMMAND_XVIEW
 };
 
-static char *selCmdNames[] = {
+static CONST char *selCmdNames[] = {
     "adjust", "clear", "from", "present", "range", "to", (char *) NULL
 };
 
@@ -623,7 +623,7 @@ enum selCmd {
  * enumerated types used to dispatch the spinbox widget command.
  */
 
-static char *sbCmdNames[] = {
+static CONST char *sbCmdNames[] = {
     "bbox", "cget", "configure", "delete", "get", "icursor", "identify",
     "index", "insert", "invoke", "scan", "selection", "set",
     "validate", "xview", (char *) NULL
@@ -636,7 +636,7 @@ enum sbCmd {
     SB_CMD_SET, SB_CMD_VALIDATE, SB_CMD_XVIEW
 };
 
-static char *sbSelCmdNames[] = {
+static CONST char *sbSelCmdNames[] = {
     "adjust", "clear", "element", "from", "present", "range", "to",
     (char *) NULL
 };
@@ -650,7 +650,7 @@ enum sbselCmd {
  * Extra for selection of elements
  */
 
-static char *selElementNames[] = {
+static CONST char *selElementNames[] = {
     "none", "buttondown", "buttonup", (char *) NULL, "entry"
 };
 enum selelement {
@@ -3959,7 +3959,8 @@ SpinboxWidgetObjCmd(clientData, interp, objc, objv)
 	    }
 	    elem = GetSpinboxElement(sbPtr, x, y);
 	    if (elem != SEL_NONE) {
-		Tcl_SetResult(interp, selElementNames[elem], TCL_VOLATILE);
+		Tcl_SetStringObj(Tcl_GetObjResult(interp),
+			selElementNames[elem], -1);
 	    }
 	    break;
 	}
@@ -4187,9 +4188,8 @@ SpinboxWidgetObjCmd(clientData, interp, objc, objv)
 			goto error;
 		    }
 		    if (objc == 3) {
-			Tcl_SetResult(interp,
-				selElementNames[sbPtr->selElement],
-				TCL_VOLATILE);
+			Tcl_SetStringObj(Tcl_GetObjResult(interp),
+				selElementNames[sbPtr->selElement], -1);
 		    } else {
 			int lastElement = sbPtr->selElement;
 

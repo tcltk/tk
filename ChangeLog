@@ -1,5 +1,41 @@
 2002-01-16  Don Porter  <dgp@users.sourceforge.net>
 
+	* generic/tk3d.c (Tk_GetReliefFromObj): 
+	* generic/tkBind.c (Tk_EventObjCmd,HandleEventGenerate): 
+	* generic/tkButton.c (ButtonWidgetObjCmd): 
+	* generic/tkCanvas.c (CanvasWidgetCmd,FindItems): 
+	* generic/tkClipboard.c (Tk_ClipboardObjCmd): 
+	* generic/tkCmds.c (Tk_BellObjCmd,Tk_TkObjCmd,Tk_TkwaitObjCmd,
+	  Tk_UpdateObjCmd,Tk_WinfoObjCmd,Tk_WmObjCmd): 
+	* generic/tkConfig.c (DoObjConfig): 
+	* generic/tkEntry.c (EntryWidgetObjCmd,SpinboxWidgetObjCmd):
+	* generic/tkFocus.c (Tk_FocusObjCmd):
+	* generic/tkFont.c (Tk_FocusObjCmd,ConfigAttributesObj):
+	* generic/tkFrame.c (Tk_FrameObjCmd):
+	* generic/tkGet.c (Tk_GetAnchorFromObj,Tk_GetJustifyFromObj):
+	* generic/tkGrab.c (Tk_GrabObjCmd):
+	* generic/tkGrid.c (Tk_GridObjCmd,GridRowColumnConfigureCommand,
+	  GridSlavesCommand,ConfigureSlaves):
+	* generic/tkImage.c (Tk_ImageObjCmd):
+	* generic/tkImgBmap.c (ImgBmapCmd):
+	* generic/tkImgGIF.c (FileReadGIF):
+	* generic/tkImgPhoto.c (ImgPhotoCmd):
+	* generic/tkListbox.c (ListboxWidgetObjCmd,ListboxSelectionSubCmd,
+	  GetListboxIndex):
+	* generic/tkMenu.c (MenuWidgetObjCmd,MenuAddOrInsert,MenuCmd,
+	  ConfigureMenu,CloneMenu):
+	* generic/tkMenubutton.c (MenuButtonWidgetObjCmd): 
+	* generic/tkMessage.c (MessageWidgetObjCmd): 
+	* generic/tkOption.c (Tk_OptionObjCmd):
+	* generic/tkPack.c (Tk_PackObjCmd,ConfigureSlaves):
+	* generic/tkPlace.c (Tk_PlaceObjCmd):
+	* generic/tkScale.c (ScaleWidgetObjCmd): 
+	* generic/tkSelect.c (Tk_SelectionObjCmd): 
+	* generic/tkTest.c (TestobjconfigObjCmd,TrivialConfigObjCmd,
+	  TestfontObjCmd): Updates to handle change in type of tablePtr
+	argument of Tcl_GetIndexFromObj(Struct) from (char **) to
+	(CONST char **).  [TIP 27] [Patch 504705]
+
 	* generic/tkCanvText.c (GetSelText):
 	* generic/tkEntry.c (Entry{FetchSelection,Setvalue},ExpandPercents):
 	* generic/tkSelect.c (HandleTclCommand):

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.9 2002/01/17 03:35:00 dgp Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.10 2002/01/17 05:13:11 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -690,8 +690,9 @@ Tk_SelectionObjCmd(clientData, interp, objc, objv)
     char *selName = NULL, *string;
     int count, index;
     Tcl_Obj **objs;
-    static char *optionStrings[] = { "clear", "get", "handle", "own",
-					 (char *) NULL };
+    static CONST char *optionStrings[] = {
+	"clear", "get", "handle", "own", (char *) NULL
+    };
     enum options { SELECTION_CLEAR, SELECTION_GET, SELECTION_HANDLE,
 		       SELECTION_OWN };
     
@@ -707,8 +708,9 @@ Tk_SelectionObjCmd(clientData, interp, objc, objv)
 
     switch ((enum options) index) {
 	case SELECTION_CLEAR: {
-	    static char *clearOptionStrings[] = { "-displayof", "-selection",
-						      (char *) NULL };
+	    static CONST char *clearOptionStrings[] = {
+		"-displayof", "-selection", (char *) NULL
+	    };
 	    enum clearOptions { CLEAR_DISPLAYOF, CLEAR_SELECTION };
 	    int clearIndex;
 	    
@@ -764,8 +766,9 @@ Tk_SelectionObjCmd(clientData, interp, objc, objv)
 	    char *targetName = NULL;
 	    Tcl_DString selBytes;
 	    int result;
-	    static char *getOptionStrings[] = { "-displayof", "-selection",
-						    "-type", (char *) NULL };
+	    static CONST char *getOptionStrings[] = {
+		"-displayof", "-selection", "-type", (char *) NULL
+	    };
 	    enum getOptions { GET_DISPLAYOF, GET_SELECTION, GET_TYPE };
 	    int getIndex;
 	    
@@ -837,8 +840,9 @@ Tk_SelectionObjCmd(clientData, interp, objc, objv)
 	    char *formatName = NULL;
 	    register CommandInfo *cmdInfoPtr;
 	    int cmdLength;
-	    static char *handleOptionStrings[] = { "-format", "-selection",
-						    "-type", (char *) NULL };
+	    static CONST char *handleOptionStrings[] = {
+		"-format", "-selection", "-type", (char *) NULL
+	    };
 	    enum handleOptions { HANDLE_FORMAT, HANDLE_SELECTION,
 				     HANDLE_TYPE };
 	    int handleIndex;
@@ -923,7 +927,7 @@ Tk_SelectionObjCmd(clientData, interp, objc, objv)
 	    register LostCommand *lostPtr;
 	    char *script = NULL;
 	    int cmdLength;
-	    static char *ownOptionStrings[] = {
+	    static CONST char *ownOptionStrings[] = {
 		"-command", "-displayof", "-selection", (char *) NULL
 	    };
 	    enum ownOptions { OWN_COMMAND, OWN_DISPLAYOF, OWN_SELECTION };

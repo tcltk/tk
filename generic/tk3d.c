@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.11 2001/08/15 15:44:35 dkf Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.12 2002/01/17 05:13:11 dgp Exp $
  */
 
 #include "tk3d.h"
@@ -20,7 +20,7 @@
  * used by Tk_GetReliefFromObj.
  */
 
-static char *reliefStrings[] = {"flat", "groove", "raised",
+static CONST char *reliefStrings[] = {"flat", "groove", "raised",
 				    "ridge", "solid", "sunken", 
 				    (char *) NULL};
 
