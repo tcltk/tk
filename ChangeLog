@@ -1,3 +1,29 @@
+2003-05-13  Daniel Steffen  <das@users.sourceforge.net>
+
+	backport of Mac OS X specific changes on trunk since 8.4.2:
+	
+	* macosx/tkMacOSXClipboard.c (TkSelGetSelection): Convert
+	'\r' to '\n' on the way into Tcl. (ingham)
+
+	* macosx/tkMacOSXMenu.c (EventuallyInvokeMenu): New function,
+	used to invoke menu commands at idle time.
+	(TkMacOSXDispatchMenuEvent): Don't immediately dispatch menu
+	commands, wait till the idle loop to do so.  This is more like
+	what is done on Windows, and avoids the crash from destroying
+	a menu in it's command. (ingham)
+
+	* macosx/tkMacOSXHLEvents.c (ReallyKillMe): Don't force the shell
+	to exit.  According to the OS X HI guidelines, it should be
+	possible to cancel an attempt to quit, and if we force the kill,
+	here, it would not be possible to implement this. (ingham)
+
+	* macosx/tkMacOSXApplication.r (removed):
+	* macosx/tkMacOSXLibrary.r (removed):
+	* macosx/tkMacOSXResource.r (removed):
+	* macosx/Wish.pbproj/project.pbxproj:
+	* macosx/tkAboutDlg.r: updated copyrights, cleaned up about box,
+	removed obsolete unused resource files. (steffen)
+
 2003-05-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkCanvPoly.c (PolygonToPostscript):
