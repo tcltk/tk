@@ -1,6 +1,16 @@
 2003-12-26  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/tkWinMenu.c (DrawMenuEntryAccelerator,
+	DrawMenuEntryLabel): When drawing the label
+	text and accelerator text for a disabled
+	menu entry be sure to draw a 3D highlight.
+	The only exception to this is when a
+	disabled menu entry is highlighted, in that
+	case do not draw a 3D hightlight.
+
+2003-12-26  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWinMenu.c (DrawMenuEntryAccelerator,
 	DrawMenuEntryArrow): Move the unused menu
 	arrow drawing code in DrawMenuEntryAccelerator
 	into a new function named DrawMenuEntryArrow.
