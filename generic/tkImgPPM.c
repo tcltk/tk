@@ -13,7 +13,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPPM.c,v 1.12 2004/03/26 14:34:05 dkf Exp $
+ * RCS: @(#) $Id: tkImgPPM.c,v 1.13 2004/03/26 19:49:40 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -53,7 +53,7 @@ static int		StringWritePPM _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr));
 
 Tk_PhotoImageFormat tkImgFmtPPM = {
-    "PPM",			/* name */
+    "ppm",			/* name */
     FileMatchPPM,		/* fileMatchProc */
     NULL,			/* stringMatchProc */
     FileReadPPM,		/* fileReadProc */
