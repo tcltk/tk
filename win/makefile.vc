@@ -5,8 +5,9 @@
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
+# Copyright (c) 2001 ActiveState Corporation.
 #
-# RCS: @(#) $Id: makefile.vc,v 1.40 2001/03/30 23:50:17 hobbs Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.41 2001/10/01 21:04:37 hobbs Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -38,10 +39,10 @@ MACHINE		= IX86
 !IF "$(MACHINE)" == "IA64"
 
 # IA64 support is based on the standard setup with v2 of the
-# Microsoft Platform SDK for Whistler, build 2267
+# Microsoft SDK for XP, RC1
 
-TOOLS32		= C:\Progra~1\Microsoft Platform SDK
-TOOLS32_rc	= C:\Progra~1\Microsoft Platform SDK
+TOOLS32		= C:\Progra~1\Microsoft SDK
+TOOLS32_rc	= C:\Progra~1\Microsoft SDK
 
 cc32		= "$(TOOLS32)\bin\Win64\cl.exe"
 link32		= "$(TOOLS32)\bin\Win64\link.exe"
@@ -255,16 +256,15 @@ RCDIR		= $(WINDIR)\rc
 
 TK_INCLUDES	= -I$(WINDIR) -I$(GENERICDIR) -I$(BITMAPDIR) -I$(XLIBDIR) \
 			-I$(TCLDIR)\generic
-TK_DEFINES	= -D__WIN32__ $(DEBUGDEFINES) $(THREADDEFINES)
+TK_DEFINES	= $(DEBUGDEFINES) $(THREADDEFINES)
 
 ######################################################################
 # Compile flags
 ######################################################################
 
 !IF "$(NODEBUG)" == "1"
-!IF "$(MACHINE)" == "ALPHA"
-# MSVC on Alpha doesn't understand -Ot
-cdebug	= -O2i -Gs -GD
+!IF "$(MACHINE)" == "IA64"
+cdebug	= -O2i -Gs
 !ELSE
 # NOTE: Due to a bug in MSVC, we cannot use -O2 here or Tk starts to misbehave.
 cdebug	= -Oti -Gs -GD

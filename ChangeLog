@@ -1,3 +1,9 @@
+2001-10-01  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/configure: regen'ed
+	* win/tcl.m4:
+	* win/makefile.vc: updated for Win64 SDK RC1 compilation support
+
 2001-09-30  Peter Spjuth <peter.spjuth@space.se>
 
 	* doc/grid.n:
@@ -75,6 +81,9 @@
 	Only -padx/y supports asymmetry. [Bug #462348]
 
 2001-09-21  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinWindow.c (TkpPrintWindowId, TkpScanWindowId): fixed to
+	work on Win64 with 64bit XIDs.
 
 	* generic/tkWindow.c (Tk_CreateAnonymousWindow): 
 	* generic/tkEntry.c (GetSpinboxElement): fixed unreachable returns.
