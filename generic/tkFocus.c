@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.9 2002/06/19 19:37:54 mdejong Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.10 2002/10/08 19:57:59 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -439,14 +439,21 @@ TkFocusFilterEvent(winPtr, eventPtr)
     }
     newFocusPtr = tlFocusPtr->focusWinPtr;
 
+    /*
+     * Ignore event if newFocus window is already dead!
+     */
+    if (newFocusPtr->flags & TK_ALREADY_DEAD) {
+	return retValue;
+    }
+
     if (eventPtr->type == FocusIn) {
 	GenerateFocusEvents(displayFocusPtr->focusWinPtr, newFocusPtr);
 	displayFocusPtr->focusWinPtr = newFocusPtr;
 	dispPtr->focusPtr = newFocusPtr;
 
 	/*
-	 * NotifyPointer gets set when the focus has been set to the root window
-	 * but we have the pointer.  We'll treat this like an implicit
+	 * NotifyPointer gets set when the focus has been set to the root
+	 * window but we have the pointer.  We'll treat this like an implicit
 	 * focus in event so that upon Leave events we release focus.
 	 */
 
