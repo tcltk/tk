@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: options.n,v 1.9 2004/09/19 16:05:37 dkf Exp $
+'\" RCS: @(#) $Id: options.n,v 1.10 2005/02/14 20:40:35 hobbs Exp $
 '\" 
 .so man.macros
 .TH options n 4.4 Tk "Tk Built-In Commands"
@@ -91,6 +91,8 @@ The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 .OP \-cursor cursor Cursor
 Specifies the mouse cursor to be used for the widget.
 The value may have any of the forms acceptable to \fBTk_GetCursor\fR.
+In addition, if an empty string is specified, it indicates that the
+widget should defer to its parent for cursor specification.
 .OP \-compound compound Compound
 Specifies if the widget should display text and bitmaps/images at the
 same time, and if so, where the bitmap/image should be placed relative
