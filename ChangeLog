@@ -1,3 +1,8 @@
+1999-03-11    <stanton@GASPODE>
+
+	* generic/tkInt.decls: Added reserved slot for XSetDashes for use
+	by the dash patch.
+
 1999-03-10    <redman@scriptics.com>
 	* win/tkWinInt.h:
 	* win/tkWinPointer.c:

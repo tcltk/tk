@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.3 1999/03/10 18:56:08 redman Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.4 1999/03/12 03:17:47 stanton Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
@@ -33,244 +33,245 @@
  */
 
 #ifdef __WIN32__
-/* 0 */
-EXTERN XModifierKeymap*	 XGetModifierMapping _ANSI_ARGS_((Display* d));
+/* Slot 0 is reserved */
 /* 1 */
+EXTERN XModifierKeymap*	 XGetModifierMapping _ANSI_ARGS_((Display* d));
+/* 2 */
 EXTERN XImage *		XCreateImage _ANSI_ARGS_((Display* d, Visual* v, 
 				unsigned int ui1, int i1, int i2, char* cp, 
 				unsigned int ui2, unsigned int ui3, int i3, 
 				int i4));
-/* 2 */
+/* 3 */
 EXTERN XImage *		XGetImage _ANSI_ARGS_((Display* d, Drawable dr, 
 				int i1, int i2, unsigned int ui1, 
 				unsigned int ui2, unsigned long ul, int i3));
-/* 3 */
-EXTERN char *		XGetAtomName _ANSI_ARGS_((Display* d, Atom a));
 /* 4 */
-EXTERN char *		XKeysymToString _ANSI_ARGS_((KeySym k));
+EXTERN char *		XGetAtomName _ANSI_ARGS_((Display* d, Atom a));
 /* 5 */
+EXTERN char *		XKeysymToString _ANSI_ARGS_((KeySym k));
+/* 6 */
 EXTERN Colormap		XCreateColormap _ANSI_ARGS_((Display* d, Window w, 
 				Visual* v, int i));
-/* 6 */
+/* 7 */
 EXTERN Cursor		XCreatePixmapCursor _ANSI_ARGS_((Display* d, 
 				Pixmap p1, Pixmap p2, XColor* x1, XColor* x2, 
 				unsigned int ui1, unsigned int ui2));
-/* 7 */
+/* 8 */
 EXTERN Cursor		XCreateGlyphCursor _ANSI_ARGS_((Display* d, Font f1, 
 				Font f2, unsigned int ui1, unsigned int ui2, 
 				XColor* x1, XColor* x2));
-/* 8 */
-EXTERN GContext		XGContextFromGC _ANSI_ARGS_((GC g));
 /* 9 */
-EXTERN XHostAddress *	XListHosts _ANSI_ARGS_((Display* d, int* i, Bool* b));
+EXTERN GContext		XGContextFromGC _ANSI_ARGS_((GC g));
 /* 10 */
+EXTERN XHostAddress *	XListHosts _ANSI_ARGS_((Display* d, int* i, Bool* b));
+/* 11 */
 EXTERN KeySym		XKeycodeToKeysym _ANSI_ARGS_((Display* d, 
 				unsigned int k, int i));
-/* 11 */
-EXTERN KeySym		XStringToKeysym _ANSI_ARGS_((_Xconst char* c));
 /* 12 */
-EXTERN Window		XRootWindow _ANSI_ARGS_((Display* d, int i));
+EXTERN KeySym		XStringToKeysym _ANSI_ARGS_((_Xconst char* c));
 /* 13 */
-EXTERN XErrorHandler	XSetErrorHandler _ANSI_ARGS_((XErrorHandler x));
+EXTERN Window		XRootWindow _ANSI_ARGS_((Display* d, int i));
 /* 14 */
+EXTERN XErrorHandler	XSetErrorHandler _ANSI_ARGS_((XErrorHandler x));
+/* 15 */
 EXTERN Status		XIconifyWindow _ANSI_ARGS_((Display* d, Window w, 
 				int i));
-/* 15 */
+/* 16 */
 EXTERN Status		XWithdrawWindow _ANSI_ARGS_((Display* d, Window w, 
 				int i));
-/* 16 */
+/* 17 */
 EXTERN Status		XGetWMColormapWindows _ANSI_ARGS_((Display* d, 
 				Window w, Window** wpp, int* ip));
-/* 17 */
+/* 18 */
 EXTERN Status		XAllocColor _ANSI_ARGS_((Display* d, Colormap c, 
 				XColor* xp));
-/* 18 */
-EXTERN void		XBell _ANSI_ARGS_((Display* d, int i));
 /* 19 */
+EXTERN void		XBell _ANSI_ARGS_((Display* d, int i));
+/* 20 */
 EXTERN void		XChangeProperty _ANSI_ARGS_((Display* d, Window w, 
 				Atom a1, Atom a2, int i1, int i2, 
 				_Xconst unsigned char* c, int i3));
-/* 20 */
+/* 21 */
 EXTERN void		XChangeWindowAttributes _ANSI_ARGS_((Display* d, 
 				Window w, unsigned long ul, 
 				XSetWindowAttributes* x));
-/* 21 */
-EXTERN void		XClearWindow _ANSI_ARGS_((Display* d, Window w));
 /* 22 */
+EXTERN void		XClearWindow _ANSI_ARGS_((Display* d, Window w));
+/* 23 */
 EXTERN void		XConfigureWindow _ANSI_ARGS_((Display* d, Window w, 
 				unsigned int i, XWindowChanges* x));
-/* 23 */
+/* 24 */
 EXTERN void		XCopyArea _ANSI_ARGS_((Display* d, Drawable dr1, 
 				Drawable dr2, GC g, int i1, int i2, 
 				unsigned int ui1, unsigned int ui2, int i3, 
 				int i4));
-/* 24 */
+/* 25 */
 EXTERN void		XCopyPlane _ANSI_ARGS_((Display* d, Drawable dr1, 
 				Drawable dr2, GC g, int i1, int i2, 
 				unsigned int ui1, unsigned int ui2, int i3, 
 				int i4, unsigned long ul));
-/* 25 */
+/* 26 */
 EXTERN Pixmap		XCreateBitmapFromData _ANSI_ARGS_((Display* display, 
 				Drawable d, _Xconst char* data, 
 				unsigned int width, unsigned int height));
-/* 26 */
+/* 27 */
 EXTERN void		XDefineCursor _ANSI_ARGS_((Display* d, Window w, 
 				Cursor c));
-/* 27 */
+/* 28 */
 EXTERN void		XDeleteProperty _ANSI_ARGS_((Display* d, Window w, 
 				Atom a));
-/* 28 */
-EXTERN void		XDestroyWindow _ANSI_ARGS_((Display* d, Window w));
 /* 29 */
+EXTERN void		XDestroyWindow _ANSI_ARGS_((Display* d, Window w));
+/* 30 */
 EXTERN void		XDrawArc _ANSI_ARGS_((Display* d, Drawable dr, GC g, 
 				int i1, int i2, unsigned int ui1, 
 				unsigned int ui2, int i3, int i4));
-/* 30 */
+/* 31 */
 EXTERN void		XDrawLines _ANSI_ARGS_((Display* d, Drawable dr, 
 				GC g, XPoint* x, int i1, int i2));
-/* 31 */
+/* 32 */
 EXTERN void		XDrawRectangle _ANSI_ARGS_((Display* d, Drawable dr, 
 				GC g, int i1, int i2, unsigned int ui1, 
 				unsigned int ui2));
-/* 32 */
+/* 33 */
 EXTERN void		XFillArc _ANSI_ARGS_((Display* d, Drawable dr, GC g, 
 				int i1, int i2, unsigned int ui1, 
 				unsigned int ui2, int i3, int i4));
-/* 33 */
+/* 34 */
 EXTERN void		XFillPolygon _ANSI_ARGS_((Display* d, Drawable dr, 
 				GC g, XPoint* x, int i1, int i2, int i3));
-/* 34 */
+/* 35 */
 EXTERN void		XFillRectangles _ANSI_ARGS_((Display* d, Drawable dr, 
 				GC g, XRectangle* x, int i));
-/* 35 */
-EXTERN void		XForceScreenSaver _ANSI_ARGS_((Display* d, int i));
 /* 36 */
-EXTERN void		XFreeColormap _ANSI_ARGS_((Display* d, Colormap c));
+EXTERN void		XForceScreenSaver _ANSI_ARGS_((Display* d, int i));
 /* 37 */
+EXTERN void		XFreeColormap _ANSI_ARGS_((Display* d, Colormap c));
+/* 38 */
 EXTERN void		XFreeColors _ANSI_ARGS_((Display* d, Colormap c, 
 				unsigned long* ulp, int i, unsigned long ul));
-/* 38 */
-EXTERN void		XFreeCursor _ANSI_ARGS_((Display* d, Cursor c));
 /* 39 */
-EXTERN void		XFreeModifiermap _ANSI_ARGS_((XModifierKeymap* x));
+EXTERN void		XFreeCursor _ANSI_ARGS_((Display* d, Cursor c));
 /* 40 */
+EXTERN void		XFreeModifiermap _ANSI_ARGS_((XModifierKeymap* x));
+/* 41 */
 EXTERN Status		XGetGeometry _ANSI_ARGS_((Display* d, Drawable dr, 
 				Window* w, int* i1, int* i2, 
 				unsigned int* ui1, unsigned int* ui2, 
 				unsigned int* ui3, unsigned int* ui4));
-/* 41 */
+/* 42 */
 EXTERN void		XGetInputFocus _ANSI_ARGS_((Display* d, Window* w, 
 				int* i));
-/* 42 */
+/* 43 */
 EXTERN int		XGetWindowProperty _ANSI_ARGS_((Display* d, Window w, 
 				Atom a1, long l1, long l2, Bool b, Atom a2, 
 				Atom* ap, int* ip, unsigned long* ulp1, 
 				unsigned long* ulp2, unsigned char** cpp));
-/* 43 */
+/* 44 */
 EXTERN Status		XGetWindowAttributes _ANSI_ARGS_((Display* d, 
 				Window w, XWindowAttributes* x));
-/* 44 */
+/* 45 */
 EXTERN int		XGrabKeyboard _ANSI_ARGS_((Display* d, Window w, 
 				Bool b, int i1, int i2, Time t));
-/* 45 */
+/* 46 */
 EXTERN int		XGrabPointer _ANSI_ARGS_((Display* d, Window w1, 
 				Bool b, unsigned int ui, int i1, int i2, 
 				Window w2, Cursor c, Time t));
-/* 46 */
-EXTERN KeyCode		XKeysymToKeycode _ANSI_ARGS_((Display* d, KeySym k));
 /* 47 */
+EXTERN KeyCode		XKeysymToKeycode _ANSI_ARGS_((Display* d, KeySym k));
+/* 48 */
 EXTERN Status		XLookupColor _ANSI_ARGS_((Display* d, Colormap c1, 
 				_Xconst char* c2, XColor* x1, XColor* x2));
-/* 48 */
-EXTERN void		XMapWindow _ANSI_ARGS_((Display* d, Window w));
 /* 49 */
+EXTERN void		XMapWindow _ANSI_ARGS_((Display* d, Window w));
+/* 50 */
 EXTERN void		XMoveResizeWindow _ANSI_ARGS_((Display* d, Window w, 
 				int i1, int i2, unsigned int ui1, 
 				unsigned int ui2));
-/* 50 */
+/* 51 */
 EXTERN void		XMoveWindow _ANSI_ARGS_((Display* d, Window w, 
 				int i1, int i2));
-/* 51 */
-EXTERN void		XNextEvent _ANSI_ARGS_((Display* d, XEvent* x));
 /* 52 */
-EXTERN void		XPutBackEvent _ANSI_ARGS_((Display* d, XEvent* x));
+EXTERN void		XNextEvent _ANSI_ARGS_((Display* d, XEvent* x));
 /* 53 */
+EXTERN void		XPutBackEvent _ANSI_ARGS_((Display* d, XEvent* x));
+/* 54 */
 EXTERN void		XQueryColors _ANSI_ARGS_((Display* d, Colormap c, 
 				XColor* x, int i));
-/* 54 */
+/* 55 */
 EXTERN Bool		XQueryPointer _ANSI_ARGS_((Display* d, Window w1, 
 				Window* w2, Window* w3, int* i1, int* i2, 
 				int* i3, int* i4, unsigned int* ui));
-/* 55 */
+/* 56 */
 EXTERN Status		XQueryTree _ANSI_ARGS_((Display* d, Window w1, 
 				Window* w2, Window* w3, Window** w4, 
 				unsigned int* ui));
-/* 56 */
-EXTERN void		XRaiseWindow _ANSI_ARGS_((Display* d, Window w));
 /* 57 */
+EXTERN void		XRaiseWindow _ANSI_ARGS_((Display* d, Window w));
+/* 58 */
 EXTERN void		XRefreshKeyboardMapping _ANSI_ARGS_((
 				XMappingEvent* x));
-/* 58 */
+/* 59 */
 EXTERN void		XResizeWindow _ANSI_ARGS_((Display* d, Window w, 
 				unsigned int ui1, unsigned int ui2));
-/* 59 */
+/* 60 */
 EXTERN void		XSelectInput _ANSI_ARGS_((Display* d, Window w, 
 				long l));
-/* 60 */
+/* 61 */
 EXTERN Status		XSendEvent _ANSI_ARGS_((Display* d, Window w, Bool b, 
 				long l, XEvent* x));
-/* 61 */
+/* 62 */
 EXTERN void		XSetCommand _ANSI_ARGS_((Display* d, Window w, 
 				char** c, int i));
-/* 62 */
+/* 63 */
 EXTERN void		XSetIconName _ANSI_ARGS_((Display* d, Window w, 
 				_Xconst char* c));
-/* 63 */
+/* 64 */
 EXTERN void		XSetInputFocus _ANSI_ARGS_((Display* d, Window w, 
 				int i, Time t));
-/* 64 */
+/* 65 */
 EXTERN void		XSetSelectionOwner _ANSI_ARGS_((Display* d, Atom a, 
 				Window w, Time t));
-/* 65 */
+/* 66 */
 EXTERN void		XSetWindowBackground _ANSI_ARGS_((Display* d, 
 				Window w, unsigned long ul));
-/* 66 */
+/* 67 */
 EXTERN void		XSetWindowBackgroundPixmap _ANSI_ARGS_((Display* d, 
 				Window w, Pixmap p));
-/* 67 */
+/* 68 */
 EXTERN void		XSetWindowBorder _ANSI_ARGS_((Display* d, Window w, 
 				unsigned long ul));
-/* 68 */
+/* 69 */
 EXTERN void		XSetWindowBorderPixmap _ANSI_ARGS_((Display* d, 
 				Window w, Pixmap p));
-/* 69 */
+/* 70 */
 EXTERN void		XSetWindowBorderWidth _ANSI_ARGS_((Display* d, 
 				Window w, unsigned int ui));
-/* 70 */
+/* 71 */
 EXTERN void		XSetWindowColormap _ANSI_ARGS_((Display* d, Window w, 
 				Colormap c));
-/* 71 */
+/* 72 */
 EXTERN Bool		XTranslateCoordinates _ANSI_ARGS_((Display* d, 
 				Window w1, Window w2, int i1, int i2, 
 				int* i3, int* i4, Window* w3));
-/* 72 */
-EXTERN void		XUngrabKeyboard _ANSI_ARGS_((Display* d, Time t));
 /* 73 */
-EXTERN void		XUngrabPointer _ANSI_ARGS_((Display* d, Time t));
+EXTERN void		XUngrabKeyboard _ANSI_ARGS_((Display* d, Time t));
 /* 74 */
-EXTERN void		XUnmapWindow _ANSI_ARGS_((Display* d, Window w));
+EXTERN void		XUngrabPointer _ANSI_ARGS_((Display* d, Time t));
 /* 75 */
+EXTERN void		XUnmapWindow _ANSI_ARGS_((Display* d, Window w));
+/* 76 */
 EXTERN void		XWindowEvent _ANSI_ARGS_((Display* d, Window w, 
 				long l, XEvent* x));
-/* 76 */
-EXTERN void		XDestroyIC _ANSI_ARGS_((XIC x));
 /* 77 */
-EXTERN Bool		XFilterEvent _ANSI_ARGS_((XEvent* x, Window w));
+EXTERN void		XDestroyIC _ANSI_ARGS_((XIC x));
 /* 78 */
+EXTERN Bool		XFilterEvent _ANSI_ARGS_((XEvent* x, Window w));
+/* 79 */
 EXTERN int		XmbLookupString _ANSI_ARGS_((XIC xi, 
 				XKeyPressedEvent* xk, char* c, int i, 
 				KeySym* k, Status* s));
-/* 79 */
+/* 80 */
 EXTERN void		TkPutImage _ANSI_ARGS_((unsigned long * colors, 
 				int ncolors, Display* display, Drawable d, 
 				GC gc, XImage* image, int src_x, int src_y, 
@@ -278,178 +279,179 @@ EXTERN void		TkPutImage _ANSI_ARGS_((unsigned long * colors,
 				unsigned int height));
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
-/* 0 */
-EXTERN XModifierKeymap*	 XGetModifierMapping _ANSI_ARGS_((Display* d));
+/* Slot 0 is reserved */
 /* 1 */
+EXTERN XModifierKeymap*	 XGetModifierMapping _ANSI_ARGS_((Display* d));
+/* 2 */
 EXTERN XImage *		XCreateImage _ANSI_ARGS_((Display* d, Visual* v, 
 				unsigned int ui1, int i1, int i2, char* cp, 
 				unsigned int ui2, unsigned int ui3, int i3, 
 				int i4));
-/* 2 */
+/* 3 */
 EXTERN XImage *		XGetImage _ANSI_ARGS_((Display* d, Drawable dr, 
 				int i1, int i2, unsigned int ui1, 
 				unsigned int ui2, unsigned long ul, int i3));
-/* 3 */
-EXTERN char *		XGetAtomName _ANSI_ARGS_((Display* d, Atom a));
 /* 4 */
-EXTERN char *		XKeysymToString _ANSI_ARGS_((KeySym k));
+EXTERN char *		XGetAtomName _ANSI_ARGS_((Display* d, Atom a));
 /* 5 */
+EXTERN char *		XKeysymToString _ANSI_ARGS_((KeySym k));
+/* 6 */
 EXTERN Colormap		XCreateColormap _ANSI_ARGS_((Display* d, Window w, 
 				Visual* v, int i));
-/* 6 */
-EXTERN GContext		XGContextFromGC _ANSI_ARGS_((GC g));
 /* 7 */
+EXTERN GContext		XGContextFromGC _ANSI_ARGS_((GC g));
+/* 8 */
 EXTERN KeySym		XKeycodeToKeysym _ANSI_ARGS_((Display* d, KeyCode k, 
 				int i));
-/* 8 */
-EXTERN KeySym		XStringToKeysym _ANSI_ARGS_((_Xconst char* c));
 /* 9 */
-EXTERN Window		XRootWindow _ANSI_ARGS_((Display* d, int i));
+EXTERN KeySym		XStringToKeysym _ANSI_ARGS_((_Xconst char* c));
 /* 10 */
-EXTERN XErrorHandler	XSetErrorHandler _ANSI_ARGS_((XErrorHandler x));
+EXTERN Window		XRootWindow _ANSI_ARGS_((Display* d, int i));
 /* 11 */
+EXTERN XErrorHandler	XSetErrorHandler _ANSI_ARGS_((XErrorHandler x));
+/* 12 */
 EXTERN Status		XAllocColor _ANSI_ARGS_((Display* d, Colormap c, 
 				XColor* xp));
-/* 12 */
-EXTERN void		XBell _ANSI_ARGS_((Display* d, int i));
 /* 13 */
+EXTERN void		XBell _ANSI_ARGS_((Display* d, int i));
+/* 14 */
 EXTERN void		XChangeProperty _ANSI_ARGS_((Display* d, Window w, 
 				Atom a, Atom a, int i1, int i2, 
 				_Xconst unsigned char* c, int i3));
-/* 14 */
+/* 15 */
 EXTERN void		XChangeWindowAttributes _ANSI_ARGS_((Display* d, 
 				Window w, unsigned long ul, 
 				XSetWindowAttributes* x));
-/* 15 */
+/* 16 */
 EXTERN void		XConfigureWindow _ANSI_ARGS_((Display* d, Window w, 
 				unsigned int i, XWindowChanges* x));
-/* 16 */
+/* 17 */
 EXTERN void		XCopyArea _ANSI_ARGS_((Display* d, Drawable dr1, 
 				Drawable dr2, GC g, int i1, int i2, 
 				unsigned int ui1, unsigned int ui2, int i3, 
 				int i4));
-/* 17 */
+/* 18 */
 EXTERN void		XCopyPlane _ANSI_ARGS_((Display* d, Drawable dr1, 
 				Drawable dr2, GC g, int i1, int i2, 
 				unsigned int ui1, unsigned int ui2, int i3, 
 				int i4, unsigned long ul));
-/* 18 */
+/* 19 */
 EXTERN Pixmap		XCreateBitmapFromData _ANSI_ARGS_((Display* display, 
 				Drawable d, _Xconst char* data, 
 				unsigned int width, unsigned int height));
-/* 19 */
+/* 20 */
 EXTERN void		XDefineCursor _ANSI_ARGS_((Display* d, Window w, 
 				Cursor c));
-/* 20 */
-EXTERN void		XDestroyWindow _ANSI_ARGS_((Display* d, Window w));
 /* 21 */
+EXTERN void		XDestroyWindow _ANSI_ARGS_((Display* d, Window w));
+/* 22 */
 EXTERN void		XDrawArc _ANSI_ARGS_((Display* d, Drawable dr, GC g, 
 				int i1, int i2, unsigned int ui1, 
 				unsigned int ui2, int i3, int i4));
-/* 22 */
+/* 23 */
 EXTERN void		XDrawLines _ANSI_ARGS_((Display* d, Drawable dr, 
 				GC g, XPoint* x, int i1, int i2));
-/* 23 */
+/* 24 */
 EXTERN void		XDrawRectangle _ANSI_ARGS_((Display* d, Drawable dr, 
 				GC g, int i1, int i2, unsigned int ui1, 
 				unsigned int ui2));
-/* 24 */
+/* 25 */
 EXTERN void		XFillArc _ANSI_ARGS_((Display* d, Drawable dr, GC g, 
 				int i1, int i2, unsigned int ui1, 
 				unsigned int ui2, int i3, int i4));
-/* 25 */
+/* 26 */
 EXTERN void		XFillPolygon _ANSI_ARGS_((Display* d, Drawable dr, 
 				GC g, XPoint* x, int i1, int i2, int i3));
-/* 26 */
+/* 27 */
 EXTERN void		XFillRectangles _ANSI_ARGS_((Display* d, Drawable dr, 
 				GC g, XRectangle* x, int i));
-/* 27 */
-EXTERN void		XFreeColormap _ANSI_ARGS_((Display* d, Colormap c));
 /* 28 */
+EXTERN void		XFreeColormap _ANSI_ARGS_((Display* d, Colormap c));
+/* 29 */
 EXTERN void		XFreeColors _ANSI_ARGS_((Display* d, Colormap c, 
 				unsigned long* ulp, int i, unsigned long ul));
-/* 29 */
-EXTERN void		XFreeModifiermap _ANSI_ARGS_((XModifierKeymap* x));
 /* 30 */
+EXTERN void		XFreeModifiermap _ANSI_ARGS_((XModifierKeymap* x));
+/* 31 */
 EXTERN Status		XGetGeometry _ANSI_ARGS_((Display* d, Drawable dr, 
 				Window* w, int* i1, int* i2, 
 				unsigned int* ui1, unsigned int* ui2, 
 				unsigned int* ui3, unsigned int* ui4));
-/* 31 */
+/* 32 */
 EXTERN int		XGetWindowProperty _ANSI_ARGS_((Display* d, Window w, 
 				Atom a1, long l1, long l2, Bool b, Atom a2, 
 				Atom* ap, int* ip, unsigned long* ulp1, 
 				unsigned long* ulp2, unsigned char** cpp));
-/* 32 */
+/* 33 */
 EXTERN int		XGrabKeyboard _ANSI_ARGS_((Display* d, Window w, 
 				Bool b, int i1, int i2, Time t));
-/* 33 */
+/* 34 */
 EXTERN int		XGrabPointer _ANSI_ARGS_((Display* d, Window w1, 
 				Bool b, unsigned int ui, int i1, int i2, 
 				Window w2, Cursor c, Time t));
-/* 34 */
-EXTERN KeyCode		XKeysymToKeycode _ANSI_ARGS_((Display* d, KeySym k));
 /* 35 */
-EXTERN void		XMapWindow _ANSI_ARGS_((Display* d, Window w));
+EXTERN KeyCode		XKeysymToKeycode _ANSI_ARGS_((Display* d, KeySym k));
 /* 36 */
+EXTERN void		XMapWindow _ANSI_ARGS_((Display* d, Window w));
+/* 37 */
 EXTERN void		XMoveResizeWindow _ANSI_ARGS_((Display* d, Window w, 
 				int i1, int i2, unsigned int ui1, 
 				unsigned int ui2));
-/* 37 */
+/* 38 */
 EXTERN void		XMoveWindow _ANSI_ARGS_((Display* d, Window w, 
 				int i1, int i2));
-/* 38 */
+/* 39 */
 EXTERN Bool		XQueryPointer _ANSI_ARGS_((Display* d, Window w1, 
 				Window* w2, Window* w3, int* i1, int* i2, 
 				int* i3, int* i4, unsigned int* ui));
-/* 39 */
-EXTERN void		XRaiseWindow _ANSI_ARGS_((Display* d, Window w));
 /* 40 */
+EXTERN void		XRaiseWindow _ANSI_ARGS_((Display* d, Window w));
+/* 41 */
 EXTERN void		XRefreshKeyboardMapping _ANSI_ARGS_((
 				XMappingEvent* x));
-/* 41 */
+/* 42 */
 EXTERN void		XResizeWindow _ANSI_ARGS_((Display* d, Window w, 
 				unsigned int ui1, unsigned int ui2));
-/* 42 */
+/* 43 */
 EXTERN void		XSelectInput _ANSI_ARGS_((Display* d, Window w, 
 				long l));
-/* 43 */
+/* 44 */
 EXTERN Status		XSendEvent _ANSI_ARGS_((Display* d, Window w, Bool b, 
 				long l, XEvent* x));
-/* 44 */
+/* 45 */
 EXTERN void		XSetIconName _ANSI_ARGS_((Display* d, Window w, 
 				_Xconst char* c));
-/* 45 */
+/* 46 */
 EXTERN void		XSetInputFocus _ANSI_ARGS_((Display* d, Window w, 
 				int i, Time t));
-/* 46 */
+/* 47 */
 EXTERN void		XSetSelectionOwner _ANSI_ARGS_((Display* d, Atom a, 
 				Window w, Time t));
-/* 47 */
+/* 48 */
 EXTERN void		XSetWindowBackground _ANSI_ARGS_((Display* d, 
 				Window w, unsigned long ul));
-/* 48 */
+/* 49 */
 EXTERN void		XSetWindowBackgroundPixmap _ANSI_ARGS_((Display* d, 
 				Window w, Pixmap p));
-/* 49 */
+/* 50 */
 EXTERN void		XSetWindowBorder _ANSI_ARGS_((Display* d, Window w, 
 				unsigned long ul));
-/* 50 */
+/* 51 */
 EXTERN void		XSetWindowBorderPixmap _ANSI_ARGS_((Display* d, 
 				Window w, Pixmap p));
-/* 51 */
+/* 52 */
 EXTERN void		XSetWindowBorderWidth _ANSI_ARGS_((Display* d, 
 				Window w, unsigned int ui));
-/* 52 */
+/* 53 */
 EXTERN void		XSetWindowColormap _ANSI_ARGS_((Display* d, Window w, 
 				Colormap c));
-/* 53 */
-EXTERN void		XUngrabKeyboard _ANSI_ARGS_((Display* d, Time t));
 /* 54 */
-EXTERN void		XUngrabPointer _ANSI_ARGS_((Display* d, Time t));
+EXTERN void		XUngrabKeyboard _ANSI_ARGS_((Display* d, Time t));
 /* 55 */
-EXTERN void		XUnmapWindow _ANSI_ARGS_((Display* d, Window w));
+EXTERN void		XUngrabPointer _ANSI_ARGS_((Display* d, Time t));
 /* 56 */
+EXTERN void		XUnmapWindow _ANSI_ARGS_((Display* d, Window w));
+/* 57 */
 EXTERN void		TkPutImage _ANSI_ARGS_((unsigned long * colors, 
 				int ncolors, Display* display, Drawable d, 
 				GC gc, XImage* image, int src_x, int src_y, 
@@ -462,145 +464,147 @@ typedef struct TkIntXlibStubs {
     struct TkIntXlibStubHooks *hooks;
 
 #ifdef __WIN32__
-    XModifierKeymap* (*xGetModifierMapping) _ANSI_ARGS_((Display* d)); /* 0 */
-    XImage * (*xCreateImage) _ANSI_ARGS_((Display* d, Visual* v, unsigned int ui1, int i1, int i2, char* cp, unsigned int ui2, unsigned int ui3, int i3, int i4)); /* 1 */
-    XImage * (*xGetImage) _ANSI_ARGS_((Display* d, Drawable dr, int i1, int i2, unsigned int ui1, unsigned int ui2, unsigned long ul, int i3)); /* 2 */
-    char * (*xGetAtomName) _ANSI_ARGS_((Display* d, Atom a)); /* 3 */
-    char * (*xKeysymToString) _ANSI_ARGS_((KeySym k)); /* 4 */
-    Colormap (*xCreateColormap) _ANSI_ARGS_((Display* d, Window w, Visual* v, int i)); /* 5 */
-    Cursor (*xCreatePixmapCursor) _ANSI_ARGS_((Display* d, Pixmap p1, Pixmap p2, XColor* x1, XColor* x2, unsigned int ui1, unsigned int ui2)); /* 6 */
-    Cursor (*xCreateGlyphCursor) _ANSI_ARGS_((Display* d, Font f1, Font f2, unsigned int ui1, unsigned int ui2, XColor* x1, XColor* x2)); /* 7 */
-    GContext (*xGContextFromGC) _ANSI_ARGS_((GC g)); /* 8 */
-    XHostAddress * (*xListHosts) _ANSI_ARGS_((Display* d, int* i, Bool* b)); /* 9 */
-    KeySym (*xKeycodeToKeysym) _ANSI_ARGS_((Display* d, unsigned int k, int i)); /* 10 */
-    KeySym (*xStringToKeysym) _ANSI_ARGS_((_Xconst char* c)); /* 11 */
-    Window (*xRootWindow) _ANSI_ARGS_((Display* d, int i)); /* 12 */
-    XErrorHandler (*xSetErrorHandler) _ANSI_ARGS_((XErrorHandler x)); /* 13 */
-    Status (*xIconifyWindow) _ANSI_ARGS_((Display* d, Window w, int i)); /* 14 */
-    Status (*xWithdrawWindow) _ANSI_ARGS_((Display* d, Window w, int i)); /* 15 */
-    Status (*xGetWMColormapWindows) _ANSI_ARGS_((Display* d, Window w, Window** wpp, int* ip)); /* 16 */
-    Status (*xAllocColor) _ANSI_ARGS_((Display* d, Colormap c, XColor* xp)); /* 17 */
-    void (*xBell) _ANSI_ARGS_((Display* d, int i)); /* 18 */
-    void (*xChangeProperty) _ANSI_ARGS_((Display* d, Window w, Atom a1, Atom a2, int i1, int i2, _Xconst unsigned char* c, int i3)); /* 19 */
-    void (*xChangeWindowAttributes) _ANSI_ARGS_((Display* d, Window w, unsigned long ul, XSetWindowAttributes* x)); /* 20 */
-    void (*xClearWindow) _ANSI_ARGS_((Display* d, Window w)); /* 21 */
-    void (*xConfigureWindow) _ANSI_ARGS_((Display* d, Window w, unsigned int i, XWindowChanges* x)); /* 22 */
-    void (*xCopyArea) _ANSI_ARGS_((Display* d, Drawable dr1, Drawable dr2, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 23 */
-    void (*xCopyPlane) _ANSI_ARGS_((Display* d, Drawable dr1, Drawable dr2, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4, unsigned long ul)); /* 24 */
-    Pixmap (*xCreateBitmapFromData) _ANSI_ARGS_((Display* display, Drawable d, _Xconst char* data, unsigned int width, unsigned int height)); /* 25 */
-    void (*xDefineCursor) _ANSI_ARGS_((Display* d, Window w, Cursor c)); /* 26 */
-    void (*xDeleteProperty) _ANSI_ARGS_((Display* d, Window w, Atom a)); /* 27 */
-    void (*xDestroyWindow) _ANSI_ARGS_((Display* d, Window w)); /* 28 */
-    void (*xDrawArc) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 29 */
-    void (*xDrawLines) _ANSI_ARGS_((Display* d, Drawable dr, GC g, XPoint* x, int i1, int i2)); /* 30 */
-    void (*xDrawRectangle) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2)); /* 31 */
-    void (*xFillArc) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 32 */
-    void (*xFillPolygon) _ANSI_ARGS_((Display* d, Drawable dr, GC g, XPoint* x, int i1, int i2, int i3)); /* 33 */
-    void (*xFillRectangles) _ANSI_ARGS_((Display* d, Drawable dr, GC g, XRectangle* x, int i)); /* 34 */
-    void (*xForceScreenSaver) _ANSI_ARGS_((Display* d, int i)); /* 35 */
-    void (*xFreeColormap) _ANSI_ARGS_((Display* d, Colormap c)); /* 36 */
-    void (*xFreeColors) _ANSI_ARGS_((Display* d, Colormap c, unsigned long* ulp, int i, unsigned long ul)); /* 37 */
-    void (*xFreeCursor) _ANSI_ARGS_((Display* d, Cursor c)); /* 38 */
-    void (*xFreeModifiermap) _ANSI_ARGS_((XModifierKeymap* x)); /* 39 */
-    Status (*xGetGeometry) _ANSI_ARGS_((Display* d, Drawable dr, Window* w, int* i1, int* i2, unsigned int* ui1, unsigned int* ui2, unsigned int* ui3, unsigned int* ui4)); /* 40 */
-    void (*xGetInputFocus) _ANSI_ARGS_((Display* d, Window* w, int* i)); /* 41 */
-    int (*xGetWindowProperty) _ANSI_ARGS_((Display* d, Window w, Atom a1, long l1, long l2, Bool b, Atom a2, Atom* ap, int* ip, unsigned long* ulp1, unsigned long* ulp2, unsigned char** cpp)); /* 42 */
-    Status (*xGetWindowAttributes) _ANSI_ARGS_((Display* d, Window w, XWindowAttributes* x)); /* 43 */
-    int (*xGrabKeyboard) _ANSI_ARGS_((Display* d, Window w, Bool b, int i1, int i2, Time t)); /* 44 */
-    int (*xGrabPointer) _ANSI_ARGS_((Display* d, Window w1, Bool b, unsigned int ui, int i1, int i2, Window w2, Cursor c, Time t)); /* 45 */
-    KeyCode (*xKeysymToKeycode) _ANSI_ARGS_((Display* d, KeySym k)); /* 46 */
-    Status (*xLookupColor) _ANSI_ARGS_((Display* d, Colormap c1, _Xconst char* c2, XColor* x1, XColor* x2)); /* 47 */
-    void (*xMapWindow) _ANSI_ARGS_((Display* d, Window w)); /* 48 */
-    void (*xMoveResizeWindow) _ANSI_ARGS_((Display* d, Window w, int i1, int i2, unsigned int ui1, unsigned int ui2)); /* 49 */
-    void (*xMoveWindow) _ANSI_ARGS_((Display* d, Window w, int i1, int i2)); /* 50 */
-    void (*xNextEvent) _ANSI_ARGS_((Display* d, XEvent* x)); /* 51 */
-    void (*xPutBackEvent) _ANSI_ARGS_((Display* d, XEvent* x)); /* 52 */
-    void (*xQueryColors) _ANSI_ARGS_((Display* d, Colormap c, XColor* x, int i)); /* 53 */
-    Bool (*xQueryPointer) _ANSI_ARGS_((Display* d, Window w1, Window* w2, Window* w3, int* i1, int* i2, int* i3, int* i4, unsigned int* ui)); /* 54 */
-    Status (*xQueryTree) _ANSI_ARGS_((Display* d, Window w1, Window* w2, Window* w3, Window** w4, unsigned int* ui)); /* 55 */
-    void (*xRaiseWindow) _ANSI_ARGS_((Display* d, Window w)); /* 56 */
-    void (*xRefreshKeyboardMapping) _ANSI_ARGS_((XMappingEvent* x)); /* 57 */
-    void (*xResizeWindow) _ANSI_ARGS_((Display* d, Window w, unsigned int ui1, unsigned int ui2)); /* 58 */
-    void (*xSelectInput) _ANSI_ARGS_((Display* d, Window w, long l)); /* 59 */
-    Status (*xSendEvent) _ANSI_ARGS_((Display* d, Window w, Bool b, long l, XEvent* x)); /* 60 */
-    void (*xSetCommand) _ANSI_ARGS_((Display* d, Window w, char** c, int i)); /* 61 */
-    void (*xSetIconName) _ANSI_ARGS_((Display* d, Window w, _Xconst char* c)); /* 62 */
-    void (*xSetInputFocus) _ANSI_ARGS_((Display* d, Window w, int i, Time t)); /* 63 */
-    void (*xSetSelectionOwner) _ANSI_ARGS_((Display* d, Atom a, Window w, Time t)); /* 64 */
-    void (*xSetWindowBackground) _ANSI_ARGS_((Display* d, Window w, unsigned long ul)); /* 65 */
-    void (*xSetWindowBackgroundPixmap) _ANSI_ARGS_((Display* d, Window w, Pixmap p)); /* 66 */
-    void (*xSetWindowBorder) _ANSI_ARGS_((Display* d, Window w, unsigned long ul)); /* 67 */
-    void (*xSetWindowBorderPixmap) _ANSI_ARGS_((Display* d, Window w, Pixmap p)); /* 68 */
-    void (*xSetWindowBorderWidth) _ANSI_ARGS_((Display* d, Window w, unsigned int ui)); /* 69 */
-    void (*xSetWindowColormap) _ANSI_ARGS_((Display* d, Window w, Colormap c)); /* 70 */
-    Bool (*xTranslateCoordinates) _ANSI_ARGS_((Display* d, Window w1, Window w2, int i1, int i2, int* i3, int* i4, Window* w3)); /* 71 */
-    void (*xUngrabKeyboard) _ANSI_ARGS_((Display* d, Time t)); /* 72 */
-    void (*xUngrabPointer) _ANSI_ARGS_((Display* d, Time t)); /* 73 */
-    void (*xUnmapWindow) _ANSI_ARGS_((Display* d, Window w)); /* 74 */
-    void (*xWindowEvent) _ANSI_ARGS_((Display* d, Window w, long l, XEvent* x)); /* 75 */
-    void (*xDestroyIC) _ANSI_ARGS_((XIC x)); /* 76 */
-    Bool (*xFilterEvent) _ANSI_ARGS_((XEvent* x, Window w)); /* 77 */
-    int (*xmbLookupString) _ANSI_ARGS_((XIC xi, XKeyPressedEvent* xk, char* c, int i, KeySym* k, Status* s)); /* 78 */
-    void (*tkPutImage) _ANSI_ARGS_((unsigned long * colors, int ncolors, Display* display, Drawable d, GC gc, XImage* image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 79 */
+    void *reserved0;
+    XModifierKeymap* (*xGetModifierMapping) _ANSI_ARGS_((Display* d)); /* 1 */
+    XImage * (*xCreateImage) _ANSI_ARGS_((Display* d, Visual* v, unsigned int ui1, int i1, int i2, char* cp, unsigned int ui2, unsigned int ui3, int i3, int i4)); /* 2 */
+    XImage * (*xGetImage) _ANSI_ARGS_((Display* d, Drawable dr, int i1, int i2, unsigned int ui1, unsigned int ui2, unsigned long ul, int i3)); /* 3 */
+    char * (*xGetAtomName) _ANSI_ARGS_((Display* d, Atom a)); /* 4 */
+    char * (*xKeysymToString) _ANSI_ARGS_((KeySym k)); /* 5 */
+    Colormap (*xCreateColormap) _ANSI_ARGS_((Display* d, Window w, Visual* v, int i)); /* 6 */
+    Cursor (*xCreatePixmapCursor) _ANSI_ARGS_((Display* d, Pixmap p1, Pixmap p2, XColor* x1, XColor* x2, unsigned int ui1, unsigned int ui2)); /* 7 */
+    Cursor (*xCreateGlyphCursor) _ANSI_ARGS_((Display* d, Font f1, Font f2, unsigned int ui1, unsigned int ui2, XColor* x1, XColor* x2)); /* 8 */
+    GContext (*xGContextFromGC) _ANSI_ARGS_((GC g)); /* 9 */
+    XHostAddress * (*xListHosts) _ANSI_ARGS_((Display* d, int* i, Bool* b)); /* 10 */
+    KeySym (*xKeycodeToKeysym) _ANSI_ARGS_((Display* d, unsigned int k, int i)); /* 11 */
+    KeySym (*xStringToKeysym) _ANSI_ARGS_((_Xconst char* c)); /* 12 */
+    Window (*xRootWindow) _ANSI_ARGS_((Display* d, int i)); /* 13 */
+    XErrorHandler (*xSetErrorHandler) _ANSI_ARGS_((XErrorHandler x)); /* 14 */
+    Status (*xIconifyWindow) _ANSI_ARGS_((Display* d, Window w, int i)); /* 15 */
+    Status (*xWithdrawWindow) _ANSI_ARGS_((Display* d, Window w, int i)); /* 16 */
+    Status (*xGetWMColormapWindows) _ANSI_ARGS_((Display* d, Window w, Window** wpp, int* ip)); /* 17 */
+    Status (*xAllocColor) _ANSI_ARGS_((Display* d, Colormap c, XColor* xp)); /* 18 */
+    void (*xBell) _ANSI_ARGS_((Display* d, int i)); /* 19 */
+    void (*xChangeProperty) _ANSI_ARGS_((Display* d, Window w, Atom a1, Atom a2, int i1, int i2, _Xconst unsigned char* c, int i3)); /* 20 */
+    void (*xChangeWindowAttributes) _ANSI_ARGS_((Display* d, Window w, unsigned long ul, XSetWindowAttributes* x)); /* 21 */
+    void (*xClearWindow) _ANSI_ARGS_((Display* d, Window w)); /* 22 */
+    void (*xConfigureWindow) _ANSI_ARGS_((Display* d, Window w, unsigned int i, XWindowChanges* x)); /* 23 */
+    void (*xCopyArea) _ANSI_ARGS_((Display* d, Drawable dr1, Drawable dr2, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 24 */
+    void (*xCopyPlane) _ANSI_ARGS_((Display* d, Drawable dr1, Drawable dr2, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4, unsigned long ul)); /* 25 */
+    Pixmap (*xCreateBitmapFromData) _ANSI_ARGS_((Display* display, Drawable d, _Xconst char* data, unsigned int width, unsigned int height)); /* 26 */
+    void (*xDefineCursor) _ANSI_ARGS_((Display* d, Window w, Cursor c)); /* 27 */
+    void (*xDeleteProperty) _ANSI_ARGS_((Display* d, Window w, Atom a)); /* 28 */
+    void (*xDestroyWindow) _ANSI_ARGS_((Display* d, Window w)); /* 29 */
+    void (*xDrawArc) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 30 */
+    void (*xDrawLines) _ANSI_ARGS_((Display* d, Drawable dr, GC g, XPoint* x, int i1, int i2)); /* 31 */
+    void (*xDrawRectangle) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2)); /* 32 */
+    void (*xFillArc) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 33 */
+    void (*xFillPolygon) _ANSI_ARGS_((Display* d, Drawable dr, GC g, XPoint* x, int i1, int i2, int i3)); /* 34 */
+    void (*xFillRectangles) _ANSI_ARGS_((Display* d, Drawable dr, GC g, XRectangle* x, int i)); /* 35 */
+    void (*xForceScreenSaver) _ANSI_ARGS_((Display* d, int i)); /* 36 */
+    void (*xFreeColormap) _ANSI_ARGS_((Display* d, Colormap c)); /* 37 */
+    void (*xFreeColors) _ANSI_ARGS_((Display* d, Colormap c, unsigned long* ulp, int i, unsigned long ul)); /* 38 */
+    void (*xFreeCursor) _ANSI_ARGS_((Display* d, Cursor c)); /* 39 */
+    void (*xFreeModifiermap) _ANSI_ARGS_((XModifierKeymap* x)); /* 40 */
+    Status (*xGetGeometry) _ANSI_ARGS_((Display* d, Drawable dr, Window* w, int* i1, int* i2, unsigned int* ui1, unsigned int* ui2, unsigned int* ui3, unsigned int* ui4)); /* 41 */
+    void (*xGetInputFocus) _ANSI_ARGS_((Display* d, Window* w, int* i)); /* 42 */
+    int (*xGetWindowProperty) _ANSI_ARGS_((Display* d, Window w, Atom a1, long l1, long l2, Bool b, Atom a2, Atom* ap, int* ip, unsigned long* ulp1, unsigned long* ulp2, unsigned char** cpp)); /* 43 */
+    Status (*xGetWindowAttributes) _ANSI_ARGS_((Display* d, Window w, XWindowAttributes* x)); /* 44 */
+    int (*xGrabKeyboard) _ANSI_ARGS_((Display* d, Window w, Bool b, int i1, int i2, Time t)); /* 45 */
+    int (*xGrabPointer) _ANSI_ARGS_((Display* d, Window w1, Bool b, unsigned int ui, int i1, int i2, Window w2, Cursor c, Time t)); /* 46 */
+    KeyCode (*xKeysymToKeycode) _ANSI_ARGS_((Display* d, KeySym k)); /* 47 */
+    Status (*xLookupColor) _ANSI_ARGS_((Display* d, Colormap c1, _Xconst char* c2, XColor* x1, XColor* x2)); /* 48 */
+    void (*xMapWindow) _ANSI_ARGS_((Display* d, Window w)); /* 49 */
+    void (*xMoveResizeWindow) _ANSI_ARGS_((Display* d, Window w, int i1, int i2, unsigned int ui1, unsigned int ui2)); /* 50 */
+    void (*xMoveWindow) _ANSI_ARGS_((Display* d, Window w, int i1, int i2)); /* 51 */
+    void (*xNextEvent) _ANSI_ARGS_((Display* d, XEvent* x)); /* 52 */
+    void (*xPutBackEvent) _ANSI_ARGS_((Display* d, XEvent* x)); /* 53 */
+    void (*xQueryColors) _ANSI_ARGS_((Display* d, Colormap c, XColor* x, int i)); /* 54 */
+    Bool (*xQueryPointer) _ANSI_ARGS_((Display* d, Window w1, Window* w2, Window* w3, int* i1, int* i2, int* i3, int* i4, unsigned int* ui)); /* 55 */
+    Status (*xQueryTree) _ANSI_ARGS_((Display* d, Window w1, Window* w2, Window* w3, Window** w4, unsigned int* ui)); /* 56 */
+    void (*xRaiseWindow) _ANSI_ARGS_((Display* d, Window w)); /* 57 */
+    void (*xRefreshKeyboardMapping) _ANSI_ARGS_((XMappingEvent* x)); /* 58 */
+    void (*xResizeWindow) _ANSI_ARGS_((Display* d, Window w, unsigned int ui1, unsigned int ui2)); /* 59 */
+    void (*xSelectInput) _ANSI_ARGS_((Display* d, Window w, long l)); /* 60 */
+    Status (*xSendEvent) _ANSI_ARGS_((Display* d, Window w, Bool b, long l, XEvent* x)); /* 61 */
+    void (*xSetCommand) _ANSI_ARGS_((Display* d, Window w, char** c, int i)); /* 62 */
+    void (*xSetIconName) _ANSI_ARGS_((Display* d, Window w, _Xconst char* c)); /* 63 */
+    void (*xSetInputFocus) _ANSI_ARGS_((Display* d, Window w, int i, Time t)); /* 64 */
+    void (*xSetSelectionOwner) _ANSI_ARGS_((Display* d, Atom a, Window w, Time t)); /* 65 */
+    void (*xSetWindowBackground) _ANSI_ARGS_((Display* d, Window w, unsigned long ul)); /* 66 */
+    void (*xSetWindowBackgroundPixmap) _ANSI_ARGS_((Display* d, Window w, Pixmap p)); /* 67 */
+    void (*xSetWindowBorder) _ANSI_ARGS_((Display* d, Window w, unsigned long ul)); /* 68 */
+    void (*xSetWindowBorderPixmap) _ANSI_ARGS_((Display* d, Window w, Pixmap p)); /* 69 */
+    void (*xSetWindowBorderWidth) _ANSI_ARGS_((Display* d, Window w, unsigned int ui)); /* 70 */
+    void (*xSetWindowColormap) _ANSI_ARGS_((Display* d, Window w, Colormap c)); /* 71 */
+    Bool (*xTranslateCoordinates) _ANSI_ARGS_((Display* d, Window w1, Window w2, int i1, int i2, int* i3, int* i4, Window* w3)); /* 72 */
+    void (*xUngrabKeyboard) _ANSI_ARGS_((Display* d, Time t)); /* 73 */
+    void (*xUngrabPointer) _ANSI_ARGS_((Display* d, Time t)); /* 74 */
+    void (*xUnmapWindow) _ANSI_ARGS_((Display* d, Window w)); /* 75 */
+    void (*xWindowEvent) _ANSI_ARGS_((Display* d, Window w, long l, XEvent* x)); /* 76 */
+    void (*xDestroyIC) _ANSI_ARGS_((XIC x)); /* 77 */
+    Bool (*xFilterEvent) _ANSI_ARGS_((XEvent* x, Window w)); /* 78 */
+    int (*xmbLookupString) _ANSI_ARGS_((XIC xi, XKeyPressedEvent* xk, char* c, int i, KeySym* k, Status* s)); /* 79 */
+    void (*tkPutImage) _ANSI_ARGS_((unsigned long * colors, int ncolors, Display* display, Drawable d, GC gc, XImage* image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 80 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
-    XModifierKeymap* (*xGetModifierMapping) _ANSI_ARGS_((Display* d)); /* 0 */
-    XImage * (*xCreateImage) _ANSI_ARGS_((Display* d, Visual* v, unsigned int ui1, int i1, int i2, char* cp, unsigned int ui2, unsigned int ui3, int i3, int i4)); /* 1 */
-    XImage * (*xGetImage) _ANSI_ARGS_((Display* d, Drawable dr, int i1, int i2, unsigned int ui1, unsigned int ui2, unsigned long ul, int i3)); /* 2 */
-    char * (*xGetAtomName) _ANSI_ARGS_((Display* d, Atom a)); /* 3 */
-    char * (*xKeysymToString) _ANSI_ARGS_((KeySym k)); /* 4 */
-    Colormap (*xCreateColormap) _ANSI_ARGS_((Display* d, Window w, Visual* v, int i)); /* 5 */
-    GContext (*xGContextFromGC) _ANSI_ARGS_((GC g)); /* 6 */
-    KeySym (*xKeycodeToKeysym) _ANSI_ARGS_((Display* d, KeyCode k, int i)); /* 7 */
-    KeySym (*xStringToKeysym) _ANSI_ARGS_((_Xconst char* c)); /* 8 */
-    Window (*xRootWindow) _ANSI_ARGS_((Display* d, int i)); /* 9 */
-    XErrorHandler (*xSetErrorHandler) _ANSI_ARGS_((XErrorHandler x)); /* 10 */
-    Status (*xAllocColor) _ANSI_ARGS_((Display* d, Colormap c, XColor* xp)); /* 11 */
-    void (*xBell) _ANSI_ARGS_((Display* d, int i)); /* 12 */
-    void (*xChangeProperty) _ANSI_ARGS_((Display* d, Window w, Atom a, Atom a, int i1, int i2, _Xconst unsigned char* c, int i3)); /* 13 */
-    void (*xChangeWindowAttributes) _ANSI_ARGS_((Display* d, Window w, unsigned long ul, XSetWindowAttributes* x)); /* 14 */
-    void (*xConfigureWindow) _ANSI_ARGS_((Display* d, Window w, unsigned int i, XWindowChanges* x)); /* 15 */
-    void (*xCopyArea) _ANSI_ARGS_((Display* d, Drawable dr1, Drawable dr2, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 16 */
-    void (*xCopyPlane) _ANSI_ARGS_((Display* d, Drawable dr1, Drawable dr2, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4, unsigned long ul)); /* 17 */
-    Pixmap (*xCreateBitmapFromData) _ANSI_ARGS_((Display* display, Drawable d, _Xconst char* data, unsigned int width, unsigned int height)); /* 18 */
-    void (*xDefineCursor) _ANSI_ARGS_((Display* d, Window w, Cursor c)); /* 19 */
-    void (*xDestroyWindow) _ANSI_ARGS_((Display* d, Window w)); /* 20 */
-    void (*xDrawArc) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 21 */
-    void (*xDrawLines) _ANSI_ARGS_((Display* d, Drawable dr, GC g, XPoint* x, int i1, int i2)); /* 22 */
-    void (*xDrawRectangle) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2)); /* 23 */
-    void (*xFillArc) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 24 */
-    void (*xFillPolygon) _ANSI_ARGS_((Display* d, Drawable dr, GC g, XPoint* x, int i1, int i2, int i3)); /* 25 */
-    void (*xFillRectangles) _ANSI_ARGS_((Display* d, Drawable dr, GC g, XRectangle* x, int i)); /* 26 */
-    void (*xFreeColormap) _ANSI_ARGS_((Display* d, Colormap c)); /* 27 */
-    void (*xFreeColors) _ANSI_ARGS_((Display* d, Colormap c, unsigned long* ulp, int i, unsigned long ul)); /* 28 */
-    void (*xFreeModifiermap) _ANSI_ARGS_((XModifierKeymap* x)); /* 29 */
-    Status (*xGetGeometry) _ANSI_ARGS_((Display* d, Drawable dr, Window* w, int* i1, int* i2, unsigned int* ui1, unsigned int* ui2, unsigned int* ui3, unsigned int* ui4)); /* 30 */
-    int (*xGetWindowProperty) _ANSI_ARGS_((Display* d, Window w, Atom a1, long l1, long l2, Bool b, Atom a2, Atom* ap, int* ip, unsigned long* ulp1, unsigned long* ulp2, unsigned char** cpp)); /* 31 */
-    int (*xGrabKeyboard) _ANSI_ARGS_((Display* d, Window w, Bool b, int i1, int i2, Time t)); /* 32 */
-    int (*xGrabPointer) _ANSI_ARGS_((Display* d, Window w1, Bool b, unsigned int ui, int i1, int i2, Window w2, Cursor c, Time t)); /* 33 */
-    KeyCode (*xKeysymToKeycode) _ANSI_ARGS_((Display* d, KeySym k)); /* 34 */
-    void (*xMapWindow) _ANSI_ARGS_((Display* d, Window w)); /* 35 */
-    void (*xMoveResizeWindow) _ANSI_ARGS_((Display* d, Window w, int i1, int i2, unsigned int ui1, unsigned int ui2)); /* 36 */
-    void (*xMoveWindow) _ANSI_ARGS_((Display* d, Window w, int i1, int i2)); /* 37 */
-    Bool (*xQueryPointer) _ANSI_ARGS_((Display* d, Window w1, Window* w2, Window* w3, int* i1, int* i2, int* i3, int* i4, unsigned int* ui)); /* 38 */
-    void (*xRaiseWindow) _ANSI_ARGS_((Display* d, Window w)); /* 39 */
-    void (*xRefreshKeyboardMapping) _ANSI_ARGS_((XMappingEvent* x)); /* 40 */
-    void (*xResizeWindow) _ANSI_ARGS_((Display* d, Window w, unsigned int ui1, unsigned int ui2)); /* 41 */
-    void (*xSelectInput) _ANSI_ARGS_((Display* d, Window w, long l)); /* 42 */
-    Status (*xSendEvent) _ANSI_ARGS_((Display* d, Window w, Bool b, long l, XEvent* x)); /* 43 */
-    void (*xSetIconName) _ANSI_ARGS_((Display* d, Window w, _Xconst char* c)); /* 44 */
-    void (*xSetInputFocus) _ANSI_ARGS_((Display* d, Window w, int i, Time t)); /* 45 */
-    void (*xSetSelectionOwner) _ANSI_ARGS_((Display* d, Atom a, Window w, Time t)); /* 46 */
-    void (*xSetWindowBackground) _ANSI_ARGS_((Display* d, Window w, unsigned long ul)); /* 47 */
-    void (*xSetWindowBackgroundPixmap) _ANSI_ARGS_((Display* d, Window w, Pixmap p)); /* 48 */
-    void (*xSetWindowBorder) _ANSI_ARGS_((Display* d, Window w, unsigned long ul)); /* 49 */
-    void (*xSetWindowBorderPixmap) _ANSI_ARGS_((Display* d, Window w, Pixmap p)); /* 50 */
-    void (*xSetWindowBorderWidth) _ANSI_ARGS_((Display* d, Window w, unsigned int ui)); /* 51 */
-    void (*xSetWindowColormap) _ANSI_ARGS_((Display* d, Window w, Colormap c)); /* 52 */
-    void (*xUngrabKeyboard) _ANSI_ARGS_((Display* d, Time t)); /* 53 */
-    void (*xUngrabPointer) _ANSI_ARGS_((Display* d, Time t)); /* 54 */
-    void (*xUnmapWindow) _ANSI_ARGS_((Display* d, Window w)); /* 55 */
-    void (*tkPutImage) _ANSI_ARGS_((unsigned long * colors, int ncolors, Display* display, Drawable d, GC gc, XImage* image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 56 */
+    void *reserved0;
+    XModifierKeymap* (*xGetModifierMapping) _ANSI_ARGS_((Display* d)); /* 1 */
+    XImage * (*xCreateImage) _ANSI_ARGS_((Display* d, Visual* v, unsigned int ui1, int i1, int i2, char* cp, unsigned int ui2, unsigned int ui3, int i3, int i4)); /* 2 */
+    XImage * (*xGetImage) _ANSI_ARGS_((Display* d, Drawable dr, int i1, int i2, unsigned int ui1, unsigned int ui2, unsigned long ul, int i3)); /* 3 */
+    char * (*xGetAtomName) _ANSI_ARGS_((Display* d, Atom a)); /* 4 */
+    char * (*xKeysymToString) _ANSI_ARGS_((KeySym k)); /* 5 */
+    Colormap (*xCreateColormap) _ANSI_ARGS_((Display* d, Window w, Visual* v, int i)); /* 6 */
+    GContext (*xGContextFromGC) _ANSI_ARGS_((GC g)); /* 7 */
+    KeySym (*xKeycodeToKeysym) _ANSI_ARGS_((Display* d, KeyCode k, int i)); /* 8 */
+    KeySym (*xStringToKeysym) _ANSI_ARGS_((_Xconst char* c)); /* 9 */
+    Window (*xRootWindow) _ANSI_ARGS_((Display* d, int i)); /* 10 */
+    XErrorHandler (*xSetErrorHandler) _ANSI_ARGS_((XErrorHandler x)); /* 11 */
+    Status (*xAllocColor) _ANSI_ARGS_((Display* d, Colormap c, XColor* xp)); /* 12 */
+    void (*xBell) _ANSI_ARGS_((Display* d, int i)); /* 13 */
+    void (*xChangeProperty) _ANSI_ARGS_((Display* d, Window w, Atom a, Atom a, int i1, int i2, _Xconst unsigned char* c, int i3)); /* 14 */
+    void (*xChangeWindowAttributes) _ANSI_ARGS_((Display* d, Window w, unsigned long ul, XSetWindowAttributes* x)); /* 15 */
+    void (*xConfigureWindow) _ANSI_ARGS_((Display* d, Window w, unsigned int i, XWindowChanges* x)); /* 16 */
+    void (*xCopyArea) _ANSI_ARGS_((Display* d, Drawable dr1, Drawable dr2, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 17 */
+    void (*xCopyPlane) _ANSI_ARGS_((Display* d, Drawable dr1, Drawable dr2, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4, unsigned long ul)); /* 18 */
+    Pixmap (*xCreateBitmapFromData) _ANSI_ARGS_((Display* display, Drawable d, _Xconst char* data, unsigned int width, unsigned int height)); /* 19 */
+    void (*xDefineCursor) _ANSI_ARGS_((Display* d, Window w, Cursor c)); /* 20 */
+    void (*xDestroyWindow) _ANSI_ARGS_((Display* d, Window w)); /* 21 */
+    void (*xDrawArc) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 22 */
+    void (*xDrawLines) _ANSI_ARGS_((Display* d, Drawable dr, GC g, XPoint* x, int i1, int i2)); /* 23 */
+    void (*xDrawRectangle) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2)); /* 24 */
+    void (*xFillArc) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 25 */
+    void (*xFillPolygon) _ANSI_ARGS_((Display* d, Drawable dr, GC g, XPoint* x, int i1, int i2, int i3)); /* 26 */
+    void (*xFillRectangles) _ANSI_ARGS_((Display* d, Drawable dr, GC g, XRectangle* x, int i)); /* 27 */
+    void (*xFreeColormap) _ANSI_ARGS_((Display* d, Colormap c)); /* 28 */
+    void (*xFreeColors) _ANSI_ARGS_((Display* d, Colormap c, unsigned long* ulp, int i, unsigned long ul)); /* 29 */
+    void (*xFreeModifiermap) _ANSI_ARGS_((XModifierKeymap* x)); /* 30 */
+    Status (*xGetGeometry) _ANSI_ARGS_((Display* d, Drawable dr, Window* w, int* i1, int* i2, unsigned int* ui1, unsigned int* ui2, unsigned int* ui3, unsigned int* ui4)); /* 31 */
+    int (*xGetWindowProperty) _ANSI_ARGS_((Display* d, Window w, Atom a1, long l1, long l2, Bool b, Atom a2, Atom* ap, int* ip, unsigned long* ulp1, unsigned long* ulp2, unsigned char** cpp)); /* 32 */
+    int (*xGrabKeyboard) _ANSI_ARGS_((Display* d, Window w, Bool b, int i1, int i2, Time t)); /* 33 */
+    int (*xGrabPointer) _ANSI_ARGS_((Display* d, Window w1, Bool b, unsigned int ui, int i1, int i2, Window w2, Cursor c, Time t)); /* 34 */
+    KeyCode (*xKeysymToKeycode) _ANSI_ARGS_((Display* d, KeySym k)); /* 35 */
+    void (*xMapWindow) _ANSI_ARGS_((Display* d, Window w)); /* 36 */
+    void (*xMoveResizeWindow) _ANSI_ARGS_((Display* d, Window w, int i1, int i2, unsigned int ui1, unsigned int ui2)); /* 37 */
+    void (*xMoveWindow) _ANSI_ARGS_((Display* d, Window w, int i1, int i2)); /* 38 */
+    Bool (*xQueryPointer) _ANSI_ARGS_((Display* d, Window w1, Window* w2, Window* w3, int* i1, int* i2, int* i3, int* i4, unsigned int* ui)); /* 39 */
+    void (*xRaiseWindow) _ANSI_ARGS_((Display* d, Window w)); /* 40 */
+    void (*xRefreshKeyboardMapping) _ANSI_ARGS_((XMappingEvent* x)); /* 41 */
+    void (*xResizeWindow) _ANSI_ARGS_((Display* d, Window w, unsigned int ui1, unsigned int ui2)); /* 42 */
+    void (*xSelectInput) _ANSI_ARGS_((Display* d, Window w, long l)); /* 43 */
+    Status (*xSendEvent) _ANSI_ARGS_((Display* d, Window w, Bool b, long l, XEvent* x)); /* 44 */
+    void (*xSetIconName) _ANSI_ARGS_((Display* d, Window w, _Xconst char* c)); /* 45 */
+    void (*xSetInputFocus) _ANSI_ARGS_((Display* d, Window w, int i, Time t)); /* 46 */
+    void (*xSetSelectionOwner) _ANSI_ARGS_((Display* d, Atom a, Window w, Time t)); /* 47 */
+    void (*xSetWindowBackground) _ANSI_ARGS_((Display* d, Window w, unsigned long ul)); /* 48 */
+    void (*xSetWindowBackgroundPixmap) _ANSI_ARGS_((Display* d, Window w, Pixmap p)); /* 49 */
+    void (*xSetWindowBorder) _ANSI_ARGS_((Display* d, Window w, unsigned long ul)); /* 50 */
+    void (*xSetWindowBorderPixmap) _ANSI_ARGS_((Display* d, Window w, Pixmap p)); /* 51 */
+    void (*xSetWindowBorderWidth) _ANSI_ARGS_((Display* d, Window w, unsigned int ui)); /* 52 */
+    void (*xSetWindowColormap) _ANSI_ARGS_((Display* d, Window w, Colormap c)); /* 53 */
+    void (*xUngrabKeyboard) _ANSI_ARGS_((Display* d, Time t)); /* 54 */
+    void (*xUngrabPointer) _ANSI_ARGS_((Display* d, Time t)); /* 55 */
+    void (*xUnmapWindow) _ANSI_ARGS_((Display* d, Window w)); /* 56 */
+    void (*tkPutImage) _ANSI_ARGS_((unsigned long * colors, int ncolors, Display* display, Drawable d, GC gc, XImage* image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 57 */
 #endif /* MAC_TCL */
 } TkIntXlibStubs;
 
@@ -613,555 +617,557 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
  */
 
 #ifdef __WIN32__
+/* Slot 0 is reserved */
 #ifndef XGetModifierMapping
 #define XGetModifierMapping(d) \
-	(tkIntXlibStubsPtr->xGetModifierMapping)(d) /* 0 */
+	(tkIntXlibStubsPtr->xGetModifierMapping)(d) /* 1 */
 #endif
 #ifndef XCreateImage
 #define XCreateImage(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4) \
-	(tkIntXlibStubsPtr->xCreateImage)(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4) /* 1 */
+	(tkIntXlibStubsPtr->xCreateImage)(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4) /* 2 */
 #endif
 #ifndef XGetImage
 #define XGetImage(d, dr, i1, i2, ui1, ui2, ul, i3) \
-	(tkIntXlibStubsPtr->xGetImage)(d, dr, i1, i2, ui1, ui2, ul, i3) /* 2 */
+	(tkIntXlibStubsPtr->xGetImage)(d, dr, i1, i2, ui1, ui2, ul, i3) /* 3 */
 #endif
 #ifndef XGetAtomName
 #define XGetAtomName(d, a) \
-	(tkIntXlibStubsPtr->xGetAtomName)(d, a) /* 3 */
+	(tkIntXlibStubsPtr->xGetAtomName)(d, a) /* 4 */
 #endif
 #ifndef XKeysymToString
 #define XKeysymToString(k) \
-	(tkIntXlibStubsPtr->xKeysymToString)(k) /* 4 */
+	(tkIntXlibStubsPtr->xKeysymToString)(k) /* 5 */
 #endif
 #ifndef XCreateColormap
 #define XCreateColormap(d, w, v, i) \
-	(tkIntXlibStubsPtr->xCreateColormap)(d, w, v, i) /* 5 */
+	(tkIntXlibStubsPtr->xCreateColormap)(d, w, v, i) /* 6 */
 #endif
 #ifndef XCreatePixmapCursor
 #define XCreatePixmapCursor(d, p1, p2, x1, x2, ui1, ui2) \
-	(tkIntXlibStubsPtr->xCreatePixmapCursor)(d, p1, p2, x1, x2, ui1, ui2) /* 6 */
+	(tkIntXlibStubsPtr->xCreatePixmapCursor)(d, p1, p2, x1, x2, ui1, ui2) /* 7 */
 #endif
 #ifndef XCreateGlyphCursor
 #define XCreateGlyphCursor(d, f1, f2, ui1, ui2, x1, x2) \
-	(tkIntXlibStubsPtr->xCreateGlyphCursor)(d, f1, f2, ui1, ui2, x1, x2) /* 7 */
+	(tkIntXlibStubsPtr->xCreateGlyphCursor)(d, f1, f2, ui1, ui2, x1, x2) /* 8 */
 #endif
 #ifndef XGContextFromGC
 #define XGContextFromGC(g) \
-	(tkIntXlibStubsPtr->xGContextFromGC)(g) /* 8 */
+	(tkIntXlibStubsPtr->xGContextFromGC)(g) /* 9 */
 #endif
 #ifndef XListHosts
 #define XListHosts(d, i, b) \
-	(tkIntXlibStubsPtr->xListHosts)(d, i, b) /* 9 */
+	(tkIntXlibStubsPtr->xListHosts)(d, i, b) /* 10 */
 #endif
 #ifndef XKeycodeToKeysym
 #define XKeycodeToKeysym(d, k, i) \
-	(tkIntXlibStubsPtr->xKeycodeToKeysym)(d, k, i) /* 10 */
+	(tkIntXlibStubsPtr->xKeycodeToKeysym)(d, k, i) /* 11 */
 #endif
 #ifndef XStringToKeysym
 #define XStringToKeysym(c) \
-	(tkIntXlibStubsPtr->xStringToKeysym)(c) /* 11 */
+	(tkIntXlibStubsPtr->xStringToKeysym)(c) /* 12 */
 #endif
 #ifndef XRootWindow
 #define XRootWindow(d, i) \
-	(tkIntXlibStubsPtr->xRootWindow)(d, i) /* 12 */
+	(tkIntXlibStubsPtr->xRootWindow)(d, i) /* 13 */
 #endif
 #ifndef XSetErrorHandler
 #define XSetErrorHandler(x) \
-	(tkIntXlibStubsPtr->xSetErrorHandler)(x) /* 13 */
+	(tkIntXlibStubsPtr->xSetErrorHandler)(x) /* 14 */
 #endif
 #ifndef XIconifyWindow
 #define XIconifyWindow(d, w, i) \
-	(tkIntXlibStubsPtr->xIconifyWindow)(d, w, i) /* 14 */
+	(tkIntXlibStubsPtr->xIconifyWindow)(d, w, i) /* 15 */
 #endif
 #ifndef XWithdrawWindow
 #define XWithdrawWindow(d, w, i) \
-	(tkIntXlibStubsPtr->xWithdrawWindow)(d, w, i) /* 15 */
+	(tkIntXlibStubsPtr->xWithdrawWindow)(d, w, i) /* 16 */
 #endif
 #ifndef XGetWMColormapWindows
 #define XGetWMColormapWindows(d, w, wpp, ip) \
-	(tkIntXlibStubsPtr->xGetWMColormapWindows)(d, w, wpp, ip) /* 16 */
+	(tkIntXlibStubsPtr->xGetWMColormapWindows)(d, w, wpp, ip) /* 17 */
 #endif
 #ifndef XAllocColor
 #define XAllocColor(d, c, xp) \
-	(tkIntXlibStubsPtr->xAllocColor)(d, c, xp) /* 17 */
+	(tkIntXlibStubsPtr->xAllocColor)(d, c, xp) /* 18 */
 #endif
 #ifndef XBell
 #define XBell(d, i) \
-	(tkIntXlibStubsPtr->xBell)(d, i) /* 18 */
+	(tkIntXlibStubsPtr->xBell)(d, i) /* 19 */
 #endif
 #ifndef XChangeProperty
 #define XChangeProperty(d, w, a1, a2, i1, i2, c, i3) \
-	(tkIntXlibStubsPtr->xChangeProperty)(d, w, a1, a2, i1, i2, c, i3) /* 19 */
+	(tkIntXlibStubsPtr->xChangeProperty)(d, w, a1, a2, i1, i2, c, i3) /* 20 */
 #endif
 #ifndef XChangeWindowAttributes
 #define XChangeWindowAttributes(d, w, ul, x) \
-	(tkIntXlibStubsPtr->xChangeWindowAttributes)(d, w, ul, x) /* 20 */
+	(tkIntXlibStubsPtr->xChangeWindowAttributes)(d, w, ul, x) /* 21 */
 #endif
 #ifndef XClearWindow
 #define XClearWindow(d, w) \
-	(tkIntXlibStubsPtr->xClearWindow)(d, w) /* 21 */
+	(tkIntXlibStubsPtr->xClearWindow)(d, w) /* 22 */
 #endif
 #ifndef XConfigureWindow
 #define XConfigureWindow(d, w, i, x) \
-	(tkIntXlibStubsPtr->xConfigureWindow)(d, w, i, x) /* 22 */
+	(tkIntXlibStubsPtr->xConfigureWindow)(d, w, i, x) /* 23 */
 #endif
 #ifndef XCopyArea
 #define XCopyArea(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4) \
-	(tkIntXlibStubsPtr->xCopyArea)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4) /* 23 */
+	(tkIntXlibStubsPtr->xCopyArea)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4) /* 24 */
 #endif
 #ifndef XCopyPlane
 #define XCopyPlane(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul) \
-	(tkIntXlibStubsPtr->xCopyPlane)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul) /* 24 */
+	(tkIntXlibStubsPtr->xCopyPlane)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul) /* 25 */
 #endif
 #ifndef XCreateBitmapFromData
 #define XCreateBitmapFromData(display, d, data, width, height) \
-	(tkIntXlibStubsPtr->xCreateBitmapFromData)(display, d, data, width, height) /* 25 */
+	(tkIntXlibStubsPtr->xCreateBitmapFromData)(display, d, data, width, height) /* 26 */
 #endif
 #ifndef XDefineCursor
 #define XDefineCursor(d, w, c) \
-	(tkIntXlibStubsPtr->xDefineCursor)(d, w, c) /* 26 */
+	(tkIntXlibStubsPtr->xDefineCursor)(d, w, c) /* 27 */
 #endif
 #ifndef XDeleteProperty
 #define XDeleteProperty(d, w, a) \
-	(tkIntXlibStubsPtr->xDeleteProperty)(d, w, a) /* 27 */
+	(tkIntXlibStubsPtr->xDeleteProperty)(d, w, a) /* 28 */
 #endif
 #ifndef XDestroyWindow
 #define XDestroyWindow(d, w) \
-	(tkIntXlibStubsPtr->xDestroyWindow)(d, w) /* 28 */
+	(tkIntXlibStubsPtr->xDestroyWindow)(d, w) /* 29 */
 #endif
 #ifndef XDrawArc
 #define XDrawArc(d, dr, g, i1, i2, ui1, ui2, i3, i4) \
-	(tkIntXlibStubsPtr->xDrawArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4) /* 29 */
+	(tkIntXlibStubsPtr->xDrawArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4) /* 30 */
 #endif
 #ifndef XDrawLines
 #define XDrawLines(d, dr, g, x, i1, i2) \
-	(tkIntXlibStubsPtr->xDrawLines)(d, dr, g, x, i1, i2) /* 30 */
+	(tkIntXlibStubsPtr->xDrawLines)(d, dr, g, x, i1, i2) /* 31 */
 #endif
 #ifndef XDrawRectangle
 #define XDrawRectangle(d, dr, g, i1, i2, ui1, ui2) \
-	(tkIntXlibStubsPtr->xDrawRectangle)(d, dr, g, i1, i2, ui1, ui2) /* 31 */
+	(tkIntXlibStubsPtr->xDrawRectangle)(d, dr, g, i1, i2, ui1, ui2) /* 32 */
 #endif
 #ifndef XFillArc
 #define XFillArc(d, dr, g, i1, i2, ui1, ui2, i3, i4) \
-	(tkIntXlibStubsPtr->xFillArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4) /* 32 */
+	(tkIntXlibStubsPtr->xFillArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4) /* 33 */
 #endif
 #ifndef XFillPolygon
 #define XFillPolygon(d, dr, g, x, i1, i2, i3) \
-	(tkIntXlibStubsPtr->xFillPolygon)(d, dr, g, x, i1, i2, i3) /* 33 */
+	(tkIntXlibStubsPtr->xFillPolygon)(d, dr, g, x, i1, i2, i3) /* 34 */
 #endif
 #ifndef XFillRectangles
 #define XFillRectangles(d, dr, g, x, i) \
-	(tkIntXlibStubsPtr->xFillRectangles)(d, dr, g, x, i) /* 34 */
+	(tkIntXlibStubsPtr->xFillRectangles)(d, dr, g, x, i) /* 35 */
 #endif
 #ifndef XForceScreenSaver
 #define XForceScreenSaver(d, i) \
-	(tkIntXlibStubsPtr->xForceScreenSaver)(d, i) /* 35 */
+	(tkIntXlibStubsPtr->xForceScreenSaver)(d, i) /* 36 */
 #endif
 #ifndef XFreeColormap
 #define XFreeColormap(d, c) \
-	(tkIntXlibStubsPtr->xFreeColormap)(d, c) /* 36 */
+	(tkIntXlibStubsPtr->xFreeColormap)(d, c) /* 37 */
 #endif
 #ifndef XFreeColors
 #define XFreeColors(d, c, ulp, i, ul) \
-	(tkIntXlibStubsPtr->xFreeColors)(d, c, ulp, i, ul) /* 37 */
+	(tkIntXlibStubsPtr->xFreeColors)(d, c, ulp, i, ul) /* 38 */
 #endif
 #ifndef XFreeCursor
 #define XFreeCursor(d, c) \
-	(tkIntXlibStubsPtr->xFreeCursor)(d, c) /* 38 */
+	(tkIntXlibStubsPtr->xFreeCursor)(d, c) /* 39 */
 #endif
 #ifndef XFreeModifiermap
 #define XFreeModifiermap(x) \
-	(tkIntXlibStubsPtr->xFreeModifiermap)(x) /* 39 */
+	(tkIntXlibStubsPtr->xFreeModifiermap)(x) /* 40 */
 #endif
 #ifndef XGetGeometry
 #define XGetGeometry(d, dr, w, i1, i2, ui1, ui2, ui3, ui4) \
-	(tkIntXlibStubsPtr->xGetGeometry)(d, dr, w, i1, i2, ui1, ui2, ui3, ui4) /* 40 */
+	(tkIntXlibStubsPtr->xGetGeometry)(d, dr, w, i1, i2, ui1, ui2, ui3, ui4) /* 41 */
 #endif
 #ifndef XGetInputFocus
 #define XGetInputFocus(d, w, i) \
-	(tkIntXlibStubsPtr->xGetInputFocus)(d, w, i) /* 41 */
+	(tkIntXlibStubsPtr->xGetInputFocus)(d, w, i) /* 42 */
 #endif
 #ifndef XGetWindowProperty
 #define XGetWindowProperty(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp) \
-	(tkIntXlibStubsPtr->xGetWindowProperty)(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp) /* 42 */
+	(tkIntXlibStubsPtr->xGetWindowProperty)(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp) /* 43 */
 #endif
 #ifndef XGetWindowAttributes
 #define XGetWindowAttributes(d, w, x) \
-	(tkIntXlibStubsPtr->xGetWindowAttributes)(d, w, x) /* 43 */
+	(tkIntXlibStubsPtr->xGetWindowAttributes)(d, w, x) /* 44 */
 #endif
 #ifndef XGrabKeyboard
 #define XGrabKeyboard(d, w, b, i1, i2, t) \
-	(tkIntXlibStubsPtr->xGrabKeyboard)(d, w, b, i1, i2, t) /* 44 */
+	(tkIntXlibStubsPtr->xGrabKeyboard)(d, w, b, i1, i2, t) /* 45 */
 #endif
 #ifndef XGrabPointer
 #define XGrabPointer(d, w1, b, ui, i1, i2, w2, c, t) \
-	(tkIntXlibStubsPtr->xGrabPointer)(d, w1, b, ui, i1, i2, w2, c, t) /* 45 */
+	(tkIntXlibStubsPtr->xGrabPointer)(d, w1, b, ui, i1, i2, w2, c, t) /* 46 */
 #endif
 #ifndef XKeysymToKeycode
 #define XKeysymToKeycode(d, k) \
-	(tkIntXlibStubsPtr->xKeysymToKeycode)(d, k) /* 46 */
+	(tkIntXlibStubsPtr->xKeysymToKeycode)(d, k) /* 47 */
 #endif
 #ifndef XLookupColor
 #define XLookupColor(d, c1, c2, x1, x2) \
-	(tkIntXlibStubsPtr->xLookupColor)(d, c1, c2, x1, x2) /* 47 */
+	(tkIntXlibStubsPtr->xLookupColor)(d, c1, c2, x1, x2) /* 48 */
 #endif
 #ifndef XMapWindow
 #define XMapWindow(d, w) \
-	(tkIntXlibStubsPtr->xMapWindow)(d, w) /* 48 */
+	(tkIntXlibStubsPtr->xMapWindow)(d, w) /* 49 */
 #endif
 #ifndef XMoveResizeWindow
 #define XMoveResizeWindow(d, w, i1, i2, ui1, ui2) \
-	(tkIntXlibStubsPtr->xMoveResizeWindow)(d, w, i1, i2, ui1, ui2) /* 49 */
+	(tkIntXlibStubsPtr->xMoveResizeWindow)(d, w, i1, i2, ui1, ui2) /* 50 */
 #endif
 #ifndef XMoveWindow
 #define XMoveWindow(d, w, i1, i2) \
-	(tkIntXlibStubsPtr->xMoveWindow)(d, w, i1, i2) /* 50 */
+	(tkIntXlibStubsPtr->xMoveWindow)(d, w, i1, i2) /* 51 */
 #endif
 #ifndef XNextEvent
 #define XNextEvent(d, x) \
-	(tkIntXlibStubsPtr->xNextEvent)(d, x) /* 51 */
+	(tkIntXlibStubsPtr->xNextEvent)(d, x) /* 52 */
 #endif
 #ifndef XPutBackEvent
 #define XPutBackEvent(d, x) \
-	(tkIntXlibStubsPtr->xPutBackEvent)(d, x) /* 52 */
+	(tkIntXlibStubsPtr->xPutBackEvent)(d, x) /* 53 */
 #endif
 #ifndef XQueryColors
 #define XQueryColors(d, c, x, i) \
-	(tkIntXlibStubsPtr->xQueryColors)(d, c, x, i) /* 53 */
+	(tkIntXlibStubsPtr->xQueryColors)(d, c, x, i) /* 54 */
 #endif
 #ifndef XQueryPointer
 #define XQueryPointer(d, w1, w2, w3, i1, i2, i3, i4, ui) \
-	(tkIntXlibStubsPtr->xQueryPointer)(d, w1, w2, w3, i1, i2, i3, i4, ui) /* 54 */
+	(tkIntXlibStubsPtr->xQueryPointer)(d, w1, w2, w3, i1, i2, i3, i4, ui) /* 55 */
 #endif
 #ifndef XQueryTree
 #define XQueryTree(d, w1, w2, w3, w4, ui) \
-	(tkIntXlibStubsPtr->xQueryTree)(d, w1, w2, w3, w4, ui) /* 55 */
+	(tkIntXlibStubsPtr->xQueryTree)(d, w1, w2, w3, w4, ui) /* 56 */
 #endif
 #ifndef XRaiseWindow
 #define XRaiseWindow(d, w) \
-	(tkIntXlibStubsPtr->xRaiseWindow)(d, w) /* 56 */
+	(tkIntXlibStubsPtr->xRaiseWindow)(d, w) /* 57 */
 #endif
 #ifndef XRefreshKeyboardMapping
 #define XRefreshKeyboardMapping(x) \
-	(tkIntXlibStubsPtr->xRefreshKeyboardMapping)(x) /* 57 */
+	(tkIntXlibStubsPtr->xRefreshKeyboardMapping)(x) /* 58 */
 #endif
 #ifndef XResizeWindow
 #define XResizeWindow(d, w, ui1, ui2) \
-	(tkIntXlibStubsPtr->xResizeWindow)(d, w, ui1, ui2) /* 58 */
+	(tkIntXlibStubsPtr->xResizeWindow)(d, w, ui1, ui2) /* 59 */
 #endif
 #ifndef XSelectInput
 #define XSelectInput(d, w, l) \
-	(tkIntXlibStubsPtr->xSelectInput)(d, w, l) /* 59 */
+	(tkIntXlibStubsPtr->xSelectInput)(d, w, l) /* 60 */
 #endif
 #ifndef XSendEvent
 #define XSendEvent(d, w, b, l, x) \
-	(tkIntXlibStubsPtr->xSendEvent)(d, w, b, l, x) /* 60 */
+	(tkIntXlibStubsPtr->xSendEvent)(d, w, b, l, x) /* 61 */
 #endif
 #ifndef XSetCommand
 #define XSetCommand(d, w, c, i) \
-	(tkIntXlibStubsPtr->xSetCommand)(d, w, c, i) /* 61 */
+	(tkIntXlibStubsPtr->xSetCommand)(d, w, c, i) /* 62 */
 #endif
 #ifndef XSetIconName
 #define XSetIconName(d, w, c) \
-	(tkIntXlibStubsPtr->xSetIconName)(d, w, c) /* 62 */
+	(tkIntXlibStubsPtr->xSetIconName)(d, w, c) /* 63 */
 #endif
 #ifndef XSetInputFocus
 #define XSetInputFocus(d, w, i, t) \
-	(tkIntXlibStubsPtr->xSetInputFocus)(d, w, i, t) /* 63 */
+	(tkIntXlibStubsPtr->xSetInputFocus)(d, w, i, t) /* 64 */
 #endif
 #ifndef XSetSelectionOwner
 #define XSetSelectionOwner(d, a, w, t) \
-	(tkIntXlibStubsPtr->xSetSelectionOwner)(d, a, w, t) /* 64 */
+	(tkIntXlibStubsPtr->xSetSelectionOwner)(d, a, w, t) /* 65 */
 #endif
 #ifndef XSetWindowBackground
 #define XSetWindowBackground(d, w, ul) \
-	(tkIntXlibStubsPtr->xSetWindowBackground)(d, w, ul) /* 65 */
+	(tkIntXlibStubsPtr->xSetWindowBackground)(d, w, ul) /* 66 */
 #endif
 #ifndef XSetWindowBackgroundPixmap
 #define XSetWindowBackgroundPixmap(d, w, p) \
-	(tkIntXlibStubsPtr->xSetWindowBackgroundPixmap)(d, w, p) /* 66 */
+	(tkIntXlibStubsPtr->xSetWindowBackgroundPixmap)(d, w, p) /* 67 */
 #endif
 #ifndef XSetWindowBorder
 #define XSetWindowBorder(d, w, ul) \
-	(tkIntXlibStubsPtr->xSetWindowBorder)(d, w, ul) /* 67 */
+	(tkIntXlibStubsPtr->xSetWindowBorder)(d, w, ul) /* 68 */
 #endif
 #ifndef XSetWindowBorderPixmap
 #define XSetWindowBorderPixmap(d, w, p) \
-	(tkIntXlibStubsPtr->xSetWindowBorderPixmap)(d, w, p) /* 68 */
+	(tkIntXlibStubsPtr->xSetWindowBorderPixmap)(d, w, p) /* 69 */
 #endif
 #ifndef XSetWindowBorderWidth
 #define XSetWindowBorderWidth(d, w, ui) \
-	(tkIntXlibStubsPtr->xSetWindowBorderWidth)(d, w, ui) /* 69 */
+	(tkIntXlibStubsPtr->xSetWindowBorderWidth)(d, w, ui) /* 70 */
 #endif
 #ifndef XSetWindowColormap
 #define XSetWindowColormap(d, w, c) \
-	(tkIntXlibStubsPtr->xSetWindowColormap)(d, w, c) /* 70 */
+	(tkIntXlibStubsPtr->xSetWindowColormap)(d, w, c) /* 71 */
 #endif
 #ifndef XTranslateCoordinates
 #define XTranslateCoordinates(d, w1, w2, i1, i2, i3, i4, w3) \
-	(tkIntXlibStubsPtr->xTranslateCoordinates)(d, w1, w2, i1, i2, i3, i4, w3) /* 71 */
+	(tkIntXlibStubsPtr->xTranslateCoordinates)(d, w1, w2, i1, i2, i3, i4, w3) /* 72 */
 #endif
 #ifndef XUngrabKeyboard
 #define XUngrabKeyboard(d, t) \
-	(tkIntXlibStubsPtr->xUngrabKeyboard)(d, t) /* 72 */
+	(tkIntXlibStubsPtr->xUngrabKeyboard)(d, t) /* 73 */
 #endif
 #ifndef XUngrabPointer
 #define XUngrabPointer(d, t) \
-	(tkIntXlibStubsPtr->xUngrabPointer)(d, t) /* 73 */
+	(tkIntXlibStubsPtr->xUngrabPointer)(d, t) /* 74 */
 #endif
 #ifndef XUnmapWindow
 #define XUnmapWindow(d, w) \
-	(tkIntXlibStubsPtr->xUnmapWindow)(d, w) /* 74 */
+	(tkIntXlibStubsPtr->xUnmapWindow)(d, w) /* 75 */
 #endif
 #ifndef XWindowEvent
 #define XWindowEvent(d, w, l, x) \
-	(tkIntXlibStubsPtr->xWindowEvent)(d, w, l, x) /* 75 */
+	(tkIntXlibStubsPtr->xWindowEvent)(d, w, l, x) /* 76 */
 #endif
 #ifndef XDestroyIC
 #define XDestroyIC(x) \
-	(tkIntXlibStubsPtr->xDestroyIC)(x) /* 76 */
+	(tkIntXlibStubsPtr->xDestroyIC)(x) /* 77 */
 #endif
 #ifndef XFilterEvent
 #define XFilterEvent(x, w) \
-	(tkIntXlibStubsPtr->xFilterEvent)(x, w) /* 77 */
+	(tkIntXlibStubsPtr->xFilterEvent)(x, w) /* 78 */
 #endif
 #ifndef XmbLookupString
 #define XmbLookupString(xi, xk, c, i, k, s) \
-	(tkIntXlibStubsPtr->xmbLookupString)(xi, xk, c, i, k, s) /* 78 */
+	(tkIntXlibStubsPtr->xmbLookupString)(xi, xk, c, i, k, s) /* 79 */
 #endif
 #ifndef TkPutImage
 #define TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height) \
-	(tkIntXlibStubsPtr->tkPutImage)(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height) /* 79 */
+	(tkIntXlibStubsPtr->tkPutImage)(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height) /* 80 */
 #endif
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
+/* Slot 0 is reserved */
 #ifndef XGetModifierMapping
 #define XGetModifierMapping(d) \
-	(tkIntXlibStubsPtr->xGetModifierMapping)(d) /* 0 */
+	(tkIntXlibStubsPtr->xGetModifierMapping)(d) /* 1 */
 #endif
 #ifndef XCreateImage
 #define XCreateImage(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4) \
-	(tkIntXlibStubsPtr->xCreateImage)(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4) /* 1 */
+	(tkIntXlibStubsPtr->xCreateImage)(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4) /* 2 */
 #endif
 #ifndef XGetImage
 #define XGetImage(d, dr, i1, i2, ui1, ui2, ul, i3) \
-	(tkIntXlibStubsPtr->xGetImage)(d, dr, i1, i2, ui1, ui2, ul, i3) /* 2 */
+	(tkIntXlibStubsPtr->xGetImage)(d, dr, i1, i2, ui1, ui2, ul, i3) /* 3 */
 #endif
 #ifndef XGetAtomName
 #define XGetAtomName(d, a) \
-	(tkIntXlibStubsPtr->xGetAtomName)(d, a) /* 3 */
+	(tkIntXlibStubsPtr->xGetAtomName)(d, a) /* 4 */
 #endif
 #ifndef XKeysymToString
 #define XKeysymToString(k) \
-	(tkIntXlibStubsPtr->xKeysymToString)(k) /* 4 */
+	(tkIntXlibStubsPtr->xKeysymToString)(k) /* 5 */
 #endif
 #ifndef XCreateColormap
 #define XCreateColormap(d, w, v, i) \
-	(tkIntXlibStubsPtr->xCreateColormap)(d, w, v, i) /* 5 */
+	(tkIntXlibStubsPtr->xCreateColormap)(d, w, v, i) /* 6 */
 #endif
 #ifndef XGContextFromGC
 #define XGContextFromGC(g) \
-	(tkIntXlibStubsPtr->xGContextFromGC)(g) /* 6 */
+	(tkIntXlibStubsPtr->xGContextFromGC)(g) /* 7 */
 #endif
 #ifndef XKeycodeToKeysym
 #define XKeycodeToKeysym(d, k, i) \
-	(tkIntXlibStubsPtr->xKeycodeToKeysym)(d, k, i) /* 7 */
+	(tkIntXlibStubsPtr->xKeycodeToKeysym)(d, k, i) /* 8 */
 #endif
 #ifndef XStringToKeysym
 #define XStringToKeysym(c) \
-	(tkIntXlibStubsPtr->xStringToKeysym)(c) /* 8 */
+	(tkIntXlibStubsPtr->xStringToKeysym)(c) /* 9 */
 #endif
 #ifndef XRootWindow
 #define XRootWindow(d, i) \
-	(tkIntXlibStubsPtr->xRootWindow)(d, i) /* 9 */
+	(tkIntXlibStubsPtr->xRootWindow)(d, i) /* 10 */
 #endif
 #ifndef XSetErrorHandler
 #define XSetErrorHandler(x) \
-	(tkIntXlibStubsPtr->xSetErrorHandler)(x) /* 10 */
+	(tkIntXlibStubsPtr->xSetErrorHandler)(x) /* 11 */
 #endif
 #ifndef XAllocColor
 #define XAllocColor(d, c, xp) \
-	(tkIntXlibStubsPtr->xAllocColor)(d, c, xp) /* 11 */
+	(tkIntXlibStubsPtr->xAllocColor)(d, c, xp) /* 12 */
 #endif
 #ifndef XBell
 #define XBell(d, i) \
-	(tkIntXlibStubsPtr->xBell)(d, i) /* 12 */
+	(tkIntXlibStubsPtr->xBell)(d, i) /* 13 */
 #endif
 #ifndef XChangeProperty
 #define XChangeProperty(d, w, a, a, i1, i2, c, i3) \
-	(tkIntXlibStubsPtr->xChangeProperty)(d, w, a, a, i1, i2, c, i3) /* 13 */
+	(tkIntXlibStubsPtr->xChangeProperty)(d, w, a, a, i1, i2, c, i3) /* 14 */
 #endif
 #ifndef XChangeWindowAttributes
 #define XChangeWindowAttributes(d, w, ul, x) \
-	(tkIntXlibStubsPtr->xChangeWindowAttributes)(d, w, ul, x) /* 14 */
+	(tkIntXlibStubsPtr->xChangeWindowAttributes)(d, w, ul, x) /* 15 */
 #endif
 #ifndef XConfigureWindow
 #define XConfigureWindow(d, w, i, x) \
-	(tkIntXlibStubsPtr->xConfigureWindow)(d, w, i, x) /* 15 */
+	(tkIntXlibStubsPtr->xConfigureWindow)(d, w, i, x) /* 16 */
 #endif
 #ifndef XCopyArea
 #define XCopyArea(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4) \
-	(tkIntXlibStubsPtr->xCopyArea)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4) /* 16 */
+	(tkIntXlibStubsPtr->xCopyArea)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4) /* 17 */
 #endif
 #ifndef XCopyPlane
 #define XCopyPlane(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul) \
-	(tkIntXlibStubsPtr->xCopyPlane)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul) /* 17 */
+	(tkIntXlibStubsPtr->xCopyPlane)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul) /* 18 */
 #endif
 #ifndef XCreateBitmapFromData
 #define XCreateBitmapFromData(display, d, data, width, height) \
-	(tkIntXlibStubsPtr->xCreateBitmapFromData)(display, d, data, width, height) /* 18 */
+	(tkIntXlibStubsPtr->xCreateBitmapFromData)(display, d, data, width, height) /* 19 */
 #endif
 #ifndef XDefineCursor
 #define XDefineCursor(d, w, c) \
-	(tkIntXlibStubsPtr->xDefineCursor)(d, w, c) /* 19 */
+	(tkIntXlibStubsPtr->xDefineCursor)(d, w, c) /* 20 */
 #endif
 #ifndef XDestroyWindow
 #define XDestroyWindow(d, w) \
-	(tkIntXlibStubsPtr->xDestroyWindow)(d, w) /* 20 */
+	(tkIntXlibStubsPtr->xDestroyWindow)(d, w) /* 21 */
 #endif
 #ifndef XDrawArc
 #define XDrawArc(d, dr, g, i1, i2, ui1, ui2, i3, i4) \
-	(tkIntXlibStubsPtr->xDrawArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4) /* 21 */
+	(tkIntXlibStubsPtr->xDrawArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4) /* 22 */
 #endif
 #ifndef XDrawLines
 #define XDrawLines(d, dr, g, x, i1, i2) \
-	(tkIntXlibStubsPtr->xDrawLines)(d, dr, g, x, i1, i2) /* 22 */
+	(tkIntXlibStubsPtr->xDrawLines)(d, dr, g, x, i1, i2) /* 23 */
 #endif
 #ifndef XDrawRectangle
 #define XDrawRectangle(d, dr, g, i1, i2, ui1, ui2) \
-	(tkIntXlibStubsPtr->xDrawRectangle)(d, dr, g, i1, i2, ui1, ui2) /* 23 */
+	(tkIntXlibStubsPtr->xDrawRectangle)(d, dr, g, i1, i2, ui1, ui2) /* 24 */
 #endif
 #ifndef XFillArc
 #define XFillArc(d, dr, g, i1, i2, ui1, ui2, i3, i4) \
-	(tkIntXlibStubsPtr->xFillArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4) /* 24 */
+	(tkIntXlibStubsPtr->xFillArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4) /* 25 */
 #endif
 #ifndef XFillPolygon
 #define XFillPolygon(d, dr, g, x, i1, i2, i3) \
-	(tkIntXlibStubsPtr->xFillPolygon)(d, dr, g, x, i1, i2, i3) /* 25 */
+	(tkIntXlibStubsPtr->xFillPolygon)(d, dr, g, x, i1, i2, i3) /* 26 */
 #endif
 #ifndef XFillRectangles
 #define XFillRectangles(d, dr, g, x, i) \
-	(tkIntXlibStubsPtr->xFillRectangles)(d, dr, g, x, i) /* 26 */
+	(tkIntXlibStubsPtr->xFillRectangles)(d, dr, g, x, i) /* 27 */
 #endif
 #ifndef XFreeColormap
 #define XFreeColormap(d, c) \
-	(tkIntXlibStubsPtr->xFreeColormap)(d, c) /* 27 */
+	(tkIntXlibStubsPtr->xFreeColormap)(d, c) /* 28 */
 #endif
 #ifndef XFreeColors
 #define XFreeColors(d, c, ulp, i, ul) \
-	(tkIntXlibStubsPtr->xFreeColors)(d, c, ulp, i, ul) /* 28 */
+	(tkIntXlibStubsPtr->xFreeColors)(d, c, ulp, i, ul) /* 29 */
 #endif
 #ifndef XFreeModifiermap
 #define XFreeModifiermap(x) \
-	(tkIntXlibStubsPtr->xFreeModifiermap)(x) /* 29 */
+	(tkIntXlibStubsPtr->xFreeModifiermap)(x) /* 30 */
 #endif
 #ifndef XGetGeometry
 #define XGetGeometry(d, dr, w, i1, i2, ui1, ui2, ui3, ui4) \
-	(tkIntXlibStubsPtr->xGetGeometry)(d, dr, w, i1, i2, ui1, ui2, ui3, ui4) /* 30 */
+	(tkIntXlibStubsPtr->xGetGeometry)(d, dr, w, i1, i2, ui1, ui2, ui3, ui4) /* 31 */
 #endif
 #ifndef XGetWindowProperty
 #define XGetWindowProperty(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp) \
-	(tkIntXlibStubsPtr->xGetWindowProperty)(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp) /* 31 */
+	(tkIntXlibStubsPtr->xGetWindowProperty)(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp) /* 32 */
 #endif
 #ifndef XGrabKeyboard
 #define XGrabKeyboard(d, w, b, i1, i2, t) \
-	(tkIntXlibStubsPtr->xGrabKeyboard)(d, w, b, i1, i2, t) /* 32 */
+	(tkIntXlibStubsPtr->xGrabKeyboard)(d, w, b, i1, i2, t) /* 33 */
 #endif
 #ifndef XGrabPointer
 #define XGrabPointer(d, w1, b, ui, i1, i2, w2, c, t) \
-	(tkIntXlibStubsPtr->xGrabPointer)(d, w1, b, ui, i1, i2, w2, c, t) /* 33 */
+	(tkIntXlibStubsPtr->xGrabPointer)(d, w1, b, ui, i1, i2, w2, c, t) /* 34 */
 #endif
 #ifndef XKeysymToKeycode
 #define XKeysymToKeycode(d, k) \
-	(tkIntXlibStubsPtr->xKeysymToKeycode)(d, k) /* 34 */
+	(tkIntXlibStubsPtr->xKeysymToKeycode)(d, k) /* 35 */
 #endif
 #ifndef XMapWindow
 #define XMapWindow(d, w) \
-	(tkIntXlibStubsPtr->xMapWindow)(d, w) /* 35 */
+	(tkIntXlibStubsPtr->xMapWindow)(d, w) /* 36 */
 #endif
 #ifndef XMoveResizeWindow
 #define XMoveResizeWindow(d, w, i1, i2, ui1, ui2) \
-	(tkIntXlibStubsPtr->xMoveResizeWindow)(d, w, i1, i2, ui1, ui2) /* 36 */
+	(tkIntXlibStubsPtr->xMoveResizeWindow)(d, w, i1, i2, ui1, ui2) /* 37 */
 #endif
 #ifndef XMoveWindow
 #define XMoveWindow(d, w, i1, i2) \
-	(tkIntXlibStubsPtr->xMoveWindow)(d, w, i1, i2) /* 37 */
+	(tkIntXlibStubsPtr->xMoveWindow)(d, w, i1, i2) /* 38 */
 #endif
 #ifndef XQueryPointer
 #define XQueryPointer(d, w1, w2, w3, i1, i2, i3, i4, ui) \
-	(tkIntXlibStubsPtr->xQueryPointer)(d, w1, w2, w3, i1, i2, i3, i4, ui) /* 38 */
+	(tkIntXlibStubsPtr->xQueryPointer)(d, w1, w2, w3, i1, i2, i3, i4, ui) /* 39 */
 #endif
 #ifndef XRaiseWindow
 #define XRaiseWindow(d, w) \
-	(tkIntXlibStubsPtr->xRaiseWindow)(d, w) /* 39 */
+	(tkIntXlibStubsPtr->xRaiseWindow)(d, w) /* 40 */
 #endif
 #ifndef XRefreshKeyboardMapping
 #define XRefreshKeyboardMapping(x) \
-	(tkIntXlibStubsPtr->xRefreshKeyboardMapping)(x) /* 40 */
+	(tkIntXlibStubsPtr->xRefreshKeyboardMapping)(x) /* 41 */
 #endif
 #ifndef XResizeWindow
 #define XResizeWindow(d, w, ui1, ui2) \
-	(tkIntXlibStubsPtr->xResizeWindow)(d, w, ui1, ui2) /* 41 */
+	(tkIntXlibStubsPtr->xResizeWindow)(d, w, ui1, ui2) /* 42 */
 #endif
 #ifndef XSelectInput
 #define XSelectInput(d, w, l) \
-	(tkIntXlibStubsPtr->xSelectInput)(d, w, l) /* 42 */
+	(tkIntXlibStubsPtr->xSelectInput)(d, w, l) /* 43 */
 #endif
 #ifndef XSendEvent
 #define XSendEvent(d, w, b, l, x) \
-	(tkIntXlibStubsPtr->xSendEvent)(d, w, b, l, x) /* 43 */
+	(tkIntXlibStubsPtr->xSendEvent)(d, w, b, l, x) /* 44 */
 #endif
 #ifndef XSetIconName
 #define XSetIconName(d, w, c) \
-	(tkIntXlibStubsPtr->xSetIconName)(d, w, c) /* 44 */
+	(tkIntXlibStubsPtr->xSetIconName)(d, w, c) /* 45 */
 #endif
 #ifndef XSetInputFocus
 #define XSetInputFocus(d, w, i, t) \
-	(tkIntXlibStubsPtr->xSetInputFocus)(d, w, i, t) /* 45 */
+	(tkIntXlibStubsPtr->xSetInputFocus)(d, w, i, t) /* 46 */
 #endif
 #ifndef XSetSelectionOwner
 #define XSetSelectionOwner(d, a, w, t) \
-	(tkIntXlibStubsPtr->xSetSelectionOwner)(d, a, w, t) /* 46 */
+	(tkIntXlibStubsPtr->xSetSelectionOwner)(d, a, w, t) /* 47 */
 #endif
 #ifndef XSetWindowBackground
 #define XSetWindowBackground(d, w, ul) \
-	(tkIntXlibStubsPtr->xSetWindowBackground)(d, w, ul) /* 47 */
+	(tkIntXlibStubsPtr->xSetWindowBackground)(d, w, ul) /* 48 */
 #endif
 #ifndef XSetWindowBackgroundPixmap
 #define XSetWindowBackgroundPixmap(d, w, p) \
-	(tkIntXlibStubsPtr->xSetWindowBackgroundPixmap)(d, w, p) /* 48 */
+	(tkIntXlibStubsPtr->xSetWindowBackgroundPixmap)(d, w, p) /* 49 */
 #endif
 #ifndef XSetWindowBorder
 #define XSetWindowBorder(d, w, ul) \
-	(tkIntXlibStubsPtr->xSetWindowBorder)(d, w, ul) /* 49 */
+	(tkIntXlibStubsPtr->xSetWindowBorder)(d, w, ul) /* 50 */
 #endif
 #ifndef XSetWindowBorderPixmap
 #define XSetWindowBorderPixmap(d, w, p) \
-	(tkIntXlibStubsPtr->xSetWindowBorderPixmap)(d, w, p) /* 50 */
+	(tkIntXlibStubsPtr->xSetWindowBorderPixmap)(d, w, p) /* 51 */
 #endif
 #ifndef XSetWindowBorderWidth
 #define XSetWindowBorderWidth(d, w, ui) \
-	(tkIntXlibStubsPtr->xSetWindowBorderWidth)(d, w, ui) /* 51 */
+	(tkIntXlibStubsPtr->xSetWindowBorderWidth)(d, w, ui) /* 52 */
 #endif
 #ifndef XSetWindowColormap
 #define XSetWindowColormap(d, w, c) \
-	(tkIntXlibStubsPtr->xSetWindowColormap)(d, w, c) /* 52 */
+	(tkIntXlibStubsPtr->xSetWindowColormap)(d, w, c) /* 53 */
 #endif
 #ifndef XUngrabKeyboard
 #define XUngrabKeyboard(d, t) \
-	(tkIntXlibStubsPtr->xUngrabKeyboard)(d, t) /* 53 */
+	(tkIntXlibStubsPtr->xUngrabKeyboard)(d, t) /* 54 */
 #endif
 #ifndef XUngrabPointer
 #define XUngrabPointer(d, t) \
-	(tkIntXlibStubsPtr->xUngrabPointer)(d, t) /* 54 */
+	(tkIntXlibStubsPtr->xUngrabPointer)(d, t) /* 55 */
 #endif
 #ifndef XUnmapWindow
 #define XUnmapWindow(d, w) \
-	(tkIntXlibStubsPtr->xUnmapWindow)(d, w) /* 55 */
+	(tkIntXlibStubsPtr->xUnmapWindow)(d, w) /* 56 */
 #endif
 #ifndef TkPutImage
 #define TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height) \
-	(tkIntXlibStubsPtr->tkPutImage)(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height) /* 56 */
+	(tkIntXlibStubsPtr->tkPutImage)(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height) /* 57 */
 #endif
 #endif /* MAC_TCL */
 
