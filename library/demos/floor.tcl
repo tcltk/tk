@@ -3,7 +3,7 @@
 # This demonstration script creates a canvas widet that displays the
 # floorplan for DEC's Western Research Laboratory.
 #
-# RCS: @(#) $Id: floor.tcl,v 1.4 2003/08/20 23:02:18 hobbs Exp $
+# RCS: @(#) $Id: floor.tcl,v 1.5 2003/11/03 15:31:18 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -1290,7 +1290,7 @@ proc fg3 {w color} {
 # Below is the "main program" that creates the floorplan demonstration.
 
 set w .floor
-global c tk_library currentRoom colors activeFloor
+global c currentRoom colors activeFloor
 catch {destroy $w}
 toplevel $w
 wm title $w "Floorplan Canvas Demonstration"
