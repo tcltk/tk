@@ -1,3 +1,9 @@
+2001-12-05  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkText.c:
+	* generic/tkText.h: changed TkTextEditType enums to be prefaced
+	with TK_EDIT_ to prevent name collision.
+
 2001-12-05  Daniel Steffen <das@users.sourceforge.net>
 
 	* mac/tkMacWm.c: mac implementation of wm stackorder
