@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.15 2002/01/25 21:09:37 dgp Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.16 2002/01/31 21:05:27 uid38226 Exp $
  */
 
 /*
@@ -1998,7 +1998,7 @@ ConfigureMenuCloneEntries(interp, menuPtr, index, objc, objv)
 	    oldCascadeName = Tcl_GetStringFromObj(oldCascadePtr,
 		    NULL);
 	    cascadeEntryChanged = (strcmp(oldCascadeName, newCascadeName) 
-		    == 0);
+		    != 0);
 	}
 	if (oldCascadePtr != NULL) {
 	    Tcl_DecrRefCount(oldCascadePtr);
