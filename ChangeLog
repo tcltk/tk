@@ -1,3 +1,9 @@
+2004-04-16  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/bgerror.tcl (bgerror): rework to only set -topmost bit
+	on Windows if necessary.  Also use existing ::tk functions for
+	placing dialog and managing focus/grab.
+
 2004-03-31  Jim Ingham  <jingham@apple.com>
 
 	* tkMacOSXMenu.c (EventuallyInvokeMenu): Report errors from invoking
@@ -296,7 +302,7 @@
 	* generic/tkMenu.c (MenuVarProc): prevent this from triggering
 	while interp is being destroyed.
 
-2x03-11-21  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
+2003-11-21  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
 
 	*** 8.4.5 TAGGED FOR RELEASE ***
 
