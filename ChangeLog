@@ -1,3 +1,8 @@
+2003-10-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/dialog.tcl (tk_dialog): Constrain the dialog to be
+	fairly sensibly sized and placed.  [Bug 827535]
+
 2003-10-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkInt.h:      move TkGetOptionSpec to stubs intDecls
