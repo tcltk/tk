@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.13 2002/06/15 01:09:36 hobbs Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.14 2002/06/15 01:54:09 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -866,7 +866,7 @@ Tk_HandleEvent(eventPtr)
 	    winPtr->flags |= TK_CHECKED_IC;
 	    if (dispPtr->inputMethod != NULL) {
 #if TK_XIM_SPOT
-		if (dispPtr->flags & TK_USE_XIM_SPOT) {
+		if (dispPtr->flags & TK_DISPLAY_XIM_SPOT) {
 		    XVaNestedList preedit_attr;
 		    XPoint spot = {0, 0};
 
