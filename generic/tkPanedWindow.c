@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.7 2002/08/06 14:38:13 dkf Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.8 2002/08/08 01:43:31 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -368,7 +368,7 @@ Tk_PanedWindowObjCmd(clientData, interp, objc, objv)
 	pwOpts->slaveOpts = Tk_CreateOptionTable(interp, slaveOptionSpecs);
     }
 
-    Tk_SetClass(tkwin, "PanedWindow");
+    Tk_SetClass(tkwin, "Panedwindow");
 
     /*
      * Allocate and initialize the widget record.
