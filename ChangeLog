@@ -1,5 +1,11 @@
 2002-08-08  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* unix/tkUnixWm.c (WmTransientCmd): Apply fix for
+	wm transient assertion error that was applied
+	to tkWinWm.c for Tk Bug #592201.
+
+2002-08-08  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* tests/wm.test: Add deleteWindows at start of
 	new transient tests so they do not fail if the
 	toplevels already exist.
