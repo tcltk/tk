@@ -3,6 +3,11 @@
 	* generic/tkListbox.c: fixed 'get' of listbox to return a string
 	when only one item is requested.
 
+	* tests/clrpick.test:
+	* tests/filebox.test: minor whitespace cleanup
+
+	* library/tk.tcl: fixed missing $w in ::tk::PlaceWindow
+
 1999-11-24  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* library/clrpick.tcl:
