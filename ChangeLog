@@ -1,3 +1,7 @@
+2004-06-24  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* tests/canvPs.test, etc: Use standard tcltest constraint names.
+
 2004-06-19  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/tcl.m4: autoconf 2.5 fixes in Darwin section.
