@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.1.4.3 1998/10/06 03:27:36 stanton Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.1.4.4 1998/10/06 20:34:11 stanton Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -46,7 +46,7 @@ NODEBUG = 1
 TCLNAMEPREFIX = tcl
 TKNAMEPREFIX = tk
 WISHNAMEPREFIX = wish
-VERSION = 80
+VERSION = 81
 
 BINROOT		= .
 !IF "$(NODEBUG)" == "1"
