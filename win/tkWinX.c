@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.16 2001/11/10 00:58:51 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.17 2001/12/28 23:43:24 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -27,6 +27,38 @@
  */
 
 #include <imm.h>
+
+static TkWinProcs asciiProcs = {
+    0,
+
+    (LRESULT (WINAPI *)(WNDPROC lpPrevWndFunc, HWND hWnd, UINT Msg,
+	    WPARAM wParam, LPARAM lParam)) CallWindowProcA,
+    (LRESULT (WINAPI *)(HWND hWnd, UINT Msg, WPARAM wParam,
+	    LPARAM lParam)) DefWindowProcA,
+    (ATOM (WINAPI *)(CONST WNDCLASS *lpWndClass)) RegisterClassA,
+    (BOOL (WINAPI *)(HWND hWnd, LPCTSTR lpString)) SetWindowTextA,
+    (HWND (WINAPI *)(DWORD dwExStyle, LPCTSTR lpClassName,
+	    LPCTSTR lpWindowName, DWORD dwStyle, int x, int y,
+	    int nWidth, int nHeight, HWND hWndParent, HMENU hMenu,
+	    HINSTANCE hInstance, LPVOID lpParam)) CreateWindowExA,
+};
+
+static TkWinProcs unicodeProcs = {
+    1,
+
+    (LRESULT (WINAPI *)(WNDPROC lpPrevWndFunc, HWND hWnd, UINT Msg,
+	    WPARAM wParam, LPARAM lParam)) CallWindowProcW,
+    (LRESULT (WINAPI *)(HWND hWnd, UINT Msg, WPARAM wParam,
+	    LPARAM lParam)) DefWindowProcW,
+    (ATOM (WINAPI *)(CONST WNDCLASS *lpWndClass)) RegisterClassW,
+    (BOOL (WINAPI *)(HWND hWnd, LPCTSTR lpString)) SetWindowTextW,
+    (HWND (WINAPI *)(DWORD dwExStyle, LPCTSTR lpClassName,
+	    LPCTSTR lpWindowName, DWORD dwStyle, int x, int y,
+	    int nWidth, int nHeight, HWND hWndParent, HMENU hMenu,
+	    HINSTANCE hInstance, LPVOID lpParam)) CreateWindowExW,
+};
+
+TkWinProcs *tkWinProcs;
 
 /*
  * Declarations of static variables used in this file.
@@ -164,6 +196,10 @@ TkWinXInit(hInstance)
 	INITCOMMONCONTROLSEX comctl;
 	ZeroMemory(&comctl, sizeof(comctl));
 	(void) InitCommonControlsEx(&comctl);
+
+	tkWinProcs = &unicodeProcs;
+    } else {
+	tkWinProcs = &asciiProcs;
     }
 
     tkInstance = hInstance;
