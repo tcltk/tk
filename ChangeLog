@@ -1,3 +1,12 @@
+2004-08-04  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkImgPhoto.c (ImgPhotoBlendComplexAlpha): Clean the code
+	up a bit and add a few more comments.
+	(Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock): Clarified the code,
+	corrected the compositing rule now that I have looked up what the
+	right thing to do is, and factorized out the compositing rule code
+	into a few simpler macros.
+
 2004-07-30  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/configure:

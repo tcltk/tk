@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.47 2004/05/03 18:03:13 hobbs Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.48 2004/08/04 14:24:00 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -372,6 +372,15 @@ static Tk_ConfigSpec configSpecs[] = {
 static Tcl_HashTable imgPhotoColorHash;
 static int imgPhotoColorHashInitialized;
 #define N_COLOR_HASH	(sizeof(ColorTableId) / sizeof(int))
+
+/*
+ * Implementation of the Porter-Duff Source-Over compositing rule.
+ */
+
+#define PD_SRC_OVER(srcColor,srcAlpha,dstColor,dstAlpha) \
+	(srcColor*srcAlpha/255) + dstAlpha*(255-srcAlpha)/255*dstColor/255
+#define PD_SRC_OVER_ALPHA(srcAlpha,dstAlpha) \
+	(srcAlpha + (255-srcAlpha)*dstAlpha/255)
 
 /*
  * Forward declarations
@@ -2571,26 +2580,30 @@ ToggleComplexAlphaIfNeeded(PhotoMaster *mPtr)
  *
  *----------------------------------------------------------------------
  */
+
 /*
  * This should work on all platforms that set mask and shift data properly
  * from the visualInfo.
  * RGB is really only a 24+ bpp version whereas RGB15 is the correct version
  * and works for 15bpp+, but it slower, so it's only used for 15bpp+.
+ *
+ * Note that Win32 pre-defines those operations that we really need.
  */
+
 #ifndef __WIN32__
 #define GetRValue(rgb)	(UCHAR((rgb & red_mask) >> red_shift))
 #define GetGValue(rgb)	(UCHAR((rgb & green_mask) >> green_shift))
 #define GetBValue(rgb)	(UCHAR((rgb & blue_mask) >> blue_shift))
 #define RGB(r,g,b)      ((unsigned)((UCHAR(r)<<red_shift)|(UCHAR(g)<<green_shift)|(UCHAR(b)<<blue_shift)))
 #define RGB15(r,g,b)    ((unsigned)(((r*red_mask/255)&red_mask)|((g*green_mask/255)&green_mask)|((b*blue_mask/255)&blue_mask)))
-#endif
+#endif /* !__WIN32__ */
 
-static void ImgPhotoBlendComplexAlpha (
-    XImage *bgImg,            /* background image to draw on */
-    PhotoInstance *iPtr,      /* image instance to draw */
-    int xOffset, int yOffset, /* X & Y offset into image instance to draw */
-    int width, int height     /* width & height of image to draw */
-    )
+static void
+ImgPhotoBlendComplexAlpha(bgImg, iPtr, xOffset, yOffset, width, height)
+    XImage *bgImg;		/* background image to draw on */
+    PhotoInstance *iPtr;	/* image instance to draw */
+    int xOffset, int yOffset;	/* X & Y offset into image instance to draw */
+    int width, int height;	/* width & height of image to draw */
 {
     int x, y, line;
     unsigned long pixel;
@@ -2598,46 +2611,62 @@ static void ImgPhotoBlendComplexAlpha (
     unsigned char *alphaAr = iPtr->masterPtr->pix32;
     unsigned char *masterPtr;
 
-#ifndef __WIN32__
     /*
-     * We have to get the mask and shift info from the visual.
-     * This might be cached for better performance.
+     * This blending is an integer version of the Source-Over
+     * compositing rule (see Porter&Duff, "Compositing Digital
+     * Images", proceedings of SIGGRAPH 1984) that has been hard-coded
+     * (for speed) to work with targetting a solid surface.
      */
+
+#define ALPHA_BLEND(bgPix, imgPix, alpha, unalpha) \
+	((bgPix * unalpha + imgPix * alpha) / 255)
+
+    /*
+     * We have to get the mask and shift info from the visual on
+     * non-Win32 so that the macros Get*Value(), RGB() and RGB15()
+     * work correctly.  This might be cached for better performance.
+     */
+
+#ifndef __WIN32__
     unsigned long red_mask, green_mask, blue_mask;
     unsigned long red_shift, green_shift, blue_shift;
     Visual *visual = iPtr->visualInfo.visual;
 
-    red_mask    = visual->red_mask;
-    green_mask  = visual->green_mask;
-    blue_mask   = visual->blue_mask;
-    red_shift   = 0;
+    red_mask = visual->red_mask;
+    green_mask = visual->green_mask;
+    blue_mask = visual->blue_mask;
+    red_shift = 0;
     green_shift = 0;
-    blue_shift  = 0;
-    while ((0x0001 & (red_mask >> red_shift)) == 0)	red_shift++;
-    while ((0x0001 & (green_mask >> green_shift)) == 0)	green_shift++;
-    while ((0x0001 & (blue_mask >> blue_shift)) == 0)	blue_shift++;
-#endif
+    blue_shift = 0;
+    while ((0x0001 & (red_mask >> red_shift)) == 0) {
+	red_shift++;
+    }
+    while ((0x0001 & (green_mask >> green_shift)) == 0) {
+	green_shift++;
+    }
+    while ((0x0001 & (blue_mask >> blue_shift)) == 0) {
+	blue_shift++;
+    }
+#endif /* !__WIN32__ */
 
-#define ALPHA_BLEND(bgPix, imgPix, alpha, unalpha) \
-		((bgPix * unalpha + imgPix * alpha) / 255)
-
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
     /*
      * Only unix requires the special case for <24bpp.  It varies with
      * 3 extra shifts and uses RGB15.  The 24+bpp version could also
      * then be further optimized.
      */
+
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
     if (bgImg->depth < 24) {
 	unsigned char red_mlen, green_mlen, blue_mlen;
 
-	red_mlen   = 8 - CountBits(red_mask >> red_shift);
+	red_mlen = 8 - CountBits(red_mask >> red_shift);
 	green_mlen = 8 - CountBits(green_mask >> green_shift);
-	blue_mlen  = 8 - CountBits(blue_mask >> blue_shift);
+	blue_mlen = 8 - CountBits(blue_mask >> blue_shift);
 	for (y = 0; y < height; y++) {
 	    line = (y + yOffset) * iPtr->masterPtr->width;
 	    for (x = 0; x < width; x++) {
 		masterPtr = alphaAr + ((line + x + xOffset) * 4);
-		alpha     = masterPtr[3];
+		alpha = masterPtr[3];
 		/*
 		 * Ignore pixels that are fully transparent
 		 */
@@ -2668,43 +2697,46 @@ static void ImgPhotoBlendComplexAlpha (
 		}
 	    }
 	}
-    } else
-#endif
-	for (y = 0; y < height; y++) {
-	    line = (y + yOffset) * iPtr->masterPtr->width;
-	    for (x = 0; x < width; x++) {
-		masterPtr = alphaAr + ((line + x + xOffset) * 4);
-		alpha     = masterPtr[3];
-		/*
-		 * Ignore pixels that are fully transparent
-		 */
-		if (alpha) {
-		    /*
-		     * We could perhaps be more efficient than XGetPixel for
-		     * 24 and 32 bit displays, but this seems "fast enough".
-		     */
-		    r = masterPtr[0];
-		    g = masterPtr[1];
-		    b = masterPtr[2];
-		    if (alpha != 255) {
-			/*
-			 * Only blend pixels that have some transparency
-			 */
-			unsigned char ra, ga, ba;
+	return;
+    }
+#endif /* !__WIN32__ && !MAC_OSX_TK */
 
-			pixel = XGetPixel(bgImg, x, y);
-			ra = GetRValue(pixel);
-			ga = GetGValue(pixel);
-			ba = GetBValue(pixel);
-			unalpha = 255 - alpha;
-			r = ALPHA_BLEND(ra, r, alpha, unalpha);
-			g = ALPHA_BLEND(ga, g, alpha, unalpha);
-			b = ALPHA_BLEND(ba, b, alpha, unalpha);
-		    }
-		    XPutPixel(bgImg, x, y, RGB(r, g, b));
+    for (y = 0; y < height; y++) {
+	line = (y + yOffset) * iPtr->masterPtr->width;
+	for (x = 0; x < width; x++) {
+	    masterPtr = alphaAr + ((line + x + xOffset) * 4);
+	    alpha = masterPtr[3];
+	    /*
+	     * Ignore pixels that are fully transparent
+	     */
+	    if (alpha) {
+		/*
+		 * We could perhaps be more efficient than XGetPixel for
+		 * 24 and 32 bit displays, but this seems "fast enough".
+		 */
+		r = masterPtr[0];
+		g = masterPtr[1];
+		b = masterPtr[2];
+		if (alpha != 255) {
+		    /*
+		     * Only blend pixels that have some transparency
+		     */
+		    unsigned char ra, ga, ba;
+
+		    pixel = XGetPixel(bgImg, x, y);
+		    ra = GetRValue(pixel);
+		    ga = GetGValue(pixel);
+		    ba = GetBValue(pixel);
+		    unalpha = 255 - alpha;
+		    r = ALPHA_BLEND(ra, r, alpha, unalpha);
+		    g = ALPHA_BLEND(ga, g, alpha, unalpha);
+		    b = ALPHA_BLEND(ba, b, alpha, unalpha);
 		}
+		XPutPixel(bgImg, x, y, RGB(r, g, b));
 	    }
 	}
+    }
+
 #undef ALPHA_BLEND
 }
 
@@ -4417,6 +4449,7 @@ Tk_PhotoPutBlock(interp, handle, blockPtr, x, y, width, height, compRule)
 			srcPtr = srcLinePtr;
 			for (; wCopy > 0; --wCopy) {
 			    alpha = srcPtr[alphaOffset];
+			    
 			    /*
 			     * In the easy case, we can just copy.
 			     */
@@ -4451,10 +4484,17 @@ Tk_PhotoPutBlock(interp, handle, blockPtr, x, y, width, height, compRule)
 				}
 
 				if (alpha) {
-				    destPtr[0] += (srcPtr[0] - destPtr[0]) * alpha / 255;
-				    destPtr[1] += (srcPtr[greenOffset] - destPtr[1]) * alpha / 255;
-				    destPtr[2] += (srcPtr[blueOffset] - destPtr[2]) * alpha / 255;
-				    destPtr[3] += (255 - destPtr[3]) * alpha / 255;
+				    int Alpha = destPtr[3];
+
+				    /*
+				     * This implements the Porter-Duff
+				     * Source-Over compositing rule.
+				     */
+
+				    destPtr[0] = PD_SRC_OVER(srcPtr[0],alpha,destPtr[0],Alpha);
+				    destPtr[1] = PD_SRC_OVER(srcPtr[greenOffset],alpha,destPtr[1],Alpha);
+				    destPtr[2] = PD_SRC_OVER(srcPtr[blueOffset],alpha,destPtr[2],Alpha);
+				    destPtr[3] = PD_SRC_OVER_ALPHA(alpha,Alpha);
 				}
 				/*
 				 * else should be empty space
@@ -4736,10 +4776,11 @@ Tk_PhotoPutZoomedBlock(interp, handle, blockPtr, x, y, width, height,
 		srcPtr = srcLinePtr;
 		for (; wCopy > 0; wCopy -= zoomX) {
 		    for (xRepeat = MIN(wCopy, zoomX); xRepeat > 0; xRepeat--) {
+			int alpha = srcPtr[alphaOffset];
 			/*
 			 * Common case (solid pixels) first
 			 */
-			if (!alphaOffset || (srcPtr[alphaOffset] == 255)) {
+			if (!alphaOffset || (alpha == 255)) {
 			    *destPtr++ = srcPtr[0];
 			    *destPtr++ = srcPtr[greenOffset];
 			    *destPtr++ = srcPtr[blueOffset];
@@ -4752,7 +4793,7 @@ Tk_PhotoPutZoomedBlock(interp, handle, blockPtr, x, y, width, height,
 			    *destPtr++ = srcPtr[0];
 			    *destPtr++ = srcPtr[greenOffset];
 			    *destPtr++ = srcPtr[blueOffset];
-			    *destPtr++ = srcPtr[alphaOffset];
+			    *destPtr++ = alpha;
 			    break;
 			case TK_PHOTO_COMPOSITE_OVERLAY:
 			    if (!destPtr[3]) {
@@ -4762,11 +4803,12 @@ Tk_PhotoPutZoomedBlock(interp, handle, blockPtr, x, y, width, height,
 				 */
 				destPtr[0] = destPtr[1] = destPtr[2] = 0xd9;
 			    }
-			    if (srcPtr[alphaOffset]) {
-				destPtr[0] += (srcPtr[0] - destPtr[0]) * srcPtr[alphaOffset] / 255;
-				destPtr[1] += (srcPtr[greenOffset] - destPtr[1]) * srcPtr[alphaOffset] / 255;
-				destPtr[2] += (srcPtr[blueOffset] - destPtr[2]) * srcPtr[alphaOffset] / 255;
-				destPtr[3] += (255 - destPtr[3]) * srcPtr[alphaOffset] / 255;
+			    if (alpha) {
+				int Alpha = destPtr[3];
+				destPtr[0] = PD_SRC_OVER(srcPtr[0],alpha,destPtr[0],Alpha);
+				destPtr[1] = PD_SRC_OVER(srcPtr[greenOffset],alpha,destPtr[1],Alpha);
+				destPtr[2] = PD_SRC_OVER(srcPtr[blueOffset],alpha,destPtr[2],Alpha);
+				destPtr[3] = PD_SRC_OVER_ALPHA(alpha,Alpha);
 			    }
 			    destPtr += 4;
 			    break;
