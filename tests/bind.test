@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bind.test,v 1.8 2000/08/03 20:36:17 ericm Exp $
+# RCS: @(#) $Id: bind.test,v 1.9 2001/03/30 21:52:28 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1945,7 +1945,7 @@ test bind-22.2 {HandleEventGenerate} {
 } {1 {bad window name/identifier "zzz"}}
 test bind-22.3 {HandleEventGenerate} {
     list [catch {event gen 47 <Control-v>} msg] $msg
-} {1 {window id "47" doesn't exist in this application}}
+} {1 {bad window name/identifier "47"}}
 test bind-22.4 {HandleEventGenerate} {
     setup
     bind .b.f <Button> {set x "%s %b"}
@@ -2046,7 +2046,11 @@ test bind-22.16 {HandleEventGenerate} {
 test bind-22.17 {HandleEventGenerate} {
     list [catch {event gen . <Button> -when xyz} msg] $msg
 } {1 {bad -when value "xyz": must be now, head, mark, or tail}}
-set i 18
+test bind-22.18 {HandleEventGenerate} {
+    # Bug 411307
+    list [catch {event gen . <a> -root 98765} msg] $msg
+} {1 {bad window name/identifier "98765"}}
+set i 19
 foreach check {
     {<Configure> %a {-above .xyz} {{1 {bad window path name ".xyz"}}}}
     {<Configure> %a {-above .b} {[winfo id .b]}}
@@ -2673,22 +2677,8 @@ test bind-31.2 {MouseWheel events} {
     set x
 } {240 10 30}
 
-
 destroy .b
 
 # cleanup
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
