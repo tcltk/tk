@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.80 2005/01/05 02:51:23 chengyemao Exp $
+RCS: @(#) $Id: changes,v 1.81 2005/01/07 15:41:35 chengyemao Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5926,3 +5926,12 @@ moves over the menu items to complete display. (chengyemao)
 2005-1-3 (feature implementation of embedded/embedding Tk of Windows) Added
 a separated window handler for an embedded menu; solved the problem of 
 a blank menu display with a mouse click in XP. (chengyemao)
+
+2005-1-7 (feature implementation of embedded/embedding Tk of Window) Added
+TK_STATE message (Windows) to support {wm state} for embedded windows; forced
+redraw of container after the embedded window detached; removed unnecessary
+panic in using embedded window; embeded toplevel menu of an embedded window
+automatically in wrapper updating.  Modified and added functions: WmStateCmd,
+UpdateWrapper, TkpWmGetState (added) in tkWinWm.c; TkpUseWindow, 
+TkWinEmbeddedEventProc in tkWinEmbed.c; TkWinChildProc in tkWinX.c. 
+(chengyemao) 
