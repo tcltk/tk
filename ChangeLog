@@ -1,19 +1,34 @@
 2002-06-14  Joe English  <jenglish@users.sf.net>
-	* doc/bind.n, generic/tk.h, generic/tkBind.c,
-	generic/tkCanvWind.c, generic/tkCmds.c, generic/tkEvent.c,
-	generic/tkFocus.c, generic/tkGrab.c, generic/tkGrid.c,
-	generic/tkImage.c, generic/tkPack.c, generic/tkPlace.c,
-	generic/tkPointer.c, generic/tkTextWind.c,
-	generic/tkWindow.c, mac/tkMacSubwindows.c,
-	mac/tkMacWindowMgr.c, mac/tkMacWm.c, unix/Makefile.in,
-	unix/tkUnixEmbed.c, unix/tkUnixWm.c, win/tkWinScrlbr.c,
-	win/tkWinWindow.c, win/tkWinWm.c: Implementation for
-	TIP #47 "Modifying Tk to Allow Writing X Window managers"
-	(patch from Neil McKay).
-	* Add CirculateRequest, Create, MapRequest, ResizeRequest, 
-	  and ConfigureRequest event types;
-	* Split TK_TOPLEVEL flag into TK_TOPLEVEL, TK_HAS_WRAPPER,
-	  TK_WIN_MANAGED, and TK_TOP_HIERARCHY.
+
+	* doc/bind.n:
+	* generic/tk.h:
+	* generic/tkBind.c:
+	* generic/tkCanvWind.c:
+	* generic/tkCmds.c:
+	* generic/tkEvent.c:
+	* generic/tkFocus.c:
+	* generic/tkGrab.c:
+	* generic/tkGrid.c:
+	* generic/tkImage.c:
+	* generic/tkPack.c:
+	* generic/tkPlace.c:
+	* generic/tkPointer.c:
+	* generic/tkTextWind.c:
+	* generic/tkWindow.c:
+	* mac/tkMacSubwindows.c:
+	* mac/tkMacWindowMgr.c
+	* mac/tkMacWm.c:
+	* unix/Makefile.in:
+	* unix/tkUnixEmbed.c:
+	* unix/tkUnixWm.c:
+	* win/tkWinScrlbr.c:
+	* win/tkWinWindow.c
+	* win/tkWinWm.c: Implementation of TIP #47
+	"Modifying Tk to Allow Writing X Window managers" (patch from Neil McKay).
+	Add CirculateRequest, Create, MapRequest, ResizeRequest, 
+	and ConfigureRequest event types;
+	Split TK_TOPLEVEL flag into TK_TOPLEVEL, TK_HAS_WRAPPER,
+	TK_WIN_MANAGED, and TK_TOP_HIERARCHY.
 
 2002-06-14  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
 
@@ -22,7 +37,7 @@
 
 2002-06-14  David Gravereaux <davygrvy@pobox.com>
 
-	*win/rules.vc: The test for compiler optimizations was in error.
+	* win/rules.vc: The test for compiler optimizations was in error.
 	Thanks goes to Roy Terry <royterry@earthlink.net> for his
 	assistance with this.
 
@@ -36,7 +51,7 @@
 	* tests/imgPhoto.test: Added tests of -compositingrule
 
 	* doc/photo.n: Added documentation for "-compositingrule".
-	* generic/tkImgPhoto.c (ImgPhotoCmd,ParseSubcommandOptions): New
+	* generic/tkImgPhoto.c (ImgPhotoCmd, ParseSubcommandOptions): New
 	"-compositingrule" option for [$photo copy] subcommand, using
 	OPT_COMPOSITE flag and compositingRule field in SubcommandOptions
 	structure.
