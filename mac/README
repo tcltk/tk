@@ -1,10 +1,14 @@
-Tk 8.0 for Macintosh
+Tk 8.0.3 for Macintosh
 
 by Ray Johnson
-Sun Microsystems Laboratories
-rjohnson@eng.sun.com
+Scriptics Corporation
+rjohnson@scriptics.com
+with major help from
+Jim Ingham
+Cygnus Solutions
+jingham@cygnus.com
 
-SCCS: @(#) README 1.30 97/11/20 22:06:57
+SCCS: %Z% $Id: README,v 1.2 1998/08/12 11:38:17 welch Exp $ 
 
 1. Introduction
 ---------------
@@ -109,7 +113,7 @@ Macintosh Tk is distributed in three different forms.  This
 should make it easier to only download what you need.  The 
 packages are as follows:
 
-mactk8.0.sea.hqx
+mactk8.0.3.sea.hqx
 
     This distribution is a "binary" only release.  It contains an
     installer program that will install a 68k, PowerPC, or Fat
@@ -117,23 +121,29 @@ mactk8.0.sea.hqx
     the Tcl & Tk libraries in the Extensions folder inside your
     System Folder.  (No "INIT"'s or Control Pannels are installed.)
 
-mactcltk-full-8.0.sea.hqx
+mactcltk-full-8.0.3.sea.hqx
 
     This release contains the full release of Tcl and Tk for the
     Macintosh plus the More Files package on which Macintosh Tcl and
     Tk rely.
 
-mactk-source-8.0.sea.hqx
+mactk-source-8.0.3.sea.hqx
 
     This release contains the complete source to Tk for the Macintosh
     In addition, Metrowerks CodeWarrior libraries and project files
     are included.  However, you must already have the More Files
     package to compile this code.
 
+UNIX Tar file distribution.
+    The standard Tcl/Tk source distribution has Mac project files
+    in it.  Be warned that the Tk project file is lacking one minor
+    change compared to the ones in the installers listed above
+    having to do with locking down the MDEF resource.
+
 5. Documentation
 ----------------
 
-Two books are currently available for Tcl.  Both provide a good
+There are now many books available for Tcl.  These two provide a good
 introduction to the language.  It is a good way to get started
 if you haven't used the language before:
 
@@ -147,6 +157,9 @@ if you haven't used the language before:
     Publisher:			Prentice Hall
     ISBN:			0-13-182007-9
 
+More books are listed at
+    http://www.scriptics.com/resource/doc/books/
+
 The "doc" subdirectory contains reference in documentation
 in the "man" format found on most UNIX machines.  Unfortunately,
 there is not a suitable way to view these pages on the Macintosh.  
@@ -155,7 +168,7 @@ developed.  We are working are having better documentation for
 the Macintosh platform in the future.  However, if you have WWW 
 access you may access the Man pages at the following URL:
 
-	http://sunscript.sun.com/man/tcl8.0/contents.html
+	http://www.scriptics.com/man/tcl8.0/contents.html
 
 Other documentation and sample Tcl scripts can be found at
 the Tcl ftp site: 
@@ -174,6 +187,7 @@ following items:
 
 	CodeWarrior Pro 1 or higher (CodeWarrior release 9 or higher can work
 		and we have project files, but we are depricating support)
+		8.0.3 was build with CW Pro 3.
 	Mac Tcl 8.0 (source)
 	  (which requires More Files 1.4.2 or 1.4.3)
 	Mac Tk 8.0 (source)
@@ -189,17 +203,8 @@ Special notes:
 * Check out the file bugs.doc for information about known bugs.
 
 * We are starting to support the new Appearance Manager that shipped
-  with MacOS 8.  At this point, the only feature that we are using is 
-  the API to Iconify windows (so that wm iconify will work).   However,
-  as of the release of Tk8.0p1, the SDK from Apple is still in Beta, so 
-  we cannot ship it.  So support for the Appearance Manager is turned off
-  in the source version of Tk8.0p1.
-  If you want to build Tk, and want to get the Appearance Manager features, 
-  then need to do the following:
-      1) get the SDK from Apple
-      2) Uncomment the #define HAVE_APPEARANCE line in tk8.0:mac:MW_TkHeader.pch
-      3) Add the Appearance.lib to tk8.0:mac:TkShells.¼, and put the include 
-         directory of the SDK on your path in this project, and TkLibraries.¼.
+  with MacOS 8.0.  The Tk 8.0.3 release is the first Tk release
+  that supports the Appearance Manager well.
 
 7. About Dialog
 ---------------
@@ -296,4 +301,4 @@ future.
 
 If you have comments or Bug reports send them to:
 Jim Ingham
-jingham@eng.sun.com
+jingham@cygnus.com
