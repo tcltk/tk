@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.6 1998/11/11 17:30:44 jingham Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.7 1999/04/16 01:25:54 stanton Exp $
  */
 
 #include <Menus.h>
@@ -214,11 +214,6 @@ static TopLevelMenubarList *windowListPtr;
 static MenuItemDrawingUPP tkThemeMenuItemDrawingUPP; 
 				/* Points to the UPP for theme Item drawing. */
 
-static GC     appearanceGC = NULL; /* The fake appearance GC.  If you
-				      pass the foreground of this to TkMacSetColor, 
-				      it will return false, so you will know 
-				      not to set the foreground color */
-					  
 				
 /*
  * Forward declarations for procedures defined later in this file:
@@ -2343,11 +2338,11 @@ DrawSICN(
 	GetForeColor(&origForeColor);
 	GetBackColor(&origBackColor);
 	
-	if (TkSetMacColor(gc->foreground, &foreColor) == true) {
+	if (TkSetMacColor(gc->foreground, &foreColor)) {
 	    RGBForeColor(&foreColor);
 	}
 	
-	if (TkSetMacColor(gc->background, &backColor) == true) {
+	if (TkSetMacColor(gc->background, &backColor)) {
 	    RGBBackColor(&backColor);
 	}
 
@@ -2758,16 +2753,16 @@ MenuDefProc(
  	    GetBackColor(&origBackColor);
 
 	    if (TkSetMacColor(menuPtr->textGC->foreground, 
-	    	    &foreColor) == true) {
-	    	if (!TkMacHaveAppearance()) {
+	    	    &foreColor)) {
+	    	/* if (!TkMacHaveAppearance()) { */
 	    	    RGBForeColor(&foreColor);
-	    	}
+	    	/* } */
 	    }
 	    if (TkSetMacColor(menuPtr->textGC->background, 
-	    	    &backColor) == true) {
-	    	if (!TkMacHaveAppearance()) {
+	    	    &backColor)) {
+	    	/* if (!TkMacHaveAppearance()) { */
 	    	    RGBBackColor(&backColor);
-	    	}
+	    	/* } */
 	    }
 
 	    /*
@@ -3492,12 +3487,7 @@ TkpDrawMenuEntry(
 	    && !strictMotif) {
 	gc = mePtr->activeGC;
 	if (gc == NULL) {
-	    if ((TkMacHaveAppearance() > 1) && (menuPtr->menuType != TEAROFF_MENU)) {
-	        SetThemeTextColor(kThemeSelectedMenuItemTextColor,32,true);
-	        gc = appearanceGC;
-	    } else {
 	        gc = menuPtr->activeGC;
-	    }
 	}
     } else {
     	TkMenuEntry *cascadeEntryPtr;
@@ -3519,22 +3509,12 @@ TkpDrawMenuEntry(
 		&& (menuPtr->disabledFg != NULL)) {
 	    gc = mePtr->disabledGC;
 	    if (gc == NULL) {
-	        if ((TkMacHaveAppearance() > 1) && (mePtr->bitmap == NULL)) {
-	            SetThemeTextColor(kThemeDisabledMenuItemTextColor,32,true);
-	            gc = appearanceGC;
-	        } else {
 		gc = menuPtr->disabledGC;
-	    }
 	    }
 	} else {
 	    gc = mePtr->textGC;
 	    if (gc == NULL) {
-	        if ((TkMacHaveAppearance() > 1) && (mePtr->bitmap == NULL)) {
-	            SetThemeTextColor(kThemeActiveMenuItemTextColor,32,true);
-	            gc = appearanceGC;
-	        } else {
 		    gc = menuPtr->textGC;
-	        }
 	    }
         }
     }
@@ -4292,7 +4272,6 @@ TkpMenuInit(void)
         tmpColorPtr = TkpGetColor(NULL, "systemAppearanceColor");
         tmpValues.foreground = tmpColorPtr->color.pixel;
         tmpValues.background = tmpColorPtr->color.pixel;
-        appearanceGC = XCreateGC(NULL, NULL, GCForeground | GCBackground, &tmpValues);
         ckfree((char *) tmpColorPtr);
         
         tkThemeMenuItemDrawingUPP = NewMenuItemDrawingProc(tkThemeMenuItemDrawingProc);				

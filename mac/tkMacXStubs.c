@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacXStubs.c,v 1.4 1999/03/10 07:04:45 stanton Exp $
+ * RCS: @(#) $Id: tkMacXStubs.c,v 1.5 1999/04/16 01:25:55 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -22,6 +22,7 @@
 
 #include <Xatom.h>
 
+#include <Gestalt.h>
 #include <Windows.h>
 #include <Fonts.h>
 #include <QDOffscreen.h>
@@ -550,13 +551,17 @@ TkGetServerInfo(
     Tk_Window tkwin)		/* Token for window;  this selects a
 				 * particular display and server. */
 {
-    char buffer[50], buffer2[50];
-
-    sprintf(buffer, "X%dR%d ", ProtocolVersion(Tk_Display(tkwin)),
-	    ProtocolRevision(Tk_Display(tkwin)));
-    sprintf(buffer2, " %d", VendorRelease(Tk_Display(tkwin)));
-    Tcl_AppendResult(interp, buffer, ServerVendor(Tk_Display(tkwin)),
-	    buffer2, (char *) NULL);
+    char buffer[50];
+    long result;
+    short low, major, minor, micro;
+   
+    Gestalt(gestaltSystemVersion, &result);
+    low = LoWord(result);
+    major = (low & 0x0F00) >> 8;
+    minor = (low & 0x00F0) >> 4;
+    micro = (low & 0x000F);
+    sprintf(buffer, "MacOS %d.%d.%d", major, minor, micro); 
+    Tcl_AppendResult(interp, buffer, (char *) NULL);
 }
 /*
  * Image stuff 

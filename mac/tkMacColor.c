@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacColor.c,v 1.3 1998/11/11 17:29:57 jingham Exp $
+ * RCS: @(#) $Id: tkMacColor.c,v 1.4 1999/04/16 01:25:54 stanton Exp $
  */
 
 #include <tkColor.h>
@@ -88,8 +88,7 @@ TkSetMacColor(
 	case MENU_BACKGROUND_PIXEL:
 	case MENU_DISABLED_PIXEL:
 	case MENU_TEXT_PIXEL:
-	    GetMenuPartColor((pixel >> 24), macColor);
-	    return true;
+	    return GetMenuPartColor((pixel >> 24), macColor);
 	case APPEARANCE_PIXEL:
 	    return false;
 	case PIXEL_MAGIC:
@@ -431,63 +430,75 @@ GetMenuPartColor(
     RGBColor backColor, foreColor;
     GDHandle maxDevice;
     Rect globalRect;
-    MCEntryPtr mcEntryPtr = GetMCEntry(0, 0);
+    MCEntryPtr mcEntryPtr;
     
-    switch (pixel) {
-    	case MENU_ACTIVE_PIXEL:
-    	    if (mcEntryPtr == NULL) {
-    		macColor->red = macColor->blue = macColor->green = 0;
-    	    } else {
-    	    	*macColor = mcEntryPtr->mctRGB3;
-    	    }
-    	    return 1;
-    	case MENU_ACTIVE_TEXT_PIXEL:
-    	    if (mcEntryPtr == NULL) {
-    		macColor->red = macColor->blue = macColor->green = 0xFFFF;
-    	    } else {
-    	        *macColor = mcEntryPtr->mctRGB2;
-    	    }
-    	    return 1;
-    	case MENU_BACKGROUND_PIXEL:
-    	    if (mcEntryPtr == NULL) {
-    		macColor->red = macColor->blue = macColor->green = 0xFFFF;
-    	    } else {
-    	        *macColor = mcEntryPtr->mctRGB2;
-    	    }
-    	    return 1;
-    	case MENU_DISABLED_PIXEL:
-    	    if (mcEntryPtr == NULL) {
-    		backColor.red = backColor.blue = backColor.green = 0xFFFF;
-    		foreColor.red = foreColor.blue = foreColor.green = 0x0000;
-    	    } else {
-    	    	backColor = mcEntryPtr->mctRGB2;
-    	    	foreColor = mcEntryPtr->mctRGB3;
-    	    }
-    	    SetRect(&globalRect, SHRT_MIN, SHRT_MIN, SHRT_MAX, SHRT_MAX);
-    	    maxDevice = GetMaxDevice(&globalRect);
-    	    if (GetGray(maxDevice, &backColor, &foreColor)) {
-    	    	*macColor = foreColor;
-    	    } else {
+    /* Under Appearance, we don't want to set any menu colors when we
+       are asked for the standard menu colors.  So we return false (which
+       means don't use this color... */
+       
+    if (TkMacHaveAppearance()) {
+        macColor->red = 0xFFFF;
+        macColor->green = 0;
+        macColor->blue = 0;
+        return false;
+    } else {
+        mcEntryPtr = GetMCEntry(0, 0);
+        switch (pixel) {
+    	    case MENU_ACTIVE_PIXEL:
+    	        if (mcEntryPtr == NULL) {
+    		    macColor->red = macColor->blue = macColor->green = 0;
+    	        } else {
+    	    	    *macColor = mcEntryPtr->mctRGB3;
+    	        }
+    	        return true;
+    	    case MENU_ACTIVE_TEXT_PIXEL:
+    	        if (mcEntryPtr == NULL) {
+    		    macColor->red = macColor->blue = macColor->green = 0xFFFF;
+    	        } else {
+    	            *macColor = mcEntryPtr->mctRGB2;
+    	        }
+    	        return true;
+    	    case MENU_BACKGROUND_PIXEL:
+    	        if (mcEntryPtr == NULL) {
+    		    macColor->red = macColor->blue = macColor->green = 0xFFFF;
+    	        } else {
+    	            *macColor = mcEntryPtr->mctRGB2;
+    	        }
+    	        return true;
+    	    case MENU_DISABLED_PIXEL:
+    	        if (mcEntryPtr == NULL) {
+    		    backColor.red = backColor.blue = backColor.green = 0xFFFF;
+    		    foreColor.red = foreColor.blue = foreColor.green = 0x0000;
+    	        } else {
+    	    	    backColor = mcEntryPtr->mctRGB2;
+                    foreColor = mcEntryPtr->mctRGB3;
+                }
+                SetRect(&globalRect, SHRT_MIN, SHRT_MIN, SHRT_MAX, SHRT_MAX);
+                maxDevice = GetMaxDevice(&globalRect);
+                if (GetGray(maxDevice, &backColor, &foreColor)) {
+             	    *macColor = foreColor;
+    	        } else {
     	    
-    	    	/*
-    	    	 * Pointer may have been moved by GetMaxDevice or GetGray.
-    	    	 */
+    	    	    /*
+    	    	     * Pointer may have been moved by GetMaxDevice or GetGray.
+    	    	     */
     	    	 
-    	    	mcEntryPtr = GetMCEntry(0,0);
-    	    	if (mcEntryPtr == NULL) {
-    	   	    macColor->red = macColor->green = macColor->blue = 0x7777;
-    	   	} else {
-    	    	    *macColor = mcEntryPtr->mctRGB2;
-    	    	}
-    	    }
-    	    return 1;
-    	case MENU_TEXT_PIXEL:
-    	    if (mcEntryPtr == NULL) {
-    	    	macColor->red = macColor->green = macColor->blue = 0;
-    	    } else {
-    	    	*macColor = mcEntryPtr->mctRGB3;
-    	    }
-    	    return 1;
+    	    	    mcEntryPtr = GetMCEntry(0,0);
+    	    	    if (mcEntryPtr == NULL) {
+    	   	        macColor->red = macColor->green = macColor->blue = 0x7777;
+    	   	    } else {
+    	    	        *macColor = mcEntryPtr->mctRGB2;
+    	    	    }
+    	        }
+    	        return true;
+    	    case MENU_TEXT_PIXEL:
+    	        if (mcEntryPtr == NULL) {
+    	    	    macColor->red = macColor->green = macColor->blue = 0;
+    	        } else {
+    	    	    *macColor = mcEntryPtr->mctRGB3;
+    	        }
+    	        return true;
+        }
+        return false;
     }
-    return 0;
 }

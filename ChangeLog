@@ -1,3 +1,8 @@
+1999-04-15    <stanton@scriptics.com>
+
+	* Merged changes from 8.0.5:
+	    - Updated for Mac release
+	
 1999-03-22    <redman@scriptics.com>
 
 	* unix/configure.in: Removed --enable-tcl-stub from configure

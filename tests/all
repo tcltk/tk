@@ -2,7 +2,7 @@
 # tests.  Execute it by invoking "source all" when running tclTest
 # in this directory.
 #
-# RCS: @(#) $Id: all,v 1.5 1999/03/24 18:07:46 hershey Exp $
+# RCS: @(#) $Id: all,v 1.6 1999/04/16 01:25:55 stanton Exp $
 
 set TESTS_DIR [file join [pwd] [file dirname [info script]]]
 source [file join $TESTS_DIR defs]
@@ -74,6 +74,11 @@ if {[info exists TMP_DIR]} {
 }
 
 # exit if Tk is running in non-interactive mode.
-if {[info exists tk_version] && !$tcl_interactive} {
+# Don't exit at the end of all the tests on the Mac, since
+# this destroys the window that contains the test results...
+
+if {([info exists tk_version] && !$tcl_interactive) \
+	|| [string compare $tcl_platform(platform) macintosh]} {
+    catch {destroy .}
     exit
 }
