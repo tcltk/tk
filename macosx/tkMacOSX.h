@@ -1,5 +1,5 @@
 /*
- * tkMacOSXInt.h --
+ * tkMacOSX.h --
  *
  *	Declarations of Macintosh specific exported variables and procedures.
  *
@@ -9,14 +9,16 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSX.h,v 1.2 2002/08/31 06:12:29 das Exp $
+ * RCS: @(#) $Id: tkMacOSX.h,v 1.3 2005/02/24 00:41:04 das Exp $
  */
 
 #ifndef _TKMAC
 #define _TKMAC
 
 #include <Carbon/Carbon.h>
-#include "tkInt.h"
+#ifndef _TK
+#include "tk.h"
+#endif
 
 /*
  * Structures and function types for handling Netscape-type in process
