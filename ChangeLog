@@ -1,3 +1,11 @@
+1999-11-23  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* generic/tk.h:
+	* generic/tkConfig.c: added support for TK_OPTION_DONT_SET_DEFAULT
+	as equiv for TK_CONFIG_DONT_SET_DEFAULT
+	* generic/tkListbox.c: added TK_OPTION_DONT_SET_DEFAULT to the
+	item specs
+
 1999-11-19  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* generic/tkColor.c:
