@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.34 2002/09/02 21:21:14 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.35 2002/12/01 23:37:53 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -244,8 +244,8 @@ typedef struct TkWmInfo {
  *				allow the user to change the height of the
  *				window (controlled by "wm resizable"
  *				command).
- * WM_TRANSIENT_WITHDRAWN -	non-zero means that this is a transient window
- *				that has explicitly been withdrawn. It should
+ * WM_WITHDRAWN -		non-zero means that this window has explicitly
+ *				been withdrawn. If it's a transient, it should
  *				not mirror state changes in the master.
  */
 
@@ -262,7 +262,7 @@ typedef struct TkWmInfo {
 #define WM_ADDED_TOPLEVEL_COLORMAP	0x800
 #define WM_WIDTH_NOT_RESIZABLE		0x1000
 #define WM_HEIGHT_NOT_RESIZABLE		0x2000
-#define WM_TRANSIENT_WITHDRAWN		0x4000
+#define WM_WITHDRAWN		       	0x4000
 
 /*
  * This module keeps a list of all top-level windows, primarily to
@@ -1488,9 +1488,7 @@ WmDeiconifyCmd(tkwin, winPtr, interp, objc, objv)
 		": it is an embedded window", (char *) NULL);
 	return TCL_ERROR;
     }
-    if (wmPtr->flags & WM_TRANSIENT_WITHDRAWN) {
-	wmPtr->flags &= ~WM_TRANSIENT_WITHDRAWN;
-    }
+    wmPtr->flags &= ~WM_WITHDRAWN;
     TkpWmSetState(winPtr, NormalState);
     return TCL_OK;
 }
@@ -2843,9 +2841,7 @@ WmStateCmd(tkwin, winPtr, interp, objc, objv)
 	}
 
 	if (index == OPT_NORMAL) {
-	    if (wmPtr->flags & WM_TRANSIENT_WITHDRAWN) {
-		wmPtr->flags &= ~WM_TRANSIENT_WITHDRAWN;
-	    }
+	    wmPtr->flags &= ~WM_WITHDRAWN;
 	    (void) TkpWmSetState(winPtr, NormalState);
 	} else if (index == OPT_ICONIC) {
 	    if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
@@ -2868,9 +2864,7 @@ WmStateCmd(tkwin, winPtr, interp, objc, objv)
 		return TCL_ERROR;
 	    }
 	} else { /* OPT_WITHDRAWN */
-	    if (wmPtr->masterPtr != NULL) {
-		wmPtr->flags |= WM_TRANSIENT_WITHDRAWN;
-	    }
+	    wmPtr->flags |= WM_WITHDRAWN;
 	    if (TkpWmSetState(winPtr, WithdrawnState) == 0) {
 		Tcl_SetResult(interp,
 			"couldn't send withdraw message to window manager",
@@ -3133,9 +3127,7 @@ WmWithdrawCmd(tkwin, winPtr, interp, objc, objv)
 		(char *) NULL);
 	return TCL_ERROR;
     }
-    if (wmPtr->masterPtr != NULL) {
-	wmPtr->flags |= WM_TRANSIENT_WITHDRAWN;
-    }
+    wmPtr->flags |= WM_WITHDRAWN;
     if (TkpWmSetState(winPtr, WithdrawnState) == 0) {
 	Tcl_SetResult(interp,
 		"couldn't send withdraw message to window manager",
@@ -3176,7 +3168,7 @@ WmWaitMapProc(clientData, eventPtr)
         return;
 
     if (eventPtr->type == MapNotify) {
-        if (!(winPtr->wmInfoPtr->flags & WM_TRANSIENT_WITHDRAWN))
+        if (!(winPtr->wmInfoPtr->flags & WM_WITHDRAWN))
             (void) TkpWmSetState(winPtr, NormalState);
     } else if (eventPtr->type == UnmapNotify) {
         (void) TkpWmSetState(winPtr, WithdrawnState);
