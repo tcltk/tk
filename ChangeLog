@@ -1,3 +1,8 @@
+2003-12-05  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
+
+	* win/tkWinFont.c (Tk_MeasureChars): Fix indentation.  Fix memory
+	leak.  Fix handling of TK_WHOLE_WORDS.
+
 2003-12-04  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkText.c: disallow negative or decreasing tab-stops,
