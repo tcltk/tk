@@ -1,3 +1,13 @@
+2002-01-28  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* unix/Makefile.in: Remove commented out vars.
+	* unix/configure: Regen.
+	* unix/configure.in: Don't subst vars that are already
+	taken care of in SC_LOAD_TCLCONFIG.
+	* unix/tcl.m4: Update from Tcl.
+	* win/configure: Regen.
+	* win/tcl.m4: Update from Tcl.
+
 2001-01-27  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkFileFilter.c:
