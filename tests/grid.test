@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.11 2001/08/21 20:21:36 pspjuth Exp $
+# RCS: @(#) $Id: grid.test,v 1.12 2001/08/22 19:59:49 pspjuth Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -853,6 +853,34 @@ test grid-11.15 {^ ^ test with multiple windows} {
     set a
 } {{0,0 50,50} {50,0 50,100} {100,0 50,100} {0,50 50,50}}
 grid_reset 11.15
+
+test grid-11.16 {default widget placement} {
+    foreach l {a b c d e} {
+        frame .$l -width 50 -height 50
+    }
+    grid .a .b .c .d -sticky news 
+    grid  x  ^  x .e -sticky news
+    update
+    set res ""
+    lappend res [winfo height .a]
+    lappend res [winfo height .b]
+    lappend res [winfo height .c]
+} {50 100 50}
+grid_reset 11.16
+
+test grid-11.17 {default widget placement} {
+    foreach l {a b c d e} {
+        frame .$l -width 50 -height 50
+    }
+    grid .a .b .c .d -sticky news
+    grid  ^  x  ^ .e -sticky news
+    update
+    set res ""
+    lappend res [winfo height .a]
+    lappend res [winfo height .b]
+    lappend res [winfo height .c]
+} {100 50 100}
+grid_reset 11.17
 
 test grid-12.1 {-sticky} {
     catch {unset data}
