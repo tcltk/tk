@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: pack.test,v 1.6 2001/02/12 18:06:48 drh Exp $
+# RCS: @(#) $Id: pack.test,v 1.7 2001/08/21 20:21:36 pspjuth Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -704,7 +704,7 @@ test pack-12.8 {command options and errors} {
 test pack-12.9 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -anchor gorp} msg] $msg
-} {1 {bad anchor position "gorp": must be n, ne, e, se, s, sw, w, nw, or center}}
+} {1 {bad anchor "gorp": must be n, ne, e, se, s, sw, w, nw, or center}}
 test pack-12.10 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -before gorp} msg] $msg
@@ -781,7 +781,7 @@ test pack-12.23 {command options and errors} {
 test pack-12.24 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -lousy bac} msg] $msg
-} {1 {unknown or ambiguous option "-lousy": must be -after, -anchor, -before, -expand, -fill, -in, -ipadx, -ipady, -padx, -pady, or -side}}
+} {1 {bad option "-lousy": must be -after, -anchor, -before, -expand, -fill, -in, -ipadx, -ipady, -padx, -pady, or -side}}
 test pack-12.25 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -padx} msg] $msg
@@ -789,7 +789,7 @@ test pack-12.25 {command options and errors} {
 test pack-12.26 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a {} 22} msg] $msg
-} {1 {unknown or ambiguous option "": must be -after, -anchor, -before, -expand, -fill, -in, -ipadx, -ipady, -padx, -pady, or -side}}
+} {1 {bad option "": must be -after, -anchor, -before, -expand, -fill, -in, -ipadx, -ipady, -padx, -pady, or -side}}
 test pack-12.27 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -in .} msg] $msg

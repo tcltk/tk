@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.34 2001/08/21 14:43:08 dkf Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.35 2001/08/21 20:21:36 pspjuth Exp $
  */
 
 #include "tkPort.h"
@@ -106,11 +106,11 @@ static TkCmd commands[] = {
     {"focus",		NULL,			Tk_FocusObjCmd,		1, 1},
     {"font",		NULL,			Tk_FontObjCmd,		1, 1},
     {"grab",		NULL,			Tk_GrabObjCmd,		0, 1},
-    {"grid",		Tk_GridCmd,		NULL,			1, 1},
+    {"grid",		NULL,			Tk_GridObjCmd,		1, 1},
     {"image",		NULL,			Tk_ImageObjCmd,		1, 1},
     {"lower",		NULL,			Tk_LowerObjCmd,		1, 1},
     {"option",		NULL,			Tk_OptionObjCmd,	1, 1},
-    {"pack",		Tk_PackCmd,		NULL,			1, 1},
+    {"pack",		NULL,			Tk_PackObjCmd,		1, 1},
     {"place",		NULL,			Tk_PlaceObjCmd,		1, 0},
     {"raise",		NULL,			Tk_RaiseObjCmd,		1, 1},
     {"selection",	NULL,			Tk_SelectionObjCmd,	0, 1},

@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: oldpack.test,v 1.3 1999/04/16 01:51:40 stanton Exp $
+# RCS: @(#) $Id: oldpack.test,v 1.4 2001/08/21 20:21:36 pspjuth Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -449,7 +449,7 @@ test pack-8.16 {syntax errors} {
     set msg ""
     set result [catch {pack append .pack .pack.blue {frame south}} msg]
     concat $result $msg
-} {1 bad anchor position "south": must be n, ne, e, se, s, sw, w, nw, or center}
+} {1 bad anchor "south": must be n, ne, e, se, s, sw, w, nw, or center}
 test pack-8.17 {syntax errors} {
     set msg ""
     set result [catch {pack append .pack .pack.blue {padx -2}} msg]
