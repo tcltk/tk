@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: panedwindow.n,v 1.4 2004/08/17 22:37:24 dkf Exp $
+'\" RCS: @(#) $Id: panedwindow.n,v 1.5 2004/10/24 17:22:55 dkf Exp $
 '\" 
 .so man.macros
 .TH panedwindow n 8.4 Tk "Tk Built-In Commands"
@@ -63,7 +63,6 @@ horizontally or vertically, according to the value of the
 \fB\-orient\fR option.  Each pane contains one widget, and each pair of
 panes is separated by a moveable (via mouse movements) sash.  Moving a
 sash causes the widgets on either side of the sash to be resized.
-
 .SH "WIDGET COMMAND"
 .PP
 The \fBpanedwindow\fR command creates a new Tcl command whose name is
@@ -191,6 +190,11 @@ height requested internally by the window will be used initially; the
 height may later be adjusted by the movement of sashes in the
 panedwindow.  \fISize\fR may be any value accepted by \fBTk_GetPixels\fR.
 .TP
+\fB\-hide \fIboolean\fR
+Controls the visibility of a pane.  When the \fIboolean\fR is true
+(according to \fBTcl_GetBoolean\fR) the pane will not be visible, but
+it will still be maintained in the list of panes.
+.TP
 \fB\-minsize \fIn\fR
 Specifies that the size of the window cannot be made less than
 \fIn\fR.  This constraint only affects the size of the widget in the
@@ -219,6 +223,35 @@ will "stick" to.  If both \fBn\fP and \fBs\fP (or \fBe\fP and \fBw\fP)
 are specified, the window will be stretched to fill the entire height
 (or width) of its cavity.
 .TP
+\fB\-stretch \fIwhen\fR
+Controls how extra space is allocated to each of the panes.
+\fIWhen\fR is one of \fBalways\fR, \fBfirst\fR, \fBlast\fR,
+\fBmiddle\fR, and \fBnever\fR.
+The panedwindow will calculate the required size of all its panes. Any
+remaining (or deficit) space will be distributed to those panes marked
+for stretching. The space will be distributed based on each panes
+current ratio of the whole.  The \fIwhen\fR values have the following
+definition:
+.RS
+.TP
+\fBalways\fR
+This pane will always stretch.
+.TP
+\fBfirst\fR
+Only if this pane is the first pane (left-most or top-most) will it 
+stretch.
+.TP
+\fBlast\fR
+Only if this pane is the last pane (right-most or bottom-most) will it 
+stretch.  This is the default value.
+.TP
+\fBmiddle\fR
+Only if this pane is not the first or last pane will it stretch.
+.TP
+\fBnever\fR
+This pane will never stretch.
+.RE
+.TP
 \fB\-width \fIsize\fR
 Specify a width for the window.  The width will be the outer
 dimension of the window including its border, if any.  If \fIsize\fR
@@ -230,9 +263,7 @@ panedwindow.  \fISize\fR may be any value accepted by \fBTk_GetPixels\fR.
 .TP
 \fIpathName \fBpanes\fR
 Returns an ordered list of the widgets managed by \fIpathName\fR.
-
 .SH "RESIZING PANES"
-
 A pane is resized by grabbing the sash (or sash handle if present) and
 dragging with the mouse.  This is accomplished via mouse motion
 bindings on the widget.  When a sash is moved, the sizes of the panes
