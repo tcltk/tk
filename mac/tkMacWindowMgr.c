@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWindowMgr.c,v 1.4 1999/04/16 01:51:32 stanton Exp $
+ * RCS: @(#) $Id: tkMacWindowMgr.c,v 1.5 1999/12/07 03:04:52 hobbs Exp $
  */
 
 #include <Events.h>
@@ -207,10 +207,13 @@ WindowManagerMouse(
 	    {
 		int oldMode;
 		KeyMap theKeys;
+		void TkpPreprocessMacMenu(void);
 
 		GetKeys(theKeys);
 		oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
 		TkMacClearMenubarActive();
+		/* POSTCOMMAND??? */
+		TkpPreprocessMacMenu();
 		TkMacHandleMenuSelect(MenuSelect(eventPtr->where),
 			theKeys[1] & 4);
 		Tcl_SetServiceMode(oldMode);

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.13 1999/08/13 08:07:02 jingham Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.14 1999/12/07 03:04:51 hobbs Exp $
  */
 
 #include "tkMacInt.h"
@@ -712,24 +712,24 @@ GetEntryText(
     } else if (mePtr->bitmapPtr != NULL) {
     	Tcl_DStringAppend(dStringPtr, "(Pixmap)", -1);
     } else if (mePtr->labelPtr == NULL || mePtr->labelLength == 0) {
-    
 	/*
 	 * The Mac menu manager does not like null strings.
 	 */
-	 
+
 	Tcl_DStringAppend(dStringPtr, " ", -1);
     } else {
     	int length;
     	char *text = Tcl_GetStringFromObj(mePtr->labelPtr, &length);
     	char *dStringText;
     	int i;
-    	
-	for (i = 0; i < length; text++, i++) {
+
+	for (i = 0; *text; text++, i++) {
     	    if ((*text == '.')
     	    	    && (*(text + 1) != '\0') && (*(text + 1) == '.')
     	    	    && (*(text + 2) != '\0') && (*(text + 2) == '.')) {
     	    	Tcl_DStringAppend(dStringPtr, elipsisString, -1);
     	    	i += strlen(elipsisString) - 1;
+		text += 2;
    	    } else {
     	    	Tcl_DStringSetLength(dStringPtr,
 			Tcl_DStringLength(dStringPtr) + 1);
@@ -751,11 +751,11 @@ GetEntryText(
  *
  * 	We try the following special mac characters. If none of them
  * 	are present, just use the check mark.
- * 	'' - Check mark character
- * 	'´' - Bullet character
- * 	'' - Filled diamond
- * 	'×' - Hollow diamond
- * 	'„' = Long dash ("em dash")
+ * 	'' - Check mark character	(\022)
+ * 	'´' - Bullet character	(\264 or \245 ??)
+ * 	'' - Filled diamond		(\023)
+ * 	'×' - Hollow diamond		(\327)
+ * 	'„' = Long dash ("em dash")	(\204 or \321 ??)
  * 	'-' = short dash (minus, "en dash");
  *
  * Results:
@@ -779,20 +779,20 @@ FindMarkCharacter(
     	    (mePtr->fontPtr == NULL) ? mePtr->menuPtr->fontPtr
 	    : mePtr->fontPtr);
     	    
-    if (!TkMacIsCharacterMissing(tkfont, '')) {
-    	markChar = '';
-    } else if (!TkMacIsCharacterMissing(tkfont, '´')) {
-    	markChar = '´';
-    } else if (!TkMacIsCharacterMissing(tkfont, '')) {
-    	markChar = '';
-    } else if (!TkMacIsCharacterMissing(tkfont, '×')) {
-    	markChar = '×';
-    } else if (!TkMacIsCharacterMissing(tkfont, '„')) {
-    	markChar = '„';
+    if (!TkMacIsCharacterMissing(tkfont, '\022')) {
+    	markChar = '\022';	/* Check mark */
+    } else if (!TkMacIsCharacterMissing(tkfont, '\264')) {
+    	markChar = '´';	/* Bullet */
+    } else if (!TkMacIsCharacterMissing(tkfont, '\023')) {
+    	markChar = '\023';	/* Filled Diamond */
+    } else if (!TkMacIsCharacterMissing(tkfont, '\327')) {
+    	markChar = '\327';	/* Hollow Diamond */
+    } else if (!TkMacIsCharacterMissing(tkfont, '\204')) {
+    	markChar = '\204';	/* Lond Dash */
     } else if (!TkMacIsCharacterMissing(tkfont, '-')) {
-    	markChar = '-';
+    	markChar = '-';		/* Short Dash */
     } else {
-    	markChar = '';
+    	markChar = '\022';	/* Check mark */
     }
     return markChar;
 }
@@ -1061,7 +1061,7 @@ ReconfigureIndividualMenu(
     TkMenuEntry *mePtr;
     Str255 itemText;
     int parentDisabled = 0;
-    
+
     for (mePtr = menuPtr->menuRefPtr->parentEntryPtr; mePtr != NULL;
     	    mePtr = mePtr->nextCascadePtr) {
     	char *name = (mePtr->namePtr == NULL) ? ""
@@ -1175,10 +1175,10 @@ ReconfigureIndividualMenu(
 	    }
 	    
     	    if ((mePtr->type != CASCADE_ENTRY) 
-    	    	    && (ENTRY_COMMAND_ACCEL 
-    	    	    == (mePtr->entryFlags & ENTRY_ACCEL_MASK))) {
+    	    	    && (ENTRY_COMMAND_ACCEL
+			    == (mePtr->entryFlags & ENTRY_ACCEL_MASK))) {
     	    	char *accel = Tcl_GetStringFromObj(mePtr->accelPtr, NULL);
-	    	SetItemCmd(macMenuHdl, index, accel[((EntryGeometry *)
+	    	SetItemCmd(macMenuHdl, base + index, accel[((EntryGeometry *)
 	    		mePtr->platformEntryData)->accelTextStart]);
 	    }
     	}
@@ -3574,7 +3574,6 @@ TkpDrawMenuEntry(
     Tk_FontMetrics entryMetrics;
     int adjustedY = y + padY;
     int adjustedHeight = height - 2 * padY;
-    int state;
 
     /*
      * Choose the gc for drawing the foreground part of the entry.
@@ -3605,7 +3604,7 @@ TkpDrawMenuEntry(
     	    }
     	}
 
-	if (((parentDisabled || (state == ENTRY_DISABLED)))
+	if (((parentDisabled || (mePtr->state == ENTRY_DISABLED)))
 		&& (menuPtr->disabledFgPtr != NULL)) {
 	    gc = mePtr->disabledGC;
 	    if (gc == NULL) {
@@ -4378,12 +4377,12 @@ TkpMenuInit(void)
     currentMenuBarInterp = NULL;
     currentMenuBarName = NULL;
     windowListPtr = NULL;
-    
+
     /*
      * Get the GC that we will use as the sign to the font
      * routines that they should not muck with the foreground color...
      */
-    
+
     if (TkMacHaveAppearance() > 1) {
         XGCValues tmpValues;
         TkColor *tmpColorPtr;
@@ -4397,8 +4396,8 @@ TkpMenuInit(void)
     }
     FixMDEF();
 
-    
-    Tcl_ExternalToUtf(NULL, NULL, "É", -1, 0, NULL, elipsisString,
+    Tcl_ExternalToUtf(NULL, NULL, "\311", /* É */
+	    -1, 0, NULL, elipsisString,
 	    TCL_UTF_MAX + 1, NULL, NULL, NULL);
 }
 

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacFont.c,v 1.4 1999/04/16 01:51:30 stanton Exp $
+ * RCS: @(#) $Id: tkMacFont.c,v 1.5 1999/12/07 03:04:51 hobbs Exp $
  */
  
 #include <Windows.h>
@@ -1721,7 +1721,11 @@ FontMapLoadPage(
     unsigned char buf[16];
     int srcRead, dstWrote;
     Tcl_Encoding encoding;
-     
+    Handle fHandle;
+    short theID;
+    ResType theType;
+    Str255 theName;
+
     subFontPtr->fontMap[row] = (char *) ckalloc(FONTMAP_BITSPERPAGE / 8);
     memset(subFontPtr->fontMap[row], 0, FONTMAP_BITSPERPAGE / 8);
     
@@ -1738,36 +1742,65 @@ FontMapLoadPage(
     fm.denom.v	= 1;
     
 #if !defined(UNIVERSAL_INTERFACES_VERSION) || (UNIVERSAL_INTERFACES_VERSION < 0x0300)
-    fontRecPtr = *((FontRec **) FMSwapFont(&fm)->fontResult);
+    fHandle = FMSwapFont(&fm)->fontHandle;
 #else
-    fontRecPtr = *((FontRec **) FMSwapFont(&fm)->fontHandle);
+    fHandle = FMSwapFont(&fm)->fontHandle;
 #endif
-    widths = (short *) ((long) &fontRecPtr->owTLoc 
-    	    + ((long) (fontRecPtr->owTLoc - fontRecPtr->firstChar) 
-    	    		* sizeof(short)));
+    GetResInfo(fHandle, &theID, &theType, theName);
     isMultiByteFont = subFontPtr->familyPtr->isMultiByteFont;
-    	    		
-    end = (row + 1) << FONTMAP_SHIFT;
-    for (i = row << FONTMAP_SHIFT; i < end; i++) {
-        if (Tcl_UtfToExternal(NULL, encoding, src, Tcl_UniCharToUtf(i, src), 
-        	TCL_ENCODING_STOPONERROR, NULL, (char *) buf, sizeof(buf), 
-		&srcRead, &dstWrote, NULL) == TCL_OK) {
-            
-            if (((isMultiByteFont != 0) && (buf[0] > 31))
-            	    || (widths[buf[0]] != -1)) {
-            	if ((buf[0] == 0x11) && (widths[0x12] == -1)) {
-            	    continue;
-            	}
-            	
-                /* 
-                 * Mac's char existence metrics are only for one-byte
-                 * characters.  If we have a double-byte char, just 
-                 * assume that the font supports that char if the font's 
-                 * encoding supports that char.
-                 */
+    if( theType=='sfnt' ) {
+	/*
+	 * Found an outline font which has very complex font record.
+	 * Let's just assume *ALL* the characters are allowed.
+	 */
+
+        end = (row + 1) << FONTMAP_SHIFT;
+        for (i = row << FONTMAP_SHIFT; i < end; i++) {
+            if (Tcl_UtfToExternal(NULL, encoding, src, Tcl_UniCharToUtf(i,
+		    src), 
+		    TCL_ENCODING_STOPONERROR, NULL, (char *) buf,
+		    sizeof(buf),
+		    &srcRead, &dstWrote, NULL) == TCL_OK) {
+		bitOffset = i & (FONTMAP_BITSPERPAGE - 1);
+		subFontPtr->fontMap[row][bitOffset >> 3] |= 1
+						   << (bitOffset & 7);
+	    }
+	}
+    } else {
+	/*
+	 * Found an old bitmap font which has a well-defined record.
+	 * We can check the width table to see which characters exist.
+	 */
+
+        fontRecPtr = *((FontRec **) fHandle );
+        widths = (short *) ((long) &fontRecPtr->owTLoc 
+		+ ((long) (fontRecPtr->owTLoc - fontRecPtr->firstChar)
+			* sizeof(short)));
+                              
+        end = (row + 1) << FONTMAP_SHIFT;
+        for (i = row << FONTMAP_SHIFT; i < end; i++) {
+            if (Tcl_UtfToExternal(NULL, encoding, src,
+		    Tcl_UniCharToUtf(i, src), 
+		    TCL_ENCODING_STOPONERROR, NULL, (char *) buf, sizeof(buf), 
+		    &srcRead, &dstWrote, NULL) == TCL_OK) {
                 
-                bitOffset = i & (FONTMAP_BITSPERPAGE - 1);
-		subFontPtr->fontMap[row][bitOffset >> 3] |= 1 << (bitOffset & 7);
+                if (((isMultiByteFont != 0) && (buf[0] > 31))
+			|| (widths[buf[0]] != -1)) {
+		    if ((buf[0] == 0x11) && (widths[0x12] == -1)) {
+			continue;
+		    }
+                      
+                    /* 
+                     * Mac's char existence metrics are only for one-byte
+                     * characters.  If we have a double-byte char, just 
+                     * assume that the font supports that char if the font's 
+                     * encoding supports that char.
+                     */
+                    
+                    bitOffset = i & (FONTMAP_BITSPERPAGE - 1);
+		    subFontPtr->fontMap[row][bitOffset >> 3] |= 1
+						       << (bitOffset & 7);
+		}
 	    }
 	}
     }
