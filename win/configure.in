@@ -2,7 +2,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.20 2000/07/21 16:27:35 mo Exp $
+# RCS: @(#) $Id: configure.in,v 1.21 2000/07/27 22:52:43 mo Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -112,14 +112,14 @@ eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}"
 # I left out the other vars that also need to get defined here.
 # we also need to double check about including DBGX in lib names
 # and spaces in file or directory names for the eval
-eval "TK_STUB_LIB_FLAG=\"-ltkstub${VER}${LIBSUFFIX}\""
+eval "TK_STUB_LIB_FLAG=\"-ltkstub${VER}${TCL_DBGX}\""
 eval "TK_BUILD_STUB_LIB_SPEC=\"-L`pwd` ${TK_STUB_LIB_FLAG}\""
 
 eval "TCL_DLL_FILE=\"tcl$VER${DLLSUFFIX}\""
 eval "TCL_LIB_FILE=\"${LIBPREFIX}tcl$VER${LIBSUFFIX}\""
 
 eval "TCL_STUB_LIB_FILE=\"${LIBPREFIX}tclstub${VER}${LIBSUFFIX}\""
-eval "TCL_STUB_LIB_FLAG=\"-ltclstub${VER}${LIBSUFFIX}\""
+eval "TCL_STUB_LIB_FLAG=\"-ltclstub${VER}${TCL_DBGX}\""
 eval "TCL_BUILD_STUB_LIB_SPEC=\"-L`pwd` ${TCL_STUB_LIB_FLAG}\""
 
 eval "DLLSUFFIX=${DLLSUFFIX}"
