@@ -1,3 +1,8 @@
+2002-07-01  Don Porter <dgp@users.sf.net>
+
+	* unix/configure:
+	* unix/tcl.m4: Updated to latest tcl.m4 from Tcl.
+
 2002-06-28  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/msgbox.tcl (MessageBox): Force all non-button widgets to

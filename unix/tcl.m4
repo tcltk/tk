@@ -407,6 +407,7 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 	# 'pthread_attr_setstacksize' ?
 
 	AC_CHECK_FUNCS(pthread_attr_setstacksize)
+	AC_CHECK_FUNCS(readdir_r)
     else
 	TCL_THREADS=0
 	AC_MSG_RESULT([no (default)])
@@ -1088,8 +1089,8 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    DL_LIBS=""
 	    LDFLAGS="-prebind"
 	    LD_SEARCH_FLAGS=""
-	    CFLAGS_OPTIMIZE="-O3"
-	    EXTRA_CFLAGS="-arch ppc -pipe"
+	    CFLAGS_OPTIMIZE="-O2"
+	    EXTRA_CFLAGS='-DTCL_DEFAULT_ENCODING=\"utf-8\"'
 	    ;;
 	NEXTSTEP-*)
 	    SHLIB_CFLAGS=""
@@ -1242,7 +1243,6 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    AC_DEFINE(_POSIX_PTHREAD_SEMANTICS)
 
 	    SHLIB_CFLAGS="-KPIC"
-	    SHLIB_LD="/usr/ccs/bin/ld -G -z text"
 
 	    # Note: need the LIBS below, otherwise Tk won't find Tcl's
 	    # symbols when dynamically loaded into tclsh.
@@ -1254,8 +1254,10 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    LDFLAGS=""
 	    if test "$GCC" = "yes" ; then
 		LD_SEARCH_FLAGS='-Wl,-R,${LIB_RUNTIME_DIR}'
+		SHLIB_LD="$CC -shared"
 	    else
 		LD_SEARCH_FLAGS='-R ${LIB_RUNTIME_DIR}'
+		SHLIB_LD="/usr/ccs/bin/ld -G -z text"
 	    fi
 	    ;;
 	SunOS-5*)
@@ -1267,7 +1269,6 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    AC_DEFINE(_POSIX_PTHREAD_SEMANTICS)
 
 	    SHLIB_CFLAGS="-KPIC"
-	    SHLIB_LD="/usr/ccs/bin/ld -G -z text"
 	    LDFLAGS=""
     
 	    # Check to enable 64-bit flags for compiler/linker
@@ -1300,8 +1301,10 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    DL_LIBS="-ldl"
 	    if test "$GCC" = "yes" ; then
 		LD_SEARCH_FLAGS='-Wl,-R,${LIB_RUNTIME_DIR}'
+		SHLIB_LD="$CC -shared"
 	    else
 		LD_SEARCH_FLAGS='-R ${LIB_RUNTIME_DIR}'
+		SHLIB_LD="/usr/ccs/bin/ld -G -z text"
 	    fi
 	    ;;
 	ULTRIX-4.*)
