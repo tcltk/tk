@@ -1,3 +1,15 @@
+2003-11-12  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* generic/tkText.h: 
+	* generic/tkText.c: 
+	* generic/tkTextDisp.c: 
+	* generic/tkTextIndex.c: 
+	* generic/tkTextTag.c: 
+	* tests/textTag.test: fixes to two very old Tk bugs [Bug 583286]
+	(focus handling with embedded windows), [Bug 220780] (tag
+	bindings trigger on window borders), and made two more functions
+	static in tkTextDisp.c.
+	
 2003-11-11  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/configure:

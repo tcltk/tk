@@ -6,14 +6,15 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textTag.test,v 1.8 2003/05/19 13:04:24 vincentdarley Exp $
+# RCS: @(#) $Id: textTag.test,v 1.9 2003/11/12 17:19:18 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+namespace import -force tcltest::test
 
 catch {destroy .t}
-testConstraint courier12 [expr {[catch {
+tcltest::testConstraint courier12 [expr {[catch {
 				text .t -font {Courier 12} -width 20 -height 10
 				}] == 0}]
 
@@ -769,6 +770,32 @@ test textTag-17.1 {insert procedure inserts tags} {
     .t insert end abcd {x} \n {} efgh {y} \n {}
     .t dump -tag 1.0 end
 } {tagon x 1.0 tagoff x 1.4 tagon y 2.0 tagoff y 2.4}
+
+catch {destroy .t}
+
+test textTag-18.1 {TkTextPickCurrent tag bindings} {
+    text .t -width 30 -height 4 -relief sunken -borderwidth 10 \
+      -highlightthickness 10 -pady 2
+    pack .t
+    
+    .t insert end " Tag here " TAG " no tag here"
+    .t tag configure TAG -borderwidth 4 -relief raised
+    .t tag bind TAG <Enter>  {lappend res "%x %y tag-Enter"}
+    .t tag bind TAG <Leave>  {lappend res "%x %y tag-Leave"}
+    bind .t <Enter> {lappend res Enter}
+    bind .t <Leave> {lappend res Leave}
+
+    set res {}
+    # Bindings must not trigger on the widget border, only over
+    # the actual tagged characters themselves.
+    event gen .t <Motion> -warp 1 -x 0 -y 0 ; update
+    event gen .t <Motion> -warp 1 -x 10 -y 10 ; update
+    event gen .t <Motion> -warp 1 -x 25 -y 25 ; update
+    event gen .t <Motion> -warp 1 -x 20 -y 20 ; update
+    event gen .t <Motion> -warp 1 -x 10 -y 10 ; update
+    event gen .t <Motion> -warp 1 -x 25 -y 25 ; update
+    set res
+} {Enter {25 25 tag-Enter} {20 20 tag-Leave} {25 25 tag-Enter}}
 
 catch {destroy .t}
 

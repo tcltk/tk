@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.19 2003/11/08 17:22:46 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.20 2003/11/12 17:19:18 vincentdarley Exp $
  */
 
 #ifndef _TKTEXT
@@ -1016,14 +1016,10 @@ EXTERN int      	TkTextMakePixelIndex _ANSI_ARGS_((TkText *textPtr,
 			    int pixelIndex, TkTextIndex *indexPtr));
 EXTERN void             TkTextInvalidateLineMetrics _ANSI_ARGS_((TkText *textPtr,
 			    TkTextLine *linePtr, int lineCount, int action));
-EXTERN void	        TkTextAsyncUpdateLineMetrics _ANSI_ARGS_((ClientData 
-			    clientData));
 EXTERN int              TkTextUpdateLineMetrics _ANSI_ARGS_((TkText *textPtr,
 			    int lineNum, int endLine, int doThisMuch));
 EXTERN int              TkTextUpdateOneLine _ANSI_ARGS_((TkText *textPtr, 
 			    TkTextLine *linePtr));
-EXTERN void	        TkTextUpdateYScrollbar _ANSI_ARGS_((ClientData 
-			    clientData));
 EXTERN int		TkTextMarkCmd _ANSI_ARGS_((TkText *textPtr,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
 EXTERN int		TkTextMarkNameToIndex _ANSI_ARGS_((TkText *textPtr,
@@ -1034,7 +1030,7 @@ EXTERN void		TkTextEventuallyRepick _ANSI_ARGS_((TkText *textPtr));
 EXTERN void		TkTextPickCurrent _ANSI_ARGS_((TkText *textPtr,
 			    XEvent *eventPtr));
 EXTERN void		TkTextPixelIndex _ANSI_ARGS_((TkText *textPtr,
-			    int x, int y, TkTextIndex *indexPtr));
+			    int x, int y, TkTextIndex *indexPtr, int *nearest));
 EXTERN int		TkTextPrintIndex _ANSI_ARGS_((
 			    CONST TkTextIndex *indexPtr, char *string));
 EXTERN Tcl_Obj*		TkTextNewIndexObj _ANSI_ARGS_((TkText *textPtr,

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.26 2003/11/10 14:37:33 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.27 2003/11/12 17:19:18 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -446,6 +446,10 @@ static int              TextGetScrollInfoObj _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkText *textPtr, int objc, 
 			    Tcl_Obj *CONST objv[], double *dblPtr,
 			    int *intPtr));
+static void	        AsyncUpdateLineMetrics _ANSI_ARGS_((ClientData 
+			    clientData));
+static void	        AsyncUpdateYScrollbar _ANSI_ARGS_((ClientData 
+			    clientData));
 
 /*
  * Result values returned by TextGetScrollInfo:
@@ -513,10 +517,10 @@ TkTextCreateDInfo(textPtr)
     /* Add a refCount for each of the idle call-backs */
     textPtr->refCount++;
     dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(0, 
-			TkTextAsyncUpdateLineMetrics, (ClientData) textPtr);
+			AsyncUpdateLineMetrics, (ClientData) textPtr);
     textPtr->refCount++;
     dInfoPtr->scrollbarTimer = Tcl_CreateTimerHandler(200, 
-			TkTextUpdateYScrollbar, (ClientData) textPtr);
+			AsyncUpdateYScrollbar, (ClientData) textPtr);
 
 
     textPtr->dInfoPtr = dInfoPtr;
@@ -2462,7 +2466,7 @@ DisplayLineBackground(textPtr, dlPtr, prevPtr, pixmap)
 /*
  *----------------------------------------------------------------------
  *
- * TkTextAsyncUpdateLineMetrics --
+ * AsyncUpdateLineMetrics --
  *
  *	This procedure is invoked as a background handler to update the
  *	pixel-height calculations of individual lines in an
@@ -2484,8 +2488,8 @@ DisplayLineBackground(textPtr, dlPtr, prevPtr, pixmap)
  *----------------------------------------------------------------------
  */
 
-void
-TkTextAsyncUpdateLineMetrics(clientData)
+static void
+AsyncUpdateLineMetrics(clientData)
     ClientData clientData;	/* Information about widget. */
 {
     register TkText *textPtr = (TkText *) clientData;
@@ -2534,7 +2538,7 @@ TkTextAsyncUpdateLineMetrics(clientData)
      * so no need to adjust that.
      */
     dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1, 
-			TkTextAsyncUpdateLineMetrics, (ClientData) textPtr);
+			AsyncUpdateLineMetrics, (ClientData) textPtr);
 }
 
 /*
@@ -2784,7 +2788,7 @@ TkTextInvalidateLineMetrics(textPtr, linePtr, lineCount, action)
     if (dInfoPtr->lineUpdateTimer == NULL) {
 	textPtr->refCount++;
 	dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1, 
-			TkTextAsyncUpdateLineMetrics, (ClientData) textPtr);
+			AsyncUpdateLineMetrics, (ClientData) textPtr);
     }
 }
 
@@ -3140,7 +3144,7 @@ TkTextUpdateOneLine(textPtr, linePtr)
     if (textPtr->dInfoPtr->scrollbarTimer == NULL) {
 	textPtr->refCount++;
         textPtr->dInfoPtr->scrollbarTimer = Tcl_CreateTimerHandler(200, 
-		TkTextUpdateYScrollbar, (ClientData) textPtr);
+		AsyncUpdateYScrollbar, (ClientData) textPtr);
     }
     return displayLines;
 }
@@ -4157,7 +4161,7 @@ TkTextRelayoutWindow(textPtr, mask)
 	if (dInfoPtr->lineUpdateTimer == NULL) {
 	    textPtr->refCount++;
 	    dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1, 
-			TkTextAsyncUpdateLineMetrics, (ClientData) textPtr);
+			AsyncUpdateLineMetrics, (ClientData) textPtr);
 	}
     }
 }
@@ -5464,7 +5468,7 @@ GetYView(interp, textPtr, report)
 /*
  *----------------------------------------------------------------------
  *
- * TkTextUpdateYScrollbar --
+ * AsyncUpdateYScrollbar --
  *
  *	This procedure is called to update the vertical scrollbar
  *	asychronously as the pixel height calculations progress for
@@ -5480,8 +5484,8 @@ GetYView(interp, textPtr, report)
  *----------------------------------------------------------------------
  */
 
-void
-TkTextUpdateYScrollbar(clientData)
+static void
+AsyncUpdateYScrollbar(clientData)
     ClientData clientData;	/* Information about widget. */
 {
     register TkText *textPtr = (TkText *) clientData;
@@ -5589,15 +5593,21 @@ FindDLine(dlPtr, indexPtr)
  */
 
 void
-TkTextPixelIndex(textPtr, x, y, indexPtr)
+TkTextPixelIndex(textPtr, x, y, indexPtr, nearest)
     TkText *textPtr;		/* Widget record for text widget. */
     int x, y;			/* Pixel coordinates of point in widget's
 				 * window. */
     TkTextIndex *indexPtr;	/* This index gets filled in with the
 				 * index of the character nearest to (x,y). */
+    int *nearest;               /* If non-NULL then gets set to 0 if
+                                 * (x,y) is actually over the returned 
+                                 * index, and 1 if it is just nearby
+                                 * (e.g. if x,y is on the border of the
+                                 * widget). */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     register DLine *dlPtr, *validDlPtr;
+    int nearby = 0;
 
     /*
      * Make sure that all of the layout information about what's
@@ -5617,14 +5627,17 @@ TkTextPixelIndex(textPtr, x, y, indexPtr)
     if (y < dInfoPtr->y) {
 	y = dInfoPtr->y;
 	x = dInfoPtr->x;
+	nearby = 1;
     }
     if (x >= dInfoPtr->maxX) {
 	x = dInfoPtr->maxX - 1;
+	nearby = 1;
     }
     if (x < dInfoPtr->x) {
 	x = dInfoPtr->x;
+	nearby = 1;
     }
-
+    
     /*
      * Find the display line containing the desired y-coordinate.
      */
@@ -5640,11 +5653,16 @@ TkTextPixelIndex(textPtr, x, y, indexPtr)
 	     */
 
 	    x = dInfoPtr->maxX - 1;
+	    nearby = 1;
 	    break;
 	}
     }
     if (dlPtr->chunkPtr == NULL) dlPtr = validDlPtr;
     
+    if (nearest != NULL) {
+	*nearest = nearby;
+    }
+
     DlineIndexOfX(textPtr, dlPtr, x, indexPtr);
 }
 
