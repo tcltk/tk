@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.33 2004/06/29 23:21:43 hobbs Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.34 2004/06/30 22:18:01 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -30,7 +30,7 @@
  * Forward declarations for procedures defined later in this file:
  */
 
-static TkWindow *	GetToplevel _ANSI_ARGS_((Tk_Window tkwin));
+static TkWindow *	GetTopHierarchy _ANSI_ARGS_((Tk_Window tkwin));
 static char *		WaitVariableProc _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, CONST char *name1,
 			    CONST char *name2, int flags));
@@ -1283,7 +1283,7 @@ Tk_WinfoObjCmd(clientData, interp, objc, objv)
 	    useY = 1;
 
 	    pointerxy:
-	    winPtr = GetToplevel(tkwin);
+	    winPtr = GetTopHierarchy(tkwin);
 	    if (winPtr == NULL) {
 		x = -1;
 		y = -1;
@@ -1361,7 +1361,7 @@ Tk_WinfoObjCmd(clientData, interp, objc, objv)
 	    break;
 	}
 	case WIN_TOPLEVEL: {
-	    winPtr = GetToplevel(tkwin);
+	    winPtr = GetTopHierarchy(tkwin);
 	    if (winPtr != NULL) {
 		Tcl_SetStringObj(resultPtr, winPtr->pathName, -1);
 	    }
@@ -2019,14 +2019,15 @@ TkDeadAppCmd(clientData, interp, argc, argv)
 /*
  *----------------------------------------------------------------------
  *
- * GetToplevel --
+ * GetTopHierarchy --
  *
- *	Retrieves the toplevel window which is the nearest ancestor of
- *	of the specified window.
+ *	Retrieves the top-of-hierarchy window which is the nearest
+ *	ancestor of the specified window.
  *
  * Results:
- *	Returns the toplevel window or NULL if the window has no
- *	ancestor which is a toplevel.
+ *	Returns the top-of-hierarchy window, or NULL if the window
+ *	has no ancestor which is at the top of a physical window
+ *	hierarchy.
  *
  * Side effects:
  *	None.
@@ -2035,17 +2036,17 @@ TkDeadAppCmd(clientData, interp, argc, argv)
  */
 
 static TkWindow *
-GetToplevel(tkwin)
-    Tk_Window tkwin;		/* Window for which the toplevel should be
-				 * deterined. */
+GetTopHierarchy(tkwin)
+    Tk_Window tkwin;		/* Window for which the top-of-hierarchy
+				 * ancestor should be deterined. */
 {
-     TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
-     while (!(winPtr->flags & TK_TOP_LEVEL)) {
-	 winPtr = winPtr->parentPtr;
-	 if (winPtr == NULL) {
-	     return NULL;
-	 }
-     }
-     return winPtr;
+    while (!(winPtr->flags & TK_TOP_HIERARCHY)) {
+	winPtr = winPtr->parentPtr;
+	if (winPtr == NULL) {
+	    return NULL; /* This should never happen! */
+	}
+    }
+    return winPtr;
 }
