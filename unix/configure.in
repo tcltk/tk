@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 AC_INIT(../generic/tk.h)
-# RCS: @(#) $Id: configure.in,v 1.24 1999/01/04 19:25:27 rjohnson Exp $
+# RCS: @(#) $Id: configure.in,v 1.25 1999/01/29 00:32:40 rjohnson Exp $
 
 TK_VERSION=8.0
 TK_MAJOR_VERSION=8
@@ -39,6 +39,23 @@ if test "${GCC}" = "yes" ; then
     CFLAGS_WARNING="-Wall -Wconversion -Wno-implicit-int"
 else
     CFLAGS_WARNING=""
+fi
+
+#------------------------------------------------------------------------------
+# If we're using GCC, see if the compiler understands -pipe.  If so, use it.
+# It makes compiling go faster.  (This is only a performance feature.)
+#------------------------------------------------------------------------------
+
+if test -z "$no_pipe"; then
+if test -n "$GCC"; then
+  AC_MSG_CHECKING([if the compiler understands -pipe])
+  OLDCC="$CC"  
+  CC="$CC -pipe"
+  AC_TRY_COMPILE(,,
+    AC_MSG_RESULT(yes),
+    CC="$OLDCC"
+    AC_MSG_RESULT(no))
+fi  
 fi
 
 #--------------------------------------------------------------------
