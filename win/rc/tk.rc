@@ -1,4 +1,4 @@
-// RCS: @(#) $Id: tk.rc,v 1.7 2001/10/01 21:04:07 hobbs Exp $
+// RCS: @(#) $Id: tk.rc,v 1.8 2001/11/10 00:58:51 hobbs Exp $
 //
 // Version Resource Script
 //
@@ -67,3 +67,15 @@ END
 //
 
 #include "tk_base.rc"
+
+//
+// This enables themed scrollbars in XP by trying to use comctl32 v6.
+//
+
+#ifndef RT_MANIFEST
+#define RT_MANIFEST     24
+#endif
+#ifndef CREATEPROCESS_MANIFEST_RESOURCE_ID
+#define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
+#endif
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "wish.exe.manifest"
