@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.2 1999/03/10 07:04:38 stanton Exp $
+# RCS: @(#) $Id: tk.decls,v 1.3 1999/04/16 01:51:09 stanton Exp $
 
 library tk
 
@@ -77,7 +77,7 @@ declare 8 generic {
 
 declare 9 generic {
     int Tk_CanvasGetCoord (Tcl_Interp *interp, \
-	    Tk_Canvas canvas, char *string, double *doublePtr)
+	    Tk_Canvas canvas, char *str, double *doublePtr)
 }
 
 declare 10 generic {
@@ -186,7 +186,7 @@ declare 30 generic {
 
 declare 31 generic {
     Tk_TextLayout Tk_ComputeTextLayout (Tk_Font font, \
-	    CONST char *string, int numChars, int wrapLength, \
+	    CONST char *str, int numChars, int wrapLength, \
 	    Tk_Justify justify, int flags, int *widthPtr, \
 	    int *heightPtr)
 }
@@ -198,7 +198,7 @@ declare 32 generic {
 declare 33 generic {
     unsigned long Tk_CreateBinding (Tcl_Interp *interp, \
 	    Tk_BindingTable bindingTable, ClientData object, \
-	    char *eventString, char *command, int append)
+	    char *eventStr, char *command, int append)
 }
 
 declare 34 generic {
@@ -251,8 +251,8 @@ declare 43 generic {
 }
 
 declare 44 generic {
-    int Tk_DefineBitmap (Tcl_Interp *interp, \
-	    Tk_Uid name, char *source, int width, int height)
+    int Tk_DefineBitmap (Tcl_Interp *interp, CONST char *name, char *source, \
+	    int width, int height)
 }
 
 declare 45 generic {
@@ -266,7 +266,7 @@ declare 46 generic {
 declare 47 generic {
     int Tk_DeleteBinding (Tcl_Interp *interp, \
 	    Tk_BindingTable bindingTable, ClientData object, \
-	    char *eventString)
+	    char *eventStr)
 }
 
 declare 48 generic {
@@ -315,22 +315,19 @@ declare 57 generic {
 }
 
 declare 58 generic {
-    void Tk_Draw3DRectangle (Tk_Window tkwin, \
-	    Drawable drawable, Tk_3DBorder border, int x, \
-	    int y, int width, int height, int borderWidth, \
-	    int relief)
+    void Tk_Draw3DRectangle (Tk_Window tkwin, Drawable drawable, \
+	    Tk_3DBorder border, int x, int y, int width, int height, \
+	    int borderWidth, int relief)
 }
 
 declare 59 generic {
-    void Tk_DrawChars (Display *display, \
-	    Drawable drawable, GC gc, Tk_Font tkfont, \
-	    CONST char *source, int numChars, int x, \
-	    int y)
+    void Tk_DrawChars (Display *display, Drawable drawable, GC gc, \
+	    Tk_Font tkfont, CONST char *source, int numBytes, int x, int y)
 }
 
 declare 60 generic {
-    void Tk_DrawFocusHighlight (Tk_Window tkwin, \
-	    GC gc, int width, Drawable drawable)
+    void Tk_DrawFocusHighlight (Tk_Window tkwin, GC gc, int width, \
+	    Drawable drawable)
 }
 
 declare 61 generic {
@@ -430,7 +427,7 @@ declare 81 generic {
 
 declare 82 generic {
     int Tk_GetAnchor (Tcl_Interp *interp, \
-	    char *string, Tk_Anchor *anchorPtr)
+	    char *str, Tk_Anchor *anchorPtr)
 }
 
 declare 83 generic {
@@ -440,11 +437,11 @@ declare 83 generic {
 declare 84 generic {
     char * Tk_GetBinding (Tcl_Interp *interp, \
 	    Tk_BindingTable bindingTable, ClientData object, \
-	    char *eventString)
+	    char *eventStr)
 }
 
 declare 85 generic {
-    Pixmap Tk_GetBitmap (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid string)
+    Pixmap Tk_GetBitmap (Tcl_Interp *interp, Tk_Window tkwin, CONST char * str)
 }
 
 declare 86 generic {
@@ -453,7 +450,7 @@ declare 86 generic {
 }
 
 declare 87 generic {
-    int Tk_GetCapStyle (Tcl_Interp *interp, char *string, int *capPtr)
+    int Tk_GetCapStyle (Tcl_Interp *interp, char *str, int *capPtr)
 }
 
 declare 88 generic {
@@ -465,12 +462,12 @@ declare 89 generic {
 }
 
 declare 90 generic {
-    Colormap Tk_GetColormap (Tcl_Interp *interp, Tk_Window tkwin, char *string)
+    Colormap Tk_GetColormap (Tcl_Interp *interp, Tk_Window tkwin, char *str)
 }
 
 declare 91 generic {
     Tk_Cursor Tk_GetCursor (Tcl_Interp *interp, Tk_Window tkwin, \
-	    Tk_Uid string)
+	    Tk_Uid str)
 }
 
 declare 92 generic {
@@ -482,12 +479,11 @@ declare 92 generic {
 
 declare 93 generic {
     Tk_Font Tk_GetFont (Tcl_Interp *interp, \
-	    Tk_Window tkwin, CONST char *string)
+	    Tk_Window tkwin, CONST char *str)
 }
 
 declare 94 generic {
-    Tk_Font Tk_GetFontFromObj (Tcl_Interp *interp, \
-	    Tk_Window tkwin, Tcl_Obj *objPtr)
+    Tk_Font Tk_GetFontFromObj (Tk_Window tkwin, Tcl_Obj *objPtr)
 }
 
 declare 95 generic {
@@ -513,12 +509,12 @@ declare 99 generic {
 }
 
 declare 100 generic {
-    int Tk_GetJoinStyle (Tcl_Interp *interp, char *string, int *joinPtr)
+    int Tk_GetJoinStyle (Tcl_Interp *interp, char *str, int *joinPtr)
 }
 
 declare 101 generic {
     int Tk_GetJustify (Tcl_Interp *interp, \
-	    char *string, Tk_Justify *justifyPtr)
+	    char *str, Tk_Justify *justifyPtr)
 }
 
 declare 102 generic {
@@ -531,7 +527,7 @@ declare 103 generic {
 
 declare 104 generic {
     int Tk_GetPixels (Tcl_Interp *interp, \
-	    Tk_Window tkwin, char *string, int *intPtr)
+	    Tk_Window tkwin, char *str, int *intPtr)
 }
 
 declare 105 generic {
@@ -554,7 +550,7 @@ declare 108 generic {
 
 declare 109 generic {
     int Tk_GetScreenMM (Tcl_Interp *interp, \
-	    Tk_Window tkwin, char *string, double *doublePtr)
+	    Tk_Window tkwin, char *str, double *doublePtr)
 }
 
 declare 110 generic {
@@ -564,12 +560,12 @@ declare 110 generic {
 }
 
 declare 111 generic {
-    Tk_Uid Tk_GetUid (CONST char *string)
+    Tk_Uid Tk_GetUid (CONST char *str)
 }
 
 declare 112 generic {
     Visual * Tk_GetVisual (Tcl_Interp *interp, \
-	    Tk_Window tkwin, char *string, int *depthPtr, \
+	    Tk_Window tkwin, char *str, int *depthPtr, \
 	    Colormap *colormapPtr)
 }
 
@@ -632,7 +628,7 @@ declare 125 generic {
 
 declare 126 generic {
     int Tk_MeasureChars (Tk_Font tkfont, \
-	    CONST char *source, int maxChars, int maxPixels, \
+	    CONST char *source, int numBytes, int maxPixels, \
 	    int flags, int *lengthPtr)
 }
 
@@ -850,7 +846,7 @@ declare 175 generic {
 }
 
 declare 176 generic {
-    int Tk_TextWidth (Tk_Font font, CONST char *string, int numChars)
+    int Tk_TextWidth (Tk_Font font, CONST char *str, int numBytes)
 }
 
 declare 177 generic {
@@ -860,8 +856,8 @@ declare 177 generic {
 declare 178 generic {
     void Tk_UnderlineChars (Display *display, \
 	    Drawable drawable, GC gc, Tk_Font tkfont, \
-	    CONST char *source, int x, int y, int firstChar, \
-	    int lastChar)
+	    CONST char *source, int x, int y, int firstByte, \
+	    int lastByte)
 }
 
 declare 179 generic {
@@ -888,6 +884,152 @@ declare 183 generic {
 
 declare 184 generic {
     void Tk_UpdatePointer (Tk_Window tkwin, int x, int y, int state)
+}
+
+# new functions for 8.1
+
+declare 185 generic {
+    Pixmap  Tk_AllocBitmapFromObj (Tcl_Interp *interp, Tk_Window tkwin, \
+    Tcl_Obj *objPtr)
+}
+
+declare 186 generic {
+    Tk_3DBorder Tk_Alloc3DBorderFromObj (Tcl_Interp *interp, Tk_Window tkwin, \
+	    Tcl_Obj *objPtr)
+}
+
+declare 187 generic {
+    XColor *  Tk_AllocColorFromObj (Tcl_Interp *interp, Tk_Window tkwin, \
+	    Tcl_Obj *objPtr)
+}
+
+declare 188 generic {
+    Tk_Cursor Tk_AllocCursorFromObj (Tcl_Interp *interp, Tk_Window tkwin, \
+	    Tcl_Obj *objPtr)
+}
+
+declare 189 generic {
+    Tk_Font  Tk_AllocFontFromObj (Tcl_Interp *interp, Tk_Window tkwin, \
+	    Tcl_Obj *objPtr)
+
+}
+
+declare 190 generic {
+    Tk_OptionTable Tk_CreateOptionTable (Tcl_Interp *interp, \
+	    CONST Tk_OptionSpec *templatePtr)
+}
+
+declare 191 generic {
+    void  Tk_DeleteOptionTable (Tk_OptionTable optionTable)
+}
+
+declare 192 generic {
+    void  Tk_Free3DBorderFromObj (Tk_Window tkwin, Tcl_Obj *objPtr)
+}
+
+declare 193 generic {
+    void  Tk_FreeBitmapFromObj (Tk_Window tkwin, Tcl_Obj *objPtr)
+}
+
+declare 194 generic {
+    void  Tk_FreeColorFromObj (Tk_Window tkwin, Tcl_Obj *objPtr)
+}
+
+declare 195 generic {
+    void  Tk_FreeConfigOptions (char *recordPtr, Tk_OptionTable optionToken, \
+	    Tk_Window tkwin)
+
+}
+
+declare 196 generic {
+    void  Tk_FreeSavedOptions (Tk_SavedOptions *savePtr)
+}
+
+declare 197 generic {
+    void  Tk_FreeCursorFromObj (Tk_Window tkwin, Tcl_Obj *objPtr)
+}
+
+declare 198 generic {
+    void  Tk_FreeFontFromObj (Tk_Window tkwin, Tcl_Obj *objPtr)
+}
+
+declare 199 generic {
+    Tk_3DBorder Tk_Get3DBorderFromObj (Tk_Window tkwin, Tcl_Obj *objPtr)
+}
+
+declare 200 generic {
+    int  Tk_GetAnchorFromObj (Tcl_Interp *interp, Tcl_Obj *objPtr, \
+	    Tk_Anchor *anchorPtr)
+}
+
+declare 201 generic {
+    Pixmap  Tk_GetBitmapFromObj (Tk_Window tkwin, Tcl_Obj *objPtr)
+}
+
+declare 202 generic {
+    XColor *  Tk_GetColorFromObj (Tk_Window tkwin, Tcl_Obj *objPtr)
+}
+
+declare 203 generic {
+    Tk_Cursor Tk_GetCursorFromObj (Tk_Window tkwin, Tcl_Obj *objPtr)
+}
+
+declare 204 generic {
+    Tcl_Obj * Tk_GetOptionInfo (Tcl_Interp *interp, \
+	    char *recordPtr, Tk_OptionTable optionTable, \
+	    Tcl_Obj *namePtr, Tk_Window tkwin)
+}
+
+declare 205 generic {
+    Tcl_Obj * Tk_GetOptionValue (Tcl_Interp *interp, char *recordPtr, \
+	    Tk_OptionTable optionTable, Tcl_Obj *namePtr, Tk_Window tkwin)
+}
+
+declare 206 generic {
+    int  Tk_GetJustifyFromObj (Tcl_Interp *interp, \
+	    Tcl_Obj *objPtr, Tk_Justify *justifyPtr)
+}
+
+declare 207 generic {
+    int  Tk_GetMMFromObj (Tcl_Interp *interp, \
+	    Tk_Window tkwin, Tcl_Obj *objPtr, double *doublePtr)
+}
+
+declare 208 generic {
+    int  Tk_GetPixelsFromObj (Tcl_Interp *interp, \
+	    Tk_Window tkwin, Tcl_Obj *objPtr, int *intPtr)
+}
+
+declare 209 generic {
+    int  Tk_GetReliefFromObj (Tcl_Interp *interp, \
+	    Tcl_Obj *objPtr, int *resultPtr)
+}
+
+declare 210 generic {
+    int  Tk_GetScrollInfoObj (Tcl_Interp *interp, \
+	    int objc, Tcl_Obj *CONST objv[], double *dblPtr, int *intPtr)
+}
+
+declare 211 generic {
+    int  Tk_InitOptions (
+       Tcl_Interp *interp, char *recordPtr, \
+	       Tk_OptionTable optionToken, Tk_Window tkwin)
+}
+
+declare 212 generic {
+    void  Tk_MainEx (int argc, char **argv, Tcl_AppInitProc *appInitProc, \
+	    Tcl_Interp *interp)
+}
+
+declare 213 generic {
+    void  Tk_RestoreSavedOptions (Tk_SavedOptions *savePtr)
+}
+
+declare 214 generic {
+    int  Tk_SetOptions (Tcl_Interp *interp, char *recordPtr, \
+	    Tk_OptionTable optionTable, int objc, \
+	    Tcl_Obj *CONST objv[], Tk_Window tkwin, \
+	    Tk_SavedOptions *savePtr, int *maskPtr)
 }
 
 

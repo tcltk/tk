@@ -11,9 +11,9 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.8 1998/11/12 06:22:05 welch Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.9 1999/04/16 01:51:27 stanton Exp $
 #
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
+# Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -95,10 +95,10 @@ proc tkIconList_Create {w} {
 
     bind $data(canvas) <1>         "tkIconList_Btn1 $w %x %y"
     bind $data(canvas) <B1-Motion> "tkIconList_Motion1 $w %x %y"
-    bind $data(canvas) <Double-1>  "tkIconList_Double1 $w %x %y"
-    bind $data(canvas) <ButtonRelease-1> "tkCancelRepeat"
     bind $data(canvas) <B1-Leave>  "tkIconList_Leave1 $w %x %y"
     bind $data(canvas) <B1-Enter>  "tkCancelRepeat"
+    bind $data(canvas) <ButtonRelease-1> "tkCancelRepeat"
+    bind $data(canvas) <Double-ButtonRelease-1> "tkIconList_Double1 $w %x %y"
 
     bind $data(canvas) <Up>        "tkIconList_UpDown $w -1"
     bind $data(canvas) <Down>      "tkIconList_UpDown $w  1"
@@ -628,23 +628,22 @@ proc tkIconList_Reset {w} {
 #	the tk_strictMotif flag is set to false. This procedure shouldn't
 #	be called directly. Call tk_getOpenFile or tk_getSaveFile instead.
 #
-proc tkFDialog {args} {
+# Arguments:
+#	type		"open" or "save"
+#	args		Options parsed by the procedure.
+#
+
+proc tkFDialog {type args} {
     global tkPriv
-    set w __tk_filedialog
-    upvar #0 $w data
+    set dataName __tk_filedialog
+    upvar #0 $dataName data
 
-    if {![string compare [lindex [info level 0] 0] tk_getOpenFile]} {
-	set type open
-    } else {
-	set type save
-    }
-
-    tkFDialog_Config $w $type $args
+    tkFDialog_Config $dataName $type $args
 
     if {![string compare $data(-parent) .]} {
-        set w .$w
+        set w .$dataName
     } else {
-        set w $data(-parent).$w
+        set w $data(-parent).$dataName
     }
 
     # (re)create the dialog box if necessary
@@ -668,7 +667,9 @@ proc tkFDialog {args} {
     }
     wm transient $w $data(-parent)
 
-    # 5. Initialize the file types menu
+    trace variable data(selectPath) w "tkFDialog_SetPath $w"
+
+    # Initialize the file types menu
     #
     if {$data(-filetypes) != {}} {
 	$data(typeMenu) delete 0 end
@@ -689,7 +690,7 @@ proc tkFDialog {args} {
 
     tkFDialog_UpdateWhenIdle $w
 
-    # 6. Withdraw the window, then update all the geometry information
+    # Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
     # display and de-iconify it.
 
@@ -703,7 +704,7 @@ proc tkFDialog {args} {
     wm deiconify $w
     wm title $w $data(-title)
 
-    # 7. Set a grab and claim the focus too.
+    # Set a grab and claim the focus too.
 
     set oldFocus [focus]
     set oldGrab [grab current $w]
@@ -718,7 +719,7 @@ proc tkFDialog {args} {
     $data(ent) select to   end
     $data(ent) icursor end
 
-    # 8. Wait for the user to respond, then restore the focus and
+    # Wait for the user to respond, then restore the focus and
     # return the index of the selected button.  Restore the focus
     # before deleting the window, since otherwise the window manager
     # may take the focus away so we can't redirect it.  Finally,
@@ -735,6 +736,7 @@ proc tkFDialog {args} {
 	    grab $oldGrab
 	}
     }
+
     return $tkPriv(selectFilePath)
 }
 
@@ -742,10 +744,18 @@ proc tkFDialog {args} {
 #
 #	Configures the TK filedialog according to the argument list
 #
-proc tkFDialog_Config {w type argList} {
-    upvar #0 $w data
+proc tkFDialog_Config {dataName type argList} {
+    upvar #0 $dataName data
 
     set data(type) $type
+
+    # 0: Delete all variable that were set on data(selectPath) the
+    # last time the file dialog is used. The traces may cause troubles
+    # if the dialog is now used with a different -parent option.
+
+    foreach trace [trace vinfo data(selectPath)] {
+	trace vdelete data(selectPath) [lindex $trace 0] [lindex $trace 1]
+    }
 
     # 1: the configuration specs
     #
@@ -768,7 +778,7 @@ proc tkFDialog_Config {w type argList} {
 
     # 3: parse the arguments
     #
-    tclParseConfigSpec $w $specs "" $argList
+    tclParseConfigSpec $dataName $specs "" $argList
 
     if {![string compare $data(-title) ""]} {
 	if {![string compare $type "open"]} {
@@ -782,9 +792,8 @@ proc tkFDialog_Config {w type argList} {
     #    settings
     #
     if {[string compare $data(-initialdir) ""]} {
-	
 	if {[file isdirectory $data(-initialdir)]} {
-	    set data(selectPath) [glob $data(-initialdir)]
+	    set data(selectPath) [lindex [glob $data(-initialdir)] 0]
 	} else {
 	    set data(selectPath) [pwd]
 	}
@@ -914,8 +923,6 @@ static char updir_bits[] = {
     $data(upBtn)     config -command "tkFDialog_UpDirCmd $w"
     $data(okBtn)     config -command "tkFDialog_OkCmd $w"
     $data(cancelBtn) config -command "tkFDialog_CancelCmd $w"
-
-    trace variable data(selectPath) w "tkFDialog_SetPath $w"
 
     bind $w <Alt-d> "focus $data(dirMenuBtn)"
     bind $w <Alt-t> [format {
@@ -1067,6 +1074,14 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     # Restore the PWD to the application's PWD
     #
     cd $appPWD
+
+    # Restore the Open/Save Button
+    #
+    if {![string compare $data(type) open]} {
+        $data(okBtn) config -text "Open"
+    } else {
+        $data(okBtn) config -text "Save"
+    }
 
     # turn off the busy cursor.
     #

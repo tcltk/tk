@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacSubwindows.c,v 1.4 1998/09/14 18:23:39 stanton Exp $
+ * RCS: @(#) $Id: tkMacSubwindows.c,v 1.5 1999/04/16 01:51:32 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -930,7 +930,8 @@ TkMacGetDrawablePort(
 	contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
 	
     	if (contWinPtr != NULL) {
-    	    resultPort = TkMacGetDrawablePort((Drawable) contWinPtr->privatePtr);
+    	    resultPort = TkMacGetDrawablePort(
+		(Drawable) contWinPtr->privatePtr);
     	} else if (gMacEmbedHandler != NULL) {
 	    resultPort = gMacEmbedHandler->getPortProc(
                     (Tk_Window) macWin->winPtr);

@@ -4,11 +4,12 @@
  *	Windows specific mouse tracking code.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1998-1999 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPointer.c,v 1.5 1999/03/10 19:29:24 redman Exp $
+ * RCS: @(#) $Id: tkWinPointer.c,v 1.6 1999/04/16 01:51:53 stanton Exp $
  */
 
 #include "tkWinInt.h"

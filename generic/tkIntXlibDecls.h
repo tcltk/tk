@@ -9,11 +9,13 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.4 1999/03/12 03:17:47 stanton Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.5 1999/04/16 01:51:18 stanton Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
 #define _TKINTXLIBDECLS
+
+#include "X11/Xutil.h"
 
 #ifdef BUILD_tk
 #undef TCL_STORAGE_CLASS
@@ -277,6 +279,74 @@ EXTERN void		TkPutImage _ANSI_ARGS_((unsigned long * colors,
 				GC gc, XImage* image, int src_x, int src_y, 
 				int dest_x, int dest_y, unsigned int width, 
 				unsigned int height));
+/* Slot 81 is reserved */
+/* 82 */
+EXTERN Status		XParseColor _ANSI_ARGS_((Display * display, 
+				Colormap map, _Xconst char* spec, 
+				XColor * colorPtr));
+/* 83 */
+EXTERN GC		XCreateGC _ANSI_ARGS_((Display* display, Drawable d, 
+				unsigned long valuemask, XGCValues* values));
+/* 84 */
+EXTERN void		XFreeGC _ANSI_ARGS_((Display* display, GC gc));
+/* 85 */
+EXTERN Atom		XInternAtom _ANSI_ARGS_((Display* display, 
+				_Xconst char* atom_name, Bool only_if_exists));
+/* 86 */
+EXTERN void		XSetBackground _ANSI_ARGS_((Display* display, GC gc, 
+				unsigned long foreground));
+/* 87 */
+EXTERN void		XSetForeground _ANSI_ARGS_((Display* display, GC gc, 
+				unsigned long foreground));
+/* 88 */
+EXTERN void		XSetClipMask _ANSI_ARGS_((Display* display, GC gc, 
+				Pixmap pixmap));
+/* 89 */
+EXTERN void		XSetClipOrigin _ANSI_ARGS_((Display* display, GC gc, 
+				int clip_x_origin, int clip_y_origin));
+/* 90 */
+EXTERN void		XSetTSOrigin _ANSI_ARGS_((Display* display, GC gc, 
+				int ts_x_origin, int ts_y_origin));
+/* 91 */
+EXTERN void		XChangeGC _ANSI_ARGS_((Display * d, GC gc, 
+				unsigned long mask, XGCValues * values));
+/* 92 */
+EXTERN void		XSetFont _ANSI_ARGS_((Display * display, GC gc, 
+				Font font));
+/* 93 */
+EXTERN void		XSetArcMode _ANSI_ARGS_((Display * display, GC gc, 
+				int arc_mode));
+/* 94 */
+EXTERN void		XSetStipple _ANSI_ARGS_((Display * display, GC gc, 
+				Pixmap stipple));
+/* 95 */
+EXTERN void		XSetFillRule _ANSI_ARGS_((Display * display, GC gc, 
+				int fill_rule));
+/* 96 */
+EXTERN void		XSetFillStyle _ANSI_ARGS_((Display * display, GC gc, 
+				int fill_style));
+/* 97 */
+EXTERN void		XSetFunction _ANSI_ARGS_((Display * display, GC gc, 
+				int function));
+/* 98 */
+EXTERN void		XSetLineAttributes _ANSI_ARGS_((Display * display, 
+				GC gc, unsigned int line_width, 
+				int line_style, int cap_style, 
+				int join_style));
+/* 99 */
+EXTERN int		_XInitImageFuncPtrs _ANSI_ARGS_((XImage * image));
+/* 100 */
+EXTERN XIC		XCreateIC _ANSI_ARGS_((void));
+/* 101 */
+EXTERN XVisualInfo *	XGetVisualInfo _ANSI_ARGS_((Display* display, 
+				long vinfo_mask, XVisualInfo* vinfo_template, 
+				int* nitems_return));
+/* 102 */
+EXTERN void		XSetWMClientMachine _ANSI_ARGS_((Display* display, 
+				Window w, XTextProperty* text_prop));
+/* 103 */
+EXTERN Status		XStringListToTextProperty _ANSI_ARGS_((char** list, 
+				int count, XTextProperty* text_prop_return));
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* Slot 0 is reserved */
@@ -457,6 +527,73 @@ EXTERN void		TkPutImage _ANSI_ARGS_((unsigned long * colors,
 				GC gc, XImage* image, int src_x, int src_y, 
 				int dest_x, int dest_y, unsigned int width, 
 				unsigned int height));
+/* 58 */
+EXTERN Status		XParseColor _ANSI_ARGS_((Display * display, 
+				Colormap map, _Xconst char* spec, 
+				XColor * colorPtr));
+/* 59 */
+EXTERN GC		XCreateGC _ANSI_ARGS_((Display* display, Drawable d, 
+				unsigned long valuemask, XGCValues* values));
+/* 60 */
+EXTERN void		XFreeGC _ANSI_ARGS_((Display* display, GC gc));
+/* 61 */
+EXTERN Atom		XInternAtom _ANSI_ARGS_((Display* display, 
+				_Xconst char* atom_name, Bool only_if_exists));
+/* 62 */
+EXTERN void		XSetBackground _ANSI_ARGS_((Display* display, GC gc, 
+				unsigned long foreground));
+/* 63 */
+EXTERN void		XSetForeground _ANSI_ARGS_((Display* display, GC gc, 
+				unsigned long foreground));
+/* 64 */
+EXTERN void		XSetClipMask _ANSI_ARGS_((Display* display, GC gc, 
+				Pixmap pixmap));
+/* 65 */
+EXTERN void		XSetClipOrigin _ANSI_ARGS_((Display* display, GC gc, 
+				int clip_x_origin, int clip_y_origin));
+/* 66 */
+EXTERN void		XSetTSOrigin _ANSI_ARGS_((Display* display, GC gc, 
+				int ts_x_origin, int ts_y_origin));
+/* 67 */
+EXTERN void		XChangeGC _ANSI_ARGS_((Display * d, GC gc, 
+				unsigned long mask, XGCValues * values));
+/* 68 */
+EXTERN void		XSetFont _ANSI_ARGS_((Display * display, GC gc, 
+				Font font));
+/* 69 */
+EXTERN void		XSetArcMode _ANSI_ARGS_((Display * display, GC gc, 
+				int arc_mode));
+/* 70 */
+EXTERN void		XSetStipple _ANSI_ARGS_((Display * display, GC gc, 
+				Pixmap stipple));
+/* 71 */
+EXTERN void		XSetFillRule _ANSI_ARGS_((Display * display, GC gc, 
+				int fill_rule));
+/* 72 */
+EXTERN void		XSetFillStyle _ANSI_ARGS_((Display * display, GC gc, 
+				int fill_style));
+/* 73 */
+EXTERN void		XSetFunction _ANSI_ARGS_((Display * display, GC gc, 
+				int function));
+/* 74 */
+EXTERN void		XSetLineAttributes _ANSI_ARGS_((Display * display, 
+				GC gc, unsigned int line_width, 
+				int line_style, int cap_style, 
+				int join_style));
+/* 75 */
+EXTERN int		_XInitImageFuncPtrs _ANSI_ARGS_((XImage * image));
+/* 76 */
+EXTERN XIC		XCreateIC _ANSI_ARGS_((void));
+/* 77 */
+EXTERN XVisualInfo *	XGetVisualInfo _ANSI_ARGS_((Display* display, 
+				long vinfo_mask, XVisualInfo* vinfo_template, 
+				int* nitems_return));
+/* 78 */
+EXTERN void		XSetWMClientMachine _ANSI_ARGS_((Display* display, 
+				Window w, XTextProperty* text_prop));
+/* 79 */
+EXTERN Status		XStringListToTextProperty _ANSI_ARGS_((char** list, 
+				int count, XTextProperty* text_prop_return));
 #endif /* MAC_TCL */
 
 typedef struct TkIntXlibStubs {
@@ -545,6 +682,29 @@ typedef struct TkIntXlibStubs {
     Bool (*xFilterEvent) _ANSI_ARGS_((XEvent* x, Window w)); /* 78 */
     int (*xmbLookupString) _ANSI_ARGS_((XIC xi, XKeyPressedEvent* xk, char* c, int i, KeySym* k, Status* s)); /* 79 */
     void (*tkPutImage) _ANSI_ARGS_((unsigned long * colors, int ncolors, Display* display, Drawable d, GC gc, XImage* image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 80 */
+    void *reserved81;
+    Status (*xParseColor) _ANSI_ARGS_((Display * display, Colormap map, _Xconst char* spec, XColor * colorPtr)); /* 82 */
+    GC (*xCreateGC) _ANSI_ARGS_((Display* display, Drawable d, unsigned long valuemask, XGCValues* values)); /* 83 */
+    void (*xFreeGC) _ANSI_ARGS_((Display* display, GC gc)); /* 84 */
+    Atom (*xInternAtom) _ANSI_ARGS_((Display* display, _Xconst char* atom_name, Bool only_if_exists)); /* 85 */
+    void (*xSetBackground) _ANSI_ARGS_((Display* display, GC gc, unsigned long foreground)); /* 86 */
+    void (*xSetForeground) _ANSI_ARGS_((Display* display, GC gc, unsigned long foreground)); /* 87 */
+    void (*xSetClipMask) _ANSI_ARGS_((Display* display, GC gc, Pixmap pixmap)); /* 88 */
+    void (*xSetClipOrigin) _ANSI_ARGS_((Display* display, GC gc, int clip_x_origin, int clip_y_origin)); /* 89 */
+    void (*xSetTSOrigin) _ANSI_ARGS_((Display* display, GC gc, int ts_x_origin, int ts_y_origin)); /* 90 */
+    void (*xChangeGC) _ANSI_ARGS_((Display * d, GC gc, unsigned long mask, XGCValues * values)); /* 91 */
+    void (*xSetFont) _ANSI_ARGS_((Display * display, GC gc, Font font)); /* 92 */
+    void (*xSetArcMode) _ANSI_ARGS_((Display * display, GC gc, int arc_mode)); /* 93 */
+    void (*xSetStipple) _ANSI_ARGS_((Display * display, GC gc, Pixmap stipple)); /* 94 */
+    void (*xSetFillRule) _ANSI_ARGS_((Display * display, GC gc, int fill_rule)); /* 95 */
+    void (*xSetFillStyle) _ANSI_ARGS_((Display * display, GC gc, int fill_style)); /* 96 */
+    void (*xSetFunction) _ANSI_ARGS_((Display * display, GC gc, int function)); /* 97 */
+    void (*xSetLineAttributes) _ANSI_ARGS_((Display * display, GC gc, unsigned int line_width, int line_style, int cap_style, int join_style)); /* 98 */
+    int (*_XInitImageFuncPtrs) _ANSI_ARGS_((XImage * image)); /* 99 */
+    XIC (*xCreateIC) _ANSI_ARGS_((void)); /* 100 */
+    XVisualInfo * (*xGetVisualInfo) _ANSI_ARGS_((Display* display, long vinfo_mask, XVisualInfo* vinfo_template, int* nitems_return)); /* 101 */
+    void (*xSetWMClientMachine) _ANSI_ARGS_((Display* display, Window w, XTextProperty* text_prop)); /* 102 */
+    Status (*xStringListToTextProperty) _ANSI_ARGS_((char** list, int count, XTextProperty* text_prop_return)); /* 103 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     void *reserved0;
@@ -605,6 +765,28 @@ typedef struct TkIntXlibStubs {
     void (*xUngrabPointer) _ANSI_ARGS_((Display* d, Time t)); /* 55 */
     void (*xUnmapWindow) _ANSI_ARGS_((Display* d, Window w)); /* 56 */
     void (*tkPutImage) _ANSI_ARGS_((unsigned long * colors, int ncolors, Display* display, Drawable d, GC gc, XImage* image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 57 */
+    Status (*xParseColor) _ANSI_ARGS_((Display * display, Colormap map, _Xconst char* spec, XColor * colorPtr)); /* 58 */
+    GC (*xCreateGC) _ANSI_ARGS_((Display* display, Drawable d, unsigned long valuemask, XGCValues* values)); /* 59 */
+    void (*xFreeGC) _ANSI_ARGS_((Display* display, GC gc)); /* 60 */
+    Atom (*xInternAtom) _ANSI_ARGS_((Display* display, _Xconst char* atom_name, Bool only_if_exists)); /* 61 */
+    void (*xSetBackground) _ANSI_ARGS_((Display* display, GC gc, unsigned long foreground)); /* 62 */
+    void (*xSetForeground) _ANSI_ARGS_((Display* display, GC gc, unsigned long foreground)); /* 63 */
+    void (*xSetClipMask) _ANSI_ARGS_((Display* display, GC gc, Pixmap pixmap)); /* 64 */
+    void (*xSetClipOrigin) _ANSI_ARGS_((Display* display, GC gc, int clip_x_origin, int clip_y_origin)); /* 65 */
+    void (*xSetTSOrigin) _ANSI_ARGS_((Display* display, GC gc, int ts_x_origin, int ts_y_origin)); /* 66 */
+    void (*xChangeGC) _ANSI_ARGS_((Display * d, GC gc, unsigned long mask, XGCValues * values)); /* 67 */
+    void (*xSetFont) _ANSI_ARGS_((Display * display, GC gc, Font font)); /* 68 */
+    void (*xSetArcMode) _ANSI_ARGS_((Display * display, GC gc, int arc_mode)); /* 69 */
+    void (*xSetStipple) _ANSI_ARGS_((Display * display, GC gc, Pixmap stipple)); /* 70 */
+    void (*xSetFillRule) _ANSI_ARGS_((Display * display, GC gc, int fill_rule)); /* 71 */
+    void (*xSetFillStyle) _ANSI_ARGS_((Display * display, GC gc, int fill_style)); /* 72 */
+    void (*xSetFunction) _ANSI_ARGS_((Display * display, GC gc, int function)); /* 73 */
+    void (*xSetLineAttributes) _ANSI_ARGS_((Display * display, GC gc, unsigned int line_width, int line_style, int cap_style, int join_style)); /* 74 */
+    int (*_XInitImageFuncPtrs) _ANSI_ARGS_((XImage * image)); /* 75 */
+    XIC (*xCreateIC) _ANSI_ARGS_((void)); /* 76 */
+    XVisualInfo * (*xGetVisualInfo) _ANSI_ARGS_((Display* display, long vinfo_mask, XVisualInfo* vinfo_template, int* nitems_return)); /* 77 */
+    void (*xSetWMClientMachine) _ANSI_ARGS_((Display* display, Window w, XTextProperty* text_prop)); /* 78 */
+    Status (*xStringListToTextProperty) _ANSI_ARGS_((char** list, int count, XTextProperty* text_prop_return)); /* 79 */
 #endif /* MAC_TCL */
 } TkIntXlibStubs;
 
@@ -619,555 +801,732 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #ifdef __WIN32__
 /* Slot 0 is reserved */
 #ifndef XGetModifierMapping
-#define XGetModifierMapping(d) \
-	(tkIntXlibStubsPtr->xGetModifierMapping)(d) /* 1 */
+#define XGetModifierMapping \
+	(tkIntXlibStubsPtr->xGetModifierMapping) /* 1 */
 #endif
 #ifndef XCreateImage
-#define XCreateImage(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4) \
-	(tkIntXlibStubsPtr->xCreateImage)(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4) /* 2 */
+#define XCreateImage \
+	(tkIntXlibStubsPtr->xCreateImage) /* 2 */
 #endif
 #ifndef XGetImage
-#define XGetImage(d, dr, i1, i2, ui1, ui2, ul, i3) \
-	(tkIntXlibStubsPtr->xGetImage)(d, dr, i1, i2, ui1, ui2, ul, i3) /* 3 */
+#define XGetImage \
+	(tkIntXlibStubsPtr->xGetImage) /* 3 */
 #endif
 #ifndef XGetAtomName
-#define XGetAtomName(d, a) \
-	(tkIntXlibStubsPtr->xGetAtomName)(d, a) /* 4 */
+#define XGetAtomName \
+	(tkIntXlibStubsPtr->xGetAtomName) /* 4 */
 #endif
 #ifndef XKeysymToString
-#define XKeysymToString(k) \
-	(tkIntXlibStubsPtr->xKeysymToString)(k) /* 5 */
+#define XKeysymToString \
+	(tkIntXlibStubsPtr->xKeysymToString) /* 5 */
 #endif
 #ifndef XCreateColormap
-#define XCreateColormap(d, w, v, i) \
-	(tkIntXlibStubsPtr->xCreateColormap)(d, w, v, i) /* 6 */
+#define XCreateColormap \
+	(tkIntXlibStubsPtr->xCreateColormap) /* 6 */
 #endif
 #ifndef XCreatePixmapCursor
-#define XCreatePixmapCursor(d, p1, p2, x1, x2, ui1, ui2) \
-	(tkIntXlibStubsPtr->xCreatePixmapCursor)(d, p1, p2, x1, x2, ui1, ui2) /* 7 */
+#define XCreatePixmapCursor \
+	(tkIntXlibStubsPtr->xCreatePixmapCursor) /* 7 */
 #endif
 #ifndef XCreateGlyphCursor
-#define XCreateGlyphCursor(d, f1, f2, ui1, ui2, x1, x2) \
-	(tkIntXlibStubsPtr->xCreateGlyphCursor)(d, f1, f2, ui1, ui2, x1, x2) /* 8 */
+#define XCreateGlyphCursor \
+	(tkIntXlibStubsPtr->xCreateGlyphCursor) /* 8 */
 #endif
 #ifndef XGContextFromGC
-#define XGContextFromGC(g) \
-	(tkIntXlibStubsPtr->xGContextFromGC)(g) /* 9 */
+#define XGContextFromGC \
+	(tkIntXlibStubsPtr->xGContextFromGC) /* 9 */
 #endif
 #ifndef XListHosts
-#define XListHosts(d, i, b) \
-	(tkIntXlibStubsPtr->xListHosts)(d, i, b) /* 10 */
+#define XListHosts \
+	(tkIntXlibStubsPtr->xListHosts) /* 10 */
 #endif
 #ifndef XKeycodeToKeysym
-#define XKeycodeToKeysym(d, k, i) \
-	(tkIntXlibStubsPtr->xKeycodeToKeysym)(d, k, i) /* 11 */
+#define XKeycodeToKeysym \
+	(tkIntXlibStubsPtr->xKeycodeToKeysym) /* 11 */
 #endif
 #ifndef XStringToKeysym
-#define XStringToKeysym(c) \
-	(tkIntXlibStubsPtr->xStringToKeysym)(c) /* 12 */
+#define XStringToKeysym \
+	(tkIntXlibStubsPtr->xStringToKeysym) /* 12 */
 #endif
 #ifndef XRootWindow
-#define XRootWindow(d, i) \
-	(tkIntXlibStubsPtr->xRootWindow)(d, i) /* 13 */
+#define XRootWindow \
+	(tkIntXlibStubsPtr->xRootWindow) /* 13 */
 #endif
 #ifndef XSetErrorHandler
-#define XSetErrorHandler(x) \
-	(tkIntXlibStubsPtr->xSetErrorHandler)(x) /* 14 */
+#define XSetErrorHandler \
+	(tkIntXlibStubsPtr->xSetErrorHandler) /* 14 */
 #endif
 #ifndef XIconifyWindow
-#define XIconifyWindow(d, w, i) \
-	(tkIntXlibStubsPtr->xIconifyWindow)(d, w, i) /* 15 */
+#define XIconifyWindow \
+	(tkIntXlibStubsPtr->xIconifyWindow) /* 15 */
 #endif
 #ifndef XWithdrawWindow
-#define XWithdrawWindow(d, w, i) \
-	(tkIntXlibStubsPtr->xWithdrawWindow)(d, w, i) /* 16 */
+#define XWithdrawWindow \
+	(tkIntXlibStubsPtr->xWithdrawWindow) /* 16 */
 #endif
 #ifndef XGetWMColormapWindows
-#define XGetWMColormapWindows(d, w, wpp, ip) \
-	(tkIntXlibStubsPtr->xGetWMColormapWindows)(d, w, wpp, ip) /* 17 */
+#define XGetWMColormapWindows \
+	(tkIntXlibStubsPtr->xGetWMColormapWindows) /* 17 */
 #endif
 #ifndef XAllocColor
-#define XAllocColor(d, c, xp) \
-	(tkIntXlibStubsPtr->xAllocColor)(d, c, xp) /* 18 */
+#define XAllocColor \
+	(tkIntXlibStubsPtr->xAllocColor) /* 18 */
 #endif
 #ifndef XBell
-#define XBell(d, i) \
-	(tkIntXlibStubsPtr->xBell)(d, i) /* 19 */
+#define XBell \
+	(tkIntXlibStubsPtr->xBell) /* 19 */
 #endif
 #ifndef XChangeProperty
-#define XChangeProperty(d, w, a1, a2, i1, i2, c, i3) \
-	(tkIntXlibStubsPtr->xChangeProperty)(d, w, a1, a2, i1, i2, c, i3) /* 20 */
+#define XChangeProperty \
+	(tkIntXlibStubsPtr->xChangeProperty) /* 20 */
 #endif
 #ifndef XChangeWindowAttributes
-#define XChangeWindowAttributes(d, w, ul, x) \
-	(tkIntXlibStubsPtr->xChangeWindowAttributes)(d, w, ul, x) /* 21 */
+#define XChangeWindowAttributes \
+	(tkIntXlibStubsPtr->xChangeWindowAttributes) /* 21 */
 #endif
 #ifndef XClearWindow
-#define XClearWindow(d, w) \
-	(tkIntXlibStubsPtr->xClearWindow)(d, w) /* 22 */
+#define XClearWindow \
+	(tkIntXlibStubsPtr->xClearWindow) /* 22 */
 #endif
 #ifndef XConfigureWindow
-#define XConfigureWindow(d, w, i, x) \
-	(tkIntXlibStubsPtr->xConfigureWindow)(d, w, i, x) /* 23 */
+#define XConfigureWindow \
+	(tkIntXlibStubsPtr->xConfigureWindow) /* 23 */
 #endif
 #ifndef XCopyArea
-#define XCopyArea(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4) \
-	(tkIntXlibStubsPtr->xCopyArea)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4) /* 24 */
+#define XCopyArea \
+	(tkIntXlibStubsPtr->xCopyArea) /* 24 */
 #endif
 #ifndef XCopyPlane
-#define XCopyPlane(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul) \
-	(tkIntXlibStubsPtr->xCopyPlane)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul) /* 25 */
+#define XCopyPlane \
+	(tkIntXlibStubsPtr->xCopyPlane) /* 25 */
 #endif
 #ifndef XCreateBitmapFromData
-#define XCreateBitmapFromData(display, d, data, width, height) \
-	(tkIntXlibStubsPtr->xCreateBitmapFromData)(display, d, data, width, height) /* 26 */
+#define XCreateBitmapFromData \
+	(tkIntXlibStubsPtr->xCreateBitmapFromData) /* 26 */
 #endif
 #ifndef XDefineCursor
-#define XDefineCursor(d, w, c) \
-	(tkIntXlibStubsPtr->xDefineCursor)(d, w, c) /* 27 */
+#define XDefineCursor \
+	(tkIntXlibStubsPtr->xDefineCursor) /* 27 */
 #endif
 #ifndef XDeleteProperty
-#define XDeleteProperty(d, w, a) \
-	(tkIntXlibStubsPtr->xDeleteProperty)(d, w, a) /* 28 */
+#define XDeleteProperty \
+	(tkIntXlibStubsPtr->xDeleteProperty) /* 28 */
 #endif
 #ifndef XDestroyWindow
-#define XDestroyWindow(d, w) \
-	(tkIntXlibStubsPtr->xDestroyWindow)(d, w) /* 29 */
+#define XDestroyWindow \
+	(tkIntXlibStubsPtr->xDestroyWindow) /* 29 */
 #endif
 #ifndef XDrawArc
-#define XDrawArc(d, dr, g, i1, i2, ui1, ui2, i3, i4) \
-	(tkIntXlibStubsPtr->xDrawArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4) /* 30 */
+#define XDrawArc \
+	(tkIntXlibStubsPtr->xDrawArc) /* 30 */
 #endif
 #ifndef XDrawLines
-#define XDrawLines(d, dr, g, x, i1, i2) \
-	(tkIntXlibStubsPtr->xDrawLines)(d, dr, g, x, i1, i2) /* 31 */
+#define XDrawLines \
+	(tkIntXlibStubsPtr->xDrawLines) /* 31 */
 #endif
 #ifndef XDrawRectangle
-#define XDrawRectangle(d, dr, g, i1, i2, ui1, ui2) \
-	(tkIntXlibStubsPtr->xDrawRectangle)(d, dr, g, i1, i2, ui1, ui2) /* 32 */
+#define XDrawRectangle \
+	(tkIntXlibStubsPtr->xDrawRectangle) /* 32 */
 #endif
 #ifndef XFillArc
-#define XFillArc(d, dr, g, i1, i2, ui1, ui2, i3, i4) \
-	(tkIntXlibStubsPtr->xFillArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4) /* 33 */
+#define XFillArc \
+	(tkIntXlibStubsPtr->xFillArc) /* 33 */
 #endif
 #ifndef XFillPolygon
-#define XFillPolygon(d, dr, g, x, i1, i2, i3) \
-	(tkIntXlibStubsPtr->xFillPolygon)(d, dr, g, x, i1, i2, i3) /* 34 */
+#define XFillPolygon \
+	(tkIntXlibStubsPtr->xFillPolygon) /* 34 */
 #endif
 #ifndef XFillRectangles
-#define XFillRectangles(d, dr, g, x, i) \
-	(tkIntXlibStubsPtr->xFillRectangles)(d, dr, g, x, i) /* 35 */
+#define XFillRectangles \
+	(tkIntXlibStubsPtr->xFillRectangles) /* 35 */
 #endif
 #ifndef XForceScreenSaver
-#define XForceScreenSaver(d, i) \
-	(tkIntXlibStubsPtr->xForceScreenSaver)(d, i) /* 36 */
+#define XForceScreenSaver \
+	(tkIntXlibStubsPtr->xForceScreenSaver) /* 36 */
 #endif
 #ifndef XFreeColormap
-#define XFreeColormap(d, c) \
-	(tkIntXlibStubsPtr->xFreeColormap)(d, c) /* 37 */
+#define XFreeColormap \
+	(tkIntXlibStubsPtr->xFreeColormap) /* 37 */
 #endif
 #ifndef XFreeColors
-#define XFreeColors(d, c, ulp, i, ul) \
-	(tkIntXlibStubsPtr->xFreeColors)(d, c, ulp, i, ul) /* 38 */
+#define XFreeColors \
+	(tkIntXlibStubsPtr->xFreeColors) /* 38 */
 #endif
 #ifndef XFreeCursor
-#define XFreeCursor(d, c) \
-	(tkIntXlibStubsPtr->xFreeCursor)(d, c) /* 39 */
+#define XFreeCursor \
+	(tkIntXlibStubsPtr->xFreeCursor) /* 39 */
 #endif
 #ifndef XFreeModifiermap
-#define XFreeModifiermap(x) \
-	(tkIntXlibStubsPtr->xFreeModifiermap)(x) /* 40 */
+#define XFreeModifiermap \
+	(tkIntXlibStubsPtr->xFreeModifiermap) /* 40 */
 #endif
 #ifndef XGetGeometry
-#define XGetGeometry(d, dr, w, i1, i2, ui1, ui2, ui3, ui4) \
-	(tkIntXlibStubsPtr->xGetGeometry)(d, dr, w, i1, i2, ui1, ui2, ui3, ui4) /* 41 */
+#define XGetGeometry \
+	(tkIntXlibStubsPtr->xGetGeometry) /* 41 */
 #endif
 #ifndef XGetInputFocus
-#define XGetInputFocus(d, w, i) \
-	(tkIntXlibStubsPtr->xGetInputFocus)(d, w, i) /* 42 */
+#define XGetInputFocus \
+	(tkIntXlibStubsPtr->xGetInputFocus) /* 42 */
 #endif
 #ifndef XGetWindowProperty
-#define XGetWindowProperty(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp) \
-	(tkIntXlibStubsPtr->xGetWindowProperty)(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp) /* 43 */
+#define XGetWindowProperty \
+	(tkIntXlibStubsPtr->xGetWindowProperty) /* 43 */
 #endif
 #ifndef XGetWindowAttributes
-#define XGetWindowAttributes(d, w, x) \
-	(tkIntXlibStubsPtr->xGetWindowAttributes)(d, w, x) /* 44 */
+#define XGetWindowAttributes \
+	(tkIntXlibStubsPtr->xGetWindowAttributes) /* 44 */
 #endif
 #ifndef XGrabKeyboard
-#define XGrabKeyboard(d, w, b, i1, i2, t) \
-	(tkIntXlibStubsPtr->xGrabKeyboard)(d, w, b, i1, i2, t) /* 45 */
+#define XGrabKeyboard \
+	(tkIntXlibStubsPtr->xGrabKeyboard) /* 45 */
 #endif
 #ifndef XGrabPointer
-#define XGrabPointer(d, w1, b, ui, i1, i2, w2, c, t) \
-	(tkIntXlibStubsPtr->xGrabPointer)(d, w1, b, ui, i1, i2, w2, c, t) /* 46 */
+#define XGrabPointer \
+	(tkIntXlibStubsPtr->xGrabPointer) /* 46 */
 #endif
 #ifndef XKeysymToKeycode
-#define XKeysymToKeycode(d, k) \
-	(tkIntXlibStubsPtr->xKeysymToKeycode)(d, k) /* 47 */
+#define XKeysymToKeycode \
+	(tkIntXlibStubsPtr->xKeysymToKeycode) /* 47 */
 #endif
 #ifndef XLookupColor
-#define XLookupColor(d, c1, c2, x1, x2) \
-	(tkIntXlibStubsPtr->xLookupColor)(d, c1, c2, x1, x2) /* 48 */
+#define XLookupColor \
+	(tkIntXlibStubsPtr->xLookupColor) /* 48 */
 #endif
 #ifndef XMapWindow
-#define XMapWindow(d, w) \
-	(tkIntXlibStubsPtr->xMapWindow)(d, w) /* 49 */
+#define XMapWindow \
+	(tkIntXlibStubsPtr->xMapWindow) /* 49 */
 #endif
 #ifndef XMoveResizeWindow
-#define XMoveResizeWindow(d, w, i1, i2, ui1, ui2) \
-	(tkIntXlibStubsPtr->xMoveResizeWindow)(d, w, i1, i2, ui1, ui2) /* 50 */
+#define XMoveResizeWindow \
+	(tkIntXlibStubsPtr->xMoveResizeWindow) /* 50 */
 #endif
 #ifndef XMoveWindow
-#define XMoveWindow(d, w, i1, i2) \
-	(tkIntXlibStubsPtr->xMoveWindow)(d, w, i1, i2) /* 51 */
+#define XMoveWindow \
+	(tkIntXlibStubsPtr->xMoveWindow) /* 51 */
 #endif
 #ifndef XNextEvent
-#define XNextEvent(d, x) \
-	(tkIntXlibStubsPtr->xNextEvent)(d, x) /* 52 */
+#define XNextEvent \
+	(tkIntXlibStubsPtr->xNextEvent) /* 52 */
 #endif
 #ifndef XPutBackEvent
-#define XPutBackEvent(d, x) \
-	(tkIntXlibStubsPtr->xPutBackEvent)(d, x) /* 53 */
+#define XPutBackEvent \
+	(tkIntXlibStubsPtr->xPutBackEvent) /* 53 */
 #endif
 #ifndef XQueryColors
-#define XQueryColors(d, c, x, i) \
-	(tkIntXlibStubsPtr->xQueryColors)(d, c, x, i) /* 54 */
+#define XQueryColors \
+	(tkIntXlibStubsPtr->xQueryColors) /* 54 */
 #endif
 #ifndef XQueryPointer
-#define XQueryPointer(d, w1, w2, w3, i1, i2, i3, i4, ui) \
-	(tkIntXlibStubsPtr->xQueryPointer)(d, w1, w2, w3, i1, i2, i3, i4, ui) /* 55 */
+#define XQueryPointer \
+	(tkIntXlibStubsPtr->xQueryPointer) /* 55 */
 #endif
 #ifndef XQueryTree
-#define XQueryTree(d, w1, w2, w3, w4, ui) \
-	(tkIntXlibStubsPtr->xQueryTree)(d, w1, w2, w3, w4, ui) /* 56 */
+#define XQueryTree \
+	(tkIntXlibStubsPtr->xQueryTree) /* 56 */
 #endif
 #ifndef XRaiseWindow
-#define XRaiseWindow(d, w) \
-	(tkIntXlibStubsPtr->xRaiseWindow)(d, w) /* 57 */
+#define XRaiseWindow \
+	(tkIntXlibStubsPtr->xRaiseWindow) /* 57 */
 #endif
 #ifndef XRefreshKeyboardMapping
-#define XRefreshKeyboardMapping(x) \
-	(tkIntXlibStubsPtr->xRefreshKeyboardMapping)(x) /* 58 */
+#define XRefreshKeyboardMapping \
+	(tkIntXlibStubsPtr->xRefreshKeyboardMapping) /* 58 */
 #endif
 #ifndef XResizeWindow
-#define XResizeWindow(d, w, ui1, ui2) \
-	(tkIntXlibStubsPtr->xResizeWindow)(d, w, ui1, ui2) /* 59 */
+#define XResizeWindow \
+	(tkIntXlibStubsPtr->xResizeWindow) /* 59 */
 #endif
 #ifndef XSelectInput
-#define XSelectInput(d, w, l) \
-	(tkIntXlibStubsPtr->xSelectInput)(d, w, l) /* 60 */
+#define XSelectInput \
+	(tkIntXlibStubsPtr->xSelectInput) /* 60 */
 #endif
 #ifndef XSendEvent
-#define XSendEvent(d, w, b, l, x) \
-	(tkIntXlibStubsPtr->xSendEvent)(d, w, b, l, x) /* 61 */
+#define XSendEvent \
+	(tkIntXlibStubsPtr->xSendEvent) /* 61 */
 #endif
 #ifndef XSetCommand
-#define XSetCommand(d, w, c, i) \
-	(tkIntXlibStubsPtr->xSetCommand)(d, w, c, i) /* 62 */
+#define XSetCommand \
+	(tkIntXlibStubsPtr->xSetCommand) /* 62 */
 #endif
 #ifndef XSetIconName
-#define XSetIconName(d, w, c) \
-	(tkIntXlibStubsPtr->xSetIconName)(d, w, c) /* 63 */
+#define XSetIconName \
+	(tkIntXlibStubsPtr->xSetIconName) /* 63 */
 #endif
 #ifndef XSetInputFocus
-#define XSetInputFocus(d, w, i, t) \
-	(tkIntXlibStubsPtr->xSetInputFocus)(d, w, i, t) /* 64 */
+#define XSetInputFocus \
+	(tkIntXlibStubsPtr->xSetInputFocus) /* 64 */
 #endif
 #ifndef XSetSelectionOwner
-#define XSetSelectionOwner(d, a, w, t) \
-	(tkIntXlibStubsPtr->xSetSelectionOwner)(d, a, w, t) /* 65 */
+#define XSetSelectionOwner \
+	(tkIntXlibStubsPtr->xSetSelectionOwner) /* 65 */
 #endif
 #ifndef XSetWindowBackground
-#define XSetWindowBackground(d, w, ul) \
-	(tkIntXlibStubsPtr->xSetWindowBackground)(d, w, ul) /* 66 */
+#define XSetWindowBackground \
+	(tkIntXlibStubsPtr->xSetWindowBackground) /* 66 */
 #endif
 #ifndef XSetWindowBackgroundPixmap
-#define XSetWindowBackgroundPixmap(d, w, p) \
-	(tkIntXlibStubsPtr->xSetWindowBackgroundPixmap)(d, w, p) /* 67 */
+#define XSetWindowBackgroundPixmap \
+	(tkIntXlibStubsPtr->xSetWindowBackgroundPixmap) /* 67 */
 #endif
 #ifndef XSetWindowBorder
-#define XSetWindowBorder(d, w, ul) \
-	(tkIntXlibStubsPtr->xSetWindowBorder)(d, w, ul) /* 68 */
+#define XSetWindowBorder \
+	(tkIntXlibStubsPtr->xSetWindowBorder) /* 68 */
 #endif
 #ifndef XSetWindowBorderPixmap
-#define XSetWindowBorderPixmap(d, w, p) \
-	(tkIntXlibStubsPtr->xSetWindowBorderPixmap)(d, w, p) /* 69 */
+#define XSetWindowBorderPixmap \
+	(tkIntXlibStubsPtr->xSetWindowBorderPixmap) /* 69 */
 #endif
 #ifndef XSetWindowBorderWidth
-#define XSetWindowBorderWidth(d, w, ui) \
-	(tkIntXlibStubsPtr->xSetWindowBorderWidth)(d, w, ui) /* 70 */
+#define XSetWindowBorderWidth \
+	(tkIntXlibStubsPtr->xSetWindowBorderWidth) /* 70 */
 #endif
 #ifndef XSetWindowColormap
-#define XSetWindowColormap(d, w, c) \
-	(tkIntXlibStubsPtr->xSetWindowColormap)(d, w, c) /* 71 */
+#define XSetWindowColormap \
+	(tkIntXlibStubsPtr->xSetWindowColormap) /* 71 */
 #endif
 #ifndef XTranslateCoordinates
-#define XTranslateCoordinates(d, w1, w2, i1, i2, i3, i4, w3) \
-	(tkIntXlibStubsPtr->xTranslateCoordinates)(d, w1, w2, i1, i2, i3, i4, w3) /* 72 */
+#define XTranslateCoordinates \
+	(tkIntXlibStubsPtr->xTranslateCoordinates) /* 72 */
 #endif
 #ifndef XUngrabKeyboard
-#define XUngrabKeyboard(d, t) \
-	(tkIntXlibStubsPtr->xUngrabKeyboard)(d, t) /* 73 */
+#define XUngrabKeyboard \
+	(tkIntXlibStubsPtr->xUngrabKeyboard) /* 73 */
 #endif
 #ifndef XUngrabPointer
-#define XUngrabPointer(d, t) \
-	(tkIntXlibStubsPtr->xUngrabPointer)(d, t) /* 74 */
+#define XUngrabPointer \
+	(tkIntXlibStubsPtr->xUngrabPointer) /* 74 */
 #endif
 #ifndef XUnmapWindow
-#define XUnmapWindow(d, w) \
-	(tkIntXlibStubsPtr->xUnmapWindow)(d, w) /* 75 */
+#define XUnmapWindow \
+	(tkIntXlibStubsPtr->xUnmapWindow) /* 75 */
 #endif
 #ifndef XWindowEvent
-#define XWindowEvent(d, w, l, x) \
-	(tkIntXlibStubsPtr->xWindowEvent)(d, w, l, x) /* 76 */
+#define XWindowEvent \
+	(tkIntXlibStubsPtr->xWindowEvent) /* 76 */
 #endif
 #ifndef XDestroyIC
-#define XDestroyIC(x) \
-	(tkIntXlibStubsPtr->xDestroyIC)(x) /* 77 */
+#define XDestroyIC \
+	(tkIntXlibStubsPtr->xDestroyIC) /* 77 */
 #endif
 #ifndef XFilterEvent
-#define XFilterEvent(x, w) \
-	(tkIntXlibStubsPtr->xFilterEvent)(x, w) /* 78 */
+#define XFilterEvent \
+	(tkIntXlibStubsPtr->xFilterEvent) /* 78 */
 #endif
 #ifndef XmbLookupString
-#define XmbLookupString(xi, xk, c, i, k, s) \
-	(tkIntXlibStubsPtr->xmbLookupString)(xi, xk, c, i, k, s) /* 79 */
+#define XmbLookupString \
+	(tkIntXlibStubsPtr->xmbLookupString) /* 79 */
 #endif
 #ifndef TkPutImage
-#define TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height) \
-	(tkIntXlibStubsPtr->tkPutImage)(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height) /* 80 */
+#define TkPutImage \
+	(tkIntXlibStubsPtr->tkPutImage) /* 80 */
+#endif
+/* Slot 81 is reserved */
+#ifndef XParseColor
+#define XParseColor \
+	(tkIntXlibStubsPtr->xParseColor) /* 82 */
+#endif
+#ifndef XCreateGC
+#define XCreateGC \
+	(tkIntXlibStubsPtr->xCreateGC) /* 83 */
+#endif
+#ifndef XFreeGC
+#define XFreeGC \
+	(tkIntXlibStubsPtr->xFreeGC) /* 84 */
+#endif
+#ifndef XInternAtom
+#define XInternAtom \
+	(tkIntXlibStubsPtr->xInternAtom) /* 85 */
+#endif
+#ifndef XSetBackground
+#define XSetBackground \
+	(tkIntXlibStubsPtr->xSetBackground) /* 86 */
+#endif
+#ifndef XSetForeground
+#define XSetForeground \
+	(tkIntXlibStubsPtr->xSetForeground) /* 87 */
+#endif
+#ifndef XSetClipMask
+#define XSetClipMask \
+	(tkIntXlibStubsPtr->xSetClipMask) /* 88 */
+#endif
+#ifndef XSetClipOrigin
+#define XSetClipOrigin \
+	(tkIntXlibStubsPtr->xSetClipOrigin) /* 89 */
+#endif
+#ifndef XSetTSOrigin
+#define XSetTSOrigin \
+	(tkIntXlibStubsPtr->xSetTSOrigin) /* 90 */
+#endif
+#ifndef XChangeGC
+#define XChangeGC \
+	(tkIntXlibStubsPtr->xChangeGC) /* 91 */
+#endif
+#ifndef XSetFont
+#define XSetFont \
+	(tkIntXlibStubsPtr->xSetFont) /* 92 */
+#endif
+#ifndef XSetArcMode
+#define XSetArcMode \
+	(tkIntXlibStubsPtr->xSetArcMode) /* 93 */
+#endif
+#ifndef XSetStipple
+#define XSetStipple \
+	(tkIntXlibStubsPtr->xSetStipple) /* 94 */
+#endif
+#ifndef XSetFillRule
+#define XSetFillRule \
+	(tkIntXlibStubsPtr->xSetFillRule) /* 95 */
+#endif
+#ifndef XSetFillStyle
+#define XSetFillStyle \
+	(tkIntXlibStubsPtr->xSetFillStyle) /* 96 */
+#endif
+#ifndef XSetFunction
+#define XSetFunction \
+	(tkIntXlibStubsPtr->xSetFunction) /* 97 */
+#endif
+#ifndef XSetLineAttributes
+#define XSetLineAttributes \
+	(tkIntXlibStubsPtr->xSetLineAttributes) /* 98 */
+#endif
+#ifndef _XInitImageFuncPtrs
+#define _XInitImageFuncPtrs \
+	(tkIntXlibStubsPtr->_XInitImageFuncPtrs) /* 99 */
+#endif
+#ifndef XCreateIC
+#define XCreateIC \
+	(tkIntXlibStubsPtr->xCreateIC) /* 100 */
+#endif
+#ifndef XGetVisualInfo
+#define XGetVisualInfo \
+	(tkIntXlibStubsPtr->xGetVisualInfo) /* 101 */
+#endif
+#ifndef XSetWMClientMachine
+#define XSetWMClientMachine \
+	(tkIntXlibStubsPtr->xSetWMClientMachine) /* 102 */
+#endif
+#ifndef XStringListToTextProperty
+#define XStringListToTextProperty \
+	(tkIntXlibStubsPtr->xStringListToTextProperty) /* 103 */
 #endif
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* Slot 0 is reserved */
 #ifndef XGetModifierMapping
-#define XGetModifierMapping(d) \
-	(tkIntXlibStubsPtr->xGetModifierMapping)(d) /* 1 */
+#define XGetModifierMapping \
+	(tkIntXlibStubsPtr->xGetModifierMapping) /* 1 */
 #endif
 #ifndef XCreateImage
-#define XCreateImage(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4) \
-	(tkIntXlibStubsPtr->xCreateImage)(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4) /* 2 */
+#define XCreateImage \
+	(tkIntXlibStubsPtr->xCreateImage) /* 2 */
 #endif
 #ifndef XGetImage
-#define XGetImage(d, dr, i1, i2, ui1, ui2, ul, i3) \
-	(tkIntXlibStubsPtr->xGetImage)(d, dr, i1, i2, ui1, ui2, ul, i3) /* 3 */
+#define XGetImage \
+	(tkIntXlibStubsPtr->xGetImage) /* 3 */
 #endif
 #ifndef XGetAtomName
-#define XGetAtomName(d, a) \
-	(tkIntXlibStubsPtr->xGetAtomName)(d, a) /* 4 */
+#define XGetAtomName \
+	(tkIntXlibStubsPtr->xGetAtomName) /* 4 */
 #endif
 #ifndef XKeysymToString
-#define XKeysymToString(k) \
-	(tkIntXlibStubsPtr->xKeysymToString)(k) /* 5 */
+#define XKeysymToString \
+	(tkIntXlibStubsPtr->xKeysymToString) /* 5 */
 #endif
 #ifndef XCreateColormap
-#define XCreateColormap(d, w, v, i) \
-	(tkIntXlibStubsPtr->xCreateColormap)(d, w, v, i) /* 6 */
+#define XCreateColormap \
+	(tkIntXlibStubsPtr->xCreateColormap) /* 6 */
 #endif
 #ifndef XGContextFromGC
-#define XGContextFromGC(g) \
-	(tkIntXlibStubsPtr->xGContextFromGC)(g) /* 7 */
+#define XGContextFromGC \
+	(tkIntXlibStubsPtr->xGContextFromGC) /* 7 */
 #endif
 #ifndef XKeycodeToKeysym
-#define XKeycodeToKeysym(d, k, i) \
-	(tkIntXlibStubsPtr->xKeycodeToKeysym)(d, k, i) /* 8 */
+#define XKeycodeToKeysym \
+	(tkIntXlibStubsPtr->xKeycodeToKeysym) /* 8 */
 #endif
 #ifndef XStringToKeysym
-#define XStringToKeysym(c) \
-	(tkIntXlibStubsPtr->xStringToKeysym)(c) /* 9 */
+#define XStringToKeysym \
+	(tkIntXlibStubsPtr->xStringToKeysym) /* 9 */
 #endif
 #ifndef XRootWindow
-#define XRootWindow(d, i) \
-	(tkIntXlibStubsPtr->xRootWindow)(d, i) /* 10 */
+#define XRootWindow \
+	(tkIntXlibStubsPtr->xRootWindow) /* 10 */
 #endif
 #ifndef XSetErrorHandler
-#define XSetErrorHandler(x) \
-	(tkIntXlibStubsPtr->xSetErrorHandler)(x) /* 11 */
+#define XSetErrorHandler \
+	(tkIntXlibStubsPtr->xSetErrorHandler) /* 11 */
 #endif
 #ifndef XAllocColor
-#define XAllocColor(d, c, xp) \
-	(tkIntXlibStubsPtr->xAllocColor)(d, c, xp) /* 12 */
+#define XAllocColor \
+	(tkIntXlibStubsPtr->xAllocColor) /* 12 */
 #endif
 #ifndef XBell
-#define XBell(d, i) \
-	(tkIntXlibStubsPtr->xBell)(d, i) /* 13 */
+#define XBell \
+	(tkIntXlibStubsPtr->xBell) /* 13 */
 #endif
 #ifndef XChangeProperty
-#define XChangeProperty(d, w, a, a, i1, i2, c, i3) \
-	(tkIntXlibStubsPtr->xChangeProperty)(d, w, a, a, i1, i2, c, i3) /* 14 */
+#define XChangeProperty \
+	(tkIntXlibStubsPtr->xChangeProperty) /* 14 */
 #endif
 #ifndef XChangeWindowAttributes
-#define XChangeWindowAttributes(d, w, ul, x) \
-	(tkIntXlibStubsPtr->xChangeWindowAttributes)(d, w, ul, x) /* 15 */
+#define XChangeWindowAttributes \
+	(tkIntXlibStubsPtr->xChangeWindowAttributes) /* 15 */
 #endif
 #ifndef XConfigureWindow
-#define XConfigureWindow(d, w, i, x) \
-	(tkIntXlibStubsPtr->xConfigureWindow)(d, w, i, x) /* 16 */
+#define XConfigureWindow \
+	(tkIntXlibStubsPtr->xConfigureWindow) /* 16 */
 #endif
 #ifndef XCopyArea
-#define XCopyArea(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4) \
-	(tkIntXlibStubsPtr->xCopyArea)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4) /* 17 */
+#define XCopyArea \
+	(tkIntXlibStubsPtr->xCopyArea) /* 17 */
 #endif
 #ifndef XCopyPlane
-#define XCopyPlane(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul) \
-	(tkIntXlibStubsPtr->xCopyPlane)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul) /* 18 */
+#define XCopyPlane \
+	(tkIntXlibStubsPtr->xCopyPlane) /* 18 */
 #endif
 #ifndef XCreateBitmapFromData
-#define XCreateBitmapFromData(display, d, data, width, height) \
-	(tkIntXlibStubsPtr->xCreateBitmapFromData)(display, d, data, width, height) /* 19 */
+#define XCreateBitmapFromData \
+	(tkIntXlibStubsPtr->xCreateBitmapFromData) /* 19 */
 #endif
 #ifndef XDefineCursor
-#define XDefineCursor(d, w, c) \
-	(tkIntXlibStubsPtr->xDefineCursor)(d, w, c) /* 20 */
+#define XDefineCursor \
+	(tkIntXlibStubsPtr->xDefineCursor) /* 20 */
 #endif
 #ifndef XDestroyWindow
-#define XDestroyWindow(d, w) \
-	(tkIntXlibStubsPtr->xDestroyWindow)(d, w) /* 21 */
+#define XDestroyWindow \
+	(tkIntXlibStubsPtr->xDestroyWindow) /* 21 */
 #endif
 #ifndef XDrawArc
-#define XDrawArc(d, dr, g, i1, i2, ui1, ui2, i3, i4) \
-	(tkIntXlibStubsPtr->xDrawArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4) /* 22 */
+#define XDrawArc \
+	(tkIntXlibStubsPtr->xDrawArc) /* 22 */
 #endif
 #ifndef XDrawLines
-#define XDrawLines(d, dr, g, x, i1, i2) \
-	(tkIntXlibStubsPtr->xDrawLines)(d, dr, g, x, i1, i2) /* 23 */
+#define XDrawLines \
+	(tkIntXlibStubsPtr->xDrawLines) /* 23 */
 #endif
 #ifndef XDrawRectangle
-#define XDrawRectangle(d, dr, g, i1, i2, ui1, ui2) \
-	(tkIntXlibStubsPtr->xDrawRectangle)(d, dr, g, i1, i2, ui1, ui2) /* 24 */
+#define XDrawRectangle \
+	(tkIntXlibStubsPtr->xDrawRectangle) /* 24 */
 #endif
 #ifndef XFillArc
-#define XFillArc(d, dr, g, i1, i2, ui1, ui2, i3, i4) \
-	(tkIntXlibStubsPtr->xFillArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4) /* 25 */
+#define XFillArc \
+	(tkIntXlibStubsPtr->xFillArc) /* 25 */
 #endif
 #ifndef XFillPolygon
-#define XFillPolygon(d, dr, g, x, i1, i2, i3) \
-	(tkIntXlibStubsPtr->xFillPolygon)(d, dr, g, x, i1, i2, i3) /* 26 */
+#define XFillPolygon \
+	(tkIntXlibStubsPtr->xFillPolygon) /* 26 */
 #endif
 #ifndef XFillRectangles
-#define XFillRectangles(d, dr, g, x, i) \
-	(tkIntXlibStubsPtr->xFillRectangles)(d, dr, g, x, i) /* 27 */
+#define XFillRectangles \
+	(tkIntXlibStubsPtr->xFillRectangles) /* 27 */
 #endif
 #ifndef XFreeColormap
-#define XFreeColormap(d, c) \
-	(tkIntXlibStubsPtr->xFreeColormap)(d, c) /* 28 */
+#define XFreeColormap \
+	(tkIntXlibStubsPtr->xFreeColormap) /* 28 */
 #endif
 #ifndef XFreeColors
-#define XFreeColors(d, c, ulp, i, ul) \
-	(tkIntXlibStubsPtr->xFreeColors)(d, c, ulp, i, ul) /* 29 */
+#define XFreeColors \
+	(tkIntXlibStubsPtr->xFreeColors) /* 29 */
 #endif
 #ifndef XFreeModifiermap
-#define XFreeModifiermap(x) \
-	(tkIntXlibStubsPtr->xFreeModifiermap)(x) /* 30 */
+#define XFreeModifiermap \
+	(tkIntXlibStubsPtr->xFreeModifiermap) /* 30 */
 #endif
 #ifndef XGetGeometry
-#define XGetGeometry(d, dr, w, i1, i2, ui1, ui2, ui3, ui4) \
-	(tkIntXlibStubsPtr->xGetGeometry)(d, dr, w, i1, i2, ui1, ui2, ui3, ui4) /* 31 */
+#define XGetGeometry \
+	(tkIntXlibStubsPtr->xGetGeometry) /* 31 */
 #endif
 #ifndef XGetWindowProperty
-#define XGetWindowProperty(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp) \
-	(tkIntXlibStubsPtr->xGetWindowProperty)(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp) /* 32 */
+#define XGetWindowProperty \
+	(tkIntXlibStubsPtr->xGetWindowProperty) /* 32 */
 #endif
 #ifndef XGrabKeyboard
-#define XGrabKeyboard(d, w, b, i1, i2, t) \
-	(tkIntXlibStubsPtr->xGrabKeyboard)(d, w, b, i1, i2, t) /* 33 */
+#define XGrabKeyboard \
+	(tkIntXlibStubsPtr->xGrabKeyboard) /* 33 */
 #endif
 #ifndef XGrabPointer
-#define XGrabPointer(d, w1, b, ui, i1, i2, w2, c, t) \
-	(tkIntXlibStubsPtr->xGrabPointer)(d, w1, b, ui, i1, i2, w2, c, t) /* 34 */
+#define XGrabPointer \
+	(tkIntXlibStubsPtr->xGrabPointer) /* 34 */
 #endif
 #ifndef XKeysymToKeycode
-#define XKeysymToKeycode(d, k) \
-	(tkIntXlibStubsPtr->xKeysymToKeycode)(d, k) /* 35 */
+#define XKeysymToKeycode \
+	(tkIntXlibStubsPtr->xKeysymToKeycode) /* 35 */
 #endif
 #ifndef XMapWindow
-#define XMapWindow(d, w) \
-	(tkIntXlibStubsPtr->xMapWindow)(d, w) /* 36 */
+#define XMapWindow \
+	(tkIntXlibStubsPtr->xMapWindow) /* 36 */
 #endif
 #ifndef XMoveResizeWindow
-#define XMoveResizeWindow(d, w, i1, i2, ui1, ui2) \
-	(tkIntXlibStubsPtr->xMoveResizeWindow)(d, w, i1, i2, ui1, ui2) /* 37 */
+#define XMoveResizeWindow \
+	(tkIntXlibStubsPtr->xMoveResizeWindow) /* 37 */
 #endif
 #ifndef XMoveWindow
-#define XMoveWindow(d, w, i1, i2) \
-	(tkIntXlibStubsPtr->xMoveWindow)(d, w, i1, i2) /* 38 */
+#define XMoveWindow \
+	(tkIntXlibStubsPtr->xMoveWindow) /* 38 */
 #endif
 #ifndef XQueryPointer
-#define XQueryPointer(d, w1, w2, w3, i1, i2, i3, i4, ui) \
-	(tkIntXlibStubsPtr->xQueryPointer)(d, w1, w2, w3, i1, i2, i3, i4, ui) /* 39 */
+#define XQueryPointer \
+	(tkIntXlibStubsPtr->xQueryPointer) /* 39 */
 #endif
 #ifndef XRaiseWindow
-#define XRaiseWindow(d, w) \
-	(tkIntXlibStubsPtr->xRaiseWindow)(d, w) /* 40 */
+#define XRaiseWindow \
+	(tkIntXlibStubsPtr->xRaiseWindow) /* 40 */
 #endif
 #ifndef XRefreshKeyboardMapping
-#define XRefreshKeyboardMapping(x) \
-	(tkIntXlibStubsPtr->xRefreshKeyboardMapping)(x) /* 41 */
+#define XRefreshKeyboardMapping \
+	(tkIntXlibStubsPtr->xRefreshKeyboardMapping) /* 41 */
 #endif
 #ifndef XResizeWindow
-#define XResizeWindow(d, w, ui1, ui2) \
-	(tkIntXlibStubsPtr->xResizeWindow)(d, w, ui1, ui2) /* 42 */
+#define XResizeWindow \
+	(tkIntXlibStubsPtr->xResizeWindow) /* 42 */
 #endif
 #ifndef XSelectInput
-#define XSelectInput(d, w, l) \
-	(tkIntXlibStubsPtr->xSelectInput)(d, w, l) /* 43 */
+#define XSelectInput \
+	(tkIntXlibStubsPtr->xSelectInput) /* 43 */
 #endif
 #ifndef XSendEvent
-#define XSendEvent(d, w, b, l, x) \
-	(tkIntXlibStubsPtr->xSendEvent)(d, w, b, l, x) /* 44 */
+#define XSendEvent \
+	(tkIntXlibStubsPtr->xSendEvent) /* 44 */
 #endif
 #ifndef XSetIconName
-#define XSetIconName(d, w, c) \
-	(tkIntXlibStubsPtr->xSetIconName)(d, w, c) /* 45 */
+#define XSetIconName \
+	(tkIntXlibStubsPtr->xSetIconName) /* 45 */
 #endif
 #ifndef XSetInputFocus
-#define XSetInputFocus(d, w, i, t) \
-	(tkIntXlibStubsPtr->xSetInputFocus)(d, w, i, t) /* 46 */
+#define XSetInputFocus \
+	(tkIntXlibStubsPtr->xSetInputFocus) /* 46 */
 #endif
 #ifndef XSetSelectionOwner
-#define XSetSelectionOwner(d, a, w, t) \
-	(tkIntXlibStubsPtr->xSetSelectionOwner)(d, a, w, t) /* 47 */
+#define XSetSelectionOwner \
+	(tkIntXlibStubsPtr->xSetSelectionOwner) /* 47 */
 #endif
 #ifndef XSetWindowBackground
-#define XSetWindowBackground(d, w, ul) \
-	(tkIntXlibStubsPtr->xSetWindowBackground)(d, w, ul) /* 48 */
+#define XSetWindowBackground \
+	(tkIntXlibStubsPtr->xSetWindowBackground) /* 48 */
 #endif
 #ifndef XSetWindowBackgroundPixmap
-#define XSetWindowBackgroundPixmap(d, w, p) \
-	(tkIntXlibStubsPtr->xSetWindowBackgroundPixmap)(d, w, p) /* 49 */
+#define XSetWindowBackgroundPixmap \
+	(tkIntXlibStubsPtr->xSetWindowBackgroundPixmap) /* 49 */
 #endif
 #ifndef XSetWindowBorder
-#define XSetWindowBorder(d, w, ul) \
-	(tkIntXlibStubsPtr->xSetWindowBorder)(d, w, ul) /* 50 */
+#define XSetWindowBorder \
+	(tkIntXlibStubsPtr->xSetWindowBorder) /* 50 */
 #endif
 #ifndef XSetWindowBorderPixmap
-#define XSetWindowBorderPixmap(d, w, p) \
-	(tkIntXlibStubsPtr->xSetWindowBorderPixmap)(d, w, p) /* 51 */
+#define XSetWindowBorderPixmap \
+	(tkIntXlibStubsPtr->xSetWindowBorderPixmap) /* 51 */
 #endif
 #ifndef XSetWindowBorderWidth
-#define XSetWindowBorderWidth(d, w, ui) \
-	(tkIntXlibStubsPtr->xSetWindowBorderWidth)(d, w, ui) /* 52 */
+#define XSetWindowBorderWidth \
+	(tkIntXlibStubsPtr->xSetWindowBorderWidth) /* 52 */
 #endif
 #ifndef XSetWindowColormap
-#define XSetWindowColormap(d, w, c) \
-	(tkIntXlibStubsPtr->xSetWindowColormap)(d, w, c) /* 53 */
+#define XSetWindowColormap \
+	(tkIntXlibStubsPtr->xSetWindowColormap) /* 53 */
 #endif
 #ifndef XUngrabKeyboard
-#define XUngrabKeyboard(d, t) \
-	(tkIntXlibStubsPtr->xUngrabKeyboard)(d, t) /* 54 */
+#define XUngrabKeyboard \
+	(tkIntXlibStubsPtr->xUngrabKeyboard) /* 54 */
 #endif
 #ifndef XUngrabPointer
-#define XUngrabPointer(d, t) \
-	(tkIntXlibStubsPtr->xUngrabPointer)(d, t) /* 55 */
+#define XUngrabPointer \
+	(tkIntXlibStubsPtr->xUngrabPointer) /* 55 */
 #endif
 #ifndef XUnmapWindow
-#define XUnmapWindow(d, w) \
-	(tkIntXlibStubsPtr->xUnmapWindow)(d, w) /* 56 */
+#define XUnmapWindow \
+	(tkIntXlibStubsPtr->xUnmapWindow) /* 56 */
 #endif
 #ifndef TkPutImage
-#define TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height) \
-	(tkIntXlibStubsPtr->tkPutImage)(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height) /* 57 */
+#define TkPutImage \
+	(tkIntXlibStubsPtr->tkPutImage) /* 57 */
+#endif
+#ifndef XParseColor
+#define XParseColor \
+	(tkIntXlibStubsPtr->xParseColor) /* 58 */
+#endif
+#ifndef XCreateGC
+#define XCreateGC \
+	(tkIntXlibStubsPtr->xCreateGC) /* 59 */
+#endif
+#ifndef XFreeGC
+#define XFreeGC \
+	(tkIntXlibStubsPtr->xFreeGC) /* 60 */
+#endif
+#ifndef XInternAtom
+#define XInternAtom \
+	(tkIntXlibStubsPtr->xInternAtom) /* 61 */
+#endif
+#ifndef XSetBackground
+#define XSetBackground \
+	(tkIntXlibStubsPtr->xSetBackground) /* 62 */
+#endif
+#ifndef XSetForeground
+#define XSetForeground \
+	(tkIntXlibStubsPtr->xSetForeground) /* 63 */
+#endif
+#ifndef XSetClipMask
+#define XSetClipMask \
+	(tkIntXlibStubsPtr->xSetClipMask) /* 64 */
+#endif
+#ifndef XSetClipOrigin
+#define XSetClipOrigin \
+	(tkIntXlibStubsPtr->xSetClipOrigin) /* 65 */
+#endif
+#ifndef XSetTSOrigin
+#define XSetTSOrigin \
+	(tkIntXlibStubsPtr->xSetTSOrigin) /* 66 */
+#endif
+#ifndef XChangeGC
+#define XChangeGC \
+	(tkIntXlibStubsPtr->xChangeGC) /* 67 */
+#endif
+#ifndef XSetFont
+#define XSetFont \
+	(tkIntXlibStubsPtr->xSetFont) /* 68 */
+#endif
+#ifndef XSetArcMode
+#define XSetArcMode \
+	(tkIntXlibStubsPtr->xSetArcMode) /* 69 */
+#endif
+#ifndef XSetStipple
+#define XSetStipple \
+	(tkIntXlibStubsPtr->xSetStipple) /* 70 */
+#endif
+#ifndef XSetFillRule
+#define XSetFillRule \
+	(tkIntXlibStubsPtr->xSetFillRule) /* 71 */
+#endif
+#ifndef XSetFillStyle
+#define XSetFillStyle \
+	(tkIntXlibStubsPtr->xSetFillStyle) /* 72 */
+#endif
+#ifndef XSetFunction
+#define XSetFunction \
+	(tkIntXlibStubsPtr->xSetFunction) /* 73 */
+#endif
+#ifndef XSetLineAttributes
+#define XSetLineAttributes \
+	(tkIntXlibStubsPtr->xSetLineAttributes) /* 74 */
+#endif
+#ifndef _XInitImageFuncPtrs
+#define _XInitImageFuncPtrs \
+	(tkIntXlibStubsPtr->_XInitImageFuncPtrs) /* 75 */
+#endif
+#ifndef XCreateIC
+#define XCreateIC \
+	(tkIntXlibStubsPtr->xCreateIC) /* 76 */
+#endif
+#ifndef XGetVisualInfo
+#define XGetVisualInfo \
+	(tkIntXlibStubsPtr->xGetVisualInfo) /* 77 */
+#endif
+#ifndef XSetWMClientMachine
+#define XSetWMClientMachine \
+	(tkIntXlibStubsPtr->xSetWMClientMachine) /* 78 */
+#endif
+#ifndef XStringListToTextProperty
+#define XStringListToTextProperty \
+	(tkIntXlibStubsPtr->xStringListToTextProperty) /* 79 */
 #endif
 #endif /* MAC_TCL */
 

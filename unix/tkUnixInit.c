@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixInit.c,v 1.3 1998/09/14 18:23:57 stanton Exp $
+ * RCS: @(#) $Id: tkUnixInit.c,v 1.4 1999/04/16 01:51:46 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -32,7 +32,7 @@
  *
  * Results:
  *	Returns a standard Tcl result.  Leaves an error message or result
- *	in interp->result.
+ *	in the interp's result.
  *
  * Side effects:
  *	Sets "tk_library" Tcl variable, runs "tk.tcl" script.
@@ -109,9 +109,9 @@ TkpDisplayWarning(msg, title)
 {
     Tcl_Channel errChannel = Tcl_GetStdChannel(TCL_STDERR);
     if (errChannel) {
-	Tcl_Write(errChannel, title, -1);
-	Tcl_Write(errChannel, ": ", 2);
-	Tcl_Write(errChannel, msg, -1);
-	Tcl_Write(errChannel, "\n", 1);
+	Tcl_WriteChars(errChannel, title, -1);
+	Tcl_WriteChars(errChannel, ": ", 2);
+	Tcl_WriteChars(errChannel, msg, -1);
+	Tcl_WriteChars(errChannel, "\n", 1);
     }
 }

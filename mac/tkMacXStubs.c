@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacXStubs.c,v 1.5 1999/04/16 01:25:55 stanton Exp $
+ * RCS: @(#) $Id: tkMacXStubs.c,v 1.6 1999/04/16 01:51:33 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -22,7 +22,6 @@
 
 #include <Xatom.h>
 
-#include <Gestalt.h>
 #include <Windows.h>
 #include <Fonts.h>
 #include <QDOffscreen.h>
@@ -275,15 +274,6 @@ DefaultErrorHandler(
 }
 
 
-
-void
-Tk_FreeXId (
-    Display *display,
-    XID xid)
-{
-    /* no-op function needed for stubs implementation */
-}
-
 char *
 XGetAtomName(
     Display * display,
@@ -525,6 +515,47 @@ XForceScreenSaver(
      */
     display->request++;
 }
+
+void
+Tk_FreeXId (
+    Display *display,
+    XID xid)
+{
+    /* no-op function needed for stubs implementation. */
+}
+
+void
+Tk_3DHorizontalBevel (
+    Tk_Window tkwin,
+    Drawable d,
+    Tk_3DBorder b,
+    int x,
+    int y,
+    int width,
+    int height,
+    int leftIn,
+    int rightIn,
+    int topBevel,
+    int relief)
+{
+    /* no-op function needed for stubs implementation. */
+}
+
+void
+Tk_3DVerticalBevel (
+    Tk_Window tkwin,
+    Drawable d,
+    Tk_3DBorder b,
+    int x,
+    int y,
+    int width,
+    int height,
+    int leftBevel,
+    int relief)
+{
+    /* no-op function needed for stubs implementation. */
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -551,17 +582,14 @@ TkGetServerInfo(
     Tk_Window tkwin)		/* Token for window;  this selects a
 				 * particular display and server. */
 {
-    char buffer[50];
-    long result;
-    short low, major, minor, micro;
-   
-    Gestalt(gestaltSystemVersion, &result);
-    low = LoWord(result);
-    major = (low & 0x0F00) >> 8;
-    minor = (low & 0x00F0) >> 4;
-    micro = (low & 0x000F);
-    sprintf(buffer, "MacOS %d.%d.%d", major, minor, micro); 
-    Tcl_AppendResult(interp, buffer, (char *) NULL);
+    char buffer[8 + TCL_INTEGER_SPACE * 2];
+    char buffer2[TCL_INTEGER_SPACE];
+
+    sprintf(buffer, "X%dR%d ", ProtocolVersion(Tk_Display(tkwin)),
+	    ProtocolRevision(Tk_Display(tkwin)));
+    sprintf(buffer2, " %d", VendorRelease(Tk_Display(tkwin)));
+    Tcl_AppendResult(interp, buffer, ServerVendor(Tk_Display(tkwin)),
+	    buffer2, (char *) NULL);
 }
 /*
  * Image stuff 
@@ -721,24 +749,3 @@ TkGetDefaultScreenName(
     }
     return screenName;
 }
-
-void Tk_3DHorizontalBevel (
-    Tk_Window tkwin,
-    Drawable drawable, Tk_3DBorder border, int x,
-    int y, int width, int height, int leftIn,
-    int rightIn, int topBevel, int relief )
-{
-    /* no-op required for stubs implementation */
-    /* this function will probably be filled in at some point */
-}
-
-void Tk_3DVerticalBevel (
-    Tk_Window tkwin,
-    Drawable drawable, Tk_3DBorder border, int x,
-    int y, int width, int height, int leftBevel,
-    int relief )
-{
-    /* no-op required for stubs implementation */
-    /* this function will probably be filled in at some point */
-}
-

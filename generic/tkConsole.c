@@ -10,12 +10,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.4 1999/03/10 07:04:39 stanton Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.5 1999/04/16 01:51:13 stanton Exp $
  */
 
 #include "tk.h"
-#include "tkInt.h"
 #include <string.h>
+
+#include "tkInt.h"
 
 /*
  * A data structure of the following type holds information for each console
@@ -28,7 +29,10 @@ typedef struct ConsoleInfo {
     Tcl_Interp *interp;		/* Interpreter to send console commands. */
 } ConsoleInfo;
 
-static Tcl_Interp *gStdoutInterp = NULL;
+typedef struct ThreadSpecificData {
+    Tcl_Interp *gStdoutInterp;
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Forward declarations for procedures defined later in this file:
@@ -36,7 +40,6 @@ static Tcl_Interp *gStdoutInterp = NULL;
  * The first three will be used in the tk app shells...
  */
  
-void	TkConsoleCreate _ANSI_ARGS_((void));
 void	TkConsoleCreate_ _ANSI_ARGS_((void));
 int	TkConsoleInit _ANSI_ARGS_((Tcl_Interp *interp));
 void	TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
@@ -101,10 +104,10 @@ void
 TkConsoleCreate()
 {
     /*
-     * This function is being disabled so we don't end up calling it
-     * twice.  Once from WinMain() and once from Tk_Main().  The real
-     * function is now TkConsoleCreate_ and is only called from Tk_Main.
-     * All of is an ugly hack.
+     * This function is being diabled so we don't end up calling it
+     * twice.  Once from WinMain() and once from Tk_MainEx(). The real
+     * function is now tkCreateConsole_ and is only called from Tk_MainEx.
+     * All of this is an ugly hack.
      */
 }
 
@@ -113,27 +116,50 @@ TkConsoleCreate_()
 {
     Tcl_Channel consoleChannel;
 
-    consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console0",
-	    (ClientData) TCL_STDIN, TCL_READABLE);
-    if (consoleChannel != NULL) {
-	Tcl_SetChannelOption(NULL, consoleChannel, "-translation", "lf");
-	Tcl_SetChannelOption(NULL, consoleChannel, "-buffering", "none");
+    /*
+     * check for STDIN, otherwise create it
+     */
+
+    if (Tcl_GetStdChannel(TCL_STDIN) == NULL) {
+	consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console0",
+	        (ClientData) TCL_STDIN, TCL_READABLE);
+	if (consoleChannel != NULL) {
+	    Tcl_SetChannelOption(NULL, consoleChannel, "-translation", "lf");
+	    Tcl_SetChannelOption(NULL, consoleChannel, "-buffering", "none");
+	    Tcl_SetChannelOption(NULL, consoleChannel, "-encoding", "utf-8");
+	}
+	Tcl_SetStdChannel(consoleChannel, TCL_STDIN);
     }
-    Tcl_SetStdChannel(consoleChannel, TCL_STDIN);
-    consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console1",
-	    (ClientData) TCL_STDOUT, TCL_WRITABLE);
-    if (consoleChannel != NULL) {
-	Tcl_SetChannelOption(NULL, consoleChannel, "-translation", "lf");
-	Tcl_SetChannelOption(NULL, consoleChannel, "-buffering", "none");
+
+    /*
+     * check for STDOUT, otherwise create it
+     */
+
+    if (Tcl_GetStdChannel(TCL_STDOUT) == NULL) {
+	consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console1",
+	        (ClientData) TCL_STDOUT, TCL_WRITABLE);
+	if (consoleChannel != NULL) {
+	    Tcl_SetChannelOption(NULL, consoleChannel, "-translation", "lf");
+	    Tcl_SetChannelOption(NULL, consoleChannel, "-buffering", "none");
+	    Tcl_SetChannelOption(NULL, consoleChannel, "-encoding", "utf-8");
+	}
+	Tcl_SetStdChannel(consoleChannel, TCL_STDOUT);
     }
-    Tcl_SetStdChannel(consoleChannel, TCL_STDOUT);
-    consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console2",
-	    (ClientData) TCL_STDERR, TCL_WRITABLE);
-    if (consoleChannel != NULL) {
-	Tcl_SetChannelOption(NULL, consoleChannel, "-translation", "lf");
-	Tcl_SetChannelOption(NULL, consoleChannel, "-buffering", "none");
+
+    /*
+     * check for STDERR, otherwise create it
+     */
+
+    if (Tcl_GetStdChannel(TCL_STDERR) == NULL) {
+	consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console2",
+	        (ClientData) TCL_STDERR, TCL_WRITABLE);
+	if (consoleChannel != NULL) {
+	    Tcl_SetChannelOption(NULL, consoleChannel, "-translation", "lf");
+	    Tcl_SetChannelOption(NULL, consoleChannel, "-buffering", "none");
+	    Tcl_SetChannelOption(NULL, consoleChannel, "-encoding", "utf-8");
+	}
+	Tcl_SetStdChannel(consoleChannel, TCL_STDERR);
     }
-    Tcl_SetStdChannel(consoleChannel, TCL_STDERR);
 }
 
 /*
@@ -161,6 +187,8 @@ TkConsoleInit(interp)
     Tcl_Interp *consoleInterp;
     ConsoleInfo *info;
     Tk_Window mainWindow = Tk_MainWindow(interp);
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 #ifdef MAC_TCL
     static char initCmd[] = "source -rsrc {Console}";
 #else
@@ -168,7 +196,6 @@ TkConsoleInit(interp)
 #endif
     
     consoleInterp = Tcl_CreateInterp();
-    
     if (consoleInterp == NULL) {
 	goto error;
     }
@@ -183,7 +210,7 @@ TkConsoleInit(interp)
     if (Tk_Init(consoleInterp) != TCL_OK) {
 	goto error;
     }
-    gStdoutInterp = interp;
+    tsdPtr->gStdoutInterp = interp;
     
     /* 
      * Add console commands to the interp 
@@ -239,11 +266,15 @@ ConsoleOutput(instanceData, buf, toWrite, errorCode)
     int toWrite;			/* How many bytes to write? */
     int *errorCode;			/* Where to store error code. */
 {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
     *errorCode = 0;
     Tcl_SetErrno(0);
 
-    if (gStdoutInterp != NULL) {
-	TkConsolePrint(gStdoutInterp, (int) instanceData, buf, toWrite);
+    if (tsdPtr->gStdoutInterp != NULL) {
+	TkConsolePrint(tsdPtr->gStdoutInterp, (int) instanceData, buf, 
+                toWrite);
     }
     
     return toWrite;
@@ -390,6 +421,7 @@ ConsoleCmd(clientData, interp, argc, argv)
     int length;
     int result;
     Tcl_Interp *consoleInterp;
+    Tcl_DString dString;
 
     if (argc < 2) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
@@ -402,20 +434,20 @@ ConsoleCmd(clientData, interp, argc, argv)
     result = TCL_OK;
     consoleInterp = info->consoleInterp;
     Tcl_Preserve((ClientData) consoleInterp);
+    Tcl_DStringInit(&dString);
+
     if ((c == 't') && (strncmp(argv[1], "title", length)) == 0) {
-	Tcl_DString dString;
-	
-	Tcl_DStringInit(&dString);
 	Tcl_DStringAppend(&dString, "wm title . ", -1);
 	if (argc == 3) {
 	    Tcl_DStringAppendElement(&dString, argv[2]);
 	}
 	Tcl_Eval(consoleInterp, Tcl_DStringValue(&dString));
-	Tcl_DStringFree(&dString);
     } else if ((c == 'h') && (strncmp(argv[1], "hide", length)) == 0) {
-	Tcl_Eval(consoleInterp, "wm withdraw .");
+	Tcl_DStringAppend(&dString, "wm withdraw . ", -1);
+	Tcl_Eval(consoleInterp, Tcl_DStringValue(&dString));
     } else if ((c == 's') && (strncmp(argv[1], "show", length)) == 0) {
-	Tcl_Eval(consoleInterp, "wm deiconify .");
+	Tcl_DStringAppend(&dString, "wm deiconify . ", -1);
+	Tcl_Eval(consoleInterp, Tcl_DStringValue(&dString));
     } else if ((c == 'e') && (strncmp(argv[1], "eval", length)) == 0) {
 	if (argc == 3) {
 	    result = Tcl_Eval(consoleInterp, argv[2]);
@@ -432,6 +464,7 @@ ConsoleCmd(clientData, interp, argc, argv)
 		(char *) NULL);
         result = TCL_ERROR;
     }
+    Tcl_DStringFree(&dString);
     Tcl_Release((ClientData) consoleInterp);
     return result;
 }
@@ -547,9 +580,13 @@ ConsoleEventProc(clientData, eventPtr)
 {
     ConsoleInfo *info = (ConsoleInfo *) clientData;
     Tcl_Interp *consoleInterp;
+    Tcl_DString dString;
     
     if (eventPtr->type == DestroyNotify) {
-        consoleInterp = info->consoleInterp;
+
+	Tcl_DStringInit(&dString);
+  
+	consoleInterp = info->consoleInterp;
 
         /*
          * It is possible that the console interpreter itself has
@@ -562,7 +599,9 @@ ConsoleEventProc(clientData, eventPtr)
             return;
         }
         Tcl_Preserve((ClientData) consoleInterp);
-	Tcl_Eval(consoleInterp, "tkConsoleExit");
+	Tcl_DStringAppend(&dString, "tkConsoleExit", -1);
+	Tcl_Eval(consoleInterp, Tcl_DStringValue(&dString));
+	Tcl_DStringFree(&dString);
         Tcl_Release((ClientData) consoleInterp);
     }
 }

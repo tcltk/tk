@@ -12,12 +12,12 @@
  *	George C. Kaplan and Michael Hoegeman.
  *
  * Copyright (c) 1993 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixXId.c,v 1.2 1998/09/14 18:23:58 stanton Exp $
+ * RCS: @(#) $Id: tkUnixXId.c,v 1.3 1999/04/16 01:51:48 stanton Exp $
  */
 
 /*
@@ -28,9 +28,8 @@
 
 #define XLIB_ILLEGAL_ACCESS 1
 
-#include "tkInt.h"
-#include "tkPort.h"
 #include "tkUnixInt.h"
+#include "tkPort.h"
 
 /*
  * A structure of the following type is used to hold one or more

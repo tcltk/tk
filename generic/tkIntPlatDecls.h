@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.2 1999/03/10 07:04:40 stanton Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.3 1999/04/16 01:51:16 stanton Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -150,6 +150,17 @@ EXTERN void		TkWinWmCleanup _ANSI_ARGS_((HINSTANCE hInstance));
 EXTERN void		TkWinXCleanup _ANSI_ARGS_((HINSTANCE hInstance));
 /* 35 */
 EXTERN void		TkWinXInit _ANSI_ARGS_((HINSTANCE hInstance));
+/* 36 */
+EXTERN void		TkWinSetForegroundWindow _ANSI_ARGS_((
+				TkWindow * winPtr));
+/* 37 */
+EXTERN void		TkWinDialogDebug _ANSI_ARGS_((int debug));
+/* 38 */
+EXTERN Tcl_Obj *	TkWinGetMenuSystemDefault _ANSI_ARGS_((
+				Tk_Window tkwin, char * dbName, 
+				char * className));
+/* 39 */
+EXTERN int		TkWinGetPlatformId _ANSI_ARGS_((void));
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* 0 */
@@ -389,6 +400,10 @@ typedef struct TkIntPlatStubs {
     void (*tkWinWmCleanup) _ANSI_ARGS_((HINSTANCE hInstance)); /* 33 */
     void (*tkWinXCleanup) _ANSI_ARGS_((HINSTANCE hInstance)); /* 34 */
     void (*tkWinXInit) _ANSI_ARGS_((HINSTANCE hInstance)); /* 35 */
+    void (*tkWinSetForegroundWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 36 */
+    void (*tkWinDialogDebug) _ANSI_ARGS_((int debug)); /* 37 */
+    Tcl_Obj * (*tkWinGetMenuSystemDefault) _ANSI_ARGS_((Tk_Window tkwin, char * dbName, char * className)); /* 38 */
+    int (*tkWinGetPlatformId) _ANSI_ARGS_((void)); /* 39 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     void (*tkClipBox) _ANSI_ARGS_((TkRegion rgn, XRectangle* rect_return)); /* 0 */
@@ -476,472 +491,488 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 
 #if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
 #ifndef TkCreateXEventSource
-#define TkCreateXEventSource() \
-	(tkIntPlatStubsPtr->tkCreateXEventSource)() /* 0 */
+#define TkCreateXEventSource \
+	(tkIntPlatStubsPtr->tkCreateXEventSource) /* 0 */
 #endif
 #ifndef TkFreeWindowId
-#define TkFreeWindowId(dispPtr, w) \
-	(tkIntPlatStubsPtr->tkFreeWindowId)(dispPtr, w) /* 1 */
+#define TkFreeWindowId \
+	(tkIntPlatStubsPtr->tkFreeWindowId) /* 1 */
 #endif
 #ifndef TkInitXId
-#define TkInitXId(dispPtr) \
-	(tkIntPlatStubsPtr->tkInitXId)(dispPtr) /* 2 */
+#define TkInitXId \
+	(tkIntPlatStubsPtr->tkInitXId) /* 2 */
 #endif
 #ifndef TkpCmapStressed
-#define TkpCmapStressed(tkwin, colormap) \
-	(tkIntPlatStubsPtr->tkpCmapStressed)(tkwin, colormap) /* 3 */
+#define TkpCmapStressed \
+	(tkIntPlatStubsPtr->tkpCmapStressed) /* 3 */
 #endif
 #ifndef TkpSync
-#define TkpSync(display) \
-	(tkIntPlatStubsPtr->tkpSync)(display) /* 4 */
+#define TkpSync \
+	(tkIntPlatStubsPtr->tkpSync) /* 4 */
 #endif
 #ifndef TkUnixContainerId
-#define TkUnixContainerId(winPtr) \
-	(tkIntPlatStubsPtr->tkUnixContainerId)(winPtr) /* 5 */
+#define TkUnixContainerId \
+	(tkIntPlatStubsPtr->tkUnixContainerId) /* 5 */
 #endif
 #ifndef TkUnixDoOneXEvent
-#define TkUnixDoOneXEvent(timePtr) \
-	(tkIntPlatStubsPtr->tkUnixDoOneXEvent)(timePtr) /* 6 */
+#define TkUnixDoOneXEvent \
+	(tkIntPlatStubsPtr->tkUnixDoOneXEvent) /* 6 */
 #endif
 #ifndef TkUnixSetMenubar
-#define TkUnixSetMenubar(tkwin, menubar) \
-	(tkIntPlatStubsPtr->tkUnixSetMenubar)(tkwin, menubar) /* 7 */
+#define TkUnixSetMenubar \
+	(tkIntPlatStubsPtr->tkUnixSetMenubar) /* 7 */
 #endif
 #endif /* UNIX */
 #ifdef __WIN32__
 #ifndef TkAlignImageData
-#define TkAlignImageData(image, alignment, bitOrder) \
-	(tkIntPlatStubsPtr->tkAlignImageData)(image, alignment, bitOrder) /* 0 */
+#define TkAlignImageData \
+	(tkIntPlatStubsPtr->tkAlignImageData) /* 0 */
 #endif
 #ifndef TkClipBox
-#define TkClipBox(rgn, rect_return) \
-	(tkIntPlatStubsPtr->tkClipBox)(rgn, rect_return) /* 1 */
+#define TkClipBox \
+	(tkIntPlatStubsPtr->tkClipBox) /* 1 */
 #endif
 #ifndef TkCreateRegion
-#define TkCreateRegion() \
-	(tkIntPlatStubsPtr->tkCreateRegion)() /* 2 */
+#define TkCreateRegion \
+	(tkIntPlatStubsPtr->tkCreateRegion) /* 2 */
 #endif
 #ifndef TkDestroyRegion
-#define TkDestroyRegion(rgn) \
-	(tkIntPlatStubsPtr->tkDestroyRegion)(rgn) /* 3 */
+#define TkDestroyRegion \
+	(tkIntPlatStubsPtr->tkDestroyRegion) /* 3 */
 #endif
 #ifndef TkGenerateActivateEvents
-#define TkGenerateActivateEvents(winPtr, active) \
-	(tkIntPlatStubsPtr->tkGenerateActivateEvents)(winPtr, active) /* 4 */
+#define TkGenerateActivateEvents \
+	(tkIntPlatStubsPtr->tkGenerateActivateEvents) /* 4 */
 #endif
 #ifndef TkIntersectRegion
-#define TkIntersectRegion(sra, srcb, dr_return) \
-	(tkIntPlatStubsPtr->tkIntersectRegion)(sra, srcb, dr_return) /* 5 */
+#define TkIntersectRegion \
+	(tkIntPlatStubsPtr->tkIntersectRegion) /* 5 */
 #endif
 #ifndef TkpGetMS
-#define TkpGetMS() \
-	(tkIntPlatStubsPtr->tkpGetMS)() /* 6 */
+#define TkpGetMS \
+	(tkIntPlatStubsPtr->tkpGetMS) /* 6 */
 #endif
 #ifndef TkPointerDeadWindow
-#define TkPointerDeadWindow(winPtr) \
-	(tkIntPlatStubsPtr->tkPointerDeadWindow)(winPtr) /* 7 */
+#define TkPointerDeadWindow \
+	(tkIntPlatStubsPtr->tkPointerDeadWindow) /* 7 */
 #endif
 #ifndef TkpPrintWindowId
-#define TkpPrintWindowId(buf, window) \
-	(tkIntPlatStubsPtr->tkpPrintWindowId)(buf, window) /* 8 */
+#define TkpPrintWindowId \
+	(tkIntPlatStubsPtr->tkpPrintWindowId) /* 8 */
 #endif
 #ifndef TkpScanWindowId
-#define TkpScanWindowId(interp, string, idPtr) \
-	(tkIntPlatStubsPtr->tkpScanWindowId)(interp, string, idPtr) /* 9 */
+#define TkpScanWindowId \
+	(tkIntPlatStubsPtr->tkpScanWindowId) /* 9 */
 #endif
 #ifndef TkpSetCapture
-#define TkpSetCapture(winPtr) \
-	(tkIntPlatStubsPtr->tkpSetCapture)(winPtr) /* 10 */
+#define TkpSetCapture \
+	(tkIntPlatStubsPtr->tkpSetCapture) /* 10 */
 #endif
 #ifndef TkpSetCursor
-#define TkpSetCursor(cursor) \
-	(tkIntPlatStubsPtr->tkpSetCursor)(cursor) /* 11 */
+#define TkpSetCursor \
+	(tkIntPlatStubsPtr->tkpSetCursor) /* 11 */
 #endif
 #ifndef TkpWmSetState
-#define TkpWmSetState(winPtr, state) \
-	(tkIntPlatStubsPtr->tkpWmSetState)(winPtr, state) /* 12 */
+#define TkpWmSetState \
+	(tkIntPlatStubsPtr->tkpWmSetState) /* 12 */
 #endif
 #ifndef TkRectInRegion
-#define TkRectInRegion(rgn, x, y, width, height) \
-	(tkIntPlatStubsPtr->tkRectInRegion)(rgn, x, y, width, height) /* 13 */
+#define TkRectInRegion \
+	(tkIntPlatStubsPtr->tkRectInRegion) /* 13 */
 #endif
 #ifndef TkSetPixmapColormap
-#define TkSetPixmapColormap(pixmap, colormap) \
-	(tkIntPlatStubsPtr->tkSetPixmapColormap)(pixmap, colormap) /* 14 */
+#define TkSetPixmapColormap \
+	(tkIntPlatStubsPtr->tkSetPixmapColormap) /* 14 */
 #endif
 #ifndef TkSetRegion
-#define TkSetRegion(display, gc, rgn) \
-	(tkIntPlatStubsPtr->tkSetRegion)(display, gc, rgn) /* 15 */
+#define TkSetRegion \
+	(tkIntPlatStubsPtr->tkSetRegion) /* 15 */
 #endif
 #ifndef TkUnionRectWithRegion
-#define TkUnionRectWithRegion(rect, src, dr_return) \
-	(tkIntPlatStubsPtr->tkUnionRectWithRegion)(rect, src, dr_return) /* 16 */
+#define TkUnionRectWithRegion \
+	(tkIntPlatStubsPtr->tkUnionRectWithRegion) /* 16 */
 #endif
 #ifndef TkWinCancelMouseTimer
-#define TkWinCancelMouseTimer() \
-	(tkIntPlatStubsPtr->tkWinCancelMouseTimer)() /* 17 */
+#define TkWinCancelMouseTimer \
+	(tkIntPlatStubsPtr->tkWinCancelMouseTimer) /* 17 */
 #endif
 #ifndef TkWinClipboardRender
-#define TkWinClipboardRender(dispPtr, format) \
-	(tkIntPlatStubsPtr->tkWinClipboardRender)(dispPtr, format) /* 18 */
+#define TkWinClipboardRender \
+	(tkIntPlatStubsPtr->tkWinClipboardRender) /* 18 */
 #endif
 #ifndef TkWinEmbeddedEventProc
-#define TkWinEmbeddedEventProc(hwnd, message, wParam, lParam) \
-	(tkIntPlatStubsPtr->tkWinEmbeddedEventProc)(hwnd, message, wParam, lParam) /* 19 */
+#define TkWinEmbeddedEventProc \
+	(tkIntPlatStubsPtr->tkWinEmbeddedEventProc) /* 19 */
 #endif
 #ifndef TkWinFillRect
-#define TkWinFillRect(dc, x, y, width, height, pixel) \
-	(tkIntPlatStubsPtr->tkWinFillRect)(dc, x, y, width, height, pixel) /* 20 */
+#define TkWinFillRect \
+	(tkIntPlatStubsPtr->tkWinFillRect) /* 20 */
 #endif
 #ifndef TkWinGetBorderPixels
-#define TkWinGetBorderPixels(tkwin, border, which) \
-	(tkIntPlatStubsPtr->tkWinGetBorderPixels)(tkwin, border, which) /* 21 */
+#define TkWinGetBorderPixels \
+	(tkIntPlatStubsPtr->tkWinGetBorderPixels) /* 21 */
 #endif
 #ifndef TkWinGetDrawableDC
-#define TkWinGetDrawableDC(display, d, state) \
-	(tkIntPlatStubsPtr->tkWinGetDrawableDC)(display, d, state) /* 22 */
+#define TkWinGetDrawableDC \
+	(tkIntPlatStubsPtr->tkWinGetDrawableDC) /* 22 */
 #endif
 #ifndef TkWinGetModifierState
-#define TkWinGetModifierState() \
-	(tkIntPlatStubsPtr->tkWinGetModifierState)() /* 23 */
+#define TkWinGetModifierState \
+	(tkIntPlatStubsPtr->tkWinGetModifierState) /* 23 */
 #endif
 #ifndef TkWinGetSystemPalette
-#define TkWinGetSystemPalette() \
-	(tkIntPlatStubsPtr->tkWinGetSystemPalette)() /* 24 */
+#define TkWinGetSystemPalette \
+	(tkIntPlatStubsPtr->tkWinGetSystemPalette) /* 24 */
 #endif
 #ifndef TkWinGetWrapperWindow
-#define TkWinGetWrapperWindow(tkwin) \
-	(tkIntPlatStubsPtr->tkWinGetWrapperWindow)(tkwin) /* 25 */
+#define TkWinGetWrapperWindow \
+	(tkIntPlatStubsPtr->tkWinGetWrapperWindow) /* 25 */
 #endif
 #ifndef TkWinHandleMenuEvent
-#define TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult) \
-	(tkIntPlatStubsPtr->tkWinHandleMenuEvent)(phwnd, pMessage, pwParam, plParam, plResult) /* 26 */
+#define TkWinHandleMenuEvent \
+	(tkIntPlatStubsPtr->tkWinHandleMenuEvent) /* 26 */
 #endif
 #ifndef TkWinIndexOfColor
-#define TkWinIndexOfColor(colorPtr) \
-	(tkIntPlatStubsPtr->tkWinIndexOfColor)(colorPtr) /* 27 */
+#define TkWinIndexOfColor \
+	(tkIntPlatStubsPtr->tkWinIndexOfColor) /* 27 */
 #endif
 #ifndef TkWinReleaseDrawableDC
-#define TkWinReleaseDrawableDC(d, hdc, state) \
-	(tkIntPlatStubsPtr->tkWinReleaseDrawableDC)(d, hdc, state) /* 28 */
+#define TkWinReleaseDrawableDC \
+	(tkIntPlatStubsPtr->tkWinReleaseDrawableDC) /* 28 */
 #endif
 #ifndef TkWinResendEvent
-#define TkWinResendEvent(wndproc, hwnd, eventPtr) \
-	(tkIntPlatStubsPtr->tkWinResendEvent)(wndproc, hwnd, eventPtr) /* 29 */
+#define TkWinResendEvent \
+	(tkIntPlatStubsPtr->tkWinResendEvent) /* 29 */
 #endif
 #ifndef TkWinSelectPalette
-#define TkWinSelectPalette(dc, colormap) \
-	(tkIntPlatStubsPtr->tkWinSelectPalette)(dc, colormap) /* 30 */
+#define TkWinSelectPalette \
+	(tkIntPlatStubsPtr->tkWinSelectPalette) /* 30 */
 #endif
 #ifndef TkWinSetMenu
-#define TkWinSetMenu(tkwin, hMenu) \
-	(tkIntPlatStubsPtr->tkWinSetMenu)(tkwin, hMenu) /* 31 */
+#define TkWinSetMenu \
+	(tkIntPlatStubsPtr->tkWinSetMenu) /* 31 */
 #endif
 #ifndef TkWinSetWindowPos
-#define TkWinSetWindowPos(hwnd, siblingHwnd, pos) \
-	(tkIntPlatStubsPtr->tkWinSetWindowPos)(hwnd, siblingHwnd, pos) /* 32 */
+#define TkWinSetWindowPos \
+	(tkIntPlatStubsPtr->tkWinSetWindowPos) /* 32 */
 #endif
 #ifndef TkWinWmCleanup
-#define TkWinWmCleanup(hInstance) \
-	(tkIntPlatStubsPtr->tkWinWmCleanup)(hInstance) /* 33 */
+#define TkWinWmCleanup \
+	(tkIntPlatStubsPtr->tkWinWmCleanup) /* 33 */
 #endif
 #ifndef TkWinXCleanup
-#define TkWinXCleanup(hInstance) \
-	(tkIntPlatStubsPtr->tkWinXCleanup)(hInstance) /* 34 */
+#define TkWinXCleanup \
+	(tkIntPlatStubsPtr->tkWinXCleanup) /* 34 */
 #endif
 #ifndef TkWinXInit
-#define TkWinXInit(hInstance) \
-	(tkIntPlatStubsPtr->tkWinXInit)(hInstance) /* 35 */
+#define TkWinXInit \
+	(tkIntPlatStubsPtr->tkWinXInit) /* 35 */
+#endif
+#ifndef TkWinSetForegroundWindow
+#define TkWinSetForegroundWindow \
+	(tkIntPlatStubsPtr->tkWinSetForegroundWindow) /* 36 */
+#endif
+#ifndef TkWinDialogDebug
+#define TkWinDialogDebug \
+	(tkIntPlatStubsPtr->tkWinDialogDebug) /* 37 */
+#endif
+#ifndef TkWinGetMenuSystemDefault
+#define TkWinGetMenuSystemDefault \
+	(tkIntPlatStubsPtr->tkWinGetMenuSystemDefault) /* 38 */
+#endif
+#ifndef TkWinGetPlatformId
+#define TkWinGetPlatformId \
+	(tkIntPlatStubsPtr->tkWinGetPlatformId) /* 39 */
 #endif
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 #ifndef TkClipBox
-#define TkClipBox(rgn, rect_return) \
-	(tkIntPlatStubsPtr->tkClipBox)(rgn, rect_return) /* 0 */
+#define TkClipBox \
+	(tkIntPlatStubsPtr->tkClipBox) /* 0 */
 #endif
 #ifndef TkCreateRegion
-#define TkCreateRegion() \
-	(tkIntPlatStubsPtr->tkCreateRegion)() /* 1 */
+#define TkCreateRegion \
+	(tkIntPlatStubsPtr->tkCreateRegion) /* 1 */
 #endif
 #ifndef TkDestroyRegion
-#define TkDestroyRegion(rgn) \
-	(tkIntPlatStubsPtr->tkDestroyRegion)(rgn) /* 2 */
+#define TkDestroyRegion \
+	(tkIntPlatStubsPtr->tkDestroyRegion) /* 2 */
 #endif
 #ifndef TkGenerateActivateEvents
-#define TkGenerateActivateEvents(winPtr, active) \
-	(tkIntPlatStubsPtr->tkGenerateActivateEvents)(winPtr, active) /* 3 */
+#define TkGenerateActivateEvents \
+	(tkIntPlatStubsPtr->tkGenerateActivateEvents) /* 3 */
 #endif
 #ifndef TkIntersectRegion
-#define TkIntersectRegion(sra, srcb, dr_return) \
-	(tkIntPlatStubsPtr->tkIntersectRegion)(sra, srcb, dr_return) /* 4 */
+#define TkIntersectRegion \
+	(tkIntPlatStubsPtr->tkIntersectRegion) /* 4 */
 #endif
 #ifndef TkpCreateNativeBitmap
-#define TkpCreateNativeBitmap(display, source) \
-	(tkIntPlatStubsPtr->tkpCreateNativeBitmap)(display, source) /* 5 */
+#define TkpCreateNativeBitmap \
+	(tkIntPlatStubsPtr->tkpCreateNativeBitmap) /* 5 */
 #endif
 #ifndef TkpDefineNativeBitmaps
-#define TkpDefineNativeBitmaps() \
-	(tkIntPlatStubsPtr->tkpDefineNativeBitmaps)() /* 6 */
+#define TkpDefineNativeBitmaps \
+	(tkIntPlatStubsPtr->tkpDefineNativeBitmaps) /* 6 */
 #endif
 #ifndef TkpGetMS
-#define TkpGetMS() \
-	(tkIntPlatStubsPtr->tkpGetMS)() /* 7 */
+#define TkpGetMS \
+	(tkIntPlatStubsPtr->tkpGetMS) /* 7 */
 #endif
 #ifndef TkpGetNativeAppBitmap
-#define TkpGetNativeAppBitmap(display, name, width, height) \
-	(tkIntPlatStubsPtr->tkpGetNativeAppBitmap)(display, name, width, height) /* 8 */
+#define TkpGetNativeAppBitmap \
+	(tkIntPlatStubsPtr->tkpGetNativeAppBitmap) /* 8 */
 #endif
 #ifndef TkPointerDeadWindow
-#define TkPointerDeadWindow(winPtr) \
-	(tkIntPlatStubsPtr->tkPointerDeadWindow)(winPtr) /* 9 */
+#define TkPointerDeadWindow \
+	(tkIntPlatStubsPtr->tkPointerDeadWindow) /* 9 */
 #endif
 #ifndef TkpSetCapture
-#define TkpSetCapture(winPtr) \
-	(tkIntPlatStubsPtr->tkpSetCapture)(winPtr) /* 10 */
+#define TkpSetCapture \
+	(tkIntPlatStubsPtr->tkpSetCapture) /* 10 */
 #endif
 #ifndef TkpSetCursor
-#define TkpSetCursor(cursor) \
-	(tkIntPlatStubsPtr->tkpSetCursor)(cursor) /* 11 */
+#define TkpSetCursor \
+	(tkIntPlatStubsPtr->tkpSetCursor) /* 11 */
 #endif
 #ifndef TkpWmSetState
-#define TkpWmSetState(winPtr, state) \
-	(tkIntPlatStubsPtr->tkpWmSetState)(winPtr, state) /* 12 */
+#define TkpWmSetState \
+	(tkIntPlatStubsPtr->tkpWmSetState) /* 12 */
 #endif
 #ifndef TkRectInRegion
-#define TkRectInRegion(rgn, x, y, width, height) \
-	(tkIntPlatStubsPtr->tkRectInRegion)(rgn, x, y, width, height) /* 13 */
+#define TkRectInRegion \
+	(tkIntPlatStubsPtr->tkRectInRegion) /* 13 */
 #endif
 #ifndef TkSetRegion
-#define TkSetRegion(display, gc, rgn) \
-	(tkIntPlatStubsPtr->tkSetRegion)(display, gc, rgn) /* 14 */
+#define TkSetRegion \
+	(tkIntPlatStubsPtr->tkSetRegion) /* 14 */
 #endif
 #ifndef TkUnionRectWithRegion
-#define TkUnionRectWithRegion(rect, src, dr_return) \
-	(tkIntPlatStubsPtr->tkUnionRectWithRegion)(rect, src, dr_return) /* 15 */
+#define TkUnionRectWithRegion \
+	(tkIntPlatStubsPtr->tkUnionRectWithRegion) /* 15 */
 #endif
 #ifndef HandleWMEvent
-#define HandleWMEvent(theEvent) \
-	(tkIntPlatStubsPtr->handleWMEvent)(theEvent) /* 16 */
+#define HandleWMEvent \
+	(tkIntPlatStubsPtr->handleWMEvent) /* 16 */
 #endif
 #ifndef TkAboutDlg
-#define TkAboutDlg() \
-	(tkIntPlatStubsPtr->tkAboutDlg)() /* 17 */
+#define TkAboutDlg \
+	(tkIntPlatStubsPtr->tkAboutDlg) /* 17 */
 #endif
 #ifndef TkCreateMacEventSource
-#define TkCreateMacEventSource() \
-	(tkIntPlatStubsPtr->tkCreateMacEventSource)() /* 18 */
+#define TkCreateMacEventSource \
+	(tkIntPlatStubsPtr->tkCreateMacEventSource) /* 18 */
 #endif
 #ifndef TkFontList
-#define TkFontList(interp, display) \
-	(tkIntPlatStubsPtr->tkFontList)(interp, display) /* 19 */
+#define TkFontList \
+	(tkIntPlatStubsPtr->tkFontList) /* 19 */
 #endif
 #ifndef TkGetTransientMaster
-#define TkGetTransientMaster(winPtr) \
-	(tkIntPlatStubsPtr->tkGetTransientMaster)(winPtr) /* 20 */
+#define TkGetTransientMaster \
+	(tkIntPlatStubsPtr->tkGetTransientMaster) /* 20 */
 #endif
 #ifndef TkGenerateButtonEvent
-#define TkGenerateButtonEvent(x, y, window, state) \
-	(tkIntPlatStubsPtr->tkGenerateButtonEvent)(x, y, window, state) /* 21 */
+#define TkGenerateButtonEvent \
+	(tkIntPlatStubsPtr->tkGenerateButtonEvent) /* 21 */
 #endif
 #ifndef TkGetCharPositions
-#define TkGetCharPositions(font_struct, string, count, buffer) \
-	(tkIntPlatStubsPtr->tkGetCharPositions)(font_struct, string, count, buffer) /* 22 */
+#define TkGetCharPositions \
+	(tkIntPlatStubsPtr->tkGetCharPositions) /* 22 */
 #endif
 #ifndef TkGenWMDestroyEvent
-#define TkGenWMDestroyEvent(tkwin) \
-	(tkIntPlatStubsPtr->tkGenWMDestroyEvent)(tkwin) /* 23 */
+#define TkGenWMDestroyEvent \
+	(tkIntPlatStubsPtr->tkGenWMDestroyEvent) /* 23 */
 #endif
 #ifndef TkGenWMConfigureEvent
-#define TkGenWMConfigureEvent(tkwin, x, y, width, height, flags) \
-	(tkIntPlatStubsPtr->tkGenWMConfigureEvent)(tkwin, x, y, width, height, flags) /* 24 */
+#define TkGenWMConfigureEvent \
+	(tkIntPlatStubsPtr->tkGenWMConfigureEvent) /* 24 */
 #endif
 #ifndef TkMacButtonKeyState
-#define TkMacButtonKeyState() \
-	(tkIntPlatStubsPtr->tkMacButtonKeyState)() /* 25 */
+#define TkMacButtonKeyState \
+	(tkIntPlatStubsPtr->tkMacButtonKeyState) /* 25 */
 #endif
 #ifndef TkMacClearMenubarActive
-#define TkMacClearMenubarActive() \
-	(tkIntPlatStubsPtr->tkMacClearMenubarActive)() /* 26 */
+#define TkMacClearMenubarActive \
+	(tkIntPlatStubsPtr->tkMacClearMenubarActive) /* 26 */
 #endif
 #ifndef TkMacConvertEvent
-#define TkMacConvertEvent(eventPtr) \
-	(tkIntPlatStubsPtr->tkMacConvertEvent)(eventPtr) /* 27 */
+#define TkMacConvertEvent \
+	(tkIntPlatStubsPtr->tkMacConvertEvent) /* 27 */
 #endif
 #ifndef TkMacDispatchMenuEvent
-#define TkMacDispatchMenuEvent(menuID, index) \
-	(tkIntPlatStubsPtr->tkMacDispatchMenuEvent)(menuID, index) /* 28 */
+#define TkMacDispatchMenuEvent \
+	(tkIntPlatStubsPtr->tkMacDispatchMenuEvent) /* 28 */
 #endif
 #ifndef TkMacInstallCursor
-#define TkMacInstallCursor(resizeOverride) \
-	(tkIntPlatStubsPtr->tkMacInstallCursor)(resizeOverride) /* 29 */
+#define TkMacInstallCursor \
+	(tkIntPlatStubsPtr->tkMacInstallCursor) /* 29 */
 #endif
 #ifndef TkMacConvertTkEvent
-#define TkMacConvertTkEvent(eventPtr, window) \
-	(tkIntPlatStubsPtr->tkMacConvertTkEvent)(eventPtr, window) /* 30 */
+#define TkMacConvertTkEvent \
+	(tkIntPlatStubsPtr->tkMacConvertTkEvent) /* 30 */
 #endif
 #ifndef TkMacHandleTearoffMenu
-#define TkMacHandleTearoffMenu() \
-	(tkIntPlatStubsPtr->tkMacHandleTearoffMenu)() /* 31 */
+#define TkMacHandleTearoffMenu \
+	(tkIntPlatStubsPtr->tkMacHandleTearoffMenu) /* 31 */
 #endif
 #ifndef tkMacInstallMWConsole
-#define tkMacInstallMWConsole(interp) \
-	(tkIntPlatStubsPtr->tkMacInstallMWConsole)(interp) /* 32 */
+#define tkMacInstallMWConsole \
+	(tkIntPlatStubsPtr->tkMacInstallMWConsole) /* 32 */
 #endif
 #ifndef TkMacInvalClipRgns
-#define TkMacInvalClipRgns(winPtr) \
-	(tkIntPlatStubsPtr->tkMacInvalClipRgns)(winPtr) /* 33 */
+#define TkMacInvalClipRgns \
+	(tkIntPlatStubsPtr->tkMacInvalClipRgns) /* 33 */
 #endif
 #ifndef TkMacDoHLEvent
-#define TkMacDoHLEvent(theEvent) \
-	(tkIntPlatStubsPtr->tkMacDoHLEvent)(theEvent) /* 34 */
+#define TkMacDoHLEvent \
+	(tkIntPlatStubsPtr->tkMacDoHLEvent) /* 34 */
 #endif
 #ifndef TkMacFontInfo
-#define TkMacFontInfo(fontId, family, style, size) \
-	(tkIntPlatStubsPtr->tkMacFontInfo)(fontId, family, style, size) /* 35 */
+#define TkMacFontInfo \
+	(tkIntPlatStubsPtr->tkMacFontInfo) /* 35 */
 #endif
 #ifndef TkMacGenerateTime
-#define TkMacGenerateTime() \
-	(tkIntPlatStubsPtr->tkMacGenerateTime)() /* 36 */
+#define TkMacGenerateTime \
+	(tkIntPlatStubsPtr->tkMacGenerateTime) /* 36 */
 #endif
 #ifndef TkMacGetDrawablePort
-#define TkMacGetDrawablePort(drawable) \
-	(tkIntPlatStubsPtr->tkMacGetDrawablePort)(drawable) /* 37 */
+#define TkMacGetDrawablePort \
+	(tkIntPlatStubsPtr->tkMacGetDrawablePort) /* 37 */
 #endif
 #ifndef TkMacGetScrollbarGrowWindow
-#define TkMacGetScrollbarGrowWindow(winPtr) \
-	(tkIntPlatStubsPtr->tkMacGetScrollbarGrowWindow)(winPtr) /* 38 */
+#define TkMacGetScrollbarGrowWindow \
+	(tkIntPlatStubsPtr->tkMacGetScrollbarGrowWindow) /* 38 */
 #endif
 #ifndef TkMacGetXWindow
-#define TkMacGetXWindow(macWinPtr) \
-	(tkIntPlatStubsPtr->tkMacGetXWindow)(macWinPtr) /* 39 */
+#define TkMacGetXWindow \
+	(tkIntPlatStubsPtr->tkMacGetXWindow) /* 39 */
 #endif
 #ifndef TkMacGrowToplevel
-#define TkMacGrowToplevel(whichWindow, start) \
-	(tkIntPlatStubsPtr->tkMacGrowToplevel)(whichWindow, start) /* 40 */
+#define TkMacGrowToplevel \
+	(tkIntPlatStubsPtr->tkMacGrowToplevel) /* 40 */
 #endif
 #ifndef TkMacHandleMenuSelect
-#define TkMacHandleMenuSelect(mResult, optionKeyPressed) \
-	(tkIntPlatStubsPtr->tkMacHandleMenuSelect)(mResult, optionKeyPressed) /* 41 */
+#define TkMacHandleMenuSelect \
+	(tkIntPlatStubsPtr->tkMacHandleMenuSelect) /* 41 */
 #endif
 #ifndef TkMacHaveAppearance
-#define TkMacHaveAppearance() \
-	(tkIntPlatStubsPtr->tkMacHaveAppearance)() /* 42 */
+#define TkMacHaveAppearance \
+	(tkIntPlatStubsPtr->tkMacHaveAppearance) /* 42 */
 #endif
 #ifndef TkMacInitAppleEvents
-#define TkMacInitAppleEvents(interp) \
-	(tkIntPlatStubsPtr->tkMacInitAppleEvents)(interp) /* 43 */
+#define TkMacInitAppleEvents \
+	(tkIntPlatStubsPtr->tkMacInitAppleEvents) /* 43 */
 #endif
 #ifndef TkMacInitMenus
-#define TkMacInitMenus(interp) \
-	(tkIntPlatStubsPtr->tkMacInitMenus)(interp) /* 44 */
+#define TkMacInitMenus \
+	(tkIntPlatStubsPtr->tkMacInitMenus) /* 44 */
 #endif
 #ifndef TkMacInvalidateWindow
-#define TkMacInvalidateWindow(macWin, flag) \
-	(tkIntPlatStubsPtr->tkMacInvalidateWindow)(macWin, flag) /* 45 */
+#define TkMacInvalidateWindow \
+	(tkIntPlatStubsPtr->tkMacInvalidateWindow) /* 45 */
 #endif
 #ifndef TkMacIsCharacterMissing
-#define TkMacIsCharacterMissing(tkfont, searchChar) \
-	(tkIntPlatStubsPtr->tkMacIsCharacterMissing)(tkfont, searchChar) /* 46 */
+#define TkMacIsCharacterMissing \
+	(tkIntPlatStubsPtr->tkMacIsCharacterMissing) /* 46 */
 #endif
 #ifndef TkMacMakeRealWindowExist
-#define TkMacMakeRealWindowExist(winPtr) \
-	(tkIntPlatStubsPtr->tkMacMakeRealWindowExist)(winPtr) /* 47 */
+#define TkMacMakeRealWindowExist \
+	(tkIntPlatStubsPtr->tkMacMakeRealWindowExist) /* 47 */
 #endif
 #ifndef TkMacMakeStippleMap
-#define TkMacMakeStippleMap(d1, d2) \
-	(tkIntPlatStubsPtr->tkMacMakeStippleMap)(d1, d2) /* 48 */
+#define TkMacMakeStippleMap \
+	(tkIntPlatStubsPtr->tkMacMakeStippleMap) /* 48 */
 #endif
 #ifndef TkMacMenuClick
-#define TkMacMenuClick() \
-	(tkIntPlatStubsPtr->tkMacMenuClick)() /* 49 */
+#define TkMacMenuClick \
+	(tkIntPlatStubsPtr->tkMacMenuClick) /* 49 */
 #endif
 #ifndef TkMacRegisterOffScreenWindow
-#define TkMacRegisterOffScreenWindow(window, portPtr) \
-	(tkIntPlatStubsPtr->tkMacRegisterOffScreenWindow)(window, portPtr) /* 50 */
+#define TkMacRegisterOffScreenWindow \
+	(tkIntPlatStubsPtr->tkMacRegisterOffScreenWindow) /* 50 */
 #endif
 #ifndef TkMacResizable
-#define TkMacResizable(winPtr) \
-	(tkIntPlatStubsPtr->tkMacResizable)(winPtr) /* 51 */
+#define TkMacResizable \
+	(tkIntPlatStubsPtr->tkMacResizable) /* 51 */
 #endif
 #ifndef TkMacSetEmbedRgn
-#define TkMacSetEmbedRgn(winPtr, rgn) \
-	(tkIntPlatStubsPtr->tkMacSetEmbedRgn)(winPtr, rgn) /* 52 */
+#define TkMacSetEmbedRgn \
+	(tkIntPlatStubsPtr->tkMacSetEmbedRgn) /* 52 */
 #endif
 #ifndef TkMacSetHelpMenuItemCount
-#define TkMacSetHelpMenuItemCount() \
-	(tkIntPlatStubsPtr->tkMacSetHelpMenuItemCount)() /* 53 */
+#define TkMacSetHelpMenuItemCount \
+	(tkIntPlatStubsPtr->tkMacSetHelpMenuItemCount) /* 53 */
 #endif
 #ifndef TkMacSetScrollbarGrow
-#define TkMacSetScrollbarGrow(winPtr, flag) \
-	(tkIntPlatStubsPtr->tkMacSetScrollbarGrow)(winPtr, flag) /* 54 */
+#define TkMacSetScrollbarGrow \
+	(tkIntPlatStubsPtr->tkMacSetScrollbarGrow) /* 54 */
 #endif
 #ifndef TkMacSetUpClippingRgn
-#define TkMacSetUpClippingRgn(drawable) \
-	(tkIntPlatStubsPtr->tkMacSetUpClippingRgn)(drawable) /* 55 */
+#define TkMacSetUpClippingRgn \
+	(tkIntPlatStubsPtr->tkMacSetUpClippingRgn) /* 55 */
 #endif
 #ifndef TkMacSetUpGraphicsPort
-#define TkMacSetUpGraphicsPort(gc) \
-	(tkIntPlatStubsPtr->tkMacSetUpGraphicsPort)(gc) /* 56 */
+#define TkMacSetUpGraphicsPort \
+	(tkIntPlatStubsPtr->tkMacSetUpGraphicsPort) /* 56 */
 #endif
 #ifndef TkMacUpdateClipRgn
-#define TkMacUpdateClipRgn(winPtr) \
-	(tkIntPlatStubsPtr->tkMacUpdateClipRgn)(winPtr) /* 57 */
+#define TkMacUpdateClipRgn \
+	(tkIntPlatStubsPtr->tkMacUpdateClipRgn) /* 57 */
 #endif
 #ifndef TkMacUnregisterMacWindow
-#define TkMacUnregisterMacWindow(portPtr) \
-	(tkIntPlatStubsPtr->tkMacUnregisterMacWindow)(portPtr) /* 58 */
+#define TkMacUnregisterMacWindow \
+	(tkIntPlatStubsPtr->tkMacUnregisterMacWindow) /* 58 */
 #endif
 #ifndef TkMacUseMenuID
-#define TkMacUseMenuID(macID) \
-	(tkIntPlatStubsPtr->tkMacUseMenuID)(macID) /* 59 */
+#define TkMacUseMenuID \
+	(tkIntPlatStubsPtr->tkMacUseMenuID) /* 59 */
 #endif
 #ifndef TkMacVisableClipRgn
-#define TkMacVisableClipRgn(winPtr) \
-	(tkIntPlatStubsPtr->tkMacVisableClipRgn)(winPtr) /* 60 */
+#define TkMacVisableClipRgn \
+	(tkIntPlatStubsPtr->tkMacVisableClipRgn) /* 60 */
 #endif
 #ifndef TkMacWinBounds
-#define TkMacWinBounds(winPtr, geometry) \
-	(tkIntPlatStubsPtr->tkMacWinBounds)(winPtr, geometry) /* 61 */
+#define TkMacWinBounds \
+	(tkIntPlatStubsPtr->tkMacWinBounds) /* 61 */
 #endif
 #ifndef TkMacWindowOffset
-#define TkMacWindowOffset(wRef, xOffset, yOffset) \
-	(tkIntPlatStubsPtr->tkMacWindowOffset)(wRef, xOffset, yOffset) /* 62 */
+#define TkMacWindowOffset \
+	(tkIntPlatStubsPtr->tkMacWindowOffset) /* 62 */
 #endif
 #ifndef TkResumeClipboard
-#define TkResumeClipboard() \
-	(tkIntPlatStubsPtr->tkResumeClipboard)() /* 63 */
+#define TkResumeClipboard \
+	(tkIntPlatStubsPtr->tkResumeClipboard) /* 63 */
 #endif
 #ifndef TkSetMacColor
-#define TkSetMacColor(pixel, macColor) \
-	(tkIntPlatStubsPtr->tkSetMacColor)(pixel, macColor) /* 64 */
+#define TkSetMacColor \
+	(tkIntPlatStubsPtr->tkSetMacColor) /* 64 */
 #endif
 #ifndef TkSetWMName
-#define TkSetWMName(winPtr, titleUid) \
-	(tkIntPlatStubsPtr->tkSetWMName)(winPtr, titleUid) /* 65 */
+#define TkSetWMName \
+	(tkIntPlatStubsPtr->tkSetWMName) /* 65 */
 #endif
 #ifndef TkSuspendClipboard
-#define TkSuspendClipboard() \
-	(tkIntPlatStubsPtr->tkSuspendClipboard)() /* 66 */
+#define TkSuspendClipboard \
+	(tkIntPlatStubsPtr->tkSuspendClipboard) /* 66 */
 #endif
 #ifndef TkWMGrowToplevel
-#define TkWMGrowToplevel(whichWindow, start) \
-	(tkIntPlatStubsPtr->tkWMGrowToplevel)(whichWindow, start) /* 67 */
+#define TkWMGrowToplevel \
+	(tkIntPlatStubsPtr->tkWMGrowToplevel) /* 67 */
 #endif
 #ifndef TkMacZoomToplevel
-#define TkMacZoomToplevel(whichWindow, where, zoomPart) \
-	(tkIntPlatStubsPtr->tkMacZoomToplevel)(whichWindow, where, zoomPart) /* 68 */
+#define TkMacZoomToplevel \
+	(tkIntPlatStubsPtr->tkMacZoomToplevel) /* 68 */
 #endif
 #ifndef Tk_TopCoordsToWindow
-#define Tk_TopCoordsToWindow(tkwin, rootX, rootY, newX, newY) \
-	(tkIntPlatStubsPtr->tk_TopCoordsToWindow)(tkwin, rootX, rootY, newX, newY) /* 69 */
+#define Tk_TopCoordsToWindow \
+	(tkIntPlatStubsPtr->tk_TopCoordsToWindow) /* 69 */
 #endif
 #ifndef TkMacContainerId
-#define TkMacContainerId(winPtr) \
-	(tkIntPlatStubsPtr->tkMacContainerId)(winPtr) /* 70 */
+#define TkMacContainerId \
+	(tkIntPlatStubsPtr->tkMacContainerId) /* 70 */
 #endif
 #ifndef TkMacGetHostToplevel
-#define TkMacGetHostToplevel(winPtr) \
-	(tkIntPlatStubsPtr->tkMacGetHostToplevel)(winPtr) /* 71 */
+#define TkMacGetHostToplevel \
+	(tkIntPlatStubsPtr->tkMacGetHostToplevel) /* 71 */
 #endif
 #endif /* MAC_TCL */
 

@@ -1,10 +1,10 @@
-Tk 8.0.5 for Windows
+Tk 8.1 for Windows
 
 by Scott Stanton
 Scriptics Corporation
 scott.stanton@scriptics.com
 
-RCS: @(#) $Id: README,v 1.8 1999/02/09 03:46:27 stanton Exp $
+RCS: @(#) $Id: README,v 1.9 1999/04/16 01:51:48 stanton Exp $
 
 1. Introduction
 ---------------
@@ -17,25 +17,25 @@ contains information specific to the Windows version of Tk.
 2. Distribution notes
 ---------------------
 
-Tk 8.0 for Windows is distributed in binary form in addition to the
+Tk 8.1 for Windows is distributed in binary form in addition to the
 common source release.  The binary distribution is a self-extracting
 archive with a built-in installation script.
 
 Look for the binary release in the same location as the source release
-(ftp.scriptics.com:/pub/tcl/tcl8_0 or any of the mirror sites).  For
-most users, the binary release will be much easier to install and use.
-You only need the source release if you plan to modify the core of
-Tcl, or if you need to compile with a different compiler.  With the
-addition of the dynamic loading interface, it is no longer necessary
-to have the source distribution in order to build and use extensions.
+(ftp.scriptics.com:/pub/tcl/tcl8_1 or any of the mirror sites).  For most users,
+the binary release will be much easier to install and use.  You only
+need the source release if you plan to modify the core of Tcl, or if
+you need to compile with a different compiler.  With the addition of
+the dynamic loading interface, it is no longer necessary to have the
+source distribution in order to build and use extensions.
 
 3. Compiling Tk
 ----------------
 
 In order to compile Tk for Windows, you need the following items:
 
-	Tcl 8.0 Source Distribution (plus any patches)
-	Tk 8.0 Source Distribution (plus any patches)
+	Tcl 8.1 Source Distribution (plus any patches)
+	Tk 8.1 Source Distribution (plus any patches)
 
 	The latest Win32 SDK header files
 
@@ -43,7 +43,7 @@ In order to compile Tk for Windows, you need the following items:
 	  or
 	Visual C++ 2.x or later
 
-In practice, 8.0.5 was built with Visual C++ 5.0
+In practice, 8.1 was built with Visual C++ 5.0
 
 In the "win" subdirectory of the source release, you will find two
 files called "makefile.bc" and "makefile.vc".  These are the makefiles
@@ -59,19 +59,20 @@ find them.  Tk looks in one of two places for the library files:
 
 	1) The environment variable "TK_LIBRARY".
 
-	2) In the lib\tk8.0 directory under the Tcl installation directory
+	2) In the lib\tk8.1 directory under the Tcl installation directory
 	   as specified in the registry:
 
-		HKEY_LOCAL_MACHINE\SOFTWARE\Scriptics\Tcl\8.0
-		Value Name is "Root"
+		    HKEY_LOCAL_MACHINE\SOFTWARE\Scriptics\Tcl\8.1\
 
 	2) Relative to the directory containing the current .exe.
-	    Tk will look for a directory "..\lib\tk8.0" relative to the
+	    Tk will look for a directory "..\lib\tk8.1" relative to the
 	    directory containing the currently running .exe.
 
-Note that in order to run wish80.exe, you must ensure that tcl80.dll,
-tclpip80.dll, and tk80.dll are on your path, in the system directory,
-or in the directory containing wish80.exe.
+Note that in order to run wish81.exe, you must ensure that tcl81.dll,
+tclpip81.dll, and tk81.dll are on your path, in the system directory, 
+or in the directory containing wish81.exe.
+
+Note that Tk no longer supports Win32s.
 
 4. Test suite
 -------------
@@ -102,15 +103,14 @@ Windows beta version of Tk:
 - Tk_dialog appears in the upper left corner.  This is a symptom of a
   larger problem with "wm geometry" when applied to unmapped or
   iconified windows.
-- Some keys don't work on international keyboards.
 - PPM images are using the wrong translation mode for writing to
   files, resulting in CR/LF terminated PPM files.
 - Tk crashes if the display depth changes while it is running.  Tk
   also doesn't consistently track changes in the system colors.
 
 If you have comments or bug reports for the Windows version of Tk,
-please direct them to:
+please use our on-line bug form at:
 
-<bugs@scriptics.com>
+http://www.scriptics.com/support/bugForm.html
 
 or post them to the newsgroup comp.lang.tcl.

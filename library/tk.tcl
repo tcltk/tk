@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.6 1999/01/04 19:25:27 rjohnson Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.7 1999/04/16 01:51:27 stanton Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -14,8 +14,8 @@
 
 # Insist on running with compatible versions of Tcl and Tk.
 
-package require -exact Tk 8.0
-package require -exact Tcl 8.0
+package require -exact Tk 8.1
+package require -exact Tcl 8.1
 
 # Add Tk's directory to the end of the auto-load search path, if it
 # isn't already on the path:
@@ -56,27 +56,29 @@ proc tkScreenChanged screen {
 	set tkPriv(screen) $screen
 	return
     }
-    set tkPriv(activeMenu) {}
-    set tkPriv(activeItem) {}
-    set tkPriv(afterId) {}
-    set tkPriv(buttons) 0
-    set tkPriv(buttonWindow) {}
-    set tkPriv(dragging) 0
-    set tkPriv(focus) {}
-    set tkPriv(grab) {}
-    set tkPriv(initPos) {}
-    set tkPriv(inMenubutton) {}
-    set tkPriv(listboxPrev) {}
-    set tkPriv(menuBar) {}
-    set tkPriv(mouseMoved) 0
-    set tkPriv(oldGrab) {}
-    set tkPriv(popup) {}
-    set tkPriv(postedMb) {}
-    set tkPriv(pressX) 0
-    set tkPriv(pressY) 0
-    set tkPriv(prevPos) 0
+    array set tkPriv {
+      activeMenu      {}
+      activeItem      {}
+      afterId         {}
+      buttons         0
+      buttonWindow    {}
+      dragging        0
+      focus           {}
+      grab            {}
+      initPos         {}
+      inMenubutton    {}
+      listboxPrev     {}
+      menuBar         {}
+      mouseMoved      0
+      oldGrab         {}
+      popup           {}
+      postedMb        {}
+      pressX          0
+      pressY          0
+      prevPos         0
+      selectMode      char
+    }
     set tkPriv(screen) $screen
-    set tkPriv(selectMode) char
     if {[string compare $tcl_platform(platform) "unix"] == 0} {
 	set tkPriv(tearoff) 1
     } else {
@@ -114,6 +116,40 @@ proc tkEventMotifBindings {n1 dummy dummy} {
 }
 
 #----------------------------------------------------------------------
+# Define common dialogs on platforms where they are not implemented 
+# using compiled code.
+#----------------------------------------------------------------------
+
+if {![string compare [info commands tk_chooseColor] ""]} {
+    proc tk_chooseColor {args} {
+	return [eval tkColorDialog $args]
+    }
+}
+if {![string compare [info commands tk_getOpenFile] ""]} {
+    proc tk_getOpenFile {args} {
+	if {$::tk_strictMotif} {
+	    return [eval tkMotifFDialog open $args]
+	} else {
+	    return [eval tkFDialog open $args]
+	}
+    }
+}
+if {![string compare [info commands tk_getSaveFile] ""]} {
+    proc tk_getSaveFile {args} {
+	if {$::tk_strictMotif} {
+	    return [eval tkMotifFDialog save $args]
+	} else {
+	    return [eval tkFDialog save $args]
+	}
+    }
+}
+if {![string compare [info commands tk_messageBox] ""]} {
+    proc tk_messageBox {args} {
+	return [eval tkMessageBox $args]
+    }
+}
+	
+#----------------------------------------------------------------------
 # Define the set of common virtual events.
 #----------------------------------------------------------------------
 
@@ -145,7 +181,7 @@ switch $tcl_platform(platform) {
 # Read in files that define all of the class bindings.
 # ----------------------------------------------------------------------
 
-if {$tcl_platform(platform) != "macintosh"} {
+if {[string compare $tcl_platform(platform) "macintosh"]} {
     source [file join $tk_library button.tcl]
     source [file join $tk_library entry.tcl]
     source [file join $tk_library listbox.tcl]
@@ -185,7 +221,7 @@ proc tkCancelRepeat {} {
 # w - Window to which focus should be set.
 
 proc tkTabToWindow {w} {
-    if {"[winfo class $w]" == "Entry"} {
+    if {![string compare [winfo class $w] Entry]} {
 	$w select range 0 end
 	$w icur end
     }

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacInt.h,v 1.6 1999/03/10 07:04:44 stanton Exp $
+ * RCS: @(#) $Id: tkMacInt.h,v 1.7 1999/04/16 01:51:31 stanton Exp $
  */
 
 #ifndef _TKMACINT
@@ -207,11 +207,5 @@ typedef TkMenuDefProcPtr TkMenuDefUPP;
 	(*(userRoutine))((message), (theMenu), (menuRectPtr), (hitPt), \
 	(whichItemPtr), (globalsPtr))
 #endif
-
-/*
- * Internal procedures shared among Macintosh Tk modules but not exported
- * to the outside world:
- */
-#include "tkIntPlatDecls.h"
 
 #endif /* _TKMACINT */

@@ -3,7 +3,7 @@ README:  Tk
 	Tk is maintained, enhanced, and distributed freely as a
 	service to the Tcl community by Scriptics Corporation.
 
-RCS: @(#) $Id: README,v 1.13 1999/02/17 02:34:36 hershey Exp $
+RCS: @(#) $Id: README,v 1.14 1999/04/16 01:51:07 stanton Exp $
 
 Contents
 --------
@@ -11,7 +11,7 @@ Contents
     2. Documentation
     3. Compiling and installing Tk
     4. Getting started
-    5. Summary of changes in Tk 8.0
+    5. Summary of changes in Tk 8.1
     6. Development tools
     7. Tcl newsgroup
     8. Tcl contributed archive
@@ -25,19 +25,23 @@ Contents
 
 This directory contains the sources and documentation for Tk, an X11
 toolkit implemented with the Tcl scripting language.  The information
-here corresponds to release 8.0.5, which is the fifth patch update for
-Tk 8.0.  This release is designed to work with Tcl 8.0.5 and may not
-work with any other version of Tcl.
+here corresponds to release 8.1b3, which is the third beta release
+for Tk 8.1.  This release is mostly feature complete but may have bugs
+and be missing some minor features.  This release is for early
+adopters who are willing to help us find and fix problems.  Please let
+us know about any problems you uncover.
 
-Tk 8.0 is a major release with significant new features such as native
-look and feel on Macintoshes and PCs, a new font mechanism, application
-embedding, and proper support for Safe-Tcl.  See below for details.
-There should be no backward incompatibilities in Tk 8.0 that affect
-scripts.  This patch release fixes various bugs in Tk 8.0; there are no
-feature changes relative to Tk 8.0.
+The most important change in Tk 8.1 is that it supports the new
+internationalization features in Tcl 8.1.  It also contains a new
+library for handling configuration options some of the widgets have
+been converted to use the Tcl object facilities.  For details on
+features, incompatibilities, and potential problems with this release,
+see the Tcl/Tk 8.1 Web page at
 
-Note: with Tk 8.0 the Tk version number skipped from 4.2 to 8.0. The
-jump was made in order to synchronize the Tcl and Tk version numbers.
+	http://www.scriptics.com/software/8.1.html
+
+or refer to the "changes" file in this directory, which contains a
+historical record of all changes to Tk.
 
 Tk is a freely available open source package.  You can do virtually
 anything you like with it, such as modifying it, redistributing it,
@@ -153,119 +157,8 @@ library/demos/widget is a script that you can use to invoke many
 individual demonstrations of Tk's facilities, see the code that
 produced the demos, and modify the code to try out alternatives.
 
-5. Summary of changes in Tk 8.0
+5. Summary of changes in Tk 8.1
 -------------------------------
-
-Here is a list of the most important new features in Tk 8.0.  The
-release also includes several smaller feature changes and bug fixes. 
-See the "changes" file for a complete list of all changes.
-
-    1. Native look and feel.  The widgets have been rewritten to provide
-    (nearly?) native look and feel on the Macintosh and PC.  Many
-    widgets, including scrollbars, menus, and the button family, are
-    implemented with native platform widgets.  Others, such as entries
-    and texts, have been modified to emulate native look and feel. 
-    These changes are backwards compatible except that (a) some
-    configuration options are now ignored on some platforms and (b) you
-    must use the new menu mechanism described below to native look and
-    feel for menus.
-
-    2. There is a new interface for creating menus, where a menubar is
-    implemented as a menu widget instead of a frame containing menubuttons.
-    The -menu option for a toplevel is used to specify the name of the
-    menubar; the menu will be displayed *outside* the toplevel using
-    different mechanisms on each platform (e.g. on the Macintosh the menu
-    will appear at the top of the screen).  See the menu demos in the
-    widget demo for examples.  The old style of menu still works, but
-    does not provide native look and feel.  Menus have several new
-    features:
-        - New "-columnbreak" and "-hideMargin" options make it possible
-	  to create multi-column menus.
-	- It is now possible to manipulate the Apple and Help menus on
-	  the Macintosh, and the system menu on Windows.  It is also
-	  possible to have a right justified Help menu on Unix.
-	- Menus now issue the virtual event <<MenuSelect>> whenever the
-	  current item changes.  Applications can use this to generate
-	  help messages.
-        - There is a new "-direction" option for menubuttons, which
-	  controls where the menu pops up revenues to the button.
-
-    3. The font mechanism in Tk has been completely reworked:
-	- Font names need not be nasty X LFDs: more intuitive names
-	  like {Times 12 Bold} can also be used.  See the manual entry
-	  font.n for details.
-	- Font requests always succeed now.  If the requested font is
-	  not available, Tk finds the closest available font and uses
-	  that one.
-	- Tk now supports named fonts whose precise attributes can be
-	  changed dynamically.  If a named font is changed, any widget
-	  using that font updates itself to reflect the change.
-	- There is a new command "font" for creating named fonts and
-	  querying various information about fonts.
-	- There are now officially supported C APIs for measuring and
-	  displaying text.  If you use these APIs now, your code will
-	  automatically handle international text when internationalization
-	  is added to Tk in a future release.  See the manual entries
-	  MeasureChar.3, TextLayout.3, and FontId.3.
-	- The old C procedures Tk_GetFontStruct, Tk_NameOfFontStruct,
-	  and Tk_FreeFontStruct have been replaced with more portable
-	  procedures Tk_GetFont, Tk_NameOfFont, and Tk_FreeFont.
-
-    4. Application embedding.  It is now possible to embedded one Tcl/Tk
-    application inside another, using the -container option on frame
-    widgets and the -use option for toplevel widgets or on the command
-    line for wish.  Embedding should be fully functional under Unix,
-    but the implementation is incomplete on the Macintosh and PC.
-
-    5. Tk now works correctly with Safe-Tcl: it can be loaded into
-    safe interpreters using safe::loadTk.
-
-    6. Text widgets now allow images to be embedded directly in the
-    text without using embedded windows.  This is more efficient and
-    provides smoother scrolling.
-
-    7. Buttons have a new -default option for drawing default rings in
-    a platform-specific manner.
-
-    8. There is a new "gray75" bitmap, and the "gray25" bitmap is now
-    really 25% on (due to an ancient mistake, it had been only 12% on).
-    The Macintosh now supports native bitmaps, including new builtin
-    bitmaps "stop", "caution", and "note", plus the ability to use
-    bitmaps in the application's resource fork.
-
-    9. The "destroy" command now ignores windows that don't exist
-    instead of generating an error.
-
-Tk 8.0 introduces the following incompatibilities that may affect Tcl/Tk
-scripts that worked under Tk 4.2 and earlier releases:
-
-    1. Font specifications such as "Times 12" now interpret the size
-    as points, whereas it used to be pixels (this was actually a bug,
-    since the behavior was documented as points).  To get pixels now,
-    use a negative size such as "Times -12".
-
-    2. The -transient option for menus is no longer supported.  You can
-    achieve the same effect with the -type field.
-
-    3. In the canvas "coords" command, polygons now return only the
-    points that were explicitly specified when the polygon was created
-    (they used to return an extra point if the polygon wasn't originally
-    closed).  Internally, polygons are still closed automatically for
-    purposes of display and hit detection; the extra point just isn't
-    returned by the "coords" command.
-
-    4. The photo image mechanism now uses Tcl_Channels instead of FILEs,
-    in order to make it portable.  FILEs are no longer used anywhere
-    in Tk.  The procedure Tk_FindPhoto now requires an extra "interp"
-    argument in order to fix a bug where images in different interpreters
-    with the same name could get confused.
-
-    5. The procedures Tk_GetFontStruct, Tk_NameOfFontStruct,
-    and Tk_FreeFontStruct have been removed.
-
-Note: the new compiler in Tcl 8.0 may also affect Tcl/Tk scripts; check
-the Tcl documentation for information on incompatibilities introduced by
-Tcl 8.0.
 
 6. Development tools
 --------------------

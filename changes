@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.31 1999/04/16 01:25:53 stanton Exp $
+RCS: @(#) $Id: changes,v 1.32 1999/04/16 01:51:07 stanton Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4010,19 +4010,19 @@ virtual events now go to the correct (focus) window. (RJ)
 
 9/19/97 (bug fix) Made Macintosh tearoff menus non-resizable. (RJ)
 
+10/9/97 (bug fix) Default font for new canvas text items was hardcoded to
+"Helvetica 12" instead of using DEF_CANVTEXT_FONT defined in
+tk{platform}Default.h like all the other widget settings.  (CCS)
+
 10/9/97 (bug fix) Image code could cause crashes during "exit" under
 some conditions (such as an image named "place").  (JO)
 
 10/9/97 (bug fix) Fixed bug that sometimes prevented listboxes from
 scrolling far enough horizontally to see the rightmost character.  (JO)
 
-10/9/97 (bug fix) Default font for new canvas text items was hardcoded to
-"Helvetica 12" instead of using DEF_CANVTEXT_FONT defined in
-tk{platform}Default.h like all the other widget settings.  (CCS)
-
-10/10/97 (bug fix) In canvas text items, if the text ended with a \n, it
-was not counted in the bbox height, as it did in tk4.2.  This caused
-"hello\n" to be the same height as "hello" and you couldn't see the
+10/10/97 (bug fix) In canvas text items, if the text ended with a \n, it 
+was not counted in the bbox height, as it did in tk4.2.  This caused 
+"hello\n" to be the same height as "hello" and you couldn't see the 
 cursor positioned on the next line. (CCS)
 
 10/10/97 (bug fix) The grid geometry manager didn't always properly
@@ -4343,10 +4343,242 @@ on Win NT 4.0/Japanese that cause a crash in some cases. (stanton)
 2/4/99 (bug fix) Fixed uninitialized memory access bug in Unix send
 code. (stanton)
 
------------------ Released 8.0.5, 3/9/99 -------------------------
-
 ----------------------------------------------------------
 Changes for Tk 8.0 go above this line.
 Changes for Tk 8.1 go below this line.
 ----------------------------------------------------------
+
+1/16/98 (new feature) Tk now supports international characters sets:
+    - Font display mechanism overhauled to display Unicode strings
+      containing full set of international characters.  You do not need
+      Unicode fonts on your system in order to use tk or see international
+      characters.  For those familiar with the Japanese or Chinese patches,
+      there is no "-kanjifont" option.  Characters from any available fonts
+      will automatically be used if the widget's originally selected font is
+      not capable of displaying a given character.  
+    - Textual widgets are international aware.  For instance, cursor
+      positioning commands would now move the cursor forwards/back by 1
+      international character, not by 1 byte.  
+    - Input Method Editors (IMEs) work on Mac and Windows.  Unix is still in
+      progress.
+
+7/7/97 (new feature) The send command now works for Microsoft
+Windows. It is implemented using Dynamic Data Exchange, and a new
+command, dde, allows Tk to send more generic DDE commands to other
+applications. (SRP)
+
+11/3/97 (new feature) Major overhaul of code that manages configuration
+options to use Tcl_Obj structures instead of strings:
+    - There is a new set of procedures including Tk_CreateOptionTable,
+      Tk_InitOptions, and Tk_SetOptions, which replace Tk_ConfigureWidget
+      and related procedures.  The old procedures are still available.
+      The new procedures use a new format for configuration tables.
+      See SetOptions.3 for more information.
+    - There are new procedures Tk_AllocColorFromObj, Tk_GetColorFromObj,
+      and Tk_FreeColorFromObj to manage colors using objects to hold the
+      name of the color and cache the corresponding XColor pointer.
+      There are similar procedures Tk_Alloc3DBorderFromObj,
+      Tk_AllocBitmapFromObj, Tk_AllocCursorFromObj, Tk_AllocFontFromObj,
+      and so on to manage borders, bitmaps, cursors, and fonts.
+    - The old-style procedures such as Tk_GetColor and Tk_GetBitmap no
+      longer take Tk_Uids for arguments; they just take strings.
+    - Menus, labels, buttons, checkbuttons, and radiobuttons have been
+      converted to use the new object-based configuration library.
+      (SRP & JO)
+
+11/7/97 (improvement) Changed code referring to "interp->result" to call
+accessor functions like Tcl_SetResult().
+
+12/23/97 (fix) Fixed transparency and web optimized the palette of
+the images/ Tcl powered logos. (DL)
+
+12/16/97 (bug fix) Canvas and text "bind" subcommands generated an
+error with no message if called to fetch a binding that didn't exist.
+They now silently return without an error like the "bind" command. (SS)
+
+1/13/98 (bug fix) Keysyms for international characters were not being
+reported properly under Windows. (SS)
+
+----------------- Released 8.1a1, 1/22/98 -----------------------
+
+2/4/98 (bug fix) Calling XFreeFontNames() twice if couldn't allocate
+font. (CCS)
+
+2/10/98 (bug fix) Inlined prolog.ps in tkCanvPs.c to make it accessible
+from safe interpreters: canvas postscript now works in safe interps
+(like in tk8.0plugin). (DL)
+
+2/11/98 (bug fix) Windows "send" to a remote interp wasn't propagating
+$errorInfo correctly from the remote interp to the local invoking interp.
+(CCS)
+
+2/11/98 (bug fix) Windows "send" should have accepted "--" to mean "no more
+arguments". (CCS)
+
+2/11/98 (bug fix) Windows "send" was concatenating its arguments
+incorrectly (not consistent with "eval", "uplevel", or Unix "send"). (CCS)
+
+2/18/98 (bug fix) Macintosh radiobuttons and checkbuttons now color
+their backgrounds correctly under Appearance.  The controls gadgets themselves
+however, remain the Theme colors. (JI)
+
+2/18/98 (improvement) The corner pixels that peek through around the
+rounded corners of the Mac button widget are now controlled by the
+-highlightbackground, rather than the -background option. (JI)
+
+2/18/98 (improvement) Implemented the intra-application Send on the
+Mac (RJ)
+
+2/18/98 (bug fix) Under X, a problem mapping from a fontStructPtr to an
+XLFD (no XA_FONT attribute) would lead to dereferencing NULL. (CCS)
+
+----------------- Released 8.1a2, Feb 20 1998 -----------------------
+
+10/21/98 (bug fix) Tk_UnderlineChars did not handle UTF strings properly
+so underline indices were in bytes instead of characters. (stanton)
+
+11/19/98 (bug fix) Fixed menus and titles so they properly display
+Unicode characters under Windows. [Bug: 819] (stanton)
+
+11/24/98 (bug fix) Fixed a bunch of memory leaks in the Windows menu
+code. [Bug: 620] (stanton)
+
+11/25/98 (bug fix) Various small bug fixes: (stanton)
+	- hidemargin option was not honored properly in menus [Bug: 859]
+	- disabled menu entries were getting reenabled whenever the
+	mouse passed over the entry [Bug: 860]
+	- fixed deletion order bug where a crash would result if a
+	binding deleted "."
+
+11/30/98 (bug fix) The error result was getting lost when restoring
+configuration options in buttons. [Bug: 619] (stanton)
+
+12/8/98 (bug fix) The Windows clipboard was not correctly traslating
+multibyte characters. [Bug: 935] (stanton)
+
+----------------- Released 8.1b1, Dec 11 1998 -----------------------
+
+1/29/99 (bug fix) Fixed bug in "grid forget" that failed to cancel
+pending idle handlers, resulting in a crash in a few odd
+cases. (stanton)
+
+2/4/99 (bug fix): Fixed uninitialized memory access in
+Tk_SetAppName. [Bug: 919] (stanton)
+
+2/4/99 (bug fix): Added a workaround for a bug in GetTextExtentExPoint
+on Win NT 4.0/Japanese. [Bug: 1006] (stanton)
+
+2/4/99 (bug fix): Changed so keyboard shortcuts for menus will only be
+found in the current toplevel.  Previously, they might be found in
+menus attached to other toplevels that might not even be mapped.
+[Bug: 924] (stanton)
+
+2/4/99 (bug fix): Changed to treat zero width lines in the canvas like
+they have width 1 for purposes of selection. [Bug: 925] (stanton)
+
+2/4/99 (bug fix): TK_LD_SEARCH_FLAGS was set incorrectly if
+SHLIB_LD_LIBS='${LIBS}', and shared linking is performed through the C
+compiler. Systems affected are Linux, MP-RAS and NEXTSTEP, but also
+with gcc on many more systems. [Bug: 908] (stanton)
+
+2/4/99 (feature enhancement): Changed so windows that aren't resizable
+don't have resize handles and the zoom box is disabled on
+Windows. (stanton)
+
+2/4/99 (bug fix): Fixed so errors in console eval are reported
+properly.  Eliminated duplicate result messages. [Bug: 973] (stanton)
+
+2/4/99 (bug fix): Changed so focus window is always set if -force is
+specified.  This fixes the problem on Windows where Tk does not
+activate the window if it already has focus. (stanton)
+
+2/4/99 (bug fix): If an image mask changed but ended up with the same
+XID, the GC failed to be updated and so the new mask was not
+used. [Bug: 970] (stanton)
+
+2/12/99 (new feature): Tk is now thread safe.  You enable this by
+configuring with --enable-threads.  Tcl must also be compiled with
+--enable-threads.  See Tcl for more information about the threading
+interfaces. (lfb)
+
+2/25/99 (bug fix) Under Windows, wish can now inherit pipe handles on
+stdio so it is possible to use the wish executable in a command
+pipeline to capture the output of puts or read from the pipe with
+gets.  (redman)
+
+3/1/99 (bug fix) Under Windows, Tk was not properly handling focus and
+activation changes in some cases. (redman)
+
+3/10/99 (new feature) Tk now uses the new stub library feature in Tcl.
+The Tk library now contains no direct references to any symbols in
+Tcl.  In addition, there is a new Tk_MainEx() function that takes an
+interpreter as an argument.  See the Tcl documentation for more
+information about the stubs mechanism. (redman)
+
+3/14/99 (feature change) Test suite now uses "test" namespace to
+define the test procedure and other auxiliary procedures as well as
+global variables.
+    - Global array testConfige is now called ::test::testConfig.
+    - Global variable VERBOSE is now called ::test::verbose, and
+      ::test::verbose no longer works with numerical values.  We've
+      switched to a bitwise character string.  You can set
+      ::test::verbose by using the -verbose option on the Tk command
+      line.
+    - Global variable TESTS is now called ::test::matchingTests, and
+      can be set on the Tk command line via the -match option.
+    - There is now a ::test::skipTests variable (works similarly to
+      ::test::matchTests) that can be set on the Tk command line via
+      the -match option.
+    - The test suite can now be run in any working directory.  When
+      you run "make test", the working directory is nolonger switched
+      to ../tests.
+(hirschl)
+*** POTENTIAL INCOMPATIBILITY ***
+
+----------------- Released 8.1b2, March 16, 1999 ---------------------
+
+3/23/99 (feature change) Test suite now uses "tcltest" namespace to
+define the test procedure and other auxiliary procedures as well as
+global variables.  The previously chosen "test" namespace was thought
+to be too generic and likely to create conflits.
+(hirschl)
+*** POTENTIAL INCOMPATIBILITY ***
+
+3/26/99 [bug fix]  Fixed bug reported by Bryan Oakley in the
+menubutton bindings.  There was a false assumption that there was
+always a menu attached to the button.  [Bug 1116] (surles)
+
+3/26/99 (feature change) Removed --enable-tcl-stub from the configure
+script. Linking Tk to Tcl stubs is causing too many problems when
+linking executables like wish.  Until the Tk is a fully loadable
+extension, linking against the Tcl stubs is not supported in Tk.
+(redman)
+
+3/26/99 (feature change) --nameble-shared is now the default and builds
+Tk as a shared library; specify --disable-shared to build a static Tk
+library and shell.
+*** POTENTIAL INCOMPATIBILITY ***
+
+3/29/99 (api change) Standardized text layout and font interfaces
+so they are consistent with respect to byte versus character
+oriented indices.  The layout functions all manipulate character
+oriented values while the lower level measurement functions all
+operate on byte oriented values. (stanton)
+
+4/1/99 (bug fix) Image handlers are finalized before the font subsystem
+to fix crashes during finalization of complex widgets. (stanton)
+
+4/1/99 (feature change) Removed the send command on Windows.  Moved
+the DDE basis of that command out to its own extension.  The send
+implementation on top of DDE was causing Tk to lock up in some cases.
+(redman)
+
+4/5/99 (bug fix) Fixed handling of Unicode in text searches.  The
+-count option was returning byte counts instead of character counts.
+
+4/5/99 (feature change) Cut and paste to an entry widget returns the
+selection instead of the widget contents, which can be different if the
+-show option is used to hide the display. (stanton)
+
+--------------- Released 8.1b3, April 6, 1999 ----------------------
 

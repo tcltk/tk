@@ -3,7 +3,7 @@
 #	Some functions needed for the common dialog boxes. Probably need to go
 #	in a different file.
 #
-# RCS: @(#) $Id: comdlg.tcl,v 1.3 1998/09/14 18:23:22 stanton Exp $
+# RCS: @(#) $Id: comdlg.tcl,v 1.4 1999/04/16 01:51:26 stanton Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -52,13 +52,12 @@ proc tclParseConfigSpec {w specs flags argList} {
 	set verproc($cmdsw) [lindex $spec 4]
     }
 
-    if {([llength $argList]%2) != 0} {
-	foreach {cmdsw value} $argList {
-	    if {![info exists cmd($cmdsw)]} {
-	        error "unknown option \"$cmdsw\", must be [tclListValidFlags cmd]"
-	    }
+    if {[llength $argList] & 1} {
+	set cmdsw [lindex $argList end]
+	if {![info exists cmd($cmdsw)]} {
+	    error "bad option \"$cmdsw\": must be [tclListValidFlags cmd]"
 	}
-	error "value for \"[lindex $argList end]\" missing"
+	error "value for \"$cmdsw\" missing"
     }
 
     # 2: set the default values
@@ -71,7 +70,7 @@ proc tclParseConfigSpec {w specs flags argList} {
     #
     foreach {cmdsw value} $argList {
 	if {![info exists cmd($cmdsw)]} {
-	    error "unknown option \"$cmdsw\", must be [tclListValidFlags cmd]"
+	    error "bad option \"$cmdsw\": must be [tclListValidFlags cmd]"
 	}
 	set data($cmdsw) $value
     }
@@ -90,7 +89,7 @@ proc tclListValidFlags {v} {
 	append errormsg "$separator$cmdsw"
 	incr i
 	if {$i == $len} {
-	    set separator " or "
+	    set separator ", or "
 	} else {
 	    set separator ", "
 	}

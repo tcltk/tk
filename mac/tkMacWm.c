@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.5 1998/11/11 17:31:51 jingham Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.6 1999/04/16 01:51:32 stanton Exp $
  */
 
 #include <Gestalt.h>
@@ -709,7 +709,7 @@ Tk_WmCmd(
 	    return TCL_ERROR;
 	}
 	if (argc == 2) {
-	    interp->result = (wmTracing) ? "on" : "off";
+	    Tcl_SetResult(interp, ((wmTracing) ? "on" : "off"), TCL_STATIC);
 	    return TCL_OK;
 	}
 	return Tcl_GetBoolean(interp, argv[2], &wmTracing);
@@ -739,9 +739,12 @@ Tk_WmCmd(
 	}
 	if (argc == 3) {
 	    if (wmPtr->sizeHintsFlags & PAspect) {
-		sprintf(interp->result, "%d %d %d %d", wmPtr->minAspect.x,
+		char buf[TCL_INTEGER_SPACE * 4];
+
+		sprintf(buf, "%d %d %d %d", wmPtr->minAspect.x,
 			wmPtr->minAspect.y, wmPtr->maxAspect.x,
 			wmPtr->maxAspect.y);
+		Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	    }
 	    return TCL_OK;
 	}
@@ -756,7 +759,8 @@ Tk_WmCmd(
 	    }
 	    if ((numer1 <= 0) || (denom1 <= 0) || (numer2 <= 0) ||
 		    (denom2 <= 0)) {
-		interp->result = "aspect number can't be <= 0";
+		Tcl_SetResult(interp, "aspect number can't be <= 0",
+			TCL_STATIC);
 		return TCL_ERROR;
 	    }
 	    wmPtr->minAspect.x = numer1;
@@ -777,7 +781,7 @@ Tk_WmCmd(
 	}
 	if (argc == 3) {
 	    if (wmPtr->clientMachine != NULL) {
-		interp->result = wmPtr->clientMachine;
+		Tcl_SetResult(interp, wmPtr->clientMachine, TCL_STATIC);
 	    }
 	    return TCL_OK;
 	}
@@ -875,8 +879,9 @@ Tk_WmCmd(
 	}
 	if (argc == 3) {
 	    if (wmPtr->cmdArgv != NULL) {
-		interp->result = Tcl_Merge(wmPtr->cmdArgc, wmPtr->cmdArgv);
-		interp->freeProc = (Tcl_FreeProc *) free;
+		Tcl_SetResult(interp,
+			Tcl_Merge(wmPtr->cmdArgc, wmPtr->cmdArgv),
+			TCL_DYNAMIC);
 	    }
 	    return TCL_OK;
 	}
@@ -926,7 +931,8 @@ Tk_WmCmd(
 	    return TCL_ERROR;
 	}
 	if (argc == 3) {
-	    interp->result = wmPtr->hints.input ? "passive" : "active";
+	    Tcl_SetResult(interp, (wmPtr->hints.input ? "passive" : "active"),
+		    TCL_STATIC);
 	    return TCL_OK;
 	}
 	c = argv[3][0];
@@ -943,6 +949,7 @@ Tk_WmCmd(
     } else if ((c == 'f') && (strncmp(argv[1], "frame", length) == 0)
 	    && (length >= 2)) {
 	Window window;
+	char buf[TCL_INTEGER_SPACE];
 
 	if (argc != 3) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
@@ -953,7 +960,8 @@ Tk_WmCmd(
 	if (window == None) {
 	    window = Tk_WindowId((Tk_Window) winPtr);
 	}
-	sprintf(interp->result, "0x%x", (unsigned int) window);
+	sprintf(buf, "0x%x", (unsigned int) window);
+	Tcl_SetResult(interp, buf, TCL_VOLATILE);
     } else if ((c == 'g') && (strncmp(argv[1], "geometry", length) == 0)
 	    && (length >= 2)) {
 	char xSign, ySign;
@@ -966,6 +974,8 @@ Tk_WmCmd(
 	    return TCL_ERROR;
 	}
 	if (argc == 3) {
+	    char buf[16 + TCL_INTEGER_SPACE * 4];
+
 	    xSign = (wmPtr->flags & WM_NEGATIVE_X) ? '-' : '+';
 	    ySign = (wmPtr->flags & WM_NEGATIVE_Y) ? '-' : '+';
 	    if (wmPtr->gridWin != NULL) {
@@ -977,8 +987,9 @@ Tk_WmCmd(
 		width = winPtr->changes.width;
 		height = winPtr->changes.height;
 	    }
-	    sprintf(interp->result, "%dx%d%c%d%c%d", width, height,
-		    xSign, wmPtr->x, ySign, wmPtr->y);
+	    sprintf(buf, "%dx%d%c%d%c%d", width, height, xSign, wmPtr->x,
+		    ySign, wmPtr->y);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	    return TCL_OK;
 	}
 	if (*argv[3] == '\0') {
@@ -999,9 +1010,12 @@ Tk_WmCmd(
 	}
 	if (argc == 3) {
 	    if (wmPtr->sizeHintsFlags & PBaseSize) {
-		sprintf(interp->result, "%d %d %d %d", wmPtr->reqGridWidth,
+		char buf[TCL_INTEGER_SPACE * 4];
+
+		sprintf(buf, "%d %d %d %d", wmPtr->reqGridWidth,
 			wmPtr->reqGridHeight, wmPtr->widthInc,
 			wmPtr->heightInc);
+		Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	    }
 	    return TCL_OK;
 	}
@@ -1028,19 +1042,19 @@ Tk_WmCmd(
 		return TCL_ERROR;
 	    }
 	    if (reqWidth < 0) {
-		interp->result = "baseWidth can't be < 0";
+		Tcl_SetResult(interp, "baseWidth can't be < 0", TCL_STATIC);
 		return TCL_ERROR;
 	    }
 	    if (reqHeight < 0) {
-		interp->result = "baseHeight can't be < 0";
+		Tcl_SetResult(interp, "baseHeight can't be < 0", TCL_STATIC);
 		return TCL_ERROR;
 	    }
 	    if (widthInc < 0) {
-		interp->result = "widthInc can't be < 0";
+		Tcl_SetResult(interp, "widthInc can't be < 0", TCL_STATIC);
 		return TCL_ERROR;
 	    }
 	    if (heightInc < 0) {
-		interp->result = "heightInc can't be < 0";
+		Tcl_SetResult(interp, "heightInc can't be < 0", TCL_STATIC);
 		return TCL_ERROR;
 	    }
 	    Tk_SetGrid((Tk_Window) winPtr, reqWidth, reqHeight, widthInc,
@@ -1060,7 +1074,7 @@ Tk_WmCmd(
 	}
 	if (argc == 3) {
 	    if (wmPtr->hints.flags & WindowGroupHint) {
-		interp->result = wmPtr->leaderName;
+		Tcl_SetResult(interp, wmPtr->leaderName, TCL_STATIC);
 	    }
 	    return TCL_OK;
 	}
@@ -1093,8 +1107,9 @@ Tk_WmCmd(
 	}
 	if (argc == 3) {
 	    if (wmPtr->hints.flags & IconPixmapHint) {
-		interp->result = Tk_NameOfBitmap(winPtr->display,
-			wmPtr->hints.icon_pixmap);
+		Tcl_SetResult(interp,
+			Tk_NameOfBitmap(winPtr->display, wmPtr->hints.icon_pixmap),
+			TCL_STATIC);
 	    }
 	    return TCL_OK;
 	}
@@ -1153,8 +1168,9 @@ Tk_WmCmd(
 	}
 	if (argc == 3) {
 	    if (wmPtr->hints.flags & IconMaskHint) {
-		interp->result = Tk_NameOfBitmap(winPtr->display,
-			wmPtr->hints.icon_mask);
+		Tcl_SetResult(interp,
+			Tk_NameOfBitmap(winPtr->display, wmPtr->hints.icon_mask),
+			TCL_STATIC);
 	    }
 	    return TCL_OK;
 	}
@@ -1179,7 +1195,9 @@ Tk_WmCmd(
 	    return TCL_ERROR;
 	}
 	if (argc == 3) {
-	    interp->result = (wmPtr->iconName != NULL) ? wmPtr->iconName : "";
+	    Tcl_SetResult(interp,
+		    ((wmPtr->iconName != NULL) ? wmPtr->iconName : ""),
+		    TCL_STATIC);
 	    return TCL_OK;
 	} else {
 	    wmPtr->iconName = Tk_GetUid(argv[3]);
@@ -1199,8 +1217,11 @@ Tk_WmCmd(
 	}
 	if (argc == 3) {
 	    if (wmPtr->hints.flags & IconPositionHint) {
-		sprintf(interp->result, "%d %d", wmPtr->hints.icon_x,
+		char buf[TCL_INTEGER_SPACE * 2];
+		
+		sprintf(buf, "%d %d", wmPtr->hints.icon_x,
 			wmPtr->hints.icon_y);
+		Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	    }
 	    return TCL_OK;
 	}
@@ -1228,7 +1249,7 @@ Tk_WmCmd(
 	}
 	if (argc == 3) {
 	    if (wmPtr->icon != NULL) {
-		interp->result = Tk_PathName(wmPtr->icon);
+		Tcl_SetResult(interp, Tk_PathName(wmPtr->icon), TCL_STATIC);
 	    }
 	    return TCL_OK;
 	}
@@ -1282,8 +1303,10 @@ Tk_WmCmd(
 	    return TCL_ERROR;
 	}
 	if (argc == 3) {
-	    sprintf(interp->result, "%d %d", wmPtr->maxWidth,
-		    wmPtr->maxHeight);
+	    char buf[TCL_INTEGER_SPACE * 2];
+	    
+	    sprintf(buf, "%d %d", wmPtr->maxWidth, wmPtr->maxHeight);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	    return TCL_OK;
 	}
 	if ((Tcl_GetInt(interp, argv[3], &width) != TCL_OK)
@@ -1303,8 +1326,10 @@ Tk_WmCmd(
 	    return TCL_ERROR;
 	}
 	if (argc == 3) {
-	    sprintf(interp->result, "%d %d", wmPtr->minWidth,
-		    wmPtr->minHeight);
+	    char buf[TCL_INTEGER_SPACE * 2];
+	    
+	    sprintf(buf, "%d %d", wmPtr->minWidth, wmPtr->minHeight);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	    return TCL_OK;
 	}
 	if ((Tcl_GetInt(interp, argv[3], &width) != TCL_OK)
@@ -1328,9 +1353,9 @@ Tk_WmCmd(
 	}
 	if (argc == 3) {
 	    if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
-		interp->result = "1";
+		Tcl_SetResult(interp, "1", TCL_STATIC);
 	    } else {
-		interp->result = "0";
+		Tcl_SetResult(interp, "0", TCL_STATIC);
 	    }
 	    return TCL_OK;
 	}
@@ -1351,9 +1376,9 @@ Tk_WmCmd(
 	}
 	if (argc == 3) {
 	    if (wmPtr->sizeHintsFlags & USPosition) {
-		interp->result = "user";
+		Tcl_SetResult(interp, "user", TCL_STATIC);
 	    } else if (wmPtr->sizeHintsFlags & PPosition) {
-		interp->result = "program";
+		Tcl_SetResult(interp, "program", TCL_STATIC);
 	    }
 	    return TCL_OK;
 	}
@@ -1408,7 +1433,7 @@ Tk_WmCmd(
 	    for (protPtr = wmPtr->protPtr; protPtr != NULL;
 					   protPtr = protPtr->nextPtr) {
 		if (protPtr->protocol == protocol) {
-		    interp->result = protPtr->command;
+		    Tcl_SetResult(interp, protPtr->command, TCL_STATIC);
 		    return TCL_OK;
 		}
 	    }
@@ -1452,9 +1477,12 @@ Tk_WmCmd(
 	    return TCL_ERROR;
 	}
 	if (argc == 3) {
-	    sprintf(interp->result, "%d %d",
+	    char buf[TCL_INTEGER_SPACE * 2];
+
+	    sprintf(buf, "%d %d",
 		    (wmPtr->flags  & WM_WIDTH_NOT_RESIZABLE) ? 0 : 1,
 		    (wmPtr->flags  & WM_HEIGHT_NOT_RESIZABLE) ? 0 : 1);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	    return TCL_OK;
 	}
 	if ((Tcl_GetBoolean(interp, argv[3], &width) != TCL_OK)
@@ -1487,9 +1515,9 @@ Tk_WmCmd(
 	}
 	if (argc == 3) {
 	    if (wmPtr->sizeHintsFlags & USSize) {
-		interp->result = "user";
+		Tcl_SetResult(interp, "user", TCL_STATIC);
 	    } else if (wmPtr->sizeHintsFlags & PSize) {
-		interp->result = "program";
+		Tcl_SetResult(interp, "program", TCL_STATIC);
 	    }
 	    return TCL_OK;
 	}
@@ -1521,20 +1549,20 @@ Tk_WmCmd(
 	    return TCL_ERROR;
 	}
 	if (wmPtr->iconFor != NULL) {
-	    interp->result = "icon";
+	    Tcl_SetResult(interp, "icon", TCL_STATIC);
 	} else {
 	    switch (wmPtr->hints.initial_state) {
 		case NormalState:
-		    interp->result = "normal";
+		    Tcl_SetResult(interp, "normal", TCL_STATIC);
 		    break;
 		case IconicState:
-		    interp->result = "iconic";
+		    Tcl_SetResult(interp, "iconic", TCL_STATIC);
 		    break;
 		case WithdrawnState:
-		    interp->result = "withdrawn";
+		    Tcl_SetResult(interp, "withdrawn", TCL_STATIC);
 		    break;
 		case ZoomState:
-		    interp->result = "zoomed";
+		    Tcl_SetResult(interp, "zoomed", TCL_STATIC);
 		    break;
 	    }
 	}
@@ -1546,8 +1574,9 @@ Tk_WmCmd(
 	    return TCL_ERROR;
 	}
 	if (argc == 3) {
-	    interp->result = (wmPtr->titleUid != NULL) ? wmPtr->titleUid
-		: winPtr->nameUid;
+	    Tcl_SetResult(interp,
+		    ((wmPtr->titleUid != NULL) ? wmPtr->titleUid : winPtr->nameUid),
+		    TCL_STATIC);
 	    return TCL_OK;
 	} else {
 	    wmPtr->titleUid = Tk_GetUid(argv[3]);
@@ -1566,7 +1595,7 @@ Tk_WmCmd(
 	}
 	if (argc == 3) {
 	    if (wmPtr->master != None) {
-		interp->result = wmPtr->masterWindowName;
+		Tcl_SetResult(interp, wmPtr->masterWindowName, TCL_STATIC);
 	    }
 	    return TCL_OK;
 	}
@@ -2146,7 +2175,7 @@ UpdateSizeHints(
  *
  * Results:
  *	A standard Tcl return value, plus an error message in
- *	interp->result if an error occurs.
+ *	the interp's result if an error occurs.
  *
  * Side effects:
  *	The size and/or location of winPtr may change.
@@ -2399,6 +2428,7 @@ Tk_CoordsToWindow(
 				 * far that contains point. */
     int x, y;			/* Coordinates in winPtr. */
     int tmpx, tmpy, bd;
+    TkDisplay *dispPtr;
 
     /*
      * Step 1: find the top-level window that contains the desired point.
@@ -2411,7 +2441,8 @@ Tk_CoordsToWindow(
 	return NULL;
     }
     rootChild = TkMacGetXWindow(whichWin);
-    winPtr = (TkWindow *) Tk_IdToWindow(tkDisplayList->display, rootChild);
+    dispPtr = TkGetDisplayList();
+    winPtr = (TkWindow *) Tk_IdToWindow(dispPtr->display, rootChild);
     if (winPtr == NULL) {
         return NULL;
     }
@@ -3255,6 +3286,7 @@ TkMacGrowToplevel(
     Point start)
 {
     Point where = start;
+    TkDisplay *dispPtr;
 
     GlobalToLocal(&where);
     if (where.h > (whichWindow->portRect.right - 16) &&
@@ -3267,7 +3299,8 @@ TkMacGrowToplevel(
 	long growResult;
 
 	window = TkMacGetXWindow(whichWindow);
-	winPtr = (TkWindow *) Tk_IdToWindow(tkDisplayList->display, window);
+	dispPtr = TkGetDisplayList();
+	winPtr = (TkWindow *) Tk_IdToWindow(dispPtr->display, window);
 	wmPtr = winPtr->wmInfoPtr;
 	
 	/* TODO: handle grid size options. */
@@ -3330,15 +3363,19 @@ TkSetWMName(
 {
     Str255  pTitle;
     GWorldPtr macWin;
+    int destWrote;
     
     if (Tk_IsEmbedded(winPtr)) {
         return;
     }
+    Tcl_UtfToExternal(NULL, NULL, titleUid,
+	    strlen(titleUid), 0, NULL, 
+	    (char *) &pTitle[1],
+	    255, NULL, &destWrote, NULL); /* Internalize native */
+    pTitle[0] = destWrote;
     
-     macWin = TkMacGetDrawablePort(winPtr->window);
-	
-    strcpy((char *) pTitle + 1, titleUid);
-    pTitle[0] = strlen(titleUid);
+    macWin = TkMacGetDrawablePort(winPtr->window);
+
     SetWTitle((WindowPtr) macWin, pTitle);
 }
 
@@ -3595,7 +3632,8 @@ TkMacZoomToplevel(
      * has changed.
      */
     window = TkMacGetXWindow(whichWindow);
-    tkwin = Tk_IdToWindow(tkDisplayList->display, window);
+    dispPtr = TkGetDisplayList();
+    tkwin = Tk_IdToWindow(dispPtr->display, window);
     if (tkwin == NULL) {
 	return false;
     }
@@ -3697,42 +3735,42 @@ TkUnsupported1Cmd(
 	    switch (wmPtr->style) {
 		case noGrowDocProc:
 		case documentProc:
-		    interp->result = "documentProc";
+		    Tcl_SetResult(interp, "documentProc", TCL_STATIC);
 		    break;
 		case dBoxProc:
-		    interp->result = "dBoxProc";
+		    Tcl_SetResult(interp, "dBoxProc", TCL_STATIC);
 		    break;
 		case plainDBox:
-		    interp->result = "plainDBox";
+		    Tcl_SetResult(interp, "plainDBox", TCL_STATIC);
 		    break;
 		case altDBoxProc:
-		    interp->result = "altDBoxProc";
+		    Tcl_SetResult(interp, "altDBoxProc", TCL_STATIC);
 		    break;
 		case movableDBoxProc:
-		    interp->result = "movableDBoxProc";
+		    Tcl_SetResult(interp, "movableDBoxProc", TCL_STATIC);
 		    break;
 		case zoomDocProc:
 		case zoomNoGrow:
-		    interp->result = "zoomDocProc";
+		    Tcl_SetResult(interp, "zoomDocProc", TCL_STATIC);
 		    break;
 		case rDocProc:
-		    interp->result = "rDocProc";
+		    Tcl_SetResult(interp, "rDocProc", TCL_STATIC);
 		    break;
 		case floatProc:
 		case floatGrowProc:
-		    interp->result = "floatProc";
+		    Tcl_SetResult(interp, "floatProc", TCL_STATIC);
 		    break;
 		case floatZoomProc:
 		case floatZoomGrowProc:
-		    interp->result = "floatZoomProc";
+		    Tcl_SetResult(interp, "floatZoomProc", TCL_STATIC);
 		    break;
 		case floatSideProc:
 		case floatSideGrowProc:
-		    interp->result = "floatSideProc";
+		    Tcl_SetResult(interp, "floatSideProc", TCL_STATIC);
 		    break;
 		case floatSideZoomProc:
 		case floatSideZoomGrowProc:
-		    interp->result = "floatSideZoomProc";
+		    Tcl_SetResult(interp, "floatSideZoomProc", TCL_STATIC);
 		    break;
 		default:
 		   panic("invalid style");

@@ -6,12 +6,11 @@
  *	#includes for system include files and a few other things.
  *
  * Copyright (c) 1994-1996 Sun Microsystems, Inc.
- * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacPort.h,v 1.5 1999/03/10 07:04:44 stanton Exp $
+ * RCS: @(#) $Id: tkMacPort.h,v 1.6 1999/04/16 01:51:31 stanton Exp $
  */
 
 #ifndef _TKMACPORT
@@ -91,11 +90,12 @@ extern int		strncasecmp _ANSI_ARGS_((CONST char *s1,
 #define XVisualIDFromVisual(visual) (visual->visualid)
 
 /*
- * The following functions are not used on the Mac, so we stub it out.
+ * The following functions are not used on the Mac, so we stub them out.
  */
 
 #define TkFreeWindowId(dispPtr,w)
 #define TkInitXId(dispPtr)
+#define TkpButtonSetDefaults(specPtr) {}
 #define TkpCmapStressed(tkwin,colormap) (0)
 #define TkpFreeColor(tkColPtr)
 #define TkSetPixmapColormap(p,c) {}

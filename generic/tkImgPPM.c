@@ -13,7 +13,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPPM.c,v 1.2 1998/09/14 18:23:13 stanton Exp $
+ * RCS: @(#) $Id: tkImgPPM.c,v 1.3 1999/04/16 01:51:15 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -110,7 +110,7 @@ FileMatchPPM(chan, fileName, formatString, widthPtr, heightPtr)
  *
  * Results:
  *	A standard TCL completion code.  If TCL_ERROR is returned
- *	then an error message is left in interp->result.
+ *	then an error message is left in the interp's result.
  *
  * Side effects:
  *	The access position in file f is changed, and new data is
@@ -151,7 +151,7 @@ FileReadPPM(interp, chan, fileName, formatString, imageHandle, destX, destY,
 	return TCL_ERROR;
     }
     if ((maxIntensity <= 0) || (maxIntensity >= 256)) {
-	char buffer[30];
+	char buffer[TCL_INTEGER_SPACE];
 
 	sprintf(buffer, "%d", maxIntensity);
 	Tcl_AppendResult(interp, "PPM image file \"", fileName,
@@ -243,7 +243,7 @@ FileReadPPM(interp, chan, fileName, formatString, imageHandle, destX, destY,
  *
  * Results:
  *	A standard TCL completion code.  If TCL_ERROR is returned
- *	then an error message is left in interp->result.
+ *	then an error message is left in the interp's result.
  *
  * Side effects:
  *	Data is written to the file given by "fileName".
@@ -262,7 +262,7 @@ FileWritePPM(interp, fileName, formatString, blockPtr)
     int w, h;
     int greenOffset, blueOffset, nBytes;
     unsigned char *pixelPtr, *pixLinePtr;
-    char header[30];
+    char header[16 + TCL_INTEGER_SPACE * 2];
 
     chan = Tcl_OpenFileChannel(interp, fileName, "w", 0666);
     if (chan == NULL) {

@@ -2,14 +2,13 @@
 # tkWindow.c.  It is organized in the standard fashion for Tcl tests.
 #
 # Copyright (c) 1995 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: window.test,v 1.3 1998/09/14 18:23:53 stanton Exp $
+# RCS: @(#) $Id: window.test,v 1.4 1999/04/16 01:51:44 stanton Exp $
 
-if {[info procs test] != "test"} {
-    source defs
+if {[lsearch [namespace children] ::tcltest] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 foreach i [winfo children .] {
@@ -80,13 +79,12 @@ test window-2.3 {Tk_DestroyWindow procedure, destroy handler deletes parent} {
     destroy .f
 } {}
 
-if {[string compare testmenubar [info commands testmenubar]] != 0} {
-    puts "This application hasn't been compiled with the testmenubar command,"
-    puts "therefore I am skipping all of these tests."
-    return
-}
+# Some tests require the testmenubar command
+set ::tcltest::testConfig(testmenubar) \
+	[expr {[info commands testmenubar] != {}}]
 
-test window-3.1 {Tk_MakeWindowExist procedure, stacking order and menubars} unixOnly {
+test window-3.1 {Tk_MakeWindowExist procedure, stacking order and menubars} \
+	{unixOnly testmenubar} {
     catch {destroy .t}
     toplevel .t -width 300 -height 200
     wm geometry .t +0+0
@@ -96,7 +94,8 @@ test window-3.1 {Tk_MakeWindowExist procedure, stacking order and menubars} unix
     update
     # If stacking order isn't handle properly, generates an X error.
 } {}
-test window-3.2 {Tk_MakeWindowExist procedure, stacking order and menubars} unixOnly {
+test window-3.2 {Tk_MakeWindowExist procedure, stacking order and menubars} \
+	{unixOnly testmenubar} {
     catch {destroy .t}
     toplevel .t -width 300 -height 200
     wm geometry .t +0+0
@@ -110,11 +109,11 @@ test window-3.2 {Tk_MakeWindowExist procedure, stacking order and menubars} unix
     # If stacking order isn't handled properly, generates an X error.
 } {}
 
-test window-4.1 {Tk_NameToWindow procedure} {
+test window-4.1 {Tk_NameToWindow procedure} {testmenubar} {
     catch {destroy .t}
     list [catch {winfo geometry .t} msg] $msg
 } {1 {bad window path name ".t"}}
-test window-4.2 {Tk_NameToWindow procedure} {
+test window-4.2 {Tk_NameToWindow procedure} {testmenubar} {
     catch {destroy .t}
     frame .t -width 100 -height 50
     place .t -x 10 -y 10
@@ -122,7 +121,8 @@ test window-4.2 {Tk_NameToWindow procedure} {
     list [catch {winfo geometry .t} msg] $msg
 } {0 100x50+10+10}
 
-test window-5.1 {Tk_MakeWindowExist procedure, stacking order and menubars} unixOnly {
+test window-5.1 {Tk_MakeWindowExist procedure, stacking order and menubars} \
+	{unixOnly testmenubar} {
     catch {destroy .t}
     toplevel .t -width 300 -height 200
     wm geometry .t +0+0
@@ -135,3 +135,19 @@ test window-5.1 {Tk_MakeWindowExist procedure, stacking order and menubars} unix
     update
     # If stacking order isn't handled properly, generates an X error.
 } {}
+
+# cleanup
+::tcltest::cleanupTests
+return
+
+
+
+
+
+
+
+
+
+
+
+

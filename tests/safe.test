@@ -3,31 +3,28 @@
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: safe.test,v 1.4 1999/04/16 01:25:55 stanton Exp $
+# RCS: @(#) $Id: safe.test,v 1.5 1999/04/16 01:51:40 stanton Exp $
 
-if {[info procs test] != "test"} {
-    source defs
+if {[lsearch [namespace children] ::tcltest] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 foreach i [winfo children .] {
-    puts "*** Destroying $i ***"; update idletasks
     destroy $i
 }
 
 # The set of hidden commands is platform dependent:
 
 if {"$tcl_platform(platform)" == "macintosh"} {
-    set hidden_cmds {beep bell cd clipboard echo exit fconfigure file glob grab load ls menu open pwd selection socket source tk tk_chooseColor tk_getOpenFile tk_getSaveFile tk_messageBox toplevel wm}
+    set hidden_cmds {beep bell cd clipboard echo encoding exit fconfigure file glob grab load ls menu open pwd selection send socket source tk tk_chooseColor tk_chooseDirectory tk_getOpenFile tk_getSaveFile toplevel wm}
 } elseif {"$tcl_platform(platform)" == "windows"} {
-    set hidden_cmds {bell cd clipboard exec exit fconfigure file glob grab load menu open pwd selection socket source tk tk_chooseColor tk_getOpenFile tk_getSaveFile tk_messageBox toplevel wm}
+    set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection socket source tk tk_chooseColor tk_getOpenFile tk_getSaveFile tk_messageBox toplevel wm}
 } else {
-    set hidden_cmds {bell cd clipboard exec exit fconfigure file glob grab load menu open pwd selection send socket source tk tk_chooseColor tk_getOpenFile tk_getSaveFile tk_messageBox toplevel wm}
+    set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection send socket source tk toplevel wm}
 }
-puts "About to do 1"
 
 test safe-1.1 {Safe Tk loading into an interpreter} {
     catch {safe::interpDelete a}
@@ -51,7 +48,7 @@ test safe-1.3 {Safe Tk loading into an interpreter} {
     set l [lsort [interp aliases a]]
     safe::interpDelete a
     set l
-} {exit file load source}
+} {encoding exit file load source}
 
 test safe-2.1 {Unsafe commands not available} {
     catch {safe::interpDelete a}
@@ -99,19 +96,14 @@ test safe-3.2 {Unsafe commands are available hidden} {
     set status
 } ok
 
-# This test gets a panic on the Mac in Tk8.0.5.  It did not in 8.0.4,
-# and it also does not if you update before deleting.  This is just
-# revealing the weakness in the link between the container list and the
-# ports for the windows.  The same comment applies to safe-5.2
- 
-test safe-4.1 {testing loadTk} {unixOrPc} {
+test safe-4.1 {testing loadTk} {
     # no error shall occur, the user will
     # eventually see a new toplevel
     set i [safe::loadTk [safe::interpCreate]]
     interp eval $i {button .b -text "hello world!"; pack .b}
-# lets don't update because it might impy that the user has
-# to position the window (if the wm does not do it automatically)
-# and thus make the test suite not runable non interactively
+    # lets don't update because it might imply that the user has
+    # to position the window (if the wm does not do it automatically)
+    # and thus make the test suite not runable non interactively
     safe::interpDelete $i
 } {}
 
@@ -133,7 +125,7 @@ test safe-5.1 {loading Tk in safe interps without master's clearance} {
     set msg
 } {not allowed to start Tk by master's safe::TkInit}
 
-test safe-5.2 {multi-level Tk loading with clearance} {unixOrPc} {
+test safe-5.2 {multi-level Tk loading with clearance} {
     # No error shall occur in that test and no window
     # shall remain at the end.
     set i [safe::interpCreate]
@@ -173,4 +165,27 @@ test safe-6.2 {loadTk -use windowPath, conflicting -display} {
 } {conflicting -display :23.56 and -use }
 
 
+test safe-7.1 {canvas printing} {
+    set i [safe::loadTk [safe::interpCreate]]
+    set r [catch {interp eval $i {canvas .c; .c postscript}}]
+    safe::interpDelete $i
+    set r
+} 0
+
+# cleanup
 unset hidden_cmds
+::tcltest::cleanupTests
+return
+
+
+
+
+
+
+
+
+
+
+
+
+

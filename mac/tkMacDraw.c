@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDraw.c,v 1.3 1999/04/16 01:25:54 stanton Exp $
+ * RCS: @(#) $Id: tkMacDraw.c,v 1.4 1999/04/16 01:51:30 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -220,7 +220,7 @@ XCopyPlane(
     tmode = srcOr;
     tmode = srcCopy + transparent;
 
-    if (TkSetMacColor(gc->foreground, &macColor)) {
+    if (TkSetMacColor(gc->foreground, &macColor) == true) {
 	RGBForeColor(&macColor);
     }
 
@@ -230,9 +230,8 @@ XCopyPlane(
 	 * Case 1: opaque bitmaps.
 	 */
 
-	if (TkSetMacColor(gc->background, &macColor)) {
+	TkSetMacColor(gc->background, &macColor);
 	RGBBackColor(&macColor);
-	}
 	tmode = srcCopy;
 	CopyBits(srcBit, destBit, &srcRect, &destRect, tmode, NULL);
     } else if (clipPtr->type == TKP_CLIP_PIXMAP) {
@@ -672,73 +671,6 @@ XDrawRectangle(
 /*
  *----------------------------------------------------------------------
  *
- * XDrawRectangles --
- *
- *       Draws the outlines of the specified rectangles as if a
- *       five-point PolyLine protocol request were specified for each
- *       rectangle:
- *
- *             [x,y] [x+width,y] [x+width,y+height] [x,y+height]
- *             [x,y]
- *
- *      For the specified rectangles, these functions do not draw a
- *      pixel more than once.  XDrawRectangles draws the rectangles in
- *      the order listed in the array.  If rectangles intersect, the
- *      intersecting pixels are drawn multiple times.  Draws a
- *      rectangle.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Draws rectangles on the specified drawable.
- *
- *----------------------------------------------------------------------
- */
-void
-XDrawRectangles(display, d, gc, rectArr, numRects)
-    Display *display;
-    Drawable d;
-    GC gc;
-    XRectangle *rectArr;
-    int numRects;
-{
-    MacDrawable *macWin = (MacDrawable *) d;
-    Rect theRect;
-    CGrafPtr saveWorld;
-    GDHandle saveDevice;
-    GWorldPtr destPort;
-
-    register XRectangle *rectPtr;
-
-    destPort = TkMacGetDrawablePort(d);
-
-    display->request++;
-    GetGWorld(&saveWorld, &saveDevice);
-    SetGWorld(destPort, NULL);
-
-    TkMacSetUpClippingRgn(d);
-
-    TkMacSetUpGraphicsPort(gc);
-
-    ShowPen();
-    PenPixPat(gPenPat);
-    
-    for (rectPtr = rectArr; numRects > 0; numRects--, rectPtr++) {
-        theRect.left = (short) (macWin->xOff + rectPtr->x);
-        theRect.top = (short) (macWin->yOff + rectPtr->y);
-        theRect.right = (short) (theRect.left + rectPtr->width);
-        theRect.bottom = (short) (theRect.top + rectPtr->height);
-	
-        FrameRect(&theRect);
-    }
-    
-    SetGWorld(saveWorld, saveDevice);
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XDrawArc --
  *
  *	Draw an arc.
@@ -792,65 +724,6 @@ XDrawArc(
     PenPixPat(gPenPat);
     FrameArc(&theRect, start, extent);
 
-    SetGWorld(saveWorld, saveDevice);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XDrawArcs --
- *
- *	Draw an array of arcs.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Draws the arcs on the specified drawable.
- *
- *----------------------------------------------------------------------
- */
-
-void 
-XDrawArcs(
-    Display* display,		/* Display. */
-    Drawable d,			/* Draw on this. */
-    GC gc,			/* Use this GC. */
-    XArc *arcArr, 
-    int numArcs)
-
-{
-    MacDrawable *macWin = (MacDrawable *) d;
-    Rect theRect;
-    short start, extent;
-    CGrafPtr saveWorld;
-    GDHandle saveDevice;
-    GWorldPtr destPort;
-    register XArc *arcPtr;
-
-    destPort = TkMacGetDrawablePort(d);
-
-    display->request++;
-    GetGWorld(&saveWorld, &saveDevice);
-    SetGWorld(destPort, NULL);
-
-    TkMacSetUpClippingRgn(d);
-
-    TkMacSetUpGraphicsPort(gc);
-
-    ShowPen();
-    PenPixPat(gPenPat);
-
-    for (arcPtr = arcArr; numArcs > 0; numArcs--, arcPtr++) {
-        theRect.left = (short) (macWin->xOff + arcPtr->x );
-        theRect.top = (short) (macWin->yOff + arcPtr->y);
-        theRect.right = (short) (theRect.left + arcPtr->width);
-        theRect.bottom = (short) (theRect.top + arcPtr->height);
-        start = (short) (90 - (arcPtr->angle1 / 64));
-        extent = (short) (-(arcPtr->angle2 / 64));
-
-        FrameArc(&theRect, start, extent);
-    }
     SetGWorld(saveWorld, saveDevice);
 }
 
@@ -944,97 +817,6 @@ XFillArc(
 	FillCArc(&theRect, start, extent, gPenPat);
     }
 
-    SetGWorld(saveWorld, saveDevice);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XFillArc --
- *
- *	Draw an array of filled arcs.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Draws the filled arcs on the specified drawable.
- *
- *----------------------------------------------------------------------
- */
-
-void
-XFillArcs(
-    Display* display,		/* Display. */
-    Drawable d,			/* Draw on this. */
-    GC gc,			/* Use this GC. */
-    XArc *arcArr,		/* Array of arcs */
-    int numArcs)		/* number of arcs */
-{
-    MacDrawable *macWin = (MacDrawable *) d;
-    Rect theRect;
-    short start, extent;
-    PolyHandle polygon;
-    XArc *arcPtr;
-    double sin1, cos1, sin2, cos2, angle;
-    double boxWidth, boxHeight;
-    double vertex[2], center1[2], center2[2];
-    CGrafPtr saveWorld;
-    GDHandle saveDevice;
-    GWorldPtr destPort;
-
-    destPort = TkMacGetDrawablePort(d);
-
-    display->request++;
-    GetGWorld(&saveWorld, &saveDevice);
-    SetGWorld(destPort, NULL);
-
-    TkMacSetUpClippingRgn(d);
-
-    TkMacSetUpGraphicsPort(gc);
-
-    for (arcPtr = arcArr; numArcs > 0; numArcs--, arcPtr++) {
-        theRect.left = (short) (macWin->xOff + arcPtr->x);
-        theRect.top = (short) (macWin->yOff + arcPtr->y);
-        theRect.right = (short) (theRect.left + arcPtr->width);
-        theRect.bottom = (short) (theRect.top + arcPtr->height);
-        start = (short) (90 - (arcPtr->angle1 / 64));
-        extent = (short) (- (arcPtr->angle2 / 64));
-
-        if (gc->arc_mode == ArcChord) {
-    	    boxWidth = theRect.right - theRect.left;
-    	    boxHeight = theRect.bottom - theRect.top;
-    	    angle = -(arcPtr->angle1/64.0)*PI/180.0;
-    	    sin1 = sin(angle);
-    	    cos1 = cos(angle);
-    	    angle -= (arcPtr->angle2/64.0)*PI/180.0;
-    	    sin2 = sin(angle);
-    	    cos2 = cos(angle);
-    	    vertex[0] = (theRect.left + theRect.right)/2.0;
-    	    vertex[1] = (theRect.top + theRect.bottom)/2.0;
-    	    center1[0] = vertex[0] + cos1*boxWidth/2.0;
-    	    center1[1] = vertex[1] + sin1*boxHeight/2.0;
-    	    center2[0] = vertex[0] + cos2*boxWidth/2.0;
-    	    center2[1] = vertex[1] + sin2*boxHeight/2.0;
-
-	    polygon = OpenPoly();
-	    MoveTo((short) ((theRect.left + theRect.right)/2),
-		    (short) ((theRect.top + theRect.bottom)/2));
-	
-	    LineTo((short) (center1[0] + 0.5), (short) (center1[1] + 0.5));
-	    LineTo((short) (center2[0] + 0.5), (short) (center2[1] + 0.5));
-	    ClosePoly();
-
-	    ShowPen();
-	    FillCArc(&theRect, start, extent, gPenPat);
-	    FillCPoly(polygon, gPenPat);
-
-	    KillPoly(polygon);
-        } else {
-	    ShowPen();
-	    FillCArc(&theRect, start, extent, gPenPat);
-        }
-    }
     SetGWorld(saveWorld, saveDevice);
 }
 
@@ -1142,7 +924,7 @@ TkScrollWindow(
     SetGWorld(saveWorld, saveDevice);
     
     /*
-     * Fortunantly, the region returned by ScrollRect is symanticly
+     * Fortunantly, the region returned by ScrollRect is symanticlly
      * the same as what we need to return in this function.  If the
      * region is empty we return zero to denote that no damage was
      * created.
@@ -1183,14 +965,14 @@ TkMacSetUpGraphicsPort(
     if (TkSetMacColor(gc->foreground, &macColor) == true) {
         /* TODO: cache RGBPats for preformace - measure gains...  */
 	MakeRGBPat(gPenPat, &macColor);
+    }
     
-        PenNormal();
-        if(gc->function == GXxor) {
-	    PenMode(patXor);
-        }
-        if (gc->line_width > 1) {
-	    PenSize(gc->line_width, gc->line_width);
-        }
+    PenNormal();
+    if(gc->function == GXxor) {
+	PenMode(patXor);
+    }
+    if (gc->line_width > 1) {
+	PenSize(gc->line_width, gc->line_width);
     }
 }
 

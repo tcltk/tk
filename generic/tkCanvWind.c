@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvWind.c,v 1.2 1998/09/14 18:23:06 stanton Exp $
+ * RCS: @(#) $Id: tkCanvWind.c,v 1.3 1999/04/16 01:51:12 stanton Exp $
  */
 
 #include <stdio.h>
@@ -147,7 +147,7 @@ static Tk_GeomMgr canvasGeomType = {
  * Results:
  *	A standard Tcl return value.  If an error occurred in
  *	creating the item, then an error message is left in
- *	interp->result;  in this case itemPtr is
+ *	the interp's result;  in this case itemPtr is
  *	left uninitialized, so it can be safely freed by the
  *	caller.
  *
@@ -214,7 +214,7 @@ CreateWinItem(interp, canvas, itemPtr, argc, argv)
  *	details on what it does.
  *
  * Results:
- *	Returns TCL_OK or TCL_ERROR, and sets interp->result.
+ *	Returns TCL_OK or TCL_ERROR, and sets the interp's result.
  *
  * Side effects:
  *	The coordinates for the given item may be changed.
@@ -248,8 +248,10 @@ WinItemCoords(interp, canvas, itemPtr, argc, argv)
 	}
 	ComputeWindowBbox(canvas, winItemPtr);
     } else {
-	sprintf(interp->result,
-		"wrong # coordinates: expected 0 or 2, got %d", argc);
+	char buf[64 + TCL_INTEGER_SPACE];
+
+	sprintf(buf, "wrong # coordinates: expected 0 or 2, got %d", argc);
+	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -265,7 +267,7 @@ WinItemCoords(interp, canvas, itemPtr, argc, argv)
  *
  * Results:
  *	A standard Tcl result code.  If an error occurs, then
- *	an error message is left in interp->result.
+ *	an error message is left in the interp's result.
  *
  * Side effects:
  *	Configuration information may be set for itemPtr.

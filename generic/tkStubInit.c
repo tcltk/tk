@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.4 1999/03/12 03:17:48 stanton Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.5 1999/04/16 01:51:22 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -226,9 +226,37 @@ TkStubs tkStubs = {
     Tk_UnmapWindow, /* 182 */
     Tk_UnsetGrid, /* 183 */
     Tk_UpdatePointer, /* 184 */
+    Tk_AllocBitmapFromObj, /* 185 */
+    Tk_Alloc3DBorderFromObj, /* 186 */
+    Tk_AllocColorFromObj, /* 187 */
+    Tk_AllocCursorFromObj, /* 188 */
+    Tk_AllocFontFromObj, /* 189 */
+    Tk_CreateOptionTable, /* 190 */
+    Tk_DeleteOptionTable, /* 191 */
+    Tk_Free3DBorderFromObj, /* 192 */
+    Tk_FreeBitmapFromObj, /* 193 */
+    Tk_FreeColorFromObj, /* 194 */
+    Tk_FreeConfigOptions, /* 195 */
+    Tk_FreeSavedOptions, /* 196 */
+    Tk_FreeCursorFromObj, /* 197 */
+    Tk_FreeFontFromObj, /* 198 */
+    Tk_Get3DBorderFromObj, /* 199 */
+    Tk_GetAnchorFromObj, /* 200 */
+    Tk_GetBitmapFromObj, /* 201 */
+    Tk_GetColorFromObj, /* 202 */
+    Tk_GetCursorFromObj, /* 203 */
+    Tk_GetOptionInfo, /* 204 */
+    Tk_GetOptionValue, /* 205 */
+    Tk_GetJustifyFromObj, /* 206 */
+    Tk_GetMMFromObj, /* 207 */
+    Tk_GetPixelsFromObj, /* 208 */
+    Tk_GetReliefFromObj, /* 209 */
+    Tk_GetScrollInfoObj, /* 210 */
+    Tk_InitOptions, /* 211 */
+    Tk_MainEx, /* 212 */
+    Tk_RestoreSavedOptions, /* 213 */
+    Tk_SetOptions, /* 214 */
 };
-
-TkStubs *tkStubsPtr = &tkStubs;
 
 TkIntStubs tkIntStubs = {
     TCL_STUB_MAGIC,
@@ -262,7 +290,7 @@ TkIntStubs tkIntStubs = {
     TkFontPkgInit, /* 26 */
     TkFontPkgFree, /* 27 */
     TkFreeBindingTags, /* 28 */
-    TkFreeCursor, /* 29 */
+    TkpFreeCursor, /* 29 */
     TkGetBitmapData, /* 30 */
     TkGetButtPoints, /* 31 */
     TkGetCursorByName, /* 32 */
@@ -331,9 +359,22 @@ TkIntStubs tkIntStubs = {
     TkWmRestackToplevel, /* 95 */
     TkWmSetClass, /* 96 */
     TkWmUnmapWindow, /* 97 */
+    TkDebugBitmap, /* 98 */
+    TkDebugBorder, /* 99 */
+    TkDebugCursor, /* 100 */
+    TkDebugColor, /* 101 */
+    TkDebugConfig, /* 102 */
+    TkDebugFont, /* 103 */
+    TkFindStateNumObj, /* 104 */
+    TkGetBitmapPredefTable, /* 105 */
+    TkGetDisplayList, /* 106 */
+    TkGetMainInfoList, /* 107 */
+    TkGetWindowFromObj, /* 108 */
+    TkpGetString, /* 109 */
+    TkpGetSubFonts, /* 110 */
+    TkpGetSystemDefault, /* 111 */
+    TkpMenuThreadInit, /* 112 */
 };
-
-TkIntStubs *tkIntStubsPtr = &tkIntStubs;
 
 TkIntPlatStubs tkIntPlatStubs = {
     TCL_STUB_MAGIC,
@@ -385,6 +426,10 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkWinWmCleanup, /* 33 */
     TkWinXCleanup, /* 34 */
     TkWinXInit, /* 35 */
+    TkWinSetForegroundWindow, /* 36 */
+    TkWinDialogDebug, /* 37 */
+    TkWinGetMenuSystemDefault, /* 38 */
+    TkWinGetPlatformId, /* 39 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     TkClipBox, /* 0 */
@@ -461,8 +506,6 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkMacGetHostToplevel, /* 71 */
 #endif /* MAC_TCL */
 };
-
-TkIntPlatStubs *tkIntPlatStubsPtr = &tkIntPlatStubs;
 
 TkIntXlibStubs tkIntXlibStubs = {
     TCL_STUB_MAGIC,
@@ -549,6 +592,29 @@ TkIntXlibStubs tkIntXlibStubs = {
     XFilterEvent, /* 78 */
     XmbLookupString, /* 79 */
     TkPutImage, /* 80 */
+    NULL, /* 81 */
+    XParseColor, /* 82 */
+    XCreateGC, /* 83 */
+    XFreeGC, /* 84 */
+    XInternAtom, /* 85 */
+    XSetBackground, /* 86 */
+    XSetForeground, /* 87 */
+    XSetClipMask, /* 88 */
+    XSetClipOrigin, /* 89 */
+    XSetTSOrigin, /* 90 */
+    XChangeGC, /* 91 */
+    XSetFont, /* 92 */
+    XSetArcMode, /* 93 */
+    XSetStipple, /* 94 */
+    XSetFillRule, /* 95 */
+    XSetFillStyle, /* 96 */
+    XSetFunction, /* 97 */
+    XSetLineAttributes, /* 98 */
+    _XInitImageFuncPtrs, /* 99 */
+    XCreateIC, /* 100 */
+    XGetVisualInfo, /* 101 */
+    XSetWMClientMachine, /* 102 */
+    XStringListToTextProperty, /* 103 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     NULL, /* 0 */
@@ -609,10 +675,30 @@ TkIntXlibStubs tkIntXlibStubs = {
     XUngrabPointer, /* 55 */
     XUnmapWindow, /* 56 */
     TkPutImage, /* 57 */
+    XParseColor, /* 58 */
+    XCreateGC, /* 59 */
+    XFreeGC, /* 60 */
+    XInternAtom, /* 61 */
+    XSetBackground, /* 62 */
+    XSetForeground, /* 63 */
+    XSetClipMask, /* 64 */
+    XSetClipOrigin, /* 65 */
+    XSetTSOrigin, /* 66 */
+    XChangeGC, /* 67 */
+    XSetFont, /* 68 */
+    XSetArcMode, /* 69 */
+    XSetStipple, /* 70 */
+    XSetFillRule, /* 71 */
+    XSetFillStyle, /* 72 */
+    XSetFunction, /* 73 */
+    XSetLineAttributes, /* 74 */
+    _XInitImageFuncPtrs, /* 75 */
+    XCreateIC, /* 76 */
+    XGetVisualInfo, /* 77 */
+    XSetWMClientMachine, /* 78 */
+    XStringListToTextProperty, /* 79 */
 #endif /* MAC_TCL */
 };
-
-TkIntXlibStubs *tkIntXlibStubsPtr = &tkIntXlibStubs;
 
 TkPlatStubs tkPlatStubs = {
     TCL_STUB_MAGIC,
@@ -639,8 +725,6 @@ TkPlatStubs tkPlatStubs = {
     TkMacGetDrawablePort, /* 10 */
 #endif /* MAC_TCL */
 };
-
-TkPlatStubs *tkPlatStubsPtr = &tkPlatStubs;
 
 static TkStubHooks tkStubHooks = {
     &tkPlatStubs,

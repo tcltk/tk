@@ -5,14 +5,13 @@
 # generates output for errors.  No output means no errors were found.
 #
 # Copyright (c) 1997 by Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: main.test,v 1.4 1999/02/04 21:03:28 stanton Exp $
+# RCS: @(#) $Id: main.test,v 1.5 1999/04/16 01:51:39 stanton Exp $
 
-if {[info procs test] != "test"} {
-    source defs
+if {[lsearch [namespace children] ::tcltest] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 test main-1.1 {StdinProc} {unixOnly} {
@@ -22,7 +21,7 @@ test main-1.1 {StdinProc} {unixOnly} {
 	close stdin; exit
     }
     close $fd
-    if {[catch {exec $tktest <script} msg]} {
+    if {[catch {exec $::tcltest::tktest <script} msg]} {
 	set error 1
     } else {
 	set error 0
@@ -31,7 +30,20 @@ test main-1.1 {StdinProc} {unixOnly} {
     list $error $msg
 } {0 {}}
 
-#
-# Clean up.
-#
+# cleanup
 catch {removeFile script}
+::tcltest::cleanupTests
+return
+
+
+
+
+
+
+
+
+
+
+
+
+

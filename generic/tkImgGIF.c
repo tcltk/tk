@@ -27,7 +27,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.2 1998/09/14 18:23:12 stanton Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.3 1999/04/16 01:51:15 stanton Exp $
  */
 
 /*
@@ -59,6 +59,17 @@ typedef struct mFile {
 
 #include "tkInt.h"
 #include "tkPort.h"
+
+/*
+ * 			 HACK ALERT!!  HACK ALERT!!  HACK ALERT!!
+ * This code is hard-wired for reading from files.  In order to read
+ * from a data stream, we'll trick fread so we can reuse the same code
+ */
+
+typedef struct ThreadSpecificData {
+    int fromData;
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * The format record for the GIF file format:
@@ -98,14 +109,6 @@ Tk_PhotoImageFormat tkImgFmtGIF = {
 #define MAX_LWZ_BITS		12
 #define LM_to_uint(a,b)         (((b)<<8)|(a))
 #define ReadOK(file,buffer,len)	(Fread(buffer, len, 1, file) != 0)
-
-/*
- * 			 HACK ALERT!!  HACK ALERT!!  HACK ALERT!!
- * This code is hard-wired for reading from files.  In order to read
- * from a data stream, we'll trick fread so we can reuse the same code
- */
- 
-static int fromData=0;
 
 /*
  * Prototypes for local procedures defined in this file:
@@ -184,7 +187,7 @@ FileMatchGIF(chan, fileName, formatString, widthPtr, heightPtr)
  *
  * Results:
  *	A standard TCL completion code.  If TCL_ERROR is returned
- *	then an error message is left in interp->result.
+ *	then an error message is left in the interp's result.
  *
  * Side effects:
  *	The access position in file f is changed, and new data is
@@ -287,12 +290,14 @@ FileReadGIF(interp, chan, fileName, formatString, imageHandle, destX, destY,
 	     */
 
 	    if (Fread(buf, 1, 1, chan) != 1) {
-		interp->result =
-			"error reading extension function code in GIF image";
+		Tcl_SetResult(interp,
+			"error reading extension function code in GIF image",
+			TCL_STATIC);
 		goto error;
 	    }
 	    if (DoExtension(chan, buf[0], &transparent) < 0) {
-		interp->result = "error reading extension in GIF image";
+		Tcl_SetResult(interp, "error reading extension in GIF image",
+			TCL_STATIC);
 		goto error;
 	    }
 	    continue;
@@ -306,7 +311,9 @@ FileReadGIF(interp, chan, fileName, formatString, imageHandle, destX, destY,
 	}
 
 	if (Fread(buf, 1, 9, chan) != 9) {
-	    interp->result = "couldn't read left/top/width/height in GIF image";
+	    Tcl_SetResult(interp,
+		    "couldn't read left/top/width/height in GIF image",
+		    TCL_STATIC);
 	    goto error;
 	}
 
@@ -418,7 +425,7 @@ StringMatchGIF(string, formatString, widthPtr, heightPtr)
  *
  * Results:
  *	A standard TCL completion code.  If TCL_ERROR is returned
- *	then an error message is left in interp->result.
+ *	then an error message is left in the interp's result.
  *
  * Side effects:
  *	new data is added to the image given by imageHandle.  This
@@ -439,15 +446,18 @@ StringReadGIF(interp,string,formatString,imageHandle,
     int  width, height;		/*   image to copy */
     int srcX, srcY;
 {
-	int result;
-	MFile handle;
-	mInit((unsigned char *)string,&handle);
-	fromData = 1;
-	result = FileReadGIF(interp, (Tcl_Channel) &handle, "inline data",
-		formatString, imageHandle, destX, destY, width, height,
-		srcX, srcY);
-	fromData = 0;
-	return(result);
+    int result;
+    MFile handle;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    mInit((unsigned char *)string,&handle);
+    tsdPtr->fromData = 1;
+    result = FileReadGIF(interp, (Tcl_Channel) &handle, "inline data",
+            formatString, imageHandle, destX, destY, width, height,
+            srcX, srcY);
+    tsdPtr->fromData = 0;
+    return(result);
 }
 
 /*
@@ -619,7 +629,7 @@ ReadImage(interp, imagePtr, chan, len, rows, cmap,
     }
 
     if (LWZReadByte(chan, 1, c) < 0) {
-	interp->result = "format error in GIF image";
+	Tcl_SetResult(interp, "format error in GIF image", TCL_STATIC);
 	return TCL_ERROR;
     }
 
@@ -1051,7 +1061,10 @@ Fread(dst, hunk, count, chan)
     size_t hunk,count;		/* how many */
     Tcl_Channel chan;
 {
-    if (fromData) {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (tsdPtr->fromData) {
 	return(Mread(dst, hunk, count, (MFile *) chan));
     } else {
 	return Tcl_Read(chan, (char *) dst, (int) (hunk * count));

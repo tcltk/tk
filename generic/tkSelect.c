@@ -6,12 +6,12 @@
  *	and Tcl commands.
  *
  * Copyright (c) 1990-1993 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.2 1998/09/14 18:23:17 stanton Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.3 1999/04/16 01:51:21 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -45,12 +45,16 @@ typedef struct LostCommand {
 } LostCommand;
 
 /*
- * Shared variables:
+ * The structure below is used to keep each thread's pending list
+ * separate.
  */
 
-TkSelInProgress *pendingPtr = NULL;
+typedef struct ThreadSpecificData {
+    TkSelInProgress *pendingPtr;
 				/* Topmost search in progress, or
 				 * NULL if none. */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Forward declarations for procedures defined in this file:
@@ -199,6 +203,8 @@ Tk_DeleteSelHandler(tkwin, selection, target)
     TkWindow *winPtr = (TkWindow *) tkwin;
     register TkSelHandler *selPtr, *prevPtr;
     register TkSelInProgress *ipPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Find the selection handler to be deleted, or return if it doesn't
@@ -220,7 +226,8 @@ Tk_DeleteSelHandler(tkwin, selection, target)
      * handler is dead.
      */
 
-    for (ipPtr = pendingPtr; ipPtr != NULL; ipPtr = ipPtr->nextPtr) {
+    for (ipPtr = tsdPtr->pendingPtr; ipPtr != NULL; 
+            ipPtr = ipPtr->nextPtr) {
 	if (ipPtr->selPtr == selPtr) {
 	    ipPtr->selPtr = NULL;
 	}
@@ -431,7 +438,7 @@ Tk_ClearSelection(tkwin, selection)
  * Results:
  *	The return value is a standard Tcl return value.
  *	If an error occurs (such as no selection exists)
- *	then an error message is left in interp->result.
+ *	then an error message is left in the interp's result.
  *
  * Side effects:
  *	The standard X11 protocols are used to retrieve the
@@ -457,7 +464,7 @@ Tk_ClearSelection(tkwin, selection)
  *	the "portion" arguments in separate calls will contain
  *	successive parts of the selection.  Proc should normally
  *	return TCL_OK.  If it detects an error then it should return
- *	TCL_ERROR and leave an error message in interp->result; the
+ *	TCL_ERROR and leave an error message in the interp's result; the
  *	remainder of the selection retrieval will be aborted.
  *
  *--------------------------------------------------------------
@@ -480,6 +487,8 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
     TkSelectionInfo *infoPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (dispPtr->multipleAtom == None) {
 	TkSelInit(tkwin);
@@ -528,13 +537,13 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
 	    offset = 0;
 	    result = TCL_OK;
 	    ip.selPtr = selPtr;
-	    ip.nextPtr = pendingPtr;
-	    pendingPtr = &ip;
+	    ip.nextPtr = tsdPtr->pendingPtr;
+	    tsdPtr->pendingPtr = &ip;
 	    while (1) {
 		count = (selPtr->proc)(selPtr->clientData, offset, buffer,
 			TK_SEL_BYTES_AT_ONCE);
 		if ((count < 0) || (ip.selPtr == NULL)) {
-		    pendingPtr = ip.nextPtr;
+		    tsdPtr->pendingPtr = ip.nextPtr;
 		    goto cantget;
 		}
 		if (count > TK_SEL_BYTES_AT_ONCE) {
@@ -548,7 +557,7 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
 		}
 		offset += count;
 	    }
-	    pendingPtr = ip.nextPtr;
+	    tsdPtr->pendingPtr = ip.nextPtr;
 	}
 	return result;
     }
@@ -602,9 +611,8 @@ Tk_SelectionCmd(clientData, interp, argc, argv)
     char **args;
 
     if (argc < 2) {
-	sprintf(interp->result,
-		"wrong # args: should be \"%.50s option ?arg arg ...?\"",
-		argv[0]);
+	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
+		" option ?arg arg ...?\"", (char *) NULL);
 	return TCL_ERROR;
     }
     c = argv[1][0];
@@ -854,7 +862,7 @@ Tk_SelectionCmd(clientData, interp, argc, argv)
 
 	    if ((infoPtr != NULL)
 		    && (infoPtr->owner != winPtr->dispPtr->clipWindow)) {
-		interp->result = Tk_PathName(infoPtr->owner);
+		Tcl_SetResult(interp, Tk_PathName(infoPtr->owner), TCL_STATIC);
 	    }
 	    return TCL_OK;
 	}
@@ -878,11 +886,64 @@ Tk_SelectionCmd(clientData, interp, argc, argv)
 	Tk_OwnSelection(tkwin, selection, LostSelection, (ClientData) lostPtr);
 	return TCL_OK;
     } else {
-	sprintf(interp->result,
-		"bad option \"%.50s\": must be clear, get, handle, or own",
-		argv[1]);
+	Tcl_AppendResult(interp, "bad option \"", argv[1],
+		"\": must be clear, get, handle, or own", (char *) NULL);
 	return TCL_ERROR;
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkSelGetInProgress --
+ *
+ *	This procedure returns a pointer to the thread-local
+ *      list of pending searches.
+ *
+ * Results:
+ *	The return value is a pointer to the first search in progress, 
+ *      or NULL if there are none. 
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TkSelInProgress *
+TkSelGetInProgress(void)
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    return tsdPtr->pendingPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkSelSetInProgress --
+ *
+ *	This procedure is used to set the thread-local list of pending 
+ *      searches.  It is required because the pending list is kept
+ *      in thread local storage.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+void
+TkSelSetInProgress(pendingPtr)
+    TkSelInProgress *pendingPtr;
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+   tsdPtr->pendingPtr = pendingPtr;
 }
 
 /*
@@ -909,6 +970,8 @@ TkSelDeadWindow(winPtr)
     register TkSelHandler *selPtr;
     register TkSelInProgress *ipPtr;
     TkSelectionInfo *infoPtr, *prevPtr, *nextPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * While deleting all the handlers, be careful to check whether
@@ -919,7 +982,8 @@ TkSelDeadWindow(winPtr)
     while (winPtr->selHandlerList != NULL) {
 	selPtr = winPtr->selHandlerList;
 	winPtr->selHandlerList = selPtr->nextPtr;
-	for (ipPtr = pendingPtr; ipPtr != NULL; ipPtr = ipPtr->nextPtr) {
+	for (ipPtr = tsdPtr->pendingPtr; ipPtr != NULL; 
+                ipPtr = ipPtr->nextPtr) {
 	    if (ipPtr->selPtr == selPtr) {
 		ipPtr->selPtr = NULL;
 	    }
@@ -1155,11 +1219,12 @@ HandleTclCommand(clientData, offset, buffer, maxBytes)
     Tcl_DStringInit(&oldResult);
     Tcl_DStringGetResult(interp, &oldResult);
     if (TkCopyAndGlobalEval(interp, command) == TCL_OK) {
-	length = strlen(interp->result);
+	length = strlen(Tcl_GetStringResult(interp));
 	if (length > maxBytes) {
 	    length = maxBytes;
 	}
-	memcpy((VOID *) buffer, (VOID *) interp->result, (size_t) length);
+	memcpy((VOID *) buffer, (VOID *) Tcl_GetStringResult(interp),
+		(size_t) length);
 	buffer[length] = '\0';
     } else {
 	length = -1;
@@ -1302,8 +1367,7 @@ LostSelection(clientData)
     ClientData clientData;		/* Pointer to CommandInfo structure. */
 {
     LostCommand *lostPtr = (LostCommand *) clientData;
-    char *oldResultString;
-    Tcl_FreeProc *oldFreeProc;
+    Tcl_Obj *objPtr;
     Tcl_Interp *interp;
 
     interp = lostPtr->interp;
@@ -1314,22 +1378,16 @@ LostSelection(clientData)
      * restore it after executing the command.
      */
 
-    oldFreeProc = interp->freeProc;
-    if (oldFreeProc != TCL_STATIC) {
-	oldResultString = interp->result;
-    } else {
-	oldResultString = (char *) ckalloc((unsigned)
-		(strlen(interp->result) + 1));
-	strcpy(oldResultString, interp->result);
-	oldFreeProc = TCL_DYNAMIC;
-    }
-    interp->freeProc = TCL_STATIC;
+    objPtr = Tcl_GetObjResult(interp);
+    Tcl_IncrRefCount(objPtr);
+    Tcl_ResetResult(interp);
+
     if (TkCopyAndGlobalEval(interp, lostPtr->command) != TCL_OK) {
 	Tcl_BackgroundError(interp);
     }
-    Tcl_FreeResult(interp);
-    interp->result = oldResultString;
-    interp->freeProc = oldFreeProc;
+
+    Tcl_SetObjResult(interp, objPtr);
+    Tcl_DecrRefCount(objPtr);
 
     Tcl_Release((ClientData) interp);
     

@@ -3,12 +3,12 @@
  *
  *	This file contains functions for managing the clipboard.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinClipboard.c,v 1.2 1998/09/14 18:23:59 stanton Exp $
+ * RCS: @(#) $Id: tkWinClipboard.c,v 1.3 1999/04/16 01:51:49 stanton Exp $
  */
 
 #include "tkWinInt.h"
@@ -27,7 +27,7 @@
  * Results:
  *	The return value is a standard Tcl return value.
  *	If an error occurs (such as no selection exists)
- *	then an error message is left in interp->result.
+ *	then an error message is left in the interp's result.
  *
  * Side effects:
  *	None.
@@ -50,6 +50,7 @@ TkSelGetSelection(interp, tkwin, selection, target, proc, clientData)
     ClientData clientData;	/* Arbitrary value to pass to proc. */
 {
     char *data, *buffer, *destPtr;
+    Tcl_DString ds;
     HGLOBAL handle;
     int result, length;
 
@@ -72,8 +73,10 @@ TkSelGetSelection(interp, tkwin, selection, target, proc, clientData)
 		*destPtr = '\0';
 		GlobalUnlock(handle);
 		CloseClipboard();
-		result = (*proc)(clientData, interp, buffer);
+		Tcl_ExternalToUtfDString(NULL, buffer, -1, &ds);
 		ckfree(buffer);
+		result = (*proc)(clientData, interp, Tcl_DStringValue(&ds));
+		Tcl_DStringFree(&ds);
 		return result;
 	    }
 	    CloseClipboard();
@@ -119,7 +122,7 @@ XSetSelectionOwner(display, selection, owner, time)
      * It expects a Tk_Window, even though it only needs a Tk_Display.
      */
 
-    tkwin = (Tk_Window)tkMainWindowList->winPtr;
+    tkwin = (Tk_Window) TkGetMainInfoList()->winPtr;
 
     if (selection == Tk_InternAtom(tkwin, "CLIPBOARD")) {
 
@@ -162,8 +165,9 @@ TkWinClipboardRender(dispPtr, format)
     TkClipboardTarget *targetPtr;
     TkClipboardBuffer *cbPtr;
     HGLOBAL handle;
-    char *buffer, *p, *endPtr;
+    char *buffer, *p, *rawText, *endPtr;
     int length;
+    Tcl_DString ds;
 
     for (targetPtr = dispPtr->clipTargetPtr; targetPtr != NULL;
 	    targetPtr = targetPtr->nextPtr) {
@@ -183,11 +187,7 @@ TkWinClipboardRender(dispPtr, format)
 	    }
 	}
     }
-    handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE, length+1);
-    if (!handle) {
-	return;
-    }
-    buffer = GlobalLock(handle);
+    buffer = rawText = ckalloc(length + 1);
     if (targetPtr != NULL) {
 	for (cbPtr = targetPtr->firstBufferPtr; cbPtr != NULL;
 		cbPtr = cbPtr->nextPtr) {
@@ -201,7 +201,18 @@ TkWinClipboardRender(dispPtr, format)
 	}
     }
     *buffer = '\0';
+    Tcl_UtfToExternalDString(NULL, rawText, -1, &ds);
+    ckfree(rawText);
+    handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
+	    Tcl_DStringLength(&ds)+1);
+    if (!handle) {
+	Tcl_DStringFree(&ds);
+	return;
+    }
+    buffer = GlobalLock(handle);
+    memcpy(buffer, Tcl_DStringValue(&ds), Tcl_DStringLength(&ds) + 1);
     GlobalUnlock(handle);
+    Tcl_DStringFree(&ds);
     SetClipboardData(CF_TEXT, handle);
     return;
 }

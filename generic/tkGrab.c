@@ -4,12 +4,12 @@
  *	This file provides procedures that implement grabs for Tk.
  *
  * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.3 1999/03/10 07:04:39 stanton Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.4 1999/04/16 01:51:14 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -242,10 +242,11 @@ Tk_GrabCmd(clientData, interp, argc, argv)
 	    }
 	    dispPtr = ((TkWindow *) tkwin)->dispPtr;
 	    if (dispPtr->eventualGrabWinPtr != NULL) {
-		interp->result = dispPtr->eventualGrabWinPtr->pathName;
+		Tcl_SetResult(interp, dispPtr->eventualGrabWinPtr->pathName,
+			TCL_STATIC);
 	    }
 	} else {
-	    for (dispPtr = tkDisplayList; dispPtr != NULL;
+	    for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
 		    dispPtr = dispPtr->nextPtr) {
 		if (dispPtr->eventualGrabWinPtr != NULL) {
 		    Tcl_AppendElement(interp,
@@ -307,11 +308,11 @@ Tk_GrabCmd(clientData, interp, argc, argv)
 	}
 	dispPtr = winPtr->dispPtr;
 	if (dispPtr->eventualGrabWinPtr != winPtr) {
-	    interp->result = "none";
+	    Tcl_SetResult(interp, "none", TCL_STATIC);
 	} else if (dispPtr->grabFlags & GRAB_GLOBAL) {
-	    interp->result = "global";
+	    Tcl_SetResult(interp, "global", TCL_STATIC);
 	} else {
-	    interp->result = "local";
+	    Tcl_SetResult(interp, "local", TCL_STATIC);
 	}
     } else {
 	Tcl_AppendResult(interp, "unknown or ambiguous option \"", argv[1],
@@ -333,7 +334,7 @@ Tk_GrabCmd(clientData, interp, argc, argv)
  * Results:
  *	A standard Tcl result is returned.  TCL_OK is the normal return
  *	value;  if the grab could not be set then TCL_ERROR is returned
- *	and interp->result will hold an error message.
+ *	and the interp's result will hold an error message.
  *
  * Side effects:
  *	Once this call completes successfully, no window outside the
@@ -370,7 +371,8 @@ Tk_Grab(interp, tkwin, grabGlobal)
 	}
 	if (dispPtr->eventualGrabWinPtr->mainPtr != winPtr->mainPtr) {
 	    alreadyGrabbed:
-	    interp->result = "grab failed: another application has grab";
+	    Tcl_SetResult(interp, "grab failed: another application has grab",
+		    TCL_STATIC);
 	    return TCL_ERROR;
 	}
 	Tk_Ungrab((Tk_Window) dispPtr->eventualGrabWinPtr);
@@ -436,15 +438,18 @@ Tk_Grab(interp, tkwin, grabGlobal)
 	if (grabResult != 0) {
 	    grabError:
 	    if (grabResult == GrabNotViewable) {
-		interp->result = "grab failed: window not viewable";
+		Tcl_SetResult(interp, "grab failed: window not viewable",
+			TCL_STATIC);
 	    } else if (grabResult == AlreadyGrabbed) {
 		goto alreadyGrabbed;
 	    } else if (grabResult == GrabFrozen) {
-		interp->result = "grab failed: keyboard or pointer frozen";
+		Tcl_SetResult(interp,
+			"grab failed: keyboard or pointer frozen", TCL_STATIC);
 	    } else if (grabResult == GrabInvalidTime) {
-		interp->result = "grab failed: invalid time";
+		Tcl_SetResult(interp, "grab failed: invalid time",
+			TCL_STATIC);
 	    } else {
-		char msg[100];
+		char msg[64 + TCL_INTEGER_SPACE];
 	
 		sprintf(msg, "grab failed for unknown reason (code %d)",
 			grabResult);

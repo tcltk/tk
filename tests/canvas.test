@@ -3,15 +3,13 @@
 # standard fashion for Tcl tests.
 #
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998 by Scriptics Corporation.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: canvas.test,v 1.4 1998/10/13 18:13:07 rjohnson Exp $
+# RCS: @(#) $Id: canvas.test,v 1.5 1999/04/16 01:51:35 stanton Exp $
 
-if {[info procs test] != "test"} {
-    source defs
+if {[lsearch [namespace children] ::tcltest] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 foreach i [winfo children .] {
@@ -75,7 +73,16 @@ canvas .c -width 60 -height 40 -scrollregion {0 0 200 150} -bd 0 \
 	-highlightthickness 0
 pack .c
 update
-test canvas-2.1 {CanvasWidgetCmd, xview option} {
+
+test canvas-2.1 {CanvasWidgetCmd, bind option} {
+    set i [.c create rect 10 10 100 100]
+    list [catch {.c bind $i <a>} msg] $msg
+} {0 {}}
+test canvas-2.2 {CanvasWidgetCmd, bind option} {
+    set i [.c create rect 10 10 100 100]
+    list [catch {.c bind $i <} msg] $msg
+} {1 {no event type or button # or keysym}}
+test canvas-2.3 {CanvasWidgetCmd, xview option} {
     .c configure -xscrollincrement 40 -yscrollincrement 5
     .c xview moveto 0
     update
@@ -84,7 +91,7 @@ test canvas-2.1 {CanvasWidgetCmd, xview option} {
     update
     lappend x [.c xview]
 } {{0 0.3} {0.4 0.7}}
-test canvas-2.2 {CanvasWidgetCmd, xview option} {nonPortable} {
+test canvas-2.4 {CanvasWidgetCmd, xview option} {nonPortable} {
     # This test gives slightly different results on platforms such
     # as NetBSD.  I don't know why...
     .c configure -xscrollincrement 0 -yscrollincrement 5
@@ -236,3 +243,20 @@ test canvas-9.1 {canvas id creation and deletion} {
 	
     set x ""
 } {}
+
+# cleanup
+::tcltest::cleanupTests
+return
+
+
+
+
+
+
+
+
+
+
+
+
+

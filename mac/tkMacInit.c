@@ -4,12 +4,12 @@
  *	This file contains Mac-specific interpreter initialization
  *	functions.
  *
- * Copyright (c) 1995-1996 Sun Microsystems, Inc.
+ * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacInit.c,v 1.2 1998/09/14 18:23:36 stanton Exp $
+ * RCS: @(#) $Id: tkMacInit.c,v 1.3 1999/04/16 01:51:31 stanton Exp $
  */
 
 #include <Resources.h>
@@ -41,7 +41,7 @@ QDGlobalsPtr tcl_macQdPtr = NULL;
  *
  * Results:
  *	A standard Tcl completion code (TCL_OK or TCL_ERROR).  Also
- *	leaves information in interp->result.
+ *	leaves information in the interp's result.
  *
  * Side effects:
  *	Sets "tk_library" Tcl variable, runs initialization scripts

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.9 1999/03/10 07:04:40 stanton Exp $ 
+ * RCS: $Id: tkInt.h,v 1.10 1999/04/16 01:51:15 stanton Exp $ 
  */
 
 #ifndef _TKINT
@@ -38,13 +38,6 @@ typedef struct TkpCursor_ *TkpCursor;
 typedef struct TkRegion_ *TkRegion;
 typedef struct TkStressedCmap TkStressedCmap;
 typedef struct TkBindInfo_ *TkBindInfo;
-
-/*
- * Array type definitions
- */
-
-typedef double TkDouble2[2];
-typedef double TkDouble4[4];
 
 /*
  * Procedure types.
@@ -89,16 +82,37 @@ typedef struct TkClassProcs {
 
 typedef struct TkCursor {
     Tk_Cursor cursor;		/* System specific identifier for cursor. */
-    int refCount;		/* Number of active uses of cursor. */
+    Display *display;		/* Display containing cursor. Needed for
+				 * disposal and retrieval of cursors. */
+    int resourceRefCount;	/* Number of active uses of this cursor (each
+				 * active use corresponds to a call to
+				 * Tk_AllocPreserveFromObj or Tk_GetPreserve).
+				 * If this count is 0, then this structure
+				 * is no longer valid and it isn't present
+				 * in a hash table: it is being kept around
+				 * only because there are objects referring
+				 * to it.  The structure is freed when
+				 * resourceRefCount and objRefCount are
+				 * both 0. */
+    int objRefCount;		/* Number of Tcl objects that reference
+				 * this structure.. */
     Tcl_HashTable *otherTable;	/* Second table (other than idTable) used
 				 * to index this entry. */
     Tcl_HashEntry *hashPtr;	/* Entry in otherTable for this structure
 				 * (needed when deleting). */
+    Tcl_HashEntry *idHashPtr;	/* Entry in idTable for this structure
+				 * (needed when deleting). */
+    struct TkCursor *nextPtr;	/* Points to the next TkCursor structure with
+				 * the same name.  Cursors with the same
+				 * name but different displays are chained
+				 * together off a single hash table entry. */
 } TkCursor;
 
 /*
  * One of the following structures is maintained for each display
- * containing a window managed by Tk:
+ * containing a window managed by Tk.  In part, the structure is 
+ * used to store thread-specific data, since each thread will have 
+ * its own TkDisplay structure.
  */
 
 typedef struct TkDisplay {
@@ -108,6 +122,23 @@ typedef struct TkDisplay {
 				 * identifier removed).  Malloc-ed. */
     Time lastEventTime;		/* Time of last event received for this
 				 * display. */
+
+    /*
+     * Information used primarily by tk3d.c:
+     */
+
+    int borderInit;             /* 0 means borderTable needs initializing. */
+    Tcl_HashTable borderTable;  /* Maps from color name to TkBorder 
+				 * structure. */
+
+    /*
+     * Information used by tkAtom.c only:
+     */
+
+    int atomInit;		/* 0 means stuff below hasn't been
+				 * initialized yet. */
+    Tcl_HashTable nameTable;	/* Maps from names to Atom's. */
+    Tcl_HashTable atomTable;	/* Maps from Atom's back to names. */
 
     /*
      * Information used primarily by tkBind.c:
@@ -135,6 +166,63 @@ typedef struct TkDisplay {
 				 * may be NULL. */
 
     /*
+     * Information used by tkBitmap.c only:
+     */
+  
+    int bitmapInit;             /* 0 means tables above need initializing. */
+    int bitmapAutoNumber;       /* Used to number bitmaps. */
+    Tcl_HashTable bitmapNameTable;    
+                                /* Maps from name of bitmap to the first 
+				 * TkBitmap record for that name. */
+    Tcl_HashTable bitmapIdTable;/* Maps from bitmap id to the TkBitmap
+				 * structure for the bitmap. */
+    Tcl_HashTable bitmapDataTable;    
+                                /* Used by Tk_GetBitmapFromData to map from
+				 * a collection of in-core data about a 
+				 * bitmap to a reference giving an auto-
+				 * matically-generated name for the bitmap. */
+
+    /*
+     * Information used by tkCanvas.c only:
+     */
+
+    int numIdSearches;          
+    int numSlowSearches;
+
+    /*
+     * Used by tkColor.c only:
+     */
+
+    int colorInit;              /* 0 means color module needs initializing. */
+    TkStressedCmap *stressPtr;	/* First in list of colormaps that have
+				 * filled up, so we have to pick an
+				 * approximate color. */
+    Tcl_HashTable colorNameTable;
+                                /* Maps from color name to TkColor structure
+				 * for that color. */
+    Tcl_HashTable colorValueTable;
+                                /* Maps from integer RGB values to TkColor
+				 * structures. */
+
+    /*
+     * Used by tkCursor.c only:
+     */
+
+    int cursorInit;             /* 0 means cursor module need initializing. */
+    Tcl_HashTable cursorNameTable;
+                                /* Maps from a string name to a cursor to the
+				 * TkCursor record for the cursor. */
+    Tcl_HashTable cursorDataTable;
+                                /* Maps from a collection of in-core data
+				 * about a cursor to a TkCursor structure. */
+    Tcl_HashTable cursorIdTable;
+                                /* Maps from a cursor id to the TkCursor
+				 * structure for the cursor. */
+    char cursorString[20];      /* Used to store a cursor id string. */
+    Font cursorFont;		/* Font to use for standard cursors.
+				 * None means font not loaded yet. */
+
+    /*
      * Information used by tkError.c only:
      */
 
@@ -148,68 +236,65 @@ typedef struct TkDisplay {
 				 * gets big, handlers get cleaned up. */
 
     /*
-     * Information used by tkSend.c only:
+     * Used by tkEvent.c only:
      */
 
-    Tk_Window commTkwin;	/* Window used for communication
-				 * between interpreters during "send"
-				 * commands.  NULL means send info hasn't
-				 * been initialized yet. */
-    Atom commProperty;		/* X's name for comm property. */
-    Atom registryProperty;	/* X's name for property containing
-				 * registry of interpreter names. */
-    Atom appNameProperty;	/* X's name for property used to hold the
-				 * application name on each comm window. */
+    struct TkWindowEvent *delayedMotionPtr;
+				/* Points to a malloc-ed motion event
+				 * whose processing has been delayed in
+				 * the hopes that another motion event
+				 * will come along right away and we can
+				 * merge the two of them together.  NULL
+				 * means that there is no delayed motion
+				 * event. */
 
     /*
-     * Information used by tkSelect.c and tkClipboard.c only:
+     * Information used by tkFocus.c only:
      */
 
-    struct TkSelectionInfo *selectionInfoPtr;
-				/* First in list of selection information
-				 * records.  Each entry contains information
-				 * about the current owner of a particular
-				 * selection on this display. */
-    Atom multipleAtom;		/* Atom for MULTIPLE.  None means
-				 * selection stuff isn't initialized. */
-    Atom incrAtom;		/* Atom for INCR. */
-    Atom targetsAtom;		/* Atom for TARGETS. */
-    Atom timestampAtom;		/* Atom for TIMESTAMP. */
-    Atom textAtom;		/* Atom for TEXT. */
-    Atom compoundTextAtom;	/* Atom for COMPOUND_TEXT. */
-    Atom applicationAtom;	/* Atom for TK_APPLICATION. */
-    Atom windowAtom;		/* Atom for TK_WINDOW. */
-    Atom clipboardAtom;		/* Atom for CLIPBOARD. */
-
-    Tk_Window clipWindow;	/* Window used for clipboard ownership and to
-				 * retrieve selections between processes. NULL
-				 * means clipboard info hasn't been
-				 * initialized. */
-    int clipboardActive;	/* 1 means we currently own the clipboard
-				 * selection, 0 means we don't. */
-    struct TkMainInfo *clipboardAppPtr;
-				/* Last application that owned clipboard. */
-    struct TkClipboardTarget *clipTargetPtr;
-				/* First in list of clipboard type information
-				 * records.  Each entry contains information
-				 * about the buffers for a given selection
-				 * target. */
+    int focusDebug;             /* 1 means collect focus debugging 
+				 * statistics. */
+    struct TkWindow *implicitWinPtr;
+				/* If the focus arrived at a toplevel window
+				 * implicitly via an Enter event (rather
+				 * than via a FocusIn event), this points
+				 * to the toplevel window.  Otherwise it is
+				 * NULL. */
+    struct TkWindow *focusPtr;	/* Points to the window on this display that
+				 * should be receiving keyboard events.  When
+				 * multiple applications on the display have
+				 * the focus, this will refer to the
+				 * innermost window in the innermost
+				 * application.  This information isn't used
+				 * under Unix or Windows, but it's needed on
+				 * the Macintosh. */
 
     /*
-     * Information used by tkAtom.c only:
+     * Information used by tkGC.c only:
      */
-
-    int atomInit;		/* 0 means stuff below hasn't been
-				 * initialized yet. */
-    Tcl_HashTable nameTable;	/* Maps from names to Atom's. */
-    Tcl_HashTable atomTable;	/* Maps from Atom's back to names. */
+    
+    Tcl_HashTable gcValueTable; /* Maps from a GC's values to a TkGC structure
+				 * describing a GC with those values. */
+    Tcl_HashTable gcIdTable;    /* Maps from a GC to a TkGC. */ 
+    int gcInit;                 /* 0 means the tables below need 
+				 * initializing. */
 
     /*
-     * Information used by tkCursor.c only:
+     * Information used by tkGeometry.c only:
      */
 
-    Font cursorFont;		/* Font to use for standard cursors.
-				 * None means font not loaded yet. */
+    Tcl_HashTable maintainHashTable;
+                                /* Hash table that maps from a master's 
+				 * Tk_Window token to a list of slaves
+				 * managed by that master. */
+    int geomInit;    
+
+    /*
+     * Information used by tkGet.c only:
+     */
+  
+    Tcl_HashTable uidTable;     /* Stores all Tk_Uids used in a thread. */
+    int uidInit;                /* 0 means uidTable needs initializing. */
 
     /*
      * Information used by tkGrab.c only:
@@ -247,6 +332,100 @@ typedef struct TkDisplay {
 				 * in tkGrab.c. */
 
     /*
+     * Information used by tkGrid.c only:
+     */
+
+    int gridInit;               /* 0 means table below needs initializing. */
+    Tcl_HashTable gridHashTable;/* Maps from Tk_Window tokens to 
+				 * corresponding Grid structures. */
+
+    /*
+     * Information used by tkImage.c only:
+     */
+
+    int imageId;                /* Value used to number image ids. */
+
+    /*
+     * Information used by tkMacWinMenu.c only:
+     */
+
+    int postCommandGeneration;  
+
+    /*
+     * Information used by tkOption.c only.
+     */
+
+
+
+    /*
+     * Information used by tkPack.c only.
+     */
+
+    int packInit;              /* 0 means table below needs initializing. */
+    Tcl_HashTable packerHashTable;
+                               /* Maps from Tk_Window tokens to 
+				* corresponding Packer structures. */
+    
+
+    /*
+     * Information used by tkPlace.c only.
+     */
+
+    int placeInit;              /* 0 means tables below need initializing. */
+    Tcl_HashTable masterTable;  /* Maps from Tk_Window toke to the Master
+				 * structure for the window, if it exists. */
+    Tcl_HashTable slaveTable;   /* Maps from Tk_Window toke to the Slave
+				 * structure for the window, if it exists. */
+
+    /*
+     * Information used by tkSelect.c and tkClipboard.c only:
+     */
+
+    struct TkSelectionInfo *selectionInfoPtr;
+				/* First in list of selection information
+				 * records.  Each entry contains information
+				 * about the current owner of a particular
+				 * selection on this display. */
+    Atom multipleAtom;		/* Atom for MULTIPLE.  None means
+				 * selection stuff isn't initialized. */
+    Atom incrAtom;		/* Atom for INCR. */
+    Atom targetsAtom;		/* Atom for TARGETS. */
+    Atom timestampAtom;		/* Atom for TIMESTAMP. */
+    Atom textAtom;		/* Atom for TEXT. */
+    Atom compoundTextAtom;	/* Atom for COMPOUND_TEXT. */
+    Atom applicationAtom;	/* Atom for TK_APPLICATION. */
+    Atom windowAtom;		/* Atom for TK_WINDOW. */
+    Atom clipboardAtom;		/* Atom for CLIPBOARD. */
+
+    Tk_Window clipWindow;	/* Window used for clipboard ownership and to
+				 * retrieve selections between processes. NULL
+				 * means clipboard info hasn't been
+				 * initialized. */
+    int clipboardActive;	/* 1 means we currently own the clipboard
+				 * selection, 0 means we don't. */
+    struct TkMainInfo *clipboardAppPtr;
+				/* Last application that owned clipboard. */
+    struct TkClipboardTarget *clipTargetPtr;
+				/* First in list of clipboard type information
+				 * records.  Each entry contains information
+				 * about the buffers for a given selection
+				 * target. */
+
+    /*
+     * Information used by tkSend.c only:
+     */
+
+    Tk_Window commTkwin;	/* Window used for communication
+				 * between interpreters during "send"
+				 * commands.  NULL means send info hasn't
+				 * been initialized yet. */
+    Atom commProperty;		/* X's name for comm property. */
+    Atom registryProperty;	/* X's name for property containing
+				 * registry of interpreter names. */
+    Atom appNameProperty;	/* X's name for property used to hold the
+				 * application name on each comm window. */
+
+    /*
      * Information used by tkXId.c only:
      */
 
@@ -263,6 +442,19 @@ typedef struct TkDisplay {
     int idCleanupScheduled;	/* 1 means a call to WindowIdCleanup has
 				 * already been scheduled, 0 means it
 				 * hasn't. */
+
+    /*
+     * Information used by tkUnixWm.c and tkWinWm.c only:
+     */
+
+    int wmTracing;              /* Used to enable or disable tracing in 
+				 * this module.  If tracing is enabled, 
+				 * then information is printed on
+				 * standard output about interesting 
+				 * interactions with the window manager. */
+    struct TkWmInfo *firstWmPtr;  /* Points to first top-level window. */
+    struct TkWmInfo *foregroundWmPtr;    
+                                /* Points to the foreground window. */
 
     /*
      * Information maintained by tkWindow.c for use later on by tkXId.c:
@@ -283,46 +475,6 @@ typedef struct TkDisplay {
 
     TkColormap *cmapPtr;	/* First in list of all non-default colormaps
 				 * allocated for this display. */
-
-    /*
-     * Information used by tkFocus.c only:
-     */
-
-    struct TkWindow *implicitWinPtr;
-				/* If the focus arrived at a toplevel window
-				 * implicitly via an Enter event (rather
-				 * than via a FocusIn event), this points
-				 * to the toplevel window.  Otherwise it is
-				 * NULL. */
-    struct TkWindow *focusPtr;	/* Points to the window on this display that
-				 * should be receiving keyboard events.  When
-				 * multiple applications on the display have
-				 * the focus, this will refer to the
-				 * innermost window in the innermost
-				 * application.  This information isn't used
-				 * under Unix or Windows, but it's needed on
-				 * the Macintosh. */
-
-    /*
-     * Used by tkColor.c only:
-     */
-
-    TkStressedCmap *stressPtr;	/* First in list of colormaps that have
-				 * filled up, so we have to pick an
-				 * approximate color. */
-
-    /*
-     * Used by tkEvent.c only:
-     */
-
-    struct TkWindowEvent *delayedMotionPtr;
-				/* Points to a malloc-ed motion event
-				 * whose processing has been delayed in
-				 * the hopes that another motion event
-				 * will come along right away and we can
-				 * merge the two of them together.  NULL
-				 * means that there is no delayed motion
-				 * event. */
 
     /*
      * Miscellaneous information:
@@ -375,6 +527,9 @@ typedef struct TkErrorHandler {
 				 * list. */
 } TkErrorHandler;
 
+
+
+
 /*
  * One of the following structures exists for each event handler
  * created by calling Tk_CreateEventHandler.  This information
@@ -417,10 +572,10 @@ typedef struct TkMainInfo {
 				/* Used in conjunction with "bind" command
 				 * to bind events to Tcl commands. */
     TkBindInfo bindInfo;	/* Information used by tkBind.c on a per
-				 * interpreter basis. */
+				 * application basis. */
     struct TkFontInfo *fontInfoPtr;
-				/* Hold named font tables.  Used only by
-				 * tkFont.c. */
+				/* Information used by tkFont.c on a per
+				 * application basis. */
 
     /*
      * Information used only by tkFocus.c and tk*Embed.c:
@@ -711,67 +866,82 @@ extern int			tkSendSerial;
 # define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
-int	TkConsoleInit _ANSI_ARGS_((Tcl_Interp *interp));
-void	TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
-			    int devId, char *buffer, long size));
-
 /*
- * For backwards compatibility, need the tkIntPlatDecls.h here for
- * windows & mac X wrappers.
+ * Internal procedures shared among Tk modules but not exported
+ * to the outside world:
  */
 
+EXTERN int		Tk_AfterCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_BellObjCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_BindCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_BindtagsCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_ButtonCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_ButtonObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_CanvasCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_CheckbuttonCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_CheckbuttonObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_ClipboardCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int              Tk_ChooseColorCmd _ANSI_ARGS_((ClientData clientData,
-                            Tcl_Interp *interp, int argc, char **argv));
+EXTERN int              Tk_ChooseColorObjCmd _ANSI_ARGS_((
+			    ClientData clientData, Tcl_Interp *interp,
+			    int objc, Tcl_Obj *CONST objv[]));
+EXTERN int              Tk_ChooseDirectoryObjCmd _ANSI_ARGS_((
+			    ClientData clientData, Tcl_Interp *interp,
+			    int objc, Tcl_Obj *CONST objv[]));
+EXTERN int              Tk_ChooseFontObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_DestroyCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_EntryCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_EventCmd _ANSI_ARGS_((ClientData clientData,
+EXTERN int		Tk_EntryObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+                            Tcl_Obj *CONST objv[]));
+EXTERN int		Tk_EventObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
+EXTERN int		Tk_FileeventCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_FrameCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_FocusCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_FontObjCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+EXTERN int		Tk_FocusObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));
-EXTERN int              Tk_GetOpenFileCmd _ANSI_ARGS_((ClientData clientData,
-                            Tcl_Interp *interp, int argc, char **argv));
-EXTERN int              Tk_GetSaveFileCmd _ANSI_ARGS_((ClientData clientData,
-                            Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_FontObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+			    Tcl_Obj *CONST objv[]));
+EXTERN int              Tk_GetOpenFileObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+			    Tcl_Obj *CONST objv[]));
+EXTERN int              Tk_GetSaveFileObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_GrabCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_GridCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_ImageCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_LabelCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_LabelObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_ListboxCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_LowerCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_MenuCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_MenubuttonCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int              Tk_MessageBoxCmd _ANSI_ARGS_((ClientData clientData,
-                            Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_MenubuttonObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+			    Tcl_Obj *CONST objv[]));
+EXTERN int              Tk_MessageBoxObjCmd _ANSI_ARGS_((ClientData clientData,
+                            Tcl_Interp *interp, int objc, 
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_MessageCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_OptionCmd _ANSI_ARGS_((ClientData clientData,
@@ -780,18 +950,23 @@ EXTERN int		Tk_PackCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_PlaceCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_RadiobuttonCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_RadiobuttonObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_RaiseCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_ScaleCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_ScaleObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+                            Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_ScrollbarCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_SelectionCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_SendCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_SendObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_TextCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_TkObjCmd _ANSI_ARGS_((ClientData clientData,
@@ -801,17 +976,26 @@ EXTERN int		Tk_TkwaitCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_ToplevelCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_UpdateCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_UpdateObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_WinfoObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_WmCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int TkDeadAppCmd _ANSI_ARGS_((ClientData clientData,
-	Tcl_Interp *interp, int argc, char **argv));
-EXTERN int TkpTestembedCmd _ANSI_ARGS_((ClientData clientData,
-	Tcl_Interp *interp, int argc, char **argv));
+int	TkConsoleInit _ANSI_ARGS_((Tcl_Interp *interp));
+void	TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
+			    int devId, char *buffer, long size));
+
+EXTERN void		TkEventInit _ANSI_ARGS_((void));
+
+EXTERN int		TkCreateMenuCmd _ANSI_ARGS_((Tcl_Interp *interp));
+EXTERN int		TkDeadAppCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int argc, char **argv));
+
+EXTERN int		TkpTestembedCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int argc, char **argv));
 
 /* 
  * Unsupported commands.

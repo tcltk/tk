@@ -9,11 +9,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin3d.c,v 1.2 1998/09/14 18:23:59 stanton Exp $
+ * RCS: @(#) $Id: tkWin3d.c,v 1.3 1999/04/16 01:51:49 stanton Exp $
  */
 
-#include <tk3d.h>
-#include <tkWinInt.h>
+#include "tkWinInt.h"
+#include "tk3d.h"
 
 /*
  * This structure is used to keep track of the extra colors used by

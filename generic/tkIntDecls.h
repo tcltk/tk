@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.2 1999/03/10 07:04:40 stanton Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.3 1999/04/16 01:51:16 stanton Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -127,7 +127,7 @@ EXTERN void		TkFontPkgFree _ANSI_ARGS_((TkMainInfo * mainPtr));
 /* 28 */
 EXTERN void		TkFreeBindingTags _ANSI_ARGS_((TkWindow * winPtr));
 /* 29 */
-EXTERN void		TkFreeCursor _ANSI_ARGS_((TkCursor * cursorPtr));
+EXTERN void		TkpFreeCursor _ANSI_ARGS_((TkCursor * cursorPtr));
 /* 30 */
 EXTERN char *		TkGetBitmapData _ANSI_ARGS_((Tcl_Interp * interp, 
 				char * string, char * fileName, 
@@ -181,11 +181,11 @@ EXTERN void		TkInstallFrameMenu _ANSI_ARGS_((Tk_Window tkwin));
 /* 46 */
 EXTERN char *		TkKeysymToString _ANSI_ARGS_((KeySym keysym));
 /* 47 */
-EXTERN int		TkLineToArea _ANSI_ARGS_((TkDouble2 end1Ptr, 
-				TkDouble2 end2Ptr, TkDouble4 rectPtr));
+EXTERN int		TkLineToArea _ANSI_ARGS_((double end1Ptr[], 
+				double end2Ptr[], double rectPtr[]));
 /* 48 */
 EXTERN double		TkLineToPoint _ANSI_ARGS_((double end1Ptr[], 
-				TkDouble2 end2Ptr, TkDouble2 pointPtr));
+				double end2Ptr[], double pointPtr[]));
 /* 49 */
 EXTERN int		TkMakeBezierCurve _ANSI_ARGS_((Tk_Canvas canvas, 
 				double * pointPtr, int numPoints, 
@@ -203,8 +203,8 @@ EXTERN void		TkOptionDeadWindow _ANSI_ARGS_((TkWindow * winPtr));
 EXTERN int		TkOvalToArea _ANSI_ARGS_((double * ovalPtr, 
 				double * rectPtr));
 /* 54 */
-EXTERN double		TkOvalToPoint _ANSI_ARGS_((TkDouble4 ovalPtr, 
-				double width, int filled, TkDouble2 pointPtr));
+EXTERN double		TkOvalToPoint _ANSI_ARGS_((double ovalPtr[], 
+				double width, int filled, double pointPtr[]));
 /* 55 */
 EXTERN int		TkpChangeFocus _ANSI_ARGS_((TkWindow * winPtr, 
 				int force));
@@ -327,6 +327,49 @@ EXTERN void		TkWmRestackToplevel _ANSI_ARGS_((TkWindow * winPtr,
 EXTERN void		TkWmSetClass _ANSI_ARGS_((TkWindow * winPtr));
 /* 97 */
 EXTERN void		TkWmUnmapWindow _ANSI_ARGS_((TkWindow * winPtr));
+/* 98 */
+EXTERN Tcl_Obj *	TkDebugBitmap _ANSI_ARGS_((Tk_Window tkwin, 
+				char * name));
+/* 99 */
+EXTERN Tcl_Obj *	TkDebugBorder _ANSI_ARGS_((Tk_Window tkwin, 
+				char * name));
+/* 100 */
+EXTERN Tcl_Obj *	TkDebugCursor _ANSI_ARGS_((Tk_Window tkwin, 
+				char * name));
+/* 101 */
+EXTERN Tcl_Obj *	TkDebugColor _ANSI_ARGS_((Tk_Window tkwin, 
+				char * name));
+/* 102 */
+EXTERN Tcl_Obj *	TkDebugConfig _ANSI_ARGS_((Tcl_Interp * interp, 
+				Tk_OptionTable table));
+/* 103 */
+EXTERN Tcl_Obj *	TkDebugFont _ANSI_ARGS_((Tk_Window tkwin, 
+				char * name));
+/* 104 */
+EXTERN int		TkFindStateNumObj _ANSI_ARGS_((Tcl_Interp * interp, 
+				Tcl_Obj * optionPtr, 
+				CONST TkStateMap * mapPtr, Tcl_Obj * keyPtr));
+/* 105 */
+EXTERN Tcl_HashTable *	TkGetBitmapPredefTable _ANSI_ARGS_((void));
+/* 106 */
+EXTERN TkDisplay *	TkGetDisplayList _ANSI_ARGS_((void));
+/* 107 */
+EXTERN TkMainInfo *	TkGetMainInfoList _ANSI_ARGS_((void));
+/* 108 */
+EXTERN int		TkGetWindowFromObj _ANSI_ARGS_((Tcl_Interp * interp, 
+				Tk_Window tkwin, Tcl_Obj * objPtr, 
+				Tk_Window * windowPtr));
+/* 109 */
+EXTERN char *		TkpGetString _ANSI_ARGS_((TkWindow * winPtr, 
+				XEvent * eventPtr, Tcl_DString * dsPtr));
+/* 110 */
+EXTERN void		TkpGetSubFonts _ANSI_ARGS_((Tcl_Interp * interp, 
+				Tk_Font tkfont));
+/* 111 */
+EXTERN Tcl_Obj *	TkpGetSystemDefault _ANSI_ARGS_((Tk_Window tkwin, 
+				char * dbName, char * className));
+/* 112 */
+EXTERN void		TkpMenuThreadInit _ANSI_ARGS_((void));
 
 typedef struct TkIntStubs {
     int magic;
@@ -361,7 +404,7 @@ typedef struct TkIntStubs {
     void (*tkFontPkgInit) _ANSI_ARGS_((TkMainInfo * mainPtr)); /* 26 */
     void (*tkFontPkgFree) _ANSI_ARGS_((TkMainInfo * mainPtr)); /* 27 */
     void (*tkFreeBindingTags) _ANSI_ARGS_((TkWindow * winPtr)); /* 28 */
-    void (*tkFreeCursor) _ANSI_ARGS_((TkCursor * cursorPtr)); /* 29 */
+    void (*tkpFreeCursor) _ANSI_ARGS_((TkCursor * cursorPtr)); /* 29 */
     char * (*tkGetBitmapData) _ANSI_ARGS_((Tcl_Interp * interp, char * string, char * fileName, int * widthPtr, int * heightPtr, int * hotXPtr, int * hotYPtr)); /* 30 */
     void (*tkGetButtPoints) _ANSI_ARGS_((double p1[], double p2[], double width, int project, double m1[], double m2[])); /* 31 */
     TkCursor * (*tkGetCursorByName) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Window tkwin, Tk_Uid string)); /* 32 */
@@ -379,14 +422,14 @@ typedef struct TkIntStubs {
     void (*tkInOutEvents) _ANSI_ARGS_((XEvent * eventPtr, TkWindow * sourcePtr, TkWindow * destPtr, int leaveType, int enterType, Tcl_QueuePosition position)); /* 44 */
     void (*tkInstallFrameMenu) _ANSI_ARGS_((Tk_Window tkwin)); /* 45 */
     char * (*tkKeysymToString) _ANSI_ARGS_((KeySym keysym)); /* 46 */
-    int (*tkLineToArea) _ANSI_ARGS_((TkDouble2 end1Ptr, TkDouble2 end2Ptr, TkDouble4 rectPtr)); /* 47 */
-    double (*tkLineToPoint) _ANSI_ARGS_((double end1Ptr[], TkDouble2 end2Ptr, TkDouble2 pointPtr)); /* 48 */
+    int (*tkLineToArea) _ANSI_ARGS_((double end1Ptr[], double end2Ptr[], double rectPtr[])); /* 47 */
+    double (*tkLineToPoint) _ANSI_ARGS_((double end1Ptr[], double end2Ptr[], double pointPtr[])); /* 48 */
     int (*tkMakeBezierCurve) _ANSI_ARGS_((Tk_Canvas canvas, double * pointPtr, int numPoints, int numSteps, XPoint xPoints[], double dblPoints[])); /* 49 */
     void (*tkMakeBezierPostscript) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Canvas canvas, double * pointPtr, int numPoints)); /* 50 */
     void (*tkOptionClassChanged) _ANSI_ARGS_((TkWindow * winPtr)); /* 51 */
     void (*tkOptionDeadWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 52 */
     int (*tkOvalToArea) _ANSI_ARGS_((double * ovalPtr, double * rectPtr)); /* 53 */
-    double (*tkOvalToPoint) _ANSI_ARGS_((TkDouble4 ovalPtr, double width, int filled, TkDouble2 pointPtr)); /* 54 */
+    double (*tkOvalToPoint) _ANSI_ARGS_((double ovalPtr[], double width, int filled, double pointPtr[])); /* 54 */
     int (*tkpChangeFocus) _ANSI_ARGS_((TkWindow * winPtr, int force)); /* 55 */
     void (*tkpCloseDisplay) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 56 */
     void (*tkpClaimFocus) _ANSI_ARGS_((TkWindow * topLevelPtr, int force)); /* 57 */
@@ -430,6 +473,21 @@ typedef struct TkIntStubs {
     void (*tkWmRestackToplevel) _ANSI_ARGS_((TkWindow * winPtr, int aboveBelow, TkWindow * otherPtr)); /* 95 */
     void (*tkWmSetClass) _ANSI_ARGS_((TkWindow * winPtr)); /* 96 */
     void (*tkWmUnmapWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 97 */
+    Tcl_Obj * (*tkDebugBitmap) _ANSI_ARGS_((Tk_Window tkwin, char * name)); /* 98 */
+    Tcl_Obj * (*tkDebugBorder) _ANSI_ARGS_((Tk_Window tkwin, char * name)); /* 99 */
+    Tcl_Obj * (*tkDebugCursor) _ANSI_ARGS_((Tk_Window tkwin, char * name)); /* 100 */
+    Tcl_Obj * (*tkDebugColor) _ANSI_ARGS_((Tk_Window tkwin, char * name)); /* 101 */
+    Tcl_Obj * (*tkDebugConfig) _ANSI_ARGS_((Tcl_Interp * interp, Tk_OptionTable table)); /* 102 */
+    Tcl_Obj * (*tkDebugFont) _ANSI_ARGS_((Tk_Window tkwin, char * name)); /* 103 */
+    int (*tkFindStateNumObj) _ANSI_ARGS_((Tcl_Interp * interp, Tcl_Obj * optionPtr, CONST TkStateMap * mapPtr, Tcl_Obj * keyPtr)); /* 104 */
+    Tcl_HashTable * (*tkGetBitmapPredefTable) _ANSI_ARGS_((void)); /* 105 */
+    TkDisplay * (*tkGetDisplayList) _ANSI_ARGS_((void)); /* 106 */
+    TkMainInfo * (*tkGetMainInfoList) _ANSI_ARGS_((void)); /* 107 */
+    int (*tkGetWindowFromObj) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Window tkwin, Tcl_Obj * objPtr, Tk_Window * windowPtr)); /* 108 */
+    char * (*tkpGetString) _ANSI_ARGS_((TkWindow * winPtr, XEvent * eventPtr, Tcl_DString * dsPtr)); /* 109 */
+    void (*tkpGetSubFonts) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Font tkfont)); /* 110 */
+    Tcl_Obj * (*tkpGetSystemDefault) _ANSI_ARGS_((Tk_Window tkwin, char * dbName, char * className)); /* 111 */
+    void (*tkpMenuThreadInit) _ANSI_ARGS_((void)); /* 112 */
 } TkIntStubs;
 
 extern TkIntStubs *tkIntStubsPtr;
@@ -441,396 +499,456 @@ extern TkIntStubs *tkIntStubsPtr;
  */
 
 #ifndef TkAllocWindow
-#define TkAllocWindow(dispPtr, screenNum, parentPtr) \
-	(tkIntStubsPtr->tkAllocWindow)(dispPtr, screenNum, parentPtr) /* 0 */
+#define TkAllocWindow \
+	(tkIntStubsPtr->tkAllocWindow) /* 0 */
 #endif
 #ifndef TkBezierPoints
-#define TkBezierPoints(control, numSteps, coordPtr) \
-	(tkIntStubsPtr->tkBezierPoints)(control, numSteps, coordPtr) /* 1 */
+#define TkBezierPoints \
+	(tkIntStubsPtr->tkBezierPoints) /* 1 */
 #endif
 #ifndef TkBezierScreenPoints
-#define TkBezierScreenPoints(canvas, control, numSteps, xPointPtr) \
-	(tkIntStubsPtr->tkBezierScreenPoints)(canvas, control, numSteps, xPointPtr) /* 2 */
+#define TkBezierScreenPoints \
+	(tkIntStubsPtr->tkBezierScreenPoints) /* 2 */
 #endif
 #ifndef TkBindDeadWindow
-#define TkBindDeadWindow(winPtr) \
-	(tkIntStubsPtr->tkBindDeadWindow)(winPtr) /* 3 */
+#define TkBindDeadWindow \
+	(tkIntStubsPtr->tkBindDeadWindow) /* 3 */
 #endif
 #ifndef TkBindEventProc
-#define TkBindEventProc(winPtr, eventPtr) \
-	(tkIntStubsPtr->tkBindEventProc)(winPtr, eventPtr) /* 4 */
+#define TkBindEventProc \
+	(tkIntStubsPtr->tkBindEventProc) /* 4 */
 #endif
 #ifndef TkBindFree
-#define TkBindFree(mainPtr) \
-	(tkIntStubsPtr->tkBindFree)(mainPtr) /* 5 */
+#define TkBindFree \
+	(tkIntStubsPtr->tkBindFree) /* 5 */
 #endif
 #ifndef TkBindInit
-#define TkBindInit(mainPtr) \
-	(tkIntStubsPtr->tkBindInit)(mainPtr) /* 6 */
+#define TkBindInit \
+	(tkIntStubsPtr->tkBindInit) /* 6 */
 #endif
 #ifndef TkChangeEventWindow
-#define TkChangeEventWindow(eventPtr, winPtr) \
-	(tkIntStubsPtr->tkChangeEventWindow)(eventPtr, winPtr) /* 7 */
+#define TkChangeEventWindow \
+	(tkIntStubsPtr->tkChangeEventWindow) /* 7 */
 #endif
 #ifndef TkClipInit
-#define TkClipInit(interp, dispPtr) \
-	(tkIntStubsPtr->tkClipInit)(interp, dispPtr) /* 8 */
+#define TkClipInit \
+	(tkIntStubsPtr->tkClipInit) /* 8 */
 #endif
 #ifndef TkComputeAnchor
-#define TkComputeAnchor(anchor, tkwin, padX, padY, innerWidth, innerHeight, xPtr, yPtr) \
-	(tkIntStubsPtr->tkComputeAnchor)(anchor, tkwin, padX, padY, innerWidth, innerHeight, xPtr, yPtr) /* 9 */
+#define TkComputeAnchor \
+	(tkIntStubsPtr->tkComputeAnchor) /* 9 */
 #endif
 #ifndef TkCopyAndGlobalEval
-#define TkCopyAndGlobalEval(interp, script) \
-	(tkIntStubsPtr->tkCopyAndGlobalEval)(interp, script) /* 10 */
+#define TkCopyAndGlobalEval \
+	(tkIntStubsPtr->tkCopyAndGlobalEval) /* 10 */
 #endif
 #ifndef TkCreateBindingProcedure
-#define TkCreateBindingProcedure(interp, bindingTable, object, eventString, evalProc, freeProc, clientData) \
-	(tkIntStubsPtr->tkCreateBindingProcedure)(interp, bindingTable, object, eventString, evalProc, freeProc, clientData) /* 11 */
+#define TkCreateBindingProcedure \
+	(tkIntStubsPtr->tkCreateBindingProcedure) /* 11 */
 #endif
 #ifndef TkCreateCursorFromData
-#define TkCreateCursorFromData(tkwin, source, mask, width, height, xHot, yHot, fg, bg) \
-	(tkIntStubsPtr->tkCreateCursorFromData)(tkwin, source, mask, width, height, xHot, yHot, fg, bg) /* 12 */
+#define TkCreateCursorFromData \
+	(tkIntStubsPtr->tkCreateCursorFromData) /* 12 */
 #endif
 #ifndef TkCreateFrame
-#define TkCreateFrame(clientData, interp, argc, argv, toplevel, appName) \
-	(tkIntStubsPtr->tkCreateFrame)(clientData, interp, argc, argv, toplevel, appName) /* 13 */
+#define TkCreateFrame \
+	(tkIntStubsPtr->tkCreateFrame) /* 13 */
 #endif
 #ifndef TkCreateMainWindow
-#define TkCreateMainWindow(interp, screenName, baseName) \
-	(tkIntStubsPtr->tkCreateMainWindow)(interp, screenName, baseName) /* 14 */
+#define TkCreateMainWindow \
+	(tkIntStubsPtr->tkCreateMainWindow) /* 14 */
 #endif
 #ifndef TkCurrentTime
-#define TkCurrentTime(dispPtr) \
-	(tkIntStubsPtr->tkCurrentTime)(dispPtr) /* 15 */
+#define TkCurrentTime \
+	(tkIntStubsPtr->tkCurrentTime) /* 15 */
 #endif
 #ifndef TkDeleteAllImages
-#define TkDeleteAllImages(mainPtr) \
-	(tkIntStubsPtr->tkDeleteAllImages)(mainPtr) /* 16 */
+#define TkDeleteAllImages \
+	(tkIntStubsPtr->tkDeleteAllImages) /* 16 */
 #endif
 #ifndef TkDoConfigureNotify
-#define TkDoConfigureNotify(winPtr) \
-	(tkIntStubsPtr->tkDoConfigureNotify)(winPtr) /* 17 */
+#define TkDoConfigureNotify \
+	(tkIntStubsPtr->tkDoConfigureNotify) /* 17 */
 #endif
 #ifndef TkDrawInsetFocusHighlight
-#define TkDrawInsetFocusHighlight(tkwin, gc, width, drawable, padding) \
-	(tkIntStubsPtr->tkDrawInsetFocusHighlight)(tkwin, gc, width, drawable, padding) /* 18 */
+#define TkDrawInsetFocusHighlight \
+	(tkIntStubsPtr->tkDrawInsetFocusHighlight) /* 18 */
 #endif
 #ifndef TkEventDeadWindow
-#define TkEventDeadWindow(winPtr) \
-	(tkIntStubsPtr->tkEventDeadWindow)(winPtr) /* 19 */
+#define TkEventDeadWindow \
+	(tkIntStubsPtr->tkEventDeadWindow) /* 19 */
 #endif
 #ifndef TkFillPolygon
-#define TkFillPolygon(canvas, coordPtr, numPoints, display, drawable, gc, outlineGC) \
-	(tkIntStubsPtr->tkFillPolygon)(canvas, coordPtr, numPoints, display, drawable, gc, outlineGC) /* 20 */
+#define TkFillPolygon \
+	(tkIntStubsPtr->tkFillPolygon) /* 20 */
 #endif
 #ifndef TkFindStateNum
-#define TkFindStateNum(interp, option, mapPtr, strKey) \
-	(tkIntStubsPtr->tkFindStateNum)(interp, option, mapPtr, strKey) /* 21 */
+#define TkFindStateNum \
+	(tkIntStubsPtr->tkFindStateNum) /* 21 */
 #endif
 #ifndef TkFindStateString
-#define TkFindStateString(mapPtr, numKey) \
-	(tkIntStubsPtr->tkFindStateString)(mapPtr, numKey) /* 22 */
+#define TkFindStateString \
+	(tkIntStubsPtr->tkFindStateString) /* 22 */
 #endif
 #ifndef TkFocusDeadWindow
-#define TkFocusDeadWindow(winPtr) \
-	(tkIntStubsPtr->tkFocusDeadWindow)(winPtr) /* 23 */
+#define TkFocusDeadWindow \
+	(tkIntStubsPtr->tkFocusDeadWindow) /* 23 */
 #endif
 #ifndef TkFocusFilterEvent
-#define TkFocusFilterEvent(winPtr, eventPtr) \
-	(tkIntStubsPtr->tkFocusFilterEvent)(winPtr, eventPtr) /* 24 */
+#define TkFocusFilterEvent \
+	(tkIntStubsPtr->tkFocusFilterEvent) /* 24 */
 #endif
 #ifndef TkFocusKeyEvent
-#define TkFocusKeyEvent(winPtr, eventPtr) \
-	(tkIntStubsPtr->tkFocusKeyEvent)(winPtr, eventPtr) /* 25 */
+#define TkFocusKeyEvent \
+	(tkIntStubsPtr->tkFocusKeyEvent) /* 25 */
 #endif
 #ifndef TkFontPkgInit
-#define TkFontPkgInit(mainPtr) \
-	(tkIntStubsPtr->tkFontPkgInit)(mainPtr) /* 26 */
+#define TkFontPkgInit \
+	(tkIntStubsPtr->tkFontPkgInit) /* 26 */
 #endif
 #ifndef TkFontPkgFree
-#define TkFontPkgFree(mainPtr) \
-	(tkIntStubsPtr->tkFontPkgFree)(mainPtr) /* 27 */
+#define TkFontPkgFree \
+	(tkIntStubsPtr->tkFontPkgFree) /* 27 */
 #endif
 #ifndef TkFreeBindingTags
-#define TkFreeBindingTags(winPtr) \
-	(tkIntStubsPtr->tkFreeBindingTags)(winPtr) /* 28 */
+#define TkFreeBindingTags \
+	(tkIntStubsPtr->tkFreeBindingTags) /* 28 */
 #endif
-#ifndef TkFreeCursor
-#define TkFreeCursor(cursorPtr) \
-	(tkIntStubsPtr->tkFreeCursor)(cursorPtr) /* 29 */
+#ifndef TkpFreeCursor
+#define TkpFreeCursor \
+	(tkIntStubsPtr->tkpFreeCursor) /* 29 */
 #endif
 #ifndef TkGetBitmapData
-#define TkGetBitmapData(interp, string, fileName, widthPtr, heightPtr, hotXPtr, hotYPtr) \
-	(tkIntStubsPtr->tkGetBitmapData)(interp, string, fileName, widthPtr, heightPtr, hotXPtr, hotYPtr) /* 30 */
+#define TkGetBitmapData \
+	(tkIntStubsPtr->tkGetBitmapData) /* 30 */
 #endif
 #ifndef TkGetButtPoints
-#define TkGetButtPoints(p1, p2, width, project, m1, m2) \
-	(tkIntStubsPtr->tkGetButtPoints)(p1, p2, width, project, m1, m2) /* 31 */
+#define TkGetButtPoints \
+	(tkIntStubsPtr->tkGetButtPoints) /* 31 */
 #endif
 #ifndef TkGetCursorByName
-#define TkGetCursorByName(interp, tkwin, string) \
-	(tkIntStubsPtr->tkGetCursorByName)(interp, tkwin, string) /* 32 */
+#define TkGetCursorByName \
+	(tkIntStubsPtr->tkGetCursorByName) /* 32 */
 #endif
 #ifndef TkGetDefaultScreenName
-#define TkGetDefaultScreenName(interp, screenName) \
-	(tkIntStubsPtr->tkGetDefaultScreenName)(interp, screenName) /* 33 */
+#define TkGetDefaultScreenName \
+	(tkIntStubsPtr->tkGetDefaultScreenName) /* 33 */
 #endif
 #ifndef TkGetDisplay
-#define TkGetDisplay(display) \
-	(tkIntStubsPtr->tkGetDisplay)(display) /* 34 */
+#define TkGetDisplay \
+	(tkIntStubsPtr->tkGetDisplay) /* 34 */
 #endif
 #ifndef TkGetDisplayOf
-#define TkGetDisplayOf(interp, objc, objv, tkwinPtr) \
-	(tkIntStubsPtr->tkGetDisplayOf)(interp, objc, objv, tkwinPtr) /* 35 */
+#define TkGetDisplayOf \
+	(tkIntStubsPtr->tkGetDisplayOf) /* 35 */
 #endif
 #ifndef TkGetFocusWin
-#define TkGetFocusWin(winPtr) \
-	(tkIntStubsPtr->tkGetFocusWin)(winPtr) /* 36 */
+#define TkGetFocusWin \
+	(tkIntStubsPtr->tkGetFocusWin) /* 36 */
 #endif
 #ifndef TkGetInterpNames
-#define TkGetInterpNames(interp, tkwin) \
-	(tkIntStubsPtr->tkGetInterpNames)(interp, tkwin) /* 37 */
+#define TkGetInterpNames \
+	(tkIntStubsPtr->tkGetInterpNames) /* 37 */
 #endif
 #ifndef TkGetMiterPoints
-#define TkGetMiterPoints(p1, p2, p3, width, m1, m2) \
-	(tkIntStubsPtr->tkGetMiterPoints)(p1, p2, p3, width, m1, m2) /* 38 */
+#define TkGetMiterPoints \
+	(tkIntStubsPtr->tkGetMiterPoints) /* 38 */
 #endif
 #ifndef TkGetPointerCoords
-#define TkGetPointerCoords(tkwin, xPtr, yPtr) \
-	(tkIntStubsPtr->tkGetPointerCoords)(tkwin, xPtr, yPtr) /* 39 */
+#define TkGetPointerCoords \
+	(tkIntStubsPtr->tkGetPointerCoords) /* 39 */
 #endif
 #ifndef TkGetServerInfo
-#define TkGetServerInfo(interp, tkwin) \
-	(tkIntStubsPtr->tkGetServerInfo)(interp, tkwin) /* 40 */
+#define TkGetServerInfo \
+	(tkIntStubsPtr->tkGetServerInfo) /* 40 */
 #endif
 #ifndef TkGrabDeadWindow
-#define TkGrabDeadWindow(winPtr) \
-	(tkIntStubsPtr->tkGrabDeadWindow)(winPtr) /* 41 */
+#define TkGrabDeadWindow \
+	(tkIntStubsPtr->tkGrabDeadWindow) /* 41 */
 #endif
 #ifndef TkGrabState
-#define TkGrabState(winPtr) \
-	(tkIntStubsPtr->tkGrabState)(winPtr) /* 42 */
+#define TkGrabState \
+	(tkIntStubsPtr->tkGrabState) /* 42 */
 #endif
 #ifndef TkIncludePoint
-#define TkIncludePoint(itemPtr, pointPtr) \
-	(tkIntStubsPtr->tkIncludePoint)(itemPtr, pointPtr) /* 43 */
+#define TkIncludePoint \
+	(tkIntStubsPtr->tkIncludePoint) /* 43 */
 #endif
 #ifndef TkInOutEvents
-#define TkInOutEvents(eventPtr, sourcePtr, destPtr, leaveType, enterType, position) \
-	(tkIntStubsPtr->tkInOutEvents)(eventPtr, sourcePtr, destPtr, leaveType, enterType, position) /* 44 */
+#define TkInOutEvents \
+	(tkIntStubsPtr->tkInOutEvents) /* 44 */
 #endif
 #ifndef TkInstallFrameMenu
-#define TkInstallFrameMenu(tkwin) \
-	(tkIntStubsPtr->tkInstallFrameMenu)(tkwin) /* 45 */
+#define TkInstallFrameMenu \
+	(tkIntStubsPtr->tkInstallFrameMenu) /* 45 */
 #endif
 #ifndef TkKeysymToString
-#define TkKeysymToString(keysym) \
-	(tkIntStubsPtr->tkKeysymToString)(keysym) /* 46 */
+#define TkKeysymToString \
+	(tkIntStubsPtr->tkKeysymToString) /* 46 */
 #endif
 #ifndef TkLineToArea
-#define TkLineToArea(end1Ptr, end2Ptr, rectPtr) \
-	(tkIntStubsPtr->tkLineToArea)(end1Ptr, end2Ptr, rectPtr) /* 47 */
+#define TkLineToArea \
+	(tkIntStubsPtr->tkLineToArea) /* 47 */
 #endif
 #ifndef TkLineToPoint
-#define TkLineToPoint(end1Ptr, end2Ptr, pointPtr) \
-	(tkIntStubsPtr->tkLineToPoint)(end1Ptr, end2Ptr, pointPtr) /* 48 */
+#define TkLineToPoint \
+	(tkIntStubsPtr->tkLineToPoint) /* 48 */
 #endif
 #ifndef TkMakeBezierCurve
-#define TkMakeBezierCurve(canvas, pointPtr, numPoints, numSteps, xPoints, dblPoints) \
-	(tkIntStubsPtr->tkMakeBezierCurve)(canvas, pointPtr, numPoints, numSteps, xPoints, dblPoints) /* 49 */
+#define TkMakeBezierCurve \
+	(tkIntStubsPtr->tkMakeBezierCurve) /* 49 */
 #endif
 #ifndef TkMakeBezierPostscript
-#define TkMakeBezierPostscript(interp, canvas, pointPtr, numPoints) \
-	(tkIntStubsPtr->tkMakeBezierPostscript)(interp, canvas, pointPtr, numPoints) /* 50 */
+#define TkMakeBezierPostscript \
+	(tkIntStubsPtr->tkMakeBezierPostscript) /* 50 */
 #endif
 #ifndef TkOptionClassChanged
-#define TkOptionClassChanged(winPtr) \
-	(tkIntStubsPtr->tkOptionClassChanged)(winPtr) /* 51 */
+#define TkOptionClassChanged \
+	(tkIntStubsPtr->tkOptionClassChanged) /* 51 */
 #endif
 #ifndef TkOptionDeadWindow
-#define TkOptionDeadWindow(winPtr) \
-	(tkIntStubsPtr->tkOptionDeadWindow)(winPtr) /* 52 */
+#define TkOptionDeadWindow \
+	(tkIntStubsPtr->tkOptionDeadWindow) /* 52 */
 #endif
 #ifndef TkOvalToArea
-#define TkOvalToArea(ovalPtr, rectPtr) \
-	(tkIntStubsPtr->tkOvalToArea)(ovalPtr, rectPtr) /* 53 */
+#define TkOvalToArea \
+	(tkIntStubsPtr->tkOvalToArea) /* 53 */
 #endif
 #ifndef TkOvalToPoint
-#define TkOvalToPoint(ovalPtr, width, filled, pointPtr) \
-	(tkIntStubsPtr->tkOvalToPoint)(ovalPtr, width, filled, pointPtr) /* 54 */
+#define TkOvalToPoint \
+	(tkIntStubsPtr->tkOvalToPoint) /* 54 */
 #endif
 #ifndef TkpChangeFocus
-#define TkpChangeFocus(winPtr, force) \
-	(tkIntStubsPtr->tkpChangeFocus)(winPtr, force) /* 55 */
+#define TkpChangeFocus \
+	(tkIntStubsPtr->tkpChangeFocus) /* 55 */
 #endif
 #ifndef TkpCloseDisplay
-#define TkpCloseDisplay(dispPtr) \
-	(tkIntStubsPtr->tkpCloseDisplay)(dispPtr) /* 56 */
+#define TkpCloseDisplay \
+	(tkIntStubsPtr->tkpCloseDisplay) /* 56 */
 #endif
 #ifndef TkpClaimFocus
-#define TkpClaimFocus(topLevelPtr, force) \
-	(tkIntStubsPtr->tkpClaimFocus)(topLevelPtr, force) /* 57 */
+#define TkpClaimFocus \
+	(tkIntStubsPtr->tkpClaimFocus) /* 57 */
 #endif
 #ifndef TkpDisplayWarning
-#define TkpDisplayWarning(msg, title) \
-	(tkIntStubsPtr->tkpDisplayWarning)(msg, title) /* 58 */
+#define TkpDisplayWarning \
+	(tkIntStubsPtr->tkpDisplayWarning) /* 58 */
 #endif
 #ifndef TkpGetAppName
-#define TkpGetAppName(interp, name) \
-	(tkIntStubsPtr->tkpGetAppName)(interp, name) /* 59 */
+#define TkpGetAppName \
+	(tkIntStubsPtr->tkpGetAppName) /* 59 */
 #endif
 #ifndef TkpGetOtherWindow
-#define TkpGetOtherWindow(winPtr) \
-	(tkIntStubsPtr->tkpGetOtherWindow)(winPtr) /* 60 */
+#define TkpGetOtherWindow \
+	(tkIntStubsPtr->tkpGetOtherWindow) /* 60 */
 #endif
 #ifndef TkpGetWrapperWindow
-#define TkpGetWrapperWindow(winPtr) \
-	(tkIntStubsPtr->tkpGetWrapperWindow)(winPtr) /* 61 */
+#define TkpGetWrapperWindow \
+	(tkIntStubsPtr->tkpGetWrapperWindow) /* 61 */
 #endif
 #ifndef TkpInit
-#define TkpInit(interp) \
-	(tkIntStubsPtr->tkpInit)(interp) /* 62 */
+#define TkpInit \
+	(tkIntStubsPtr->tkpInit) /* 62 */
 #endif
 #ifndef TkpInitializeMenuBindings
-#define TkpInitializeMenuBindings(interp, bindingTable) \
-	(tkIntStubsPtr->tkpInitializeMenuBindings)(interp, bindingTable) /* 63 */
+#define TkpInitializeMenuBindings \
+	(tkIntStubsPtr->tkpInitializeMenuBindings) /* 63 */
 #endif
 #ifndef TkpMakeContainer
-#define TkpMakeContainer(tkwin) \
-	(tkIntStubsPtr->tkpMakeContainer)(tkwin) /* 64 */
+#define TkpMakeContainer \
+	(tkIntStubsPtr->tkpMakeContainer) /* 64 */
 #endif
 #ifndef TkpMakeMenuWindow
-#define TkpMakeMenuWindow(tkwin, transient) \
-	(tkIntStubsPtr->tkpMakeMenuWindow)(tkwin, transient) /* 65 */
+#define TkpMakeMenuWindow \
+	(tkIntStubsPtr->tkpMakeMenuWindow) /* 65 */
 #endif
 #ifndef TkpMakeWindow
-#define TkpMakeWindow(winPtr, parent) \
-	(tkIntStubsPtr->tkpMakeWindow)(winPtr, parent) /* 66 */
+#define TkpMakeWindow \
+	(tkIntStubsPtr->tkpMakeWindow) /* 66 */
 #endif
 #ifndef TkpMenuNotifyToplevelCreate
-#define TkpMenuNotifyToplevelCreate(interp1, menuName) \
-	(tkIntStubsPtr->tkpMenuNotifyToplevelCreate)(interp1, menuName) /* 67 */
+#define TkpMenuNotifyToplevelCreate \
+	(tkIntStubsPtr->tkpMenuNotifyToplevelCreate) /* 67 */
 #endif
 #ifndef TkpOpenDisplay
-#define TkpOpenDisplay(display_name) \
-	(tkIntStubsPtr->tkpOpenDisplay)(display_name) /* 68 */
+#define TkpOpenDisplay \
+	(tkIntStubsPtr->tkpOpenDisplay) /* 68 */
 #endif
 #ifndef TkPointerEvent
-#define TkPointerEvent(eventPtr, winPtr) \
-	(tkIntStubsPtr->tkPointerEvent)(eventPtr, winPtr) /* 69 */
+#define TkPointerEvent \
+	(tkIntStubsPtr->tkPointerEvent) /* 69 */
 #endif
 #ifndef TkPolygonToArea
-#define TkPolygonToArea(polyPtr, numPoints, rectPtr) \
-	(tkIntStubsPtr->tkPolygonToArea)(polyPtr, numPoints, rectPtr) /* 70 */
+#define TkPolygonToArea \
+	(tkIntStubsPtr->tkPolygonToArea) /* 70 */
 #endif
 #ifndef TkPolygonToPoint
-#define TkPolygonToPoint(polyPtr, numPoints, pointPtr) \
-	(tkIntStubsPtr->tkPolygonToPoint)(polyPtr, numPoints, pointPtr) /* 71 */
+#define TkPolygonToPoint \
+	(tkIntStubsPtr->tkPolygonToPoint) /* 71 */
 #endif
 #ifndef TkPositionInTree
-#define TkPositionInTree(winPtr, treePtr) \
-	(tkIntStubsPtr->tkPositionInTree)(winPtr, treePtr) /* 72 */
+#define TkPositionInTree \
+	(tkIntStubsPtr->tkPositionInTree) /* 72 */
 #endif
 #ifndef TkpRedirectKeyEvent
-#define TkpRedirectKeyEvent(winPtr, eventPtr) \
-	(tkIntStubsPtr->tkpRedirectKeyEvent)(winPtr, eventPtr) /* 73 */
+#define TkpRedirectKeyEvent \
+	(tkIntStubsPtr->tkpRedirectKeyEvent) /* 73 */
 #endif
 #ifndef TkpSetMainMenubar
-#define TkpSetMainMenubar(interp, tkwin, menuName) \
-	(tkIntStubsPtr->tkpSetMainMenubar)(interp, tkwin, menuName) /* 74 */
+#define TkpSetMainMenubar \
+	(tkIntStubsPtr->tkpSetMainMenubar) /* 74 */
 #endif
 #ifndef TkpUseWindow
-#define TkpUseWindow(interp, tkwin, string) \
-	(tkIntStubsPtr->tkpUseWindow)(interp, tkwin, string) /* 75 */
+#define TkpUseWindow \
+	(tkIntStubsPtr->tkpUseWindow) /* 75 */
 #endif
 #ifndef TkpWindowWasRecentlyDeleted
-#define TkpWindowWasRecentlyDeleted(win, dispPtr) \
-	(tkIntStubsPtr->tkpWindowWasRecentlyDeleted)(win, dispPtr) /* 76 */
+#define TkpWindowWasRecentlyDeleted \
+	(tkIntStubsPtr->tkpWindowWasRecentlyDeleted) /* 76 */
 #endif
 #ifndef TkQueueEventForAllChildren
-#define TkQueueEventForAllChildren(winPtr, eventPtr) \
-	(tkIntStubsPtr->tkQueueEventForAllChildren)(winPtr, eventPtr) /* 77 */
+#define TkQueueEventForAllChildren \
+	(tkIntStubsPtr->tkQueueEventForAllChildren) /* 77 */
 #endif
 #ifndef TkReadBitmapFile
-#define TkReadBitmapFile(display, d, filename, width_return, height_return, bitmap_return, x_hot_return, y_hot_return) \
-	(tkIntStubsPtr->tkReadBitmapFile)(display, d, filename, width_return, height_return, bitmap_return, x_hot_return, y_hot_return) /* 78 */
+#define TkReadBitmapFile \
+	(tkIntStubsPtr->tkReadBitmapFile) /* 78 */
 #endif
 #ifndef TkScrollWindow
-#define TkScrollWindow(tkwin, gc, x, y, width, height, dx, dy, damageRgn) \
-	(tkIntStubsPtr->tkScrollWindow)(tkwin, gc, x, y, width, height, dx, dy, damageRgn) /* 79 */
+#define TkScrollWindow \
+	(tkIntStubsPtr->tkScrollWindow) /* 79 */
 #endif
 #ifndef TkSelDeadWindow
-#define TkSelDeadWindow(winPtr) \
-	(tkIntStubsPtr->tkSelDeadWindow)(winPtr) /* 80 */
+#define TkSelDeadWindow \
+	(tkIntStubsPtr->tkSelDeadWindow) /* 80 */
 #endif
 #ifndef TkSelEventProc
-#define TkSelEventProc(tkwin, eventPtr) \
-	(tkIntStubsPtr->tkSelEventProc)(tkwin, eventPtr) /* 81 */
+#define TkSelEventProc \
+	(tkIntStubsPtr->tkSelEventProc) /* 81 */
 #endif
 #ifndef TkSelInit
-#define TkSelInit(tkwin) \
-	(tkIntStubsPtr->tkSelInit)(tkwin) /* 82 */
+#define TkSelInit \
+	(tkIntStubsPtr->tkSelInit) /* 82 */
 #endif
 #ifndef TkSelPropProc
-#define TkSelPropProc(eventPtr) \
-	(tkIntStubsPtr->tkSelPropProc)(eventPtr) /* 83 */
+#define TkSelPropProc \
+	(tkIntStubsPtr->tkSelPropProc) /* 83 */
 #endif
 #ifndef TkSetClassProcs
-#define TkSetClassProcs(tkwin, procs, instanceData) \
-	(tkIntStubsPtr->tkSetClassProcs)(tkwin, procs, instanceData) /* 84 */
+#define TkSetClassProcs \
+	(tkIntStubsPtr->tkSetClassProcs) /* 84 */
 #endif
 #ifndef TkSetWindowMenuBar
-#define TkSetWindowMenuBar(interp, tkwin, oldMenuName, menuName) \
-	(tkIntStubsPtr->tkSetWindowMenuBar)(interp, tkwin, oldMenuName, menuName) /* 85 */
+#define TkSetWindowMenuBar \
+	(tkIntStubsPtr->tkSetWindowMenuBar) /* 85 */
 #endif
 #ifndef TkStringToKeysym
-#define TkStringToKeysym(name) \
-	(tkIntStubsPtr->tkStringToKeysym)(name) /* 86 */
+#define TkStringToKeysym \
+	(tkIntStubsPtr->tkStringToKeysym) /* 86 */
 #endif
 #ifndef TkThickPolyLineToArea
-#define TkThickPolyLineToArea(coordPtr, numPoints, width, capStyle, joinStyle, rectPtr) \
-	(tkIntStubsPtr->tkThickPolyLineToArea)(coordPtr, numPoints, width, capStyle, joinStyle, rectPtr) /* 87 */
+#define TkThickPolyLineToArea \
+	(tkIntStubsPtr->tkThickPolyLineToArea) /* 87 */
 #endif
 #ifndef TkWmAddToColormapWindows
-#define TkWmAddToColormapWindows(winPtr) \
-	(tkIntStubsPtr->tkWmAddToColormapWindows)(winPtr) /* 88 */
+#define TkWmAddToColormapWindows \
+	(tkIntStubsPtr->tkWmAddToColormapWindows) /* 88 */
 #endif
 #ifndef TkWmDeadWindow
-#define TkWmDeadWindow(winPtr) \
-	(tkIntStubsPtr->tkWmDeadWindow)(winPtr) /* 89 */
+#define TkWmDeadWindow \
+	(tkIntStubsPtr->tkWmDeadWindow) /* 89 */
 #endif
 #ifndef TkWmFocusToplevel
-#define TkWmFocusToplevel(winPtr) \
-	(tkIntStubsPtr->tkWmFocusToplevel)(winPtr) /* 90 */
+#define TkWmFocusToplevel \
+	(tkIntStubsPtr->tkWmFocusToplevel) /* 90 */
 #endif
 #ifndef TkWmMapWindow
-#define TkWmMapWindow(winPtr) \
-	(tkIntStubsPtr->tkWmMapWindow)(winPtr) /* 91 */
+#define TkWmMapWindow \
+	(tkIntStubsPtr->tkWmMapWindow) /* 91 */
 #endif
 #ifndef TkWmNewWindow
-#define TkWmNewWindow(winPtr) \
-	(tkIntStubsPtr->tkWmNewWindow)(winPtr) /* 92 */
+#define TkWmNewWindow \
+	(tkIntStubsPtr->tkWmNewWindow) /* 92 */
 #endif
 #ifndef TkWmProtocolEventProc
-#define TkWmProtocolEventProc(winPtr, evenvPtr) \
-	(tkIntStubsPtr->tkWmProtocolEventProc)(winPtr, evenvPtr) /* 93 */
+#define TkWmProtocolEventProc \
+	(tkIntStubsPtr->tkWmProtocolEventProc) /* 93 */
 #endif
 #ifndef TkWmRemoveFromColormapWindows
-#define TkWmRemoveFromColormapWindows(winPtr) \
-	(tkIntStubsPtr->tkWmRemoveFromColormapWindows)(winPtr) /* 94 */
+#define TkWmRemoveFromColormapWindows \
+	(tkIntStubsPtr->tkWmRemoveFromColormapWindows) /* 94 */
 #endif
 #ifndef TkWmRestackToplevel
-#define TkWmRestackToplevel(winPtr, aboveBelow, otherPtr) \
-	(tkIntStubsPtr->tkWmRestackToplevel)(winPtr, aboveBelow, otherPtr) /* 95 */
+#define TkWmRestackToplevel \
+	(tkIntStubsPtr->tkWmRestackToplevel) /* 95 */
 #endif
 #ifndef TkWmSetClass
-#define TkWmSetClass(winPtr) \
-	(tkIntStubsPtr->tkWmSetClass)(winPtr) /* 96 */
+#define TkWmSetClass \
+	(tkIntStubsPtr->tkWmSetClass) /* 96 */
 #endif
 #ifndef TkWmUnmapWindow
-#define TkWmUnmapWindow(winPtr) \
-	(tkIntStubsPtr->tkWmUnmapWindow)(winPtr) /* 97 */
+#define TkWmUnmapWindow \
+	(tkIntStubsPtr->tkWmUnmapWindow) /* 97 */
+#endif
+#ifndef TkDebugBitmap
+#define TkDebugBitmap \
+	(tkIntStubsPtr->tkDebugBitmap) /* 98 */
+#endif
+#ifndef TkDebugBorder
+#define TkDebugBorder \
+	(tkIntStubsPtr->tkDebugBorder) /* 99 */
+#endif
+#ifndef TkDebugCursor
+#define TkDebugCursor \
+	(tkIntStubsPtr->tkDebugCursor) /* 100 */
+#endif
+#ifndef TkDebugColor
+#define TkDebugColor \
+	(tkIntStubsPtr->tkDebugColor) /* 101 */
+#endif
+#ifndef TkDebugConfig
+#define TkDebugConfig \
+	(tkIntStubsPtr->tkDebugConfig) /* 102 */
+#endif
+#ifndef TkDebugFont
+#define TkDebugFont \
+	(tkIntStubsPtr->tkDebugFont) /* 103 */
+#endif
+#ifndef TkFindStateNumObj
+#define TkFindStateNumObj \
+	(tkIntStubsPtr->tkFindStateNumObj) /* 104 */
+#endif
+#ifndef TkGetBitmapPredefTable
+#define TkGetBitmapPredefTable \
+	(tkIntStubsPtr->tkGetBitmapPredefTable) /* 105 */
+#endif
+#ifndef TkGetDisplayList
+#define TkGetDisplayList \
+	(tkIntStubsPtr->tkGetDisplayList) /* 106 */
+#endif
+#ifndef TkGetMainInfoList
+#define TkGetMainInfoList \
+	(tkIntStubsPtr->tkGetMainInfoList) /* 107 */
+#endif
+#ifndef TkGetWindowFromObj
+#define TkGetWindowFromObj \
+	(tkIntStubsPtr->tkGetWindowFromObj) /* 108 */
+#endif
+#ifndef TkpGetString
+#define TkpGetString \
+	(tkIntStubsPtr->tkpGetString) /* 109 */
+#endif
+#ifndef TkpGetSubFonts
+#define TkpGetSubFonts \
+	(tkIntStubsPtr->tkpGetSubFonts) /* 110 */
+#endif
+#ifndef TkpGetSystemDefault
+#define TkpGetSystemDefault \
+	(tkIntStubsPtr->tkpGetSystemDefault) /* 111 */
+#endif
+#ifndef TkpMenuThreadInit
+#define TkpMenuThreadInit \
+	(tkIntStubsPtr->tkpMenuThreadInit) /* 112 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

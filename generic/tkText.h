@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.2 1998/09/14 18:23:18 stanton Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.3 1999/04/16 01:51:23 stanton Exp $
  */
 
 #ifndef _TKTEXT
@@ -176,7 +176,7 @@ typedef struct TkTextIndex {
     TkTextBTree tree;			/* Tree containing desired position. */
     TkTextLine *linePtr;		/* Pointer to line containing position
 					 * of interest. */
-    int charIndex;			/* Index within line of desired
+    int byteIndex;			/* Index within line of desired
 					 * character (0 means first one). */
 } TkTextIndex;
 
@@ -241,7 +241,7 @@ struct TkTextDispChunk {
 					 * a given x-location. */
     Tk_ChunkBboxProc *bboxProc;		/* Procedure to find bounding box
 					 * of character in chunk. */
-    int numChars;			/* Number of characters that will be
+    int numBytes;			/* Number of bytes that will be
 					 * displayed in the chunk. */
     int minAscent;			/* Minimum space above the baseline
 					 * needed by this chunk. */
@@ -256,7 +256,7 @@ struct TkTextDispChunk {
 					 * of line. */
     int breakIndex;			/* Index within chunk of last
 					 * acceptable position for a line
-					 * (break just before this character).
+					 * (break just before this byte index).
 					 * <= 0 means don't break during or
 					 * immediately after this chunk. */
     ClientData clientData;		/* Additional information for use
@@ -470,8 +470,8 @@ typedef struct TkText {
 				 * image segment doesn't yet have an
 				 * associated image, there is no entry for
 				 * it here. */
-    Tk_Uid state;		/* Normal or disabled.  Text is read-only
-				 * when disabled. */
+    Tk_Uid state;		/* Either normal or disabled. A text 
+				 * widget is read-only when disabled. */
 
     /*
      * Default information for displaying (may be overridden by tags
@@ -730,6 +730,7 @@ extern int		TkBTreeCharTagged _ANSI_ARGS_((TkTextIndex *indexPtr,
 			    TkTextTag *tagPtr));
 extern void		TkBTreeCheck _ANSI_ARGS_((TkTextBTree tree));
 extern int		TkBTreeCharsInLine _ANSI_ARGS_((TkTextLine *linePtr));
+extern int		TkBTreeBytesInLine _ANSI_ARGS_((TkTextLine *linePtr));
 extern TkTextBTree	TkBTreeCreate _ANSI_ARGS_((TkText *textPtr));
 extern void		TkBTreeDestroy _ANSI_ARGS_((TkTextBTree tree));
 extern void		TkBTreeDeleteChars _ANSI_ARGS_((TkTextIndex *index1Ptr,
@@ -784,22 +785,34 @@ extern int		TkTextGetIndex _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkTextIndex *indexPtr));
 extern TkTextTabArray *	TkTextGetTabs _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window tkwin, char *string));
-extern void		TkTextIndexBackChars _ANSI_ARGS_((TkTextIndex *srcPtr,
-			    int count, TkTextIndex *dstPtr));
-extern int		TkTextIndexCmp _ANSI_ARGS_((TkTextIndex *index1Ptr,
-			    TkTextIndex *index2Ptr));
-extern void		TkTextIndexForwChars _ANSI_ARGS_((TkTextIndex *srcPtr,
-			    int count, TkTextIndex *dstPtr));
-extern TkTextSegment *	TkTextIndexToSeg _ANSI_ARGS_((TkTextIndex *indexPtr,
-			    int *offsetPtr));
+extern void		TkTextIndexBackBytes _ANSI_ARGS_((
+			    CONST TkTextIndex *srcPtr, int count,
+			    TkTextIndex *dstPtr));
+extern void		TkTextIndexBackChars _ANSI_ARGS_((
+			    CONST TkTextIndex *srcPtr, int count,
+			    TkTextIndex *dstPtr));
+extern int		TkTextIndexCmp _ANSI_ARGS_((
+			    CONST TkTextIndex *index1Ptr,
+			    CONST TkTextIndex *index2Ptr));
+extern void		TkTextIndexForwBytes _ANSI_ARGS_((
+			    CONST TkTextIndex *srcPtr, int count,
+			    TkTextIndex *dstPtr));
+extern void		TkTextIndexForwChars _ANSI_ARGS_((
+			    CONST TkTextIndex *srcPtr, int count,
+			    TkTextIndex *dstPtr));
+extern TkTextSegment *	TkTextIndexToSeg _ANSI_ARGS_((
+			    CONST TkTextIndex *indexPtr, int *offsetPtr));
 extern void		TkTextInsertDisplayProc _ANSI_ARGS_((
 			    TkTextDispChunk *chunkPtr, int x, int y, int height,
 			    int baseline, Display *display, Drawable dst,
 			    int screenY));
 extern void		TkTextLostSelection _ANSI_ARGS_((
 			    ClientData clientData));
-extern TkTextIndex *	TkTextMakeIndex _ANSI_ARGS_((TkTextBTree tree,
+extern TkTextIndex *	TkTextMakeCharIndex _ANSI_ARGS_((TkTextBTree tree,
 			    int lineIndex, int charIndex,
+			    TkTextIndex *indexPtr));
+extern TkTextIndex *	TkTextMakeByteIndex _ANSI_ARGS_((TkTextBTree tree,
+			    int lineIndex, int byteIndex,
 			    TkTextIndex *indexPtr));
 extern int		TkTextMarkCmd _ANSI_ARGS_((TkText *textPtr,
 			    Tcl_Interp *interp, int argc, char **argv));
@@ -812,8 +825,8 @@ extern void		TkTextPickCurrent _ANSI_ARGS_((TkText *textPtr,
 			    XEvent *eventPtr));
 extern void		TkTextPixelIndex _ANSI_ARGS_((TkText *textPtr,
 			    int x, int y, TkTextIndex *indexPtr));
-extern void		TkTextPrintIndex _ANSI_ARGS_((TkTextIndex *indexPtr,
-			    char *string));
+extern void		TkTextPrintIndex _ANSI_ARGS_((
+			    CONST TkTextIndex *indexPtr, char *string));
 extern void		TkTextRedrawRegion _ANSI_ARGS_((TkText *textPtr,
 			    int x, int y, int width, int height));
 extern void		TkTextRedrawTag _ANSI_ARGS_((TkText *textPtr,
@@ -824,8 +837,9 @@ extern int		TkTextScanCmd _ANSI_ARGS_((TkText *textPtr,
 			    Tcl_Interp *interp, int argc, char **argv));
 extern int		TkTextSeeCmd _ANSI_ARGS_((TkText *textPtr,
 			    Tcl_Interp *interp, int argc, char **argv));
-extern int		TkTextSegToOffset _ANSI_ARGS_((TkTextSegment *segPtr,
-			    TkTextLine *linePtr));
+extern int		TkTextSegToOffset _ANSI_ARGS_((
+			    CONST TkTextSegment *segPtr,
+			    CONST TkTextLine *linePtr));
 extern TkTextSegment *	TkTextSetMark _ANSI_ARGS_((TkText *textPtr, char *name,
 			    TkTextIndex *indexPtr));
 extern void		TkTextSetYView _ANSI_ARGS_((TkText *textPtr,

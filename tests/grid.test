@@ -3,14 +3,13 @@
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: grid.test,v 1.3 1999/01/06 21:10:46 stanton Exp $
+# RCS: @(#) $Id: grid.test,v 1.4 1999/04/16 01:51:38 stanton Exp $
 
-if {[string compare test [info procs test]] == 1} then \
-  {source ../tests/defs}
+if {[lsearch [namespace children] ::tcltest] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
+}
 
 # helper routine to return "." to a sane state after a test
 # The variable GRID_VERBOSE can be used to "look" at the result
@@ -319,7 +318,7 @@ test grid-6.8 {location (weights)} {
 } {{-10->-1 -1} {0->0 0} {16->0 1} {201->1 1}}
 grid_reset 6.8
 
-test grid-6.9 {location: check updates pending} {
+test grid-6.9 {location: check updates pending} {nonPortable} {
 	set a ""
 	foreach i {0 1 2} {
 	    frame .$i -width 120 -height 75 -bg red
@@ -989,23 +988,26 @@ test grid-14.2 {structure notify} {
 } {{0 0 200 100,0 0 200 100} {0 0 240 140,20 20 200 100}}
 grid_reset 14.2
 
-test grid-14.3 {map notify} {
-	global A
-	catch {unset A}
-	bind . <Configure> {incr A(%W)}
-	set A(.) 0
-	foreach i {0 1 2} {
-		frame .$i -width 100 -height 75
-		set A(.$i) 0
-	}
-	grid .0 .1 .2
-	update
-	bind <Configure> .1 {destroy .0}
-	.2 configure -bd 10
-	update
-	bind . <Configure> {}
-	array get A
-} {.2 2 .0 1 . 1 .1 1}
+test grid-14.3 {map notify: bug 1648} {nonPortable} {
+    # This test is nonPortable because the number of times
+    # A(.) will be incremented is unspecified--the behavior
+    # is different accross window managers.
+    global A
+    catch {unset A}
+    bind . <Configure> {incr A(%W)}
+    set A(.) 0
+    foreach i {0 1 2} {
+	frame .$i -width 100 -height 75
+	set A(.$i) 0
+    }
+    grid .0 .1 .2
+    update
+    bind <Configure> .1 {destroy .0}
+    .2 configure -bd 10
+    update
+    bind . <Configure> {}
+    array get A
+} {.2 2 .0 1 . 2 .1 1}
 grid_reset 14.3
 
 test grid-15.1 {lost slave} {
@@ -1212,3 +1214,20 @@ test grid-17.1 {forget and pending idle handlers} {
     destroy .t
     set result ok
 } ok
+
+# cleanup
+::tcltest::cleanupTests
+return
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,11 +1,11 @@
 # Borland C++ 4.5 makefile for Tk
 #
-# Copyright (c) 1995-1996 by Sun Microsystems, Inc.
+# Copyright (c) 1995-1997 by Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: makefile.bc,v 1.8 1999/02/04 21:02:58 stanton Exp $
+# RCS: @(#) $Id: makefile.bc,v 1.9 1999/04/16 01:51:48 stanton Exp $
 
 
 #
@@ -19,7 +19,7 @@
 ROOT	= ..
 TMPDIR	= .
 TOOLS	= c:\bc45
-TCLDIR	= ..\..\tcl8.0.5
+TCLDIR	= ..\..\tcl8.1b3
 
 # uncomment the following line to compile with symbols
 #DEBUG=1
@@ -104,6 +104,7 @@ TKOBJS = \
 	$(TMPDIR)\tkWinButton.obj \
 	$(TMPDIR)\tkWinClipboard.obj \
 	$(TMPDIR)\tkWinColor.obj \
+	$(TMPDIR)\tkWinConfig.obj \
 	$(TMPDIR)\tkWinCursor.obj \
 	$(TMPDIR)\tkWinDialog.obj \
 	$(TMPDIR)\tkWinDraw.obj \
@@ -118,6 +119,7 @@ TKOBJS = \
 	$(TMPDIR)\tkWinRegion.obj \
 	$(TMPDIR)\tkWinScrlbr.obj \
 	$(TMPDIR)\tkWinSend.obj \
+	$(TMPDIR)\tkWinTest.obj \
 	$(TMPDIR)\tkWinWindow.obj \
 	$(TMPDIR)\tkWinWm.obj \
 	$(TMPDIR)\tkWinX.obj \
@@ -168,6 +170,8 @@ TKOBJS = \
 	$(TMPDIR)\tkMenubutton.obj \
 	$(TMPDIR)\tkMenuDraw.obj \
 	$(TMPDIR)\tkMessage.obj \
+	$(TMPDIR)\tkObj.obj \
+	$(TMPDIR)\tkOldConfig.obj \
 	$(TMPDIR)\tkOption.obj \
 	$(TMPDIR)\tkPack.obj \
 	$(TMPDIR)\tkPlace.obj \
@@ -189,11 +193,11 @@ TKOBJS = \
 	$(TMPDIR)\tkVisual.obj \
 	$(TMPDIR)\tkWindow.obj
 
-TCLDLL = tcl80.dll
-TCLLIB = tcl80.lib
-TKDLL = tk80.dll
-TKLIB = tk80.lib
-WISH = wish80.exe
+TCLDLL = tcl81.dll
+TCLLIB = tcl81.lib
+TKDLL = tk81.dll
+TKLIB = tk81.lib
+WISH = wish81.exe
 TKTEST = tktest.exe
 
 #

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInit.c,v 1.2 1998/09/14 18:24:00 stanton Exp $
+ * RCS: @(#) $Id: tkWinInit.c,v 1.3 1999/04/16 01:51:52 stanton Exp $
  */
 
 #include "tkWinInt.h"
@@ -31,7 +31,7 @@
  *
  * Results:
  *	A standard Tcl completion code (TCL_OK or TCL_ERROR).  Also
- *	leaves information in interp->result.
+ *	leaves information in the interp's result.
  *
  * Side effects:
  *	Sets "tk_library" Tcl variable, runs "tk.tcl" script.

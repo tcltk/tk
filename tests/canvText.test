@@ -3,14 +3,13 @@
 # fashion for Tcl tests.
 #
 # Copyright (c) 1996-1997 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: canvText.test,v 1.3 1998/10/16 00:46:19 rjohnson Exp $
+# RCS: @(#) $Id: canvText.test,v 1.4 1999/04/16 01:51:35 stanton Exp $
 
-if {"[info procs test]" != "test"} {
-    source defs
+if {[lsearch [namespace children] ::tcltest] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 foreach i [winfo children .] {
@@ -174,7 +173,7 @@ test canvText-5.1 {ConfigureText procedure: adjust cursor} {
     .c delete x
 } {}
 
-test canvText-6.1 {ComputeTextBbox procedure} {fonts} {
+test canvText-6.1 {ComputeTextBbox procedure} {fonts nonPortable} {
     .c itemconfig test -font $font -text 0
     .c coords test 0 0
     set x {}
@@ -200,7 +199,7 @@ test canvText-6.1 {ComputeTextBbox procedure} {fonts} {
 focus .c
 .c focus test
 .c itemconfig test -text "abcd\nefghi\njklmnopq"
-test canvText-7.1 {DisplayText procedure: stippling} {
+test canvText-7.0 {DisplayText procedure: stippling} {
     .c itemconfig test -stipple gray50
     update
     .c itemconfig test -stipple {}
@@ -491,3 +490,19 @@ restore showpage
 end
 %%EOF
 "
+# cleanup
+::tcltest::cleanupTests
+return
+
+
+
+
+
+
+
+
+
+
+
+
+

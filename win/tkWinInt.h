@@ -5,12 +5,12 @@
  *	Windows-specific parts of Tk, but aren't used by the rest of
  *	Tk.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.5 1999/03/10 19:29:24 redman Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.6 1999/04/16 01:51:52 stanton Exp $
  */
 
 #ifndef _TKWININT
@@ -27,6 +27,11 @@
 #ifndef _TKWIN
 #include "tkWin.h"
 #endif
+
+#ifndef _TKPORT
+#include "tkPort.h"
+#endif
+
 
 /*
  * Define constants missing from older Win32 SDK header files.
@@ -148,9 +153,8 @@ extern int tkpWinRopModes[];
 
 #include "tkIntPlatDecls.h"
 
-extern void TkWinSetForegroundWindow(TkWindow *winPtr);
-extern LRESULT CALLBACK TkWinChildProc (HWND hwnd, UINT message,
-	WPARAM wParam, LPARAM lParam);
+extern LRESULT CALLBACK	TkWinChildProc _ANSI_ARGS_((HWND hwnd, UINT message,
+			    WPARAM wParam, LPARAM lParam));
 
 #endif /* _TKWININT */
 

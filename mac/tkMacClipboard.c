@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacClipboard.c,v 1.2 1998/09/14 18:23:34 stanton Exp $
+ * RCS: @(#) $Id: tkMacClipboard.c,v 1.3 1999/04/16 01:51:30 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -32,7 +32,7 @@
  * Results:
  *	The return value is a standard Tcl return value.
  *	If an error occurs (such as no selection exists)
- *	then an error message is left in interp->result.
+ *	then an error message is left in the interp's result.
  *
  * Side effects:
  *	None.
@@ -241,7 +241,7 @@ TkSuspendClipboard()
     char *buffer, *p, *endPtr, *buffPtr;
     long length;
 
-    dispPtr = tkDisplayList;
+    dispPtr = TkGetDisplayList();
     if ((dispPtr == NULL) || !dispPtr->clipboardActive) {
 	return;
     }

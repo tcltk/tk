@@ -1,4 +1,4 @@
-# tkInt.decls --
+	# tkInt.decls --
 #
 #	This file contains the declarations for all unsupported
 #	functions that are exported by the Tk library.  This file
@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.4 1999/03/12 03:17:47 stanton Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.5 1999/04/16 01:51:15 stanton Exp $
 
 library tk
 
@@ -156,8 +156,9 @@ declare 28 generic {
     void TkFreeBindingTags (TkWindow *winPtr)
 }
 
+# Name change only, TkFreeCursor in Tcl 8.0.x now TkpFreeCursor
 declare 29 generic {
-    void TkFreeCursor (TkCursor *cursorPtr)
+    void TkpFreeCursor (TkCursor *cursorPtr)
 }
 
 declare 30 generic {
@@ -237,12 +238,12 @@ declare 46 generic {
 }
 
 declare 47 generic {
-    int TkLineToArea (TkDouble2 end1Ptr, TkDouble2 end2Ptr, TkDouble4 rectPtr)
+    int TkLineToArea (double end1Ptr[], double end2Ptr[], double rectPtr[])
 }
 
 declare 48 generic {
     double TkLineToPoint (double end1Ptr[], \
-	    TkDouble2 end2Ptr, TkDouble2 pointPtr)
+	    double end2Ptr[], double pointPtr[])
 }
 
 declare 49 generic {
@@ -269,8 +270,8 @@ declare 53 generic {
 }
 
 declare 54 generic {
-    double TkOvalToPoint (TkDouble4 ovalPtr, \
-	    double width, int filled, TkDouble2 pointPtr)
+    double TkOvalToPoint (double ovalPtr[], \
+	    double width, int filled, double pointPtr[])
 }
 
 declare 55 generic {
@@ -456,6 +457,73 @@ declare 97 generic {
     void TkWmUnmapWindow (TkWindow *winPtr)
 }
 
+# new for 8.1
+
+declare 98 generic {
+    Tcl_Obj * TkDebugBitmap ( Tk_Window tkwin, char *name)
+}
+
+declare 99 generic {
+    Tcl_Obj * TkDebugBorder ( Tk_Window tkwin, char *name)
+}
+
+declare 100 generic {
+    Tcl_Obj * TkDebugCursor ( Tk_Window tkwin, char *name)
+}
+
+declare 101 generic {
+    Tcl_Obj * TkDebugColor ( Tk_Window tkwin, char *name)
+}
+
+declare 102 generic {
+    Tcl_Obj * TkDebugConfig (Tcl_Interp *interp, Tk_OptionTable table)
+}
+
+declare 103 generic {
+    Tcl_Obj * TkDebugFont ( Tk_Window tkwin, char *name)
+}
+
+declare 104 generic {
+    int  TkFindStateNumObj (Tcl_Interp *interp, \
+	    Tcl_Obj *optionPtr, CONST TkStateMap *mapPtr, \
+	    Tcl_Obj *keyPtr)
+}
+
+declare 105 generic {
+    Tcl_HashTable *  TkGetBitmapPredefTable (void)
+}
+
+declare 106 generic {
+    TkDisplay * TkGetDisplayList (void)
+}
+
+declare 107 generic {
+    TkMainInfo * TkGetMainInfoList (void)
+}
+
+declare 108 generic {
+    int  TkGetWindowFromObj (Tcl_Interp *interp, \
+	    Tk_Window tkwin, Tcl_Obj *objPtr, \
+	    Tk_Window *windowPtr)
+}
+
+declare 109 generic {
+    char *  TkpGetString (TkWindow *winPtr, \
+	    XEvent *eventPtr, Tcl_DString *dsPtr)
+}
+
+declare 110 generic {
+    void  TkpGetSubFonts (Tcl_Interp *interp, Tk_Font tkfont)
+}
+
+declare 111 generic {
+    Tcl_Obj * TkpGetSystemDefault (Tk_Window tkwin, \
+	    char *dbName, char *className)
+}
+
+declare 112 generic {
+    void TkpMenuThreadInit (void)
+}
 
 ##############################################################################
 
@@ -655,6 +723,24 @@ declare 35 win {
     void   TkWinXInit (HINSTANCE hInstance)
 }
 
+# new for 8.1
+
+declare 36 win {
+    void TkWinSetForegroundWindow (TkWindow *winPtr)
+}
+
+declare 37 win {
+    void TkWinDialogDebug (int debug)
+}
+
+declare 38 win {
+    Tcl_Obj * TkWinGetMenuSystemDefault (Tk_Window tkwin, \
+	    char *dbName, char *className)
+}
+
+declare 39 win {
+    int TkWinGetPlatformId(void)
+}
 
 ########################
 # Mac specific functions
@@ -1089,7 +1175,7 @@ declare 25 win {
 declare 26 win {
     Pixmap XCreateBitmapFromData(Display* display, Drawable d, \
 	    _Xconst char* data, unsigned int width,unsigned int height)
-}    
+}
 
 declare 27 win {
     void XDefineCursor (Display* d, Window w, Cursor c)
@@ -1327,13 +1413,118 @@ declare 80 win {
 	    int dest_x, int dest_y, unsigned int width, \
 	    unsigned int height)
 }
+# This slot is reserved for use by the clipping rectangle patch:
+#  declare 81 win {
+#      XSetClipRectangles(Display *display, GC gc, int clip_x_origin, \
+#  	    int clip_y_origin, XRectangle rectangles[], int n, int ordering)
+#  }
+
+declare 82 win {
+    Status XParseColor (Display *display, Colormap map, \
+          _Xconst char* spec, XColor *colorPtr)
+}
+
+declare 83 win {
+    GC XCreateGC(Display* display, Drawable d, \
+	    unsigned long valuemask, XGCValues* values)
+}
+
+declare 84 win {
+    void XFreeGC(Display* display, GC gc)
+}
+
+declare 85 win {
+    Atom XInternAtom(Display* display,_Xconst char* atom_name, \
+	    Bool only_if_exists)
+}
+
+declare 86 win {
+    void XSetBackground(Display* display, GC gc, \
+	    unsigned long foreground)
+}
+
+declare 87 win {
+    void XSetForeground(Display* display, GC gc, \
+	    unsigned long foreground)
+}
+
+declare 88 win {
+    void XSetClipMask(Display* display, GC gc, Pixmap pixmap)
+}
+
+declare 89 win {
+    void XSetClipOrigin(Display* display, GC gc, \
+	    int clip_x_origin, int clip_y_origin)
+}
+
+declare 90 win {
+    void XSetTSOrigin(Display* display, GC gc, \
+	    int ts_x_origin, int ts_y_origin)
+}
+
+declare 91 win {
+    void XChangeGC(Display * d, GC gc, unsigned long mask, XGCValues *values)
+}
+
+declare 92 win {
+    void XSetFont(Display *display, GC gc, Font font)
+}
+
+declare 93 win {
+    void XSetArcMode(Display *display, GC gc, int arc_mode)
+}
+
+declare 94 win {
+    void XSetStipple(Display *display, GC gc, Pixmap stipple)
+}
+
+declare 95 win {
+    void XSetFillRule(Display *display, GC gc, int fill_rule)
+}
+
+declare 96 win {
+    void XSetFillStyle(Display *display, GC gc, int fill_style)
+}
+
+declare 97 win {
+    void XSetFunction(Display *display, GC gc, int function)
+}
+
+declare 98 win {
+    void XSetLineAttributes(Display *display, GC gc, \
+	    unsigned int line_width, int line_style, \
+	    int cap_style, int join_style)
+}
+
+declare 99 win {
+    int _XInitImageFuncPtrs(XImage *image)
+}
+
+declare 100 win {
+    XIC XCreateIC(void)
+}
+
+declare 101 win {
+    XVisualInfo *XGetVisualInfo(Display* display, long vinfo_mask, \
+	    XVisualInfo* vinfo_template, int* nitems_return)
+}
+
+declare 102 win {
+    void XSetWMClientMachine(Display* display, Window w, XTextProperty* text_prop)
+}
+
+declare 103 win {
+    Status XStringListToTextProperty(char** list, int count, \
+	    XTextProperty* text_prop_return)
+}
 
 # X functions for Mac
 
 # This slot is reserved for use by the dash patch:
-#  declare 0 mac {
+#  declare 0 win {
 #	XSetDashes
 #  }
+
 declare 1 mac {
     XModifierKeymap* XGetModifierMapping (Display* d)
 }
@@ -1422,7 +1613,7 @@ declare 18 mac {
 declare 19 mac {
     Pixmap XCreateBitmapFromData(Display* display, Drawable d, \
 	    _Xconst char* data, unsigned int width,unsigned int height)
-}    
+}
 
 declare 20 mac {
     void XDefineCursor (Display* d, Window w, Cursor c)
@@ -1591,5 +1782,102 @@ declare 57 mac {
 	    GC gc, XImage* image, int src_x, int src_y, \
 	    int dest_x, int dest_y, unsigned int width, \
 	    unsigned int height)
+} 
+declare 58 mac {
+    Status XParseColor (Display *display, Colormap map, \
+          _Xconst char* spec, XColor *colorPtr)
 }
 
+declare 59 mac {
+    GC XCreateGC(Display* display, Drawable d, \
+	    unsigned long valuemask, XGCValues* values)
+}
+
+declare 60 mac {
+    void XFreeGC(Display* display, GC gc)
+}
+
+declare 61 mac {
+    Atom XInternAtom(Display* display,_Xconst char* atom_name, \
+	    Bool only_if_exists)
+}
+
+declare 62 mac {
+    void XSetBackground(Display* display, GC gc, \
+	    unsigned long foreground)
+}
+
+declare 63 mac {
+    void XSetForeground(Display* display, GC gc, \
+	    unsigned long foreground)
+}
+
+declare 64 mac {
+    void XSetClipMask(Display* display, GC gc, Pixmap pixmap)
+}
+
+declare 65 mac {
+    void XSetClipOrigin(Display* display, GC gc, \
+	    int clip_x_origin, int clip_y_origin)
+}
+
+declare 66 mac {
+    void XSetTSOrigin(Display* display, GC gc, \
+	    int ts_x_origin, int ts_y_origin)
+}
+
+declare 67 mac {
+    void XChangeGC(Display * d, GC gc, unsigned long mask, XGCValues *values)
+}
+
+declare 68 mac {
+    void XSetFont(Display *display, GC gc, Font font)
+}
+
+declare 69 mac {
+    void XSetArcMode(Display *display, GC gc, int arc_mode)
+}
+
+declare 70 mac {
+    void XSetStipple(Display *display, GC gc, Pixmap stipple)
+}
+
+declare 71 mac {
+    void XSetFillRule(Display *display, GC gc, int fill_rule)
+}
+
+declare 72 mac {
+    void XSetFillStyle(Display *display, GC gc, int fill_style)
+}
+
+declare 73 mac {
+    void XSetFunction(Display *display, GC gc, int function)
+}
+
+declare 74 mac {
+    void XSetLineAttributes(Display *display, GC gc, \
+	    unsigned int line_width, int line_style, \
+	    int cap_style, int join_style)
+}
+
+declare 75 mac {
+    int _XInitImageFuncPtrs(XImage *image)
+}
+
+declare 76 mac {
+    XIC XCreateIC(void)
+}
+
+declare 77 mac {
+    XVisualInfo *XGetVisualInfo(Display* display, long vinfo_mask, \
+	    XVisualInfo* vinfo_template, int* nitems_return)
+}
+
+declare 78 mac {
+    void XSetWMClientMachine(Display* display, Window w, XTextProperty* text_prop)
+}
+
+declare 79 mac {
+    Status XStringListToTextProperty(char** list, int count, \
+	    XTextProperty* text_prop_return)
+}

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinKey.c,v 1.3 1998/09/14 18:24:00 stanton Exp $
+ * RCS: @(#) $Id: tkWinKey.c,v 1.4 1999/04/16 01:51:52 stanton Exp $
  */
 
 #include "tkWinInt.h"
@@ -89,71 +89,59 @@ static Keys keymap[] = {
 /*
  *----------------------------------------------------------------------
  *
- * XLookupString --
+ * TkpGetString --
  *
- *	Retrieve the string equivalent for the given keyboard event.
+ *	Retrieve the UTF string equivalent for the given keyboard event.
  *
  * Results:
- *	Returns the number of characters stored in buffer_return.
+ *	Returns the UTF string.
  *
  * Side effects:
- *	Retrieves the characters stored in the event and inserts them
- *	into buffer_return.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
 
-int
-XLookupString(event_struct, buffer_return, bytes_buffer, keysym_return,
-	status_in_out)
-    XKeyEvent* event_struct;
-    char* buffer_return;
-    int bytes_buffer;
-    KeySym* keysym_return;
-    XComposeStatus* status_in_out;
+char *
+TkpGetString(winPtr, eventPtr, dsPtr)
+    TkWindow *winPtr;		/* Window where event occurred:  needed to
+				 * get input context. */
+    XEvent *eventPtr;		/* X keyboard event. */
+    Tcl_DString *dsPtr;		/* Uninitialized or empty string to hold
+				 * result. */
 {
-    int i, limit;
+    int index;
+    KeySym keysym;
+    XKeyEvent* keyEv = &eventPtr->xkey;
 
-    if (event_struct->send_event != -1) {
+    Tcl_DStringInit(dsPtr);
+    if (eventPtr->xkey.send_event != -1) {
 	/*
 	 * This is an event generated from generic code.  It has no
 	 * nchars or trans_chars members. 
 	 */
 
-	int index;
-	KeySym keysym;
-
 	index = 0;
-	if (event_struct->state & ShiftMask) {
+	if (eventPtr->xkey.state & ShiftMask) {
 	    index |= 1;
 	}
-	if (event_struct->state & Mod1Mask) {
+	if (eventPtr->xkey.state & Mod1Mask) {
 	    index |= 2;
 	}
-	keysym = XKeycodeToKeysym(event_struct->display, 
-		event_struct->keycode, index);
+	keysym = XKeycodeToKeysym(eventPtr->xkey.display, 
+		eventPtr->xkey.keycode, index);
 	if (((keysym != NoSymbol) && (keysym > 0) && (keysym < 256)) 
 		|| (keysym == XK_Return)
 		|| (keysym == XK_Tab)) {
-	    buffer_return[0] = (char) keysym;
-	    return 1;
+	    char buf[TCL_UTF_MAX];
+	    int len = Tcl_UniCharToUtf((Tcl_UniChar) keysym, buf);
+	    Tcl_DStringAppend(dsPtr, buf, len);
 	}
-	return 0;
+    } else if (eventPtr->xkey.nbytes > 0) {
+	Tcl_ExternalToUtfDString(NULL, eventPtr->xkey.trans_chars,
+		eventPtr->xkey.nbytes, dsPtr);
     }
-    if ((event_struct->nchars <= 0) || (buffer_return == NULL)) {
-	return 0;
-    }
-    limit = (event_struct->nchars < bytes_buffer) ? event_struct->nchars :
-	bytes_buffer;
-
-    for (i = 0; i < limit; i++) {
-	buffer_return[i] = event_struct->trans_chars[i];
-    }
-
-    if (keysym_return != NULL) {
-	*keysym_return = NoSymbol;
-    }
-    return i;
+    return Tcl_DStringValue(dsPtr);
 }
 
 /*
@@ -199,8 +187,8 @@ XKeycodeToKeysym(display, keycode, index)
      * for alphanumeric characters map onto Latin-1, we just return it.
      */
 
-    if (result == 1 && buf[0] >= 0x20) {
-	return (KeySym) buf[0];
+    if (result == 1 && UCHAR(buf[0]) >= 0x20) {
+	return (KeySym) UCHAR(buf[0]);
     }
 
     /*

@@ -7,12 +7,12 @@
  *	attributes.
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.2 1998/09/14 18:23:10 stanton Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.3 1999/04/16 01:51:14 stanton Exp $
  */
 
 #include "default.h"
@@ -441,7 +441,7 @@ TkCreateFrame(clientData, interp, argc, argv, toplevel, appName)
     if (toplevel) {
 	Tcl_DoWhenIdle(MapFrame, (ClientData) framePtr);
     }
-    interp->result = Tk_PathName(new);
+    Tcl_SetResult(interp, Tk_PathName(new), TCL_STATIC);
     return TCL_OK;
 
     error:
@@ -597,7 +597,7 @@ DestroyFrame(memPtr)
  *
  * Results:
  *	The return value is a standard Tcl result.  If TCL_ERROR is
- *	returned, then interp->result contains an error message.
+ *	returned, then the interp's result contains an error message.
  *
  * Side effects:
  *	Configuration information, such as text string, colors, font,

@@ -1,5 +1,5 @@
 /*
- * Tkmacint.h --
+ * tkMacInt.h --
  *
  *	Declarations of Macintosh specific exported variables and procedures.
  *
@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMac.h,v 1.5 1999/03/10 07:04:44 stanton Exp $
+ * RCS: @(#) $Id: tkMac.h,v 1.6 1999/04/16 01:51:29 stanton Exp $
  */
 
 #ifndef _TKMAC
@@ -44,11 +44,11 @@ typedef int (Tk_MacEmbedMakeContainerExistProc) (Tk_Window window);
 typedef void (Tk_MacEmbedGetClipProc) (Tk_Window window, RgnHandle rgn); 
 typedef void (Tk_MacEmbedGetOffsetInParentProc) (Tk_Window window, Point *ulCorner);
 
-/* 
- * Mac Specific functions that are available to extension writers.
+/*
+ * These functions are currently in tkMacInt.h.  They are just copied over here
+ * so they can be exported.
  */
 
-#include "tkPlatDecls.h"
 
 #pragma export reset
 

@@ -4,12 +4,12 @@
  *	Declarations of public types and interfaces that are only
  *	available under Windows.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
+ * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin.h,v 1.5 1999/03/10 07:04:46 stanton Exp $
+ * RCS: @(#) $Id: tkWin.h,v 1.6 1999/04/16 01:51:48 stanton Exp $
  */
 
 #ifndef _TKWIN
@@ -27,7 +27,6 @@
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLEXPORT
 #endif
-
 
 /*
  * The following messages are use to communicate between a Tk toplevel
@@ -47,6 +46,7 @@
  *
  *--------------------------------------------------------------
  */
+
 #include "tkPlatDecls.h"
 
 # undef TCL_STORAGE_CLASS

@@ -7,12 +7,12 @@
  *	used by canvases.
  *
  * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994 Sun Microsystems, Inc.
+ * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTrig.c,v 1.2 1998/09/14 18:23:20 stanton Exp $
+ * RCS: @(#) $Id: tkTrig.c,v 1.3 1999/04/16 01:51:24 stanton Exp $
  */
 
 #include <stdio.h>
@@ -1195,7 +1195,7 @@ TkMakeBezierCurve(canvas, pointPtr, numPoints, numSteps, xPoints, dblPoints)
  *
  * Results:
  *	None.  Postscript commands to generate the path are appended
- *	to interp->result.
+ *	to the interp's result.
  *
  * Side effects:
  *	None.

@@ -3,17 +3,16 @@
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: textDisp.test,v 1.2 1998/09/14 18:23:50 stanton Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.3 1999/04/16 01:51:41 stanton Exp $
 
-if {[string compare test [info procs test]] == 1} {
-    source defs
-    if {$testConfig(fonts) == 0} {
-	puts "skipping font-sensitive tests"
-    }
+if {[lsearch [namespace children] ::tcltest] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
+}
+if {$::tcltest::testConfig(fonts) == 0} {
+    puts "skipping font-sensitive tests"
 }
 
 # The procedure below is used as the scrolling command for the text;
@@ -2866,3 +2865,20 @@ foreach i [winfo children .] {
     catch {destroy $i}
 }
 option clear
+
+# cleanup
+::tcltest::cleanupTests
+return
+
+
+
+
+
+
+
+
+
+
+
+
+

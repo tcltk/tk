@@ -84,7 +84,6 @@ TkGetMenuHashTable
 TkGetMenuIndex
 TkGetMiterPoints
 TkGetPointerCoords
-TkGetProlog
 TkGetServerInfo
 TkGetTransientMaster
 TkGrabDeadWindow

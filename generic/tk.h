@@ -6,13 +6,13 @@
  *
  * Copyright (c) 1989-1994 The Regents of the University of California.
  * Copyright (c) 1994 The Australian National University.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1994-1998 Sun Microsystems, Inc.
  * Copyright (c) 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.20 1999/03/10 07:04:38 stanton Exp $
+ * RCS: @(#) $Id: tk.h,v 1.21 1999/04/16 01:51:09 stanton Exp $
  */
 
 #ifndef _TK
@@ -22,39 +22,26 @@
  * When version numbers change here, you must also go into the following files
  * and update the version numbers:
  *
- * README
  * unix/configure.in
  * win/makefile.bc
  * win/makefile.vc
- * win/README
- * mac/README
- * library/tk.tcl	(Not for patch release updates)
- *
- * The release level should be  0 for alpha, 1 for beta, and 2 for
- * final/patch.  The release serial value is the number that follows the
- * "a", "b", or "p" in the patch level; for example, if the patch level
- * is 4.3b2, TK_RELEASE_SERIAL is 2.  It restarts at 1 whenever the
- * release level is changed, except for the final release, which should
- * be 0.
- *
+ * README
+ * library/tk.tcl	(only if major.minor changes, not patchlevel)
+ * mac/README		(only if major.minor changes, not patchlevel)
+ * win/README		(only if major.minor changes, not patchlevel)
+ * unix/README		(only if major.minor changes, not patchlevel)
+
  * You may also need to update some of these files when the numbers change
  * for the version of Tcl that this release of Tk is compiled against.
  */
 
 #define TK_MAJOR_VERSION   8
-#define TK_MINOR_VERSION   0
-#define TK_RELEASE_LEVEL   2
-#define TK_RELEASE_SERIAL  5
+#define TK_MINOR_VERSION   1
+#define TK_RELEASE_LEVEL   TCL_BETA_RELEASE
+#define TK_RELEASE_SERIAL  3
 
-#define TK_VERSION "8.0"
-#define TK_PATCH_LEVEL "8.0.5"
-
-/* 
- * A special definition used to allow this header file to be included 
- * in resource files.
- */
-
-#ifndef RESOURCE_INCLUDED
+#define TK_VERSION "8.1"
+#define TK_PATCH_LEVEL "8.1b3"
 
 /*
  * The following definitions set up the proper options for Macintosh
@@ -70,6 +57,14 @@
 #ifndef _TCL
 #   include <tcl.h>
 #endif
+
+/* 
+ * A special definition used to allow this header file to be included 
+ * in resource files.
+ */
+
+#ifndef RESOURCE_INCLUDED
+
 #ifndef _XLIB_H
 #   ifdef MAC_TCL
 #	include <Xlib.h>
@@ -82,15 +77,9 @@
 #   include <stddef.h>
 #endif
 
-#undef TCL_STORAGE_CLASS
 #ifdef BUILD_tk
+# undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLEXPORT
-#else
-# ifdef USE_TK_STUBS
-#  define TCL_STORAGE_CLASS
-# else
-#  define TCL_STORAGE_CLASS DLLIMPORT
-# endif
 #endif
 
 /*
@@ -112,6 +101,7 @@ typedef struct Tk_ErrorHandler_ *Tk_ErrorHandler;
 typedef struct Tk_Font_ *Tk_Font;
 typedef struct Tk_Image__ *Tk_Image;
 typedef struct Tk_ImageMaster_ *Tk_ImageMaster;
+typedef struct Tk_OptionTable_ *Tk_OptionTable;
 typedef struct Tk_TextLayout_ *Tk_TextLayout;
 typedef struct Tk_Window_ *Tk_Window;
 typedef struct Tk_3DBorder_ *Tk_3DBorder;
@@ -123,53 +113,163 @@ typedef struct Tk_3DBorder_ *Tk_3DBorder;
 typedef char *Tk_Uid;
 
 /*
- * Structure used to specify how to handle argv options.
+ * The enum below defines the valid types for Tk configuration options
+ * as implemented by Tk_InitOptions, Tk_SetOptions, etc.
  */
 
-typedef struct {
-    char *key;		/* The key string that flags the option in the
-			 * argv array. */
-    int type;		/* Indicates option type;  see below. */
-    char *src;		/* Value to be used in setting dst;  usage
-			 * depends on type. */
-    char *dst;		/* Address of value to be modified;  usage
-			 * depends on type. */
-    char *help;		/* Documentation message describing this option. */
-} Tk_ArgvInfo;
+typedef enum {
+    TK_OPTION_BOOLEAN,
+    TK_OPTION_INT,
+    TK_OPTION_DOUBLE,
+    TK_OPTION_STRING,
+    TK_OPTION_STRING_TABLE,
+    TK_OPTION_COLOR,
+    TK_OPTION_FONT,
+    TK_OPTION_BITMAP,
+    TK_OPTION_BORDER,
+    TK_OPTION_RELIEF,
+    TK_OPTION_CURSOR,
+    TK_OPTION_JUSTIFY,
+    TK_OPTION_ANCHOR,
+    TK_OPTION_SYNONYM,
+    TK_OPTION_PIXELS,
+    TK_OPTION_WINDOW,
+    TK_OPTION_END
+} Tk_OptionType;
 
 /*
- * Legal values for the type field of a Tk_ArgvInfo: see the user
- * documentation for details.
+ * Structures of the following type are used by widgets to specify
+ * their configuration options.  Typically each widget has a static
+ * array of these structures, where each element of the array describes
+ * a single configuration option.  The array is passed to
+ * Tk_CreateOptionTable.
  */
 
-#define TK_ARGV_CONSTANT		15
-#define TK_ARGV_INT			16
-#define TK_ARGV_STRING			17
-#define TK_ARGV_UID			18
-#define TK_ARGV_REST			19
-#define TK_ARGV_FLOAT			20
-#define TK_ARGV_FUNC			21
-#define TK_ARGV_GENFUNC			22
-#define TK_ARGV_HELP			23
-#define TK_ARGV_CONST_OPTION		24
-#define TK_ARGV_OPTION_VALUE		25
-#define TK_ARGV_OPTION_NAME_VALUE	26
-#define TK_ARGV_END			27
+typedef struct Tk_OptionSpec {
+    Tk_OptionType type;		/* Type of option, such as TK_OPTION_COLOR; 
+				 * see definitions above. Last option in
+				 * table must have type TK_OPTION_END. */
+    char *optionName;		/* Name used to specify option in Tcl	
+				 * commands. */
+    char *dbName;		/* Name for option in option database. */
+    char *dbClass;		/* Class for option in database. */
+    char *defValue;		/* Default value for option if not specified
+				 * in command line, the option database,
+				 * or the system. */
+    int objOffset;		/* Where in record to store a Tcl_Obj * that
+				 * holds the value of this option, specified
+				 * as an offset in bytes from the start of
+				 * the record. Use the Tk_Offset macro to
+				 * generate values for this.  -1 means don't
+				 * store the Tcl_Obj in the record. */
+    int internalOffset;		/* Where in record to store the internal
+				 * representation of the value of this option,
+				 * such as an int or XColor *.  This field
+				 * is specified as an offset in bytes
+				 * from the start of the record. Use the
+				 * Tk_Offset macro to generate values for it.
+				 * -1 means don't store the internal
+				 * representation in the record. */
+    int flags;			/* Any combination of the values defined
+				 * below. */
+    ClientData clientData;	/* An alternate place to put option-specific
+    				 * data. Used for the monochrome default value
+				 * for colors, etc. */
+    int typeMask;		/* An arbitrary bit mask defined by the
+				 * class manager; typically bits correspond
+				 * to certain kinds of options such as all
+				 * those that require a redisplay when they
+				 * change.  Tk_SetOptions returns the bit-wise
+				 * OR of the typeMasks of all options that
+				 * were changed. */
+} Tk_OptionSpec;
 
 /*
- * Flag bits for passing to Tk_ParseArgv:
+ * Flag values for Tk_OptionSpec structures.  These flags are shared by
+ * Tk_ConfigSpec structures, so be sure to coordinate any changes
+ * carefully.
  */
 
-#define TK_ARGV_NO_DEFAULTS		0x1
-#define TK_ARGV_NO_LEFTOVERS		0x2
-#define TK_ARGV_NO_ABBREV		0x4
-#define TK_ARGV_DONT_SKIP_FIRST_ARG	0x8
+#define TK_OPTION_NULL_OK		1
+
+/*
+ * Macro to use to fill in "offset" fields of Tk_OptionSpecs.
+ * Computes number of bytes from beginning of structure to a
+ * given field.
+ */
+
+#ifdef offsetof
+#define Tk_Offset(type, field) ((int) offsetof(type, field))
+#else
+#define Tk_Offset(type, field) ((int) ((char *) &((type *) 0)->field))
+#endif
+
+/*
+ * The following two structures are used for error handling.  When
+ * configuration options are being modified, the old values are
+ * saved in a Tk_SavedOptions structure.  If an error occurs, then the
+ * contents of the structure can be used to restore all of the old
+ * values.  The contents of this structure are for the private use
+ * Tk.  No-one outside Tk should ever read or write any of the fields
+ * of these structures.
+ */
+
+typedef struct Tk_SavedOption {
+    struct TkOption *optionPtr;		/* Points to information that describes
+					 * the option. */
+    Tcl_Obj *valuePtr;			/* The old value of the option, in
+					 * the form of a Tcl object; may be
+					 * NULL if the value wasn't saved as
+					 * an object. */
+    double internalForm;		/* The old value of the option, in
+					 * some internal representation such
+					 * as an int or (XColor *).  Valid
+					 * only if optionPtr->specPtr->objOffset
+					 * is < 0.  The space must be large
+					 * enough to accommodate a double, a
+					 * long, or a pointer; right now it
+					 * looks like a double is big
+					 * enough.  Also, using a double
+					 * guarantees that the field is
+					 * properly aligned for storing large
+					 * values. */
+} Tk_SavedOption;
+
+#ifdef TCL_MEM_DEBUG
+#   define TK_NUM_SAVED_OPTIONS 2
+#else
+#   define TK_NUM_SAVED_OPTIONS 20
+#endif
+
+typedef struct Tk_SavedOptions {
+    char *recordPtr;			/* The data structure in which to
+					 * restore configuration options. */
+    Tk_Window tkwin;			/* Window associated with recordPtr;
+					 * needed to restore certain options. */
+    int numItems;			/* The number of valid items in 
+					 * items field. */
+    Tk_SavedOption items[TK_NUM_SAVED_OPTIONS];
+					/* Items used to hold old values. */
+    struct Tk_SavedOptions *nextPtr;	/* Points to next structure in list;	
+					 * needed if too many options changed
+					 * to hold all the old values in a
+					 * single structure.  NULL means no
+					 * more structures. */
+} Tk_SavedOptions;
 
 /*
  * Structure used to describe application-specific configuration
  * options:  indicates procedures to call to parse an option and
- * to return a text string describing an option.
+ * to return a text string describing an option. THESE ARE
+ * DEPRECATED; PLEASE USE THE NEW STRUCTURES LISTED ABOVE.
  */
+
+/*
+ * This is a temporary flag used while tkObjConfig and new widgets
+ * are in development.
+ */
+
+#ifndef __NO_OLD_CONFIG
 
 typedef int (Tk_OptionParseProc) _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, Tk_Window tkwin, char *value, char *widgRec,
@@ -224,40 +324,15 @@ typedef struct Tk_ConfigSpec {
  * documentation for details.
  */
 
-#define TK_CONFIG_BOOLEAN	1
-#define TK_CONFIG_INT		2
-#define TK_CONFIG_DOUBLE	3
-#define TK_CONFIG_STRING	4
-#define TK_CONFIG_UID		5
-#define TK_CONFIG_COLOR		6
-#define TK_CONFIG_FONT		7
-#define TK_CONFIG_BITMAP	8
-#define TK_CONFIG_BORDER	9
-#define TK_CONFIG_RELIEF	10
-#define TK_CONFIG_CURSOR	11
-#define TK_CONFIG_ACTIVE_CURSOR	12
-#define TK_CONFIG_JUSTIFY	13
-#define TK_CONFIG_ANCHOR	14
-#define TK_CONFIG_SYNONYM	15
-#define TK_CONFIG_CAP_STYLE	16
-#define TK_CONFIG_JOIN_STYLE	17
-#define TK_CONFIG_PIXELS	18
-#define TK_CONFIG_MM		19
-#define TK_CONFIG_WINDOW	20
-#define TK_CONFIG_CUSTOM	21
-#define TK_CONFIG_END		22
-
-/*
- * Macro to use to fill in "offset" fields of Tk_ConfigInfos.
- * Computes number of bytes from beginning of structure to a
- * given field.
- */
-
-#ifdef offsetof
-#define Tk_Offset(type, field) ((int) offsetof(type, field))
-#else
-#define Tk_Offset(type, field) ((int) ((char *) &((type *) 0)->field))
-#endif
+typedef enum {
+    TK_CONFIG_BOOLEAN, TK_CONFIG_INT, TK_CONFIG_DOUBLE, TK_CONFIG_STRING,
+    TK_CONFIG_UID, TK_CONFIG_COLOR, TK_CONFIG_FONT, TK_CONFIG_BITMAP,
+    TK_CONFIG_BORDER, TK_CONFIG_RELIEF, TK_CONFIG_CURSOR, 
+    TK_CONFIG_ACTIVE_CURSOR, TK_CONFIG_JUSTIFY, TK_CONFIG_ANCHOR, 
+    TK_CONFIG_SYNONYM, TK_CONFIG_CAP_STYLE, TK_CONFIG_JOIN_STYLE,
+    TK_CONFIG_PIXELS, TK_CONFIG_MM, TK_CONFIG_WINDOW, TK_CONFIG_CUSTOM, 
+    TK_CONFIG_END
+} Tk_ConfigTypes;
 
 /*
  * Possible values for flags argument to Tk_ConfigureWidget:
@@ -266,18 +341,62 @@ typedef struct Tk_ConfigSpec {
 #define TK_CONFIG_ARGV_ONLY	1
 
 /*
- * Possible flag values for Tk_ConfigInfo structures.  Any bits at
+ * Possible flag values for Tk_ConfigSpec structures.  Any bits at
  * or above TK_CONFIG_USER_BIT may be used by clients for selecting
  * certain entries.  Before changing any values here, coordinate with
- * tkConfig.c (internal-use-only flags are defined there).
+ * tkOldConfig.c (internal-use-only flags are defined there).
  */
 
-#define TK_CONFIG_COLOR_ONLY		1
-#define TK_CONFIG_MONO_ONLY		2
-#define TK_CONFIG_NULL_OK		4
+#define TK_CONFIG_NULL_OK		1
+#define TK_CONFIG_COLOR_ONLY		2
+#define TK_CONFIG_MONO_ONLY		4
 #define TK_CONFIG_DONT_SET_DEFAULT	8
 #define TK_CONFIG_OPTION_SPECIFIED	0x10
 #define TK_CONFIG_USER_BIT		0x100
+#endif /* __NO_OLD_CONFIG */
+
+/*
+ * Structure used to specify how to handle argv options.
+ */
+
+typedef struct {
+    char *key;		/* The key string that flags the option in the
+			 * argv array. */
+    int type;		/* Indicates option type;  see below. */
+    char *src;		/* Value to be used in setting dst;  usage
+			 * depends on type. */
+    char *dst;		/* Address of value to be modified;  usage
+			 * depends on type. */
+    char *help;		/* Documentation message describing this option. */
+} Tk_ArgvInfo;
+
+/*
+ * Legal values for the type field of a Tk_ArgvInfo: see the user
+ * documentation for details.
+ */
+
+#define TK_ARGV_CONSTANT		15
+#define TK_ARGV_INT			16
+#define TK_ARGV_STRING			17
+#define TK_ARGV_UID			18
+#define TK_ARGV_REST			19
+#define TK_ARGV_FLOAT			20
+#define TK_ARGV_FUNC			21
+#define TK_ARGV_GENFUNC			22
+#define TK_ARGV_HELP			23
+#define TK_ARGV_CONST_OPTION		24
+#define TK_ARGV_OPTION_VALUE		25
+#define TK_ARGV_OPTION_NAME_VALUE	26
+#define TK_ARGV_END			27
+
+/*
+ * Flag bits for passing to Tk_ParseArgv:
+ */
+
+#define TK_ARGV_NO_DEFAULTS		0x1
+#define TK_ARGV_NO_LEFTOVERS		0x2
+#define TK_ARGV_NO_ABBREV		0x4
+#define TK_ARGV_DONT_SKIP_FIRST_ARG	0x8
 
 /*
  * Enumerated type for describing actions to be taken in response
@@ -302,12 +421,12 @@ typedef enum {
  * Relief values returned by Tk_GetRelief:
  */
 
-#define TK_RELIEF_RAISED	1
-#define TK_RELIEF_FLAT		2
-#define TK_RELIEF_SUNKEN	4
-#define TK_RELIEF_GROOVE	8
-#define TK_RELIEF_RIDGE		16
-#define TK_RELIEF_SOLID		32
+#define TK_RELIEF_FLAT		0
+#define TK_RELIEF_GROOVE	1
+#define TK_RELIEF_RAISED	2
+#define TK_RELIEF_RIDGE		3
+#define TK_RELIEF_SOLID		4
+#define TK_RELIEF_SUNKEN	5
 
 /*
  * "Which" argument values for Tk_3DBorderGC:
@@ -740,6 +859,8 @@ typedef void	Tk_ItemInsertProc _ANSI_ARGS_((Tk_Canvas canvas,
 typedef void	Tk_ItemDCharsProc _ANSI_ARGS_((Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int first, int last));
 
+#ifndef __NO_OLD_CONFIG
+
 typedef struct Tk_ItemType {
     char *name;				/* The name of this type of item, such
 					 * as "line". */
@@ -793,6 +914,8 @@ typedef struct Tk_ItemType {
     char *reserved4;
 } Tk_ItemType;
 
+#endif
+
 /*
  * The following structure provides information about the selection and
  * the insertion cursor.  It is needed by only a few items, such as
@@ -811,16 +934,17 @@ typedef struct Tk_CanvasTextInfo {
     Tk_Item *selItemPtr;	/* Pointer to selected item.  NULL means
 				 * selection isn't in this canvas.
 				 * Writable by items. */
-    int selectFirst;		/* Index of first selected character. 
-				 * Writable by items. */
-    int selectLast;		/* Index of last selected character. 
-				 * Writable by items. */
+    int selectFirst;		/* Character index of first selected
+				 * character.  Writable by items. */
+    int selectLast;		/* Character index of last selected
+				 * character.  Writable by items. */
     Tk_Item *anchorItemPtr;	/* Item corresponding to "selectAnchor":
 				 * not necessarily selItemPtr.   Read-only
 				 * to items. */
-    int selectAnchor;		/* Fixed end of selection (i.e. "select to"
-				 * operation will use this as one end of the
-				 * selection).  Writable by items. */
+    int selectAnchor;		/* Character index of fixed end of
+				 * selection (i.e. "select to" operation will
+				 * use this as one end of the selection).
+				 * Writable by items. */
     Tk_3DBorder insertBorder;	/* Used to draw vertical bar for insertion
 				 * cursor.  Read-only to items. */
     int insertWidth;		/* Total width of insertion cursor.  Read-only
@@ -1023,11 +1147,27 @@ struct Tk_PhotoImageFormat {
 #define Tk_DoWhenIdle		Tcl_DoWhenIdle
 #define Tk_Sleep		Tcl_Sleep
 
+/* Additional stuff that has moved to Tcl: */
+
+#define Tk_AfterCmd		Tcl_AfterCmd
 #define Tk_EventuallyFree	Tcl_EventuallyFree
 #define Tk_FreeProc		Tcl_FreeProc
 #define Tk_Preserve		Tcl_Preserve
 #define Tk_Release		Tcl_Release
-#define Tk_FileeventCmd		Tcl_FileEventCmd
+
+/* Removed Tk_Main, use macro instead */
+#define Tk_Main(argc, argv, proc) \
+    Tk_MainEx(argc, argv, proc, Tcl_CreateInterp())
+
+char *Tk_InitStubs _ANSI_ARGS_((Tcl_Interp *interp, char *version, int exact));
+
+#ifndef USE_TK_STUBS
+
+#define Tk_InitStubs(interp, version, exact) \
+    Tcl_PkgRequire(interp, "Tk", version, exact)
+
+#endif
+
 
 /*
  *--------------------------------------------------------------
@@ -1051,32 +1191,20 @@ typedef Tk_RestrictAction (Tk_RestrictProc) _ANSI_ARGS_((
 typedef int (Tk_SelectionProc) _ANSI_ARGS_((ClientData clientData,
 	int offset, char *buffer, int maxBytes));
 
-
 /*
- * Public functions that are not accessible via the stubs table.
+ *--------------------------------------------------------------
+ *
+ * Exported procedures and variables.
+ *
+ *--------------------------------------------------------------
  */
-
-EXTERN void		Tk_Main _ANSI_ARGS_((int argc, char **argv,
-			    Tcl_AppInitProc *appInitProc));
-EXTERN void		Tk_MainEx _ANSI_ARGS_((int argc, char **argv,
-			    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp));
-
-/*
- * Stubs initialization function.  This function should be invoked before
- * any other Tk functions in a stubs-aware extension.  Tk_InitStubs is
- * implemented in the stub library, not the main Tk library.  In directly
- * linked code, this function turns into a call to Tcl_PkgRequire().
- */
-
-EXTERN char *		Tk_InitStubs _ANSI_ARGS_((Tcl_Interp *interp,
-			    char *version, int exact));
-
-#ifndef USE_TK_STUBS
-#define Tk_InitStubs(interp, version, exact) \
- 	 Tcl_PkgRequire(interp, "Tk", version, exact)
-#endif
 
 #include "tkDecls.h"
+
+/*
+ * Tcl commands exported by Tk:
+ */
+
 
 #endif /* RESOURCE_INCLUDED */
 

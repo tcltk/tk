@@ -7,12 +7,11 @@
  *
  * Copyright (c) 1991-1993 The Regents of the University of California.
  * Copyright (c) 1994-1996 Sun Microsystems, Inc.
- * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixPort.h,v 1.4 1999/03/10 07:04:46 stanton Exp $
+ * RCS: @(#) $Id: tkUnixPort.h,v 1.5 1999/04/16 01:51:47 stanton Exp $
  */
 
 #ifndef _UNIXPORT
@@ -176,9 +175,16 @@ extern int errno;
 #endif
 
 /*
+ * Declarations for various library procedures that may not be declared
+ * in any other header file.
+ */
+
+
+/*
  * These functions do nothing under Unix, so we just eliminate calls to them.
  */
 
+#define TkpButtonSetDefaults(specPtr) {}
 #define TkpDestroyButton(butPtr) {}
 #define TkSelUpdateClipboard(a,b) {}
 #define TkSetPixmapColormap(p,c) {}
@@ -214,13 +220,12 @@ extern int errno;
 #define ALWAYS_SHOW_SELECTION
 
 /*
- * tclInt.h is included to get declarations of the following functions.
- *	void		panic _ANSI_ARGS_(TCL_VARARGS(char *,format));
- *	void		TclpGetTime _ANSI_ARGS_((Tcl_Time *time));
+ * The following declaration is used to get access to a private Tcl interface
+ * that is needed for portability reasons.
  */
-  
+
 #ifndef _TCLINT
-#   include <tclInt.h>
+#include <tclInt.h>
 #endif
 
 #endif /* _UNIXPORT */
