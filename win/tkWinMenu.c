@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.19 2002/01/17 03:35:01 dgp Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.20 2002/08/05 04:30:41 dgp Exp $
  */
 
 #define OEMRESOURCE
@@ -2744,8 +2744,8 @@ MenuExitHandler(
 Tcl_Obj *
 TkWinGetMenuSystemDefault(
     Tk_Window tkwin,		/* A window to use. */
-    char *dbName,		/* The option database name. */
-    char *className)		/* The name of the option class. */
+    CONST char *dbName,		/* The option database name. */
+    CONST char *className)	/* The name of the option class. */
 {
     Tcl_Obj *valuePtr = NULL;
 

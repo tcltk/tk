@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.7 2002/01/25 21:09:37 dgp Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.8 2002/08/05 04:30:40 dgp Exp $
  */
 
 #include "default.h"
@@ -76,7 +76,7 @@ static Tk_ConfigSpec tagConfigSpecs[] = {
 static void		ChangeTagPriority _ANSI_ARGS_((TkText *textPtr,
 			    TkTextTag *tagPtr, int prio));
 static TkTextTag *	FindTag _ANSI_ARGS_((Tcl_Interp *interp,
-			    TkText *textPtr, char *tagName));
+			    TkText *textPtr, CONST char *tagName));
 static void		SortTags _ANSI_ARGS_((int numTags,
 			    TkTextTag **tagArrayPtr));
 static int		TagSortProc _ANSI_ARGS_((CONST VOID *first,
@@ -105,7 +105,7 @@ TkTextTagCmd(textPtr, interp, argc, argv)
     register TkText *textPtr;	/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings.  Someone else has already
+    CONST char **argv;		/* Argument strings.  Someone else has already
 				 * parsed this command enough to know that
 				 * argv[1] is "tag". */
 {
@@ -245,7 +245,7 @@ TkTextTagCmd(textPtr, interp, argc, argv)
 		return TCL_ERROR;
 	    }
 	} else if (argc == 5) {
-	    char *command;
+	    CONST char *command;
     
 	    command = Tk_GetBinding(interp, textPtr->bindingTable,
 		    (ClientData) tagPtr, argv[4]);
@@ -264,7 +264,7 @@ TkTextTagCmd(textPtr, interp, argc, argv)
 		    Tcl_ResetResult(interp);
 		}
 	    } else {
-		Tcl_SetResult(interp, command, TCL_STATIC);
+		Tcl_SetResult(interp, (char *) command, TCL_STATIC);
 	    }
 	} else {
 	    Tk_GetAllBindings(interp, textPtr->bindingTable,
@@ -890,7 +890,7 @@ FindTag(interp, textPtr, tagName)
 				 * if NULL, then don't record an error
 				 * message. */
     TkText *textPtr;		/* Widget in which tag is being used. */
-    char *tagName;		/* Name of desired tag. */
+    CONST char *tagName;	/* Name of desired tag. */
 {
     Tcl_HashEntry *hPtr;
 

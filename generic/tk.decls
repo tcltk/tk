@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.22 2002/06/18 23:51:46 dkf Exp $
+# RCS: @(#) $Id: tk.decls,v 1.23 2002/08/05 04:30:38 dgp Exp $
 
 library tk
 
@@ -121,7 +121,7 @@ declare 17 generic {
 
 declare 18 generic {
     int Tk_CanvasTagsParseProc (ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, char *value, char *widgRec, int offset)
+	    Tk_Window tkwin, CONST char *value, char *widgRec, int offset)
 }
 
 declare 19 generic {
@@ -164,19 +164,19 @@ declare 26 generic {
 declare 27 generic {
     int Tk_ConfigureInfo (Tcl_Interp *interp,
 	    Tk_Window tkwin, Tk_ConfigSpec *specs,
-	    char *widgRec, char *argvName, int flags)
+	    char *widgRec, CONST char *argvName, int flags)
 }
 
 declare 28 generic {
     int Tk_ConfigureValue (Tcl_Interp *interp,
 	    Tk_Window tkwin, Tk_ConfigSpec *specs,
-	    char *widgRec, char *argvName, int flags)
+	    char *widgRec, CONST char *argvName, int flags)
 }
 
 declare 29 generic {
     int Tk_ConfigureWidget (Tcl_Interp *interp,
 	    Tk_Window tkwin, Tk_ConfigSpec *specs,
-	    int argc, char **argv, char *widgRec,
+	    int argc, CONST84 char **argv, char *widgRec,
 	    int flags)
 }
 
@@ -199,7 +199,7 @@ declare 32 generic {
 declare 33 generic {
     unsigned long Tk_CreateBinding (Tcl_Interp *interp,
 	    Tk_BindingTable bindingTable, ClientData object,
-	    char *eventStr, char *command, int append)
+	    CONST char *eventStr, CONST char *command, int append)
 }
 
 declare 34 generic {
@@ -243,17 +243,17 @@ declare 41 generic {
 
 declare 42 generic {
     Tk_Window Tk_CreateWindow (Tcl_Interp *interp,
-	    Tk_Window parent, char *name, char *screenName)
+	    Tk_Window parent, CONST char *name, CONST char *screenName)
 }
 
 declare 43 generic {
     Tk_Window Tk_CreateWindowFromPath (Tcl_Interp *interp, Tk_Window tkwin,
-	    char *pathName, char *screenName)
+	    CONST char *pathName, CONST char *screenName)
 }
 
 declare 44 generic {
-    int Tk_DefineBitmap (Tcl_Interp *interp, CONST char *name, char *source,
-	    int width, int height)
+    int Tk_DefineBitmap (Tcl_Interp *interp, CONST char *name,
+	    CONST char *source, int width, int height)
 }
 
 declare 45 generic {
@@ -267,7 +267,7 @@ declare 46 generic {
 declare 47 generic {
     int Tk_DeleteBinding (Tcl_Interp *interp,
 	    Tk_BindingTable bindingTable, ClientData object,
-	    char *eventStr)
+	    CONST char *eventStr)
 }
 
 declare 48 generic {
@@ -289,7 +289,7 @@ declare 51 generic {
 }
 
 declare 52 generic {
-    void Tk_DeleteImage (Tcl_Interp *interp, char *name)
+    void Tk_DeleteImage (Tcl_Interp *interp, CONST char *name)
 }
 
 declare 53 generic {
@@ -301,7 +301,7 @@ declare 54 generic {
 }
 
 declare 55 generic {
-    char * Tk_DisplayName (Tk_Window tkwin)
+    CONST84_RETURN char * Tk_DisplayName (Tk_Window tkwin)
 }
 
 declare 56 generic {
@@ -352,7 +352,7 @@ declare 63 generic {
 }
 
 declare 64 generic {
-    Tk_PhotoHandle Tk_FindPhoto (Tcl_Interp *interp, char *imageName)
+    Tk_PhotoHandle Tk_FindPhoto (Tcl_Interp *interp, CONST char *imageName)
 }
 
 declare 65 generic {
@@ -428,17 +428,17 @@ declare 81 generic {
 
 declare 82 generic {
     int Tk_GetAnchor (Tcl_Interp *interp,
-	    char *str, Tk_Anchor *anchorPtr)
+	    CONST char *str, Tk_Anchor *anchorPtr)
 }
 
 declare 83 generic {
-    char * Tk_GetAtomName (Tk_Window tkwin, Atom atom)
+    CONST84_RETURN char * Tk_GetAtomName (Tk_Window tkwin, Atom atom)
 }
 
 declare 84 generic {
-    char * Tk_GetBinding (Tcl_Interp *interp,
+    CONST84_RETURN char * Tk_GetBinding (Tcl_Interp *interp,
 	    Tk_BindingTable bindingTable, ClientData object,
-	    char *eventStr)
+	    CONST char *eventStr)
 }
 
 declare 85 generic {
@@ -447,11 +447,11 @@ declare 85 generic {
 
 declare 86 generic {
     Pixmap Tk_GetBitmapFromData (Tcl_Interp *interp,
-	    Tk_Window tkwin, char *source, int width, int height)
+	    Tk_Window tkwin, CONST char *source, int width, int height)
 }
 
 declare 87 generic {
-    int Tk_GetCapStyle (Tcl_Interp *interp, char *str, int *capPtr)
+    int Tk_GetCapStyle (Tcl_Interp *interp, CONST char *str, int *capPtr)
 }
 
 declare 88 generic {
@@ -463,7 +463,8 @@ declare 89 generic {
 }
 
 declare 90 generic {
-    Colormap Tk_GetColormap (Tcl_Interp *interp, Tk_Window tkwin, char *str)
+    Colormap Tk_GetColormap (Tcl_Interp *interp, Tk_Window tkwin,
+	    CONST char *str)
 }
 
 declare 91 generic {
@@ -473,7 +474,7 @@ declare 91 generic {
 
 declare 92 generic {
     Tk_Cursor Tk_GetCursorFromData (Tcl_Interp *interp,
-	    Tk_Window tkwin, char *source, char *mask,
+	    Tk_Window tkwin, CONST char *source, CONST char *mask,
 	    int width, int height, int xHot, int yHot,
 	    Tk_Uid fg, Tk_Uid bg)
 }
@@ -496,13 +497,13 @@ declare 96 generic {
 }
 
 declare 97 generic {
-    Tk_Image Tk_GetImage (Tcl_Interp *interp, Tk_Window tkwin, char *name,
+    Tk_Image Tk_GetImage (Tcl_Interp *interp, Tk_Window tkwin, CONST char *name,
 	    Tk_ImageChangedProc *changeProc, ClientData clientData)
 }
 
 declare 98 generic {
     ClientData Tk_GetImageMasterData (Tcl_Interp *interp,
-	    char *name, Tk_ImageType **typePtrPtr)
+	    CONST char *name, Tk_ImageType **typePtrPtr)
 }
 
 declare 99 generic {
@@ -510,12 +511,12 @@ declare 99 generic {
 }
 
 declare 100 generic {
-    int Tk_GetJoinStyle (Tcl_Interp *interp, char *str, int *joinPtr)
+    int Tk_GetJoinStyle (Tcl_Interp *interp, CONST char *str, int *joinPtr)
 }
 
 declare 101 generic {
     int Tk_GetJustify (Tcl_Interp *interp,
-	    char *str, Tk_Justify *justifyPtr)
+	    CONST char *str, Tk_Justify *justifyPtr)
 }
 
 declare 102 generic {
@@ -523,7 +524,8 @@ declare 102 generic {
 }
 
 declare 103 generic {
-    Tk_Uid Tk_GetOption (Tk_Window tkwin, char *name, char *className)
+    Tk_Uid Tk_GetOption (Tk_Window tkwin, CONST char *name, 
+	    CONST char *className)
 }
 
 declare 104 generic {
@@ -537,7 +539,7 @@ declare 105 generic {
 }
 
 declare 106 generic {
-    int Tk_GetRelief (Tcl_Interp *interp, char *name, int *reliefPtr)
+    int Tk_GetRelief (Tcl_Interp *interp, CONST char *name, int *reliefPtr)
 }
 
 declare 107 generic {
@@ -546,7 +548,7 @@ declare 107 generic {
 
 declare 108 generic {
     int Tk_GetScrollInfo (Tcl_Interp *interp,
-	    int argc, char **argv, double *dblPtr, int *intPtr)
+	    int argc, CONST84 char **argv, double *dblPtr, int *intPtr)
 }
 
 declare 109 generic {
@@ -566,7 +568,7 @@ declare 111 generic {
 
 declare 112 generic {
     Visual * Tk_GetVisual (Tcl_Interp *interp,
-	    Tk_Window tkwin, char *str, int *depthPtr,
+	    Tk_Window tkwin, CONST char *str, int *depthPtr,
 	    Colormap *colormapPtr)
 }
 
@@ -597,7 +599,7 @@ declare 118 generic {
 }
 
 declare 119 generic {
-    Atom Tk_InternAtom (Tk_Window tkwin, char *name)
+    Atom Tk_InternAtom (Tk_Window tkwin, CONST char *name)
 }
 
 declare 120 generic {
@@ -647,47 +649,47 @@ declare 129 generic {
 }
 
 declare 130 generic {
-    char * Tk_NameOf3DBorder (Tk_3DBorder border)
+    CONST84_RETURN char * Tk_NameOf3DBorder (Tk_3DBorder border)
 }
 
 declare 131 generic {
-    char * Tk_NameOfAnchor (Tk_Anchor anchor)
+    CONST84_RETURN char * Tk_NameOfAnchor (Tk_Anchor anchor)
 }
 
 declare 132 generic {
-    char * Tk_NameOfBitmap (Display *display, Pixmap bitmap)
+    CONST84_RETURN char * Tk_NameOfBitmap (Display *display, Pixmap bitmap)
 }
 
 declare 133 generic {
-    char * Tk_NameOfCapStyle (int cap)
+    CONST84_RETURN char * Tk_NameOfCapStyle (int cap)
 }
 
 declare 134 generic {
-    char * Tk_NameOfColor (XColor *colorPtr)
+    CONST84_RETURN char * Tk_NameOfColor (XColor *colorPtr)
 }
 
 declare 135 generic {
-    char * Tk_NameOfCursor (Display *display, Tk_Cursor cursor)
+    CONST84_RETURN char * Tk_NameOfCursor (Display *display, Tk_Cursor cursor)
 }
 
 declare 136 generic {
-    char * Tk_NameOfFont (Tk_Font font)
+    CONST84_RETURN char * Tk_NameOfFont (Tk_Font font)
 }
 
 declare 137 generic {
-    char * Tk_NameOfImage (Tk_ImageMaster imageMaster)
+    CONST84_RETURN char * Tk_NameOfImage (Tk_ImageMaster imageMaster)
 }
 
 declare 138 generic {
-    char * Tk_NameOfJoinStyle (int join)
+    CONST84_RETURN char * Tk_NameOfJoinStyle (int join)
 }
 
 declare 139 generic {
-    char * Tk_NameOfJustify (Tk_Justify justify)
+    CONST84_RETURN char * Tk_NameOfJustify (Tk_Justify justify)
 }
 
 declare 140 generic {
-    char * Tk_NameOfRelief (int relief)
+    CONST84_RETURN char * Tk_NameOfRelief (int relief)
 }
 
 declare 141 generic {
@@ -780,7 +782,7 @@ declare 159 generic {
 }
 
 declare 160 generic {
-    char * Tk_SetAppName (Tk_Window tkwin, char *name)
+    CONST char * Tk_SetAppName (Tk_Window tkwin, CONST char *name)
 }
 
 declare 161 generic {
@@ -788,7 +790,7 @@ declare 161 generic {
 }
 
 declare 162 generic {
-    void Tk_SetClass (Tk_Window tkwin, char *className)
+    void Tk_SetClass (Tk_Window tkwin, CONST char *className)
 }
 
 declare 163 generic {
@@ -1139,7 +1141,7 @@ declare 240 generic {
 #
 declare 241 generic {
     Tk_Window Tk_CreateAnonymousWindow (Tcl_Interp *interp,
-	    Tk_Window parent, char *screenName)
+	    Tk_Window parent, CONST char *screenName)
 }
 declare 242 generic {
     void Tk_SetClassProcs (Tk_Window tkwin,
@@ -1181,17 +1183,18 @@ declare 248 generic {
 
 # Style engine
 declare 249 generic {
-    Tk_StyleEngine Tk_RegisterStyleEngine (char *name, Tk_StyleEngine parent)
+    Tk_StyleEngine Tk_RegisterStyleEngine (CONST char *name,
+	    Tk_StyleEngine parent)
 }
 declare 250 generic {
-    Tk_StyleEngine Tk_GetStyleEngine (char *name)
+    Tk_StyleEngine Tk_GetStyleEngine (CONST char *name)
 }
 declare 251 generic {
     int Tk_RegisterStyledElement (Tk_StyleEngine engine,
 	    Tk_ElementSpec *templatePtr)
 }
 declare 252 generic {
-    int Tk_GetElementId (char *name)
+    int Tk_GetElementId (CONST char *name)
 }
 declare 253 generic {
     Tk_Style Tk_CreateStyle (CONST char *name, Tk_StyleEngine engine,

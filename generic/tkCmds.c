@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.28 2002/06/17 20:09:01 hobbs Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.29 2002/08/05 04:30:38 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -32,8 +32,8 @@
 
 static TkWindow *	GetToplevel _ANSI_ARGS_((Tk_Window tkwin));
 static char *		WaitVariableProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, char *name1, CONST char *name2,
-			    int flags));
+			    Tcl_Interp *interp, CONST char *name1,
+			    CONST char *name2, int flags));
 static void		WaitVisibilityProc _ANSI_ARGS_((ClientData clientData,
 			    XEvent *eventPtr));
 static void		WaitWindowProc _ANSI_ARGS_((ClientData clientData,
@@ -193,7 +193,7 @@ Tk_BindObjCmd(clientData, interp, objc, objv)
 	    return TCL_ERROR;
 	}
     } else if (objc == 3) {
-	char *command;
+	CONST char *command;
 
 	command = Tk_GetBinding(interp, winPtr->mainPtr->bindingTable,
 		object, Tcl_GetString(objv[2]));
@@ -201,7 +201,7 @@ Tk_BindObjCmd(clientData, interp, objc, objv)
 	    Tcl_ResetResult(interp);
 	    return TCL_OK;
 	}
-	Tcl_SetResult(interp, command, TCL_STATIC);
+	Tcl_SetResult(interp, (char *) command, TCL_STATIC);
     } else {
 	Tk_GetAllBindings(interp, winPtr->mainPtr->bindingTable, object);
     }
@@ -939,7 +939,7 @@ static char *
 WaitVariableProc(clientData, interp, name1, name2, flags)
     ClientData clientData;	/* Pointer to integer to set to 1. */
     Tcl_Interp *interp;		/* Interpreter containing variable. */
-    char *name1;		/* Name of variable. */
+    CONST char *name1;		/* Name of variable. */
     CONST char *name2;		/* Second part of variable name. */
     int flags;			/* Information about what happened. */
 {
@@ -1410,7 +1410,7 @@ Tk_WinfoObjCmd(clientData, interp, objc, objv)
 	    break;
 	}
 	case WIN_ATOMNAME: {
-	    char *name;
+	    CONST char *name;
 	    long id;
 	    
 	    skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
@@ -1966,7 +1966,7 @@ TkDeadAppCmd(clientData, interp, argc, argv)
     ClientData clientData;	/* Dummy. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    CONST char **argv;		/* Argument strings. */
 {
     Tcl_AppendResult(interp, "can't invoke \"", argv[0],
 	    "\" command:  application has been destroyed", (char *) NULL);

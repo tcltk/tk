@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.23 2002/06/22 09:15:51 hobbs Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.24 2002/08/05 04:30:38 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -900,7 +900,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	
 	if (objc == 4) {
 	    int minsize = 0, pad = 0, weight = 0;
-	    char *uniform = NULL;
+	    Tk_Uid uniform = NULL;
 	    Tcl_Obj *res = Tcl_NewListObj(0, NULL);
 	 
 	    if (ok == TCL_OK) {
@@ -968,7 +968,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	    }
 	    else if (index == ROWCOL_UNIFORM) {
 		if (objc == 5) {
-		    char *value;
+		    Tk_Uid value;
 		    value = (ok == TCL_OK) ? slotPtr[slot].uniform : "";
 		    if (value == NULL) {
 			value = "";

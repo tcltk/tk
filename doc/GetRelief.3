@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetRelief.3,v 1.3 1999/04/16 01:51:08 stanton Exp $
+'\" RCS: @(#) $Id: GetRelief.3,v 1.4 2002/08/05 04:30:38 dgp Exp $
 '\" 
 .so man.macros
 .TH Tk_GetReliefFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -24,7 +24,7 @@ int
 int
 \fBTk_GetRelief(\fIinterp, name, reliefPtr\fB)\fR
 .sp
-char *
+CONST char *
 \fBTk_NameOfRelief(\fIrelief\fB)\fR
 .SH ARGUMENTS
 .AS "Tcl_Interp" *reliefPtr
@@ -42,6 +42,8 @@ a string.
 .AP int *reliefPtr out
 Pointer to location in which to store relief value corresponding to
 \fIobjPtr\fR or \fIname\fR.
+.AP "CONST char" *name
+Name of the relief.
 .AP int relief in
 Relief value (one of TK_RELIEF_FLAT, TK_RELIEF_RAISED, TK_RELIEF_SUNKEN,
 TK_RELIEF_GROOVE, TK_RELIEF_SOLID, or TK_RELIEF_RIDGE).

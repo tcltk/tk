@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.6 2002/06/22 08:37:25 hobbs Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.7 2002/08/05 04:30:41 dgp Exp $
  */
 
 #include "tkWinInt.h"
@@ -110,7 +110,7 @@ TkpTestembedCmd(clientData, interp, argc, argv)
     ClientData clientData;
     Tcl_Interp *interp;
     int argc;
-    char **argv;
+    CONST char **argv;
 {
     return TCL_OK;
 }
@@ -144,7 +144,7 @@ TkpUseWindow(interp, tkwin, string)
 				 * if string is bogus. */
     Tk_Window tkwin;		/* Tk window that does not yet have an
 				 * associated X window. */
-    char *string;		/* String identifying an X window to use
+    CONST char *string;		/* String identifying an X window to use
 				 * for tkwin;  must be an integer value. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.25 2002/06/19 19:37:53 mdejong Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.26 2002/08/05 04:30:38 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -676,13 +676,13 @@ static int		DeleteVirtualEvent _ANSI_ARGS_((Tcl_Interp *interp,
 static void		DeleteVirtualEventTable _ANSI_ARGS_((
 			    VirtualEventTable *vetPtr));
 static void		ExpandPercents _ANSI_ARGS_((TkWindow *winPtr,
-			    char *before, XEvent *eventPtr, KeySym keySym,
+			    CONST char *before, XEvent *eventPtr, KeySym keySym,
 			    Tcl_DString *dsPtr));
 static void		FreeTclBinding _ANSI_ARGS_((ClientData clientData));
 static PatSeq *		FindSequence _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tcl_HashTable *patternTablePtr, ClientData object,
-			    char *eventString, int create, int allowVirtual,
-			    unsigned long *maskPtr));
+			    CONST char *eventString, int create,
+			    int allowVirtual, unsigned long *maskPtr));
 static void		GetAllVirtualEvents _ANSI_ARGS_((Tcl_Interp *interp,
 			    VirtualEventTable *vetPtr));
 static char *		GetField _ANSI_ARGS_((char *p, char *copy, int size));
@@ -705,7 +705,7 @@ static int		NameToWindow _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window main, Tcl_Obj *objPtr,
 			    Tk_Window *tkwinPtr));
 static int		ParseEventDescription _ANSI_ARGS_((Tcl_Interp *interp,
-			    char **eventStringPtr, Pattern *patPtr,
+			    CONST char **eventStringPtr, Pattern *patPtr,
 			    unsigned long *eventMaskPtr));
 static void		DoWarp _ANSI_ARGS_((ClientData clientData));
 
@@ -972,9 +972,9 @@ Tk_CreateBinding(interp, bindingTable, object, eventString, command, append)
 				/* Table in which to create binding. */
     ClientData object;		/* Token for object with which binding is
 				 * associated. */
-    char *eventString;		/* String describing event sequence that
+    CONST char *eventString;	/* String describing event sequence that
 				 * triggers binding. */
-    char *command;		/* Contains Tcl command to execute when
+    CONST char *command;	/* Contains Tcl command to execute when
 				 * binding triggers. */
     int append;			/* 0 means replace any existing binding for
 				 * eventString; 1 means append to that
@@ -1076,7 +1076,7 @@ TkCreateBindingProcedure(interp, bindingTable, object, eventString,
 				/* Table in which to create binding. */
     ClientData object;		/* Token for object with which binding is
 				 * associated. */
-    char *eventString;		/* String describing event sequence that
+    CONST char *eventString;	/* String describing event sequence that
 				 * triggers binding. */
     TkBindEvalProc *eventProc;	/* Procedure to invoke when binding
 				 * triggers.  Must not be NULL. */
@@ -1154,7 +1154,7 @@ Tk_DeleteBinding(interp, bindingTable, object, eventString)
     Tk_BindingTable bindingTable;	/* Table in which to delete binding. */
     ClientData object;			/* Token for object with which binding
 					 * is associated. */
-    char *eventString;			/* String describing event sequence
+    CONST char *eventString;		/* String describing event sequence
 					 * that triggers binding. */
 {
     BindingTable *bindPtr = (BindingTable *) bindingTable;
@@ -1243,14 +1243,14 @@ Tk_DeleteBinding(interp, bindingTable, object, eventString)
  *--------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_GetBinding(interp, bindingTable, object, eventString)
     Tcl_Interp *interp;			/* Interpreter for error reporting. */
     Tk_BindingTable bindingTable;	/* Table in which to look for
 					 * binding. */
     ClientData object;			/* Token for object with which binding
 					 * is associated. */
-    char *eventString;			/* String describing event sequence
+    CONST char *eventString;		/* String describing event sequence
 					 * that triggers binding. */
 {
     BindingTable *bindPtr = (BindingTable *) bindingTable;
@@ -1263,7 +1263,7 @@ Tk_GetBinding(interp, bindingTable, object, eventString)
 	return NULL;
     }
     if (psPtr->eventProc == EvalTclBinding) {
-	return (char *) psPtr->clientData;
+	return (CONST char *) psPtr->clientData;
     }
     return "";
 }
@@ -2306,7 +2306,7 @@ static void
 ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
     TkWindow *winPtr;		/* Window where event occurred:  needed to
 				 * get input context. */
-    char *before;		/* Command containing percent expressions
+    CONST char *before;		/* Command containing percent expressions
 				 * to be replaced. */
     XEvent *eventPtr;		/* X event containing information to be
 				 * used in % replacements. */
@@ -2319,7 +2319,7 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 				 * list element. */
     int number, flags, length;
 #define NUM_SIZE 40
-    char *string;
+    CONST char *string;
     Tcl_DString buf;
     char numStorage[NUM_SIZE+1];
 
@@ -3279,7 +3279,8 @@ HandleEventGenerate(interp, mainWin, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     XEvent event;    
-    char *name, *p, *windowName;
+    CONST char *p;
+    char *name, *windowName;
     int count, flags, synch, i, number, warp;
     Tcl_QueuePosition pos;
     Pattern pat;
@@ -3951,7 +3952,7 @@ FindSequence(interp, patternTablePtr, object, eventString, create,
     ClientData object;		/* For binding table, token for object with
 				 * which binding is associated.
 				 * For virtual event table, NULL. */
-    char *eventString;		/* String description of pattern to
+    CONST char *eventString;	/* String description of pattern to
 				 * match on.  See user documentation
 				 * for details. */
     int create;			/* 0 means don't create the entry if
@@ -3967,7 +3968,7 @@ FindSequence(interp, patternTablePtr, object, eventString, create,
 
     Pattern pats[EVENT_BUFFER_SIZE];
     int numPats, virtualFound;
-    char *p;
+    CONST char *p;
     Pattern *patPtr;
     PatSeq *psPtr;
     Tcl_HashEntry *hPtr;
@@ -4122,7 +4123,7 @@ static int
 ParseEventDescription(interp, eventStringPtr, patPtr,
 	eventMaskPtr)
     Tcl_Interp *interp;		/* For error messages. */
-    char **eventStringPtr;	/* On input, holds a pointer to start of
+    CONST char **eventStringPtr;/* On input, holds a pointer to start of
 				 * event string.  On exit, gets pointer to
 				 * rest of string after parsed event. */
     Pattern *patPtr;		/* Filled with the pattern parsed from the
@@ -4136,8 +4137,10 @@ ParseEventDescription(interp, eventStringPtr, patPtr,
 #define FIELD_SIZE 48
     char field[FIELD_SIZE];
     Tcl_HashEntry *hPtr;
+    Tcl_DString copy;
 
-    p = *eventStringPtr;
+    Tcl_DStringInit(&copy);
+    p = Tcl_DStringAppend(&copy, *eventStringPtr, -1);
 
     patPtr->eventType = -1;
     patPtr->needMods = 0;
@@ -4166,7 +4169,8 @@ ParseEventDescription(interp, eventStringPtr, patPtr,
 		
 		sprintf(buf, "bad ASCII character 0x%x", (unsigned char) *p);
 		Tcl_SetResult(interp, buf, TCL_VOLATILE);
-		return 0;
+		count = 0;
+		goto done;
 	    }
 	}
 	p++;
@@ -4207,12 +4211,14 @@ ParseEventDescription(interp, eventStringPtr, patPtr,
 	if (p == field) {
 	    Tcl_SetResult(interp, "virtual event \"<<>>\" is badly formed",
 		    TCL_STATIC);
-	    return 0;
+	    count = 0;
+	    goto done;
 	}	    
 	if ((p == NULL) || (p[1] != '>')) {
 	    Tcl_SetResult(interp, "missing \">\" in virtual binding",
 		    TCL_STATIC);
-	    return 0;
+	    count = 0;
+	    goto done;
 	}
 	*p = '\0';
 	patPtr->eventType = VirtualEvent;
@@ -4275,7 +4281,8 @@ ParseEventDescription(interp, eventStringPtr, patPtr,
 	    } else if ((eventFlags & BUTTON) == 0) {
 		Tcl_AppendResult(interp, "specified button \"", field,
 			"\" for non-button event", (char *) NULL);
-		return 0;
+		count = 0;
+		goto done;
 	    }
 	    patPtr->detail.button = (*field - '0');
 	} else {
@@ -4284,7 +4291,8 @@ ParseEventDescription(interp, eventStringPtr, patPtr,
 	    if (patPtr->detail.keySym == NoSymbol) {
 		Tcl_AppendResult(interp, "bad event type or keysym \"",
 			field, "\"", (char *) NULL);
-		return 0;
+		count = 0;
+		goto done;
 	    }
 	    if (eventFlags == 0) {
 		patPtr->eventType = KeyPress;
@@ -4292,13 +4300,15 @@ ParseEventDescription(interp, eventStringPtr, patPtr,
 	    } else if ((eventFlags & KEY) == 0) {
 		Tcl_AppendResult(interp, "specified keysym \"", field,
 			"\" for non-key event", (char *) NULL);
-		return 0;
+		count = 0;
+		goto done;
 	    }
 	}
     } else if (eventFlags == 0) {
 	Tcl_SetResult(interp, "no event type or button # or keysym",
 		TCL_STATIC);
-	return 0;
+	count = 0;
+	goto done;
     }
 
     while ((*p == '-') || isspace(UCHAR(*p))) {
@@ -4311,17 +4321,21 @@ ParseEventDescription(interp, eventStringPtr, patPtr,
 		Tcl_SetResult(interp,
 			"extra characters after detail in binding",
 			TCL_STATIC);
-		return 0;
+		count = 0;
+		goto done;
 	    }
 	}
 	Tcl_SetResult(interp, "missing \">\" in binding", TCL_STATIC);
-	return 0;
+	count = 0;
+	goto done;
     }
     p++;
 
 end:
-    *eventStringPtr = p;
+    *eventStringPtr += (p - Tcl_DStringValue(&copy));
     *eventMaskPtr |= eventMask;
+done:
+    Tcl_DStringFree(&copy);
     return count;
 }
 

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkAtom.c,v 1.2 1998/09/14 18:23:03 stanton Exp $
+ * RCS: @(#) $Id: tkAtom.c,v 1.3 2002/08/05 04:30:38 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -80,7 +80,7 @@ Atom
 Tk_InternAtom(tkwin, name)
     Tk_Window tkwin;		/* Window token;  map name to atom
 				 * for this window's display. */
-    char *name;			/* Name to turn into atom. */
+    CONST char *name;		/* Name to turn into atom. */
 {
     register TkDisplay *dispPtr;
     register Tcl_HashEntry *hPtr;
@@ -127,7 +127,7 @@ Tk_InternAtom(tkwin, name)
  *--------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_GetAtomName(tkwin, atom)
     Tk_Window tkwin;		/* Window token;  map atom to name
 				 * relative to this window's
@@ -168,7 +168,7 @@ Tk_GetAtomName(tkwin, atom)
 		&new);
 	Tcl_SetHashValue(hPtr, name);
     }
-    return (char *) Tcl_GetHashValue(hPtr);
+    return Tcl_GetHashValue(hPtr);
 }
 
 /*

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.18 2002/06/17 10:54:29 drh Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.19 2002/08/05 04:30:38 dgp Exp $
  */
 
 #include "tkButton.h"
@@ -524,11 +524,11 @@ static void		ButtonSelectImageProc _ANSI_ARGS_((
 			    ClientData clientData, int x, int y, int width,
 			    int height, int imgWidth, int imgHeight));
 static char *		ButtonTextVarProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, char *name1, CONST char *name2,
-			    int flags));
+			    Tcl_Interp *interp, CONST char *name1,
+			    CONST char *name2, int flags));
 static char *		ButtonVarProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, char *name1, CONST char *name2,
-			    int flags));
+			    Tcl_Interp *interp, CONST char *name1,
+			    CONST char *name2, int flags));
 static int		ButtonWidgetObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
@@ -1552,7 +1552,7 @@ static char *
 ButtonVarProc(clientData, interp, name1, name2, flags)
     ClientData clientData;	/* Information about button. */
     Tcl_Interp *interp;		/* Interpreter containing variable. */
-    char *name1;		/* Name of variable. */
+    CONST char *name1;		/* Name of variable. */
     CONST char *name2;		/* Second part of variable name. */
     int flags;			/* Information about what happened. */
 {
@@ -1631,7 +1631,7 @@ static char *
 ButtonTextVarProc(clientData, interp, name1, name2, flags)
     ClientData clientData;	/* Information about button. */
     Tcl_Interp *interp;		/* Interpreter containing variable. */
-    char *name1;		/* Not used. */
+    CONST char *name1;		/* Not used. */
     CONST char *name2;		/* Not used. */
     int flags;			/* Information about what happened. */
 {

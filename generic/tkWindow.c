@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.51 2002/07/25 21:35:22 pspjuth Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.52 2002/08/05 04:30:40 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -159,7 +159,7 @@ static TkCmd commands[] = {
     {"::tk::unsupported::MacWindowStyle",
 	    		TkUnsupported1Cmd,	NULL,			1, 1},
 #endif
-    {(char *) NULL,	(int (*) _ANSI_ARGS_((ClientData, Tcl_Interp *, int, char **))) NULL, NULL, 0}
+    {(char *) NULL,	(int (*) _ANSI_ARGS_((ClientData, Tcl_Interp *, int, CONST char **))) NULL, NULL, 0}
 };
 
 /*
@@ -202,8 +202,8 @@ static Tk_ArgvInfo argTable[] = {
  */
 
 static Tk_Window	CreateTopLevelWindow _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_Window parent, char *name, char *screenName,
-			    unsigned int flags));
+			    Tk_Window parent, CONST char *name, 
+			    CONST char *screenName, unsigned int flags));
 static void		DeleteWindowsExitProc _ANSI_ARGS_((
 			    ClientData clientData));
 static TkDisplay *	GetScreen _ANSI_ARGS_((Tcl_Interp *interp,
@@ -211,7 +211,7 @@ static TkDisplay *	GetScreen _ANSI_ARGS_((Tcl_Interp *interp,
 static int		Initialize _ANSI_ARGS_((Tcl_Interp *interp));
 static int		NameWindow _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkWindow *winPtr, TkWindow *parentPtr,
-			    char *name));
+			    CONST char *name));
 static void		UnlinkWindow _ANSI_ARGS_((TkWindow *winPtr));
 
 /*
@@ -302,10 +302,10 @@ CreateTopLevelWindow(interp, parent, name, screenName, flags)
     Tk_Window parent;		/* Token for logical parent of new window
 				 * (used for naming, options, etc.).  May
 				 * be NULL. */
-    char *name;			/* Name for new window;  if parent is
+    CONST char *name;		/* Name for new window;  if parent is
 				 * non-NULL, must be unique among parent's
 				 * children. */
-    char *screenName;		/* Name of screen on which to create
+    CONST char *screenName;	/* Name of screen on which to create
 				 * window.  NULL means use DISPLAY environment
 				 * variable to determine.  Empty string means
 				 * use parent's screen, or DISPLAY if no
@@ -704,7 +704,7 @@ NameWindow(interp, winPtr, parentPtr, name)
     register TkWindow *winPtr;	/* Window that is to be named and inserted. */
     TkWindow *parentPtr;	/* Pointer to logical parent for winPtr
 				 * (used for naming, options, etc.). */
-    char *name;			/* Name for winPtr;   must be unique among
+    CONST char *name;		/* Name for winPtr;   must be unique among
 				 * parentPtr's children. */
 {
 #define FIXED_SIZE 200
@@ -821,7 +821,7 @@ NameWindow(interp, winPtr, parentPtr, name)
 Tk_Window
 TkCreateMainWindow(interp, screenName, baseName)
     Tcl_Interp *interp;		/* Interpreter to use for error reporting. */
-    char *screenName;		/* Name of screen on which to create
+    CONST char *screenName;	/* Name of screen on which to create
 				 * window.  Empty or NULL string means
 				 * use DISPLAY environment variable. */
     char *baseName;		/* Base name for application;  usually of the
@@ -971,9 +971,9 @@ Tk_CreateWindow(interp, parent, name, screenName)
 				 * the interp's result is assumed to be
 				 * initialized by the caller. */
     Tk_Window parent;		/* Token for parent of new window. */
-    char *name;			/* Name for new window.  Must be unique
+    CONST char *name;		/* Name for new window.  Must be unique
 				 * among parent's children. */
-    char *screenName;		/* If NULL, new window will be internal on
+    CONST char *screenName;	/* If NULL, new window will be internal on
 				 * same screen as its parent.  If non-NULL,
 				 * gives name of screen on which to create
 				 * new window;  window will be a top-level
@@ -1039,7 +1039,7 @@ Tk_CreateAnonymousWindow(interp, parent, screenName)
 				 * the interp's result is assumed to be
 				 * initialized by the caller. */
     Tk_Window parent;		/* Token for parent of new window. */
-    char *screenName;		/* If NULL, new window will be internal on
+    CONST char *screenName;	/* If NULL, new window will be internal on
 				 * same screen as its parent.  If non-NULL,
 				 * gives name of screen on which to create
 				 * new window;  window will be a top-level
@@ -1111,11 +1111,11 @@ Tk_CreateWindowFromPath(interp, tkwin, pathName, screenName)
 				 * initialized by the caller. */
     Tk_Window tkwin;		/* Token for any window in application
 				 * that is to contain new window. */
-    char *pathName;		/* Path name for new window within the
+    CONST char *pathName;	/* Path name for new window within the
 				 * application of tkwin.  The parent of
 				 * this window must already exist, but
 				 * the window itself must not exist. */
-    char *screenName;		/* If NULL, new window will be on same
+    CONST char *screenName;	/* If NULL, new window will be on same
 				 * screen as its parent.  If non-NULL,
 				 * gives name of screen on which to create
 				 * new window;  window will be a top-level
@@ -2164,7 +2164,7 @@ TkDoConfigureNotify(winPtr)
 void
 Tk_SetClass(tkwin, className)
     Tk_Window tkwin;		/* Token for window to assign class. */
-    char *className;		/* New class for tkwin. */
+    CONST char *className;	/* New class for tkwin. */
 {
     register TkWindow *winPtr = (TkWindow *) tkwin;
 
@@ -2314,7 +2314,7 @@ Tk_IdToWindow(display, window)
  *----------------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_DisplayName(tkwin)
     Tk_Window tkwin;		/* Window whose display name is desired. */
 {

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.4 1999/12/14 06:52:33 hobbs Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.5 2002/08/05 04:30:40 dgp Exp $
  */
 
 #include "tk.h"
@@ -38,8 +38,8 @@
  */
 
 static int		AlignParseProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, Tk_Window tkwin, char *value,
-			    char *widgRec, int offset));
+			    Tcl_Interp *interp, Tk_Window tkwin,
+			    CONST char *value, char *widgRec, int offset));
 static char *		AlignPrintProc _ANSI_ARGS_((ClientData clientData,
 			    Tk_Window tkwin, char *widgRec, int offset,
 			    Tcl_FreeProc **freeProcPtr));
@@ -52,7 +52,7 @@ static void		EmbImageBboxProc _ANSI_ARGS_((TkTextDispChunk *chunkPtr,
 			    int *xPtr, int *yPtr, int *widthPtr,
 			    int *heightPtr));
 static int		EmbImageConfigure _ANSI_ARGS_((TkText *textPtr,
-			    TkTextSegment *eiPtr, int argc, char **argv));
+			    TkTextSegment *eiPtr, int argc, CONST char **argv));
 static int		EmbImageDeleteProc _ANSI_ARGS_((TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone));
 static void		EmbImageDisplayProc _ANSI_ARGS_((
@@ -132,7 +132,7 @@ TkTextImageCmd(textPtr, interp, argc, argv)
     register TkText *textPtr;	/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings.  Someone else has already
+    CONST char **argv;		/* Argument strings.  Someone else has already
 				 * parsed this command enough to know that
 				 * argv[1] is "image". */
 {
@@ -303,7 +303,7 @@ EmbImageConfigure(textPtr, eiPtr, argc, argv)
 				 * contains embedded image. */
     TkTextSegment *eiPtr;	/* Embedded image to be configured. */
     int argc;			/* Number of strings in argv. */
-    char **argv;		/* Array of strings describing configuration
+    CONST char **argv;		/* Array of strings describing configuration
 				 * options. */
 {
     Tk_Image image;
@@ -423,7 +423,7 @@ AlignParseProc(clientData, interp, tkwin, value, widgRec, offset)
     ClientData clientData;		/* Not used.*/
     Tcl_Interp *interp;			/* Used for reporting errors. */
     Tk_Window tkwin;			/* Window for text widget. */
-    char *value;			/* Value of option. */
+    CONST char *value;			/* Value of option. */
     char *widgRec;			/* Pointer to TkTextEmbWindow
 					 * structure. */
     int offset;				/* Offset into item (ignored). */
@@ -844,7 +844,7 @@ EmbImageBboxProc(chunkPtr, index, y, lineHeight, baseline, xPtr, yPtr,
 int
 TkTextImageIndex(textPtr, name, indexPtr)
     TkText *textPtr;		/* Text widget containing image. */
-    char *name;			/* Name of image. */
+    CONST char *name;			/* Name of image. */
     TkTextIndex *indexPtr;	/* Index information gets stored here. */
 {
     Tcl_HashEntry *hPtr;

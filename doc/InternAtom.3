@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: InternAtom.3,v 1.2 1998/09/14 18:22:52 stanton Exp $
+'\" RCS: @(#) $Id: InternAtom.3,v 1.3 2002/08/05 04:30:38 dgp Exp $
 '\" 
 .so man.macros
 .TH Tk_InternAtom 3 "" Tk "Tk Library Procedures"
@@ -19,13 +19,13 @@ Tk_InternAtom, Tk_GetAtomName \- manage cache of X atoms
 Atom
 \fBTk_InternAtom(\fItkwin, name\fR)
 .sp
-char *
+CONST char *
 \fBTk_GetAtomName(\fItkwin, atom\fR)
 .SH ARGUMENTS
 .AS Tk_Window parent
 .AP Tk_Window tkwin in
 Token for window.  Used to map atom or name relative to a particular display.
-.AP char *name in
+.AP "CONST char" *name in
 String name for which atom is desired.
 .AP Atom atom in
 Atom for which corresponding string name is desired.

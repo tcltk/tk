@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.17 2002/06/18 23:51:46 dkf Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.18 2002/08/05 04:30:38 dgp Exp $
  */
 
 /*
@@ -465,7 +465,7 @@ Tk_InitOptions(interp, recordPtr, optionTable, tkwin)
     OptionTable *tablePtr = (OptionTable *) optionTable;
     Option *optionPtr;
     int count;
-    char *value;
+    Tk_Uid value;
     Tcl_Obj *valuePtr;
     enum {
 	OPTION_DATABASE, SYSTEM_DEFAULT, TABLE_DEFAULT

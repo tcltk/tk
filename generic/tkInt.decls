@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.28 2002/06/18 23:51:46 dkf Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.29 2002/08/05 04:30:39 dgp Exp $
 
 library tk
 
@@ -73,14 +73,14 @@ declare 10 generic {
 declare 11 generic {
     unsigned long TkCreateBindingProcedure (Tcl_Interp *interp, \
 	    Tk_BindingTable bindingTable, \
-	    ClientData object, char *eventString, \
+	    ClientData object, CONST char *eventString, \
 	    TkBindEvalProc *evalProc, TkBindFreeProc *freeProc, \
 	    ClientData clientData)
 }
 
 declare 12 generic {
     TkCursor * TkCreateCursorFromData (Tk_Window tkwin, \
-	    char *source, char *mask, int width, int height, \
+	    CONST char *source, CONST char *mask, int width, int height, \
 	    int xHot, int yHot, XColor fg, XColor bg)
 }
 
@@ -92,7 +92,7 @@ declare 13 generic {
 
 declare 14 generic {
     Tk_Window TkCreateMainWindow (Tcl_Interp *interp, \
-	    char *screenName, char *baseName)
+	    CONST char *screenName, char *baseName)
 }
 
 declare 15 generic {
@@ -178,7 +178,7 @@ declare 32 generic {
 }
 
 declare 33 generic {
-    CONST char * TkGetDefaultScreenName (Tcl_Interp *interp, \
+    CONST84_RETURN char * TkGetDefaultScreenName (Tcl_Interp *interp, \
 	    CONST char *screenName)
 }
 
@@ -358,7 +358,7 @@ declare 74 generic {
 }
 
 declare 75 generic {
-    int TkpUseWindow (Tcl_Interp *interp, Tk_Window tkwin, char *string)
+    int TkpUseWindow (Tcl_Interp *interp, Tk_Window tkwin, CONST char *string)
 }
 
 declare 76 generic {
@@ -520,7 +520,7 @@ declare 110 generic {
 
 declare 111 generic {
     Tcl_Obj * TkpGetSystemDefault (Tk_Window tkwin, \
-	    char *dbName, char *className)
+	    CONST char *dbName, CONST char *className)
 }
 
 declare 112 generic {
@@ -866,7 +866,7 @@ declare 31 win {
 
 declare 32 win {
     Tcl_Obj * TkWinGetMenuSystemDefault (Tk_Window tkwin, \
-	    char *dbName, char *className)
+	    CONST char *dbName, CONST char *className)
 }
 
 declare 33 win {

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGet.c,v 1.9 2002/04/12 07:44:45 hobbs Exp $
+ * RCS: @(#) $Id: tkGet.c,v 1.10 2002/08/05 04:30:38 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -107,7 +107,7 @@ Tk_GetAnchorFromObj(interp, objPtr, anchorPtr)
 int
 Tk_GetAnchor(interp, string, anchorPtr)
     Tcl_Interp *interp;		/* Use this for error reporting. */
-    char *string;		/* String describing a direction. */
+    CONST char *string;		/* String describing a direction. */
     Tk_Anchor *anchorPtr;	/* Where to store Tk_Anchor corresponding
 				 * to string. */
 {
@@ -181,7 +181,7 @@ Tk_GetAnchor(interp, string, anchorPtr)
  *--------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_NameOfAnchor(anchor)
     Tk_Anchor anchor;		/* Anchor for which identifying string
 				 * is desired. */
@@ -223,7 +223,7 @@ Tk_NameOfAnchor(anchor)
 int
 Tk_GetJoinStyle(interp, string, joinPtr)
     Tcl_Interp *interp;		/* Use this for error reporting. */
-    char *string;		/* String describing a justification style. */
+    CONST char *string;		/* String describing a justification style. */
     int *joinPtr;		/* Where to store join style corresponding
 				 * to string. */
 {
@@ -269,7 +269,7 @@ Tk_GetJoinStyle(interp, string, joinPtr)
  *--------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_NameOfJoinStyle(join)
     int join;			/* Join style for which identifying string
 				 * is desired. */
@@ -305,7 +305,7 @@ Tk_NameOfJoinStyle(join)
 int
 Tk_GetCapStyle(interp, string, capPtr)
     Tcl_Interp *interp;		/* Use this for error reporting. */
-    char *string;		/* String describing a justification style. */
+    CONST char *string;		/* String describing a justification style. */
     int *capPtr;		/* Where to store cap style corresponding
 				 * to string. */
 {
@@ -351,7 +351,7 @@ Tk_GetCapStyle(interp, string, capPtr)
  *--------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_NameOfCapStyle(cap)
     int cap;			/* Cap style for which identifying string
 				 * is desired. */
@@ -424,7 +424,7 @@ Tk_GetJustifyFromObj(interp, objPtr, justifyPtr)
 int
 Tk_GetJustify(interp, string, justifyPtr)
     Tcl_Interp *interp;		/* Use this for error reporting. */
-    char *string;		/* String describing a justification style. */
+    CONST char *string;		/* String describing a justification style. */
     Tk_Justify *justifyPtr;	/* Where to store Tk_Justify corresponding
 				 * to string. */
 {
@@ -470,7 +470,7 @@ Tk_GetJustify(interp, string, justifyPtr)
  *--------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_NameOfJustify(justify)
     Tk_Justify justify;		/* Justification style for which
 				 * identifying string is desired. */
