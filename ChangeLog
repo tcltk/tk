@@ -1,3 +1,8 @@
+2005-03-24  Jim Ingham  <jingham@apple.com>
+
+	* xlib/xgc.c (XCreateGC): Set the default linewidth to 1, not
+	0.  Some extensions seem to expect this.
+	
 2005-03-15  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* unix/tcl.m4:    Updated for OpenBSD and regenerated the configure
