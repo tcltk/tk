@@ -1,5 +1,8 @@
 2002-09-26  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* unix/configure: regen.
+	* unix/tcl.m4: improve AIX-4/5 64bit compilation support.
+
 	* unix/Makefile.in: add macosx subdir to dist target.
 	Do not generate .Z, only .gz and .zip in alldist target.
 
