@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: send.test,v 1.9 2003/04/01 21:06:51 dgp Exp $
+# RCS: @(#) $Id: send.test,v 1.10 2003/07/09 21:18:36 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -153,7 +153,7 @@ test send-5.4 {ValidateName procedure} {secureserver testsend} {
     winfo interps
 } {test}
 
-if {[testConstraint xhost]} {
+if {[testConstraint nonPortable] && [testConstraint xhost]} {
     winfo interps
     tk appname tktest
     update
@@ -168,12 +168,12 @@ test send-6.1 {ServerSecure procedure} {nonPortable secureserver} {
     set a 44
     list [dobg [list send [tk appname] set a 55]] $a
 } {55 55}
-test send-6.2 {ServerSecure procedure} {nonPortable secureserver} {
+test send-6.2 {ServerSecure procedure} {nonPortable secureserver xhost} {
     set a 22
     exec xhost [exec hostname]
     list [catch {dobg [list send [tk appname] set a 33]} msg] $a $msg
 } {0 22 {X server insecure (must use xauth-style authorization); command ignored}}
-test send-6.3 {ServerSecure procedure} {nonPortable secureserver} {
+test send-6.3 {ServerSecure procedure} {nonPortable secureserver xhost} {
     set a abc
     exec xhost - [exec hostname]
     list [dobg [list send [tk appname] set a new]] $a
