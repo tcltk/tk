@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.10.4.2 2001/07/03 20:01:09 dgp Exp $
+# RCS: @(#) $Id: console.tcl,v 1.10.4.3 2001/07/17 00:21:37 dgp Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -165,39 +165,39 @@ proc ::tk::ConsoleInvoke {args} {
 # This procedure implements command line history for the
 # console.  In general is evals the history command in the
 # main interpreter to obtain the history.  The variable
-# ::tk::histNum is used to store the current location in the history.
+# ::tk::HistNum is used to store the current location in the history.
 #
 # Arguments:
 # cmd -	Which action to take: prev, next, reset.
 
-set ::tk::histNum 1
+set ::tk::HistNum 1
 proc ::tk::ConsoleHistory {cmd} {
-    variable histNum
+    variable HistNum
     
     switch $cmd {
     	prev {
-	    incr histNum -1
-	    if {$histNum == 0} {
+	    incr HistNum -1
+	    if {$HistNum == 0} {
 		set cmd {history event [expr {[history nextid] -1}]}
 	    } else {
-		set cmd "history event $histNum"
+		set cmd "history event $HistNum"
 	    }
     	    if {[catch {consoleinterp eval $cmd} cmd]} {
-    	    	incr histNum
+    	    	incr HistNum
     	    	return
     	    }
 	    .console delete promptEnd end
     	    .console insert promptEnd $cmd {input stdin}
     	}
     	next {
-	    incr histNum
-	    if {$histNum == 0} {
+	    incr HistNum
+	    if {$HistNum == 0} {
 		set cmd {history event [expr {[history nextid] -1}]}
-	    } elseif {$histNum > 0} {
+	    } elseif {$HistNum > 0} {
 		set cmd ""
-		set histNum 1
+		set HistNum 1
 	    } else {
-		set cmd "history event $histNum"
+		set cmd "history event $HistNum"
 	    }
 	    if {[string compare $cmd ""]} {
 		catch {consoleinterp eval $cmd} cmd
@@ -206,7 +206,7 @@ proc ::tk::ConsoleHistory {cmd} {
 	    .console insert promptEnd $cmd {input stdin}
     	}
     	reset {
-    	    set histNum 1
+    	    set HistNum 1
     	}
     }
 }

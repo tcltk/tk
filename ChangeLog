@@ -1,6 +1,11 @@
 2001-07-16  Don Porter  <dgp@users.sourceforge.net>
 
 	BRANCH dgp-privates-into-namespace:
+	* library/console.tcl:
+	* library/unsupported.tcl: Renamed tk::histNum to tk::HistNum
+	as directed by the Tcl Style Guide.
+
+	BRANCH dgp-privates-into-namespace:
 	* ChangeLog:
 	* README:
 	* deleted_files/xlib/ximage.c:
