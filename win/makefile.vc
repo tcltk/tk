@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.1.4.11 1999/02/26 19:08:04 redman Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.1.4.12 1999/03/09 01:34:50 lfb Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -32,6 +32,9 @@ TCLDIR		= ..\..\tcl8.1b2
 
 # Set this to the appropriate value of /MACHINE: for your platform
 MACHINE	= IX86
+
+# Uncomment the following line to compile with thread support
+#THREADDEFINES = -DTCL_THREADS=1
 
 # Set NODEBUG to 0 to compile with symbols
 NODEBUG = 1
