@@ -11,9 +11,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.2 2002/08/31 06:12:29 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.3 2002/10/16 19:44:05 das Exp $
  */
 #include <Carbon/Carbon.h>
+
+#include "tclInt.h"
 
 #include "tkMacOSXInt.h"
 #include "tkFont.h"
@@ -2188,4 +2190,90 @@ TkMacOSXInitControlFontStyle(Tk_Font tkfont, ControlFontStylePtr fsPtr)
     fsPtr->size = fontPtr->size;
     fsPtr->style = fontPtr->style;
     fsPtr->just = teCenter;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXUseAntialiasedText --
+ *
+ *      Enables or disables application-wide use of quickdraw 
+ *      antialiased text (where available).
+ *      Sets up a linked tcl global boolean variable with write trace
+ *      to allow disabling of antialiased text from tcl.
+ *
+ * Results:
+ *      TCL_OK if facility was sucessfully enabled/disabled.
+ *      TCL_ERROR if an error occurred or if facility is not available.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#include <mach-o/dyld.h>
+
+/* define constants from 10.2 Quickdraw.h to enable compilation in 10.1 */
+#define kQDUseTrueTypeScalerGlyphs      (1 << 0)
+#define kQDUseCGTextRendering           (1 << 1)
+#define kQDUseCGTextMetrics             (1 << 2)
+
+static int TkMacOSXAntialiasedTextEnabled = FALSE;
+
+static char *
+TkMacOSXAntialiasedTextVariableProc(clientData, interp, name1, name2, flags)
+    ClientData clientData;
+    Tcl_Interp *interp;
+    CONST char *name1;
+    CONST char *name2;
+    int flags;
+{
+    TkMacOSXUseAntialiasedText(interp, TkMacOSXAntialiasedTextEnabled);
+    return (char *) NULL;
+}
+
+int TkMacOSXUseAntialiasedText(interp, enable)
+        Tcl_Interp *interp;
+        int enable;
+{
+    static Boolean initialized = FALSE;
+    static UInt32 (*swaptextflags)(UInt32) = NULL;
+    
+    if(!initialized) {
+        NSSymbol nsSymbol=NULL;
+        if(NSIsSymbolNameDefinedWithHint("_QDSwapTextFlags", "QD")) {
+            nsSymbol = NSLookupAndBindSymbolWithHint("_QDSwapTextFlags", "QD");
+        } else if(NSIsSymbolNameDefinedWithHint("_SwapQDTextFlags", "QD")) {
+            nsSymbol = NSLookupAndBindSymbolWithHint("_SwapQDTextFlags", "QD");
+        }
+        if(nsSymbol) {
+            swaptextflags = NSAddressOfSymbol(nsSymbol);
+        }
+        initialized = TRUE;
+
+        TkMacOSXAntialiasedTextEnabled = (swaptextflags ? enable : FALSE);
+        if (Tcl_CreateNamespace(interp, "::tk::mac", NULL, NULL) == NULL) {
+            Tcl_ResetResult(interp);
+        }
+        if (Tcl_TraceVar(interp, "::tk::mac::antialiasedtext", 
+                TCL_GLOBAL_ONLY | TCL_TRACE_WRITES,
+                TkMacOSXAntialiasedTextVariableProc, NULL) != TCL_OK) {
+            Tcl_ResetResult(interp);
+        }
+        if (Tcl_LinkVar(interp, "::tk::mac::antialiasedtext",
+                (char *) &TkMacOSXAntialiasedTextEnabled, 
+                TCL_LINK_BOOLEAN) != TCL_OK) {
+            Tcl_ResetResult(interp);
+        }
+    }
+    if(swaptextflags) {
+        swaptextflags(enable ? kQDUseCGTextRendering | kQDUseCGTextMetrics 
+                             : kQDUseTrueTypeScalerGlyphs);
+        TkMacOSXAntialiasedTextEnabled = enable;
+        return TCL_OK;
+    } else {
+        TkMacOSXAntialiasedTextEnabled = FALSE;
+        return TCL_ERROR;
+    }
 }

@@ -1,3 +1,16 @@
+2002-10-17  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.pbproj/project.pbxproj: added TEXT document
+	type to plist so that files can be dragged onto Wish Shell.
+
+	* macosx/tkMacOSXInt.h:
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXFont.c: added private proc
+	TkMacOSXUseAntialiasedText() to enable/disable quickdraw
+	text antialiasing where available, default is enabled.
+	Added a linked boolean ::tk::mac::antialiasedtext with
+	write trace to allow control of antialiasing from tcl.
+
 2002-10-16  Vince Darley  <vincentdarley@users.sourceforge.net>
 
 	* macosx/tkMacOSXMenu.c: fix to accelerators shown in menus
