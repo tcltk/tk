@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.28 2002/09/06 16:07:37 dgp Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.29 2002/11/07 22:27:04 mdejong Exp $
 
 package require tcltest 2.2
 namespace import -force tcltest::configure
@@ -1974,9 +1974,11 @@ test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {
 	wm geometry $w +0+0
     }
     raise .t .t2
+    sleep 2000
     update
     set result [list [winfo containing 100 100]]
     lower .t3
+    sleep 2000
     lappend result [winfo containing 100 100]
 } {.t3 .t}
 test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} {

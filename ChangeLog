@@ -1,3 +1,9 @@
+2002-11-07  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* tests/unixWm.test: Add short delay to test unixWm-51.7
+	to account for raise/lower changes in TIP 107. This allows
+	the test case to pass under Window Maker on Linux.
+
 2002-11-07  Peter Spjuth  <peter.spjuth@space.se>
 
 	* tests/place.test:
