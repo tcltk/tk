@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.41 2003/10/31 02:05:21 hobbs Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.42 2003/10/31 18:56:30 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -2580,7 +2580,7 @@ static void ImgPhotoBlendComplexAlpha (
 #define ALPHA_BLEND(bgPix, imgPix, alpha, unalpha) \
 		((bgPix * unalpha + imgPix * alpha) / 255)
 
-#ifndef __WIN32__
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
     /*
      * Only unix requires the special case for <24bpp.  It varies with
      * 3 extra shifts and uses RGB15.  The 24+bpp version could also
