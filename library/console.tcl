@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.22 2003/02/21 03:34:29 das Exp $
+# RCS: @(#) $Id: console.tcl,v 1.22.2.1 2004/11/17 22:18:28 hobbs Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -896,7 +896,9 @@ proc ::tk::console::ExpandVariable str {
 	    set vars $ary\([ExpandBestMatch $match $str]
 	    foreach var $match {lappend vars $ary\($var\)}
 	    return $vars
-	} else {set match $ary\($match\)}
+	} elseif {[llength $match] == 1} {
+	    set match $ary\($match\)
+	}
 	## Space transformation avoided for array names.
     } else {
 	set match [EvalAttached [list info vars $str*]]
