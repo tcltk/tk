@@ -1,7 +1,7 @@
 2002-01-31  Todd Helfter <tmh@users.sourceforge.net>
 	* generic/tkMenu.c (ConfigureMenuCloneEntries)
 	* tests/menu.test (menu3.68)
-	Correct and test for logic error when cloning menus. [Bug 508988]
+	Correct and test for logic error when cloning menus. [Bug #508988]
 
 2002-01-30  Don Porter  <dgp@users.sourceforge.net>
 
