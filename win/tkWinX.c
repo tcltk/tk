@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.28 2004/01/13 02:06:02 davygrvy Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.29 2004/05/03 22:28:45 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -553,27 +553,12 @@ TkpCloseDisplay(dispPtr)
     TkDisplay *dispPtr;
 {
     Display *display = dispPtr->display;
-    HWND hwnd;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (dispPtr != tsdPtr->winDisplay) {
         Tcl_Panic("TkpCloseDisplay: tried to call TkpCloseDisplay on another display");
         return;
-    }
-
-    /*
-     * Force the clipboard to be rendered if we are the clipboard owner.
-     */
-    
-    if (dispPtr->clipWindow) {
-	hwnd = Tk_GetHWND(Tk_WindowId(dispPtr->clipWindow));
-	if (GetClipboardOwner() == hwnd) {
-	    OpenClipboard(hwnd);
-	    EmptyClipboard();
-	    TkWinClipboardRender(dispPtr, CF_TEXT);
-	    CloseClipboard();
-	}
     }
 
     tsdPtr->winDisplay = NULL;
@@ -594,6 +579,54 @@ TkpCloseDisplay(dispPtr)
         ckfree((char *) display->screens);
     }
     ckfree((char *) display);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkClipCleanup --
+ *
+ *	This procedure is called to cleanup resources associated with
+ *	claiming clipboard ownership and for receiving selection get
+ *	results.  This function is called in tkWindow.c.  This has to be
+ *	called by the display cleanup function because we still need the
+ *	access display elements.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Resources are freed - the clipboard may no longer be used.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkClipCleanup(dispPtr)
+    TkDisplay *dispPtr;	/* display associated with clipboard */
+{
+    if (dispPtr->clipWindow != NULL) {
+	/*
+	 * Force the clipboard to be rendered if we are the clipboard owner.
+	 */
+
+	HWND hwnd = Tk_GetHWND(Tk_WindowId(dispPtr->clipWindow));
+	if (GetClipboardOwner() == hwnd) {
+	    OpenClipboard(hwnd);
+	    EmptyClipboard();
+	    TkWinClipboardRender(dispPtr, CF_TEXT);
+	    CloseClipboard();
+	}
+
+	Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
+		dispPtr->applicationAtom);
+	Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
+		dispPtr->windowAtom);
+
+	Tk_DestroyWindow(dispPtr->clipWindow);
+	Tcl_Release((ClientData) dispPtr->clipWindow);
+	dispPtr->clipWindow = NULL;
+    }
 }
 
 /*
