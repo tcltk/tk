@@ -1,3 +1,8 @@
+2004-09-10  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* library/demos/filebox.tcl: Stop the use of tk_strictMotif from
+	poisoning the rest of the widget demo. [Bug 1013942]
+
 2004-09-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinWm.c (ActivateWindow): SetFocus to grab window when
