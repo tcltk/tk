@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.12 2000/06/30 06:38:38 ericm Exp $
-# $Id: bgerror.tcl,v 1.12 2000/06/30 06:38:38 ericm Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.13 2000/07/17 21:07:54 ericm Exp $
+# $Id: bgerror.tcl,v 1.13 2000/07/17 21:07:54 ericm Exp $
 
 option add *ErrorDialog.function.text [::msgcat::mc "Save To Log"] \
 	widgetDefault
@@ -128,7 +128,7 @@ proc bgerror err {
     set title [::msgcat::mc "Application Error"]
     set text [::msgcat::mc "Error: %1\$s" $err]
     set buttons [list ok $ok dismiss [::msgcat::mc "Skip Messages"] \
-	    function [::msgcat::mc "Details  >>"]]
+	    function [::msgcat::mc "Details >>"]]
 
     # 1. Create the top-level window and divide it into top
     # and bottom parts.
