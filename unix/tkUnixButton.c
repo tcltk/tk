@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.14 2003/08/14 10:31:14 dkf Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.15 2003/08/14 12:30:11 dkf Exp $
  */
 
 #include "tkButton.h"
@@ -599,23 +599,31 @@ TkpDisplayButton(clientData)
     if ((butPtr->type == TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
 	if (butPtr->indicatorDiameter > 2*butPtr->borderWidth) {
 	    TkBorder *selBorder = (TkBorder *) butPtr->selectBorder;
+	    XColor *selColor = NULL;
 
+	    if (selBorder != NULL) {
+		selColor = selBorder->bgColorPtr;
+	    }
 	    x -= butPtr->indicatorSpace/2;
 	    y = Tk_Height(tkwin)/2;
-	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, 
-		    x, y, border, butPtr->normalFg, selBorder->bgColorPtr,
-		    butPtr->disabledFg, (butPtr->flags & SELECTED), 
+	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, x, y,
+		    border, butPtr->normalFg, selColor, butPtr->disabledFg,
+		    (butPtr->flags & SELECTED), 
 		    (butPtr->state == STATE_DISABLED), CHECK_BUTTON);
 	}
     } else if ((butPtr->type == TYPE_RADIO_BUTTON) && butPtr->indicatorOn) {
 	if (butPtr->indicatorDiameter > 2*butPtr->borderWidth) {
 	    TkBorder *selBorder = (TkBorder *) butPtr->selectBorder;
+	    XColor *selColor = NULL;
 
+	    if (selBorder != NULL) {
+		selColor = selBorder->bgColorPtr;
+	    }
 	    x -= butPtr->indicatorSpace/2;
 	    y = Tk_Height(tkwin)/2;
-	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, 
-		    x, y, border, butPtr->normalFg, selBorder->bgColorPtr,
-		    butPtr->disabledFg, (butPtr->flags & SELECTED), 
+	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap,  x, y,
+		    border, butPtr->normalFg, selColor, butPtr->disabledFg,
+		    (butPtr->flags & SELECTED), 
 		    (butPtr->state == STATE_DISABLED), RADIO_BUTTON);
 	}
     }
