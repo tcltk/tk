@@ -1,3 +1,8 @@
+2002-07-09  Don Porter <dgp@users.sf.net>
+
+	* generic/tkTest.c:	Removed unused dependence on TclThread_Init()
+	* tests/defs.tcl:	and [testthread].  [Bug 578165, Tcl Bug 531413]
+
 2002-07-08  David Gravereaux <davygrvy@pobox.com>
 
 	* unix/Makefile.in: Added missing win/lamp.bmp to the dist
