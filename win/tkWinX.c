@@ -5,12 +5,12 @@
  *
  * Copyright (c) 1995-1996 Sun Microsystems, Inc.
  * Copyright (c) 1994 Software Research Associates, Inc.
- * Copyright (c) 1998 by Scriptics Corporation.
+ * Copyright (c) 1998-2000 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.8 2000/03/31 09:24:27 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.9 2000/04/12 18:51:11 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -41,6 +41,7 @@ TCL_DECLARE_MUTEX(winXMutex)
 typedef struct ThreadSpecificData {
     TkDisplay *winDisplay;       /* TkDisplay structure that *
 				  *  represents Windows screen. */
+    int updatingClipboard;	/* If 1, we are updating the clipboard */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -397,13 +398,14 @@ TkpOpenDisplay(display_name)
     screen->white_pixel = RGB(255, 255, 255);
     screen->black_pixel = RGB(0, 0, 0);
 
-    display->screens = screen;
-    display->nscreens = 1;
-    display->default_screen = 0;
+    display->screens		= screen;
+    display->nscreens		= 1;
+    display->default_screen	= 0;
     screen->cmap = XCreateColormap(display, None, screen->root_visual,
 	    AllocNone);
     tsdPtr->winDisplay = (TkDisplay *) ckalloc(sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
+    tsdPtr->updatingClipboard = FALSE;
     return tsdPtr->winDisplay;
 }
 
@@ -682,6 +684,8 @@ GenerateXEvent(hwnd, message, wParam, lParam)
 {
     XEvent event;
     TkWindow *winPtr = (TkWindow *)Tk_HWNDToWindow(hwnd);
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!winPtr || winPtr->window == None) {
 	return;
@@ -746,6 +750,13 @@ GenerateXEvent(hwnd, message, wParam, lParam)
 	}
 
 	case WM_DESTROYCLIPBOARD:
+	    if (tsdPtr->updatingClipboard == TRUE) {
+		/*
+		 * We want to avoid this event if we are the ones that caused
+		 * this event.
+		 */
+		return;
+	    }
 	    event.type = SelectionClear;
 	    event.xselectionclear.selection =
 		Tk_InternAtom((Tk_Window)winPtr, "CLIPBOARD");
@@ -1148,4 +1159,28 @@ unsigned long
 TkpGetMS()
 {
     return GetTickCount();
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinUpdatingClipboard --
+ *
+ *
+ * Results:
+ *	Number of milliseconds.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWinUpdatingClipboard(int mode)
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    tsdPtr->updatingClipboard = mode;
 }

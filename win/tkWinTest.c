@@ -5,11 +5,12 @@
  *	the Windows platform.
  *
  * Copyright (c) 1997 Sun Microsystems, Inc.
+ * Copyright (c) 2000 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.2 1999/04/16 01:51:53 stanton Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.3 2000/04/12 18:51:11 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -21,8 +22,9 @@ HWND tkWinCurrentDialog;
  */
 
 int			TkplatformtestInit(Tcl_Interp *interp);
-static int		TestclipboardCmd(ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv);
+static int		TestclipboardObjCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]);
 static int		TestwineventCmd(ClientData clientData, 
 			    Tcl_Interp *interp, int argc, char **argv);
 
@@ -52,7 +54,7 @@ TkplatformtestInit(
      * Add commands for platform specific tests on MacOS here.
      */
     
-    Tcl_CreateCommand(interp, "testclipboard", TestclipboardCmd,
+    Tcl_CreateObjCommand(interp, "testclipboard", TestclipboardObjCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateCommand(interp, "testwinevent", TestwineventCmd,
             (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
@@ -63,7 +65,7 @@ TkplatformtestInit(
 /*
  *----------------------------------------------------------------------
  *
- * TestclipboardCmd --
+ * TestclipboardObjCmd --
  *
  *	This procedure implements the testclipboard command. It provides
  *	a way to determine the actual contents of the Windows clipboard.
@@ -78,24 +80,40 @@ TkplatformtestInit(
  */
 
 static int
-TestclipboardCmd(clientData, interp, argc, argv)
+TestclipboardObjCmd(clientData, interp, objc, objv)
     ClientData clientData;		/* Main window for application. */
     Tcl_Interp *interp;			/* Current interpreter. */
-    int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    int objc;				/* Number of arguments. */
+    Tcl_Obj *CONST objv[];		/* Argument values. */
 {
     TkWindow *winPtr = (TkWindow *) clientData;
     HGLOBAL handle;
     char *data;
 
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, (char *) NULL);
+	return TCL_ERROR;
+    }
     if (OpenClipboard(NULL)) {
+	/*
+	 * We could consider using CF_UNICODETEXT on NT, but then we
+	 * would have to convert it from External.  Instead we'll just
+	 * take this and do "bytestring" at the Tcl level for Unicode
+	 * inclusive text
+	 */
 	handle = GetClipboardData(CF_TEXT);
 	if (handle != NULL) {
 	    data = GlobalLock(handle);
 	    Tcl_AppendResult(interp, data, (char *) NULL);
 	    GlobalUnlock(handle);
+	} else {
+	    Tcl_AppendResult(interp, "null clipboard handle", (char *) NULL);
+	    return TCL_ERROR;
 	}
 	CloseClipboard();
+    } else {
+	Tcl_AppendResult(interp, "couldn't open clipboard", (char *) NULL);
+	return TCL_ERROR;
     }
     return TCL_OK;
 }

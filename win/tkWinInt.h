@@ -6,11 +6,12 @@
  *	Tk.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1998-2000 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.9 2000/03/31 09:24:27 hobbs Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.10 2000/04/12 18:51:11 hobbs Exp $
  */
 
 #ifndef _TKWININT
@@ -90,11 +91,11 @@ typedef union {
  * The following macros are used to retrieve internal values from a Drawable.
  */
 
-#define TkWinGetHWND(w) (((TkWinDrawable *) w)->window.handle)
-#define TkWinGetWinPtr(w) (((TkWinDrawable*)w)->window.winPtr)
-#define TkWinGetHBITMAP(w) (((TkWinDrawable*)w)->bitmap.handle)
-#define TkWinGetColormap(w) (((TkWinDrawable*)w)->bitmap.colormap)
-#define TkWinGetHDC(w) (((TkWinDrawable *) w)->winDC.hdc)
+#define TkWinGetHWND(w)		(((TkWinDrawable *) w)->window.handle)
+#define TkWinGetWinPtr(w)	(((TkWinDrawable *) w)->window.winPtr)
+#define TkWinGetHBITMAP(w)	(((TkWinDrawable *) w)->bitmap.handle)
+#define TkWinGetColormap(w)	(((TkWinDrawable *) w)->bitmap.colormap)
+#define TkWinGetHDC(w)		(((TkWinDrawable *) w)->winDC.hdc)
 
 /*
  * The following structure is used to encapsulate palette information.
@@ -156,6 +157,12 @@ extern int tkpWinRopModes[];
 
 EXTERN LRESULT CALLBACK	TkWinChildProc _ANSI_ARGS_((HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam));
+
+/*
+ * Special proc needed as tsd accessor function between
+ * tkWinX.c:GenerateXEvent and tkWinClipboard.c:UpdateClipboard
+ */
+EXTERN void	TkWinUpdatingClipboard(int mode);
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

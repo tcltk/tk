@@ -4,11 +4,12 @@
  *	This file contains functions for managing the clipboard.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1998-2000 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinClipboard.c,v 1.6 1999/09/21 06:43:06 hobbs Exp $
+ * RCS: @(#) $Id: tkWinClipboard.c,v 1.7 2000/04/12 18:51:11 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -380,6 +381,7 @@ static void
 UpdateClipboard(hwnd)
     HWND hwnd;
 {
+    TkWinUpdatingClipboard(TRUE);
     OpenClipboard(hwnd);
     EmptyClipboard();
 
@@ -394,6 +396,7 @@ UpdateClipboard(hwnd)
 	SetClipboardData(CF_TEXT, NULL);
     }
     CloseClipboard();
+    TkWinUpdatingClipboard(FALSE);
 }
 
 /*

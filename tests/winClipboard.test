@@ -7,10 +7,10 @@
 # generates output for errors.  No output means no errors were found.
 #
 # Copyright (c) 1997 by Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winClipboard.test,v 1.6 1999/12/14 06:53:15 hobbs Exp $
+# RCS: @(#) $Id: winClipboard.test,v 1.7 2000/04/12 18:52:14 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -38,6 +38,7 @@ test winClipboard-1.2 {TkSelGetSelection} {pcOnly} {
 test winClipboard-1.3 {TkSelGetSelection & TkWinClipboardRender} {pcOnly} {
     clipboard clear
     clipboard append abcd
+    update
     list [selection get -selection CLIPBOARD] [testclipboard]
 } {abcd abcd}
 test winClipboard-1.4 {TkSelGetSelection & TkWinClipboardRender} {pcOnly} {
@@ -50,6 +51,21 @@ test winClipboard-1.5 {TkSelGetSelection & TkWinClipboardRender} {pcOnly} {
     clipboard append "line 1\u00c7\nline 2"
     list [selection get -selection CLIPBOARD] [testclipboard]
 } [list "line 1\u00c7\nline 2" [bytestring "line 1\u00c7\r\nline 2"]]
+
+test winClipboard-2.1 {TkSelUpdateClipboard reentrancy problem} {pcOnly} {
+    clipboard clear
+    clipboard append -type OUR_ACTION "action data"
+    clipboard append "string data"
+    update
+    list [selection get -selection CLIPBOARD -type OUR_ACTION] [testclipboard]
+} [list "action data" "string data"]
+test winClipboard-2.2 {TkSelUpdateClipboard reentrancy problem} {pcOnly} {
+    clipboard clear
+    clipboard append -type OUR_ACTION "new data"
+    clipboard append "more data in string"
+    update
+    list [testclipboard] [selection get -selection CLIPBOARD -type OUR_ACTION]
+} [list "more data in string" "new data"]
 
 # cleanup
 ::tcltest::cleanupTests

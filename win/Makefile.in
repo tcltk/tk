@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.19 2000/04/08 06:59:09 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.20 2000/04/12 18:51:11 hobbs Exp $
 
 TCLVERSION = @TCL_VERSION@
 VERSION = @TK_VERSION@
@@ -132,9 +132,10 @@ DEPARG = "$(shell cygpath $(PATHTYPE) $<)"
 
 # Setting the VPATH variable to a list of paths will cause the 
 # makefile to look into these paths when resolving .c to .obj
-# dependencies.
+# dependencies. Note the ':' to avoid autoconf's habit of deleting
+# all VPATH lines without an explicit ':' in it.
 
-VPATH = $(GENERIC_DIR);$(WIN_DIR);$(UNIX_DIR);$(XLIB_DIR);$(RC_DIR)
+VPATH = $(GENERIC_DIR);$(WIN_DIR);$(UNIX_DIR);$(XLIB_DIR);$(RC_DIR) # : 
 
 # warning flags
 CFLAGS_WARNING	= @CFLAGS_WARNING@
