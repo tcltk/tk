@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.20 2002/07/25 21:36:08 pspjuth Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.21 2002/07/25 22:12:29 pspjuth Exp $
  */
 
 #include <Gestalt.h>
@@ -689,6 +689,12 @@ TkWmDeadWindow(winPtr)
 
     if (wmPtr == NULL) {
 	return;
+    }
+    if (wmPtr->title != NULL) {
+	ckfree(wmPtr->title);
+    }
+    if (wmPtr->iconName != NULL) {
+	ckfree(wmPtr->iconName);
     }
     if (wmPtr->hints.flags & IconPixmapHint) {
 	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
