@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.22 2001/11/23 02:04:56 das Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.23 2001/12/04 03:07:43 mdejong Exp $
 
 library tk
 
@@ -638,6 +638,10 @@ declare 139 generic {
 
 declare 140 generic {
     TkRegion TkPhotoGetValidRegion (Tk_PhotoHandle handle)
+}
+
+declare 141 generic {
+    TkWindow ** TkWmStackorderToplevel(TkWindow *parentPtr)
 }
 
 ##############################################################################

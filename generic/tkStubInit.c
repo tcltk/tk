@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.29 2001/11/23 02:07:07 das Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.30 2001/12/04 03:07:43 mdejong Exp $
  */
 
 #include "tkInt.h"
@@ -268,6 +268,7 @@ TkIntStubs tkIntStubs = {
     TkpGetKeySym, /* 138 */
     TkpInitKeymapInfo, /* 139 */
     TkPhotoGetValidRegion, /* 140 */
+    TkWmStackorderToplevel, /* 141 */
 };
 
 TkIntPlatStubs tkIntPlatStubs = {

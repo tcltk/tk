@@ -1,0 +1,301 @@
+# This file is a Tcl script to test out Tk's interactions with
+# the window manager, including the "wm" command.  It is organized
+# in the standard fashion for Tcl tests.
+#
+# Copyright (c) 1992-1994 The Regents of the University of California.
+# Copyright (c) 1994-1997 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
+#
+# RCS: @(#) $Id: wm.test,v 1.1 2001/12/04 03:07:43 mdejong Exp $
+
+# This file tests window manager interactions that work across
+# platforms. Window manager tests that only work on a specific
+# platform should be placed in unixWm.test or winWm.test.
+
+if {[lsearch [namespace children] ::tcltest] == -1} {
+    package require tcltest
+    namespace import -force ::tcltest::*
+}
+
+proc deleteWindows {} {
+    foreach i [winfo children .] {
+    	catch [destroy $i]
+    }
+}
+
+
+deleteWindows
+
+
+test wm-stackorder-1.1 {usage} {
+    list [catch {wm stackorder} err] $err
+} {1 {wrong # args: should be "wm option window ?arg ...?"}}
+
+test wm-stackorder-1.2 {usage} {
+    list [catch {wm stackorder . _} err] $err
+} {1 {wrong # arguments: must be "wm stackorder window ?isabove|isbelow? ?window?"}}
+
+test wm-stackorder-1.3 {usage} {
+    list [catch {wm stackorder . _ _ _} err] $err
+} {1 {wrong # arguments: must be "wm stackorder window ?isabove|isbelow? ?window?"}}
+
+test wm-stackorder-1.4 {usage} {
+    list [catch {wm stackorder . is .} err] $err
+} {1 {bad argument "is": must be isabove or isbelow}}
+
+test wm-stackorder-1.5 {usage} {
+    list [catch {wm stackorder _} err] $err
+} {1 {bad window path name "_"}}
+
+test wm-stackorder-1.6 {usage} {
+    list [catch {wm stackorder . isabove _} err] $err
+} {1 {bad window path name "_"}}
+
+test wm-stackorder-1.7 {usage} {
+    catch {destroy .t}
+    toplevel .t
+    button .t.b
+    list [catch {wm stackorder .t.b} err] $err
+} {1 {window ".t.b" isn't a top-level window}}
+
+test wm-stackorder-1.8 {usage} {
+    catch {destroy .t}
+    toplevel .t
+    button .t.b
+    pack .t.b
+    update
+    list [catch {wm stackorder . isabove .t.b} err] $err
+} {1 {window ".t.b" isn't a top-level window}}
+
+test wm-stackorder-1.9 {usage} {
+    catch {destroy .t}
+    toplevel .t
+    button .t.b
+    pack .t.b
+    update
+    list [catch {wm stackorder . isbelow .t.b} err] $err
+} {1 {window ".t.b" isn't a top-level window}}
+
+test wm-stackorder-1.10 {usage, isabove|isbelow toplevels must be mapped} {
+    catch {destroy .t}
+    toplevel .t ; update
+    wm withdraw .t
+    list [catch {wm stackorder .t isabove .} err] $err
+} {1 {window ".t" isn't mapped}}
+
+test wm-stackorder-1.11 {usage, isabove|isbelow toplevels must be mapped} {
+    catch {destroy .t}
+    toplevel .t ; update
+    wm withdraw .t
+    list [catch {wm stackorder . isbelow .t} err] $err
+} {1 {window ".t" isn't mapped}}
+
+
+deleteWindows
+
+
+test wm-stackorder-2.1 {} {
+    catch {destroy .t}
+    toplevel .t ; update
+    wm stackorder .
+} {. .t}
+
+test wm-stackorder-2.2 {} {
+    catch {destroy .t}
+    toplevel .t ; update
+    raise .
+    wm stackorder .
+} {.t .}
+
+test wm-stackorder-2.3 {} {
+    catch {destroy .t}
+    toplevel .t ; update
+    catch {destroy .t2}
+    toplevel .t2 ; update
+    raise .
+    raise .t2
+    wm stackorder .
+} {.t . .t2}
+
+test wm-stackorder-2.4 {} {
+    catch {destroy .t}
+    toplevel .t ; update
+    catch {destroy .t2}
+    toplevel .t2 ; update
+    raise .
+    lower .t2
+    wm stackorder .
+} {.t2 .t .}
+
+test wm-stackorder-2.5 {} {
+    catch {destroy .parent}
+    toplevel .parent ; update
+    catch {destroy .parent.child1}
+    toplevel .parent.child1 ; update
+    catch {destroy .parent.child2}
+    toplevel .parent.child2 ; update
+    catch {destroy .extra}
+    toplevel .extra ; update
+    raise .parent
+    lower .parent.child2
+    wm stackorder .parent
+} {.parent.child2 .parent.child1 .parent}
+
+deleteWindows
+
+test wm-stackorder-2.6 {non-toplevel widgets ignored} {
+    catch {destroy .t1}
+    toplevel .t1
+    button .t1.b
+    pack .t1.b
+    update
+    wm stackorder .
+} {. .t1}
+
+deleteWindows
+
+test wm-stackorder-2.7 {no children returns self} {
+    wm stackorder .
+} {.}
+
+deleteWindows
+
+
+test wm-stackorder-3.1 {unmapped toplevel} {
+    catch {destroy .t1}
+    toplevel .t1 ; update
+    catch {destroy .t2}
+    toplevel .t2 ; update
+    wm iconify .t1
+    wm stackorder .
+} {. .t2}
+
+test wm-stackorder-3.2 {unmapped toplevel} {
+    catch {destroy .t1}
+    toplevel .t1 ; update
+    catch {destroy .t2}
+    toplevel .t2 ; update
+    wm withdraw .t2
+    wm stackorder .
+} {. .t1}
+
+test wm-stackorder-3.3 {unmapped toplevel} {
+    catch {destroy .t1}
+    toplevel .t1 ; update
+    catch {destroy .t2}
+    toplevel .t2 ; update
+    wm withdraw .t2
+    wm stackorder .t2
+} {}
+
+test wm-stackorder-3.4 {unmapped toplevel} {
+    catch {destroy .t1}
+    toplevel .t1 ; update
+    toplevel .t1.t2 ; update
+    wm withdraw .t1.t2
+    wm stackorder .t1
+} {.t1}
+
+test wm-stackorder-3.5 {unmapped toplevel} {
+    catch {destroy .t1}
+    toplevel .t1 ; update
+    toplevel .t1.t2 ; update
+    wm withdraw .t1
+    wm stackorder .t1
+} {.t1.t2}
+
+test wm-stackorder-3.6 {unmapped toplevel} {
+    catch {destroy .t1}
+    toplevel .t1 ; update
+    toplevel .t1.t2 ; update
+    toplevel .t1.t2.t3 ; update
+    wm withdraw .t1.t2
+    wm stackorder .t1
+} {.t1 .t1.t2.t3}
+
+test wm-stackorder-3.7 {unmapped toplevel, mapped children returned} {
+    catch {destroy .t1}
+    toplevel .t1 ; update
+    toplevel .t1.t2 ; update
+    wm withdraw .t1
+    wm stackorder .t1
+} {.t1.t2}
+
+test wm-stackorder-3.8 {toplevel mapped in idle callback } {
+    catch {destroy .t1}
+    toplevel .t1
+    wm stackorder .
+} {.}
+
+
+deleteWindows
+
+
+test wm-stackorder-4.1 {wm stackorder isabove|isbelow} {
+    catch {destroy .t}
+    toplevel .t ; update
+    raise .t
+    wm stackorder . isabove .t
+} {0}
+
+test wm-stackorder-4.2 {wm stackorder isabove|isbelow} {
+    catch {destroy .t}
+    toplevel .t ; update
+    raise .t
+    wm stackorder . isbelow .t
+} {1}
+
+test wm-stackorder-4.3 {wm stackorder isabove|isbelow} {
+    catch {destroy .t}
+    toplevel .t ; update
+    raise .
+    wm stackorder .t isa .
+} {0}
+
+test wm-stackorder-4.4 {wm stackorder isabove|isbelow} {
+    catch {destroy .t}
+    toplevel .t ; update
+    raise .
+    wm stackorder .t isb .
+} {1}
+
+deleteWindows
+
+test wm-stackorder-5.1 {overrideredirect does not change stackorder} {
+    catch {destroy .t}
+    toplevel .t
+    wm overrideredirect .t 1
+    update
+    raise .
+    wm stackorder . isabove .t
+} {1}
+
+test wm-stackorder-5.2 {a menu is not a toplevel} {
+    catch {destroy .t}
+    toplevel .t
+    menu .t.m -type menubar
+    .t.m add cascade -label "File"
+    .t configure -menu .t.m
+    update
+    raise .
+    wm stackorder .
+} {.t .}
+
+
+deleteWindows
+
+
+# FIXME:
+
+# Need test cases for embedded Windows, they should not appear in
+# the stacking order since they are not actually toplevel Windows.
+
+# Test delivery of virtual events to the WM. We could check to see
+# if the window was raised after a button click for example.
+# This sort of testing may not be possible.
+
+return
+
+
+
