@@ -1,3 +1,15 @@
+1999-04-27    <stanton@scriptics.com>
+
+	* generic/tkDecls.h: 
+	* generic/tkIntDecls.h: 
+	* generic/tkIntPlatDecls.h: 
+	* generic/tkIntXlibDecls.h: 
+	* generic/tkPlatDecls.h: 
+	* generic/tkStubInit.c: Changed to avoid the need for forward
+	declarations in stub initializers.  Added extern "C" blocks around
+	stub table pointer declarations so the stubs can be used from C++
+	code. [Bug: 1934]
+
 1999-04-23    <stanton@scriptics.com>
 
 	* generic/tkInt.decls: Added TkClipBox, XDrawSegments, and
