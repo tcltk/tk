@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.10 2000/08/02 20:52:34 ericm Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.11 2001/02/12 18:06:47 drh Exp $
  */
 
 #include "tkInt.h"
@@ -161,10 +161,13 @@ typedef struct Gridder {
     int numCols, numRows;	/* Number of columns or rows this slave spans.
 				 * Should be at least 1. */
     int padX, padY;		/* Total additional pixels to leave around the
-				 * window (half of this space is left on each
-				 * side).  This is space *outside* the window:
+				 * window.  Some is of this space is on each 
+				 * side.  This is space *outside* the window:
 				 * we'll allocate extra space in frame but
 				 * won't enlarge window). */
+    int padLeft, padTop;	/* The part of padX or padY to use on the
+				 * left or top of the widget, respectively.
+				 * By default, this is half of padX or padY. */
     int iPadX, iPadY;		/* Total extra pixels to allocate inside the
 				 * window (half this amount will appear on
 				 * each side). */
@@ -265,6 +268,14 @@ static void	SetGridSize _ANSI_ARGS_((Gridder *gridPtr));
 static void	StickyToString _ANSI_ARGS_((int flags, char *result));
 static int	StringToSticky _ANSI_ARGS_((char *string));
 static void	Unlink _ANSI_ARGS_((Gridder *gridPtr));
+
+/*
+ * Prototypes for procedures contained in other files but not exported
+ * using tkIntDecls.h
+ */
+
+void TkPrintPadAmount _ANSI_ARGS_((Tcl_Interp*, char*, int, int));
+int  TkParsePadAmount _ANSI_ARGS_((Tcl_Interp*, Tk_Window, char*, int*, int*));
 
 static Tk_GeomMgr gridMgrType = {
     "grid",			/* name */
@@ -545,6 +556,7 @@ GridForgetRemoveCommand(tkwin, interp, argc, argv)
 		slavePtr->numCols = 1;
 		slavePtr->numRows = 1;
 		slavePtr->padX = slavePtr->padY = 0;
+		slavePtr->padLeft = slavePtr->padTop = 0;
 		slavePtr->iPadX = slavePtr->iPadY = 0;
 		slavePtr->doubleBw = 2*Tk_Changes(tkwin)->border_width;
 		if (slavePtr->flags & REQUESTED_RELAYOUT) {
@@ -615,10 +627,10 @@ GridInfoCommand(tkwin, interp, argc, argv)
 	    slavePtr->column, slavePtr->row,
 	    slavePtr->numCols, slavePtr->numRows);
     Tcl_AppendResult(interp, buffer, (char *) NULL);
-    sprintf(buffer, " -ipadx %d -ipady %d -padx %d -pady %d",
-	    slavePtr->iPadX/2, slavePtr->iPadY/2, slavePtr->padX/2,
-	    slavePtr->padY/2);
-    Tcl_AppendResult(interp, buffer, (char *) NULL);
+    TkPrintPadAmount(interp, "ipadx", slavePtr->iPadX/2, slavePtr->iPadX);
+    TkPrintPadAmount(interp, "ipady", slavePtr->iPadY/2, slavePtr->iPadY);
+    TkPrintPadAmount(interp, "padx", slavePtr->padLeft, slavePtr->padX);
+    TkPrintPadAmount(interp, "pady", slavePtr->padTop, slavePtr->padY);
     StickyToString(slavePtr->sticky,buffer);
     Tcl_AppendResult(interp, " -sticky ", buffer, (char *) NULL);
     return TCL_OK;
@@ -1425,9 +1437,9 @@ AdjustForSticky(slavePtr, xPtr, yPtr, widthPtr, heightPtr)
     int diffy=0;	/* Cavity hight - slave height. */
     int sticky = slavePtr->sticky;
 
-    *xPtr += slavePtr->padX/2;
+    *xPtr += slavePtr->padLeft;
     *widthPtr -= slavePtr->padX;
-    *yPtr += slavePtr->padY/2;
+    *yPtr += slavePtr->padTop;
     *heightPtr -= slavePtr->padY;
 
     if (*widthPtr > (Tk_ReqWidth(slavePtr->tkwin) + slavePtr->iPadX)) {
@@ -2029,6 +2041,7 @@ GetGrid(tkwin)
     gridPtr->numRows = 1;
 
     gridPtr->padX = gridPtr->padY = 0;
+    gridPtr->padLeft = gridPtr->padTop = 0;
     gridPtr->iPadX = gridPtr->iPadY = 0;
     gridPtr->doubleBw = 2*Tk_Changes(tkwin)->border_width;
     gridPtr->abortPtr = NULL;
@@ -2599,26 +2612,16 @@ ConfigureSlaves(interp, tkwin, argc, argv)
 		slavePtr->iPadY = tmp*2;
 	    } else if ((c == 'p')
 		    && (strncmp(argv[i], "-padx", length) == 0)) {
-		if ((Tk_GetPixels(interp, slave, argv[i+1], &tmp) != TCL_OK)
-			|| (tmp< 0)) {
-		    Tcl_ResetResult(interp);
-		    Tcl_AppendResult(interp, "bad padx value \"", argv[i+1],
-			    "\": must be positive screen distance",
-			    (char *) NULL);
+		if (TkParsePadAmount(interp, tkwin, argv[i+1],
+			&slavePtr->padLeft, &slavePtr->padX) != TCL_OK) {
 		    return TCL_ERROR;
 		}
-		slavePtr->padX = tmp*2;
 	    } else if ((c == 'p')
 		    && (strncmp(argv[i], "-pady", length) == 0)) {
-		if ((Tk_GetPixels(interp, slave, argv[i+1], &tmp) != TCL_OK)
-			|| (tmp< 0)) {
-		    Tcl_ResetResult(interp);
-		    Tcl_AppendResult(interp, "bad pady value \"", argv[i+1],
-			    "\": must be positive screen distance",
-			    (char *) NULL);
+		if (TkParsePadAmount(interp, tkwin, argv[i+1],
+			&slavePtr->padTop, &slavePtr->padY) != TCL_OK) {
 		    return TCL_ERROR;
 		}
-		slavePtr->padY = tmp*2;
 	    } else if ((c == 'r') && (strncmp(argv[i], "-row", length) == 0)) {
 		if (Tcl_GetInt(interp, argv[i+1], &tmp) != TCL_OK || tmp<0) {
 		    Tcl_ResetResult(interp);
@@ -2905,4 +2908,4 @@ StringToSticky(string)
 	}
     }
     return sticky;
-}		
+}

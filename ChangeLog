@@ -1,3 +1,10 @@
+2001-02-12  D. Richard Hipp  <drh@hwaci.com>
+
+        TIP #21: Asymmetric padding in the pack and grid geometry managers.
+        With this changes, you can now say "-padx {10 20}" to put 10 pixels
+        of padding on the left and 20 on the right.  Similar rules apply
+        for vertical padding.  See the revised documentation for details.
+
 2001-01-02  Andreas Kupries  <a.kupries@westend.com>
 
 	* Everything below belongs together and implements TIP #8
