@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.10 1999/08/10 16:58:52 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.11 1999/09/21 06:43:06 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1392,10 +1392,13 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	TkpWmSetState(winPtr, NormalState);
 	/*
 	 * Follow Windows-like style here:
-	 * raise the window to the top and force the focus on it
+	 * raise the window to the top, and if it isn't overridden,
+	 * then force the focus on it
 	 */
-	Tk_RestackWindow(tkwin, Above, NULL);
-	TkSetFocusWin(winPtr, 1);
+	TkWmRestackToplevel(winPtr, Above, NULL);
+	if (!(Tk_Attributes((Tk_Window) winPtr)->override_redirect)) {
+	    TkSetFocusWin(winPtr, 1);
+	}
     } else if ((c == 'f') && (strncmp(argv[1], "focusmodel", length) == 0)
 	    && (length >= 2)) {
 	if ((argc != 3) && (argc != 4)) {

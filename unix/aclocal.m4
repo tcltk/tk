@@ -563,13 +563,13 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     TCL_BUILD_EXP_FILE=""
     TCL_EXP_FILE=""
     case $system in
-	AIX-4.[[1-9]])
+	AIX-4.[[2-9]])
 	    SHLIB_CFLAGS=""
-	    SHLIB_LD="$fullSrcDir/ldAix /bin/ld -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+	    SHLIB_LD=$TCL_SHLIB_LD
 	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
-	    DL_LIBS="-ldl"
+	    DL_LIBS="-ldl ${TCL_BUILD_LIB_SPEC}"
 	    LDFLAGS=""
 	    LD_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
 	    TCL_NEEDS_EXP_FILE=1
@@ -577,12 +577,12 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    ;;
 	AIX-*)
 	    SHLIB_CFLAGS=""
-	    SHLIB_LD="$fullSrcDir/ldAix /bin/ld -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+	    SHLIB_LD=$TCL_SHLIB_LD
 	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    LIBOBJS="$LIBOBJS tclLoadAix.o"
-	    DL_LIBS="-lld"
+	    DL_LIBS="-lld ${TCL_BUILD_LIB_SPEC}"
 	    LDFLAGS=""
 	    LD_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
 	    TCL_NEEDS_EXP_FILE=1
@@ -594,7 +594,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
-	    DL_LIBS="-ldl"
+	    DL_LIBS="-ldl ${TCL_BUILD_LIB_SPEC}"
 	    LDFLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
@@ -645,7 +645,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	IRIX-5.*|IRIX-6.*|IRIX64-6.5*)
 	    SHLIB_CFLAGS=""
 	    SHLIB_LD="ld -n32 -shared -rdata_shared"
-	    SHLIB_LD_LIBS=""
+	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
@@ -725,7 +725,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    LDFLAGS="-Wl,-Bexport"
 	    LD_SEARCH_FLAGS=""
 	    ;;
-	NetBSD-*|FreeBSD-[[12]].*|OpenBSD-*)
+	NetBSD-*|FreeBSD-[[1-2]].*|OpenBSD-*)
 	    # Not available on all versions:  check for include file.
 	    AC_CHECK_HEADER(dlfcn.h, [
 		SHLIB_CFLAGS="-fpic"

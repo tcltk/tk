@@ -1,3 +1,22 @@
+1999-09-16  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* generic/tkFont.c: fixed processing of font options and error
+	returned [Bug: 2075]
+
+	* win/tkWinWm.c: fixed bug in 'wm deiconify' that raised the
+	wrong toplevel, and changed it to not set focus on overridden
+	toplevels
+
+1999-09-15  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* unix/aclocal.m4: added fix for FreeBSD-[1-2] recognition [Bug: 2070]
+	and fix to AIX-* to get ldAix right [Bug: 2624], fixed AIX
+	version check (readjust from 8-21 fix) and several other config
+	fixes for AIX
+	* mac/tkMacMenubutton.c:
+	* unix/tkUnixMenubu.c: fixed permanently stippled menubutton image
+	* win/tkWinButton.c: fixed possible pointer smash [Bug: 2733]
+
 1999-09-14  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* win/tkWinMenu.c: fix for stack overrun in GetTextFace [Bug: 909]

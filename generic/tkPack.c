@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.3 1999/04/16 01:51:20 stanton Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.4 1999/09/21 06:42:30 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1366,16 +1366,15 @@ PackStructureProc(clientData, eventPtr)
 	    Tcl_DoWhenIdle(ArrangePacking, (ClientData) packPtr);
 	}
     } else if (eventPtr->type == UnmapNotify) {
-	Packer *packPtr2;
+	register Packer *packPtr2;
 
 	/*
 	 * Unmap all of the slaves when the master gets unmapped,
 	 * so that they don't bother to keep redisplaying
 	 * themselves.
 	 */
-
 	for (packPtr2 = packPtr->slavePtr; packPtr2 != NULL;
-		packPtr2 = packPtr2->nextPtr) {
+	     packPtr2 = packPtr2->nextPtr) {
 	    Tk_UnmapWindow(packPtr2->tkwin);
 	}
     }

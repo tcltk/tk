@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinClipboard.c,v 1.5 1999/05/22 02:05:31 stanton Exp $
+ * RCS: @(#) $Id: tkWinClipboard.c,v 1.6 1999/09/21 06:43:06 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -384,7 +384,7 @@ UpdateClipboard(hwnd)
     EmptyClipboard();
 
     /*
-     * CF_UNICODETEXT is only supported on NT, but it it is preffered
+     * CF_UNICODETEXT is only supported on NT, but it it is prefered
      * when possible.
      */
 
