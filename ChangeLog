@@ -1,3 +1,25 @@
+2004-10-26  David Gravereaux <davygrvy@pobox.com>
+
+	* generic/tkInt.h:	Backport of shutdown safety mods from the HEAD
+	* generic/tkMenu.c:	dating from 2003-12-21
+	* generic/tkUtil.c:
+	* generic/tkWindow.c:
+	* mac/tkMacButton.c:
+	* unix/tkUnixEvent.c:
+	* win/tkWin32Dll.c:
+	* win/tkWinEmbed.c:
+	* win/tkWinMenu.c:
+	* win/tkWinX.c:
+
+	* generic/tkInt.decls:       Signature for tkWinXCleanup needed to be
+	* generic/tkIntPlatDecls.h:  changed so it matches the Tcl_ExitProc
+				     typedef to avoid a bad-style cast.
+	
+
+	* win/makefile.vc:  Backport to the most recent
+	* win/rules.vc:     changes on the HEAD.
+	* win/nmakehlp.c:
+
 2004-10-26  Don Porter	<dgp@users.sourceforge.net>
 
         * tests/safe.test (safe-1.3):  Made test less sensitve to the
