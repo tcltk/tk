@@ -1,6 +1,10 @@
+2004-12-06  Don Porter  <dgp@users.sourceforge.net>
+
+	* tests/safe.test:	Trim auto_path to improve performance [1080039]
+
 2004-12-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* changes: updated for 8.4.9 release
+	* changes: updated for 8.5a2 release
 
 2004-12-04  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
