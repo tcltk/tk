@@ -1,3 +1,44 @@
+2000-03-02  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* tests/color.test:
+	* xlib/xcolors.c (XParseColor FindColor):
+	* win/tkWinColor.c (XAllocColor): Fixed bit fiddling for colors to
+	return "correct" values for color mapping. [Bug: 4282]
+
+	* unix/Makefile.in (SCRIPT_INSTALL_DIR): removed extraneous '/'
+	* unix/aclocal.m4: corrected TCL_NEEDS_EXP_FILE to be 1 for AIX
+
+	* win/tkWinInt.h: change extern to EXTERN for TkWinChildProc
+	declaration with extra #defs. [Bug: 4240]
+
+	* library/focus.tcl: fixed tkFocusOK to protect $w in
+	uplevel with list. [Bug: 4208]
+
+	* doc/CrtItemType.3: fixed docs for Tk_CreateItemType to reflect
+	changes made in 8.3.0 (but old style would still work as well).
+	[Bug: 4252]
+
+	* tests/config.test: extra test to check object cleanup when
+	destroying the widget
+	* generic/tkListbox.c (DestroyListbox): fixed crash in
+	DestroyListbox due to null tkwin.  [Bug: 4207]
+
+	* tests/entry.test: added test suite for entry validation
+	* doc/entry.n: improved docs discussing caveats and gotchas when
+	mixing textvar with widget validation
+	* generic/tkEntry.c (EntryValidateChange): improved handling of
+	validation with relation to -textvariable.  Previously, it would
+	turn off whenever the textvar was set.  Now it will it will turn
+	off only when the textvar is set and validation returns 0.  Added
+	%V (type of validation occuring) to %-subs to help work with
+	trickier validation.
+
+2000-02-25  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* win/tkWinWm.c (RaiseWinWhenIdle): Checked for the possibility
+	that the window could be destroyed (can occur with
+	wm deiconify .toplevel; destroy .toplevel).
+
 2000-02-25  Eric Melski  <ericm@scriptics.com>
 
 	* generic/tkImgGIF.c: Applied "spirit of" the patch in 1605 (the
