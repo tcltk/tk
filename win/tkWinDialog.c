@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.19 2001/03/30 06:01:55 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.20 2001/04/04 06:40:35 hobbs Exp $
  *
  */
 
@@ -954,7 +954,7 @@ GetFileNameA(clientData, interp, objc, objv, open)
 {
     OPENFILENAME ofn;
     TCHAR file[TK_MULTI_MAX_PATH], savePath[MAX_PATH];
-    int result, winCode, oldMode, i, multi;
+    int result, winCode, oldMode, i, multi = 0;
     char *extension, *filter, *title;
     Tk_Window tkwin;
     HWND hWnd;
