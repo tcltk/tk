@@ -1,3 +1,24 @@
+2002-09-26  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/Makefile.in: add macosx subdir to dist target.
+	Do not generate .Z, only .gz and .zip in alldist target.
+
+2002-09-18  Mumit Khan  <khan@nanotech.wisc.edu>
+
+	Added basic Cygwin support.
+
+	* win/tcl.m4 (SC_PATH_TCLCONFIG): Support one-tree build.
+	(SC_PATH_TKCONFIG): Likewise.
+	(SC_PROG_TCLSH): Likewise.
+	(SC_CONFIG_CFLAGS): Assume real Cygwin port and remove -mno-cygwin 
+	flags.  Add -mwin32 to extra_cflags and extra_ldflags.
+	Remove ``-e _WinMain@16'' from LDFLAGS_WINDOW.
+	* win/configure: Regenerate.
+
+	* win/tkWinPort.h (tchar.h): Do not include on Cygwin.
+	(_T): Define for Cygwin.
+	* win/winMain.c (main): Conditionally define.
+
 2002-09-26  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Makefile: preserve environment value of INSTALL_ROOT.
