@@ -4,15 +4,15 @@ README:  Tk
 	service to the Tcl community by Scriptics Corporation.
 	http://www.scriptics.com/
 
-RCS: @(#) $Id: README,v 1.15.2.1 1999/04/22 23:05:56 welch Exp $
+RCS: @(#) $Id: README,v 1.15.2.2 1999/05/14 02:19:14 stanton Exp $
 
 1. Introduction
 ---------------
 
 This directory contains the sources and documentation for Tk, an X11
 toolkit implemented with the Tcl scripting language.  The information
-here corresponds to release 8.1.0, which is the final release for Tk
-8.1.
+here corresponds to release 8.1.1, which is the first patch release
+for Tk 8.1.
 
 For details on features, incompatibilities, and potential problems with
 this release, see the Tcl/Tk 8.1 Web page at
