@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.19 2003/06/26 17:15:48 vincentdarley Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.20 2004/02/04 00:25:13 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -280,11 +280,20 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
     	    above {
     	    	set x [winfo rootx $w]
     	    	set y [expr {[winfo rooty $w] - [winfo reqheight $menu]}]
+		# if we go offscreen to the top, show as 'below'
+		if {$y < 0} {
+		    set y [expr {[winfo rooty $w] + [winfo height $w]}]
+		}
 		PostOverPoint $menu $x $y
     	    }
     	    below {
     	    	set x [winfo rootx $w]
     	    	set y [expr {[winfo rooty $w] + [winfo height $w]}]
+		# if we go offscreen to the bottom, show as 'above'
+		set mh [winfo reqheight $menu]
+		if {($y + $mh) > [winfo screenheight $w]} {
+		    set y [expr {[winfo rooty $w] - $mh}]
+		}
 		PostOverPoint $menu $x $y
     	    }
     	    left {
@@ -336,7 +345,7 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 	            PostOverPoint $menu $x $y [MenuFindName $menu [$w cget -text]]
 		} else {
 		    PostOverPoint $menu [winfo rootx $w] [expr {[winfo rooty $w]+[winfo height $w]}]
-    	    	}  
+    	    	}
     	    }
 	}
     } msg]} {

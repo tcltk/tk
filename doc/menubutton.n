@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menubutton.n,v 1.4 2001/05/21 14:07:32 tmh Exp $
+'\" RCS: @(#) $Id: menubutton.n,v 1.5 2004/02/04 00:25:13 hobbs Exp $
 '\" 
 .so man.macros
 .TH menubutton n 4.0 Tk "Tk Built-In Commands"
@@ -34,14 +34,14 @@ Valid values for this option are \fBbottom\fR, \fBcenter\fR,
 is \fBnone\fR, meaning that the menubutton will display either an image or
 text, depending on the values of the \fB\-image\fR and \fB\-bitmap\fR
 options.
-.VS
 .OP \-direction direction Height
 Specifies where the menu is going to be popup up. \fBabove\fR tries to
 pop the menu above the menubutton. \fBbelow\fR tries to pop the menu
 below the menubutton. \fBleft\fR tries to pop the menu to the left of
 the menubutton. \fBright\fR tries to pop the menu to the right of the
 menu button. \fBflush\fR pops the menu directly over the menubutton.
-.VE
+In the case of \fBabove\fR or \fBbelow\fR, the direction will be
+reversed if the menu would show offscreen.
 .OP \-height height Height
 Specifies a desired height for the menubutton.
 If an image or bitmap is being displayed in the menubutton then the value is in
