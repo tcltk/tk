@@ -11,7 +11,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: defs.tcl,v 1.5 1999/05/25 20:40:54 stanton Exp $
+# RCS: @(#) $Id: defs.tcl,v 1.6 1999/06/19 00:59:01 jenn Exp $
 
 # Initialize wish shell
 
@@ -981,7 +981,7 @@ if {[info exists tk_version]} {
 	}
 	
 	# The following code segment cannot be run on Windows prior
-	# to Tk 8.1b3 due to a channel I/O bug.
+	# to Tk 8.1b3 due to a channel I/O bug (bugID 1495).
 
 	global tcl_platform
 	set ::tcltest::fd [open "|[list $::tcltest::tktest -geometry +0+0 -name tktest] $args" r+]
