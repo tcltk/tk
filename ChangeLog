@@ -4,6 +4,8 @@
 	to never jump to the end of the switch.  I find that confusing as
 	I can't see whether there's processing still to be done from a
 	quick glance at the code, unlike with a direct return. [Bug 771988]
+	(ImgPhotoCmd, ImgPhotoSetSize, ImgPhotoInstanceSetSize): Try harder
+	to avoid zero-length mallocs()... [Bug 404421]
 
 2003-07-16  Don Porter  <dgp@users.sourceforge.net>
 
