@@ -1,3 +1,11 @@
+2000-04-17  Eric Melski  <ericm@scriptics.com>
+
+	* tests/grid.test: Added test for [grid propagate . 0] to not toggle.
+	
+	* generic/tkGrid.c: Fixed bogus logic in [grid propagate] that
+	caused [grid propagate . 0] to act as a toggle instead of an
+	absolute set. [Bug: 2286].
+
 2000-04-16  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* win/tkWinColor.c (FindSystemColor): correct calculation of

@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.7 2000/01/20 23:46:21 ericm Exp $
+# RCS: @(#) $Id: grid.test,v 1.8 2000/04/17 17:44:27 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -370,7 +370,16 @@ test grid-7.6 {propagate} {
     set a
 } {100x100 100x100 75x85}
 grid_reset 7.6
-
+test grid-7.7 {propagate} {
+    grid propagate . 1
+    set res [list [grid propagate .]]
+    grid propagate . 0
+    lappend res [grid propagate .]
+    grid propagate . 0
+    lappend res [grid propagate .]
+    set res
+} [list 1 0 0]
+grid_reset 7.7
 
 test grid-8.1 {size} {
     list [catch {grid size . foo} msg] $msg
