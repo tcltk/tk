@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.6 2002/05/27 17:33:26 mdejong Exp $
+# RCS: @(#) $Id: wm.test,v 1.7 2002/05/27 19:49:33 mdejong Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -344,6 +344,150 @@ test wm-transient-1.6 {usage} {
     toplevel .dummy
     list [catch {wm transient .dummy .icon} msg] $msg
 } {1 {can't make ".icon" a master: it is an icon for .top}}
+
+
+
+test wm-state-1.1 {usage} {
+    list [catch {wm state} err] $err
+} {1 {wrong # args: should be "wm option window ?arg ...?"}}
+
+test wm-state-1.2 {usage} {
+    list [catch {wm state . _ _} err] $err
+} {1 {wrong # arguments: must be "wm state window ?state?"}}
+
+test wm-state-2.1 {initial state} {
+    deleteWindows
+    toplevel .t
+    wm state .t
+} {normal}
+
+test wm-state-2.2 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm state .t withdrawn
+    wm state .t
+} {withdrawn}
+
+test wm-state-2.3 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm withdraw .t
+    wm state .t
+} {withdrawn}
+
+test wm-state-2.4 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm state .t withdrawn
+    wm state .t
+} {withdrawn}
+
+test wm-state-2.5 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm withdraw .t
+    wm state .t
+} {withdrawn}
+
+test wm-state-2.6 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm state .t iconic
+    wm state .t
+} {iconic}
+
+test wm-state-2.7 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm iconify .t
+    wm state .t
+} {iconic}
+
+test wm-state-2.8 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm state .t iconic
+    wm state .t
+} {iconic}
+
+test wm-state-2.9 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm iconify .t
+    wm state .t
+} {iconic}
+
+test wm-state-2.10 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm withdraw .t
+    wm state .t normal
+    wm state .t
+} {normal}
+
+test wm-state-2.11 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm withdraw .t
+    wm deiconify .t
+    wm state .t
+} {normal}
+
+test wm-state-2.12 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm withdraw .t
+    wm state .t normal
+    wm state .t
+} {normal}
+
+test wm-state-2.13 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm withdraw .t
+    wm deiconify .t
+    wm state .t
+} {normal}
+
+test wm-state-2.14 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm iconify .t
+    wm state .t normal
+    wm state .t
+} {normal}
+
+test wm-state-2.15 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm iconify .t
+    wm deiconify .t
+    wm state .t
+} {normal}
+
+test wm-state-2.16 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm iconify .t
+    wm state .t normal
+    wm state .t
+} {normal}
+
+test wm-state-2.17 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm iconify .t
+    wm deiconify .t
+    wm state .t
+} {normal}
 
 
 # FIXME:

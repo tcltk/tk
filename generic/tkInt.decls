@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.25 2002/04/12 10:10:48 hobbs Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.26 2002/05/27 19:49:32 mdejong Exp $
 
 library tk
 
@@ -713,6 +713,10 @@ declare 10 unix {
 
 declare 11 unix {
     void TkFreeXId (TkDisplay *dispPtr)
+}
+
+declare 12 unix {
+    int TkpWmSetState (TkWindow *winPtr, int state)
 }
 
 ############################

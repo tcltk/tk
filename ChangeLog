@@ -1,5 +1,17 @@
 2002-05-27  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* generic/tkInt.decls: Add unix decl for TkpWmSetState.
+	* generic/tkIntPlatDecls.h: Regen.
+	* generic/tkStubInit.c: Regen.
+	* tests/wm.test: Test state changes between iconic,
+	normal, and withdrawn both before and after initial
+	mapping.
+	* unix/tkUnixWm.c (Tk_WmCmd, TkpWmSetState): Move
+	state change code into TkpWmSetState to more closely
+	match the Win32 implementation.
+
+2002-05-27  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* tests/embed.test: Added cross platform embed tests.
 	Check that window passed to -use has the -container
 	option set.
