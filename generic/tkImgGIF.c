@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.		|
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.22 2002/08/08 09:35:08 hobbs Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.23 2003/02/18 14:03:46 dkf Exp $
  */
 
 /*
@@ -424,13 +424,6 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	    continue;
 	}
 
-	/*
-	 * If a trash buffer has been allocated, free it now.
-	 */
-	if (trashBuffer != NULL) {
-	    ckfree((char *)trashBuffer);
-	    trashBuffer = NULL;
-	}
 	if (BitSet(buf[8], LOCALCOLORMAP)) {
 	    if (!ReadColorMap(chan, bitPixel, colorMap)) {
 		    Tcl_AppendResult(interp, "error reading color map", 
@@ -485,6 +478,12 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	    TK_PHOTO_COMPOSITE_SET);
 
     noerror:
+    /*
+     * If a trash buffer has been allocated, free it now.
+     */
+    if (trashBuffer != NULL) {
+	ckfree((char *)trashBuffer);
+    }
     if (block.pixelPtr) {
 	ckfree((char *) block.pixelPtr);
     }
@@ -492,11 +491,16 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
     return TCL_OK;
 
     error:
+    /*
+     * If a trash buffer has been allocated, free it now.
+     */
+    if (trashBuffer != NULL) {
+	ckfree((char *)trashBuffer);
+    }
     if (block.pixelPtr) {
 	ckfree((char *) block.pixelPtr);
     }
     return TCL_ERROR;
-
 }
 
 /*
