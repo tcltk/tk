@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.1.4.4 1999/03/11 18:51:18 hershey Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.1.4.5 1999/03/11 23:51:27 hershey Exp $
 
 if {$tcl_platform(platform) != "unix"} {
     puts "skipping: Unix only tests..."
@@ -2332,7 +2332,7 @@ test unixWm-58.1 {exit processing} {
 	exit
     }
     close $fd
-    if {[catch {exec $tktest script -geometry 10x10+0+0} msg]} {
+    if {[catch {exec $::test::tktest script -geometry 10x10+0+0} msg]} {
 	set error 1
     } else {
 	set error 0
@@ -2351,7 +2351,7 @@ test unixWm-58.2 {exit processing} {
 	exit
     }
     close $fd
-    if {[catch {exec $tktest script -geometry 10x10+0+0} msg]} {
+    if {[catch {exec $::test::tktest script -geometry 10x10+0+0} msg]} {
 	set error 1
     } else {
 	set error 0
@@ -2376,7 +2376,7 @@ test unixWm-58.3 {exit processing} {
 	exit
     }
     close $fd
-    if {[catch {exec $tktest script -geometry 10x10+0+0} msg]} {
+    if {[catch {exec $::test::tktest script -geometry 10x10+0+0} msg]} {
 	set error 1
     } else {
 	set error 0

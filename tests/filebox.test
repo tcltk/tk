@@ -6,11 +6,8 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: filebox.test,v 1.1.4.4 1999/03/11 18:50:48 hershey Exp $
+# RCS: @(#) $Id: filebox.test,v 1.1.4.5 1999/03/11 23:51:26 hershey Exp $
 #
-
-puts "skipping these tests: TEMPORARILY under construction"
-return
 
 set tk_strictMotif_old $tk_strictMotif
 
@@ -104,6 +101,11 @@ if {$tcl_platform(platform) == "unix"} {
 
 set unknownOptionsMsg {1 {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -parent, or -title}}
 
+set tmpFile "filebox.tmp"
+makeFile {
+    # this file can be empty!
+} $tmpFile
+
 foreach mode $modes {
 
     #
@@ -186,10 +188,7 @@ foreach mode $modes {
 	    set fileDir [pwd]
 	    set pathName [file join [pwd] $fileName]
 	} else {
-	    set thisFile [info script]
-	    set fileName [file tail $thisFile]
-
-	    # this file should be in the current working dir
+	    set fileName $tmpFile
 	    set fileDir [pwd]
 	    set pathName [file join $fileDir $fileName]
 	}
