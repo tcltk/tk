@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.44 2004/03/17 18:15:44 das Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.45 2004/08/19 14:43:43 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -292,6 +292,8 @@ TkIntStubs tkIntStubs = {
     TkStylePkgFree, /* 147 */
     TkToplevelWindowForCommand, /* 148 */
     TkGetOptionSpec, /* 149 */
+    TkMakeRawCurve, /* 150 */
+    TkMakeRawCurvePostscript, /* 151 */
 };
 
 TkIntPlatStubs tkIntPlatStubs = {

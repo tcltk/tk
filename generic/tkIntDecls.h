@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.24 2004/03/17 18:15:43 das Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.25 2004/08/19 14:43:42 dkf Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -944,6 +944,21 @@ EXTERN Tk_Window	TkToplevelWindowForCommand _ANSI_ARGS_((
 EXTERN CONST Tk_OptionSpec * TkGetOptionSpec _ANSI_ARGS_((CONST char * name, 
 				Tk_OptionTable optionTable));
 #endif
+#ifndef TkMakeRawCurve_TCL_DECLARED
+#define TkMakeRawCurve_TCL_DECLARED
+/* 150 */
+EXTERN int		TkMakeRawCurve _ANSI_ARGS_((Tk_Canvas canvas, 
+				double * pointPtr, int numPoints, 
+				int numSteps, XPoint xPoints[], 
+				double dblPoints[]));
+#endif
+#ifndef TkMakeRawCurvePostscript_TCL_DECLARED
+#define TkMakeRawCurvePostscript_TCL_DECLARED
+/* 151 */
+EXTERN void		TkMakeRawCurvePostscript _ANSI_ARGS_((
+				Tcl_Interp * interp, Tk_Canvas canvas, 
+				double * pointPtr, int numPoints));
+#endif
 
 typedef struct TkIntStubs {
     int magic;
@@ -1187,6 +1202,8 @@ typedef struct TkIntStubs {
     void (*tkStylePkgFree) _ANSI_ARGS_((TkMainInfo * mainPtr)); /* 147 */
     Tk_Window (*tkToplevelWindowForCommand) _ANSI_ARGS_((Tcl_Interp * interp, CONST char * cmdName)); /* 148 */
     CONST Tk_OptionSpec * (*tkGetOptionSpec) _ANSI_ARGS_((CONST char * name, Tk_OptionTable optionTable)); /* 149 */
+    int (*tkMakeRawCurve) _ANSI_ARGS_((Tk_Canvas canvas, double * pointPtr, int numPoints, int numSteps, XPoint xPoints[], double dblPoints[])); /* 150 */
+    void (*tkMakeRawCurvePostscript) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Canvas canvas, double * pointPtr, int numPoints)); /* 151 */
 } TkIntStubs;
 
 #ifdef __cplusplus
@@ -1833,6 +1850,14 @@ extern TkIntStubs *tkIntStubsPtr;
 #ifndef TkGetOptionSpec
 #define TkGetOptionSpec \
 	(tkIntStubsPtr->tkGetOptionSpec) /* 149 */
+#endif
+#ifndef TkMakeRawCurve
+#define TkMakeRawCurve \
+	(tkIntStubsPtr->tkMakeRawCurve) /* 150 */
+#endif
+#ifndef TkMakeRawCurvePostscript
+#define TkMakeRawCurvePostscript \
+	(tkIntStubsPtr->tkMakeRawCurvePostscript) /* 151 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
