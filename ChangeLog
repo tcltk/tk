@@ -1,3 +1,14 @@
+2004-11-17  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkCanvImg.c (ImageToPostscript): don't try ps generation
+	of canvas image item without image specified. [Bug 1032300]
+
+	* library/console.tcl (::tk::console::ExpandVariable): correct
+	array keyname expansion. [Bug 1004508] (bold)
+
+	* generic/tkPanedWindow.c (Tk_PanedWindowObjCmd): set save_under X
+	attr to prevent expose events when moving sash. [Bug 1036963]
+
 2004-11-16  Don Porter	<dgp@users.sourceforge.net>
 
 	* changes:	Updates for Tk 8.4.8 release.
