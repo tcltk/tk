@@ -3,7 +3,7 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# RCS: @(#) $Id: dialog.tcl,v 1.6 1999/10/01 22:45:19 hobbs Exp $
+# RCS: @(#) $Id: dialog.tcl,v 1.7 2000/01/12 11:45:14 hobbs Exp $
 #
 # Copyright (c) 1992-1993 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -31,6 +31,18 @@
 
 proc tk_dialog {w title text bitmap default args} {
     global tkPriv tcl_platform
+
+    # Check that $default was properly given
+    if {[string is int $default]} {
+	if {$default >= [llength $args]} {
+	    return -code error "default button index greater than number of\
+		    buttons specified for tk_dialog"
+	}
+    } elseif {[string equal {} $default]} {
+	set default -1
+    } else {
+	set default [lsearch -exact $args $default]
+    }
 
     # 1. Create the top-level window and divide it into top
     # and bottom parts.
