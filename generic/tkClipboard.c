@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkClipboard.c,v 1.11 2002/06/19 20:40:55 mdejong Exp $
+ * RCS: @(#) $Id: tkClipboard.c,v 1.12 2002/08/05 04:30:38 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -141,7 +141,7 @@ ClipboardAppHandler(clientData, offset, buffer, maxBytes)
 {
     TkDisplay *dispPtr = (TkDisplay *) clientData;
     size_t length;
-    char *p;
+    CONST char *p;
 
     p = dispPtr->clipboardAppPtr->winPtr->nameUid;
     length = strlen(p);

@@ -16,7 +16,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.33 2002/07/11 13:01:30 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.34 2002/08/05 04:30:39 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -400,7 +400,7 @@ static char *		ImgGetPhoto _ANSI_ARGS_((PhotoMaster *masterPtr,
 			    Tk_PhotoImageBlock *blockPtr,
 			    struct SubcommandOptions *optPtr));
 static int		IsValidPalette _ANSI_ARGS_((PhotoInstance *instancePtr,
-			    char *palette));
+			    CONST char *palette));
 static int		CountBits _ANSI_ARGS_((pixel mask));
 static void		GetColorTable _ANSI_ARGS_((PhotoInstance *instancePtr));
 static void		FreeColorTable _ANSI_ARGS_((ColorTable *colorPtr,
@@ -1824,7 +1824,7 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
 				 * such as TK_CONFIG_ARGV_ONLY. */
 {
     PhotoInstance *instancePtr;
-    char *oldFileString, *oldPaletteString;
+    CONST char *oldFileString, *oldPaletteString;
     Tcl_Obj *oldData, *data = NULL, *oldFormat, *format = NULL;
     int length, i, j;
     double oldGamma;
@@ -1832,11 +1832,11 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
     Tcl_Channel chan;
     Tk_PhotoImageFormat *imageFormat;
     int imageWidth, imageHeight;
-    char **args;
+    CONST char **args;
     int oldformat;
     Tcl_Obj *tempdata, *tempformat;
 
-    args = (char **) ckalloc((objc + 1) * sizeof(char *));
+    args = (CONST char **) ckalloc((objc + 1) * sizeof(char *));
     for (i = 0, j = 0; i < objc; i++,j++) {
 	args[j] = Tcl_GetStringFromObj(objv[i], &length);
 	if ((length > 1) && (args[j][0] == '-')) {
@@ -2940,7 +2940,7 @@ static int
 IsValidPalette(instancePtr, palette)
     PhotoInstance *instancePtr;		/* Instance to which the palette
 					 * specification is to be applied. */
-    char *palette;			/* Palette specification string. */
+    CONST char *palette;		/* Palette specification string. */
 {
     int nRed, nGreen, nBlue, mono, numColors;
     char *endp;
@@ -3926,7 +3926,7 @@ Tk_PhotoHandle
 Tk_FindPhoto(interp, imageName)
     Tcl_Interp *interp;		/* Interpreter (application) in which image
 				 * exists. */
-    char *imageName;		/* Name of the desired photo image. */
+    CONST char *imageName;	/* Name of the desired photo image. */
 {
     ClientData clientData;
     Tk_ImageType *typePtr;

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.19 2002/06/18 23:51:46 dkf Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.20 2002/08/05 04:30:39 dgp Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -71,22 +71,22 @@ EXTERN int		TkCopyAndGlobalEval _ANSI_ARGS_((Tcl_Interp * interp,
 EXTERN unsigned long	TkCreateBindingProcedure _ANSI_ARGS_((
 				Tcl_Interp * interp, 
 				Tk_BindingTable bindingTable, 
-				ClientData object, char * eventString, 
+				ClientData object, CONST char * eventString, 
 				TkBindEvalProc * evalProc, 
 				TkBindFreeProc * freeProc, 
 				ClientData clientData));
 /* 12 */
 EXTERN TkCursor *	TkCreateCursorFromData _ANSI_ARGS_((Tk_Window tkwin, 
-				char * source, char * mask, int width, 
-				int height, int xHot, int yHot, XColor fg, 
-				XColor bg));
+				CONST char * source, CONST char * mask, 
+				int width, int height, int xHot, int yHot, 
+				XColor fg, XColor bg));
 /* 13 */
 EXTERN int		TkCreateFrame _ANSI_ARGS_((ClientData clientData, 
 				Tcl_Interp * interp, int argc, char ** argv, 
 				int toplevel, char * appName));
 /* 14 */
 EXTERN Tk_Window	TkCreateMainWindow _ANSI_ARGS_((Tcl_Interp * interp, 
-				char * screenName, char * baseName));
+				CONST char * screenName, char * baseName));
 /* 15 */
 EXTERN Time		TkCurrentTime _ANSI_ARGS_((TkDisplay * dispPtr));
 /* 16 */
@@ -141,7 +141,7 @@ EXTERN void		TkGetButtPoints _ANSI_ARGS_((double p1[],
 EXTERN TkCursor *	TkGetCursorByName _ANSI_ARGS_((Tcl_Interp * interp, 
 				Tk_Window tkwin, Tk_Uid string));
 /* 33 */
-EXTERN CONST char *	TkGetDefaultScreenName _ANSI_ARGS_((
+EXTERN CONST84_RETURN char * TkGetDefaultScreenName _ANSI_ARGS_((
 				Tcl_Interp * interp, CONST char * screenName));
 /* 34 */
 EXTERN TkDisplay *	TkGetDisplay _ANSI_ARGS_((Display * display));
@@ -263,7 +263,7 @@ EXTERN void		TkpSetMainMenubar _ANSI_ARGS_((Tcl_Interp * interp,
 				Tk_Window tkwin, char * menuName));
 /* 75 */
 EXTERN int		TkpUseWindow _ANSI_ARGS_((Tcl_Interp * interp, 
-				Tk_Window tkwin, char * string));
+				Tk_Window tkwin, CONST char * string));
 /* 76 */
 EXTERN int		TkpWindowWasRecentlyDeleted _ANSI_ARGS_((Window win, 
 				TkDisplay * dispPtr));
@@ -365,7 +365,7 @@ EXTERN void		TkpGetSubFonts _ANSI_ARGS_((Tcl_Interp * interp,
 				Tk_Font tkfont));
 /* 111 */
 EXTERN Tcl_Obj *	TkpGetSystemDefault _ANSI_ARGS_((Tk_Window tkwin, 
-				char * dbName, char * className));
+				CONST char * dbName, CONST char * className));
 /* 112 */
 EXTERN void		TkpMenuThreadInit _ANSI_ARGS_((void));
 #ifdef __WIN32__
@@ -519,10 +519,10 @@ typedef struct TkIntStubs {
     int (*tkClipInit) _ANSI_ARGS_((Tcl_Interp * interp, TkDisplay * dispPtr)); /* 8 */
     void (*tkComputeAnchor) _ANSI_ARGS_((Tk_Anchor anchor, Tk_Window tkwin, int padX, int padY, int innerWidth, int innerHeight, int * xPtr, int * yPtr)); /* 9 */
     int (*tkCopyAndGlobalEval) _ANSI_ARGS_((Tcl_Interp * interp, char * script)); /* 10 */
-    unsigned long (*tkCreateBindingProcedure) _ANSI_ARGS_((Tcl_Interp * interp, Tk_BindingTable bindingTable, ClientData object, char * eventString, TkBindEvalProc * evalProc, TkBindFreeProc * freeProc, ClientData clientData)); /* 11 */
-    TkCursor * (*tkCreateCursorFromData) _ANSI_ARGS_((Tk_Window tkwin, char * source, char * mask, int width, int height, int xHot, int yHot, XColor fg, XColor bg)); /* 12 */
+    unsigned long (*tkCreateBindingProcedure) _ANSI_ARGS_((Tcl_Interp * interp, Tk_BindingTable bindingTable, ClientData object, CONST char * eventString, TkBindEvalProc * evalProc, TkBindFreeProc * freeProc, ClientData clientData)); /* 11 */
+    TkCursor * (*tkCreateCursorFromData) _ANSI_ARGS_((Tk_Window tkwin, CONST char * source, CONST char * mask, int width, int height, int xHot, int yHot, XColor fg, XColor bg)); /* 12 */
     int (*tkCreateFrame) _ANSI_ARGS_((ClientData clientData, Tcl_Interp * interp, int argc, char ** argv, int toplevel, char * appName)); /* 13 */
-    Tk_Window (*tkCreateMainWindow) _ANSI_ARGS_((Tcl_Interp * interp, char * screenName, char * baseName)); /* 14 */
+    Tk_Window (*tkCreateMainWindow) _ANSI_ARGS_((Tcl_Interp * interp, CONST char * screenName, char * baseName)); /* 14 */
     Time (*tkCurrentTime) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 15 */
     void (*tkDeleteAllImages) _ANSI_ARGS_((TkMainInfo * mainPtr)); /* 16 */
     void (*tkDoConfigureNotify) _ANSI_ARGS_((TkWindow * winPtr)); /* 17 */
@@ -541,7 +541,7 @@ typedef struct TkIntStubs {
     char * (*tkGetBitmapData) _ANSI_ARGS_((Tcl_Interp * interp, char * string, char * fileName, int * widthPtr, int * heightPtr, int * hotXPtr, int * hotYPtr)); /* 30 */
     void (*tkGetButtPoints) _ANSI_ARGS_((double p1[], double p2[], double width, int project, double m1[], double m2[])); /* 31 */
     TkCursor * (*tkGetCursorByName) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Window tkwin, Tk_Uid string)); /* 32 */
-    CONST char * (*tkGetDefaultScreenName) _ANSI_ARGS_((Tcl_Interp * interp, CONST char * screenName)); /* 33 */
+    CONST84_RETURN char * (*tkGetDefaultScreenName) _ANSI_ARGS_((Tcl_Interp * interp, CONST char * screenName)); /* 33 */
     TkDisplay * (*tkGetDisplay) _ANSI_ARGS_((Display * display)); /* 34 */
     int (*tkGetDisplayOf) _ANSI_ARGS_((Tcl_Interp * interp, int objc, Tcl_Obj *CONST objv[], Tk_Window * tkwinPtr)); /* 35 */
     TkWindow * (*tkGetFocusWin) _ANSI_ARGS_((TkWindow * winPtr)); /* 36 */
@@ -583,7 +583,7 @@ typedef struct TkIntStubs {
     int (*tkPositionInTree) _ANSI_ARGS_((TkWindow * winPtr, TkWindow * treePtr)); /* 72 */
     void (*tkpRedirectKeyEvent) _ANSI_ARGS_((TkWindow * winPtr, XEvent * eventPtr)); /* 73 */
     void (*tkpSetMainMenubar) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Window tkwin, char * menuName)); /* 74 */
-    int (*tkpUseWindow) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Window tkwin, char * string)); /* 75 */
+    int (*tkpUseWindow) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Window tkwin, CONST char * string)); /* 75 */
     int (*tkpWindowWasRecentlyDeleted) _ANSI_ARGS_((Window win, TkDisplay * dispPtr)); /* 76 */
     void (*tkQueueEventForAllChildren) _ANSI_ARGS_((TkWindow * winPtr, XEvent * eventPtr)); /* 77 */
     int (*tkReadBitmapFile) _ANSI_ARGS_((Display* display, Drawable d, CONST char* filename, unsigned int* width_return, unsigned int* height_return, Pixmap* bitmap_return, int* x_hot_return, int* y_hot_return)); /* 78 */
@@ -619,7 +619,7 @@ typedef struct TkIntStubs {
     int (*tkGetWindowFromObj) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Window tkwin, Tcl_Obj * objPtr, Tk_Window * windowPtr)); /* 108 */
     char * (*tkpGetString) _ANSI_ARGS_((TkWindow * winPtr, XEvent * eventPtr, Tcl_DString * dsPtr)); /* 109 */
     void (*tkpGetSubFonts) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Font tkfont)); /* 110 */
-    Tcl_Obj * (*tkpGetSystemDefault) _ANSI_ARGS_((Tk_Window tkwin, char * dbName, char * className)); /* 111 */
+    Tcl_Obj * (*tkpGetSystemDefault) _ANSI_ARGS_((Tk_Window tkwin, CONST char * dbName, CONST char * className)); /* 111 */
     void (*tkpMenuThreadInit) _ANSI_ARGS_((void)); /* 112 */
 #if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     void *reserved113;

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ConfigWidg.3,v 1.7 2000/11/21 16:35:27 dkf Exp $
+'\" RCS: @(#) $Id: ConfigWidg.3,v 1.8 2002/08/05 04:30:38 dgp Exp $
 '\" 
 .so man.macros
 .TH Tk_ConfigureWidget 3 4.1 Tk "Tk Library Procedures"
@@ -40,7 +40,7 @@ Pointer to table specifying legal configuration options for this
 widget.
 .AP int argc in
 Number of arguments in \fIargv\fR.
-.AP char **argv in
+.AP "CONST char" **argv in
 Command-line options for configuring widget.
 .AP char *widgRec in/out
 Points to widget record structure.  Fields in this structure get
@@ -55,7 +55,7 @@ selectively disable entries in \fIspecs\fR.
 The name of the type of a widget record.
 .AP "field name" field in
 The name of a field in records of type \fItype\fR.
-.AP char *argvName in
+.AP "CONST char" *argvName in
 The name used on Tcl command lines to refer to a particular option
 (e.g. when creating a widget or invoking the \fBconfigure\fR widget
 command).  If non-NULL, then information is returned only for this

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkRectOval.c,v 1.8 2001/07/03 06:03:44 hobbs Exp $
+ * RCS: @(#) $Id: tkRectOval.c,v 1.9 2002/08/05 04:30:40 dgp Exp $
  */
 
 #include <stdio.h>
@@ -423,8 +423,8 @@ ConfigureRectOval(interp, canvas, itemPtr, objc, objv, flags)
 
     tkwin = Tk_CanvasTkwin(canvas);
 
-    if (Tk_ConfigureWidget(interp, tkwin, configSpecs, objc, (char **) objv,
-	    (char *) rectOvalPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
+    if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
+	    (CONST char **) objv, (char *) rectOvalPtr, flags|TK_CONFIG_OBJS)) {
 	return TCL_ERROR;
     }
     state = itemPtr->state;

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: BindTable.3,v 1.2 1998/09/14 18:22:45 stanton Exp $
+'\" RCS: @(#) $Id: BindTable.3,v 1.3 2002/08/05 04:30:38 dgp Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateBindingTable 3 4.0 Tk "Tk Library Procedures"
@@ -27,7 +27,7 @@ unsigned long
 int
 \fBTk_DeleteBinding(\fIinterp, bindingTable, object, eventString\fB)\fR
 .sp
-char *
+CONST char *
 \fBTk_GetBinding(\fIinterp, bindingTable, object, eventString\fB)\fR
 .sp
 \fBTk_GetAllBindings(\fIinterp, bindingTable, object\fB)\fR
@@ -45,7 +45,7 @@ Token for binding table;  must have been returned by some previous
 call to \fBTk_CreateBindingTable\fR.
 .AP ClientData object in
 Identifies object with which binding is associated.
-.AP char *eventString in
+.AP "CONST char" *eventString in
 String describing event sequence.
 .AP char *script in
 Tcl script to invoke when binding triggers.

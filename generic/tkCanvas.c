@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.19 2002/07/24 19:41:38 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.20 2002/08/05 04:30:38 dgp Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -291,7 +291,7 @@ static int		FindArea _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkCanvas *canvasPtr, Tcl_Obj *CONST *argv, Tk_Uid uid,
 			    int enclosed));
 static double		GridAlign _ANSI_ARGS_((double coord, double spacing));
-static char**		GetStringsFromObjs _ANSI_ARGS_((int argc,
+static CONST char**	GetStringsFromObjs _ANSI_ARGS_((int argc,
 			    Tcl_Obj *CONST *objv));
 static void		InitCanvas _ANSI_ARGS_((void));
 #ifdef USE_OLD_TAG_SEARCH
@@ -770,7 +770,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 		goto done;
 	    }
 	} else if (argc == 4) {
-	    char *command;
+	    CONST char *command;
     
 	    command = Tk_GetBinding(interp, canvasPtr->bindingTable,
 		    object, Tcl_GetStringFromObj(argv[3], NULL));
@@ -791,7 +791,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 		    Tcl_ResetResult(interp);
 		}
 	    } else {
-		Tcl_SetResult(interp, command, TCL_STATIC);
+		Tcl_SetResult(interp, (char *) command, TCL_STATIC);
 	    }
 	} else {
 	    Tk_GetAllBindings(interp, canvasPtr->bindingTable, object);
@@ -900,7 +900,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 		result = (*itemPtr->typePtr->coordProc)(interp,
 			(Tk_Canvas) canvasPtr, itemPtr, argc-3, argv+3);
 	      } else {
-		char **args = GetStringsFromObjs(argc-3, argv+3);
+		CONST char **args = GetStringsFromObjs(argc-3, argv+3);
 		result = (*itemPtr->typePtr->coordProc)(interp,
 			(Tk_Canvas) canvasPtr, itemPtr, argc-3, (Tcl_Obj **) args);
 		if (args) ckfree((char *) args);
@@ -959,7 +959,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	  result = (*typePtr->createProc)(interp, (Tk_Canvas) canvasPtr,
 		itemPtr, argc-3, argv+3);
 	} else {
-	  char **args = GetStringsFromObjs(argc-3, argv+3);
+	  CONST char **args = GetStringsFromObjs(argc-3, argv+3);
 	  result = (*typePtr->createProc)(interp, (Tk_Canvas) canvasPtr,
 		itemPtr, argc-3, (Tcl_Obj **) args);
 	  if (args) ckfree((char *) args);
@@ -1437,7 +1437,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 			(Tk_Canvas) canvasPtr, itemPtr, argc-3, argv+3,
 			TK_CONFIG_ARGV_ONLY);
 		} else {
-		char **args = GetStringsFromObjs(argc-3, argv+3);
+		CONST char **args = GetStringsFromObjs(argc-3, argv+3);
 		result = (*itemPtr->typePtr->configProc)(interp,
 			(Tk_Canvas) canvasPtr, itemPtr, argc-3, (Tcl_Obj **) args,
 			TK_CONFIG_ARGV_ONLY);
@@ -1526,7 +1526,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	break;
       }
       case CANV_POSTSCRIPT: {
-	char **args = GetStringsFromObjs(argc, argv);
+	CONST char **args = GetStringsFromObjs(argc, argv);
 	result = TkCanvPostscriptCmd(canvasPtr, interp, argc, args);
 	if (args) ckfree((char *) args);
 	break;
@@ -1819,7 +1819,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 		    - canvasPtr->inset, canvasPtr->scrollX1,
 		    canvasPtr->scrollX2));
 	} else {
-	    char **args = GetStringsFromObjs(argc, argv);
+	    CONST char **args = GetStringsFromObjs(argc, argv);
 	    type = Tk_GetScrollInfo(interp, argc, args, &fraction, &count);
 	    if (args) ckfree((char *) args);
 	    switch (type) {
@@ -1863,7 +1863,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 		    - canvasPtr->inset, canvasPtr->scrollY1,
 		    canvasPtr->scrollY2));
 	} else {
-	    char **args = GetStringsFromObjs(argc, argv);
+	    CONST char **args = GetStringsFromObjs(argc, argv);
 	    type = Tk_GetScrollInfo(interp, argc, args, &fraction, &count);
 	    if (args) ckfree((char *) args);
 	    switch (type) {
@@ -2008,7 +2008,8 @@ ConfigureCanvas(interp, canvasPtr, argc, argv, flags)
     GC new;
 
     if (Tk_ConfigureWidget(interp, canvasPtr->tkwin, configSpecs,
-	    argc, (char **) argv, (char *) canvasPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
+	    argc, (CONST char **) argv, (char *) canvasPtr,
+	    flags|TK_CONFIG_OBJS) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -5485,17 +5486,17 @@ CanvasSetOrigin(canvasPtr, xOrigin, yOrigin)
  *----------------------------------------------------------------------
  */
 /* ARGSUSED */
-static char **
+static CONST char **
 GetStringsFromObjs(argc, objv)
     int argc;
     Tcl_Obj *CONST objv[];
 {
     register int i;
-    char **argv;
+    CONST char **argv;
     if (argc <= 0) {
 	return NULL;
     }
-    argv = (char **) ckalloc((argc+1) * sizeof(char *));
+    argv = (CONST char **) ckalloc((argc+1) * sizeof(char *));
     for (i = 0; i < argc; i++) {
 	argv[i]=Tcl_GetStringFromObj(objv[i], (int *) NULL);
     }

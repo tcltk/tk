@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetScroll.3,v 1.4 2000/04/25 22:06:31 hobbs Exp $
+'\" RCS: @(#) $Id: GetScroll.3,v 1.5 2002/08/05 04:30:38 dgp Exp $
 '\" 
 .so man.macros
 .TH Tk_GetScrollInfo 3 8.0 Tk "Tk Library Procedures"
@@ -27,7 +27,7 @@ int
 Interpreter to use for error reporting.
 .AP int argc in
 Number of strings in \fIargv\fR array.
-.AP char *argv[] in
+.AP "CONST char" *argv[] in
 Argument strings.  These represent the entire widget command, of
 which the first word is typically the widget name and the second
 word is typically \fBxview\fR or \fByview\fR.

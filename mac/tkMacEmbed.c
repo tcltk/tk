@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacEmbed.c,v 1.4 1999/04/16 01:51:30 stanton Exp $
+ *  RCS: @(#) $Id: tkMacEmbed.c,v 1.5 2002/08/05 04:30:40 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -232,7 +232,7 @@ TkpUseWindow(
 				 * if string is bogus. */
     Tk_Window tkwin,		/* Tk window that does not yet have an
 				 * associated X window. */
-    char *string)		/* String identifying an X window to use
+    CONST char *string)		/* String identifying an X window to use
 				 * for tkwin;  must be an integer value. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -620,7 +620,7 @@ TkpTestembedCmd(
     ClientData clientData,		/* Main window for application. */
     Tcl_Interp *interp,			/* Current interpreter. */
     int argc,				/* Number of arguments. */
-    char **argv)			/* Argument strings. */
+    CONST char **argv)			/* Argument strings. */
 {
     int all;
     Container *containerPtr;

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.65 2002/07/14 17:29:57 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.66 2002/08/05 04:30:38 dgp Exp $
  */
 
 #ifndef _TK
@@ -124,7 +124,7 @@ typedef struct Tk_StyledElement_ *Tk_StyledElement;
  * Additional types exported to clients.
  */
 
-typedef char *Tk_Uid;
+typedef CONST char *Tk_Uid;
 
 /*
  * The enum below defines the valid types for Tk configuration options
@@ -322,7 +322,7 @@ typedef struct Tk_SavedOptions {
 #ifndef __NO_OLD_CONFIG
 
 typedef int (Tk_OptionParseProc) _ANSI_ARGS_((ClientData clientData,
-	Tcl_Interp *interp, Tk_Window tkwin, char *value, char *widgRec,
+	Tcl_Interp *interp, Tk_Window tkwin, CONST84 char *value, char *widgRec,
 	int offset));
 typedef char *(Tk_OptionPrintProc) _ANSI_ARGS_((ClientData clientData,
 	Tk_Window tkwin, char *widgRec, int offset,
@@ -353,9 +353,9 @@ typedef struct Tk_ConfigSpec {
 				 * table must have type TK_CONFIG_END. */
     char *argvName;		/* Switch used to specify option in argv.
 				 * NULL means this spec is part of a group. */
-    char *dbName;		/* Name for option in option database. */
-    char *dbClass;		/* Class for option in database. */
-    char *defValue;		/* Default value for option if not
+    Tk_Uid dbName;		/* Name for option in option database. */
+    Tk_Uid dbClass;		/* Class for option in database. */
+    Tk_Uid defValue;		/* Default value for option if not
 				 * specified in command line or database. */
     int offset;			/* Where in widget record to store value;
 				 * use Tk_Offset macro to generate values

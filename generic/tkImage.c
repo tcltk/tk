@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.16 2002/06/18 01:00:59 mdejong Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.17 2002/08/05 04:30:39 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -506,7 +506,7 @@ Tk_ImageChanged(imageMaster, x, y, width, height, imageWidth,
  *----------------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_NameOfImage(imageMaster)
     Tk_ImageMaster imageMaster;		/* Token for image. */
 {
@@ -544,7 +544,7 @@ Tk_GetImage(interp, tkwin, name, changeProc, clientData)
 				 * can't be found. */
     Tk_Window tkwin;		/* Token for window in which image will
 				 * be used. */
-    char *name;			/* Name of desired image. */
+    CONST char *name;		/* Name of desired image. */
     Tk_ImageChangedProc *changeProc;
 				/* Procedure to invoke when redisplay is
 				 * needed because image's pixels or size
@@ -853,7 +853,7 @@ void
 Tk_DeleteImage(interp, name)
     Tcl_Interp *interp;		/* Interpreter in which the image was
 				 * created. */
-    char *name;			/* Name of image. */
+    CONST char *name;		/* Name of image. */
 {
     Tcl_HashEntry *hPtr;
     TkWindow *winPtr;
@@ -1004,7 +1004,7 @@ ClientData
 Tk_GetImageMasterData(interp, name, typePtrPtr)
     Tcl_Interp *interp;		/* Interpreter in which the image was
 				 * created. */
-    char *name;			/* Name of image. */
+    CONST char *name;		/* Name of image. */
     Tk_ImageType **typePtrPtr;	/* Points to location to fill in with
 				 * pointer to type information for image. */
 {

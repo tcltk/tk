@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.11 2002/03/20 02:59:30 hobbs Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.12 2002/08/05 04:30:40 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -36,12 +36,12 @@ static int		DoConfig _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window tkwin, Tk_ConfigSpec *specPtr,
 			    Tk_Uid value, int valueIsUid, char *widgRec));
 static Tk_ConfigSpec *	FindConfigSpec _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_ConfigSpec *specs, char *argvName,
+			    Tk_ConfigSpec *specs, CONST char *argvName,
 			    int needFlags, int hateFlags));
 static char *		FormatConfigInfo _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window tkwin, Tk_ConfigSpec *specPtr,
 			    char *widgRec));
-static char *		FormatConfigValue _ANSI_ARGS_((Tcl_Interp *interp,
+static CONST char *	FormatConfigValue _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window tkwin, Tk_ConfigSpec *specPtr,
 			    char *widgRec, char *buffer,
 			    Tcl_FreeProc **freeProcPtr));
@@ -74,7 +74,7 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
 				 * set up X resources). */
     Tk_ConfigSpec *specs;	/* Describes legal options. */
     int argc;			/* Number of elements in argv. */
-    char **argv;		/* Command-line options. */
+    CONST char **argv;		/* Command-line options. */
     char *widgRec;		/* Record whose fields are to be
 				 * modified.  Values must be properly
 				 * initialized. */
@@ -134,7 +134,7 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
      */
 
     for ( ; argc > 0; argc -= 2, argv += 2) {
-	char *arg;
+	CONST char *arg;
 
 	if (flags & TK_CONFIG_OBJS) {
 	    arg = Tcl_GetStringFromObj((Tcl_Obj *) *argv, NULL);
@@ -255,7 +255,7 @@ FindConfigSpec(interp, specs, argvName, needFlags, hateFlags)
     Tcl_Interp *interp;		/* Used for reporting errors. */
     Tk_ConfigSpec *specs;	/* Pointer to table of configuration
 				 * specifications for a widget. */
-    char *argvName;		/* Name (suitable for use in a "config"
+    CONST char *argvName;	/* Name (suitable for use in a "config"
 				 * command) identifying particular option. */
     int needFlags;		/* Flags that must be present in matching
 				 * entry. */
@@ -351,7 +351,7 @@ DoConfig(interp, tkwin, specPtr, value, valueIsUid, widgRec)
     Tk_Window tkwin;		/* Window containing widget (needed to
 				 * set up X resources). */
     Tk_ConfigSpec *specPtr;	/* Specifier to apply. */
-    char *value;		/* Value to use to fill in widgRec. */
+    Tk_Uid value;		/* Value to use to fill in widgRec. */
     int valueIsUid;		/* Non-zero means value is a Tk_Uid;
 				 * zero means it's an ordinary string. */
     char *widgRec;		/* Record whose fields are to be
@@ -618,7 +618,7 @@ Tk_ConfigureInfo(interp, tkwin, specs, widgRec, argvName, flags)
     Tk_ConfigSpec *specs;	/* Describes legal options. */
     char *widgRec;		/* Record whose fields contain current
 				 * values for options. */
-    char *argvName;		/* If non-NULL, indicates a single option
+    CONST char *argvName;	/* If non-NULL, indicates a single option
 				 * whose info is to be returned.  Otherwise
 				 * info is returned for all options. */
     int flags;			/* Used to specify additional flags
@@ -766,7 +766,7 @@ FormatConfigInfo(interp, tkwin, specPtr, widgRec)
  *----------------------------------------------------------------------
  */
 
-static char *
+static CONST char *
 FormatConfigValue(interp, tkwin, specPtr, widgRec, buffer, freeProcPtr)
     Tcl_Interp *interp;		/* Interpreter for use in real conversions. */
     Tk_Window tkwin;		/* Window corresponding to widget. */
@@ -780,7 +780,7 @@ FormatConfigValue(interp, tkwin, specPtr, widgRec, buffer, freeProcPtr)
 				 * of procedure to free the result, or NULL
 				 * if result is static. */
 {
-    char *ptr, *result;
+    CONST char *ptr, *result;
 
     *freeProcPtr = NULL;
     ptr = widgRec + specPtr->offset;
@@ -920,7 +920,7 @@ Tk_ConfigureValue(interp, tkwin, specs, widgRec, argvName, flags)
     Tk_ConfigSpec *specs;	/* Describes legal options. */
     char *widgRec;		/* Record whose fields contain current
 				 * values for options. */
-    char *argvName;		/* Gives the command-line name for the
+    CONST char *argvName;	/* Gives the command-line name for the
 				 * option whose value is to be returned. */
     int flags;			/* Used to specify additional flags
 				 * that must be present in config specs
@@ -928,6 +928,9 @@ Tk_ConfigureValue(interp, tkwin, specs, widgRec, argvName, flags)
 {
     Tk_ConfigSpec *specPtr;
     int needFlags, hateFlags;
+    Tcl_FreeProc *freeProc;
+    CONST char *result;
+    char buffer[200];
 
     needFlags = flags & ~(TK_CONFIG_USER_BIT - 1);
     if (Tk_Depth(tkwin) <= 1) {
@@ -939,13 +942,14 @@ Tk_ConfigureValue(interp, tkwin, specs, widgRec, argvName, flags)
     if (specPtr == NULL) {
 	return TCL_ERROR;
     }
-    interp->result = FormatConfigValue(interp, tkwin, specPtr, widgRec,
-	    interp->result, &interp->freeProc);
-    /*
-     * Don't let the interp->result be NULL.
-     */
-    if (interp->result == NULL) {
-	interp->result = "";
+    result = FormatConfigValue(interp, tkwin, specPtr, widgRec, buffer, &freeProc);
+    Tcl_SetResult(interp, (char *) result, TCL_VOLATILE);
+    if (freeProc != NULL) {
+	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
+	    ckfree((char *)result);
+	} else {
+	    (*freeProc)((char *)result);
+	}
     }
     return TCL_OK;
 }

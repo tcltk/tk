@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.14 2002/06/19 19:37:54 mdejong Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.15 2002/08/05 04:30:40 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -422,8 +422,8 @@ Tk_Uid
 Tk_GetOption(tkwin, name, className)
     Tk_Window tkwin;		/* Token for window that option is
 				 * associated with. */
-    char *name;			/* Name of option. */
-    char *className;		/* Class of option.  NULL means there
+    CONST char *name;		/* Name of option. */
+    CONST char *className;	/* Class of option.  NULL means there
 				 * is no class for this option:  just
 				 * check for name. */
 {
@@ -713,7 +713,7 @@ Tk_OptionObjCmd(clientData, interp, objc, objv)
 	    value = Tk_GetOption(window, Tcl_GetString(objv[3]),
 		    Tcl_GetString(objv[4]));
 	    if (value != NULL) {
-		Tcl_SetResult(interp, value, TCL_STATIC);
+		Tcl_SetResult(interp, (char *)value, TCL_STATIC);
 	    }
 	    break;
 	}

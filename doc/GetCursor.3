@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetCursor.3,v 1.4 1999/12/16 21:57:11 hobbs Exp $
+'\" RCS: @(#) $Id: GetCursor.3,v 1.5 2002/08/05 04:30:38 dgp Exp $
 '\" 
 .so man.macros
 .TH Tk_AllocCursorFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -30,7 +30,7 @@ Tk_Cursor
 Tk_Cursor
 \fBTk_GetCursorFromData(\fIinterp, tkwin, source, mask, width, height, xHot, yHot, fg, bg\fB)\fR
 .sp
-char *
+CONST char *
 \fBTk_NameOfCursor(\fIdisplay, cursor\fB)\fR
 .sp
 .VS 8.1
@@ -52,9 +52,9 @@ modified to cache pointer to corresponding Tk_Cursor.
 Same as \fIobjPtr\fR except description of cursor is passed as a string and
 resulting Tk_Cursor isn't cached.
 .VE
-.AP char *source in
+.AP "CONST char" *source in
 Data for cursor cursor, in standard cursor format.
-.AP char *mask in
+.AP "CONST char" *mask in
 Data for mask cursor, in standard cursor format.
 .AP "int" width in
 Width of \fIsource\fR and \fImask\fR.
