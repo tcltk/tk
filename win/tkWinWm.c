@@ -7,11 +7,12 @@
  *	to the window manager.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.4 1998/09/14 18:24:01 stanton Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.5 1998/10/14 00:34:39 rjohnson Exp $
  */
 
 #include "tkWinInt.h"
@@ -2147,7 +2148,7 @@ Tk_SetGrid(tkwin, reqWidth, reqHeight, widthInc, heightInc)
 	    && (wmPtr->widthInc == widthInc)
 	    && (wmPtr->heightInc == heightInc)
 	    && ((wmPtr->sizeHintsFlags & (PBaseSize|PResizeInc))
-		    == PBaseSize|PResizeInc)) {
+		    == (PBaseSize|PResizeInc))) {
 	return;
     }
 
