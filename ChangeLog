@@ -1,3 +1,8 @@
+2003-02-14  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/configure:
+	* unix/tcl.m4: correct HP-UX ia64 --enable-64bit build flags
+
 2002-11-22  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkTextDisp.c (TkTextSeeCmd): handle see for unmapped
