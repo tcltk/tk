@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.24.2.3 2004/08/26 18:04:08 hobbs Exp $
+# RCS: @(#) $Id: text.tcl,v 1.24.2.4 2004/11/23 17:50:02 vincentdarley Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -842,12 +842,19 @@ proc ::tk::TextInsert {w s} {
 }
 
 # ::tk::TextUpDownLine --
-# Returns the index of the character one line above or below the
+# Returns the index of the character one display line above or below the
 # insertion cursor.  There are two tricky things here.  First,
 # we want to maintain the original column across repeated operations,
 # even though some lines that will get passed through don't have
 # enough characters to cover the original column.  Second, don't
 # try to scroll past the beginning or end of the text.
+# 
+# This procedue has side effects, in that it will adjust the widget's
+# current display to show the insert position.  This is required to
+# allow correct moving by display lines (when wrapped).  All callers
+# of this proc always adjust the display anyway, so the side-effects
+# here are not actually observed by the user of the text widget
+# bindings.
 #
 # Arguments:
 # w -		The text window in which the cursor is to move.
@@ -856,16 +863,36 @@ proc ::tk::TextInsert {w s} {
 
 proc ::tk::TextUpDownLine {w n} {
     variable ::tk::Priv
-
+    
+    $w see insert
+    scan [$w bbox insert] {%d %d %*d %d} xpos ypos height
+    set weight [$w cget -height]
+    
     set i [$w index insert]
-    scan $i "%d.%d" line char
     if {$Priv(prevPos) ne $i} {
-	set Priv(char) $char
+	set Priv(pos) $xpos
     }
-    set new [$w index [expr {$line + $n}].$Priv(char)]
-    if {[$w compare $new == end] || [$w compare $new == "insert linestart"]} {
+    
+    if {(($n < 0) && ($ypos <= $height)) \
+      || (($n > 0) && (($ypos+$height) >= ($weight*$height)))} {
+	$w yview scroll $n units
+	scan [$w bbox insert] {%*d %d %*d %d} ypos height
+	set weight [$w cget -height]
+    }
+    
+    if {(($n < 0) && ($ypos > $height)) \
+      || (($n > 0) && (($ypos+$height) < ($weight*$height))) } {
+	set new [$w index "@$Priv(pos),[expr {$ypos + $n * $height}]"]
+	scan [$w bbox $new] {%d %d %d %*d} newx newy newwidth
+	if {$newy eq $ypos} {
+	   set new $i
+	} elseif {$Priv(pos) > [expr {$newx+$newwidth/2}]} {
+	   set new [$w index "@[expr {$newx + $newwidth + 1}],$newy"]
+	}
+    } else {
 	set new $i
     }
+    
     set Priv(prevPos) $new
     return $new
 }

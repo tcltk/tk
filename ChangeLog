@@ -1,3 +1,8 @@
+2004-11-23  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* library/text.tcl: make up/down cursor keys move by display
+	lines, not logical lines [Bug 1011234]
+
 2004-11-19  Reinhard Max  <max@suse.de>
 
 	*** 8.4.8 TAGGED FOR RELEASE ***
