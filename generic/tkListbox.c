@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.17 2000/07/28 16:34:54 ericm Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.18 2000/07/28 16:41:40 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -229,9 +229,8 @@ static Tk_OptionSpec optionSpecs[] = {
 	 DEF_LISTBOX_CURSOR, -1, Tk_Offset(Listbox, cursor),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
-	 "Foreground",
-	 DEF_LISTBOX_DISABLED_FG, -1, Tk_Offset(Listbox, dfgColorPtr),
-	 TK_OPTION_NULL_OK, 0, 0},
+	 "DisabledForeground", DEF_LISTBOX_DISABLED_FG, -1,
+	 Tk_Offset(Listbox, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	 "ExportSelection", DEF_LISTBOX_EXPORT_SELECTION, -1,
 	 Tk_Offset(Listbox, exportSelection), 0, 0, 0},
