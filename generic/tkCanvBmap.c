@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvBmap.c,v 1.10 2004/06/08 20:28:19 dgp Exp $
+ * RCS: @(#) $Id: tkCanvBmap.c,v 1.11 2005/02/11 19:30:09 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -352,12 +352,12 @@ ConfigureBitmap(interp, canvas, itemPtr, objc, objv, flags)
 	itemPtr->redraw_flags &= ~TK_ITEM_STATE_DEPENDANT;
     }
 
-    if(state == TK_STATE_NULL) {
+    if (state == TK_STATE_NULL) {
 	state = ((TkCanvas *)canvas)->canvas_state;
     }
-    if (state==TK_STATE_HIDDEN) {
+    if (state == TK_STATE_HIDDEN) {
 	ComputeBitmapBbox(canvas, bmapPtr);
-	return TCL_OK;	
+	return TCL_OK;
     }
     fgColor = bmapPtr->fgColor;
     bgColor = bmapPtr->bgColor;
@@ -372,7 +372,7 @@ ConfigureBitmap(interp, canvas, itemPtr, objc, objv, flags)
 	if (bmapPtr->activeBitmap!=None) {
 	    bitmap = bmapPtr->activeBitmap;
 	}
-    } else if (state==TK_STATE_DISABLED) {
+    } else if (state == TK_STATE_DISABLED) {
 	if (bmapPtr->disabledFgColor!=NULL) {
 	    fgColor = bmapPtr->disabledFgColor;
 	}
@@ -384,23 +384,18 @@ ConfigureBitmap(interp, canvas, itemPtr, objc, objv, flags)
 	}
     }
 
-    if (state==TK_STATE_DISABLED || bitmap == None) {
-	ComputeBitmapBbox(canvas, bmapPtr);
-	return TCL_OK;
-    }
-
-    gcValues.foreground = fgColor->pixel;
-    mask = GCForeground;
-    if (bgColor != NULL) {
-	gcValues.background = bgColor->pixel;
-	mask |= GCBackground;
-    } else {
-	gcValues.clip_mask = bitmap;
-	mask |= GCClipMask;
-    }
     if (bitmap == None) {
 	newGC = None;
     } else {
+	gcValues.foreground = fgColor->pixel;
+	mask = GCForeground;
+	if (bgColor != NULL) {
+	    gcValues.background = bgColor->pixel;
+	    mask |= GCBackground;
+	} else {
+	    gcValues.clip_mask = bitmap;
+	    mask |= GCClipMask;
+	}
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     }
     if (bmapPtr->gc != None) {
@@ -409,7 +404,6 @@ ConfigureBitmap(interp, canvas, itemPtr, objc, objv, flags)
     bmapPtr->gc = newGC;
 
     ComputeBitmapBbox(canvas, bmapPtr);
-
     return TCL_OK;
 }
 
@@ -503,7 +497,7 @@ ComputeBitmapBbox(canvas, bmapPtr)
     Pixmap bitmap;
     Tk_State state = bmapPtr->header.state;
 
-    if(state == TK_STATE_NULL) {
+    if (state == TK_STATE_NULL) {
 	state = ((TkCanvas *)canvas)->canvas_state;
     }
     bitmap = bmapPtr->bitmap;
@@ -530,7 +524,7 @@ ComputeBitmapBbox(canvas, bmapPtr)
      * Compute location and size of bitmap, using anchor information.
      */
 
-    Tk_SizeOfBitmap(Tk_Display(Tk_CanvasTkwin(canvas)), bmapPtr->bitmap,
+    Tk_SizeOfBitmap(Tk_Display(Tk_CanvasTkwin(canvas)), bitmap,
 	    &width, &height);
     switch (bmapPtr->anchor) {
 	case TK_ANCHOR_N:
@@ -615,7 +609,7 @@ DisplayBitmap(canvas, itemPtr, display, drawable, x, y, width, height)
      * redisplay.
      */
 
-    if(state == TK_STATE_NULL) {
+    if (state == TK_STATE_NULL) {
 	state = ((TkCanvas *)canvas)->canvas_state;
     }
     bitmap = bmapPtr->bitmap;
@@ -623,7 +617,7 @@ DisplayBitmap(canvas, itemPtr, display, drawable, x, y, width, height)
 	if (bmapPtr->activeBitmap!=None) {
 	    bitmap = bmapPtr->activeBitmap;
 	}
-    } else if (state==TK_STATE_DISABLED) {
+    } else if (state == TK_STATE_DISABLED) {
 	if (bmapPtr->disabledBitmap!=None) {
 	    bitmap = bmapPtr->disabledBitmap;
 	}
@@ -662,7 +656,7 @@ DisplayBitmap(canvas, itemPtr, display, drawable, x, y, width, height)
 	 * to line up with the bitmap's origin (in order to make
 	 * bitmaps with "-background {}" work right).
 	 */
- 
+
 	XSetClipOrigin(display, bmapPtr->gc, drawableX - bmapX,
 		drawableY - bmapY);
 	XCopyPlane(display, bitmap, drawable,
@@ -881,8 +875,40 @@ BitmapToPostscript(interp, canvas, itemPtr, prepass)
     int width, height, rowsAtOnce, rowsThisTime;
     int curRow;
     char buffer[100 + TCL_DOUBLE_SPACE * 2 + TCL_INTEGER_SPACE * 4];
+    XColor *fgColor;
+    XColor *bgColor;
+    Pixmap bitmap;
+    Tk_State state = itemPtr->state;
 
-    if (bmapPtr->bitmap == None) {
+    if (state == TK_STATE_NULL) {
+	state = ((TkCanvas *)canvas)->canvas_state;
+    }
+    fgColor = bmapPtr->fgColor;
+    bgColor = bmapPtr->bgColor;
+    bitmap = bmapPtr->bitmap;
+    if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
+	if (bmapPtr->activeFgColor!=NULL) {
+	    fgColor = bmapPtr->activeFgColor;
+	}
+	if (bmapPtr->activeBgColor!=NULL) {
+	    bgColor = bmapPtr->activeBgColor;
+	}
+	if (bmapPtr->activeBitmap!=None) {
+	    bitmap = bmapPtr->activeBitmap;
+	}
+    } else if (state == TK_STATE_DISABLED) {
+	if (bmapPtr->disabledFgColor!=NULL) {
+	    fgColor = bmapPtr->disabledFgColor;
+	}
+	if (bmapPtr->disabledBgColor!=NULL) {
+	    bgColor = bmapPtr->disabledBgColor;
+	}
+	if (bmapPtr->disabledBitmap!=None) {
+	    bitmap = bmapPtr->disabledBitmap;
+	}
+    }
+
+    if (bitmap == None) {
 	return TCL_OK;
     }
 
@@ -893,7 +919,7 @@ BitmapToPostscript(interp, canvas, itemPtr, prepass)
 
     x = bmapPtr->x;
     y = Tk_CanvasPsY(canvas, bmapPtr->y);
-    Tk_SizeOfBitmap(Tk_Display(Tk_CanvasTkwin(canvas)), bmapPtr->bitmap,
+    Tk_SizeOfBitmap(Tk_Display(Tk_CanvasTkwin(canvas)), bitmap,
 	    &width, &height);
     switch (bmapPtr->anchor) {
 	case TK_ANCHOR_NW:			y -= height;		break;
@@ -911,12 +937,12 @@ BitmapToPostscript(interp, canvas, itemPtr, prepass)
      * Color the background, if there is one.
      */
 
-    if (bmapPtr->bgColor != NULL) {
+    if (bgColor != NULL) {
 	sprintf(buffer,
 		"%.15g %.15g moveto %d 0 rlineto 0 %d rlineto %d %s\n",
 		x, y, width, height, -width, "0 rlineto closepath");
 	Tcl_AppendResult(interp, buffer, (char *) NULL);
-	if (Tk_CanvasPsColor(interp, canvas, bmapPtr->bgColor) != TCL_OK) {
+	if (Tk_CanvasPsColor(interp, canvas, bgColor) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	Tcl_AppendResult(interp, "fill\n", (char *) NULL);
@@ -929,8 +955,8 @@ BitmapToPostscript(interp, canvas, itemPtr, prepass)
      * can't handle single strings longer than 64 KBytes long.
      */
 
-    if (bmapPtr->fgColor != NULL) {
-	if (Tk_CanvasPsColor(interp, canvas, bmapPtr->fgColor) != TCL_OK) {
+    if (fgColor != NULL) {
+	if (Tk_CanvasPsColor(interp, canvas, fgColor) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (width > 60000) {
@@ -954,7 +980,7 @@ BitmapToPostscript(interp, canvas, itemPtr, prepass)
 	    sprintf(buffer, "0 -%.15g translate\n%d %d true matrix {\n",
 		    (double) rowsThisTime, width, rowsThisTime);
 	    Tcl_AppendResult(interp, buffer, (char *) NULL);
-	    if (Tk_CanvasPsBitmap(interp, canvas, bmapPtr->bitmap,
+	    if (Tk_CanvasPsBitmap(interp, canvas, bitmap,
 		    0, curRow, width, rowsThisTime) != TCL_OK) {
 		return TCL_ERROR;
 	    }
