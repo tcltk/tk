@@ -1,4 +1,4 @@
-// RCS: @(#) $Id: wish.rc,v 1.9 2004/01/13 02:01:55 davygrvy Exp $
+// RCS: @(#) $Id: wish.rc,v 1.10 2004/02/01 10:42:32 davygrvy Exp $
 //
 // Version Resource Script
 //
@@ -22,7 +22,7 @@
 #endif
 
 #if DEBUG
-#define SUFFIX_DEBUG	    "d"
+#define SUFFIX_DEBUG	    "g"
 #else
 #define SUFFIX_DEBUG	    ""
 #endif
