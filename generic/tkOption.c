@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.11 2002/02/22 01:58:36 hobbs Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.12 2002/04/12 07:29:55 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -235,6 +235,8 @@ static void		ExtendStacks _ANSI_ARGS_((ElArray *arrayPtr,
 static int		GetDefaultOptions _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkWindow *winPtr));	
 static ElArray *	NewArray _ANSI_ARGS_((int numEls));	
+static void		OptionThreadExitProc _ANSI_ARGS_((
+			    ClientData clientData));
 static void		OptionInit _ANSI_ARGS_((TkMainInfo *mainPtr));
 static int		ParsePriority _ANSI_ARGS_((Tcl_Interp *interp,
 			    char *string));
@@ -558,6 +560,7 @@ Tk_GetOption(tkwin, name, className)
 	masqClass[classNameLength] = '\0';
 	
 	winClassId	= Tk_GetUid(masqClass);
+	ckfree(masqClass);
 	winNameId	= ((TkWindow *)tkwin)->nameUid;
 
 	levelPtr = &tsdPtr->levels[tsdPtr->curLevel];
@@ -1437,6 +1440,39 @@ ExtendStacks(arrayPtr, leaf)
 /*
  *--------------------------------------------------------------
  *
+ * OptionThreadExitProc --
+ *
+ *	Free data structures for option handling.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Option-related data structures get freed.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+OptionThreadExitProc(clientData)
+    ClientData clientData;	/* not used */
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (tsdPtr->initialized) {
+	int i;
+	for (i = 0; i < NUM_STACKS; i++) {
+	    ckfree((char *) tsdPtr->stacks[i]);
+	}
+	ckfree((char *) tsdPtr->levels);
+	tsdPtr->initialized = 0;
+    }
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * OptionInit --
  *
  *	Initialize data structures for option handling.
@@ -1484,6 +1520,7 @@ OptionInit(mainPtr)
 	defaultMatchPtr->child.valueUid = NULL;
 	defaultMatchPtr->priority = -1;
 	defaultMatchPtr->flags = 0;
+	Tcl_CreateThreadExitHandler(OptionThreadExitProc, NULL);
     }
 
     /*
