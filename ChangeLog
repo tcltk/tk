@@ -1,9 +1,13 @@
-2003-12-15  David Gravereaux >davygrvy@pobox.com>
+2003-12-15  David Gravereaux <davygrvy@pobox.com>
+
+	Some silent invalid handle issues discovered with NuMega's
+	BoundsChecker [Patch 699022]
 
 	* win/tkWinMenu.c (ReconfigureWindowsMenu) : Only redraw the
-	menubar when a menubar exists.  Although the invalid handle
-	doesn't cause an exception, it was discovered with NuMega's
-	BoundsChecker.
+	menubar when a menubar exists.
+
+	* win/tkWinWm.c (UpdateGeometryInfo) : wmPtr->wrapper might
+	be NULL.  No exception is thrown, but it isn't correct to ignore.
 
 2003-12-15  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
 
