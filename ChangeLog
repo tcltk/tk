@@ -1,3 +1,35 @@
+2004-11-11  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkMain.c:
+	* macosx/tkMacOSXAppInit.c (removed):
+	* macosx/Wish.pbproj/project.pbxproj: 
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXInt.h: changes to make TkAqua dynamically loadable,
+	enabling [package require Tk] from tclsh. Startup code from
+	tkMacOSXAppInit.c moved into tkMacOSXInit.c, added code that
+	notifies the window server that an unbundled executable is a full
+	GUI application after loading Tk. [Patch 1035348]
+
+	* doc/wm.n: documented [wm attributes] on Mac OS X. [Bug 606665]
+	* macosx/tkMacOSXWm.c: implemented TIP 222 [wm attributes -alpha] on
+	Mac OS X. [Patch 892194]
+	WmIconbitmapCmd: adopted FSRef changes from [wm atttrs -titlepath].
+
+	* macosx/tkMacOSXButton.c:
+	* macosx/tkMacOSXMenus.c:
+	* macosx/tkMacOSXRegion.c:
+	* macosx/tkMacOSXSubwindows.c: synced spacing/formatting with HEAD.
+
+	* macosx/tkMacOSXMouseEvent.c: endianness fixes.
+
+	* macosx/Wish.pbproj/project.pbxproj: corrected path to html help
+	inside framework.
+
+	* macosx/Makefile: prevent parallel make from building several
+	targets at the same time.
+	Ensure that xcodebuild will use Wish.pbproj project even if a .xcode
+	project is also present.
+
 2004-11-10  Jim Ingham  <jingham@apple.com>
 
 	From Michael Kirkham (mikek@muonics.com):

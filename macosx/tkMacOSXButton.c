@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.6 2004/11/10 17:29:45 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.7 2004/11/11 01:26:42 das Exp $
  */
 
 #include "tkButton.h"
@@ -309,7 +309,7 @@ TkpDisplayButton(
             fullWidth = 0;
             fullHeight = 0;
             
-            switch ((enum compound) butPtr->compound)
+            switch ((enum compound) butPtr->compound) {
                 case COMPOUND_TOP: 
                 case COMPOUND_BOTTOM: {
                     /* Image is above or below text */
@@ -324,8 +324,9 @@ TkpDisplayButton(
                     textXOffset = (fullWidth - butPtr->textWidth)/2;
                     imageXOffset = (fullWidth - width)/2;
                     break;
+                }
                 case COMPOUND_LEFT:
-                case COMPOUND_RIGHT:
+                case COMPOUND_RIGHT: {
                     /* 
                      * Image is left or right of text 
                      */
@@ -341,7 +342,8 @@ TkpDisplayButton(
                     textYOffset = (fullHeight - butPtr->textHeight)/2;
                     imageYOffset = (fullHeight - height)/2;
                     break;
-                case COMPOUND_CENTER:
+                }
+                case COMPOUND_CENTER: {
                     /* 
                      * Image and text are superimposed 
                      */
@@ -355,8 +357,8 @@ TkpDisplayButton(
                     textYOffset = (fullHeight - butPtr->textHeight)/2;
                     imageYOffset = (fullHeight - height)/2;
                     break;
-                case COMPOUND_NONE:
-		  break;
+                }
+                case COMPOUND_NONE: {break;}
             }
             
             TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
@@ -820,13 +822,12 @@ TkMacOSXInitControl (
      */
 
     initiallyVisible = false;
-    initialValue = kControlSupportsEmbedding|   
-        kControlHasSpecialBackground;
-    minValue = 0;
-    maxValue = 1;
-    procID = kControlUserPaneProc;
+    initialValue     = kControlSupportsEmbedding|kControlHasSpecialBackground;
+    minValue         = 0;
+    maxValue         = 1;
+    procID           = kControlUserPaneProc;
     controlReference = (SInt32)mbPtr;
-    mbPtr->userPane = NewControl(mbPtr->windowRef,
+    mbPtr->userPane  = NewControl(mbPtr->windowRef,
         paneRect, "\p",
         initiallyVisible,
         initialValue,
@@ -840,7 +841,7 @@ TkMacOSXInitControl (
         return 1;
     }
     
-    if ((status=EmbedControl(mbPtr->userPane,rootControl)) != noErr) {
+    if ((status = EmbedControl(mbPtr->userPane,rootControl)) != noErr) {
         fprintf(stderr,"Failed to embed user pane control %d\n", status);
         return 1;
     }
@@ -910,22 +911,22 @@ TkMacOSXDrawControl(
 
     winPtr = (TkWindow *)butPtr->tkwin;
    
-    paneRect.left = winPtr->privatePtr->xOff;
-    paneRect.top = winPtr->privatePtr->yOff;
-    paneRect.right = paneRect.left + Tk_Width(butPtr->tkwin);
+    paneRect.left   = winPtr->privatePtr->xOff;
+    paneRect.top    = winPtr->privatePtr->yOff;
+    paneRect.right  = paneRect.left + Tk_Width(butPtr->tkwin);
     paneRect.bottom = paneRect.top + Tk_Height(butPtr->tkwin);
 
     cntrRect = paneRect;
 
 /*
-    cntrRect.left += butPtr->inset;
-    cntrRect.top += butPtr->inset;
-    cntrRect.right -= butPtr->inset;
+    cntrRect.left   += butPtr->inset;
+    cntrRect.top    += butPtr->inset;
+    cntrRect.right  -= butPtr->inset;
     cntrRect.bottom -= butPtr->inset;
 */
-    cntrRect.left += DEF_INSET_LEFT;
-    cntrRect.top += DEF_INSET_TOP;
-    cntrRect.right -= DEF_INSET_RIGHT;
+    cntrRect.left   += DEF_INSET_LEFT;
+    cntrRect.top    += DEF_INSET_TOP;
+    cntrRect.right  -= DEF_INSET_RIGHT;
     cntrRect.bottom -= DEF_INSET_BOTTOM;
 
     /* 
@@ -1144,7 +1145,7 @@ SetupBevelButton(
     if ((err = SetControlData(controlHandle, kControlButtonPart,
             kControlBevelButtonContentTag,
             sizeof(ControlButtonContentInfo),
-            (char *) &mbPtr->bevelButtonContent)) != noErr ) {
+            (char *) &mbPtr->bevelButtonContent)) != noErr) {
         fprintf(stderr,
                 "SetControlData BevelButtonContent failed, %d\n", err );
     }
@@ -1172,7 +1173,7 @@ SetupBevelButton(
     if ((err = SetControlData(controlHandle, kControlButtonPart,
             kControlBevelButtonGraphicAlignTag,
             sizeof(ControlButtonGraphicAlignment),
-            (char *) &theAlignment)) != noErr ) {
+            (char *) &theAlignment)) != noErr) {
         fprintf(stderr,
                 "SetControlData BevelButtonGraphicAlign failed, %d\n", err );
     }
@@ -1192,7 +1193,7 @@ SetupBevelButton(
         if ((err = SetControlData(controlHandle, kControlButtonPart,
                 kControlBevelButtonTextPlaceTag,
                 sizeof(ControlButtonTextPlacement),
-                (char *) &thePlacement)) != noErr ) {
+                (char *) &thePlacement)) != noErr) {
             fprintf(stderr,
                     "SetControlData BevelButtonTextPlace failed, %d\n", err );
         }
