@@ -1,3 +1,9 @@
+2004-06-25  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkImgPhoto.c (ImgPhotoDisplay): Early exit from image
+	redraw if the region to redraw is empty, so stopping XGetImage
+	from bailing out. [Bug 979239]
+
 2004-06-08  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* generic/tkCanvText.c (DisplayCanvText): Fix text

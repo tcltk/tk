@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.8 2004/05/03 18:01:32 hobbs Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.9 2004/06/25 08:46:20 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -2716,6 +2716,15 @@ ImgPhotoDisplay(clientData, display, drawable, imageX, imageY, width,
      */
 
     if (instancePtr->pixels == None) {
+	return;
+    }
+
+    /*
+     * Check for bogus widths/heights.  This prevents us from calling
+     * XGetImage with a zero size, which it does not like. [Bug 979239]
+     */
+
+    if (width < 1 || height < 1) {
 	return;
     }
 
