@@ -10,14 +10,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.16 2004/01/27 10:09:35 das Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.17 2004/02/28 16:04:43 vincentdarley Exp $
  */
 
 #include "default.h"
 #include "tkPort.h"
 #include "tkInt.h"
 #include "tkText.h"
-#include <tclInt.h>
 
 /*
  * Index to use to select last character in line (very large integer):
@@ -2041,7 +2040,7 @@ StartEnd(textPtr, string, indexPtr)
 	    int chSize = 1;
 	    if (segPtr->typePtr == &tkTextCharType) {
 		Tcl_UniChar ch;
-		chSize = TclUtfToUniChar(segPtr->body.chars + offset, &ch);
+		chSize = Tcl_UtfToUniChar(segPtr->body.chars + offset, &ch);
 		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}
@@ -2083,7 +2082,7 @@ StartEnd(textPtr, string, indexPtr)
 	    int chSize = 1;
 	    if (segPtr->typePtr == &tkTextCharType) {
 		Tcl_UniChar ch;
-		TclUtfToUniChar(segPtr->body.chars + offset, &ch);
+		Tcl_UtfToUniChar(segPtr->body.chars + offset, &ch);
 		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}
