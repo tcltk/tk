@@ -3,7 +3,7 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# RCS: @(#) $Id: dialog.tcl,v 1.12 2001/08/22 01:25:33 hobbs Exp $
+# RCS: @(#) $Id: dialog.tcl,v 1.13 2002/06/12 23:08:12 mdejong Exp $
 #
 # Copyright (c) 1992-1993 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -61,7 +61,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     # window, this can hang the entire application.  Therefore we only make
     # the dialog transient if the parent is viewable.
     #
-    if { [winfo viewable [winfo toplevel [winfo parent $w]]] } {
+    if {[winfo viewable [winfo toplevel [winfo parent $w]]] } {
 	wm transient $w [winfo toplevel [winfo parent $w]]
     }    
 

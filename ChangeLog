@@ -1,5 +1,19 @@
 2002-06-12  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* library/choosedir.tcl (tk::dialog::file::chooseDir):
+	* library/clrpick.tcl (tk::dialog::color):
+	* library/dialog.tcl (tk_dialog):
+	* library/msgbox.tcl (tk::MessageBox):
+	* library/tkfbox.tcl (tk::dialog::file):
+	* library/xmfbox.tcl (tk::MotifFDialog_Create):
+	Only make the dialog window a transient if
+	the master is visible. This check already
+	appeared in some of the dialogs. This patch
+	just copies the check into those that were
+	lacking.
+
+2002-06-12  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* changes: Add note about new transient behavior.
 	* tests/unixWm.test: Check that the WM_TRANSIENT_FOR
 	property for a transient window is being cleared
