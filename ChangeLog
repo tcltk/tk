@@ -1,4 +1,11 @@
+2001-10-19  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/console.tcl: removed transpose ability until the console
+	can get a proper rewrite of tag handling.
+
 2001-10-18  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/defs.tcl: removed threaded build warning under X.
 
 	* library/console.tcl (ConsoleOutput): fixed undefined widget
 	argument.
