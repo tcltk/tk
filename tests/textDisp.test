@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.31 2004/11/20 15:49:47 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.32 2004/11/22 17:54:32 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1813,7 +1813,7 @@ test textDisp-16.15 {TkTextYviewCmd procedure, "moveto" option} {
 test textDisp-16.16 {TkTextYviewCmd procedure, "moveto" option} {textfonts} {
     set count [expr {5 * $bigHeight + 150 * $fixedHeight}]
     set extra [expr {0.04 * double($fixedDiff * 150) / double($count)}]
-    .t yview moveto [expr {.754 - $extra}]
+    .t yview moveto [expr {.753 - $extra}]
     .t index @0,0
 } {151.60}
 test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} {
