@@ -2,7 +2,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.33 2001/07/04 00:19:48 mdejong Exp $
+# RCS: @(#) $Id: configure.in,v 1.34 2001/07/04 00:25:09 mdejong Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -211,7 +211,6 @@ AC_SUBST(CFG_TK_UNSHARED_LIB_SUFFIX)
 AC_SUBST(CFG_TK_EXPORT_FILE_SUFFIX)
 AC_SUBST(TK_SHARED_BUILD)
 
-AC_SUBST(PATHTYPE)
 AC_SUBST(CYGPATH)
 AC_SUBST(CFLAGS_DEFAULT)
 AC_SUBST(CFLAGS_DEBUG)
