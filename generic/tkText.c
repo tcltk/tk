@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.7 1999/04/21 21:53:28 rjohnson Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.8 1999/12/12 22:51:22 hobbs Exp $
  */
 
 #include "default.h"
@@ -1797,7 +1797,7 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	    }
 	    matchByte = i;
 	    matchLength = thisLength;
-	    firstByte += Tcl_UtfToUniChar(startOfLine + matchByte, &ch);
+	    firstByte = i + Tcl_UtfToUniChar(startOfLine + matchByte, &ch);
 	} while (backwards);
 
 	/*
