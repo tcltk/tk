@@ -1,3 +1,9 @@
+2004-12-10  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* unix/tk.spec, macosx/Tk-Info.plist, macosx/Wish-Info.plist: 
+	* macosx/Wish.pbproj/project.pbxproj, README, win/configure.in: 
+	* unix/configure.in, generic/tk.h: Bump version to 8.5a3.
+
 2004-12-09  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/tcl.m4: synced with tcl/unix/tcl.m4
