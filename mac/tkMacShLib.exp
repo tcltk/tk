@@ -545,7 +545,7 @@ XChangeWindowAttributes
 XConfigureWindow
 XCopyArea
 XCopyPlane
-XCreateBitmapFromData
+TkCreateBitmapFromData
 XCreateColormap
 XCreateGC
 XCreateImage
@@ -584,7 +584,7 @@ XMoveWindow
 XParseColor
 XQueryPointer
 XRaiseWindow
-XReadBitmapFile
+TkReadBitmapFile
 XRefreshKeyboardMapping
 XResizeWindow
 XRootWindow
