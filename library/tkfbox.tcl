@@ -309,7 +309,7 @@ proc tkIconList_Invoke {w} {
     upvar #0 $w data
 
     if {[string compare $data(-command) ""] && [info exists data(selected)]} {
-	eval $data(-command) [list $data(selected)]
+	eval $data(-command)
     }
 }
 
@@ -826,7 +826,7 @@ static char updir_bits[] = {
     #
     set data(icons) [tkIconList $w.icons \
 	-browsecmd "tkFDialog_ListBrowse $w" \
-	-command   "tkFDialog_ListInvoke $w"]
+	-command   "tkFDialog_OkCmd $w"]
 
     # f2: the frame with the OK button and the "file name" field
     #
@@ -1062,7 +1062,7 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 #
 proc tkFDialog_SetPathSilently {w path} {
     upvar #0 [winfo name $w] data
-
+    
     trace vdelete  data(selectPath) w "tkFDialog_SetPath $w"
     set data(selectPath) $path
     trace variable data(selectPath) w "tkFDialog_SetPath $w"
@@ -1072,8 +1072,10 @@ proc tkFDialog_SetPathSilently {w path} {
 # This proc gets called whenever data(selectPath) is set
 #
 proc tkFDialog_SetPath {w name1 name2 op} {
-    upvar #0 [winfo name $w] data
-    tkFDialog_UpdateWhenIdle $w
+    if {[winfo exists $w]} {
+	upvar #0 [winfo name $w] data
+	tkFDialog_UpdateWhenIdle $w
+    }
 }
 
 # This proc gets called whenever data(filter) is set
