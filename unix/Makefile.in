@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.80 2002/08/16 07:52:23 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.81 2002/08/31 13:28:45 das Exp $
 
 # Current Tk version;  used in various names.
 
@@ -232,6 +232,7 @@ WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@
 STLIB_LD		= @STLIB_LD@
 SHLIB_LD		= @SHLIB_LD@
 SHLIB_LD_LIBS		= @SHLIB_LD_LIBS@
+TK_SHLIB_LD_EXTRAS	= @TK_SHLIB_LD_EXTRAS@
 
 # Additional search flags needed to find the various shared libraries
 # at run-time.  The first symbol is for use when creating a binary
@@ -473,20 +474,15 @@ runtest: tktest
 # This target can be used to run wish from the build directory
 # via `make shell` or `make shell SCRIPT=/tmp/foo.tcl`
 shell: wish
-	LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}; \
-	export LD_LIBRARY_PATH; \
-	LIBPATH=`pwd`:${TCL_BIN_DIR}:${LIBPATH}; export LIBPATH; \
-	SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}; \
-	export SHLIB_PATH; \
+	@LD_LIBRARY_PATH_VAR@=`pwd`:${TCL_BIN_DIR}:${@LD_LIBRARY_PATH_VAR@}; \
+	export @LD_LIBRARY_PATH_VAR@; \
 	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
 	./wish $(SCRIPT)
 
 # This target can be used to run wish inside either gdb or insight
 gdb: wish
-	@echo "set env LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}" > gdb.run
-	@echo "set env LIBPATH=`pwd`:${TCL_BIN_DIR}:${LIBPATH}" >> gdb.run
-	@echo "set env SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}" >> gdb.run
+	@echo "set env @LD_LIBRARY_PATH_VAR@=`pwd`:${TCL_BIN_DIR}:${@LD_LIBRARY_PATH_VAR@}" > gdb.run
 	@echo "set env TCL_LIBRARY=@TCL_SRC_DIR@/library" >> gdb.run
 	@echo "set env TK_LIBRARY=@TK_SRC_DIR@/library" >> gdb.run
 	gdb ./wish --command=gdb.run
