@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.15 2002/06/21 23:09:53 hobbs Exp $
+# RCS: @(#) $Id: text.test,v 1.16 2002/06/22 08:21:52 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -243,10 +243,10 @@ test text-7.4 {TextWidgetCmd procedure, "debug" option} {
 
 test text-8.1 {TextWidgetCmd procedure, "delete" option} {
     list [catch {.t delete} msg] $msg
-} {1 {wrong # args: should be ".t delete index1 ?index2?"}}
+} {1 {wrong # args: should be ".t delete index1 ?index2 ...?"}}
 test text-8.2 {TextWidgetCmd procedure, "delete" option} {
     list [catch {.t delete a b c} msg] $msg
-} {1 {wrong # args: should be ".t delete index1 ?index2?"}}
+} {1 {bad text index "a"}}
 test text-8.3 {TextWidgetCmd procedure, "delete" option} {
     list [catch {.t delete @x 2.2} msg] $msg
 } {1 {bad text index "@x"}}
@@ -254,11 +254,11 @@ test text-8.4 {TextWidgetCmd procedure, "delete" option} {
     list [catch {.t delete 2.3 @y} msg] $msg
 } {1 {bad text index "@y"}}
 test text-8.5 {TextWidgetCmd procedure, "delete" option} {
-    .t con -state disabled
+    .t configure -state disabled
     .t delete 2.3
     .t g 2.0 2.end
 } abcdefghijklm
-.t con -state normal
+.t configure -state normal
 test text-8.6 {TextWidgetCmd procedure, "delete" option} {
     .t delete 2.3
     .t get 2.0 2.end
@@ -267,13 +267,71 @@ test text-8.7 {TextWidgetCmd procedure, "delete" option} {
     .t delete 2.1 2.3
     .t get 2.0 2.end
 } aefghijklm
+test text-8.8 {TextWidgetCmd procedure, "delete" option} {
+    # All indices are checked before we actually delete anything
+    list [catch {.t delete 2.1 2.3 foo} msg] $msg \
+	    [.t get 2.0 2.end]
+} {1 {bad text index "foo"} aefghijklm}
+set prevtext [.t get 1.0 end-1c]
+test text-8.9 {TextWidgetCmd procedure, "delete" option} {
+    # auto-forward one byte if the last "pair" is just one
+    .t delete 1.0 end; .t insert 1.0 "foo\nabcdefghijklm"
+    .t delete 2.1 2.3 2.3
+    .t get 1.0 end-1c
+} foo\naefghijklm
+test text-8.10 {TextWidgetCmd procedure, "delete" option} {
+    # all indices will be ordered before deletion
+    .t delete 1.0 end; .t insert 1.0 "foo\nabcdefghijklm"
+    .t delete 2.0 2.3 2.7 2.9 2.4
+    .t get 1.0 end-1c
+} foo\ndfgjklm
+test text-8.11 {TextWidgetCmd procedure, "delete" option} {
+    # and check again with even pairs
+    .t delete 1.0 end; .t insert 1.0 "foo\nabcdefghijklm"
+    .t delete 2.0 2.2 2.7 2.9 2.4 2.5
+    .t get 1.0 end-1c
+} foo\ncdfgjklm
+test text-8.12 {TextWidgetCmd procedure, "delete" option} {
+    # we should get the longest range on equal start indices
+    .t delete 1.0 end; .t insert 1.0 "foo\nabcdefghijklm"
+    .t delete 2.0 2.2 2.0 2.5 2.0 2.3 2.8 2.7
+    .t get 1.0 end-1c
+} foo\nfghijklm
+test text-8.13 {TextWidgetCmd procedure, "delete" option} {
+    # we should get the longest range on equal start indices
+    .t delete 1.0 end; .t insert 1.0 "foo\nabcdefghijklm"
+    .t delete 2.0 2.2 1.2 2.6 2.0 2.5
+    .t get 1.0 end-1c
+} foghijklm
+test text-8.14 {TextWidgetCmd procedure, "delete" option} {
+    # we should get the longest range on equal start indices
+    .t delete 1.0 end; .t insert 1.0 "foo\nabcdefghijklm"
+    .t delete 2.0 2.2 2.0 2.5 1.1 2.3 2.8 2.7
+    .t get 1.0 end-1c
+} ffghijklm
+test text-8.15 {TextWidgetCmd procedure, "delete" option} {
+    # we should get the watch for overlapping ranges - they should
+    # essentially be merged into one span.
+    .t delete 1.0 end; .t insert 1.0 "foo\nabcdefghijklm"
+    .t delete 2.0 2.6 2.2 2.8
+    .t get 1.0 end-1c
+} foo\nijklm
+test text-8.16 {TextWidgetCmd procedure, "delete" option} {
+    # we should get the watch for overlapping ranges - they should
+    # essentially be merged into one span.
+    .t delete 1.0 end; .t insert 1.0 "foo\nabcdefghijklm"
+    .t delete 2.0 2.6 2.2 2.4
+    .t get 1.0 end-1c
+} foo\nghijklm
+
+.t delete 1.0 end; .t insert 1.0 $prevtext
 
 test text-9.1 {TextWidgetCmd procedure, "get" option} {
     list [catch {.t get} msg] $msg
-} {1 {wrong # args: should be ".t get index1 ?index2?"}}
+} {1 {wrong # args: should be ".t get index1 ?index2 ...?"}}
 test text-9.2 {TextWidgetCmd procedure, "get" option} {
     list [catch {.t get a b c} msg] $msg
-} {1 {wrong # args: should be ".t get index1 ?index2?"}}
+} {1 {bad text index "a"}}
 test text-9.3 {TextWidgetCmd procedure, "get" option} {
     list [catch {.t get @q 3.1} msg] $msg
 } {1 {bad text index "@q"}}
@@ -304,6 +362,25 @@ test text-9.9 {TextWidgetCmd procedure, "get" option} {
 test text-9.10 {TextWidgetCmd procedure, "get" option} {
     .t get 5.2 5.4
 } {y }
+test text-9.11 {TextWidgetCmd procedure, "get" option} {
+    .t get 5.2 5.4 5.4
+} {{y } G}
+test text-9.12 {TextWidgetCmd procedure, "get" option} {
+    .t get 5.2 5.4 5.4 5.5
+} {{y } G}
+test text-9.13 {TextWidgetCmd procedure, "get" option} {
+    .t get 5.2 5.4 5.5 "5.5+5c"
+} {{y } {Irl .}}
+test text-9.14 {TextWidgetCmd procedure, "get" option} {
+    .t get 5.2 5.4 5.4 5.5 end-3c
+} {{y } G { }}
+test text-9.15 {TextWidgetCmd procedure, "get" option} {
+    .t get 5.2 5.4 5.4 5.5 end-3c end
+} {{y } G { 7
+}}
+test text-9.17 {TextWidgetCmd procedure, "get" option} {
+    list [catch {.t get 5.2 5.4 5.5 foo} msg] $msg
+} {1 {bad text index "foo"}}
 
 test text-10.1 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t index} msg] $msg

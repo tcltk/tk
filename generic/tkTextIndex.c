@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.4 2002/01/17 03:35:00 dgp Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.5 2002/06/22 08:21:51 hobbs Exp $
  */
 
 #include "default.h"
@@ -377,6 +377,7 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
 		&last);
 	TkBTreeStartSearch(&first, &last, tagPtr, &search);
 	if (!TkBTreeCharTagged(&first, tagPtr) && !TkBTreeNextTag(&search)) {
+	    Tcl_ResetResult(interp);
 	    Tcl_AppendResult(interp,
 		    "text doesn't contain any characters tagged with \"",
 		    Tcl_GetHashKey(&textPtr->tagTable, hPtr), "\"",
@@ -527,6 +528,7 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
     return TCL_OK;
 
     error:
+    Tcl_ResetResult(interp);
     Tcl_AppendResult(interp, "bad text index \"", string, "\"",
 	    (char *) NULL);
     return TCL_ERROR;

@@ -1,3 +1,11 @@
+2002-06-22  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/text.n:                             TIP #93 implementation that
+	* generic/tkText.c (TextWidgetCmd):       enhances the text get and
+	* generic/tkTextIndex.c (TkTextGetIndex): delete methods to accept
+	* tests/text.test:                        multiple range pairs.
+	This handles the delete case in an atomic, fixed-index fashion.
+
 2002-06-21  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* tests/wm.test: Add tests to make sure a withdrawn
