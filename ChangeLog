@@ -1,3 +1,11 @@
+2004-10-26  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* macosx/tkMacOSXRegion.c (TkpBuildRegionFromAlphaData):
+	* win/tkWinRegion.c (TkpBuildRegionFromAlphaData): Factor out the
+	* unix/tkUnix.c (TkpBuildRegionFromAlphaData):	   building of region
+	* generic/tkImgPhoto.c (Tk_PhotoPutBlock):	   data to permit
+	better implementations on particular platforms. [Bug 919066]
+
 2004-10-24  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	TIP#177 AND TIP#179 IMPLEMENTATIONS

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinRegion.c,v 1.3 2002/06/14 13:35:49 dkf Exp $
+ * RCS: @(#) $Id: tkWinRegion.c,v 1.4 2004/10/26 13:15:09 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -141,6 +141,67 @@ TkUnionRectWithRegion(rectangle, src_region, dest_region_return)
 	    rectangle->x + rectangle->width, rectangle->y + rectangle->height);
     CombineRgn((HRGN) dest_region_return, (HRGN) src_region,
 	    (HRGN) rectRgn, RGN_OR);
+    DeleteObject(rectRgn);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpBuildRegionFromAlphaData --
+ *
+ *	Set up a rectangle of the given region based on the supplied
+ *	alpha data.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	The region is updated, with extra pixels added to it.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpBuildRegionFromAlphaData(region, x, y, width, height, dataPtr,
+	pixelStride, lineStride)
+    TkRegion region;
+    unsigned int x, y;			/* Where in region to update. */
+    unsigned int width, height;		/* Size of rectangle to update. */
+    unsigned char *dataPtr;		/* Data to read from. */
+    unsigned int pixelStride;		/* num bytes from one piece of alpha
+					 * data to the next in the line. */
+    unsigned int lineStride;		/* num bytes from one line of alpha
+					 * data to the next line. */
+{
+    unsigned char *lineDataPtr;
+    unsigned int x1, y1, end;
+    HRGN rectRgn = CreateRectRgn(0,0,1,1); /* Workspace region. */
+
+    for (y1 = 0; y1 < height; y1++) {
+	lineDataPtr = dataPtr;
+	for {x1 = 0; x1 < width; x1 = end) {
+	    /* search for first non-transparent pixel */
+	    while ((x1 < width) && !*lineDataPtr) {
+		x1++;
+		lineDataPtr += pixelStride;
+	    }
+	    end = x1;
+	    /* search for first transparent pixel */
+	    while ((end < width) && *lineDataPtr) {
+		end++;
+		lineDataPtr += pixelStride;
+	    }
+	    if (end > x1) {
+		/*
+		 * Manipulate Win32 regions directly; it's more efficient.
+		 */
+		SetRectRgn(rectRgn, x+x1, y+y1, x+end, y+y1+1);
+		CombineRgn((HRGN) region, (HRGN) region, rectRgn, RGN_OR);
+	    }
+	}
+	dataPtr += lineStride;
+    }
+
     DeleteObject(rectRgn);
 }
 
