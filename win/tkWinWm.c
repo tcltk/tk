@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.12 2004/09/23 00:35:09 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.13 2004/09/23 01:49:08 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -416,6 +416,7 @@ static int		InstallColormaps _ANSI_ARGS_((HWND hwnd, int message,
 			    int isForemost));
 static void		InvalidateSubTree _ANSI_ARGS_((TkWindow *winPtr,
 			    Colormap colormap));
+static void		InvalidateSubTreeDepth _ANSI_ARGS_((TkWindow *winPtr));
 static int		ParseGeometry _ANSI_ARGS_((Tcl_Interp *interp,
 			    char *string, TkWindow *winPtr));
 static void		RefreshColormap _ANSI_ARGS_((Colormap colormap,
@@ -5829,6 +5830,13 @@ Tk_GetVRootGeometry(tkwin, xPtr, yPtr, widthPtr, heightPtr)
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
 
+    /*
+     * XXX: This is not correct for multiple monitors.  There may be many
+     * changes required to get this right, and it may effect existing
+     * applications that don't consider possible <0 vroot.  See
+     * http://msdn.microsoft.com/library/en-us/gdi/monitor_3lrn.asp
+     * for more info.
+     */
     *xPtr = 0;
     *yPtr = 0;
     *widthPtr = DisplayWidth(winPtr->display, winPtr->screenNum);
@@ -6858,6 +6866,62 @@ InvalidateSubTree(winPtr, colormap)
 /*
  *----------------------------------------------------------------------
  *
+ * InvalidateSubTreeDepth --
+ *
+ *	This function recursively updates depth info for a window and
+ *	all of its children that belong to the same toplevel.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets the depth of each window to that of the display.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+InvalidateSubTreeDepth(winPtr)
+    TkWindow *winPtr;
+{
+    Display *display = Tk_Display(winPtr);
+    int screenNum = Tk_ScreenNumber(winPtr);
+    TkWindow *childPtr;
+
+    winPtr->depth = DefaultDepth(display, screenNum);
+
+#if 0
+    /*
+     * XXX: What other elements may require changes?  Changing just
+     * the depth works for standard windows and 16/24/32-bpp changes.
+     * I suspect 8-bit (palettized) displays may require colormap and/or
+     * visual changes as well.
+     */
+
+    if (winPtr->window) {
+	InvalidateRect(Tk_GetHWND(winPtr->window), NULL, FALSE);
+    }
+    winPtr->visual = DefaultVisual(display, screenNum);
+    winPtr->atts.colormap = DefaultColormap(display, screenNum);
+    winPtr->dirtyAtts |= CWColormap;
+#endif
+
+    for (childPtr = winPtr->childList; childPtr != NULL;
+	 childPtr = childPtr->nextPtr) {
+	/*
+	 * We can stop the descent when we hit a toplevel window, as it
+	 * should get its own message.
+	 */
+
+	if (!Tk_TopWinHierarchy(childPtr)) {
+	    InvalidateSubTreeDepth(childPtr);
+	}
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWinGetSystemPalette --
  *
  *	Retrieves the currently installed foreground palette.
@@ -7144,6 +7208,48 @@ WmProc(hwnd, message, wParam, lParam)
 	    SetLimits(hwnd, (MINMAXINFO *) lParam);
 	    result = 0;
 	    goto done;
+
+	case WM_DISPLAYCHANGE:
+	    /* display and/or color resolution changed */
+	    winPtr = GetTopLevel(hwnd);
+	    if (winPtr) {
+		Screen *screen = Tk_Screen(winPtr);
+		if (screen->root_depth != (int) wParam) {
+		    /*
+		     * Color resolution changed, so do extensive rebuild of
+		     * display parameters.  This will affect the display for
+		     * all Tk windows.  We will receive this event for each
+		     * toplevel, but this check makes us update only once, for
+		     * the first toplevel that receives the message.
+		     */
+		    TkWinDisplayChanged(Tk_Display(winPtr));
+		} else {
+		    HDC dc = GetDC(NULL);
+		    screen->width   = LOWORD(lParam); /* horizontal res */
+		    screen->height  = HIWORD(lParam); /* vertical res */
+		    screen->mwidth  = MulDiv(screen->width, 254,
+			    GetDeviceCaps(dc, LOGPIXELSX) * 10);
+		    screen->mheight = MulDiv(screen->height, 254,
+			    GetDeviceCaps(dc, LOGPIXELSY) * 10);
+		    ReleaseDC(NULL, dc);
+		}
+		if (Tk_Depth(winPtr) != (int) wParam) {
+		    /*
+		     * Defer the window depth check to here so that each
+		     * toplevel will properly update depth info.
+		     */
+		    InvalidateSubTreeDepth(winPtr);
+		}
+	    }
+	    result = 0;
+	    goto done;
+
+	case WM_SYSCOLORCHANGE:
+	    /*
+	     * XXX: Called when system color changes.  We need to
+	     * update any widgets that use a system color.
+	     */
+	    break;
 
 	case WM_PALETTECHANGED:
 	    result = InstallColormaps(hwnd, WM_PALETTECHANGED,
