@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.24 2000/04/25 22:30:42 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.24.2.1 2000/07/11 04:53:13 welch Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -172,13 +172,14 @@ LDFLAGS_CONSOLE	= @LDFLAGS_CONSOLE@
 LDFLAGS_WINDOW	= @LDFLAGS_WINDOW@
 EXEEXT		= @EXEEXT@
 OBJEXT		= @OBJEXT@
+GRAPHIC_LIBS	= @GRAPHIC_LIBS@
 SHLIB_LD	= @SHLIB_LD@
-SHLIB_LD_LIBS	= @SHLIB_LD_LIBS@ $(TCL_STUB_LIB_FILE) gdi32.lib comdlg32.lib
 SHLIB_CFLAGS	= @SHLIB_CFLAGS@
+SHLIB_LD_LIBS	= @SHLIB_LD_LIBS@ $(TCL_STUB_LIB_FILE) $(GRAPHIC_LIBS)
 SHLIB_SUFFIX	= @SHLIB_SUFFIX@
 VER		= @TK_MAJOR_VERSION@@TK_MINOR_VERSION@
 DOTVER		= @TK_MAJOR_VERSION@.@TK_MINOR_VERSION@
-LIBS		= @LIBS@ gdi32.lib comdlg32.lib
+LIBS		= @LIBS@ $(GRAPHIC_LIBS)
 RMDIR		= rm -rf
 MKDIR		= mkdir -p
 SHELL		= @SHELL@
