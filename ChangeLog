@@ -1,3 +1,14 @@
+2002-06-22  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* tests/wm.test: Remove invalid minsize test. Add update
+	calls to wm transient tests so that idle handlers get
+	run. This is needed to get the tests to pass under Win32.
+	* unix/tkUnixWm.c (WmWaitMapProc): Move the special
+	transient withdrawn check into the if body to
+	make it easier to set a breakpoint on this test
+	inside a debugger. No functional changes.
+	* win/tkWinWm.c (WmWaitVisibilityOrMapProc): Ditto.
+
 2002-06-22  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* doc/wm.n:                   TIP #95 Windows implementation and
