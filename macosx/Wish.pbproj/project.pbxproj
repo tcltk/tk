@@ -1532,21 +1532,23 @@
 				DYLIB_COMPATIBILITY_VERSION = 8.5;
 				DYLIB_CURRENT_VERSION = 8.5;
 				DYLIB_INSTALL_PATH = /Library/Frameworks;
-				FRAMEWORK_SEARCH_PATHS = "\"$(SYMROOT)\"";
+				FRAMEWORK_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)\"";
 				FRAMEWORK_VERSION = 8.5;
-				GLOBAL_CFLAGS = "`source \"${SYMROOT}/Tcl.framework/Resources/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
-				HEADER_SEARCH_PATHS = "\"$(SYMROOT)/Tcl.framework/Headers\" \"$(SYMROOT)/Tcl.framework/PrivateHeaders\" ../bitmaps ../generic ../xlib";
+				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/Resources/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
+				HEADER_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/PrivateHeaders\" ../bitmaps ../generic ../xlib";
 				INSTALL_PATH = "${DYLIB_INSTALL_PATH}";
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "-DMAC_OSX_TK -DTCL_WIDE_INT_TYPE=\"long long\"";
 				OTHER_LDFLAGS = "-seg1addr 0xb000000";
 				OTHER_LIBTOOL_FLAGS = "";
-				OTHER_REZFLAGS = "-i \"$(SYMROOT)/Tcl.framework/Headers\" -i \"../generic\"";
+				OTHER_REZFLAGS = "-i \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" -i \"../generic\"";
 				PRECOMPILE_PREFIX_HEADER = YES;
 				PRINCIPAL_CLASS = "";
 				PRODUCT_NAME = Tk;
 				SECTORDER_FLAGS = "";
+				TCLSH_DIR = "$(TCL_FRAMEWORK_DIR)";
+				TCL_FRAMEWORK_DIR = "$(SYMROOT)";
 				TK_MAJOR_VERSION = 8;
 				TK_MINOR_VERSION = 4;
 				TK_PATCH_LEVEL = .1;
@@ -2900,18 +2902,19 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				F5877FBD031FAC6A016F146B,
 			);
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = "\"$(SYMROOT)\"";
+				FRAMEWORK_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)\" \"$(SYMROOT)\"";
 				FRAMEWORK_VERSION = 8.5;
-				GLOBAL_CFLAGS = "`source \"${SYMROOT}/Tcl.framework/Resources/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
-				HEADER_SEARCH_PATHS = "\"$(SYMROOT)/Tcl.framework/Headers\" \"$(SYMROOT)/Tcl.framework/PrivateHeaders\" ../generic ../xlib";
+				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/Resources/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
+				HEADER_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/PrivateHeaders\" ../generic ../xlib";
 				INSTALL_PATH = /Applications/Utilities;
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "-DMAC_OSX_TK -DTCL_WIDE_INT_TYPE=\"long long\"";
 				OTHER_LDFLAGS = "-sectcreate __TEXT __info_plist \"$TEMP_DIR/Info.plist\" -headerpad_max_install_names";
-				OTHER_REZFLAGS = "-i \"$(SYMROOT)/Tcl.framework/Headers\" -i \"../generic\"";
+				OTHER_REZFLAGS = "-i \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" -i \"../generic\"";
 				PRODUCT_NAME = "Wish Shell";
 				SECTORDER_FLAGS = "";
+				TCL_FRAMEWORK_DIR = "$(SYMROOT)";
 				USE_GCC3_PFE_SUPPORT = NO;
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
 				WRAPPER_EXTENSION = app;
@@ -3105,8 +3108,8 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				F59D847903390D7E016F146B,
 			);
 			buildSettings = {
-				GLOBAL_CFLAGS = "`source \"${SYMROOT}/Tcl.framework/Resources/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
-				HEADER_SEARCH_PATHS = "\"$(SYMROOT)/Tcl.framework/Headers\" \"$(SYMROOT)/Tcl.framework/PrivateHeaders\" ../generic ../xlib";
+				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/Resources/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
+				HEADER_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/PrivateHeaders\" ../generic ../xlib";
 				LIBRARY_STYLE = STATIC;
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "-DMAC_OSX_TK -DTCL_WIDE_INT_TYPE=\"long long\"";
@@ -3115,6 +3118,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				PRODUCT_NAME = libtkstub8.5.a;
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
+				TCL_FRAMEWORK_DIR = "$(SYMROOT)";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
 			};
 			dependencies = (
@@ -3244,7 +3248,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "# redo prebinding\ncd \"${INSTALL_ROOT}\"\nif [ ! -d usr/lib ]; then mkdir -p usr; ln -fs /usr/lib usr/; RM_USRLIB=1; fi\nif [ ! -d System ]; then ln -fs /System .; RM_SYSTEM=1; fi\nif [ ! -d Library/Frameworks/Tcl.framework ]; then ln -fs ${SYMROOT}/Tcl.framework Library/Frameworks; RM_TCL=1; fi\nredo_prebinding -r . \"./${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}/${PRODUCT_NAME}\"\nif [ -n \"${RM_USRLIB:-}\" ]; then rm -f usr/lib; rmdir -p usr 2>&-; fi\nif [ -n \"${RM_SYSTEM:-}\" ]; then rm -f System; fi\nif [ -n \"${RM_TCL:-}\" ]; then rm -f Library/Frameworks/Tcl.framework; fi\n\n# fix permissions on uninstalled products\nchmod a+w \"${TEMP_ROOT}/UninstalledProducts\"\nchmod a+w \"${TEMP_ROOT}\"/UninstalledProducts/libtkstub*.a";
+			shellScript = "# redo prebinding\ncd \"${INSTALL_ROOT}\"\nif [ ! -d usr/lib ]; then mkdir -p usr; ln -fs /usr/lib usr/; RM_USRLIB=1; fi\nif [ ! -d System ]; then ln -fs /System .; RM_SYSTEM=1; fi\nif [ ! -d Library/Frameworks/Tcl.framework ]; then ln -fs ${TCL_FRAMEWORK_DIR}/Tcl.framework Library/Frameworks; RM_TCL=1; fi\nredo_prebinding -r . \"./${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}/${PRODUCT_NAME}\"\nif [ -n \"${RM_USRLIB:-}\" ]; then rm -f usr/lib; rmdir -p usr 2>&-; fi\nif [ -n \"${RM_SYSTEM:-}\" ]; then rm -f System; fi\nif [ -n \"${RM_TCL:-}\" ]; then rm -f Library/Frameworks/Tcl.framework; fi\n\n# fix permissions on uninstalled products\nchmod a+w \"${TEMP_ROOT}/UninstalledProducts\"\nchmod a+w \"${TEMP_ROOT}\"/UninstalledProducts/libtkstub*.a";
 		};
 		F5877FBD031FAC6A016F146B = {
 			buildActionMask = 8;
@@ -3257,7 +3261,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "# redo prebinding\ncd \"${INSTALL_ROOT}\"\nEXECUTABLE_DIR=\"./${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/MacOS\"\nif [ -n \"${EMBEDDED_BUILD:-}\" ]; then\n    ln -fs \"${EXECUTABLE_DIR}\" @executable_path\nelse\n    if [ ! -d usr/lib ]; then mkdir -p usr; ln -fs /usr/lib usr/; RM_USRLIB=1; fi\n    if [ ! -d System ]; then ln -fs /System .; RM_SYSTEM=1; fi\n    if [ ! -d Library/Frameworks/Tcl.framework ]; then ln -fs ${SYMROOT}/Tcl.framework Library/Frameworks; RM_TCL=1; fi\n    PREBIND_OPTS=\"-r .\"\nfi\nredo_prebinding ${PREBIND_OPTS:-} \"${EXECUTABLE_DIR}/${PRODUCT_NAME}\"\nif [ -n \"${EMBEDDED_BUILD:-}\" ]; then\n    rm -f @executable_path\nelse\n    if [ -n \"${RM_USRLIB:-}\" ]; then rm -f usr/lib; rmdir -p usr 2>&-; fi\n    if [ -n \"${RM_SYSTEM:-}\" ]; then rm -f System; fi\n    if [ -n \"${RM_TCL:-}\" ]; then rm -f Library/Frameworks/Tcl.framework; fi\nfi\n\n# install wish script & symbolic links\nif [ -z \"${EMBEDDED_BUILD:-}\" ]; then\nmkdir -p \"${INSTALL_ROOT}/usr/bin\"\nrm -f \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\"\ncat > \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\" <<EOF\n#!/bin/sh\n\"\\$(dirname \\$0)/../../${EXECUTABLE_DIR}/${PRODUCT_NAME}\" \"\\$@\"\nEOF\nchmod a+x \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\"\nln -fs \"wish${FRAMEWORK_VERSION}\" \"${INSTALL_ROOT}/usr/bin/wish\"\nfi";
+			shellScript = "# redo prebinding\ncd \"${INSTALL_ROOT}\"\nEXECUTABLE_DIR=\"./${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/MacOS\"\nif [ -z \"${EMBEDDED_BUILD:-}\" ]; then\n    if [ ! -d usr/lib ]; then mkdir -p usr; ln -fs /usr/lib usr/; RM_USRLIB=1; fi\n    if [ ! -d System ]; then ln -fs /System .; RM_SYSTEM=1; fi\n    if [ ! -d Library/Frameworks/Tcl.framework ]; then ln -fs ${TCL_FRAMEWORK_DIR}/Tcl.framework Library/Frameworks; RM_TCL=1; fi\n    PREBIND_OPTS=\"-r .\"\nfi\nredo_prebinding ${PREBIND_OPTS:-} -e \"${EXECUTABLE_DIR}\" \"${EXECUTABLE_DIR}/${PRODUCT_NAME}\"\nif [ -n \"${RM_USRLIB:-}\" ]; then rm -f usr/lib; rmdir -p usr 2>&-; fi\nif [ -n \"${RM_SYSTEM:-}\" ]; then rm -f System; fi\nif [ -n \"${RM_TCL:-}\" ]; then rm -f Library/Frameworks/Tcl.framework; fi\n\n# install wish script & symbolic links\nif [ -z \"${EMBEDDED_BUILD:-}\" ]; then\nmkdir -p \"${INSTALL_ROOT}/usr/bin\"\nrm -f \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\"\ncat > \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\" <<EOF\n#!/bin/sh\n\"\\$(dirname \\$0)/../../${EXECUTABLE_DIR}/${PRODUCT_NAME}\" \"\\$@\"\nEOF\nchmod a+x \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\"\nln -fs \"wish${FRAMEWORK_VERSION}\" \"${INSTALL_ROOT}/usr/bin/wish\"\nfi";
 		};
 		F59D847903390D7E016F146B = {
 			buildActionMask = 2147483647;
@@ -3543,7 +3547,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# synthesize tkConfig.sh via buildTkConfig.tcl script\nexport DYLD_FRAMEWORK_PATH=${SYMROOT}\n\"${SYMROOT}/tclsh${FRAMEWORK_VERSION}\" \"${SRCROOT}/buildTkConfig.tcl\" \"${SYMROOT}/Tcl.${WRAPPER_EXTENSION}/Resources/tclConfig.sh\" \"${SRCROOT}/../unix/tkConfig.sh.in\" \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Resources/tkConfig.sh\"";
+			shellScript = "# synthesize tkConfig.sh via buildTkConfig.tcl script\nexport DYLD_FRAMEWORK_PATH=\"${TCL_FRAMEWORK_DIR}\"\nTCLSH=\"${TCLSH_DIR}/tclsh${FRAMEWORK_VERSION}\"\nif [ ! -e \"${TCLSH}\" ]; then TCLSH=\"/bin/sh\"; fi\n\"${TCLSH}\" \"${SRCROOT}/buildTkConfig.tcl\" \"${TCL_FRAMEWORK_DIR}/Tcl.${WRAPPER_EXTENSION}/Resources/tclConfig.sh\" \"${SRCROOT}/../unix/tkConfig.sh.in\" \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Resources/tkConfig.sh\"";
 		};
 		F5C2EA33034D71B2016F146B = {
 			isa = PBXFileReference;
