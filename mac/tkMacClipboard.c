@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacClipboard.c,v 1.4 1999/05/22 06:32:32 jingham Exp $
+ * RCS: @(#) $Id: tkMacClipboard.c,v 1.5 2000/01/06 02:22:36 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -66,12 +66,17 @@ TkSelGetSelection(
 	handle = NewHandle(1);
 	length = GetScrap(handle, 'TEXT', &offset);
 	if (length > 0) {
+	    Tcl_DString encodedText;
+
 	    SetHandleSize(handle, (Size) length + 1);
 	    HLock(handle);
 	    (*handle)[length] = '\0';
-	    
-	    result = (*proc)(clientData, interp, *handle);
-	    
+
+	    Tcl_ExternalToUtfDString(NULL, *handle, length, &encodedText);
+	    result = (*proc)(clientData, interp,
+		    Tcl_DStringValue(encodedText));
+	    Tcl_DStringFree(&encodedText);
+
 	    HUnlock(handle);
 	    DisposeHandle(handle);
 	    return result;
@@ -252,6 +257,8 @@ TkSuspendClipboard()
 	    break;
     }
     if (targetPtr != NULL) {
+	Tcl_DString encodedText;
+
 	length = 0;
 	for (cbPtr = targetPtr->firstBufferPtr; cbPtr != NULL;
 		cbPtr = cbPtr->nextPtr) {
@@ -273,7 +280,10 @@ TkSuspendClipboard()
 	}
 
 	ZeroScrap();
-	PutScrap(length, 'TEXT', buffer);
+	Tcl_UtfToExternalDString(NULL, buffer, length, &encodedText);
+	PutScrap(Tcl_DStringLength(&encodedText), 'TEXT',
+		Tcl_DStringValue(&encodedText));
+	Tcl_DStringFree(&encodedText);
 	ckfree(buffer);
     }
 
