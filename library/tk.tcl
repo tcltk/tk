@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.9 1999/08/10 15:27:49 hobbs Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.10 1999/08/13 02:58:17 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -20,10 +20,9 @@ package require -exact Tcl 8.2
 # Add Tk's directory to the end of the auto-load search path, if it
 # isn't already on the path:
 
-if {[info exists auto_path]} {
-    if {[lsearch -exact $auto_path $tk_library] < 0} {
-	lappend auto_path $tk_library
-    }
+if {[info exists auto_path] && [string compare {} $tk_library] && \
+	[lsearch -exact $auto_path $tk_library] < 0} {
+    lappend auto_path $tk_library
 }
 
 # Turn off strict Motif look and feel as a default.
@@ -181,7 +180,8 @@ switch $tcl_platform(platform) {
 # Read in files that define all of the class bindings.
 # ----------------------------------------------------------------------
 
-if {[string compare $tcl_platform(platform) "macintosh"]} {
+if {[string compare $tcl_platform(platform) "macintosh"] &&
+    [string compare {} $tk_library]} {
     source [file join $tk_library button.tcl]
     source [file join $tk_library entry.tcl]
     source [file join $tk_library listbox.tcl]
