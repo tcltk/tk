@@ -1,3 +1,7 @@
+2003-11-20  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
+
+	* macosx/tkMacOSXKeyboard.c: Add PowerBook keycode 0x34 as <Return>.
+
 2003-11-18  Jim Ingham  <jingham@apple.com>
 
         * macosx/tkMacOSXScrlbr.c: Reworking Vince's fix to [Bug 842952].  This
