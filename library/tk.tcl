@@ -3,11 +3,11 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.18 2000/02/01 23:23:21 ericm Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.19 2000/02/08 10:00:55 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright (c) 1998-2000 Scriptics Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -274,13 +274,13 @@ switch $tcl_platform(platform) {
 	# that is returned when the user presses <Shift-Tab>.  In order for
 	# tab traversal to work, we have to add these keysyms to the 
 	# PrevWindow event.
-	switch $tcl_platform(os) {
-	    "IRIX"  -
-	    "Linux" {
-		event add <<PrevWindow>> <ISO_Left_Tab>
-	    }
-	    "HP-UX" {
-		event add <<PrevWindow>> <hpBackTab>
+	# The info exists is necessary, because tcl_platform(os) doesn't
+	# exist in safe interpreters.
+	if {[info exists tcl_platform(os)]} {
+	    switch $tcl_platform(os) {
+		"IRIX"  -
+		"Linux" { event add <<PrevWindow>> <ISO_Left_Tab> }
+		"HP-UX" { event add <<PrevWindow>> <hpBackTab> }
 	    }
 	}
 	trace variable tk_strictMotif w tkEventMotifBindings
