@@ -1,3 +1,27 @@
+2001-03-30  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/makefile.vc:
+	* win/configure:
+	* win/tcl.m4: added imm32.lib to LIBS_GUI for Tk IME support.
+	* win/tkWinInt.h:
+	* win/tkWinKey.c:
+	* win/tkWinX.c: added support for changing IME on the fly in
+	Windows (2000).  (lam) [Patch #402993]
+	
+	* tests/bind.test (bind-22.18):
+	* generic/tkBind.c (NameToWindow): handled the error case where a
+	valid-looking but invalid identifier could be passed in certain
+	event generate options causing a crash. [Bug #411307]
+
+	* win/tkWinWm.c (UpdateWrapper): ensured that the passed in winPtr
+	had an existent window to operate on. [Bug #409172]
+
+	* win/Makefile.in (install-*): improved install-* targets to use
+	their base build dependency.
+
+	* generic/tkImage.c (Tk_ImageObjCmd, EventuallyDeleteImage):
+	added casts to allow compiling on Windows with debbuging.
+
 2001-03-29  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/msgs/de.msg: fixed translations. [Patch #403525]
