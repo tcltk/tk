@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.35 2001/07/03 01:03:16 hobbs Exp $ 
+ * RCS: $Id: tkInt.h,v 1.36 2001/08/15 15:44:36 dkf Exp $ 
  */
 
 #ifndef _TKINT
@@ -835,6 +835,19 @@ extern TkDisplay *tkDisplayList;
 #define ALT_MASK	(AnyModifier<<2)
 
 /*
+ * Object types not declared in tkObj.c need to be mentioned here so
+ * they can be properly registered with Tcl:
+ */
+
+extern Tcl_ObjType tkBorderObjType;
+extern Tcl_ObjType tkBitmapObjType;
+extern Tcl_ObjType tkColorObjType;
+extern Tcl_ObjType tkCursorObjType;
+extern Tcl_ObjType tkFontObjType;
+extern Tcl_ObjType tkOptionObjType;
+extern Tcl_ObjType tkStateKeyObjType;
+
+/*
  * Miscellaneous variables shared among Tk modules but not exported
  * to the outside world:
  */
@@ -1002,6 +1015,8 @@ void	TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
 			    int devId, char *buffer, long size));
 
 EXTERN void		TkEventInit _ANSI_ARGS_((void));
+
+EXTERN void		TkRegisterObjTypes _ANSI_ARGS_((void));
 
 EXTERN int		TkCreateMenuCmd _ANSI_ARGS_((Tcl_Interp *interp));
 EXTERN int		TkDeadAppCmd _ANSI_ARGS_((ClientData clientData,

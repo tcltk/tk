@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.11 2000/11/22 01:49:38 ericm Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.12 2001/08/15 15:44:36 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -355,7 +355,7 @@ static void		UpdateDependentFonts _ANSI_ARGS_((TkFontInfo *fiPtr,
  * NULL.
  */
 
-static Tcl_ObjType fontObjType = {
+Tcl_ObjType tkFontObjType = {
     "font",			/* name */
     FreeFontObjProc,		/* freeIntRepProc */
     DupFontObjProc,		/* dupIntRepProc */
@@ -1005,7 +1005,7 @@ Tk_AllocFontFromObj(interp, tkwin, objPtr)
     NamedFont *nfPtr;
 
     fiPtr = ((TkWindow *) tkwin)->mainPtr->fontInfoPtr;
-    if (objPtr->typePtr != &fontObjType) {
+    if (objPtr->typePtr != &tkFontObjType) {
 	SetFontFromAny(interp, objPtr);
     }
 
@@ -1172,7 +1172,7 @@ Tk_GetFontFromObj(tkwin, objPtr)
     TkFont *fontPtr;
     Tcl_HashEntry *hashPtr;
  
-    if (objPtr->typePtr != &fontObjType) {
+    if (objPtr->typePtr != &tkFontObjType) {
 	SetFontFromAny((Tcl_Interp *) NULL, objPtr);
     }
 
@@ -1230,7 +1230,7 @@ Tk_GetFontFromObj(tkwin, objPtr)
  *	Always returns TCL_OK.
  *
  * Side effects:
- *	The object is left with its typePtr pointing to fontObjType.
+ *	The object is left with its typePtr pointing to tkFontObjType.
  *	The TkFont pointer is NULL.
  *
  *----------------------------------------------------------------------
@@ -1252,7 +1252,7 @@ SetFontFromAny(interp, objPtr)
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	(*typePtr->freeIntRepProc)(objPtr);
     }
-    objPtr->typePtr = &fontObjType;
+    objPtr->typePtr = &tkFontObjType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 
     return TCL_OK;

@@ -1,3 +1,13 @@
+2001-08-14  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* generic/tk{Util,Font,Cursor,Color,Bitmap,3d}.c: Modified
+	objtype declarations so that they can be picked up in tkObj.c and
+	the names are now prefixed with "tk" too.
+	* generic/tkObj.c (TkRegisterObjTypes): 
+	* generic/tkWindow.c (Initialize): 
+	* generic/tkInt.h: Added code to register Tk's object types with
+	the Tcl runtime.  [Tcl Bug 450545]
+
 2001-08-12  Mo DeJong  <mdejong@redhat.com>
 
 	* unix/configure: Regen.
