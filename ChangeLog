@@ -1,3 +1,12 @@
+2002-09-13  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
+
+	* generic/tk.h: Moved RC_INVOKED down so that tcl.h is still
+	  included when running the resource compiler. <tcl.h> excludes
+	  the unnecessary parts on its own. This reenables the Windows
+	  build. It failed because the non-inclusion of tcl.h caused the
+	  resource compiler to miss some vital macro definitions
+	  (TCL_FINAL_RELEASE, STRINGIFY, ...).
+
 2002-09-12  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tk.h:
