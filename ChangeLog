@@ -1,0 +1,7 @@
+1998-11-24    <stanton@GASPODE>
+
+	* unix/tkUnixFont.c (TkpGetNativeFont): On some X servers,
+	XQueryLoadFont will always return a font, even if the name is
+	meaningless.  This prevents Tk from parsing the font name, so now
+	we perform a quick sanity check on the name before letting X have
+	it.  [Bug: 846]
