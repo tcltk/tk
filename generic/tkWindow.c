@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.55 2002/11/14 17:30:20 mdejong Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.56 2003/01/28 20:39:17 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -888,6 +888,7 @@ TkCreateMainWindow(interp, screenName, baseName)
     mainPtr->refCount = 1;
     mainPtr->interp = interp;
     Tcl_InitHashTable(&mainPtr->nameTable, TCL_STRING_KEYS);
+    mainPtr->deletionEpoch = 0l;
     TkEventInit();
     TkBindInit(mainPtr);
     TkFontPkgInit(mainPtr);
@@ -1493,9 +1494,10 @@ Tk_DestroyWindow(tkwin)
             winPtr->pathName = NULL;
 
 	    /*
-	     * Invalidate all objects referring to windows on this display.
+	     * Invalidate all objects referring to windows
+	     * with the same main window
 	     */
-	    dispPtr->deletionEpoch++;
+	    winPtr->mainPtr->deletionEpoch++;
 	}
 	winPtr->mainPtr->refCount--;
 	if (winPtr->mainPtr->refCount == 0) {

@@ -1,3 +1,12 @@
+2003-01-28  Joe English  <jenglish@users.sourceforge.net>
+	* generic/tkInt.h (TkDisplay,TkMainInfo):
+	* generic/tkObj.c (windowObjType):
+	* generic/tkWindow.c (Tk_DestroyWindow):
+	* tests/wm.test (wm-deletion-epoch-1.1):
+	Moved 'deletionEpoch' field from TkDisplay to TkMainInfo.
+	Reworked windowObj type.  Fixes Tk Bug #671330 "segfault when e.g.
+	deiconifying destroyed window"
+
 2003-01-23  D. Richard Hipp  <drh@hwaci.com>
 
 	* library/entry.tcl: Fix the KeyPress binding on the entry widget
