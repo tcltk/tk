@@ -1,5 +1,10 @@
 2001-12-28  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* test/winButton.test:
+	* win/tkWinButton.c: added updated patch #463234 which returns the
+	default sizing behavior (not so native), but enables native L&F
+	with negative sizing (-11 for example).
+
 	* library/text.tcl (tk::TextButton1): made text receive focus even
 	in disabled state for Windows to show selection and allow
 	mouse-wheel scrolling.
