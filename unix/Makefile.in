@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.62 2002/01/29 08:04:37 mdejong Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.63 2002/02/22 02:41:17 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -265,8 +265,8 @@ TCLTEST_OBJS = ${TCL_BIN_DIR}/tclTest.o ${TCL_BIN_DIR}/tclThreadTest.o \
 TKTEST_OBJS = $(TCLTEST_OBJS) tkTestInit.o tkTest.o tkSquare.o
 
 WIDGOBJS = tkButton.o tkEntry.o tkFrame.o tkListbox.o \
-	tkMenu.o tkMenubutton.o tkMenuDraw.o tkMessage.o tkScale.o \
-	tkScrollbar.o
+	tkMenu.o tkMenubutton.o tkMenuDraw.o tkMessage.o \
+	tkPanedWindow.o tkScale.o tkScrollbar.o
 
 CANVOBJS = tkCanvas.o tkCanvArc.o tkCanvBmap.o tkCanvImg.o \
 	tkCanvLine.o tkCanvPoly.o tkCanvPs.o tkCanvText.o \
@@ -316,6 +316,7 @@ SRCS = \
 	$(GENERIC_DIR)/tkListbox.c $(GENERIC_DIR)/tkMenu.c \
 	$(GENERIC_DIR)/tkMenubutton.c $(GENERIC_DIR)/tkMenuDraw.c \
 	$(GENERIC_DIR)/tkMessage.c \
+	$(GENERIC_DIR)/tkPanedWindow.c \
 	$(GENERIC_DIR)/tkScale.c $(GENERIC_DIR)/tkScrollbar.c \
 	$(GENERIC_DIR)/tkCanvas.c $(GENERIC_DIR)/tkCanvArc.c \
 	$(GENERIC_DIR)/tkCanvBmap.c $(GENERIC_DIR)/tkCanvImg.c \
@@ -780,6 +781,9 @@ tkMenuDraw.o: $(GENERIC_DIR)/tkMenuDraw.c
 
 tkMessage.o: $(GENERIC_DIR)/tkMessage.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkMessage.c
+
+tkPanedWindow.o: $(GENERIC_DIR)/tkPanedWindow.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkPanedWindow.c
 
 tkScale.o: $(GENERIC_DIR)/tkScale.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkScale.c

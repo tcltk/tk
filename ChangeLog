@@ -1,3 +1,25 @@
+2002-02-21  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/panedwindow.n:
+	* generic/tkPanedWindow.c:
+	* generic/tkInt.h:
+	* generic/tkWindow.c:
+	* library/panedwindow.tcl:
+	* mac/tkMacDefault.h:
+	* tests/panedwindow.test:
+	* unix/Makefile.in:
+	* unix/tkUnixDefault.h:
+	* win/Makefile.in:
+	* win/makefile.vc:
+	* win/tkWinDefault.h: added implementation of TIP #41, panedwindow
+	widget. [Patch #512503] (melski)
+
+	* generic/tkOption.c (ReadOptionFile): fixed Tcl_Seek casting to
+	remove warnings (we expect no option files with be > 2GB).
+
+	* unix/configure: regenerated
+	* unix/tcl.m4: updated to sync with Tcl's tcl.m4
+
 2002-02-19  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes: First draft of updated changes for 8.4a4 release.
