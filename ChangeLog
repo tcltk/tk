@@ -1,3 +1,9 @@
+2003-09-17  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkImage.c:	Stopped [image create] from generating an
+	* tests/image.test:	image command name that would overwrite an
+	existing command name.  Thanks to Michael Schlenker.  [Bug 808039].
+
 2003-09-16  Peter Spjuth  <peter.spjuth@space.se>
 	* tests/grid.test:
 	* generic/tkGrid.c: Reworked a part of grid's geometry computations
