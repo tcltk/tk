@@ -1,3 +1,15 @@
+2000-05-26  Eric Melski  <ericm@scriptics.com>
+
+	* generic/tkOption.c (Tk_GetOption): Extended Tk_GetOption to
+	support a new syntax for option names in option tables.  If the
+	option name has an embedded ".", it indicates that the name field
+	contains both an option name and an overriding widget class, in
+	the form "class.option".  The lookup for the option value will be
+	performed as though the widget class is that specified, rather
+	than the actual widget class.
+	(SetupStacks): Replaced several lines of array element copying
+	with a for loop for conciseness.
+
 2000-05-25  Eric Melski  <ericm@scriptics.com>
 
 	* library/button.tcl: Tweaks for -overrelief handling on Windows.

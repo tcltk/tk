@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.4 2000/03/24 23:13:18 ericm Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.5 2000/05/27 01:43:46 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -397,8 +397,11 @@ Tk_GetOption(tkwin, name, className)
 				 * check for name. */
 {
     Tk_Uid nameId, classId;
+    char *masqName;
     register Element *elPtr, *bestPtr;
     register int count;
+    StackLevel *levelPtr;
+    int stackDepth[NUM_STACKS];
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -411,43 +414,168 @@ Tk_GetOption(tkwin, name, className)
 	SetupStacks((TkWindow *) tkwin, 1);
     }
 
-    nameId = Tk_GetUid(name);
+    /*
+     * Get a default "best" match.
+     */
+    
     bestPtr = &tsdPtr->defaultMatch;
+
+    /*
+     * For megawidget support, we want to have some widget options masquerade
+     * as options for other widgets.  For example, a combobox has a button in
+     * it; this button ought to pick up the *Button.background, etc., options.
+     * But because the class of the widget is Combobox, our normal search
+     * won't get that option.
+     *
+     * To work around this, the option name field syntax was extended to allow
+     * for a "." in the name; if this character occurs in the name, then it
+     * indicates that this name contains a new window class and an option name,
+     * ie, "Button.foreground".  If we see this form in the name field, we 
+     * query the option database directly (since the option stacks will not
+     * have the information we need).
+     */
+
+    masqName = strchr(name, (int)'.');
+    if (masqName != NULL) {
+	/*
+	 * This option is masquerading with a different window class.
+	 * Instead of using the current level, search the stack to the
+	 * current level - 1, then do a direct probe on the option database
+	 * to get the extra bits.
+	 */
+	levelPtr = &tsdPtr->levels[tsdPtr->curLevel];
+	nameId = Tk_GetUid(masqName+1);
+	for (count = 0; count < NUM_STACKS; count++) {
+	    stackDepth[count] = levelPtr->bases[count];
+	}
+    } else {
+	/*
+	 * No option masquerading here.  Just use the current level to get the
+	 * stack depths.
+	 */
+	nameId = Tk_GetUid(name);
+	for (count = 0; count < NUM_STACKS; count++) {
+	    stackDepth[count] = tsdPtr->stacks[count]->numUsed;
+	}
+    }
+
+    /*
+     * Probe the stacks for matches.
+     */
+
     for (elPtr = tsdPtr->stacks[EXACT_LEAF_NAME]->els,
-	    count = tsdPtr->stacks[EXACT_LEAF_NAME]->numUsed; count > 0;
-	    elPtr++, count--) {
+	     count = stackDepth[EXACT_LEAF_NAME]; count > 0;
+	 elPtr++, count--) {
 	if ((elPtr->nameUid == nameId)
 		&& (elPtr->priority > bestPtr->priority)) {
 	    bestPtr = elPtr;
 	}
     }
     for (elPtr = tsdPtr->stacks[WILDCARD_LEAF_NAME]->els,
-	    count = tsdPtr->stacks[WILDCARD_LEAF_NAME]->numUsed; count > 0;
-	    elPtr++, count--) {
+	     count = stackDepth[WILDCARD_LEAF_NAME]; count > 0;
+	 elPtr++, count--) {
 	if ((elPtr->nameUid == nameId)
 		&& (elPtr->priority > bestPtr->priority)) {
 	    bestPtr = elPtr;
 	}
     }
+
     if (className != NULL) {
 	classId = Tk_GetUid(className);
 	for (elPtr = tsdPtr->stacks[EXACT_LEAF_CLASS]->els,
-		count = tsdPtr->stacks[EXACT_LEAF_CLASS]->numUsed; count > 0;
-		elPtr++, count--) {
+		 count = stackDepth[EXACT_LEAF_CLASS]; count > 0;
+	     elPtr++, count--) {
 	    if ((elPtr->nameUid == classId)
 		    && (elPtr->priority > bestPtr->priority)) {
 		bestPtr = elPtr;
 	    }
 	}
 	for (elPtr = tsdPtr->stacks[WILDCARD_LEAF_CLASS]->els,
-		count = tsdPtr->stacks[WILDCARD_LEAF_CLASS]->numUsed; 
-                count > 0; elPtr++, count--) {
+		 count = stackDepth[WILDCARD_LEAF_CLASS]; count > 0;
+	     elPtr++, count--) {
 	    if ((elPtr->nameUid == classId)
 		    && (elPtr->priority > bestPtr->priority)) {
 		bestPtr = elPtr;
 	    }
 	}
     }
+    
+    /*
+     * If this option was masquerading with a different window class,
+     * probe the option database now.  Note that this will be inefficient
+     * if the option database is densely populated, or if the widget has many
+     * masquerading options.
+     */
+
+    if (masqName != NULL) {
+	char *masqClass;
+	Tk_Uid nodeId, winClassId, winNameId;
+	unsigned int classNameLength;
+	register Element *nodePtr, *leafPtr;
+	static int searchOrder[] = { EXACT_NODE_NAME,
+					 WILDCARD_NODE_NAME,
+					 EXACT_NODE_CLASS,
+					 WILDCARD_NODE_CLASS,
+					 -1 };
+	int *currentPtr, currentStack, leafCount;
+	
+	/*
+	 * Extract the masquerade class name from the name field.
+	 */
+	
+	classNameLength	= (unsigned int)(masqName - name);
+	masqClass	= (char *)malloc(classNameLength + 1);
+	strncpy(masqClass, name, classNameLength);
+	masqClass[classNameLength] = '\0';
+	
+	winClassId	= Tk_GetUid(masqClass);
+	winNameId	= ((TkWindow *)tkwin)->nameUid;
+
+	levelPtr = &tsdPtr->levels[tsdPtr->curLevel];
+
+	for (currentPtr = searchOrder; *currentPtr != -1; currentPtr++) {
+	    currentStack = *currentPtr;
+	    nodePtr	= tsdPtr->stacks[currentStack]->els;
+	    count	= levelPtr->bases[currentStack];
+
+	    /*
+	     * For wildcard stacks, check all entries;  for non-wildcard
+	     * stacks, only check things that matched in the parent.
+	     */
+	    
+	    if (!(currentStack & WILDCARD)) {
+		nodePtr += levelPtr[-1].bases[currentStack];
+		count	-= levelPtr[-1].bases[currentStack];
+	    }
+	    
+	    if (currentStack && CLASS) {
+		nodeId = winClassId;
+	    } else {
+		nodeId = winNameId;
+	    }
+
+	    for ( ; count > 0; nodePtr++, count--) {
+		if (nodePtr->nameUid == nodeId) {
+		    leafPtr	= nodePtr->child.arrayPtr->els;
+		    leafCount	= nodePtr->child.arrayPtr->numUsed;
+		    for ( ; leafCount > 0; leafPtr++, leafCount--) {
+			if (leafPtr->flags & CLASS && className != NULL) {
+			    if (leafPtr->nameUid == classId &&
+				    leafPtr->priority > bestPtr->priority) {
+				bestPtr = leafPtr;
+			    }
+			} else {
+			    if (leafPtr->nameUid == nameId &&
+				    leafPtr->priority > bestPtr->priority) {
+				bestPtr = leafPtr;
+			    }
+			}
+		    }
+		}
+	    }
+	}
+    }
+    
     return bestPtr->child.valueUid;
 }
 
@@ -1195,24 +1323,9 @@ SetupStacks(winPtr, leaf)
     arrayPtr = tsdPtr->stacks[EXACT_LEAF_CLASS];
     arrayPtr->numUsed = 0;
     arrayPtr->nextToUse = arrayPtr->els;
-    levelPtr->bases[EXACT_LEAF_NAME] = tsdPtr->stacks[EXACT_LEAF_NAME]
-            ->numUsed;
-    levelPtr->bases[EXACT_LEAF_CLASS] = tsdPtr->stacks[EXACT_LEAF_CLASS]
-            ->numUsed;
-    levelPtr->bases[EXACT_NODE_NAME] = tsdPtr->stacks[EXACT_NODE_NAME]
-            ->numUsed;
-    levelPtr->bases[EXACT_NODE_CLASS] = tsdPtr->stacks[EXACT_NODE_CLASS]
-            ->numUsed;
-    levelPtr->bases[WILDCARD_LEAF_NAME] = tsdPtr->stacks[WILDCARD_LEAF_NAME]
-            ->numUsed;
-    levelPtr->bases[WILDCARD_LEAF_CLASS] = tsdPtr->stacks[WILDCARD_LEAF_CLASS]
-            ->numUsed;
-    levelPtr->bases[WILDCARD_NODE_NAME] = tsdPtr->stacks[WILDCARD_NODE_NAME]
-            ->numUsed;
-    levelPtr->bases[WILDCARD_NODE_CLASS] = tsdPtr->stacks[WILDCARD_NODE_CLASS]
-            ->numUsed;
-
-
+    for (i = 0; i < NUM_STACKS; i++) {
+	levelPtr->bases[i] = tsdPtr->stacks[i]->numUsed;
+    }
     /*
      * Step 5: scan the current stack level looking for matches to this
      * window's name or class;  where found, add new information to the
