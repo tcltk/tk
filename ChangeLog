@@ -1,3 +1,8 @@
+2003-07-19  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinCursor.c (TkGetCursorByName): Fix bug 420510 to provide
+	consistency between unix and windows -cursor option.
+
 2003-07-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinDialog.c: doubled the TK_MULTI_MAX_PATH value to ~10K.
