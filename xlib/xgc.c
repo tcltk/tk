@@ -9,12 +9,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xgc.c,v 1.5.8.2 2001/10/17 07:01:59 wolfsuit Exp $
+ * RCS: @(#) $Id: xgc.c,v 1.5.8.3 2002/04/03 19:26:31 wolfsuit Exp $
  */
 
 #include <tkInt.h>
 
-#if !defined(MAC_TCL) && !(defined(MAC_TCL)
+#if !defined(MAC_TCL) && !defined(MAC_OSX_TK)
 #	include <X11/Xlib.h>
 #endif
 #ifdef MAC_TCL
