@@ -16,7 +16,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.36 2002/10/18 00:48:22 hobbs Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.1 2003/07/17 09:58:14 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -686,11 +686,11 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 
 	if (objc == 2) {
 	    Tk_PhotoBlank(masterPtr);
+	    return TCL_OK;
 	} else {
 	    Tcl_WrongNumArgs(interp, 2, objv, (char *) NULL);
 	    return TCL_ERROR;
 	}
-	break;
 
     case PHOTO_CGET: {
 	char *arg;
@@ -704,17 +704,15 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	    if (masterPtr->dataString) {
 		Tcl_SetObjResult(interp, masterPtr->dataString);
 	    }
-	    return TCL_OK;
-	}
-	if (strncmp(arg,"-format", length) == 0) {
+	} else if (strncmp(arg,"-format", length) == 0) {
 	    if (masterPtr->format) {
 		Tcl_SetObjResult(interp, masterPtr->format);
 	    }
-	    return TCL_OK;
+	} else {
+	    Tk_ConfigureValue(interp, Tk_MainWindow(interp), configSpecs,
+		    (char *) masterPtr, Tcl_GetString(objv[2]), 0);
 	}
-	Tk_ConfigureValue(interp, Tk_MainWindow(interp), configSpecs,
-		(char *) masterPtr, Tcl_GetString(objv[2]), 0);
-	break;
+	return TCL_OK;
     }
 
     case PHOTO_CONFIGURE:
@@ -882,8 +880,7 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 		options.toY2 - options.toY, options.zoomX, options.zoomY,
 		options.subsampleX, options.subsampleY,
 		options.compositingRule);
-
-	break;
+	return TCL_OK;
 
     case PHOTO_DATA: {
 	char *data;
@@ -968,7 +965,6 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	    ckfree(data);
 	}
 	return result;
-	break;
     }
 
     case PHOTO_GET: {
@@ -1001,7 +997,7 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	sprintf(string, "%d %d %d", pixelPtr[0], pixelPtr[1],
 		pixelPtr[2]);
 	Tcl_AppendResult(interp, string, (char *) NULL);
-	break;
+	return TCL_OK;
     }
 
     case PHOTO_PUT:
@@ -1129,7 +1125,7 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 		options.toX, options.toY, options.toX2 - options.toX,
 		options.toY2 - options.toY, TK_PHOTO_COMPOSITE_SET);
 	ckfree((char *) block.pixelPtr);
-	break;
+	return TCL_OK;
 
     case PHOTO_READ: {
 	Tcl_Obj *format;
@@ -1240,7 +1236,6 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	    Tcl_Close(NULL, chan);
 	}
 	return result;
-	break;
     }
 
     case PHOTO_REDITHER:
@@ -1276,7 +1271,7 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 		    (masterPtr->width - x), (masterPtr->height - y),
 		    masterPtr->width, masterPtr->height);
 	}
-	break;
+	return TCL_OK;
 
     case PHOTO_TRANS: {
 	static CONST char *photoTransOptions[] = {
@@ -1391,10 +1386,11 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	    Tk_ImageChanged(masterPtr->tkMaster, x, y, 1, 1,
 		    masterPtr->width, masterPtr->height);
 	    masterPtr->flags &= ~IMAGE_CHANGED;
+	    return TCL_OK;
+	}
 	}
 
-	}
-	return TCL_OK;
+	panic("unexpected fallthrough");
     }
 
     case PHOTO_WRITE: {
@@ -1516,7 +1512,8 @@ ImgPhotoCmd(clientData, interp, objc, objv)
     }
 
     }
-    return TCL_OK;
+    panic("unexpected fallthrough");
+    return TCL_ERROR; /* NOT REACHED */
 }
 
 /*
