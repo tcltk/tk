@@ -292,6 +292,7 @@
 	* generic/tkStubInit.c: collapsing.  Added a flags parameter to the
 	* generic/tkWindow.c:   internal display structure to support this
 	* doc/QWinEvent.3:      and be used in the future for other bits.
+	                        [Tk patch 564642]
 
 	* unix/mkLinks: updated from current docs
 
@@ -332,7 +333,7 @@
 	Add CirculateRequest, Create, MapRequest, ResizeRequest, 
 	and ConfigureRequest event types;
 	Split TK_TOPLEVEL flag into TK_TOPLEVEL, TK_HAS_WRAPPER,
-	TK_WIN_MANAGED, and TK_TOP_HIERARCHY.
+	TK_WIN_MANAGED, and TK_TOP_HIERARCHY. [Tk patch 572978]
 
 2002-06-14  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
 
@@ -347,6 +348,8 @@
 
 2002-06-14  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	Implement TIP 98  [Tk patch 566765]
+	
 	* doc/FindPhoto.3, generic/tk.h, generic/tk.decls:
 	* generic/tkImgPhoto.c: Changed *_Old to *_NoComposite and
 	USE_OLD_PHOTO_PUT_BLOCK to USE_COMPOSITELESS_PHOTO_PUT_BLOCK
