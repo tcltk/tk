@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.18 2001/11/13 00:19:05 hobbs Exp $
+# RCS: @(#) $Id: text.tcl,v 1.19 2001/12/27 22:26:41 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -256,7 +256,8 @@ bind Text <<Clear>> {
     catch {%W delete sel.first sel.last}
 }
 bind Text <<PasteSelection>> {
-    if {!$tk::Priv(mouseMoved) || $tk_strictMotif} {
+    if {$tk_strictMotif || ![info exists tk::Priv(mouseMoved)]
+	|| !$tk::Priv(mouseMoved)} {
 	tk::TextPaste %W %x %y
     }
 }
@@ -447,20 +448,12 @@ bind Text <Control-h> {
 }
 bind Text <2> {
     if {!$tk_strictMotif} {
-	%W scan mark %x %y
-	set tk::Priv(x) %x
-	set tk::Priv(y) %y
-	set tk::Priv(mouseMoved) 0
+	tk::TextScanMark %W %x %y
     }
 }
 bind Text <B2-Motion> {
     if {!$tk_strictMotif} {
-	if {(%x != $tk::Priv(x)) || (%y != $tk::Priv(y))} {
-	    set tk::Priv(mouseMoved) 1
-	}
-	if {$tk::Priv(mouseMoved)} {
-	    %W scan dragto %x %y
-	}
+	tk::TextScanDrag %W %x %y
     }
 }
 set ::tk::Priv(prevPos) {}
@@ -1103,4 +1096,42 @@ proc ::tk::TextPrevPos {w start op} {
 	set cur [$w index "$cur linestart - 1c"]
     }
     return 0.0
+}
+
+# ::tk::TextScanMark --
+#
+# Marks the start of a possible scan drag operation
+#
+# Arguments:
+# w -	The text window from which the text to get
+# x -	x location on screen
+# y -	y location on screen
+
+proc ::tk::TextScanMark {w x y} {
+    $w scan mark $x $y
+    set ::tk::Priv(x) $x
+    set ::tk::Priv(y) $y
+    set ::tk::Priv(mouseMoved) 0
+}
+
+# ::tk::TextScanDrag --
+#
+# Marks the start of a possible scan drag operation
+#
+# Arguments:
+# w -	The text window from which the text to get
+# x -	x location on screen
+# y -	y location on screen
+
+proc ::tk::TextScanDrag {w x y} {
+    # Make sure these exist, as some weird situations can trigger the
+    # motion binding without the initial press.  [Bug #220269]
+    if {![info exists ::tk::Priv(x)]} { set ::tk::Priv(x) $x }
+    if {![info exists ::tk::Priv(y)]} { set ::tk::Priv(y) $y }
+    if {($x != $::tk::Priv(x)) || ($y != $::tk::Priv(y))} {
+	set ::tk::Priv(mouseMoved) 1
+    }
+    if {[info exists ::tk::Priv(mouseMoved)] && $::tk::Priv(mouseMoved)} {
+	$w scan dragto $x $y
+    }
 }
