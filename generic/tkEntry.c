@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.5 1999/08/10 05:05:48 jingham Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.6 1999/11/10 02:56:24 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1946,7 +1946,7 @@ EntryCmdDeletedProc(clientData)
      * destroys the widget.
      */
 
-    if (! entryPtr->flags & ENTRY_DELETED) {
+    if (!(entryPtr->flags & ENTRY_DELETED)) {
         Tk_DestroyWindow(entryPtr->tkwin);
     }
 }

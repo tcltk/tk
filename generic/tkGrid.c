@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.5 1999/07/01 00:39:44 redman Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.6 1999/11/10 02:56:25 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1431,7 +1431,7 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 
     gridCount = MAX(constraintCount,slotCount);
     if (gridCount >= TYPICAL_SIZE) {
-	layoutPtr = (GridLayout *) Tcl_Alloc(sizeof(GridLayout) * (1+gridCount));
+	layoutPtr = (GridLayout *) ckalloc(sizeof(GridLayout) * (1+gridCount));
     } else {
 	layoutPtr = layoutData;
     }
@@ -1750,7 +1750,7 @@ GetGrid(tkwin)
     if (!new) {
 	return (Gridder *) Tcl_GetHashValue(hPtr);
     }
-    gridPtr = (Gridder *) Tcl_Alloc(sizeof(Gridder));
+    gridPtr = (Gridder *) ckalloc(sizeof(Gridder));
     gridPtr->tkwin = tkwin;
     gridPtr->masterPtr = NULL;
     gridPtr->masterDataPtr = NULL;
@@ -1873,7 +1873,7 @@ CheckSlotData(masterPtr, slot, slotType, checkOnly)
 	    int      newNumSlot = slot + PREALLOC ;
 	    size_t   oldSize = numSlot    * sizeof(SlotInfo) ;
 	    size_t   newSize = newNumSlot * sizeof(SlotInfo) ;
-	    SlotInfo *new = (SlotInfo *) Tcl_Alloc(newSize);
+	    SlotInfo *new = (SlotInfo *) ckalloc(newSize);
 	    SlotInfo *old = (slotType == ROW) ?
 		    masterPtr->masterDataPtr->rowPtr :
 		    masterPtr->masterDataPtr->columnPtr;
@@ -1925,17 +1925,17 @@ InitMasterData(masterPtr)
     size_t size;
     if (masterPtr->masterDataPtr == NULL) {
 	GridMaster *gridPtr = masterPtr->masterDataPtr =
-		(GridMaster *) Tcl_Alloc(sizeof(GridMaster));
+		(GridMaster *) ckalloc(sizeof(GridMaster));
 	size = sizeof(SlotInfo) * TYPICAL_SIZE;
 
 	gridPtr->columnEnd = 0;
 	gridPtr->columnMax = 0;
-	gridPtr->columnPtr = (SlotInfo *) Tcl_Alloc(size);
+	gridPtr->columnPtr = (SlotInfo *) ckalloc(size);
 	gridPtr->columnSpace = 0;
 	gridPtr->columnSpace = TYPICAL_SIZE;
 	gridPtr->rowEnd = 0;
 	gridPtr->rowMax = 0;
-	gridPtr->rowPtr = (SlotInfo *) Tcl_Alloc(size);
+	gridPtr->rowPtr = (SlotInfo *) ckalloc(size);
 	gridPtr->rowSpace = 0;
 	gridPtr->rowSpace = TYPICAL_SIZE;
 
