@@ -5,7 +5,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.10 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.11 2001/09/17 14:12:18 dkf Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -222,10 +222,11 @@ proc ::tk::dialog::file::chooseDir::DblClick {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
     set selection [tk::IconList_Curselection $data(icons)]
     if { [llength $selection] != 0 } {
-	set text [tk::IconList_Get $data(icons) [lindex $selection 0]]
+	set filenameFragment \
+		[tk::IconList_Get $data(icons) [lindex $selection 0]]
 	set file $data(selectPath)
 	if {[file isdirectory $file]} {
-	    ::tk::dialog::file::ListInvoke $w $text
+	    ::tk::dialog::file::ListInvoke $w [list $filenameFragment]
 	    return
 	}
     }

@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.30 2001/09/12 19:13:56 drh Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.31 2001/09/17 14:12:18 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -1626,17 +1626,17 @@ proc ::tk::dialog::file::JoinFile {path file} {
 proc ::tk::dialog::file::OkCmd {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    set text {}
+    set filenames {}
     foreach item [::tk::IconList_Curselection $data(icons)] {
-	lappend text [::tk::IconList_Get $data(icons) $item]
+	lappend filenames [::tk::IconList_Get $data(icons) $item]
     }
 
-    if {([llength $text] && !$data(-multiple)) || \
-	    ($data(-multiple) && ([llength $text] == 1))} {
-	set text [lindex $text 0]
-	set file [::tk::dialog::file::JoinFile $data(selectPath) $text]
+    if {([llength $filenames] && !$data(-multiple)) || \
+	    ($data(-multiple) && ([llength $filenames] == 1))} {
+	set filename [lindex $filenames 0]
+	set file [::tk::dialog::file::JoinFile $data(selectPath) $filename]
 	if {[file isdirectory $file]} {
-	    ::tk::dialog::file::ListInvoke $w [list $text]
+	    ::tk::dialog::file::ListInvoke $w [list $filename]
 	    return
 	}
     }
@@ -1702,14 +1702,15 @@ proc ::tk::dialog::file::ListBrowse {w} {
 # Gets called when user invokes the IconList widget (double-click, 
 # Return key, etc)
 #
-proc ::tk::dialog::file::ListInvoke {w text} {
+proc ::tk::dialog::file::ListInvoke {w filenames} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    if {[llength $text] == 0} {
+    if {[llength $filenames] == 0} {
 	return
     }
 
-    set file [::tk::dialog::file::JoinFile $data(selectPath) [lindex $text 0]]
+    set file [::tk::dialog::file::JoinFile $data(selectPath) \
+	    [lindex $filenames 0]]
     
     set class [winfo class $w]
     if {[string equal $class TkChooseDir] || [file isdirectory $file]} {
@@ -1724,7 +1725,7 @@ proc ::tk::dialog::file::ListInvoke {w text} {
 	}
     } else {
 	if {$data(-multiple)} {
-	    set data(selectFile) $text
+	    set data(selectFile) $filenames
 	} else {
 	    set data(selectFile) $file
 	}
