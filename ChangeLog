@@ -1,10 +1,18 @@
+2000-07-19  Eric Melski  <ericm@ajubasolutions.com>
+
+	* generic/tkText.c (TextSearchCmd): Added a test for a NULL
+	segment pointer when doing backwards searches for "" on an empty
+	text widget. [Bug: 6007].
+
 2000-07-18  Mo DeJong  <mdejong@redhat.com>
 
 	* unix/aclocal.m4: Use tcl.m4.
-	* unix/configure.in: Properly quote
-	LOCALES variable. Properly quote
+
+	* unix/configure.in: Properly quote LOCALES variable. Properly quote
 	argument to m4 macro.
+	
 	* unix/tcl.m4: Add updated file from tcl.
+	
 	* win/tcl.m4: Updated file from tcl.
 
 2000-07-18  Eric Melski  <ericm@ajubasolutions.com>

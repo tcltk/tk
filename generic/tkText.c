@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.14 2000/02/03 17:29:57 ericm Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.15 2000/07/19 18:13:50 ericm Exp $
  */
 
 #include "default.h"
@@ -1955,10 +1955,14 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	     * account for embedded windows or any other non-textual info.
 	     * Scan through the line's segments again to adjust both
 	     * matchChar and matchCount.
+	     *
+	     * We will walk through the segments of this line until we have
+	     * either reached the end of the match or we have reached the end
+	     * of the line.
 	     */
 
 	    for (segPtr = linePtr->segPtr, leftToScan = matchByte;
-		    leftToScan >= 0; segPtr = segPtr->nextPtr) {
+		    leftToScan >= 0 && segPtr; segPtr = segPtr->nextPtr) {
 		if (segPtr->typePtr != &tkTextCharType) {
 		    matchByte += segPtr->size;
 		    continue;
