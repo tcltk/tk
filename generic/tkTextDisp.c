@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.10 2002/04/22 12:45:49 dkf Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.11 2002/04/23 00:20:35 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1890,6 +1890,25 @@ DisplayLineBackground(textPtr, dlPtr, prevPtr, pixmap)
 	    rightX = maxX;
 	}
 	if (chunkPtr->stylePtr->bgGC != None) {
+	    /* Not visible - bail out now */
+	    if (rightX + xOffset <= 0) {
+	        leftX = rightX;
+		continue;
+	    }
+
+	    /*
+	     * Trim the start position for drawing to be no further away than
+	     * -borderWidth. The reason is that on many X servers drawing from
+	     * -32768 (or less) to +something simply does not display
+	     * correctly. [Patch #541999]
+	     */
+	    if ((leftX + xOffset) < -(sValuePtr->borderWidth)) {
+	        leftX = -sValuePtr->borderWidth - xOffset;
+	    }
+	    if ((rightX - leftX) > 32767) {
+	        rightX = leftX + 32767;
+	    }
+
 	    XFillRectangle(display, pixmap, chunkPtr->stylePtr->bgGC,
 		    leftX + xOffset, 0, (unsigned int) (rightX - leftX),
 		    (unsigned int) dlPtr->height);
