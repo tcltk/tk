@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.11 2004/02/16 00:19:42 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.12 2004/06/16 20:03:18 jenglish Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -1318,12 +1318,12 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
             Tcl_SetResult(interp, "baseHeight can't be < 0", TCL_STATIC);
             return TCL_ERROR;
         }
-        if (widthInc < 0) {
-            Tcl_SetResult(interp, "widthInc can't be < 0", TCL_STATIC);
+        if (widthInc <= 0) {
+            Tcl_SetResult(interp, "widthInc can't be <= 0", TCL_STATIC);
             return TCL_ERROR;
         }
-        if (heightInc < 0) {
-            Tcl_SetResult(interp, "heightInc can't be < 0", TCL_STATIC);
+        if (heightInc <= 0) {
+            Tcl_SetResult(interp, "heightInc can't be <= 0", TCL_STATIC);
             return TCL_ERROR;
         }
         Tk_SetGrid((Tk_Window) winPtr, reqWidth, reqHeight, widthInc,
@@ -2658,6 +2658,17 @@ Tk_SetGrid(
     WmInfo *wmPtr;
 
     /*
+     * Ensure widthInc and heightInc are greater than 0
+     */
+    if (widthInc <= 0) {
+	widthInc = 1;
+    }
+    if (heightInc <= 0) {
+	heightInc = 1;
+    }
+
+
+    /*
      * Find the top-level window for tkwin, plus the window manager
      * information.
      */
@@ -2710,7 +2721,7 @@ Tk_SetGrid(
     wmPtr->sizeHintsFlags |= PBaseSize|PResizeInc;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tk_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
+	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }
