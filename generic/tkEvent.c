@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.17.2.2 2004/02/16 23:09:25 wolfsuit Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.17.2.3 2004/07/21 03:07:06 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -883,6 +883,7 @@ Tk_HandleEvent(eventPtr)
     dispPtr = winPtr->dispPtr;
     if ((dispPtr->flags & TK_DISPLAY_USE_IM)) {
 	if (!(winPtr->flags & (TK_CHECKED_IC|TK_ALREADY_DEAD))) {
+	    long im_event_mask = 0L;
 	    winPtr->flags |= TK_CHECKED_IC;
 	    if (dispPtr->inputMethod != NULL) {
 #if TK_XIM_SPOT
@@ -935,6 +936,15 @@ Tk_HandleEvent(eventPtr)
 			XNFocusWindow, winPtr->window,
 			NULL);
 #endif
+	    }
+	    if (winPtr->inputContext != NULL) {
+		XGetICValues(winPtr->inputContext,
+			XNFilterEvents, &im_event_mask, NULL);
+		if (im_event_mask != 0L) {
+		    XSelectInput(winPtr->display, winPtr->window,
+		    winPtr->atts.event_mask | im_event_mask);
+		    XSetICFocus(winPtr->inputContext);
+		}
 	    }
 	}
 	if (XFilterEvent(eventPtr, None)) {
