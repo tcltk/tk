@@ -1,3 +1,14 @@
+1999-12-06  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* library/comdlg.tcl: removed tclVerifyInteger and tclSortNoCase,
+	they weren't used, and were not actually correct
+
+	* mac/tkMacFont.c:
+	* mac/tkMacMenu.c:
+	* mac/tkMacWindowMgr.c: fixed greyed out menu items, handling of
+	... elipsis, font mapping problem, and enabled generated menu
+	posting [Bug: 3705]
+
 1999-12-02  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* generic/tkInt.h:
@@ -5,7 +16,7 @@
 	* generic/tkCmds.c: converted Tk_DestroyCmd, Tk_LowerCmd and
 	Tk_RaiseCmd to their ObjCmd equivalent.
 
-	* library/tkfbox.tcl: added color icons for tk_messageBox on Unix
+	* library/msgbox.tcl: added color icons for tk_messageBox on Unix
 	and Mac when tk_strictMotif isn't set. (Hipp)
 	* library/tk.tcl: added window bounds checking to ::tk::PlaceWindow
 
