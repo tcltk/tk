@@ -1,3 +1,8 @@
+2004-09-16  David Gravereaux <davygrvy@pobox.com>
+
+	* win/makefile.vc : added VC7-safe environment check as used in the
+	Tcl makefile.vc
+
 2004-09-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkMenu.c (MenuWorldChanged): ensure that we recompute
