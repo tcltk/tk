@@ -1,3 +1,11 @@
+2002-07-29  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* unix/configure: Regen.
+	* unix/configure.in: Remove code that was setting
+	CC_SEARCH_FLAGS and LD_SEARCH_FLAGS to try to
+	account for cc vs ld linking. Tcl now handles this.
+	* unix/tcl.m4: Update from Tcl.
+
 2002-07-27  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/Makefile.in: Add MAJOR_VERSION, MINOR_VERSION,
