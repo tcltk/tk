@@ -1,5 +1,9 @@
 2004-07-24  Jim Ingham  <jingham@apple.com>
 
+	macosx/tkMacOSXDefault.h: Change the default -tearoff value
+	to 0.  It doesn't work at present, so it is silly to make
+	it the default.
+	
 	Mac OS X: Complete the implementation of the CG version of
 	the X drawing emulation layer.
 	
