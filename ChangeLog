@@ -1,3 +1,11 @@
+2003-05-30  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* generic/tkMenu.c
+	* generic/tkMenu.h
+	* generic/tkMenuDraw.c: 
+	* tests/menu.test: fixed complex bug in menu clone cleanup
+	[Bug#465324] and removed 'knownBug' from a test.
+	
 2003-05-29  Joe English <jenglish@users.sourceforge.net>
 	* doc/text.n: Fixed markup errors.
 
