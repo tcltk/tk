@@ -1,3 +1,20 @@
+2004-03-16  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tkUnixButton.c (TkpDrawCheckIndicator): correct crash
+	condition for new radio/checkbuttons when colors are exhausted.
+	[Bug 915330] (griffin)
+
+	* generic/tkGrid.c (GridRowColumnConfigureCommand): fix lint warning
+
+	* generic/tkCanvUtil.c: fix cast warnings
+
+	* generic/tkTextImage.c (EmbImageConfigure): fix casts
+
+	* unix/tkUnixSelect.c (ConvertSelection, TkSelPropProc): fix casts
+
+	* unix/configure, unix/tcl.m4: add -Wno-strict-aliasing for GCC to
+	suppress useless type puning warnings.
+
 2004-03-08  David Gravereaux <davygrvy@pobox.com>
 
 	* win/makefile.vc:
