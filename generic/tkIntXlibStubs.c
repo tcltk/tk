@@ -7,7 +7,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibStubs.c,v 1.2.2.1 1999/03/10 07:13:44 stanton Exp $
+ * RCS: @(#) $Id: tkIntXlibStubs.c,v 1.2.2.2 1999/03/12 03:12:47 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -26,7 +26,8 @@
  */
 
 #ifdef __WIN32__
-/* Slot 0 */
+/* Slot 0 is reserved */
+/* Slot 1 */
 XModifierKeymap*
 XGetModifierMapping(d)
     Display* d;
@@ -34,7 +35,7 @@ XGetModifierMapping(d)
     return (tkIntXlibStubsPtr->xGetModifierMapping)(d);
 }
 
-/* Slot 1 */
+/* Slot 2 */
 XImage *
 XCreateImage(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4)
     Display* d;
@@ -51,7 +52,7 @@ XCreateImage(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4)
     return (tkIntXlibStubsPtr->xCreateImage)(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4);
 }
 
-/* Slot 2 */
+/* Slot 3 */
 XImage *
 XGetImage(d, dr, i1, i2, ui1, ui2, ul, i3)
     Display* d;
@@ -66,7 +67,7 @@ XGetImage(d, dr, i1, i2, ui1, ui2, ul, i3)
     return (tkIntXlibStubsPtr->xGetImage)(d, dr, i1, i2, ui1, ui2, ul, i3);
 }
 
-/* Slot 3 */
+/* Slot 4 */
 char *
 XGetAtomName(d, a)
     Display* d;
@@ -75,7 +76,7 @@ XGetAtomName(d, a)
     return (tkIntXlibStubsPtr->xGetAtomName)(d, a);
 }
 
-/* Slot 4 */
+/* Slot 5 */
 char *
 XKeysymToString(k)
     KeySym k;
@@ -83,7 +84,7 @@ XKeysymToString(k)
     return (tkIntXlibStubsPtr->xKeysymToString)(k);
 }
 
-/* Slot 5 */
+/* Slot 6 */
 Colormap
 XCreateColormap(d, w, v, i)
     Display* d;
@@ -94,7 +95,7 @@ XCreateColormap(d, w, v, i)
     return (tkIntXlibStubsPtr->xCreateColormap)(d, w, v, i);
 }
 
-/* Slot 6 */
+/* Slot 7 */
 Cursor
 XCreatePixmapCursor(d, p1, p2, x1, x2, ui1, ui2)
     Display* d;
@@ -108,7 +109,7 @@ XCreatePixmapCursor(d, p1, p2, x1, x2, ui1, ui2)
     return (tkIntXlibStubsPtr->xCreatePixmapCursor)(d, p1, p2, x1, x2, ui1, ui2);
 }
 
-/* Slot 7 */
+/* Slot 8 */
 Cursor
 XCreateGlyphCursor(d, f1, f2, ui1, ui2, x1, x2)
     Display* d;
@@ -122,7 +123,7 @@ XCreateGlyphCursor(d, f1, f2, ui1, ui2, x1, x2)
     return (tkIntXlibStubsPtr->xCreateGlyphCursor)(d, f1, f2, ui1, ui2, x1, x2);
 }
 
-/* Slot 8 */
+/* Slot 9 */
 GContext
 XGContextFromGC(g)
     GC g;
@@ -130,7 +131,7 @@ XGContextFromGC(g)
     return (tkIntXlibStubsPtr->xGContextFromGC)(g);
 }
 
-/* Slot 9 */
+/* Slot 10 */
 XHostAddress *
 XListHosts(d, i, b)
     Display* d;
@@ -140,7 +141,7 @@ XListHosts(d, i, b)
     return (tkIntXlibStubsPtr->xListHosts)(d, i, b);
 }
 
-/* Slot 10 */
+/* Slot 11 */
 KeySym
 XKeycodeToKeysym(d, k, i)
     Display* d;
@@ -150,7 +151,7 @@ XKeycodeToKeysym(d, k, i)
     return (tkIntXlibStubsPtr->xKeycodeToKeysym)(d, k, i);
 }
 
-/* Slot 11 */
+/* Slot 12 */
 KeySym
 XStringToKeysym(c)
     _Xconst char* c;
@@ -158,7 +159,7 @@ XStringToKeysym(c)
     return (tkIntXlibStubsPtr->xStringToKeysym)(c);
 }
 
-/* Slot 12 */
+/* Slot 13 */
 Window
 XRootWindow(d, i)
     Display* d;
@@ -167,7 +168,7 @@ XRootWindow(d, i)
     return (tkIntXlibStubsPtr->xRootWindow)(d, i);
 }
 
-/* Slot 13 */
+/* Slot 14 */
 XErrorHandler
 XSetErrorHandler(x)
     XErrorHandler x;
@@ -175,7 +176,7 @@ XSetErrorHandler(x)
     return (tkIntXlibStubsPtr->xSetErrorHandler)(x);
 }
 
-/* Slot 14 */
+/* Slot 15 */
 Status
 XIconifyWindow(d, w, i)
     Display* d;
@@ -185,7 +186,7 @@ XIconifyWindow(d, w, i)
     return (tkIntXlibStubsPtr->xIconifyWindow)(d, w, i);
 }
 
-/* Slot 15 */
+/* Slot 16 */
 Status
 XWithdrawWindow(d, w, i)
     Display* d;
@@ -195,7 +196,7 @@ XWithdrawWindow(d, w, i)
     return (tkIntXlibStubsPtr->xWithdrawWindow)(d, w, i);
 }
 
-/* Slot 16 */
+/* Slot 17 */
 Status
 XGetWMColormapWindows(d, w, wpp, ip)
     Display* d;
@@ -206,7 +207,7 @@ XGetWMColormapWindows(d, w, wpp, ip)
     return (tkIntXlibStubsPtr->xGetWMColormapWindows)(d, w, wpp, ip);
 }
 
-/* Slot 17 */
+/* Slot 18 */
 Status
 XAllocColor(d, c, xp)
     Display* d;
@@ -216,7 +217,7 @@ XAllocColor(d, c, xp)
     return (tkIntXlibStubsPtr->xAllocColor)(d, c, xp);
 }
 
-/* Slot 18 */
+/* Slot 19 */
 void
 XBell(d, i)
     Display* d;
@@ -225,7 +226,7 @@ XBell(d, i)
     (tkIntXlibStubsPtr->xBell)(d, i);
 }
 
-/* Slot 19 */
+/* Slot 20 */
 void
 XChangeProperty(d, w, a1, a2, i1, i2, c, i3)
     Display* d;
@@ -240,7 +241,7 @@ XChangeProperty(d, w, a1, a2, i1, i2, c, i3)
     (tkIntXlibStubsPtr->xChangeProperty)(d, w, a1, a2, i1, i2, c, i3);
 }
 
-/* Slot 20 */
+/* Slot 21 */
 void
 XChangeWindowAttributes(d, w, ul, x)
     Display* d;
@@ -251,7 +252,7 @@ XChangeWindowAttributes(d, w, ul, x)
     (tkIntXlibStubsPtr->xChangeWindowAttributes)(d, w, ul, x);
 }
 
-/* Slot 21 */
+/* Slot 22 */
 void
 XClearWindow(d, w)
     Display* d;
@@ -260,7 +261,7 @@ XClearWindow(d, w)
     (tkIntXlibStubsPtr->xClearWindow)(d, w);
 }
 
-/* Slot 22 */
+/* Slot 23 */
 void
 XConfigureWindow(d, w, i, x)
     Display* d;
@@ -271,7 +272,7 @@ XConfigureWindow(d, w, i, x)
     (tkIntXlibStubsPtr->xConfigureWindow)(d, w, i, x);
 }
 
-/* Slot 23 */
+/* Slot 24 */
 void
 XCopyArea(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4)
     Display* d;
@@ -288,7 +289,7 @@ XCopyArea(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4)
     (tkIntXlibStubsPtr->xCopyArea)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4);
 }
 
-/* Slot 24 */
+/* Slot 25 */
 void
 XCopyPlane(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul)
     Display* d;
@@ -306,7 +307,7 @@ XCopyPlane(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul)
     (tkIntXlibStubsPtr->xCopyPlane)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul);
 }
 
-/* Slot 25 */
+/* Slot 26 */
 Pixmap
 XCreateBitmapFromData(display, d, data, width, height)
     Display* display;
@@ -318,7 +319,7 @@ XCreateBitmapFromData(display, d, data, width, height)
     return (tkIntXlibStubsPtr->xCreateBitmapFromData)(display, d, data, width, height);
 }
 
-/* Slot 26 */
+/* Slot 27 */
 void
 XDefineCursor(d, w, c)
     Display* d;
@@ -328,7 +329,7 @@ XDefineCursor(d, w, c)
     (tkIntXlibStubsPtr->xDefineCursor)(d, w, c);
 }
 
-/* Slot 27 */
+/* Slot 28 */
 void
 XDeleteProperty(d, w, a)
     Display* d;
@@ -338,7 +339,7 @@ XDeleteProperty(d, w, a)
     (tkIntXlibStubsPtr->xDeleteProperty)(d, w, a);
 }
 
-/* Slot 28 */
+/* Slot 29 */
 void
 XDestroyWindow(d, w)
     Display* d;
@@ -347,7 +348,7 @@ XDestroyWindow(d, w)
     (tkIntXlibStubsPtr->xDestroyWindow)(d, w);
 }
 
-/* Slot 29 */
+/* Slot 30 */
 void
 XDrawArc(d, dr, g, i1, i2, ui1, ui2, i3, i4)
     Display* d;
@@ -363,7 +364,7 @@ XDrawArc(d, dr, g, i1, i2, ui1, ui2, i3, i4)
     (tkIntXlibStubsPtr->xDrawArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4);
 }
 
-/* Slot 30 */
+/* Slot 31 */
 void
 XDrawLines(d, dr, g, x, i1, i2)
     Display* d;
@@ -376,7 +377,7 @@ XDrawLines(d, dr, g, x, i1, i2)
     (tkIntXlibStubsPtr->xDrawLines)(d, dr, g, x, i1, i2);
 }
 
-/* Slot 31 */
+/* Slot 32 */
 void
 XDrawRectangle(d, dr, g, i1, i2, ui1, ui2)
     Display* d;
@@ -390,7 +391,7 @@ XDrawRectangle(d, dr, g, i1, i2, ui1, ui2)
     (tkIntXlibStubsPtr->xDrawRectangle)(d, dr, g, i1, i2, ui1, ui2);
 }
 
-/* Slot 32 */
+/* Slot 33 */
 void
 XFillArc(d, dr, g, i1, i2, ui1, ui2, i3, i4)
     Display* d;
@@ -406,7 +407,7 @@ XFillArc(d, dr, g, i1, i2, ui1, ui2, i3, i4)
     (tkIntXlibStubsPtr->xFillArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4);
 }
 
-/* Slot 33 */
+/* Slot 34 */
 void
 XFillPolygon(d, dr, g, x, i1, i2, i3)
     Display* d;
@@ -420,7 +421,7 @@ XFillPolygon(d, dr, g, x, i1, i2, i3)
     (tkIntXlibStubsPtr->xFillPolygon)(d, dr, g, x, i1, i2, i3);
 }
 
-/* Slot 34 */
+/* Slot 35 */
 void
 XFillRectangles(d, dr, g, x, i)
     Display* d;
@@ -432,7 +433,7 @@ XFillRectangles(d, dr, g, x, i)
     (tkIntXlibStubsPtr->xFillRectangles)(d, dr, g, x, i);
 }
 
-/* Slot 35 */
+/* Slot 36 */
 void
 XForceScreenSaver(d, i)
     Display* d;
@@ -441,7 +442,7 @@ XForceScreenSaver(d, i)
     (tkIntXlibStubsPtr->xForceScreenSaver)(d, i);
 }
 
-/* Slot 36 */
+/* Slot 37 */
 void
 XFreeColormap(d, c)
     Display* d;
@@ -450,7 +451,7 @@ XFreeColormap(d, c)
     (tkIntXlibStubsPtr->xFreeColormap)(d, c);
 }
 
-/* Slot 37 */
+/* Slot 38 */
 void
 XFreeColors(d, c, ulp, i, ul)
     Display* d;
@@ -462,7 +463,7 @@ XFreeColors(d, c, ulp, i, ul)
     (tkIntXlibStubsPtr->xFreeColors)(d, c, ulp, i, ul);
 }
 
-/* Slot 38 */
+/* Slot 39 */
 void
 XFreeCursor(d, c)
     Display* d;
@@ -471,7 +472,7 @@ XFreeCursor(d, c)
     (tkIntXlibStubsPtr->xFreeCursor)(d, c);
 }
 
-/* Slot 39 */
+/* Slot 40 */
 void
 XFreeModifiermap(x)
     XModifierKeymap* x;
@@ -479,7 +480,7 @@ XFreeModifiermap(x)
     (tkIntXlibStubsPtr->xFreeModifiermap)(x);
 }
 
-/* Slot 40 */
+/* Slot 41 */
 Status
 XGetGeometry(d, dr, w, i1, i2, ui1, ui2, ui3, ui4)
     Display* d;
@@ -495,7 +496,7 @@ XGetGeometry(d, dr, w, i1, i2, ui1, ui2, ui3, ui4)
     return (tkIntXlibStubsPtr->xGetGeometry)(d, dr, w, i1, i2, ui1, ui2, ui3, ui4);
 }
 
-/* Slot 41 */
+/* Slot 42 */
 void
 XGetInputFocus(d, w, i)
     Display* d;
@@ -505,7 +506,7 @@ XGetInputFocus(d, w, i)
     (tkIntXlibStubsPtr->xGetInputFocus)(d, w, i);
 }
 
-/* Slot 42 */
+/* Slot 43 */
 int
 XGetWindowProperty(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp)
     Display* d;
@@ -524,7 +525,7 @@ XGetWindowProperty(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp)
     return (tkIntXlibStubsPtr->xGetWindowProperty)(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp);
 }
 
-/* Slot 43 */
+/* Slot 44 */
 Status
 XGetWindowAttributes(d, w, x)
     Display* d;
@@ -534,7 +535,7 @@ XGetWindowAttributes(d, w, x)
     return (tkIntXlibStubsPtr->xGetWindowAttributes)(d, w, x);
 }
 
-/* Slot 44 */
+/* Slot 45 */
 int
 XGrabKeyboard(d, w, b, i1, i2, t)
     Display* d;
@@ -547,7 +548,7 @@ XGrabKeyboard(d, w, b, i1, i2, t)
     return (tkIntXlibStubsPtr->xGrabKeyboard)(d, w, b, i1, i2, t);
 }
 
-/* Slot 45 */
+/* Slot 46 */
 int
 XGrabPointer(d, w1, b, ui, i1, i2, w2, c, t)
     Display* d;
@@ -563,7 +564,7 @@ XGrabPointer(d, w1, b, ui, i1, i2, w2, c, t)
     return (tkIntXlibStubsPtr->xGrabPointer)(d, w1, b, ui, i1, i2, w2, c, t);
 }
 
-/* Slot 46 */
+/* Slot 47 */
 KeyCode
 XKeysymToKeycode(d, k)
     Display* d;
@@ -572,7 +573,7 @@ XKeysymToKeycode(d, k)
     return (tkIntXlibStubsPtr->xKeysymToKeycode)(d, k);
 }
 
-/* Slot 47 */
+/* Slot 48 */
 Status
 XLookupColor(d, c1, c2, x1, x2)
     Display* d;
@@ -584,7 +585,7 @@ XLookupColor(d, c1, c2, x1, x2)
     return (tkIntXlibStubsPtr->xLookupColor)(d, c1, c2, x1, x2);
 }
 
-/* Slot 48 */
+/* Slot 49 */
 void
 XMapWindow(d, w)
     Display* d;
@@ -593,7 +594,7 @@ XMapWindow(d, w)
     (tkIntXlibStubsPtr->xMapWindow)(d, w);
 }
 
-/* Slot 49 */
+/* Slot 50 */
 void
 XMoveResizeWindow(d, w, i1, i2, ui1, ui2)
     Display* d;
@@ -606,7 +607,7 @@ XMoveResizeWindow(d, w, i1, i2, ui1, ui2)
     (tkIntXlibStubsPtr->xMoveResizeWindow)(d, w, i1, i2, ui1, ui2);
 }
 
-/* Slot 50 */
+/* Slot 51 */
 void
 XMoveWindow(d, w, i1, i2)
     Display* d;
@@ -617,7 +618,7 @@ XMoveWindow(d, w, i1, i2)
     (tkIntXlibStubsPtr->xMoveWindow)(d, w, i1, i2);
 }
 
-/* Slot 51 */
+/* Slot 52 */
 void
 XNextEvent(d, x)
     Display* d;
@@ -626,7 +627,7 @@ XNextEvent(d, x)
     (tkIntXlibStubsPtr->xNextEvent)(d, x);
 }
 
-/* Slot 52 */
+/* Slot 53 */
 void
 XPutBackEvent(d, x)
     Display* d;
@@ -635,7 +636,7 @@ XPutBackEvent(d, x)
     (tkIntXlibStubsPtr->xPutBackEvent)(d, x);
 }
 
-/* Slot 53 */
+/* Slot 54 */
 void
 XQueryColors(d, c, x, i)
     Display* d;
@@ -646,7 +647,7 @@ XQueryColors(d, c, x, i)
     (tkIntXlibStubsPtr->xQueryColors)(d, c, x, i);
 }
 
-/* Slot 54 */
+/* Slot 55 */
 Bool
 XQueryPointer(d, w1, w2, w3, i1, i2, i3, i4, ui)
     Display* d;
@@ -662,7 +663,7 @@ XQueryPointer(d, w1, w2, w3, i1, i2, i3, i4, ui)
     return (tkIntXlibStubsPtr->xQueryPointer)(d, w1, w2, w3, i1, i2, i3, i4, ui);
 }
 
-/* Slot 55 */
+/* Slot 56 */
 Status
 XQueryTree(d, w1, w2, w3, w4, ui)
     Display* d;
@@ -675,7 +676,7 @@ XQueryTree(d, w1, w2, w3, w4, ui)
     return (tkIntXlibStubsPtr->xQueryTree)(d, w1, w2, w3, w4, ui);
 }
 
-/* Slot 56 */
+/* Slot 57 */
 void
 XRaiseWindow(d, w)
     Display* d;
@@ -684,7 +685,7 @@ XRaiseWindow(d, w)
     (tkIntXlibStubsPtr->xRaiseWindow)(d, w);
 }
 
-/* Slot 57 */
+/* Slot 58 */
 void
 XRefreshKeyboardMapping(x)
     XMappingEvent* x;
@@ -692,7 +693,7 @@ XRefreshKeyboardMapping(x)
     (tkIntXlibStubsPtr->xRefreshKeyboardMapping)(x);
 }
 
-/* Slot 58 */
+/* Slot 59 */
 void
 XResizeWindow(d, w, ui1, ui2)
     Display* d;
@@ -703,7 +704,7 @@ XResizeWindow(d, w, ui1, ui2)
     (tkIntXlibStubsPtr->xResizeWindow)(d, w, ui1, ui2);
 }
 
-/* Slot 59 */
+/* Slot 60 */
 void
 XSelectInput(d, w, l)
     Display* d;
@@ -713,7 +714,7 @@ XSelectInput(d, w, l)
     (tkIntXlibStubsPtr->xSelectInput)(d, w, l);
 }
 
-/* Slot 60 */
+/* Slot 61 */
 Status
 XSendEvent(d, w, b, l, x)
     Display* d;
@@ -725,7 +726,7 @@ XSendEvent(d, w, b, l, x)
     return (tkIntXlibStubsPtr->xSendEvent)(d, w, b, l, x);
 }
 
-/* Slot 61 */
+/* Slot 62 */
 void
 XSetCommand(d, w, c, i)
     Display* d;
@@ -736,7 +737,7 @@ XSetCommand(d, w, c, i)
     (tkIntXlibStubsPtr->xSetCommand)(d, w, c, i);
 }
 
-/* Slot 62 */
+/* Slot 63 */
 void
 XSetIconName(d, w, c)
     Display* d;
@@ -746,7 +747,7 @@ XSetIconName(d, w, c)
     (tkIntXlibStubsPtr->xSetIconName)(d, w, c);
 }
 
-/* Slot 63 */
+/* Slot 64 */
 void
 XSetInputFocus(d, w, i, t)
     Display* d;
@@ -757,7 +758,7 @@ XSetInputFocus(d, w, i, t)
     (tkIntXlibStubsPtr->xSetInputFocus)(d, w, i, t);
 }
 
-/* Slot 64 */
+/* Slot 65 */
 void
 XSetSelectionOwner(d, a, w, t)
     Display* d;
@@ -768,7 +769,7 @@ XSetSelectionOwner(d, a, w, t)
     (tkIntXlibStubsPtr->xSetSelectionOwner)(d, a, w, t);
 }
 
-/* Slot 65 */
+/* Slot 66 */
 void
 XSetWindowBackground(d, w, ul)
     Display* d;
@@ -778,7 +779,7 @@ XSetWindowBackground(d, w, ul)
     (tkIntXlibStubsPtr->xSetWindowBackground)(d, w, ul);
 }
 
-/* Slot 66 */
+/* Slot 67 */
 void
 XSetWindowBackgroundPixmap(d, w, p)
     Display* d;
@@ -788,7 +789,7 @@ XSetWindowBackgroundPixmap(d, w, p)
     (tkIntXlibStubsPtr->xSetWindowBackgroundPixmap)(d, w, p);
 }
 
-/* Slot 67 */
+/* Slot 68 */
 void
 XSetWindowBorder(d, w, ul)
     Display* d;
@@ -798,7 +799,7 @@ XSetWindowBorder(d, w, ul)
     (tkIntXlibStubsPtr->xSetWindowBorder)(d, w, ul);
 }
 
-/* Slot 68 */
+/* Slot 69 */
 void
 XSetWindowBorderPixmap(d, w, p)
     Display* d;
@@ -808,7 +809,7 @@ XSetWindowBorderPixmap(d, w, p)
     (tkIntXlibStubsPtr->xSetWindowBorderPixmap)(d, w, p);
 }
 
-/* Slot 69 */
+/* Slot 70 */
 void
 XSetWindowBorderWidth(d, w, ui)
     Display* d;
@@ -818,7 +819,7 @@ XSetWindowBorderWidth(d, w, ui)
     (tkIntXlibStubsPtr->xSetWindowBorderWidth)(d, w, ui);
 }
 
-/* Slot 70 */
+/* Slot 71 */
 void
 XSetWindowColormap(d, w, c)
     Display* d;
@@ -828,7 +829,7 @@ XSetWindowColormap(d, w, c)
     (tkIntXlibStubsPtr->xSetWindowColormap)(d, w, c);
 }
 
-/* Slot 71 */
+/* Slot 72 */
 Bool
 XTranslateCoordinates(d, w1, w2, i1, i2, i3, i4, w3)
     Display* d;
@@ -843,7 +844,7 @@ XTranslateCoordinates(d, w1, w2, i1, i2, i3, i4, w3)
     return (tkIntXlibStubsPtr->xTranslateCoordinates)(d, w1, w2, i1, i2, i3, i4, w3);
 }
 
-/* Slot 72 */
+/* Slot 73 */
 void
 XUngrabKeyboard(d, t)
     Display* d;
@@ -852,7 +853,7 @@ XUngrabKeyboard(d, t)
     (tkIntXlibStubsPtr->xUngrabKeyboard)(d, t);
 }
 
-/* Slot 73 */
+/* Slot 74 */
 void
 XUngrabPointer(d, t)
     Display* d;
@@ -861,7 +862,7 @@ XUngrabPointer(d, t)
     (tkIntXlibStubsPtr->xUngrabPointer)(d, t);
 }
 
-/* Slot 74 */
+/* Slot 75 */
 void
 XUnmapWindow(d, w)
     Display* d;
@@ -870,7 +871,7 @@ XUnmapWindow(d, w)
     (tkIntXlibStubsPtr->xUnmapWindow)(d, w);
 }
 
-/* Slot 75 */
+/* Slot 76 */
 void
 XWindowEvent(d, w, l, x)
     Display* d;
@@ -881,7 +882,7 @@ XWindowEvent(d, w, l, x)
     (tkIntXlibStubsPtr->xWindowEvent)(d, w, l, x);
 }
 
-/* Slot 76 */
+/* Slot 77 */
 void
 XDestroyIC(x)
     XIC x;
@@ -889,7 +890,7 @@ XDestroyIC(x)
     (tkIntXlibStubsPtr->xDestroyIC)(x);
 }
 
-/* Slot 77 */
+/* Slot 78 */
 Bool
 XFilterEvent(x, w)
     XEvent* x;
@@ -898,7 +899,7 @@ XFilterEvent(x, w)
     return (tkIntXlibStubsPtr->xFilterEvent)(x, w);
 }
 
-/* Slot 78 */
+/* Slot 79 */
 int
 XmbLookupString(xi, xk, c, i, k, s)
     XIC xi;
@@ -911,7 +912,7 @@ XmbLookupString(xi, xk, c, i, k, s)
     return (tkIntXlibStubsPtr->xmbLookupString)(xi, xk, c, i, k, s);
 }
 
-/* Slot 79 */
+/* Slot 80 */
 void
 TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height)
     unsigned long * colors;
@@ -932,7 +933,8 @@ TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x, dest_y,
 
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
-/* Slot 0 */
+/* Slot 0 is reserved */
+/* Slot 1 */
 XModifierKeymap*
 XGetModifierMapping(d)
     Display* d;
@@ -940,7 +942,7 @@ XGetModifierMapping(d)
     return (tkIntXlibStubsPtr->xGetModifierMapping)(d);
 }
 
-/* Slot 1 */
+/* Slot 2 */
 XImage *
 XCreateImage(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4)
     Display* d;
@@ -957,7 +959,7 @@ XCreateImage(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4)
     return (tkIntXlibStubsPtr->xCreateImage)(d, v, ui1, i1, i2, cp, ui2, ui3, i3, i4);
 }
 
-/* Slot 2 */
+/* Slot 3 */
 XImage *
 XGetImage(d, dr, i1, i2, ui1, ui2, ul, i3)
     Display* d;
@@ -972,7 +974,7 @@ XGetImage(d, dr, i1, i2, ui1, ui2, ul, i3)
     return (tkIntXlibStubsPtr->xGetImage)(d, dr, i1, i2, ui1, ui2, ul, i3);
 }
 
-/* Slot 3 */
+/* Slot 4 */
 char *
 XGetAtomName(d, a)
     Display* d;
@@ -981,7 +983,7 @@ XGetAtomName(d, a)
     return (tkIntXlibStubsPtr->xGetAtomName)(d, a);
 }
 
-/* Slot 4 */
+/* Slot 5 */
 char *
 XKeysymToString(k)
     KeySym k;
@@ -989,7 +991,7 @@ XKeysymToString(k)
     return (tkIntXlibStubsPtr->xKeysymToString)(k);
 }
 
-/* Slot 5 */
+/* Slot 6 */
 Colormap
 XCreateColormap(d, w, v, i)
     Display* d;
@@ -1000,7 +1002,7 @@ XCreateColormap(d, w, v, i)
     return (tkIntXlibStubsPtr->xCreateColormap)(d, w, v, i);
 }
 
-/* Slot 6 */
+/* Slot 7 */
 GContext
 XGContextFromGC(g)
     GC g;
@@ -1008,7 +1010,7 @@ XGContextFromGC(g)
     return (tkIntXlibStubsPtr->xGContextFromGC)(g);
 }
 
-/* Slot 7 */
+/* Slot 8 */
 KeySym
 XKeycodeToKeysym(d, k, i)
     Display* d;
@@ -1018,7 +1020,7 @@ XKeycodeToKeysym(d, k, i)
     return (tkIntXlibStubsPtr->xKeycodeToKeysym)(d, k, i);
 }
 
-/* Slot 8 */
+/* Slot 9 */
 KeySym
 XStringToKeysym(c)
     _Xconst char* c;
@@ -1026,7 +1028,7 @@ XStringToKeysym(c)
     return (tkIntXlibStubsPtr->xStringToKeysym)(c);
 }
 
-/* Slot 9 */
+/* Slot 10 */
 Window
 XRootWindow(d, i)
     Display* d;
@@ -1035,7 +1037,7 @@ XRootWindow(d, i)
     return (tkIntXlibStubsPtr->xRootWindow)(d, i);
 }
 
-/* Slot 10 */
+/* Slot 11 */
 XErrorHandler
 XSetErrorHandler(x)
     XErrorHandler x;
@@ -1043,7 +1045,7 @@ XSetErrorHandler(x)
     return (tkIntXlibStubsPtr->xSetErrorHandler)(x);
 }
 
-/* Slot 11 */
+/* Slot 12 */
 Status
 XAllocColor(d, c, xp)
     Display* d;
@@ -1053,7 +1055,7 @@ XAllocColor(d, c, xp)
     return (tkIntXlibStubsPtr->xAllocColor)(d, c, xp);
 }
 
-/* Slot 12 */
+/* Slot 13 */
 void
 XBell(d, i)
     Display* d;
@@ -1062,7 +1064,7 @@ XBell(d, i)
     (tkIntXlibStubsPtr->xBell)(d, i);
 }
 
-/* Slot 13 */
+/* Slot 14 */
 void
 XChangeProperty(d, w, a, a, i1, i2, c, i3)
     Display* d;
@@ -1077,7 +1079,7 @@ XChangeProperty(d, w, a, a, i1, i2, c, i3)
     (tkIntXlibStubsPtr->xChangeProperty)(d, w, a, a, i1, i2, c, i3);
 }
 
-/* Slot 14 */
+/* Slot 15 */
 void
 XChangeWindowAttributes(d, w, ul, x)
     Display* d;
@@ -1088,7 +1090,7 @@ XChangeWindowAttributes(d, w, ul, x)
     (tkIntXlibStubsPtr->xChangeWindowAttributes)(d, w, ul, x);
 }
 
-/* Slot 15 */
+/* Slot 16 */
 void
 XConfigureWindow(d, w, i, x)
     Display* d;
@@ -1099,7 +1101,7 @@ XConfigureWindow(d, w, i, x)
     (tkIntXlibStubsPtr->xConfigureWindow)(d, w, i, x);
 }
 
-/* Slot 16 */
+/* Slot 17 */
 void
 XCopyArea(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4)
     Display* d;
@@ -1116,7 +1118,7 @@ XCopyArea(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4)
     (tkIntXlibStubsPtr->xCopyArea)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4);
 }
 
-/* Slot 17 */
+/* Slot 18 */
 void
 XCopyPlane(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul)
     Display* d;
@@ -1134,7 +1136,7 @@ XCopyPlane(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul)
     (tkIntXlibStubsPtr->xCopyPlane)(d, dr1, dr2, g, i1, i2, ui1, ui2, i3, i4, ul);
 }
 
-/* Slot 18 */
+/* Slot 19 */
 Pixmap
 XCreateBitmapFromData(display, d, data, width, height)
     Display* display;
@@ -1146,7 +1148,7 @@ XCreateBitmapFromData(display, d, data, width, height)
     return (tkIntXlibStubsPtr->xCreateBitmapFromData)(display, d, data, width, height);
 }
 
-/* Slot 19 */
+/* Slot 20 */
 void
 XDefineCursor(d, w, c)
     Display* d;
@@ -1156,7 +1158,7 @@ XDefineCursor(d, w, c)
     (tkIntXlibStubsPtr->xDefineCursor)(d, w, c);
 }
 
-/* Slot 20 */
+/* Slot 21 */
 void
 XDestroyWindow(d, w)
     Display* d;
@@ -1165,7 +1167,7 @@ XDestroyWindow(d, w)
     (tkIntXlibStubsPtr->xDestroyWindow)(d, w);
 }
 
-/* Slot 21 */
+/* Slot 22 */
 void
 XDrawArc(d, dr, g, i1, i2, ui1, ui2, i3, i4)
     Display* d;
@@ -1181,7 +1183,7 @@ XDrawArc(d, dr, g, i1, i2, ui1, ui2, i3, i4)
     (tkIntXlibStubsPtr->xDrawArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4);
 }
 
-/* Slot 22 */
+/* Slot 23 */
 void
 XDrawLines(d, dr, g, x, i1, i2)
     Display* d;
@@ -1194,7 +1196,7 @@ XDrawLines(d, dr, g, x, i1, i2)
     (tkIntXlibStubsPtr->xDrawLines)(d, dr, g, x, i1, i2);
 }
 
-/* Slot 23 */
+/* Slot 24 */
 void
 XDrawRectangle(d, dr, g, i1, i2, ui1, ui2)
     Display* d;
@@ -1208,7 +1210,7 @@ XDrawRectangle(d, dr, g, i1, i2, ui1, ui2)
     (tkIntXlibStubsPtr->xDrawRectangle)(d, dr, g, i1, i2, ui1, ui2);
 }
 
-/* Slot 24 */
+/* Slot 25 */
 void
 XFillArc(d, dr, g, i1, i2, ui1, ui2, i3, i4)
     Display* d;
@@ -1224,7 +1226,7 @@ XFillArc(d, dr, g, i1, i2, ui1, ui2, i3, i4)
     (tkIntXlibStubsPtr->xFillArc)(d, dr, g, i1, i2, ui1, ui2, i3, i4);
 }
 
-/* Slot 25 */
+/* Slot 26 */
 void
 XFillPolygon(d, dr, g, x, i1, i2, i3)
     Display* d;
@@ -1238,7 +1240,7 @@ XFillPolygon(d, dr, g, x, i1, i2, i3)
     (tkIntXlibStubsPtr->xFillPolygon)(d, dr, g, x, i1, i2, i3);
 }
 
-/* Slot 26 */
+/* Slot 27 */
 void
 XFillRectangles(d, dr, g, x, i)
     Display* d;
@@ -1250,7 +1252,7 @@ XFillRectangles(d, dr, g, x, i)
     (tkIntXlibStubsPtr->xFillRectangles)(d, dr, g, x, i);
 }
 
-/* Slot 27 */
+/* Slot 28 */
 void
 XFreeColormap(d, c)
     Display* d;
@@ -1259,7 +1261,7 @@ XFreeColormap(d, c)
     (tkIntXlibStubsPtr->xFreeColormap)(d, c);
 }
 
-/* Slot 28 */
+/* Slot 29 */
 void
 XFreeColors(d, c, ulp, i, ul)
     Display* d;
@@ -1271,7 +1273,7 @@ XFreeColors(d, c, ulp, i, ul)
     (tkIntXlibStubsPtr->xFreeColors)(d, c, ulp, i, ul);
 }
 
-/* Slot 29 */
+/* Slot 30 */
 void
 XFreeModifiermap(x)
     XModifierKeymap* x;
@@ -1279,7 +1281,7 @@ XFreeModifiermap(x)
     (tkIntXlibStubsPtr->xFreeModifiermap)(x);
 }
 
-/* Slot 30 */
+/* Slot 31 */
 Status
 XGetGeometry(d, dr, w, i1, i2, ui1, ui2, ui3, ui4)
     Display* d;
@@ -1295,7 +1297,7 @@ XGetGeometry(d, dr, w, i1, i2, ui1, ui2, ui3, ui4)
     return (tkIntXlibStubsPtr->xGetGeometry)(d, dr, w, i1, i2, ui1, ui2, ui3, ui4);
 }
 
-/* Slot 31 */
+/* Slot 32 */
 int
 XGetWindowProperty(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp)
     Display* d;
@@ -1314,7 +1316,7 @@ XGetWindowProperty(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp)
     return (tkIntXlibStubsPtr->xGetWindowProperty)(d, w, a1, l1, l2, b, a2, ap, ip, ulp1, ulp2, cpp);
 }
 
-/* Slot 32 */
+/* Slot 33 */
 int
 XGrabKeyboard(d, w, b, i1, i2, t)
     Display* d;
@@ -1327,7 +1329,7 @@ XGrabKeyboard(d, w, b, i1, i2, t)
     return (tkIntXlibStubsPtr->xGrabKeyboard)(d, w, b, i1, i2, t);
 }
 
-/* Slot 33 */
+/* Slot 34 */
 int
 XGrabPointer(d, w1, b, ui, i1, i2, w2, c, t)
     Display* d;
@@ -1343,7 +1345,7 @@ XGrabPointer(d, w1, b, ui, i1, i2, w2, c, t)
     return (tkIntXlibStubsPtr->xGrabPointer)(d, w1, b, ui, i1, i2, w2, c, t);
 }
 
-/* Slot 34 */
+/* Slot 35 */
 KeyCode
 XKeysymToKeycode(d, k)
     Display* d;
@@ -1352,7 +1354,7 @@ XKeysymToKeycode(d, k)
     return (tkIntXlibStubsPtr->xKeysymToKeycode)(d, k);
 }
 
-/* Slot 35 */
+/* Slot 36 */
 void
 XMapWindow(d, w)
     Display* d;
@@ -1361,7 +1363,7 @@ XMapWindow(d, w)
     (tkIntXlibStubsPtr->xMapWindow)(d, w);
 }
 
-/* Slot 36 */
+/* Slot 37 */
 void
 XMoveResizeWindow(d, w, i1, i2, ui1, ui2)
     Display* d;
@@ -1374,7 +1376,7 @@ XMoveResizeWindow(d, w, i1, i2, ui1, ui2)
     (tkIntXlibStubsPtr->xMoveResizeWindow)(d, w, i1, i2, ui1, ui2);
 }
 
-/* Slot 37 */
+/* Slot 38 */
 void
 XMoveWindow(d, w, i1, i2)
     Display* d;
@@ -1385,7 +1387,7 @@ XMoveWindow(d, w, i1, i2)
     (tkIntXlibStubsPtr->xMoveWindow)(d, w, i1, i2);
 }
 
-/* Slot 38 */
+/* Slot 39 */
 Bool
 XQueryPointer(d, w1, w2, w3, i1, i2, i3, i4, ui)
     Display* d;
@@ -1401,7 +1403,7 @@ XQueryPointer(d, w1, w2, w3, i1, i2, i3, i4, ui)
     return (tkIntXlibStubsPtr->xQueryPointer)(d, w1, w2, w3, i1, i2, i3, i4, ui);
 }
 
-/* Slot 39 */
+/* Slot 40 */
 void
 XRaiseWindow(d, w)
     Display* d;
@@ -1410,7 +1412,7 @@ XRaiseWindow(d, w)
     (tkIntXlibStubsPtr->xRaiseWindow)(d, w);
 }
 
-/* Slot 40 */
+/* Slot 41 */
 void
 XRefreshKeyboardMapping(x)
     XMappingEvent* x;
@@ -1418,7 +1420,7 @@ XRefreshKeyboardMapping(x)
     (tkIntXlibStubsPtr->xRefreshKeyboardMapping)(x);
 }
 
-/* Slot 41 */
+/* Slot 42 */
 void
 XResizeWindow(d, w, ui1, ui2)
     Display* d;
@@ -1429,7 +1431,7 @@ XResizeWindow(d, w, ui1, ui2)
     (tkIntXlibStubsPtr->xResizeWindow)(d, w, ui1, ui2);
 }
 
-/* Slot 42 */
+/* Slot 43 */
 void
 XSelectInput(d, w, l)
     Display* d;
@@ -1439,7 +1441,7 @@ XSelectInput(d, w, l)
     (tkIntXlibStubsPtr->xSelectInput)(d, w, l);
 }
 
-/* Slot 43 */
+/* Slot 44 */
 Status
 XSendEvent(d, w, b, l, x)
     Display* d;
@@ -1451,7 +1453,7 @@ XSendEvent(d, w, b, l, x)
     return (tkIntXlibStubsPtr->xSendEvent)(d, w, b, l, x);
 }
 
-/* Slot 44 */
+/* Slot 45 */
 void
 XSetIconName(d, w, c)
     Display* d;
@@ -1461,7 +1463,7 @@ XSetIconName(d, w, c)
     (tkIntXlibStubsPtr->xSetIconName)(d, w, c);
 }
 
-/* Slot 45 */
+/* Slot 46 */
 void
 XSetInputFocus(d, w, i, t)
     Display* d;
@@ -1472,7 +1474,7 @@ XSetInputFocus(d, w, i, t)
     (tkIntXlibStubsPtr->xSetInputFocus)(d, w, i, t);
 }
 
-/* Slot 46 */
+/* Slot 47 */
 void
 XSetSelectionOwner(d, a, w, t)
     Display* d;
@@ -1483,7 +1485,7 @@ XSetSelectionOwner(d, a, w, t)
     (tkIntXlibStubsPtr->xSetSelectionOwner)(d, a, w, t);
 }
 
-/* Slot 47 */
+/* Slot 48 */
 void
 XSetWindowBackground(d, w, ul)
     Display* d;
@@ -1493,7 +1495,7 @@ XSetWindowBackground(d, w, ul)
     (tkIntXlibStubsPtr->xSetWindowBackground)(d, w, ul);
 }
 
-/* Slot 48 */
+/* Slot 49 */
 void
 XSetWindowBackgroundPixmap(d, w, p)
     Display* d;
@@ -1503,7 +1505,7 @@ XSetWindowBackgroundPixmap(d, w, p)
     (tkIntXlibStubsPtr->xSetWindowBackgroundPixmap)(d, w, p);
 }
 
-/* Slot 49 */
+/* Slot 50 */
 void
 XSetWindowBorder(d, w, ul)
     Display* d;
@@ -1513,7 +1515,7 @@ XSetWindowBorder(d, w, ul)
     (tkIntXlibStubsPtr->xSetWindowBorder)(d, w, ul);
 }
 
-/* Slot 50 */
+/* Slot 51 */
 void
 XSetWindowBorderPixmap(d, w, p)
     Display* d;
@@ -1523,7 +1525,7 @@ XSetWindowBorderPixmap(d, w, p)
     (tkIntXlibStubsPtr->xSetWindowBorderPixmap)(d, w, p);
 }
 
-/* Slot 51 */
+/* Slot 52 */
 void
 XSetWindowBorderWidth(d, w, ui)
     Display* d;
@@ -1533,7 +1535,7 @@ XSetWindowBorderWidth(d, w, ui)
     (tkIntXlibStubsPtr->xSetWindowBorderWidth)(d, w, ui);
 }
 
-/* Slot 52 */
+/* Slot 53 */
 void
 XSetWindowColormap(d, w, c)
     Display* d;
@@ -1543,7 +1545,7 @@ XSetWindowColormap(d, w, c)
     (tkIntXlibStubsPtr->xSetWindowColormap)(d, w, c);
 }
 
-/* Slot 53 */
+/* Slot 54 */
 void
 XUngrabKeyboard(d, t)
     Display* d;
@@ -1552,7 +1554,7 @@ XUngrabKeyboard(d, t)
     (tkIntXlibStubsPtr->xUngrabKeyboard)(d, t);
 }
 
-/* Slot 54 */
+/* Slot 55 */
 void
 XUngrabPointer(d, t)
     Display* d;
@@ -1561,7 +1563,7 @@ XUngrabPointer(d, t)
     (tkIntXlibStubsPtr->xUngrabPointer)(d, t);
 }
 
-/* Slot 55 */
+/* Slot 56 */
 void
 XUnmapWindow(d, w)
     Display* d;
@@ -1570,7 +1572,7 @@ XUnmapWindow(d, w)
     (tkIntXlibStubsPtr->xUnmapWindow)(d, w);
 }
 
-/* Slot 56 */
+/* Slot 57 */
 void
 TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height)
     unsigned long * colors;
