@@ -1,7 +1,22 @@
 2000-04-07  Jeff Hobbs  <hobbs@scriptics.com>
 
+	* generic/tkGrid.c (InitMasterData): fixed uninit'd data in
+	GridMaster struct [Bug: 4387]
+
+	* library/safetk.tcl (disallowTk): made disallowTk work in the
+	simple case.
+
+	* library/comdlg.tcl (tkFocusGroup_In): fixed key navigation
+	problems in dialogs under CDE [Bug: 2960]
+
+	* tests/winDialog.test: removed knownBug constraint from 5.16
+
 	* win/tkWinFont.c (GetScreenFont): corrected adjustment against
-	LC_FACESIZE limitation for NT.  [Bug: 4931]
+	LC_FACESIZE limitation for NT [Bug: 4931]
+
+	* win/makefile.vc (TKTEST_OBJS):
+	* win/Makefile.in (TKTEST_OBJS): moved tkWinTest.c from normal
+	objs to TKTEST_OBJS where it belonged.
 
 2000-04-03  Jeff Hobbs  <hobbs@scriptics.com>
 
