@@ -1,6 +1,14 @@
 2001-06-22  Mo DeJong  <mdejong@redhat.com>
 
 	* win/configure: Regen.
+	* win/tcl.m4 (SC_CONFIG_CFLAGS): Link to the
+	imm32 library when building with mingw gcc.
+	* win/tkWinX.c: Include the imm.h header
+	to fix compiling with mingw gcc.
+
+2001-06-22  Mo DeJong  <mdejong@redhat.com>
+
+	* win/configure: Regen.
 	* win/configure.in: Add resource compiler fix from
 	8.3.3 to fix compiling with mingw.
 
