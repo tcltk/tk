@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.9 2000/04/17 17:40:27 ericm Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.9.2.1 2002/01/04 16:39:57 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -735,12 +735,12 @@ Tk_GridCmd(clientData, interp, argc, argv)
 	if (checkOnly && argcPtr > 1) {
 	    Tcl_AppendResult(interp, argv[3],
 		    " must be a single element.", (char *) NULL);
-	    Tcl_Free((char *)argvPtr);
+	    ckfree((char *)argvPtr);
 	    return TCL_ERROR;
 	}
 	for (indexP=argvPtr; *indexP != NULL; indexP++) {
 	    if (Tcl_GetInt(interp, *indexP, &slot) != TCL_OK) {
-		Tcl_Free((char *)argvPtr);
+		ckfree((char *)argvPtr);
 		return TCL_ERROR;
 	    }
 	    ok = CheckSlotData(masterPtr, slot, slotType, checkOnly);
@@ -748,7 +748,7 @@ Tk_GridCmd(clientData, interp, argc, argv)
 		Tcl_AppendResult(interp, argv[0],
 			" ", argv[1], ": \"", *argvPtr,"\" is out of range",
 			(char *) NULL);
-		Tcl_Free((char *)argvPtr);
+		ckfree((char *)argvPtr);
 		return TCL_ERROR;
 	    } else if (ok == TCL_OK) {
 		slotPtr = (slotType == COLUMN) ?
@@ -762,7 +762,7 @@ Tk_GridCmd(clientData, interp, argc, argv)
 	     */
 
 	    if (argc == 4) {
-		Tcl_Free((char *)argvPtr);
+		ckfree((char *)argvPtr);
 	    }
 	    if ((argc == 4) && (ok == TCL_OK)) {
 		char buf[64 + TCL_INTEGER_SPACE * 3];
@@ -790,7 +790,7 @@ Tk_GridCmd(clientData, interp, argc, argv)
 		    Tcl_AppendResult(interp, "invalid arg \"",
 			    argv[i], "\" :expecting -minsize, -pad, or -weight.",
 			    (char *) NULL);
-		    Tcl_Free((char *)argvPtr);
+		    ckfree((char *)argvPtr);
 		    return TCL_ERROR;
 		}
 		if (strncmp(argv[i], "-minsize", length) == 0) {
@@ -803,7 +803,7 @@ Tk_GridCmd(clientData, interp, argc, argv)
 			Tcl_SetResult(interp, buf, TCL_VOLATILE);
 		    } else if (Tk_GetPixels(interp, master, argv[i+1], &size)
 			    != TCL_OK) {
-			Tcl_Free((char *)argvPtr);
+			ckfree((char *)argvPtr);
 			return TCL_ERROR;
 		    } else {
 			slotPtr[slot].minSize = size;
@@ -819,12 +819,12 @@ Tk_GridCmd(clientData, interp, argc, argv)
 			sprintf(buf, "%d", value);
 			Tcl_SetResult(interp, buf, TCL_VOLATILE);
 		    } else if (Tcl_GetInt(interp, argv[i+1], &wt) != TCL_OK) {
-			Tcl_Free((char *)argvPtr);
+			ckfree((char *)argvPtr);
 			return TCL_ERROR;
 		    } else if (wt < 0) {
 			Tcl_AppendResult(interp, "invalid arg \"", argv[i],
 				"\": should be non-negative", (char *) NULL);
-			Tcl_Free((char *)argvPtr);
+			ckfree((char *)argvPtr);
 			return TCL_ERROR;
 		    } else {
 			slotPtr[slot].weight = wt;
@@ -840,12 +840,12 @@ Tk_GridCmd(clientData, interp, argc, argv)
 			Tcl_SetResult(interp, buf, TCL_VOLATILE);
 		    } else if (Tk_GetPixels(interp, master, argv[i+1], &size)
 			    != TCL_OK) {
-			Tcl_Free((char *)argvPtr);
+			ckfree((char *)argvPtr);
 			return TCL_ERROR;
 		    } else if (size < 0) {
 			Tcl_AppendResult(interp, "invalid arg \"", argv[i],
 				"\": should be non-negative", (char *) NULL);
-			Tcl_Free((char *)argvPtr);
+			ckfree((char *)argvPtr);
 			return TCL_ERROR;
 		    } else {
 			slotPtr[slot].pad = size;
@@ -854,12 +854,12 @@ Tk_GridCmd(clientData, interp, argc, argv)
 		    Tcl_AppendResult(interp, "invalid arg \"",
 			    argv[i], "\": expecting -minsize, -pad, or -weight.",
 			    (char *) NULL);
-		    Tcl_Free((char *)argvPtr);
+		    ckfree((char *)argvPtr);
 		    return TCL_ERROR;
 		}
 	    }
 	}
-	Tcl_Free((char *)argvPtr);
+	ckfree((char *)argvPtr);
 
 	/*
 	 * If we changed a property, re-arrange the table,
@@ -1707,7 +1707,7 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 
     --layoutPtr;
     if (layoutPtr != layoutData) {
-	Tcl_Free((char *)layoutPtr);
+	ckfree((char *)layoutPtr);
     }
     return requiredSize;
 }
@@ -1886,7 +1886,7 @@ CheckSlotData(masterPtr, slot, slotType, checkOnly)
 		    masterPtr->masterDataPtr->columnPtr;
 	    memcpy((VOID *) new, (VOID *) old, oldSize );
 	    memset((VOID *) (new+numSlot), 0, newSize - oldSize );
-	    Tcl_Free((char *) old);
+	    ckfree((char *) old);
 	    if (slotType == ROW) {
 	 	masterPtr->masterDataPtr->rowPtr = new ;
 	    	masterPtr->masterDataPtr->rowSpace = newNumSlot ;
@@ -2037,14 +2037,14 @@ DestroyGrid(memPtr)
 
     if (gridPtr->masterDataPtr != NULL) {
 	if (gridPtr->masterDataPtr->rowPtr != NULL) {
-	    Tcl_Free((char *) gridPtr->masterDataPtr -> rowPtr);
+	    ckfree((char *) gridPtr->masterDataPtr -> rowPtr);
 	}
 	if (gridPtr->masterDataPtr->columnPtr != NULL) {
-	    Tcl_Free((char *) gridPtr->masterDataPtr -> columnPtr);
+	    ckfree((char *) gridPtr->masterDataPtr -> columnPtr);
 	}
-	Tcl_Free((char *) gridPtr->masterDataPtr);
+	ckfree((char *) gridPtr->masterDataPtr);
     }
-    Tcl_Free((char *) gridPtr);
+    ckfree((char *) gridPtr);
 }
 
 /*

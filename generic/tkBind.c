@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.13.2.2 2001/10/13 01:25:10 hobbs Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.13.2.3 2002/01/04 16:39:57 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -809,7 +809,7 @@ TkBindFree(mainPtr)
     bindInfoPtr = (BindInfo *) mainPtr->bindInfo;
     DeleteVirtualEventTable(&bindInfoPtr->virtualEventTable);
     bindInfoPtr->deleted = 1;
-    Tcl_EventuallyFree((ClientData) bindInfoPtr, Tcl_Free);
+    Tcl_EventuallyFree((ClientData) bindInfoPtr, TCL_DYNAMIC);
     mainPtr->bindInfo = NULL;
 }
 

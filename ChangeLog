@@ -1,3 +1,11 @@
+2002-01-04  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkBind.c (TkBindFree):
+        * generic/tkGrid.c (Tk_GridCmd,ResolveConstraints,CheckSlotData,
+	DestroyGrid):
+        * generic/tkSelect.c (Tk_DeleteSelHandler,TkSelDeadWindow): Replaced
+        Tcl_Free calls with ckfree so that memory debugging is fully supported.
+
 2001-12-18  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/event.test (event-click-drag-1.2): Corrected test that
