@@ -1,5 +1,7 @@
 2004-03-26  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* generic/tkImgPPM.c (ReadPPMStringHeader): Code to read PPM/PGM data
+	(StringReadPPM, StringMatchPPM): from strings/bytearrays. [FRQ 540375]
 	* generic/tkImgPPM.c (StringWritePPM): New function to support
 	converting of images to PPM strings.  Other direction not yet
 	done.  Rest of file converted to use new image API.
