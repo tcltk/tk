@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: checkbutton.n,v 1.8 2004/08/16 14:01:10 dkf Exp $
+'\" RCS: @(#) $Id: checkbutton.n,v 1.9 2004/10/28 10:22:51 dkf Exp $
 '\" 
 .so man.macros
 .TH checkbutton n 4.4 Tk "Tk Built-In Commands"
@@ -96,13 +96,17 @@ the widget and will ignore mouse button presses.
 In this state the \fBdisabledForeground\fR and
 \fBbackground\fR options determine how the checkbutton is displayed.
 .OP \-tristateimage tristateImage TristateImage
+.VS 8.5
 Specifies an image to display (in place of the \fBimage\fR option)
 when the checkbutton is in tri-state mode.
 This option is ignored unless the \fBimage\fR option has been
 specified.
+.VE 8.5
 .OP \-tristatevalue tristateValue Value
+.VS 8.5
 Specifies the value that causes the checkbutton to display the multi-value 
 selection, also known as the tri-state mode.  Defaults to ``""''
+.VE 8.5
 .OP \-variable variable Variable
 Specifies name of global variable to set to indicate whether
 or not this button is selected.  Defaults to the name of the
@@ -149,10 +153,10 @@ checkbutton.
 .PP
 In addition, checkbuttons can be \fIselected\fR.
 If a checkbutton is selected then the indicator is normally
-.VS
 drawn with a selected appearance, and
 a Tcl variable associated with the checkbutton is set to a particular
 value (normally 1).
+.VS 8.5
 The indicator is drawn with a check mark inside.
 If the checkbutton is not selected, then the indicator is drawn with a
 deselected appearance, and the associated variable is
@@ -165,7 +169,6 @@ box represents the state of multiple items.)
 The indicator is drawn in a platform dependent manner.  Under Unix and 
 Windows, the background interior of the box is ``grayed''.  Under Mac, 
 the indicator is drawn with a dash mark inside.
-.VE
 By default, the name of the variable associated with a checkbutton is the
 same as the \fIname\fR used to create the checkbutton.
 The variable name, and the ``on'', ``off'' and ``tristate'' values stored in 
@@ -178,7 +181,7 @@ itself on alternate button clicks.
 In addition, each checkbutton monitors its associated variable and
 automatically selects and deselects itself when the variables value
 changes to and from the button's ``on'', ``off'' and ``tristate'' values.
-
+.VE 8.5
 .SH "WIDGET COMMAND"
 .PP
 The \fBcheckbutton\fR command creates a new Tcl command whose
@@ -238,7 +241,6 @@ value.
 \fIpathName \fBtoggle\fR
 Toggles the selection state of the button, redisplaying it and
 modifying its associated variable to reflect the new state.
-
 .SH BINDINGS
 .PP
 Tk automatically creates class bindings for checkbuttons that give them
@@ -268,6 +270,9 @@ actions occur:  the checkbutton is completely non-responsive.
 .PP
 The behavior of checkbuttons can be changed by defining new bindings for
 individual widgets or by redefining the class bindings.
+
+.SH "SEE ALSO"
+button(n), options(n), radiobutton(n)
 
 .SH KEYWORDS
 checkbutton, widget
