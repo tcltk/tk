@@ -3,7 +3,7 @@
 # This demonstration script creates a window with a bunch of menus
 # and cascaded menus using menubars.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.6 2003/11/03 15:31:18 dkf Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.7 2004/10/19 15:25:07 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -116,7 +116,7 @@ $w.menu add cascade -label "Icons" -menu $m -underline 0
 menu $m -tearoff 0
 # Main widget program sets variable tk_demoDirectory
 $m add command \
-    -bitmap @[file join $tk_demoDirectory images pattern.bmp] \
+    -bitmap @[file join $tk_demoDirectory images pattern.xbm] \
     -hidemargin 1 \
     -command {
 	tk_dialog .pattern {Bitmap Menu Entry} {The menu entry you invoked displays a bitmap rather than a text string.  Other than this, it is just like any other menu entry.} {} 0 OK

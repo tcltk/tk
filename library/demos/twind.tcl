@@ -3,7 +3,7 @@
 # This demonstration script creates a text widget with a bunch of
 # embedded windows.
 #
-# RCS: @(#) $Id: twind.tcl,v 1.6 2004/09/10 12:13:43 vincentdarley Exp $
+# RCS: @(#) $Id: twind.tcl,v 1.7 2004/10/19 15:25:07 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -158,7 +158,7 @@ $t window create end -window $t.smallP
 $t insert end "\n\nFinally, images fit comfortably in text widgets too:"
 
 $t image create end -image \
-  [image create bitmap -file [file join $tk_demoDirectory images face.bmp]]
+  [image create bitmap -file [file join $tk_demoDirectory images face.xbm]]
 
 
 proc textWindBigB w {

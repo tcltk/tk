@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.11 2004/01/13 02:06:00 davygrvy Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.12 2004/10/19 15:25:05 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -30,16 +30,16 @@
 #pragma warning (disable : 4305)
 #endif
 
-#include "error.bmp"
-#include "gray12.bmp"
-#include "gray25.bmp"
-#include "gray50.bmp"
-#include "gray75.bmp"
-#include "hourglass.bmp"
-#include "info.bmp"
-#include "questhead.bmp"
-#include "question.bmp"
-#include "warning.bmp"
+#include "error.xbm"
+#include "gray12.xbm"
+#include "gray25.xbm"
+#include "gray50.xbm"
+#include "gray75.xbm"
+#include "hourglass.xbm"
+#include "info.xbm"
+#include "questhead.xbm"
+#include "question.xbm"
+#include "warning.xbm"
 
 #if defined(__WIN32__) || defined(_WIN32)
 #pragma warning (default : 4305)
@@ -1109,7 +1109,7 @@ TkReadBitmapFile(display, d, filename, width_return, height_return,
 
     ckfree(data);
     return BitmapSuccess;
-  }
+}
 
 /*
  *----------------------------------------------------------------------
@@ -1159,7 +1159,6 @@ TkDebugBitmap(tkwin, name)
     }
     return resultPtr;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -1180,6 +1179,7 @@ TkDebugBitmap(tkwin, name)
  *
  *----------------------------------------------------------------------
  */
+
 Tcl_HashTable *
 TkGetBitmapPredefTable()
 {
