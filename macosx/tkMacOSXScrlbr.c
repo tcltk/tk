@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.1.2.2 2002/08/26 21:55:38 wolfsuit Exp $
  */
 
 #include "tkScrollbar.h"
@@ -246,12 +246,12 @@ TkpDisplayScrollbar(
         r.left = r.top = 0;
         r.right = r.bottom = 1;
 
-        minValue=MIN_SCROLLBAR_VALUE;
-        maxValue=MAX_SCROLLBAR_VALUE;
-        initialValue=(minValue+maxValue)/2;
-        procID=kControlScrollBarProc;
+        minValue = MIN_SCROLLBAR_VALUE;
+        maxValue = MAX_SCROLLBAR_VALUE;
+        initialValue = (minValue + maxValue)/2;
+        procID = kControlScrollBarLiveProc;
 
-        windowRef=GetWindowFromPort(destPort);
+        windowRef = GetWindowFromPort(destPort);
         macScrollPtr->sbHandle = NewControl(windowRef, &r, "\p",
                 false, initialValue,minValue,maxValue,
                 procID, (SInt32) scrollPtr);
@@ -588,6 +588,7 @@ ThumbActionProc()
      *
      * Note: the arrowLength is equal to the thumb width of a Mac scrollbar.
      */
+     
     origValue = GetControlValue(macScrollPtr->sbHandle);
     GetControlBounds(macScrollPtr->sbHandle, &trackRect);
     if (scrollPtr->vertical == true) {
@@ -610,13 +611,20 @@ ThumbActionProc()
      * we calculate the value that should be passed to the "command" part of
      * the scrollbar.
      */
+     
     do {
-        if (((err=TrackMouseLocationWithOptions(NULL,
-            kTrackMouseLocationOptionDontConsumeMouseUp,
-            kEventDurationForever,
-            &currentPoint,
-            NULL,
-            &trackingResult))==noErr) && (trackingResult == kMouseTrackingMouseMoved)) {
+        OSErr err;
+        
+        err = TrackMouseLocationWithOptions(NULL,
+                kTrackMouseLocationOptionDontConsumeMouseUp,
+                kEventDurationForever,
+                &currentPoint,
+                NULL,
+                &trackingResult);
+            
+        if ((err==noErr) 
+                && ((trackingResult == kMouseTrackingMouseDragged)
+                || (trackingResult == kMouseTrackingMouseMoved))) {
         /*
          * Calculating this value is a little tricky.  We need to calculate a
          * value for where the thumb would be in a Motif widget (variable
@@ -654,17 +662,7 @@ ThumbActionProc()
             Tcl_Release((ClientData) interp);
         }
     } while ((err==noErr) && trackingResult!=kMouseTrackingMouseReleased );
-    
-#ifdef CLIP_HACK /*  9/17/01 */
-    /*
-     * This next bit of code is a bit of a hack - but needed.  The problem is
-     * that the control wants to draw the drag outline if the control value
-     * changes during the drag (which it does).  What we do here is change the
-     * clip region to hide this drawing from the user.
-     */
-    ClipRect(&nullRect);
-#endif
-    
+        
     Tcl_DStringFree(&cmdString);
     return;
 }
@@ -1060,9 +1058,11 @@ UpdateControlValues(
      */
     middle = scrollPtr->firstFraction / (scrollPtr->firstFraction +
             (1.0 - scrollPtr->lastFraction));
-    viewSize=(SInt32)((scrollPtr->lastFraction-scrollPtr->firstFraction) * MAX_SCROLLBAR_DVALUE);
+    viewSize = (SInt32)((scrollPtr->lastFraction-scrollPtr->firstFraction) 
+            * MAX_SCROLLBAR_DVALUE);
     SetControlViewSize(macScrollPtr->sbHandle,viewSize);
-    SetControlValue(macScrollPtr->sbHandle,(short) (middle * MAX_SCROLLBAR_VALUE) );
+    SetControlValue(macScrollPtr->sbHandle, 
+            (short) (middle * MAX_SCROLLBAR_VALUE) );
     contrlHilite=GetControlHilite(macScrollPtr->sbHandle);
     if ( contrlHilite == 0 || contrlHilite == 255) {
         if (scrollPtr->firstFraction == 0.0 &&
