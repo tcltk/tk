@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.13 2000/07/28 16:34:55 ericm Exp $
+# RCS: @(#) $Id: listbox.test,v 1.14 2001/04/03 04:41:08 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -2101,11 +2101,19 @@ test listbox-26.5 {listbox disabled state disallows active modification} {
 } 0
 
 resetGridInfo
-catch {destroy .l2}
-catch {destroy .t}
-catch {destroy .e}
-catch {destroy .partial}
+eval destroy [winfo children .]
 option clear
+
+test listbox-27.1 {widget deletion while active} {
+    destroy .l
+    pack [listbox .l]
+    update
+    .l configure -cursor xterm -xscrollcommand { destroy .l }
+    update idle
+    winfo exists .l
+} 0
+
+eval destroy [winfo children .]
 
 # cleanup
 ::tcltest::cleanupTests
