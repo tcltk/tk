@@ -117,6 +117,7 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
     int            status,err;
     MouseEventData mouseEventData, * medPtr = &mouseEventData;
     KeyMap         keyMap;
+    long           modif;
 
     switch (eventPtr->eKind) {
         case kEventMouseUp:
@@ -140,19 +141,21 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
     }
     medPtr->state = 0;
     GetKeys(keyMap);
-    if (keyMap[1] & 2) { 
+    modif = EndianS32_BtoN(*(long*)(&keyMap[1]));
+
+    if (modif & 2) { 
         medPtr->state |= LockMask;
     }
-    if (keyMap[1] & 1) {
+    if (modif & 1) {
         medPtr->state |= ShiftMask;
     }
-    if (keyMap[1] & 8) {
+    if (modif & 8) {
         medPtr->state |= ControlMask;
     }
-    if (keyMap[1] & 32768) {
+    if (modif & 32768) {
         medPtr->state |= Mod1Mask;              /* command key */
     }
-    if (keyMap[1] & 4) {
+    if (modif & 4) {
         medPtr->state |= Mod2Mask;              /* option key */
     }
     if (eventPtr->eKind == kEventMouseDown 
@@ -381,7 +384,7 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
                  
                 TkMacOSXPreprocessMenu();
                 TkMacOSXHandleMenuSelect(MenuSelect(where),
-                        theKeys[1] & 4);
+                        EndianS32_BtoN(*(long*)(&theKeys[1])) & 4);
                 Tcl_SetServiceMode(oldMode);
                 return true; /* TODO: may not be on event on queue. */
             }
@@ -678,30 +681,33 @@ TkMacOSXButtonKeyState()
 {
     unsigned int state = 0;
     KeyMap theKeys;
+    long modif;
 
     if (Button() & !gEatButtonUp) {
         state |= Button1Mask;
     }
 
     GetKeys(theKeys);
+    
+    modif = EndianS32_BtoN(*(long*)(&theKeys[1]));
 
-    if (theKeys[1] & 2) {
+    if (modif & 2) {
         state |= LockMask;
     }
 
-    if (theKeys[1] & 1) {
+    if (modif & 1) {
         state |= ShiftMask;
     }
 
-    if (theKeys[1] & 8) {
+    if (modif & 8) {
         state |= ControlMask;
     }
 
-    if (theKeys[1] & 32768) {
+    if (modif & 32768) {
         state |= Mod1Mask;                /* command key */
     }
 
-    if (theKeys[1] & 4) {
+    if (modif & 4) {
         state |= Mod2Mask;                /* option key */
     }
 

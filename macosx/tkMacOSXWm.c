@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.5 2004/10/05 22:27:26 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.6 2004/11/11 01:26:43 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -90,6 +90,7 @@ static void		WmAttrGetModifiedStatus(WindowRef macWindow, Tcl_Obj
 				    *result);
 static void		WmAttrGetTitlePath(WindowRef macWindow, Tcl_Obj
 				    *result);
+static void		WmAttrGetAlpha(WindowRef macWindow, Tcl_Obj *result);
 static int 		WmClientCmd _ANSI_ARGS_((Tk_Window tkwin,
                                       TkWindow *winPtr, Tcl_Interp *interp, int objc,
                                       Tcl_Obj *CONST objv[]));
@@ -773,17 +774,19 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
     const char *optionTable[] = {
 	"-modified",
 	"-titlepath",
+	"-alpha",
 	(char *)NULL
     };
     enum optionIdx {
 	WmAttrModifiedIdx,
-	WmAttrTitlePathIdx
+	WmAttrTitlePathIdx,
+	WmAttrAlphaIdx,
     };
 
     /* Must have objc >= 3 at this point. */
     if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 0, objv,
-	    "wm attributes window ?-modified ?bool?? ?-titlepath ?path??");
+	Tcl_WrongNumArgs(interp, 1, objv,
+	    "attributes window ?-modified ?bool?? ?-titlepath ?path?? ?-alpha ?double??");
 	return TCL_ERROR;
     }
 
@@ -795,6 +798,8 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 	WmAttrGetModifiedStatus(macWindow, result);
 	Tcl_AppendToObj(result, " -titlepath ", -1);
 	WmAttrGetTitlePath(macWindow, result);
+	Tcl_AppendToObj(result, " -alpha ", -1);
+	WmAttrGetAlpha(macWindow, result);
 	Tcl_SetObjResult(interp, result);
         return TCL_OK;
     }
@@ -811,6 +816,9 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 	    case WmAttrTitlePathIdx:
 		WmAttrGetTitlePath(macWindow, result);
 		break;
+	    case WmAttrAlphaIdx:
+		WmAttrGetAlpha(macWindow, result);
+		break;
 	}
 	Tcl_SetObjResult(interp, result);
 	return TCL_OK;
@@ -818,7 +826,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 
     if ( (objc - 3) % 2 != 0 ) {
 	Tcl_WrongNumArgs(interp, 3, objv,
-	    "?-modified ?bool?? ?-titlepath ?path??");
+	    "?-modified ?bool?? ?-titlepath ?path?? ?-alpha ?double??");
 	return TCL_ERROR;
     }
     for (i = 3; i < objc; i += 2) {
@@ -827,6 +835,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 	FSRef ref;
 	AliasHandle alias;
 	Boolean isDirectory;
+	double dval;
 
 	if (Tcl_GetIndexFromObj(interp, objv[i], optionTable, "option", 0,
 	    &index) != TCL_OK) {
@@ -859,6 +868,22 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 		} else {
 		    result = objv[i+1];
 		}
+		break;
+	    case WmAttrAlphaIdx:
+		if (Tcl_GetDoubleFromObj(interp, objv[i+1], &dval) !=
+		    TCL_OK) {
+		    return TCL_ERROR;
+		}
+		/*
+		 * The user should give (transparent) 0 .. 1.0 (opaque)
+		 */
+		if (dval < 0.0) {
+		    dval = 0.0;
+		} else if (dval > 1.0) {
+		    dval = 1.0;
+		}
+		result = Tcl_NewDoubleObj(dval);
+		SetWindowAlpha(macWindow, dval);
 		break;
 	}
     }
@@ -924,6 +949,31 @@ static void WmAttrGetTitlePath(WindowRef macWindow, Tcl_Obj *result)
     } else {
 	Tcl_AppendToObj(result, "{}", -1);
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ * WmAttrGetAlpha --
+ *
+ *	Helper procedure to retrieve the -alpha option for the wm
+ *	attributes command.
+ *
+ * Results:
+ *	Nothing.
+ * 
+ * Side effects:
+ *	Appends the alpha value of the given window to the Tcl_Obj 
+ * 	passed in.
+ *
+ *----------------------------------------------------------------------
+ */
+static void WmAttrGetAlpha(WindowRef macWindow, Tcl_Obj *result)
+{
+    float fval;
+    if (GetWindowAlpha(macWindow, &fval) != noErr) {
+        fval = 1.0;
+    }
+    Tcl_AppendObjToObj(result, Tcl_NewDoubleObj(fval));
 }
 
 /*
@@ -1547,16 +1597,16 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
         wmPtr->hints.flags &= ~IconPixmapHint;
     } else {
         OSErr err;
-        FSSpec spec;
+        AliasHandle alias;
         FSRef ref;
         Boolean isDirectory;
         err = FSPathMakeRef(Tcl_GetStringFromObj(objv[3], NULL), &ref, &isDirectory);
         if (err == noErr) {
-            err = FSGetCatalogInfo (&ref, kFSCatInfoNone, NULL, NULL, &spec, NULL);
+            err = FSNewAlias(NULL, &ref, &alias);
             if (err == noErr) {
                 WindowRef macWin
                         = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
-                SetWindowProxyFSSpec(macWin, &spec);
+                SetWindowProxyAlias(macWin, alias);
                 return TCL_OK;
             }
         }
@@ -5050,9 +5100,9 @@ TkMacOSXMakeRealWindowExist(
 	    return;
 	} else if (gMacEmbedHandler != NULL) {
 	    if (gMacEmbedHandler->containerExistProc != NULL) {
-	        if (gMacEmbedHandler->containerExistProc((Tk_Window) winPtr) != TCL_OK) {
+		if (gMacEmbedHandler->containerExistProc((Tk_Window) winPtr) != TCL_OK) {
 	           panic("ContainerExistProc could not make container");
-	       }
+		}
 	    }
 	    return;
 	} else {
