@@ -1,3 +1,8 @@
+2004-08-20  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* tests/canvas.test (canvas-17.1): Report the result of the test
+	so that it can be compared. [Bug 1012331]
+
 2004-08-19  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinDialog.c (Tk_MessageBoxObjCmd): Inherit the icon from
