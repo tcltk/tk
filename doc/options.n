@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: options.n,v 1.5 2000/04/27 18:28:58 ericm Exp $
+'\" RCS: @(#) $Id: options.n,v 1.4 1999/08/13 02:58:12 hobbs Exp $
 '\" 
 .so man.macros
 .TH options n 4.4 Tk "Tk Built-In Commands"
@@ -324,9 +324,6 @@ scrollbars.  This option is treated in the same way as the
 scrollbars and is provided by widgets that support vertical scrolling.
 See the description of \fBxScrollCommand\fR for details
 on how this option is used.
-
-.SH SEE ALSO
-colors, cursors
 
 .SH KEYWORDS
 class, name, standard option, switch

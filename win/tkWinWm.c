@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.22 2000/04/15 17:38:13 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.22.2.1 2000/05/12 21:04:16 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -4559,7 +4559,8 @@ RaiseWinWhenIdle(clientData)
 {
     register TkWindow *winPtr = (TkWindow *) clientData;
 
-    if ((winPtr == NULL) || (winPtr->flags & TK_ALREADY_DEAD)) {
+    if ((winPtr == NULL)
+	    || (winPtr->flags & (TK_ALREADY_DEAD|TK_DONT_DESTROY_WINDOW))) {
 	return;
     }
     if (winPtr->wmInfoPtr->flags & WM_UPDATE_PENDING) {

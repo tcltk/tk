@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bind.n,v 1.4 2000/04/27 18:28:54 ericm Exp $
+'\" RCS: @(#) $Id: bind.n,v 1.3 1998/10/10 00:30:35 rjohnson Exp $
 '\" 
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
@@ -517,7 +517,7 @@ The \fBbgerror\fR command will be executed at global level
 (outside the context of any Tcl procedure).
 
 .SH "SEE ALSO"
-bgerror, keysyms
+bgerror
 
 .SH KEYWORDS
 form, manual
