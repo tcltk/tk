@@ -1,3 +1,8 @@
+2002-06-17  Don Porter <dgp@users.sf.net>
+
+	* library/msgs/en_gb.msg:  Added catalog for UK English.
+	Currently includes only Color -> Colour translation.
+
 2002-06-17  D. Richard Hipp  <drh@hwaci.com>
 
 	* doc/checkbutton.n:
