@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.		|
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.24 2003/02/20 15:28:40 dkf Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.24.2.1 2004/07/27 20:31:02 das Exp $
  */
 
 /*
@@ -324,11 +324,12 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
     while (1) {
 	if (Fread(buf, 1, 1, chan) != 1) {
 	    /*
-	     * Premature end of image.  We should really notify
-	     * the user, but for now just show garbage.
+	     * Premature end of image.
 	     */
 
-	    break;
+	    Tcl_AppendResult(interp,"premature end of image data for this index",
+                             (char *) NULL);
+	    goto error;
 	}
 
 	if (buf[0] == GIF_TERMINATOR) {
