@@ -1,3 +1,13 @@
+2001-10-15  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/configure:
+	* unix/configure.in:
+	* win/configure:
+	* win/configure.in:
+	* win/tkConfig.sh.in: reworked to be a little cleaner in
+	comparison to each other, and to AC_SUBST even empty vars for
+	win/tkConfig.sh
+
 2001-10-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinDialog.c: Win64 pointer fixes
