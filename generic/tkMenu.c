@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.20.2.1 2003/07/15 13:59:06 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.20.2.2 2003/12/03 04:57:37 hobbs Exp $
  */
 
 /*
@@ -2544,19 +2544,27 @@ MenuVarProc(clientData, interp, name1, name2, flags)
     TkMenuEntry *mePtr = (TkMenuEntry *) clientData;
     TkMenu *menuPtr;
     CONST char *value;
-    char *name = Tcl_GetStringFromObj(mePtr->namePtr, NULL);
+    char *name;
     char *onValue;
 
+    if (flags & TCL_INTERP_DESTROYED) {
+	/*
+	 * Do nothing if the interpreter is going away.
+	 */
+
+    	return (char *) NULL;
+    }
+
     menuPtr = mePtr->menuPtr;
+    name = Tcl_GetStringFromObj(mePtr->namePtr, NULL);
 
     /*
-     * If the variable is being unset, then re-establish the
-     * trace unless the whole interpreter is going away.
+     * If the variable is being unset, then re-establish the trace.
      */
 
     if (flags & TCL_TRACE_UNSETS) {
 	mePtr->entryFlags &= ~ENTRY_SELECTED;
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+	if (flags & TCL_TRACE_DESTROYED) {
 	    Tcl_TraceVar(interp, name,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    MenuVarProc, clientData);
