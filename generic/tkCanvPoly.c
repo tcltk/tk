@@ -5,11 +5,12 @@
  *
  * Copyright (c) 1991-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1998-2000 Ajuba Solutions.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.5 2000/02/01 11:41:09 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvPoly.c,v 1.6 2000/06/03 08:38:12 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -916,7 +917,7 @@ DisplayPolygon(canvas, itemPtr, display, drawable, x, y, width, height)
      * read-only.
      */
 
-    if (stipple != None) {
+    if ((stipple != None) && (polyPtr->fillGC != None)) {
 	Tk_TSOffset *tsoffset = &polyPtr->tsoffset;
 	int w=0; int h=0;
 	int flags = tsoffset->flags;
@@ -991,7 +992,7 @@ DisplayPolygon(canvas, itemPtr, display, drawable, x, y, width, height)
 	}
     }
     Tk_ResetOutlineGC(canvas, itemPtr, &(polyPtr->outline));
-    if (stipple != None) {
+    if ((stipple != None) && (polyPtr->fillGC != None)) {
 	XSetTSOrigin(display, polyPtr->fillGC, 0, 0);
     }
 }

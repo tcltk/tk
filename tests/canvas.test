@@ -3,10 +3,10 @@
 # standard fashion for Tcl tests.
 #
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright (c) 1998-2000 Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.8 2000/03/29 00:09:06 ericm Exp $
+# RCS: @(#) $Id: canvas.test,v 1.9 2000/06/03 08:38:11 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -319,7 +319,7 @@ test canvas-10.7 {check errors from tag expressions} {
       canvas .c
       .c create oval 20 20 40 40 -fill red -tag [list a b c d]
       .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
-      catch {.c find withtag {d&&"tag with spaces}} err
+      catch {.c find withtag "d&&\"tag with spaces"} err
       set err
 } {Missing endquote in tag search expression}
 test canvas-10.8 {check errors from tag expressions} {
@@ -357,6 +357,14 @@ test canvas-10.12 {multple events bound to same tag expr} {
       canvas .c
       .c bind {a && b} <Enter> {puts Enter}
       .c bind {a && b} <Leave> {puts Leave}
+} {}
+
+test canvas-11.1 {canvas poly fill check, bug 5783} {
+    # This would crash in 8.3.0 and 8.3.1
+    destroy .c
+    pack [canvas .c]
+    .c create polygon 0 0 100 100 200 50 \
+	    -fill {} -stipple gray50 -outline black
 } {}
 
 # cleanup
