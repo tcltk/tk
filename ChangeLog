@@ -1,3 +1,8 @@
+2001-10-18  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/console.tcl (tkConsoleOutput): fixed undefined widget
+	argument.
+
 2001-10-17 Daniel Steffen <das@users.sourceforge.net>
 
 	* mac/tkMacProjects.sea.hqx: updated projects with new version
