@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.21 2002/02/15 05:48:08 mdejong Exp $
+# RCS: @(#) $Id: text.tcl,v 1.22 2002/03/07 11:49:49 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -256,7 +256,7 @@ bind Text <<Clear>> {
 bind Text <<PasteSelection>> {
     if {$tk_strictMotif || ![info exists tk::Priv(mouseMoved)]
 	|| !$tk::Priv(mouseMoved)} {
-	tk::TextPaste %W %x %y
+	tk::TextPasteSelection %W %x %y
     }
 }
 bind Text <Insert> {
@@ -625,7 +625,7 @@ proc ::tk::TextKeyExtend {w index} {
     $w tag remove sel $last end
 }
 
-# ::tk::TextPaste --
+# ::tk::TextPasteSelection --
 # This procedure sets the insertion cursor to the mouse position,
 # inserts the selection, and sets the focus to the window.
 #
@@ -633,16 +633,15 @@ proc ::tk::TextKeyExtend {w index} {
 # w -		The text window.
 # x, y - 	Position of the mouse.
 
-proc ::tk::TextPaste {w x y} {
+proc ::tk::TextPasteSelection {w x y} {
     $w mark set insert [TextClosestGap $w $x $y]
-    catch {$w insert insert [::tk::GetSelection $w PRIMARY]}
-    catch {
+    if {![catch {::tk::GetSelection $w PRIMARY} sel]} {
 	set oldSeparator [$w cget -autoseparators]
 	if {$oldSeparator} {
 	    $w configure -autoseparators 0
 	    $w edit separator
 	}
-	$w insert insert [::tk::GetSelection $w PRIMARY]
+	$w insert insert $sel
 	if {$oldSeparator} {
 	    $w edit separator
 	    $w configure -autoseparators 1
@@ -997,7 +996,7 @@ proc ::tk_textCut w {
 
 proc ::tk_textPaste w {
     global tcl_platform
-    catch {
+    if {![catch {::tk::GetSelection $w CLIPBOARD} sel]} {
 	set oldSeparator [$w cget -autoseparators]
 	if { $oldSeparator } {
 	    $w configure -autoseparators 0
@@ -1006,7 +1005,7 @@ proc ::tk_textPaste w {
 	if {[string compare $tcl_platform(platform) "unix"]} {
 	    catch { $w delete sel.first sel.last }
 	}
-	$w insert insert [::tk::GetSelection $w CLIPBOARD]
+	$w insert insert $sel
 	if { $oldSeparator } {
 	    $w edit separator
 	    $w configure -autoseparators 1

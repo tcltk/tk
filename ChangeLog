@@ -1,3 +1,12 @@
+2002-03-07  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/text.tcl (TextPasteSelection): Renaming of TextPaste to
+	prevent confusion with tk_textPaste.  Stopped code from inserting
+	selections twice, which seems to have happened with TIP#26, and
+	reorganized code to reduce amount of stuff protected by catch
+	which is tricky to maintain.
+	(tk_textPaste): Reduce amount of code protected by catch.
+
 2002-03-06  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/tkWinX.c: Define _WIN32_IE as 0x0300
