@@ -1,3 +1,8 @@
+2002-07-17  Reinhard Max  <max@suse.de>
+
+	* library/unsupported.tcl: Extended ExposePrivateVariable, and
+	ExposePrivateCommand to accept patterns as well.	
+
 2002-07-17  Don Porter <dgp@users.sf.net>
 
 	* generic/tkFont.c: Corrected reversed logic in assert -> panic

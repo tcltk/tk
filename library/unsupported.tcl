@@ -3,7 +3,7 @@
 # Commands provided by Tk without official support.  Use them at your
 # own risk.  They may change or go away without notice.
 #
-# RCS: @(#) $Id: unsupported.tcl,v 1.3 2001/08/06 18:29:41 dgp Exp $
+# RCS: @(#) $Id: unsupported.tcl,v 1.4 2002/07/17 16:51:53 rmax Exp $
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -247,7 +247,8 @@ namespace eval ::tk::unsupported {
 #	old global name
 #
 # Arguments:
-#	cmd	Global name by which the command was once known
+#	cmd	Global name by which the command was once known,
+#               or a glob-style pattern.
 #
 # Results:
 #	None.
@@ -258,10 +259,13 @@ namespace eval ::tk::unsupported {
 
 proc ::tk::unsupported::ExposePrivateCommand {cmd} {
     variable PrivateCommands
-    if {![info exists PrivateCommands($cmd)]} {
+    set cmds [array get PrivateCommands $cmd]
+    if {[llength $cmds] == 0} {
 	return -code error "No compatibility support for \[$cmd]"
     }
-    namespace eval :: [list interp alias {} $cmd {}] $PrivateCommands($cmd)
+    foreach {old new} $cmds {
+	namespace eval :: [list interp alias {} $old {}] $new
+    }
 }
 
 # ::tk::unsupported::ExposePrivateVariable --
@@ -270,7 +274,8 @@ proc ::tk::unsupported::ExposePrivateCommand {cmd} {
 #	old global name
 #
 # Arguments:
-#	var	Global name by which the variable was once known
+#	var	Global name by which the variable was once known,
+#               or a glob-style pattern.
 #
 # Results:
 #	None.
@@ -281,9 +286,12 @@ proc ::tk::unsupported::ExposePrivateCommand {cmd} {
 
 proc ::tk::unsupported::ExposePrivateVariable {var} {
     variable PrivateVariables
-    if {![info exists PrivateVariables($var)]} {
+    set vars [array get PrivateVariables $var]
+    if {[llength $vars] == 0} {
 	return -code error "No compatibility support for \$$var"
     }
-    namespace eval :: [list upvar #0 $PrivateVariables($var) $var]
+    namespace eval ::tk::mac {}
+    foreach {old new} $vars {
+	namespace eval :: [list upvar "#0" $new $old]
+    }
 }
-
