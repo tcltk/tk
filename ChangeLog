@@ -5,6 +5,11 @@
 
 2003-07-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* unix/tkUnixFont.c (Tk_DrawChars): do not make XGetGeometry call
+	that prevents overwidth lines as it requires a roundtrip call to
+	the X server for every string drawn.  Hard-code max width to 32768
+	until a beter solution to get max width is made.
+
 	* library/panedwindow.tcl: use widget-specific Priv slots for
 	pwAfterId and panecursor items to correctly handle cursor changes
 	with adjacant panedwindows.
