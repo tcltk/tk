@@ -20,15 +20,16 @@ SGI, as well as PCs running Linux, BSDI, and SCO UNIX.  To compile for
 a PC running Windows, see the README file in the directory ../win.  To
 compile for a Macintosh, see the README file in the directory ../mac.
 
-RCS: @(#) $Id: README,v 1.18 2002/10/10 05:01:23 hobbs Exp $
+RCS: @(#) $Id: README,v 1.19 2003/02/27 00:05:54 hobbs Exp $
 
 How To Compile And Install Tk:
 ------------------------------
 
-(a) Make sure that the Tcl 8.4.1 release is present in the directory
-    ../../tcl8.4.1 (or else use the "--with-tcl" switch described below). 
-    This release of Tk will only work with Tcl 8.4. Also, be sure that
-    you have configured Tcl before you configure Tk.
+(a) Make sure that the Tcl release is present in the directory
+    ../../tcl<version> (or else use the "--with-tcl" switch described
+    below).  This release of Tk will only work with the equivalently
+    version Tcl release. Also, be sure that you have configured Tcl before
+    you configure Tk.
 
 (b) Check for patches as described in ../README.
 
