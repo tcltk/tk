@@ -3,7 +3,7 @@
 # Makefile to build AquaTk on Mac OS X packaged as a Framework
 #	uses Project Builder command line tool 'pbxbuild'
 #
-# RCS: @(#) $Id: Makefile,v 1.12 2004/01/27 10:09:37 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.13 2004/02/23 22:49:26 das Exp $
 #
 ################################################################################
 
@@ -40,8 +40,8 @@ PBXBUILD		= /usr/bin/pbxbuild
 XCODEBUILD		= /usr/bin/xcodebuild
 
 BUILDCMD		= `if [ -f $(XCODEBUILD) ]; then \
-				echo "$(XCODEBUILD)"; \
-			  	else echo "$(PBXBUILD)"; fi`
+			    echo "$(XCODEBUILD) -project $$(ls -d *.pbproj)"; \
+			    else echo "$(PBXBUILD)"; fi`
 
 MAKE_VARS		:= SYMROOT OBJROOT BINDIR APPLICATION_INSTALL_PATH \
 				TCL_FRAMEWORK_DIR TCLSH_DIR
