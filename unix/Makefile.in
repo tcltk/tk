@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.14 1999/04/16 01:51:44 stanton Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.15 1999/04/20 01:48:00 surles Exp $
 
 # Current Tk version;  used in various names.
 
@@ -926,6 +926,7 @@ dist:   $(UNIX_DIR)/configure
 	mkdir $(DISTDIR)/generic
 	cp -p $(GENERIC_DIR)/*.c $(GENERIC_DIR)/*.h $(GENERIC_DIR)/prolog.ps \
 		$(DISTDIR)/generic
+	cp -p $(GENERIC_DIR)/*.decls $(DISTDIR)/generic
 	cp -p $(GENERIC_DIR)/README $(DISTDIR)/generic
 	cp -p $(TOP_DIR)/changes $(TOP_DIR)/README $(TOP_DIR)/license.terms \
 		$(DISTDIR)
