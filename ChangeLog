@@ -1,3 +1,46 @@
+1999-09-01  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* win/tkWinDraw.c:
+	* unix/tkUnixDraw.c: fixed header style for TkpDrawHighlightBorder
+	* generic/tkCanvas.c: fixed GC error (bg <> fg) in tkCanvas.c
+	(from code added to support TkpDrawHighlightBorder) [Bug: 2676]
+	* unix/aclocal.m4: added -bnoentry to the AIX-* flags
+	* generic/tkCursor.c: fixed equality error in GetCursorFromObj
+	[Bug: 2562]
+	* library/msgbox.tcl: changed the behavior of tk_messageBox on
+	Unix to be more Windows like in handling of <Return> and the
+	default button
+	* library/button.tcl:
+	* library/clrpick.tcl:
+	* library/comdlg.tcl:
+	* library/console.tcl:
+	* library/dialog.tcl:
+	* library/entry.tcl:
+	* library/focus.tcl:
+	* library/listbox.tcl:
+	* library/menu.tcl:
+	* library/msgbox.tcl:
+	* library/palette.tcl:
+	* library/safetk.tcl:
+	* library/scale.tcl:
+	* library/scrlbar.tcl:
+	* library/tearoff.tcl:
+	* library/text.tcl:
+	* library/tk.tcl:
+	* library/tkfbox.tcl:
+	* library/xmfbox.tcl: updated commands to use [string] ops
+	instead of expr equality operators
+
+1999-08-21  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* unix/aclocal.m4: Changed AIX-4.[2-9] check to AIX-4.[1-9]
+	[Bug: 1909]
+
+1999-08-20  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* generic/tkCursor.c: fixed bug in GetCursorFromObj that caused
+	panic [Bug: 2562]
+	
 1999-08-13  Jim Ingham  <jingham@cygnus.com>
 
         * mac/tkMacMenu.c: Tk_DrawChars ends up setting the menu background
