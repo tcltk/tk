@@ -3,7 +3,7 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# RCS: @(#) $Id: dialog.tcl,v 1.4 1999/04/16 01:51:26 stanton Exp $
+# RCS: @(#) $Id: dialog.tcl,v 1.4.6.1 1999/09/24 22:17:58 hobbs Exp $
 #
 # Copyright (c) 1992-1993 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -68,7 +68,7 @@ proc tk_dialog {w title text bitmap default args} {
     if {![string compare $tcl_platform(platform) "macintosh"]} {
 	option add *Dialog.msg.font system widgetDefault
     } else {
-	option add *Dialog.msg.font {Times 18} widgetDefault
+	option add *Dialog.msg.font {Times 12} widgetDefault
     }
 
     label $w.msg -justify left -text $text

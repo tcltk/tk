@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.29.4.2 1999/09/23 22:03:32 wart Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.29.4.3 1999/09/24 22:18:01 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -430,7 +430,7 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	    do \
 	    if [ ! -d $$i ] ; then \
 		echo "Making directory $$i"; \
-		mkdir $$i; \
+		mkdir -p $$i; \
 		chmod 755 $$i; \
 		else true; \
 		fi; \
@@ -462,7 +462,7 @@ install-libraries:
 	    do \
 	    if [ ! -d $$i ] ; then \
 		echo "Making directory $$i"; \
-		mkdir $$i; \
+		mkdir -p $$i; \
 		chmod 755 $$i; \
 		else true; \
 		fi; \
@@ -494,7 +494,7 @@ install-demos:
 	    do \
 	    if [ ! -d $$i ] ; then \
 		echo "Making directory $$i"; \
-		mkdir $$i; \
+		mkdir -p $$i; \
 		chmod 755 $$i; \
 		else true; \
 		fi; \
@@ -524,7 +524,7 @@ install-doc:
 	    do \
 	    if [ ! -d $$i ] ; then \
 		echo "Making directory $$i"; \
-		mkdir $$i; \
+		mkdir -p $$i; \
 		chmod 755 $$i; \
 		else true; \
 		fi; \
@@ -924,7 +924,7 @@ $(UNIX_DIR)/configure: $(UNIX_DIR)/configure.in
 
 dist:   $(UNIX_DIR)/configure
 	rm -rf $(DISTDIR)
-	mkdir $(DISTDIR)
+	mkdir -p $(DISTDIR)
 	mkdir $(DISTDIR)/unix
 	cp -p $(UNIX_DIR)/*.c $(UNIX_DIR)/*.h $(DISTDIR)/unix
 	cp $(TOP_DIR)/license.terms $(UNIX_DIR)/Makefile.in $(DISTDIR)/unix
