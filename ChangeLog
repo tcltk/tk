@@ -1,3 +1,8 @@
+2004-10-27  Don Porter	<dgp@users.sourceforge.net>
+
+        * library/xmfbox.tcl (MotifFDialog_BuildUI): Fix [Bug 987169] in
+        the Motif file dialogs as well.  Backport of DKF bug fix.
+
 2004-10-26  David Gravereaux <davygrvy@pobox.com>
 
 	* generic/tkInt.h:	Backport of shutdown safety mods from the HEAD

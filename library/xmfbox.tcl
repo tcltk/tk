@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"::tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.25 2003/02/18 21:19:35 hobbs Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.25.2.1 2004/10/27 16:37:59 dgp Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Scriptics Corporation
@@ -54,9 +54,10 @@ proc ::tk::MotifFDialog {type args} {
     # restore any grab that was in effect.
 
     vwait ::tk::Priv(selectFilePath)
+    set result $Priv(selectFilePath)
     ::tk::RestoreFocusGrab $w $data(sEnt) withdraw
 
-    return $Priv(selectFilePath)
+    return $result
 }
 
 # ::tk::MotifFDialog_Create --
@@ -378,6 +379,8 @@ proc ::tk::MotifFDialog_BuildUI {w} {
 
     bind $data(fEnt) <Return> [list tk::MotifFDialog_ActivateFEnt $w]
     bind $data(sEnt) <Return> [list tk::MotifFDialog_ActivateSEnt $w]
+    bind $w <Escape> [list tk::MotifFDialog_CancelCmd $w]
+    bind $w.bot <Destroy> {set ::tk::Priv(selectFilePath) {}}
 
     wm protocol $w WM_DELETE_WINDOW [list tk::MotifFDialog_CancelCmd $w]
 }
