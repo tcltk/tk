@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.6 1999/02/04 21:01:46 stanton Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.7 1999/03/10 19:29:24 redman Exp $
  */
 
 #include "tkWinInt.h"
@@ -4234,4 +4234,35 @@ ActivateWindow(
     }
     
     return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinSetForegroundWindow --
+ *
+ *    This function is a wrapper for SetForegroundWindow, calling
+ *      it on the wrapper window because it has no affect on child
+ *      windows.
+ *
+ * Results:
+ *    none
+ *
+ * Side effects:
+ *    May activate the toplevel window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWinSetForegroundWindow(winPtr)
+    TkWindow *winPtr;
+{
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    
+    if (wmPtr->wrapper != NULL) {
+	SetForegroundWindow(wmPtr->wrapper);
+    } else {
+	SetForegroundWindow(Tk_GetHWND(winPtr->window));
+    }
 }

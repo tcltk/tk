@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.4 1999/03/10 07:04:46 stanton Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.5 1999/03/10 19:29:24 redman Exp $
  */
 
 #ifndef _TKWININT
@@ -148,6 +148,7 @@ extern int tkpWinRopModes[];
 
 #include "tkIntPlatDecls.h"
 
+extern void TkWinSetForegroundWindow(TkWindow *winPtr);
 extern LRESULT CALLBACK TkWinChildProc (HWND hwnd, UINT message,
 	WPARAM wParam, LPARAM lParam);
 
