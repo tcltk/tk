@@ -1,4 +1,4 @@
-001-12-20  Mo DeJong  <mdejong@users.sourceforge.net>
+2001-12-20  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/configure: Regen.
 	* unix/tcl.m4: Update from Tcl.
