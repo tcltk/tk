@@ -1,3 +1,10 @@
+2004-10-19  Joe English  <jenglish@users.sourceforge.net>
+
+	TIP#204 IMPLEMENTATION
+
+	* library/tk.tcl, library/entry.tcl, library/spinbox.tcl:
+	TIP #204 "Virtual Events for Keyboard Traversal" (patch #976928)
+
 2004-10-19  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* tests/canvPsImg.tcl, tests/canvPsBmap.tcl: 
