@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: SetOptions.3,v 1.7 2000/09/29 17:55:30 ericm Exp $
+'\" RCS: @(#) $Id: SetOptions.3,v 1.8 2000/10/01 21:31:35 ericm Exp $
 '\" 
 .so man.macros
 .TH Tk_SetOptions 3 8.1 Tk "Tk Library Procedures"
@@ -555,7 +555,9 @@ for the custom option type; pointers to the four procedures; and a
 \fIclientData\fR value to be passed to those procedures when they are
 invoked.  The \fIclientData\fR value typically points to a structure
 containing information that is needed by the procedures when they are
-parsing and printing options.
+parsing and printing options.  \fIRestoreProc\fR and \fIfreeProc\fR
+may be NULL, indicating that no function should be called for those
+operations.
 .PP
 The \fIsetProc\fR procedure is invoked by \fBTk_SetOptions\fR to
 convert a Tcl_Obj into an internal representation and store the

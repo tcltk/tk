@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.12 2000/09/29 17:55:31 ericm Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.13 2000/10/01 21:31:36 ericm Exp $
  */
 
 /*
@@ -1432,9 +1432,11 @@ Tk_RestoreSavedOptions(savePtr)
 		}
 		case TK_OPTION_CUSTOM: {
 		    Tk_ObjCustomOption *custom = optionPtr->extra.custom;
-		    custom->restoreProc(custom->clientData, savePtr->tkwin,
-			    internalPtr,
-			    (char *)&savePtr->items[i].internalForm);
+		    if (custom->restoreProc != NULL) {
+			custom->restoreProc(custom->clientData, savePtr->tkwin,
+				internalPtr,
+				(char *)&savePtr->items[i].internalForm);
+		    }
 		    break;
 		}
 		default: {
