@@ -55,6 +55,8 @@
 #include "tkPort.h"
 #include "tkMacOSXEvent.h"
 
+extern Tcl_Encoding macRomanEncoding;
+
 typedef struct {
     WindowRef   whichWindow;
     Point       global;
@@ -98,12 +100,14 @@ int TkMacOSXProcessKeyboardEvent(
         TkMacOSXEvent * eventPtr, 
         MacEventStatus * statusPtr)
 {
-    /* static */ UInt32 savedKeyCode = 0;
+    UInt32 savedKeyCode = 0;
     OSStatus     status;
     KeyEventData keyEventData;
     Window    window;
     MenuRef   menuRef;
     MenuItemIndex menuItemIndex;
+    int eventGenerated;
+    
     statusPtr->handledByTk = 1;
     keyEventData.whichWindow = FrontNonFloatingWindow();
     if (keyEventData.whichWindow == NULL) {
@@ -170,13 +174,20 @@ int TkMacOSXProcessKeyboardEvent(
     keyEventData.message = keyEventData.ch|(keyEventData.keyCode << 8);
 
     window = TkMacOSXGetXWindow(keyEventData.whichWindow);
-    if (!GenerateKeyEvent(eventPtr->eKind, &keyEventData, 
-            window, savedKeyCode) ) {
-        savedKeyCode = keyEventData.message;
-        return false;
+    
+    eventGenerated = GenerateKeyEvent(eventPtr->eKind, &keyEventData,
+				      window, savedKeyCode);
+    
+    if (eventGenerated == 0) {
+	savedKeyCode = keyEventData.message;
+	return false;
+    } else if (eventGenerated == -1) {
+	savedKeyCode = 0;
+	return false;
+    } else {
+	savedKeyCode = 0;
+	return true;
     }
-
-    return true;
 }
 
 /*
@@ -190,7 +201,8 @@ int TkMacOSXProcessKeyboardEvent(
  *        event.
  *
  * Results:
- *        True if event(s) are generated - false otherwise.
+ *        1 if an event was generated, 0 if we are waiting for another
+ *        byte of a multi-byte sequence, and -1 for any other error.
  *
  * Side effects:
  *        Additional events may be place on the Tk event queue.
@@ -221,24 +233,24 @@ GenerateKeyEvent( EventKind eKind,
     
     if (tkwin == NULL) {
         fprintf(stderr,"tkwin == NULL, %d\n", __LINE__);
-        return false;
+        return -1;
     }
     
     tkwin = (Tk_Window) ((TkWindow *) tkwin)->dispPtr->focusPtr;
     if (tkwin == NULL) {
         fprintf(stderr,"tkwin == NULL, %d\n", __LINE__);
-        return false;
+        return -1;
     }
     byte = (e->message&charCodeMask);
     if ((savedKeyCode == 0) && 
-            (Tcl_ExternalToUtf(NULL, NULL, (char *) &byte, 1, 0, NULL, 
+            (Tcl_ExternalToUtf(NULL, macRomanEncoding, (char *) &byte, 1, 0, NULL, 
                         buf, sizeof(buf), NULL, NULL, NULL) != TCL_OK)) {
         /*
          * This event specifies a lead byte.  Wait for the second byte
          * to come in before sending the XEvent.
          */
         fprintf(stderr,"Failed %02x\n", byte);
-        return false;
+        return 0;
     }   
 
     event.xany.send_event = False;
@@ -279,7 +291,7 @@ GenerateKeyEvent( EventKind eKind,
         default:
             break;
     } 
-    return true;
+    return 1;
 }
 
 /*

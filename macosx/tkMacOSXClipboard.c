@@ -9,15 +9,18 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.1.2.2 2002/06/28 22:30:14 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.1.2.3 2002/07/18 23:45:18 vincentdarley Exp $
  */
 
 #include "tkInt.h"
 #include "tkPort.h"
 #include "tkMacOSXInt.h"
+#include "tkSelect.h"
 
 #include <Carbon/Carbon.h>
-#include "tkSelect.h"
+
+extern Tcl_Encoding macRomanEncoding;
+
 
 /*
  *----------------------------------------------------------------------
@@ -90,7 +93,7 @@ TkSelGetSelection(
                     return TCL_ERROR;
             }
 
-            Tcl_ExternalToUtfDString(NULL, buf, length, &encodedText);
+            Tcl_ExternalToUtfDString(macRomanEncoding, buf, length, &encodedText);
             result = (*proc)(clientData, interp,
                     Tcl_DStringValue(&encodedText));
             Tcl_DStringFree(&encodedText);

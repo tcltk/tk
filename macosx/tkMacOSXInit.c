@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.1.2.4 2002/02/05 02:25:17 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.1.2.5 2002/07/18 23:45:18 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -21,6 +21,8 @@
  * defined in tkInitScript.h
  */
 #include "tkInitScript.h"
+
+Tcl_Encoding macRomanEncoding = NULL;
 
 
 /*
@@ -49,6 +51,10 @@ TkpInit(interp)
     int result;
     static int menusInitialized = false;
 
+    if (macRomanEncoding == NULL) {
+	macRomanEncoding = Tcl_GetEncoding(NULL, "macRoman");
+    }
+    
     /* Since it is possible for TkInit to be called multiple times
      * and we don't want to do the menu initialization multiple times
      * we protect against doing it more than once.

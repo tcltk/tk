@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.1.2.5 2002/07/18 09:34:42 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.1.2.6 2002/07/18 23:45:18 vincentdarley Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -24,6 +24,8 @@
 #include <Carbon/Carbon.h>
 #include "tkMacOSXDebug.h"
 #include <CoreFoundation/CFString.h>
+
+extern Tcl_Encoding macRomanEncoding;
 
 typedef struct MacMenu {
     MenuRef menuHdl;		/* The Menu Manager data structure. */
@@ -791,10 +793,10 @@ GetEntryText(
  * 	We try the following special mac characters. If none of them
  * 	are present, just use the check mark.
  * 	'' - Check mark character		(\022)
- * 	'¥' - Mac Bullet character		(\245)
+ * 	'Â¥' - Mac Bullet character		(\245)
  * 	'' - Filled diamond			(\023)
- * 	'—' - Hollow diamond			(\327)
- * 	'‘' = Mac Long dash ("em dash")	(\321)
+ * 	'Â—' - Hollow diamond			(\327)
+ * 	'Â‘' = Mac Long dash ("em dash")	(\321)
  * 	'-' = short dash (minus, "en dash");
  *
  * Results:
@@ -2348,6 +2350,11 @@ DrawMenuEntryIndicator(
 	    	int dstWrote;
 	    	
             	markChar = (char) markShort;
+                /* 
+                 * Not sure if this is the correct encoding, but this function
+                 * doesn't appear to be used at all in, since the Carbon Menus
+                 * draw themselves
+                 */
             	Tcl_ExternalToUtf(NULL, NULL, &markChar, 1, 0, NULL,
 			markCharUTF, TCL_UTF_MAX + 1, NULL, &dstWrote, NULL);
 		Tk_DrawChars(menuPtr->display, d, gc, tkfont, markCharUTF,
@@ -3802,7 +3809,7 @@ TkpMenuInit(void)
     tkThemeMenuItemDrawingUPP 
             = NewMenuItemDrawingUPP(tkThemeMenuItemDrawingProc);
             				
-    Tcl_ExternalToUtf(NULL, NULL, "\311", /* ellipsis character */
+    Tcl_ExternalToUtf(NULL, macRomanEncoding, "\311", /* ellipsis character */
         -1, 0, NULL, elipsisString,
         TCL_UTF_MAX + 1, NULL, NULL, NULL);
         

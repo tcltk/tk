@@ -1,3 +1,14 @@
+2002-07-17  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* macosx/tkMacOSXMenu.c: 
+	* macosx/takMacOSXClipboard.c: 
+	* macosx/takMacOSXDialog.c: 
+	* macosx/takMacOSXHLEvents.c: 
+	* macosx/takMacOSXInit.c: 
+	* macosx/takMacOSXKeyboard.c: 
+	* macosx/tkMacOSXKeyEvent.c: fix for some more encoding issues,
+	and Jim's proper fix for the key-event problems.
+
 2002-07-16  Vince Darley  <vincentdarley@users.sourceforge.net>
 
 	* macosx/tkMacOSXMenu.c: 

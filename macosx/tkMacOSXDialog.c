@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.1.2.3 2002/02/05 02:25:17 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.1.2.4 2002/07/18 23:45:18 vincentdarley Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -121,7 +121,6 @@ Tk_ChooseColorObjCmd(
     Tk_Window parent;
     char *title;
     int i, picked, srcRead, dstWrote;
-    OSErr err;
     ColorPickerInfo cpinfo;
     static int inited = 0;
     static RGBColor in;
@@ -906,6 +905,7 @@ NavServicesGetFile(
                                 pathValid = 1;
                             }
                             if (pathValid) {
+                                /* Tested this and NULL=utf-8 encoding is good here */
                                 Tcl_ExternalToUtfDString(NULL, pathPtr, -1, &fileName);
                                 if (multiple) {
                                     Tcl_ListObjAppendElement(interp, theResult, 

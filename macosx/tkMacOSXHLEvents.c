@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.1.2.2 2002/02/05 02:25:17 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.1.2.3 2002/07/18 23:45:18 vincentdarley Exp $
  */
 
 #include "tkMacOSXUtil.h"
@@ -246,7 +246,7 @@ OSErr PrintHandler (const AppleEvent * event, AppleEvent * reply, long handlerRe
  *        This handler process the script event.  
  *
  * Results:
- *        Scedules the given event to be processed.
+ *        Schedules the given event to be processed.
  *
  * Side effects:
  *        None.
