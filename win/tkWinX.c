@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.10.2.1 2001/04/04 07:57:18 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.10.2.2 2001/04/06 00:13:24 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -839,6 +839,7 @@ GenerateXEvent(hwnd, message, wParam, lParam)
 		    event.type = MouseWheelEvent;
 		    event.xany.send_event = -1;
 		    event.xkey.keycode = (short) HIWORD(wParam);
+		    event.xkey.nbytes = 0;
 		    break;
 		case WM_SYSKEYDOWN:
 		case WM_KEYDOWN:
