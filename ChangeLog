@@ -1,3 +1,8 @@
+2003-12-16  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinSend.c: Removed some misleading comments (bug #846134)
+	and disabled the send package until bug #858822 is resolved.
+
 2003-12-16  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
 
 	* win/tkWinWm.c (InstallColormaps): Check for TK_ALREADY_DEAD

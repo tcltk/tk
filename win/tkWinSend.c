@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSend.c,v 1.7 2003/11/20 19:36:58 vincentdarley Exp $
+ * RCS: @(#) $Id: tkWinSend.c,v 1.8 2003/12/16 21:57:57 patthoyts Exp $
  */
 
 #include "tkPort.h"
@@ -31,7 +31,8 @@
 #define MK_E_MONIKERALREADYREGISTERED \
     MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x02A1)
 
-/* Package information structure.
+/*
+ * Package information structure.
  * This is used to keep interpreter specific details for use when releasing
  * the package resources upon interpreter deletion or package removal.
  */
@@ -120,6 +121,11 @@ Tk_SetAppName(tkwin, name)
     tsdPtr = TCL_TSD_INIT(&dataKey);
     interp = winPtr->mainPtr->interp;
 
+    /*
+     * Temporarily disabled for bug #858822
+     */
+    return name;
+
     /* 
      * Initialise the COM library for this interpreter just once.
      */
@@ -200,6 +206,11 @@ TkGetInterpNames(interp, tkwin)
     Tcl_Obj *objList = NULL;
     int result = TCL_OK;
     
+    /*
+     * Temporarily disabled for bug #858822
+     */
+    return TCL_OK;
+
     hr = GetRunningObjectTable(0, &pROT);
     if(SUCCEEDED(hr)) {
 	IBindCtx* pBindCtx = NULL;
@@ -317,7 +328,7 @@ Tk_SendObjCmd(clientData, interp, objc, objv)
     }
 
     /*
-     * FIX ME: we don't support displayPtr.
+     * We don't support displayPtr. See TIP #150.
      */
 
     if (displayPtr) {
@@ -328,7 +339,7 @@ Tk_SendObjCmd(clientData, interp, objc, objv)
     }
     
     /* send the arguments to the foreign interp */
-    /* FIX ME: async and check for local interp */
+    /* FIX ME: we need to check for local interp */
     if (result == TCL_OK) {
 	LPDISPATCH pdisp;
 	result = FindInterpreterObject(interp, Tcl_GetString(objv[i]), &pdisp);
@@ -427,8 +438,7 @@ FindInterpreterObject(Tcl_Interp *interp, CONST char *name, LPDISPATCH *ppdisp)
  */
 
 static void
-CmdDeleteProc(clientData)
-     ClientData clientData;	/* Pointer to the interp registration block */
+CmdDeleteProc(ClientData clientData)
 {
     RegisteredInterp *riPtr = (RegisteredInterp *)clientData;
 
@@ -647,8 +657,12 @@ RegisterInterp(CONST char *name, RegisteredInterp *riPtr)
  */   
 
 static int
-Send(LPDISPATCH pdispInterp, Tcl_Interp *interp, 
-    int async, ClientData clientData, int objc, Tcl_Obj *CONST objv[])
+Send(LPDISPATCH pdispInterp,   /* pointer to the remote interp's COM object */
+     Tcl_Interp *interp,       /* the local interpreter */
+     int async,                /* flag for the calling style */
+     ClientData clientData,    /* the RegisteredInterp structure for this interp */
+     int objc,                 /* number of arguments to be sent */
+     Tcl_Obj *CONST objv[])    /* the arguments to be sent */
 {
     VARIANT vCmd, vResult;
     DISPPARAMS dp;
@@ -657,7 +671,6 @@ Send(LPDISPATCH pdispInterp, Tcl_Interp *interp,
     HRESULT hr = S_OK, ehr = S_OK;
     Tcl_Obj *cmd = NULL;
     DISPID dispid;
-    /*RegisteredInterp *riPtr = (RegisteredInterp *)clientData;*/
 
     cmd = Tcl_ConcatObj(objc, objv);
 
@@ -906,7 +919,6 @@ SendEventProc(Tcl_Event *eventPtr, int flags)
 {
     int result = TCL_OK;
     SendEvent *evPtr = (SendEvent *)eventPtr;
-    /*ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);*/
 
     TRACE("SendEventProc\n");
     
