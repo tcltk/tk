@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.18.2.1 2003/05/15 18:06:04 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.18.2.2 2003/07/19 01:45:42 hobbs Exp $
  */
  
 #include "tkUnixInt.h"
@@ -1158,19 +1158,21 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
     SubFont *thisSubFontPtr, *lastSubFontPtr;
     Tcl_DString runString;
     CONST char *p, *end, *next;
-    int xStart, needWidth, window_width;
+    int xStart, needWidth, window_width, do_width;
     Tcl_UniChar ch;
     FontFamily *familyPtr;
+#ifdef TK_DRAW_CHAR_XWINDOW_CHECK
     int rx, ry;
     unsigned int width, height, border_width, depth;
-    int do_width;
     Drawable root;
+#endif
 
     fontPtr = (UnixFont *) tkfont;
     lastSubFontPtr = &fontPtr->subFontArray[0];
 
     xStart = x;
 
+#ifdef TK_DRAW_CHAR_XWINDOW_CHECK
     /*
      * Get the window width so we can abort drawing outside of the window
      */
@@ -1180,6 +1182,13 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
     } else {
 	window_width = width;
     }
+#else
+    /*
+     * This is used by default until we find a solution that doesn't
+     * round-trip to the X server (need to get Tk cached window width).
+     */
+    window_width = 32768;
+#endif
 
     end = source + numBytes;
     needWidth = fontPtr->font.fa.underline + fontPtr->font.fa.overstrike;
