@@ -11,7 +11,7 @@
 #
 # The information in this file is specific to a single platform.
 #
-# RCS: @(#) $Id: tkConfig.sh.in,v 1.9 2003/04/04 19:29:51 mdejong Exp $
+# RCS: @(#) $Id: tkConfig.sh.in,v 1.10 2003/09/25 05:36:08 das Exp $
 
 # Tk's version number.
 TK_VERSION='@TK_VERSION@'
@@ -58,6 +58,10 @@ TK_BUILD_LIB_SPEC='@TK_BUILD_LIB_SPEC@'
 # String to pass to linker to pick up the Tk library from its
 # installed directory.
 TK_LIB_SPEC='@TK_LIB_SPEC@'
+
+# String to pass to the compiler so that an extension can
+# find installed Tk headers.
+TK_INCLUDE_SPEC='@TK_INCLUDE_SPEC@'
 
 # Location of the top-level source directory from which Tk was built.
 # This is the directory that contains a README file as well as

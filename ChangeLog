@@ -1,5 +1,12 @@
+2003-09-25  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/configure:
+	* unix/configure.in:
+	* unix/tkConfig.sh.in: added TK_INCLUDE_SPEC to allow extensions to
+	find installed Tk headers, parallel to TCL_INCLUDE_SPEC. [Bug 777203] 
+
 2003-09-18  Chengye Mao <chengye.geo@yahoo.com>
-        * generic/tkConsole.c: Fixed memroy leak [Bug 802435]
+	* generic/tkConsole.c: Fixed memroy leak [Bug 802435]
 
 2003-09-18  Peter Spjuth  <peter.spjuth@space.se>
 	* doc/grid.n:
