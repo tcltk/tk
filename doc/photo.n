@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: photo.n,v 1.6 2000/07/25 21:14:35 jenglish Exp $
+'\" RCS: @(#) $Id: photo.n,v 1.7 2001/02/13 21:52:45 ericm Exp $
 '\" 
 .so man.macros
 .TH photo n 4.0 Tk "Tk Built-In Commands"
@@ -210,8 +210,9 @@ Specifies a rectangular region of \fIimageName\fR to be returned.
 If only \fIx1\fR and \fIy1\fR are specified, the region
 extends from \fI(x1,y1)\fR to the bottom-right corner of
 \fIimageName\fR.  If all four coordinates are given, they specify
-diagonally opposite corners of the rectangular region.  The default,
-if this option is not given, is the whole image.
+diagonally opposite corners of the rectangular region, including x1,y1
+and excluding x2,y2.  The default, if this option is not given, is the
+whole image.
 .TP
 \fB\-grayscale\fR
 If this options is specified, the data will not contain color
