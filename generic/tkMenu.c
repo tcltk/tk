@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.20.2.2 2003/12/03 04:57:37 hobbs Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.20.2.3 2004/09/16 20:05:44 hobbs Exp $
  */
 
 /*
@@ -1384,7 +1384,7 @@ UnhookCascadeEntry(mePtr)
      * Singularly linked list deletion. The two special cases are
      * 1. one element; 2. The first element is the one we want.
      */
- 
+
     if (cascadeEntryPtr == mePtr) {
     	if (cascadeEntryPtr->nextCascadePtr == NULL) {
 
@@ -1393,7 +1393,7 @@ UnhookCascadeEntry(mePtr)
 	     * menu, so we need to clear out the list pointer in the
 	     * cascade itself.
 	     */
-	
+
 	    menuRefPtr->parentEntryPtr = NULL;
 	    /* 
 	     * The original field is set to zero below, after it is
@@ -1448,7 +1448,6 @@ DestroyMenuEntry(memPtr)
     TkMenu *menuPtr = mePtr->menuPtr;
 
     if (menuPtr->postedCascade == mePtr) {
-	
     	/*
 	 * Ignore errors while unposting the menu, since it's possible
 	 * that the menu has already been deleted and the unpost will
@@ -1537,20 +1536,21 @@ DestroyMenuEntry(memPtr)
  *
  *---------------------------------------------------------------------------
  */
- 
+
 static void
 MenuWorldChanged(instanceData)
     ClientData instanceData;	/* Information about widget. */
 {
     TkMenu *menuPtr = (TkMenu *) instanceData;
     int i;
-    
+
     TkMenuConfigureDrawOptions(menuPtr);
     for (i = 0; i < menuPtr->numEntries; i++) {
     	TkMenuConfigureEntryDrawOptions(menuPtr->entries[i],
 		menuPtr->entries[i]->index);
-	TkpConfigureMenuEntry(menuPtr->entries[i]);	
+	TkpConfigureMenuEntry(menuPtr->entries[i]);
     }
+    TkEventuallyRecomputeMenu(menuPtr);
 }
 
 /*
