@@ -1,5 +1,15 @@
 2002-02-14  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* library/entry.tcl:
+	* library/text.tcl: Adjust <Double-1> and <Triple-1> bindings
+	so that no anchor point is set and the insertion cursor is
+	set to the last character in the selection. [Bug 220943]
+	* tests/event.test: Add test cases for double click and
+	drag as well as triple click and drag in the text and
+	entry widgets.
+
+2002-02-14  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* tests/event.test (_text_ind_to_x_y, _get_selection): Fix
 	incorrect use of results from bbox invocation so that
 	y center point for a give index is calculated correctly.
