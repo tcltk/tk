@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.16 2003/11/08 17:22:46 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.17 2003/11/13 18:30:42 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -591,6 +591,9 @@ test textDisp-4.5 {UpdateDisplayInfo, tiny window} {textfonts} {
     update
     list [.t bbox 2.0] [.t bbox 2.1] [.t bbox 3.0] $tk_textRelayout
 } [list [list 5 [expr {$fixedDiff + 18}] 1 $fixedHeight] {} [list 5 [expr {2*$fixedDiff + 31}] 1 $fixedHeight] {1.0 2.0 3.0}]
+if {$tcl_platform(platform) == "windows"} {
+    wm overrideredirect . 0
+}
 test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
     # This test was failing on Windows because the title bar on .
     # was a certain minimum size and it was interfering with the size
@@ -2869,6 +2872,9 @@ test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {textfonts} {
     update
     list [.t bbox 1.0] [.t bbox 1.1] [.t bbox 1.2]
 } [list [list 3 3 1 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 1 $fixedHeight] [list 3 [expr {2*$fixedDiff + 29}] 1 $fixedHeight]]
+if {$tcl_platform(platform) == "windows"} {
+    wm overrideredirect . 0
+}
 test textDisp-24.17 {TkTextCharLayoutProc, -wrap word} {textfonts} {
     .t configure -wrap word
     .t delete 1.0 end
