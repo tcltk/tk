@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: panedwindow.n,v 1.2.2.1 2003/07/17 20:49:00 dkf Exp $
+'\" RCS: @(#) $Id: panedwindow.n,v 1.2.2.2 2004/10/28 12:25:22 dkf Exp $
 '\" 
 .so man.macros
 .TH panedwindow n 8.4 Tk "Tk Built-In Commands"
@@ -63,7 +63,6 @@ horizontally or vertically, according to the value of the
 \fB\-orient\fR option.  Each pane contains one widget, and each pair of
 panes is separated by a moveable (via mouse movements) sash.  Moving a
 sash causes the widgets on either side of the sash to be resized.
-
 .SH "WIDGET COMMAND"
 .PP
 The \fBpanedwindow\fR command creates a new Tcl command whose name is
@@ -125,7 +124,7 @@ the following forms:
 Return a list containing the x and y coordinates of the most recent
 proxy location.
 .TP
-\fIpathname \fBproxy forget\fR
+\fIpathName \fBproxy forget\fR
 Remove the proxy from the display.
 .TP
 \fIpathName \fBproxy place \fIx y\fR
@@ -142,6 +141,7 @@ Return the current x and y coordinate pair for the sash given by
 \fIindex\fR.  \fIIndex\fR must be an integer between 0 and 1 less than
 the number of panes in the panedwindow.  The coordinates given are
 those of the top left corner of the region containing the sash.
+.TP
 \fIpathName \fBsash dragto \fIindex x y\fR
 This command computes the difference between the given coordinates and the
 coordinates given to the last \fBsash coord\fR command for the given
@@ -229,16 +229,14 @@ panedwindow.  \fISize\fR may be any value accepted by \fBTk_GetPixels\fR.
 .TP
 \fIpathName \fBpanes\fR
 Returns an ordered list of the widgets managed by \fIpathName\fR.
-
 .SH "RESIZING PANES"
-
 A pane is resized by grabbing the sash (or sash handle if present) and
 dragging with the mouse.  This is accomplished via mouse motion
 bindings on the widget.  When a sash is moved, the sizes of the panes
 on each side of the sash, and thus the widgets in those panes, are
 adjusted.
 .PP
-When a pane is resized from outside (eg, it is packed to expand and
+When a pane is resized from outside (e.g. it is packed to expand and
 fill, and the containing toplevel is resized), space is added to the final
 (rightmost or bottommost) pane in the window.
 

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.15 2003/02/19 18:52:14 mdejong Exp $
+'\" RCS: @(#) $Id: text.n,v 1.15.2.1 2004/10/28 12:25:22 dkf Exp $
 '\" 
 .so man.macros
 .TH text n 8.4 Tk "Tk Built-In Commands"
@@ -52,21 +52,21 @@ Requests additional space above each text line in the widget,
 using any of the standard forms for screen distances.
 If a line wraps, this option only applies to the first line
 on the display.
-This option may be overriden with \fB\-spacing1\fR options in
+This option may be overridden with \fB\-spacing1\fR options in
 tags.
 .OP \-spacing2 spacing2 Spacing2
 For lines that wrap (so that they cover more than one line on the
 display) this option specifies additional space to provide between
 the display lines that represent a single line of text.
 The value may have any of the standard forms for screen distances.
-This option may be overriden with \fB\-spacing2\fR options in
+This option may be overridden with \fB\-spacing2\fR options in
 tags.
 .OP \-spacing3 spacing3 Spacing3
 Requests additional space below each text line in the widget,
 using any of the standard forms for screen distances.
 If a line wraps, this option only applies to the last line
 on the display.
-This option may be overriden with \fB\-spacing3\fR options in
+This option may be overridden with \fB\-spacing3\fR options in
 tags.
 .OP \-state state State
 Specifies one of two states for the text:  \fBnormal\fR or \fBdisabled\fR.
@@ -75,7 +75,9 @@ and no insertion cursor will be displayed, even if the input focus is
 in the widget.
 .OP \-tabs tabs Tabs
 Specifies a set of tab stops for the window.  The option's value consists
-of a list of screen distances giving the positions of the tab stops.  Each
+of a list of screen distances giving the positions of the tab stops,
+each of which is a distance relative to the left edge of the widget
+(excluding borders, padding, etc).  Each
 position may optionally be followed in the next list element
 by one of the keywords \fBleft\fR, \fBright\fR, \fBcenter\fR,
 or \fBnumeric\fR, which specifies how to justify
@@ -94,7 +96,9 @@ tab stops at two-centimeter intervals;  the first two use left
 justification and the third uses center justification.
 If the list of tab stops does not have enough elements to cover all
 of the tabs in a text line, then Tk extrapolates new tab stops using
-the spacing and alignment from the last tab stop in the list.
+the spacing and alignment from the last tab stop in the list.  Tab
+distances must be strictly positive, and must always increase from one 
+tab stop to the next (if not, an error is thrown).
 The value of the \fBtabs\fR option may be overridden by \fB\-tabs\fR
 options in tags.
 If no \fB\-tabs\fR option is specified, or if it is specified as
@@ -144,27 +148,26 @@ to be displayed with different fonts and colors.
 In addition, Tcl commands can be associated with tags so
 that scripts are invoked when particular actions such as keystrokes
 and mouse button presses occur in particular ranges of the text.
-See TAGS below for more details.
+See \fBTAGS\fR below for more details.
 .PP
-The second form of annotation consists of marks, which are floating
-markers in the text.
+The second form of annotation consists of floating markers in the text
+called "marks".
 Marks are used to keep track of various interesting positions in the
 text as it is edited.
-See MARKS below for more details.
+See \fBMARKS\fR below for more details.
 .PP
 The third form of annotation allows arbitrary windows to be
 embedded in a text widget.
-See EMBEDDED WINDOWS below for more details.
+See \fBEMBEDDED WINDOWS\fR below for more details.
 .PP
 The fourth form of annotation allows Tk images to be embedded in a text
 widget.
-See EMBEDDED IMAGES below for more details.
+See \fBEMBEDDED IMAGES\fR below for more details.
 .PP
 .VS 8.4
 The text widget also has a built-in undo/redo mechanism.
-See UNDO MECHANISM below for more details.
+See \fBTHE UNDO MECHANISM\fR below for more details.
 .VE 8.4
-
 .SH INDICES
 .PP
 Many of the widget commands for texts take one or more indices
@@ -289,14 +292,13 @@ left-to-right order.  For example, the index ``\fBend \- 1 chars\fR''
 refers to the next-to-last character in the text and
 ``\fBinsert wordstart \- 1 c\fR'' refers to the character just before
 the first one in the word containing the insertion cursor.
-
 .SH TAGS
 .PP
 The first form of annotation in text widgets is a tag.
 A tag is a textual string that is associated with some of the characters
 in a text.
 Tags may contain arbitrary characters, but it is probably best to
-avoid using the the characters `` '' (space), \fB+\fR, or \fB\-\fR:
+avoid using the characters `` '' (space), \fB+\fR, or \fB\-\fR:
 these characters have special meaning in indices, so tags containing
 them can't be used as indices.
 There may be any number of tags associated with characters in a
@@ -500,8 +502,7 @@ For details, see the description of the \fBtag bind\fR widget
 command below.
 .PP
 The third use for tags is in managing the selection.
-See THE SELECTION below.
-
+See \fBTHE SELECTION\fR below.
 .SH MARKS
 .PP
 The second form of annotation in text widgets is a mark.
@@ -521,7 +522,7 @@ Marks may be manipulated with the ``\fIpathName \fBmark\fR'' widget
 command, and their current locations may be determined by using the
 mark name as an index in widget commands.
 .PP
-Each mark also has a \fIgravity\fR, which is either \fBleft\fR or
+Each mark also has a "gravity", which is either \fBleft\fR or
 \fBright\fR.
 The gravity for a mark specifies what happens to the mark when
 text is inserted at the point of the mark.
@@ -538,7 +539,7 @@ to different things.
 .PP
 Two marks have special significance.
 First, the mark \fBinsert\fR is associated with the insertion cursor,
-as described under THE INSERTION CURSOR below.
+as described under \fBTHE INSERTION CURSOR\fR below.
 Second, the mark \fBcurrent\fR is associated with the character
 closest to the mouse and is adjusted automatically to track the
 mouse position and any changes to the text in the widget (one
@@ -546,7 +547,6 @@ exception:  \fBcurrent\fR is not updated in response to mouse
 motions if a mouse button is down;  the update will be deferred
 until all mouse buttons have been released).
 Neither of these special marks may be deleted.
-
 .SH "EMBEDDED WINDOWS"
 .PP
 The third form of annotation in text widgets is an embedded window.
@@ -616,7 +616,6 @@ stretched.
 .TP
 \fB\-window \fIpathName\fR
 Specifies the name of a window to display in the annotation.
-
 .SH "EMBEDDED IMAGES"
 .PP
 The final form of annotation in text widgets is an embedded image.
@@ -630,21 +629,21 @@ text is modified or scrolled.
 Each embedded image occupies one character's worth of index space
 in the text widget, and it may be referred to either by
 its position in the widget's index space, or the name it is assigned
-when the image is inserted into the text widget widh \fBimage create\fP.
+when the image is inserted into the text widget with \fBimage create\fP.
 If the range of text containing the embedded image is deleted then
 that copy of the image is removed from the screen.
 .PP
 When an embedded image is added to a text widget with the \fBimage
 create\fR widget command, a name unique to this instance of the image
 is returned.  This name may then be used to refer to this image
-instance.  The name is taken to be the value of the \fB-name\fP option
-(described below).  If the \fB-name\fP option is not provided, the
-\fB-image\fP name is used instead.  If the \fIimageName\fP is already
+instance.  The name is taken to be the value of the \fB\-name\fP option
+(described below).  If the \fB\-name\fP option is not provided, the
+\fB\-image\fP name is used instead.  If the \fIimageName\fP is already
 in use in the text widget, then \fB#\fInn\fR is added to the end of the
 \fIimageName\fP, where \fInn\fP is an arbitrary integer.  This insures
 the \fIimageName\fP is unique.
 Once this name is assigned to this instance of the image, it does not 
-change, even though the \fB-image\fP or \fB-name\fP values can be changed
+change, even though the \fB\-image\fP or \fB\-name\fP values can be changed
 with \fBimage configure\fP.
 .PP
 When an embedded image is added to a text widget with the
@@ -684,7 +683,6 @@ It may have any of the usual forms defined for a screen distance.
 \fIPixels\fR specifies the amount of extra space to leave on
 the top and on the bottom of the embedded image.
 It may have any of the usual forms defined for a screen distance.
-
 .SH "THE SELECTION"
 .PP
 Selection support is implemented via tags.
@@ -713,7 +711,6 @@ the text widget are tied to the \fB\-background\fR,
 \fB\-borderwidth\fR, and \fB\-foreground\fR options for the \fBsel\fR
 tag:  changes in either will automatically be reflected in the
 other.
-
 .SH "THE INSERTION CURSOR"
 .PP
 The mark named \fBinsert\fR has special significance in text widgets.
@@ -723,33 +720,30 @@ command.
 The \fBinsert\fR mark represents the position of the insertion
 cursor, and the insertion cursor will automatically be drawn at
 this point whenever the text widget has the input focus.
-
 .SH "THE MODIFIED FLAG"
 The text widget can keep track of changes to the content of the widget
 by means of the modified flag. Inserting or deleting text will set
-this flag. The flag can be queried, set and cleared programatically
+this flag. The flag can be queried, set and cleared programmatically
 as well. Whenever the flag changes state a \fB<<Modified>>\fR virtual 
 event is generated. See the \fBedit modified\fR widget command for 
 more details.
-
 .SH "THE UNDO MECHANISM"
 .PP
 .VS 8.4
 The text widget has an unlimited undo and redo mechanism (when the
-\fB-undo\fR widget option is true) which records every insert and
+\fB\-undo\fR widget option is true) which records every insert and
 delete action on a stack.
 .PP
-Boundaries (called "separators") are inserted between edit actions.
-The purpose of these separators is to group inserts and deletes into
-one compound edit action.  When undoing a change everything between
-two separators will be undone.  The undone changes are then moved to
-the redo stack, so that an undone edit can be redone again.  The redo
-stack is cleared whenever new edit actions are recorded on the undo
-stack.  The undo and redo stacks can be cleared to keep their depth
-under control.
+Boundaries (called "separators") are inserted between edit actions.  The
+purpose of these separators is to group inserts, deletes and replaces
+into one compound edit action.  When undoing a change everything between
+two separators will be undone.  The undone changes are then moved to the
+redo stack, so that an undone edit can be redone again.  The redo stack
+is cleared whenever new edit actions are recorded on the undo stack.  The
+undo and redo stacks can be cleared to keep their depth under control.
 .PP
-Separators are inserted automatically when the \fB-autoseparators\fR
-widget option is true.  You can insert separators programatically as
+Separators are inserted automatically when the \fB\-autoseparators\fR
+widget option is true.  You can insert separators programmatically as
 well.  If a separator is already present at the top of the undo stack
 no other will be inserted.  That means that two separators on the undo
 stack are always separated by at least one insert or delete action.
@@ -764,7 +758,6 @@ the flag has been reset again.
 See below for the \fBedit\fR widget command that controls the undo
 mechanism.
 .VE 8.4
-
 .SH "WIDGET COMMAND"
 .PP
 The \fBtext\fR command creates a new Tcl command whose
@@ -860,7 +853,7 @@ The command returns an empty string.
 If more indices are given, multiple ranges of text will be deleted.
 All indices are first checked for validity before any deletions are made.
 They are sorted and the text is removed from the last range to the
-first range to deleted text does not cause a undesired index shifting
+first range to deleted text does not cause an undesired index shifting
 side-effects.  If multiple ranges with the same start index are given,
 then the longest range is used.  If overlapping ranges are given, then
 they will be merged into spans that do not cause deletion of text
@@ -932,7 +925,7 @@ Include information about text in the dump results.  The value is the
 text up to the next element or the end of range indicated by \fIindex2\fR.
 A text element does not span newlines.  A multi-line block of text that
 contains no marks or tag transitions will still be dumped as a set
-of text seqments that each end with a newline.  The newline is part
+of text segments that each end with a newline.  The newline is part
 of the value.
 .TP
 \fB\-window\fR
@@ -958,9 +951,9 @@ user can set or clear the modified flag.  If \fIboolean\fR is
 specified, sets the modified flag of the widget to \fIboolean\fR.
 .TP
 \fIpathName \fBedit redo\fR
-When the \fB-undo\fR option is true, reapplies the last undone edits
+When the \fB\-undo\fR option is true, reapplies the last undone edits
 provided no other edits were done since then. Generates an error when
-the redo stack is empty.  Does nothing when the \fB-undo\fR option is
+the redo stack is empty.  Does nothing when the \fB\-undo\fR option is
 false.
 .TP
 \fIpathName \fBedit reset\fR
@@ -968,13 +961,13 @@ Clears the undo and redo stacks.
 .TP
 \fIpathName \fBedit separator\fR
 Inserts a separator (boundary) on the undo stack. Does nothing when
-the \fB-undo\fR option is false.
+the \fB\-undo\fR option is false.
 .TP
 \fIpathName \fBedit undo\fR
-Undoes the last edit action when the \fB-undo\fR option is true.  An
+Undoes the last edit action when the \fB\-undo\fR option is true.  An
 edit action is defined as all the insert and delete commands that are
 recorded on the undo stack in between two separators. Generates an
-error when the undo stack is empty.  Does nothing when the \fB-undo\fR
+error when the undo stack is empty.  Does nothing when the \fB\-undo\fR
 option is false.
 .RE
 .VE 8.4
@@ -1009,7 +1002,7 @@ The following forms of the command are currently supported:
 Returns the value of a configuration option for an embedded image.
 \fIIndex\fR identifies the embedded image, and \fIoption\fR
 specifies a particular configuration option, which must be one of
-the ones listed in the section EMBEDDED IMAGES.
+the ones listed in the section \fBEMBEDDED IMAGES\fR.
 .TP
 \fIpathName \fBimage configure \fIindex\fR ?\fIoption value ...\fR?
 Query or modify the configuration options for an embedded image.
@@ -1023,7 +1016,7 @@ identical to the corresponding sublist of the value returned if no
 If one or more \fIoption\-value\fR pairs are specified, then the command
 modifies the given option(s) to have the given value(s);  in
 this case the command returns an empty string.
-See EMBEDDED IMAGES for information on the options that
+See \fBEMBEDDED IMAGES\fR for information on the options that
 are supported.
 .TP
 \fIpathName \fBimage create \fIindex\fR ?\fIoption value ...\fR?
@@ -1033,7 +1026,7 @@ Any number of \fIoption\-value\fR pairs may be specified to
 configure the annotation.
 Returns a unique identifier that may be used as an index to refer to
 this image.
-See EMBEDDED IMAGES for information on the options that
+See \fBEMBEDDED IMAGES\fR for information on the options that
 are supported, and a description of the identifier returned.
 .TP
 \fIpathName \fBimage names\fR
@@ -1045,7 +1038,7 @@ embedded in \fIwindow\fR.
 Returns the position corresponding to \fIindex\fR in the form
 \fIline.char\fR where \fIline\fR is the line number and \fIchar\fR
 is the character number.
-\fIIndex\fR may have any of the forms described under INDICES above.
+\fIIndex\fR may have any of the forms described under \fBINDICES\fR above.
 .TP
 \fIpathName \fBinsert \fIindex chars \fR?\fItagList chars tagList ...\fR?
 Inserts all of the \fIchars\fR arguments just before the character at
@@ -1185,12 +1178,13 @@ Ignore case differences between the pattern and the text.
 The argument following \fB\-count\fR gives the name of a variable;
 if a match is found, the number of index positions between beginning and
 end of the matching range will be stored in the variable.  If there are no
-embedded images or windows in the matching range, this is equivalent to the
+embedded images or windows in the matching range (and there are no
+elided characters if \fB\-elide\fR is not given), this is equivalent to the
 number of characters matched.  In either case, the range \fImatchIdx\fR to
 \fImatchIdx + $count chars\fR will return the entire matched text.
 .TP
 \fB\-elide\fR
-Find elidden (hidden) text as well. By default only displayed text is
+Find elided (hidden) text as well. By default only displayed text is
 searched.
 .TP
 \fB\-\|\-\fR
@@ -1271,7 +1265,7 @@ The only events for which bindings may be specified are those related
 to the mouse and keyboard (such as \fBEnter\fR, \fBLeave\fR, 
 \fBButtonPress\fR, \fBMotion\fR, and \fBKeyPress\fR) or virtual events.
 Event bindings for a text widget use the \fBcurrent\fR mark described
-under MARKS above.  An \fBEnter\fR event triggers for a tag when the tag
+under \fBMARKS\fR above.  An \fBEnter\fR event triggers for a tag when the tag
 first becomes present on the current character, and a \fBLeave\fR event
 triggers for a tag when it ceases to be present on the current character.
 \fBEnter\fR and \fBLeave\fR events can happen either because the
@@ -1322,7 +1316,7 @@ is specified).
 If one or more \fIoption\-value\fR pairs are specified, then the command
 modifies the given option(s) to have the given value(s) in \fItagName\fR;
 in this case the command returns an empty string.
-See TAGS above for details on the options available for tags.
+See \fBTAGS\fR above for details on the options available for tags.
 .TP
 \fIpathName \fBtag delete \fItagName \fR?\fItagName ...\fR?
 Deletes all tag information for each of the \fItagName\fR
@@ -1424,7 +1418,7 @@ The following forms of the command are currently supported:
 Returns the value of a configuration option for an embedded window.
 \fIIndex\fR identifies the embedded window, and \fIoption\fR
 specifies a particular configuration option, which must be one of
-the ones listed in the section EMBEDDED WINDOWS.
+the ones listed in the section \fBEMBEDDED WINDOWS\fR.
 .TP
 \fIpathName \fBwindow configure \fIindex\fR ?\fIoption value ...\fR?
 Query or modify the configuration options for an embedded window.
@@ -1438,7 +1432,7 @@ identical to the corresponding sublist of the value returned if no
 If one or more \fIoption\-value\fR pairs are specified, then the command
 modifies the given option(s) to have the given value(s);  in
 this case the command returns an empty string.
-See EMBEDDED WINDOWS for information on the options that
+See \fBEMBEDDED WINDOWS\fR for information on the options that
 are supported.
 .TP
 \fIpathName \fBwindow create \fIindex\fR ?\fIoption value ...\fR?
@@ -1446,7 +1440,7 @@ This command creates a new window annotation, which will appear
 in the text at the position given by \fIindex\fR.
 Any number of \fIoption\-value\fR pairs may be specified to
 configure the annotation.
-See EMBEDDED WINDOWS for information on the options that
+See \fBEMBEDDED WINDOWS\fR for information on the options that
 are supported.
 Returns an empty string.
 .TP
@@ -1563,7 +1557,6 @@ the one given by \fInumber\fR visible at the top of the window.
 \fINumber\fR must be an integer.
 This command used to be used for scrolling, but now it is obsolete.
 .RE
-
 .SH BINDINGS
 .PP
 Tk automatically creates class bindings for texts that give them
@@ -1717,18 +1710,19 @@ front of the insertion cursor without moving the insertion cursor.
 Meta-backspace and Meta-Delete delete the word to the left of the
 insertion cursor.
 .IP [30]
-Control-x deletes whatever is selected in the text widget.
+Control-x deletes whatever is selected in the text widget
+after copying it to the clipboard.
 .IP [31]
 Control-t reverses the order of the two characters to the right of
 the insertion cursor. 
 .IP [32]
 .VS 8.4
 Control-z (and Control-underscore on UNIX when \fBtk_strictMotif\fR is
-true) undoes the last edit action if the \fB-undo\fR option is true.
+true) undoes the last edit action if the \fB\-undo\fR option is true.
 Does nothing otherwise.
 .IP [33]
 Control-Z (or Control-y on Windows) reapplies the last undone edit
-action if the \fB-undo\fR option is true. Does nothing otherwise.
+action if the \fB\-undo\fR option is true. Does nothing otherwise.
 .VE 8.4
 .PP
 If the widget is disabled using the \fB\-state\fR option, then its
@@ -1738,7 +1732,6 @@ take place.
 .PP
 The behavior of texts can be changed by defining new bindings for
 individual widgets or by redefining the class bindings.
-
 .SH "PERFORMANCE ISSUES"
 .PP
 Text widgets should run efficiently under a variety
@@ -1772,5 +1765,9 @@ especially if they have many marks and tags within them.
 The display line with the insert cursor is redrawn each time the
 cursor blinks, which causes a steady stream of graphics traffic.
 Set the \fBinsertOffTime\fP attribute to 0 avoid this.
+
+.SH "SEE ALSO"
+entry(n), scrollbar(n)
+
 .SH KEYWORDS
 text, widget, tkvars

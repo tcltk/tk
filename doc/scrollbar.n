@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: scrollbar.n,v 1.3 2000/08/25 06:58:32 ericm Exp $
+'\" RCS: @(#) $Id: scrollbar.n,v 1.3.8.1 2004/10/28 12:25:22 dkf Exp $
 '\" 
 .so man.macros
 .TH scrollbar n 4.1 Tk "Tk Built-In Commands"
@@ -69,7 +69,7 @@ A scrollbar is a widget that displays two arrows, one at each end of
 the scrollbar, and a \fIslider\fR in the middle portion of the
 scrollbar.
 It provides information about what is visible in an \fIassociated window\fR
-that displays an document of some sort (such as a file being edited or
+that displays a document of some sort (such as a file being edited or
 a drawing).
 The position and size of the slider indicate which portion of the
 document is visible in the associated window.  For example, if the
@@ -78,9 +78,8 @@ between the two arrows, it means that the associated window displays
 the top third of its document.
 .PP
 Scrollbars can be used to adjust the view in the associated window
-by clicking or dragging with the mouse.  See the BINDINGS section
+by clicking or dragging with the mouse.  See the \fBBINDINGS\fR section
 below for details.
-
 .SH "ELEMENTS"
 .PP
 A scrollbar displays five elements, which are referred to in the
@@ -100,7 +99,6 @@ The region between the slider and \fBarrow2\fR.
 .TP 10
 \fBarrow2\fR
 The bottom or right arrow in the scrollbar.
-
 .SH "WIDGET COMMAND"
 .PP
 The \fBscrollbar\fR command creates a new Tcl command whose
@@ -190,7 +188,6 @@ For example, if \fIfirst\fR is 0.2 and \fIlast\fR is 0.4, it means
 that the first part of the document visible in the window is 20%
 of the way through the document, and the last visible part is 40%
 of the way through.
-
 .SH "SCROLLING COMMANDS"
 .PP
 When the user interacts with the scrollbar, for example by dragging
@@ -227,7 +224,6 @@ is a slight overlap between the old and new views.
 \fINumber\fR is either 1, which means the next page should
 become visible, or \-1, which means that the previous page should
 become visible.
-
 .SH "OLD COMMAND SYNTAX"
 .PP
 In versions of Tk before 4.0, the \fBset\fR and \fBget\fR widget
@@ -268,13 +264,11 @@ to use the old syntax.
 If it is given two real arguments then the new syntax will be
 used in the future, and if it is given four integer arguments then
 the old syntax will be used.
-
 .SH BINDINGS
 Tk automatically creates class bindings for scrollbars that give them
 the following default behavior.
 If the behavior is different for vertical and horizontal scrollbars,
 the horizontal behavior is described in parentheses.
-
 .IP [1]
 Pressing button 1 over \fBarrow1\fR causes the view in the
 associated widget to shift up (left) by one unit so that the
@@ -336,6 +330,16 @@ as mouse clicks over \fBtrough1\fR and \fBtrough2\fR, respectively.
 The Home key adjusts the view to the top (left edge) of the document.
 .IP [14]
 The End key adjusts the view to the bottom (right edge) of the document.
+.SH EXAMPLE
+Create a window with a scrollable \fBtext\fR widget:
+.CS
+toplevel .tl
+text .tl.t -yscrollcommand {.tl.s set}
+\fBscrollbar\fR .tl.s -command {.tl.t yview}
+grid .tl.t .tl.s -sticky nsew
+grid columnconfigure .tl 0 -weight 1
+grid rowconfigure .tl 0 -weight 1
+.CE
 
 .SH KEYWORDS
 scrollbar, widget

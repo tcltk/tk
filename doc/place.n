@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: place.n,v 1.3 2000/08/10 00:21:06 ericm Exp $
+'\" RCS: @(#) $Id: place.n,v 1.3.8.1 2004/10/28 12:25:22 dkf Exp $
 '\" 
 .so man.macros
 .TH place n "" Tk "Tk Built-In Commands"
@@ -14,15 +14,7 @@
 .SH NAME
 place \- Geometry manager for fixed or rubber-sheet placement
 .SH SYNOPSIS
-\fBplace \fIwindow option value \fR?\fIoption value ...\fR?
-.sp
-\fBplace configure \fIwindow \fR?\fIoption\fR? ?\fIvalue option value ...\fR?
-.sp
-\fBplace forget \fIwindow\fR
-.sp
-\fBplace info \fIwindow\fR
-.sp
-\fBplace slaves \fIwindow\fR
+\fBplace \fIoption arg \fR?\fIarg ...\fR?
 .BE
 
 .SH DESCRIPTION
@@ -104,7 +96,7 @@ If \fIsize\fR is an empty string, or if no \fB\-height\fR or
 internally by the window will be used.
 .TP
 \fB\-in \fImaster\fR
-\fIMaster\fR specifes the path name of the window relative
+\fIMaster\fR specifies the path name of the window relative
 to which \fIwindow\fR is to be placed.
 \fIMaster\fR must either be \fIwindow\fR's parent or a descendant
 of \fIwindow\fR's parent.
@@ -203,13 +195,12 @@ command.
 \fBplace slaves \fIwindow\fR
 Returns a list of all the slave windows for which \fIwindow\fR is the master.
 If there are no slaves for \fIwindow\fR then an empty string is returned.
-
+.PP
 If the configuration of a window has been retrieved with
 \fBplace info\fR, that configuration can be restored later by
 first using \fBplace forget\fR to erase any existing information
 for the window and then invoking \fBplace configure\fR with
 the saved information.
-
 .SH "FINE POINTS"
 .PP
 It is not necessary for the master window to be the parent
@@ -245,6 +236,16 @@ the master windows or the parents of slave windows (i.e. it doesn't
 set their requested sizes).
 To control the sizes of these windows, make them windows like
 frames and canvases that provide configuration options for this purpose.
+.SH EXAMPLE
+Make the label occupy the middle bit of the toplevel, no matter how it
+is resized:
+.CS
+label .l \-text "In the\\nMiddle!" \-bg black \-fg white
+\fBplace\fR .l \-relwidth .3 \-relx .35 \-relheight .3 \-rely .35
+.CE
+
+.SH "SEE ALSO"
+grid(n), pack(n)
 
 .SH KEYWORDS
 geometry manager, height, location, master, place, rubber sheet, slave, width
