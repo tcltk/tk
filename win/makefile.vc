@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.22 1999/04/16 01:51:48 stanton Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.23 1999/04/17 00:18:41 surles Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -359,15 +359,17 @@ install-binaries:
 install-libraries:
 	@mkd "$(INCLUDE_INSTALL_DIR)"
 	@mkd "$(INCLUDE_INSTALL_DIR)\X11"
-	copy "$(ROOT)\generic\tk.h" "$(INCLUDE_INSTALL_DIR)"
-	xcopy "$(ROOT)\xlib\X11\*.h" "$(INCLUDE_INSTALL_DIR)\X11"
+	copy "$(ROOT)\generic\tk.h"             "$(INCLUDE_INSTALL_DIR)"
+	copy "$(ROOT)\generic\tkDecls.h"        "$(INCLUDE_INSTALL_DIR)"
+	copy "$(ROOT)\generic\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)"
+	xcopy "$(ROOT)\xlib\X11\*.h"            "$(INCLUDE_INSTALL_DIR)\X11"
 	@mkd "$(SCRIPT_INSTALL_DIR)"
 	@mkd "$(SCRIPT_INSTALL_DIR)\images"
 	@mkd "$(SCRIPT_INSTALL_DIR)\demos"
 	@mkd "$(SCRIPT_INSTALL_DIR)\demos\images"
-	xcopy "$(ROOT)\library" "$(SCRIPT_INSTALL_DIR)"
-	xcopy "$(ROOT)\library\images" "$(SCRIPT_INSTALL_DIR)\images"
-	xcopy "$(ROOT)\library\demos" "$(SCRIPT_INSTALL_DIR)\demos"
+	xcopy "$(ROOT)\library"              "$(SCRIPT_INSTALL_DIR)"
+	xcopy "$(ROOT)\library\images"       "$(SCRIPT_INSTALL_DIR)\images"
+	xcopy "$(ROOT)\library\demos"        "$(SCRIPT_INSTALL_DIR)\demos"
 	xcopy "$(ROOT)\library\demos\images" "$(SCRIPT_INSTALL_DIR)\demos\images"
 
 $(TKLIB): $(TKDLL) $(TKSTUBLIB)
