@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menubut.test,v 1.5 1999/04/21 21:53:29 rjohnson Exp $
+# RCS: @(#) $Id: menubut.test,v 1.6 2001/05/21 14:07:33 tmh Exp $
 
 # XXX This test file is woefully incomplete right now.  If any part
 # XXX of a procedure has tests then the whole procedure has tests,
@@ -138,7 +138,7 @@ test menubutton-3.6 {ButtonWidgetCmd procedure, "cget" option} {
 } {3}
 test menubutton-3.7 {ButtonWidgetCmd procedure, "configure" option} {
     llength [.mb configure]
-} {32}
+} {33}
 test menubutton-3.8 {ButtonWidgetCmd procedure, "configure" option} {
     list [catch {.mb configure -gorp} msg] $msg
 } {1 {unknown option "-gorp"}}
