@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.33 2000/04/08 06:59:09 hobbs Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.34 2000/05/03 00:18:37 hobbs Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -26,7 +26,7 @@
 #
 
 ROOT		= ..
-TCLDIR		= ..\..\tcl8.3
+TCLDIR		= ..\..\tcl8.4
 INSTALLDIR      = c:\progra~1\tcl
 
 # Set this to the appropriate value of /MACHINE: for your platform
@@ -56,8 +56,8 @@ NODEBUG = 1
 TCLNAMEPREFIX = tcl
 TKNAMEPREFIX = tk
 WISHNAMEPREFIX = wish
-VERSION = 83
-DOTVERSION = 8.3
+VERSION = 84
+DOTVERSION = 8.4
 
 TCLSTUBPREFIX = $(TCLNAMEPREFIX)stub
 TKSTUBPREFIX  = $(TKNAMEPREFIX)stub

@@ -1,3 +1,19 @@
+2000-05-02  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* README:
+	* generic/tk.h:
+	* library/tk.tcl:
+	* mac/README:
+	* unix/README:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/README:
+	* win/aclocal.m4:
+	* win/configure.in:
+	* win/makefile.vc: updated patchlevel to 8.4a1
+
+	* unix/Makefile.in: added tk.spec to dist target
+
 2000-04-27  Eric Melski  <ericm@scriptics.com>
 
 	* doc/Tk_Init.3: Added Tk_SafeInit information [Bug: 1884].
