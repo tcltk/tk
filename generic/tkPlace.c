@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.9 2001/08/29 23:22:24 hobbs Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.10 2001/09/26 20:25:17 pspjuth Exp $
  */
 
 #include "tkPort.h"
@@ -810,7 +810,7 @@ RecomputePlacement(clientData)
     register Master *masterPtr = (Master *) clientData;
     register Slave *slavePtr;
     int x, y, width, height, tmp;
-    int masterWidth, masterHeight, masterBW;
+    int masterWidth, masterHeight, masterX, masterY;
     double x1, y1, x2, y2;
 
     masterPtr->flags &= ~PARENT_RECONFIG_PENDING;
@@ -827,25 +827,29 @@ RecomputePlacement(clientData)
 	 * account desired border mode.
 	 */
 
-	masterBW = 0;
+	masterX = masterY = 0;
 	masterWidth = Tk_Width(masterPtr->tkwin);
 	masterHeight = Tk_Height(masterPtr->tkwin);
 	if (slavePtr->borderMode == BM_INSIDE) {
-	    masterBW = Tk_InternalBorderWidth(masterPtr->tkwin);
+	    masterX = Tk_InternalBorderLeft(masterPtr->tkwin);
+	    masterY = Tk_InternalBorderTop(masterPtr->tkwin);
+            masterWidth -= masterX + Tk_InternalBorderRight(masterPtr->tkwin);
+            masterHeight -= masterY +
+		    Tk_InternalBorderBottom(masterPtr->tkwin);
 	} else if (slavePtr->borderMode == BM_OUTSIDE) {
-	    masterBW = -Tk_Changes(masterPtr->tkwin)->border_width;
+	    masterX = masterY = -Tk_Changes(masterPtr->tkwin)->border_width;
+            masterWidth -= 2 * masterX;
+            masterHeight -= 2 * masterY;
 	}
-	masterWidth -= 2*masterBW;
-	masterHeight -= 2*masterBW;
 
 	/*
 	 * Step 2:  compute size of slave (outside dimensions including
 	 * border) and location of anchor point within master.
 	 */
 
-	x1 = slavePtr->x + masterBW + (slavePtr->relX*masterWidth);
+	x1 = slavePtr->x + masterX + (slavePtr->relX*masterWidth);
 	x = (int) (x1 + ((x1 > 0) ? 0.5 : -0.5));
-	y1 = slavePtr->y + masterBW + (slavePtr->relY*masterHeight);
+	y1 = slavePtr->y + masterY + (slavePtr->relY*masterHeight);
 	y = (int) (y1 + ((y1 > 0) ? 0.5 : -0.5));
 	if (slavePtr->flags & (CHILD_WIDTH|CHILD_REL_WIDTH)) {
 	    width = 0;

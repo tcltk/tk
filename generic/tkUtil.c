@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.10 2001/08/15 15:44:36 dkf Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.11 2001/09/26 20:25:17 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -794,7 +794,7 @@ TkComputeAnchor(anchor, tkwin, padX, padY, innerWidth, innerHeight, xPtr, yPtr)
 	case TK_ANCHOR_NW:
 	case TK_ANCHOR_W:
 	case TK_ANCHOR_SW:
-	    *xPtr = Tk_InternalBorderWidth(tkwin) + padX;
+	    *xPtr = Tk_InternalBorderLeft(tkwin) + padX;
 	    break;
 
 	case TK_ANCHOR_N:
@@ -804,7 +804,7 @@ TkComputeAnchor(anchor, tkwin, padX, padY, innerWidth, innerHeight, xPtr, yPtr)
 	    break;
 
 	default:
-	    *xPtr = Tk_Width(tkwin) - (Tk_InternalBorderWidth(tkwin) + padX)
+	    *xPtr = Tk_Width(tkwin) - (Tk_InternalBorderRight(tkwin) + padX)
 		    - innerWidth;
 	    break;
     }
@@ -813,7 +813,7 @@ TkComputeAnchor(anchor, tkwin, padX, padY, innerWidth, innerHeight, xPtr, yPtr)
 	case TK_ANCHOR_NW:
 	case TK_ANCHOR_N:
 	case TK_ANCHOR_NE:
-	    *yPtr = Tk_InternalBorderWidth(tkwin) + padY;
+	    *yPtr = Tk_InternalBorderTop(tkwin) + padY;
 	    break;
 
 	case TK_ANCHOR_W:
@@ -823,7 +823,7 @@ TkComputeAnchor(anchor, tkwin, padX, padY, innerWidth, innerHeight, xPtr, yPtr)
 	    break;
 
 	default:
-	    *yPtr = Tk_Height(tkwin) - Tk_InternalBorderWidth(tkwin) - padY
+	    *yPtr = Tk_Height(tkwin) - Tk_InternalBorderBottom(tkwin) - padY
 		    - innerHeight;
 	    break;
     }

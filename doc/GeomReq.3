@@ -6,20 +6,24 @@
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
 '\" 
-'\" RCS: @(#) $Id: GeomReq.3,v 1.2 1998/09/14 18:22:48 stanton Exp $
+'\" RCS: @(#) $Id: GeomReq.3,v 1.3 2001/09/26 20:25:17 pspjuth Exp $
 '\" 
 .so man.macros
-.TH Tk_GeometryRequest 3 "" Tk "Tk Library Procedures"
+.TH Tk_GeometryRequest 3 "8.4" Tk "Tk Library Procedures"
 .BS
 .SH NAME
-Tk_GeometryRequest, Tk_SetInternalBorder \- specify desired geometry or internal border for a window
+Tk_GeometryRequest, Tk_SetMinimumRequestSize, Tk_SetInternalBorder, Tk_SetInternalBorderEx \- specify desired geometry or internal border for a window
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
 .sp
 \fBTk_GeometryRequest\fR(\fItkwin, reqWidth, reqHeight\fR)
 .sp
+\fBTk_SetMinimumRequestSize\fR(\fItkwin, minWidth, minHeight\fR)
+.sp
 \fBTk_SetInternalBorder\fR(\fItkwin, width\fR)
+.sp
+\fBTk_SetInternalBorderEx\fR(\fItkwin, left, right, top, bottom\fR)
 .SH ARGUMENTS
 .AS baseHeight clientData
 .AP Tk_Window tkwin in
@@ -28,8 +32,20 @@ Window for which geometry is being requested.
 Desired width for \fItkwin\fR, in pixel units.
 .AP int reqHeight in
 Desired height for \fItkwin\fR, in pixel units.
+.AP int minWidth in
+Desired minimum requested width for \fItkwin\fR, in pixel units.
+.AP int minHeight in
+Desired minimum requested height for \fItkwin\fR, in pixel units.
 .AP int width in
 Space to leave for internal border for \fItkwin\fR, in pixel units.
+.AP int left in
+Space to leave for left side of internal border for \fItkwin\fR, in pixel units.
+.AP int right in
+Space to leave for right side of internal border for \fItkwin\fR, in pixel units.
+.AP int top in
+Space to leave for top side of internal border for \fItkwin\fR, in pixel units.
+.AP int bottom in
+Space to leave for bottom side of internal border for \fItkwin\fR, in pixel units.
 .BE
 
 .SH DESCRIPTION
@@ -60,9 +76,21 @@ specifies the width of the border in pixels.  Geometry managers will
 use this information to avoid placing any children of \fItkwin\fR
 overlapping the outermost \fIwidth\fR pixels of \fItkwin\fR's area.
 .PP
-The information specified in calls to \fBTk_GeometryRequest\fR and
-\fBTk_SetInternalBorder\fR can be retrieved using the macros
-\fBTk_ReqWidth\fR, \fBTk_ReqHeight\fR, and \fBTk_InternalBorderWidth\fR.
+\fBTk_SetInternalBorderEx\fR works like \fBTk_SetInternalBorder\fR
+but lets you specify different widths for different sides of the window.
+.PP
+\fBTk_SetMinimumRequestSize\fR is called by widget code to indicate
+that a geometry manager should request at least this size for the
+widget.  This allows a widget to have some control over its size when
+a propagating geometry manager is used inside it.
+.PP
+The information specified in calls to \fBTk_GeometryRequest\fR,
+\fBTk_SetMinimumRequestSize\fR, \fBTk_SetInternalBorder\fR and
+\fBTk_SetInternalBorderEx\fR can be retrieved using the macros
+\fBTk_ReqWidth\fR, \fBTk_ReqHeight\fR, \fBTk_MinReqWidth\fR,
+\fBTk_MinReqHeight\fR, \fBTk_MinReqWidth\fR, \fBTk_InternalBorderLeft\fR,
+\fBTk_InternalBorderRight\fR, \fBTk_InternalBorderTop\fR and
+\fBTk_InternalBorderBottom\fR.
 See the \fBTk_WindowId\fR manual entry for details.
 
 .SH KEYWORDS

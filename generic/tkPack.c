@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.12 2001/09/23 11:30:44 pspjuth Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.13 2001/09/26 20:25:17 pspjuth Exp $
  */
 
 #include "tkPort.h"
@@ -556,8 +556,6 @@ ArrangePacking(clientData)
 				 * allocated to the current window. */
     int x, y, width, height;	/* These variables are used to hold the
 				 * actual geometry of the current window. */
-    int intBWidth;		/* Width of internal border in parent window,
-				 * if any. */
     int abort;			/* May get set to non-zero to abort this
 				 * repacking operation. */
     int borderX, borderY;
@@ -609,8 +607,10 @@ ArrangePacking(clientData)
      * maxHeight -	Same as maxWidth, except keeps height info.
      */
 
-    intBWidth = Tk_InternalBorderWidth(masterPtr->tkwin);
-    width = height = maxWidth = maxHeight = 2*intBWidth;
+    width = maxWidth = Tk_InternalBorderLeft(masterPtr->tkwin) +
+	    Tk_InternalBorderRight(masterPtr->tkwin);
+    height = maxHeight = Tk_InternalBorderTop(masterPtr->tkwin) +
+	    Tk_InternalBorderBottom(masterPtr->tkwin);
     for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
 	    slavePtr = slavePtr->nextPtr) {
 	if ((slavePtr->side == TOP) || (slavePtr->side == BOTTOM)) {
@@ -636,6 +636,13 @@ ArrangePacking(clientData)
     }
     if (height > maxHeight) {
 	maxHeight = height;
+    }
+
+    if (maxWidth < Tk_MinReqWidth(masterPtr->tkwin)) {
+	maxWidth = Tk_MinReqWidth(masterPtr->tkwin);
+    }
+    if (maxHeight < Tk_MinReqHeight(masterPtr->tkwin)) {
+	maxHeight = Tk_MinReqHeight(masterPtr->tkwin);
     }
 
     /*
@@ -666,9 +673,14 @@ ArrangePacking(clientData)
      * frame, depending on anchor.
      */
 
-    cavityX = cavityY = x = y = intBWidth;
-    cavityWidth = Tk_Width(masterPtr->tkwin) - 2*intBWidth;
-    cavityHeight = Tk_Height(masterPtr->tkwin) - 2*intBWidth;
+    cavityX = x = Tk_InternalBorderLeft(masterPtr->tkwin);
+    cavityY = y = Tk_InternalBorderTop(masterPtr->tkwin);
+    cavityWidth = Tk_Width(masterPtr->tkwin) -
+	    Tk_InternalBorderLeft(masterPtr->tkwin) -
+	    Tk_InternalBorderRight(masterPtr->tkwin);
+    cavityHeight = Tk_Height(masterPtr->tkwin) -
+	    Tk_InternalBorderTop(masterPtr->tkwin) -
+	    Tk_InternalBorderBottom(masterPtr->tkwin);
     for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
 	    slavePtr = slavePtr->nextPtr) {
 	if ((slavePtr->side == TOP) || (slavePtr->side == BOTTOM)) {

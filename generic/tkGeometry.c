@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGeometry.c,v 1.4 2000/10/05 00:50:00 ericm Exp $
+ * RCS: @(#) $Id: tkGeometry.c,v 1.5 2001/09/26 20:25:17 pspjuth Exp $
  */
 
 #include "tkPort.h"
@@ -165,6 +165,79 @@ Tk_GeometryRequest(tkwin, reqWidth, reqHeight)
 /*
  *----------------------------------------------------------------------
  *
+ * Tk_SetInternalBorderEx --
+ *
+ *	Notify relevant geometry managers that a window has an internal
+ *	border of a given width and that child windows should not be
+ *	placed on that border.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The border widths are recorded for the window, and all geometry
+ *	managers of all children are notified so that can re-layout, if
+ *	necessary.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_SetInternalBorderEx(tkwin, left, right, top, bottom)
+    Tk_Window tkwin;		/* Window that will have internal border. */
+    int left, right;		/* Width of internal border, in pixels. */
+    int top, bottom;
+{
+    register TkWindow *winPtr = (TkWindow *) tkwin;
+    register int changed = 0;
+
+    if (left < 0) {
+	left = 0;
+    }
+    if (left != winPtr->internalBorderLeft) {
+	winPtr->internalBorderLeft = left;
+	changed = 1;
+    }
+
+    if (right < 0) {
+	right = 0;
+    }
+    if (right != winPtr->internalBorderRight) {
+	winPtr->internalBorderRight = right;
+	changed = 1;
+    }
+
+    if (top < 0) {
+	top = 0;
+    }
+    if (top != winPtr->internalBorderTop) {
+	winPtr->internalBorderTop = top;
+	changed = 1;
+    }
+
+    if (bottom < 0) {
+	bottom = 0;
+    }
+    if (bottom != winPtr->internalBorderBottom) {
+	winPtr->internalBorderBottom = bottom;
+	changed = 1;
+    }
+
+    /*
+     * All the slaves for which this is the master window must now be
+     * repositioned to take account of the new internal border width.
+     * To signal all the geometry managers to do this, just resize the
+     * window to its current size.  The ConfigureNotify event will
+     * cause geometry managers to recompute everything.
+     */
+
+    if (changed) {
+	Tk_ResizeWindow(tkwin, Tk_Width(tkwin), Tk_Height(tkwin));
+    }
+}
+/*
+ *----------------------------------------------------------------------
+ *
  * Tk_SetInternalBorder --
  *
  *	Notify relevant geometry managers that a window has an internal
@@ -187,19 +260,45 @@ Tk_SetInternalBorder(tkwin, width)
     Tk_Window tkwin;		/* Window that will have internal border. */
     int width;			/* Width of internal border, in pixels. */
 {
+    Tk_SetInternalBorderEx(tkwin, width, width, width, width);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_SetMinimumRequestSize --
+ *
+ *	Notify relevant geometry managers that a window has a minimum
+ *	request size.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The minimum request size is recorded for the window, and 
+ *      a new size is requested for the window, if necessary.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_SetMinimumRequestSize(tkwin, minWidth, minHeight)
+    Tk_Window tkwin;		/* Window that will have internal border. */
+    int minWidth, minHeight;	/* Minimum requested size, in pixels. */
+{
     register TkWindow *winPtr = (TkWindow *) tkwin;
 
-    if (width == winPtr->internalBorderWidth) {
+    if ((winPtr->minReqWidth == minWidth) &&
+	    (winPtr->minReqHeight == minHeight)) {
 	return;
     }
-    if (width < 0) {
-	width = 0;
-    }
-    winPtr->internalBorderWidth = width;
+
+    winPtr->minReqWidth = minWidth;
+    winPtr->minReqHeight = minHeight;
 
     /*
-     * All the slaves for which this is the master window must now be
-     * repositioned to take account of the new internal border width.
+     * The changed min size may cause geometry managers to get a
+     * different result, so make them recompute.
      * To signal all the geometry managers to do this, just resize the
      * window to its current size.  The ConfigureNotify event will
      * cause geometry managers to recompute everything.
