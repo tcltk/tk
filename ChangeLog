@@ -1,3 +1,15 @@
+2003-07-15  Don Porter  <dgp@users.sourceforge.net>
+
+	* README:		Bumped patchlevel to 8.4.4 in preparation
+	* generic/tk.h:		for the Tk 8.4.4 release.
+	* macosx/Wish.pbproj/project.pbxproj:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf (2.13)
+	* win/configure:
+
 2003-07-15  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkMenu.c
