@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.1.4.11 1999/03/09 02:48:44 lfb Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.1.4.12 1999/03/26 02:37:18 redman Exp $
  */
 
 #include "tkWinInt.h"
@@ -1124,7 +1124,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
     char **argv;		/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
-    TkWindow *winPtr;
+    TkWindow *winPtr = NULL;
     register WmInfo *wmPtr;
     int c;
     size_t length;
@@ -4014,7 +4014,7 @@ WmProc(hwnd, message, wParam, lParam)
 			 * leaving move/size mode.  Note that this mechanism
 			 * assumes move/size is only one level deep. */
     LRESULT result;
-    TkWindow *winPtr;
+    TkWindow *winPtr = NULL;
 
     if (TkWinHandleMenuEvent(&hwnd, &message, &wParam, &lParam, &result)) {
 	goto done;
