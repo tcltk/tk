@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDefault.h,v 1.1.4.2 1998/09/30 02:18:05 stanton Exp $
+ * RCS: @(#) $Id: tkMacDefault.h,v 1.1.4.3 1999/02/13 05:09:36 lfb Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -349,7 +349,8 @@
 #define DEF_SCALE_FG_COLOR		BLACK
 #define DEF_SCALE_FG_MONO		BLACK
 #define DEF_SCALE_FROM			"0"
-#define DEF_SCALE_HIGHLIGHT_BG		NORMAL_BG
+#define DEF_SCALE_HIGHLIGHT_BG_COLOR	DEF_SCALE_BG_COLOR
+#define DEF_SCALE_HIGHLIGHT_BG_MONO	DEF_SCALE_BG_MONO
 #define DEF_SCALE_HIGHLIGHT		BLACK
 #define DEF_SCALE_HIGHLIGHT_WIDTH	"0"
 #define DEF_SCALE_LABEL			""

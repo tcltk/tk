@@ -10,18 +10,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.1.4.6 1998/12/13 08:16:21 lfb Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.1.4.7 1999/02/13 05:09:37 lfb Exp $
  */
 
 #include "tkWinInt.h"
 
-typedef struct ThreadSpecificData {
-    TkDisplay *winDisplay;      /* Display that represents Windows screen. */
-    HINSTANCE tkInstance;       /* Application instance handle. */
-    int childClassInitialized;  /* Registered child class? */
-    WNDCLASS childClass;	/* Window class for child windows. */
-} ThreadSpecificData;
-static Tcl_ThreadDataKey dataKey;
+static TkDisplay *winDisplay;     /* Display that represents Windows screen. */
+static HINSTANCE tkInstance;      /* Application instance handle. */
+static int childClassInitialized; /* Registered child class? */
+static WNDCLASS childClass;	  /* Window class for child windows. */
 
 /*
  * The zmouse.h file includes the definition for WM_MOUSEWHEEL.
@@ -111,10 +108,7 @@ TkGetServerInfo(interp, tkwin)
 HINSTANCE
 Tk_GetHINSTANCE()
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    return tsdPtr->tkInstance;
+    return tkInstance;
 }
 
 /*
@@ -138,37 +132,35 @@ TkWinXInit(hInstance)
     HINSTANCE hInstance;
 {
     OSVERSIONINFO info;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     GetVersionEx(&info);
     tkpIsWin32s = (info.dwPlatformId == VER_PLATFORM_WIN32s);
 
-    if (tsdPtr->childClassInitialized != 0) {
+    if (childClassInitialized != 0) {
 	return;
     }
-    tsdPtr->childClassInitialized = 1;
+    childClassInitialized = 1;
 
-    tsdPtr->tkInstance = hInstance;
+    tkInstance = hInstance;
 
-    tsdPtr->childClass.style = CS_HREDRAW | CS_VREDRAW | CS_CLASSDC;
-    tsdPtr->childClass.cbClsExtra = 0;
-    tsdPtr->childClass.cbWndExtra = 0;
-    tsdPtr->childClass.hInstance = hInstance;
-    tsdPtr->childClass.hbrBackground = NULL;
-    tsdPtr->childClass.lpszMenuName = NULL;
+    childClass.style = CS_HREDRAW | CS_VREDRAW | CS_CLASSDC;
+    childClass.cbClsExtra = 0;
+    childClass.cbWndExtra = 0;
+    childClass.hInstance = hInstance;
+    childClass.hbrBackground = NULL;
+    childClass.lpszMenuName = NULL;
 
     /*
      * Register the Child window class.
      */
 
-    tsdPtr->childClass.lpszClassName = TK_WIN_CHILD_CLASS_NAME;
-    tsdPtr->childClass.lpfnWndProc = TkWinChildProc;
-    tsdPtr->childClass.hIcon = NULL;
-    tsdPtr->childClass.hCursor = NULL;
+    childClass.lpszClassName = TK_WIN_CHILD_CLASS_NAME;
+    childClass.lpfnWndProc = TkWinChildProc;
+    childClass.hIcon = NULL;
+    childClass.hCursor = NULL;
 
-    if (!RegisterClass(&tsdPtr->childClass)) {
+    if (!RegisterClass(&childClass)) {
 	panic("Unable to register TkChild class");
     }
 }
@@ -193,15 +185,12 @@ void
 TkWinXCleanup(hInstance)
     HINSTANCE hInstance;
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
     /*
      * Clean up our own class.
      */
     
-    if (tsdPtr->childClassInitialized) {
-        tsdPtr->childClassInitialized = 0;
+    if (childClassInitialized) {
+        childClassInitialized = 0;
         UnregisterClass(TK_WIN_CHILD_CLASS_NAME, hInstance);
     }
 
@@ -265,13 +254,11 @@ TkpOpenDisplay(display_name)
     HDC dc;
     TkWinDrawable *twdPtr;
     Display *display;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (tsdPtr->winDisplay != NULL) {
-	if (strcmp(tsdPtr->winDisplay->display->display_name, display_name) 
+    if (winDisplay != NULL) {
+	if (strcmp(winDisplay->display->display_name, display_name) 
                 == 0) {
-	    return tsdPtr->winDisplay;
+	    return winDisplay;
 	} else {
 	    return NULL;
 	}
@@ -373,9 +360,9 @@ TkpOpenDisplay(display_name)
     display->default_screen = 0;
     screen->cmap = XCreateColormap(display, None, screen->root_visual,
 	    AllocNone);
-    tsdPtr->winDisplay = (TkDisplay *) ckalloc(sizeof(TkDisplay));
-    tsdPtr->winDisplay->display = display;
-    return tsdPtr->winDisplay;
+    winDisplay = (TkDisplay *) ckalloc(sizeof(TkDisplay));
+    winDisplay->display = display;
+    return winDisplay;
 }
 
 /*
@@ -401,10 +388,8 @@ TkpCloseDisplay(dispPtr)
 {
     Display *display = dispPtr->display;
     HWND hwnd;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (dispPtr != tsdPtr->winDisplay) {
+    if (dispPtr != winDisplay) {
         panic("TkpCloseDisplay: tried to call TkpCloseDisplay on another display");
         return;
     }
@@ -423,7 +408,7 @@ TkpCloseDisplay(dispPtr)
 	}
     }
 
-    tsdPtr->winDisplay = NULL;
+    winDisplay = NULL;
 
     if (display->display_name != (char *) NULL) {
         ckfree(display->display_name);

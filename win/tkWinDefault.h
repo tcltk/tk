@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDefault.h,v 1.1.4.2 1998/09/30 02:19:30 stanton Exp $
+ * RCS: @(#) $Id: tkWinDefault.h,v 1.1.4.3 1999/02/13 05:09:37 lfb Exp $
  */
 
 #ifndef _TKWINDEFAULT
@@ -348,7 +348,8 @@
 #define DEF_SCALE_FG_COLOR		NORMAL_FG
 #define DEF_SCALE_FG_MONO		BLACK
 #define DEF_SCALE_FROM			"0"
-#define DEF_SCALE_HIGHLIGHT_BG		NORMAL_BG
+#define DEF_SCALE_HIGHLIGHT_BG_COLOR	DEF_SCALE_BG_COLOR
+#define DEF_SCALE_HIGHLIGHT_BG_MONO	DEF_SCALE_BG_MONO
 #define DEF_SCALE_HIGHLIGHT		HIGHLIGHT
 #define DEF_SCALE_HIGHLIGHT_WIDTH	"2"
 #define DEF_SCALE_LABEL			""
