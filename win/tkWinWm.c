@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.78 2004/10/21 01:13:06 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.79 2004/10/29 22:28:31 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -2859,7 +2859,7 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
     char *string;
     int i, boolean, length;
 
-    if (objc < 3) {
+    if ((objc < 3) || ((objc > 5) && ((objc%2) == 0))) {
         configArgs:
 	Tcl_WrongNumArgs(interp, 2, objv,
 		"window"
@@ -2902,12 +2902,12 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 	} else if (strncmp(string, "-alpha", length) == 0) {
 	    stylePtr = &exStyle;
 	    styleBit = WS_EX_LAYERED;
-	} else if ((strncmp(string, "-toolwindow", length) == 0)
-		   && (length >= 3)) {
+	} else if ((length > 3)
+		   && (strncmp(string, "-toolwindow", length) == 0)) {
 	    stylePtr = &exStyle;
 	    styleBit = WS_EX_TOOLWINDOW;
-	} else if ((strncmp(string, "-topmost", length) == 0)
-		   && (length >= 3)) {
+	} else if ((length > 3)
+		   && (strncmp(string, "-topmost", length) == 0)) {
 	    stylePtr = &exStyle;
 	    styleBit = WS_EX_TOPMOST;
 	    if ((i < objc-1) && (winPtr->flags & TK_EMBEDDED)) {
@@ -2922,7 +2922,7 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 	if (styleBit == WS_EX_LAYERED) {
 	    double dval;
 
-	    if (i == objc-1) {
+	    if (objc == 4) {
 		Tcl_SetDoubleObj(Tcl_GetObjResult(interp), wmPtr->alpha);
 	    } else {
 		if ((i < objc-1) &&
@@ -2964,7 +2964,7 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 			    != TCL_OK)) {
 		return TCL_ERROR;
 	    }
-	    if (i == objc-1) {
+	    if (objc == 4) {
 		Tcl_SetIntObj(Tcl_GetObjResult(interp),
 			((*stylePtr & styleBit) != 0));
 	    } else if (boolean) {
@@ -4826,8 +4826,10 @@ WmStateCmd(tkwin, winPtr, interp, objc, objv)
 	} else if (index == OPT_WITHDRAWN) {
 	    wmPtr->flags |= WM_WITHDRAWN;
 	    TkpWmSetState(winPtr, WithdrawnState);
-	} else { /* OPT_ZOOMED */
+	} else if (index == OPT_ZOOMED) {
 	    TkpWmSetState(winPtr, ZoomState);
+	} else {
+	    Tcl_Panic("wm state not matched");
 	}
     } else {
 	if (wmPtr->iconFor != NULL) {
