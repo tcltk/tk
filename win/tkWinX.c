@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.10.2.2 2001/04/06 00:13:24 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.10.2.3 2001/10/13 01:23:27 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -22,6 +22,12 @@
 #include <zmouse.h>
 
 /*
+ * imm.h is needed by HandleIMEComposition
+ */
+
+#include <imm.h>
+
+/*
  * Declarations of static variables used in this file.
  */
 
@@ -29,7 +35,7 @@ static char winScreenName[] = ":0"; /* Default name of windows display. */
 static HINSTANCE tkInstance;        /* Application instance handle. */
 static int childClassInitialized;   /* Registered child class? */
 static WNDCLASS childClass;	    /* Window class for child windows. */
-static int tkPlatformId;	    /* version of Windows platform */
+static int tkPlatformId = 0;	    /* version of Windows platform */
 static Tcl_Encoding keyInputEncoding = NULL;/* The current character
 				     * encoding for keyboard input */
 static int keyInputCharset = -1;    /* The Win32 CHARSET for the keyboard
@@ -90,8 +96,14 @@ TkGetServerInfo(interp, tkwin)
 
     os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     GetVersionEx(&os);
-    sprintf(buffer, "Windows %d.%d %d Win32", os.dwMajorVersion,
-	    os.dwMinorVersion, os.dwBuildNumber);
+    sprintf(buffer, "Windows %d.%d %d %s", os.dwMajorVersion,
+	    os.dwMinorVersion, os.dwBuildNumber,
+#ifdef _WIN64
+	    "Win64"
+#else
+	    "Win32"
+#endif
+	);
     Tcl_SetResult(interp, buffer, TCL_VOLATILE);
 }
 
@@ -137,18 +149,12 @@ void
 TkWinXInit(hInstance)
     HINSTANCE hInstance;
 {
-    OSVERSIONINFO os;
-
     if (childClassInitialized != 0) {
 	return;
     }
     childClassInitialized = 1;
 
     tkInstance = hInstance;
-
-    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx(&os);
-    tkPlatformId = os.dwPlatformId;
 
     /*
      * When threads are enabled, we cannot use CLASSDC because
@@ -227,7 +233,7 @@ TkWinXCleanup(hInstance)
  * TkWinGetPlatformId --
  *
  *	Determines whether running under NT, 95, or Win32s, to allow 
- *	runtime conditional code.
+ *	runtime conditional code.  Win32s is no longer supported.
  *
  * Results:
  *	The return value is one of:
@@ -244,6 +250,13 @@ TkWinXCleanup(hInstance)
 int		
 TkWinGetPlatformId()
 {
+    if (tkPlatformId == 0) {
+	OSVERSIONINFO os;
+
+	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	GetVersionEx(&os);
+	tkPlatformId = os.dwPlatformId;
+    }
     return tkPlatformId;
 }
 
@@ -344,7 +357,7 @@ TkpOpenDisplay(display_name)
     twdPtr->window.winPtr = NULL;
     twdPtr->window.handle = NULL;
     screen->root = (Window)twdPtr;
- 
+
     /*
      * On windows, when creating a color bitmap, need two pieces of 
      * information: the number of color planes and the number of 
@@ -1199,7 +1212,7 @@ HandleIMEComposition(hwnd, lParam)
     char * buff;
     TkWindow *winPtr;
 
-    if (tkPlatformId != VER_PLATFORM_WIN32_NT) {
+    if (TkWinGetPlatformId() != VER_PLATFORM_WIN32_NT) {
         /*
          * The ImmGetCompositionStringW function works only on WinNT.
          */
