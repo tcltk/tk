@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: grid.n,v 1.9 2004/06/21 14:40:15 dkf Exp $
+'\" RCS: @(#) $Id: grid.n,v 1.10 2004/06/21 14:41:42 dkf Exp $
 '\" 
 .so man.macros
 .TH grid n 8.5 Tk "Tk Built-In Commands"
@@ -397,20 +397,20 @@ text .t.txt \-wrap none \-xscroll {.t.h set} \-yscroll {.t.v set}
 scrollbar .t.v \-orient vertical   \-command {.t.txt xview}
 scrollbar .t.h \-orient horizontal \-command {.t.txt xview}
 # Lay them out
-grid .t.txt .t.v \-sticky nsew
-grid .t.h        \-sticky nsew
+\fBgrid\fR .t.txt .t.v \-sticky nsew
+\fBgrid\fR .t.h        \-sticky nsew
 # Tell the text widget to take all the extra room
-grid rowconfigure    .t .t.txt -weight 1
-grid columnconfigure .t .t.txt -weight 1
+\fBgrid\fR rowconfigure    .t .t.txt -weight 1
+\fBgrid\fR columnconfigure .t .t.txt -weight 1
 .CE
 .PP
-Three widgets of equal width:
+Three widgets of equal width, despite their different "natural" widths:
 .CS
 button .b \-text "Foo"
 entry .e \-variable foo
 label .l \-text "This is a fairly long piece of text"
-grid .b .e .l \-sticky ew
-grid columnconfigure . "all" \-uniform allTheSame
+\fBgrid\fR .b .e .l \-sticky ew
+\fBgrid\fR columnconfigure . "all" \-uniform allTheSame
 .CE
 
 .SH "SEE ALSO"
