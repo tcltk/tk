@@ -1,9 +1,14 @@
 2001-08-28  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tkWinDialog.c (ChooseDirectoryHookProc): work-around for MS
+	bug that caused crashing in tk_chooseDirectory on Win95.
+	[Bug #224936] (baker)
+
 	* unix/tkUnixWm.c (TkWmRestackToplevel): reworked how
 	ConfigureNotify requests were handled in relation to the parent to
 	avoid the problem with potential 'raise' delays on some wms.
-	[Bug #220260] (baker)
+	[Bug #220260] (baker) wms that were affected should notice the
+	difference in tests unixWm-51.* not failing that failed before.
 
 2001-08-27  Jeff Hobbs  <jeffh@ActiveState.com>
 
