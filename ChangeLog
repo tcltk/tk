@@ -1,3 +1,7 @@
+2005-01-12  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/event.n: Added section on predefined virtual events. [Bug 608115]
+
 2005-01-11  Vince Darley  <vincentdarley@users.sourceforge.net>
 
 	* generic/tkTextDisp.c: fix to scrollbar height calculations

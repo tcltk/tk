@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: event.n,v 1.10 2004/08/29 09:27:35 dkf Exp $
+'\" RCS: @(#) $Id: event.n,v 1.11 2005/01/12 11:03:33 dkf Exp $
 '\" 
 .so man.macros
 .TH event n 8.3 Tk "Tk Built-In Commands"
@@ -306,6 +306,70 @@ for binding scripts.
 Any options that are not specified when generating an event are filled 
 with the value 0, except for \fIserial\fR, which is filled with the 
 next X event serial number.  
+.SH "PREDEFINED VIRTUAL EVENTS"
+Tk defines the following virtual events for the purposes of
+notification:
+.TP
+\fB<<AltUnderlined>>\fR
+This is sent to widget to notify it that the letter it has underlined
+(as an accelerator indicator) with the \fB\-underline\fR option has
+been pressed in combination with the Alt key. The usual response to
+this is to either focus into the widget (or some related widget) or to
+invoke the widget.
+.TP
+\fB<<ListboxSelect>>\fR
+This is sent to a listbox when the set of selected item(s) in the
+listbox is updated.
+.TP
+\fB<<MenuSelect>>\fR
+This is sent to a menu when the currently selected item in the menu
+changes. It is intended for use with context-sensitive help systems.
+.TP
+\fB<<Modified>>\fR
+This is sent to a text widget when the contents of the widget are
+changed.
+.TP
+\fB<<Selection>>\fR
+This is sent to a text widget when the selection in the widget is
+changed.
+.TP
+\fB<<TraverseIn>>\fR
+This is sent to a widget when the focus enters the widget because of a
+user-driven "tab to widget" action.
+.TP
+\fB<<TraverseOut>>\fR
+This is sent to a widget when the focus leaves the widget because of a
+user-driven "tab to widget" action.
+.PP
+Tk defines the following virtual events for the purposes of unifying
+bindings across multiple platforms. Users expect them to behave in the
+following way:
+.TP
+\fB<<Clear>>\fR
+Delete the currently selected widget contents.
+.TP
+\fB<<Copy>>\fR
+Copy the currently selected widget contents to the clipboard.
+.TP
+\fB<<Cut>>\fR
+Move the currently selected widget contents to the clipboard.
+.TP
+\fB<<Paste>>\fR
+Replace the currently selected widget contents with the contents of
+the clipboard.
+.TP
+\fB<<PasteSelection>>\fR
+Insert the contents of the selection at the mouse location. (This
+event has meaningful \fB%x\fR and \fB%y\fR substitutions).
+.TP
+\fB<<PrevWindow>>\fR
+Traverse to the previous window.
+.TP
+\fB<<Redo>>\fR
+Redo one undone action.
+.TP
+\fB<<Undo>>\fR
+Undo the last action.
 .SH "VIRTUAL EVENT EXAMPLES"
 .PP
 In order for a virtual event binding to trigger, two things must
