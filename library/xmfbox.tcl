@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.14 2000/06/30 20:19:07 ericm Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.15 2001/06/14 10:56:58 dkf Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Scriptics Corporation
@@ -347,8 +347,8 @@ proc tkMotifFDialog_BuildUI {w} {
 
     # The buttons
     #
-	set maxWidth [::msgcat::mcmax OK Filter Cancel]
-	set maxWidth [expr $maxWidth<6?6:$maxWidth]
+    set maxWidth [::msgcat::mcmax OK Filter Cancel]
+    set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
     set data(okBtn) [button $bot.ok -text [::msgcat::mc "OK"] \
 	    -width $maxWidth -under 0 \
 	    -command [list tkMotifFDialog_OkCmd $w]]
