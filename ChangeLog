@@ -1,3 +1,16 @@
+2000-09-29  Eric Melski  <ericm@ajubasolutions.com>
+
+	* generic/tkTest.c: Fixed tests to use updated API.
+
+	* doc/SetOptions.3:
+	* generic/tk.h: 
+	* generic/tkConfig.c: Changed interface for Tk_CustomOptionSetProc
+	and Tk_CustomOptionGetProc; these now take a pointer to the start
+	of the widget record, and an integer offset to the slot for the
+	option value, instead of just a pointer to the slot.  This allows
+	more sophisticated options to do interesting things based on other
+	data in the widget record.
+
 2000-09-17  Eric Melski  <ericm@ajubasolutions.com>
 
 	* generic/tk.h: Added declaration of Tk_ObjCustomOption structure,

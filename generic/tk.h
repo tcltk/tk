@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.50 2000/09/17 21:02:39 ericm Exp $
+ * RCS: @(#) $Id: tk.h,v 1.51 2000/09/29 17:55:31 ericm Exp $
  */
 
 #ifndef _TK
@@ -212,10 +212,10 @@ typedef struct Tk_OptionSpec {
  */
 
 typedef int (Tk_CustomOptionSetProc) _ANSI_ARGS_((ClientData clientData,
-	Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj **value,
-	char *internalPtr, char *saveInternalPtr, int flags));
+	Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj **value, char *widgRec,
+	int offset, char *saveInternalPtr, int flags));
 typedef Tcl_Obj *(Tk_CustomOptionGetProc) _ANSI_ARGS_((ClientData clientData,
-	Tk_Window tkwin, char *internalPtr));
+	Tk_Window tkwin, char *widgRec, int offset));
 typedef void (Tk_CustomOptionRestoreProc) _ANSI_ARGS_((ClientData clientData,
 	Tk_Window tkwin, char *internalPtr, char *saveInternalPtr));
 typedef void (Tk_CustomOptionFreeProc) _ANSI_ARGS_((ClientData clientData,

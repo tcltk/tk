@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: SetOptions.3,v 1.6 2000/09/17 21:02:39 ericm Exp $
+'\" RCS: @(#) $Id: SetOptions.3,v 1.7 2000/09/29 17:55:30 ericm Exp $
 '\" 
 .so man.macros
 .TH Tk_SetOptions 3 8.1 Tk "Tk Library Procedures"
@@ -527,14 +527,16 @@ typedef int Tk_CustomOptionSetProc(
 	Tcl_Interp *\fIinterp\fR, 
 	Tk_Window \fItkwin\fR, 
 	Tcl_Obj **\fIvaluePtr\fR,
-	char *\fIinternalPtr\fR, 
+	char *\fIrecordPtr\fR,
+	int \fIinternalOffset\fR,
 	char *\fIsaveInternalPtr\fR, 
 	int \fIflags\fR);
 
 typedef Tcl_Obj *Tk_CustomOptionGetProc(
 	ClientData \fIclientData\fR,
 	Tk_Window \fItkwin\fR, 
-	char *\fIinternalPtr\fR);
+	char *\fIrecordPtr\fR,
+	int \fIinternalOffset\fR);
 
 typedef void Tk_CustomOptionRestoreProc(
 	ClientData \fIclientData\fR,
@@ -581,15 +583,17 @@ stored at the objOffset for the option.  \fISetProc\fR may modify the
 value if necessary; for example, \fIsetProc\fR may change the value to
 NULL to support the TK_OPTION_NULL_OK flag.
 .TP
-\fIinternalPtr\fR
-A pointer to the internal storage allocated for the option
-in the widget record.  The value referenced by \fIinternalPtr\fR
-should be set to the internal representation of the new option value.
+\fIrecordPtr\fR
+A pointer to the start of the widget record to modify.
+.TP
+\fIinternalOffset\fR
+Offset in bytes from the start of the widget record to the location
+where the internal representation of the option value is to be placed.
 .TP
 \fIsaveInternalPtr\fR
 A pointer to storage allocated in a Tk_SavedOptions structure for the
 internal representation of the original option value.  Before setting
-\fIinternalPtr\fR to its new value, \fIsetProc\fR should set the value
+the option to its new value, \fIsetProc\fR should set the value
 referenced by \fIsaveInternalPtr\fR to the original value of the
 option in order to support \fBTk_RestoreSavedOptions\fR.
 .TP
@@ -608,10 +612,12 @@ The \fIgetProc\fR procedure is invoked by \fBTk_GetOptionValue\fR and
 internal representation of an option.  The \fIclientData\fR argument
 is a copy of the \fIclientData\fR field in the Tk_ObjCustomOption
 structure.  \fITkwin\fR is a copy of the \fItkwin\fR argument to
-\fBTk_GetOptionValue\fR or \fBTk_GetOptionInfo\fR.  \fIInternalPtr\fR
-is a pointer to the internal representation of the option value.
-\fIGetProc\fR must return a pointer to a Tcl_Obj representing the
-value of the option.
+\fBTk_GetOptionValue\fR or \fBTk_GetOptionInfo\fR.  \fIRecordPtr\fR
+is a pointer to the beginning of the widget record to query.
+\fIInternalOffset\fR is the offset in bytes from the beginning of the
+widget record to the location where the internal representation of the
+option value is stored.  \fIGetProc\fR must return a pointer to a
+Tcl_Obj representing the value of the option.
 .PP
 The \fIrestoreProc\fR procedure is invoked by
 \fBTk_RestoreSavedOptions\fR to restore a previously saved internal
@@ -619,7 +625,8 @@ representation of a custom option value.  The \fIclientData\fR argument
 is a copy of the \fIclientData\fR field in the Tk_ObjCustomOption
 structure.  \fITkwin\fR is a copy of the \fItkwin\fR argument to
 \fBTk_GetOptionValue\fR or \fBTk_GetOptionInfo\fR.  \fIInternalPtr\fR
-is a pointer to the internal representation of the option value.
+is a pointer to the location where internal representation of the
+option value is stored.
 \fISaveInternalPtr\fR is a pointer to the saved value.
 \fIRestoreProc\fR must copy the value from \fIsaveInternalPtr\fR to
 \fIinternalPtr\fR to restore the value.  \fIRestoreProc\fR need not
@@ -633,9 +640,9 @@ internal representation of a custom option.  The \fIclientData\fR argument
 is a copy of the \fIclientData\fR field in the Tk_ObjCustomOption
 structure.  \fITkwin\fR is a copy of the \fItkwin\fR argument to
 \fBTk_GetOptionValue\fR or \fBTk_GetOptionInfo\fR.  \fIInternalPtr\fR
-is a pointer to the internal representation of the option value.
-The \fIfreeProc\fR must free any storage associated with the option.
-\fIFreeProc\fR has no return value.
+is a pointer to the location where the internal representation of the
+option value is stored.  The \fIfreeProc\fR must free any storage
+associated with the option.  \fIFreeProc\fR has no return value.
 
 
 .SH KEYWORDS
