@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.19 2000/11/22 01:49:38 ericm Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.20 2001/09/21 21:19:43 hobbs Exp $
 
 library tk
 
@@ -703,7 +703,7 @@ declare 5 win {
 }
 
 declare 6 win {
-    int TkpScanWindowId (Tcl_Interp *interp, char *string, int *idPtr)
+    int TkpScanWindowId (Tcl_Interp *interp, char *string, Window *idPtr)
 }
 
 declare 7 win {
