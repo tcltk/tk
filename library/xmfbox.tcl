@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"::tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.23 2002/07/22 21:25:39 mdejong Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.24 2002/09/09 20:05:27 uid38172 Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Scriptics Corporation
@@ -817,26 +817,25 @@ proc ::tk::MotifFDialog_ActivateSEnt {w} {
 	    set item [file join $data(selectPath) $item]
 	} elseif {![file exists [file dirname $item]]} {
 	    tk_messageBox -icon warning -type ok \
-	    -message [mc {Directory "%1$s" does not exist.} \
-		[file dirname $item]]
+		    -message [mc {Directory "%1$s" does not exist.} \
+		    [file dirname $item]]
 	    return
 	}
 
 	if {![file exists $item]} {
 	    if {[string equal $data(type) open]} {
 		tk_messageBox -icon warning -type ok \
-		    -message [mc {File "$item" does not exist.} \
-			$item]
+			-message [mc {File "%1$s" does not exist.} $item]
 		return
 	    }
 	} else {
 	    if {[string equal $data(type) save]} {
-	    set message [format %s%s \
-		[mc {File "%1$s" already exists.\n\n} \
-		    $selectFilePath ] \
-		[mc {Replace existing file?}]]
+		set message [format %s%s \
+			[mc {File "%1$s" already exists.\n\n} \
+			$selectFilePath] \
+			[mc {Replace existing file?}]]
 		set answer [tk_messageBox -icon warning -type yesno \
-				-message $message]
+			-message $message]
 		if {[string equal $answer "no"]} {
 		    return
 		}
