@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.20 1999/06/18 18:44:01 wart Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.21 1999/06/22 18:56:57 wart Exp $
 
 # Current Tk version;  used in various names.
 
@@ -41,7 +41,7 @@ INSTALL_ROOT =
 TK_LIBRARY =		$(prefix)/lib/tk$(VERSION)
 
 # Path name to use when installing library scripts:
-SCRIPT_INSTALL_DIR =	$(INSTALL_ROOT)$(TK_LIBRARY)
+SCRIPT_INSTALL_DIR =	$(INSTALL_ROOT)/$(TK_LIBRARY)
 
 # Directory in which to install the .a or .so binary for the Tk library:
 LIB_INSTALL_DIR =	$(INSTALL_ROOT)$(exec_prefix)/lib
