@@ -1,3 +1,9 @@
+2004-09-06  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/tkfbox.tcl (::tk::dialog::file::Create): use label
+	instead of button for "File of type", as it properly handles
+	-state disabled now.
+
 2004-08-26  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/text.tcl (::tk::TextTranspose): Ensure that Transpose is
