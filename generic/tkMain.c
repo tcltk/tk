@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.1.4.6 1999/03/10 07:13:44 stanton Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.1.4.7 1999/04/07 00:58:22 stanton Exp $
  */
 
 #include <ctype.h>
@@ -225,6 +225,7 @@ Tk_MainEx(argc, argv, appInitProc, interp)
      */
 
     if (fileName != NULL) {
+	Tcl_ResetResult(interp);
 	code = Tcl_EvalFile(interp, fileName);
 	if (code != TCL_OK) {
 	    /*
