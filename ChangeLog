@@ -1,3 +1,9 @@
+2004-06-09  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkUndo.c (TkUndoSetDepth): Delete the unlinked element and
+	not the next element.  Stops a crash in some situations and a memory
+	leak in others. Thanks to Jiang Wu for spotting this. [Bug 969358]
+
 2004-06-08  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* generic/tkCanvText.c (DisplayCanvText): Fix text
