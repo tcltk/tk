@@ -1,7 +1,12 @@
+2002-10-17  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/text.test:                    properly return the number of
+	* unix/tkUnixFont.c (ControlUtfProc): bytes consumed. [Bug #624732]
+
 2002-10-15  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* README:
-	* generic/tk.h:
+	* README:           updated to 8.3.5 patchlevel
+	* generic/tk.h:     pointed README urls at www.tcl.tk
 	* mac/README:
 	* unix/README:
 	* unix/configure:

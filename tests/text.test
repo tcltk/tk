@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.10.2.1 2000/08/05 23:53:15 hobbs Exp $
+# RCS: @(#) $Id: text.test,v 1.10.2.2 2002/10/17 23:38:21 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1366,22 +1366,15 @@ test text-24.1 {bug fix - 1642} {
     .t search -backward -regexp "\$" insert 1.0
 } {2.6}
 
+test text-26.1 {bug fix - 624372, ControlUtfProc long lines} {
+    destroy .t
+    pack [text .t -wrap none]
+    .t insert end [string repeat "\1" 500]
+} {}
+
 eval destroy [winfo child .]
 option clear
 
 # cleanup
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

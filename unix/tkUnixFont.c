@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.8.2.3 2002/03/26 23:47:55 andreas_kupries Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.8.2.4 2002/10/17 23:38:21 hobbs Exp $
  */
  
 #include "tkUnixInt.h"
@@ -366,7 +366,7 @@ ControlUtfProc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
 				 * correspond to the bytes stored in the
 				 * output buffer. */
 {
-    CONST char *srcEnd;
+    CONST char *srcStart, *srcEnd;
     char *dstStart, *dstEnd;
     Tcl_UniChar ch;
     int result;
@@ -376,8 +376,9 @@ ControlUtfProc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
 	'a', 'b', 't', 'n', 'v', 'f', 'r'
     };
 
-    result = TCL_OK;    
+    result = TCL_OK;
 
+    srcStart = src;
     srcEnd = src + srcLen;
 
     dstStart = dst;
@@ -407,7 +408,7 @@ ControlUtfProc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
 	    dst += 6;
 	}
     }
-    *srcReadPtr = src - srcEnd;
+    *srcReadPtr = src - srcStart;
     *dstWrotePtr = dst - dstStart;
     *dstCharsPtr = dst - dstStart;
     return result;
@@ -948,21 +949,23 @@ Tk_MeasureChars(tkfont, source, numBytes, maxLength, flags, lengthPtr)
 	    next = p + Tcl_UtfToUniChar(p, &ch);
 	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch);
 	    if (thisSubFontPtr != lastSubFontPtr) {
-		familyPtr = lastSubFontPtr->familyPtr;
-		Tcl_UtfToExternalDString(familyPtr->encoding, source,
-			p - source, &runString);
-		if (familyPtr->isTwoByteFont) {
-		    curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
-			    (XChar2b *) Tcl_DStringValue(&runString),
-			    Tcl_DStringLength(&runString) / 2);
-		} else {
-		    curX += XTextWidth(lastSubFontPtr->fontStructPtr,
-			    Tcl_DStringValue(&runString),
-			    Tcl_DStringLength(&runString));
+		if (p > source) {
+		    familyPtr = lastSubFontPtr->familyPtr;
+		    Tcl_UtfToExternalDString(familyPtr->encoding, source,
+			    p - source, &runString);
+		    if (familyPtr->isTwoByteFont) {
+			curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
+				(XChar2b *) Tcl_DStringValue(&runString),
+				Tcl_DStringLength(&runString) / 2);
+		    } else {
+			curX += XTextWidth(lastSubFontPtr->fontStructPtr,
+				Tcl_DStringValue(&runString),
+				Tcl_DStringLength(&runString));
+		    }
+		    Tcl_DStringFree(&runString);
+		    source = p;
 		}
-		Tcl_DStringFree(&runString);
 		lastSubFontPtr = thisSubFontPtr;
-		source = p;
 	    }
 	    p = next;
 	}
