@@ -8,7 +8,7 @@ Jim Ingham
 Cygnus Solutions
 jingham@cygnus.com
 
-RCS: @(#) $Id: README,v 1.4 1998/11/11 17:29:34 jingham Exp $
+RCS: @(#) $Id: README,v 1.5 1998/11/12 05:59:13 jingham Exp $
 
 1. Introduction
 ---------------
@@ -200,7 +200,13 @@ Special notes:
 * We are starting to support the new Appearance Manager that shipped
   with MacOS 8.0.  The Tk 8.0.3 release is the first Tk release
   that supports the Appearance Manager well.  Tk 8.0.4 extends this support
-  to the menu system.
+  to the menu system, though you have to have Appearance 1.0.1 or later
+  installed for this to work.
+  
+* If you get the Unix tar file, it will untar into a directory tcl8.0.4.  However,
+  the Macintosh project files expect the folder to be called tcl8.0.  You will need
+  to rename the folder to tcl8.0, or change all the paths in the project files.
+
 
 7. About Dialog
 ---------------
