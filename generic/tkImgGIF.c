@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.14.2.1 2000/08/05 23:53:11 hobbs Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.14.2.2 2001/08/24 23:58:14 hobbs Exp $
  */
 
 /*
@@ -1083,6 +1083,7 @@ mInit(string, handle)
 {
    handle->data = string;
    handle->state = 0;
+   handle->c = 0;
 }
 
 /*
@@ -1160,7 +1161,7 @@ Mgetc(handle)
 
     if (c>GIF_SPECIAL) {
 	handle->state = GIF_DONE;
-	return(handle->state ? handle->c : GIF_DONE);
+	return handle->c;
     }
 
     switch (handle->state++) {
