@@ -1,3 +1,17 @@
+2003-02-14  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* README:             Bumped to 8.4.2.
+	* generic/tk.h:
+	* macosx/Wish.pbproj/project.pbxproj:
+	* unix/configure:
+	* unix/configure.in:
+	* unix/tcl.m4:
+	* unix/tk.spec:
+	* win/configure:
+	* win/configure.in:
+
+	* unix/tcl.m4: correct HP-UX ia64 --enable-64bit build flags
+
 2003-02-13  Kevin Kenny  <kennykb@users.sourceforge.net>
 
 	* doc/wish.n: Added language to describe the handling of

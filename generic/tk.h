@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.73 2002/10/09 19:35:37 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.74 2003/02/15 02:20:59 hobbs Exp $
  */
 
 #ifndef _TK
@@ -50,10 +50,10 @@ extern "C" {
 #define TK_MAJOR_VERSION   8
 #define TK_MINOR_VERSION   4
 #define TK_RELEASE_LEVEL   TCL_FINAL_RELEASE
-#define TK_RELEASE_SERIAL  1
+#define TK_RELEASE_SERIAL  2
 
 #define TK_VERSION	"8.4"
-#define TK_PATCH_LEVEL	"8.4.1"
+#define TK_PATCH_LEVEL	"8.4.2"
 
 /*
  * The following definitions set up the proper options for Macintosh
