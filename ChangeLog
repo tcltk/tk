@@ -1,3 +1,10 @@
+2003-09-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/makefile.vc:    Implementation of TIP #150, "Provide
+	* win/tkWinSend.c:    'send' command for Windows"
+	* win/tkWinSendCom.h:
+	* win/tkWinSendCom.c:
+
 2003-09-26  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
 
     * macosx/tkMacOSXWm.c (TkWmStackorderToplevelWrapperMap): Add

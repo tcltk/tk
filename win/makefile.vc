@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.72 2003/08/25 20:35:59 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.73 2003/09/26 23:59:26 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -241,6 +241,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkWinRegion.obj \
 	$(TMP_DIR)\tkWinScrlbr.obj \
 	$(TMP_DIR)\tkWinSend.obj \
+	$(TMP_DIR)\tkWinSendCom.obj \
 	$(TMP_DIR)\tkWinWindow.obj \
 	$(TMP_DIR)\tkWinWm.obj \
 	$(TMP_DIR)\tkWinX.obj \
@@ -425,7 +426,7 @@ dlllflags = $(lflags) -dll
 conlflags = $(lflags) -subsystem:console
 guilflags = $(lflags) -subsystem:windows
 
-baselibs  = kernel32.lib advapi32.lib user32.lib
+baselibs  = kernel32.lib advapi32.lib user32.lib ole32.lib oleaut32.lib uuid.lib
 guilibs	  = $(baselibs) shell32.lib gdi32.lib comdlg32.lib winspool.lib imm32.lib comctl32.lib
 
 
