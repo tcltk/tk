@@ -1,3 +1,9 @@
+2003-09-18  Peter Spjuth  <peter.spjuth@space.se>
+	* doc/grid.n:
+	* tests/grid.test:
+	* generic/tkGrid.c: Implementation of TIP#147,
+	"Make Grid's Column/Row Configure Easier".
+
 2003-09-17  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkImage.c:	Stopped [image create] from generating an

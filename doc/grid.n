@@ -4,10 +4,10 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: grid.n,v 1.5 2001/09/30 19:01:58 pspjuth Exp $
+'\" RCS: @(#) $Id: grid.n,v 1.6 2003/09/18 18:22:22 pspjuth Exp $
 '\" 
 .so man.macros
-.TH grid n 8.4 Tk "Tk Built-In Commands"
+.TH grid n 8.5 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
@@ -46,12 +46,16 @@ indicated is returned.
 \fBgrid columnconfigure \fImaster index \fR?\fI\-option value...\fR?
 Query or set the column properties of the \fIindex\fP column of the 
 geometry master, \fImaster\fP.
-.VS 8.4
 The valid options are \fB\-minsize\fP, \fB\-weight\fP, \fB\-uniform\fP
 and \fB-pad\fP.
-.VE
 If one or more options are provided, then \fIindex\fP may be given as 
-a list of column indeces to which the configuration options will operate on.
+a list of column indices to which the configuration options will operate on.
+.VS 8.5
+Indices may be integers, window names or the keyword \fIall\fP. For \fIall\fP
+the options apply to all columns currently occupied be slave windows. For
+a window name, that window must be a slave of this master and the options
+apply to all columns currently occupied be the slave.
+.VE
 The \fB\-minsize\fP option sets the minimum size, in screen units,
 that will be permitted for this column.
 The \fB\-weight\fP option (an integer value)
@@ -61,14 +65,12 @@ columns.
 A weight of zero (0) indicates the column will not deviate from its requested
 size.  A column whose weight is two will grow at twice the rate as a column
 of weight one when extra space is allocated to the layout.
-.VS 8.4
 The \fB-uniform\fP option, when a non-empty value is supplied, places
 the column in a \fIuniform group\fP with other columns that have the
 same value for \fB-uniform\fP.  The space for columns belonging to a
 uniform group is allocated so that their sizes are always in strict
 proportion to their \fB-weight\fP values.  See
 ``THE GRID ALGORITHM'' below for further details.
-.VE
 The \fB-pad\fP option specifies the number of screen units that will be
 added to the largest window contained completely in that column when the
 grid geometry manager requests a size from the containing window.
@@ -204,12 +206,16 @@ Propagation is enabled by default.
 \fBgrid rowconfigure \fImaster index \fR?\fI\-option value...\fR?
 Query or set the row properties of the \fIindex\fP row of the 
 geometry master, \fImaster\fP.
-.VS 8.4
 The valid options are \fB\-minsize\fP, \fB\-weight\fP, \fB\-uniform\fP
 and \fB-pad\fP.
-.VE
 If one or more options are provided, then \fIindex\fP may be given as 
-a list of row indeces to which the configuration options will operate on.
+a list of row indices to which the configuration options will operate on.
+.VS 8.5
+Indices may be integers, window names or the keyword \fIall\fP. For \fIall\fP
+the options apply to all rows currently occupied be slave windows. For
+a window name, that window must be a slave of this master and the options
+apply to all rows currently occupied be the slave.
+.VE
 The \fB\-minsize\fP option sets the minimum size, in screen units,
 that will be permitted for this row.
 The \fB\-weight\fP option (an integer value)
@@ -219,14 +225,12 @@ rows.
 A weight of zero (0) indicates the row will not deviate from its requested
 size.  A row whose weight is two will grow at twice the rate as a row
 of weight one when extra space is allocated to the layout.
-.VS 8.4
 The \fB-uniform\fP option, when a non-empty value is supplied, places
 the row in a \fIuniform group\fP with other rows that have the
 same value for \fB-uniform\fP.  The space for rows belonging to a
 uniform group is allocated so that their sizes are always in strict
 proportion to their \fB-weight\fP values.  See
 ``THE GRID ALGORITHM'' below for further details.
-.VE
 The \fB-pad\fP option specifies the number of screen units that will be
 added to the largest window contained completely in that row when the
 grid geometry manager requests a size from the containing window.
