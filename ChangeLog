@@ -1,4 +1,13 @@
+2001-08-27  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkWindow.c (Initialize): added call to Tcl_SetMainLoop.
+	This only has effect when tclsh is run (not wish), and then Tk is
+	loaded in interactively.
+
 2001-08-24  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/unixFont.test (unixFont-2.[234]): fixed to be more
+	sensitive on systems that have more installed fonts.
 
 	* generic/tkWindow.c (Tk_DestroyWindow): changed to use
 	Tcl_EventuallyFree instead of ckfree so that widgets that have

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.16.2.1 2001/08/24 23:57:59 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.16.2.2 2001/08/28 00:13:58 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -2961,6 +2961,16 @@ Initialize(interp)
     code = Tcl_PkgProvideEx(interp, "Tk", TK_VERSION, (ClientData) &tkStubs);
     if (code != TCL_OK) {
 	goto done;
+    } else {
+	/*
+	 * If we were able to provide ourselves as a package, then set
+	 * the main loop procedure in Tcl to our main loop proc.  This
+	 * will cause tclsh to be event-aware when Tk is dynamically
+	 * loaded.  This will have no effect in wish, which already is
+	 * prepared to run the event loop.
+	 */
+
+	Tcl_SetMainLoop(Tk_MainLoop);
     }
 
 #ifdef Tk_InitStubs
