@@ -1,5 +1,9 @@
 2000-02-10  Jeff Hobbs  <hobbs@scriptics.com>
 
+	8.3.0 RELEASE
+
+	* changes: updated for 8.3.0 release
+
 	* generic/tkImgGIF.c (FileReadGIF): added cast for trashBuffer
 
 	* generic/tkIntXlibDecls.h:

@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.40 2000/01/14 03:25:35 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.41 2000/02/10 09:55:46 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4788,3 +4788,57 @@ on Windows (hobbs)
 text widget was disabled [Bug: 1807] (hobbs)
 
 --- Released 8.3b2, January 13, 2000 --- See ChangeLog for details ---
+
+2000-01-20 (bug fix) fixed interpretation of consecutive ^ characters in
+grid command (melski)
+
+2000-01-20 (bug fix) fixed -select(bg|fg) class names in listbox (hobbs)
+
+2000-01-20 (bug fix) fixed handling of too few coords for line item type in
+canvas (hobbs)
+
+2000-01-20 (bug fix) fixed dialog's association with parent (melski)
+
+2000-01-26 (bug fix) fixed handling of binary data for -data option to
+image create (melski)
+
+2000-01-26 (feature enhancement) improved GIF decoding speed by ~60%
+(melski)
+
+2000-01-26 (feature enhancement) added tk_chooseDirectory implementation
+for Unix and Mac (nelson, melski)
+
+2000-02-01 (bug fix) fixed resolution rounding problem in scale (porter)
+and fixed potential Unix seg fault due to use of ckfree instead of
+Tcl_EventuallyFree (hobbs)
+
+2000-02-01 (bug fix) fixed handling of negative dash values for canvas
+items (nijtmans)
+
+2000-02-01 (bug fix) fixed dialog lockup on Windows where once the native
+dialog disappeared, the parent window could end up locked up (hobbs)
+
+2000-02-03 (bug fix) fixed text dump to use char indices instead of byte
+indices (melski)
+
+2000-02-07 (bug fix) fixed handling of default extension in unix file
+dialogs (dejong)
+
+2000-02-08 (bug fix) corrected windows symbol font use to restrict itself
+to 8-bit chars (kenny)
+
+2000-02-08 (feature enhancement) improved support for moving from the old
+style image C API to the new obj'ified one with new Tk_InitImageArgs
+command and stub'ing of image code.  See docs for how to make the
+transition. (nijtmans)
+
+2000-02-08 (bug fix) fixed incorrect handling of CapsLock on Win9* and the
+use of dead keys on international keyboards (spjuth)
+
+2000-02-10 (bug fix) brought Mac back to building state, added support
+for Appearance Manager (ingham)
+
+2000-02-10 (feature enhancement) added support for buttons 4 && 5 as
+mousewheel style scrolling in listbox and text widget for Unix.
+
+--- Released 8.3.0, February 10, 2000 --- See ChangeLog for details ---
