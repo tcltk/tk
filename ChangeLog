@@ -5,6 +5,15 @@
 	Unix.  If there are similar dependencies on other platforms, they
 	can probably be removed as well.  [Bug 572134].
 
+2002-06-20  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/listbox.n:
+	* generic/tkListbox.c (DisplayListbox): 
+	* mac/tkMacDefault.h:   TIP #94 implementation adding -activestyle
+	* tests/listbox.test:   option to the listbox.  This adds the ability 
+	* unix/tkUnixDefault.h: to have listboxes look native on Windows, and
+	* win/tkWinDefault.h:   "nicer" elsewhere using the 'dotbox' style.
+
 2002-06-20  Peter Spjuth  <peter.spjuth@space.se>
 
 	* generic/tkGrid.c: Corrected the test for grid propagate change.
