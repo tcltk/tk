@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.23 2003/12/05 17:19:06 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.24 2003/12/15 11:51:05 vincentdarley Exp $
  */
 
 #ifndef _TKTEXT
@@ -1012,6 +1012,8 @@ EXTERN TkTextIndex *	TkTextMakeCharIndex _ANSI_ARGS_((TkTextBTree tree,
 			    TkTextIndex *indexPtr));
 EXTERN int		TkTextMeasureDown _ANSI_ARGS_((TkText *textPtr,
 			    TkTextIndex *srcPtr, int distance));
+EXTERN void		TkTextFreeElideInfo _ANSI_ARGS_((
+			    TkTextElideInfo *infoPtr));
 EXTERN int		TkTextIsElided _ANSI_ARGS_((CONST TkText *textPtr,
 			    CONST TkTextIndex *indexPtr, 
 			    TkTextElideInfo *infoPtr));

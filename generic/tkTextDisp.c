@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.37 2003/12/05 17:19:06 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.38 2003/12/15 11:51:06 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -23,6 +23,53 @@
 #ifdef __WIN32__
 #include "tkWinInt.h"
 #endif
+
+/*
+ * "Calculations of line pixel heights and the size of the vertical
+ * scrollbar."
+ * 
+ * Given that tag, font and elide changes can happen to large numbers of
+ * diverse chunks in a text widget containing megabytes of text, it is
+ * not possible to recalculate all affected height information
+ * immediately any such change takes place and maintain a responsive
+ * user-experience.  Yet, for an accurate vertical scrollbar to be
+ * drawn, we must know the total number of vertical pixels shown on
+ * display versus the number available to be displayed.
+ * 
+ * The way the text widget solves this problem is by maintaining cached
+ * line pixel heights (in the BTree for each logical line), and having
+ * asynchronous timer callbacks (i) to iterate through the logical
+ * lines recalculating their heights, and (ii) to recalculate the
+ * vertical scrollbar's position and size.
+ * 
+ * Typically this works well but there are some situations where the
+ * overall functional design of this file causes some problems.  These
+ * problems can only arise because the calculations used to display
+ * lines on screen are not connected to those in the iterating-line-
+ * recalculation-process.
+ * 
+ * The reason for this disconnect is that the display calculations
+ * operate in display lines, and the iteration and cache operates in
+ * logical lines.  Given that the display calculations both need not
+ * contain complete logical lines (at top or bottom of display), and
+ * that they do not actually keep track of logical lines (for simplicity
+ * of code and historical design), this means a line may be known and
+ * drawn with a different pixel height to that which is cached in the
+ * BTree, and this might cause some temporary undesirable mismatch
+ * between display and the vertical scrollbar.
+ * 
+ * All such mismatches should be temporary, however, since the
+ * asynchronous height calculations will always catch up eventually.
+ * 
+ * For further details see the comments before and within the following
+ * functions below: LayoutDLine, AsyncUpdateLineMetrics, GetYView,
+ * GetYPixelCount, TkTextUpdateOneLine, TkTextUpdateLineMetrics.
+ *
+ * For details of the way in which the BTree keeps track of pixel
+ * heights, see tkTextBTree.c.  Basically the BTree maintains two
+ * pieces of information: the logical line indices and the pixel
+ * height cache.
+ */
 
 /*
  * The following structure describes how to display a range of characters.
@@ -415,7 +462,7 @@ static void		GetXView _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkText *textPtr, int report));
 static void		GetYView _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkText *textPtr, int report));
-static int              GetPixelCount _ANSI_ARGS_((TkText *textPtr, 
+static int              GetYPixelCount _ANSI_ARGS_((TkText *textPtr, 
 			    DLine *dlPtr));
 static DLine *		LayoutDLine _ANSI_ARGS_((TkText *textPtr,
 			    CONST TkTextIndex *indexPtr));
@@ -1030,10 +1077,26 @@ LayoutDLine(textPtr, indexPtr)
 	if (elide) {
 	    dlPtr->byteCount = maxBytes;
 	    dlPtr->spaceAbove = dlPtr->spaceBelow = dlPtr->length = 0;
+	    if (dlPtr->index.byteIndex == 0) {
+		/* 
+		 * Elided state goes from beginning to end of 
+		 * an entire logical line.  This means we can
+		 * update the line's pixel height, and bring
+		 * its pixel calculation up to date.
+		 */
+		dlPtr->index.linePtr->pixelCalculationEpoch 
+		  = textPtr->dInfoPtr->lineMetricUpdateEpoch;
+
+		if (dlPtr->index.linePtr->pixelHeight != 0) {
+		    TkBTreeAdjustPixelHeight(dlPtr->index.linePtr, 0);
+		}
+	    }
+	    TkTextFreeElideInfo(&info);
 	    return dlPtr;
 	}
     }
-
+    TkTextFreeElideInfo(&info);
+    
     /*
      * Each iteration of the loop below creates one TkTextDispChunk for
      * the new display line.  The line will always have at least one
@@ -5381,17 +5444,22 @@ GetXView(interp, textPtr, report)
 /*
  *----------------------------------------------------------------------
  *
- * GetPixelCount --
+ * GetYPixelCount --
  *
  *	How many pixels are there between the absolute top of the
  *	widget and the top of the given DLine.
  *	
- *	This is only ever called when dlPtr is the first display
- *	line in the widget (by 'GetYView').  We have to be careful
- *	if dlPtr's logical line wraps enough times to fill the
- *	text widget's current view -- in this case we won't have
- *	enough dlPtrs in the linked list to be able to subtract off
- *	what we want.
+ *	While this function will work for any valid DLine, it is
+ *	only ever called when dlPtr is the first display
+ *	line in the widget (by 'GetYView').  This means that
+ *	usually this function is a very quick calculation, since
+ *	it can use the pre-calculated linked-list of DLines for
+ *	height information.
+ *	
+ *	The only situation where this breaks down is if dlPtr's logical
+ *	line wraps enough times to fill the text widget's current view
+ *	-- in this case we won't have enough dlPtrs in the linked list
+ *	to be able to subtract off what we want.
  *
  * Results:
  *	The number of pixels.
@@ -5403,20 +5471,26 @@ GetXView(interp, textPtr, report)
  */
     
 static int
-GetPixelCount(textPtr, dlPtr)
+GetYPixelCount(textPtr, dlPtr)
     TkText *textPtr;			/* Information about text widget. */
     DLine *dlPtr;                       /* Information about the layout
                                          * of a given index */
 {
     TkTextLine *linePtr = dlPtr->index.linePtr;
     /* 
-     * Get the pixel count to the top of dlPtr's logical line.
+     * Get the pixel count to the top of dlPtr's logical line.  The
+     * rest of the function is then concerned with updating 'count'
+     * for any difference between the top of the logical line and
+     * the display line.
      */
     int count = TkBTreePixels(linePtr);
    
     /* 
      * For the common case where this dlPtr is also the start of the
-     * logical line, we can return right away.
+     * logical line, we can return right away.  Note the implicit
+     * assumption here that the start of a logical line is always the
+     * start of a display line (if the 'elide won't elide first newline'
+     * bug is fixed, this will no longer necessarily be true).
      */
     if (dlPtr->index.byteIndex == 0) {
         return count;
@@ -5424,8 +5498,8 @@ GetPixelCount(textPtr, dlPtr)
 
     /* 
      * Add on the logical line's height to reach one pixel beyond the
-     * bottom of the line.  And then subtract off the heights of all the
-     * display lines from dlPtr to the end of its logical line.  
+     * bottom of the logical line.  And then subtract off the heights of
+     * all the display lines from dlPtr to the end of its logical line.
      * 
      * A different approach would be to lay things out from the start of
      * the logical line until we reach dlPtr, but since none of those are
@@ -5543,7 +5617,7 @@ GetYView(interp, textPtr, report)
 	 * partially visible, then we use 'topPixelOffset' to get the
 	 * difference.
 	 */
-	count = GetPixelCount(textPtr, dlPtr);
+	count = GetYPixelCount(textPtr, dlPtr);
 	first = (count + dInfoPtr->topPixelOffset) / (double) totalPixels;
 
 	/* 
