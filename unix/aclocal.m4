@@ -771,7 +771,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    ;;
 	FreeBSD-*)
 	    # FreeBSD 3.* and greater have ELF.
-	    SHLIB_CFLAGS="-fpic"
+	    SHLIB_CFLAGS="-fPIC"
 	    SHLIB_LD="ld -Bshareable -x"
 	    SHLIB_LD_LIBS=""
 	    SHLIB_SUFFIX=".so"
@@ -808,7 +808,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    ;;
 	OSF1-1.*)
 	    # OSF/1 1.3 from OSF using ELF, and derivatives, including AD2
-	    SHLIB_CFLAGS="-fpic"
+	    SHLIB_CFLAGS="-fPIC"
 	    SHLIB_LD="ld -shared"
 	    SHLIB_LD_LIBS=""
 	    SHLIB_SUFFIX=".so"
