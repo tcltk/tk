@@ -606,7 +606,7 @@ Pixmap
 TkCreateBitmapFromData(display, d, data, width, height)
     Display* display;
     Drawable d;
-    _Xconst char* data;
+    CONST char* data;
     unsigned int width;
     unsigned int height;
 {
@@ -659,7 +659,7 @@ TkReadBitmapFile(display, d, filename, width_return, height_return,
 	bitmap_return, x_hot_return, y_hot_return) 
     Display* display;
     Drawable d;
-    _Xconst char* filename;
+    CONST char* filename;
     unsigned int* width_return;
     unsigned int* height_return;
     Pixmap* bitmap_return;
