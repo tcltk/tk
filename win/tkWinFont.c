@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.7 2000/02/01 11:41:44 hobbs Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.8 2000/02/08 10:01:16 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -2299,13 +2299,15 @@ LoadFontRanges(
 		     * metrics are reported as F020 to F0FE.  When we load
 		     * a symbol font, we must fix the character existence
 		     * metrics.
+		     *
+		     * Symbol fonts should only use the symbol encoding
+		     * for 8-bit characters [note Bug: 2406]
 		     */
 
 		    for (i = 0; i < segCount; i++) {
-			if ((startCount[i] & 0xff00) == 0xf000) {
+			if (((startCount[i] & 0xff00) == 0xf000)
+				&& ((endCount[i] & 0xff00) == 0xf000)) {
 			    startCount[i] &= 0xff;
-			}
-			if ((endCount[i] & 0xff00) == 0xf000) {
 			    endCount[i] &= 0xff;
 			}
 		    }
