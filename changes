@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.61 2002/10/22 19:18:17 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.62 2003/03/03 01:22:59 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5370,3 +5370,104 @@ boolean ::tk::mac::antialiasedtext with write trace to allow control of
 antialiasing from tcl.  (steffen)
 
 --- Released 8.4.1, October 22, 2002 --- See ChangeLog for details ---
+
+2002-11-07 (bug fix)[635025,532022] Make [place info] complete and bring into
+line with other geometry managers.
+
+2002-11-14 (bug fix)[630533] Handle half-dead windows better.
+
+2002-11-19 (bug fix) Better handling of narrow scrollbars on OSX.
+
+2002-11-22 (bug fix)[641778] Make the [text see] work when the widget is unmapped.
+
+2002-12-01 (bug fix) Stopped [wm withdraw] and [wm transient] from interfering
+with each other.
+
+2002-12-06 (bug fix) Improved DLL cleanup on Windows.
+
+2002-12-06 (new feature) New function TkWinSetHINSTANCE() as part of enabling
+dynamic Tk to load resources correctly.
+
+2002-12-13 (bug fix)[616245] Use Tcl*StartupScript*() routines in Tk_Main.
+
+2002-12-27 (bug fix)[578569] Made sure that Tk always knows whether its windows
+are mapped or not.
+
+2003-01-03 (bug fix)[661792] Stopped crash when trying to create a toplevel when
+Tk is dying.
+
+2003-01-08 (bug fix)[663981] Clip long lines so they show correctly even when
+they hit windowing-system limits.
+
+2003-01-14 (bug fix)[666346] Stopped selection handling crashes under KDE3.0.
+
+2003-01-22 (bug fix)[220891] Image creation cannot trigger Tk's death.
+
+2003-01-23 (bug fix)[673687] Entry typein works as expected even when the mouse
+button is pressed.
+
+2003-01-28 (bug fix)[671330] Stopped segfaults from unsynchonized window
+deletion epochs.
+
+2003-02-08 (bug fix) Make canvas item coordinate list handling consistent to
+stop segfaults.  Cannot now create items without coordinates.
+	*** POTENTIAL INCOMPATIBILITY ***
+
+2003-02-10 (bug fix) Better support for themed and animated cursors on OSX.
+
+2003-02-17 (bug fix) Stopped motion events from morphing into button press
+and motion events.
+
+2003-02-18 (bug fix) Removed memory leak in GIF image loader.
+
+2003-02-18 (bug fix) Made OSX menus support UTF8 text and icons.
+
+2003-02-18 (bug fix)[608559] Stop message boxes from getting extremely wide.
+
+2003-02-18 (bug fix)[683813] Make focus behaviour of spinboxes more like entries.
+
+2003-02-19 (new demo)[627453] New demo showing off Tk's Unicode font handling.
+
+2003-02-19 (bug fix) Bring event handling more into line with the OSX standard.
+Also improves "dead key" handling.
+
+2003-02-20 (bug fix)[618872,689357] Stopped read of freed memory when working
+with large composite fonts.
+
+2003-02-20 (bug fix)[689099,tcllib 689258] Improvements to [panedwindow] pane
+size and sash handling.
+
+2003-02-20 (bug fix)[624116] Stopped semi-crash in Windows scrollbar handling.
+
+2003-02-21 (bug fix)[671122] Stopped panedwindow from crashing when embedded
+in a window with a different visual to the root window.
+
+2003-02-21 (bug fix)[617392] Limit the screen-size of [tk_get*File] file type
+selection menu.
+
+2003-02-21 (bug fix)[673722] Rework standard dialogs to use [grid].
+
+2003-02-24 (bug fix)[637828] Report that entries can provide the selection,
+even if they're not displaying it.
+
+2003-02-24 (bug fix)[669595] Improved display of indicators in disabled
+checkbuttons and radiobuttons. (hintermayer)
+
+2003-02-24 (bug fix)[632514] Allow listbox 'selection includes' to respond
+positively when disabled.
+
+2003-02-24 (bug fix)[647497] Make Tk pick the first best matching font on
+the font path.
+	*** POTENTIAL VISUAL INCOMPATIBILITY ***
+
+2003-02-25 (bug fix)[621672] Fixed conversion of apple event parameters
+to posix path names.
+
+2003-02-25 (feature enhancement)[patch 685388] Support simple XOR text drawing
+on Windows.
+
+2003-02-28 (bug fix)[612110] Make %-substitutions for events only read data out
+of the event structure when that field is valid for that event type.
+	*** POTENTIAL INCOMPATIBILITY ***
+
+--- Released 8.4.2, March X, 2002 --- See ChangeLog for details ---
