@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.26 2002/04/12 07:18:49 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.27 2002/07/11 22:42:40 hobbs Exp $
  *
  */
 
@@ -1627,8 +1627,12 @@ New Behaviour:
   held open to allow further modification by the user.
 
 - Not sure how to implement localization of message prompts.
+
+- -title is really -message.
 ToDo:
 - Fix bugs.
+- test to see what platforms this really works on.  May require v4.71
+  of shell32.dll everywhere (what is standard?).
  *
  */
 int
@@ -1663,11 +1667,12 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     /*
      * Initialize
      */
-    result                 = TCL_ERROR;
-    path[0]                = '\0';
+    result		= TCL_ERROR;
+    path[0]		= '\0';
+    utfTitle		= NULL;
 
     ZeroMemory(&cdCBData, sizeof(CHOOSEDIRDATA));
-    cdCBData.interp        = interp;
+    cdCBData.interp	= interp;
 
     tkwin = (Tk_Window) clientData;
     /*
