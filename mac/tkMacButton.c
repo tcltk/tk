@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacButton.c,v 1.6 1999/05/22 06:32:26 jingham Exp $
+ * RCS: @(#) $Id: tkMacButton.c,v 1.7 1999/08/07 18:53:23 jingham Exp $
  */
 
 #include "tkButton.h"
@@ -930,7 +930,8 @@ InitSampleControls()
 	OSErr err;
 	ControlRef dontCare;
 	    
-	/* Adding UserPaneBackgroundProcs to the root control does
+ 	/* 
+ 	 * Adding UserPaneBackgroundProcs to the root control does
 	 * not seem to work, so we have to add another UserPane to 
 	 * the root control.
 	 */
@@ -1336,9 +1337,10 @@ UpdateControlColors(
 			(butPtr->type == TYPE_RADIO_BUTTON))) {
 	    RGBColor newColor;
 	
-	    TkSetMacColor(xcolor->pixel, &newColor);
+	    if (TkSetMacColor(xcolor->pixel, &newColor)) {
 	    ChangeBackgroundWindowColor((**controlHandle).contrlOwner,
 		    newColor, saveColorPtr);
+            }
 	    return true;
 	}
     }
