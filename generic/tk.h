@@ -44,7 +44,7 @@
 #define TK_RELEASE_SERIAL  3
 
 #define TK_VERSION "8.0"
-#define TK_PATCH_LEVEL "8.0.3-5"
+#define TK_PATCH_LEVEL "8.0.3"
 
 /* 
  * A special definition used to allow this header file to be included 
