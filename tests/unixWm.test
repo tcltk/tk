@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.8 1999/12/14 06:53:15 hobbs Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.9 1999/12/16 02:13:49 wart Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -822,6 +822,7 @@ test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {
     catch {destroy .t2}
     toplevel .t2
     wm geom .t2 +0+0
+    update
     wm iconify .t2
     update
     set result [winfo ismapped .t2]
@@ -835,6 +836,7 @@ test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} {
     update
     set result [winfo ismapped .t2]
     wm iconify .t2
+    update
     lappend result [winfo ismapped .t2]
     destroy .t2
     set result
