@@ -1,5 +1,11 @@
 2003-03-18  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* win/tkConfig.sh.in: Add TK_DLL_FILE entry
+	to mirror the TCL_DLL_FILE entry in tclConfig.sh.
+	[Patch 694271]
+
+2003-03-18  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* win/configure: Regen.
 	* win/configure.in: Don't run the AC_CYGWIN
 	macro since it uses AC_CANONICAL_HOST under
