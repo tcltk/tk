@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvImg.c,v 1.7 2004/01/13 02:06:00 davygrvy Exp $
+ * RCS: @(#) $Id: tkCanvImg.c,v 1.8 2004/11/17 22:17:11 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -741,6 +741,12 @@ ImageToPostscript(interp, canvas, itemPtr, prepass)
 	    image = imgPtr->disabledImage;
 	}
     }
+    if (image == NULL) {
+	/*
+	 * Image item without actual image specified.
+	 */
+        return TCL_OK;
+    }
     Tk_SizeOfImage(image, &width, &height);
 
     /*
@@ -750,7 +756,7 @@ ImageToPostscript(interp, canvas, itemPtr, prepass)
 
     x = imgPtr->x;
     y = Tk_CanvasPsY(canvas, imgPtr->y);
-    
+
     switch (imgPtr->anchor) {
 	case TK_ANCHOR_NW:			y -= height;		break;
 	case TK_ANCHOR_N:	x -= width/2.0; y -= height;		break;
@@ -763,10 +769,6 @@ ImageToPostscript(interp, canvas, itemPtr, prepass)
 	case TK_ANCHOR_CENTER:	x -= width/2.0; y -= height/2.0;	break;
     }
 
-    if (image == NULL) {
-        return TCL_OK;
-    }
-    
     if (!prepass) {
 	sprintf(buffer, "%.15g %.15g", x, y);
 	Tcl_AppendResult(interp, buffer, " translate\n", (char *) NULL);
