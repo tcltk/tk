@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.60 2002/09/09 23:51:06 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.61 2002/10/22 19:18:17 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5312,3 +5312,61 @@ Rewrote Tk test suite to use tcltest package.
 2002-09-02 (platfrom support) 64-bit compile on HP-11 (martin)
 
 --- Released 8.4.0, September 10, 2002 --- See ChangeLog for details ---
+
+2002-09-15 (bug fix)[570902] Use PEEK_XCLOSEIM to examine the input context
+queue before invoking XCloseIM. Generate an assert if there is an input
+context that has not been freed. (dejong)
+
+2002-09-18 (platform support) Updated support for compiling with Cygwin and
+either mingw or gcc. (khan, howell, dejong)
+
+2002-09-30 (bug fix)[614650] Correct incremental transfers of UTF8_STRING
+selections (fellows)
+
+2002-10-02 (bug fix)[616791, 614474] don't blink the cursor unless it is
+visible. (bonfield)
+
+2002-10-02 (bug fix)[607390, 617446] check if the entry is being deleted
+before handling an associated textvariable. (hobbs)
+
+2002-10-08 (bug fix)[616589] leave the DestroyPanedWindow proc to free the
+pwPtr. (hobbs)
+
+2002-10-08 (bug fix)[588831] Ignore event if we are focusing into a dead
+window (griffin)
+
+2002-10-09 (bug fix)[619544] Only error-out creating an image if we fail to
+allocate a non-empty buffer (fellows)
+
+2002-10-09 (build support) all --enable-symbols to take the enhanced
+options yes|no|mem|all. (hobbs)
+
+2002-10-10 (feature enhancement) added support for generating ps for
+embedded widgets on canvases on Windows (hobbs)
+
+2002-10-10 (bug fix)[621241] The grid size was not updated properly when
+removing a widget from a grid (forssen)
+
+2002-10-16 (bug fix)[616988] macosx fix to accelerators shown in menus
+with non-alphanumeric keys. (darley)
+
+2002-10-15 (platform support) Correct AIX-5 ppc and 4/5 64-bit build flags.
+Correct HP 11 64-bit gcc building. (martin, hobbs)
+
+2002-10-17 (bug fix)[624974] fix arg handling for missing image create
+photo -format or -data options (hobbs)
+
+2002-10-17 (bug fix)[624732] In ControlUtfProc, properly return the number
+of bytes consumed (hobbs)
+
+2002-10-22 (platform support)[624509] On macosx, add embedded framework
+dirs to tcl_pkgPath: @executable_path/../Frameworks and
+@executable_path/../PrivateFrameworks (if they exist), as well as the dirs
+in DYLD_FRAMEWORK_PATH (if set).  Added 'rapp' apple event handler.  Added
+TEXT document type to plist so that files can be dragged onto Wish Shell.
+Added private proc TkMacOSXUseAntialiasedText() to enable/disable quickdraw
+text antialiasing where available, default is enabled.  Added a linked
+boolean ::tk::mac::antialiasedtext with write trace to allow control of
+antialiasing from tcl.  (steffen)
+
+--- Released 8.4.1, October 22, 2002 --- See ChangeLog for details ---
