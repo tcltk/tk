@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winMenu.test,v 1.6 2002/07/13 20:28:36 dgp Exp $
+# RCS: @(#) $Id: winMenu.test,v 1.6.2.1 2004/10/29 11:16:38 patthoyts Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -1037,15 +1037,3 @@ test winMenu-34.1 {TkpMenuInit called at boot time} {emptyTest pcOnly} {} {}
 deleteWindows
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-

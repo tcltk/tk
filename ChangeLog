@@ -1,3 +1,8 @@
+2004-10-29  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/tk.tcl (::tk::PlaceWindow): Backported the fix from 
+	#533519 to handle window placement on multi-monitor Windows.
+
 2004-10-28  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* doc/wm.n: Add wm attributes . -alpha doc to account
