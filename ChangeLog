@@ -1,3 +1,9 @@
+2001-12-18  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* unix/Makefile.in:
+	* win/Makefile.in: Use $(MAKE) instead of make
+	in the tcltest rule.
+
 2001-12-18  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/event.test (event-click-drag-1.2): Corrected test that
