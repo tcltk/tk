@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.9 2001/02/12 18:06:47 drh Exp $
+# RCS: @(#) $Id: grid.test,v 1.10 2001/08/18 20:03:17 pspjuth Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -67,6 +67,22 @@ test grid-1.5 {basic argument checking} {
 test grid-1.6 {basic argument checking} {
 	list [catch {grid x} msg] $msg
 } {1 {can't determine master window}}
+
+test grid-1.7 {basic argument checking} {
+	list [catch {grid configure x} msg] $msg
+} {1 {can't determine master window}}
+
+test grid-1.8 {basic argument checking} {
+	button .b
+	list [catch {grid x .b} msg] $msg
+} {0 {}}
+grid_reset 1.8
+
+test grid-1.9 {basic argument checking} {
+	button .b
+	list [catch {grid configure x .b} msg] $msg
+} {0 {}}
+grid_reset 1.9
 
 test grid-2.1 {bbox} {
 	list [catch {grid bbox .} msg] $msg
