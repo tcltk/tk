@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.1.4.18 1999/03/17 22:06:29 stanton Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.1.4.19 1999/03/18 00:43:01 stanton Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -481,7 +481,8 @@ $(TMPDIR)\winMain.obj: $(ROOT)\win\winMain.c
 	$(cc32) -DDLL_BUILD -DBUILD_tk $(TK_CFLAGS) -Fo$(TMPDIR)\ $<
 
 {$(RCDIR)}.rc{$(TMPDIR)}.res:
-	$(rc32) -fo $@ -r -i "$(GENERICDIR)" -i "$(TOOLS32)\include" $<
+	$(rc32) -fo $@ -r -i "$(GENERICDIR)" -i "$(TOOLS32)\include" \
+		-i "$(TCLDIR)\generic" $<
 
 clean:
         -@del $(OUTDIR)\*.exp 

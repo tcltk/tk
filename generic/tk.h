@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.1.4.13 1999/03/17 22:06:28 stanton Exp $
+ * RCS: @(#) $Id: tk.h,v 1.1.4.14 1999/03/18 00:43:01 stanton Exp $
  */
 
 #ifndef _TK
@@ -43,13 +43,6 @@
 #define TK_VERSION "8.1"
 #define TK_PATCH_LEVEL "8.1b3"
 
-/* 
- * A special definition used to allow this header file to be included 
- * in resource files.
- */
-
-#ifndef RESOURCE_INCLUDED
-
 /*
  * The following definitions set up the proper options for Macintosh
  * compilers.  We use this method because there is no autoconf equivalent.
@@ -64,6 +57,14 @@
 #ifndef _TCL
 #   include <tcl.h>
 #endif
+
+/* 
+ * A special definition used to allow this header file to be included 
+ * in resource files.
+ */
+
+#ifndef RESOURCE_INCLUDED
+
 #ifndef _XLIB_H
 #   ifdef MAC_TCL
 #	include <Xlib.h>
