@@ -1,5 +1,9 @@
 2003-05-19  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* tests/textImage.test:		Fixed faults in option parsing and
+	* tests/text.test:		made tests conformant. [Bug 739965]
+	* generic/tkText.c (TextSearchCmd): 
+
 	* library/demos/en.msg: Base catalog for the widget demo.
 	* library/demos/widget: Added message-catalog support.
 	* library/console.tcl: Reworked to use tk::AmpMenuArgs and be more

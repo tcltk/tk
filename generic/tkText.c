@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.35 2003/05/19 14:37:20 dkf Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.36 2003/05/19 21:19:51 dkf Exp $
  */
 
 #include "default.h"
@@ -2107,8 +2107,8 @@ TextSearchCmd(textPtr, interp, objc, objv)
     SearchSpec searchSpec;
 
     static CONST char *switchStrings[] = {
-	"--", "-all", "-backward", "-count", "-elide", "-exact",
-	"-forward", "-hidden", "-nocase", "-nolinestop", "-regexp", NULL
+	"--", "-all", "-backwards", "-count", "-elide", "-exact",
+	"-forwards", "-hidden", "-nocase", "-nolinestop", "-regexp", NULL
     };
     enum SearchSwitches {
 	SEARCH_END, SEARCH_ALL, SEARCH_BACK, SEARCH_COUNT, SEARCH_ELIDE,
@@ -2139,7 +2139,7 @@ TextSearchCmd(textPtr, interp, objc, objv)
      * Parse switches and other arguments.
      */
 
-    for (i = 2; i < objc; i++) {
+    for (i=2 ; i<objc ; i++) {
 	int index;
 	if (Tcl_GetString(objv[i])[0] != '-') {
 	    break;
@@ -2151,10 +2151,10 @@ TextSearchCmd(textPtr, interp, objc, objv)
 	     * Hide the -hidden option
 	     */
 	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "bad switch \"", objv[i],
-		    "\": must be --, -all, -backward, -count, ",
-		    "-elide, -exact, -forward, -nocase, ",
-		    "-nolinestop, or -regexp", (char *) NULL);
+	    Tcl_AppendResult(interp, "bad switch \"", Tcl_GetString(objv[i]),
+		    "\": must be --, -all, -backward, -count, -elide, ",
+		    "-exact, -forward, -nocase, -nolinestop, or -regexp",
+		    (char *) NULL);
 	    return TCL_ERROR;
 	}
 
@@ -2208,16 +2208,17 @@ TextSearchCmd(textPtr, interp, objc, objv)
 
     argsLeft = objc - (i+2);
     if ((argsLeft != 0) && (argsLeft != 1)) {
-	Tcl_WrongNumArgs(interp, 2, objv, 
-			 "?switches? pattern index ?stopIndex?");
+	Tcl_WrongNumArgs(interp, 2, objv,
+		"?switches? pattern index ?stopIndex?");
 	return TCL_ERROR;
     }
-    
+
     if (searchSpec.noLineStop && searchSpec.exact) {
-	Tcl_SetResult(interp, "the \"-nolinestop\" option requires the \"-regexp\" option to be present", TCL_STATIC);
+	Tcl_SetResult(interp, "the \"-nolinestop\" option requires the "
+		"\"-regexp\" option to be present", TCL_STATIC);
 	return TCL_ERROR;
     }
-    
+
     /*
      * Scan through all of the lines of the text circularly, starting
      * at the given index.  'objv[i]' is the pattern which may be an
@@ -2226,25 +2227,31 @@ TextSearchCmd(textPtr, interp, objc, objv)
      */
 
     code = SearchPerform(interp, &searchSpec, objv[i], objv[i+1], 
-			 (argsLeft == 1 ? objv[i+2] : NULL));
-    if (code != TCL_OK) goto cleanup;
-    
-    /* Set the '-count' variable, if given */
+	    (argsLeft == 1 ? objv[i+2] : NULL));
+    if (code != TCL_OK) {
+	goto cleanup;
+    }
+
+    /*
+     * Set the '-count' variable, if given.
+     */
     if (searchSpec.varPtr != NULL && searchSpec.countPtr != NULL) {
 	Tcl_IncrRefCount(searchSpec.countPtr);
 	if (Tcl_ObjSetVar2(interp, searchSpec.varPtr, NULL, 
-			   searchSpec.countPtr, TCL_LEAVE_ERR_MSG) == NULL) {
+		searchSpec.countPtr, TCL_LEAVE_ERR_MSG) == NULL) {
 	    code = TCL_ERROR;
 	    goto cleanup;
 	}
     }
-    
-    /* Set the result */
+
+    /*
+     * Set the result
+     */
     if (searchSpec.resPtr != NULL) {
 	Tcl_SetObjResult(interp, searchSpec.resPtr);
 	searchSpec.resPtr = NULL;
     }
-        
+
     cleanup:
     if (searchSpec.countPtr != NULL) {
 	Tcl_DecrRefCount(searchSpec.countPtr);
