@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.20 2001/11/20 09:58:33 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.21 2001/11/21 01:36:33 hobbs Exp $
  */
 
 #include "default.h"
@@ -811,6 +811,8 @@ DestroyText(memPtr)
     if (textPtr->bindingTable != NULL) {
 	Tk_DeleteBindingTable(textPtr->bindingTable);
     }
+    clearStack(&(textPtr->undoStack));
+    clearStack(&(textPtr->redoStack));
 
     /*
      * NOTE: do NOT free up selBorder, selBdString, or selFgColorPtr:
@@ -1414,7 +1416,8 @@ DeleteChars(textPtr, index1String, index2String)
 	strcpy(deletion->index, indexBuffer);
 
 	TextGetText(&index1, &index2, &ds);
-	deletion->string = (char *) ckalloc(Tcl_DStringLength(&ds) + 1);
+	deletion->string =
+	    (char *) ckalloc((unsigned int) Tcl_DStringLength(&ds) + 1);
 	strcpy(deletion->string, Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
 
@@ -2877,7 +2880,7 @@ TextGetText(indexPtr1,indexPtr2, dsPtr)
 
     if (TkTextIndexCmp(indexPtr1, indexPtr2) < 0) {
 	while (1) {
-	    int offset, last, savedChar;
+	    int offset, last;
 	    TkTextSegment *segPtr;
 
 	    segPtr = TkTextIndexToSeg(&tmpIndex, &offset);
@@ -2894,11 +2897,8 @@ TextGetText(indexPtr1,indexPtr2, dsPtr)
 		}
 	    }
 	    if (segPtr->typePtr == &tkTextCharType) {
-		savedChar = segPtr->body.chars[last];
-		segPtr->body.chars[last] = 0;
-		Tcl_DStringAppend(dsPtr,segPtr->body.chars + offset,
-			(int)strlen(segPtr->body.chars + offset));
-		segPtr->body.chars[last] = savedChar;
+		Tcl_DStringAppend(dsPtr, segPtr->body.chars + offset,
+			last - offset);
 	    }
 	    TkTextIndexForwBytes(&tmpIndex, last-offset, &tmpIndex);
 	}
