@@ -14,263 +14,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.35 2003/02/25 00:46:41 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.36 2005/03/24 07:16:13 wolfsuit Exp $
  */
 
 #include "tkInt.h"
 #include "default.h"
+#include "tkEntry.h"
 
-enum EntryType {
-    TK_ENTRY, TK_SPINBOX
-};
-
-/*
- * A data structure of the following type is kept for each Entry
- * widget managed by this file:
- */
-
-typedef struct {
-    Tk_Window tkwin;		/* Window that embodies the entry. NULL
-				 * means that the window has been destroyed
-				 * but the data structures haven't yet been
-				 * cleaned up.*/
-    Display *display;		/* Display containing widget.  Used, among
-				 * other things, so that resources can be
-				 * freed even after tkwin has gone away. */
-    Tcl_Interp *interp;		/* Interpreter associated with entry. */
-    Tcl_Command widgetCmd;	/* Token for entry's widget command. */
-    Tk_OptionTable optionTable;	/* Table that defines configuration options
-				 * available for this widget. */
-    enum EntryType type;	/* Specialized type of Entry widget */
-
-    /*
-     * Fields that are set by widget commands other than "configure".
-     */
-     
-    CONST char *string;		/* Pointer to storage for string;
-				 * NULL-terminated;  malloc-ed. */
-    int insertPos;		/* Character index before which next typed
-				 * character will be inserted. */
-
-    /*
-     * Information about what's selected, if any.
-     */
-
-    int selectFirst;		/* Character index of first selected
-				 * character (-1 means nothing selected. */
-    int selectLast;		/* Character index just after last selected
-				 * character (-1 means nothing selected. */
-    int selectAnchor;		/* Fixed end of selection (i.e. "select to"
-				 * operation will use this as one end of the
-				 * selection). */
-
-    /*
-     * Information for scanning:
-     */
-
-    int scanMarkX;		/* X-position at which scan started (e.g.
-				 * button was pressed here). */
-    int scanMarkIndex;		/* Character index of character that was at
-				 * left of window when scan started. */
-
-    /*
-     * Configuration settings that are updated by Tk_ConfigureWidget.
-     */
-
-    Tk_3DBorder normalBorder;	/* Used for drawing border around whole
-				 * window, plus used for background. */
-    Tk_3DBorder disabledBorder;	/* Used for drawing  border around whole
-				 * window in disabled state, plus used for
-				 * background. */
-    Tk_3DBorder readonlyBorder;	/* Used for drawing  border around whole
-				 * window in readonly state, plus used for
-				 * background. */
-    int borderWidth;		/* Width of 3-D border around window. */
-    Tk_Cursor cursor;		/* Current cursor for window, or None. */
-    int exportSelection;	/* Non-zero means tie internal entry selection
-				 * to X selection. */
-    Tk_Font tkfont;		/* Information about text font, or NULL. */
-    XColor *fgColorPtr;		/* Text color in normal mode. */
-    XColor *dfgColorPtr;	/* Text color in disabled mode. */
-    XColor *highlightBgColorPtr;/* Color for drawing traversal highlight
-				 * area when highlight is off. */
-    XColor *highlightColorPtr;	/* Color for drawing traversal highlight. */
-    int highlightWidth;		/* Width in pixels of highlight to draw
-				 * around widget when it has the focus.
-				 * <= 0 means don't draw a highlight. */
-    Tk_3DBorder insertBorder;	/* Used to draw vertical bar for insertion
-				 * cursor. */
-    int insertBorderWidth;	/* Width of 3-D border around insert cursor. */
-    int insertOffTime;		/* Number of milliseconds cursor should spend
-				 * in "off" state for each blink. */
-    int insertOnTime;		/* Number of milliseconds cursor should spend
-				 * in "on" state for each blink. */
-    int insertWidth;		/* Total width of insert cursor. */
-    Tk_Justify justify;		/* Justification to use for text within
-				 * window. */
-    int relief;			/* 3-D effect: TK_RELIEF_RAISED, etc. */
-    Tk_3DBorder selBorder;	/* Border and background for selected
-				 * characters. */
-    int selBorderWidth;		/* Width of border around selection. */
-    XColor *selFgColorPtr;	/* Foreground color for selected text. */
-    int state;		        /* Normal or disabled.  Entry is read-only
-				 * when disabled. */
-    char *textVarName;		/* Name of variable (malloc'ed) or NULL.
-				 * If non-NULL, entry's string tracks the
-				 * contents of this variable and vice versa. */
-    char *takeFocus;		/* Value of -takefocus option;  not used in
-				 * the C code, but used by keyboard traversal
-				 * scripts.  Malloc'ed, but may be NULL. */
-    int prefWidth;		/* Desired width of window, measured in
-				 * average characters. */
-    char *scrollCmd;		/* Command prefix for communicating with
-				 * scrollbar(s).  Malloc'ed.  NULL means
-				 * no command to issue. */
-    char *showChar;		/* Value of -show option.  If non-NULL, first
-				 * character is used for displaying all
-				 * characters in entry.  Malloc'ed.
-				 * This is only used by the Entry widget. */
-
-    /*
-     * Fields whose values are derived from the current values of the
-     * configuration settings above.
-     */
-
-    CONST char *displayString;	/* String to use when displaying.  This may
-				 * be a pointer to string, or a pointer to
-				 * malloced memory with the same character
-				 * length as string but whose characters
-				 * are all equal to showChar. */
-    int numBytes;		/* Length of string in bytes. */
-    int numChars;		/* Length of string in characters.  Both
-				 * string and displayString have the same
-				 * character length, but may have different
-				 * byte lengths due to being made from
-				 * different UTF-8 characters. */
-    int numDisplayBytes;	/* Length of displayString in bytes. */
-    int inset;			/* Number of pixels on the left and right
-				 * sides that are taken up by XPAD, borderWidth
-				 * (if any), and highlightWidth (if any). */
-    Tk_TextLayout textLayout;	/* Cached text layout information. */
-    int layoutX, layoutY;	/* Origin for layout. */
-    int leftX;			/* X position at which character at leftIndex
-				 * is drawn (varies depending on justify). */
-    int leftIndex;		/* Character index of left-most character
-				 * visible in window. */
-    Tcl_TimerToken insertBlinkHandler;
-				/* Timer handler used to blink cursor on and
-				 * off. */
-    GC textGC;			/* For drawing normal text. */
-    GC selTextGC;		/* For drawing selected text. */
-    GC highlightGC;		/* For drawing traversal highlight. */
-    int avgWidth;		/* Width of average character. */
-    int xWidth;			/* Extra width to reserve for widget.
-				 * Used by spinboxes for button space. */
-    int flags;			/* Miscellaneous flags;  see below for
-				 * definitions. */
-
-    int validate;               /* Non-zero means try to validate */
-    char *validateCmd;          /* Command prefix to use when invoking
-				 * validate command.  NULL means don't
-				 * invoke commands.  Malloc'ed. */
-    char *invalidCmd;		/* Command called when a validation returns 0
-				 * (successfully fails), defaults to {}. */
-
-} Entry;
-
-/*
- * A data structure of the following type is kept for each spinbox
- * widget managed by this file:
- */
-
-typedef struct {
-    Entry entry;		/* A pointer to the generic entry structure.
-				 * This must be the first element of the
-				 * Spinbox. */
-
-    /*
-     * Spinbox specific configuration settings.
-     */
-
-    Tk_3DBorder activeBorder;	/* Used for drawing border around active
-				 * buttons. */
-    Tk_3DBorder buttonBorder;	/* Used for drawing border around buttons. */
-    Tk_Cursor bCursor;		/* cursor for buttons, or None. */
-    int bdRelief;		/* 3-D effect: TK_RELIEF_RAISED, etc. */
-    int buRelief;		/* 3-D effect: TK_RELIEF_RAISED, etc. */
-    char *command;		/* Command to invoke for spin buttons.
-				 * NULL means no command to issue. */
-
-    /*
-     * Spinbox specific fields for use with configuration settings above.
-     */
-
-    int wrap;			/* whether to wrap around when spinning */
-
-    int selElement;		/* currently selected control */
-    int curElement;		/* currently mouseover control */
-
-    int repeatDelay;		/* repeat delay */
-    int repeatInterval;		/* repeat interval */
-
-    double fromValue;		/* Value corresponding to left/top of dial */
-    double toValue;		/* Value corresponding to right/bottom
-				 * of dial */
-    double increment;		/* If > 0, all values are rounded to an
-				 * even multiple of this value. */
-    char *formatBuf;		/* string into which to format value.
-				 * Malloc'ed. */
-    char *reqFormat;		/* Sprintf conversion specifier used for the
-				 * value that the users requests. Malloc'ed. */
-    char *valueFormat;		/* Sprintf conversion specifier used for
-				 * the value. */
-    char digitFormat[10];	/* Sprintf conversion specifier computed from
-				 * digits and other information; used for
-				 * the value. */
-
-    char *valueStr;		/* Values List. Malloc'ed. */
-    Tcl_Obj *listObj;		/* Pointer to the list object being used */
-    int eIndex;			/* Holds the current index into elements */
-    int nElements;		/* Holds the current count of elements */
-
-} Spinbox;
-
-/*
- * Assigned bits of "flags" fields of Entry structures, and what those
- * bits mean:
- *
- * REDRAW_PENDING:		Non-zero means a DoWhenIdle handler has
- *				already been queued to redisplay the entry.
- * BORDER_NEEDED:		Non-zero means 3-D border must be redrawn
- *				around window during redisplay.  Normally
- *				only text portion needs to be redrawn.
- * CURSOR_ON:			Non-zero means insert cursor is displayed at
- *				present.  0 means it isn't displayed.
- * GOT_FOCUS:			Non-zero means this window has the input
- *				focus.
- * UPDATE_SCROLLBAR:		Non-zero means scrollbar should be updated
- *				during next redisplay operation.
- * GOT_SELECTION:		Non-zero means we've claimed the selection.
- * ENTRY_DELETED:		This entry has been effectively destroyed.
- * VALIDATING:			Non-zero means we are in a validateCmd
- * VALIDATE_VAR:		Non-zero means we are attempting to validate
- *				the entry's textvariable with validateCmd
- * VALIDATE_ABORT:		Non-zero if validatecommand signals an abort
- *				for current procedure and make no changes
- * ENTRY_VAR_TRACED:		Non-zero if a var trace is set.
- */
-
-#define REDRAW_PENDING		1
-#define BORDER_NEEDED		2
-#define CURSOR_ON		4
-#define GOT_FOCUS		8
-#define UPDATE_SCROLLBAR	0x10
-#define GOT_SELECTION		0x20
-#define ENTRY_DELETED           0x40
-#define VALIDATING              0x80
-#define VALIDATE_VAR            0x100
-#define VALIDATE_ABORT          0x200
-#define ENTRY_VAR_TRACED        0x400
 
 /*
  * The following macro defines how many extra pixels to leave on each
@@ -286,15 +36,6 @@ typedef struct {
 #define MIN_DBL_VAL		1E-9
 #define DOUBLES_EQ(d1, d2)	(fabs((d1) - (d2)) < MIN_DBL_VAL)
 
-/*
- * The following enum is used to define a type for the -state option
- * of the Entry widget.  These values are used as indices into the 
- * string table below.
- */
-
-enum state {
-    STATE_DISABLED, STATE_NORMAL, STATE_READONLY
-};
 
 static char *stateStrings[] = {
     "disabled", "normal", "readonly", (char *) NULL
@@ -654,13 +395,14 @@ enum sbselCmd {
  * Extra for selection of elements
  */
 
+/* 
+ * This is the string array  corresponding to the enum in selelement.
+ * If you modify them, you must modify the strings here.
+ */
+ 
 static CONST char *selElementNames[] = {
     "none", "buttondown", "buttonup", (char *) NULL, "entry"
 };
-enum selelement {
-    SEL_NONE, SEL_BUTTONDOWN, SEL_BUTTONUP, SEL_NULL, SEL_ENTRY
-};
-
 /*
  * Flags for GetEntryIndex procedure:
  */
@@ -1774,6 +1516,63 @@ EntryWorldChanged(instanceData)
     EventuallyRedraw(entryPtr);
 }
 
+#ifndef MAC_OSX_TK 
+/*
+ *--------------------------------------------------------------
+ *
+ * TkpDrawEntryBorderAndFocus --
+ *
+ *	This procedure redraws the border of an entry widget.
+ *      It overrides the generic border drawing code if the 
+ *      entry widget parameters are such that the native widget
+ *      drawing is a good fit.
+ *      This version just returns o, so platforms that don't
+ *      do special native drawing don't have to implement it.
+ *
+ * Results:
+ *	1 if it has drawn the border, 0 if not.
+ *
+ * Side effects:
+ *	May draw the entry border into pixmap.
+ *
+ *--------------------------------------------------------------
+ */
+
+int
+TkpDrawEntryBorderAndFocus(Entry *entryPtr, Drawable pixmap, int isSpinbox)
+{
+    return 0;
+}
+
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkpDrawSpinboxButtons --
+ *
+ *	This procedure redraws the buttons of an spinbox widget.
+ *      It overrides the generic button drawing code if the 
+ *      spinbox widget parameters are such that the native widget
+ *      drawing is a good fit.
+ *      This version just returns 0, so platforms that don't
+ *      do special native drawing don't have to implement it.
+ *
+ * Results:
+ *	1 if it has drawn the border, 0 if not.
+ *
+ * Side effects:
+ *	May draw the entry border into pixmap.
+ *
+ *--------------------------------------------------------------
+ */
+
+int
+TkpDrawSpinboxButtons(Spinbox *sbPtr, pixmap)
+{
+    return 0;
+}
+#endif /* Not MAC_OSX_TK */
+
 /*
  *--------------------------------------------------------------
  *
@@ -1964,76 +1763,78 @@ DisplayEntry(clientData)
 	/*
 	 * Draw the spin button controls.
 	 */
-	xWidth = entryPtr->xWidth;
-	pad    = XPAD + 1;
-	inset  = entryPtr->inset - XPAD;
-	startx = Tk_Width(tkwin) - (xWidth + inset);
-	height = (Tk_Height(tkwin) - 2*inset)/2;
+        if (TkpDrawSpinboxButtons(sbPtr, pixmap) == 0) {
+            xWidth = entryPtr->xWidth;
+            pad    = XPAD + 1;
+            inset  = entryPtr->inset - XPAD;
+            startx = Tk_Width(tkwin) - (xWidth + inset);
+            height = (Tk_Height(tkwin) - 2*inset)/2;
 #if 0
-	Tk_Fill3DRectangle(tkwin, pixmap, sbPtr->buttonBorder,
-		startx, inset, xWidth, height, 1, sbPtr->buRelief);
-	Tk_Fill3DRectangle(tkwin, pixmap, sbPtr->buttonBorder,
-		startx, inset+height, xWidth, height, 1, sbPtr->bdRelief);
+            Tk_Fill3DRectangle(tkwin, pixmap, sbPtr->buttonBorder,
+                    startx, inset, xWidth, height, 1, sbPtr->buRelief);
+            Tk_Fill3DRectangle(tkwin, pixmap, sbPtr->buttonBorder,
+                    startx, inset+height, xWidth, height, 1, sbPtr->bdRelief);
 #else
-	Tk_Fill3DRectangle(tkwin, pixmap, sbPtr->buttonBorder,
-		startx, inset, xWidth, height, 1,
-		(sbPtr->selElement == SEL_BUTTONUP) ?
-		TK_RELIEF_SUNKEN : TK_RELIEF_RAISED);
-	Tk_Fill3DRectangle(tkwin, pixmap, sbPtr->buttonBorder,
-		startx, inset+height, xWidth, height, 1,
-		(sbPtr->selElement == SEL_BUTTONDOWN) ?
-		TK_RELIEF_SUNKEN : TK_RELIEF_RAISED);
+	    Tk_Fill3DRectangle(tkwin, pixmap, sbPtr->buttonBorder,
+		    startx, inset, xWidth, height, 1,
+		    (sbPtr->selElement == SEL_BUTTONUP) ?
+		    TK_RELIEF_SUNKEN : TK_RELIEF_RAISED);
+	    Tk_Fill3DRectangle(tkwin, pixmap, sbPtr->buttonBorder,
+		    startx, inset+height, xWidth, height, 1,
+		    (sbPtr->selElement == SEL_BUTTONDOWN) ?
+		    TK_RELIEF_SUNKEN : TK_RELIEF_RAISED);
 #endif
     
-	xWidth -= 2*pad;
-	/*
-	 * Only draw the triangles if we have enough display space
-	 */
-	if ((xWidth > 1)) {
-	    XPoint points[3];
-	    int starty, space, offset;
+            xWidth -= 2*pad;
+            /*
+             * Only draw the triangles if we have enough display space
+             */
+            if ((xWidth > 1)) {
+                XPoint points[3];
+                int starty, space, offset;
 
-	    space = height - 2*pad;
-	    /*
-	     * Ensure width of triangle is odd to guarantee a sharp tip
-	     */
-	    if (!(xWidth % 2)) {
-		xWidth++;
-	    }
-	    tHeight = (xWidth + 1) / 2;
-	    if (tHeight > space) {
-		tHeight = space;
-	    }
-	    space   = (space - tHeight) / 2;
-	    startx += pad;
-	    starty  = inset + height - pad - space;
-	    offset  = (sbPtr->selElement == SEL_BUTTONUP);
-	    /*
-	     * The points are slightly different for the up and down arrows
-	     * because (for *.x), we need to account for a bug in the way
-	     * XFillPolygon draws triangles, and we want to shift
-	     * the arrows differently when allowing for depressed behavior.
-	     */
-	    points[0].x = startx + offset;
-	    points[0].y = starty + (offset ? 0 : -1);
-	    points[1].x = startx + xWidth/2 + offset;
-	    points[1].y = starty - tHeight + (offset ? 0 : -1);
-	    points[2].x = startx + xWidth + offset;
-	    points[2].y = points[0].y;
-	    XFillPolygon(entryPtr->display, pixmap, entryPtr->textGC,
-		    points, 3, Convex, CoordModeOrigin);
+                space = height - 2*pad;
+                /*
+                 * Ensure width of triangle is odd to guarantee a sharp tip
+                 */
+                if (!(xWidth % 2)) {
+                    xWidth++;
+                }
+                tHeight = (xWidth + 1) / 2;
+                if (tHeight > space) {
+                    tHeight = space;
+                }
+                space   = (space - tHeight) / 2;
+                startx += pad;
+                starty  = inset + height - pad - space;
+                offset  = (sbPtr->selElement == SEL_BUTTONUP);
+                /*
+                 * The points are slightly different for the up and down arrows
+                 * because (for *.x), we need to account for a bug in the way
+                 * XFillPolygon draws triangles, and we want to shift
+                 * the arrows differently when allowing for depressed behavior.
+                 */
+                points[0].x = startx + offset;
+                points[0].y = starty + (offset ? 0 : -1);
+                points[1].x = startx + xWidth/2 + offset;
+                points[1].y = starty - tHeight + (offset ? 0 : -1);
+                points[2].x = startx + xWidth + offset;
+                points[2].y = points[0].y;
+                XFillPolygon(entryPtr->display, pixmap, entryPtr->textGC,
+                        points, 3, Convex, CoordModeOrigin);
 
-	    starty = inset + height + pad + space;
-	    offset = (sbPtr->selElement == SEL_BUTTONDOWN);
-	    points[0].x = startx + 1 + offset;
-	    points[0].y = starty + (offset ? 1 : 0);
-	    points[1].x = startx + xWidth/2 + offset;
-	    points[1].y = starty + tHeight + (offset ? 0 : -1);
-	    points[2].x = startx - 1 + xWidth + offset;
-	    points[2].y = points[0].y;
-	    XFillPolygon(entryPtr->display, pixmap, entryPtr->textGC,
-		    points, 3, Convex, CoordModeOrigin);
-	}
+                starty = inset + height + pad + space;
+                offset = (sbPtr->selElement == SEL_BUTTONDOWN);
+                points[0].x = startx + 1 + offset;
+                points[0].y = starty + (offset ? 1 : 0);
+                points[1].x = startx + xWidth/2 + offset;
+                points[1].y = starty + tHeight + (offset ? 0 : -1);
+                points[2].x = startx - 1 + xWidth + offset;
+                points[2].y = points[0].y;
+                XFillPolygon(entryPtr->display, pixmap, entryPtr->textGC,
+                        points, 3, Convex, CoordModeOrigin);
+            }
+        }
     }
 
     /*
@@ -2041,23 +1842,26 @@ DisplayEntry(clientData)
      * any text that extends past the viewable part of the window.
      */
 
-    xBound = entryPtr->highlightWidth;
-    if (entryPtr->relief != TK_RELIEF_FLAT) {
-	Tk_Draw3DRectangle(tkwin, pixmap, border, xBound, xBound,
-		Tk_Width(tkwin) - 2 * xBound,
-		Tk_Height(tkwin) - 2 * xBound,
-		entryPtr->borderWidth, entryPtr->relief);
-    }
-    if (xBound > 0) {
-	GC fgGC, bgGC;
+    if (!TkpDrawEntryBorderAndFocus(entryPtr, pixmap, 
+            (entryPtr->type == TK_SPINBOX))) {
+        xBound = entryPtr->highlightWidth;
+        if (entryPtr->relief != TK_RELIEF_FLAT) {
+	    Tk_Draw3DRectangle(tkwin, pixmap, border, xBound, xBound,
+                    Tk_Width(tkwin) - 2 * xBound,
+		    Tk_Height(tkwin) - 2 * xBound,
+		    entryPtr->borderWidth, entryPtr->relief);
+        }
+        if (xBound > 0) {
+	    GC fgGC, bgGC;
 
-	bgGC = Tk_GCForColor(entryPtr->highlightBgColorPtr, pixmap);
-	if (entryPtr->flags & GOT_FOCUS) {
-	    fgGC = Tk_GCForColor(entryPtr->highlightColorPtr, pixmap);
-	    TkpDrawHighlightBorder(tkwin, fgGC, bgGC, xBound, pixmap);
-	} else {
-	    TkpDrawHighlightBorder(tkwin, bgGC, bgGC, xBound, pixmap);
-	}
+	    bgGC = Tk_GCForColor(entryPtr->highlightBgColorPtr, pixmap);
+	    if (entryPtr->flags & GOT_FOCUS) {
+	        fgGC = Tk_GCForColor(entryPtr->highlightColorPtr, pixmap);
+	        TkpDrawHighlightBorder(tkwin, fgGC, bgGC, xBound, pixmap);
+	    } else {
+	        TkpDrawHighlightBorder(tkwin, bgGC, bgGC, xBound, pixmap);
+	    }
+        }
     }
 
     /*
