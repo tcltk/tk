@@ -1,3 +1,10 @@
+2003-12-15  David Gravereaux >davygrvy@pobox.com>
+
+	* win/tkWinMenu.c (ReconfigureWindowsMenu) : Only redraw the
+	menubar when a menubar exists.  Although the invalid handle
+	doesn't cause an exception, it was discovered with NuMega's
+	BoundsChecker.
+
 2003-12-15  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
 
 	* macosx/tkMacOSXKeyboard.c: General cleanup.  Add support for
