@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.13.2.1 2001/10/13 01:25:10 hobbs Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.13.2.2 2002/02/02 00:17:18 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -658,13 +658,13 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 		 * That will indicate to the user that input methods
 		 * are just not available.
 		 */
-		int bool;
-		if (Tcl_GetBooleanFromObj(interp, objv[2+skip], &bool)
+		int boolVal;
+		if (Tcl_GetBooleanFromObj(interp, objv[2+skip], &boolVal)
 			!= TCL_OK) {
 		    return TCL_ERROR;
 		}
 #ifdef TK_USE_INPUT_METHODS
-		dispPtr->useInputMethods = bool;
+		dispPtr->useInputMethods = boolVal;
 #endif /* TK_USE_INPUT_METHODS */
 	    } else if ((objc - skip) != 2) {
 		Tcl_WrongNumArgs(interp, 2, objv,
