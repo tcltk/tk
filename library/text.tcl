@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.13 2000/07/19 23:22:20 ericm Exp $
+# RCS: @(#) $Id: text.tcl,v 1.14 2001/03/29 11:05:49 mdejong Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -581,15 +581,9 @@ proc tkTextSelectTo {w x y {extend 0}} {
 	}
     }
     if {$tkPriv(mouseMoved) || [string compare $tkPriv(selectMode) "char"]} {
-	if {[string compare $tcl_platform(platform) "unix"] \
-		&& [$w compare $cur < anchor]} {
-	    $w mark set insert $first
-	} else {
-	    $w mark set insert $last
-	}
-	$w tag remove sel 0.0 $first
+	$w tag remove sel 0.0 end
+	$w mark set insert $cur
 	$w tag add sel $first $last
-	$w tag remove sel $last end
 	update idletasks
     }
 }
