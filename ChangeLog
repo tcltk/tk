@@ -1,3 +1,25 @@
+1999-10-28  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* doc/CrtImgType.3:
+	* doc/CrtPhImgFmt.3:
+	* doc/FindPhoto.3:
+	* doc/photo.n:
+	* generic/tk.h:
+	* generic/tkCmds.c:
+	* generic/tkImage.c:
+	* generic/tkImgBmap.c:
+	* generic/tkImgGIF.c:
+	* generic/tkImgPPM.c:
+	* generic/tkImgPhoto.c:
+	* generic/tkInt.h:
+	* generic/tkTest.c:
+	* generic/tkWindow.c:
+	* tests/imgPhoto.test: added Img patch (Nijtmans) with docs,
+	headers #def'd with USE_OLD_IMAGE.  Upgrades image stuff to
+	Tcl_Obj API, adds alpha channel (images are now 32 bpp)
+
+	* makefile.vc: changed 'c:/program files' to c:/progra~1
+
 1999-10-19  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* library/scrlbar.tcl: changed tkScrollButtonUp to check for
