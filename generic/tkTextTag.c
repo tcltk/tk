@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.10 2003/05/27 15:35:53 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.11 2003/10/31 09:02:12 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -162,7 +162,8 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 	    }
 	    tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]));
 	    for (i = 4; i < objc; i += 2) {
-		if (TkTextGetObjIndex(interp, textPtr, objv[i], &index1) != TCL_OK) {
+		if (TkTextGetObjIndex(interp, textPtr, objv[i], 
+				      &index1) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		if (objc > (i+1)) {
@@ -175,7 +176,7 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 		    }
 		} else {
 		    index2 = index1;
-		    TkTextIndexForwChars(&index2, 1, &index2);
+		    TkTextIndexForwChars(&index2, 1, &index2, COUNT_INDICES);
 		}
 
 		if (tagPtr->affectsDisplay) {
@@ -188,38 +189,40 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 
 		    TkTextEventuallyRepick(textPtr);
 		}
-		TkBTreeTag(&index1, &index2, tagPtr, addTag);
-
-		/*
-		 * If the tag is "sel" then grab the selection if we're supposed
-		 * to export it and don't already have it.  Also, invalidate
-		 * partially-completed selection retrievals.
-		 */
-
-		if (tagPtr == textPtr->selTagPtr) {
-		    XEvent event;
+		if (TkBTreeTag(&index1, &index2, tagPtr, addTag)) {
 		    /*
-		     * Send an event that the selection changed.
-		     * This is equivalent to
-		     * "event generate $textWidget <<Selection>>"
+		     * If the tag is "sel", and we actually adjusted
+		     * something then grab the selection if we're
+		     * supposed to export it and don't already have it.
+		     * Also, invalidate partially-completed selection
+		     * retrievals.
 		     */
 
-		    memset((VOID *) &event, 0, sizeof(event));
-		    event.xany.type = VirtualEvent;
-		    event.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
-		    event.xany.send_event = False;
-		    event.xany.window = Tk_WindowId(textPtr->tkwin);
-		    event.xany.display = Tk_Display(textPtr->tkwin);
-		    ((XVirtualEvent *) &event)->name = Tk_GetUid("Selection");
-		    Tk_HandleEvent(&event);
+		    if (tagPtr == textPtr->selTagPtr) {
+			XEvent event;
+			/*
+			 * Send an event that the selection changed.
+			 * This is equivalent to
+			 * "event generate $textWidget <<Selection>>"
+			 */
 
-		    if (addTag && textPtr->exportSelection
-			    && !(textPtr->flags & GOT_SELECTION)) {
-			Tk_OwnSelection(textPtr->tkwin, XA_PRIMARY,
-				TkTextLostSelection, (ClientData) textPtr);
-			textPtr->flags |= GOT_SELECTION;
+			memset((VOID *) &event, 0, sizeof(event));
+			event.xany.type = VirtualEvent;
+			event.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
+			event.xany.send_event = False;
+			event.xany.window = Tk_WindowId(textPtr->tkwin);
+			event.xany.display = Tk_Display(textPtr->tkwin);
+			((XVirtualEvent *) &event)->name = Tk_GetUid("Selection");
+			Tk_HandleEvent(&event);
+
+			if (addTag && textPtr->exportSelection
+				&& !(textPtr->flags & GOT_SELECTION)) {
+			    Tk_OwnSelection(textPtr->tkwin, XA_PRIMARY,
+				    TkTextLostSelection, (ClientData) textPtr);
+			    textPtr->flags |= GOT_SELECTION;
+			}
+			textPtr->abortSelections = 1;
 		    }
-		    textPtr->abortSelections = 1;
 		}
 	    }
 	    break;
@@ -464,26 +467,37 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 		    textPtr->selFgColorPtr = tagPtr->fgColor;
 		}
 		tagPtr->affectsDisplay = 0;
-		if ((tagPtr->border != NULL)
-			|| (tagPtr->reliefString != NULL)
-			|| (tagPtr->bgStipple != None)
-			|| (tagPtr->fgColor != NULL) || (tagPtr->tkfont != None)
-			|| (tagPtr->fgStipple != None)
+		tagPtr->affectsDisplayGeometry = 0;
+		if ((tagPtr->elideString != NULL)
+			|| (tagPtr->tkfont != None)
 			|| (tagPtr->justifyString != NULL)
 			|| (tagPtr->lMargin1String != NULL)
 			|| (tagPtr->lMargin2String != NULL)
 			|| (tagPtr->offsetString != NULL)
-			|| (tagPtr->overstrikeString != NULL)
 			|| (tagPtr->rMarginString != NULL)
 			|| (tagPtr->spacing1String != NULL)
 			|| (tagPtr->spacing2String != NULL)
 			|| (tagPtr->spacing3String != NULL)
 			|| (tagPtr->tabStringPtr != NULL)
-			|| (tagPtr->underlineString != NULL)
-			|| (tagPtr->elideString != NULL)
 			|| (tagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
 		    tagPtr->affectsDisplay = 1;
+		    tagPtr->affectsDisplayGeometry = 1;
 		}
+		if ((tagPtr->border != NULL)
+			|| (tagPtr->reliefString != NULL)
+			|| (tagPtr->bgStipple != None)
+			|| (tagPtr->fgColor != NULL)
+			|| (tagPtr->fgStipple != None)
+			|| (tagPtr->overstrikeString != NULL)
+			|| (tagPtr->underlineString != NULL)) {
+		    tagPtr->affectsDisplay = 1;
+		}
+		/* 
+		 * This line is totally unnecessary if this is a new
+		 * tag, since it can't possibly have been applied to
+		 * anything yet.  We might wish to test for that
+		 * case specially
+		 */
 		TkTextRedrawTag(textPtr, (TkTextIndex *) NULL,
 			(TkTextIndex *) NULL, tagPtr, 1);
 		return result;
@@ -582,7 +596,8 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 	case TAG_NAMES: {
 	    TkTextTag **arrayPtr;
 	    int arraySize;
-
+	    Tcl_Obj *listObj;
+	    
 	    if ((objc != 3) && (objc != 4)) {
 		Tcl_WrongNumArgs(interp, 3, objv, "?index?");
 		return TCL_ERROR;
@@ -609,10 +624,13 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 		}
 	    }
 	    SortTags(arraySize, arrayPtr);
+	    listObj = Tcl_NewListObj(0, NULL);
 	    for (i = 0; i < arraySize; i++) {
 		tagPtr = arrayPtr[i];
-		Tcl_AppendElement(interp, tagPtr->name);
+		Tcl_ListObjAppendElement(interp, listObj, 
+					 Tcl_NewStringObj(tagPtr->name,-1));
 	    }
+	    Tcl_SetObjResult(interp, listObj);
 	    ckfree((char *) arrayPtr);
 	    break;
 	}
@@ -778,7 +796,7 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 	}
 	case TAG_RANGES: {
 	    TkTextSearch tSearch;
-	    char position[TK_POS_CHARS];
+	    Tcl_Obj *listObj = Tcl_NewListObj(0, NULL);
 
 	    if (objc != 4) {
 		Tcl_WrongNumArgs(interp, 3, objv, "tagName");
@@ -793,13 +811,14 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 		    0, &last);
 	    TkBTreeStartSearch(&first, &last, tagPtr, &tSearch);
 	    if (TkBTreeCharTagged(&first, tagPtr)) {
-		TkTextPrintIndex(&first, position);
-		Tcl_AppendElement(interp, position);
+		Tcl_ListObjAppendElement(interp, listObj, 
+		    TkTextNewIndexObj(textPtr, &first));
 	    }
 	    while (TkBTreeNextTag(&tSearch)) {
-		TkTextPrintIndex(&tSearch.curIndex, position);
-		Tcl_AppendElement(interp, position);
+		Tcl_ListObjAppendElement(interp, listObj,
+		    TkTextNewIndexObj(textPtr, &tSearch.curIndex));
 	    }
+	    Tcl_SetObjResult(interp, listObj);
 	    break;
 	}
     }
@@ -883,6 +902,7 @@ TkTextCreateTag(textPtr, tagName)
     tagPtr->elide = 0;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
     tagPtr->affectsDisplay = 0;
+    tagPtr->affectsDisplayGeometry = 0;
     textPtr->numTags++;
     Tcl_SetHashValue(hPtr, tagPtr);
     tagPtr->optionTable = Tk_CreateOptionTable(textPtr->interp, tagOptionSpecs);
@@ -1132,7 +1152,7 @@ TkTextBindProc(clientData, eventPtr)
 # define AnyButtonMask (Button1Mask|Button2Mask|Button3Mask\
 	|Button4Mask|Button5Mask)
 
-    Tcl_Preserve((ClientData) textPtr);
+    textPtr->refCount++;
 
     /*
      * This code simulates grabs for mouse buttons by keeping track
@@ -1197,12 +1217,16 @@ TkTextBindProc(clientData, eventPtr)
 	oldState = eventPtr->xbutton.state;
 	eventPtr->xbutton.state &= ~(Button1Mask|Button2Mask
 		|Button3Mask|Button4Mask|Button5Mask);
-	TkTextPickCurrent(textPtr, eventPtr);
+	if (!(textPtr->flags & DESTROYED)) {
+	    TkTextPickCurrent(textPtr, eventPtr);
+	}
 	eventPtr->xbutton.state = oldState;
     }
 
     done:
-    Tcl_Release((ClientData) textPtr);
+    if (--textPtr->refCount == 0) {
+	ckfree((char *) textPtr);
+    }
 }
 
 /*
@@ -1224,7 +1248,7 @@ TkTextBindProc(clientData, eventPtr)
  *	then the commands associated with character entry and leave
  *	could do just about anything.  For example, the text widget
  *	might be deleted.  It is up to the caller to protect itself
- *	with calls to Tcl_Preserve and Tcl_Release.
+ *	by incrementing the refCount of the text widget.
  *
  *--------------------------------------------------------------
  */

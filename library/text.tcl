@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.26 2003/10/06 22:14:26 jenglish Exp $
+# RCS: @(#) $Id: text.tcl,v 1.27 2003/10/31 09:02:13 vincentdarley Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -88,10 +88,10 @@ bind Text <Control-1> {
     %W mark set insert @%x,%y
 }
 bind Text <Left> {
-    tk::TextSetCursor %W insert-1c
+    tk::TextSetCursor %W insert-1displayindices
 }
 bind Text <Right> {
-    tk::TextSetCursor %W insert+1c
+    tk::TextSetCursor %W insert+1displayindices
 }
 bind Text <Up> {
     tk::TextSetCursor %W [tk::TextUpDownLine %W -1]
@@ -100,10 +100,10 @@ bind Text <Down> {
     tk::TextSetCursor %W [tk::TextUpDownLine %W 1]
 }
 bind Text <Shift-Left> {
-    tk::TextKeySelect %W [%W index {insert - 1c}]
+    tk::TextKeySelect %W [%W index {insert - 1displayindices}]
 }
 bind Text <Shift-Right> {
-    tk::TextKeySelect %W [%W index {insert + 1c}]
+    tk::TextKeySelect %W [%W index {insert + 1displayindices}]
 }
 bind Text <Shift-Up> {
     tk::TextKeySelect %W [tk::TextUpDownLine %W -1]
@@ -205,7 +205,7 @@ bind Text <Return> {
     if {[%W cget -autoseparators]} {%W edit separator}
 }
 bind Text <Delete> {
-    if {[string compare [%W tag nextrange sel 1.0 end] ""]} {
+    if {[%W tag nextrange sel 1.0 end] ne ""} {
 	%W delete sel.first sel.last
     } else {
 	%W delete insert
@@ -213,7 +213,7 @@ bind Text <Delete> {
     }
 }
 bind Text <BackSpace> {
-    if {[string compare [%W tag nextrange sel 1.0 end] ""]} {
+    if {[%W tag nextrange sel 1.0 end] ne ""} {
 	%W delete sel.first sel.last
     } elseif {[%W compare insert != 1.0]} {
 	%W delete insert-1c
@@ -290,7 +290,7 @@ bind Text <Control-a> {
 }
 bind Text <Control-b> {
     if {!$tk_strictMotif} {
-	tk::TextSetCursor %W insert-1c
+	tk::TextSetCursor %W insert-1displayindices
     }
 }
 bind Text <Control-d> {
@@ -305,7 +305,7 @@ bind Text <Control-e> {
 }
 bind Text <Control-f> {
     if {!$tk_strictMotif} {
-	tk::TextSetCursor %W insert+1c
+	tk::TextSetCursor %W insert+1displayindices
     }
 }
 bind Text <Control-k> {
@@ -449,12 +449,19 @@ bind Text <B2-Motion> {
 }
 set ::tk::Priv(prevPos) {}
 
-# The MouseWheel will typically only fire on Windows.  However,
-# someone could use the "event generate" command to produce one
-# on other platforms.
+# The MouseWheel will typically only fire on Windows and MacOS X.
+# However, someone could use the "event generate" command to produce one
+# on other platforms.  We must be careful not to round -ve values of %D
+# down to zero.
 
 bind Text <MouseWheel> {
-    %W yview scroll [expr {- (%D / 120) * 4}] units
+    %W yview scroll [expr {-%D}] pixels
+}
+if {[string equal [tk windowingsystem] "classic"]
+	|| [string equal [tk windowingsystem] "aqua"]} {
+bind Text <Option-MouseWheel> {
+    %W yview scroll [expr {- 10*%D}] pixels
+}
 }
 
 if {[string equal "x11" [tk windowingsystem]]} {
@@ -464,12 +471,12 @@ if {[string equal "x11" [tk windowingsystem]]} {
     #	http://www.inria.fr/koala/colas/mouse-wheel-scroll/
     bind Text <4> {
 	if {!$tk_strictMotif} {
-	    %W yview scroll -5 units
+	    %W yview scroll -50 pixels
 	}
     }
     bind Text <5> {
 	if {!$tk_strictMotif} {
-	    %W yview scroll 5 units
+	    %W yview scroll 50 pixels
 	}
     }
 }
@@ -582,7 +589,7 @@ proc ::tk::TextSelectTo {w x y {extend 0}} {
 	    }
 	}
     }
-    if {$Priv(mouseMoved) || [string compare $Priv(selectMode) "char"]} {
+    if {$Priv(mouseMoved) || ($Priv(selectMode) ne "char")} {
 	$w tag remove sel 0.0 end
 	$w mark set insert $cur
 	$w tag add sel $first $last
@@ -659,9 +666,9 @@ proc ::tk::TextAutoScan {w} {
     variable ::tk::Priv
     if {![winfo exists $w]} return
     if {$Priv(y) >= [winfo height $w]} {
-	$w yview scroll 2 units
+	$w yview scroll [expr {1 + $Priv(y) - [winfo height $w]}] pixels
     } elseif {$Priv(y) < 0} {
-	$w yview scroll -2 units
+	$w yview scroll [expr {-1 + $Priv(y)}] pixels
     } elseif {$Priv(x) >= [winfo width $w]} {
 	$w xview scroll 2 units
     } elseif {$Priv(x) < 0} {
@@ -821,28 +828,30 @@ proc ::tk::TextInsert {w s} {
 }
 
 # ::tk::TextUpDownLine --
-# Returns the index of the character one line above or below the
-# insertion cursor.  There are two tricky things here.  First,
-# we want to maintain the original column across repeated operations,
-# even though some lines that will get passed through don't have
-# enough characters to cover the original column.  Second, don't
-# try to scroll past the beginning or end of the text.
+# Returns the index of the character one display line above or below the
+# insertion cursor.  There are two tricky things here.  First, we want to
+# maintain the original x position across repeated operations, even though
+# some lines that will get passed through don't have enough characters to
+# cover the original column.  Second, don't try to scroll past the
+# beginning or end of the text.
 #
 # Arguments:
 # w -		The text window in which the cursor is to move.
-# n -		The number of lines to move: -1 for up one line,
+# n -		The number of display lines to move: -1 for up one line,
 #		+1 for down one line.
 
 proc ::tk::TextUpDownLine {w n} {
     variable ::tk::Priv
 
     set i [$w index insert]
-    scan $i "%d.%d" line char
-    if {[string compare $Priv(prevPos) $i]} {
-	set Priv(char) $char
+    if {$Priv(prevPos) ne $i} {
+	set Priv(textPosOrig) $i
     }
-    set new [$w index [expr {$line + $n}].$Priv(char)]
-    if {[$w compare $new == end] || [$w compare $new == "insert linestart"]} {
+    set lines [$w count -displaylines $Priv(textPosOrig) $i]
+    set new [$w index \
+      "$Priv(textPosOrig) + [expr {$lines + $n}] displaylines"]
+    if {[$w compare $new == end] \
+      || [$w compare $new == "insert display linestart"]} {
 	set new $i
     }
     set Priv(prevPos) $new
@@ -862,10 +871,11 @@ proc ::tk::TextPrevPara {w pos} {
     set pos [$w index "$pos linestart"]
     while {1} {
 	if {([string equal [$w get "$pos - 1 line"] "\n"] \
-		&& [string compare [$w get $pos] "\n"]) \
+		&& ([$w get $pos] ne "\n")) \
 		|| [string equal $pos "1.0"]} {
-	    if {[regexp -indices {^[ 	]+(.)} [$w get $pos "$pos lineend"] \
-		    dummy index]} {
+	    if {[regexp -indices -- \
+	      {^[ \t]+(.)} [$w get $pos "$pos lineend"] \
+	      dummy index]} {
 		set pos [$w index "$pos + [lindex $index 0] chars"]
 	    }
 	    if {[$w compare $pos != insert] || [string equal $pos 1.0]} {
@@ -887,7 +897,7 @@ proc ::tk::TextPrevPara {w pos} {
 
 proc ::tk::TextNextPara {w start} {
     set pos [$w index "$start linestart + 1 line"]
-    while {[string compare [$w get $pos] "\n"]} {
+    while {[$w get $pos] ne "\n"} {
 	if {[$w compare $pos == end]} {
 	    return [$w index "end - 1c"]
 	}
@@ -899,7 +909,7 @@ proc ::tk::TextNextPara {w start} {
 	    return [$w index "end - 1c"]
 	}
     }
-    if {[regexp -indices {^[ 	]+(.)} [$w get $pos "$pos lineend"] \
+    if {[regexp -indices -- {^[ \t]+(.)} [$w get $pos "$pos lineend"] \
 	    dummy index]} {
 	return [$w index "$pos + [lindex $index 0] chars"]
     }
@@ -996,7 +1006,7 @@ proc ::tk_textPaste w {
 	    $w configure -autoseparators 0
 	    $w edit separator
 	}
-	if {[string compare [tk windowingsystem] "x11"]} {
+	if {[tk windowingsystem] ne "x11"} {
 	    catch { $w delete sel.first sel.last }
 	}
 	$w insert insert $sel
@@ -1041,16 +1051,10 @@ proc ::tk::TextNextPos {w start op} {
     set text ""
     set cur $start
     while {[$w compare $cur < end]} {
-	set text $text[$w get $cur "$cur lineend + 1c"]
+	set text $text[$w get -displaychars $cur "$cur lineend + 1c"]
 	set pos [$op $text 0]
 	if {$pos >= 0} {
-	    ## Adjust for embedded windows and images
-	    ## dump gives us 3 items per window/image
-	    set dump [$w dump -image -window $start "$start + $pos c"]
-	    if {[llength $dump]} {
-		set pos [expr {$pos + ([llength $dump]/3)}]
-	    }
-	    return [$w index "$start + $pos c"]
+	    return [$w index "$start + $pos display chars"]
 	}
 	set cur [$w index "$cur lineend +1c"]
     }
@@ -1070,22 +1074,10 @@ proc ::tk::TextPrevPos {w start op} {
     set text ""
     set cur $start
     while {[$w compare $cur > 0.0]} {
-	set text [$w get "$cur linestart - 1c" $cur]$text
+	set text [$w get -displaychars "$cur linestart - 1c" $cur]$text
 	set pos [$op $text end]
 	if {$pos >= 0} {
-	    ## Adjust for embedded windows and images
-	    ## dump gives us 3 items per window/image
-	    set dump [$w dump -image -window "$cur linestart" "$start - 1c"]
-	    if {[llength $dump]} {
-		## This is a hokey extra hack for control-arrow movement
-		## that should be in a while loop to be correct (hobbs)
-		if {[$w compare [lindex $dump 2] > \
-			"$cur linestart - 1c + $pos c"]} {
-		    incr pos -1
-		}
-		set pos [expr {$pos + ([llength $dump]/3)}]
-	    }
-	    return [$w index "$cur linestart - 1c + $pos c"]
+	    return [$w index "$cur linestart - 1c + $pos display chars"]
 	}
 	set cur [$w index "$cur linestart - 1c"]
     }

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.7 2003/05/19 13:04:23 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.8 2003/10/31 09:02:10 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -55,6 +55,7 @@ typedef struct Node {
     int numChildren;			/* Number of children of this node. */
     int numLines;			/* Total number of lines (leaves) in
 					 * the subtree rooted here. */
+    int numPixels;
 } Node;
 
 /*
@@ -217,7 +218,7 @@ TkBTreeCreate(textPtr)
     register Node *rootPtr;
     register TkTextLine *linePtr, *linePtr2;
     register TkTextSegment *segPtr;
-
+    
     /*
      * The tree will initially have two empty lines.  The second line
      * isn't actually part of the tree's contents, but its presence
@@ -235,7 +236,13 @@ TkBTreeCreate(textPtr)
     rootPtr->children.linePtr = linePtr;
     rootPtr->numChildren = 2;
     rootPtr->numLines = 2;
-
+    rootPtr->numPixels = textPtr->charHeight;
+    linePtr->pixelHeight = textPtr->charHeight;
+    linePtr->pixelCalculationEpoch = 0;
+    /* The last line permanently has a pixel height of zero */
+    linePtr2->pixelHeight = 0;
+    linePtr2->pixelCalculationEpoch = 1;
+    
     linePtr->parentPtr = rootPtr;
     linePtr->nextPtr = linePtr2;
     segPtr = (TkTextSegment *) ckalloc(CSEG_SIZE(1));
@@ -245,7 +252,7 @@ TkBTreeCreate(textPtr)
     segPtr->size = 1;
     segPtr->body.chars[0] = '\n';
     segPtr->body.chars[1] = 0;
-
+    
     linePtr2->parentPtr = rootPtr;
     linePtr2->nextPtr = NULL;
     segPtr = (TkTextSegment *) ckalloc(CSEG_SIZE(1));
@@ -371,6 +378,54 @@ DeleteSummaries(summaryPtr)
 /*
  *----------------------------------------------------------------------
  *
+ * TkBTreeAdjustPixelHeight --
+ *
+ *	Adjust the pixel height of a given logical line to the
+ *	specified value.
+ *
+ * Results:
+ *	Total number of valid pixels currently known in the tree.
+ *
+ * Side effects:
+ *	Updates overall data structures so pixel height count is
+ *	consistent.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkBTreeAdjustPixelHeight(linePtr, newPixelHeight)
+    register TkTextLine *linePtr;	/* The logical line to update */
+    int newPixelHeight;			/* The line's known height 
+                       			 * in pixels */
+{
+    register Node *nodePtr;
+    int changeToPixelCount;		/* Counts change to total number of
+					 * pixels in file. */
+
+    changeToPixelCount = newPixelHeight - linePtr->pixelHeight;
+
+    /*
+     * Increment the pixel counts in all the parent nodes of the
+     * current line, then rebalance the tree if necessary.
+     */
+
+    nodePtr = linePtr->parentPtr;
+    nodePtr->numPixels += changeToPixelCount;
+    
+    while (nodePtr->parentPtr != NULL) {
+	nodePtr = nodePtr->parentPtr;
+	nodePtr->numPixels += changeToPixelCount;
+    }
+
+    linePtr->pixelHeight = newPixelHeight;
+    
+    return nodePtr->numPixels;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkBTreeInsertChars --
  *
  *	Insert characters at a given position in a B-tree.
@@ -414,6 +469,8 @@ TkBTreeInsertChars(indexPtr, string)
 					 * one in current chunk. */
     int changeToLineCount;		/* Counts change to total number of
 					 * lines in file. */
+    int changeToPixelCount;		/* Counts change to total number of
+					 * pixels in file. */
 
     prevPtr = SplitSeg(indexPtr);
     linePtr = indexPtr->linePtr;
@@ -426,6 +483,7 @@ TkBTreeInsertChars(indexPtr, string)
      */
 
     changeToLineCount = 0;
+    changeToPixelCount = 0;
     while (*string != 0) {
 	for (eol = string; *eol != 0; eol++) {
 	    if (*eol == '\n') {
@@ -461,11 +519,19 @@ TkBTreeInsertChars(indexPtr, string)
 	newLinePtr->nextPtr = linePtr->nextPtr;
 	linePtr->nextPtr = newLinePtr;
 	newLinePtr->segPtr = segPtr->nextPtr;
+	/*
+	 * Set up a starting default height, which will be re-adjusted 
+	 * later
+	 */
+	newLinePtr->pixelHeight = linePtr->pixelHeight;
+	newLinePtr->pixelCalculationEpoch = 0;
+
 	segPtr->nextPtr = NULL;
 	linePtr = newLinePtr;
 	curPtr = NULL;
 	changeToLineCount++;
-
+	changeToPixelCount += newLinePtr->pixelHeight;
+	
 	string = eol;
     }
 
@@ -478,15 +544,26 @@ TkBTreeInsertChars(indexPtr, string)
     if (linePtr != indexPtr->linePtr) {
 	CleanupLine(linePtr);
     }
+    
+    /*
+     * I don't believe it's possible for either of the two lines
+     * passed to this function to be the last line of text, but
+     * the function is robust to that case anyway.  (We must never
+     * re-calculated the line height of the last line).
+     */
+    TkTextInvalidateLineMetrics(((BTree*)indexPtr->tree)->textPtr, 
+				indexPtr->linePtr, changeToLineCount, 
+				TK_TEXT_INVALIDATE_INSERT);
 
     /*
-     * Increment the line counts in all the parent nodes of the insertion
-     * point, then rebalance the tree if necessary.
+     * Increment the line and pixel counts in all the parent nodes of the
+     * insertion point, then rebalance the tree if necessary.
      */
 
     for (nodePtr = linePtr->parentPtr ; nodePtr != NULL;
 	    nodePtr = nodePtr->parentPtr) {
 	nodePtr->numLines += changeToLineCount;
+	nodePtr->numPixels += changeToPixelCount;
     }
     nodePtr = linePtr->parentPtr;
     nodePtr->numChildren += changeToLineCount;
@@ -649,7 +726,8 @@ TkBTreeDeleteChars(index1Ptr, index2Ptr)
     TkTextSegment *segPtr, *nextPtr;
     TkTextLine *curLinePtr;
     Node *curNodePtr, *nodePtr;
-
+    int changeToLineCount = 0;
+    
     /*
      * Tricky point:  split at index2Ptr first;  otherwise the split
      * at index2Ptr may invalidate segPtr and/or prevPtr.
@@ -675,6 +753,7 @@ TkBTreeDeleteChars(index1Ptr, index2Ptr)
      */
 
     curLinePtr = index1Ptr->linePtr;
+
     curNodePtr = curLinePtr->parentPtr;
     while (segPtr != lastPtr) {
 	if (segPtr == NULL) {
@@ -696,7 +775,9 @@ TkBTreeDeleteChars(index1Ptr, index2Ptr)
 		for (nodePtr = curNodePtr; nodePtr != NULL;
 			nodePtr = nodePtr->parentPtr) {
 		    nodePtr->numLines--;
+		    nodePtr->numPixels -= curLinePtr->pixelHeight;
 		}
+		changeToLineCount++;
 		curNodePtr->numChildren--;
 		ckfree((char *) curLinePtr);
 	    }
@@ -768,7 +849,9 @@ TkBTreeDeleteChars(index1Ptr, index2Ptr)
 	for (nodePtr = curNodePtr; nodePtr != NULL;
 		nodePtr = nodePtr->parentPtr) {
 	    nodePtr->numLines--;
+	    nodePtr->numPixels -= index2Ptr->linePtr->pixelHeight;
 	}
+	changeToLineCount++;
 	curNodePtr->numChildren--;
 	prevLinePtr = curNodePtr->children.linePtr;
 	if (prevLinePtr == index2Ptr->linePtr) {
@@ -780,6 +863,7 @@ TkBTreeDeleteChars(index1Ptr, index2Ptr)
 	    prevLinePtr->nextPtr = index2Ptr->linePtr->nextPtr;
 	}
 	ckfree((char *) index2Ptr->linePtr);
+
 	Rebalance((BTree *) index2Ptr->tree, curNodePtr);
     }
 
@@ -789,6 +873,18 @@ TkBTreeDeleteChars(index1Ptr, index2Ptr)
 
     CleanupLine(index1Ptr->linePtr);
 
+    /*
+     * This line now needs to have its height recalculated.  For safety,
+     * ensure we don't call this function with the last artificial line
+     * of text.  I _believe_ that it isn't possible to get this far with
+     * the last line, but it is good to be safe.
+     */
+    if (TkBTreeNextLine(index1Ptr->linePtr) != NULL) {
+        TkTextInvalidateLineMetrics(((BTree*)index1Ptr->tree)->textPtr, 
+				    index1Ptr->linePtr, changeToLineCount, 
+				    TK_TEXT_INVALIDATE_DELETE);
+    }
+    
     /*
      * Lastly, rebalance the first node of the range.
      */
@@ -858,6 +954,82 @@ TkBTreeFindLine(tree, line)
 	    panic("TkBTreeFindLine ran out of lines");
 	}
 	linesLeft -= 1;
+    }
+    return linePtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkBTreeFindPixelLine --
+ *
+ *	Find a particular line in a B-tree based on its pixel count.
+ *
+ * Results:
+ *	The return value is a pointer to the line structure for the
+ *	line which contains the pixel "pixels", or NULL if no such 
+ *	line exists.  If the first line is of height 20, then pixels
+ *	0-19 will return it, and pixels = 20 will return the next
+ *	line.
+ *	
+ *	If pixelOffset is non-NULL, it is set to the amount by which 
+ *	'pixels' exceeds the first pixel located on the returned
+ *	line.  This should always be non-negative.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TkTextLine *
+TkBTreeFindPixelLine(tree, pixels, pixelOffset)
+    TkTextBTree tree;			/* B-tree in which to find line. */
+    int pixels;				/* Index of desired line. */
+    int *pixelOffset;                   /* Used to return offset */
+{
+    BTree *treePtr = (BTree *) tree;
+    register Node *nodePtr;
+    register TkTextLine *linePtr;
+    int pixelsLeft;
+
+    nodePtr = treePtr->rootPtr;
+    pixelsLeft = pixels;
+
+    if ((pixels < 0) || (pixels > nodePtr->numPixels)) {
+	return NULL;
+    }
+
+    /*
+     * Work down through levels of the tree until a node is found at
+     * level 0.
+     */
+
+    while (nodePtr->level != 0) {
+	for (nodePtr = nodePtr->children.nodePtr;
+		nodePtr->numPixels <= pixelsLeft;
+		nodePtr = nodePtr->nextPtr) {
+	    if (nodePtr == NULL) {
+		panic("TkBTreeFindLine ran out of nodes");
+	    }
+	    pixelsLeft -= nodePtr->numPixels;
+	}
+    }
+
+    /*
+     * Work through the lines attached to the level-0 node.
+     */
+
+    for (linePtr = nodePtr->children.linePtr; 
+	    linePtr->pixelHeight < pixelsLeft;
+	    linePtr = linePtr->nextPtr) {
+	if (linePtr == NULL) {
+	    panic("TkBTreeFindLine ran out of lines");
+	}
+	pixelsLeft -= linePtr->pixelHeight;
+    }
+    if (pixelOffset != NULL && linePtr != NULL) {
+        *pixelOffset = pixelsLeft;
     }
     return linePtr;
 }
@@ -983,6 +1155,72 @@ TkBTreePreviousLine(linePtr)
 	    return prevPtr;
 	}
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkBTreePixels --
+ *
+ *	Given a pointer to a line in a B-tree, return the numerical
+ *	pixel index of the top of that line (i.e. the result does
+ *	not include the height of the given line).
+ *	
+ *	Since the last line of text (the artificial one) has zero
+ *	height by defintion, calling this with the last line will
+ *	return the total number of pixels in the widget.
+ *
+ * Results:
+ *	The result is the index of linePtr within the tree, where 0
+ *	corresponds to the first line in the tree.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkBTreePixels(linePtr)
+    TkTextLine *linePtr;		/* Pointer to existing line in
+					 * B-tree. */
+{
+    register TkTextLine *linePtr2;
+    register Node *nodePtr, *parentPtr, *nodePtr2;
+    int index;
+
+    /*
+     * First count how many lines precede this one in its level-0
+     * node.
+     */
+
+    nodePtr = linePtr->parentPtr;
+    index = 0;
+    for (linePtr2 = nodePtr->children.linePtr; linePtr2 != linePtr;
+	    linePtr2 = linePtr2->nextPtr) {
+	if (linePtr2 == NULL) {
+	    panic("TkBTreePixels couldn't find line");
+	}
+	index += linePtr2->pixelHeight;
+    }
+
+    /*
+     * Now work up through the levels of the tree one at a time,
+     * counting how many lines are in nodes preceding the current
+     * node.
+     */
+
+    for (parentPtr = nodePtr->parentPtr ; parentPtr != NULL;
+	    nodePtr = parentPtr, parentPtr = parentPtr->parentPtr) {
+	for (nodePtr2 = parentPtr->children.nodePtr; nodePtr2 != nodePtr;
+		nodePtr2 = nodePtr2->nextPtr) {
+	    if (nodePtr2 == NULL) {
+		panic("TkBTreePixels couldn't find node");
+	    }
+	    index += nodePtr2->numPixels;
+	}
+    }
+    return index;
 }
 
 /*
@@ -1137,7 +1375,9 @@ TkBTreeUnlinkSegment(tree, segPtr, linePtr)
  *	a B-tree of text.
  *
  * Results:
- *	None.
+ *	1 if the tags on any characters in the range were changed,
+ *	and zero otherwise (i.e. if the tag was already absent (add = 0)
+ *	or present (add = 1) on the index range in question).
  *
  * Side effects:
  *	The given tag is added to the given range of characters
@@ -1150,7 +1390,7 @@ TkBTreeUnlinkSegment(tree, segPtr, linePtr)
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkBTreeTag(index1Ptr, index2Ptr, tagPtr, add)
     register TkTextIndex *index1Ptr;	/* Indicates first character in
 					 * range. */
@@ -1166,7 +1406,8 @@ TkBTreeTag(index1Ptr, index2Ptr, tagPtr, add)
     TkTextLine *cleanupLinePtr;
     int oldState;
     int changed;
-
+    int anyChanges = 0;
+    
     /*
      * See whether the tag is present at the start of the range.  If
      * the state doesn't already match what we want then add a toggle
@@ -1188,6 +1429,7 @@ TkBTreeTag(index1Ptr, index2Ptr, tagPtr, add)
 	segPtr->size = 0;
 	segPtr->body.toggle.tagPtr = tagPtr;
 	segPtr->body.toggle.inNodeCounts = 0;
+	anyChanges = 1;
     }
 
     /*
@@ -1199,6 +1441,7 @@ TkBTreeTag(index1Ptr, index2Ptr, tagPtr, add)
     TkBTreeStartSearch(index1Ptr, index2Ptr, tagPtr, &search);
     cleanupLinePtr = index1Ptr->linePtr;
     while (TkBTreeNextTag(&search)) {
+	anyChanges = 1;
 	oldState ^= 1;
 	segPtr = search.segPtr;
 	prevPtr = search.curIndex.linePtr->segPtr;
@@ -1257,6 +1500,7 @@ TkBTreeTag(index1Ptr, index2Ptr, tagPtr, add)
 	segPtr->size = 0;
 	segPtr->body.toggle.tagPtr = tagPtr;
 	segPtr->body.toggle.inNodeCounts = 0;
+	anyChanges = 1;
     }
 
     /*
@@ -1264,14 +1508,17 @@ TkBTreeTag(index1Ptr, index2Ptr, tagPtr, add)
      * these are different.
      */
 
-    CleanupLine(cleanupLinePtr);
-    if (cleanupLinePtr != index2Ptr->linePtr) {
-	CleanupLine(index2Ptr->linePtr);
+    if (anyChanges) {
+        CleanupLine(cleanupLinePtr);
+	if (cleanupLinePtr != index2Ptr->linePtr) {
+	    CleanupLine(index2Ptr->linePtr);
+	}
     }
 
     if (tkBTreeDebug) {
 	TkBTreeCheck(index1Ptr->tree);
     }
+    return anyChanges;
 }
 
 /*
@@ -1789,7 +2036,8 @@ TkBTreeStartSearchBack(index1Ptr, index2Ptr, tagPtr, searchPtr)
 	searchPtr->curIndex = index0;
 	index1Ptr = &index0;
     } else {
-	TkTextIndexBackChars(index1Ptr, 1, &searchPtr->curIndex);
+	TkTextIndexBackChars(index1Ptr, 1, &searchPtr->curIndex, 
+			     COUNT_INDICES);
     }
     searchPtr->segPtr = NULL;
     searchPtr->nextPtr = TkTextIndexToSeg(&searchPtr->curIndex, &offset);
@@ -1805,7 +2053,7 @@ TkBTreeStartSearchBack(index1Ptr, index2Ptr, tagPtr, searchPtr)
 	backOne = *index2Ptr;
 	searchPtr->lastPtr = NULL;	/* Signals special case for 1.0 */
     } else {
-	TkTextIndexBackChars(index2Ptr, 1, &backOne);
+	TkTextIndexBackChars(index2Ptr, 1, &backOne, COUNT_INDICES);
 	searchPtr->lastPtr = TkTextIndexToSeg(&backOne, (int *) NULL);
     }
     searchPtr->tagPtr = tagPtr;
@@ -2451,7 +2699,7 @@ TkBTreeGetTags(indexPtr, numTagsPtr)
 	/* ARGSUSED */
 int
 TkTextIsElided(textPtr, indexPtr)
-    TkText *textPtr;		/* Overall information about text widget. */
+    CONST TkText *textPtr;	/* Overall information about text widget. */
     CONST TkTextIndex *indexPtr;/* The character in the text for which
 				 * display information is wanted. */
 {
@@ -2469,7 +2717,7 @@ TkTextIsElided(textPtr, indexPtr)
     register TkTextTag *tagPtr = NULL;
     register int i, index;
 
-	/* almost always avoid malloc, so stay out of system calls */
+    /* Almost always avoid malloc, so stay out of system calls */
     if (LOTSA_TAGS < numTags) {
 	tagCnts = (int *)ckalloc((unsigned)sizeof(int) * numTags);
 	tagPtrs = (TkTextTag **)ckalloc((unsigned)sizeof(TkTextTag *) * numTags);
@@ -2806,7 +3054,7 @@ CheckNodeConsistency(nodePtr)
     register Summary *summaryPtr, *summaryPtr2;
     register TkTextLine *linePtr;
     register TkTextSegment *segPtr;
-    int numChildren, numLines, toggleCount, minChildren;
+    int numChildren, numLines, numPixels, toggleCount, minChildren;
 
     if (nodePtr->parentPtr != NULL) {
 	minChildren = MIN_CHILDREN;
@@ -2823,6 +3071,7 @@ CheckNodeConsistency(nodePtr)
 
     numChildren = 0;
     numLines = 0;
+    numPixels = 0;
     if (nodePtr->level == 0) {
 	for (linePtr = nodePtr->children.linePtr; linePtr != NULL;
 		linePtr = linePtr->nextPtr) {
@@ -2850,6 +3099,7 @@ CheckNodeConsistency(nodePtr)
 	    }
 	    numChildren++;
 	    numLines++;
+	    numPixels += linePtr->pixelHeight;
 	}
     } else {
 	for (childNodePtr = nodePtr->children.nodePtr; childNodePtr != NULL;
@@ -2881,6 +3131,7 @@ CheckNodeConsistency(nodePtr)
 	    }
 	    numChildren++;
 	    numLines += childNodePtr->numLines;
+	    numPixels += childNodePtr->numPixels;
 	}
     }
     if (numChildren != nodePtr->numChildren) {
@@ -2890,6 +3141,10 @@ CheckNodeConsistency(nodePtr)
     if (numLines != nodePtr->numLines) {
 	panic("CheckNodeConsistency: mismatch in numLines (%d %d)",
 		numLines, nodePtr->numLines);
+    }
+    if (numPixels != nodePtr->numPixels) {
+	panic("CheckNodeConsistency: mismatch in numPixels (%d %d)",
+	      numPixels, nodePtr->numPixels);
     }
 
     for (summaryPtr = nodePtr->summaryPtr; summaryPtr != NULL;
@@ -2997,6 +3252,7 @@ Rebalance(treePtr, nodePtr)
 		    newPtr->children.nodePtr = nodePtr;
 		    newPtr->numChildren = 1;
 		    newPtr->numLines = nodePtr->numLines;
+		    newPtr->numPixels = nodePtr->numPixels;
 		    RecomputeNodeCounts(newPtr);
 		    treePtr->rootPtr = newPtr;
 		}
@@ -3209,6 +3465,7 @@ RecomputeNodeCounts(nodePtr)
     }
     nodePtr->numChildren = 0;
     nodePtr->numLines = 0;
+    nodePtr->numPixels = 0;
 
     /*
      * Scan through the children, adding the childrens' tag counts into
@@ -3221,6 +3478,7 @@ RecomputeNodeCounts(nodePtr)
 		linePtr = linePtr->nextPtr) {
 	    nodePtr->numChildren++;
 	    nodePtr->numLines++;
+	    nodePtr->numPixels += linePtr->pixelHeight;
 	    linePtr->parentPtr = nodePtr;
 	    for (segPtr = linePtr->segPtr; segPtr != NULL;
 		    segPtr = segPtr->nextPtr) {
@@ -3252,6 +3510,7 @@ RecomputeNodeCounts(nodePtr)
 		childPtr = childPtr->nextPtr) {
 	    nodePtr->numChildren++;
 	    nodePtr->numLines += childPtr->numLines;
+	    nodePtr->numPixels += childPtr->numPixels;
 	    childPtr->parentPtr = nodePtr;
 	    for (summaryPtr2 = childPtr->summaryPtr; summaryPtr2 != NULL;
 		    summaryPtr2 = summaryPtr2->nextPtr) {
@@ -3340,6 +3599,34 @@ TkBTreeNumLines(tree)
 {
     BTree *treePtr = (BTree *) tree;
     return treePtr->rootPtr->numLines - 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkBTreeNumPixels --
+ *
+ *	This procedure returns a count of the number of pixels of
+ *	text present in a given B-tree.
+ *
+ * Results:
+ *	The return value is a count of the number of usable pixels in
+ *	tree (since the dummy line used to mark the end of the tree is
+ *	maintained with zero height, it doesn't feature in this
+ *	calculation).
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkBTreeNumPixels(tree)
+    TkTextBTree tree;			/* Information about tree. */
+{
+    BTree *treePtr = (BTree *) tree;
+    return treePtr->rootPtr->numPixels;
 }
 
 /*
