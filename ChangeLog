@@ -1,5 +1,14 @@
 2003-05-15  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* README:            Bumped version to 8.4.3
+	* generic/tk.h:
+	* macosx/Wish.pbproj/project.pbxproj:
+	* unix/configure:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure:
+	* win/configure.in:
+
 	* unix/tkUnixFont.c: use gb2312-raw as the alias for gb2312*
 	charset fonts.  gb2312.enc was made to be euc-cn for Tcl because
 	that is what is most often meant, but X really wants the original
