@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.1.4.2 1998/09/30 02:19:34 stanton Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.1.4.3 1999/02/11 04:13:51 stanton Exp $
  */
 
 #ifndef _TKWININT
@@ -151,6 +151,7 @@ extern int tkpWinRopModes[];
  * Internal procedures used by more than one source file.
  */
 
+extern void		TkWinCancelMouseTimer _ANSI_ARGS_((void));
 extern LRESULT CALLBACK	TkWinChildProc _ANSI_ARGS_((HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam));
 extern void		TkWinClipboardRender _ANSI_ARGS_((TkDisplay *dispPtr,

@@ -4,11 +4,12 @@
  *	This module implements the Windows platform-specific features of menus.
  *
  * Copyright (c) 1996-1998 by Sun Microsystems, Inc.
+ * Copyright (c) 1998-1999 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.1.4.8 1998/12/13 09:54:45 lfb Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.1.4.9 1999/02/11 04:13:51 stanton Exp $
  */
 
 #define OEMRESOURCE
@@ -384,6 +385,10 @@ TkpDestroyMenu(menuPtr)
  	DestroyMenu(winMenuHdl);
     }
     menuPtr->platformData = NULL;
+
+    if (menuPtr == tsdPtr->modalMenuPtr) {
+	tsdPtr->modalMenuPtr = NULL;
+    }
 }
 
 /*

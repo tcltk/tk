@@ -4,11 +4,12 @@
  *	Main entry point for wish and other Tk-based applications.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1998-1999 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.1.4.2 1998/09/30 02:19:41 stanton Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.1.4.3 1999/02/11 04:13:52 stanton Exp $
  */
 
 #include <tk.h>
@@ -34,12 +35,12 @@ static void		setargv _ANSI_ARGS_((int *argcPtr, char ***argvPtr));
 static void		WishPanic _ANSI_ARGS_(TCL_VARARGS(char *,format));
 
 #ifdef TK_TEST
-EXTERN int		Tktest_Init(Tcl_Interp *interp);
+extern int		Tktest_Init(Tcl_Interp *interp);
 #endif /* TK_TEST */
 
 #ifdef TCL_TEST
-EXTERN int		TclObjTest_Init _ANSI_ARGS_((Tcl_Interp *interp));
-EXTERN int		Tcltest_Init _ANSI_ARGS_((Tcl_Interp *interp));
+extern int		TclObjTest_Init _ANSI_ARGS_((Tcl_Interp *interp));
+extern int		Tcltest_Init _ANSI_ARGS_((Tcl_Interp *interp));
 #endif /* TCL_TEST */
 
 

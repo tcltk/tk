@@ -4,10 +4,11 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.1.4.2 1998/09/30 02:17:33 stanton Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.1.4.3 1999/02/11 04:13:48 stanton Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -885,6 +886,10 @@ proc tkMenuFind {w char} {
     set windowlist [winfo child $w]
 
     foreach child $windowlist {
+	# Don't descend into other toplevels.
+        if {[winfo toplevel [focus]] != [winfo toplevel $child] } {
+	    continue
+	}
 	switch [winfo class $child] {
 	    Menu {
 		if {[$child cget -type] == "menubar"} {
@@ -911,6 +916,10 @@ proc tkMenuFind {w char} {
     }
 
     foreach child $windowlist {
+	# Don't descend into other toplevels.
+        if {[winfo toplevel [focus]] != [winfo toplevel $child] } {
+	    continue
+	}
 	switch [winfo class $child] {
 	    Menubutton {
 		set char2 [string index [$child cget -text] \

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.1.4.6 1999/01/29 00:34:31 stanton Exp $
+ * RCS: @(#) $Id: tk.h,v 1.1.4.7 1999/02/11 04:13:44 stanton Exp $
  */
 
 #ifndef _TK
@@ -24,8 +24,8 @@
  *
  * README
  * unix/configure.in
- * win/makefile.bc	(Not for patch release updates)
- * win/makefile.vc	(Not for patch release updates)
+ * win/makefile.bc
+ * win/makefile.vc
  * win/README
  * library/tk.tcl
  * README, win/README, unix/README, and mac/README

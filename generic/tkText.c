@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.1.4.3 1999/01/07 02:42:51 lfb Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.1.4.4 1999/02/11 04:13:47 stanton Exp $
  */
 
 #include "default.h"
@@ -138,9 +138,7 @@ static Tk_ConfigSpec configSpecs[] = {
  */
 
 Tk_Uid tkTextCharUid = NULL;
-Tk_Uid tkTextDisabledUid = NULL;
 Tk_Uid tkTextNoneUid = NULL;
-Tk_Uid tkTextNormalUid = NULL;
 Tk_Uid tkTextWordUid = NULL;
 
 /*
@@ -235,11 +233,9 @@ Tk_TextCmd(clientData, interp, argc, argv)
      * Perform once-only initialization:
      */
 
-    if (tkTextNormalUid == NULL) {
+    if (tkTextCharUid == NULL) {
 	tkTextCharUid = Tk_GetUid("char");
-	tkTextDisabledUid = Tk_GetUid("disabled");
 	tkTextNoneUid = Tk_GetUid("none");
-	tkTextNormalUid = Tk_GetUid("normal");
 	tkTextWordUid = Tk_GetUid("word");
     }
 
@@ -265,7 +261,7 @@ Tk_TextCmd(clientData, interp, argc, argv)
     Tcl_InitHashTable(&textPtr->markTable, TCL_STRING_KEYS);
     Tcl_InitHashTable(&textPtr->windowTable, TCL_STRING_KEYS);
     Tcl_InitHashTable(&textPtr->imageTable, TCL_STRING_KEYS);
-    textPtr->state = tkTextNormalUid;
+    textPtr->state = TK_STATE_NORMAL;
     textPtr->border = NULL;
     textPtr->borderWidth = 0;
     textPtr->padX = 0;
@@ -501,7 +497,7 @@ TextWidgetCmd(clientData, interp, argc, argv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (textPtr->state == tkTextNormalUid) {
+	if (textPtr->state == TK_STATE_NORMAL) {
 	    result = DeleteChars(textPtr, argv[2],
 		    (argc == 4) ? argv[3] : (char *) NULL);
 	}
@@ -609,7 +605,7 @@ TextWidgetCmd(clientData, interp, argc, argv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (textPtr->state == tkTextNormalUid) {
+	if (textPtr->state == TK_STATE_NORMAL) {
 	    for (j = 3;  j < argc; j += 2) {
 		InsertChars(textPtr, &index1, argv[j]);
 		if (argc > (j+1)) {
@@ -785,11 +781,11 @@ ConfigureText(interp, textPtr, argc, argv, flags)
      * the geometry and setting the background from a 3-D border.
      */
 
-    if ((textPtr->state != tkTextNormalUid)
-	    && (textPtr->state != tkTextDisabledUid)) {
+    if ((textPtr->state != TK_STATE_NORMAL)
+	    && (textPtr->state != TK_STATE_DISABLED)) {
 	Tcl_AppendResult(interp, "bad state value \"", textPtr->state,
 		"\": must be normal or disabled", (char *) NULL);
-	textPtr->state = tkTextNormalUid;
+	textPtr->state = TK_STATE_NORMAL;
 	return TCL_ERROR;
     }
 

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.1.4.5 1998/12/04 07:21:20 welch Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.1.4.6 1999/02/11 04:13:46 stanton Exp $
  */
 
 /*
@@ -1056,7 +1056,6 @@ TkInvokeMenu(interp, menuPtr, index)
     } else if ((mePtr->type == CHECK_BUTTON_ENTRY)
 	    && (mePtr->namePtr != NULL)) {
 	Tcl_Obj *valuePtr;
-	char *name;
 
 	if (mePtr->entryFlags & ENTRY_SELECTED) {
 	    valuePtr = mePtr->offValuePtr;
@@ -1067,8 +1066,7 @@ TkInvokeMenu(interp, menuPtr, index)
 	    valuePtr = Tcl_NewObj();
 	}
 	Tcl_IncrRefCount(valuePtr);
-	name = Tcl_GetStringFromObj(mePtr->namePtr, NULL);
-	if (Tcl_SetObjVar2(interp, name, NULL, valuePtr,
+	if (Tcl_ObjSetVar2(interp, mePtr->namePtr, NULL, valuePtr,
 		TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG) == NULL) {
 	    result = TCL_ERROR;
 	}
@@ -1076,13 +1074,12 @@ TkInvokeMenu(interp, menuPtr, index)
     } else if ((mePtr->type == RADIO_BUTTON_ENTRY)
 	    && (mePtr->namePtr != NULL)) {
 	Tcl_Obj *valuePtr = mePtr->onValuePtr;
-	char *name = Tcl_GetStringFromObj(mePtr->namePtr, NULL);
-	
+
 	if (valuePtr == NULL) {
 	    valuePtr = Tcl_NewObj();
 	}
 	Tcl_IncrRefCount(valuePtr);
-	if (Tcl_SetObjVar2(interp, name, NULL, valuePtr,
+	if (Tcl_ObjSetVar2(interp, mePtr->namePtr, NULL, valuePtr,
 		TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG) == NULL) {
 	    result = TCL_ERROR;
 	}
@@ -1092,7 +1089,7 @@ TkInvokeMenu(interp, menuPtr, index)
 	Tcl_Obj *commandPtr = mePtr->commandPtr;
 
 	Tcl_IncrRefCount(commandPtr);
-	result = Tcl_EvalObj(interp, commandPtr, TCL_EVAL_GLOBAL);
+	result = Tcl_EvalObjEx(interp, commandPtr, TCL_EVAL_GLOBAL);
 	Tcl_DecrRefCount(commandPtr);
     }
     Tcl_Release((ClientData) mePtr);
@@ -1778,8 +1775,7 @@ PostProcessEntry(mePtr)
 	 */
 	
 	if (mePtr->namePtr != NULL) {
-	    char *name = Tcl_GetStringFromObj(mePtr->namePtr, NULL);
-	    valuePtr = Tcl_GetObjVar2(menuPtr->interp, name, NULL,
+	    valuePtr = Tcl_ObjGetVar2(menuPtr->interp, mePtr->namePtr, NULL,
 		    TCL_GLOBAL_ONLY);
 	} else {
 	    valuePtr = NULL;
@@ -1798,8 +1794,7 @@ PostProcessEntry(mePtr)
 	    }
 	} else {
 	    if (mePtr->namePtr != NULL) {
-		char *name = Tcl_GetStringFromObj(mePtr->namePtr, NULL);
-		Tcl_SetObjVar2(menuPtr->interp, name, NULL,
+		Tcl_ObjSetVar2(menuPtr->interp, mePtr->namePtr, NULL,
 			(mePtr->type == CHECK_BUTTON_ENTRY)
 			? mePtr->offValuePtr
 			: Tcl_NewObj(),
@@ -2564,7 +2559,7 @@ TkPostCommand(menuPtr)
 	Tcl_Obj *postCommandPtr = menuPtr->postCommandPtr;
 
 	Tcl_IncrRefCount(postCommandPtr);
-	result = Tcl_EvalObj(menuPtr->interp, postCommandPtr,
+	result = Tcl_EvalObjEx(menuPtr->interp, postCommandPtr,
 		TCL_EVAL_GLOBAL);
 	Tcl_DecrRefCount(postCommandPtr);
 	if (result != TCL_OK) {

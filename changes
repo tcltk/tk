@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.1.4.6 1999/01/29 00:34:29 stanton Exp $
+RCS: @(#) $Id: changes,v 1.1.4.7 1999/02/11 04:13:44 stanton Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4285,6 +4285,63 @@ with MacOS 8.0 so it will not work with a straight 8.0, but it will
 with MacOS 8.1 or later. (JI)
 
 ----------------- Released 8.0.4, 11/20/98 -----------------------
+
+11/24/98 (bug fix) On some X servers, XQueryLoadFont will always
+return a font, even if the name is meaningless.  This prevents Tk from
+parsing the font name, so now we perform a quick sanity check on the
+name before letting X have it. (stanton)
+
+12/30/98 (bug fix) Fixed bug in "grid forget" that failed to cancel
+pending idle handlers, resulting in a crash in a few odd cases. (stanton)
+
+1/28/99 (configure change) Now support -pipe option on gcc.  (RJ)
+
+2/4/99 (bug fix) Changed so color tables in photo images are freed
+immediately instead of being delayed.  This ensures that color tables
+are properly disposed at process exit. (stanton)
+
+2/4/99 (bug fix) Changed postscript template to	include a European
+character with an umlaut when determining font height. (stanton)
+
+2/4/99 (bug fix) If an image bitmap mask changed but ended up with the
+same XID, the GC failed to be updated and so the new mask was
+not used. (stanton)
+
+2/4/99 (bug fix) Changed so focus window is always set if -force is
+specified.  This fixes the problem on Windows where Tk does not
+activate the window if it already has focus. (stanton)
+
+2/4/99 (bug fix) Fixed so errors in console eval are reported
+properly.  Eliminated duplicate result messages. (stanton)
+
+2/4/99 (bug fix) Under Windows, changed so toplevels that aren't
+resizable don't have resize handles and the zoom box is disabled. (stanton)
+
+2/4/99 (bug fix) Changed to cancel the mouse timer when a user
+initiated move/resize loop begins on Windows. (stanton)
+
+2/4/99 (configure change) TK_LD_SEARCH_FLAGS was set incorrectly if
+SHLIB_LD_LIBS='${LIBS}', and shared linking is performed through the C
+compiler. Systems affected are Linux, MP-RAS and NEXTSTEP, but also
+with gcc on many more systems.
+
+2/4/99 (bug fix) Changed some EXTERN declarations to extern since they
+are not defining exported interfaces.  This avoids generating useless
+declspec() attributes and makes the Windows makefile simpler. (stanton)
+
+2/4/99 (bug fix) Changed so keyboard shortcuts will only be found in
+the current toplevel.  Previously, they might be found in menus
+attached to other toplevels that might not even be mapped. (stanton)
+*** POTENTIAL INCOMPATIBILITY ***
+
+2/4/99 (bug fix) Changed to treat zero width lines in the canvas like
+they have width 1 for purposes of selection. (stanton)
+
+2/4/99 (bug fix) Added a workaround for a bug in GetTextExtentExPoint
+on Win NT 4.0/Japanese that cause a crash in some cases. (stanton)
+
+2/4/99 (bug fix) Fixed uninitialized memory access bug in Unix send
+code. (stanton)
 
 ----------------------------------------------------------
 Changes for Tk 8.0 go above this line.

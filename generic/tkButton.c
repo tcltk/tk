@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.1.4.3 1998/11/30 21:03:40 stanton Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.1.4.4 1999/02/11 04:13:45 stanton Exp $
  */
 
 #include "tkButton.h"
@@ -776,17 +776,14 @@ ButtonWidgetObjCmd(clientData, interp, objc, objv)
 		goto error;
 	    }
 	    if (butPtr->type == TYPE_CHECK_BUTTON) {
-		if (Tcl_SetObjVar2(interp,
-			Tcl_GetString(butPtr->selVarNamePtr),
-			NULL, butPtr->offValuePtr,
-			TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
+		if (Tcl_ObjSetVar2(interp, butPtr->selVarNamePtr, NULL,
+			butPtr->offValuePtr, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
 			== NULL) {
 		    goto error;
 		}
 	    } else if (butPtr->flags & SELECTED) {
-		if (Tcl_SetObjVar2(interp,
-			Tcl_GetString(butPtr->selVarNamePtr), NULL,
-			Tcl_NewObj(),
+		if (Tcl_ObjSetVar2(interp,
+			butPtr->selVarNamePtr, NULL, Tcl_NewObj(),
 			TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
 			== NULL) {
 		    goto error;
@@ -845,10 +842,8 @@ ButtonWidgetObjCmd(clientData, interp, objc, objv)
 		Tcl_WrongNumArgs(interp, 1, objv, "select");
 		goto error;
 	    }
-	    if (Tcl_SetObjVar2(interp,
-		    Tcl_GetString(butPtr->selVarNamePtr), NULL,
-		    butPtr->onValuePtr,
-		    TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
+	    if (Tcl_ObjSetVar2(interp, butPtr->selVarNamePtr, NULL,
+		    butPtr->onValuePtr, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
 		    == NULL) {
 		goto error;
 	    }
@@ -860,8 +855,7 @@ ButtonWidgetObjCmd(clientData, interp, objc, objv)
 		Tcl_WrongNumArgs(interp, 1, objv, "toggle");
 		goto error;
 	    }
-	    if (Tcl_SetObjVar2(interp,
-		    Tcl_GetString(butPtr->selVarNamePtr), NULL,
+	    if (Tcl_ObjSetVar2(interp, butPtr->selVarNamePtr, NULL,
 		    (butPtr->flags & SELECTED) ? butPtr->offValuePtr
 		    : butPtr->onValuePtr,
 		    TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
@@ -1056,15 +1050,14 @@ ConfigureButton(interp, butPtr, objc, objv)
 	}
 
 	if (butPtr->type >= TYPE_CHECK_BUTTON) {
-	    Tcl_Obj *valuePtr;
-	    char *name;
+	    Tcl_Obj *valuePtr, *namePtr;
     
 	    if (butPtr->selVarNamePtr == NULL) {
 		butPtr->selVarNamePtr = Tcl_NewStringObj(
 			Tk_Name(butPtr->tkwin), -1);
 		Tcl_IncrRefCount(butPtr->selVarNamePtr);
 	    }
-	    name = Tcl_GetString(butPtr->selVarNamePtr);
+	    namePtr = butPtr->selVarNamePtr;
     
 	    /*
 	     * Select the button if the associated variable has the
@@ -1073,7 +1066,7 @@ ConfigureButton(interp, butPtr, objc, objv)
 	     * changes to its value.
 	     */
     
-	    valuePtr = Tcl_GetObjVar2(interp, name, NULL, TCL_GLOBAL_ONLY);
+	    valuePtr = Tcl_ObjGetVar2(interp, namePtr, NULL, TCL_GLOBAL_ONLY);
 	    butPtr->flags &= ~SELECTED;
 	    if (valuePtr != NULL) {
 		if (strcmp(Tcl_GetString(valuePtr),
@@ -1081,7 +1074,7 @@ ConfigureButton(interp, butPtr, objc, objv)
 		    butPtr->flags |= SELECTED;
 		}
 	    } else {
-		if (Tcl_SetObjVar2(interp, name, NULL,
+		if (Tcl_ObjSetVar2(interp, namePtr, NULL,
 			(butPtr->type == TYPE_CHECK_BUTTON)
 			? butPtr->offValuePtr : Tcl_NewObj(),
 			TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
@@ -1134,13 +1127,12 @@ ConfigureButton(interp, butPtr, objc, objv)
 	     * exist, and fetch its current value.
 	     */
     
-	    char *name;
-	    Tcl_Obj *valuePtr;
+	    Tcl_Obj *valuePtr, *namePtr;
 
-	    name = Tcl_GetString(butPtr->textVarNamePtr);
-	    valuePtr = Tcl_GetObjVar2(interp, name, NULL, TCL_GLOBAL_ONLY);
+	    namePtr = butPtr->textVarNamePtr;
+	    valuePtr = Tcl_ObjGetVar2(interp, namePtr, NULL, TCL_GLOBAL_ONLY);
 	    if (valuePtr == NULL) {
-		if (Tcl_SetObjVar2(interp, name, NULL, butPtr->textPtr,
+		if (Tcl_ObjSetVar2(interp, namePtr, NULL, butPtr->textPtr,
 			TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
 			== NULL) {
 		    continue;
@@ -1438,42 +1430,31 @@ int
 TkInvokeButton(butPtr)
     TkButton *butPtr;			/* Information about button. */
 {
-    char *name;
+    Tcl_Obj *namePtr = butPtr->selVarNamePtr;
 
-    if (butPtr->selVarNamePtr != NULL) {
-	name = Tcl_GetString(butPtr->selVarNamePtr);
-    } else {
-	/*
-	 * This code should be executed only if the button is a
-	 * label or regular button, in which case the variable should
-	 * never be used.
-	 */
-
-	name = NULL;
-    }
     if (butPtr->type == TYPE_CHECK_BUTTON) {
 	if (butPtr->flags & SELECTED) {
-	    if (Tcl_SetObjVar2(butPtr->interp, name, NULL, butPtr->offValuePtr,
-		    TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
+	    if (Tcl_ObjSetVar2(butPtr->interp, namePtr, NULL,
+		    butPtr->offValuePtr, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
 		    == NULL) {
 		return TCL_ERROR;
 	    }
 	} else {
-	    if (Tcl_SetObjVar2(butPtr->interp, name, NULL, butPtr->onValuePtr,
-		    TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
+	    if (Tcl_ObjSetVar2(butPtr->interp, namePtr, NULL,
+		    butPtr->onValuePtr, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
 		    == NULL) {
 		return TCL_ERROR;
 	    }
 	}
     } else if (butPtr->type == TYPE_RADIO_BUTTON) {
-	if (Tcl_SetObjVar2(butPtr->interp, name, NULL, butPtr->onValuePtr,
+	if (Tcl_ObjSetVar2(butPtr->interp, namePtr, NULL, butPtr->onValuePtr,
 		TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
 		== NULL) {
 	    return TCL_ERROR;
 	}
     }
     if ((butPtr->type != TYPE_LABEL) && (butPtr->commandPtr != NULL)) {
-	return Tcl_EvalObj(butPtr->interp, butPtr->commandPtr,
+	return Tcl_EvalObjEx(butPtr->interp, butPtr->commandPtr,
 		TCL_EVAL_GLOBAL);
     }
     return TCL_OK;
@@ -1533,7 +1514,7 @@ ButtonVarProc(clientData, interp, name1, name2, flags)
      * the button.
      */
 
-    valuePtr = Tcl_GetObjVar2(interp, name, NULL, TCL_GLOBAL_ONLY);
+    valuePtr = Tcl_GetVar2Ex(interp, name, NULL, TCL_GLOBAL_ONLY);
     if (valuePtr == NULL) {
 	value = "";
     } else {
@@ -1599,7 +1580,7 @@ ButtonTextVarProc(clientData, interp, name1, name2, flags)
 
     if (flags & TCL_TRACE_UNSETS) {
 	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_SetObjVar2(interp, name, NULL, butPtr->textPtr, 
+	    Tcl_SetVar2Ex(interp, name, NULL, butPtr->textPtr, 
 		    TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar(interp, name,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
@@ -1608,7 +1589,7 @@ ButtonTextVarProc(clientData, interp, name1, name2, flags)
 	return (char *) NULL;
     }
 
-    valuePtr = Tcl_GetObjVar2(interp, name, NULL, TCL_GLOBAL_ONLY);
+    valuePtr = Tcl_GetVar2Ex(interp, name, NULL, TCL_GLOBAL_ONLY);
     if (valuePtr == NULL) {
 	valuePtr = Tcl_NewObj();
     }

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.1.4.2 1998/09/30 02:17:02 stanton Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.1.4.3 1999/02/11 04:13:46 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -342,6 +342,7 @@ ImgBmapConfigureInstance(instancePtr)
     XGCValues gcValues;
     GC gc;
     unsigned int mask;
+    Pixmap oldMask;
 
     /*
      * For each of the options in masterPtr, translate the string
@@ -384,16 +385,23 @@ ImgBmapConfigureInstance(instancePtr)
 		(unsigned) masterPtr->height);
     }
 
-    if (instancePtr->mask != None) {
-	Tk_FreePixmap(Tk_Display(instancePtr->tkwin), instancePtr->mask);
-	instancePtr->mask = None;
-    }
+    /*
+     * Careful:  We have to allocate a new mask Pixmap before deleting
+     * the old one.  Otherwise, The XID allocator will always return
+     * the same XID for the new Pixmap as was used for the old Pixmap.
+     * And that will prevent the mask from changing in the GC below.
+     */
+    oldMask = instancePtr->mask;
+    instancePtr->mask = None;
     if (masterPtr->maskData != NULL) {
 	instancePtr->mask = XCreateBitmapFromData(
 		Tk_Display(instancePtr->tkwin),
 		RootWindowOfScreen(Tk_Screen(instancePtr->tkwin)),
 		masterPtr->maskData, (unsigned) masterPtr->width,
 		(unsigned) masterPtr->height);
+    }
+    if (oldMask != None) {
+      Tk_FreePixmap(Tk_Display(instancePtr->tkwin), oldMask);
     }
 
     if (masterPtr->data != NULL) {

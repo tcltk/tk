@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSend.c,v 1.1.4.3 1998/12/13 08:16:19 lfb Exp $
+ * RCS: @(#) $Id: tkWinSend.c,v 1.1.4.4 1999/02/11 04:13:52 stanton Exp $
  */
 
 #include "tkWinInt.h"
@@ -339,11 +339,11 @@ Tk_SendObjCmd(
 	 */
 
 	if (objc == 1) {
-	    result = Tcl_EvalObj(sendInterp, objv[0], TCL_EVAL_GLOBAL);
+	    result = Tcl_EvalObjEx(sendInterp, objv[0], TCL_EVAL_GLOBAL);
 	} else {
 	    objPtr = Tcl_ConcatObj(objc, objv);
 	    Tcl_IncrRefCount(objPtr);
-	    result = Tcl_EvalObj(sendInterp, objPtr, TCL_EVAL_GLOBAL);
+	    result = Tcl_EvalObjEx(sendInterp, objPtr, TCL_EVAL_GLOBAL);
 	    Tcl_DecrRefCount(objPtr);
 	}
 	if (interp != sendInterp) {
@@ -354,12 +354,12 @@ Tk_SendObjCmd(
 		 */
 
 		Tcl_ResetResult(interp);
-		objPtr = Tcl_GetObjVar2(sendInterp, "errorInfo", NULL, 
+		objPtr = Tcl_GetVar2Ex(sendInterp, "errorInfo", NULL, 
 			TCL_GLOBAL_ONLY);
 		string = Tcl_GetStringFromObj(objPtr, &length);
 		Tcl_AddObjErrorInfo(interp, string, length);
 
-		objPtr = Tcl_GetObjVar2(sendInterp, "errorCode", NULL,
+		objPtr = Tcl_GetVar2Ex(sendInterp, "errorCode", NULL,
 			TCL_GLOBAL_ONLY);
 		Tcl_SetObjErrorCode(interp, objPtr);
 	    }
@@ -613,17 +613,17 @@ ExecuteRemoteObject(
     Tcl_Obj *returnPackagePtr;
     int result;
 
-    result = Tcl_EvalObj(riPtr->interp, ddeObjectPtr, TCL_EVAL_GLOBAL);
+    result = Tcl_EvalObjEx(riPtr->interp, ddeObjectPtr, TCL_EVAL_GLOBAL);
     returnPackagePtr = Tcl_NewListObj(0, (Tcl_Obj **) NULL);
     Tcl_ListObjAppendElement(NULL, returnPackagePtr,
 	    Tcl_NewIntObj(result));
     Tcl_ListObjAppendElement(NULL, returnPackagePtr,
 	    Tcl_GetObjResult(riPtr->interp));
     if (result == TCL_ERROR) {
-	errorObjPtr = Tcl_GetObjVar2(riPtr->interp, "errorCode", NULL,
+	errorObjPtr = Tcl_GetVar2Ex(riPtr->interp, "errorCode", NULL,
 		TCL_GLOBAL_ONLY);
 	Tcl_ListObjAppendElement(NULL, returnPackagePtr, errorObjPtr);
-	errorObjPtr = Tcl_GetObjVar2(riPtr->interp, "errorInfo", NULL,
+	errorObjPtr = Tcl_GetVar2Ex(riPtr->interp, "errorInfo", NULL,
 		TCL_GLOBAL_ONLY);
         Tcl_ListObjAppendElement(NULL, returnPackagePtr, errorObjPtr);
     }
@@ -795,7 +795,7 @@ TkDdeServerProc (
 			    returnString, len, 0, ddeItem, CF_TEXT,
 			    0);
 		} else {
-		    Tcl_Obj *variableObjPtr = Tcl_GetObjVar2(
+		    Tcl_Obj *variableObjPtr = Tcl_GetVar2Ex(
 			    convPtr->riPtr->interp, utilString, NULL, 
 			    TCL_GLOBAL_ONLY);
 		    if (variableObjPtr != NULL) {
