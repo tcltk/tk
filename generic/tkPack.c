@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.6 2000/04/10 22:43:12 ericm Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.7 2001/02/12 18:06:47 drh Exp $
  */
 
 #include "tkPort.h"
@@ -24,7 +24,7 @@ typedef enum {TOP, BOTTOM, LEFT, RIGHT} Side;
  * structure of the following type:
  */
 
-typedef struct /* Green Bay */ Packer {
+typedef struct Packer {
     Tk_Window tkwin;		/* Tk token for window.  NULL means that
 				 * the window has been deleted, but the
 				 * packet hasn't had a chance to clean up
@@ -45,12 +45,15 @@ typedef struct /* Green Bay */ Packer {
 				 * than window needs, this indicates how
 				 * where to position window in frame. */
     int padX, padY;		/* Total additional pixels to leave around the
-				 * window (half of this space is left on each
-				 * side).  This is space *outside* the window:
+				 * window.  Some is of this space is on each 
+				 * side.  This is space *outside* the window:
 				 * we'll allocate extra space in frame but
 				 * won't enlarge window). */
+    int padLeft, padTop;	/* The part of padX or padY to use on the
+				 * left or top of the widget, respectively.
+				 * By default, this is half of padX or padY. */
     int iPadX, iPadY;		/* Total extra pixels to allocate inside the
-				 * window (half this amount will appear on
+				 * window (half of this amount will appear on
 				 * each side). */
     int doubleBw;		/* Twice the window's last known border
 				 * width.  If this changes, the window
@@ -132,6 +135,43 @@ static int		XExpansion _ANSI_ARGS_((Packer *slavePtr,
 			    int cavityWidth));
 static int		YExpansion _ANSI_ARGS_((Packer *slavePtr,
 			    int cavityHeight));
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkPrintPadAmount --
+ *
+ *	This procedure generates a text value that describes one
+ *	of the -padx, -pady, -ipadx, or -ipady configuration options.
+ *	The text value generated is appended to the interpreter
+ *	result.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+void 
+TkPrintPadAmount(interp, switchName, halfSpace, allSpace)
+    Tcl_Interp *interp;		/* The interpreter into which the result
+				 * is written. */
+    char *switchName;		/* One of "padx", "pady", "ipadx" or "ipady" */
+    int halfSpace;		/* The left or top padding amount */
+    int allSpace;		/* The total amount of padding */
+{
+    char buffer[60 + 2*TCL_INTEGER_SPACE];
+    if (halfSpace*2 == allSpace) {
+	sprintf(buffer, " -%.10s %d", switchName, halfSpace);
+    } else {
+	sprintf(buffer, " -%.10s {%d %d}", switchName, halfSpace,
+		allSpace - halfSpace);
+    }
+    Tcl_AppendResult(interp, buffer, (char *)NULL);
+}
+
 
 /*
  *--------------------------------------------------------------
@@ -268,7 +308,6 @@ Tk_PackCmd(clientData, interp, argc, argv)
     } else if ((c == 'i') && (strncmp(argv[1], "info", length) == 0)) {
 	register Packer *slavePtr;
 	Tk_Window slave;
-	char buffer[64 + TCL_INTEGER_SPACE * 4];
 	static char *sideNames[] = {"top", "bottom", "left", "right"};
 
 	if (argc != 3) {
@@ -307,10 +346,11 @@ Tk_PackCmd(clientData, interp, argc, argv)
 		Tcl_AppendResult(interp, "both", (char *) NULL);
 		break;
 	}
-	sprintf(buffer, " -ipadx %d -ipady %d -padx %d -pady %d",
-		slavePtr->iPadX/2, slavePtr->iPadY/2, slavePtr->padX/2,
-		slavePtr->padY/2);
-	Tcl_AppendResult(interp, buffer, " -side ", sideNames[slavePtr->side],
+        TkPrintPadAmount(interp, "ipadx", slavePtr->iPadX/2, slavePtr->iPadX);
+        TkPrintPadAmount(interp, "ipady", slavePtr->iPadY/2, slavePtr->iPadY);
+        TkPrintPadAmount(interp, "padx", slavePtr->padLeft, slavePtr->padX);
+        TkPrintPadAmount(interp, "pady", slavePtr->padTop, slavePtr->padY);
+	Tcl_AppendResult(interp, " -side ", sideNames[slavePtr->side],
 		(char *) NULL);
     } else if ((c == 'p') && (strncmp(argv[1], "propagate", length) == 0)) {
 	Tk_Window master;
@@ -518,6 +558,8 @@ ArrangePacking(clientData)
     int abort;			/* May get set to non-zero to abort this
 				 * repacking operation. */
     int borderX, borderY;
+    int borderTop, borderBtm;
+    int borderLeft, borderRight;
     int maxWidth, maxHeight, tmp;
 
     masterPtr->flags &= ~REQUESTED_REPACK;
@@ -678,9 +720,15 @@ ArrangePacking(clientData)
 
 	if (slavePtr->flags & OLD_STYLE) {
 	    borderX = borderY = 0;
+	    borderTop = borderBtm = 0;
+	    borderLeft = borderRight = 0;
 	} else {
 	    borderX = slavePtr->padX;
 	    borderY = slavePtr->padY;
+	    borderLeft = slavePtr->padLeft;
+	    borderRight = borderX - borderLeft;
+	    borderTop = slavePtr->padTop;
+	    borderBtm = borderY - borderTop;
 	}
 	width = Tk_ReqWidth(slavePtr->tkwin) + slavePtr->doubleBw
 		+ slavePtr->iPadX;
@@ -694,44 +742,42 @@ ArrangePacking(clientData)
 		|| (height > (frameHeight - borderY))) {
 	    height = frameHeight - borderY;
 	}
-	borderX /= 2;
-	borderY /= 2;
 	switch (slavePtr->anchor) {
 	    case TK_ANCHOR_N:
-		x = frameX + (frameWidth - width)/2;
-		y = frameY + borderY;
+		x = frameX + (borderLeft + frameWidth - width - borderRight)/2;
+		y = frameY + borderTop;
 		break;
 	    case TK_ANCHOR_NE:
-		x = frameX + frameWidth - width - borderX;
-		y = frameY + borderY;
+		x = frameX + frameWidth - width - borderRight;
+		y = frameY + borderTop;
 		break;
 	    case TK_ANCHOR_E:
-		x = frameX + frameWidth - width - borderX;
-		y = frameY + (frameHeight - height)/2;
+		x = frameX + frameWidth - width - borderRight;
+		y = frameY + (borderTop + frameHeight - height - borderBtm)/2;
 		break;
 	    case TK_ANCHOR_SE:
-		x = frameX + frameWidth - width - borderX;
-		y = frameY + frameHeight - height - borderY;
+		x = frameX + frameWidth - width - borderRight;
+		y = frameY + frameHeight - height - borderBtm;
 		break;
 	    case TK_ANCHOR_S:
-		x = frameX + (frameWidth - width)/2;
-		y = frameY + frameHeight - height - borderY;
+		x = frameX + (borderLeft + frameWidth - width - borderRight)/2;
+		y = frameY + frameHeight - height - borderBtm;
 		break;
 	    case TK_ANCHOR_SW:
-		x = frameX + borderX;
-		y = frameY + frameHeight - height - borderY;
+		x = frameX + borderLeft;
+		y = frameY + frameHeight - height - borderBtm;
 		break;
 	    case TK_ANCHOR_W:
-		x = frameX + borderX;
-		y = frameY + (frameHeight - height)/2;
+		x = frameX + borderLeft;
+		y = frameY + (borderTop + frameHeight - height - borderBtm)/2;
 		break;
 	    case TK_ANCHOR_NW:
-		x = frameX + borderX;
-		y = frameY + borderY;
+		x = frameX + borderLeft;
+		y = frameY + borderTop;
 		break;
 	    case TK_ANCHOR_CENTER:
-		x = frameX + (frameWidth - width)/2;
-		y = frameY + (frameHeight - height)/2;
+		x = frameX + (borderLeft + frameWidth - width - borderRight)/2;
+		y = frameY + (borderTop + frameHeight - height - borderBtm)/2;
 		break;
 	    default:
 		panic("bad frame factor in ArrangePacking");
@@ -969,6 +1015,7 @@ GetPacker(tkwin)
     packPtr->side = TOP;
     packPtr->anchor = TK_ANCHOR_CENTER;
     packPtr->padX = packPtr->padY = 0;
+    packPtr->padLeft = packPtr->padTop = 0;
     packPtr->iPadX = packPtr->iPadY = 0;
     packPtr->doubleBw = 2*Tk_Changes(tkwin)->border_width;
     packPtr->abortPtr = NULL;
@@ -977,6 +1024,85 @@ GetPacker(tkwin)
     Tk_CreateEventHandler(tkwin, StructureNotifyMask,
 	    PackStructureProc, (ClientData) packPtr);
     return packPtr;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkParsePadAmount --
+ *
+ *	This procedure parses a padding specification and returns
+ *	the appropriate padding values.  A padding specification can
+ *	be either a single pixel width, or a list of two pixel widths.
+ *	If a single pixel width, the amount specified is used for 
+ *	padding on both sides.  If two amounts are specified, then
+ *	they specify the left/right or top/bottom padding.
+ *
+ * Results:
+ *	A standard Tcl return value.
+ *
+ * Side effects:
+ *	An error message is written to the interpreter is something
+ *	is not right.
+ *
+ *--------------------------------------------------------------
+ */
+
+int
+TkParsePadAmount(interp, tkwin, padSpec, halfPtr, allPtr)
+    Tcl_Interp *interp;		/* Interpreter for error reporting. */
+    Tk_Window tkwin;		/* A window.  Needed by Tk_GetPixels() */
+    char *padSpec;		/* The argument to "-padx", "-pady", "-ipadx",
+				 * or "-ipady".  The thing to be parsed. */
+    int *halfPtr;		/* Write the left/top part of padding here */
+    int *allPtr;		/* Write the total padding here */
+{
+    char *secondPart; 		/* The second pixel amount of the list */
+    char *separator = 0;	/* Separator between 1st and 2nd pixel widths */
+    int sepChar;		/* Character used as the separator */
+    int firstInt, secondInt;    /* The two components of the padding */
+
+    for (secondPart=padSpec;
+	    (*secondPart != '\0') && !isspace(UCHAR(*secondPart));
+	    secondPart++)
+	{ /* Do nothing */ }
+    if (*secondPart != '\0') {
+	separator = secondPart;
+	sepChar = *secondPart;
+	*secondPart = '\0';
+        secondPart++;
+	while ( isspace(UCHAR(*secondPart)) ) {
+	    secondPart++;
+	}
+	if (*secondPart == '\0'){
+	    secondPart = 0;
+	    *separator = sepChar;
+	}
+    } else {
+	secondPart = 0;
+    }
+    if ((Tk_GetPixels(interp, tkwin, padSpec, &firstInt) != TCL_OK) ||
+	    (firstInt < 0)) {
+	Tcl_ResetResult(interp);
+	Tcl_AppendResult(interp, "bad pad value \"", padSpec, 
+		"\": must be positive screen distance", (char *) NULL);
+	return TCL_ERROR;
+    }
+    if (secondPart) {
+	if ((Tk_GetPixels(interp, tkwin, secondPart, &secondInt) != TCL_OK) ||
+		(secondInt < 0)) {
+	    Tcl_ResetResult(interp);
+	    Tcl_AppendResult(interp, "bad 2nd pad value \"", secondPart, 
+		    "\": must be positive screen distance", (char *) NULL);
+	    return TCL_ERROR;
+	}
+	*separator = sepChar;
+    } else {
+	secondInt = firstInt;
+    }
+    if (halfPtr != 0) *halfPtr = firstInt;
+    *allPtr = firstInt + secondInt;
+    return TCL_OK;
 }
 
 /*
@@ -1013,7 +1139,7 @@ PackAfter(interp, prevPtr, masterPtr, argc, argv)
     Tk_Window tkwin, ancestor, parent;
     size_t length;
     char **options;
-    int index, tmp, optionCount, c;
+    int index, optionCount, c;
 
     /*
      * Iterate over all of the window specifiers, each consisting of
@@ -1072,6 +1198,7 @@ PackAfter(interp, prevPtr, masterPtr, argc, argv)
 	packPtr->side = TOP;
 	packPtr->anchor = TK_ANCHOR_CENTER;
 	packPtr->padX = packPtr->padY = 0;
+	packPtr->padLeft = packPtr->padTop = 0;
 	packPtr->iPadX = packPtr->iPadY = 0;
 	packPtr->flags &= ~(FILLX|FILLY|EXPAND);
 	packPtr->flags |= OLD_STYLE;
@@ -1111,27 +1238,24 @@ PackAfter(interp, prevPtr, masterPtr, argc, argv)
 			    (char *) NULL);
 		    goto error;
 		}
-		if ((Tk_GetPixels(interp, tkwin, options[index+1], &tmp)
-			!= TCL_OK) || (tmp < 0)) {
-		    badPad:
-		    Tcl_AppendResult(interp, "bad pad value \"",
-			    options[index+1],
-			    "\": must be positive screen distance",
-			    (char *) NULL);
+		if (TkParsePadAmount(interp, tkwin, options[index+1],
+			&packPtr->padLeft, &packPtr->padX) != TCL_OK) {
 		    goto error;
 		}
-		packPtr->padX = tmp;
+		packPtr->padX /= 2;
+		packPtr->padLeft /= 2;
 		packPtr->iPadX = 0;
 		index++;
 	    } else if ((c == 'p') && (strcmp(curOpt, "pady")) == 0) {
 		if (optionCount < (index+2)) {
 		    goto missingPad;
 		}
-		if ((Tk_GetPixels(interp, tkwin, options[index+1], &tmp)
-			!= TCL_OK) || (tmp < 0)) {
-		    goto badPad;
+		if (TkParsePadAmount(interp, tkwin, options[index+1],
+			&packPtr->padTop, &packPtr->padY) != TCL_OK) {
+		    goto error;
 		}
-		packPtr->padY = tmp;
+		packPtr->padY /= 2;
+		packPtr->padTop /= 2;
 		packPtr->iPadY = 0;
 		index++;
 	    } else if ((c == 'f') && (length > 1)
@@ -1462,6 +1586,7 @@ ConfigureSlaves(interp, tkwin, argc, argv)
 	    slavePtr->side = TOP;
 	    slavePtr->anchor = TK_ANCHOR_CENTER;
 	    slavePtr->padX = slavePtr->padY = 0;
+	    slavePtr->padLeft = slavePtr->padTop = 0;
 	    slavePtr->iPadX = slavePtr->iPadY = 0;
 	    slavePtr->flags &= ~(FILLX|FILLY|EXPAND);
 	}
@@ -1561,34 +1686,25 @@ ConfigureSlaves(interp, tkwin, argc, argv)
 		    positionGiven = 1;
 		}
 	    } else if ((c == 'i') && (strcmp(argv[i], "-ipadx") == 0)) {
-		if ((Tk_GetPixels(interp, slave, argv[i+1], &tmp) != TCL_OK)
-			|| (tmp < 0)) {
-		    badPad:
-		    Tcl_ResetResult(interp);
-		    Tcl_AppendResult(interp, "bad pad value \"", argv[i+1],
-			    "\": must be positive screen distance",
-			    (char *) NULL);
+		if (TkParsePadAmount(interp, slave, argv[i+1],
+			0, &slavePtr->iPadX) != TCL_OK) {
 		    return TCL_ERROR;
 		}
-		slavePtr->iPadX = tmp*2;
 	    } else if ((c == 'i') && (strcmp(argv[i], "-ipady") == 0)) {
-		if ((Tk_GetPixels(interp, slave, argv[i+1], &tmp) != TCL_OK)
-			|| (tmp< 0)) {
-		    goto badPad;
+		if (TkParsePadAmount(interp, slave, argv[i+1],
+			0, &slavePtr->iPadY) != TCL_OK) {
+		    return TCL_ERROR;
 		}
-		slavePtr->iPadY = tmp*2;
 	    } else if ((c == 'p') && (strcmp(argv[i], "-padx") == 0)) {
-		if ((Tk_GetPixels(interp, slave, argv[i+1], &tmp) != TCL_OK)
-			|| (tmp< 0)) {
-		    goto badPad;
+		if (TkParsePadAmount(interp, slave, argv[i+1],
+			&slavePtr->padLeft, &slavePtr->padX) != TCL_OK) {
+		    return TCL_ERROR;
 		}
-		slavePtr->padX = tmp*2;
 	    } else if ((c == 'p') && (strcmp(argv[i], "-pady") == 0)) {
-		if ((Tk_GetPixels(interp, slave, argv[i+1], &tmp) != TCL_OK)
-			|| (tmp< 0)) {
-		    goto badPad;
+		if (TkParsePadAmount(interp, slave, argv[i+1],
+			&slavePtr->padTop, &slavePtr->padY) != TCL_OK) {
+		    return TCL_ERROR;
 		}
-		slavePtr->padY = tmp*2;
 	    } else if ((c == 's') && (strncmp(argv[i], "-side", length) == 0)) {
 		c = argv[i+1][0];
 		if ((c == 't') && (strcmp(argv[i+1], "top") == 0)) {
