@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.4 2002/10/03 06:24:54 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5 2002/11/20 05:21:08 wolfsuit Exp $
  */
 
 #include "tkScrollbar.h"
@@ -269,6 +269,18 @@ TkpDisplayScrollbar(
         }
     }
 
+    /*
+     * Adjust the control size based on its width...
+     */
+
+    if (macScrollPtr->info.width < 13) {
+        SetControlData(macScrollPtr->sbHandle, kControlNoPart, kControlSizeTag,
+                sizeof(kControlSizeSmall), (void *) kControlSizeSmall);
+    } else {
+        SetControlData(macScrollPtr->sbHandle, kControlNoPart, kControlSizeTag,
+                sizeof(kControlSizeSmall), (void *) kControlSizeLarge);
+    }        
+    
     /*
      * Update the control values before we draw.
      */
@@ -954,7 +966,7 @@ UpdateControlValues(
      * the grow region if need be.
      */
     if (!strcmp(macDraw->winPtr->geomMgrPtr->name, "place")) {
-        macScrollPtr->macFlags &= AUTO_ADJUST;
+        macScrollPtr->macFlags &= ~AUTO_ADJUST;
     } else {
         macScrollPtr->macFlags |= AUTO_ADJUST;
     }

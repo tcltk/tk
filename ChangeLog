@@ -1,3 +1,12 @@
+2002-11-19  Jim Ingham <jingham@apple.com>
+
+	* macosx/tkMacOSXScrlbr.c (TkpDisplayScrollbar): If the
+	scrollbar width is set to 12 or less (but 12 is what you 
+	should use) use the small metric scrollbar.
+
+	(UpdateControlValues): Fix thinko in setting off AUTO_ADJUST for
+	the place geometry manager.
+	
 2002-11-19  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/Makefile.in: add macosx/*.tcl (buildTkConfig.tcl in
