@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixScale.c,v 1.8 2001/09/21 21:34:10 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixScale.c,v 1.8.4.1 2004/10/28 15:18:40 patthoyts Exp $
  */
 
 #include "tkScale.h"
@@ -500,7 +500,11 @@ DisplayHorizontalValue(scalePtr, drawable, value, top)
     if (x < (scalePtr->inset + SPACING)) {
 	x = scalePtr->inset + SPACING;
     }
-    if (x > (Tk_Width(tkwin) - scalePtr->inset)) {
+    /*
+     * Check the right border so use starting point +text width
+     * for the check.
+     */
+    if (x + width >= (Tk_Width(tkwin) - scalePtr->inset)) {
 	x = Tk_Width(tkwin) - scalePtr->inset - SPACING - width;
     }
     Tk_DrawChars(scalePtr->display, drawable, scalePtr->textGC,
