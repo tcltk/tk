@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"::tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.21 2002/06/12 23:08:12 mdejong Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.22 2002/06/13 06:17:21 mdejong Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Scriptics Corporation
@@ -55,6 +55,13 @@ proc ::tk::MotifFDialog {type args} {
 
     vwait ::tk::Priv(selectFilePath)
     ::tk::RestoreFocusGrab $w $data(sEnt) withdraw
+
+    # Remove the transient property to insulate the
+    # dialog from changes in the master's state.
+
+    if {[winfo exists $w]} {
+        wm transient $w {}
+    }
 
     return $Priv(selectFilePath)
 }
