@@ -149,7 +149,15 @@ test winfont-5.10 {Tk_MeasureChars procedure: make first part of word fit} {
     .b.l config -wrap [expr $ax*12] -text "0000000000000000"
     getsize
 } "[expr $ax*12] [expr $ay*2]"
-
+test winfont-5.10 {Tk_MeasureChars procedure: check for kerning} {nonPortable} {
+    set font [.b.l cget -font]
+    .b.l config -font {{MS Sans Serif} 8} -text "W"
+    set width [winfo reqwidth .b.l]
+    .b.l config -text "XaYoYaKaWx"
+    set x [lindex [getsize] 0]
+    .b.l config -font $font
+    expr $x < ($width*10)
+} 1
 test winfont-6.1 {Tk_DrawChars procedure: loop test} {
     .b.l config -text "a"
     update
