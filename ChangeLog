@@ -1,3 +1,10 @@
+2003-05-15  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tkUnixFont.c: use gb2312-raw as the alias for gb2312*
+	charset fonts.  gb2312.enc was made to be euc-cn for Tcl because
+	that is what is most often meant, but X really wants the original
+	(-raw) gb2312 encoding. [Bug 557030]
+
 2003-05-14  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/msgs/fr.msg: updated msg catalog. [Bug #737790] (zolli)
