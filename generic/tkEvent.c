@@ -7,11 +7,12 @@
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1995 Sun Microsystems, Inc.
  * Copyright (c) 1998-2000 Ajuba Solutions.
+ * Copyright (c) 2004 George Peter Staplin
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.20 2004/01/13 02:06:00 davygrvy Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.21 2004/07/02 23:36:24 georgeps Exp $
  */
 
 #include "tkPort.h"
@@ -187,6 +188,622 @@ static int		WindowEventProc _ANSI_ARGS_((Tcl_Event *evPtr,
 static int		TkXErrorHandler _ANSI_ARGS_((ClientData clientData,
 			    XErrorEvent *errEventPtr));
 
+static int              InvokeGenericHandlers _ANSI_ARGS_((
+			    ThreadSpecificData *tsdPtr, 
+			    XEvent *eventPtr));
+
+static int              GetButtonMask _ANSI_ARGS_((unsigned int Button));
+
+static void             UpdateButtonEventState _ANSI_ARGS_((XEvent *eventPtr));
+
+static void             InvokeClientMessageHandlers _ANSI_ARGS_((
+			    ThreadSpecificData *tsdPtr, 
+			    Tk_Window tkwin, 
+			    XEvent *eventPtr));
+
+static int              RefreshKeyboardMappingIfNeeded _ANSI_ARGS_((
+			    XEvent *eventPtr));
+
+static unsigned long    GetEventMaskFromXEvent _ANSI_ARGS_((XEvent *eventPtr));
+
+static Window           ParentXId _ANSI_ARGS_((Display *display, Window w));
+
+static TkWindow *       GetTkWindowFromXEvent _ANSI_ARGS_((XEvent *eventPtr));
+
+#ifdef TK_USE_INPUT_METHODS
+static int              InvokeInputMethods _ANSI_ARGS_((TkWindow *winPtr, 
+			    XEvent *eventPtr));
+#endif
+
+#if TK_XIM_SPOT
+static void             CreateXIMSpotMethods _ANSI_ARGS_((TkWindow *winPtr));
+#endif
+
+static int              InvokeMouseHandlers _ANSI_ARGS_((TkWindow *winPtr, 
+			    unsigned long mask, XEvent *eventPtr));
+
+static int              InvokeFocusHandlers _ANSI_ARGS_((
+			    TkWindow **winPtrPtr,
+			    unsigned long mask, XEvent *eventPtr));
+
+
+/*
+ *----------------------------------------------------------
+ *
+ * InvokeFocusHandlers --
+ * 
+ *   Call focus-related code to look at FocusIn, FocusOut, 
+ *   Enter, and Leave events;  depending on its return 
+ *   value, ignore the event.
+ *
+ * Results: 
+ *      0 further processing can be done on the event.
+ *      1 we are done with the event passed.
+ * 
+ * Side effects:
+ *   The *winPtrPtr in the caller may be changed to the 
+ *   TkWindow for the window with focus.   
+ *---------------------------------------------------------
+ */
+static int
+InvokeFocusHandlers(winPtrPtr, mask, eventPtr)
+    TkWindow **winPtrPtr;
+    unsigned long mask;
+    XEvent *eventPtr;
+{
+    if ((mask & (FocusChangeMask|EnterWindowMask|LeaveWindowMask))
+       && (TkFocusFilterEvent(*winPtrPtr, eventPtr) == 0)) {
+	return 1;
+    }
+
+    if (mask & (KeyPressMask|KeyReleaseMask|MouseWheelMask)) {
+	(*winPtrPtr)->dispPtr->lastEventTime = eventPtr->xkey.time;
+	*winPtrPtr = TkFocusKeyEvent(*winPtrPtr, eventPtr);
+	if (*winPtrPtr == NULL) {
+	    return 1;
+	}
+    }
+
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------
+ *
+ * InvokeMouseHandlers --
+ *
+ *   Call a grab-related procedure to do special processing
+ *   on pointer events.
+ *
+ * Results: 
+ *      0 further processing can be done on the event.
+ *      1 we are done with the event passed.
+ * 
+ * Side effects:
+ *      New events may be queued from TkPointerEvent and
+ *      grabs may be added/removed.  The eventPtr may be
+ *      changed by TkPointerEvent in some cases.
+ *
+ *---------------------------------------------------------
+ */
+static int
+InvokeMouseHandlers(winPtr, mask, eventPtr)
+    TkWindow *winPtr;
+    unsigned long mask;
+    XEvent *eventPtr;
+{
+    if (mask & (ButtonPressMask|ButtonReleaseMask|PointerMotionMask
+	  |EnterWindowMask|LeaveWindowMask)) {
+	
+	if (mask & (ButtonPressMask|ButtonReleaseMask)) {
+	    winPtr->dispPtr->lastEventTime = eventPtr->xbutton.time;
+	} else if (mask & PointerMotionMask) {
+	    winPtr->dispPtr->lastEventTime = eventPtr->xmotion.time;
+	} else {
+	    winPtr->dispPtr->lastEventTime = eventPtr->xcrossing.time;
+	}
+	
+	if (TkPointerEvent(eventPtr, winPtr) == 0) {
+	    /* 
+	     * The event should be ignored to make grab work
+	     * correctly (as the comment for TkPointerEvent states).
+	     */
+	    return 1;
+	}
+    } 
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------
+ *
+ * CreateXIMSpotMethods --
+ *
+ *   Create the X input methods for our winPtr.  
+ *   XIM is only ever enabled on Unix.
+ * Results: 
+ *      None.
+ * 
+ * Side effects:
+ *      An input context is created or we Tcl_Panic.
+ *
+ *---------------------------------------------------------
+ */
+#if TK_XIM_SPOT
+static void
+CreateXIMSpotMethods(winPtr)
+    TkWindow *winPtr;
+{
+    TkDisplay *dispPtr = winPtr->dispPtr;
+
+    if (dispPtr->flags & TK_DISPLAY_XIM_SPOT) {
+	XVaNestedList preedit_attr;
+	XPoint spot = {0, 0};
+	
+	if (dispPtr->inputXfs == NULL) {
+	    /*
+	     * We only need to create one XFontSet
+	     */
+	    char      **missing_list;
+	    int       missing_count;
+	    char      *def_string;
+	    
+	    dispPtr->inputXfs = XCreateFontSet(dispPtr->display,
+	       "-*-*-*-R-Normal--14-130-75-75-*-*",
+		&missing_list, &missing_count, &def_string);
+	    if (missing_count > 0) {
+		XFreeStringList(missing_list);
+	    }
+	}
+	
+	preedit_attr = XVaCreateNestedList(0, XNSpotLocation,
+	     &spot, XNFontSet, dispPtr->inputXfs, NULL);
+	if (winPtr->inputContext != NULL) {
+	    Tcl_Panic("inputContext not NULL");
+	}
+	winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
+	     XNInputStyle, XIMPreeditPosition|XIMStatusNothing,
+	     XNClientWindow, winPtr->window,
+	     XNFocusWindow, winPtr->window,
+	     XNPreeditAttributes, preedit_attr,
+	     NULL);
+	XFree(preedit_attr);
+    } else {
+	if (winPtr->inputContext != NULL) {
+	    Tcl_Panic("inputContext not NULL");
+	}
+	winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
+  	    XNInputStyle, XIMPreeditNothing|XIMStatusNothing,
+	    XNClientWindow, winPtr->window,
+	    XNFocusWindow, winPtr->window,
+	    NULL);
+    }
+}
+#endif /*TK_XIM_SPOT*/
+
+/*
+ *----------------------------------------------------------
+ *
+ * InvokeInputMethods --
+ *   Pass the event to the input method(s), if there are
+ *   any, and discard the event if the input method(s)
+ *   insist.  Create the input context for the window if
+ *   it hasn't already been done (XFilterEvent needs this
+ *   context).
+ * 
+ * Results: 
+ *      1 when we are done with the event.
+ *      0 when the event can be processed further.
+ * 
+ * Side effects:
+ *      Input contexts/methods may be created. 
+ *
+ *---------------------------------------------------------
+ */
+#ifdef TK_USE_INPUT_METHODS
+static int
+InvokeInputMethods(winPtr,eventPtr)
+    TkWindow *winPtr;
+    XEvent *eventPtr;
+{
+    TkDisplay *dispPtr = winPtr->dispPtr;
+    if ((dispPtr->flags & TK_DISPLAY_USE_IM)) {
+	if (!(winPtr->flags & (TK_CHECKED_IC|TK_ALREADY_DEAD))) {
+	    winPtr->flags |= TK_CHECKED_IC;
+	    if (dispPtr->inputMethod != NULL) {
+#if TK_XIM_SPOT
+		CreateXIMSpotMethods(winPtr);
+#else
+		if (winPtr->inputContext != NULL) {
+		    Tcl_Panic("inputContext not NULL");
+		}
+		winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
+		    XNInputStyle, XIMPreeditNothing|XIMStatusNothing,
+		    XNClientWindow, winPtr->window,
+		    XNFocusWindow, winPtr->window,
+		    NULL);
+#endif
+	    }
+	}
+	if (XFilterEvent(eventPtr, None)) {
+	    return 1;
+	}
+    }
+    return 0;
+}
+#endif /*TK_USE_INPUT_METHODS*/
+
+/*
+ *--------------------------------------------------------
+ *
+ * GetTkWindowFromXEvent --
+ * 
+ *   Attempt to find which TkWindow is associated with 
+ *   an event.  If it fails we attempt to get the 
+ *   TkWindow from the parent for a property notification.
+ * 
+ * Results: 
+ *      The TkWindow associated with the event or NULL.
+ * 
+ * Side effects:
+ *      TkSelPropProc may influence selection on windows
+ *      not known to Tk.
+ *
+ *--------------------------------------------------------
+ */
+static TkWindow *
+GetTkWindowFromXEvent(eventPtr)
+    XEvent *eventPtr;
+{
+    TkWindow *winPtr;
+    Window parentXId;
+    Window handlerWindow;
+
+    handlerWindow = eventPtr->xany.window;
+    if ((eventPtr->xany.type == StructureNotifyMask) 
+	&& (eventPtr->xmap.event != eventPtr->xmap.window)) {
+
+        handlerWindow = eventPtr->xmap.event;
+    }
+
+    winPtr = (TkWindow *) Tk_IdToWindow(eventPtr->xany.display, handlerWindow);
+    
+    if (winPtr == NULL) {
+	/*
+	 * There isn't a TkWindow structure for this window.
+	 * However, if the event is a PropertyNotify event then call
+	 * the selection manager (it deals beneath-the-table with
+	 * certain properties). Also, if the window's parent is a
+	 * Tk window that has the TK_PROP_PROPCHANGE flag set, then
+	 * we must propagate the PropertyNotify event up to the parent.
+	 */
+        if (eventPtr->type != PropertyNotify) {
+	    return NULL;
+	}
+	TkSelPropProc(eventPtr);
+	parentXId = ParentXId(eventPtr->xany.display,  handlerWindow);
+        if (parentXId == None) {
+            return NULL;
+        }
+	winPtr = (TkWindow *) Tk_IdToWindow(eventPtr->xany.display, parentXId);
+	if (winPtr == NULL) {
+            return NULL;
+        }
+	if (!(winPtr->flags & TK_PROP_PROPCHANGE)) {
+            return NULL;
+        }
+    }      
+    return winPtr;
+}
+
+/*
+ *------------------------------------------------------
+ *
+ * GetEventMaskFromXEvent --
+ * 
+ *   The event type is looked up in our eventMasks
+ *   table, and may be changed to a different mask
+ *   depending on the state of the event and window
+ *   members.
+ * 
+ * Results: 
+ *      The mask for the event.
+ * 
+ * Side effects:
+ *      None.
+ *
+ *------------------------------------------------------
+ */
+static unsigned long
+GetEventMaskFromXEvent(eventPtr)
+    XEvent *eventPtr;
+{
+    unsigned long mask;
+    
+    mask = eventMasks[eventPtr->xany.type];
+
+    /*
+     * Events selected by StructureNotify require special
+     * handling.  They look the same as those selected by
+     * SubstructureNotify.   The only difference is whether
+     * the "event" and "window" fields are the same.  
+     * Compare the two fields and convert StructureNotify
+     * to SubstructureNotify if necessary.
+     */
+
+    if (mask == StructureNotifyMask) {
+	if (eventPtr->xmap.event != eventPtr->xmap.window) {
+	    mask = SubstructureNotifyMask;
+	}
+    }
+    return mask;
+}
+
+/*
+ *------------------------------------------------------
+ *
+ * RefreshKeyboardMappingIfNeeded --
+ * 
+ *    If the event is a MappingNotify event, find its 
+ *    display and refresh the keyboard mapping 
+ *    information for the display.
+ * 
+ * Results: 
+ *      0 if the event was not a MappingNotify event
+ *      1 if the event was a MappingNotify event
+ * 
+ * Side effects:
+ *      None.
+ *
+ *------------------------------------------------------
+ */
+static int
+RefreshKeyboardMappingIfNeeded(eventPtr)
+    XEvent *eventPtr;
+{
+    TkDisplay *dispPtr;
+
+    if (eventPtr->type == MappingNotify) {
+        dispPtr = TkGetDisplay(eventPtr->xmapping.display);
+	if (dispPtr != NULL) {
+	    XRefreshKeyboardMapping(&eventPtr->xmapping);
+	    dispPtr->bindInfoStale = 1;
+	}
+	return 1;
+    }
+    return 0;
+}
+
+/*
+ *------------------------------------------------------
+ *
+ * GetButtonMask --
+ * 
+ * Return the proper Button${n}Mask for the button.
+ * 
+ * Results: 
+ *      A button mask.
+ * 
+ * Side effects:
+ *      None.
+ *
+ *------------------------------------------------------
+ */
+
+static int
+GetButtonMask(button) 
+    unsigned int button;
+{
+    switch (button) {
+        case 1: 
+	    return Button1Mask;
+        case 2:
+	    return Button2Mask;
+        case 3: 
+	    return Button3Mask;
+        case 4:
+	    return Button4Mask;
+        case 5:
+	    return Button5Mask;
+    }
+    return 0;
+}
+
+/*
+ *------------------------------------------------------
+ *
+ * UpdateButtonEventState --
+ * 
+ * Update the button event state in our TkDisplay
+ * using the XEvent passed.  We also may modify the
+ * the XEvent passed to fit some aspects of our 
+ * TkDisplay.
+ * 
+ * Results: 
+ *      None.
+ * 
+ * Side effects:
+ *    The TkDisplay's private button state may be
+ *    modified.  The eventPtr's state may be updated
+ *    to reflect masks stored in our TkDisplay that
+ *    the event doesn't contain.  The eventPtr may also
+ *    be modified to not contain a button state for the
+ *    window in which it was not pressed in.
+ *------------------------------------------------------
+ */
+
+static void
+UpdateButtonEventState(eventPtr)
+    XEvent *eventPtr;
+{
+    TkDisplay *dispPtr;
+    int allButtonsMask = Button1Mask | Button2Mask | Button3Mask 
+      | Button4Mask | Button5Mask;
+
+    switch (eventPtr->type) {
+        case ButtonPress:
+	    dispPtr = TkGetDisplay(eventPtr->xbutton.display);
+	    dispPtr->mouseButtonWindow = eventPtr->xbutton.window;
+	    eventPtr->xbutton.state |= dispPtr->mouseButtonState;
+	    
+	    dispPtr->mouseButtonState |= 
+	      GetButtonMask(eventPtr->xbutton.button);
+	    break;
+
+        case ButtonRelease:
+	    dispPtr = TkGetDisplay(eventPtr->xbutton.display);
+	    dispPtr->mouseButtonWindow = None;
+	    dispPtr->mouseButtonState &= 
+	      ~GetButtonMask(eventPtr->xbutton.button);
+	    eventPtr->xbutton.state |= dispPtr->mouseButtonState;
+	    break;
+
+        case MotionNotify:
+   	    dispPtr = TkGetDisplay(eventPtr->xmotion.display);
+	    if (dispPtr->mouseButtonState & allButtonsMask) {
+	        if (eventPtr->xbutton.window != dispPtr->mouseButtonWindow) {
+		    /*
+		     * This motion event should not be interpreted as a button
+		     * press + motion event since this is not the same window
+		     * the button was pressed down in.
+		     */
+		    dispPtr->mouseButtonState &= ~allButtonsMask;
+		    dispPtr->mouseButtonWindow = None;
+		} else {
+	            eventPtr->xmotion.state |= dispPtr->mouseButtonState;
+	        }
+	    }
+	    break;
+    }
+}
+
+/*
+ *------------------------------------------------------
+ *
+ * InvokeClientMessageHandlers --
+ * 
+ * Iterate the list of handlers and invoke the function
+ * pointer for each.  
+ * 
+ * Results: 
+ *     None.
+ *
+ * Side effects:
+ *     Handlers may be deleted and events may be sent to
+ *     handlers.
+ *------------------------------------------------------
+ */
+static void
+InvokeClientMessageHandlers(tsdPtr, tkwin, eventPtr)
+    ThreadSpecificData *tsdPtr;
+    Tk_Window tkwin;
+    XEvent *eventPtr;
+{
+    GenericHandler *prevPtr;
+    GenericHandler *curPtr = tsdPtr->cmList;
+    GenericHandler *tmpPtr;
+
+    for (prevPtr = NULL; curPtr != NULL; ) {
+        if (curPtr->deleteFlag) {
+	    if (!tsdPtr->handlersActive) {
+	        /*
+		 * This handler needs to be deleted and there are
+		 * no calls pending through any handlers, so now
+		 * is a safe time to delete it.
+		 */
+	      
+	        tmpPtr = curPtr->nextPtr;
+		if (prevPtr == NULL) {
+		    tsdPtr->cmList = tmpPtr;
+		} else {
+		    prevPtr->nextPtr = tmpPtr;
+		}
+		if (tmpPtr == NULL) {
+		    tsdPtr->lastCmPtr = prevPtr;
+		}
+		(void) ckfree((char *) curPtr);
+		curPtr = tmpPtr;
+		continue;
+	    } else {
+	        int done;
+
+		tsdPtr->handlersActive++;
+		done = (*(Tk_ClientMessageProc *)curPtr->proc)
+		  (tkwin, eventPtr);
+		tsdPtr->handlersActive--;
+	        if (done) {
+		    break;
+		}
+	    }
+        }
+	prevPtr = curPtr;
+	curPtr = curPtr->nextPtr;
+    }
+}
+
+/*
+ *------------------------------------------------------
+ *
+ * InvokeGenericHandlers --
+ * 
+ * Iterate the list of handlers and invoke the function
+ * pointer for each.  If the handler invoked returns a
+ * non-zero value then we are done.
+ * 
+ * Results: 
+ *      0 when the event wasn't handled by a handler.
+ *      non-zero when it was processed and handled 
+ *      by a handler.
+ * 
+ * Side effects:
+ *     Handlers may be deleted and events may be sent to
+ *     handlers.
+ *------------------------------------------------------
+ */
+static int 
+InvokeGenericHandlers(tsdPtr, eventPtr)
+    ThreadSpecificData *tsdPtr; 
+    XEvent *eventPtr;
+{
+    GenericHandler *prevPtr;
+    GenericHandler *curPtr = tsdPtr->genericList;
+    GenericHandler *tmpPtr;
+
+    for (prevPtr = NULL; curPtr != NULL; ) {
+        if (curPtr->deleteFlag) {
+	    if (!tsdPtr->handlersActive) {
+	        /*
+		 * This handler needs to be deleted and there are no
+		 * calls pending through the handler, so now is a safe
+		 * time to delete it.
+		 */
+	        tmpPtr = curPtr->nextPtr;
+		if (prevPtr == NULL) {
+		    tsdPtr->genericList = tmpPtr;
+		} else {
+		    prevPtr->nextPtr = tmpPtr;
+		}
+		if (tmpPtr == NULL) {
+		    tsdPtr->lastGenericPtr = prevPtr;
+		}
+		(void) ckfree((char *) curPtr);
+		curPtr = tmpPtr;
+		continue;
+	    }
+	} else {
+	    int done;
+	    tsdPtr->handlersActive++;
+	    done = (*curPtr->proc)(curPtr->clientData, eventPtr);
+	    tsdPtr->handlersActive--;
+	    if (done) {
+	        return done;
+	    }
+	}
+	prevPtr = curPtr;
+	curPtr = curPtr->nextPtr;
+    }
+    return 0;
+}
 
 /*
  *--------------------------------------------------------------
@@ -645,174 +1262,40 @@ ParentXId(display, w)
 
 void
 Tk_HandleEvent(eventPtr)
-    XEvent *eventPtr;		/* Event to dispatch. */
+    XEvent *eventPtr;	/* Event to dispatch. */
 {
     register TkEventHandler *handlerPtr;
-    register GenericHandler *genericPtr;
-    register GenericHandler *genPrevPtr;
     TkWindow *winPtr;
     unsigned long mask;
     InProgress ip;
-    Window handlerWindow;
-    Window parentXId;
-    TkDisplay *dispPtr;
     Tcl_Interp *interp = (Tcl_Interp *) NULL;
+
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    /*
-     * Hack for simulated X-events: Correct the state field
-     * of the event record to match with the ButtonPress
-     * and ButtonRelease events.
-     */
-
-    if (eventPtr->type==ButtonPress) {
-	dispPtr = TkGetDisplay(eventPtr->xbutton.display);
-	dispPtr->mouseButtonWindow = eventPtr->xbutton.window;
-	eventPtr->xbutton.state |= dispPtr->mouseButtonState;
-	switch (eventPtr->xbutton.button) {
-	    case 1: dispPtr->mouseButtonState |= Button1Mask; break; 
-	    case 2: dispPtr->mouseButtonState |= Button2Mask; break; 
-	    case 3: dispPtr->mouseButtonState |= Button3Mask; break; 
-	}
-    } else if (eventPtr->type==ButtonRelease) {
-	dispPtr = TkGetDisplay(eventPtr->xbutton.display);
-	dispPtr->mouseButtonWindow = 0;
-	switch (eventPtr->xbutton.button) {
-	    case 1: dispPtr->mouseButtonState &= ~Button1Mask; break; 
-	    case 2: dispPtr->mouseButtonState &= ~Button2Mask; break; 
-	    case 3: dispPtr->mouseButtonState &= ~Button3Mask; break; 
-	}
-	eventPtr->xbutton.state |= dispPtr->mouseButtonState;
-    } else if (eventPtr->type==MotionNotify) {
-	dispPtr = TkGetDisplay(eventPtr->xmotion.display);
-	if (dispPtr->mouseButtonState & (Button1Mask|Button2Mask|Button3Mask)) {
-	    if (eventPtr->xbutton.window != dispPtr->mouseButtonWindow) {
-	        /*
-	         * This motion event should not be interpreted as a button
-	         * press + motion event since this is not the same window
-	         * the button was pressed down in.
-	         */
-	        dispPtr->mouseButtonState &=
-	                ~(Button1Mask|Button2Mask|Button3Mask);
-	        dispPtr->mouseButtonWindow = 0;
-	    } else {
-	        eventPtr->xmotion.state |= dispPtr->mouseButtonState;
-	    }
-	}
-    }
+  
+    UpdateButtonEventState (eventPtr);
 
     /* 
-     * Next, invoke all the generic event handlers (those that are
-     * invoked for all events).  If a generic event handler reports that
-     * an event is fully processed, go no further.
+     * If the generic handler processed this event we are done
+     * and can return.
      */
-
-    for (genPrevPtr = NULL, genericPtr = tsdPtr->genericList;  
-            genericPtr != NULL; ) {
-	if (genericPtr->deleteFlag) {
-	    if (!tsdPtr->handlersActive) {
-		GenericHandler *tmpPtr;
-
-		/*
-		 * This handler needs to be deleted and there are no
-		 * calls pending through the handler, so now is a safe
-		 * time to delete it.
-		 */
-
-		tmpPtr = genericPtr->nextPtr;
-		if (genPrevPtr == NULL) {
-		    tsdPtr->genericList = tmpPtr;
-		} else {
-		    genPrevPtr->nextPtr = tmpPtr;
-		}
-		if (tmpPtr == NULL) {
-		    tsdPtr->lastGenericPtr = genPrevPtr;
-		}
-		(void) ckfree((char *) genericPtr);
-		genericPtr = tmpPtr;
-		continue;
-	    }
-	} else {
-	    int done;
-
-	    tsdPtr->handlersActive++;
-	    done = (*genericPtr->proc)(genericPtr->clientData, eventPtr);
-	    tsdPtr->handlersActive--;
-	    if (done) {
-		return;
-	    }
-	}
-	genPrevPtr = genericPtr;
-	genericPtr = genPrevPtr->nextPtr;
+    if (InvokeGenericHandlers (tsdPtr, eventPtr)) {
+        return;
     }
-
-    /*
-     * If the event is a MappingNotify event, find its display and
-     * refresh the keyboard mapping information for the display.
-     * After that there's nothing else to do with the event, so just
-     * quit.
-     */
-
-    if (eventPtr->type == MappingNotify) {
-	dispPtr = TkGetDisplay(eventPtr->xmapping.display);
-	if (dispPtr != NULL) {
-	    XRefreshKeyboardMapping(&eventPtr->xmapping);
-	    dispPtr->bindInfoStale = 1;
-	}
-	return;
-    }
-
-    /*
-     * Events selected by StructureNotify require special handling.
-     * They look the same as those selected by SubstructureNotify.
-     * The only difference is whether the "event" and "window" fields
-     * are the same.  Compare the two fields and convert StructureNotify
-     * to SubstructureNotify if necessary.
-     */
-
-    handlerWindow = eventPtr->xany.window;
-    mask = eventMasks[eventPtr->xany.type];
-    if (mask == StructureNotifyMask) {
-	if (eventPtr->xmap.event != eventPtr->xmap.window) {
-	    mask = SubstructureNotifyMask;
-	    handlerWindow = eventPtr->xmap.event;
-	}
-    }
-    winPtr = (TkWindow *) Tk_IdToWindow(eventPtr->xany.display, handlerWindow);
-    if (winPtr == NULL) {
-	/*
-	 * There isn't a TkWindow structure for this window.
-	 * However, if the event is a PropertyNotify event then call
-	 * the selection manager (it deals beneath-the-table with
-	 * certain properties). Also, if the window's parent is a
-	 * Tk window that has the TK_PROP_PROPCHANGE flag set, then
-	 * we must propagate the PropertyNotify event up to the parent.
+    
+    if (RefreshKeyboardMappingIfNeeded (eventPtr)) {
+        /*
+	 * We are done with a MappingNotify event.
 	 */
+        return;
+    }
 
-	if (eventPtr->type != PropertyNotify) {
-	    return;
-	}
+    mask = GetEventMaskFromXEvent(eventPtr);
+    winPtr = GetTkWindowFromXEvent(eventPtr);
 
-	TkSelPropProc(eventPtr);
-
-	/* Get handlerWindow's parent. */
-
-	parentXId = ParentXId(eventPtr->xany.display, handlerWindow);
-	if (parentXId == None) {
-	    return;
-	}
-
-	winPtr = (TkWindow *) Tk_IdToWindow(eventPtr->xany.display, parentXId);
-	if (winPtr == NULL) {
-	    return;
-	}
-
-	if (!(winPtr->flags & TK_PROP_PROPCHANGE)) {
-	    return;
-	}
-
-	handlerWindow = parentXId;
+    if (winPtr == NULL) {
+        return;
     }
 
     /*
@@ -830,137 +1313,31 @@ Tk_HandleEvent(eventPtr)
     }
 
     if (winPtr->mainPtr != NULL) {
+	int result;
 
-        /*
+	interp = winPtr->mainPtr->interp;
+
+	/*
          * Protect interpreter for this window from possible deletion
          * while we are dealing with the event for this window. Thus,
          * widget writers do not have to worry about protecting the
          * interpreter in their own code.
          */
-        
-        interp = winPtr->mainPtr->interp;
-        Tcl_Preserve((ClientData) interp);
-        
-	/*
-	 * Call focus-related code to look at FocusIn, FocusOut, Enter,
-	 * and Leave events;  depending on its return value, ignore the
-	 * event.
-	 */
-    
-	if ((mask & (FocusChangeMask|EnterWindowMask|LeaveWindowMask))
-		&& !TkFocusFilterEvent(winPtr, eventPtr)) {
-            Tcl_Release((ClientData) interp);
-	    return;
-	}
-    
-	/*
-	 * Redirect KeyPress and KeyRelease events to the focus window,
-	 * or ignore them entirely if there is no focus window.  We also
-	 * route the MouseWheel event to the focus window.  The MouseWheel
-	 * event is an extension to the X event set.  Currently, it is only
-	 * available on the Windows version of Tk.
-	 */
-    
-	if (mask & (KeyPressMask|KeyReleaseMask|MouseWheelMask)) {
-	    winPtr->dispPtr->lastEventTime = eventPtr->xkey.time;
-	    winPtr = TkFocusKeyEvent(winPtr, eventPtr);
-	    if (winPtr == NULL) {
-                Tcl_Release((ClientData) interp);
-		return;
-	    }
-	}
-    
-	/*
-	 * Call a grab-related procedure to do special processing on
-	 * pointer events.
-	 */
-    
-	if (mask & (ButtonPressMask|ButtonReleaseMask|PointerMotionMask
-		|EnterWindowMask|LeaveWindowMask)) {
-	    if (mask & (ButtonPressMask|ButtonReleaseMask)) {
-		winPtr->dispPtr->lastEventTime = eventPtr->xbutton.time;
-	    } else if (mask & PointerMotionMask) {
-		winPtr->dispPtr->lastEventTime = eventPtr->xmotion.time;
-	    } else {
-		winPtr->dispPtr->lastEventTime = eventPtr->xcrossing.time;
-	    }
-	    if (TkPointerEvent(eventPtr, winPtr) == 0) {
-                goto done;
-	    }
+	Tcl_Preserve((ClientData) interp);
+
+	result = ((InvokeFocusHandlers(&winPtr, mask, eventPtr)) 
+	   || (InvokeMouseHandlers(winPtr, mask, eventPtr)));
+
+	if (result) {
+	    goto done;
 	}
     }
 
 #ifdef TK_USE_INPUT_METHODS
-    /*
-     * Pass the event to the input method(s), if there are any, and
-     * discard the event if the input method(s) insist.  Create the
-     * input context for the window if it hasn't already been done
-     * (XFilterEvent needs this context).  XIM is only ever enabled on
-     * Unix, but this hasn't been factored out of the generic code yet.
-     */
-    dispPtr = winPtr->dispPtr;
-    if ((dispPtr->flags & TK_DISPLAY_USE_IM)) {
-	if (!(winPtr->flags & (TK_CHECKED_IC|TK_ALREADY_DEAD))) {
-	    winPtr->flags |= TK_CHECKED_IC;
-	    if (dispPtr->inputMethod != NULL) {
-#if TK_XIM_SPOT
-		if (dispPtr->flags & TK_DISPLAY_XIM_SPOT) {
-		    XVaNestedList preedit_attr;
-		    XPoint spot = {0, 0};
-
-		    if (dispPtr->inputXfs == NULL) {
-			/*
-			 * We only need to create one XFontSet
-			 */
-			char      **missing_list;
-			int       missing_count;
-			char      *def_string;
-
-			dispPtr->inputXfs = XCreateFontSet(dispPtr->display,
-				"-*-*-*-R-Normal--14-130-75-75-*-*",
-				&missing_list, &missing_count, &def_string);
-			if (missing_count > 0) {
-			    XFreeStringList(missing_list);
-			}
-		    }
-
-		    preedit_attr = XVaCreateNestedList(0, XNSpotLocation,
-			    &spot, XNFontSet, dispPtr->inputXfs, NULL);
-		    if (winPtr->inputContext != NULL)
-		        Tcl_Panic("inputContext not NULL");
-		    winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
-			    XNInputStyle, XIMPreeditPosition|XIMStatusNothing,
-			    XNClientWindow, winPtr->window,
-			    XNFocusWindow, winPtr->window,
-			    XNPreeditAttributes, preedit_attr,
-			    NULL);
-		    XFree(preedit_attr);
-		} else {
-		    if (winPtr->inputContext != NULL)
-		        Tcl_Panic("inputContext not NULL");
-		    winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
-			    XNInputStyle, XIMPreeditNothing|XIMStatusNothing,
-			    XNClientWindow, winPtr->window,
-			    XNFocusWindow, winPtr->window,
-			    NULL);
-		}
-#else
-		if (winPtr->inputContext != NULL)
-		    Tcl_Panic("inputContext not NULL");
-		winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
-			XNInputStyle, XIMPreeditNothing|XIMStatusNothing,
-			XNClientWindow, winPtr->window,
-			XNFocusWindow, winPtr->window,
-			NULL);
-#endif
-	    }
-	}
-	if (XFilterEvent(eventPtr, None)) {
-	    goto done;
-	}
+    if (InvokeInputMethods(winPtr, eventPtr)) {
+	goto done;
     }
-#endif /* TK_USE_INPUT_METHODS */
-
+#endif
     /*
      * For events where it hasn't already been done, update the current
      * time in the display.
@@ -990,49 +1367,7 @@ Tk_HandleEvent(eventPtr)
 		    Tk_InternAtom((Tk_Window) winPtr, "WM_PROTOCOLS")) {
 		TkWmProtocolEventProc(winPtr, eventPtr);
 	    } else {
-		/* 
-		 * Finally, invoke any ClientMessage event handlers.
-		 */
-
-		for (genPrevPtr = NULL, genericPtr = tsdPtr->cmList;  
-		     genericPtr != NULL; ) {
-		    if (genericPtr->deleteFlag) {
-			if (!tsdPtr->handlersActive) {
-			    GenericHandler *tmpPtr;
-
-			    /*
-			     * This handler needs to be deleted and there are
-			     * no calls pending through any handlers, so now
-			     * is a safe time to delete it.
-			     */
-
-			    tmpPtr = genericPtr->nextPtr;
-			    if (genPrevPtr == NULL) {
-				tsdPtr->cmList = tmpPtr;
-			    } else {
-				genPrevPtr->nextPtr = tmpPtr;
-			    }
-			    if (tmpPtr == NULL) {
-				tsdPtr->lastGenericPtr = genPrevPtr;
-			    }
-			    (void) ckfree((char *) genericPtr);
-			    genericPtr = tmpPtr;
-			    continue;
-			}
-		    } else {
-			int done;
-
-			tsdPtr->handlersActive++;
-			done = (*(Tk_ClientMessageProc *)genericPtr->proc)
-			    ((Tk_Window) winPtr, eventPtr);
-			tsdPtr->handlersActive--;
-			if (done) {
-			    break;
-			}
-		    }
-		    genPrevPtr	= genericPtr;
-		    genericPtr	= genPrevPtr->nextPtr;
-		}
+       	        InvokeClientMessageHandlers(tsdPtr, (Tk_Window)winPtr, eventPtr);
 	    }
 	}
     } else {
