@@ -1,5 +1,15 @@
 2001-11-24  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* unix/Makefile.in: Add comments to better describe
+	TCL_EXE and when it should be available. Add
+	rule that prints message about running `make genstubs`
+	when tkStubInit.c is out of date.
+	* win/Makefile.in: Add TCL_TOOL_DIR and TCL_EXE
+	variables to better match the Tcl Makefile. Add
+	genstubs rule so tkSTubInit.c can be regenerated.
+
+2001-11-24  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* win/configure: Regen.
 	* win/configure.in: Don't AC_SUBST CFLAGS_DEBUG, CFLAGS_OPTIMIZE,
 	or CFLAGS_WARNING since it is now done in SC_CONFIG_CFLAGS.
