@@ -1,5 +1,13 @@
 2004-02-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* README:       update to patchlevel 8.4.6
+	* generic/tk.h:
+	* macosx/Wish.pbproj/project.pbxproj:
+	* unix/configure, unix/configure.in, unix/tk.spec:
+	* win/configure, win/configure.in:
+
+	* tests/window.test: simple code cleanup
+
 	* win/tkWinDialog.c (ChooseDirectoryValidateProc): create a pidl
 	for -initialdir if we have a UNC path because BFFM_SETSELECTION
 	doesn't support UNC paths in strings.
