@@ -1,3 +1,16 @@
+2000-08-08  Eric Melski  <ericm@ajubasolutions.com>
+
+	* tests/place.test: Extended test suite to test error returns from
+	[place].
+
+	* generic/tkInt.h: Replaced Tk_PlaceCmd prototype with
+	Tk_PlaceObjCmd prototype.
+
+	* generic/tkWindow.c: Updated [place] command entry to use new
+	Tcl_Obj interface.
+
+	* generic/tkPlace.c (Tk_PlaceObjCmd): Tcl_Obj'ified [place] command.
+
 2000-08-07  Eric Melski  <ericm@ajubasolutions.com>
 
 	* generic/tkWindow.c: Updated [selection] command entry to use

@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: place.test,v 1.3 1999/04/16 01:51:40 stanton Exp $
+# RCS: @(#) $Id: place.test,v 1.4 2000/08/08 19:21:20 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -216,21 +216,88 @@ test place-8.2 {MasterStructureProc, mapping and unmapping slaves} {
     lappend result [winfo ismapped .t.f2]
 } {1 0 42 32 0 1}
 
+test place-9.1 {PlaceObjCmd} {
+    list [catch {place} msg] $msg
+} [list 1 "wrong # args: should be \"place option|pathName args\""]
+test place-9.2 {PlaceObjCmd} {
+    list [catch {place foo} msg] $msg
+} [list 1 "wrong # args: should be \"place option|pathName args\""]
+test place-9.3 {PlaceObjCmd} {
+    catch {destroy .foo}
+    list [catch {place .foo bar} msg] $msg
+} [list 1 "bad window path name \".foo\""]
+test place-9.4 {PlaceObjCmd} {
+    catch {destroy .foo}
+    list [catch {place bar .foo} msg] $msg
+} [list 1 "bad window path name \".foo\""]
+test place-9.5 {PlaceObjCmd} {
+    catch {destroy .foo}
+    frame .foo
+    set res [list [catch {place badopt .foo} msg] $msg]
+    destroy .foo
+    set res
+} [list 1 "bad option \"badopt\": must be configure, forget, info, or slaves"]
+test place-9.6 {PlaceObjCmd, configure errors} {
+    catch {destroy .foo}
+    frame .foo
+    set res [list [catch {place configure .foo} msg] $msg]
+    destroy .foo
+    set res
+} [list 1 "wrong # args: should be \"place configure pathName option value ?option value ...?\""]
+test place-9.7 {PlaceObjCmd, configure errors} {
+    catch {destroy .foo}
+    frame .foo
+    set res [list [catch {place configure .foo bar} msg] $msg]
+    destroy .foo
+    set res
+} [list 1 "wrong # args: should be \"place configure pathName option value ?option value ...?\""]
+test place-9.8 {PlaceObjCmd, forget errors} {
+    catch {destroy .foo}
+    frame .foo
+    set res [list [catch {place forget .foo bar} msg] $msg]
+    destroy .foo
+    set res
+} [list 1 "wrong # args: should be \"place forget pathName\""]
+test place-9.9 {PlaceObjCmd, info errors} {
+    catch {destroy .foo}
+    frame .foo
+    set res [list [catch {place info .foo bar} msg] $msg]
+    destroy .foo
+    set res
+} [list 1 "wrong # args: should be \"place info pathName\""]
+test place-9.10 {PlaceObjCmd, slaves errors} {
+    catch {destroy .foo}
+    frame .foo
+    set res [list [catch {place slaves .foo bar} msg] $msg]
+    destroy .foo
+    set res
+} [list 1 "wrong # args: should be \"place slaves pathName\""]
+
+test place-10.1 {ConfigureSlave} {
+    catch {destroy .foo}
+    frame .foo
+    set res [list [catch {place .foo -badopt} msg] $msg]
+    destroy .foo
+    set res
+} [list 1 "bad option \"-badopt\": must be -anchor, -bordermode, -height, -in, -relheight, -relwidth, -relx, -rely, -width, -x, or -y"]
+test place-10.2 {ConfigureSlave} {
+    catch {destroy .foo}
+    frame .foo
+    set res [list [catch {place .foo -anchor} msg] $msg]
+    destroy .foo
+    set res
+} [list 1 "value missing for option \"-anchor\""]
+test place-10.3 {ConfigureSlave} {
+    catch {destroy .foo}
+    frame .foo
+    set res [list [catch {place .foo -bordermode j} msg] $msg]
+    destroy .foo
+    set res
+} [list 1 "bad border mode \"j\": must be ignore, inside, or outside"]
+	
+
 catch {destroy .t}
 
 # cleanup
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
