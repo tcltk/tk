@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.42 2002/02/22 02:41:17 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.43 2002/02/27 01:26:51 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -2503,8 +2503,18 @@ Tk_MainWindow(interp)
 					 * reporting also. */
 {
     TkMainInfo *mainPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr;
+
+    if (interp == NULL) {
+	return NULL;
+    }
+#ifdef USE_TCL_STUBS
+    if (tclStubsPtr == NULL) {
+	return NULL;
+    }
+#endif
+    tsdPtr = (ThreadSpecificData *) 
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (mainPtr = tsdPtr->mainWindowList; mainPtr != NULL;
 	    mainPtr = mainPtr->nextPtr) {
@@ -2628,8 +2638,16 @@ OpenIM(dispPtr)
 int
 Tk_GetNumMainWindows()
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr;
+
+#ifdef USE_TCL_STUBS
+    if (tclStubsPtr == NULL) {
+	return 0;
+    }
+#endif
+
+    tsdPtr = (ThreadSpecificData *) 
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->numMainWindows;
 }
