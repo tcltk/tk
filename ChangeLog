@@ -1,5 +1,8 @@
 2004-03-26  Don Porter  <dgp@users.sourceforge.net>
 
+	* unix/tcl.m4:	Replaced -Wno-strict-alias with more portable
+			-fno-strict-alias alternative.
+
 	* README:		Bump version to 8.5a2.
 	* generic/tk.h:
 	* macosx/Wish.pbproj/project.pbxproj:
