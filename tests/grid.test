@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.19 2003/04/01 21:06:36 dgp Exp $
+# RCS: @(#) $Id: grid.test,v 1.20 2003/09/16 21:47:15 pspjuth Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1349,7 +1349,7 @@ test grid-16.8 {layout internal constraints} {
     	append a "[winfo x .$i] "
     }
     set a
-} {0 30 70 250 280 , 0 30 130 230 260 , 0 30 113 197 280 , 0 30 60 90 120 }
+} {0 30 130 230 280 , 0 30 130 230 260 , 0 30 113 196 280 , 0 30 60 90 120 }
 grid_reset 16.8
 
 test grid-16.9 {layout uniform} {
@@ -1414,7 +1414,7 @@ test grid-16.12 {layout uniform (grow)} {
     grid .f1 .f2 .f3 .f4 -sticky news
     grid columnconfigure . {0 1 2} -uniform a
     # Put weight 2 on the biggest in the group to see that the groups
-    # adapts to one of the smaller.
+    # adapt to one of the smaller.
     grid columnconfigure . 2 -weight 2
     grid columnconfigure . {0 3} -weight 1
     update
@@ -1430,6 +1430,112 @@ test grid-16.12 {layout uniform (grow)} {
 } [list {0 0 50 95} {50 0 50 95} {100 0 100 95} {200 0 70 95} \
         {0 0 70 95} {70 0 50 95} {120 0 140 95} {260 0 90 95}]
 grid_reset 16.12
+
+test grid-16.13 {layout span} {
+    frame .f1 -width 24 -height 20
+    frame .f2 -width 38 -height 20
+    frame .f3 -width 150 -height 20
+
+    grid .f1 - - .f2
+    grid .f3 - - -
+
+    set res {}
+    foreach w {{0 1 0 0} {0 0 1 0} {1 3 4 0} {1 2 1 2} {1 1 1 12}} {
+        for {set c 0} {$c < 4} {incr c} {
+            grid columnconfigure . $c -weight [lindex $w $c]
+        }
+        update
+        set res2 {}
+        for {set c 0} {$c <= 4} {incr c} {
+            lappend res2 [lindex [grid bbox . $c 0] 2]
+        }
+        lappend res $res2
+    }
+    set res
+    # The last result below should ideally be 8 8 8 126 but the current
+    # implementation is not exact enough.
+} [list [list 0 112 0 38 0] [list 0 0 112 38 0] [list 14 42 56 38 0] \
+           [list 18 38 18 76 0] [list 7 8 9 126 0]]
+grid_reset 16.13
+
+test grid-16.14 {layout span} {
+    frame .f1 -width 110 -height 20
+    frame .f2 -width 38 -height 20
+    frame .f3 -width 150 -height 20
+
+    grid .f1 - - .f2
+    grid .f3 - - -
+
+    set res {}
+    foreach w {{0 1 0 0} {0 0 1 0} {1 3 4 0} {1 2 1 3} {1 1 1 12}} {
+        for {set c 0} {$c < 4} {incr c} {
+            grid columnconfigure . $c -weight [lindex $w $c]
+        }
+        update
+        set res2 {}
+        for {set c 0} {$c <= 4} {incr c} {
+            lappend res2 [lindex [grid bbox . $c 0] 2]
+        }
+        lappend res $res2
+    }
+    set res
+} [list [list 0 112 0 38 0] [list 0 0 112 38 0] [list 14 42 56 38 0] \
+           [list 27 55 28 40 0] [list 36 37 37 40 0]]
+grid_reset 16.14
+
+test grid-16.15 {layout span} {
+    frame .f1 -width 24 -height 20
+    frame .f2 -width 38 -height 20
+    frame .f3 -width 150 -height 20
+
+    grid .f1 - - .f2
+    grid x .f3 - -
+
+    set res {}
+    foreach w {{0 1 0 0} {0 0 1 0} {1 0 1 0} {0 0 0 0} {1 0 0 6}} {
+        for {set c 0} {$c < 4} {incr c} {
+            grid columnconfigure . $c -weight [lindex $w $c]
+        }
+        update
+        set res2 {}
+        for {set c 0} {$c <= 4} {incr c} {
+            lappend res2 [lindex [grid bbox . $c 0] 2]
+        }
+        lappend res $res2
+    }
+    set res
+} [list [list 0 112 0 38 0] [list 0 0 112 38 0] [list 0 0 112 38 0] \
+           [list 0 37 37 76 0] [list 0 12 12 126 0]]
+grid_reset 16.15
+
+test grid-16.16 {layout span} {
+    frame .f1 -width 64 -height 20
+    frame .f2 -width 38 -height 20
+    frame .f3 -width 150 -height 20
+    frame .f4 -width 15 -height 20
+    frame .f5 -width 18 -height 20
+    frame .f6 -width 20 -height 20
+
+    grid .f1 - x .f2
+    grid .f3 - - -
+    grid .f4 .f5 .f6
+
+    set res {}
+    foreach w {{1 1 5 1} {0 0 1 0} {1 3 4 0} {1 2 1 2} {1 1 1 12}} {
+        for {set c 0} {$c < 4} {incr c} {
+            grid columnconfigure . $c -weight [lindex $w $c]
+        }
+        update
+        set res2 {}
+        for {set c 0} {$c <= 4} {incr c} {
+            lappend res2 [lindex [grid bbox . $c 0] 2]
+        }
+        lappend res $res2
+    }
+    set res
+} [list [list 30 34 43 43 0] [list 30 34 48 38 0] [list 22 42 48 38 0] \
+           [list 25 39 29 57 0] [list 30 34 22 64 0]]
+grid_reset 16.16
 
 test grid-17.1 {forget and pending idle handlers} {
     # This test is intended to detect a crash caused by a failure to remove
