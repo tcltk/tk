@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.19 2001/11/13 00:19:05 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.20 2001/11/20 09:58:33 hobbs Exp $
  */
 
 #include "default.h"
@@ -315,8 +315,8 @@ static int		TextEditUndo _ANSI_ARGS_((Tcl_Interp * interp,
 			    TkText *textPtr));
 static int		TextEditRedo _ANSI_ARGS_((Tcl_Interp * interp,
 			    TkText *textPtr));
-static char *		TextGetText _ANSI_ARGS_((TkTextIndex * index1,
-			    TkTextIndex * index2));
+static void		TextGetText _ANSI_ARGS_((TkTextIndex * index1,
+			    TkTextIndex * index2, Tcl_DString *dsPtr));
 static void		pushStack _ANSI_ARGS_(( TkTextEditAtom ** stack, 
 			    TkTextEditAtom * elem ));
 
@@ -474,11 +474,9 @@ TextWidgetCmd(clientData, interp, argc, argv)
     char **argv;		/* Argument strings. */
 {
     register TkText *textPtr = (TkText *) clientData;
-    int result = TCL_OK;
+    int c, result = TCL_OK;
     size_t length;
-    int c;
     TkTextIndex index1, index2;
-    char * string;
 
     if (argc < 2) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -647,13 +645,17 @@ TextWidgetCmd(clientData, interp, argc, argv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (TkTextIndexCmp(&index1, &index2) >= 0) {
-	    goto done;
+	if (TkTextIndexCmp(&index1, &index2) < 0) {
+	    /* 
+	     * Place the text in a DString and move it to the result.  Since
+	     * this could in principle be a megabyte or more, we want to do
+	     * it efficiently!
+	     */
+	    Tcl_DString ds;
+	    TextGetText(&index1, &index2, &ds);
+	    Tcl_DStringResult(interp, &ds);
+	    Tcl_DStringFree(&ds);
 	}
-        string = TextGetText(&index1,&index2);
-        Tcl_AppendResult(interp, string, (char *) NULL);
-        ckfree(string);
-        
     } else if ((c == 'i') && (strncmp(argv[1], "index", length) == 0)
 	    && (length >= 3)) {
 	char buf[200];
@@ -1396,7 +1398,9 @@ DeleteChars(textPtr, index1String, index2String)
      * Push the deletion on the undo stack
      */
 
-    if ( textPtr->undo ) {
+    if (textPtr->undo) {
+	Tcl_DString ds;
+
 	if (textPtr->autoSeparators && (textPtr->undoStack != NULL)
 		&& (textPtr->undoStack->type != DELETE)) {
 	   insertSeparator(&(textPtr->undoStack));
@@ -1404,14 +1408,17 @@ DeleteChars(textPtr, index1String, index2String)
 
 	deletion = (TkTextEditAtom *) ckalloc(sizeof(TkTextEditAtom));
 	deletion->type = DELETE;
-	
-	TkTextPrintIndex(&index1,indexBuffer);
-	deletion->index = (char *) ckalloc(strlen(indexBuffer) + 1);
-	strcpy(deletion->index,indexBuffer);
-	
-	deletion->string = TextGetText(&index1, &index2);
 
-	pushStack(&(textPtr->undoStack),deletion);
+	TkTextPrintIndex(&index1, indexBuffer);
+	deletion->index = (char *) ckalloc(strlen(indexBuffer) + 1);
+	strcpy(deletion->index, indexBuffer);
+
+	TextGetText(&index1, &index2, &ds);
+	deletion->string = (char *) ckalloc(Tcl_DStringLength(&ds) + 1);
+	strcpy(deletion->string, Tcl_DStringValue(&ds));
+	Tcl_DStringFree(&ds);
+
+	pushStack(&(textPtr->undoStack), deletion);
 	clearStack(&(textPtr->redoStack));
     }
     updateDirtyFlag(textPtr);
@@ -2846,59 +2853,56 @@ TextEditCmd(textPtr, interp, argc, argv)
 
 /*
  * TextGetText --
- *    returns the text from indexPtr1 to indexPtr2.
+ *    Returns the text from indexPtr1 to indexPtr2, placing that text
+ *    in the Tcl_DString given.  That DString should be free or uninitialized.
  *
  * Results:
- *    the string between indices indexPtr1 and indexPtr2
+ *    None.
  *
  * Side effects:
- *    None.
+ *    Memory will be allocated for the DString.  Remember to free it.
  */
 
-char * TextGetText(indexPtr1,indexPtr2)
-    TkTextIndex * indexPtr1;
-    TkTextIndex * indexPtr2;
+void 
+TextGetText(indexPtr1,indexPtr2, dsPtr)
+    TkTextIndex *indexPtr1;
+    TkTextIndex *indexPtr2;
+    Tcl_DString *dsPtr;
 {
     TkTextIndex tmpIndex;
-    char * string;
-    string = (char *) ckalloc(1);
-    *string = '\0';
+    Tcl_DStringInit(dsPtr);
     
     TkTextMakeByteIndex(indexPtr1->tree, TkBTreeLineIndex(indexPtr1->linePtr),
 	    indexPtr1->byteIndex, &tmpIndex);
 
-    if (TkTextIndexCmp(indexPtr1, indexPtr2) >= 0) {
-	return string;
-    }
-    while (1) {
-	int offset, last, savedChar;
-	TkTextSegment *segPtr;
+    if (TkTextIndexCmp(indexPtr1, indexPtr2) < 0) {
+	while (1) {
+	    int offset, last, savedChar;
+	    TkTextSegment *segPtr;
 
-	segPtr = TkTextIndexToSeg(&tmpIndex, &offset);
-	last = segPtr->size;
-	if (tmpIndex.linePtr == indexPtr2->linePtr) {
-	    int last2;
+	    segPtr = TkTextIndexToSeg(&tmpIndex, &offset);
+	    last = segPtr->size;
+	    if (tmpIndex.linePtr == indexPtr2->linePtr) {
+		int last2;
 
-	    if (indexPtr2->byteIndex == tmpIndex.byteIndex) {
-		break;
+		if (indexPtr2->byteIndex == tmpIndex.byteIndex) {
+		    break;
+		}
+		last2 = indexPtr2->byteIndex - tmpIndex.byteIndex + offset;
+		if (last2 < last) {
+		    last = last2;
+		}
 	    }
-	    last2 = indexPtr2->byteIndex - tmpIndex.byteIndex + offset;
-	    if (last2 < last) {
-		last = last2;
+	    if (segPtr->typePtr == &tkTextCharType) {
+		savedChar = segPtr->body.chars[last];
+		segPtr->body.chars[last] = 0;
+		Tcl_DStringAppend(dsPtr,segPtr->body.chars + offset,
+			(int)strlen(segPtr->body.chars + offset));
+		segPtr->body.chars[last] = savedChar;
 	    }
+	    TkTextIndexForwBytes(&tmpIndex, last-offset, &tmpIndex);
 	}
-	if (segPtr->typePtr == &tkTextCharType) {
-	    savedChar = segPtr->body.chars[last];
-	    segPtr->body.chars[last] = 0;
-            string = (char *) ckrealloc(string,strlen(string)
-		    + strlen(segPtr->body.chars + offset) + 1);
-            strcat(string,segPtr->body.chars + offset);
-	    segPtr->body.chars[last] = savedChar;
-	}
-	TkTextIndexForwBytes(&tmpIndex, last-offset, &tmpIndex);
     }
-
-    return string;
 }
 
 /*
