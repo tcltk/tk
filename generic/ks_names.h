@@ -1,6 +1,6 @@
 /*
  * This file is generated from $(INCLUDESRC)/keysymdef.h.  Do not edit.
- * RCS: $Id: ks_names.h,v 1.3 1998/09/14 18:23:02 stanton Exp $ 
+ * RCS: $Id: ks_names.h,v 1.4 2000/04/15 00:33:08 ericm Exp $ 
  */
 { "BackSpace", 0xFF08 },
 { "Tab", 0xFF09 },
@@ -8,6 +8,8 @@
 { "Clear", 0xFF0B },
 { "Return", 0xFF0D },
 { "Pause", 0xFF13 },
+{ "Scroll_Lock", 0xFF14 },
+{ "Sys_Req", 0xFF15 },
 { "Escape", 0xFF1B },
 { "Delete", 0xFFFF },
 { "Multi_key", 0xFF20 },

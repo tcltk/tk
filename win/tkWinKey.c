@@ -1,4 +1,4 @@
-/* 
+/*
  * tkWinKey.c --
  *
  *	This file contains X emulation routines for keyboard related
@@ -9,80 +9,50 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinKey.c,v 1.9 2000/04/14 01:36:35 ericm Exp $
+ * RCS: @(#) $Id: tkWinKey.c,v 1.10 2000/04/15 00:33:08 ericm Exp $
  */
 
 #include "tkWinInt.h"
-
-typedef struct {
-    unsigned int keycode;
-    KeySym keysym;
-} Keys;
-
-static Keys keymap[] = {
-    VK_CANCEL, XK_Cancel,
-    VK_BACK, XK_BackSpace,
-    VK_TAB, XK_Tab,
-    VK_CLEAR, XK_Clear,
-    VK_RETURN, XK_Return,
-    VK_SHIFT, XK_Shift_L,
-    VK_CONTROL, XK_Control_L,
-    VK_MENU, XK_Alt_L,
-    VK_PAUSE, XK_Pause,
-    VK_CAPITAL, XK_Caps_Lock,
-    VK_ESCAPE, XK_Escape,
-    VK_SPACE, XK_space,
-    VK_PRIOR, XK_Prior,
-    VK_NEXT, XK_Next,
-    VK_END, XK_End,
-    VK_HOME, XK_Home,
-    VK_LEFT, XK_Left,
-    VK_UP, XK_Up,
-    VK_RIGHT, XK_Right,
-    VK_DOWN, XK_Down,
-    VK_SELECT, XK_Select,
-    VK_PRINT, XK_Print,
-    VK_EXECUTE, XK_Execute,
-    VK_INSERT, XK_Insert,
-    VK_DELETE, XK_Delete,
-    VK_HELP, XK_Help,
-    VK_F1, XK_F1,
-    VK_F2, XK_F2,
-    VK_F3, XK_F3,
-    VK_F4, XK_F4,
-    VK_F5, XK_F5,
-    VK_F6, XK_F6,
-    VK_F7, XK_F7,
-    VK_F8, XK_F8,
-    VK_F9, XK_F9,
-    VK_F10, XK_F10,
-    VK_F11, XK_F11,
-    VK_F12, XK_F12,
-    VK_F13, XK_F13,
-    VK_F14, XK_F14,
-    VK_F15, XK_F15,
-    VK_F16, XK_F16,
-    VK_F17, XK_F17,
-    VK_F18, XK_F18,
-    VK_F19, XK_F19,
-    VK_F20, XK_F20,
-    VK_F21, XK_F21,
-    VK_F22, XK_F22,
-    VK_F23, XK_F23,
-    VK_F24, XK_F24,
-    VK_NUMLOCK, XK_Num_Lock, 
-    VK_SCROLL, XK_Scroll_Lock,
-
-    /*
-     * The following support the new keys in the Microsoft keyboard.
-     * Win_L and Win_R have the windows logo.  App has the menu.
-     */
-
-    VK_LWIN, XK_Win_L,
-    VK_RWIN, XK_Win_R,
-    VK_APPS, XK_App,
-
-    0, NoSymbol
+/*
+ * The keymap table holds mappings of Windows keycodes to X keysyms.
+ * If Windows ever comes along and changes the value of their keycodes,
+ * this will break all kinds of things.  However, this table lookup is much
+ * faster than the alternative, in which we walked a list of keycodes looking
+ * for a match.  Since this lookup is performed for every Windows keypress
+ * event, it seems like a worthwhile improvement to use the table.
+ */
+#define MAX_KEYCODE 145 /* VK_SCROLL is the last entry in our table below */
+static KeySym keymap[] = {
+    NoSymbol, NoSymbol, NoSymbol, XK_Cancel, NoSymbol,
+	NoSymbol, NoSymbol, NoSymbol, XK_BackSpace, XK_Tab,
+	NoSymbol, NoSymbol, XK_Clear, XK_Return, NoSymbol,
+	NoSymbol, XK_Shift_L, XK_Control_L, XK_Alt_L, XK_Pause,
+	XK_Caps_Lock, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
+	NoSymbol, NoSymbol, XK_Escape, NoSymbol, NoSymbol,
+	NoSymbol, NoSymbol, XK_space, XK_Prior, XK_Next,
+	XK_End, XK_Home, XK_Left, XK_Up, XK_Right,
+	XK_Down, XK_Select, XK_Print, XK_Execute, NoSymbol,
+	XK_Insert, XK_Delete, XK_Help, NoSymbol, NoSymbol,
+	NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
+	NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
+	NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
+	NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
+	NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
+	NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
+	NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
+	NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
+	NoSymbol, XK_Win_L, XK_Win_R, XK_App, NoSymbol,
+	NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
+	NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
+	NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
+	NoSymbol, NoSymbol, XK_F1, XK_F2, XK_F3,
+	XK_F4, XK_F5, XK_F6, XK_F7, XK_F8,
+	XK_F9, XK_F10, XK_F11, XK_F12, XK_F13,
+	XK_F14, XK_F15, XK_F16, XK_F17, XK_F18,
+	XK_F19,	XK_F20, XK_F21, XK_F22, XK_F23,
+	XK_F24,	NoSymbol, NoSymbol, NoSymbol, NoSymbol,
+	NoSymbol, NoSymbol, NoSymbol, NoSymbol, XK_Num_Lock,
+	XK_Scroll_Lock
 };
 
 /*
@@ -199,7 +169,6 @@ KeycodeToKeysym(keycode, state, noascii)
     int state;
     int noascii;
 {
-    Keys* key;
     BYTE keys[256];
     int result, deadkey, shift;
     char buf[4];
@@ -306,44 +275,41 @@ KeycodeToKeysym(keycode, state, noascii)
      */
 
     skipToAscii:
-    for (key = keymap; key->keycode != 0; key++) {
-	if (key->keycode == keycode) {
-	    /*
-	     * Windows only gives us an undifferentiated VK_CONTROL
-	     * code (for example) when either Control key is pressed.
-	     * To distinguish between left and right, we have to query the
-	     * state of one of the two to determine which was actually
-	     * pressed.  So if the keycode indicates Control, Shift, or Menu
-	     * (the key that everybody else calls Alt), do this extra test.
-	     * If the right-side key was pressed, return the appropriate
-	     * keycode.  Otherwise, we fall through and rely on the
-	     * keymap table to hold the correct keysym value.
-	     */
-	    switch (keycode) {
-		case VK_CONTROL: {
-		    if (GetKeyState(VK_RCONTROL) & 0x80) {
-			return XK_Control_R;
-		    }
-		    break;
-		}
-		case VK_SHIFT: {
-		    if (GetKeyState(VK_RSHIFT) & 0x80) {
-			return XK_Shift_R;
-		    }
-		    break;
-		}
-		case VK_MENU: {
-		    if (GetKeyState(VK_RMENU) & 0x80) {
-			return XK_Alt_R;
-		    }
-		    break;
-		}
+    if (keycode < 0 || keycode > MAX_KEYCODE) {
+	return NoSymbol;
+    }
+    switch (keycode) {
+	/*
+	 * Windows only gives us an undifferentiated VK_CONTROL
+	 * code (for example) when either Control key is pressed.
+	 * To distinguish between left and right, we have to query the
+	 * state of one of the two to determine which was actually
+	 * pressed.  So if the keycode indicates Control, Shift, or Menu
+	 * (the key that everybody else calls Alt), do this extra test.
+	 * If the right-side key was pressed, return the appropriate
+	 * keycode.  Otherwise, we fall through and rely on the
+	 * keymap table to hold the correct keysym value.
+	 */
+	case VK_CONTROL: {
+	    if (GetKeyState(VK_RCONTROL) & 0x80) {
+		return XK_Control_R;
 	    }
-	    return key->keysym;
+	    break;
+	}
+	case VK_SHIFT: {
+	    if (GetKeyState(VK_RSHIFT) & 0x80) {
+		return XK_Shift_R;
+	    }
+	    break;
+	}
+	case VK_MENU: {
+	    if (GetKeyState(VK_RMENU) & 0x80) {
+		return XK_Alt_R;
+	    }
+	    break;
 	}
     }
-
-    return NoSymbol;
+    return keymap[keycode];
 }
 
 
@@ -545,7 +511,7 @@ TkpSetKeycodeAndState(tkwin, keySym, eventPtr)
     KeySym keySym;
     XEvent *eventPtr;
 {
-    Keys* key;
+    int i;
     SHORT result;
     int shift;
     
@@ -560,14 +526,12 @@ TkpSetKeycodeAndState(tkwin, keySym, eventPtr)
      * for the "extended" Syms.  This may be due to just casting
      * problems below, but this works.
      */
-    
-    for (key = keymap; key->keycode != 0; key++) {
-        if (key->keysym == keySym) {
-            eventPtr->xkey.keycode = key->keycode;
+    for (i = 0; i <= MAX_KEYCODE; i++) {
+	if (keymap[i] == keySym) {
+            eventPtr->xkey.keycode = i;
             return;
-        }
+	}
     }
-
     if (keySym >= 0x20) {
 	result = VkKeyScan((char) keySym);
 	if (result != -1) {
@@ -612,7 +576,7 @@ XKeysymToKeycode(display, keysym)
     Display* display;
     KeySym keysym;
 {
-    Keys* key;
+    int i;
     SHORT result;
 
     /*
@@ -621,13 +585,14 @@ XKeysymToKeycode(display, keysym)
      * for the "extended" Syms.  This may be due to just casting
      * problems below, but this works.
      */
-
-    for (key = keymap; key->keycode != 0; key++) {
-	if (key->keysym == keysym) {
-	    return key->keycode;
+    if (keysym == NoSymbol) {
+	return 0;
+    }
+    for (i = 0; i <= MAX_KEYCODE; i++) {
+	if (keymap[i] == keysym) {
+	    return ((KeyCode) i);
 	}
     }
-
     if (keysym >= 0x20) {
 	result = VkKeyScan((char) keysym);
 	if (result != -1) {
