@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.5 1999/04/17 02:35:38 rjohnson Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.6 1999/04/20 01:04:04 rjohnson Exp $
  */
 
 #include "default.h"
@@ -1716,12 +1716,13 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	/*
 	 * Check for matches within the current line.  If so, and if we're
 	 * searching backwards, repeat the search to find the last match
-	 * in the line.
+	 * in the line.  (Note: The lastByte should include the NULL char
+	 * so we can handle searching for end of line easier.)
 	 */
 
 	matchByte = -1;
 	firstByte = 0;
-	lastByte = INT_MAX;
+	lastByte = Tcl_DStringLength(&line) + 1;
 	if (lineNum == startingLine) {
 	    int indexInDString;
 

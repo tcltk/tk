@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scale.test,v 1.5 1999/04/19 23:54:57 hershey Exp $
+# RCS: @(#) $Id: scale.test,v 1.6 1999/04/20 01:04:04 rjohnson Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -92,8 +92,8 @@ foreach test {
     .s configure $name [lindex [.s configure $name] 3]
     incr i
 }
-
 destroy .s
+
 test scale-2.1 {Tk_ScaleCmd procedure} {
     list [catch {scale} msg] $msg
 } {1 {wrong # args: should be "scale pathName ?options?"}}
@@ -795,6 +795,20 @@ test scale-16.1 {scale widget vs hidden commands} {
     destroy .s
     list [winfo children .] [interp hidden]
 } [list {} $l]
+
+test scale-17.1 {bug fix 1786} {
+    # Perhaps x is set to {}, depending on what other tests have run.
+    # If x is unset, or set to something not convertable to a double,
+    # then the scale try to initialize its value with the contents
+    # of uninitialized memory.  Sometimes that causes an FPE.
+
+    set x {}
+    scale .s -from 100 -to 300
+    pack .s
+    update
+    .s configure -variable x   ;# CRASH! -> Floating point exception
+    set x
+} {}
 
 catch {destroy .s}
 option clear

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.3 1999/04/16 01:51:40 stanton Exp $
+# RCS: @(#) $Id: text.test,v 1.4 1999/04/20 01:04:04 rjohnson Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1278,6 +1278,19 @@ test text-23.1 {text widget vs hidden commands} {
     destroy .t
     list [winfo children .] [interp hidden]
 } [list {} $l]
+
+test text-24.1 {bug fix - 1642} {
+    catch {destroy .t}
+    text .t
+    pack .t
+    .t insert end "line 1\n"
+    .t insert end "line 2\n"
+    .t insert end "line 3\n"
+    .t insert end "line 4\n"
+    .t insert end "line 5\n"
+    tkTextSetCursor .t 3.0
+    .t search -backward -regexp "\$" insert 1.0
+} {2.6}
 
 eval destroy [winfo child .]
 option clear
