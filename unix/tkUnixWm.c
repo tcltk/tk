@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.32 2002/08/08 23:45:01 mdejong Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.33 2002/08/08 23:49:50 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -3063,14 +3063,14 @@ WmTransientCmd(tkwin, winPtr, interp, objc, objv)
 	     * transient states reflect the state of the master.
 	     */
 
-	    if (wmPtr->masterPtr == NULL) {
-		masterPtr->wmInfoPtr->numTransients++;
-	    } else {
+	    if (wmPtr->masterPtr != NULL) {
+		wmPtr->masterPtr->wmInfoPtr->numTransients--;
 		Tk_DeleteEventHandler((Tk_Window) wmPtr->masterPtr,
 			StructureNotifyMask,
 			WmWaitMapProc, (ClientData) winPtr);
 	    }
 
+	    masterPtr->wmInfoPtr->numTransients++;
 	    Tk_CreateEventHandler((Tk_Window) masterPtr,
 		    StructureNotifyMask,
 		    WmWaitMapProc, (ClientData) winPtr);
