@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.19 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.20 2003/02/26 02:32:56 hobbs Exp $
  */
 
 /*
@@ -370,6 +370,7 @@ static void		MenuWorldChanged _ANSI_ARGS_((
 static int		PostProcessEntry _ANSI_ARGS_((TkMenuEntry *mePtr));
 static void		RecursivelyDeleteMenu _ANSI_ARGS_((TkMenu *menuPtr));
 static void		UnhookCascadeEntry _ANSI_ARGS_((TkMenuEntry *mePtr));
+static void		TkMenuCleanup _ANSI_ARGS_((ClientData unused));
 
 /*
  * The structure below is a list of procs that respond to certain window
@@ -3455,6 +3456,29 @@ DeleteMenuCloneEntries(menuPtr, first, last)
 /*
  *----------------------------------------------------------------------
  *
+ * TkMenuCleanup --
+ *
+ *	Resets menusInitialized to allow Tk to be finalized and reused
+ *	without the DLL being unloaded.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkMenuCleanup(ClientData unused)
+{
+    menusInitialized = 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkMenuInit --
  *
  *	Sets up the hash tables and the variables used by the menu package.
@@ -3474,13 +3498,17 @@ TkMenuInit()
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    
+
     if (!menusInitialized) {
 	Tcl_MutexLock(&menuMutex);
 	if (!menusInitialized) {
 	    TkpMenuInit();
 	    menusInitialized = 1;
 	}
+	/*
+	 * Make sure we cleanup on finalize.
+	 */
+	Tcl_CreateExitHandler((Tcl_ExitProc *) TkMenuCleanup, NULL);
 	Tcl_MutexUnlock(&menuMutex);
     }
     if (!tsdPtr->menusInitialized) {
