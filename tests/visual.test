@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: visual.test,v 1.8 2004/05/23 17:34:49 dkf Exp $
+# RCS: @(#) $Id: visual.test,v 1.9 2004/06/04 19:55:31 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -72,7 +72,7 @@ if {[llength $avail] > 1} {
 tcltest::testConstraint haveOtherVisual [expr {$other ne ""}]
 tcltest::testConstraint havePseudocolorVisual [string match *pseudocolor* $avail]
 tcltest::testConstraint haveMultipleVisuals [expr {[llength $avail] > 1}]
-tktest::testConstraint defaultPseudocolor8 [expr {
+tcltest::testConstraint defaultPseudocolor8 [expr {
     ([winfo visual .] == "pseudocolor") && ([winfo depth .] == 8)
 }]
 
@@ -211,7 +211,7 @@ test visual-6.1 {Tk_GetVisual, no matching visual} {havePseudocolorVisual haveMu
 # These tests are non-portable due to variations in how many colors
 # are already in use on the screen.
 
-if {[tktest::testConstraint defaultPseudocolor8]} {
+if {[tcltest::testConstraint defaultPseudocolor8]} {
     eatColors .t1
 }
 test visual-7.1 {Tk_GetColormap, "new"} {defaultPseudocolor8 nonPortable} {
@@ -262,7 +262,7 @@ test visual-7.6 {Tk_GetColormap, copy from other window} {defaultPseudocolor8 ha
     wm geometry .t1 +0+0
     list [catch {toplevel .t2 -width 400 -height 50 -colormap .t1} msg] $msg
 } {1 {can't use colormap for .t1: incompatible visuals}}
-if {[tktest::testConstraint defaultPseudocolor8]} {
+if {[tcltest::testConstraint defaultPseudocolor8]} {
     catch {destroy .t1}
     catch {destroy .t2}
 }
