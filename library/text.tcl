@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.31 2004/06/04 10:51:18 vincentdarley Exp $
+# RCS: @(#) $Id: text.tcl,v 1.32 2004/08/26 18:03:30 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -972,9 +972,19 @@ proc ::tk::TextTranspose w {
     if {[$w compare "$pos - 1 char" == 1.0]} {
 	return
     }
+    # ensure this is seen as an atomic op to undo
+    set autosep [$w cget -autoseparators]
+    if {$autosep} {
+	$w configure -autoseparators 0
+	$w edit separator
+    }
     $w delete "$pos - 2 char" $pos
     $w insert insert $new
     $w see insert
+    if {$autosep} {
+	$w edit separator
+	$w configure -autoseparators $autosep
+    }
 }
 
 # ::tk_textCopy --
