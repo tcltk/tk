@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wish.1,v 1.4 2003/09/05 22:44:39 dgp Exp $
+'\" RCS: @(#) $Id: wish.1,v 1.5 2004/09/09 12:17:11 dkf Exp $
 '\" 
 .so man.macros
 .TH wish 1 8.0 Tk "Tk Applications"
@@ -43,6 +43,11 @@ the window whose identifier is \fIid\fR, instead of being created as an
 independent toplevel window.  \fIId\fR must be specified in the same
 way as the value for the \fB\-use\fR option for toplevel widgets (i.e.
 it has a form like that returned by the \fBwinfo id\fR command).
+.RS
+Note that on some platforms this will only work correctly if \fIid\fR
+refers to a Tk \fBframe\fR or \fBtoplevel\fR that has its
+\fB\-container\fR option enabled.
+.RE
 .IP "\fB\-visual \fIvisual\fR" 20
 Specifies the visual to use for the window.
 \fIVisual\fR may have any of the forms supported by the \fBTk_GetVisual\fR
