@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textWind.test,v 1.6 2003/04/01 21:06:55 dgp Exp $
+# RCS: @(#) $Id: textWind.test,v 1.7 2003/05/19 13:04:24 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -18,7 +18,7 @@ tcltest::loadTestedCommands
 option add *Text.borderWidth 2
 option add *Text.highlightThickness 2
 if {$tcl_platform(platform) == "windows"} {
-    option add *Text.font {Courier -14}
+    option add *Text.font {Courier -12}
 } else {   
     option add *Text.font {Courier -12}
 }
@@ -191,7 +191,7 @@ test textWind-2.19 {TkTextWindowCmd procedure} {
 } {1 {unknown option "-gorp"} 1 1.0 1}
 test textWind-2.20 {TkTextWindowCmd procedure} {
     list [catch {.t window c} msg] $msg
-} {1 {bad window option "c": must be cget, configure, create, or names}}
+} {1 {ambiguous window option "c": must be cget, configure, create, or names}}
 destroy .f
 test textWind-2.21 {TkTextWindowCmd procedure, "names" option} {
     list [catch {.t window names foo} msg] $msg
@@ -308,7 +308,7 @@ test textWind-4.5 {AlignParseProc and AlignPrintProc procedures} {
     .t window configure 1.0 -align top
     list [catch {.t window configure 1.0 -align gorp} msg] $msg \
 	    [.t window configure 1.0 -align]
-} {1 {bad alignment "gorp": must be baseline, bottom, center, or top} {-align {} {} center top}}
+} {1 {bad align "gorp": must be baseline, bottom, center, or top} {-align {} {} center top}}
 
 test textWind-5.1 {EmbWinStructureProc procedure} {fonts} {
     .t delete 1.0 end

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextMark.c,v 1.6 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkTextMark.c,v 1.7 2003/05/19 13:04:23 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -95,122 +95,139 @@ Tk_SegType tkTextLeftMarkType = {
  */
 
 int
-TkTextMarkCmd(textPtr, interp, argc, argv)
+TkTextMarkCmd(textPtr, interp, objc, objv)
     register TkText *textPtr;	/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    CONST char **argv;		/* Argument strings.  Someone else has already
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
-				 * argv[1] is "mark". */
+				 * objv[1] is "mark". */
 {
-    int c, i;
-    size_t length;
     Tcl_HashEntry *hPtr;
     TkTextSegment *markPtr;
     Tcl_HashSearch search;
     TkTextIndex index;
     Tk_SegType *newTypePtr;
 
-    if (argc < 3) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " mark option ?arg arg ...?\"", (char *) NULL);
+    int optionIndex;
+    
+    static CONST char *markOptionStrings[] = {
+	"gravity", "names", "next", "previous", "set", 
+	"unset", (char *) NULL 
+    };
+    enum markOptions {
+	MARK_GRAVITY, MARK_NAMES, MARK_NEXT, MARK_PREVIOUS, 
+	MARK_SET, MARK_UNSET
+    };
+
+    if (objc < 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
-    c = argv[2][0];
-    length = strlen(argv[2]);
-    if ((c == 'g') && (strncmp(argv[2], "gravity", length) == 0)) {
-	if (argc < 4 || argc > 5) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " mark gravity markName ?gravity?\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	hPtr = Tcl_FindHashEntry(&textPtr->markTable, argv[3]);
-	if (hPtr == NULL) {
-	    Tcl_AppendResult(interp, "there is no mark named \"",
-		    argv[3], "\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	markPtr = (TkTextSegment *) Tcl_GetHashValue(hPtr);
-	if (argc == 4) {
-	    if (markPtr->typePtr == &tkTextRightMarkType) {
-		Tcl_SetResult(interp, "right", TCL_STATIC);
-	    } else {
-		Tcl_SetResult(interp, "left", TCL_STATIC);
+    if (Tcl_GetIndexFromObj(interp, objv[2], markOptionStrings, 
+			    "mark option", 0, &optionIndex) != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    switch ((enum markOptions)optionIndex) {
+	case MARK_GRAVITY: {
+	    char c;
+	    int length;
+	    char *str;
+	    
+	    if (objc < 4 || objc > 5) {
+		Tcl_WrongNumArgs(interp, 3, objv, "markName ?gravity?");
+		return TCL_ERROR;
 	    }
+	    hPtr = Tcl_FindHashEntry(&textPtr->markTable, Tcl_GetString(objv[3]));
+	    if (hPtr == NULL) {
+		Tcl_AppendResult(interp, "there is no mark named \"",
+				 Tcl_GetString(objv[3]), "\"", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    markPtr = (TkTextSegment *) Tcl_GetHashValue(hPtr);
+	    if (objc == 4) {
+		if (markPtr->typePtr == &tkTextRightMarkType) {
+		    Tcl_SetResult(interp, "right", TCL_STATIC);
+		} else {
+		    Tcl_SetResult(interp, "left", TCL_STATIC);
+		}
+		return TCL_OK;
+	    }
+	    str = Tcl_GetStringFromObj(objv[4],&length);
+	    c = str[0];
+	    if ((c == 'l') && (strncmp(str, "left", length) == 0)) {
+		newTypePtr = &tkTextLeftMarkType;
+	    } else if ((c == 'r') && (strncmp(str, "right", length) == 0)) {
+		newTypePtr = &tkTextRightMarkType;
+	    } else {
+		Tcl_AppendResult(interp, "bad mark gravity \"", str, 
+				 "\": must be left or right", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    TkTextMarkSegToIndex(textPtr, markPtr, &index);
+	    TkBTreeUnlinkSegment(textPtr->tree, markPtr,
+		    markPtr->body.mark.linePtr);
+	    markPtr->typePtr = newTypePtr;
+	    TkBTreeLinkSegment(markPtr, &index);
+	    break;
+	}
+	case MARK_NAMES: {
+	    if (objc != 3) {
+		Tcl_WrongNumArgs(interp, 3, objv, NULL);
+		return TCL_ERROR;
+	    }
+	    for (hPtr = Tcl_FirstHashEntry(&textPtr->markTable, &search);
+		    hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
+		Tcl_AppendElement(interp,
+			Tcl_GetHashKey(&textPtr->markTable, hPtr));
+	    }
+	    break;
+	}
+	case MARK_NEXT: {
+	    if (objc != 4) {
+		Tcl_WrongNumArgs(interp, 3, objv, "index");
+		return TCL_ERROR;
+	    }
+	    return MarkFindNext(interp, textPtr, Tcl_GetString(objv[3]));
+	}
+	case MARK_PREVIOUS: {
+	    if (objc != 4) {
+		Tcl_WrongNumArgs(interp, 3, objv, "index");
+		return TCL_ERROR;
+	    }
+	    return MarkFindPrev(interp, textPtr, Tcl_GetString(objv[3]));
+	}
+	case MARK_SET: {
+	    if (objc != 5) {
+		Tcl_WrongNumArgs(interp, 3, objv, "markName index");
+		return TCL_ERROR;
+	    }
+	    if (TkTextGetObjIndex(interp, textPtr, objv[4], &index) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    TkTextSetMark(textPtr, Tcl_GetString(objv[3]), &index);
 	    return TCL_OK;
 	}
-	length = strlen(argv[4]);
-	c = argv[4][0];
-	if ((c == 'l') && (strncmp(argv[4], "left", length) == 0)) {
-	    newTypePtr = &tkTextLeftMarkType;
-	} else if ((c == 'r') && (strncmp(argv[4], "right", length) == 0)) {
-	    newTypePtr = &tkTextRightMarkType;
-	} else {
-	    Tcl_AppendResult(interp, "bad mark gravity \"",
-		    argv[4], "\": must be left or right", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	TkTextMarkSegToIndex(textPtr, markPtr, &index);
-	TkBTreeUnlinkSegment(textPtr->tree, markPtr,
-		markPtr->body.mark.linePtr);
-	markPtr->typePtr = newTypePtr;
-	TkBTreeLinkSegment(markPtr, &index);
-    } else if ((c == 'n') && (strncmp(argv[2], "names", length) == 0)) {
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " mark names\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	for (hPtr = Tcl_FirstHashEntry(&textPtr->markTable, &search);
-		hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	    Tcl_AppendElement(interp,
-		    Tcl_GetHashKey(&textPtr->markTable, hPtr));
-	}
-    } else if ((c == 'n') && (strncmp(argv[2], "next", length) == 0)) {
-	if (argc != 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " mark next index\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	return MarkFindNext(interp, textPtr, argv[3]);
-    } else if ((c == 'p') && (strncmp(argv[2], "previous", length) == 0)) {
-	if (argc != 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " mark previous index\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	return MarkFindPrev(interp, textPtr, argv[3]);
-    } else if ((c == 's') && (strncmp(argv[2], "set", length) == 0)) {
-	if (argc != 5) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " mark set markName index\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	if (TkTextGetIndex(interp, textPtr, argv[4], &index) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	TkTextSetMark(textPtr, argv[3], &index);
-    } else if ((c == 'u') && (strncmp(argv[2], "unset", length) == 0)) {
-	for (i = 3; i < argc; i++) {
-	    hPtr = Tcl_FindHashEntry(&textPtr->markTable, argv[i]);
-	    if (hPtr != NULL) {
-		markPtr = (TkTextSegment *) Tcl_GetHashValue(hPtr);
-		if ((markPtr == textPtr->insertMarkPtr)
-			|| (markPtr == textPtr->currentMarkPtr)) {
-		    continue;
+	case MARK_UNSET: {
+	    int i;
+	    for (i = 3; i < objc; i++) {
+		hPtr = Tcl_FindHashEntry(&textPtr->markTable, Tcl_GetString(objv[i]));
+		if (hPtr != NULL) {
+		    markPtr = (TkTextSegment *) Tcl_GetHashValue(hPtr);
+		    if ((markPtr == textPtr->insertMarkPtr)
+			    || (markPtr == textPtr->currentMarkPtr)) {
+			continue;
+		    }
+		    TkBTreeUnlinkSegment(textPtr->tree, markPtr,
+			    markPtr->body.mark.linePtr);
+		    Tcl_DeleteHashEntry(hPtr);
+		    ckfree((char *) markPtr);
 		}
-		TkBTreeUnlinkSegment(textPtr->tree, markPtr,
-			markPtr->body.mark.linePtr);
-		Tcl_DeleteHashEntry(hPtr);
-		ckfree((char *) markPtr);
 	    }
+	    break;
 	}
-    } else {
-	Tcl_AppendResult(interp, "bad mark option \"", argv[2],
-		"\": must be gravity, names, next, previous, set, or unset",
-		(char *) NULL);
-	return TCL_ERROR;
+	
     }
     return TCL_OK;
 }

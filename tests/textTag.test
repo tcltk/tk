@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textTag.test,v 1.7 2003/04/01 21:06:55 dgp Exp $
+# RCS: @(#) $Id: textTag.test,v 1.8 2003/05/19 13:04:24 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -101,7 +101,7 @@ test textTag-2.1 {TkTextTagCmd - "add" option} courier12 {
 } {1 {wrong # args: should be ".t tag option ?arg arg ...?"}}
 test textTag-2.2 {TkTextTagCmd - "add" option} courier12 {
     list [catch {.t tag gorp} msg] $msg
-} {1 {bad tag option "gorp": must be add, bind, cget, configure, delete, lower, names, nextrange, raise, ranges, or remove}}
+} {1 {bad tag option "gorp": must be add, bind, cget, configure, delete, lower, names, nextrange, prevrange, raise, ranges, or remove}}
 test textTag-2.3 {TkTextTagCmd - "add" option} courier12 {
     list [catch {.t tag add foo} msg] $msg
 } {1 {wrong # args: should be ".t tag add tagName index1 ?index2 index1 index2 ...?"}}
@@ -313,7 +313,7 @@ test textTag-5.22 {TkTextTagCmd - "configure" option} courier12 {
 
 test textTag-6.1 {TkTextTagCmd - "delete" option} courier12 {
     list [catch {.t tag delete} msg] $msg
-} {1 {wrong # args: should be ".t tag delete tagName tagName ..."}}
+} {1 {wrong # args: should be ".t tag delete tagName ?tagName ...?"}}
 test textTag-6.2 {TkTextTagCmd - "delete" option} courier12 {
     list [catch {.t tag delete zork} msg] $msg
 } {0 {}}
@@ -760,6 +760,15 @@ test textTag-16.7 {TkTextPickCurrent procedure} courier12 {
     event gen .t <Motion> -x $x2 -y $y2
     .t index current
 } {3.1}
+
+test textTag-17.1 {insert procedure inserts tags} {
+    .t delete 1.0 end
+    # Objectification of the text widget had a problem
+    # with inserting tags when using 'end'. Check that
+    # bug has been fixed.
+    .t insert end abcd {x} \n {} efgh {y} \n {}
+    .t dump -tag 1.0 end
+} {tagon x 1.0 tagoff x 1.4 tagon y 2.0 tagoff y 2.4}
 
 catch {destroy .t}
 

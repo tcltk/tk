@@ -1,3 +1,31 @@
+2003-05-13  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* doc/text.n
+	* generic/tkCanvas.c
+	* generic/tkInt.h
+	* generic/tkTest.c
+	* generic/tkText.c
+	* generic/tkText.h
+	* generic/tkTextBTree.c
+	* generic/tkTextDisp.c
+	* generic/tkTextImage.c
+	* generic/tkTextIndex.c
+	* generic/tkTextMark.c
+	* generic/tkTextTag.c
+	* generic/tkTextWind.c
+	* generic/tkUndo.c
+	* generic/tkUndo.h
+	* generic/tkWindow.c
+	* library/text.tcl
+	* tests/text.test
+	* tests/textIndex.test
+	* tests/textMark.test
+	* tests/textTag.test
+	* tests/textWind.test: implementation of TIP 113.  This adds
+	multi-line searching and '-all' searching to the text widget.
+	In addition the changes contain a complete 'objectification' of
+	the text widget.  Includes documentation and new tests.
+	
 2003-05-19  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.pbproj/project.pbxproj: changed tkConfig.sh location

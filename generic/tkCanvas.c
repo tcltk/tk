@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.21 2003/02/09 07:48:22 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.22 2003/05/19 13:04:23 vincentdarley Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -291,7 +291,7 @@ static int		FindArea _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkCanvas *canvasPtr, Tcl_Obj *CONST *argv, Tk_Uid uid,
 			    int enclosed));
 static double		GridAlign _ANSI_ARGS_((double coord, double spacing));
-static CONST char**	GetStringsFromObjs _ANSI_ARGS_((int argc,
+CONST char**	        GetStringsFromObjs _ANSI_ARGS_((int argc,
 			    Tcl_Obj *CONST *objv));
 static void		InitCanvas _ANSI_ARGS_((void));
 #ifdef USE_OLD_TAG_SEARCH
@@ -5494,7 +5494,7 @@ CanvasSetOrigin(canvasPtr, xOrigin, yOrigin)
  *----------------------------------------------------------------------
  */
 /* ARGSUSED */
-static CONST char **
+CONST char **
 GetStringsFromObjs(argc, objv)
     int argc;
     Tcl_Obj *CONST objv[];
