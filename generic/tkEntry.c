@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.23 2001/09/21 22:08:19 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.24 2002/01/17 03:35:00 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -702,7 +702,7 @@ static int		EntryValidate _ANSI_ARGS_((Entry *entryPtr,
 static int		EntryValidateChange _ANSI_ARGS_((Entry *entryPtr,
 			    char *change, char *new, int index, int type));
 static void		ExpandPercents _ANSI_ARGS_((Entry *entryPtr,
-			    char *before, char *change, char *new,
+			    CONST char *before, char *change, char *new,
 			    int index, int type, Tcl_DString *dsPtr));
 static void		EntryValueChanged _ANSI_ARGS_((Entry *entryPtr,
 			    char *newValue));
@@ -2955,7 +2955,8 @@ EntryFetchSelection(clientData, offset, buffer, maxBytes)
 {
     Entry *entryPtr = (Entry *) clientData;
     int byteCount;
-    char *string, *selStart, *selEnd;
+    char *string;
+    CONST char *selStart, *selEnd;
 
     if ((entryPtr->selectFirst < 0) || !(entryPtr->exportSelection)) {
 	return -1;
@@ -3526,7 +3527,8 @@ EntryValidateChange(entryPtr, change, new, index, type)
 static void
 ExpandPercents(entryPtr, before, change, new, index, type, dsPtr)
      register Entry *entryPtr;	/* Entry that needs validation. */
-     register char *before;	/* Command containing percent
+     register CONST char *before;
+				/* Command containing percent
 				 * expressions to be replaced. */
      char *change;		/* Characters to added/deleted
 				 * (NULL-terminated string). */
@@ -3539,7 +3541,7 @@ ExpandPercents(entryPtr, before, change, new, index, type, dsPtr)
     int spaceNeeded, cvtFlags;	/* Used to substitute string as proper Tcl
 				 * list element. */
     int number, length;
-    register char *string;
+    register CONST char *string;
     Tcl_UniChar ch;
     char numStorage[2*TCL_INTEGER_SPACE];
 
