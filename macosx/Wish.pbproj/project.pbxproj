@@ -1874,11 +1874,12 @@
 				DYLIB_INSTALL_PATH = /Library/Frameworks;
 				FRAMEWORK_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)\"";
 				FRAMEWORK_VERSION = 8.5;
+				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
 				HEADER_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/PrivateHeaders\" . ../bitmaps ../generic ../xlib";
 				INSTALL_PATH = "${DYLIB_INSTALL_PATH}";
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "-DMAC_OSX_TK -DHAVE_TCL_CONFIG_H";
+				OTHER_CFLAGS = "-DMAC_OSX_TK -DTCL_WIDE_INT_TYPE=\"long long\"";
 				OTHER_LDFLAGS = "-seg1addr 0xb000000";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "-i \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" -i \"../generic\"";
@@ -3276,11 +3277,12 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				DYLIB_INSTALL_PATH = /Library/Frameworks;
 				FRAMEWORK_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)\" \"$(SYMROOT)\"";
 				FRAMEWORK_VERSION = 8.5;
+				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
 				HEADER_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/PrivateHeaders\" . ../generic ../xlib";
 				INSTALL_PATH = "${APPLICATION_INSTALL_PATH}";
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "-DMAC_OSX_TK -DHAVE_TCL_CONFIG_H";
+				OTHER_CFLAGS = "-DMAC_OSX_TK -DTCL_WIDE_INT_TYPE=\"long long\"";
 				OTHER_LDFLAGS = "-sectcreate __TEXT __info_plist \"$TEMP_DIR/Info.plist\" -headerpad_max_install_names";
 				OTHER_REZFLAGS = "-i \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" -i \"../generic\"";
 				PRODUCT_NAME = "Wish Shell";
@@ -3467,10 +3469,11 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				F59D847903390D7E016F146B,
 			);
 			buildSettings = {
+				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
 				HEADER_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/PrivateHeaders\" . ../generic ../xlib";
 				LIBRARY_STYLE = STATIC;
 				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "-DMAC_OSX_TK -DHAVE_TCL_CONFIG_H";
+				OTHER_CFLAGS = "-DMAC_OSX_TK -DTCL_WIDE_INT_TYPE=\"long long\"";
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
 				PRODUCT_NAME = libtkstub8.5.a;
