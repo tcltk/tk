@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: choosedir.test,v 1.1 2000/02/14 22:00:17 ericm Exp $
+# RCS: @(#) $Id: choosedir.test,v 1.2 2000/02/26 00:51:17 ericm Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
@@ -116,7 +116,7 @@ test filebox-2.3 "tk_chooseDirectory command" {unixOnly} {
 	    -title "Enter \"$otherdir\" and press Ok" \
 	    -parent $parent -initialdir $initialdir]
 } $otherdir
- 
+
 # cleanup
 ::tcltest::cleanupTests
 return

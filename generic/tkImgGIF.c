@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.12 2000/02/10 08:52:33 hobbs Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.13 2000/02/26 00:51:17 ericm Exp $
  */
 
 /*
@@ -61,6 +61,22 @@ typedef struct mFile {
 
 #include "tkInt.h"
 #include "tkPort.h"
+
+/*
+ * Non-ASCII encoding support:
+ * Most data in a GIF image is binary and is treated as such.  However,
+ * a few key bits are stashed in ASCII.  If we try to compare those pieces
+ * to the char they represent, it will fail on any non-ASCII (eg, EBCDIC)
+ * system.  To accomodate these systems, we test against the numeric value
+ * of the ASCII characters instead of the characters themselves.  This is
+ * encoding independant.
+ */
+
+#  define GIF87a         "\x47\x49\x46\x38\x37\x61" /* ASCII GIF87a */
+#  define GIF89a         "\x47\x49\x46\x38\x39\x61" /* ASCII GIF89a */
+#  define GIF_TERMINATOR 0x3b                       /* ASCII ; */
+#  define GIF_EXTENSION  0x21                       /* ASCII ! */
+#  define GIF_START      0x2c                       /* ASCII , */
 
 /*
  * 			 HACK ALERT!!  HACK ALERT!!  HACK ALERT!!
@@ -311,7 +327,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	    break;
 	}
 
-	if (buf[0] == ';') {
+	if (buf[0] == GIF_TERMINATOR) {
 	    /*
 	     * GIF terminator.
 	     */
@@ -321,7 +337,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	    goto error;
 	}
 
-	if (buf[0] == '!') {
+	if (buf[0] == GIF_EXTENSION) {
 	    /*
 	     * This is a GIF extension.
 	     */
@@ -340,7 +356,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	    continue;
 	}
 
-	if (buf[0] != ',') {
+	if (buf[0] != GIF_START) {
 	    /*
 	     * Not a valid start character; ignore it.
 	     */
@@ -509,14 +525,14 @@ StringMatchGIF(dataObj, format, widthPtr, heightPtr, interp)
 
     /* Check whether the data is Base64 encoded */
 
-    if ((strncmp("\107\111\106\70\67\141", (char *) data, 6) != 0) && 
-	(strncmp("\107\111\106\70\71\141", (char *) data, 6) != 0)) {
+    if ((strncmp(GIF87a, (char *) data, 6) != 0) && 
+	(strncmp(GIF89a, (char *) data, 6) != 0)) {
       /* Try interpreting the data as Base64 encoded */
       mInit((unsigned char *) data, &handle);
       got = Mread(header, 10, 1, &handle);
       if (got != 10
-	      || ((strncmp("\107\111\106\70\67\141", (char *) header, 6) != 0)
-	      && (strncmp("\107\111\106\70\71\141", (char *) header, 6) != 0))) {
+	      || ((strncmp(GIF87a, (char *) header, 6) != 0)
+	      && (strncmp(GIF89a, (char *) header, 6) != 0))) {
 	  return 0;
       }
     } else {
@@ -570,8 +586,8 @@ StringReadGIF(interp, dataObj, format, imageHandle,
      * Check whether the data is Base64 encoded
      */
     data = (char *) Tcl_GetByteArrayFromObj(dataObj, NULL);
-    if ((strncmp("\107\111\106\70\67\141", data, 6) != 0) && 
-	    (strncmp("\107\111\106\70\71\141", data, 6) != 0)) {
+    if ((strncmp(GIF87a, data, 6) != 0) && 
+	    (strncmp(GIF89a, data, 6) != 0)) {
 	mInit((unsigned char *)data, &handle);
 	tsdPtr->fromData = 1;
 	dataSrc = (Tcl_Channel) &handle;
@@ -615,8 +631,8 @@ ReadGIFHeader(chan, widthPtr, heightPtr)
     unsigned char buf[7];
 
     if ((Fread(buf, 1, 6, chan) != 6)
-	    || ((strncmp("\107\111\106\70\67\141", (char *) buf, 6) != 0)
-	    && (strncmp("\107\111\106\70\71\141", (char *) buf, 6) != 0))) {
+	    || ((strncmp(GIF87a, (char *) buf, 6) != 0)
+	    && (strncmp(GIF89a, (char *) buf, 6) != 0))) {
 	return 0;
     }
 
@@ -1381,7 +1397,7 @@ CommonWriteGIF(interp, handle, format, blockPtr)
 	alphaOffset = 0;
     }
 
-    Tcl_Write(handle, (char *) (alphaOffset ? "GIF89a":"GIF87a"), 6);
+    Tcl_Write(handle, (char *) (alphaOffset ? GIF89a : GIF87a), 6);
 
     for (x=0;x<MAXCOLORMAPSIZE;x++) {
 	mapa[x][CM_RED] = 255;
@@ -1437,10 +1453,12 @@ CommonWriteGIF(interp, handle, format, blockPtr)
      */
 
     if (alphaOffset) {
-	Tcl_Write(handle, "!\371\4\1\0\0\0", 8);
+	c = GIF_EXTENSION;
+	Mputc(c, handle);
+	Tcl_Write(handle, "\371\4\1\0\0\0", 7);
     }
 
-    c = ',';
+    c = GIF_START;
     Mputc(c,handle);
     c=LSB(top);
     Mputc(c,handle);
@@ -1472,7 +1490,7 @@ CommonWriteGIF(interp, handle, format, blockPtr)
 
     c = 0; 
     Mputc(c,handle);
-    c = ';';
+    c = GIF_TERMINATOR;
     Mputc(c,handle);
 
     return TCL_OK;	

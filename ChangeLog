@@ -1,3 +1,18 @@
+2000-02-25  Eric Melski  <ericm@scriptics.com>
+
+	* generic/tkImgGIF.c: Applied "spirit of" the patch in 1605 (the
+	submitted patch was more complicated than necessary and did not
+	extend to writing GIF's, only reading), to allow reading/writing
+	of GIF files on EBCDIC and other non-ASCII based systems.
+
+2000-02-14  Eric Melski  <ericm@scriptics.com>
+
+	* unix/tk.spec: RPM specification for producing a binary Tk RPM
+	for Linux.
+
+	* unix/Makefile.in: Added rpm target to generate Tk
+	binary RPM.
+
 2000-02-10  Jeff Hobbs  <hobbs@scriptics.com>
 
 	8.3.0 RELEASE
