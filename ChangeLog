@@ -1,5 +1,8 @@
 2001-10-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* unix/tkUnixXId.c (TkpScanWindowId): added specific char* cast to
+	prevent warning.  'string' is not modified in any case.
+
 	* unix/configure: regened
 	* unix/configure.in: added preset CFLAGS check from HEAD to
 	prevent --enable-gcc from adding "-g -O2"

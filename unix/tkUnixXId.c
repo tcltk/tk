@@ -17,7 +17,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixXId.c,v 1.5.12.1 2001/10/13 01:25:10 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixXId.c,v 1.5.12.2 2001/10/17 19:15:39 hobbs Exp $
  */
 
 /*
@@ -561,7 +561,7 @@ TkpScanWindowId(interp, string, idPtr)
     Window *idPtr;
 {
     int value;
-    if (Tcl_GetInt(interp, string, &value) != TCL_OK) {
+    if (Tcl_GetInt(interp, (char *) string, &value) != TCL_OK) {
 	return TCL_ERROR;
     }
     *idPtr = (Window) value;
