@@ -1,3 +1,9 @@
+1999-04-09    <redman@scriptics.com>
+
+	* generic/tkWindow.c: Fixed deadlock situation when the Initialize()
+	function returns without releasing the mutex.  Found while testing
+	Bug 1700, during safe.test (tk).
+
 1999-04-06    <stanton@scriptics.com>
 
 	* generic/tkMain.c (Tk_MainEx): Changed to reset result before

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.1.4.12 1999/04/06 18:20:49 redman Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.1.4.13 1999/04/09 23:32:33 redman Exp $
  */
 
 #include "tkPort.h"
@@ -2762,6 +2762,7 @@ Initialize(interp)
 	    if (master == NULL) {
 		Tcl_DStringFree(&ds);
 		Tcl_AppendResult(interp, "NULL master", (char *) NULL);
+		Tcl_MutexUnlock(&windowMutex);
 		return TCL_ERROR;
 	    }
 	    if (!Tcl_IsSafe(master)) {
@@ -2775,6 +2776,7 @@ Initialize(interp)
 	if (Tcl_GetInterpPath(master, interp) != TCL_OK) {
 	    Tcl_AppendResult(interp, "error in Tcl_GetInterpPath",
 		    (char *) NULL);
+	    Tcl_MutexUnlock(&windowMutex);
 	    return TCL_ERROR;
 	}
 	/*
@@ -2798,6 +2800,7 @@ Initialize(interp)
 	    Tcl_AppendResult(interp, 
 		    "not allowed to start Tk by master's safe::TkInit",
 		    (char *) NULL);
+	    Tcl_MutexUnlock(&windowMutex);
 	    return TCL_ERROR;
 	}
 	Tcl_DStringFree(&ds);
@@ -2825,6 +2828,7 @@ Initialize(interp)
 	    argError:
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (processing arguments in argv variable)");
+	    Tcl_MutexUnlock(&windowMutex);
 	    return TCL_ERROR;
 	}
 	if (Tk_ParseArgv(interp, (Tk_Window) NULL, &argc, argv,
