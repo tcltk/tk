@@ -1,3 +1,12 @@
+2004-06-30  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	TIP#153 IMPLEMENTATION
+
+	* generic/tkCmds.c (GetTopHierarchy): Modified from GetToplevel so
+	* doc/winfo.n:			      that [winfo toplevel] does not
+	assume that it is really working with toplevels. Occasionally this
+	is important. Thanks to Neil McKay for this patch!
+
 2004-06-29  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkCmds.c (Tk_WinfoObjCmd): refetch interp result obj for
