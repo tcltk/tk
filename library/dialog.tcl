@@ -3,7 +3,7 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# RCS: @(#) $Id: dialog.tcl,v 1.11 2001/08/09 00:47:09 dgp Exp $
+# RCS: @(#) $Id: dialog.tcl,v 1.12 2001/08/22 01:25:33 hobbs Exp $
 #
 # Copyright (c) 1992-1993 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -71,7 +71,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 
     frame $w.bot
     frame $w.top
-    if {[string equal $tcl_platform(platform) "unix"]} {
+    if {[string compare $tcl_platform(platform) "macintosh"]} {
 	$w.bot configure -relief raised -bd 1
 	$w.top configure -relief raised -bd 1
     }
@@ -110,7 +110,8 @@ proc ::tk_dialog {w title text bitmap default args} {
 	} else {
 	    $w.button$i configure -default normal
 	}
-	grid $w.button$i -in $w.bot -column $i -row 0 -sticky ew -padx 10
+	grid $w.button$i -in $w.bot -column $i -row 0 -sticky ew \
+		-padx 10 -pady 4
 	grid columnconfigure $w.bot $i
 	# We boost the size of some Mac buttons for l&f
 	if {[string equal $tcl_platform(platform) "macintosh"]} {
