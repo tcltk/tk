@@ -1,3 +1,7 @@
+1999-07-30  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* tkInt.decls: Added stub entry for XFillRectangle [Bug: 2446]
+
 1999-07-30    <redman@scriptics.com>
 
 	* win/makefile.vc: Corrected building threaded tktest.exe on
