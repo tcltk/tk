@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.6 2002/01/17 05:13:11 dgp Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.7 2002/04/12 10:03:24 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1011,4 +1011,40 @@ FindDisplayFocusInfo(mainPtr, dispPtr)
     displayFocusPtr->nextPtr = mainPtr->displayFocusPtr;
     mainPtr->displayFocusPtr = displayFocusPtr;
     return displayFocusPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkFocusFree --
+ *
+ *	Free resources associated with maintaining the focus.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	This mainPtr should no long access focus information.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkFocusFree(mainPtr)
+    TkMainInfo *mainPtr;	/* Record that identifies a particular
+				 * application. */
+{
+    DisplayFocusInfo *displayFocusPtr;
+    ToplevelFocusInfo *tlFocusPtr;
+
+    while (mainPtr->displayFocusPtr != NULL) {
+	displayFocusPtr          = mainPtr->displayFocusPtr;
+	mainPtr->displayFocusPtr = mainPtr->displayFocusPtr->nextPtr;
+	ckfree((char *) displayFocusPtr);
+    }
+    while (mainPtr->tlFocusPtr != NULL) {
+	tlFocusPtr          = mainPtr->tlFocusPtr;
+	mainPtr->tlFocusPtr = mainPtr->tlFocusPtr->nextPtr;
+	ckfree((char *) tlFocusPtr);
+    }
 }
