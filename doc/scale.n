@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: scale.n,v 1.5 2004/09/19 16:05:37 dkf Exp $
+'\" RCS: @(#) $Id: scale.n,v 1.6 2004/10/28 12:25:53 dkf Exp $
 '\" 
 .so man.macros
 .TH scale n 4.1 Tk "Tk Built-In Commands"
@@ -133,7 +133,6 @@ of numerical tick marks just to the left of the current value
 (just below the trough for horizontal scales).  Each of these three
 annotations may be enabled or disabled using the
 configuration options.
-
 .SH "WIDGET COMMAND"
 .PP
 The \fBscale\fR command creates a new Tcl command whose
@@ -197,7 +196,6 @@ This command is invoked to change the current value of the scale,
 and hence the position at which the slider is displayed.  \fIValue\fR
 gives the new value for the scale.
 The command has no effect if the scale is disabled.
-
 .SH BINDINGS
 .PP
 Tk automatically creates class bindings for scales that give them
