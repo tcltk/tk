@@ -1,3 +1,10 @@
+2001-09-17  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/choosedir.tcl (DblClick): 
+	* library/tkfbox.tcl (OkCmd, ListInvoke): Rewrote so as to avoid
+	the highly confusing string "text" and to be consistent about what
+	is and what is not a list.  [Bug 459895, reported by fandom]
+
 2001-09-14  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
 
 	* generic/tkImgGIF.c:
@@ -15,7 +22,7 @@
 
 2001-09-12  D. Richard Hipp  <drh@hwaci.com>
 
-	* Fix a bug in library/tkxbox.tcl
+	* Fix a bug in library/tkfbox.tcl
 
 2001-09-10  Mo DeJong  <mdejong@users.sourceforge.net>
 
