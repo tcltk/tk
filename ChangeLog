@@ -1,8 +1,13 @@
+2004-11-12  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkCmds.c (Tk_TkObjCmd): use correct screen data when
+	-displayof arg is passed to [tk scaling]. [Bug 800178]
+
 2004-11-12  Daniel Steffen  <das@users.sourceforge.net>
 
-        * macosx/tkMacOSXFont.c (Tk_MeasureChars,Tk_DrawChars,etc): Make
-        sure that the lastSubFontPtr remains valid even when the subfont
-        array is reallocated. [Bug 618872]
+	* macosx/tkMacOSXFont.c (Tk_MeasureChars,Tk_DrawChars,etc): Make
+	sure that the lastSubFontPtr remains valid even when the subfont
+	array is reallocated. [Bug 618872]
 
 2004-11-11  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -92,8 +97,8 @@
 
 2004-10-27  Don Porter	<dgp@users.sourceforge.net>
 
-        * library/xmfbox.tcl (MotifFDialog_BuildUI): Fix [Bug 987169] in
-        the Motif file dialogs as well.  Backport of DKF bug fix.
+	* library/xmfbox.tcl (MotifFDialog_BuildUI): Fix [Bug 987169] in
+	the Motif file dialogs as well.	 Backport of DKF bug fix.
 
 2004-10-26  David Gravereaux <davygrvy@pobox.com>
 
@@ -119,13 +124,13 @@
 
 2004-10-26  Don Porter	<dgp@users.sourceforge.net>
 
-        * tests/safe.test (safe-1.3):  Made test less sensitve to the
-        full set of existing aliases in an interp, so the it only tests
-        whether the tested ones are present.
+	* tests/safe.test (safe-1.3):  Made test less sensitve to the
+	full set of existing aliases in an interp, so the it only tests
+	whether the tested ones are present.
 
-        * unix/Makefile.in:     Copied LD_LIBRARY_PATH machinery from
-        `make shell` target to other similar targets so that just built
-        libraries are tested, rather than previous installations.
+	* unix/Makefile.in:	Copied LD_LIBRARY_PATH machinery from
+	`make shell` target to other similar targets so that just built
+	libraries are tested, rather than previous installations.
 
 2004-10-26  Reinhard Max  <max@suse.de>
 
