@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.55 2002/03/29 01:18:36 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.56 2002/03/29 01:27:50 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -646,7 +646,6 @@ install-docs:
 !if exist($(HELPFILE))
 	@xcopy /i /y "$(HELPFILE)" "$(DOC_INSTALL_DIR)\"
 	@xcopy /i /y "$(HELPCNT)" "$(DOC_INSTALL_DIR)\"
-	@echo :Include $(HLPBASE).cnt >> $(DOC_INSTALL_DIR)\tcl$(VERSION).cnt
 	$(TCLSH) <<
 puts "Installing Tk's helpfile contents into Tcl's ..."
 set f [open "$(DOC_INSTALL_DIR:\=/)/tcl$(VERSION).cnt" r]
