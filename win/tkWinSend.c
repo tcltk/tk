@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSend.c,v 1.1.4.5 1999/03/09 01:38:11 lfb Exp $
+ * RCS: @(#) $Id: tkWinSend.c,v 1.1.4.6 1999/03/31 22:37:26 redman Exp $
  */
 
 #include "tkWinInt.h"
@@ -383,9 +383,10 @@ Tk_SendObjCmd(
 	 * it for a result.
 	 */
 
-	HCONV hConv;
-	HDDEDATA ddeItem;
-	HDDEDATA ddeData;
+	HCONV hConv = 0;
+	HDDEDATA ddeItem = 0;
+	HDDEDATA ddeData = 0;
+	HSZ ddeCookie = 0;
 	DWORD ddeResult;
 
 	if (MakeDdeConnection(interp, sendName, &hConv) != TCL_OK) {
@@ -394,8 +395,9 @@ Tk_SendObjCmd(
 
 	objPtr = Tcl_ConcatObj(objc, objv);
 	string = Tcl_GetStringFromObj(objPtr, &length);
-	ddeItem = DdeCreateDataHandle(ddeInstance, string, length, 0, 0,
+	ddeItem = DdeCreateDataHandle(ddeInstance, string, length+1, 0, 0,
 		CF_TEXT, 0);
+	
 	if (async) {
 	    ddeData = DdeClientTransaction((LPBYTE) ddeItem, 0xFFFFFFFF, hConv, 0,
 		    CF_TEXT, XTYP_EXECUTE, TIMEOUT_ASYNC, &ddeResult);
@@ -404,21 +406,20 @@ Tk_SendObjCmd(
 	    ddeData = DdeClientTransaction((LPBYTE) ddeItem, 0xFFFFFFFF, hConv, 0,
 		    CF_TEXT, XTYP_EXECUTE, 7200000, NULL);
 	    if (ddeData != 0) {
-		HSZ ddeCookie;
 
 		ddeCookie = DdeCreateStringHandle(ddeInstance, 
 			"$TK$EXECUTE$RESULT", CP_WINANSI);
 		ddeData = DdeClientTransaction(NULL, 0, hConv, ddeCookie,
 			CF_TEXT, XTYP_REQUEST, 7200000, NULL);
-		DdeFreeStringHandle(ddeInstance, ddeCookie);
 	    }
 	}
 
-	DdeFreeDataHandle(ddeItem);
+
 	Tcl_DecrRefCount(objPtr);
 
 	if (ddeData == 0) {
 	    SetDdeError(interp);
+	    DdeFreeDataHandle(ddeItem);
 	    DdeDisconnect(hConv);
 	    return TCL_ERROR;
 	}
@@ -434,14 +435,13 @@ Tk_SendObjCmd(
 	     * and the fourth is the value of the variable "errorInfo".
 	     */
 
-	    length = DdeGetData(ddeData, NULL, 0, 0);
 	    resultPtr = Tcl_NewObj();
+	    length = DdeGetData(ddeData, NULL, 0, 0);
 	    Tcl_SetObjLength(resultPtr, length);
 	    string = Tcl_GetString(resultPtr);
 	    DdeGetData(ddeData, string, length, 0);
-	    DdeFreeDataHandle(ddeData);
-	    DdeDisconnect(hConv);
-
+	    Tcl_SetObjLength(resultPtr, strlen(string));
+	    
 	    if (Tcl_ListObjIndex(NULL, resultPtr, 0, &objPtr) != TCL_OK) {
 		goto error;
 	    }
@@ -454,6 +454,7 @@ Tk_SendObjCmd(
 		if (Tcl_ListObjIndex(NULL, resultPtr, 3, &objPtr) != TCL_OK) {
 		    goto error;
 		}
+		length = -1;
 		string = Tcl_GetStringFromObj(objPtr, &length);
 		Tcl_AddObjErrorInfo(interp, string, length);
 
@@ -471,7 +472,31 @@ Tk_SendObjCmd(
 	    Tcl_SetStringObj(Tcl_GetObjResult(interp),
 		"invalid data returned from server", -1);
 	    Tcl_DecrRefCount(resultPtr);
+	    if (ddeCookie != NULL) {
+		DdeFreeStringHandle(ddeInstance, ddeCookie);
+	    }
+	    if (ddeItem != NULL) {
+		DdeFreeDataHandle(ddeItem);
+	    }
+	    if (ddeData != NULL) {
+		DdeFreeDataHandle(ddeData);
+	    }
+	    if (hConv != NULL) {
+		DdeDisconnect(hConv);
+	    }
 	    return TCL_ERROR;
+	}
+	if (ddeCookie != NULL) {
+	    DdeFreeStringHandle(ddeInstance, ddeCookie);
+	}
+	if (ddeItem != NULL) {
+	    DdeFreeDataHandle(ddeItem);
+	}
+	if (ddeData != NULL) {
+	    DdeFreeDataHandle(ddeData);
+	}
+	if (hConv != NULL) {
+	    DdeDisconnect(hConv);
 	}
     }
 
@@ -802,7 +827,7 @@ TkDdeServerProc (
 		    returnString =
 		        Tcl_GetStringFromObj(convPtr->returnPackagePtr, &len);
 		    ddeReturn = DdeCreateDataHandle(ddeInstance,
-			    returnString, len, 0, ddeItem, CF_TEXT,
+			    returnString, len+1, 0, ddeItem, CF_TEXT,
 			    0);
 		} else {
 		    Tcl_Obj *variableObjPtr = Tcl_GetVar2Ex(
@@ -812,7 +837,7 @@ TkDdeServerProc (
 			returnString = Tcl_GetStringFromObj(variableObjPtr,
 				&len);
 			ddeReturn = DdeCreateDataHandle(ddeInstance,
-				returnString, len, 0, ddeItem, CF_TEXT, 0);
+				returnString, len+1, 0, ddeItem, CF_TEXT, 0);
 		    } else {
 			ddeReturn = NULL;
 		    }
@@ -844,7 +869,7 @@ TkDdeServerProc (
 	    }
 
 	    utilString = (char *) DdeAccessData(hData, &len);
-	    ddeObjectPtr = Tcl_NewStringObj(utilString, len);
+	    ddeObjectPtr = Tcl_NewStringObj(utilString, -1);
 	    Tcl_IncrRefCount(ddeObjectPtr);
 	    DdeUnaccessData(hData);
 	    if (convPtr->returnPackagePtr != NULL) {
@@ -1175,7 +1200,7 @@ Tk_DdeObjCmd(
 	    }
 
 	    ddeData = DdeCreateDataHandle(ddeInstance, dataString,
-		    dataLength, 0, 0, CF_TEXT, 0);
+		    dataLength+1, 0, 0, CF_TEXT, 0);
 	    if (ddeData != NULL) {
 		if (async) {
 		    DdeClientTransaction((LPBYTE) ddeData, 0xFFFFFFFF, hConv, 0, 
@@ -1223,7 +1248,7 @@ Tk_DdeObjCmd(
 			result = TCL_ERROR;
 		    } else {
 			dataString = DdeAccessData(ddeData, &dataLength);
-			returnObjPtr = Tcl_NewStringObj(dataString, dataLength);
+			returnObjPtr = Tcl_NewStringObj(dataString, -1);
 			DdeUnaccessData(ddeData);
 			DdeFreeDataHandle(ddeData);
 			Tcl_SetObjResult(interp, returnObjPtr);
