@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.12 2004/07/26 21:24:07 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.64.2.13 2004/07/29 21:47:57 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5671,9 +5671,6 @@ cursor on OS X when Tk asks for the "NULL" (empty) cursor.
 
 2004-07-19 (bug fix)[874058] improved build configuration on 64-bit systems.
 Corrects Tcl_StatBuf definition issues.  (hobbs)
-
-2004-07-20 (bug fix)[905830] Ensure IC focus is set after creation.  This
-corrects XIM support on Solaris. (hobbs)
 
 2003-07-23 (platform support) Mac OS X: Fix several problems with
 Icelandic (and Faroese) keyboards (riefenstahl)
