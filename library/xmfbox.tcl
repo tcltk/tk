@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.9 1999/11/24 20:59:06 hobbs Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.10 2000/01/06 02:22:25 hobbs Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -786,7 +786,8 @@ proc tkListBoxKeyAccel_Key {w key} {
     catch {
 	after cancel $tkPriv(lbAccel,$w,afterId)
     }
-    set tkPriv(lbAccel,$w,afterId) [after 500 tkListBoxKeyAccel_Reset $w]
+    set tkPriv(lbAccel,$w,afterId) [after 500 \
+	    [list tkListBoxKeyAccel_Reset $w]]
 }
 
 proc tkListBoxKeyAccel_Goto {w string} {

@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.7 1999/09/02 17:02:53 hobbs Exp $
+# RCS: @(#) $Id: text.tcl,v 1.8 2000/01/06 02:22:24 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -634,7 +634,7 @@ proc tkTextAutoScan {w} {
 	return
     }
     tkTextSelectTo $w $tkPriv(x) $tkPriv(y)
-    set tkPriv(afterId) [after 50 tkTextAutoScan $w]
+    set tkPriv(afterId) [after 50 [list tkTextAutoScan $w]]
 }
 
 # tkTextSetCursor

@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scale widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: scale.tcl,v 1.5 1999/09/02 17:02:53 hobbs Exp $
+# RCS: @(#) $Id: scale.tcl,v 1.6 2000/01/06 02:22:24 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -211,12 +211,12 @@ proc tkScaleIncrement {w dir big repeat} {
 
     if {[string equal $repeat "again"]} {
 	set tkPriv(afterId) [after [$w cget -repeatinterval] \
-		tkScaleIncrement $w $dir $big again]
+		[list tkScaleIncrement $w $dir $big again]]
     } elseif {[string equal $repeat "initial"]} {
 	set delay [$w cget -repeatdelay]
 	if {$delay > 0} {
 	    set tkPriv(afterId) [after $delay \
-		    tkScaleIncrement $w $dir $big again]
+		    [list tkScaleIncrement $w $dir $big again]]
 	}
     }
 }

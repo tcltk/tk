@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scrollbar widgets.
 # It also provides procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: scrlbar.tcl,v 1.7 1999/10/20 01:02:24 hobbs Exp $
+# RCS: @(#) $Id: scrlbar.tcl,v 1.8 2000/01/06 02:22:24 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -198,11 +198,12 @@ proc tkScrollSelect {w element repeat} {
     }
     if {[string equal $repeat "again"]} {
 	set tkPriv(afterId) [after [$w cget -repeatinterval] \
-		tkScrollSelect $w $element again]
+		[list tkScrollSelect $w $element again]]
     } elseif {[string equal $repeat "initial"]} {
 	set delay [$w cget -repeatdelay]
 	if {$delay > 0} {
-	    set tkPriv(afterId) [after $delay tkScrollSelect $w $element again]
+	    set tkPriv(afterId) [after $delay \
+		    [list tkScrollSelect $w $element again]]
 	}
     }
 }
@@ -258,7 +259,7 @@ proc tkScrollDrag {w x y} {
 		    [expr {[lindex $tkPriv(initValues) 1] + $delta}]
 	} else {
 	    set delta [expr {round($delta * [lindex $tkPriv(initValues) 0])}]
-	    eval $w set [lreplace $tkPriv(initValues) 2 3 \
+	    eval [list $w] set [lreplace $tkPriv(initValues) 2 3 \
 		    [expr {[lindex $tkPriv(initValues) 2] + $delta}] \
 		    [expr {[lindex $tkPriv(initValues) 3] + $delta}]]
 	}

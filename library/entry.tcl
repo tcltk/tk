@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: entry.tcl,v 1.10 1999/11/30 07:27:01 hobbs Exp $
+# RCS: @(#) $Id: entry.tcl,v 1.11 2000/01/06 02:22:24 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -430,7 +430,7 @@ proc tkEntryAutoScan {w} {
 	$w xview scroll -2 units
 	tkEntryMouseSelect $w $x
     }
-    set tkPriv(afterId) [after 50 tkEntryAutoScan $w]
+    set tkPriv(afterId) [after 50 [list tkEntryAutoScan $w]]
 }
 
 # tkEntryKeySelect --

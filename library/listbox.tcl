@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: listbox.tcl,v 1.8 1999/12/21 23:55:27 hobbs Exp $
+# RCS: @(#) $Id: listbox.tcl,v 1.9 2000/01/06 02:22:24 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -347,7 +347,7 @@ proc tkListboxAutoScan {w} {
 	return
     }
     tkListboxMotion $w [$w index @$x,$y]
-    set tkPriv(afterId) [after 50 tkListboxAutoScan $w]
+    set tkPriv(afterId) [after 50 [list tkListboxAutoScan $w]]
 }
 
 # tkListboxUpDown --
