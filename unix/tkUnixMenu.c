@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.1.4.4 1998/11/25 04:10:26 stanton Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.1.4.5 1998/11/25 22:13:20 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -1545,7 +1545,7 @@ TkpComputeStandardMenuGeometry(
 	    if (height > mePtr->height) {
 	    	mePtr->height = height;
 	    }
-	    if (mePtr->hideMargin) {
+	    if (!mePtr->hideMargin) {
 		width += MENU_MARGIN_WIDTH;
 	    }
 	    if (width > accelWidth) {
@@ -1557,7 +1557,7 @@ TkpComputeStandardMenuGeometry(
 	    if (height > mePtr->height) {
 	    	mePtr->height = height;
 	    }
-	    if (mePtr->hideMargin) {
+	    if (!mePtr->hideMargin) {
 		width += MENU_MARGIN_WIDTH;
 	    }
 	    if (width > indicatorSpace) {
