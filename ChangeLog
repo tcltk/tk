@@ -1,5 +1,10 @@
 1999-03-26    <redman@scriptics.com>
 
+	* generic/tkTextIndex.c:
+	* tests/testIndex.test: Avoid looking past the beginning of the
+	array storing data for the text widget (.t index end-2c).  Added
+	test case to check for the bug.  [Bug 991]
+	
 	* generic/tkConsole.c: Copy static strings into a Tcl_DString
 	before passing to Tcl_Eval, in case the compiler puts static
 	strings into read-only memory.

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.1.4.2 1998/09/30 02:17:25 stanton Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.1.4.3 1999/03/27 02:31:39 redman Exp $
  */
 
 #include "default.h"
@@ -561,7 +561,7 @@ TkTextPrintIndex(indexPtr, string)
     numBytes = indexPtr->byteIndex;
     charIndex = 0;
     for (segPtr = indexPtr->linePtr->segPtr; ; segPtr = segPtr->nextPtr) {
-	if (numBytes < segPtr->size) {
+	if (numBytes <= segPtr->size) {
 	    break;
 	}
 	if (segPtr->typePtr == &tkTextCharType) {
