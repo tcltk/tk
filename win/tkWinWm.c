@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.22.2.1 2000/05/12 21:04:16 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.22.2.2 2000/05/16 00:03:15 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -294,8 +294,6 @@ static void		InvalidateSubTree _ANSI_ARGS_((TkWindow *winPtr,
 			    Colormap colormap));
 static int		ParseGeometry _ANSI_ARGS_((Tcl_Interp *interp,
 			    char *string, TkWindow *winPtr));
-static void		RaiseWinWhenIdle _ANSI_ARGS_((
-			    ClientData clientData));
 static void		RefreshColormap _ANSI_ARGS_((Colormap colormap,
 	                    TkDisplay *dispPtr));
 static void		SetLimits _ANSI_ARGS_((HWND hwnd, MINMAXINFO *info));
@@ -1459,8 +1457,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	 * before it is deiconified by TkpWmSetState.
 	 * Don't bother if we've never been mapped.
 	 */
-	if ((wmPtr->flags & WM_UPDATE_PENDING) &&
-		!(wmPtr->flags & WM_NEVER_MAPPED)) {
+	if (wmPtr->flags & WM_UPDATE_PENDING) {
 	    Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData) winPtr);
 	    UpdateGeometryInfo((ClientData) winPtr);
 	}
@@ -1477,10 +1474,11 @@ Tk_WmCmd(clientData, interp, argc, argv)
 
 	/*
 	 * Follow Windows-like style here, raising the window to the top.
-	 * Do this when idle, to not cause an unrefreshable window to
-	 * get mapped.
 	 */
-	Tcl_DoWhenIdle(RaiseWinWhenIdle, (ClientData) winPtr);
+	TkWmRestackToplevel(winPtr, Above, NULL);
+	if (!(Tk_Attributes((Tk_Window) winPtr)->override_redirect)) {
+	    TkSetFocusWin(winPtr, 1);
+	}
     } else if ((c == 'f') && (strncmp(argv[1], "focusmodel", length) == 0)
 	    && (length >= 2)) {
 	if ((argc != 3) && (argc != 4)) {
@@ -4532,43 +4530,5 @@ TkWinSetForegroundWindow(winPtr)
 	SetForegroundWindow(wmPtr->wrapper);
     } else {
 	SetForegroundWindow(Tk_GetHWND(winPtr->window));
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * RaiseWinWhenIdle --
- *
- *	This procedure is invoked after a toplevel window is deiconified
- *	and also as a when-idle procedure, to raise the toplevel window
- *	to the top and force focus into it, if it isn't overridden.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The window will be raised to the top, and may receive focus.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-RaiseWinWhenIdle(clientData)
-    ClientData clientData;		/* Pointer to the window's record. */
-{
-    register TkWindow *winPtr = (TkWindow *) clientData;
-
-    if ((winPtr == NULL)
-	    || (winPtr->flags & (TK_ALREADY_DEAD|TK_DONT_DESTROY_WINDOW))) {
-	return;
-    }
-    if (winPtr->wmInfoPtr->flags & WM_UPDATE_PENDING) {
-	Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData) winPtr);
-	UpdateGeometryInfo((ClientData) winPtr);
-    }
-    TkWmRestackToplevel(winPtr, Above, NULL);
-    if (!(Tk_Attributes((Tk_Window) winPtr)->override_redirect)) {
-	TkSetFocusWin(winPtr, 1);
     }
 }
