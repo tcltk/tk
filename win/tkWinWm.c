@@ -12,11 +12,19 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.7 2004/09/17 22:45:07 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.8 2004/09/17 23:36:16 hobbs Exp $
  */
 
 #include "tkWinInt.h"
 #include <shellapi.h>
+
+#ifndef WS_EX_LAYERED
+/*
+ * This is only valid on Win2K/XP+.
+ */
+#define WS_EX_LAYERED	0x00080000
+#define LWA_ALPHA	0x00000002
+#endif
 
 /*
  * Event structure for synthetic activation events.  These events are
@@ -228,6 +236,8 @@ typedef struct TkWmInfo {
     DWORD style, exStyle;	/* Style flags for the wrapper window. */
     LONG styleConfig;		/* Extra user requested style bits */
     LONG exStyleConfig;		/* Extra user requested extended style bits */
+    double alpha;		/* Alpha transparency level
+				 * 0.0 (fully transparent) .. 1.0 (opaque) */
 
     /*
      * List of children of the toplevel which have private colormaps.
@@ -375,6 +385,13 @@ static int initialized;        /* Flag indicating whether module has
  */
 DWORD* (WINAPI *shgetfileinfoProc) (LPCTSTR pszPath, DWORD dwFileAttributes,
     SHFILEINFO* psfi, UINT cbFileInfo, UINT uFlags) = NULL;
+
+/*
+ * A pointer to SetLayeredWindowAttributes (user32.dll) which we
+ * retrieve dynamically because it is only valid on Win2K+.
+ */
+BOOL (WINAPI *setLayeredWindowAttributesProc) (HWND hwnd, COLORREF crKey,
+	BYTE bAlpha, DWORD dwFlags) = NULL;
 
 TCL_DECLARE_MUTEX(winWmMutex)
 
@@ -825,6 +842,17 @@ InitWindowClass(WinIconPtr titlebaricon)
 		    FreeLibrary(hInstance);
 		}
 	    }
+	    if (setLayeredWindowAttributesProc == NULL) {
+		HINSTANCE hInstance = LoadLibraryA("user32");
+		if (hInstance != NULL) {
+		    setLayeredWindowAttributesProc =
+			(BOOL (WINAPI *) (HWND hwnd, COLORREF crKey,
+				BYTE bAlpha, DWORD dwFlags))
+			GetProcAddress(hInstance,
+				"SetLayeredWindowAttributes");
+		    FreeLibrary(hInstance);
+		}
+	    }
 	    /*
 	     * The only difference between WNDCLASSW and WNDCLASSA are
 	     * in pointers, so we can use the generic structure WNDCLASS.
@@ -867,6 +895,23 @@ InitWindowClass(WinIconPtr titlebaricon)
 	    if (!(*tkWinProcs->registerClass)(&class)) {
 		Tcl_Panic("Unable to register TkTopLevel class");
 	    }
+
+#ifndef TCL_THREADS
+	    /*
+	     * Use of WS_EX_LAYERED disallows CS_CLASSDC, as does
+	     * TCL_THREADS usage, so only create this if necessary.
+	     */
+	    if (setLayeredWindowAttributesProc != NULL) {
+		class.style = CS_HREDRAW | CS_VREDRAW;
+		Tcl_DStringFree(&classString);
+		Tcl_WinUtfToTChar(TK_WIN_TOPLEVEL_NOCDC_CLASS_NAME,
+			-1, &classString);
+		class.lpszClassName = (LPCTSTR) Tcl_DStringValue(&classString);
+		if (!(*tkWinProcs->registerClass)(&class)) {
+		    Tcl_Panic("Unable to register TkTopLevelNoCDC class");
+		}
+	    }
+#endif
 	    Tcl_DStringFree(&classString);
 	}
 	Tcl_MutexUnlock(&winWmMutex);
@@ -1848,6 +1893,7 @@ TkWmNewWindow(winPtr)
     wmPtr->height = -1;
     wmPtr->x = winPtr->changes.x;
     wmPtr->y = winPtr->changes.y;
+    wmPtr->alpha = 1.0;
 
     wmPtr->configWidth = -1;
     wmPtr->configHeight = -1;
@@ -2013,7 +2059,17 @@ UpdateWrapper(winPtr)
 	tsdPtr->createWindow = winPtr;
 	Tcl_WinUtfToTChar(((wmPtr->title != NULL) ?
                            wmPtr->title : winPtr->nameUid), -1, &titleString);
-	Tcl_WinUtfToTChar(TK_WIN_TOPLEVEL_CLASS_NAME, -1, &classString);
+#ifndef TCL_THREADS
+	/*
+	 * Transparent windows require a non-CS_CLASSDC window class.
+	 */
+	if ((wmPtr->exStyleConfig & WS_EX_LAYERED)
+		&& setLayeredWindowAttributesProc != NULL) {
+	    Tcl_WinUtfToTChar(TK_WIN_TOPLEVEL_NOCDC_CLASS_NAME,
+		    -1, &classString);
+	} else
+#endif
+	    Tcl_WinUtfToTChar(TK_WIN_TOPLEVEL_CLASS_NAME, -1, &classString);
 	wmPtr->wrapper = (*tkWinProcs->createWindowEx)(wmPtr->exStyle,
 		(LPCTSTR) Tcl_DStringValue(&classString),
 		(LPCTSTR) Tcl_DStringValue(&titleString),
@@ -2027,6 +2083,16 @@ UpdateWrapper(winPtr)
 	SetWindowLong(wmPtr->wrapper, GWL_USERDATA, (LONG) winPtr);
 #endif
 	tsdPtr->createWindow = NULL;
+
+	if ((wmPtr->exStyleConfig & WS_EX_LAYERED)
+		&& setLayeredWindowAttributesProc != NULL) {
+	    /*
+	     * The user supplies a double from [0..1], but Windows wants an
+	     * int (transparent) 0..255 (opaque), so do the translation.
+	     */
+	    setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
+		    (COLORREF) NULL, (BYTE) (wmPtr->alpha * 255), LWA_ALPHA);
+	}
 
 	place.length = sizeof(WINDOWPLACEMENT);
 	GetWindowPlacement(wmPtr->wrapper, &place);
@@ -2770,13 +2836,15 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     LONG style, exStyle, styleBit, *stylePtr;
-    char buf[TCL_INTEGER_SPACE], *string;
+    char *string;
     int i, boolean, length;
+    double alpha;
 
     if (objc < 3) {
         configArgs:
 	Tcl_WrongNumArgs(interp, 2, objv,
 		"window"
+		" ?-alpha ?double??"
 		" ?-disabled ?bool??"
 		" ?-toolwindow ?bool??"
 		" ?-topmost ?bool??");
@@ -2784,13 +2852,25 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
     }
     exStyle = wmPtr->exStyleConfig;
     style   = wmPtr->styleConfig;
+    alpha   = wmPtr->alpha;
     if (objc == 3) {
-	sprintf(buf, "%d", ((style & WS_DISABLED) != 0));
-	Tcl_AppendResult(interp, "-disabled ", buf, (char *) NULL);
-	sprintf(buf, "%d", ((exStyle & WS_EX_TOOLWINDOW) != 0));
-	Tcl_AppendResult(interp, " -toolwindow ", buf, (char *) NULL);
-	sprintf(buf, "%d", ((exStyle & WS_EX_TOPMOST) != 0));
-	Tcl_AppendResult(interp, " -topmost ", buf, (char *) NULL);
+	Tcl_Obj *objPtr = Tcl_NewObj();
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-alpha", -1));
+	Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewDoubleObj(wmPtr->alpha));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-disabled", -1));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewBooleanObj((style & WS_DISABLED)));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-toolwindow", -1));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewBooleanObj((exStyle & WS_EX_TOOLWINDOW)));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-topmost", -1));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewBooleanObj((exStyle & WS_EX_TOPMOST)));
+	Tcl_SetObjResult(interp, objPtr);
 	return TCL_OK;
     }
     for (i = 3; i < objc; i += 2) {
@@ -2798,13 +2878,12 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 	if ((length < 2) || (string[0] != '-')) {
 	    goto configArgs;
 	}
-	if ((i < objc-1) &&
-		(Tcl_GetBooleanFromObj(interp, objv[i+1], &boolean) != TCL_OK)) {
-	    return TCL_ERROR;
-	}
 	if (strncmp(string, "-disabled", length) == 0) {
 	    stylePtr = &style;
 	    styleBit = WS_DISABLED;
+	} else if (strncmp(string, "-alpha", length) == 0) {
+	    stylePtr = &exStyle;
+	    styleBit = WS_EX_LAYERED;
 	} else if ((strncmp(string, "-toolwindow", length) == 0)
 		   && (length >= 3)) {
 	    stylePtr = &exStyle;
@@ -2822,19 +2901,76 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 	} else {
 	    goto configArgs;
 	}
-	if (i == objc-1) {
-	    Tcl_SetIntObj(Tcl_GetObjResult(interp),
-		    ((*stylePtr & styleBit) != 0));
-	} else if (boolean) {
-	    *stylePtr |= styleBit;
+	if (styleBit == WS_EX_LAYERED) {
+	    double dval;
+
+	    if (i == objc-1) {
+		Tcl_SetDoubleObj(Tcl_GetObjResult(interp), wmPtr->alpha);
+	    } else {
+		if ((i < objc-1) &&
+			(Tcl_GetDoubleFromObj(interp, objv[i+1], &dval)
+				!= TCL_OK)) {
+		    return TCL_ERROR;
+		}
+		if (setLayeredWindowAttributesProc != NULL) {
+		    /*
+		     * The user should give (transparent) 0 .. 1.0 (opaque),
+		     * but we ignore the setting of this (it will always be 1)
+		     * in the case that the API is not available.
+		     */
+		    if (dval < 0.0) {
+			dval = 0;
+		    } else if (dval > 1.0) {
+			dval = 1;
+		    }
+		    wmPtr->alpha = dval;
+		    if (dval < 1.0) {
+			*stylePtr |= styleBit;
+		    } else {
+			*stylePtr &= ~styleBit;
+		    }
+		    if ((dval > 0) && (alpha > 0)) {
+			/*
+			 * If we are just changing transparency level, just
+			 * adjust the window setting (no UpdateWrapper).
+			 * The user supplies (opaque) 0..100 (transparent),
+			 * but Windows wants (transparent) 0..255 (opaque), so
+			 * do the translation.
+			 */
+			alpha = wmPtr->alpha;
+			setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
+				(COLORREF) NULL, (BYTE) (wmPtr->alpha * 255),
+				LWA_ALPHA);
+		    }
+		}
+	    }
 	} else {
-	    *stylePtr &= ~styleBit;
+	    if ((i < objc-1) &&
+		    (Tcl_GetBooleanFromObj(interp, objv[i+1], &boolean) != TCL_OK)) {
+		return TCL_ERROR;
+	    }
+	    if (i == objc-1) {
+		Tcl_SetIntObj(Tcl_GetObjResult(interp),
+			((*stylePtr & styleBit) != 0));
+	    } else if (boolean) {
+		*stylePtr |= styleBit;
+	    } else {
+		*stylePtr &= ~styleBit;
+	    }
 	}
     }
-    if ((wmPtr->styleConfig != style) ||
+    if ((wmPtr->styleConfig != style) || (wmPtr->alpha != alpha) ||
 	    (wmPtr->exStyleConfig != exStyle)) {
 	wmPtr->styleConfig = style;
 	wmPtr->exStyleConfig = exStyle;
+	/*
+	 * We could possibly avoid the UpdateWrapper with a SetWindowPos call
+	 * with SWP_FRAMECHANGED, but we need to handle the current styles
+	 * and the Config styles together.
+	SetWindowPos(wmPtr->wrapper, NULL, 0, 0, 0, 0,
+		SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING
+		|SWP_NOZORDER|SWP_FRAMECHANGED);
+	 */
 	UpdateWrapper(winPtr);
     }
     return TCL_OK;
