@@ -1,10 +1,12 @@
-# Visual C++ 2.x and 4.0 makefile
+# Visual C++ makefile
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.38 2000/10/31 01:28:26 davidg Exp $
+# Copyright (c) 1998-2000 Ajuba Solutions.
+#
+# RCS: @(#) $Id: makefile.vc,v 1.39 2000/11/03 01:16:30 hobbs Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -27,22 +29,44 @@
 
 ROOT		= ..
 TCLDIR		= ..\..\tcl8.4
-INSTALLDIR      = c:\progra~1\tcl
+INSTALLDIR      = C:\Progra~1\tcl
 
 # Set this to the appropriate value of /MACHINE: for your platform
-MACHINE	= IX86
-#MACHINE	= ALPHA
+# Choices: IX86, IA64, ALPHA
+MACHINE		= IX86
 
 !IF "$(MACHINE)" == "IA64"
-TOOLS32		= c:\ia64sdk17
-TOOLS32_rc	= c:\ia64sdk17
-!ELSE IF "$(MACHINE)" == "ALPHA"
-TOOLS32         = C:\Progra~1\Micros~2\vc98
-TOOLS32_rc      = C:\Progra~1\Micros~2\common\MSDev98
+
+# IA64 support is based on the standard setup with v2 of the
+# Microsoft Platform SDK for Whistler, build 2267
+
+TOOLS32		= C:\Progra~1\Microsoft Platform SDK
+TOOLS32_rc	= C:\Progra~1\Microsoft Platform SDK
+
+cc32		= "$(TOOLS32)\bin\Win64\cl.exe"
+link32		= "$(TOOLS32)\bin\Win64\link.exe"
+libpath32	= /LIBPATH:"$(TOOLS32)\lib\IA64"
+lib32		= "$(TOOLS32)\bin\Win64\lib.exe"
+
 !ELSE
-TOOLS32		= c:\Progra~1\devstudio\vc
-TOOLS32_rc	= c:\Progra~1\devstudio\sharedide
+
+# Visual Studio 5 default
+#TOOLS32		= C:\Progra~1\devstudio\vc
+#TOOLS32_rc	= C:\Progra~1\devstudio\sharedide
+
+# Visual Studio 6 default
+TOOLS32		= C:\Progra~1\Microsoft Visual Studio\VC98
+TOOLS32_rc	= C:\Progra~1\Microsoft Visual Studio\common\MSDev98
+
+cc32		= "$(TOOLS32)\bin\cl.exe"
+link32		= "$(TOOLS32)\bin\link.exe"
+libpath32	= /LIBPATH:"$(TOOLS32)\lib"
+lib32		= "$(TOOLS32)\bin\lib.exe"
+
 !ENDIF
+
+rc32		= "$(TOOLS32_rc)\bin\rc.exe"
+include32	= -I"$(TOOLS32)\include"
 
 # Uncomment the following line to compile with thread support
 #THREADDEFINES = -DTCL_THREADS=1
@@ -222,13 +246,6 @@ TKOBJS = \
 TKSTUBOBJS = $(TMPDIR)\tkStubLib.obj \
 	$(TMPDIR)\tkStubImg.obj
 
-
-cc32		= "$(TOOLS32)\bin\cl.exe"
-link32		= "$(TOOLS32)\bin\link.exe"
-lib32		= "$(TOOLS32)\bin\lib.exe"
-rc32		= "$(TOOLS32_rc)\bin\rc.exe"
-include32	= -I"$(TOOLS32)\include"
-
 WINDIR          = $(ROOT)\win
 GENERICDIR	= $(ROOT)\generic
 XLIBDIR		= $(ROOT)\xlib
@@ -252,12 +269,10 @@ cdebug	= -O2i -Gs -GD
 # NOTE: Due to a bug in MSVC, we cannot use -O2 here or Tk starts to misbehave.
 cdebug	= -Oti -Gs -GD
 !ENDIF
-!ELSE
-!IF "$(MACHINE)" == "IA64"
+!ELSE IF "$(MACHINE)" == "IA64"
 cdebug	= -Od -Zi
 !ELSE
 cdebug	= -Z7 -Od -WX
-!ENDIF
 !ENDIF
 
 # declarations common to all compiler options
@@ -282,7 +297,7 @@ ldebug	= -debug:full -debugtype:cv
 
 # declarations common to all linker options
 lcommon	= /NODEFAULTLIB /RELEASE /NOLOGO
-lflags	= $(lcommon) /MACHINE:$(MACHINE)
+lflags	= $(lcommon) /MACHINE:$(MACHINE) $(libpath32)
 
 # declarations for use on Intel i386, i486, and Pentium systems
 !IF "$(MACHINE)" == "IX86"
@@ -366,7 +381,6 @@ $(TKSTUBLIB): $(TKSTUBOBJS)
         $(lib32) /out:$@ $(TKSTUBOBJS)
 
 $(TKDLL): $(TKOBJS) $(TMPDIR)\tk.res
-	set LIB=$(TOOLS32)\lib
        $(link32) $(ldebug) $(dlllflags) \
 		-out:$@ $(TMPDIR)\tk.res $(TCLLIBDIR)\$(TCLSTUBLIB) \
 		$(guilibsdll) @<<
@@ -376,7 +390,6 @@ $(TKDLL): $(TKOBJS) $(TMPDIR)\tk.res
 $(TKPLUGINLIB): $(TKPLUGINDLL)
 
 $(TKPLUGINDLL): $(TKOBJS) $(TMPDIR)\tk.res
-	set LIB=$(TOOLS32)\lib
         $(link32) $(ldebug) $(dlllflags) \
 		-out:$@ $(TMPDIR)\tk.res $(TCLLIBDIR)\$(TCLPLUGINLIB) \
 		$(guilibsdll) @<<
@@ -384,29 +397,24 @@ $(TKPLUGINDLL): $(TKOBJS) $(TMPDIR)\tk.res
 <<
 
 $(WISH): $(WISHOBJS) $(TKLIB) $(TMPDIR)\wish.res
-	set LIB=$(TOOLS32)\lib
 	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -out:$@ \
 		$(guilibsdll) $(TCLLIBDIR)\$(TCLLIB) $(TKLIB) $(WISHOBJS) 
 
 $(WISHC): $(WISHOBJS) $(TKLIB) $(TMPDIR)\wish.res
-	set LIB=$(TOOLS32)\lib
 	$(link32) $(ldebug) $(conlflags) $(TMPDIR)\wish.res -out:$@ \
 		$(guilibsdll) $(TCLLIBDIR)\$(TCLLIB) $(TKLIB) $(WISHOBJS) 
 
 $(WISHP): $(WISHOBJS) $(TKPLUGINLIB) $(TMPDIR)\wish.res
-	set LIB=$(TOOLS32)\lib
 	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -out:$@ \
 		$(guilibsdll) $(TCLLIBDIR)\$(TCLPLUGINLIB) \
 		$(TKPLUGINLIB) $(WISHOBJS) 
 
 $(TKTEST): $(TKTESTOBJS) $(TKLIB) $(TMPDIR)\wish.res
-	set LIB=$(TOOLS32)\lib
 	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -out:$@ \
 		$(guilibsdll) $(TCLLIBDIR)\$(TCLLIB) $(TKLIB) $(TKTESTOBJS)
 
 $(CAT32): $(TCLDIR)\win\cat.c
 	$(cc32) $(CON_CFLAGS) -Fo$(TMPDIR)\ $?
-	set LIB=$(TOOLS32)\lib
 	$(link32) $(conlflags) -out:$@ -stack:16384 $(TMPDIR)\cat.obj $(conlibs)
 
 #
