@@ -1,3 +1,13 @@
+2001-03-01  Don Porter  <dgp@users.sourceforge.net>
+
+	BRANCH dgp-privates-into-namespace:
+	* library/unsupported.tcl: New file for Tk's unsupported
+	interfaces.  Contains [tk::unsupported::ExposePrivateCommand]
+	and [tk::unsupported::ExposePrivateVariable] that restore the
+	availability of an old public name of one of Tk's private
+	commands and variables, respectively, for those applications
+	and extensions that depend on the old names against advice.
+
 2001-02-28  Don Porter  <dgp@users.sourceforge.net>
 
 	BRANCH dgp-privates-into-namespace:  Feature branch to move all
