@@ -1,3 +1,8 @@
+2001-01-02  Andreas Kupries  <a.kupries@westend.com>
+
+	* win/tkWinWm.c:
+	* doc/wm.n: Applied patch #102833 (TIP #8).
+
 2000-12-13  jeff hobbs  <jhobbs@interwoven.com>
 
 	* generic/tkObj.c (SetMMFromAny): Added ability to recognize

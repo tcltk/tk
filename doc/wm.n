@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.5 2000/01/12 11:44:42 hobbs Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.6 2001/01/02 19:13:02 andreas_kupries Exp $
 '\" 
 .so man.macros
 .TH wm n 4.3 Tk "Tk Built-In Commands"
@@ -208,7 +208,16 @@ bitmap is cancelled for \fIwindow\fR.
 If \fIbitmap\fR is specified then the command returns an empty string.
 Otherwise it returns the name of
 the current icon bitmap associated with \fIwindow\fR, or an empty
-string if \fIwindow\fR has no icon bitmap.
+string if \fIwindow\fR has no icon bitmap.  On the Windows operating
+system, an additional flag is supported: 
+\fBwm iconbitmap \fIwindow\fR ?\fI-default\fR? ?\fIimage\fR?.  
+If the \fI-default\fR
+flag is given, the icon is applied to all toplevel windows (existing
+and future) to which no other specific icon has yet been applied.
+In addition to bitmap image types, any file which contains a valid
+Windows icon is also accepted (usually .ico or .icr files).  Tcl will
+first test if the files contains an icon, and if that fails, test for
+a bitmap.
 .TP
 \fBwm iconify \fIwindow\fR
 Arrange for \fIwindow\fR to be iconified.  It \fIwindow\fR hasn't
@@ -501,6 +510,9 @@ Most existing window managers appear to have bugs that affect the
 operation of the \fBwm\fR command.  For example, some changes won't
 take effect if the window is already active:  the window will have
 to be withdrawn and de-iconified in order to make the change happen.
+.PP
+On the Windows operating system \fIwm iconbitmap\fR has no effect when
+passed a bitmap: only icon files currently work properly.
 
 .SH KEYWORDS
 aspect ratio, deiconify, focus model, geometry, grid, group, icon, iconify, increments, position, size, title, top-level window, units, window manager
