@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.32 2001/08/06 18:29:41 dgp Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.33 2001/08/15 15:44:36 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -2828,6 +2828,11 @@ Initialize(interp)
     if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
         return TCL_ERROR;
     }
+
+    /*
+     * Ensure that our obj-types are registered with the Tcl runtime.
+     */
+    TkRegisterObjTypes();
 
     tsdPtr = (ThreadSpecificData *) 
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.9 2000/04/19 23:11:24 ericm Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.10 2001/08/15 15:44:36 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -22,7 +22,7 @@
  * Tcl object, used for quickly finding a mapping in a TkStateMap.
  */
 
-static Tcl_ObjType stateKeyType = {
+Tcl_ObjType tkStateKeyObjType = {
     "statekey",				/* name */
     (Tcl_FreeInternalRepProc *) NULL,	/* freeIntRepProc */
     (Tcl_DupInternalRepProc *) NULL,	/* dupIntRepProc */
@@ -920,7 +920,7 @@ TkFindStateNumObj(interp, optionPtr, mapPtr, keyPtr)
     CONST char *key;
     CONST Tcl_ObjType *typePtr;
 
-    if ((keyPtr->typePtr == &stateKeyType)
+    if ((keyPtr->typePtr == &tkStateKeyObjType)
 	    && (keyPtr->internalRep.twoPtrValue.ptr1 == (VOID *) mapPtr)) {
 	return (int) keyPtr->internalRep.twoPtrValue.ptr2;
     }
@@ -934,7 +934,7 @@ TkFindStateNumObj(interp, optionPtr, mapPtr, keyPtr)
 	    }
 	    keyPtr->internalRep.twoPtrValue.ptr1 = (VOID *) mapPtr;
 	    keyPtr->internalRep.twoPtrValue.ptr2 = (VOID *) mPtr->numKey;
-	    keyPtr->typePtr = &stateKeyType;	    
+	    keyPtr->typePtr = &tkStateKeyObjType;	    
 	    return mPtr->numKey;
 	}
     }
