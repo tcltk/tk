@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.83 2005/01/09 07:04:33 chengyemao Exp $
+RCS: @(#) $Id: changes,v 1.84 2005/01/09 17:55:34 chengyemao Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5938,3 +5938,7 @@ TkWinEmbeddedEventProc in tkWinEmbed.c; TkWinChildProc in tkWinX.c.
 
 2005-1-8 (bug fix)[1098625] Wrong toplevel geometry when created with a menu;
 [637653] Deleting a popup menu crashes wish (chengyemao)
+
+2005-1-9 (bug fix)[1098779] TkParsePadAmount (tkPack.c) did not properly 
+handle list. The bug was due to fail to handle leading spaces. Skipping the 
+leading spaces fixes the bug (chengyemao).
