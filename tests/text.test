@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.11 2000/07/21 23:44:12 ericm Exp $
+# RCS: @(#) $Id: text.test,v 1.12 2000/07/25 00:05:40 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1139,6 +1139,30 @@ test text-20.69 {TextSearchCmd, hidden text does not affect match index} {
     .t2 search boo 1.0
 } 3.3
 
+test text-20.70 {TextSearchCmd, -regexp -nocase searches} {
+    catch {destroy .t}
+    pack [text .t]
+    .t insert end "word1 word2"
+    set res [.t search -nocase -regexp {\mword.} 1.0 end]
+    destroy .t
+    set res
+} 1.0
+test text-20.71 {TextSearchCmd, -regexp -nocase searches} {
+    catch {destroy .t}
+    pack [text .t]
+    .t insert end "word1 word2"
+    set res [.t search -nocase -regexp {word.\M} 1.0 end]
+    destroy .t
+    set res
+} 1.0
+test text-20.72 {TextSearchCmd, -regexp -nocase searches} {
+    catch {destroy .t}
+    pack [text .t]
+    .t insert end "word1 word2"
+    set res [.t search -nocase -regexp {word.\W} 1.0 end]
+    destroy .t
+    set res
+} 1.0
     
 eval destroy [winfo child .]
 text .t2 -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100

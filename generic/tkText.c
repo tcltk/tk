@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.16 2000/07/21 23:44:11 ericm Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.17 2000/07/25 00:05:40 ericm Exp $
  */
 
 #include "default.h"
@@ -1673,6 +1673,7 @@ TextSearchCmd(textPtr, interp, argc, argv)
     TkTextSegment *segPtr;
     TkTextLine *linePtr;
     TkTextIndex curIndex;
+    Tcl_Obj *patObj = NULL;
     Tcl_RegExp regexp = NULL;		/* Initialization needed only to
 					 * prevent compiler warning. */
 
@@ -1748,7 +1749,7 @@ TextSearchCmd(textPtr, interp, argc, argv)
      * Convert the pattern to lower-case if we're supposed to ignore case.
      */
 
-    if (noCase) {
+    if (noCase && exact) {
 	Tcl_DStringInit(&patDString);
 	Tcl_DStringAppend(&patDString, pattern, -1);
 	pattern = Tcl_DStringValue(&patDString);
@@ -1798,7 +1799,10 @@ TextSearchCmd(textPtr, interp, argc, argv)
     if (exact) {
 	patLength = strlen(pattern);
     } else {
-	regexp = Tcl_RegExpCompile(interp, pattern);
+	patObj = Tcl_NewStringObj(pattern, -1);
+	Tcl_IncrRefCount(patObj);
+	regexp = Tcl_GetRegExpFromObj(interp, patObj,
+		(noCase ? TCL_REG_NOCASE : 0) | TCL_REG_ADVANCED);
 	if (regexp == NULL) {
 	    code = TCL_ERROR;
 	    goto done;
@@ -2031,8 +2035,11 @@ TextSearchCmd(textPtr, interp, argc, argv)
     }
     done:
     Tcl_DStringFree(&line);
-    if (noCase) {
+    if (noCase && exact) {
 	Tcl_DStringFree(&patDString);
+    }
+    if (patObj != NULL) {
+	Tcl_DecrRefCount(patObj);
     }
     return code;
 }
