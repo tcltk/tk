@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.19 2003/01/22 14:32:59 dkf Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.20 2003/05/08 09:35:41 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -293,6 +293,7 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 		    (*masterPtr->typePtr->deleteProc)(masterPtr->masterData);
 		    masterPtr->typePtr = NULL;
 		}
+		masterPtr->deleted = 0;
 	    }
 
 	    /*
@@ -343,11 +344,16 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 		char *arg = Tcl_GetString(objv[i]);
 		hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->imageTable, arg);
 		if (hPtr == NULL) {
+		  deleteAlreadyDeleted:
 		    Tcl_AppendResult(interp, "image \"", arg,
 			    "\" doesn't exist", (char *) NULL);
 		    return TCL_ERROR;
 		}
-		DeleteImage((ImageMaster *) Tcl_GetHashValue(hPtr));
+		masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+		if (masterPtr->deleted) {
+		    goto deleteAlreadyDeleted;
+		}
+		DeleteImage(masterPtr);
 	    }
 	    break;
 	}
@@ -360,11 +366,15 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 	    arg = Tcl_GetString(objv[2]);
 	    hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->imageTable, arg);
 	    if (hPtr == NULL) {
+	      heightAlreadyDeleted:
 		Tcl_AppendResult(interp, "image \"", arg,
 			"\" doesn't exist", (char *) NULL);
 		return TCL_ERROR;
 	    }
 	    masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+	    if (masterPtr->deleted) {
+		goto heightAlreadyDeleted;
+	    }
 	    Tcl_SetIntObj(Tcl_GetObjResult(interp), masterPtr->height);
 	    break;
 	}
@@ -379,11 +389,15 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 	    arg = Tcl_GetString(objv[2]);
 	    hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->imageTable, arg);
 	    if (hPtr == NULL) {
+	      inuseAlreadyDeleted:
 		Tcl_AppendResult(interp, "image \"", arg,
 			"\" doesn't exist", (char *) NULL);
 		return TCL_ERROR;
 	    }
 	    masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+	    if (masterPtr->deleted) {
+		goto inuseAlreadyDeleted;
+	    }
 	    if (masterPtr->typePtr != NULL && masterPtr->instancePtr != NULL) {
 		count = 1;
 	    }
@@ -398,6 +412,10 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 	    }
 	    hPtr = Tcl_FirstHashEntry(&winPtr->mainPtr->imageTable, &search);
 	    for ( ; hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
+		masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+		if (masterPtr->deleted) {
+		    continue;
+		}
 		Tcl_AppendElement(interp, Tcl_GetHashKey(
 		    &winPtr->mainPtr->imageTable, hPtr));
 	    }
@@ -413,11 +431,15 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 	    arg = Tcl_GetString(objv[2]);
 	    hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->imageTable, arg);
 	    if (hPtr == NULL) {
+	      typeAlreadyDeleted:
 		Tcl_AppendResult(interp, "image \"", arg,
 			"\" doesn't exist", (char *) NULL);
 		return TCL_ERROR;
 	    }
 	    masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+	    if (masterPtr->deleted) {
+		goto typeAlreadyDeleted;
+	    }
 	    if (masterPtr->typePtr != NULL) {
 		Tcl_SetResult(interp, masterPtr->typePtr->name, TCL_STATIC);
 	    }
@@ -447,11 +469,15 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 	    arg = Tcl_GetString(objv[2]);
 	    hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->imageTable, arg);
 	    if (hPtr == NULL) {
+	      widthAlreadyDeleted:
 		Tcl_AppendResult(interp, "image \"", arg,
 			"\" doesn't exist", (char *) NULL);
 		return TCL_ERROR;
 	    }
 	    masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+	    if (masterPtr->deleted) {
+		goto widthAlreadyDeleted;
+	    }
 	    Tcl_SetIntObj(Tcl_GetObjResult(interp), masterPtr->width);
 	    break;
 	}
@@ -576,6 +602,9 @@ Tk_GetImage(interp, tkwin, name, changeProc, clientData)
     }
     masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
     if (masterPtr->typePtr == NULL) {
+	goto noSuchImage;
+    }
+    if (masterPtr->deleted) {
 	goto noSuchImage;
     }
     imagePtr = (Image *) ckalloc(sizeof(Image));
@@ -926,6 +955,8 @@ DeleteImage(masterPtr)
 	Tcl_DeleteHashEntry(masterPtr->hPtr);
 	Tcl_Release((ClientData) masterPtr->winPtr);
 	ckfree((char *) masterPtr);
+    } else {
+	masterPtr->deleted = 1;
     }
 }
 
@@ -1032,6 +1063,10 @@ Tk_GetImageMasterData(interp, name, typePtrPtr)
 	return NULL;
     }
     masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+    if (masterPtr->deleted) {
+	*typePtrPtr = NULL;
+	return NULL;
+    }
     *typePtrPtr = masterPtr->typePtr;
     return masterPtr->masterData;
 }

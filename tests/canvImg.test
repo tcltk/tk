@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvImg.test,v 1.6 2003/04/01 21:06:18 dgp Exp $
+# RCS: @(#) $Id: canvImg.test,v 1.7 2003/05/08 09:35:41 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -128,13 +128,14 @@ test canvImg-5.1 {DeleteImage procedure} testImageType {
     .c delete all
     .c create image 50 100 -image xyzzy -tags i1
     update
+    set names [lsort [image names]]
     image delete xyzzy
     set z {}
-    set names [lsort [image names]]
+    set names2 [lsort [image names]]
     .c delete i1
     update
-    list $names $z [lsort [image names]]
-} {{foo foo2 xyzzy} {} {foo foo2}}
+    list $names $names2 $z [lsort [image names]]
+} {{foo foo2 xyzzy} {foo foo2} {} {foo foo2}}
 test canvImg-5.2 {DeleteImage procedure (don't delete non-existent image)} {
     .c delete all
     .c create image 50 100 -tags i1
