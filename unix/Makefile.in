@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.87.2.1 2003/05/20 17:32:19 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.87.2.2 2003/11/11 00:05:36 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -235,6 +235,7 @@ WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@
 
 STLIB_LD		= @STLIB_LD@
 SHLIB_LD		= @SHLIB_LD@
+SHLIB_LD_FLAGS		= @SHLIB_LD_FLAGS@
 SHLIB_LD_LIBS		= @SHLIB_LD_LIBS@
 TK_SHLIB_LD_EXTRAS	= @TK_SHLIB_LD_EXTRAS@
 
