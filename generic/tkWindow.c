@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.30 2001/05/28 16:56:02 pspjuth Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.31 2001/07/03 05:59:50 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1394,12 +1394,12 @@ Tk_DestroyWindow(tkwin)
 	    /*
 	     * We just deleted the last window in the application.  Delete
 	     * the TkMainInfo structure too and replace all of Tk's commands
-	     * with dummy commands that return errors.  Also delete the
+	     * with dummy commands that return errors.	Also delete the
 	     * "send" command to unregister the interpreter.
-             *
-             * NOTE: Only replace the commands it if the interpreter is
-             * not being deleted. If it *is*, the interpreter cleanup will
-             * do all the needed work.
+	     *
+	     * NOTE: Only replace the commands it if the interpreter is
+	     * not being deleted. If it *is*, the interpreter cleanup will
+	     * do all the needed work.
 	     */
 
             if ((winPtr->mainPtr->interp != NULL) &&
@@ -1494,7 +1494,7 @@ Tk_DestroyWindow(tkwin)
             }
 	}
     }
-    ckfree((char *) winPtr);
+    Tcl_EventuallyFree((ClientData) winPtr, TCL_DYNAMIC);
 }
 
 /*
