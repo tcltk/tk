@@ -1,3 +1,8 @@
+2001-07-24  Mo DeJong  <mdejong@redhat.com>
+
+	* generic/default.h: Include tkWinDefault.h
+	when built with Cygwin or Mingw.
+
 2001-07-10  Mo DeJong  <mdejong@redhat.com>
 
 	* unix/Makefile.in: Add AR and STLIB_LD variables.
