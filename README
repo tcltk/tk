@@ -1,11 +1,11 @@
 README:  Tk
-    This is the Tk 8.3.1 source distribution.
+    This is the Tk 8.3.2 source distribution.
     You can get any release of Tcl from:
         http://dev.scriptics.com/registration/<version>.html
     Tcl/Tk is also available through NetCVS:
 	http://dev.scriptics.com/software/tcltk/netcvs.html
 
-RCS: @(#) $Id: README,v 1.25 2000/04/26 17:37:34 hobbs Exp $
+RCS: @(#) $Id: README,v 1.25.2.1 2000/07/27 01:05:57 hobbs Exp $
 
 1. Introduction
 ---------------

@@ -1,3 +1,11 @@
+2000-07-26  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* unix/configure.in (TK_PATCH_LEVEL): updated to 8.3.2
+	* unix/tk.spec:
+	* win/configure.in: 
+	* generic/tk.h:
+	* README:
+
 2000-07-22  Brent Welch <welch@ajubasolutions.com>
 	* win/Makefile.in, win/configure.in, win/rc/tk.rc, win/rc/tk_base.rc
 	Trying to generalize .rc files so they work with both DLL's and
