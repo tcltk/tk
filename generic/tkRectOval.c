@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkRectOval.c,v 1.9 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkRectOval.c,v 1.10 2003/02/09 07:48:22 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -252,24 +252,10 @@ CreateRectOval(interp, canvas, itemPtr, objc, objv)
     Tcl_Obj *CONST objv[];		/* Arguments describing rectangle. */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
-    int i = 4;
+    int i;
 
-
-    if (objc == 1) {
-	i = 1;
-    } else if (objc > 1) {
-	char *arg = Tcl_GetString(objv[1]);
-	if ((arg[0] == '-') && (arg[1] >= 'a') && (arg[1] <= 'z')) {
-	    i = 1;
-	}
-    }
-
-    if (objc < i) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		Tk_PathName(Tk_CanvasTkwin(canvas)), " create ",
-		itemPtr->typePtr->name, " x1 y1 x2 y2 ?options?\"",
-		(char *) NULL);
-	return TCL_ERROR;
+    if (objc == 0) {
+	panic("canvas did not pass any coords\n");
     }
 
     /*
@@ -293,6 +279,12 @@ CreateRectOval(interp, canvas, itemPtr, objc, objv)
      * Process the arguments to fill in the item record.
      */
 
+    for (i = 1; i < objc; i++) {
+	char *arg = Tcl_GetString(objv[i]);
+	if ((arg[0] == '-') && (arg[1] >= 'a') && (arg[1] <= 'z')) {
+	    break;
+	}
+    }
     if ((RectOvalCoords(interp, canvas, itemPtr, i, objv) != TCL_OK)) {
 	goto error;
     }

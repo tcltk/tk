@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvBmap.c,v 1.6 2002/08/05 04:30:38 dgp Exp $
+ * RCS: @(#) $Id: tkCanvBmap.c,v 1.7 2003/02/09 07:48:22 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -179,24 +179,8 @@ CreateBitmap(interp, canvas, itemPtr, objc, objv)
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
     int i;
 
-    if (objc==1) {
-	i = 1;
-    } else {
-	char *arg = Tcl_GetStringFromObj(objv[1], NULL);
-	if (((objc>1) && (arg[0] == '-')
-		&& (arg[1] >= 'a') && (arg[1] <= 'z'))) {
-	    i = 1;
-	} else {
-	    i = 2;
-	}
-    }
-
-    if (objc < i) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		Tk_PathName(Tk_CanvasTkwin(canvas)), " create ",
-		itemPtr->typePtr->name, " x y ?options?\"",
-		(char *) NULL);
-	return TCL_ERROR;
+    if (objc == 0) {
+	panic("canvas did not pass any coords\n");
     }
 
     /*
@@ -217,12 +201,23 @@ CreateBitmap(interp, canvas, itemPtr, objc, objv)
 
     /*
      * Process the arguments to fill in the item record.
+     * Only 1 (list) or 2 (x y) coords are allowed.
      */
 
-    if ((BitmapCoords(interp, canvas, itemPtr, i, objv) != TCL_OK)) {
+    if (objc == 1) {
+	i = 1;
+    } else {
+	char *arg = Tcl_GetString(objv[1]);
+	i = 2;
+	if ((arg[0] == '-') && (arg[1] >= 'a') && (arg[1] <= 'z')) {
+	    i = 1;
+	}
+    }
+    if (BitmapCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
 	goto error;
     }
-    if (ConfigureBitmap(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
+    if (ConfigureBitmap(interp, canvas, itemPtr, objc-i, objv+i, 0)
+	    == TCL_OK) {
 	return TCL_OK;
     }
 
@@ -269,8 +264,8 @@ BitmapCoords(interp, canvas, itemPtr, objc, objv)
 	subobj = Tcl_NewDoubleObj(bmapPtr->y);
 	Tcl_ListObjAppendElement(interp, obj, subobj);
 	Tcl_SetObjResult(interp, obj);
-    } else if (objc <3) {
-	if (objc==1) {
+    } else if (objc < 3) {
+	if (objc == 1) {
 	    if (Tcl_ListObjGetElements(interp, objv[0], &objc,
 		    (Tcl_Obj ***) &objv) != TCL_OK) {
 		return TCL_ERROR;
@@ -282,9 +277,10 @@ BitmapCoords(interp, canvas, itemPtr, objc, objv)
 		return TCL_ERROR;
 	    }
 	}
-	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0], &bmapPtr->x) != TCL_OK)
-		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1], &bmapPtr->y)
- 		    != TCL_OK)) {
+	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0],
+		&bmapPtr->x) != TCL_OK)
+		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1],
+			&bmapPtr->y) != TCL_OK)) {
 	    return TCL_ERROR;
 	}
 	ComputeBitmapBbox(canvas, bmapPtr);
