@@ -59,10 +59,12 @@ discussion on the contents of \fIfilePatternList\fR.
 \fB\-initialdir\fR \fIdirectory\fR
 Specifies that the files in \fIdirectory\fR should be displayed
 when the dialog pops up. If this parameter is not specified, then
-the files in the current working directory are displayed.  This
-option may not always work on the Macintosh.  This is not a bug.
-Rather, the \fIGeneral Controls\fR control panel on the Mac allows the
-end user to override the application default directory.
+the files in the current working directory are displayed. If the
+parameter specifies a relative path, the return value will convert the
+relative path to an absolute path.  This option may not always work on
+the Macintosh.  This is not a bug. Rather, the \fIGeneral Controls\fR
+control panel on the Mac allows the end user to override the
+application default directory.
 .TP
 \fB\-initialfile\fR \fIfilename\fR
 Specifies a filename to be displayed in the dialog when it pops
