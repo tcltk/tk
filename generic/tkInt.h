@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.34 2000/11/22 01:49:38 ericm Exp $ 
+ * RCS: $Id: tkInt.h,v 1.35 2001/07/03 01:03:16 hobbs Exp $ 
  */
 
 #ifndef _TKINT
@@ -369,6 +369,7 @@ typedef struct TkDisplay {
     Atom applicationAtom;	/* Atom for TK_APPLICATION. */
     Atom windowAtom;		/* Atom for TK_WINDOW. */
     Atom clipboardAtom;		/* Atom for CLIPBOARD. */
+    Atom utf8Atom;		/* Atom for UTF8_STRING. */
 
     Tk_Window clipWindow;	/* Window used for clipboard ownership and to
 				 * retrieve selections between processes. NULL

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: select.test,v 1.5 2000/08/07 21:49:17 ericm Exp $
+# RCS: @(#) $Id: select.test,v 1.6 2001/07/03 01:03:16 hobbs Exp $
 
 #
 # Note: Multiple display selection handling will only be tested if the
@@ -129,7 +129,13 @@ test select-1.3 {Tk_CreateSelHandler procedure} {
     set selInfo ""
     list [selection get TEST] $selInfo
 } {{Test value} {TEST 0 4000}}
-test select-1.4 {Tk_CreateSelHandler procedure} {
+test select-1.4.1 {Tk_CreateSelHandler procedure} {unixOnly} {
+    setup
+    selection handle .f1 {handler TEST} TEST
+    selection handle .f1 {handler STRING}
+    lsort [selection get TARGETS]
+} {MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING}
+test select-1.4.2 {Tk_CreateSelHandler procedure} {macOrPc} {
     setup
     selection handle .f1 {handler TEST} TEST
     selection handle .f1 {handler STRING}
@@ -144,7 +150,20 @@ test select-1.5 {Tk_CreateSelHandler procedure} {
     set selInfo ""
     list [selection get] $selInfo
 } {{} {STRING 0 4000}}
-test select-1.6 {Tk_CreateSelHandler procedure} {
+test select-1.6.1 {Tk_CreateSelHandler procedure} {unixOnly} {
+    global selValue selInfo
+    setup
+    selection handle .f1 {handler TEST} TEST
+    selection handle .f1 {handler STRING}
+    set selValue ""
+    set selInfo ""
+    selection get
+    selection get -type TEST
+    selection handle .f1 {handler TEST2} TEST
+    selection get -type TEST
+    list [set selInfo] [lsort [selection get TARGETS]]
+} {{STRING 0 4000 TEST 0 4000 TEST2 0 4000} {MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING}}
+test select-1.6.2 {Tk_CreateSelHandler procedure} {macOrPc} {
     global selValue selInfo
     setup
     selection handle .f1 {handler TEST} TEST
@@ -157,7 +176,15 @@ test select-1.6 {Tk_CreateSelHandler procedure} {
     selection get -type TEST
     list [set selInfo] [lsort [selection get TARGETS]]
 } {{STRING 0 4000 TEST 0 4000 TEST2 0 4000} {MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW}}
-test select-1.7 {Tk_CreateSelHandler procedure} {
+test select-1.7.1 {Tk_CreateSelHandler procedure} {unixOnly} {
+    setup
+    selection own -selection CLIPBOARD .f1
+    selection handle -selection CLIPBOARD .f1 {handler TEST} TEST
+    selection handle -selection PRIMARY .f1 {handler TEST2} STRING
+    list [lsort [selection get -selection PRIMARY TARGETS]] \
+	[lsort [selection get -selection CLIPBOARD TARGETS]] 
+} {{MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING} {MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW}}
+test select-1.7.2 {Tk_CreateSelHandler procedure} {macOrPc} {
     setup
     selection own -selection CLIPBOARD .f1
     selection handle -selection CLIPBOARD .f1 {handler TEST} TEST
@@ -173,7 +200,34 @@ test select-1.8 {Tk_CreateSelHandler procedure} {
 
 ##############################################################################
 
-test select-2.1 {Tk_DeleteSelHandler procedure} {
+test select-2.1 {Tk_DeleteSelHandler procedure} {unixOnly} {
+    setup
+    selection handle .f1 {handler STRING} 
+    selection handle -type TEST .f1 {handler TEST} 
+    selection handle -type USER .f1 {handler USER} 
+    set result [list [lsort [selection get TARGETS]]]
+    selection handle -type TEST .f1 {}
+    lappend result [lsort [selection get TARGETS]]
+} {{MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW USER UTF8_STRING} {MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW USER UTF8_STRING}}
+test select-2.2 {Tk_DeleteSelHandler procedure} {unixOnly} {
+    setup
+    selection handle .f1 {handler STRING} 
+    selection handle -type TEST .f1 {handler TEST} 
+    selection handle -type USER .f1 {handler USER} 
+    set result [list [lsort [selection get TARGETS]]]
+    selection handle -type USER .f1 {}
+    lappend result [lsort [selection get TARGETS]]
+} {{MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW USER UTF8_STRING} {MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING}}
+test select-2.3 {Tk_DeleteSelHandler procedure} {unixOnly} {
+    setup
+    selection own -selection CLIPBOARD .f1
+    selection handle -selection PRIMARY .f1 {handler STRING} 
+    selection handle -selection CLIPBOARD .f1 {handler STRING} 
+    selection handle -selection CLIPBOARD .f1 {}
+    list [lsort [selection get TARGETS]] \
+	[lsort [selection get -selection CLIPBOARD TARGETS]]
+} {{MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
+test select-2.4 {Tk_DeleteSelHandler procedure} {macOrPc} {
     setup
     selection handle .f1 {handler STRING} 
     selection handle -type TEST .f1 {handler TEST} 
@@ -182,7 +236,7 @@ test select-2.1 {Tk_DeleteSelHandler procedure} {
     selection handle -type TEST .f1 {}
     lappend result [lsort [selection get TARGETS]]
 } {{MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW USER} {MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW USER}}
-test select-2.2 {Tk_DeleteSelHandler procedure} {
+test select-2.5 {Tk_DeleteSelHandler procedure} {macOrPc} {
     setup
     selection handle .f1 {handler STRING} 
     selection handle -type TEST .f1 {handler TEST} 
@@ -191,7 +245,7 @@ test select-2.2 {Tk_DeleteSelHandler procedure} {
     selection handle -type USER .f1 {}
     lappend result [lsort [selection get TARGETS]]
 } {{MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW USER} {MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW}}
-test select-2.3 {Tk_DeleteSelHandler procedure} {
+test select-2.6 {Tk_DeleteSelHandler procedure} {macOrPc} {
     setup
     selection own -selection CLIPBOARD .f1
     selection handle -selection PRIMARY .f1 {handler STRING} 
@@ -200,7 +254,7 @@ test select-2.3 {Tk_DeleteSelHandler procedure} {
     list [lsort [selection get TARGETS]] \
 	[lsort [selection get -selection CLIPBOARD TARGETS]]
 } {{MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
-test select-2.4 {Tk_DeleteSelHandler procedure} {
+test select-2.7 {Tk_DeleteSelHandler procedure} {
     setup
     selection handle .f1 {handler STRING}
     list [selection handle .f1 {}] [selection handle .f1 {}]
