@@ -1,3 +1,10 @@
+1999-03-22    <redman@scriptics.com>
+
+	* unix/configure.in: Removed --enable-tcl-stub.  Linking Tk to Tcl
+ 	stubs is causing too many problems when linking executables like wish.
+  	Until the Tk is a fully loadable extension, linking against the Tcl
+ 	stubs is not supported in Tk.
+
 1999-03-19    <redman@scriptics.com>
 
 	* generic/tkBitmap.c:
