@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.10 2003/11/07 15:36:26 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.11 2003/11/08 17:22:46 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -1385,25 +1385,46 @@ TkTextIndexForwChars(textPtr, srcPtr, charCount, dstPtr, type)
 		if ((segPtr->typePtr == &tkTextToggleOffType)
 		    || (segPtr->typePtr == &tkTextToggleOnType)) {		
 		    TkTextTag *tagPtr = segPtr->body.toggle.tagPtr;
-		    if (tagPtr->elideString != NULL 
-		      && (tagPtr->priority >= infoPtr->elidePriority)) {
-			if (elide) {
-			    elide = ((segPtr->typePtr == &tkTextToggleOffType)
-				     & !tagPtr->elide);
-			} else {
-			    elide = ((segPtr->typePtr == &tkTextToggleOnType)
-				     & tagPtr->elide);
+		    /*
+		     * The elide state only changes if this tag is
+		     * either the current highest priority tag
+		     * (and is therefore being toggled off), or it's
+		     * a new tag with higher priority.
+		     */
+		    if (tagPtr->elideString != NULL) {
+			infoPtr->tagCnts[tagPtr->priority]++;
+			if (infoPtr->tagCnts[tagPtr->priority] & 1) {
+			    infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
 			}
-			if (!elide && tagPtr->priority 
-			    == infoPtr->elidePriority) {
-			    /* Find previous elide tag, if any */
-			    while (--infoPtr->elidePriority > 0) {
-				if (infoPtr->tagCnts[infoPtr->elidePriority] & 1) {
-				    break;
+			if (tagPtr->priority >= infoPtr->elidePriority) {
+			    if (segPtr->typePtr == &tkTextToggleOffType) {
+				/* 
+				 * If it is being toggled off, and it has
+				 * an elide string, it must actually be the
+				 * current highest priority tag, so this
+				 * check is redundant:
+				 */
+				if (tagPtr->priority != infoPtr->elidePriority) {
+				    panic("Bad tag priority being toggled off");
 				}
+			    
+				/* 
+				 * Find previous elide tag, if any (if not
+				 * then elide will be zero, of course).
+				 */
+				elide = 0;
+				while (--infoPtr->elidePriority > 0) {
+				    if (infoPtr->tagCnts[infoPtr->elidePriority] 
+					& 1) {
+					elide = infoPtr->tagPtrs
+					    [infoPtr->elidePriority]->elide;
+					break;
+				    }
+				}
+			    } else {
+				elide = tagPtr->elide;
+				infoPtr->elidePriority = tagPtr->priority;
 			    }
-			} else {
-			    infoPtr->elidePriority = tagPtr->priority;
 			}
 		    }
 		}
@@ -1529,33 +1550,54 @@ TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type)
 	     */
 	    if (checkElided) {
 		if ((segPtr->typePtr == &tkTextToggleOffType)
-		  || (segPtr->typePtr == &tkTextToggleOnType)) {		
+		  || (segPtr->typePtr == &tkTextToggleOnType)) {
 		    TkTextTag *tagPtr = segPtr->body.toggle.tagPtr;
-		    if (tagPtr->elideString != NULL 
-		      && (tagPtr->priority >= infoPtr->elidePriority)) {
-			if (elide) {
-			    elide = ((segPtr->typePtr == &tkTextToggleOffType)
-				     & !tagPtr->elide);
-			} else {
-			    elide = ((segPtr->typePtr == &tkTextToggleOnType)
-				     & tagPtr->elide);
+		    /*
+		     * The elide state only changes if this tag is
+		     * either the current highest priority tag
+		     * (and is therefore being toggled off), or it's
+		     * a new tag with higher priority.
+		     */
+		    if (tagPtr->elideString != NULL) {
+			infoPtr->tagCnts[tagPtr->priority]++;
+			if (infoPtr->tagCnts[tagPtr->priority] & 1) {
+			    infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
 			}
-			if (!elide && tagPtr->priority 
-			    == infoPtr->elidePriority) {
-			    /* Find previous elide tag, if any */
-			    while (--infoPtr->elidePriority > 0) {
-				if (infoPtr->tagCnts[infoPtr->elidePriority] & 1) {
-				    break;
+			if (tagPtr->priority >= infoPtr->elidePriority) {
+			    if (segPtr->typePtr == &tkTextToggleOffType) {
+				/* 
+				 * If it is being toggled off, and it has
+				 * an elide string, it must actually be the
+				 * current highest priority tag, so this
+				 * check is redundant:
+				 */
+				if (tagPtr->priority != infoPtr->elidePriority) {
+				    panic("Bad tag priority being toggled off");
 				}
+				
+				/* 
+				 * Find previous elide tag, if any (if not
+				 * then elide will be zero, of course).
+				 */
+				elide = 0;
+				while (--infoPtr->elidePriority > 0) {
+				    if (infoPtr->tagCnts[infoPtr->elidePriority] 
+					& 1) {
+					elide = infoPtr->tagPtrs
+					  [infoPtr->elidePriority]->elide;
+					break;
+				    }
+				}
+			    } else {
+				elide = tagPtr->elide;
+				infoPtr->elidePriority = tagPtr->priority;
 			    }
-			} else {
-			    infoPtr->elidePriority = tagPtr->priority;
 			}
 		    }
 		}
 		if (elide) {
 		    if (segPtr == seg2Ptr) {
-			return count;
+			goto countDone;
 		    }
 		    byteOffset = 0;
 		    continue;
@@ -1601,7 +1643,7 @@ TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type)
 		}
 	    }
 	    if (segPtr == seg2Ptr) {
-		return count;
+		goto countDone;
 	    }
 	    byteOffset = 0;
 	}
@@ -1618,6 +1660,11 @@ TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type)
 	}
 	segPtr = linePtr1->segPtr;
     }
+  countDone:
+    if (infoPtr != NULL) {
+	ckfree((char*) infoPtr);
+    }
+    return count;
 }
 	
 /*
@@ -1761,25 +1808,45 @@ TkTextIndexBackChars(textPtr, srcPtr, charCount, dstPtr, type)
 	    if ((segPtr->typePtr == &tkTextToggleOffType)
 	      || (segPtr->typePtr == &tkTextToggleOnType)) {		
 		TkTextTag *tagPtr = segPtr->body.toggle.tagPtr;
-		if (tagPtr->elideString != NULL 
-		    && (tagPtr->priority >= infoPtr->elidePriority)) {
-		    if (elide) {
-			elide = ((segPtr->typePtr == &tkTextToggleOnType)
-				 & !tagPtr->elide);
-		    } else {
-			elide = ((segPtr->typePtr == &tkTextToggleOffType)
-				 & tagPtr->elide);
+		/*
+		 * The elide state only changes if this tag is
+		 * either the current highest priority tag
+		 * (and is therefore being toggled off), or it's
+		 * a new tag with higher priority.
+		 */
+		if (tagPtr->elideString != NULL) {
+		    infoPtr->tagCnts[tagPtr->priority]++;
+		    if (infoPtr->tagCnts[tagPtr->priority] & 1) {
+			infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
 		    }
-		    if (!elide && tagPtr->priority 
-			== infoPtr->elidePriority) {
-			/* Find previous elide tag, if any */
-			while (--infoPtr->elidePriority > 0) {
-			    if (infoPtr->tagCnts[infoPtr->elidePriority] & 1) {
-				break;
+		    if (tagPtr->priority >= infoPtr->elidePriority) {
+			if (segPtr->typePtr == &tkTextToggleOnType) {
+			    /* 
+			     * If it is being toggled on, and it has
+			     * an elide string, it must actually be the
+			     * current highest priority tag, so this
+			     * check is redundant:
+			     */
+			    if (tagPtr->priority != infoPtr->elidePriority) {
+				panic("Bad tag priority being toggled on");
 			    }
+						    
+			    /* 
+			     * Find previous elide tag, if any (if not
+			     * then elide will be zero, of course).
+			     */
+			    elide = 0;
+			    while (--infoPtr->elidePriority > 0) {
+				if (infoPtr->tagCnts[infoPtr->elidePriority] & 1) {
+				    elide = infoPtr->tagPtrs
+				              [infoPtr->elidePriority]->elide;
+				    break;
+				}
+			    }
+			} else {
+			    elide = tagPtr->elide;
+			    infoPtr->elidePriority = tagPtr->priority;
 			}
-		    } else {
-			infoPtr->elidePriority = tagPtr->priority;
 		    }
 		}
 	    }
