@@ -1,3 +1,12 @@
+2000-03-15  Sven Delmas  <sven@scriptics.com>
+
+	* win/tkWinDialog.c: Changed the behavior for the
+	tk_chooseDirectory dialog under Windows. Instead of trying to
+	return the currently selected listbox entry (which didn't work in
+	case the user selected the initial directory anyway), we now
+	return the value shown in the entry. This seems to be in
+	accordance with the expected behavior for this dialog.
+
 2000-03-10  Eric Melski  <ericm@scriptics.com>
 
 	* library/menu.tcl: Applied patch from [Bug: 4155]; protects
