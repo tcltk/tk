@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.18.2.2 2003/07/19 01:45:42 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.18.2.3 2003/10/29 01:07:46 hobbs Exp $
  */
  
 #include "tkUnixInt.h"
@@ -2716,6 +2716,13 @@ GetFontAttributes(display, fontStructPtr, faPtr)
     } else {
 	TkInitFontAttributes(&faPtr->fa);
 	TkInitXLFDAttributes(&faPtr->xa);
+    }
+    /*
+     * Do last ditch check for family.  It seems that some X servers can
+     * fail on the X font calls above, slipping through earlier checks.
+     * X-Win32 5.4 is one of these.
+     */
+    if (faPtr->fa.family == NULL) {
 	faPtr->fa.family = Tk_GetUid("");
 	faPtr->xa.foundry = Tk_GetUid("");
 	faPtr->xa.charset = Tk_GetUid("");
