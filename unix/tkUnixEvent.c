@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.7 2002/06/15 01:09:36 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.8 2002/06/15 01:54:09 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -591,7 +591,7 @@ OpenIM(dispPtr)
     for (i = 0; i < stylePtr->count_styles; i++) {
 	if (stylePtr->supported_styles[i]
 		== (XIMPreeditPosition | XIMStatusNothing)) {
-	    dispPtr->flags |= TK_USE_XIM_SPOT;
+	    dispPtr->flags |= TK_DISPLAY_XIM_SPOT;
 	    XFree(stylePtr);
 	    return;
 	}
