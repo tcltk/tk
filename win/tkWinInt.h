@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.10 2000/04/12 18:51:11 hobbs Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.10.4.1 2000/11/03 22:49:27 hobbs Exp $
  */
 
 #ifndef _TKWININT
@@ -28,6 +28,12 @@
 #ifndef _TKWIN
 #include "tkWin.h"
 #endif
+
+/*
+ * main header of speedup patch
+ */
+
+#include "tkWinGdi.h"
 
 #ifndef _TKPORT
 #include "tkPort.h"
@@ -157,6 +163,15 @@ extern int tkpWinRopModes[];
 
 EXTERN LRESULT CALLBACK	TkWinChildProc _ANSI_ARGS_((HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam));
+
+/*
+ * speedup patch related definitions
+ */
+#define FILLRECTGC
+#ifdef USE_CKGRAPH_IMP
+   extern int tkWinHashBrushs;
+   extern int tkWinHashPens;
+#endif /* USE_CKGRAPH_IMP */
 
 /*
  * Special proc needed as tsd accessor function between

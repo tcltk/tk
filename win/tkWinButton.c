@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.11 2000/11/03 01:22:16 hobbs Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.11.2.1 2000/11/03 22:49:25 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -589,8 +589,8 @@ TkpDisplayButton(clientData)
 	    rect.right = x+butPtr->textWidth + 1;
 	    rect.bottom = y+butPtr->textHeight + 1;
 	}
-	SetTextColor(dc, gc->foreground);
-	SetBkColor(dc, gc->background);
+	CkSetTextColor(dc, gc->foreground);
+	CkSetBkColor(dc, gc->background);
 	DrawFocusRect(dc, &rect);
 	TkWinReleaseDrawableDC(pixmap, dc, &state);
     }

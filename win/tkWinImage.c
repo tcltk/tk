@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinImage.c,v 1.3 2000/01/06 02:22:51 hobbs Exp $
+ * RCS: @(#) $Id: tkWinImage.c,v 1.3.4.1 2000/11/03 22:49:27 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -304,7 +304,7 @@ XGetImage(display, d, x, y, width, height, plane_mask, format)
 	    width, height, 32, 0);
     imagePtr->data = ckalloc(imagePtr->bytes_per_line * imagePtr->height);
 
-    dc = GetDC(NULL);
+    dc = TkWinGetNULLDC();
 
     GetDIBits(dc, twdPtr->bitmap.handle, 0, height, NULL,
 	    infoPtr, DIB_RGB_COLORS);
@@ -323,7 +323,7 @@ XGetImage(display, d, x, y, width, height, plane_mask, format)
 
     GetDIBits(dc, twdPtr->bitmap.handle, 0, height, imagePtr->data,
 	    infoPtr, DIB_RGB_COLORS);
-    ReleaseDC(NULL, dc);
+    TkWinReleaseNULLDC(dc);
 
     return imagePtr;
 }

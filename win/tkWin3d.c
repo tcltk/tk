@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin3d.c,v 1.5 2000/04/14 01:36:35 ericm Exp $
+ * RCS: @(#) $Id: tkWin3d.c,v 1.5.4.1 2000/11/03 22:49:24 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -126,6 +126,10 @@ Tk_3DVerticalBevel(tkwin, drawable, border, x, y, width, height,
 {
     TkBorder *borderPtr = (TkBorder *) border;
     int left, right;
+#ifdef FILLRECTGC
+    GC leftgc=None; 
+    GC rightgc=None;
+#endif
     Display *display = Tk_Display(tkwin);
     TkWinDCState state;
     HDC dc = TkWinGetDrawableDC(display, drawable, &state);
@@ -140,6 +144,11 @@ Tk_3DVerticalBevel(tkwin, drawable, border, x, y, width, height,
 	    left = (leftBevel)
 		? borderPtr->lightGC->foreground
 		: borderPtr->darkGC->foreground;
+#ifdef FILLRECTGC
+	    leftgc = (leftBevel)
+		? borderPtr->lightGC
+		: borderPtr->darkGC;
+#endif
 	    right = (leftBevel)
 		? ((WinBorder *)borderPtr)->light2ColorPtr->pixel
 		: ((WinBorder *)borderPtr)->dark2ColorPtr->pixel;
@@ -151,17 +160,33 @@ Tk_3DVerticalBevel(tkwin, drawable, border, x, y, width, height,
 	    right = (leftBevel)
 		? borderPtr->darkGC->foreground
 		: borderPtr->lightGC->foreground;
+#ifdef FILLRECTGC
+	    rightgc = (leftBevel)
+		? borderPtr->darkGC
+		: borderPtr->lightGC;
+#endif
 	    break;
 	case TK_RELIEF_RIDGE:
 	    left = borderPtr->lightGC->foreground;
 	    right = borderPtr->darkGC->foreground;
+#ifdef FILLRECTGC
+	    leftgc = borderPtr->lightGC;
+	    rightgc = borderPtr->darkGC;
+#endif
 	    break;
 	case TK_RELIEF_GROOVE:
 	    left = borderPtr->darkGC->foreground;
 	    right = borderPtr->lightGC->foreground;
+#ifdef FILLRECTGC
+	    leftgc = borderPtr->darkGC;
+	    rightgc = borderPtr->lightGC;
+#endif
 	    break;
 	case TK_RELIEF_FLAT:
+#ifdef FILLRECTGC
 	    left = right = borderPtr->bgGC->foreground;
+	    leftgc = rightgc = borderPtr->bgGC;
+#endif
 	    break;
 	case TK_RELIEF_SOLID:
 	    left = right = RGB(0,0,0);
@@ -171,8 +196,16 @@ Tk_3DVerticalBevel(tkwin, drawable, border, x, y, width, height,
     if (leftBevel && (width & 1)) {
 	half++;
     }
-    TkWinFillRect(dc, x, y, half, height, left);
-    TkWinFillRect(dc, x+half, y, width-half, height, right);
+#ifdef FILLRECTGC
+    (leftgc!=None)?
+      TkWinFillRectGC(dc, x, y, half, height, left,leftgc):
+#endif
+      TkWinFillRect(dc, x, y, half, height, left);
+#ifdef FILLRECTGC
+    (rightgc!=None)?
+      TkWinFillRectGC(dc, x+half, y, width-half, height, right,rightgc):
+#endif
+      TkWinFillRect(dc, x+half, y, width-half, height, right);
     TkWinReleaseDrawableDC(drawable, dc, &state);
 }
 

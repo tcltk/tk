@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.10 2000/04/19 23:12:56 hobbs Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.10.4.1 2000/11/03 22:49:30 hobbs Exp $
  */
 
 #include <tk.h>
@@ -19,6 +19,7 @@
 #include <malloc.h>
 #include <locale.h>
 
+#include <tkPlatDecls.h>
 #include "tkInt.h"
 
 /*
@@ -37,6 +38,16 @@ static void		WishPanic _ANSI_ARGS_(TCL_VARARGS(char *,format));
 #ifdef TK_TEST
 extern int		Tktest_Init(Tcl_Interp *interp);
 #endif /* TK_TEST */
+#ifdef STATIC_LIB
+#include <tkWinInt.h>
+#include <stdlib.h>
+BOOL APIENTRY DllMain(HINSTANCE hInstance,DWORD reason,LPVOID reserved);
+void static_exit(void){
+ HINSTANCE hInstance=Tk_GetHINSTANCE();
+// DllMain(hInstance,DLL_PROCESS_DETACH,NULL);
+ TkWinXCleanup(hInstance);
+}
+#endif
 
 #ifdef TCL_TEST
 extern int		TclObjTest_Init _ANSI_ARGS_((Tcl_Interp *interp));
@@ -175,6 +186,9 @@ Tcl_AppInit(interp)
     }
     if (Tk_Init(interp) == TCL_ERROR) {
 	goto error;
+    }
+    if (TkWin_Init(interp) == TCL_ERROR) {
+        goto error;
     }
     Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
 

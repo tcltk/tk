@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.24 2000/10/05 18:31:26 ericm Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.24.2.1 2000/11/03 22:49:23 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -397,6 +397,20 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkWinDialogDebug, /* 31 */
     TkWinGetMenuSystemDefault, /* 32 */
     TkWinGetPlatformId, /* 33 */
+    NULL, /* 34 */
+    NULL, /* 35 */
+    NULL, /* 36 */
+    NULL, /* 37 */
+    NULL, /* 38 */
+    NULL, /* 39 */
+    dprintf, /* 40 */
+    TkWinFillRectGC, /* 41 */
+    TkWinGdiInit, /* 42 */
+    TkWinGdiCleanup, /* 43 */
+    TkWinGetNULLDC, /* 44 */
+    TkWinReleaseNULLDC, /* 45 */
+    TkWinCreateSolidBrush, /* 46 */
+    TkWinDeleteBrush, /* 47 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     TkGenerateActivateEvents, /* 0 */
@@ -684,6 +698,12 @@ TkPlatStubs tkPlatStubs = {
     Tk_HWNDToWindow, /* 3 */
     Tk_PointerEvent, /* 4 */
     Tk_TranslateWinEvent, /* 5 */
+    NULL, /* 6 */
+    NULL, /* 7 */
+    NULL, /* 8 */
+    NULL, /* 9 */
+    TkWin_CreateDebugTerminal, /* 10 */
+    TkWin_Init, /* 11 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     Tk_MacSetEmbedHandler, /* 0 */

@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.13 2000/10/21 21:22:42 ericm Exp $
+# RCS: @(#) $Id: tk.decls,v 1.13.2.1 2000/11/03 22:49:22 hobbs Exp $
 
 library tk
 
@@ -1177,6 +1177,14 @@ declare 4 win {
 declare 5 win {
     int Tk_TranslateWinEvent (HWND hwnd, \
 	    UINT message, WPARAM wParam, LPARAM lParam, LRESULT *result)
+}
+
+declare 10 win {
+    HWND TkWin_CreateDebugTerminal (char* name)
+}
+
+declare 11 win {
+    int TkWin_Init (Tcl_Interp* interp)
 }
 
 # Mac specific functions

@@ -1,5 +1,35 @@
 2000-11-03  Jeff Hobbs  <hobbs@ajubasolutions.com>
 
+	* generic/tk.decls:
+	* generic/tkInt.decls:
+	* generic/tkIntPlatDecls.h:
+	* generic/tkPlatDecls.h:
+	* generic/tkStubInit.c:
+	* win/Makefile.in:
+	* win/makefile.vc:
+	* win/tkWin3d.c:
+	* win/tkWinButton.c:
+	* win/tkWinColor.c:
+	* win/tkWinDraw.c:
+	* win/tkWinFont.c:
+	* win/tkWinGdi.c (new):
+	* win/tkWinGdi.h (new):
+	* win/tkWinImage.c:
+	* win/tkWinInt.h:
+	* win/tkWinMenu.c:
+	* win/tkWinPixmap.c:
+	* win/tkWinUtil.c (new):
+	* win/tkWinWindow.c:
+	* win/tkWinWm.c:
+	* win/tkWinX.c:
+	* win/winMain.c:
+	* xlib/xgc.c:
+	* xlib/X11/Xlib.h: first cut at Windows speedup improvements by
+	Leo Schubert.  Needs to be streamlined, but the code is correct
+	and passes all tests.
+
+	8.4a2 RELEASE
+
 	* generic/tkWindow.c (Initialize): added call to Tcl_SetMainLoop.
 	This only has effect when tclsh is run (not wish), and then Tk is
 	loaded in interactively.

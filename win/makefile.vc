@@ -6,7 +6,7 @@
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
 #
-# RCS: @(#) $Id: makefile.vc,v 1.39 2000/11/03 01:16:30 hobbs Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.39.2.1 2000/11/03 22:49:24 hobbs Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -171,6 +171,8 @@ TKOBJS = \
 	$(TMPDIR)\tkWinWindow.obj \
 	$(TMPDIR)\tkWinWm.obj \
 	$(TMPDIR)\tkWinX.obj \
+	$(TMPDIR)\tkWinGdi.obj \
+	$(TMPDIR)\tkWinUtil.obj \
 	$(TMPDIR)\stubs.obj \
 	$(TMPDIR)\tk3d.obj \
 	$(TMPDIR)\tkArgv.obj \

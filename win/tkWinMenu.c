@@ -9,12 +9,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.13 2000/08/29 21:00:13 ericm Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.13.2.1 2000/11/03 22:49:27 hobbs Exp $
  */
 
 #define OEMRESOURCE
 #include "tkWinInt.h"
 #include "tkMenu.h"
+#include "tkWinGdi.h"
 
 #include <string.h>
 
@@ -1071,6 +1072,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		twdPtr = (TkWinDrawable *) ckalloc(sizeof(TkWinDrawable));
 		twdPtr->type = TWD_WINDC;
 		twdPtr->winDC.hdc = itemPtr->hDC;
+		CkGraph_RegisterDeviceContext(itemPtr->hDC) ;
 
 		if (mePtr->state != ENTRY_DISABLED) {
 		    if (itemPtr->itemState & ODS_SELECTED) {
@@ -1089,6 +1091,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 			- itemPtr->rcItem.top, 0, 0);
 
 		ckfree((char *) twdPtr);
+		CkGraph_UnRegisterDeviceContext(itemPtr->hDC) ;
 		*plResult = 1;
 		returnResult = 1;
 	    }
@@ -1435,13 +1438,16 @@ DrawWindowsSystemBitmap(display, drawable, gc, rectPtr, bitmapID, alignFlags)
     POINT ptOrg;
     int topOffset, leftOffset;
     
-    SetBkColor(hdc, gc->background);
-    SetTextColor(hdc, gc->foreground);
+#ifdef USE_CKGRAPH_IMP
+    CkGraph_ClearDC(hdc);
+#endif
+    CkSetBkColor(hdc, gc->background);
+    CkSetTextColor(hdc, gc->foreground);
 
-    scratchDC = CreateCompatibleDC(hdc);
-    bitmap = LoadBitmap(NULL, MAKEINTRESOURCE(bitmapID));
+    scratchDC = CkCreateCompatibleDC(hdc);
+    bitmap = CkLoadBitmap(NULL, MAKEINTRESOURCE(bitmapID));
 
-    SelectObject(scratchDC, bitmap);
+    CkSelectBitmap(scratchDC, bitmap);
     SetMapMode(scratchDC, GetMapMode(hdc));
     GetObject(bitmap, sizeof(BITMAP), &bm);
     ptSize.x = bm.bmWidth;
@@ -1467,10 +1473,10 @@ DrawWindowsSystemBitmap(display, drawable, gc, rectPtr, bitmapID, alignFlags)
 	leftOffset = (rectPtr->right - rectPtr->left) / 2 - (ptSize.x / 2);
     }
     
-    BitBlt(hdc, rectPtr->left + leftOffset, rectPtr->top + topOffset, ptSize.x,
+    CkBitBlt(hdc, rectPtr->left + leftOffset, rectPtr->top + topOffset, ptSize.x,
 	    ptSize.y, scratchDC, ptOrg.x, ptOrg.y, SRCCOPY);
-    DeleteDC(scratchDC);
-    DeleteObject(bitmap);
+    CkDeleteDC(scratchDC);
+    CkDeleteBitmap(bitmap);
 
     TkWinReleaseDrawableDC(drawable, hdc, &state);
 }
@@ -2662,7 +2668,7 @@ SetDefaults(
 	defaultBorderWidth = GetSystemMetrics(SM_CYBORDER);
     }
 
-    scratchDC = CreateDC("DISPLAY", NULL, NULL, NULL);
+    scratchDC = CkCreateDC("DISPLAY", NULL, NULL, NULL);
     if (!firstTime) {
 	Tcl_DStringFree(&menuFontDString);
     }
@@ -2671,8 +2677,8 @@ SetDefaults(
     ncMetrics.cbSize = sizeof(ncMetrics);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncMetrics),
 	    &ncMetrics, 0);
-    menuFont = CreateFontIndirect(&ncMetrics.lfMenuFont);
-    SelectObject(scratchDC, menuFont);
+    menuFont = CkCreateFontIndirect(&ncMetrics.lfMenuFont);
+    CkSelectFont(scratchDC, menuFont);
     GetTextMetrics(scratchDC, &tm);
     GetTextFace(scratchDC, LF_FACESIZE, faceName);
     pointSize = MulDiv(tm.tmHeight - tm.tmInternalLeading,
@@ -2683,11 +2689,12 @@ SetDefaults(
     if (tm.tmItalic) {
 	italic = 1;
     }
+#ifndef USE_CKGRAPH_IMP
+    CkSelectFont(scratchDC, CkGetStockObject(SYSTEM_FONT));
+#endif
+    CkDeleteDC(scratchDC);
 
-    SelectObject(scratchDC, GetStockObject(SYSTEM_FONT));
-    DeleteDC(scratchDC);
-
-    DeleteObject(menuFont);
+    CkDeleteFont(menuFont);
     
     Tcl_DStringAppendElement(&menuFontDString, faceName);
     sprintf(sizeString, "%d", pointSize);
@@ -2714,6 +2721,7 @@ SetDefaults(
      * is the only way to insure menu items lining up, and is not
      * documented.
      */
+     /*Harhar*/
 
     if (TkWinGetPlatformId() >= VER_PLATFORM_WIN32_WINDOWS) {
 	indicatorDimensions[0] = GetSystemMetrics(SM_CYMENUCHECK);

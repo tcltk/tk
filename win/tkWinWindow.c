@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWindow.c,v 1.6 2000/07/06 03:17:45 mo Exp $
+ * RCS: @(#) $Id: tkWinWindow.c,v 1.6.2.1 2000/11/03 22:49:29 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -667,6 +667,7 @@ XConfigureWindow(display, w, value_mask, values)
  *
  *----------------------------------------------------------------------
  */
+/*notused, Leo*/
 
 void
 XClearWindow(display, w)
@@ -675,27 +676,36 @@ XClearWindow(display, w)
 {
     RECT rc;
     HBRUSH brush;
-    HPALETTE oldPalette, palette;
+    HPALETTE palette;
+#ifndef USE_CKGRAPH_IMP
+    HPALETTE oldPalette;
+#endif
     TkWindow *winPtr;
     HWND hwnd = TkWinGetHWND(w);
-    HDC dc = GetDC(hwnd);
+    HDC dc = CkGetDC(hwnd);
 
     palette = TkWinGetPalette(display->screens[0].cmap);
-    oldPalette = SelectPalette(dc, palette, FALSE);
+#ifdef USE_CKGRAPH_IMP
+    CkSelectPalette(dc, palette, FALSE);
+#else
+    oldPalette = CkSelectPalette(dc, palette, FALSE);
+#endif
 
     display->request++;
 
     winPtr = TkWinGetWinPtr(w);
-    brush = CreateSolidBrush(winPtr->atts.background_pixel);
+    brush = CkCreateSolidBrush(winPtr->atts.background_pixel);
     GetWindowRect(hwnd, &rc);
     rc.right = rc.right - rc.left;
     rc.bottom = rc.bottom - rc.top;
     rc.left = rc.top = 0;
-    FillRect(dc, &rc, brush);
+    CkFillRect(dc, &rc, brush);
 
-    DeleteObject(brush);
-    SelectPalette(dc, oldPalette, TRUE);
-    ReleaseDC(hwnd, dc);
+    CkDeleteObject(brush);
+#ifndef USE_CKGRAPH_IMP
+    CkSelectPalette(dc, oldPalette, TRUE);
+#endif
+    CkReleaseDC(hwnd, dc);
 }
 
 /*

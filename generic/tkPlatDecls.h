@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.6 2000/09/07 00:28:39 ericm Exp $
+ * RCS: @(#) $Id: tkPlatDecls.h,v 1.6.2.1 2000/11/03 22:49:23 hobbs Exp $
  */
 
 #ifndef _TKPLATDECLS
@@ -47,6 +47,14 @@ EXTERN void		Tk_PointerEvent _ANSI_ARGS_((HWND hwnd, int x, int y));
 EXTERN int		Tk_TranslateWinEvent _ANSI_ARGS_((HWND hwnd, 
 				UINT message, WPARAM wParam, LPARAM lParam, 
 				LRESULT * result));
+/* Slot 6 is reserved */
+/* Slot 7 is reserved */
+/* Slot 8 is reserved */
+/* Slot 9 is reserved */
+/* 10 */
+EXTERN HWND		TkWin_CreateDebugTerminal _ANSI_ARGS_((char* name));
+/* 11 */
+EXTERN int		TkWin_Init _ANSI_ARGS_((Tcl_Interp* interp));
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* 0 */
@@ -94,6 +102,12 @@ typedef struct TkPlatStubs {
     Tk_Window (*tk_HWNDToWindow) _ANSI_ARGS_((HWND hwnd)); /* 3 */
     void (*tk_PointerEvent) _ANSI_ARGS_((HWND hwnd, int x, int y)); /* 4 */
     int (*tk_TranslateWinEvent) _ANSI_ARGS_((HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT * result)); /* 5 */
+    void *reserved6;
+    void *reserved7;
+    void *reserved8;
+    void *reserved9;
+    HWND (*tkWin_CreateDebugTerminal) _ANSI_ARGS_((char* name)); /* 10 */
+    int (*tkWin_Init) _ANSI_ARGS_((Tcl_Interp* interp)); /* 11 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     void (*tk_MacSetEmbedHandler) _ANSI_ARGS_((Tk_MacEmbedRegisterWinProc * registerWinProcPtr, Tk_MacEmbedGetGrafPortProc * getPortProcPtr, Tk_MacEmbedMakeContainerExistProc * containerExistProcPtr, Tk_MacEmbedGetClipProc * getClipProc, Tk_MacEmbedGetOffsetInParentProc * getOffsetProc)); /* 0 */
@@ -148,6 +162,18 @@ extern TkPlatStubs *tkPlatStubsPtr;
 #ifndef Tk_TranslateWinEvent
 #define Tk_TranslateWinEvent \
 	(tkPlatStubsPtr->tk_TranslateWinEvent) /* 5 */
+#endif
+/* Slot 6 is reserved */
+/* Slot 7 is reserved */
+/* Slot 8 is reserved */
+/* Slot 9 is reserved */
+#ifndef TkWin_CreateDebugTerminal
+#define TkWin_CreateDebugTerminal \
+	(tkPlatStubsPtr->tkWin_CreateDebugTerminal) /* 10 */
+#endif
+#ifndef TkWin_Init
+#define TkWin_Init \
+	(tkPlatStubsPtr->tkWin_Init) /* 11 */
 #endif
 #endif /* __WIN32__ */
 #ifdef MAC_TCL

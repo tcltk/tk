@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPixmap.c,v 1.3 2000/02/01 11:41:44 hobbs Exp $
+ * RCS: @(#) $Id: tkWinPixmap.c,v 1.3.4.1 2000/11/03 22:49:28 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -44,6 +44,7 @@ Tk_GetPixmap(display, d, width, height, depth)
     Screen *screen;
     
     display->request++;
+    GTRACE(("begin Tk_GetPixmap\n");)
 
     newTwdPtr = (TkWinDrawable*) ckalloc(sizeof(TkWinDrawable));
     newTwdPtr->type = TWD_BITMAP;
@@ -65,13 +66,18 @@ Tk_GetPixmap(display, d, width, height, depth)
 	planes = (int) screen->ext_data;
 	depth /= planes;
     }
-    newTwdPtr->bitmap.handle = CreateBitmap(width, height, planes, depth, NULL);
+#ifdef USE_CKGRAPH_IMP
+    newTwdPtr->bitmap.handle=CkGraph_GetHashedBitmap(width,height,planes,depth);
+#else
+    newTwdPtr->bitmap.handle = CkCreateBitmap(width, height, planes, depth, NULL);
+#endif
 
     if (newTwdPtr->bitmap.handle == NULL) {
 	ckfree((char *) newTwdPtr);
 	return None;
     }
     
+    GTRACE(("end Tk_GetPixmap return 0x%x\n",newTwdPtr->bitmap.handle);)
     return (Pixmap)newTwdPtr;
 }
 
@@ -99,10 +105,16 @@ Tk_FreePixmap(display, pixmap)
     TkWinDrawable *twdPtr = (TkWinDrawable *) pixmap;
 
     display->request++;
+    GTRACE(("begin Tk_FreePixmap 0x%x\n",twdPtr->bitmap.handle);)
     if (twdPtr != NULL) {
-	DeleteObject(twdPtr->bitmap.handle);
+#ifdef USE_CKGRAPH_IMP
+        CkGraph_ReleaseHashedBitmap(twdPtr->bitmap.handle);
+#else
+	CkDeleteBitmap(twdPtr->bitmap.handle);
+#endif
 	ckfree((char *)twdPtr);
     }
+    GTRACE(("end Tk_FreePixmap 0x%x\n",twdPtr->bitmap.handle);)
 }
 
 /*
@@ -128,6 +140,7 @@ TkSetPixmapColormap(pixmap, colormap)
     Colormap colormap;
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *)pixmap;
+    GTRACE(("TkSetPixmapColormap 0x%x\n",colormap);)
     twdPtr->bitmap.colormap = colormap;
 }
 
@@ -171,17 +184,18 @@ XGetGeometry(display, d, root_return, x_return, y_return, width_return,
 	if (twdPtr->bitmap.handle == NULL) {
             panic("XGetGeometry: invalid pixmap");
         }
-        dc = GetDC(NULL);
+        dc = TkWinGetNULLDC();
         info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
         info.bmiHeader.biBitCount = 0;
         if (!GetDIBits(dc, twdPtr->bitmap.handle, 0, 0, NULL, &info,
                 DIB_RGB_COLORS)) {
             panic("XGetGeometry: unable to get bitmap size");
         }
-        ReleaseDC(NULL, dc);
+        TkWinReleaseNULLDC(dc);
 
         *width_return = info.bmiHeader.biWidth;
         *height_return = info.bmiHeader.biHeight;
+        GTRACE(("XGetGeometry(..0x%x) returns w:%d,h:%d \n",twdPtr->bitmap.handle,*width_return,*height_return);)
     } else if (twdPtr->type == TWD_WINDOW) {
 	RECT rect;
 

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.9 2000/10/24 23:51:33 ericm Exp $
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.9.2.1 2000/11/03 22:49:25 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -102,9 +102,12 @@ static int bltModes[] = {
 /*
  * The followng typedef is used to pass Windows GDI drawing functions.
  */
-
 typedef BOOL (CALLBACK *WinDrawFunc) _ANSI_ARGS_((HDC dc,
 			    CONST POINT* points, int npoints));
+#define F_POLYGON  0
+#define F_POLYLINE 1
+#define POLYFUNC(functype,hdc,lp,count) \
+  functype==F_POLYGON?CkPolygon(hdc,lp,count):CkPolyline(hdc,lp,count)
 
 typedef struct ThreadSpecificData {
     POINT *winPoints;    /* Array of points that is reused. */
@@ -124,9 +127,116 @@ static void		DrawOrFillArc _ANSI_ARGS_((Display *display,
 			    int start, int extent, int fill));
 static void		RenderObject _ANSI_ARGS_((HDC dc, GC gc,
 			    XPoint* points, int npoints, int mode, HPEN pen,
-			    WinDrawFunc func));
+			    int func));
 static HPEN		SetUpGraphicsPort _ANSI_ARGS_((GC gc));
 
+static double mycos(double val){
+  return cos(val);
+}
+static double mysin(double val){
+  return sin(val);
+}
+
+#ifdef USE_CKGRAPH_IMP
+  int tkWinHashBrushs=1;
+  int tkWinHashPens=1;
+#endif
+
+#ifdef USE_CKGRAPH_IMP
+HDC TkWinGetNULLDC(void){
+  return CkGraph_GetHashedDC();
+}
+void TkWinReleaseNULLDC(HDC hdc){
+  CkGraph_ReleaseHashedDC(hdc);
+}
+#else  /*USE_CKGRAPH_IMP*/
+HDC TkWinGetNULLDC(void){
+  return GetDC(NULL);
+}
+void TkWinReleaseNULLDC(HDC hdc){
+  ReleaseDC(NULL,hdc);
+}
+#endif /*USE_CKGRAPH_IMP*/
+
+HBRUSH TkWinCreateSolidBrush(GC gc,COLORREF color){
+#ifdef USE_CKGRAPH_IMP
+    if ( tkWinHashBrushs==0 ) 
+#endif
+      return CkCreateSolidBrush(color);
+#ifdef USE_CKGRAPH_IMP
+    if(color==gc->foreground){
+      return (HBRUSH)((gc->fgBrush==None)?
+                gc->fgBrush=(unsigned int)CkCreateSolidBrush(gc->foreground):
+                gc->fgBrush);
+    } else if(color==gc->background) {
+      return (HBRUSH)((gc->bgBrush==None)?
+                gc->bgBrush=(unsigned int)CkCreateSolidBrush(gc->background):
+                gc->bgBrush);
+    } else {
+      return CkCreateSolidBrush(color);
+    }
+#endif
+}
+BOOL TkWinDeleteBrush(GC gc,HBRUSH hBrush){
+#ifdef USE_CKGRAPH_IMP
+    if ( tkWinHashBrushs==0 ) 
+#endif
+      return CkDeleteBrush(hBrush);
+#ifdef USE_CKGRAPH_IMP
+/*
+ * let the brushs allocated until GC is destroyed
+ * except this is a temporary allocated brush
+ */
+    if(hBrush!=(HBRUSH)gc->bgBrush && hBrush!=(HBRUSH)gc->fgBrush){
+      return CkDeleteBrush(hBrush);
+    }
+    return TRUE;
+#endif
+}
+static HPEN TkWinExtCreatePen(GC gc,DWORD style,DWORD width,CONST LOGBRUSH* lb,
+                     DWORD count,CONST DWORD* lp){
+#ifdef USE_CKGRAPH_IMP
+    if ( tkWinHashPens==0 ) 
+#endif
+      return CkExtCreatePen(style, width, lb, count, lp);
+#ifdef USE_CKGRAPH_IMP
+    if(gc->fgExtPen==None){
+       goto done;
+    } else if (style!=gc->extpenstyle){
+       CkDeletePen((HPEN)gc->fgExtPen);
+       goto done;
+    } else {
+       return (HPEN)gc->fgExtPen;
+    }
+done:
+    gc->extpenstyle=style;
+    return (HPEN) (gc->fgExtPen=(unsigned int)CkExtCreatePen(style, width, lb, count, lp));
+#endif
+}
+static HPEN TkWinCreatePen(GC gc,int style,int width,COLORREF color){
+#ifdef USE_CKGRAPH_IMP
+    if ( tkWinHashPens==0 ) 
+#endif
+      return CkCreatePen(style,width,color);
+#ifdef USE_CKGRAPH_IMP
+    return (HPEN)((gc->fgPen==None)?
+                gc->fgPen=(unsigned int)CkCreatePen(style,width,color):
+                gc->fgPen);
+#endif
+}
+static BOOL TkWinDeletePen(GC gc,HPEN hPen){
+#ifdef USE_CKGRAPH_IMP
+    if ( tkWinHashPens==0 ) 
+#endif
+      return CkDeletePen(hPen);
+#ifdef USE_CKGRAPH_IMP
+/*
+ * let the pens allocated until GC is destroyed
+ * except this is a temporary allocated brush
+ */
+    return TRUE;
+#endif
+}
 /*
  *----------------------------------------------------------------------
  *
@@ -155,10 +265,11 @@ TkWinGetDrawableDC(display, d, state)
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
     Colormap cmap;
 
+    GTRACE(("begin TkWinGetDrawableDC\n");)
     if (twdPtr->type == TWD_WINDOW) {
 	TkWindow *winPtr = twdPtr->window.winPtr;
     
- 	dc = GetDC(twdPtr->window.handle);
+ 	dc = CkGetDC(twdPtr->window.handle);
 	if (winPtr == NULL) {
 	    cmap = DefaultColormap(display, DefaultScreen(display));
 	} else {
@@ -168,12 +279,22 @@ TkWinGetDrawableDC(display, d, state)
 	dc = twdPtr->winDC.hdc;
 	cmap = DefaultColormap(display, DefaultScreen(display));
     } else {
-	dc = CreateCompatibleDC(NULL);
-	SelectObject(dc, twdPtr->bitmap.handle);
+#ifdef USE_CKGRAPH_IMP
+	dc = CkGraph_GetHashedDC();
+#else
+	dc = CkCreateCompatibleDC(NULL);
+#endif
+#ifdef USE_CKGRAPH_IMP
+#ifdef CKGRAPH_DEBUG
+        CkGraph_CheckSelectedBitmap(dc, twdPtr->bitmap.handle);
+#endif
+#endif
+	CkSelectBitmap(dc, twdPtr->bitmap.handle);
 	cmap = twdPtr->bitmap.colormap;
     }
     state->palette = TkWinSelectPalette(dc, cmap);
     state->bkmode  = GetBkMode(dc);
+    GTRACE(("end TkWinGetDrawableDC\n");)
     return dc;
 }
 
@@ -200,14 +321,22 @@ TkWinReleaseDrawableDC(d, dc, state)
     TkWinDCState *state;
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
-    SetBkMode(dc, state->bkmode);
-    SelectPalette(dc, state->palette, TRUE);
-    RealizePalette(dc);
+    GTRACE(("begin TkWinReleaseDrawableDC\n");)
+    CkSetBkMode(dc, state->bkmode);
+#ifndef USE_CKGRAPH_IMP
+    CkSelectPalette(dc, state->palette, TRUE);
+    CkRealizePalette(dc);
+#endif
     if (twdPtr->type == TWD_WINDOW) {
-	ReleaseDC(TkWinGetHWND(d), dc);
+	CkReleaseDC(TkWinGetHWND(d), dc);
     } else if (twdPtr->type == TWD_BITMAP) {
-	DeleteDC(dc);
+#ifdef USE_CKGRAPH_IMP
+        CkGraph_ReleaseHashedDC(dc);
+#else
+	CkDeleteDC(dc);
+#endif
     }
+    GTRACE(("end TkWinReleaseDrawableDC\n");)
 }
 
 /*
@@ -313,6 +442,7 @@ XCopyArea(display, src, dest, gc, src_x, src_y, width, height, dest_x, dest_y)
     HDC srcDC, destDC;
     TkWinDCState srcState, destState;
     TkpClipMask *clipPtr = (TkpClipMask*)gc->clip_mask;
+    GTRACE(("begin XCopyArea\n");)
 
     srcDC = TkWinGetDrawableDC(display, src, &srcState);
 
@@ -323,19 +453,20 @@ XCopyArea(display, src, dest, gc, src_x, src_y, width, height, dest_x, dest_y)
     }
 
     if (clipPtr && clipPtr->type == TKP_CLIP_REGION) {
-	SelectClipRgn(destDC, (HRGN) clipPtr->value.region);
-	OffsetClipRgn(destDC, gc->clip_x_origin, gc->clip_y_origin);
+	CkSelectClipRgn(destDC, (HRGN) clipPtr->value.region);
+	CkOffsetClipRgn(destDC, gc->clip_x_origin, gc->clip_y_origin);
     }
 
-    BitBlt(destDC, dest_x, dest_y, width, height, srcDC, src_x, src_y,
+    CkBitBlt(destDC, dest_x, dest_y, width, height, srcDC, src_x, src_y,
 	    bltModes[gc->function]);
 
-    SelectClipRgn(destDC, NULL);
+    CkSelectClipRgn(destDC, NULL);
 
     if (src != dest) {
 	TkWinReleaseDrawableDC(dest, destDC, &destState);
     }
     TkWinReleaseDrawableDC(src, srcDC, &srcState);
+    GTRACE(("end XCopyArea\n");)
 }
 
 /*
@@ -371,8 +502,12 @@ XCopyPlane(display, src, dest, gc, src_x, src_y, width, height, dest_x,
 {
     HDC srcDC, destDC;
     TkWinDCState srcState, destState;
-    HBRUSH bgBrush, fgBrush, oldBrush;
+    HBRUSH bgBrush, fgBrush; 
+#ifndef USE_CKGRAPH_IMP
+    HBRUSH oldBrush;
+#endif
     TkpClipMask *clipPtr = (TkpClipMask*)gc->clip_mask;
+    GTRACE(("begin XCopyPlane\n");)
 
     display->request++;
 
@@ -398,17 +533,18 @@ XCopyPlane(display, src, dest, gc, src_x, src_y, width, height, dest_x,
 	 */
 
 	if (clipPtr && clipPtr->type == TKP_CLIP_REGION) {
-	    SelectClipRgn(destDC, (HRGN) clipPtr->value.region);
-	    OffsetClipRgn(destDC, gc->clip_x_origin, gc->clip_y_origin);
+            //this sometimes fail in BLT-Graph, dunno why
+	    CkSelectClipRgn(destDC, (HRGN) clipPtr->value.region);
+	    CkOffsetClipRgn(destDC, gc->clip_x_origin, gc->clip_y_origin);
 	}
 
-	SetBkMode(destDC, OPAQUE);
-	SetBkColor(destDC, gc->foreground);
-	SetTextColor(destDC, gc->background);
-	BitBlt(destDC, dest_x, dest_y, width, height, srcDC, src_x, src_y,
+	CkSetBkMode(destDC, OPAQUE);
+	CkSetBkColor(destDC, gc->foreground);
+	CkSetTextColor(destDC, gc->background);
+	CkBitBlt(destDC, dest_x, dest_y, width, height, srcDC, src_x, src_y,
 		SRCCOPY);
 
-	SelectClipRgn(destDC, NULL);
+	CkSelectClipRgn(destDC, NULL);
     } else if (clipPtr->type == TKP_CLIP_PIXMAP) {
 	if (clipPtr->value.pixmap == src) {
 
@@ -417,13 +553,23 @@ XCopyPlane(display, src, dest, gc, src_x, src_y, width, height, dest_x,
 	     * destination to the foreground color whenever the source
 	     * pixel is set.
 	     */
+	    fgBrush = TkWinCreateSolidBrush(gc,gc->foreground);
 
-	    fgBrush = CreateSolidBrush(gc->foreground);
-	    oldBrush = SelectObject(destDC, fgBrush);
-	    BitBlt(destDC, dest_x, dest_y, width, height, srcDC, src_x, src_y,
+#ifdef USE_CKGRAPH_IMP
+	    //Oops,the Tcl/Tk appeared brown in the bitmap ...
+	    //so reset the DC correctly
+	    CkGraph_ClearDC(destDC);
+	    CkGraph_ClearDC(srcDC);
+	    CkSelectBrush(destDC, fgBrush);
+#else
+	    oldBrush = CkSelectBrush(destDC, fgBrush);
+#endif
+	    CkBitBlt(destDC, dest_x, dest_y, width, height, srcDC, src_x, src_y,
 		    MASKPAT);
-	    SelectObject(destDC, oldBrush);
-	    DeleteObject(fgBrush);
+#ifndef USE_CKGRAPH_IMP
+	    CkSelectBrush(destDC, oldBrush);
+#endif
+	    TkWinDeleteBrush(gc,fgBrush);
 	} else {
 
 	    /*
@@ -436,13 +582,13 @@ XCopyPlane(display, src, dest, gc, src_x, src_y, width, height, dest_x,
 	    HBITMAP bitmap;
 	    TkWinDCState maskState;
 
-	    fgBrush = CreateSolidBrush(gc->foreground);
-	    bgBrush = CreateSolidBrush(gc->background);
+	    fgBrush = TkWinCreateSolidBrush(gc,gc->foreground);
+	    bgBrush = TkWinCreateSolidBrush(gc,gc->background);
 	    maskDC = TkWinGetDrawableDC(display, clipPtr->value.pixmap,
 		    &maskState);
-	    memDC = CreateCompatibleDC(destDC);
-	    bitmap = CreateBitmap(width, height, 1, 1, NULL);
-	    SelectObject(memDC, bitmap);
+	    memDC = CkCreateCompatibleDC(destDC);
+	    bitmap = CkCreateBitmap(width, height, 1, 1, NULL);
+	    CkSelectBitmap(memDC, bitmap);
 
 	    /*
 	     * Set foreground bits.  We create a new bitmap containing
@@ -450,12 +596,16 @@ XCopyPlane(display, src, dest, gc, src_x, src_y, width, height, dest_x,
 	     * into the destination.
 	     */
 
-	    BitBlt(memDC, 0, 0, width, height, srcDC, src_x, src_y, SRCCOPY);
-	    BitBlt(memDC, 0, 0, width, height, maskDC,
+	    CkBitBlt(memDC, 0, 0, width, height, srcDC, src_x, src_y, SRCCOPY);
+	    CkBitBlt(memDC, 0, 0, width, height, maskDC,
 		    dest_x - gc->clip_x_origin, dest_y - gc->clip_y_origin,
 		    SRCAND);
-	    oldBrush = SelectObject(destDC, fgBrush);
-	    BitBlt(destDC, dest_x, dest_y, width, height, memDC, 0, 0,
+#ifdef USE_CKGRAPH_IMP
+	    CkSelectBrush(destDC, fgBrush);
+#else
+	    oldBrush = CkSelectBrush(destDC, fgBrush);
+#endif
+	    CkBitBlt(destDC, dest_x, dest_y, width, height, memDC, 0, 0,
 		    MASKPAT);
 
 	    /*
@@ -463,27 +613,30 @@ XCopyPlane(display, src, dest, gc, src_x, src_y, width, height, dest_x,
 	     * ((NOT source) AND mask) and the background brush.
 	     */
 
-	    BitBlt(memDC, 0, 0, width, height, srcDC, src_x, src_y,
+	    CkBitBlt(memDC, 0, 0, width, height, srcDC, src_x, src_y,
 		    NOTSRCCOPY);
-	    BitBlt(memDC, 0, 0, width, height, maskDC,
+	    CkBitBlt(memDC, 0, 0, width, height, maskDC,
 		    dest_x - gc->clip_x_origin, dest_y - gc->clip_y_origin,
 		    SRCAND);
-	    SelectObject(destDC, bgBrush);
-	    BitBlt(destDC, dest_x, dest_y, width, height, memDC, 0, 0,
+	    CkSelectBrush(destDC, bgBrush);
+	    CkBitBlt(destDC, dest_x, dest_y, width, height, memDC, 0, 0,
 		    MASKPAT);
 
 	    TkWinReleaseDrawableDC(clipPtr->value.pixmap, maskDC, &maskState);
-	    SelectObject(destDC, oldBrush);
-	    DeleteDC(memDC);
-	    DeleteObject(bitmap);
-	    DeleteObject(fgBrush);
-	    DeleteObject(bgBrush);
+#ifndef USE_CKGRAPH_IMP
+	    CkSelectBrush(destDC, oldBrush);
+#endif
+	    CkDeleteDC(memDC);
+	    CkDeleteBitmap(bitmap);
+	    TkWinDeleteBrush(gc,fgBrush);
+	    TkWinDeleteBrush(gc,bgBrush);
 	}
     }
     if (src != dest) {
 	TkWinReleaseDrawableDC(dest, destDC, &destState);
     }
     TkWinReleaseDrawableDC(src, srcDC, &srcState);
+    GTRACE(("end XCopyPlane\n");)
 }
 
 /*
@@ -525,10 +678,11 @@ TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x,
     char *data;
 
     display->request++;
+    GTRACE(("begin TkPutImage\n");)
 
     dc = TkWinGetDrawableDC(display, d, &state);
-    SetROP2(dc, tkpWinRopModes[gc->function]);
-    dcMem = CreateCompatibleDC(dc);
+    CkSetROP2(dc, tkpWinRopModes[gc->function]);
+    dcMem = CkCreateCompatibleDC(dc);
 
     if (image->bits_per_pixel == 1) {
 	/*
@@ -539,14 +693,14 @@ TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x,
 	if ((image->bitmap_bit_order != MSBFirst)
 		|| (image->bitmap_pad != sizeof(WORD))) {
 	    data = TkAlignImageData(image, sizeof(WORD), MSBFirst);
-	    bitmap = CreateBitmap(image->width, image->height, 1, 1, data);
+	    bitmap = CkCreateBitmap(image->width, image->height, 1, 1, data);
 	    ckfree(data);
 	} else {
-	    bitmap = CreateBitmap(image->width, image->height, 1, 1,
+	    bitmap = CkCreateBitmap(image->width, image->height, 1, 1,
 		    image->data);
 	}
-	SetTextColor(dc, gc->foreground);
-	SetBkColor(dc, gc->background);
+	CkSetTextColor(dc, gc->foreground);
+	CkSetBkColor(dc, gc->background);
     } else {    
 	int i, usePalette;
 
@@ -585,15 +739,24 @@ TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x,
 	} else {
 	    infoPtr->bmiHeader.biClrUsed = 0;
 	}
-	bitmap = CreateDIBitmap(dc, &infoPtr->bmiHeader, CBM_INIT,
+	bitmap = CkCreateDIBitmap(dc, &infoPtr->bmiHeader, CBM_INIT,
 		image->data, infoPtr, DIB_RGB_COLORS);
 	ckfree((char *) infoPtr);
     }
-    bitmap = SelectObject(dcMem, bitmap);
-    BitBlt(dc, dest_x, dest_y, width, height, dcMem, src_x, src_y, SRCCOPY);
-    DeleteObject(SelectObject(dcMem, bitmap));
-    DeleteDC(dcMem);
+#ifdef USE_CKGRAPH_IMP
+    CkSelectBitmap(dcMem, bitmap);
+#else
+    bitmap = CkSelectBitmap(dcMem, bitmap);
+#endif
+    CkBitBlt(dc, dest_x, dest_y, width, height, dcMem, src_x, src_y, SRCCOPY);
+    CkDeleteDC(dcMem);
+#ifdef USE_CKGRAPH_IMP
+    CkDeleteBitmap(bitmap);
+#else
+    CkDeleteBitmap(CkSelectBitmap(dcMem, bitmap));
+#endif
     TkWinReleaseDrawableDC(d, dc, &state);
+    GTRACE(("end TkPutImage\n");)
 }
 
 /*
@@ -624,24 +787,28 @@ XFillRectangles(display, d, gc, rectangles, nrectangles)
     int i;
     RECT rect;
     TkWinDCState state;
-    HBRUSH brush;
 
     if (d == None) {
 	return;
     }
-
+    GTRACE(("begin XFillRectangles(..%d)\n",nrectangles);)
     dc = TkWinGetDrawableDC(display, d, &state);
-    SetROP2(dc, tkpWinRopModes[gc->function]);
-    brush = CreateSolidBrush(gc->foreground);
+    CkSetROP2(dc, tkpWinRopModes[gc->function]);
 
     if ((gc->fill_style == FillStippled
 	    || gc->fill_style == FillOpaqueStippled)
 	    && gc->stipple != None) {
 	TkWinDrawable *twdPtr = (TkWinDrawable *)gc->stipple;
-	HBRUSH oldBrush, stipple;
-	HBITMAP oldBitmap, bitmap;
+        POINT brushOrg;
+#ifndef USE_CKGRAPH_IMP
+	HBRUSH oldBrush;
+	HBITMAP oldBitmap;
+#endif
+	HBRUSH stipple;
+        HBITMAP bitmap;
 	HDC dcMem;
-	HBRUSH bgBrush = CreateSolidBrush(gc->background);
+        HBRUSH brush = TkWinCreateSolidBrush(gc,gc->foreground);
+	HBRUSH bgBrush = TkWinCreateSolidBrush(gc,gc->background);
 
 	if (twdPtr->type != TWD_BITMAP) {
 	    panic("unexpected drawable type in stipple");
@@ -650,11 +817,15 @@ XFillRectangles(display, d, gc, rectangles, nrectangles)
 	/*
 	 * Select stipple pattern into destination dc.
 	 */
-	
-	stipple = CreatePatternBrush(twdPtr->bitmap.handle);
-	SetBrushOrgEx(dc, gc->ts_x_origin, gc->ts_y_origin, NULL);
-	oldBrush = SelectObject(dc, stipple);
-	dcMem = CreateCompatibleDC(dc);
+	stipple = CkCreatePatternBrush(twdPtr->bitmap.handle);
+	SetBrushOrgEx(dc, gc->ts_x_origin, gc->ts_y_origin, &brushOrg);
+#ifdef USE_CKGRAPH_IMP
+	CkGraph_ClearDC(dc);
+	CkSelectBrush(dc, stipple);
+#else
+	oldBrush = CkSelectBrush(dc, stipple);
+#endif
+	dcMem = CkCreateCompatibleDC(dc);
 
 	/*
 	 * For each rectangle, create a drawing surface which is the size of
@@ -663,38 +834,53 @@ XFillRectangles(display, d, gc, rectangles, nrectangles)
 	 */
 
 	for (i = 0; i < nrectangles; i++) {
-	    bitmap = CreateCompatibleBitmap(dc, rectangles[i].width,
+	    bitmap = CkCreateCompatibleBitmap(dc, rectangles[i].width,
 		    rectangles[i].height);
-	    oldBitmap = SelectObject(dcMem, bitmap);
+#ifdef USE_CKGRAPH_IMP
+	    CkSelectBitmap(dcMem, bitmap);
+#else
+	    oldBitmap = CkSelectBitmap(dcMem, bitmap);
+#endif
 	    rect.left = 0;
 	    rect.top = 0;
 	    rect.right = rectangles[i].width;
 	    rect.bottom = rectangles[i].height;
-	    FillRect(dcMem, &rect, brush);
-	    BitBlt(dc, rectangles[i].x, rectangles[i].y, rectangles[i].width,
+	    CkFillRect(dcMem, &rect, brush);
+	    CkBitBlt(dc, rectangles[i].x, rectangles[i].y, rectangles[i].width,
 		    rectangles[i].height, dcMem, 0, 0, COPYFG);
 	    if (gc->fill_style == FillOpaqueStippled) {
-		FillRect(dcMem, &rect, bgBrush);
-		BitBlt(dc, rectangles[i].x, rectangles[i].y,
+		CkFillRect(dcMem, &rect, bgBrush);
+		CkBitBlt(dc, rectangles[i].x, rectangles[i].y,
 			rectangles[i].width, rectangles[i].height, dcMem,
 			0, 0, COPYBG);
 	    }
-	    SelectObject(dcMem, oldBitmap);
-	    DeleteObject(bitmap);
+#ifndef USE_CKGRAPH_IMP
+	    CkSelectBitmap(dcMem, oldBitmap);
+#endif
+	    CkDeleteBitmap(bitmap);
 	}
 	
-	DeleteDC(dcMem);
-	SelectObject(dc, oldBrush);
-	DeleteObject(stipple);
-	DeleteObject(bgBrush);
+	CkDeleteDC(dcMem);
+#ifndef USE_CKGRAPH_IMP
+	CkSelectBrush(dc, oldBrush);
+#endif
+	CkDeleteBrush(stipple);
+	TkWinDeleteBrush(gc,bgBrush);
+        TkWinDeleteBrush(gc,brush);
+	SetBrushOrgEx(dc, brushOrg.x, brushOrg.y, NULL);
     } else {
 	for (i = 0; i < nrectangles; i++) {
+#ifdef FILLRECTGC
+	    TkWinFillRectGC(dc, rectangles[i].x, rectangles[i].y,
+		    rectangles[i].width, rectangles[i].height, gc->foreground,gc);
+#else
 	    TkWinFillRect(dc, rectangles[i].x, rectangles[i].y,
 		    rectangles[i].width, rectangles[i].height, gc->foreground);
+#endif
 	}
     }
-    DeleteObject(brush);
     TkWinReleaseDrawableDC(d, dc, &state);
+    GTRACE(("end XFillRectangles(..%d)\n",nrectangles);)
 }
 
 /*
@@ -703,7 +889,7 @@ XFillRectangles(display, d, gc, rectangles, nrectangles)
  * RenderObject --
  *
  *	This function draws a shape using a list of points, a
- *	stipple pattern, and the specified drawing function.
+ *	stipple pattern, and the specified drawing function type.
  *
  * Results:
  *	None.
@@ -715,19 +901,22 @@ XFillRectangles(display, d, gc, rectangles, nrectangles)
  */
 
 static void
-RenderObject(dc, gc, points, npoints, mode, pen, func)
+RenderObject(dc, gc, points, npoints, mode, pen, functype)
     HDC dc;
     GC gc;
     XPoint* points;
     int npoints;
     int mode;
     HPEN pen;
-    WinDrawFunc func;
+    int functype;
 {
     RECT rect;
+#ifndef USE_CKGRAPH_IMP
     HPEN oldPen;
     HBRUSH oldBrush;
+#endif
     POINT *winPoints = ConvertPoints(points, npoints, mode, &rect);
+    GTRACE(("begin RenderObject\n");)
     
     if ((gc->fill_style == FillStippled
 	    || gc->fill_style == FillOpaqueStippled)
@@ -736,9 +925,18 @@ RenderObject(dc, gc, points, npoints, mode, pen, func)
 	TkWinDrawable *twdPtr = (TkWinDrawable *)gc->stipple;
 	HDC dcMem;
 	LONG width, height;
-	HBITMAP oldBitmap;
 	int i;
+	POINT brushOrg;
+#ifdef USE_CKGRAPH_IMP
+	HBRUSH fgBrush;
+	HBRUSH bgBrush=(HBRUSH)NULL;
+	HBRUSH patBrush;
+	HBITMAP bitmap;
+	CkGraph_ClearDC(dc);
+#else
+	HBITMAP oldBitmap;
 	HBRUSH oldMemBrush;
+#endif
 	
 	if (twdPtr->type != TWD_BITMAP) {
 	    panic("unexpected drawable type in stipple");
@@ -760,19 +958,29 @@ RenderObject(dc, gc, points, npoints, mode, pen, func)
 	 * Select stipple pattern into destination dc.
 	 */
 	
-	SetBrushOrgEx(dc, gc->ts_x_origin, gc->ts_y_origin, NULL);
-	oldBrush = SelectObject(dc, CreatePatternBrush(twdPtr->bitmap.handle));
+	SetBrushOrgEx(dc, gc->ts_x_origin, gc->ts_y_origin, &brushOrg);
+#ifdef USE_CKGRAPH_IMP
+	CkSelectBrush(dc,patBrush=CkCreatePatternBrush(twdPtr->bitmap.handle));
+#else
+	oldBrush = CkSelectBrush(dc, CkCreatePatternBrush(twdPtr->bitmap.handle));
+#endif
 
 	/*
 	 * Create temporary drawing surface containing a copy of the
 	 * destination equal in size to the bounding box of the object.
 	 */
 	
-	dcMem = CreateCompatibleDC(dc);
-	oldBitmap = SelectObject(dcMem, CreateCompatibleBitmap(dc, width,
+	dcMem = CkCreateCompatibleDC(dc);
+#ifdef USE_CKGRAPH_IMP
+	CkSelectPen(dcMem, pen);
+	CkSelectBitmap(dcMem, bitmap=CkCreateCompatibleBitmap(dc, width,
 		height));
-	oldPen = SelectObject(dcMem, pen);
-	BitBlt(dcMem, 0, 0, width, height, dc, rect.left, rect.top, SRCCOPY);
+#else
+	oldBitmap = CkSelectBitmap(dcMem, CkCreateCompatibleBitmap(dc, width,
+		height));
+	oldPen = CkSelectPen(dcMem, pen);
+#endif
+	CkBitBlt(dcMem, 0, 0, width, height, dc, rect.left, rect.top, SRCCOPY);
 
 	/*
 	 * Translate the object for rendering in the temporary drawing
@@ -791,41 +999,69 @@ RenderObject(dc, gc, points, npoints, mode, pen, func)
 
 	SetPolyFillMode(dcMem, (gc->fill_rule == EvenOddRule) ? ALTERNATE
 		: WINDING);
-	oldMemBrush = SelectObject(dcMem, CreateSolidBrush(gc->foreground));
-	(*func)(dcMem, winPoints, npoints);
-	BitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0, COPYFG);
+#ifdef USE_CKGRAPH_IMP
+	CkSelectBrush(dcMem, fgBrush=TkWinCreateSolidBrush(gc,gc->foreground));
+#else
+	oldMemBrush = CkSelectBrush(dcMem, TkWinCreateSolidBrush(gc,gc->foreground));
+#endif
+	POLYFUNC(functype, dcMem, winPoints, npoints);
+	CkBitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0, COPYFG);
 
 	/*
 	 * If we are rendering an opaque stipple, then draw the polygon in the
 	 * background color and copy it to the destination wherever the pattern
 	 * is clear.
 	 */
-
 	if (gc->fill_style == FillOpaqueStippled) {
-	    DeleteObject(SelectObject(dcMem,
-		    CreateSolidBrush(gc->background)));
-	    (*func)(dcMem, winPoints, npoints);
-	    BitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0,
+#ifdef USE_CKGRAPH_IMP
+	    CkSelectBrush(dcMem,bgBrush=TkWinCreateSolidBrush(gc,gc->background));
+#else
+	    TkWinDeleteBrush(gc,CkSelectBrush(dcMem,
+		    TkWinCreateSolidBrush(gc,gc->background)));
+#endif
+	    POLYFUNC(functype, dcMem, winPoints, npoints);
+	    CkBitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0,
 		    COPYBG);
 	}
 
-	SelectObject(dcMem, oldPen);
-	DeleteObject(SelectObject(dcMem, oldMemBrush));
-	DeleteObject(SelectObject(dcMem, oldBitmap));
-	DeleteDC(dcMem);
+#ifdef USE_CKGRAPH_IMP
+	CkDeleteDC(dcMem);
+	CkDeleteBrush(patBrush);
+	TkWinDeleteBrush(gc,fgBrush);
+        if(bgBrush!=NULL)
+	  TkWinDeleteBrush(gc,bgBrush);
+	CkDeleteBitmap(bitmap);
+#else
+	CkSelectPen(dcMem, oldPen);
+	TkWinDeleteBrush(gc,CkSelectBrush(dcMem, oldMemBrush));
+	CkDeleteBitmap(CkSelectBitmap(dcMem, oldBitmap));
+	CkDeleteDC(dcMem);
+#endif
+	SetBrushOrgEx(dc, brushOrg.x, brushOrg.y, NULL);
     } else {
-	oldPen = SelectObject(dc, pen);
-	oldBrush = SelectObject(dc, CreateSolidBrush(gc->foreground));
-	SetROP2(dc, tkpWinRopModes[gc->function]);
+#ifdef USE_CKGRAPH_IMP
+        HBRUSH hBrush;
+	CkSelectPen(dc, pen);
+	CkSelectBrush(dc,hBrush=TkWinCreateSolidBrush(gc,gc->foreground));
+#else
+	oldPen = CkSelectPen(dc, pen);
+	oldBrush = CkSelectBrush(dc, TkWinCreateSolidBrush(gc,gc->foreground));
+#endif
+	CkSetROP2(dc, tkpWinRopModes[gc->function]);
 
-	SetPolyFillMode(dc, (gc->fill_rule == EvenOddRule) ? ALTERNATE
+	CkSetPolyFillMode(dc, (gc->fill_rule == EvenOddRule) ? ALTERNATE
 		: WINDING);
-
-	(*func)(dc, winPoints, npoints);
-
-	SelectObject(dc, oldPen);
+	POLYFUNC(functype, dc, winPoints, npoints);
+#ifdef USE_CKGRAPH_IMP
+        TkWinDeleteBrush(gc,hBrush);
+#else 
+	CkSelectPen(dc, oldPen);
+#endif
     }
-    DeleteObject(SelectObject(dc, oldBrush));
+#ifndef USE_CKGRAPH_IMP
+    TkWinDeleteBrush(gc,CkSelectBrush(dc, oldBrush));
+#endif
+    GTRACE(("end RenderObject\n");)
 }
 
 /*
@@ -860,15 +1096,17 @@ XDrawLines(display, d, gc, points, npoints, mode)
     if (d == None) {
 	return;
     }
+    GTRACE(("begin XDrawLines\n");)
 
     dc = TkWinGetDrawableDC(display, d, &state);
 
     pen = SetUpGraphicsPort(gc);
-    SetBkMode(dc, TRANSPARENT);
-    RenderObject(dc, gc, points, npoints, mode, pen, Polyline);
-    DeleteObject(pen);
+    CkSetBkMode(dc, TRANSPARENT);
+    RenderObject(dc, gc, points, npoints, mode, pen, F_POLYLINE);
+    TkWinDeletePen(gc,pen);
     
     TkWinReleaseDrawableDC(d, dc, &state);
+    GTRACE(("end XDrawLines\n");)
 }
 
 /*
@@ -905,12 +1143,14 @@ XFillPolygon(display, d, gc, points, npoints, shape, mode)
 	return;
     }
 
+    GTRACE(("begin XFillPoly\n");)
     dc = TkWinGetDrawableDC(display, d, &state);
 
-    pen = GetStockObject(NULL_PEN);
-    RenderObject(dc, gc, points, npoints, mode, pen, Polygon);
+    pen = CkGetStockObject(NULL_PEN);
+    RenderObject(dc, gc, points, npoints, mode, pen, F_POLYGON);
 
     TkWinReleaseDrawableDC(d, dc, &state);
+    GTRACE(("end XFillPoly\n");)
 }
 
 /*
@@ -939,9 +1179,12 @@ XDrawRectangle(display, d, gc, x, y, width, height)
     unsigned int width;
     unsigned int height;
 {
-    HPEN pen, oldPen;
-    TkWinDCState state;
+    HPEN pen;
+#ifndef USE_CKGRAPH_IMP
+    HPEN oldPen;
     HBRUSH oldBrush;
+#endif
+    TkWinDCState state;
     HDC dc;
 
     if (d == None) {
@@ -951,15 +1194,23 @@ XDrawRectangle(display, d, gc, x, y, width, height)
     dc = TkWinGetDrawableDC(display, d, &state);
 
     pen = SetUpGraphicsPort(gc);
-    SetBkMode(dc, TRANSPARENT);
-    oldPen = SelectObject(dc, pen);
-    oldBrush = SelectObject(dc, GetStockObject(NULL_BRUSH));
-    SetROP2(dc, tkpWinRopModes[gc->function]);
+    CkSetBkMode(dc, TRANSPARENT);
+#ifdef USE_CKGRAPH_IMP
+    CkSelectPen(dc, pen);
+    CkSelectBrush(dc, GetStockObject(NULL_BRUSH));
+#else
+    oldPen = CkSelectPen(dc, pen);
+    oldBrush = CkSelectBrush(dc, GetStockObject(NULL_BRUSH));
+#endif
+    CkSetROP2(dc, tkpWinRopModes[gc->function]);
 
-    Rectangle(dc, x, y, x+width+1, y+height+1);
-
-    DeleteObject(SelectObject(dc, oldPen));
-    SelectObject(dc, oldBrush);
+    CkRectangle(dc, x, y, x+width+1, y+height+1);
+#ifdef USE_CKGRAPH_IMP
+    TkWinDeletePen(gc, pen);
+#else
+    TkWinDeletePen(gc,CkSelectPen(dc, oldPen));
+    CkSelectBrush(dc, oldBrush);
+#endif
     TkWinReleaseDrawableDC(d, dc, &state);
 }
 
@@ -992,8 +1243,10 @@ XDrawArc(display, d, gc, x, y, width, height, start, extent)
     int extent;
 {
     display->request++;
+    GTRACE(("begin XDrawArc\n");)
 
     DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, 0);
+    GTRACE(("end XDrawArc\n");)
 }
 
 /*
@@ -1026,7 +1279,9 @@ XFillArc(display, d, gc, x, y, width, height, start, extent)
 {
     display->request++;
 
+    GTRACE(("begin XFillArc\n");)
     DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, 1);
+    GTRACE(("end XFillArc\n");)
 }
 
 /*
@@ -1046,6 +1301,56 @@ XFillArc(display, d, gc, x, y, width, height, start, extent)
  *----------------------------------------------------------------------
  */
 
+/*
+ * Implements the "pixeling" of small arcs, because GDI-performance
+ * for this is awful
+ * was made especially for BLT, graph4 demo now runs 4x faster
+ *
+ *
+ /
+/* O-outer , I-inner, B-both */
+#define _ 0
+#define O 1
+#define I 2
+#define B (O|I)
+#define MINIARCS 5
+static int arcus0[1]={B};
+static int arcus1[4]={B,B,
+                      B,B};
+
+static int arcus2[9]={_,O,_,
+                      O,I,O,
+                      _,O,_};
+
+static int arcus3[16]={_,O,O,_,
+                       O,I,I,O,
+                       O,I,I,O,
+                       _,O,O,_};
+
+static int arcus4[25]={_,O,O,O,_,
+                       O,I,I,I,O,
+                       O,I,I,I,O,
+                       O,I,I,I,O,
+                       _,O,O,O,_};
+/* ... someone could add some more here if wanted :-) ... */
+static int* arcis[MINIARCS]={arcus0,arcus1,arcus2,arcus3,arcus4};
+
+static void DrawMiniArc(HDC dc,int width,int x,int y,
+                        int mask,COLORREF inner,COLORREF outer) {
+  int *arc;
+  int i,j;
+  if(width>MINIARCS)
+    return;
+  arc=arcis[width];
+  for(i=0;i<=width;i++){
+    for(j=0;j<=width;j++){
+      if(mask&(arc[i*(width+1)+j])&O)
+        SetPixel(dc,x+i,y+j,outer);
+      if(mask&(arc[i*(width+1)+j])&I)
+        SetPixel(dc,x+i,y+j,inner);
+    }
+  }
+}
 static void
 DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, fill)
     Display *display;
@@ -1058,9 +1363,14 @@ DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, fill)
     int fill;			/* ==0 draw, !=0 fill */
 {
     HDC dc;
-    HBRUSH brush, oldBrush;
-    HPEN pen, oldPen;
+    HBRUSH brush;
+#ifndef USE_CKGRAPH_IMP
+    HBRUSH oldBrush;
+    HPEN oldPen;
+#endif
+    HPEN pen;
     TkWinDCState state;
+    int full=0;
     int clockwise = (extent < 0); /* non-zero if clockwise */
     int xstart, ystart, xend, yend;
     double radian_start, radian_end, xr, yr;
@@ -1071,13 +1381,18 @@ DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, fill)
 
     dc = TkWinGetDrawableDC(display, d, &state);
 
-    SetROP2(dc, tkpWinRopModes[gc->function]);
+    CkSetROP2(dc, tkpWinRopModes[gc->function]);
 
     /*
      * Compute the absolute starting and ending angles in normalized radians.
      * Swap the start and end if drawing clockwise.
      */
-
+    if (start == 0 && extent == 64*360 && width==height ) {
+      full=1;
+      xend= xstart = x + width;
+      yend = ystart = y + (int)(((double)height/2.0)+0.5);
+      goto sel;
+    }
     start = start % (64*360);
     if (start < 0) {
 	start += (64*360);
@@ -1112,9 +1427,21 @@ DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, fill)
      * increase the size of the bounding box by one to account for the
      * difference in pixel definitions between X and Windows.
      */
+sel:
+    if(full && width==height && width<MINIARCS){
+        if(!fill)
+            DrawMiniArc(dc,width, x, y,O,0,gc->foreground);
+        else
+            DrawMiniArc(dc,width, x, y,I,gc->foreground,0);
+        goto dcfree;
 
+    }
     pen = SetUpGraphicsPort(gc);
-    oldPen = SelectObject(dc, pen);
+#ifdef USE_CKGRAPH_IMP
+    CkSelectPen(dc, pen);
+#else
+    oldPen = CkSelectPen(dc, pen);
+#endif
     if (!fill) {
 	/*
 	 * Note that this call will leave a gap of one pixel at the
@@ -1122,19 +1449,32 @@ DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, fill)
 	 * it's only supported under Windows NT.
 	 */
 
-	SetBkMode(dc, TRANSPARENT);
-	Arc(dc, x, y, x+width+1, y+height+1, xstart, ystart, xend, yend);
+	CkSetBkMode(dc, TRANSPARENT);
+	CkArc(dc, x, y, x+width+1, y+height+1, xstart, ystart, xend, yend);
     } else {
-	brush = CreateSolidBrush(gc->foreground);
+	brush = TkWinCreateSolidBrush(gc,gc->foreground);
+#ifdef USE_CKGRAPH_IMP
+	CkSelectBrush(dc, brush);
+#else
 	oldBrush = SelectObject(dc, brush);
+#endif
 	if (gc->arc_mode == ArcChord) {
-	    Chord(dc, x, y, x+width+1, y+height+1, xstart, ystart, xend, yend);
+	    CkChord(dc, x, y, x+width+1, y+height+1, xstart, ystart, xend, yend);
 	} else if ( gc->arc_mode == ArcPieSlice ) {
-	    Pie(dc, x, y, x+width+1, y+height+1, xstart, ystart, xend, yend);
+	    CkPie(dc, x, y, x+width+1, y+height+1, xstart, ystart, xend, yend);
 	}
-	DeleteObject(SelectObject(dc, oldBrush));
+#ifdef USE_CKGRAPH_IMP
+	TkWinDeleteBrush(gc, brush);
+#else
+	TkWinDeleteBrush(gc , CkSelectBrush(dc, oldBrush));
+#endif
     }
-    DeleteObject(SelectObject(dc, oldPen));
+#ifdef USE_CKGRAPH_IMP
+    TkWinDeletePen(gc,pen);
+#else
+    TkWinDeletePen(gc,CkSelectPen(dc, oldPen));
+#endif
+dcfree:
     TkWinReleaseDrawableDC(d, dc, &state);
 }
 
@@ -1188,7 +1528,7 @@ SetUpGraphicsPort(gc)
 	style = PS_SOLID;
     }
     if (gc->line_width < 2) {
-	return CreatePen(style, gc->line_width, gc->foreground);
+	return TkWinCreatePen(gc, style, gc->line_width, gc->foreground);
     } else {
 	LOGBRUSH lb;
 
@@ -1220,7 +1560,7 @@ SetUpGraphicsPort(gc)
 		style |= PS_JOIN_BEVEL; 
 		break;
 	}
-	return ExtCreatePen(style, gc->line_width, &lb, 0, NULL);
+	return TkWinExtCreatePen(gc, style, gc->line_width, &lb, 0, NULL);
     }
 }
 
@@ -1280,6 +1620,26 @@ TkScrollWindow(tkwin, gc, x, y, width, height, dx, dy, damageRgn)
  *----------------------------------------------------------------------
  */
 
+#ifdef FILLRECTGC
+void
+TkWinFillRectGC(dc, x, y, width, height, pixel,gc)
+    HDC dc;
+    int x, y, width, height;
+    int pixel;
+    GC gc;
+{
+    HBRUSH hbr;
+    RECT rect;
+    rect.left = x;
+    rect.top = y;
+    rect.right = x + width;
+    rect.bottom = y + height;
+    GTRACE(("begin TkWinFillRectGC\n");)
+    FillRect(dc,&rect,hbr=TkWinCreateSolidBrush(gc,pixel));
+    TkWinDeleteBrush(gc,hbr);
+    GTRACE(("end TkWinFillRectGC\n");)
+}
+#endif
 void
 TkWinFillRect(dc, x, y, width, height, pixel)
     HDC dc;
@@ -1287,16 +1647,15 @@ TkWinFillRect(dc, x, y, width, height, pixel)
     int pixel;
 {
     RECT rect;
-    COLORREF oldColor;
-
     rect.left = x;
     rect.top = y;
     rect.right = x + width;
     rect.bottom = y + height;
-    oldColor = SetBkColor(dc, (COLORREF)pixel);
-    SetBkMode(dc, OPAQUE);
-    ExtTextOut(dc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
-    SetBkColor(dc, oldColor);
+    GTRACE(("begin TkWinFillRect\n");)
+    CkSetBkColor(dc, (COLORREF)pixel);
+    CkSetBkMode(dc, OPAQUE);
+    CkExtTextOut(dc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
+    GTRACE(("end TkWinFillRect\n");)
 }
 
 /*
@@ -1331,3 +1690,4 @@ TkpDrawHighlightBorder(tkwin, fgGC, bgGC, highlightWidth, drawable)
 {
     TkDrawInsetFocusHighlight(tkwin, fgGC, highlightWidth, drawable, 0);
 }
+

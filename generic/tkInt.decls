@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.17 2000/04/10 22:43:11 ericm Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.17.4.1 2000/11/03 22:49:22 hobbs Exp $
 
 library tk
 
@@ -815,6 +815,40 @@ declare 32 win {
 
 declare 33 win {
     int TkWinGetPlatformId(void)
+}
+##################################
+# speedup patch related functions
+
+declare 40 win {
+    void dprintf   (const char *format, ...)
+}
+declare 41 win {
+    void  TkWinFillRectGC (HDC dc, int x, int y, int width, int height, \
+	    int pixel, GC gc)
+}
+
+declare 42 win {
+    void TkWinGdiInit (HINSTANCE hInstance)
+}
+
+declare 43 win {
+    void TkWinGdiCleanup (HINSTANCE hInstance)
+}
+
+declare 44 win {
+    HDC TkWinGetNULLDC (void) 
+}
+
+declare 45 win {
+    void TkWinReleaseNULLDC (HDC hdc) 
+}
+
+declare 46 win {
+    HBRUSH TkWinCreateSolidBrush (GC gc, COLORREF color)
+}
+
+declare 47 win {
+    BOOL TkWinDeleteBrush (GC gc, HBRUSH hBrush)
 }
 
 ########################

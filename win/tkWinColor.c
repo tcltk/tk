@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinColor.c,v 1.6 2000/07/06 03:17:44 mo Exp $
+ * RCS: @(#) $Id: tkWinColor.c,v 1.6.2.1 2000/11/03 22:49:25 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -73,6 +73,15 @@ typedef struct ThreadSpecificData {
     int ncolors;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
+
+/*
+ * Protect the following statics with a mutex
+ */
+
+TCL_DECLARE_MUTEX(paletteMutex)
+static int askedforpalette=0;
+static int haspalette=0;
+static unsigned long sizePalette=0;
 
 /*
  * Forward declarations for functions defined later in this file.
@@ -340,13 +349,27 @@ XAllocColor(display, colormap, color)
     TkWinColormap *cmap = (TkWinColormap *) colormap;
     PALETTEENTRY entry, closeEntry;
     HDC dc = GetDC(NULL);
+    int screendc;
+    Tcl_MutexLock(&paletteMutex);
+    if(!askedforpalette){
+        askedforpalette=1;
+        dc=GetDC(NULL);
+        haspalette=GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE;
+        sizePalette = GetDeviceCaps(dc, SIZEPALETTE);
+        screendc=1;
+    } else {
+        dc=GetDC(NULL);
+        screendc=1;
+    }
+    Tcl_MutexUnlock(&paletteMutex);
+
 
     entry.peRed = (color->red) >> 8;
     entry.peGreen = (color->green) >> 8;
     entry.peBlue = (color->blue) >> 8;
     entry.peFlags = 0;
 
-    if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
+    if ( haspalette ) {
 	unsigned long sizePalette = GetDeviceCaps(dc, SIZEPALETTE);
 	UINT newPixel, closePixel;
 	int new, refCount;
@@ -384,8 +407,8 @@ XAllocColor(display, colormap, color)
 		}
 	    } else {
 		cmap->size++;
-		ResizePalette(cmap->palette, cmap->size);
-		SetPaletteEntries(cmap->palette, cmap->size - 1, 1, &entry);
+		CkResizePalette(cmap->palette, cmap->size);
+		CkSetPaletteEntries(cmap->palette, cmap->size - 1, 1, &entry);
 	    }
 	}
 
@@ -411,7 +434,10 @@ XAllocColor(display, colormap, color)
 	color->blue   = GetBValue(color->pixel) * 257;
     }
 
-    ReleaseDC(NULL, dc);
+    if(screendc)
+      ReleaseDC(NULL,dc);
+    else
+      TkWinReleaseNULLDC(dc);
     return 1;
 }
 
@@ -446,13 +472,22 @@ XFreeColors(display, colormap, pixels, npixels, planes)
     int i;
     PALETTEENTRY entry, *entries;
     Tcl_HashEntry *entryPtr;
-    HDC dc = GetDC(NULL);
+    HDC dc = NULL;
+
+    Tcl_MutexLock(&paletteMutex);
+    if(!askedforpalette){
+      askedforpalette=1;
+      dc=GetDC(NULL);
+      haspalette=GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE;
+      sizePalette = GetDeviceCaps(dc, SIZEPALETTE);
+    }
+    Tcl_MutexUnlock(&paletteMutex);
 
     /*
      * We don't have to do anything for non-palette devices.
      */
     
-    if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
+    if (haspalette) {
 
 	/*
 	 * This is really slow for large values of npixels.
@@ -486,7 +521,8 @@ XFreeColors(display, colormap, pixels, npixels, planes)
 	    }
 	}
     }
-    ReleaseDC(NULL, dc);
+    if(dc!=NULL)
+      ReleaseDC(NULL,dc);
 }
 
 /*
@@ -527,14 +563,14 @@ XCreateColormap(display, w, visual, alloc)
 
     logPalettePtr = (LOGPALETTE *) logPalBuf;
     logPalettePtr->palVersion = 0x300;
-    sysPal = (HPALETTE) GetStockObject(DEFAULT_PALETTE);
+    sysPal = (HPALETTE) CkGetStockObject(DEFAULT_PALETTE);
     logPalettePtr->palNumEntries = GetPaletteEntries(sysPal, 0, 256,
 	    logPalettePtr->palPalEntry);
 
     cmap = (TkWinColormap *) ckalloc(sizeof(TkWinColormap));
     cmap->size = logPalettePtr->palNumEntries;
     cmap->stale = 0;
-    cmap->palette = CreatePalette(logPalettePtr);
+    cmap->palette = CkCreatePalette(logPalettePtr);
 
     /*
      * Add hash entries for each of the static colors.
@@ -575,13 +611,16 @@ XFreeColormap(display, colormap)
     Colormap colormap;
 {
     TkWinColormap *cmap = (TkWinColormap *) colormap;
-    if (!DeleteObject(cmap->palette)) {
+    if (!CkDeletePalette(cmap->palette)) {
 	panic("Unable to free colormap, palette is still selected.");
     }
     Tcl_DeleteHashTable(&cmap->refCounts);
     ckfree((char *) cmap);
 }
 
+static HPALETTE FindDelPalette (HPALETTE hr) {
+  return 0;
+}
 /*
  *----------------------------------------------------------------------
  *
@@ -609,8 +648,8 @@ TkWinSelectPalette(dc, colormap)
     TkWinColormap *cmap = (TkWinColormap *) colormap;
     HPALETTE oldPalette;
 
-    oldPalette = SelectPalette(dc, cmap->palette,
+    oldPalette = CkSelectPalette(dc, cmap->palette,
 	    (cmap->palette == TkWinGetSystemPalette()) ? FALSE : TRUE);
-    RealizePalette(dc);
+    CkRealizePalette(dc);
     return oldPalette;
 }

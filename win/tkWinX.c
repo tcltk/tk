@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.11 2000/07/06 03:17:45 mo Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.11.2.1 2000/11/03 22:49:30 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -176,6 +176,9 @@ TkWinXInit(hInstance)
     if (!RegisterClass(&childClass)) {
 	panic("Unable to register TkChild class");
     }
+#ifdef USE_CKGRAPH_IMP
+    TkWinGdiInit(hInstance);
+#endif
 }
 
 /*
@@ -212,6 +215,9 @@ TkWinXCleanup(hInstance)
      */
     
     TkWinWmCleanup(hInstance);
+#ifdef USE_CKGRAPH_IMP
+    TkWinGdiCleanup(hInstance);
+#endif
 }
 
 /*
@@ -317,7 +323,7 @@ TkpOpenDisplay(display_name)
     screen = (Screen *) ckalloc(sizeof(Screen));
     screen->display = display;
 
-    dc = GetDC(NULL);
+    dc = TkWinGetNULLDC();
     screen->width = GetDeviceCaps(dc, HORZRES);
     screen->height = GetDeviceCaps(dc, VERTRES);
     screen->mwidth = MulDiv(screen->width, 254,
@@ -387,7 +393,7 @@ TkpOpenDisplay(display_name)
 	}
     }
     screen->root_visual->bits_per_rgb = screen->root_depth;
-    ReleaseDC(NULL, dc);
+    TkWinReleaseNULLDC(dc);
 
     /*
      * Note that these pixel values are not palette relative.
@@ -699,12 +705,12 @@ GenerateXEvent(hwnd, message, wParam, lParam)
 	    PAINTSTRUCT ps;
 
 	    event.type = Expose;
-	    BeginPaint(hwnd, &ps);
+	    CkBeginPaint(hwnd, &ps);
 	    event.xexpose.x = ps.rcPaint.left;
 	    event.xexpose.y = ps.rcPaint.top;
 	    event.xexpose.width = ps.rcPaint.right - ps.rcPaint.left;
 	    event.xexpose.height = ps.rcPaint.bottom - ps.rcPaint.top;
-	    EndPaint(hwnd, &ps);
+	    CkEndPaint(hwnd, &ps);
 	    event.xexpose.count = 0;
 	    break;
 	}

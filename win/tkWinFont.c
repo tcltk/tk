@@ -11,11 +11,14 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.12 2000/08/29 21:00:13 ericm Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.12.2.1 2000/11/03 22:49:26 hobbs Exp $
  */
 
 #include "tkWinInt.h"
 #include "tkFont.h"
+#define USE_NULLDC
+//#define USE_RESEL
+ 
 
 /*
  * The following structure represents a font family.  It is assumed that
@@ -359,7 +362,11 @@ TkpGetFontFromAttributes(
     tkwin   = (Tk_Window) ((TkWindow *) tkwin)->mainPtr->winPtr;
     window  = Tk_WindowId(tkwin);
     hwnd    = (window == None) ? NULL : TkWinGetHWND(window);
-    hdc	    = GetDC(hwnd);
+#ifdef USE_NULLDC
+    hdc = TkWinGetNULLDC();
+#else
+    hdc = CkGetDC(hwnd);
+#endif
 
     /*
      * Algorithm to get the closest font name to the one requested.
@@ -398,7 +405,11 @@ TkpGetFontFromAttributes(
     }
 
     found:
-    ReleaseDC(hwnd, hdc);
+#ifdef USE_NULLDC
+    TkWinReleaseNULLDC(hdc);
+#else
+    CkReleaseDC(hwnd, hdc);
+#endif
 
     hFont = GetScreenFont(faPtr, faceName, TkFontGetPixels(tkwin, faPtr->size));
     if (tkFontPtr == NULL) {
@@ -470,7 +481,11 @@ TkpGetFontFamilies(
 
     window  = Tk_WindowId(tkwin);
     hwnd    = (window == None) ? NULL : TkWinGetHWND(window);
-    hdc	    = GetDC(hwnd);
+#ifdef USE_NULLDC
+    hdc = TkWinGetNULLDC();
+#else
+    hdc	    = CkGetDC(hwnd);
+#endif
 
     /*
      * On any version NT, there may fonts with international names.  
@@ -494,7 +509,11 @@ TkpGetFontFamilies(
 	EnumFontFamiliesA(hdc, NULL, (FONTENUMPROCA) WinFontFamilyEnumProc,
 		(LPARAM) interp);
     }	    
-    ReleaseDC(hwnd, hdc);
+#ifdef USE_NULLDC
+    TkWinReleaseNULLDC(hdc);
+#else
+    CkReleaseDC(hwnd, hdc);
+#endif
 }
 
 static int CALLBACK
@@ -602,7 +621,9 @@ Tk_MeasureChars(
 				 * terminating character. */
 {
     HDC hdc;
+#ifdef USE_RESEL
     HFONT oldFont;
+#endif
     WinFont *fontPtr;
     int curX, curByte;
     SubFont *lastSubFontPtr;
@@ -617,9 +638,17 @@ Tk_MeasureChars(
 
     fontPtr = (WinFont *) tkfont;
 
-    hdc = GetDC(fontPtr->hwnd);
+#ifdef USE_NULLDC
+    hdc = TkWinGetNULLDC();
+#else
+    hdc = CkGetDC(fontPtr->hwnd);
+#endif
     lastSubFontPtr = &fontPtr->subFontArray[0];
-    oldFont = SelectObject(hdc, lastSubFontPtr->hFont);
+#ifdef USE_RESEL
+    oldFont = CkSelectFont(hdc, lastSubFontPtr->hFont);
+#else
+    CkSelectFont(hdc, lastSubFontPtr->hFont);
+#endif
 
     if (numBytes == 0) {
 	curX = 0;
@@ -658,7 +687,7 @@ Tk_MeasureChars(
                 lastSubFontPtr = thisSubFontPtr;
                 source = p;
 
-		SelectObject(hdc, lastSubFontPtr->hFont);
+		CkSelectFont(hdc, lastSubFontPtr->hFont);
             }
             p = next;
         }
@@ -706,7 +735,7 @@ Tk_MeasureChars(
 	    } else {
 		thisSubFontPtr = FindSubFontForChar(fontPtr, ch);
 		if (thisSubFontPtr != lastSubFontPtr) {
-		    SelectObject(hdc, thisSubFontPtr->hFont);
+		    CkSelectFont(hdc, thisSubFontPtr->hFont);
 		    lastSubFontPtr = thisSubFontPtr;
 		}
 		familyPtr = lastSubFontPtr->familyPtr;
@@ -770,8 +799,15 @@ Tk_MeasureChars(
 	curByte = term - source;	
     }
 
-    SelectObject(hdc, oldFont);
-    ReleaseDC(fontPtr->hwnd, hdc);
+#ifdef USE_RESEL 
+    CkSelectFont(hdc, oldFont);
+#endif
+
+#ifdef USE_NULLDC
+    TkWinReleaseNULLDC(hdc);
+#else
+    CkReleaseDC(fontPtr->hwnd, hdc);
+#endif
 
     *lengthPtr = curX;
     return curByte;
@@ -824,7 +860,7 @@ Tk_DrawChars(
 
     dc = TkWinGetDrawableDC(display, drawable, &state);
 
-    SetROP2(dc, tkpWinRopModes[gc->function]);
+    CkSetROP2(dc, tkpWinRopModes[gc->function]);
 
     if ((gc->fill_style == FillStippled
 	    || gc->fill_style == FillOpaqueStippled)
@@ -839,21 +875,22 @@ Tk_DrawChars(
 	if (twdPtr->type != TWD_BITMAP) {
 	    panic("unexpected drawable type in stipple");
 	}
+        CkGraph_ClearDC(dc);
 
 	/*
 	 * Select stipple pattern into destination dc.
 	 */
 	
-	dcMem = CreateCompatibleDC(dc);
+	dcMem = CkCreateCompatibleDC(dc);
 
-	stipple = CreatePatternBrush(twdPtr->bitmap.handle);
+	stipple = CkCreatePatternBrush(twdPtr->bitmap.handle);
 	SetBrushOrgEx(dc, gc->ts_x_origin, gc->ts_y_origin, NULL);
-	oldBrush = SelectObject(dc, stipple);
+	oldBrush = CkSelectBrush(dc, stipple);
 
 	SetTextAlign(dcMem, TA_LEFT | TA_BASELINE);
-	SetTextColor(dcMem, gc->foreground);
-	SetBkMode(dcMem, TRANSPARENT);
-	SetBkColor(dcMem, RGB(0, 0, 0));
+	CkSetTextColor(dcMem, gc->foreground);
+	CkSetBkMode(dcMem, TRANSPARENT);
+	CkSetBkColor(dcMem, RGB(0, 0, 0));
 
 	/*
 	 * Compute the bounding box and create a compatible bitmap.
@@ -862,8 +899,8 @@ Tk_DrawChars(
 	GetTextExtentPoint(dcMem, source, numBytes, &size);
 	GetTextMetrics(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
-	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
-	oldBitmap = SelectObject(dcMem, bitmap);
+	bitmap = CkCreateCompatibleBitmap(dc, size.cx, size.cy);
+	oldBitmap = CkSelectBitmap(dcMem, bitmap);
 
 	/*
 	 * The following code is tricky because fonts are rendered in multiple
@@ -875,26 +912,26 @@ Tk_DrawChars(
 
 	PatBlt(dcMem, 0, 0, size.cx, size.cy, BLACKNESS);
 	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y);
-	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
+	CkBitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, 0xEA02E9);
 	PatBlt(dcMem, 0, 0, size.cx, size.cy, WHITENESS);
 	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y);
-	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
+	CkBitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, 0x8A0E06);
 
 	/*
 	 * Destroy the temporary bitmap and restore the device context.
 	 */
 
-	SelectObject(dcMem, oldBitmap);
-	DeleteObject(bitmap);
-	DeleteDC(dcMem);
-	SelectObject(dc, oldBrush);
-	DeleteObject(stipple);
+	CkSelectBitmap(dcMem, oldBitmap);
+	CkDeleteBitmap(bitmap);
+	CkDeleteDC(dcMem);
+	CkSelectBrush(dc, oldBrush);
+	CkDeleteBrush(stipple);
     } else {
 	SetTextAlign(dc, TA_LEFT | TA_BASELINE);
-	SetTextColor(dc, gc->foreground);
-	SetBkMode(dc, TRANSPARENT);
+	CkSetTextColor(dc, gc->foreground);
+	CkSetBkMode(dc, TRANSPARENT);
 	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y);
     }
     TkWinReleaseDrawableDC(drawable, dc, &state);
@@ -933,14 +970,20 @@ MultiFontTextOut(
 {
     Tcl_UniChar ch;
     SIZE size;
+#ifdef USE_RESEL
     HFONT oldFont;
+#endif
     FontFamily *familyPtr;
     Tcl_DString runString;
     CONST char *p, *end, *next;
     SubFont *lastSubFontPtr, *thisSubFontPtr;
 
     lastSubFontPtr = &fontPtr->subFontArray[0];
-    oldFont = SelectObject(hdc, lastSubFontPtr->hFont);
+#ifdef USE_RESEL
+    oldFont = CkSelectFont(hdc, lastSubFontPtr->hFont);
+#else
+    CkSelectFont(hdc, lastSubFontPtr->hFont);
+#endif
 
     end = source + numBytes;
     for (p = source; p < end; ) {
@@ -963,7 +1006,7 @@ MultiFontTextOut(
 	    }
             lastSubFontPtr = thisSubFontPtr;
             source = p;
-	    SelectObject(hdc, lastSubFontPtr->hFont);
+	    CkSelectFont(hdc, lastSubFontPtr->hFont);
 	}
 	p = next;
     }
@@ -975,7 +1018,9 @@ MultiFontTextOut(
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
 	Tcl_DStringFree(&runString);
     }
-    SelectObject(hdc, oldFont);
+#ifdef USE_RESEL
+    CkSelectFont(hdc, oldFont);
+#endif
 }
 
 /*
@@ -1025,7 +1070,15 @@ InitFont(
  
     window  = Tk_WindowId(tkwin);
     hwnd    = (window == None) ? NULL : TkWinGetHWND(window);
-    hdc	    = GetDC(hwnd);
+#ifdef USE_NULLDC0
+    hdc = TkWinGetNULLDC();
+#else
+    hdc	    = CkGetDC(hwnd);
+#endif
+    /* 
+     *  I still let here SelectObject, otherwise the Display isn't correct
+     *  leo 
+     */
     oldFont = SelectObject(hdc, hFont);
 
     GetTextMetrics(hdc, &tm);
@@ -1084,7 +1137,11 @@ InitFont(
     Tcl_DStringFree(&faceString);
 
     SelectObject(hdc, oldFont);
-    ReleaseDC(hwnd, hdc);
+#ifdef USE_NULLDC0
+    TkWinReleaseNULLDC(hdc);
+#else
+    CkReleaseDC(hwnd, hdc);
+#endif
 }
 
 /*
@@ -1221,7 +1278,7 @@ AllocFontFamily(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    hFont = SelectObject(hdc, hFont);
+    hFont = CkSelectFont(hdc, hFont);
     if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	GetTextFaceW(hdc, LF_FACESIZE, (WCHAR *) buf);
     } else {
@@ -1230,7 +1287,7 @@ AllocFontFamily(
     Tcl_ExternalToUtfDString(systemEncoding, buf, -1, &faceString);
     faceName = Tk_GetUid(Tcl_DStringValue(&faceString));
     Tcl_DStringFree(&faceString);
-    hFont = SelectObject(hdc, hFont);
+    hFont = CkSelectFont(hdc, hFont);
 
     familyPtr = tsdPtr->fontFamilyList; 
     for ( ; familyPtr != NULL; familyPtr = familyPtr->nextPtr) {
@@ -1419,7 +1476,7 @@ FindSubFontForChar(
      */
      
     Tcl_DStringInit(&ds);
-    hdc = GetDC(fontPtr->hwnd);
+    hdc = CkGetDC(fontPtr->hwnd);
         
     aliases = TkFontGetAliasList(fontPtr->font.fa.family);
 
@@ -1508,7 +1565,7 @@ FindSubFontForChar(
 	subFontPtr = &fontPtr->subFontArray[0];
         FontMapInsert(subFontPtr, ch);
     }
-    ReleaseDC(fontPtr->hwnd, hdc);
+    CkReleaseDC(fontPtr->hwnd, hdc);
     return subFontPtr;
 }
 
@@ -2224,7 +2281,7 @@ LoadFontRanges(
     endCount = NULL;
     *symbolPtr = 0;
 
-    hFont = SelectObject(hdc, hFont);
+    hFont = CkSelectFont(hdc, hFont);
 
     i = 0;
     s = (char *) &i;
@@ -2327,7 +2384,7 @@ LoadFontRanges(
 	startCount[0] = 0x0000;
 	endCount[0] = 0x00ff;
     }
-    SelectObject(hdc, hFont);
+    CkSelectFont(hdc, hFont);
 
     *startCountPtr = startCount;
     *endCountPtr = endCount;

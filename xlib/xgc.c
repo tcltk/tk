@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xgc.c,v 1.5 2000/02/10 08:53:32 hobbs Exp $
+ * RCS: @(#) $Id: xgc.c,v 1.5.4.1 2000/11/03 22:49:31 hobbs Exp $
  */
 
 #include <tkInt.h>
@@ -21,6 +21,9 @@
 #	define Region XRegion
 #else
 #	include <X11/Xlib.h>
+#endif
+#ifdef __WIN32__
+#include <tkWinInt.h>
 #endif
 
 
@@ -93,6 +96,13 @@ XCreateGC(display, d, mask, values)
     } else {
 	gp->clip_mask = None;
     }
+#ifdef __WIN32__
+    gp->fgBrush=None;
+    gp->bgBrush=None;
+    gp->fgPen=None;
+    gp->fgExtPen=None;
+    gp->extpenstyle=0;
+#endif
 
     return gp;
 }
@@ -121,6 +131,32 @@ XChangeGC(d, gc, mask, values)
     unsigned long mask;
     XGCValues *values;
 {
+#ifdef __WIN32__
+    if (mask & GCForeground) { 
+      if ( gc->foreground != values->foreground ) {
+        if(gc->fgBrush!=None){
+	    CkDeleteBrush((HBRUSH)gc->fgBrush);
+	    gc->fgBrush=None;
+        }
+        if(gc->fgPen!=None){
+	    CkDeletePen((HPEN)gc->fgPen);
+	    gc->fgPen=None;
+        }
+        if(gc->fgExtPen!=None){
+	    CkDeletePen((HPEN)gc->fgExtPen);
+	    gc->fgExtPen=None;
+        }
+      }
+    }
+    if (mask & GCBackground) { 
+        if(gc->background != values->background){
+            if(gc->bgBrush!=None){
+  	        CkDeleteBrush((HBRUSH)gc->bgBrush);
+	        gc->bgBrush=None;
+            }
+        }
+    }
+#endif
     if (mask & GCFunction) { gc->function = values->function; }
     if (mask & GCPlaneMask) { gc->plane_mask = values->plane_mask; }
     if (mask & GCForeground) { gc->foreground = values->foreground; }
@@ -170,6 +206,24 @@ void XFreeGC(d, gc)
 	if (gc->clip_mask != None) {
 	    ckfree((char*) gc->clip_mask);
 	}
+#ifdef __WIN32__
+	if(gc->fgBrush!=None){
+	    CkDeleteBrush((HBRUSH)gc->fgBrush);
+	    gc->fgBrush=None;
+	}
+	if(gc->fgPen!=None){
+	    CkDeletePen((HPEN)gc->fgPen);
+	    gc->fgPen=None;
+	}
+	if(gc->bgBrush!=None){
+	    CkDeleteBrush((HBRUSH)gc->bgBrush);
+	    gc->bgBrush=None;
+	}
+	if(gc->fgExtPen!=None){
+	    CkDeletePen((HPEN)gc->fgExtPen);
+	    gc->fgExtPen=None;
+	}
+#endif
 	ckfree((char *) gc);
     }
 }
@@ -197,6 +251,22 @@ XSetForeground(display, gc, foreground)
     GC gc;
     unsigned long foreground;
 {
+#ifdef __WIN32__
+    if(foreground != gc->foreground){
+        if(gc->fgBrush!=None){
+	    CkDeleteBrush((HBRUSH)gc->fgBrush);
+	    gc->fgBrush=None;
+        }
+        if(gc->fgPen!=None){
+	    CkDeletePen((HPEN)gc->fgPen);
+	    gc->fgPen=None;
+        }
+        if(gc->fgExtPen!=None){
+	    CkDeletePen((HPEN)gc->fgExtPen);
+	    gc->fgExtPen=None;
+        }
+    }
+#endif
     gc->foreground = foreground;
 }
 
@@ -206,6 +276,14 @@ XSetBackground(display, gc, background)
     GC gc;
     unsigned long background;
 {
+#ifdef __WIN32__
+    if(background != gc->background){
+        if(gc->bgBrush!=None){
+  	    CkDeleteBrush((HBRUSH)gc->bgBrush);
+	    gc->bgBrush=None;
+        }
+    }
+#endif
     gc->background = background;
 }
 
@@ -307,6 +385,18 @@ XSetLineAttributes(display, gc, line_width, line_style, cap_style,
     int cap_style;
     int join_style;
 {
+#ifdef __WIN32__
+    if(line_width != (unsigned int)gc->line_width){
+        if(gc->fgPen!=None){
+	    CkDeletePen((HPEN)gc->fgPen);
+	    gc->fgPen=None;
+        }
+        if(gc->fgExtPen!=None){
+	    CkDeletePen((HPEN)gc->fgExtPen);
+	    gc->fgExtPen=None;
+        }
+    }
+#endif
     gc->line_width = line_width;
     gc->line_style = line_style;
     gc->cap_style = cap_style;

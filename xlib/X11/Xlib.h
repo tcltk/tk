@@ -26,7 +26,6 @@
 #define _XLIB_H_
 
 #define XlibSpecificationRelease 5
-
 #ifdef MAC_TCL
 #   include <X.h>
 #   define Cursor XCursor
@@ -184,6 +183,13 @@ typedef struct {
 	Pixmap clip_mask;	/* bitmap clipping; other calls for rects */
 	int dash_offset;	/* patterned/dashed line information */
 	char dashes;
+#ifdef __WIN32__
+	unsigned int fgBrush;
+	unsigned int bgBrush;
+	unsigned int fgPen;
+	unsigned int fgExtPen;
+	unsigned int extpenstyle;
+#endif
 } XGCValues;
 
 /*

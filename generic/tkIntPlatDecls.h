@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.7 1999/12/07 03:51:05 hobbs Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.7.4.1 2000/11/03 22:49:22 hobbs Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -142,6 +142,30 @@ EXTERN Tcl_Obj *	TkWinGetMenuSystemDefault _ANSI_ARGS_((
 				char * className));
 /* 33 */
 EXTERN int		TkWinGetPlatformId _ANSI_ARGS_((void));
+/* Slot 34 is reserved */
+/* Slot 35 is reserved */
+/* Slot 36 is reserved */
+/* Slot 37 is reserved */
+/* Slot 38 is reserved */
+/* Slot 39 is reserved */
+/* 40 */
+EXTERN void		dprintf _ANSI_ARGS_(TCL_VARARGS(const char *,format));
+/* 41 */
+EXTERN void		TkWinFillRectGC _ANSI_ARGS_((HDC dc, int x, int y, 
+				int width, int height, int pixel, GC gc));
+/* 42 */
+EXTERN void		TkWinGdiInit _ANSI_ARGS_((HINSTANCE hInstance));
+/* 43 */
+EXTERN void		TkWinGdiCleanup _ANSI_ARGS_((HINSTANCE hInstance));
+/* 44 */
+EXTERN HDC		TkWinGetNULLDC _ANSI_ARGS_((void));
+/* 45 */
+EXTERN void		TkWinReleaseNULLDC _ANSI_ARGS_((HDC hdc));
+/* 46 */
+EXTERN HBRUSH		TkWinCreateSolidBrush _ANSI_ARGS_((GC gc, 
+				COLORREF color));
+/* 47 */
+EXTERN BOOL		TkWinDeleteBrush _ANSI_ARGS_((GC gc, HBRUSH hBrush));
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* 0 */
@@ -343,6 +367,20 @@ typedef struct TkIntPlatStubs {
     void (*tkWinDialogDebug) _ANSI_ARGS_((int debug)); /* 31 */
     Tcl_Obj * (*tkWinGetMenuSystemDefault) _ANSI_ARGS_((Tk_Window tkwin, char * dbName, char * className)); /* 32 */
     int (*tkWinGetPlatformId) _ANSI_ARGS_((void)); /* 33 */
+    void *reserved34;
+    void *reserved35;
+    void *reserved36;
+    void *reserved37;
+    void *reserved38;
+    void *reserved39;
+    void (*dprintf) _ANSI_ARGS_(TCL_VARARGS(const char *,format)); /* 40 */
+    void (*tkWinFillRectGC) _ANSI_ARGS_((HDC dc, int x, int y, int width, int height, int pixel, GC gc)); /* 41 */
+    void (*tkWinGdiInit) _ANSI_ARGS_((HINSTANCE hInstance)); /* 42 */
+    void (*tkWinGdiCleanup) _ANSI_ARGS_((HINSTANCE hInstance)); /* 43 */
+    HDC (*tkWinGetNULLDC) _ANSI_ARGS_((void)); /* 44 */
+    void (*tkWinReleaseNULLDC) _ANSI_ARGS_((HDC hdc)); /* 45 */
+    HBRUSH (*tkWinCreateSolidBrush) _ANSI_ARGS_((GC gc, COLORREF color)); /* 46 */
+    BOOL (*tkWinDeleteBrush) _ANSI_ARGS_((GC gc, HBRUSH hBrush)); /* 47 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow * winPtr, int active)); /* 0 */
@@ -595,6 +633,44 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #ifndef TkWinGetPlatformId
 #define TkWinGetPlatformId \
 	(tkIntPlatStubsPtr->tkWinGetPlatformId) /* 33 */
+#endif
+/* Slot 34 is reserved */
+/* Slot 35 is reserved */
+/* Slot 36 is reserved */
+/* Slot 37 is reserved */
+/* Slot 38 is reserved */
+/* Slot 39 is reserved */
+#ifndef dprintf
+#define dprintf \
+	(tkIntPlatStubsPtr->dprintf) /* 40 */
+#endif
+#ifndef TkWinFillRectGC
+#define TkWinFillRectGC \
+	(tkIntPlatStubsPtr->tkWinFillRectGC) /* 41 */
+#endif
+#ifndef TkWinGdiInit
+#define TkWinGdiInit \
+	(tkIntPlatStubsPtr->tkWinGdiInit) /* 42 */
+#endif
+#ifndef TkWinGdiCleanup
+#define TkWinGdiCleanup \
+	(tkIntPlatStubsPtr->tkWinGdiCleanup) /* 43 */
+#endif
+#ifndef TkWinGetNULLDC
+#define TkWinGetNULLDC \
+	(tkIntPlatStubsPtr->tkWinGetNULLDC) /* 44 */
+#endif
+#ifndef TkWinReleaseNULLDC
+#define TkWinReleaseNULLDC \
+	(tkIntPlatStubsPtr->tkWinReleaseNULLDC) /* 45 */
+#endif
+#ifndef TkWinCreateSolidBrush
+#define TkWinCreateSolidBrush \
+	(tkIntPlatStubsPtr->tkWinCreateSolidBrush) /* 46 */
+#endif
+#ifndef TkWinDeleteBrush
+#define TkWinDeleteBrush \
+	(tkIntPlatStubsPtr->tkWinDeleteBrush) /* 47 */
 #endif
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
