@@ -653,6 +653,17 @@ proc tkFDialog {args} {
     } elseif {[string compare [winfo class $w] TkFDialog]} {
 	destroy $w
 	tkFDialog_Create $w
+    } else {
+	set data(dirMenuBtn) $w.f1.menu
+	set data(dirMenu) $w.f1.menu.menu
+	set data(upBtn) $w.f1.up
+	set data(icons) $w.icons
+	set data(ent) $w.f2.ent
+	set data(typeMenuLab) $w.f3.lab
+	set data(typeMenuBtn) $w.f3.menu
+	set data(typeMenu) $data(typeMenuBtn).m
+	set data(okBtn) $w.f2.ok
+	set data(cancelBtn) $w.f3.cancel
     }
     wm transient $w $data(-parent)
 
@@ -950,17 +961,17 @@ proc tkFDialog_UpdateWhenIdle {w} {
 #	directories.
 #
 proc tkFDialog_Update {w} {
-    set dataName [winfo name $w]
-    upvar #0 $dataName data
-    global tk_library tkPriv
 
     # This proc may be called within an idle handler. Make sure that the
     # window has not been destroyed before this proc is called
     if {![winfo exists $w] || [string compare [winfo class $w] TkFDialog]} {
 	return
-    } else {
-	catch {unset data(updateId)}
     }
+
+    set dataName [winfo name $w]
+    upvar #0 $dataName data
+    global tk_library tkPriv
+    catch {unset data(updateId)}
 
     set TRANSPARENT_GIF_COLOR [$w cget -bg]
     if ![info exists tkPriv(folderImage)] {
