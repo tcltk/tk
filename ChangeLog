@@ -1,3 +1,11 @@
+2002-07-16  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* macosx/tkMacOSXMenu.c: 
+	* macosx/tkMacOSXButton.c: 
+	* macosx/tkMacOSXMenubutton.c: fix for some encoding issues,
+	and allow menu accelerator strings and modifiers to be shown
+	in the menus.
+
 2002-06-06  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* win/tkWinCursor.c (TkGetCursorByName): Fixed so that the reading
