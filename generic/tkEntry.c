@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.27 2002/03/20 22:55:16 dgp Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.28 2002/04/05 08:43:22 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1894,23 +1894,26 @@ DisplayEntry(clientData)
      * cursor isn't on.  Otherwise the selection would hide the cursor.
      */
 
-    if ((entryPtr->insertPos >= entryPtr->leftIndex)
-	    && (entryPtr->state == STATE_NORMAL)
-	    && (entryPtr->flags & GOT_FOCUS)) {
+    if ((entryPtr->state == STATE_NORMAL) && (entryPtr->flags & GOT_FOCUS)) {
 	Tk_CharBbox(entryPtr->textLayout, entryPtr->insertPos, &cursorX, NULL,
 		NULL, NULL);
-	cursorX += entryPtr->layoutX;
-	cursorX -= (entryPtr->insertWidth)/2;
-	if (cursorX < xBound) {
-	    if (entryPtr->flags & CURSOR_ON) {
-		Tk_Fill3DRectangle(tkwin, pixmap, entryPtr->insertBorder,
-			cursorX, baseY - fm.ascent, entryPtr->insertWidth,
-			fm.ascent + fm.descent, entryPtr->insertBorderWidth,
-			TK_RELIEF_RAISED);
-	    } else if (entryPtr->insertBorder == entryPtr->selBorder) {
-		Tk_Fill3DRectangle(tkwin, pixmap, border,
-			cursorX, baseY - fm.ascent, entryPtr->insertWidth,
-			fm.ascent + fm.descent, 0, TK_RELIEF_FLAT);
+	Tk_SetCaretPos(entryPtr->tkwin, cursorX, baseY - fm.ascent,
+		fm.ascent + fm.descent);
+	if (entryPtr->insertPos >= entryPtr->leftIndex) {
+	    cursorX += entryPtr->layoutX;
+	    cursorX -= (entryPtr->insertWidth)/2;
+	    if (cursorX < xBound) {
+		if (entryPtr->flags & CURSOR_ON) {
+		    Tk_Fill3DRectangle(tkwin, pixmap, entryPtr->insertBorder,
+			    cursorX, baseY - fm.ascent, entryPtr->insertWidth,
+			    fm.ascent + fm.descent,
+			    entryPtr->insertBorderWidth,
+			    TK_RELIEF_RAISED);
+		} else if (entryPtr->insertBorder == entryPtr->selBorder) {
+		    Tk_Fill3DRectangle(tkwin, pixmap, border,
+			    cursorX, baseY - fm.ascent, entryPtr->insertWidth,
+			    fm.ascent + fm.descent, 0, TK_RELIEF_FLAT);
+		}
 	    }
 	}
     }
