@@ -1,3 +1,9 @@
+2002-12-17  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* doc/photo.n: Fixed documentation of the put subcommand to no
+	longer talk about files and to mention that you can use colour
+	names for working with solid colours.  [Bug 640026]
+
 2002-12-13  Don Porter <dgp@users.sf.net>
 
 	* generic/tkMain.c (Tk_Main):  Call on Tcl*StartupScript*() routines
