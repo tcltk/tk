@@ -3,7 +3,7 @@
 	* macosx/Wish.pbproj/project.pbxproj:
 	* macosx/Makefile: reworked embedded build to no longer require
 	relinking but to use install_name_tool instead to change the
-	install_names for embedded frameworks.
+	install_names for embedded frameworks. [Bug #644510]
 
 2003-02-19  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
