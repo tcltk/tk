@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvText.test,v 1.6 1999/04/21 21:53:29 rjohnson Exp $
+# RCS: @(#) $Id: canvText.test,v 1.7 1999/11/12 23:55:16 wart Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -243,6 +243,7 @@ test canvText-7.8 {DisplayText procedure: not selected} {
 test canvText-7.9 {DisplayText procedure: select end} {
     catch {destroy .t}
     toplevel .t
+    wm geometry .t +0+0
     canvas .t.c
     pack .t.c
     set id [.t.c create text 0 0 -text Dummy -anchor nw]

@@ -10,7 +10,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winFont.test,v 1.4 1999/04/16 01:51:43 stanton Exp $
+# RCS: @(#) $Id: winFont.test,v 1.5 1999/11/12 23:55:16 wart Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -20,6 +20,7 @@ catch {destroy .b}
 catch {font delete xyz}
 
 toplevel .b
+wm geometry .b +0+0
 update idletasks
 
 set courier {Courier 14}
