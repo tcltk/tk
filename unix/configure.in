@@ -8,7 +8,7 @@ AC_INIT(../generic/tk.h)
 TK_VERSION=8.0
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=0
-TK_PATCH_LEVEL=".3-4"
+TK_PATCH_LEVEL=".3-5"
 VERSION=${TK_VERSION}
 
 if test "${prefix}" = "NONE"; then
@@ -47,7 +47,7 @@ fi
 #--------------------------------------------------------------------
 
 AC_ARG_WITH(tcl, [  --with-tcl=DIR          use Tcl 8.0 binaries from DIR],
-	TCL_BIN_DIR=$withval, TCL_BIN_DIR=`cd ../../tcl8.0/unix; pwd`)
+	TCL_BIN_DIR=$withval, TCL_BIN_DIR=`cd ../../tcl8.0$TK_PATCH_LEVEL/unix; pwd`)
 if test ! -d $TCL_BIN_DIR; then
     AC_MSG_ERROR(Tcl directory $TCL_BIN_DIR doesn't exist)
 fi
