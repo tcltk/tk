@@ -1,3 +1,7 @@
+2002-07-18  Reinhard Max  <max@suse.de>
+
+	* unix/tkUnixSend.c: Using Tcl_GetTime instead of TclpGetTime.
+
 2002-07-17  Reinhard Max  <max@suse.de>
 
 	* library/unsupported.tcl: Extended ExposePrivateVariable, and
