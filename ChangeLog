@@ -1,3 +1,11 @@
+2003-09-30  Jim Ingham  <jingham@apple.com>
+
+	* macosx/tkMacOSXButton.c (TkpDisplayButton): Use the tk text
+	drawing for checkbuttons & radiobuttons as well as for labels.
+	* macosx/tkMacOSXEvent.c (XSync): New function, need to implement
+	this so drawing will get flushed in "update idletasks".
+	* tkMacOSXPort.h: convert #define of XSync to function def'n.
+	
 2003-09-30  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/demos/browse:		Added suitable [package require]
