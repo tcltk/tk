@@ -1,3 +1,9 @@
+2002-06-12  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinCursor.c (TkGetCursorByName): reverted fix from
+	2002-06-06 because it broke the ability to use built-in cursors
+	like left_ptr.
+
 2002-06-12  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* library/choosedir.tcl (tk::dialog::file::chooseDir):
