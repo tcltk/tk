@@ -1,3 +1,10 @@
+2003-11-04  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* tests/textDisp.test:
+	* tests/textWind.test: fix to rest of test suite problems
+	reported in [Bug 833761].  This also has the nice effect 
+	that many more tests are now run on Windows.
+	
 2003-11-04  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/demos/widget (showCode,printCode): Added code to print
