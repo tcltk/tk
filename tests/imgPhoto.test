@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.4 1999/04/16 01:51:38 stanton Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.5 1999/07/12 17:34:57 jenn Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -46,6 +46,7 @@ if {![file exists $teapotPhotoFile]} {
     if {![file exists $teapotPhotoFile]} {
 	puts "Can't find [file join demos images teapot.ppm] in $tk_library"
 	puts "your Tk library is incomplete, so I am skipping imgPhoto tests."    
+	::tcltest::cleanupTests
 	return 0
     }
 }
