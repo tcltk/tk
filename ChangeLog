@@ -1,3 +1,13 @@
+2003-04-25  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/bgerror.tcl: make bgerror dialog topmost on Windows to
+	prevent it being covered by other windows.
+
+	* unix/tkUnixButton.c (TkpDisplayButton): Use the normalTextGc when
+	* win/tkWinButton.c (TkpDisplayButton):   displaying disabled text
+	that have images, as they get a gray50 stipple as well and the
+	disabledGc is not set up correctly for font drawing. [Bug #477740]
+
 2003-04-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/configure: regen
