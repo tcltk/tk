@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.10 2000/11/29 15:47:05 dkf Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.11 2001/03/30 22:42:10 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -293,18 +293,18 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 		}
 		args[objc] = NULL;
 	    }
-	    Tcl_Preserve(masterPtr);
+	    Tcl_Preserve((ClientData) masterPtr);
 	    if ((*typePtr->createProc)(interp, name, objc,
 		    args, typePtr, (Tk_ImageMaster) masterPtr,
 		    &masterPtr->masterData) != TCL_OK) {
 		EventuallyDeleteImage(masterPtr);
-		Tcl_Release(masterPtr);
+		Tcl_Release((ClientData) masterPtr);
 		if (oldimage) {
 		    ckfree((char *) args);
 		}
 		return TCL_ERROR;
 	    }
-	    Tcl_Release(masterPtr);
+	    Tcl_Release((ClientData) masterPtr);
 	    if (oldimage) {
 		ckfree((char *) args);
 	    }
@@ -937,7 +937,8 @@ EventuallyDeleteImage(masterPtr)
 {
     if (!masterPtr->deleted) {
 	masterPtr->deleted = 1;
-	Tcl_EventuallyFree(masterPtr, (Tcl_FreeProc *)DeleteImage);
+	Tcl_EventuallyFree((ClientData) masterPtr,
+		(Tcl_FreeProc *)DeleteImage);
     }
 }
 
