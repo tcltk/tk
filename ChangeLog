@@ -1,3 +1,26 @@
+1999-02-25    <redman@scriptics.com>
+
+	* win/tkWinWm.c: Properly initialize the tsdPtr->firstWindow field.
+	
+	* win/cat.c: Code for cat32.exe, copied from the Tcl sources. Required
+	in order to run the test suite from the makefile
+
+	* win/winMain.c: Add main() for a console-based wishc.exe, which meant
+	adding code to disable the call to Tk_ConsoleInit().
+	
+	* generic/tkConsole.c: Check the standard handles before creating the
+	new standard channels.  This allows a windows app that has stdin,
+	stdout, or stderr to correctly connect to them.
+	
+	* generic/tkMain.c: Add a proper check for the interactive mode, since
+	the standard channels may actually be connected in windows mode or
+	even in the console-based wish.
+	
+	* win/makefile.vc: Add targets for wishc.exe (console-based wish) and
+	cat32.exe (for testing). Fix the test suite target so it can be run
+	from the makefile (which can happen since the standard handles have
+	been fixed).
+
 1999-02-12    <lfb@scriptics.com>
 
         * generic/tkMenuButton.h:
