@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: options.n,v 1.5 2000/04/27 18:28:58 ericm Exp $
+'\" RCS: @(#) $Id: options.n,v 1.6 2000/07/25 21:14:35 jenglish Exp $
 '\" 
 .so man.macros
 .TH options n 4.4 Tk "Tk Built-In Commands"
@@ -108,6 +108,7 @@ requests when it has a selection.  The default is usually for widgets
 to export selections.
 .OP \-font font Font
 Specifies the font to use when drawing text inside the widget.
+The value may have any of the forms accepted by \fBTk_GetFont\fR.
 .OP "\-foreground or \-fg" foreground Foreground
 Specifies the normal foreground color to use when displaying the widget.
 .OP \-highlightbackground highlightBackground HighlightBackground
@@ -325,8 +326,8 @@ scrollbars and is provided by widgets that support vertical scrolling.
 See the description of \fBxScrollCommand\fR for details
 on how this option is used.
 
-.SH SEE ALSO
-colors, cursors
+.SH "SEE ALSO"
+colors, cursors, font
 
 .SH KEYWORDS
 class, name, standard option, switch

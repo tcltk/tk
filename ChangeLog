@@ -1,3 +1,9 @@
+2000-07-25  Joe English  <jenglish@flightlab.com>
+	* doc: CanvPsY.3, ConfigWidg.3, CrtImgType.3, CrtItemType.3, 
+	FontId.3, GetFont.3, canvas.n, font.n, options.n, text.n:
+	Documentation fix: Replaced references to XFontStruct *
+	and Tk_FontStruct with Tk_Font.
+
 2000-07-24  Eric Melski  <ericm@ajubasolutions.com>
 
 	* tests/text.test: Added tests for -regexp -nocase searches with

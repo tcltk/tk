@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetFont.3,v 1.3 1999/04/16 01:51:08 stanton Exp $
+'\" RCS: @(#) $Id: GetFont.3,v 1.4 2000/07/25 21:14:34 jenglish Exp $
 '\" 
 .so man.macros
 .TH Tk_AllocFontFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -62,7 +62,7 @@ Opaque font token.
 .VS 8.1
 \fBTk_AllocFontFromObj\fR finds the font indicated by \fIobjPtr\fR and
 returns a token that represents the font.  The return value can be used
-in subsequent calls to procedures such as \fBTk_FontMetrics\fR,
+in subsequent calls to procedures such as \fBTk_GetFontMetrics\fR,
 \fBTk_MeasureChars\fR, and \fBTk_FreeFont\fR.  The Tk_Font token
 will remain valid until
 \fBTk_FreeFontFromObj\fR or \fBTk_FreeFont\fR is called to release it. 
@@ -117,6 +117,9 @@ with its Tk_Font token.  There should be
 exactly one call to \fBTk_FreeFontFromObj\fR or \fBTk_FreeFont\fR
 for each call to \fBTk_AllocFontFromObj\fR or \fBTk_GetFont\fR.
 .VE
+
+.SH "SEE ALSO"
+Tk_FontId(3)
 
 .SH KEYWORDS
 font
