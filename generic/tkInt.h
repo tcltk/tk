@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.56 2003/02/18 06:22:44 mdejong Exp $ 
+ * RCS: $Id: tkInt.h,v 1.57 2003/04/14 23:34:41 mdejong Exp $ 
  */
 
 #ifndef _TKINT
@@ -1166,6 +1166,8 @@ EXTERN char *		TkTilePrintProc _ANSI_ARGS_((
 			    ClientData clientData, Tk_Window tkwin,
 			    char *widgRec, int offset,
 			    Tcl_FreeProc **freeProcPtr));
+EXTERN XEvent *		TkpGetBindingXEvent _ANSI_ARGS_((
+			    Tcl_Interp *interp));
 
 /* 
  * Unsupported commands.

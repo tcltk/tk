@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.28 2003/02/28 15:55:33 dkf Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.29 2003/04/14 23:34:41 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -4675,5 +4675,31 @@ TkCopyAndGlobalEval(interp, script)
     Tcl_DStringFree(&buffer);
     return code;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpGetBindingXEvent --
+ *
+ *	This procedure returns the XEvent associated with the
+ *	currently executing binding. This procedure can only
+ *	be invoked while a binding is executing.
+ *
+ * Results:
+ *	Returns a pointer to the XEvent that caused the
+ *	current binding code to be run.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 
-
+XEvent *
+TkpGetBindingXEvent(interp)
+    Tcl_Interp *interp;			/* Interpreter. */
+{
+   TkWindow *winPtr = (TkWindow *) Tk_MainWindow(interp);
+   BindingTable *bindPtr = (BindingTable *) winPtr->mainPtr->bindingTable;
+   return &(bindPtr->eventRing[bindPtr->curEvent]);
+}
