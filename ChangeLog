@@ -1,3 +1,12 @@
+2001-08-21  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/unixFont.test (unixFont-2.[234]): fixed to be more
+	sensitive on systems that have more installed fonts.
+
+	* library/dialog.tcl (tk_dialog): changed dialog to show bar on
+	Windows as well and added some y padding between the buttons and
+	the bar. [Patch #442835] (harrismh)
+
 2001-08-20  Peter Spjuth  <peter.spjuth@space.se>
 
 	* generic/tkInt.h:
