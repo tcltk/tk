@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.24 2003/04/25 20:02:43 hobbs Exp $
-# $Id: bgerror.tcl,v 1.24 2003/04/25 20:02:43 hobbs Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.25 2003/12/20 19:57:53 jenglish Exp $
+# $Id: bgerror.tcl,v 1.25 2003/12/20 19:57:53 jenglish Exp $
 
 namespace eval ::tk {
     namespace eval dialog {
@@ -127,7 +127,7 @@ proc ::tk::dialog::error::bgerror err {
 
     set w .bgerrorDialog
     set title [mc "Application Error"]
-    set text [mc {Error: %1$s} $err]
+    set text "Error: $displayedErr"
     set buttons [list ok $ok dismiss [mc "Skip Messages"] \
 	    function [mc "Details >>"]]
 
