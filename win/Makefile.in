@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.57 2002/08/26 14:32:18 dgp Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.58 2002/09/04 17:44:55 andreas_kupries Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -444,7 +444,8 @@ install-binaries: binaries
 install-libraries: libraries
 	@for i in $(INSTALL_ROOT)$(prefix)/lib \
 		$(INCLUDE_INSTALL_DIR) $(INCLUDE_INSTALL_DIR)/X11 \
-		$(SCRIPT_INSTALL_DIR) $(SCRIPT_INSTALL_DIR)/images; \
+		$(SCRIPT_INSTALL_DIR) $(SCRIPT_INSTALL_DIR)/images \
+		$(SCRIPT_INSTALL_DIR)/msgs; \
 	    do \
 	    if [ ! -d $$i ] ; then \
 		echo "Making directory $$i"; \
@@ -474,6 +475,13 @@ install-libraries: libraries
 	    do \
 	    if [ -f $$i ] ; then \
 		$(INSTALL_DATA) $$i $(SCRIPT_INSTALL_DIR)/images; \
+	    fi; \
+	    done;
+	@echo "Installing translation directory";
+	@for i in $(ROOT_DIR)/library/msgs/*.msg; \
+	    do \
+	    if [ -f $$i ] ; then \
+		$(INSTALL_DATA) $$i $(SCRIPT_INSTALL_DIR)/msgs; \
 	    fi; \
 	    done;
 
