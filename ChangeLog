@@ -1,3 +1,11 @@
+2004-11-09  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* macosx/tkMacOSXButton.c: fix to dynamic reconfiguration of
+	button '-compound' options (cosmetic problem), [Bug 1055023]
+
+	* tests/text.test: added 'knownBug' 20.172.1 in text widget
+	multiline search routines.
+
 2004-11-08  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/demos/goldberg.tcl: Added slightly adapted version of
