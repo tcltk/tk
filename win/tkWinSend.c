@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSend.c,v 1.6 2003/11/08 22:53:01 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinSend.c,v 1.7 2003/11/20 19:36:58 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -198,40 +198,37 @@ TkGetInterpNames(interp, tkwin)
     LPCOLESTR oleszStub = TKWINSEND_REGISTRATION_BASE;
     HRESULT hr = S_OK;
     Tcl_Obj *objList = NULL;
-    int r = TCL_OK;
+    int result = TCL_OK;
     
     hr = GetRunningObjectTable(0, &pROT);
-    if(SUCCEEDED(hr))
-    {
+    if(SUCCEEDED(hr)) {
 	IBindCtx* pBindCtx = NULL;
 	objList = Tcl_NewListObj(0, NULL);
 	hr = CreateBindCtx(0, &pBindCtx);
-	if (SUCCEEDED(hr))
-	{
+	if (SUCCEEDED(hr)) {
 	    
 	    IEnumMoniker* pEnum;
 	    hr = pROT->lpVtbl->EnumRunning(pROT, &pEnum);
-	    if(SUCCEEDED(hr))
-	    {
+	    if(SUCCEEDED(hr)) {
 		IMoniker* pmk = NULL;
-		while (pEnum->lpVtbl->Next(pEnum, 1, &pmk, (ULONG*)NULL) == S_OK) 
-		{
+		while (pEnum->lpVtbl->Next(pEnum, 1, &pmk, (ULONG*)NULL) 
+		       == S_OK) {
 		    LPOLESTR olestr;
-		    hr = pmk->lpVtbl->GetDisplayName(pmk, pBindCtx, NULL, &olestr);
-		    if (SUCCEEDED(hr))
-		    {
+		    hr = pmk->lpVtbl->GetDisplayName(pmk, pBindCtx, 
+						     NULL, &olestr);
+		    if (SUCCEEDED(hr)) {
 			IMalloc *pMalloc = NULL;
 			
-			if (wcsncmp(olestr, oleszStub, wcslen(oleszStub)) == 0)
-			{
+			if (wcsncmp(olestr, oleszStub, wcslen(oleszStub)) == 0) {
 			    LPOLESTR p = olestr + wcslen(oleszStub);
-			    if (*p)
-				r = Tcl_ListObjAppendElement(interp, objList, Tcl_NewUnicodeObj(p + 1, -1));
+			    if (*p) {
+			        result = Tcl_ListObjAppendElement(interp, 
+				  objList, Tcl_NewUnicodeObj(p + 1, -1));
+			    }
 			}
 			
 			hr = CoGetMalloc(1, &pMalloc);
-			if (SUCCEEDED(hr))
-			{
+			if (SUCCEEDED(hr)) {
 			    pMalloc->lpVtbl->Free(pMalloc, (void*)olestr);
 			    pMalloc->lpVtbl->Release(pMalloc);
 			}
@@ -251,13 +248,14 @@ TkGetInterpNames(interp, tkwin)
             Tcl_DecrRefCount(objList);
         }
         Tcl_SetObjResult(interp, Win32ErrorObj(hr));
-        r = TCL_ERROR;
+        result = TCL_ERROR;
     }
     
-    if (r == TCL_OK)
+    if (result == TCL_OK) {
         Tcl_SetObjResult(interp, objList);
+    }
     
-    return r;
+    return result;
 }
 
 /*
@@ -291,7 +289,7 @@ Tk_SendObjCmd(clientData, interp, objc, objv)
     static CONST char *sendOptions[] = {
 	"-async",   "-displayof",   "--",  (CONST char *)NULL
     };
-    int r = TCL_OK;
+    int result = TCL_OK;
     int i, optind, async = 0;
     Tcl_Obj *displayPtr = NULL;
 
@@ -315,7 +313,7 @@ Tk_SendObjCmd(clientData, interp, objc, objv)
     if ((objc - i) < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, 
 		"?-async? ?-displayof? ?--? interpName arg ?arg ...?");
-        r = TCL_ERROR;
+        result = TCL_ERROR;
     }
 
     /*
@@ -326,22 +324,23 @@ Tk_SendObjCmd(clientData, interp, objc, objv)
 	Tcl_SetStringObj(Tcl_GetObjResult(interp),
 	    "option not implemented: \"displayof\" is not available "
 	    "for this platform.", -1);
-	r = TCL_ERROR;
+	result = TCL_ERROR;
     }
     
     /* send the arguments to the foreign interp */
     /* FIX ME: async and check for local interp */
-    if (r == TCL_OK) {
+    if (result == TCL_OK) {
 	LPDISPATCH pdisp;
-	r = FindInterpreterObject(interp, Tcl_GetString(objv[i]), &pdisp);
-	if (r == TCL_OK) {
+	result = FindInterpreterObject(interp, Tcl_GetString(objv[i]), &pdisp);
+	if (result == TCL_OK) {
 	    i++;
-	    r = Send(pdisp, interp, async, clientData, (objc - i), &objv[i]);
+	    result = Send(pdisp, interp, async, clientData, 
+			  (objc - i), &objv[i]);
 	    pdisp->lpVtbl->Release(pdisp);
 	}
     }
     
-    return r;
+    return result;
 }
 
 /*
@@ -370,18 +369,15 @@ static int
 FindInterpreterObject(Tcl_Interp *interp, CONST char *name, LPDISPATCH *ppdisp)
 {
     LPRUNNINGOBJECTTABLE pROT = NULL;
-    int r = TCL_OK;
+    int result = TCL_OK;
     HRESULT hr = GetRunningObjectTable(0, &pROT);
-    if (SUCCEEDED(hr))
-    {
+    if (SUCCEEDED(hr)) {
 	IBindCtx* pBindCtx = NULL;
 	hr = CreateBindCtx(0, &pBindCtx);
-	if (SUCCEEDED(hr))
-	{
+	if (SUCCEEDED(hr)) {
 	    LPMONIKER pmk = NULL;
 	    hr = BuildMoniker(name, &pmk);
-	    if (SUCCEEDED(hr))
-	    {
+	    if (SUCCEEDED(hr)) {
 		IUnknown* punkInterp = NULL;
 		hr = pROT->lpVtbl->IsRunning(pROT, pmk);
 		hr = pmk->lpVtbl->BindToObject(pmk, pBindCtx, NULL,
@@ -395,7 +391,7 @@ FindInterpreterObject(Tcl_Interp *interp, CONST char *name, LPDISPATCH *ppdisp)
 		    Tcl_ResetResult(interp);
 		    Tcl_AppendResult(interp,
 			"no application named \"", name, "\"", NULL);
-		    r = TCL_ERROR;
+		    result = TCL_ERROR;
 		}
 		
 		pmk->lpVtbl->Release(pmk);
@@ -404,12 +400,11 @@ FindInterpreterObject(Tcl_Interp *interp, CONST char *name, LPDISPATCH *ppdisp)
 	}
 	pROT->lpVtbl->Release(pROT);
     }
-    if (FAILED(hr) && r == TCL_OK)
-    {
+    if (FAILED(hr) && result == TCL_OK) {
 	Tcl_SetObjResult(interp, Win32ErrorObj(hr));
-	r = TCL_ERROR;
+	result = TCL_ERROR;
     }
-    return r;
+    return result;
 }
 
 /*
@@ -615,17 +610,19 @@ RegisterInterp(CONST char *name, RegisteredInterp *riPtr)
 		pmk->lpVtbl->Release(pmk);
 	    }
 
-	    if (hr == MK_S_MONIKERALREADYREGISTERED)
-		pROT->lpVtbl->Revoke(pROT, riPtr->cookie);
-	    else if (hr == S_OK)
+	    if (hr == MK_S_MONIKERALREADYREGISTERED) {
+	        pROT->lpVtbl->Revoke(pROT, riPtr->cookie);
+	    } else if (hr == S_OK) {
 		break;
+	    }
 	}
 	
 	pROT->lpVtbl->Release(pROT);
     }
 
-    if (SUCCEEDED(hr))
-	riPtr->name = strdup(actualName);
+    if (SUCCEEDED(hr)) {
+        riPtr->name = strdup(actualName);
+    }
 
     Tcl_DStringFree(&dString);
     return hr;
@@ -695,8 +692,9 @@ Send(LPDISPATCH pdispInterp, Tcl_Interp *interp,
      */
     
     ehr = VariantChangeType(&vResult, &vResult, 0, VT_BSTR);
-    if (SUCCEEDED(ehr))
+    if (SUCCEEDED(ehr)) {
         Tcl_SetObjResult(interp, Tcl_NewUnicodeObj(vResult.bstrVal, -1));
+    }
 
     /*
      * Errors are returned as dispatch exceptions. If an error code was
@@ -704,12 +702,10 @@ Send(LPDISPATCH pdispInterp, Tcl_Interp *interp,
      * error variables.
      */
 
-    if (hr == DISP_E_EXCEPTION)
-    {
+    if (hr == DISP_E_EXCEPTION) {
         Tcl_Obj *opError, *opErrorCode, *opErrorInfo;
 	
-        if (ei.bstrSource != NULL)
-        {
+        if (ei.bstrSource != NULL) {
             int len;
             char * szErrorInfo;
 	    
@@ -768,8 +764,9 @@ Win32ErrorObj(HRESULT hrError)
 	wsprintf(sBuffer, _T("Error Code: %08lX"), hrError);
     }
 
-    if ((p = _tcsrchr(lpBuffer, _T('\r'))) != NULL)
-	*p = _T('\0');
+    if ((p = _tcsrchr(lpBuffer, _T('\r'))) != NULL) {
+        *p = _T('\0');
+    }
 
 #ifdef _UNICODE
     errPtr = Tcl_NewUnicodeObj(lpBuffer, (int)wcslen(lpBuffer));
@@ -777,8 +774,9 @@ Win32ErrorObj(HRESULT hrError)
     errPtr = Tcl_NewStringObj(lpBuffer, (int)strlen(lpBuffer));
 #endif
 
-    if (lpBuffer != sBuffer)    
-	LocalFree((HLOCAL)lpBuffer);
+    if (lpBuffer != sBuffer) {
+        LocalFree((HLOCAL)lpBuffer);
+    }
 
     return errPtr;
 }
@@ -805,17 +803,22 @@ Win32ErrorObj(HRESULT hrError)
 void
 SetExcepInfo(Tcl_Interp* interp, EXCEPINFO *pExcepInfo)
 {
-    if (pExcepInfo)
-    {
+    if (pExcepInfo) {
         Tcl_Obj *opError, *opErrorInfo, *opErrorCode;
         ICreateErrorInfo *pCEI;
         IErrorInfo *pEI;
         HRESULT hr;
 
         opError = Tcl_GetObjResult(interp);
-	    opErrorInfo = Tcl_GetVar2Ex(interp, "errorInfo", NULL, TCL_GLOBAL_ONLY);
+	opErrorInfo = Tcl_GetVar2Ex(interp, "errorInfo", NULL, TCL_GLOBAL_ONLY);
         opErrorCode = Tcl_GetVar2Ex(interp, "errorCode", NULL, TCL_GLOBAL_ONLY);
 
+	if (Tcl_IsShared(opErrorCode)) {
+	    Tcl_Obj *ec = Tcl_DuplicateObj(opErrorCode);
+	    Tcl_IncrRefCount(ec);
+	    Tcl_DecrRefCount(opErrorCode);
+	    opErrorCode = ec;
+	}
         Tcl_ListObjAppendElement(interp, opErrorCode, opErrorInfo);
 
         pExcepInfo->bstrDescription = SysAllocString(Tcl_GetUnicode(opError));
@@ -823,14 +826,13 @@ SetExcepInfo(Tcl_Interp* interp, EXCEPINFO *pExcepInfo)
         pExcepInfo->scode = E_FAIL;
 
         hr = CreateErrorInfo(&pCEI);
-        if (SUCCEEDED(hr))
-        {
+        if (SUCCEEDED(hr)) {
             hr = pCEI->lpVtbl->SetGUID(pCEI, &IID_IDispatch);
             hr = pCEI->lpVtbl->SetDescription(pCEI, pExcepInfo->bstrDescription);
             hr = pCEI->lpVtbl->SetSource(pCEI, pExcepInfo->bstrSource);
-            hr = pCEI->lpVtbl->QueryInterface(pCEI, &IID_IErrorInfo, (void**)&pEI);
-            if (SUCCEEDED(hr))
-            {
+            hr = pCEI->lpVtbl->QueryInterface(pCEI, &IID_IErrorInfo, 
+					      (void**)&pEI);
+            if (SUCCEEDED(hr)) {
                 SetErrorInfo(0, pEI);
                 pEI->lpVtbl->Release(pEI);
             }
@@ -902,13 +904,13 @@ TkWinSend_QueueCommand(Tcl_Interp *interp, Tcl_Obj *cmdPtr)
 static int
 SendEventProc(Tcl_Event *eventPtr, int flags)
 {
-    int r = TCL_OK;
+    int result = TCL_OK;
     SendEvent *evPtr = (SendEvent *)eventPtr;
     /*ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);*/
 
     TRACE("SendEventProc\n");
     
-    r = Tcl_EvalObjEx(evPtr->interp, evPtr->cmdPtr,
+    result = Tcl_EvalObjEx(evPtr->interp, evPtr->cmdPtr,
                       TCL_EVAL_DIRECT | TCL_EVAL_GLOBAL);
         
     Tcl_DecrRefCount(evPtr->cmdPtr);
@@ -946,10 +948,3 @@ SendTrace(const char *format, ...)
     va_end(args);
 }
 
-/*
- * Local variables:
- *   mode: c
- *   tab-width: 8
- *   c-indentation-style: tcltk
- * End:
- */
