@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.3.2.1 2004/02/16 00:42:34 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.3.2.2 2004/11/12 09:03:40 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -235,9 +235,9 @@ static GWorldPtr gWorld = NULL;
  */
 
 static FontFamily * AllocFontFamily(CONST MacFont *fontPtr, int family);
-static SubFont * CanUseFallback(MacFont *fontPtr, CONST char *fallbackName, int ch);
-static SubFont * CanUseFallbackWithAliases(MacFont *fontPtr, CONST char *faceName, int ch, Tcl_DString *nameTriedPtr);
-static SubFont * FindSubFontForChar(MacFont *fontPtr, int ch);
+static SubFont * CanUseFallback(MacFont *fontPtr, CONST char *fallbackName, int ch, SubFont **fixSubFontPtrPtr);
+static SubFont * CanUseFallbackWithAliases(MacFont *fontPtr, CONST char *faceName, int ch, Tcl_DString *nameTriedPtr, SubFont **fixSubFontPtrPtr);
+static SubFont * FindSubFontForChar(MacFont *fontPtr, int ch, SubFont **fixSubFontPtrPtr);
 static void FontMapInsert(SubFont *subFontPtr, int ch);
 static void FontMapLoadPage(SubFont *subFontPtr, int row);
 static int  FontMapLookup(SubFont *subFontPtr, int ch);
@@ -670,7 +670,7 @@ Tk_MeasureChars(
                                  * terminating character. */
 {
     MacFont *fontPtr;
-    FontFamily *lastFamilyPtr;
+    SubFont *thisSubFontPtr, *lastSubFontPtr;
     CGrafPtr saveWorld;
     GDHandle saveDevice;
     int curX, curByte;
@@ -695,7 +695,7 @@ Tk_MeasureChars(
     TextSize(fontPtr->size);
     TextFace(fontPtr->style);
 
-    lastFamilyPtr = fontPtr->subFontArray[0].familyPtr; 
+    lastSubFontPtr = &fontPtr->subFontArray[0];
     
     if (numBytes == 0) {
             curX = 0;
@@ -703,7 +703,7 @@ Tk_MeasureChars(
     } else if (maxLength < 0) {
             CONST char *p, *end, *next;
             Tcl_UniChar ch;
-            FontFamily *thisFamilyPtr;
+	    FontFamily *familyPtr;
             Tcl_DString runString;
              
             /*
@@ -718,21 +718,23 @@ Tk_MeasureChars(
         end = source + numBytes;
         for (p = source; p < end; ) {
             next = p + Tcl_UtfToUniChar(p, &ch);
-            thisFamilyPtr = FindSubFontForChar(fontPtr, ch)->familyPtr;
-            if (thisFamilyPtr != lastFamilyPtr) {
-                TextFont(lastFamilyPtr->faceNum);
-                Tcl_UtfToExternalDString(lastFamilyPtr->encoding, source, 
+            thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
+            if (thisSubFontPtr != lastSubFontPtr) {
+                familyPtr = lastSubFontPtr->familyPtr;
+                TextFont(familyPtr->faceNum);
+                Tcl_UtfToExternalDString(familyPtr->encoding, source, 
                         p - source, &runString);
                 curX += TextWidth(Tcl_DStringValue(&runString), 0, 
                         Tcl_DStringLength(&runString));
                 Tcl_DStringFree(&runString);
-                lastFamilyPtr = thisFamilyPtr;
+		lastSubFontPtr = thisSubFontPtr;
                 source = p;
             }
             p = next;
         }
-        TextFont(lastFamilyPtr->faceNum);
-        Tcl_UtfToExternalDString(lastFamilyPtr->encoding, source, p - source, 
+        familyPtr = lastSubFontPtr->familyPtr;
+        TextFont(familyPtr->faceNum);
+        Tcl_UtfToExternalDString(familyPtr->encoding, source, p - source, 
                 &runString);
         curX += TextWidth(Tcl_DStringValue(&runString), 0, 
                 Tcl_DStringLength(&runString));
@@ -741,7 +743,6 @@ Tk_MeasureChars(
     } else {
         CONST char *p, *end, *next, *sourceOrig;
         int widthLeft;
-        FontFamily *thisFamilyPtr;
         Tcl_UniChar ch;
         CONST char *rest = NULL;
         
@@ -758,24 +759,24 @@ Tk_MeasureChars(
         end = source + numBytes;      
         for (p = source; p < end; p = next) {
             next = p + Tcl_UtfToUniChar(p, &ch);
-              thisFamilyPtr = FindSubFontForChar(fontPtr, ch)->familyPtr;
-              if (thisFamilyPtr != lastFamilyPtr) {
-                  if (p > source) {
-                      rest = BreakLine(lastFamilyPtr, flags, source, 
-                                  p - source, &widthLeft);
-                      flags &= ~TK_AT_LEAST_ONE;
-                      if (rest != NULL) {
-                          p = source;
-                          break;
-                      }
-                  }
-                lastFamilyPtr = thisFamilyPtr;
+            thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
+            if (thisSubFontPtr != lastSubFontPtr) {
+                if (p > source) {
+                    rest = BreakLine(lastSubFontPtr->familyPtr, flags, source, 
+                                p - source, &widthLeft);
+                    flags &= ~TK_AT_LEAST_ONE;
+                    if (rest != NULL) {
+                        p = source;
+                        break;
+                    }
+                }
+		lastSubFontPtr = thisSubFontPtr;
                 source = p;
             }
         }
         
         if (p > source) {
-            rest = BreakLine(lastFamilyPtr, flags, source, p - source, 
+            rest = BreakLine(lastSubFontPtr->familyPtr, flags, source, p - source, 
                         &widthLeft);
         }
         
@@ -1079,7 +1080,8 @@ MultiFontDrawText(
     int x, int y)               /* Coordinates at which to place origin *
                                  * of string when drawing. */
 {
-    FontFamily *lastFamilyPtr, *thisFamilyPtr = NULL;
+    SubFont *thisSubFontPtr, *lastSubFontPtr;
+    FontFamily *familyPtr;
     Tcl_DString runString;
     CONST char *p, *end, *next;
     Tcl_UniChar ch;
@@ -1087,16 +1089,17 @@ MultiFontDrawText(
     TextSize(fontPtr->size);
     TextFace(fontPtr->style);
 
-    lastFamilyPtr = fontPtr->subFontArray[0].familyPtr;
+    lastSubFontPtr = &fontPtr->subFontArray[0];
 
     end = source + numBytes;
     for (p = source; p < end; ) {
         next = p + Tcl_UtfToUniChar(p, &ch);
-        thisFamilyPtr = FindSubFontForChar(fontPtr, ch)->familyPtr;
-        if (thisFamilyPtr != lastFamilyPtr) {
+        thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
+        if (thisSubFontPtr != lastSubFontPtr) {
             if (p > source) {
-                TextFont(lastFamilyPtr->faceNum);
-                 Tcl_UtfToExternalDString(lastFamilyPtr->encoding, source, 
+                familyPtr = lastSubFontPtr->familyPtr;
+                TextFont(familyPtr->faceNum);
+                 Tcl_UtfToExternalDString(familyPtr->encoding, source, 
                         p - source, &runString);
                 MoveTo((short) x, (short) y);
                 DrawText(Tcl_DStringValue(&runString), 0, 
@@ -1106,13 +1109,14 @@ MultiFontDrawText(
                 Tcl_DStringFree(&runString);
                 source = p;
             }
-            lastFamilyPtr = thisFamilyPtr;
+            lastSubFontPtr = thisSubFontPtr;
         }
         p = next;
     }
     if (p > source) {
-        TextFont(thisFamilyPtr->faceNum);
-        Tcl_UtfToExternalDString(lastFamilyPtr->encoding, source, 
+        familyPtr = lastSubFontPtr->familyPtr;
+        TextFont(familyPtr->faceNum);
+        Tcl_UtfToExternalDString(familyPtr->encoding, source, 
                 p - source, &runString);
         MoveTo((short) x, (short) y);
             DrawText(Tcl_DStringValue(&runString), 0, 
@@ -1488,7 +1492,9 @@ FreeFontFamily(
  * Side effects:
  *        The contents of fontPtr are modified to cache the results
  *        of the lookup and remember any SubFonts that were dynamically 
- *        loaded.
+ *	  loaded.  The table of SubFonts might be extended, and if a non-NULL
+ *	  reference to a subfont pointer is available, it is updated if it
+ *	  previously pointed into the old subfont table.
  *
  *-------------------------------------------------------------------------
  */
@@ -1497,7 +1503,9 @@ static SubFont *
 FindSubFontForChar(
     MacFont *fontPtr,           /* The font object with which the character
                                  * will be displayed. */
-    int ch)                     /* The Unicode character to be displayed. */
+    int ch,                     /* The Unicode character to be displayed. */
+    SubFont **fixSubFontPtrPtr)	/* Subfont reference to fix up if we
+				 * reallocate our subfont table. */
 {
     int i, j, k;
     CONST char *fallbackName;
@@ -1561,7 +1569,7 @@ FindSubFontForChar(
         for (j = 0; fontFallbacks[i][j] != NULL; j++) {
             fallbackName = fontFallbacks[i][j];
             subFontPtr = CanUseFallbackWithAliases(fontPtr, fallbackName,
-                    ch, &faceNames);
+                    ch, &faceNames, fixSubFontPtrPtr);
             if (subFontPtr != NULL) {
                 goto end;
             }
@@ -1576,7 +1584,7 @@ FindSubFontForChar(
     for (i = 0; anyFallbacks[i] != NULL; i++) {
         fallbackName = anyFallbacks[i];
         subFontPtr = CanUseFallbackWithAliases(fontPtr, fallbackName, ch,
-                &faceNames);
+                &faceNames, fixSubFontPtrPtr);
         if (subFontPtr != NULL) {
             goto end;
         }
@@ -1590,7 +1598,8 @@ FindSubFontForChar(
     for (mapPtr = gFontNameMap; mapPtr->utfName != NULL; mapPtr++) {
         fallbackName = mapPtr->utfName;
         if (SeenName(fallbackName, &faceNames) == 0) {
-            subFontPtr = CanUseFallback(fontPtr, fallbackName, ch);
+	    subFontPtr = CanUseFallback(fontPtr, fallbackName, ch,
+		    fixSubFontPtrPtr);
             if (subFontPtr != NULL) {
                 goto end;
             }
@@ -1832,7 +1841,9 @@ FontMapLoadPage(
  * Side effects:
  *        If the name and/or one of its aliases was rejected, the
  *        rejected string is recorded in nameTriedPtr so that it won't
- *        be tried again.
+ *	  be tried again.  The table of SubFonts might be extended, and if
+ *	  a non-NULL reference to a subfont pointer is available, it is
+ *	  updated if it previously pointed into the old subfont table.
  *
  *---------------------------------------------------------------------------
  */
@@ -1844,17 +1855,19 @@ CanUseFallbackWithAliases(
     CONST char *faceName,             /* Desired face name for new screen font. */
     int ch,                     /* The Unicode character that the new
                                  * screen font must be able to display. */
-    Tcl_DString *nameTriedPtr)  /* Records face names that have already
+    Tcl_DString *nameTriedPtr,  /* Records face names that have already
                                  * been tried.  It is possible for the same
                                  * face name to be queried multiple times when
                                  * trying to find a suitable screen font. */
+    SubFont **fixSubFontPtrPtr)	/* Subfont reference to fix up if we
+				 * reallocate our subfont table. */
 {
     SubFont *subFontPtr;
     char **aliases;
     int i;
     
     if (SeenName(faceName, nameTriedPtr) == 0) {
-        subFontPtr = CanUseFallback(fontPtr, faceName, ch);
+	subFontPtr = CanUseFallback(fontPtr, faceName, ch, fixSubFontPtrPtr);
         if (subFontPtr != NULL) {
             return subFontPtr;
         }
@@ -1863,7 +1876,8 @@ CanUseFallbackWithAliases(
     if (aliases != NULL) {
         for (i = 0; aliases[i] != NULL; i++) {
             if (SeenName(aliases[i], nameTriedPtr) == 0) {
-                subFontPtr = CanUseFallback(fontPtr, aliases[i], ch);
+		subFontPtr = CanUseFallback(fontPtr, aliases[i], ch,
+			fixSubFontPtrPtr);
                 if (subFontPtr != NULL) {
                     return subFontPtr;
                 }
@@ -1932,7 +1946,10 @@ SeenName(
  *
  * Side effects:                                       
  *        The font object's subFontArray is updated to contain a reference
- *        to the newly allocated SubFont.
+ *	  to the newly allocated SubFont.  The table of SubFonts might be
+ *	  extended, and if a non-NULL reference to a subfont pointer is
+ *	  available, it is updated if it previously pointed into the old
+ *	  subfont table.
  *
  *-------------------------------------------------------------------------
  */
@@ -1942,8 +1959,10 @@ CanUseFallback(
     MacFont *fontPtr,           /* The font object that will own the new
                                  * screen font. */
     CONST char *faceName,       /* Desired face name for new screen font. */
-    int ch)                     /* The Unicode character that the new
+    int ch,                     /* The Unicode character that the new
                                  * screen font must be able to display. */
+    SubFont **fixSubFontPtrPtr)	/* Subfont reference to fix up if we
+				 * reallocate our subfont table. */
 {
     int i;
     SubFont subFont;
@@ -1980,6 +1999,14 @@ CanUseFallback(
             * (fontPtr->numSubFonts + 1));
         memcpy((char *) newPtr, fontPtr->subFontArray,
                 fontPtr->numSubFonts * sizeof(SubFont));
+	if (fixSubFontPtrPtr != NULL) {
+            /*
+             * Fix up the variable pointed to by fixSubFontPtrPtr so it
+             * still points into the live array.  [Bug 618872]
+             */
+            *fixSubFontPtrPtr = 
+                    newPtr + (*fixSubFontPtrPtr - fontPtr->subFontArray);
+	}
         if (fontPtr->subFontArray != fontPtr->staticSubFonts) {
             ckfree((char *) fontPtr->subFontArray);
         }
