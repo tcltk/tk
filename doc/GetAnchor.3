@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetAnchor.3,v 1.4 2002/08/05 04:30:38 dgp Exp $
+'\" RCS: @(#) $Id: GetAnchor.3,v 1.5 2005/04/06 21:11:53 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_GetAnchorFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -16,10 +16,8 @@ Tk_GetAnchorFromObj, Tk_GetAnchor, Tk_NameOfAnchor \- translate between strings 
 .nf
 \fB#include <tk.h>\fR
 .sp
-.VS 8.1
 int
 \fBTk_GetAnchorFromObj(\fIinterp, objPtr, anchorPtr\fB)\fR
-.VE
 .sp
 int
 \fBTk_GetAnchor(\fIinterp, string, anchorPtr\fB)\fR
@@ -30,7 +28,6 @@ CONST char *
 .AS "Tk_Anchor" *anchorPtr
 .AP Tcl_Interp *interp in
 Interpreter to use for error reporting, or NULL.
-.VS 8.1 br
 .AP Tcl_Obj *objPtr in/out
 String value contains name of anchor point: \fBn\fR, \fBne\fR,
 \fBe\fR, \fBse\fR, \fBs\fR, \fBsw\fR, \fBw\fR, \fBnw\fR, or \fBcenter\fR;
@@ -38,7 +35,6 @@ internal rep will be modified to cache corresponding Tk_Anchor.
 .AP "CONST char" *string in
 Same as \fIobjPtr\fR except description of anchor point is passed as
 a string.
-.VE
 .AP int *anchorPtr out
 Pointer to location in which to store anchor position corresponding to
 \fIobjPtr\fR or \fIstring\fR.
@@ -48,7 +44,6 @@ Anchor position, e.g. \fBTCL_ANCHOR_CENTER\fR.
 
 .SH DESCRIPTION
 .PP
-.VS 8.1
 \fBTk_GetAnchorFromObj\fR places in \fI*anchorPtr\fR an anchor position
 (enumerated type \fBTk_Anchor\fR)
 corresponding to \fIobjPtr\fR's value.  The result will be one of
@@ -74,7 +69,6 @@ that the description of the anchor is specified with a string instead
 of an object.  This prevents \fBTk_GetAnchor\fR from caching the
 return value, so \fBTk_GetAnchor\fR is less efficient than
 \fBTk_GetAnchorFromObj\fR.
-.VE
 .PP
 \fBTk_NameOfAnchor\fR is the logical inverse of \fBTk_GetAnchor\fR.
 Given an anchor position such as \fBTK_ANCHOR_N\fR it returns a

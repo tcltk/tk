@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetFont.3,v 1.5 2002/08/05 04:30:38 dgp Exp $
+'\" RCS: @(#) $Id: GetFont.3,v 1.6 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_AllocFontFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -16,7 +16,6 @@ Tk_AllocFontFromObj, Tk_GetFont, Tk_GetFontFromObj, Tk_NameOfFont, Tk_FreeFontFr
 .nf
 \fB#include <tk.h>\fR
 .sp
-.VS 8.1
 Tk_Font 
 \fBTk_AllocFontFromObj(\fIinterp, tkwin, objPtr\fB)\fR
 .sp
@@ -25,15 +24,12 @@ Tk_Font
 .sp
 Tk_Font 
 \fBTk_GetFontFromObj(\fItkwin, objPtr\fB)\fR
-.VE
 .sp
 CONST char *
 \fBTk_NameOfFont(\fItkfont\fB)\fR
 .sp
-.VS 8.1
 Tk_Font 
 \fBTk_FreeFontFromObj(\fItkwin, objPtr\fB)\fR
-.VE
 .sp
 void
 \fBTk_FreeFont(\fItkfont\fB)\fR
@@ -45,7 +41,6 @@ Interpreter to use for error reporting.  If NULL, then no error
 messages are left after errors.
 .AP Tk_Window tkwin in
 Token for window in which font will be used.
-.VS 8.1 br
 .AP Tcl_Obj *objPtr in/out
 Gives name or description of font.  See documentation
 for the \fBfont\fR command for details on acceptable formats.
@@ -53,13 +48,11 @@ Internal rep will be modified to cache corresponding Tk_Font.
 .AP "const char" *string in
 Same as \fIobjPtr\fR except description of font is passed as a string and
 resulting Tk_Font isn't cached.
-.VE
 .AP Tk_Font tkfont in
 Opaque font token.
 .BE
 .SH DESCRIPTION
 .PP
-.VS 8.1
 \fBTk_AllocFontFromObj\fR finds the font indicated by \fIobjPtr\fR and
 returns a token that represents the font.  The return value can be used
 in subsequent calls to procedures such as \fBTk_GetFontMetrics\fR,
@@ -90,7 +83,6 @@ must already have been created with a previous call to
 value is cached in \fIobjPtr\fR, which speeds up
 future calls to \fBTk_GetFontFromObj\fR with the same \fIobjPtr\fR
 and \fItkwin\fR.
-.VE
 .PP
 \fBTk_AllocFontFromObj\fR and \fBTk_GetFont\fR maintain
 a database of all fonts they have allocated.  If
@@ -107,7 +99,6 @@ passed to \fBTk_GetFont\fR to create the font.  The string returned by
 \fBTk_NameOfFont\fR is only guaranteed to persist until the \fItkfont\fR
 is deleted.  The caller must not modify this string.
 .PP
-.VS 8.1
 When a font is no longer needed,
 \fBTk_FreeFontFromObj\fR or \fBTk_FreeFont\fR should be called to
 release it.  For \fBTk_FreeFontFromObj\fR the font to release is specified
@@ -116,10 +107,8 @@ with the same information used to create it; for
 with its Tk_Font token.  There should be
 exactly one call to \fBTk_FreeFontFromObj\fR or \fBTk_FreeFont\fR
 for each call to \fBTk_AllocFontFromObj\fR or \fBTk_GetFont\fR.
-.VE
 
 .SH "SEE ALSO"
 Tk_FontId(3)
-
 .SH KEYWORDS
 font

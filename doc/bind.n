@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bind.n,v 1.18 2004/10/28 10:22:51 dkf Exp $
+'\" RCS: @(#) $Id: bind.n,v 1.19 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
@@ -66,10 +66,8 @@ the binding applies to all windows in the application.
 .PP
 The \fIsequence\fR argument specifies a sequence of one or more
 event patterns, with optional white space between the patterns.  Each
-.VS
 event pattern may
 take one of three forms.  In the simplest case it is a single
-.VE
 printing ASCII character, such as \fBa\fR or \fB[\fR.  The character
 may not be a space character or the character \fB<\fR.  This form of
 pattern matches a \fBKeyPress\fR event for the particular
@@ -115,9 +113,7 @@ Modifiers consist of any of the following values:
 \fBButton4, B4\fR	\fBDouble\fR
 \fBButton5, B5\fR	\fBTriple\fR
 \fBMod1, M1\fR	\fBQuadruple\fR
-.VS
 \fBExtended\fR
-.VE
 .DE
 Where more than one value is listed, separated by commas, the values
 are equivalent.
@@ -461,12 +457,10 @@ for \fBEnter\fR and \fBLeave\fR events.  \fB1\fP if the receiving
 window is the focus window or a descendant of the focus window, 
 \fB0\fP otherwise.
 .IP \fB%h\fR 5
-.VS
 The \fIheight\fR field from the event.  Valid for the \fBConfigure\fR,
 \fBConfigureRequest\fR, \fBCreate\fR, \fBResizeRequest\fR, and
 \fBExpose\fR events.
 Indicates the new or requested height of the window.
-.VE
 .IP \fB%i\fR 5
 The \fIwindow\fR field from the event, represented as a hexadecimal
 integer.  Valid for all event types.
@@ -476,10 +470,8 @@ and \fBKeyRelease\fR events.
 .IP \fB%m\fR 5
 The \fImode\fR field from the event.  The substituted string is one of
 \fBNotifyNormal\fR, \fBNotifyGrab\fR, \fBNotifyUngrab\fR, or
-.VS
 \fBNotifyWhileGrabbed\fR.  Valid only for \fBEnter\fR,
 \fBFocusIn\fR, \fBFocusOut\fR, and \fBLeave\fR events.
-.VE
 .IP \fB%o\fR 5
 The \fIoverride_redirect\fR field from the event.  Valid only for
 \fBMap\fR, \fBReparent\fR, and \fBConfigure\fR events.
@@ -507,10 +499,8 @@ Valid for most events.
 The \fIwidth\fR field from the event.
 Indicates the new or requested width of the window.
 Valid only for
-.VS
 \fBConfigure\fR, \fBConfigureRequest\fR, \fBCreate\fR,
 \fBResizeRequest\fR, and \fBExpose\fR events.
-.VE
 .IP "\fB%x\fR, \fB%y\fR" 5
 The \fIx\fR and \fIy\fR fields from the event.
 For \fBButtonPress\fP, \fBButtonRelease\fP, \fBMotion\fP, 
@@ -532,14 +522,12 @@ Valid only for \fBKeyPress\fR and \fBKeyRelease\fR events.
 The \fIborder_width\fR field from the event.  Valid only for
 \fBConfigure\fR, \fBConfigureRequest\fR, and \fBCreate\fR events.
 .IP \fB%D\fR 5
-.VS
 This reports the \fIdelta\fR value of a \fBMouseWheel\fR event.  The
 \fIdelta\fR value represents the rotation units the mouse wheel has
 been moved.  On Windows 95 & 98 systems the smallest value for the
 delta is 120.  Future systems may support higher resolution values for
 the delta.  The sign of the value represents the direction the mouse
 wheel was scrolled.
-.VE
 .IP \fB%E\fR 5
 The \fIsend_event\fR field from the event.  Valid for all event types.
 \fB0\fP indicates that this is a ``normal'' event, \fB1\fP indicates
