@@ -33,6 +33,9 @@ static char initScript[] =
 	set tk_library .\n\
     }\n\
     set dirs {}\n\
+    if {[info exists env(tk_pkgLibrary)]} {\n\
+	lappend dirs $env(tk_pkgLibrary)\n\
+    }\n\
     if {[info exists env(TK_LIBRARY)]} {\n\
 	lappend dirs $env(TK_LIBRARY)\n\
     }\n\
