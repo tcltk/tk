@@ -1,3 +1,11 @@
+2003-02-28  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* tests/bind.test (bind-16.44): 
+	* generic/tkBind.c (ExpandPercents): Only allow events to see
+	those expansions that are actually valid for them, and force the
+	substitution of the rest as "??".  This stops some crashes on
+	Windows and gets rid of bogus values everywhere.  [Bug #612110]
+
 2003-02-26  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* macosx/README: correct 8.4.3 refs to 8.4.2.

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.27 2002/08/31 06:12:20 das Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.28 2003/02/28 15:55:33 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -548,6 +548,7 @@ static Tcl_HashTable eventTable;
 #define CIRCREQ			0x400000
 
 #define KEY_BUTTON_MOTION_VIRTUAL	(KEY|BUTTON|MOTION|VIRTUAL)
+#define KEY_BUTTON_MOTION_CROSSING	(KEY|BUTTON|MOTION|CROSSING|VIRTUAL)
 
 static int flagArray[TK_LASTEVENT] = {
    /* Not used */		0,
@@ -2364,13 +2365,17 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		}
 		goto doString;
 	    case 'b':
-		number = eventPtr->xbutton.button;
-		goto doNumber;
+		if (flags & BUTTON) {
+		    number = eventPtr->xbutton.button;
+		    goto doNumber;
+		}
+		goto doString;
 	    case 'c':
 		if (flags & EXPOSE) {
 		    number = eventPtr->xexpose.count;
+		    goto doNumber;
 		}
-		goto doNumber;
+		goto doString;
 	    case 'd':
 		if (flags & (CROSSING|FOCUS)) {
 		    if (flags & FOCUS) {
@@ -2379,8 +2384,7 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 			number = eventPtr->xcrossing.detail;
 		    }
 		    string = TkFindStateString(notifyDetail, number);
-		}
-		else if (flags & CONFIGREQ) {
+		} else if (flags & CONFIGREQ) {
 		    if (eventPtr->xconfigurerequest.value_mask & CWStackMode) {
 			string = TkFindStateString(configureRequestDetail,
 					eventPtr->xconfigurerequest.detail);
@@ -2390,20 +2394,24 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		}
 		goto doString;
 	    case 'f':
-		number = eventPtr->xcrossing.focus;
-		goto doNumber;
+		if (flags & CROSSING) {
+		    number = eventPtr->xcrossing.focus;
+		    goto doNumber;
+		}
+		goto doString;
 	    case 'h':
 		if (flags & EXPOSE) {
 		    number = eventPtr->xexpose.height;
 		} else if (flags & (CONFIG)) {
 		    number = eventPtr->xconfigure.height;
-		}
-		else if (flags & CREATE) {
+		} else if (flags & CREATE) {
 		    number = eventPtr->xcreatewindow.height;
 		} else if (flags & CONFIGREQ) {
 		    number =  eventPtr->xconfigurerequest.height;
 		} else if (flags & RESIZEREQ) {
 		    number =  eventPtr->xresizerequest.height;
+		} else {
+		    goto doString;
 		}
 		goto doNumber;
 	    case 'i':
@@ -2419,15 +2427,19 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		string = numStorage;
 		goto doString;
 	    case 'k':
-		number = eventPtr->xkey.keycode;
-		goto doNumber;
+		if (flags & KEY) {
+		    number = eventPtr->xkey.keycode;
+		    goto doNumber;
+		}
+		goto doString;
 	    case 'm':
 		if (flags & CROSSING) {
 		    number = eventPtr->xcrossing.mode;
+		    string = TkFindStateString(notifyMode, number);
 		} else if (flags & FOCUS) {
 		    number = eventPtr->xfocus.mode;
+		    string = TkFindStateString(notifyMode, number);
 		}
-		string = TkFindStateString(notifyMode, number);
 		goto doString;
 	    case 'o':
 		if (flags & CREATE) {
@@ -2438,6 +2450,8 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		    number = eventPtr->xreparent.override_redirect;
 		} else if (flags & CONFIG) {
 		    number = eventPtr->xconfigure.override_redirect;
+		} else {
+		    goto doString;
 		}
 		goto doNumber;
 	    case 'p':
@@ -2460,6 +2474,8 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		    string = TkFindStateString(visNotify,
 			    eventPtr->xvisibility.state);
 		    goto doString;
+		} else {
+		    goto doString;
 		}
 		goto doNumber;
 	    case 't':
@@ -2469,6 +2485,8 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		    number = (int) eventPtr->xcrossing.time;
 		} else if (flags & PROP) {
 		    number = (int) eventPtr->xproperty.time;
+		} else {
+		    goto doString;
 		}
 		goto doNumber;
 	    case 'v':
@@ -2479,13 +2497,14 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		    number = eventPtr->xexpose.width;
 		} else if (flags & CONFIG) {
 		    number = eventPtr->xconfigure.width;
-		}
-		else if (flags & CREATE) {
+		} else if (flags & CREATE) {
 		    number = eventPtr->xcreatewindow.width;
 		} else if (flags & CONFIGREQ) {
 		    number =  eventPtr->xconfigurerequest.width;
 		} else if (flags & RESIZEREQ) {
 		    number =  eventPtr->xresizerequest.width;
+		} else {
+		    goto doString;
 		}
 		goto doNumber;
 	    case 'x':
@@ -2499,11 +2518,12 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		    number = eventPtr->xcreatewindow.x;
 		} else if (flags & REPARENT) {
 		    number = eventPtr->xreparent.x;
-		}
-		else if (flags & CREATE) {
+		} else if (flags & CREATE) {
 		    number = eventPtr->xcreatewindow.x;
 		} else if (flags & CONFIGREQ) {
 		    number =  eventPtr->xconfigurerequest.x;
+		} else {
+		    goto doString;
 		}
 		goto doNumber;
 	    case 'y':
@@ -2517,12 +2537,12 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		    number = eventPtr->xreparent.y;
 		} else if (flags & CROSSING) {
 		    number = eventPtr->xcrossing.y;
-
-		}
-		else if (flags & CREATE) {
+		} else if (flags & CREATE) {
 		    number = eventPtr->xcreatewindow.y;
 		} else if (flags & CONFIGREQ) {
-		    number =  eventPtr->xconfigurerequest.y;
+		    number = eventPtr->xconfigurerequest.y;
+		} else {
+		    goto doString;
 		}
 		goto doNumber;
 	    case 'A':
@@ -2536,17 +2556,21 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		    number = eventPtr->xcreatewindow.border_width;
 		} else if (flags & CONFIGREQ) {
 		    number = eventPtr->xconfigurerequest.border_width;
-		} else {
+		} else if (flags & CONFIG) {
 		    number = eventPtr->xconfigure.border_width;
+		} else {
+		    goto doString;
 		}
 		goto doNumber;
 	    case 'D':
 		/*
 		 * This is used only by the MouseWheel event.
 		 */
-		    
-		number = eventPtr->xkey.keycode;
-		goto doNumber;
+		if (flags & KEY) {
+		    number = eventPtr->xkey.keycode;
+		    goto doNumber;
+		}
+		goto doString;
 	    case 'E':
 		number = (int) eventPtr->xany.send_event;
 		goto doNumber;
@@ -2561,20 +2585,27 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		}
 		goto doString;
 	    case 'N':
-		number = (int) keySym;
-		goto doNumber;
+		if (flags & KEY) {
+		    number = (int) keySym;
+		    goto doNumber;
+		}
+		goto doString;
 	    case 'P':
 		if (flags & PROP) {
 		    string = Tk_GetAtomName((Tk_Window) winPtr, eventPtr->xproperty.atom);
 		}
 		goto doString;
 	    case 'R':
-		TkpPrintWindowId(numStorage, eventPtr->xkey.root);
-		string = numStorage;
+		if (flags & KEY_BUTTON_MOTION_CROSSING) {
+		    TkpPrintWindowId(numStorage, eventPtr->xkey.root);
+		    string = numStorage;
+		}
 		goto doString;
             case 'S':
-		TkpPrintWindowId(numStorage, eventPtr->xkey.subwindow);
-		string = numStorage;
+		if (flags & KEY_BUTTON_MOTION_CROSSING) {
+		    TkpPrintWindowId(numStorage, eventPtr->xkey.subwindow);
+		    string = numStorage;
+		}
 		goto doString;
 	    case 'T':
 		number = eventPtr->type;
@@ -2591,34 +2622,38 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		}
 		goto doString;
 	    }
-	    case 'X': {
-		Tk_Window tkwin;
-		int x, y;
-		int width, height;
+	    case 'X':
+		if (flags & KEY_BUTTON_MOTION_CROSSING) {
+		    Tk_Window tkwin;
+		    int x, y;
+		    int width, height;
 
-		number = eventPtr->xkey.x_root;
-		tkwin = Tk_IdToWindow(eventPtr->xany.display,
-			eventPtr->xany.window);
-		if (tkwin != NULL) {
-		    Tk_GetVRootGeometry(tkwin, &x, &y, &width, &height);
-		    number -= x;
+		    number = eventPtr->xkey.x_root;
+		    tkwin = Tk_IdToWindow(eventPtr->xany.display,
+			    eventPtr->xany.window);
+		    if (tkwin != NULL) {
+			Tk_GetVRootGeometry(tkwin, &x, &y, &width, &height);
+			number -= x;
+		    }
+		    goto doNumber;
 		}
-		goto doNumber;
-	    }
-	    case 'Y': {
-		Tk_Window tkwin;
-		int x, y;
-		int width, height;
+		goto doString;
+	    case 'Y':
+		if (flags & KEY_BUTTON_MOTION_CROSSING) {
+		    Tk_Window tkwin;
+		    int x, y;
+		    int width, height;
 
-		number = eventPtr->xkey.y_root;
-		tkwin = Tk_IdToWindow(eventPtr->xany.display,
-			eventPtr->xany.window);
-		if (tkwin != NULL) {
-		    Tk_GetVRootGeometry(tkwin, &x, &y, &width, &height);
-		    number -= y;
+		    number = eventPtr->xkey.y_root;
+		    tkwin = Tk_IdToWindow(eventPtr->xany.display,
+			    eventPtr->xany.window);
+		    if (tkwin != NULL) {
+			Tk_GetVRootGeometry(tkwin, &x, &y, &width, &height);
+			number -= y;
+		    }
+		    goto doNumber;
 		}
-		goto doNumber;
-	    }
+		goto doString;
 	    default:
 		numStorage[0] = before[1];
 		numStorage[1] = '\0';
