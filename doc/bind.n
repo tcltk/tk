@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bind.n,v 1.15 2004/07/05 21:21:52 dkf Exp $
+'\" RCS: @(#) $Id: bind.n,v 1.16 2004/08/20 10:56:36 dkf Exp $
 '\" 
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
@@ -135,9 +135,9 @@ If no modifiers are specified, then any combination of modifiers may
 be present in the event.
 .PP
 \fBMeta\fR and \fBM\fR refer to whichever of the
-\fBM1\fR through \fBM5\fR modifiers is associated with the meta
+\fBM1\fR through \fBM5\fR modifiers is associated with the Meta
 key(s) on the keyboard (keysyms \fBMeta_R\fR and \fBMeta_L\fR).
-If there are no meta keys, or if they are not associated with any
+If there are no Meta keys, or if they are not associated with any
 modifiers, then \fBMeta\fR and \fBM\fR will not match any events.
 Similarly, the \fBAlt\fR modifier refers to whichever modifier
 is associated with the alt key(s) on the keyboard (keysyms
@@ -198,14 +198,14 @@ active.  Likewise, the \fBDeactive\fR event is sent when the window's
 state changes from active to deactive.  There are no useful percent
 substitutions you would make when binding to these events.
 .IP \fBMouseWheel\fR 5
-Some mice on the Windows platform support a mouse wheel which is used
+Many contemporary mice support a mouse wheel, which is used
 for scrolling documents without using the scrollbars.  By rolling the
 wheel, the system will generate \fBMouseWheel\fR events that the
 application can use to scroll.  Like \fBKey\fR events the event is
 always routed to the window that currently has focus. When the event
 is received you can use the \fB%D\fR substitution to get the
-\fIdelta\fR field for the event which is a integer value of motion
-that the mouse wheel has moved.  The smallest value for which the
+\fIdelta\fR field for the event, which is a integer value describing how
+the mouse wheel has moved.  The smallest value for which the
 system will report is defined by the OS.  On Windows 95 & 98 machines
 this value is at least 120 before it is reported.  However, higher
 resolution devices may be available in the future.  The sign of the
@@ -327,7 +327,7 @@ They are included for completeness.
 
 A \fBCirculate\fP event indicates that the window has moved
 to the top or to the bottom of the stacking order as
-a result of a \fBXCirculateSubwindows\fP protocol request.
+a result of an \fBXCirculateSubwindows\fP protocol request.
 Note that the stacking order may be changed for other reasons
 which do not generate a \fBCirculate\fP event, and that
 Tk does not use \fBXCirculateSubwindows()\fP internally.
@@ -356,7 +356,7 @@ they include all the alphanumeric ASCII characters (e.g. ``a'' is
 the keysym for the ASCII character ``a''), plus descriptions for
 non-alphanumeric characters (``comma'' is the keysym for the comma
 character), plus descriptions for all the non-ASCII keys on the
-keyboard (``Shift_L'' is the keysm for the left shift key, and
+keyboard (``Shift_L'' is the keysym for the left shift key, and
 ``F1'' is the keysym for the F1 function key, if it exists).  The
 complete list of keysyms is not presented here;  it is
 available in other X documentation and may vary from system to
@@ -396,7 +396,7 @@ types.
 The \fIabove\fR field from the event,
 formatted as a hexadecimal number.
 Valid only for \fBConfigure\fR events.
-Inidicates the sibling window immediately below the receiving window
+Indicates the sibling window immediately below the receiving window
 in the stacking order, or \fB0\fP if the receiving window is at the
 bottom.
 .IP \fB%b\fR 5
@@ -438,7 +438,7 @@ window is the focus window or a descendant of the focus window,
 The \fIheight\fR field from the event.  Valid for the \fBConfigure\fR,
 \fBConfigureRequest\fR, \fBCreate\fR, \fBResizeRequest\fR, and
 \fBExpose\fR events.
-Inidicates the new or requested height of the window.
+Indicates the new or requested height of the window.
 .VE
 .IP \fB%i\fR 5
 The \fIwindow\fR field from the event, represented as a hexadecimal
@@ -478,7 +478,7 @@ the last server reset) in milliseconds, when the event occurred.
 Valid for most events.  
 .IP \fB%w\fR 5
 The \fIwidth\fR field from the event.
-Inidicates the new or requested width of the window.
+Indicates the new or requested width of the window.
 Valid only for
 .VS
 \fBConfigure\fR, \fBConfigureRequest\fR, \fBCreate\fR,
@@ -493,7 +493,7 @@ relative to the receiving window.
 For \fBEnter\fP and \fBLeave\fP events, the position where the 
 mouse pointer crossed the window, relative to the receiving window.
 For \fBConfigure\fP and \fBCreate\fP requests, the \fIx\fP and \fIy\fP
-cooredinates of the window relative to its parent window.
+coordinates of the window relative to its parent window.
 .IP \fB%A\fR 5
 Substitutes the UNICODE character corresponding to the event, or
 the empty string if the event doesn't correspond to a UNICODE character
