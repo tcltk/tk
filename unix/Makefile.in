@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.1.4.7 1999/03/11 19:01:59 hershey Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.1.4.8 1999/03/13 18:28:41 welch Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1018,8 +1018,8 @@ dist:   $(UNIX_DIR)/configure
 	mkdir $(DISTDIR)/tests
 	cp -p $(TOP_DIR)/license.terms $(TOP_DIR)/tests/*.test \
 		$(TOP_DIR)/tests/visual $(TOP_DIR)/tests/*.tcl \
-		$(TOP_DIR)/tests/README $(TOP_DIR)/tests/all \
-		$(TOP_DIR)/tests/defs $(TOP_DIR)/tests/option.file* \
+		$(TOP_DIR)/tests/README $(TOP_DIR)/tests/all.tcl \
+		$(TOP_DIR)/tests/defs.tcl $(TOP_DIR)/tests/option.file* \
 		$(DISTDIR)/tests
 
 #
