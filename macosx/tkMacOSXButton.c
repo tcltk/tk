@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.1 2003/04/26 02:53:47 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.2 2003/04/30 16:19:07 hobbs Exp $
  */
 
 #include "tkButton.h"
@@ -465,7 +465,7 @@ TkpDisplayButton(
                 && ((butPtr->disabledFg == NULL) || (butPtr->image != NULL))) {
             if ((butPtr->flags & SELECTED) && !butPtr->indicatorOn
 		    && (butPtr->selectBorder != NULL)) {
-                XSetForeground(butPtr->display, butPtr->stippledGC,
+                XSetForeground(butPtr->display, butPtr->stippleGC,
 			Tk_3DBorderColor(butPtr->selectBorder)->pixel);
             }
 	    /*
@@ -483,7 +483,7 @@ TkpDisplayButton(
 	    }
             if ((butPtr->flags & SELECTED) && !butPtr->indicatorOn
 		    && (butPtr->selectBorder != NULL)) {
-		XSetForeground(butPtr->display, butPtr->stippledGC,
+		XSetForeground(butPtr->display, butPtr->stippleGC,
 			Tk_3DBorderColor(butPtr->normalBorder)->pixel);
 	    }
         }
