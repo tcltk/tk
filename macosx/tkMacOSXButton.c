@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.5 2003/09/25 05:37:00 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.6 2003/09/30 23:26:09 wolfsuit Exp $
  */
 
 #include "tkButton.h"
@@ -223,7 +223,11 @@ TkpDisplayButton(
 
     if (TkMacOSXComputeDrawParams(butPtr, &drawParams) ) {
         macButtonPtr->usingControl=1;
-        macButtonPtr->useTkText=DEFAULT_USE_TK_TEXT;
+        if (butPtr->type == TYPE_BUTTON) {
+            macButtonPtr->useTkText = 0;
+        } else {
+            macButtonPtr->useTkText = 1;
+        }
     } else {
         macButtonPtr->usingControl=0;
         macButtonPtr->useTkText=1;
