@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.9 2000/08/23 00:08:45 hobbs Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.10 2000/08/23 19:18:19 hobbs Exp $
  */
 
 #include "tkButton.h"
@@ -1645,14 +1645,9 @@ ButtonTextVarProc(clientData, interp, name1, name2, flags)
     if (valuePtr == NULL) {
 	valuePtr = Tcl_NewObj();
     }
-    /*
-     * Incr valuePtr before Decr, in case they point to the same object.
-     * We could also do some short-circuiting in that case, but it
-     * shouldn't happen in practice.
-     */
-    Tcl_IncrRefCount(valuePtr);
-    butPtr->textPtr = valuePtr;
     Tcl_DecrRefCount(butPtr->textPtr);
+    butPtr->textPtr = valuePtr;
+    Tcl_IncrRefCount(butPtr->textPtr);
     TkpComputeButtonGeometry(butPtr);
 
     if ((butPtr->tkwin != NULL) && Tk_IsMapped(butPtr->tkwin)
