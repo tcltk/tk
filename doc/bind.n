@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bind.n,v 1.9 2003/09/13 20:27:32 jenglish Exp $
+'\" RCS: @(#) $Id: bind.n,v 1.10 2004/01/09 22:26:24 pspjuth Exp $
 '\" 
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
@@ -328,7 +328,7 @@ as necessary.
 .br
 Note that Tk provides no useful details for this event type.
 
-.\" Added in wm-enablers patch:
+'\" Added in wm-enablers patch:
 .IP \fBMapRequest\fP
 .IP \fBCirculateRequest\fP
 .IP \fBResizeRequest\fP
