@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.49 2003/07/28 21:14:12 patthoyts Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.50 2003/07/31 22:17:14 patthoyts Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -100,7 +100,7 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
 	set y [expr {([winfo screenheight $w]-[winfo reqheight $w])/2}]
 	set checkBounds 0
     }
-    if {[tk windowingsystem eq "win32"]} {
+    if {[tk windowingsystem] eq "win32"} {
         # Bug 533519: win32 multiple desktops may produce negative geometry.
         set checkBounds 0
     }
