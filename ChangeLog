@@ -1,5 +1,12 @@
 2002-09-30  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* tests/unixSelect.test:
+	* unix/tkUnixSelect.c (TkSelPropProc,SelRcvIncrProc): Incremental
+	transfers of UTF8_STRING selections should now work; Tk will now
+	tag them with the right size and only transfer complete UTF8
+	characters.  Previously, things only worked when the transfer
+	could only happen in one go, and even then not always. [Bug 614650]
+
 	* doc/bind.n: Doc-fix to mention that %A substitutes UNICODE
 	characters rather than ASCII ones.  Tk's done this ever since 8.1
 	in any case; after all, it is the right thing to do.
