@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.18 2003/10/31 09:02:10 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.19 2003/10/31 14:21:49 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -5636,7 +5636,16 @@ DlineIndexOfX(textPtr, dlPtr, x, indexPtr)
 
     *indexPtr = dlPtr->index;
     x = x - dInfoPtr->x + dInfoPtr->curXPixelOffset;
-    for (chunkPtr = dlPtr->chunkPtr; x >= (chunkPtr->x + chunkPtr->width);
+    chunkPtr = dlPtr->chunkPtr;
+
+    if (chunkPtr == NULL) {
+	/* 
+	 * This may occur if everything is elided
+	 */
+	return;
+    }
+
+    for (; x >= (chunkPtr->x + chunkPtr->width);
 	    indexPtr->byteIndex += chunkPtr->numBytes,
 	    chunkPtr = chunkPtr->nextPtr) {
 	if (chunkPtr->nextPtr == NULL) {
