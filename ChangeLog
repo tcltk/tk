@@ -1,5 +1,8 @@
 2000-11-21  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* doc/ConfigWidg.3: Added deprecation note from Bug #120944 - use
+	Tk_SetOption() instead.
+
 	* generic/tkImgPhoto.c (TkPhotoGetValidRegion): Applied patch to
 	create this function and add it to tkInt stubs.  Should now be
 	possible to write an extension that accesses the transparency data
