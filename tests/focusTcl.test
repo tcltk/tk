@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: focusTcl.test,v 1.6 2003/04/01 21:06:28 dgp Exp $
+# RCS: @(#) $Id: focusTcl.test,v 1.7 2003/10/28 22:52:16 hobbs Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -18,7 +18,7 @@ proc setup1 w {
 	set w ""
     }
     foreach i {a b c d} {
-	frame  $w.$i -width 100 -height 50 -bd 2 -relief raised
+	frame  $w.$i -width 200 -height 50 -bd 2 -relief raised
 	pack $w.$i
     }
     .b configure -width 0 -height 0
