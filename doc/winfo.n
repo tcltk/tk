@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: winfo.n,v 1.3 2001/12/04 03:07:43 mdejong Exp $
+'\" RCS: @(#) $Id: winfo.n,v 1.3.2.1 2004/10/28 12:25:22 dkf Exp $
 '\" 
 .so man.macros
 .TH winfo n 4.3 Tk "Tk Built-In Commands"
@@ -197,7 +197,8 @@ in pixels.  This is the value used by \fIwindow\fR's geometry
 manager to compute its geometry.
 .TP
 \fBwinfo rgb \fIwindow color\fR
-Returns a list containing three decimal values, which are the
+Returns a list containing three decimal values in the range 0 to
+65535, which are the
 red, green, and blue intensities that correspond to \fIcolor\fR in
 the window given by \fIwindow\fR.  \fIColor\fR
 may be specified in any of the forms acceptable for a color
@@ -326,6 +327,19 @@ Returns a decimal string giving the y-coordinate, in \fIwindow\fR's
 parent, of the
 upper-left corner of \fIwindow\fR's border (or \fIwindow\fR if it
 has no border).
+.SH EXAMPLE
+Print where the mouse pointer is and what window it is currently over:
+.CS
+set x [\fBwinfo pointerx\fR .]
+set y [\fBwinfo pointery\fR .]
+puts -nonewline "Mouse pointer at ($x,$y) which is "
+set win [\fBwinfo containing\fR $x $y]
+if {$win eq ""} {
+    puts "over no window"
+} else {
+    puts "over $win"
+}
+.CE
 
 .SH KEYWORDS
 atom, children, class, geometry, height, identifier, information, interpreters,
