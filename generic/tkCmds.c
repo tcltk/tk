@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.23 2002/03/20 22:55:16 dgp Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.24 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -270,7 +270,7 @@ TkBindEventProc(winPtr, eventPtr)
 	objPtr[0] = (ClientData) winPtr->pathName;
 	objPtr[1] = (ClientData) winPtr->classUid;
 	for (topLevPtr = winPtr;
-		(topLevPtr != NULL) && !(topLevPtr->flags & TK_TOP_LEVEL);
+		(topLevPtr != NULL) && !(topLevPtr->flags & TK_TOP_HIERARCHY);
 		topLevPtr = topLevPtr->parentPtr) {
 	    /* Empty loop body. */
 	}
@@ -337,7 +337,7 @@ Tk_BindtagsObjCmd(clientData, interp, objc, objv)
 	    Tcl_ListObjAppendElement(interp, listPtr,
 		    Tcl_NewStringObj(winPtr->classUid, -1));
 	    winPtr2 = winPtr;
-	    while ((winPtr2 != NULL) && !(Tk_IsTopLevel(winPtr2))) {
+	    while ((winPtr2 != NULL) && !(Tk_TopWinHierarchy(winPtr2))) {
 		winPtr2 = winPtr2->parentPtr;
 	    }
 	    if ((winPtr != winPtr2) && (winPtr2 != NULL)) {
@@ -1246,7 +1246,7 @@ Tk_WinfoObjCmd(clientData, interp, objc, objv)
 		if ((winPtr == NULL) || !(winPtr->flags & TK_MAPPED)) {
 		    break;
 		}
-		if (winPtr->flags & TK_TOP_LEVEL) {
+		if (winPtr->flags & TK_TOP_HIERARCHY) {
 		    viewable = 1;
 		    break;
 		}

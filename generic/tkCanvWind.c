@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvWind.c,v 1.5 2001/07/03 06:03:44 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvWind.c,v 1.6 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include <stdio.h>
@@ -353,7 +353,7 @@ ConfigureWinItem(interp, canvas, itemPtr, objc, objv, flags)
 	    /*
 	     * Make sure that the canvas is either the parent of the
 	     * window associated with the item or a descendant of that
-	     * parent.  Also, don't allow a top-level window to be
+	     * parent.  Also, don't allow a top-of-hierarchy window to be
 	     * managed inside a canvas.
 	     */
 
@@ -363,7 +363,7 @@ ConfigureWinItem(interp, canvas, itemPtr, objc, objv, flags)
 		if (ancestor == parent) {
 		    break;
 		}
-		if (((Tk_FakeWin *) (ancestor))->flags & TK_TOP_LEVEL) {
+		if (((Tk_FakeWin *) (ancestor))->flags & TK_TOP_HIERARCHY) {
 		    badWindow:
 		    Tcl_AppendResult(interp, "can't use ",
 			    Tk_PathName(winItemPtr->tkwin),
@@ -372,7 +372,7 @@ ConfigureWinItem(interp, canvas, itemPtr, objc, objv, flags)
 		    return TCL_ERROR;
 		}
 	    }
-	    if (((Tk_FakeWin *) (winItemPtr->tkwin))->flags & TK_TOP_LEVEL) {
+	    if (((Tk_FakeWin *) (winItemPtr->tkwin))->flags & TK_TOP_HIERARCHY) {
 		goto badWindow;
 	    }
 	    if (winItemPtr->tkwin == canvasTkwin) {

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.20 2002/01/17 05:13:11 dgp Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.21 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -2642,7 +2642,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	    return TCL_ERROR;
 	}
 
-	if (Tk_IsTopLevel(slave)) {
+	if (Tk_TopWinHierarchy(slave)) {
 	    Tcl_AppendResult(interp, "can't manage \"", Tcl_GetString(objv[j]),
 		    "\": it's a top-level window", (char *) NULL);
 	    return TCL_ERROR;
@@ -2806,7 +2806,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	    if (ancestor == parent) {
 		break;
 	    }
-	    if (Tk_IsTopLevel(ancestor)) {
+	    if (Tk_TopWinHierarchy(ancestor)) {
 		Tcl_AppendResult(interp, "can't put ", Tcl_GetString(objv[j]),
 			" inside ", Tk_PathName(masterPtr->tkwin),
 			(char *) NULL);

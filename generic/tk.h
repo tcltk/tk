@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.60 2002/06/14 14:07:51 dkf Exp $
+ * RCS: @(#) $Id: tk.h,v 1.61 2002/06/14 22:25:11 jenglish Exp $
  */
 
 #ifndef _TK
@@ -715,6 +715,12 @@ typedef XActivateDeactivateEvent XDeactivateEvent;
     (((Tk_FakeWin *) (tkwin))->flags & TK_MAPPED)
 #define Tk_IsTopLevel(tkwin) \
     (((Tk_FakeWin *) (tkwin))->flags & TK_TOP_LEVEL)
+#define Tk_HasWrapper(tkwin) \
+    (((Tk_FakeWin *) (tkwin))->flags & TK_HAS_WRAPPER)
+#define Tk_WinManaged(tkwin) \
+    (((Tk_FakeWin *) (tkwin))->flags & TK_WIN_MANAGED)
+#define Tk_TopWinHierarchy(tkwin) \
+    (((Tk_FakeWin *) (tkwin))->flags & TK_TOP_HIERARCHY)
 #define Tk_ReqWidth(tkwin)		(((Tk_FakeWin *) (tkwin))->reqWidth)
 #define Tk_ReqHeight(tkwin)		(((Tk_FakeWin *) (tkwin))->reqHeight)
 /* Tk_InternalBorderWidth is deprecated */
@@ -792,9 +798,7 @@ typedef struct Tk_FakeWin {
  *
  * TK_MAPPED:			1 means window is currently mapped,
  *				0 means unmapped.
- * TK_TOP_LEVEL:		1 means this is a top-level window (it
- *				was or will be created as a child of
- *				a root window).
+ * TK_TOP_LEVEL:		1 means this is a top-level widget.
  * TK_ALREADY_DEAD:		1 means the window is in the process of
  *				being destroyed already.
  * TK_NEED_CONFIG_NOTIFY:	1 means that the window has been reconfigured
@@ -846,6 +850,18 @@ typedef struct Tk_FakeWin {
  *				special Unix menubar windows.
  * TK_ANONYMOUS_WINDOW:		1 means that this window has no name, and is
  *				thus not accessible from Tk.
+ * TK_HAS_WRAPPER		1 means that this window has a wrapper window
+ * TK_WIN_MANAGED		1 means that this window is a child of the
+ *				root window, and is managed by the window
+ *				manager.
+ * TK_TOP_HIERARCHY		1 means this window is at the top of a
+ *				physical window hierarchy within this
+ *				process, i.e. the window's parent
+ *				either doesn't exist or is not owned by
+ *				this Tk application.
+ * TK_PROP_PROPCHANGE		1 means that PropertyNotify events in
+ *				this window's children should propagate
+ *				up to this window.
  */
 
 
@@ -864,6 +880,10 @@ typedef struct Tk_FakeWin {
 #define TK_WRAPPER		0x1000
 #define TK_REPARENTED		0x2000
 #define TK_ANONYMOUS_WINDOW	0x4000
+#define TK_HAS_WRAPPER		0x8000
+#define TK_WIN_MANAGED		0x10000
+#define TK_TOP_HIERARCHY	0x20000
+#define TK_PROP_PROPCHANGE	0x40000
 
 /*
  *--------------------------------------------------------------

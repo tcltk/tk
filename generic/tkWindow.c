@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.45 2002/04/12 10:20:27 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.46 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -364,12 +364,12 @@ CreateTopLevelWindow(interp, parent, name, screenName, flags)
     winPtr->dirtyAtts |= CWBorderPixel;
 
     /*
-     * (Need to set the TK_TOP_LEVEL flag immediately here;  otherwise
+     * (Need to set the TK_TOP_HIERARCHY flag immediately here;  otherwise
      * Tk_DestroyWindow will core dump if it is called before the flag
      * has been set.)
      */
 
-    winPtr->flags |= TK_TOP_LEVEL;
+    winPtr->flags |= TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED;
 
     if (parent != NULL) {
         if (NameWindow(interp, winPtr, (TkWindow *) parent, name) != TCL_OK) {
@@ -1347,7 +1347,7 @@ Tk_DestroyWindow(tkwin)
      * Cleanup the data structures associated with this window.
      */
 
-    if (winPtr->flags & TK_TOP_LEVEL) {
+    if (winPtr->flags & TK_WIN_MANAGED) {
 	TkWmDeadWindow(winPtr);
     } else if (winPtr->flags & TK_WM_COLORMAP_WINDOW) {
 	TkWmRemoveFromColormapWindows(winPtr);
@@ -1356,7 +1356,7 @@ Tk_DestroyWindow(tkwin)
 #if defined(MAC_TCL) || defined(__WIN32__)
 	XDestroyWindow(winPtr->display, winPtr->window);
 #else
-	if ((winPtr->flags & TK_TOP_LEVEL)
+	if ((winPtr->flags & TK_TOP_HIERARCHY)
 		|| !(winPtr->flags & TK_DONT_DESTROY_WINDOW)) {
 	    /*
 	     * The parent has already been destroyed and this isn't
@@ -1538,7 +1538,7 @@ Tk_MapWindow(tkwin)
     if (winPtr->window == None) {
 	Tk_MakeWindowExist(tkwin);
     }
-    if (winPtr->flags & TK_TOP_LEVEL) {
+    if (winPtr->flags & TK_WIN_MANAGED) {
 	/*
 	 * Lots of special processing has to be done for top-level
 	 * windows.  Let tkWm.c handle everything itself.
@@ -1595,7 +1595,7 @@ Tk_MakeWindowExist(tkwin)
 	return;
     }
 
-    if ((winPtr->parentPtr == NULL) || (winPtr->flags & TK_TOP_LEVEL)) {
+    if ((winPtr->parentPtr == NULL) || (winPtr->flags & TK_TOP_HIERARCHY)) {
 	parent = XRootWindow(winPtr->display, winPtr->screenNum);
     } else {
 	if (winPtr->parentPtr->window == None) {
@@ -1617,7 +1617,7 @@ Tk_MakeWindowExist(tkwin)
     winPtr->dirtyAtts = 0;
     winPtr->dirtyChanges = 0;
 
-    if (!(winPtr->flags & TK_TOP_LEVEL)) {
+    if (!(winPtr->flags & TK_TOP_HIERARCHY)) {
 	/*
 	 * If any siblings higher up in the stacking order have already
 	 * been created then move this window to its rightful position
@@ -1632,7 +1632,7 @@ Tk_MakeWindowExist(tkwin)
 	for (winPtr2 = winPtr->nextPtr; winPtr2 != NULL;
 		winPtr2 = winPtr2->nextPtr) {
 	    if ((winPtr2->window != None)
-		    && !(winPtr2->flags & (TK_TOP_LEVEL|TK_REPARENTED))) {
+		    && !(winPtr2->flags & (TK_TOP_HIERARCHY|TK_REPARENTED))) {
 		XWindowChanges changes;
 		changes.sibling = winPtr2->window;
 		changes.stack_mode = Below;
@@ -1698,7 +1698,7 @@ Tk_UnmapWindow(tkwin)
     if (!(winPtr->flags & TK_MAPPED) || (winPtr->flags & TK_ALREADY_DEAD)) {
 	return;
     }
-    if (winPtr->flags & TK_TOP_LEVEL) {
+    if (winPtr->flags & TK_WIN_MANAGED) {
 	/*
 	 * Special processing has to be done for top-level windows.  Let
 	 * tkWm.c handle everything itself.
@@ -1709,7 +1709,7 @@ Tk_UnmapWindow(tkwin)
     }
     winPtr->flags &= ~TK_MAPPED;
     XUnmapWindow(winPtr->display, winPtr->window);
-    if (!(winPtr->flags & TK_TOP_LEVEL)) {
+    if (!(winPtr->flags & TK_TOP_HIERARCHY)) {
 	XEvent event;
 
 	event.type = UnmapNotify;
@@ -2018,7 +2018,7 @@ Tk_SetWindowColormap(tkwin, colormap)
 
     if (winPtr->window != None) {
 	XSetWindowColormap(winPtr->display, winPtr->window, colormap);
-	if (!(winPtr->flags & TK_TOP_LEVEL)) {
+	if (!(winPtr->flags & TK_WIN_MANAGED)) {
 	    TkWmAddToColormapWindows(winPtr);
 	    winPtr->flags |= TK_WM_COLORMAP_WINDOW;
 	}
@@ -2147,7 +2147,7 @@ Tk_SetClass(tkwin, className)
     register TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->classUid = Tk_GetUid(className);
-    if (winPtr->flags & TK_TOP_LEVEL) {
+    if (winPtr->flags & TK_WIN_MANAGED) {
 	TkWmSetClass(winPtr);
     }
     TkOptionClassChanged(winPtr);
@@ -2383,8 +2383,8 @@ Tk_RestackWindow(tkwin, aboveBelow, other)
      * otherPtr without changing any of Tk's childLists.
      */
 
-    if (winPtr->flags & TK_TOP_LEVEL) {
-	while ((otherPtr != NULL) && !(otherPtr->flags & TK_TOP_LEVEL)) {
+    if (winPtr->flags & TK_WIN_MANAGED) {
+	while ((otherPtr != NULL) && !(otherPtr->flags & TK_TOP_HIERARCHY)) {
 	    otherPtr = otherPtr->parentPtr;
 	}
 	TkWmRestackToplevel(winPtr, aboveBelow, otherPtr);
@@ -2410,7 +2410,7 @@ Tk_RestackWindow(tkwin, aboveBelow, other)
 	}
     } else {
 	while (winPtr->parentPtr != otherPtr->parentPtr) {
-	    if ((otherPtr == NULL) || (otherPtr->flags & TK_TOP_LEVEL)) {
+	    if ((otherPtr == NULL) || (otherPtr->flags & TK_TOP_HIERARCHY)) {
 		return TCL_ERROR;
 	    }
 	    otherPtr = otherPtr->parentPtr;
@@ -2462,7 +2462,7 @@ Tk_RestackWindow(tkwin, aboveBelow, other)
 	for (otherPtr = winPtr->nextPtr; otherPtr != NULL;
 		otherPtr = otherPtr->nextPtr) {
 	    if ((otherPtr->window != None)
-		    && !(otherPtr->flags & (TK_TOP_LEVEL|TK_REPARENTED))){
+		    && !(otherPtr->flags & (TK_TOP_HIERARCHY|TK_REPARENTED))){
 		changes.sibling = otherPtr->window;
 		changes.stack_mode = Below;
 		mask = CWStackMode|CWSibling;

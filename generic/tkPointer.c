@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPointer.c,v 1.5 2001/11/23 02:07:02 das Exp $
+ * RCS: @(#) $Id: tkPointer.c,v 1.6 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -562,7 +562,7 @@ UpdateCursor(winPtr)
 	if (winPtr->atts.cursor != None) {
 	    cursor = winPtr->atts.cursor;
 	    break;
-	} else if (winPtr->flags & TK_TOP_LEVEL) {
+	} else if (winPtr->flags & TK_TOP_HIERARCHY) {
 	    break;
 	}
 	winPtr = winPtr->parentPtr;

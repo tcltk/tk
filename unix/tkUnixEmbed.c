@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEmbed.c,v 1.4 2002/05/27 17:33:26 mdejong Exp $
+ * RCS: @(#) $Id: tkUnixEmbed.c,v 1.5 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -780,7 +780,7 @@ TkpRedirectKeyEvent(winPtr, eventPtr)
 
 	    return;
 	}
-	if (winPtr->flags & TK_TOP_LEVEL) {
+	if (winPtr->flags & TK_TOP_HIERARCHY) {
 	    break;
 	}
 	winPtr = winPtr->parentPtr;

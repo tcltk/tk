@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.21 2002/01/25 21:09:36 dgp Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.22 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -506,6 +506,11 @@ static EventInfo eventArray[] = {
     {"Activate",	ActivateNotify,		ActivateMask},
     {"Deactivate",	DeactivateNotify,	ActivateMask},
     {"MouseWheel",	MouseWheelEvent,	MouseWheelMask},
+    {"CirculateRequest", CirculateRequest,	SubstructureRedirectMask},
+    {"ConfigureRequest", ConfigureRequest,	SubstructureRedirectMask},
+    {"Create",		CreateNotify,		SubstructureNotifyMask},
+    {"MapRequest",	MapRequest,             SubstructureRedirectMask},
+    {"ResizeRequest",	ResizeRequest,		ResizeRedirectMask},
     {(char *) NULL,	0,			0}
 };
 static Tcl_HashTable eventTable;
@@ -537,6 +542,10 @@ static Tcl_HashTable eventTable;
 #define COLORMAP		0x10000
 #define VIRTUAL			0x20000
 #define ACTIVATE		0x40000
+#define	MAPREQ			0x80000
+#define	CONFIGREQ		0x100000
+#define	RESIZEREQ		0x200000
+#define CIRCREQ			0x400000
 
 #define KEY_BUTTON_MOTION_VIRTUAL	(KEY|BUTTON|MOTION|VIRTUAL)
 
@@ -561,12 +570,12 @@ static int flagArray[TK_LASTEVENT] = {
    /* DestroyNotify */		DESTROY,
    /* UnmapNotify */		UNMAP,
    /* MapNotify */		MAP,
-   /* MapRequest */		0,
+   /* MapRequest */		MAPREQ,
    /* ReparentNotify */		REPARENT,
    /* ConfigureNotify */	CONFIG,
-   /* ConfigureRequest */	0,
+   /* ConfigureRequest */	CONFIGREQ,
    /* GravityNotify */		GRAVITY,
-   /* ResizeRequest */		0,
+   /* ResizeRequest */		RESIZEREQ,
    /* CirculateNotify */	CIRC,
    /* CirculateRequest */	0,
    /* PropertyNotify */		PROP,
@@ -633,6 +642,22 @@ static TkStateMap visNotify[] = {
     {VisibilityUnobscured,	    "VisibilityUnobscured"},
     {VisibilityPartiallyObscured,   "VisibilityPartiallyObscured"},
     {VisibilityFullyObscured,	    "VisibilityFullyObscured"},
+    {-1, NULL}
+};
+
+static TkStateMap configureRequestDetail[] = {
+    {None,		"None"},
+    {Above,		"Above"},
+    {Below,		"Below"},
+    {BottomIf,		"BottomIf"},
+    {TopIf,		"TopIf"},
+    {Opposite,		"Opposite"},
+    {-1, NULL}
+};
+
+static TkStateMap propNotify[] = {
+    {PropertyNewValue,	"NewValue"},
+    {PropertyDelete,	"Delete"},
     {-1, NULL}
 };
 
@@ -2032,6 +2057,10 @@ MatchPatterns(dispPtr, bindPtr, psPtr, bestPtr, objectPtr, sourcePtrPtr)
 		}
 		goto nextEvent;
 	    }
+	    if (eventPtr->xany.type == CreateNotify
+		&& eventPtr->xcreatewindow.parent != window) {
+		goto nextSequence;
+	    } else 
 	    if (eventPtr->xany.window != window) {
 		goto nextSequence;
 	    }
@@ -2245,6 +2274,7 @@ MatchPatterns(dispPtr, bindPtr, psPtr, bestPtr, objectPtr, sourcePtrPtr)
     *sourcePtrPtr = bestSourcePtr;
     return bestPtr;
 }
+
 
 /*
  *--------------------------------------------------------------
@@ -2343,6 +2373,14 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		    }
 		    string = TkFindStateString(notifyDetail, number);
 		}
+		else if (flags & CONFIGREQ) {
+		    if (eventPtr->xconfigurerequest.value_mask & CWStackMode) {
+			string = TkFindStateString(configureRequestDetail,
+					eventPtr->xconfigurerequest.detail);
+		    } else {
+			string = "";
+		    }
+		}
 		goto doString;
 	    case 'f':
 		number = eventPtr->xcrossing.focus;
@@ -2353,7 +2391,26 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		} else if (flags & (CONFIG)) {
 		    number = eventPtr->xconfigure.height;
 		}
+		else if (flags & CREATE) {
+		    number = eventPtr->xcreatewindow.height;
+		} else if (flags & CONFIGREQ) {
+		    number =  eventPtr->xconfigurerequest.height;
+		} else if (flags & RESIZEREQ) {
+		    number =  eventPtr->xresizerequest.height;
+		}
 		goto doNumber;
+	    case 'i':
+		if (flags & CREATE) {
+		    TkpPrintWindowId(numStorage, eventPtr->xcreatewindow.window);
+		} else if (flags & CONFIGREQ) {
+		    TkpPrintWindowId(numStorage, eventPtr->xconfigurerequest.window);
+		} else if (flags & MAPREQ) {
+		    TkpPrintWindowId(numStorage, eventPtr->xmaprequest.window);
+		} else {
+		    TkpPrintWindowId(numStorage, eventPtr->xany.window);
+		}
+		string = numStorage;
+		goto doString;
 	    case 'k':
 		number = eventPtr->xkey.keycode;
 		goto doNumber;
@@ -2377,13 +2434,21 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		}
 		goto doNumber;
 	    case 'p':
-		string = TkFindStateString(circPlace, eventPtr->xcirculate.place);
+		if (flags & CIRC) {
+		    string = TkFindStateString(circPlace, eventPtr->xcirculate.place);
+		} else if (flags & CIRCREQ) {
+		    string = TkFindStateString(circPlace, eventPtr->xcirculaterequest.place);
+		}
 		goto doString;
 	    case 's':
 		if (flags & (KEY_BUTTON_MOTION_VIRTUAL)) {
 		    number = eventPtr->xkey.state;
 		} else if (flags & CROSSING) {
 		    number = eventPtr->xcrossing.state;
+		} else if (flags & PROP) {
+		    string = TkFindStateString(propNotify,
+			    eventPtr->xproperty.state);
+		    goto doString;
 		} else if (flags & VISIBILITY) {
 		    string = TkFindStateString(visNotify,
 			    eventPtr->xvisibility.state);
@@ -2408,6 +2473,13 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		} else if (flags & CONFIG) {
 		    number = eventPtr->xconfigure.width;
 		}
+		else if (flags & CREATE) {
+		    number = eventPtr->xcreatewindow.width;
+		} else if (flags & CONFIGREQ) {
+		    number =  eventPtr->xconfigurerequest.width;
+		} else if (flags & RESIZEREQ) {
+		    number =  eventPtr->xresizerequest.width;
+		}
 		goto doNumber;
 	    case 'x':
 		if (flags & (KEY_BUTTON_MOTION_VIRTUAL)) {
@@ -2420,6 +2492,11 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		    number = eventPtr->xcreatewindow.x;
 		} else if (flags & REPARENT) {
 		    number = eventPtr->xreparent.x;
+		}
+		else if (flags & CREATE) {
+		    number = eventPtr->xcreatewindow.x;
+		} else if (flags & CONFIGREQ) {
+		    number =  eventPtr->xconfigurerequest.x;
 		}
 		goto doNumber;
 	    case 'y':
@@ -2435,6 +2512,11 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		    number = eventPtr->xcrossing.y;
 
 		}
+		else if (flags & CREATE) {
+		    number = eventPtr->xcreatewindow.y;
+		} else if (flags & CONFIGREQ) {
+		    number =  eventPtr->xconfigurerequest.y;
+		}
 		goto doNumber;
 	    case 'A':
 		if (flags & KEY) {
@@ -2443,7 +2525,13 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		}
 		goto doString;
 	    case 'B':
-		number = eventPtr->xcreatewindow.border_width;
+		if (flags & CREATE) {
+		    number = eventPtr->xcreatewindow.border_width;
+		} else if (flags & CONFIGREQ) {
+		    number = eventPtr->xconfigurerequest.border_width;
+		} else {
+		    number = eventPtr->xconfigure.border_width;
+		}
 		goto doNumber;
 	    case 'D':
 		/*
@@ -2468,6 +2556,11 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 	    case 'N':
 		number = (int) keySym;
 		goto doNumber;
+	    case 'P':
+		if (flags & PROP) {
+		    string = Tk_GetAtomName(winPtr, eventPtr->xproperty.atom);
+		}
+		goto doString;
 	    case 'R':
 		TkpPrintWindowId(numStorage, eventPtr->xkey.root);
 		string = numStorage;
