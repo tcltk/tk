@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacPort.h,v 1.6 1999/04/16 01:51:31 stanton Exp $
+ * RCS: @(#) $Id: tkMacPort.h,v 1.7 1999/05/22 06:34:57 jingham Exp $
  */
 
 #ifndef _TKMACPORT
@@ -48,6 +48,7 @@
 #include <Xatom.h>
 #include <Xfuncproto.h>
 #include <Xutil.h>
+#include "tkIntXlibDecls.h"
 
 /*
  * Not all systems declare the errno variable in errno.h. so this

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenubutton.c,v 1.3 1999/04/16 01:51:31 stanton Exp $
+ * RCS: @(#) $Id: tkMacMenubutton.c,v 1.4 1999/05/22 06:33:38 jingham Exp $
  */
 
 #include "tkMenubutton.h"
@@ -163,8 +163,8 @@ TkpDisplayMenuButton(
      * foreground color, generate the stippled effect.
      */
 
-    if (mbPtr->state == STATE_DISABLED && mbPtr->disabledFg != NULL) {
-            || (mbPtr->image != NULL))) {
+    if ((mbPtr->state == STATE_DISABLED && mbPtr->disabledFg != NULL)
+            || (mbPtr->image != NULL)) {
 	XFillRectangle(mbPtr->display, Tk_WindowId(tkwin), 
                 mbPtr->disabledGC, mbPtr->inset, mbPtr->inset,
 		(unsigned) (Tk_Width(tkwin) - 2*mbPtr->inset),

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.6 1999/04/16 01:51:32 stanton Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.7 1999/05/22 06:35:34 jingham Exp $
  */
 
 #include <Gestalt.h>
@@ -3620,6 +3620,7 @@ TkMacZoomToplevel(
     Point location = {0, 0};
     int xOffset, yOffset;
     WmInfo *wmPtr;
+    TkDisplay *dispPtr;
 
     SetPort(whichWindow);
     if (!TrackBox(whichWindow, where, zoomPart)) {

@@ -9,11 +9,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenus.c,v 1.3 1999/04/16 01:51:31 stanton Exp $
+ * RCS: @(#) $Id: tkMacMenus.c,v 1.4 1999/05/22 06:33:41 jingham Exp $
  */
 
 #include "tcl.h"
-#include "tclMacInt.h"
+#include "tclMacInt.h" /* Needed for FSpLocationFromPath */
 #include "tk.h"
 #include "tkInt.h"
 #include "tkMacInt.h"

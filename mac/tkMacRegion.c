@@ -8,10 +8,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacRegion.c,v 1.2 1998/09/14 18:23:39 stanton Exp $
+ * RCS: @(#) $Id: tkMacRegion.c,v 1.3 1999/05/22 06:35:00 jingham Exp $
  */
 
 #include "tkInt.h"
+#include "tkMacInt.h"
 #include "X.h"
 #include "Xlib.h"
 

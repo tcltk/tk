@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacXStubs.c,v 1.6 1999/04/16 01:51:33 stanton Exp $
+ * RCS: @(#) $Id: tkMacXStubs.c,v 1.7 1999/05/22 06:35:49 jingham Exp $
  */
 
 #include "tkInt.h"
@@ -28,6 +28,7 @@
 #include <ToolUtils.h>
 #include <Sound.h>
 #include "tkMacInt.h"
+#include "tkPort.h"
 
 /*
  * Because this file is still under major development Debugger statements are
@@ -523,39 +524,6 @@ Tk_FreeXId (
 {
     /* no-op function needed for stubs implementation. */
 }
-
-void
-Tk_3DHorizontalBevel (
-    Tk_Window tkwin,
-    Drawable d,
-    Tk_3DBorder b,
-    int x,
-    int y,
-    int width,
-    int height,
-    int leftIn,
-    int rightIn,
-    int topBevel,
-    int relief)
-{
-    /* no-op function needed for stubs implementation. */
-}
-
-void
-Tk_3DVerticalBevel (
-    Tk_Window tkwin,
-    Drawable d,
-    Tk_3DBorder b,
-    int x,
-    int y,
-    int width,
-    int height,
-    int leftBevel,
-    int relief)
-{
-    /* no-op function needed for stubs implementation. */
-}
-
 
 /*
  *----------------------------------------------------------------------
@@ -720,6 +688,31 @@ XSetWindowColormap(
     Colormap colormap)
 {
     Debugger();
+}
+
+Status		
+XStringListToTextProperty(
+    char** list, 
+    int count, 
+    XTextProperty* text_prop_return)
+{
+    Debugger();
+    return (Status) 0;
+}
+void		
+XSetWMClientMachine(
+    Display* display, 
+    Window w, 
+    XTextProperty* text_prop)
+{
+    Debugger();
+}
+XIC		
+XCreateIC(
+    void)
+{
+    Debugger();
+    return (XIC) 0;
 }
 
 /*

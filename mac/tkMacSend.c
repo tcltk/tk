@@ -31,7 +31,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacSend.c,v 1.3 1999/04/16 01:51:32 stanton Exp $
+ * RCS: @(#) $Id: tkMacSend.c,v 1.4 1999/05/22 06:35:10 jingham Exp $
  */
 
 #include <Gestalt.h>
@@ -433,14 +433,14 @@ Tk_SendObjCmd(
 	     * parser is faster.
 	     */
 
-	    result = Tcl_EvalObj(localInterp, objv[firstArg], TCL_EVAL_DIRECT);
+	    result = Tcl_EvalObjEx(localInterp, objv[firstArg], TCL_EVAL_DIRECT);
 	} else {
 	    listObjPtr = Tcl_NewListObj(0, (Tcl_Obj **) NULL);
 	    for (i = firstArg; i < objc; i++) {
 		Tcl_ListObjAppendList(interp, listObjPtr, objv[i]);
 	    }
 	    Tcl_IncrRefCount(listObjPtr);
-	    result = Tcl_EvalObj(localInterp, listObjPtr, TCL_EVAL_DIRECT);
+	    result = Tcl_EvalObjEx(localInterp, listObjPtr, TCL_EVAL_DIRECT);
 	    Tcl_DecrRefCount(listObjPtr);
 	}
 	if (interp != localInterp) {
