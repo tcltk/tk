@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.43 2002/02/27 01:26:51 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.44 2002/04/05 08:41:24 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -212,7 +212,6 @@ static int		Initialize _ANSI_ARGS_((Tcl_Interp *interp));
 static int		NameWindow _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkWindow *winPtr, TkWindow *parentPtr,
 			    char *name));
-static void		OpenIM _ANSI_ARGS_((TkDisplay *dispPtr));
 static void		UnlinkWindow _ANSI_ARGS_((TkWindow *winPtr));
 
 /*
@@ -470,7 +469,6 @@ GetScreen(interp, screenName, screenPtr)
 	    strncpy(dispPtr->name, screenName, length);
 	    dispPtr->name[length] = '\0';
 	    dispPtr->useInputMethods = 0;
-	    OpenIM(dispPtr);
 	    TkInitXId(dispPtr);
 	    dispPtr->deletionEpoch = 0L;
 
@@ -1617,9 +1615,6 @@ Tk_MakeWindowExist(tkwin)
     Tcl_SetHashValue(hPtr, winPtr);
     winPtr->dirtyAtts = 0;
     winPtr->dirtyChanges = 0;
-#ifdef TK_USE_INPUT_METHODS
-    winPtr->inputContext = NULL;
-#endif /* TK_USE_INPUT_METHODS */
 
     if (!(winPtr->flags & TK_TOP_LEVEL)) {
 	/*
@@ -1666,7 +1661,7 @@ Tk_MakeWindowExist(tkwin)
      */
 
     if ((winPtr->flags & TK_NEED_CONFIG_NOTIFY)
-	    && !(winPtr->flags & TK_ALREADY_DEAD)){
+	    && !(winPtr->flags & TK_ALREADY_DEAD)) {
 	winPtr->flags &= ~TK_NEED_CONFIG_NOTIFY;
 	TkDoConfigureNotify(winPtr);
     }
@@ -2552,70 +2547,6 @@ Tk_StrictMotif(tkwin)
 					 * to be checked. */
 {
     return ((TkWindow *) tkwin)->mainPtr->strictMotif;
-}
-
-/* 
- *--------------------------------------------------------------
- *
- * OpenIM --
- *
- *	Tries to open an X input method, associated with the
- *	given display.  Right now we can only deal with a bare-bones
- *	input style:  no preedit, and no status.
- *
- * Results:
- *	Stores the input method in dispPtr->inputMethod;  if there isn't
- *	a suitable input method, then NULL is stored in dispPtr->inputMethod.
- *
- * Side effects:
- *	An input method gets opened.
- *
- *--------------------------------------------------------------
- */
-
-static void
-OpenIM(dispPtr)
-    TkDisplay *dispPtr;		/* Tk's structure for the display. */
-{
-#ifndef TK_USE_INPUT_METHODS
-    return;
-#else
-    unsigned short i;
-    XIMStyles *stylePtr;
-    char *modifier_list;
-
-    if ((modifier_list = XSetLocaleModifiers("")) == NULL) {
-	goto error;
-    }
-
-    dispPtr->inputMethod = XOpenIM(dispPtr->display, NULL, NULL, NULL);
-    if (dispPtr->inputMethod == NULL) {
-	return;
-    }
-
-    if ((XGetIMValues(dispPtr->inputMethod, XNQueryInputStyle, &stylePtr,
-	    NULL) != NULL) || (stylePtr == NULL)) {
-	goto error;
-    }
-    for (i = 0; i < stylePtr->count_styles; i++) {
-	if (stylePtr->supported_styles[i]
-		== (XIMPreeditNothing|XIMStatusNothing)) {
-	    XFree(stylePtr);
-	    return;
-	}
-    }
-    XFree(stylePtr);
-
-    error:
-
-    /*
-     * Should close the input method, but this causes core dumps on some
-     * systems (e.g. Solaris 2.3 as of 1/6/95).
-     * XCloseIM(dispPtr->inputMethod);
-     */
-    dispPtr->inputMethod = NULL;
-    return;
-#endif /* TK_USE_INPUT_METHODS */
 }
 
 /*
