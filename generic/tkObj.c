@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.9 2003/10/10 15:56:22 dkf Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.10 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -519,7 +519,7 @@ UpdateStringOfMM(objPtr)
     mmPtr = (MMRep *) objPtr->internalRep.otherValuePtr;
     /* assert( mmPtr->units == -1 && objPtr->bytes == NULL ); */
     if ((mmPtr->units != -1) || (objPtr->bytes != NULL)) {
-        panic("UpdateStringOfMM: false precondition");
+        Tcl_Panic("UpdateStringOfMM: false precondition");
     }
 
     Tcl_PrintDouble((Tcl_Interp *) NULL, mmPtr->value, buffer);

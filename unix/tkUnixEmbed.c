@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEmbed.c,v 1.6 2002/08/05 04:30:41 dgp Exp $
+ * RCS: @(#) $Id: tkUnixEmbed.c,v 1.7 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -115,7 +115,7 @@ TkpUseWindow(interp, tkwin, string)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr->window != None) {
-	panic("TkUseWindow: X window already assigned");
+	Tcl_Panic("TkUseWindow: X window already assigned");
     }
     if (Tcl_GetInt(interp, string, &id) != TCL_OK) {
 	return TCL_ERROR;
@@ -232,7 +232,7 @@ TkpMakeWindow(winPtr, parent)
 	for (containerPtr = tsdPtr->firstContainerPtr; ;
 		containerPtr = containerPtr->nextPtr) {
 	    if (containerPtr == NULL) {
-		panic("TkMakeWindow couldn't find container for window");
+		Tcl_Panic("TkMakeWindow couldn't find container for window");
 	    }
 	    if (containerPtr->embeddedPtr == winPtr) {
 		break;
@@ -421,7 +421,7 @@ ContainerEventProc(clientData, eventPtr)
 	    containerPtr->parent != eventPtr->xmaprequest.parent;
 	    containerPtr = containerPtr->nextPtr) {
 	if (containerPtr == NULL) {
-	    panic("ContainerEventProc couldn't find Container record");
+	    Tcl_Panic("ContainerEventProc couldn't find Container record");
 	}
     }
 
@@ -729,7 +729,7 @@ TkpGetOtherWindow(winPtr)
 	    return containerPtr->embeddedPtr;
 	}
     }
-    panic("TkpGetOtherWindow couldn't find window");
+    Tcl_Panic("TkpGetOtherWindow couldn't find window");
     return NULL;
 }
 
@@ -1029,6 +1029,6 @@ TkUnixContainerId(winPtr)
 	    return containerPtr->parent;
 	}
     }
-    panic("TkUnixContainerId couldn't find window");
+    Tcl_Panic("TkUnixContainerId couldn't find window");
     return None;
 }

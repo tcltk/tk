@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.14 2004/01/07 15:21:02 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.15 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "default.h"
@@ -1405,7 +1405,7 @@ TkTextIndexForwChars(textPtr, srcPtr, charCount, dstPtr, type)
 				 * check is redundant:
 				 */
 				if (tagPtr->priority != infoPtr->elidePriority) {
-				    panic("Bad tag priority being toggled off");
+				    Tcl_Panic("Bad tag priority being toggled off");
 				}
 			    
 				/* 
@@ -1573,7 +1573,7 @@ TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type)
 				 * check is redundant:
 				 */
 				if (tagPtr->priority != infoPtr->elidePriority) {
-				    panic("Bad tag priority being toggled off");
+				    Tcl_Panic("Bad tag priority being toggled off");
 				}
 				
 				/* 
@@ -1657,7 +1657,7 @@ TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type)
 	 
 	linePtr1 = TkBTreeNextLine(linePtr1);
 	if (linePtr1 == NULL) {
-	    panic("Reached end of text widget when counting characters");
+	    Tcl_Panic("Reached end of text widget when counting characters");
 	}
 	segPtr = linePtr1->segPtr;
     }
@@ -1830,7 +1830,7 @@ TkTextIndexBackChars(textPtr, srcPtr, charCount, dstPtr, type)
 			     * check is redundant:
 			     */
 			    if (tagPtr->priority != infoPtr->elidePriority) {
-				panic("Bad tag priority being toggled on");
+				Tcl_Panic("Bad tag priority being toggled on");
 			    }
 						    
 			    /* 

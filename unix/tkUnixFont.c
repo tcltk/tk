@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.21 2003/10/28 22:51:41 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.22 2004/01/13 02:06:01 davygrvy Exp $
  */
  
 #include "tkUnixInt.h"
@@ -2672,7 +2672,7 @@ GetSystemFont(display)
     if (fontStructPtr == NULL) {
 	fontStructPtr = XLoadQueryFont(display, "*");
 	if (fontStructPtr == NULL) {
-	    panic("TkpGetFontFromAttributes: cannot get any font");
+	    Tcl_Panic("TkpGetFontFromAttributes: cannot get any font");
 	}
     }
     return fontStructPtr;

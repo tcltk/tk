@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.59 2003/12/16 19:53:33 a_kovalenko Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.60 2004/01/13 02:06:02 davygrvy Exp $
  */
 
 #include "tkWinInt.h"
@@ -864,7 +864,7 @@ InitWindowClass(WinIconPtr titlebaricon) {
 	    class.hCursor = LoadCursor(NULL, IDC_ARROW);
 
 	    if (!(*tkWinProcs->registerClass)(&class)) {
-		panic("Unable to register TkTopLevel class");
+		Tcl_Panic("Unable to register TkTopLevel class");
 	    }
 	    Tcl_DStringFree(&classString);
 	}
@@ -1829,10 +1829,10 @@ UpdateWrapper(winPtr)
     if (winPtr->flags & TK_EMBEDDED) {
 	wmPtr->wrapper = (HWND) winPtr->privatePtr;
 	if (wmPtr->wrapper == NULL) {
-	    panic("UpdateWrapper: Cannot find container window");
+	    Tcl_Panic("UpdateWrapper: Cannot find container window");
 	}
 	if (!IsWindow(wmPtr->wrapper)) {
-	    panic("UpdateWrapper: Container was destroyed");
+	    Tcl_Panic("UpdateWrapper: Container was destroyed");
 	}
 
     } else {
@@ -2246,7 +2246,7 @@ TkWmDeadWindow(winPtr)
 	for (prevPtr = winPtr->dispPtr->firstWmPtr; ;
 	     prevPtr = prevPtr->nextPtr) {
 	    if (prevPtr == NULL) {
-		panic("couldn't unlink window in TkWmDeadWindow");
+		Tcl_Panic("couldn't unlink window in TkWmDeadWindow");
 	    }
 	    if (prevPtr->nextPtr == wmPtr) {
 		prevPtr->nextPtr = wmPtr->nextPtr;
@@ -2274,7 +2274,7 @@ TkWmDeadWindow(winPtr)
 	}
     }
     if (wmPtr->numTransients != 0)
-        panic("numTransients should be 0");
+        Tcl_Panic("numTransients should be 0");
 
     if (wmPtr->title != NULL) {
 	ckfree(wmPtr->title);
@@ -4286,7 +4286,7 @@ WmStackorderCmd(tkwin, winPtr, interp, objc, objv)
     if (objc == 3) {
 	windows = TkWmStackorderToplevel(winPtr);
 	if (windows == NULL) {
-	    panic("TkWmStackorderToplevel failed");
+	    Tcl_Panic("TkWmStackorderToplevel failed");
 	} else {
 	    for (window_ptr = windows; *window_ptr ; window_ptr++) {
 		Tcl_AppendElement(interp, (*window_ptr)->pathName);
@@ -4341,9 +4341,9 @@ WmStackorderCmd(tkwin, winPtr, interp, objc, objv)
 		    index2 = (window_ptr - windows);
 	    }
 	    if (index1 == -1)
-		panic("winPtr window not found");
+		Tcl_Panic("winPtr window not found");
 	    if (index2 == -1)
-		panic("winPtr2 window not found");
+		Tcl_Panic("winPtr2 window not found");
 
 	    ckfree((char *) windows);
 	}
@@ -5586,7 +5586,7 @@ Tk_MoveToplevelWindow(tkwin, x, y)
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (!(winPtr->flags & TK_TOP_LEVEL)) {
-	panic("Tk_MoveToplevelWindow called with non-toplevel window");
+	Tcl_Panic("Tk_MoveToplevelWindow called with non-toplevel window");
     }
     wmPtr->x = x;
     wmPtr->y = y;
@@ -5717,7 +5717,7 @@ BOOL CALLBACK TkWmStackorderToplevelEnumProc(hwnd, lParam)
         childWinPtr = (TkWindow *) Tcl_GetHashValue(hPtr);
         /* Double check that same HWND does not get passed twice */
         if (childWinPtr == NULL) {
-            panic("duplicate HWND in TkWmStackorderToplevelEnumProc");
+            Tcl_Panic("duplicate HWND in TkWmStackorderToplevelEnumProc");
         } else {
             Tcl_SetHashValue(hPtr, NULL);
         }
@@ -5841,7 +5841,7 @@ TkWmStackorderToplevel(parentPtr)
         windows = NULL;
     } else {
         if (pair.window_ptr != (windows-1))
-            panic("num matched toplevel windows does not equal num children");
+            Tcl_Panic("num matched toplevel windows does not equal num children");
     }
 
     done:

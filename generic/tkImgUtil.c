@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgUtil.c,v 1.2 1998/09/14 18:23:13 stanton Exp $
+ * RCS: @(#) $Id: tkImgUtil.c,v 1.3 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -46,7 +46,7 @@ TkAlignImageData(image, alignment, bitOrder)
     int i, j;
 
     if (image->bits_per_pixel != 1) {
-	panic("TkAlignImageData: Can't handle image depths greater than 1.");
+	Tcl_Panic("TkAlignImageData: Can't handle image depths greater than 1.");
     }
 
     /*

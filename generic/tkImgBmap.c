@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.15 2002/08/05 04:30:39 dgp Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.16 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -798,7 +798,7 @@ ImgBmapCmd(clientData, interp, objc, objv)
 	return code;
       }
       default: {
-	panic("bad const entries to bmapOptions in ImgBmapCmd");
+	Tcl_Panic("bad const entries to bmapOptions in ImgBmapCmd");
       }
     }
     return TCL_OK;
@@ -1025,7 +1025,7 @@ ImgBmapDelete(masterData)
     BitmapMaster *masterPtr = (BitmapMaster *) masterData;
 
     if (masterPtr->instancePtr != NULL) {
-	panic("tried to delete bitmap image when instances still exist");
+	Tcl_Panic("tried to delete bitmap image when instances still exist");
     }
     masterPtr->tkMaster = NULL;
     if (masterPtr->imageCmd != NULL) {

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.23 2003/10/10 00:03:01 hobbs Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.24 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #define OEMRESOURCE
@@ -1155,7 +1155,7 @@ ButtonProc(hwnd, message, wParam, lParam)
     Tk_Window tkwin = Tk_HWNDToWindow(hwnd);
 
     if (tkwin == NULL) {
-	panic("ButtonProc called on an invalid HWND");
+	Tcl_Panic("ButtonProc called on an invalid HWND");
     }
     butPtr = (WinButton *)((TkWindow*)tkwin)->instanceData;
 

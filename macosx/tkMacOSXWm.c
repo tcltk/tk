@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.8 2003/09/26 16:04:20 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.9 2004/01/13 02:06:01 davygrvy Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -2251,7 +2251,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
     if (objc == 3) {
         windows = TkWmStackorderToplevel(winPtr);
         if (windows == NULL) {
-            panic("TkWmStackorderToplevel failed");
+            Tcl_Panic("TkWmStackorderToplevel failed");
         } else {
             for (window_ptr = windows; *window_ptr ; window_ptr++) {
                 Tcl_AppendElement(interp, (*window_ptr)->pathName);
@@ -2306,9 +2306,9 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
                     index2 = (window_ptr - windows);
             }
             if (index1 == -1)
-                panic("winPtr window not found");
+                Tcl_Panic("winPtr window not found");
             if (index2 == -1)
-                panic("winPtr2 window not found");
+                Tcl_Panic("winPtr2 window not found");
 
             ckfree((char *) windows);
         }
@@ -2820,7 +2820,7 @@ TopLevelEventProc(
 	    printf("TopLevelEventProc: %s deleted\n", winPtr->pathName);
 	}
     } else if (eventPtr->type == ReparentNotify) {
-	panic("recieved unwanted reparent event");
+	Tcl_Panic("recieved unwanted reparent event");
     }
 }
 
@@ -3737,7 +3737,7 @@ Tk_MoveToplevelWindow(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (!(winPtr->flags & TK_TOP_LEVEL)) {
-	panic("Tk_MoveToplevelWindow called with non-toplevel window");
+	Tcl_Panic("Tk_MoveToplevelWindow called with non-toplevel window");
     }
     wmPtr->x = x;
     wmPtr->y = y;
@@ -4555,7 +4555,7 @@ TkUnsupported1Cmd(
 		    Tcl_SetResult(interp, "floatSideZoomProc", TCL_STATIC);
 		    break;
 		default:
-		   panic("invalid style");
+		   Tcl_Panic("invalid style");
 	    }
 	    if (appearanceSpec) {
 	        Tcl_Obj *attributeList, *newResult = NULL;
@@ -4586,7 +4586,7 @@ TkUnsupported1Cmd(
                         newResult = Tcl_NewStringObj("toolbar", -1);
                         break;
                     default:
-                        panic("invalid class");
+                        Tcl_Panic("invalid class");
                 }
 
  	        attributeList = Tcl_NewListObj(0, NULL);
@@ -4888,13 +4888,13 @@ TkMacOSXMakeRealWindowExist(
 	    return;
 	} else if (gMacEmbedHandler != NULL) {
 	    if (gMacEmbedHandler->containerExistProc != NULL) {
-	        if (gMacEmbedHandler->containerExistProc((Tk_Window) winPtr) != TCL_OK) {
-	           panic("ContainerExistProc could not make container");
-	       }
+		if (gMacEmbedHandler->containerExistProc((Tk_Window) winPtr) != TCL_OK) {
+		    Tcl_Panic("ContainerExistProc could not make container");
+		}
 	    }
 	    return;
 	} else {
-	    panic("TkMacOSXMakeRealWindowExist could not find container");
+	    Tcl_Panic("TkMacOSXMakeRealWindowExist could not find container");
 	}
 
 	/*
@@ -4929,10 +4929,10 @@ TkMacOSXMakeRealWindowExist(
     }
     
     if (newWindow == NULL) {
-	panic("couldn't allocate new Mac window");
+	Tcl_Panic("couldn't allocate new Mac window");
     }
     if (CreateRootControl(newWindow,&rootControl) != noErr ) {
-        panic("couldn't create root control for new Mac window");
+        Tcl_Panic("couldn't create root control for new Mac window");
     }
     
     /*
@@ -4956,7 +4956,7 @@ TkMacOSXMakeRealWindowExist(
     valueHashPtr = Tcl_CreateHashEntry(&windowTable,
 	    (char *) newWindow, &new);
     if (!new) {
-	panic("same macintosh window allocated twice!");
+	Tcl_Panic("same macintosh window allocated twice!");
     }
     Tcl_SetHashValue(valueHashPtr, macWin);
     
@@ -5000,7 +5000,7 @@ TkMacOSXRegisterOffScreenWindow(
     valueHashPtr = Tcl_CreateHashEntry(&windowTable,
 	    (char *) portPtr, &new);
     if (!new) {
-	panic("same macintosh window allocated twice!");
+	Tcl_Panic("same macintosh window allocated twice!");
     }
     Tcl_SetHashValue(valueHashPtr, macWin);
 }
@@ -5029,7 +5029,7 @@ TkMacOSXUnregisterMacWindow(
 {
  Tcl_HashEntry *entryPtr;
     if (!windowHashInit) {
-	panic("TkMacOSXUnregisterMacWindow: unmapping before inited");
+	Tcl_Panic("TkMacOSXUnregisterMacWindow: unmapping before inited");
     }
     entryPtr=Tcl_FindHashEntry(&windowTable,(char *) macWinPtr);
     if (!entryPtr) {
@@ -5504,7 +5504,7 @@ TkWmStackorderToplevel(parentPtr)
             frontWindow = GetNextWindow(frontWindow);
 	    }
         if (window_ptr != (windows-1))
-            panic("num matched toplevel windows does not equal num children");
+            Tcl_Panic("num matched toplevel windows does not equal num children");
     }
 
     done:

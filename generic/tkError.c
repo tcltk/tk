@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkError.c,v 1.2 1998/09/14 18:23:09 stanton Exp $
+ * RCS: @(#) $Id: tkError.c,v 1.3 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tkPort.h"
@@ -105,7 +105,7 @@ Tk_CreateErrorHandler(display, error, request, minorCode, errorProc, clientData)
 
     dispPtr = TkGetDisplay(display);
     if (dispPtr == NULL) {
-	panic("Unknown display passed to Tk_CreateErrorHandler");
+	Tcl_Panic("Unknown display passed to Tk_CreateErrorHandler");
     }
 
     /*

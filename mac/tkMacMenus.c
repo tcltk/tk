@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenus.c,v 1.8 2002/01/27 11:11:02 das Exp $
+ * RCS: @(#) $Id: tkMacMenus.c,v 1.9 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tcl.h"
@@ -186,11 +186,11 @@ TkMacInitMenus(
      */
 
     if (TkMacUseMenuID(256) != TCL_OK) {
-    	panic("Menu ID 256 is already in use!");
+    	Tcl_Panic("Menu ID 256 is already in use!");
     }
     tkAppleMenu = NewMenu(256, "\p\024");
     if (tkAppleMenu == NULL) {
-	panic("memory - menus");
+	Tcl_Panic("memory - menus");
     }
     InsertMenu(tkAppleMenu, 0);
     AppendMenu(tkAppleMenu, "\pAbout Tcl & Tkä");
@@ -198,11 +198,11 @@ TkMacInitMenus(
     AppendResMenu(tkAppleMenu, 'DRVR');
 
     if (TkMacUseMenuID(kFileMenu) != TCL_OK) {
-    	panic("Menu ID %d is already in use!", kFileMenu);
+    	Tcl_Panic("Menu ID %d is already in use!", kFileMenu);
     }
     tkFileMenu = NewMenu(kFileMenu, "\pFile");
     if (tkFileMenu == NULL) {
-	panic("memory - menus");
+	Tcl_Panic("memory - menus");
     }
     InsertMenu(tkFileMenu, 0);
     AppendMenu(tkFileMenu, "\pSourceä");
@@ -211,11 +211,11 @@ TkMacInitMenus(
     AppendMenu(tkFileMenu, "\pQuit/Q");
 
     if (TkMacUseMenuID(kEditMenu) != TCL_OK) {
-    	panic("Menu ID %d is already in use!", kEditMenu);
+    	Tcl_Panic("Menu ID %d is already in use!", kEditMenu);
     }
     tkEditMenu = NewMenu(kEditMenu, "\pEdit");
     if (tkEditMenu == NULL) {
-	panic("memory - menus");
+	Tcl_Panic("memory - menus");
     }
     InsertMenu(tkEditMenu, 0);
     AppendMenu(tkEditMenu, "\pCut/X");
@@ -223,7 +223,7 @@ TkMacInitMenus(
     AppendMenu(tkEditMenu, "\pPaste/V");
     AppendMenu(tkEditMenu, "\pClear");
     if (TkMacUseMenuID(kHMHelpMenuID) != TCL_OK) {
-    	panic("Help menu ID %s is already in use!", kHMHelpMenuID);
+    	Tcl_Panic("Help menu ID %s is already in use!", kHMHelpMenuID);
     }
     
     DrawMenuBar();

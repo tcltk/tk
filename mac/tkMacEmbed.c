@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacEmbed.c,v 1.6 2002/10/09 11:56:39 das Exp $
+ *  RCS: @(#) $Id: tkMacEmbed.c,v 1.7 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -243,7 +243,7 @@ TkpUseWindow(
     int result;
 
     if (winPtr->window != None) {
-	panic("TkpUseWindow: X window already assigned");
+	Tcl_Panic("TkpUseWindow: X window already assigned");
     }
     
     /*
@@ -516,7 +516,7 @@ TkMacContainerId(winPtr)
 	    return (MacDrawable *) containerPtr->parent;
 	}
     }
-    panic("TkMacContainerId couldn't find window");
+    Tcl_Panic("TkMacContainerId couldn't find window");
     return None;
 }
 
@@ -845,7 +845,7 @@ ContainerEventProc(clientData, eventPtr)
 	    containerPtr->parent != eventPtr->xmaprequest.parent;
 	    containerPtr = containerPtr->nextPtr) {
 	if (containerPtr == NULL) {
-	    panic("ContainerEventProc couldn't find Container record");
+	    Tcl_Panic("ContainerEventProc couldn't find Container record");
 	}
     }
 

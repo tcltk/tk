@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacButton.c,v 1.20 2003/12/21 23:50:13 davygrvy Exp $
+ * RCS: @(#) $Id: tkMacButton.c,v 1.21 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tkButton.h"
@@ -1129,7 +1129,7 @@ InitSampleControls()
     windowRef = NewCWindow(NULL, &geometry, "\pempty", false, 
 	    zoomDocProc, (WindowRef) frontWin, true, 0);
     if (windowRef == NULL) {
-	panic("Can't allocate buffer window.");
+	Tcl_Panic("Can't allocate buffer window.");
     }
 	
     /*
@@ -1156,7 +1156,7 @@ InitSampleControls()
 	     
 	err = CreateRootControl(windowRef, &dontCare);
 	if (err != noErr) {
-	    panic("Can't create root control in DrawBufferedControl");
+	    Tcl_Panic("Can't create root control in DrawBufferedControl");
 	}
 	    
 	userPaneHandle = NewControl(windowRef, &geometry, "\p",

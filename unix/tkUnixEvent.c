@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.13 2003/12/21 23:50:13 davygrvy Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.14 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -224,7 +224,7 @@ TkpCloseDisplay(dispPtr)
 	if (do_peek) {
 	    peek = (struct XIMPeek *) dispPtr->inputMethod;
 	    if (peek->ic_chain != NULL)
-	        panic("input contexts not freed before XCloseIM");
+	        Tcl_Panic("input contexts not freed before XCloseIM");
 	}
 #endif
 	XCloseIM(dispPtr->inputMethod);

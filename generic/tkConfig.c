@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.18 2002/08/05 04:30:38 dgp Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.19 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 /*
@@ -254,7 +254,7 @@ Tk_CreateOptionTable(interp, templatePtr)
 
 	    for (specPtr2 = templatePtr, i = 0; ; specPtr2++, i++) {
 		if (specPtr2->type == TK_OPTION_END) {
-		    panic("Tk_CreateOptionTable couldn't find synonym");
+		    Tcl_Panic("Tk_CreateOptionTable couldn't find synonym");
 		}
 		if (strcmp(specPtr2->optionName,
 			(char *) specPtr->clientData) == 0) {
@@ -1554,7 +1554,7 @@ Tk_RestoreSavedOptions(savePtr)
 		    break;
 		}
 		default: {
-		    panic("bad option type in Tk_RestoreSavedOptions");
+		    Tcl_Panic("bad option type in Tk_RestoreSavedOptions");
 		}
 	    }
 	}
@@ -2076,7 +2076,7 @@ GetObjectForOption(recordPtr, optionPtr, tkwin)
 	    break;
 	}
 	default: {
-	    panic("bad option type in GetObjectForOption");
+	    Tcl_Panic("bad option type in GetObjectForOption");
 	}
     }
     if (objPtr == NULL) {

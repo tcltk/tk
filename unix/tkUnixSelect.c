@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.11 2002/10/01 08:48:08 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.12 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -351,7 +351,7 @@ TkSelPropProc(eventPtr)
 		}
 		numItems += length;
 		if (numItems > TK_SEL_BYTES_AT_ONCE) {
-		    panic("selection handler returned too many bytes");
+		    Tcl_Panic("selection handler returned too many bytes");
 		}
 	    }
 	    ((char *) buffer)[numItems] = 0;
@@ -448,7 +448,7 @@ TkSelPropProc(eventPtr)
 		 */
 
 		if (srcLen > TCL_UTF_MAX) {
-		    panic("selection conversion left too many bytes unconverted");
+		    Tcl_Panic("selection conversion left too many bytes unconverted");
 		}
 		memcpy(incrPtr->converts[i].buffer, src, (size_t) srcLen+1);
 		Tcl_DStringFree(&ds);
@@ -934,7 +934,7 @@ ConvertSelection(winPtr, eventPtr)
 		continue;
 	    }
 	    if (numItems > TK_SEL_BYTES_AT_ONCE) {
-		panic("selection handler returned too many bytes");
+		Tcl_Panic("selection handler returned too many bytes");
 	    }
 	    ((char *) buffer)[numItems] = '\0';
 	}

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.21 2002/09/02 19:13:47 hobbs Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.22 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tkPort.h"
@@ -437,7 +437,7 @@ TkFontPkgFree(mainPtr)
     }
 #ifdef PURIFY
     if (fontsLeft) {
-	panic("TkFontPkgFree: all fonts should have been freed already");
+	Tcl_Panic("TkFontPkgFree: all fonts should have been freed already");
     }
 #endif
     Tcl_DeleteHashTable(&fiPtr->fontCache);
@@ -1216,7 +1216,7 @@ Tk_GetFontFromObj(tkwin, objPtr)
 	}
     }
 
-    panic("Tk_GetFontFromObj called with non-existent font!");
+    Tcl_Panic("Tk_GetFontFromObj called with non-existent font!");
     return NULL;
 }
 
@@ -3700,7 +3700,7 @@ TkDebugFont(tkwin, name)
     if (hashPtr != NULL) {
 	fontPtr = (TkFont *) Tcl_GetHashValue(hashPtr);
 	if (fontPtr == NULL) {
-	    panic("TkDebugFont found empty hash table entry");
+	    Tcl_Panic("TkDebugFont found empty hash table entry");
 	}
 	for ( ; (fontPtr != NULL); fontPtr = fontPtr->nextPtr) {
 	    objPtr = Tcl_NewObj();

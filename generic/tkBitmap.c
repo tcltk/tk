@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.10 2002/08/05 04:30:38 dgp Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.11 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tkPort.h"
@@ -402,7 +402,7 @@ GetBitmap(interp, tkwin, string)
 		bitmap = TkpCreateNativeBitmap(Tk_Display(tkwin),
 		    predefPtr->source);
 		if (bitmap == None) {
-		    panic("native bitmap creation failed");
+		    Tcl_Panic("native bitmap creation failed");
 		}
 	    } else {
 		bitmap = XCreateBitmapFromData(Tk_Display(tkwin),
@@ -429,7 +429,7 @@ GetBitmap(interp, tkwin, string)
     bitmapPtr->idHashPtr = Tcl_CreateHashEntry(&dispPtr->bitmapIdTable, 
             (char *) bitmap, &new);
     if (!new) {
-	panic("bitmap already registered in Tk_GetBitmap");
+	Tcl_Panic("bitmap already registered in Tk_GetBitmap");
     }
     bitmapPtr->nextPtr = existingBitmapPtr;
     Tcl_SetHashValue(nameHashPtr, bitmapPtr);
@@ -535,7 +535,7 @@ Tk_NameOfBitmap(display, bitmap)
 
     if (dispPtr == NULL || !dispPtr->bitmapInit) {
 	unknown:
-	panic("Tk_NameOfBitmap received unknown bitmap argument");
+	Tcl_Panic("Tk_NameOfBitmap received unknown bitmap argument");
     }
 
     idHashPtr = Tcl_FindHashEntry(&dispPtr->bitmapIdTable, (char *) bitmap);
@@ -579,7 +579,7 @@ Tk_SizeOfBitmap(display, bitmap, widthPtr, heightPtr)
 
     if (!dispPtr->bitmapInit) {
 	unknownBitmap:
-	panic("Tk_SizeOfBitmap received unknown bitmap argument");
+	Tcl_Panic("Tk_SizeOfBitmap received unknown bitmap argument");
     }
 
     idHashPtr = Tcl_FindHashEntry(&dispPtr->bitmapIdTable, (char *) bitmap);
@@ -669,12 +669,12 @@ Tk_FreeBitmap(display, bitmap)
     TkDisplay *dispPtr = TkGetDisplay(display);
 
     if (!dispPtr->bitmapInit) {
-	panic("Tk_FreeBitmap called before Tk_GetBitmap");
+	Tcl_Panic("Tk_FreeBitmap called before Tk_GetBitmap");
     }
 
     idHashPtr = Tcl_FindHashEntry(&dispPtr->bitmapIdTable, (char *) bitmap);
     if (idHashPtr == NULL) {
-	panic("Tk_FreeBitmap received unknown bitmap argument");
+	Tcl_Panic("Tk_FreeBitmap received unknown bitmap argument");
     }
     FreeBitmap((TkBitmap *) Tcl_GetHashValue(idHashPtr));
 }
@@ -935,7 +935,7 @@ GetBitmapFromObj(tkwin, objPtr)
     }
 
     error:
-    panic("GetBitmapFromObj called with non-existent bitmap!");
+    Tcl_Panic("GetBitmapFromObj called with non-existent bitmap!");
     /*
      * The following code isn't reached; it's just there to please compilers.
      */
@@ -1146,7 +1146,7 @@ TkDebugBitmap(tkwin, name)
     if (hashPtr != NULL) {
 	bitmapPtr = (TkBitmap *) Tcl_GetHashValue(hashPtr);
 	if (bitmapPtr == NULL) {
-	    panic("TkDebugBitmap found empty hash table entry");
+	    Tcl_Panic("TkDebugBitmap found empty hash table entry");
 	}
 	for ( ; (bitmapPtr != NULL); bitmapPtr = bitmapPtr->nextPtr) {
 	    objPtr = Tcl_NewObj();

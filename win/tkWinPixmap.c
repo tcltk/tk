@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPixmap.c,v 1.3 2000/02/01 11:41:44 hobbs Exp $
+ * RCS: @(#) $Id: tkWinPixmap.c,v 1.4 2004/01/13 02:06:02 davygrvy Exp $
  */
 
 #include "tkWinInt.h"
@@ -169,14 +169,14 @@ XGetGeometry(display, d, root_return, x_return, y_return, width_return,
 	BITMAPINFO info;
 
 	if (twdPtr->bitmap.handle == NULL) {
-            panic("XGetGeometry: invalid pixmap");
+            Tcl_Panic("XGetGeometry: invalid pixmap");
         }
         dc = GetDC(NULL);
         info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
         info.bmiHeader.biBitCount = 0;
         if (!GetDIBits(dc, twdPtr->bitmap.handle, 0, 0, NULL, &info,
                 DIB_RGB_COLORS)) {
-            panic("XGetGeometry: unable to get bitmap size");
+            Tcl_Panic("XGetGeometry: unable to get bitmap size");
         }
         ReleaseDC(NULL, dc);
 
@@ -186,13 +186,13 @@ XGetGeometry(display, d, root_return, x_return, y_return, width_return,
 	RECT rect;
 
         if (twdPtr->window.handle == NULL) {
-            panic("XGetGeometry: invalid window");
+            Tcl_Panic("XGetGeometry: invalid window");
         }
         GetClientRect(twdPtr->window.handle, &rect);
         *width_return = rect.right - rect.left;
         *height_return = rect.bottom - rect.top;
     } else {
-        panic("XGetGeometry: invalid window");
+        Tcl_Panic("XGetGeometry: invalid window");
     }
     return 1;
 }

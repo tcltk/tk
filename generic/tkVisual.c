@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkVisual.c,v 1.4 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkVisual.c,v 1.5 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -470,7 +470,7 @@ Tk_FreeColormap(display, colormap)
 
     dispPtr = TkGetDisplay(display);
     if (dispPtr == NULL) {
-	panic("unknown display passed to Tk_FreeColormap");
+	Tcl_Panic("unknown display passed to Tk_FreeColormap");
     }
     for (prevPtr = NULL, cmapPtr = dispPtr->cmapPtr; cmapPtr != NULL;
 	    prevPtr = cmapPtr, cmapPtr = cmapPtr->nextPtr) {
@@ -529,7 +529,7 @@ Tk_PreserveColormap(display, colormap)
 
     dispPtr = TkGetDisplay(display);
     if (dispPtr == NULL) {
-	panic("unknown display passed to Tk_PreserveColormap");
+	Tcl_Panic("unknown display passed to Tk_PreserveColormap");
     }
     for (cmapPtr = dispPtr->cmapPtr; cmapPtr != NULL;
 	    cmapPtr = cmapPtr->nextPtr) {

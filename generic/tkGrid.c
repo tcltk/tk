@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.30 2004/01/09 22:23:26 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.31 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -2560,7 +2560,7 @@ Unlink(slavePtr)
     } else {
 	for (slavePtr2 = masterPtr->slavePtr; ; slavePtr2 = slavePtr2->nextPtr) {
 	    if (slavePtr2 == NULL) {
-		panic("Unlink couldn't find previous window");
+		Tcl_Panic("Unlink couldn't find previous window");
 	    }
 	    if (slavePtr2->nextPtr == slavePtr) {
 		slavePtr2->nextPtr = slavePtr->nextPtr;

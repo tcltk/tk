@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFocus.c,v 1.3 1999/04/16 01:51:46 stanton Exp $
+ * RCS: @(#) $Id: tkUnixFocus.c,v 1.4 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -115,7 +115,7 @@ TkpChangeFocus(winPtr, force)
     errHandler = Tk_CreateErrorHandler(dispPtr->display, -1, -1, -1,
 	    (Tk_ErrorProc *) NULL, (ClientData) NULL);
     if (winPtr->window == None) {
-	panic("ChangeXFocus got null X window");
+	Tcl_Panic("ChangeXFocus got null X window");
     }
     XSetInputFocus(dispPtr->display, winPtr->window, RevertToParent,
 	    CurrentTime);

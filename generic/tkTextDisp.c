@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.39 2004/01/07 16:28:23 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.40 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tkPort.h"
@@ -1050,7 +1050,7 @@ LayoutDLine(textPtr, indexPtr)
 			     * check is redundant:
 			     */
 			    if (tagPtr->priority != info.elidePriority) {
-				panic("Bad tag priority being toggled off");
+				Tcl_Panic("Bad tag priority being toggled off");
 			    }
 			    
 			    /* 
@@ -1335,7 +1335,7 @@ LayoutDLine(textPtr, indexPtr)
 	chunkPtr = NULL;
     }
     if (noCharsYet) {
-	panic("LayoutDLine couldn't place any characters on a line");
+	Tcl_Panic("LayoutDLine couldn't place any characters on a line");
     }
     wholeLine = (segPtr == NULL);
 
@@ -1831,7 +1831,7 @@ UpdateDisplayInfo(textPtr)
 		if (spaceLeft > 0 ||
 			dInfoPtr->newTopPixelOffset >= dInfoPtr->dLinePtr->height) {
 		    /* Bad situation */
-		    panic("Pixel height problem while laying out text widget");
+		    Tcl_Panic("Pixel height problem while laying out text widget");
 		}
 	    }
 	}
@@ -1847,7 +1847,7 @@ UpdateDisplayInfo(textPtr)
 	for (dlPtr = dInfoPtr->dLinePtr; dlPtr != NULL;
 		dlPtr = dlPtr->nextPtr) {
 	    if (y > dInfoPtr->maxY) {
-		panic("Added too many new lines in UpdateDisplayInfo");
+		Tcl_Panic("Added too many new lines in UpdateDisplayInfo");
 	    }
 	    dlPtr->y = y;
 	    y += dlPtr->height; 
@@ -3307,7 +3307,7 @@ TkTextUpdateOneLine(textPtr, linePtr, pixelHeight, indexPtr)
 	char buffer[TCL_INTEGER_SPACE + 1];
 
 	if (TkBTreeNextLine(linePtr) == NULL) {
-	    panic("Mustn't ever update line height of last artificial line");
+	    Tcl_Panic("Mustn't ever update line height of last artificial line");
 	}
 
 	sprintf(buffer, "%d", pixelHeight);
@@ -5682,7 +5682,9 @@ GetYView(interp, textPtr, report)
 	     * pixelHeight is for a logical line.
 	     */
     #if 0
-	    panic("Counted more pixels (%d) than expected (%d) total pixels in text widget scroll bar calculation.", count, totalPixels);
+	    Tcl_Panic("Counted more pixels (%d) than expected (%d) total "
+		    "pixels in text widget scroll bar calculation.", count,
+		    totalPixels);
     #endif
 	    count = totalPixels;
 	}
@@ -5808,7 +5810,7 @@ FindDLine(dlPtr, indexPtr)
 	}
 	linePtr = TkBTreeNextLine(linePtr);
 	if (linePtr == NULL) {
-	    panic("FindDLine reached end of text");
+	    Tcl_Panic("FindDLine reached end of text");
 	}
     }
     if (indexPtr->linePtr != dlPtr->index.linePtr) {

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.11 2003/12/04 12:28:37 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.12 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tk.h"
@@ -289,7 +289,7 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 	return TCL_OK;
     }
     default:
-	panic("unexpected switch fallthrough");
+	Tcl_Panic("unexpected switch fallthrough");
     }
     return TCL_ERROR;
 }
@@ -535,7 +535,7 @@ EmbImageLayoutProc(textPtr, indexPtr, eiPtr, offset, maxX, maxChars,
     int width, height;
 
     if (offset != 0) {
-	panic("Non-zero offset in EmbImageLayoutProc");
+	Tcl_Panic("Non-zero offset in EmbImageLayoutProc");
     }
 
     /*
@@ -605,10 +605,10 @@ EmbImageCheckProc(eiPtr, linePtr)
     TkTextLine *linePtr;		/* Line containing segment. */
 {
     if (eiPtr->nextPtr == NULL) {
-	panic("EmbImageCheckProc: embedded image is last segment in line");
+	Tcl_Panic("EmbImageCheckProc: embedded image is last segment in line");
     }
     if (eiPtr->size != 1) {
-	panic("EmbImageCheckProc: embedded image has size %d", eiPtr->size);
+	Tcl_Panic("EmbImageCheckProc: embedded image has size %d", eiPtr->size);
     }
 }
 

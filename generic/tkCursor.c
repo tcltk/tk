@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCursor.c,v 1.10 2003/04/18 21:54:14 hobbs Exp $
+ * RCS: @(#) $Id: tkCursor.c,v 1.11 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tkPort.h"
@@ -280,7 +280,7 @@ TkcGetCursor(interp, tkwin, string)
     cursorPtr->idHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorIdTable, 
             (char *) cursorPtr->cursor, &new);
     if (!new) {
-	panic("cursor already registered in Tk_GetCursor");
+	Tcl_Panic("cursor already registered in Tk_GetCursor");
     }
     Tcl_SetHashValue(nameHashPtr, cursorPtr);
     Tcl_SetHashValue(cursorPtr->idHashPtr, cursorPtr);
@@ -386,7 +386,7 @@ Tk_GetCursorFromData(interp, tkwin, source, mask, width, height,
     cursorPtr->nextPtr = NULL;
 
     if (!new) {
-	panic("cursor already registered in Tk_GetCursorFromData");
+	Tcl_Panic("cursor already registered in Tk_GetCursorFromData");
     }
     Tcl_SetHashValue(dataHashPtr, cursorPtr);
     Tcl_SetHashValue(cursorPtr->idHashPtr, cursorPtr);
@@ -524,12 +524,12 @@ Tk_FreeCursor(display, cursor)
     TkDisplay *dispPtr = TkGetDisplay(display);
 
     if (!dispPtr->cursorInit) {
-	panic("Tk_FreeCursor called before Tk_GetCursor");
+	Tcl_Panic("Tk_FreeCursor called before Tk_GetCursor");
     }
 
     idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, (char *) cursor);
     if (idHashPtr == NULL) {
-	panic("Tk_FreeCursor received unknown cursor argument");
+	Tcl_Panic("Tk_FreeCursor received unknown cursor argument");
     }
     FreeCursor((TkCursor *) Tcl_GetHashValue(idHashPtr));
 }
@@ -730,7 +730,7 @@ GetCursorFromObj(tkwin, objPtr)
     }
 
     error:
-    panic("GetCursorFromObj called with non-existent cursor!");
+    Tcl_Panic("GetCursorFromObj called with non-existent cursor!");
     /*
      * The following code isn't reached; it's just there to please compilers.
      */
@@ -853,7 +853,7 @@ TkDebugCursor(tkwin, name)
     if (hashPtr != NULL) {
 	cursorPtr = (TkCursor *) Tcl_GetHashValue(hashPtr);
 	if (cursorPtr == NULL) {
-	    panic("TkDebugCursor found empty hash table entry");
+	    Tcl_Panic("TkDebugCursor found empty hash table entry");
 	}
 	for ( ; (cursorPtr != NULL); cursorPtr = cursorPtr->nextPtr) {
 	    objPtr = Tcl_NewObj();

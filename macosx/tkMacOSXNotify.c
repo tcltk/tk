@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.5 2002/09/26 17:07:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.6 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tclInt.h"
@@ -288,7 +288,7 @@ TkMacOSXInitNotifier()
     if (notifierCount == 0) {
 	if (Tcl_CreateThread(&notifierThread, NotifierThreadProc, NULL,
 		     TCL_THREAD_STACK_DEFAULT, TCL_THREAD_NOFLAGS) != TCL_OK) {
-	    panic("Tcl_InitNotifier: unable to start notifier thread");
+	    Tcl_Panic("Tcl_InitNotifier: unable to start notifier thread");
 	}
     }
     notifierCount++;
@@ -347,7 +347,7 @@ TkMacOSXFinalizeNotifier(clientData)
 
     if (notifierCount == 0) {
 	if (triggerPipe < 0) {
-	    panic("Tcl_FinalizeNotifier: notifier pipe not initialized");
+	    Tcl_Panic("Tcl_FinalizeNotifier: notifier pipe not initialized");
 	}
 
         /*
@@ -971,7 +971,7 @@ NotifierThreadProc(clientData)
     char buf[2];
 
     if (pipe(fds) != 0) {
-	panic("NotifierThreadProc: could not create trigger pipe.");
+	Tcl_Panic("NotifierThreadProc: could not create trigger pipe.");
     }
 
     receivePipe = fds[0];
@@ -980,19 +980,19 @@ NotifierThreadProc(clientData)
     status = fcntl(receivePipe, F_GETFL);
     status |= O_NONBLOCK;
     if (fcntl(receivePipe, F_SETFL, status) < 0) {
-	panic("NotifierThreadProc: could not make receive pipe non blocking.");
+	Tcl_Panic("NotifierThreadProc: could not make receive pipe non blocking.");
     }
     status = fcntl(fds[1], F_GETFL);
     status |= O_NONBLOCK;
     if (fcntl(fds[1], F_SETFL, status) < 0) {
-	panic("NotifierThreadProc: could not make trigger pipe non blocking.");
+	Tcl_Panic("NotifierThreadProc: could not make trigger pipe non blocking.");
     }
 #else
     if (ioctl(receivePipe, (int) FIONBIO, &status) < 0) {
-	panic("NotifierThreadProc: could not make receive pipe non blocking.");
+	Tcl_Panic("NotifierThreadProc: could not make receive pipe non blocking.");
     }
     if (ioctl(fds[1], (int) FIONBIO, &status) < 0) {
-	panic("NotifierThreadProc: could not make trigger pipe non blocking.");
+	Tcl_Panic("NotifierThreadProc: could not make trigger pipe non blocking.");
     }
 #endif
 

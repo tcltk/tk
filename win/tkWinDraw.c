@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.13 2003/11/11 00:26:17 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.14 2004/01/13 02:06:02 davygrvy Exp $
  */
 
 #include "tkWinInt.h"
@@ -377,7 +377,7 @@ XCopyPlane(display, src, dest, gc, src_x, src_y, width, height, dest_x,
     display->request++;
 
     if (plane != 1) {
-	panic("Unexpected plane specified for XCopyPlane");
+	Tcl_Panic("Unexpected plane specified for XCopyPlane");
     }
 
     srcDC = TkWinGetDrawableDC(display, src, &srcState);
@@ -590,7 +590,7 @@ TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x,
 	ckfree((char *) infoPtr);
     }
     if(!bitmap) {
-	panic("Fail to allocate bitmap\n");
+	Tcl_Panic("Fail to allocate bitmap\n");
 	DeleteDC(dcMem);
     	TkWinReleaseDrawableDC(d, dc, &state);
 	return;
@@ -650,7 +650,7 @@ XFillRectangles(display, d, gc, rectangles, nrectangles)
 	HBRUSH bgBrush = CreateSolidBrush(gc->background);
 
 	if (twdPtr->type != TWD_BITMAP) {
-	    panic("unexpected drawable type in stipple");
+	    Tcl_Panic("unexpected drawable type in stipple");
 	}
 
 	/*
@@ -766,7 +766,7 @@ RenderObject(dc, gc, points, npoints, mode, pen, func)
 	HBRUSH oldMemBrush;
 	
 	if (twdPtr->type != TWD_BITMAP) {
-	    panic("unexpected drawable type in stipple");
+	    Tcl_Panic("unexpected drawable type in stipple");
 	}
 
 	/*

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.13 2003/01/14 19:24:56 jenglish Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.14 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -609,7 +609,7 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
 	    count = TkSelDefaultSelection(infoPtr, target, buffer,
 		    TK_SEL_BYTES_AT_ONCE, &type);
 	    if (count > TK_SEL_BYTES_AT_ONCE) {
-		panic("selection handler returned too many bytes");
+		Tcl_Panic("selection handler returned too many bytes");
 	    }
 	    if (count < 0) {
 		goto cantget;
@@ -630,7 +630,7 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
 		    goto cantget;
 		}
 		if (count > TK_SEL_BYTES_AT_ONCE) {
-		    panic("selection handler returned too many bytes");
+		    Tcl_Panic("selection handler returned too many bytes");
 		}
 		buffer[count] = '\0';
 		result = (*proc)(clientData, interp, buffer);

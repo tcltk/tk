@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.13 2003/02/09 07:48:22 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.14 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include <stdio.h>
@@ -303,7 +303,7 @@ CreateLine(interp, canvas, itemPtr, objc, objv)
     int i;
 
     if (objc == 0) {
-	panic("canvas did not pass any coords\n");
+	Tcl_Panic("canvas did not pass any coords\n");
     }
 
     /*
@@ -1876,7 +1876,7 @@ ParseArrowShape(clientData, interp, tkwin, value, recordPtr, offset)
     CONST char **argv = NULL;
 
     if (offset != Tk_Offset(LineItem, arrowShapeA)) {
-	panic("ParseArrowShape received bogus offset");
+	Tcl_Panic("ParseArrowShape received bogus offset");
     }
 
     if (Tcl_SplitList(interp, (char *) value, &argc, &argv) != TCL_OK) {
