@@ -21,13 +21,6 @@
  */
 #include "tkInitScript.h"
 
-
-/*
- * Default directory in which to look for libraries:
- */
-
-static char defaultLibraryDir[200] = TK_LIBRARY;
-
 
 /*
  *----------------------------------------------------------------------
@@ -51,12 +44,6 @@ int
 TkpInit(interp)
     Tcl_Interp *interp;
 {
-    char *libDir;
-
-    libDir = Tcl_GetVar(interp, "tk_library", TCL_GLOBAL_ONLY);
-    if (libDir == NULL) {
-	Tcl_SetVar(interp, "tk_library", defaultLibraryDir, TCL_GLOBAL_ONLY);
-    }
     TkCreateXEventSource();
     return Tcl_Eval(interp, initScript);
 }
