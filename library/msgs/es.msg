@@ -64,4 +64,4 @@
 ::msgcat::mcset es "ok" "ok"
 ::msgcat::mcset es "red" "rojo"
 ::msgcat::mcset es "retry" "reintentar"
-::msgcat::mcset es "yes" "si"
+::msgcat::mcset es "yes" "s\u00ed"
