@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.h,v 1.9 2002/06/17 10:54:29 drh Exp $
+ * RCS: @(#) $Id: tkButton.h,v 1.9.2.1 2003/04/26 02:53:46 hobbs Exp $
  */
 
 #ifndef _TKBUTTON
@@ -159,12 +159,10 @@ typedef struct {
 				 * screen. */
     GC activeTextGC;		/* GC for drawing text in active mode (NULL
 				 * means use normalTextGC). */
-    GC disabledGC;		/* Used to produce disabled effect.  If
-				 * disabledFg isn't NULL, this GC is used to
-				 * draw button text or icon.  Otherwise
-				 * text or icon is drawn with normalGC and
-				 * this GC is used to stipple background
-				 * across it.  For labels this is None. */
+    GC disabledGC;		/* Used to produce disabled effect for text
+				 * and check/radio marks. */
+    GC stippleGC;		/* Used to produce disabled stipple effect
+				 * for images when disabled. */
     Pixmap gray;		/* Pixmap for displaying disabled text if
 				 * disabledFg is NULL. */
     GC copyGC;			/* Used for copying information from an
