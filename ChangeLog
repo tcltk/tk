@@ -1,3 +1,10 @@
+2003-12-09  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* win/tkWinWm.c: fix to memory leak on certain error cases.
+	
+	* generic/tkTextTag.c: fix reading of freed tag memory, by removing
+	all references to freed tags.
+	
 2003-12-08  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* doc/entry.n: clean up usage of 'edition' as a verb.
