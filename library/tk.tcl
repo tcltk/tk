@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.53 2004/03/17 18:15:45 das Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.54 2004/10/19 18:56:01 jenglish Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -428,19 +428,21 @@ proc ::tk::CancelRepeat {} {
 }
 
 # ::tk::TabToWindow --
-# This procedure moves the focus to the given widget.  If the widget
-# is an entry or a spinbox, it selects the entire contents of the widget.
+# This procedure moves the focus to the given widget.
+# It sends a <<TraverseOut>> virtual event to the previous focus window, 
+# if any, before changing the focus, and a <<TraverseIn>> event
+# to the new focus window afterwards.
 #
 # Arguments:
 # w - Window to which focus should be set.
 
 proc ::tk::TabToWindow {w} {
-    if {[string equal [winfo class $w] Entry] \
-	    || [string equal [winfo class $w] Spinbox]} {
-	$w selection range 0 end
-	$w icursor end
+    set focus [focus]
+    if {$focus ne ""} {
+	event generate $focus <<TraverseOut>>
     }
     focus $w
+    event generate $w <<TraverseIn>>
 }
 
 # ::tk::UnderlineAmpersand --

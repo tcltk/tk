@@ -4,7 +4,7 @@
 # procedures that help in implementing those bindings.  The spinbox builds
 # off the entry widget, so it can reuse Entry bindings and procedures.
 #
-# RCS: @(#) $Id: spinbox.tcl,v 1.7 2004/03/17 18:15:45 das Exp $
+# RCS: @(#) $Id: spinbox.tcl,v 1.8 2004/10/19 18:56:01 jenglish Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -73,6 +73,11 @@ bind Spinbox <<PasteSelection>> {
 	|| !$tk::Priv(mouseMoved)} {
 	::tk::spinbox::Paste %W %x
     }
+}
+
+bind Spinbox <<TraverseIn>> {
+    %W selection range 0 end 
+    %W icursor end 
 }
 
 # Standard Motif bindings:
