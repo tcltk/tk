@@ -1,3 +1,7 @@
+2002-01-18  Don Porter  <dgp@users.sourceforge.net>
+
+	* win/tkWinDialog.c: Overlooked Tcl_GetIndexFromObj callers.
+
 2001-01-18  Daniel Steffen  <das@users.sourceforge.net>
 
 	* mac/tkMacDialog.c:

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.23 2001/12/28 23:43:44 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.24 2002/01/18 13:29:05 dgp Exp $
  *
  */
 
@@ -226,7 +226,7 @@ Tk_ChooseColorObjCmd(clientData, interp, objc, objv)
     static int inited = 0;
     static COLORREF dwCustColors[16];
     static long oldColor;		/* the color selected last time */
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"-initialcolor", "-parent", "-title", NULL
     };
     enum options {
@@ -507,15 +507,15 @@ GetFileNameW(clientData, interp, objc, objv, open)
     Tcl_DString extString, filterString, dirString, titleString;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    static char *saveOptionStrings[] = {
+    static CONST char *saveOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
 	"-parent", "-title", NULL
     };
-    static char *openOptionStrings[] = {
+    static CONST char *openOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
 	"-multiple", "-parent", "-title", NULL
     };
-    char **optionStrings;
+    CONST char **optionStrings;
 
     enum options {
 	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR,	FILE_INITFILE,
@@ -982,15 +982,15 @@ GetFileNameA(clientData, interp, objc, objv, open)
     Tcl_DString extString, filterString, dirString, titleString;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    static char *saveOptionStrings[] = {
+    static CONST char *saveOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
 	"-parent", "-title", NULL
     };
-    static char *openOptionStrings[] = {
+    static CONST char *openOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
 	"-multiple", "-parent", "-title", NULL
     };
-    char **optionStrings;
+    CONST char **optionStrings;
 
     enum options {
 	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR,	FILE_INITFILE,
@@ -1654,7 +1654,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     Tcl_DString initDirString;	/* Initial directory */
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
         "-initialdir", "-mustexist",  "-parent",  "-title", (char *) NULL
     };
     enum options {
@@ -1990,7 +1990,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     Tcl_DString titleString, dirString;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"-initialdir",	"-mustexist",	"-parent",	"-title",
 	NULL
     };
@@ -2432,7 +2432,7 @@ Tk_MessageBoxObjCmd(clientData, interp, objc, objv)
     int defaultBtn, icon, type;
     int i, oldMode, flags, winCode;
     Tcl_DString messageString, titleString;
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"-default",	"-icon",	"-message",	"-parent",
 	"-title",	"-type",	NULL
     };
