@@ -5,6 +5,41 @@
 	};
 	objectVersion = 39;
 	objects = {
+		4C148E2007ECCFAC0033822E = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = tkEntry.h;
+			path = /Volumes/CodeBits/jingham/Tcl/Source/tk/generic/tkEntry.h;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		4C148E2107ECCFAC0033822E = {
+			fileRef = 4C148E2007ECCFAC0033822E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4C148E2407ECCFCF0033822E = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
+			path = tkMacOSXEntry.c;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		4C148E2507ECCFCF0033822E = {
+			fileRef = 4C148E2407ECCFCF0033822E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4C278DC507F2A0050034F48B = {
+			fileRef = F53755CB016C389901DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		4C3B4CF6040B18B200C916F0 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -15,6 +50,12 @@
 		};
 		4C3B4CF7040B18B200C916F0 = {
 			fileRef = 4C3B4CF6040B18B200C916F0;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4C69CD7D061A6CA500E36205 = {
+			fileRef = F53755B6016C389901DC9062;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -46,6 +87,14 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		4CB2D7CF0619F8EB0081E375 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
+			path = tkMacOSXScale.c;
+			refType = 4;
+			sourceTree = "<group>";
 		};
 //4C0
 //4C1
@@ -238,6 +287,7 @@
 		};
 		F537552F016C376E01DC9062 = {
 			children = (
+				4C148E2007ECCFAC0033822E,
 				F5375569016C37A601DC9062,
 				F537556A016C37A601DC9062,
 				F537556B016C37A601DC9062,
@@ -508,6 +558,7 @@
 				F5375550016C376E01DC9062,
 				F5375551016C376E01DC9062,
 				F5375552016C376E01DC9062,
+				4C148E2407ECCFCF0033822E,
 				F5375553016C376E01DC9062,
 				F5375554016C376E01DC9062,
 				F5375555016C376E01DC9062,
@@ -520,6 +571,7 @@
 				F537555C016C376E01DC9062,
 				F537555D016C376E01DC9062,
 				F537555E016C376E01DC9062,
+				4CB2D7CF0619F8EB0081E375,
 				F5375560016C376E01DC9062,
 				F5375561016C376E01DC9062,
 				F5375562016C376E01DC9062,
@@ -1987,6 +2039,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				F537569B016C3F1001DC9062,
 				F537569C016C3F1001DC9062,
 				F5BFE59002F8C45B01DC9062,
+				4C148E2107ECCFAC0033822E,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2055,7 +2108,6 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				F5375637016C397D01DC9062,
 				F5375638016C397D01DC9062,
 				F5375639016C397D01DC9062,
-				F537563A016C397D01DC9062,
 				F537563B016C397D01DC9062,
 				F537563C016C397D01DC9062,
 				F537563D016C397D01DC9062,
@@ -2100,7 +2152,6 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				F537566A016C39A101DC9062,
 				F537566B016C39A101DC9062,
 				F537566C016C39F201DC9062,
-				F537566D016C39F201DC9062,
 				F5375677016C3A6D01DC9062,
 				F5375678016C3A6D01DC9062,
 				F5375679016C3A6D01DC9062,
@@ -2111,6 +2162,9 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				F5BFE58D02F8C41501DC9062,
 				F5BFE58E02F8C41501DC9062,
 				4C8A204505E0421900C18A82,
+				4C69CD7D061A6CA500E36205,
+				4C148E2507ECCFCF0033822E,
+				4C278DC507F2A0050034F48B,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2673,12 +2727,6 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			settings = {
 			};
 		};
-		F537563A016C397D01DC9062 = {
-			fileRef = F53755B6016C389901DC9062;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F537563B016C397D01DC9062 = {
 			fileRef = F53755B7016C389901DC9062;
 			isa = PBXBuildFile;
@@ -2939,12 +2987,6 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 		};
 		F537566C016C39F201DC9062 = {
 			fileRef = F53755CA016C389901DC9062;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F537566D016C39F201DC9062 = {
-			fileRef = F53755CB016C389901DC9062;
 			isa = PBXBuildFile;
 			settings = {
 			};

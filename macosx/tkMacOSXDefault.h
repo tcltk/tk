@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.6 2004/11/11 01:24:32 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.7 2005/03/24 07:16:13 wolfsuit Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -138,11 +138,21 @@
 /*
  * Defaults for entries:
  */
+ 
+/* 
+ * I test the following two values in TkpDrawEntryBorderAndFocus
+ * to determine whether to use the native entry widget.  So if 
+ * you change the defaults to be different from these, then you
+ * won't get the native widget by default.
+ */
+ 
+#define MAC_OSX_FOCUS_WIDTH 3
+#define MAC_OSX_ENTRY_BORDER 5
+#define MAC_OSX_ENTRY_RELEIF TK_RELIEF_SUNKEN
 
 #define DEF_ENTRY_BG_COLOR		NORMAL_BG
 #define DEF_ENTRY_BG_MONO		WHITE
-/* #define DEF_ENTRY_BORDER_WIDTH		"2" */
-#define DEF_ENTRY_BORDER_WIDTH		"1"
+#define DEF_ENTRY_BORDER_WIDTH		"5"
 #define DEF_ENTRY_CURSOR		"xterm"
 #define DEF_ENTRY_DISABLED_BG_COLOR	NORMAL_BG
 #define DEF_ENTRY_DISABLED_BG_MONO	WHITE
@@ -153,7 +163,7 @@
 #define DEF_ENTRY_HIGHLIGHT_BG		NORMAL_BG
 #define DEF_ENTRY_HIGHLIGHT		BLACK
 /* #define DEF_ENTRY_HIGHLIGHT_WIDTH	"3" */
-#define DEF_ENTRY_HIGHLIGHT_WIDTH	"0"
+#define DEF_ENTRY_HIGHLIGHT_WIDTH	"3"
 #define DEF_ENTRY_INSERT_BG		BLACK
 #define DEF_ENTRY_INSERT_BD_COLOR	"0"
 #define DEF_ENTRY_INSERT_BD_MONO	"0"
@@ -164,8 +174,8 @@
 #define DEF_ENTRY_JUSTIFY		"left"
 #define DEF_ENTRY_READONLY_BG_COLOR	NORMAL_BG
 #define DEF_ENTRY_READONLY_BG_MONO	WHITE
-/* #define DEF_ENTRY_RELIEF		"sunken" */
-#define DEF_ENTRY_RELIEF		"solid"
+#define DEF_ENTRY_RELIEF		"sunken"
+/* #define DEF_ENTRY_RELIEF		"solid" */
 #define DEF_ENTRY_SCROLL_COMMAND	""
 #define DEF_ENTRY_SELECT_COLOR		SELECT_BG
 #define DEF_ENTRY_SELECT_MONO		BLACK
