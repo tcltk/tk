@@ -2,7 +2,7 @@
 '\" Copyright (c) 1998-2000 by Scriptics Corporation.
 '\" All rights reserved.
 '\" 
-'\" RCS: @(#) $Id: keysyms.n,v 1.1 2000/04/27 18:28:57 ericm Exp $
+'\" RCS: @(#) $Id: keysyms.n,v 1.2 2000/04/28 00:46:04 ericm Exp $
 '\" 
 '\"
 .so man.macros
@@ -914,7 +914,7 @@ Hyper_R                          65518     0xffee
 Delete                           65535     0xffff
 .CE
 
-.SH SEE ALSO
+.SH "SEE ALSO"
 bind
 
 .SH KEYWORDS

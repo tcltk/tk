@@ -620,6 +620,10 @@ if test -r TkInitStubs.3; then
     rm -f Tk_InitStubs.3
     ln TkInitStubs.3 Tk_InitStubs.3
 fi
+if test -r Tk_Init.3; then
+    rm -f Tk_SafeInit.3
+    ln Tk_Init.3 Tk_SafeInit.3
+fi
 if test -r WindowId.3; then
     rm -f Tk_WindowId.3
     rm -f Tk_Parent.3

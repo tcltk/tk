@@ -1,5 +1,7 @@
 2000-04-27  Eric Melski  <ericm@scriptics.com>
 
+	* doc/Tk_Init.3: Added Tk_SafeInit information [Bug: 1884].
+
 	* doc/keysyms.n: Man page enumerating keysyms [RFE: 1645].
 
 	* doc/colors.n: Man page enumerating valid color names [RFE: 1645].

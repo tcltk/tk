@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.16 2000/03/24 23:13:18 ericm Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.17 2000/04/28 00:46:04 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -2665,8 +2665,8 @@ Tk_SafeInit(interp)
      * - Continuous ringing of the bell is a nuisance.
      * - Cannot allow access to the clipboard because a malicious script
      *   can replace the contents with the string "rm -r *" and lead to
-     *   surprises when the contents of the clipboard are pasted. We do
-     *   not currently hide the selection command.. Should we?
+     *   surprises when the contents of the clipboard are pasted. Similarly,
+     *   the selection command is blocked.
      * - Cannot allow send because it can be used to cause unsafe
      *   interpreters to execute commands. The tk command recreates the
      *   send command, so that too must be hidden.
