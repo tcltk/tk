@@ -3,7 +3,7 @@
 # This demonstration script creates a canvas widget that displays a ruler
 # with tab stops that can be set, moved, and deleted.
 #
-# RCS: @(#) $Id: ruler.tcl,v 1.5 2003/11/03 15:31:18 dkf Exp $
+# RCS: @(#) $Id: ruler.tcl,v 1.6 2004/10/19 15:25:07 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -52,11 +52,11 @@ set demo_rulerInfo(normalStyle) "-fill black"
 if {[winfo depth $c] > 1} {
     set demo_rulerInfo(activeStyle) "-fill red -stipple {}"
     set demo_rulerInfo(deleteStyle) [list -fill red \
-	    -stipple @[file join $tk_demoDirectory images gray25.bmp]]
+	    -stipple @[file join $tk_demoDirectory images gray25.xbm]]
 } else {
     set demo_rulerInfo(activeStyle) "-fill black -stipple {}"
     set demo_rulerInfo(deleteStyle) [list -fill black \
-	    -stipple @[file join $tk_demoDirectory images gray25.bmp]]
+	    -stipple @[file join $tk_demoDirectory images gray25.xbm]]
 }
 
 $c create line 1c 0.5c 1c 1c 13c 1c 13c 0.5c -width 1
