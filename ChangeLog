@@ -1,3 +1,10 @@
+2003-12-04  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* win/tkWinFont.c: applied [Patch 852669] which fixes [Bug 478568]
+	with certain bold or italic fonts on Windows.
+	* tests/textDisp.test: added test for the font measurement 
+	problem.
+
 2003-12-02  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkMenu.c (MenuVarProc): prevent this from triggering
