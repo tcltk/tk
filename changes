@@ -4236,3 +4236,5 @@ WS_EX_NOPARENTNOTIFY on TkChild windows. (SS)
 
 8/6/98 (feature change) Changed tkInitScript.h to use the new
 tcl_findLibrary procedure to locate its script library. (BW)
+
+-------- Released 8.0.3 to the Tcl Consortium CD-ROM project, 8/7/98 ------
