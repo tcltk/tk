@@ -1995,3 +1995,110 @@ AC_DEFUN(SC_TCL_LINK_LIBS, [
     AC_SUBST(TCL_LIBS)
     AC_SUBST(MATH_LIBS)
 ])
+
+#--------------------------------------------------------------------
+# SC_TCL_EARLY_FLAGS
+#
+#	Check for what flags are needed to be passed so the correct OS
+#	features are available.
+#
+# Arguments:
+#	None
+#	
+# Results:
+#
+#	Might define the following vars:
+#		_ISOC99_SOURCE
+#		_LARGEFILE64_SOURCE
+#
+#--------------------------------------------------------------------
+
+AC_DEFUN(SC_TCL_EARLY_FLAG,[
+    AC_CACHE_VAL([tcl_cv_flag_]translit($1,[A-Z],[a-z]),
+	AC_TRY_COMPILE([$2], $3, [tcl_cv_flag_]translit($1,[A-Z],[a-z])=no,
+	    AC_TRY_COMPILE([[#define ]$1[ 1
+]$2], $3,
+		[tcl_cv_flag_]translit($1,[A-Z],[a-z])=yes,
+		[tcl_cv_flag_]translit($1,[A-Z],[a-z])=no)))
+    if test ["x${tcl_cv_flag_]translit($1,[A-Z],[a-z])[}" = "xyes"] ; then
+	AC_DEFINE($1)
+	tcl_flags="$tcl_flags $1"
+    fi])
+
+AC_DEFUN(SC_TCL_EARLY_FLAGS,[
+    AC_MSG_CHECKING([for required early compiler flags])
+    tcl_flags=""
+    SC_TCL_EARLY_FLAG(_ISOC99_SOURCE,[#include <stdlib.h>],
+	[char *p = (char *)strtoll; char *q = (char *)strtoull;])
+    SC_TCL_EARLY_FLAG(_LARGEFILE64_SOURCE,[#include <sys/stat.h>],
+	[struct stat64 buf; int i = stat64("/", &buf);])
+    if test "x${tcl_flags}" = "x" ; then
+	AC_MSG_RESULT(none)
+    else
+	AC_MSG_RESULT(${tcl_flags})
+    fi])
+
+#--------------------------------------------------------------------
+# SC_TCL_64BIT_FLAGS
+#
+#	Check for what is defined in the way of 64-bit features.
+#
+# Arguments:
+#	None
+#	
+# Results:
+#
+#	Might define the following vars:
+#		TCL_WIDE_INT_IS_LONG
+#		TCL_WIDE_INT_TYPE
+#		HAVE_STRUCT_DIRENT64
+#		HAVE_STRUCT_STAT64
+#		HAVE_TYPE_OFF64_T
+#
+#--------------------------------------------------------------------
+
+AC_DEFUN(SC_TCL_64BIT_FLAGS, [
+    AC_MSG_CHECKING([for 64-bit integer type])
+    AC_CACHE_VAL(tcl_cv_type_64bit,[
+	AC_TRY_COMPILE(,[__int64 value = (__int64) 0;],
+           tcl_cv_type_64bit=__int64,tcl_cv_type_64bit=none
+           AC_TRY_RUN([#include <unistd.h>
+		int main() {exit(!(sizeof(long long) > sizeof(long)));}
+		], tcl_cv_type_64bit="long long"))])
+    if test "${tcl_cv_type_64bit}" = none ; then
+	AC_MSG_RESULT(using long)
+    else
+	AC_DEFINE_UNQUOTED(TCL_WIDE_INT_TYPE,${tcl_cv_type_64bit})
+	AC_MSG_RESULT(${tcl_cv_type_64bit})
+
+	# Now check for auxiliary declarations
+	AC_MSG_CHECKING([for struct dirent64])
+	AC_CACHE_VAL(tcl_cv_struct_dirent64,[
+	    AC_TRY_COMPILE([#include <sys/types.h>
+#include <sys/dirent.h>],[struct dirent64 p;],
+		tcl_cv_struct_dirent64=yes,tcl_cv_struct_dirent64=no)])
+	if test "x${tcl_cv_struct_dirent64}" = "xyes" ; then
+	    AC_DEFINE(HAVE_STRUCT_DIRENT64)
+	fi
+	AC_MSG_RESULT(${tcl_cv_struct_dirent64})
+
+	AC_MSG_CHECKING([for struct stat64])
+	AC_CACHE_VAL(tcl_cv_struct_stat64,[
+	    AC_TRY_COMPILE([#include <sys/stat.h>],[struct stat64 p;
+],
+		tcl_cv_struct_stat64=yes,tcl_cv_struct_stat64=no)])
+	if test "x${tcl_cv_struct_stat64}" = "xyes" ; then
+	    AC_DEFINE(HAVE_STRUCT_STAT64)
+	fi
+	AC_MSG_RESULT(${tcl_cv_struct_stat64})
+
+	AC_MSG_CHECKING([for off64_t])
+	AC_CACHE_VAL(tcl_cv_type_off64_t,[
+	    AC_TRY_COMPILE([#include <sys/types.h>],[off64_t offset;
+],
+		tcl_cv_type_off64_t=yes,tcl_cv_type_off64_t=no)])
+	if test "x${tcl_cv_type_off64_t}" = "xyes" ; then
+	    AC_DEFINE(HAVE_TYPE_OFF64_T)
+	fi
+	AC_MSG_RESULT(${tcl_cv_type_off64_t})
+    fi])
