@@ -4190,3 +4190,5 @@ and still work with unpatched Tk, and vice versa.
 7/6/98 (bug fix) Added keysym definitions for the new keys on the
 Microsoft keyboards.  You can bind to <App>, <Win_L>, and <Win_R>,
 but you cannot use the Win keys as modifiers. (SS, BW)
+
+7/6/98 (new feature) Added support for the Macintosh Appearance Manager. (JI)
