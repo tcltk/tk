@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.33 2005/02/03 13:46:43 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.34 2005/02/07 10:33:09 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -953,12 +953,12 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	}
 	arg = Tcl_GetStringFromObj(objv[2], (int *) &length);
 	c = arg[0];
-	Tcl_MutexLock(&typeListPtr);
+	Tcl_MutexLock(&typeListMutex);
 	for (typePtr = typeList; typePtr != NULL; typePtr = typePtr->nextPtr) {
 	    if ((c == typePtr->name[0])
 		    && (strncmp(arg, typePtr->name, length) == 0)) {
 		if (matchPtr != NULL) {
-		    Tcl_MutexUnlock(&typeListPtr);
+		    Tcl_MutexUnlock(&typeListMutex);
 		badType:
 		    Tcl_AppendResult(interp,
 			    "unknown or ambiguous item type \"",
@@ -974,7 +974,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	 * the matched item type that are potentially modified by
 	 * other threads.
 	 */
-	Tcl_MutexUnlock(&typeListPtr);
+	Tcl_MutexUnlock(&typeListMutex);
 	if (matchPtr == NULL) {
 	    goto badType;
 	}
