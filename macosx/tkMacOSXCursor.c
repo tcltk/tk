@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.4 2003/02/11 07:26:18 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.4.2.1 2004/07/15 05:24:39 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -431,9 +431,14 @@ TkpSetCursor(
     }
     
     if (cursor == None) {
-        if (gCurrentCursor == NULL) {
-            cursorChanged = 0;
-        }
+        /*  
+         * This is a little tricky.  We can't really tell whether
+         * gCurrentCursor is NULL because it was NULL last time around
+         * or because we just freed the current cursor.  So if the input
+         * cursor is NULL, we always need to reset it, we can't trust the
+         * cursorChanged logic.
+         */
+         
         gCurrentCursor = NULL;
     } else {
         if (gCurrentCursor == (TkMacOSXCursor *) cursor) {
