@@ -1,5 +1,7 @@
 2004-09-09  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* tests/panedwindow.test: bulletproof 23.2 result [Bug #1019100]
+
 	* win/tkWinWm.c (ReadIconFromFile): when using SHGetFileInfo to
 	retrieve icon, get regular icon as well for correct Alt-Tab icon.
 
