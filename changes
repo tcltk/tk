@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.84 2005/01/09 17:55:34 chengyemao Exp $
+RCS: @(#) $Id: changes,v 1.85 2005/01/09 18:50:12 chengyemao Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5942,3 +5942,10 @@ TkWinEmbeddedEventProc in tkWinEmbed.c; TkWinChildProc in tkWinX.c.
 2005-1-9 (bug fix)[1098779] TkParsePadAmount (tkPack.c) did not properly 
 handle list. The bug was due to fail to handle leading spaces. Skipping the 
 leading spaces fixes the bug (chengyemao).
+
+2005-1-9 (feature implementation of embedded/embedding Tk) Changed 
+FrameWidgetObjCmd (tkFrame.c), TkpUseWindow (tkMacOSXEmbed.c, tkUnixEmbed.c, 
+tkWinEmbed.c) to make implementation ready for a configurable toplevel -use
+option and completed the implementation for Windows (tkWinWm.c, tkWinEmbed.c, 
+tkWinInt.h). Embedding with a frame container needs further debugging
+(chengyemao).
