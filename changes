@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.52 2002/05/27 22:54:42 mdejong Exp $
+RCS: @(#) $Id: changes,v 1.53 2002/06/12 19:02:48 mdejong Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5184,4 +5184,8 @@ address TIP 72 changes (64-bit) in Tcl (fellows)
 
 --- Released 8.4a4, March 5, 2002 --- See ChangeLog for details ---
 
-2002-05-27 (feature change) [wm transient .t .t] now raises an error
+2002-05-27 (feature change) [wm transient .t .t] now raises an error (dejong)
+
+2002-06-12 (feature change) A transient toplevel now mirrors state
+changes in the master. (dejong)
+
