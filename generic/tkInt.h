@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.43 2002/04/05 08:41:07 hobbs Exp $ 
+ * RCS: $Id: tkInt.h,v 1.44 2002/04/12 10:06:09 hobbs Exp $ 
  */
 
 #ifndef _TKINT
@@ -423,8 +423,9 @@ typedef struct TkDisplay {
 				/* First in list of chunks of window
 				 * identifers that can't be reused right
 				 * now. */
-    int idCleanupScheduled;	/* 1 means a call to WindowIdCleanup has
-				 * already been scheduled, 0 means it
+    Tcl_TimerToken idCleanupScheduled;
+				/* If set, it means a call to WindowIdCleanup
+				 * has already been scheduled, 0 means it
 				 * hasn't. */
 
     /*
