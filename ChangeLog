@@ -1,5 +1,8 @@
 2004-02-23  Daniel Steffen  <das@users.sourceforge.net>
 
+	* macosx/Makefile: ensure that xcodebuild will use the
+	Wish.pbproj project even if a .xcode project is also present.
+
 	* macosx/tkMacOSXMouseEvent.c: fixed modifiers for MouseWheel events.
 
 	* macosx/Wish.pbproj/project.pbxproj:
