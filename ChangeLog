@@ -5,6 +5,8 @@
 
 2000-09-06  Jeff Hobbs  <hobbs@scriptics.com>
 
+	* doc/canvas.n: fixed doc bug (ellson). [Bug: 6218]
+
 	* README:
 	* generic/tk.h:
 	* unix/configure.in:
