@@ -1,5 +1,8 @@
 2001-10-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/xmfbox.tcl: fixed filtering in motif file dialog.
+	[Patch #469670] (nelson)
+
 	* generic/tkWindow.c (OpenIM): Added simple XIM patch to enable
 	basic XIM input on Unix. [Patch #412727] (fabian)
 
