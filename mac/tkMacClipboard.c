@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacClipboard.c,v 1.5 2000/01/06 02:22:36 hobbs Exp $
+ * RCS: @(#) $Id: tkMacClipboard.c,v 1.6 2000/02/10 08:53:11 jingham Exp $
  */
 
 #include "tkInt.h"
@@ -74,7 +74,7 @@ TkSelGetSelection(
 
 	    Tcl_ExternalToUtfDString(NULL, *handle, length, &encodedText);
 	    result = (*proc)(clientData, interp,
-		    Tcl_DStringValue(encodedText));
+		    Tcl_DStringValue(&encodedText));
 	    Tcl_DStringFree(&encodedText);
 
 	    HUnlock(handle);

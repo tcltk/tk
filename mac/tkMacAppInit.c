@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacAppInit.c,v 1.11 1999/06/16 05:33:58 jingham Exp $
+ * RCS: @(#) $Id: tkMacAppInit.c,v 1.12 2000/02/10 08:53:06 jingham Exp $
  */
 
 #include <Gestalt.h>
@@ -250,7 +250,11 @@ MacintoshInit()
 
     InitGraf(&tcl_macQdPtr->thePort);
     InitFonts();
+    if (TkMacHaveAppearance() >= 0x110) {
+        InitFloatingWindows();
+    } else {
     InitWindows();
+    }
     InitMenus();
     InitDialogs((long) NULL);		
     InitCursor();
