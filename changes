@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.3 2003/11/18 23:37:38 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.64.2.4 2003/11/19 16:28:17 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5550,13 +5550,13 @@ while moving the thumb.
 2003-08-19 (bug fix)[791500] Fix panedwindow refresh glitches for bg.
 
 2003-09-17 (bug fix)[808039] Prevent [image create] from generating an
-image command name that overwrites and existing command.
+image command name that overwrites an existing command.
 
 2003-09-25 (enhancement) Added -compound support for OS X bevel buttons.
 
 2003-10-10 (bug fix) Fix image offset stippling for disabled buttons.
 
-2003-10-22 (enhancement)[827535] Constring tk_dialog to be sensibly sized and
+2003-10-22 (enhancement)[827535] Constrain tk_dialog to be sensibly sized and
 placed
 
 2003-10-28 (bug fix) Add 16bpp XGetImage support on Windows
