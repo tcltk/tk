@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.4 2002/10/21 04:37:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.5 2004/02/16 00:19:41 wolfsuit Exp $
  */
 #include <pthread.h>
 #include <sys/stat.h>
@@ -133,7 +133,7 @@ main(argc, argv)
     }
 
 #endif
-    textEncoding=GetApplicationTextEncoding();
+    textEncoding = GetApplicationTextEncoding();
     
     /*
      * Now add the scripts folder to the auto_path.

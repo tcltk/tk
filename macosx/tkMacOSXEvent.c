@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.4 2003/09/30 23:26:09 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.5 2004/02/16 00:19:42 wolfsuit Exp $
  */
 
 #include <stdio.h>
@@ -69,7 +69,7 @@ tkMacOSXFlushWindows ()
         if (QDIsPortBuffered(portPtr)) {
             QDFlushPortBuffer(portPtr, NULL);
         }
-        wRef=GetNextWindow(wRef);
+        wRef = GetNextWindow(wRef);
     }
 }
 
@@ -143,8 +143,8 @@ TkMacOSXProcessAppleEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
     EventRecord eventRecord;
     if (ConvertEventRefToEventRecord(eventPtr->eventRef,
         &eventRecord )) {
-        err=TkMacOSXDoHLEvent(&eventRecord);
-        if (err!=noErr) {
+        err = TkMacOSXDoHLEvent(&eventRecord);
+        if (err != noErr) {
             char buf1 [ 256 ];
             char buf2 [ 256 ];
             fprintf(stderr,
@@ -253,7 +253,7 @@ ReceiveAndProcessEvent()
      * into this routine, and are guaranteed to have one waiting.
      */
      
-    err=ReceiveNextEvent(0, NULL, kEventDurationNoWait, 
+    err = ReceiveNextEvent(0, NULL, kEventDurationNoWait, 
             true, &macEvent.eventRef);
     if (err != noErr) {
         return err;
@@ -264,10 +264,10 @@ ReceiveAndProcessEvent()
         TkMacOSXProcessEvent(&macEvent,&eventStatus);
         if (!eventStatus.stopProcessing) {
             if (!targetRef) {
-                targetRef=GetEventDispatcherTarget();
+                targetRef = GetEventDispatcherTarget();
             }
             
-            err= SendEventToEventTarget(macEvent.eventRef,targetRef);
+            err = SendEventToEventTarget(macEvent.eventRef,targetRef);
             if (err != noErr
 #if !TK_MAC_DEBUG
                     && err != eventNotHandledErr
@@ -275,7 +275,7 @@ ReceiveAndProcessEvent()
                 ) {
                 fprintf(stderr,
                         "RCNE SendEventToEventTarget (%s) failed, %d\n",
-                        CarbonEventToAscii(macEvent.eventRef,buf ),err);
+                        CarbonEventToAscii(macEvent.eventRef, buf),err);
             }
          }
          ReleaseEvent(macEvent.eventRef);

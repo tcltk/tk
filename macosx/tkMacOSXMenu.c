@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.11 2004/02/14 01:26:49 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.12 2004/02/16 00:19:42 wolfsuit Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -1954,7 +1954,7 @@ TkpSetMainMenubar(
     WindowRef macWindowPtr;
     WindowRef frontNonFloating;
 
-    winPort=TkMacOSXGetDrawablePort(winPtr->window);
+    winPort = TkMacOSXGetDrawablePort(winPtr->window);
     if (!winPort) {
         return;
     }
@@ -3457,7 +3457,8 @@ DrawMenuEntryLabel(
             tag = kATSUSizeTag;
             valueSize = sizeof(fixedSize);
             valuePtr = &fixedSize;
-            if ((err=ATSUSetAttributes(style, 1, &tag, &valueSize, &valuePtr))!= noErr) {
+	    err = ATSUSetAttributes(style, 1, &tag, &valueSize, &valuePtr);
+            if (err != noErr) {
                 fprintf(stderr,"ATSUSetAttributes failed,%d\n", err );
             }
 
@@ -3466,7 +3467,8 @@ DrawMenuEntryLabel(
             tag = kATSUFontTag;
             valueSize = sizeof(fontID);
             valuePtr = &fontID;
-            if ((err=ATSUSetAttributes(style, 1, &tag, &valueSize, &valuePtr))!= noErr) {
+	    err = ATSUSetAttributes(style, 1, &tag, &valueSize, &valuePtr);
+            if (err != noErr) {
                 fprintf(stderr,"ATSUSetAttributes failed,%d\n", err );
             }
 
@@ -3481,8 +3483,10 @@ DrawMenuEntryLabel(
             if (!stringRef) {
                 fprintf(stderr,"CFStringCreateWithCString failed\n");
             }
-            if ((err=ATSUCreateTextLayoutWithTextPtr(CFStringGetCharactersPtr(stringRef), 0, length, length,
-                    1, &runLengths, &style, &textLayout)) != noErr) {
+	    err = ATSUCreateTextLayoutWithTextPtr(CFStringGetCharactersPtr(stringRef), 
+                    0, length, length,
+		    1, &runLengths, &style, &textLayout)
+            if (err != noErr) {
                 fprintf(stderr,"ATSUCreateTextLayoutWithTextPtr failed, %d\n", err);
                 return;
             }
@@ -3502,8 +3506,8 @@ DrawMenuEntryLabel(
 	    Tcl_UtfToExternalDString(TkMacOSXCarbonEncoding, Tcl_DStringValue(&itemTextDString), 
 	            Tcl_DStringLength(&itemTextDString), &convertedTextDString);
 #ifdef USE_ATSU
-            xLocation = leftEdge<<16;
-            yLocation = baseline<<16;
+            xLocation = leftEdge << 16;
+            yLocation = baseline << 16;
             ATSUDrawText(textLayout,kATSUFromTextBeginning, kATSUToTextEnd, xLocation, yLocation);
             ATSUDisposeTextLayout(textLayout);
             CFRelease(stringRef);
