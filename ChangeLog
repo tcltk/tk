@@ -1,11 +1,22 @@
+2004-11-17  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkCanvImg.c (ImageToPostscript): don't try ps generation
+	of canvas image item without image specified. [Bug 1032300]
+
+	* library/console.tcl (::tk::console::ExpandVariable): correct
+	array keyname expansion. [Bug 1004508] (bold)
+
+	* generic/tkPanedWindow.c (Tk_PanedWindowObjCmd): set save_under X
+	attr to prevent expose events when moving sash. [Bug 1036963]
+
 2004-11-16  Vince Darley  <vincentdarley@users.sourceforge.net>
 
 	* doc/text.n: clarified documentation on use of -tabs option.
 
 2004-11-16  Don Porter  <dgp@users.sourceforge.net>
 
-        * library/msgs/it.msg:  Updated Italian message catalog.
-        Thanks to Roberto Ugoccioni [Bug 1063675].
+	* library/msgs/it.msg:	Updated Italian message catalog.
+	Thanks to Roberto Ugoccioni [Bug 1063675].
 
 2004-11-16  Daniel Steffen  <das@users.sourceforge.net>
 
