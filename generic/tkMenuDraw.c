@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenuDraw.c,v 1.5 2003/11/12 00:07:25 hobbs Exp $
+ * RCS: @(#) $Id: tkMenuDraw.c,v 1.6 2003/11/13 16:07:06 dkf Exp $
  */
 
 #include "tkMenu.h"
@@ -19,8 +19,7 @@
  */
 
 static void		AdjustMenuCoords _ANSI_ARGS_ ((TkMenu *menuPtr,
-			    TkMenuEntry *mePtr, int *xPtr, int *yPtr,
-			    char *string));
+			    TkMenuEntry *mePtr, int *xPtr, int *yPtr));
 static void		ComputeMenuGeometry _ANSI_ARGS_((
 			    ClientData clientData));
 static void		DisplayMenu _ANSI_ARGS_((ClientData clientData));
@@ -959,15 +958,13 @@ TkPostSubmenu(interp, menuPtr, mePtr)
 				 * no submenu is posted. */
 {
     int result, x, y;
+    Tcl_Obj *subary[4];
 
     if (mePtr == menuPtr->postedCascade) {
 	return TCL_OK;
     }
 
     if (menuPtr->postedCascade != NULL) {
-	char *name = Tcl_GetStringFromObj(menuPtr->postedCascade->namePtr,
-		NULL);
-
 	/*
 	 * Note: when unposting a submenu, we have to redraw the entire
 	 * parent menu.  This is because of a combination of the following
@@ -985,8 +982,12 @@ TkPostSubmenu(interp, menuPtr, mePtr)
 	 * the parent.
 	 */
 
+	subary[0] = menuPtr->postedCascade->namePtr;
+	subary[1] = Tcl_NewStringObj("unpost", -1);
+	Tcl_IncrRefCount(subary[1]);
 	TkEventuallyRedrawMenu(menuPtr, (TkMenuEntry *) NULL);
-	result = Tcl_VarEval(interp, "{", name, "} unpost", (char *) NULL);
+	result = Tcl_EvalObjv(interp, 2, subary, 0);
+	Tcl_DecrRefCount(subary[1]);
 	menuPtr->postedCascade = NULL;
 	if (result != TCL_OK) {
 	    return result;
@@ -1003,13 +1004,20 @@ TkPostSubmenu(interp, menuPtr, mePtr)
 	 * The menu has to redrawn so that the entry can change relief.
 	 */
 
-	char string[TCL_INTEGER_SPACE * 2];
-	char *name;
-
-	name = Tcl_GetStringFromObj(mePtr->namePtr, NULL);
 	Tk_GetRootCoords(menuPtr->tkwin, &x, &y);
-	AdjustMenuCoords(menuPtr, mePtr, &x, &y, string);
-	result = Tcl_VarEval(interp, "{", name, "} post ", string, (char *) NULL);
+	AdjustMenuCoords(menuPtr, mePtr, &x, &y);
+
+	subary[0] = mePtr->namePtr;
+	subary[1] = Tcl_NewStringObj("post", -1);
+	subary[2] = Tcl_NewIntObj(x);
+	subary[3] = Tcl_NewIntObj(x);
+	Tcl_IncrRefCount(subary[1]);
+	Tcl_IncrRefCount(subary[2]);
+	Tcl_IncrRefCount(subary[3]);
+	result = Tcl_EvalObjv(interp, 4, subary, 0);
+	Tcl_DecrRefCount(subary[1]);
+	Tcl_DecrRefCount(subary[2]);
+	Tcl_DecrRefCount(subary[3]);
 	if (result != TCL_OK) {
 	    return result;
 	}
@@ -1037,12 +1045,11 @@ TkPostSubmenu(interp, menuPtr, mePtr)
  */
 
 static void
-AdjustMenuCoords(menuPtr, mePtr, xPtr, yPtr, string)
+AdjustMenuCoords(menuPtr, mePtr, xPtr, yPtr)
     TkMenu *menuPtr;
     TkMenuEntry *mePtr;
     int *xPtr;
     int *yPtr;
-    char *string;
 {
     if (menuPtr->menuType == MENUBAR) {
 	*xPtr += mePtr->x;
@@ -1058,5 +1065,4 @@ AdjustMenuCoords(menuPtr, mePtr, xPtr, yPtr, string)
 		- 2;
 	*yPtr += mePtr->y + activeBorderWidth + 2;
     }
-    sprintf(string, "%d %d", *xPtr, *yPtr);
 }
