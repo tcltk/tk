@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.14 2004/10/05 22:27:28 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.15 2004/10/21 01:12:28 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -2202,7 +2202,8 @@ UpdateWrapper(winPtr)
     wmPtr->hints.initial_state = WithdrawnState;
     if (nextHWND) {
 	SetWindowPos(wmPtr->wrapper, nextHWND, 0, 0, 0, 0,
-		SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING);
+		SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING
+		|SWP_NOOWNERZORDER);
     }
     TkpWmSetState(winPtr, state);
 
