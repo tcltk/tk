@@ -1,3 +1,8 @@
+2004-08-10  Joe English  <jenglish@users.sourceforge.net>
+
+	* unix/tkUnixWm.c: Fix for #1006686 "wm resizable command 
+	not working on Solaris/CDE" (patch from Colin McDonald).
+
 2004-08-09  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* tests/canvText.test:
