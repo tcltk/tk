@@ -1,3 +1,15 @@
+2002-04-08  Daniel Steffen  <das@users.sourceforge.net>
+
+	* mac/tkMacProjects.sea.hqx: added tkPanedWindow.c to projects
+	* mac/tkMacAppInit.c: fixes to MSL stdin/stdout hookup to the
+	TkConsole when using shared MSL libraries; fix for crashing
+	bug on exit: writing to stdin/sterr when console has already
+	been destroyed. (both fixes need support in MSL, see 
+	'CW Pro6 changes' in tcl/mac/tcltkMacBuildSupport.sea.hqx)
+	* mac/tkMacDialog.c: fixes to Navigation Services Dialog filter.
+	* mac/tkMacDraw.c: add panic for overwide TkImages that would
+	crash Tk on mac otherwise.
+
 2002-04-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* mac/tkMacXStubs.c: added Tk_SetCaretPos stub (does nothing).
