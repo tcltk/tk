@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.9 2000/01/26 21:11:00 ericm Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.10 2000/01/27 16:58:42 ericm Exp $
  */
 
 /*
@@ -131,8 +131,6 @@ static int		GetCode _ANSI_ARGS_((Tcl_Channel chan, int code_size,
 			    int flag));
 static int		GetDataBlock _ANSI_ARGS_((Tcl_Channel chan,
 			    unsigned char *buf));
-static int		LWZReadByte _ANSI_ARGS_((Tcl_Channel chan, int flag,
-			    int input_code_size));
 static int		ReadColorMap _ANSI_ARGS_((Tcl_Channel chan, int number,
 			    unsigned char buffer[MAXCOLORMAPSIZE][4]));
 static int		ReadGIFHeader _ANSI_ARGS_((Tcl_Channel chan,
@@ -229,6 +227,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
     Tcl_Obj **objv;
     Tk_PhotoImageBlock block;
     unsigned char buf[100];
+    unsigned char *trashBuffer = NULL;
     int bitPixel;
     unsigned char colorMap[MAXCOLORMAPSIZE][4];
     int transparent = -1;
@@ -361,37 +360,49 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	bitPixel = 1<<((buf[8]&0x07)+1);
 
 	if (index--) {
-	    int x,y;
-	    unsigned char c;
 	    /* this is not the image we want to read: skip it. */
-
 	    if (BitSet(buf[8], LOCALCOLORMAP)) {
-		if (!ReadColorMap(chan, bitPixel, 0)) {
+		if (!ReadColorMap(chan, bitPixel, colorMap)) {
 		    Tcl_AppendResult(interp,
 			    "error reading color map", (char *) NULL);
 		    goto error;
 		}
 	    }
 
-	    /* read data */
-	    if (!ReadOK(chan,&c,1)) {
-		goto error;
+	    /* If we've not yet allocated a trash buffer, do so now */
+	    if (trashBuffer == NULL) {
+		nBytes = fileWidth * fileHeight * 3;
+		trashBuffer =
+		    (unsigned char *) ckalloc((unsigned int) nBytes);
 	    }
 
-	    LWZReadByte(chan, 1, c);
-
-	    for (y=0; y<fileHeight; y++) {
-		for (x=0; x<fileWidth; x++) {
-		    if (LWZReadByte(chan, 0, c) < 0) {
-			Tcl_AppendResult(interp,
-				"error reading image data", (char *) NULL);
-			goto error;
-		    }
-		}
+	    /*
+	     * Slurp!  Process the data for this image and stuff it in a
+	     * trash buffer.
+	     *
+	     * Yes, it might be more efficient here to *not* store the data
+	     * (we're just going to throw it away later).  However, I elected
+	     * to implement it this way for good reasons.  First, I wanted to
+	     * avoid duplicating the (fairly complex) LWZ decoder in ReadImage.
+	     * Fine, you say, why didn't you just modify it to allow the use of
+	     * a NULL specifier for the output buffer?  I tried that, but it
+	     * negatively impacted the performance of what I think will be the
+	     * common case:  reading the first image in the file.  Rather than
+	     * marginally improve the speed of the less frequent case, I chose
+	     * to maintain high performance for the common case.
+	     */
+	    if (ReadImage(interp, trashBuffer, chan, fileWidth,
+			  fileHeight, colorMap, 0, 0, 0, 0, 0, -1) != TCL_OK) {
+	      goto error;
 	    }
 	    continue;
 	}
 
+	/* If a trash buffer has been allocated, free it now */
+	if (trashBuffer != NULL) {
+	    ckfree((char *)trashBuffer);
+	    trashBuffer = NULL;
+	}
 	if (BitSet(buf[8], LOCALCOLORMAP)) {
 	    if (!ReadColorMap(chan, bitPixel, colorMap)) {
 		    Tcl_AppendResult(interp, "error reading color map", 
@@ -730,18 +741,11 @@ GetDataBlock(chan, buf)
  *      which is (c) 2000 ImageMagick Studio.
  *
  *      Some thoughts on our implementation:
- *      We currently have implementations for two separate GIF decoders in
- *      this source.  One is here, in ReadImage; the other is in LWZReadByte.
- *      This is an artifact of our original implementation.  Ideally, we
- *      should remove all vestiges of LWZReadByte, which is slow and poorly
- *      documented.  However, that would require some additional effort to
- *      collapse the calling layers of this system:  Instead of
- *      FileReadGIF -> ReadImage, it would change to FileReadGIF.
+ *      It sure would be nice if ReadImage didn't take 11 parameters!  I think
+ *      that if we were smarter, we could avoid doing that.
  *
  *      Possible further optimizations:  we could pull the GetCode function
- *      directly into ReadImage, which would improve our speed.  The reason
- *      I have not yet done so is because GetCode is still used by LWZReadByte,
- *      and I don't want to duplicate the code.
+ *      directly into ReadImage, which would improve our speed.
  *
  * Results:
  *	Processes a GIF image and loads the pixel data into a memory array.
@@ -768,19 +772,18 @@ ReadImage(interp, imagePtr, chan, len, rows, cmap,
     unsigned char initialCodeSize;
     int v;
     int xpos = 0, ypos = 0, pass = 0, i;
-    char *pixelPtr;
+    register char *pixelPtr;
     const static int interlaceStep[] = { 8, 8, 4, 2 };
     const static int interlaceStart[] = { 0, 4, 2, 1 };
     unsigned short prefix[(1 << MAX_LWZ_BITS)];
     unsigned char  append[(1 << MAX_LWZ_BITS)];
     unsigned char  stack[(1 << MAX_LWZ_BITS)*2];
-    unsigned char *top;
+    register unsigned char *top;
     int codeSize, clearCode, inCode, endCode, oldCode, maxCode,
 	code, firstCode;
     
-    
     /*
-     *  Initialize the decompression routines
+     *  Initialize the decoder
      */
     if (! ReadOK(chan, &initialCodeSize, 1))  {
 	Tcl_AppendResult(interp, "error reading GIF image: ",
@@ -920,6 +923,12 @@ ReadImage(interp, imagePtr, chan, len, rows, cmap,
 	    if (v < 0) {
 		return TCL_OK;
 	    }
+
+	    /* 
+	     * If pixelPtr is null, we're skipping this image (presumably
+	     * there are more in the file and we will be called to read 
+	     * one of them later)
+	     */
 	    *pixelPtr++ = cmap[v][CM_RED];
 	    *pixelPtr++ = cmap[v][CM_GREEN];
 	    *pixelPtr++ = cmap[v][CM_BLUE];
@@ -927,6 +936,7 @@ ReadImage(interp, imagePtr, chan, len, rows, cmap,
 		*pixelPtr++ = cmap[v][CM_ALPHA];
 	    }
 	    xpos++;
+
 	}
 
 	/* If interlacing, the next ypos is not just +1 */
@@ -945,135 +955,6 @@ ReadImage(interp, imagePtr, chan, len, rows, cmap,
 	pixelPtr = imagePtr + (ypos) * len * ((transparent>=0)?4:3);
     }
     return TCL_OK;
-}
-
-static int
-LWZReadByte(chan, flag, input_code_size)
-     Tcl_Channel chan;
-     int flag;
-     int input_code_size;
-{
-    static int  fresh = 0;
-    int code, incode;
-    static int code_size, set_code_size;
-    static int max_code, max_code_size;
-    static int firstcode, oldcode;
-    static int clear_code, end_code;
-    static int prefix[(1 << MAX_LWZ_BITS)];
-    static int append[(1 << MAX_LWZ_BITS)];
-    static int stack[(1<<(MAX_LWZ_BITS))*2], *sp;
-    register int    i;
-
-    if (flag) {
-	set_code_size = input_code_size;
-	code_size = set_code_size+1;
-	clear_code = 1 << set_code_size ;
-	end_code = clear_code + 1;
-	max_code_size = 2*clear_code;
-	max_code = clear_code+2;
-
-	/* Init the lwz unpacker */
-	GetCode(chan, 0, 1);
-
-	fresh = 1;
-
-	/* Initialize prefix and append tables */
-	memset((void *)prefix, 0, (1 << MAX_LWZ_BITS) * sizeof(int));
-	memset((void *)append, 0, (1 << MAX_LWZ_BITS) * sizeof(int));
-	for (i = 0; i < clear_code; ++i) {
-	    append[i] = i;
-	}
-	sp = stack;
-
-	return 0;
-    } else if (fresh) {
-	/*
-	 * find the first "real" code and return that.  Because of
-	 * how LWZ works, it will necessarily refer to a single char,
-	 * so we need not bother with the stack
-	 */
-	fresh = 0;
-	do {
-	    firstcode = GetCode(chan, code_size, 0);
-	} while (firstcode == clear_code);
-	oldcode = firstcode;
-	return firstcode;
-    }
-
-    if (sp > stack) {
-	return *--sp;
-    }
-
-    while ((code = GetCode(chan, code_size, 0)) >= 0) {
-	if (code == clear_code) {
-	    memset((void *)prefix, 0, (1 << MAX_LWZ_BITS) * sizeof(int));
-	    memset((void *)append, 0, (1 << MAX_LWZ_BITS) * sizeof(int));
-	    for (i = 0; i < clear_code; ++i) {
-		append[i] = i;
-	    }
-
-	    code_size = set_code_size+1;
-	    max_code_size = 2*clear_code;
-	    max_code = clear_code+2;
-	    sp = stack;
-	    firstcode = oldcode = GetCode(chan, code_size, 0);
-	    return firstcode;
-
-	} else if (code == end_code) {
-	    int count;
-	    unsigned char buf[260];
-
-	    if (ZeroDataBlock) {
-		return -2;
-	    }
-	    
-	    while ((count = GetDataBlock(chan, buf)) > 0)
-		/* Empty body */;
-
-	    if (count != 0) {
-		return -2;
-	    }
-	}
-
-	incode = code;
-
-	if (code >= max_code) {
-	    *sp++ = firstcode;
-	    code = oldcode;
-	}
-
-	while (code >= clear_code) {
-	    *sp++ = append[code];
-	    if (code == prefix[code]) {
-		return -2;
-
-		/*
-		 * Used to be this instead, Steve Ball suggested
-		 * the change to just return.
-		 printf("circular table entry BIG ERROR\n");
-		 */
-	    }
-	    code = prefix[code];
-	}
-
-	*sp++ = firstcode = append[code];
-
-	if ((code = max_code) <(1<<MAX_LWZ_BITS)) {
-	    prefix[code] = oldcode;
-	    append[code] = firstcode;
-	    ++max_code;
-	    if ((max_code>=max_code_size) && (max_code_size < (1<<MAX_LWZ_BITS))) {
-		max_code_size *= 2;
-		++code_size;
-	    }
-	}
-
-	oldcode = incode;
-
-	if (sp > stack)
-	    return *--sp;
-	}
-	return code;
 }
 
 
