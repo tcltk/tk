@@ -8,13 +8,14 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.9 1999/05/22 06:33:19 jingham Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.10 1999/06/16 05:36:46 jingham Exp $
  */
 
 #include "tkMacInt.h"
 #include "tkMenuButton.h"
 #include "tkMenu.h"
 #include "tkColor.h"
+#include "tkMacInt.h"
 #undef Status
 #include <Menus.h>
 #include <OSUtils.h>
@@ -3159,12 +3160,29 @@ MenuDefProc(
 	    if (menuPtr->totalHeight > maxMenuHeight) {
 	    	menuRectPtr->top = GetMBarHeight();
 	    } else {
+	    	int delta;
 	    	menuRectPtr->top = hitPt.h;
 	    	if (oldItem >= 0) {
 	    	    menuRectPtr->top -= menuPtr->entries[oldItem]->y;
 	    	}
-	    	if (menuRectPtr->top + menuPtr->totalHeight > maxMenuHeight) {
-	    	    menuRectPtr->top -= maxMenuHeight - menuPtr->totalHeight;
+	    	
+	    	if (menuRectPtr->top < GetMBarHeight()) {
+	    	    /* Displace downward if the menu would stick off the
+	    	     * top of the screen.
+	    	     */
+	    	     
+	    	    menuRectPtr->top = GetMBarHeight() + SCREEN_MARGIN;
+	    	} else {
+	    	    /*
+	    	     * Or upward if the menu sticks off the 
+	    	     * bottom end...
+	    	     */
+	    	     
+	    	    delta = menuRectPtr->top + menuPtr->totalHeight 
+	    	            - maxMenuHeight;
+	    	    if (delta > 0) {
+	    	        menuRectPtr->top -= delta;
+	    	    }
 	    	}
 	    }
     	    menuRectPtr->left = hitPt.v;
@@ -3177,6 +3195,8 @@ MenuDefProc(
     	    } else {
 	    	*whichItem = menuRectPtr->top;
 	    }
+	    globalsPtr->menuTop = *whichItem;
+	    globalsPtr->menuBottom = menuRectPtr->bottom;
     	    break;
     }
 }
