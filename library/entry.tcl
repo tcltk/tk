@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: entry.tcl,v 1.13 2000/05/29 01:43:14 hobbs Exp $
+# RCS: @(#) $Id: entry.tcl,v 1.14 2001/03/29 11:05:49 mdejong Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -389,6 +389,9 @@ proc tkEntryMouseSelect {w x} {
 	line {
 	    $w selection range 0 end
 	}
+    }
+    if {$tkPriv(mouseMoved)} {
+        $w icursor $cur
     }
     update idletasks
 }
