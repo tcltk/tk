@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.19 2003/10/31 14:21:49 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.20 2003/10/31 19:14:27 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -6857,7 +6857,7 @@ TextGetScrollInfoObj(interp, textPtr, objc, objv, dblPtr, intPtr)
 					 * if any. */
 {
     char c;
-    size_t length;
+    int length;
     CONST char *arg2;
 
     arg2 = Tcl_GetStringFromObj(objv[2], &length);
@@ -6873,6 +6873,7 @@ TextGetScrollInfoObj(interp, textPtr, objc, objv, dblPtr, intPtr)
 	return TKTEXT_SCROLL_MOVETO;
     } else if ((c == 's') && (strncmp(arg2, "scroll", length) == 0)) {
 	CONST char *arg4;
+	size_t argLen;
 	
 	if (objc != 5) {
 	    Tcl_WrongNumArgs(interp, 2, objv, 
@@ -6880,23 +6881,24 @@ TextGetScrollInfoObj(interp, textPtr, objc, objv, dblPtr, intPtr)
 	    return TKTEXT_SCROLL_ERROR;
 	}
 	arg4 = Tcl_GetStringFromObj(objv[4], &length);
+	argLen = (size_t) length;
 	c = arg4[0];
 	if ((c == 'p') && (length == 1)) {
 	    Tcl_AppendResult(interp, "ambiguous argument \"", arg4,
 		    "\": must be units, pages or pixels", (char *) NULL);
 	    return TKTEXT_SCROLL_ERROR;
-	} else if ((c == 'p') && (strncmp(arg4, "pages", length) == 0)) {
+	} else if ((c == 'p') && (strncmp(arg4, "pages", argLen) == 0)) {
 	    if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
 		return TKTEXT_SCROLL_ERROR;
 	    }
 	    return TKTEXT_SCROLL_PAGES;
-	} else if ((c == 'p') && (strncmp(arg4, "pixels", length) == 0)) {
+	} else if ((c == 'p') && (strncmp(arg4, "pixels", argLen) == 0)) {
 	    if (Tk_GetPixelsFromObj(interp, textPtr->tkwin, objv[3], 
 				    intPtr) != TCL_OK) {
 		return TKTEXT_SCROLL_ERROR;
 	    }
 	    return TKTEXT_SCROLL_PIXELS;
-	} else if ((c == 'u') && (strncmp(arg4, "units", length) == 0)) {
+	} else if ((c == 'u') && (strncmp(arg4, "units", argLen) == 0)) {
 	    if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
 		return TKTEXT_SCROLL_ERROR;
 	    }
