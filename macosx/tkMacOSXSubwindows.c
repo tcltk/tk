@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.7 2005/03/12 00:28:09 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.8 2005/03/15 02:11:56 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -31,8 +31,7 @@ static RgnHandle tmpRgn = NULL;
  */
 
 static void GenerateConfigureNotify (TkWindow *winPtr, int includeWin);
-static void UpdateOffsets _ANSI_ARGS_((TkWindow *winPtr, 
-        int deltaX, int deltaY));
+static void UpdateOffsets (TkWindow *winPtr, int deltaX, int deltaY);
 
 /*
  *----------------------------------------------------------------------
@@ -156,6 +155,57 @@ XDestroyWindow(
 	ckfree((char *) macWin);
     }
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * FixMappingFlags --
+ *
+ *  If on is 0, mark the child windows of the window passed in in winPtr 
+ *  as unmapped, but remember whether they were originally mapped in their
+ *  parent.
+ *  If on is 1, set all the child windows of winPtr that WERE mapped in
+ *  their parent before the parent was unmapped back to mapped. 
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The TkWindow and MacDrawable flags may be adjusted.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+FixMappingFlags (TkWindow *winPtr, int on)
+{
+    TkWindow *childPtr;
+    childPtr = winPtr->childList;
+    
+    while (childPtr != NULL) {
+        /*
+         * We might get called before the Mac OS X side of the widget
+         * is created yet.  If so, wait till later...  
+         */
+     
+        if (childPtr->privatePtr != NULL) {
+    
+            if (((MacDrawable *)childPtr->privatePtr)->flags 
+                     & TK_MAPPED_IN_PARENT) {
+                if (on) {
+                    childPtr->flags |= TK_MAPPED;
+                } else {
+                    childPtr->flags &= ~TK_MAPPED;
+                }
+            }
+	    if (!Tk_TopWinHierarchy(childPtr)) {
+	        FixMappingFlags (childPtr, on);
+	    }
+        }
+	childPtr = childPtr->nextPtr;
+    }
+    
+}
 
 /*
  *----------------------------------------------------------------------
@@ -197,6 +247,8 @@ XMapWindow(
 
     display->request++;
     macWin->winPtr->flags |= TK_MAPPED;
+    macWin->flags |= TK_MAPPED_IN_PARENT;
+    FixMappingFlags(macWin->winPtr, 1);
     if (Tk_IsTopLevel(macWin->winPtr)) {
 	if (!Tk_IsEmbedded(macWin->winPtr)) {
         	    ShowWindow(GetWindowFromPort(destPort));
@@ -257,6 +309,8 @@ XUnmapWindow(
 
     display->request++;
     macWin->winPtr->flags &= ~TK_MAPPED;
+    macWin->flags &= ~TK_MAPPED_IN_PARENT;
+    FixMappingFlags(macWin->winPtr, 0);
     if (Tk_IsTopLevel(macWin->winPtr)) {
 	if (!Tk_IsEmbedded(macWin->winPtr)) {
 	    HideWindow(GetWindowFromPort(destPort));
@@ -311,14 +365,14 @@ XResizeWindow(
 {
     MacDrawable *macWin = (MacDrawable *) window;
     CGrafPtr     destPort;
+    int havePort = 1;
 
     destPort = TkMacOSXGetDrawablePort(window);
     if (destPort == NULL) {
-	return;
+	havePort = 0;
     }
 
     display->request++;
-    SetPort( destPort);
     if (Tk_IsTopLevel(macWin->winPtr)) {
 	if (!Tk_IsEmbedded(macWin->winPtr)) {
 	    /* 
@@ -326,10 +380,14 @@ XResizeWindow(
 	     * region.  It is currently assumed that Tk will need
 	     * to completely redraw anway.
 	     */
-	    SizeWindow(GetWindowFromPort(destPort),
-		    (short) width, (short) height, false);
-	    TkMacOSXInvalidateWindow(macWin, TK_WINDOW_ONLY);
-	    TkMacOSXInvalClipRgns(macWin->winPtr);
+             
+            if (havePort) {
+                SetPort(destPort);
+	        SizeWindow(GetWindowFromPort(destPort),
+		        (short) width, (short) height, false);
+	        TkMacOSXInvalidateWindow(macWin, TK_WINDOW_ONLY);
+	        TkMacOSXInvalClipRgns(macWin->winPtr);
+            }
 	} else {
 	    int deltaX, deltaY;
 	    
@@ -343,10 +401,12 @@ XResizeWindow(
 	    
 	    if (contWinPtr != NULL) {
 	        MacDrawable *macParent = contWinPtr->privatePtr;
-
-		TkMacOSXInvalClipRgns(macParent->winPtr);	
-		TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
-		
+                
+                if (havePort) {
+                    SetPort(destPort);
+		    TkMacOSXInvalClipRgns(macParent->winPtr);	
+		    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+		}
 		deltaX = macParent->xOff +
 		    macWin->winPtr->changes.x - macWin->xOff;
 		deltaY = macParent->yOff +
@@ -376,9 +436,11 @@ XResizeWindow(
 	    return; /* TODO: Probably should be a panic */
 	}
 	
-	TkMacOSXInvalClipRgns(macParent->winPtr);	
-	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
-
+        if (havePort) {
+            SetPort(destPort);
+	    TkMacOSXInvalClipRgns(macParent->winPtr);	
+	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+        }
 	deltaX = - macWin->xOff;
 	deltaY = - macWin->yOff;
 
@@ -458,13 +520,13 @@ XMoveResizeWindow(
 {	
     MacDrawable * macWin = (MacDrawable *) window;
     CGrafPtr      destPort;
+    int havePort = 1;
 
     destPort   = TkMacOSXGetDrawablePort(window);
     if (destPort == NULL) {
-	return;
+	havePort = 0;
     }
 
-    SetPort( destPort);
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {	
 	/* 
 	 * NOTE: we are not adding the new space to the update
@@ -472,13 +534,16 @@ XMoveResizeWindow(
 	 * to completely redraw anway.
 	 */
 	
-	SizeWindow(GetWindowFromPort(destPort),
-		(short) width, (short) height, false);
-	MoveWindowStructure(GetWindowFromPort(destPort), x, y);
+        if (havePort) {
+            SetPort( destPort);
+	    SizeWindow(GetWindowFromPort(destPort),
+		    (short) width, (short) height, false);
+	    MoveWindowStructure(GetWindowFromPort(destPort), x, y);
 	
-	/* TODO: is the following right? */
-	TkMacOSXInvalidateWindow(macWin, TK_WINDOW_ONLY);
-	TkMacOSXInvalClipRgns(macWin->winPtr);
+	    /* TODO: is the following right? */
+	    TkMacOSXInvalidateWindow(macWin, TK_WINDOW_ONLY);
+	    TkMacOSXInvalClipRgns(macWin->winPtr);
+        }
     } else {
 	int deltaX, deltaY, parentBorderwidth;
 	Rect bounds;
@@ -509,10 +574,13 @@ XMoveResizeWindow(
 	        return; /* TODO: Probably should be a panic */
 	    }
 	}
-	        
-	TkMacOSXInvalClipRgns(macParent->winPtr);
-	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
-
+	 
+        if (havePort) {
+            SetPort( destPort);
+	    TkMacOSXInvalClipRgns(macParent->winPtr);
+	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+        }
+        
 	deltaX = - macWin->xOff;
 	deltaY = - macWin->yOff;
 	
@@ -532,8 +600,10 @@ XMoveResizeWindow(
 	    macWin->winPtr->changes.y;
 		
 	UpdateOffsets(macWin->winPtr, deltaX, deltaY);
-	TkMacOSXWinBounds(macWin->winPtr, &bounds);
-	InvalWindowRect(GetWindowFromPort(destPort),&bounds);
+        if (havePort) {
+	    TkMacOSXWinBounds(macWin->winPtr, &bounds);
+	    InvalWindowRect(GetWindowFromPort(destPort),&bounds);
+        }
         GenerateConfigureNotify(macWin->winPtr, 0);
     }
 }
@@ -564,24 +634,28 @@ XMoveWindow(
 {
     MacDrawable *macWin = (MacDrawable *) window;
     CGrafPtr  destPort;
+    int havePort = 1;
 
     destPort   = TkMacOSXGetDrawablePort(window);
     if (destPort == NULL) {
-	return;
+	havePort = 0;
     }
 
-    SetPort( destPort);
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	/* 
 	 * NOTE: we are not adding the new space to the update
 	 * region.  It is currently assumed that Tk will need
 	 * to completely redraw anway.
 	 */
-	MoveWindowStructure( GetWindowFromPort(destPort), x, y);
+         
+        if (havePort) { 
+            SetPort(destPort);
+	    MoveWindowStructure( GetWindowFromPort(destPort), x, y);
 
-	/* TODO: is the following right? */
-	TkMacOSXInvalidateWindow(macWin, TK_WINDOW_ONLY);
-	TkMacOSXInvalClipRgns(macWin->winPtr);
+	    /* TODO: is the following right? */
+	    TkMacOSXInvalidateWindow(macWin, TK_WINDOW_ONLY);
+	    TkMacOSXInvalClipRgns(macWin->winPtr);
+        }
     } else {
 	int deltaX, deltaY, parentBorderwidth;
 	Rect bounds;
@@ -612,9 +686,12 @@ XMoveWindow(
 	    }
 	}
 
-	TkMacOSXInvalClipRgns(macParent->winPtr);
-	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
-
+        if (havePort) {
+            SetPort(destPort);
+	    TkMacOSXInvalClipRgns(macParent->winPtr);
+	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+        }
+        
 	deltaX = - macWin->xOff;
 	deltaY = - macWin->yOff;
 	
@@ -634,8 +711,10 @@ XMoveWindow(
 	    macWin->winPtr->changes.y;
 		
 	UpdateOffsets(macWin->winPtr, deltaX, deltaY);
-	TkMacOSXWinBounds(macWin->winPtr, &bounds);
-	InvalWindowRect(GetWindowFromPort(destPort),&bounds);
+	if (havePort) {
+            TkMacOSXWinBounds(macWin->winPtr, &bounds);
+	    InvalWindowRect(GetWindowFromPort(destPort),&bounds);
+        }
 	GenerateConfigureNotify(macWin->winPtr, 0);
     }
 }
@@ -792,11 +871,11 @@ TkMacOSXUpdateClipRgn(
     RgnHandle rgn;
     int x, y;
     TkWindow *win2Ptr;
-
+    
     if (winPtr == NULL) {
 	return;
     }
-    
+
     if (winPtr->privatePtr->flags & TK_CLIP_INVALID) {
 	rgn = winPtr->privatePtr->aboveClipRgn;
 	if (tmpRgn == NULL) {
@@ -936,6 +1015,7 @@ RgnHandle
 TkMacOSXVisableClipRgn(
     TkWindow *winPtr)
 {
+    
     if (winPtr->privatePtr->flags & TK_CLIP_INVALID) {
 	TkMacOSXUpdateClipRgn(winPtr);
     }
@@ -1207,9 +1287,9 @@ TkMacOSXWinBounds(
     bounds->left = (short) winPtr->privatePtr->xOff;
     bounds->top = (short) winPtr->privatePtr->yOff;
     bounds->right = (short) (winPtr->privatePtr->xOff +
-	    winPtr->changes.width);
+            winPtr->changes.width);
     bounds->bottom = (short) (winPtr->privatePtr->yOff +
-	    winPtr->changes.height);
+            winPtr->changes.height);
 }
 /*
  *----------------------------------------------------------------------
