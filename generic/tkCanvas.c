@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.29 2004/06/15 15:28:23 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.30 2004/06/15 15:37:31 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -360,7 +360,7 @@ static Tk_ClassProcs canvasClass = {
     if ((result=TagSearchScan(canvasPtr,(objPtr),(searchPtrPtr))) != TCL_OK){ \
 	errorExitClause; \
     } \
-    itemPtr = TagSearchFirst(searchPtr);
+    itemPtr = TagSearchFirst(*(searchPtrPtr));
 #define FOR_EVERY_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,errorExitClause) \
     if ((result=TagSearchScan(canvasPtr,(objPtr),(searchPtrPtr))) != TCL_OK){ \
 	errorExitClause; \
