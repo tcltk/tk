@@ -1,3 +1,12 @@
+2004-09-22  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinInt.h (TkWinDisplayChanged): added decl
+	* win/tkWinX.c (TkWinDisplayChanged, TkpOpenDisplay): Correctly
+	* win/tkWinWm.c (InvalidateSubTreeDepth, WmProc):     handle color
+	and screen resolution changes.  Tested for 16/24/32 bpp changes on
+	XP.  May need more fixes for 8bpp switch, use of special
+	colormaps, or other special palette handling cases.  [Bug 223689]
+	
 2004-09-21  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* generic/tkInt.decls: Add decl for TkWinGetPlatformTheme.
