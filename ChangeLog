@@ -1,3 +1,8 @@
+2003-10-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/makefile.vc:  Applied patches from tcl bug #801467 from
+	* win/winMain.c:    Joe Mistachkin
+
 2003-10-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkInt.h:	move TkGetOptionSpec to stubs intDecls
