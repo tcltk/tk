@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.8 2000/08/10 00:21:07 ericm Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.9 2001/08/29 23:22:24 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -199,7 +199,7 @@ static void		UnlinkSlave _ANSI_ARGS_((Slave *slavePtr));
 
 int
 Tk_PlaceObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Main window associated with interpreter. */
+    ClientData clientData;	/* NULL. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
@@ -208,7 +208,7 @@ Tk_PlaceObjCmd(clientData, interp, objc, objv)
     Slave *slavePtr;
     char *string;
     TkDisplay *dispPtr;
-    Tk_OptionTable optionTable = (Tk_OptionTable)clientData;
+    Tk_OptionTable optionTable;
     static char *optionStrings[] = { "configure", "forget", "info", "slaves",
 					 (char *) NULL };
     enum options { PLACE_CONFIGURE, PLACE_FORGET, PLACE_INFO, PLACE_SLAVES };
@@ -220,23 +220,12 @@ Tk_PlaceObjCmd(clientData, interp, objc, objv)
 	return TCL_ERROR;
     }
 
-    if (optionTable == NULL) {
-	Tcl_CmdInfo info;
-	char *name;
-	
-	/*
-	 * We haven't created the option table for this widget class
-	 * yet.  Do it now and save the table as the clientData for
-	 * the command, so we'll have access to it in future
-	 * invocations of the command.
-	 */
-	
-	optionTable = Tk_CreateOptionTable(interp, optionSpecs);
-	name = Tcl_GetString(objv[0]);
-	Tcl_GetCommandInfo(interp, name, &info);
-	info.objClientData = (ClientData) optionTable;
-	Tcl_SetCommandInfo(interp, name, &info);
-    }
+    /*
+     * Create the option table for this widget class.  If it has already
+     * been created, the cached pointer will be returned.
+     */
+
+    optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
     /*
      * Handle special shortcut where window name is first argument.
