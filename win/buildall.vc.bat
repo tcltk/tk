@@ -5,9 +5,9 @@ set INSTALLDIR=C:\tclTestArea
 set TCLDIR=..\..\tcl_head
 
 nmake -nologo -f makefile.vc release
-nmake -nologo -f makefile.vc release OPTS=static
+nmake -nologo -f makefile.vc release OPTS=static,linkexten
 nmake -nologo -f makefile.vc core    OPTS=static,msvcrt
-nmake -nologo -f makefile.vc release OPTS=static,threads
+nmake -nologo -f makefile.vc release OPTS=static,threads,linkexten
 nmake -nologo -f makefile.vc core    OPTS=static,msvcrt,threads
 nmake -nologo -f makefile.vc release OPTS=threads
 pause
