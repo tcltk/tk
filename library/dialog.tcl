@@ -3,7 +3,7 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# RCS: @(#) $Id: dialog.tcl,v 1.7 2000/01/12 11:45:14 hobbs Exp $
+# RCS: @(#) $Id: dialog.tcl,v 1.8 2000/04/18 02:18:33 ericm Exp $
 #
 # Copyright (c) 1992-1993 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -53,12 +53,17 @@ proc tk_dialog {w title text bitmap default args} {
     wm iconname $w Dialog
     wm protocol $w WM_DELETE_WINDOW { }
 
-    # The following command means that the dialog won't be posted if
-    # [winfo parent $w] is iconified, but it's really needed;  otherwise
-    # the dialog can become obscured by other windows in the application,
-    # even though its grab keeps the rest of the application from being used.
+    # Dialog boxes should be transient with respect to their parent,
+    # so that they will always stay on top of their parent window.  However,
+    # some window managers will create the window as withdrawn if the parent
+    # window is withdrawn or iconified.  Combined with the grab we put on the
+    # window, this can hang the entire application.  Therefore we only make
+    # the dialog transient if the parent is viewable.
+    #
+    if { [winfo viewable [winfo toplevel [winfo parent $w]]] } {
+	wm transient $w [winfo toplevel [winfo parent $w]]
+    }    
 
-    wm transient $w [winfo toplevel [winfo parent $w]]
     if {[string equal $tcl_platform(platform) "macintosh"]} {
 	unsupported1 style $w dBoxProc
     }

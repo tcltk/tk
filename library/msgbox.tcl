@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.8 1999/12/03 07:15:02 hobbs Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.9 2000/04/18 02:18:33 ericm Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -244,7 +244,18 @@ proc tkMessageBox {args} {
     wm title $w $data(-title)
     wm iconname $w Dialog
     wm protocol $w WM_DELETE_WINDOW { }
-    wm transient $w $data(-parent)
+
+    # Message boxes should be transient with respect to their parent so that
+    # they always stay on top of the parent window.  But some window managers
+    # will simply create the child window as withdrawn if the parent is not
+    # viewable (because it is withdrawn or iconified).  This is not good for
+    # "grab"bed windows.  So only make the message box transient if the parent
+    # is viewable.
+    #
+    if { [winfo viewable [winfo toplevel $data(-parent)]] } {
+	wm transient $w $data(-parent)
+    }    
+
     if {[string equal $tcl_platform(platform) "macintosh"]} {
 	unsupported1 style $w dBoxProc
     }

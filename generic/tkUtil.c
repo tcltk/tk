@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.7 1999/12/14 06:52:34 hobbs Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.8 2000/04/18 02:18:33 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -950,4 +950,38 @@ TkFindStateNumObj(interp, optionPtr, mapPtr, keyPtr)
 	}
     }
     return mPtr->numKey;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_IsViewable --
+ *
+ *	Given a Tk_Window pointer, determine if that window is viewable.
+ *
+ * Results:
+ *	1 if the window is viewable, 0 otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Tk_IsViewable(tkwin)
+    Tk_Window tkwin;		/* Pointer to the window to examine */
+{
+    TkWindow *winPtr = (TkWindow *)tkwin;
+    int viewable = 0;
+    for ( ; ; winPtr = winPtr->parentPtr) {
+	if ((winPtr == NULL) || !(winPtr->flags & TK_MAPPED)) {
+	    break;
+	}
+	if (winPtr->flags & TK_TOP_LEVEL) {
+	    viewable = 1;
+	    break;
+	}
+    }
+    return viewable;
 }
