@@ -6,7 +6,7 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.8.2.2 2001/04/04 07:57:17 hobbs Exp $
+# RCS: @(#) $Id: canvas.test,v 1.8.2.3 2001/04/06 01:10:17 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -400,7 +400,7 @@ proc kill_canvas {w} {
     ]
 }
 
-test canvas-13.1 {canvas delete during event, SF bug-228024} {
+test canvas-13.1 {canvas delete during event, SF bug-228024} {knownBug} {
     kill_canvas .c
     set ::x {}
     # do this many times to improve chances of triggering the crash
