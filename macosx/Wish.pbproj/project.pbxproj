@@ -1565,11 +1565,11 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>8.4.4</string>
+	<string>8.4.5</string>
 	<key>CFBundleSignature</key>
 	<string>WiSH</string>
 	<key>CFBundleVersion</key>
-	<string>8.4.4</string>
+	<string>8.4.5</string>
 </dict>
 </plist>
 ";
@@ -2948,11 +2948,11 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>8.4.4</string>
+	<string>8.4.5</string>
 	<key>CFBundleSignature</key>
 	<string>WiSH</string>
 	<key>CFBundleVersion</key>
-	<string>8.4.4</string>
+	<string>8.4.5</string>
 </dict>
 </plist>
 ";
