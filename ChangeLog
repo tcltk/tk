@@ -1,8 +1,70 @@
+2001-08-01  Don Porter  <dgp@users.sourceforge.net>
+
+	* doc/console.n:
+ 	* doc/menu.n:
+ 	* doc/text.n:
+ 	* doc/tkvars.n:
+ 	* generic/tkBind.c:
+ 	* generic/tkMenu.c:
+ 	* library/bgerror.tcl:
+ 	* library/button.tcl:
+ 	* library/choosedir.tcl:
+ 	* library/clrpick.tcl:
+ 	* library/comdlg.tcl:
+ 	* library/console.tcl:
+ 	* library/dialog.tcl:
+ 	* library/entry.tcl:
+ 	* library/focus.tcl:
+ 	* library/listbox.tcl:
+ 	* library/menu.tcl:
+ 	* library/msgbox.tcl:
+ 	* library/optMenu.tcl:
+ 	* library/palette.tcl:
+ 	* library/scale.tcl:
+ 	* library/scrlbar.tcl:
+ 	* library/spinbox.tcl:
+ 	* library/tclIndex:
+ 	* library/tearoff.tcl:
+ 	* library/text.tcl:
+ 	* library/tk.tcl:
+ 	* library/tkfbox.tcl:
+ 	* library/unsupported.tcl:
+ 	* library/xmfbox.tcl:
+ 	* mac/tkMacMenu.c:
+ 	* tests/clrpick.test:
+ 	* tests/filebox.test:
+ 	* tests/macMenu.test:
+ 	* tests/menu.test:
+ 	* tests/menuDraw.test:
+ 	* tests/msgbox.test:
+ 	* tests/text.test:
+ 	* tests/unixMenu.test:
+ 	* tests/winMenu.test:
+ 	* tests/xmfbox.test:
+ 	* unix/mkLinks:
+ 	* unix/tkUnixDialog.c: Merged changes from feature branch
+ 	dgp-privates-into-namespace, implementing TIP 44.  All
+ 	Tk commands and variables matching tk[A-Z]* are now in the
+ 	::tk namespace.  See "BRANCH: dgp-privates-into-namespace"
+ 	entries below for details.  [FR 220936]
+ 
 2001-07-24  Mo DeJong  <mdejong@redhat.com>
 
 	* generic/default.h: Include tkWinDefault.h
 	when built with Cygwin or Mingw.
 
+2001-07-18  Don Porter  <dgp@users.sourceforge.net>
+ 
+ 	BRANCH dgp-privates-into-namespace:
+ 	* doc/console.n:  Updated names of private console commands.
+ 
+2001-07-16  Don Porter  <dgp@users.sourceforge.net>
+ 
+ 	BRANCH dgp-privates-into-namespace:
+ 	* library/console.tcl:
+ 	* library/unsupported.tcl: Renamed tk::histNum to tk::HistNum
+ 	as directed by the Tcl Style Guide.
+ 
 2001-07-10  Mo DeJong  <mdejong@redhat.com>
 
 	* unix/Makefile.in: Add AR and STLIB_LD variables.
@@ -453,6 +515,89 @@
 	* tests/unixEmbed.test (unixEmbed-8.2):
 	* tests/unixWm.test (unixWm-50.4):  Replaced all [load {} tk]
 	in Tk test suite with [load {} Tk].  [Bug 220940, Patch 411952]
+
+2001-03-12  Don Porter  <dgp@users.sourceforge.net>
+
+	BRANCH dgp-privates-into-namespace:
+	* doc/menu.n:
+	* unix/mkLinks: Added documentation for [tk_menuSetFocus].
+
+2001-03-12  Don Porter  <dgp@users.sourceforge.net>
+
+	BRANCH dgp-privates-into-namespace:
+	* doc/text.n:
+	* doc/tkvars.n:
+	* unix/mkLinks: Added documentation for commands and variables
+	matching tk_text*.
+
+2001-03-08  Don Porter  <dgp@users.sourceforge.net>
+
+	BRANCH dgp-privates-into-namespace:
+	* generic/tkTextDisp.c: 
+	* library/unsupported.tcl: 
+	* tests/textDisp.test: Restored the global variables tk_textRedraw
+	and tk_textRelayout.  Since they match tk_*, they should remain
+	publicly available until at least Tk 9.
+
+2001-03-01  Don Porter  <dgp@users.sourceforge.net>
+
+	BRANCH dgp-privates-into-namespace:
+	* library/unsupported.tcl: New file for Tk's unsupported
+	interfaces.  Contains [tk::unsupported::ExposePrivateCommand]
+	and [tk::unsupported::ExposePrivateVariable] that restore the
+	availability of an old public name of one of Tk's private
+	commands and variables, respectively, for those applications
+	and extensions that depend on the old names against advice.
+
+2001-02-28  Don Porter  <dgp@users.sourceforge.net>
+
+	BRANCH dgp-privates-into-namespace:  Feature branch to move all
+	of Tk's private commands and variable into the ::tk namespace
+	and its children.
+
+	* doc/tkvars.n:  Documented private variable tkPriv renamed tk::Priv.
+
+	* generic/tkBind.c:
+	* generic/tkMenu.c:
+	* generic/tkTextDisp.c:
+	* library/bgerror.tcl:
+	* library/button.tcl:
+	* library/choosedir.tcl:
+	* library/clrpick.tcl:
+	* library/comdlg.tcl:
+	* library/console.tcl:
+	* library/dialog.tcl:
+	* library/entry.tcl:
+	* library/focus.tcl:
+	* library/listbox.tcl:
+	* library/menu.tcl:
+	* library/msgbox.tcl:
+	* library/optMenu.tcl:
+	* library/palette.tcl:
+	* library/scale.tcl:
+	* library/scrlbar.tcl:
+	* library/spinbox.tcl:
+	* library/tclIndex:
+	* library/tearoff.tcl:
+	* library/text.tcl:
+	* library/tk.tcl:
+	* library/tkfbox.tcl:
+	* library/xmfbox.tcl:
+	* mac/tkMacMenu.c:
+	* tests/clrpick.test:
+	* tests/filebox.test:
+	* tests/macMenu.test:
+	* tests/menu.test:
+	* tests/menuDraw.test:
+	* tests/msgbox.test:
+	* tests/text.test:
+	* tests/textDisp.test:
+	* tests/unixMenu.test:
+	* tests/winMenu.test:
+	* tests/xmfbox.test:
+	* unix/tkUnixDialog.c:  All Tk commands matching ::tk[A-Z]* and
+	all Tk private variables in the global namespace were renamed to
+	live in the namespace ::tk or one of its children.  
 
 2001-02-13  Eric Melski  <ericm@interwoven.com>
 

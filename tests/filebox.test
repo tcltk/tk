@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: filebox.test,v 1.10 2000/06/30 20:19:07 ericm Exp $
+# RCS: @(#) $Id: filebox.test,v 1.11 2001/08/01 16:21:12 dgp Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
@@ -161,7 +161,7 @@ foreach mode $modes {
 	    list [catch {$command -filetypes {Foo}} msg] $msg
 	} {1 {bad file type "Foo", should be "typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?"}}
 
-	if {[info commands tkMotifFDialog] == "" && [info commands ::tk::dialog::file::tkFDialog] == ""} {
+	if {[info commands tk::MotifFDialog] == "" && [info commands ::tk::dialog::file::] == ""} {
 	    set isNative 1
 	} else {
 	    set isNative 0

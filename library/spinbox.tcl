@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk spinbox widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: spinbox.tcl,v 1.2 2001/07/03 01:03:16 hobbs Exp $
+# RCS: @(#) $Id: spinbox.tcl,v 1.3 2001/08/01 16:21:11 dgp Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -15,7 +15,7 @@
 #
 
 #-------------------------------------------------------------------------
-# Elements of tkPriv that are used in this file:
+# Elements of tk::Priv that are used in this file:
 #
 # afterId -		If non-null, it means that auto-scanning is underway
 #			and it gives the "after" id for the next auto-scan
@@ -38,18 +38,18 @@ namespace eval ::tk::spinbox {}
 # The code below creates the default class bindings for entries.
 #-------------------------------------------------------------------------
 bind Spinbox <<Cut>> {
-    if {![catch {::tk::spinbox::GetSelection %W} tkPriv(data)]} {
+    if {![catch {::tk::spinbox::GetSelection %W} tk::Priv(data)]} {
 	clipboard clear -displayof %W
-	clipboard append -displayof %W $tkPriv(data)
+	clipboard append -displayof %W $tk::Priv(data)
 	%W delete sel.first sel.last
-	unset tkPriv(data)
+	unset tk::Priv(data)
     }
 }
 bind Spinbox <<Copy>> {
-    if {![catch {::tk::spinbox::GetSelection %W} tkPriv(data)]} {
+    if {![catch {::tk::spinbox::GetSelection %W} tk::Priv(data)]} {
 	clipboard clear -displayof %W
-	clipboard append -displayof %W $tkPriv(data)
-	unset tkPriv(data)
+	clipboard append -displayof %W $tk::Priv(data)
+	unset tk::Priv(data)
     }
 }
 bind Spinbox <<Paste>> {
@@ -68,7 +68,7 @@ bind Spinbox <<Clear>> {
     %W delete sel.first sel.last
 }
 bind Spinbox <<PasteSelection>> {
-    if {!$tkPriv(mouseMoved) || $tk_strictMotif} {
+    if {!$tk::Priv(mouseMoved) || $tk_strictMotif} {
 	::tk::spinbox::Paste %W %x
     }
 }
@@ -82,31 +82,31 @@ bind Spinbox <B1-Motion> {
     ::tk::spinbox::Motion %W %x %y
 }
 bind Spinbox <Double-1> {
-    set tkPriv(selectMode) word
+    set tk::Priv(selectMode) word
     ::tk::spinbox::MouseSelect %W %x sel.first
 }
 bind Spinbox <Triple-1> {
-    set tkPriv(selectMode) line
+    set tk::Priv(selectMode) line
     ::tk::spinbox::MouseSelect %W %x 0
 }
 bind Spinbox <Shift-1> {
-    set tkPriv(selectMode) char
+    set tk::Priv(selectMode) char
     %W selection adjust @%x
 }
 bind Spinbox <Double-Shift-1> {
-    set tkPriv(selectMode) word
+    set tk::Priv(selectMode) word
     ::tk::spinbox::MouseSelect %W %x
 }
 bind Spinbox <Triple-Shift-1> {
-    set tkPriv(selectMode) line
+    set tk::Priv(selectMode) line
     ::tk::spinbox::MouseSelect %W %x
 }
 bind Spinbox <B1-Leave> {
-    set tkPriv(x) %x
+    set tk::Priv(x) %x
     ::tk::spinbox::AutoScan %W
 }
 bind Spinbox <B1-Enter> {
-    tkCancelRepeat
+    tk::CancelRepeat
 }
 bind Spinbox <ButtonRelease-1> {
     ::tk::spinbox::ButtonUp %W %x %y
@@ -295,15 +295,15 @@ bind Spinbox <Meta-Delete> {
 bind Spinbox <2> {
     if {!$tk_strictMotif} {
 	%W scan mark %x
-	set tkPriv(x) %x
-	set tkPriv(y) %y
-	set tkPriv(mouseMoved) 0
+	set tk::Priv(x) %x
+	set tk::Priv(y) %y
+	set tk::Priv(mouseMoved) 0
     }
 }
 bind Spinbox <B2-Motion> {
     if {!$tk_strictMotif} {
-	if {abs(%x-$tkPriv(x)) > 2} {
-	    set tkPriv(mouseMoved) 1
+	if {abs(%x-$tk::Priv(x)) > 2} {
+	    set tk::Priv(mouseMoved) 1
 	}
 	%W scan dragto %x
     }
@@ -317,15 +317,15 @@ bind Spinbox <B2-Motion> {
 # elem -	Element to invoke
 
 proc ::tk::spinbox::Invoke {w elem} {
-    global tkPriv
+    variable ::tk::Priv
 
-    if {![info exists tkPriv(outsideElement)]} {
+    if {![info exists Priv(outsideElement)]} {
 	$w invoke $elem
-	incr tkPriv(repeated)
+	incr Priv(repeated)
     }
     set delay [$w cget -repeatinterval]
     if {$delay > 0} {
-	set tkPriv(afterId) [after $delay \
+	set Priv(afterId) [after $delay \
 		[list ::tk::spinbox::Invoke $w $elem]]
     }
 }
@@ -358,44 +358,44 @@ proc ::tk::spinbox::ClosestGap {w x} {
 # x -		The x-coordinate of the button press.
 
 proc ::tk::spinbox::ButtonDown {w x y} {
-    global tkPriv
+    variable ::tk::Priv
 
     # Get the element that was clicked in.  If we are not directly over
     # the spinbox, default to entry.  This is necessary for spinbox grabs.
     #
-    set tkPriv(element) [$w identify $x $y]
-    if {$tkPriv(element) eq ""} {
-	set tkPriv(element) "entry"
+    set Priv(element) [$w identify $x $y]
+    if {$Priv(element) eq ""} {
+	set Priv(element) "entry"
     }
 
-    switch -exact $tkPriv(element) {
+    switch -exact $Priv(element) {
 	"buttonup" - "buttondown" {
 	    if {[string compare "disabled" [$w cget -state]]} {
-		$w selection element $tkPriv(element)
-		set tkPriv(repeated) 0
-		set tkPriv(relief) [$w cget -$tkPriv(element)relief]
-		after cancel $tkPriv(afterId)
+		$w selection element $Priv(element)
+		set Priv(repeated) 0
+		set Priv(relief) [$w cget -$Priv(element)relief]
+		after cancel $Priv(afterId)
 		set delay [$w cget -repeatdelay]
 		if {$delay > 0} {
-		    set tkPriv(afterId) [after $delay \
-			    [list ::tk::spinbox::Invoke $w $tkPriv(element)]]
+		    set Priv(afterId) [after $delay \
+			    [list ::tk::spinbox::Invoke $w $Priv(element)]]
 		}
-		if {[info exists tkPriv(outsideElement)]} {
-		    unset tkPriv(outsideElement)
+		if {[info exists Priv(outsideElement)]} {
+		    unset Priv(outsideElement)
 		}
 	    }
 	}
 	"entry" {
-	    set tkPriv(selectMode) char
-	    set tkPriv(mouseMoved) 0
-	    set tkPriv(pressX) $x
+	    set Priv(selectMode) char
+	    set Priv(mouseMoved) 0
+	    set Priv(pressX) $x
 	    $w icursor [::tk::spinbox::ClosestGap $w $x]
 	    $w selection from insert
 	    if {[string compare "disabled" [$w cget -state]]} {focus $w}
 	    $w selection clear
 	}
 	default {
-	    return -code error "unknown spinbox element \"$tkPriv(element)\""
+	    return -code error "unknown spinbox element \"$Priv(element)\""
 	}
     }
 }
@@ -409,18 +409,18 @@ proc ::tk::spinbox::ButtonDown {w x y} {
 # x -		The x-coordinate of the button press.
 
 proc ::tk::spinbox::ButtonUp {w x y} {
-    global tkPriv
+    variable ::tk::Priv
 
-    tkCancelRepeat
+    ::tk::CancelRepeat
 
-    # tkPriv(relief) may not exist if the ButtonUp is not paired with
+    # Priv(relief) may not exist if the ButtonUp is not paired with
     # a preceding ButtonDown
-    if {[info exists tkPriv(element)] && [info exists tkPriv(relief)] && \
-	    [string match "button*" $tkPriv(element)]} {
-	if {[info exists tkPriv(repeated)] && !$tkPriv(repeated)} {
-	    $w invoke $tkPriv(element)
+    if {[info exists Priv(element)] && [info exists Priv(relief)] && \
+	    [string match "button*" $Priv(element)]} {
+	if {[info exists Priv(repeated)] && !$Priv(repeated)} {
+	    $w invoke $Priv(element)
 	}
-	$w configure -$tkPriv(element)relief $tkPriv(relief)
+	$w configure -$Priv(element)relief $Priv(relief)
 	$w selection element none
     }
 }
@@ -438,25 +438,25 @@ proc ::tk::spinbox::ButtonUp {w x y} {
 # cursor -	optional place to set cursor.
 
 proc ::tk::spinbox::MouseSelect {w x {cursor {}}} {
-    global tkPriv
+    variable ::tk::Priv
 
-    if {[string compare "entry" $tkPriv(element)]} {
-	if {[string compare "none" $tkPriv(element)] && \
+    if {[string compare "entry" $Priv(element)]} {
+	if {[string compare "none" $Priv(element)] && \
 		[string compare "ignore" $cursor]} {
 	    $w selection element none
-	    $w invoke $tkPriv(element)
-	    $w selection element $tkPriv(element)
+	    $w invoke $Priv(element)
+	    $w selection element $Priv(element)
 	}
 	return
     }
     set cur [::tk::spinbox::ClosestGap $w $x]
     set anchor [$w index anchor]
-    if {($cur != $anchor) || (abs($tkPriv(pressX) - $x) >= 3)} {
-	set tkPriv(mouseMoved) 1
+    if {($cur != $anchor) || (abs($Priv(pressX) - $x) >= 3)} {
+	set Priv(mouseMoved) 1
     }
-    switch $tkPriv(selectMode) {
+    switch $Priv(selectMode) {
 	char {
-	    if {$tkPriv(mouseMoved)} {
+	    if {$Priv(mouseMoved)} {
 		if {$cur < $anchor} {
 		    $w selection range $cur $anchor
 		} elseif {$cur > $anchor} {
@@ -501,7 +501,6 @@ proc ::tk::spinbox::MouseSelect {w x {cursor {}}} {
 # x -		X position of the mouse.
 
 proc ::tk::spinbox::Paste {w x} {
-    global tkPriv
 
     $w icursor [::tk::spinbox::ClosestGap $w $x]
     catch {$w insert insert [::tk::GetSelection $w PRIMARY]}
@@ -516,26 +515,26 @@ proc ::tk::spinbox::Paste {w x} {
 # w -		The spinbox window.
 
 proc ::tk::spinbox::Motion {w x y} {
-    global tkPriv
+    variable ::tk::Priv
 
-    if {![info exists tkPriv(element)]} {
-	set tkPriv(element) [$w identify $x $y]
+    if {![info exists Priv(element)]} {
+	set Priv(element) [$w identify $x $y]
     }
 
-    set tkPriv(x) $x
-    if {[string equal "entry" $tkPriv(element)]} {
+    set Priv(x) $x
+    if {[string equal "entry" $Priv(element)]} {
 	::tk::spinbox::MouseSelect $w $x ignore
-    } elseif {[string compare [$w identify $x $y] $tkPriv(element)]} {
-	if {![info exists tkPriv(outsideElement)]} {
+    } elseif {[string compare [$w identify $x $y] $Priv(element)]} {
+	if {![info exists Priv(outsideElement)]} {
 	    # We've wandered out of the spin button
 	    # setting outside element will cause ::tk::spinbox::Invoke to
 	    # loop without doing anything
-	    set tkPriv(outsideElement) ""
+	    set Priv(outsideElement) ""
 	    $w selection element none
 	}
-    } elseif {[info exists tkPriv(outsideElement)]} {
-	unset tkPriv(outsideElement)
-	$w selection element $tkPriv(element)
+    } elseif {[info exists Priv(outsideElement)]} {
+	unset Priv(outsideElement)
+	$w selection element $Priv(element)
     }
 }
 
@@ -550,9 +549,9 @@ proc ::tk::spinbox::Motion {w x y} {
 # w -		The spinbox window.
 
 proc ::tk::spinbox::AutoScan {w} {
-    global tkPriv
+    variable ::tk::Priv
 
-    set x $tkPriv(x)
+    set x $Priv(x)
     if {$x >= [winfo width $w]} {
 	$w xview scroll 2 units
 	::tk::spinbox::MouseSelect $w $x ignore
@@ -560,7 +559,7 @@ proc ::tk::spinbox::AutoScan {w} {
 	$w xview scroll -2 units
 	::tk::spinbox::MouseSelect $w $x ignore
     }
-    set tkPriv(afterId) [after 50 [list ::tk::spinbox::AutoScan $w]]
+    set Priv(afterId) [after 50 [list ::tk::spinbox::AutoScan $w]]
 }
 
 # ::tk::spinbox::KeySelect --

@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.30 2001/07/03 01:03:16 hobbs Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.31 2001/08/01 16:21:11 dgp Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -24,14 +24,14 @@ if { ![interp issafe] } {
 # Add Tk's directory to the end of the auto-load search path, if it
 # isn't already on the path:
 
-if {[info exists auto_path] && [string compare {} $tk_library] && \
-	[lsearch -exact $auto_path $tk_library] < 0} {
-    lappend auto_path $tk_library
+if {[info exists ::auto_path] && [string compare {} $::tk_library] && \
+	[lsearch -exact $::auto_path $::tk_library] < 0} {
+    lappend ::auto_path $::tk_library
 }
 
 # Turn off strict Motif look and feel as a default.
 
-set tk_strictMotif 0
+set ::tk_strictMotif 0
 
 # Turn on useinputmethods (X Input Methods) by default.
 # We catch this because safe interpreters may not allow the call.
@@ -183,17 +183,17 @@ if {[string equal $tcl_platform(platform) "unix"]} {
     }
 }
 
-# tkScreenChanged --
+# ::tk::ScreenChanged --
 # This procedure is invoked by the binding mechanism whenever the
 # "current" screen is changing.  The procedure does two things.
-# First, it uses "upvar" to make global variable "tkPriv" point at an
+# First, it uses "upvar" to make variable "::tk::Priv" point at an
 # array variable that holds state for the current display.  Second,
 # it initializes the array if it didn't already exist.
 #
 # Arguments:
 # screen -		The name of the new screen.
 
-proc tkScreenChanged screen {
+proc ::tk::ScreenChanged screen {
     set x [string last . $screen]
     if {$x > 0} {
 	set disp [string range $screen 0 [expr {$x - 1}]]
@@ -201,15 +201,15 @@ proc tkScreenChanged screen {
 	set disp $screen
     }
 
-    uplevel #0 upvar #0 tkPriv.$disp tkPriv
-    global tkPriv
+    uplevel #0 upvar #0 ::tk::Priv.$disp ::tk::Priv
+    variable ::tk::Priv
     global tcl_platform
 
-    if {[info exists tkPriv]} {
-	set tkPriv(screen) $screen
+    if {[info exists Priv]} {
+	set Priv(screen) $screen
 	return
     }
-    array set tkPriv {
+    array set Priv {
 	activeMenu	{}
 	activeItem	{}
 	afterId		{}
@@ -231,26 +231,26 @@ proc tkScreenChanged screen {
 	prevPos		0
 	selectMode	char
     }
-    set tkPriv(screen) $screen
-    set tkPriv(tearoff) [string equal $tcl_platform(platform) "unix"]
-    set tkPriv(window) {}
+    set Priv(screen) $screen
+    set Priv(tearoff) [string equal $tcl_platform(platform) "unix"]
+    set Priv(window) {}
 }
 
-# Do initial setup for tkPriv, so that it is always bound to something
+# Do initial setup for Priv, so that it is always bound to something
 # (otherwise, if someone references it, it may get set to a non-upvar-ed
 # value, which will cause trouble later).
 
-tkScreenChanged [winfo screen .]
+tk::ScreenChanged [winfo screen .]
 
-# tkEventMotifBindings --
-# This procedure is invoked as a trace whenever tk_strictMotif is
+# ::tk::EventMotifBindings --
+# This procedure is invoked as a trace whenever ::tk_strictMotif is
 # changed.  It is used to turn on or turn off the motif virtual
 # bindings.
 #
 # Arguments:
-# n1 - the name of the variable being changed ("tk_strictMotif").
+# n1 - the name of the variable being changed ("::tk_strictMotif").
 
-proc tkEventMotifBindings {n1 dummy dummy} {
+proc ::tk::EventMotifBindings {n1 dummy dummy} {
     upvar $n1 name
     
     if {$name} {
@@ -270,36 +270,36 @@ proc tkEventMotifBindings {n1 dummy dummy} {
 #----------------------------------------------------------------------
 
 if {[string equal [info commands tk_chooseColor] ""]} {
-    proc tk_chooseColor {args} {
-	return [eval tkColorDialog $args]
+    proc ::tk_chooseColor {args} {
+	return [eval tk::dialog::color:: $args]
     }
 }
 if {[string equal [info commands tk_getOpenFile] ""]} {
-    proc tk_getOpenFile {args} {
+    proc ::tk_getOpenFile {args} {
 	if {$::tk_strictMotif} {
-	    return [eval tkMotifFDialog open $args]
+	    return [eval tk::MotifFDialog open $args]
 	} else {
-	    return [eval ::tk::dialog::file::tkFDialog open $args]
+	    return [eval ::tk::dialog::file:: open $args]
 	}
     }
 }
 if {[string equal [info commands tk_getSaveFile] ""]} {
-    proc tk_getSaveFile {args} {
+    proc ::tk_getSaveFile {args} {
 	if {$::tk_strictMotif} {
-	    return [eval tkMotifFDialog save $args]
+	    return [eval tk::MotifFDialog save $args]
 	} else {
-	    return [eval ::tk::dialog::file::tkFDialog save $args]
+	    return [eval ::tk::dialog::file:: save $args]
 	}
     }
 }
 if {[string equal [info commands tk_messageBox] ""]} {
-    proc tk_messageBox {args} {
-	return [eval tkMessageBox $args]
+    proc ::tk_messageBox {args} {
+	return [eval tk::MessageBox $args]
     }
 }
 if {[string equal [info command tk_chooseDirectory] ""]} {
-    proc tk_chooseDirectory {args} {
-	return [eval ::tk::dialog::file::chooseDir::tkChooseDirectory $args]
+    proc ::tk_chooseDirectory {args} {
+	return [eval ::tk::dialog::file::chooseDir:: $args]
     }
 }
 	
@@ -307,7 +307,7 @@ if {[string equal [info command tk_chooseDirectory] ""]} {
 # Define the set of common virtual events.
 #----------------------------------------------------------------------
 
-switch $tcl_platform(platform) {
+switch $::tcl_platform(platform) {
     "unix" {
 	event add <<Cut>> <Control-Key-x> <Key-F20> 
 	event add <<Copy>> <Control-Key-c> <Key-F16>
@@ -329,8 +329,8 @@ switch $tcl_platform(platform) {
 		}
 	    }
 	}
-	trace variable tk_strictMotif w tkEventMotifBindings
-	set tk_strictMotif $tk_strictMotif
+	trace variable ::tk_strictMotif w ::tk::EventMotifBindings
+	set ::tk_strictMotif $::tk_strictMotif
     }
     "windows" {
 	event add <<Cut>> <Control-Key-x> <Shift-Key-Delete>
@@ -349,51 +349,53 @@ switch $tcl_platform(platform) {
 # ----------------------------------------------------------------------
 # Read in files that define all of the class bindings.
 # ----------------------------------------------------------------------
-if {[string compare $tcl_platform(platform) "macintosh"] && \
-	[string compare {} $tk_library]} {
-    source [file join $tk_library button.tcl]
-    source [file join $tk_library entry.tcl]
-    source [file join $tk_library listbox.tcl]
-    source [file join $tk_library menu.tcl]
-    source [file join $tk_library scale.tcl]
-    source [file join $tk_library scrlbar.tcl]
-    source [file join $tk_library spinbox.tcl]
-    source [file join $tk_library text.tcl]
+
+if {[string compare $::tcl_platform(platform) "macintosh"] && \
+	[string compare {} $::tk_library]} {
+    source [file join $::tk_library button.tcl]
+    source [file join $::tk_library entry.tcl]
+    source [file join $::tk_library listbox.tcl]
+    source [file join $::tk_library menu.tcl]
+    source [file join $::tk_library scale.tcl]
+    source [file join $::tk_library scrlbar.tcl]
+    source [file join $::tk_library spinbox.tcl]
+    source [file join $::tk_library text.tcl]
 }
 # ----------------------------------------------------------------------
 # Default bindings for keyboard traversal.
 # ----------------------------------------------------------------------
 
 event add <<PrevWindow>> <Shift-Tab>
-bind all <Tab> {tkTabToWindow [tk_focusNext %W]}
-bind all <<PrevWindow>> {tkTabToWindow [tk_focusPrev %W]}
+bind all <Tab> {tk::TabToWindow [tk_focusNext %W]}
+bind all <<PrevWindow>> {tk::TabToWindow [tk_focusPrev %W]}
 
-# tkCancelRepeat --
+# ::tk::CancelRepeat --
 # This procedure is invoked to cancel an auto-repeat action described
-# by tkPriv(afterId).  It's used by several widgets to auto-scroll
+# by ::tk::Priv(afterId).  It's used by several widgets to auto-scroll
 # the widget when the mouse is dragged out of the widget with a
 # button pressed.
 #
 # Arguments:
 # None.
 
-proc tkCancelRepeat {} {
-    global tkPriv
-    after cancel $tkPriv(afterId)
-    set tkPriv(afterId) {}
+proc ::tk::CancelRepeat {} {
+    variable ::tk::Priv
+    after cancel $Priv(afterId)
+    set Priv(afterId) {}
 }
 
-# tkTabToWindow --
+# ::tk::TabToWindow --
 # This procedure moves the focus to the given widget.  If the widget
 # is an entry, it selects the entire contents of the widget.
 #
 # Arguments:
 # w - Window to which focus should be set.
 
-proc tkTabToWindow {w} {
+proc ::tk::TabToWindow {w} {
     if {[string equal [winfo class $w] Entry]} {
 	$w selection range 0 end
 	$w icursor end
     }
     focus $w
 }
+

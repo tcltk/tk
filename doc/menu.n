@@ -5,16 +5,18 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.4 2000/08/25 06:58:32 ericm Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.5 2001/08/01 16:21:11 dgp Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-menu \- Create and manipulate menu widgets
+menu, tk_menuSetFocus \- Create and manipulate menu widgets
 .SH SYNOPSIS
+.nf
 \fBmenu\fR \fIpathName \fR?\fIoptions\fR?
+\fBtk_menuSetFocus\fR \fIpathName\fR
 .SO
 \-activebackground	\-borderwidth		\-foreground
 \-activeborderwidth	\-cursor		\-relief
@@ -751,6 +753,12 @@ next menubutton to the right is posted.
 .PP
 Disabled menu entries are non-responsive:  they don't activate and
 they ignore mouse button presses and releases.
+.PP
+.VS 8.4
+Several of the bindings make use of the command \fBtk_menuSetFocus\fR.
+It saves the current focus and sets the focus to its \fIpathName\fR
+argument, which is a menu widget.
+.VE
 .PP
 The behavior of menus can be changed by defining new bindings for
 individual widgets or by redefining the class bindings.
