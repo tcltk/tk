@@ -12,12 +12,12 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.73 2003/09/26 23:59:26 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.74 2003/10/14 15:35:52 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
 MSG = ^
-You'll need to run vcvars32.bat from Developer Studio, first, to setup^
+You will need to run vcvars32.bat from Developer Studio, first, to setup^
 the environment.  Jump to this line to read the new instructions.
 !error $(MSG)
 !endif
@@ -391,6 +391,7 @@ BASE_CLFAGS	= $(cdebug) $(cflags) $(crt) $(TK_INCLUDES)
 TK_CFLAGS	= $(BASE_CLFAGS) $(TK_DEFINES) -DUSE_TCL_STUBS
 CON_CFLAGS	= $(cdebug) $(cflags) $(crt) -DCONSOLE
 WISH_CFLAGS	= $(BASE_CLFAGS) $(TK_DEFINES)
+STUB_CFLAGS     = $(cflags) $(cdebug) $(TK_DEFINES)
 
 
 #---------------------------------------------------------------------
@@ -700,10 +701,10 @@ $(TMP_DIR)\winMain.obj: $(WINDIR)\winMain.c
 # and no reference made to a C runtime.
 
 $(TMP_DIR)\tkStubLib.obj : $(GENERICDIR)\tkStubLib.c
-	$(cc32) $(cdebug) $(cflags) $(TK_INCLUDES) -Zl -DSTATIC_BUILD -Fo$@ $?
+	$(cc32) $(STUB_CFLAGS) $(TK_INCLUDES) -Zl -DSTATIC_BUILD -Fo$@ $?
 
 $(TMP_DIR)\tkStubImg.obj : $(GENERICDIR)\tkStubImg.c
-	$(cc32) $(cdebug) $(cflags) $(TK_INCLUDES) -Zl -DSTATIC_BUILD -Fo$@ $?
+	$(cc32) $(STUB_CFLAGS) $(TK_INCLUDES) -Zl -DSTATIC_BUILD -Fo$@ $?
 
 
 #---------------------------------------------------------------------
