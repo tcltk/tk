@@ -1,5 +1,9 @@
 2003-12-16  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* win/rc/wish.exe.manifest: It seems that Windows XP insists on a
+	strict format for the version value. 8.5.a0 or 8.5.0 results in an
+	unloadable executable -- must be 4 numbers.
+
 	* win/tkWinSend.c: Removed some misleading comments (bug #846134)
 	and disabled the send package until bug #858822 is resolved.
 
