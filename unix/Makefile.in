@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.49 2000/09/29 21:40:54 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.50 2001/04/25 20:52:48 mdejong Exp $
 
 # Current Tk version;  used in various names.
 
@@ -174,7 +174,7 @@ TCL_EXE			= tclsh
 SHLIB_CFLAGS		= @SHLIB_CFLAGS@
 
 # To enable support for stubs in Tcl.
-STUB_LIB_FILE		= @STUB_LIB_FILE@
+STUB_LIB_FILE		= @TK_STUB_LIB_FILE@
 
 TK_STUB_LIB_FILE	= @TK_STUB_LIB_FILE@
 #TK_STUB_LIB_FILE	= libtkstub.a
