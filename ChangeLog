@@ -1,3 +1,10 @@
+2000-05-30  Eric Melski  <ericm@scriptics.com>
+
+	* generic/tkImgGIF.c: Changed defines for GIF87a/GIF89a to be
+	static char arrays with integer initialization, to address EBCIDIC
+	vs. ASCII encoding issues and to handle compilers that don't deal
+	with "\xAB" syntax for specifying hex values in strings.
+
 2000-05-28  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* doc/spinbox.n: (new file) docs for spinbox widget

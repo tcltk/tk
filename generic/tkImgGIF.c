@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.14 2000/03/30 19:44:41 ericm Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.15 2000/05/30 17:51:50 ericm Exp $
  */
 
 /*
@@ -72,11 +72,13 @@ typedef struct mFile {
  * encoding independant.
  */
 
-#  define GIF87a         "\x47\x49\x46\x38\x37\x61" /* ASCII GIF87a */
-#  define GIF89a         "\x47\x49\x46\x38\x39\x61" /* ASCII GIF89a */
-#  define GIF_TERMINATOR 0x3b                       /* ASCII ; */
-#  define GIF_EXTENSION  0x21                       /* ASCII ! */
-#  define GIF_START      0x2c                       /* ASCII , */
+static CONST char GIF87a[] =
+	{ 0x47, 0x49, 0x46, 0x38, 0x37, 0x61, 0x00 }; /* ASCII GIF87a */
+static CONST char GIF89a[] =
+	{ 0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x00 }; /* ASCII GIF89a */
+#  define GIF_TERMINATOR 0x3b                         /* ASCII ; */
+#  define GIF_EXTENSION  0x21                         /* ASCII ! */
+#  define GIF_START      0x2c                         /* ASCII , */
 
 /*
  * 			 HACK ALERT!!  HACK ALERT!!  HACK ALERT!!
