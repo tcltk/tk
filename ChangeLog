@@ -1,3 +1,6 @@
+2003-11-14  Joe English  <jenglish@users.sourceforge.net>
+	* doc/text.n: Fix markup errors.
+
 2003-11-15  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkText.h: 
