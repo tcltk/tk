@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.23 2003/12/04 12:28:37 vincentdarley Exp $
+'\" RCS: @(#) $Id: text.n,v 1.24 2003/12/22 22:16:48 jenglish Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -2016,9 +2016,13 @@ least a partial match with the pattern.  This means in the case where the
 first extra line added results in no match and Tcl's regexp system
 returns the incorrect code and adding a second extra line would actually
 match, the text widget will return the wrong result.  In practice this is
-a rare problem, but it can occur, for example: \fBpack [text .t] ; 
-.t insert 1.0 "aaaa\\nbbbb\\ncccc\\nbbbb\\naaaa\\n" ; .t search -regexp --
-{(a+|b+\\nc+\\nb+)+\\na+} 1.0\fR will not find a match when one exists of 19
+a rare problem, but it can occur, for example:
+.CS
+ pack [text .t]
+ .t insert 1.0 "aaaa\\nbbbb\\ncccc\\nbbbb\\naaaa\\n" 
+ .t search -regexp -- {(a+|b+\\nc+\\nb+)+\\na+} 1.0
+.CE
+will not find a match when one exists of 19
 characters starting from the first 'b'.
 .PP
 Whenever one possible match is fully enclosed in another, the search
@@ -2028,9 +2032,13 @@ will not always achieve this, in the case where a match is preceded by
 one or more short, non-overlapping matches, all of which are preceded
 by a large match which actually encompasses all of them.  The search
 algorithm used by the widget does not look back arbitrarily far for a
-possible match which might cover large portions of the widget.  For
-example: \fBpack [text .t] ; .t insert 1.0 "aaaa\\nbbbb\\nbbbb\\nbbbb\\nbbbb\\n"
-; .t search -regexp -backward -- {b+\\n|a+\\n(b+\\n)+} end\fR 
+possible match which might cover large portions of the widget.
+For example:
+.CS
+ pack [text .t] 
+ .t insert 1.0 "aaaa\\nbbbb\\nbbbb\\nbbbb\\nbbbb\\n"
+ .t search -regexp -backward -- {b+\\n|a+\\n(b+\\n)+} end 
+.CE
 matches at '5.0' when a true greedy match would match at '1.0'.  
 Similarly if we add \fB-all\fR to this case, it matches at 
 all of '5.0', '4.0', '3.0' and '1.0', 
