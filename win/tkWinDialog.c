@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.22 2001/10/01 21:20:55 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.23 2001/12/28 23:43:44 hobbs Exp $
  *
  */
 
@@ -18,6 +18,30 @@
 #include <commdlg.h>    /* includes common dialog functionality */
 #include <dlgs.h>       /* includes common dialog template defines */
 #include <cderr.h>      /* includes the common dialog error codes */
+
+/*
+ * The new choose directory dialog is almost ready for prime time, but
+ * it has a very long first load time that needs to be checked to see
+ * if it can be sped up, as well as checked for cleanup. -- hobbs
+ * See Patch #468139
+ *
+#define USE_NEW_CHOOSEDIR 1
+ */
+#ifdef USE_NEW_CHOOSEDIR
+#include <shlobj.h>     /* includes SHBrowseForFolder */
+
+/*
+ * The following structure is used by the new Tk_ChooseDirectoryObjCmd
+ * to pass data between it and its callback. Unqiue to Winodws platform.
+ */
+typedef struct ChooseDirData {
+   TCHAR utfInitDir[MAX_PATH];       /* Initial folder to use */
+   TCHAR utfRetDir[MAX_PATH];        /* Returned folder to use */
+   Tcl_Interp *interp;
+   int mustExist;                    /* true if file must exist to return from
+				      * callback */
+} CHOOSEDIRDATA;
+#endif
 
 typedef struct ThreadSpecificData { 
     int debugFlag;            /* Flags whether we should output debugging 
@@ -116,8 +140,13 @@ typedef struct ChooseDir {
  * Definitions of procedures used only in this file.
  */
 
+#ifdef USE_NEW_CHOOSEDIR
+static UINT APIENTRY	ChooseDirectoryValidateProc(HWND hdlg, UINT uMsg,
+			    LPARAM wParam, LPARAM lParam);
+#else
 static UINT APIENTRY	ChooseDirectoryHookProc(HWND hdlg, UINT uMsg, 
 			    WPARAM wParam, LPARAM lParam);
+#endif
 static UINT CALLBACK	ColorDlgHookProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
 static int 		GetFileNameA(ClientData clientData, 
@@ -364,8 +393,9 @@ ColorDlgHookProc(hDlg, uMsg, wParam, lParam)
 	    ccPtr = (CHOOSECOLOR *) lParam;
 	    title = (const char *) ccPtr->lCustData;
 	    if ((title != NULL) && (title[0] != '\0')) {
-		Tcl_UtfToExternalDString(NULL, title, -1, &ds);
-		SetWindowText(hDlg, (TCHAR *) Tcl_DStringValue(&ds));
+		Tcl_WinUtfToTChar(title, -1, &ds);
+		(*tkWinProcs->setWindowText)(hDlg,
+			(TCHAR *) Tcl_DStringValue(&ds));
 		Tcl_DStringFree(&ds);
 	    }
 	    if (tsdPtr->debugFlag) {
@@ -1532,6 +1562,397 @@ MakeFilter(interp, string, dsPtr)
     return TCL_OK;
 }
 
+#ifdef USE_NEW_CHOOSEDIR
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_ChooseDirectoryObjCmd --
+ *
+ * This procedure implements the "tk_chooseDirectory" dialog box
+ * for the Windows platform. See the user documentation for details
+ * on what it does. Uses the newer SHBrowseForFolder explorer type
+ * interface.
+ *
+ * Results:
+ * See user documentation.
+ *
+ * Side effects:
+ * A modal dialog window is created.  Tcl_SetServiceMode() is
+ * called to allow background events to be processed
+ *
+ *----------------------------------------------------------------------
+
+The procedure tk_chooseDirectory pops up a dialog box for the user to
+select a directory.  The following option-value pairs are possible as
+command line arguments:
+
+-initialdir dirname
+
+Specifies that the directories in directory should be displayed when the
+dialog pops up.  If this parameter is not specified, then the directories
+in the current working directory are displayed.  If the parameter specifies
+a relative path, the return value will convert the relative path to an
+absolute path.  This option may not always work on the Macintosh.  This is
+not a bug.  Rather, the General Controls control panel on the Mac allows
+the end user to override the application default directory.
+
+-parent window
+
+Makes window the logical parent of the dialog.  The dialog is displayed on
+top of its parent window.
+
+-title titleString
+
+Specifies a string to display as the title of the dialog box.  If this
+option is not specified, then a default title will be displayed.
+
+-mustexist boolean
+
+Specifies whether the user may specify non-existant directories.  If this
+parameter is true, then the user may only select directories that already
+exist.  The default value is false.
+
+New Behaviour:
+
+- If mustexist = 0 and a user entered folder does not exist, a prompt will
+  pop-up asking if the user wants another chance to change it. The old
+  dialog just returned the bogus entry. On mustexist = 1, the entries MUST
+  exist before exiting the box with OK.
+
+  Bugs:
+
+- If valid abs directory name is entered into the entry box and Enter
+  pressed, the box will close returning the name. This is inconsistent when
+  entering relative names or names with forward slashes, which are
+  invalidated then corrected in the callback. After correction, the box is
+  held open to allow further modification by the user.
+
+- Not sure how to implement localization of message prompts.
+ToDo:
+- Fix bugs.
+ *
+ */
+int
+Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
+    ClientData clientData;      /* Main window associated with interpreter. */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
+{
+    char path[MAX_PATH];
+    int oldMode, result, i;
+    LPCITEMIDLIST pidl;		/* Returned by browser */
+    BROWSEINFO bInfo;		/* Used by browser */
+    CHOOSEDIRDATA cdCBData;	/* Structure to pass back and forth */
+    LPMALLOC pMalloc;		/* Used by shell */
+
+    Tk_Window tkwin;
+    HWND hWnd;
+    char *utfTitle;		/* Title for window */
+    TCHAR saveDir[MAX_PATH];
+    Tcl_DString titleString;	/* UTF Title */
+    Tcl_DString initDirString;	/* Initial directory */
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    static char *optionStrings[] = {
+        "-initialdir", "-mustexist",  "-parent",  "-title", (char *) NULL
+    };
+    enum options {
+        DIR_INITIAL,   DIR_EXIST,  DIR_PARENT, FILE_TITLE
+    };
+
+    /*
+     * Initialize
+     */
+    result                 = TCL_ERROR;
+    path[0]                = '\0';
+
+    ZeroMemory(&cdCBData, sizeof(CHOOSEDIRDATA));
+    cdCBData.interp        = interp;
+
+    tkwin = (Tk_Window) clientData;
+    /*
+     * Process the command line options
+     */
+    for (i = 1; i < objc; i += 2) {
+        int index;
+        char *string;
+        Tcl_Obj *optionPtr, *valuePtr;
+
+        optionPtr = objv[i];
+        valuePtr = objv[i + 1];
+
+        if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings, "option",
+                0, &index) != TCL_OK) {
+            goto cleanup;
+        }
+        if (i + 1 == objc) {
+            string = Tcl_GetStringFromObj(optionPtr, NULL);
+            Tcl_AppendResult(interp, "value for \"", string, "\" missing",
+                    (char *) NULL);
+            goto cleanup;
+        }
+
+	string = Tcl_GetString(valuePtr);
+        switch ((enum options) index) {
+            case DIR_INITIAL: {
+                if (Tcl_TranslateFileName(interp, string,
+			&initDirString) == NULL) {
+		    goto cleanup;
+		}
+                string = Tcl_DStringValue(&initDirString);
+                /*
+                 * Convert possible relative path to full path to keep
+                 * dialog happy
+                 */
+                GetFullPathName(string, MAX_PATH, saveDir, NULL);
+                lstrcpyn(cdCBData.utfInitDir, saveDir, MAX_PATH);
+                Tcl_DStringFree(&initDirString);
+                break;
+            }
+            case DIR_EXIST: {
+                if (Tcl_GetBooleanFromObj(interp, valuePtr,
+                        &cdCBData.mustExist) != TCL_OK) {
+                    goto cleanup;
+                }
+                break;
+            }
+            case DIR_PARENT: {
+                tkwin = Tk_NameToWindow(interp, string, tkwin);
+                if (tkwin == NULL) {
+                    goto cleanup;
+                }
+                break;
+            }
+            case FILE_TITLE: {
+                utfTitle = string;
+                break;
+            }
+        }
+    }
+
+    /*
+     * Get ready to call the browser
+     */
+
+    Tk_MakeWindowExist(tkwin);
+    hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
+
+    /*
+     * Setup the parameters used by SHBrowseForFolder
+     */
+
+    bInfo.hwndOwner      = hWnd;
+    bInfo.pszDisplayName = path;
+    bInfo.pidlRoot       = NULL;
+    if (lstrlen(cdCBData.utfInitDir) == 0) {
+        GetCurrentDirectory(MAX_PATH, cdCBData.utfInitDir);
+    }
+    bInfo.lParam = (LPARAM) &cdCBData;
+
+    if (utfTitle != NULL) {
+        Tcl_UtfToExternalDString(NULL, utfTitle, -1, &titleString);
+        bInfo.lpszTitle = (LPTSTR) Tcl_DStringValue(&titleString);
+    } else {
+        bInfo.lpszTitle = "Please choose a directory, then select OK.";
+    }
+
+    /*
+     * Set flags to add edit box (needs 4.71 Shell DLLs), status text line,
+     * validate edit box and
+     */
+    bInfo.ulFlags  =  BIF_EDITBOX | BIF_STATUSTEXT | BIF_RETURNFSANCESTORS
+        | BIF_VALIDATE;
+
+    /*
+     * Callback to handle events
+     */
+    bInfo.lpfn     = (BFFCALLBACK) ChooseDirectoryValidateProc;
+
+    /*
+     * Display dialog in background and process result.
+     * We look to give the user a chance to change their mind
+     * on an invalid folder if mustexist is 0;
+     */
+
+    oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
+    GetCurrentDirectory(MAX_PATH, saveDir);
+    if (SHGetMalloc(&pMalloc) == NOERROR) {
+	pidl = SHBrowseForFolder(&bInfo);
+	/* Null for cancel button or invalid dir, otherwise valid*/
+	if (pidl != NULL) {
+	    if (!SHGetPathFromIDList(pidl, path)) {
+		Tcl_SetResult(interp, "Error: Not a file system folder\n",
+			TCL_VOLATILE);
+	    };
+	    pMalloc->lpVtbl->Free(pMalloc, (void *) pidl);
+	} else if (lstrlen(cdCBData.utfRetDir) > 0) {
+	    lstrcpy(path, cdCBData.utfRetDir);
+	}
+	pMalloc->lpVtbl->Release(pMalloc);
+    }
+    SetCurrentDirectory(saveDir);
+    Tcl_SetServiceMode(oldMode);
+
+    /*
+     * Ensure that hWnd is enabled, because it can happen that we
+     * have updated the wrapper of the parent, which causes us to
+     * leave this child disabled (Windows loses sync).
+     */
+    EnableWindow(hWnd, 1);
+
+    /*
+     * Change the pathname to the Tcl "normalized" pathname, where
+     * back slashes are used instead of forward slashes
+     */
+    Tcl_ResetResult(interp);
+    if (*path) {
+        char *p;
+        Tcl_DString ds;
+
+        Tcl_ExternalToUtfDString(NULL, (char *) path, -1, &ds);
+        for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
+            if (*p == '\\') {
+                *p = '/';
+            }
+        }
+        Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
+        Tcl_DStringFree(&ds);
+    }
+
+    result = TCL_OK;
+
+    if (utfTitle != NULL) {
+        Tcl_DStringFree(&titleString);
+    }
+
+    cleanup:
+    return result;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ChooseDirectoryValidateProc --
+ *
+ * Hook procedure called by the explorer ChooseDirectory dialog when events
+ * occur.  It is used to validate the text entry the user may have entered.
+ *
+ * Results:
+ * Returns 0 to allow default processing of message, or 1 to
+ * tell default dialog procedure not to close.
+ *
+ *----------------------------------------------------------------------
+ */
+static UINT APIENTRY
+ChooseDirectoryValidateProc (
+    HWND hwnd,
+    UINT message,
+    LPARAM lParam,
+    LPARAM lpData)
+{
+    TCHAR selDir[MAX_PATH];
+    CHOOSEDIRDATA *chooseDirSharedData;
+    Tcl_DString initDirString;
+    char string[MAX_PATH];
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+        Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    chooseDirSharedData = (CHOOSEDIRDATA *)lpData;
+
+#ifdef _WIN64
+    SetWindowLongPtr(hwnd, GWLP_USERDATA, lpData);
+#else
+    SetWindowLong(hwnd, GWL_USERDATA, lpData);
+#endif
+
+    if (tsdPtr->debugFlag) {
+        tsdPtr->debugInterp = (Tcl_Interp *) chooseDirSharedData->interp;
+        Tcl_DoWhenIdle(SetTkDialog, (ClientData) hwnd);
+    }
+    chooseDirSharedData->utfRetDir[0] = '\0';
+    switch (message) {
+        case BFFM_VALIDATEFAILED:
+            /*
+             * First save and check to see if it is a valid path name, if
+             * so then make that path the one shown in the
+             * window. Otherwise, it failed the check and should be treated
+             * as such. Use Set/GetCurrentDirectory which allows relative
+             * path names and names with forward slashes. Use
+             * Tcl_TranslateFileName to make sure names like ~ are
+             * converted correctly.
+             */
+            Tcl_TranslateFileName(chooseDirSharedData->interp,
+                    (char *)lParam, &initDirString);
+            lstrcpyn (string, Tcl_DStringValue(&initDirString), MAX_PATH);
+            Tcl_DStringFree(&initDirString);
+
+            if (SetCurrentDirectory((char *)string) == 0) {
+                LPTSTR lpFilePart[MAX_PATH];
+                /*
+                 * Get the full path name to the user entry,
+                 * at this point it doesn't exist so see if
+                 * it is supposed to. Otherwise just return it.
+                 */
+                GetFullPathName(string, MAX_PATH,
+			chooseDirSharedData->utfRetDir, /*unused*/ lpFilePart);
+                if (chooseDirSharedData->mustExist) {
+                    /*
+                     * User HAS to select a valid directory.
+                     */
+                    wsprintf(selDir, _T("Directory '%.200s' does not exist,\nplease select or enter an existing directory."), chooseDirSharedData->utfRetDir);
+                    MessageBox(NULL, selDir, NULL, MB_ICONEXCLAMATION|MB_OK);
+                    return 1;
+                }
+            } else {
+                /*
+                 * Changed to new folder OK, return immediatly with the
+                 * current directory in utfRetDir.
+                 */
+                GetCurrentDirectory(MAX_PATH, chooseDirSharedData->utfRetDir);
+                return 0;
+            }
+            return 0;
+
+        case BFFM_SELCHANGED:
+            /*
+             * Set the status window to the currently selected path.
+             * And enable the OK button if a file system folder, otherwise
+             * disable the OK button for things like server names.
+             * perhaps a new switch -enablenonfolders can be used to allow
+             * non folders to be selected.
+             *
+             * Not called when user changes edit box directly.
+             */
+
+            if (SHGetPathFromIDList((LPITEMIDLIST) lParam, selDir)) {
+                SendMessage(hwnd, BFFM_SETSTATUSTEXT, 0, (LPARAM) selDir);
+                // enable the OK button
+                SendMessage(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 1);
+                //EnableWindow(GetDlgItem(hwnd, IDOK), TRUE);
+                SetCurrentDirectory(selDir);
+            } else {
+                // disable the OK button
+                SendMessage(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 0);
+                //EnableWindow(GetDlgItem(hwnd, IDOK), FALSE);
+            }
+            UpdateWindow(hwnd);
+            return 1;
+
+        case BFFM_INITIALIZED:
+            /*
+             * Directory browser intializing - tell it where to start from,
+             * user specified parameter.
+             */
+            SetCurrentDirectory((char *) lpData);
+            SendMessage(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)lpData);
+            SendMessage(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 1);
+            break;
+
+    }
+    return 0;
+}
+#else
 /*
  *----------------------------------------------------------------------
  *
@@ -1976,6 +2397,7 @@ ChooseDirectoryHookProc(
     }
     return 0;
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -2003,6 +2425,7 @@ Tk_MessageBoxObjCmd(clientData, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
+    Tcl_Encoding unicodeEncoding = Tcl_GetEncoding(NULL, "unicode");
     Tk_Window tkwin, parent;
     HWND hWnd;
     char *message, *title;
@@ -2120,12 +2543,16 @@ Tk_MessageBoxObjCmd(clientData, interp, objc, objv)
 
     flags |= icon | type | MB_SYSTEMMODAL;
 
-    Tcl_UtfToExternalDString(NULL, message, -1, &messageString);
-    Tcl_UtfToExternalDString(NULL, title, -1, &titleString);
+    Tcl_UtfToExternalDString(unicodeEncoding, message, -1, &messageString);
+    Tcl_UtfToExternalDString(unicodeEncoding, title, -1, &titleString);
 
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-    winCode = MessageBox(hWnd, Tcl_DStringValue(&messageString),
-		Tcl_DStringValue(&titleString), flags);
+    /*
+     * MessageBoxW exists for all platforms.  Use it to allow unicode
+     * error message to be displayed correctly where possible by the OS.
+     */
+    winCode = MessageBoxW(hWnd, (WCHAR *) Tcl_DStringValue(&messageString),
+		(WCHAR *) Tcl_DStringValue(&titleString), flags);
     (void) Tcl_SetServiceMode(oldMode);
 
     /*
