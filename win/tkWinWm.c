@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.53 2002/12/01 23:37:54 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54 2002/12/06 23:29:37 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1679,6 +1679,11 @@ TkWinWmCleanup(hInstance)
         return;
     }
 #endif
+
+    if (!initialized) {
+	return;
+    }
+    initialized = 0;
 
     tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
