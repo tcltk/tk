@@ -1,3 +1,10 @@
+2003-11-17  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkMenubutton.h: fixed compound menubutton handling like
+	* generic/tkMenubutton.c: *button corrections of 2003-04-25.
+	* mac/tkMacMenubutton.c (TkpDisplayMenuButton): 
+	* unix/tkUnixMenubu.c (TkpDisplayMenuButton): 
+
 2003-11-16  Don Porter	<dgp@users.sourceforge.net>
 
 	* win/makefile.vc:	Restored consistency of pkgIndex.tcl file
