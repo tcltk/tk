@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.42 2005/01/17 07:00:11 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.43 2005/01/18 15:24:18 chengyemao Exp $
  */
 
 #define OEMRESOURCE
@@ -1237,14 +1237,15 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		}
 
 		if (menuPtr != NULL) {
+		    long entryIndex = LOWORD(*pwParam);
 	    	    mePtr = NULL;
-		    if (flags != 0xFFFF) {
+		    if (flags != 0xFFFF && entryIndex < menuPtr->numEntries) {
 			if (flags & MF_POPUP) {
-			    mePtr = menuPtr->entries[LOWORD(*pwParam)];
+			    mePtr = menuPtr->entries[entryIndex];
 			} else {
 			    hashEntryPtr = Tcl_FindHashEntry(
                                     &tsdPtr->commandTable,
-				    (char *) LOWORD(*pwParam));
+				    (char *) entryIndex);
 			    if (hashEntryPtr != NULL) {
 				mePtr = (TkMenuEntry *) 
 					Tcl_GetHashValue(hashEntryPtr);
