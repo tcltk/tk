@@ -1,3 +1,16 @@
+2001-11-17  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinButton.c (TkpComputeButtonGeometry): corrected the
+	default size of Windows buttons to conform to the Windows style.
+	This changes the default size of buttons on Windows.
+	[Patch #463234] (nelson)
+		**** POTENTIAL VISUAL INCOMPATABILITY ****
+	
+2001-11-16  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/menu.tcl: corrected menu traversal code on Unix to
+	better handle entering cascades.  [Patch #481219] (oleinick)
+
 2001-11-16  David Gravereaux <davygrvy@pobox.com>
 
 	* win/makefile.vc:  Install target repaired.
