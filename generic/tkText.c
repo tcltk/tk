@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.28 2002/06/22 08:21:51 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.29 2002/07/24 18:31:10 hobbs Exp $
  */
 
 #include "default.h"
@@ -2743,28 +2743,32 @@ DumpSegment(interp, key, value, command, index, what)
  * Side effects:
  *    None.
  */
- 
-static int TextEditUndo (textPtr)
+
+static int
+TextEditUndo(textPtr)
     TkText     * textPtr;          /* Overall information about text widget. */
 {
     int status;
-    
-    if ( ! textPtr->undo ) {
+
+    if (!textPtr->undo) {
        return TCL_OK;
     }
 
     /* Turn off the undo feature */
-
     textPtr->undo = 0;
 
-    /* revert one compound action */
+    /* The dirty counter should count downwards as we are undoing things */
+    textPtr->isDirtyIncrement = -1;
 
+    /* revert one compound action */
     status = TkUndoRevert(textPtr->undoStack);
 
+    /* Restore the isdirty increment */
+    textPtr->isDirtyIncrement = 1;
+
     /* Turn back on the undo feature */
-    
     textPtr->undo = 1;
-    
+
     return status;
 }
 
@@ -2779,7 +2783,8 @@ static int TextEditUndo (textPtr)
  *    None.
  */
 
-static int TextEditRedo (textPtr)
+static int
+TextEditRedo(textPtr)
     TkText     * textPtr;       /* Overall information about text widget. */
 {
     int status;
@@ -2789,17 +2794,14 @@ static int TextEditRedo (textPtr)
     }
 
     /* Turn off the undo feature temporarily */
-
     textPtr->undo = 0;
 
     /* reapply one compound action */
-
     status = TkUndoApply(textPtr->undoStack);
 
     /* Turn back on the undo feature */
-    
     textPtr->undo = 1;
-    
+
     return status;
 }
 
