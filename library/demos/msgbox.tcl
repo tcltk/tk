@@ -2,11 +2,13 @@
 #
 # This demonstration script creates message boxes of various type
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.3 2003/08/22 22:44:15 dkf Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.4 2004/12/21 11:56:35 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
+
+package require Tk
 
 set w .msgbox
 catch {destroy $w}

@@ -36,11 +36,11 @@
 # I could comment on the code, but it's just 26 state machines with
 # lots of canvas create and move calls.
 
-if 0 {
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
-}
+
+package require Tk
 
 set w .goldberg
 catch {destroy $w}
