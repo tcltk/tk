@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.58 2002/03/29 04:14:40 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.59 2002/05/08 02:22:37 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -155,25 +155,34 @@ Please `cd` to its location first.
 PROJECT	= tk
 !include "rules.vc"
 
+_INSTALLDIR	= $(INSTALLDIR:/=\)
+
 !if !defined(TCLDIR)
-!if exist($(INSTALLDIR)\include\tcl.h)
+!if exist($(_INSTALLDIR)\include\tcl.h)
 TCLINSTALL	= 1
-TCLDIR		= $(INSTALLDIR)
+_TCLDIR		= $(_INSTALLDIR)
 !else
 MSG=^
-Don't know where tcl.h is.  Set the TCLDIR macro.
+Don't know where tcl.h is.  Set the _TCLDIR macro.
 !error $(MSG)
 !endif
 !else
-!if exist($(TCLDIR)\include\tcl.h)
+_TCLDIR	= $(TCLDIR:/=\)
+!if exist($(_TCLDIR)\include\tcl.h)
 TCLINSTALL	= 1
-!elseif exist($(TCLDIR)\generic\tcl.h)
+!elseif exist($(_TCLDIR)\generic\tcl.h)
 TCLINSTALL	= 0
 !else
 MSG =^
 Don't know where tcl.h is.  the TCLDIR macro doesn't appear correct.
 !error $(MSG)
 !endif
+!endif
+
+!if $(TCLINSTALL)
+!message *** Warning: Tk requires the source distribution of Tcl to build from,
+!message ***    at this time, sorry.  Please set the TCLDIR macro to point to the
+!message ***    Tcl sources.
 !endif
 
 STUBPREFIX = $(PROJECT)stub
@@ -199,25 +208,25 @@ TKSTUBLIBNAME	= $(STUBPREFIX)$(VERSION).lib
 TKSTUBLIB	= $(OUT_DIR)\$(TKSTUBLIBNAME)
 
 !if $(TCLINSTALL)
-TCLSH		= $(INSTALLDIR)\bin\tclsh$(VERSION)$(SUFX).exe
-TCLSTUBLIB	= $(INSTALLDIR)\lib\$(TCLSTUBLIBNAME)
-TCLIMPLIB	= $(INSTALLDIR)\lib\$(TCLIMPLIBNAME)
-TCL_LIBRARY	= $(INSTALLDIR)\lib
-TCLREGLIB	= $(INSTALLDIR)\lib\$(TCLREGLIBNAME)
-TCLDDELIB	= $(INSTALLDIR)\lib\$(TCLDDELIBNAME)
+TCLSH		= $(_INSTALLDIR)\bin\tclsh$(VERSION)$(SUFX).exe
+TCLSTUBLIB	= $(_INSTALLDIR)\lib\$(TCLSTUBLIBNAME)
+TCLIMPLIB	= $(_INSTALLDIR)\lib\$(TCLIMPLIBNAME)
+TCL_LIBRARY	= $(_INSTALLDIR)\lib
+TCLREGLIB	= $(_INSTALLDIR)\lib\$(TCLREGLIBNAME)
+TCLDDELIB	= $(_INSTALLDIR)\lib\$(TCLDDELIBNAME)
 TCLTMP_DIR	= \must\have\tcl\sources\to\build\this\target
 COFFBASE	= \must\have\tcl\sources\to\build\this\target
 TOOLSDIR	= \must\have\tcl\sources\to\build\this\target
 !else
-TCLSH		= $(TCLDIR)\win\$(BUILDDIRTOP)\tclsh$(VERSION)$(SUFX).exe
-TCLSTUBLIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLSTUBLIBNAME)
-TCLIMPLIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLIMPLIBNAME)
-TCL_LIBRARY	= $(TCLDIR)\library
-TCLREGLIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLREGLIBNAME)
-TCLDDELIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLDDELIBNAME)
-TCLTMP_DIR	= $(TCLDIR)\win\$(TMP_DIR:tk=tcl)
-COFFBASE	= $(TCLDIR)\win\coffbase.txt
-TOOLSDIR	= $(TCLDIR)\tools
+TCLSH		= $(_TCLDIR)\win\$(BUILDDIRTOP)\tclsh$(VERSION)$(SUFX).exe
+TCLSTUBLIB	= $(_TCLDIR)\win\$(BUILDDIRTOP)\$(TCLSTUBLIBNAME)
+TCLIMPLIB	= $(_TCLDIR)\win\$(BUILDDIRTOP)\$(TCLIMPLIBNAME)
+TCL_LIBRARY	= $(_TCLDIR)\library
+TCLREGLIB	= $(_TCLDIR)\win\$(BUILDDIRTOP)\$(TCLREGLIBNAME)
+TCLDDELIB	= $(_TCLDIR)\win\$(BUILDDIRTOP)\$(TCLDDELIBNAME)
+TCLTMP_DIR	= $(_TCLDIR)\win\$(TMP_DIR:tk=tcl)
+COFFBASE	= $(_TCLDIR)\win\coffbase.txt
+TOOLSDIR	= $(_TCLDIR)\tools
 !endif
 
 WISH 		= $(OUT_DIR)\$(WISHNAMEPREFIX)$(VERSION)$(SUFX).exe
@@ -228,11 +237,11 @@ CAT32		= $(OUT_DIR)\cat32.exe
 RMDIR		= .\rmd.bat
 RM		= del
 
-LIB_INSTALL_DIR		= $(INSTALLDIR)\lib
-BIN_INSTALL_DIR		= $(INSTALLDIR)\bin
-DOC_INSTALL_DIR		= $(INSTALLDIR)\doc
-SCRIPT_INSTALL_DIR	= $(INSTALLDIR)\lib\$(PROJECT)$(DOTVERSION)
-INCLUDE_INSTALL_DIR	= $(INSTALLDIR)\include
+LIB_INSTALL_DIR		= $(_INSTALLDIR)\lib
+BIN_INSTALL_DIR		= $(_INSTALLDIR)\bin
+DOC_INSTALL_DIR		= $(_INSTALLDIR)\doc
+SCRIPT_INSTALL_DIR	= $(_INSTALLDIR)\lib\$(PROJECT)$(DOTVERSION)
+INCLUDE_INSTALL_DIR	= $(_INSTALLDIR)\include
 
 WISHOBJS = \
 	$(TMP_DIR)\winMain.obj \
@@ -373,9 +382,9 @@ DOCDIR		= $(ROOT)\doc
 RCDIR		= $(WINDIR)\rc
 
 !if $(TCLINSTALL)
-TCL_INCLUDES	= -I "$(TCLDIR)\include"
+TCL_INCLUDES	= -I "$(_TCLDIR)\include"
 !else
-TCL_INCLUDES	= -I "$(TCLDIR)\win" -I "$(TCLDIR)\generic"
+TCL_INCLUDES	= -I "$(_TCLDIR)\win" -I "$(_TCLDIR)\generic"
 !endif
 TK_INCLUDES	= -I"$(WINDIR)" -I"$(GENERICDIR)" -I"$(BITMAPDIR)" -I"$(XLIBDIR)" \
 			$(TCL_INCLUDES)
@@ -483,9 +492,9 @@ tktest:	  setup $(TKTEST) $(CAT32)
 test: setup $(TKTEST) $(TKLIB) $(CAT32)
 	set TCL_LIBRARY=$(TCL_LIBRARY)
 !if $(TCLINSTALL)
-	set PATH=$(TCLDIR)\bin;$(PATH)
+	set PATH=$(_TCLDIR)\bin;$(PATH)
 !else
-	set PATH=$(TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
+	set PATH=$(_TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
 !endif
 !if "$(OS)" == "Windows_NT"  || "$(MSVCDIR)" == "IDE"
 	$(TKTEST) $(ROOT)/tests/all.tcl $(TESTFLAGS) | $(CAT32)
@@ -496,18 +505,18 @@ test: setup $(TKTEST) $(TKLIB) $(CAT32)
 runtest: setup $(TKTEST) $(TKLIB) $(CAT32)
 	set TCL_LIBRARY=$(TCL_LIBRARY)
 !if $(TCLINSTALL)
-	set PATH=$(TCLDIR)\bin;$(PATH)
+	set PATH=$(_TCLDIR)\bin;$(PATH)
 !else
-	set PATH=$(TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
+	set PATH=$(_TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
 !endif
 	$(TKTEST) 
 
 rundemo: setup $(TKTEST) $(TKLIB) $(CAT32)
 	set TCL_LIBRARY=$(TCL_LIBRARY)
 !if $(TCLINSTALL)
-	set PATH=$(TCLDIR)\bin;$(PATH)
+	set PATH=$(_TCLDIR)\bin;$(PATH)
 !else
-	set PATH=$(TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
+	set PATH=$(_TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
 !endif
 	$(TKTEST) $(ROOT)\library\demos\widget
 
@@ -547,7 +556,7 @@ $(TKTEST): $(TKTESTOBJS) $(TKIMPLIB)
 	$(link32) $(guilflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
 
 
-$(CAT32): $(TCLDIR)\win\cat.c
+$(CAT32): $(_TCLDIR)\win\cat.c
 	$(cc32) $(CON_CFLAGS) -Fo$(TMP_DIR)\ $?
 	$(link32) $(conlflags) -out:$@ -stack:16384 $(TMP_DIR)\cat.obj $(baselibs)
 
@@ -575,7 +584,7 @@ CVS
 #---------------------------------------------------------------------
 
 genstubs:
-	$(TCLSH) $(TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
+	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
 		$(GENERICDIR)\$(PROJECT).decls $(GENERICDIR)\$(PROJECT)Int.decls
 
 
