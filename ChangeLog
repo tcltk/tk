@@ -1,5 +1,10 @@
 2001-10-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* unix/configure: regend
+	* unix/tcl.m4 (SC_ENABLE_GCC): enabled better recognition of gcc.
+
+	* tests/defs.tcl: removed threaded build warning under X.
+
 	* library/console.tcl (tkConsoleOutput): fixed undefined widget
 	argument.
 
