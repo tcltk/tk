@@ -1,3 +1,8 @@
+2002-10-16  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* macosx/tkMacOSXMenu.c: fix to accelerators shown in menus
+	with non-alphanumeric keys.
+	
 2002-10-15  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/configure:
