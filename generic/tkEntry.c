@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.34 2003/02/18 21:54:41 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.35 2003/02/25 00:46:41 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1089,14 +1089,16 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	    }
 
 	    /*
-	     * Disabled entries don't allow the selection to be modified.
+	     * Disabled entries don't allow the selection to be modified,
+	     * but 'selection present' must return a boolean.
 	     */
 
-	    if (entryPtr->state == STATE_DISABLED) {
+	    if ((entryPtr->state == STATE_DISABLED)
+		    && (selIndex != SELECTION_PRESENT)) {
 		goto done;
 	    }
 
-	    switch(selIndex) {
+	    switch (selIndex) {
 	        case SELECTION_ADJUST: {
 		    if (objc != 4) {
 		        Tcl_WrongNumArgs(interp, 3, objv, "index");
@@ -1159,11 +1161,8 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 		        Tcl_WrongNumArgs(interp, 3, objv, (char *) NULL);
 			goto error;
 		    }
-		    if (entryPtr->selectFirst < 0) {
-		        Tcl_SetResult(interp, "0", TCL_STATIC);
-		    } else {
-		        Tcl_SetResult(interp, "1", TCL_STATIC);
-		    }
+		    Tcl_SetObjResult(interp,
+			    Tcl_NewBooleanObj((entryPtr->selectFirst >= 0)));
 		    goto done;
 		}
 
@@ -4098,14 +4097,16 @@ SpinboxWidgetObjCmd(clientData, interp, objc, objv)
 	    }
 
 	    /*
-	     * Disabled entries don't allow the selection to be modified.
+	     * Disabled entries don't allow the selection to be modified,
+	     * but 'selection present' must return a boolean.
 	     */
 
-	    if (entryPtr->state == STATE_DISABLED) {
+	    if ((entryPtr->state == STATE_DISABLED)
+		    && (selIndex != SB_SEL_PRESENT)) {
 		goto done;
 	    }
-	    
-	    switch(selIndex) {
+
+	    switch (selIndex) {
 	        case SB_SEL_ADJUST: {
 		    if (objc != 4) {
 		        Tcl_WrongNumArgs(interp, 3, objv, "index");
