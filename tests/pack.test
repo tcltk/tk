@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: pack.test,v 1.7 2001/08/21 20:21:36 pspjuth Exp $
+# RCS: @(#) $Id: pack.test,v 1.8 2001/09/23 11:30:44 pspjuth Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -761,19 +761,27 @@ test pack-12.18.1 {command options and errors} {
 test pack-12.19 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -ipadx abc} msg] $msg
-} {1 {bad pad value "abc": must be positive screen distance}}
+} {1 {bad ipadx value "abc": must be positive screen distance}}
 test pack-12.20 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -ipadx -1} msg] $msg
-} {1 {bad pad value "-1": must be positive screen distance}}
+} {1 {bad ipadx value "-1": must be positive screen distance}}
+test pack-12.20.1 {command options and errors} {
+    pack forget .pack.a .pack.b .pack.c .pack.d
+    list [catch {pack .pack.a -ipadx {5 5}} msg] $msg
+} {1 {bad ipadx value "5 5": must be positive screen distance}}
 test pack-12.21 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -ipady abc} msg] $msg
-} {1 {bad pad value "abc": must be positive screen distance}}
+} {1 {bad ipady value "abc": must be positive screen distance}}
 test pack-12.22 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -ipady -1} msg] $msg
-} {1 {bad pad value "-1": must be positive screen distance}}
+} {1 {bad ipady value "-1": must be positive screen distance}}
+test pack-12.22.1 {command options and errors} {
+    pack forget .pack.a .pack.b .pack.c .pack.d
+    list [catch {pack .pack.a -ipady {5 5}} msg] $msg
+} {1 {bad ipady value "5 5": must be positive screen distance}}
 test pack-12.23 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -side bac} msg] $msg

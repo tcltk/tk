@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.11 2001/09/21 21:34:10 hobbs Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.12 2001/09/23 11:30:44 pspjuth Exp $
  */
 
 #include "tkPort.h"
@@ -1691,15 +1691,29 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 		    positionGiven = 1;
 		}
 	    } else if (index == CONF_IPADX) {
-		if (TkParsePadAmount(interp, slave, objv[i+1],
-			0, &slavePtr->iPadX) != TCL_OK) {
+		if ((Tk_GetPixelsFromObj(interp, slave, objv[i+1], &tmp)
+			!= TCL_OK)
+			|| (tmp < 0)) {
+		    Tcl_ResetResult(interp);
+		    Tcl_AppendResult(interp, "bad ipadx value \"",
+			    Tcl_GetString(objv[i+1]),
+			    "\": must be positive screen distance",
+			    (char *) NULL);
 		    return TCL_ERROR;
 		}
+		slavePtr->iPadX = tmp * 2;
 	    } else if (index == CONF_IPADY) {
-		if (TkParsePadAmount(interp, slave, objv[i+1],
-			0, &slavePtr->iPadY) != TCL_OK) {
+		if ((Tk_GetPixelsFromObj(interp, slave, objv[i+1], &tmp)
+			!= TCL_OK)
+			|| (tmp < 0)) {
+		    Tcl_ResetResult(interp);
+		    Tcl_AppendResult(interp, "bad ipady value \"",
+			    Tcl_GetString(objv[i+1]),
+			    "\": must be positive screen distance",
+			    (char *) NULL);
 		    return TCL_ERROR;
 		}
+		slavePtr->iPadY = tmp * 2;
 	    } else if (index == CONF_PADX) {
 		if (TkParsePadAmount(interp, slave, objv[i+1],
 			&slavePtr->padLeft, &slavePtr->padX) != TCL_OK) {
