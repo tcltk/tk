@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: clipboard.n,v 1.5 2002/07/04 01:09:47 hobbs Exp $
+'\" RCS: @(#) $Id: clipboard.n,v 1.6 2004/03/04 00:06:06 hobbs Exp $
 '\" 
 .so man.macros
 .TH clipboard n 8.4 Tk "Tk Built-In Commands"
@@ -77,8 +77,8 @@ next argument will always be used as \fIdata\fR.
 This feature may be convenient if, for example, \fIdata\fR starts
 with a \fB\-\fR.
 .RE
-.TP
 .VS 8.4
+.TP
 \fBclipboard get\fR ?\fB\-displayof\fR \fIwindow\fR? ?\fB\-type\fR?
 Retrieve data from the clipboard on \fIwindow\fR's display.
 \fIwindow\fR defaults to ".".  \fIType\fR specifies the form in which
