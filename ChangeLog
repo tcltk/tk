@@ -1,3 +1,11 @@
+2004-06-26  Joe Mistachkin  <joe@mistachkin.com>
+
+	* generic/tkConsole.c (ConsoleDeleteProc): Set tsdPtr->gStdoutInterp
+	to NULL when the console command is deleted [Bug 756840].  Also,
+	added Tcl_Preserve/Tcl_Release for consoleInterp in InterpreterCmd
+	in case it gets deleted during the calls to Tcl_GlobalEval and 
+	Tcl_RecordAndEval.
+
 2004-06-24  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* tests/canvPs.test, etc: Use standard tcltest constraint names.

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.20 2004/03/17 18:15:43 das Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.21 2004/06/26 09:04:15 mistachkin Exp $
  */
 
 #include "tk.h"
@@ -639,6 +639,7 @@ InterpreterCmd(clientData, interp, argc, argv)
     char c;
     size_t length;
     int result;
+    Tcl_Interp *consoleInterp;
     Tcl_Interp *otherInterp;
 
     if (argc < 2) {
@@ -649,6 +650,8 @@ InterpreterCmd(clientData, interp, argc, argv)
     
     c = argv[1][0];
     length = strlen(argv[1]);
+    consoleInterp = info->consoleInterp;
+    Tcl_Preserve((ClientData) consoleInterp);
     otherInterp = info->interp;
     Tcl_Preserve((ClientData) otherInterp);
     if ((c == 'e') && (strncmp(argv[1], "eval", length)) == 0) {
@@ -666,6 +669,7 @@ InterpreterCmd(clientData, interp, argc, argv)
 	result = TCL_ERROR;
     }
     Tcl_Release((ClientData) otherInterp);
+    Tcl_Release((ClientData) consoleInterp);
     return result;
 }
 
@@ -691,6 +695,17 @@ ConsoleDeleteProc(clientData)
     ClientData clientData;
 {
     ConsoleInfo *info = (ConsoleInfo *) clientData;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    /*
+     * Also need to null this out to prevent any further use.
+     *
+     * Fix [Bug #756840]
+     */
+    if (tsdPtr != NULL) {
+        tsdPtr->gStdoutInterp = NULL;
+    }
 
     Tcl_DeleteInterp(info->consoleInterp);
     info->consoleInterp = NULL;
