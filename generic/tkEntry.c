@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.19 2001/04/03 04:40:50 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.20 2001/07/02 23:52:36 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1363,13 +1363,15 @@ DestroyEntry(memPtr)
     entryPtr->tkwin = NULL;
 
     /*
-     * Tcl_EventuallyFree should be used here or better yet in the
+     * Tcl_EventuallyFree should be used in
      * DestroyNotify branch of EntryEventProc.  However, that can lead
      * complications in Tk_FreeConfigOptions where the display for the
      * entry has been deleted by Tk_DestroyWindow, which is needed
-     * when freeing the cursor option. 
+     * when freeing the cursor option.  Also, there can be a timing
+     * issue were we wouldn't get called until too late in Tk clean-up,
+     * and it complains that we haven't freed our fonts yet.
      */
-    ckfree((char *) entryPtr);
+    Tcl_EventuallyFree((ClientData) entryPtr, TCL_DYNAMIC);
 }
 
 /*
