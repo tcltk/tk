@@ -109,7 +109,6 @@ Windows beta version of Tk:
   larger problem with "wm geometry" when applied to unmapped or
   iconified windows.
 - Some keys don't work on international keyboards.
-- Grabs do not affect native menus or the title bar.
 - PPM images are using the wrong translation mode for writing to
   files, resulting in CR/LF terminated PPM files.
 - Tk crashes if the display depth changes while it is running.  Tk
