@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.10 2000/05/29 01:43:15 hobbs Exp $
+# RCS: @(#) $Id: entry.test,v 1.11 2001/04/03 04:40:50 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1506,9 +1506,9 @@ proc doval {W d i P s S v V} {
     set ::vVals [list $W $d $i $P $s $S $v $V]
     return 0
 }
-.e configure -validate all
 
 test entry-19.18 {entry widget validation} {
+    .e configure -validate all
     set ::e nextdata
     list [.e cget -validate] $::vVals
 } {none {.e -1 -1 nextdata newdata {} all forced}}
@@ -1518,16 +1518,14 @@ proc doval {W d i P s S v V} {
     set ::e mydata
     return 1
 }
-.e configure -validate all
 
 ## This sets validate to none because it shows that we prevent a possible
 ## loop condition in the validation, when the entry textvar is also set
 test entry-19.19 {entry widget validation} {
+    .e configure -validate all
     .e validate
     list [.e cget -validate] [.e get] $::vVals
 } {none mydata {.e -1 -1 nextdata nextdata {} all forced}}
-
-.e configure -validate all
 
 ## This leaves validate alone because we trigger validation through the
 ## textvar (a write trace), and the write during validation triggers
@@ -1535,6 +1533,7 @@ test entry-19.19 {entry widget validation} {
 ## one of those "dangerous" conditions where the user will have a
 ## different value in the entry widget shown as is in the textvar.
 test entry-19.20 {entry widget validation} {
+    .e configure -validate all
     set ::e testdata
     list [.e cget -validate] [.e get] $::e $::vVals
 } {all testdata mydata {.e -1 -1 testdata mydata {} all forced}}
@@ -1545,6 +1544,53 @@ catch {unset ::e ::vVals}
 ##
 ## End validation tests
 ##
+
+test entry-20.1 {widget deletion while active} {
+    destroy .e
+    entry .e -validate all \
+	    -validatecommand { destroy %W ; return 1 } \
+	    -invalidcommand bell
+    update
+    .e insert 0 abc
+    winfo exists .e
+} 0
+test entry-20.2 {widget deletion while active} {
+    destroy .e
+    entry .e -validate all \
+	    -validatecommand { return 0 } \
+	    -invalidcommand { destroy %W }
+    .e insert 0 abc
+    winfo exists .e
+} 0
+test entry-20.3 {widget deletion while active} {
+    destroy .e
+    entry .e -validate all \
+	    -validatecommand { rename .e {} ; return 1 }
+    .e insert 0 abc
+    winfo exists .e
+} 0
+test entry-20.4 {widget deletion while active} {
+    destroy .e
+    entry .e -validate all \
+	    -validatecommand { return 0 } \
+	    -invalidcommand { rename .e {} }
+    .e insert 0 abc
+    winfo exists .e
+} 0
+test entry-20.5 {widget deletion while active} {
+    destroy .e
+    entry .e -validatecommand { destroy .e ; return 0 }
+    .e validate
+    winfo exists .e
+} 0
+test entry-20.6 {widget deletion while active} {
+    destroy .e
+    pack [entry .e]
+    update
+    .e config -xscrollcommand { destroy .e }
+    update idle
+    winfo exists .e
+} 0
 
 # XXX Still need to write tests for EntryBlinkProc, EntryFocusProc,
 # and EntryTextVarProc.
