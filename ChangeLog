@@ -1,3 +1,9 @@
+2003-11-13  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkMenuDraw.c (TkPostSubmenu,AdjustMenuCoords): Rewrote
+	to use Tcl_EvalObjv instead of Tcl_VarEval for greater robustness.
+	A side benefit is that this should all be faster now too. [Bug 723856]
+
 2003-11-12  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkText.h: 
