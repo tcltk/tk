@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.33 2004/05/13 01:36:11 chengyemao Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.34 2004/07/05 21:21:52 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -425,6 +425,7 @@ static ModInfo modArray[] = {
     {"Meta",		META_MASK,	0},
     {"M",		META_MASK,	0},
     {"Alt",		ALT_MASK,	0},
+    {"Extended",	EXTENDED_MASK,	0},
     {"B1",		Button1Mask,	0},
     {"Button1",		Button1Mask,	0},
     {"B2",		Button2Mask,	0},

@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bind.test,v 1.14 2004/06/17 22:38:56 dkf Exp $
+# RCS: @(#) $Id: bind.test,v 1.15 2004/07/05 21:21:53 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2460,6 +2460,7 @@ foreach check {
     {bind-25.29 {<Double 1>} <Double-Button-1>}
     {bind-25.30 <Triple-1>  <Triple-Button-1>}
     {bind-25.31 {<M1-M2 M3-M4 B1-Control-a>} <Control-B1-Mod1-Mod2-Mod3-Mod4-Key-a>}
+    {bind-25.32 <Extended-Return> <Extended-Key-Return>}
 } {
     lassign $check name shortBind longBind
     test $name {modifier names} -setup {
@@ -2687,7 +2688,7 @@ test bind-31.2 {MouseWheel events} {
     event gen .b.f <MouseWheel> -delta 120
     set x
 } {120}
-test bind-31.2 {MouseWheel events} {
+test bind-31.3 {MouseWheel events} {
     setup
     set x {}
     bind .b.f <MouseWheel> {set x "%D %x %y"}
