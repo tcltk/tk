@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacResource.r,v 1.4 1999/04/16 01:51:32 stanton Exp $
+ * RCS: @(#) $Id: tkMacResource.r,v 1.5 1999/08/16 00:09:26 jingham Exp $
  */
 
 /*
@@ -50,14 +50,14 @@ resource 'vers' (1) {
 	TK_MAJOR_VERSION, MINOR_VERSION,
 	RELEASE_LEVEL, 0x00, verUS,
 	TK_PATCH_LEVEL,
-	TK_PATCH_LEVEL ", by Ray Johnson © 1993-1996" "\n" "Sun Microsystems Labratories"
+	TK_PATCH_LEVEL ", by Ray Johnson & Jim Ingham "\n© 1993-1997 Sun Microsystems" "\n  1998-1999 Scriptics Inc."
 };
 
 resource 'vers' (2) {
 	TK_MAJOR_VERSION, MINOR_VERSION,
 	RELEASE_LEVEL, 0x00, verUS,
 	TK_PATCH_LEVEL,
-	"Wish " TK_PATCH_LEVEL " © 1993-1996"
+	"Wish " TK_PATCH_LEVEL " © 1993-1999"
 };
 
 
@@ -134,8 +134,8 @@ resource 'DITL' (128, "About Box", purgeable) {
 	    "Wish - Windowing Shell" "\n" "based on Tcl " 
 	    TCL_PATCH_LEVEL " & Tk " TK_PATCH_LEVEL "\n\n" 
             "Ray Johnson & Jim Ingham" "\n"
-	    "Sun Microsystems Labs" "\n" "ray.johnson@eng.sun.com"
-            "\n" "jim.ingham@eng.sun.com"},	    
+	    "Scriptics Inc." "\n"
+            "jim.ingham@cygnus.com"},	    
         { 19,  24, 119,  92}, Picture  {enabled, 128}
     }
 };

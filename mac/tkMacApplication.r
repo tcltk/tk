@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacApplication.r,v 1.2 1998/09/14 18:23:34 stanton Exp $
+ * RCS: @(#) $Id: tkMacApplication.r,v 1.3 1999/08/16 00:09:09 jingham Exp $
  */
 
 #include <Types.r>
@@ -43,14 +43,14 @@ resource 'vers' (1) {
 	TK_MAJOR_VERSION, MINOR_VERSION,
 	RELEASE_LEVEL, 0x00, verUS,
 	TK_PATCH_LEVEL,
-	TK_PATCH_LEVEL ", by Ray Johnson © 1993-1996" "\n" "Sun Microsystems Labratories"
+	TK_PATCH_LEVEL ", by Ray Johnson & Jim Ingham "\n© 1993-1997 Sun Microsystems" "\n  1998-1999 Scriptics Inc."
 };
 
 resource 'vers' (2) {
 	TK_MAJOR_VERSION, MINOR_VERSION,
 	RELEASE_LEVEL, 0x00, verUS,
 	TK_PATCH_LEVEL,
-	"Wish " TK_PATCH_LEVEL " © 1993-1996"
+	"Wish " TK_PATCH_LEVEL " © 1993-1999"
 };
 
 #define TK_APP_RESOURCES 128

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacLibrary.r,v 1.3 1998/09/14 18:23:37 stanton Exp $
+ * RCS: @(#) $Id: tkMacLibrary.r,v 1.4 1999/08/16 00:09:20 jingham Exp $
  */
 
 /*
@@ -54,14 +54,14 @@ resource 'vers' (1) {
 	TK_MAJOR_VERSION, MINOR_VERSION,
 	RELEASE_LEVEL, 0x00, verUS,
 	TK_PATCH_LEVEL,
-	TK_PATCH_LEVEL ", by Ray Johnson © 1993-1996" "\n" "Sun Microsystems Labratories"
+	TK_PATCH_LEVEL ",by Ray Johnson & Jim Ingham "\n© 1993-1997 Sun Microsystems" "\n  1998-1999 Scriptics Inc."
 };
 
 resource 'vers' (2) {
 	TK_MAJOR_VERSION, MINOR_VERSION,
 	RELEASE_LEVEL, 0x00, verUS,
 	TK_PATCH_LEVEL,
-	"Tk Library " TK_PATCH_LEVEL " © 1993-1996"
+	"Tk Library " TK_PATCH_LEVEL " © 1993-1999"
 };
 
 #define TK_LIBRARY_RESOURCES 3000
@@ -75,7 +75,7 @@ resource 'vers' (2) {
 resource 'STR ' (-16397, purgeable) {
 	"Tk Library\n\n"
 	"This is the library needed to run Tcl/Tk programs. "
-	"To work properly, it should be placed in the ŒTool Command Language¹ folder "
+	"To work properly, it should be placed in the Tool Command Language folder "
 	"within the Extensions folder."
 };
 
@@ -138,8 +138,8 @@ resource 'DITL' (129, "About Box", purgeable) {
 	{128, 128, 148, 186}, Button	    {enabled, "Ok"},
 	{ 14, 108, 117, 298}, StaticText    {disabled, 
 	    "Wish - Windowing Shell" "\n" "based on Tcl " 
-	    TCL_PATCH_LEVEL " & Tk " TK_PATCH_LEVEL "\n\n" "Ray Johnson"
-	    "Sun Microsystems Labs" "\n" "ray.johnson@eng.sun.com"},	    
+	    TCL_PATCH_LEVEL " & Tk " TK_PATCH_LEVEL "\n\n" "Jim Ingham & Ray Johnson"
+	    "Scriptics Inc." "\n" "jingham@cygnus.com"},	    
         { 11,  24, 111,  92}, Picture  {enabled, 128}
     }
 };
