@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scale widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: scale.tcl,v 1.6 2000/01/06 02:22:24 hobbs Exp $
+# RCS: @(#) $Id: scale.tcl,v 1.7 2000/04/14 08:33:31 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -106,14 +106,16 @@ bind Scale <End> {
 # x, y -	Mouse coordinates.
 
 proc tkScaleActivate {w x y} {
-    global tkPriv
     if {[string equal [$w cget -state] "disabled"]} {
 	return
     }
     if {[string equal [$w identify $x $y] "slider"]} {
-	$w configure -state active
+	set state active
     } else {
-	$w configure -state normal
+	set state normal
+    }
+    if {[string compare [$w cget -state] $state]} {
+	$w configure -state $state
     }
 }
 
