@@ -5,13 +5,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.18 2003/03/12 00:09:37 mdejong Exp $
+# RCS: @(#) $Id: grid.test,v 1.19 2003/04/01 21:06:36 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # helper routine to return "." to a sane state after a test
@@ -1526,5 +1523,5 @@ test grid-20.2 {recalculate size after removal (forget)} {
 grid_reset 20.2
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return

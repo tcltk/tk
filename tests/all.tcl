@@ -9,11 +9,13 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: all.tcl,v 1.7 2002/07/14 05:48:45 dgp Exp $
+# RCS: @(#) $Id: all.tcl,v 1.8 2003/04/01 21:06:14 dgp Exp $
 
 package require Tcl 8.4
 package require tcltest 2.1
 tcltest::configure -testdir [file join [pwd] [file dirname [info script]]]
+tcltest::configure -loadfile \
+	[file join [tcltest::testsDirectory] constraints.tcl]
 tcltest::configure -singleproc 1
 eval tcltest::configure $argv
 tcltest::runAllTests

@@ -5,14 +5,11 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clrpick.test,v 1.7 2002/07/14 05:48:46 dgp Exp $
+# RCS: @(#) $Id: clrpick.test,v 1.8 2003/04/01 21:06:20 dgp Exp $
 #
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 test clrpick-1.1 {tk_chooseColor command} {
@@ -215,5 +212,5 @@ test clrpick-4.1 {tk_chooseColor: screen is inherited from parent} unixOnly {
 } [winfo screen $parent]
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return

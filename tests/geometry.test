@@ -7,13 +7,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: geometry.test,v 1.4 2002/07/13 21:52:34 dgp Exp $
+# RCS: @(#) $Id: geometry.test,v 1.5 2003/04/01 21:06:34 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 wm geometry . 300x300
@@ -250,7 +247,7 @@ test geometry-4.10 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} {
 catch {destroy .t}
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return
 
 

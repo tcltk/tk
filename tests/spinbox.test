@@ -4,13 +4,10 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: spinbox.test,v 1.6 2003/03/13 19:34:40 dgp Exp $
+# RCS: @(#) $Id: spinbox.test,v 1.7 2003/04/01 21:06:52 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 proc scroll args {
@@ -1600,5 +1597,5 @@ catch {unset ::e ::vVals}
 option clear
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return

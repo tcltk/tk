@@ -6,17 +6,11 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: imgPPM.test,v 1.5 2002/07/13 21:52:34 dgp Exp $
+# RCS: @(#) $Id: imgPPM.test,v 1.6 2003/04/01 21:06:37 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
-
-namespace import -force tcltest::makeFile
-namespace import -force tcltest::removeFile
 
 eval image delete [image names]
 
@@ -155,7 +149,7 @@ removeFile test2.ppm
 eval image delete [image names]
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return
 
 

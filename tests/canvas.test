@@ -6,13 +6,10 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.16 2003/02/09 07:48:22 hobbs Exp $
+# RCS: @(#) $Id: canvas.test,v 1.17 2003/04/01 21:06:19 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # XXX - This test file is woefully incomplete.  At present, only a
@@ -477,5 +474,5 @@ test canvas-16.1 {arc coords check} {
 destroy .c
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return

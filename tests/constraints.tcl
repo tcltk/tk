@@ -175,6 +175,14 @@ cleanupbg
 
 eval tcltest::configure $argv
 namespace import -force tcltest::test
+namespace import -force tcltest::makeFile
+namespace import -force tcltest::removeFile
+namespace import -force tcltest::makeDirectory
+namespace import -force tcltest::removeDirectory
+namespace import -force tcltest::interpreter
+namespace import -force tcltest::testsDirectory
+namespace import -force tcltest::cleanupTests
+namespace import -force tcltest::bytestring
 
 deleteWindows
 wm geometry . {}

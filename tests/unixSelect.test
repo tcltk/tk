@@ -9,13 +9,10 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: unixSelect.test,v 1.8 2003/01/14 19:24:51 jenglish Exp $
+# RCS: @(#) $Id: unixSelect.test,v 1.9 2003/04/01 21:06:57 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 global longValue selValue selInfo
@@ -360,5 +357,5 @@ test unixSelect-1.20 {Automatic UTF8_STRING support for selection handle} {unixO
 } "This is the selection value"
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return

@@ -7,18 +7,11 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.33 2003/03/18 16:30:42 dgp Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.34 2003/04/01 21:06:57 dgp Exp $
 
 package require tcltest 2.2
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
-
-namespace import -force tcltest::interpreter
-namespace import -force tcltest::makeFile
-namespace import -force tcltest::removeFile
 
 proc sleep ms {
     global x
@@ -2454,5 +2447,5 @@ test unixWm-60.2 {wm attributes} unix {
 
 # cleanup
 catch {destroy .t}
-::tcltest::cleanupTests
+cleanupTests
 return

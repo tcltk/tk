@@ -9,17 +9,11 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.15 2002/10/18 00:48:22 hobbs Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.16 2003/04/01 21:06:37 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
-
-namespace import -force tcltest::makeFile
-namespace import -force tcltest::removeFile
 
 eval image delete [image names]
 
@@ -666,5 +660,5 @@ eval image delete [image names]
 
 # cleanup
 removeFile README-imgPhoto
-::tcltest::cleanupTests
+cleanupTests
 return
