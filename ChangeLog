@@ -1,6 +1,7 @@
 2002-09-30  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
-	* tests/unixSelect.test:
+	* tests/unixSelect.test: Test for various things that can fail to
+	work in 8.4.0...
 	* unix/tkUnixSelect.c (TkSelPropProc,SelRcvIncrProc): Incremental
 	transfers of UTF8_STRING selections should now work; Tk will now
 	tag them with the right size and only transfer complete UTF8
