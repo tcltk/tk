@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: menubut.test,v 1.1.4.1 1998/09/30 02:18:49 stanton Exp $
+# RCS: @(#) $Id: menubut.test,v 1.1.4.2 1999/02/16 06:00:42 lfb Exp $
 
 # XXX This test file is woefully incomplete right now.  If any part
 # XXX of a procedure has tests then the whole procedure has tests,
@@ -51,7 +51,7 @@ foreach test {
 	    {unknown color name "non-existent"}}
     {-activeforeground #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"}}
-    {-anchor nw nw bogus {bad anchor position "bogus": must be n, ne, e, se, s, sw, w, nw, or center}}
+    {-anchor nw nw bogus {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, or center}}
     {-background #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"}}
     {-bd 4 4 badValue {bad screen distance "badValue"}}
@@ -59,7 +59,7 @@ foreach test {
     {-bitmap questhead questhead badValue {bitmap "badValue" not defined}}
     {-borderwidth 1.3 1 badValue {bad screen distance "badValue"}}
     {-cursor arrow arrow badValue {bad cursor spec "badValue"}}
-    {-direction below below badValue {bad direction value "badValue": must be above, below, left, right, or flush}}
+    {-direction below below badValue {bad direction "badValue": must be above, below, flush, left, or right}}
     {-disabledforeground #00ff00 #00ff00 xyzzy {unknown color name "xyzzy"}}
     {-fg #110022 #110022 bogus {unknown color name "bogus"}}
     {-font {Helvetica 12} {Helvetica 12} {} {font "" doesn't exist}}
@@ -74,8 +74,8 @@ foreach test {
     {-menu "any old string" "any old string" {} {}}
     {-padx 12 12 420x {bad screen distance "420x"}}
     {-pady 12 12 420x {bad screen distance "420x"}}
-    {-relief groove groove 1.5 {bad relief type "1.5": must be flat, groove, raised, ridge, solid, or sunken}}
-    {-state normal normal bogus {bad state value "bogus": must be normal, active, or disabled}}
+    {-relief groove groove 1.5 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}}
+    {-state normal normal bogus {bad state "bogus": must be active, disabled, or normal}}
     {-takefocus "any string" "any string" {} {}}
     {-text "Sample text" {Sample text} {} {}}
     {-textvariable i i {} {}}
@@ -122,7 +122,7 @@ test menubutton-3.1 {MenuButtonWidgetCmd procedure} {
 } {1 {wrong # args: should be ".mb option ?arg arg ...?"}}
 test menubutton-3.2 {ButtonWidgetCmd procedure, "cget" option} {
     list [catch {.mb c} msg] $msg
-} {1 {bad option "c": must be cget or configure}}
+} {1 {ambiguous option "c": must be cget or configure}}
 test menubutton-3.3 {ButtonWidgetCmd procedure, "cget" option} {
     list [catch {.mb cget} msg] $msg
 } {1 {wrong # args: should be ".mb cget option"}}
@@ -204,7 +204,7 @@ test menubutton-4.6 {ConfigureMenuButton procedure - bad direction} {
     menubutton .mb -text "Test"
     list [catch {.mb configure -direction badValue} msg] $msg \
 	[.mb cget -direction] [destroy .mb]
-} {1 {bad direction value "badValue": must be above, below, left, right, or flush} below {}}
+} {1 {bad direction "badValue": must be above, below, flush, left, or right} below {}}
 
 # XXX Need to add tests for several procedures here. XXX
 

@@ -17,7 +17,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.1.4.4 1999/02/13 05:09:35 lfb Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.1.4.5 1999/02/16 06:00:41 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -46,7 +46,7 @@ static char *stateStrings[] = {
 
 static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
-	DEF_BUTTON_ACTIVE_BG_COLOR, -1, Tk_Offset(TkScale, activeBorder),
+	DEF_SCALE_ACTIVE_BG_COLOR, -1, Tk_Offset(TkScale, activeBorder),
 	0, (ClientData) DEF_SCALE_ACTIVE_BG_MONO, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_SCALE_BG_COLOR, -1, Tk_Offset(TkScale, bgBorder),
@@ -75,7 +75,8 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_SCALE_FONT, -1, Tk_Offset(TkScale, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-	DEF_BUTTON_FG, -1, Tk_Offset(TkScale, textColorPtr), 0, 0, 0},
+	DEF_SCALE_FG_COLOR, -1, Tk_Offset(TkScale, textColorPtr), 0, 
+        (ClientData) DEF_SCALE_FG_MONO, 0},
     {TK_OPTION_DOUBLE, "-from", "from", "From", DEF_SCALE_FROM, -1, 
         Tk_Offset(TkScale, fromValue), 0, 0, 0},
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
@@ -246,6 +247,8 @@ Tk_ScaleObjCmd(clientData, interp, objc, objv)
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
+
+    Tk_SetClass(tkwin, "Scale");
     scalePtr = TkpCreateScale(tkwin);
 
     /*
@@ -307,7 +310,6 @@ Tk_ScaleObjCmd(clientData, interp, objc, objv)
     scalePtr->takeFocusPtr = NULL;
     scalePtr->flags = NEVER_SET;
 
-    Tk_SetClass(scalePtr->tkwin, "Scale");
     TkSetClassProcs(scalePtr->tkwin, &scaleClass, (ClientData) scalePtr);
     Tk_CreateEventHandler(scalePtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,

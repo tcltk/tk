@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.1.4.4 1999/02/11 04:13:45 stanton Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.1.4.5 1999/02/16 06:00:40 lfb Exp $
  */
 
 #include "tkButton.h"
@@ -1027,7 +1027,7 @@ ConfigureButton(interp, butPtr, objc, objv)
 	/*
 	 * A few options need special processing, such as setting the
 	 * background from a 3-D border, or filling in complicated
-	 * defaults that couldn't be specified to Tk_ConfigureWidget.
+	 * defaults that couldn't be specified to Tk_SetOptions.
 	 */
 
 	if ((butPtr->state == STATE_ACTIVE)

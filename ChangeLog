@@ -3,7 +3,11 @@
         * generic/tkMenuButton.h:
         * generic/tkMenuButton.c:
 	* mac/tkMacMenubutton.c:
+	* mac/tkMacDefault.h
 	* unix/tkUnixMenubu.c: Eliminated Tk_Uids used by -state option.
+	* unix/tkUnixDefault.h
+	* win/tkWinDefault.h
+	
 
 	* generic/tk.h:
 	* generic/tkScale.h:

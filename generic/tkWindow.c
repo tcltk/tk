@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.1.4.6 1999/02/13 05:09:35 lfb Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.1.4.7 1999/02/16 06:00:41 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -135,7 +135,7 @@ static TkCmd commands[] = {
     {"frame",		Tk_FrameCmd,		NULL,			1, 1},
     {"label",		NULL,			Tk_LabelObjCmd,		1, 0},
     {"listbox",		Tk_ListboxCmd,		NULL,			1, 1},
-    {"menubutton",	Tk_MenubuttonCmd,	NULL,			1, 1},
+    {"menubutton",	NULL,                   Tk_MenubuttonObjCmd,	1, 0},
     {"message",		Tk_MessageCmd,		NULL,			1, 1},
     {"radiobutton",	NULL,			Tk_RadiobuttonObjCmd,	1, 0},
     {"scale",		NULL,	                Tk_ScaleObjCmd,		1, 0},

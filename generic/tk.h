@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.1.4.9 1999/02/13 05:09:35 lfb Exp $
+ * RCS: @(#) $Id: tk.h,v 1.1.4.10 1999/02/16 06:00:40 lfb Exp $
  */
 
 #ifndef _TK
@@ -1747,8 +1747,9 @@ EXTERN int		Tk_ListboxCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_LowerCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_MenubuttonCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_MenubuttonObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+			    Tcl_Obj *CONST objv[]));
 EXTERN int              Tk_MessageBoxObjCmd _ANSI_ARGS_((ClientData clientData,
                             Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));

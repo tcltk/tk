@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDefault.h,v 1.1.4.3 1999/02/13 05:09:36 lfb Exp $
+ * RCS: @(#) $Id: tkMacDefault.h,v 1.1.4.4 1999/02/16 06:00:42 lfb Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -289,7 +289,8 @@
 #define DEF_MENUBUTTON_FONT		"system"
 #define DEF_MENUBUTTON_FG		BLACK
 #define DEF_MENUBUTTON_HEIGHT		"0"
-#define DEF_MENUBUTTON_HIGHLIGHT_BG	NORMAL_BG
+#define DEF_MENUBUTTON_HIGHLIGHT_BG_COLOR DEF_MENUBUTTON_BG_COLOR
+#define DEF_MENUBUTTON_HIGHLIGHT_BG_MONO  DEF_MENUBUTTON_BG_MONO
 #define DEF_MENUBUTTON_HIGHLIGHT	BLACK
 #define DEF_MENUBUTTON_HIGHLIGHT_WIDTH	"0"
 #define DEF_MENUBUTTON_IMAGE		(char *) NULL
