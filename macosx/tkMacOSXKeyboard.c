@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.12 2003/12/15 19:32:17 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.13 2004/01/24 18:16:09 cc_benny Exp $
  */
 
 #include "tkInt.h"
@@ -588,7 +588,8 @@ NB: Keep this commented code for a moment for reference.
  * Results:
  *      Fills an XEvent, sets the member xkey.keycode with a keycode
  *      formatted the same as XKeysymToKeycode and the member xkey.state with
- *      the modifiers implied by the keysym.
+ *      the modifiers implied by the keysym.  Also fills in xkey.trans_chars,
+ *      so that the actual characters can be retrieved later.
  *
  * Side effects:
  *      None.
@@ -624,6 +625,13 @@ TkpSetKeycodeAndState(
         }
         if (optionKey & macKeycode) {
             eventPtr->xkey.state |= OPTION_MASK;
+        }
+
+        if (keysym <= LATIN1_MAX) {
+            eventPtr->xkey.trans_chars[0] = keysym;
+            eventPtr->xkey.trans_chars[1] = 0;
+        } else {
+            eventPtr->xkey.trans_chars[0] = 0;
         }
     }
 }
