@@ -1,3 +1,16 @@
+/*
+ * tkUnixRFont.c --
+ *
+ *	Alternate implementation of tkUnixFont.c using Xft.
+ *
+ * Copyright (c) 2002-2003 Keith Packard
+ *
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ *
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.2 2003/05/31 18:23:08 jenglish Exp $
+ */
+
 #include "tkUnixInt.h"
 #include "tkFont.h"
 #include <X11/Xft/Xft.h>
@@ -152,7 +165,7 @@ InitFont (Tk_Window tkwin, FcPattern *pattern)
 	spacing = 0;
     else
 	spacing = 1;
-#if 0
+#if DEBUG_FONTSEL
     printf ("family %s size %g weight %d slant %d\n", family, size, weight, slant);
 #endif
     fontPtr->font.fid	= XLoadFont (Tk_Display (tkwin), "fixed");
@@ -217,16 +230,19 @@ TkpGetNativeFont(tkwin, name)
 {
     UnixFtFont	*fontPtr;
     FcPattern	*pattern;
-#if 0
+#if DEBUG_FONTSEL
     printf ("TkpGetNativeFont %s\n", name);
 #endif
-    if (*name == '-')
-	pattern = XftXlfdParse (name, FcFalse, FcFalse);
-    else
-	pattern = FcNameParse (name);
-#if 0
-    XftPatternPrint (pattern);
-#endif
+
+    pattern = XftXlfdParse (name, FcFalse, FcFalse);
+    if (!pattern)
+	return NULL;
+
+    /* Should also try: pattern = FcNameParse(name);
+     * but generic/tkFont.c expects TkpGetNativeFont() to only
+     * work on XLFD names under Unix.
+     */
+
     fontPtr = InitFont (tkwin, pattern);
     if (!fontPtr)
 	return NULL;
@@ -249,17 +265,19 @@ TkpGetFontFromAttributes(tkFontPtr, tkwin, faPtr)
     int		weight, slant;
     UnixFtFont	*fontPtr;
 
-#if 0
+#if DEBUG_FONTSEL
     printf ("TkpGetFontFromAttributes %s-%d %d %d\n", faPtr->family,
 	    faPtr->size, faPtr->weight, faPtr->slant);
 #endif
-    pattern = XftPatternBuild (0,
-			       XFT_FAMILY, XftTypeString, faPtr->family,
-			       0);
+    pattern = XftPatternCreate();
+    if (faPtr->family)
+	XftPatternAddString (pattern, XFT_FAMILY, faPtr->family);
     if (faPtr->size > 0)
 	XftPatternAddInteger (pattern, XFT_SIZE, faPtr->size);
-    else
+    else if (faPtr->size < 0)
 	XftPatternAddInteger (pattern, XFT_PIXEL_SIZE, -faPtr->size);
+    else
+	XftPatternAddInteger (pattern, XFT_SIZE, 12);
     switch (faPtr->weight) {
     case TK_FW_NORMAL:
     default:
@@ -405,6 +423,16 @@ Tk_MeasureChars(tkfont, source, numBytes, maxLength, flags, lengthPtr)
     while (numBytes > 0)
     {
 	clen = FcUtf8ToUcs4 ((FcChar8 *) source, &c, numBytes);
+
+	if (clen <= 0) 
+	{
+	    /* This should not happen, but it can, due to bugs in Tcl
+	     * (i.e., [encoding convertfrom identity]).
+	     */
+	    *lengthPtr = curX;
+	    return ++curByte;
+	}
+
 	source += clen;
 	numBytes -= clen;
 	if (c < 256 && isspace (c))
@@ -436,7 +464,7 @@ Tk_MeasureChars(tkfont, source, numBytes, maxLength, flags, lengthPtr)
 		curX = newX;
 		curByte = newByte;
 	    } 
-	    else if (flags & TK_WHOLE_WORDS)
+	    else if (flags & TK_WHOLE_WORDS && termX != 0)
 	    {
 		curX = termX;
 		curByte = termByte;
@@ -526,6 +554,11 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
 	FcChar32    c;
 	
 	clen = FcUtf8ToUcs4 ((FcChar8 *) source, &c, numBytes);
+	if (clen <= 0) 
+	{
+	    /* This should not happen, but it can. */
+	    return;
+	}
 	source += clen;
 	numBytes -= clen;
 
