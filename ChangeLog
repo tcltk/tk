@@ -1,3 +1,11 @@
+2000-05-22  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* doc/bind.n: 
+	* doc/canvas.n: 
+	* doc/entry.n: 
+	* doc/listbox.n: 
+	* doc/photo.n: doc fix-ups [Bug: 5396]
+
 2000-05-17  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* doc/bell.n:
