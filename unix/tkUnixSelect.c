@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.9 2002/08/05 04:30:41 dgp Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.10 2002/09/30 13:42:26 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -246,15 +246,10 @@ TkSelPropProc(eventPtr)
     register XEvent *eventPtr;		/* X PropertyChange event. */
 {
     register IncrInfo *incrPtr;
-    int i, length, numItems, flags;
-    Tcl_Encoding encoding;
-    int srcLen, dstLen, result, srcRead, dstWrote, soFar;
-    Tcl_DString ds;
-    char *src, *dst;
-    Atom target, formatType;
     register TkSelHandler *selPtr;
+    int i, length, numItems;
+    Atom target, formatType;
     long buffer[TK_SEL_WORDS_AT_ONCE];
-    char *propPtr;
     TkDisplay *dispPtr = TkGetDisplay(eventPtr->xany.display);
     Tk_ErrorHandler errorHandler;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
@@ -361,24 +356,31 @@ TkSelPropProc(eventPtr)
 	    }
 	    ((char *) buffer)[numItems] = 0;
 
+	    errorHandler = Tk_CreateErrorHandler(eventPtr->xproperty.display,
+		    -1, -1, -1, (int (*)()) NULL, (ClientData) NULL);
 	    /*
 	     * Encode the data using the proper format for each type.
 	     */
 
 	    if ((formatType == XA_STRING)
-		    || (dispPtr
-			    && (formatType == dispPtr->compoundTextAtom))) {
+		    || (dispPtr && formatType==dispPtr->compoundTextAtom)) {
+		Tcl_DString ds;
+		int encodingCvtFlags;
+		int srcLen, dstLen, result, srcRead, dstWrote, soFar;
+		char *src, *dst;
+		Tcl_Encoding encoding;
+
 		/*
 		 * Set up the encoding state based on the format and whether
 		 * this is the first and/or last chunk.
 		 */
 
-		flags = 0;
+		encodingCvtFlags = 0;
 		if (incrPtr->converts[i].offset == 0) {
-		    flags |= TCL_ENCODING_START;
+		    encodingCvtFlags |= TCL_ENCODING_START;
 		}
 		if (numItems < TK_SEL_BYTES_AT_ONCE) {
-		    flags |= TCL_ENCODING_END;
+		    encodingCvtFlags |= TCL_ENCODING_END;
 		}
 		if (formatType == XA_STRING) {
 		    encoding = Tcl_GetEncoding(NULL, "iso8859-1");
@@ -404,11 +406,11 @@ TkSelPropProc(eventPtr)
 
 		while (1) {
 		    result = Tcl_UtfToExternal(NULL, encoding,
-			    src, srcLen, flags,
+			    src, srcLen, encodingCvtFlags,
 			    &incrPtr->converts[i].state,
 			    dst, dstLen, &srcRead, &dstWrote, NULL);
 		    soFar = dst + dstWrote - Tcl_DStringValue(&ds);
-		    flags &= ~TCL_ENCODING_START;
+		    encodingCvtFlags &= ~TCL_ENCODING_START;
 		    src += srcRead;
 		    srcLen -= srcRead;
 		    if (result != TCL_CONVERT_NOSPACE) {
@@ -418,8 +420,7 @@ TkSelPropProc(eventPtr)
 		    if (Tcl_DStringLength(&ds) == 0) {
 			Tcl_DStringSetLength(&ds, dstLen);
 		    }
-		    Tcl_DStringSetLength(&ds,
-			    2 * Tcl_DStringLength(&ds) + 1);
+		    Tcl_DStringSetLength(&ds, 2 * Tcl_DStringLength(&ds) + 1);
 		    dst = Tcl_DStringValue(&ds) + soFar;
 		    dstLen = Tcl_DStringLength(&ds) - soFar - 1;
 		}
@@ -433,16 +434,11 @@ TkSelPropProc(eventPtr)
 		 * Set the property to the encoded string value.
 		 */
 
-		errorHandler = Tk_CreateErrorHandler(
-		    eventPtr->xproperty.display, -1, -1, -1,
-		    (int (*)()) NULL, (ClientData) NULL);
 		XChangeProperty(eventPtr->xproperty.display,
-			eventPtr->xproperty.window,
-			eventPtr->xproperty.atom, formatType, 8,
-			PropModeReplace,
+			eventPtr->xproperty.window, eventPtr->xproperty.atom,
+			formatType, 8, PropModeReplace,
 			(unsigned char *) Tcl_DStringValue(&ds),
 			Tcl_DStringLength(&ds));
-		Tk_DeleteErrorHandler(errorHandler);
 
 		/*
 		 * Preserve any left-over bytes.
@@ -453,27 +449,59 @@ TkSelPropProc(eventPtr)
 		}
 		memcpy(incrPtr->converts[i].buffer, src, (size_t) srcLen+1);
 		Tcl_DStringFree(&ds);
-	    } else {
-		propPtr = (char *) SelCvtToX((char *) buffer,
-			formatType, (Tk_Window) incrPtr->winPtr,
-			&numItems);
+	    } else if (dispPtr && formatType==dispPtr->utf8Atom) {
+		/*
+		 * Detect if the last character was a complete UTF-8
+		 * character; if not, it is not a good idea to send it
+		 * to the remote end as there's no telling whether the
+		 * other side will be able to digest partial
+		 * characters.
+		 *
+		 * Note that utfLength is calculated and then potentially
+		 * recalculated...
+		 */
+		CONST char *utfBuffer = (CONST char *) buffer;
+		CONST char *lastChar =
+			Tcl_UtfPrev(utfBuffer+numItems, utfBuffer);
+		int utfLength = lastChar-utfBuffer;
 
+		if (numItems-utfLength > TCL_UTF_MAX) {
+		    panic("Tcl_UtfPrev scanned backward over more than one character");
+		}
+		if (!Tcl_UtfCharComplete(lastChar, numItems-utfLength)) {
+		    /*
+		     * numItems must not be reduced, so we need to set
+		     * the length of the bits we want to subtract off
+		     * it here.  Horrid!
+		     */
+		    length = numItems - utfLength;
+		} else {
+		    /*
+		     * We want to shovel all the data we've got across
+		     */
+		    utfLength = numItems;
+		}
+
+		XChangeProperty(eventPtr->xproperty.display,
+			eventPtr->xproperty.window, eventPtr->xproperty.atom,
+			formatType, 8, PropModeReplace,
+			(unsigned char *) utfBuffer, utfLength);
+	    } else {
 		/*
 		 * Set the property to the encoded string value.
 		 */
 
-		errorHandler = Tk_CreateErrorHandler(
-		    eventPtr->xproperty.display, -1, -1, -1,
-		    (int (*)()) NULL, (ClientData) NULL);
-		XChangeProperty(eventPtr->xproperty.display,
-			eventPtr->xproperty.window,
-			eventPtr->xproperty.atom, formatType, 8,
-			PropModeReplace,
-			(unsigned char *) Tcl_DStringValue(&ds), numItems);
-		Tk_DeleteErrorHandler(errorHandler);
+		char *propPtr = (char *) SelCvtToX((char *) buffer,
+			formatType, (Tk_Window) incrPtr->winPtr,
+			&numItems);
 
+		XChangeProperty(eventPtr->xproperty.display,
+			eventPtr->xproperty.window, eventPtr->xproperty.atom,
+			formatType, 32, PropModeReplace,
+			(unsigned char *) propPtr, numItems);
 		ckfree(propPtr);
 	    }
+	    Tk_DeleteErrorHandler(errorHandler);
 
 	    /*
 	     * Compute the next offset value.  If this was the last chunk,
@@ -1127,13 +1155,11 @@ SelRcvIncrProc(clientData, eventPtr)
     register XEvent *eventPtr;		/* X PropertyChange event. */
 {
     register TkSelRetrievalInfo *retrPtr = (TkSelRetrievalInfo *) clientData;
-    char *propInfo, *dst, *src;
+    char *propInfo;
     Atom type;
-    int format, result, srcLen, dstLen, srcRead, dstWrote, soFar;
+    int format, result;
     unsigned long numItems, bytesAfter;
-    Tcl_DString *dstPtr, temp;
     Tcl_Interp *interp;
-    Tcl_Encoding encoding;
 
     if ((eventPtr->xproperty.atom != retrPtr->property)
 	    || (eventPtr->xproperty.state != PropertyNewValue)
@@ -1157,6 +1183,11 @@ SelRcvIncrProc(clientData, eventPtr)
     if ((type == XA_STRING)
 	    || (type == retrPtr->winPtr->dispPtr->textAtom)
 	    || (type == retrPtr->winPtr->dispPtr->compoundTextAtom)) {
+	char *dst, *src;
+	int srcLen, dstLen, srcRead, dstWrote, soFar;
+	Tcl_Encoding encoding;
+	Tcl_DString *dstPtr, temp;
+
 	if (format != 8) {
 	    char buf[64 + TCL_INTEGER_SPACE];
 	    
@@ -1253,6 +1284,54 @@ SelRcvIncrProc(clientData, eventPtr)
 	Tcl_DStringFree(&temp);
 	if (encoding) {
 	    Tcl_FreeEncoding(encoding);
+	}
+	if (result != TCL_OK) {
+	    retrPtr->result = result;
+	}
+    } else if (type == retrPtr->winPtr->dispPtr->utf8Atom) {
+	/*
+	 * The X selection data is in UTF-8 format already.
+	 * We can't guarantee that propInfo is NULL-terminated,
+	 * so we might have to copy the string.
+	 */
+	char *propData = propInfo;
+
+	if (format != 8) {
+	    char buf[64 + TCL_INTEGER_SPACE];
+	    
+	    sprintf(buf, 
+		    "bad format for string selection: wanted \"8\", got \"%d\"",
+		    format);
+	    Tcl_SetResult(retrPtr->interp, buf, TCL_VOLATILE);
+	    retrPtr->result = TCL_ERROR;
+	    goto done;
+	}
+
+	/*
+	 * Check for the end of the incremental transfer.
+	 */
+	if (numItems == 0) {
+	    retrPtr->result = TCL_OK;
+	    goto done;
+	}
+
+	/*
+	 * Not sure if this is correct; can propInfo contain embedded
+	 * NUL bytes?  Certainly not if it is coming from Tcl/Tk, but
+	 * I don't remember if all other apps treat \u0000 the same
+	 * way...
+	 */
+	if (propInfo[numItems] != '\0') {
+	    propData = ckalloc((size_t) numItems + 1);
+	    strcpy(propData, propInfo);
+	    propData[numItems] = '\0';
+	}
+        interp = retrPtr->interp;
+        Tcl_Preserve((ClientData) interp);
+	result = (*retrPtr->proc)(retrPtr->clientData, interp, propData);
+	Tcl_Release((ClientData) interp);
+	if (propData != propInfo) {
+	    ckfree((char *) propData);
 	}
 	if (result != TCL_OK) {
 	    retrPtr->result = result;
