@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.5 1998/10/14 00:34:39 rjohnson Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.6 1999/02/04 21:01:46 stanton Exp $
  */
 
 #include "tkWinInt.h"
@@ -681,6 +681,11 @@ UpdateWrapper(winPtr)
 	} else {
 	    wmPtr->style = WM_TOPLEVEL_STYLE;
 	    wmPtr->exStyle = EX_TOPLEVEL_STYLE;
+	}
+
+	if ((wmPtr->flags & WM_WIDTH_NOT_RESIZABLE)
+		&& (wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE)) {
+	    wmPtr->style &= ~ (WS_MAXIMIZEBOX | WS_SIZEBOX);
 	}
 
 	/*
@@ -2381,6 +2386,11 @@ UpdateGeometryInfo(clientData)
 	return;
     }
 
+    if (wmPtr->flags & WM_UPDATE_SIZE_HINTS) {
+	wmPtr->flags &= ~WM_UPDATE_SIZE_HINTS;
+	UpdateWrapper(winPtr);
+    }
+	   
     /*
      * Compute the border size for the current window style.  This
      * size will include the resize handles, the title bar and the
@@ -3954,6 +3964,15 @@ WmProc(hwnd, message, wParam, lParam)
 
 	case WM_ENTERSIZEMOVE:
 	    inMoveSize = 1;
+
+	    /*
+	     * Cancel any current mouse timer.  If the mouse timer
+	     * fires during the size/move mouse capture, it will
+	     * release the capture, which is wrong.
+	     */
+
+	    TkWinCancelMouseTimer();
+
 	    oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
 	    break;
 
