@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.15 1999/04/20 01:48:00 surles Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.16 1999/04/28 18:38:04 redman Exp $
 
 # Current Tk version;  used in various names.
 
@@ -270,10 +270,10 @@ UNIXOBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
 STUB_LIB_OBJS = tkStubLib.o
 
 OBJS =  tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkClipboard.o tkCmds.o \
-	tkColor.o tkConfig.o tkCursor.o tkError.o tkEvent.o \
+	tkColor.o tkConfig.o tkConsole.o tkCursor.o tkError.o tkEvent.o \
 	tkFocus.o tkFont.o tkGet.o tkGC.o tkGeometry.o tkGrab.o tkGrid.o \
 	tkMain.o tkObj.o tkOldConfig.o tkOption.o tkPack.o tkPlace.o \
-	tkSelect.o tkUtil.o tkVisual.o tkWindow.o \
+	tkSelect.o tkUtil.o tkVisual.o tkWindow.o tkConsole.o \
 	$(UNIXOBJS) $(WIDGOBJS) $(CANVOBJS) $(IMAGEOBJS) $(TEXTOBJS)
 
 TK_DECLS = \
@@ -290,7 +290,7 @@ SRCS = \
 	$(GENERIC_DIR)/tkFocus.c $(GENERIC_DIR)/tkFont.c \
 	$(GENERIC_DIR)/tkGet.c $(GENERIC_DIR)/tkGC.c \
 	$(GENERIC_DIR)/tkGeometry.c $(GENERIC_DIR)/tkGrab.c \
-	$(GENERIC_DIR)/tkGrid.c \
+	$(GENERIC_DIR)/tkGrid.c $(GENERIC_DIR)/tkConsole.c \
 	$(GENERIC_DIR)/tkMain.c $(GENERIC_DIR)/tkOption.c \
 	$(GENERIC_DIR)/tkPack.c $(GENERIC_DIR)/tkPlace.c \
 	$(GENERIC_DIR)/tkSelect.c $(GENERIC_DIR)/tkUtil.c \
@@ -597,6 +597,9 @@ tkColor.o: $(GENERIC_DIR)/tkColor.c
 
 tkConfig.o: $(GENERIC_DIR)/tkConfig.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkConfig.c
+
+tkConsole.o: $(GENERIC_DIR)/tkConsole.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkConsole.c
 
 tkCursor.o: $(GENERIC_DIR)/tkCursor.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkCursor.c
