@@ -565,6 +565,9 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     TCL_EXP_FILE=""
     case $system in
 	AIX-4.[[2-9]])
+	    # The IBM compiler has a bug with -O when compiling the
+	    # text widget code (TkTextPixelIndex segv)
+	    CFLAGS_OPTIMIZE=""
 	    SHLIB_CFLAGS=""
 	    SHLIB_LD=$TCL_SHLIB_LD
 	    SHLIB_LD_LIBS='${LIBS}'

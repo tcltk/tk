@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.7 1999/06/01 18:44:56 stanton Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.8 1999/12/21 23:56:34 hobbs Exp $
  */
  
 #include "tkUnixInt.h"
@@ -339,7 +339,7 @@ ControlUtfProc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
 				 * correspond to the bytes stored in the
 				 * output buffer. */
 {
-    CONST char *srcStart, *srcEnd;
+    CONST char *srcEnd;
     char *dstStart, *dstEnd;
     Tcl_UniChar ch;
     int result;
@@ -351,7 +351,6 @@ ControlUtfProc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
 
     result = TCL_OK;    
 
-    srcStart = src;
     srcEnd = src + srcLen;
 
     dstStart = dst;

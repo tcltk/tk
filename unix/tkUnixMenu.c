@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.3 1999/04/16 01:51:46 stanton Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.4 1999/12/21 23:56:34 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -658,14 +658,12 @@ DrawMenuSeparator(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, y, width, height)
     int height;
 {
     XPoint points[2];
-    int margin;
     Tk_3DBorder border;
 
     if (menuPtr->menuType == MENUBAR) {
 	return;
     }
     
-    margin = (fmPtr->ascent + fmPtr->descent)/2;
     points[0].x = x;
     points[0].y = y + height/2;
     points[1].x = width - 1;
@@ -936,7 +934,7 @@ TkpComputeMenubarGeometry(menuPtr)
     Tk_FontMetrics menuMetrics, entryMetrics, *fmPtr;
     int width, height;
     int i, j;
-    int x, y, currentRowHeight, currentRowWidth, maxWidth;
+    int x, y, currentRowHeight, maxWidth;
     int maxWindowWidth;
     int lastRowBreak;
     int helpMenuIndex = -1;
@@ -969,7 +967,6 @@ TkpComputeMenubarGeometry(menuPtr)
 		&borderWidth);
 	x = y = borderWidth;
 	lastRowBreak = 0;
-	currentRowWidth = 0;
 	
 	/*
 	 * On the Mac especially, getting font metrics can be quite slow,
@@ -1135,14 +1132,13 @@ DrawTearoffEntry(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, y, width, height)
     int height;
 {
     XPoint points[2];
-    int margin, segmentWidth, maxX;
+    int segmentWidth, maxX;
     Tk_3DBorder border;
 
     if (menuPtr->menuType != MASTER_MENU) {
 	return;
     }
     
-    margin = (fmPtr->ascent + fmPtr->descent)/2;
     points[0].x = x;
     points[0].y = y + height/2;
     points[1].y = points[0].y;
