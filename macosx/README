@@ -1,7 +1,7 @@
 TclTkAqua README 
 ----------------
 
-RCS: @(#) $Id: README,v 1.5 2003/02/21 03:34:29 das Exp $
+RCS: @(#) $Id: README,v 1.6 2003/02/27 00:09:26 hobbs Exp $
 
 This is the README file for the Mac OS X native versions of Tcl & Tk.
 
@@ -94,7 +94,7 @@ not supported.
 
 - Scrollbars: There are two scrollbar variants in Aqua, normal & small.  The 
 normal scrollbar has a small dimension of 16, the small variant 12.  Access
-to the small variant was added in Tk 8.4.3.
+to the small variant was added in Tk 8.4.2.
 
 - Cursors: You can now put up and spin the Classic MacOS spinner, and the 
 counting hands and watch cursor.  The way this is done is each of the spinners
@@ -110,7 +110,7 @@ name.  So, for instance this code will spin the spinner:
         $widget configure -cursor spinning$count
         after 100 spinCursor [incr count]
     }
-This was added in Tk 8.4.3
+This was added in Tk 8.4.2
 
 
 3. Building TclTkAqua
