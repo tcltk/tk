@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.14 2004/01/25 12:03:59 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.15 2004/02/07 16:21:08 cc_benny Exp $
  */
 
 #include "tkInt.h"
@@ -628,8 +628,9 @@ TkpSetKeycodeAndState(
         }
 
         if (keysym <= LATIN1_MAX) {
-            eventPtr->xkey.trans_chars[0] = keysym;
-            eventPtr->xkey.trans_chars[1] = 0;
+            int done;
+            done = Tcl_UniCharToUtf(keysym,eventPtr->xkey.trans_chars);
+            eventPtr->xkey.trans_chars[done] = 0;
         } else {
             eventPtr->xkey.trans_chars[0] = 0;
         }
