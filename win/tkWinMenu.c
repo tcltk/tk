@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.28 2003/12/26 22:29:07 mdejong Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.29 2003/12/28 05:04:18 mdejong Exp $
  */
 
 #define OEMRESOURCE
@@ -1471,7 +1471,7 @@ DrawWindowsSystemBitmap(display, drawable, gc, rectPtr, bitmapID, alignFlags)
     GetObject(bitmap, sizeof(BITMAP), &bm);
     ptSize.x = bm.bmWidth;
     ptSize.y = bm.bmHeight;
-    DPtoLP(hdc, &ptSize, 1);
+    DPtoLP(scratchDC, &ptSize, 1);
 
     ptOrg.y = ptOrg.x = 0;
     DPtoLP(scratchDC, &ptOrg, 1);
