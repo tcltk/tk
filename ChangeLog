@@ -1,3 +1,9 @@
+2002-11-22  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/textDisp.test:
+	* generic/tkTextDisp.c (TkTextSeeCmd): handle see for unmapped
+	text displays. [Bug #641778]
+
 2002-11-19  Jim Ingham <jingham@apple.com>
 
 	* macosx/tkMacOSXScrlbr.c (TkpDisplayScrollbar): If the
