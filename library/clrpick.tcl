@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# RCS: @(#) $Id: clrpick.tcl,v 1.6 1999/09/02 17:02:52 hobbs Exp $
+# RCS: @(#) $Id: clrpick.tcl,v 1.7 1999/11/24 20:59:06 hobbs Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -65,30 +65,16 @@ proc tkColorDialog {args} {
     }
     wm transient $w $data(-parent)
 
-
     # 5. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
     # display and de-iconify it.
 
-    wm withdraw $w
-    update idletasks
-    set x [expr {[winfo screenwidth $w]/2 - [winfo reqwidth $w]/2 \
-	    - [winfo vrootx [winfo parent $w]]}]
-    set y [expr {[winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
-	    - [winfo vrooty [winfo parent $w]]}]
-    wm geom $w +$x+$y
-    wm deiconify $w
+    ::tk::PlaceWindow $w widget $data(-parent)
     wm title $w $data(-title)
 
     # 6. Set a grab and claim the focus too.
 
-    set oldFocus [focus]
-    set oldGrab [grab current $w]
-    if {[string compare $oldGrab ""]} {
-	set grabStatus [grab status $oldGrab]
-    }
-    grab $w
-    focus $data(okBtn)
+    ::tk::SetFocusGrab $w $data(okBtn)
 
     # 7. Wait for the user to respond, then restore the focus and
     # return the index of the selected button.  Restore the focus
@@ -97,17 +83,9 @@ proc tkColorDialog {args} {
     # restore any grab that was in effect.
 
     tkwait variable tkPriv(selectColor)
-    catch {focus $oldFocus}
-    grab release $w
-    destroy $w
+    ::tk::RestoreFocusGrab $w $data(okBtn)
     unset data
-    if {[string compare $oldGrab ""]} {
-	if {[string equal $grabStatus "global"]} {
-	    grab -global $oldGrab
-	} else {
-	    grab $oldGrab
-	}
-    }
+
     return $tkPriv(selectColor)
 }
 

@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.6 1999/09/02 17:02:53 hobbs Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.7 1999/11/24 20:59:06 hobbs Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -226,28 +226,16 @@ proc tkMessageBox {args} {
     # so we know how big it wants to be, then center the window in the
     # display and de-iconify it.
 
-    wm withdraw $w
-    update idletasks
-    set x [expr {[winfo screenwidth $w]/2 - [winfo reqwidth $w]/2 \
-	    - [winfo vrootx [winfo parent $w]]}]
-    set y [expr {[winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
-	    - [winfo vrooty [winfo parent $w]]}]
-    wm geom $w +$x+$y
-    wm deiconify $w
+    ::tk::PlaceWindow $w widget $data(-parent)
 
     # 8. Set a grab and claim the focus too.
 
-    set oldFocus [focus]
-    set oldGrab [grab current $w]
-    if {[string compare $oldGrab ""]} {
-	set grabStatus [grab status $oldGrab]
-    }
-    grab $w
     if {[string compare $data(-default) ""]} {
-	focus $w.$data(-default)
+	set focus $w.$data(-default)
     } else {
-	focus $w
+	set focus $w
     }
+    ::tk::SetFocusGrab $w $focus
 
     # 9. Wait for the user to respond, then restore the focus and
     # return the index of the selected button.  Restore the focus
@@ -256,14 +244,8 @@ proc tkMessageBox {args} {
     # restore any grab that was in effect.
 
     tkwait variable tkPriv(button)
-    catch {focus $oldFocus}
-    destroy $w
-    if {[string compare $oldGrab ""]} {
-	if {[string equal $grabStatus "global"]} {
-	    grab -global $oldGrab
-	} else {
-	    grab $oldGrab
-	}
-    }
+
+    ::tk::RestoreFocusGrab $w $focus
+
     return $tkPriv(button)
 }

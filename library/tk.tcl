@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.12 1999/10/01 22:45:19 hobbs Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.13 1999/11/24 20:59:06 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -28,6 +28,86 @@ if {[info exists auto_path] && [string compare {} $tk_library] && \
 # Turn off strict Motif look and feel as a default.
 
 set tk_strictMotif 0
+
+# Create a ::tk namespace
+
+namespace eval ::tk {
+}
+
+# ::tk::PlaceWindow --
+#   place a toplevel at a particular position
+# Arguments:
+#   toplevel	name of toplevel window
+#   ?placement?	pointer ?center? ; places $w centered on the pointer
+#		widget widgetPath ; centers $w over widget_name
+#		defaults to placing toplevel in the middle of the screen
+#   ?anchor?	center or widgetPath
+# Results:
+#   Returns nothing
+#
+proc ::tk::PlaceWindow {w {placement ""} {anchor ""}} {
+    wm withdraw $w
+    update idletasks
+    if {[string match p* $placement]} {
+	## place at POINTER (centered if $anchor == center)
+	if {[string match "c*" $anchor]} {
+	    set x [expr {[winfo pointerx $w]-[winfo reqwidth $w]/2}]
+	    set y [expr {[winfo pointery $w]-[winfo reqheight $w]/2}]
+	} else {
+	    set x [winfo pointerx $w]
+	    set y [winfo pointery $w]
+	}
+    } elseif {[string match w* $placement] && \
+	    [winfo exists $anchor] && [winfo ismapped $anchor]} {
+	## center about WIDGET $anchor, widget must be mapped
+	set x [expr {[winfo rootx $anchor] + \
+		([winfo width $anchor]-[winfo reqwidth $w])/2}]
+	set y [expr {[winfo rooty $anchor] + \
+		([winfo height $anchor]-[winfo reqheight $w])/2}]
+    } else {
+	set x [expr {([winfo screenwidth $w]-[winfo reqwidth $w])/2}]
+	set y [expr {([winfo screenheight $w]-[winfo reqheight $w])/2}]
+    }
+    wm geometry +$x+$y
+    wm deiconify $w
+}
+
+proc ::tk::SetFocusGrab {grab {focus {}}} {
+    set index "$grab,$focus"
+    upvar ::tk::FocusGrab($index) data
+
+    lappend data [focus]
+    set oldGrab [grab current $grab]
+    lappend data $oldGrab
+    if {[winfo exists $oldGrab]} {
+	lappend data [grab status $oldGrab]
+    }
+    grab $grab
+    if {[winfo exists $focus]} {
+	focus $focus
+    }
+}
+
+proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
+    set index "$grab,$focus"
+    foreach {oldFocus oldGrab oldStatus} $::tk::FocusGrab($index) { break }
+    unset ::tk::FocusGrab($index)
+
+    catch {focus $oldFocus}
+    grab release $grab
+    if {[string equal $destroy "withdraw"]} {
+	wm withdraw $grab
+    } else {
+	destroy $grab
+    }
+    if {[winfo exists $oldGrab] && [winfo ismapped $oldGrab]} {
+	if {[string equal $oldStatus "global"]} {
+	    grab -global $oldGrab
+	} else {
+	    grab $oldGrab
+	}
+    }
+}
 
 # tkScreenChanged --
 # This procedure is invoked by the binding mechanism whenever the

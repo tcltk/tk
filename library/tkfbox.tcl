@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.10 1999/09/02 17:02:53 hobbs Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.11 1999/11/24 20:59:06 hobbs Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -693,29 +693,15 @@ proc tkFDialog {type args} {
     # so we know how big it wants to be, then center the window in the
     # display and de-iconify it.
 
-    wm withdraw $w
-    update idletasks
-    set x [expr {[winfo screenwidth $w]/2 - [winfo reqwidth $w]/2 \
-	    - [winfo vrootx [winfo parent $w]]}]
-    set y [expr {[winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
-	    - [winfo vrooty [winfo parent $w]]}]
-    wm geom $w [winfo reqwidth $w]x[winfo reqheight $w]+$x+$y
-    wm deiconify $w
+    ::tk::PlaceWindow $w widget $data(-parent)
     wm title $w $data(-title)
 
     # Set a grab and claim the focus too.
 
-    set oldFocus [focus]
-    set oldGrab [grab current $w]
-    if {[string compare $oldGrab ""]} {
-	set grabStatus [grab status $oldGrab]
-    }
-    grab $w
-    focus $data(ent)
+    ::tk::SetFocusGrab $w $data(ent)
     $data(ent) delete 0 end
     $data(ent) insert 0 $data(selectFile)
-    $data(ent) select from 0
-    $data(ent) select to   end
+    $data(ent) selection range 0 end
     $data(ent) icursor end
 
     # Wait for the user to respond, then restore the focus and
@@ -725,16 +711,8 @@ proc tkFDialog {type args} {
     # restore any grab that was in effect.
 
     tkwait variable tkPriv(selectFilePath)
-    catch {focus $oldFocus}
-    grab release $w
-    wm withdraw $w
-    if {[string compare $oldGrab ""]} {
-	if {[string equal $grabStatus "global"]} {
-	    grab -global $oldGrab
-	} else {
-	    grab $oldGrab
-	}
-    }
+
+    ::tk::RestoreFocusGrab $w $data(ent) withdraw
 
     return $tkPriv(selectFilePath)
 }
@@ -1282,8 +1260,7 @@ proc tkFDialog_ActivateEnt {w} {
 	    if {[string equal $data(type) open]} {
 		tk_messageBox -icon warning -type ok -parent $data(-parent) \
 		    -message "File \"[file join $path $file]\" does not exist."
-		$data(ent) select from 0
-		$data(ent) select to   end
+		$data(ent) selection range 0 end
 		$data(ent) icursor end
 	    } else {
 		tkFDialog_SetPathSilently $w $path
@@ -1294,24 +1271,21 @@ proc tkFDialog_ActivateEnt {w} {
 	PATH {
 	    tk_messageBox -icon warning -type ok -parent $data(-parent) \
 		-message "Directory \"$path\" does not exist."
-	    $data(ent) select from 0
-	    $data(ent) select to   end
+	    $data(ent) selection range 0 end
 	    $data(ent) icursor end
 	}
 	CHDIR {
 	    tk_messageBox -type ok -parent $data(-parent) -message \
 	       "Cannot change to the directory \"$path\".\nPermission denied."\
 		-icon warning
-	    $data(ent) select from 0
-	    $data(ent) select to   end
+	    $data(ent) selection range 0 end
 	    $data(ent) icursor end
 	}
 	ERROR {
 	    tk_messageBox -type ok -parent $data(-parent) -message \
 	       "Invalid file name \"$path\"."\
 		-icon warning
-	    $data(ent) select from 0
-	    $data(ent) select to   end
+	    $data(ent) selection range 0 end
 	    $data(ent) icursor end
 	}
     }
@@ -1447,18 +1421,15 @@ proc tkFDialog_Done {w {selectFilePath ""}} {
 	set tkPriv(selectFile)     $data(selectFile)
 	set tkPriv(selectPath)     $data(selectPath)
 
-	if {[file exists $selectFilePath] && 
-	    [string equal $data(type) save]} {
-
-		set reply [tk_messageBox -icon warning -type yesno\
-			-parent $data(-parent) -message "File\
-			\"$selectFilePath\" already exists.\nDo\
-			you want to overwrite it?"]
-		if {[string equal $reply "no"]} {
-		    return
-		}
+	if {[file exists $selectFilePath] && [string equal $data(type) save]} {
+	    set reply [tk_messageBox -icon warning -type yesno\
+		    -parent $data(-parent) -message "File\
+		    \"$selectFilePath\" already exists.\nDo\
+		    you want to overwrite it?"]
+	    if {[string equal $reply "no"]} {
+		return
+	    }
 	}
     }
     set tkPriv(selectFilePath) $selectFilePath
 }
-
