@@ -80,8 +80,8 @@
 #endif
 
 #ifdef BUILD_tk
-# undef EXPORT
-# define EXPORT DLLEXPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
