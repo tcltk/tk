@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.11 2004/12/20 10:34:20 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.12 2005/02/22 08:48:56 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -81,7 +81,7 @@ pascal void             OpenEventProc(NavEventCallbackMessage callBackSelector,
 static void             InitFileDialogs();
 static int              NavServicesGetFile(Tcl_Interp *interp, OpenFileData *ofd,
                             AEDesc *initialDescPtr,
-                            unsigned char *initialFile, AEDescList *selectDescPtr,
+                            char *initialFile, AEDescList *selectDescPtr,
                             CFStringRef title, CFStringRef message, int multiple, int isOpen);
 static int              HandleInitialDirectory (Tcl_Interp *interp,
                                                 char *initialFile, char *initialDir,
@@ -414,7 +414,7 @@ Tk_GetSaveFileObjCmd(
     Tcl_Obj *CONST objv[])     /* Argument objects. */
 {
     int i, result;
-    Str255 initialFile;
+    char *initialFile = NULL;
     Tk_Window parent;
     AEDesc initialDesc = {typeNull, NULL};
     AEDesc *initialPtr = NULL;
@@ -436,7 +436,6 @@ Tk_GetSaveFileObjCmd(
     
     result = TCL_ERROR;    
     parent = (Tk_Window) clientData;    
-    StrLength(initialFile) = 0;
     title = NULL;
     message = NULL;   
 
@@ -444,8 +443,6 @@ Tk_GetSaveFileObjCmd(
         char *choice;
         int index, choiceLen;
         char *string;
-        Tcl_DString ds;
-        int srcRead, dstWrote;
 
         if (Tcl_GetIndexFromObj(interp, objv[i], saveOptionStrings, "option",
                 TCL_EXACT, &index) != TCL_OK) {
@@ -472,16 +469,7 @@ Tk_GetSaveFileObjCmd(
                 }
                 break;
             case SAVE_INITFILE:
-                choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                if (Tcl_TranslateFileName(interp, choice, &ds) == NULL) {
-                    result = TCL_ERROR;
-                    goto end;
-                }
-                Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, Tcl_DStringValue(&ds), 
-                        Tcl_DStringLength(&ds), 0, NULL, 
-                        StrBody(initialFile), 255, &srcRead, &dstWrote, NULL);
-                StrLength(initialFile) = (unsigned char) dstWrote;
-                Tcl_DStringFree(&ds);            
+                initialFile = Tcl_GetStringFromObj(objv[i + 1], NULL);
                 break;
             case SAVE_MESSAGE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
@@ -733,7 +721,7 @@ NavServicesGetFile(
     Tcl_Interp *interp,
     OpenFileData *ofdPtr,
     AEDesc *initialDescPtr,
-    unsigned char *initialFile,
+    char *initialFile,
     AEDescList *selectDescPtr,
     CFStringRef title,
     CFStringRef message,
@@ -747,9 +735,7 @@ NavServicesGetFile(
     OSErr err;
     Tcl_Obj *theResult = NULL;
     int result;
-    TextEncoding encoding;
 
-    encoding = GetApplicationTextEncoding();
     err = NavGetDefaultDialogCreationOptions(&diagOptions);
     if (err!=noErr) {
         return TCL_ERROR;
@@ -783,7 +769,7 @@ NavServicesGetFile(
         for (filterPtr = ofdPtr->fl.filters; filterPtr != NULL; 
                 filterPtr = filterPtr->next, index++) {
             menuItemNames[index] = CFStringCreateWithCString(NULL, 
-                    filterPtr->name, encoding);
+                    filterPtr->name, kCFStringEncodingUTF8);
         }
         diagOptions.popupExtension = CFArrayCreate(NULL, 
                 (const void **) menuItemNames, ofdPtr->fl.numFilters, NULL);
@@ -799,12 +785,12 @@ NavServicesGetFile(
     
     diagOptions.optionFlags += kNavSupportPackages;
     
-    diagOptions.clientName = CFStringCreateWithCString(NULL, "Wish", encoding);
+    diagOptions.clientName = CFStringCreateWithCString(NULL, "Wish", kCFStringEncodingUTF8);
     diagOptions.message = message;
     diagOptions.windowTitle = title;
-    if ((initialFile != NULL) && (initialFile[0] != 0)) {
-        diagOptions.saveFileName = CFStringCreateWithPascalString(NULL,
-                initialFile, encoding);
+    if (initialFile) {
+        diagOptions.saveFileName = CFStringCreateWithCString(NULL,
+                initialFile, kCFStringEncodingUTF8);
     } else {
         diagOptions.saveFileName = NULL;
     }
@@ -881,7 +867,6 @@ NavServicesGetFile(
     if (theReply.validRecord && err == noErr) {
         AEDesc resultDesc;
         long count;
-        Tcl_DString fileName;
         FSRef  fsRef;
         char   pathPtr[1024];
         int    pathValid = 0;
@@ -905,10 +890,14 @@ NavServicesGetFile(
                                 char saveName [1024];
                                 if (saveNameRef = NavDialogGetSaveFileName(dialogRef)) {
                                     if (CFStringGetCString(saveNameRef, saveName, 
-                                            1024, encoding)) {
-                                        strcat(pathPtr, "/");
-                                        strcat(pathPtr, saveName);
-                                        pathValid = 1;
+                                            1024, kCFStringEncodingUTF8)) {
+                                        if (strlen(pathPtr) + strlen(saveName) < 1023) {
+                                            strcat(pathPtr, "/");
+                                            strcat(pathPtr, saveName);
+                                            pathValid = 1;
+                                        } else {
+                                            fprintf(stderr, "Path name too long\n");                                        
+                                        }
                                     } else {
                                         fprintf(stderr, "CFStringGetCString failed\n");
                                     }
@@ -919,21 +908,12 @@ NavServicesGetFile(
                                 pathValid = 1;
                             }
                             if (pathValid) {
-                                /* 
-                                 * Tested this and NULL=utf-8 encoding is
-                                 * good here
-                                 */
-                                Tcl_ExternalToUtfDString(NULL, pathPtr, -1, 
-							 &fileName);
                                 if (multiple) {
                                     Tcl_ListObjAppendElement(interp, theResult, 
-                                        Tcl_NewStringObj(Tcl_DStringValue(&fileName), 
-                                        Tcl_DStringLength(&fileName)));
+                                        Tcl_NewStringObj(pathPtr, -1));
                                 } else {
-                                    Tcl_SetStringObj(theResult, Tcl_DStringValue(&fileName), 
-                                        Tcl_DStringLength(&fileName));
+                                    Tcl_SetStringObj(theResult, pathPtr, -1);
                                 }
-                                Tcl_DStringFree(&fileName);
                             }
                         }
                     }
