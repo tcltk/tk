@@ -9,6 +9,9 @@
 	does set #define _WIN32_IE 0x0300, I guess we can accept IE3 as the
 	lowest denominator and use the version 4.71 features of Comctl32.dll
 
+	* win/rc/wish.exe.manifest: updated version string.  This file isn't
+	compiled.
+
 2003-12-10  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* tests/textWind.test: fixed 2 tests so they run on Windows as well
