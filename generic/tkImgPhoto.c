@@ -16,7 +16,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.29 2002/02/19 16:30:26 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.30 2002/04/12 06:48:58 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -315,6 +315,7 @@ typedef struct ThreadSpecificData {
 				       * list of known photo image formats.*/
     Tk_PhotoImageFormat *oldFormatList;  /* Pointer to the first in the 
 				       * list of known photo image formats.*/
+    int initialized;	/* set to 1 if we've initialized the strucuture */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -358,6 +359,8 @@ static int imgPhotoColorHashInitialized;
  * Forward declarations
  */
 
+static void		PhotoFormatThreadExitProc _ANSI_ARGS_((
+			    ClientData clientData));
 static int		ImgPhotoCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
 static int		ParseSubcommandOptions _ANSI_ARGS_((
@@ -431,6 +434,48 @@ static void		PhotoOptionCleanupProc _ANSI_ARGS_((
  *
  *----------------------------------------------------------------------
  */
+
+static void
+PhotoFormatThreadExitProc(clientData)
+    ClientData clientData;	/* not used */
+{
+    Tk_PhotoImageFormat *freePtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    while (tsdPtr->oldFormatList != NULL) {
+	freePtr = tsdPtr->oldFormatList;
+	tsdPtr->oldFormatList = tsdPtr->oldFormatList->nextPtr;
+	ckfree((char *) freePtr->name);
+	ckfree((char *) freePtr);
+    }
+    while (tsdPtr->formatList != NULL) {
+	freePtr = tsdPtr->formatList;
+	tsdPtr->formatList = tsdPtr->formatList->nextPtr;
+	ckfree((char *) freePtr->name);
+	ckfree((char *) freePtr);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_CreateOldPhotoImageFormat, Tk_CreatePhotoImageFormat --
+ *
+ *	This procedure is invoked by an image file handler to register
+ *	a new photo image format and the procedures that handle the
+ *	new format.  The procedure is typically invoked during
+ *	Tcl_AppInit.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The new image file format is entered into a table used in the
+ *	photo image "read" and "write" subcommands.
+ *
+ *----------------------------------------------------------------------
+ */
 void
 Tk_CreateOldPhotoImageFormat(formatPtr)
     Tk_PhotoImageFormat *formatPtr;
@@ -443,6 +488,10 @@ Tk_CreateOldPhotoImageFormat(formatPtr)
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
+    if (!tsdPtr->initialized) {
+	tsdPtr->initialized = 1;
+	Tcl_CreateThreadExitHandler(PhotoFormatThreadExitProc, NULL);
+    }
     copyPtr = (Tk_PhotoImageFormat *) ckalloc(sizeof(Tk_PhotoImageFormat));
     *copyPtr = *formatPtr;
     copyPtr->name = (char *) ckalloc((unsigned) (strlen(formatPtr->name) + 1));
@@ -463,6 +512,10 @@ Tk_CreatePhotoImageFormat(formatPtr)
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
+    if (!tsdPtr->initialized) {
+	tsdPtr->initialized = 1;
+	Tcl_CreateThreadExitHandler(PhotoFormatThreadExitProc, NULL);
+    }
     copyPtr = (Tk_PhotoImageFormat *) ckalloc(sizeof(Tk_PhotoImageFormat));
     *copyPtr = *formatPtr;
     copyPtr->name = (char *) ckalloc((unsigned) (strlen(formatPtr->name) + 1));
@@ -1849,19 +1902,14 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
 	if (chan == NULL) {
 	    return TCL_ERROR;
 	}
-        if (Tcl_SetChannelOption(interp, chan, "-translation", "binary")
-		!= TCL_OK) {
-	    Tcl_Close(NULL, chan);
-            return TCL_ERROR;
-        }
-        if (Tcl_SetChannelOption(interp, chan, "-encoding", "binary")
-		!= TCL_OK) {
-	    Tcl_Close(NULL, chan);
-            return TCL_ERROR;
-        }
-	if (MatchFileFormat(interp, chan, masterPtr->fileString,
-		masterPtr->format, &imageFormat, &imageWidth,
-		&imageHeight, &oldformat) != TCL_OK) {
+	/*
+	 * -translation binary also sets -encoding binary
+	 */
+        if ((Tcl_SetChannelOption(interp, chan,
+		"-translation", "binary") != TCL_OK) ||
+		(MatchFileFormat(interp, chan, masterPtr->fileString,
+			masterPtr->format, &imageFormat, &imageWidth,
+			&imageHeight, &oldformat) != TCL_OK)) {
 	    Tcl_Close(NULL, chan);
 	    return TCL_ERROR;
 	}
@@ -1885,7 +1933,7 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
 
     if ((masterPtr->fileString == NULL) && (masterPtr->dataString != NULL)
 	    && ((masterPtr->dataString != oldData)
-	    || (masterPtr->format != oldFormat))) {
+		    || (masterPtr->format != oldFormat))) {
 
 	if (MatchStringFormat(interp, masterPtr->dataString, 
 		masterPtr->format, &imageFormat, &imageWidth,
@@ -3894,6 +3942,7 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height)
 		(VOID *) (blockPtr->pixelPtr + blockPtr->offset[0]),
 		(size_t) (height * width * 4));
     } else {
+	int alpha;
 	for (hLeft = height; hLeft > 0;) {
 	    srcLinePtr = blockPtr->pixelPtr + blockPtr->offset[0];
 	    hCopy = MIN(hLeft, blockPtr->height);
@@ -3905,24 +3954,29 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height)
 		    wLeft -= wCopy;
 		    srcPtr = srcLinePtr;
 		    for (; wCopy > 0; --wCopy) {
-		      if (!destPtr[3]) {
-			destPtr[0] = destPtr[1] = destPtr[2] = 0xd9;
-		      }
-		      if (!alphaOffset || (srcPtr[alphaOffset] == 255)) {
-			*destPtr++ = srcPtr[0];
-			*destPtr++ = srcPtr[greenOffset];
-			*destPtr++ = srcPtr[blueOffset];
-			*destPtr++ = 255;
-		      } else {
-			if (srcPtr[alphaOffset]) {
-			    destPtr[0] += (srcPtr[0] - destPtr[0]) * srcPtr[alphaOffset] / 255;
-			    destPtr[1] += (srcPtr[greenOffset] - destPtr[1]) * srcPtr[alphaOffset] / 255;
-			    destPtr[2] += (srcPtr[blueOffset] - destPtr[2]) * srcPtr[alphaOffset] / 255;
-			    destPtr[3] += (255 - destPtr[3]) * srcPtr[alphaOffset] / 255;
-		  	}
-			destPtr+=4;
-		      }
-		      srcPtr += blockPtr->pixelSize;
+			alpha = srcPtr[alphaOffset];
+			if (!destPtr[3]) {
+			    destPtr[0] = destPtr[1] = destPtr[2] = 0xd9;
+			}
+			if (!alphaOffset || (alpha == 255)) {
+			    /* new solid part of the image */
+			    *destPtr++ = srcPtr[0];
+			    *destPtr++ = srcPtr[greenOffset];
+			    *destPtr++ = srcPtr[blueOffset];
+			    *destPtr++ = 255;
+			} else {
+			    if (alpha) {
+				destPtr[0] += (srcPtr[0] - destPtr[0]) * alpha / 255;
+				destPtr[1] += (srcPtr[greenOffset] - destPtr[1]) * alpha / 255;
+				destPtr[2] += (srcPtr[blueOffset] - destPtr[2]) * alpha / 255;
+				destPtr[3] += (255 - destPtr[3]) * alpha / 255;
+			    }
+			    /*
+			     * else should be empty space
+			     */
+			    destPtr += 4;
+			}
+			srcPtr += blockPtr->pixelSize;
 		    }
 		}
 		srcLinePtr += blockPtr->pitch;
@@ -3935,61 +3989,62 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height)
      * Add this new block to the region which specifies which data is valid.
      */
 
-  if (alphaOffset) {
-    int x1, y1, end;
-    
-    /*
-     * This block is grossly inefficient.  For each row in the image, it
-     * finds each continguous string of nontransparent pixels, then marks
-     * those areas as valid in the validRegion mask.  This makes drawing very
-     * efficient, because of the way we use X:  we just say, here's your
-     * mask, and here's your data.  We need not worry about the current
-     * background color, etc.  But this costs us a lot on the image setup.
-     * Still, image setup only happens once, whereas the drawing happens
-     * many times, so this might be the best way to go.
-     *
-     * An alternative might be to not set up this mask, and instead, at
-     * drawing time, for each transparent pixel, set its color to the
-     * color of the background behind that pixel.  This is what I suspect
-     * most of programs do.  However, they don't have to deal with the canvas,
-     * which could have many different background colors.  Determining the
-     * correct bg color for a given pixel might be expensive.
-     */
-     
-    destLinePtr = masterPtr->pix24 + (y * masterPtr->width + x) * 4 + 3;
-    for (y1 = 0; y1 < height; y1++) {
-	x1 = 0;
-	destPtr = destLinePtr;
-	while (x1 < width) {
-	    /* search for first non-transparent pixel */
-	    while ((x1 < width) && !*destPtr) {
+    if (alphaOffset) {
+	int x1, y1, end;
+
+	/*
+	 * This block is grossly inefficient.  For each row in the image, it
+	 * finds each continguous string of nontransparent pixels, then marks
+	 * those areas as valid in the validRegion mask.  This makes drawing
+	 * very efficient, because of the way we use X: we just say, here's
+	 * your mask, and here's your data.  We need not worry about the
+	 * current background color, etc.  But this costs us a lot on the
+	 * image setup.  Still, image setup only happens once, whereas the
+	 * drawing happens many times, so this might be the best way to go.
+	 *
+	 * An alternative might be to not set up this mask, and instead, at
+	 * drawing time, for each transparent pixel, set its color to the
+	 * color of the background behind that pixel.  This is what I suspect
+	 * most of programs do.  However, they don't have to deal with the
+	 * canvas, which could have many different background colors.
+	 * Determining the correct bg color for a given pixel might be
+	 * expensive.
+	 */
+
+	destLinePtr = masterPtr->pix24 + (y * masterPtr->width + x) * 4 + 3;
+	for (y1 = 0; y1 < height; y1++) {
+	    x1 = 0;
+	    destPtr = destLinePtr;
+	    while (x1 < width) {
+		/* search for first non-transparent pixel */
+		while ((x1 < width) && !*destPtr) {
 		    x1++; destPtr += 4;
+		}
+		end = x1;
+		/* search for first transparent pixel */
+		while ((end < width) && *destPtr) {
+		    end++; destPtr += 4;
+		}
+		if (end > x1) {
+		    rect.x = x + x1;
+		    rect.y = y + y1;
+		    rect.width = end - x1;
+		    rect.height = 1;
+		    TkUnionRectWithRegion(&rect, masterPtr->validRegion,
+			    masterPtr->validRegion);
+		}
+		x1 = end;
 	    }
-	    end = x1;
-	    /* search for first transparent pixel */
-	    while ((end < width) && *destPtr) {
-	        end++; destPtr += 4;
-	    }
-	    if (end > x1) {
-		rect.x = x + x1;
-		rect.y = y + y1;
-		rect.width = end - x1;
-		rect.height = 1;
-		TkUnionRectWithRegion(&rect, masterPtr->validRegion,
-			masterPtr->validRegion);
-	    }
-	    x1 = end;
+	    destLinePtr += masterPtr->width * 4;
 	}
-	destLinePtr += masterPtr->width * 4;
+    } else {
+	rect.x = x;
+	rect.y = y;
+	rect.width = width;
+	rect.height = height;
+	TkUnionRectWithRegion(&rect, masterPtr->validRegion,
+		masterPtr->validRegion);
     }
-  } else {
-    rect.x = x;
-    rect.y = y;
-    rect.width = width;
-    rect.height = height;
-    TkUnionRectWithRegion(&rect, masterPtr->validRegion,
-	    masterPtr->validRegion);
-  }
 
     /*
      * Update each instance.
@@ -4190,43 +4245,43 @@ Tk_PhotoPutZoomedBlock(handle, blockPtr, x, y, width, height, zoomX, zoomY,
      * Add this new block to the region that specifies which data is valid.
      */
 
-  if (alphaOffset) {
-    int x1, y1, end;
+    if (alphaOffset) {
+	int x1, y1, end;
 
-    destLinePtr = masterPtr->pix24 + (y * masterPtr->width + x) * 4 + 3;
-    for (y1 = 0; y1 < height; y1++) {
-	x1 = 0;
-	destPtr = destLinePtr;
-	while (x1 < width) {
-	    /* search for first non-transparent pixel */
-	    while ((x1 < width) && !*destPtr) {
+	destLinePtr = masterPtr->pix24 + (y * masterPtr->width + x) * 4 + 3;
+	for (y1 = 0; y1 < height; y1++) {
+	    x1 = 0;
+	    destPtr = destLinePtr;
+	    while (x1 < width) {
+		/* search for first non-transparent pixel */
+		while ((x1 < width) && !*destPtr) {
 		    x1++; destPtr += 4;
+		}
+		end = x1;
+		/* search for first transparent pixel */
+		while ((end < width) && *destPtr) {
+		    end++; destPtr += 4;
+		}
+		if (end > x1) {
+		    rect.x = x + x1;
+		    rect.y = y + y1;
+		    rect.width = end - x1;
+		    rect.height = 1;
+		    TkUnionRectWithRegion(&rect, masterPtr->validRegion,
+			    masterPtr->validRegion);
+		}
+		x1 = end;
 	    }
-	    end = x1;
-	    /* search for first transparent pixel */
-	    while ((end < width) && *destPtr) {
-	        end++; destPtr += 4;
-	    }
-	    if (end > x1) {
-		rect.x = x + x1;
-		rect.y = y + y1;
-		rect.width = end - x1;
-		rect.height = 1;
-		TkUnionRectWithRegion(&rect, masterPtr->validRegion,
-			masterPtr->validRegion);
-	    }
-	    x1 = end;
+	    destLinePtr += masterPtr->width * 4;
 	}
-	destLinePtr += masterPtr->width * 4;
+    } else {
+	rect.x = x;
+	rect.y = y;
+	rect.width = width;
+	rect.height = height;
+	TkUnionRectWithRegion(&rect, masterPtr->validRegion,
+		masterPtr->validRegion);
     }
-  } else {
-    rect.x = x;
-    rect.y = y;
-    rect.width = width;
-    rect.height = height;
-    TkUnionRectWithRegion(&rect, masterPtr->validRegion,
-	    masterPtr->validRegion);
-  }
 
     /*
      * Update each instance.
