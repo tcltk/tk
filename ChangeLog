@@ -1,3 +1,8 @@
+2004-03-31  Jim Ingham  <jingham@apple.com>
+
+	* tkMacOSXMenu.c (EventuallyInvokeMenu): Report errors from invoking
+	menu commands as background errors. [Bug 220871]
+
 2004-03-26  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkImgPPM.c (ReadPPMStringHeader): Code to read PPM/PGM data
