@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXApplication.r,v 1.2 2002/08/31 06:12:29 das Exp $
+ * RCS: @(#) $Id: tkMacOSXApplication.r,v 1.3 2002/09/12 17:34:16 das Exp $
  */
 
 #include <Carbon/Carbon.r>
@@ -18,7 +18,7 @@
  * the version string for Tcl.
  */
 
-#define RESOURCE_INCLUDED
+#define RC_INVOKED
 #include "tk.h"
 
 #if (TK_RELEASE_LEVEL == 0)
