@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.20 2005/01/09 18:28:06 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.21 2005/01/09 19:17:23 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -415,6 +415,10 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
     }
 
     if (containerPtr) {
+	TkWindow *topwinPtr = NULL;
+	if(Tk_IsTopLevel(containerPtr->parentPtr)) {
+	    topwinPtr = containerPtr->parentPtr;
+	}
 	switch (message) {
 	    case TK_ATTACHWINDOW:
 	    /* An embedded window (either from this application or from
@@ -441,7 +445,7 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	    containerPtr->embeddedMenuHWnd = NULL;
 	    containerPtr->embeddedHWnd = NULL;
 	    containerPtr->parentPtr->flags &= ~TK_BOTH_HALVES;
-	    TkWinSetMenu((Tk_Window)containerPtr->parentPtr, 0);
+	    if(topwinPtr) TkWinSetMenu((Tk_Window)topwinPtr, 0);
 	    InvalidateRect(hwnd, NULL, TRUE);
 	    break;
 
@@ -477,15 +481,15 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	    break;
 
 	    case TK_WITHDRAW:
-	    TkpWinToplevelWithDraw(containerPtr->parentPtr);
+	    if(topwinPtr) TkpWinToplevelWithDraw(topwinPtr);
 	    break;
 
 	    case TK_ICONIFY:
-	    TkpWinToplevelIconify(containerPtr->parentPtr);
+	    if(topwinPtr) TkpWinToplevelIconify(topwinPtr);
 	    break;
 
 	    case TK_DEICONIFY:
-	    TkpWinToplevelDeiconify(containerPtr->parentPtr);
+	    if(topwinPtr) TkpWinToplevelDeiconify(topwinPtr);
 	    break;
 
 	    case TK_MOVEWINDOW:
@@ -493,17 +497,23 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	     *	wParam - x value of the frame's upper left;
 	     *	lParam - y value of the frame's upper left;
 	     */
-	    result = TkpWinToplevelMove(containerPtr->parentPtr, wParam, lParam);
+	    if(topwinPtr) {
+	        result = TkpWinToplevelMove(topwinPtr, wParam, lParam);
+	    }
 	    break;
 
 	    case TK_OVERRIDEREDIRECT:
-	    result = TkpWinToplevelOverrideRedirect(containerPtr->parentPtr, wParam);
+	    if(topwinPtr) {
+		result = TkpWinToplevelOverrideRedirect(topwinPtr, wParam);
+	    }
 	    break;
 
 	    case TK_SETMENU:
-	    containerPtr->embeddedMenuHWnd = (HWND)lParam;
-	    TkWinSetMenu((Tk_Window)containerPtr->parentPtr, (HMENU)wParam);
-	    result = 1;
+	    if(topwinPtr) {
+		containerPtr->embeddedMenuHWnd = (HWND)lParam;
+		TkWinSetMenu((Tk_Window)topwinPtr, (HMENU)wParam);
+		result = 1;
+	    }
 	    break;
 
 	    case TK_STATE:
@@ -513,10 +523,12 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	     *	2 - zoom state
 	     *	3 - icon state
 	     */
-	    if(wParam >= 0 && wParam <= 3) {
-		TkpWmSetState(containerPtr->parentPtr, wParam);
+	    if(topwinPtr) {
+		if(wParam >= 0 && wParam <= 3) {
+		    TkpWmSetState(topwinPtr, wParam);
+		}
+		result = TkpWmGetState(topwinPtr);
 	    }
-	    result = TkpWmGetState(containerPtr->parentPtr);
 	    break;
 	    /*
 	     * Return 0 since the current Tk container implementation 
