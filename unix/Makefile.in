@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.71 2002/06/21 23:09:53 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.72 2002/06/25 16:45:12 rmax Exp $
 
 # Current Tk version;  used in various names.
 
@@ -241,6 +241,10 @@ TOOL_DIR		= @TCL_SRC_DIR@/tools
 # script won't modify it and you shouldn't need to modify it
 # either.
 #----------------------------------------------------------------
+
+# Flags to be passed to mkLinks to control whether the manpages
+# should be compressed and linked with softlinks
+MKLINKS_FLAGS           = @MKLINKS_FLAGS@
 
 CC			= @CC@
 
@@ -490,9 +494,6 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	@if test ! -x $(UNIX_DIR)/install-sh; then \
 	    chmod +x $(UNIX_DIR)/install-sh; \
 	    fi
-	@if test ! -x $(UNIX_DIR)/mkLinks; then \
-	    chmod +x $(UNIX_DIR)/mkLinks; \
-	    fi
 	@echo "Installing $(TK_LIB_FILE) to $(LIB_INSTALL_DIR)/"
 	@$(INSTALL_DATA) $(TK_LIB_FILE) $(LIB_INSTALL_DIR)/$(TK_LIB_FILE)
 	@(cd $(LIB_INSTALL_DIR); $(RANLIB) $(TK_LIB_FILE))
@@ -587,6 +588,9 @@ install-demos:
 	    done;
 
 install-doc:
+	@if test ! -x $(UNIX_DIR)/mkLinks; then \
+	    chmod +x $(UNIX_DIR)/mkLinks; \
+	    fi
 	@for i in $(MAN_INSTALL_DIR) $(MAN1_INSTALL_DIR) $(MAN3_INSTALL_DIR) $(MANN_INSTALL_DIR) ; \
 	    do \
 	    if [ ! -d $$i ] ; then \
@@ -605,7 +609,7 @@ install-doc:
 	    chmod 444 $(MAN1_INSTALL_DIR)/$$i; \
 	    done;
 	@echo "Cross-linking top-level (.1) docs";
-	@$(UNIX_DIR)/mkLinks $(MAN1_INSTALL_DIR)
+	@$(UNIX_DIR)/mkLinks $(MKLINKS_FLAGS) $(MAN1_INSTALL_DIR)
 	@echo "Installing C API (.3) docs";
 	@cd $(SRC_DIR)/doc; for i in *.3; \
 	    do \
@@ -615,7 +619,7 @@ install-doc:
 	    chmod 444 $(MAN3_INSTALL_DIR)/$$i; \
 	    done;
 	@echo "Cross-linking top-level (.3) docs";
-	@$(UNIX_DIR)/mkLinks $(MAN3_INSTALL_DIR)
+	@$(UNIX_DIR)/mkLinks $(MKLINKS_FLAGS) $(MAN3_INSTALL_DIR)
 	@echo "Installing command (.n) docs";
 	@cd $(SRC_DIR)/doc; for i in *.n; \
 	    do \
@@ -625,7 +629,7 @@ install-doc:
 	    chmod 444 $(MANN_INSTALL_DIR)/$$i; \
 	    done;
 	@echo "Cross-linking command (.n) docs";
-	@$(UNIX_DIR)/mkLinks $(MANN_INSTALL_DIR)
+	@$(UNIX_DIR)/mkLinks $(MKLINKS_FLAGS) $(MANN_INSTALL_DIR)
 
 Makefile: $(UNIX_DIR)/Makefile.in
 	$(SHELL) config.status
@@ -1010,6 +1014,11 @@ rpm: all /bin/rpm
 	mv RPMS/i386/*.rpm .
 	rm -rf RPMS THIS.TK.SPEC
 
+mklinks:
+	$(TCL_EXE) $(TCLDIR)/unix/mkLinks.tcl \
+		$(UNIX_DIR)/../doc/*.[13n] > $(UNIX_DIR)/mkLinks
+	chmod +x $(UNIX_DIR)/mkLinks
+
 #
 # Target to create a proper Tk distribution from information in the
 # master source directory.  DISTDIR must be defined to indicate where
@@ -1024,7 +1033,7 @@ TCLDIR = 	@TCL_SRC_DIR@
 $(UNIX_DIR)/configure: $(UNIX_DIR)/configure.in
 	autoconf $(UNIX_DIR)/configure.in > $(UNIX_DIR)/configure
 
-dist:   $(UNIX_DIR)/configure
+dist:   $(UNIX_DIR)/configure mklinks
 	rm -rf $(DISTDIR)
 	mkdir -p $(DISTDIR)
 	mkdir $(DISTDIR)/unix
@@ -1034,12 +1043,9 @@ dist:   $(UNIX_DIR)/configure
 	cp $(UNIX_DIR)/configure $(UNIX_DIR)/configure.in $(UNIX_DIR)/tk.spec \
 		$(UNIX_DIR)/aclocal.m4 $(UNIX_DIR)/tcl.m4 \
 		$(UNIX_DIR)/tkConfig.sh.in $(TCLDIR)/unix/install-sh \
-		$(UNIX_DIR)/README $(DISTDIR)/unix
+		$(UNIX_DIR)/README $(UNIX_DIR)/mkLinks $(DISTDIR)/unix
 	chmod 775 $(DISTDIR)/unix/configure $(DISTDIR)/unix/configure.in
 	chmod +x $(DISTDIR)/unix/install-sh
-	$(TCL_EXE) $(TCLDIR)/unix/mkLinks.tcl $(TOP_DIR)/doc/*.[13n] \
-		> $(DISTDIR)/unix/mkLinks
-	chmod +x $(DISTDIR)/unix/mkLinks
 	mkdir $(DISTDIR)/bitmaps
 	@(cd $(TOP_DIR); for i in bitmaps/* ; do \
 	    if [ -f $$i ] ; then \
