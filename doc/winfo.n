@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: winfo.n,v 1.5 2004/06/18 22:31:18 dkf Exp $
+'\" RCS: @(#) $Id: winfo.n,v 1.6 2004/06/30 22:17:59 dkf Exp $
 '\" 
 .so man.macros
 .TH winfo n 4.3 Tk "Tk Built-In Commands"
@@ -261,7 +261,9 @@ is the name of the vendor for the server, and \fIvendorRelease\fR
 is an integer release number provided by the server.
 .TP
 \fBwinfo toplevel \fIwindow\fR
-Returns the path name of the top-level window containing \fIwindow\fR.
+Returns the path name of the top-of-hierarchy window containing \fIwindow\fR.
+In standard Tk this will always be a \fBtoplevel\fR widget, but extensions may
+create other kinds of top-of-hierarchy widgets.
 .TP
 \fBwinfo viewable \fIwindow\fR
 Returns 1 if \fIwindow\fR and all of its ancestors up through the
