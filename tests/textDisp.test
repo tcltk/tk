@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.21 2003/11/21 17:29:13 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.22 2003/11/21 18:51:18 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -3166,27 +3166,23 @@ test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential
     lset res 0 [expr {[lindex $res 0] - $tab}]
     set res
 } [list 0 [expr {$fixedDiff + 18}] 7 $fixedHeight]
-test textDisp-27.7.1 {SizeOfTab procedure, fractional tab interpolation problem} {knownBug textfonts} {
+test textDisp-27.7.1 {SizeOfTab procedure, fractional tab interpolation problem} {
     .t delete 1.0 end
-    set cm [winfo fpixels .t 1c]
-    .t configure -tabs {1c 2c 3c 4c} -wrap none -width 40
-    .t insert 1.0 a\tb\tc\td\te\n012345678934567890a\tbb\tcc\tdd
-    set width [expr {$fixedWidth * 19}]
-    set tab $cm
-    while {$tab < $width} {
-	set tab [expr {$tab + $cm}]
+    set interpolatetab {1c 2c}
+    set precisetab {}
+    for {set i 1} {$i < 20} {incr i} {
+	lappend precisetab "${i}c"
     }
-    # Now we've calculated to the end of the tab after 'a', add one
-    # more for 'bb\t' and we're there, with 4 for the border
-    set tab [expr {4 + int($tab + $cm)}]
+    .t configure -tabs $interpolatetab -wrap none -width 150
+    .t insert 1.0 [string repeat "a\t" 20]
     update
-    set res [.t bbox 2.23]
-    # Now, on some platforms Tk interpolated from 3c-4c->5c but that
-    # interpolation doesn't use fractional pixels and so this result
-    # might be off by one.
-    lset res 0 [expr {[lindex $res 0] - $tab}]
-    set res
-} [list 0 [expr {$fixedDiff + 18}] 7 $fixedHeight]
+    set res [.t bbox 1.20]
+    # Now, Tk's interpolated tabs should be the same as
+    # non-interpolated.
+    .t configure -tabs $precisetab
+    update
+    expr {[lindex $res 0] - [lindex [.t bbox 1.20] 0]}
+} {0}
 
 .t configure -wrap char -tabs {} -width 20
 update
