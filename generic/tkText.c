@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.23 2001/12/05 18:18:22 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.24 2002/01/17 03:35:00 dgp Exp $
  */
 
 #include "default.h"
@@ -1964,7 +1964,7 @@ TextSearchCmd(textPtr, interp, argc, argv)
 		i = p - startOfLine;
 		thisLength = patLength;
 	    } else {
-		char *start, *end;
+		CONST char *start, *end;
 		int match;
 
 		match = Tcl_RegExpExec(interp, regexp,

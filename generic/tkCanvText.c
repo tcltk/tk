@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.10 2001/08/17 21:08:28 drh Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.11 2002/01/17 03:35:00 dgp Exp $
  */
 
 #include <stdio.h>
@@ -1376,7 +1376,8 @@ GetSelText(canvas, itemPtr, offset, buffer, maxBytes)
 {
     TextItem *textPtr = (TextItem *) itemPtr;
     int byteCount; 
-    char *text, *selStart, *selEnd;
+    char *text;
+    CONST char *selStart, *selEnd;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
     if ((textInfoPtr->selectFirst < 0) ||
