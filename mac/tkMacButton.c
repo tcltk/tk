@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacButton.c,v 1.5 1999/04/16 01:51:29 stanton Exp $
+ * RCS: @(#) $Id: tkMacButton.c,v 1.6 1999/05/22 06:32:26 jingham Exp $
  */
 
 #include "tkButton.h"
@@ -471,7 +471,7 @@ TkpComputeButtonGeometry(
     } else {
 	Tk_FreeTextLayout(butPtr->textLayout);
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-		Tcl_GetString(butPtr->text), -1, butPtr->wrapLength,
+		Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
 		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 
 	width = butPtr->textWidth;

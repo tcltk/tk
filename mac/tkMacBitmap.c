@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacBitmap.c,v 1.3 1999/04/16 01:51:29 stanton Exp $
+ * RCS: @(#) $Id: tkMacBitmap.c,v 1.4 1999/05/22 06:32:12 jingham Exp $
  */
 
 #include "tkPort.h"
@@ -101,8 +101,6 @@ TkpDefineNativeBitmaps()
     BuiltInIcon *builtInPtr;
     NativeIcon *nativeIconPtr;
     Tcl_HashTable *tablePtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     
     for (builtInPtr = builtInIcons; builtInPtr->name != NULL; builtInPtr++) {
 	name = Tk_GetUid(builtInPtr->name);
@@ -204,7 +202,7 @@ TkpCreateNativeBitmap(
 Pixmap
 TkpGetNativeAppBitmap(
     Display *display,	/* The display. */
-    char *name,		/* The name of the bitmap. */
+    CONST char *name,	/* The name of the bitmap. */
     int *width,		/* The width & height of the bitmap. */
     int *height)
 {

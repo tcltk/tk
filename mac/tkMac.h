@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMac.h,v 1.6 1999/04/16 01:51:29 stanton Exp $
+ * RCS: @(#) $Id: tkMac.h,v 1.7 1999/05/22 06:32:05 jingham Exp $
  */
 
 #ifndef _TKMAC
@@ -49,6 +49,7 @@ typedef void (Tk_MacEmbedGetOffsetInParentProc) (Tk_Window window, Point *ulCorn
  * so they can be exported.
  */
 
+#include "tkPlatDecls.h"
 
 #pragma export reset
 
