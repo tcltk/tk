@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.10 1999/12/22 03:09:55 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.11 2000/01/12 11:45:02 hobbs Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -311,8 +311,8 @@ static Tk_Item *	StartTagSearch _ANSI_ARGS_((TkCanvas *canvasPtr,
 static int		RelinkItems _ANSI_ARGS_((TkCanvas *canvasPtr,
 			    Tcl_Obj *tag, Tk_Item *prevPtr,
 			    TagSearch **searchPtrPtr));
-static void 		TagSearchExprInit _ANSI_ARGS_ ((TagSearchExpr **exprPtrPtr,
-			    Tk_Uid uid));
+static void 		TagSearchExprInit _ANSI_ARGS_ ((
+			    TagSearchExpr **exprPtrPtr));
 static void		TagSearchExprDestroy _ANSI_ARGS_((TagSearchExpr *expr));
 static void		TagSearchDestroy _ANSI_ARGS_((TagSearch *searchPtr));
 static int		TagSearchScan _ANSI_ARGS_((TkCanvas *canvasPtr,
@@ -3010,9 +3010,8 @@ NextItem(searchPtr)
  */
 
 static void
-TagSearchExprInit(exprPtrPtr, uid)
+TagSearchExprInit(exprPtrPtr)
 TagSearchExpr **exprPtrPtr;
-Tk_Uid uid;
 {
     TagSearchExpr* expr = *exprPtrPtr;
 
@@ -3022,7 +3021,7 @@ Tk_Uid uid;
 	expr->uids = NULL;
 	expr->next = NULL;
     }
-    expr->uid = uid;
+    expr->uid = NULL;
     expr->index = 0;
     expr->length = 0;
     *exprPtrPtr = expr;
@@ -3068,7 +3067,7 @@ TagSearchExprDestroy(expr)
  *      was successfully scanned (syntax).
  *      The information at *searchPtr is initialized
  *      such that a call to TagSearchFirst, followed by
- *      successive calls to NextItem will return items
+ *      successive calls to TagSearchNext will return items
  *      that match tag.
  *
  * Side effects:
@@ -3107,17 +3106,15 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
         searchPtr->rewritebuffer =
             ckalloc(searchPtr->rewritebufferAllocated);
     }
-    TagSearchExprInit(&(searchPtr->expr),Tk_GetUid(tag));
+    TagSearchExprInit(&(searchPtr->expr));
 
-    /* short circuit impossible searches for null tags */
-    if ((searchPtr->stringLength = strlen(tag)) == 0) {
-        return TCL_OK;
-	}
+    /* How long is the tagOrId ? */
+    searchPtr->stringLength = strlen(tag);
 
     /* Make sure there is enough buffer to hold rewritten tags */
     if ((unsigned int)searchPtr->stringLength >=
 	    searchPtr->rewritebufferAllocated) {
-        searchPtr->rewritebufferAllocated += 100;
+        searchPtr->rewritebufferAllocated = searchPtr->stringLength + 100;
         searchPtr->rewritebuffer =
             ckrealloc(searchPtr->rewritebuffer,
 		    searchPtr->rewritebufferAllocated);
@@ -3135,7 +3132,7 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
      * hot item, in which case the search can be skipped.
      */
 
-    if (isdigit(UCHAR(*tag))) {
+    if (searchPtr->stringLength && isdigit(UCHAR(*tag))) {
         char *end;
 
         searchPtr->id = strtoul(tag, &end, 0);
@@ -3143,6 +3140,18 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
             searchPtr->type = 1;
             return TCL_OK;
 	}
+    }
+
+    /*
+     * For all other tags and tag expressions convert to a UID.
+     * This UID is kept forever, but this should be thought of
+     * as a cache rather than as a memory leak.
+     */
+    searchPtr->expr->uid = Tk_GetUid(tag);
+
+    /* short circuit impossible searches for null tags */
+    if (searchPtr->stringLength == 0) {
+	return TCL_OK;
     }
 
     /*
@@ -3183,8 +3192,8 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
 	if (TagSearchScanExpr(canvasPtr->interp, searchPtr, searchPtr->expr) != TCL_OK) {
             /* Syntax error in tag expression */
 	    /* Result message set by TagSearchScanExpr */
-        return TCL_ERROR;
-    }
+	    return TCL_ERROR;
+	}
 	searchPtr->expr->length = searchPtr->expr->index;
     } else {
         if (searchPtr->expr->uid == allUid) {
@@ -3285,16 +3294,13 @@ TagSearchScanExpr(interp, searchPtr, expr)
         if (looking_for_tag) {
 
             switch (c) {
-
-                /* ignore unquoted whitespace */
-                case ' '  :
+                case ' '  :	/* ignore unquoted whitespace */
                 case '\t' :
                 case '\n' :
                 case '\r' :
                     break;
 
-                /* negate next tag or subexpr */
-                case '!'  :
+                case '!'  :	/* negate next tag or subexpr */
                     if (looking_for_tag > 1) {
                         Tcl_AppendResult(interp,
                             "Too many '!' in tag search expression",
@@ -3305,48 +3311,46 @@ TagSearchScanExpr(interp, searchPtr, expr)
                     negate_result = 1;
                     break;
 
-                /* scan subexpr (or negated subexpr) recursively */
-                case '('  :
+                case '('  :	/* scan (negated) subexpr recursively */
                     if (negate_result) {
                         expr->uids[expr->index++] = negparenUid;
                         negate_result = 0;
-    } else {
+		    } else {
                         expr->uids[expr->index++] = parenUid;
-    }
+		    }
                     if (TagSearchScanExpr(interp, searchPtr, expr) != TCL_OK) {
                         /* Result string should be already set
                          * by nested call to tag_expr_scan() */
-	    return TCL_ERROR;
-	}
+			return TCL_ERROR;
+		    }
                     looking_for_tag = 0;
                     found_tag = 1;
                     break;
 
-                /* quoted tag string */
-                case '"'  :
+                case '"'  :	/* quoted tag string */
                     if (negate_result) {
                         expr->uids[expr->index++] = negtagvalUid;
                         negate_result = 0;
                     } else {
                         expr->uids[expr->index++] = tagvalUid;
-	}
+		    }
                     tag = searchPtr->rewritebuffer;
                     found_endquote = 0;
                     while (searchPtr->stringIndex < searchPtr->stringLength) {
                         c = searchPtr->string[searchPtr->stringIndex++];
                         if (c == '\\') {
                             c = searchPtr->string[searchPtr->stringIndex++];
-	}
+			}
                         if (c == '"') {
                             found_endquote = 1;
-	break;
-      }
+			    break;
+			}
                         *tag++ = c;
                     }
                     if (! found_endquote) {
                         Tcl_AppendResult(interp,
-                            "Missing endquote in tag search expression",
-                            (char *) NULL);
+				"Missing endquote in tag search expression",
+				(char *) NULL);
                         return TCL_ERROR;
                     }
                     if (! (tag - searchPtr->rewritebuffer)) {
@@ -3362,18 +3366,16 @@ TagSearchScanExpr(interp, searchPtr, expr)
                     found_tag = 1;
                     break;
 
-                /* illegal chars when looking for tag */
-                case '&'  :
+                case '&'  :	/* illegal chars when looking for tag */
                 case '|'  :
                 case '^'  :
                 case ')'  :
                     Tcl_AppendResult(interp,
-                        "Unexpected operator in tag search expression",
-                        (char *) NULL);
+			    "Unexpected operator in tag search expression",
+			    (char *) NULL);
                     return TCL_ERROR;
 
-                /* unquoted tag string */
-                default :
+                default :	/* unquoted tag string */
                     if (negate_result) {
                         expr->uids[expr->index++] = negtagvalUid;
                         negate_result = 0;
@@ -3385,14 +3387,9 @@ TagSearchScanExpr(interp, searchPtr, expr)
                     /* copy rest of tag, including any embedded whitespace */
                     while (searchPtr->stringIndex < searchPtr->stringLength) {
                         c = searchPtr->string[searchPtr->stringIndex];
-                        if (c == '!'
-                         || c == '&'
-                         || c == '|'
-                         || c == '^'
-                         || c == '('
-                         || c == ')'
-                         || c == '"') {
-                             break;
+                        if (c == '!' || c == '&' || c == '|' || c == '^'
+				|| c == '(' || c == ')' || c == '"') {
+			    break;
                         }
                         *tag++ = c;
                         searchPtr->stringIndex++;
@@ -3402,11 +3399,9 @@ TagSearchScanExpr(interp, searchPtr, expr)
                         c = *--tag;
                         /* there must have been one non-whitespace char,
                          *  so this will terminate */
-                        if (c != ' '
-                         && c != '\t'
-                         && c != '\n'
-                         && c != '\r')
+                        if (c != ' ' && c != '\t' && c != '\n' && c != '\r') {
                             break;
+			}
                     }
                     *++tag = '\0';
                     expr->uids[expr->index++] =
@@ -3418,16 +3413,13 @@ TagSearchScanExpr(interp, searchPtr, expr)
         } else {    /* ! looking_for_tag */
 
             switch (c) {
-
-                /* ignore whitespace */
-                case ' '  :
+                case ' '  :	/* ignore whitespace */
                 case '\t' :
                 case '\n' :
                 case '\r' :
                     break;
 
-                /* AND operator */
-                case '&'  :
+                case '&'  :	/* AND operator */
                     c = searchPtr->string[searchPtr->stringIndex++];
                     if (c != '&') {
                         Tcl_AppendResult(interp,
@@ -3439,8 +3431,7 @@ TagSearchScanExpr(interp, searchPtr, expr)
                     looking_for_tag = 1;
                     break;
 
-                /* OR operator */
-                case '|'  :
+                case '|'  :	/* OR operator */
                     c = searchPtr->string[searchPtr->stringIndex++];
                     if (c != '|') {
                         Tcl_AppendResult(interp,
@@ -3452,22 +3443,19 @@ TagSearchScanExpr(interp, searchPtr, expr)
                     looking_for_tag = 1;
                     break;
 
-                /* XOR operator */
-                case '^'  :
+                case '^'  :	/* XOR operator */
                     expr->uids[expr->index++] = xorUid;
                     looking_for_tag = 1;
                     break;
 
-                /* end subexpression */
-                case ')'  :
+                case ')'  :	/* end subexpression */
                     expr->uids[expr->index++] = endparenUid;
                     goto breakwhile;
 
-                /* syntax error */
-                default   :
+                default   :	/* syntax error */
                     Tcl_AppendResult(interp,
-                        "Invalid boolean operator in tag search expression",
-                        (char *) NULL);
+			    "Invalid boolean operator in tag search expression",
+			    (char *) NULL);
                     return TCL_ERROR;
             }
         }
@@ -3476,8 +3464,8 @@ TagSearchScanExpr(interp, searchPtr, expr)
     if (found_tag && ! looking_for_tag) {
         return TCL_OK;
     }
-    Tcl_AppendResult(interp,
-        "Missing tag in tag search expression", (char *) NULL);
+    Tcl_AppendResult(interp, "Missing tag in tag search expression",
+	    (char *) NULL);
     return TCL_ERROR;
 }
 

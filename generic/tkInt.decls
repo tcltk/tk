@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.13 1999/12/14 06:52:29 hobbs Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.14 2000/01/12 11:45:03 hobbs Exp $
 
 library tk
 
@@ -660,8 +660,6 @@ declare 6 unix {
 declare 7 unix {
     void TkUnixSetMenubar (Tk_Window tkwin, Tk_Window menubar)
 }
-	
-
 
 ############################
 # Windows specific functions

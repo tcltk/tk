@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.8 1999/12/21 23:55:10 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.9 2000/01/12 11:45:02 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -2598,7 +2598,8 @@ EntryBlinkProc(clientData)
 {
     Entry *entryPtr = (Entry *) clientData;
 
-    if (!(entryPtr->flags & GOT_FOCUS) || (entryPtr->insertOffTime == 0)) {
+    if ((entryPtr->state == STATE_DISABLED) ||
+	    !(entryPtr->flags & GOT_FOCUS) || (entryPtr->insertOffTime == 0)) {
 	return;
     }
     if (entryPtr->flags & CURSOR_ON) {

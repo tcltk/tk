@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.10 2000/01/06 02:18:58 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.11 2000/01/12 11:45:03 hobbs Exp $
  */
 
 #include "default.h"
@@ -1617,7 +1617,8 @@ TextBlinkProc(clientData)
     TkTextIndex index;
     int x, y, w, h;
 
-    if (!(textPtr->flags & GOT_FOCUS) || (textPtr->insertOffTime == 0)) {
+    if ((textPtr->state == TK_STATE_DISABLED) ||
+	    !(textPtr->flags & GOT_FOCUS) || (textPtr->insertOffTime == 0)) {
 	return;
     }
     if (textPtr->flags & INSERT_ON) {

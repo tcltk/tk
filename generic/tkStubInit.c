@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.14 1999/12/14 06:52:31 hobbs Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.15 2000/01/12 11:45:03 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -919,8 +919,6 @@ TkStubs tkStubs = {
     Tk_InitConsoleChannels, /* 215 */
     Tk_CreateConsoleWindow, /* 216 */
     Tk_CreateSmoothMethod, /* 217 */
-    Tk_CreateCanvasVisitor, /* 218 */
-    Tk_GetCanvasVisitor, /* 219 */
 };
 
 /* !END!: Do not edit above this line. */

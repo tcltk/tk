@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkRectOval.c,v 1.4 1999/12/14 06:52:30 hobbs Exp $
+ * RCS: @(#) $Id: tkRectOval.c,v 1.5 2000/01/12 11:45:03 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -664,7 +664,16 @@ ComputeRectOvalBbox(canvas, rectOvalPtr)
     }
 
     if (rectOvalPtr->outline.gc == None) {
+	/*
+	 * The Win32 switch was added for 8.3 to solve a problem
+	 * with ovals leaving traces on bottom and right of 1 pixel.
+	 * This may not be the correct place to solve it, but it works.
+	 */
+#ifdef __WIN32__
 	bloat = 1;
+#else
+	bloat = 0;
+#endif
     } else {
 	bloat = (int) (width+1)/2;
     }
