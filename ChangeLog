@@ -1,3 +1,42 @@
+2003-03-11  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* generic/tkGrid.c (GridStructureProc, ConfigureSlaves):
+	Check for a NULL masterPtr and slavePtr in the
+	GridStructureProc code to ensure that a Gridder
+	created before some error condition is ignored
+	when it comes to geometry calculations. This
+	approach closely matches the pack implementation.
+	Keep track of a -in argument to a grid command
+	in order to detect the case of an already
+	gridded widget that wants to change some options.
+	The previous implementation could make repeated
+	and unnecessary calls to Tk_ManageGeometry.
+	Replace use of "parent" with "master" in comments
+	throughout the file.
+	* generic/tkPack.c (PackStructureProc): Check for
+	a NULL masterPtr before other checks so that a
+	slave created under certain error conditions
+	is cleaned up properly.
+	Replace use of "parent" with "master" in comments
+	throughout the file.
+	* generic/tkPlace.c (CreateSlave, ConfigureSlave,
+	SlaveStructureProc):
+	Don't call Tk_ManageGeometry in CreateSlave since
+	this was causing incorrect results in some error
+	cases. Rework the ConfigureSlave method so that
+	slave setup is done in one place. The call to
+	Tk_ManageGeometry was added to the one place
+	where a slave is setup. When a slave is configured
+	but the master is not changed, simply goto the
+	scheduleLayout label. Check for a NULL master
+	in SlaveStructureProc for the sake of readability.
+	* tests/grid.test:
+	* tests/pack.test:
+	* tests/place.test: Add test to check that a
+	winfo manager call does not return incorrect
+	results after an error condition is hit.
+	[Patch 693063]
+
 2002-03-11  Kevin Kenny  <kennykb@users.sourceforge.net>
 
 	* win/makefile.vc: Backported the code that makes the makefile
