@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: button.test,v 1.18 2004/12/04 00:04:41 dkf Exp $
+# RCS: @(#) $Id: button.test,v 1.19 2004/12/07 10:07:41 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -112,27 +112,34 @@ foreach test {
 } {
     lassign $test name value okResult badValue badResult classes
     foreach w {.l .b .c .r} hasOption $classes {
+	set classname [winfo class $w]
 	if {$hasOption} {
-	    test button-1.$i {configuration options} testImageType {
-		$w configure $name $value
-		lindex [$w configure $name] 4
-	    } $okResult
+	    test button-1.$i "configuration option $name for $classname" \
+		-constraint testImageType -body "
+		    $w configure $name [list $value]
+		    lindex \[$w configure $name] 4
+		" -result $okResult
 	    incr i
 	    if {$badValue ne ""} {
-		test button-1.$i {configuration options} testImageType {
-		    list [catch {$w configure $name $badValue} msg] $msg
-		} [list 1 $badResult]
+		test button-1.$i "configuration option $name for $classname" \
+		    -constraint testImageType \
+		    -body [list $w configure $name $badValue] \
+		    -returnCodes error -result $badResult
+		incr i
 	    }
 	    $w configure $name [lindex [$w configure $name] 3]
 	} else {
-	    test button-1.$i {configuration options} testImageType {
-		list [catch {$w configure $name $value} msg] $msg
-	    } "1 {unknown option \"$name\"}"
+	    test button-1.$i "configuration option $name for $classname" \
+		-constraint testImageType \
+		-body [list $w configure $name $value] \
+		-returnCodes error -result "unknown option \"$name\""
+	    incr i
 	}
     }
-    incr i
 }
 test button-1.$i {configuration options} {
+    # Additional check to make sure that -selectcolor may be empty in
+    # checkbox widgets
     .c configure -selectcolor {}
 } {}
 

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: cursor.test,v 1.14 2004/06/24 12:45:42 dkf Exp $
+# RCS: @(#) $Id: cursor.test,v 1.15 2004/12/07 10:07:59 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -209,15 +209,15 @@ foreach {testName cursor} {
     cursor-6.66 tcross
     cursor-6.67 top_left_arrow
     cursor-6.68 top_left_corner
-    cursor-6.68 top_right_corner
-    cursor-6.69 top_side
-    cursor-6.70 top_tee
-    cursor-6.71 trek
-    cursor-6.72 ul_angle
-    cursor-6.73 umbrella
-    cursor-6.74 ur_angle
-    cursor-6.75 watch
-    cursor-6.76 xterm
+    cursor-6.69 top_right_corner
+    cursor-6.70 top_side
+    cursor-6.71 top_tee
+    cursor-6.72 trek
+    cursor-6.73 ul_angle
+    cursor-6.74 umbrella
+    cursor-6.75 ur_angle
+    cursor-6.76 watch
+    cursor-6.77 xterm
 } {
     test $testName "check cursor-font cursor $cursor" -setup {
 	button .b -text $cursor
@@ -242,7 +242,7 @@ foreach {testName cursor} {
     cursor-7.8 uparrow
     cursor-7.9 wait
 } {
-    test testName "check Windows cursor $cursor" -constraints win -setup {
+    test $testName "check Windows cursor $cursor" -constraints win -setup {
 	button .b -text $cursor
     } -body {
 	.b configure -cursor $cursor
