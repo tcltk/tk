@@ -1,3 +1,17 @@
+2003-01-12  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/Makefile.in: Add TCL_DEFS to AC_FLAGS
+	so that compiler flags defined by Tcl get
+	passed to the compiler. Add empty rule
+	for cat.c so that Tk compiles under msys.
+	* win/configure: Regen.
+	* win/tcl.m4: Update from Tcl, this pulls
+	in a subst of TCL_DEFS, it also defines
+	USE_THREAD_ALLOC when threads are used
+	and it updates the SC_ENABLE_SYMBOLS
+	and SC_PROG_TCLSH macros to match the
+	ones used in Tcl.
+
 2003-01-10  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tkUnixEvent.c (OpenIM): Remove unused variable
