@@ -6,7 +6,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.4 2000/03/02 03:02:13 ericm Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.5 2000/03/04 01:44:16 ericm Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -112,8 +112,9 @@ proc ::tk::dialog::chooseDir::tkChooseDirectory { args } {
     grid configure $lbl -sticky w
     grid configure $ent -sticky ew
     grid configure $frm -sticky nsew
-    grid columnconfigure . 0 -weight 1
-    grid columnconfigure . 1 -weight 1
+    grid columnconfigure $w 0 -weight 1
+    grid columnconfigure $w 1 -weight 1
+    grid rowconfigure $w 2 -weight 1
 
     $ent insert end $opts(-initialdir)
 
