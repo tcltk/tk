@@ -2,6 +2,9 @@
 
 	*** 8.5a1 TAGGED FOR RELEASE ***
 
+	* unix/Makefile.in (dist): don't require win/lamp.bmp copy in dist
+	target (it's already handled by win/rc/*.bmp copy)
+
 	* changes: updated for 8.5a1
 	
 2004-03-01  Jeff Hobbs  <jeffh@ActiveState.com>
@@ -529,7 +532,7 @@
 	widget when inserting lines which wrap thousands of times 
 	[Bug 853003].  Note that the text widget must now perform additional
 	calculations (pixel heights) compared to Tk <= 8.4, and so some
-	actions will be slower, be necessity.
+	actions will be slower, by necessity.
 
 2003-12-05  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
 
@@ -619,11 +622,12 @@
 
 2003-11-18  Jim Ingham  <jingham@apple.com>
 
-        * macosx/tkMacOSXScrlbr.c: Reworking Vince's fix to [Bug 842952].  This
-        version is clearer, and works helps keep the mouse better pinned to the
-        scrollbar.  I also removed the glitch where the scrollbar would jump get
-        its middle over the mouse when you first moved it.
-         
+	* macosx/tkMacOSXScrlbr.c: Reworking Vince's fix to [Bug 842952].
+	This version is clearer, and works helps keep the mouse better
+	pinned to the scrollbar.  I also removed the glitch where the
+	scrollbar would jump get its middle over the mouse when you first
+	moved it.
+
 2003-11-17  Don Porter	<dgp@users.sourceforge.net>
 
 	* tests/constraints.tcl:When running the test suite in a process
@@ -1111,7 +1115,8 @@
 	find installed Tk headers, parallel to TCL_INCLUDE_SPEC. [Bug 777203] 
 
 2003-09-18  Chengye Mao <chengye.geo@yahoo.com>
-	* generic/tkConsole.c: Fixed memroy leak [Bug 802435]
+
+	* generic/tkConsole.c: Fixed memory leak [Bug 802435]
 
 2003-09-18  Peter Spjuth  <peter.spjuth@space.se>
 	* doc/grid.n:
