@@ -31,7 +31,6 @@
 #-------------------------------------------------------------------------
 # The code below creates the default class bindings for entries.
 #-------------------------------------------------------------------------
-
 bind Entry <<Cut>> {
     if {![catch {set data [string range [%W get] [%W index sel.first]\
 	    [expr {[%W index sel.last] - 1}]]}]} {
@@ -61,6 +60,11 @@ bind Entry <<Paste>> {
 }
 bind Entry <<Clear>> {
     %W delete sel.first sel.last
+}
+bind Entry <<PasteSelection>> {
+    if {!$tkPriv(mouseMoved) || $tk_strictMotif} {
+	tkEntryPaste %W %x
+    }
 }
 
 # Standard Motif bindings:
@@ -107,11 +111,6 @@ bind Entry <ButtonRelease-1> {
 }
 bind Entry <Control-1> {
     %W icursor @%x
-}
-bind Entry <ButtonRelease-2> {
-    if {!$tkPriv(mouseMoved) || $tk_strictMotif} {
-	tkEntryPaste %W %x
-    }
 }
 
 bind Entry <Left> {

@@ -86,11 +86,6 @@ bind Text <ButtonRelease-1> {
 bind Text <Control-1> {
     %W mark set insert @%x,%y
 }
-bind Text <ButtonRelease-2> {
-    if {!$tkPriv(mouseMoved) || $tk_strictMotif} {
-	tkTextPaste %W %x %y
-    }
-}
 bind Text <Left> {
     tkTextSetCursor %W insert-1c
 }
@@ -253,6 +248,11 @@ bind Text <<Paste>> {
 }
 bind Text <<Clear>> {
     catch {%W delete sel.first sel.last}
+}
+bind Text <<PasteSelection>> {
+    if {!$tkPriv(mouseMoved) || $tk_strictMotif} {
+	tkTextPaste %W %x %y
+    }
 }
 bind Text <Insert> {
     catch {tkTextInsert %W [selection get -displayof %W]}
