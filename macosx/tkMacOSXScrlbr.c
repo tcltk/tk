@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5 2002/11/20 05:21:08 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.6 2003/11/16 01:01:32 vincentdarley Exp $
  */
 
 #include "tkScrollbar.h"
@@ -1072,7 +1072,8 @@ UpdateControlValues(
             (1.0 - scrollPtr->lastFraction));
     
     viewSize = (SInt32) ((scrollPtr->lastFraction - scrollPtr->firstFraction) 
-            * MAX_SCROLLBAR_DVALUE);
+            * MAX_SCROLLBAR_DVALUE
+	    /(1 - (scrollPtr->lastFraction - scrollPtr->firstFraction)));
     
     SetControlViewSize(macScrollPtr->sbHandle,viewSize);
     SetControlValue(macScrollPtr->sbHandle, 
