@@ -1,3 +1,8 @@
+2000-09-06  Eric Melski  <ericm@ajubasolutions.com>
+
+	* generic/tkPlatDecls.h: Added #include <windows.h> for Windows,
+	so that HWND, etc., are defined properly.
+
 2000-09-06  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* README:
