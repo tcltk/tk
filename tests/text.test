@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.20 2003/04/01 21:06:52 dgp Exp $
+# RCS: @(#) $Id: text.test,v 1.21 2003/05/19 13:04:24 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -219,7 +219,7 @@ test text-6.13 {TextWidgetCmd procedure, "compare" option} {
 } {1 {bad comparison operator "z": must be <, <=, ==, >=, >, or !=}}
 test text-6.14 {TextWidgetCmd procedure, "compare" option} {
     list [catch {.t co 1.0 z 1.2} msg] $msg
-} {1 {bad option "co": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
+} {1 {ambiguous option "co": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
 
 # "configure" option is already covered above
 
@@ -228,7 +228,7 @@ test text-7.1 {TextWidgetCmd procedure, "debug" option} {
 } {1 {wrong # args: should be ".t debug boolean"}}
 test text-7.2 {TextWidgetCmd procedure, "debug" option} {
     list [catch {.t de 0 1} msg] $msg
-} {1 {bad option "de": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
+} {1 {ambiguous option "de": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
 test text-7.3 {TextWidgetCmd procedure, "debug" option} {
     .t debug true
     .t deb
@@ -388,7 +388,7 @@ test text-10.2 {TextWidgetCmd procedure, "index" option} {
 } {1 {wrong # args: should be ".t index index"}}
 test text-10.3 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t in a b} msg] $msg
-} {1 {bad option "in": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
+} {1 {ambiguous option "in": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
 test text-10.4 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t index @xyz} msg] $msg
 } {1 {bad text index "@xyz"}}
@@ -451,7 +451,7 @@ test text-11.10 {TextWidgetCmd procedure, "insert" option} {
 
 test text-12.1 {ConfigureText procedure} {
     list [catch {.t2 configure -state foobar} msg] $msg
-} {1 {bad state value "foobar": must be normal or disabled}}
+} {1 {bad state "foobar": must be disabled or normal}}
 test text-12.2 {ConfigureText procedure} {
     .t2 configure -spacing1 -2 -spacing2 1 -spacing3 1
     list [.t2 cget -spacing1] [.t2 cget -spacing2] [.t2 cget -spacing3]
@@ -479,7 +479,7 @@ test text-12.6 {ConfigureText procedure} {
 } {}
 test text-12.7 {ConfigureText procedure} {
     list [catch {.t2 configure -wrap bogus} msg] $msg
-} {1 {bad wrap mode "bogus": must be char, none, or word}}
+} {1 {bad wrap "bogus": must be char, none, or word}}
 test text-12.8 {ConfigureText procedure} {
     .t2 configure -selectborderwidth 17 -selectforeground #332211 \
 	    -selectbackground #abc
@@ -932,10 +932,13 @@ test text-19.3 {TkTextLostSelection procedure} {
 .t insert end "xxyz xyz x. the\nfoo -forward bar xxxxx BaR foo\nxyz xxyzx"
 test text-20.1 {TextSearchCmd procedure, argument parsing} {
     list [catch {.t search -} msg] $msg
-} {1 {bad switch "-": must be --, -backward, -count, -elide, -exact, -forward, -nocase, or -regexp}}
+} {1 {bad switch "-": must be --, -all, -backward, -count, -elide, -exact, -forward, -nocase, -nolinestop, or -regexp}}
 test text-20.2 {TextSearchCmd procedure, -backwards option} {
     .t search -backwards xyz 1.4
 } {1.1}
+test text-20.2.1 {TextSearchCmd procedure, -all option} {
+    .t search -all xyz 1.4
+} {1.5 3.0 3.5 1.1}
 test text-20.3 {TextSearchCmd procedure, -forwards option} {
     .t search -forwards xyz 1.4
 } {1.5}
@@ -955,9 +958,19 @@ test text-20.7 {TextSearchCmd procedure, -count option} {
 test text-20.8 {TextSearchCmd procedure, -nocase option} {
     list [.t search -nocase BaR 1.1] [.t search BaR 1.1]
 } {2.13 2.23}
-test text-20.9 {TextSearchCmd procedure, -nocase option} {
-    .t search -n BaR 1.1
+test text-20.9 {TextSearchCmd procedure, -n ambiguous option} {
+    list [catch {.t search -n BaR 1.1} msg] $msg
+} {1 {bad switch "-n": must be --, -all, -backward, -count, -elide, -exact, -forward, -nocase, -nolinestop, or -regexp}}
+test text-20.9.1 {TextSearchCmd procedure, -nocase option} {
+    .t search -noc BaR 1.1
 } {2.13}
+test text-20.9.2 {TextSearchCmd procedure, -nolinestop option} {
+    list [catch {.t search -nolinestop BaR 1.1} msg] $msg
+} {1 {the "-nolinestop" option requires the "-regexp" option to be present}}
+test text-20.9.3 {TextSearchCmd procedure, -nolinestop option} {
+    set msg ""
+    list [.t search -nolinestop -regexp -count msg e.*o 1.1] $msg
+} {1.14 32}
 test text-20.10 {TextSearchCmd procedure, -- option} {
     .t search -- -forward 1.0
 } {2.4}
@@ -1006,15 +1019,15 @@ test text-20.23 {TextSearchCmd procedure, extract line contents} {
 test text-20.24 {TextSearchCmd procedure, stripping newlines} {
     .t search the\n 1.0
 } {1.12}
-test text-20.25 {TextSearchCmd procedure, stripping newlines} {
+test text-20.25 {TextSearchCmd procedure, handling newlines} {
     .t search -regexp the\n 1.0
-} {}
+} {1.12}
 test text-20.26 {TextSearchCmd procedure, stripping newlines} {
     .t search -regexp {the$} 1.0
 } {1.12}
-test text-20.27 {TextSearchCmd procedure, stripping newlines} {
+test text-20.27 {TextSearchCmd procedure, handling newlines} {
     .t search -regexp \n 1.0
-} {}
+} {1.15}
 test text-20.28 {TextSearchCmd procedure, line case conversion} {
     list [.t search -nocase bar 2.18] [.t search bar 2.18]
 } {2.23 2.13}
@@ -1241,7 +1254,463 @@ test text-20.72 {TextSearchCmd, -regexp -nocase searches} {
     destroy .t
     set res
 } 1.0
-    
+test text-20.73 {TextSearchCmd, hidden text and start index} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 search bar 1.3
+} 1.3
+test text-20.74 {TextSearchCmd, hidden text shouldn't influence start index} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 tag configure hidden -elide true
+    .t2 tag add hidden 1.0 1.2
+    .t2 search bar 1.3
+} 1.3
+test text-20.75 {TextSearchCmd, hidden text inside match must count in length} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 tag configure hidden -elide true
+    .t2 tag add hidden 1.2 1.4
+    list [.t2 search -count foo foar 1.3] $foo
+} {1.0 6}
+test text-20.76 {TextSearchCmd, hidden text and start index} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 search -regexp bar 1.3
+} 1.3
+test text-20.77 {TextSearchCmd, hidden text shouldn't influence start index} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 tag configure hidden -elide true
+    .t2 tag add hidden 1.0 1.2
+    .t2 search -regexp bar 1.3
+} 1.3
+test text-20.78 {TextSearchCmd, hidden text inside match must count in length} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 tag configure hidden -elide true
+    .t2 tag add hidden 1.2 1.4
+    list [.t2 search -regexp -count foo foar 1.3] $foo
+} {1.0 6}
+
+test text-20.78.1 {TextSearchCmd, hidden text inside match must count in length} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 tag configure hidden -elide true
+    .t2 tag add hidden 1.2 1.4
+    list [.t2 search -count foo foar 1.3] $foo
+} {1.0 6}
+
+test text-20.78.2 {TextSearchCmd, hidden text inside match must count in length} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoar"
+    .t2 tag configure hidden -elide true
+    .t2 tag add hidden 1.2 1.4
+    .t2 tag add hidden 2.2 2.4
+    list [.t2 search -regexp -all -count foo foar 1.3] $foo
+} {{2.0 3.0 1.0} {6 4 6}}
+
+test text-20.78.3 {TextSearchCmd, hidden text inside match must count in length} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoar"
+    .t2 tag configure hidden -elide true
+    .t2 tag add hidden 1.2 1.4
+    .t2 tag add hidden 2.2 2.4
+    list [.t2 search -all -count foo foar 1.3] $foo
+} {{2.0 3.0 1.0} {6 4 6}}
+
+test text-20.79 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -count foo foobar\nfoo 1.0] $foo
+} {1.0 10}
+
+test text-20.80 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -count foo bar\nfoo 1.0] $foo
+} {1.3 7}
+
+test text-20.81 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -count foo \nfoo 1.0] $foo
+} {1.6 4}
+
+test text-20.82 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -count foo bar\nfoobar\nfoo 1.0] $foo
+} {1.3 14}
+
+test text-20.83 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 search -count foo bar\nfoobar\nfoobanearly 1.0
+} {}
+
+test text-20.84 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -regexp -count foo foobar\nfoo 1.0] $foo
+} {1.0 10}
+
+test text-20.85 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -regexp -count foo bar\nfoo 1.0] $foo
+} {1.3 7}
+
+test text-20.86 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -regexp -count foo \nfoo 1.0] $foo
+} {1.6 4}
+
+test text-20.87 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -regexp -count foo bar\nfoobar\nfoo 1.0] $foo
+} {1.3 14}
+
+test text-20.88 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 search -regexp -count foo bar\nfoobar\nfoobanearly 1.0
+} {}
+
+test text-20.89 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfaoobar\nfoobar"
+    .t2 search -regexp -count foo bar\nfoo 1.0
+} {2.4}
+
+test text-20.90 {TextSearchCmd, multiline matching end of window} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfaoobar\nfoobar"
+    .t2 search -regexp -count foo bar\nfoobar\n\n 1.0
+} {}
+
+test text-20.91 {TextSearchCmd, multiline matching end of window} {
+    deleteWindows
+    pack [text .t2]
+    .t2 search "\n\n" 1.0
+} {}
+
+test text-20.92 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -backwards -count foo foobar\nfoo end] $foo
+} {2.0 10}
+
+test text-20.93 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -backwards -count foo bar\nfoo 1.0] $foo
+} {2.3 7}
+
+test text-20.94 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -backwards -count foo \nfoo 1.0] $foo
+} {2.6 4}
+
+test text-20.95 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -backwards -count foo bar\nfoobar\nfoo 1.0] $foo
+} {1.3 14}
+
+test text-20.96 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 search -backwards -count foo bar\nfoobar\nfoobanearly 1.0
+} {}
+
+test text-20.97 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -backwards -regexp -count foo foobar\nfoo 1.0] $foo
+} {2.0 10}
+
+test text-20.98 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -backwards -regexp -count foo bar\nfoo 1.0] $foo
+} {2.3 7}
+
+test text-20.99 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -backwards -regexp -count foo \nfoo 1.0] $foo
+} {2.6 4}
+
+test text-20.100 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -backwards -regexp -count foo bar\nfoobar\nfoo 1.0] $foo
+} {1.3 14}
+
+test text-20.101 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 search -backwards -regexp -count foo bar\nfoobar\nfoobanearly 1.0
+} {}
+
+test text-20.102 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfaoobar\nfoobar"
+    .t2 search -backwards -regexp -count foo bar\nfoo 1.0
+} {2.4}
+
+test text-20.103 {TextSearchCmd, multiline matching end of window} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfaoobar\nfoobar"
+    .t2 search -backwards -regexp -count foo bar\nfoobar\n\n 1.0
+} {}
+
+test text-20.104 {TextSearchCmd, multiline matching end of window} {
+    deleteWindows
+    pack [text .t2]
+    .t2 search -backwards "\n\n" 1.0
+} {}
+
+test text-20.105 {TextSearchCmd, multiline regexp matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 {    Tcl_Obj *objPtr));
+static Tcl_Obj*         FSNormalizeAbsolutePath 
+			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
+    set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
+    append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
+    append markExpr "\[ \n\t\r\]*\\()"
+    .t2 search -forwards -regexp $markExpr 1.41 end
+} {}
+
+test text-20.106 {TextSearchCmd, multiline regexp matching} {
+    # Practical example which crashes Tk, but only after the
+    # search is complete.  This is memory corruption caused by
+    # a bug in Tcl's handling of string objects.
+    # (Tcl bug 635200)
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 {static int		SetFsPathFromAny _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tcl_Obj *objPtr));
+static Tcl_Obj*         FSNormalizeAbsolutePath 
+			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
+    set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
+    append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
+    append markExpr "\[ \n\t\r\]*\\()"
+    .t2 search -forwards -regexp $markExpr 1.41 end
+} {}
+
+test text-20.107 {TextSearchCmd, multiline regexp matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 {
+static int		SetFsPathFromAny _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tcl_Obj *objPtr));
+static Tcl_Obj*         FSNormalizeAbsolutePath 
+			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
+    set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
+    append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
+    append markExpr "\[ \n\t\r\]*\\()"
+    .t2 search -backwards -all -regexp $markExpr end
+} {2.0}
+
+test text-20.108 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 search -all -regexp -count foo bar\nfoo 1.0
+} {1.3 2.3}
+
+test text-20.109 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 search -all -backwards -regexp -count foo bar\nfoo 1.0
+} {2.3 1.3}
+
+test text-20.110 {TextSearchCmd, wrapping and limits} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 search -- "blah" 3.3 1.3
+} {}
+
+test text-20.111 {TextSearchCmd, wrapping and limits} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 search -backwards -- "blah" 1.3 3.3
+} {}
+
+test text-20.112 {TextSearchCmd, wrapping and limits} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "if (stringPtr->uallocated > 0) \{x"
+    .t2 search -backwards -regexp -- "\[\]\")\}\[(\{\]" "1.32" 1.0
+} {1.31}
+
+test text-20.113 {TextSearchCmd, wrapping and limits} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "if (stringPtr->uallocated > 0) \{x"
+    .t2 search -regexp -- "\[\]\")\}\[(\{\]" 1.30 "1.0 lineend"
+} {1.31}
+
+test text-20.114 {TextSearchCmd, wrapping and limits} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "if (stringPtr->uallocated > 0) \{x"
+    .t2 search -backwards -all -regexp -- "\[\]\")\}\[(\{\]" "1.32" 1.0
+} {1.3 1.29 1.31}
+
+test text-20.115 {TextSearchCmd, wrapping and limits} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "if (stringPtr->uallocated > 0) \{x"
+    .t2 search -all -regexp -- "\[\]\")\}\[(\{\]" 1.0 "1.0 lineend"
+} {1.3 1.29 1.31}
+
+test text-20.116 {TextSearchCmd, wrapping and limits} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "if (stringPtr->uallocated > 0) \{x"
+    .t2 search -backwards -- "\{" "1.32" 1.0
+} {1.31}
+
+test text-20.117 {TextSearchCmd, wrapping and limits} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "if (stringPtr->uallocated > 0) \{x"
+    .t2 search -- "\{" 1.30 "1.0 lineend"
+} {1.31}
+
+test text-20.118 {TextSearchCmd, multiline regexp matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 {
+
+void
+Tcl_SetObjLength(objPtr, length)
+    register Tcl_Obj *objPtr;	/* Pointer to object.  This object must
+				 * not currently be shared. */
+    register int length;	/* Number of bytes desired for string
+				 * representation of object, not including
+				 * terminating null byte. */
+\{
+    char *new;
+}
+    set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
+    append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
+    append markExpr "\[ \n\t\r\]*\\()"
+    .t2 search -all -regexp -- $markExpr 1.0
+} {4.0}
+
+test text-20.119 {TextSearchCmd, multiline regexp matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "first line\nlast line of text"
+    set markExpr {^[a-z]+}
+    # This should not match, and should not wrap
+    .t2 search -regexp -- $markExpr end end
+} {}
+
+test text-20.120 {TextSearchCmd, multiline regexp matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "first line\nlast line of text"
+    set markExpr {^[a-z]+}
+    # This should not match, and should not wrap
+    .t2 search -regexp -- $markExpr end+10c end
+} {}
+
+test text-20.121 {TextSearchCmd, multiline regexp matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "first line\nlast line of text"
+    set markExpr {^[a-z]+}
+    # This should not match, and should not wrap
+    .t2 search -regexp -backwards -- $markExpr 1.0 1.0
+} {}
+
+test text-20.122 {TextSearchCmd, regexp linestop} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "first line\nlast line of text"
+    .t2 search -regexp -- {i.*x} 1.0
+} {2.6}
+
+test text-20.123 {TextSearchCmd, multiline regexp nolinestop matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "first line\nlast line of text"
+    .t2 search -regexp -nolinestop -- {i.*x} 1.0
+} {1.1}
+
+test text-20.124 {TextSearchCmd, regexp linestop} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "first line\nlast line of text"
+    .t2 search -regexp -all -- {i.*x} 1.0
+} {2.6}
+
+test text-20.125 {TextSearchCmd, multiline regexp nolinestop matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "first line\nlast line of text"
+    .t2 search -regexp -all -nolinestop -- {i.*x} 1.0
+} {1.1 1.7 2.6}
+
+test text-20.126 {TextSearchCmd, stop at end of line} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "  \t\n   last line of text"
+    .t2 search -regexp -nolinestop -- {[^ \t]} 1.0
+} {1.3}
+
+test text-20.126 {TextSearchCmd, stop at end of line} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "  \t\n   last line of text"
+    .t2 search -regexp -- {[^ \t]} 1.0
+} {2.3}
+
 deleteWindows
 text .t2 -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
 pack .t2
@@ -1450,7 +1919,7 @@ test text-25.1 {TextEditCmd procedure, argument parsing} {
 
 test text-25.2 {TextEditCmd procedure, argument parsing} {
     list [catch {.t edit gorp} msg] $msg
-} {1 {bad edit option "gorp": must be modified, redo, reset, separator or undo}}
+} {1 {bad edit option "gorp": must be modified, redo, reset, separator, or undo}}
 
 test text-25.3 {TextEditUndo procedure, undoing changes} {
     catch {destroy .t}

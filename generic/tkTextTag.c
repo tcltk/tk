@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.8 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.9 2003/05/19 13:04:24 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -19,54 +19,64 @@
 #include "tkInt.h"
 #include "tkText.h"
 
-static Tk_ConfigSpec tagConfigSpecs[] = {
-    {TK_CONFIG_BORDER, "-background", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, border), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BITMAP, "-bgstipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, bgStipple), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-borderwidth", (char *) NULL, (char *) NULL,
-	"0", Tk_Offset(TkTextTag, bdString),
-	TK_CONFIG_DONT_SET_DEFAULT|TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-elide", (char *) NULL, (char *) NULL,
-	"0", Tk_Offset(TkTextTag, elideString),
-	TK_CONFIG_DONT_SET_DEFAULT|TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BITMAP, "-fgstipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, fgStipple), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_FONT, "-font", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, tkfont), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_COLOR, "-foreground", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, fgColor), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-justify", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, justifyString), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-lmargin1", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, lMargin1String), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-lmargin2", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, lMargin2String), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-offset", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, offsetString), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-overstrike", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, overstrikeString),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-relief", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, reliefString), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-rmargin", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, rMarginString), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-spacing1", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, spacing1String), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-spacing2", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, spacing2String), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-spacing3", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, spacing3String), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-tabs", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, tabString), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-underline", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, underlineString),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_CUSTOM, "-wrap", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextTag, wrapMode),
-	TK_CONFIG_NULL_OK, &textWrapModeOption},
-    {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, 0}
+/*
+ * The 'TkWrapMode' enum in tkText.h is used to define a type for the
+ * -wrap option of tags in a Text widget.  These values are used as
+ * indices into the string table below.  Tags are allowed an empty wrap
+ * value, but the widget as a whole is not.
+ */
+
+static char *wrapStrings[] = {
+    "char", "none", "word", "", (char *) NULL
+};
+
+static Tk_OptionSpec tagOptionSpecs[] = {
+    {TK_OPTION_BORDER, "-background", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, border), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_BITMAP, "-bgstipple", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, bgStipple), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-borderwidth", (char *) NULL, (char *) NULL,
+	"0", Tk_Offset(TkTextTag, borderWidthPtr), Tk_Offset(TkTextTag, borderWidth),
+	TK_OPTION_DONT_SET_DEFAULT|TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-elide", (char *) NULL, (char *) NULL,
+	"0", -1, Tk_Offset(TkTextTag, elideString),
+	TK_OPTION_DONT_SET_DEFAULT|TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_BITMAP, "-fgstipple", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, fgStipple), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_FONT, "-font", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, tkfont), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_COLOR, "-foreground", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, fgColor), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-justify", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, justifyString), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-lmargin1", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, lMargin1String), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-lmargin2", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, lMargin2String), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-offset", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, offsetString), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-overstrike", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, overstrikeString),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-relief", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, reliefString), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-rmargin", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, rMarginString), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-spacing1", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, spacing1String), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-spacing2", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, spacing2String), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-spacing3", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, spacing3String), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-tabs", (char *) NULL, (char *) NULL,
+	(char *) NULL, Tk_Offset(TkTextTag, tabStringPtr), -1, TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-underline", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, underlineString),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING_TABLE, "-wrap", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, wrapMode),
+	TK_OPTION_NULL_OK, (ClientData) wrapStrings, 0},
+    {TK_OPTION_END}
 };
 
 /*
@@ -76,7 +86,7 @@ static Tk_ConfigSpec tagConfigSpecs[] = {
 static void		ChangeTagPriority _ANSI_ARGS_((TkText *textPtr,
 			    TkTextTag *tagPtr, int prio));
 static TkTextTag *	FindTag _ANSI_ARGS_((Tcl_Interp *interp,
-			    TkText *textPtr, CONST char *tagName));
+			    TkText *textPtr, Tcl_Obj *tagName));
 static void		SortTags _ANSI_ARGS_((int numTags,
 			    TkTextTag **tagArrayPtr));
 static int		TagSortProc _ANSI_ARGS_((CONST VOID *first,
@@ -101,684 +111,697 @@ static int		TagSortProc _ANSI_ARGS_((CONST VOID *first,
  */
 
 int
-TkTextTagCmd(textPtr, interp, argc, argv)
+TkTextTagCmd(textPtr, interp, objc, objv)
     register TkText *textPtr;	/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    CONST char **argv;		/* Argument strings.  Someone else has already
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
-				 * argv[1] is "tag". */
+				 * objv[1] is "tag". */
 {
-    int c, i, addTag;
-    size_t length;
-    char *fullOption;
+    int optionIndex;
+    
+    static CONST char *tagOptionStrings[] = {
+	"add", "bind", "cget", "configure", "delete", "lower",
+	"names", "nextrange", "prevrange", "raise", "ranges", 
+	"remove", (char *) NULL 
+    };
+    enum tagOptions {
+	TAG_ADD, TAG_BIND, TAG_CGET, TAG_CONFIGURE, TAG_DELETE,
+	TAG_LOWER, TAG_NAMES, TAG_NEXTRANGE, TAG_PREVRANGE,
+	TAG_RAISE, TAG_RANGES, TAG_REMOVE
+    };
+
+    int i;
     register TkTextTag *tagPtr;
     TkTextIndex first, last, index1, index2;
 
-    if (argc < 3) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " tag option ?arg arg ...?\"", (char *) NULL);
+    if (objc < 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
-    c = argv[2][0];
-    length = strlen(argv[2]);
-    if ((c == 'a') && (strncmp(argv[2], "add", length) == 0)) {
-	fullOption = "add";
-	addTag = 1;
+    
+    if (Tcl_GetIndexFromObj(interp, objv[2], tagOptionStrings, 
+			    "tag option", 0, &optionIndex) != TCL_OK) {
+	return TCL_ERROR;
+    }
 
-	addAndRemove:
-	if (argc < 5) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " tag ", fullOption,
-		    " tagName index1 ?index2 index1 index2 ...?\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	tagPtr = TkTextCreateTag(textPtr, argv[3]);
-	for (i = 4; i < argc; i += 2) {
-	    if (TkTextGetIndex(interp, textPtr, argv[i], &index1) != TCL_OK) {
+    switch ((enum tagOptions)optionIndex) {
+	case TAG_ADD: 
+	case TAG_REMOVE: {
+	    int addTag;
+	    if (((enum tagOptions)optionIndex) == TAG_ADD) {
+	        addTag = 1;
+	    } else {
+		addTag = 0;
+	    }
+	    if (objc < 5) {
+		Tcl_WrongNumArgs(interp, 3, objv, 
+				 "tagName index1 ?index2 index1 index2 ...?");
 		return TCL_ERROR;
 	    }
-	    if (argc > (i+1)) {
-		if (TkTextGetIndex(interp, textPtr, argv[i+1], &index2)
-			!= TCL_OK) {
+	    tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]));
+	    for (i = 4; i < objc; i += 2) {
+		if (TkTextGetObjIndex(interp, textPtr, objv[i], &index1) != TCL_OK) {
 		    return TCL_ERROR;
 		}
-		if (TkTextIndexCmp(&index1, &index2) >= 0) {
+		if (objc > (i+1)) {
+		    if (TkTextGetObjIndex(interp, textPtr, objv[i+1], &index2)
+			    != TCL_OK) {
+			return TCL_ERROR;
+		    }
+		    if (TkTextIndexCmp(&index1, &index2) >= 0) {
+			return TCL_OK;
+		    }
+		} else {
+		    index2 = index1;
+		    TkTextIndexForwChars(&index2, 1, &index2);
+		}
+
+		if (tagPtr->affectsDisplay) {
+		    TkTextRedrawTag(textPtr, &index1, &index2, tagPtr, !addTag);
+		} else {
+		    /*
+		     * Still need to trigger enter/leave events on tags that
+		     * have changed.
+		     */
+
+		    TkTextEventuallyRepick(textPtr);
+		}
+		TkBTreeTag(&index1, &index2, tagPtr, addTag);
+
+		/*
+		 * If the tag is "sel" then grab the selection if we're supposed
+		 * to export it and don't already have it.  Also, invalidate
+		 * partially-completed selection retrievals.
+		 */
+
+		if (tagPtr == textPtr->selTagPtr) {
+		    XEvent event;
+		    /*
+		     * Send an event that the selection changed.
+		     * This is equivalent to
+		     * "event generate $textWidget <<Selection>>"
+		     */
+
+		    memset((VOID *) &event, 0, sizeof(event));
+		    event.xany.type = VirtualEvent;
+		    event.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
+		    event.xany.send_event = False;
+		    event.xany.window = Tk_WindowId(textPtr->tkwin);
+		    event.xany.display = Tk_Display(textPtr->tkwin);
+		    ((XVirtualEvent *) &event)->name = Tk_GetUid("Selection");
+		    Tk_HandleEvent(&event);
+
+		    if (addTag && textPtr->exportSelection
+			    && !(textPtr->flags & GOT_SELECTION)) {
+			Tk_OwnSelection(textPtr->tkwin, XA_PRIMARY,
+				TkTextLostSelection, (ClientData) textPtr);
+			textPtr->flags |= GOT_SELECTION;
+		    }
+		    textPtr->abortSelections = 1;
+		}
+	    }
+	    break;
+	}
+	case TAG_BIND: {
+	    if ((objc < 4) || (objc > 6)) {
+		Tcl_WrongNumArgs(interp, 3, objv, "tagName ?sequence? ?command?");
+		return TCL_ERROR;
+	    }
+	    tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]));
+
+	    /*
+	     * Make a binding table if the widget doesn't already have
+	     * one.
+	     */
+
+	    if (textPtr->bindingTable == NULL) {
+		textPtr->bindingTable = Tk_CreateBindingTable(interp);
+	    }
+
+	    if (objc == 6) {
+		int append = 0;
+		unsigned long mask;
+		char *fifth = Tcl_GetString(objv[5]);
+
+		if (fifth[0] == 0) {
+		    return Tk_DeleteBinding(interp, textPtr->bindingTable,
+			    (ClientData) tagPtr, Tcl_GetString(objv[4]));
+		}
+		if (fifth[0] == '+') {
+		    fifth++;
+		    append = 1;
+		}
+		mask = Tk_CreateBinding(interp, textPtr->bindingTable,
+			(ClientData) tagPtr, Tcl_GetString(objv[4]), 
+					fifth, append);
+		if (mask == 0) {
+		    return TCL_ERROR;
+		}
+		if (mask & (unsigned) ~(ButtonMotionMask|Button1MotionMask
+			|Button2MotionMask|Button3MotionMask|Button4MotionMask
+			|Button5MotionMask|ButtonPressMask|ButtonReleaseMask
+			|EnterWindowMask|LeaveWindowMask|KeyPressMask
+			|KeyReleaseMask|PointerMotionMask|VirtualEventMask)) {
+		    Tk_DeleteBinding(interp, textPtr->bindingTable,
+			    (ClientData) tagPtr, Tcl_GetString(objv[4]));
+		    Tcl_ResetResult(interp);
+		    Tcl_AppendResult(interp, "requested illegal events; ",
+			    "only key, button, motion, enter, leave, and virtual ",
+			    "events may be used", (char *) NULL);
+		    return TCL_ERROR;
+		}
+	    } else if (objc == 5) {
+		CONST char *command;
+	
+		command = Tk_GetBinding(interp, textPtr->bindingTable,
+			(ClientData) tagPtr, Tcl_GetString(objv[4]));
+		if (command == NULL) {
+		    CONST char *string = Tcl_GetStringResult(interp); 
+
+		    /*
+		     * Ignore missing binding errors.  This is a special hack
+		     * that relies on the error message returned by FindSequence
+		     * in tkBind.c.
+		     */
+
+		    if (string[0] != '\0') {
+			return TCL_ERROR;
+		    } else {
+			Tcl_ResetResult(interp);
+		    }
+		} else {
+		    Tcl_SetResult(interp, (char *) command, TCL_STATIC);
+		}
+	    } else {
+		Tk_GetAllBindings(interp, textPtr->bindingTable,
+			(ClientData) tagPtr);
+	    }
+	    break;
+	}
+	case TAG_CGET: {
+	    if (objc != 5) {
+		Tcl_WrongNumArgs(interp, 1, objv, "tag cget tagName option");
+		return TCL_ERROR;
+	    } else {
+		Tcl_Obj *objPtr;
+		
+		tagPtr = FindTag(interp, textPtr, objv[3]);
+		if (tagPtr == NULL) {
+		    return TCL_ERROR;
+		}
+		objPtr = Tk_GetOptionValue(interp, (char *) tagPtr,
+					   tagPtr->optionTable, objv[4], textPtr->tkwin);
+		if (objPtr == NULL) {
+		    return TCL_ERROR;
+		} else {
+		    Tcl_SetObjResult(interp, objPtr);
+		    return TCL_OK;
+		}
+	    }
+	    break;
+	}
+	case TAG_CONFIGURE: {
+	    if (objc < 4) {
+		Tcl_WrongNumArgs(interp, 3, objv, "tagName ?option? ?value? ?option value ...?");
+		return TCL_ERROR;
+	    }
+	    tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]));
+	    if (objc <= 5) {
+		Tcl_Obj* objPtr = Tk_GetOptionInfo(interp, (char *) tagPtr,
+						   tagPtr->optionTable,
+			(objc == 5) ? objv[4] : (Tcl_Obj *) NULL,
+					  textPtr->tkwin);
+		if (objPtr == NULL) {
+		    return TCL_ERROR;
+		} else {
+		    Tcl_SetObjResult(interp, objPtr);
 		    return TCL_OK;
 		}
 	    } else {
-		index2 = index1;
-		TkTextIndexForwChars(&index2, 1, &index2);
-	    }
+		int result = TCL_OK;
 
-	    if (tagPtr->affectsDisplay) {
-		TkTextRedrawTag(textPtr, &index1, &index2, tagPtr, !addTag);
-	    } else {
-		/*
-		 * Still need to trigger enter/leave events on tags that
-		 * have changed.
-		 */
-
-		TkTextEventuallyRepick(textPtr);
-	    }
-	    TkBTreeTag(&index1, &index2, tagPtr, addTag);
-
-	    /*
-	     * If the tag is "sel" then grab the selection if we're supposed
-	     * to export it and don't already have it.  Also, invalidate
-	     * partially-completed selection retrievals.
-	     */
-
-	    if (tagPtr == textPtr->selTagPtr) {
-		XEvent event;
-		/*
-		 * Send an event that the selection changed.
-		 * This is equivalent to
-		 * "event generate $textWidget <<Selection>>"
-		 */
-
-		memset((VOID *) &event, 0, sizeof(event));
-		event.xany.type = VirtualEvent;
-		event.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
-		event.xany.send_event = False;
-		event.xany.window = Tk_WindowId(textPtr->tkwin);
-		event.xany.display = Tk_Display(textPtr->tkwin);
-		((XVirtualEvent *) &event)->name = Tk_GetUid("Selection");
-		Tk_HandleEvent(&event);
-
-		if (addTag && textPtr->exportSelection
-			&& !(textPtr->flags & GOT_SELECTION)) {
-		    Tk_OwnSelection(textPtr->tkwin, XA_PRIMARY,
-			    TkTextLostSelection, (ClientData) textPtr);
-		    textPtr->flags |= GOT_SELECTION;
-		}
-		textPtr->abortSelections = 1;
-	    }
-	}
-    } else if ((c == 'b') && (strncmp(argv[2], "bind", length) == 0)) {
-	if ((argc < 4) || (argc > 6)) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " tag bind tagName ?sequence? ?command?\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	tagPtr = TkTextCreateTag(textPtr, argv[3]);
-
-	/*
-	 * Make a binding table if the widget doesn't already have
-	 * one.
-	 */
-
-	if (textPtr->bindingTable == NULL) {
-	    textPtr->bindingTable = Tk_CreateBindingTable(interp);
-	}
-
-	if (argc == 6) {
-	    int append = 0;
-	    unsigned long mask;
-
-	    if (argv[5][0] == 0) {
-		return Tk_DeleteBinding(interp, textPtr->bindingTable,
-			(ClientData) tagPtr, argv[4]);
-	    }
-	    if (argv[5][0] == '+') {
-		argv[5]++;
-		append = 1;
-	    }
-	    mask = Tk_CreateBinding(interp, textPtr->bindingTable,
-		    (ClientData) tagPtr, argv[4], argv[5], append);
-	    if (mask == 0) {
-		return TCL_ERROR;
-	    }
-	    if (mask & (unsigned) ~(ButtonMotionMask|Button1MotionMask
-		    |Button2MotionMask|Button3MotionMask|Button4MotionMask
-		    |Button5MotionMask|ButtonPressMask|ButtonReleaseMask
-		    |EnterWindowMask|LeaveWindowMask|KeyPressMask
-		    |KeyReleaseMask|PointerMotionMask|VirtualEventMask)) {
-		Tk_DeleteBinding(interp, textPtr->bindingTable,
-			(ClientData) tagPtr, argv[4]);
-		Tcl_ResetResult(interp);
-		Tcl_AppendResult(interp, "requested illegal events; ",
-			"only key, button, motion, enter, leave, and virtual ",
-			"events may be used", (char *) NULL);
-		return TCL_ERROR;
-	    }
-	} else if (argc == 5) {
-	    CONST char *command;
-    
-	    command = Tk_GetBinding(interp, textPtr->bindingTable,
-		    (ClientData) tagPtr, argv[4]);
-	    if (command == NULL) {
-		CONST char *string = Tcl_GetStringResult(interp); 
-
-		/*
-		 * Ignore missing binding errors.  This is a special hack
-		 * that relies on the error message returned by FindSequence
-		 * in tkBind.c.
-		 */
-
-		if (string[0] != '\0') {
-		    return TCL_ERROR;
-		} else {
-		    Tcl_ResetResult(interp);
-		}
-	    } else {
-		Tcl_SetResult(interp, (char *) command, TCL_STATIC);
-	    }
-	} else {
-	    Tk_GetAllBindings(interp, textPtr->bindingTable,
-		    (ClientData) tagPtr);
-	}
-    } else if ((c == 'c') && (strncmp(argv[2], "cget", length) == 0)
-	    && (length >= 2)) {
-	if (argc != 5) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " tag cget tagName option\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	tagPtr = FindTag(interp, textPtr, argv[3]);
-	if (tagPtr == NULL) {
-	    return TCL_ERROR;
-	}
-	return Tk_ConfigureValue(interp, textPtr->tkwin, tagConfigSpecs,
-		(char *) tagPtr, argv[4], 0);
-    } else if ((c == 'c') && (strncmp(argv[2], "configure", length) == 0)
-	    && (length >= 2)) {
-	if (argc < 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " tag configure tagName ?option? ?value? ",
-		    "?option value ...?\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	tagPtr = TkTextCreateTag(textPtr, argv[3]);
-	if (argc == 4) {
-	    return Tk_ConfigureInfo(interp, textPtr->tkwin, tagConfigSpecs,
-		    (char *) tagPtr, (char *) NULL, 0);
-	} else if (argc == 5) {
-	    return Tk_ConfigureInfo(interp, textPtr->tkwin, tagConfigSpecs,
-		    (char *) tagPtr, argv[4], 0);
-	} else {
-	    int result;
-
-	    result = Tk_ConfigureWidget(interp, textPtr->tkwin, tagConfigSpecs,
-		    argc-4, argv+4, (char *) tagPtr, 0);
-	    /*
-	     * Some of the configuration options, like -underline
-	     * and -justify, require additional translation (this is
-	     * needed because we need to distinguish a particular value
-	     * of an option from "unspecified").
-	     */
-
-	    if (tagPtr->bdString != NULL) {
-		if (Tk_GetPixels(interp, textPtr->tkwin, tagPtr->bdString,
-			&tagPtr->borderWidth) != TCL_OK) {
+		if (Tk_SetOptions(interp, (char*)tagPtr, tagPtr->optionTable,
+			objc-4, objv+4, textPtr->tkwin, NULL, NULL) != TCL_OK) {
 		    return TCL_ERROR;
 		}
+		/*
+		 * Some of the configuration options, like -underline
+		 * and -justify, require additional translation (this is
+		 * needed because we need to distinguish a particular value
+		 * of an option from "unspecified").
+		 */
+
 		if (tagPtr->borderWidth < 0) {
 		    tagPtr->borderWidth = 0;
 		}
-	    }
-	    if (tagPtr->reliefString != NULL) {
-		if (Tk_GetRelief(interp, tagPtr->reliefString,
-			&tagPtr->relief) != TCL_OK) {
-		    return TCL_ERROR;
+		if (tagPtr->reliefString != NULL) {
+		    if (Tk_GetRelief(interp, tagPtr->reliefString,
+			    &tagPtr->relief) != TCL_OK) {
+			return TCL_ERROR;
+		    }
 		}
-	    }
-	    if (tagPtr->justifyString != NULL) {
-		if (Tk_GetJustify(interp, tagPtr->justifyString,
-			&tagPtr->justify) != TCL_OK) {
-		    return TCL_ERROR;
+		if (tagPtr->justifyString != NULL) {
+		    if (Tk_GetJustify(interp, tagPtr->justifyString,
+			    &tagPtr->justify) != TCL_OK) {
+			return TCL_ERROR;
+		    }
 		}
-	    }
-	    if (tagPtr->lMargin1String != NULL) {
-		if (Tk_GetPixels(interp, textPtr->tkwin,
-			tagPtr->lMargin1String, &tagPtr->lMargin1) != TCL_OK) {
-		    return TCL_ERROR;
+		if (tagPtr->lMargin1String != NULL) {
+		    if (Tk_GetPixels(interp, textPtr->tkwin,
+			    tagPtr->lMargin1String, &tagPtr->lMargin1) != TCL_OK) {
+			return TCL_ERROR;
+		    }
 		}
-	    }
-	    if (tagPtr->lMargin2String != NULL) {
-		if (Tk_GetPixels(interp, textPtr->tkwin,
-			tagPtr->lMargin2String, &tagPtr->lMargin2) != TCL_OK) {
-		    return TCL_ERROR;
+		if (tagPtr->lMargin2String != NULL) {
+		    if (Tk_GetPixels(interp, textPtr->tkwin,
+			    tagPtr->lMargin2String, &tagPtr->lMargin2) != TCL_OK) {
+			return TCL_ERROR;
+		    }
 		}
-	    }
-	    if (tagPtr->offsetString != NULL) {
-		if (Tk_GetPixels(interp, textPtr->tkwin, tagPtr->offsetString,
-			&tagPtr->offset) != TCL_OK) {
-		    return TCL_ERROR;
+		if (tagPtr->offsetString != NULL) {
+		    if (Tk_GetPixels(interp, textPtr->tkwin, tagPtr->offsetString,
+			    &tagPtr->offset) != TCL_OK) {
+			return TCL_ERROR;
+		    }
 		}
-	    }
-	    if (tagPtr->overstrikeString != NULL) {
-		if (Tcl_GetBoolean(interp, tagPtr->overstrikeString,
-			&tagPtr->overstrike) != TCL_OK) {
-		    return TCL_ERROR;
+		if (tagPtr->overstrikeString != NULL) {
+		    if (Tcl_GetBoolean(interp, tagPtr->overstrikeString,
+			    &tagPtr->overstrike) != TCL_OK) {
+			return TCL_ERROR;
+		    }
 		}
-	    }
-	    if (tagPtr->rMarginString != NULL) {
-		if (Tk_GetPixels(interp, textPtr->tkwin,
-			tagPtr->rMarginString, &tagPtr->rMargin) != TCL_OK) {
-		    return TCL_ERROR;
+		if (tagPtr->rMarginString != NULL) {
+		    if (Tk_GetPixels(interp, textPtr->tkwin,
+			    tagPtr->rMarginString, &tagPtr->rMargin) != TCL_OK) {
+			return TCL_ERROR;
+		    }
 		}
-	    }
-	    if (tagPtr->spacing1String != NULL) {
-		if (Tk_GetPixels(interp, textPtr->tkwin,
-			tagPtr->spacing1String, &tagPtr->spacing1) != TCL_OK) {
-		    return TCL_ERROR;
+		if (tagPtr->spacing1String != NULL) {
+		    if (Tk_GetPixels(interp, textPtr->tkwin,
+			    tagPtr->spacing1String, &tagPtr->spacing1) != TCL_OK) {
+			return TCL_ERROR;
+		    }
+		    if (tagPtr->spacing1 < 0) {
+			tagPtr->spacing1 = 0;
+		    }
 		}
-		if (tagPtr->spacing1 < 0) {
-		    tagPtr->spacing1 = 0;
+		if (tagPtr->spacing2String != NULL) {
+		    if (Tk_GetPixels(interp, textPtr->tkwin,
+			    tagPtr->spacing2String, &tagPtr->spacing2) != TCL_OK) {
+			return TCL_ERROR;
+		    }
+		    if (tagPtr->spacing2 < 0) {
+			tagPtr->spacing2 = 0;
+		    }
 		}
-	    }
-	    if (tagPtr->spacing2String != NULL) {
-		if (Tk_GetPixels(interp, textPtr->tkwin,
-			tagPtr->spacing2String, &tagPtr->spacing2) != TCL_OK) {
-		    return TCL_ERROR;
+		if (tagPtr->spacing3String != NULL) {
+		    if (Tk_GetPixels(interp, textPtr->tkwin,
+			    tagPtr->spacing3String, &tagPtr->spacing3) != TCL_OK) {
+			return TCL_ERROR;
+		    }
+		    if (tagPtr->spacing3 < 0) {
+			tagPtr->spacing3 = 0;
+		    }
 		}
-		if (tagPtr->spacing2 < 0) {
-		    tagPtr->spacing2 = 0;
+		if (tagPtr->tabArrayPtr != NULL) {
+		    ckfree((char *) tagPtr->tabArrayPtr);
+		    tagPtr->tabArrayPtr = NULL;
 		}
-	    }
-	    if (tagPtr->spacing3String != NULL) {
-		if (Tk_GetPixels(interp, textPtr->tkwin,
-			tagPtr->spacing3String, &tagPtr->spacing3) != TCL_OK) {
-		    return TCL_ERROR;
+		if (tagPtr->tabStringPtr != NULL) {
+		    tagPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr->tkwin,
+			    tagPtr->tabStringPtr);
+		    if (tagPtr->tabArrayPtr == NULL) {
+			return TCL_ERROR;
+		    }
 		}
-		if (tagPtr->spacing3 < 0) {
-		    tagPtr->spacing3 = 0;
+		if (tagPtr->underlineString != NULL) {
+		    if (Tcl_GetBoolean(interp, tagPtr->underlineString,
+			    &tagPtr->underline) != TCL_OK) {
+			return TCL_ERROR;
+		    }
 		}
-	    }
-	    if (tagPtr->tabArrayPtr != NULL) {
-		ckfree((char *) tagPtr->tabArrayPtr);
-		tagPtr->tabArrayPtr = NULL;
-	    }
-	    if (tagPtr->tabString != NULL) {
-		tagPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr->tkwin,
-			tagPtr->tabString);
-		if (tagPtr->tabArrayPtr == NULL) {
-		    return TCL_ERROR;
+		if (tagPtr->elideString != NULL) {
+		    if (Tcl_GetBoolean(interp, tagPtr->elideString,
+			    &tagPtr->elide) != TCL_OK) {
+			return TCL_ERROR;
+		    }
 		}
-	    }
-	    if (tagPtr->underlineString != NULL) {
-		if (Tcl_GetBoolean(interp, tagPtr->underlineString,
-			&tagPtr->underline) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    }
-	    if (tagPtr->elideString != NULL) {
-		if (Tcl_GetBoolean(interp, tagPtr->elideString,
-			&tagPtr->elide) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    }
 
-	    /*
-	     * If the "sel" tag was changed, be sure to mirror information
-	     * from the tag back into the text widget record.   NOTE: we
-	     * don't have to free up information in the widget record
-	     * before overwriting it, because it was mirrored in the tag
-	     * and hence freed when the tag field was overwritten.
-	     */
-
-	    if (tagPtr == textPtr->selTagPtr) {
-		textPtr->selBorder = tagPtr->border;
-		textPtr->selBdString = tagPtr->bdString;
-		textPtr->selFgColorPtr = tagPtr->fgColor;
-	    }
-	    tagPtr->affectsDisplay = 0;
-	    if ((tagPtr->border != NULL)
-		    || (tagPtr->bdString != NULL)
-		    || (tagPtr->reliefString != NULL)
-		    || (tagPtr->bgStipple != None)
-		    || (tagPtr->fgColor != NULL) || (tagPtr->tkfont != None)
-		    || (tagPtr->fgStipple != None)
-		    || (tagPtr->justifyString != NULL)
-		    || (tagPtr->lMargin1String != NULL)
-		    || (tagPtr->lMargin2String != NULL)
-		    || (tagPtr->offsetString != NULL)
-		    || (tagPtr->overstrikeString != NULL)
-		    || (tagPtr->rMarginString != NULL)
-		    || (tagPtr->spacing1String != NULL)
-		    || (tagPtr->spacing2String != NULL)
-		    || (tagPtr->spacing3String != NULL)
-		    || (tagPtr->tabString != NULL)
-		    || (tagPtr->underlineString != NULL)
-		    || (tagPtr->elideString != NULL)
-		    || (tagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
-		tagPtr->affectsDisplay = 1;
-	    }
-	    TkTextRedrawTag(textPtr, (TkTextIndex *) NULL,
-		    (TkTextIndex *) NULL, tagPtr, 1);
-	    return result;
-	}
-    } else if ((c == 'd') && (strncmp(argv[2], "delete", length) == 0)) {
-	Tcl_HashEntry *hPtr;
-
-	if (argc < 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " tag delete tagName tagName ...\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	for (i = 3; i < argc; i++) {
-	    hPtr = Tcl_FindHashEntry(&textPtr->tagTable, argv[i]);
-	    if (hPtr == NULL) {
-		continue;
-	    }
-	    tagPtr = (TkTextTag *) Tcl_GetHashValue(hPtr);
-	    if (tagPtr == textPtr->selTagPtr) {
-		continue;
-	    }
-	    if (tagPtr->affectsDisplay) {
-		TkTextRedrawTag(textPtr, (TkTextIndex *) NULL,
-			(TkTextIndex *) NULL, tagPtr, 1);
-	    }
-	    TkTextMakeByteIndex(textPtr->tree, 0, 0, &first);
-	    TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree),
-		    0, &last),
-	    TkBTreeTag(&first, &last, tagPtr, 0);
-
-	    if (tagPtr == textPtr->selTagPtr) {
-		XEvent event;
 		/*
-		 * Send an event that the selection changed.
-		 * This is equivalent to
-		 * "event generate $textWidget <<Selection>>"
+		 * If the "sel" tag was changed, be sure to mirror information
+		 * from the tag back into the text widget record.   NOTE: we
+		 * don't have to free up information in the widget record
+		 * before overwriting it, because it was mirrored in the tag
+		 * and hence freed when the tag field was overwritten.
 		 */
 
-		memset((VOID *) &event, 0, sizeof(event));
-		event.xany.type = VirtualEvent;
-		event.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
-		event.xany.send_event = False;
-		event.xany.window = Tk_WindowId(textPtr->tkwin);
-		event.xany.display = Tk_Display(textPtr->tkwin);
-		((XVirtualEvent *) &event)->name = Tk_GetUid("Selection");
-		Tk_HandleEvent(&event);
+		if (tagPtr == textPtr->selTagPtr) {
+		    textPtr->selBorder = tagPtr->border;
+		    textPtr->selBorderWidth = tagPtr->borderWidth;
+		    textPtr->selBorderWidthPtr = tagPtr->borderWidthPtr;
+		    textPtr->selFgColorPtr = tagPtr->fgColor;
+		}
+		tagPtr->affectsDisplay = 0;
+		if ((tagPtr->border != NULL)
+			|| (tagPtr->reliefString != NULL)
+			|| (tagPtr->bgStipple != None)
+			|| (tagPtr->fgColor != NULL) || (tagPtr->tkfont != None)
+			|| (tagPtr->fgStipple != None)
+			|| (tagPtr->justifyString != NULL)
+			|| (tagPtr->lMargin1String != NULL)
+			|| (tagPtr->lMargin2String != NULL)
+			|| (tagPtr->offsetString != NULL)
+			|| (tagPtr->overstrikeString != NULL)
+			|| (tagPtr->rMarginString != NULL)
+			|| (tagPtr->spacing1String != NULL)
+			|| (tagPtr->spacing2String != NULL)
+			|| (tagPtr->spacing3String != NULL)
+			|| (tagPtr->tabStringPtr != NULL)
+			|| (tagPtr->underlineString != NULL)
+			|| (tagPtr->elideString != NULL)
+			|| (tagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
+		    tagPtr->affectsDisplay = 1;
+		}
+		TkTextRedrawTag(textPtr, (TkTextIndex *) NULL,
+			(TkTextIndex *) NULL, tagPtr, 1);
+		return result;
 	    }
-
-	    Tcl_DeleteHashEntry(hPtr);
-	    if (textPtr->bindingTable != NULL) {
-		Tk_DeleteAllBindings(textPtr->bindingTable,
-			(ClientData) tagPtr);
-	    }
-	
-	    /*
-	     * Update the tag priorities to reflect the deletion of this tag.
-	     */
-
-	    ChangeTagPriority(textPtr, tagPtr, textPtr->numTags-1);
-	    textPtr->numTags -= 1;
-	    TkTextFreeTag(textPtr, tagPtr);
+	    break;
 	}
-    } else if ((c == 'l') && (strncmp(argv[2], "lower", length) == 0)) {
-	TkTextTag *tagPtr2;
-	int prio;
-
-	if ((argc != 4) && (argc != 5)) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " tag lower tagName ?belowThis?\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	tagPtr = FindTag(interp, textPtr, argv[3]);
-	if (tagPtr == NULL) {
-	    return TCL_ERROR;
-	}
-	if (argc == 5) {
-	    tagPtr2 = FindTag(interp, textPtr, argv[4]);
-	    if (tagPtr2 == NULL) {
-		return TCL_ERROR;
-	    }
-	    if (tagPtr->priority < tagPtr2->priority) {
-		prio = tagPtr2->priority - 1;
-	    } else {
-		prio = tagPtr2->priority;
-	    }
-	} else {
-	    prio = 0;
-	}
-	ChangeTagPriority(textPtr, tagPtr, prio);
-	TkTextRedrawTag(textPtr, (TkTextIndex *) NULL, (TkTextIndex *) NULL,
-		tagPtr, 1);
-    } else if ((c == 'n') && (strncmp(argv[2], "names", length) == 0)
-	    && (length >= 2)) {
-	TkTextTag **arrayPtr;
-	int arraySize;
-
-	if ((argc != 3) && (argc != 4)) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " tag names ?index?\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	if (argc == 3) {
-	    Tcl_HashSearch search;
+	case TAG_DELETE: {
 	    Tcl_HashEntry *hPtr;
 
-	    arrayPtr = (TkTextTag **) ckalloc((unsigned)
-		    (textPtr->numTags * sizeof(TkTextTag *)));
-	    for (i = 0, hPtr = Tcl_FirstHashEntry(&textPtr->tagTable, &search);
-		    hPtr != NULL; i++, hPtr = Tcl_NextHashEntry(&search)) {
-		arrayPtr[i] = (TkTextTag *) Tcl_GetHashValue(hPtr);
+	    if (objc < 4) {
+		Tcl_WrongNumArgs(interp, 3, objv, "tagName ?tagName ...?");
+		return TCL_ERROR;
 	    }
-	    arraySize = textPtr->numTags;
-	} else {
-	    if (TkTextGetIndex(interp, textPtr, argv[3], &index1)
+	    for (i = 3; i < objc; i++) {
+		hPtr = Tcl_FindHashEntry(&textPtr->tagTable, Tcl_GetString(objv[i]));
+		if (hPtr == NULL) {
+		    continue;
+		}
+		tagPtr = (TkTextTag *) Tcl_GetHashValue(hPtr);
+		if (tagPtr == textPtr->selTagPtr) {
+		    continue;
+		}
+		if (tagPtr->affectsDisplay) {
+		    TkTextRedrawTag(textPtr, (TkTextIndex *) NULL,
+			    (TkTextIndex *) NULL, tagPtr, 1);
+		}
+		TkTextMakeByteIndex(textPtr->tree, 0, 0, &first);
+		TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree),
+			0, &last),
+		TkBTreeTag(&first, &last, tagPtr, 0);
+
+		if (tagPtr == textPtr->selTagPtr) {
+		    XEvent event;
+		    /*
+		     * Send an event that the selection changed.
+		     * This is equivalent to
+		     * "event generate $textWidget <<Selection>>"
+		     */
+
+		    memset((VOID *) &event, 0, sizeof(event));
+		    event.xany.type = VirtualEvent;
+		    event.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
+		    event.xany.send_event = False;
+		    event.xany.window = Tk_WindowId(textPtr->tkwin);
+		    event.xany.display = Tk_Display(textPtr->tkwin);
+		    ((XVirtualEvent *) &event)->name = Tk_GetUid("Selection");
+		    Tk_HandleEvent(&event);
+		}
+
+		Tcl_DeleteHashEntry(hPtr);
+		if (textPtr->bindingTable != NULL) {
+		    Tk_DeleteAllBindings(textPtr->bindingTable,
+			    (ClientData) tagPtr);
+		}
+	    
+		/*
+		 * Update the tag priorities to reflect the deletion of this tag.
+		 */
+
+		ChangeTagPriority(textPtr, tagPtr, textPtr->numTags-1);
+		textPtr->numTags -= 1;
+		TkTextFreeTag(textPtr, tagPtr);
+	    }
+	    break;
+	}
+	case TAG_LOWER: {
+	    TkTextTag *tagPtr2;
+	    int prio;
+
+	    if ((objc != 4) && (objc != 5)) {
+		Tcl_WrongNumArgs(interp, 3, objv, "tagName ?belowThis?");
+		return TCL_ERROR;
+	    }
+	    tagPtr = FindTag(interp, textPtr, objv[3]);
+	    if (tagPtr == NULL) {
+		return TCL_ERROR;
+	    }
+	    if (objc == 5) {
+		tagPtr2 = FindTag(interp, textPtr, objv[4]);
+		if (tagPtr2 == NULL) {
+		    return TCL_ERROR;
+		}
+		if (tagPtr->priority < tagPtr2->priority) {
+		    prio = tagPtr2->priority - 1;
+		} else {
+		    prio = tagPtr2->priority;
+		}
+	    } else {
+		prio = 0;
+	    }
+	    ChangeTagPriority(textPtr, tagPtr, prio);
+	    TkTextRedrawTag(textPtr, (TkTextIndex *) NULL, (TkTextIndex *) NULL,
+		    tagPtr, 1);
+	    break;
+	}
+	case TAG_NAMES: {
+	    TkTextTag **arrayPtr;
+	    int arraySize;
+
+	    if ((objc != 3) && (objc != 4)) {
+		Tcl_WrongNumArgs(interp, 3, objv, "?index?");
+		return TCL_ERROR;
+	    }
+	    if (objc == 3) {
+		Tcl_HashSearch search;
+		Tcl_HashEntry *hPtr;
+
+		arrayPtr = (TkTextTag **) ckalloc((unsigned)
+			(textPtr->numTags * sizeof(TkTextTag *)));
+		for (i = 0, hPtr = Tcl_FirstHashEntry(&textPtr->tagTable, &search);
+			hPtr != NULL; i++, hPtr = Tcl_NextHashEntry(&search)) {
+		    arrayPtr[i] = (TkTextTag *) Tcl_GetHashValue(hPtr);
+		}
+		arraySize = textPtr->numTags;
+	    } else {
+		if (TkTextGetObjIndex(interp, textPtr, objv[3], &index1)
+			!= TCL_OK) {
+		    return TCL_ERROR;
+		}
+		arrayPtr = TkBTreeGetTags(&index1, &arraySize);
+		if (arrayPtr == NULL) {
+		    return TCL_OK;
+		}
+	    }
+	    SortTags(arraySize, arrayPtr);
+	    for (i = 0; i < arraySize; i++) {
+		tagPtr = arrayPtr[i];
+		Tcl_AppendElement(interp, tagPtr->name);
+	    }
+	    ckfree((char *) arrayPtr);
+	    break;
+	}
+	case TAG_NEXTRANGE: {
+	    TkTextSearch tSearch;
+	    char position[TK_POS_CHARS];
+
+	    if ((objc != 5) && (objc != 6)) {
+		Tcl_WrongNumArgs(interp, 3, objv, "tagName index1 ?index2?");
+		return TCL_ERROR;
+	    }
+	    tagPtr = FindTag((Tcl_Interp *) NULL, textPtr, objv[3]);
+	    if (tagPtr == NULL) {
+		return TCL_OK;
+	    }
+	    if (TkTextGetObjIndex(interp, textPtr, objv[4], &index1) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree),
+		    0, &last);
+	    if (objc == 5) {
+		index2 = last;
+	    } else if (TkTextGetObjIndex(interp, textPtr, objv[5], &index2)
 		    != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    arrayPtr = TkBTreeGetTags(&index1, &arraySize);
-	    if (arrayPtr == NULL) {
-		return TCL_OK;
-	    }
-	}
-	SortTags(arraySize, arrayPtr);
-	for (i = 0; i < arraySize; i++) {
-	    tagPtr = arrayPtr[i];
-	    Tcl_AppendElement(interp, tagPtr->name);
-	}
-	ckfree((char *) arrayPtr);
-    } else if ((c == 'n') && (strncmp(argv[2], "nextrange", length) == 0)
-	    && (length >= 2)) {
-	TkTextSearch tSearch;
-	char position[TK_POS_CHARS];
-
-	if ((argc != 5) && (argc != 6)) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " tag nextrange tagName index1 ?index2?\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	tagPtr = FindTag((Tcl_Interp *) NULL, textPtr, argv[3]);
-	if (tagPtr == NULL) {
-	    return TCL_OK;
-	}
-	if (TkTextGetIndex(interp, textPtr, argv[4], &index1) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree),
-		0, &last);
-	if (argc == 5) {
-	    index2 = last;
-	} else if (TkTextGetIndex(interp, textPtr, argv[5], &index2)
-		!= TCL_OK) {
-	    return TCL_ERROR;
-	}
-
-	/*
-	 * The search below is a bit tricky.  Rather than use the B-tree
-	 * facilities to stop the search at index2, let it search up
-	 * until the end of the file but check for a position past index2
-	 * ourselves.  The reason for doing it this way is that we only
-	 * care whether the *start* of the range is before index2;  once
-	 * we find the start, we don't want TkBTreeNextTag to abort the
-	 * search because the end of the range is after index2.
-	 */
-
-	TkBTreeStartSearch(&index1, &last, tagPtr, &tSearch);
-	if (TkBTreeCharTagged(&index1, tagPtr)) {
-	    TkTextSegment *segPtr;
-	    int offset;
 
 	    /*
-	     * The first character is tagged.  See if there is an
-	     * on-toggle just before the character.  If not, then
-	     * skip to the end of this tagged range.
+	     * The search below is a bit tricky.  Rather than use the B-tree
+	     * facilities to stop the search at index2, let it search up
+	     * until the end of the file but check for a position past index2
+	     * ourselves.  The reason for doing it this way is that we only
+	     * care whether the *start* of the range is before index2;  once
+	     * we find the start, we don't want TkBTreeNextTag to abort the
+	     * search because the end of the range is after index2.
 	     */
 
-	    for (segPtr = index1.linePtr->segPtr, offset = index1.byteIndex; 
-		    offset >= 0;
-		    offset -= segPtr->size, segPtr = segPtr->nextPtr) {
-		if ((offset == 0) && (segPtr->typePtr == &tkTextToggleOnType)
-			&& (segPtr->body.toggle.tagPtr == tagPtr)) {
-		    goto gotStart;
+	    TkBTreeStartSearch(&index1, &last, tagPtr, &tSearch);
+	    if (TkBTreeCharTagged(&index1, tagPtr)) {
+		TkTextSegment *segPtr;
+		int offset;
+
+		/*
+		 * The first character is tagged.  See if there is an
+		 * on-toggle just before the character.  If not, then
+		 * skip to the end of this tagged range.
+		 */
+
+		for (segPtr = index1.linePtr->segPtr, offset = index1.byteIndex; 
+			offset >= 0;
+			offset -= segPtr->size, segPtr = segPtr->nextPtr) {
+		    if ((offset == 0) && (segPtr->typePtr == &tkTextToggleOnType)
+			    && (segPtr->body.toggle.tagPtr == tagPtr)) {
+			goto gotStart;
+		    }
+		}
+		if (!TkBTreeNextTag(&tSearch)) {
+		     return TCL_OK;
 		}
 	    }
+
+	    /*
+	     * Find the start of the tagged range.
+	     */
+
 	    if (!TkBTreeNextTag(&tSearch)) {
-		 return TCL_OK;
-	    }
-	}
-
-	/*
-	 * Find the start of the tagged range.
-	 */
-
-	if (!TkBTreeNextTag(&tSearch)) {
-	    return TCL_OK;
-	}
-	gotStart:
-	if (TkTextIndexCmp(&tSearch.curIndex, &index2) >= 0) {
-	    return TCL_OK;
-	}
-	TkTextPrintIndex(&tSearch.curIndex, position);
-	Tcl_AppendElement(interp, position);
-	TkBTreeNextTag(&tSearch);
-	TkTextPrintIndex(&tSearch.curIndex, position);
-	Tcl_AppendElement(interp, position);
-    } else if ((c == 'p') && (strncmp(argv[2], "prevrange", length) == 0)
-	    && (length >= 2)) {
-	TkTextSearch tSearch;
-	char position1[TK_POS_CHARS];
-	char position2[TK_POS_CHARS];
-
-	if ((argc != 5) && (argc != 6)) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " tag prevrange tagName index1 ?index2?\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	tagPtr = FindTag((Tcl_Interp *) NULL, textPtr, argv[3]);
-	if (tagPtr == NULL) {
-	    return TCL_OK;
-	}
-	if (TkTextGetIndex(interp, textPtr, argv[4], &index1) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	if (argc == 5) {
-	    TkTextMakeByteIndex(textPtr->tree, 0, 0, &index2);
-	} else if (TkTextGetIndex(interp, textPtr, argv[5], &index2)
-		!= TCL_OK) {
-	    return TCL_ERROR;
-	}
-
-	/*
-	 * The search below is a bit weird.  The previous toggle can be
-	 * either an on or off toggle. If it is an on toggle, then we
-	 * need to turn around and search forward for the end toggle.
-	 * Otherwise we keep searching backwards.
-	 */
-
-	TkBTreeStartSearchBack(&index1, &index2, tagPtr, &tSearch);
-
-	if (!TkBTreePrevTag(&tSearch)) {
-	    return TCL_OK;
-	}
-	if (tSearch.segPtr->typePtr == &tkTextToggleOnType) {
-	    TkTextPrintIndex(&tSearch.curIndex, position1);
-	    TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree),
-		    0, &last);
-	    TkBTreeStartSearch(&tSearch.curIndex, &last, tagPtr, &tSearch);
-	    TkBTreeNextTag(&tSearch);
-	    TkTextPrintIndex(&tSearch.curIndex, position2);
-	} else {
-	    TkTextPrintIndex(&tSearch.curIndex, position2);
-	    TkBTreePrevTag(&tSearch);
-	    if (TkTextIndexCmp(&tSearch.curIndex, &index2) < 0) {
 		return TCL_OK;
 	    }
-	    TkTextPrintIndex(&tSearch.curIndex, position1);
-	}
-	Tcl_AppendElement(interp, position1);
-	Tcl_AppendElement(interp, position2);
-    } else if ((c == 'r') && (strncmp(argv[2], "raise", length) == 0)
-	    && (length >= 3)) {
-	TkTextTag *tagPtr2;
-	int prio;
-
-	if ((argc != 4) && (argc != 5)) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " tag raise tagName ?aboveThis?\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	tagPtr = FindTag(interp, textPtr, argv[3]);
-	if (tagPtr == NULL) {
-	    return TCL_ERROR;
-	}
-	if (argc == 5) {
-	    tagPtr2 = FindTag(interp, textPtr, argv[4]);
-	    if (tagPtr2 == NULL) {
-		return TCL_ERROR;
+	    gotStart:
+	    if (TkTextIndexCmp(&tSearch.curIndex, &index2) >= 0) {
+		return TCL_OK;
 	    }
-	    if (tagPtr->priority <= tagPtr2->priority) {
-		prio = tagPtr2->priority;
-	    } else {
-		prio = tagPtr2->priority + 1;
-	    }
-	} else {
-	    prio = textPtr->numTags-1;
-	}
-	ChangeTagPriority(textPtr, tagPtr, prio);
-	TkTextRedrawTag(textPtr, (TkTextIndex *) NULL, (TkTextIndex *) NULL,
-		tagPtr, 1);
-    } else if ((c == 'r') && (strncmp(argv[2], "ranges", length) == 0)
-	    && (length >= 3)) {
-	TkTextSearch tSearch;
-	char position[TK_POS_CHARS];
-
-	if (argc != 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " tag ranges tagName\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	tagPtr = FindTag((Tcl_Interp *) NULL, textPtr, argv[3]);
-	if (tagPtr == NULL) {
-	    return TCL_OK;
-	}
-	TkTextMakeByteIndex(textPtr->tree, 0, 0, &first);
-	TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree),
-		0, &last);
-	TkBTreeStartSearch(&first, &last, tagPtr, &tSearch);
-	if (TkBTreeCharTagged(&first, tagPtr)) {
-	    TkTextPrintIndex(&first, position);
-	    Tcl_AppendElement(interp, position);
-	}
-	while (TkBTreeNextTag(&tSearch)) {
 	    TkTextPrintIndex(&tSearch.curIndex, position);
 	    Tcl_AppendElement(interp, position);
+	    TkBTreeNextTag(&tSearch);
+	    TkTextPrintIndex(&tSearch.curIndex, position);
+	    Tcl_AppendElement(interp, position);
+	    break;
 	}
-    } else if ((c == 'r') && (strncmp(argv[2], "remove", length) == 0)
-	    && (length >= 2)) {
-	fullOption = "remove";
-	addTag = 0;
-	goto addAndRemove;
-    } else {
-	Tcl_AppendResult(interp, "bad tag option \"", argv[2],
-		"\": must be add, bind, cget, configure, delete, lower, ",
-		"names, nextrange, raise, ranges, or remove",
-		(char *) NULL);
-	return TCL_ERROR;
+	case TAG_PREVRANGE: {
+	    TkTextSearch tSearch;
+	    char position1[TK_POS_CHARS];
+	    char position2[TK_POS_CHARS];
+
+	    if ((objc != 5) && (objc != 6)) {
+		Tcl_WrongNumArgs(interp, 3, objv, "tagName index1 ?index2?");
+		return TCL_ERROR;
+	    }
+	    tagPtr = FindTag((Tcl_Interp *) NULL, textPtr, objv[3]);
+	    if (tagPtr == NULL) {
+		return TCL_OK;
+	    }
+	    if (TkTextGetObjIndex(interp, textPtr, objv[4], &index1) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    if (objc == 5) {
+		TkTextMakeByteIndex(textPtr->tree, 0, 0, &index2);
+	    } else if (TkTextGetObjIndex(interp, textPtr, objv[5], &index2)
+		    != TCL_OK) {
+		return TCL_ERROR;
+	    }
+
+	    /*
+	     * The search below is a bit weird.  The previous toggle can be
+	     * either an on or off toggle. If it is an on toggle, then we
+	     * need to turn around and search forward for the end toggle.
+	     * Otherwise we keep searching backwards.
+	     */
+
+	    TkBTreeStartSearchBack(&index1, &index2, tagPtr, &tSearch);
+
+	    if (!TkBTreePrevTag(&tSearch)) {
+		return TCL_OK;
+	    }
+	    if (tSearch.segPtr->typePtr == &tkTextToggleOnType) {
+		TkTextPrintIndex(&tSearch.curIndex, position1);
+		TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree),
+			0, &last);
+		TkBTreeStartSearch(&tSearch.curIndex, &last, tagPtr, &tSearch);
+		TkBTreeNextTag(&tSearch);
+		TkTextPrintIndex(&tSearch.curIndex, position2);
+	    } else {
+		TkTextPrintIndex(&tSearch.curIndex, position2);
+		TkBTreePrevTag(&tSearch);
+		if (TkTextIndexCmp(&tSearch.curIndex, &index2) < 0) {
+		    return TCL_OK;
+		}
+		TkTextPrintIndex(&tSearch.curIndex, position1);
+	    }
+	    Tcl_AppendElement(interp, position1);
+	    Tcl_AppendElement(interp, position2);
+	    break;
+	}
+	case TAG_RAISE: {
+	    TkTextTag *tagPtr2;
+	    int prio;
+
+	    if ((objc != 4) && (objc != 5)) {
+		Tcl_WrongNumArgs(interp, 3, objv, "tagName ?aboveThis?");
+		return TCL_ERROR;
+	    }
+	    tagPtr = FindTag(interp, textPtr, objv[3]);
+	    if (tagPtr == NULL) {
+		return TCL_ERROR;
+	    }
+	    if (objc == 5) {
+		tagPtr2 = FindTag(interp, textPtr, objv[4]);
+		if (tagPtr2 == NULL) {
+		    return TCL_ERROR;
+		}
+		if (tagPtr->priority <= tagPtr2->priority) {
+		    prio = tagPtr2->priority;
+		} else {
+		    prio = tagPtr2->priority + 1;
+		}
+	    } else {
+		prio = textPtr->numTags-1;
+	    }
+	    ChangeTagPriority(textPtr, tagPtr, prio);
+	    TkTextRedrawTag(textPtr, (TkTextIndex *) NULL, (TkTextIndex *) NULL,
+		    tagPtr, 1);
+	    break;
+	}
+	case TAG_RANGES: {
+	    TkTextSearch tSearch;
+	    char position[TK_POS_CHARS];
+
+	    if (objc != 4) {
+		Tcl_WrongNumArgs(interp, 3, objv, "tagName");
+		return TCL_ERROR;
+	    }
+	    tagPtr = FindTag((Tcl_Interp *) NULL, textPtr, objv[3]);
+	    if (tagPtr == NULL) {
+		return TCL_OK;
+	    }
+	    TkTextMakeByteIndex(textPtr->tree, 0, 0, &first);
+	    TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree),
+		    0, &last);
+	    TkBTreeStartSearch(&first, &last, tagPtr, &tSearch);
+	    if (TkBTreeCharTagged(&first, tagPtr)) {
+		TkTextPrintIndex(&first, position);
+		Tcl_AppendElement(interp, position);
+	    }
+	    while (TkBTreeNextTag(&tSearch)) {
+		TkTextPrintIndex(&tSearch.curIndex, position);
+		Tcl_AppendElement(interp, position);
+	    }
+	    break;
+	}
     }
     return TCL_OK;
 }
@@ -826,8 +849,8 @@ TkTextCreateTag(textPtr, tagName)
     tagPtr->tagRootPtr = NULL;
     tagPtr->priority = textPtr->numTags;
     tagPtr->border = NULL;
-    tagPtr->bdString = NULL;
     tagPtr->borderWidth = 0;
+    tagPtr->borderWidthPtr = NULL;
     tagPtr->reliefString = NULL;
     tagPtr->relief = TK_RELIEF_FLAT;
     tagPtr->bgStipple = None;
@@ -852,7 +875,7 @@ TkTextCreateTag(textPtr, tagName)
     tagPtr->spacing2 = 0;
     tagPtr->spacing3String = NULL;
     tagPtr->spacing3 = 0;
-    tagPtr->tabString = NULL;
+    tagPtr->tabStringPtr = NULL;
     tagPtr->tabArrayPtr = NULL;
     tagPtr->underlineString = NULL;
     tagPtr->underline = 0;
@@ -862,6 +885,7 @@ TkTextCreateTag(textPtr, tagName)
     tagPtr->affectsDisplay = 0;
     textPtr->numTags++;
     Tcl_SetHashValue(hPtr, tagPtr);
+    tagPtr->optionTable = Tk_CreateOptionTable(textPtr->interp, tagOptionSpecs);
     return tagPtr;
 }
 
@@ -890,16 +914,16 @@ FindTag(interp, textPtr, tagName)
 				 * if NULL, then don't record an error
 				 * message. */
     TkText *textPtr;		/* Widget in which tag is being used. */
-    CONST char *tagName;	/* Name of desired tag. */
+    Tcl_Obj *tagName;	        /* Name of desired tag. */
 {
     Tcl_HashEntry *hPtr;
 
-    hPtr = Tcl_FindHashEntry(&textPtr->tagTable, tagName);
+    hPtr = Tcl_FindHashEntry(&textPtr->tagTable, Tcl_GetString(tagName));
     if (hPtr != NULL) {
 	return (TkTextTag *) Tcl_GetHashValue(hPtr);
     }
     if (interp != NULL) {
-	Tcl_AppendResult(interp, "tag \"", tagName,
+	Tcl_AppendResult(interp, "tag \"", Tcl_GetString(tagName),
 		"\" isn't defined in text widget", (char *) NULL);
     }
     return NULL;
@@ -927,60 +951,12 @@ TkTextFreeTag(textPtr, tagPtr)
     TkText *textPtr;			/* Info about overall widget. */
     register TkTextTag *tagPtr;		/* Tag being deleted. */
 {
-    if (tagPtr->border != None) {
-	Tk_Free3DBorder(tagPtr->border);
-    }
-    if (tagPtr->bdString != NULL) {
-	ckfree(tagPtr->bdString);
-    }
-    if (tagPtr->reliefString != NULL) {
-	ckfree(tagPtr->reliefString);
-    }
-    if (tagPtr->bgStipple != None) {
-	Tk_FreeBitmap(textPtr->display, tagPtr->bgStipple);
-    }
-    if (tagPtr->fgColor != None) {
-	Tk_FreeColor(tagPtr->fgColor);
-    }
-    Tk_FreeFont(tagPtr->tkfont);
-    if (tagPtr->fgStipple != None) {
-	Tk_FreeBitmap(textPtr->display, tagPtr->fgStipple);
-    }
-    if (tagPtr->justifyString != NULL) {
-	ckfree(tagPtr->justifyString);
-    }
-    if (tagPtr->lMargin1String != NULL) {
-	ckfree(tagPtr->lMargin1String);
-    }
-    if (tagPtr->lMargin2String != NULL) {
-	ckfree(tagPtr->lMargin2String);
-    }
-    if (tagPtr->offsetString != NULL) {
-	ckfree(tagPtr->offsetString);
-    }
-    if (tagPtr->overstrikeString != NULL) {
-	ckfree(tagPtr->overstrikeString);
-    }
-    if (tagPtr->rMarginString != NULL) {
-	ckfree(tagPtr->rMarginString);
-    }
-    if (tagPtr->spacing1String != NULL) {
-	ckfree(tagPtr->spacing1String);
-    }
-    if (tagPtr->spacing2String != NULL) {
-	ckfree(tagPtr->spacing2String);
-    }
-    if (tagPtr->spacing3String != NULL) {
-	ckfree(tagPtr->spacing3String);
-    }
-    if (tagPtr->tabString != NULL) {
-	ckfree(tagPtr->tabString);
-    }
+    /* Let Tk do most of the hard work for us */
+    Tk_FreeConfigOptions((char *) tagPtr, tagPtr->optionTable,
+			 textPtr->tkwin);
+    /* This associated information is managed by us */
     if (tagPtr->tabArrayPtr != NULL) {
 	ckfree((char *) tagPtr->tabArrayPtr);
-    }
-    if (tagPtr->underlineString != NULL) {
-	ckfree(tagPtr->underlineString);
     }
     ckfree((char *) tagPtr);
 }

@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.24 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: text.tcl,v 1.25 2003/05/19 13:04:24 vincentdarley Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -805,16 +805,16 @@ proc ::tk::TextInsert {w s} {
 	return
     }
     set compound 0
-    catch {
-	if {[$w compare sel.first <= insert] \
-		&& [$w compare sel.last >= insert]} {
-            set oldSeparator [$w cget -autoseparators]
-            if { $oldSeparator } {
-                $w configure -autoseparators 0
-                $w edit separator
-                set compound 1
-            }
-	    $w delete sel.first sel.last
+    if {[llength [set range [$w tag ranges sel]]]} {
+	if {[$w compare [lindex $range 0] <= insert] \
+	  && [$w compare [lindex $range end] >= insert]} {
+	    set oldSeparator [$w cget -autoseparators]
+	    if { $oldSeparator } {
+		$w configure -autoseparators 0
+		$w edit separator
+		set compound 1
+	    }
+	    $w delete [lindex $range 0] [lindex $range end]
 	}
     }
     $w insert insert $s

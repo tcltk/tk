@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textIndex.test,v 1.8 2003/04/01 21:06:54 dgp Exp $
+# RCS: @(#) $Id: textIndex.test,v 1.9 2003/05/19 13:04:24 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -654,7 +654,6 @@ test testIndex-16.1 {TkTextPrintIndex} {
     catch {destroy $t}
 } 0
 
-
 test testIndex-16.2 {TkTextPrintIndex} {
     set t [text .t2]
     $t insert end \n
@@ -663,6 +662,38 @@ test testIndex-16.2 {TkTextPrintIndex} {
     pack $t
     catch {destroy $t}
 } 0
+
+test testIndex-17.1 {Object indices} {
+    set res {}
+    set t [text .t2 -height 20]
+    for {set i 0} {$i < 100} {incr i} {
+	$t insert end $i\n
+    }
+    pack $t
+    update
+    set idx @0,0
+    lappend res $idx [$t index $idx]
+    $t yview scroll 2 pages
+    lappend res $idx [$t index $idx]
+    catch {destroy $t}
+    unset i
+    unset idx
+    list $res
+} {{@0,0 1.0 @0,0 37.0}}
+
+test testIndex-18.1 {Object indices don't cache mark names} {
+    set res {}
+    text .t2
+    .t2 insert 1.0 1234\n1234\n1234
+    set pos "insert"
+    lappend res [.t2 index $pos]
+    .t2 mark set $pos 3.0
+    lappend res [.t2 index $pos]
+    .t2 mark set $pos 1.0
+    lappend res [.t2 index $pos]
+    catch {destroy .t2}
+    set res
+} {3.4 3.0 1.0}
 
 # cleanup
 rename textimage {}

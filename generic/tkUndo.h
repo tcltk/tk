@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUndo.h,v 1.1 2002/06/21 23:09:55 hobbs Exp $
+ * RCS: @(#) $Id: tkUndo.h,v 1.2 2003/05/19 13:04:24 vincentdarley Exp $
  */
 
 #ifndef _TKUNDO
@@ -28,26 +28,29 @@
 
 typedef enum {
     TK_UNDO_SEPARATOR,			/* Marker */
-    TK_UNDO_ACTION			   /* Command */
+    TK_UNDO_ACTION,			/* Command */
+    TK_UNDO_ACTION_LIST			/* Command list */
 } TkUndoAtomType;
 
 /* struct defining the basic undo/redo stack element */
 
 typedef struct TkUndoAtom {
-    TkUndoAtomType type;		 /* The type that will trigger the
-					 * required action*/
-    Tcl_Obj * apply;			   /* Command to apply the action that was taken */
-    Tcl_Obj * revert;			/* The command to undo the action */
+    TkUndoAtomType type;	/* The type that will trigger the
+				 * required action*/
+    Tcl_Obj *apply;		/* Command to apply the action that 
+                   		 * was taken */
+    Tcl_Obj *revert;		/* The command to undo the action */
     struct TkUndoAtom * next;	/* Pointer to the next element in the
-					 * stack */
+				 * stack */
 } TkUndoAtom;
 
 /* struct defining the basic undo/redo stack element */
 
 typedef struct TkUndoRedoStack {
-    TkUndoAtom * undoStack;		 /* The undo stack */
-    TkUndoAtom * redoStack;		 /* The redo stack */
-    Tcl_Interp * interp   ;       /* The interpreter in which to execute the revert and apply scripts */
+    TkUndoAtom * undoStack;	  /* The undo stack */
+    TkUndoAtom * redoStack;	  /* The redo stack */
+    Tcl_Interp * interp   ;       /* The interpreter in which to execute 
+                                   * the revert and apply scripts */
     int          maxdepth;
     int          depth;
 } TkUndoRedoStack;
@@ -78,7 +81,7 @@ EXTERN void TkUndoFreeStack _ANSI_ARGS_((TkUndoRedoStack * stack));
 EXTERN void TkUndoInsertUndoSeparator _ANSI_ARGS_((TkUndoRedoStack * stack));
 
 EXTERN void TkUndoPushAction _ANSI_ARGS_((TkUndoRedoStack * stack,
-    Tcl_DString * actionScript, Tcl_DString * revertScript));
+    Tcl_Obj *actionScript, Tcl_Obj *revertScript, int isList));
 
 EXTERN int TkUndoRevert _ANSI_ARGS_((TkUndoRedoStack *  stack));
  

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.15 2003/02/19 18:52:14 mdejong Exp $
+'\" RCS: @(#) $Id: text.n,v 1.16 2003/05/19 13:04:22 vincentdarley Exp $
 '\" 
 .so man.macros
 .TH text n 8.4 Tk "Tk Built-In Commands"
@@ -1166,7 +1166,9 @@ This is the default.
 \fB\-backwards\fR
 The search will proceed backward through the text, finding the
 matching range closest to \fIindex\fR whose first character
-is before \fIindex\fR.
+is before \fIindex\fR.  Note that, for a variety of reasons, backwards
+searches can be substantially slower than forwards searches, so it is
+recommended that performance-critical code use forward searches.
 .TP
 \fB\-exact\fR
 Use exact matching:  the characters in the matching range must be
@@ -1176,7 +1178,18 @@ This is the default.
 \fB\-regexp\fR
 Treat \fIpattern\fR as a regular expression and match it against
 the text using the rules for regular expressions (see the \fBregexp\fR
-command for details).
+command for details).  The default matching automatically passes
+both the \fB\-lineanchor\fR and \fB\-linestop\fR options 
+to the regexp engine (unless \fB\-nolinestop\fR is used), so that
+\fI^$\fR match beginning and end of line, and \fI.\fR, \fI[^\fR 
+sequences will never match the newline character \fI\n\fR.
+.TP
+\fB\-nolinestop\fR
+This allows 
+\fI.\fR and \fI[^\fR sequences to match the newline character \fI\n\fR,
+which they will otherwise not do (see the \fBregexp\fR
+command for details). This option is only meaningful if \fB\-regexp\fR 
+is also given, and an error will be thrown otherwise.
 .TP
 \fB\-nocase\fR
 Ignore case differences between the pattern and the text.
@@ -1188,6 +1201,14 @@ end of the matching range will be stored in the variable.  If there are no
 embedded images or windows in the matching range, this is equivalent to the
 number of characters matched.  In either case, the range \fImatchIdx\fR to
 \fImatchIdx + $count chars\fR will return the entire matched text.
+.TP
+\fB\-all\fR
+Find all matches in the given range and return a list of the indices of
+the first character of each match.  If a \fB\-count\fI varName\fR switch is 
+given, then \fBvarName\fR is also set to a list containing one element 
+for each successful match.  Note that, even for exact searches, the
+elements of this list may be different, if there are embedded images,
+windows or hidden text. 
 .TP
 \fB\-elide\fR
 Find elidden (hidden) text as well. By default only displayed text is

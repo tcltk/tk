@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.5 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.6 2003/05/19 13:04:23 vincentdarley Exp $
  */
 
 #include "tk.h"
@@ -52,7 +52,7 @@ static void		EmbImageBboxProc _ANSI_ARGS_((TkTextDispChunk *chunkPtr,
 			    int *xPtr, int *yPtr, int *widthPtr,
 			    int *heightPtr));
 static int		EmbImageConfigure _ANSI_ARGS_((TkText *textPtr,
-			    TkTextSegment *eiPtr, int argc, CONST char **argv));
+			    TkTextSegment *eiPtr, int objc, Tcl_Obj *CONST objv[]));
 static int		EmbImageDeleteProc _ANSI_ARGS_((TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone));
 static void		EmbImageDisplayProc _ANSI_ARGS_((
@@ -128,74 +128,70 @@ static Tk_ConfigSpec configSpecs[] = {
  */
 
 int
-TkTextImageCmd(textPtr, interp, argc, argv)
+TkTextImageCmd(textPtr, interp, objc, objv)
     register TkText *textPtr;	/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    CONST char **argv;		/* Argument strings.  Someone else has already
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
-				 * argv[1] is "image". */
+				 * objv[1] is "image". */
 {
-    size_t length;
+    int length;
     register TkTextSegment *eiPtr;
-
-    if (argc < 3) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " image option ?arg arg ...?\"", (char *) NULL);
+    CONST char *str;
+    
+    if (objc < 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
-    length = strlen(argv[2]);
-    if ((strncmp(argv[2], "cget", length) == 0) && (length >= 2)) {
+    str = Tcl_GetStringFromObj(objv[2],&length);
+    if ((strncmp(str, "cget", length) == 0) && (length >= 2)) {
 	TkTextIndex index;
 	TkTextSegment *eiPtr;
 
-	if (argc != 5) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " image cget index option\"",
-		    (char *) NULL);
+	if (objc != 5) {
+	    Tcl_WrongNumArgs(interp, 3, objv, "index option");
 	    return TCL_ERROR;
 	}
-	if (TkTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
+	if (TkTextGetObjIndex(interp, textPtr, objv[3], &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	eiPtr = TkTextIndexToSeg(&index, (int *) NULL);
 	if (eiPtr->typePtr != &tkTextEmbImageType) {
 	    Tcl_AppendResult(interp, "no embedded image at index \"",
-		    argv[3], "\"", (char *) NULL);
+			     Tcl_GetString(objv[3]), "\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
 	return Tk_ConfigureValue(interp, textPtr->tkwin, configSpecs,
-		(char *) &eiPtr->body.ei, argv[4], 0);
-    } else if ((strncmp(argv[2], "configure", length) == 0) && (length >= 2)) {
+		(char *) &eiPtr->body.ei, Tcl_GetString(objv[4]), 0);
+    } else if ((strncmp(str, "configure", length) == 0) && (length >= 2)) {
 	TkTextIndex index;
 	TkTextSegment *eiPtr;
 
-	if (argc < 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " image configure index ?option value ...?\"",
-		    (char *) NULL);
+	if (objc < 4) {
+	    Tcl_WrongNumArgs(interp, 3, objv, "index ?option value ...?");
 	    return TCL_ERROR;
 	}
-	if (TkTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
+	if (TkTextGetObjIndex(interp, textPtr, objv[3], &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	eiPtr = TkTextIndexToSeg(&index, (int *) NULL);
 	if (eiPtr->typePtr != &tkTextEmbImageType) {
 	    Tcl_AppendResult(interp, "no embedded image at index \"",
-		    argv[3], "\"", (char *) NULL);
+			     Tcl_GetString(objv[3]), "\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	if (argc == 4) {
+	if (objc == 4) {
 	    return Tk_ConfigureInfo(interp, textPtr->tkwin, configSpecs,
 		    (char *) &eiPtr->body.ei, (char *) NULL, 0);
-	} else if (argc == 5) {
+	} else if (objc == 5) {
 	    return Tk_ConfigureInfo(interp, textPtr->tkwin, configSpecs,
-		    (char *) &eiPtr->body.ei, argv[4], 0);
+		    (char *) &eiPtr->body.ei, Tcl_GetString(objv[4]), 0);
 	} else {
 	    TkTextChanged(textPtr, &index, &index);
-	    return EmbImageConfigure(textPtr, eiPtr, argc-4, argv+4);
+	    return EmbImageConfigure(textPtr, eiPtr, objc-4, objv+4);
 	}
-    } else if ((strncmp(argv[2], "create", length) == 0) && (length >= 2)) {
+    } else if ((strncmp(str, "create", length) == 0) && (length >= 2)) {
 	TkTextIndex index;
 	int lineIndex;
 
@@ -204,13 +200,11 @@ TkTextImageCmd(textPtr, interp, argc, argv)
 	 * mark that position for redisplay.
 	 */
 
-	if (argc < 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " image create index ?option value ...?\"",
-		    (char *) NULL);
+	if (objc < 4) {
+	    Tcl_WrongNumArgs(interp, 3, objv, "index ?option value ...?");
 	    return TCL_ERROR;
 	}
-	if (TkTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
+	if (TkTextGetObjIndex(interp, textPtr, objv[3], &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
@@ -248,20 +242,19 @@ TkTextImageCmd(textPtr, interp, argc, argv)
 
 	TkTextChanged(textPtr, &index, &index);
 	TkBTreeLinkSegment(eiPtr, &index);
-	if (EmbImageConfigure(textPtr, eiPtr, argc-4, argv+4) != TCL_OK) {
+	if (EmbImageConfigure(textPtr, eiPtr, objc-4, objv+4) != TCL_OK) {
 	    TkTextIndex index2;
 
 	    TkTextIndexForwChars(&index, 1, &index2);
 	    TkBTreeDeleteChars(&index, &index2);
 	    return TCL_ERROR;
 	}
-    } else if (strncmp(argv[2], "names", length) == 0) {
+    } else if (strncmp(str, "names", length) == 0) {
 	Tcl_HashSearch search;
 	Tcl_HashEntry *hPtr;
 
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " image names\"", (char *) NULL);
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	    return TCL_ERROR;
 	}
 	for (hPtr = Tcl_FirstHashEntry(&textPtr->imageTable, &search);
@@ -270,7 +263,7 @@ TkTextImageCmd(textPtr, interp, argc, argv)
 		    Tcl_GetHashKey(&textPtr->markTable, hPtr));
 	}
     } else {
-	Tcl_AppendResult(interp, "bad image option \"", argv[2],
+	Tcl_AppendResult(interp, "bad image option \"", str,
 		"\": must be cget, configure, create, or names",
 		(char *) NULL);
 	return TCL_ERROR;
@@ -284,7 +277,7 @@ TkTextImageCmd(textPtr, interp, argc, argv)
  * EmbImageConfigure --
  *
  *	This procedure is called to handle configuration options
- *	for an embedded image, using an argc/argv list.
+ *	for an embedded image, using an objc/objv list.
  *
  * Results:
  *	The return value is a standard Tcl result.  If TCL_ERROR is
@@ -298,12 +291,12 @@ TkTextImageCmd(textPtr, interp, argc, argv)
  */
 
 static int
-EmbImageConfigure(textPtr, eiPtr, argc, argv)
+EmbImageConfigure(textPtr, eiPtr, objc, objv)
     TkText *textPtr;		/* Information about text widget that
 				 * contains embedded image. */
     TkTextSegment *eiPtr;	/* Embedded image to be configured. */
-    int argc;			/* Number of strings in argv. */
-    CONST char **argv;		/* Array of strings describing configuration
+    int objc;			/* Number of strings in objv. */
+    Tcl_Obj *CONST objv[];	/* Array of strings describing configuration
 				 * options. */
 {
     Tk_Image image;
@@ -315,12 +308,16 @@ EmbImageConfigure(textPtr, eiPtr, argc, argv)
     int count = 0;		/* The counter for picking a unique name */
     int conflict = 0;		/* True if we have a name conflict */
     unsigned int len;		/* length of image name */
-
+    CONST char **argv;
+   
+    argv = GetStringsFromObjs(objc, objv);
     if (Tk_ConfigureWidget(textPtr->interp, textPtr->tkwin, configSpecs,
-	    argc, argv, (char *) &eiPtr->body.ei,TK_CONFIG_ARGV_ONLY)
+	    objc, argv, (char *) &eiPtr->body.ei,TK_CONFIG_ARGV_ONLY)
 	    != TCL_OK) {
+	if (argv) ckfree((char *) argv);
 	return TCL_ERROR;
     }
+    if (argv) ckfree((char *) argv);
 
     /*
      * Create the image.  Save the old image around and don't free it

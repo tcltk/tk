@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.21 2002/09/02 19:14:04 hobbs Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.22 2003/05/19 13:04:23 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -2325,7 +2325,11 @@ TesttextCmd(clientData, interp, argc, argv)
     if (Tcl_GetCommandInfo(interp, argv[1], &info) == 0) {
 	return TCL_ERROR;
     }
-    textPtr = (TkText *) info.clientData;
+    if (info.isNativeObjectProc) {
+	textPtr = (TkText *) info.objClientData;
+    } else {
+        textPtr = (TkText *) info.clientData;
+    }
     len = strlen(argv[2]);
     if (strncmp(argv[2], "byteindex", len) == 0) {
 	if (argc != 5) {

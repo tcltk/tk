@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.6 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.7 2003/05/19 13:04:23 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -2223,7 +2223,7 @@ TkBTreePrevTag(searchPtr)
 
 int
 TkBTreeCharTagged(indexPtr, tagPtr)
-    TkTextIndex *indexPtr;		/* Indicates a character position at
+    CONST TkTextIndex *indexPtr;	/* Indicates a character position at
 					 * which to check for a tag. */
     TkTextTag *tagPtr;			/* Tag of interest. */
 {
@@ -2335,7 +2335,7 @@ TkBTreeCharTagged(indexPtr, tagPtr)
 	/* ARGSUSED */
 TkTextTag **
 TkBTreeGetTags(indexPtr, numTagsPtr)
-    TkTextIndex *indexPtr;	/* Indicates a particular position in
+    CONST TkTextIndex *indexPtr;/* Indicates a particular position in
 				 * the B-tree. */
     int *numTagsPtr;		/* Store number of tags found at this
 				 * location. */
@@ -2452,7 +2452,7 @@ TkBTreeGetTags(indexPtr, numTagsPtr)
 int
 TkTextIsElided(textPtr, indexPtr)
     TkText *textPtr;		/* Overall information about text widget. */
-    TkTextIndex *indexPtr;	/* The character in the text for which
+    CONST TkTextIndex *indexPtr;/* The character in the text for which
 				 * display information is wanted. */
 {
 #define LOTSA_TAGS 1000
@@ -2466,7 +2466,7 @@ TkTextIsElided(textPtr, indexPtr)
     register Node *nodePtr;
     register TkTextLine *siblingLinePtr;
     register TkTextSegment *segPtr;
-    register TkTextTag *tagPtr;
+    register TkTextTag *tagPtr = NULL;
     register int i, index;
 
 	/* almost always avoid malloc, so stay out of system calls */

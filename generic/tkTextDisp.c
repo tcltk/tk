@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.14 2002/11/22 23:25:19 hobbs Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.15 2003/05/19 13:04:23 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -350,7 +350,7 @@ static void		DisplayLineBackground _ANSI_ARGS_((TkText *textPtr,
 			    DLine *dlPtr, DLine *prevPtr, Pixmap pixmap));
 static void		DisplayText _ANSI_ARGS_((ClientData clientData));
 static DLine *		FindDLine _ANSI_ARGS_((DLine *dlPtr,
-			    TkTextIndex *indexPtr));
+			    CONST TkTextIndex *indexPtr));
 static void		FreeDLines _ANSI_ARGS_((TkText *textPtr,
 			    DLine *firstPtr, DLine *lastPtr, int unlink));
 static void		FreeStyle _ANSI_ARGS_((TkText *textPtr,
@@ -560,7 +560,8 @@ GetStyle(textPtr, indexPtr)
 	    styleValues.border = tagPtr->border;
 	    borderPrio = tagPtr->priority;
 	}
-	if ((tagPtr->bdString != NULL)
+	if ((tagPtr->borderWidthPtr != NULL) 
+	        && (Tcl_GetString(tagPtr->borderWidthPtr)[0] != '\0')
 		&& (tagPtr->priority > borderWidthPrio)) {
 	    styleValues.borderWidth = tagPtr->borderWidth;
 	    borderWidthPrio = tagPtr->priority;
@@ -636,7 +637,7 @@ GetStyle(textPtr, indexPtr)
 	    styleValues.spacing3 = tagPtr->spacing3;
 	    spacing3Prio = tagPtr->priority;
 	}
-	if ((tagPtr->tabString != NULL)
+	if ((tagPtr->tabStringPtr != NULL)
 		&& (tagPtr->priority > tabPrio)) {
 	    styleValues.tabArrayPtr = tagPtr->tabArrayPtr;
 	    tabPrio = tagPtr->priority;
@@ -1706,7 +1707,7 @@ DisplayDLine(textPtr, dlPtr, prevPtr, pixmap)
      * to its left.
      */
 
-    if (textPtr->state == TK_STATE_NORMAL) {
+    if (textPtr->state == TK_TEXT_STATE_NORMAL) {
 	for (chunkPtr = dlPtr->chunkPtr; (chunkPtr != NULL);
 		chunkPtr = chunkPtr->nextPtr) {
 	    x = chunkPtr->x + dInfoPtr->x - dInfoPtr->curPixelOffset;
@@ -3295,13 +3296,13 @@ MeasureUp(textPtr, srcPtr, distance, dstPtr)
  */
 
 int
-TkTextSeeCmd(textPtr, interp, argc, argv)
+TkTextSeeCmd(textPtr, interp, objc, objv)
     TkText *textPtr;		/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    CONST char **argv;		/* Argument strings.  Someone else has already
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
-				 * argv[1] is "see". */
+				 * objv[1] is "see". */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     TkTextIndex index;
@@ -3309,12 +3310,12 @@ TkTextSeeCmd(textPtr, interp, argc, argv)
     DLine *dlPtr;
     TkTextDispChunk *chunkPtr;
 
-    if (argc != 3) {
+    if (objc != 3) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " see index\"", (char *) NULL);
+		Tcl_GetString(objv[0]), " see index\"", (char *) NULL);
 	return TCL_ERROR;
     }
-    if (TkTextGetIndex(interp, textPtr, argv[2], &index) != TCL_OK) {
+    if (TkTextGetObjIndex(interp, textPtr, objv[2], &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -3428,13 +3429,13 @@ TkTextSeeCmd(textPtr, interp, argc, argv)
  */
 
 int
-TkTextXviewCmd(textPtr, interp, argc, argv)
+TkTextXviewCmd(textPtr, interp, objc, objv)
     TkText *textPtr;		/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    CONST char **argv;		/* Argument strings.  Someone else has already
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
-				 * argv[1] is "xview". */
+				 * objv[1] is "xview". */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     int type, charsPerPage, count, newOffset;
@@ -3444,13 +3445,13 @@ TkTextXviewCmd(textPtr, interp, argc, argv)
 	UpdateDisplayInfo(textPtr);
     }
 
-    if (argc == 2) {
+    if (objc == 2) {
 	GetXView(interp, textPtr, 0);
 	return TCL_OK;
     }
 
     newOffset = dInfoPtr->newByteOffset;
-    type = Tk_GetScrollInfo(interp, argc, argv, &fraction, &count);
+    type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
     switch (type) {
 	case TK_SCROLL_ERROR:
 	    return TCL_ERROR;
@@ -3616,13 +3617,13 @@ ScrollByLines(textPtr, offset)
  */
 
 int
-TkTextYviewCmd(textPtr, interp, argc, argv)
+TkTextYviewCmd(textPtr, interp, objc, objv)
     TkText *textPtr;		/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    CONST char **argv;		/* Argument strings.  Someone else has already
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
-				 * argv[1] is "yview". */
+				 * objv[1] is "yview". */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     int pickPlace, lineNum, type, bytesInLine;
@@ -3638,7 +3639,7 @@ TkTextYviewCmd(textPtr, interp, argc, argv)
 	UpdateDisplayInfo(textPtr);
     }
 
-    if (argc == 2) {
+    if (objc == 2) {
 	GetYView(interp, textPtr, 0);
 	return TCL_OK;
     }
@@ -3648,21 +3649,22 @@ TkTextYviewCmd(textPtr, interp, argc, argv)
      */
 
     pickPlace = 0;
-    if (argv[2][0] == '-') {
-	switchLength = strlen(argv[2]);
+    if (Tcl_GetString(objv[2])[0] == '-') {
+	switchLength = strlen(Tcl_GetString(objv[2]));
 	if ((switchLength >= 2)
-		&& (strncmp(argv[2], "-pickplace", switchLength) == 0)) {
+		&& (strncmp(Tcl_GetString(objv[2]), "-pickplace", switchLength) == 0)) {
 	    pickPlace = 1;
-	    if (argc != 4) {
+	    if (objc != 4) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"",
-			argv[0], " yview -pickplace lineNum|index\"",
+				 Tcl_GetString(objv[0]), 
+				 " yview -pickplace lineNum|index\"",
 			(char *) NULL);
 		return TCL_ERROR;
 	    }
 	}
     }
-    if ((argc == 3) || pickPlace) {
-	if (Tcl_GetInt(interp, argv[2+pickPlace], &lineNum) == TCL_OK) {
+    if ((objc == 3) || pickPlace) {
+	if (Tcl_GetIntFromObj(interp, objv[2+pickPlace], &lineNum) == TCL_OK) {
 	    TkTextMakeByteIndex(textPtr->tree, lineNum, 0, &index);
 	    TkTextSetYView(textPtr, &index, 0);
 	    return TCL_OK;
@@ -3673,7 +3675,7 @@ TkTextYviewCmd(textPtr, interp, argc, argv)
 	 */
     
 	Tcl_ResetResult(interp);
-	if (TkTextGetIndex(interp, textPtr, argv[2+pickPlace],
+	if (TkTextGetObjIndex(interp, textPtr, objv[2+pickPlace],
 		&index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -3682,10 +3684,10 @@ TkTextYviewCmd(textPtr, interp, argc, argv)
     }
 
     /*
-     * New syntax: dispatch based on argv[2].
+     * New syntax: dispatch based on objv[2].
      */
 
-    type = Tk_GetScrollInfo(interp, argc, argv, &fraction, &count);
+    type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
     switch (type) {
 	case TK_SCROLL_ERROR:
 	    return TCL_ERROR;
@@ -3782,13 +3784,13 @@ TkTextYviewCmd(textPtr, interp, argc, argv)
  */
 
 int
-TkTextScanCmd(textPtr, interp, argc, argv)
+TkTextScanCmd(textPtr, interp, objc, objv)
     register TkText *textPtr;	/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    CONST char **argv;		/* Argument strings.  Someone else has already
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
-				 * argv[1] is "scan". */
+				 * objv[1] is "scan". */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     TkTextIndex index;
@@ -3796,23 +3798,23 @@ TkTextScanCmd(textPtr, interp, argc, argv)
     Tk_FontMetrics fm;
     size_t length;
 
-    if ((argc != 5) && (argc != 6)) {
+    if ((objc != 5) && (objc != 6)) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " scan mark x y\" or \"",
-		argv[0], " scan dragto x y ?gain?\"", (char *) NULL);
+			 Tcl_GetString(objv[0]), " scan mark x y\" or \"",
+			 Tcl_GetString(objv[0]), " scan dragto x y ?gain?\"", (char *) NULL);
 	return TCL_ERROR;
     }
-    if (Tcl_GetInt(interp, argv[3], &x) != TCL_OK) {
+    if (Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (Tcl_GetInt(interp, argv[4], &y) != TCL_OK) {
+    if (Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if ((argc == 6) && (Tcl_GetInt(interp, argv[5], &gain) != TCL_OK))
+    if ((objc == 6) && (Tcl_GetIntFromObj(interp, objv[5], &gain) != TCL_OK))
 	return TCL_ERROR;
-    c = argv[2][0];
-    length = strlen(argv[2]);
-    if ((c == 'd') && (strncmp(argv[2], "dragto", length) == 0)) {
+    c = Tcl_GetString(objv[2])[0];
+    length = strlen(Tcl_GetString(objv[2]));
+    if ((c == 'd') && (strncmp(Tcl_GetString(objv[2]), "dragto", length) == 0)) {
 	/*
 	 * Amplify the difference between the current position and the
 	 * mark position to compute how much the view should shift, then
@@ -3852,13 +3854,13 @@ TkTextScanCmd(textPtr, interp, argc, argv)
 		dInfoPtr->scanMarkY = y;
 	    }
 	}
-    } else if ((c == 'm') && (strncmp(argv[2], "mark", length) == 0)) {
+    } else if ((c == 'm') && (strncmp(Tcl_GetString(objv[2]), "mark", length) == 0)) {
 	dInfoPtr->scanMarkIndex = dInfoPtr->newByteOffset;
 	dInfoPtr->scanMarkX = x;
 	dInfoPtr->scanTotalScroll = 0;
 	dInfoPtr->scanMarkY = y;
     } else {
-	Tcl_AppendResult(interp, "bad scan option \"", argv[2],
+	Tcl_AppendResult(interp, "bad scan option \"", Tcl_GetString(objv[2]),
 		"\": must be mark or dragto", (char *) NULL);
 	return TCL_ERROR;
     }
@@ -4051,7 +4053,7 @@ static DLine *
 FindDLine(dlPtr, indexPtr)
     register DLine *dlPtr;	/* Pointer to first in list of DLines
 				 * to search. */
-    TkTextIndex *indexPtr;	/* Index of desired character. */
+    CONST TkTextIndex *indexPtr;/* Index of desired character. */
 {
     TkTextLine *linePtr;
 
@@ -4229,7 +4231,7 @@ TkTextPixelIndex(textPtr, x, y, indexPtr)
 int
 TkTextCharBbox(textPtr, indexPtr, xPtr, yPtr, widthPtr, heightPtr)
     TkText *textPtr;		/* Widget record for text widget. */
-    TkTextIndex *indexPtr;	/* Index of character whose bounding
+    CONST TkTextIndex *indexPtr;/* Index of character whose bounding
 				 * box is desired. */
     int *xPtr, *yPtr;		/* Filled with character's upper-left
 				 * coordinate. */
@@ -4338,7 +4340,7 @@ TkTextCharBbox(textPtr, indexPtr, xPtr, yPtr, widthPtr, heightPtr)
 int
 TkTextDLineInfo(textPtr, indexPtr, xPtr, yPtr, widthPtr, heightPtr, basePtr)
     TkText *textPtr;		/* Widget record for text widget. */
-    TkTextIndex *indexPtr;	/* Index of character whose bounding
+    CONST TkTextIndex *indexPtr;/* Index of character whose bounding
 				 * box is desired. */
     int *xPtr, *yPtr;		/* Filled with line's upper-left
 				 * coordinate. */
