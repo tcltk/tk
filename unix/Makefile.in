@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.76 2002/07/14 05:48:46 dgp Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.77 2002/07/16 23:17:09 mdejong Exp $
 
 # Current Tk version;  used in various names.
 
@@ -994,7 +994,9 @@ checkexports: $(TK_LIB_FILE)
 
 $(GENERIC_DIR)/tkStubInit.c: $(GENERIC_DIR)/tk.decls \
 		$(GENERIC_DIR)/tkInt.decls
-	@echo "Warning: run \"make genstubs\" to regenerate tkStubInit.c"
+	@echo "Warning: tkStubInit.c may be out of date."
+	@echo "Developers may want to run \"make genstubs\" to regenerate."
+	@echo "This warning can be safely ignored, do not report as a bug!"
 
 genstubs:
 	$(TCL_EXE) $(TOOL_DIR)/genStubs.tcl $(GENERIC_DIR) \
