@@ -1,3 +1,16 @@
+2003-10-01  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.pbproj/project.pbxproj:
+	* macosx/Makefile: fixed redo prebinding bug when DESTDIR="".
+	Added support for all applicable customizable makefile variables
+	from tcl/macosx/Makefile.
+
+	* macosx/README:
+	* macosx/Wish.pbproj/project.pbxproj: ensure that the versioned
+	wishX.X script works correctly when Tk.framework with multiple
+	versions is present by referring to a copy of 'Wish Shell.app'
+	located in Tk.framework/Versions/X.X/Resources.
+
 2003-09-29  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* unix/tcl.m4 (SC_ENABLE_FRAMEWORK): Added note to make it clearer
