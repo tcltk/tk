@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: config.test,v 1.1.2.6 1999/03/26 00:07:53 hershey Exp $
+# RCS: @(#) $Id: config.test,v 1.1.2.7 1999/03/26 19:14:47 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -596,7 +596,7 @@ test config-8.8 {Tk_RestoreSavedOptions - color internal form} {
     testobjconfig internal .a
     list [catch {.a csave -color green -color bogus}] [.a cget -color]
 } {1 red}
-test config-8.9 {Tk_RestoreSavedOptions - font internal form} {
+test config-8.9 {Tk_RestoreSavedOptions - font internal form} {nonPortable} {
     eval destroy [winfo children .]
     testobjconfig internal .a
     list [catch {.a csave -font {Times 12} -color bogus}] [.a cget -font]

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvText.test,v 1.1.4.6 1999/03/24 02:54:31 hershey Exp $
+# RCS: @(#) $Id: canvText.test,v 1.1.4.7 1999/03/26 19:14:46 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -173,7 +173,7 @@ test canvText-5.1 {ConfigureText procedure: adjust cursor} {
     .c delete x
 } {}
 
-test canvText-6.1 {ComputeTextBbox procedure} {fonts} {
+test canvText-6.1 {ComputeTextBbox procedure} {fonts nonPortable} {
     .c itemconfig test -font $font -text 0
     .c coords test 0 0
     set x {}

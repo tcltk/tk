@@ -17,7 +17,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.1.4.6 1999/02/16 11:39:32 lfb Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.1.4.7 1999/03/26 19:14:46 hershey Exp $
  */
 
 #include "tkPort.h"
@@ -365,6 +365,9 @@ ScaleWidgetObjCmd(clientData, interp, objc, objv)
     }
     result = Tcl_GetIndexFromObj(interp, objv[1], commandNames,
             "option", 0, &index);
+    if (result != TCL_OK) {
+	return result;
+    }
     Tcl_Preserve((ClientData) scalePtr);
 
     switch (index) {
