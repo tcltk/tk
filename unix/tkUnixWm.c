@@ -12,13 +12,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.39 2004/01/13 02:06:01 davygrvy Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.40 2004/01/31 20:27:52 jenglish Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
 #include "tkUnixInt.h"
-#include <errno.h>
 
 /*
  * A data structure of the following type holds information for
@@ -4425,7 +4424,7 @@ WaitForEvent(display, wmInfoPtr, type, eventPtr)
     oldRestrictProc = Tk_RestrictEvents(WaitRestrictProc, (ClientData) &info,
 	    &oldRestrictData);
 
-    TclpGetTime(&timeout);
+    Tcl_GetTime(&timeout);
     timeout.sec += 2;
 
     while (!info.foundEvent) {

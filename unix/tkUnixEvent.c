@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.14 2004/01/13 02:06:01 davygrvy Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.15 2004/01/31 20:27:52 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -470,7 +470,7 @@ TkUnixDoOneXEvent(timePtr)
      */
 
     if (timePtr) {
-	TclpGetTime(&now);
+	Tcl_GetTime(&now);
 	blockTime.tv_sec = timePtr->sec;
 	blockTime.tv_usec = timePtr->usec - now.usec;
 	if (blockTime.tv_usec < 0) {
@@ -543,7 +543,7 @@ TkUnixDoOneXEvent(timePtr)
      */
 
     if (timePtr) {
-	TclpGetTime(&now);
+	Tcl_GetTime(&now);
 	if ((now.sec > timePtr->sec) || ((now.sec == timePtr->sec)
 		&& (now.usec > timePtr->usec))) {
 	    return 0;
