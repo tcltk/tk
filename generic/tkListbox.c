@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.13 1999/11/24 01:09:07 ericm Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.14 1999/11/29 18:16:21 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -794,8 +794,15 @@ ListboxWidgetObjCmd(clientData, interp, objc, objv)
 	    if (result != TCL_OK) {
 		break;
 	    }
-	    Tcl_SetListObj(Tcl_GetObjResult(interp), (last - first + 1),
-		    &(elemPtrs[first]));
+	    if (objc == 3) {
+		/*
+		 * One element request - we return a string
+		 */
+		Tcl_SetObjResult(interp, elemPtrs[first]);
+	    } else {
+		Tcl_SetListObj(Tcl_GetObjResult(interp), (last - first + 1),
+			&(elemPtrs[first]));
+	    }
 	    result = TCL_OK;
 	    break;
 	}
