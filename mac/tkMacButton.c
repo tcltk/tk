@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacButton.c,v 1.19 2003/10/10 20:19:51 hobbs Exp $
+ * RCS: @(#) $Id: tkMacButton.c,v 1.20 2003/12/21 23:50:13 davygrvy Exp $
  */
 
 #include "tkButton.h"
@@ -1272,7 +1272,7 @@ InitSampleControls()
      * code it includes will crash the Mac on exit from Tk.
 	 
      oldPixPtr = ((CWindowPeek) windowRef)->port.portPixMap;
-     Tcl_CreateExitHandler(ButtonExitProc, (ClientData) NULL);
+     TkCreateExitHandler(ButtonExitProc, (ClientData) NULL);
     */
 
 }
