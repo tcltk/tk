@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.25 2004/05/23 17:34:50 dkf Exp $
+# RCS: @(#) $Id: wm.test,v 1.26 2004/06/16 20:03:19 jenglish Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -393,11 +393,11 @@ test wm-grid-1.10 {usage} {
 
 test wm-grid-1.11 {usage} {
     list [catch {wm grid . 13 14 -1 16} msg] $msg
-} {1 {widthInc can't be < 0}}
+} {1 {widthInc can't be <= 0}}
 
 test wm-grid-1.12 {usage} {
     list [catch {wm grid . 13 14 15 -1} msg] $msg
-} {1 {heightInc can't be < 0}}
+} {1 {heightInc can't be <= 0}}
 
 test wm-grid-2.1 {setting and reading values} {
     set result {}

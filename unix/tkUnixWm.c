@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.41 2004/04/04 20:08:39 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.42 2004/06/16 20:03:19 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -1729,12 +1729,12 @@ WmGridCmd(tkwin, winPtr, interp, objc, objv)
 	    Tcl_SetResult(interp, "baseHeight can't be < 0", TCL_STATIC);
 	    return TCL_ERROR;
 	}
-	if (widthInc < 0) {
-	    Tcl_SetResult(interp, "widthInc can't be < 0", TCL_STATIC);
+	if (widthInc <= 0) {
+	    Tcl_SetResult(interp, "widthInc can't be <= 0", TCL_STATIC);
 	    return TCL_ERROR;
 	}
-	if (heightInc < 0) {
-	    Tcl_SetResult(interp, "heightInc can't be < 0", TCL_STATIC);
+	if (heightInc <= 0) {
+	    Tcl_SetResult(interp, "heightInc can't be <= 0", TCL_STATIC);
 	    return TCL_ERROR;
 	}
 	Tk_SetGrid((Tk_Window) winPtr, reqWidth, reqHeight, widthInc,
@@ -3223,6 +3223,16 @@ Tk_SetGrid(tkwin, reqWidth, reqHeight, widthInc, heightInc)
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     register WmInfo *wmPtr;
+
+    /*
+     * Ensure widthInc and heightInc are greater than 0
+     */
+    if (widthInc <= 0) {
+	widthInc = 1;
+    }
+    if (heightInc <= 0) {
+	heightInc = 1;
+    }
 
     /*
      * Find the top-level window for tkwin, plus the window manager
