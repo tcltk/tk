@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.12 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.12.2.1 2004/10/27 00:37:38 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -950,4 +950,150 @@ TkFindStateNumObj(interp, optionPtr, mapPtr, keyPtr)
 	}
     }
     return mPtr->numKey;
+}
+
+/*
+ * For each exit handler created with a call to TkCreateExitHandler
+ * there is a structure of the following type:
+ */
+
+typedef struct ExitHandler {
+    Tcl_ExitProc *proc;		/* Procedure to call when process exits. */
+    ClientData clientData;	/* One word of information to pass to proc. */
+    struct ExitHandler *nextPtr;/* Next in list of all exit handlers for
+				 * this application, or NULL for end of list. */
+} ExitHandler;
+
+/*
+ * There is both per-process and per-thread exit handlers.
+ * The first list is controlled by a mutex.  The other is in
+ * thread local storage.
+ */
+
+static ExitHandler *firstExitPtr = NULL;
+				/* First in list of all exit handlers for
+				 * application. */
+TCL_DECLARE_MUTEX(exitMutex)
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkCreateExitHandler --
+ *
+ *	Same as Tcl_CreateExitHandler, but private to Tk.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects.
+ *	Sets a handler with Tcl_CreateExitHandler if this is the first call.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkCreateExitHandler (proc, clientData)
+    Tcl_ExitProc *proc;		/* Procedure to invoke. */
+    ClientData clientData;	/* Arbitrary value to pass to proc. */
+{
+    ExitHandler *exitPtr;
+
+    exitPtr = (ExitHandler *) ckalloc(sizeof(ExitHandler));
+    exitPtr->proc = proc;
+    exitPtr->clientData = clientData;
+    Tcl_MutexLock(&exitMutex);
+    if (firstExitPtr == NULL) {
+	Tcl_CreateExitHandler(TkFinalize, NULL);
+    }
+    exitPtr->nextPtr = firstExitPtr;
+    firstExitPtr = exitPtr;
+    Tcl_MutexUnlock(&exitMutex);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkDeleteExitHandler --
+ *
+ *	Same as Tcl_DeleteExitHandler, but private to Tk.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects.
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkDeleteExitHandler (proc, clientData)
+    Tcl_ExitProc *proc;		/* Procedure that was previously registered. */
+    ClientData clientData;	/* Arbitrary value to pass to proc. */
+{
+    ExitHandler *exitPtr, *prevPtr;
+
+    Tcl_MutexLock(&exitMutex);
+    for (prevPtr = NULL, exitPtr = firstExitPtr; exitPtr != NULL;
+	    prevPtr = exitPtr, exitPtr = exitPtr->nextPtr) {
+	if ((exitPtr->proc == proc)
+		&& (exitPtr->clientData == clientData)) {
+	    if (prevPtr == NULL) {
+		firstExitPtr = exitPtr->nextPtr;
+	    } else {
+		prevPtr->nextPtr = exitPtr->nextPtr;
+	    }
+	    ckfree((char *) exitPtr);
+	    break;
+	}
+    }
+    Tcl_MutexUnlock(&exitMutex);
+    return;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkFinalize --
+ *
+ *	Runs our private exit handlers and removes itself from Tcl. This is
+ *	benificial should we want to protect from dangling pointers should
+ *	the Tk shared library be unloaded prior to Tcl which can happen on
+ *	windows should the process be forcefully exiting from an exception
+ *	handler.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects.
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkFinalize (clientData)
+    ClientData clientData;	/* Arbitrary value to pass to proc. */
+{
+    ExitHandler *exitPtr;
+
+    Tcl_DeleteExitHandler(TkFinalize, NULL);
+
+    Tcl_MutexLock(&exitMutex);
+    for (exitPtr = firstExitPtr; exitPtr != NULL; exitPtr = firstExitPtr) {
+	/*
+	 * Be careful to remove the handler from the list before
+	 * invoking its callback.  This protects us against
+	 * double-freeing if the callback should call
+	 * Tcl_DeleteExitHandler on itself.
+	 */
+
+	firstExitPtr = exitPtr->nextPtr;
+	Tcl_MutexUnlock(&exitMutex);
+	(*exitPtr->proc)(exitPtr->clientData);
+	ckfree((char *) exitPtr);
+	Tcl_MutexLock(&exitMutex);
+    }    
+    firstExitPtr = NULL;
+    Tcl_MutexUnlock(&exitMutex);
 }
