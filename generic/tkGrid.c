@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.16 2001/09/26 20:25:17 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.17 2001/09/30 19:01:58 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -41,6 +41,12 @@
 
 #define TYPICAL_SIZE	25  /* (arbitrary guess) */
 #define PREALLOC	10  /* extra slots to allocate */
+
+/*
+ * Pre-allocate room for uniform groups during layout.
+ */
+
+#define UNIFORM_PREALLOC 10
 
 /* 
  * Data structures are allocated dynamically to support arbitrary sized tables.
@@ -75,6 +81,9 @@ typedef struct SlotInfo {
 	int pad;		/* Extra padding, in pixels, required for
 				 * this slot.  This amount is "added" to the
 				 * largest slave in the slot. */
+        Tk_Uid uniform;		/* Value of -uniform option. It is used to
+				 * group slots that should have the same
+				 * size. */
 	int offset;		/* This is a cached value used for
 				 * introspection.  It is the pixel
 				 * offset of the right or bottom edge
@@ -103,6 +112,9 @@ typedef struct GridLayout {
     				 * constrants, such as size or padding. */
     int pad;			/* Padding needed for this slot */
     int weight;			/* Slot weight, controls resizing. */
+    Tk_Uid uniform;             /* Value of -uniform option. It is used to
+				 * group slots that should have the same
+				 * size. */
     int minOffset;		/* The minimum offset, in pixels, from
     				 * the beginning of the layout to the
     				 * right/bottom edge of the slot calculated
@@ -207,6 +219,16 @@ typedef struct Gridder {
 #define STICK_EAST		2
 #define STICK_SOUTH		4
 #define STICK_WEST		8
+
+
+/*
+ * Structure to gather information about uniform groups during layout.
+ */
+
+typedef struct UniformGroup {
+    Tk_Uid group;
+    int minSize;
+} UniformGroup;
 
 /*
  * Flag values for Grid structures:
@@ -828,8 +850,8 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
     int i, j;
     char *string;
     static char *optionStrings[] = {
-	"-minsize", "-pad", "-weight", (char *) NULL };
-    enum options { ROWCOL_MINSIZE, ROWCOL_PAD, ROWCOL_WEIGHT };
+	"-minsize", "-pad", "-uniform", "-weight", (char *) NULL };
+    enum options { ROWCOL_MINSIZE, ROWCOL_PAD, ROWCOL_UNIFORM, ROWCOL_WEIGHT };
     int index;
     
     if (((objc % 2 != 0) && (objc > 6)) || (objc < 4)) {
@@ -877,12 +899,14 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	
 	if (objc == 4) {
 	    int minsize = 0, pad = 0, weight = 0;
+	    char *uniform = NULL;
 	    Tcl_Obj *res = Tcl_NewListObj(0, NULL);
 	 
 	    if (ok == TCL_OK) {
 		minsize = slotPtr[slot].minSize;
 		pad     = slotPtr[slot].pad;
 		weight  = slotPtr[slot].weight;
+		uniform = slotPtr[slot].uniform;
 	    }
 	    
 	    Tcl_ListObjAppendElement(interp, res,
@@ -891,6 +915,10 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	    Tcl_ListObjAppendElement(interp, res,
 		    Tcl_NewStringObj("-pad", -1));
 	    Tcl_ListObjAppendElement(interp, res, Tcl_NewIntObj(pad));
+	    Tcl_ListObjAppendElement(interp, res,
+		    Tcl_NewStringObj("-uniform", -1));
+	    Tcl_ListObjAppendElement(interp, res,
+		    Tcl_NewStringObj(uniform == NULL ? "" : uniform, -1));
 	    Tcl_ListObjAppendElement(interp, res,
 		    Tcl_NewStringObj("-weight", -1));
 	    Tcl_ListObjAppendElement(interp, res, Tcl_NewIntObj(weight));
@@ -937,6 +965,22 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 		    slotPtr[slot].weight = wt;
 		}
 	    }
+	    else if (index == ROWCOL_UNIFORM) {
+		if (objc == 5) {
+		    char *value;
+		    value = (ok == TCL_OK) ? slotPtr[slot].uniform : "";
+		    if (value == NULL) {
+			value = "";
+		    }
+		    Tcl_SetObjResult(interp, Tcl_NewStringObj(value, -1));
+		} else {
+		    slotPtr[slot].uniform = Tk_GetUid(Tcl_GetString(objv[i+1]));
+		    if (slotPtr[slot].uniform != NULL &&
+			    slotPtr[slot].uniform[0] == 0) {
+			slotPtr[slot].uniform = NULL;
+		    }
+		}
+	    }
 	    else if (index == ROWCOL_PAD) {
 		if (objc == 5) {
 		    Tcl_SetObjResult(interp, Tcl_NewIntObj(
@@ -966,7 +1010,8 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	    int last = masterPtr->masterDataPtr->rowMax - 1;
 	    while ((last >= 0) && (slotPtr[last].weight == 0)
 		    && (slotPtr[last].pad == 0)
-		    && (slotPtr[last].minSize == 0)) {
+		    && (slotPtr[last].minSize == 0)
+		    && (slotPtr[last].uniform == NULL)) {
 		last--;
 	    }
 	    masterPtr->masterDataPtr->rowMax = last+1;
@@ -974,7 +1019,8 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	    int last = masterPtr->masterDataPtr->columnMax - 1;
 	    while ((last >= 0) && (slotPtr[last].weight == 0)
 		    && (slotPtr[last].pad == 0)
-		    && (slotPtr[last].minSize == 0)) {
+		    && (slotPtr[last].minSize == 0)
+		    && (slotPtr[last].uniform == NULL)) {
 		last--;
 	    }
 	    masterPtr->masterDataPtr->columnMax = last + 1;
@@ -1648,6 +1694,14 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
     				 * constraints are not yet fully resolved. */
     int end;			/* The Last slot of a contiguous set whose
 				 * constraints are not yet fully resolved. */
+    UniformGroup uniformPre[UNIFORM_PREALLOC];
+				/* Pre-allocated space for uniform groups. */
+    UniformGroup *uniformGroupPtr;
+				/* Uniform groups data. */
+    int uniformGroups;		/* Number of currently used uniform groups. */
+    int uniformGroupsAlloced;	/* Size of allocated space for uniform groups.
+				 */
+    int weight, minSize;
 
     /*
      * For typical sized tables, we'll use stack space for the layout data
@@ -1697,13 +1751,15 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 
     for (slot=0; slot < constraintCount; slot++) {
         layoutPtr[slot].minSize = slotPtr[slot].minSize;
-        layoutPtr[slot].weight =  slotPtr[slot].weight;
+        layoutPtr[slot].weight  = slotPtr[slot].weight;
+        layoutPtr[slot].uniform = slotPtr[slot].uniform;
         layoutPtr[slot].pad =  slotPtr[slot].pad;
         layoutPtr[slot].binNextPtr = NULL;
     }
     for(;slot<gridCount;slot++) {
         layoutPtr[slot].minSize = 0;
         layoutPtr[slot].weight = 0;
+        layoutPtr[slot].uniform = NULL;
         layoutPtr[slot].pad = 0;
         layoutPtr[slot].binNextPtr = NULL;
     }
@@ -1757,6 +1813,83 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 	    }
 	    break;
 	}
+
+    /*
+     * Step 2b.
+     * Consider demands on uniform sizes.
+     */
+
+    uniformGroupPtr = uniformPre;
+    uniformGroupsAlloced = UNIFORM_PREALLOC;
+    uniformGroups = 0;
+
+    for (slot = 0; slot < gridCount; slot++) {
+	if (layoutPtr[slot].uniform != NULL) {
+	    for (start = 0; start < uniformGroups; start++) {
+		if (uniformGroupPtr[start].group == layoutPtr[slot].uniform) {
+		    break;
+		}
+	    }
+	    if (start >= uniformGroups) {
+		/*
+		 * Have not seen that group before, set up data for it.
+		 */
+
+		if (uniformGroups >= uniformGroupsAlloced) {
+		    /*
+		     * We need to allocate more space.
+		     */
+
+		    size_t oldSize = uniformGroupsAlloced
+			    * sizeof(UniformGroup);
+		    size_t newSize = (uniformGroupsAlloced + UNIFORM_PREALLOC)
+			    * sizeof(UniformGroup);
+		    UniformGroup *new = (UniformGroup *) ckalloc(newSize);
+		    UniformGroup *old = uniformGroupPtr;
+		    memcpy((VOID *) new, (VOID *) old, oldSize);
+		    if (old != uniformPre) {
+			Tcl_Free((char *) old);
+		    }
+		    uniformGroupPtr = new;
+		    uniformGroupsAlloced += UNIFORM_PREALLOC;
+		}
+		uniformGroups++;
+		uniformGroupPtr[start].group = layoutPtr[slot].uniform;
+		uniformGroupPtr[start].minSize = 0;
+	    }
+	    weight = layoutPtr[slot].weight;
+	    weight = weight > 0 ? weight : 1;
+	    minSize = (layoutPtr[slot].minSize + weight - 1) / weight;
+	    if (minSize > uniformGroupPtr[start].minSize) {
+		uniformGroupPtr[start].minSize = minSize;
+	    }
+	}
+    }
+
+    /*
+     * Data has been gathered about uniform groups. Now relayout accordingly.
+     */
+
+    if (uniformGroups > 0) {
+	for (slot = 0; slot < gridCount; slot++) {
+	    if (layoutPtr[slot].uniform != NULL) {
+		for (start = 0; start < uniformGroups; start++) {
+		    if (uniformGroupPtr[start].group ==
+			    layoutPtr[slot].uniform) {
+			weight = layoutPtr[slot].weight;
+			weight = weight > 0 ? weight : 1;
+			layoutPtr[slot].minSize =
+				uniformGroupPtr[start].minSize * weight;
+			break;
+		    }
+		}
+	    }
+	}
+    }
+
+    if (uniformGroupPtr != uniformPre) {
+	Tcl_Free((char *) uniformGroupPtr);
+    }
 
     /*
      * Step 3.

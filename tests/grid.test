@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.14 2001/09/26 21:36:19 pspjuth Exp $
+# RCS: @(#) $Id: grid.test,v 1.15 2001/09/30 19:01:58 pspjuth Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -28,10 +28,10 @@ proc grid_reset {{test ?} {top .}} {
     update
     foreach {cols rows} [grid size .] {}
     for {set i 0} {$i <= $cols} {incr i} {
-    	grid columnconfigure . $i -weight 0 -minsize 0 -pad 0
+    	grid columnconfigure . $i -weight 0 -minsize 0 -pad 0 -uniform ""
     }
     for {set i 0} {$i <= $rows} {incr i} {
-    	grid rowconfigure . $i -weight 0 -minsize 0 -pad 0
+    	grid rowconfigure . $i -weight 0 -minsize 0 -pad 0 -uniform ""
     }
     grid propagate . 1
     update
@@ -592,12 +592,12 @@ grid_reset 10.5
 
 test grid-10.6 {column/row configure} {
 	list [catch {grid columnconfigure . 0} msg] $msg
-} {0 {-minsize 0 -pad 0 -weight 0}}
+} {0 {-minsize 0 -pad 0 -uniform {} -weight 0}}
 grid_reset 10.6
 
 test grid-10.7 {column/row configure} {
 	list [catch {grid columnconfigure . 0 -foo} msg] $msg
-} {1 {bad option "-foo": must be -minsize, -pad, or -weight}}
+} {1 {bad option "-foo": must be -minsize, -pad, -uniform, or -weight}}
 grid_reset 10.7
 
 test grid-10.8 {column/row configure} {
@@ -680,6 +680,12 @@ test grid-10.19 {column/row configure} {
 	list [catch {grid columnconfigure . {0 -1 2} -weight 1} msg] $msg
 } {1 {grid columnconfigure: "-1" is out of range}}
 grid_reset 10.19
+
+test grid-10.20 {column/row configure} {
+	grid columnconfigure . 0 -uniform foo
+	grid columnconfigure . 0 -uniform
+} {foo}
+grid_reset 10.20
 
 # auto-placement tests
 
@@ -1336,6 +1342,86 @@ test grid-16.8 {layout internal constraints} {
     }
     set a
 } {0 30 70 250 280 , 0 30 130 230 260 , 0 30 113 197 280 , 0 30 60 90 120 }
+grid_reset 16.8
+
+test grid-16.9 {layout uniform} {
+    frame .f1 -width 75 -height 50
+    frame .f2 -width 60 -height 25
+    frame .f3 -width 95 -height 75
+    frame .f4 -width 135 -height 100
+    frame .f5 -width 80 -height 40
+    for {set t 1} {$t <= 5} {incr t} {
+        grid .f$t
+    }
+    grid rowconfigure . {0 2} -uniform a
+    grid rowconfigure . {1 3} -uniform b
+    update
+    list [grid bbox . 0 0] [grid bbox . 0 1] [grid bbox . 0 2] \
+            [grid bbox . 0 3] [grid bbox . 0 4]
+} {{0 0 135 75} {0 75 135 100} {0 175 135 75} {0 250 135 100} {0 350 135 40}}
+grid_reset 16.9
+
+test grid-16.10 {layout uniform} {
+    grid [frame .f1 -width  75 -height  50] -row 0 -column 0
+    grid [frame .f2 -width  60 -height  30] -row 1 -column 2
+    grid [frame .f3 -width  95 -height  90] -row 2 -column 1
+    grid [frame .f4 -width  60 -height 100] -row 3 -column 4
+    grid [frame .f5 -width  60 -height  40] -row 4 -column 3
+
+    grid rowconfigure . {0 1} -uniform a
+    grid rowconfigure . {2 4} -uniform b
+    grid rowconfigure . {0 2} -weight 2
+    grid columnconfigure . {0 2} -uniform a
+    grid columnconfigure . {3 4} -uniform b
+    grid columnconfigure . {2 4} -weight 2
+    grid columnconfigure . 3 -minsize 70
+    grid columnconfigure . 4 -minsize 130
+    update
+    list [grid bbox . 0 0] [grid bbox . 2 1] [grid bbox . 1 2] \
+            [grid bbox . 4 3] [grid bbox . 3 4]
+} {{0 0 75 60} {170 60 150 30} {75 90 95 90} {390 180 140 100} {320 280 70 45}}
+grid_reset 16.10
+
+test grid-16.11 {layout uniform (shrink)} {
+    frame .f1 -width 75 -height 50
+    frame .f2 -width 100 -height 95
+    grid .f1 .f2 -sticky news
+    grid columnconfigure . {0 1} -uniform a
+    grid columnconfigure . 0 -weight 1
+    update
+    set res {}
+    lappend res [grid bbox . 0 0] [grid bbox . 1 0]
+    grid propagate . 0
+    . configure -width 150 -height 95
+    update
+    lappend res [grid bbox . 0 0] [grid bbox . 1 0]
+} {{0 0 100 95} {100 0 100 95} {0 0 50 95} {50 0 100 95}}
+grid_reset 16.11
+
+test grid-16.12 {layout uniform (grow)} {
+    frame .f1 -width 40 -height 50
+    frame .f2 -width 50 -height 95
+    frame .f3 -width 60 -height 50
+    frame .f4 -width 70 -height 95
+    grid .f1 .f2 .f3 .f4 -sticky news
+    grid columnconfigure . {0 1 2} -uniform a
+    # Put weight 2 on the biggest in the group to see that the groups
+    # adapts to one of the smaller.
+    grid columnconfigure . 2 -weight 2
+    grid columnconfigure . {0 3} -weight 1
+    update
+    set res {}
+    lappend res [grid bbox . 0 0] [grid bbox . 1 0]
+    lappend res [grid bbox . 2 0] [grid bbox . 3 0]
+
+    grid propagate . 0
+    . configure -width 350 -height 95
+    update
+    lappend res [grid bbox . 0 0] [grid bbox . 1 0]
+    lappend res [grid bbox . 2 0] [grid bbox . 3 0]
+} [list {0 0 50 95} {50 0 50 95} {100 0 100 95} {200 0 70 95} \
+        {0 0 70 95} {70 0 50 95} {120 0 140 95} {260 0 90 95}]
+grid_reset 16.12
 
 test grid-17.1 {forget and pending idle handlers} {
     # This test is intended to detect a crash caused by a failure to remove
@@ -1394,6 +1480,19 @@ test grid-18.2 {test support for minreqsize} {
     destroy .pack
     set res
 } {162x127+0+0 172x112+0+0}
+
+test grid-19.1 {uniform realloc} {
+    # Use a lot of uniform groups to test the reallocation mechanism
+    for {set t 0} {$t < 100} {incr t 2} {
+        frame .fa$t -width 5 -height 20
+        frame .fb$t -width 6 -height 20
+        grid .fa$t .fb$t -row 0 -column $t -sticky news
+        grid columnconfigure . [list $t [expr {$t + 1}]] -uniform a$t
+    }
+    update
+    grid bbox .
+} {0 0 600 20}
+grid_reset 19.1
 
 # cleanup
 ::tcltest::cleanupTests
