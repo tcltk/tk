@@ -1,3 +1,8 @@
+2004-07-20  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkEvent.c (InvokeInputMethods): ensure IC focus is set
+	after creation. [Bug #905830]
+
 2004-07-20  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Makefile: added support to tk framework build to
