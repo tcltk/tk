@@ -1,6 +1,11 @@
-2004-12-03  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+2004-12-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	*** 8.4.9 TAGGED FOR RELEASE ***
+
+	* library/text.tcl (::tk::TextUpDownLine): revert 2004-11-23 as it
+	prevented scrolling to bottom.
+
+2004-12-03  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkImgPhoto.c (Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock):
 	Make overlay compositing where the target is empty no longer set
@@ -29,7 +34,7 @@
 2004-11-23  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* library/text.tcl: make up/down cursor keys move by display
-	lines, not logical lines [Bug 1011234]
+	lines, not logical lines [Bug 1011234] (REVERTED 2004-12-06)
 
 2004-11-19  Reinhard Max  <max@suse.de>
 
