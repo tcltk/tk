@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacColor.c,v 1.2 1998/09/14 18:23:34 stanton Exp $
+ * RCS: @(#) $Id: tkMacColor.c,v 1.3 1998/11/11 17:29:57 jingham Exp $
  */
 
 #include <tkColor.h>
@@ -90,6 +90,8 @@ TkSetMacColor(
 	case MENU_TEXT_PIXEL:
 	    GetMenuPartColor((pixel >> 24), macColor);
 	    return true;
+	case APPEARANCE_PIXEL:
+	    return false;
 	case PIXEL_MAGIC:
 	default:
 	    macColor->blue = (unsigned short) ((pixel & 0xFF) << 8);
@@ -251,6 +253,12 @@ TkpGetColor(
 	} else if (!strcasecmp(name+6, "MenuText")) {
 	    GetMenuPartColor(MENU_TEXT_PIXEL, &rgbValue);
 	    pixelCode = MENU_TEXT_PIXEL;
+	    foundSystemColor = true;
+	} else if (!strcasecmp(name+6, "AppearanceColor")) {
+	    color.red = 0;
+	    color.green = 0;
+	    color.blue = 0;
+	    pixelCode = APPEARANCE_PIXEL;
 	    foundSystemColor = true;
 	}
 	

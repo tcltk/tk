@@ -1,4 +1,4 @@
-Tk 8.0.3 for Macintosh
+Tk 8.0.4 for Macintosh
 
 by Ray Johnson
 Scriptics Corporation
@@ -8,7 +8,7 @@ Jim Ingham
 Cygnus Solutions
 jingham@cygnus.com
 
-RCS: @(#) $Id: README,v 1.3 1998/09/14 18:23:33 stanton Exp $
+RCS: @(#) $Id: README,v 1.4 1998/11/11 17:29:34 jingham Exp $
 
 1. Introduction
 ---------------
@@ -34,10 +34,8 @@ applications (like Aaron.)  We also use "system" colors so the default
 backgrounds etc. will also change colors.  We plan to support this
 feature - so let me know if something doesn't work quite right.
 Unfortunantly, we are not able to change the colors of buttons under
-MacOS 8.  We are working on a solution to this.  
-In the meantime, if you really must have colored buttons, turn off the 
-"System-wide platinum appearance" option in the Appearance Control Panel,
-and you will get the System 7, colorable, buttons back.
+MacOS 8.  Doing this is discouraged under Appearance, and we will probably 
+not implement it anytime soon.
 
 We also now support native menus!  By using the new -menu option
 on toplevels you can have a menubar that is cross platform.  You
@@ -45,6 +43,9 @@ can also place Tk menus in the Apple and Help menus!  Check out
 the documentation for more details.  Syd Polk <icepick@eng.sun.com> is
 the author of the new menu code.  Feel free to contact him if you
 have questions or comments about the menu mechanism.
+
+As of Tk 8.0.4, MacTk menus will adopt the backgrounds, shape, separator, etc
+of the current theme. 
 
 The "tk_messageBox" command on the Macintosh is now much more
 mac-like.  I'll probably still need to adjust this more - but it
@@ -113,7 +114,7 @@ Macintosh Tk is distributed in three different forms.  This
 should make it easier to only download what you need.  The 
 packages are as follows:
 
-mactk8.0.3.sea.hqx
+mactk8.0.4.sea.hqx
 
     This distribution is a "binary" only release.  It contains an
     installer program that will install a 68k, PowerPC, or Fat
@@ -121,24 +122,18 @@ mactk8.0.3.sea.hqx
     the Tcl & Tk libraries in the Extensions folder inside your
     System Folder.  (No "INIT"'s or Control Pannels are installed.)
 
-mactcltk-full-8.0.3.sea.hqx
+mactcltk-full-8.0.4.sea.hqx
 
     This release contains the full release of Tcl and Tk for the
     Macintosh plus the More Files package on which Macintosh Tcl and
     Tk rely.
 
-mactk-source-8.0.3.sea.hqx
+mactk-source-8.0.4.sea.hqx
 
     This release contains the complete source to Tk for the Macintosh
     In addition, Metrowerks CodeWarrior libraries and project files
     are included.  However, you must already have the More Files
     package to compile this code.
-
-UNIX Tar file distribution.
-    The standard Tcl/Tk source distribution has Mac project files
-    in it.  Be warned that the Tk project file is lacking one minor
-    change compared to the ones in the installers listed above
-    having to do with locking down the MDEF resource.
 
 5. Documentation
 ----------------
@@ -187,7 +182,7 @@ following items:
 
 	CodeWarrior Pro 1 or higher (CodeWarrior release 9 or higher can work
 		and we have project files, but we are depricating support)
-		8.0.3 was build with CW Pro 3.
+		8.0.4 was build with CW Pro 3.
 	Mac Tcl 8.0 (source)
 	  (which requires More Files 1.4.2 or 1.4.3)
 	Mac Tk 8.0 (source)
@@ -204,7 +199,8 @@ Special notes:
 
 * We are starting to support the new Appearance Manager that shipped
   with MacOS 8.0.  The Tk 8.0.3 release is the first Tk release
-  that supports the Appearance Manager well.
+  that supports the Appearance Manager well.  Tk 8.0.4 extends this support
+  to the menu system.
 
 7. About Dialog
 ---------------

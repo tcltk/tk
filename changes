@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.25 1998/10/20 20:02:36 rjohnson Exp $
+RCS: @(#) $Id: changes,v 1.26 1998/11/11 17:30:41 jingham Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4277,3 +4277,8 @@ changed for IRIX to build n32 binaries instead of the old 32 abi
 format.  If you have extensions built with the o32 abi's you will need
 to update them to n32 for them to work with Tcl.  (RJ)
 *** POTENTIAL INCOMPATIBILITY ***
+
+11/10/98 (feature change) The Macintosh menus will use the Appearance Theme 
+backgrounds, separators and menu shape, if Appearance version 1.0.1 or 
+greater is installed.  The version of Appearance that shipped with MacOS 8.0 
+so it will not work with a straight 8.0, but it will with MacOS 8.1 or later. (JI)

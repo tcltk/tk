@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacAppInit.c,v 1.3 1998/09/14 18:23:34 stanton Exp $
+ * RCS: @(#) $Id: tkMacAppInit.c,v 1.4 1998/11/11 17:29:48 jingham Exp $
  */
 
 #include <Gestalt.h>
@@ -30,6 +30,8 @@ EXTERN int		Tktest_Init _ANSI_ARGS_((Tcl_Interp *interp));
 #endif /* TK_TEST */
 
 #ifdef TCL_TEST
+EXTERN int		Procbodytest_Init _ANSI_ARGS_((Tcl_Interp *interp));
+EXTERN int		Procbodytest_SafeInit _ANSI_ARGS_((Tcl_Interp *interp));
 EXTERN int		TclObjTest_Init _ANSI_ARGS_((Tcl_Interp *interp));
 EXTERN int		Tcltest_Init _ANSI_ARGS_((Tcl_Interp *interp));
 #endif /* TCL_TEST */
@@ -149,6 +151,11 @@ Tcl_AppInit(
     if (TclObjTest_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
+    if (Procbodytest_Init(interp) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    Tcl_StaticPackage(interp, "procbodytest", Procbodytest_Init,
+            Procbodytest_SafeInit);
 #endif /* TCL_TEST */
 
 #ifdef TK_TEST
