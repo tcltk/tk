@@ -4426,9 +4426,14 @@ if test "$SHARED_BUILD" = 0 -o $TCL_NEEDS_EXP_FILE = 0; then
 else
     TK_BUILD_EXP_FILE="lib.exp"
     eval "TK_EXP_FILE=libtk${TCL_EXPORT_FILE_SUFFIX}"
-    
-    TK_BUILD_LIB_SPEC="-bI:`pwd`/${TK_BUILD_EXP_FILE}"
-    TK_LIB_SPEC="-bI:${exec_prefix}/lib/${TK_EXP_FILE}"
+
+    if test "$GCC" = "yes" ; then
+	TK_BUILD_LIB_SPEC="-Wl,-bI:`pwd`/${TK_BUILD_EXP_FILE} -L`pwd`"
+	TK_LIB_SPEC="-Wl,-bI:${exec_prefix}/lib/${TK_EXP_FILE} -L`pwd`"    
+    else
+	TK_BUILD_LIB_SPEC="-bI:`pwd`/${TK_BUILD_EXP_FILE}"
+	TK_LIB_SPEC="-bI:${exec_prefix}/lib/${TK_EXP_FILE}"    
+    fi
 fi
 TK_SHARED_BUILD=${SHARED_BUILD}
 
