@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPort.h,v 1.8 2002/09/27 00:48:06 hobbs Exp $
+ * RCS: @(#) $Id: tkWinPort.h,v 1.9 2002/10/19 02:10:20 hobbs Exp $
  */
 
 #ifndef _WINPORT
@@ -59,7 +59,9 @@
 
 #define NBBY 8
 
+#ifndef OPEN_MAX
 #define OPEN_MAX 32
+#endif
 
 /*
  * The following define causes Tk to use its internal keysym hash table
