@@ -1,5 +1,14 @@
 2003-11-21  Vince Darley <vincentdarley@users.sourceforge.net>
 
+	* generic/tkTextDisp.c: 
+	* generic/tkText.h: 
+	* generic/tkText.c: 
+	* tests/textDisp.test: ensure interpolated tabs are at the same
+	location as the equivalent real tabs, by making use of fractional
+	rather than integer pixel calculations.
+	
+2003-11-21  Vince Darley <vincentdarley@users.sourceforge.net>
+
 	* generic/tkTextDisp.c: prevent wrapped line height calculations 
 	until the widget has actually been given a geometry.
 	
