@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.38 2002/04/29 13:17:44 bagnonm Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.39 2002/05/20 10:21:28 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -378,16 +378,27 @@ switch $::tcl_platform(platform) {
 # Read in files that define all of the class bindings.
 # ----------------------------------------------------------------------
 
-if {$::tcl_platform(platform) ne "macintosh" && $::tk_library ne ""} {
-    source [file join $::tk_library button.tcl]
-    source [file join $::tk_library entry.tcl]
-    source [file join $::tk_library listbox.tcl]
-    source [file join $::tk_library menu.tcl]
-    source [file join $::tk_library panedwindow.tcl]
-    source [file join $::tk_library scale.tcl]
-    source [file join $::tk_library scrlbar.tcl]
-    source [file join $::tk_library spinbox.tcl]
-    source [file join $::tk_library text.tcl]
+if {$::tk_library ne ""} {
+    if {[string equal $tcl_platform(platform) "macintosh"]} {
+	proc sourceLibFile {file} {
+	    if {[catch {uplevel #0 [list source [file join $::tk_library \
+		$file.tcl]]}]} {uplevel #0 [list source -rsrc $file]}
+	}
+    } else {
+	proc sourceLibFile {file} {
+	    uplevel #0 [list source [file join $::tk_library $file.tcl]]
+	}	
+    }
+    sourceLibFile button
+    sourceLibFile entry
+    sourceLibFile listbox
+    sourceLibFile menu
+    sourceLibFile panedwindow
+    sourceLibFile scale
+    sourceLibFile scrlbar
+    sourceLibFile spinbox
+    sourceLibFile text
+    rename sourceLibFile {}
 }
 # ----------------------------------------------------------------------
 # Default bindings for keyboard traversal.
