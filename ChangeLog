@@ -1,3 +1,8 @@
+2004-06-15  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkCanvas.c: Make tag search subsystem use symbolic names
+	for type flags for easier maintenance.
+
 2004-06-12  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
 
 	* win/tkWinWm.c (UpdateWrapper): Let overrideredirect'ed window's
