@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# SCCS: %Z% $Id: makefile.vc,v 1.2 1998/07/01 18:48:48 escoffon Exp $ 
+# SCCS: %Z% $Id: makefile.vc,v 1.3 1998/07/20 16:06:53 escoffon Exp $ 
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -43,29 +43,33 @@ NODEBUG = 1
 # Do not modify below this line
 ######################################################################
 
+TCLNAMEPREFIX = tcl
+TKNAMEPREFIX = tcl
+WISHNAMEPREFIX = wish
 VERSION = 80
 
+BINROOT		= .
 !IF "$(NODEBUG)" == "1"
-TMPDIR		= Release
+TMPDIR		= $(BINROOT)\Release
 DBGX		=
 !ELSE
-TMPDIR		= Debug
+TMPDIR		= $(BINROOT)\Debug
 DBGX		= d
 !ENDIF
 OUTDIR		= $(TMPDIR)
 
-TCLLIB 		= tcl$(VERSION)$(DBGX).lib
-TCLPLUGINLIB 	= tcl$(VERSION)p.lib
-TKDLLNAME	= tk$(VERSION)$(DBGX).dll
+TCLLIB 		= $(TCLNAMEPREFIX)$(VERSION)$(DBGX).lib
+TCLPLUGINLIB 	= $(TCLNAMEPREFIX)$(VERSION)p.lib
+TKDLLNAME	= $(TKNAMEPREFIX)$(VERSION)$(DBGX).dll
 TKDLL 		= $(OUTDIR)\$(TKDLLNAME)
-TKLIB 		= $(OUTDIR)\tk$(VERSION)$(DBGX).lib
-TKPLUGINDLLNAME	= tk$(VERSION)p$(DBG).dll
+TKLIB 		= $(OUTDIR)\$(TKNAMEPREFIX)$(VERSION)$(DBGX).lib
+TKPLUGINDLLNAME	= $(TKNAMEPREFIX)$(VERSION)p$(DBG).dll
 TKPLUGINDLL 	= $(OUTDIR)\$(TKPLUGINDLLNAME)
-TKPLUGINLIB 	= $(OUTDIR)\tk$(VERSION)p$(DBGX).lib
+TKPLUGINLIB 	= $(OUTDIR)\$(TKNAMEPREFIX)$(VERSION)p$(DBGX).lib
 
-WISH 		= $(OUTDIR)\wish$(VERSION)$(DBGX).exe
-WISHP 		= $(OUTDIR)\wishp$(VERSION)$(DBGX).exe
-TKTEST 		= $(OUTDIR)\tktest.exe
+WISH 		= $(OUTDIR)\$(WISHNAMEPREFIX)$(VERSION)$(DBGX).exe
+WISHP 		= $(OUTDIR)\$(WISHNAMEPREFIX)p$(VERSION)$(DBGX).exe
+TKTEST 		= $(OUTDIR)\$(TKNAMEPREFIX)test.exe
 DUMPEXTS 	= $(TMPDIR)\dumpexts.exe
 
 WISHOBJS = \
