@@ -1,3 +1,7 @@
+2003-10-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/scale.tcl: Clear bug with chording mouse buttons.
+
 2003-10-01  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.pbproj/project.pbxproj:
