@@ -1,3 +1,8 @@
+2003-11-11  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* macosx/tkMacOSXClipboard.c (TkSuspendClipboard, TkSelGetSelection):
+	add unicode clipboard support. [Patch #840107] (senn)
+	
 2003-11-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/configure:
