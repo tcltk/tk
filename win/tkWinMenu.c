@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.33 2004/05/03 23:23:14 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.34 2004/08/25 22:23:33 dgp Exp $
  */
 
 #define OEMRESOURCE
@@ -1850,9 +1850,7 @@ TkWinMenuKeyObjCmd(clientData, interp, objc, objv)
     int i;
 
     if (objc != 3) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-	        Tcl_GetString(objv[0]),
-	        " window keySym\"", (char *) NULL);
+	Tcl_WrongNumArgs(interp, 1, objv, "window keySym");
 	return TCL_ERROR;
     }
 
