@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.7 2002/02/22 13:13:13 dkf Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.8 2003/08/14 10:31:14 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -31,6 +31,23 @@
 #define ENTRY_HELP_MENU		ENTRY_PLATFORM_FLAG1
 
 /*
+ * Shared with button widget.
+ */
+
+extern void		TkpDrawCheckIndicator _ANSI_ARGS_((
+			    Tk_Window tkwin, Display *display, Drawable d,
+			    int x, int y, Tk_3DBorder bgBorder,
+			    XColor *indicatorColor, XColor *selectColor, 
+			    XColor *disColor, int on, int disabled, int mode));
+/*
+ * Indicator Draw Modes
+ */
+#define CHECK_BUTTON 0
+#define CHECK_MENU   1
+#define RADIO_BUTTON 2
+#define RADIO_MENU   3
+
+/*
  * Procedures used internally.
  */
 
@@ -47,9 +64,9 @@ static void		DrawMenuEntryBackground _ANSI_ARGS_((
 			    Tk_3DBorder bgBorder, int x, int y,
 			    int width, int heigth));
 static void		DrawMenuEntryIndicator _ANSI_ARGS_((
-			    TkMenu *menuPtr, TkMenuEntry *mePtr,
-			    Drawable d, GC gc, GC indicatorGC, 
-			    Tk_Font tkfont,
+			    TkMenu *menuPtr, TkMenuEntry *mePtr, Drawable d,
+			    Tk_3DBorder border, XColor *indicatorColor,
+			    XColor *disableColor, Tk_Font tkfont,
 			    CONST Tk_FontMetrics *fmPtr, int x, int y,
 			    int width, int height));
 static void		DrawMenuEntryLabel _ANSI_ARGS_((
@@ -549,13 +566,14 @@ DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr, activeBorder,
  */
 
 static void
-DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr,
-	x, y, width, height)
+DrawMenuEntryIndicator(menuPtr, mePtr, d, border, indicatorColor, disableColor,
+	tkfont, fmPtr, x, y, width, height)
     TkMenu *menuPtr;			/* The menu we are drawing */
     TkMenuEntry *mePtr;			/* The entry we are drawing */
     Drawable d;				/* The drawable to draw into */
-    GC gc;				/* The gc to draw with */
-    GC indicatorGC;			/* The gc that indicators draw with */
+    Tk_3DBorder border;			/* The background color */
+    XColor *indicatorColor;		/* The color to draw indicators with */
+    XColor *disableColor;		/* The color use use when disabled */
     Tk_Font tkfont;			/* The font to draw with */
     CONST Tk_FontMetrics *fmPtr;	/* The font metrics of the font */
     int x;				/* The left of the entry rect */
@@ -570,28 +588,20 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr,
     if ((mePtr->type == CHECK_BUTTON_ENTRY) && mePtr->indicatorOn) {
 	int dim, top, left;
 	int activeBorderWidth;
-	Tk_3DBorder border;
-	
+	int disabled = (mePtr->state == ENTRY_DISABLED);
+	XColor *bg;
+
 	dim = (int) mePtr->platformEntryData;
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
-	left = x + activeBorderWidth + (mePtr->indicatorSpace - dim)/2;
-	if (menuPtr->menuType == MENUBAR) {
-	    left += 5;
-	}
-	top = y + (height - dim)/2;
-	border = Tk_Get3DBorderFromObj(menuPtr->tkwin,
-		menuPtr->borderPtr);
-	Tk_Fill3DRectangle(menuPtr->tkwin, d, border, left, top, dim,
-		dim, DECORATION_BORDER_WIDTH, TK_RELIEF_SUNKEN);
-	left += DECORATION_BORDER_WIDTH;
-	top += DECORATION_BORDER_WIDTH;
-	dim -= 2*DECORATION_BORDER_WIDTH;
-	if ((dim > 0) && (mePtr->entryFlags
-		& ENTRY_SELECTED)) {
-	    XFillRectangle(menuPtr->display, d, indicatorGC, left, top,
-		    (unsigned int) dim, (unsigned int) dim);
-	}
+	bg = Tk_3DBorderColor(border);
+	top = y + height/2;
+	left = x + activeBorderWidth + DECORATION_BORDER_WIDTH
+		+ mePtr->indicatorSpace/2;
+
+	TkpDrawCheckIndicator(menuPtr->tkwin, menuPtr->display, d, left, top,
+		border, indicatorColor, bg, disableColor, 
+		(mePtr->entryFlags & ENTRY_SELECTED), disabled, CHECK_MENU);
     }
 
     /*
@@ -599,31 +609,22 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr,
      */
 
     if ((mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn) {
-	XPoint points[4];
-	int radius;
-	Tk_3DBorder border;
+	int dim, top, left;
+	int activeBorderWidth;
+	int disabled = (mePtr->state == ENTRY_DISABLED);
+	XColor *bg;
 
-	border = Tk_Get3DBorderFromObj(menuPtr->tkwin, 
-		menuPtr->borderPtr);
-	radius = ((int) mePtr->platformEntryData)/2;
-	points[0].x = x + (mePtr->indicatorSpace
-		- (int) mePtr->platformEntryData)/2;
-	points[0].y = y + (height)/2;
-	points[1].x = points[0].x + radius;
-	points[1].y = points[0].y + radius;
-	points[2].x = points[1].x + radius;
-	points[2].y = points[0].y;
-	points[3].x = points[1].x;
-	points[3].y = points[0].y - radius;
-	if (mePtr->entryFlags & ENTRY_SELECTED) {
-	    XFillPolygon(menuPtr->display, d, indicatorGC, points, 4,
-		    Convex, CoordModeOrigin);
-	} else {
-	    Tk_Fill3DPolygon(menuPtr->tkwin, d, border, points, 4,
-		    DECORATION_BORDER_WIDTH, TK_RELIEF_FLAT);
-	}
-	Tk_Draw3DPolygon(menuPtr->tkwin, d, border, points, 4,
-		DECORATION_BORDER_WIDTH, TK_RELIEF_SUNKEN);
+	dim = (int) mePtr->platformEntryData;
+	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
+		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
+	bg = Tk_3DBorderColor(border);
+	top = y + height/2;
+	left = x + activeBorderWidth + DECORATION_BORDER_WIDTH
+		+ mePtr->indicatorSpace/2;
+
+	TkpDrawCheckIndicator(menuPtr->tkwin, menuPtr->display, d, left, top,
+		border, indicatorColor, bg, disableColor, 
+		(mePtr->entryFlags & ENTRY_SELECTED), disabled, RADIO_MENU);
     }
 }
 
@@ -1344,6 +1345,8 @@ TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
 				     * to Windows. */
 {
     GC gc, indicatorGC;
+    XColor *indicatorColor;
+    XColor *disableColor;
     TkMenu *menuPtr = mePtr->menuPtr;
     Tk_3DBorder bgBorder, activeBorder;
     CONST Tk_FontMetrics *fmPtr;
@@ -1398,6 +1401,15 @@ TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
     if (indicatorGC == NULL) {
 	indicatorGC = menuPtr->indicatorGC;
     }
+    if (mePtr->indicatorFgPtr) {
+	indicatorColor = Tk_GetColorFromObj(menuPtr->tkwin,
+		mePtr->indicatorFgPtr);
+    } else {
+	indicatorColor = Tk_GetColorFromObj(menuPtr->tkwin,
+		menuPtr->indicatorFgPtr);
+    }
+
+    disableColor = Tk_GetColorFromObj(menuPtr->tkwin, menuPtr->disabledFgPtr);
 
     bgBorder = Tk_Get3DBorderFromObj(menuPtr->tkwin,
 	    (mePtr->borderPtr == NULL)
@@ -1439,8 +1451,12 @@ TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
 	DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 		activeBorder, x, adjustedY, width, adjustedHeight, drawArrow);
 	if (!mePtr->hideMargin) {
-	    DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont,
-		    fmPtr, x, adjustedY, width, adjustedHeight);
+	    if (mePtr->state == ENTRY_ACTIVE) {
+		bgBorder = activeBorder;
+	    }
+	    DrawMenuEntryIndicator(menuPtr, mePtr, d, bgBorder, indicatorColor,
+		    disableColor, tkfont, fmPtr, x, adjustedY, width,
+		    adjustedHeight);
 	}
     }
 }

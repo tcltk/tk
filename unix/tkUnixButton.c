@@ -9,10 +9,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.13 2003/04/26 02:59:20 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.14 2003/08/14 10:31:14 dkf Exp $
  */
 
 #include "tkButton.h"
+#include "tk3d.h"
 
 /*
  * Declaration of Unix specific button structure.
@@ -30,6 +31,261 @@ Tk_ClassProcs tkpButtonProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     TkButtonWorldChanged,	/* worldChangedProc */
 };
+
+/*
+ * The button image
+ * the header info here is ignored, it's the image that's
+ * important.  The colors will be applied as follows:
+ *   A = Background
+ *   B = Background
+ *   C = 3D light
+ *   D = selectColor
+ *   E = 3D dark
+ *   F = Background
+ *   G = Indicator Color
+ *   H = disabled Indicator Color
+ */
+
+/* XPM */
+static char *button_images[] = {
+    /* width height ncolors chars_per_pixel */
+    "52 26 7 1",
+    /* colors */
+    "A c #808000000000",
+    "B c #000080800000",
+    "C c #808080800000",
+    "D c #000000008080",
+    "E c #808000008080",
+    "F c #000080808080",
+    "G c #000000000000",
+    "H c #000080800000",
+    /* pixels */
+    "AAAAAAAAAAAABAAAAAAAAAAAABAAAAAAAAAAAABAAAAAAAAAAAAB",
+    "AEEEEEEEEEECBAEEEEEEEEEECBAEEEEEEEEEECBAEEEEEEEEEECB",
+    "AEDDDDDDDDDCBAEDDDDDDDDDCBAEFFFFFFFFFCBAEFFFFFFFFFCB",
+    "AEDDDDDDDDDCBAEDDDDDDDGDCBAEFFFFFFFFFCBAEFFFFFFFHFCB",
+    "AEDDDDDDDDDCBAEDDDDDDGGDCBAEFFFFFFFFFCBAEFFFFFFHHFCB",
+    "AEDDDDDDDDDCBAEDGDDDGGGDCBAEFFFFFFFFFCBAEFHFFFHHHFCB",
+    "AEDDDDDDDDDCBAEDGGDGGGDDCBAEFFFFFFFFFCBAEFHHFHHHFFCB",
+    "AEDDDDDDDDDCBAEDGGGGGDDDCBAEFFFFFFFFFCBAEFHHHHHFFFCB",
+    "AEDDDDDDDDDCBAEDDGGGDDDDCBAEFFFFFFFFFCBAEFFHHHFFFFCB",
+    "AEDDDDDDDDDCBAEDDDGDDDDDCBAEFFFFFFFFFCBAEFFFHFFFFFCB",
+    "AEDDDDDDDDDCBAEDDDDDDDDDCBAEFFFFFFFFFCBAEFFFFFFFFFCB",
+    "ACCCCCCCCCCCBACCCCCCCCCCCBACCCCCCCCCCCBACCCCCCCCCCCB",
+    "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+    "FFFFAAAAFFFFFFFFFAAAAFFFFFFFFFAAAAFFFFFFFFFAAAAFFFFF",
+    "FFAAEEEEAAFFFFFAAEEEEAAFFFFFAAEEEEAAFFFFFAAEEEEAAFFF",
+    "FAEEDDDDEEBFFFAEEDDDDEEBFFFAEEFFFFEEBFFFAEEFFFFEEBFF",
+    "FAEDDDDDDCBFFFAEDDDDDDCBFFFAEFFFFFFCBFFFAEFFFFFFCBFF",
+    "AEDDDDDDDDCBFAEDDDGGDDDCBFAEFFFFFFFFCBFAEFFFHHFFFCBF",
+    "AEDDDDDDDDCBFAEDDGGGGDDCBFAEFFFFFFFFCBFAEFFHHHHFFCBF",
+    "AEDDDDDDDDCBFAEDDGGGGDDCBFAEFFFFFFFFCBFAEFFHHHHFFCBF",
+    "AEDDDDDDDDCBFAEDDDGGDDDCBFAEFFFFFFFFCBFAEFFFHHFFFCBF",
+    "FAEDDDDDDCBFFFAEDDDDDDCBFFFAEFFFFFFCBFFFAEFFFFFFCBFF",
+    "FACCDDDDCCBFFFACCDDDDCCBFFFACCFFFFCCBFFFACCFFFFCCBFF",
+    "FFBBCCCCBBFFFFFBBCCCCBBFFFFFBBCCCCBBFFFFFBBCCCCBBFFF",
+    "FFFFBBBBFFFFFFFFFBBBBFFFFFFFFFBBBBFFFFFFFFFBBBBFFFFF",
+    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+};
+
+/*
+ * Sizes and offsets into above XPM file.
+ */
+#define CHECK_BUTTON_DIM    13
+#define CHECK_MENU_DIM       9
+#define CHECK_START          9
+#define CHECK_ON_OFFSET     13
+#define CHECK_OFF_OFFSET     0
+#define CHECK_DISON_OFFSET  39
+#define CHECK_DISOFF_OFFSET 26
+#define RADIO_BUTTON_DIM    12
+#define RADIO_MENU_DIM       6
+#define RADIO_WIDTH         13
+#define RADIO_START         22
+#define RADIO_ON_OFFSET     13
+#define RADIO_OFF_OFFSET     0
+#define RADIO_DISON_OFFSET  39
+#define RADIO_DISOFF_OFFSET 26
+
+/*
+ * Indicator Draw Modes
+ */
+#define CHECK_BUTTON 0
+#define CHECK_MENU   1
+#define RADIO_BUTTON 2
+#define RADIO_MENU   3
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpDrawCheckIndicator -
+ *
+ *	Draws the checkbox image in the drawable at the (x,y)
+ *	location, value, and state given.  This routine is use by the
+ *	button and menu widgets
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	An image is drawn in the drawable at the location given.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void 
+TkpDrawCheckIndicator(tkwin, display, d, x, y, bgBorder, indicatorColor,
+	selectColor, disableColor, on, disabled, mode)
+    Tk_Window tkwin;				/* handle for resource alloc */
+    Display *display;
+    Drawable d;					/* what to draw on */
+    int x, y;					/* where to draw */
+    Tk_3DBorder bgBorder;			/* colors of the border */
+    XColor *indicatorColor;			/* color of the indicator */
+    XColor *selectColor;			/* color when selected */
+    XColor *disableColor;			/* color when disabled */
+    int on;					/* are we on? */
+    int disabled;				/* are we disabled? */
+    int mode;					/* kind of indicator to draw */
+{
+    int ix, iy;
+    int dim;
+    int imgsel, imgstart;
+    TkBorder *bg_brdr = (TkBorder*)bgBorder;
+    XGCValues gcValues;
+    GC copyGC;
+    unsigned long imgColors[8];
+    XImage *img;
+    Pixmap pixmap;
+    int depth;
+
+    /*
+     * Sanity check.
+     */
+
+    if (tkwin == NULL || display == None || d == None || bgBorder == NULL
+	    || indicatorColor == NULL || selectColor == NULL
+	    || disableColor == NULL) {
+	return;
+    }
+
+    depth = Tk_Depth(tkwin);
+
+    /*
+     * Compute starting point and dimensions of image inside
+     * button_images to be used.
+     */
+
+    switch (mode) {
+    default:
+    case CHECK_BUTTON:
+	imgsel = on ? CHECK_ON_OFFSET : CHECK_OFF_OFFSET;
+	imgsel += disabled ? CHECK_DISOFF_OFFSET : 0;
+	imgstart = CHECK_START;
+	dim = CHECK_BUTTON_DIM;
+	break;
+
+    case CHECK_MENU:
+	imgsel = on ? CHECK_ON_OFFSET : CHECK_OFF_OFFSET;
+	imgsel += disabled ? CHECK_DISOFF_OFFSET : 0;
+	imgstart = CHECK_START + 2;
+	imgsel += 2;
+	dim = CHECK_MENU_DIM;
+	break;
+
+    case RADIO_BUTTON:
+	imgsel = on ? RADIO_ON_OFFSET : RADIO_OFF_OFFSET;
+	imgsel += disabled ? RADIO_DISOFF_OFFSET : 0;
+	imgstart = RADIO_START;
+	dim = RADIO_BUTTON_DIM;
+	break;
+
+    case RADIO_MENU:    
+	imgsel = on ? RADIO_ON_OFFSET : RADIO_OFF_OFFSET;
+	imgsel += disabled ? RADIO_DISOFF_OFFSET : 0;
+	imgstart = RADIO_START + 3;
+	imgsel += 3;
+	dim = RADIO_MENU_DIM;
+	break;
+    }
+
+    /*
+     * Allocate the drawing areas to use.  Note that we use
+     * double-buffering here because not all code paths leading to
+     * this function do so.
+     */
+
+    pixmap = Tk_GetPixmap(display, d, dim, dim, depth);
+    if (pixmap == None) {
+	return;
+    }
+
+    x -= dim/2;
+    y -= dim/2;
+
+    img = XGetImage(display, pixmap, 0, 0,
+	    (unsigned int)dim, (unsigned int)dim, AllPlanes, ZPixmap);
+    if (img == NULL) {
+	return;
+    }
+
+    /*
+     * Set up the color mapping table.
+     */
+
+    TkpGetShadows(bg_brdr, tkwin);
+
+    imgColors[0 /*A*/] =
+	    Tk_GetColorByValue(tkwin, bg_brdr->bgColorPtr)->pixel;
+    imgColors[1 /*B*/] =
+	    Tk_GetColorByValue(tkwin, bg_brdr->bgColorPtr)->pixel;
+    imgColors[2 /*C*/] =
+	    Tk_GetColorByValue(tkwin, bg_brdr->lightColorPtr)->pixel;
+    imgColors[3 /*D*/] =
+	    Tk_GetColorByValue(tkwin, selectColor)->pixel;
+    imgColors[4 /*E*/] =
+	    Tk_GetColorByValue(tkwin, bg_brdr->darkColorPtr)->pixel;
+    imgColors[5 /*F*/] =
+	    Tk_GetColorByValue(tkwin, bg_brdr->bgColorPtr)->pixel;
+    imgColors[6 /*G*/] =
+	    Tk_GetColorByValue(tkwin, indicatorColor)->pixel;
+    imgColors[7 /*H*/] =
+	    Tk_GetColorByValue(tkwin, disableColor)->pixel;
+
+    /*
+     * Create the image, painting it into an XImage one pixel at a time.
+     */
+
+    for (iy=0 ; iy<dim ; iy++) {
+	for (ix=0 ; ix<dim ; ix++) {
+	    XPutPixel(img, ix, iy,
+		    imgColors[button_images[imgstart+iy][imgsel+ix] - 'A'] );
+	}
+    }
+
+    /*
+     * Copy onto our target drawable surface.
+     */
+
+    memset(&gcValues, 0, sizeof(gcValues));
+    gcValues.background = bg_brdr->bgColorPtr->pixel;
+    gcValues.graphics_exposures = False;
+    copyGC = Tk_GetGC(tkwin, 0, &gcValues);
+
+    XPutImage(display, pixmap, copyGC, img, 0, 0, 0, 0,
+	    (unsigned int)dim, (unsigned int)dim);
+    XCopyArea(display, pixmap, d, copyGC, 0, 0,
+	    (unsigned int)dim, (unsigned int)dim, x, y);
+
+    /*
+     * Tidy up.
+     */
+
+    Tk_FreeGC(display, copyGC);
+    XDestroyImage(img);
+    Tk_FreePixmap(display, pixmap);
+}
 
 /*
  *----------------------------------------------------------------------
@@ -161,7 +417,7 @@ TkpDisplayButton(clientData)
      * In order to avoid screen flashes, this procedure redraws
      * the button in a pixmap, then copies the pixmap to the
      * screen in a single operation.  This means that there's no
-     * point in time where the on-sreen image has been cleared.
+     * point in time where the on-screen image has been cleared.
      */
 
     pixmap = Tk_GetPixmap(butPtr->display, Tk_WindowId(tkwin),
@@ -341,89 +597,27 @@ TkpDisplayButton(clientData)
      */
 
     if ((butPtr->type == TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-	int dim;
+	if (butPtr->indicatorDiameter > 2*butPtr->borderWidth) {
+	    TkBorder *selBorder = (TkBorder *) butPtr->selectBorder;
 
-	dim = butPtr->indicatorDiameter;
-	x -= butPtr->indicatorSpace;
-	y -= dim/2;
-	if (dim > 2*butPtr->borderWidth) {
-	    Tk_Draw3DRectangle(tkwin, pixmap, border, x, y, dim, dim,
-		    butPtr->borderWidth,
-		    (butPtr->flags & SELECTED) ? TK_RELIEF_SUNKEN :
-		    TK_RELIEF_RAISED);
-	    x += butPtr->borderWidth;
-	    y += butPtr->borderWidth;
-	    dim -= 2*butPtr->borderWidth;
-	    if (butPtr->flags & SELECTED) {
-		GC gc;
-		if (butPtr->state != STATE_DISABLED) {
-		    if (butPtr->selectBorder != NULL) {
-			gc = Tk_3DBorderGC(tkwin, butPtr->selectBorder,
-				TK_3D_FLAT_GC);
-		    } else {
-			gc = Tk_3DBorderGC(tkwin, butPtr->normalBorder,
-				TK_3D_FLAT_GC);
-		    }
-		} else {
-		    if (butPtr->disabledFg != NULL) {
-			gc = butPtr->disabledGC;
-		    } else {
-			gc = butPtr->normalTextGC; 
-			XSetForeground(butPtr->display, butPtr->disabledGC,
-				Tk_3DBorderColor(butPtr->normalBorder)->pixel);
-		    }
-		}
-
-		XFillRectangle(butPtr->display, pixmap, gc, x, y,
-			(unsigned int) dim, (unsigned int) dim);
-	    } else {
-		Tk_Fill3DRectangle(tkwin, pixmap, butPtr->normalBorder, x, y,
-			dim, dim, butPtr->borderWidth, TK_RELIEF_FLAT);
-	    }
+	    x -= butPtr->indicatorSpace/2;
+	    y = Tk_Height(tkwin)/2;
+	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, 
+		    x, y, border, butPtr->normalFg, selBorder->bgColorPtr,
+		    butPtr->disabledFg, (butPtr->flags & SELECTED), 
+		    (butPtr->state == STATE_DISABLED), CHECK_BUTTON);
 	}
     } else if ((butPtr->type == TYPE_RADIO_BUTTON) && butPtr->indicatorOn) {
-	XPoint points[4];
-	int radius;
+	if (butPtr->indicatorDiameter > 2*butPtr->borderWidth) {
+	    TkBorder *selBorder = (TkBorder *) butPtr->selectBorder;
 
-	radius = butPtr->indicatorDiameter/2;
-	points[0].x = x - butPtr->indicatorSpace;
-	points[0].y = y;
-	points[1].x = points[0].x + radius;
-	points[1].y = points[0].y + radius;
-	points[2].x = points[1].x + radius;
-	points[2].y = points[0].y;
-	points[3].x = points[1].x;
-	points[3].y = points[0].y - radius;
-	if (butPtr->flags & SELECTED) {
-	    GC gc;
-
-	    if (butPtr->state != STATE_DISABLED) {
-		if (butPtr->selectBorder != NULL) {
-		    gc = Tk_3DBorderGC(tkwin, butPtr->selectBorder,
-			    TK_3D_FLAT_GC);
-		} else {
-		    gc = Tk_3DBorderGC(tkwin, butPtr->normalBorder,
-			    TK_3D_FLAT_GC);
-		}
-	    } else {
-		if (butPtr->disabledFg != NULL) {
-		    gc = butPtr->disabledGC;
-		} else {
-		    gc = butPtr->normalTextGC; 
-		    XSetForeground(butPtr->display, butPtr->disabledGC,
-			    Tk_3DBorderColor(butPtr->normalBorder)->pixel);
-		}
-	    }
-
-	    XFillPolygon(butPtr->display, pixmap, gc, points, 4, Convex,
-		    CoordModeOrigin);
-	} else {
-	    Tk_Fill3DPolygon(tkwin, pixmap, butPtr->normalBorder, points,
-		    4, butPtr->borderWidth, TK_RELIEF_FLAT);
+	    x -= butPtr->indicatorSpace/2;
+	    y = Tk_Height(tkwin)/2;
+	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, 
+		    x, y, border, butPtr->normalFg, selBorder->bgColorPtr,
+		    butPtr->disabledFg, (butPtr->flags & SELECTED), 
+		    (butPtr->state == STATE_DISABLED), RADIO_BUTTON);
 	}
-	Tk_Draw3DPolygon(tkwin, pixmap, border, points, 4, butPtr->borderWidth,
-		(butPtr->flags & SELECTED) ? TK_RELIEF_SUNKEN :
-		TK_RELIEF_RAISED);
     }
 
     /*
