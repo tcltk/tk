@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: messageBox.n,v 1.5 2000/04/27 18:28:58 ericm Exp $
+'\" RCS: @(#) $Id: messageBox.n,v 1.6 2004/05/24 21:23:23 dkf Exp $
 '\" 
 .so man.macros
 .TH tk_messageBox n 4.2 Tk "Tk Built-In Commands"
@@ -32,6 +32,14 @@ The following option-value pairs are supported:
 this message window ('ok', 'cancel', and so on). See \fB\-type\fR 
 for a list of the symbolic names.  If this option is not specified,
 the first button in the dialog will be made the default.
+.TP
+\fB\-detail\fR \fIstring\fR
+.VS 8.5
+Specifies an auxiliary message to the main message given by the
+\fB\-message\fR option.  Where supported by the underlying OS, the
+message detail will be presented in a less emphasized font than the
+main message.
+.VE 8.5
 .TP
 \fB\-icon\fR \fIiconImage\fR
 Specifies an icon to display. \fIIconImage\fR must be one of the
@@ -78,10 +86,13 @@ and \fBcancel\fR.
 .PP
 .SH EXAMPLE
 .CS
-set answer [tk_messageBox \-message "Really quit?" \-type yesno \-icon question]
+set answer [tk_messageBox \-message "Really quit?" \b
+        \-icon question \-type yesno \b
+        \-detail "Select \b"Yes\b" to make the application exit"]
 switch -- $answer {
     yes exit
-    no {tk_messageBox \-message "I know you like this application!" \-type ok}
+    no {tk_messageBox \-message "I know you like this application!" \b
+            \-type ok}
 }
 .CE
 
