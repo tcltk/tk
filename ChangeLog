@@ -4,7 +4,7 @@
 	* doc/wm.n: fix for part of [Bug 581627], and made iconbitmap
 	code on Windows more flexible about reading in icons [Bug
 	220800].
-	
+
 2002-07-15  David Gravereaux <davygrvy@pobox.com>
 
 	* win/makefile.bc (new): re-add of the borland makefile.  Submitted
@@ -20,6 +20,7 @@
 	* win/tkWinWm.c:		Typo in error message.
 
 2002-07-14  Don Porter <dgp@users.sf.net>
+
 	* tests/event.test:	Fixes to enable testing of only userInteraction
 	* tests/visual_bb.test:	tests.
 
@@ -43,7 +44,7 @@
 	* tests/[g-x]*.test:		factored out common code.
 
 2002-07-11  Don Porter <dgp@users.sf.net>
-	
+
 	* tests/canvPsImg.tcl:			Converted several files in the
 	* tests/constraints.tcl (new file):	Tk test suite for testing by
 	* tests/[r-x]*.test:			tcltest 2.1.
@@ -105,8 +106,8 @@
 2002-06-27  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
 
 	* win/Makefile.in (install-binaries): Fix of troubled Makefile
-	  quoting introduced by [Patch 521356] causing the installed to
-	  fail.
+	quoting introduced by [Patch 521356] causing the installed to
+	fail.
 
 2002-06-25  Don Porter <dgp@users.sf.net>
 
