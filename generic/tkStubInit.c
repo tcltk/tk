@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.42 2003/03/06 15:05:40 dkf Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.43 2003/10/13 03:41:37 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -329,6 +329,7 @@ TkIntStubs tkIntStubs = {
     TkStylePkgInit, /* 146 */
     TkStylePkgFree, /* 147 */
     TkToplevelWindowForCommand, /* 148 */
+    TkGetOptionSpec, /* 149 */
 };
 
 TkIntPlatStubs tkIntPlatStubs = {
