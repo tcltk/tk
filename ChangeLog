@@ -1,3 +1,8 @@
+2003-10-31  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* win/tkWinMenu.c: more correct placing of images in compound
+	menu entries.
+
 2003-10-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkImgPhoto.c (ImgPhotoBlendComplexAlpha): add alpha
