@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.5 2003/02/19 19:27:47 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.6 2003/11/20 12:40:15 cc_benny Exp $
  */
 
 #include "tkInt.h"
@@ -25,9 +25,21 @@ typedef struct {
     KeySym keysym;		/* X windows Keysym */
 } KeyInfo;
 
+/*
+ * Notes on keyArray:
+ *
+ * 0x34, XK_Return - Powerbooks use this and some keymaps define it.
+ *
+ * 0x47, XK_Clear - This key is NumLock when used on PCs, but Mac
+ * applications don't use it like that.
+ *
+ * All other keycodes are taken from the published ADB keyboard layouts.
+ */
+
 static KeyInfo keyArray[] = {
     {0x4C,	XK_Return},
     {0x24,	XK_Return},
+    {0x34,  XK_Return},
     {0x33,	XK_BackSpace},
     {0x75,	XK_Delete},
     {0x30,	XK_Tab},
