@@ -3,17 +3,19 @@
 # Simple makefile for building on Mac OS X with the
 # Project Builder command line tool 'pbxbuild'
 #
-# RCS: @(#) $Id: Makefile,v 1.7.2.1 2003/03/18 13:55:50 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.7.2.2 2003/07/18 01:06:33 das Exp $
 #
 ################################################################################
 
 INSTALL_ROOT	?=
 
 BUILD_DIR	?= ${CURDIR}/../../build
+SYMROOT		?= ${BUILD_DIR}/${PROJECT}
 
-TCL_FRAMEWORK_DIR	?= ${BUILD_DIR}
+TCL_FRAMEWORK_DIR	?= ${BUILD_DIR}/tcl
 TCLSH_DIR	?= ${TCL_FRAMEWORK_DIR}
 
+PROJECT		= tk
 TARGET		= Wish
 
 DEVBUILDSTYLE	= Development
@@ -21,8 +23,9 @@ DEPBUILDSTYLE	= Deployment
 
 PBXBUILD	= /usr/bin/pbxbuild
 
-BUILD		= ${PBXBUILD} SYMROOT="${BUILD_DIR}" -target "${TARGET}" \
-			  TCL_FRAMEWORK_DIR="${TCL_FRAMEWORK_DIR}" TCLSH_DIR="${TCLSH_DIR}"
+BUILD		= ${PBXBUILD} SYMROOT="${SYMROOT}" -target "${TARGET}" \
+			TCL_FRAMEWORK_DIR="${TCL_FRAMEWORK_DIR}" \
+			TCLSH_DIR="${TCLSH_DIR}"
 
 DEVBUILD	= ${BUILD} -buildstyle "${DEVBUILDSTYLE}"
 DEPBUILD	= ${BUILD} -buildstyle "${DEPBUILDSTYLE}"
@@ -77,10 +80,6 @@ clean-deploy:
 
 ################################################################################
 
-forceRelink:
-	@-cd ${BUILD_DIR}; \
-	rm -rf Tk.framework Wish\ Shell.app libtkstub8.4.a
-
 cleanup-embedded:
 	@-cd ${INSTALL_ROOT}; \
 	chmod -RH u+w Library/Frameworks/Tcl.framework; \
@@ -93,7 +92,6 @@ cleanup-embedded:
 
 .PHONY: all install embedded clean develop deploy install-develop install-deploy \
 embedded-develop embedded-deploy install-embedded-develop install-embedded-deploy \
-clean-develop clean-deploy forceRelink \
-cleanup-embedded
+clean-develop clean-deploy cleanup-embedded
 
 ################################################################################
