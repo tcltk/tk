@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.88 2005/01/07 15:18:03 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.89 2005/01/09 00:22:48 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -2222,6 +2222,7 @@ UpdateWrapper(winPtr)
 		|SWP_NOOWNERZORDER);
     }
     TkpWmSetState(winPtr, state);
+    wmPtr->hints.initial_state = state;
 
     if (hSmallIcon != NULL) {
 	SendMessage(wmPtr->wrapper,WM_SETICON,ICON_SMALL,(LPARAM)hSmallIcon);
@@ -2240,6 +2241,10 @@ UpdateWrapper(winPtr)
      */
 
     if (winPtr->flags & TK_EMBEDDED) {
+	if(state != SendMessage(wmPtr->wrapper, TK_STATE, state, 0)) {
+	    TkpWmSetState(winPtr, NormalState);
+	    wmPtr->hints.initial_state = NormalState;
+	}
 	XMapWindow(winPtr->display, winPtr->window);
     }
 
