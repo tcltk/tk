@@ -1,3 +1,21 @@
+2000-05-28  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* doc/spinbox.n: (new file) docs for spinbox widget
+	* generic/tkInt.h: added Tk_SpinboxObjCmd declaration
+	* generic/tkEntry.c: added 'spinbox' widget - an extension of the
+	entry widget type.
+	* generic/tkWindow.c: added 'spinbox' to core Tk commands
+	* library/spinbox.tcl: (new file) binding and helper procs for spinbox
+	* library/tk.tcl: added spinbox.tcl to list of files to source
+	* tests/entry.test: updated changed error messages
+	* tests/spinbox.test: (new file) test suite for spinbox
+
+	* generic/tkPlace.c (Tk_PlaceCmd): reworked place master/slave
+	table init'n to prevent seg fault when using place on multiple
+	displays.
+
+	* generic/tk.h: added comments ot Tk_FakeWin structure
+
 2000-05-26  Eric Melski  <ericm@scriptics.com>
 
 	* generic/tkOption.c (Tk_GetOption): Extended Tk_GetOption to
