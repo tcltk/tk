@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.24 2004/12/04 00:04:41 dkf Exp $
+# RCS: @(#) $Id: listbox.test,v 1.25 2004/12/08 03:03:06 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -943,6 +943,7 @@ test listbox-4.18 {ConfigureListbox, no listvar -> bad listvar} {
 	"unmatched open quote in list: invalid -listvariable value"]
 test listbox-4.19 {ConfigureListbox, no listvar -> bad non-existent listvar} {
     catch {destroy .l}
+    unset -nocomplain ::foo
     listbox .l -listvar foo
     .l insert end a b c d
     catch {.l configure -listvar ::zoo::bar::foo} result

@@ -1,3 +1,13 @@
+2004-12-07  Don Porter  <dgp@users.sourceforge.net>
+
+	* tests/canvPs.test:	Cleaned up the matching of [makeFile] and
+	* tests/choosedir.test: [removeFile] commands as indicated by the
+	* tests/filebox.test:	results of a -debug 1 run of the test suite.
+	* tests/imgPPM.test:	Tk test suite is now -debug 1 clean.  This
+	* tests/imgPhoto.test:	completes fixing [1078648].
+	* tests/listbox.test:
+	* tests/main.test:
+
 2004-12-07  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* tests/bind.test, tests/button.test, tests/canvas.test:
