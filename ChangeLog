@@ -1,3 +1,33 @@
+2001-12-28  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/text.tcl (tk::TextButton1): made text receive focus even
+	in disabled state for Windows to show selection and allow
+	mouse-wheel scrolling.
+
+	* win/tkWinInit.c (TkpDisplayWarning): added Tcl_DStringFree's
+
+	* win/tkWinInt.h:
+	* win/tkWinX.c: added TkWinProcs that represent a function table
+	to switch between unicode and ansi procs on Windows.  This is
+	analogous to the TclWinProcs.  Using Tcl_WinUtfToTChar, we can
+	easily take advantage of using unicode functions where available
+	without having to switch on the platform id each time.
+
+	* win/tkWinWm.c (InitWindowClass): corrected init routines to
+	allow unicode in window titles on Windows (for Win2K/XP).
+	(TkWmStackorderToplevel): Corrected casts to enable debug compile
+
+	* win/configure: regen'ed
+	* win/tcl.m4: added shell32.lib to link libs, as these are
+	necessary for new directory chooser (when enabled).
+
+	* win/tkWinDialog.c (Tk_MessageBoxObjCmd): use MessageBoxW for
+	proper display of unicode errors.
+	Added patch which uses new OLE based directory chooser.  This
+	still has some issues, so is disabled by default. [Patch #468139]
+	(ColorDlgHookProc) Corrected ability to use unicode chars in
+	tk_chooseColor -title.
+
 2001-12-27  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinInit.c (TkpDisplayWarning): Use MessageBoxW in case the
