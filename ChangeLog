@@ -1,3 +1,8 @@
+2003-07-20  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/buildTkConfig.tcl: fix to TK_BUILD_* ref generation
+	broken by changes to tcl buildsystem.
+
 2003-07-19  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinCursor.c (TkGetCursorByName): Fix bug 420510 to provide
