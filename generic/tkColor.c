@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.c,v 1.6 1999/11/19 22:00:02 hobbs Exp $
+ * RCS: @(#) $Id: tkColor.c,v 1.6.2.1 2000/08/05 23:53:11 hobbs Exp $
  */
 
 #include "tkColor.h"
@@ -540,6 +540,7 @@ Tk_FreeColorFromObj(tkwin, objPtr)
     Tcl_Obj *objPtr;		/* The Tcl_Obj * to be freed. */
 {
     Tk_FreeColor(Tk_GetColorFromObj(tkwin, objPtr));
+    FreeColorObjProc(objPtr);
 }
 
 /*
@@ -645,38 +646,43 @@ Tk_GetColorFromObj(tkwin, objPtr)
     if (objPtr->typePtr != &colorObjType) {
 	InitColorObj(objPtr);
     }
-
+  
+    /*
+     * First check to see if the internal representation of the object
+     * is defined and is a color that is valid for the current screen
+     * and color map.  If it is, we are done.
+     */
     tkColPtr = (TkColor *) objPtr->internalRep.twoPtrValue.ptr1;
-    if (tkColPtr != NULL) {
-	if ((tkColPtr->resourceRefCount > 0)
-		&& (Tk_Screen(tkwin) == tkColPtr->screen)
-		&& (Tk_Colormap(tkwin) == tkColPtr->colormap)) {
-	    /*
-	     * The object already points to the right TkColor structure.
-	     * Just return it.
-	     */
+    if ((tkColPtr != NULL)
+	    && (tkColPtr->resourceRefCount > 0)
+	    && (Tk_Screen(tkwin) == tkColPtr->screen)
+	    && (Tk_Colormap(tkwin) == tkColPtr->colormap)) {
+	/*
+	 * The object already points to the right TkColor structure.
+	 * Just return it.
+	 */
 
-	    return (XColor *) tkColPtr;
-	}
-	hashPtr = tkColPtr->hashPtr;
-	FreeColorObjProc(objPtr);
-    } else {
-	hashPtr = Tcl_FindHashEntry(&dispPtr->colorNameTable, 
-                Tcl_GetString(objPtr));
-	if (hashPtr == NULL) {
-	    goto error;
-	}
+	return (XColor *) tkColPtr;
     }
 
     /*
-     * At this point we've got a hash table entry, off of which hang
-     * one or more TkColor structures.  See if any of them will work.
+     * If we reach this point, it means that the TkColor structure
+     * that we have cached in the internal representation is not valid
+     * for the current screen and colormap.  But there is a list of
+     * other TkColor structures attached to the TkDisplay.  Walk this
+     * list looking for the right TkColor structure.
      */
 
+    hashPtr = Tcl_FindHashEntry(&dispPtr->colorNameTable, 
+	    Tcl_GetString(objPtr));
+    if (hashPtr == NULL) {
+	goto error;
+    }
     for (tkColPtr = (TkColor *) Tcl_GetHashValue(hashPtr);
 	    (tkColPtr != NULL); tkColPtr = tkColPtr->nextPtr) {
 	if ((Tk_Screen(tkwin) == tkColPtr->screen)
 		&& (Tk_Colormap(tkwin) == tkColPtr->colormap)) {
+	    FreeColorObjProc(objPtr);
 	    objPtr->internalRep.twoPtrValue.ptr1 = (VOID *) tkColPtr;
 	    tkColPtr->objRefCount++;
 	    return (XColor *) tkColPtr;

@@ -2,8 +2,8 @@
  * tkImgGIF.c --
  *
  *	A photo image file handler for GIF files. Reads 87a and 89a GIF
- *	files. At present, there only is a file write function. GIF images may be
- *	read using the -data option of the photo image.  The data may be
+ *	files. At present, there only is a file write function. GIF images
+ *	may be read using the -data option of the photo image.  The data may be
  *	given as a binary string in a Tcl_Obj or by representing
  *	the data as BASE64 encoded ascii.  Derived from the giftoppm code
  *	found in the pbmplus package and tkImgFmtPPM.c in the tk4.0b2
@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.14 2000/03/30 19:44:41 ericm Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.14.2.1 2000/08/05 23:53:11 hobbs Exp $
  */
 
 /*
@@ -72,11 +72,13 @@ typedef struct mFile {
  * encoding independant.
  */
 
-#  define GIF87a         "\x47\x49\x46\x38\x37\x61" /* ASCII GIF87a */
-#  define GIF89a         "\x47\x49\x46\x38\x39\x61" /* ASCII GIF89a */
-#  define GIF_TERMINATOR 0x3b                       /* ASCII ; */
-#  define GIF_EXTENSION  0x21                       /* ASCII ! */
-#  define GIF_START      0x2c                       /* ASCII , */
+static CONST char GIF87a[] =
+	{ 0x47, 0x49, 0x46, 0x38, 0x37, 0x61, 0x00 }; /* ASCII GIF87a */
+static CONST char GIF89a[] =
+	{ 0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x00 }; /* ASCII GIF89a */
+#  define GIF_TERMINATOR 0x3b                         /* ASCII ; */
+#  define GIF_EXTENSION  0x21                         /* ASCII ! */
+#  define GIF_START      0x2c                         /* ASCII , */
 
 /*
  * 			 HACK ALERT!!  HACK ALERT!!  HACK ALERT!!
@@ -1326,15 +1328,15 @@ static unsigned char mapa[MAXCOLORMAPSIZE][3];
  *	Definition of new functions to write GIFs
  */
 
-static int color _ANSI_ARGS_((int red,int green, int blue));
+static int color _ANSI_ARGS_((int red,int green, int blue,
+		unsigned char mapa[MAXCOLORMAPSIZE][3]));
 static void compress _ANSI_ARGS_((int init_bits, Tcl_Channel handle,
 		ifunptr readValue));
 static int nuevo _ANSI_ARGS_((int red, int green ,int blue,
 		unsigned char mapa[MAXCOLORMAPSIZE][3]));
-static int savemap _ANSI_ARGS_((Tk_PhotoImageBlock *blockPtr,
+static void savemap _ANSI_ARGS_((Tk_PhotoImageBlock *blockPtr,
 		unsigned char mapa[MAXCOLORMAPSIZE][3]));
 static int ReadValue _ANSI_ARGS_((void));
-static int no_bits _ANSI_ARGS_((int colors));
 
 static int
 FileWriteGIF (interp, filename, format, blockPtr)
@@ -1351,9 +1353,6 @@ FileWriteGIF (interp, filename, format, blockPtr)
 	return TCL_ERROR;
     }
     if (Tcl_SetChannelOption(interp, chan, "-translation", "binary") != TCL_OK) {
-	return TCL_ERROR;
-    }
-    if (Tcl_SetChannelOption(interp, chan, "-encoding", "binary") != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -1374,12 +1373,10 @@ CommonWriteGIF(interp, handle, format, blockPtr)
     Tk_PhotoImageBlock *blockPtr;
 {
     int  resolution;
-    long  numcolormap;
 
     long  width,height,x;
     unsigned char c;
     unsigned int top,left;
-    int num;
 
     top = 0;
     left = 0;
@@ -1410,11 +1407,12 @@ CommonWriteGIF(interp, handle, format, blockPtr)
     height=blockPtr->height;
     pixelo=blockPtr->pixelPtr + blockPtr->offset[0];
     pixelPitch=blockPtr->pitch;
-    if ((num=savemap(blockPtr,mapa))<0) {
+    savemap(blockPtr,mapa);
+    if (num>=MAXCOLORMAPSIZE) {
 	Tcl_AppendResult(interp, "too many colors", (char *) NULL);
 	return TCL_ERROR;
     }
-    if (num<3) num=3;
+    if (num<2) num=2;
     c=LSB(width);
     Mputc(c,handle);
     c=MSB(width);
@@ -1424,11 +1422,14 @@ CommonWriteGIF(interp, handle, format, blockPtr)
     c=MSB(height);
     Mputc(c,handle);
 
-    c= (1 << 7) | (no_bits(num) << 4) | (no_bits(num));
+    resolution = 0;
+    while (num >> resolution) {
+	resolution++;
+    }
+    c = 111 + resolution * 17;
     Mputc(c,handle);
-    resolution = no_bits(num)+1;
 
-    numcolormap=1 << resolution;
+    num = 1 << resolution;
 
     /*  background color */
 
@@ -1439,7 +1440,7 @@ CommonWriteGIF(interp, handle, format, blockPtr)
 
     Mputc(c,handle);
 
-    for (x=0; x<numcolormap ;x++) {
+    for (x=0; x<num ;x++) {
 	c = mapa[x][CM_RED];
 	Mputc(c,handle);
 	c = mapa[x][CM_GREEN];
@@ -1497,10 +1498,11 @@ CommonWriteGIF(interp, handle, format, blockPtr)
 }
 
 static int
-color(red, green, blue)
+color(red, green, blue, mapa)
     int red;
     int green;
     int blue;
+    unsigned char mapa[MAXCOLORMAPSIZE][3];
 {
     int x;
     for (x=(alphaOffset != 0);x<=MAXCOLORMAPSIZE;x++) {
@@ -1519,7 +1521,7 @@ nuevo(red, green, blue, mapa)
     unsigned char mapa[MAXCOLORMAPSIZE][3];
 {
     int x;
-    for (x=(alphaOffset != 0);x<num;x++) {
+    for (x=(alphaOffset != 0);x<=num;x++) {
 	if ((mapa[x][CM_RED]==red) && (mapa[x][CM_GREEN]==green) &&
 		(mapa[x][CM_BLUE]==blue)) {
 	    return 0;
@@ -1528,7 +1530,7 @@ nuevo(red, green, blue, mapa)
     return 1;
 }
 
-static int
+static void
 savemap(blockPtr,mapa)
     Tk_PhotoImageBlock *blockPtr;
     unsigned char mapa[MAXCOLORMAPSIZE][3];
@@ -1538,12 +1540,12 @@ savemap(blockPtr,mapa)
     unsigned char  red,green,blue;
 
     if (alphaOffset) {
-	num = 1;
+	num = 0;
 	mapa[0][CM_RED] = 0xd9;
 	mapa[0][CM_GREEN] = 0xd9;
 	mapa[0][CM_BLUE] = 0xd9;
     } else {
-	num = 0;
+	num = -1;
     }
 
     for(y=0;y<blockPtr->height;y++) {
@@ -1555,19 +1557,19 @@ savemap(blockPtr,mapa)
 		green = colores[greenOffset];
 		blue = colores[blueOffset];
 		if (nuevo(red,green,blue,mapa)) {
-		    if (num>255) 
-			return -1;
-
+		    num++;
+		    if (num>=MAXCOLORMAPSIZE) {
+			return;
+		    }
 		    mapa[num][CM_RED]=red;
 		    mapa[num][CM_GREEN]=green;
 		    mapa[num][CM_BLUE]=blue;
-		    num++;
 		}
 	    }
 	    colores += pixelSize;
 	}
     }
-    return num-1;
+    return;
 }
 
 static int
@@ -1581,7 +1583,7 @@ ReadValue()
     if (alphaOffset && (pixelo[alphaOffset]==0)) {
 	col = 0;
     } else {
-	col = color(pixelo[0],pixelo[greenOffset],pixelo[blueOffset]);
+	col = color(pixelo[0],pixelo[greenOffset],pixelo[blueOffset], mapa);
     }
     pixelo += pixelSize;
     if (--ssize <= 0) {
@@ -1591,25 +1593,6 @@ ReadValue()
     }
 
     return col;
-}
-
-/*
- * Return the number of bits ( -1 ) to represent a given
- * number of colors ( ex: 256 colors => 7 ).
- */
-
-static int
-no_bits( colors )
-int colors;
-{
-    register int bits = 0;
-
-    colors--;
-    while ( colors >> bits ) {
-	bits++;
-    }
-
-    return (bits-1);
 }
 
 

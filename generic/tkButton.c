@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.4 2000/03/08 03:19:31 ericm Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.4.2.1 2000/08/05 23:53:10 hobbs Exp $
  */
 
 #include "tkButton.h"
@@ -48,6 +48,12 @@ static char *stateStrings[] = {
  */
 
 static Tk_OptionSpec labelOptionSpecs[] = {
+    {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
+	DEF_BUTTON_ACTIVE_BG_COLOR, -1, Tk_Offset(TkButton, activeBorder),
+	0, (ClientData) DEF_BUTTON_ACTIVE_BG_MONO, 0},
+    {TK_OPTION_COLOR, "-activeforeground", "activeForeground", "Background",
+	DEF_BUTTON_ACTIVE_FG_COLOR, -1, Tk_Offset(TkButton, activeFg),
+	TK_OPTION_NULL_OK, (ClientData) DEF_BUTTON_ACTIVE_FG_MONO, 0},
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	DEF_BUTTON_ANCHOR, -1, Tk_Offset(TkButton, anchor), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",

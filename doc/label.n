@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: label.n,v 1.2 1998/09/14 18:22:57 stanton Exp $
+'\" RCS: @(#) $Id: label.n,v 1.2.18.1 2000/08/05 23:53:09 hobbs Exp $
 '\" 
 .so man.macros
 .TH label n 4.0 Tk "Tk Built-In Commands"
@@ -16,11 +16,14 @@ label \- Create and manipulate label widgets
 .SH SYNOPSIS
 \fBlabel\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-anchor	\-font	\-image	\-takefocus
-\-background	\-foreground	\-justify	\-text
-\-bitmap	\-highlightbackground	\-padx	\-textvariable
-\-borderwidth	\-highlightcolor	\-pady	\-underline
-\-cursor	\-highlightthickness	\-relief	\-wraplength
+\-activebackground         \-activeforeground         \-anchor
+\-background               \-bitmap                   \-borderwidth
+\-cursor                   \-disabledforeground       \-font
+\-foreground               \-highlightbackground      \-highlightcolor
+\-highlightthickness       \-image                    \-justify
+\-padx                     \-pady                     \-relief
+\-takefocus                \-text                     \-textvariable
+\-underline                \-wraplength
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-height height Height
@@ -30,6 +33,14 @@ screen units (i.e. any of the forms acceptable to \fBTk_GetPixels\fR);
 for text it is in lines of text.
 If this option isn't specified, the label's desired height is computed
 from the size of the image or bitmap or text being displayed in it.
+.OP \-state state State
+Specifies one of three states for the label:  \fBnormal\fR, \fBactive\fR,
+or \fBdisabled\fR.  In normal state the button is displayed using the
+\fBforeground\fR and \fBbackground\fR options.  In active state
+the label is displayed using the \fBactiveForeground\fR and
+\fBactiveBackground\fR options.  In the disabled state the
+\fBdisabledForeground\fR and \fBbackground\fR options determine how
+the button is displayed.
 .OP \-width width Width
 Specifies a desired width for the label.
 If an image or bitmap is being displayed in the label then the value is in

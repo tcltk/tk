@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.8 2000/04/13 20:51:55 ericm Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.8.2.1 2000/08/05 23:53:15 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -82,8 +82,6 @@ static int defaultBorderWidth;	/* The windows default border width. */
 static Tcl_DString menuFontDString;
 				/* A buffer to store the default menu font
 				 * string. */
-TCL_DECLARE_MUTEX(winMenuMutex)
-
 /*
  * Forward declarations for procedures defined later in this file:
  */
@@ -149,7 +147,6 @@ static void		GetTearoffEntryGeometry _ANSI_ARGS_((TkMenu *menuPtr,
 			    int *heightPtr));
 static int		GetNewID _ANSI_ARGS_((TkMenuEntry *mePtr,
 			    int *menuIDPtr));
-static void		MenuExitProc _ANSI_ARGS_((ClientData clientData));
 static int		MenuKeyBindProc _ANSI_ARGS_((
 			    ClientData clientData, 
 			    Tcl_Interp *interp, XEvent *eventPtr,
@@ -579,13 +576,13 @@ ReconfigureWindowsMenu(
 	    lpNewItem = (LPCTSTR) mePtr;
 	    flags |= MF_OWNERDRAW;
 	}
-	
+
 	/*
 	 * Set enabling and disabling correctly.
 	 */
 	
 	if (mePtr->state == ENTRY_DISABLED) {
-	    flags |= MF_DISABLED;
+	    flags |= MF_DISABLED | MF_GRAYED;
 	}
 	
 	/*
@@ -596,6 +593,18 @@ ReconfigureWindowsMenu(
 		|| (mePtr->type == RADIO_BUTTON_ENTRY))
 		&& (mePtr->entryFlags & ENTRY_SELECTED)) {
 	    flags |= MF_CHECKED;
+	}
+	
+	/*
+	 * Set the SEPARATOR bit for separator entries.  This bit is not
+	 * used by our internal drawing functions, but it is used by the
+	 * system when drawing the system menu (we do not draw the system menu
+	 * ourselves).  If this bit is not set, separator entries on the system
+	 * menu will not be drawn correctly.
+	 */
+
+	if (mePtr->type == SEPARATOR_ENTRY) {
+	    flags |= MF_SEPARATOR;
 	}
 	
 	if (mePtr->columnBreak) {
@@ -1384,7 +1393,7 @@ GetMenuSeparatorGeometry (
     int *heightPtr)			/* The resulting height */
 {
     *widthPtr = 0;
-    *heightPtr = fmPtr->linespace;
+    *heightPtr = fmPtr->linespace - (2 * fmPtr->descent);
 }
 
 /*

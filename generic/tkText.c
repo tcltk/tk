@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.14 2000/02/03 17:29:57 ericm Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.14.2.1 2000/08/05 23:53:12 hobbs Exp $
  */
 
 #include "default.h"
@@ -1673,6 +1673,7 @@ TextSearchCmd(textPtr, interp, argc, argv)
     TkTextSegment *segPtr;
     TkTextLine *linePtr;
     TkTextIndex curIndex;
+    Tcl_Obj *patObj = NULL;
     Tcl_RegExp regexp = NULL;		/* Initialization needed only to
 					 * prevent compiler warning. */
 
@@ -1748,7 +1749,7 @@ TextSearchCmd(textPtr, interp, argc, argv)
      * Convert the pattern to lower-case if we're supposed to ignore case.
      */
 
-    if (noCase) {
+    if (noCase && exact) {
 	Tcl_DStringInit(&patDString);
 	Tcl_DStringAppend(&patDString, pattern, -1);
 	pattern = Tcl_DStringValue(&patDString);
@@ -1798,7 +1799,10 @@ TextSearchCmd(textPtr, interp, argc, argv)
     if (exact) {
 	patLength = strlen(pattern);
     } else {
-	regexp = Tcl_RegExpCompile(interp, pattern);
+	patObj = Tcl_NewStringObj(pattern, -1);
+	Tcl_IncrRefCount(patObj);
+	regexp = Tcl_GetRegExpFromObj(interp, patObj,
+		(noCase ? TCL_REG_NOCASE : 0) | TCL_REG_ADVANCED);
 	if (regexp == NULL) {
 	    code = TCL_ERROR;
 	    goto done;
@@ -1952,18 +1956,26 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	    /*
 	     * The index information returned by the regular expression
 	     * parser only considers textual information:  it doesn't
-	     * account for embedded windows or any other non-textual info.
+	     * account for embedded windows, elided text (when we are not
+	     * searching elided text) or any other non-textual info.
 	     * Scan through the line's segments again to adjust both
 	     * matchChar and matchCount.
+	     *
+	     * We will walk through the segments of this line until we have
+	     * either reached the end of the match or we have reached the end
+	     * of the line.
 	     */
 
+	    curIndex.linePtr = linePtr; curIndex.byteIndex = 0;
 	    for (segPtr = linePtr->segPtr, leftToScan = matchByte;
-		    leftToScan >= 0; segPtr = segPtr->nextPtr) {
-		if (segPtr->typePtr != &tkTextCharType) {
+		    leftToScan >= 0 && segPtr; segPtr = segPtr->nextPtr) {
+		if (segPtr->typePtr != &tkTextCharType || \
+			(!searchElide && TkTextIsElided(textPtr, &curIndex))) {
 		    matchByte += segPtr->size;
-		    continue;
+		} else {
+		    leftToScan -= segPtr->size;
 		}
-		leftToScan -= segPtr->size;
+		curIndex.byteIndex += segPtr->size;
 	    }
 	    for (leftToScan += matchLength; leftToScan > 0;
 		    segPtr = segPtr->nextPtr) {
@@ -2023,8 +2035,11 @@ TextSearchCmd(textPtr, interp, argc, argv)
     }
     done:
     Tcl_DStringFree(&line);
-    if (noCase) {
+    if (noCase && exact) {
 	Tcl_DStringFree(&patDString);
+    }
+    if (patObj != NULL) {
+	Tcl_DecrRefCount(patObj);
     }
     return code;
 }

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: focus.test,v 1.5 1999/04/16 01:51:37 stanton Exp $
+# RCS: @(#) $Id: focus.test,v 1.5.12.1 2000/08/05 23:53:14 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -33,7 +33,6 @@ proc focusSetupAlt {} {
     global env
     catch {destroy .alt}
     toplevel .alt -screen $env(TK_ALT_DISPLAY)
-    wm withdraw .alt
     foreach i {a b c d} {
 	button .alt.$i -text .alt.$i -relief raised -bd 2
 	pack .alt.$i

@@ -1,3 +1,86 @@
+2000-08-05  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* win/Makefile.in (cat32.${OBJEXT}): corrected where to find cat.c
+	given the change in default def'n of TCL_SRC_DIR.
+
+	* win/tcl.m4: changed references from 8.4 to 8.3 (leftover from a
+	backported file).
+
+	* library/safetk.tcl: rationalized the setting of tk_library when
+	initialized Tk in a safe interpreter.
+
+2000-08-04  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* BACKPORTED FROM 8.4 (HEAD) BRANCH:
+
+	* tests/button.test:
+	* generic/tkButton.c: Added -activeforeground, -activebackground
+	for labels, for the -state option.
+
+	* doc/label.n: Added -disabledforeground to list of options [Bug:
+	6053].
+
+	* tests/focus.test (focusSetupAlt): removed wm withdraw from proc
+	as it would cause a hang for tkwait visibility
+
+	* tests/menu.test:
+	* generic/tk3d.c:
+	* generic/tkColor.c:
+	* generic/tkCursor.c: corrected handling of 3DBorder, Cursor and
+	Color objects on multiple screens. [Bug: 5454]
+
+	* generic/tkCursor.c: Added initialization for nextPtr field of
+	TkCursor, patch from Nijtmans/Howlett.
+
+	* canvas.test: added test for 5783.
+	* generic/tkCanvPoly.c (DisplayPolygon): added checks for the
+	polygon fillGC not being empty to prevent segfault. [Bug: 5783]
+
+	* generic/tkImgGIF.c: Applied patch from Jan Nijtmans to fix a
+	problem with the GIF writing code [Bug:	5823].
+	* generic/tkImgGIF.c: Changed defines for GIF87a/GIF89a to be
+	static char arrays with integer initialization, to address EBCIDIC
+	vs. ASCII encoding issues and to handle compilers that don't deal
+	with "\xAB" syntax for specifying hex values in strings.
+
+	* generic/tkMenu.c (DeleteMenuCloneEntries): Applied fix from
+	[Bug: 5275], which corrected a segfault-causing indexing problem
+	when deleting entries from torn-off menus.
+
+	* generic/tkPlace.c (Tk_PlaceCmd): reworked place master/slave
+	table init'n to prevent seg fault when using place on multiple
+	displays.
+
+	* tests/text.test: Added tests for -regexp -nocase searches with
+	backslash character classes.
+	* tests/text.test: Added tests for searching when text is elided.
+	* generic/tkText.c (TextSearchCmd): Text search did not work
+	properly when -regexp and -nocase were used, in combination with
+	backslash character classes represented by capital letters (ie,
+	\W, \M); altered implementation of -regexp -nocase searches to use
+	new regexp interfaces to fix this problem.  [Bug: 5988].
+	* generic/tkText.c (TextSearchCmd): Text search was not returning
+	the correct index when the search covered (but did not search)
+	elided characters; corrected this by adjusting the match index by
+	the number of elided characters preceeding the start of the match,
+	just as is done with embedded windows, etc. [Bug: 5470].
+	* generic/tkText.c (TextSearchCmd): Added a test for a NULL
+	segment pointer when doing backwards searches for "" on an empty
+	text widget. [Bug: 6007].
+
+	* library/focus.tcl: fixed calling of takeFocus proc [Bug: 5372]
+
+	* win/tkWinMenu.c (ReconfigureWindowsMenu): Added MF_GRAYED bit
+	for disabled menu entries, to ensure that those which are drawn by
+	the system are shown grayed (such as entries on menubars) [Bug: 4372].
+	* win/tkWinMenu.c (ReconfigureWindowsMenu): Added code to add the
+	MF_SEPARATOR bit for SEPARATOR_ENTRY menu items.  This causes
+	separator entries on the system menu to be drawn correctly [Bug: 5451].
+	* win/tkWinMenu.c (GetMenuSeparatorGeometry): Tweaked height
+	requested for separator bars to be (linespace - (2*descent))
+	instead of just (linespace); this makes the separator occupy a
+	more correct amount of vertical space. [Bug: 5303].
+
 2000-07-20  Brent Welch <welch@ajubasolutions.com>
 
 	* win/tkConfig.sh.in:

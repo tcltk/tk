@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.6 1999/12/21 23:55:10 hobbs Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.6.2.1 2000/08/05 23:53:10 hobbs Exp $
  */
 
 #include "tk3d.h"
@@ -501,6 +501,7 @@ Tk_Free3DBorderFromObj(tkwin, objPtr)
     Tcl_Obj *objPtr;		/* The Tcl_Obj * to be freed. */
 {
     Tk_Free3DBorder(Tk_Get3DBorderFromObj(tkwin, objPtr));
+    FreeBorderObjProc(objPtr);
 }
 
 /*
@@ -1263,37 +1264,46 @@ Tk_Get3DBorderFromObj(tkwin, objPtr)
 	InitBorderObj(objPtr);
     }
 
-    borderPtr = (TkBorder *) objPtr->internalRep.twoPtrValue.ptr1;
-    if (borderPtr != NULL) {
-	if ((borderPtr->resourceRefCount > 0)
-		&& (Tk_Screen(tkwin) == borderPtr->screen)
-		&& (Tk_Colormap(tkwin) == borderPtr->colormap)) {
-	    /*
-	     * The object already points to the right border structure.
-	     * Just return it.
-	     */
+    /*
+     * If we are lucky (and the user doesn't use too many different
+     * displays, screens, or colormaps...) then the  TkBorder 
+     * structure we need will be cached in the internal
+     * representation of the Tcl_Obj.  Check it out...
+     */
 
-	    return (Tk_3DBorder) borderPtr;
-	}
-	hashPtr = borderPtr->hashPtr;
-	FreeBorderObjProc(objPtr);
-    } else {
-	hashPtr = Tcl_FindHashEntry(&dispPtr->borderTable, 
-                Tcl_GetString(objPtr));
-	if (hashPtr == NULL) {
-	    goto error;
-	}
+    borderPtr = (TkBorder *) objPtr->internalRep.twoPtrValue.ptr1;
+    if ((borderPtr != NULL)
+	    && (borderPtr->resourceRefCount > 0)
+	    && (Tk_Screen(tkwin) == borderPtr->screen)
+	    && (Tk_Colormap(tkwin) == borderPtr->colormap)) {
+	/*
+	 * The object already points to the right border structure.
+	 * Just return it.
+	 */
+	return (Tk_3DBorder) borderPtr;
     }
 
     /*
-     * At this point we've got a hash table entry, off of which hang
-     * one or more  TkBorder structures.  See if any of them will work.
+     * If we make it here, it means we aren't so lucky.  Either there
+     * was no cached TkBorder in the Tcl_Obj, or the TkBorder that was
+     * there is for the wrong screen/colormap.  Either way, we have
+     * to search for the right TkBorder.  For each color name, there is
+     * linked list of TkBorder structures, one structure for each 
+     * screen/colormap combination.  The head of the linked list is
+     * recorded in a hash table (where the key is the color name)
+     * attached to the TkDisplay structure.  Walk this list to find
+     * the right TkBorder structure.
      */
 
+    hashPtr = Tcl_FindHashEntry(&dispPtr->borderTable, Tcl_GetString(objPtr));
+    if (hashPtr == NULL) {
+	goto error;
+    }
     for (borderPtr = (TkBorder *) Tcl_GetHashValue(hashPtr);
 	    (borderPtr != NULL); borderPtr = borderPtr->nextPtr) {
 	if ((Tk_Screen(tkwin) == borderPtr->screen)
 		&& (Tk_Colormap(tkwin) == borderPtr->colormap)) {
+	    FreeBorderObjProc(objPtr);
 	    objPtr->internalRep.twoPtrValue.ptr1 = (VOID *) borderPtr;
 	    borderPtr->objRefCount++;
 	    return (Tk_3DBorder) borderPtr;
