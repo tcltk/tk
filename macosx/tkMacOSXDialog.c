@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.4 2003/02/25 16:09:23 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.5 2003/07/18 11:04:59 vincentdarley Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -58,6 +58,18 @@ typedef struct _OpenFileData {
 } OpenFileData;
 
 
+/*
+ * The following structure is used in the tk_messageBox
+ * implementation.
+ */
+typedef struct {
+    WindowRef	windowRef;
+    int		buttonIndex;
+} CallbackUserData;
+
+
+static OSStatus		AlertHandler _ANSI_ARGS_(( EventHandlerCallRef callRef, 
+			    EventRef eventRef, void *userData ));
 static Boolean                MatchOneType _ANSI_ARGS_((StringPtr fileNamePtr, OSType fileType,
                             OpenFileData *myofdPtr, FileFilter *filterPtr));
 static pascal Boolean   OpenFileFilterProc(AEDesc* theItem, void* info, 
@@ -1225,4 +1237,384 @@ TkAboutDlg()
     SelectWindow(FrontNonFloatingWindow());
 
     return;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_MessageBoxObjCmd --
+ *
+ *		Implements the tk_messageBox in native Mac OS X style.
+ *
+ * Results:
+ *		A standard Tcl result.
+ *
+ * Side effects:
+ *		none
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Tk_MessageBoxObjCmd(
+    ClientData  clientData,	    /* Main window associated with interpreter. */
+    Tcl_Interp  *interp,		/* Current interpreter. */
+    int         objc,		    /* Number of arguments. */
+    Tcl_Obj     *CONST objv[])	/* Argument objects. */
+{
+    Tk_Window   	    tkwin = (Tk_Window) clientData;
+    AlertStdCFStringAlertParamRec paramCFStringRec;
+    AlertType               alertType;
+    DialogRef				dialogRef;
+    CFStringRef 			messageTextCF = NULL;
+    CFStringRef 			finemessageTextCF = NULL;
+    OSErr                   osError;
+    SInt16                  itemHit;
+    Boolean                 haveDefaultOption = false;
+    Boolean                 haveParentOption = false;
+    char                    *str;
+    int                     index;
+    int                     defaultButtonIndex;
+    int                     defaultNativeButtonIndex;    /* 1, 2, 3: right to left. */
+    int                     typeIndex;
+    int                     i;
+    int                     indexDefaultOption;
+    int                     result = TCL_OK;
+    
+    static CONST char *movableAlertStrings[] = {
+	"-default", /* "-finemessage", */ "-icon", 
+	"-message", "-parent", 
+	"-title", "-type", 	
+	(char *)NULL
+    };
+    static CONST char *movableTypeStrings[] = {
+	"abortretryignore", "ok",
+	"okcancel", "retrycancel", 
+	"yesno", "yesnocancel", 	
+	(char *)NULL
+    };
+    static CONST char *movableButtonStrings[] = {
+	"abort", "retry", "ignore", 
+	"ok", "cancel", "yes", "no", 
+	(char *)NULL
+    };
+    static CONST char *movableIconStrings[] = {
+	"error", "info", "question", "warning", 
+	(char *)NULL
+    };
+    enum movableAlertOptions {
+	ALERT_DEFAULT, /* ALERT_FINEMESSAGE, */ ALERT_ICON,
+	ALERT_MESSAGE, ALERT_PARENT,
+	ALERT_TITLE, ALERT_TYPE
+    };
+    enum movableTypeOptions {
+	TYPE_ABORTRETRYIGNORE, TYPE_OK,
+	TYPE_OKCANCEL, TYPE_RETRYCANCEL,
+	TYPE_YESNO, TYPE_YESNOCANCEL
+    };
+    enum movableButtonOptions {
+	TEXT_ABORT, TEXT_RETRY, TEXT_IGNORE, 
+	TEXT_OK, TEXT_CANCEL, TEXT_YES, TEXT_NO
+    };
+    enum movableIconOptions {
+	ICON_ERROR, ICON_INFO, ICON_QUESTION, ICON_WARNING
+    };
+    
+    /*
+     * Need to map from 'movableButtonStrings' and its corresponding integer index,
+     * to the native button index, which is 1, 2, 3, from right to left.
+     * This is necessary to do for each separate '-type' of button sets.
+     */
+    
+    short   buttonIndexAndTypeToNativeButtonIndex[][7] = {
+	/*  abort retry ignore ok   cancel yes   no    */
+	{1,    2,    3,    0,    0,    0,    0},   		/*  abortretryignore */
+	{0,    0,    0,    1,    0,    0,    0},        /*  ok */
+	{0,    0,    0,    1,    2,    0,    0},        /*  okcancel */
+	{0,    1,    0,    0,    2,    0,    0},        /*  retrycancel */
+	{0,    0,    0,    0,    0,    1,    2},        /*  yesno */
+	{0,    0,    0,    0,    3,    1,    2},     	/*  yesnocancel */
+    };
+    
+    /*
+     * Need also the inverse mapping, from native button (1, 2, 3) to the
+     * descriptive button text string index.
+     */
+    
+    short   nativeButtonIndexAndTypeToButtonIndex[][4] = {
+	{-1, 0, 1, 2},        /*  abortretryignore */
+	{-1, 3, 0, 0},        /*  ok */
+	{-1, 3, 4, 0},        /*  okcancel */
+	{-1, 1, 4, 0},        /*  retrycancel */
+	{-1, 5, 6, 0},        /*  yesno */
+	{-1, 5, 6, 4},        /*  yesnocancel */
+    };
+    
+    alertType = kAlertPlainAlert;
+    typeIndex = TYPE_OK;
+    
+    GetStandardAlertDefaultParams( &paramCFStringRec, kStdCFStringAlertVersionOne );
+    paramCFStringRec.movable = true;
+    paramCFStringRec.helpButton = false;
+    paramCFStringRec.defaultButton = kAlertStdAlertOKButton;
+    
+    for (i = 1; i < objc; i += 2) {
+	int     iconIndex;
+	char    *string;
+	
+	if (Tcl_GetIndexFromObj( interp, objv[i], movableAlertStrings, "option",
+				TCL_EXACT, &index ) != TCL_OK) {
+	    result = TCL_ERROR;
+	    goto end;
+	}
+	if (i + 1 == objc) {
+	    string = Tcl_GetStringFromObj( objv[i], NULL );
+	    Tcl_AppendResult(interp, "value for \"", string, "\" missing", 
+			     (char *) NULL);
+	    result = TCL_ERROR;
+	    goto end;
+	}
+	
+	switch (index) {
+	    
+	    case ALERT_DEFAULT:
+	    
+	    /* 
+	     * Need to postpone processing of this option until we are 
+	     * sure to know the '-type' as well.
+	     */
+	    
+	    haveDefaultOption = true;
+	    indexDefaultOption = i;
+	    break;
+	    
+/*	    case ALERT_FINEMESSAGE:
+	    str = Tcl_GetStringFromObj( objv[i + 1], NULL );
+	    finemessageTextCF = CFStringCreateWithCString( NULL, str, kCFStringEncodingUTF8 );
+	    break;
+*/	    
+	    case ALERT_ICON:
+	    /*  not sure about UTF translation here... */
+	    if (Tcl_GetIndexFromObj( interp, objv[i + 1], movableIconStrings, 
+				    "value", TCL_EXACT, &iconIndex ) != TCL_OK) {
+		result = TCL_ERROR;
+		goto end;
+	    }
+	    switch (iconIndex) {
+		case ICON_ERROR:
+		alertType = kAlertStopAlert;
+		break;
+		case ICON_INFO:
+		alertType = kAlertNoteAlert;
+		break;
+		case ICON_QUESTION:
+		alertType = kAlertCautionAlert;
+		break;
+		case ICON_WARNING:
+		alertType = kAlertCautionAlert;
+		break;
+	    }
+	    break;
+	    
+	    case ALERT_MESSAGE:
+	    str = Tcl_GetStringFromObj( objv[i + 1], NULL );
+	    messageTextCF = CFStringCreateWithCString( NULL, str, kCFStringEncodingUTF8 );
+	    break;
+	    
+	    case ALERT_PARENT:
+	    str = Tcl_GetStringFromObj( objv[i + 1], NULL );
+	    tkwin = Tk_NameToWindow( interp, str, tkwin );
+	    if (tkwin == NULL) {
+		result = TCL_ERROR;
+		goto end;
+	    }
+	    haveParentOption= true;
+	    break;
+	    
+	    case ALERT_TITLE:
+	    break;
+	    
+	    case ALERT_TYPE:
+	    /*  not sure about UTF translation here... */
+	    if (Tcl_GetIndexFromObj( interp, objv[i + 1], movableTypeStrings, 
+				    "value", TCL_EXACT, &typeIndex ) != TCL_OK) {
+		result = TCL_ERROR;
+		goto end;
+	    }
+	    switch (typeIndex) {
+		case TYPE_ABORTRETRYIGNORE:
+		paramCFStringRec.defaultText = CFSTR("Abort");
+		paramCFStringRec.cancelText = CFSTR("Retry");
+		paramCFStringRec.otherText = CFSTR("Ignore");
+		break;
+		case TYPE_OK:
+		paramCFStringRec.defaultText = CFSTR("OK");
+		break;
+		case TYPE_OKCANCEL:
+		paramCFStringRec.defaultText = CFSTR("OK");
+		paramCFStringRec.cancelText = CFSTR("Cancel");
+		break;
+		case TYPE_RETRYCANCEL:
+		paramCFStringRec.defaultText = CFSTR("Retry");
+		paramCFStringRec.cancelText = CFSTR("Cancel");
+		break;
+		case TYPE_YESNO:
+		paramCFStringRec.defaultText = CFSTR("Yes");
+		paramCFStringRec.cancelText = CFSTR("No");
+		break;
+		case TYPE_YESNOCANCEL:
+		paramCFStringRec.defaultText = CFSTR("Yes");
+		paramCFStringRec.cancelText = CFSTR("No");
+		paramCFStringRec.otherText = CFSTR("Cancel");
+		break;
+	    }
+	    break;
+	}
+    }    
+    
+    if (haveDefaultOption) {        
+	
+	/*
+	 * Any '-default' option needs to know the '-type' option, which is why
+	 * we do this here.
+	 */
+	
+	str = Tcl_GetStringFromObj( objv[indexDefaultOption + 1], NULL );
+	if (Tcl_GetIndexFromObj( interp, objv[indexDefaultOption + 1], 
+				movableButtonStrings, "value", TCL_EXACT, 
+				&defaultButtonIndex ) != TCL_OK) {
+	    result = TCL_ERROR;
+	    goto end;
+	}
+	
+	/* Need to map from "ok" etc. to 1, 2, 3, right to left. */
+	
+	defaultNativeButtonIndex = 
+	buttonIndexAndTypeToNativeButtonIndex[typeIndex][defaultButtonIndex];
+	if (defaultNativeButtonIndex == 0) {
+	    Tcl_SetObjResult( interp,  
+			     Tcl_NewStringObj( "Illegel default option", -1 ));         
+	    result = TCL_ERROR;
+	    goto end;
+	}
+	paramCFStringRec.defaultButton = defaultNativeButtonIndex;    	       
+    }
+    SetThemeCursor( kThemeArrowCursor );
+    
+    if (haveParentOption) {
+	TkWindow 			*winPtr;
+	MacDrawable 		*macWin;
+	WindowRef			windowRef;
+	EventTargetRef 		notifyTarget;
+	EventHandlerUPP		handler;
+	CallbackUserData	data;
+	const EventTypeSpec kEvents[] = {
+	    {kEventClassCommand, kEventProcessCommand}
+	};
+	
+	winPtr = (TkWindow *) tkwin;
+	
+	/*
+	 * Create the underlying Mac window for this Tk window.
+	 */
+	
+	macWin = (MacDrawable *) winPtr->window;
+	windowRef = GetWindowFromPort( TkMacOSXGetDrawablePort((Drawable) macWin) );
+	notifyTarget = GetWindowEventTarget( windowRef );
+	osError = CreateStandardSheet( alertType, messageTextCF,
+				      finemessageTextCF, &paramCFStringRec,
+				      notifyTarget, &dialogRef );
+	if(osError != noErr) {
+	    result = TCL_ERROR;
+	    goto end;
+	}
+	data.windowRef = windowRef;
+	data.buttonIndex = 1;
+	handler = NewEventHandlerUPP( AlertHandler );
+	InstallEventHandler( notifyTarget, handler, GetEventTypeCount(kEvents), &kEvents, &data, NULL );
+	osError = ShowSheetWindow( GetDialogWindow(dialogRef), windowRef );
+	if(osError != noErr) {
+	    result = TCL_ERROR;
+	    goto end;
+	}
+	osError = RunAppModalLoopForWindow( windowRef );
+	
+	itemHit = data.buttonIndex;
+	DisposeEventHandlerUPP( handler );
+    } else {
+	osError = CreateStandardAlert( alertType, messageTextCF,
+				      finemessageTextCF, &paramCFStringRec, &dialogRef );
+	if(osError != noErr) {
+	    result = TCL_ERROR;
+	    goto end;
+	}
+	osError = RunStandardAlert( dialogRef, NULL, &itemHit );
+    }	
+    if(osError == noErr) {
+	int     ind;
+	
+	/*
+	 * Map 'itemHit' (1, 2, 3) to descriptive text string.
+	 */
+	
+	ind = nativeButtonIndexAndTypeToButtonIndex[typeIndex][itemHit];
+	Tcl_SetObjResult( interp,  
+			 Tcl_NewStringObj( movableButtonStrings[ind], -1 ));         
+    } else {
+	result = TCL_ERROR;
+    }
+    
+    end:
+    if (finemessageTextCF != NULL) {
+	CFRelease( finemessageTextCF );
+    }
+    if (messageTextCF != NULL) {
+	CFRelease( messageTextCF );
+    }
+    return result;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * AlertHandler --
+ *
+ *	Carbon event handler for the Standard Sheet dialog.
+ *
+ * Results:
+ *	OSStatus if event handled or not.
+ *
+ * Side effects:
+ *	May set userData.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static OSStatus
+AlertHandler( EventHandlerCallRef callRef, EventRef eventRef, void *userData )
+{
+    OSStatus		result = eventNotHandledErr;
+    HICommand		cmd;
+    CallbackUserData	*dataPtr = (CallbackUserData *) userData;
+    
+    GetEventParameter( eventRef, kEventParamDirectObject, typeHICommand, 
+		      NULL, sizeof(cmd), NULL, &cmd );
+    switch (cmd.commandID) {
+	case kHICommandOK:
+	dataPtr->buttonIndex = 1;
+	result = noErr;
+	break;
+	case kHICommandCancel:
+	dataPtr->buttonIndex = 2;
+	result = noErr;
+	break;
+	case kHICommandOther:
+	dataPtr->buttonIndex = 3;
+	result = noErr;
+	break;
+    }
+    if (result == noErr) {
+	result = QuitAppModalLoopForWindow( dataPtr->windowRef );
+    }
+    return result;
 }

@@ -271,11 +271,25 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
          if (!(TkpIsWindowFloating(medPtr->whichWin))
              && (medPtr->whichWin != medPtr->activeNonFloating)) {
              Tk_Window grabWin = TkMacOSXGetCapture();
+             if ((grabWin == NULL)) {
+                int grabState = TkGrabState((TkWindow*)tkwin);
+                if (grabState != TK_GRAB_NONE && grabState != TK_GRAB_IN_TREE) {
+                   /* Now we want to set the focus to the local grabWin */
+                    TkMacOSXSetEatButtonUp(true);
+                    grabWin = (Tk_Window) (((TkWindow*)tkwin)->dispPtr->grabWinPtr);
+                    BringWindowForward(GetWindowFromPort(TkMacOSXGetDrawablePort(((TkWindow*)grabWin)->window)));
+                   statusPtr->stopProcessing = 1;
+                   return false;
+                }
+             }
              if ((grabWin != NULL) && (grabWin != tkwin)) {
                  TkWindow * tkw, * grb;
                  tkw = (TkWindow *)tkwin;
                  grb = (TkWindow *)grabWin;
-                 SysBeep(1);  
+		 /* Now we want to set the focus to the global grabWin */
+                 TkMacOSXSetEatButtonUp(true);
+                 BringWindowForward(GetWindowFromPort(TkMacOSXGetDrawablePort(((TkWindow*)grabWin)->window)));
+                   statusPtr->stopProcessing = 1;
                  return false;
              }
 
