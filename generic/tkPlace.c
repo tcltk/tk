@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.13 2002/11/07 19:10:30 pspjuth Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.14 2003/03/12 00:09:37 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -398,7 +398,6 @@ CreateSlave(tkwin)
 	Tcl_SetHashValue(hPtr, slavePtr);
 	Tk_CreateEventHandler(tkwin, StructureNotifyMask, SlaveStructureProc,
 		(ClientData) slavePtr);
-	Tk_ManageGeometry(tkwin, &placerType, (ClientData) slavePtr);
     } else {
 	slavePtr = (Slave *) Tcl_GetHashValue(hPtr);
     }
@@ -590,9 +589,9 @@ ConfigureSlave(interp, tkwin, table, objc, objv)
     register Master *masterPtr;
     Tk_SavedOptions savedOptions;
     int mask;
-    int result = TCL_OK;
     Slave *slavePtr;
-    
+    Tk_Window masterWin = (Tk_Window) NULL;
+
     if (Tk_TopWinHierarchy(tkwin)) {
 	Tcl_AppendResult(interp, "can't use placer on top-level window \"",
 		Tk_PathName(tkwin), "\"; use wm command instead",
@@ -601,65 +600,10 @@ ConfigureSlave(interp, tkwin, table, objc, objv)
     }
 
     slavePtr = CreateSlave(tkwin);
-    
+
     if (Tk_SetOptions(interp, (char *)slavePtr, table, objc, objv,
 	    slavePtr->tkwin, &savedOptions, &mask) != TCL_OK) {
-	Tk_RestoreSavedOptions(&savedOptions);
-	result = TCL_ERROR;
-	goto done;
-    }
-
-    if (mask & IN_MASK) {
-	/* -in changed */
-	Tk_Window tkwin;
-	Tk_Window ancestor;
-	
-	tkwin = slavePtr->inTkwin;
-	
-	/*
-	 * Make sure that the new master is either the logical parent
-	 * of the slave or a descendant of that window, and that the
-	 * master and slave aren't the same.
-	 */
-	
-	for (ancestor = tkwin; ; ancestor = Tk_Parent(ancestor)) {
-	    if (ancestor == Tk_Parent(slavePtr->tkwin)) {
-		break;
-	    }
-	    if (Tk_TopWinHierarchy(ancestor)) {
-		Tcl_AppendResult(interp, "can't place ",
-			Tk_PathName(slavePtr->tkwin), " relative to ",
-			Tk_PathName(tkwin), (char *) NULL);
-		result = TCL_ERROR;
-		Tk_RestoreSavedOptions(&savedOptions);
-		goto done;
-	    }
-	}
-	if (slavePtr->tkwin == tkwin) {
-	    Tcl_AppendResult(interp, "can't place ",
-		    Tk_PathName(slavePtr->tkwin), " relative to itself",
-		    (char *) NULL);
-	    result = TCL_ERROR;
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    goto done;
-	}
-	if ((slavePtr->masterPtr != NULL)
-		&& (slavePtr->masterPtr->tkwin == tkwin)) {
-	    /*
-	     * Re-using same old master.  Nothing to do.
-	     */
-	} else {
-	    if ((slavePtr->masterPtr != NULL)
-		    && (slavePtr->masterPtr->tkwin
-			    != Tk_Parent(slavePtr->tkwin))) {
-		Tk_UnmaintainGeometry(slavePtr->tkwin,
-			slavePtr->masterPtr->tkwin);
-	    }
-	    UnlinkSlave(slavePtr);
-	    slavePtr->masterPtr = CreateMaster(tkwin);
-	    slavePtr->nextPtr = slavePtr->masterPtr->slavePtr;
-	    slavePtr->masterPtr->slavePtr = slavePtr;
-	}
+	goto error;
     }
 
     /*
@@ -683,26 +627,103 @@ ConfigureSlave(interp, tkwin, table, objc, objv)
 	slavePtr->flags |= CHILD_WIDTH;
     }
 
+    if (((mask & IN_MASK) == 0) && (slavePtr->masterPtr != NULL)) {
+	/*
+	 * If no -in option was passed and the slave is already placed
+	 * then just recompute the placement.
+	 */
+
+	masterPtr = slavePtr->masterPtr;
+	goto scheduleLayout;
+    } else if (mask & IN_MASK) {
+	/* -in changed */
+	Tk_Window tkwin;
+	Tk_Window ancestor;
+
+	tkwin = slavePtr->inTkwin;
+
+	/*
+	 * Make sure that the new master is either the logical parent
+	 * of the slave or a descendant of that window, and that the
+	 * master and slave aren't the same.
+	 */
+
+	for (ancestor = tkwin; ; ancestor = Tk_Parent(ancestor)) {
+	    if (ancestor == Tk_Parent(slavePtr->tkwin)) {
+		break;
+	    }
+	    if (Tk_TopWinHierarchy(ancestor)) {
+		Tcl_AppendResult(interp, "can't place ",
+			Tk_PathName(slavePtr->tkwin), " relative to ",
+			Tk_PathName(tkwin), (char *) NULL);
+		goto error;
+	    }
+	}
+	if (slavePtr->tkwin == tkwin) {
+	    Tcl_AppendResult(interp, "can't place ",
+		    Tk_PathName(slavePtr->tkwin), " relative to itself",
+		    (char *) NULL);
+	    goto error;
+	}
+	if ((slavePtr->masterPtr != NULL)
+		&& (slavePtr->masterPtr->tkwin == tkwin)) {
+	    /*
+	     * Re-using same old master.  Nothing to do.
+	     */
+	    masterPtr = slavePtr->masterPtr;
+	    goto scheduleLayout;
+	} else {
+	    if ((slavePtr->masterPtr != NULL)
+		    && (slavePtr->masterPtr->tkwin
+			    != Tk_Parent(slavePtr->tkwin))) {
+		Tk_UnmaintainGeometry(slavePtr->tkwin,
+			slavePtr->masterPtr->tkwin);
+	    }
+	    UnlinkSlave(slavePtr);
+	    masterWin = tkwin;
+	}
+    }
+
     /*
      * If there's no master specified for this slave, use its Tk_Parent.
-     * Then arrange for a placement recalculation in the master.
      */
 
-    Tk_FreeSavedOptions(&savedOptions);
-    done:
-    masterPtr = slavePtr->masterPtr;
-    if (masterPtr == NULL) {
-	masterPtr = CreateMaster(Tk_Parent(slavePtr->tkwin));
-	slavePtr->masterPtr = masterPtr;
-	slavePtr->nextPtr = masterPtr->slavePtr;
-	masterPtr->slavePtr = slavePtr;
+    if (masterWin == NULL) {
+        masterWin = Tk_Parent(slavePtr->tkwin);
+        slavePtr->inTkwin = masterWin;
     }
-    slavePtr->inTkwin = masterPtr->tkwin;
+
+    /*
+     * Manage the slave window in this master.
+     */
+
+    masterPtr = CreateMaster(masterWin);
+    slavePtr->masterPtr = masterPtr;
+    slavePtr->nextPtr = masterPtr->slavePtr;
+    masterPtr->slavePtr = slavePtr;
+    Tk_ManageGeometry(slavePtr->tkwin, &placerType, (ClientData) slavePtr);
+
+    /*
+     * Arrange for the master to be re-arranged at the first
+     * idle moment.
+     */
+
+    scheduleLayout:
+    Tk_FreeSavedOptions(&savedOptions);
+
     if (!(masterPtr->flags & PARENT_RECONFIG_PENDING)) {
 	masterPtr->flags |= PARENT_RECONFIG_PENDING;
 	Tcl_DoWhenIdle(RecomputePlacement, (ClientData) masterPtr);
     }
-    return result;
+    return TCL_OK;
+
+    /*
+     * Error while processing some option, cleanup and return.
+     */
+
+    error:
+    Tk_RestoreSavedOptions(&savedOptions);
+    return TCL_ERROR;
 }
 
 /*
@@ -1074,7 +1095,9 @@ SlaveStructureProc(clientData, eventPtr)
     TkDisplay * dispPtr = ((TkWindow *) slavePtr->tkwin)->dispPtr;
 
     if (eventPtr->type == DestroyNotify) {
-	UnlinkSlave(slavePtr);
+	if (slavePtr->masterPtr != NULL) {
+	    UnlinkSlave(slavePtr);
+	}
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->slaveTable,
 		(char *) slavePtr->tkwin));
 	ckfree((char *) slavePtr);

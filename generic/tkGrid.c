@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.25 2002/10/10 21:07:51 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.26 2003/03/12 00:09:36 mdejong Exp $
  */
 
 #include "tkInt.h"
@@ -141,9 +141,9 @@ typedef struct {
     int rowSpace;		/* The number of slots currently allocated
     				 * for row constraints. */
     int startX;			/* Pixel offset of this layout within its
-    				 * parent. */
+    				 * master. */
     int startY;			/* Pixel offset of this layout within its
-    				 * parent. */
+    				 * master. */
 } GridMaster;
 
 /*
@@ -163,7 +163,7 @@ typedef struct Gridder {
 				 * is managed (NULL means this window
 				 * isn't managed by the gridder). */
     struct Gridder *nextPtr;	/* Next window managed within same
-				 * parent.  List order doesn't matter. */
+				 * master.  List order doesn't matter. */
     struct Gridder *slavePtr;	/* First in list of slaves managed
 				 * inside this window (NULL means
 				 * no grid slaves). */
@@ -187,7 +187,7 @@ typedef struct Gridder {
 				 * sticks to. See below for definitions */
     int doubleBw;		/* Twice the window's last known border
 				 * width.  If this changes, the window
-				 * must be re-arranged within its parent. */
+				 * must be re-arranged within its master. */
     int *abortPtr;		/* If non-NULL, it means that there is a nested
 				 * call to ArrangeGrid already working on
 				 * this window.  *abortPtr may be set to 1 to
@@ -676,7 +676,7 @@ GridLocationCommand(tkwin, interp, objc, objv)
     Gridder *masterPtr;		/* master grid record */
     GridMaster *gridPtr;	/* pointer to grid data */
     register SlotInfo *slotPtr;
-    int x, y;		/* Offset in pixels, from edge of parent. */
+    int x, y;		/* Offset in pixels, from edge of master. */
     int i, j;		/* Corresponding column and row indeces. */
     int endX, endY;		/* end of grid */
     
@@ -1286,7 +1286,7 @@ AdjustOffsets(size, slots, slotPtr)
     }
 
     /*
-     * If all the weights are zero, center the layout in its parent if 
+     * If all the weights are zero, center the layout in its master if 
      * there is extra space, else clip on the bottom/right.
      */
 
@@ -1487,7 +1487,7 @@ AdjustForSticky(slavePtr, xPtr, yPtr, widthPtr, heightPtr)
 
 static void
 ArrangeGrid(clientData)
-    ClientData clientData;	/* Structure describing parent whose slaves
+    ClientData clientData;	/* Structure describing master whose slaves
 				 * are to be re-layed out. */
 {
     register Gridder *masterPtr = (Gridder *) clientData;
@@ -1500,9 +1500,9 @@ ArrangeGrid(clientData)
     masterPtr->flags &= ~REQUESTED_RELAYOUT;
 
     /*
-     * If the parent has no slaves anymore, then don't do anything
-     * at all:  just leave the parent's size as-is.  Otherwise there is
-     * no way to "relinquish" control over the parent so another geometry
+     * If the master has no slaves anymore, then don't do anything
+     * at all:  just leave the master's size as-is.  Otherwise there is
+     * no way to "relinquish" control over the master so another geometry
      * manager can take over.
      */
 
@@ -1560,10 +1560,10 @@ ArrangeGrid(clientData)
     }
 
     /*
-     * If the currently requested layout size doesn't match the parent's
+     * If the currently requested layout size doesn't match the master's
      * window size, then adjust the slot offsets according to the
      * weights.  If all of the weights are zero, center the layout in 
-     * its parent.  I haven't decided what to do if the parent is smaller
+     * its master.  I haven't decided what to do if the master is smaller
      * than the requested size.
      */
 
@@ -2325,13 +2325,13 @@ InitMasterData(masterPtr)
  *
  * Unlink --
  *
- *	Remove a grid from its parent's list of slaves.
+ *	Remove a grid from its master's list of slaves.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The parent will be scheduled for re-arranging, and the size of the
+ *	The master will be scheduled for re-arranging, and the size of the
  *	grid will be adjusted accordingly
  *
  *----------------------------------------------------------------------
@@ -2440,13 +2440,14 @@ GridStructureProc(clientData, eventPtr)
     TkDisplay *dispPtr = ((TkWindow *) gridPtr->tkwin)->dispPtr;
 
     if (eventPtr->type == ConfigureNotify) {
-	if (!(gridPtr->flags & REQUESTED_RELAYOUT)) {
+	if ((gridPtr->slavePtr != NULL)
+	        && !(gridPtr->flags & REQUESTED_RELAYOUT)) {
 	    gridPtr->flags |= REQUESTED_RELAYOUT;
 	    Tcl_DoWhenIdle(ArrangeGrid, (ClientData) gridPtr);
 	}
-	if (gridPtr->doubleBw != 2*Tk_Changes(gridPtr->tkwin)->border_width) {
-	    if ((gridPtr->masterPtr != NULL) &&
-		    !(gridPtr->masterPtr->flags & REQUESTED_RELAYOUT)) {
+	if ((gridPtr->masterPtr != NULL)
+	        && (gridPtr->doubleBw != 2*Tk_Changes(gridPtr->tkwin)->border_width)) {
+	    if (!(gridPtr->masterPtr->flags & REQUESTED_RELAYOUT)) {
 		gridPtr->doubleBw = 2*Tk_Changes(gridPtr->tkwin)->border_width;
 		gridPtr->masterPtr->flags |= REQUESTED_RELAYOUT;
 		Tcl_DoWhenIdle(ArrangeGrid, (ClientData) gridPtr->masterPtr);
@@ -2473,7 +2474,8 @@ GridStructureProc(clientData, eventPtr)
 	gridPtr->tkwin = NULL;
 	Tcl_EventuallyFree((ClientData) gridPtr, DestroyGrid);
     } else if (eventPtr->type == MapNotify) {
-	if (!(gridPtr->flags & REQUESTED_RELAYOUT)) {
+	if ((gridPtr->slavePtr != NULL)
+		&& !(gridPtr->flags & REQUESTED_RELAYOUT)) {
 	    gridPtr->flags |= REQUESTED_RELAYOUT;
 	    Tcl_DoWhenIdle(ArrangeGrid, (ClientData) gridPtr);
 	}
@@ -2542,6 +2544,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
     int index;
     char *string;
     char firstChar, prevChar;
+    int positionGiven;
 
     /*
      * Count the number of windows, or window short-cuts.
@@ -2609,6 +2612,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
      */
 
     masterPtr = NULL;
+    positionGiven = 0;
     for (j = 0; j < numWindows; j++) {
 	string = Tcl_GetString(objv[j]);
     	firstChar = string[0];
@@ -2695,6 +2699,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 			    TCL_STATIC);
 		    return TCL_ERROR;
 		}
+		positionGiven = 1;
 		masterPtr = GetGrid(other);
 		InitMasterData(masterPtr);
 	    } else if (index == CONF_IPADX) {
@@ -2765,15 +2770,30 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	}
 
 	/*
+	 * If no position was specified via -in and the slave is
+	 * already packed, then leave it in its current location.
+	 */
+
+    	if (!positionGiven && (slavePtr->masterPtr != NULL)) {
+	    masterPtr = slavePtr->masterPtr;
+	    goto scheduleLayout;
+    	}
+
+	/*
+	 * If the same -in window is passed in again, then just
+	 * leave it in its current location.
+	 */
+
+	if (positionGiven && (masterPtr == slavePtr->masterPtr)) {
+	    goto scheduleLayout;
+	}
+
+	/*
 	 * Make sure we have a geometry master.  We look at:
 	 *  1)   the -in flag
-	 *  2)   the geometry master of the first slave (if specified)
-	 *  3)   the parent of the first slave.
+	 *  2)   the parent of the first slave.
 	 */
-    
-    	if (masterPtr == NULL) {
-	    masterPtr = slavePtr->masterPtr;
-    	}
+
 	parent = Tk_Parent(slave);
     	if (masterPtr == NULL) {
 	    masterPtr = GetGrid(parent);
@@ -2845,10 +2865,11 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	defaultColumnSpan = 1;
 
 	/*
-	 * Arrange for the parent to be re-arranged at the first
+	 * Arrange for the master to be re-arranged at the first
 	 * idle moment.
 	 */
 
+	scheduleLayout:
 	if (masterPtr->abortPtr != NULL) {
 	    *masterPtr->abortPtr = 1;
 	}

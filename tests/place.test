@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: place.test,v 1.8 2002/11/07 19:10:30 pspjuth Exp $
+# RCS: @(#) $Id: place.test,v 1.9 2003/03/12 00:09:40 mdejong Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -86,6 +86,12 @@ test place-4.1 {ConfigureSlave procedure, bad -in options} {
     list [catch {place .t.f2 -in .t.f2} msg] $msg
 } [list 1 "can't place .t.f2 relative to itself"]
 test place-4.2 {ConfigureSlave procedure, bad -in option} {
+    place forget .t.f2
+    list [winfo manager .t.f2] \
+        [catch {place .t.f2 -in .t.f2} err] $err \
+        [winfo manager .t.f2]
+} {{} 1 {can't place .t.f2 relative to itself} {}}
+test place-4.3 {ConfigureSlave procedure, bad -in option} {
     place forget .t.f2
     list [catch {place .t.f2 -in .} msg] $msg
 } [list 1 "can't place .t.f2 relative to ."]
