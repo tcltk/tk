@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: destroy.n,v 1.2 1998/09/14 18:22:55 stanton Exp $
+'\" RCS: @(#) $Id: destroy.n,v 1.3 2004/06/21 14:24:04 dkf Exp $
 '\" 
 .so man.macros
 .TH destroy n "" Tk "Tk Built-In Commands"
@@ -18,7 +18,6 @@ destroy \- Destroy one or more windows
 .BE
 
 .SH DESCRIPTION
-.VS
 .PP
 This command deletes the windows given by the
 \fIwindow\fR arguments, plus all of their descendants.
@@ -28,7 +27,17 @@ The \fIwindow\fRs are destroyed in order, and if an error occurs
 in destroying a window the command aborts without destroying the
 remaining windows.
 No error is returned if \fIwindow\fR does not exist.
-.VE
+.SH EXAMPLE
+Destroy all checkbuttons that are direct children of the given widget:
+.CS
+proc killCheckbuttonChildren {parent} {
+   foreach w [winfo children $parent] {
+      if {[winfo class $w] eq "Checkbutton"} {
+         \fBdestroy\fR $w
+      }
+   }
+}
+.CE
 
 .SH KEYWORDS
 application, destroy, window
