@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkRectOval.c,v 1.6 2000/02/01 11:41:10 hobbs Exp $
+ * RCS: @(#) $Id: tkRectOval.c,v 1.7 2000/04/19 22:20:45 ericm Exp $
  */
 
 #include <stdio.h>
@@ -430,7 +430,6 @@ ConfigureRectOval(interp, canvas, itemPtr, argc, argv, flags)
 	    (char *) rectOvalPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
 	return TCL_ERROR;
     }
-
     state = itemPtr->state;
 
     /*
@@ -466,9 +465,18 @@ ConfigureRectOval(interp, canvas, itemPtr, argc, argv, flags)
 	tsoffset->yoffset = (int) (rectOvalPtr->bbox[2] + 0.5);
     }
 
+    /*
+     * Configure the outline graphics context.  If mask is non-zero,
+     * the gc has changed and must be reallocated, provided that the
+     * new settings specify a valid outline (non-zero width and non-NULL
+     * color)
+     */
+
     mask = Tk_ConfigOutlineGC(&gcValues, canvas, itemPtr,
 	     &(rectOvalPtr->outline));
-    if (mask) {
+    if (mask && \
+	    rectOvalPtr->outline.width != 0 && \
+	    rectOvalPtr->outline.color != NULL) {
 	gcValues.cap_style = CapProjecting;
 	mask |= GCCapStyle;
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);

@@ -1,3 +1,10 @@
+2000-04-19  Eric Melski  <ericm@scriptics.com>
+
+	* generic/tkRectOval.c (ConfigureRectOval): Added checks for valid
+	outline settings before creating of outline GC; this means that it
+	is really possible now to have an oval or rectangle with no
+	outline.  [Bug: 5029].
+
 2000-04-19  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* README:
