@@ -1135,9 +1135,6 @@ fi
 
     # Set some defaults (may get changed below)
     EXTRA_CFLAGS=""
-    PATHTYPE='-w'
-    CYGPATH='cygpath'
-    VPSEP=';'
 
     # Extract the first word of "cygpath", so it can be a program name with args.
 set dummy cygpath; ac_word=$2
@@ -1203,15 +1200,8 @@ echo "configure:1180: checking compiler flags" >&5
 	    extra_cflags="-mno-cygwin"
 	    extra_ldflags="-mno-cygwin"
 	else
-	    mno_cygwin="no"
 	    extra_cflags=""
 	    extra_ldflags=""
-	fi
-
-	if test "$cross_compiling" = "yes" -o "$mno_cygwin" = "yes"; then
-	    PATHTYPE=''
-	    CYGPATH='echo '
-	    VPSEP=':'
 	fi
 
 	if test "${SHARED_BUILD}" = "0" ; then
@@ -1319,7 +1309,7 @@ echo "configure:1180: checking compiler flags" >&5
 	
 	# Specify the CC output file names based on the target name
 	CC_OBJNAME="-Fo\$@"
-	CC_EXENAME="-Fe\"\$(shell \$(CYGPATH) \$(PATHTYPE) '\$@')\""
+	CC_EXENAME="-Fe\"\$(shell \$(CYGPATH) '\$@')\""
 
 	# Specify linker flags depending on the type of app being 
 	# built -- Console vs. Window.
@@ -1859,6 +1849,7 @@ s%@SET_MAKE@%$SET_MAKE%g
 s%@OBJEXT@%$OBJEXT%g
 s%@EXEEXT@%$EXEEXT%g
 s%@TCL_THREADS@%$TCL_THREADS%g
+s%@CYGPATH@%$CYGPATH%g
 s%@CPP@%$CPP%g
 s%@MAN2TCLFLAGS@%$MAN2TCLFLAGS%g
 s%@TCL_BIN_DIR@%$TCL_BIN_DIR%g
