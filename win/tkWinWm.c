@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.22 2000/04/15 17:38:13 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.23 2000/05/10 00:09:41 ericm Exp $
  */
 
 #include "tkWinInt.h"
@@ -224,8 +224,7 @@ typedef struct TkWmInfo {
 
 #define WM_TRANSIENT_STYLE \
 		(WS_POPUP|WS_CAPTION|WS_SYSMENU|WS_CLIPSIBLINGS|CS_DBLCLKS)
-#define EX_TRANSIENT_STYLE \
-		(WS_EX_TOOLWINDOW|WS_EX_DLGMODALFRAME)
+#define EX_TRANSIENT_STYLE (WS_EX_DLGMODALFRAME)
 
 /*
  * The following structure is the official type record for geometry

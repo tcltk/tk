@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.4 2000/03/08 03:19:31 ericm Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.5 2000/05/10 00:09:39 ericm Exp $
  */
 
 #include "tkButton.h"
@@ -190,7 +190,8 @@ static Tk_OptionSpec buttonOptionSpecs[] = {
 	DEF_BUTTON_PADY, Tk_Offset(TkButton, padYPtr),
 	Tk_Offset(TkButton, padY), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_BUTTON_RELIEF, -1, Tk_Offset(TkButton, relief), 0, 0, 0},
+	DEF_BUTTON_RELIEF, -1, Tk_Offset(TkButton, relief),
+	 TK_OPTION_LINK_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_BUTTON_STATE, -1, Tk_Offset(TkButton, state),
 	0, (ClientData) stateStrings, 0},

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: button.n,v 1.2 1998/09/14 18:22:55 stanton Exp $
+'\" RCS: @(#) $Id: button.n,v 1.3 2000/05/10 00:09:38 ericm Exp $
 '\" 
 .so man.macros
 .TH button n 4.4 Tk "Tk Built-In Commands"
@@ -49,6 +49,14 @@ screen units (i.e. any of the forms acceptable to \fBTk_GetPixels\fR);
 for text it is in lines of text.
 If this option isn't specified, the button's desired height is computed
 from the size of the image or bitmap or text being displayed in it.
+.VS 8.4
+.OP \-relief relief Relief
+Specifies a relief for the button.  In addition to the standard relief
+styles available to most widgets, buttons support the \fBlink\fR
+relief style.  When using this relief style, buttons will have a
+raised relief when they are active (when the mouse cursor is over the
+button), and a flat relief otherwise.
+.VE 8.4
 .OP \-state state State
 Specifies one of three states for the button:  \fBnormal\fR, \fBactive\fR,
 or \fBdisabled\fR.  In normal state the button is displayed using the

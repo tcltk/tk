@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.40 2000/05/03 00:18:35 hobbs Exp $
+ * RCS: @(#) $Id: tk.h,v 1.41 2000/05/10 00:09:38 ericm Exp $
  */
 
 #ifndef _TK
@@ -204,6 +204,9 @@ typedef struct Tk_OptionSpec {
 #define TK_OPTION_NULL_OK		1
 #define TK_OPTION_DONT_SET_DEFAULT	8
 
+/* This widget allows the link relief */
+#define TK_OPTION_LINK_OK		(1 << 9) 
+
 /*
  * Macro to use to fill in "offset" fields of the Tk_OptionSpec.
  * struct.  Computes number of bytes from beginning of structure
@@ -366,6 +369,8 @@ typedef enum {
 #define TK_CONFIG_DONT_SET_DEFAULT	8
 #define TK_CONFIG_OPTION_SPECIFIED	0x10
 #define TK_CONFIG_USER_BIT		0x100
+/* This widget allows the link relief */
+#define TK_CONFIG_LINK_OK		(1 << 9)
 #endif /* __NO_OLD_CONFIG */
 
 /*
@@ -440,6 +445,7 @@ typedef enum {
 #define TK_RELIEF_RIDGE		3
 #define TK_RELIEF_SOLID		4
 #define TK_RELIEF_SUNKEN	5
+#define TK_RELIEF_LINK          6
 
 /*
  * "Which" argument values for Tk_3DBorderGC:

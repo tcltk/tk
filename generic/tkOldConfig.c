@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.6 2000/03/07 00:09:08 ericm Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.7 2000/05/10 00:09:39 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -484,6 +484,21 @@ DoConfig(interp, tkwin, specPtr, value, valueIsUid, widgRec)
 	    case TK_CONFIG_RELIEF:
 		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
 		if (Tk_GetRelief(interp, uid, (int *) ptr) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+
+		/*
+		 * Not all widgets allow the link relief.  If the given
+		 * relief is "link" and this widget does not support it,
+		 * display the "invalid relief" error message and return
+		 * TCL_ERROR.
+		 */
+		
+		if ((*ptr == TK_RELIEF_LINK) && \
+			((specPtr->specFlags & TK_CONFIG_LINK_OK) == 0)) {
+		    Tcl_SetResult(interp, "invalid relief \"link\": must be "
+			    "flat, groove, raised, ridge, solid, or sunken",
+			    TCL_STATIC);
 		    return TCL_ERROR;
 		}
 		break;

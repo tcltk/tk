@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.3 1999/04/16 01:51:45 stanton Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.4 2000/05/10 00:09:40 ericm Exp $
  */
 
 #include "tkButton.h"
@@ -122,6 +122,20 @@ TkpDisplayButton(clientData)
 		: TK_RELIEF_RAISED;
     }
 
+    /*
+     * LINK relief means that the button has a raised relief when it is
+     * active, and a flat relief otherwise (like toolbar buttons).  It
+     * is supported for true buttons only.
+     */
+
+    if ((butPtr->type == TYPE_BUTTON) && butPtr->relief == TK_RELIEF_LINK) {
+	if (butPtr->state == STATE_ACTIVE) {
+	    relief = TK_RELIEF_RAISED;
+	} else {
+	    relief = TK_RELIEF_FLAT;
+	}
+    }
+    
     offset = (butPtr->type == TYPE_BUTTON) && !Tk_StrictMotif(butPtr->tkwin);
 
     /*

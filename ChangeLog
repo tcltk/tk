@@ -1,3 +1,36 @@
+2000-05-09  Eric Melski  <ericm@scriptics.com>
+
+	* doc/button.n: Added documentation for link relief.
+
+	* tests/button.test: Added tests for link relief for buttons.
+
+	* generic/tk.h (TK_CONFIG_LINK_OK): Added definition of
+	TK_RELIEF_LINK, TK_OPTION_LINK_OK and TK_CONFIG_LINK_OK. [RFE: 4348]
+
+	* generic/tk3d.c: Added support for link relief. [RFE: 4348]
+
+	* mac/tkMacButton.c (TkpDisplayButton): 
+	* unix/tkUnixButton.c (TkpDisplayButton): Added support for link
+	relief. [RFE: 4348]
+
+	* generic/tkOldConfig.c (Tk_ConfigureWidget): 
+	* generic/tkConfig.c (DoObjConfig): Added understanding of link
+	relief, which is allowed only for widgets that have
+	TK_OPTION_LINK_OK or TK_CONFIG_LINK_OK set for the "-relief"
+	option. [RFE: 4348]
+
+	* generic/tkButton.c: Added TK_OPTION_LINK_OK to "-relief" option
+	for buttons. [RFE: 4348]
+
+	* win/tkWinWm.c (EX_TRANSIENT_STYLE): Removed WS_EX_TOOLWINDOW
+	style bit, so that transient windows have full-size titlebars
+	(like the tk_getOpenFile dialog).
+
+	* win/tkWinMenu.c (GetMenuSeparatorGeometry): Tweaked height
+	requested for separator bars to be (linespace - (2*descent))
+	instead of just (linespace); this makes the separator occupy a
+	more correct amount of vertical space. [Bug: 5303].
+
 2000-05-09  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* library/focus.tcl: fixed calling of takeFocus proc [Bug: 5372]

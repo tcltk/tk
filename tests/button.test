@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: button.test,v 1.5 2000/03/08 03:19:31 ericm Exp $
+# RCS: @(#) $Id: button.test,v 1.6 2000/05/10 00:09:40 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -88,7 +88,6 @@ foreach test {
     {-offvalue fantastic fantastic {} {} {0 0 1 0}}
     {-padx 12m 12m 420x {bad screen distance "420x"} {1 1 1 1}}
     {-pady 12m 12m 420x {bad screen distance "420x"} {1 1 1 1}}
-    {-relief groove groove 1.5 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken} {1 1 1 1}}
     {-selectcolor #110022 #110022 bogus {unknown color name "bogus"} {0 0 1 1}}
     {-selectimage image1 image1 bogus {image "bogus" doesn't exist} {0 0 1 1}}
     {-state normal normal bogus {bad state "bogus": must be active, disabled, or normal} {1 1 1 1}}
@@ -126,7 +125,21 @@ foreach test {
 test button-1.$i {configuration options} {
     .c configure -selectcolor {}
 } {}
-incr i
+test button-1.[incr i] {configuration options} {
+    list [catch {.l configure -relief 1.5} msg] $msg
+} [list 1 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}]
+test button-1.[incr i] {configuration options} {
+    list [catch {.c configure -relief 1.5} msg] $msg
+} [list 1 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}]
+test button-1.[incr i] {configuration options} {
+    list [catch {.r configure -relief 1.5} msg] $msg
+} [list 1 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}]
+test button-1.[incr i] {configuration options} {
+    list [catch {.b configure -relief 1.5} msg] $msg
+} [list 1 {bad relief "1.5": must be flat, groove, link, raised, ridge, solid, or sunken}]
+test button-1.[incr i] {configuration options} {
+    list [catch {.b configure -relief link} msg] $msg [.b cget -relief]
+} [list 0 {} link]
 
 test button-3.1 {ButtonCreate - not enough cd ../unix
 } {

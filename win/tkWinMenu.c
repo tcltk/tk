@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.8 2000/04/13 20:51:55 ericm Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.9 2000/05/10 00:09:40 ericm Exp $
  */
 
 #define OEMRESOURCE
@@ -1384,7 +1384,7 @@ GetMenuSeparatorGeometry (
     int *heightPtr)			/* The resulting height */
 {
     *widthPtr = 0;
-    *heightPtr = fmPtr->linespace;
+    *heightPtr = fmPtr->linespace - (2 * fmPtr->descent);
 }
 
 /*
