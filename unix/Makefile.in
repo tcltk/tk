@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.29 1999/08/04 23:42:15 wart Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.29.4.1 1999/09/22 06:53:17 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -197,6 +197,7 @@ WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@ -lc
 # The values of the symbolis normally set by the configure script.
 
 SHLIB_LD = @SHLIB_LD@
+SHLIB_LD_LIBS = @SHLIB_LD_LIBS@
 
 # Additional search flags needed to find the various shared libraries
 # at run-time.  The first symbol is for use when creating a binary
@@ -349,7 +350,11 @@ binaries: ${TK_LIB_FILE} ${STUB_LIB_FILE} wish
 
 libraries:
 
-doc:
+$(SRC_DIR)/doc/man.macros:
+	chmod +x $(UNIX_DIR)/install-sh
+	$(INSTALL_DATA) @TCL_SRC_DIR@/doc/man.macros $(SRC_DIR)/doc/man.macros
+
+doc: $(SRC_DIR)/doc/man.macros
 
 # The following target is configured by autoconf to generate either
 # a shared library or non-shared library for Tk.
@@ -396,6 +401,7 @@ xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE)
 test: tktest
 	LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}; \
 	export LD_LIBRARY_PATH; \
+	LIBPATH=`pwd`:${TCL_BIN_DIR}:${LIBPATH}; export LIBPATH; \
 	SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}; \
 	export SHLIB_PATH; \
 	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
@@ -406,6 +412,7 @@ test: tktest
 runtest:
 	LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}; \
 	export LD_LIBRARY_PATH; \
+	LIBPATH=`pwd`:${TCL_BIN_DIR}:${LIBPATH}; export LIBPATH; \
 	SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}; \
 	export SHLIB_PATH; \
 	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \

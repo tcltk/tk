@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.5 1999/04/21 21:53:32 rjohnson Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.5.6.1 1999/09/22 06:53:24 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -789,6 +789,14 @@ ButtonProc(hwnd, message, wParam, lParam)
 	    BeginPaint(hwnd, &ps);
 	    EndPaint(hwnd, &ps);
 	    TkpDisplayButton((ClientData)butPtr);
+
+	    /*
+	     * Special note: must cancel any existing idle handler
+	     * for TkpDisplayButton;  it's no longer needed, and
+	     * TkpDisplayButton cleared the REDRAW_PENDING flag.
+	     */
+           
+	    Tcl_CancelIdleCall(TkpDisplayButton, (ClientData)butPtr);
 	    return 0;
 	}
 	case BN_CLICKED: {

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.7 1999/08/10 05:05:20 jingham Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.7.4.1 1999/09/22 06:53:10 hobbs Exp $
  */
 
 #include "default.h"
@@ -1840,18 +1840,17 @@ DisplayCanvas(clientData)
 	}
 	if (canvasPtr->highlightWidth != 0) {
 	    GC fgGC, bgGC;
-    
-             
-	    bgGC = Tk_GCForColor(canvasPtr->highlightColorPtr,
+
+	    bgGC = Tk_GCForColor(canvasPtr->highlightBgColorPtr,
 		    Tk_WindowId(tkwin));
 	    if (canvasPtr->textInfo.gotFocus) {
-		fgGC = Tk_GCForColor(canvasPtr->highlightBgColorPtr,
+		fgGC = Tk_GCForColor(canvasPtr->highlightColorPtr,
 			Tk_WindowId(tkwin));
-	    	TkpDrawHighlightBorder(tkwin, fgGC, bgGC, canvasPtr->highlightWidth,
-		        Tk_WindowId(tkwin));
+	    	TkpDrawHighlightBorder(tkwin, fgGC, bgGC,
+			canvasPtr->highlightWidth, Tk_WindowId(tkwin));
 	    } else {
-	    	TkpDrawHighlightBorder(tkwin, bgGC, bgGC, canvasPtr->highlightWidth,
-		        Tk_WindowId(tkwin));
+	    	TkpDrawHighlightBorder(tkwin, bgGC, bgGC,
+			canvasPtr->highlightWidth, Tk_WindowId(tkwin));
 	    }
 	}
     }

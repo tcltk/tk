@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.5 1999/06/02 18:15:54 stanton Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.5.4.1 1999/09/22 06:53:11 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -2837,7 +2837,7 @@ ConfigAttributesObj(interp, tkwin, objc, objv, faPtr)
 		&index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (objc & 1) {
+	if ((i+2 >= objc) && (objc & 1)) {
 	    /*
 	     * This test occurs after Tcl_GetIndexFromObj() so that
 	     * "font create xyz -xyz" will return the error message

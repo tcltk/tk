@@ -1,11 +1,35 @@
+1999-09-21  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* generic/tkFont.c: fixed processing of font options and error
+	returned [Bug: 2075]
+
+	* win/tkWinWm.c: fixed bug in 'wm deiconify' that raised the
+	wrong toplevel, and changed it to not set focus on overridden
+	toplevels
+
+	* unix/aclocal.m4: added fix for FreeBSD-[1-2] recognition [Bug: 2070]
+	and fix to AIX-* to get ldAix right [Bug: 2624], fixed AIX
+	version check and several other config fixes for AIX
+
+	* mac/tkMacMenubutton.c:
+	* unix/tkUnixMenubu.c: fixed permanently stippled menubutton image
+	* win/tkWinButton.c: fixed possible pointer smash [Bug: 2733]
+
+	* win/tkWinMenu.c: fix for stack overrun in GetTextFace [Bug: 909]
+
+	* unix/tkUnixDraw.c: fixed header style for TkpDrawHighlightBorder
+
+	* generic/tkCanvas.c: fixed GC error (bg <> fg) in tkCanvas.c
+	(from code added to support TkpDrawHighlightBorder) [Bug: 2676]
+
 1999-08-13  Jim Ingham  <jingham@cygnus.com>
 
-        * mac/tkMacMenu.c: Tk_DrawChars ends up setting the menu background
-        wrong.  There is no clean way to stop it, so I use lower level routines
-        here to draw the text.
-        * mac/tkMacProjects.sea.hqx: Rearrange the projects so that the build 
-        directory is separate from the sources.  Much more convenient! 
-        
+	* mac/tkMacMenu.c: Tk_DrawChars ends up setting the menu background
+	wrong.	There is no clean way to stop it, so I use lower level routines
+	here to draw the text.
+	* mac/tkMacProjects.sea.hqx: Rearrange the projects so that the build 
+	directory is separate from the sources.	 Much more convenient! 
+
 1999-08-10  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* win/tkWinWm.c: changed "wm deiconify" on Windows to raise and
