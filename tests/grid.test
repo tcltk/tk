@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.25 2004/11/07 22:00:12 pspjuth Exp $
+# RCS: @(#) $Id: grid.test,v 1.26 2005/04/03 15:21:49 pspjuth Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1659,6 +1659,32 @@ test grid-16.17 {layout weights (shrinking at minsize)} {
     set a
 } {25-25-1 25-25-1 100-75-1 100-75-1 25-25-0 25-25-0 100-75-1 100-75-1}
 grid_reset 16.17
+
+test grid-16.18 {layout span} {
+    frame .f1 -width 30  -height 20
+    frame .f2 -width 166 -height 20
+    frame .f3 -width 39  -height 20
+    frame .f4 -width 10  -height 20
+
+    grid .f1 .f3 -
+    grid .f2 -   .f4
+    grid columnconfigure . 0 -weight 1
+
+    set res {}
+    foreach w {{1 0 0} {0 1 0} {0 0 1}} {
+        for {set c 0} {$c < 3} {incr c} {
+            grid columnconfigure . $c -weight [lindex $w $c]
+        }
+        update
+        set res2 {}
+        for {set c 0} {$c <= 2} {incr c} {
+            lappend res2 [lindex [grid bbox . $c 0] 2]
+        }
+        lappend res $res2
+    }
+    set res
+} [list [list 137 29 10] [list 30 136 10] [list 98 68 10]]
+grid_reset 16.18
 
 test grid-17.1 {forget and pending idle handlers} {
     # This test is intended to detect a crash caused by a failure to remove
