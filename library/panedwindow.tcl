@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk panedwindow widgets and
 # provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: panedwindow.tcl,v 1.1 2002/02/22 02:41:17 hobbs Exp $
+# RCS: @(#) $Id: panedwindow.tcl,v 1.2 2002/02/22 14:07:01 dkf Exp $
 #
 
 bind PanedWindow <Button-1> { ::tk::panedwindow::MarkSash %W %x %y 1 }
@@ -71,7 +71,7 @@ proc ::tk::panedwindow::DragSash {w x y proxy} {
 # Results:
 #   Returns ...
 #
-proc ::tk::panedwindow::ReleaseSash {w proxy} {
+proc ::tk::panedwindow::ReleaseSash {w x y proxy} {
     if { [info exists ::tk::Priv(sash)] } {
 	if {$proxy} {
 	    foreach {x y} [$w proxy coord] break

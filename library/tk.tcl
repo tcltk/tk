@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.34 2001/11/23 02:04:39 das Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.35 2002/02/22 14:07:01 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -357,12 +357,12 @@ switch $::tcl_platform(platform) {
 # Read in files that define all of the class bindings.
 # ----------------------------------------------------------------------
 
-if {[string compare $::tcl_platform(platform) "macintosh"] && \
-	[string compare {} $::tk_library]} {
+if {$::tcl_platform(platform) ne "macintosh" && $::tk_library ne ""} {
     source [file join $::tk_library button.tcl]
     source [file join $::tk_library entry.tcl]
     source [file join $::tk_library listbox.tcl]
     source [file join $::tk_library menu.tcl]
+    source [file join $::tk_library panedwindow.tcl]
     source [file join $::tk_library scale.tcl]
     source [file join $::tk_library scrlbar.tcl]
     source [file join $::tk_library spinbox.tcl]

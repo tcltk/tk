@@ -1,5 +1,12 @@
 2002-02-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* library/demos/widget: New section "Paned Windows"
+	* library/demos/paned2.tcl, library/demos/paned1.tcl: New files.
+
+	* library/panedwindow.tcl (ReleaseSash): Added missing arguments.
+	* library/tk.tcl: Bindings for paned window were not being loaded
+	by default.
+
 	* unix/tkUnixMenu.c (GetMenuLabelGeometry,DrawMenuEntryLabel):
 	Stop meaningless GCC warnings.
 
