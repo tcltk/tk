@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.7 2001/08/01 16:21:12 dgp Exp $
+# RCS: @(#) $Id: menu.test,v 1.8 2001/08/30 01:51:42 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -23,6 +23,8 @@ if {[lsearch [image types] test] < 0} {
 set ::tcltest::testConfig(nonUnixUserInteraction) \
     [expr {$::tcltest::testConfig(userInteraction) || \
 	$::tcltest::testConfig(unixOnly)}]
+
+set ::tcltest::testConfig(altDisplay) [info exists env(TK_ALT_DISPLAY)]
 
 proc deleteWindows {} {
     foreach i [winfo children .] {
@@ -2441,17 +2443,14 @@ test menu-33.1 {menu vs command hiding} {
 # creating menus on two different screens then deleting the
 # menu from the first screen crashes Tk8.3.1
 #
-test menu-35.1 {menus on multiple screens - crashes tk8.3.1, Bug 5454} {
-    if {[info exists ::env(TK_ALT_DISPLAY)]} {
-	toplevel .one
-	menu .one.m
-	toplevel .two -screen $::env(TK_ALT_DISPLAY)
-	menu .two.m
-	destroy .one
-	destroy .two
-    } else {
-	puts "skipping: Multi-screen tests requiring TK_ALT_DISPLAY..."
-    }
+test menu-35.1 {menus on multiple screens - crashes tk8.3.1, Bug 5454} \
+	{altDisplay} {
+    toplevel .one
+    menu .one.m
+    toplevel .two -screen $::env(TK_ALT_DISPLAY)
+    menu .two.m
+    destroy .one
+    destroy .two
 } {}
 
 # cleanup

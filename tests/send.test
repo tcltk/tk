@@ -7,11 +7,13 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: send.test,v 1.3 1999/04/16 01:51:40 stanton Exp $
+# RCS: @(#) $Id: send.test,v 1.4 2001/08/30 01:51:42 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
+
+# 'send' is only available on Unix...
 
 if {$tcl_platform(platform) == "macintosh"} {
     puts "send is not available on the Mac - skipping tests"
@@ -28,6 +30,8 @@ if {[auto_execok xhost] == ""} {
     ::tcltest::cleanupTests
     return
 }
+
+set ::tcltest::testConfig(altDisplay) [info exists env(TK_ALT_DISPLAY)]
 
 if {[info commands testsend] == "testsend"} {
     set gotTestCmds 1
@@ -249,22 +253,20 @@ test send-8.1 {Tk_SendCmd procedure, options} {
     cleanupbg
     lappend result $a
 } {66 77}
-if [info exists env(TK_ALT_DISPLAY)] {
-    test send-8.2 {Tk_SendCmd procedure, options} {
-	setupbg -display $env(TK_ALT_DISPLAY)
-	tk appname xyzgorp
-	set a homeDisplay
-	set result [dobg "
-	    toplevel .t -screen [winfo screen .]
-	    wm geometry .t +0+0
-	    set a altDisplay
-	    tk appname xyzgorp
-	    list \[send xyzgorp set a\] \[send -displayof .t xyzgorp set a\]
-	"]
-	cleanupbg
-	set result
-    } {altDisplay homeDisplay}
-}
+test send-8.2 {Tk_SendCmd procedure, options} {altDisplay} {
+    setupbg -display $env(TK_ALT_DISPLAY)
+    tk appname xyzgorp
+    set a homeDisplay
+    set result [dobg "
+    toplevel .t -screen [winfo screen .]
+    wm geometry .t +0+0
+    set a altDisplay
+    tk appname xyzgorp
+    list \[send xyzgorp set a\] \[send -displayof .t xyzgorp set a\]
+    "]
+    cleanupbg
+    set result
+} {altDisplay homeDisplay}
 test send-8.3 {Tk_SendCmd procedure, options} {
     list [catch {send -- -async foo bar baz} msg] $msg
 } {1 {no application named "-async"}}
@@ -614,26 +616,24 @@ test send-13.2 {DeleteProc procedure} {
     lappend result [winfo interps] [info commands send]
 } {{} {} foo send}
 
-if [info exists env(TK_ALT_DISPLAY)] {
-    test send-14.1 {SendRestrictProc procedure, sends crossing from different displays} {
-	setupbg -display $env(TK_ALT_DISPLAY)
-	set result [dobg "
-	    toplevel .t -screen [winfo screen .]
-	    wm geometry .t +0+0
-	    tk appname xyzgorp1
-	    set x child
-	"]
-	toplevel .t -screen $env(TK_ALT_DISPLAY)
-	wm geometry .t +0+0
-	tk appname xyzgorp2
-	update
-	set y parent
-	set result [send -displayof .t xyzgorp1 {list $x [send -displayof .t xyzgorp2 set y]}]
-	destroy .t
-	cleanupbg
-	set result
-    } {child parent}
-}
+test send-14.1 {SendRestrictProc procedure, sends crossing from different displays} {altDisplay} {
+    setupbg -display $env(TK_ALT_DISPLAY)
+    set result [dobg "
+    toplevel .t -screen [winfo screen .]
+    wm geometry .t +0+0
+    tk appname xyzgorp1
+    set x child
+    "]
+    toplevel .t -screen $env(TK_ALT_DISPLAY)
+    wm geometry .t +0+0
+    tk appname xyzgorp2
+    update
+    set y parent
+    set result [send -displayof .t xyzgorp1 {list $x [send -displayof .t xyzgorp2 set y]}]
+    destroy .t
+    cleanupbg
+    set result
+} {child parent}
 
 if $gotTestCmds {
     testsend prop root InterpRegister $registry
