@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.34 2002/06/14 13:35:49 dkf Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.35 2002/06/14 14:08:23 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -794,8 +794,8 @@ TkStubs tkStubs = {
     Tk_NameToWindow, /* 141 */
     Tk_OwnSelection, /* 142 */
     Tk_ParseArgv, /* 143 */
-    Tk_PhotoPutBlock_Old, /* 144 */
-    Tk_PhotoPutZoomedBlock_Old, /* 145 */
+    Tk_PhotoPutBlock_NoComposite, /* 144 */
+    Tk_PhotoPutZoomedBlock_NoComposite, /* 145 */
     Tk_PhotoGetImage, /* 146 */
     Tk_PhotoBlank, /* 147 */
     Tk_PhotoExpand, /* 148 */
