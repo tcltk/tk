@@ -2,7 +2,7 @@
 # tests.  Execute it by invoking "source all" when running tclTest
 # in this directory.
 #
-# RCS: @(#) $Id: all,v 1.3 1998/12/04 04:19:12 hershey Exp $
+# RCS: @(#) $Id: all,v 1.4 1998/12/07 23:29:00 hershey Exp $
 
 set TESTS_DIR [file join [pwd] [file dirname [info script]]]
 source [file join $TESTS_DIR defs]
@@ -12,7 +12,7 @@ catch {array set flag $argv}
 set requiredSourceFiles [list arc.tcl bugs.tcl butGeom2.tcl \
 	canvPsBmap.tcl canvPsText.tcl bevel.tcl butGeom.tcl \
 	canvPsArc.tcl canvPsGrph.tcl cmap.tcl filebox.test \
-	option.file1 option.file2 visual defs]
+	option.file1 option.file2 visual README defs]
 
 #
 # Set the TMP_DIR to pwd or the arg of -tmpdir, if given.
