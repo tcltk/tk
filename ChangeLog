@@ -1,13 +1,13 @@
 2004-03-01  Don Porter	<dgp@users.sourceforge.net>
 
+	*** 8.4.7 TAGGED FOR RELEASE ***
+
 	* changes:
 	* generic/tkEvent.c (Tk_HandleEvent): revert the 2004-07-20 commit.
 	That commit created a new Bug 1000051 - a broken Compose Key.
 	This revert restores Bug 905830 until a cleaner fix can be provided.
 
 2004-07-27  Daniel Steffen  <das@users.sourceforge.net>
-
-	*** 8.4.7 TAGGED FOR RELEASE ***
 
 	* generic/tkImgGIF.c (FileReadGIF): fix crash reported by Reinhard Max:
 	in case of premature end of image data, return error instead of
