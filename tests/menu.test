@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.3.12.2 2001/04/04 07:57:17 hobbs Exp $
+# RCS: @(#) $Id: menu.test,v 1.3.12.3 2002/01/31 21:08:19 uid38226 Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -911,6 +911,25 @@ test menu-3.67 {MenuWidgetCmd procedure, bad option} {
     menu .m1
     list [catch {.m1 foo} msg] $msg [destroy .m1]
 } {1 {bad option "foo": must be activate, add, cget, clone, configure, delete, entrycget, entryconfigure, index, insert, invoke, post, postcascade, type, unpost, or yposition} {}}
+test menu-3.68 {MenuWidgetCmd procedure, fix for bug#508988} {
+    set t .t
+    set m1 .t.m1
+    set c1 .t.c1
+    set c2 .t.c2
+    toplevel $t
+    menu $m1 -tearoff 1
+    menu $c1 -tearoff 1
+    $c1 add command -label c1
+    menu $c2 -tearoff 1
+    $c2 add command -label c2
+    $m1 add cascade -label c1 -menu $c1
+    $t configure -menu $m1
+    $m1 entryconfigure 1 -menu $c2 -label c2
+    $t configure -menu ""
+    set l [list [winfo exists $c1] [winfo exists $c2]]
+    destroy $t;
+    set l;
+} {1 1}
 
 test menu-4.1 {TkInvokeMenu: disabled} {
     catch {destroy .m1}
