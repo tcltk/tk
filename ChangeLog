@@ -4,6 +4,11 @@
 	(IconList_Arrange): Assorted tk_getOpenFile fixes. [part of Bug 600313]
 	(IconList_ShiftMotion1): Also fix shift-drag.
 
+2005-01-12  Don Porter  <dgp@users.sourceforge.net>
+
+	* unix/tcl.m4:		Sync'ed to Tcl's copy.
+	* unix/configure:	autoconf-2.57
+
 2005-01-12  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/event.n: Added section on predefined virtual events. [Bug 608115]
