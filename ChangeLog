@@ -1,5 +1,14 @@
 2002-08-31  Daniel Steffen  <das@users.sourceforge.net>
 
+	* unix/tcl.m4: update from Tcl
+
+	* unix/Makefile.in: import of TK_SHLIB_LD_EXTRAS for Tk library
+	specific linker settings. Added use of new LD_LIBRARY_PATH_VAR.
+
+	* unix/configure: regen
+
+2002-08-31  Daniel Steffen  <das@users.sourceforge.net>
+
 	*** macosx-8-4-branch merged into the mainline [tcl patch #602770] ***
 
 	* generic/tk.decls:
