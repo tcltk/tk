@@ -1,3 +1,9 @@
+2003-07-09  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* tests/send.test: Strengthened constraints to stop accidental
+	smashing of Xserver access; some systems (*ahem* mine *ahem*)
+	require xhost-style security for all use...  :^/
+
 2003-07-07  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkTextDisp.c (DisplayText): correct use of textPtr data
