@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.9 1999/12/21 23:55:11 hobbs Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.10 2000/02/03 21:27:26 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -1933,7 +1933,7 @@ Tk_ComputeTextLayout(tkfont, string, numChars, wrapLength, justify, flags,
 		    continue;
 		}
 	    } else {	
-		NewChunk(&layoutPtr, &maxChunks, start, 1, curX, 1000000000,
+		NewChunk(&layoutPtr, &maxChunks, start, 1, curX, curX,
 			baseline)->numDisplayChars = -1;
 		start++;
 		goto wrapLine;
@@ -2011,7 +2011,7 @@ Tk_ComputeTextLayout(tkfont, string, numChars, wrapLength, justify, flags,
     if ((layoutPtr->numChunks > 0) && ((flags & TK_IGNORE_NEWLINES) == 0)) {
 	if (layoutPtr->chunks[layoutPtr->numChunks - 1].start[0] == '\n') {
 	    chunkPtr = NewChunk(&layoutPtr, &maxChunks, start, 0, curX,
-		    1000000000, baseline);
+		    curX, baseline);
 	    chunkPtr->numDisplayChars = -1;
 	    Tcl_DStringAppend(&lineBuffer, (char *) &curX, sizeof(curX));
 	    baseline += height;

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvText.test,v 1.8 1999/12/14 06:53:12 hobbs Exp $
+# RCS: @(#) $Id: canvText.test,v 1.9 2000/02/03 21:27:27 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -504,6 +504,21 @@ restore showpage
 end
 %%EOF
 "
+
+test canvText-18.1 {bug fix 2525, find enclosed on text with newlines} {
+    catch {destroy .c}
+    canvas .c
+    pack .c
+    .c delete all
+    .c create text 100 100 -text Hello\n -anchor nw
+    set bbox [.c bbox 1]
+    set x2 [lindex $bbox 2]
+    set y2 [lindex $bbox 3]
+    incr y2
+    update
+    .c find enclosed 99 99 [expr $x2 + $i] [expr $y2 + 1]
+} 1
+
 # cleanup
 ::tcltest::cleanupTests
 return
