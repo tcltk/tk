@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.20 2000/04/12 18:51:11 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.21 2000/04/21 04:07:09 hobbs Exp $
 
 TCLVERSION = @TCL_VERSION@
 VERSION = @TK_VERSION@
@@ -120,7 +120,7 @@ STATIC_LIBRARIES	= $(TK_LIB_FILE)
 
 WISH			= wish$(VER)${EXESUFFIX}
 TKTEST			= tktest${EXEEXT}
-CAT32			= cat32
+CAT32			= cat32$(EXEEXT)
 MAN2TCL			= man2tcl$(EXEEXT)
 
 @SET_MAKE@
@@ -356,11 +356,12 @@ $(ROOT_DIR)/doc/man.macros:
 
 doc: $(ROOT_DIR)/doc/man.macros
 
-winhelp:  $(TCL_SRC_DIR_NATIVE)/../tools/man2help.tcl $(MAN2TCL)
+winhelp: $(TCL_SRC_DIR_NATIVE)/../tools/man2help.tcl $(MAN2TCL)
 	TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/../library"; export TCL_LIBRARY; \
 	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
 	PATH="$(PATH):$(TCL_BIN_DIR)"; export PATH; \
 	$(TCLSH_PROG) "$(TCL_SRC_DIR_NATIVE)"/../tools/man2help.tcl tcl "$(VER)" $(CORE_DOCS)
+	$(COPY) "$(TCL_BIN_DIR)"/tcl.hpj ./
 	hcw /c /e tcl.hpj
 
 $(MAN2TCL): $(TCL_SRC_DIR_NATIVE)/../tools/man2tcl.c
@@ -486,8 +487,10 @@ $(TKTEST): $(TK_LIB_FILE) $(TKTEST_OBJS) wish.res $(CAT32)
 	$(TK_LIB_FILE) $(LIBS) \
 	wish.res $(CC_EXENAME) -link $(LDFLAGS_WINDOW)
 
-$(CAT32): $(TCL_SRC_DIR)/cat.c
+cat32.${OBJEXT}: $(TCL_SRC_DIR)/cat.c
 	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
+
+$(CAT32): cat32.${OBJEXT}
 	$(CC) $(CFLAGS) cat32.$(OBJEXT) $(CC_EXENAME) -link $(LDFLAGS_CONSOLE)
 
 # The following targets are configured by autoconf to generate either
@@ -541,13 +544,16 @@ tclThreadTest.$(OBJEXT): $(TCL_BIN_DIR)/tclThreadTest.$(OBJEXT)
 
 depend:
 
-clean:
-	$(RM) *.lib *.exp *.dll *.${OBJEXT} *~ \#* TAGS a.out
-	$(RM) $(WISH) $(TKTEST)
-	$(RM) *.pch
+cleanhelp:
+	$(RM) *.hlp *.cnt *.hpj *.GID *.rtf man2tcl.exe
+
+clean: cleanhelp
+	$(RM) *.lib *.exp *.dll *.res *.${OBJEXT} *~ \#* TAGS a.out
+	$(RM) $(WISH) $(TKTEST) $(CAT32)
+	$(RM) *.pch *.ilk *.pdb
 
 distclean: clean
-	$(RM) Makefile config.status config.cache config.log
+	$(RM) Makefile config.status config.cache config.log tkConfig.sh
 
 Makefile: Makefile.in
 	./config.status

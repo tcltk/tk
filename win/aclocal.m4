@@ -465,7 +465,7 @@ AC_DEFUN(SC_PROG_TCLSH, [
     AC_CACHE_VAL(ac_cv_path_tclsh, [
 	search_path=`echo ${exec_prefix}/bin:${prefix}/bin:${TCL_BIN_DIR}:${TCL_BIN_DIR}/../bin:${PATH} | sed -e 's/:/ /g'`
 	for dir in $search_path ; do
-	    for j in `ls -r $dir/tclsh[[8-9]]* 2> /dev/null` \
+	    for j in `ls -r $dir/tclsh[[8-9]]*.exe 2> /dev/null` \
 		    `ls -r $dir/tclsh* 2> /dev/null` ; do
 		if test x"$ac_cv_path_tclsh" = x ; then
 		    if test -f "$j" ; then
