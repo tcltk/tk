@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.15 2000/11/22 01:49:37 ericm Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.16 2001/04/03 04:40:31 hobbs Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -1929,14 +1929,10 @@ DestroyCanvas(memPtr)
 {
     TkCanvas *canvasPtr = (TkCanvas *) memPtr;
     Tk_Item *itemPtr;
+#ifndef USE_OLD_TAG_SEARCH
+    TagSearchExpr *expr, *next;
+#endif
 
-    if (canvasPtr->tkwin != NULL) {
-	Tcl_DeleteCommandFromToken(canvasPtr->interp, canvasPtr->widgetCmd);
-    }
-    if (canvasPtr->flags & REDRAW_PENDING) {
-	Tcl_CancelIdleCall(DisplayCanvas, (ClientData) canvasPtr);
-    }
-	
     /*
      * Free up all of the items in the canvas.
      */
@@ -1963,15 +1959,11 @@ DestroyCanvas(memPtr)
 	Tk_FreeGC(canvasPtr->display, canvasPtr->pixmapGC);
     }
 #ifndef USE_OLD_TAG_SEARCH
-    {
-    	TagSearchExpr *expr, *next;
-
-	expr = canvasPtr->bindTagExprs;
-	while (expr) {
-	    next = expr->next;
-	    TagSearchExprDestroy(expr);
-	    expr = next;
-	}
+    expr = canvasPtr->bindTagExprs;
+    while (expr) {
+	next = expr->next;
+	TagSearchExprDestroy(expr);
+	expr = next;
     }
 #endif
     Tcl_DeleteTimerHandler(canvasPtr->insertBlinkHandler);
@@ -2447,7 +2439,16 @@ CanvasEventProc(clientData, eventPtr)
 	    canvasPtr->flags |= REDRAW_BORDERS;
 	}
     } else if (eventPtr->type == DestroyNotify) {
-	DestroyCanvas((char *) canvasPtr);
+	if (canvasPtr->tkwin != NULL) {
+	    canvasPtr->tkwin = NULL;
+	    Tcl_DeleteCommandFromToken(canvasPtr->interp,
+		    canvasPtr->widgetCmd);
+	}
+	if (canvasPtr->flags & REDRAW_PENDING) {
+	    Tcl_CancelIdleCall(DisplayCanvas, (ClientData) canvasPtr);
+	}
+	Tcl_EventuallyFree((ClientData) canvasPtr,
+		(Tcl_FreeProc *) DestroyCanvas);
     } else if (eventPtr->type == ConfigureNotify) {
 	canvasPtr->flags |= UPDATE_SCROLLBARS;
 
