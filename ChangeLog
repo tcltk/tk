@@ -1,3 +1,9 @@
+2001-09-23  Peter Spjuth  <peter.spjuth@space.se>
+	* generic/tkPack.c (ConfigureSlaves):
+	* tests/pack.test:
+	* tests/grid.test:  Pack accepted asymmetric values for -ipadx/y.
+	Only -padx/y supports asymmetry. [Bug #462348]
+
 2001-09-21  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkWindow.c (Tk_CreateAnonymousWindow): 
