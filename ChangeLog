@@ -1,3 +1,8 @@
+2003-10-09  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinButton.c (TkpDisplayButton): correct imageYOffset for
+	buttons with just images.
+
 2003-10-06  Don Porter  <dgp@users.sourceforge.net>
 
 	* doc/ConfigWidg.3:	Removed reference to Tk_Offset from the
