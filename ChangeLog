@@ -1,6 +1,14 @@
 2003-12-04  Vince Darley <vincentdarley@users.sourceforge.net>
 
-	* generic/tkText.c: disallow negative or decreasing tab-stops
+	* generic/tkText.c: disallow negative or decreasing tab-stops,
+	which fixes [Bug 852949], but is a 
+
+	*** POTENTIAL INCOMPATIBILITY *** 
+	
+	with Tk 8.4.5 or earlier, but only for code which assumed
+	(incorrectly) that tab stops are relative to each other instead
+	of relative to the widget's left edge.  Such code will now throw
+	an error instead of doing the wrong thing.
 
 	* generic/tkTextDisp.c: restore previous meaning of 
 	-[xy]scrollcommand [Bug 852954], and remove unused argument
