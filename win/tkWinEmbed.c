@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.14 2004/12/20 01:13:12 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.15 2004/12/20 15:30:43 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -471,6 +471,10 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	    result = TkpWinToplevelMove(containerPtr->parentPtr, wParam, lParam);
 	    break;
 
+	    case TK_OVERRIDEREDIRECT:
+	    result = TkpWinToplevelOverrideRedirect(containerPtr->parentPtr, wParam);
+	    break;
+
 	     /*
 	     * Return 0 since the current Tk container implementation 
 	     * is unable to provide following services.
@@ -613,6 +617,40 @@ TkpGetOtherWindow(winPtr)
 	}
     }
     Tcl_Panic("TkpGetOtherWindow couldn't find window");
+    return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetEmbeddedHWnd --
+ *
+ *	This function returns the embedded window id.
+ *
+ * Results:
+ *	If winPtr is a container, the return value is the HWND for the
+ *	embedded window. Otherwise it returns NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+HWND
+Tk_GetEmbeddedHWnd(winPtr)
+    TkWindow *winPtr;
+{
+    Container *containerPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    for (containerPtr = tsdPtr->firstContainerPtr; containerPtr != NULL;
+	    containerPtr = containerPtr->nextPtr) {
+	if (containerPtr->parentPtr == winPtr) {
+	    return containerPtr->embeddedHWnd;
+	}
+    }
     return NULL;
 }
 
