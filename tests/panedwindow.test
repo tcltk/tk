@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.10 2003/05/21 15:31:01 dkf Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.11 2003/07/17 00:39:53 hobbs Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1871,7 +1871,28 @@ test panedwindow-22.11 {ArrangePanes, panes with width <= 0 are unmapped} {
     destroy .p .p.f1 .p.f2
     set result
 } {1 0}
-    
+test panedwindow-22.12 {ArrangePanes, last pane shrinks} {
+    panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
+    .p add [frame .f1 -width 20 -height 20 -bg blue] \
+	    [frame .f2 -width 20 -height 20 -bg red] -sticky nsew
+    place .p -width 40 -x 0 -y 0
+    update
+    set result [winfo width .f2]
+    destroy .p .f1 .f2
+    set result
+} 18
+test panedwindow-22.13 {ArrangePanes, last pane shrinks} {
+    panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
+            -orient vertical
+    .p add [frame .f1 -width 20 -height 20 -bg blue] \
+	    [frame .f2 -width 20 -height 20 -bg red] -sticky nsew
+    place .p -height 40 -x 0 -y 0
+    update
+    set result [winfo height .f2]
+    destroy .p .f1 .f2
+    set result
+} 18
+
 test panedwindow-23.1 {PanedWindowReqProc, react to slave geometry changes} {
     # Basically just want to make sure that the PanedWindowReqProc is called
     panedwindow .p -borderwidth 0 -sashpad 0 -sashwidth 2
