@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.33 2002/12/09 00:32:45 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.34 2003/02/18 21:54:41 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -2509,7 +2509,7 @@ EntrySetValue(entryPtr, value)
     CONST char *value;		/* New text to display in entry. */
 {
     CONST char *oldSource;
-    int code, valueLen, malloced = 0;
+    int valueLen, malloced = 0;
 
     if (strcmp(value, entryPtr->string) == 0) {
 	return;
@@ -2530,7 +2530,7 @@ EntrySetValue(entryPtr, value)
 	malloced = 1;
 
 	entryPtr->flags |= VALIDATE_VAR;
-	code = EntryValidateChange(entryPtr, (char *) NULL, value, -1,
+	(void) EntryValidateChange(entryPtr, (char *) NULL, value, -1,
 		VALIDATE_FORCED);
 	entryPtr->flags &= ~VALIDATE_VAR;
 	/*
