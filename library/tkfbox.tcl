@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.32 2001/12/14 14:56:46 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.33 2002/04/29 13:17:44 bagnonm Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -766,7 +766,9 @@ proc ::tk::IconList_Reset {w} {
 #----------------------------------------------------------------------
 
 namespace eval ::tk::dialog {}
-namespace eval ::tk::dialog::file {}
+namespace eval ::tk::dialog::file {
+    namespace import ::tk::msgcat::*
+}
 
 # ::tk::dialog::file:: --
 #
@@ -925,9 +927,9 @@ proc ::tk::dialog::file::Config {dataName type argList} {
 
     if {$data(-title) == ""} {
 	if {[string equal $type "open"]} {
-	    set data(-title) "[::msgcat::mc "Open"]"
+	    set data(-title) "[mc "Open"]"
 	} else {
-	    set data(-title) "[::msgcat::mc "Save As"]"
+	    set data(-title) "[mc "Save As"]"
 	}
     }
 
@@ -977,7 +979,7 @@ proc ::tk::dialog::file::Create {w class} {
     # f1: the frame with the directory option menu
     #
     set f1 [frame $w.f1]
-    label $f1.lab -text "[::msgcat::mc "Directory:"]" -under 0
+    label $f1.lab -text "[mc "Directory:"]" -under 0
     set data(dirMenuBtn) $f1.menu
     set data(dirMenu) [tk_optionMenu $f1.menu [format %s(selectPath) ::tk::dialog::file::$dataName] ""]
     set data(upBtn) [button $f1.up]
@@ -1005,17 +1007,17 @@ static char updir_bits[] = {
     #
     if { [string equal $class TkFDialog] } {
 	if { $data(-multiple) } {
-	    set fNameCaption "[::msgcat::mc {File names:}]"
+	    set fNameCaption "[mc {File names:}]"
 	} else {
-	    set fNameCaption "[::msgcat::mc {File name:}]"
+	    set fNameCaption "[mc {File name:}]"
 	}
-	set fTypeCaption [::msgcat::mc "Files of type:"]
-	set fCaptionWidth [::msgcat::mcmax $fNameCaption $fTypeCaption]
+	set fTypeCaption [mc "Files of type:"]
+	set fCaptionWidth [mcmax $fNameCaption $fTypeCaption]
 	set fCaptionWidth [expr {$fCaptionWidth<14?14:$fCaptionWidth}]
 	set fNameUnder 5
 	set iconListCommand [list ::tk::dialog::file::OkCmd $w]
     } else {
-	set fNameCaption [::msgcat::mc "Selection:"]
+	set fNameCaption [mc "Selection:"]
 	set fNameUnder 0
 	set fCaptionWidth [string length $fNameCaption]
 	set iconListCommand [list ::tk::dialog::file::chooseDir::DblClick $w]
@@ -1068,11 +1070,11 @@ static char updir_bits[] = {
 
     # the okBtn is created after the typeMenu so that the keyboard traversal
     # is in the right order
-	set maxWidth [::msgcat::mcmax OK Cancel]
+	set maxWidth [mcmax OK Cancel]
 	set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
-    set data(okBtn)     [button $f2.ok     -text "[::msgcat::mc "OK"]" \
+    set data(okBtn)     [button $f2.ok     -text "[mc "OK"]" \
 	-under 0 -width $maxWidth -default active -pady 3]
-    set data(cancelBtn) [button $f3.cancel -text "[::msgcat::mc "Cancel"]" \
+    set data(cancelBtn) [button $f3.cancel -text "[mc "Cancel"]" \
 	-under 0 -width $maxWidth -default normal -pady 3]
 
     # pack the widgets in f2 and f3
@@ -1148,9 +1150,9 @@ proc ::tk::dialog::file::SetSelectMode {w multi} {
     set dataName __tk_filedialog
     upvar ::tk::dialog::file::$dataName data
     if { $multi } {
-	set fNameCaption "[::msgcat::mc {File names:}]"
+	set fNameCaption "[mc {File names:}]"
     } else {
-	set fNameCaption "[::msgcat::mc {File name:}]"
+	set fNameCaption "[mc {File name:}]"
     }
     set fNameUnder 5
     set iconListCommand [list ::tk::dialog::file::OkCmd $w]
@@ -1222,7 +1224,7 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	# we normally won't come to here. Anyways, give an error and abort
 	# action.
 	tk_messageBox -type ok -parent $w -message \
-	    "[::msgcat::mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $data(selectPath)]"\
+	    "[mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $data(selectPath)]"\
 	    -icon warning
 	cd $appPWD
 	return
@@ -1305,15 +1307,15 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	# Restore the Open/Save Button if this is a File Dialog
 	#
 	if {[string equal $data(type) open]} {
-	    $data(okBtn) config -text "[::msgcat::mc "Open"]"
-		set maxWidth [string length [::msgcat::mc "Open"]]
+	    $data(okBtn) config -text "[mc "Open"]"
+		set maxWidth [string length [mc "Open"]]
 		if {$maxWidth>[$data(okBtn) cget -width]} {
 			$data(okBtn) config -width $maxWidth
 			$data(cancelBtn) config -width $maxWidth
 		}
 	} else {
-	    $data(okBtn) config -text "[::msgcat::mc "Save"]"
-		set maxWidth [string length [::msgcat::mc "Save"]]
+	    $data(okBtn) config -text "[mc "Save"]"
+		set maxWidth [string length [mc "Save"]]
 		if {$maxWidth>[$data(okBtn) cget -width]} {
 			$data(okBtn) config -width $maxWidth
 			$data(cancelBtn) config -width $maxWidth
@@ -1506,9 +1508,9 @@ proc ::tk::dialog::file::EntFocusIn {w} {
     if { [string equal [winfo class $w] TkFDialog] } {
 	# If this is a File Dialog, make sure the buttons are labeled right.
 	if {[string equal $data(type) open]} {
-	    $data(okBtn) config -text "[::msgcat::mc "Open"]"
+	    $data(okBtn) config -text "[mc "Open"]"
 	} else {
-	    $data(okBtn) config -text "[::msgcat::mc "Save"]"
+	    $data(okBtn) config -text "[mc "Save"]"
 	}
     }
 }
@@ -1575,7 +1577,7 @@ proc ::tk::dialog::file::VerifyFileName {w filename} {
 	FILE {
 	    if {[string equal $data(type) open]} {
 		tk_messageBox -icon warning -type ok -parent $w \
-		    -message "[::msgcat::mc "File \"%1\$s\"  does not exist." [file join $path $file]]"
+		    -message "[mc "File \"%1\$s\"  does not exist." [file join $path $file]]"
 		$data(ent) selection range 0 end
 		$data(ent) icursor end
 	    } else {
@@ -1590,20 +1592,20 @@ proc ::tk::dialog::file::VerifyFileName {w filename} {
 	}
 	PATH {
 	    tk_messageBox -icon warning -type ok -parent $w \
-		-message "[::msgcat::mc "Directory \"%1\$s\" does not exist." $path]"
+		-message "[mc "Directory \"%1\$s\" does not exist." $path]"
 	    $data(ent) selection range 0 end
 	    $data(ent) icursor end
 	}
 	CHDIR {
 	    tk_messageBox -type ok -parent $w -message \
-	       "[::msgcat::mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $path]"\
+	       "[mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $path]"\
 		-icon warning
 	    $data(ent) selection range 0 end
 	    $data(ent) icursor end
 	}
 	ERROR {
 	    tk_messageBox -type ok -parent $w -message \
-	       "[::msgcat::mc "Invalid file name \"%1\$s\"." $path]"\
+	       "[mc "Invalid file name \"%1\$s\"." $path]"\
 		-icon warning
 	    $data(ent) selection range 0 end
 	    $data(ent) icursor end
@@ -1708,14 +1710,14 @@ proc ::tk::dialog::file::ListBrowse {w} {
 
 	if { [string equal [winfo class $w] TkFDialog] } {
 	    if {[string equal $data(type) open]} {
-		$data(okBtn) config -text "[::msgcat::mc "Open"]"
+		$data(okBtn) config -text "[mc "Open"]"
 	    } else {
-		$data(okBtn) config -text "[::msgcat::mc "Save"]"
+		$data(okBtn) config -text "[mc "Save"]"
 	    }
 	}
     } else {
 	if { [string equal [winfo class $w] TkFDialog] } {
-	    $data(okBtn) config -text "[::msgcat::mc "Open"]"
+	    $data(okBtn) config -text "[mc "Open"]"
 	}
     }
 }
@@ -1738,7 +1740,7 @@ proc ::tk::dialog::file::ListInvoke {w filenames} {
 	set appPWD [pwd]
 	if {[catch {cd $file}]} {
 	    tk_messageBox -type ok -parent $w -message \
-	       "[::msgcat::mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $file]"\
+	       "[mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $file]"\
 		-icon warning
 	} else {
 	    cd $appPWD
@@ -1785,7 +1787,7 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
 	    if {[file exists $selectFilePath]} {
 	    set reply [tk_messageBox -icon warning -type yesno\
 		    -parent $w -message \
-			"[::msgcat::mc "File \"%1\$s\" already exists.\nDo you want to overwrite it?" $selectFilePath]"]
+			"[mc "File \"%1\$s\" already exists.\nDo you want to overwrite it?" $selectFilePath]"]
 	    if {[string equal $reply "no"]} {
 		return
 		}
