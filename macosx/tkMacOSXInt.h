@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.4 2004/02/16 00:19:42 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.5 2004/11/11 01:24:32 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -151,12 +151,9 @@ extern TkMacOSXWindowList *tkMacOSXWindowListPtr;
 extern Tcl_Encoding TkMacOSXCarbonEncoding;
 
 extern int TkMacOSXUseAntialiasedText(Tcl_Interp *interp, int enable);
-
-/* 
- * FIXME: Put this into the decls file? 
- */
-
 extern void TkMacOSXInitCarbonEvents (Tcl_Interp *interp);
+extern int TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable, int antiAlias);
+extern void TkMacOSXDefaultStartupScript(void);
 
 #include "tkIntPlatDecls.h"
 
