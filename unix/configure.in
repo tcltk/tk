@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.91 2003/10/06 17:11:31 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.92 2003/11/12 01:10:40 hobbs Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.57)
@@ -306,8 +306,8 @@ XFT_CFLAGS=""
 XFT_LIBS=""
 if test "$enable_xft" = "yes" ; then
     AC_MSG_CHECKING([for xft configuration])
-    XFT_CFLAGS=`pkg-config --cflags xft` || enable_xft="no"
-    XFT_LIBS=`pkg-config --libs xft` || enable_xft="no"
+    XFT_CFLAGS=`xft-config --cflags` || enable_xft="no"
+    XFT_LIBS=`xft-config --libs` || enable_xft="no"
     if test "$enable_xft" = "yes" ; then
     	AC_MSG_RESULT([ok])
     else

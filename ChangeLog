@@ -1,5 +1,12 @@
 2003-11-11  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* unix/configure:
+	* unix/configure.in: use xft-config instead of pkg-config to
+	determine xft info.
+	* unix/tcl.m4: improve AIX --enable-64bit handling
+	remove -D__NO_STRING_INLINES -D__NO_MATH_INLINES from
+	CFLAGS_OPTIMIZE on Linux.  Make default opt -O2 (was -O).
+
 	* generic/tkButton.c (ConfigureButton): abort option processing if
 	the button was deleted. [Bug #824479]
 
