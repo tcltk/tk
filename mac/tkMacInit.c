@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacInit.c,v 1.3.12.1 2001/10/17 19:29:51 das Exp $
+ * RCS: @(#) $Id: tkMacInit.c,v 1.3.12.2 2001/10/19 19:40:18 das Exp $
  */
 
 #include <Resources.h>
@@ -63,24 +63,38 @@ TkpInit(
      * safe interps because file exists is restricted.
      * to be fixed using [interp issafe] like in Unix & Windows.
      */
-    static char initCmd[] =
-	"if [file exists $tk_library:tk.tcl] {\n\
-	    source $tk_library:tk.tcl\n\
-	    source $tk_library:button.tcl\n\
-	    source $tk_library:entry.tcl\n\
-	    source $tk_library:listbox.tcl\n\
-	    source $tk_library:menu.tcl\n\
-	    source $tk_library:scale.tcl\n\
-	    source $tk_library:scrlbar.tcl\n\
-	    source $tk_library:text.tcl\n\
-	    source $tk_library:comdlg.tcl\n\
-	    source $tk_library:msgbox.tcl\n\
-	} else {\n\
-	    set msg \"can't find tk resource or $tk_library:tk.tcl;\"\n\
-	    append msg \" perhaps you need to\\ninstall Tk or set your \"\n\
-	    append msg \"TK_LIBRARY environment variable?\"\n\
-	    error $msg\n\
-	}";
+    static char initCmd[] = "\
+proc sourcePath {file} {\n\
+  global tk_library\n\
+  if {[catch {uplevel #0 [list source $tk_library:$file.tcl]}] == 0} {\n\
+    return\n\
+  }\n\
+  if {[catch {uplevel #0 [list source -rsrc $file]}] == 0} {\n\
+    return\n\
+  }\n\
+  rename sourcePath {}\n\
+  set msg \"can't find $file resource or a usable $file.tcl file\"\n\
+  append msg \" perhaps you need to install Tk or set your \"\n\
+  append msg \"TK_LIBRARY environment variable?\"\n\
+  error $msg\n\
+}\n\
+sourcePath tk\n\
+sourcePath button\n\
+sourcePath dialog\n\
+sourcePath entry\n\
+sourcePath focus\n\
+sourcePath listbox\n\
+sourcePath menu\n\
+sourcePath optMenu\n\
+sourcePath palette\n\
+sourcePath scale\n\
+sourcePath scrlbar\n\
+sourcePath tearoff\n\
+sourcePath text\n\
+sourcePath bgerror\n\
+sourcePath msgbox\n\
+sourcePath comdlg\n\
+rename sourcePath {}";
 
     Tcl_DStringInit(&path);
 
@@ -123,30 +137,7 @@ TkpInit(
     Tcl_SetVar(interp, "tk_library", libDir, TCL_GLOBAL_ONLY);
     Tcl_DStringFree(&path);
 
-    /*
-     * Source the needed Tk libraries from the resource
-     * fork of the application.
-     */
-    result = Tcl_MacEvalResource(interp, "tk", 0, NULL);
-    result |= Tcl_MacEvalResource(interp, "button", 0, NULL);
-    result |= Tcl_MacEvalResource(interp, "entry", 0, NULL);
-    result |= Tcl_MacEvalResource(interp, "listbox", 0, NULL);
-    result |= Tcl_MacEvalResource(interp, "menu", 0, NULL);
-    result |= Tcl_MacEvalResource(interp, "scale", 0, NULL);
-    result |= Tcl_MacEvalResource(interp, "scrollbar", 0, NULL);
-    result |= Tcl_MacEvalResource(interp, "text", 0, NULL);
-    result |= Tcl_MacEvalResource(interp, "dialog", 0, NULL);
-    result |= Tcl_MacEvalResource(interp, "focus", 0, NULL);
-    result |= Tcl_MacEvalResource(interp, "optionMenu", 0, NULL);
-    result |= Tcl_MacEvalResource(interp, "palette", 0, NULL);
-    result |= Tcl_MacEvalResource(interp, "tearoff", 0, NULL);
-    result |= Tcl_MacEvalResource(interp, "tkerror", 0, NULL);
-    result |= Tcl_MacEvalResource(interp, "comdlg", 0, NULL);
-    result |= Tcl_MacEvalResource(interp, "msgbox", 0, NULL);
-
-    if (result != TCL_OK) {
 	result = Tcl_Eval(interp, initCmd);
-    }
     return result;
 }
 

@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.8.2.3 2001/10/19 17:33:27 hobbs Exp $
+# RCS: @(#) $Id: console.tcl,v 1.8.2.4 2001/10/19 19:40:17 das Exp $
 #
 # Copyright (c) 1998-1999 Scriptics Corp.
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
@@ -442,7 +442,7 @@ proc tkConsoleBind {w} {
     bind Console <F9> {
 	eval destroy [winfo child .]
 	if {[string equal $tcl_platform(platform) "macintosh"]} {
-	    source -rsrc Console
+	    if {[catch {source $tk_library:console.tcl}]} {source -rsrc console}
 	} else {
 	    source [file join $tk_library console.tcl]
 	}

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacResource.r,v 1.6.2.2 2001/10/17 19:29:52 das Exp $
+ * RCS: @(#) $Id: tkMacResource.r,v 1.6.2.3 2001/10/19 19:40:18 das Exp $
  */
 
 /*
@@ -60,7 +60,7 @@
  * will load the TEXT resource named "Init".
  */
 
-read 'TEXT' (TK_LIBRARY_RESOURCES+1, "tk", purgeable) 
+read 'TEXT' (TK_LIBRARY_RESOURCES+1, "tk", purgeable,preload) 
 	"::library:tk.tcl";
 read 'TEXT' (TK_LIBRARY_RESOURCES+2, "button", purgeable) 
 	"::library:button.tcl";
@@ -74,25 +74,25 @@ read 'TEXT' (TK_LIBRARY_RESOURCES+6, "listbox", purgeable)
 	"::library:listbox.tcl";
 read 'TEXT' (TK_LIBRARY_RESOURCES+7, "menu", purgeable) 
 	"::library:menu.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+8, "optionMenu", purgeable) 
+read 'TEXT' (TK_LIBRARY_RESOURCES+8, "optMenu", purgeable) 
 	"::library:optMenu.tcl";
 read 'TEXT' (TK_LIBRARY_RESOURCES+9, "palette", purgeable) 
 	"::library:palette.tcl";
 read 'TEXT' (TK_LIBRARY_RESOURCES+10, "scale", purgeable) 
 	"::library:scale.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+11, "scrollbar", purgeable) 
+read 'TEXT' (TK_LIBRARY_RESOURCES+11, "scrlbar", purgeable) 
 	"::library:scrlbar.tcl";
 read 'TEXT' (TK_LIBRARY_RESOURCES+12, "tearoff", purgeable) 
 	"::library:tearoff.tcl";
 read 'TEXT' (TK_LIBRARY_RESOURCES+13, "text", purgeable) 
 	"::library:text.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+14, "tkerror", purgeable) 
+read 'TEXT' (TK_LIBRARY_RESOURCES+14, "bgerror", purgeable) 
 	"::library:bgerror.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+15, "Console", purgeable) 
+read 'TEXT' (TK_LIBRARY_RESOURCES+15, "console", purgeable) 
 	"::library:console.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+16, "msgbox", purgeable, preload) 
+read 'TEXT' (TK_LIBRARY_RESOURCES+16, "msgbox", purgeable) 
 	"::library:msgbox.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+17, "comdlg", purgeable, preload) 
+read 'TEXT' (TK_LIBRARY_RESOURCES+17, "comdlg", purgeable) 
 	"::library:comdlg.tcl";
 
 
