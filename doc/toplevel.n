@@ -1,3 +1,4 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1990-1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -5,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: toplevel.n,v 1.5 2004/03/25 12:12:36 vincentdarley Exp $
+'\" RCS: @(#) $Id: toplevel.n,v 1.6 2004/09/01 09:37:57 dkf Exp $
 '\" 
 .so man.macros
 .TH toplevel n 8.4 Tk "Tk Built-In Commands"
@@ -61,8 +62,8 @@ If this option is less than or equal to zero then the window will
 not request any size at all.
 .OP \-menu menu Menu
 Specifies a menu widget to be used as a menubar. On the Macintosh, the
-menubar will be displayed accross the top of the main monitor. On
-Microsoft Windows and all UNIX platforms, the menu will appear accross
+menubar will be displayed across the top of the main monitor. On
+Microsoft Windows and all UNIX platforms, the menu will appear across
 the toplevel window as part of the window dressing maintained by the
 window manager.
 .OP \-screen "" ""

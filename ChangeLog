@@ -1,3 +1,8 @@
+2004-09-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/toplevel.n, doc/loadTk.n: More spelling/abbreviation fixes
+	from Mikhail Kolesnitchenko.
+
 2004-08-29  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	TIP#165 IMPLEMENTATION
