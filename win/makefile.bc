@@ -19,7 +19,7 @@
 ROOT	= ..
 TMPDIR	= .
 TOOLS	= c:\bc45
-TCLDIR	= ..\..\tcl8.0
+TCLDIR	= ..\..\tcl8.0.3
 
 # uncomment the following line to compile with symbols
 #DEBUG=1
