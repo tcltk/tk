@@ -43,12 +43,17 @@ AC_DEFUN(SC_PATH_TCLCONFIG, [
 	    # then check for a private Tcl installation
 	    if test x"${ac_cv_c_tclconfig}" = x ; then
 		for i in \
-			../tcl \
-			`ls -dr ../tcl[[8-9]].[[0-9]]* 2>/dev/null` \
-			../../tcl \
-			`ls -dr ../../tcl[[8-9]].[[0-9]]* 2>/dev/null` \
-			../../../tcl \
-			`ls -dr ../../../tcl[[8-9]].[[0-9]]* 2>/dev/null` ; do
+                        ../tcl \
+                        `ls -dr ../tcl[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \
+                        `ls -dr ../tcl[[8-9]].[[0-9]] 2>/dev/null` \
+                        `ls -dr ../tcl[[8-9]].[[0-9]]* 2>/dev/null` \
+                        ../../tcl \
+                        `ls -dr ../../tcl[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \                        `ls -dr ../../tcl[[8-9]].[[0-9]] 2>/dev/null` \
+                        `ls -dr ../../tcl[[8-9]].[[0-9]]* 2>/dev/null` \
+                        ../../../tcl \
+                        `ls -dr ../../../tcl[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \
+                        `ls -dr ../../../tcl[[8-9]].[[0-9]] 2>/dev/null` \
+                        `ls -dr ../../../tcl[[8-9]].[[0-9]]* 2>/dev/null` ; do
 		    if test -f "$i/unix/tclConfig.sh" ; then
 			ac_cv_c_tclconfig=`(cd $i/unix; pwd)`
 			break
@@ -74,7 +79,9 @@ AC_DEFUN(SC_PATH_TCLCONFIG, [
 	    if test x"${ac_cv_c_tclconfig}" = x ; then
 		for i in \
 			${srcdir}/../tcl \
-			`ls -dr ${srcdir}/../tcl[[8-9]].[[0-9]]* 2>/dev/null` ; do
+                        `ls -dr ${srcdir}/../tcl[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \
+                        `ls -dr ${srcdir}/../tcl[[8-9]].[[0-9]] 2>/dev/null` \
+                        `ls -dr ${srcdir}/../tcl[[8-9]].[[0-9]]* 2>/dev/null` ; do
 		    if test -f "$i/unix/tclConfig.sh" ; then
 		    ac_cv_c_tclconfig=`(cd $i/unix; pwd)`
 		    break
@@ -140,11 +147,17 @@ AC_DEFUN(SC_PATH_TKCONFIG, [
 	    if test x"${ac_cv_c_tkconfig}" = x ; then
 		for i in \
 			../tk \
-			`ls -dr ../tk[[8-9]].[[0-9]]* 2>/dev/null` \
-			../../tk \
-			`ls -dr ../../tk[[8-9]].[[0-9]]* 2>/dev/null` \
-			../../../tk \
-			`ls -dr ../../../tk[[8-9]].[[0-9]]* 2>/dev/null` ; do
+                        `ls -dr ../tk[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \
+                        `ls -dr ../tk[[8-9]].[[0-9]] 2>/dev/null` \
+                        `ls -dr ../tk[[8-9]].[[0-9]]* 2>/dev/null` \
+                        ../../tk \
+                        `ls -dr ../../tk[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \
+                        `ls -dr ../../tk[[8-9]].[[0-9]] 2>/dev/null` \
+                        `ls -dr ../../tk[[8-9]].[[0-9]]* 2>/dev/null` \
+                        ../../../tk \
+                        `ls -dr ../../../tk[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \
+                        `ls -dr ../../../tk[[8-9]].[[0-9]] 2>/dev/null` \
+                        `ls -dr ../../../tk[[8-9]].[[0-9]]* 2>/dev/null` ; do
 		    if test -f "$i/unix/tkConfig.sh" ; then
 			ac_cv_c_tkconfig=`(cd $i/unix; pwd)`
 			break
@@ -168,7 +181,9 @@ AC_DEFUN(SC_PATH_TKCONFIG, [
 	    if test x"${ac_cv_c_tkconfig}" = x ; then
 		for i in \
 			${srcdir}/../tk \
-			`ls -dr ${srcdir}/../tk[[8-9]].[[0-9]]* 2>/dev/null` ; do
+                        `ls -dr ${srcdir}/../tk[[8-9]].[[0-9]].[[0-9]]* 2>/dev/null` \
+                        `ls -dr ${srcdir}/../tk[[8-9]].[[0-9]] 2>/dev/null` \
+                        `ls -dr ${srcdir}/../tk[[8-9]].[[0-9]]* 2>/dev/null` ; do
 		    if test -f "$i/unix/tkConfig.sh" ; then
 			ac_cv_c_tkconfig=`(cd $i/unix; pwd)`
 			break
@@ -501,6 +516,7 @@ AC_DEFUN(SC_ENABLE_SYMBOLS, [
 	LDFLAGS_DEFAULT='$(LDFLAGS_OPTIMIZE)'
 	DBGX=""
 	AC_MSG_RESULT([no])
+	AC_DEFINE(TCL_CFG_OPTIMIZED)
     else
 	CFLAGS_DEFAULT='$(CFLAGS_DEBUG)'
 	LDFLAGS_DEFAULT='$(LDFLAGS_DEBUG)'
@@ -511,6 +527,7 @@ AC_DEFUN(SC_ENABLE_SYMBOLS, [
     fi
     AC_SUBST(CFLAGS_DEFAULT)
     AC_SUBST(LDFLAGS_DEFAULT)
+    AC_DEFINE(TCL_CFG_DEBUG)
 
     if test "$tcl_ok" = "mem" -o "$tcl_ok" = "all"; then
 	AC_DEFINE(TCL_MEM_DEBUG)
@@ -1281,7 +1298,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".dylib"
 	    DL_OBJS="tclLoadDyld.o"
-	    PLAT_OBJS="tclMacOSXBundle.o"
+	    PLAT_OBJS="tclMacOSXBundle.o tclMacOSXFCmd.o"
 	    DL_LIBS=""
 	    LDFLAGS="-prebind"
 	    CC_SEARCH_FLAGS=""
@@ -1352,8 +1369,10 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    LDFLAGS=""
 	    CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
 	    LD_SEARCH_FLAGS='-rpath ${LIB_RUNTIME_DIR}'
-	    if test "$GCC" != "yes" ; then
-		EXTRA_CFLAGS="-DHAVE_TZSET -std1"
+	    if test "$GCC" = "yes" ; then
+		EXTRA_CFLAGS="-mieee"
+            else
+		EXTRA_CFLAGS="-DHAVE_TZSET -std1 -ieee"
 	    fi
 	    # see pthread_intro(3) for pthread support on osf1, k.furukawa
 	    if test "${TCL_THREADS}" = "1" ; then
@@ -1562,6 +1581,10 @@ dnl AC_CHECK_TOOL(AR, ar)
 
     if test "$do64bit" = "yes" -a "$do64bit_ok" = "no" ; then
     AC_MSG_WARN("64bit support being disabled -- don\'t know magic for this platform")
+    fi
+
+    if test "$do64bit" = "yes" -a "$do64bit_ok" = "yes" ; then
+	AC_DEFINE(TCL_CFG_DO64BIT)
     fi
 
     # Step 4: If pseudo-static linking is in use (see K. B. Kenny, "Dynamic
@@ -2464,4 +2487,30 @@ AC_DEFUN(SC_TCL_64BIT_FLAGS, [
 	    AC_DEFINE(HAVE_TYPE_OFF64_T)
 	fi
 	AC_MSG_RESULT(${tcl_cv_type_off64_t})
+    fi])
+
+#--------------------------------------------------------------------
+# SC_TCL_CFG_ENCODING	TIP #59
+#
+#	Declare the encoding to use for embedded configuration information.
+#
+# Arguments:
+#	None.
+#
+# Results:
+#	Might append to the following vars:
+#		DEFS	(implicit)
+#
+#	Will define the following vars:
+#		TCL_CFGVAL_ENCODING
+#
+#--------------------------------------------------------------------
+
+AC_DEFUN(SC_TCL_CFG_ENCODING, [
+    AC_ARG_WITH(encoding, [  --with-encoding              encoding for configuration values], with_tcencoding=${withval})
+
+    if test x"${with_tcencoding}" != x ; then
+	AC_DEFINE_UNQUOTED(TCL_CFGVAL_ENCODING,"${with_tcencoding}")
+    else
+	AC_DEFINE(TCL_CFGVAL_ENCODING,"iso8859-1")
     fi])
