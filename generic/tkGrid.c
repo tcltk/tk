@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.11 2001/02/12 18:06:47 drh Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.12 2001/08/18 20:03:16 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -328,7 +328,8 @@ Tk_GridCmd(clientData, interp, argc, argv)
 	return GridBboxCommand(tkwin, interp, argc, argv);
 	
     } else if ((c == 'c') && (strncmp(argv[1], "configure", length) == 0)) {
-	if (argv[2][0] != '.') {
+	if ((argv[2][0] != '.') && (argv[2][0] != REL_SKIP) &&
+    		(argv[2][0] != REL_VERT)) {
 	    Tcl_AppendResult(interp, "bad argument \"", argv[2],
 		    "\": must be name of window", (char *) NULL);
 	    return TCL_ERROR;
