@@ -1,5 +1,11 @@
 2001-08-08  Don Porter <dgp@users.sourceforge.net>
 
+	* tests/dialog.test:  New file testing [tk_dialog].
+
+	* library/dialog.tcl:
+	* library/tkfbox.tcl: Corrections to problems introduced by
+	the TIP 44 changes.  [Bug 449261]
+
         * README:
         * generic/tk.h:
         * unix/configure:
