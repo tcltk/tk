@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.16 2002/05/23 19:55:18 mdejong Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.17 2002/05/24 09:50:11 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -2049,10 +2049,28 @@ Tk_WmCmd(clientData, interp, argc, argv)
 		master = Tk_Parent(master);
 	    }
 	    Tk_MakeWindowExist(master);
+
+	    if (wmPtr->iconFor != NULL) {
+	        Tcl_AppendResult(interp, "can't make \"", argv[2],
+	    	        "\" a transient: it is an icon for ",
+	                Tk_PathName(wmPtr->iconFor),
+	                (char *) NULL);
+	        return TCL_ERROR;
+	    }
+
 	    wmPtr2 = ((TkWindow *) master)->wmInfoPtr;
 	    if (wmPtr2->wrapperPtr == NULL) {
 		CreateWrapper(wmPtr2);
 	    }
+
+	    if (wmPtr2->iconFor != NULL) {
+	        Tcl_AppendResult(interp, "can't make \"", argv[3],
+	                "\" a master: it is an icon for ",
+	                Tk_PathName(wmPtr2->iconFor),
+	                (char *) NULL);
+	        return TCL_ERROR;
+	    }
+
 	    wmPtr->master = Tk_WindowId(wmPtr2->wrapperPtr);
 	    if (wmPtr->masterWindowName != NULL) {
 		ckfree((char *) wmPtr->masterWindowName);

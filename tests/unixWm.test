@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.14 2001/12/04 03:07:43 mdejong Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.15 2002/05/24 09:50:11 mdejong Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1262,12 +1262,6 @@ test unixWm-36.2 {Tk_WmCmd procedure, "title" option} {unixOnly} {
     lappend result [wm title .t] [testprop [testwrapper .t] WM_NAME]
 } {t t {Test window} {Test window}}
 
-test unixWm-37.1 {Tk_WmCmd procedure, "transient" option} {
-    list [catch {wm transient .t 1 2} msg]  $msg
-} {1 {wrong # arguments: must be "wm transient window ?master?"}}
-test unixWm-37.2 {Tk_WmCmd procedure, "transient" option} {
-    list [catch {wm transient .t foo} msg]  $msg
-} {1 {bad window path name "foo"}}
 test unixWm-37.3 {Tk_WmCmd procedure, "transient" option} {unixOnly} {
     set result {}
     catch {destroy .t2}

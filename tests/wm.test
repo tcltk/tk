@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.4 2002/05/23 19:55:18 mdejong Exp $
+# RCS: @(#) $Id: wm.test,v 1.5 2002/05/24 09:50:11 mdejong Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -301,6 +301,48 @@ test wm-stackorder-6.1 {An embedded toplevel does not
     update
     wm stackorder .
 } {. .real}
+
+
+test wm-transient-1.1 {usage} {
+    catch {destroy .t} ; toplevel .t
+    list [catch {wm transient .t 1 2} msg]  $msg
+} {1 {wrong # arguments: must be "wm transient window ?master?"}}
+
+test wm-transient-1.2 {usage} {
+    catch {destroy .t} ; toplevel .t
+    list [catch {wm transient .t foo} msg]  $msg
+} {1 {bad window path name "foo"}}
+
+test wm-transient-1.3 {usage} {
+    catch {destroy .t} ; toplevel .t
+    list [catch {wm transient foo .t} msg]  $msg
+} {1 {bad window path name "foo"}}
+
+test wm-transient-1.4 {usage} {
+    deleteWindows
+    toplevel .master
+    toplevel .subject
+    wm transient .subject .master
+    list [catch {wm iconify .subject} msg] $msg
+} {1 {can't iconify ".subject": it is a transient}}
+
+test wm-transient-1.5 {usage} {
+    deleteWindows
+    toplevel .icon -bg blue
+    toplevel .top
+    wm iconwindow .top .icon
+    toplevel .dummy
+    list [catch {wm transient .icon .dummy} msg] $msg
+} {1 {can't make ".icon" a transient: it is an icon for .top}}
+
+test wm-transient-1.6 {usage} {
+    deleteWindows
+    toplevel .icon -bg blue
+    toplevel .top
+    wm iconwindow .top .icon
+    toplevel .dummy
+    list [catch {wm transient .dummy .icon} msg] $msg
+} {1 {can't make ".icon" a master: it is an icon for .top}}
 
 
 # FIXME:
