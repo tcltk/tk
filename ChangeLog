@@ -1,3 +1,8 @@
+2002-11-19  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/Makefile.in: add macosx/*.tcl (buildTkConfig.tcl in
+	particular) to the dist target.
+
 2002-11-14  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* generic/tkWindow.c (Tk_DestroyWindow,
