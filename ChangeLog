@@ -1,3 +1,18 @@
+2003-04-14  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* generic/tkBind.c (TkpGetBindingXEvent): Add helper method
+	that can be used to query the XEvent* for the currently
+	executing binding.
+	* generic/tkInt.h: Declare TkpGetBindingXEvent.
+	* win/tkWinMenu.c (MenuKeyBindProc, TkWinMenuKeyObjCmd,
+	TkpInitializeMenuBindings): Rename MenuKeyBindProc to
+	TkWinMenuKeyObjCmd and convert it into a Tcl command
+	named tk::tkWinMenuKey. Bind keyboard accelerator
+	actions to this Tcl command instead of using a native
+	C binding. This makes it possible to extend the
+	existing binding with Tcl code and makes the Windows
+	version work just like the unix version.
+	
 2003-04-04  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/Makefile.in: Subst TCL_LIBS instead of
