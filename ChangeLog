@@ -1,5 +1,8 @@
 2003-07-28  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* library/panedwindow.tcl: Apply patch from bug #778893 to make
+	the panedwindow -opaqueresize option work as per the docs.
+
 	* library/tk.tcl: Apply fix for bug #778840 for window placement
 	when using multiple desktops on windows.
 
