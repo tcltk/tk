@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.25 2001/12/07 04:17:25 chengyemao Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.26 2002/01/17 05:13:11 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -563,7 +563,7 @@ ImgPhotoCmd(clientData, interp, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     int oldformat = 0;
-    static char *photoOptions[] = {
+    static CONST char *photoOptions[] = {
 	"blank", "cget", "configure", "copy", "data", "get", "put",
 	"read", "redither", "write", (char *) NULL
     };

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGet.c,v 1.6 1999/12/14 06:52:28 hobbs Exp $
+ * RCS: @(#) $Id: tkGet.c,v 1.7 2002/01/17 05:13:11 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -37,9 +37,12 @@ static Tcl_ThreadDataKey dataKey;
  * used by Tk_GetAnchorFromObj and Tk_GetJustifyFromObj.
  */
 
-static char *anchorStrings[] = {"n", "ne", "e", "se", "s", "sw", "w", "nw",
-	"center", (char *) NULL};
-static char *justifyStrings[] = {"left", "right", "center", (char *) NULL};
+static CONST char *anchorStrings[] = {
+    "n", "ne", "e", "se", "s", "sw", "w", "nw", "center", (char *) NULL
+};
+static CONST char *justifyStrings[] = {
+    "left", "right", "center", (char *) NULL
+};
 
 
 /*

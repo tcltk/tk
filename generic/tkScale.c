@@ -18,7 +18,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.14 2001/08/29 23:22:24 hobbs Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.15 2002/01/17 05:13:11 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -147,7 +147,7 @@ static Tk_OptionSpec optionSpecs[] = {
  * to dispatch the scale widget command.
  */
 
-static char *commandNames[] = {
+static CONST char *commandNames[] = {
     "cget", "configure", "coords", "get", "identify", "set", (char *) NULL
 };
 

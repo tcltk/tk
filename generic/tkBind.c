@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.19 2002/01/04 16:35:04 dgp Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.20 2002/01/17 05:13:11 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -2617,7 +2617,7 @@ Tk_EventObjCmd(clientData, interp, objc, objv)
     Tk_Window tkwin;
     VirtualEventTable *vetPtr;
     TkBindInfo bindInfo;
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"add",		"delete",	"generate",	"info",
 	NULL
     };
@@ -3186,7 +3186,7 @@ HandleEventGenerate(interp, mainWin, objc, objv)
     Tk_Window tkwin, tkwin2;
     TkWindow *mainPtr;
     unsigned long eventMask;
-    static char *fieldStrings[] = {
+    static CONST char *fieldStrings[] = {
 	"-when",	"-above",	"-borderwidth",	"-button",
 	"-count",	"-delta",	"-detail",	"-focus",
 	"-height",

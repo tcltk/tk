@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.12 2001/08/15 15:44:36 dkf Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.13 2002/01/17 05:13:11 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -168,7 +168,7 @@ static TkStateMap xlfdSetwidthMap[] = {
  * when configuring a set of font attributes.
  */
 
-static char *fontOpt[] = {
+static CONST char *fontOpt[] = {
     "-family",
     "-size",
     "-weight",
@@ -479,7 +479,7 @@ Tk_FontObjCmd(clientData, interp, objc, objv)
     int index;
     Tk_Window tkwin;
     TkFontInfo *fiPtr;
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"actual",	"configure",	"create",	"delete",
 	"families",	"measure",	"metrics",	"names",
 	NULL
@@ -684,7 +684,7 @@ Tk_FontObjCmd(clientData, interp, objc, objv)
 	    Tk_Font tkfont;
 	    int skip, index, i;
 	    CONST TkFontMetrics *fmPtr;
-	    static char *switches[] = {
+	    static CONST char *switches[] = {
 		"-ascent", "-descent", "-linespace", "-fixed", NULL
 	    };
 
