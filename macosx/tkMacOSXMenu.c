@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.9 2003/07/18 11:04:59 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.10 2003/08/12 08:49:22 das Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -2144,8 +2144,9 @@ TkMacOSXDispatchMenuEvent(
     	    	if ((helpMenuRef != NULL) && (helpMenuRef->menuPtr != NULL)) {
 		    MenuRef outHelpMenu;
 		    MenuItemIndex itemIndex;
+		    int newIndex;
 		    HMGetHelpMenu(&outHelpMenu, &itemIndex);
-    	    	    int newIndex = index - itemIndex;
+    	    	    newIndex = index - itemIndex;
     	    	    result = TkInvokeMenu(currentMenuBarInterp,
     	    	    	    helpMenuRef->menuPtr, newIndex);
     	    	}
