@@ -144,7 +144,7 @@ int TkMacOSXProcessKeyboardEvent(
 #endif
     int eventGenerated;
     UniChar uniChars[5]; /* make this larger, if needed */
-    UInt32 uniCharsLen;
+    UInt32 uniCharsLen = 0;
 
     if (!InitKeyData(&keyEventData)) {
         statusPtr->err = 1;
