@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.5 2004/02/20 19:51:24 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.6 2004/02/20 19:54:34 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5479,7 +5479,7 @@ on Windows. (martin)
 of the event structure when that field is valid for that event type. (fellows)
 	*** POTENTIAL INCOMPATIBILITY ***
 
---- Released 8.4.2, March 3, 2002 --- See ChangeLog for details ---
+--- Released 8.4.2, March 3, 2003 --- See ChangeLog for details ---
 
 2003-03-14 (bug fix)[701812] Stop buttons from being very wide when a
 tk_messageBox has a lot of content on Unix
@@ -5502,7 +5502,7 @@ charset fonts.  gb2312.enc was made to be euc-cn for Tcl because that is
 what is most often meant, but X really wants the original (-raw) gb2312
 encoding.
 
---- Released 8.4.3, May 20, 2002 --- See ChangeLog for details ---
+--- Released 8.4.3, May 20, 2003 --- See ChangeLog for details ---
 
 2003-07-07 (bug fix)[749353] Improve deletion of images on exit.
 
