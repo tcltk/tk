@@ -1,3 +1,16 @@
+1999-03-29    <redman@scriptics.com>
+
+	* unix/configure.in:
+	* unix/Makefile.in:
+	* win/makefile.vc:
+	* generic/tkDecls.h:
+	* generic/tkIntDecls.h:
+	* generic/tkIntPlatDecls.h:
+	* generic/tkPlatDecls.h:
+	* generic/tkIntXlibDecls.h: Removed stub functions. Always use the
+	Tcl stubs when building with --enable-shared.
+	
+
 1999-03-26    <redman@scriptics.com>
 
 	* generic/tkTextIndex.c:
@@ -17,9 +30,12 @@
         and shell.
 
 1999-03-26    <surles@scriptics.com>
+
 	* library/menu.tcl: Fixed bug reported by Bryan Oakley in the
 	menubutton bindings.  There was a false assumption that there was
 	always a menu attached to the button.  [Bug 1116] 
+
+1999-03-26    <redman@scriptics.com>
 
 	* unix/configure.in: Removed --enable-tcl-stub.  Linking Tk to Tcl
  	stubs is causing too many problems when linking executables like wish.
