@@ -1,3 +1,13 @@
+1999-11-09  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* generic/tkGrid.c: changed Tcl_Alloc to ckalloc
+
+	* generic/tkEntry.c: fixed C expr error in destroy of entry
+	that could lead to 'malformed bucket chain' error
+
+	* win/winMain.c: corrected winMain to not do a DebugBreak when
+	returning an error message from the top level
+
 1999-10-30  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* win/tkWinKey.c: fixed XKeysymToKeycode to handle mapping of
