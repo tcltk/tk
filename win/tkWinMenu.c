@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.1.4.2 1998/09/30 02:19:35 stanton Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.1.4.3 1998/10/06 03:27:36 stanton Exp $
  */
 
 #define OEMRESOURCE
@@ -1820,8 +1820,8 @@ MenuKeyBindProc(clientData, interp, eventPtr, tkwin, keySym)
 		CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 			WM_SYSKEYDOWN, virtualKey, ((scanCode << 16)
 			| (1 << 29)));
-		if (eventPtr->xkey.nchars > 0) {
-		    for (i = 0; i < eventPtr->xkey.nchars; i++) {
+		if (eventPtr->xkey.nbytes > 0) {
+		    for (i = 0; i < eventPtr->xkey.nbytes; i++) {
 			CallWindowProc(DefWindowProc,
 				Tk_GetHWND(Tk_WindowId(tkwin)),
 				WM_SYSCHAR,
