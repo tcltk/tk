@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.33 1999/04/30 22:49:54 stanton Exp $
+RCS: @(#) $Id: changes,v 1.33.2.1 1999/05/25 20:30:06 stanton Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4589,9 +4589,16 @@ headers. (redman)
 4/22/99 (bug fix) Set the -translation and -encoding options to binary
 for image files. (redman)
 
-4/27 (bug fix) Changed to avoid the need for forward declarations in
+4/27/99 (bug fix) Changed to avoid the need for forward declarations in
 stub initializers.  Added extern "C" blocks around stub table pointer
 declarations so the stubs can be used from C++ code. (stanton)
 
 --------------- Released 8.1 final, April 29, 1999 ----------------------
 
+5/7/99 (bug fix) Fixed bug wheretk_popup fails when called too
+quickly. [Bug: 2009] (stanton)
+
+5/18/99 (bug fix) Fixed clipboard code so it handles Unicode data
+properly on Windows NT and 95. [Bug: 1791] (stanton)
+
+--------------- Released 8.1.1, May 25, 1999 ----------------------
