@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bind.test,v 1.15 2004/07/05 21:21:53 dkf Exp $
+# RCS: @(#) $Id: bind.test,v 1.16 2004/08/29 09:27:35 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2696,8 +2696,64 @@ test bind-31.3 {MouseWheel events} {
     set x
 } {240 10 30}
 
+test bind-32.1 {virtual event user_data field - bad generation} {
+    setup
+    # Check no confusion, since Focus events use %d for something else
+    list [catch {event gen .b.f <FocusIn> -data foo} msg] $msg
+} {1 {<FocusIn> event doesn't accept "-data" option}}
+test bind-32.2 {virtual event user_data field - NULL, synch} {
+    setup
+    set x {}
+    bind .b.f <<TestUserData>> {set x "TestUserData >%d<"}
+    event gen .b.f <<TestUserData>>
+    set x
+} {TestUserData >{}<}
+test bind-32.3 {virtual event user_data field - shared, synch} {
+    setup
+    set x {}
+    bind .b.f <<TestUserData>> {set x "TestUserData >%d<"}
+    event gen .b.f <<TestUserData>> -data "foo bar"
+    set x
+} {TestUserData >foo bar<}
+test bind-32.4 {virtual event user_data field - unshared, synch} {
+    setup
+    set x {}
+    bind .b.f <<TestUserData>> {set x "TestUserData >%d<"}
+    event gen .b.f <<TestUserData>> -data [string index abc 1]
+    set x
+} {TestUserData >b<}
+# Note that asynch event handling can only really catch any potential
+# extra errors when used in combination with a tool like Purify or
+# Valgrind. Such testing is rarely done, but at least any problem with
+# reference handling will eventually show up with these tests...
+test bind-32.5 {virtual event user_data field - NULL, asynch} {
+    setup
+    set x {}
+    bind .b.f <<TestUserData>> {set x "TestUserData >%d<"}
+    event gen .b.f <<TestUserData>> -when head
+    list $x [update] $x
+} {{} {} {TestUserData >{}<}}
+test bind-32.6 {virtual event user_data field - shared, asynch} {
+    setup
+    set x {}
+    bind .b.f <<TestUserData>> {set x "TestUserData >%d<"}
+    event gen .b.f <<TestUserData>> -data "foo bar" -when head
+    list $x [update] $x
+} {{} {} {TestUserData >foo bar<}}
+test bind-32.7 {virtual event user_data field - unshared, asynch} {
+    setup
+    set x {}
+    bind .b.f <<TestUserData>> {set x "TestUserData >%d<"}
+    event gen .b.f <<TestUserData>> -data [string index abc 1] -when head
+    list $x [update] $x
+} {{} {} {TestUserData >b<}}
+
 destroy .b
 
 # cleanup
 cleanupTests
 return
+
+# Local Variables:
+# mode: tcl
+# End:

@@ -1,3 +1,15 @@
+2004-08-29  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	TIP#165 IMPLEMENTATION
+
+	* generic/tk.h (XVirtualEvent): Added user_data field to
+	structure.
+	* generic/tkBind.c (ExpandPercents, HandleEventGenerate): 
+	* generic/tkEvent.c (Tk_HandleEvent): Handle putting data into the
+	user_data field, passing it to scripts as %d substitution, and
+	releasing the field's contents once the event has been processed.
+	* doc/bind.n, doc/event.n, tests/bind.test: Docs + tests.
+
 2004-08-26  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/text.tcl (::tk::TextTranspose): Ensure that Transpose is

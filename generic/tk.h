@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.80 2004/03/26 19:57:34 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.81 2004/08/29 09:27:35 dkf Exp $
  */
 
 #ifndef _TK
@@ -681,6 +681,9 @@ typedef struct {
     unsigned int state;	    /* key or button mask */
     Tk_Uid name;	    /* Name of virtual event. */
     Bool same_screen;	    /* same screen flag */
+    Tcl_Obj *user_data;     /* application-specific data reference; Tk will
+			     * decrement the reference count *once* when it
+			     * has finished processing the event. */
 } XVirtualEvent;
 
 typedef struct {
