@@ -1,3 +1,11 @@
+2002-11-07  Peter Spjuth  <peter.spjuth@space.se>
+
+	* tests/place.test:
+	* generic/tkPlace.c: place info did not return all settings,
+	and didn't make sure the result was a proper list.
+	Put '-in' first in result to be more consistent with how
+	grid/pack info behaves. [Bug #635025][Bug #532022]
+
 2002-11-07  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/Makefile.in: added macosx/README to dist target.
