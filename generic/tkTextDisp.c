@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.41 2004/06/04 10:51:18 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.42 2004/06/07 16:23:52 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -339,9 +339,15 @@ typedef struct TextDInfo {
 				 * contained in the widget and update
 				 * their geometry calculations, if they
 				 * are out of date.  */
-    TkTextIndex metricIndex;
-    int metricPixelHeight;
-    int metricEpoch;
+    TkTextIndex metricIndex;    /* If the current metric update line
+                                 * wraps into very many display lines, then
+                                 * this is used to keep track of what
+                                 * index we've got to so far... */
+    int metricPixelHeight;      /* ...and this is for the height
+                                 * calculation so far...*/
+    int metricEpoch;            /* ...and this for the epoch of the
+                                 * partial calculation so it can be
+                                 * cancelled if things change once more. */
     int lastMetricUpdateLine;   /* When the current update line reaches
 				 * this line, we are done and should
 				 * stop the asychronous callback
@@ -2620,6 +2626,15 @@ AsyncUpdateLineMetrics(clientData)
      */
     lineNum = TkTextUpdateLineMetrics(textPtr, lineNum, 
 	    dInfoPtr->lastMetricUpdateLine, 256);
+
+    if (tkTextDebug) {
+	char buffer[2 * TCL_INTEGER_SPACE + 1];
+
+	sprintf(buffer, "%d %d", lineNum, dInfoPtr->lastMetricUpdateLine);
+	Tcl_SetVar2(textPtr->interp, "tk_textInvalidateLine", (char *) NULL, 
+		    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+    }
+    
     if (lineNum == dInfoPtr->lastMetricUpdateLine) {
 	/*
 	 * We have looped over all lines, so we're done.  We must
@@ -2633,6 +2648,7 @@ AsyncUpdateLineMetrics(clientData)
 	return;
     }
     dInfoPtr->currentMetricUpdateLine = lineNum;
+
     /* 
      * Re-arm the timer.  We already have a refCount on the text widget
      * so no need to adjust that.
@@ -2708,6 +2724,16 @@ TkTextUpdateLineMetrics(textPtr, lineNum, endLine, doThisMuch)
 	}
 
 	if (lineNum < totalLines) {
+	    if (tkTextDebug) {
+		char buffer[4 * TCL_INTEGER_SPACE + 3];
+
+		sprintf(buffer, "%d %d %d %d", lineNum, endLine, 
+			totalLines, count);
+		Tcl_SetVar2(textPtr->interp, "tk_textInvalidateLine", 
+			    (char *) NULL, buffer, 
+			    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+	    }
+	    
 	    /* Now update the line's metrics if necessary */
 	    if (linePtr->pixelCalculationEpoch 
 		!= textPtr->dInfoPtr->lineMetricUpdateEpoch) {
@@ -2732,6 +2758,12 @@ TkTextUpdateLineMetrics(textPtr, lineNum, endLine, doThisMuch)
 			indexPtr = &textPtr->dInfoPtr->metricIndex;
 			pixelHeight = textPtr->dInfoPtr->metricPixelHeight;
 		    } else {
+			/* 
+			 * We must reset the partial line height
+			 * calculation data here, so we don't use
+			 * it when it is out of date.
+			 */
+			textPtr->dInfoPtr->metricEpoch = -1;
 			index.tree = textPtr->tree;
 			index.linePtr = linePtr;
 			index.byteIndex = 0;
@@ -2761,6 +2793,11 @@ TkTextUpdateLineMetrics(textPtr, lineNum, endLine, doThisMuch)
 			break;
 		    }
 		}
+	    } else {
+		/* 
+		 * This line is already up to date.   That means there's
+		 * nothing to do here.
+		 */
 	    }
 	} else {
 	    /* 
@@ -3290,6 +3327,10 @@ TkTextUpdateOneLine(textPtr, linePtr, pixelHeight, indexPtr)
 	 * just below).
 	 */
 	linePtr->pixelCalculationEpoch = textPtr->dInfoPtr->lineMetricUpdateEpoch;
+	/* 
+	 * Also cancel any partial line height calculation state.
+	 */
+	textPtr->dInfoPtr->metricEpoch = -1;
 
 	if (linePtr->pixelHeight == pixelHeight) {
 	    return displayLines;
@@ -3304,15 +3345,15 @@ TkTextUpdateOneLine(textPtr, linePtr, pixelHeight, indexPtr)
     pixelHeight = TkBTreeAdjustPixelHeight(linePtr, pixelHeight);
     
     if (tkTextDebug) {
-	char buffer[TCL_INTEGER_SPACE + 1];
+	char buffer[2 * TCL_INTEGER_SPACE + 1];
 
 	if (TkBTreeNextLine(linePtr) == NULL) {
 	    Tcl_Panic("Mustn't ever update line height of last artificial line");
 	}
 
-	sprintf(buffer, "%d", pixelHeight);
+	sprintf(buffer, "%d %d", TkBTreeLineIndex(linePtr), pixelHeight);
 	Tcl_SetVar2(textPtr->interp, "tk_textNumPixels", (char *) NULL, 
-		    buffer, TCL_GLOBAL_ONLY);
+		    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
     }
     if (textPtr->dInfoPtr->scrollbarTimer == NULL) {
 	textPtr->refCount++;
@@ -4336,6 +4377,7 @@ TkTextRelayoutWindow(textPtr, mask)
 	if ((++dInfoPtr->lineMetricUpdateEpoch) == 0) {
 	    dInfoPtr->lineMetricUpdateEpoch++;
 	}
+
 	dInfoPtr->currentMetricUpdateLine = -1;
 	
 	if (dInfoPtr->lineUpdateTimer == NULL) {
