@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.11 2000/05/13 00:02:25 hobbs Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.12 2000/08/29 21:00:13 ericm Exp $
  */
 
 #include "tkWinInt.h"
@@ -1931,6 +1931,7 @@ GetScreenFont(
     HFONT hFont;
     LOGFONTW lf;
 
+    memset(&lf, 0, sizeof(lf));
     lf.lfHeight		= -pixelSize;
     lf.lfWidth		= 0;
     lf.lfEscapement	= 0;
