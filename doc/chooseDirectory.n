@@ -2,7 +2,7 @@
 '\" Copyright (c) 1998-2000 by Scriptics Corporation.
 '\" All rights reserved.
 '\" 
-'\" RCS: @(#) $Id: chooseDirectory.n,v 1.1 2000/01/27 00:23:10 ericm Exp $
+'\" RCS: @(#) $Id: chooseDirectory.n,v 1.1.10.1 2004/10/28 10:19:29 dkf Exp $
 '\" 
 .so man.macros
 .TH tk_chooseDirectory n 8.3 Tk "Tk Built-In Commands"
@@ -40,13 +40,21 @@ Specifies a string to display as the title of the dialog box. If this
 option is not specified, then a default title will be displayed.
 .TP
 \fB\-mustexist\fR \fIboolean\fR
-Specifies whether the user may specify non-existant directories.  If
+Specifies whether the user may specify non-existent directories.  If
 this parameter is true, then the user may only select directories that
 already exist.  The default value is \fIfalse\fR.
-.LP
+.SH EXAMPLE
+.CS
+set dir [\fBtk_chooseDirectory\fR \\
+        \-initialdir ~ \-title "Choose a directory"]
+if {$dir eq ""} {
+   label .l -text "No directory selected"
+} else {
+   label .l -text "Selected $dir"
+}
+.CE
 
 .SH "SEE ALSO"
-tk_getOpenFile, tk_getSaveFile
-
+tk_getOpenFile(n), tk_getSaveFile(n)
 .SH KEYWORDS
-directory selection dialog
+directory, selection, dialog, platform-specific

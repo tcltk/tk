@@ -1,3 +1,7 @@
+2004-10-28  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/*.n: Backport of minor documentation fixes.
+
 2004-10-27  Don Porter	<dgp@users.sourceforge.net>
 
         * library/xmfbox.tcl (MotifFDialog_BuildUI): Fix [Bug 987169] in
