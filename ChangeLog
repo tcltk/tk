@@ -1,3 +1,11 @@
+2004-01-09  Peter Spjuth  <peter.spjuth@space.se>
+	* doc/grid.n:
+	* tests/grid.test:
+	* generic/tkGrid.c: Implementation of TIP#146,
+	"Add Overall Anchoring to the Grid Geometry Manager",
+	adding [grid anchor] subcommand.
+	**** POTENTIAL VISUAL INCOMPATABILITY ****
+
 2004-01-07  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkTextDisp.c:
