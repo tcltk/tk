@@ -1,3 +1,8 @@
+2003-03-18  Don Porter  <dgp@users.sourceforge.net>
+
+	* tests/unixWm.test (unixWm-41.2): Corrected typo in 2003-03-13
+	commit.  Thanks Larry Virden.  [Bug 705567]
+
 2003-03-18  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.pbproj/project.pbxproj:
