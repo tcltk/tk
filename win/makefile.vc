@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.75 2003/11/16 06:07:00 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.76 2003/11/17 02:15:32 dgp Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -533,12 +533,8 @@ install-binaries:
 !if !$(STATIC_BUILD)
 	@echo Creating package index "$(SCRIPT_INSTALL_DIR)\pkgIndex.tcl"
 	-del "$(SCRIPT_INSTALL_DIR)\pkgIndex.tcl"
-	echo if {[package vcompare [package provide Tcl] $(TCL_DOTVERSION)] != 0} { return }> "$(OUT_DIR)\pkgIndex.tcl"
-	echo if {[info exists ::tcl_platform(debug)]} {>> "$(OUT_DIR)\pkgIndex.tcl"
-	echo     package ifneeded Tk $(DOTVERSION) [list load [file join $$dir .. .. bin tk$(VERSION)g.dll] Tk]>> "$(OUT_DIR)\pkgIndex.tcl"
-	echo } else {>> "$(OUT_DIR)\pkgIndex.tcl"
-	echo    package ifneeded Tk $(DOTVERSION) [list load [file join $$dir .. .. bin tk$(VERSION).dll] Tk]>> "$(OUT_DIR)\pkgIndex.tcl"
-	echo }>> "$(OUT_DIR)\pkgIndex.tcl"
+	echo if {[package vcompare [package provide Tcl] $(TCL_DOTVERSION)] != 0} { return } > "$(OUT_DIR)\pkgIndex.tcl"
+	echo package ifneeded Tk $(DOTVERSION) [list load [file join $$dir .. .. bin $(TKLIBNAME)] Tk] >>"$(OUT_DIR)\pkgIndex.tcl"
 	$(CPY) "$(OUT_DIR)\pkgIndex.tcl" "$(SCRIPT_INSTALL_DIR)\"
 !endif
 
