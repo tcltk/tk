@@ -1,5 +1,18 @@
 2001-04-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* tests/canvas.test: marked canvas-13.1 knownBug
+	* generic/tkCanvas.c (CanvasEventProc): reverted 2001-04-02 canvas
+	changes back because it lead to cached fonts not being freed.  The
+	changes were correct for the bug, but the problem is that the
+	needed Tcl_EventuallyFree will sometimes not get called until the
+	whole app is being destroyed and thus the font panic is invoked.
+
+	* win/configure:
+	* win/tcl.m4: added -link50compat
+
+	* win/tkWinX.c (GenerateXEvent): set xkey.numbytes = 0 for
+	MouseWheel event processing.
+
 	* unix/tkUnixFont.c: Corrected support for iso10646 (X11 Unicode)
 	fonts on Unix. This adds a ucs-2be (UCS-2 Big Endian) encoding in
 	Tk on Unix that is used for those fonts (X11 requires
