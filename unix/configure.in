@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.68 2002/01/29 08:04:37 mdejong Exp $
+# RCS: @(#) $Id: configure.in,v 1.69 2002/01/29 08:23:36 mdejong Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -344,9 +344,6 @@ SC_ENABLE_SHARED
 
 eval eval "TK_SHARED_LIB_SUFFIX=${SHARED_LIB_SUFFIX}"
 eval eval "TK_UNSHARED_LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}"
-
-TCL_LIB_SPEC='-L$(TCL_BIN_DIR) $(TCL_LIB_FLAG)'
-TCL_STUB_LIB_SPEC='-L$(TCL_BIN_DIR) $(TCL_STUB_LIB_FLAG)'
 
 if test "${SHARED_BUILD}" = "1" -a "${SHLIB_SUFFIX}" != ""; then
     TK_SHLIB_CFLAGS="${SHLIB_CFLAGS}"

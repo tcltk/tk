@@ -1,5 +1,14 @@
 2002-01-28  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* unix/configure: Regen.
+	* unix/configure.in: Don't set TCL_LIB_SPEC and
+	TCL_STUB_LIB_SPEC variables since this breaks
+	the AIX build. This was used in the past to
+	support linking with Tcl from the build dir
+	or the install dir, but it is no longer needed.
+
+2002-01-28  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* unix/Makefile.in: Remove commented out vars.
 	* unix/configure: Regen.
 	* unix/configure.in: Don't subst vars that are already
