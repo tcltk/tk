@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.2 1998/09/14 18:23:30 stanton Exp $
+# RCS: @(#) $Id: widget,v 1.3 2001/09/26 21:36:19 pspjuth Exp $
 
 eval destroy [winfo child .]
 wm title . "Widget Demonstration"
@@ -208,6 +208,12 @@ This application provides a front end for several short scripts that demonstrate
 .t insert end " \n " {demospace}
 .t insert end "2. Menubuttons"\
 	{demo demo-menubu}
+.t insert end " \n " {demospace}
+
+.t insert end \n {} "Labelframes" title
+.t insert end " \n " {demospace}
+.t insert end "1. Labelframe." \
+	{demo demo-labelframe}
 .t insert end " \n " {demospace}
 
 .t insert end \n {} "Common Dialogs" title

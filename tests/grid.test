@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.13 2001/09/23 11:30:44 pspjuth Exp $
+# RCS: @(#) $Id: grid.test,v 1.14 2001/09/26 21:36:19 pspjuth Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1359,6 +1359,41 @@ test grid-17.1 {forget and pending idle handlers} {
     destroy .t
     set result ok
 } ok
+
+test grid-18.1 {test respect for internalborder} {
+    toplevel .pack
+    wm geometry .pack 200x200
+    frame .pack.l -width 15 -height 10
+    labelframe .pack.lf -labelwidget .pack.l
+    pack .pack.lf -fill both -expand 1
+    frame .pack.lf.f
+    grid .pack.lf.f -sticky news
+    grid columnconfigure .pack.lf 0 -weight 1
+    grid rowconfigure .pack.lf 0 -weight 1
+    update
+    set res [list [winfo geometry .pack.lf.f]]
+    .pack.lf configure -labelanchor e -padx 3 -pady 5
+    update
+    lappend res [winfo geometry .pack.lf.f]
+    destroy .pack
+    set res
+} {196x188+2+10 177x186+5+7}
+test grid-18.2 {test support for minreqsize} {
+    toplevel .pack
+    wm geometry .pack {}
+    frame .pack.l -width 150 -height 100
+    labelframe .pack.lf -labelwidget .pack.l
+    pack .pack.lf -fill both -expand 1
+    frame .pack.lf.f -width 20 -height 25
+    grid .pack.lf.f
+    update
+    set res [list [winfo geometry .pack.lf]]
+    .pack.lf configure -labelanchor ws
+    update
+    lappend res [winfo geometry .pack.lf]
+    destroy .pack
+    set res
+} {162x127+0+0 172x112+0+0}
 
 # cleanup
 ::tcltest::cleanupTests
