@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: send.n,v 1.1.4.2 1998/09/30 02:16:29 stanton Exp $
+'\" RCS: @(#) $Id: send.n,v 1.1.4.3 1999/04/02 23:50:11 redman Exp $
 '\" 
 .so man.macros
 .TH send n 4.0 Tk "Tk Built-In Commands"
@@ -88,12 +88,8 @@ This means that applications cannot connect to your server unless
 they use some other form of authorization
 such as that provide by \fBxauth\fR.
 .VS
-Under Windows, any application running on the current machine can send
-Dynamic Data Exchange (DDE) commands which could read and write files and start
-processes. Only the local machine can connect, however, so there are
-no restrictions on which processes can connect. The \fBsend\fR command
-uses DDE as its transport, and a \fBdde\fR command has been added to
-Tk 8.0.
+Under Windows, \fBsend\fR is currently disabled.  Most of the
+functionality is provided by the \fBdde\fR command instead.
 .VE
 .SH KEYWORDS
 .VS

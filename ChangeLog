@@ -8,6 +8,8 @@
 	* win/makefile.vc: Tk now uses its own stub library to store
 	pointers to its own stubs table.
 
+	* doc/dde.n: (removed)
+	* doc/send.n:
 	* generic/tk.decls:
 	* tests/winSend.test:
 	* generic/tkPlatDecls.h:
