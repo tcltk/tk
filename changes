@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.42.2.3 2001/10/18 23:17:59 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.42.2.4 2002/02/18 06:31:08 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5003,3 +5003,10 @@ expansion to the Win/Mac console. (hobbs)
 2001-10-17 (bug fix) updated Mac build support. (steffen)
 
 --- Released 8.3.4, October 19, 2001 --- See ChangeLog for details ---
+
+2001-12-18 (bug fix)[413735] event-click-drag-1.2 test failure (porter)
+
+2002-01-31 (bug fix)[508988] logic error in menu cloning (helfter)
+
+2002-02-01 (bug fix)[511956] C99 spec: avoid 'bool' as a variable name (hobbs)
+

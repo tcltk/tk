@@ -1,3 +1,7 @@
+2002-02-18  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes: First draft of updates to changes for 8.3.5.
+
 2002-02-01  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkCmds.c (Tk_TkObjCmd): don't use 'bool' as an arg as it
