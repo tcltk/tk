@@ -5,7 +5,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.6 2000/03/24 19:38:57 ericm Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.7 2000/04/19 23:12:56 hobbs Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -22,7 +22,6 @@ namespace eval ::tk::dialog::file::chooseDir {
 # Arguments:
 #	args		Options parsed by the procedure.
 #
-
 proc ::tk::dialog::file::chooseDir::tkChooseDirectory {args} {
     global tkPriv
     set dataName __tk_choosedir
@@ -53,7 +52,7 @@ proc ::tk::dialog::file::chooseDir::tkChooseDirectory {args} {
     }
     wm transient $w $data(-parent)
 
-    trace variable data(selectPath) w "::tk::dialog::file::SetPath $w"
+    trace variable data(selectPath) w [list ::tk::dialog::file::SetPath $w]
     $data(dirMenuBtn) configure \
 	    -textvariable ::tk::dialog::file::${dataName}(selectPath)
 
@@ -110,14 +109,13 @@ proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
     # 0: Delete all variable that were set on data(selectPath) the
     # last time the file dialog is used. The traces may cause troubles
     # if the dialog is now used with a different -parent option.
-
+    #
     foreach trace [trace vinfo data(selectPath)] {
 	trace vdelete data(selectPath) [lindex $trace 0] [lindex $trace 1]
     }
 
     # 1: the configuration specs
     #
-
     set specs {
 	{-mustexist "" "" 0}
 	{-initialdir "" "" ""}
@@ -127,7 +125,6 @@ proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
 
     # 2: default values depending on the type of the dialog
     #
-
     if {![info exists data(selectPath)]} {
 	# first time the dialog has been popped up
 	set data(selectPath) [pwd]
@@ -135,30 +132,25 @@ proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
 
     # 3: parse the arguments
     #
-
     tclParseConfigSpec ::tk::dialog::file::$dataName $specs "" $argList
 
-    if {[string equal $data(-title) ""]} {
+    if {$data(-title) == ""} {
 	set data(-title) "Choose Directory"
     }
 
     # 4: set the default directory and selection according to the -initial
     #    settings
     #
-
-    if {[string compare $data(-initialdir) ""]} {
+    if {$data(-initialdir) != ""} {
+	# Ensure that initialdir is an absolute path name.
 	if {[file isdirectory $data(-initialdir)]} {
-	    set data(selectPath) [lindex [glob $data(-initialdir)] 0]
+	    set old [pwd]
+	    cd $data(-initialdir)
+	    set data(selectPath) [pwd]
+	    cd $old
 	} else {
 	    set data(selectPath) [pwd]
 	}
-
-	# Convert the initialdir to an absolute path name.
-
-	set old [pwd]
-	cd $data(selectPath)
-	set data(selectPath) [pwd]
-	cd $old
     }
 
     if {![winfo exists $data(-parent)]} {
@@ -173,7 +165,7 @@ proc ::tk::dialog::file::chooseDir::OkCmd {w} {
 
     # This is the brains behind selecting non-existant directories.  Here's
     # the flowchart:
-    # 1.  If the icon list has a selection, join it with the current directory,
+    # 1.  If the icon list has a selection, join it with the current dir,
     #     and return that value.
     # 1a.  If the icon list does not have a selection ...
     # 2.  If the entry is empty, do nothing.

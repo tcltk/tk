@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.9 1999/12/02 02:05:46 redman Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.10 2000/04/19 23:12:56 hobbs Exp $
  */
 
 #include <tk.h>
@@ -45,6 +45,28 @@ extern int		Tcltest_Init _ANSI_ARGS_((Tcl_Interp *interp));
 
 static BOOL consoleRequired = TRUE;
 
+/*
+ * The following #if block allows you to change the AppInit
+ * function by using a #define of TCL_LOCAL_APPINIT instead
+ * of rewriting this entire file.  The #if checks for that
+ * #define and uses Tcl_AppInit if it doesn't exist.
+ */
+    
+#ifndef TK_LOCAL_APPINIT
+#define TK_LOCAL_APPINIT Tcl_AppInit    
+#endif
+extern int TK_LOCAL_APPINIT _ANSI_ARGS_((Tcl_Interp *interp));
+    
+/*
+ * The following #if block allows you to change how Tcl finds the startup
+ * script, prime the library or encoding paths, fiddle with the argv,
+ * etc., without needing to rewrite Tk_Main()
+ */
+
+#ifdef TK_LOCAL_MAIN_HOOK
+extern int TK_LOCAL_MAIN_HOOK _ANSI_ARGS_((int *argc, char ***argv));
+#endif
+
 
 /*
  *----------------------------------------------------------------------
@@ -74,28 +96,6 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
     int argc;
     char buffer[MAX_PATH+1];
     char *p;
-    
-    /*
-     * The following #if block allows you to change the AppInit
-     * function by using a #define of TCL_LOCAL_APPINIT instead
-     * of rewriting this entire file.  The #if checks for that
-     * #define and uses Tcl_AppInit if it doesn't exist.
-     */
-    
-#ifndef TK_LOCAL_APPINIT
-#define TK_LOCAL_APPINIT Tcl_AppInit    
-#endif
-    extern int TK_LOCAL_APPINIT _ANSI_ARGS_((Tcl_Interp *interp));
-    
-    /*
-     * The following #if block allows you to change how Tcl finds the startup
-     * script, prime the library or encoding paths, fiddle with the argv,
-     * etc., without needing to rewrite Tk_Main()
-     */
-    
-#ifdef TK_LOCAL_MAIN_HOOK
-    extern int TK_LOCAL_MAIN_HOOK _ANSI_ARGS_((int *argc, char ***argv));
-#endif
 
     Tcl_SetPanicProc(WishPanic);
 

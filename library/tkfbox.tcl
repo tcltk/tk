@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.18 2000/03/31 09:24:12 hobbs Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.19 2000/04/19 23:12:56 hobbs Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -771,7 +771,7 @@ proc ::tk::dialog::file::Config {dataName type argList} {
     #
     tclParseConfigSpec ::tk::dialog::file::$dataName $specs "" $argList
 
-    if {[string equal $data(-title) ""]} {
+    if {$data(-title) == ""} {
 	if {[string equal $type "open"]} {
 	    set data(-title) "Open"
 	} else {
@@ -782,19 +782,16 @@ proc ::tk::dialog::file::Config {dataName type argList} {
     # 4: set the default directory and selection according to the -initial
     #    settings
     #
-    if {[string compare $data(-initialdir) ""]} {
+    if {$data(-initialdir) != ""} {
+	# Ensure that initialdir is an absolute path name.
 	if {[file isdirectory $data(-initialdir)]} {
-	    set data(selectPath) [lindex [glob $data(-initialdir)] 0]
+	    set old [pwd]
+	    cd $data(-initialdir)
+	    set data(selectPath) [pwd]
+	    cd $old
 	} else {
 	    set data(selectPath) [pwd]
 	}
-
-	# Convert the initialdir to an absolute path name.
-
-	set old [pwd]
-	cd $data(selectPath)
-	set data(selectPath) [pwd]
-	cd $old
     }
     set data(selectFile) $data(-initialfile)
 
