@@ -1,4 +1,3 @@
-
 /*
  * tkWinDialog.c --
  *
@@ -9,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.18 2000/11/03 01:22:16 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.19 2001/03/30 06:01:55 hobbs Exp $
  *
  */
 
@@ -79,6 +78,16 @@ static const struct {int type; int btnIds[3];} allowedTypes[] = {
 };
 
 #define NUM_TYPES (sizeof(allowedTypes) / sizeof(allowedTypes[0]))
+
+/*
+ * The value of TK_MULTI_MAX_PATH dictactes how many files can
+ * be retrieved with tk_get*File -multiple 1.  It must be allocated
+ * on the stack, so make it large enough but not too large.  -- hobbs
+ * The data is stored as <dir>\0<file1>\0<file2>\0...<fileN>\0\0.
+ * MAX_PATH == 260 on Win2K/NT.
+ */
+
+#define TK_MULTI_MAX_PATH	(MAX_PATH*20)
 
 /*
  * The following structure is used to pass information between the directory
@@ -458,7 +467,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
 {
     Tcl_Encoding unicodeEncoding = Tcl_GetEncoding(NULL, "unicode");
     OPENFILENAMEW ofn;
-    WCHAR file[MAX_PATH];
+    WCHAR file[TK_MULTI_MAX_PATH];
     int result, winCode, oldMode, i, multi = 0;
     char *extension, *filter, *title;
     Tk_Window tkwin;
@@ -469,17 +478,17 @@ GetFileNameW(clientData, interp, objc, objv, open)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     static char *saveOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	    "-parent", "-title", NULL
+	"-parent", "-title", NULL
     };
     static char *openOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	    "-multiple", "-parent", "-title", NULL
+	"-multiple", "-parent", "-title", NULL
     };
     char **optionStrings;
-    
+
     enum options {
-	FILE_DEFAULT, FILE_TYPES, FILE_INITDIR, FILE_INITFILE,
-	    FILE_MULTIPLE, FILE_PARENT,	FILE_TITLE
+	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR,	FILE_INITFILE,
+	FILE_MULTIPLE,	FILE_PARENT,	FILE_TITLE
     };
 
     result = TCL_ERROR;
@@ -566,8 +575,8 @@ GetFileNameW(clientData, interp, objc, objv, open)
 		if (Tcl_TranslateFileName(interp, string, &ds) == NULL) {
 		    goto end;
 		}
-		Tcl_UtfToExternal(NULL, unicodeEncoding, Tcl_DStringValue(&ds), 
-			Tcl_DStringLength(&ds), 0, NULL, (char *) file, 
+		Tcl_UtfToExternal(NULL, unicodeEncoding, Tcl_DStringValue(&ds),
+			Tcl_DStringLength(&ds), 0, NULL, (char *) file,
 			sizeof(file), NULL, NULL, NULL);
 		break;
 	    }
@@ -615,7 +624,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
     ofn.nMaxCustFilter		= 0;
     ofn.nFilterIndex		= 0;
     ofn.lpstrFile		= (WCHAR *) file;
-    ofn.nMaxFile		= MAX_PATH;
+    ofn.nMaxFile		= TK_MULTI_MAX_PATH;
     ofn.lpstrFileTitle		= NULL;
     ofn.nMaxFileTitle		= 0;
     ofn.lpstrInitialDir		= NULL;
@@ -729,13 +738,13 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	    Tcl_DString fullname, filename;
 	    Tcl_Obj *returnList;
 	    int count = 0;
-	    
+
 	    returnList = Tcl_NewObj();
 	    Tcl_IncrRefCount(returnList);
 
 	    files = ofn.lpstrFile;
 	    Tcl_ExternalToUtfDString(unicodeEncoding, (char *) files, -1, &ds);
-	    
+
 	    /* Get directory */
 	    dir = Tcl_DStringValue(&ds);
 	    for (p = dir; p && *p; p++) {
@@ -747,7 +756,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
 		    *p = '/';
 		}
 	    }
-	    
+
 	    while (*files != '\0') {
 		while (*files != '\0') {
 		    files++;
@@ -810,7 +819,11 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	 * memory, bad window handles, etc.).  Most of the error codes will be
 	 * ignored; as we find we want more specific error messages for
 	 * particular errors, we can extend the code as needed.
+	 *
+	 * We could also check for FNERR_BUFFERTOOSMALL, but we can't
+	 * really do anything about it when it happens.
 	 */
+
 	if (CommDlgExtendedError() == FNERR_INVALIDFILENAME) {
 	    char *p;
 	    Tcl_DString ds;
@@ -940,8 +953,8 @@ GetFileNameA(clientData, interp, objc, objv, open)
 				 * call GetSaveFileName(). */
 {
     OPENFILENAME ofn;
-    TCHAR file[MAX_PATH], savePath[MAX_PATH];
-    int result, winCode, oldMode, i;
+    TCHAR file[TK_MULTI_MAX_PATH], savePath[MAX_PATH];
+    int result, winCode, oldMode, i, multi;
     char *extension, *filter, *title;
     Tk_Window tkwin;
     HWND hWnd;
@@ -949,13 +962,19 @@ GetFileNameA(clientData, interp, objc, objv, open)
     Tcl_DString extString, filterString, dirString, titleString;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    static char *optionStrings[] = {
+    static char *saveOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-parent",	"-title",	NULL
+	"-parent", "-title", NULL
     };
+    static char *openOptionStrings[] = {
+	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
+	"-multiple", "-parent", "-title", NULL
+    };
+    char **optionStrings;
+
     enum options {
 	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR,	FILE_INITFILE,
-	FILE_PARENT,	FILE_TITLE
+	FILE_MULTIPLE,	FILE_PARENT,	FILE_TITLE
     };
 
     result = TCL_ERROR;
@@ -972,6 +991,12 @@ GetFileNameA(clientData, interp, objc, objv, open)
     tkwin = (Tk_Window) clientData;
     title = NULL;
 
+    if (open) {
+	optionStrings = openOptionStrings;
+    } else {
+	optionStrings = saveOptionStrings;
+    }
+
     for (i = 1; i < objc; i += 2) {
 	int index;
 	char *string;
@@ -980,9 +1005,23 @@ GetFileNameA(clientData, interp, objc, objv, open)
 	optionPtr = objv[i];
 	valuePtr = objv[i + 1];
 
-	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings, "option", 
-		0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings,
+		"option", 0, &index) != TCL_OK) {
 	    goto end;
+	}
+	/*
+	 * We want to maximize code sharing between the open and save file
+	 * dialog implementations; in particular, the switch statement below.
+	 * We use different sets of option strings from the GetIndexFromObj
+	 * call above, but a single enumeration for both.  The save file
+	 * dialog doesn't support -multiple, but it falls in the middle of
+	 * the enumeration.  Ultimately, this means that when the index found
+	 * by GetIndexFromObj is >= FILE_MULTIPLE, when doing a save file
+	 * dialog, we have to increment the index, so that it matches the
+	 * open file dialog enumeration.
+	 */
+	if (!open && index >= FILE_MULTIPLE) {
+	    index++;
 	}
 	if (i + 1 == objc) {
 	    string = Tcl_GetStringFromObj(optionPtr, NULL);
@@ -1010,7 +1049,7 @@ GetFileNameA(clientData, interp, objc, objv, open)
 	    }
 	    case FILE_INITDIR: {
 		Tcl_DStringFree(&utfDirString);
-		if (Tcl_TranslateFileName(interp, string, 
+		if (Tcl_TranslateFileName(interp, string,
 			&utfDirString) == NULL) {
 		    goto end;
 		}
@@ -1025,6 +1064,13 @@ GetFileNameA(clientData, interp, objc, objv, open)
 		Tcl_UtfToExternal(NULL, NULL, Tcl_DStringValue(&ds), 
 			Tcl_DStringLength(&ds), 0, NULL, (char *) file, 
 			sizeof(file), NULL, NULL, NULL);
+		break;
+	    }
+	    case FILE_MULTIPLE: {
+		if (Tcl_GetBooleanFromObj(interp, valuePtr,
+			&multi) != TCL_OK) {
+		    return TCL_ERROR;
+		}
 		break;
 	    }
 	    case FILE_PARENT: {
@@ -1064,7 +1110,7 @@ GetFileNameA(clientData, interp, objc, objv, open)
     ofn.nMaxCustFilter		= 0;
     ofn.nFilterIndex		= 0;
     ofn.lpstrFile		= (LPTSTR) file;
-    ofn.nMaxFile		= MAX_PATH;
+    ofn.nMaxFile		= TK_MULTI_MAX_PATH;
     ofn.lpstrFileTitle		= NULL;
     ofn.nMaxFileTitle		= 0;
     ofn.lpstrInitialDir		= NULL;
@@ -1086,6 +1132,10 @@ GetFileNameA(clientData, interp, objc, objv, open)
 
     if (tsdPtr->debugFlag != 0) {
 	ofn.Flags |= OFN_ENABLEHOOK;
+    }
+
+    if (multi != 0) {
+	ofn.Flags |= OFN_ALLOWMULTISELECT;
     }
 
     if (extension != NULL) {
@@ -1126,7 +1176,7 @@ GetFileNameA(clientData, interp, objc, objv, open)
     }
 
     /*
-     * Popup the dialog.  
+     * Popup the dialog.
      */
 
     GetCurrentDirectory(MAX_PATH, savePath);
@@ -1158,21 +1208,92 @@ GetFileNameA(clientData, interp, objc, objv, open)
      */
 
     if (winCode != 0) {
-	char *p;
-	Tcl_DString ds;
-
-	Tcl_ExternalToUtfDString(NULL, (char *) ofn.lpstrFile, -1, &ds);
-	for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
-	    /*
-	     * Change the pathname to the Tcl "normalized" pathname, where
-	     * back slashes are used instead of forward slashes
+	if (ofn.Flags & OFN_ALLOWMULTISELECT) {
+            /*
+	     * The result in custData->szFile contains many items,
+	     * separated with null characters.  It is terminated with
+	     * two nulls in a row.  The first element is the directory
+	     * path.
 	     */
-	    if (*p == '\\') {
-		*p = '/';
+	    char *dir;
+	    char *p;
+	    char *file;
+	    char *files;
+	    Tcl_DString ds;
+	    Tcl_DString fullname, filename;
+	    Tcl_Obj *returnList;
+	    int count = 0;
+
+	    returnList = Tcl_NewObj();
+	    Tcl_IncrRefCount(returnList);
+
+	    files = ofn.lpstrFile;
+	    Tcl_ExternalToUtfDString(NULL, (char *) files, -1, &ds);
+
+	    /* Get directory */
+	    dir = Tcl_DStringValue(&ds);
+	    for (p = dir; p && *p; p++) {
+		/*
+		 * Change the pathname to the Tcl "normalized" pathname, where
+		 * back slashes are used instead of forward slashes
+		 */
+		if (*p == '\\') {
+		    *p = '/';
+		}
 	    }
+
+	    while (*files != '\0') {
+		while (*files != '\0') {
+		    files++;
+		}
+		files++;
+		if (*files != '\0') {
+		    count++;
+		    Tcl_ExternalToUtfDString(NULL,
+			    (char *)files, -1, &filename);
+		    file = Tcl_DStringValue(&filename);
+		    for (p = file; *p != '\0'; p++) {
+			if (*p == '\\') {
+			    *p = '/';
+			}
+		    }
+		    Tcl_DStringInit(&fullname);
+		    Tcl_DStringAppend(&fullname, dir, -1);
+		    Tcl_DStringAppend(&fullname, "/", -1);
+		    Tcl_DStringAppend(&fullname, file, -1);
+		    Tcl_ListObjAppendElement(interp, returnList,
+			    Tcl_NewStringObj(Tcl_DStringValue(&fullname), -1));
+		    Tcl_DStringFree(&fullname);
+		    Tcl_DStringFree(&filename);
+		}
+	    }
+	    if (count == 0) {
+		/*
+		 * Only one file was returned.
+		 */
+		Tcl_ListObjAppendElement(interp, returnList,
+			Tcl_NewStringObj(dir, -1));
+	    }
+	    Tcl_SetObjResult(interp, returnList);
+	    Tcl_DecrRefCount(returnList);
+	    Tcl_DStringFree(&ds);
+	} else {
+	    char *p;
+	    Tcl_DString ds;
+
+	    Tcl_ExternalToUtfDString(NULL, (char *) ofn.lpstrFile, -1, &ds);
+	    for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
+		/*
+		 * Change the pathname to the Tcl "normalized" pathname, where
+		 * back slashes are used instead of forward slashes
+		 */
+		if (*p == '\\') {
+		    *p = '/';
+		}
+	    }
+	    Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
+	    Tcl_DStringFree(&ds);
 	}
-	Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
-	Tcl_DStringFree(&ds);
 	result = TCL_OK;
     } else {
 	/*
@@ -1182,12 +1303,15 @@ GetFileNameA(clientData, interp, objc, objv, open)
 	 * memory, bad window handles, etc.).  Most of the error codes will be
 	 * ignored;; as we find we want specific error messages for particular
 	 * errors, we can extend the code as needed.
+	 *
+	 * We could also check for FNERR_BUFFERTOOSMALL, but we can't
+	 * really do anything about it when it happens.
 	 */
 	if (CommDlgExtendedError() == FNERR_INVALIDFILENAME) {
 	    char *p;
 	    Tcl_DString ds;
-	    
-	    Tcl_ExternalToUtfDString(NULL,(char *) ofn.lpstrFile, -1, &ds);
+
+	    Tcl_ExternalToUtfDString(NULL, (char *) ofn.lpstrFile, -1, &ds);
 	    for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
 		/*
 		 * Change the pathname to the Tcl "normalized" pathname,
