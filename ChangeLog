@@ -1,3 +1,8 @@
+2002-02-01  David Gravereaux <davygrvy@pobox.com>
+
+	* win/makefile.vc: unset macro located in the tktest target
+	caused a failure to build.  [Bug 511652]
+
 2002-01-30  Don Porter  <dgp@users.sourceforge.net>
 
 	* win/stubs.c (XSetCommand):  Overlooked CONSTification.
