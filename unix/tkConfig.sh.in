@@ -11,7 +11,7 @@
 #
 # The information in this file is specific to a single platform.
 #
-# RCS: @(#) $Id: tkConfig.sh.in,v 1.8 2002/07/28 03:23:08 mdejong Exp $
+# RCS: @(#) $Id: tkConfig.sh.in,v 1.9 2003/04/04 19:29:51 mdejong Exp $
 
 # Tk's version number.
 TK_VERSION='@TK_VERSION@'
@@ -32,7 +32,7 @@ TK_DBGX=@TK_DBGX@
 TK_LIB_FILE='@TK_LIB_FILE@'
 
 # Additional libraries to use when linking Tk.
-TK_LIBS='@XLIBSW@ @DL_LIBS@ @LIBS@ @MATH_LIBS@'
+TK_LIBS='@XLIBSW@ @LIBS@ @TCL_LIBS@'
 
 # Top-level directory in which Tcl's platform-independent files are
 # installed.

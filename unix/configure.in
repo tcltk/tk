@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.85 2003/03/13 10:54:49 mdejong Exp $
+# RCS: @(#) $Id: configure.in,v 1.86 2003/04/04 19:29:48 mdejong Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.57)
@@ -54,12 +54,6 @@ AC_PROG_CC
 
 AC_HAVE_HEADERS(unistd.h limits.h)
 
-#------------------------------------------------------------------------
-# Threads support
-#------------------------------------------------------------------------
-
-SC_ENABLE_THREADS
-
 #------------------------------------------------------------------------------
 # If we're using GCC, see if the compiler understands -pipe.  If so, use it.
 # It makes compiling go faster.  (This is only a performance feature.)
@@ -92,6 +86,22 @@ SC_TCL_64BIT_FLAGS
 SC_PATH_TCLCONFIG
 SC_LOAD_TCLCONFIG
 
+#------------------------------------------------------------------------
+# Threads support
+#------------------------------------------------------------------------
+
+dnl Removed call to SC_ENABLE_THREADS since Tk needs to use
+dnl the thread configuration provided by Tcl.
+dnl SC_ENABLE_THREADS
+
+if test "${TCL_THREADS}" = 1; then
+    # FIXME: It seems like these defines should be covered by
+    # the TCL_DEFS entry in tclConfig.sh. Why are they not?
+    AC_DEFINE(TCL_THREADS)
+    AC_DEFINE(_REENTRANT)
+    AC_DEFINE(_THREAD_SAFE)
+fi
+
 #--------------------------------------------------------------------
 # Recompute the necessary flags to run the compiler
 #--------------------------------------------------------------------
@@ -113,31 +123,6 @@ TK_DBGX=${DBGX}
 
 if test "$TCL_EXEC_PREFIX" != "$exec_prefix"; then
     LIB_RUNTIME_DIR="${LIB_RUNTIME_DIR}:${TCL_EXEC_PREFIX}/lib"
-fi
-
-#--------------------------------------------------------------------
-# On a few very rare systems, all of the libm.a stuff is
-# already in libc.a.  Set compiler flags accordingly.
-# Also, Linux requires the "ieee" library for math to work
-# right (and it must appear before "-lm").
-#--------------------------------------------------------------------
-
-AC_CHECK_FUNC(sin, MATH_LIBS="", MATH_LIBS="-lm")
-AC_CHECK_LIB(ieee, main, [MATH_LIBS="-lieee $MATH_LIBS"])
-
-#--------------------------------------------------------------------
-# On AIX systems, libbsd.a has to be linked in to support
-# non-blocking file IO.  This library has to be linked in after
-# the MATH_LIBS or it breaks the pow() function.  The way to
-# insure proper sequencing, is to add it to the tail of MATH_LIBS.
-# This library also supplies gettimeofday.
-#--------------------------------------------------------------------
-libbsd=no
-if test "`uname -s`" = "AIX" ; then
-    AC_CHECK_LIB(bsd, gettimeofday, libbsd=yes)
-    if test $libbsd = yes; then
-	MATH_LIBS="$MATH_LIBS -lbsd"
-    fi
 fi
 
 #--------------------------------------------------------------------
@@ -266,22 +251,6 @@ eval "LD_SEARCH_FLAGS=\"$TCL_LD_SEARCH_FLAGS\""
 
 AC_CHECK_LIB(Xbsd, main, [LIBS="$LIBS -lXbsd"])
 
-tk_checkBoth=0
-AC_CHECK_FUNC(connect, tk_checkSocket=0, tk_checkSocket=1)
-if test "$tk_checkSocket" = 1; then
-    AC_CHECK_LIB(socket, main, LIBS="$LIBS -lsocket", tk_checkBoth=1)
-fi
-if test "$tk_checkBoth" = 1; then
-    tk_oldLibs=$LIBS
-    LIBS="$LIBS -lsocket -lnsl"
-    AC_CHECK_FUNC(accept, tk_checkNsl=0, [LIBS=$tk_oldLibs])
-fi
-AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(nsl, main, [LIBS="$LIBS -lnsl"])])
-
-# Add the threads support libraries
-
-LIBS="$LIBS$THREADS_LIBS"
-
 #--------------------------------------------------------------------
 # One more check related to the X libraries.  The standard releases
 # of Ultrix don't support the "xauth" mechanism, so send won't work
@@ -311,17 +280,6 @@ if test -d /usr/include/mit ; then
     CFLAGS=$tk_oldCFlags
     LIBS=$tk_oldLibs
 fi
-
-#--------------------------------------------------------------------
-#	On a few very rare systems, all of the libm.a stuff is
-#	already in libc.a.  Set compiler flags accordingly.
-#	Also, Linux requires the "ieee" library for math to
-#	work right (and it must appear before "-lm").
-#--------------------------------------------------------------------
-
-MATH_LIBS=""
-AC_CHECK_FUNC(sin, , MATH_LIBS="-lm")
-AC_CHECK_LIB(ieee, main, [MATH_LIBS="-lieee $MATH_LIBS"])
 
 #--------------------------------------------------------------------
 #	Figure out whether "char" is unsigned.  If so, set a
@@ -432,7 +390,6 @@ AC_SUBST(TK_EXP_FILE)
 
 AC_SUBST(LD_LIBRARY_PATH_VAR)
 
-AC_SUBST(MATH_LIBS)
 AC_SUBST(TK_BUILD_LIB_SPEC)
 AC_SUBST(TK_LIB_FILE)
 AC_SUBST(TK_LIB_FLAG)
