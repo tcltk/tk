@@ -1,3 +1,8 @@
+2002-07-17  Don Porter <dgp@users.sf.net>
+
+	* generic/tkFont.c: Corrected reversed logic in assert -> panic
+	conversion.  [Bug 582799]
+
 2002-07-16  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* generic/tkFont.c (TkFontPkgFree): Call panic instead
