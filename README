@@ -1,13 +1,13 @@
 The Tk Toolkit
 
-RCS: @(#) $Id: README,v 1.1.4.3 1998/12/04 07:21:17 welch Exp $
+RCS: @(#) $Id: README,v 1.1.4.4 1999/02/12 01:09:01 stanton Exp $
 
 1. Introduction
 ---------------
 
 This directory and its descendants contain the sources and documentation
 for Tk, an X11 toolkit implemented with the Tcl scripting language.  The
-information here constitutes the 8.1b1 release, which is the first beta
+information here constitutes the 8.1b2 release, which is the second beta
 release for Tcl 8.1.  This release is mostly feature complete but may
 have bugs and be missing some minor features.  This release is for
 early adopters who are willing to help us find and fix problems.

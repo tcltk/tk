@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.1.4.8 1999/02/12 00:52:06 stanton Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.1.4.9 1999/02/12 01:09:03 stanton Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -28,7 +28,7 @@
 ROOT		= ..
 TOOLS32		= c:\program files\devstudio\vc
 TOOLS32_rc	= c:\program files\devstudio\sharedide
-TCLDIR		= ..\..\tcl8.1b1
+TCLDIR		= ..\..\tcl8.1b2
 
 # Set this to the appropriate value of /MACHINE: for your platform
 MACHINE	= IX86

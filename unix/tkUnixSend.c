@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.1.4.4 1999/02/11 04:13:50 stanton Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.1.4.5 1999/02/12 01:09:02 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -1011,7 +1011,7 @@ Tk_SendCmd(clientData, interp, argc, argv)
 		Tcl_ResetResult(interp);
 		Tcl_AddErrorInfo(interp, Tcl_GetVar2(localInterp,
 			"errorInfo", (char *) NULL, TCL_GLOBAL_ONLY));
-		errorObjPtr = Tcl_GetObjVar2(localInterp, "errorCode", NULL,
+		errorObjPtr = Tcl_GetVar2Ex(localInterp, "errorCode", NULL,
 			TCL_GLOBAL_ONLY);
 		Tcl_SetObjErrorCode(interp, errorObjPtr);
 	    }

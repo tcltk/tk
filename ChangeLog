@@ -1,3 +1,14 @@
+1999-02-11    <stanton@GASPODE>
+
+	* README:
+	* generic/tk.h: 
+	* unix/configure.in:
+	* win/README:
+	* win/makefile.bc:
+	* win/makefile.vc: Updated version to 8.1b2.
+	
+	* unix/tkUnixSend.c: Fixed one more Tcl_*ObjVar instance.
+	
 1999-02-04    <stanton@GASPODE>
 
 	* Various cleanup related to the Tcl_Eval and Tcl_ObjSetVar

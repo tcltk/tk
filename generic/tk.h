@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.1.4.7 1999/02/11 04:13:44 stanton Exp $
+ * RCS: @(#) $Id: tk.h,v 1.1.4.8 1999/02/12 01:09:02 stanton Exp $
  */
 
 #ifndef _TK
@@ -22,11 +22,9 @@
  * When version numbers change here, you must also go into the following files
  * and update the version numbers:
  *
- * README
  * unix/configure.in
  * win/makefile.bc
  * win/makefile.vc
- * win/README
  * library/tk.tcl
  * README, win/README, unix/README, and mac/README
  *
@@ -44,7 +42,7 @@
 #define TK_MAJOR_VERSION   8
 #define TK_MINOR_VERSION   1
 #define TK_RELEASE_LEVEL   1
-#define TK_RELEASE_SERIAL  1
+#define TK_RELEASE_SERIAL  2
 
 #define TK_VERSION "8.1"
 #define TK_PATCH_LEVEL "8.1b1"
