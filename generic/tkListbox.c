@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.16.2.2 2001/04/05 19:44:16 hobbs Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.16.2.3 2001/08/24 23:58:29 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -490,9 +490,13 @@ Tk_ListboxObjCmd(clientData, interp, objc, objv)
     /*
      * Initialize the fields of the structure that won't be initialized
      * by ConfigureListbox, or that ConfigureListbox requires to be
-     * initialized already (e.g. resource pointers).
+     * initialized already (e.g. resource pointers).  Only the non-NULL/0
+     * data must be initialized as memset covers the rest.
      */
+
     listPtr 				= (Listbox *) ckalloc(sizeof(Listbox));
+    memset((VOID *) listPtr, 0, sizeof(Listbox));
+
     listPtr->tkwin 			= tkwin;
     listPtr->display 			= Tk_Display(tkwin);
     listPtr->interp 			= interp;
@@ -501,53 +505,27 @@ Tk_ListboxObjCmd(clientData, interp, objc, objv)
 	    (ClientData) listPtr, ListboxCmdDeletedProc);
     listPtr->optionTable 		= optionTables->listboxOptionTable;
     listPtr->itemAttrOptionTable	= optionTables->itemAttrOptionTable;
-    listPtr->listVarName 		= NULL;
-    listPtr->listObj 			= NULL;
     listPtr->selection 			=
 	(Tcl_HashTable *) ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(listPtr->selection, TCL_ONE_WORD_KEYS);
     listPtr->itemAttrTable 		=
 	(Tcl_HashTable *) ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(listPtr->itemAttrTable, TCL_ONE_WORD_KEYS);
-    listPtr->nElements 			= 0;
-    listPtr->normalBorder 		= NULL;
-    listPtr->borderWidth 		= 0;
     listPtr->relief 			= TK_RELIEF_RAISED;
-    listPtr->highlightWidth 		= 0;
-    listPtr->highlightBgColorPtr 	= NULL;
-    listPtr->highlightColorPtr 		= NULL;
-    listPtr->inset 			= 0;
-    listPtr->tkfont 			= NULL;
-    listPtr->fgColorPtr 		= NULL;
     listPtr->textGC 			= None;
-    listPtr->selBorder 			= NULL;
-    listPtr->selBorderWidth 		= 0;
     listPtr->selFgColorPtr 		= None;
     listPtr->selTextGC 			= None;
-    listPtr->width 			= 0;
-    listPtr->height 			= 0;
-    listPtr->lineHeight 		= 0;
-    listPtr->topIndex 			= 0;
     listPtr->fullLines 			= 1;
-    listPtr->partialLine 		= 0;
-    listPtr->setGrid 			= 0;
-    listPtr->maxWidth 			= 0;
     listPtr->xScrollUnit 		= 1;
-    listPtr->xOffset 			= 0;
-    listPtr->selectMode 		= NULL;
-    listPtr->numSelected 		= 0;
-    listPtr->selectAnchor 		= 0;
     listPtr->exportSelection 		= 1;
-    listPtr->active 			= 0;
-    listPtr->scanMarkX 			= 0;
-    listPtr->scanMarkY 			= 0;
-    listPtr->scanMarkXOffset 		= 0;
-    listPtr->scanMarkYIndex 		= 0;
     listPtr->cursor 			= None;
-    listPtr->takeFocus 			= NULL;
-    listPtr->xScrollCmd 		= NULL;
-    listPtr->yScrollCmd 		= NULL;
-    listPtr->flags 			= 0;
+
+    /*
+     * Keep a hold of the associated tkwin until we destroy the listbox,
+     * otherwise Tk might free it while we still need it.
+     */
+
+    Tcl_Preserve((ClientData) listPtr->tkwin);
 
     Tk_SetClass(listPtr->tkwin, "Listbox");
     TkSetClassProcs(listPtr->tkwin, &listboxClass, (ClientData) listPtr);
@@ -604,7 +582,6 @@ ListboxWidgetObjCmd(clientData, interp, objc, objv)
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
-    Tcl_Preserve((ClientData)listPtr);
 
     /*
      * Parse the command by looking up the second argument in the list
@@ -613,10 +590,10 @@ ListboxWidgetObjCmd(clientData, interp, objc, objv)
     result = Tcl_GetIndexFromObj(interp, objv[1], commandNames,
 	    "option", 0, &cmdIndex);
     if (result != TCL_OK) {
-	Tcl_Release((ClientData)listPtr);
 	return result;
     }
 
+    Tcl_Preserve((ClientData)listPtr);
     /* The subcommand was valid, so continue processing */
     switch (cmdIndex) {
 	case COMMAND_ACTIVATE: {
@@ -1412,16 +1389,6 @@ DestroyListbox(memPtr)
     Tcl_HashEntry *entry;
     Tcl_HashSearch search;
 
-    listPtr->flags |= LISTBOX_DELETED;
-
-    Tcl_DeleteCommandFromToken(listPtr->interp, listPtr->widgetCmd);
-    if (listPtr->setGrid) {
-	Tk_UnsetGrid(listPtr->tkwin);
-    }
-    if (listPtr->flags & REDRAW_PENDING) {
-	Tcl_CancelIdleCall(DisplayListbox, (ClientData) listPtr);
-    }
-
     /* If we have an internal list object, free it */
     if (listPtr->listObj != NULL) {
 	Tcl_DecrRefCount(listPtr->listObj);
@@ -1460,6 +1427,7 @@ DestroyListbox(memPtr)
     }
     Tk_FreeConfigOptions((char *)listPtr, listPtr->optionTable,
 	    listPtr->tkwin);
+    Tcl_Release((ClientData) listPtr->tkwin);
     listPtr->tkwin = NULL;
     ckfree((char *) listPtr);
 }
@@ -1766,6 +1734,9 @@ DisplayListbox(clientData)
     Pixmap pixmap;
 
     listPtr->flags &= ~REDRAW_PENDING;
+    if (listPtr->flags & LISTBOX_DELETED) {
+	return;
+    }
 
     if (listPtr->flags & MAXWIDTH_IS_STALE) {
 	ListboxComputeGeometry(listPtr, 0, 1, 0);
@@ -1773,16 +1744,23 @@ DisplayListbox(clientData)
 	listPtr->flags |= UPDATE_H_SCROLLBAR;
     }
 
+    Tcl_Preserve((ClientData) listPtr);
     if (listPtr->flags & UPDATE_V_SCROLLBAR) {
 	ListboxUpdateVScrollbar(listPtr);
+	if ((listPtr->flags & LISTBOX_DELETED) || !Tk_IsMapped(tkwin)) {
+	    Tcl_Release((ClientData) listPtr);
+	    return;
+	}
     }
     if (listPtr->flags & UPDATE_H_SCROLLBAR) {
 	ListboxUpdateHScrollbar(listPtr);
+	if ((listPtr->flags & LISTBOX_DELETED) || !Tk_IsMapped(tkwin)) {
+	    Tcl_Release((ClientData) listPtr);
+	    return;
+	}
     }
     listPtr->flags &= ~(REDRAW_PENDING|UPDATE_V_SCROLLBAR|UPDATE_H_SCROLLBAR);
-    if ((listPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
-	return;
-    }
+    Tcl_Release((ClientData) listPtr);
 
     /*
      * Redrawing is done in a temporary pixmap that is allocated
@@ -2365,7 +2343,17 @@ ListboxEventProc(clientData, eventPtr)
 		NearestListboxElement(listPtr, eventPtr->xexpose.y
 		+ eventPtr->xexpose.height));
     } else if (eventPtr->type == DestroyNotify) {
-	DestroyListbox((char *) clientData);
+	if (!(listPtr->flags & LISTBOX_DELETED)) {
+	    listPtr->flags |= LISTBOX_DELETED;
+	    Tcl_DeleteCommandFromToken(listPtr->interp, listPtr->widgetCmd);
+	    if (listPtr->setGrid) {
+		Tk_UnsetGrid(listPtr->tkwin);
+	    }
+	    if (listPtr->flags & REDRAW_PENDING) {
+		Tcl_CancelIdleCall(DisplayListbox, clientData);
+	    }
+	    Tcl_EventuallyFree(clientData, DestroyListbox);
+	}
     } else if (eventPtr->type == ConfigureNotify) {
 	int vertSpace;
 
@@ -2979,7 +2967,7 @@ EventuallyRedrawRange(listPtr, first, last)
     /* We don't have to register a redraw callback if one is already pending,
      * or if the window doesn't exist, or if the window isn't mapped */
     if ((listPtr->flags & REDRAW_PENDING)
-	    || (listPtr->tkwin == NULL)
+	    || (listPtr->flags & LISTBOX_DELETED)
 	    || !Tk_IsMapped(listPtr->tkwin)) {
 	return;
     }
