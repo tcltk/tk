@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.30 2003/03/12 00:25:41 mdejong Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.31 2003/03/12 03:25:52 mdejong Exp $
 
 package require tcltest 2.2
 namespace import -force tcltest::configure
@@ -995,7 +995,7 @@ wm geom .t +0+0
 update
 
 test unixWm-28.1 {Tk_WmCmd procedure, "maxsize" option, setting the
-        maxsize should update WM_NORMAL_HINTS} {
+        maxsize should update WM_NORMAL_HINTS} {testwrapper} {
     destroy .t
     toplevel .t
     wm maxsize .t 300 300
@@ -1006,7 +1006,7 @@ test unixWm-28.1 {Tk_WmCmd procedure, "maxsize" option, setting the
 
 test unixWm-28.2 {Tk_WmCmd procedure, "maxsize" option, setting the
         maxsize to a value smaller than the current size should
-        set the maxsize in WM_NORMAL_HINTS} {
+        set the maxsize in WM_NORMAL_HINTS} {testwrapper} {
     destroy .t
     toplevel .t
     wm geom .t 400x400
@@ -1019,7 +1019,7 @@ test unixWm-28.2 {Tk_WmCmd procedure, "maxsize" option, setting the
 test unixWm-28.3 {Tk_WmCmd procedure, "maxsize" option, setting the
         maxsize to a value smaller than the current size should
         set the maxsize in WM_NORMAL_HINTS even if the
-        interactive resizable flag is set to 0} {
+        interactive resizable flag is set to 0} {testwrapper} {
     destroy .t
     toplevel .t
     wm geom .t 400x400
@@ -1031,7 +1031,7 @@ test unixWm-28.3 {Tk_WmCmd procedure, "maxsize" option, setting the
 } {300 300}
 
 test unixWm-29.1 {Tk_WmCmd procedure, "minsize" option, setting the
-        minsize should update WM_NORMAL_HINTS} {
+        minsize should update WM_NORMAL_HINTS} {testwrapper} {
     destroy .t
     toplevel .t
     wm minsize .t 300 300
@@ -1042,7 +1042,7 @@ test unixWm-29.1 {Tk_WmCmd procedure, "minsize" option, setting the
 
 test unixWm-29.2 {Tk_WmCmd procedure, "minsize" option, setting the
         minsize to a value larger than the current size should
-        set the maxsize in WM_NORMAL_HINTS} {
+        set the maxsize in WM_NORMAL_HINTS} {testwrapper} {
     destroy .t
     toplevel .t
     wm geom .t 200x200
@@ -1055,7 +1055,7 @@ test unixWm-29.2 {Tk_WmCmd procedure, "minsize" option, setting the
 test unixWm-29.3 {Tk_WmCmd procedure, "minsize" option, setting the
         minsize to a value larger than the current size should
         set the minsize in WM_NORMAL_HINTS even if the
-        interactive resizable flag is set to 0} {
+        interactive resizable flag is set to 0} {testwrapper} {
     destroy .t
     toplevel .t
     wm geom .t 200x200

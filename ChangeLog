@@ -1,5 +1,12 @@
 2003-03-11  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* tests/unixWm.test: Add the testwrapper
+	constraint to tests that depend on the
+	testwrapper command. These tests should
+	not be run under Windows for example.
+
+2003-03-11  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* doc/wm.n (minimize, maximize): Remove claim
 	that the resizable command keeps scripts from
 	changing the size of windows since it is
