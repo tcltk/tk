@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInit.c,v 1.5 2001/12/28 02:14:41 hobbs Exp $
+ * RCS: @(#) $Id: tkWinInit.c,v 1.6 2001/12/28 23:09:12 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -131,4 +131,6 @@ TkpDisplayWarning(msg, title)
 	    (WCHAR *) Tcl_DStringValue(&titleString),
 	    MB_OK | MB_ICONEXCLAMATION | MB_SYSTEMMODAL
 	    | MB_SETFOREGROUND | MB_TOPMOST);
+    Tcl_DStringFree(&msgString);
+    Tcl_DStringFree(&titleString);
 }
