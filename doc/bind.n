@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bind.n,v 1.16 2004/08/20 10:56:36 dkf Exp $
+'\" RCS: @(#) $Id: bind.n,v 1.17 2004/08/29 09:27:35 dkf Exp $
 '\" 
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
@@ -85,7 +85,6 @@ a particular button or keysym.  Any of the fields may be omitted,
 as long as at least one of \fItype\fR and \fIdetail\fR is present.
 The fields must be separated by white space or dashes.
 .PP
-.VS
 The third form of pattern is used to specify a user-defined, named virtual
 event.  It has the following syntax:
 .CS
@@ -98,11 +97,10 @@ virtual event to modify it.  Bindings on a virtual event may be created
 before the virtual event is defined, and if the definition of a virtual
 event changes dynamically, all windows bound to that virtual event will
 respond immediately to the new definition.  
-
+.PP
 Some widgets (e.g. \fBmenu\fR and \fBtext\fR) issue virtual events
 when their internal state is updated in some ways.  Please see the
 manual page for each widget for details.
-.VE
 .SS "MODIFIERS"
 .PP
 Modifiers consist of any of the following values:
@@ -407,7 +405,11 @@ The \fIcount\fR field from the event.  Valid only for \fBExpose\fR events.
 Indicates that there are \fIcount\fP pending \fBExpose\fP events which have not
 yet been delivered to the window.
 .IP \fB%d\fR 5
-The \fIdetail\fR field from the event.  The \fB%d\fR is replaced by
+The \fIdetail\fR
+.VS 8.5
+or \fIuser_data\fR
+.VE 8.5
+field from the event.  The \fB%d\fR is replaced by
 a string identifying the detail.  For \fBEnter\fR,
 \fBLeave\fR, \fBFocusIn\fR, and \fBFocusOut\fR events,
 the string will be one of the following:
@@ -426,6 +428,13 @@ For \fBConfigureRequest\fR events, the string will be one of:
 Below	None
 BottomIf	TopIf\fR
 .DE
+.VS
+For virtual events, the string will be whatever value is stored in the
+\fIuser_data\fR field when the event was created (typically with
+\fBevent generate\fR), or the empty string if the field is NULL.
+Virtual events corresponding to key sequence presses (see \fBevent
+add\fR for details) set the \fIuser_data\fR to NULL.
+.VE
 For events other than these, the substituted string is undefined.
 .RE
 .IP \fB%f\fR 5
