@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: select.test,v 1.4 1999/12/14 06:53:14 hobbs Exp $
+# RCS: @(#) $Id: select.test,v 1.5 2000/08/07 21:49:17 ericm Exp $
 
 #
 # Note: Multiple display selection handling will only be tested if the
@@ -555,10 +555,10 @@ test select-6.5 {Tk_SelectionCmd procedure} {
 } {.f1 . .f1 {}}
 test select-6.6 {Tk_SelectionCmd procedure} {
     list [catch {selection clear -badopt foo} cmd] $cmd
-} {1 {unknown option "-badopt"}}
+} {1 {bad option "-badopt": must be -displayof or -selection}}
 test select-6.7 {Tk_SelectionCmd procedure} {
     list [catch {selection clear -selectionfoo foo} cmd] $cmd
-} {1 {unknown option "-selectionfoo"}}
+} {1 {bad option "-selectionfoo": must be -displayof or -selection}}
 test select-6.8 {Tk_SelectionCmd procedure} {
     catch {destroy .f2}
     list [catch {selection clear -displayof .f2} cmd] $cmd
@@ -617,10 +617,10 @@ test select-6.16 {Tk_SelectionCmd procedure} {
 } {{Test value} {TEST 0 4000}}
 test select-6.17 {Tk_SelectionCmd procedure} {
     list [catch {selection get -badopt foo} cmd] $cmd
-} {1 {unknown option "-badopt"}}
+} {1 {bad option "-badopt": must be -displayof, -selection, or -type}}
 test select-6.18 {Tk_SelectionCmd procedure} {
     list [catch {selection get -selectionfoo foo} cmd] $cmd
-} {1 {unknown option "-selectionfoo"}}
+} {1 {bad option "-selectionfoo": must be -displayof, -selection, or -type}}
 test select-6.19 {Tk_SelectionCmd procedure} {
     catch { destroy .f2 }
     list [catch {selection get -displayof .f2} cmd] $cmd
@@ -652,10 +652,10 @@ test select-6.23 {Tk_SelectionCmd procedure} {
 } {{} {Test value} {TEST 0 4000}}
 test select-6.24 {Tk_SelectionCmd procedure} {
     list [catch {selection handle -badopt foo} cmd] $cmd
-} {1 {unknown option "-badopt"}}
+} {1 {bad option "-badopt": must be -format, -selection, or -type}}
 test select-6.25 {Tk_SelectionCmd procedure} {
     list [catch {selection handle -selectionfoo foo} cmd] $cmd
-} {1 {unknown option "-selectionfoo"}}
+} {1 {bad option "-selectionfoo": must be -format, -selection, or -type}}
 test select-6.26 {Tk_SelectionCmd procedure} {
     list [catch {selection handle} cmd] $cmd
 } {1 {wrong # args: should be "selection handle ?options? window command"}}
@@ -697,10 +697,10 @@ test select-6.33 {Tk_SelectionCmd procedure} {
 } {owned lost}
 test select-6.34 {Tk_SelectionCmd procedure} {
     list [catch {selection own -badopt foo} cmd] $cmd
-} {1 {unknown option "-badopt"}}
+} {1 {bad option "-badopt": must be -command, -displayof, or -selection}}
 test select-6.35 {Tk_SelectionCmd procedure} {
     list [catch {selection own -selectionfoo foo} cmd] $cmd
-} {1 {unknown option "-selectionfoo"}}
+} {1 {bad option "-selectionfoo": must be -command, -displayof, or -selection}}
 test select-6.36 {Tk_SelectionCmd procedure} {
     catch {destroy .f2}
     list [catch {selection own -displayof .f2} cmd] $cmd

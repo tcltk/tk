@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.5 1999/08/13 17:52:13 redman Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.6 2000/08/07 21:49:16 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -589,7 +589,7 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
 /*
  *--------------------------------------------------------------
  *
- * Tk_SelectionCmd --
+ * Tk_SelectionObjCmd --
  *
  *	This procedure is invoked to process the "selection" Tcl
  *	command.  See the user documentation for details on what
@@ -605,304 +605,348 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
  */
 
 int
-Tk_SelectionCmd(clientData, interp, argc, argv)
+Tk_SelectionObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Main window associated with
 				 * interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     char *path = NULL;
     Atom selection;
-    char *selName = NULL;
-    int c, count;
-    size_t length;
-    char **args;
-
-    if (argc < 2) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		" option ?arg arg ...?\"", (char *) NULL);
+    char *selName = NULL, *string;
+    int count, index;
+    Tcl_Obj **objs;
+    static char *optionStrings[] = { "clear", "get", "handle", "own",
+					 (char *) NULL };
+    enum options { SELECTION_CLEAR, SELECTION_GET, SELECTION_HANDLE,
+		       SELECTION_OWN };
+    
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
-    c = argv[1][0];
-    length = strlen(argv[1]);
-    if ((c == 'c') && (strncmp(argv[1], "clear", length) == 0)) {
-	for (count = argc-2, args = argv+2; count > 0; count -= 2, args += 2) {
-	    if (args[0][0] != '-') {
-		break;
-	    }
-	    if (count < 2) {
-		Tcl_AppendResult(interp, "value for \"", *args,
-			"\" missing", (char *) NULL);
-		return TCL_ERROR;
-	    }
-	    c = args[0][1];
-	    length = strlen(args[0]);
-	    if ((c == 'd') && (strncmp(args[0], "-displayof", length) == 0)) {
-		path = args[1];
-	    } else if ((c == 's')
-		    && (strncmp(args[0], "-selection", length) == 0)) {
-		selName = args[1];
-	    } else {
-		Tcl_AppendResult(interp, "unknown option \"", args[0],
-			"\"", (char *) NULL);
-		return TCL_ERROR;
-	    }
-	}
-	if (count == 1) {
-	    path = args[0];
-	} else if (count > 1) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		    " clear ?options?\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	if (path != NULL) {
-	    tkwin = Tk_NameToWindow(interp, path, tkwin);
-	}
-	if (tkwin == NULL) {
-	    return TCL_ERROR;
-	}
-	if (selName != NULL) {
-	    selection = Tk_InternAtom(tkwin, selName);
-	} else {
-	    selection = XA_PRIMARY;
-	}
+
+    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
+	    &index) != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    switch ((enum options) index) {
+	case SELECTION_CLEAR: {
+	    static char *clearOptionStrings[] = { "-displayof", "-selection",
+						      (char *) NULL };
+	    enum clearOptions { CLEAR_DISPLAYOF, CLEAR_SELECTION };
+	    int clearIndex;
 	    
-	Tk_ClearSelection(tkwin, selection);
-	return TCL_OK;
-    } else if ((c == 'g') && (strncmp(argv[1], "get", length) == 0)) {
-	Atom target;
-	char *targetName = NULL;
-	Tcl_DString selBytes;
-	int result;
-	
-	for (count = argc-2, args = argv+2; count > 0; count -= 2, args += 2) {
-	    if (args[0][0] != '-') {
-		break;
-	    }
-	    if (count < 2) {
-		Tcl_AppendResult(interp, "value for \"", *args,
-			"\" missing", (char *) NULL);
-		return TCL_ERROR;
-	    }
-	    c = args[0][1];
-	    length = strlen(args[0]);
-	    if ((c == 'd') && (strncmp(args[0], "-displayof", length) == 0)) {
-		path = args[1];
-	    } else if ((c == 's')
-		    && (strncmp(args[0], "-selection", length) == 0)) {
-		selName = args[1];
-	    } else if ((c == 't')
-		    && (strncmp(args[0], "-type", length) == 0)) {
-		targetName = args[1];
-	    } else {
-		Tcl_AppendResult(interp, "unknown option \"", args[0],
-			"\"", (char *) NULL);
-		return TCL_ERROR;
-	    }
-	}
-	if (path != NULL) {
-	    tkwin = Tk_NameToWindow(interp, path, tkwin);
-	}
-	if (tkwin == NULL) {
-	    return TCL_ERROR;
-	}
-	if (selName != NULL) {
-	    selection = Tk_InternAtom(tkwin, selName);
-	} else {
-	    selection = XA_PRIMARY;
-	}
-	if (count > 1) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		    " get ?options?\"", (char *) NULL);
-	    return TCL_ERROR;
-	} else if (count == 1) {
-	    target = Tk_InternAtom(tkwin, args[0]);
-	} else if (targetName != NULL) {
-	    target = Tk_InternAtom(tkwin, targetName);
-	} else {
-	    target = XA_STRING;
-	}
+	    for (count = objc-2, objs = ((Tcl_Obj **)objv)+2; count > 0;
+		 count-=2, objs+=2) {
+		string = Tcl_GetString(objs[0]);
+		if (string[0] != '-') {
+		    break;
+		}
+		if (count < 2) {
+		    Tcl_AppendResult(interp, "value for \"", string,
+			    "\" missing", (char *) NULL);
+		    return TCL_ERROR;
+		}
 
-	Tcl_DStringInit(&selBytes);
-	result = Tk_GetSelection(interp, tkwin, selection, target, SelGetProc,
-		(ClientData) &selBytes);
-	if (result == TCL_OK) {
-	    Tcl_DStringResult(interp, &selBytes);
-	} else {
-	    Tcl_DStringFree(&selBytes);
-	}
-	return result;
-    } else if ((c == 'h') && (strncmp(argv[1], "handle", length) == 0)) {
-	Atom target, format;
-	char *targetName = NULL;
-	char *formatName = NULL;
-	register CommandInfo *cmdInfoPtr;
-	int cmdLength;
-	
-	for (count = argc-2, args = argv+2; count > 0; count -= 2, args += 2) {
-	    if (args[0][0] != '-') {
-		break;
+		if (Tcl_GetIndexFromObj(interp, objs[0], clearOptionStrings,
+			"option", 0, &clearIndex) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+		switch ((enum clearOptions) clearIndex) {
+		    case CLEAR_DISPLAYOF:
+			path = Tcl_GetString(objs[1]);
+			break;
+		    case CLEAR_SELECTION:
+			selName = Tcl_GetString(objs[1]);
+			break;
+		}
 	    }
-	    if (count < 2) {
-		Tcl_AppendResult(interp, "value for \"", *args,
-			"\" missing", (char *) NULL);
+	    if (count == 1) {
+		path = Tcl_GetString(objs[0]);
+	    } else if (count > 1) {
+		Tcl_WrongNumArgs(interp, 2, objv, "?options?");
 		return TCL_ERROR;
 	    }
-	    c = args[0][1];
-	    length = strlen(args[0]);
-	    if ((c == 'f') && (strncmp(args[0], "-format", length) == 0)) {
-		formatName = args[1];
-	    } else if ((c == 's')
-		    && (strncmp(args[0], "-selection", length) == 0)) {
-		selName = args[1];
-	    } else if ((c == 't')
-		    && (strncmp(args[0], "-type", length) == 0)) {
-		targetName = args[1];
-	    } else {
-		Tcl_AppendResult(interp, "unknown option \"", args[0],
-			"\"", (char *) NULL);
-		return TCL_ERROR;
-	    }
-	}
-
-	if ((count < 2) || (count > 4)) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		    " handle ?options? window command\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	tkwin = Tk_NameToWindow(interp, args[0], tkwin);
-	if (tkwin == NULL) {
-	    return TCL_ERROR;
-	}
-	if (selName != NULL) {
-	    selection = Tk_InternAtom(tkwin, selName);
-	} else {
-	    selection = XA_PRIMARY;
-	}
-	    
-	if (count > 2) {
-	    target = Tk_InternAtom(tkwin, args[2]);
-	} else if (targetName != NULL) {
-	    target = Tk_InternAtom(tkwin, targetName);
-	} else {
-	    target = XA_STRING;
-	}
-	if (count > 3) {
-	    format = Tk_InternAtom(tkwin, args[3]);
-	} else if (formatName != NULL) {
-	    format = Tk_InternAtom(tkwin, formatName);
-	} else {
-	    format = XA_STRING;
-	}
-	cmdLength = strlen(args[1]);
-	if (cmdLength == 0) {
-	    Tk_DeleteSelHandler(tkwin, selection, target);
-	} else {
-	    cmdInfoPtr = (CommandInfo *) ckalloc((unsigned) (
-		    sizeof(CommandInfo) - 3 + cmdLength));
-	    cmdInfoPtr->interp = interp;
-	    cmdInfoPtr->charOffset = 0;
-	    cmdInfoPtr->byteOffset = 0;
-	    cmdInfoPtr->buffer[0] = '\0';
-	    cmdInfoPtr->cmdLength = cmdLength;
-	    strcpy(cmdInfoPtr->command, args[1]);
-	    Tk_CreateSelHandler(tkwin, selection, target, HandleTclCommand,
-		    (ClientData) cmdInfoPtr, format);
-	}
-	return TCL_OK;
-    } else if ((c == 'o') && (strncmp(argv[1], "own", length) == 0)) {
-	register LostCommand *lostPtr;
-	char *script = NULL;
-	int cmdLength;
-
-	for (count = argc-2, args = argv+2; count > 0; count -= 2, args += 2) {
-	    if (args[0][0] != '-') {
-		break;
-	    }
-	    if (count < 2) {
-		Tcl_AppendResult(interp, "value for \"", *args,
-			"\" missing", (char *) NULL);
-		return TCL_ERROR;
-	    }
-	    c = args[0][1];
-	    length = strlen(args[0]);
-	    if ((c == 'c') && (strncmp(args[0], "-command", length) == 0)) {
-		script = args[1];
-	    } else if ((c == 'd')
-		    && (strncmp(args[0], "-displayof", length) == 0)) {
-		path = args[1];
-	    } else if ((c == 's')
-		    && (strncmp(args[0], "-selection", length) == 0)) {
-		selName = args[1];
-	    } else {
-		Tcl_AppendResult(interp, "unknown option \"", args[0],
-			"\"", (char *) NULL);
-		return TCL_ERROR;
-	    }
-	}
-
-	if (count > 2) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		    " own ?options? ?window?\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	if (selName != NULL) {
-	    selection = Tk_InternAtom(tkwin, selName);
-	} else {
-	    selection = XA_PRIMARY;
-	}
-	if (count == 0) {
-	    TkSelectionInfo *infoPtr;
-	    TkWindow *winPtr;
 	    if (path != NULL) {
 		tkwin = Tk_NameToWindow(interp, path, tkwin);
 	    }
 	    if (tkwin == NULL) {
 		return TCL_ERROR;
 	    }
-	    winPtr = (TkWindow *)tkwin;
-	    for (infoPtr = winPtr->dispPtr->selectionInfoPtr; infoPtr != NULL;
-		    infoPtr = infoPtr->nextPtr) {
-		if (infoPtr->selection == selection)
+	    if (selName != NULL) {
+		selection = Tk_InternAtom(tkwin, selName);
+	    } else {
+		selection = XA_PRIMARY;
+	    }
+	    
+	    Tk_ClearSelection(tkwin, selection);
+	    break;
+	}
+
+	case SELECTION_GET: {
+	    Atom target;
+	    char *targetName = NULL;
+	    Tcl_DString selBytes;
+	    int result;
+	    static char *getOptionStrings[] = { "-displayof", "-selection",
+						    "-type", (char *) NULL };
+	    enum getOptions { GET_DISPLAYOF, GET_SELECTION, GET_TYPE };
+	    int getIndex;
+	    
+	    for (count = objc-2, objs = ((Tcl_Obj **)objv)+2; count>0;
+		 count-=2, objs+=2) {
+		string = Tcl_GetString(objs[0]);
+		if (string[0] != '-') {
 		    break;
+		}
+		if (count < 2) {
+		    Tcl_AppendResult(interp, "value for \"", string,
+			    "\" missing", (char *) NULL);
+		    return TCL_ERROR;
+		}
+		
+		if (Tcl_GetIndexFromObj(interp, objs[0], getOptionStrings,
+			"option", 0, &getIndex) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+
+		switch ((enum getOptions) getIndex) {
+		    case GET_DISPLAYOF:
+			path = Tcl_GetString(objs[1]);
+			break;
+		    case GET_SELECTION:
+			selName = Tcl_GetString(objs[1]);
+			break;
+		    case GET_TYPE:
+			targetName = Tcl_GetString(objs[1]);
+			break;
+		}
+	    }
+	    if (path != NULL) {
+		tkwin = Tk_NameToWindow(interp, path, tkwin);
+	    }
+	    if (tkwin == NULL) {
+		return TCL_ERROR;
+	    }
+	    if (selName != NULL) {
+		selection = Tk_InternAtom(tkwin, selName);
+	    } else {
+		selection = XA_PRIMARY;
+	    }
+	    if (count > 1) {
+		Tcl_WrongNumArgs(interp, 2, objv, "?options?");
+		return TCL_ERROR;
+	    } else if (count == 1) {
+		target = Tk_InternAtom(tkwin, Tcl_GetString(objs[0]));
+	    } else if (targetName != NULL) {
+		target = Tk_InternAtom(tkwin, targetName);
+	    } else {
+		target = XA_STRING;
 	    }
 
-	    /*
-	     * Ignore the internal clipboard window.
-	     */
+	    Tcl_DStringInit(&selBytes);
+	    result = Tk_GetSelection(interp, tkwin, selection, target,
+		    SelGetProc,	(ClientData) &selBytes);
+	    if (result == TCL_OK) {
+		Tcl_DStringResult(interp, &selBytes);
+	    } else {
+		Tcl_DStringFree(&selBytes);
+	    }
+	    return result;
+	}
 
-	    if ((infoPtr != NULL)
-		    && (infoPtr->owner != winPtr->dispPtr->clipWindow)) {
-		Tcl_SetResult(interp, Tk_PathName(infoPtr->owner), TCL_STATIC);
+	case SELECTION_HANDLE: {
+	    Atom target, format;
+	    char *targetName = NULL;
+	    char *formatName = NULL;
+	    register CommandInfo *cmdInfoPtr;
+	    int cmdLength;
+	    static char *handleOptionStrings[] = { "-format", "-selection",
+						    "-type", (char *) NULL };
+	    enum handleOptions { HANDLE_FORMAT, HANDLE_SELECTION,
+				     HANDLE_TYPE };
+	    int handleIndex;
+	    
+	    for (count = objc-2, objs = ((Tcl_Obj **)objv)+2; count > 0;
+		 count-=2, objs+=2) {
+		string = Tcl_GetString(objs[0]);
+		if (string[0] != '-') {
+		    break;
+		}
+		if (count < 2) {
+		    Tcl_AppendResult(interp, "value for \"", string,
+			    "\" missing", (char *) NULL);
+		    return TCL_ERROR;
+		}
+
+		if (Tcl_GetIndexFromObj(interp, objs[0],handleOptionStrings,
+			"option", 0, &handleIndex) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+
+		switch ((enum handleOptions) handleIndex) {
+		    case HANDLE_FORMAT:
+			formatName = Tcl_GetString(objs[1]);
+			break;
+		    case HANDLE_SELECTION:
+			selName = Tcl_GetString(objs[1]);
+			break;
+		    case HANDLE_TYPE:
+			targetName = Tcl_GetString(objs[1]);
+			break;
+		}
+	    }
+
+	    if ((count < 2) || (count > 4)) {
+		Tcl_WrongNumArgs(interp, 2, objv, "?options? window command");
+		return TCL_ERROR;
+	    }
+	    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objs[0]), tkwin);
+	    if (tkwin == NULL) {
+		return TCL_ERROR;
+	    }
+	    if (selName != NULL) {
+		selection = Tk_InternAtom(tkwin, selName);
+	    } else {
+		selection = XA_PRIMARY;
+	    }
+	    
+	    if (count > 2) {
+		target = Tk_InternAtom(tkwin, Tcl_GetString(objs[2]));
+	    } else if (targetName != NULL) {
+		target = Tk_InternAtom(tkwin, targetName);
+	    } else {
+		target = XA_STRING;
+	    }
+	    if (count > 3) {
+		format = Tk_InternAtom(tkwin, Tcl_GetString(objs[3]));
+	    } else if (formatName != NULL) {
+		format = Tk_InternAtom(tkwin, formatName);
+	    } else {
+		format = XA_STRING;
+	    }
+	    string = Tcl_GetStringFromObj(objs[1], &cmdLength);
+	    if (cmdLength == 0) {
+		Tk_DeleteSelHandler(tkwin, selection, target);
+	    } else {
+		cmdInfoPtr = (CommandInfo *) ckalloc((unsigned) (
+		    sizeof(CommandInfo) - 3 + cmdLength));
+		cmdInfoPtr->interp = interp;
+		cmdInfoPtr->charOffset = 0;
+		cmdInfoPtr->byteOffset = 0;
+		cmdInfoPtr->buffer[0] = '\0';
+		cmdInfoPtr->cmdLength = cmdLength;
+		strcpy(cmdInfoPtr->command, string);
+		Tk_CreateSelHandler(tkwin, selection, target, HandleTclCommand,
+			(ClientData) cmdInfoPtr, format);
 	    }
 	    return TCL_OK;
 	}
-	tkwin = Tk_NameToWindow(interp, args[0], tkwin);
-	if (tkwin == NULL) {
-	    return TCL_ERROR;
-	}
-	if (count == 2) {
-	    script = args[1];
-	}
-	if (script == NULL) {
-	    Tk_OwnSelection(tkwin, selection, (Tk_LostSelProc *) NULL,
-		    (ClientData) NULL);
+	
+	case SELECTION_OWN: {
+	    register LostCommand *lostPtr;
+	    char *script = NULL;
+	    int cmdLength;
+	    static char *ownOptionStrings[] = { "-command",
+						    "-displayof",
+						    "-selection",
+						    (char *) NULL };
+	    enum ownOptions { OWN_COMMAND, OWN_DISPLAYOF, OWN_SELECTION };
+	    int ownIndex;
+	    
+	    for (count = objc-2, objs = ((Tcl_Obj **)objv)+2; count > 0;
+		 count-=2, objs+=2) {
+		string = Tcl_GetString(objs[0]);
+		if (string[0] != '-') {
+		    break;
+		}
+		if (count < 2) {
+		    Tcl_AppendResult(interp, "value for \"", string,
+			    "\" missing", (char *) NULL);
+		    return TCL_ERROR;
+		}
+
+		if (Tcl_GetIndexFromObj(interp, objs[0], ownOptionStrings,
+			"option", 0, &ownIndex) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+
+		switch ((enum ownOptions) ownIndex) {
+		    case OWN_COMMAND:
+			script = Tcl_GetString(objs[1]);
+			break;
+		    case OWN_DISPLAYOF:
+			path = Tcl_GetString(objs[1]);
+			break;
+		    case OWN_SELECTION:
+			selName = Tcl_GetString(objs[1]);
+			break;
+		}
+	    }
+	    
+	    if (count > 2) {
+		Tcl_WrongNumArgs(interp, 2, objv, "?options? ?window?");
+		return TCL_ERROR;
+	    }
+	    if (selName != NULL) {
+		selection = Tk_InternAtom(tkwin, selName);
+	    } else {
+		selection = XA_PRIMARY;
+	    }
+	    if (count == 0) {
+		TkSelectionInfo *infoPtr;
+		TkWindow *winPtr;
+		if (path != NULL) {
+		    tkwin = Tk_NameToWindow(interp, path, tkwin);
+		}
+		if (tkwin == NULL) {
+		    return TCL_ERROR;
+		}
+		winPtr = (TkWindow *)tkwin;
+		for (infoPtr = winPtr->dispPtr->selectionInfoPtr;
+		     infoPtr != NULL; infoPtr = infoPtr->nextPtr) {
+		    if (infoPtr->selection == selection)
+			break;
+		}
+		
+		/*
+		 * Ignore the internal clipboard window.
+		 */
+		
+		if ((infoPtr != NULL)
+			&& (infoPtr->owner != winPtr->dispPtr->clipWindow)) {
+		    Tcl_SetResult(interp, Tk_PathName(infoPtr->owner),
+			    TCL_STATIC);
+		}
+		return TCL_OK;
+	    }
+	    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objs[0]), tkwin);
+	    if (tkwin == NULL) {
+		return TCL_ERROR;
+	    }
+	    if (count == 2) {
+		script = Tcl_GetString(objs[1]);
+	    }
+	    if (script == NULL) {
+		Tk_OwnSelection(tkwin, selection, (Tk_LostSelProc *) NULL,
+			(ClientData) NULL);
+		return TCL_OK;
+	    }
+	    cmdLength = strlen(script);
+	    lostPtr = (LostCommand *) ckalloc((unsigned) (sizeof(LostCommand)
+		    -3 + cmdLength));
+	    lostPtr->interp = interp;
+	    strcpy(lostPtr->command, script);
+	    Tk_OwnSelection(tkwin, selection, LostSelection,
+		    (ClientData) lostPtr);
 	    return TCL_OK;
 	}
-	cmdLength = strlen(script);
-	lostPtr = (LostCommand *) ckalloc((unsigned) (sizeof(LostCommand)
-		-3 + cmdLength));
-	lostPtr->interp = interp;
-	strcpy(lostPtr->command, script);
-	Tk_OwnSelection(tkwin, selection, LostSelection, (ClientData) lostPtr);
-	return TCL_OK;
-    } else {
-	Tcl_AppendResult(interp, "bad option \"", argv[1],
-		"\": must be clear, get, handle, or own", (char *) NULL);
-	return TCL_ERROR;
     }
+    return TCL_OK;
 }
 
 /*
