@@ -1,3 +1,8 @@
+2003-10-31  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkImgPhoto.c (ImgPhotoBlendComplexAlpha): OS X uses
+	32bpp images internally always, so make use of the assumption.
+
 2003-10-31  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkText.c
