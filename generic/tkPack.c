@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.8 2001/08/21 20:21:36 pspjuth Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.9 2001/08/22 17:29:08 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1062,7 +1062,7 @@ TkParsePadAmount(interp, tkwin, specObj, halfPtr, allPtr)
 {
     char *secondPart; 		/* The second pixel amount of the list */
     char *separator = 0;	/* Separator between 1st and 2nd pixel widths */
-    int sepChar;		/* Character used as the separator */
+    int sepChar = 0;		/* Character used as the separator */
     int firstInt, secondInt;    /* The two components of the padding */
     char *padSpec = Tcl_GetString(specObj);
 
