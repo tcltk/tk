@@ -1,3 +1,9 @@
+2004-11-08  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* library/demos/goldberg.tcl: Added slightly adapted version of
+	Keith Vetter's tkGoldberg as the final animation demo. Many many
+	thanks to Keith for giving his permission! [FRQ 627466]
+
 2004-11-07  Peter Spjuth  <peter.spjuth@space.se>
 
 	* doc/frame.n: Added some info for -width/-height options.
