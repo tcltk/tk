@@ -9,10 +9,10 @@
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # Copyright (c) 2001 ActiveState Corporation.
-# Copyright (c) 2001-2003 David Gravereaux.
+# Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.80 2004/01/15 21:46:22 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.81 2004/02/01 10:41:18 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -97,6 +97,14 @@ the environment.  Jump to this line to read the new instructions.
 #
 #		memdbg   = Enables the debugging memory allocator.
 #		compdbg  = Enables byte compilation logging.
+#
+#	CHECKS=nodep,fullwarn,none
+#		Sets special macros for checking compatability.
+#
+#		nodep	 = Turns off compatability macros to ensure Tk isn't
+#			    being built with deprecated functions. 
+#		fullwarn = Builds with full compiler and link warnings enabled.
+#			    Very verbose.
 #
 #	MACHINE=(IX86|IA64|ALPHA)
 #		Set the machine type used for the compiler, linker, and
@@ -360,7 +368,7 @@ TK_DEFINES	= $(OPTDEFINES)
 !if "$(MACHINE)" == "IA64"
 cdebug = -Od -Zi
 !else
-cdebug = -Z7 -Od -WX
+cdebug = -Z7 -Od -WX -GZ
 !endif
 !else
 # This cranks the optimization level up.  We can't use -02 because sometimes
@@ -369,7 +377,13 @@ cdebug = -Oti
 !endif
 
 # declarations common to all compiler options
-cflags = -nologo -c -W3 -YX -Fp$(TMP_DIR)^\
+cflags = -nologo -c -YX -Fp$(TMP_DIR)^\
+
+!if $(FULLWARNINGS)
+cflags = $(cflags) -W4
+!else
+cflags = $(cflags) -W3
+!endif
 
 !if $(PENT_0F_ERRATA)
 cflags = $(cflags) -QI0f
@@ -412,6 +426,10 @@ ldebug	= -release -opt:ref -opt:icf,3
 
 # declarations common to all linker options
 lflags	= -nologo -machine:$(MACHINE) $(ldebug)
+
+!if $(FULLWARNINGS)
+lflags = $(lflags) -warn:3
+!endif
 
 !if $(PROFILE)
 lflags	= $(lflags) -profile
@@ -528,34 +546,6 @@ $(TKTEST): $(TKTESTOBJS) $(TKIMPLIB)
 $(CAT32): $(_TCLDIR)\win\cat.c
 	$(cc32) $(CON_CFLAGS) -Fo$(TMP_DIR)\ $?
 	$(link32) $(conlflags) -out:$@ -stack:16384 $(TMP_DIR)\cat.obj $(baselibs)
-
-install-binaries:
-	@$(CPY) "$(WISH)" "$(BIN_INSTALL_DIR)\"
-!if $(TKLIB) != $(TKIMPLIB)
-	@$(CPY) "$(TKLIB)" "$(BIN_INSTALL_DIR)\"
-!endif
-	@$(CPY) "$(TKIMPLIB)" "$(LIB_INSTALL_DIR)\"
-	@$(CPY) "$(TKSTUBLIB)" "$(LIB_INSTALL_DIR)\"
-!if !$(STATIC_BUILD)
-	@echo Creating package index "$(SCRIPT_INSTALL_DIR)\pkgIndex.tcl"
-	-del "$(SCRIPT_INSTALL_DIR)\pkgIndex.tcl"
-	echo if {[package vcompare [package provide Tcl] $(TCL_DOTVERSION)] != 0} { return } > "$(OUT_DIR)\pkgIndex.tcl"
-	echo package ifneeded Tk $(DOTVERSION) [list load [file join $$dir .. .. bin $(TKLIBNAME)] Tk] >>"$(OUT_DIR)\pkgIndex.tcl"
-	$(CPY) "$(OUT_DIR)\pkgIndex.tcl" "$(SCRIPT_INSTALL_DIR)\"
-!endif
-
-install-libraries:
-	@$(CPY) "$(GENERICDIR)\tk.h" "$(INCLUDE_INSTALL_DIR)\"
-	@$(CPY) "$(GENERICDIR)\tkDecls.h" "$(INCLUDE_INSTALL_DIR)\"
-	@$(CPY) "$(GENERICDIR)\tkPlatDecls.h" "$(INCLUDE_INSTALL_DIR)\"
-	@$(CPY) "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)\"
-	@$(CPY) "$(XLIBDIR)\X11\*.h" "$(INCLUDE_INSTALL_DIR)\X11\"
-	@$(CPY) "$(ROOT)\library\*" "$(SCRIPT_INSTALL_DIR)\"
-	@$(CPY) "$(ROOT)\library\*" "$(SCRIPT_INSTALL_DIR)\"
-	@$(CPY) "$(ROOT)\library\demos\*" "$(SCRIPT_INSTALL_DIR)\demos\"
-	@$(CPY) "$(ROOT)\library\demos\images\*" "$(SCRIPT_INSTALL_DIR)\demos\images\"
-	@$(CPY) "$(ROOT)\library\images\*" "$(SCRIPT_INSTALL_DIR)\images\"
-	@$(CPY) "$(ROOT)\library\msgs\*" "$(SCRIPT_INSTALL_DIR)\msgs\"
 
 
 #---------------------------------------------------------------------
@@ -680,11 +670,9 @@ close $$f
 #---------------------------------------------------------------------
 
 $(TMP_DIR)\testMain.obj: $(WINDIR)\winMain.c
-!if $(TCL_USE_STATIC_PACKAGES)
-	$(cc32) $(WISH_CFLAGS) -DTK_TEST -DTCL_USE_STATIC_PACKAGES -Fo$@ $?
-!else
-	$(cc32) $(WISH_CFLAGS) -DTK_TEST -Fo$@ $?
-!endif
+	$(cc32) $(WISH_CFLAGS) -DTK_TEST \
+	    -DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
+	    -Fo$@ $?
 
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
 	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
@@ -696,11 +684,9 @@ $(TMP_DIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
 	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
 
 $(TMP_DIR)\winMain.obj: $(WINDIR)\winMain.c
-!if $(TCL_USE_STATIC_PACKAGES)
-	$(cc32) $(WISH_CFLAGS) -DTCL_USE_STATIC_PACKAGES -Fo$@ $?
-!else
-	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
-!endif
+	$(cc32) $(WISH_CFLAGS) \
+	    -DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
+	    -Fo$@ $?
 
 # The following objects are part of the stub library and should not
 # be built as DLL objects but none of the symbols should be exported
@@ -790,20 +776,69 @@ $<
 
 {$(RCDIR)}.rc{$(TMP_DIR)}.res:
 	$(rc32) -fo $@ -r -i "$(GENERICDIR)" $(TCL_INCLUDES) \
-		-d DEBUG=$(DEBUG) -d TCL_THREADS=$(TCL_THREADS) \
-		-d STATIC_BUILD=$(STATIC_BUILD) \
-		$<
+	    -d DEBUG=$(DEBUG) -d TCL_THREADS=$(TCL_THREADS) \
+	    -d STATIC_BUILD=$(STATIC_BUILD) \
+	    $<
+
+.SUFFIXES:
+.SUFFIXES:.c .rc
+
+
+#---------------------------------------------------------------------
+# Installation.
+#---------------------------------------------------------------------
+
+install-binaries:
+	@$(CPY) "$(WISH)" "$(BIN_INSTALL_DIR)\"
+!if $(TKLIB) != $(TKIMPLIB)
+	@$(CPY) "$(TKLIB)" "$(BIN_INSTALL_DIR)\"
+!endif
+	@$(CPY) "$(TKIMPLIB)" "$(LIB_INSTALL_DIR)\"
+	@$(CPY) "$(TKSTUBLIB)" "$(LIB_INSTALL_DIR)\"
+!if !$(STATIC_BUILD)
+	@echo Creating package index "$(SCRIPT_INSTALL_DIR)\pkgIndex.tcl"
+	-del "$(SCRIPT_INSTALL_DIR)\pkgIndex.tcl"
+	echo if {[package vcompare [package provide Tcl] $(TCL_DOTVERSION)] != 0} { return } > "$(OUT_DIR)\pkgIndex.tcl"
+	echo package ifneeded Tk $(DOTVERSION) [list load [file join $$dir .. .. bin $(TKLIBNAME)] Tk] >>"$(OUT_DIR)\pkgIndex.tcl"
+	$(CPY) "$(OUT_DIR)\pkgIndex.tcl" "$(SCRIPT_INSTALL_DIR)\"
+!endif
+
+install-libraries:
+	@$(CPY) "$(GENERICDIR)\tk.h" "$(INCLUDE_INSTALL_DIR)\"
+	@$(CPY) "$(GENERICDIR)\tkDecls.h" "$(INCLUDE_INSTALL_DIR)\"
+	@$(CPY) "$(GENERICDIR)\tkPlatDecls.h" "$(INCLUDE_INSTALL_DIR)\"
+	@$(CPY) "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)\"
+	@$(CPY) "$(XLIBDIR)\X11\*.h" "$(INCLUDE_INSTALL_DIR)\X11\"
+	@$(CPY) "$(ROOT)\library\*" "$(SCRIPT_INSTALL_DIR)\"
+	@$(CPY) "$(ROOT)\library\*" "$(SCRIPT_INSTALL_DIR)\"
+	@$(CPY) "$(ROOT)\library\demos\*" "$(SCRIPT_INSTALL_DIR)\demos\"
+	@$(CPY) "$(ROOT)\library\demos\images\*" "$(SCRIPT_INSTALL_DIR)\demos\images\"
+	@$(CPY) "$(ROOT)\library\images\*" "$(SCRIPT_INSTALL_DIR)\images\"
+	@$(CPY) "$(ROOT)\library\msgs\*" "$(SCRIPT_INSTALL_DIR)\msgs\"
+
 
 #---------------------------------------------------------------------
 # Clean up
 #---------------------------------------------------------------------
 
+tidy:
+!if $(TKLIB) != $(TKIMPLIB)
+	@echo Removing $(TKLIB) ...
+	@if exist $(TKLIB) del $(TKLIB)
+!endif
+	@echo Removing $(TKIMPLIB) ...
+	@if exist $(TKIMPLIB) del $(TKIMPLIB)
+	@echo Removing $(WISH) ...
+	@if exist $(WISH) del $(WISH)
+	@echo Removing $(TCLTEST) ...
+	@if exist $(TCLTEST) del $(TCLTEST)
+	@echo Removing $(TKSTUBLIB) ...
+	@if exist $(TKSTUBLIB) del $(TKSTUBLIB)
+
 clean:
-	-$(RMDIR) $(TMP_DIR)
+	@echo Cleaning $(TMP_DIR)\* ...
+	@if exist $(TMP_DIR)\nul $(RMDIR) $(TMP_DIR)
 
-hose: clean
-	-$(RMDIR) $(OUT_DIR)
-
-
-.SUFFIXES:
-.SUFFIXES:.c .rc
+hose:
+	@echo Hosing $(OUT_DIR)\* ...
+	@if exist $(OUT_DIR)\nul $(RMDIR) $(OUT_DIR)
