@@ -2006,16 +2006,22 @@ CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 # on symbols and static vs. shared.
 #--------------------------------------------------------------------
 
+if test "${GCC}" = "yes" ; then
+    RC_DEFINE_FLAG=--define
+else
+    RC_DEFINE_FLAG=-d
+fi
+
 if test "$SHARED_BUILD" = 0 -o $TCL_NEEDS_EXP_FILE = 0; then
     if test "${DBGX}" = "d"; then
-        RC_DEFINES="-d STATIC_BUILD -d DEBUG"
+        RC_DEFINES="${RC_DEFINE_FLAG} STATIC_BUILD ${RC_DEFINE_FLAG} DEBUG"
     else
-        RC_DEFINES="-d STATIC_BUILD"
+        RC_DEFINES="${RC_DEFINE_FLAG} STATIC_BUILD"
     fi
     TK_RES=""
 else
     if test "${DBGX}" = "d"; then
-        RC_DEFINES="-d DEBUG"
+        RC_DEFINES="${RC_DEFINE_FLAG} DEBUG"
     else
         RC_DEFINES=""
     fi
