@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.13.2.1 2003/07/17 00:37:03 hobbs Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.13.2.2 2003/07/17 20:49:00 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1518,14 +1518,21 @@ PanedWindowReqProc(clientData, tkwin)
     Tk_Window tkwin;		/* Other Tk-related information
 				 * about the window. */
 {
-    Slave *panePtr = (Slave *) clientData;
-    PanedWindow *pwPtr = (PanedWindow *) (panePtr->masterPtr);
+    Slave *slavePtr = (Slave *) clientData;
+    PanedWindow *pwPtr = (PanedWindow *) (slavePtr->masterPtr);
     if (Tk_IsMapped(pwPtr->tkwin)) {
 	if (!(pwPtr->flags & RESIZE_PENDING)) {
 	    pwPtr->flags |= RESIZE_PENDING;
 	    Tcl_DoWhenIdle(ArrangePanes, (ClientData) pwPtr);
 	}
     } else {
+	int doubleBw = 2 * Tk_Changes(slavePtr->tkwin)->border_width;
+	if (slavePtr->width <= 0) {
+	    slavePtr->paneWidth = Tk_ReqWidth(slavePtr->tkwin) + doubleBw;
+	}
+	if (slavePtr->height <= 0) {
+	    slavePtr->paneHeight = Tk_ReqHeight(slavePtr->tkwin) + doubleBw;
+	}
 	ComputeGeometry(pwPtr);
     }
 }
