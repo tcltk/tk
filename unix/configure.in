@@ -52,6 +52,19 @@ fi
 
 file=$TCL_BIN_DIR/tclConfig.sh
 . $file
+
+# Set the default compiler switches based on the --enable-symbols option
+
+AC_ARG_ENABLE(symbols, [  --enable-symbols        build with debugging symbols],
+    [tcl_ok=$enableval], [tcl_ok=no])
+if test "$tcl_ok" = "yes"; then
+    CFLAGS_DEFAULT=CFLAGS_DEBUG
+    DBGX=g
+else
+    CFLAGS_DEFAULT=CFLAGS_OPTIMIZE
+    DBGX=""
+fi
+
 SHLIB_CFLAGS=$TCL_SHLIB_CFLAGS
 SHLIB_LD=$TCL_SHLIB_LD
 SHLIB_LD_LIBS=$TCL_SHLIB_LD_LIBS
@@ -59,6 +72,8 @@ SHLIB_SUFFIX=$TCL_SHLIB_SUFFIX
 SHLIB_VERSION=$TCL_SHLIB_VERSION
 DL_LIBS=$TCL_DL_LIBS
 LD_FLAGS=$TCL_LD_FLAGS
+CFLAGS_DEBUG=$TCL_CFLAGS_DEBUG
+CFLAGS_OPTIMIZE=$TCL_CFLAGS_OPTIMIZE
 
 LIB_RUNTIME_DIR='${LIB_RUNTIME_DIR}'
 
@@ -376,6 +391,15 @@ else
     TK_LIB_SPEC="-L${exec_prefix}/lib -ltk`echo ${VERSION} | tr -d .`"
 fi
 
+echo CFLAGS_DEBUG=$CFLAGS_DEBUG
+echo CFLAGS_DEFAULT=$CFLAGS_DEFAULT
+echo CFLAGS_OPTIMIZE=$CFLAGS_OPTIMIZE
+echo DBGX=$DBGX
+
+AC_SUBST(CFLAGS_DEBUG)
+AC_SUBST(CFLAGS_DEFAULT)
+AC_SUBST(CFLAGS_OPTIMIZE)
+AC_SUBST(DBGX)
 AC_SUBST(DL_LIBS)
 AC_SUBST(LD_FLAGS)
 AC_SUBST(MATH_LIBS)

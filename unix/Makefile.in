@@ -81,6 +81,20 @@ TCL_GENERIC_DIR =	@TCL_SRC_DIR@/generic
 # for this version of Tk:
 TCL_BIN_DIR =		@TCL_BIN_DIR@
 
+# Libraries built with optimization switches have this additional extension
+DBGX =			@DBGX@
+
+# The default switches for optimization or debugging
+CFLAGS_DEBUG =		@CFLAGS_DEBUG@
+CFLAGS_OPTIMIZE =	@CFLAGS_OPTIMIZE@
+
+# To change the compiler switches, for example to change from optimization to
+# debugging symbols, change the following line:
+#CFLAGS = 		$(CFLAGS_DEBUG)
+#CFLAGS = 		$(CFLAGS_OPTIMIZE)
+#CFLAGS = 		$(CFLAGS_DEBUG) $(CFLAGS_OPTIMIZE)
+CFLAGS = 		$(@CFLAGS_DEFAULT@)
+
 # A "-I" switch that can be used when compiling to make all of the
 # X11 include files accessible (the configure script will try to
 # set this value, and will cause it to be an empty string if the
@@ -95,10 +109,6 @@ X11_LIB_SWITCHES =	@XLIBSW@
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
 LIBS = @TCL_BUILD_LIB_SPEC@ @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@ -lc
-
-# To change the compiler switches, for example to change from -O
-# to -g, change the following line:
-CFLAGS = -O
 
 # To turn off the security checks that disallow incoming sends when
 # the X server appears to be insecure, reverse the comments on the
