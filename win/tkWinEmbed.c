@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.17 2005/01/05 02:46:59 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.18 2005/01/07 01:39:24 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -162,10 +162,6 @@ TkpUseWindow(interp, tkwin, string)
     Container *containerPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    if (winPtr->window != None) {
-        Tcl_Panic("TkpUseWindow: Already assigned a window");
-    }
 
     if (Tcl_GetInt(interp, string, &id) != TCL_OK) {
         return TCL_ERROR;
@@ -424,6 +420,7 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	    containerPtr->embeddedMenuHWnd = NULL;
 	    containerPtr->embeddedHWnd = NULL;
 	    containerPtr->parentPtr->flags &= ~TK_BOTH_HALVES;
+	    InvalidateRect(hwnd, NULL, TRUE);
 	    break;
 
 	    case TK_GEOMETRYREQ:
