@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.22 2002/06/20 21:18:32 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.23 2002/06/22 09:15:51 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1202,7 +1202,7 @@ GridReqProc(clientData, tkwin)
     register Gridder *gridPtr = (Gridder *) clientData;
 
     gridPtr = gridPtr->masterPtr;
-    if (!(gridPtr->flags & REQUESTED_RELAYOUT)) {
+    if (gridPtr && !(gridPtr->flags & REQUESTED_RELAYOUT)) {
 	gridPtr->flags |= REQUESTED_RELAYOUT;
 	Tcl_DoWhenIdle(ArrangeGrid, (ClientData) gridPtr);
     }
