@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.84 2002/09/27 00:47:26 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.85 2002/10/10 05:01:23 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -144,9 +144,10 @@ PROTO_FLAGS		=
 #PROTO_FLAGS		= -DNO_PROTOTYPE
 
 # To enable memory debugging reverse the comment characters on the following
-# lines.  Warning:  if you enable memory debugging, you must do it
-# *everywhere*, including all the code that calls Tcl, and you must use
-# ckalloc and ckfree everywhere instead of malloc and free.
+# lines. or call configure with --enable-symbols=mem
+# Warning:  if you enable memory debugging, you must do it *everywhere*,
+# including all the code that calls Tcl, and you must use ckalloc and
+# ckfree everywhere instead of malloc and free.
 MEM_DEBUG_FLAGS		=
 #MEM_DEBUG_FLAGS	= -DTCL_MEM_DEBUG
 

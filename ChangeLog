@@ -1,3 +1,11 @@
+2002-10-09  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/README: doc'ed --enable-symbols options.
+	* unix/Makefile.in: comment docs
+	* unix/configure: regen
+	* unix/tcl.m4: replaced SC_ENABLE_MEMDEBUG with a more intelligent
+	SC_ENABLE_SYMBOLS that takes yes|no|mem|all as options now.
+
 2002-10-09  Don Porter <dgp@users.sf.net>
 
 	* generic/tk.h:  Added reminder comment to edit
@@ -39,6 +47,19 @@
 	Also tidied up file to take into account the fact that we're using
 	32 bits per pixel in the master to accommodate the alpha channel
 	as well as RGB.
+
+2002-10-08  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/winButton.test: add option clear to top to prevent option
+	leakage from other tests causing problems. [Bug #582382]
+
+	* generic/tkPanedWindow.c (Tk_PanedWindowObjCmd): leave the
+	DestroyPanedWindow proc to free the pwPtr, add a Preserve
+	reference to the pwPtr->tkwin.
+	(DestroyPanedWindow): Release the pwPtr->tkwin.
+
+	* generic/tkFocus.c (TkFocusFilterEvent): Ignore event if we are
+	focusing into a dead window. [Bug #588831] (griffin)
 
 2002-10-02  Jim Ingham  <jingham@apple.com>
 

@@ -20,7 +20,7 @@ SGI, as well as PCs running Linux, BSDI, and SCO UNIX.  To compile for
 a PC running Windows, see the README file in the directory ../win.  To
 compile for a Macintosh, see the README file in the directory ../mac.
 
-RCS: @(#) $Id: README,v 1.17 2002/09/27 18:09:53 dgp Exp $
+RCS: @(#) $Id: README,v 1.18 2002/10/10 05:01:23 hobbs Exp $
 
 How To Compile And Install Tk:
 ------------------------------
@@ -58,7 +58,10 @@ How To Compile And Install Tk:
 				how to build shared libraries.
 	--disable-shared	If this switch is specified, Tk will compile
 				itself as a static library.
-	--enable-symbols	build with debugging symbols
+	--enable-symbols	build with debugging symbols  By default
+				standard debugging symbols are used.  You
+				can specify the value "mem" to include
+				TCL_MEM_DEBUG memory debugging.
 	--disable-symbols	build without debugging symbols
 	--enable-64bit		enable 64bit support (where applicable)
 	--disable-64bit		disable 64bit support (where applicable)
