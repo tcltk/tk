@@ -217,7 +217,9 @@ TkpDrawEntryBorderAndFocus(Entry *entryPtr, Drawable d, int isSpinbox)
     }
     SetGWorld(saveWorld, saveDevice);
     
-    Tk_Width(tkwin) = oldWidth;
+    if (isSpinbox) {
+        Tk_Width(tkwin) = oldWidth;
+    }
     return 1;
 }
 /*

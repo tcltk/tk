@@ -1,3 +1,9 @@
+2005-03-24  Jim Ingham  <jingham@apple.com>
+
+	* macosx/tkMacOSXEntry.c (TkpDrawEntryBorderAndFocus): Dopey
+	bug - don't reset the width for entry widgets - we didn't
+	change it for them.
+	
 2005-03-23  Jim Ingham  <jingham@apple.com>
 
 	These changes allow us to draw the Entry and Spinbox widget
