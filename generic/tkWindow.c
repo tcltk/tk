@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.16 2000/03/24 23:13:18 ericm Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.16.2.1 2001/08/24 23:57:59 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1398,7 +1398,7 @@ Tk_DestroyWindow(tkwin)
             }
 	}
     }
-    ckfree((char *) winPtr);
+    Tcl_EventuallyFree((ClientData) winPtr, TCL_DYNAMIC);
 }
 
 /*
