@@ -1,3 +1,19 @@
+2003-12-10  David Gravereaux <davygrvy@pobox.com>
+
+	* win/winMain.c (WishPanic) : placed ExitProcess() in a __try block
+	(SEH) to catch any exceptions that might happen.  As Tcl will call
+	Tcl_Finalize from its DllMain due to the unload from ExitProcess()
+	unloading Tcl, and if Tcl_Panic had gotten called in an __except
+	block handling an exception, this avoid the possibility of not
+	being able to exit from the stack being a mess.  Falls to
+	TerminateProcess() in the __except case.
+
+	Removed the #ifdef _MSC_VER around DebugBreak as that function
+	exists in kernel32.dll and is not compiler dependent.  I'd prefer
+	to use 'if (IsDebuggerPresent()) DebugBreak();' but
+	IsDebuggerPresent() isn't available in all kernel32.dll modules
+	for all versions of windows.
+
 2003-12-10  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/CrtImgType.3: Fixed line-transposition error found by Eric
