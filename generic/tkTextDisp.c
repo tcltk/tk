@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.46 2005/01/11 16:00:14 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.47 2005/02/14 23:00:44 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -165,6 +165,8 @@ typedef struct DLine {
     int byteCount;		/* Number of bytes accounted for by this
 				 * display line, including a trailing space
 				 * or newline that isn't actually displayed. */
+    int logicalLinesMerged;     /* Number of extra logical lines merged 
+                                 * into this one due to elided newlines. */
     int y;			/* Y-position at which line is supposed to
 				 * be drawn (topmost pixel of rectangular
 				 * area occupied by line). */
@@ -508,7 +510,7 @@ static void             TextInvalidateLineMetrics _ANSI_ARGS_((TkText *textPtr,
 			    TkTextLine *linePtr, int lineCount, int action));
 static int              CalculateDisplayLineHeight _ANSI_ARGS_((
 			    TkText *textPtr, CONST TkTextIndex *indexPtr, 
-			    int *byteCountPtr));
+			    int *byteCountPtr, int *mergedLinePtr));
 static void             DlineIndexOfX _ANSI_ARGS_((TkText *textPtr, 
 			    DLine *dlPtr, int x, TkTextIndex *indexPtr));
 static int              DlineXOfIndex _ANSI_ARGS_((TkText *textPtr, 
@@ -1031,7 +1033,8 @@ LayoutDLine(textPtr, indexPtr)
     dlPtr->chunkPtr = NULL;
     dlPtr->nextPtr = NULL;
     dlPtr->flags = NEW_LAYOUT | OLD_Y_INVALID;
-
+    dlPtr->logicalLinesMerged = 0;
+    
     /*
      * Special case entirely elide line as there may be 1000s or more
      */
@@ -1115,7 +1118,7 @@ LayoutDLine(textPtr, indexPtr)
 
 		if (TkBTreeLinePixelCount(textPtr, dlPtr->index.linePtr) != 0) {
 		    TkBTreeAdjustPixelHeight(textPtr, 
-					     dlPtr->index.linePtr, 0);
+					     dlPtr->index.linePtr, 0, 0);
 		}
 	    }
 	    TkTextFreeElideInfo(&info);
@@ -1146,17 +1149,35 @@ LayoutDLine(textPtr, indexPtr)
     wrapMode = TEXT_WRAPMODE_CHAR;
     tabSize = 0;
     lastCharChunkPtr = NULL;
-
+    
     /*
      * Find the first segment to consider for the line.  Can't call
      * TkTextIndexToSeg for this because it won't return a segment
      * with zero size (such as the insertion cursor's mark).
      */
 
-    for (byteOffset = curIndex.byteIndex, segPtr = curIndex.linePtr->segPtr;
-	 (byteOffset > 0) && (byteOffset >= segPtr->size);
-	 byteOffset -= segPtr->size, segPtr = segPtr->nextPtr) {
-	/* Empty loop body. */
+  connectNextLogicalLine:
+    byteOffset = curIndex.byteIndex;
+    segPtr = curIndex.linePtr->segPtr;
+    while ((byteOffset > 0) && (byteOffset >= segPtr->size)) {
+	byteOffset -= segPtr->size;
+	segPtr = segPtr->nextPtr;
+	
+	if (segPtr == NULL) {
+	    /* 
+	     * Two logical lines merged into one display line 
+	     * through eliding of a newline
+	     */
+	    TkTextLine *linePtr = TkBTreeNextLine(NULL, curIndex.linePtr);
+	    if (linePtr != NULL) {
+		dlPtr->logicalLinesMerged++;
+		curIndex.byteIndex = 0;
+		curIndex.linePtr = linePtr;
+		segPtr = curIndex.linePtr->segPtr;
+	    } else {
+		break;
+	    }
+	}
     }
 
     while (segPtr != NULL) {
@@ -1168,11 +1189,10 @@ LayoutDLine(textPtr, indexPtr)
 	 * If current chunk is elided and last chunk was too, coalese.
 	 * 
 	 * This also means that each logical line which is entirely
-	 * elided still gets laid out into a DLine, but with zero height.
-	 * This isn't particularly a problem, but it does seem somewhat
-	 * unnecessary.  If/when we fix [Tk Bug 443848] (see below)
-	 * then we will probably have to remove such zero height DLines
-	 * too. 
+	 * elided still gets laid out into a DLine, but with zero
+	 * height.  This isn't particularly a problem, but it does seem
+	 * somewhat unnecessary.  We may wish to redesign the code to
+	 * remove these zero height DLines in the future.
 	 */
 	if (elide && (lastChunkPtr != NULL)
 		&& (lastChunkPtr->displayProc == NULL /*ElideDisplayProc*/)) {
@@ -1195,9 +1215,26 @@ LayoutDLine(textPtr, indexPtr)
 
 	    byteOffset = 0;
 	    segPtr = segPtr->nextPtr;
+	    
+	    if (segPtr == NULL) {
+		/* 
+		 * Two logical lines merged into one display line 
+		 * through eliding of a newline
+		 */
+		TkTextLine *linePtr = TkBTreeNextLine(NULL, curIndex.linePtr);
+		if (linePtr != NULL) {
+		    dlPtr->logicalLinesMerged++;
+		    curIndex.byteIndex = 0;
+		    curIndex.linePtr = linePtr;
+		    goto connectNextLogicalLine;
+		}
+	    }
+	    /* Code no longer needed, now that we allow logical lines
+	     * to merge into a single display line.
 	    if (segPtr == NULL && chunkPtr != NULL) {
 		ckfree((char *) chunkPtr);
-	    }
+		chunkPtr = NULL;
+	    }*/
 	    continue;
 	}
 
@@ -1350,19 +1387,36 @@ LayoutDLine(textPtr, indexPtr)
 	    if (elide && segPtr == NULL) {
 		/* 
 		 * An elided section started on this line, and carries on
-		 * until the newline.  Currently this forces a new line
-		 * anyway (i.e. even though the newline is elided it
-		 * still takes effect).  This is because the code 
-		 * currently doesn't allow two or more logical lines to
-		 * appear on the same display line. [Tk Bug #443848]
+		 * until the newline.  Hence the newline is actually
+		 * elided, and we want to merge the display of the next
+		 * logical line with this one.
 		 */
+		TkTextLine *linePtr = TkBTreeNextLine(NULL, curIndex.linePtr);
+		if (linePtr != NULL) {
+		    dlPtr->logicalLinesMerged++;
+		    curIndex.byteIndex = 0;
+		    curIndex.linePtr = linePtr;
+		    chunkPtr = NULL;
+		    goto connectNextLogicalLine;
+		}
 	    }
 	}
 
 	chunkPtr = NULL;
     }
     if (noCharsYet) {
-	Tcl_Panic("LayoutDLine couldn't place any characters on a line");
+	dlPtr->spaceAbove = 0;
+	dlPtr->spaceBelow = 0;
+	dlPtr->length = 0;
+	/* 
+	 * We used to Tcl_Panic here, saying that LayoutDLine couldn't
+	 * place any characters on a line, but I believe a more
+	 * appropriate response is to return a DLine with zero height.
+	 * With elided lines, tag transitions and asynchronous line
+	 * height calculations, it is hard to avoid this situation ever
+	 * arising with the current code design.
+	 */
+	return dlPtr;
     }
     wholeLine = (segPtr == NULL);
 
@@ -1704,7 +1758,7 @@ UpdateDisplayInfo(textPtr)
 		 */
 		TkBTreeAdjustPixelHeight(textPtr, 
 					 prevPtr->index.linePtr, 
-					 lineHeight);
+					 lineHeight, 0);
 		/* 
 		 * I believe we can be 100% sure that we started at the
 		 * beginning of the logical line, so we can also adjust
@@ -1826,7 +1880,7 @@ UpdateDisplayInfo(textPtr)
 							lowestPtr->index.linePtr)) {
 		    TkBTreeAdjustPixelHeight(textPtr, 
 					     lowestPtr->index.linePtr, 
-					     pixelHeight);
+					     pixelHeight, 0);
 		    if (index.linePtr != lowestPtr->index.linePtr) {
 			/* 
 			 * We examined the entire line, so can update
@@ -2796,7 +2850,7 @@ TkTextUpdateLineMetrics(textPtr, lineNum, endLine, doThisMuch)
 		!= textPtr->dInfoPtr->lineMetricUpdateEpoch) {
 		if (doThisMuch == -1) {
 		    count += 8 * TkTextUpdateOneLine(textPtr, linePtr, 
-						     0, NULL);
+						     0, NULL, 0);
 		} else {
 		    TkTextIndex index;
 		    TkTextIndex *indexPtr;
@@ -2834,7 +2888,7 @@ TkTextUpdateLineMetrics(textPtr, lineNum, endLine, doThisMuch)
 		     * 8 for each display line we actually re-layout.
 		     */
 		    count += 8 * TkTextUpdateOneLine(textPtr, linePtr, 
-						     pixelHeight, indexPtr);
+						     pixelHeight, indexPtr, 1);
 		    
 		    if (indexPtr->linePtr == linePtr) {
 			/* 
@@ -3082,11 +3136,7 @@ TextInvalidateLineMetrics(textPtr, linePtr, lineCount, action)
  *	
  *	Similarly if the end of the current display line is elided
  *	and we are looking for the end, then the returned index will
- *	be the last elided index on the display line.  (NB. This also
- *	highlights a current bug in the text widget that we cannot
- *	place two logical lines on a single display line -- even
- *	though the newline in this case is elided, it still causes
- *	a line break to be shown).
+ *	be the last elided index on the display line.
  *	
  * Results:
  *	Modifies indexPtr to point to the given end.
@@ -3127,17 +3177,51 @@ TkTextFindDisplayLineEnd(textPtr, indexPtr, end, xOffset)
 	index.textPtr = NULL;
 	
 	while (1) {
+	    TkTextIndex endOfLastLine;
+	
+	    if (TkTextIndexBackBytes(textPtr, &index, 1, &endOfLastLine)) {
+		/* Reached beginning of text */
+		break;
+	    }
+
+	    if (!TkTextIsElided(textPtr, &endOfLastLine, NULL)) {
+		/*
+		 * The eol is not elided, so 'index' points to
+		 * the start of a display line (as well as logical
+		 * line).
+		 */
+		break;
+	    }
+	    /* 
+	     * indexPtr's logical line is actually merged with
+	     * the previous logical line whose eol is elided.
+	     * Continue searching back to get a real line start.
+	     */
+	    index = endOfLastLine;
+	    index.byteIndex = 0;
+	}
+
+	while (1) {
 	    DLine *dlPtr;
 	    int byteCount;
+	    TkTextIndex nextLineStart;
 	    
 	    dlPtr = LayoutDLine(textPtr, &index);
 	    byteCount = dlPtr->byteCount;
-
+	    
+	    TkTextIndexForwBytes(textPtr, &index, byteCount, &nextLineStart);
+	    
 	    /* 
-	     * 'byteCount' goes up to the beginning of the next line,
-	     * so equality here says we need one more line
+	     * 'byteCount' goes up to the beginning of the next display
+	     * line, so equality here says we need one more line.  We
+	     * try to perform a quick comparison which is valid for 
+	     * the case where the logical line is the same, but 
+	     * otherwise fall back on a full TkTextIndexCmp.
 	     */
-	    if (index.byteIndex + byteCount > indexPtr->byteIndex) {
+	    if (((index.linePtr == indexPtr->linePtr) 
+		 && (index.byteIndex + byteCount > indexPtr->byteIndex))
+		|| (dlPtr->logicalLinesMerged > 0 
+		    && TkTextIndexCmp(&nextLineStart, indexPtr) > 0)) {
 		/* It's on this display line */
 		if (xOffset != NULL) {
 		    /* 
@@ -3149,19 +3233,20 @@ TkTextFindDisplayLineEnd(textPtr, indexPtr, end, xOffset)
 		    *xOffset = DlineXOfIndex(textPtr, dlPtr, 
 				indexPtr->byteIndex - dlPtr->index.byteIndex);
 		}
-		indexPtr->byteIndex = index.byteIndex;
 		if (end) {
 		    /* 
 		     * The index we want is one less than the number
 		     * of bytes in the display line.
 		     */
-		    indexPtr->byteIndex += byteCount - sizeof(char);
+		    TkTextIndexBackBytes(textPtr, &nextLineStart, 1, indexPtr);
+		} else {
+		    *indexPtr = index;
 		}
 		FreeDLines(textPtr, dlPtr, NULL, DLINE_FREE_TEMP);
 		return;
 	    }
 	    FreeDLines(textPtr, dlPtr, NULL, DLINE_FREE_TEMP);
-	    TkTextIndexForwBytes(textPtr, &index, byteCount, &index);
+	    index = nextLineStart;
 	}
     }
 }
@@ -3188,6 +3273,10 @@ TkTextFindDisplayLineEnd(textPtr, indexPtr, end, xOffset)
  *	If 'byteCountPtr' is non-NULL, then returns in that pointer
  *	the number of byte indices on the given display line (which
  *	can be used to update indexPtr in a loop).
+ *	
+ *	If 'mergedLinePtr' is non-NULL, then returns in that pointer
+ *	the number of extra logical lines merged into the given
+ *	display line.
  *
  * Side effects:
  *	The combination of 'LayoutDLine' and 'FreeDLines' seems
@@ -3201,17 +3290,36 @@ TkTextFindDisplayLineEnd(textPtr, indexPtr, end, xOffset)
  */
 
 static int
-CalculateDisplayLineHeight(textPtr, indexPtr, byteCountPtr)
+CalculateDisplayLineHeight(textPtr, indexPtr, byteCountPtr, mergedLinePtr)
     TkText *textPtr;             /* Widget record for text widget. */
     CONST TkTextIndex *indexPtr; /* The index at the beginning of the
 				  * display line of interest. */
     int *byteCountPtr;           /* NULL or used to return the number of
 				  * byte indices on the given display
 				  * line. */
+    int *mergedLinePtr;          /* NULL or used to return if the given
+                                  * display line merges with a following
+                                  * logical line (because the eol is 
+                                  * elided). */
 {
     DLine *dlPtr;
     int pixelHeight;
     
+    /* 
+     * Special case for artificial last line.  May be better to move
+     * this inside LayoutDLine.
+     */
+    if (indexPtr->byteIndex == 0 
+      && TkBTreeNextLine(textPtr, indexPtr->linePtr) == NULL) {
+	if (byteCountPtr != NULL) {
+	    *byteCountPtr = 0;
+	}
+	if (mergedLinePtr != NULL) {
+	    *mergedLinePtr = 0;
+	}
+	return 0;
+    }
+
     /* 
      * Layout, find the information we need and then free the
      * display-line we laid-out.  We must use 'FreeDLines' because it
@@ -3222,6 +3330,9 @@ CalculateDisplayLineHeight(textPtr, indexPtr, byteCountPtr)
     pixelHeight = dlPtr->height;
     if (byteCountPtr != NULL) {
         *byteCountPtr = dlPtr->byteCount;
+    }
+    if (mergedLinePtr != NULL) {
+        *mergedLinePtr = dlPtr->logicalLinesMerged;
     }
     FreeDLines(textPtr, dlPtr, NULL, DLINE_FREE_TEMP);
 
@@ -3288,7 +3399,7 @@ TkTextIndexYPixels(textPtr, indexPtr)
 	 * specifically the 'linePtr->pixelHeight == pixelHeight' test 
 	 * below this while loop.
 	 */
-	height = CalculateDisplayLineHeight(textPtr, &index, &bytes);
+	height = CalculateDisplayLineHeight(textPtr, &index, &bytes, NULL);
 	
 	index.byteIndex += bytes;
 	
@@ -3334,7 +3445,7 @@ TkTextIndexYPixels(textPtr, indexPtr)
  */
 
 int
-TkTextUpdateOneLine(textPtr, linePtr, pixelHeight, indexPtr)
+TkTextUpdateOneLine(textPtr, linePtr, pixelHeight, indexPtr, partialCalc)
     TkText *textPtr;        /* Widget record for text widget. */
     TkTextLine *linePtr;    /* The line of which to calculate the
                              * height. */
@@ -3344,10 +3455,18 @@ TkTextUpdateOneLine(textPtr, linePtr, pixelHeight, indexPtr)
                              * has been given. */
     TkTextIndex *indexPtr;  /* Either NULL or an index at the start of
                              * a display line belonging to linePtr,
-                             * up to which we have already calculated. */
+                             * at which we wish to start (e.g. up to 
+                             * which we have already calculated). On
+                             * return this will be set to the first
+                             * index on the next line. */
+    int partialCalc;        /* Set to 1 if we are allowed to do 
+                             * partial height calculations of 
+                             * long-lines.  In this case we'll only
+                             * return what we know so far. */
 {
     TkTextIndex index;
-    int displayLines, partialCalc;
+    int displayLines;
+    int mergedLines;
     
     if (indexPtr == NULL) {
 	index.tree = textPtr->sharedTextPtr->tree;
@@ -3356,9 +3475,6 @@ TkTextUpdateOneLine(textPtr, linePtr, pixelHeight, indexPtr)
 	index.textPtr = NULL;
 	indexPtr = &index;
 	pixelHeight = 0;
-	partialCalc = 0; 
-    } else {
-	partialCalc = 1; 
     }
     
     /* 
@@ -3369,9 +3485,10 @@ TkTextUpdateOneLine(textPtr, linePtr, pixelHeight, indexPtr)
      */
 
     displayLines = 0;
+    mergedLines = 0;
     
     while (1) {
-	int bytes, height;
+	int bytes, height, logicalLines;
 	
 	/* 
 	 * Currently this call doesn't have many side-effects. 
@@ -3381,36 +3498,71 @@ TkTextUpdateOneLine(textPtr, linePtr, pixelHeight, indexPtr)
 	 * specifically the 'linePtr->pixelHeight == pixelHeight' test 
 	 * below this while loop.
 	 */
-	height = CalculateDisplayLineHeight(textPtr, indexPtr, &bytes);
+	height = CalculateDisplayLineHeight(textPtr, indexPtr, &bytes, 
+					    &logicalLines);
 	
 	if (height > 0) {
 	    pixelHeight += height;
 	    displayLines++;
 	}
 	
+	mergedLines += logicalLines;
+	
 	if (TkTextIndexForwBytes(textPtr, indexPtr, bytes, indexPtr)) {
             break;
         }
 
-	if (indexPtr->linePtr != linePtr) {
-	    /* 
-	     * If we reached the end of the logical line, then
-	     * either way we don't have a partial calculation.
+	if (logicalLines == 0) {
+	    if (indexPtr->linePtr != linePtr) {
+		/* 
+		 * If we reached the end of the logical line, then
+		 * either way we don't have a partial calculation.
+		 */
+		partialCalc = 0;
+		break;
+	    }
+	} else if (indexPtr->byteIndex != 0) {
+	    /* We must still be on the same wrapped line */
+	} else {
+	    /*
+	     * Must check if indexPtr is really a new logical line
+	     * which is not merged with the previous line.  The only
+	     * code that would really know this is LayoutDLine, which
+	     * doesn't pass the information on, so we have to check
+	     * manually here.
 	     */
-	    partialCalc = 0;
-	    break;
+	    TkTextIndex idx;
+	    TkTextIndexBackChars(textPtr, indexPtr, 1, &idx, COUNT_INDICES);
+	    if (!TkTextIsElided(textPtr, &idx, NULL)) {
+		/* We've ended a logical line */
+		partialCalc = 0;
+		break;
+	    }
+	    /* We must still be on the same wrapped line */
 	}
-	if (partialCalc && displayLines > 50) {
+	if (partialCalc && displayLines > 50 && mergedLines == 0) {
 	    /* 
 	     * Only calculate 50 display lines at a time, to 
 	     * avoid huge delays.  In any case it is very rare
 	     * that a single line wraps 50 times!
+	     * 
+	     * If we have any merged lines, we must complete the full
+	     * logical line layout here and now, because the
+	     * partial-calculation code isn't designed to handle merged
+	     * logical lines.  Hence the 'mergedLines == 0' check.
 	     */
 	    break;
 	}
     }
     
     if (!partialCalc) {
+	int changed = 0;
+	
+	/* 
+	 * Cancel any partial line height calculation state.
+	 */
+	textPtr->dInfoPtr->metricEpoch = -1;
+
 	/* 
 	 * Mark the logical line as being up to date (caution: it isn't
 	 * yet up to date, that will happen in TkBTreeAdjustPixelHeight
@@ -3418,12 +3570,33 @@ TkTextUpdateOneLine(textPtr, linePtr, pixelHeight, indexPtr)
 	 */
 	TkBTreeLinePixelEpoch(textPtr, linePtr) 
 	                   = textPtr->dInfoPtr->lineMetricUpdateEpoch;
-	/* 
-	 * Also cancel any partial line height calculation state.
-	 */
-	textPtr->dInfoPtr->metricEpoch = -1;
-
-	if (TkBTreeLinePixelCount(textPtr, linePtr) == pixelHeight) {
+	if (TkBTreeLinePixelCount(textPtr, linePtr) != pixelHeight) {
+	    changed = 1;
+	}
+	
+	if (mergedLines > 0) {
+	    int i = mergedLines;
+	    TkTextLine *mergedLinePtr;
+	    /* 
+	     * Loop over all merged logical lines, marking them up to date
+	     * (again, the pixel count setting will actually happen in 
+	     * TkBTreeAdjustPixelHeight).
+	     */
+	    mergedLinePtr = linePtr;
+	    while (i-- > 0) {
+		mergedLinePtr = TkBTreeNextLine(textPtr, mergedLinePtr);
+		TkBTreeLinePixelEpoch(textPtr, mergedLinePtr) 
+				   = textPtr->dInfoPtr->lineMetricUpdateEpoch;
+		if (TkBTreeLinePixelCount(textPtr, mergedLinePtr) != 0) {
+		    changed = 1;
+		}
+	    }
+	}
+	
+	if (!changed) {
+	    /* 
+	     * If there's nothing to change, then we can already return.
+	     */
 	    return displayLines;
 	}
     }
@@ -3433,8 +3606,8 @@ TkTextUpdateOneLine(textPtr, linePtr, pixelHeight, indexPtr)
      * of the entire widget, which may be used just below for
      * reporting/debugging purposes.
      */
-    pixelHeight = TkBTreeAdjustPixelHeight(textPtr,  
-					   linePtr, pixelHeight);
+    pixelHeight = TkBTreeAdjustPixelHeight(textPtr, linePtr, 
+					   pixelHeight, mergedLines);
     
     if (tkTextDebug) {
 	char buffer[2 * TCL_INTEGER_SPACE + 1];
@@ -4661,7 +4834,7 @@ TkTextSetYView(textPtr, indexPtr, pickPlace)
      * window.  
      */
 
-    lineHeight = CalculateDisplayLineHeight(textPtr, indexPtr, NULL);
+    lineHeight = CalculateDisplayLineHeight(textPtr, indexPtr, NULL, NULL);
     /* 
      * It would be better if 'bottomY' were calculated using the
      * actual height of the given line, not 'textPtr->charHeight'.
@@ -5139,7 +5312,7 @@ YScrollByPixels(textPtr, offset)
 	 * negative here.
 	 */
 	offset -= CalculateDisplayLineHeight(textPtr, 
-		&textPtr->topIndex, NULL) - dInfoPtr->topPixelOffset;
+		&textPtr->topIndex, NULL, NULL) - dInfoPtr->topPixelOffset;
 	MeasureUp(textPtr, &textPtr->topIndex, -offset, 
 		&textPtr->topIndex, &dInfoPtr->newTopPixelOffset);
     } else if (offset > 0) {
@@ -6193,26 +6366,38 @@ DlineIndexOfX(textPtr, dlPtr, x, indexPtr)
     x = x - dInfoPtr->x + dInfoPtr->curXPixelOffset;
     chunkPtr = dlPtr->chunkPtr;
 
-    if (chunkPtr == NULL) {
+    if (chunkPtr == NULL || x == 0) {
 	/* 
-	 * This may occur if everything is elided
+	 * This may occur if everything is elided, or if we're simply
+	 * already at the beginning of the line.
 	 */
 	return;
     }
 
-    for (; x >= (chunkPtr->x + chunkPtr->width);
-	    indexPtr->byteIndex += chunkPtr->numBytes,
-	    chunkPtr = chunkPtr->nextPtr) {
+    while (x >= (chunkPtr->x + chunkPtr->width)) {
+	/* 
+	 * Note that this forward then backward movement of the index
+	 * can be problematic at the end of the buffer (we can't move
+	 * forward, and then when we move backward, we do, leading to
+	 * the wrong position).  Hence when x == 0 we take special
+	 * action above.
+	 */
+	if (TkTextIndexForwBytes(NULL, indexPtr, chunkPtr->numBytes, indexPtr)) {
+	    /* We've reached the end of the text */
+	    return;
+	}
 	if (chunkPtr->nextPtr == NULL) {
-	    indexPtr->byteIndex += chunkPtr->numBytes;
 	    TkTextIndexBackChars(NULL, indexPtr, 1, indexPtr, COUNT_INDICES);
 	    return;
 	}
+	chunkPtr = chunkPtr->nextPtr;
     }
 
     /*
      * If the chunk has more than one byte in it, ask it which
-     * character is at the desired location.
+     * character is at the desired location.  In this case we
+     * can manipulate 'indexPtr->byteIndex' directly, because
+     * we know we're staying inside a single logical line.
      */
 
     if (chunkPtr->numBytes > 1) {
