@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.24 2000/10/19 01:05:01 ericm Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.25 2001/03/30 06:02:20 hobbs Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -1003,9 +1003,9 @@ static char updir_bits[] = {
     #
     if { [string equal $class TkFDialog] } {
 	if { $data(-multiple) } {
-		set fNameCaption "[::msgcat::mc {File names:}]"
+	    set fNameCaption "[::msgcat::mc {File names:}]"
 	} else {
-		set fNameCaption "[::msgcat::mc {File name:}]"
+	    set fNameCaption "[::msgcat::mc {File name:}]"
 	}
 	set fTypeCaption [::msgcat::mc "Files of type:"]
 	set fCaptionWidth [::msgcat::mcmax $fNameCaption $fTypeCaption]
@@ -1147,9 +1147,9 @@ proc ::tk::dialog::file::SetSelectMode {w multi} {
     set dataName __tk_filedialog
     upvar ::tk::dialog::file::$dataName data
     if { $multi } {
-		set fNameCaption "[::msgcat::mc {File names:}]"
+	set fNameCaption "[::msgcat::mc {File names:}]"
     } else {
-		set fNameCaption "[::msgcat::mc {File name:}]"
+	set fNameCaption "[::msgcat::mc {File name:}]"
     }
     set fNameUnder 5
     set iconListCommand [list ::tk::dialog::file::OkCmd $w]
@@ -1499,12 +1499,17 @@ proc ::tk::dialog::file::EntFocusOut {w} {
 #
 proc ::tk::dialog::file::ActivateEnt {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
-    
+
     set text [$data(ent) get]
     if {$data(-multiple)} {
+	# For the multiple case we have to be careful to get the file
+	# names as a true list, watching out for a single file with a
+	# space in the name.  Thus we query the IconList directly.
+
 	set data(selectFile) ""
-	foreach fname $text {
-	    ::tk::dialog::file::VerifyFileName $w $fname
+	foreach item [tkIconList_Curselection $data(icons)] {
+	    ::tk::dialog::file::VerifyFileName $w \
+		    [tkIconList_Get $data(icons) $item]
 	}
     } else {
 	::tk::dialog::file::VerifyFileName $w $text
@@ -1622,7 +1627,8 @@ proc ::tk::dialog::file::OkCmd {w} {
 	lappend text [tkIconList_Get $data(icons) $item]
     }
 
-    if {[llength $text] && !$data(-multiple)} {
+    if {([llength $text] && !$data(-multiple)) || \
+	    ($data(-multiple) && ([llength $text] == 1))} {
 	set text [lindex $text 0]
 	set file [::tk::dialog::file::JoinFile $data(selectPath) $text]
 	if {[file isdirectory $file]} {
