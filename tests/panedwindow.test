@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.5 2002/09/30 18:55:57 hobbs Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.6 2003/02/20 21:08:30 pspjuth Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -2395,6 +2395,53 @@ test panedwindow-28.2 {destroy the window cleanly on rename [Bug #616589]} {
     rename .p {}
     winfo exists .p
 } {0}
+
+
+test panedwindow-29.1 {resizing width} {
+    -body {
+        panedwindow .p -bd 5
+        frame .f1 -width 100 -height 50 -bg blue
+        frame .f2 -width 100 -height 50 -bg red
+
+        .p add .f1 -sticky news
+        .p add .f2 -sticky news
+        pack .p -side top -fill both -expand 1
+        wm geometry . ""
+        update
+        # Note the width
+        set a [winfo width .f2]
+        # Increase the size by 10
+        regexp {^(\d+)x(\d+)} [wm geometry .] -> w h
+        wm geometry . [expr {$w + 10}]x$h
+        update
+        set b "$a [winfo width .f2]"
+    }
+    -cleanup {destroy .p .f1 .f2}
+    -result {100 110}
+}
+
+test panedwindow-29.2 {resizing height} {
+    -body {
+        panedwindow .p -orient vertical -bd 5
+        frame .f1 -width 50 -height 100 -bg blue
+        frame .f2 -width 50 -height 100 -bg red
+
+        .p add .f1 -sticky news
+        .p add .f2 -sticky news
+        pack .p -side top -fill both -expand 1
+        wm geometry . ""
+        update
+        # Note the height
+        set a [winfo height .f2]
+        # Increase the size by 10
+        regexp {^(\d+)x(\d+)} [wm geometry .] -> w h
+        wm geometry . ${w}x[expr {$h + 10}]
+        update
+        set b "$a [winfo height .f2]"
+    }
+    -cleanup {destroy .p .f1 .f2}
+    -result {100 110}
+}
 
 # cleanup
 ::tcltest::cleanupTests
