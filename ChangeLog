@@ -1,3 +1,9 @@
+1999-04-20    <redman@scriptics.com>
+
+	* xlib/X11/Xlib.h: changed definition of Status type to use a
+	typedef instead of a #define to avoid conflicting with the cygwin
+	win32 headers [Bug 1804]
+
 1999-04-15    <stanton@scriptics.com>
 
 	* Merged 8.1 branch into the main trunk

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.11 1999/04/16 18:30:27 surles Exp $ 
+ * RCS: $Id: tkInt.h,v 1.12 1999/04/21 21:53:26 rjohnson Exp $ 
  */
 
 #ifndef _TKINT

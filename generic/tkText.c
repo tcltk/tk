@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.6 1999/04/20 01:04:04 rjohnson Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.7 1999/04/21 21:53:28 rjohnson Exp $
  */
 
 #include "default.h"

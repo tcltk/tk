@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.7 1999/04/16 18:30:27 surles Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.8 1999/04/21 21:53:23 rjohnson Exp $
  */
 
 #include "tkPort.h"
