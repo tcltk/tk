@@ -1,3 +1,12 @@
+1999-03-14    <stanton@GASPODE>
+
+	* unix/configure.in: Added missing stub related definitions.
+
+	* unix/Makefile.in: Install tkDecls.h in addition to tk.h.
+
+	* generic/tkStubLib.c: Added flags to ensure we are using Tcl
+	stub macros.
+
 1999-03-11    <stanton@GASPODE>
 
 	* generic/tkInt.decls: Added reserved slot for XSetDashes for use
