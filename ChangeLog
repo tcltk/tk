@@ -1,3 +1,9 @@
+2003-08-18  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/configure: Regen.
+	* win/tcl.m4: Update from Tcl to fix
+	Tcl bug 781109.
+
 2003-08-15  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkImgPhoto.c (ImgPhotoCmd): Faster color data parsing
