@@ -1,3 +1,7 @@
+2003-09-05  Joe English  <jenglish@users.sourceforge.net>
+	* doc/bind.n: Describe %P and %s substitution for
+	Property events. [BUG #577906 "%P substitution not documented"]
+
 2003-09-05  Don Porter  <dgp@users.sourceforge.net>
 
 	* doc/wish.1:			Implementation of TIPs 137/151.
