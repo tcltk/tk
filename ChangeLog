@@ -1,3 +1,17 @@
+2003-03-11  Jim Ingham  <jingham@apple.com>
+
+	* macosx/tkMacOSXMenu.c (EventuallyInvokeMenu): New function,
+	used to invoke menu commands at idle time.
+	(TkMacOSXDispatchMenuEvent): Don't immediately dispatch menu
+	commands, wait till the idle loop to do so.  This is more like
+	what is done on Windows, and avoids the crash from destroying
+	a menu in it's command.
+
+	* macosx/tkMacOSXHLEvents.c (ReallyKillMe): Don't force the shell
+	to exit.  According to the OS X HI guidelines, it should be
+	possible to cancel an attempt to quit, and if we force the kill,
+	here, it would not be possible to implement this.
+	
 2003-03-11  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* tests/unixWm.test: Add the testwrapper
