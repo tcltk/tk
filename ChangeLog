@@ -1,3 +1,10 @@
+2003-03-22  Kevin Kenny  <kennykb@acm.org>
+
+	* win/makefile.vc:
+	* win/rules.vc: Corrected several problems that prevented
+	OPTS=symbols from building properly. [Patch 707792] Thanks
+	to Joe Mistachkin for the fixes.
+	
 2003-03-20  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXApplication.r (removed):
