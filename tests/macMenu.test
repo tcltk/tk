@@ -7,24 +7,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: macMenu.test,v 1.6 2001/09/21 20:38:18 hobbs Exp $
+# RCS: @(#) $Id: macMenu.test,v 1.7 2002/07/13 20:28:35 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-set ::tcltest::testConfig(testimage) \
-	[expr {[lsearch [image types] test] >= 0}]
-
-proc deleteWindows {} {
-    foreach i [winfo children .] {
-    	catch [destroy $i]
-    }
-}
-
-deleteWindows
-wm geometry . {}
-raise .
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 test macMenu-1.0 {TkMacUseMenuID} {macOnly} {
     # Can't really test TkMacUseMenuID; it's only called on startup.
@@ -184,7 +174,7 @@ test macMenu-8.1 {GetEntryText} {macOnly} {
     catch {destroy .m1}
     list [catch {menu .m1} msg] $msg [destroy .m1]
 } {0 .m1 {}}
-test macMenu-8.2 {GetEntryText} {macOnly testimage} {
+test macMenu-8.2 {GetEntryText} {macOnly testImageType} {
     catch {destroy .m1}
     catch {image delete image1}
     menu .m1
@@ -1377,7 +1367,7 @@ test macMenu-41.12 {TkpComputeStandardMenuGeometry - indicator} {macOnly} {
     .m1 invoke 1
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.13 {TkpComputeStandardMenuGeometry - second indicator less or equal } {macOnly testimage} {
+test macMenu-41.13 {TkpComputeStandardMenuGeometry - second indicator less or equal } {macOnly testImageType} {
     catch {destroy .m1}
     catch {image delete image1}
     image create test image1
@@ -1449,7 +1439,7 @@ test macMenu-42.1 {DrawMenuEntryLabel - setting indicatorSpace} {macOnly} {
     set tearoff [tk::TearOffMenu .m1]
     list [update idletasks] [destroy .m1]    
 } {{} {}}
-test macMenu-42.2 {DrawMenuEntryLabel - drawing image} {macOnly testimage} {
+test macMenu-42.2 {DrawMenuEntryLabel - drawing image} {macOnly testImageType} {
     catch {destroy .m1}
     catch {image delete image1}
     image create test image1
@@ -1458,7 +1448,7 @@ test macMenu-42.2 {DrawMenuEntryLabel - drawing image} {macOnly testimage} {
     set tearoff [tk::TearOffMenu .m1]
     list [update idletasks] [destroy .m1] [image delete image1]
 } {{} {} {}}
-test macMenu-42.3 {DrawMenuEntryLabel - drawing select image} {macOnly testimage} {
+test macMenu-42.3 {DrawMenuEntryLabel - drawing select image} {macOnly testImageType} {
     catch {destroy .m1}
     catch {eval image delete [image names]}
     image create test image1
@@ -1497,7 +1487,7 @@ test macMenu-42.7 {DrawMenuEntryLabel - drawing disabled label} {macOnly} {
 	set tearoff [tk::TearOffMenu .m1]
 	list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-42.8 {DrawMenuEntryLabel - disabled images} {macOnly testimage} {
+test macMenu-42.8 {DrawMenuEntryLabel - disabled images} {macOnly testImageType} {
 	catch {destroy .m1}
 	catch {image delete image1}
 	image create test image1
@@ -1507,7 +1497,7 @@ test macMenu-42.8 {DrawMenuEntryLabel - disabled images} {macOnly testimage} {
 	list [update idletasks] [destroy .m1] [image delete image1]
 } {{} {} {}}
 
-test macMenu-43.1 {GetMenuLabelGeometry - image} {macOnly testimage} {
+test macMenu-43.1 {GetMenuLabelGeometry - image} {macOnly testImageType} {
     catch {destroy .m1}
     catch {image delete image1}
     menu .m1

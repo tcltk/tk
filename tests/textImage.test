@@ -7,20 +7,17 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textImage.test,v 1.4 2002/07/12 21:08:49 dgp Exp $
+# RCS: @(#) $Id: textImage.test,v 1.5 2002/07/13 20:28:35 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-namespace import -force tcltest::testsDirectory
 namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
 configure -testdir [file join [pwd] [file dirname [info script]]]
 configure -loadfile [file join [testsDirectory] constraints.tcl]
 tcltest::loadTestedCommands
-eval configure $argv
 
 # One time setup.  Create a font to insure the tests are font metric invariant.
 
-wm geometry . {}
 catch {destroy .t}
 font create test_font -family courier -size 14
 text .t -font test_font

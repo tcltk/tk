@@ -10,13 +10,16 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winClipboard.test,v 1.10 2002/07/12 13:41:01 dgp Exp $
+# RCS: @(#) $Id: winClipboard.test,v 1.11 2002/07/13 20:28:36 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-namespace import -force tcltest::testConstraint
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
+
 namespace import -force tcltest::bytestring
-eval tcltest::configure $argv
 
 # Note that these tests may fail if another application is grabbing the
 # clipboard (e.g. an X server)

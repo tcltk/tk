@@ -6,29 +6,18 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menubut.test,v 1.6 2001/05/21 14:07:33 tmh Exp $
+# RCS: @(#) $Id: menubut.test,v 1.7 2002/07/13 20:28:35 dgp Exp $
 
 # XXX This test file is woefully incomplete right now.  If any part
 # XXX of a procedure has tests then the whole procedure has tests,
 # XXX but many procedures have no tests.
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-if {[lsearch [image types] test] < 0} {
-    puts "This application hasn't been compiled with the \"test\" image"
-    puts "type, so I can't run this test.  Are you sure you're using"
-    puts "tktest instead of wish?"
-    ::tcltest::cleanupTests
-    return
-}
-
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
@@ -41,7 +30,9 @@ option add *Button.highlightThickness 2
 option add *Button.font {Helvetica -12 bold}
 
 eval image delete [image names]
-image create test image1
+if {[testConstraint testImageType]} {
+    image create test image1
+}
 menubutton .mb -text "Test"
 pack .mb
 update
@@ -84,7 +75,7 @@ foreach test {
     {-wraplength 100 100 6x {bad screen distance "6x"}}
 } {
     set name [lindex $test 0]
-    test menubutton-1.$i {configuration options} {
+    test menubutton-1.$i {configuration options} testImageType {
 	.mb configure $name [lindex $test 1]
 	lindex [.mb configure $name] 4
     } [lindex $test 2]
@@ -181,7 +172,7 @@ test menubutton-4.3 {ConfigureMenuButton procedure} {
     (processing -width option)
     invoked from within
 ".mb1 configure -width abc"}}
-test menubutton-4.4 {ConfigureMenuButton procedure} {
+test menubutton-4.4 {ConfigureMenuButton procedure} testImageType {
     catch {destroy .mb1}
     eval image delete [image names]
     image create test image1
@@ -209,7 +200,7 @@ test menubutton-4.6 {ConfigureMenuButton procedure - bad direction} {
 # XXX Need to add tests for several procedures here. XXX
 
 test menubutton-5.1 {MenuButtonEventProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     menubutton .mb1 -bg #543210
     rename .mb1 .mb2
     set x {}
@@ -220,38 +211,38 @@ test menubutton-5.1 {MenuButtonEventProc procedure} {
 } {.mb1 #543210 {} {}}
 
 test menubutton-6.1 {MenuButtonCmdDeletedProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     menubutton .mb1
     rename .mb1 {}
     list [info command .mb*] [winfo children .]
 } {{} {}}
 
-test menubutton-7.1 {ComputeMenuButtonGeometry procedure} {
+test menubutton-7.1 {ComputeMenuButtonGeometry procedure} testImageType {
     catch {destroy .mb}
     menubutton .mb -image image1 -bd 4 -highlightthickness 0
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } {38 23}
-test menubutton-7.2 {ComputeMenuButtonGeometry procedure} {
+test menubutton-7.2 {ComputeMenuButtonGeometry procedure} testImageType {
     catch {destroy .mb}
     menubutton .mb -image image1 -bd 1 -highlightthickness 2
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } {36 21}
-test menubutton-7.3 {ComputeMenuButtonGeometry procedure} {
+test menubutton-7.3 {ComputeMenuButtonGeometry procedure} testImageType {
     catch {destroy .mb}
     menubutton .mb -image image1 -bd 0 -highlightthickness 2 -padx 5 -pady 5
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } {34 19}
-test menubutton-7.4 {ComputeMenuButtonGeometry procedure} {
+test menubutton-7.4 {ComputeMenuButtonGeometry procedure} testImageType {
     catch {destroy .mb}
     menubutton .mb -image image1 -bd 2 -relief raised -width 40 \
 	    -highlightthickness 2
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } {48 23}
-test menubutton-7.5 {ComputeMenuButtonGeometry procedure} {
+test menubutton-7.5 {ComputeMenuButtonGeometry procedure} testImageType {
     catch {destroy .mb}
     menubutton .mb -image image1 -bd 2 -relief raised -height 30 \
 	    -highlightthickness 2
@@ -314,7 +305,7 @@ test menubutton-7.13 {ComputeMenuButtonGeometry procedure} {nonPortable fonts} {
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } {78 28}
-test menubutton-7.14 {ComputeMenuButtonGeometry procedure} {unixOnly nonPortable} {
+test menubutton-7.14 {ComputeMenuButtonGeometry procedure} {testImageType unixOnly nonPortable} {
     # The following test is non-portable because the indicator's pixel
     # size varies to maintain constant absolute size.
 
@@ -324,7 +315,7 @@ test menubutton-7.14 {ComputeMenuButtonGeometry procedure} {unixOnly nonPortable
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } {64 23}
-test menubutton-7.15 {ComputeMenuButtonGeometry procedure} {pcOnly nonPortable} {
+test menubutton-7.15 {ComputeMenuButtonGeometry procedure} {testImageType pcOnly nonPortable} {
     # The following test is non-portable because the indicator's pixel
     # size varies to maintain constant absolute size.
 
@@ -336,7 +327,7 @@ test menubutton-7.15 {ComputeMenuButtonGeometry procedure} {pcOnly nonPortable} 
 } {65 23}
 
 set l [interp hidden]
-eval destroy [winfo children .]
+deleteWindows
 
 test menubutton-8.1 {menubutton vs hidden commands} {
     catch {destroy .mb}
@@ -347,7 +338,7 @@ test menubutton-8.1 {menubutton vs hidden commands} {
 } [list {} $l]
 
 eval image delete [image names]
-eval destroy [winfo children .]
+deleteWindows
 option clear
 
 # cleanup

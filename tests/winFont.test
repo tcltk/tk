@@ -10,11 +10,15 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winFont.test,v 1.7 2002/07/12 13:41:01 dgp Exp $
+# RCS: @(#) $Id: winFont.test,v 1.8 2002/07/13 20:28:36 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-eval tcltest::configure $argv
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
+
 catch {destroy .b}
 catch {font delete xyz}
 

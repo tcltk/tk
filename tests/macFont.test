@@ -10,11 +10,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: macFont.test,v 1.4 2001/09/21 20:38:18 hobbs Exp $
+# RCS: @(#) $Id: macFont.test,v 1.5 2002/07/13 20:28:35 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 catch {destroy .b}
 toplevel .b
@@ -39,11 +42,11 @@ proc getsize {} {
     return "[winfo reqwidth .b.l] [winfo reqheight .b.l]"
 }
 
-set ::tcltest::testConfig(gothic) 0
+testConstraint gothic 0
 set gothic {gothic 12}
 set mx [font measure  $gothic \u4e4e]
 if {[font actual $gothic -family] != [font actual system -family]} {
-    set ::tcltest::testConfig(gothic) 1
+    testConstraint gothic 1
 }
 
 test macFont-1.1 {TkpFontPkgInit} {macOnly} {
