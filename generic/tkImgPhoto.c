@@ -16,7 +16,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.35 2002/10/09 09:32:24 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.36 2002/10/18 00:48:22 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1841,16 +1841,24 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
 	args[j] = Tcl_GetStringFromObj(objv[i], &length);
 	if ((length > 1) && (args[j][0] == '-')) {
 	    if ((args[j][1] == 'd') &&
-		    !strncmp(args[j],"-data", (size_t) length)) {
-		if (i < objc) {
-		    data = objv[++i];
+		    !strncmp(args[j], "-data", (size_t) length)) {
+		if (++i < objc) {
+		    data = objv[i];
 		    j--;
+		} else {
+		    Tcl_AppendResult(interp,
+			    "value for \"-data\" missing", (char *) NULL);
+		    return TCL_ERROR;
 		}
 	    } else if ((args[j][1] == 'f') &&
-		    !strncmp(args[j],"-format", (size_t) length)) {
-		if (i < objc) {
-		    format = objv[++i];
+		    !strncmp(args[j], "-format", (size_t) length)) {
+		if (++i < objc) {
+		    format = objv[i];
 		    j--;
+		} else {
+		    Tcl_AppendResult(interp,
+			    "value for \"-format\" missing", (char *) NULL);
+		    return TCL_ERROR;
 		}
 	    }
 	}
