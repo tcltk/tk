@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.29 1999/08/04 23:42:15 wart Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.30 1999/08/21 01:14:45 wart Exp $
 
 # Current Tk version;  used in various names.
 
@@ -349,7 +349,11 @@ binaries: ${TK_LIB_FILE} ${STUB_LIB_FILE} wish
 
 libraries:
 
-doc:
+$(SRC_DIR)/doc/man.macros:
+	chmod +x $(UNIX_DIR)/install-sh
+	$(INSTALL_DATA) @TCL_SRC_DIR@/doc/man.macros $(SRC_DIR)/doc/man.macros
+
+doc: $(SRC_DIR)/doc/man.macros
 
 # The following target is configured by autoconf to generate either
 # a shared library or non-shared library for Tk.
