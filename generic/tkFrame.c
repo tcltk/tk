@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.13 2002/08/05 04:30:38 dgp Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.14 2003/01/03 22:43:45 hobbs Exp $
  */
 
 #include "default.h"
@@ -565,14 +565,20 @@ CreateFrame(clientData, interp, objc, objv, type, appName)
     if (tkwin != NULL) {
 	new = Tk_CreateWindowFromPath(interp, tkwin, Tcl_GetString(objv[1]),
 		screenName);
+    } else if (appName == NULL) {
+	/*
+	 * This occurs when someone tried to create a frame/toplevel
+	 * while we are being destroyed.  Let an error be thrown.
+	 */
+
+	Tcl_AppendResult(interp, "unable to create widget \"",
+		Tcl_GetString(objv[1]), "\"", (char *) NULL);
+	new = NULL;
     } else {
 	/*
 	 * We were called from Tk_Init;  create a new application.
 	 */
 
-	if (appName == NULL) {
-	    panic("TkCreateFrame didn't get application name");
-	}
 	new = TkCreateMainWindow(interp, screenName, appName);
     }
     if (new == NULL) {
