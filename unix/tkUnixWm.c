@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.27 2002/07/25 21:35:23 pspjuth Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.28 2002/08/02 03:18:07 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -982,7 +982,8 @@ Tk_WmObjCmd(clientData, interp, objc, objv)
         WMOPT_POSITIONFROM, WMOPT_PROTOCOL, WMOPT_RESIZABLE, WMOPT_SIZEFROM,
         WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT,
 	WMOPT_WITHDRAW };
-    int index, length;
+    int index; 
+    size_t length;
     char *argv1;
     TkWindow *winPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
