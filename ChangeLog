@@ -1,3 +1,9 @@
+2004-01-25  Peter Spjuth  <peter.spjuth@space.se>
+	* library/dialog.tcl:
+	* library/msgbox.tcl: The dialogs were affected by the TIP#146
+	implementation.  Added grid anchor commands to restore original
+	behaviour.
+
 2004-01-15  David Gravereaux <davygrvy@pobox.com>
 
 	* win/tkWinSendCom.c:  Placed the requirement for the special COM
