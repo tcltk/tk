@@ -1,3 +1,9 @@
+2004-09-20  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinWm.c (UpdateWrapper, WmAttributesCmd): handle attribute
+	settings prior to window mapping and resort to more forceful
+	wrapper update again for -toolwindow (to remove it from taskbar).
+
 2004-09-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinWm.c (WmAttributesCmd): correct -alpha 0.0/1.0 setting
