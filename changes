@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.42.2.5 2002/02/20 02:54:14 dgp Exp $
+RCS: @(#) $Id: changes,v 1.42.2.6 2002/10/18 19:49:26 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5013,3 +5013,21 @@ expansion to the Win/Mac console. (hobbs)
 
 2002-02-01 (bug fix)[511956] C99 spec: avoid 'bool' as a variable name (hobbs)
 
+2002-02-25 (bug fix)[503613] correct listvariable handling (hobbs)
+
+2002-03-25 (build support) updated platform support for HP-UX, IRIX64-6.*,
+SunOS, FreeBSD, AIX and Darwin and Win/Cygwin targets. (hobbs)
+
+2002-04-11 (build support) enabled COFF as well as CV style debug info with
+--enable-symbols on Windows. (hobbs)
+
+2002-10-10 (bug fix)[621241] update grid size when removing a widget from a
+grid.  (forssen)
+
+2002-10-10 (bug fix) added support for generating ps for embedded widgets
+on canvases on Windows. (hobbs)
+
+2002-10-11 (bug fix)[601518, TIP 107] further corrections to fix the
+2-second raise delay (english)
+
+--- Released 8.3.5, October 18, 2002 --- See ChangeLog for details ---

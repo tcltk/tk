@@ -1,5 +1,11 @@
 2002-10-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	************************
+	****  8.3.5 TAGGED  ****
+	************************
+
+	* changes: updated for 8.3.5 release
+
 	* win/tkWinPort.h (tchar.h): Do not include on Cygwin.
 	(_T): Define for Cygwin.
 	(OPEN_MAX): only define if currently undefined.
