@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.3.2.1 2002/06/10 05:07:59 wolfsuit Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.3.2.2 2002/06/10 05:38:23 wolfsuit Exp $
  */
 
 #include "tkPort.h"

@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.2.2.1 2002/02/05 02:25:18 wolfsuit Exp $
+# RCS: @(#) $Id: wm.test,v 1.2.2.2 2002/06/10 05:38:26 wolfsuit Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -20,13 +20,14 @@ if {[lsearch [namespace children] ::tcltest] == -1} {
 
 proc deleteWindows {} {
     foreach i [winfo children .] {
-    	catch [destroy $i]
+    	destroy $i
     }
 }
 
 
 deleteWindows
 
+wm deicon .
 
 test wm-stackorder-1.1 {usage} {
     list [catch {wm stackorder} err] $err
@@ -34,11 +35,11 @@ test wm-stackorder-1.1 {usage} {
 
 test wm-stackorder-1.2 {usage} {
     list [catch {wm stackorder . _} err] $err
-} {1 {wrong # arguments: must be "wm stackorder window ?isabove|isbelow? ?window?"}}
+} {1 {wrong # arguments: must be "wm stackorder window ?isabove|isbelow window?"}}
 
 test wm-stackorder-1.3 {usage} {
     list [catch {wm stackorder . _ _ _} err] $err
-} {1 {wrong # arguments: must be "wm stackorder window ?isabove|isbelow? ?window?"}}
+} {1 {wrong # arguments: must be "wm stackorder window ?isabove|isbelow window?"}}
 
 test wm-stackorder-1.4 {usage} {
     list [catch {wm stackorder . is .} err] $err
@@ -293,18 +294,246 @@ test wm-stackorder-5.3 {An overrideredirect window
     wm stackorder .t isbelow .
 } 1
 
+test wm-stackorder-6.1 {An embedded toplevel does not
+        appear in the stacking order} {
+    deleteWindows
+    toplevel .real -container 1
+    toplevel .embd -bg blue -use [winfo id .real]
+    update
+    wm stackorder .
+} {. .real}
 
-deleteWindows
+
+test wm-transient-1.1 {usage} {
+    catch {destroy .t} ; toplevel .t
+    list [catch {wm transient .t 1 2} msg]  $msg
+} {1 {wrong # arguments: must be "wm transient window ?master?"}}
+
+test wm-transient-1.2 {usage} {
+    catch {destroy .t} ; toplevel .t
+    list [catch {wm transient .t foo} msg]  $msg
+} {1 {bad window path name "foo"}}
+
+test wm-transient-1.3 {usage} {
+    catch {destroy .t} ; toplevel .t
+    list [catch {wm transient foo .t} msg]  $msg
+} {1 {bad window path name "foo"}}
+
+test wm-transient-1.4 {usage} {
+    deleteWindows
+    toplevel .master
+    toplevel .subject
+    wm transient .subject .master
+    list [catch {wm iconify .subject} msg] $msg
+} {1 {can't iconify ".subject": it is a transient}}
+
+test wm-transient-1.5 {usage} {
+    deleteWindows
+    toplevel .icon -bg blue
+    toplevel .top
+    wm iconwindow .top .icon
+    toplevel .dummy
+    list [catch {wm transient .icon .dummy} msg] $msg
+} {1 {can't make ".icon" a transient: it is an icon for .top}}
+
+test wm-transient-1.6 {usage} {
+    deleteWindows
+    toplevel .icon -bg blue
+    toplevel .top
+    wm iconwindow .top .icon
+    toplevel .dummy
+    list [catch {wm transient .dummy .icon} msg] $msg
+} {1 {can't make ".icon" a master: it is an icon for .top}}
+
+test wm-transient-1.7 {usage} {
+    deleteWindows
+    toplevel .master
+    list [catch {wm transient .master .master} err] $err
+} {1 {can't make ".master" its own master}}
+
+test wm-transient-1.8 {usage} {
+    deleteWindows
+    toplevel .master
+    frame .master.f
+    list [catch {wm transient .master .master.f} err] $err
+} {1 {can't make ".master" its own master}}
+
+test wm-transient-2.1 { basic get/set of master } {
+    deleteWindows
+    set results [list]    
+    toplevel .master
+    toplevel .subject
+    lappend results [wm transient .subject]
+    wm transient .subject .master
+    lappend results [wm transient .subject]
+    wm transient .subject {}
+    lappend results [wm transient .subject]
+    set results
+} {{} .master {}}
+
+test wm-transient-2.2 { first toplevel parent of
+        non-toplevel master is used } {
+    deleteWindows
+    toplevel .master
+    frame .master.f
+    toplevel .subject
+    wm transient .subject .master.f
+    wm transient .subject
+} {.master}
+
+
+
+test wm-state-1.1 {usage} {
+    list [catch {wm state} err] $err
+} {1 {wrong # args: should be "wm option window ?arg ...?"}}
+
+test wm-state-1.2 {usage} {
+    list [catch {wm state . _ _} err] $err
+} {1 {wrong # arguments: must be "wm state window ?state?"}}
+
+test wm-state-2.1 {initial state} {
+    deleteWindows
+    toplevel .t
+    wm state .t
+} {normal}
+
+test wm-state-2.2 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm state .t withdrawn
+    wm state .t
+} {withdrawn}
+
+test wm-state-2.3 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm withdraw .t
+    wm state .t
+} {withdrawn}
+
+test wm-state-2.4 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm state .t withdrawn
+    wm state .t
+} {withdrawn}
+
+test wm-state-2.5 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm withdraw .t
+    wm state .t
+} {withdrawn}
+
+test wm-state-2.6 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm state .t iconic
+    wm state .t
+} {iconic}
+
+test wm-state-2.7 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm iconify .t
+    wm state .t
+} {iconic}
+
+test wm-state-2.8 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm state .t iconic
+    wm state .t
+} {iconic}
+
+test wm-state-2.9 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm iconify .t
+    wm state .t
+} {iconic}
+
+test wm-state-2.10 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm withdraw .t
+    wm state .t normal
+    wm state .t
+} {normal}
+
+test wm-state-2.11 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm withdraw .t
+    wm deiconify .t
+    wm state .t
+} {normal}
+
+test wm-state-2.12 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm withdraw .t
+    wm state .t normal
+    wm state .t
+} {normal}
+
+test wm-state-2.13 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm withdraw .t
+    wm deiconify .t
+    wm state .t
+} {normal}
+
+test wm-state-2.14 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm iconify .t
+    wm state .t normal
+    wm state .t
+} {normal}
+
+test wm-state-2.15 {state change before map} {
+    deleteWindows
+    toplevel .t
+    wm iconify .t
+    wm deiconify .t
+    wm state .t
+} {normal}
+
+test wm-state-2.16 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm iconify .t
+    wm state .t normal
+    wm state .t
+} {normal}
+
+test wm-state-2.17 {state change after map} {
+    deleteWindows
+    toplevel .t
+    update
+    wm iconify .t
+    wm deiconify .t
+    wm state .t
+} {normal}
 
 
 # FIXME:
 
-# Need test cases for embedded Windows, they should not appear in
-# the stacking order since they are not actually toplevel Windows.
-
 # Test delivery of virtual events to the WM. We could check to see
 # if the window was raised after a button click for example.
 # This sort of testing may not be possible.
+
+
+deleteWindows
 
 return
 

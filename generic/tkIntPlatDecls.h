@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.9.2.3 2002/02/05 02:25:15 wolfsuit Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.9.2.4 2002/06/10 05:38:23 wolfsuit Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -55,6 +55,15 @@ EXTERN void		TkUnixSetMenubar _ANSI_ARGS_((Tk_Window tkwin,
 /* 8 */
 EXTERN int		TkpScanWindowId _ANSI_ARGS_((Tcl_Interp * interp, 
 				CONST char * string, Window * idPtr));
+/* 9 */
+EXTERN void		TkWmCleanup _ANSI_ARGS_((TkDisplay * dispPtr));
+/* 10 */
+EXTERN void		TkSendCleanup _ANSI_ARGS_((TkDisplay * dispPtr));
+/* 11 */
+EXTERN void		TkFreeXId _ANSI_ARGS_((TkDisplay * dispPtr));
+/* 12 */
+EXTERN int		TkpWmSetState _ANSI_ARGS_((TkWindow * winPtr, 
+				int state));
 #endif /* UNIX */
 #ifdef __WIN32__
 /* 0 */
@@ -437,6 +446,10 @@ typedef struct TkIntPlatStubs {
     int (*tkUnixDoOneXEvent) _ANSI_ARGS_((Tcl_Time * timePtr)); /* 6 */
     void (*tkUnixSetMenubar) _ANSI_ARGS_((Tk_Window tkwin, Tk_Window menubar)); /* 7 */
     int (*tkpScanWindowId) _ANSI_ARGS_((Tcl_Interp * interp, CONST char * string, Window * idPtr)); /* 8 */
+    void (*tkWmCleanup) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 9 */
+    void (*tkSendCleanup) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 10 */
+    void (*tkFreeXId) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 11 */
+    int (*tkpWmSetState) _ANSI_ARGS_((TkWindow * winPtr, int state)); /* 12 */
 #endif /* UNIX */
 #ifdef __WIN32__
     char * (*tkAlignImageData) _ANSI_ARGS_((XImage * image, int alignment, int bitOrder)); /* 0 */
@@ -651,6 +664,22 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #ifndef TkpScanWindowId
 #define TkpScanWindowId \
 	(tkIntPlatStubsPtr->tkpScanWindowId) /* 8 */
+#endif
+#ifndef TkWmCleanup
+#define TkWmCleanup \
+	(tkIntPlatStubsPtr->tkWmCleanup) /* 9 */
+#endif
+#ifndef TkSendCleanup
+#define TkSendCleanup \
+	(tkIntPlatStubsPtr->tkSendCleanup) /* 10 */
+#endif
+#ifndef TkFreeXId
+#define TkFreeXId \
+	(tkIntPlatStubsPtr->tkFreeXId) /* 11 */
+#endif
+#ifndef TkpWmSetState
+#define TkpWmSetState \
+	(tkIntPlatStubsPtr->tkpWmSetState) /* 12 */
 #endif
 #endif /* UNIX */
 #ifdef __WIN32__

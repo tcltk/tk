@@ -5,7 +5,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.11 2001/09/17 14:12:18 dkf Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.11.2.1 2002/06/10 05:38:24 wolfsuit Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -13,6 +13,7 @@ namespace eval ::tk::dialog::file {}
 
 # Make the chooseDir namespace inside the dialog namespace
 namespace eval ::tk::dialog::file::chooseDir {
+    namespace import ::tk::msgcat::*
 }
 
 # ::tk::dialog::file::chooseDir:: --
@@ -135,9 +136,9 @@ proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
     tclParseConfigSpec ::tk::dialog::file::$dataName $specs "" $argList
 
     if {$data(-title) == ""} {
-	set data(-title) "[::msgcat::mc "Choose Directory"]"
+	set data(-title) "[mc "Choose Directory"]"
     }
-
+    
     # Stub out the -multiple value for the dialog; it doesn't make sense for
     # choose directory dialogs, but we have to have something there because we
     # share so much code with the file dialogs.

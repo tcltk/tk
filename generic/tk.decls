@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.15.2.4 2002/02/05 02:25:14 wolfsuit Exp $
+# RCS: @(#) $Id: tk.decls,v 1.15.2.5 2002/06/10 05:38:23 wolfsuit Exp $
 
 library tk
 
@@ -1156,6 +1156,12 @@ declare 243 generic {
 declare 244 generic {
     void Tk_SetMinimumRequestSize (Tk_Window tkwin, \
             int minWidth, int minHeight)
+}
+
+# New in 8.4a5
+#
+declare 245 generic {
+    void Tk_SetCaretPos (Tk_Window tkwin, int x, int y, int height)
 }
 
 # Define the platform specific public Tk interface.  These functions are

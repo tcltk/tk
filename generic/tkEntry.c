@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.23.2.1 2002/02/05 02:25:14 wolfsuit Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.23.2.2 2002/06/10 05:38:23 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -694,7 +694,7 @@ static void		EntrySetValue _ANSI_ARGS_((Entry *entryPtr,
 static void		EntrySelectTo _ANSI_ARGS_((
 			    Entry *entryPtr, int index));
 static char *		EntryTextVarProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, char *name1, char *name2,
+			    Tcl_Interp *interp, char *name1, CONST char *name2,
 			    int flags));
 static void		EntryUpdateScrollbar _ANSI_ARGS_((Entry *entryPtr));
 static int		EntryValidate _ANSI_ARGS_((Entry *entryPtr,
@@ -1894,23 +1894,26 @@ DisplayEntry(clientData)
      * cursor isn't on.  Otherwise the selection would hide the cursor.
      */
 
-    if ((entryPtr->insertPos >= entryPtr->leftIndex)
-	    && (entryPtr->state == STATE_NORMAL)
-	    && (entryPtr->flags & GOT_FOCUS)) {
+    if ((entryPtr->state == STATE_NORMAL) && (entryPtr->flags & GOT_FOCUS)) {
 	Tk_CharBbox(entryPtr->textLayout, entryPtr->insertPos, &cursorX, NULL,
 		NULL, NULL);
-	cursorX += entryPtr->layoutX;
-	cursorX -= (entryPtr->insertWidth)/2;
-	if (cursorX < xBound) {
-	    if (entryPtr->flags & CURSOR_ON) {
-		Tk_Fill3DRectangle(tkwin, pixmap, entryPtr->insertBorder,
-			cursorX, baseY - fm.ascent, entryPtr->insertWidth,
-			fm.ascent + fm.descent, entryPtr->insertBorderWidth,
-			TK_RELIEF_RAISED);
-	    } else if (entryPtr->insertBorder == entryPtr->selBorder) {
-		Tk_Fill3DRectangle(tkwin, pixmap, border,
-			cursorX, baseY - fm.ascent, entryPtr->insertWidth,
-			fm.ascent + fm.descent, 0, TK_RELIEF_FLAT);
+	Tk_SetCaretPos(entryPtr->tkwin, cursorX, baseY - fm.ascent,
+		fm.ascent + fm.descent);
+	if (entryPtr->insertPos >= entryPtr->leftIndex) {
+	    cursorX += entryPtr->layoutX;
+	    cursorX -= (entryPtr->insertWidth)/2;
+	    if (cursorX < xBound) {
+		if (entryPtr->flags & CURSOR_ON) {
+		    Tk_Fill3DRectangle(tkwin, pixmap, entryPtr->insertBorder,
+			    cursorX, baseY - fm.ascent, entryPtr->insertWidth,
+			    fm.ascent + fm.descent,
+			    entryPtr->insertBorderWidth,
+			    TK_RELIEF_RAISED);
+		} else if (entryPtr->insertBorder == entryPtr->selBorder) {
+		    Tk_Fill3DRectangle(tkwin, pixmap, border,
+			    cursorX, baseY - fm.ascent, entryPtr->insertWidth,
+			    fm.ascent + fm.descent, 0, TK_RELIEF_FLAT);
+		}
 	    }
 	}
     }
@@ -3277,7 +3280,7 @@ EntryTextVarProc(clientData, interp, name1, name2, flags)
     ClientData clientData;	/* Information about button. */
     Tcl_Interp *interp;		/* Interpreter containing variable. */
     char *name1;		/* Not used. */
-    char *name2;		/* Not used. */
+    CONST char *name2;		/* Not used. */
     int flags;			/* Information about what happened. */
 {
     Entry *entryPtr = (Entry *) clientData;

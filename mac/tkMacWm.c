@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.11.2.1 2002/02/05 02:25:17 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.11.2.2 2002/06/10 05:38:25 wolfsuit Exp $
  */
 
 #include <Gestalt.h>
@@ -1559,7 +1559,7 @@ Tk_WmCmd(
 	if ((argc != 3) && (argc != 5)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
 		    argv[0],
-		    " stackorder window ?isabove|isbelow? ?window?\"",
+		    " stackorder window ?isabove|isbelow window?\"",
 		    (char *) NULL);
 	    return TCL_ERROR;
 	}
@@ -1744,6 +1744,7 @@ Tk_WmCmd(
     } else if ((c == 't') && (strncmp(argv[1], "transient", length) == 0)
 	    && (length >= 3)) {
 	Tk_Window master;
+	WmInfo *wmPtr2;
 
 	if ((argc != 3) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
@@ -1769,6 +1770,25 @@ Tk_WmCmd(
 		return TCL_ERROR;
 	    }
 	    Tk_MakeWindowExist(master);
+
+	    if (wmPtr->iconFor != NULL) {
+	        Tcl_AppendResult(interp, "can't make \"", argv[2],
+	    	        "\" a transient: it is an icon for ",
+	                Tk_PathName(wmPtr->iconFor),
+	                (char *) NULL);
+	        return TCL_ERROR;
+	    }
+
+	    wmPtr2 = ((TkWindow *) master)->wmInfoPtr;
+
+	    if (wmPtr2->iconFor != NULL) {
+	        Tcl_AppendResult(interp, "can't make \"", argv[3],
+	                "\" a master: it is an icon for ",
+	                Tk_PathName(wmPtr2->iconFor),
+	                (char *) NULL);
+	        return TCL_ERROR;
+	    }
+
 	    wmPtr->master = Tk_WindowId(master);
 	    wmPtr->masterWindowName = ckalloc((unsigned) (strlen(argv[3])+1));
 	    strcpy(wmPtr->masterWindowName, argv[3]);
@@ -3047,7 +3067,8 @@ TkWmStackorderToplevelWrapperMap(winPtr, table)
     WindowPeek wrapper;
     int newEntry;
 
-    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr)) {
+    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr) &&
+            !Tk_IsEmbedded(winPtr)) {
         wrapper = (WindowPeek) TkMacGetDrawablePort(winPtr->window);
 
         hPtr = Tcl_CreateHashEntry(table,

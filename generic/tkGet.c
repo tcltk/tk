@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGet.c,v 1.6.8.1 2002/02/05 02:25:15 wolfsuit Exp $
+ * RCS: @(#) $Id: tkGet.c,v 1.6.8.2 2002/06/10 05:38:23 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -31,6 +31,8 @@ typedef struct ThreadSpecificData {
     Tcl_HashTable uidTable;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
+
+static void	FreeUidThreadExitProc _ANSI_ARGS_((ClientData clientData));
 
 /*
  * The following tables defines the string values for reliefs, which are
@@ -484,6 +486,32 @@ Tk_NameOfJustify(justify)
 /*
  *----------------------------------------------------------------------
  *
+ * FreeUidThreadExitProc --
+ *
+ *	Cleans up memory used for Tk_Uids in the thread.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	All information in the identifier table is deleted.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+FreeUidThreadExitProc(clientData)
+    ClientData clientData;		/* Not used. */
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    Tcl_DeleteHashTable(&tsdPtr->uidTable);
+    tsdPtr->initialized = 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Tk_GetUid --
  *
  *	Given a string, this procedure returns a unique identifier
@@ -515,6 +543,7 @@ Tk_GetUid(string)
 
     if (!tsdPtr->initialized) {
 	Tcl_InitHashTable(tablePtr, TCL_STRING_KEYS);
+	Tcl_CreateThreadExitHandler(FreeUidThreadExitProc, NULL);
 	tsdPtr->initialized = 1;
     }
     return (Tk_Uid) Tcl_GetHashKey(tablePtr,

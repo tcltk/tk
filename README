@@ -1,11 +1,11 @@
 README:  Tk
-    This is the Tk 8.4a4 source distribution.
+    This is the Tk 8.4a5 source distribution.
     Tcl/Tk is also available through NetCVS:
 	http://tcl.sourceforge.net/
     You can get any source release of Tcl from the file distributions
     link at the above URL.
 
-RCS: @(#) $Id: README,v 1.31 2001/08/08 18:41:10 dgp Exp $
+RCS: @(#) $Id: README,v 1.31.2.1 2002/06/10 05:38:23 wolfsuit Exp $
 
 1. Introduction
 ---------------
@@ -16,7 +16,7 @@ toolkit implemented with the Tcl scripting language.
 For details on features, incompatibilities, and potential problems with
 this release, see the Tcl/Tk 8.4 Web page at
 
-	http://www.purl.org/tcl/home/software/tcltk/8.4.html
+	http://www.tcl.tk/software/tcltk/8.4.html
 
 or refer to the "changes" file in this directory, which contains a
 historical record of all changes to Tk.
@@ -29,7 +29,7 @@ SourceForge at:
 
 with the Tcl Developer Xchange at:
 
-	http://www.purl.org/tcl/home/
+	http://www.tcl.tk/
 
 Tk is a freely available open source package.  You can do virtually
 anything you like with it, such as modifying it, redistributing it,

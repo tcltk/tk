@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.3.18.1 2002/02/05 02:25:18 wolfsuit Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.3.18.2 2002/06/10 05:38:27 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -39,6 +39,9 @@ static void		DisplayFileProc _ANSI_ARGS_((ClientData clientData,
 static void		DisplaySetupProc _ANSI_ARGS_((ClientData clientData,
 			    int flags));
 static void		TransferXEventsToTcl _ANSI_ARGS_((Display *display));
+#ifdef TK_USE_INPUT_METHODS
+static void		OpenIM _ANSI_ARGS_((TkDisplay *dispPtr));
+#endif
 
 
 /*
@@ -127,7 +130,11 @@ TkpOpenDisplay(display_name)
 	return NULL;
     }
     dispPtr = (TkDisplay *) ckalloc(sizeof(TkDisplay));
+    memset(dispPtr, 0, sizeof(TkDisplay));
     dispPtr->display = display;
+#ifdef TK_USE_INPUT_METHODS
+    OpenIM(dispPtr);
+#endif
     Tcl_CreateFileHandler(ConnectionNumber(display), TCL_READABLE,
 	    DisplayFileProc, (ClientData) dispPtr);
     return dispPtr;
@@ -144,24 +151,44 @@ TkpOpenDisplay(display_name)
  *	None.
  *
  * Side effects:
- *	Deallocates the displayPtr.
+ *	Deallocates the displayPtr and unix-specific resources.
  *
  *----------------------------------------------------------------------
  */
 
 void
-TkpCloseDisplay(displayPtr)
-    TkDisplay *displayPtr;
+TkpCloseDisplay(dispPtr)
+    TkDisplay *dispPtr;
 {
-    TkDisplay *dispPtr = (TkDisplay *) displayPtr;
+    TkSendCleanup(dispPtr);
+
+    TkFreeXId(dispPtr);
+
+    TkWmCleanup(dispPtr);
+
+#ifdef TK_USE_INPUT_METHODS
+#if TK_XIM_SPOT
+    if (dispPtr->inputXfs) {
+	XFreeFontSet(dispPtr->display, dispPtr->inputXfs);
+    }
+#endif
+#if ! defined(SOLARIS2) || defined(HAVE_X11R6)
+    if (dispPtr->inputMethod) {
+	/*
+	 * This causes core dumps on some systems (e.g. Solaris 2.3 as of
+	 * 1/6/95), but is OK with X11R6
+	 */
+	XCloseIM(dispPtr->inputMethod);
+    }
+#endif
+#endif
 
     if (dispPtr->display != 0) {
-        Tcl_DeleteFileHandler(ConnectionNumber(dispPtr->display));
-	
-        (void) XSync(dispPtr->display, False);
-        (void) XCloseDisplay(dispPtr->display);
+	Tcl_DeleteFileHandler(ConnectionNumber(dispPtr->display));
+	(void) XSync(dispPtr->display, False);
+	(void) XCloseDisplay(dispPtr->display);
     }
-    
+
     ckfree((char *) dispPtr);
 }
 
@@ -230,7 +257,6 @@ DisplaySetupProc(clientData, flags)
  *----------------------------------------------------------------------
  */
 
-
 static void
 TransferXEventsToTcl(display)
     Display *display;
@@ -285,8 +311,6 @@ DisplayCheckProc(clientData, flags)
 	TransferXEventsToTcl(dispPtr->display);
     }
 }
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -516,5 +540,74 @@ TkpSync(display)
      * Transfer events from the X event queue to the Tk event queue.
      */
     TransferXEventsToTcl(display);
-
 }
+#ifdef TK_USE_INPUT_METHODS
+
+/* 
+ *--------------------------------------------------------------
+ *
+ * OpenIM --
+ *
+ *	Tries to open an X input method, associated with the
+ *	given display.  Right now we can only deal with a bare-bones
+ *	input style:  no preedit, and no status.
+ *
+ * Results:
+ *	Stores the input method in dispPtr->inputMethod;  if there isn't
+ *	a suitable input method, then NULL is stored in dispPtr->inputMethod.
+ *
+ * Side effects:
+ *	An input method gets opened.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+OpenIM(dispPtr)
+    TkDisplay *dispPtr;		/* Tk's structure for the display. */
+{
+    unsigned short i;
+    XIMStyles *stylePtr;
+    char *modifier_list;
+
+    if ((modifier_list = XSetLocaleModifiers("")) == NULL) {
+	goto error;
+    }
+
+    dispPtr->inputMethod = XOpenIM(dispPtr->display, NULL, NULL, NULL);
+    if (dispPtr->inputMethod == NULL) {
+	return;
+    }
+
+    if ((XGetIMValues(dispPtr->inputMethod, XNQueryInputStyle, &stylePtr,
+	    NULL) != NULL) || (stylePtr == NULL)) {
+	goto error;
+    }
+    for (i = 0; i < stylePtr->count_styles; i++) {
+	if (stylePtr->supported_styles[i]
+#if TK_XIM_SPOT
+		== (XIMPreeditPosition | XIMStatusNothing)
+#else
+		== (XIMPreeditNothing | XIMStatusNothing)
+#endif
+	    ) {
+	    XFree(stylePtr);
+	    return;
+	}
+    }
+    XFree(stylePtr);
+
+    error:
+
+    if (dispPtr->inputMethod) {
+	/*
+	 * This causes core dumps on some systems (e.g. Solaris 2.3 as of
+	 * 1/6/95), but is OK with X11R6
+	 */
+#if ! defined (SOLARIS2) || defined (HAVE_X11R6)
+	XCloseIM(dispPtr->inputMethod);
+#endif
+	dispPtr->inputMethod = NULL;
+    }
+}
+#endif /* TK_USE_INPUT_METHODS */

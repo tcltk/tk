@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"::tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.17.2.1 2002/02/05 02:25:16 wolfsuit Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.17.2.2 2002/06/10 05:38:24 wolfsuit Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Scriptics Corporation
@@ -237,12 +237,12 @@ proc ::tk::MotifFDialog_Config {dataName type argList} {
     if {[string equal $data(-title) ""]} {
 	if {[string equal $type "open"]} {
 	    if {$data(-multiple) != 0} {
-		set data(-title) "[::msgcat::mc {Open Multiple Files}]"
+		set data(-title) "[mc {Open Multiple Files}]"
 	    } else {
-	    set data(-title) [::msgcat::mc "Open"]
+	    set data(-title) [mc "Open"]
 	    }
 	} else {
-	    set data(-title) [::msgcat::mc "Save As"]
+	    set data(-title) [mc "Save As"]
 	}
     }
 
@@ -323,7 +323,7 @@ proc ::tk::MotifFDialog_BuildUI {w} {
 
     # The Filter box
     #
-    label $f1.lab -text [::msgcat::mc "Filter:"] -under 3 -anchor w
+    label $f1.lab -text [mc "Filter:"] -under 3 -anchor w
     entry $f1.ent
     pack $f1.lab -side top -fill x -padx 6 -pady 4
     pack $f1.ent -side top -fill x -padx 4 -pady 0
@@ -332,13 +332,13 @@ proc ::tk::MotifFDialog_BuildUI {w} {
     # The file and directory lists
     #
     set data(dList) [MotifFDialog_MakeSList $w $f2a \
-	    [::msgcat::mc "Directory:"] 0 DList]
+	    [mc "Directory:"] 0 DList]
     set data(fList) [MotifFDialog_MakeSList $w $f2b \
-	    [::msgcat::mc "Files:"]     2 FList]
+	    [mc "Files:"]     2 FList]
 
     # The Selection box
     #
-    label $f3.lab -text [::msgcat::mc "Selection:"] -under 0 -anchor w
+    label $f3.lab -text [mc "Selection:"] -under 0 -anchor w
     entry $f3.ent
     pack $f3.lab -side top -fill x -padx 6 -pady 0
     pack $f3.ent -side top -fill x -padx 4 -pady 4
@@ -346,15 +346,15 @@ proc ::tk::MotifFDialog_BuildUI {w} {
 
     # The buttons
     #
-    set maxWidth [::msgcat::mcmax OK Filter Cancel]
+    set maxWidth [mcmax OK Filter Cancel]
     set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
-    set data(okBtn) [button $bot.ok -text [::msgcat::mc "OK"] \
+    set data(okBtn) [button $bot.ok -text [mc "OK"] \
 	    -width $maxWidth -under 0 \
 	    -command [list tk::MotifFDialog_OkCmd $w]]
-    set data(filterBtn) [button $bot.filter -text [::msgcat::mc "Filter"] \
+    set data(filterBtn) [button $bot.filter -text [mc "Filter"] \
 	    -width $maxWidth -under 0 \
 	    -command [list tk::MotifFDialog_FilterCmd $w]]
-    set data(cancelBtn) [button $bot.cancel -text [::msgcat::mc "Cancel"] \
+    set data(cancelBtn) [button $bot.cancel -text [mc "Cancel"] \
 	    -width $maxWidth -under 0 \
 	    -command [list tk::MotifFDialog_CancelCmd $w]]
 
@@ -812,7 +812,7 @@ proc ::tk::MotifFDialog_ActivateSEnt {w} {
 	    set item [file join $data(selectPath) $item]
 	} elseif {![file exists [file dirname $item]]} {
 	    tk_messageBox -icon warning -type ok \
-	    -message [::msgcat::mc {Directory "%1$s" does not exist.} \
+	    -message [mc {Directory "%1$s" does not exist.} \
 		[file dirname $item]]
 	    return
 	}
@@ -820,16 +820,16 @@ proc ::tk::MotifFDialog_ActivateSEnt {w} {
 	if {![file exists $item]} {
 	    if {[string equal $data(type) open]} {
 		tk_messageBox -icon warning -type ok \
-		    -message [::msgcat::mc {File "$item" does not exist.} \
+		    -message [mc {File "$item" does not exist.} \
 			$item]
 		return
 	    }
 	} else {
 	    if {[string equal $data(type) save]} {
 	    set message [format %s%s \
-		[::msgcat::mc {File "%1$s" already exists.\n\n} \
+		[mc {File "%1$s" already exists.\n\n} \
 		    $selectFilePath ] \
-		[::msgcat::mc {Replace existing file?}]]
+		[mc {Replace existing file?}]]
 		set answer [tk_messageBox -icon warning -type yesno \
 				-message $message]
 		if {[string equal $answer "no"]} {

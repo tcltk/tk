@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: macMenu.test,v 1.6.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+# RCS: @(#) $Id: macMenu.test,v 1.6.2.2 2002/06/10 05:38:26 wolfsuit Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -841,7 +841,7 @@ test macMenu-21.3 {TkpSetMainMenubar - different interps} {macOnly} {
     catch {destroy .m1}
     catch {interp delete testinterp}
     interp create testinterp
-    load {} tk testinterp
+    load {} Tk testinterp
     menu .m1
     . configure -menu .m1
     raise .

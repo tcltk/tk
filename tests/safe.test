@@ -6,11 +6,31 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: safe.test,v 1.7.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+# RCS: @(#) $Id: safe.test,v 1.7.2.2 2002/06/10 05:38:26 wolfsuit Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
+
+## NOTE: Any time tests fail here with an error like:
+
+# Can't find a usable tk.tcl in the following directories:
+#     {$p(:26:)}
+# 
+# $p(:26:)/tk.tcl: script error
+# script error
+#     invoked from within
+# "source {$p(:26:)/tk.tcl}"
+#     ("uplevel" body line 1)
+#     invoked from within
+# "uplevel #0 [list source $file]"
+# 
+# 
+# This probably means that tk wasn't installed properly.
+
+## it indicates that something went wrong sourcing tk.tcl.
+## Ensure that any changes that occured to tk.tcl will work or
+## are properly prevented in a safe interpreter.  -- hobbs
 
 foreach i [winfo children .] {
     destroy $i
@@ -176,16 +196,3 @@ test safe-7.1 {canvas printing} {
 unset hidden_cmds
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

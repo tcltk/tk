@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.13.2.2 2002/02/05 02:25:18 wolfsuit Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.13.2.3 2002/06/10 05:38:26 wolfsuit Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1262,12 +1262,6 @@ test unixWm-36.2 {Tk_WmCmd procedure, "title" option} {unixOnly} {
     lappend result [wm title .t] [testprop [testwrapper .t] WM_NAME]
 } {t t {Test window} {Test window}}
 
-test unixWm-37.1 {Tk_WmCmd procedure, "transient" option} {
-    list [catch {wm transient .t 1 2} msg]  $msg
-} {1 {wrong # arguments: must be "wm transient window ?master?"}}
-test unixWm-37.2 {Tk_WmCmd procedure, "transient" option} {
-    list [catch {wm transient .t foo} msg]  $msg
-} {1 {bad window path name "foo"}}
 test unixWm-37.3 {Tk_WmCmd procedure, "transient" option} {unixOnly} {
     set result {}
     catch {destroy .t2}
@@ -1832,7 +1826,7 @@ test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} {
     wm geometry .t +0+0
     tkwait visibility .t
     interp create slave
-    load {} tk slave
+    load {} Tk slave
     slave eval {wm geometry . 200x200+0+0; tkwait visibility .}
     set result [list [winfo containing 100 100] \
 	    [slave eval {winfo containing 100 100}]]

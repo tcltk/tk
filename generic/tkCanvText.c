@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.10.2.1 2002/02/05 02:25:14 wolfsuit Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.10.2.2 2002/06/10 05:38:23 wolfsuit Exp $
  */
 
 #include <stdio.h>
@@ -635,8 +635,8 @@ ComputeTextBbox(canvas, textPtr)
      * of the bounding box for the text item.
      */
 
-    leftX = (int) (textPtr->x + 0.5);
-    topY = (int) (textPtr->y + 0.5);
+    leftX = (int) floor(textPtr->x + 0.5);
+    topY = (int) floor(textPtr->y + 0.5);
     switch (textPtr->anchor) {
 	case TK_ANCHOR_NW:
 	case TK_ANCHOR_N:
@@ -828,6 +828,8 @@ DisplayCanvText(canvas, itemPtr, display, drawable, x, y, width, height)
 			    - (textInfoPtr->insertWidth / 2)),
 		    (double) (textPtr->header.y1 + y),
 		    &drawableX, &drawableY);
+	    Tk_SetCaretPos(Tk_CanvasTkwin(canvas), drawableX, drawableY,
+		    height);
 	    if (textInfoPtr->cursorOn) {
 		Tk_Fill3DRectangle(Tk_CanvasTkwin(canvas), drawable,
 			textInfoPtr->insertBorder,

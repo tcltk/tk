@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.17.2.2 2002/02/05 02:25:16 wolfsuit Exp $
+# RCS: @(#) $Id: text.tcl,v 1.17.2.3 2002/06/10 05:38:24 wolfsuit Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -54,13 +54,11 @@ bind Text <Double-1> {
     set tk::Priv(selectMode) word
     tk::TextSelectTo %W %x %y
     catch {%W mark set insert sel.last}
-    catch {%W mark set anchor sel.first}
 }
 bind Text <Triple-1> {
     set tk::Priv(selectMode) line
     tk::TextSelectTo %W %x %y
     catch {%W mark set insert sel.last}
-    catch {%W mark set anchor sel.first}
 }
 bind Text <Shift-1> {
     tk::TextResetAnchor %W @%x,%y
@@ -258,7 +256,7 @@ bind Text <<Clear>> {
 bind Text <<PasteSelection>> {
     if {$tk_strictMotif || ![info exists tk::Priv(mouseMoved)]
 	|| !$tk::Priv(mouseMoved)} {
-	tk::TextPaste %W %x %y
+	tk::TextPasteSelection %W %x %y
     }
 }
 bind Text <Insert> {
@@ -630,7 +628,7 @@ proc ::tk::TextKeyExtend {w index} {
     $w tag remove sel $last end
 }
 
-# ::tk::TextPaste --
+# ::tk::TextPasteSelection --
 # This procedure sets the insertion cursor to the mouse position,
 # inserts the selection, and sets the focus to the window.
 #
@@ -638,16 +636,15 @@ proc ::tk::TextKeyExtend {w index} {
 # w -		The text window.
 # x, y - 	Position of the mouse.
 
-proc ::tk::TextPaste {w x y} {
+proc ::tk::TextPasteSelection {w x y} {
     $w mark set insert [TextClosestGap $w $x $y]
-    catch {$w insert insert [::tk::GetSelection $w PRIMARY]}
-    catch {
+    if {![catch {::tk::GetSelection $w PRIMARY} sel]} {
 	set oldSeparator [$w cget -autoseparators]
 	if {$oldSeparator} {
 	    $w configure -autoseparators 0
 	    $w edit separator
 	}
-	$w insert insert [::tk::GetSelection $w PRIMARY]
+	$w insert insert $sel
 	if {$oldSeparator} {
 	    $w edit separator
 	    $w configure -autoseparators 1
@@ -1002,7 +999,7 @@ proc ::tk_textCut w {
 
 proc ::tk_textPaste w {
     global tcl_platform
-    catch {
+    if {![catch {::tk::GetSelection $w CLIPBOARD} sel]} {
 	set oldSeparator [$w cget -autoseparators]
 	if { $oldSeparator } {
 	    $w configure -autoseparators 0
@@ -1011,7 +1008,7 @@ proc ::tk_textPaste w {
 	if {[string compare $tcl_platform(windowingsystem) "x11"]} {
 	    catch { $w delete sel.first sel.last }
 	}
-	$w insert insert [::tk::GetSelection $w CLIPBOARD]
+	$w insert insert $sel
 	if { $oldSeparator } {
 	    $w edit separator
 	    $w configure -autoseparators 1

@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: photo.n,v 1.7.4.1 2002/02/05 02:25:14 wolfsuit Exp $
+'\" RCS: @(#) $Id: photo.n,v 1.7.4.2 2002/06/10 05:38:23 wolfsuit Exp $
 '\" 
 .so man.macros
 .TH photo n 4.0 Tk "Tk Built-In Commands"
@@ -33,7 +33,7 @@ formats are supported, but an interface exists to allow additional
 image file formats to be added easily.  A photo image is transparent
 in regions where no image data has been supplied
 .VS 8.4
-or where it has been set transparent by the \fBtransparency set\fB
+or where it has been set transparent by the \fBtransparency set\fR
 subcommand.
 .VE 8.4
 
@@ -321,7 +321,7 @@ the photo image.  Several subcommands are available:
 \fIimageName \fBtransparency get \fIx y\fR
 Returns a boolean indicating if the pixel at (\fIx\fR,\fIy\fR) is
 transparent.
-\fIimageName \fBtransparency get \fIx y boolean\fR
+\fIimageName \fBtransparency set \fIx y boolean\fR
 Makes the pixel at (\fIx\fR,\fIy\fR) transparent if \fIboolean\fR is
 true, and makes that pixel opaque otherwise.
 .RE

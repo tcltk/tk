@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacResource.r,v 1.6.8.1 2002/02/05 02:25:17 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacResource.r,v 1.6.8.2 2002/06/10 05:38:25 wolfsuit Exp $
  */
 
 /*
@@ -32,8 +32,6 @@
 #include "tcl.h"
 #include "tk.h"
 
-#define TK_LIBRARY_RESOURCES 3000
-
 /* 
  * The mechanisim below loads Tcl source into the resource fork of the
  * application.  The example below creates a TEXT resource named
@@ -46,43 +44,9 @@
  * will load the TEXT resource named "Init".
  */
 
-read 'TEXT' (TK_LIBRARY_RESOURCES+1, "tk", purgeable,preload) 
-	"::library:tk.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+2, "button", purgeable) 
-	"::library:button.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+3, "dialog", purgeable) 
-	"::library:dialog.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+4, "entry", purgeable) 
-	"::library:entry.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+5, "focus", purgeable) 
-	"::library:focus.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+6, "listbox", purgeable) 
-	"::library:listbox.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+7, "menu", purgeable) 
-	"::library:menu.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+8, "optMenu", purgeable) 
-	"::library:optMenu.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+9, "palette", purgeable) 
-	"::library:palette.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+10, "scale", purgeable) 
-	"::library:scale.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+11, "scrlbar", purgeable) 
-	"::library:scrlbar.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+12, "tearoff", purgeable) 
-	"::library:tearoff.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+13, "text", purgeable) 
-	"::library:text.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+14, "bgerror", purgeable) 
-	"::library:bgerror.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+15, "console", purgeable) 
-	"::library:console.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+16, "msgbox", purgeable) 
-	"::library:msgbox.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+17, "comdlg", purgeable) 
-	"::library:comdlg.tcl";
-read 'TEXT' (TK_LIBRARY_RESOURCES+18, "spinbox", purgeable) 
-	"::library:spinbox.tcl";
-
+#ifndef TCLTK_NO_LIBRARY_TEXT_RESOURCES
+#include "tkMacTclCode.r"
+#endif
 
 /*
  * The following two resources define the default "About Box" for Mac Tk.

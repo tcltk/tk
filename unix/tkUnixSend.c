@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.4.18.1 2002/02/05 02:25:18 wolfsuit Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.4.18.2 2002/06/10 05:38:27 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -1251,6 +1251,39 @@ TkGetInterpNames(interp, tkwin)
     }
     RegClose(regPtr);
     return TCL_OK;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkSendCleanup --
+ *
+ *	This procedure is called to free resources used by the
+ *	communication channels for sending commands and
+ *	receiving results.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Frees various data structures and windows.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+TkSendCleanup(dispPtr)
+    TkDisplay *dispPtr;
+{
+    if (dispPtr->commTkwin != NULL) {
+	Tk_DeleteEventHandler(dispPtr->commTkwin, PropertyChangeMask,
+	    SendEventProc, (ClientData) dispPtr);
+#ifdef PURIFY
+	/* Tk_DestroyWindow(dispPtr->commTkwin); */
+	ckfree((char *) dispPtr->commTkwin);
+#endif
+	dispPtr->commTkwin = NULL;
+    }
 }
 
 /*

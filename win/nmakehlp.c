@@ -9,7 +9,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  * ----------------------------------------------------------------------------
- * RCS: @(#) $Id: nmakehlp.c,v 1.1.4.1 2002/06/10 05:08:00 wolfsuit Exp $
+ * RCS: @(#) $Id: nmakehlp.c,v 1.1.4.2 2002/06/10 05:38:27 wolfsuit Exp $
  * ----------------------------------------------------------------------------
  */
 #include <windows.h>

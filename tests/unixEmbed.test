@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixEmbed.test,v 1.8.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+# RCS: @(#) $Id: unixEmbed.test,v 1.8.2.2 2002/06/10 05:38:26 wolfsuit Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -550,7 +550,7 @@ test unixEmbed-8.2 {TkpClaimFocus procedure} {
     pack .f1 .f2
     interp create child
     child eval "set argv {-use [winfo id .f1]}"
-    load {} tk child
+    load {} Tk child
     child eval {
 	. configure -bd 2 -highlightthickness 2 -relief sunken
     }

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextMark.c,v 1.4 1999/12/14 06:52:33 hobbs Exp $
+ * RCS: @(#) $Id: tkTextMark.c,v 1.4.8.1 2002/06/10 05:38:24 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -526,11 +526,15 @@ TkTextInsertDisplayProc(chunkPtr, x, y, height, baseline, display, dst, screenY)
 
     if ((x + halfWidth) < 0) {
 	/*
-	 * The insertion cursor is off-screen.  Just return.
+	 * The insertion cursor is off-screen.
+	 * Indicate caret at 0,0 and return.
 	 */
 
+	Tk_SetCaretPos(textPtr->tkwin, 0, 0, height);
 	return;
     }
+
+    Tk_SetCaretPos(textPtr->tkwin, x - halfWidth, screenY, height);
 
     /*
      * As a special hack to keep the cursor visible on mono displays
@@ -542,12 +546,12 @@ TkTextInsertDisplayProc(chunkPtr, x, y, height, baseline, display, dst, screenY)
 
     if (textPtr->flags & INSERT_ON) {
 	Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
-		x - textPtr->insertWidth/2, y, textPtr->insertWidth,
-		height, textPtr->insertBorderWidth, TK_RELIEF_RAISED);
+		x - halfWidth, y, textPtr->insertWidth, height,
+		textPtr->insertBorderWidth, TK_RELIEF_RAISED);
     } else if (textPtr->selBorder == textPtr->insertBorder) {
 	Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->border,
-		x - textPtr->insertWidth/2, y, textPtr->insertWidth,
-		height, 0, TK_RELIEF_FLAT);
+		x - halfWidth, y, textPtr->insertWidth, height,
+		0, TK_RELIEF_FLAT);
     }
 }
 

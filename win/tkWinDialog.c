@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.22.2.1 2002/02/05 02:25:18 wolfsuit Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.22.2.2 2002/06/10 05:38:28 wolfsuit Exp $
  *
  */
 
@@ -393,9 +393,8 @@ ColorDlgHookProc(hDlg, uMsg, wParam, lParam)
 	    ccPtr = (CHOOSECOLOR *) lParam;
 	    title = (const char *) ccPtr->lCustData;
 	    if ((title != NULL) && (title[0] != '\0')) {
-		Tcl_WinUtfToTChar(title, -1, &ds);
 		(*tkWinProcs->setWindowText)(hDlg,
-			(TCHAR *) Tcl_DStringValue(&ds));
+			Tcl_WinUtfToTChar(title, -1, &ds));
 		Tcl_DStringFree(&ds);
 	    }
 	    if (tsdPtr->debugFlag) {
@@ -496,7 +495,6 @@ GetFileNameW(clientData, interp, objc, objv, open)
     int open;			/* 1 to call GetOpenFileName(), 0 to 
 				 * call GetSaveFileName(). */
 {
-    Tcl_Encoding unicodeEncoding = Tcl_GetEncoding(NULL, "unicode");
     OPENFILENAMEW ofn;
     WCHAR file[TK_MULTI_MAX_PATH];
     int result, winCode, oldMode, i, multi = 0;
@@ -505,6 +503,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
     HWND hWnd;
     Tcl_DString utfFilterString, utfDirString;
     Tcl_DString extString, filterString, dirString, titleString;
+    Tcl_Encoding unicodeEncoding = TkWinGetUnicodeEncoding();
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     static CONST char *saveOptionStrings[] = {
@@ -2425,13 +2424,13 @@ Tk_MessageBoxObjCmd(clientData, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    Tcl_Encoding unicodeEncoding = Tcl_GetEncoding(NULL, "unicode");
     Tk_Window tkwin, parent;
     HWND hWnd;
     char *message, *title;
     int defaultBtn, icon, type;
     int i, oldMode, flags, winCode;
     Tcl_DString messageString, titleString;
+    Tcl_Encoding unicodeEncoding = TkWinGetUnicodeEncoding();
     static CONST char *optionStrings[] = {
 	"-default",	"-icon",	"-message",	"-parent",
 	"-title",	"-type",	NULL

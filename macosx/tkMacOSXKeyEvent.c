@@ -380,3 +380,30 @@ TkpSetCapture(
     }
     gGrabWinPtr = (Tk_Window) winPtr;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_SetCaretPos --
+ *
+ *	This enables correct placement of the XIM caret.  This is called
+ *	by widgets to indicate their cursor placement, and the caret
+ *	location is used by TkpGetString to place the XIM caret.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	None
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_SetCaretPos(tkwin, x, y, height)
+    Tk_Window tkwin;
+    int	      x;
+    int	      y;
+    int	      height;
+{
+}

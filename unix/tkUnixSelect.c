@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.7 2001/07/03 01:03:16 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.7.2.1 2002/06/10 05:38:27 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -1197,6 +1197,7 @@ SelRcvIncrProc(clientData, eventPtr)
 	     */
 
 	    retrPtr->result = TCL_OK;
+	    Tcl_Release((ClientData) interp);
 	    goto done;
 	} else {
 	    src = propInfo;

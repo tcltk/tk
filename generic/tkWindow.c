@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.39.2.3 2002/02/05 02:25:16 wolfsuit Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.39.2.4 2002/06/10 05:38:24 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -143,6 +143,7 @@ static TkCmd commands[] = {
     {"listbox",		NULL,			Tk_ListboxObjCmd,	1, 0},
     {"menubutton",	NULL,                   Tk_MenubuttonObjCmd,	1, 0},
     {"message",		NULL,			Tk_MessageObjCmd,	1, 0},
+    {"panedwindow",	NULL,			Tk_PanedWindowObjCmd,	1, 0},
     {"radiobutton",	NULL,			Tk_RadiobuttonObjCmd,	1, 0},
     {"scale",		NULL,	                Tk_ScaleObjCmd,		1, 0},
     {"scrollbar",	Tk_ScrollbarCmd,	NULL,			1, 1},
@@ -211,8 +212,60 @@ static int		Initialize _ANSI_ARGS_((Tcl_Interp *interp));
 static int		NameWindow _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkWindow *winPtr, TkWindow *parentPtr,
 			    char *name));
-static void		OpenIM _ANSI_ARGS_((TkDisplay *dispPtr));
 static void		UnlinkWindow _ANSI_ARGS_((TkWindow *winPtr));
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkCloseDisplay --
+ *	Closing the display can lead to order of deletion problems.
+ *	We defer it until exit handling for Mac/Win, but since Unix can
+ *	use many displays, try and clean it up as best as possible.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Resources associated with the display will be free.
+ *	The display may not be referenced at all after this.
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkCloseDisplay(TkDisplay *dispPtr)
+{
+    TkClipCleanup(dispPtr);
+
+    if (dispPtr->name != NULL) {
+	ckfree(dispPtr->name);
+    }
+
+    Tcl_DeleteHashTable(&dispPtr->winTable);
+
+    if (dispPtr->atomInit) {
+	Tcl_DeleteHashTable(&dispPtr->nameTable);
+	Tcl_DeleteHashTable(&dispPtr->atomTable);
+	dispPtr->atomInit = 0;
+    }
+
+    if (dispPtr->errorPtr != NULL) {
+	TkErrorHandler *errorPtr;
+	for (errorPtr = dispPtr->errorPtr;
+	     errorPtr != NULL;
+	     errorPtr = dispPtr->errorPtr) {
+	    dispPtr->errorPtr = errorPtr->nextPtr;
+	    ckfree((char *) errorPtr);
+	}
+    }
+
+    TkGCCleanup(dispPtr);
+
+    TkpCloseDisplay(dispPtr);
+
+    /*
+     * There is more to clean up, we leave it at this for the time being.
+     */
+}
 
 /*
  *----------------------------------------------------------------------
@@ -397,83 +450,34 @@ GetScreen(interp, screenName, screenPtr)
      * then open a new connection.
      */
 
-    for (dispPtr = TkGetDisplayList(); ; dispPtr = dispPtr->nextPtr) {
+    for (dispPtr = tsdPtr->displayList; ; dispPtr = dispPtr->nextPtr) {
 	if (dispPtr == NULL) {
+	    /*
+	     * The private function zeros out dispPtr when it is created,
+	     * so we only need to initialize the non-zero items.
+	     */
 	    dispPtr = TkpOpenDisplay(screenName);
 	    if (dispPtr == NULL) {
 		Tcl_AppendResult(interp, "couldn't connect to display \"",
 			screenName, "\"", (char *) NULL);
 		return (TkDisplay *) NULL;
 	    }
-	    dispPtr->nextPtr = TkGetDisplayList();
-	    dispPtr->name = (char *) ckalloc((unsigned) (length+1));
+	    dispPtr->nextPtr = tsdPtr->displayList; /* TkGetDisplayList(); */
+	    tsdPtr->displayList = dispPtr;
+
 	    dispPtr->lastEventTime = CurrentTime;
-	    dispPtr->borderInit = 0;
-	    dispPtr->atomInit = 0;
 	    dispPtr->bindInfoStale = 1;
-	    dispPtr->modeModMask = 0;
-	    dispPtr->metaModMask = 0;
-	    dispPtr->altModMask = 0;
-	    dispPtr->numModKeyCodes = 0;
-	    dispPtr->modKeyCodes = NULL;
-	    dispPtr->bitmapInit = 0;
-	    dispPtr->bitmapAutoNumber = 0;
-	    dispPtr->numIdSearches = 0;
-	    dispPtr->numSlowSearches = 0;
-	    dispPtr->colorInit = 0;
-	    dispPtr->stressPtr = NULL;
-	    dispPtr->cursorInit = 0;
-	    dispPtr->cursorString[0] = '\0';
 	    dispPtr->cursorFont = None;
-	    dispPtr->errorPtr = NULL;
-	    dispPtr->deleteCount = 0;
-	    dispPtr->delayedMotionPtr = NULL;
-	    dispPtr->focusDebug = 0;
-	    dispPtr->implicitWinPtr = NULL;
-	    dispPtr->focusPtr = NULL;
-	    dispPtr->gcInit = 0;
-	    dispPtr->geomInit = 0;
-	    dispPtr->uidInit = 0;
-	    dispPtr->grabWinPtr = NULL;
-	    dispPtr->eventualGrabWinPtr = NULL;
-	    dispPtr->buttonWinPtr = NULL;
-	    dispPtr->serverWinPtr = NULL;
-	    dispPtr->firstGrabEventPtr = NULL;
-	    dispPtr->lastGrabEventPtr = NULL;
-	    dispPtr->grabFlags = 0;
-	    dispPtr->mouseButtonState = 0;
-	    dispPtr->warpInProgress = 0;
 	    dispPtr->warpWindow = None;
-	    dispPtr->warpX = 0;
-	    dispPtr->warpY = 0;
-	    dispPtr->gridInit = 0;
-	    dispPtr->imageId = 0;
-	    dispPtr->packInit = 0;
-	    dispPtr->placeInit = 0;
-	    dispPtr->selectionInfoPtr = NULL;
 	    dispPtr->multipleAtom = None;
-	    dispPtr->clipWindow = NULL;
-	    dispPtr->clipboardActive = 0;
-	    dispPtr->clipboardAppPtr = NULL;
-	    dispPtr->clipTargetPtr = NULL;
-	    dispPtr->commTkwin = NULL;
-	    dispPtr->wmTracing = 0;
-	    dispPtr->firstWmPtr = NULL;
-	    dispPtr->foregroundWmPtr = NULL;
-	    dispPtr->destroyCount = 0;
-	    dispPtr->lastDestroyRequest = 0;
-	    dispPtr->cmapPtr = NULL;
+
 	    Tcl_InitHashTable(&dispPtr->winTable, TCL_ONE_WORD_KEYS);
 
-            dispPtr->refCount = 0;
+	    dispPtr->name = (char *) ckalloc((unsigned) (length+1));
 	    strncpy(dispPtr->name, screenName, length);
 	    dispPtr->name[length] = '\0';
-	    dispPtr->useInputMethods = 0;
-	    OpenIM(dispPtr);
-	    TkInitXId(dispPtr);
-	    dispPtr->deletionEpoch = 0L;
 
-	    tsdPtr->displayList = dispPtr;
+	    TkInitXId(dispPtr);
 	    break;
 	}
 	if ((strncmp(dispPtr->name, screenName, length) == 0)
@@ -1429,6 +1433,7 @@ Tk_DestroyWindow(tkwin)
 	    TkBindFree(winPtr->mainPtr);
 	    TkDeleteAllImages(winPtr->mainPtr);
 	    TkFontPkgFree(winPtr->mainPtr);
+	    TkFocusFree(winPtr->mainPtr);
 
             /*
              * When embedding Tk into other applications, make sure 
@@ -1438,7 +1443,7 @@ Tk_DestroyWindow(tkwin)
              */
 
             if (winPtr->flags & TK_EMBEDDED) {
-                XSync(winPtr->display,False) ; 
+                XSync(winPtr->display, False); 
             }
 	    ckfree((char *) winPtr->mainPtr);
 
@@ -1446,15 +1451,22 @@ Tk_DestroyWindow(tkwin)
              * If no other applications are using the display, close the
              * display now and relinquish its data structures.
              */
-            
+
+#if !defined(WIN32) && !defined(MAC_TCL) && defined(NOT_YET)
             if (dispPtr->refCount <= 0) {
-#ifdef	NOT_YET
                 /*
                  * I have disabled this code because on Windows there are
                  * still order dependencies in close-down. All displays
                  * and resources will get closed down properly anyway at
-                 * exit, through the exit handler.
+                 * exit, through the exit handler. -- jyl
                  */
+		/*
+		 * Ideally this should be enabled, as unix Tk can use multiple
+		 * displays.  However, there are order issues still, as well
+		 * as the handling of queued events and such that must be
+		 * addressed before this can be enabled.  The current cleanup
+		 * works except for send event issues. -- hobbs 04/2002
+		 */
                 
                 TkDisplay *theDispPtr, *backDispPtr;
                 
@@ -1462,7 +1474,7 @@ Tk_DestroyWindow(tkwin)
                  * Splice this display out of the list of displays.
                  */
                 
-                for (theDispPtr = displayList, backDispPtr = NULL;
+                for (theDispPtr = tsdPtr->displayList, backDispPtr = NULL;
                          (theDispPtr != winPtr->dispPtr) &&
                              (theDispPtr != NULL);
                          theDispPtr = theDispPtr->nextPtr) {
@@ -1472,36 +1484,24 @@ Tk_DestroyWindow(tkwin)
                     panic("could not find display to close!");
                 }
                 if (backDispPtr == NULL) {
-                    displayList = theDispPtr->nextPtr;
+                    tsdPtr->displayList = theDispPtr->nextPtr;
                 } else {
                     backDispPtr->nextPtr = theDispPtr->nextPtr;
                 }
-                
+
+                /*
+		 * Calling XSync creates X server traffic, but addresses a
+		 * focus issue on close (but not the send issue). -- hobbs
+		 XSync(dispPtr->display, True);
+		 */
+
                 /*
                  * Found and spliced it out, now actually do the cleanup.
                  */
-                
-                if (dispPtr->name != NULL) {
-                    ckfree(dispPtr->name);
-                }
-                
-                Tcl_DeleteHashTable(&(dispPtr->winTable));
 
-		/*
-                 * Cannot yet close the display because we still have
-                 * order of deletion problems. Defer until exit handling
-                 * instead. At that time, the display will cleanly shut
-                 * down (hopefully..). (JYL)
-                 */
-
-                TkpCloseDisplay(dispPtr);
-
-                /*
-                 * There is lots more to clean up, we leave it at this for
-                 * the time being.
-                 */
-#endif
+		TkCloseDisplay(dispPtr);
             }
+#endif
 	}
     }
     Tcl_EventuallyFree((ClientData) winPtr, TCL_DYNAMIC);
@@ -1616,9 +1616,6 @@ Tk_MakeWindowExist(tkwin)
     Tcl_SetHashValue(hPtr, winPtr);
     winPtr->dirtyAtts = 0;
     winPtr->dirtyChanges = 0;
-#ifdef TK_USE_INPUT_METHODS
-    winPtr->inputContext = NULL;
-#endif /* TK_USE_INPUT_METHODS */
 
     if (!(winPtr->flags & TK_TOP_LEVEL)) {
 	/*
@@ -1665,7 +1662,7 @@ Tk_MakeWindowExist(tkwin)
      */
 
     if ((winPtr->flags & TK_NEED_CONFIG_NOTIFY)
-	    && !(winPtr->flags & TK_ALREADY_DEAD)){
+	    && !(winPtr->flags & TK_ALREADY_DEAD)) {
 	winPtr->flags &= ~TK_NEED_CONFIG_NOTIFY;
 	TkDoConfigureNotify(winPtr);
     }
@@ -2502,8 +2499,18 @@ Tk_MainWindow(interp)
 					 * reporting also. */
 {
     TkMainInfo *mainPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr;
+
+    if (interp == NULL) {
+	return NULL;
+    }
+#ifdef USE_TCL_STUBS
+    if (tclStubsPtr == NULL) {
+	return NULL;
+    }
+#endif
+    tsdPtr = (ThreadSpecificData *) 
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (mainPtr = tsdPtr->mainWindowList; mainPtr != NULL;
 	    mainPtr = mainPtr->nextPtr) {
@@ -2543,70 +2550,6 @@ Tk_StrictMotif(tkwin)
     return ((TkWindow *) tkwin)->mainPtr->strictMotif;
 }
 
-/* 
- *--------------------------------------------------------------
- *
- * OpenIM --
- *
- *	Tries to open an X input method, associated with the
- *	given display.  Right now we can only deal with a bare-bones
- *	input style:  no preedit, and no status.
- *
- * Results:
- *	Stores the input method in dispPtr->inputMethod;  if there isn't
- *	a suitable input method, then NULL is stored in dispPtr->inputMethod.
- *
- * Side effects:
- *	An input method gets opened.
- *
- *--------------------------------------------------------------
- */
-
-static void
-OpenIM(dispPtr)
-    TkDisplay *dispPtr;		/* Tk's structure for the display. */
-{
-#ifndef TK_USE_INPUT_METHODS
-    return;
-#else
-    unsigned short i;
-    XIMStyles *stylePtr;
-    char *modifier_list;
-
-    if ((modifier_list = XSetLocaleModifiers("")) == NULL) {
-	goto error;
-    }
-
-    dispPtr->inputMethod = XOpenIM(dispPtr->display, NULL, NULL, NULL);
-    if (dispPtr->inputMethod == NULL) {
-	return;
-    }
-
-    if ((XGetIMValues(dispPtr->inputMethod, XNQueryInputStyle, &stylePtr,
-	    NULL) != NULL) || (stylePtr == NULL)) {
-	goto error;
-    }
-    for (i = 0; i < stylePtr->count_styles; i++) {
-	if (stylePtr->supported_styles[i]
-		== (XIMPreeditNothing|XIMStatusNothing)) {
-	    XFree(stylePtr);
-	    return;
-	}
-    }
-    XFree(stylePtr);
-
-    error:
-
-    /*
-     * Should close the input method, but this causes core dumps on some
-     * systems (e.g. Solaris 2.3 as of 1/6/95).
-     * XCloseIM(dispPtr->inputMethod);
-     */
-    dispPtr->inputMethod = NULL;
-    return;
-#endif /* TK_USE_INPUT_METHODS */
-}
-
 /*
  *----------------------------------------------------------------------
  *
@@ -2627,8 +2570,16 @@ OpenIM(dispPtr)
 int
 Tk_GetNumMainWindows()
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr;
+
+#ifdef USE_TCL_STUBS
+    if (tclStubsPtr == NULL) {
+	return 0;
+    }
+#endif
+
+    tsdPtr = (ThreadSpecificData *) 
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->numMainWindows;
 }
@@ -2654,11 +2605,11 @@ static void
 DeleteWindowsExitProc(clientData)
     ClientData clientData;		/* Not used. */
 {
-    TkDisplay *displayPtr, *nextPtr;
+    TkDisplay *dispPtr, *nextPtr;
     Tcl_Interp *interp;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    
+
     while (tsdPtr->mainWindowList != NULL) {
         /*
          * We must protect the interpreter while deleting the window,
@@ -2672,21 +2623,17 @@ DeleteWindowsExitProc(clientData)
 	Tk_DestroyWindow((Tk_Window) tsdPtr->mainWindowList->winPtr);
         Tcl_Release((ClientData) interp);
     }
-    
-    displayPtr = tsdPtr->displayList;
-    tsdPtr->displayList = NULL;
-    
+
     /*
      * Iterate destroying the displays until no more displays remain.
      * It is possible for displays to get recreated during exit by any
      * code that calls GetScreen, so we must destroy these new displays
      * as well as the old ones.
      */
-    
-    for (displayPtr = tsdPtr->displayList;
-         displayPtr != NULL;
-         displayPtr = tsdPtr->displayList) {
 
+    for (dispPtr = tsdPtr->displayList;
+         dispPtr != NULL;
+         dispPtr = tsdPtr->displayList) {
         /*
          * Now iterate over the current list of open displays, and first
          * set the global pointer to NULL so we will be able to notice if
@@ -2695,18 +2642,14 @@ DeleteWindowsExitProc(clientData)
          * the old display as it is being destroyed, when it wants to see
          * if it needs to dispatch a message.
          */
-        
-        for (tsdPtr->displayList = NULL; displayPtr != NULL; 
-                displayPtr = nextPtr) {
-            nextPtr = displayPtr->nextPtr;
-            if (displayPtr->name != (char *) NULL) {
-                ckfree(displayPtr->name);
-            }
-            Tcl_DeleteHashTable(&(displayPtr->winTable));
-            TkpCloseDisplay(displayPtr);
+
+        for (tsdPtr->displayList = NULL; dispPtr != NULL; 
+                dispPtr = nextPtr) {
+            nextPtr = dispPtr->nextPtr;
+            TkCloseDisplay(dispPtr);
         }
     }
-    
+
     tsdPtr->numMainWindows = 0;
     tsdPtr->mainWindowList = NULL;
     tsdPtr->initialized = 0;

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.11.2.1 2002/02/05 02:25:18 wolfsuit Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.11.2.2 2002/06/10 05:38:28 wolfsuit Exp $
  */
 
 #ifndef _TKWININT
@@ -193,7 +193,13 @@ EXTERN TkWinProcs *tkWinProcs;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
+/*
+ * The following allows us to cache these encoding for multiple functions.
+ */
+
+
 extern Tcl_Encoding TkWinGetKeyInputEncoding _ANSI_ARGS_((void));
+extern Tcl_Encoding TkWinGetUnicodeEncoding _ANSI_ARGS_((void));
 
 #endif /* _TKWININT */
 

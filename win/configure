@@ -535,7 +535,7 @@ fi
 TK_VERSION=8.4
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=4
-TK_PATCH_LEVEL="a4"
+TK_PATCH_LEVEL="a5"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -1339,7 +1339,7 @@ echo "configure:1181: checking compiler flags" >&5
 
 	EXTRA_CFLAGS="-YX"
 	CFLAGS_WARNING="-W3"
-	LDFLAGS_DEBUG="-debug:full -debugtype:cv"
+	LDFLAGS_DEBUG="-debug:full -debugtype:both"
 	LDFLAGS_OPTIMIZE="-release"
 	
 	# Specify the CC output file names based on the target name

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.1.2.2 2002/02/05 02:25:17 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.1.2.3 2002/06/10 05:38:26 wolfsuit Exp $
  */
 
 #include <stdio.h>
@@ -264,7 +264,7 @@ ReceiveAndProcessEvent()
             }
             
             err= SendEventToEventTarget(macEvent.eventRef,targetRef);
-            if (err != noErr) {
+            if (err != noErr /* && err != eventNotHandledErr */) {
                 fprintf(stderr,
                         "RCNE SendEventToEventTarget (%s) failed, %d\n",
                         CarbonEventToAscii(macEvent.eventRef,buf ),err);

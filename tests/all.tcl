@@ -5,9 +5,11 @@
 # in this directory.
 #
 # Copyright (c) 1998-1999 by Scriptics Corporation.
-# All rights reserved.
+#
+# See the file "license.terms" for information on usage and redistribution
+# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: all.tcl,v 1.4 1999/04/21 21:53:29 rjohnson Exp $
+# RCS: @(#) $Id: all.tcl,v 1.4.18.1 2002/06/10 05:38:26 wolfsuit Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -63,16 +65,3 @@ foreach file [lsort $fileList] {
 puts stdout "\nTests ended at [eval $timeCmd]"
 ::tcltest::cleanupTests 1
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

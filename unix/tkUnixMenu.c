@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.5.2.1 2002/02/05 02:25:18 wolfsuit Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.5.2.2 2002/06/10 05:38:27 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -707,7 +707,7 @@ DrawMenuEntryLabel(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, y, width, height)
     int activeBorderWidth;
     int leftEdge;
     int imageHeight, imageWidth;
-    int textHeight, textWidth;
+    int textHeight = 0, textWidth = 0;	/* stop GCC warning */
     int haveImage = 0, haveText = 0;
     int imageXOffset = 0, imageYOffset = 0;
     int textXOffset = 0, textYOffset = 0;
@@ -1473,7 +1473,7 @@ GetMenuLabelGeometry(mePtr, tkfont, fmPtr, widthPtr, heightPtr)
 					 * portion */
 {
     TkMenu *menuPtr = mePtr->menuPtr;
-    int haveImage = 0, haveText = 0;
+    int haveImage = 0;
  
     if (mePtr->image != NULL) {
     	Tk_SizeOfImage(mePtr->image, widthPtr, heightPtr);

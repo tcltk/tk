@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.21.2.3 2002/02/05 02:25:15 wolfsuit Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.21.2.4 2002/06/10 05:38:23 wolfsuit Exp $
 
 library tk
 
@@ -645,6 +645,18 @@ declare 141 generic {
     TkWindow ** TkWmStackorderToplevel(TkWindow *parentPtr)
 }
 
+declare 142 generic {
+    void TkFocusFree(TkMainInfo *mainPtr)
+}
+
+declare 143 generic {
+    void TkClipCleanup(TkDisplay *dispPtr)
+}
+
+declare 144 generic {
+    void TkGCCleanup(TkDisplay *dispPtr)
+}
+
 ##############################################################################
 
 # Define the platform specific internal Tcl interface. These functions are
@@ -689,6 +701,22 @@ declare 7 unix {
 
 declare 8 unix {
     int TkpScanWindowId (Tcl_Interp *interp, CONST char *string, Window *idPtr)
+}
+
+declare 9 unix {
+    void TkWmCleanup (TkDisplay *dispPtr)
+}
+
+declare 10 unix {
+    void TkSendCleanup (TkDisplay *dispPtr)
+}
+
+declare 11 unix {
+    void TkFreeXId (TkDisplay *dispPtr)
+}
+
+declare 12 unix {
+    int TkpWmSetState (TkWindow *winPtr, int state)
 }
 
 ############################

@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk panedwindow widgets and
 # provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: panedwindow.tcl,v 1.5.4.1 2002/06/10 05:07:59 wolfsuit Exp $
+# RCS: @(#) $Id: panedwindow.tcl,v 1.5.4.2 2002/06/10 05:38:24 wolfsuit Exp $
 #
 
 bind PanedWindow <Button-1> { ::tk::panedwindow::MarkSash %W %x %y 1 }

@@ -171,7 +171,11 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 
     medPtr->windowPart= FindWindow(where, &medPtr->whichWin);
     window = TkMacOSXGetXWindow(medPtr->whichWin);
-       
+    if (medPtr->whichWin != NULL && window == None) {
+        statusPtr->handledByTk = 0;
+        return 0;
+    }
+    
     frontWindow = FrontWindow();
     medPtr->activeNonFloating = ActiveNonFloatingWindow();
 

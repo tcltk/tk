@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.1.2.2 2002/02/05 02:25:17 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.1.2.3 2002/06/10 05:38:26 wolfsuit Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -361,6 +361,39 @@
 #define DEF_MESSAGE_TEXT		""
 #define DEF_MESSAGE_TEXT_VARIABLE	""
 #define DEF_MESSAGE_WIDTH		"0"
+/*
+ * Defaults for panedwindows
+ */
+
+#define DEF_PANEDWINDOW_BG_COLOR	NORMAL_BG
+#define DEF_PANEDWINDOW_BG_MONO		WHITE
+#define DEF_PANEDWINDOW_BORDERWIDTH	"2"
+#define DEF_PANEDWINDOW_CURSOR		""
+#define DEF_PANEDWINDOW_HANDLEPAD	"8"
+#define DEF_PANEDWINDOW_HANDLESIZE	"8"
+#define DEF_PANEDWINDOW_HEIGHT		""
+#define DEF_PANEDWINDOW_OPAQUERESIZE	"0"
+#define DEF_PANEDWINDOW_ORIENT		"horizontal"
+#define DEF_PANEDWINDOW_RELIEF		"flat"
+#define DEF_PANEDWINDOW_SASHCURSOR	""
+#define DEF_PANEDWINDOW_SASHPAD		"2"
+#define DEF_PANEDWINDOW_SASHRELIEF	"raised"
+#define DEF_PANEDWINDOW_SASHWIDTH	"2"
+#define DEF_PANEDWINDOW_SHOWHANDLE	"1"
+#define DEF_PANEDWINDOW_WIDTH		""
+
+/*
+ * Defaults for panedwindow panes
+ */
+
+#define DEF_PANEDWINDOW_PANE_AFTER	""
+#define DEF_PANEDWINDOW_PANE_BEFORE	""
+#define DEF_PANEDWINDOW_PANE_HEIGHT	""
+#define DEF_PANEDWINDOW_PANE_MINSIZE	"0"
+#define DEF_PANEDWINDOW_PANE_PADX	"0"
+#define DEF_PANEDWINDOW_PANE_PADY	"0"
+#define DEF_PANEDWINDOW_PANE_STICKY	"nsew"
+#define DEF_PANEDWINDOW_PANE_WIDTH	""
 
 /*
  * Defaults for scales:

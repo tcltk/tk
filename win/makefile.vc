@@ -1,494 +1,740 @@
-# Visual C++ makefile
+#------------------------------------------------------------------------------
+# makefile.vc --
+#
+#	Microsoft Visual C++ makefile for use with nmake.exe v1.62+ (VC++ 5.0+)
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# Copyright (c) 1995-1997 Sun Microsystems, Inc.
+# Copyright (c) 1995-1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # Copyright (c) 2001 ActiveState Corporation.
+# Copyright (c) 2001-2002 David Gravereaux.
 #
-# RCS: @(#) $Id: makefile.vc,v 1.42 2001/10/12 13:30:32 tmh Exp $
+#------------------------------------------------------------------------------
+# RCS: @(#) $Id: makefile.vc,v 1.42.2.1 2002/06/10 05:38:27 wolfsuit Exp $
+#------------------------------------------------------------------------------
 
-# Does not depend on the presence of any environment variables in
-# order to compile tcl; all needed information is derived from 
-# location of the compiler directories.
+!if "$(MSVCDIR)" == ""
+MSG = ^
+You'll need to run vcvars32.bat from Developer Studio, first, to setup^
+the environment.  Jump to this line to read the new instructions.
+!error $(MSG)
+!endif
 
+#------------------------------------------------------------------------------
+# HOW TO USE this makefile:
 #
-# Project directories
+# 1)  It is now necessary to have MSVCDir set in the environment.  This is used
+#     as a check to see if vcvars32.bat had been run prior to running nmake or
+#     during the install of Microsoft Developer Studio, MSVCDir had been set
+#     globally and the PATH adjusted.  Either way is valid.
 #
-# ROOT    = top of source tree
+#     You'll need to run vcvars32.bat contained in the MsDev's vc(98)/bin
+#     directory to setup the proper environment, if needed, for your current
+#     setup.  This is a needed bootstrap requirement and allows the swapping of
+#     different environments to be easier.
 #
-# TMPDIR  = location where .obj files should be stored during build
+# 2)  To use the Platform SDK (not expressly needed), run setenv.bat after
+#     vcvars32.bat according to the instructions for it.  This can also turn on
+#     the 64-bit compiler, if your SDK has it.
 #
-# TOOLS32 = location of VC++ 32-bit development tools. Note that the
-#	    VC++ 2.0 header files are broken, so you need to use the
-#	    ones that come with the developer network CD's, or later
-#	    versions of VC++.
+# 3)  Targets are:
+#	release  -- builds the core, the shell. (default)
+#	core     -- Only builds the core.
+#	all      -- builds everything.
+#	test     -- builds and runs the test suite.
+#	tktest   -- just builds the binaries for the test suite.
+#	install  -- installs the built binaries and libraries to $(INSTALLDIR)
+#		    as the root of the install tree.
+#	console-wish -- builds a console version of wish.
+#	clean    -- removes the contents of $(TMP_DIR)
+#	hose     -- removes the contents of $(TMP_DIR) and $(OUT_DIR)
+#	genstubs -- rebuilds the Stubs table and support files (dev only).
+#	depend   -- Generates an accurate set of source dependancies for this
+#		    makefile.  Helpful to avoid problems when the sources are
+#		    refreshed and you rebuild, but can "overbuild" when common
+#		    headers like tkInt.h just get small changes.
+#	winhelp  -- builds the windows .hlp file for Tcl from the troff man
+#		    files.
 #
-# TCLDIR = location of top of Tcl source heirarchy
+# 4)  Macros usable on the commandline:
+#	TCLDIR=<path>
+#		Sets the location for where to find the Tcl headers and
+#		libraries.  The install point is assumed when not specified.
+#		Tk does need the source directory, though.  Tk comes very close
+#		to not needing the sources, but does, in fact, require them.
 #
+#	INSTALLDIR=<path>
+#		Sets where to install Tcl from the built binaries.
+#		C:\Progra~1\Tcl is assumed when not specified.
+#
+#	OPTS=static,msvcrt,linkexten,threads,symbols,profile,none
+#		Sets special options for the core.  The default is for none.
+#		Any combination of the above may be used (comma separated).
+#		'none' will over-ride everything to nothing.
+#
+#		static  =  Builds a static library of the core instead of a
+#			   dll.  The shell will be static (and large), as well.
+#		msvcrt  =  Effects the static option only to switch it from
+#			   using libcmt(d) as the C runtime [by default] to
+#			   msvcrt(d). This is useful for static embedding
+#			   support.
+#		linkexten = Affects the static option only to switch wishXX.exe
+#			   to have the dde and reg extension linked inside it.
+#		threads =  Turns on full multithreading support.
+#		symbols =  Adds symbols for step debugging.
+#		profile =  Adds profiling hooks.  Map file is assumed.
+#
+#	STATS=memdbg,compdbg,none
+#		Sets optional memory and bytecode compiler debugging code added
+#		to the core.  The default is for none.  Any combination of the
+#		above may be used (comma separated).  'none' will over-ride
+#		everything to nothing.
+#
+#		memdbg   = Enables the debugging memory allocator.
+#		compdbg  = Enables byte compilation logging.
+#
+#	MACHINE=(IX86|IA64|ALPHA)
+#		Set the machine type used for the compiler, linker, and
+#		resource compiler.  This hook is needed to tell the tools
+#		when alternate platforms are requested.  IX86 is the default
+#		when not specified.
+#
+#	TMP_DIR=<path>
+#	OUT_DIR=<path>
+#		Hooks to allow the intermediate and output directories to be
+#		changed.  $(OUT_DIR) is assumed to be 
+#		$(BINROOT)\(Release|Debug) based on if symbols are requested.
+#		$(TMP_DIR) will de $(OUT_DIR)\<buildtype> by default.
+#
+#	TESTPAT=<file>
+#		Reads the tests requested to be run from this file.
+#
+# 5)  Examples:
+#
+#	Basic syntax of calling nmake looks like this:
+#	nmake [-nologo] -f makefile.vc [target|macrodef [target|macrodef] [...]]
+#
+#                        Standard (no frills)
+#       c:\tk_src\win\>c:\progra~1\micros~1\vc98\bin\vcvars32.bat
+#       Setting environment for using Microsoft Visual C++ tools.
+#       c:\tk_src\win\>nmake -f makefile.vc release
+#       c:\tk_src\win\>nmake -f makefile.vc install INSTALLDIR=c:\progra~1\tcl
+#
+#                         Building for Win64
+#       c:\tk_src\win\>c:\progra~1\micros~1\vc98\bin\vcvars32.bat
+#       Setting environment for using Microsoft Visual C++ tools.
+#       c:\tk_src\win\>c:\progra~1\platfo~1\setenv.bat /pre64 /RETAIL
+#       Targeting Windows pre64 RETAIL
+#       c:\tk_src\win\>nmake -f makefile.vc MACHINE=IA64
+#
+#------------------------------------------------------------------------------
+#==============================================================================
+###############################################################################
 
-ROOT		= ..
-TCLDIR		= ..\..\tcl8.4
-INSTALLDIR      = C:\Progra~1\tcl
 
-# Set this to the appropriate value of /MACHINE: for your platform
-# Choices: IX86, IA64, ALPHA
-MACHINE		= IX86
+#    //==================================================================\\
+#   >>[               -> Do not modify below this line. <-               ]<<
+#   >>[  Please, use the commandline macros to modify how Tcl is built.  ]<<
+#   >>[  If you need more features, send us a patch for more macros.     ]<<
+#    \\==================================================================//
 
-!IF "$(MACHINE)" == "IA64"
 
-# IA64 support is based on the standard setup with v2 of the
-# Microsoft SDK for XP, RC1
+###############################################################################
+#==============================================================================
+#------------------------------------------------------------------------------
 
-TOOLS32		= C:\Progra~1\Microsoft SDK
-TOOLS32_rc	= C:\Progra~1\Microsoft SDK
+!if !exist("makefile.vc")
+MSG = ^
+You must run this makefile only from the directory it is in.^
+Please `cd` to its location first.
+!error $(MSG) 
+!endif
 
-cc32		= "$(TOOLS32)\bin\Win64\cl.exe"
-link32		= "$(TOOLS32)\bin\Win64\link.exe"
-libpath32	= /LIBPATH:"$(TOOLS32)\lib\IA64"
-lib32		= "$(TOOLS32)\bin\Win64\lib.exe"
+PROJECT	= tk
+!include "rules.vc"
 
-!ELSE
+_INSTALLDIR	= $(INSTALLDIR:/=\)
 
-# Visual Studio 5 default
-TOOLS32		= C:\Progra~1\devstudio\vc
-TOOLS32_rc	= C:\Progra~1\devstudio\sharedide
+!if !defined(TCLDIR)
+!if exist($(_INSTALLDIR)\include\tcl.h)
+TCLINSTALL	= 1
+_TCLDIR		= $(_INSTALLDIR)
+!else
+MSG=^
+Don't know where tcl.h is.  Set the _TCLDIR macro.
+!error $(MSG)
+!endif
+!else
+_TCLDIR	= $(TCLDIR:/=\)
+!if exist($(_TCLDIR)\include\tcl.h)
+TCLINSTALL	= 1
+!elseif exist($(_TCLDIR)\generic\tcl.h)
+TCLINSTALL	= 0
+!else
+MSG =^
+Don't know where tcl.h is.  the TCLDIR macro doesn't appear correct.
+!error $(MSG)
+!endif
+!endif
 
-# Visual Studio 6 default
-#TOOLS32		= C:\Progra~1\Microsoft Visual Studio\VC98
-#TOOLS32_rc	= C:\Progra~1\Microsoft Visual Studio\common\MSDev98
+!if $(TCLINSTALL)
+!message *** Warning: Tk requires the source distribution of Tcl to build from,
+!message ***    at this time, sorry.  Please set the TCLDIR macro to point to the
+!message ***    Tcl sources.
+!endif
 
-cc32		= "$(TOOLS32)\bin\cl.exe"
-link32		= "$(TOOLS32)\bin\link.exe"
-libpath32	= /LIBPATH:"$(TOOLS32)\lib"
-lib32		= "$(TOOLS32)\bin\lib.exe"
-
-!ENDIF
-
-rc32		= "$(TOOLS32_rc)\bin\rc.exe"
-include32	= -I"$(TOOLS32)\include"
-
-# Uncomment the following line to compile with thread support
-#THREADDEFINES = -DTCL_THREADS=1
-
-# Set NODEBUG to 0 to compile with symbols
-NODEBUG = 1
-
-# uncomment the following two lines to compile with TCL_MEM_DEBUG
-#DEBUGDEFINES	=-DTCL_MEM_DEBUG
-#DEBUGDEFINES = -DTCL_MEM_DEBUG -DUSE_TCLALLOC=0 -DPURIFY
-
-######################################################################
-# Do not modify below this line
-######################################################################
-
-TCLNAMEPREFIX = tcl
-TKNAMEPREFIX = tk
-WISHNAMEPREFIX = wish
-VERSION = 84
+STUBPREFIX = $(PROJECT)stub
 DOTVERSION = 8.4
-
-TCLSTUBPREFIX = $(TCLNAMEPREFIX)stub
-TKSTUBPREFIX  = $(TKNAMEPREFIX)stub
-
+VERSION = $(DOTVERSION:.=)
+WISHNAMEPREFIX = wish
 
 BINROOT		= .
-!IF "$(NODEBUG)" == "1"
-TMPDIRNAME	= Release
-DBGX		=
-!ELSE
-TMPDIRNAME	= Debug
-DBGX		= d
-!ENDIF
-TMPDIR		= $(BINROOT)\$(TMPDIRNAME)
-OUTDIRNAME	= $(TMPDIRNAME)
-OUTDIR		= $(TMPDIR)
+ROOT		= ..
 
-TCLLIB 		= $(TCLNAMEPREFIX)$(VERSION)$(DBGX).lib
-TCLPLUGINLIB 	= $(TCLNAMEPREFIX)$(VERSION)p.lib
-TCLSTUBLIB	= $(TCLSTUBPREFIX)$(VERSION)$(DBGX).lib
-TKDLLNAME	= $(TKNAMEPREFIX)$(VERSION)$(DBGX).dll
-TKDLL 		= $(OUTDIR)\$(TKDLLNAME)
-TKLIB 		= $(OUTDIR)\$(TKNAMEPREFIX)$(VERSION)$(DBGX).lib
-TKSTUBLIBNAME	= $(TKSTUBPREFIX)$(VERSION)$(DBGX).lib
-TKSTUBLIB	= $(OUTDIR)\$(TKSTUBLIBNAME)
-TKPLUGINDLLNAME	= $(TKNAMEPREFIX)$(VERSION)p$(DBG).dll
-TKPLUGINDLL 	= $(OUTDIR)\$(TKPLUGINDLLNAME)
-TKPLUGINLIB 	= $(OUTDIR)\$(TKNAMEPREFIX)$(VERSION)p$(DBGX).lib
+TCLIMPLIBNAME	= tcl$(VERSION)$(SUFX).lib
+TCLLIBNAME	= tcl$(VERSION)$(SUFX).$(EXT)
+TCLSTUBLIBNAME	= tclstub$(VERSION).lib
 
-WISH 		= $(OUTDIR)\$(WISHNAMEPREFIX)$(VERSION)$(DBGX).exe
-WISHC 		= $(OUTDIR)\$(WISHNAMEPREFIX)c$(VERSION)$(DBGX).exe
-WISHP 		= $(OUTDIR)\$(WISHNAMEPREFIX)p$(VERSION)$(DBGX).exe
-TKTEST 		= $(OUTDIR)\$(TKNAMEPREFIX)test.exe
-CAT32           = $(TMPDIR)\cat32.exe
+TCLREGLIBNAME	= tclreg10$(SUFX:t=).lib
+TCLDDELIBNAME	= tcldde12$(SUFX:t=).lib
 
-BIN_INSTALL_DIR = $(INSTALLDIR)\bin
-INCLUDE_INSTALL_DIR = $(INSTALLDIR)\include
-LIB_INSTALL_DIR = $(INSTALLDIR)\lib
-SCRIPT_INSTALL_DIR = $(LIB_INSTALL_DIR)\tk$(DOTVERSION)
+TKIMPLIB	= $(OUT_DIR)\$(PROJECT)$(VERSION)$(SUFX).lib
+TKLIBNAME	= $(PROJECT)$(VERSION)$(SUFX).$(EXT)
+TKLIB		= $(OUT_DIR)\$(TKLIBNAME)
+
+TKSTUBLIBNAME	= $(STUBPREFIX)$(VERSION).lib
+TKSTUBLIB	= $(OUT_DIR)\$(TKSTUBLIBNAME)
+
+!if $(TCLINSTALL)
+TCLSH		= $(_INSTALLDIR)\bin\tclsh$(VERSION)$(SUFX).exe
+TCLSTUBLIB	= $(_INSTALLDIR)\lib\$(TCLSTUBLIBNAME)
+TCLIMPLIB	= $(_INSTALLDIR)\lib\$(TCLIMPLIBNAME)
+TCL_LIBRARY	= $(_INSTALLDIR)\lib
+TCLREGLIB	= $(_INSTALLDIR)\lib\$(TCLREGLIBNAME)
+TCLDDELIB	= $(_INSTALLDIR)\lib\$(TCLDDELIBNAME)
+TCLTMP_DIR	= \must\have\tcl\sources\to\build\this\target
+COFFBASE	= \must\have\tcl\sources\to\build\this\target
+TOOLSDIR	= \must\have\tcl\sources\to\build\this\target
+!else
+TCLSH		= $(_TCLDIR)\win\$(BUILDDIRTOP)\tclsh$(VERSION)$(SUFX).exe
+TCLSTUBLIB	= $(_TCLDIR)\win\$(BUILDDIRTOP)\$(TCLSTUBLIBNAME)
+TCLIMPLIB	= $(_TCLDIR)\win\$(BUILDDIRTOP)\$(TCLIMPLIBNAME)
+TCL_LIBRARY	= $(_TCLDIR)\library
+TCLREGLIB	= $(_TCLDIR)\win\$(BUILDDIRTOP)\$(TCLREGLIBNAME)
+TCLDDELIB	= $(_TCLDIR)\win\$(BUILDDIRTOP)\$(TCLDDELIBNAME)
+TCLTMP_DIR	= $(_TCLDIR)\win\$(TMP_DIR:tk=tcl)
+COFFBASE	= $(_TCLDIR)\win\coffbase.txt
+TOOLSDIR	= $(_TCLDIR)\tools
+!endif
+
+WISH 		= $(OUT_DIR)\$(WISHNAMEPREFIX)$(VERSION)$(SUFX).exe
+WISHC 		= $(OUT_DIR)\$(WISHNAMEPREFIX)c$(VERSION)$(SUFX).exe
+
+TKTEST		= $(OUT_DIR)\$(PROJECT)test.exe
+CAT32		= $(OUT_DIR)\cat32.exe
+RMDIR		= .\rmd.bat
+RM		= del
+
+LIB_INSTALL_DIR		= $(_INSTALLDIR)\lib
+BIN_INSTALL_DIR		= $(_INSTALLDIR)\bin
+DOC_INSTALL_DIR		= $(_INSTALLDIR)\doc
+SCRIPT_INSTALL_DIR	= $(_INSTALLDIR)\lib\$(PROJECT)$(DOTVERSION)
+INCLUDE_INSTALL_DIR	= $(_INSTALLDIR)\include
 
 WISHOBJS = \
-	$(TMPDIR)\winMain.obj
+	$(TMP_DIR)\winMain.obj \
+!if $(TCL_LINKWITHEXTENSIONS)
+	$(TCLDDELIB) \
+	$(TCLREGLIB) \
+!endif
+	$(TMP_DIR)\wish.res
 
 TKTESTOBJS = \
-	$(TMPDIR)\tkTest.obj \
-	$(TMPDIR)\tkSquare.obj \
-	$(TMPDIR)\testMain.obj \
-	$(TMPDIR)\tkWinTest.obj \
-	$(TCLLIBDIR)\tclThreadTest.obj
+	$(TMP_DIR)\tkTest.obj \
+	$(TMP_DIR)\tkSquare.obj \
+	$(TMP_DIR)\testMain.obj \
+	$(TMP_DIR)\tkWinTest.obj \
+	$(TCLTMP_DIR)\tclThreadTest.obj
 
 XLIBOBJS = \
-	$(TMPDIR)\xcolors.obj \
-	$(TMPDIR)\xdraw.obj \
-	$(TMPDIR)\xgc.obj \
-	$(TMPDIR)\ximage.obj \
-	$(TMPDIR)\xutil.obj
+	$(TMP_DIR)\xcolors.obj \
+	$(TMP_DIR)\xdraw.obj \
+	$(TMP_DIR)\xgc.obj \
+	$(TMP_DIR)\ximage.obj \
+	$(TMP_DIR)\xutil.obj
 
 TKOBJS = \
-	$(TMPDIR)\tkConsole.obj \
-	$(TMPDIR)\tkUnixMenubu.obj \
-	$(TMPDIR)\tkUnixScale.obj \
+	$(TMP_DIR)\tkConsole.obj \
+	$(TMP_DIR)\tkUnixMenubu.obj \
+	$(TMP_DIR)\tkUnixScale.obj \
 	$(XLIBOBJS) \
-	$(TMPDIR)\tkWin3d.obj \
-	$(TMPDIR)\tkWin32Dll.obj \
-	$(TMPDIR)\tkWinButton.obj \
-	$(TMPDIR)\tkWinClipboard.obj \
-	$(TMPDIR)\tkWinColor.obj \
-	$(TMPDIR)\tkWinConfig.obj \
-	$(TMPDIR)\tkWinCursor.obj \
-	$(TMPDIR)\tkWinDialog.obj \
-	$(TMPDIR)\tkWinDraw.obj \
-	$(TMPDIR)\tkWinEmbed.obj \
-	$(TMPDIR)\tkWinFont.obj \
-	$(TMPDIR)\tkWinImage.obj \
-	$(TMPDIR)\tkWinInit.obj \
-	$(TMPDIR)\tkWinKey.obj \
-	$(TMPDIR)\tkWinMenu.obj \
-	$(TMPDIR)\tkWinPixmap.obj \
-	$(TMPDIR)\tkWinPointer.obj \
-	$(TMPDIR)\tkWinRegion.obj \
-	$(TMPDIR)\tkWinScrlbr.obj \
-	$(TMPDIR)\tkWinSend.obj \
-	$(TMPDIR)\tkWinWindow.obj \
-	$(TMPDIR)\tkWinWm.obj \
-	$(TMPDIR)\tkWinX.obj \
-	$(TMPDIR)\stubs.obj \
-	$(TMPDIR)\tk3d.obj \
-	$(TMPDIR)\tkArgv.obj \
-	$(TMPDIR)\tkAtom.obj \
-	$(TMPDIR)\tkBind.obj \
-	$(TMPDIR)\tkBitmap.obj \
-	$(TMPDIR)\tkButton.obj \
-	$(TMPDIR)\tkCanvArc.obj \
-	$(TMPDIR)\tkCanvBmap.obj \
-	$(TMPDIR)\tkCanvImg.obj \
-	$(TMPDIR)\tkCanvLine.obj \
-	$(TMPDIR)\tkCanvPoly.obj \
-	$(TMPDIR)\tkCanvPs.obj \
-	$(TMPDIR)\tkCanvText.obj \
-	$(TMPDIR)\tkCanvUtil.obj \
-	$(TMPDIR)\tkCanvWind.obj \
-	$(TMPDIR)\tkCanvas.obj \
-	$(TMPDIR)\tkClipboard.obj \
-	$(TMPDIR)\tkCmds.obj \
-	$(TMPDIR)\tkColor.obj \
-	$(TMPDIR)\tkConfig.obj \
-	$(TMPDIR)\tkCursor.obj \
-	$(TMPDIR)\tkEntry.obj \
-	$(TMPDIR)\tkError.obj \
-	$(TMPDIR)\tkEvent.obj \
-	$(TMPDIR)\tkFileFilter.obj \
-	$(TMPDIR)\tkFocus.obj \
-	$(TMPDIR)\tkFont.obj \
-	$(TMPDIR)\tkFrame.obj \
-	$(TMPDIR)\tkGC.obj \
-	$(TMPDIR)\tkGeometry.obj \
-	$(TMPDIR)\tkGet.obj \
-	$(TMPDIR)\tkGrab.obj \
-	$(TMPDIR)\tkGrid.obj \
-	$(TMPDIR)\tkImage.obj \
-	$(TMPDIR)\tkImgBmap.obj \
-	$(TMPDIR)\tkImgGIF.obj \
-	$(TMPDIR)\tkImgPPM.obj \
-	$(TMPDIR)\tkImgPhoto.obj \
-	$(TMPDIR)\tkImgUtil.obj \
-	$(TMPDIR)\tkListbox.obj \
-	$(TMPDIR)\tkMacWinMenu.obj \
-	$(TMPDIR)\tkMain.obj \
-	$(TMPDIR)\tkMenu.obj \
-	$(TMPDIR)\tkMenubutton.obj \
-	$(TMPDIR)\tkMenuDraw.obj \
-	$(TMPDIR)\tkMessage.obj \
-	$(TMPDIR)\tkObj.obj \
-	$(TMPDIR)\tkOldConfig.obj \
-	$(TMPDIR)\tkOption.obj \
-	$(TMPDIR)\tkPack.obj \
-	$(TMPDIR)\tkPlace.obj \
-	$(TMPDIR)\tkPointer.obj \
-	$(TMPDIR)\tkRectOval.obj \
-	$(TMPDIR)\tkScale.obj \
-	$(TMPDIR)\tkScrollbar.obj \
-	$(TMPDIR)\tkSelect.obj \
-	$(TMPDIR)\tkText.obj \
-	$(TMPDIR)\tkTextBTree.obj \
-	$(TMPDIR)\tkTextDisp.obj \
-	$(TMPDIR)\tkTextImage.obj \
-	$(TMPDIR)\tkTextIndex.obj \
-	$(TMPDIR)\tkTextMark.obj \
-	$(TMPDIR)\tkTextTag.obj \
-	$(TMPDIR)\tkTextWind.obj \
-	$(TMPDIR)\tkTrig.obj \
-	$(TMPDIR)\tkUtil.obj \
-	$(TMPDIR)\tkVisual.obj \
-	$(TMPDIR)\tkStubInit.obj \
-	$(TMPDIR)\tkStubLib.obj \
-	$(TMPDIR)\tkWindow.obj
+	$(TMP_DIR)\tkWin3d.obj \
+	$(TMP_DIR)\tkWin32Dll.obj \
+	$(TMP_DIR)\tkWinButton.obj \
+	$(TMP_DIR)\tkWinClipboard.obj \
+	$(TMP_DIR)\tkWinColor.obj \
+	$(TMP_DIR)\tkWinConfig.obj \
+	$(TMP_DIR)\tkWinCursor.obj \
+	$(TMP_DIR)\tkWinDialog.obj \
+	$(TMP_DIR)\tkWinDraw.obj \
+	$(TMP_DIR)\tkWinEmbed.obj \
+	$(TMP_DIR)\tkWinFont.obj \
+	$(TMP_DIR)\tkWinImage.obj \
+	$(TMP_DIR)\tkWinInit.obj \
+	$(TMP_DIR)\tkWinKey.obj \
+	$(TMP_DIR)\tkWinMenu.obj \
+	$(TMP_DIR)\tkWinPixmap.obj \
+	$(TMP_DIR)\tkWinPointer.obj \
+	$(TMP_DIR)\tkWinRegion.obj \
+	$(TMP_DIR)\tkWinScrlbr.obj \
+	$(TMP_DIR)\tkWinSend.obj \
+	$(TMP_DIR)\tkWinWindow.obj \
+	$(TMP_DIR)\tkWinWm.obj \
+	$(TMP_DIR)\tkWinX.obj \
+	$(TMP_DIR)\stubs.obj \
+	$(TMP_DIR)\tk3d.obj \
+	$(TMP_DIR)\tkArgv.obj \
+	$(TMP_DIR)\tkAtom.obj \
+	$(TMP_DIR)\tkBind.obj \
+	$(TMP_DIR)\tkBitmap.obj \
+	$(TMP_DIR)\tkButton.obj \
+	$(TMP_DIR)\tkCanvArc.obj \
+	$(TMP_DIR)\tkCanvBmap.obj \
+	$(TMP_DIR)\tkCanvImg.obj \
+	$(TMP_DIR)\tkCanvLine.obj \
+	$(TMP_DIR)\tkCanvPoly.obj \
+	$(TMP_DIR)\tkCanvPs.obj \
+	$(TMP_DIR)\tkCanvText.obj \
+	$(TMP_DIR)\tkCanvUtil.obj \
+	$(TMP_DIR)\tkCanvWind.obj \
+	$(TMP_DIR)\tkCanvas.obj \
+	$(TMP_DIR)\tkClipboard.obj \
+	$(TMP_DIR)\tkCmds.obj \
+	$(TMP_DIR)\tkColor.obj \
+	$(TMP_DIR)\tkConfig.obj \
+	$(TMP_DIR)\tkCursor.obj \
+	$(TMP_DIR)\tkEntry.obj \
+	$(TMP_DIR)\tkError.obj \
+	$(TMP_DIR)\tkEvent.obj \
+	$(TMP_DIR)\tkFileFilter.obj \
+	$(TMP_DIR)\tkFocus.obj \
+	$(TMP_DIR)\tkFont.obj \
+	$(TMP_DIR)\tkFrame.obj \
+	$(TMP_DIR)\tkGC.obj \
+	$(TMP_DIR)\tkGeometry.obj \
+	$(TMP_DIR)\tkGet.obj \
+	$(TMP_DIR)\tkGrab.obj \
+	$(TMP_DIR)\tkGrid.obj \
+	$(TMP_DIR)\tkImage.obj \
+	$(TMP_DIR)\tkImgBmap.obj \
+	$(TMP_DIR)\tkImgGIF.obj \
+	$(TMP_DIR)\tkImgPPM.obj \
+	$(TMP_DIR)\tkImgPhoto.obj \
+	$(TMP_DIR)\tkImgUtil.obj \
+	$(TMP_DIR)\tkListbox.obj \
+	$(TMP_DIR)\tkMacWinMenu.obj \
+	$(TMP_DIR)\tkMain.obj \
+	$(TMP_DIR)\tkMenu.obj \
+	$(TMP_DIR)\tkMenubutton.obj \
+	$(TMP_DIR)\tkMenuDraw.obj \
+	$(TMP_DIR)\tkMessage.obj \
+	$(TMP_DIR)\tkPanedWindow.obj \
+	$(TMP_DIR)\tkObj.obj \
+	$(TMP_DIR)\tkOldConfig.obj \
+	$(TMP_DIR)\tkOption.obj \
+	$(TMP_DIR)\tkPack.obj \
+	$(TMP_DIR)\tkPlace.obj \
+	$(TMP_DIR)\tkPointer.obj \
+	$(TMP_DIR)\tkRectOval.obj \
+	$(TMP_DIR)\tkScale.obj \
+	$(TMP_DIR)\tkScrollbar.obj \
+	$(TMP_DIR)\tkSelect.obj \
+	$(TMP_DIR)\tkText.obj \
+	$(TMP_DIR)\tkTextBTree.obj \
+	$(TMP_DIR)\tkTextDisp.obj \
+	$(TMP_DIR)\tkTextImage.obj \
+	$(TMP_DIR)\tkTextIndex.obj \
+	$(TMP_DIR)\tkTextMark.obj \
+	$(TMP_DIR)\tkTextTag.obj \
+	$(TMP_DIR)\tkTextWind.obj \
+	$(TMP_DIR)\tkTrig.obj \
+	$(TMP_DIR)\tkUtil.obj \
+	$(TMP_DIR)\tkVisual.obj \
+	$(TMP_DIR)\tkStubInit.obj \
+	$(TMP_DIR)\tkStubLib.obj \
+	$(TMP_DIR)\tkWindow.obj \
+!if !$(STATIC_BUILD)
+	$(TMP_DIR)\tk.res
+!endif
 
-TKSTUBOBJS = $(TMPDIR)\tkStubLib.obj \
-	$(TMPDIR)\tkStubImg.obj
+TKSTUBOBJS = \
+	$(TMP_DIR)\tkStubLib.obj \
+	$(TMP_DIR)\tkStubImg.obj
+
 
 WINDIR          = $(ROOT)\win
 GENERICDIR	= $(ROOT)\generic
 XLIBDIR		= $(ROOT)\xlib
 BITMAPDIR	= $(ROOT)\bitmaps
-TCLLIBDIR       = $(TCLDIR)\win\$(OUTDIRNAME)
+DOCDIR		= $(ROOT)\doc
 RCDIR		= $(WINDIR)\rc
 
-TK_INCLUDES	= -I$(WINDIR) -I$(GENERICDIR) -I$(BITMAPDIR) -I$(XLIBDIR) \
-			-I$(TCLDIR)\generic
-TK_DEFINES	= $(DEBUGDEFINES) $(THREADDEFINES)
+!if $(TCLINSTALL)
+TCL_INCLUDES	= -I "$(_TCLDIR)\include"
+!else
+TCL_INCLUDES	= -I "$(_TCLDIR)\win" -I "$(_TCLDIR)\generic"
+!endif
+TK_INCLUDES	= -I"$(WINDIR)" -I"$(GENERICDIR)" -I"$(BITMAPDIR)" -I"$(XLIBDIR)" \
+			$(TCL_INCLUDES)
 
-######################################################################
+TK_DEFINES	= $(OPTDEFINES)
+
+
+#---------------------------------------------------------------------
 # Compile flags
-######################################################################
+#---------------------------------------------------------------------
 
-!IF "$(NODEBUG)" == "1"
-!IF "$(MACHINE)" == "IA64"
-cdebug	= -O2i -Gs
-!ELSE
-# NOTE: Due to a bug in MSVC, we cannot use -O2 here or Tk starts to misbehave.
-cdebug	= -Oti -Gs -GD
-!ENDIF
-!ELSE IF "$(MACHINE)" == "IA64"
-cdebug	= -Od -Zi
-!ELSE
-cdebug	= -Z7 -Od -WX
-!ENDIF
+!if $(DEBUG)
+!if "$(MACHINE)" == "IA64"
+cdebug = -Od -Zi
+!else
+cdebug = -Z7 -Od -WX
+!endif
+!else
+# This cranks the optimization level up.  We can't use -02 because sometimes
+# it causes problems.
+cdebug = -Oti
+!endif
 
 # declarations common to all compiler options
-cflags	= -c -W3 -nologo -Fp$(TMPDIR)\ -YX
-cvarsdll = -MD$(DBGX)
+cflags = -nologo -c -W3 -YX -Fp$(TMP_DIR)^\
 
-CON_CFLAGS	= $(cdebug) $(cflags) $(include32) -DCONSOLE
-TK_CFLAGS	= $(cdebug) $(cflags) $(cvarsdll) $(include32) \
-			$(TK_INCLUDES) $(TK_DEFINES) -DUSE_TCL_STUBS
-WISH_CFLAGS	= $(cdebug) $(cflags) $(cvarsdll) $(include32) \
-			$(TK_INCLUDES) $(TK_DEFINES)
+!if $(PENT_0F_ERRATA)
+cflags = $(cflags) -QI0f
+!endif
 
-######################################################################
+!if $(ITAN_B_ERRATA)
+cflags = $(cflags) -QIA64_Bx
+!endif
+
+!if $(MSVCRT)
+crt = -MD$(DBGX)
+!else
+crt = -MT$(DBGX)
+!endif
+
+BASE_CLFAGS	= $(cdebug) $(cflags) $(crt) $(TK_INCLUDES)
+TK_CFLAGS	= $(BASE_CLFAGS) $(TK_DEFINES) -DUSE_TCL_STUBS
+CON_CFLAGS	= $(cdebug) $(cflags) $(crt) -DCONSOLE
+WISH_CFLAGS	= $(BASE_CLFAGS) $(TK_DEFINES)
+
+
+#---------------------------------------------------------------------
 # Link flags
-######################################################################
+#---------------------------------------------------------------------
 
-!IF "$(NODEBUG)" == "1"
-ldebug	= /RELEASE
-!ELSE
+!if $(DEBUG)
 ldebug	= -debug:full -debugtype:cv
-!ENDIF
+!else
+ldebug	= -release -opt:ref -opt:icf,3
+!endif
 
 # declarations common to all linker options
-lcommon	= /NODEFAULTLIB /RELEASE /NOLOGO
-lflags	= $(lcommon) /MACHINE:$(MACHINE) $(libpath32)
+lflags	= -nologo -machine:$(MACHINE) $(ldebug)
 
-# declarations for use on Intel i386, i486, and Pentium systems
-!IF "$(MACHINE)" == "IX86"
-DLLENTRY = @12
-!ENDIF
+!if $(PROFILE)
+lflags	= $(lflags) -profile
+!endif
 
-conlflags	= $(lflags) -subsystem:console -entry:mainCRTStartup
-guilflags	= $(lflags) -subsystem:windows -entry:WinMainCRTStartup
-dlllflags	= $(lflags) -entry:_DllMainCRTStartup$(DLLENTRY) -dll
+!if $(ALIGN98_HACK) && !$(STATIC_BUILD)
+# align sections for PE size savings.
+lflags	= $(lflags) -opt:nowin98
+!else if !$(ALIGN98_HACK) && $(STATIC_BUILD)
+# align sections for speed in loading by choosing the virtual page size.
+lflags	= $(lflags) -align:4096
+!endif
 
-!IF "$(MACHINE)" == "PPC"
-libc = libc$(DBGX).lib
-libcdll = crtdll$(DBGX).lib
-!ELSE
-libc = libc$(DBGX).lib oldnames.lib
-libcdll = msvcrt$(DBGX).lib oldnames.lib
-!ENDIF
+!if $(LOIMPACT)
+lflags	= $(lflags) -ws:aggressive
+!endif
 
-baselibs   = kernel32.lib $(optlibs) advapi32.lib
-winlibs    = $(baselibs) user32.lib gdi32.lib comdlg32.lib winspool.lib \
-             imm32.lib
-guilibs	   = $(libc) $(winlibs)
-conlibs    = $(libc) $(baselibs)
-guilibsdll = $(libcdll) $(winlibs)
+dlllflags = $(lflags) -dll
+conlflags = $(lflags) -subsystem:console
+guilflags = $(lflags) -subsystem:windows
 
-######################################################################
+baselibs   = kernel32.lib advapi32.lib user32.lib
+guilibs	    = $(baselibs) gdi32.lib comdlg32.lib winspool.lib imm32.lib comctl32.lib
+
+
+#---------------------------------------------------------------------
+# TkTest flags
+#---------------------------------------------------------------------
+
+!if "$(TESTPAT)" != ""
+TESTFLAGS   = -file $(TESTPAT)
+!endif
+
+
+#---------------------------------------------------------------------
 # Project specific targets
-######################################################################
+#---------------------------------------------------------------------
 
-all:    setup $(WISH) $(CAT32)
-install: install-binaries install-libraries
-plugin:	setup $(TKPLUGINDLL) $(WISHP)
-tktest: setup $(TKTEST) $(CAT32)
-test:	setup $(TKTEST) $(TKLIB) $(CAT32)
-	set TCL_LIBRARY=$(TCLDIR)/library
-	set PATH=$(TCLDIR)\win\$(TMPDIRNAME);$(PATH)
-	$(TKTEST) $(ROOT)/tests/all.tcl | $(CAT32)
+release:  setup $(TKSTUBLIB) $(WISH)
+all:	  release $(CAT32)
+core:	  setup $(TKSTUBLIB) $(TKLIB)
+console-wish : $(WISHC)
+install:  install-binaries install-libraries install-docs
+tktest:	  setup $(TKTEST) $(CAT32)
+
+
+test: setup $(TKTEST) $(TKLIB) $(CAT32)
+	set TCL_LIBRARY=$(TCL_LIBRARY)
+!if $(TCLINSTALL)
+	set PATH=$(_TCLDIR)\bin;$(PATH)
+!else
+	set PATH=$(_TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
+!endif
+!if "$(OS)" == "Windows_NT"  || "$(MSVCDIR)" == "IDE"
+	$(TKTEST) $(ROOT)/tests/all.tcl $(TESTFLAGS) | $(CAT32)
+!else
+	$(TKTEST) $(ROOT)/tests/all.tcl $(TESTFLAGS) | $(CAT32)
+!endif
 
 runtest: setup $(TKTEST) $(TKLIB) $(CAT32)
-	set TCL_LIBRARY=$(TCLDIR)/library
-	set PATH=$(TCLDIR)\win\$(TMPDIRNAME);$(PATH)
+	set TCL_LIBRARY=$(TCL_LIBRARY)
+!if $(TCLINSTALL)
+	set PATH=$(_TCLDIR)\bin;$(PATH)
+!else
+	set PATH=$(_TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
+!endif
 	$(TKTEST) 
 
-console-wish : all $(WISHC)
-
-stubs:
-	$(TCLDIR)\win\$(TMPDIRNAME)\tclsh$(VERSION)$(DBGX) \
-		$(TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
-		$(GENERICDIR)\tk.decls $(GENERICDIR)\tkInt.decls
+rundemo: setup $(TKTEST) $(TKLIB) $(CAT32)
+	set TCL_LIBRARY=$(TCL_LIBRARY)
+!if $(TCLINSTALL)
+	set PATH=$(_TCLDIR)\bin;$(PATH)
+!else
+	set PATH=$(_TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
+!endif
+	$(TKTEST) $(ROOT)\library\demos\widget
 
 setup:
-	@mkd $(TMPDIR)
-	@mkd $(OUTDIR)
+	@if not exist $(OUT_DIR)\nul mkdir $(OUT_DIR)
+	@if not exist $(TMP_DIR)\nul mkdir $(TMP_DIR)
 
-install-binaries:
-	@mkd "$(BIN_INSTALL_DIR)"
-	copy $(TKDLL) "$(BIN_INSTALL_DIR)"
-	copy $(WISH) "$(BIN_INSTALL_DIR)"
-	@mkd "$(LIB_INSTALL_DIR)"
-	copy $(TKLIB) "$(LIB_INSTALL_DIR)"
+!if !$(STATIC_BUILD)
+$(TKIMPLIB): $(TKLIB)
+!endif
 
-install-libraries:
-	@mkd "$(INCLUDE_INSTALL_DIR)"
-	@mkd "$(INCLUDE_INSTALL_DIR)\X11"
-	copy "$(GENERICDIR)\tk.h"             "$(INCLUDE_INSTALL_DIR)"
-	copy "$(GENERICDIR)\tkDecls.h"        "$(INCLUDE_INSTALL_DIR)"
-	copy "$(GENERICDIR)\tkPlatDecls.h"    "$(INCLUDE_INSTALL_DIR)"
-	copy "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)"
-	xcopy "$(XLIBDIR)\X11\*.h"            "$(INCLUDE_INSTALL_DIR)\X11"
-	@mkd "$(SCRIPT_INSTALL_DIR)"
-	@mkd "$(SCRIPT_INSTALL_DIR)\images"
-	@mkd "$(SCRIPT_INSTALL_DIR)\demos"
-	@mkd "$(SCRIPT_INSTALL_DIR)\demos\images"
-	xcopy "$(ROOT)\library"              "$(SCRIPT_INSTALL_DIR)"
-	xcopy "$(ROOT)\library\images"       "$(SCRIPT_INSTALL_DIR)\images"
-	xcopy "$(ROOT)\library\demos"        "$(SCRIPT_INSTALL_DIR)\demos"
-	xcopy "$(ROOT)\library\demos\images" "$(SCRIPT_INSTALL_DIR)\demos\images"
+$(TKLIB): $(TKOBJS)
+!if $(STATIC_BUILD)
+	$(lib32) -nologo -out:$@ @<<
+$**
+<<
+!else
+	$(link32) $(dlllflags) -base:@$(COFFBASE),tk -out:$@ $(guilibs) \
+		$(TCLSTUBLIB) @<<
+$**
+<<
+	-@del $*.exp
+!endif
 
-$(TKLIB): $(TKDLL) $(TKSTUBLIB)
 
 $(TKSTUBLIB): $(TKSTUBOBJS)
-        $(lib32) /out:$@ $(TKSTUBOBJS)
+	$(lib32) -nologo -out:$@ $**
 
-$(TKDLL): $(TKOBJS) $(TMPDIR)\tk.res
-       $(link32) $(ldebug) $(dlllflags) \
-		-out:$@ $(TMPDIR)\tk.res $(TCLLIBDIR)\$(TCLSTUBLIB) \
-		$(guilibsdll) @<<
-			$(TKOBJS)
+
+$(WISH): $(WISHOBJS) $(TKIMPLIB)
+	$(link32) $(guilflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
+
+$(WISHC): $(WISHOBJS) $(TKIMPLIB)
+	$(link32) $(conlflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
+
+$(TKTEST): $(TKTESTOBJS) $(TKIMPLIB)
+	$(link32) $(guilflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
+
+
+$(CAT32): $(_TCLDIR)\win\cat.c
+	$(cc32) $(CON_CFLAGS) -Fo$(TMP_DIR)\ $?
+	$(link32) $(conlflags) -out:$@ -stack:16384 $(TMP_DIR)\cat.obj $(baselibs)
+
+install-binaries:
+	@xcopy /i /y "$(WISH)" "$(BIN_INSTALL_DIR)\"
+!if "$(TKLIB)" != "$(TKIMPLIB)"
+	@xcopy /i /y "$(TKLIB)" "$(BIN_INSTALL_DIR)\"
+!endif
+	@xcopy /i /y "$(TKIMPLIB)" "$(LIB_INSTALL_DIR)\"
+	@xcopy /i /y "$(TKSTUBLIB)" "$(LIB_INSTALL_DIR)\"
+
+install-libraries:
+	@xcopy /i /y "$(GENERICDIR)\tk.h" "$(INCLUDE_INSTALL_DIR)\"
+	@xcopy /i /y "$(GENERICDIR)\tkDecls.h" "$(INCLUDE_INSTALL_DIR)\"
+	@xcopy /i /y "$(GENERICDIR)\tkPlatDecls.h" "$(INCLUDE_INSTALL_DIR)\"
+	@xcopy /i /y "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)\"
+	@xcopy /i /y "$(XLIBDIR)\X11\*.h" "$(INCLUDE_INSTALL_DIR)\X11\"
+	@xcopy /i /y "$(ROOT)\library" "$(SCRIPT_INSTALL_DIR)\" /s /exclude:<<
+CVS
 <<
 
-$(TKPLUGINLIB): $(TKPLUGINDLL)
 
-$(TKPLUGINDLL): $(TKOBJS) $(TMPDIR)\tk.res
-        $(link32) $(ldebug) $(dlllflags) \
-		-out:$@ $(TMPDIR)\tk.res $(TCLLIBDIR)\$(TCLPLUGINLIB) \
-		$(guilibsdll) @<<
-			$(TKOBJS)
-<<
-
-$(WISH): $(WISHOBJS) $(TKLIB) $(TMPDIR)\wish.res
-	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -out:$@ \
-		$(guilibsdll) $(TCLLIBDIR)\$(TCLLIB) $(TKLIB) $(WISHOBJS) 
-
-$(WISHC): $(WISHOBJS) $(TKLIB) $(TMPDIR)\wish.res
-	$(link32) $(ldebug) $(conlflags) $(TMPDIR)\wish.res -out:$@ \
-		$(guilibsdll) $(TCLLIBDIR)\$(TCLLIB) $(TKLIB) $(WISHOBJS) 
-
-$(WISHP): $(WISHOBJS) $(TKPLUGINLIB) $(TMPDIR)\wish.res
-	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -out:$@ \
-		$(guilibsdll) $(TCLLIBDIR)\$(TCLPLUGINLIB) \
-		$(TKPLUGINLIB) $(WISHOBJS) 
-
-$(TKTEST): $(TKTESTOBJS) $(TKLIB) $(TMPDIR)\wish.res
-	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -out:$@ \
-		$(guilibsdll) $(TCLLIBDIR)\$(TCLLIB) $(TKLIB) $(TKTESTOBJS)
-
-$(CAT32): $(TCLDIR)\win\cat.c
-	$(cc32) $(CON_CFLAGS) -Fo$(TMPDIR)\ $?
-	$(link32) $(conlflags) -out:$@ -stack:16384 $(TMPDIR)\cat.obj $(conlibs)
-
-#
+#---------------------------------------------------------------------
 # Regenerate the stubs files.
-#
+#---------------------------------------------------------------------
 
 genstubs:
-	tclsh$(VERSION) $(TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
-		$(GENERICDIR)\tk.decls $(GENERICDIR)\tkInt.decls
+	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
+		$(GENERICDIR)\$(PROJECT).decls $(GENERICDIR)\$(PROJECT)Int.decls
 
-#
-# Special case object file targets
-#
 
-$(TMPDIR)\testMain.obj: $(WINDIR)\winMain.c
-	$(cc32) $(WISH_CFLAGS) -DTK_TEST -Fo$@ $?
+#---------------------------------------------------------------------
+# Generate the makefile depedancies.
+#---------------------------------------------------------------------
 
-$(TMPDIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
-	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
-
-$(TMPDIR)\tkWinTest.obj: $(WINDIR)\tkWinTest.c
-	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
-
-$(TMPDIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
-	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
-
-$(TMPDIR)\winMain.obj: $(WINDIR)\winMain.c
-	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
-
-$(TMPDIR)\tkStubLib.obj : $(GENERICDIR)\tkStubLib.c
-	$(cc32) $(TK_CFLAGS) -DSTATIC_BUILD -Fo$@ $?
-
-#
-# Implicit rules
-#
-
-{$(XLIBDIR)}.c{$(TMPDIR)}.obj:
-	$(cc32) -DDLL_BUILD -DBUILD_tk $(TK_CFLAGS) -Fo$(TMPDIR)\ $<
-
-{$(GENERICDIR)}.c{$(TMPDIR)}.obj:
-	$(cc32) -DDLL_BUILD -DBUILD_tk $(TK_CFLAGS) -Fo$(TMPDIR)\ $<
-
-{$(WINDIR)}.c{$(TMPDIR)}.obj:
-	$(cc32) -DDLL_BUILD -DBUILD_tk $(TK_CFLAGS) -Fo$(TMPDIR)\ $<
-
-{$(ROOT)\unix}.c{$(TMPDIR)}.obj:
-	$(cc32) -DDLL_BUILD -DBUILD_tk $(TK_CFLAGS) -Fo$(TMPDIR)\ $<
-
-{$(RCDIR)}.rc{$(TMPDIR)}.res:
-	$(rc32) -fo $@ -r -i "$(GENERICDIR)" -i "$(TOOLS32)\include" \
-		-i "$(TCLDIR)\generic" \
-!if "$(NODEBUG)" == "0"
-		-d DEBUG \
+depend:
+!if !exist($(TCLSH))
+	@echo Build tclsh first!
+!else
+	$(TCLSH) $(TOOLSDIR:\=/)/mkdepend.tcl -vc32 -out:"$(OUT_DIR)\depend.mk" \
+		-passthru:"-DBUILD_tcl $(TK_INCLUDES:"="")" $(GENERICDIR) \
+		$(COMPATDIR) $(WINDIR) @<<
+$(TKOBJS)
+<<
 !endif
-		$<
 
-clean:
-        -@del $(OUTDIR)\*.exp 
-	-@del $(OUTDIR)\*.lib 
-	-@del $(OUTDIR)\*.dll 
-	-@del $(OUTDIR)\*.exe
-	-@del $(OUTDIR)\*.pdb
-	-@del $(TMPDIR)\*.pch
-        -@del $(TMPDIR)\*.obj
-        -@del $(TMPDIR)\*.res
-        -@del $(TMPDIR)\*.exe
-	-@rmd $(OUTDIR)
-	-@rmd $(TMPDIR)
 
-# dependencies
+#---------------------------------------------------------------------
+# Regenerate the windows help files.
+#---------------------------------------------------------------------
 
-$(TMPDIR)\tk.res: \
+HLPBASE		= $(PROJECT)$(VERSION)
+HELPFILE	= $(OUT_DIR)\$(HLPBASE).hlp
+HELPCNT		= $(OUT_DIR)\$(HLPBASE).cnt
+DOCTMP_DIR	= $(OUT_DIR)\$(PROJECT)_docs
+HELPRTF		= $(DOCTMP_DIR)\$(PROJECT).rtf
+MAN2HELP	= $(DOCTMP_DIR)\man2help.tcl
+MAN2HELP2	= $(DOCTMP_DIR)\man2help2.tcl
+INDEX		= $(DOCTMP_DIR)\index.tcl
+BMP		= $(DOCTMP_DIR)\lamp.bmp
+BMP_NOPATH	= lamp.bmp
+MAN2TCL		= $(DOCTMP_DIR)\man2tcl.exe
+
+winhelp: docsetup $(HELPFILE)
+
+docsetup:
+	@if not exist $(DOCTMP_DIR)\nul mkdir $(DOCTMP_DIR)
+
+$(MAN2HELP) $(MAN2HELP2) $(INDEX): $(TOOLSDIR)\$$(@F)
+	copy $(TOOLSDIR)\$(@F) $(@D)
+
+$(BMP):
+	copy $(WINDIR)\$(@F) $(@D)
+
+$(HELPFILE): $(HELPRTF) $(BMP)
+	cd $(DOCTMP_DIR)
+	start /wait hcrtf.exe -x <<$(PROJECT).hpj
+[OPTIONS]
+COMPRESS=12 Hall Zeck
+LCID=0x409 0x0 0x0 ; English (United States)
+TITLE=Tk Reference Manual
+BMROOT=.
+CNT=$(@B).cnt
+HLP=$(@B).hlp
+
+[FILES]
+$(PROJECT).rtf
+
+[WINDOWS]
+main="Tcl/Tk Reference Manual",,27648,(r15263976),(r4227327)
+
+[CONFIG]
+BrowseButtons()
+CreateButton(1, "Web", ExecFile("http://www.tcl.tk"))
+CreateButton(2, "SF", ExecFile("http://sf.net/projects/tcl"))
+CreateButton(3, "Wiki", ExecFile("http://wiki.tcl.tk"))
+CreateButton(4, "FAQ", ExecFile("http://www.purl.org/NET/Tcl-FAQ/"))
+<<
+	cd $(MAKEDIR)
+	copy "$(DOCTMP_DIR)\$(@B).hlp" "$(OUT_DIR)"
+	copy "$(DOCTMP_DIR)\$(@B).cnt" "$(OUT_DIR)"
+
+$(MAN2TCL): $(TOOLSDIR)\$$(@B).c
+	$(cc32) -nologo -G4 -ML -O2 -Fo$(@D)\ $(TOOLSDIR)\$(@B).c -link -out:$@
+
+$(HELPRTF): $(MAN2TCL) $(MAN2HELP) $(MAN2HELP2) $(INDEX)
+	$(TCLSH) $(MAN2HELP:\=/) -bitmap $(BMP_NOPATH) $(PROJECT) $(VERSION) $(DOCDIR:\=/)
+
+install-docs:
+!if exist($(HELPFILE))
+	@xcopy /i /y "$(HELPFILE)" "$(DOC_INSTALL_DIR)\"
+	@xcopy /i /y "$(HELPCNT)" "$(DOC_INSTALL_DIR)\"
+	$(TCLSH) <<
+puts "Installing $(PROJECT)'s helpfile contents into Tcl's ..."
+set f [open "$(DOC_INSTALL_DIR:\=/)/tcl$(VERSION).cnt" r]
+while {![eof $$f]} {
+    if {[regexp {:Include $(PROJECT)([0-9]{2}).cnt} [gets $$f] dummy ver]} {
+	if {$$ver == $(VERSION)} {
+	    puts "Already installed."
+	    exit
+	} else {
+	    # do something here logical to remove (or replace) it.
+	    puts "$$ver != $(VERSION), unfinished code path, die, die!"
+	    exit 1
+	}
+    }
+}
+close $$f
+set f [open $(DOC_INSTALL_DIR:\=/)/tcl$(VERSION).cnt a]
+puts $$f {:Include $(HLPBASE).cnt}
+close $$f
+<<
+	start /wait winhlp32 -g $(DOC_INSTALL_DIR)\tcl$(VERSION).hlp
+!endif
+
+#---------------------------------------------------------------------
+# Special case object file targets
+#---------------------------------------------------------------------
+
+$(TMP_DIR)\testMain.obj: $(WINDIR)\winMain.c
+!if $(TCL_LINKWITHEXTENSIONS)
+	$(cc32) $(WISH_CFLAGS) -DTK_TEST -DTCL_LINKWITHEXTENSIONS -Fo$@ $?
+!else
+	$(cc32) $(WISH_CFLAGS) -DTK_TEST -Fo$@ $?
+!endif
+
+$(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
+	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
+
+$(TMP_DIR)\tkWinTest.obj: $(WINDIR)\tkWinTest.c
+	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
+
+$(TMP_DIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
+	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
+
+$(TMP_DIR)\winMain.obj: $(WINDIR)\winMain.c
+!if $(TCL_LINKWITHEXTENSIONS)
+	$(cc32) $(WISH_CFLAGS) -DTCL_LINKWITHEXTENSIONS -Fo$@ $?
+!else
+	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
+!endif
+
+# The following objects are part of the stub library and should not
+# be built as DLL objects but none of the symbols should be exported
+# and no reference made to a C runtime.
+
+$(TMP_DIR)\tkStubLib.obj : $(GENERICDIR)\tkStubLib.c
+	$(cc32) $(cdebug) $(cflags) $(TK_INCLUDES) -Zl -DSTATIC_BUILD -Fo$@ $?
+
+$(TMP_DIR)\tkStubImg.obj : $(GENERICDIR)\tkStubImg.c
+	$(cc32) $(cdebug) $(cflags) $(TK_INCLUDES) -Zl -DSTATIC_BUILD -Fo$@ $?
+
+
+#---------------------------------------------------------------------
+# Dedependency rules
+#---------------------------------------------------------------------
+
+$(TMP_DIR)\tk.res: \
     $(RCDIR)\buttons.bmp \
     $(RCDIR)\cursor*.cur \
     $(RCDIR)\tk.ico
@@ -502,6 +748,7 @@ $(GENERICDIR)/tkListbox.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkMenu.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkMenubutton.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkMessage.c: $(GENERICDIR)/default.h
+$(GENERICDIR)/tkPanedWindow.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkScale.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkScrollbar.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkText.c: $(GENERICDIR)/default.h
@@ -523,3 +770,63 @@ $(GENERICDIR)/tkMenu.c: $(GENERICDIR)/tkMenu.h
 $(GENERICDIR)/tkMenuDraw.c: $(GENERICDIR)/tkMenu.h
 $(WINDIR)/tkWinMenu.c: $(GENERICDIR)/tkMenu.h
 
+!if exist("$(OUT_DIR)\depend.mk")
+!include "$(OUT_DIR)\depend.mk"
+!message *** Dependency rules in effect.
+!else
+!message *** Dependency rules are not being used.
+!endif
+
+### add a spacer in the output
+!message
+
+#---------------------------------------------------------------------
+# Implicit rules
+#---------------------------------------------------------------------
+
+{$(XLIBDIR)}.c{$(TMP_DIR)}.obj::
+	$(cc32) -DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
+$<
+<<
+
+{$(GENERICDIR)}.c{$(TMP_DIR)}.obj::
+	$(cc32) -DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
+$<
+<<
+
+{$(WINDIR)}.c{$(TMP_DIR)}.obj::
+	$(cc32) -DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
+$<
+<<
+
+{$(ROOT)\unix}.c{$(TMP_DIR)}.obj::
+	$(cc32) -DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
+$<
+<<
+
+{$(RCDIR)}.rc{$(TMP_DIR)}.res:
+	$(rc32) -fo $@ -r -i "$(GENERICDIR)" $(TCL_INCLUDES) \
+!if $(DEBUG)
+		-d DEBUG \
+!endif
+!if $(TCL_THREADS)
+		-d TCL_THREADS \
+!endif
+!if $(STATIC_BUILD)
+		-d STATIC_BUILD \
+!endif
+		$<
+
+#---------------------------------------------------------------------
+# Clean up
+#---------------------------------------------------------------------
+
+clean:
+	-@$(RMDIR) $(TMP_DIR)
+
+hose: clean
+	-@$(RMDIR) $(OUT_DIR)
+
+
+.SUFFIXES:
+.SUFFIXES:.c .rc

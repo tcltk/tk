@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.13.2.1 2002/02/05 02:25:14 wolfsuit Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.13.2.2 2002/06/10 05:38:23 wolfsuit Exp $
  */
 
 #include "tkButton.h"
@@ -520,10 +520,10 @@ static void		ButtonSelectImageProc _ANSI_ARGS_((
 			    ClientData clientData, int x, int y, int width,
 			    int height, int imgWidth, int imgHeight));
 static char *		ButtonTextVarProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, char *name1, char *name2,
+			    Tcl_Interp *interp, char *name1, CONST char *name2,
 			    int flags));
 static char *		ButtonVarProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, char *name1, char *name2,
+			    Tcl_Interp *interp, char *name1, CONST char *name2,
 			    int flags));
 static int		ButtonWidgetObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
@@ -1129,6 +1129,16 @@ ConfigureButton(interp, butPtr, objc, objv)
 			== NULL) {
 		    continue;
 		}
+
+		/*
+		 * If a radiobutton has the empty string as value
+		 * it should be selected.
+		 */
+
+ 		if ((butPtr->type == TYPE_RADIO_BUTTON) &&
+			(*Tcl_GetString(butPtr->onValuePtr) == 0)) {
+		    butPtr->flags |= SELECTED;
+		}
 	    }
 	}
 
@@ -1539,7 +1549,7 @@ ButtonVarProc(clientData, interp, name1, name2, flags)
     ClientData clientData;	/* Information about button. */
     Tcl_Interp *interp;		/* Interpreter containing variable. */
     char *name1;		/* Name of variable. */
-    char *name2;		/* Second part of variable name. */
+    CONST char *name2;		/* Second part of variable name. */
     int flags;			/* Information about what happened. */
 {
     register TkButton *butPtr = (TkButton *) clientData;
@@ -1618,7 +1628,7 @@ ButtonTextVarProc(clientData, interp, name1, name2, flags)
     ClientData clientData;	/* Information about button. */
     Tcl_Interp *interp;		/* Interpreter containing variable. */
     char *name1;		/* Not used. */
-    char *name2;		/* Not used. */
+    CONST char *name2;		/* Not used. */
     int flags;			/* Information about what happened. */
 {
     TkButton *butPtr = (TkButton *) clientData;

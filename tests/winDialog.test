@@ -6,11 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 1998-1999 ActiveState Corporation.
 #
-<<<<<<< winDialog.test
-# RCS: @(#) $Id: winDialog.test,v 1.7.2.1 2001/10/15 09:22:00 wolfsuit Exp $
-=======
-# RCS: @(#) $Id: winDialog.test,v 1.7.2.1 2001/10/15 09:22:00 wolfsuit Exp $
->>>>>>> 1.7
+# RCS: @(#) $Id: winDialog.test,v 1.7.2.2 2002/06/10 05:38:26 wolfsuit Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -127,29 +123,17 @@ test winDialog-5.8 {GetFileName: extension begins with .} {nt testwinevent} {
 	SetText 0x480 bar
 	Click 1
     }
-<<<<<<< winDialog.test
-    set x
-} [file join [pwd] bar.foo]
-test winDialog-5.9 {GetFileName: extension doesn't begin with .} {nt} {
-=======
     string totitle $x
 } [string totitle [file join [pwd] bar.foo]]
 test winDialog-5.9 {GetFileName: extension doesn't begin with .} {nt testwinevent} {
->>>>>>> 1.7
     start {set x [tk_getSaveFile -defaultextension foo -title Save]}
     then {
 	SetText 0x480 bar
 	Click 1
     }
-<<<<<<< winDialog.test
-    set x
-} [file join [pwd] bar.foo]
-test winDialog-5.10 {GetFileName: file types} {nt} {
-=======
     string totitle $x
 } [string totitle [file join [pwd] bar.foo]]
 test winDialog-5.10 {GetFileName: file types} {nt testwinevent} {
->>>>>>> 1.7
 #	    case FILE_TYPES: 
 
     start {tk_getSaveFile -filetypes {{"foo files" .foo FOOF}} -title Foo}
@@ -186,8 +170,8 @@ test winDialog-5.14 {GetFileName: initial file} {nt testwinevent} {
     then {
 	Click 1
     }
-    set x
-} [file join [pwd] "12x 456"]
+    string totitle $x
+} [string totitle [file join [pwd] "12x 456"]]
 test winDialog-5.15 {GetFileName: initial file: Tcl_TranslateFileName()} {nt} {
 #		if (Tcl_TranslateFileName(interp, string, &ds) == NULL) 
     list [catch {tk_getOpenFile -initialfile ~12x/455} msg] $msg
@@ -202,8 +186,8 @@ test winDialog-5.16 {GetFileName: initial file: long name} {nt testwinevent} {
     then {
 	Click 1
     }
-    set x
-} [string range [file join [pwd] $a] 0 257]
+    string totitle $x
+} [string totitle [string range [file join [pwd] $a] 0 257]]
 test winDialog-5.17 {GetFileName: parent} {nt} {
 #	    case FILE_PARENT: 
 

@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: entry.tcl,v 1.16.2.2 2002/02/05 02:25:16 wolfsuit Exp $
+# RCS: @(#) $Id: entry.tcl,v 1.16.2.3 2002/06/10 05:38:24 wolfsuit Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -82,12 +82,12 @@ bind Entry <B1-Motion> {
 bind Entry <Double-1> {
     set tk::Priv(selectMode) word
     tk::EntryMouseSelect %W %x
-    catch {%W icursor sel.first}
+    catch {%W icursor sel.last}
 }
 bind Entry <Triple-1> {
     set tk::Priv(selectMode) line
     tk::EntryMouseSelect %W %x
-    %W icursor 0
+    catch {%W icursor sel.last}
 }
 bind Entry <Shift-1> {
     set tk::Priv(selectMode) char

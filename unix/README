@@ -6,11 +6,11 @@ UNIX versions of Tk.  This directory also contains source files for Tk
 that are specific to UNIX.
 
 The information in this file is maintained at:
-	http://www.purl.org/tcl/home/doc/howto/compile.html
+	http://www.tcl.tk/doc/howto/compile.html
 
 For information on platforms where Tcl/Tk is known to compile, along
 with any porting notes for getting it to work on those platforms, see:
-	http://www.purl.org/tcl/home/software/tcltk/platforms.html
+	http://www.tcl.tk/software/tcltk/platforms.html
 
 The rest of this file contains instructions on how to do this.  The
 release should compile and run either "out of the box" or with trivial
@@ -20,7 +20,7 @@ SGI, as well as PCs running Linux, BSDI, and SCO UNIX.  To compile for
 a PC running Windows, see the README file in the directory ../win.  To
 compile for a Macintosh, see the README file in the directory ../mac.
 
-RCS: @(#) $Id: README,v 1.12 2001/07/05 17:23:53 hobbs Exp $
+RCS: @(#) $Id: README,v 1.12.2.1 2002/06/10 05:38:26 wolfsuit Exp $
 
 How To Compile And Install Tk:
 ------------------------------
@@ -44,13 +44,13 @@ How To Compile And Install Tk:
     type "./configure -help" or refer to the autoconf documentation (not
     included here).  Tk's "configure" script supports the following
     special switches in addition to the standard ones:
-	--enable-threads	Tk on Unix currently does not support
-				threaded builds.
 	--with-tcl=DIR		Specifies the directory containing the Tcl
 				binaries and Tcl's platform-dependent
 				configuration information.  By default
 				the Tcl directory is assumed to be in the
 				location given by (a) above.
+	--enable-threads	If this switch is set, Tcl will compile
+				itself with multithreading support.
 	--enable-shared		If this switch is specified, Tk will compile
 				itself as a shared library if it can figure
 				out how to do that on this platform.  This
@@ -58,6 +58,12 @@ How To Compile And Install Tk:
 				how to build shared libraries.
 	--disable-shared	If this switch is specified, Tk will compile
 				itself as a static library.
+	--enable-symbols	build with debugging symbols
+	--disable-symbols	build without debugging symbols
+	--enable-64bit		enable 64bit support (where applicable)
+	--disable-64bit		disable 64bit support (where applicable)
+	--enable-64bit-vis	enable 64bit Sparc VIS support
+	--disable-64bit-vis	disable 64bit Sparc VIS support
 
     Note: by default gcc will be used if it can be located on the PATH.
     if you want to use cc instead of gcc, set the CC environment variable

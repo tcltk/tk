@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.13.2.4 2002/02/05 02:25:15 wolfsuit Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.13.2.5 2002/06/10 05:38:23 wolfsuit Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -531,6 +531,12 @@ EXTERN TkRegion		TkPhotoGetValidRegion _ANSI_ARGS_((
 /* 141 */
 EXTERN TkWindow **	TkWmStackorderToplevel _ANSI_ARGS_((
 				TkWindow * parentPtr));
+/* 142 */
+EXTERN void		TkFocusFree _ANSI_ARGS_((TkMainInfo * mainPtr));
+/* 143 */
+EXTERN void		TkClipCleanup _ANSI_ARGS_((TkDisplay * dispPtr));
+/* 144 */
+EXTERN void		TkGCCleanup _ANSI_ARGS_((TkDisplay * dispPtr));
 
 typedef struct TkIntStubs {
     int magic;
@@ -788,6 +794,9 @@ typedef struct TkIntStubs {
     void (*tkpInitKeymapInfo) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 139 */
     TkRegion (*tkPhotoGetValidRegion) _ANSI_ARGS_((Tk_PhotoHandle handle)); /* 140 */
     TkWindow ** (*tkWmStackorderToplevel) _ANSI_ARGS_((TkWindow * parentPtr)); /* 141 */
+    void (*tkFocusFree) _ANSI_ARGS_((TkMainInfo * mainPtr)); /* 142 */
+    void (*tkClipCleanup) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 143 */
+    void (*tkGCCleanup) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 144 */
 } TkIntStubs;
 
 #ifdef __cplusplus
@@ -1454,6 +1463,18 @@ extern TkIntStubs *tkIntStubsPtr;
 #ifndef TkWmStackorderToplevel
 #define TkWmStackorderToplevel \
 	(tkIntStubsPtr->tkWmStackorderToplevel) /* 141 */
+#endif
+#ifndef TkFocusFree
+#define TkFocusFree \
+	(tkIntStubsPtr->tkFocusFree) /* 142 */
+#endif
+#ifndef TkClipCleanup
+#define TkClipCleanup \
+	(tkIntStubsPtr->tkClipCleanup) /* 143 */
+#endif
+#ifndef TkGCCleanup
+#define TkGCCleanup \
+	(tkIntStubsPtr->tkGCCleanup) /* 144 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

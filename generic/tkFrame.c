@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.10.2.1 2002/02/05 02:25:15 wolfsuit Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.10.2.2 2002/06/10 05:38:23 wolfsuit Exp $
  */
 
 #include "default.h"
@@ -920,7 +920,7 @@ ConfigureFrame(interp, framePtr, objc, objv)
 {
     Tk_SavedOptions savedOptions;
     char *oldMenuName;
-    Tk_Window oldWindow;
+    Tk_Window oldWindow = NULL;
     Labelframe *labelframePtr = (Labelframe *) framePtr;
 
     /*

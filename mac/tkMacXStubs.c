@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacXStubs.c,v 1.10.8.1 2002/02/05 02:25:17 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacXStubs.c,v 1.10.8.2 2002/06/10 05:38:26 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -106,6 +106,7 @@ TkpOpenDisplay(
 
     graphicsDevice = GetMainDevice();
     display = (Display *) ckalloc(sizeof(Display));
+    memset(display, 0, sizeof(Display));
     display->resource_alloc = MacXIdAlloc;
     screen = (Screen *) ckalloc(sizeof(Screen) * 2);
     display->default_screen = 0;
@@ -138,6 +139,7 @@ TkpOpenDisplay(
     screen->root_visual->map_entries = 2 ^ 8;
 
     gMacDisplay = (TkDisplay *) ckalloc(sizeof(TkDisplay));
+    memset(gMacDisplay, 0, sizeof(TkDisplay));
     gMacDisplay->display = display;
     return gMacDisplay;
 }
@@ -802,4 +804,21 @@ TkGetDefaultScreenName(
 	screenName = macScreenName;
     }
     return screenName;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_SetCaretPos --
+ *
+ *	This indicates the cursor position to Tk.  This is not used
+ *	on the Mac currently.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
+{
+    return;
 }

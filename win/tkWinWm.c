@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.31.2.1 2002/02/05 02:25:18 wolfsuit Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.31.2.2 2002/06/10 05:38:28 wolfsuit Exp $
  */
 
 #include "tkWinInt.h"
@@ -3073,7 +3073,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	if ((argc != 3) && (argc != 5)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
 		    argv[0],
-		    " stackorder window ?isabove|isbelow? ?window?\"",
+		    " stackorder window ?isabove|isbelow window?\"",
 		    (char *) NULL);
 	    return TCL_ERROR;
 	}
@@ -3261,6 +3261,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
     } else if ((c == 't') && (strncmp(argv[1], "transient", length) == 0)
 	    && (length >= 3)) {
 	TkWindow *masterPtr = wmPtr->masterPtr;
+	WmInfo *wmPtr2;
 
 	if ((argc != 3) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
@@ -3290,18 +3291,39 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    if (masterPtr == NULL) {
 		return TCL_ERROR;
 	    }
+	    while (!(masterPtr->flags & TK_TOP_LEVEL)) {
+	        /*
+	         * Ensure that the master window is actually a Tk toplevel.
+	         */
+
+	        masterPtr = masterPtr->parentPtr;
+	    }
+	    Tk_MakeWindowExist((Tk_Window)masterPtr);
+
+	    if (wmPtr->iconFor != NULL) {
+	        Tcl_AppendResult(interp, "can't make \"", argv[2],
+	    	        "\" a transient: it is an icon for ",
+	                Tk_PathName(wmPtr->iconFor),
+	                (char *) NULL);
+	        return TCL_ERROR;
+	    }
+
+	    wmPtr2 = masterPtr->wmInfoPtr;
+
+	    if (wmPtr2->iconFor != NULL) {
+	        Tcl_AppendResult(interp, "can't make \"", argv[3],
+	                "\" a master: it is an icon for ",
+	                Tk_PathName(wmPtr2->iconFor),
+	                (char *) NULL);
+	        return TCL_ERROR;
+	    }
+
 	    if (masterPtr == winPtr) {
-		wmPtr->masterPtr = NULL;
+	        Tcl_AppendResult(interp, "can't make \"", Tk_PathName(winPtr),
+	                "\" its own master",
+	                (char *) NULL);
+	        return TCL_ERROR;
 	    } else if (masterPtr != wmPtr->masterPtr) {
-		Tk_MakeWindowExist((Tk_Window)masterPtr);
-
-		/*
-		 * Ensure that the master window is actually a Tk toplevel.
-		 */
-
-		while (!(masterPtr->flags & TK_TOP_LEVEL)) {
-		    masterPtr = masterPtr->parentPtr;
-		}
 		wmPtr->masterPtr = masterPtr;
 		masterPtr->wmInfoPtr->numTransients++;
 
@@ -4335,7 +4357,8 @@ TkWmStackorderToplevelWrapperMap(winPtr, table)
     HWND wrapper;
     int newEntry;
 
-    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr)) {
+    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr) &&
+            !Tk_IsEmbedded(winPtr)) {
         wrapper = TkWinGetWrapperWindow((Tk_Window) winPtr);
 
         /*fprintf(stderr, "Mapped HWND %d to %x (%s)\n", wrapper,

@@ -9,12 +9,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.9 2001/06/04 03:07:54 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.9.2.1 2002/06/10 05:38:27 wolfsuit Exp $
  */
  
 #include "tkUnixInt.h"
 #include "tkFont.h"
 #include <netinet/in.h>		/* for htons() prototype */
+#include <arpa/inet.h>		/* inet_ntoa() */
 
 /*
  * The preferred font encodings.
@@ -197,6 +198,7 @@ static EncodingAlias encodingAliases[] = {
  * Procedures used only in this file.
  */
 
+static void		FontPkgCleanup _ANSI_ARGS_((ClientData clientData));
 static FontFamily *	AllocFontFamily _ANSI_ARGS_((Display *display,
 			    XFontStruct *fontStructPtr, int base));
 static SubFont *	CanUseFallback _ANSI_ARGS_((UnixFont *fontPtr,
@@ -261,6 +263,44 @@ static int		UtfToUcs2beProc _ANSI_ARGS_((ClientData clientData,
 /*
  *-------------------------------------------------------------------------
  *
+ * FontPkgCleanup --
+ *
+ *	This procedure is called when an application is created.  It
+ *	initializes all the structures that are used by the
+ *	platform-dependent code on a per application basis.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Releases thread-specific resources used by font pkg.
+ *
+ *-------------------------------------------------------------------------
+ */
+
+static void
+FontPkgCleanup(ClientData clientData)
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    
+    if (tsdPtr->controlFamily.encoding != NULL) {
+	FontFamily *familyPtr = &tsdPtr->controlFamily;
+	int i;
+
+	Tcl_FreeEncoding(familyPtr->encoding);
+	for (i = 0; i < FONTMAP_PAGES; i++) {
+	    if (familyPtr->fontMap[i] != NULL) {
+		ckfree(familyPtr->fontMap[i]);
+	    }
+	}
+	tsdPtr->controlFamily.encoding = NULL;
+    }
+}
+
+/*
+ *-------------------------------------------------------------------------
+ *
  * TkpFontPkgInit --
  *
  *	This procedure is called when an application is created.  It
@@ -317,6 +357,7 @@ TkpFontPkgInit(mainPtr)
 	type.clientData		= NULL;
 	type.nullSize		= 2;
 	Tcl_CreateEncoding(&type);
+	Tcl_CreateThreadExitHandler(FontPkgCleanup, NULL);
     }
 }
 
@@ -1114,74 +1155,75 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
     SubFont *thisSubFontPtr, *lastSubFontPtr;
     Tcl_DString runString;
     CONST char *p, *end, *next;
-    int xStart, needWidth;
+    int xStart, needWidth, window_width;
     Tcl_UniChar ch;
     FontFamily *familyPtr;
+    int rx, ry, width, height, border_width, depth;
+    int do_width;
+    Drawable root;
 
     fontPtr = (UnixFont *) tkfont;
     lastSubFontPtr = &fontPtr->subFontArray[0];
 
     xStart = x;
 
+    /*
+     * Get the window width so we can abort drawing outside of the window
+     */
+    if (XGetGeometry(display, drawable, &root, &rx, &ry, &width, &height,
+	    &border_width, &depth) == False) {
+	window_width = INT_MAX;
+    } else {
+	window_width = width;
+    }
+
     end = source + numBytes;
-    for (p = source; p < end; ) {
-	next = p + Tcl_UtfToUniChar(p, &ch);
-	thisSubFontPtr = FindSubFontForChar(fontPtr, ch);
-	if (thisSubFontPtr != lastSubFontPtr) {
+    needWidth = fontPtr->font.fa.underline + fontPtr->font.fa.overstrike;
+    for (p = source; p <= end; ) {
+	if (p < end) {
+	    next = p + Tcl_UtfToUniChar(p, &ch);
+	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch);
+	} else {
+	    next = p + 1;
+	    thisSubFontPtr = lastSubFontPtr;
+	}
+	if ((thisSubFontPtr != lastSubFontPtr)
+		|| (p == end) || (p-source > 200)) {
 	    if (p > source) {
+	        do_width = (needWidth || (p != end)) ? 1 : 0;
 		familyPtr = lastSubFontPtr->familyPtr;
+
 		Tcl_UtfToExternalDString(familyPtr->encoding, source,
 			p - source, &runString);
 		if (familyPtr->isTwoByteFont) {
 		    XDrawString16(display, drawable, gc, x, y, 
 			    (XChar2b *) Tcl_DStringValue(&runString),
 			    Tcl_DStringLength(&runString) / 2);
-			    
-		    x += XTextWidth16(lastSubFontPtr->fontStructPtr,
-			    (XChar2b *) Tcl_DStringValue(&runString),
-			    Tcl_DStringLength(&runString) / 2);
+		    if (do_width) {
+			x += XTextWidth16(lastSubFontPtr->fontStructPtr,
+				(XChar2b *) Tcl_DStringValue(&runString),
+				Tcl_DStringLength(&runString) / 2);
+		    }
 		} else {
 		    XDrawString(display, drawable, gc, x, y,
 			    Tcl_DStringValue(&runString),
 			    Tcl_DStringLength(&runString));
-		    x += XTextWidth(lastSubFontPtr->fontStructPtr,
-			    Tcl_DStringValue(&runString),
-			    Tcl_DStringLength(&runString));
+		    if (do_width) {
+			x += XTextWidth(lastSubFontPtr->fontStructPtr,
+				Tcl_DStringValue(&runString),
+				Tcl_DStringLength(&runString));
+		    }
 		}
 		Tcl_DStringFree(&runString);
 	    }
 	    lastSubFontPtr = thisSubFontPtr;
 	    source = p;
 	    XSetFont(display, gc, lastSubFontPtr->fontStructPtr->fid);
+	    if (x > window_width) {
+	        break;
+	    }
 	}
 	p = next;
-    }
-
-    needWidth = fontPtr->font.fa.underline + fontPtr->font.fa.overstrike;
-    if (p > source) {
-	familyPtr = lastSubFontPtr->familyPtr;
-	Tcl_UtfToExternalDString(familyPtr->encoding, source, p - source,
-		&runString);
-	if (familyPtr->isTwoByteFont) {
-	    XDrawString16(display, drawable, gc, x, y, 
-		    (XChar2b *) Tcl_DStringValue(&runString),
-		    Tcl_DStringLength(&runString) >> 1);
-	    if (needWidth) {
-		x += XTextWidth16(lastSubFontPtr->fontStructPtr,
-			(XChar2b *) Tcl_DStringValue(&runString),
-			Tcl_DStringLength(&runString) >> 1);
-	    }
-	} else {
-	    XDrawString(display, drawable, gc, x, y, 
-		    Tcl_DStringValue(&runString),
-		    Tcl_DStringLength(&runString));
-	    if (needWidth) {
-		x += XTextWidth(lastSubFontPtr->fontStructPtr,
-			Tcl_DStringValue(&runString),
-			Tcl_DStringLength(&runString));
-	    }
-	}
-	Tcl_DStringFree(&runString);
     }
 
     if (lastSubFontPtr != &fontPtr->subFontArray[0]) {
@@ -1199,6 +1241,9 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
 		(unsigned) (x - xStart), (unsigned) fontPtr->barHeight);
     }
 }
+
+
+
 
 /*
  *-------------------------------------------------------------------------

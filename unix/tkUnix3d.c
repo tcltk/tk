@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnix3d.c,v 1.5.8.2 2001/10/17 07:02:02 wolfsuit Exp $
+ * RCS: @(#) $Id: tkUnix3d.c,v 1.5.8.3 2002/06/10 05:38:27 wolfsuit Exp $
  */
 
 #include <tk3d.h>
@@ -293,6 +293,15 @@ Tk_3DHorizontalBevel(tkwin, drawable, border, x, y, width, height,
      */
 
     for ( ; y < bottom; y++) {
+	/*
+	 * X Dimensions are 16-bit, so avoid wraparound or display errors
+	 * by limiting these here.
+	 */
+	if (x1 < -32767)
+	    x1 = -32767;
+	if (x2 > 32767)
+	    x2 = 32767;
+
 	/*
 	 * In some weird cases (such as large border widths for skinny
 	 * rectangles) x1 can be >= x2.  Don't draw the lines

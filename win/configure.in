@@ -3,14 +3,14 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.36.2.1 2002/02/05 02:25:18 wolfsuit Exp $
+# RCS: @(#) $Id: configure.in,v 1.36.2.2 2002/06/10 05:38:27 wolfsuit Exp $
 
 AC_INIT(../generic/tk.h)
 
 TK_VERSION=8.4
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=4
-TK_PATCH_LEVEL="a4"
+TK_PATCH_LEVEL="a5"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------

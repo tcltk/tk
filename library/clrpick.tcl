@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# RCS: @(#) $Id: clrpick.tcl,v 1.13.2.1 2002/02/05 02:25:16 wolfsuit Exp $
+# RCS: @(#) $Id: clrpick.tcl,v 1.13.2.2 2002/06/10 05:38:24 wolfsuit Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -20,7 +20,9 @@
 # Make sure namespaces exist
 namespace eval ::tk {}
 namespace eval ::tk::dialog {}
-namespace eval ::tk::dialog::color {}
+namespace eval ::tk::dialog::color {
+    namespace import ::tk::msgcat::*
+}
 
 # ::tk::dialog::color:: --
 #
@@ -170,7 +172,7 @@ proc ::tk::dialog::color::Config {dataName argList} {
     set specs [list \
 	    [list -initialcolor "" "" $defaultColor] \
 	    [list -parent "" "" "."] \
-	    [list -title "" "" [::msgcat::mc "Color"]] \
+	    [list -title "" "" [mc "Color"]] \
 	    ]
 
     # 2: parse the arguments
@@ -203,12 +205,12 @@ proc ::tk::dialog::color::BuildDialog {w} {
     # StripsFrame contains the colorstrips and the individual RGB entries
     set stripsFrame [frame $topFrame.colorStrip]
 
-    set maxWidth [::msgcat::mcmax Red Green Blue]
+    set maxWidth [mcmax Red Green Blue]
     set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
     set colorList [list \
-	    red		[::msgcat::mc "Red"]	\
-	    green	[::msgcat::mc "Green"]	\
-	    blue	[::msgcat::mc "Blue"]	\
+	    red		[mc "Red"]	\
+	    green	[mc "Green"]	\
+	    blue	[mc "Blue"]	\
 	    ]
     foreach {color l} $colorList {
 	# each f frame contains an [R|G|B] entry and the equiv. color strip.
@@ -263,7 +265,7 @@ proc ::tk::dialog::color::BuildDialog {w} {
     # selected color
     #
     set selFrame [frame $topFrame.sel]
-    set lab [label $selFrame.lab -text [::msgcat::mc "Selection:"] \
+    set lab [label $selFrame.lab -text [mc "Selection:"] \
 	    -under 0 -anchor sw]
     set ent [entry $selFrame.ent \
 	-textvariable ::tk::dialog::color::[winfo name $w](selection) \
@@ -283,12 +285,12 @@ proc ::tk::dialog::color::BuildDialog {w} {
     # the botFrame frame contains the buttons
     #
     set botFrame [frame $w.bot -relief raised -bd 1]
-    set maxWidth [::msgcat::mcmax OK Cancel]
+    set maxWidth [mcmax OK Cancel]
     set maxWidth [expr {$maxWidth<8?8:$maxWidth}]
-    button $botFrame.ok     -text [::msgcat::mc "OK"]		\
+    button $botFrame.ok     -text [mc "OK"]		\
 	    -width $maxWidth -under 0				\
 	    -command [list tk::dialog::color::OkCmd $w]
-    button $botFrame.cancel -text [::msgcat::mc "Cancel"]	\
+    button $botFrame.cancel -text [mc "Cancel"]	\
 	    -width $maxWidth -under 0				\
 	    -command [list tk::dialog::color::CancelCmd $w]
 

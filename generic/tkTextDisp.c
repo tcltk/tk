@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.9 2000/01/06 02:18:59 hobbs Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.9.8.1 2002/06/10 05:38:24 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -94,6 +94,16 @@ typedef struct TextStyle {
         && ((s1)->sValuePtr->borderWidth == (s2)->sValuePtr->borderWidth) \
         && ((s1)->sValuePtr->relief == (s2)->sValuePtr->relief) \
         && ((s1)->sValuePtr->bgStipple == (s2)->sValuePtr->bgStipple))
+
+/*
+ * The following macro is used to compare two floating-point numbers
+ * to within a certain degree of scale.  Direct comparison fails on
+ * processors where the processor and memory representations of FP
+ * numbers of a particular precision is different (e.g. Intel)
+ */
+
+#define FP_EQUAL_SCALE(double1, double2, scaleFactor) \
+    (fabs((double1)-(double2))*((scaleFactor)+1.0) < 0.3)
 
 /*
  * The following structure describes one line of the display, which may
@@ -1880,6 +1890,25 @@ DisplayLineBackground(textPtr, dlPtr, prevPtr, pixmap)
 	    rightX = maxX;
 	}
 	if (chunkPtr->stylePtr->bgGC != None) {
+	    /* Not visible - bail out now */
+	    if (rightX + xOffset <= 0) {
+	        leftX = rightX;
+		continue;
+	    }
+
+	    /*
+	     * Trim the start position for drawing to be no further away than
+	     * -borderWidth. The reason is that on many X servers drawing from
+	     * -32768 (or less) to +something simply does not display
+	     * correctly. [Patch #541999]
+	     */
+	    if ((leftX + xOffset) < -(sValuePtr->borderWidth)) {
+	        leftX = -sValuePtr->borderWidth - xOffset;
+	    }
+	    if ((rightX - leftX) > 32767) {
+	        rightX = leftX + 32767;
+	    }
+
 	    XFillRectangle(display, pixmap, chunkPtr->stylePtr->bgGC,
 		    leftX + xOffset, 0, (unsigned int) (rightX - leftX),
 		    (unsigned int) dlPtr->height);
@@ -3865,7 +3894,7 @@ GetXView(interp, textPtr, report)
 					 * scrollbar if it has changed. */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
-    char buffer[TCL_DOUBLE_SPACE * 2];
+    char buffer[TCL_DOUBLE_SPACE * 2 + 1];
     double first, last;
     int code;
 
@@ -3886,7 +3915,8 @@ GetXView(interp, textPtr, report)
 	Tcl_SetResult(interp, buffer, TCL_VOLATILE);
 	return;
     }
-    if ((first == dInfoPtr->xScrollFirst) && (last == dInfoPtr->xScrollLast)) {
+    if (FP_EQUAL_SCALE(first, dInfoPtr->xScrollFirst, dInfoPtr->maxLength) &&
+	FP_EQUAL_SCALE(last,  dInfoPtr->xScrollLast,  dInfoPtr->maxLength)) {
 	return;
     }
     dInfoPtr->xScrollFirst = first;
@@ -3936,7 +3966,7 @@ GetYView(interp, textPtr, report)
 					 * scrollbar if it has changed. */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
-    char buffer[TCL_DOUBLE_SPACE * 2];
+    char buffer[TCL_DOUBLE_SPACE * 2 + 1];
     double first, last;
     DLine *dlPtr;
     int totalLines, code, count;
@@ -3971,7 +4001,8 @@ GetYView(interp, textPtr, report)
 	Tcl_SetResult(interp, buffer, TCL_VOLATILE);
 	return;
     }
-    if ((first == dInfoPtr->yScrollFirst) && (last == dInfoPtr->yScrollLast)) {
+    if (FP_EQUAL_SCALE(first, dInfoPtr->yScrollFirst, totalLines) &&
+	FP_EQUAL_SCALE(last,  dInfoPtr->yScrollLast,  totalLines)) {
 	return;
     }
     dInfoPtr->yScrollFirst = first;

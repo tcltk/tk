@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.12.4.1 2002/02/05 02:25:18 wolfsuit Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.12.4.2 2002/06/10 05:38:27 wolfsuit Exp $
  */
 
 #define OEMRESOURCE
@@ -704,6 +704,10 @@ TkpDisplayButton(clientData)
 		defaultWidth, Tk_Height(tkwin),
 		butPtr->highlightColorPtr->pixel);
 	TkWinReleaseDrawableDC(pixmap, dc, &state);
+    }
+
+    if (butPtr->flags & GOT_FOCUS) {
+	Tk_SetCaretPos(tkwin, x, y, 0 /* not used */);
     }
 
     /*

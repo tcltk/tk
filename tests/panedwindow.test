@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.1.4.1 2002/06/10 05:08:00 wolfsuit Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.1.4.2 2002/06/10 05:38:26 wolfsuit Exp $
 
 if {[info tclversion] < 8.4} {
     puts "panedwindow requires Tk 8.4"

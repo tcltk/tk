@@ -4,7 +4,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: embed.test,v 1.1.2.1 2002/06/10 05:08:00 wolfsuit Exp $
+# RCS: @(#) $Id: embed.test,v 1.1.2.2 2002/06/10 05:38:26 wolfsuit Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]

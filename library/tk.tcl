@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.31.2.2 2002/02/05 02:25:16 wolfsuit Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.31.2.3 2002/06/10 05:38:24 wolfsuit Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -16,9 +16,36 @@
 
 package require -exact Tk 8.4
 package require -exact Tcl 8.4
-if { ![interp issafe] } {
-    package require msgcat
-    ::msgcat::mcload [file join $::tk_library msgs]
+
+# Create a ::tk namespace
+namespace eval ::tk {
+    # Set up the msgcat commands
+    namespace eval msgcat {
+	namespace export mc mcmax        
+        if {[interp issafe] || [catch {package require msgcat}]} {
+            # The msgcat package is not available.  Supply our own
+            # minimal replacement.
+            proc mc {src args} {
+                return [eval [list format $src] $args]
+            }
+            proc mcmax {args} {
+                set max 0
+                foreach string $args {
+                    set len [string length $string]
+                    if {$len>$max} {
+                        set max $len
+                    }
+                }
+                return $max
+            }
+        } else {
+            # Get the commands from the msgcat package that Tk uses.
+            namespace import ::msgcat::mc
+            namespace import ::msgcat::mcmax
+            ::msgcat::mcload [file join $::tk_library msgs]
+        }
+    }
+    namespace import ::tk::msgcat::*
 }
 
 # Add Tk's directory to the end of the auto-load search path, if it
@@ -37,11 +64,6 @@ set ::tk_strictMotif 0
 # We catch this because safe interpreters may not allow the call.
 
 catch {tk useinputmethods 1}
-
-# Create a ::tk namespace
-
-namespace eval ::tk {
-}
 
 # ::tk::PlaceWindow --
 #   place a toplevel at a particular position
@@ -326,10 +348,10 @@ switch $tcl_platform(windowingsystem) {
 	    switch $tcl_platform(os) {
 		"IRIX"  -
 		"Linux" { event add <<PrevWindow>> <ISO_Left_Tab> }
-                "HP-UX" {
-                    # This seems to be correct on *some* HP systems.
-                    catch { event add <<PrevWindow>> <hpBackTab> }
-                }
+		"HP-UX" {
+		    # This seems to be correct on *some* HP systems.
+		    catch { event add <<PrevWindow>> <hpBackTab> }
+		}
 	    }
 	}
 	trace variable ::tk_strictMotif w ::tk::EventMotifBindings
@@ -360,22 +382,37 @@ switch $tcl_platform(windowingsystem) {
 	event add <<Redo>> <Control-Key-Z>
     }
 }
-
 # ----------------------------------------------------------------------
 # Read in files that define all of the class bindings.
 # ----------------------------------------------------------------------
-if {[string compare $tcl_platform(platform) "macintosh"] && \
-	[string compare {} $tk_library]} {
-    source [file join $::tk_library button.tcl]
-    source [file join $::tk_library entry.tcl]
-    source [file join $::tk_library listbox.tcl]
-    source [file join $::tk_library menu.tcl]
-    source [file join $::tk_library scale.tcl]
-    source [file join $::tk_library scrlbar.tcl]
-    source [file join $::tk_library spinbox.tcl]
-    source [file join $::tk_library text.tcl]
-}
 
+if {$::tk_library ne ""} {
+    if {[string equal $tcl_platform(platform) "macintosh"]} {
+	proc ::tk::SourceLibFile {file} {
+	    if {[catch {
+		namespace eval :: \
+			[list source [file join $::tk_library $file.tcl]]
+	    }]} {
+		namespace eval :: [list source -rsrc $file]
+	    }
+	}
+    } else {
+	proc ::tk::SourceLibFile {file} {
+	    namespace eval :: [list source [file join $::tk_library $file.tcl]]
+	}	
+    }
+    namespace eval ::tk {
+	SourceLibFile button
+	SourceLibFile entry
+	SourceLibFile listbox
+	SourceLibFile menu
+	SourceLibFile panedwindow
+	SourceLibFile scale
+	SourceLibFile scrlbar
+	SourceLibFile spinbox
+	SourceLibFile text
+    }
+}
 # ----------------------------------------------------------------------
 # Default bindings for keyboard traversal.
 # ----------------------------------------------------------------------

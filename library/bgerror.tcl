@@ -9,16 +9,20 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.17.2.2 2001/10/17 06:51:28 wolfsuit Exp $
-# $Id: bgerror.tcl,v 1.17.2.2 2001/10/17 06:51:28 wolfsuit Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.17.2.3 2002/06/10 05:38:24 wolfsuit Exp $
+# $Id: bgerror.tcl,v 1.17.2.3 2002/06/10 05:38:24 wolfsuit Exp $
 
-option add *ErrorDialog.function.text [::msgcat::mc "Save To Log"] \
-	widgetDefault
-option add *ErrorDialog.function.command "::tk::dialog::error::saveToLog"
-
-namespace eval ::tk {}
-namespace eval ::tk::dialog {}
-namespace eval ::tk::dialog::error {}
+namespace eval ::tk {
+    namespace eval dialog {
+	namespace eval error {
+	    namespace import ::tk::msgcat::*
+	    namespace export bgerror
+	    option add *ErrorDialog.function.text [mc "Save To Log"] \
+		    widgetDefault
+	    option add *ErrorDialog.function.command [namespace code SaveToLog]
+	}
+    }
+}
 
 proc ::tk::dialog::error::Return {} {
     variable button
@@ -29,34 +33,30 @@ proc ::tk::dialog::error::Return {} {
     set button 0
 }
 
-proc ::tk::dialog::error::details {} {
+proc ::tk::dialog::error::Details {} {
     set w .bgerrorDialog
     set caption [option get $w.function text {}]
     set command [option get $w.function command {}]
-    if { [string equal $caption ""] || [string equal $command ""] } {
+    if { ($caption eq "") || ($command eq "") } {
 	grid forget $w.function
     }
-    $w.function configure -text $caption \
-	    -command [list ::tk::dialog::error::evalFunction $command]
+    $w.function configure -text $caption -command \
+	"$command [list [.bgerrorDialog.top.info.text get 1.0 end]]"
     grid $w.top.info - -sticky nsew -padx 3m -pady 3m
 }
 
-proc ::tk::dialog::error::evalFunction {cmd} {
-    uplevel \#0 [list $cmd [.bgerrorDialog.top.info.text get 1.0 end]]
-}
-
-proc ::tk::dialog::error::saveToLog {text} {
-    if { [string equal $::tcl_platform(platform) "windows"] } {
-	set allFiles "*.*"
+proc ::tk::dialog::error::SaveToLog {text} {
+    if { $::tcl_platform(platform) eq "windows" } {
+	set allFiles *.*
     } else {
-	set allFiles "*"
+	set allFiles *
     }
     set types [list	\
-	    [list [::msgcat::mc "Log Files"]	.log]		\
-	    [list [::msgcat::mc "Text Files"]	.txt]		\
-	    [list [::msgcat::mc "All Files"]	$allFiles]	\
+	    [list [mc "Log Files"] .log]	\
+	    [list [mc "Text Files"] .txt]	\
+	    [list [mc "All Files"] $allFiles] \
 	    ]
-    set filename [tk_getSaveFile -title [::msgcat::mc "Select Log File"] \
+    set filename [tk_getSaveFile -title [mc "Select Log File"] \
 	    -filetypes $types -defaultextension .log -parent .bgerrorDialog]
     if {![string length $filename]} {
 	return
@@ -67,13 +67,13 @@ proc ::tk::dialog::error::saveToLog {text} {
 }
 
 proc ::tk::dialog::error::Destroy {w} {
-    if {".bgerrorDialog" == "$w"} {
+    if {$w eq ".bgerrorDialog"} {
 	variable button
 	set button -1
     }
 }
 
-# ::bgerror --
+# ::tk::dialog::error::bgerror --
 # This is the default version of bgerror. 
 # It tries to execute tkerror, if that fails it posts a dialog box containing
 # the error message and gives the user a chance to ask to see a stack
@@ -81,27 +81,27 @@ proc ::tk::dialog::error::Destroy {w} {
 # Arguments:
 # err -			The error message.
 
-proc ::bgerror err {
+proc ::tk::dialog::error::bgerror err {
     global errorInfo tcl_platform
-    set butvar ::tk::dialog::error::button
+    variable button
 
     set info $errorInfo
 
-    set ret [catch {tkerror $err} msg];
+    set ret [catch {::tkerror $err} msg];
     if {$ret != 1} {return -code $ret $msg}
 
     # Ok the application's tkerror either failed or was not found
     # we use the default dialog then :
-    if {[string equal $tcl_platform(platform) "macintosh"]
-             || [string equal $tcl_platform(windowingsystem) "aqua"]} {
-	set ok		[::msgcat::mc "Ok"]
+    if {($tcl_platform(platform) eq "macintosh")
+             || ($tcl_platform(windowingsystem) eq "aqua")} {
+	set ok		[mc Ok]
 	set messageFont	system
-	set textRelief	"flat"
+	set textRelief	flat
 	set textHilight	0
     } else {
-	set ok		[::msgcat::mc "OK"]
+	set ok		[mc OK]
 	set messageFont	{Times -18}
-	set textRelief	"sunken"
+	set textRelief	sunken
 	set textHilight	1
     }
 
@@ -111,7 +111,7 @@ proc ::bgerror err {
     # which one of those conditions is met.
     set displayedErr ""
     set lines 0
-    foreach line [split $err "\n"] {
+    foreach line [split $err \n] {
 	if { [string length $line] > 30 } {
 	    append displayedErr "[string range $line 0 29]..."
 	    break
@@ -126,10 +126,10 @@ proc ::bgerror err {
     }
 
     set w .bgerrorDialog
-    set title [::msgcat::mc "Application Error"]
-    set text [::msgcat::mc "Error: %1\$s" $err]
-    set buttons [list ok $ok dismiss [::msgcat::mc "Skip Messages"] \
-	    function [::msgcat::mc "Details >>"]]
+    set title [mc "Application Error"]
+    set text [mc {Error: %1$s} $err]
+    set buttons [list ok $ok dismiss [mc "Skip Messages"] \
+	    function [mc "Details >>"]]
 
     # 1. Create the top-level window and divide it into top
     # and bottom parts.
@@ -143,14 +143,14 @@ proc ::bgerror err {
     # The following, though surprising, works.
     wm transient .bgerrorDialog .bgerrorDialog
 
-    if {[string equal $tcl_platform(platform) "macintosh"] 
-            || [string equal $tcl_platform(windowingsystem) "aqua"]} {
+    if {($tcl_platform(platform) eq "macintosh") 
+            || ($tcl_platform(windowingsystem) eq "aqua")} {
 	::tk::unsupported::MacWindowStyle style .bgerrorDialog dBoxProc
     }
 
     frame .bgerrorDialog.bot
     frame .bgerrorDialog.top
-    if {[string equal $tcl_platform(windowingsystem) "x11"]} {
+    if {$tcl_platform(windowingsystem) eq "x11"} {
 	.bgerrorDialog.bot configure -relief raised -bd 1
 	.bgerrorDialog.top configure -relief raised -bd 1
     }
@@ -160,7 +160,7 @@ proc ::bgerror err {
     set W [frame $w.top.info]
     text $W.text				\
 	    -bd 2				\
-	    -yscrollcommand "$W.scroll set"	\
+	    -yscrollcommand [list $W.scroll set]\
 	    -setgrid true			\
 	    -width 40				\
 	    -height 10				\
@@ -169,7 +169,7 @@ proc ::bgerror err {
 	    -highlightthickness $textHilight	\
 	    -wrap char
 
-    scrollbar $W.scroll -relief sunken -command "$W.text yview"
+    scrollbar $W.scroll -relief sunken -command [list $W.text yview]
     pack $W.scroll -side right -fill y
     pack $W.text -side left -expand yes -fill both
     $W.text insert 0.0 "$err\n$info"
@@ -180,8 +180,8 @@ proc ::bgerror err {
     # 2. Fill the top part with bitmap and message
 
     label .bgerrorDialog.msg -justify left -text $text -font $messageFont
-    if {[string equal $tcl_platform(platform) "macintosh"]
-            || [string equal $tcl_platform(windowingsystem) "aqua"]} {
+    if {($tcl_platform(platform) eq "macintosh")
+            || ($tcl_platform(windowingsystem) eq "aqua")} {
 	# On the Macintosh, use the stop bitmap
 	label .bgerrorDialog.bitmap -bitmap stop
     } else {
@@ -207,7 +207,7 @@ proc ::bgerror err {
 	button .bgerrorDialog.$name	\
 		-text $caption		\
 		-default normal		\
-		-command "set $butvar $i"
+		-command [namespace code "set button $i"]
 	grid .bgerrorDialog.$name	\
 		-in .bgerrorDialog.bot	\
 		-column $i		\
@@ -216,9 +216,9 @@ proc ::bgerror err {
 		-padx 10
 	grid columnconfigure .bgerrorDialog.bot $i -weight 1
 	# We boost the size of some Mac buttons for l&f
-        if {[string equal $tcl_platform(platform) "macintosh"]
-             || [string equal $tcl_platform(windowingsystem) "aqua"]} {
-	    if {($name == "ok") || ($name == "dismiss")} {
+        if {($tcl_platform(platform) eq "macintosh")
+             || ($tcl_platform(windowingsystem) eq "aqua")} {
+	    if {($name eq "ok") || ($name eq "dismiss")} {
 		grid columnconfigure .bgerrorDialog.bot $i -minsize 79
 	    }
 	}
@@ -227,11 +227,9 @@ proc ::bgerror err {
     # The "OK" button is the default for this dialog.
     .bgerrorDialog.ok configure -default active
 
-    set ::tk::dialog::error::curh 0
-    bind .bgerrorDialog <Return>	{::tk::dialog::error::Return}
-    bind .bgerrorDialog <Destroy>	{::tk::dialog::error::Destroy %W}
-    .bgerrorDialog.function configure	\
-	    -command {::tk::dialog::error::details   }
+    bind .bgerrorDialog <Return>	[namespace code Return]
+    bind .bgerrorDialog <Destroy>	[namespace code [list Destroy %W]]
+    .bgerrorDialog.function configure -command [namespace code Details]
 
     # 6. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
@@ -266,19 +264,26 @@ proc ::bgerror err {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    vwait $butvar
-    set button $::tk::dialog::error::button; # Save a copy...
+    vwait [namespace which -variable button]
+    set copy $button; # Save a copy...
     catch {focus $oldFocus}
     catch {destroy .bgerrorDialog}
-    if {$oldGrab != ""} {
-	if {$grabStatus == "global"} {
+    if {$oldGrab ne ""} {
+	if {$grabStatus eq "global"} {
 	    grab -global $oldGrab
 	} else {
 	    grab $oldGrab
 	}
     }
 
-    if {$button == 1} {
+    if {$copy == 1} {
 	return -code break
     }
+}
+
+namespace eval :: {
+    # Fool the indexer
+    proc bgerror err {}
+    rename bgerror {}
+    namespace import ::tk::dialog::error::bgerror
 }

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.5 2001/10/01 21:20:36 hobbs Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.5.2.1 2002/06/10 05:38:28 wolfsuit Exp $
  */
 
 #include "tkWinInt.h"
@@ -121,11 +121,10 @@ AppendSystemError(
 	Tcl_Encoding encoding;
 
 	encoding = Tcl_GetEncoding(NULL, "unicode");
-	Tcl_ExternalToUtfDString(encoding, (char *) wMsgPtr, -1, &ds);
+	msg = Tcl_ExternalToUtfDString(encoding, (char *) wMsgPtr, -1, &ds);
 	Tcl_FreeEncoding(encoding);
 	LocalFree(wMsgPtr);
 
-	msg = Tcl_DStringValue(&ds);
 	length = Tcl_DStringLength(&ds);
 
 	/*

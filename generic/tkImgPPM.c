@@ -13,7 +13,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPPM.c,v 1.8 2001/09/14 20:35:58 andreas_kupries Exp $
+ * RCS: @(#) $Id: tkImgPPM.c,v 1.8.2.1 2002/06/10 05:38:23 wolfsuit Exp $
  */
 
 #define USE_OLD_IMAGE
@@ -192,7 +192,7 @@ FileReadPPM(interp, chan, fileName, formatString, imageHandle, destX, destY,
     Tk_PhotoExpand(imageHandle, destX + width, destY + height);
 
     if (srcY > 0) {
-	Tcl_Seek(chan, (srcY * block.pitch), SEEK_CUR);
+	Tcl_Seek(chan, (Tcl_WideInt)(srcY * block.pitch), SEEK_CUR);
     }
 
     nLines = (MAX_MEMORY + block.pitch - 1) / block.pitch;

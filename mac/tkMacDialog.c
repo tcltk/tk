@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDialog.c,v 1.6.8.1 2002/02/05 02:25:16 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacDialog.c,v 1.6.8.2 2002/06/10 05:38:24 wolfsuit Exp $
  */
 
 #include <Gestalt.h>
@@ -1050,17 +1050,10 @@ OpenEventProc(
 {
     NavMenuItemSpec *chosenItem;
     OpenFileData *ofd = (OpenFileData *) callBackUD;
-    static SInt32 otherEvent = ~(kNavCBCustomize|kNavCBStart|kNavCBTerminate
-	    |kNavCBNewLocation|kNavCBShowDesktop|kNavCBSelectEntry|kNavCBAccept
-	    |kNavCBCancel|kNavCBAdjustPreview);
         
     if (callBackSelector ==  kNavCBPopupMenuSelect) {
         chosenItem = (NavMenuItemSpec *) callBackParams->eventData.eventDataParms.param;
         ofd->curType = chosenItem->menuType;
-    } else if ( callBackSelector & otherEvent != 0) { 
-        while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT|TCL_WINDOW_EVENTS)) {
-            /* Empty Body */
-        }
     } else if (callBackSelector == kNavCBEvent) {
     	if (callBackParams->eventData.eventDataParms.event->what == updateEvt) {
     		if (TkMacConvertEvent( callBackParams->eventData.eventDataParms.event)) {
