@@ -1,3 +1,9 @@
+2000-06-27  Eric Melski  <ericm@scriptics.com>
+
+	* generic/tkMenu.c (DeleteMenuCloneEntries): Applied fix from
+	[Bug: 5275], which corrected a segfault-causing indexing problem
+	when deleting entries from torn-off menus.
+
 2000-06-22  Eric Melski  <ericm@ajubasolutions.com>
 
 	* doc/getOpenFile.n: Updated with information about -multiple.

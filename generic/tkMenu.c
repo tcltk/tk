@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.6 2000/02/10 08:52:35 hobbs Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.7 2000/06/27 17:15:58 ericm Exp $
  */
 
 /*
@@ -3403,7 +3403,7 @@ DeleteMenuCloneEntries(menuPtr, first, last)
 	}
 	for (i = last + 1; i < menuListPtr->numEntries; i++) {
 	    menuListPtr->entries[i - numDeleted] = menuListPtr->entries[i];
-	    menuListPtr->entries[i - numDeleted]->index = i;
+	    menuListPtr->entries[i - numDeleted]->index = i - numDeleted;
 	}
 	menuListPtr->numEntries -= numDeleted;
 	if (menuListPtr->numEntries == 0) {
