@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.7 2003/03/08 02:15:46 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.8 2003/03/12 05:56:21 wolfsuit Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -200,6 +200,11 @@ static struct TearoffSelect {
     				 * when we are in this menu */
 } tearoffStruct;
 
+struct MenuCommandHandlerData { /* This is the ClientData we pass to */
+    TkMenu *menuPtr;            /* Tcl_DoWhenIdle to move handling */
+    int index;                  /* menu commands to the event loop. */
+};
+
 static RgnHandle totalMenuRgn = NULL;
 				/* Used to update windows which have been
 				 * obscured by menus. */
@@ -257,6 +262,7 @@ static void		DrawTearoffEntry _ANSI_ARGS_((TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Drawable d, GC gc, 
 			    Tk_Font tkfont, CONST Tk_FontMetrics *fmPtr, 
 			    int x, int y, int width, int height));
+static void             EventuallyInvokeMenu (ClientData data);
 static void		GetEntryText _ANSI_ARGS_((TkMenuEntry *mePtr,
 			    Tcl_DString *dStringPtr));
 static void		GetMenuAccelGeometry _ANSI_ARGS_((TkMenu *menuPtr,
@@ -2071,7 +2077,36 @@ TkpSetWindowMenuBar(
     	listPtr->menuPtr = menuPtr;
     }
 }
-
+
+static void 
+/*
+ *----------------------------------------------------------------------
+ *
+ * EventuallyInvokeMenu --
+ *
+ *	This IdleTime callback actually invokes the menu command
+ *      scheduled in TkMacOSXDispatchMenuEvent.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Commands get executed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+EventuallyInvokeMenu (ClientData data)
+{
+    struct MenuCommandHandlerData *realData
+            = (struct MenuCommandHandlerData *) data;
+
+    Tcl_Release(realData->menuPtr->interp);
+    Tcl_Release(realData->menuPtr);
+    TkInvokeMenu(realData->menuPtr->interp, realData->menuPtr,
+            realData->index);
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2084,7 +2119,7 @@ TkpSetWindowMenuBar(
  *	None.
  *
  * Side effects:
- *	Commands get executed.
+ *	Commands for the event are scheduled for execution at idle time.
  *
  *----------------------------------------------------------------------
  */
@@ -2127,7 +2162,16 @@ TkMacOSXDispatchMenuEvent(
                     GetMenuItemText(GetMenuHandle(menuID), index, itemText);
                     result = TCL_OK;
                 } else {
-                    result = TkInvokeMenu(menuPtr->interp, menuPtr, index - 1);
+                    struct MenuCommandHandlerData *data
+                            = (struct MenuCommandHandlerData *)
+                            ckalloc(sizeof(struct MenuCommandHandlerData));
+                    Tcl_Preserve(menuPtr->interp);
+                    Tcl_Preserve(menuPtr);
+                    data->menuPtr = menuPtr;
+                    data->index = index - 1;
+                    Tcl_DoWhenIdle (EventuallyInvokeMenu,
+                            (ClientData) data);
+                    /* result = TkInvokeMenu(menuPtr->interp, menuPtr, index - 1); */
                 }
             } else {
                 return TCL_ERROR;
@@ -2136,7 +2180,7 @@ TkMacOSXDispatchMenuEvent(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
