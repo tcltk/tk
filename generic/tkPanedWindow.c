@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.2 2002/02/22 21:07:23 hobbs Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.3 2002/04/12 06:37:20 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -967,8 +967,9 @@ ConfigureSlaves(pwPtr, interp, objc, objv)
      * Allocate the new slaves array, then copy the slaves into it, in
      * order.
      */
-    new = (Slave **)ckalloc(sizeof(Slave *) * (pwPtr->numSlaves+numNewSlaves));
-    memset(new, 0, sizeof(Slave *) * (pwPtr->numSlaves + numNewSlaves));
+    i = sizeof(Slave *) * (pwPtr->numSlaves+numNewSlaves);
+    new = (Slave **)ckalloc((unsigned) i);
+    memset(new, 0, (size_t) i);
     if (index == -1) {
 	/*
 	 * If none of the existing slaves have to be moved, just copy the old
@@ -1505,6 +1506,9 @@ DestroyPanedWindow(pwPtr)
 		pwPtr->tkwin);
 	ckfree((void *)pwPtr->slaves[i]);
 	pwPtr->slaves[i] = NULL;
+    }
+    if (pwPtr->slaves) {
+	ckfree((char *) pwPtr->slaves);
     }
 	
     /*
