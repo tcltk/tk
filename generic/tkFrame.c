@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.18 2004/12/17 13:56:15 chengyemao Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.19 2005/01/09 18:28:05 chengyemao Exp $
  */
 
 #include "default.h"
@@ -803,10 +803,18 @@ FrameWidgetObjCmd(clientData, interp, objc, objv)
 			&& (strncmp(arg, "-use", length) == 0))
 			|| ((c == 'v')
 			&& (strncmp(arg, "-visual", length) == 0))) {
-		    Tcl_AppendResult(interp, "can't modify ", arg,
+		    if(c == 'u') {
+			CONST char*string = Tcl_GetString(objv[i+1]);
+			if(TCL_OK == TkpUseWindow(interp, framePtr->tkwin, string)) {
+			    result = TCL_ERROR;
+			    goto done;
+			}
+		    } else {
+			Tcl_AppendResult(interp, "can't modify ", arg,
 			    " option after widget is created", (char *) NULL);
-		    result = TCL_ERROR;
-		    goto done;
+			result = TCL_ERROR;
+			goto done;
+		    }
 		}
 	    }
 	    result = ConfigureFrame(interp, framePtr, objc-2, objv+2);
