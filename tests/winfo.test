@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winfo.test,v 1.5 2000/03/02 23:52:57 hobbs Exp $
+# RCS: @(#) $Id: winfo.test,v 1.6 2002/06/14 07:17:53 mdejong Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -359,6 +359,28 @@ test winfo-13.4 {[winfo containing] with embedded windows} {
     catch {destroy .emb}
     set z
 } 0
+
+test winfo-14.1 {usage} {
+    list [catch {winfo ismapped} msg] $msg
+} {1 {wrong # args: should be "winfo ismapped window"}}
+
+test winfo-14.2 {usage} {
+    list [catch {winfo ismapped . .} msg] $msg
+} {1 {wrong # args: should be "winfo ismapped window"}}
+
+test winfo-14.3 {initially unmapped} {
+    catch {destroy .t}
+    toplevel .t
+    winfo ismapped .t
+} 0
+
+test winfo-14.4 {mapped at idle time} {
+    catch {destroy .t}
+    toplevel .t
+    update idletasks
+    winfo ismapped .t
+} 1
+
 
 foreach i [winfo children .] {
     catch {destroy $i}
