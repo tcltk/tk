@@ -1,5 +1,7 @@
 2003-02-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* doc/colors.n: corrected B values [Bug #682714].
+
 	* win/tkWinInit.c (TkpDisplayWarning): truncate MessageBox string
 	to 1024 chars to prevent possible oversized window errors.  May be
 	necessary in other MB uses (ie Tcl_AppInit). [Tcl Bug #608559]
