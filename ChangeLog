@@ -2,6 +2,11 @@
 
 	* macosx/tkMacOSXMenu.c: fix to accelerators shown in menus
 	with non-alphanumeric keys.
+	* macosx/tkMacOSXKeyEvent.c: 
+	* macosx/tkMacOSXKeyboard.c: applied first patch from [Patch
+	#622582] to fix some of [Bug #616988].  Further work is needed
+	in this area, but this will let foreign keyboards at least work
+	reasonably with Tk.
 	
 2002-10-15  Jeff Hobbs  <jeffh@ActiveState.com>
 
