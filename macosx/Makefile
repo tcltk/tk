@@ -3,7 +3,7 @@
 # Simple makefile for building on Mac OS X with the
 # Project Builder command line tool 'pbxbuild'
 #
-# RCS: @(#) $Id: Makefile,v 1.7.2.2 2003/07/18 01:06:33 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.7.2.3 2003/09/25 05:37:48 das Exp $
 #
 ################################################################################
 
@@ -25,7 +25,7 @@ PBXBUILD	= /usr/bin/pbxbuild
 
 BUILD		= ${PBXBUILD} SYMROOT="${SYMROOT}" -target "${TARGET}" \
 			TCL_FRAMEWORK_DIR="${TCL_FRAMEWORK_DIR}" \
-			TCLSH_DIR="${TCLSH_DIR}"
+			TCLSH_DIR="${TCLSH_DIR}" ${MAKEOVERRIDES}
 
 DEVBUILD	= ${BUILD} -buildstyle "${DEVBUILDSTYLE}"
 DEPBUILD	= ${BUILD} -buildstyle "${DEPBUILDSTYLE}"

@@ -1,8 +1,15 @@
+2003-09-25  Daniel Steffen  <das@users.sourceforge.net>
+
+	* library/demos/widget: don't create iconwindow on aqua, but add
+	about menu like on classic.
+	* macosx/Makefile: pass MAKEOVERRIDES to pxbuild.
+	* macosx/tkMacOSXButton.c: added -compound support for bevel buttons.
+
 2003-09-17  Don Porter  <dgp@users.sourceforge.net>
 
-        * generic/tkImage.c:    Stopped [image create] from generating an
-        * tests/image.test:     image command name that would overwrite an
-        existing command name.  Thanks to Michael Schlenker.  [Bug 808039].
+	* generic/tkImage.c:    Stopped [image create] from generating an
+	* tests/image.test:     image command name that would overwrite an
+	existing command name.  Thanks to Michael Schlenker.  [Bug 808039].
 
 2003-08-19  Joe English  <jenglish@users.sourceforge.net>
 	* generic/tkPanedWindow.c(PanedWindowWorldChanged):
