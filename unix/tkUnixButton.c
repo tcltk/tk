@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.8 2000/11/22 01:49:38 ericm Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.9 2002/06/17 10:54:29 drh Exp $
  */
 
 #include "tkButton.h"
@@ -121,7 +121,7 @@ TkpDisplayButton(clientData)
     relief = butPtr->relief;
     if ((butPtr->type >= TYPE_CHECK_BUTTON) && !butPtr->indicatorOn) {
 	relief = (butPtr->flags & SELECTED) ? TK_RELIEF_SUNKEN
-		: TK_RELIEF_RAISED;
+		: butPtr->offRelief;
     }
 
     offset = (butPtr->type == TYPE_BUTTON) && !Tk_StrictMotif(butPtr->tkwin);

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.15 2002/04/05 08:43:22 hobbs Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.16 2002/06/17 10:54:29 drh Exp $
  */
 
 #define OEMRESOURCE
@@ -387,7 +387,7 @@ TkpDisplayButton(clientData)
     relief = butPtr->relief;
     if ((butPtr->type >= TYPE_CHECK_BUTTON) && !butPtr->indicatorOn) {
 	relief = (butPtr->flags & SELECTED) ? TK_RELIEF_SUNKEN
-		: TK_RELIEF_RAISED;
+		: butPtr->offRelief;
     }
 
     /*
