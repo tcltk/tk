@@ -3,7 +3,7 @@
 # This demonstration script creates a simple collection of widgets
 # that allow you to select and view images in a Tk label.
 #
-# RCS: @(#) $Id: image2.tcl,v 1.3 2001/08/10 08:33:35 dkf Exp $
+# RCS: @(#) $Id: image2.tcl,v 1.4 2001/11/15 14:02:47 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -22,6 +22,23 @@ proc loadDir w {
     $w.f.list delete 0 end
     foreach i [lsort [glob -directory $dirName *]] {
 	$w.f.list insert end [file tail $i]
+    }
+}
+
+# loadDir --
+# This procedure pops up a dialog to ask for a directory to load into
+# the listobx and (if the user presses OK) reloads the directory
+# listbox from the directory named in the demo's entry.
+#
+# Arguments:
+# w -			Name of the toplevel window of the demo.
+
+proc selectAndLoadDir w {
+    global dirName
+    set dir [tk_chooseDirectory -initialdir $dirName -parent $w -mustexist 1]
+    if {[string length $dir] != 0} {
+	set dirName $dir
+	loadDir $w
     }
 }
 
@@ -57,14 +74,18 @@ button $w.buttons.dismiss -text Dismiss -command "destroy $w"
 button $w.buttons.code -text "See Code" -command "showCode $w"
 pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
 
-label $w.dirLabel -text "Directory:"
+frame $w.mid
+pack $w.mid -fill both -expand 1
+
+labelframe $w.dir -text "Directory:"
 set dirName [file join $tk_library demos images]
-entry $w.dirName -width 30 -textvariable dirName
-bind $w.dirName <Return> "loadDir $w"
-frame $w.spacer1 -height 3m -width 20
-label $w.fileLabel -text "File:"
-frame $w.f
-pack $w.dirLabel $w.dirName $w.spacer1 $w.fileLabel $w.f -side top -anchor w
+entry $w.dir.e -width 30 -textvariable dirName
+button $w.dir.b -pady 0 -padx 2m -text "Select Dir." \
+	-command "selectAndLoadDir $w"
+bind $w.dir.e <Return> "loadDir $w"
+pack $w.dir.e -side left -fill y -padx 2m -pady 2m
+pack $w.dir.b -side left -fill y -padx {0 2m} -pady 2m
+labelframe $w.f -text "File:" -padx 2m -pady 2m
 
 listbox $w.f.list -width 20 -height 10 -yscrollcommand "$w.f.scroll set"
 scrollbar $w.f.scroll -command "$w.f.list yview"
@@ -74,7 +95,10 @@ bind $w.f.list <Double-1> "loadImage $w %x %y"
 
 catch {image delete image2a}
 image create photo image2a
-frame $w.spacer2 -height 3m -width 20
-label $w.imageLabel -text "Image:"
-label $w.image -image image2a
-pack $w.spacer2 $w.imageLabel $w.image -side top -anchor w
+labelframe $w.image -text "Image:"
+label $w.image.image -image image2a
+pack $w.image.image -padx 2m -pady 2m
+
+grid $w.dir -        -sticky w -padx 1m -pady 1m -in $w.mid
+grid $w.f   $w.image -sticky nw -padx 1m -pady 1m -in $w.mid
+grid columnconfigure $w.mid 1 -weight 1

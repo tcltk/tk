@@ -1,5 +1,13 @@
 2001-11-15  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* library/demos/image2.tcl: Many improvements to this
+	image-viewing demo; now uses labelframes and tk_chooseDirectory
+
+	* library/palette.tcl (::tk::RecolorTree): Made this work better
+	with CDE, which does some extremely annoying things with the
+	option database that interact badly with Tk's way of handling
+	options.
+
 	* doc/text.n: Overhauled the documentation of undo to make it
 	easier to understand.
 	* library/tk.tcl (::tk::EventMotifBindings): Added Emacs-like undo
