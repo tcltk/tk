@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.3 1998/09/14 18:24:00 stanton Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.4 1999/02/04 21:00:48 stanton Exp $
  */
 
 #include "tkWinInt.h"
@@ -391,14 +391,24 @@ Tk_MeasureChars(tkfont, source, numChars, maxLength, flags, lengthPtr)
 
 	if (((flags & TK_PARTIAL_OK) && max < numChars && curX < maxLength)
 		|| ((flags & TK_AT_LEAST_ONE) && max == 0 && numChars > 0)) {
+
+	    /*
+	     * MS BUG ALERT - We have to pass the bogus length, and
+	     * the dummyMax parameter, because without them the call crashes on
+	     * NT/J Service Pack 3 and less.  This is documented in the
+	     * Microsoft Knowledge Base.
+	     */
+         
+	    int dummyMax;
+           
 	    /*
 	     * We want to include the first character that didn't
 	     * quite fit.  Call the function again to include the
 	     * width of the extra character.
              */
 	    
-	    GetTextExtentExPoint(hdc, source, max + 1, 0, NULL, partials,
-                       &size);
+	    GetTextExtentExPoint(hdc, source, max + 1, INT_MAX, &dummyMax,
+		    partials, &size);
 	    curX = partials[max];
 	    ++max;
 
