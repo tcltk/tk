@@ -1,3 +1,11 @@
+2004-10-26  David Gravereaux <davygrvy@pobox.com>
+
+	* win/tkWinX.c:		     Signature for tkWinXCleanup needed to be
+	* generic/tkInt.decls:       changed so it matches the Tcl_ExitProc
+	* generic/tkIntPlatDecls.h:  typedef to avoid a bad-style cast.
+
+	* win/makefile.vc: Force TCL_LIBRARY envar when calling tclsh
+
 2004-10-26  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinRegion.c (TkpBuildRegionFromAlphaData): Fixed syntax error

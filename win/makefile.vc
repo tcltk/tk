@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.86 2004/09/16 17:52:08 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.87 2004/10/27 00:56:33 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if !defined(MSDEVDIR) && !defined(MSVCDIR)
@@ -568,6 +568,7 @@ genstubs:
 !if !exist($(TCLSH))
 	@echo Build tclsh first!
 !else
+	set TCL_LIBRARY=$(TCL_LIBRARY)
 	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
 		$(GENERICDIR)\$(PROJECT).decls $(GENERICDIR)\$(PROJECT)Int.decls
 !endif
@@ -581,6 +582,7 @@ depend:
 !if !exist($(TCLSH))
 	@echo Build tclsh first!
 !else
+	set TCL_LIBRARY=$(TCL_LIBRARY)
 	$(TCLSH) $(TOOLSDIR:\=/)/mkdepend.tcl -vc32 -out:"$(OUT_DIR)\depend.mk" \
 		-passthru:"-DBUILD_tcl $(TK_INCLUDES:"="")" $(GENERICDIR) \
 		$(COMPATDIR) $(WINDIR) @<<
