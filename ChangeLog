@@ -1,3 +1,14 @@
+2004-01-15  David Gravereaux <davygrvy@pobox.com>
+
+	* win/tkWinSendCom.c:  Placed the requirement for the special COM
+	libraries into the object file itself with #paragma comment (lib, ...)
+	when built with VC++.  This will simplify linking for users of the
+	static library.  uuid.lib is required for VC5.2, but is implicit
+	with VC6.
+
+	* win/makefile.vc:  Removed 'ole32.lib oleaut32.lib uuid.lib' from
+	$(baselibs).
+
 2004-01-12  David Gravereaux <davygrvy@pobox.com>
 
 	* generic/tk3d.c:	All uses of 'panic' (the macro) changed
