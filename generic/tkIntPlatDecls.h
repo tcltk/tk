@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.9.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.9.2.2 2001/10/17 07:02:07 wolfsuit Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -32,7 +32,7 @@
  * Exported function declarations:
  */
 
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
 /* 0 */
 EXTERN void		TkCreateXEventSource _ANSI_ARGS_((void));
 /* 1 */
@@ -296,7 +296,7 @@ EXTERN MacDrawable *	TkMacGetHostToplevel _ANSI_ARGS_((TkWindow * winPtr));
 /* 65 */
 EXTERN void		TkMacPreprocessMenu _ANSI_ARGS_((void));
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
 /* 0 */
 EXTERN void		TkGenerateActivateEvents _ANSI_ARGS_((
 				TkWindow * winPtr, int active));
@@ -421,13 +421,13 @@ EXTERN void		TkMacOSXPreprocessMenu _ANSI_ARGS_((void));
 EXTERN int		TkpIsWindowFloating _ANSI_ARGS_((WindowRef window));
 /* 47 */
 EXTERN Tk_Window	TkMacOSXGetCapture _ANSI_ARGS_((void));
-#endif /* MAC_OSX_TCL */
+#endif /* MAC_OSX_TK */
 
 typedef struct TkIntPlatStubs {
     int magic;
     struct TkIntPlatStubHooks *hooks;
 
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     void (*tkCreateXEventSource) _ANSI_ARGS_((void)); /* 0 */
     void (*tkFreeWindowId) _ANSI_ARGS_((TkDisplay * dispPtr, Window w)); /* 1 */
     void (*tkInitXId) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 2 */
@@ -542,7 +542,7 @@ typedef struct TkIntPlatStubs {
     MacDrawable * (*tkMacGetHostToplevel) _ANSI_ARGS_((TkWindow * winPtr)); /* 64 */
     void (*tkMacPreprocessMenu) _ANSI_ARGS_((void)); /* 65 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
     void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow * winPtr, int active)); /* 0 */
     Pixmap (*tkpCreateNativeBitmap) _ANSI_ARGS_((Display * display, char * source)); /* 1 */
     void (*tkpDefineNativeBitmaps) _ANSI_ARGS_((void)); /* 2 */
@@ -591,7 +591,7 @@ typedef struct TkIntPlatStubs {
     void (*tkMacOSXPreprocessMenu) _ANSI_ARGS_((void)); /* 45 */
     int (*tkpIsWindowFloating) _ANSI_ARGS_((WindowRef window)); /* 46 */
     Tk_Window (*tkMacOSXGetCapture) _ANSI_ARGS_((void)); /* 47 */
-#endif /* MAC_OSX_TCL */
+#endif /* MAC_OSX_TK */
 } TkIntPlatStubs;
 
 #ifdef __cplusplus
@@ -608,7 +608,7 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
  * Inline function declarations:
  */
 
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
 #ifndef TkCreateXEventSource
 #define TkCreateXEventSource \
 	(tkIntPlatStubsPtr->tkCreateXEventSource) /* 0 */
@@ -1017,7 +1017,7 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkMacPreprocessMenu) /* 65 */
 #endif
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
 #ifndef TkGenerateActivateEvents
 #define TkGenerateActivateEvents \
 	(tkIntPlatStubsPtr->tkGenerateActivateEvents) /* 0 */
@@ -1210,7 +1210,7 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkMacOSXGetCapture \
 	(tkIntPlatStubsPtr->tkMacOSXGetCapture) /* 47 */
 #endif
-#endif /* MAC_OSX_TCL */
+#endif /* MAC_OSX_TK */
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.1.2.2 2001/10/17 07:02:02 wolfsuit Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -1148,7 +1148,7 @@ TkMacOSXIsCharacterMissing(
  * For some reason, FMSwapFont always returns a NULL font handle under OS X
  * Until we figure this one out, return 0;
  */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
     return 0;
 #else
     MacFont *fontPtr = (MacFont *) tkfont;
@@ -1750,7 +1750,7 @@ FontMapLoadPage(
     fmOut=FMSwapFont(&fm);
     fHandle=fmOut->fontHandle;
     isMultiByteFont=subFontPtr->familyPtr->isMultiByteFont;
-#ifndef MAC_OSX_TCL
+#ifndef MAC_OSX_TK
     GetResInfo(fHandle, &theID, &theType, theName);
     fprintf ( stderr, "ResError() %d, %x\n", ResError (), fHandle );
     if (theType=='sfnt') {
@@ -1772,7 +1772,7 @@ FontMapLoadPage(
                                                    << (bitOffset & 7);
             }
         }
-#ifndef MAC_OSX_TCL
+#ifndef MAC_OSX_TK
     } else {
         /*
          * Found an old bitmap font which has a well-defined record.

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.6.6.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkPlatDecls.h,v 1.6.6.2 2001/10/17 07:02:07 wolfsuit Exp $
  */
 
 #ifndef _TKPLATDECLS
@@ -82,7 +82,7 @@ EXTERN int		TkMacHaveAppearance _ANSI_ARGS_((void));
 /* 10 */
 EXTERN GWorldPtr	TkMacGetDrawablePort _ANSI_ARGS_((Drawable drawable));
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
 /* 0 */
 EXTERN void		Tk_MacOSXSetEmbedHandler _ANSI_ARGS_((
 				Tk_MacOSXEmbedRegisterWinProc * registerWinProcPtr, 
@@ -120,7 +120,7 @@ EXTERN int		Tk_MacOSXOpenBundleResources _ANSI_ARGS_((
 EXTERN void		Tk_MacOSXSetupTkNotifier _ANSI_ARGS_((void));
 /* 11 */
 EXTERN int		Tk_MacOSXIsAppInFront _ANSI_ARGS_((void));
-#endif /* MAC_OSX_TCL */
+#endif /* MAC_OSX_TK */
 
 typedef struct TkPlatStubs {
     int magic;
@@ -147,7 +147,7 @@ typedef struct TkPlatStubs {
     int (*tkMacHaveAppearance) _ANSI_ARGS_((void)); /* 9 */
     GWorldPtr (*tkMacGetDrawablePort) _ANSI_ARGS_((Drawable drawable)); /* 10 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
     void (*tk_MacOSXSetEmbedHandler) _ANSI_ARGS_((Tk_MacOSXEmbedRegisterWinProc * registerWinProcPtr, Tk_MacOSXEmbedGetGrafPortProc * getPortProcPtr, Tk_MacOSXEmbedMakeContainerExistProc * containerExistProcPtr, Tk_MacOSXEmbedGetClipProc * getClipProc, Tk_MacOSXEmbedGetOffsetInParentProc * getOffsetProc)); /* 0 */
     void (*tk_MacOSXTurnOffMenus) _ANSI_ARGS_((void)); /* 1 */
     void (*tk_MacOSXTkOwnsCursor) _ANSI_ARGS_((int tkOwnsIt)); /* 2 */
@@ -160,7 +160,7 @@ typedef struct TkPlatStubs {
     int (*tk_MacOSXOpenBundleResources) _ANSI_ARGS_((Tcl_Interp * interp, char * bundleName, char * libraryPath, int maxPathLen, int hasResourceFile)); /* 9 */
     void (*tk_MacOSXSetupTkNotifier) _ANSI_ARGS_((void)); /* 10 */
     int (*tk_MacOSXIsAppInFront) _ANSI_ARGS_((void)); /* 11 */
-#endif /* MAC_OSX_TCL */
+#endif /* MAC_OSX_TK */
 } TkPlatStubs;
 
 #ifdef __cplusplus
@@ -249,7 +249,7 @@ extern TkPlatStubs *tkPlatStubsPtr;
 	(tkPlatStubsPtr->tkMacGetDrawablePort) /* 10 */
 #endif
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
 #ifndef Tk_MacOSXSetEmbedHandler
 #define Tk_MacOSXSetEmbedHandler \
 	(tkPlatStubsPtr->tk_MacOSXSetEmbedHandler) /* 0 */
@@ -298,7 +298,7 @@ extern TkPlatStubs *tkPlatStubsPtr;
 #define Tk_MacOSXIsAppInFront \
 	(tkPlatStubsPtr->tk_MacOSXIsAppInFront) /* 11 */
 #endif
-#endif /* MAC_OSX_TCL */
+#endif /* MAC_OSX_TK */
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 

@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.13.8.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.13.8.2 2001/10/17 07:02:07 wolfsuit Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
@@ -652,7 +652,7 @@ EXTERN void		XQueryColors _ANSI_ARGS_((Display * display,
 				Colormap colormap, XColor * defs_in_out, 
 				int ncolors));
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
 /* 0 */
 EXTERN void		XSetDashes _ANSI_ARGS_((Display* display, GC gc, 
 				int dash_offset, _Xconst char* dash_list, 
@@ -937,7 +937,7 @@ EXTERN void		XQueryColor _ANSI_ARGS_((Display * display,
 EXTERN void		XQueryColors _ANSI_ARGS_((Display * display, 
 				Colormap colormap, XColor * defs_in_out, 
 				int ncolors));
-#endif /* MAC_OSX_TCL */
+#endif /* MAC_OSX_TK */
 
 typedef struct TkIntXlibStubs {
     int magic;
@@ -1144,7 +1144,7 @@ typedef struct TkIntXlibStubs {
     void (*xQueryColor) _ANSI_ARGS_((Display * display, Colormap colormap, XColor * def_in_out)); /* 88 */
     void (*xQueryColors) _ANSI_ARGS_((Display * display, Colormap colormap, XColor * defs_in_out, int ncolors)); /* 89 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
     void (*xSetDashes) _ANSI_ARGS_((Display* display, GC gc, int dash_offset, _Xconst char* dash_list, int n)); /* 0 */
     XModifierKeymap* (*xGetModifierMapping) _ANSI_ARGS_((Display* d)); /* 1 */
     XImage * (*xCreateImage) _ANSI_ARGS_((Display* d, Visual* v, unsigned int ui1, int i1, int i2, char* cp, unsigned int ui2, unsigned int ui3, int i3, int i4)); /* 2 */
@@ -1235,7 +1235,7 @@ typedef struct TkIntXlibStubs {
     void (*xWarpPointer) _ANSI_ARGS_((Display* display, Window src_w, Window dest_w, int src_x, int src_y, unsigned int src_width, unsigned int src_height, int dest_x, int dest_y)); /* 87 */
     void (*xQueryColor) _ANSI_ARGS_((Display * display, Colormap colormap, XColor * def_in_out)); /* 88 */
     void (*xQueryColors) _ANSI_ARGS_((Display * display, Colormap colormap, XColor * defs_in_out, int ncolors)); /* 89 */
-#endif /* MAC_OSX_TCL */
+#endif /* MAC_OSX_TK */
 } TkIntXlibStubs;
 
 #ifdef __cplusplus
@@ -2041,7 +2041,7 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xQueryColors) /* 89 */
 #endif
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
 #ifndef XSetDashes
 #define XSetDashes \
 	(tkIntXlibStubsPtr->xSetDashes) /* 0 */
@@ -2402,7 +2402,7 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #define XQueryColors \
 	(tkIntXlibStubsPtr->xQueryColors) /* 89 */
 #endif
-#endif /* MAC_OSX_TCL */
+#endif /* MAC_OSX_TK */
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 

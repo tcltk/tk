@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.15.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+# RCS: @(#) $Id: tk.decls,v 1.15.2.2 2001/10/17 07:02:06 wolfsuit Exp $
 
 library tk
 
@@ -1247,7 +1247,7 @@ declare 10 mac {
 
 # Mac OS X specific functions
 
-declare 0 macosx {
+declare 0 aqua {
     void Tk_MacOSXSetEmbedHandler ( \
 	    Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr, \
 	    Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr, \
@@ -1256,40 +1256,40 @@ declare 0 macosx {
 	    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
 }
  
-declare 1 macosx {
+declare 1 aqua {
     void Tk_MacOSXTurnOffMenus (void)
 }
 
-declare 2 macosx {
+declare 2 aqua {
     void Tk_MacOSXTkOwnsCursor (int tkOwnsIt)
 }
 
-declare 3 macosx {
+declare 3 aqua {
     void TkMacOSXInitMenus (Tcl_Interp *interp)
 }
 
-declare 4 macosx {
+declare 4 aqua {
     void TkMacOSXInitAppleEvents (Tcl_Interp *interp)
 }
 
-declare 5 macosx {
+declare 5 aqua {
     void TkGenWMConfigureEvent (Tk_Window tkwin, \
 	    int x, int y, int width, int height, int flags)
 }
 
-declare 6 macosx {
+declare 6 aqua {
     void TkMacOSXInvalClipRgns (TkWindow *winPtr)
 }
 
-declare 7 macosx {
+declare 7 aqua {
     GWorldPtr TkMacOSXGetDrawablePort (Drawable drawable)
 }
 
-declare 8 macosx {
+declare 8 aqua {
     ControlRef TkMacOSXGetRootControl (Drawable drawable)
 }
 
-declare 9 macosx {
+declare 9 aqua {
     int Tk_MacOSXOpenBundleResources (Tcl_Interp *interp, \
         char *bundleName, \
         char *libraryPath, \
@@ -1297,10 +1297,10 @@ declare 9 macosx {
         int hasResourceFile)
 }
 
-declare 10 macosx {
+declare 10 aqua {
     void Tk_MacOSXSetupTkNotifier (void)
 }
 
-declare 11 macosx {
+declare 11 aqua {
     int Tk_MacOSXIsAppInFront (void)
 }

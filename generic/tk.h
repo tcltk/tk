@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.57.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tk.h,v 1.57.2.2 2001/10/17 07:02:07 wolfsuit Exp $
  */
 
 #ifndef _TK
@@ -58,7 +58,7 @@ extern "C" {
  * compilers.  We use this method because there is no autoconf equivalent.
  */
 
-#if  defined(MAC_TCL) || defined(MAC_OSX_TCL)
+#if  defined(MAC_TCL) || defined(MAC_OSX_TK)
 #   ifndef REDO_KEYSYM_LOOKUP
 #	define REDO_KEYSYM_LOOKUP
 #   endif
@@ -79,7 +79,7 @@ extern "C" {
 #   if defined (MAC_TCL)
 #      include <Xlib.h>
 #      include <X.h>
-#   elif defined(MAC_OSX_TCL)
+#   elif defined(MAC_OSX_TK)
 #	include <X11/Xlib.h>
 #	include <X11/X.h>
 #   else
