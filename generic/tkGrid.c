@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.14 2001/08/22 19:59:49 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.15 2001/09/17 23:16:26 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -2384,7 +2384,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
     Gridder *slavePtr;
     Tk_Window other, slave, parent, ancestor;
     int i, j, tmp;
-    size_t length;
+    int length;
     int numWindows;
     int width;
     int defaultColumn = 0;	/* default column number */
