@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.58 2002/09/03 05:15:43 dgp Exp $
+RCS: @(#) $Id: changes,v 1.59 2002/09/08 23:42:21 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5305,7 +5305,7 @@ Rewrote Tk test suite to use tcltest package.
 
 2002-09-02 (bug fix)[565485] button height on windows (hobbs)
 
-2002-09-02 (new feature)[TIP ???] new comand [tk windowingsystem] (steffen)
+2002-09-02 (new feature)[TIP 108] new comand [tk windowingsystem] (steffen)
 
 2002-09-02 (new feature)[TIP 107][601518] [raise] is non-blocking (english)
 
