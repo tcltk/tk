@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.36 2002/12/27 21:23:04 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.36.2.1 2004/04/21 02:45:22 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -2277,6 +2277,13 @@ WmMaxsizeCmd(tkwin, winPtr, interp, objc, objv)
     wmPtr->maxWidth = width;
     wmPtr->maxHeight = height;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
+
+    if (width <= 0 && height <= 0) {
+	wmPtr->sizeHintsFlags &= ~PMaxSize;
+    } else {
+	wmPtr->sizeHintsFlags |= PMaxSize;
+    }
+
     WmUpdateGeom(wmPtr, winPtr);
     return TCL_OK;
 }
@@ -4218,7 +4225,7 @@ UpdateSizeHints(winPtr)
     hintsPtr->max_aspect.x = wmPtr->maxAspect.x;
     hintsPtr->max_aspect.y = wmPtr->maxAspect.y;
     hintsPtr->win_gravity = wmPtr->gravity;
-    hintsPtr->flags = wmPtr->sizeHintsFlags | PMinSize | PMaxSize;
+    hintsPtr->flags = wmPtr->sizeHintsFlags | PMinSize;
 
     /*
      * If the window isn't supposed to be resizable, then set the

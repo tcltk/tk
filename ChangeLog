@@ -1,3 +1,10 @@
+2004-04-20  Joe English  <jenglish@users.sourceforge.net>
+
+	* unix/tkUnixWm.c: Backported fix for bug #915350  
+	"Tk sets min, max size in WM_HINTS when it shouldn't" 
+	and #922336 "Tk apps have no maximize window button under 
+	KDE-3.2.1"
+
 2004-04-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/bgerror.tcl (bgerror): rework to only set -topmost bit
