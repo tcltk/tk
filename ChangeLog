@@ -1,3 +1,8 @@
+2001-09-12  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* unix/configure:
+	* unix/tcl.m4: Update from Tcl.
+
 2001-09-12  D. Richard Hipp  <drh@hwaci.com>
 
 	* Fix a bug in library/tkxbox.tcl
