@@ -1,26 +1,25 @@
 The Tk Toolkit
 
-RCS: @(#) $Id: README,v 1.1.4.2 1998/09/30 02:15:12 stanton Exp $
+RCS: @(#) $Id: README,v 1.1.4.3 1998/12/04 07:21:17 welch Exp $
 
 1. Introduction
 ---------------
 
 This directory and its descendants contain the sources and documentation
 for Tk, an X11 toolkit implemented with the Tcl scripting language.  The
-information here constitutes the 8.1a2 release, which is the second alpha
-release for Tk 8.1.  This release is still in experimental form and is
-intended for expert early adopters who are willing to help us find and
-fix problems. The release is certain to contain bugs and is not yet
-feature-complete: we will probably add new features or change some of
-the existing features before the final 8.1 release.  Please let us know
-about any problems you uncover.
+information here constitutes the 8.1b1 release, which is the first beta
+release for Tcl 8.1.  This release is mostly feature complete but may
+have bugs and be missing some minor features.  This release is for
+early adopters who are willing to help us find and fix problems.
+Please let us know about any problems you uncover.
+
 
 The most important change in Tk 8.1 is that it supports the new
 internationalization features in Tcl 8.1.  It also contains a new
 library for handling configuration options some of the widgets have been
 converted to use the Tcl object facilities.  For details on features,
 incompatibilities, and potential problems with this release, see the
-Tcl/Tk 8.1 Web page at http://sunscript.sun.com/TclTkCore/8.1.html or
+Tcl/Tk 8.1 Web page at http://www.scriptics.com/software/8.1.html or
 refer to the "changes" file in this directory, which contains a
 historical record of all changes to Tk.
 
@@ -225,6 +224,9 @@ script:
     (b) what happens when you do these things (presumably this is
         undesirable)?
     (c) what did you expect to happen instead?
+
+You can use our bug reporting form to submit this information:
+http://www.scriptics.com/support/bugForm.html
 
 The Tcl/Tk community is too large for us to provide much individual
 support for users.  If you need help we suggest that you post questions

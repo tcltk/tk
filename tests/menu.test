@@ -6,7 +6,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: menu.test,v 1.1.4.2 1998/09/30 02:18:47 stanton Exp $
+# RCS: @(#) $Id: menu.test,v 1.1.4.3 1998/12/04 07:21:22 welch Exp $
 
 if {[lsearch [image types] test] < 0} {
     puts "This application hasn't been compiled with the \"test\" image"
@@ -1669,6 +1669,17 @@ test menu-12.3 {ConfigureMenuCloneEntries} {
     .m1 clone .m2
     .m1 add cascade -label dummy
     list [catch {.m1 entryconfigure dummy -menu .m3} msg] $msg [destroy .m1]
+} {0 {} {}}
+
+test menu-12.4 {ConfigureMenuCloneEntries} {
+     catch {destroy .m1}
+     catch {destroy .m2}
+     menu .m1
+     .m1 add cascade -label File -menu .m1.foo
+     menu .m1.foo
+     .m1.foo add command -label bar
+     .m1 clone .m2
+     list [catch {.m1 entryconfigure File -state disabled} msg1] $msg1 [destroy .m1]
 } {0 {} {}}
 
 test menu-13.1 {TkGetMenuIndex} {

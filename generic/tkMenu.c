@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.1.4.4 1998/11/25 22:36:50 stanton Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.1.4.5 1998/12/04 07:21:20 welch Exp $
  */
 
 /*
@@ -1998,7 +1998,7 @@ ConfigureMenuCloneEntries(interp, menuPtr, index, objc, objv)
 		Tcl_Obj *pathNamePtr = Tcl_NewStringObj(
 			Tk_PathName(menuListPtr->tkwin), -1);
 		Tcl_Obj *normalPtr = Tcl_NewStringObj("normal", -1);
-		Tcl_Obj *menuObjPtr = Tcl_NewStringObj("menu", -1);
+		Tcl_Obj *menuObjPtr = Tcl_NewStringObj("-menu", -1);
 
 		Tcl_IncrRefCount(pathNamePtr);
 		newCloneNamePtr = TkNewMenuName(menuPtr->interp,
@@ -2628,8 +2628,7 @@ CloneMenu(menuPtr, newMenuNamePtr, newMenuTypePtr)
 	Tcl_IncrRefCount(menuDupCommandArray[i]);
     }
     Tcl_Preserve((ClientData) menuPtr);
-    returnResult = Tcl_EvalObjv(menuPtr->interp, 4, menuDupCommandArray, "",
-	    -1, 0);
+    returnResult = Tcl_EvalObjv(menuPtr->interp, 4, menuDupCommandArray, 0);
     for (i = 0; i < 4; i++) {
 	Tcl_DecrRefCount(menuDupCommandArray[i]);
     }

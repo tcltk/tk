@@ -8,7 +8,7 @@ Jim Ingham
 Cygnus Solutions
 jingham@cygnus.com
 
-RCS: @(#) $Id: README,v 1.1.4.3 1998/11/25 21:16:35 stanton Exp $
+RCS: @(#) $Id: README,v 1.1.4.4 1998/12/04 07:21:21 welch Exp $
 
 1. Introduction
 ---------------
@@ -124,7 +124,7 @@ developed.  We are working are having better documentation for
 the Macintosh platform in the future.  However, if you have WWW 
 access you may access the Man pages at the following URL:
 
-	http://www.scriptics.com/man/tcl8.0/contents.html
+	http://www.scriptics.com/man/tcl8.1/contents.html
 
 Other documentation and sample Tcl scripts can be found at
 the Tcl ftp site: 
@@ -260,3 +260,8 @@ future.
 If you have comments or Bug reports send them to:
 Jim Ingham
 jingham@cygnus.com
+
+or use our on-line bug form at
+
+http://www.scriptics.com/support/bugForm.html
+

@@ -1,10 +1,10 @@
-Tk 8.1a2 for Windows
+Tk 8.1b1 for Windows
 
 by Scott Stanton
 Scriptics Corporation
 scott.stanton@scriptics.com
 
-RCS: @(#) $Id: README,v 1.1.4.3 1998/11/25 21:16:42 stanton Exp $
+RCS: @(#) $Id: README,v 1.1.4.4 1998/12/04 07:21:24 welch Exp $
 
 1. Introduction
 ---------------
@@ -62,7 +62,7 @@ find them.  Tk looks in one of two places for the library files:
 	2) In the lib\tk8.1 directory under the Tcl installation directory
 	   as specified in the registry:
 
-		    HKEY_LOCAL_MACHINE\SOFTWARE\Scriptics\Tcl\8.0\
+		    HKEY_LOCAL_MACHINE\SOFTWARE\Scriptics\Tcl\8.1\
 
 	2) Relative to the directory containing the current .exe.
 	    Tk will look for a directory "..\lib\tk8.1" relative to the
@@ -109,8 +109,8 @@ Windows beta version of Tk:
   also doesn't consistently track changes in the system colors.
 
 If you have comments or bug reports for the Windows version of Tk,
-please direct them to:
+please use our on-line bug form at:
 
-<bugs@scriptics.com>
+http://www.scriptics.com/support/bugForm.html
 
 or post them to the newsgroup comp.lang.tcl.

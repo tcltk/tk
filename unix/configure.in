@@ -3,12 +3,12 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 AC_INIT(../generic/tk.h)
-# RCS: @(#) $Id: configure.in,v 1.1.4.3 1998/11/25 21:16:41 stanton Exp $
+# RCS: @(#) $Id: configure.in,v 1.1.4.4 1998/12/04 07:21:23 welch Exp $
 
 TK_VERSION=8.1
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=1
-TK_PATCH_LEVEL=a2
+TK_PATCH_LEVEL=b1
 VERSION=${TK_VERSION}
 
 if test "${prefix}" = "NONE"; then
@@ -48,10 +48,18 @@ fi
 #--------------------------------------------------------------------
 #	See if there was a command-line option for where Tcl is;  if
 #	not, assume that its top-level directory is a sibling of ours.
+#	Try the patch-level-specific directory first, then the general one.
 #--------------------------------------------------------------------
 
+
+if test -d ../../tcl8.1$TK_PATCH_LEVEL/unix;  then
+    TCL_BIN_DEFAULT=../../tcl8.1$TK_PATCH_LEVEL/unix
+else
+    TCL_BIN_DEFAULT=../../tcl8.1/unix
+fi
+
 AC_ARG_WITH(tcl, [  --with-tcl=DIR          use Tcl 8.1 binaries from DIR],
-	TCL_BIN_DIR=$withval, TCL_BIN_DIR=`cd ../../tcl8.1$TK_PATCH_LEVEL/unix; pwd`)
+	TCL_BIN_DIR=$withval, TCL_BIN_DIR=`cd $TCL_BIN_DEFAULT; pwd`)
 if test ! -d $TCL_BIN_DIR; then
     AC_MSG_ERROR(Tcl directory $TCL_BIN_DIR doesn't exist)
 fi

@@ -1,3 +1,10 @@
+1998-12-4    <welch@SAGE>
+
+	* Changed patchLevel to 8.1b1
+
+	* generic/tkMenu.c (ConfigureMenuCloneEntries): The -menu configuration
+	option was being incorrectly specified as just "menu". 
+
 1998-11-30    <stanton@GASPODE>
 
 	* generic/tkButton.c (ConfigureButton): The error result was
