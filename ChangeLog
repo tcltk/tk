@@ -1,3 +1,8 @@
+2003-01-31  Joe English  <jenglish@users.sourceforge.net>
+	* unix/tkUnixWm.c, unix/tkUnixEvent.c:  Replaced
+	TclpGetTime() with Tcl_GetTime(), to remove dependency
+	on tclInt.h [Bug 874745].
+
 2003-01-27  Daniel Steffen  <das@users.sourceforge.net>
 
         * generic/tkTextIndex.c: added '#include <tclInt.h>' since the 
