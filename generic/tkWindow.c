@@ -12,13 +12,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.39.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.39.2.2 2001/10/17 07:10:46 wolfsuit Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
 
-#if !( defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))
+#if !( defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
 #include "tkUnixInt.h"
 #endif
 
@@ -116,7 +116,7 @@ static TkCmd commands[] = {
     {"selection",	NULL,			Tk_SelectionObjCmd,	0, 1},
     {"tk",		NULL,			Tk_TkObjCmd,		0, 1},
     {"tkwait",		NULL,			Tk_TkwaitObjCmd,	1, 1},
-#if defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL)
+#if defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)
     {"tk_chooseColor",  NULL,			Tk_ChooseColorObjCmd,	0, 1},
     {"tk_chooseDirectory", NULL,		Tk_ChooseDirectoryObjCmd, 0, 1},
     {"tk_getOpenFile",  NULL,			Tk_GetOpenFileObjCmd,	0, 1},
@@ -154,7 +154,7 @@ static TkCmd commands[] = {
      * Misc.
      */
 
-#if defined(MAC_TCL) || defined(MAC_OSX_TCL)
+#if defined(MAC_TCL) || defined(MAC_OSX_TK)
     {"::tk::unsupported::MacWindowStyle",
 	    		TkUnsupported1Cmd,	NULL,			1, 1},
 #endif
@@ -1349,7 +1349,7 @@ Tk_DestroyWindow(tkwin)
 	TkWmRemoveFromColormapWindows(winPtr);
     }
     if (winPtr->window != None) {
-#if defined(MAC_TCL) || defined(MAC_OSX_TCL) || defined(__WIN32__)
+#if defined(MAC_TCL) || defined(MAC_OSX_TK) || defined(__WIN32__)
 	XDestroyWindow(winPtr->display, winPtr->window);
 #else
 	if ((winPtr->flags & TK_TOP_LEVEL)
@@ -1990,7 +1990,7 @@ Tk_DefineCursor(tkwin, cursor)
 {
     register TkWindow *winPtr = (TkWindow *) tkwin;
 
-#if defined(MAC_TCL) || defined(MAC_OSX_TCL)
+#if defined(MAC_TCL) || defined(MAC_OSX_TK)
     winPtr->atts.cursor = (XCursor) cursor;
 #else
     winPtr->atts.cursor = (Cursor) cursor;

@@ -8,13 +8,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.28.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.28.2.2 2001/10/17 07:10:46 wolfsuit Exp $
  */
 
 #include "tkInt.h"
 #include "tkPort.h"
 
-#if !(defined(__WIN32__) && defined(MAC_TCL) || defined(MAC_OSX_TCL))
+#if !(defined(__WIN32__) && defined(MAC_TCL) || defined(MAC_OSX_TK))
 /* UNIX */
 #define UNIX_TK
 #endif
@@ -28,9 +28,8 @@
 #include "tkMacInt.h"
 #endif
 
-#if defined(MAC_OSX_TCL)
+#if defined(MAC_OSX_TK)
 /* set this locally .. we could have used _TKMACINT */
-#define MAC_OSX_TK
 #include "tkMacOSXInt.h"
 #endif
 
@@ -173,7 +172,7 @@ TkIntStubs tkIntStubs = {
     TkpGetSubFonts, /* 110 */
     TkpGetSystemDefault, /* 111 */
     TkpMenuThreadInit, /* 112 */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 113 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -183,9 +182,12 @@ TkIntStubs tkIntStubs = {
     TkClipBox, /* 113 */
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TCL
-    TkClipBox, /* 113 */
+    NULL, /* 113 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#ifdef MAC_OSX_TK
+    TkClipBox, /* 113 */
+#endif /* MAC_OSX_TK */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 114 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -195,9 +197,12 @@ TkIntStubs tkIntStubs = {
     TkCreateRegion, /* 114 */
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TCL
-    TkCreateRegion, /* 114 */
+    NULL, /* 114 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#ifdef MAC_OSX_TK
+    TkCreateRegion, /* 114 */
+#endif /* MAC_OSX_TK */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 115 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -207,9 +212,12 @@ TkIntStubs tkIntStubs = {
     TkDestroyRegion, /* 115 */
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TCL
-    TkDestroyRegion, /* 115 */
+    NULL, /* 115 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#ifdef MAC_OSX_TK
+    TkDestroyRegion, /* 115 */
+#endif /* MAC_OSX_TK */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 116 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -219,9 +227,12 @@ TkIntStubs tkIntStubs = {
     TkIntersectRegion, /* 116 */
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TCL
-    TkIntersectRegion, /* 116 */
+    NULL, /* 116 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#ifdef MAC_OSX_TK
+    TkIntersectRegion, /* 116 */
+#endif /* MAC_OSX_TK */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 117 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -231,9 +242,12 @@ TkIntStubs tkIntStubs = {
     TkRectInRegion, /* 117 */
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TCL
-    TkRectInRegion, /* 117 */
+    NULL, /* 117 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#ifdef MAC_OSX_TK
+    TkRectInRegion, /* 117 */
+#endif /* MAC_OSX_TK */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 118 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -243,9 +257,12 @@ TkIntStubs tkIntStubs = {
     TkSetRegion, /* 118 */
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TCL
-    TkSetRegion, /* 118 */
+    NULL, /* 118 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#ifdef MAC_OSX_TK
+    TkSetRegion, /* 118 */
+#endif /* MAC_OSX_TK */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 119 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -255,9 +272,12 @@ TkIntStubs tkIntStubs = {
     TkUnionRectWithRegion, /* 119 */
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TCL
+    NULL, /* 119 */
+#endif /* MAC_OSX_TCL */
+#ifdef MAC_OSX_TK
     TkUnionRectWithRegion, /* 119 */
-#endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#endif /* MAC_OSX_TK */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 120 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -269,7 +289,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TCL
     TkGenerateActivateEvents, /* 120 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 121 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -281,7 +301,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TCL
     TkpCreateNativeBitmap, /* 121 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 122 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -293,7 +313,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TCL
     TkpDefineNativeBitmaps, /* 122 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 123 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -305,7 +325,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TCL
     TkpGetMS, /* 123 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 124 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -317,7 +337,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TCL
     TkpGetNativeAppBitmap, /* 124 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 125 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -329,7 +349,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TCL
     TkPointerDeadWindow, /* 125 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 126 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -341,7 +361,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TCL
     TkpSetCapture, /* 126 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 127 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -353,7 +373,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TCL
     TkpSetCursor, /* 127 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 128 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -366,7 +386,7 @@ TkIntStubs tkIntStubs = {
     TkpWmSetState, /* 128 */
 #endif /* MAC_OSX_TCL */
     NULL, /* 129 */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 130 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -378,7 +398,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TCL
     TkGetTransientMaster, /* 130 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 131 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -391,7 +411,7 @@ TkIntStubs tkIntStubs = {
     TkGenerateButtonEvent, /* 131 */
 #endif /* MAC_OSX_TCL */
     NULL, /* 132 */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 133 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -403,7 +423,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TCL
     TkGenWMDestroyEvent, /* 133 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     NULL, /* 134 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -426,7 +446,7 @@ TkIntStubs tkIntStubs = {
 TkIntPlatStubs tkIntPlatStubs = {
     TCL_STUB_MAGIC,
     NULL,
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TCL))/* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     TkCreateXEventSource, /* 0 */
     TkFreeWindowId, /* 1 */
     TkInitXId, /* 2 */
@@ -541,7 +561,7 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkMacGetHostToplevel, /* 64 */
     TkMacPreprocessMenu, /* 65 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
     TkGenerateActivateEvents, /* 0 */
     TkpCreateNativeBitmap, /* 1 */
     TkpDefineNativeBitmaps, /* 2 */
@@ -590,7 +610,7 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXPreprocessMenu, /* 45 */
     TkpIsWindowFloating, /* 46 */
     TkMacOSXGetCapture, /* 47 */
-#endif /* MAC_OSX_TCL */
+#endif /* MAC_OSX_TK */
 };
 
 TkIntXlibStubs tkIntXlibStubs = {
@@ -797,7 +817,7 @@ TkIntXlibStubs tkIntXlibStubs = {
     XQueryColor, /* 88 */
     XQueryColors, /* 89 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
@@ -888,7 +908,7 @@ TkIntXlibStubs tkIntXlibStubs = {
     XWarpPointer, /* 87 */
     XQueryColor, /* 88 */
     XQueryColors, /* 89 */
-#endif /* MAC_OSX_TCL */
+#endif /* MAC_OSX_TK */
 };
 
 TkPlatStubs tkPlatStubs = {
@@ -915,7 +935,7 @@ TkPlatStubs tkPlatStubs = {
     TkMacHaveAppearance, /* 9 */
     TkMacGetDrawablePort, /* 10 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
     Tk_MacOSXSetEmbedHandler, /* 0 */
     Tk_MacOSXTurnOffMenus, /* 1 */
     Tk_MacOSXTkOwnsCursor, /* 2 */
@@ -928,7 +948,7 @@ TkPlatStubs tkPlatStubs = {
     Tk_MacOSXOpenBundleResources, /* 9 */
     Tk_MacOSXSetupTkNotifier, /* 10 */
     Tk_MacOSXIsAppInFront, /* 11 */
-#endif /* MAC_OSX_TCL */
+#endif /* MAC_OSX_TK */
 };
 
 static TkStubHooks tkStubHooks = {
