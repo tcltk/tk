@@ -1,5 +1,12 @@
 2002-10-09  Daniel Steffen  <das@users.sourceforge.net>
 
+	* macosx/Makefile: don't remove tclsh after building embedded.
+	
+	* macosx/Wish.pbproj/project.pbxproj: bumped version to 8.4.1;
+	added missing library/mkpsenc.tcl to framework.
+
+2002-10-09  Daniel Steffen  <das@users.sourceforge.net>
+
 	* generic/tkInt.decls(tkIntXlib): added XQueryTree declaration for
 	mac & aqua, since it's now called from ParentXId via Tk_HandleEvent.
 	* generic/tkIntXlibDecls.h:
