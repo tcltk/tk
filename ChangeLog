@@ -1,3 +1,15 @@
+2004-10-24  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	TIP#177 AND TIP#179 IMPLEMENTATIONS
+
+	* doc/panedwindow.n: Docs for -hide and -stretch options.
+	* tests/panedwindow.test: Basic tests of -hide and -stretch options.
+	* generic/tkPanedWindow.c (Slave,slaveOptionSpecs,ComputeGeometry):
+	(DisplayPanedWindow,ArrangePanes,MoveSash,PanedWindowIdentifyCoords):
+	Add hide flag and stretch setting to list of options supported on
+	a panedwindow's slaves. [Patch 983886]  Much thanks to Brian Griffin
+	for these options.
+
 2004-10-20  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinWm.c (UpdateWrapper): pass SWP_NOOWNERZORDER to
