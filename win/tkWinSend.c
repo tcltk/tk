@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSend.c,v 1.4 2003/09/26 23:59:26 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinSend.c,v 1.5 2003/10/08 21:49:57 patthoyts Exp $
  */
 
 #include "tkPort.h"
@@ -197,7 +197,7 @@ TkGetInterpNames(interp, tkwin)
     LPRUNNINGOBJECTTABLE pROT = NULL;
     LPCOLESTR oleszStub = TKWINSEND_REGISTRATION_BASE;
     HRESULT hr = S_OK;
-    Tcl_Obj *objList;
+    Tcl_Obj *objList = NULL;
     int r = TCL_OK;
     
     hr = GetRunningObjectTable(0, &pROT);
@@ -293,7 +293,6 @@ Tk_SendObjCmd(clientData, interp, objc, objv)
     };
     int r = TCL_OK;
     int i, optind, async = 0;
-    HRESULT hr = S_OK;
     Tcl_Obj *displayPtr = NULL;
 
     /* process the command options */
@@ -660,7 +659,7 @@ Send(LPDISPATCH pdispInterp, Tcl_Interp *interp,
     HRESULT hr = S_OK, ehr = S_OK;
     Tcl_Obj *cmd = NULL;
     DISPID dispid;
-    RegisteredInterp *riPtr = (RegisteredInterp *)clientData;
+    /*RegisteredInterp *riPtr = (RegisteredInterp *)clientData;*/
 
     cmd = Tcl_ConcatObj(objc, objv);
 
@@ -687,13 +686,13 @@ Send(LPDISPATCH pdispInterp, Tcl_Interp *interp,
     dispid = async ? TKWINSENDCOM_DISPID_ASYNC : TKWINSENDCOM_DISPID_SEND;
 
     hr = pdispInterp->lpVtbl->Invoke(pdispInterp, dispid,
-	&IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD,
-	&dp, &vResult, &ei, &uiErr);
+	    &IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD,
+	    &dp, &vResult, &ei, &uiErr);
 
     /*
      * Convert the result into a string and place in the interps result.
      */
-
+    
     ehr = VariantChangeType(&vResult, &vResult, 0, VT_BSTR);
     if (SUCCEEDED(ehr))
         Tcl_SetObjResult(interp, Tcl_NewUnicodeObj(vResult.bstrVal, -1));
@@ -707,12 +706,12 @@ Send(LPDISPATCH pdispInterp, Tcl_Interp *interp,
     if (hr == DISP_E_EXCEPTION)
     {
         Tcl_Obj *opError, *opErrorCode, *opErrorInfo;
-
+	
         if (ei.bstrSource != NULL)
         {
             int len;
             char * szErrorInfo;
-
+	    
             opError = Tcl_NewUnicodeObj(ei.bstrSource, -1);
             Tcl_ListObjIndex(interp, opError, 0, &opErrorCode);
             Tcl_SetObjErrorCode(interp, opErrorCode);
@@ -760,7 +759,8 @@ Win32ErrorObj(HRESULT hrError)
     Tcl_Obj* errPtr = NULL;
 
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		  NULL, hrError, LANG_NEUTRAL, (LPTSTR)&lpBuffer, 0, NULL);
+	    NULL, (DWORD)hrError, LANG_NEUTRAL,
+	    (LPTSTR)&lpBuffer, 0, NULL);
 
     if (lpBuffer == NULL) {
 	lpBuffer = sBuffer;
@@ -771,9 +771,9 @@ Win32ErrorObj(HRESULT hrError)
 	*p = _T('\0');
 
 #ifdef _UNICODE
-    errPtr = Tcl_NewUnicodeObj(lpBuffer, wcslen(lpBuffer));
+    errPtr = Tcl_NewUnicodeObj(lpBuffer, (int)wcslen(lpBuffer));
 #else
-    errPtr = Tcl_NewStringObj(lpBuffer, strlen(lpBuffer));
+    errPtr = Tcl_NewStringObj(lpBuffer, (int)strlen(lpBuffer));
 #endif
 
     if (lpBuffer != sBuffer)    
@@ -903,7 +903,7 @@ SendEventProc(Tcl_Event *eventPtr, int flags)
 {
     int r = TCL_OK;
     SendEvent *evPtr = (SendEvent *)eventPtr;
-    ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
+    /*ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);*/
 
     TRACE("SendEventProc\n");
     
