@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.10 2002/06/14 22:25:12 jenglish Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.11 2002/06/14 23:49:13 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -161,6 +161,8 @@ static Tcl_ThreadDataKey dataKey;
 static void		DelayedMotionProc _ANSI_ARGS_((ClientData clientData));
 static int		WindowEventProc _ANSI_ARGS_((Tcl_Event *evPtr,
 			    int flags));
+static int		TkXErrorHandler _ANSI_ARGS_((ClientData clientData,
+			    XErrorEvent *errEventPtr));
 
 
 /*
