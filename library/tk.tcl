@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.33 2001/11/15 11:55:26 dkf Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.34 2001/11/23 02:04:39 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -349,7 +349,7 @@ switch $::tcl_platform(platform) {
 	event add <<Paste>> <Control-Key-v> <Key-F4>
 	event add <<PasteSelection>> <ButtonRelease-2>
 	event add <<Clear>> <Clear>
-	event add <<Undo>> <Control-Key-z>
+	event add <<Undo>> <Control-Key-z> <Key-F1>
 	event add <<Redo>> <Control-Key-Z>
     }
 }

@@ -8,15 +8,27 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacInt.h,v 1.9 2000/02/10 08:55:18 jingham Exp $
+ * RCS: @(#) $Id: tkMacInt.h,v 1.10 2001/11/23 02:05:55 das Exp $
  */
 
 #ifndef _TKMACINT
 #define _TKMACINT
 
+#ifndef _TKINT
 #include "tkInt.h"
+#endif
 
+/*
+ * Include platform specific public interfaces.
+ */
+
+#ifndef _TKMAC
 #include "tkMac.h"
+#endif
+
+#ifndef _TKPORT
+#include "tkPort.h"
+#endif
 
 #include <AppleEvents.h>
 #include <Windows.h>
@@ -73,7 +85,7 @@ typedef struct TkMacWindowList {
  * embedding where Tk does not control the top-level.  It contains
  * various functions that are needed by Mac specific routines, like
  * TkMacGetDrawablePort.  The definitions of the function types
- * are in tclMac.h.
+ * are in tkMac.h.
  */
 
 typedef struct {
@@ -206,8 +218,16 @@ typedef TkMenuDefProcPtr TkMenuDefUPP;
 
 #include "tkIntPlatDecls.h"
 
-/* FIXME - This has to go in the tkInt.decls!!! */
+#ifdef BUILD_tk
+#undef TCL_STORAGE_CLASS
+#define TCL_STORAGE_CLASS DLLEXPORT
+#endif
 
-int             TkpIsWindowFloating _ANSI_ARGS_((WindowRef window));
+/*
+ * mac specific procedures exported from the DLL
+ */
+
+#undef TCL_STORAGE_CLASS
+#define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKMACINT */
