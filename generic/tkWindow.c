@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.21 2000/08/03 20:36:16 ericm Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.22 2000/08/03 21:02:20 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -98,7 +98,7 @@ static TkCmd commands[] = {
      */
 
     {"bell",		NULL,			Tk_BellObjCmd,		0, 1},
-    {"bind",		Tk_BindCmd,		NULL,			1, 1},
+    {"bind",		NULL,			Tk_BindObjCmd,		1, 1},
     {"bindtags",	NULL,			Tk_BindtagsObjCmd,	1, 1},
     {"clipboard",	NULL,			Tk_ClipboardObjCmd,	0, 1},
     {"destroy",		NULL,			Tk_DestroyObjCmd,	1, 1},

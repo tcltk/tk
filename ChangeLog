@@ -1,5 +1,13 @@
 2000-08-03  Eric Melski  <ericm@ajubasolutions.com>
 
+	* generic/tkInt.h: Replace Tk_BindCmd prototype with
+	Tk_BindObjCmd prototype.
+
+	* generic/tkWindow.c: Updated "bind" command entry to use
+	Tcl_Obj'ified command.
+
+	* generic/tkCmds.c (Tk_BindObjCmd): Tcl_Obj'ified [bind] command.
+
 	* tests/bind.test: Tweaked expected error messages for [bindtags]
 	to comply with updated error messages.
 
