@@ -1,3 +1,10 @@
+2002-12-06  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinX.c (TkWinXInit):      Move cleanup into an exit handler
+	* win/tkWin32Dll.c (DllMain):     to ensure that it will be called
+	* win/tkWinWm.c (TkWinWmCleanup): without having to unload the dll.
+	Also reset the static int initialized on cleanup to allow reinit.
+
 2002-12-01  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* tests/event.test (_keypress, _text_ind_to_x_y):
