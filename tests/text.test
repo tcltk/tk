@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: text.test,v 1.1.4.1 1998/09/30 02:18:55 stanton Exp $
+# RCS: @(#) $Id: text.test,v 1.1.4.2 1998/12/08 02:02:41 stanton Exp $
 
 if {[string compare test [info procs test]] == 1} then \
   {source defs}
@@ -906,7 +906,7 @@ test text-20.17 {TextSearchCmd procedure, pattern case conversion} {
 } {2.13 {}}
 test text-20.18 {TextSearchCmd procedure, bad regular expression pattern} {
     list [catch {.t search -regexp a( 1.0} msg] $msg
-} {1 {couldn't compile regular expression pattern: unmatched ()}}
+} {1 {couldn't compile regular expression pattern: parentheses () not balanced}}
 test text-20.19 {TextSearchCmd procedure, skip dummy last line} {
     .t search -backwards BaR end 1.0
 } {2.23}
