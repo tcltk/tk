@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.15 2004/05/03 22:40:30 hobbs Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.16 2004/08/20 00:58:52 hobbs Exp $
  */
 
 #ifndef _TKWININT
@@ -164,6 +164,11 @@ EXTERN LRESULT CALLBACK	TkWinChildProc _ANSI_ARGS_((HWND hwnd, UINT message,
  * tkWinX.c:GenerateXEvent and tkWinClipboard.c:UpdateClipboard
  */
 EXTERN void	TkWinUpdatingClipboard(int mode);
+
+/*
+ * Used by tkWinDialog.c to associate the right icon with tk_messageBox
+ */
+EXTERN HICON	TkWinGetIcon(Tk_Window tkw, DWORD iconsize);
 
 /*
  * The following structure keeps track of whether we are using the 

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.63 2004/06/16 20:03:20 jenglish Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.64 2004/08/20 00:58:52 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -798,7 +798,8 @@ ReadICOHeader( Tcl_Channel channel )
  *----------------------------------------------------------------------
  */
 static int 
-InitWindowClass(WinIconPtr titlebaricon) {
+InitWindowClass(WinIconPtr titlebaricon)
+{
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -1064,6 +1065,74 @@ WinSetIcon(interp, titlebaricon, tkw)
 /*
  *----------------------------------------------------------------------
  *
+ * TkWinGetIcon --
+ *
+ *	Gets either the default toplevel titlebar icon, or the icon
+ *	for a specific toplevel (ICON_SMALL or ICON_BIG).
+ *
+ * Results:
+ *	A Windows HICON.
+ *
+ * Side effects:
+ *	The given window will be forced into existence.
+ *
+ *----------------------------------------------------------------------
+ */
+HICON
+TkWinGetIcon(Tk_Window tkw, DWORD iconsize)
+{
+    TkWindow *winPtr;
+    WmInfo *wmPtr;
+    HICON icon;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (tsdPtr->iconPtr != NULL) {
+	/*
+	 * return default toplevel icon
+	 */
+	return GetIcon(tsdPtr->iconPtr, iconsize);
+    }
+
+    if (Tk_WindowId(tkw) == None) {
+	Tk_MakeWindowExist(tkw);
+    }
+
+    winPtr = (TkWindow *)tkw;
+    if (!(Tk_IsTopLevel(tkw))) {
+	winPtr = GetTopLevel(Tk_GetHWND(Tk_WindowId(tkw)));
+    }
+    /* We must get the window's wrapper, not the window itself */
+    wmPtr = winPtr->wmInfoPtr;
+
+    if (wmPtr->iconPtr != NULL) {
+	/*
+	 * return window toplevel icon
+	 */
+	return GetIcon(wmPtr->iconPtr, iconsize);
+    }
+
+    /*
+     * Find the icon otherwise associated with the toplevel, or
+     * finally with the window class.
+     */
+    icon = (HICON) SendMessage(wmPtr->wrapper, WM_GETICON, iconsize,
+	    (LPARAM) NULL);
+    if (icon == (HICON) NULL) {
+#ifdef _WIN64
+	icon = (HICON) GetClassLongPtr(wmPtr->wrapper,
+		(iconsize == ICON_BIG) ? GCLP_HICON : GCLP_ICONSM);
+#else
+	icon = (HICON) GetClassLong(wmPtr->wrapper,
+		(iconsize == ICON_BIG) ? GCL_HICON : GCL_HICONSM);
+#endif
+    }
+    return icon;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * ReadIconFromFile --
  *
  *	Read the contents of a file (usually .ico, .icr) and extract an
@@ -1301,7 +1370,8 @@ DecrIconRefCount(WinIconPtr titlebaricon) {
  *----------------------------------------------------------------------
  */
 static void 
-FreeIconBlock(BlockOfIconImagesPtr lpIR) {
+FreeIconBlock(BlockOfIconImagesPtr lpIR)
+{
     int i;
 
     /* Free all the bits */
@@ -1332,7 +1402,8 @@ FreeIconBlock(BlockOfIconImagesPtr lpIR) {
  *----------------------------------------------------------------------
  */
 static HICON 
-GetIcon(WinIconPtr titlebaricon, int icon_size) {
+GetIcon(WinIconPtr titlebaricon, int icon_size)
+{
     BlockOfIconImagesPtr lpIR;
     
     if (titlebaricon == NULL) {
@@ -1367,7 +1438,8 @@ GetIcon(WinIconPtr titlebaricon, int icon_size) {
 }
 
 static HCURSOR 
-TclWinReadCursorFromFile(Tcl_Interp* interp, Tcl_Obj* fileName) {
+TclWinReadCursorFromFile(Tcl_Interp* interp, Tcl_Obj* fileName)
+{
     BlockOfIconImagesPtr lpIR;
     HICON res = NULL;
     
@@ -1400,7 +1472,8 @@ TclWinReadCursorFromFile(Tcl_Interp* interp, Tcl_Obj* fileName) {
  *----------------------------------------------------------------------
  */
 static BlockOfIconImagesPtr 
-ReadIconOrCursorFromFile(Tcl_Interp* interp, Tcl_Obj* fileName, BOOL isIcon) {
+ReadIconOrCursorFromFile(Tcl_Interp* interp, Tcl_Obj* fileName, BOOL isIcon)
+{
     BlockOfIconImagesPtr lpIR, lpNew;
     Tcl_Channel          channel;
     int                  i;
@@ -3380,8 +3453,7 @@ WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    /* If true, then set for all windows. */
-    int isDefault = 0;
+    TkWindow *useWinPtr = winPtr; /* window to apply to (NULL if -default) */
     char *string;
 
     if ((objc < 3) || (objc > 5)) {
@@ -3396,7 +3468,7 @@ WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv)
 		    (char *) NULL);
 	    return TCL_ERROR;
 	}
-	isDefault = 1;
+	useWinPtr = NULL;
     } else if (objc == 3) {
 	/* No arguments were given */
 	if (wmPtr->hints.flags & IconPixmapHint) {
@@ -3414,8 +3486,7 @@ WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv)
 	    wmPtr->hints.icon_pixmap = None;
 	}
 	wmPtr->hints.flags &= ~IconPixmapHint;
-	if (WinSetIcon(interp, NULL, 
-		       (isDefault ? NULL : (Tk_Window) winPtr)) != TCL_OK) {
+	if (WinSetIcon(interp, NULL, (Tk_Window) useWinPtr) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     } else {
@@ -3444,8 +3515,8 @@ WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv)
 	     * Try to set the icon for the window.  If it is a '-default'
 	     * icon, we must pass in NULL
 	     */
-	    if (WinSetIcon(interp, titlebaricon,
-		    (isDefault ? NULL : (Tk_Window) winPtr)) != TCL_OK) {
+	    if (WinSetIcon(interp, titlebaricon, (Tk_Window) useWinPtr)
+		    != TCL_OK) {
 		/* We didn't use the titlebaricon after all */
 		DecrIconRefCount(titlebaricon);
 		titlebaricon = NULL;
@@ -3467,8 +3538,8 @@ WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv)
 	    wmPtr->hints.flags |= IconPixmapHint;
 	    titlebaricon = GetIconFromPixmap(Tk_Display(winPtr), pixmap);
 	    if (titlebaricon != NULL) {
-		if (WinSetIcon(interp, titlebaricon, 
-			(isDefault ? NULL : (Tk_Window) winPtr)) != TCL_OK) {
+		if (WinSetIcon(interp, titlebaricon, (Tk_Window) useWinPtr)
+			!= TCL_OK) {
 		    /* We didn't use the titlebaricon after all */
 		    DecrIconRefCount(titlebaricon);
 		    titlebaricon = NULL;
