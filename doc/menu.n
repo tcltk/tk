@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.8 2003/01/19 07:46:43 hobbs Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.8.2.1 2004/10/28 10:19:29 dkf Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
@@ -29,10 +29,10 @@ menu, tk_menuSetFocus \- Create and manipulate menu widgets
 .OP \-postcommand postCommand Command
 If this option is specified then it provides a Tcl command to execute
 each time the menu is posted.  The command is invoked by the \fBpost\fR
-widget command before posting the menu. Note that in 8.0 on Macintosh
-and Windows, all commands in a menu systems are executed before any
-are posted. This is due to the limitations in the individual platforms'
-menu managers.
+widget command before posting the menu. Note that in Tk 8.0 on Macintosh
+and Windows, all post-commands in a system of menus are executed before any
+of those menus are posted.
+This is due to the limitations in the individual platforms' menu managers.
 .VE
 .OP \-selectcolor selectColor Background
 For menu entries that are check buttons or radio buttons, this option
@@ -151,7 +151,7 @@ the entry is deselected another value (determined by the
 \fB\-offvalue\fR option) is stored in the global variable.
 An indicator box is displayed to the left of the label in a checkbutton
 entry.  If the entry is selected then the indicator's center is displayed
-in the color given by the \fB-selectcolor\fR option for the entry;
+in the color given by the \fB\-selectcolor\fR option for the entry;
 otherwise the indicator's center is displayed in the background color for
 the menu.  If a \fB\-command\fR option is specified for a checkbutton
 entry, then its value is evaluated as a Tcl command each time the entry
@@ -236,7 +236,7 @@ Any menu can be set as a menubar for a toplevel window (see
 \fBtoplevel\fR command for syntax). On the Macintosh, whenever the
 toplevel is in front, this menu's cascade items will appear in the
 menubar across the top of the main monitor. On Windows and Unix, this
-menu's items will be displayed in a menubar accross the top of the
+menu's items will be displayed in a menubar across the top of the
 window. These menus will behave according to the interface guidelines
 of their platforms. For every menu set as a menubar, a clone menu is
 made. See the \fBCLONES\fR section for more information.
@@ -277,7 +277,7 @@ the tearoff item displayed as "(TearOff)".
 When Tk see a Help menu on the Macintosh, the menu's contents are
 appended to the standard help menu on the right of the user's menubar
 whenever the user's menubar is in front. The first items in the menu
-are provided by Apple. Similar to the Apple Menu, cusomization in this
+are provided by Apple. Similar to the Apple Menu, customization in this
 menu is limited to what the system provides.
 .PP
 When Tk sees a System menu on Windows, its items are appended to the 
@@ -410,18 +410,20 @@ This option is not available for separator or tear-off entries.
 \fB\-bitmap \fIvalue\fR
 Specifies a bitmap to display in the menu instead of a textual
 label, in any of the forms accepted by \fBTk_GetBitmap\fR.
-This option overrides the \fB\-label\fR option but may be reset
+This option overrides the \fB\-label\fR option
+(as controlled by the \fB\-compound\fR option)
+but may be reset
 to an empty string to enable a textual label to be displayed.
 If a \fB\-image\fR option has been specified, it overrides
 \fB\-bitmap\fR.
 This option is not available for separator or tear-off entries.
-.VS 8.0
 .TP
 \fB\-columnbreak \fIvalue\fR
-When this option is zero, the appears below the previous entry. When
-this option is one, the menu appears at the top of a new column in the
+.VS 8.0
+When this option is zero, the entry appears below the previous entry. When
+this option is one, the entry appears at the top of a new column in the
 menu.
-.VE
+.VE 8.0
 .TP
 \fB\-command \fIvalue\fR
 Specifies a Tcl command to execute when the menu entry is invoked.
@@ -462,10 +464,11 @@ the entry is hidden; 0 means that the margin is used.
 .TP
 \fB\-image \fIvalue\fR
 Specifies an image to display in the menu instead of a text string
-or bitmap
+or bitmap.
 The image must have been created by some previous invocation of
 \fBimage create\fR.
 This option overrides the \fB\-label\fR and \fB\-bitmap\fR options
+(as controlled by the \fB\-compound\fR option)
 but may be reset to an empty string to enable a textual or
 bitmap label to be displayed.
 This option is not available for separator or tear-off entries.
@@ -654,8 +657,8 @@ This is the \fItype\fR argument passed to the \fBadd\fR widget
 command when the entry was created, such as \fBcommand\fR
 or \fBseparator\fR, or \fBtearoff\fR for a tear-off entry.
 .TP
-.VS
 \fIpathName \fBunpost\fR
+.VS
 Unmap the window so that it is no longer displayed.  If a
 lower-level cascaded menu is posted, unpost that menu.  Returns an
 empty string. This subcommand does not work on Windows and the
@@ -676,7 +679,7 @@ This is the most command case. You create a menu widget that will become the
 menu bar. You then add cascade entries to this menu, specifying the
 pull down menus you wish to use in your menu bar. You then create all
 of the pulldowns. Once you have done this, specify the menu using the
-\fB-menu\fR option of the toplevel's widget command. See the
+\fB\-menu\fR option of the toplevel's widget command. See the
 \fBtoplevel\fR manual entry for details.
 .VE
 .TP
@@ -731,7 +734,7 @@ The Space and Return keys invoke the active entry and
 unpost the menu.
 .IP [5]
 If any of the entries in a menu have letters underlined with
-with \fB\-underline\fR option, then pressing one of the underlined
+the \fB\-underline\fR option, then pressing one of the underlined
 letters (or its upper-case or lower-case equivalent) invokes that
 entry and unposts the menu.
 .IP [6]

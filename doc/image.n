@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: image.n,v 1.6 2001/04/03 04:33:58 hobbs Exp $
+'\" RCS: @(#) $Id: image.n,v 1.6.4.1 2004/10/28 10:19:29 dkf Exp $
 '\" 
 .so man.macros
 .TH image n 4.0 Tk "Tk Built-In Commands"
@@ -24,7 +24,7 @@ It can take several different forms, depending on the
 \fIoption\fR argument.  The legal forms are:
 .TP
 \fBimage create \fItype \fR?\fIname\fR? ?\fIoption value ...\fR?
-Creates a new image and returns its name.
+Creates a new image and a command with the same name and returns its name.
 \fItype\fR specifies the type of the image, which must be one of
 the types currently defined (e.g., \fBbitmap\fR).
 \fIname\fR specifies the name for the image;  if it is omitted then
@@ -77,7 +77,10 @@ argument to \fBimage create\fR).
 \fBimage width \fIname\fR
 Returns a decimal string giving the width of image \fIname\fR
 in pixels.
-
+.PP
+Additional operations (e.g. writing the image to a file) may be
+available as subcommands of the image instance command. See the manual
+page for the particular image type for details.
 .SH "BUILT-IN IMAGE TYPES"
 .PP
 The following image types are defined by Tk so they will be available
@@ -93,6 +96,9 @@ See the \fBbitmap\fR manual entry for more information.
 Displays a variety of full-color images, using dithering to
 approximate colors on displays with limited color capabilities.
 See the \fBphoto\fR manual entry for more information.
+
+.SH "SEE ALSO"
+bitmap(n), options(n), photo(n)
 
 .SH KEYWORDS
 height, image, types of images, width

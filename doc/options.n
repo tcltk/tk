@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: options.n,v 1.6 2000/07/25 21:14:35 jenglish Exp $
+'\" RCS: @(#) $Id: options.n,v 1.6.8.1 2004/10/28 10:19:29 dkf Exp $
 '\" 
 .so man.macros
 .TH options n 4.4 Tk "Tk Built-In Commands"
@@ -31,7 +31,7 @@ command
 .CS
 \&\fB.a.b.c\0\0configure\0\0\-foreground black\fR
 .CE
-may be used to specify the value \fBblack\fR for the option in the
+may be used to specify the value \fBblack\fR for the option in
 the widget \fB.a.b.c\fR.  Command-line switches may be abbreviated,
 as long as the abbreviation is unambiguous.
 ``Database Name'' refers to the option's name in the option database (e.g.
@@ -75,7 +75,8 @@ acceptable to \fBTk_GetBitmap\fR.
 The exact way in which the bitmap is displayed may be affected by
 other options such as \fBanchor\fR or \fBjustify\fR.
 Typically, if this option is specified then it overrides other
-options that specify a textual value to display in the widget;
+options that specify a textual value to display in the widget
+but this is controlled by the \fBcompound\fR option;
 the \fBbitmap\fR option may be reset to an empty string to re-enable
 a text display.
 In widgets that support both \fBbitmap\fR and \fBimage\fR options,
@@ -90,6 +91,18 @@ The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 .OP \-cursor cursor Cursor
 Specifies the mouse cursor to be used for the widget.
 The value may have any of the forms acceptable to \fBTk_GetCursor\fR.
+.OP \-compound compound Compound
+.VS 8.4
+Specifies if the widget should display text and bitmaps/images at the
+same time, and if so, where the bitmap/image should be placed relative
+to the text.  Must be one of the values \fBnone\fR, \fBbottom\fR,
+\fBtop\fR, \fBleft\fR, \fBright\fR, or \fBcenter\fR.  For example, the
+(default) value \fBnone\fR specifies that the bitmap or image should
+(if defined) be displayed instead of the text, the value \fBleft\fR
+specifies that the bitmap or image should be displayed to the left of
+the text, and the value \fBcenter\fR specifies that the bitmap or
+image should be displayed on top of the text.
+.VE 8.4
 .OP \-disabledforeground disabledForeground DisabledForeground
 Specifies foreground color to use when drawing a disabled element.
 If the option is specified as an empty string (which is typically the
@@ -127,7 +140,8 @@ If the value is zero, no focus highlight is drawn around the widget.
 Specifies an image to display in the widget, which must have been
 created with the \fBimage create\fR command.
 Typically, if the \fBimage\fR option is specified then it overrides other
-options that specify a bitmap or textual value to display in the widget;
+options that specify a bitmap or textual value to display in the
+widget, though this is controlled by the \fBcompound\fR option;
 the \fBimage\fR option may be reset to an empty string to re-enable
 a bitmap or text display.
 .OP \-insertbackground insertBackground Foreground
@@ -240,7 +254,7 @@ communicate with the window manager so that when the user interactively
 resizes the top-level window that contains the widget, the dimensions of
 the window will be displayed to the user in grid units and the window
 size will be constrained to integral numbers of grid units.
-See the section GRIDDED GEOMETRY MANAGEMENT in the \fBwm\fR manual
+See the section \fBGRIDDED GEOMETRY MANAGEMENT\fR in the \fBwm\fR manual
 entry for more details.
 .OP \-takefocus takeFocus TakeFocus
 Determines whether the window accepts the focus during keyboard

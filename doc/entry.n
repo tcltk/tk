@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: entry.n,v 1.11 2003/02/19 18:52:13 mdejong Exp $
+'\" RCS: @(#) $Id: entry.n,v 1.11.2.1 2004/10/28 10:19:29 dkf Exp $
 '\" 
 .so man.macros
 .TH entry n 8.3 Tk "Tk Built-In Commands"
@@ -78,8 +78,8 @@ state which mode you wish to use.  See \fBValidation\fR below for more.
 .OP "\-validatecommand or \-vcmd" validateCommand ValidateCommand
 Specifies a script to eval when you want to validate the input into
 the entry widget.  Setting it to {} disables this feature (the default).
-This command must return a valid tcl boolean value.  If it returns 0 (or
-the valid tcl boolean equivalent) then it means you reject the new edition
+This command must return a valid Tcl boolean value.  If it returns 0 (or
+the valid Tcl boolean equivalent) then it means you reject the new edition
 and it will not occur and the \fBinvalidCommand\fR will be evaluated if it
 is set. If it returns 1, then the new edition occurs.
 See \fBValidation\fR below for more information.
@@ -123,9 +123,8 @@ may be used to change the view in the window.  Entries use
 the standard \fBxScrollCommand\fR mechanism for interacting with
 scrollbars (see the description of the \fBxScrollCommand\fR option
 for details).  They also support scanning, as described below.
-
-.VS 8.3
 .SH VALIDATION
+.VS 8.3
 .PP
 Validation works by setting the \fBvalidateCommand\fR
 option to a script which will be evaluated according to the \fBvalidate\fR
@@ -156,11 +155,11 @@ or -1 for focus, forced or textvariable validation.
 .IP \fB%i\fR 5
 Index of char string to be inserted/deleted, if any, otherwise -1.
 .IP \fB%P\fR 5
-The value of the entry should edition occur.  If you are configuring the
+The value of the entry if the edit is allowed.  If you are configuring the
 entry widget to have a new textvariable, this will be the value of that
 textvariable.
 .IP \fB%s\fR 5
-The current value of entry before edition.
+The current value of entry prior to editing.
 .IP \fB%S\fR 5
 The text string being inserted/deleted, if any, {} otherwise.
 .IP \fB%v\fR 5
@@ -183,7 +182,7 @@ when an error occurs evaluating the \fBvalidateCommand\fR.
 .PP
 Primarily, an error will occur when the \fBvalidateCommand\fR or
 \fBinvalidCommand\fR encounters an error in its script while evaluating or
-\fBvalidateCommand\fR does not return a valid tcl boolean value.  The
+\fBvalidateCommand\fR does not return a valid Tcl boolean value.  The
 \fBvalidate\fR option will also set itself to \fBnone\fR when you edit the
 entry widget from within either the \fBvalidateCommand\fR or the
 \fBinvalidCommand\fR.  Such editions will override the one that was being
@@ -191,14 +190,13 @@ validated.  If you wish to edit the entry widget (for example set it to {})
 during validation and still have the \fBvalidate\fR option set, you should
 include the command
 .CS
-     \fIafter idle {%W config -validate %v}\fR
+after idle {%W config -validate %v}
 .CE
 in the \fBvalidateCommand\fR or \fBinvalidCommand\fR (whichever one you
 were editing the entry widget from).  It is also recommended to not set an
 associated \fBtextVariable\fR during validation, as that can cause the
 entry widget to become out of sync with the \fBtextVariable\fR.
 .VE
-
 .SH "WIDGET COMMAND"
 .PP
 The \fBentry\fR command creates a new Tcl command whose
@@ -334,7 +332,7 @@ has several forms, depending on \fIoption\fR:
 \fIpathName \fBselection adjust \fIindex\fR
 Locate the end of the selection nearest to the character given by
 \fIindex\fR, and adjust that end of the selection to be at \fIindex\fR
-(i.e including but not going beyond \fIindex\fR).  The other
+(i.e. including but not going beyond \fIindex\fR).  The other
 end of the selection is made the anchor point for future
 \fBselect to\fR commands.  If the selection
 isn't currently in the entry, then a new selection is created to
@@ -424,7 +422,6 @@ If \fInumber\fR is negative then characters farther to the left
 become visible;  if it is positive then characters farther to the right
 become visible.
 .RE
-
 .SH "DEFAULT BINDINGS"
 .PP
 Tk automatically creates class bindings for entries that give them
