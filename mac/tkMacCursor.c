@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacCursor.c,v 1.3 1998/09/14 18:23:34 stanton Exp $
+ * RCS: @(#) $Id: tkMacCursor.c,v 1.4 1999/03/10 07:04:44 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -385,7 +385,8 @@ TkpSetCursor(
  *----------------------------------------------------------------------
  */
 
-void Tk_MacTkOwnsCursor(
+void
+Tk_MacTkOwnsCursor(
     int tkOwnsIt)
 {
     gTkOwnsCursor = tkOwnsIt;

@@ -9,10 +9,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xdraw.c,v 1.2 1998/09/14 18:24:03 stanton Exp $
+ * RCS: @(#) $Id: xdraw.c,v 1.3 1999/03/10 07:04:47 stanton Exp $
  */
 
-#include "tk.h"
+#include "tkInt.h"
 
 /*
  *----------------------------------------------------------------------

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnix.c,v 1.2 1998/09/14 18:23:55 stanton Exp $
+ * RCS: @(#) $Id: tkUnix.c,v 1.3 1999/03/10 07:04:45 stanton Exp $
  */
 
 #include <tkInt.h>
@@ -76,4 +76,33 @@ TkGetDefaultScreenName(interp, screenName)
 	screenName = Tcl_GetVar2(interp, "env", "DISPLAY", TCL_GLOBAL_ONLY);
     }
     return screenName;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_UpdatePointer --
+ *
+ *	Unused function in UNIX
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_UpdatePointer(tkwin, x, y, state)
+    Tk_Window tkwin;		/* Window to which pointer event
+				 * is reported. May be NULL. */
+    int x, y;			/* Pointer location in root coords. */
+    int state;			/* Modifier state mask. */
+{
+  /*
+   * This function intentionally left blank
+   */
 }

@@ -12,11 +12,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.4 1998/09/30 19:01:20 rjohnson Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.5 1999/03/10 07:04:44 stanton Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
+
+#if !defined(__WIN32__) && !defined(MAC_TCL)
+#include "tkUnixInt.h"
+#endif
 
 /*
  * Count of number of main windows currently open in this process.
@@ -2609,6 +2613,15 @@ Initialize(interp)
     char buffer[30];
 
     /*
+     * Ensure that we are getting the matching version of Tcl.  This is
+     * really only an issue when Tk is loaded dynamically.
+     */
+
+    if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
+        return TCL_ERROR;
+    }
+    
+    /*
      * Start by initializing all the static variables to default acceptable
      * values so that no information is leaked from a previous run of this
      * code.
@@ -2817,7 +2830,12 @@ Initialize(interp)
 	code = TCL_ERROR;
 	goto done;
     }
-    code = Tcl_PkgProvide(interp, "Tk", TK_VERSION);
+
+    /*
+     * Provide Tk and its stub table.
+     */
+
+    code = Tcl_PkgProvideEx(interp, "Tk", TK_VERSION, (ClientData) tkStubsPtr);
     if (code != TCL_OK) {
 	goto done;
     }

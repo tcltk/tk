@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacXStubs.c,v 1.3 1998/09/14 18:23:40 stanton Exp $
+ * RCS: @(#) $Id: tkMacXStubs.c,v 1.4 1999/03/10 07:04:45 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -273,6 +273,15 @@ DefaultErrorHandler(
     return 0;
 }
 
+
+
+void
+Tk_FreeXId (
+    Display *display,
+    XID xid)
+{
+    /* no-op function needed for stubs implementation */
+}
 
 char *
 XGetAtomName(
@@ -707,3 +716,24 @@ TkGetDefaultScreenName(
     }
     return screenName;
 }
+
+void Tk_3DHorizontalBevel (
+    Tk_Window tkwin,
+    Drawable drawable, Tk_3DBorder border, int x,
+    int y, int width, int height, int leftIn,
+    int rightIn, int topBevel, int relief )
+{
+    /* no-op required for stubs implementation */
+    /* this function will probably be filled in at some point */
+}
+
+void Tk_3DVerticalBevel (
+    Tk_Window tkwin,
+    Drawable drawable, Tk_3DBorder border, int x,
+    int y, int width, int height, int leftBevel,
+    int relief )
+{
+    /* no-op required for stubs implementation */
+    /* this function will probably be filled in at some point */
+}
+

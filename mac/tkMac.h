@@ -1,5 +1,5 @@
 /*
- * tkMacInt.h --
+ * Tkmacint.h --
  *
  *	Declarations of Macintosh specific exported variables and procedures.
  *
@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMac.h,v 1.4 1998/09/14 18:23:34 stanton Exp $
+ * RCS: @(#) $Id: tkMac.h,v 1.5 1999/03/10 07:04:44 stanton Exp $
  */
 
 #ifndef _TKMAC
@@ -48,33 +48,7 @@ typedef void (Tk_MacEmbedGetOffsetInParentProc) (Tk_Window window, Point *ulCorn
  * Mac Specific functions that are available to extension writers.
  */
 
-EXTERN void 	Tk_MacSetEmbedHandler _ANSI_ARGS_((
-    		        Tk_MacEmbedRegisterWinProc *registerWinProcPtr,
-    			Tk_MacEmbedGetGrafPortProc *getPortProcPtr,
-    			Tk_MacEmbedMakeContainerExistProc *containerExistProcPtr,
-    			Tk_MacEmbedGetClipProc *getClipProc,
-    			Tk_MacEmbedGetOffsetInParentProc *getOffsetProc));
-    			
- 
-EXTERN void Tk_MacTurnOffMenus _ANSI_ARGS_ (());
-EXTERN void Tk_MacTkOwnsCursor _ANSI_ARGS_ ((int tkOwnsIt));
-
-/*
- * These functions are currently in tkMacInt.h.  They are just copied over here
- * so they can be exported.
- */
-
-EXTERN void 	TkMacInitMenus _ANSI_ARGS_((Tcl_Interp 	*interp));
-EXTERN void	TkMacInitAppleEvents _ANSI_ARGS_((Tcl_Interp *interp));
-
-EXTERN int	TkMacConvertEvent _ANSI_ARGS_((EventRecord *eventPtr));
-EXTERN int	TkMacConvertTkEvent _ANSI_ARGS_((EventRecord *eventPtr,
-			    Window window));
-EXTERN void	TkGenWMConfigureEvent _ANSI_ARGS_((Tk_Window tkwin,
-			    int x, int y, int width, int height, int flags));
-EXTERN void	TkMacInvalClipRgns _ANSI_ARGS_((TkWindow *winPtr));
-EXTERN int	TkMacHaveAppearance _ANSI_ARGS_((void));
-EXTERN GWorldPtr 	TkMacGetDrawablePort _ANSI_ARGS_((Drawable drawable));
+#include "tkPlatDecls.h"
 
 #pragma export reset
 

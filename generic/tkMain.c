@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.2 1998/09/14 18:23:14 stanton Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.3 1999/03/10 07:04:42 stanton Exp $
  */
 
 #include <ctype.h>
@@ -21,6 +21,7 @@
 #include <string.h>
 #include <tcl.h>
 #include <tk.h>
+#include "tkInt.h"
 #ifdef NO_STDLIB_H
 #   include "../compat/stdlib.h"
 #else
@@ -36,8 +37,10 @@
  * some systems.
  */
 
-extern int		isatty _ANSI_ARGS_((int fd));
+void	TkConsoleCreate_ _ANSI_ARGS_((void));
+
 #if !defined(__WIN32__) && !defined(_WIN32)
+extern int		isatty _ANSI_ARGS_((int fd));
 extern char *		strrchr _ANSI_ARGS_((CONST char *string, int c));
 #endif
 extern void		TkpDisplayWarning _ANSI_ARGS_((char *msg,
@@ -67,7 +70,7 @@ static void		StdinProc _ANSI_ARGS_((ClientData clientData,
 /*
  *----------------------------------------------------------------------
  *
- * Tk_Main --
+ * Tk_Main, Tk_MainEx --
  *
  *	Main program for Wish and most other Tk-based applications.
  *
@@ -92,14 +95,41 @@ Tk_Main(argc, argv, appInitProc)
 					 * initialization but before starting
 					 * to execute commands. */
 {
+    Tk_MainEx(argc, argv, appInitProc, Tcl_CreateInterp());
+}
+
+void
+Tk_MainEx(argc, argv, appInitProc, interp)
+    int argc;				/* Number of arguments. */
+    char **argv;			/* Array of argument strings. */
+    Tcl_AppInitProc *appInitProc;	/* Application-specific initialization
+					 * procedure to call after most
+					 * initialization but before starting
+					 * to execute commands. */
+    Tcl_Interp *interp;			/* Application interpreter. */
+{
     char *args, *fileName;
     char buf[20];
     int code;
     size_t length;
     Tcl_Channel inChannel, outChannel;
 
+    /*
+     * Make sure that Tcl is present. If using stubs this will initialize the
+     * stub table pointers.  (for 8.1, noop in 8.0.x)
+     */
+
+    if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
+	abort();
+    }
+    
     Tcl_FindExecutable(argv[0]);
-    interp = Tcl_CreateInterp();
+
+
+#if (defined(__WIN32__) || defined(MAC_TCL))
+    TkConsoleCreate_();
+#endif
+    
 #ifdef TCL_MEM_DEBUG
     Tcl_InitMemory(interp);
 #endif

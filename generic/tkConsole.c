@@ -10,10 +10,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.3 1999/02/04 20:51:36 stanton Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.4 1999/03/10 07:04:39 stanton Exp $
  */
 
 #include "tk.h"
+#include "tkInt.h"
 #include <string.h>
 
 /*
@@ -36,6 +37,7 @@ static Tcl_Interp *gStdoutInterp = NULL;
  */
  
 void	TkConsoleCreate _ANSI_ARGS_((void));
+void	TkConsoleCreate_ _ANSI_ARGS_((void));
 int	TkConsoleInit _ANSI_ARGS_((Tcl_Interp *interp));
 void	TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
 			    int devId, char *buffer, long size));
@@ -79,7 +81,7 @@ static Tcl_ChannelType consoleChannelType = {
 /*
  *----------------------------------------------------------------------
  *
- * TkConsoleCreate --
+ * TkConsoleCreate, TkConsoleCreate_ --
  *
  * 	Create the console channels and install them as the standard
  * 	channels.  All I/O will be discarded until TkConsoleInit is
@@ -97,6 +99,17 @@ static Tcl_ChannelType consoleChannelType = {
 
 void
 TkConsoleCreate()
+{
+    /*
+     * This function is being disabled so we don't end up calling it
+     * twice.  Once from WinMain() and once from Tk_Main().  The real
+     * function is now TkConsoleCreate_ and is only called from Tk_Main.
+     * All of is an ugly hack.
+     */
+}
+
+void
+TkConsoleCreate_()
 {
     Tcl_Channel consoleChannel;
 
@@ -155,6 +168,7 @@ TkConsoleInit(interp)
 #endif
     
     consoleInterp = Tcl_CreateInterp();
+    
     if (consoleInterp == NULL) {
 	goto error;
     }

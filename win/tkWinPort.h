@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPort.h,v 1.3 1998/09/30 19:01:22 rjohnson Exp $
+ * RCS: @(#) $Id: tkWinPort.h,v 1.4 1999/03/10 07:04:46 stanton Exp $
  */
 
 #ifndef _WINPORT
@@ -22,7 +22,6 @@
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
-
 #include <malloc.h>
 #include <errno.h>
 #include <ctype.h>
@@ -112,6 +111,15 @@ struct timezone {
 };
 
 extern int gettimeofday(struct timeval *, struct timezone *);
-EXTERN void		panic _ANSI_ARGS_(TCL_VARARGS(char *,format));
+
+/*
+ * tclInt.h is included to get declarations of the following functions.
+ *	void		panic _ANSI_ARGS_(TCL_VARARGS(char *,format));
+ *	void		TclpGetTime _ANSI_ARGS_((Tcl_Time *time));
+ */
+  
+#ifndef _TCLINT
+#   include <tclInt.h>
+#endif
 
 #endif /* _WINPORT */

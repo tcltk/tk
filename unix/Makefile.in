@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.12 1999/03/06 00:23:43 stanton Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.13 1999/03/10 07:04:45 stanton Exp $
 
 # Current Tk version;  used in various names.
 
@@ -110,10 +110,6 @@ X11_INCLUDES =		@XINCLUDES@
 # can override it).
 X11_LIB_SWITCHES =	@XLIBSW@
 
-# Libraries to use when linking.  This definition is determined by the
-# configure script.
-LIBS = @TCL_BUILD_LIB_SPEC@ @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@ -lc
-
 # To turn off the security checks that disallow incoming sends when
 # the X server appears to be insecure, reverse the comments on the
 # following lines:
@@ -131,6 +127,22 @@ PROTO_FLAGS =
 # ckalloc and ckfree everywhere instead of malloc and free.
 MEM_DEBUG_FLAGS =
 #MEM_DEBUG_FLAGS = -DTCL_MEM_DEBUG
+
+# To enable support for stubs in Tcl.
+STUB_LIB_FILE = @STUB_LIB_FILE@
+
+TK_STUB_LIB_FILE = @TK_STUB_LIB_FILE@
+#TK_STUB_LIB_FILE = libtkstub.a
+
+TK_STUB_LIB_FLAG = @TK_STUB_LIB_FLAG@
+#TK_STUB_LIB_FLAG = -ltkstub
+
+
+
+# Libraries to use when linking.  This definition is determined by the
+# configure script.
+LIBS =  @TCL_BUILD_LIB_SPEC@ @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@ -lc
+
 
 # If your X server is X11R4 or earlier, then you may wish to reverse
 # the comment characters on the following two lines.  This will enable
@@ -206,14 +218,23 @@ TOOL_DIR =		@TCL_SRC_DIR@/tools
 CC =		@CC@
 CC_SWITCHES =	${CFLAGS} ${CFLAGS_WARNING} ${TK_SHLIB_CFLAGS} \
 -I${UNIX_DIR} -I${GENERIC_DIR} \
--I${BMAP_DIR} -I${TCL_GENERIC_DIR} ${X11_INCLUDES} ${AC_FLAGS} ${PROTO_FLAGS} \
+-I${BMAP_DIR} -I${TCL_GENERIC_DIR} ${X11_INCLUDES} \
+${AC_FLAGS} ${PROTO_FLAGS} \
 ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS}
+
+
+STUB_CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
+-I${UNIX_DIR} -I${GENERIC_DIR} \
+-I${BMAP_DIR} -I${TCL_GENERIC_DIR} ${X11_INCLUDES} \
+${AC_FLAGS} ${PROTO_FLAGS} \
+${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
+ -DTK_SHLIB_EXT=\"${SHLIB_SUFFIX}\"
 
 DEPEND_SWITCHES = ${CFLAGS} -I${UNIX_DIR} -I${GENERIC_DIR} \
 -I${BMAP_DIR} \
 -I${TCL_GENERIC_DIR} ${X11_INCLUDES} \
 ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} \
-${KEYSYM_FLAGS}
+${KEYSYM_FLAGS} -DTK_SHLIB_EXT=\"${SHLIB_SUFFIX}\"
 
 WISH_OBJS = tkAppInit.o
 
@@ -236,7 +257,10 @@ UNIXOBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixCursor.o \
 	tkUnixDialog.o tkUnixDraw.o \
 	tkUnixEmbed.o tkUnixEvent.o tkUnixFocus.o tkUnixFont.o tkUnixInit.o \
 	tkUnixMenu.o tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o \
-	tkUnixSelect.o tkUnixSend.o tkUnixWm.o tkUnixXId.o
+	tkUnixSelect.o tkUnixSend.o tkUnixWm.o tkUnixXId.o tkStubInit.o
+
+STUB_LIB_OBJS = tkStubs.o tkIntStubs.o tkIntPlatStubs.o tkPlatStubs.o \
+	tkIntXlibStubs.o tkStubLib.o
 
 OBJS =  tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkClipboard.o tkCmds.o \
 	tkColor.o tkConfig.o tkCursor.o tkError.o tkEvent.o \
@@ -244,6 +268,10 @@ OBJS =  tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkClipboard.o tkCmds.o \
 	tkMain.o tkOption.o tkPack.o tkPlace.o \
 	tkSelect.o tkUtil.o tkVisual.o tkWindow.o \
 	$(UNIXOBJS) $(WIDGOBJS) $(CANVOBJS) $(IMAGEOBJS) $(TEXTOBJS)
+
+TK_DECLS = \
+	$(GENERIC_DIR)/tk.decls \
+	$(GENERIC_DIR)/tkInt.decls
 
 SRCS = \
 	$(GENERIC_DIR)/tk3d.c $(GENERIC_DIR)/tkArgv.c \
@@ -281,6 +309,9 @@ SRCS = \
 	$(GENERIC_DIR)/tkTextIndex.c $(GENERIC_DIR)/tkTextMark.c \
 	$(GENERIC_DIR)/tkTextTag.c $(GENERIC_DIR)/tkTextWind.c \
 	$(GENERIC_DIR)/tkSquare.c $(GENERIC_DIR)/tkTest.c \
+	$(GENERIC_DIR)/tkStubs.c $(GENERIC_DIR)/tkIntStubs.c \
+	$(GENERIC_DIR)/tkPlatStubs.c $(GENERIC_DIR)/tkIntPlatStubs.c \
+	$(GENERIC_DIR)/tkIntXlibStubs.c $(GENERIC_DIR)/tkInitStubs.c \
 	$(UNIX_DIR)/tkAppInit.c $(UNIX_DIR)/tkUnix.c \
 	$(UNIX_DIR)/tkUnix3d.c \
 	$(UNIX_DIR)/tkUnixButton.c $(UNIX_DIR)/tkUnixColor.c \
@@ -311,6 +342,11 @@ ${TK_LIB_FILE}: ${OBJS}
 	@MAKE_LIB@
 	$(RANLIB) ${TK_LIB_FILE}
 
+${STUB_LIB_FILE}: ${STUB_LIB_OBJS}
+	rm -f ${STUB_LIB_FILE}
+	@MAKE_STUB_LIB@
+	$(RANLIB) ${STUB_LIB_FILE}
+
 # Make target which outputs the list of the .o contained in the Tk lib
 # usefull to build a single big shared library containing Tcl/Tk and other
 # extensions.  used for the Tcl Plugin.  -- dl
@@ -321,7 +357,7 @@ tkLibObjs:
 objs: ${OBJS}
 
 
-wish: $(WISH_OBJS) $(TK_LIB_FILE)
+wish: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE)
 	$(CC) @LD_FLAGS@ $(WISH_OBJS) @TK_BUILD_LIB_SPEC@ $(LIBS) \
 		$(TK_CC_SEARCH_FLAGS) -o wish
 
@@ -365,7 +401,7 @@ install: install-binaries install-libraries install-demos install-man
 # some ranlibs write to current directory, and this might not always be
 # possible (e.g. if installing as root).
 
-install-binaries: $(TK_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
+install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) ; \
 	    do \
 	    if [ ! -d $$i ] ; then \
@@ -388,6 +424,11 @@ install-binaries: $(TK_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	@$(INSTALL_PROGRAM) wish $(BIN_INSTALL_DIR)/wish$(VERSION)
 	@echo "Installing tkConfig.sh"
 	@$(INSTALL_DATA) tkConfig.sh $(LIB_INSTALL_DIR)/tkConfig.sh
+	@if test "$(TK_STUB_LIB_FILE)" != "" ; then \
+	    echo "Installing $(TK_STUB_LIB_FILE)"; \
+	    $(INSTALL_DATA) $(STUB_LIB_FILE) \
+			 $(LIB_INSTALL_DIR)/$(TK_STUB_LIB_FILE); \
+	    fi
 
 install-libraries:
 	@for i in $(INSTALL_ROOT)$(prefix)/lib $(INCLUDE_INSTALL_DIR) \
@@ -771,8 +812,58 @@ tkUnixWm.o: $(UNIX_DIR)/tkUnixWm.c
 tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixXId.c
 
+tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubInit.c
+
+
+# Stub library binaries, these must be compiled for use in a shared library
+# even though they will be placed in a static archive
+
+tkStubs.o: $(GENERIC_DIR)/tkStubs.c
+	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkStubs.c
+
+tkIntStubs.o: $(GENERIC_DIR)/tkIntStubs.c
+	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkIntStubs.c
+
+tkPlatStubs.o: $(GENERIC_DIR)/tkPlatStubs.c
+	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkPlatStubs.c
+
+tkIntPlatStubs.o: $(GENERIC_DIR)/tkIntPlatStubs.c
+	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkIntPlatStubs.c
+
+tkIntXlibStubs.o: $(GENERIC_DIR)/tkIntXlibStubs.c
+	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkIntXlibStubs.c
+
+tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
+	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkStubLib.c
+
 .c.o:
 	$(CC) -c $(CC_SWITCHES) $<
+
+#
+# Target to regenerate header files and stub files from the *.decls tables.
+#
+
+genstubs:
+	tclsh $(TOOL_DIR)/genStubs.tcl $(GENERIC_DIR) \
+		$(GENERIC_DIR)/tk.decls $(GENERIC_DIR)/tkInt.decls
+
+#
+# Target to check that all exported functions have an entry in the stubs
+# tables.
+#
+
+checkstubs:
+	-@for i in `nm -p $(TK_LIB_FILE) | awk '$$2 ~ /T/ { print $$3 }' \
+		| sort -n`; do \
+		match=0; \
+		for j in $(TK_DECLS); do \
+		    if [ `grep -c $$i $$j` -gt 0 ]; then \
+			match=1; \
+		    fi; \
+		done; \
+		if [ $$match -eq 0 ]; then echo $$i; fi \
+	done
 
 #
 # Target to check for proper usage of UCHAR macro.

@@ -8,10 +8,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.4 1999/02/04 20:57:18 stanton Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.5 1999/03/10 07:04:46 stanton Exp $
  */
 
 #include <tk.h>
+#include "tkInt.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
@@ -22,9 +23,6 @@
  * The following declarations refer to internal Tk routines.  These
  * interfaces are available for use, but are not supported.
  */
-
-EXTERN void		TkConsoleCreate(void);
-EXTERN int		TkConsoleInit(Tcl_Interp *interp);
 
 /*
  * Forward declarations for procedures defined later in this file:
@@ -85,14 +83,6 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
      */
     SetMessageQueue(64);
 
-    /*
-     * Create the console channels and install them as the standard
-     * channels.  All I/O will be discarded until TkConsoleInit is
-     * called to attach the console to a text widget.
-     */
-
-    TkConsoleCreate();
-
     setargv(&argc, &argv);
 
     /*
@@ -142,6 +132,7 @@ Tcl_AppInit(interp)
     if (Tk_Init(interp) == TCL_ERROR) {
 	goto error;
     }
+
     Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
 
     /*

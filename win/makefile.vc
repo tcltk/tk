@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.19 1999/02/12 00:51:12 stanton Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.20 1999/03/10 07:04:46 stanton Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -46,6 +46,8 @@ NODEBUG = 1
 
 TCLNAMEPREFIX = tcl
 TKNAMEPREFIX = tk
+TCLSTUBPREFIX = $(TCLNAMEPREFIX)stub
+TKSTUBPREFIX = $(TKNAMEPREFIX)stub
 WISHNAMEPREFIX = wish
 VERSION = 80
 DOTVERSION = 8.0
@@ -64,9 +66,12 @@ OUTDIR		= $(TMPDIR)
 
 TCLLIB 		= $(TCLNAMEPREFIX)$(VERSION)$(DBGX).lib
 TCLPLUGINLIB 	= $(TCLNAMEPREFIX)$(VERSION)p.lib
+TCLSTUBLIB	= $(TCLSTUBPREFIX)$(VERSION)$(DBGX).lib
 TKDLLNAME	= $(TKNAMEPREFIX)$(VERSION)$(DBGX).dll
 TKDLL 		= $(OUTDIR)\$(TKDLLNAME)
-TKLIB 		= $(OUTDIR)\$(TKNAMEPREFIX)$(VERSION)$(DBGX).lib
+TKLIB		= $(OUTDIR)\$(TKNAMEPREFIX)$(VERSION)$(DBGX).lib
+TKSTUBLIBNAME	= $(TKSTUBPREFIX)$(VERSION)$(DBGX).lib
+TKSTUBLIB	= $(OUTDIR)\$(TKSTUBLIBNAME)
 TKPLUGINDLLNAME	= $(TKNAMEPREFIX)$(VERSION)p$(DBG).dll
 TKPLUGINDLL 	= $(OUTDIR)\$(TKPLUGINDLLNAME)
 TKPLUGINLIB 	= $(OUTDIR)\$(TKNAMEPREFIX)$(VERSION)p$(DBGX).lib
@@ -189,10 +194,19 @@ TKOBJS = \
 	$(TMPDIR)\tkTrig.obj \
 	$(TMPDIR)\tkUtil.obj \
 	$(TMPDIR)\tkVisual.obj \
+	$(TMPDIR)\tkStubInit.obj \
 	$(TMPDIR)\tkWindow.obj
+
+TKSTUBOBJS = \
+	$(TMPDIR)\tkStubLib.obj \
+	$(TMPDIR)\tkStubs.obj \
+	$(TMPDIR)\tkPlatStubs.obj \
+	$(TMPDIR)\tkIntStubs.obj \
+	$(TMPDIR)\tkIntPlatStubs.obj
 
 cc32		= "$(TOOLS32)\bin\cl.exe"
 link32		= "$(TOOLS32)\bin\link.exe"
+lib32		= "$(TOOLS32)\bin\lib.exe"
 rc32		= "$(TOOLS32_rc)\bin\rc.exe"
 include32	= -I"$(TOOLS32)\include"
 
@@ -208,7 +222,10 @@ TK_INCLUDES	= -I$(WINDIR) -I$(GENERICDIR) -I$(BITMAPDIR) -I$(XLIBDIR) \
 TK_DEFINES	= $(DEBUGDEFINES)
 
 TK_CFLAGS	= $(cdebug) $(cflags) $(cvarsdll) $(include32) \
-			$(TK_INCLUDES) $(TK_DEFINES) 
+			$(TK_INCLUDES) $(TK_DEFINES)
+
+WISH_CFLAGS	= $(cdebug) $(cflags) $(cvarsdll) $(include32) \
+			$(TK_INCLUDES) $(TK_DEFINES)
 
 ######################################################################
 # Link flags
@@ -317,6 +334,15 @@ install-binaries:
 	@mkd "$(LIB_INSTALL_DIR)"
 	copy $(TKLIB) "$(LIB_INSTALL_DIR)"
 
+#
+# Regenerate the stubs files.
+#
+
+stubs:
+	$(TCLDIR)\win\$(TMPDIRNAME)\tclsh$(VERSION)$(DBGX) \
+		$(TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
+		$(GENERICDIR)\tk.decls $(GENERICDIR)\tkInt.decls
+
 install-libraries:
 	@mkd "$(INCLUDE_INSTALL_DIR)"
 	@mkd "$(INCLUDE_INSTALL_DIR)\X11"
@@ -341,6 +367,9 @@ $(TKDLL): $(TKOBJS) $(TMPDIR)\tk.res $(TMPDIR)\tk.def
 			$(TKOBJS)
 <<
 
+$(TKSTUBLIB): $(TKSTUBOBJS)
+	$(lib32) /out:$@ $(TKSTUBOBJS)
+
 $(TKPLUGINLIB): $(TKPLUGINDLL)
 
 $(TKPLUGINDLL): $(TKOBJS) $(TMPDIR)\tk.res $(TMPDIR)\plugin.def
@@ -351,7 +380,7 @@ $(TKPLUGINDLL): $(TKOBJS) $(TMPDIR)\tk.res $(TMPDIR)\plugin.def
 			$(TKOBJS)
 <<
 
-$(WISH): $(WISHOBJS) $(TKLIB) $(TMPDIR)\wish.res
+$(WISH): $(WISHOBJS) $(TKSTUBLIB) $(TKLIB) $(TMPDIR)\wish.res
 	set LIB=$(TOOLS32)\lib
 	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -stack:2300000 \
 		-out:$@ \
@@ -364,7 +393,7 @@ $(WISHP): $(WISHOBJS) $(TKPLUGINLIB) $(TMPDIR)\wish.res
 		$(guilibsdll) $(TCLLIBDIR)\$(TCLPLUGINLIB) \
 		$(TKPLUGINLIB) $(WISHOBJS) 
 
-$(TKTEST): $(TKTESTOBJS) $(TKLIB) $(TMPDIR)\wish.res
+$(TKTEST): $(TKTESTOBJS) $(TKSTUBLIB) $(TMPDIR)\wish.res
 	set LIB=$(TOOLS32)\lib
 	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -stack:2300000 \
 		-out:$@ \
@@ -387,6 +416,14 @@ $(DUMPEXTS): $(TCLDIR)\win\winDumpExts.c
 		$(TMPDIR)\winDumpExts.obj 
 
 #
+# Regenerate the stubs files.
+#
+
+genstubs:
+	tclsh$(VERSION) $(TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
+		$(GENERICDIR)\tk.decls $(GENERICDIR)\tkInt.decls
+
+#
 # Special case object file targets
 #
 
@@ -400,7 +437,7 @@ $(TMPDIR)\tkSquare.obj: $(ROOT)\generic\tkSquare.c
 	$(cc32) $(TK_CFLAGS) -Fo$@ $?
 
 $(TMPDIR)\winMain.obj: $(ROOT)\win\winMain.c
-	$(cc32) $(TK_CFLAGS) -Fo$@ $?
+	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
 
 #
 # Implicit rules

@@ -11,13 +11,17 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.4 1999/02/04 21:43:14 stanton Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.5 1999/03/10 07:04:39 stanton Exp $
  */
 
 #include "tkInt.h"
 #include "tkPort.h"
 #include "tclMath.h"
 #include <ctype.h>
+
+#ifdef __WIN32__
+#include "tkWinInt.h"
+#endif
 
 /*
  * Declaration for internal Xlib function used here:
@@ -121,6 +125,9 @@ typedef struct ColorTable {
  * MAP_COLORS:			1 means pixel values should be mapped
  *				through pixelMap.
  */
+#ifdef COLOR_WINDOW
+#undef COLOR_WINDOW
+#endif
 
 #define BLACK_AND_WHITE		1
 #define COLOR_WINDOW		2
