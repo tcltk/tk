@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.11 2000/02/10 08:52:36 hobbs Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.12 2000/04/04 08:09:15 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -210,11 +210,10 @@ static void		TrivialEventProc _ANSI_ARGS_((ClientData clientData,
  * External (platform specific) initialization routine:
  */
 
-extern int		TkplatformtestInit _ANSI_ARGS_((
-			    Tcl_Interp *interp));
+extern int		TkplatformtestInit _ANSI_ARGS_((Tcl_Interp *interp));
 extern int              TclThread_Init _ANSI_ARGS_((Tcl_Interp *interp));
 
-#if !(defined(__WIN32__) && defined(MAC_TCL))
+#if !(defined(__WIN32__) || defined(MAC_TCL))
 #define TkplatformtestInit(x) TCL_OK
 #endif
 
