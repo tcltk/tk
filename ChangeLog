@@ -1,5 +1,13 @@
 2001-10-30  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* library/demos/widget: Integrated labelframe item into the labels
+	section and added a spinbox demo to the (retitled) entry section.
+
+	* library/demos/labelframe.tcl: Adjusted so as to show off the
+	labelframe widget to better effect and have a better description.
+
+	* library/demos/spin.tcl: New demo to show off spinbox capabilities.
+
 	* library/demos/rolodex: Changes up-ported from core-8-3-1-branch
 	to make the script use more 8.*-isms, but not menus due to the way
 	the context help system works.

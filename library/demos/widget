@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.3 2001/09/26 21:36:19 pspjuth Exp $
+# RCS: @(#) $Id: widget,v 1.4 2001/10/30 11:21:50 dkf Exp $
 
 eval destroy [winfo child .]
 wm title . "Widget Demonstration"
@@ -144,6 +144,8 @@ This application provides a front end for several short scripts that demonstrate
 .t insert end "8. A simple user interface for viewing images." \
     {demo demo-image2}
 .t insert end " \n " {demospace}
+.t insert end "9. Labelled frames." {demo demo-labelframe}
+.t insert end " \n " {demospace}
 
 .t insert end \n {} "Listboxes" title
 .t insert end " \n " {demospace}
@@ -155,13 +157,15 @@ This application provides a front end for several short scripts that demonstrate
 .t insert end "3. A collection of famous sayings." {demo demo-sayings}
 .t insert end " \n " {demospace}
 
-.t insert end \n {} "Entries" title
+.t insert end \n {} "Entries and Spin-boxes" title
 .t insert end " \n " {demospace}
-.t insert end "1. Without scrollbars." {demo demo-entry1}
+.t insert end "1. Entries without scrollbars." {demo demo-entry1}
 .t insert end " \n " {demospace}
-.t insert end "2. With scrollbars." {demo demo-entry2}
+.t insert end "2. Entries with scrollbars." {demo demo-entry2}
 .t insert end " \n " {demospace}
-.t insert end "3. Simple Rolodex-like form." {demo demo-form}
+.t insert end "3. Spin-boxes." {demo demo-spin}
+.t insert end " \n " {demospace}
+.t insert end "4. Simple Rolodex-like form." {demo demo-form}
 .t insert end " \n " {demospace}
 
 .t insert end \n {} "Text" title
@@ -208,12 +212,6 @@ This application provides a front end for several short scripts that demonstrate
 .t insert end " \n " {demospace}
 .t insert end "2. Menubuttons"\
 	{demo demo-menubu}
-.t insert end " \n " {demospace}
-
-.t insert end \n {} "Labelframes" title
-.t insert end " \n " {demospace}
-.t insert end "1. Labelframe." \
-	{demo demo-labelframe}
 .t insert end " \n " {demospace}
 
 .t insert end \n {} "Common Dialogs" title
@@ -395,3 +393,6 @@ proc aboutBox {} {
 Copyright (c) 1996-1997 Sun Microsystems, Inc."
 }
 
+# Local Variables:
+# mode: tcl
+# End:
