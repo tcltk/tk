@@ -1,3 +1,9 @@
+2004-04-23  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/bind.n: Added examples (in line with the parallel programme
+	for adding examples to Tcl manual pages) and made assorted minor
+	alterations to improve the overall look.
+
 2004-04-21  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* tests/textDisp.test: Get rid of windows that are no longer
