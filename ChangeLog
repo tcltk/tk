@@ -1,3 +1,9 @@
+2004-05-05  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinFont.c (Tk_MeasureChars,Tk_DrawChars,etc): Make sure
+	that the lastSubFontPtr remains valid even when the subfont array
+	is reallocated. [Bug #618872] (dkf, hobbs)
+
 2004-05-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinMenu.c, unix/tkUnixMenu.c (DrawMenuEntryLabel): place
