@@ -1,3 +1,11 @@
+2004-07-14  Jim Ingham  <jingham@apple.com>
+
+        * macosx/tkMacOSXCursor.c (TkpSetCursor): The code to not
+        reset the cursor more often than necessary was getting fooled
+        when the current cursor was nulled out when the current cursor
+        gets freed.  So in the case where the input cursor was NULL, we
+        have to just always set it. [Bug #894550]
+
 2004-07-13  Don Porter  <dgp@users.sourceforge.net>
 
 	* library/tkfbox.tcl: Corrected coding errors in most recent change.
