@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: console.n,v 1.1 2001/05/16 12:39:18 dkf Exp $
+'\" RCS: @(#) $Id: console.n,v 1.2 2001/08/01 16:21:11 dgp Exp $
 '\"
 .so man.macros
 .TH console n 8.4 Tk "Tcl Built-In Commands"
@@ -78,14 +78,14 @@ the internal implementation of the console and are likely to change or
 be modified without warning.\fR
 .PP
 Output to the console from the main interpreter via the stdout and
-stderr channels is handled by invoking the \fBtkConsoleOutput\fR
+stderr channels is handled by invoking the \fBtk::ConsoleOutput\fR
 command in the console interpreter with two arguments.  The first
 argument is the name of the channel being written to, and the second
 argument is the string being written to the channel (after encoding
 and end-of-line translation processing has been performed.)
 .PP
 When the \fB.\fR window of the main interpreter is destroyed, the
-\fBtkConsoleExit\fR command in the console interpreter is called
+\fBtk::ConsoleExit\fR command in the console interpreter is called
 (assuming the console interpreter has not already been deleted itself,
 that is.)
 

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.10 2001/04/03 06:54:33 hobbs Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.11 2001/08/01 16:21:11 dgp Exp $
  */
 
 /*
@@ -1070,7 +1070,7 @@ TkInvokeMenu(interp, menuPtr, index)
     if (mePtr->type == TEAROFF_ENTRY) {
 	Tcl_DString ds;
 	Tcl_DStringInit(&ds);
-	Tcl_DStringAppend(&ds, "tkTearOffMenu ", -1);
+	Tcl_DStringAppend(&ds, "tk::TearOffMenu ", -1);
 	Tcl_DStringAppend(&ds, Tk_PathName(menuPtr->tkwin), -1);
 	result = Tcl_Eval(interp, Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
@@ -2644,7 +2644,7 @@ CloneMenu(menuPtr, newMenuNamePtr, newMenuTypePtr)
 	}
     }
 
-    menuDupCommandArray[0] = Tcl_NewStringObj("tkMenuDup", -1);
+    menuDupCommandArray[0] = Tcl_NewStringObj("tk::MenuDup", -1);
     menuDupCommandArray[1] = Tcl_NewStringObj(Tk_PathName(menuPtr->tkwin), -1);
     menuDupCommandArray[2] = newMenuNamePtr;
     if (newMenuTypePtr == NULL) {

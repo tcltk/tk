@@ -28,10 +28,6 @@ if test "$x" != "xyzzyTestingAVeryLongFileName.foo"; then
     exit
 fi
 
-if test -r SetClassProcs.3; then
-    rm -f Tk_SetClassProcs.3
-    ln SetClassProcs.3 Tk_SetClassProcs.3
-fi
 if test -r 3DBorder.3; then
     rm -f Tk_Alloc3DBorderFromObj.3
     rm -f Tk_Get3DBorder.3
@@ -570,6 +566,10 @@ if test -r SetClass.3; then
     ln SetClass.3 Tk_SetClass.3
     ln SetClass.3 Tk_Class.3
 fi
+if test -r SetClassProcs.3; then
+    rm -f Tk_SetClassProcs.3
+    ln SetClassProcs.3 Tk_SetClassProcs.3
+fi
 if test -r SetGrid.3; then
     rm -f Tk_SetGrid.3
     rm -f Tk_UnsetGrid.3
@@ -706,6 +706,10 @@ if test -r getOpenFile.n; then
     ln getOpenFile.n tk_getOpenFile.n
     ln getOpenFile.n tk_getSaveFile.n
 fi
+if test -r menu.n; then
+    rm -f tk_menuSetFocus.n
+    ln menu.n tk_menuSetFocus.n
+fi
 if test -r menubar.n; then
     rm -f tk_menuBar.n
     rm -f tk_bindForTraversal.n
@@ -729,5 +733,13 @@ fi
 if test -r popup.n; then
     rm -f tk_popup.n
     ln popup.n tk_popup.n
+fi
+if test -r text.n; then
+    rm -f tk_textCopy.n
+    rm -f tk_textCut.n
+    rm -f tk_textPaste.n
+    ln text.n tk_textCopy.n
+    ln text.n tk_textCut.n
+    ln text.n tk_textPaste.n
 fi
 exit 0
