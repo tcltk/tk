@@ -1,3 +1,17 @@
+2003-03-13  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	Require autoconf 2.57 or newer, see TIP 34
+	for a detailed explanation of why this is good.
+	This will no doubt break the build on some
+	platforms, let the flaming begin.
+
+	* unix/configure: Regen with autoconf 2.57.
+	* unix/configure.in: Require autoconf 2.57.
+	* unix/tcl.m4: Update from Tcl.
+	* win/configure: Regen with autoconf 2.57.
+	* win/configure.in: Require autoconf 2.57.
+	* win/tcl.m4: Update from Tcl.
+
 2003-03-12  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/msgbox.tcl (tk::MessageBox): Stopped message box buttons
