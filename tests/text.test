@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.31 2004/06/24 12:45:43 dkf Exp $
+# RCS: @(#) $Id: text.test,v 1.32 2004/09/10 12:13:43 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -114,7 +114,7 @@ test text-1.[incr i] {text options} {
 	lappend result [lindex $i 4]
     }
     set result
-} {1 blue {} {} 0 7 watch 0 {} fixed #012 5 #123 #234 0 green 45 100 47 2 5 3 82 raised #ffff01234567 21 yellow 0 0 0 0 disabled {1i 2i 3i 4i} {any old thing} 1 73 word {x scroll command} {test command}}
+} {1 blue {} {} 0 7 watch {} 0 {} fixed #012 5 #123 #234 0 {} green 45 100 47 2 5 3 82 raised #ffff01234567 21 yellow 0 0 0 0 {} disabled {1i 2i 3i 4i} {any old thing} 1 73 word {x scroll command} {test command}}
 
 test text-2.1 {Tk_TextCmd procedure} {
     list [catch {text} msg] $msg
@@ -151,7 +151,7 @@ test text-3.1 {TextWidgetCmd procedure, basics} {
 } {1 {wrong # args: should be ".t option ?arg arg ...?"}}
 test text-3.2 {TextWidgetCmd procedure} {
     list [catch {.t gorp 1.0 z 1.2} msg] $msg
-} {1 {bad option "gorp": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, replace, scan, search, see, tag, window, xview, or yview}}
+} {1 {bad option "gorp": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, or yview}}
 
 test text-4.1 {TextWidgetCmd procedure, "bbox" option} {
     list [catch {.t bbox} msg] $msg
@@ -219,7 +219,7 @@ test text-6.13 {TextWidgetCmd procedure, "compare" option} {
 } {1 {bad comparison operator "z": must be <, <=, ==, >=, >, or !=}}
 test text-6.14 {TextWidgetCmd procedure, "compare" option} {
     list [catch {.t co 1.0 z 1.2} msg] $msg
-} {1 {ambiguous option "co": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, replace, scan, search, see, tag, window, xview, or yview}}
+} {1 {ambiguous option "co": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, or yview}}
 
 # "configure" option is already covered above
 
@@ -228,7 +228,7 @@ test text-7.1 {TextWidgetCmd procedure, "debug" option} {
 } {1 {wrong # args: should be ".t debug boolean"}}
 test text-7.2 {TextWidgetCmd procedure, "debug" option} {
     list [catch {.t de 0 1} msg] $msg
-} {1 {ambiguous option "de": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, replace, scan, search, see, tag, window, xview, or yview}}
+} {1 {ambiguous option "de": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, or yview}}
 test text-7.3 {TextWidgetCmd procedure, "debug" option} {
     .t debug true
     .t deb
@@ -334,7 +334,8 @@ test text-8.19 {TextWidgetCmd procedure, "replace" option} {
     list [catch {.t replace 2.1 2.3 foo} err] $err
 } {0 {}}
 .t delete 1.0 end; .t insert 1.0 $prevtext
-test text-8.20 {TextWidgetCmd procedure, "replace" option} {
+test text-8.20 {TextWidgetCmd procedure, "replace" option with undo} {
+    .t configure -undo 0
     .t configure -undo 1
     # Ensure it is treated as a single undo action
     .t replace 2.1 2.3 foo
@@ -342,6 +343,90 @@ test text-8.20 {TextWidgetCmd procedure, "replace" option} {
     .t configure -undo 0
     string equal [.t get 1.0 end-1c] $prevtext
 } {1}
+
+test text-8.21 {TextWidgetCmd procedure, "replace" option with undo} {
+    .t configure -undo 0
+    .t configure -undo 1
+    .t replace 2.1 2.3 foo
+    # Ensure we can override a text widget and intercept undo
+    # actions.  If in the future a different mechanism is available
+    # to do this, then we should be able to change this test.  The
+    # behaviour tested for here is not, strictly speaking, documented.
+    rename .t test.t
+    set res {}
+    proc .t {args} { lappend ::res $args ; uplevel 1 test.t $args }
+    .t edit undo
+    rename .t {}
+    rename test.t .t
+    .t configure -undo 0
+    set res
+} {{edit undo} {delete 2.1 2.4} {mark set insert 2.1} {see insert} {insert 2.1 ef} {mark set insert 2.3} {see insert}}
+
+test text-8.22 {TextWidgetCmd procedure, "replace" option with undo} {
+    .t configure -undo 0
+    .t configure -undo 1
+    # Ensure that undo (even composite undo like 'replace')
+    # works when the widget shows nothing useful.
+    .t replace 2.1 2.3 foo
+    .t configure -start 1 -end 1
+    .t edit undo
+    .t configure -start {} -end {}
+    .t configure -undo 0
+    if {![string equal [.t get 1.0 end-1c] $prevtext]} {
+	set res [list [.t get 1.0 end-1c] ne $prevtext]
+    } else {
+	set res 1
+    }
+} {1}
+
+.t delete 1.0 end; .t insert 1.0 $prevtext
+
+test text-8.23 {TextWidgetCmd procedure, "replace" option with peers, undo} {
+    .t configure -undo 0
+    .t configure -undo 1
+    .t peer create .tt -undo 1
+    # Ensure that undo (even composite undo like 'replace')
+    # works when the the event took place in one peer, which
+    # is then deleted, before the undo takes place in another peer.
+    .tt replace 2.1 2.3 foo
+    .tt configure -start 1 -end 1
+    destroy .tt
+    .t edit undo
+    .t configure -start {} -end {}
+    .t configure -undo 0
+    if {![string equal [.t get 1.0 end-1c] $prevtext]} {
+	set res [list [.t get 1.0 end-1c] ne $prevtext]
+    } else {
+        set res 1
+    }
+} {1}
+
+.t delete 1.0 end; .t insert 1.0 $prevtext
+
+test text-8.24 {TextWidgetCmd procedure, "replace" option with peers, undo} {
+    .t configure -undo 0
+    .t configure -undo 1
+    .t peer create .tt -undo 1
+    # Ensure that undo (even composite undo like 'replace')
+    # works when the the event took place in one peer, which
+    # is then deleted, before the undo takes place in another peer
+    # which isn't showing everything.
+    .tt replace 2.1 2.3 foo
+    set res [.tt get 2.1 2.4]
+    .tt configure -start 1 -end 1
+    destroy .tt
+    .t configure -start 3 -end 4
+    # msg will actually be set to a silently ignored error message here,
+    # (that the .tt command doesn't exist), but that is not important.
+    lappend res [catch {.t edit undo} msg]
+    .t configure -undo 0
+    .t configure -start {} -end {}
+    if {![string equal [.t get 1.0 end-1c] $prevtext]} {
+	lappend res [list [.t get 1.0 end-1c] ne $prevtext]
+    } else {
+	lappend res 1
+    }
+} {foo 0 1}
 
 .t delete 1.0 end; .t insert 1.0 $prevtext
 
@@ -741,7 +826,7 @@ test text-10.2 {TextWidgetCmd procedure, "index" option} {
 } {1 {wrong # args: should be ".t index index"}}
 test text-10.3 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t in a b} msg] $msg
-} {1 {ambiguous option "in": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, replace, scan, search, see, tag, window, xview, or yview}}
+} {1 {ambiguous option "in": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, or yview}}
 test text-10.4 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t index @xyz} msg] $msg
 } {1 {bad text index "@xyz"}}
@@ -2973,6 +3058,444 @@ test text-28.0 {repeated insert and scroll} {
     # This test must simply not crash to succeed
     set result 1
 } {1}
+
+test text-29.0 {peer widgets} {
+    destroy .t .tt
+    toplevel .tt
+    pack [text .t]
+    pack [.t peer create .tt.t]
+    destroy .t .tt
+} {}
+
+test text-29.1 {peer widgets} {
+    destroy .t .t1 .t2
+    toplevel .t1
+    toplevel .t2
+    pack [text .t]
+    pack [.t peer create .t1.t]
+    pack [.t peer create .t2.t]
+    .t insert end "abcd\nabcd"
+    update
+    destroy .t1
+    update
+    .t insert end "abcd\nabcd"
+    update
+    destroy .t .t2
+    update
+} {}
+
+test text-29.2 {peer widgets} {
+    destroy .t .t1 .t2
+    toplevel .t1
+    toplevel .t2
+    pack [text .t]
+    pack [.t peer create .t1.t]
+    pack [.t peer create .t2.t]
+    .t insert end "abcd\nabcd"
+    update
+    destroy .t
+    update
+    .t2.t insert end "abcd\nabcd"
+    update
+    destroy .t .t2
+    update
+} {}
+
+test text-29.3 {peer widgets} {
+    destroy .t .tt
+    toplevel .tt
+    pack [text .t]
+    for {set i 1} {$i < 20} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    pack [.t peer create .tt.t -start 5 -end 11]
+    update
+    destroy .t .tt
+} {}
+
+test text-29.4 {peer widgets} {
+    destroy .t .tt
+    toplevel .tt
+    pack [text .t]
+    for {set i 1} {$i < 20} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    pack [.t peer create .tt.t -start 5 -end 11]
+    pack [.tt.t peer create .tt.t2]
+    set res [list [.tt.t index end] [.tt.t2 index end]]
+    update
+    destroy .t .tt
+    set res
+} {7.0 7.0}
+
+test text-29.4.1 {peer widgets} {
+    destroy .t .tt
+    toplevel .tt
+    pack [text .t]
+    for {set i 1} {$i < 20} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    pack [.t peer create .tt.t -start 5 -end 11]
+    pack [.tt.t peer create .tt.t2 -start {} -end {}]
+    set res [list [.tt.t index end] [.tt.t2 index end]]
+    update
+    destroy .t .tt
+    set res
+} {7.0 21.0}
+
+test text-29.5 {peer widgets} {
+    destroy .t .tt
+    toplevel .tt
+    pack [text .t]
+    for {set i 1} {$i < 20} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    pack [.t peer create .tt.t -start 5 -end 11]
+    update ; update
+    set p1 [.tt.t count -update -ypixels 1.0 end]
+    set p2 [.t count -update -ypixels 5.0 11.0]
+    if {$p1 == $p2} { 
+	set res "ok" 
+    } else {
+        set res "$p1 and $p2 not equal"
+    }
+    destroy .t .tt
+    set res
+} {ok}
+
+test text-29.6 {peer widgets} {
+    destroy .t .tt
+    toplevel .tt
+    pack [text .t]
+    for {set i 1} {$i < 20} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    pack [.t peer create .tt.t -start 5 -end 11]
+    update ; update
+    .t delete 3.0 6.0
+    set res [.tt.t index end]
+    destroy .t .tt
+    set res
+} {6.0}
+
+test text-29.7 {peer widgets} {
+    destroy .t .tt
+    toplevel .tt
+    pack [text .t]
+    for {set i 1} {$i < 20} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    pack [.t peer create .tt.t -start 5 -end 11]
+    update ; update
+    .t delete 8.0 12.0
+    set res [.tt.t index end]
+    destroy .t .tt
+    set res
+} {4.0}
+
+test text-29.8 {peer widgets} {
+    destroy .t .tt
+    toplevel .tt
+    pack [text .t]
+    for {set i 1} {$i < 20} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    pack [.t peer create .tt.t -start 5 -end 11]
+    update ; update
+    .t delete 3.0 13.0
+    set res [.tt.t index end]
+    destroy .t .tt
+    set res
+} {1.0}
+
+test text-29.9 {peer widgets} {
+    destroy .t
+    pack [text .t]
+    for {set i 1} {$i < 100} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    .t tag add sel 1.0 end-1c
+    set res {}
+    lappend res [.t tag ranges sel]
+    .t configure -start 10 -end 20
+    lappend res [.t tag ranges sel]
+    destroy .t
+    set res
+} {{1.0 100.0} {1.0 11.0}}
+
+test text-29.10 {peer widgets} {
+    destroy .t
+    pack [text .t]
+    for {set i 1} {$i < 100} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    .t tag add sel 1.0 end-1c
+    set res {}
+    lappend res [.t tag ranges sel]
+    .t configure -start 11
+    lappend res [.t tag ranges sel]
+    destroy .t
+    set res
+} {{1.0 100.0} {1.0 90.0}}
+
+test text-29.11 {peer widgets} {
+    destroy .t
+    pack [text .t]
+    for {set i 1} {$i < 100} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    .t tag add sel 1.0 end-1c
+    set res {}
+    lappend res [.t tag ranges sel]
+    .t configure -end 90
+    lappend res [.t tag ranges sel]
+    destroy .t
+    set res
+} {{1.0 100.0} {1.0 90.0}}
+
+test text-29.12 {peer widgets} {
+    destroy .t
+    pack [text .t]
+    for {set i 1} {$i < 20} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    .t tag add sel 1.0 3.0 5.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0 
+    set res {}
+    lappend res [.t tag prevrange sel 1.0]
+    .t configure -start 6 -end 12
+    lappend res [.t tag ranges sel]
+    lappend res "next" [.t tag nextrange sel 4.0] \
+      [.t tag nextrange sel 5.0] [.t tag nextrange sel 6.0] \
+      [.t tag nextrange sel 7.0]
+    lappend res "prev" [.t tag prevrange sel 1.0] \
+      [.t tag prevrange sel 2.0] [.t tag prevrange sel 3.0] \
+      [.t tag prevrange sel 4.0]
+    destroy .t
+    set res
+} {{} {1.0 2.0 4.0 6.0} next {4.0 6.0} {} {} {} prev {} {1.0 2.0} {1.0 2.0} {1.0 2.0}}
+
+test text-29.13 {peer widgets} {
+    destroy .t
+    pack [text .t]
+    for {set i 1} {$i < 20} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    .t tag add sel 1.0 3.0 9.0 11.0 13.0 15.0 17.0 19.0 
+    set res {}
+    .t configure -start 6 -end 12
+    lappend res [.t tag ranges sel]
+    lappend res "next" [.t tag nextrange sel 4.0] \
+      [.t tag nextrange sel 5.0] [.t tag nextrange sel 6.0] \
+      [.t tag nextrange sel 7.0]
+    lappend res "prev" [.t tag prevrange sel 1.0] \
+      [.t tag prevrange sel 2.0] [.t tag prevrange sel 3.0] \
+      [.t tag prevrange sel 4.0]
+    destroy .t
+    set res
+} {{4.0 6.0} next {4.0 6.0} {} {} {} prev {} {} {} {}}
+
+test text-29.14 {peer widgets} {
+    destroy .t
+    pack [text .t]
+    for {set i 1} {$i < 20} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    .t tag add sel 1.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0 
+    set res {}
+    .t configure -start 6 -end 12
+    lappend res [.t tag ranges sel]
+    lappend res "next" [.t tag nextrange sel 4.0] \
+      [.t tag nextrange sel 5.0] [.t tag nextrange sel 6.0] \
+      [.t tag nextrange sel 7.0]
+    lappend res "prev" [.t tag prevrange sel 1.0] \
+      [.t tag prevrange sel 2.0] [.t tag prevrange sel 3.0] \
+      [.t tag prevrange sel 4.0]
+    destroy .t
+    set res
+} {{1.0 2.0 4.0 6.0} next {4.0 6.0} {} {} {} prev {} {1.0 2.0} {1.0 2.0} {1.0 2.0}}
+
+test text-29.15 {peer widgets} {
+    destroy .t
+    pack [text .t]
+    for {set i 1} {$i < 20} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    set res {}
+    .t tag add sel 1.0 11.0
+    lappend res [.t tag ranges sel]
+    lappend res [catch {.t configure -start 15 -end 10}]
+    lappend res [.t tag ranges sel]
+    .t configure -start 6 -end 12
+    lappend res [.t tag ranges sel]
+    .t configure -start {} -end {}
+    lappend res [.t tag ranges sel]
+    destroy .t
+    set res
+} {{1.0 11.0} 1 {1.0 11.0} {1.0 6.0} {1.0 11.0}}
+
+test text-29.16 {peer widgets} {
+    destroy .t
+    pack [text .t]
+    for {set i 1} {$i < 20} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    set res {}
+    .t tag add sel 1.0 11.0
+    lappend res [.t index sel.first]
+    lappend res [.t index sel.last]
+    destroy .t
+    set res
+} {1.0 11.0} 
+
+test text-29.17 {peer widgets} {
+    destroy .t
+    pack [text .t]
+    for {set i 1} {$i < 20} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    set res {}
+    .t tag delete sel
+    set res [list [catch {.t index sel.first} msg] $msg]
+    destroy .t
+    set res
+} {1 {text doesn't contain any characters tagged with "sel"}} 
+
+proc makeText {} {
+    set w .g
+    set font "Times 11"
+    destroy .g
+    toplevel .g
+    frame $w.f -highlightthickness 2 -borderwidth 2 -relief sunken
+    set t $w.f.text
+    text $t -yscrollcommand "$w.scroll set" -setgrid true -font $font -width 70 \
+	    -height 35 -wrap word -highlightthickness 0 -borderwidth 0
+    pack $t -expand  yes -fill both
+    scrollbar $w.scroll -command "$t yview"
+    pack $w.scroll -side right -fill y
+    pack $w.f -expand yes -fill both
+    $t tag configure center -justify center -spacing1 5m -spacing3 5m
+    $t tag configure buttons -lmargin1 1c -lmargin2 1c -rmargin 1c \
+	    -spacing1 3m -spacing2 0 -spacing3 0
+    for {set i 0} {$i < 40} {incr i} {
+	$t insert end "${i}word "
+    }
+    return $t
+}
+
+test text-30.1 {line heights on creation} {
+    set w [makeText]
+    update ; after 1000 ; update
+    set before [$w count -ypixels 1.0 2.0]
+    $w insert 1.0 "a"
+    update
+    set after [$w count -ypixels 1.0 2.0]
+    destroy .g
+    if {$before != $after} {
+	set res "Count changed: $before $after"
+    } else {
+        set res "ok"
+    }
+} {ok}
+
+destroy .t
+text .t
+test text-31.1 {TextWidgetCmd procedure, "peer" option} {
+    list [catch {.t peer foo 1} msg] $msg
+} {1 {bad peer option "foo": must be create or names}}
+test text-31.2 {TextWidgetCmd procedure, "peer" option} {
+    list [catch {.t peer names foo} msg] $msg
+} {1 {wrong # args: should be ".t peer names"}}
+test text-31.3 {TextWidgetCmd procedure, "peer" option} {
+    list [catch {.t p names} msg] $msg
+} {0 {}}
+test text-31.4 {TextWidgetCmd procedure, "peer" option} {
+    .t peer names
+} {}
+test text-31.5 {TextWidgetCmd procedure, "peer" option} {
+    list [catch {.t peer create foo} msg] $msg
+} {1 {bad window path name "foo"}}
+test text-31.6 {TextWidgetCmd procedure, "peer" option} {
+    .t peer create .t2
+    set res {}
+    lappend res [.t peer names]
+    lappend res [.t2 peer names]
+    destroy .t2
+    lappend res [.t peer names]
+} {.t2 .t {}}
+test text-31.7 {peer widget -start, -end} {
+    set res [list [catch {.t configure -start 10 -end 5} msg] $msg]
+    .t configure -start {} -end {}
+    set res
+} {0 {}}
+test text-31.8 {peer widget -start, -end} {
+    .t delete 1.0 end
+    for {set i 1} {$i < 100} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    list [catch {.t configure -start 10 -end 5} msg] $msg
+} {1 {-startline must be less than or equal to -endline}}
+test text-31.9 {peer widget -start, -end} {
+    .t delete 1.0 end
+    for {set i 1} {$i < 100} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    set res [list [catch {.t configure -start 5 -end 10} msg] $msg]
+    .t configure -start {} -end {}
+    set res
+} {0 {}}
+
+test text-31.10 {peer widget -start, -end} {
+    .t delete 1.0 end
+    for {set i 1} {$i < 100} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    set res [.t index end]
+    lappend res [catch {.t configure -start 5 -end 10 -tab foo}]
+    lappend res [.t index end]
+    lappend res [catch {.t configure -tab foo -start 15 -end 20}]
+    lappend res [.t index end]
+    .t configure -start {} -end {}
+    lappend res [.t index end]
+    set res
+} {101.0 1 101.0 1 101.0 101.0}
+
+test text-31.11 {peer widget -start, -end} {
+    .t delete 1.0 end
+    for {set i 1} {$i < 100} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    set res [.t index end]
+    lappend res [catch {.t configure -start 5 -end 15}]
+    lappend res [.t index end]
+    lappend res [catch {.t configure -start 10 -end 40}]
+    lappend res [.t index end]
+    .t configure -start {} -end {}
+    lappend res [.t index end]
+    set res
+} {101.0 0 11.0 0 31.0 101.0}
+
+test text-32.1 {peer widget -start, -end and selection} {
+    .t delete 1.0 end
+    for {set i 1} {$i < 100} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    .t tag add sel 10.0 20.0
+    set res {}
+    lappend res [.t tag ranges sel]
+    .t configure -start 5 -end 30
+    lappend res [.t tag ranges sel]
+    .t configure -start 5 -end 15
+    lappend res [.t tag ranges sel]
+    .t configure -start 15 -end 30
+    lappend res [.t tag ranges sel]
+    .t configure -start 15 -end 16
+    lappend res [.t tag ranges sel]
+    .t configure -start 25 -end 30
+    lappend res [.t tag ranges sel]
+    .t configure -start {} -end {}
+    lappend res [.t tag ranges sel]
+    set res
+} {{10.0 20.0} {6.0 16.0} {6.0 11.0} {1.0 6.0} {1.0 2.0} {} {10.0 20.0}}
 
 deleteWindows
 option clear

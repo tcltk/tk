@@ -8,13 +8,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUndo.c,v 1.4 2004/06/09 19:18:14 dkf Exp $
+ * RCS: @(#) $Id: tkUndo.c,v 1.5 2004/09/10 12:13:42 vincentdarley Exp $
  */
 
 #include "tkUndo.h"
 
-static int UndoScriptsEvaluate _ANSI_ARGS_ ((Tcl_Interp *interp, 
-				    Tcl_Obj *objPtr, TkUndoAtomType type));
+static int EvaluateActionList _ANSI_ARGS_ ((Tcl_Interp *interp, 
+					    TkUndoSubAtom *action));
 
 
 /*
@@ -122,8 +122,29 @@ TkUndoClearStack(stack)
 
     while ((elem = TkUndoPopStack(stack)) != NULL) {
 	if (elem->type != TK_UNDO_SEPARATOR) {
-	    Tcl_DecrRefCount(elem->apply);
-	    Tcl_DecrRefCount(elem->revert);
+	    TkUndoSubAtom *sub;
+	    
+	    sub = elem->apply;
+	    while (sub->next != NULL) {
+		TkUndoSubAtom *next = sub->next;
+		
+		if (sub->action != NULL) {
+		    Tcl_DecrRefCount(sub->action);
+		}
+		ckfree((char *)sub);
+		sub = next;
+	    }
+	    sub = elem->revert;
+	    while (sub->next != NULL) {
+		TkUndoSubAtom *next = sub->next;
+
+		if (sub->action != NULL) {
+		    Tcl_DecrRefCount(sub->action);
+		}
+		ckfree((char *)sub);
+		sub = next;
+	    }
+	    sub = elem->revert;
 	}
 	ckfree((char *)elem);
     }
@@ -149,29 +170,155 @@ TkUndoClearStack(stack)
  */
 
 void
-TkUndoPushAction(stack, actionScript, revertScript, isList)
+TkUndoPushAction(stack, apply, revert)
     TkUndoRedoStack *stack;	/* An Undo or Redo stack */
-    Tcl_Obj *actionScript;	/* The script to get the action (redo) */
-    Tcl_Obj *revertScript;	/* The script to revert the action (undo) */
-    int isList;			/* Are the given objects lists of scripts? */
+    TkUndoSubAtom *apply;
+    TkUndoSubAtom *revert;
 { 
     TkUndoAtom *atom;
 
     atom = (TkUndoAtom *) ckalloc(sizeof(TkUndoAtom));
-    if (isList) {
-	atom->type = TK_UNDO_ACTION_LIST;
-    } else {
-	atom->type = TK_UNDO_ACTION;
+    atom->type = TK_UNDO_ACTION;
+    atom->apply = apply;
+    atom->revert = revert;
+
+    TkUndoPushStack(&stack->undoStack, atom);
+    TkUndoClearStack(&stack->redoStack);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkUndoMakeCmdSubAtom
+ * 
+ *	Create a new undo/redo step which must later be place into an
+ *	undo stack with TkUndoPushAction.  This sub-atom, if evaluated,
+ *	will take the given command (if non-NULL), find its full Tcl
+ *	command string, and then evaluate that command with the list
+ *	elements of 'actionScript' appended.
+ *	
+ *	If 'subAtomList' is non-NULL, the newly created sub-atom
+ *	is added onto the end of the linked list of which
+ *	'subAtomList' is a part.  This makes it easy to build up
+ *	a sequence of actions which will be pushed in one step.
+ *	
+ *	A refCount is retained on 'actionScript'.
+ *	
+ *	Note: if the undo stack can persist for longer than the
+ *	Tcl_Command provided, the stack will cause crashes when
+ *	actions are evaluated.  In this case the 'command' argument
+ *	should not be used.  This is the case with peer text widgets,
+ *	for example.
+ *
+ * Results:
+ *	The newly created subAtom is returned. It must be passed
+ *	to TkUndoPushAction otherwise a memory leak will result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TkUndoSubAtom *
+TkUndoMakeCmdSubAtom(command, actionScript, subAtomList)
+    Tcl_Command command;        /* Tcl command token for actions, may
+                                 * be NULL if not needed. */
+    Tcl_Obj *actionScript;	/* The script to append to the command
+                          	 * to perform the action (may be
+                          	 * NULL if the command is not-null). */
+    TkUndoSubAtom *subAtomList; /* Add to the end of this list of
+                                 * actions if non-NULL */
+{ 
+    TkUndoSubAtom *atom;
+
+    if (command == NULL && actionScript == NULL) {
+	Tcl_Panic("NULL command and actionScript in TkUndoMakeCmdSubAtom");
+    }
+    
+    atom = (TkUndoSubAtom *) ckalloc(sizeof(TkUndoSubAtom));
+    atom->command = command;
+    atom->funcPtr = NULL;
+    atom->clientData = NULL;
+    atom->next = NULL;
+    atom->action = actionScript;
+    if (atom->action != NULL) {
+        Tcl_IncrRefCount(atom->action);
     }
 
-    atom->apply = actionScript;
-    Tcl_IncrRefCount(atom->apply);
+    if (subAtomList != NULL) {
+	while (subAtomList->next != NULL) {
+	    subAtomList = subAtomList->next;
+	}
+	subAtomList->next = atom;
+    }
+    return atom;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkUndoMakeSubAtom
+ * 
+ *	Create a new undo/redo step which must later be place into an
+ *	undo stack with TkUndoPushAction.  This sub-atom, if evaluated,
+ *	will take the given C-funcPtr (which must be non-NULL), and
+ *	call it with three arguments: the undo stack's 'interp', 
+ *	the 'clientData' given and the 'actionScript'.  The callback
+ *	should return a standard Tcl return code (TCL_OK on success).
+ *	
+ *	If 'subAtomList' is non-NULL, the newly created sub-atom
+ *	is added onto the end of the linked list of which
+ *	'subAtomList' is a part.  This makes it easy to build up
+ *	a sequence of actions which will be pushed in one step.
+ *	
+ *	A refCount is retained on 'actionScript'.
+ *
+ * Results:
+ *	The newly created subAtom is returned.  It must be passed
+ *	to TkUndoPushAction otherwise a memory leak will result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 
-    atom->revert = revertScript;
-    Tcl_IncrRefCount(atom->revert);
+TkUndoSubAtom *
+TkUndoMakeSubAtom(funcPtr, clientData, actionScript, subAtomList)
+    TkUndoProc *funcPtr;        /* Callback function to perform
+                                 * the undo/redo. */
+    ClientData clientData;      /* Data to pass to the callback
+                                 * function. */
+    Tcl_Obj *actionScript;	/* Additional Tcl data to pass to
+                          	 * the callback function (may be
+                          	 * NULL). */
+    TkUndoSubAtom *subAtomList; /* Add to the end of this list of
+                                 * actions if non-NULL */
+{ 
+    TkUndoSubAtom *atom;
 
-    TkUndoPushStack(&(stack->undoStack), atom);
-    TkUndoClearStack(&(stack->redoStack));
+    if (funcPtr == NULL) {
+	Tcl_Panic("NULL funcPtr in TkUndoMakeSubAtom");
+    }
+
+    atom = (TkUndoSubAtom *) ckalloc(sizeof(TkUndoSubAtom));
+    atom->command = NULL;
+    atom->funcPtr = funcPtr;
+    atom->clientData = clientData;
+    atom->next = NULL;
+    atom->action = actionScript;
+    if (atom->action != NULL) {
+        Tcl_IncrRefCount(atom->action);
+    }
+    
+    if (subAtomList != NULL) {
+	while (subAtomList->next != NULL) {
+	    subAtomList = subAtomList->next;
+	}
+	subAtomList->next = atom;
+    }
+    return atom;
 }
 
 /*
@@ -239,7 +386,7 @@ TkUndoSetDepth(stack, maxdepth)
 	elem = stack->undoStack;
 	prevelem = NULL;
 	while (sepNumber <= stack->maxdepth) {
-	    if (elem!=NULL && elem->type==TK_UNDO_SEPARATOR) {
+	    if (elem != NULL && elem->type == TK_UNDO_SEPARATOR) {
 		sepNumber++;
 	    }
 	    prevelem = elem;
@@ -247,7 +394,18 @@ TkUndoSetDepth(stack, maxdepth)
 	}
 	prevelem->next = NULL;
 	while (elem != NULL) {
+	    TkUndoSubAtom *sub = elem->apply;
 	    prevelem = elem;
+
+	    while (sub->next != NULL) {
+		TkUndoSubAtom *next = sub->next;
+		if (sub->action != NULL) {
+		    Tcl_DecrRefCount(sub->action);
+		}
+		ckfree((char *)sub);
+		sub = next;
+	    }
+	    
 	    elem = elem->next;
 	    ckfree((char *) prevelem);
 	}
@@ -274,8 +432,8 @@ void
 TkUndoClearStacks(stack)
     TkUndoRedoStack *stack;	/* An Undo/Redo stack */
 { 
-    TkUndoClearStack(&(stack->undoStack));
-    TkUndoClearStack(&(stack->redoStack));
+    TkUndoClearStack(&stack->undoStack);
+    TkUndoClearStack(&stack->redoStack);
     stack->depth = 0;
 }
 
@@ -300,7 +458,6 @@ TkUndoFreeStack(stack)
     TkUndoRedoStack *stack;	/* An Undo/Redo stack */
 { 
    TkUndoClearStacks(stack);
-   /* ckfree((TkUndoRedoStack *) stack); */
    ckfree((char *) stack);
 }
 
@@ -330,7 +487,7 @@ TkUndoInsertUndoSeparator(stack)
      * int sepNumber = 0;
      */
 
-    if (TkUndoInsertSeparator(&(stack->undoStack))) {
+    if (TkUndoInsertSeparator(&stack->undoStack)) {
 	stack->depth++;
 	TkUndoSetDepth(stack, stack->maxdepth);
 #if 0
@@ -338,7 +495,7 @@ TkUndoInsertUndoSeparator(stack)
 	    elem = stack->undoStack;
 	    prevelem = NULL;
 	    while (sepNumber < stack->depth) {
-		if (elem!=NULL && elem->type==TK_UNDO_SEPARATOR) {
+		if (elem != NULL && elem->type == TK_UNDO_SEPARATOR) {
 		    sepNumber++;
 		}
 		prevelem = elem;
@@ -380,31 +537,32 @@ TkUndoRevert(stack)
     /* insert a separator on the undo and the redo stack */
 
     TkUndoInsertUndoSeparator(stack);
-    TkUndoInsertSeparator(&(stack->redoStack));
+    TkUndoInsertSeparator(&stack->redoStack);
 
     /* Pop and skip the first separator if there is one*/
 
-    elem = TkUndoPopStack(&(stack->undoStack));
+    elem = TkUndoPopStack(&stack->undoStack);
 
     if (elem == NULL) {
 	return TCL_ERROR;
     }
 
-    if (elem!=NULL && elem->type==TK_UNDO_SEPARATOR) {
+    if (elem != NULL && elem->type == TK_UNDO_SEPARATOR) {
 	ckfree((char *) elem);
-	elem = TkUndoPopStack(&(stack->undoStack));
+	elem = TkUndoPopStack(&stack->undoStack);
     }
 
-    while (elem!=NULL && elem->type!=TK_UNDO_SEPARATOR) {
-	UndoScriptsEvaluate(stack->interp,elem->revert,elem->type);
+    while (elem != NULL && elem->type != TK_UNDO_SEPARATOR) {
+	/* Note that we currently ignore errors thrown here */
+	EvaluateActionList(stack->interp, elem->revert);
 
-	TkUndoPushStack(&(stack->redoStack),elem);
-	elem = TkUndoPopStack(&(stack->undoStack));
+	TkUndoPushStack(&stack->redoStack,elem);
+	elem = TkUndoPopStack(&stack->undoStack);
     }
 
     /* insert a separator on the redo stack */
 
-    TkUndoInsertSeparator(&(stack->redoStack));
+    TkUndoInsertSeparator(&stack->redoStack);
 
     stack->depth--;
 
@@ -434,31 +592,32 @@ TkUndoApply(stack)
 
     /* insert a separator on the undo stack */
 
-    TkUndoInsertSeparator(&(stack->undoStack));
+    TkUndoInsertSeparator(&stack->undoStack);
 
     /* Pop and skip the first separator if there is one*/
 
-    elem = TkUndoPopStack(&(stack->redoStack));
+    elem = TkUndoPopStack(&stack->redoStack);
 
     if (elem == NULL) {
 	return TCL_ERROR;
     }
 
-    if (elem!=NULL && elem->type==TK_UNDO_SEPARATOR) {
+    if (elem != NULL && elem->type == TK_UNDO_SEPARATOR) {
 	ckfree((char *) elem);
-	elem = TkUndoPopStack(&(stack->redoStack));
+	elem = TkUndoPopStack(&stack->redoStack);
     }
 
-    while (elem!=NULL && elem->type!=TK_UNDO_SEPARATOR) {
-	UndoScriptsEvaluate(stack->interp,elem->apply,elem->type);
+    while (elem != NULL && elem->type != TK_UNDO_SEPARATOR) {
+	/* Note that we currently ignore errors thrown here */
+	EvaluateActionList(stack->interp, elem->apply);
 
-	TkUndoPushStack(&(stack->undoStack), elem);
-	elem = TkUndoPopStack(&(stack->redoStack));
+	TkUndoPushStack(&stack->undoStack, elem);
+	elem = TkUndoPopStack(&stack->redoStack);
     }
 
     /* insert a separator on the undo stack */
 
-    TkUndoInsertSeparator(&(stack->undoStack));
+    TkUndoInsertSeparator(&stack->undoStack);
 
     stack->depth++;
 
@@ -468,40 +627,53 @@ TkUndoApply(stack)
 /*
  *----------------------------------------------------------------------
  *
- * UndoScriptsEvaluate --
- *	Execute either a single script, or a set of scripts
+ * EvaluateActionList --
+ * 
+ *	Execute a linked list of undo/redo sub-atoms.  If any sub-atom
+ *	returns a non TCL_OK value, execution of subsequent sub-atoms
+ *	is cancelled and the error returned immediately.
  *
  * Results:
  *	A Tcl status code
  *
  * Side effects:
- *	None.
+ *	The undo/redo subAtoms can perform arbitrary actions.
  *
  *----------------------------------------------------------------------
  */
 
 static int 
-UndoScriptsEvaluate(interp, objPtr, type)
-    Tcl_Interp *interp;
-    Tcl_Obj *objPtr;
-    TkUndoAtomType type;
+EvaluateActionList(interp, action)
+    Tcl_Interp *interp;     /* Interpreter to evaluate the action in. */
+    TkUndoSubAtom *action;  /* Head of linked list of action steps
+                             * to perform. */
 {
-    if (type == TK_UNDO_ACTION_LIST) {
-	int objc;
-	Tcl_Obj **objv;
-	int res, i;
-
-	res = Tcl_ListObjGetElements(interp, objPtr, &objc, &objv);
-	if (res != TCL_OK) {
-	    return res;
-	}
-	for (i=0 ; i<objc ; i++) {
-	    res = Tcl_EvalObjEx(interp, objv[i], TCL_EVAL_GLOBAL);
-	    if (res != TCL_OK) {
-		return res;
+    int result;
+    
+    while (action != NULL) {
+	if (action->funcPtr != NULL) {
+	    result = (*action->funcPtr)(interp, action->clientData, 
+					action->action);
+	} else if (action->command != NULL) {
+	    Tcl_Obj *cmdNameObj, *evalObj;
+	    
+	    cmdNameObj = Tcl_NewObj();
+	    evalObj = Tcl_NewObj();
+	    Tcl_IncrRefCount(evalObj);
+	    Tcl_GetCommandFullName(interp, action->command, cmdNameObj);
+	    Tcl_ListObjAppendElement(NULL, evalObj, cmdNameObj);
+	    if (action->action != NULL) {
+	        Tcl_ListObjAppendList(NULL, evalObj, action->action);
 	    }
+	    result = Tcl_EvalObjEx(interp, evalObj, TCL_EVAL_GLOBAL);
+	    Tcl_DecrRefCount(evalObj);
+	} else {
+	    result = Tcl_EvalObjEx(interp, action->action, TCL_EVAL_GLOBAL);
 	}
-	return res;
+	if (result != TCL_OK) {
+	    return result;
+	}
+	action = action->next;
     }
-    return Tcl_EvalObjEx(interp, objPtr, TCL_EVAL_GLOBAL);
+    return result;
 }

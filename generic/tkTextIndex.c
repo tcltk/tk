@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.18 2004/06/04 10:51:18 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.19 2004/09/10 12:13:42 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -40,7 +40,8 @@ static CONST char *	ForwBack _ANSI_ARGS_((TkText *textPtr,
 static CONST char *	StartEnd _ANSI_ARGS_((TkText *textPtr, 
 			    CONST char *string, TkTextIndex *indexPtr));
 static int		GetIndex _ANSI_ARGS_((Tcl_Interp *interp,
-			    TkText *textPtr, CONST char *string,
+			    TkSharedText *sharedPtr, TkText *textPtr, 
+			    CONST char *string,
 			    TkTextIndex *indexPtr, int *canCachePtr));
 
 /*
@@ -120,7 +121,7 @@ UpdateStringOfTextIndex(objPtr)
 
     CONST TkTextIndex *indexPtr = GET_TEXTINDEX(objPtr);
 
-    len = TkTextPrintIndex(indexPtr, buffer);
+    len = TkTextPrintIndex(indexPtr->textPtr, indexPtr, buffer);
 
     objPtr->bytes = ckalloc((unsigned) len + 1);
     strcpy(objPtr->bytes, buffer);
@@ -178,7 +179,7 @@ MakeObjIndex(textPtr, objPtr, origPtr)
 
     if (textPtr != NULL) {
 	textPtr->refCount++;
-	SET_INDEXEPOCH(objPtr, textPtr->stateEpoch);
+	SET_INDEXEPOCH(objPtr, textPtr->sharedTextPtr->stateEpoch);
     } else {
 	SET_INDEXEPOCH(objPtr, 0);
     }
@@ -201,7 +202,7 @@ TkTextGetIndexFromObj(interp, textPtr, objPtr)
 	indexPtr = GET_TEXTINDEX(objPtr);
 	epoch = GET_INDEXEPOCH(objPtr);
 	
-	if (epoch == textPtr->stateEpoch) {
+	if (epoch == textPtr->sharedTextPtr->stateEpoch) {
 	    if (indexPtr->textPtr == textPtr) {
 		return indexPtr;
 	    }
@@ -214,7 +215,7 @@ TkTextGetIndexFromObj(interp, textPtr, objPtr)
      * date (text has been added/deleted since).
      */
     
-    if (GetIndex(interp, textPtr, Tcl_GetString(objPtr), 
+    if (GetIndex(interp, NULL, textPtr, Tcl_GetString(objPtr), 
 		 &index, &cache) != TCL_OK) {
 	return NULL;
     }
@@ -317,21 +318,26 @@ TkTextMakePixelIndex(textPtr, pixelIndex, indexPtr)
 {
     int pixelOffset = 0;
 
-    indexPtr->tree = textPtr->tree;
+    indexPtr->tree = textPtr->sharedTextPtr->tree;
     indexPtr->textPtr = textPtr;
     
     if (pixelIndex < 0) {
 	pixelIndex = 0;
     }
-    indexPtr->linePtr = TkBTreeFindPixelLine(textPtr->tree, pixelIndex, 
+    indexPtr->linePtr = TkBTreeFindPixelLine(textPtr->sharedTextPtr->tree, 
+					     textPtr,
+					     pixelIndex, 
 					     &pixelOffset);
     /* 
      * 'pixedlIndex' was too large, so we try again, just to find
      * the last pixel in the window
      */
     if (indexPtr->linePtr == NULL) {
-	indexPtr->linePtr = TkBTreeFindPixelLine(textPtr->tree, 
-			      TkBTreeNumPixels(textPtr->tree)-1, &pixelOffset);
+	int lastMinusOne = TkBTreeNumPixels(textPtr->sharedTextPtr->tree,
+					    textPtr)-1;
+	indexPtr->linePtr = TkBTreeFindPixelLine(textPtr->sharedTextPtr->tree, 
+						 textPtr, 
+						 lastMinusOne, &pixelOffset);
 	indexPtr->byteIndex = 0;
 	return pixelOffset;
     }
@@ -364,9 +370,10 @@ TkTextMakePixelIndex(textPtr, pixelIndex, indexPtr)
  */
 
 TkTextIndex *
-TkTextMakeByteIndex(tree, lineIndex, byteIndex, indexPtr)
+TkTextMakeByteIndex(tree, textPtr, lineIndex, byteIndex, indexPtr)
     TkTextBTree tree;		/* Tree that lineIndex and byteIndex refer
 				 * to. */
+    CONST TkText *textPtr;
     int lineIndex;		/* Index of desired line (0 means first
 				 * line of text). */
     int byteIndex;		/* Byte index of desired character. */
@@ -385,9 +392,10 @@ TkTextMakeByteIndex(tree, lineIndex, byteIndex, indexPtr)
     if (byteIndex < 0) {
 	byteIndex = 0;
     }
-    indexPtr->linePtr = TkBTreeFindLine(tree, lineIndex);
+    indexPtr->linePtr = TkBTreeFindLine(tree, textPtr, lineIndex);
     if (indexPtr->linePtr == NULL) {
-	indexPtr->linePtr = TkBTreeFindLine(tree, TkBTreeNumLines(tree));
+	indexPtr->linePtr = TkBTreeFindLine(tree, textPtr, 
+					    TkBTreeNumLines(tree, textPtr));
 	byteIndex = 0;
     }
     if (byteIndex == 0) {
@@ -455,9 +463,10 @@ TkTextMakeByteIndex(tree, lineIndex, byteIndex, indexPtr)
  */
 
 TkTextIndex *
-TkTextMakeCharIndex(tree, lineIndex, charIndex, indexPtr)
+TkTextMakeCharIndex(tree, textPtr, lineIndex, charIndex, indexPtr)
     TkTextBTree tree;		/* Tree that lineIndex and charIndex refer
 				 * to. */
+    TkText *textPtr;
     int lineIndex;		/* Index of desired line (0 means first
 				 * line of text). */
     int charIndex;		/* Index of desired character. */
@@ -476,9 +485,10 @@ TkTextMakeCharIndex(tree, lineIndex, charIndex, indexPtr)
     if (charIndex < 0) {
 	charIndex = 0;
     }
-    indexPtr->linePtr = TkBTreeFindLine(tree, lineIndex);
+    indexPtr->linePtr = TkBTreeFindLine(tree, textPtr, lineIndex);
     if (indexPtr->linePtr == NULL) {
-	indexPtr->linePtr = TkBTreeFindLine(tree, TkBTreeNumLines(tree));
+	indexPtr->linePtr = TkBTreeFindLine(tree, textPtr, 
+					    TkBTreeNumLines(tree, textPtr));
 	charIndex = 0;
     }
 
@@ -626,7 +636,36 @@ TkTextGetObjIndex(interp, textPtr, idxObj, indexPtr)
 				 * of position. */
     TkTextIndex *indexPtr;	/* Index structure to fill in. */
 {
-    return GetIndex(interp, textPtr, Tcl_GetString(idxObj), indexPtr, NULL);
+    return GetIndex(interp, NULL, textPtr, Tcl_GetString(idxObj), indexPtr, NULL);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkTextSharedGetObjIndex --
+ * 
+ *    Simpler wrapper around the string based function, but could be
+ *    enhanced with a new object type in the future.
+ *
+ * Results:
+ *    see TkTextGetIndex
+ *
+ * Side effects:
+ *    None.
+ *    
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkTextSharedGetObjIndex(interp, sharedTextPtr, idxObj, indexPtr)
+    Tcl_Interp *interp;		/* Use this for error reporting. */
+    TkSharedText *sharedTextPtr;/* Information about text widget. */
+    Tcl_Obj *idxObj;	        /* Object containing textual description 
+				 * of position. */
+    TkTextIndex *indexPtr;	/* Index structure to fill in. */
+{
+    return GetIndex(interp, sharedTextPtr, NULL, 
+		    Tcl_GetString(idxObj), indexPtr, NULL);
 }
 
 /*
@@ -655,7 +694,7 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
     CONST char *string;		/* Textual description of position. */
     TkTextIndex *indexPtr;	/* Index structure to fill in. */
 {
-    return GetIndex(interp, textPtr, string, indexPtr, NULL);
+    return GetIndex(interp, NULL, textPtr, string, indexPtr, NULL);
 }
 
 /*
@@ -682,8 +721,9 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
  */
 
 static int
-GetIndex(interp, textPtr, string, indexPtr, canCachePtr)
+GetIndex(interp, sharedPtr, textPtr, string, indexPtr, canCachePtr)
     Tcl_Interp *interp;		/* Use this for error reporting. */
+    TkSharedText *sharedPtr;
     TkText *textPtr;		/* Information about text widget. */
     CONST char *string;		/* Textual description of position. */
     TkTextIndex *indexPtr;	/* Index structure to fill in. */
@@ -692,14 +732,16 @@ GetIndex(interp, textPtr, string, indexPtr, canCachePtr)
 {
     char *p, *end, *endOfBase;
     Tcl_HashEntry *hPtr;
-    TkTextTag *tagPtr;
-    TkTextSearch search;
     TkTextIndex first, last;
     int wantLast, result;
     char c;
     CONST char *cp;
     Tcl_DString copy;
     int canCache = 0;
+    
+    if (sharedPtr == NULL) {
+	sharedPtr = textPtr->sharedTextPtr;
+    }
     
     /*
      *---------------------------------------------------------------------
@@ -720,7 +762,7 @@ GetIndex(interp, textPtr, string, indexPtr, canCachePtr)
      *------------------------------------------------
      */
 
-    indexPtr->tree = textPtr->tree;
+    indexPtr->tree = sharedPtr->tree;
 
     /*
      * First look for the form "tag.first" or "tag.last" where "tag"
@@ -733,6 +775,10 @@ GetIndex(interp, textPtr, string, indexPtr, canCachePtr)
     Tcl_DStringInit(&copy);
     p = strrchr(Tcl_DStringAppend(&copy, string, -1), '.');
     if (p != NULL) {
+	TkTextSearch search;
+	TkTextTag *tagPtr;
+	CONST char *tagName;
+	
 	if ((p[1] == 'f') && (strncmp(p+1, "first", 5) == 0)) {
 	    wantLast = 0;
 	    endOfBase = p+6;
@@ -742,23 +788,40 @@ GetIndex(interp, textPtr, string, indexPtr, canCachePtr)
 	} else {
 	    goto tryxy;
 	}
-	*p = 0;
-	hPtr = Tcl_FindHashEntry(&textPtr->tagTable, Tcl_DStringValue(&copy));
-	*p = '.';
-	if (hPtr == NULL) {
+	tagPtr = NULL;
+	tagName = Tcl_DStringValue(&copy);
+	if (((p - tagName) == 3) && !strncmp(tagName, "sel", 3)) {
+	    /* 
+	     * Special case for sel tag which is not stored in
+	     * the hash table.
+	     */
+	    tagPtr = textPtr->selTagPtr;
+	} else {
+	    *p = 0;
+	    hPtr = Tcl_FindHashEntry(&sharedPtr->tagTable, tagName);
+	    *p = '.';
+	    if (hPtr != NULL) {
+		tagPtr = (TkTextTag *) Tcl_GetHashValue(hPtr);
+	    }
+	}
+	if (tagPtr == NULL) {
 	    goto tryxy;
 	}
-	tagPtr = (TkTextTag *) Tcl_GetHashValue(hPtr);
-	TkTextMakeByteIndex(textPtr->tree, 0, 0, &first);
-	TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree), 0,
-		&last);
+	TkTextMakeByteIndex(sharedPtr->tree, textPtr, 0, 0, &first);
+	TkTextMakeByteIndex(sharedPtr->tree, textPtr, 
+		    TkBTreeNumLines(sharedPtr->tree, textPtr), 
+		    0, &last);
 	TkBTreeStartSearch(&first, &last, tagPtr, &search);
 	if (!TkBTreeCharTagged(&first, tagPtr) && !TkBTreeNextTag(&search)) {
+	    if (tagPtr == textPtr->selTagPtr) {
+	        tagName = "sel";
+	    } else {
+		tagName = Tcl_GetHashKey(&sharedPtr->tagTable, hPtr);
+	    }
 	    Tcl_ResetResult(interp);
 	    Tcl_AppendResult(interp,
 		    "text doesn't contain any characters tagged with \"",
-		    Tcl_GetHashKey(&textPtr->tagTable, hPtr), "\"",
-			    (char *) NULL);
+		    tagName, "\"", (char *) NULL);
 	    Tcl_DStringFree(&copy);
 	    return TCL_ERROR;
 	}
@@ -816,7 +879,8 @@ GetIndex(interp, textPtr, string, indexPtr, canCachePtr)
 	    }
 	    endOfBase = end;
 	}
-	TkTextMakeCharIndex(textPtr->tree, lineIndex, charIndex, indexPtr);
+	TkTextMakeCharIndex(sharedPtr->tree, textPtr, lineIndex, 
+			    charIndex, indexPtr);
 	canCache = 1;
 	goto gotBase;
     }
@@ -847,8 +911,9 @@ GetIndex(interp, textPtr, string, indexPtr, canCachePtr)
 	 * Base position is end of text.
 	 */
 
-	TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree),
-		0, indexPtr);
+	TkTextMakeByteIndex(sharedPtr->tree, textPtr,
+		    TkBTreeNumLines(sharedPtr->tree, textPtr),
+		    0, indexPtr);
 	canCache = 1;
 	goto gotBase;
     } else {
@@ -912,6 +977,9 @@ GetIndex(interp, textPtr, string, indexPtr, canCachePtr)
     if (canCachePtr != NULL) {
 	*canCachePtr = canCache;
     }
+    if (indexPtr->linePtr == NULL) {
+	Tcl_Panic("Bad index created");
+    }
     return TCL_OK;
 
     error:
@@ -941,7 +1009,8 @@ GetIndex(interp, textPtr, string, indexPtr, canCachePtr)
  */
 
 int
-TkTextPrintIndex(indexPtr, string)
+TkTextPrintIndex(textPtr, indexPtr, string)
+    CONST TkText *textPtr;
     CONST TkTextIndex *indexPtr;/* Pointer to index. */
     char *string;		/* Place to store the position.  Must have
 				 * at least TK_POS_CHARS characters. */
@@ -967,8 +1036,9 @@ TkTextPrintIndex(indexPtr, string)
     } else {
 	charIndex += numBytes;
     }
-    return sprintf(string, "%d.%d", TkBTreeLineIndex(indexPtr->linePtr) + 1,
-	    charIndex);
+    return sprintf(string, "%d.%d", 
+		   TkBTreeLinesTo(textPtr, indexPtr->linePtr) + 1,
+		   charIndex);
 }
 
 /*
@@ -1005,8 +1075,15 @@ TkTextIndexCmp(index1Ptr, index2Ptr)
 	    return 0;
 	}
     }
-    line1 = TkBTreeLineIndex(index1Ptr->linePtr);
-    line2 = TkBTreeLineIndex(index2Ptr->linePtr);
+    /* 
+     * Assumption here that it is ok for comparisons to reflect
+     * the full B-tree and not just the portion that is available
+     * to any client.  This should be true because the only
+     * indexPtr's we should be given are ones which are valid
+     * for the current client.
+     */
+    line1 = TkBTreeLinesTo(NULL, index1Ptr->linePtr);
+    line2 = TkBTreeLinesTo(NULL, index2Ptr->linePtr);
     if (line1 < line2) {
 	return -1;
     }
@@ -1208,7 +1285,7 @@ ForwBack(textPtr, string, indexPtr)
 	     */
 	    TkTextIndexOfX(textPtr, xOffset, indexPtr);
 	} else {
-	    lineIndex = TkBTreeLineIndex(indexPtr->linePtr);
+	    lineIndex = TkBTreeLinesTo(textPtr, indexPtr->linePtr);
 	    if (*string == '+') {
 		lineIndex += count;
 	    } else {
@@ -1237,8 +1314,9 @@ ForwBack(textPtr, string, indexPtr)
 	     * same x-position in the new line.
 	     */
 
-	    TkTextMakeByteIndex(indexPtr->tree, lineIndex, indexPtr->byteIndex,
-		    indexPtr);
+	    TkTextMakeByteIndex(indexPtr->tree, textPtr, 
+				lineIndex, indexPtr->byteIndex,
+				indexPtr);
 	}
     } else {
 	return NULL;
@@ -1269,7 +1347,8 @@ ForwBack(textPtr, string, indexPtr)
  */
 
 int
-TkTextIndexForwBytes(srcPtr, byteCount, dstPtr)
+TkTextIndexForwBytes(textPtr, srcPtr, byteCount, dstPtr)
+    CONST TkText *textPtr;
     CONST TkTextIndex *srcPtr;	/* Source index. */
     int byteCount;		/* How many bytes forward to move.  May be
 				 * negative. */
@@ -1280,7 +1359,7 @@ TkTextIndexForwBytes(srcPtr, byteCount, dstPtr)
     int lineLength;
 
     if (byteCount < 0) {
-	TkTextIndexBackBytes(srcPtr, -byteCount, dstPtr);
+	TkTextIndexBackBytes(textPtr, srcPtr, -byteCount, dstPtr);
 	return 0;
     }
 
@@ -1306,7 +1385,7 @@ TkTextIndexForwBytes(srcPtr, byteCount, dstPtr)
 	    return 0;
 	}
 	dstPtr->byteIndex -= lineLength;
-	linePtr = TkBTreeNextLine(dstPtr->linePtr);
+	linePtr = TkBTreeNextLine(textPtr, dstPtr->linePtr);
 	if (linePtr == NULL) {
 	    dstPtr->byteIndex = lineLength - 1;
 	    return 1;
@@ -1374,7 +1453,16 @@ TkTextIndexForwChars(textPtr, srcPtr, charCount, dstPtr, type)
      * Move forward specified number of chars.
      */
 
-    segPtr = TkTextIndexToSeg(dstPtr, &byteOffset);
+    if (checkElided) {
+	/* 
+	 * In this case we have already calculated the information
+	 * we need, so no need to use TkTextIndexToSeg()
+	 */
+	segPtr = infoPtr->segPtr;
+	byteOffset = dstPtr->byteIndex - infoPtr->segOffset;
+    } else {
+	segPtr = TkTextIndexToSeg(dstPtr, &byteOffset);
+    }
     
     while (1) {
 	/*
@@ -1470,7 +1558,7 @@ TkTextIndexForwChars(textPtr, srcPtr, charCount, dstPtr, type)
 	 * that index.
 	 */
 	 
-	linePtr = TkBTreeNextLine(dstPtr->linePtr);
+	linePtr = TkBTreeNextLine(textPtr, dstPtr->linePtr);
 	if (linePtr == NULL) {
 	    dstPtr->byteIndex -= sizeof(char);
 	    goto forwardCharDone;
@@ -1663,7 +1751,7 @@ TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type)
 	 * that index.
 	 */
 	 
-	linePtr1 = TkBTreeNextLine(linePtr1);
+	linePtr1 = TkBTreeNextLine(textPtr, linePtr1);
 	if (linePtr1 == NULL) {
 	    Tcl_Panic("Reached end of text widget when counting characters");
 	}
@@ -1697,7 +1785,8 @@ TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type)
  */
 
 void
-TkTextIndexBackBytes(srcPtr, byteCount, dstPtr)
+TkTextIndexBackBytes(textPtr, srcPtr, byteCount, dstPtr)
+    CONST TkText *textPtr;
     CONST TkTextIndex *srcPtr;	/* Source index. */
     int byteCount;		/* How many bytes backward to move.  May be
 				 * negative. */
@@ -1707,7 +1796,7 @@ TkTextIndexBackBytes(srcPtr, byteCount, dstPtr)
     int lineIndex;
 
     if (byteCount < 0) {
-	TkTextIndexForwBytes(srcPtr, -byteCount, dstPtr);
+	TkTextIndexForwBytes(textPtr, srcPtr, -byteCount, dstPtr);
 	return;
     }
 
@@ -1721,14 +1810,14 @@ TkTextIndexBackBytes(srcPtr, byteCount, dstPtr)
 	 */
 
 	if (lineIndex < 0) {
-	    lineIndex = TkBTreeLineIndex(dstPtr->linePtr);
+	    lineIndex = TkBTreeLinesTo(textPtr, dstPtr->linePtr);
 	}
 	if (lineIndex == 0) {
 	    dstPtr->byteIndex = 0;
 	    return;
 	}
 	lineIndex--;
-	dstPtr->linePtr = TkBTreeFindLine(dstPtr->tree, lineIndex);
+	dstPtr->linePtr = TkBTreeFindLine(dstPtr->tree, textPtr, lineIndex);
 
 	/*
 	 * Compute the length of the line and add that to dstPtr->charIndex.
@@ -1801,12 +1890,21 @@ TkTextIndexBackChars(textPtr, srcPtr, charCount, dstPtr, type)
     lineIndex = -1;
     
     segSize = dstPtr->byteIndex;
-    for (segPtr = dstPtr->linePtr->segPtr; ; segPtr = segPtr->nextPtr) {
-	if (segSize <= segPtr->size) {
-	    break;
+    
+    if (checkElided) {
+	segPtr = infoPtr->segPtr;
+	segSize -= infoPtr->segOffset;
+    } else {
+	for (segPtr = dstPtr->linePtr->segPtr; ; segPtr = segPtr->nextPtr) {
+	    if (segSize <= segPtr->size) {
+		break;
+	    }
+	    segSize -= segPtr->size;
 	}
-	segSize -= segPtr->size;
     }
+    /* 
+     * Now segPtr points to the segment containing the starting index
+     */
     while (1) {
 	/*
 	 * If we do need to pay attention to the visibility of
@@ -1907,14 +2005,14 @@ TkTextIndexBackChars(textPtr, srcPtr, charCount, dstPtr, type)
 	 */
 
 	if (lineIndex < 0) {
-	    lineIndex = TkBTreeLineIndex(dstPtr->linePtr);
+	    lineIndex = TkBTreeLinesTo(textPtr, dstPtr->linePtr);
 	}
 	if (lineIndex == 0) {
 	    dstPtr->byteIndex = 0;
 	    goto backwadCharDone;
 	}
 	lineIndex--;
-	dstPtr->linePtr = TkBTreeFindLine(dstPtr->tree, lineIndex);
+	dstPtr->linePtr = TkBTreeFindLine(dstPtr->tree, textPtr, lineIndex);
 
 	/*
 	 * Compute the length of the line and add that to dstPtr->byteIndex.

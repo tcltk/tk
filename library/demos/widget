@@ -11,10 +11,10 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.23 2004/03/17 18:15:45 das Exp $
+# RCS: @(#) $Id: widget,v 1.24 2004/09/10 12:13:43 vincentdarley Exp $
 
-package require Tcl	8.4
-package require Tk	8.4
+package require Tcl	8.5
+package require Tk	8.5
 package require msgcat
 
 eval destroy [winfo child .]

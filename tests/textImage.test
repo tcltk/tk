@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textImage.test,v 1.9 2004/05/23 17:34:49 dkf Exp $
+# RCS: @(#) $Id: textImage.test,v 1.10 2004/09/10 12:13:43 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -343,8 +343,26 @@ test textImage-4.3 {alignment and padding checking} {fonts} {
     }
     set result
 } {{default:55 22 5 5} {top:55 10 5 5} {bottom:55 35 5 5} {center:55 22 5 5} {baseline:55 22 5 5}}
-# cleanup
 
+test textImage-5.0 {peer widget images} {
+    catch {
+	image create photo small -width 5 -height 5
+	small put red -to 0 0 4 4
+	image create photo large -width 50 -height 50
+	large put green -to 0 0 50 50
+    }
+    catch {destroy .t .tt}
+    pack [text .t]
+    toplevel .tt
+    pack [.t peer create .tt.t]
+    .t image create end -image large
+    .t image create end -image small -padx 5 -pady 10
+    .t insert end test
+    update
+    destroy .t .tt
+} {}
+
+# cleanup
 catch {destroy .t}
 foreach image [image names] {image delete $image}
 font delete test_font

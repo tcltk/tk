@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.23 2004/03/17 18:15:44 das Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.24 2004/09/10 12:13:40 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -2338,7 +2338,8 @@ TesttextCmd(clientData, interp, argc, argv)
 	lineIndex = atoi(argv[3]) - 1;
 	byteIndex = atoi(argv[4]);
 
-	TkTextMakeByteIndex(textPtr->tree, lineIndex, byteIndex, &index);
+	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineIndex, 
+			    byteIndex, &index);
     } else if (strncmp(argv[2], "forwbytes", len) == 0) {
 	if (argc != 5) {
 	    return TCL_ERROR;
@@ -2347,7 +2348,7 @@ TesttextCmd(clientData, interp, argc, argv)
 	    return TCL_ERROR;
 	}
 	byteOffset = atoi(argv[4]);
-	TkTextIndexForwBytes(&index, byteOffset, &index);
+	TkTextIndexForwBytes(textPtr, &index, byteOffset, &index);
     } else if (strncmp(argv[2], "backbytes", len) == 0) {
 	if (argc != 5) {
 	    return TCL_ERROR;
@@ -2356,13 +2357,13 @@ TesttextCmd(clientData, interp, argc, argv)
 	    return TCL_ERROR;
 	}
 	byteOffset = atoi(argv[4]);
-	TkTextIndexBackBytes(&index, byteOffset, &index);
+	TkTextIndexBackBytes(textPtr, &index, byteOffset, &index);
     } else {
 	return TCL_ERROR;
     }
 
     TkTextSetMark(textPtr, "insert", &index);
-    TkTextPrintIndex(&index, buf);
+    TkTextPrintIndex(textPtr, &index, buf);
     sprintf(buf + strlen(buf), " %d", index.byteIndex);
     Tcl_AppendResult(interp, buf, NULL);
 

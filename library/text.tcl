@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.32 2004/08/26 18:03:30 hobbs Exp $
+# RCS: @(#) $Id: text.tcl,v 1.33 2004/09/10 12:13:42 vincentdarley Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -222,10 +222,10 @@ bind Text <BackSpace> {
 }
 
 bind Text <Control-space> {
-    %W mark set anchor insert
+    %W mark set tk::anchor%W insert
 }
 bind Text <Select> {
-    %W mark set anchor insert
+    %W mark set tk::anchor%W insert
 }
 bind Text <Control-Shift-space> {
     set tk::Priv(selectMode) char
@@ -520,14 +520,14 @@ proc ::tk::TextButton1 {w x y} {
     set Priv(mouseMoved) 0
     set Priv(pressX) $x
     $w mark set insert [TextClosestGap $w $x $y]
-    $w mark set anchor insert
+    $w mark set tk::anchor$w insert
     # Set the anchor mark's gravity depending on the click position
     # relative to the gap
-    set bbox [$w bbox [$w index anchor]]
+    set bbox [$w bbox [$w index tk::anchor$w]]
     if {$x > [lindex $bbox 0]} {
-	$w mark gravity anchor right
+	$w mark gravity tk::anchor$w right
     } else {
-	$w mark gravity anchor left
+	$w mark gravity tk::anchor$w left
     }
     # Allow focus in any case on Windows, because that will let the
     # selection be displayed even for state disabled text widgets.
@@ -543,6 +543,11 @@ proc ::tk::TextButton1 {w x y} {
 # ignores mouse motions initially until the mouse has moved from
 # one character to another or until there have been multiple clicks.
 #
+# Note that the 'anchor' is implemented programmatically using
+# a text widget mark, and uses a name that will be unique for each
+# text widget (even when there are multiple peers).  Currently the
+# anchor is considered private to Tk, hence the name 'tk::anchor$w'.
+#
 # Arguments:
 # w -		The text window in which the button was pressed.
 # x -		Mouse x position.
@@ -553,31 +558,31 @@ proc ::tk::TextSelectTo {w x y {extend 0}} {
     variable ::tk::Priv
 
     set cur [TextClosestGap $w $x $y]
-    if {[catch {$w index anchor}]} {
-	$w mark set anchor $cur
+    if {[catch {$w index tk::anchor$w}]} {
+	$w mark set tk::anchor$w $cur
     }
-    set anchor [$w index anchor]
+    set anchor [$w index tk::anchor$w]
     if {[$w compare $cur != $anchor] || (abs($Priv(pressX) - $x) >= 3)} {
 	set Priv(mouseMoved) 1
     }
     switch -- $Priv(selectMode) {
 	char {
-	    if {[$w compare $cur < anchor]} {
+	    if {[$w compare $cur < tk::anchor$w]} {
 		set first $cur
-		set last anchor
+		set last tk::anchor$w
 	    } else {
-		set first anchor
+		set first tk::anchor$w
 		set last $cur
 	    }
 	}
 	word {
 	    # Set initial range based only on the anchor (1 char min width)
-	    if {[string equal [$w mark gravity anchor] "right"]} {
-		set first "anchor"
-		set last "anchor + 1c"
+	    if {[string equal [$w mark gravity tk::anchor$w] "right"]} {
+		set first "tk::anchor$w"
+		set last "tk::anchor$w + 1c"
 	    } else {
-		set first "anchor - 1c"
-		set last "anchor"
+		set first "tk::anchor$w - 1c"
+		set last "tk::anchor$w"
 	    }
 	    # Extend range (if necessary) based on the current point
 	    if {[$w compare $cur < $first]} {
@@ -592,8 +597,8 @@ proc ::tk::TextSelectTo {w x y {extend 0}} {
 	}
 	line {
 	    # Set initial range based only on the anchor
-	    set first "anchor linestart" 
-	    set last "anchor lineend"
+	    set first "tk::anchor$w linestart" 
+	    set last "tk::anchor$w lineend"
 
 	    # Extend range (if necessary) based on the current point
 	    if {[$w compare $cur < $first]} {
@@ -626,15 +631,15 @@ proc ::tk::TextSelectTo {w x y {extend 0}} {
 proc ::tk::TextKeyExtend {w index} {
 
     set cur [$w index $index]
-    if {[catch {$w index anchor}]} {
-	$w mark set anchor $cur
+    if {[catch {$w index tk::anchor$w}]} {
+	$w mark set tk::anchor$w $cur
     }
-    set anchor [$w index anchor]
-    if {[$w compare $cur < anchor]} {
+    set anchor [$w index tk::anchor$w]
+    if {[$w compare $cur < tk::anchor$w]} {
 	set first $cur
-	set last anchor
+	set last tk::anchor$w
     } else {
-	set first anchor
+	set first tk::anchor$w
 	set last $cur
     }
     $w tag remove sel 0.0 $first
@@ -735,13 +740,13 @@ proc ::tk::TextKeySelect {w new} {
 	} else {
 	    $w tag add sel insert $new
 	}
-	$w mark set anchor insert
+	$w mark set tk::anchor$w insert
     } else {
-	if {[$w compare $new < anchor]} {
+	if {[$w compare $new < tk::anchor$w]} {
 	    set first $new
-	    set last anchor
+	    set last tk::anchor$w
 	} else {
-	    set first anchor
+	    set first tk::anchor$w
 	    set last $new
 	}
 	$w tag remove sel 1.0 $first
@@ -780,11 +785,11 @@ proc ::tk::TextResetAnchor {w index} {
     set b [$w index sel.first]
     set c [$w index sel.last]
     if {[$w compare $a < $b]} {
-	$w mark set anchor sel.last
+	$w mark set tk::anchor$w sel.last
 	return
     }
     if {[$w compare $a > $c]} {
-	$w mark set anchor sel.first
+	$w mark set tk::anchor$w sel.first
 	return
     }
     scan $a "%d.%d" lineA chA
@@ -796,16 +801,16 @@ proc ::tk::TextResetAnchor {w index} {
 	    return
 	}
 	if {[string length [$w get $b $a]] < ($total/2)} {
-	    $w mark set anchor sel.last
+	    $w mark set tk::anchor$w sel.last
 	} else {
-	    $w mark set anchor sel.first
+	    $w mark set tk::anchor$w sel.first
 	}
 	return
     }
     if {($lineA-$lineB) < ($lineC-$lineA)} {
-	$w mark set anchor sel.last
+	$w mark set tk::anchor$w sel.last
     } else {
-	$w mark set anchor sel.first
+	$w mark set tk::anchor$w sel.first
     }
 }
 

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textIndex.test,v 1.13 2004/06/17 22:38:57 dkf Exp $
+# RCS: @(#) $Id: textIndex.test,v 1.14 2004/09/10 12:13:43 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -781,6 +781,29 @@ test textIndex-19.11 {Display lines} {
 test textIndex-19.12 {Display lines} {
     .t index "2.40 -1displaylines"
 } {2.20}
+
+test textIndex-19.13 {Display lines} {
+    destroy .t
+    text .txt -height 1 -wrap word -yscroll ".sbar set" -width 400
+    scrollbar .sbar -command ".txt yview"
+    grid .txt .sbar -sticky news
+    grid configure .sbar -sticky ns
+    grid rowconfigure    . 0 -weight 1
+    grid columnconfigure . 0 -weight 1
+    .txt configure -width 10
+    .txt tag config STAMP -elide 1
+    .txt tag config NICK-tick -elide 0
+    .txt insert end "+++++ Loading History ++++++++++++++++\n"
+    .txt mark set HISTORY {2.0 - 1 line}
+    .txt insert HISTORY {	} STAMP
+    .txt insert HISTORY {tick	} {NICK NICK-tick}
+    .txt insert HISTORY "\n" {NICK NICK-tick}
+    .txt insert HISTORY {[23:51]	} STAMP
+    .txt insert HISTORY "\n" {NICK NICK-tick}
+    # Must not crash
+    .txt index "2.0 - 2 display lines"
+    destroy .txt .sbar
+} {}
 
 proc text_test_word {startend chars start} {
     destroy .t
