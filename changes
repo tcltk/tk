@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.42.2.1 2000/08/08 19:03:43 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.42 2000/04/26 00:23:44 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4900,29 +4900,3 @@ redraws (hobbs)
 2000-04 more docs for public APIs (melski)
 
 --- Released 8.3.1, April 26, 2000 --- See ChangeLog for details ---
-
-2000-05-15 (bug fix) changed wm deiconify from using idle callback to
-calling restack and focus code immediately. (hobbs)
-
-2000-07 (build cleanup) cleanup of defines in tkConfig.sh, and cleanup
-in make and configure files to better handle .rc files across
-builds. (welch)
-
-2000-07 (build improvements) cleanup of the makefiles and configure scripts
-to correct support for building under gcc for Windows. (dejong)
-
-2000-08 (feature enhancements) for Windows, corrected drawing of separator
-menu entries, disable menu entries and the height for separator
-bars. (melski)
-
-2000-08 (bug fix) fixed calling of takeFocus proc with arg bearing
-functions. (nemethi)
-
-2000-08 (bug fix) For text widgets, added a test for a NULL segment pointer
-when doing backwards searches for "", correct searching over elided chars,
-and corrected search combining -regexp and -nocase. (melski)
-
-2000-08 (bug fix) Corrected code for using 'place', cursors, colors and 3D
-borders on multiple screens simultaneously. (hobbs, hipp)
-
---- Released 8.3.2, August 9, 2000 --- See ChangeLog for details ---
