@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.19 2000/08/18 17:02:10 ericm Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.20 2000/08/19 02:13:03 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -1976,7 +1976,6 @@ ImgPhotoGet(tkwin, masterData)
     Colormap colormap;
     int mono, nRed, nGreen, nBlue;
     XVisualInfo visualInfo, *visInfoPtr;
-    XRectangle validBox;
     char buf[TCL_INTEGER_SPACE * 3];
     int numVisuals;
     XColor *white, *black;
