@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.14 2004/11/16 19:02:27 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.15 2004/11/18 16:19:45 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5722,4 +5722,14 @@ the CG version of the X drawing emulation layer. (tittle, ingham)
 
 2004-11-16 (bug fix)[1063675] Italian msg catalog fixes (ugoccioni,welton)
 
---- Released 8.4.8, November XX, 2004 --- See ChangeLog for details ---
+2004-11-17 (bug fix)[1036963] panedwindow: set save_under X attr (hobbs)
+
+2004-11-17 (bug fix)[1004508] console: array keyname expansion (bold,hobbs)
+
+2004-11-17 (bug fix)[1032300] ps generation of unspecified canvas image (hobbs)
+
+2004-11-17 (bug fix)[982248] immediate unmap of hidden canvas windows (hobbs)
+
+2004-11-18 (new feature) configure options --enable-man-suffix (max)
+
+--- Released 8.4.8, November 18, 2004 --- See ChangeLog for details ---
