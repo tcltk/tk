@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.35 2002/02/22 14:07:01 dkf Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.36 2002/04/16 11:41:53 bagnonm Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -17,8 +17,35 @@ package require -exact Tk 8.4
 package require -exact Tcl 8.4
 
 if { ![interp issafe] } {
-    package require msgcat
-    ::msgcat::mcload [file join $::tk_library msgs]
+    if {[catch {package require msgcat}]} {
+	# msgcat not found. A minimal msgcat is defined
+	# here, with fail-safe versions of the msgcat::mc and
+	# msgcat::mcmax procedures, which happen to be the msgcat 
+	# services used by tk widgets.
+	# See the msgcat package for details about the simulated
+	# procedures.
+	namespace eval msgcat {
+	    namespace export mc mcmax
+
+	    proc mc {src args} {		
+		return [eval [list format $src $args]]
+	    }
+
+	    proc mcmax {args} {
+		set max 0
+		foreach string $args {
+		    set len [string length [msgcat::mc $string]]
+		    if {$len>$max} {
+			set max $len
+		    }
+		}
+		return $max
+	    }
+
+	}
+    } else {
+	::msgcat::mcload [file join $::tk_library msgs]
+    }
 }
 
 # Add Tk's directory to the end of the auto-load search path, if it
