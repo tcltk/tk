@@ -193,7 +193,7 @@ Tk_GetBitmap(interp, tkwin, string)
 	if (string == NULL) {
 	    goto error;
 	}
-	result = XReadBitmapFile(Tk_Display(tkwin),
+	result = TkReadBitmapFile(Tk_Display(tkwin),
 		RootWindowOfScreen(nameKey.screen), string,
 		(unsigned int *) &width, (unsigned int *) &height,
 		&bitmap, &dummy2, &dummy2);
@@ -675,7 +675,7 @@ TkReadBitmapFile(display, d, filename, width_return, height_return,
 	return BitmapFileInvalid;
     }
 
-    *bitmap_return = XCreateBitmapFromData(display, d, data, *width_return,
+    *bitmap_return = TkCreateBitmapFromData(display, d, data, *width_return,
 	    *height_return);
 
     ckfree(data);
