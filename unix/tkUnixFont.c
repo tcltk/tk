@@ -722,7 +722,26 @@ DrawChars(display, drawable, gc, fontPtr, source, numChars, x, y)
     int numChars;		/* Number of characters in string. */
     int x, y;			/* Coordinates at which to place origin of
 				 * string when drawing. */
-{		
+{
+    /*
+     * Perform a quick sanity check to ensure we won't overflow the X
+     * coordinate space.
+     */
+    
+    if ((x + (fontPtr->fontStructPtr->max_bounds.width * numChars) > 0x7fff)) {
+	int length;
+
+	/*
+	 * The string we are being asked to draw is too big and would overflow
+	 * the X coordinate space.  Unfortunatley X servers aren't too bright
+	 * and so they won't deal with this case cleanly.  We need to truncate
+	 * the string before sending it to X.
+	 */
+
+	numChars = Tk_MeasureChars((Tk_Font) fontPtr, source, numChars,
+		0x7fff - x, 0, &length);
+    }
+
     XDrawString(display, drawable, gc, x, y, source, numChars);
 
     if (fontPtr->font.fa.underline != 0) {
