@@ -4201,3 +4201,6 @@ to tcl_library, an install directory relative to the executable, a
 source directory relative to the executable, and a tk directory
 relative to the source heirarchy containing the executable.  See the
 comment at the top of generic/tkInitScript.h for more details. (SS)
+
+7/27/98 (bug fix) The bbox for coords in the canvas were incorrectly
+including the center of the coord as part of the bound area.  (RJ)
