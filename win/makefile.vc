@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2003 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.77 2003/12/23 02:59:12 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.78 2004/01/13 02:01:39 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -433,8 +433,8 @@ dlllflags = $(lflags) -dll
 conlflags = $(lflags) -subsystem:console
 guilflags = $(lflags) -subsystem:windows
 
-baselibs  = kernel32.lib advapi32.lib user32.lib ole32.lib oleaut32.lib uuid.lib
-guilibs	  = $(baselibs) shell32.lib gdi32.lib comdlg32.lib winspool.lib imm32.lib comctl32.lib
+baselibs  = kernel32.lib user32.lib ole32.lib oleaut32.lib
+guilibs	  = $(baselibs) gdi32.lib
 
 
 #---------------------------------------------------------------------
@@ -612,7 +612,7 @@ $(MAN2HELP) $(MAN2HELP2) $(INDEX): $(TCLTOOLSDIR)\$$(@F)
 	$(CPY) $(TCLTOOLSDIR)\$(@F) $(@D)
 
 $(BMP):
-	$(CPY) $(WINDIR)\$(@F) $(@D)
+	$(CPY) $(WINDIR)\rc\$(@F) $(@D)
 
 $(HELPFILE): $(HELPRTF) $(BMP)
 	cd $(DOCTMP_DIR)
@@ -790,15 +790,8 @@ $<
 
 {$(RCDIR)}.rc{$(TMP_DIR)}.res:
 	$(rc32) -fo $@ -r -i "$(GENERICDIR)" $(TCL_INCLUDES) \
-!if $(DEBUG)
-		-d DEBUG \
-!endif
-!if $(TCL_THREADS)
-		-d TCL_THREADS \
-!endif
-!if $(STATIC_BUILD)
-		-d STATIC_BUILD \
-!endif
+		-d DEBUG=$(DEBUG) -d TCL_THREADS=$(TCL_THREADS) \
+		-d STATIC_BUILD=$(STATIC_BUILD) \
 		$<
 
 #---------------------------------------------------------------------
