@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.1 2002/02/22 02:41:17 hobbs Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.2 2002/02/22 21:07:23 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -534,7 +534,7 @@ PanedWindowWidgetObjCmd(clientData, interp, objc, objv)
 		break;
 	    }
 	    
-	    return ConfigureSlaves(pwPtr, interp, objc, objv);
+	    result = ConfigureSlaves(pwPtr, interp, objc, objv);
 	    break;
 	}
 	
@@ -579,7 +579,8 @@ PanedWindowWidgetObjCmd(clientData, interp, objc, objv)
 	    
 	    if (objc < 3) {
 		Tcl_WrongNumArgs(interp, 2, objv, "widget ?widget ...?");
-		return TCL_ERROR;
+		result = TCL_ERROR;
+		break;
 	    }
 
 	    /*
@@ -616,15 +617,13 @@ PanedWindowWidgetObjCmd(clientData, interp, objc, objv)
 		break;
 	    }
 
-	    if (Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-
-	    if (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK) {
-		return TCL_ERROR;
+	    if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK)
+		    || (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)) {
+		result = TCL_ERROR;
+		break;
 	    }
 	    
-	    return PanedWindowIdentifyCoords(pwPtr, interp, x, y);
+	    result = PanedWindowIdentifyCoords(pwPtr, interp, x, y);
 	    break;
 	}
 
@@ -661,6 +660,12 @@ PanedWindowWidgetObjCmd(clientData, interp, objc, objv)
 	}
 
 	case PW_PANECONFIGURE: {
+	    if (objc < 3) {
+		Tcl_WrongNumArgs(interp, 2, objv,
+			"pane ?option? ?value option value ...?");
+		result = TCL_ERROR;
+		break;
+	    }
 	    resultObj = NULL;
 	    if (objc <= 4) {
 		tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]),
@@ -702,12 +707,12 @@ PanedWindowWidgetObjCmd(clientData, interp, objc, objv)
 	}
 
 	case PW_PROXY: {
-	    return PanedWindowProxyCommand(pwPtr, interp, objc, objv);
+	    result = PanedWindowProxyCommand(pwPtr, interp, objc, objv);
 	    break;
 	}
 
 	case PW_SASH: {
-	    return PanedWindowSashCommand(pwPtr, interp, objc, objv);
+	    result = PanedWindowSashCommand(pwPtr, interp, objc, objv);
 	    break;
 	}
     }
