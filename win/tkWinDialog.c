@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.34 2004/02/13 01:28:19 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.35 2004/05/24 21:23:23 dkf Exp $
  *
  */
 
@@ -179,9 +179,7 @@ static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam,
 static UINT APIENTRY	OFNHookProcW(HWND hdlg, UINT uMsg, WPARAM wParam, 
 			    LPARAM lParam);
 static void		SetTkDialog(ClientData clientData);
-
-
-
+
 /*
  *-------------------------------------------------------------------------
  *
@@ -226,9 +224,7 @@ static void EatSpuriousMessageBugFix( void )
 	PeekMessage(&msg,0,WM_LBUTTONUP,WM_LBUTTONUP,PM_REMOVE);
     }
 }
-
-
-
+
 /*
  *-------------------------------------------------------------------------
  *
@@ -2530,24 +2526,25 @@ Tk_MessageBoxObjCmd(clientData, interp, objc, objv)
 {
     Tk_Window tkwin, parent;
     HWND hWnd;
-    char *message, *title;
+    char *message, *title, *detail;
     int defaultBtn, icon, type;
     int i, oldMode, winCode;
     UINT flags;
     Tcl_DString messageString, titleString;
     Tcl_Encoding unicodeEncoding = TkWinGetUnicodeEncoding();
     static CONST char *optionStrings[] = {
-	"-default",	"-icon",	"-message",	"-parent",
-	"-title",	"-type",	NULL
+	"-default",	"-detail",	"-icon",	"-message",
+	"-parent",	"-title",	"-type",	NULL
     };
     enum options {
-	MSG_DEFAULT,	MSG_ICON,	MSG_MESSAGE,	MSG_PARENT,
-	MSG_TITLE,	MSG_TYPE
+	MSG_DEFAULT,	MSG_DETAIL,	MSG_ICON,	MSG_MESSAGE,
+	MSG_PARENT,	MSG_TITLE,	MSG_TYPE
     };
 
     tkwin = (Tk_Window) clientData;
 
     defaultBtn	= -1;
+    detail	= NULL;
     icon	= MB_ICONINFORMATION;
     message	= NULL;
     parent	= tkwin;
@@ -2581,6 +2578,10 @@ Tk_MessageBoxObjCmd(clientData, interp, objc, objv)
 	    if (defaultBtn < 0) {
 		return TCL_ERROR;
 	    }
+	    break;
+
+	case MSG_DETAIL:
+	    detail = string;
 	    break;
 
 	case MSG_ICON:
@@ -2648,6 +2649,22 @@ Tk_MessageBoxObjCmd(clientData, interp, objc, objv)
     flags |= icon | type | MB_SYSTEMMODAL;
 
     Tcl_UtfToExternalDString(unicodeEncoding, message, -1, &messageString);
+    if (detail != NULL) {
+	Tcl_DString detailString;
+
+	if (message != NULL) {
+	    Tcl_UtfToExternalDString(unicodeEncoding, "\n\n", -1,
+		    &detailString);
+	    Tcl_DStringAppend(&messageString, Tcl_DStringValue(&detailString),
+		    Tcl_DStringLength(&detailString));
+	    Tcl_DStringFree(&detailString);
+	}
+	Tcl_UtfToExternalDString(unicodeEncoding, detail, -1,
+		&detailString);
+	Tcl_DStringAppend(&messageString, Tcl_DStringValue(&detailString),
+		Tcl_DStringLength(&detailString));
+	Tcl_DStringFree(&detailString);
+    }
     Tcl_UtfToExternalDString(unicodeEncoding, title, -1, &titleString);
 
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
