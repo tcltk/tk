@@ -1,3 +1,8 @@
+2001-09-09  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/Makefile.in: Use TKTEST variable directly
+	instead of depending on the tktest alias.
+
 2001-09-08  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/mkd.bat:
