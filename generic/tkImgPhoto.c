@@ -7,7 +7,7 @@
  *
  * Copyright (c) 1994 The Australian National University.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2002 Donal K. Fellows
+ * Copyright (c) 2002-2003 Donal K. Fellows
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -16,7 +16,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.39 2003/07/17 12:59:52 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.40 2003/08/15 10:54:59 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -647,13 +647,11 @@ ImgPhotoCmd(clientData, interp, objc, objv)
     int x, y, width, height;
     int dataWidth, dataHeight;
     struct SubcommandOptions options;
-    int listArgc;
-    CONST char **listArgv;
-    CONST char **srcArgv;
+    int listObjc;
+    Tcl_Obj **listObjv, **srcObjv;
     unsigned char *pixelPtr;
     Tk_PhotoImageBlock block;
     Tk_Window tkwin;
-    XColor color;
     Tk_PhotoImageFormat *imageFormat;
     int imageWidth, imageHeight;
     int matched;
@@ -1052,8 +1050,8 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	    return TCL_ERROR;
 	}
 	Tcl_ResetResult(interp);
-	if (Tcl_SplitList(interp, Tcl_GetString(options.name),
-		&dataHeight, &srcArgv) != TCL_OK) {
+	if (Tcl_ListObjGetElements(interp, options.name,
+		&dataHeight, &srcObjv) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	tkwin = Tk_MainWindow(interp);
@@ -1061,44 +1059,77 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	dataWidth = 0;
 	pixelPtr = NULL;
 	for (y = 0; y < dataHeight; ++y) {
-	    if (Tcl_SplitList(interp, srcArgv[y], &listArgc, &listArgv)
-		    != TCL_OK) {
+	    if (Tcl_ListObjGetElements(interp, srcObjv[y],
+		    &listObjc, &listObjv) != TCL_OK) {
 		break;
 	    }
 	    if (y == 0) {
-		if (listArgc == 0) {
+		if (listObjc == 0) {
 		    /*
 		     * Lines must be non-empty...
 		     */
 		    break;
 		}
-		dataWidth = listArgc;
+		dataWidth = listObjc;
 		pixelPtr = (unsigned char *)
 			ckalloc((unsigned) dataWidth * dataHeight * 3);
 		block.pixelPtr = pixelPtr;
-	    } else if (listArgc != dataWidth) {
+	    } else if (listObjc != dataWidth) {
 		Tcl_AppendResult(interp, "all elements of color list must",
 			" have the same number of elements", (char *) NULL);
-		ckfree((char *) listArgv);
 		break;
 	    }
 	    for (x = 0; x < dataWidth; ++x) {
+		char *colorString = Tcl_GetString(listObjv[x]);
+		XColor color;
+		int tmpr, tmpg, tmpb;
+
+		/*
+		 * We do not use Tk_GetColorFromObj() because we
+		 * absolutely do not want to invoke the fallback code.
+		 */
+
+		if (colorString[0] == '#') {
+		    if (isxdigit(UCHAR(colorString[1])) &&
+			    isxdigit(UCHAR(colorString[2])) &&
+			    isxdigit(UCHAR(colorString[3]))) {
+			if (colorString[4] == '\0') {
+			    /* Got #rgb */
+			    sscanf(colorString+1, "%1x%1x%1x",
+				    &tmpr, &tmpg, &tmpb);
+			    *pixelPtr++ = tmpr * 0x11;
+			    *pixelPtr++ = tmpg * 0x11;
+			    *pixelPtr++ = tmpb * 0x11;
+			    continue;
+			} else if (isxdigit(UCHAR(colorString[4])) &&
+				isxdigit(UCHAR(colorString[5])) &&
+				isxdigit(UCHAR(colorString[6])) &&
+				colorString[7] == '\0') {
+			    /* Got #rrggbb */
+			    sscanf(colorString+1, "%2x%2x%2x",
+				    &tmpr, &tmpg, &tmpb);
+			    *pixelPtr++ = tmpr;
+			    *pixelPtr++ = tmpg;
+			    *pixelPtr++ = tmpb;
+			    continue;
+			}
+		    }
+		}
+
 		if (!XParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin),
-			listArgv[x], &color)) {
+			colorString, &color)) {
 		    Tcl_AppendResult(interp, "can't parse color \"",
-			    listArgv[x], "\"", (char *) NULL);
+			    colorString, "\"", (char *) NULL);
 		    break;
 		}
 		*pixelPtr++ = color.red >> 8;
 		*pixelPtr++ = color.green >> 8;
 		*pixelPtr++ = color.blue >> 8;
 	    }
-	    ckfree((char *) listArgv);
 	    if (x < dataWidth) {
 		break;
 	    }
 	}
-	ckfree((char *) srcArgv);
 	if (y < dataHeight || dataHeight == 0 || dataWidth == 0) {
 	    if (block.pixelPtr != NULL) {
 		ckfree((char *) block.pixelPtr);
@@ -5499,11 +5530,11 @@ PhotoOptionFind(interp, obj)
 {
     size_t length;
     char *name = Tcl_GetStringFromObj(obj, (int *) &length);
-    OptionAssocData *list;
     char *prevname = NULL;
     Tcl_ObjCmdProc *proc = (Tcl_ObjCmdProc *) NULL;
-    list = (OptionAssocData *) Tcl_GetAssocData(interp, "photoOption",
-	    (Tcl_InterpDeleteProc **) NULL);
+    OptionAssocData *list = (OptionAssocData *) Tcl_GetAssocData(interp,
+	    "photoOption", (Tcl_InterpDeleteProc **) NULL);
+
     while (list != (OptionAssocData *) NULL) {
 	if (strncmp(name, list->name, length) == 0) {
 	    if (proc != (Tcl_ObjCmdProc *) NULL) {
