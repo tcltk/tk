@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.15 2001/11/27 14:08:04 drh Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.16 2002/06/11 18:59:25 jenglish Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -920,8 +920,7 @@ proc ::tk::MenuFind {w char} {
 
     foreach child $windowlist {
 	# Don't descend into other toplevels.
-        if {[string compare [winfo toplevel [focus]] \
-		[winfo toplevel $child]]} {
+        if {[string compare [winfo toplevel $w] [winfo toplevel $child]]} {
 	    continue
 	}
 	if {[string equal [winfo class $child] "Menu"] && \
@@ -948,8 +947,7 @@ proc ::tk::MenuFind {w char} {
 
     foreach child $windowlist {
 	# Don't descend into other toplevels.
-        if {[string compare [winfo toplevel [focus]] \
-		[winfo toplevel $child]]} {
+        if {[string compare [winfo toplevel $w] [winfo toplevel $child]]} {
 	    continue
 	}
 	switch [winfo class $child] {
