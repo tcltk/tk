@@ -1,5 +1,8 @@
 2000-05-22  Jeff Hobbs  <hobbs@scriptics.com>
 
+	* win/Makefile.in (install-libraries): corrected to install X
+	headers [Bug: 5516]
+
 	* doc/bind.n: 
 	* doc/canvas.n: 
 	* doc/entry.n: 
