@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCursor.c,v 1.7 2001/08/15 15:44:36 dkf Exp $
+ * RCS: @(#) $Id: tkCursor.c,v 1.8 2001/10/23 08:40:47 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -276,13 +276,12 @@ GetCursor(interp, tkwin, string)
     cursorPtr->objRefCount = 0;
     cursorPtr->otherTable = &dispPtr->cursorNameTable;
     cursorPtr->hashPtr = nameHashPtr;
-	cursorPtr->nextPtr = NULL;
+    cursorPtr->nextPtr = existingCursorPtr;
     cursorPtr->idHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorIdTable, 
             (char *) cursorPtr->cursor, &new);
     if (!new) {
 	panic("cursor already registered in Tk_GetCursor");
     }
-    cursorPtr->nextPtr = existingCursorPtr;
     Tcl_SetHashValue(nameHashPtr, cursorPtr);
     Tcl_SetHashValue(cursorPtr->idHashPtr, cursorPtr);
 
@@ -384,6 +383,7 @@ Tk_GetCursorFromData(interp, tkwin, source, mask, width, height,
     cursorPtr->objRefCount = 0;
     cursorPtr->idHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorIdTable, 
             (char *) cursorPtr->cursor, &new);
+    cursorPtr->nextPtr = NULL;
 
     if (!new) {
 	panic("cursor already registered in Tk_GetCursorFromData");
