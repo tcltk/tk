@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: entry.tcl,v 1.12 2000/05/14 20:45:38 ericm Exp $
+# RCS: @(#) $Id: entry.tcl,v 1.13 2000/05/29 01:43:14 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -336,7 +336,7 @@ proc tkEntryButton1 {w x} {
     set tkPriv(pressX) $x
     $w icursor [tkEntryClosestGap $w $x]
     $w selection from insert
-    if {[string compare [$w cget -state] "disabled"]} {focus $w}
+    if {[string compare "disabled" [$w cget -state]]} {focus $w}
 }
 
 # tkEntryMouseSelect --
@@ -406,7 +406,7 @@ proc tkEntryPaste {w x} {
 
     $w icursor [tkEntryClosestGap $w $x]
     catch {$w insert insert [selection get -displayof $w]}
-    if {[string equal [$w cget -state] "normal"]} {focus $w}
+    if {[string compare "disabled" [$w cget -state]]} {focus $w}
 }
 
 # tkEntryAutoScan --

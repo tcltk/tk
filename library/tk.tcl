@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.21 2000/05/03 00:18:36 hobbs Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.22 2000/05/29 01:43:15 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -313,6 +313,7 @@ if {[string compare $tcl_platform(platform) "macintosh"] && \
     source [file join $tk_library menu.tcl]
     source [file join $tk_library scale.tcl]
     source [file join $tk_library scrlbar.tcl]
+    source [file join $tk_library spinbox.tcl]
     source [file join $tk_library text.tcl]
 }
 
