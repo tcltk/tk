@@ -380,7 +380,6 @@
 				F5375541016C376E01DC9062,
 				F5375542016C376E01DC9062,
 				F5375543016C376E01DC9062,
-				F5375544016C376E01DC9062,
 				F5375545016C376E01DC9062,
 			);
 			isa = PBXGroup;
@@ -423,12 +422,6 @@
 			path = tkMacOSXPort.h;
 			refType = 2;
 		};
-		F5375544016C376E01DC9062 = {
-			fileEncoding = 5;
-			isa = PBXFileReference;
-			path = tkMacOSXUtil.h;
-			refType = 2;
-		};
 		F5375545016C376E01DC9062 = {
 			fileEncoding = 5;
 			isa = PBXFileReference;
@@ -464,7 +457,6 @@
 				F5375561016C376E01DC9062,
 				F5375562016C376E01DC9062,
 				F5375563016C376E01DC9062,
-				F5375564016C376E01DC9062,
 				F5375565016C376E01DC9062,
 				F5375567016C376E01DC9062,
 				F5375568016C376E01DC9062,
@@ -633,12 +625,6 @@
 			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXTest.c;
-			refType = 4;
-		};
-		F5375564016C376E01DC9062 = {
-			fileEncoding = 5;
-			isa = PBXFileReference;
-			path = tkMacOSXUtil.c;
 			refType = 4;
 		};
 		F5375565016C376E01DC9062 = {
@@ -1617,7 +1603,6 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				F53755FF016C397D01DC9062,
 				F5375600016C397D01DC9062,
 				F5375601016C397D01DC9062,
-				F5375602016C397D01DC9062,
 				F5375603016C397D01DC9062,
 				F537566E016C3A1F01DC9062,
 				F537566F016C3A1F01DC9062,
@@ -1749,7 +1734,6 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				F5375664016C39A101DC9062,
 				F5375665016C39A101DC9062,
 				F5375666016C39A101DC9062,
-				F5375667016C39A101DC9062,
 				F5375668016C39A101DC9062,
 				F537566A016C39A101DC9062,
 				F537566B016C39A101DC9062,
@@ -1986,12 +1970,6 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 		};
 		F5375601016C397D01DC9062 = {
 			fileRef = F5375543016C376E01DC9062;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5375602016C397D01DC9062 = {
-			fileRef = F5375544016C376E01DC9062;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -2568,12 +2546,6 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 		};
 		F5375666016C39A101DC9062 = {
 			fileRef = F5375562016C376E01DC9062;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5375667016C39A101DC9062 = {
-			fileRef = F5375564016C376E01DC9062;
 			isa = PBXBuildFile;
 			settings = {
 			};

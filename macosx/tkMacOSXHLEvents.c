@@ -10,10 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.3 2002/09/12 17:34:16 das Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.4 2003/02/25 16:09:25 das Exp $
  */
 
-#include "tkMacOSXUtil.h"
+#include "tkMacOSXPort.h"
 #include "tkMacOSXInt.h"
 
 #include <Carbon/Carbon.h>
@@ -44,6 +44,7 @@ static OSErr PrefsHandler (const AppleEvent * event, AppleEvent * reply, long ha
 
 static int MissedAnyParameters _ANSI_ARGS_((const AppleEvent *theEvent));
 static int ReallyKillMe _ANSI_ARGS_((Tcl_Event *eventPtr, int flags));
+static OSErr FSRefToDString _ANSI_ARGS_((const FSRef *fsref, Tcl_DString *ds));
 
 /*
  *----------------------------------------------------------------------
@@ -100,7 +101,7 @@ TkMacOSXInitAppleEvents(
 
     if (interp != NULL) {
         ScriptHandlerUPP = NewAEEventHandlerUPP(ScriptHandler);
-        err = AEInstallEventHandler('misc', 'dosc',
+        err = AEInstallEventHandler(kAEMiscStandards, kAEDoScript,
             ScriptHandlerUPP, (long) interp, false);
     }
 }
@@ -201,7 +202,7 @@ OdocHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
 {
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
     AEDescList fileSpecList;
-    FSSpec file;
+    FSRef file;
     OSErr err;
     DescType type;
     Size actual;
@@ -246,23 +247,17 @@ OdocHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
     Tcl_DStringInit(&command);
     Tcl_DStringAppend(&command, "::tk::mac::OpenDocument", -1);
     for (index = 1; index <= count; index++) {
-        int length;
-        Handle fullPath;
-        
-        err = AEGetNthPtr(&fileSpecList, index, typeFSS,
-                &keyword, &type, (Ptr) &file, sizeof(FSSpec), &actual);
+        err = AEGetNthPtr(&fileSpecList, index, typeFSRef,
+                &keyword, &type, (Ptr) &file, sizeof(FSRef), &actual);
         if ( err != noErr ) {
             continue;
         }
 
-        err = FSpPathFromLocation(&file, &length, &fullPath);
-        HLock(fullPath);
-        Tcl_ExternalToUtfDString(NULL, *fullPath, length, &pathName);
-        HUnlock(fullPath);
-        DisposeHandle(fullPath);
-
-        Tcl_DStringAppendElement(&command, Tcl_DStringValue(&pathName));
-        Tcl_DStringFree(&pathName);
+        err = FSRefToDString(&file, &pathName);
+        if (err == noErr) {
+            Tcl_DStringAppendElement(&command, Tcl_DStringValue(&pathName));
+            Tcl_DStringFree(&pathName);
+        }
     }
     
     Tcl_GlobalEval(interp, Tcl_DStringValue(&command));
@@ -319,7 +314,7 @@ ScriptHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
                 strlen(errString));
         theErr = -1771;
     } else {
-        if (theDesc.descriptorType == (DescType)'TEXT') {
+        if (theDesc.descriptorType == (DescType)typeChar) {
             Tcl_DString encodedText;
             short i;
             Size  size;
@@ -343,23 +338,30 @@ ScriptHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
                     &encodedText);
             tclErr = Tcl_GlobalEval(interp, Tcl_DStringValue(&encodedText));
             Tcl_DStringFree(&encodedText);
-        } else if (theDesc.descriptorType == (DescType)'alis') {
+        } else if (theDesc.descriptorType == (DescType)typeAlias) {
             Boolean dummy;
-            FSSpec theFSS;
-            Handle fullPath;
-            int length;
-            AliasHandle aliasHandle;
+            FSRef file;
+            AliasPtr    alias;
+            Size        theSize;
 
-            AEGetDescData (&theDesc,&aliasHandle,sizeof(aliasHandle ) );
+            theSize = AEGetDescDataSize(&theDesc);
+            alias = (AliasPtr) ckalloc(theSize);
+            if (alias) {
+                AEGetDescData (&theDesc, alias, theSize);
             
-            theErr = ResolveAlias(NULL, aliasHandle,
-                    &theFSS, &dummy);
+                theErr = FSResolveAlias(NULL, &alias,
+                        &file, &dummy);
+                ckfree((char*)alias);
+            } else {
+                theErr = memFullErr;
+            }
             if (theErr == noErr) {
-                FSpPathFromLocation(&theFSS, &length, &fullPath);
-                HLock(fullPath);
-                Tcl_EvalFile(interp, *fullPath);
-                HUnlock(fullPath);
-                DisposeHandle(fullPath);
+                Tcl_DString scriptName;
+                theErr = FSRefToDString(&file, &scriptName);
+                if (theErr == noErr) {
+                    Tcl_EvalFile(interp, Tcl_DStringValue(&scriptName));
+                    Tcl_DStringFree(&scriptName);
+                }
             } else {
                 sprintf(errString, "AEDoScriptHandler: file not found");
                 AEPutParamPtr(reply, keyErrorString, typeChar,
@@ -456,4 +458,33 @@ MissedAnyParameters(
                    &returnedType, NULL, 0, &actualSize);
    
    return (err != errAEDescNotFound);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * FSRefToDString --
+ *
+ *      Get a POSIX path from an FSRef.
+ *
+ * Results:
+ *      In the parameter ds.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static OSErr
+FSRefToDString(const FSRef *fsref, Tcl_DString *ds)
+{
+    UInt8 fileName[PATH_MAX+1];
+    OSErr err;
+
+    err = FSRefMakePath(fsref, fileName, sizeof(fileName));
+    if (err == noErr) {
+        Tcl_UtfToExternalDString(NULL, fileName, -1, ds);
+    }
+    return err;
 }

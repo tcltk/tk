@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.6 2003/02/09 07:51:04 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7 2003/02/25 16:09:29 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -23,7 +23,6 @@
 #include "tkScrollbar.h"
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
-#include "tkMacOSXUtil.h"
 
 /*
  * This is a list of all of the toplevels that have been mapped so far. It is
