@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.1.4.7 1999/03/26 00:07:55 hershey Exp $
+# RCS: @(#) $Id: entry.test,v 1.1.4.8 1999/04/07 02:05:28 surles Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -517,7 +517,7 @@ test entry-3.81 {EntryWidgetCmd procedure, "xview" widget command} {
     lappend x [.e xview]
     .e xview moveto .12
     lappend x [.e xview]
-} {{0.0957447 0.308511} {0.106383 0.319149} {0.117021 0.351064}}
+} {{0.0957447 0.308511} {0.106383 0.319149} {0.117021 0.329787}}
 test entry-3.82 {EntryWidgetCmd procedure} {
     list [catch {.e gorp} msg] $msg
 } {1 {bad option "gorp": must be bbox, cget, configure, delete, get, icursor, index, insert, scan, selection, or xview}}
