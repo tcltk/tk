@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.66 2002/12/10 22:06:40 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.67 2003/02/14 20:30:36 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -47,7 +47,7 @@ the environment.  Jump to this line to read the new instructions.
 #	tktest   -- just builds the binaries for the test suite.
 #	install  -- installs the built binaries and libraries to $(INSTALLDIR)
 #		    as the root of the install tree.
-#	console-wish -- builds a console version of wish.
+#	cwish    -- builds a console version of wish.
 #	clean    -- removes the contents of $(TMP_DIR)
 #	hose     -- removes the contents of $(TMP_DIR) and $(OUT_DIR)
 #	genstubs -- rebuilds the Stubs table and support files (dev only).
@@ -80,11 +80,14 @@ the environment.  Jump to this line to read the new instructions.
 #			   using libcmt(d) as the C runtime [by default] to
 #			   msvcrt(d). This is useful for static embedding
 #			   support.
-#		linkexten = Affects the static option only to switch wishXX.exe
+#		staticpkg = Affects the static option only to switch wishXX.exe
 #			   to have the dde and reg extension linked inside it.
 #		threads =  Turns on full multithreading support.
+#		thrdalloc = Use the thread allocator (shared global free pool).
 #		symbols =  Adds symbols for step debugging.
 #		profile =  Adds profiling hooks.  Map file is assumed.
+#		loimpact =  Adds a flag for how NT treats the heap to keep memory
+#			   in use, low.  This is said to impact alloc performance.
 #
 #	STATS=memdbg,compdbg,none
 #		Sets optional memory and bytecode compiler debugging code added
@@ -185,8 +188,6 @@ WISHC 		= "$(OUT_DIR)\$(WISHNAMEPREFIX)c$(VERSION)$(SUFX).exe"
 
 TKTEST		= "$(OUT_DIR)\$(PROJECT)test.exe"
 CAT32		= "$(OUT_DIR)\cat32.exe"
-RMDIR		= .\rmd.bat
-RM		= del
 
 LIB_INSTALL_DIR		= $(_INSTALLDIR)\lib
 BIN_INSTALL_DIR		= $(_INSTALLDIR)\bin
@@ -436,7 +437,7 @@ TESTFLAGS   = -file $(TESTPAT)
 release:  setup $(TKSTUBLIB) $(WISH)
 all:	  release $(CAT32)
 core:	  setup $(TKSTUBLIB) $(TKLIB)
-console-wish : $(WISHC)
+cwish:	  $(WISHC)
 install:  install-binaries install-libraries install-docs
 tktest:	  setup $(TKTEST) $(CAT32)
 
