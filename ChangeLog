@@ -1,5 +1,8 @@
 2002-08-05  Don Porter <dgp@users.sf.net>
 
+	* win/tkWinFont.c:	Additional changes to fix CONST warnings on
+	* win/tkWinWM.c:	Windows due to latest patch.  Tks Vince Darley.
+
 	* doc/3DBorder.3:	Applied companion patch for Tcl Patch 585105,
 	* doc/BindTable.3:	updating Tk to use Tcl 8.4's fully CONST-ified
 	* doc/ConfigWidg.3:	interface, and fully CONSTifying Tk at the
