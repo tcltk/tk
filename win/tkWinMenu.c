@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.4 2004/10/27 00:37:38 davygrvy Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.4.2.1 2005/01/04 05:07:03 chengyemao Exp $
  */
 
 #define OEMRESOURCE
@@ -17,13 +17,12 @@
 #include "tkMenu.h"
 
 #include <string.h>
-
 /*
  * The class of the window for popup menus.
  */
 
 #define MENU_CLASS_NAME "MenuWindowClass"
-
+#define EMBEDDED_MENU_CLASS_NAME "EmbeddedMenuWindowClass"
 /*
  * Used to align a windows bitmap inside a rectangle
  */
@@ -60,6 +59,7 @@ typedef struct ThreadSpecificData {
     WORD lastCommandID;	        /* The last command ID we allocated. */
     HWND menuHWND;		/* A window to service popup-menu messages
 				 * in. */
+    HWND embeddedMenuHWND;	/* A window to service embedded menu messages */
     int oldServiceMode;	        /* Used while processing a menu; we need
 				 * to set the event mode specially when we
 				 * enter the menu processing modal loop
@@ -165,7 +165,9 @@ static void		SetDefaults _ANSI_ARGS_((int firstTime));
 static LRESULT CALLBACK	TkWinMenuProc _ANSI_ARGS_((HWND hwnd,
 			    UINT message, WPARAM wParam,
 			    LPARAM lParam));
-
+static LRESULT CALLBACK	TkWinEmbeddedMenuProc _ANSI_ARGS_((HWND hwnd,
+			    UINT message, WPARAM wParam,
+			    LPARAM lParam));
 
 
 /*
@@ -876,13 +878,103 @@ TkWinMenuProc(hwnd, message, wParam, lParam)
     LPARAM lParam;
 {
     LRESULT lResult;
-
-    if (!TkWinHandleMenuEvent(&hwnd, &message, &wParam, &lParam, &lResult)) {
+    if(!TkWinHandleMenuEvent(&hwnd, &message, &wParam, &lParam, &lResult)) {
 	lResult = DefWindowProc(hwnd, message, wParam, lParam);
     }
     return lResult;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * UpdateEmbeddedMenu --
+ *
+ *	This function is used as work-around for updating the pull-down 
+ *	window of an embedded menu which may show as a blank popup window.
+ *
+ * Results:
+ *	Invalidate the client area of the embedded pull-down menu and 
+ *	redraw it.
+ *
+ * Side effects:
+ *	Redraw the embedded menu window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void UpdateEmbeddedMenu(ClientData clientData) {
+    RECT rc;
+    HWND hMenuWnd = (HWND)clientData;
+    GetClientRect(hMenuWnd, &rc);
+    InvalidateRect(hMenuWnd, &rc, FALSE);
+    UpdateWindow(hMenuWnd);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinEmbeddedMenuProc --
+ *
+ *	This window proc is for the embedded menu windows. It provides
+ *	message services to an embedded menu in a different process.
+ *
+ * Results:
+ *	To an embedded menu message, returns 1 if the message has been 
+ *	handled or 0 otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static LRESULT CALLBACK
+TkWinEmbeddedMenuProc(hwnd, message, wParam, lParam)
+    HWND hwnd;
+    UINT message;
+    WPARAM wParam;
+    LPARAM lParam;
+{
+    static nPopupMenus = 0, nIdles = 0;
+    LRESULT lResult = 1;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    switch(message) {
+	case WM_ENTERIDLE: 
+	if((wParam == MSGF_MENU) && (nIdles < 1) && (hwnd == tsdPtr->embeddedMenuHWND)) {
+	    Tcl_CreateTimerHandler(200, UpdateEmbeddedMenu, (ClientData)lParam);
+	    nIdles++;
+	}
+	break;
+	
+	case WM_INITMENUPOPUP:
+	nIdles = 0;
+	nPopupMenus++;
+	break;
+
+	case WM_UNINITMENUPOPUP:
+	nPopupMenus--;
+ 	break;
+
+	case WM_INITMENU:
+	case WM_SYSCOMMAND:
+	case WM_COMMAND:
+	case WM_MENUCHAR:
+	case WM_MEASUREITEM:
+	case WM_DRAWITEM:
+	case WM_MENUSELECT:
+	lResult = TkWinHandleMenuEvent(&hwnd, &message, &wParam, &lParam, &lResult);
+	if(lResult || (GetCapture() != hwnd)) break;
+
+	default:
+	lResult = DefWindowProc(hwnd, message, wParam, lParam);
+	break;
+
+    }
+    return lResult;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -917,7 +1009,6 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
     TkMenuEntry *mePtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
     switch (*pMessage) {
 	case WM_INITMENU:
 	    TkMenuInit();
@@ -1018,7 +1109,6 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 	    returnResult = 1;
 	    break;
 	}
-
 
 	case WM_MENUCHAR: {
 	    unsigned char menuChar = (unsigned char) LOWORD(*pwParam);
@@ -1126,7 +1216,6 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 			itemPtr->rcItem.top, itemPtr->rcItem.right
 			- itemPtr->rcItem.left, itemPtr->rcItem.bottom
 			- itemPtr->rcItem.top, 0, drawArrow);
-
 		ckfree((char *) twdPtr);
 		*plResult = 1;
 		returnResult = 1;
@@ -2827,6 +2916,9 @@ MenuExitHandler(
 
     DestroyWindow(tsdPtr->menuHWND);
     UnregisterClass(MENU_CLASS_NAME, Tk_GetHINSTANCE());
+
+    DestroyWindow(tsdPtr->embeddedMenuHWND);
+    UnregisterClass(EMBEDDED_MENU_CLASS_NAME, Tk_GetHINSTANCE());
 }
 
 /*
@@ -3009,13 +3101,62 @@ TkpMenuInit()
     wndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wndClass.lpszMenuName = NULL;
     wndClass.lpszClassName = MENU_CLASS_NAME;
-    RegisterClass(&wndClass);
+    if(!RegisterClass(&wndClass)) {
+	panic("Failed to register menu window class.");
+    }
 
     tsdPtr->menuHWND = CreateWindow(MENU_CLASS_NAME, "MenuWindow", WS_POPUP,
 	0, 0, 10, 10, NULL, NULL, Tk_GetHINSTANCE(), NULL);
 
+    if(!tsdPtr->menuHWND) {
+	panic("Failed to create the menu window.");
+    }
+
+    wndClass.lpfnWndProc = TkWinEmbeddedMenuProc;
+    wndClass.lpszClassName = EMBEDDED_MENU_CLASS_NAME;
+    if(!RegisterClass(&wndClass)) {
+	panic ("Failed to register embedded menu window class.");
+    }
+
+    tsdPtr->embeddedMenuHWND = CreateWindow(EMBEDDED_MENU_CLASS_NAME, "EmbeddedMenuWindow", WS_POPUP,
+	0, 0, 10, 10, NULL, NULL, Tk_GetHINSTANCE(), NULL);
+
+    if(!tsdPtr->embeddedMenuHWND) {
+	panic("Failed to create the embedded menu window.");
+    }
+
     TkCreateExitHandler(MenuExitHandler, (ClientData) NULL);
     SetDefaults(1);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetMenuHWND --
+ *
+ *	This function returns the HWND of a hidden menu Window that
+ *	processes messages of a popup menu.  This hidden menu window
+ *	is used to handle either a dynamic popup menu in the same 
+ *	process or a pull-down menu of an embedded window in a 
+ *	different process.
+ *
+ * Results:
+ *	Returns the HWND of the hidden menu Window.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+HWND
+Tk_GetMenuHWND(tkwin)
+    Tk_Window tkwin;
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    TkMenuInit();
+    return tsdPtr->embeddedMenuHWND;
 }
 
 /*

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.15.2.1 2003/07/16 23:17:38 pspjuth Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.15.2.1.2.1 2005/01/04 05:07:42 chengyemao Exp $
  */
 
 #include "default.h"
@@ -1398,7 +1398,7 @@ DisplayFrame(clientData)
 
     framePtr->flags &= ~REDRAW_PENDING;
     if ((framePtr->tkwin == NULL) || !Tk_IsMapped(tkwin)
-        || framePtr->isContainer) {
+        ) {
 	return;
     }
 

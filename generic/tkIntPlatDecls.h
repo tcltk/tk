@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.15.2.2 2004/10/27 00:35:53 davygrvy Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.15.2.2.2.1 2005/01/04 05:07:45 chengyemao Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -125,6 +125,8 @@ EXTERN int		TkWinGetPlatformId _ANSI_ARGS_((void));
 EXTERN void		TkWinSetHINSTANCE _ANSI_ARGS_((HINSTANCE hInstance));
 /* 35 */
 EXTERN int		TkWinGetPlatformTheme _ANSI_ARGS_((void));
+/* 36 */
+EXTERN void		TkWinCleanupContainerList _ANSI_ARGS_((void));
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* 0 */
@@ -465,6 +467,7 @@ typedef struct TkIntPlatStubs {
     int (*tkWinGetPlatformId) _ANSI_ARGS_((void)); /* 33 */
     void (*tkWinSetHINSTANCE) _ANSI_ARGS_((HINSTANCE hInstance)); /* 34 */
     int (*tkWinGetPlatformTheme) _ANSI_ARGS_((void)); /* 35 */
+    void (*tkWinCleanupContainerList) _ANSI_ARGS_((void)); /* 36 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow * winPtr, int active)); /* 0 */
@@ -763,6 +766,10 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #ifndef TkWinGetPlatformTheme
 #define TkWinGetPlatformTheme \
 	(tkIntPlatStubsPtr->tkWinGetPlatformTheme) /* 35 */
+#endif
+#ifndef TkWinCleanupContainerList
+#define TkWinCleanupContainerList \
+	(tkIntPlatStubsPtr->tkWinCleanupContainerList) /* 36 */
 #endif
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
