@@ -360,6 +360,7 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 	TCL_THREADS=1
 	AC_DEFINE(TCL_THREADS)
 	AC_DEFINE(_REENTRANT)
+	AC_MSG_WARN("Tk on Unix is known to have problems with thread support.  It is recommended that Tk be used with a non-thread enabled Tcl.")
 
 	AC_CHECK_LIB(pthread,pthread_mutex_init,tcl_ok=yes,tcl_ok=no)
 	if test "$tcl_ok" = "yes"; then
