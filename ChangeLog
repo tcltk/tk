@@ -1,3 +1,8 @@
+2000-07-10  Brent Welch <welch@ajubasolutions.com>
+
+	* win/{Makefile.in,configure.in,tkConfig.sh.in}: 
+	Cleanup of defines in tkConfig.sh
+
 2000-05-15  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* win/tkWinWm.c: changed wm deiconify from using idle
