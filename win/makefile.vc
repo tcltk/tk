@@ -12,7 +12,7 @@
 # Copyright (c) 2001 Tomasoft Engineering.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.46 2001/11/13 06:55:18 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.47 2001/11/16 10:24:53 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -414,30 +414,30 @@ WISH_CFLAGS	= $(BASE_CLFAGS) $(TK_DEFINES)
 #---------------------------------------------------------------------
 
 !if $(DEBUG)
-ldebug	= -debug:full -debugtype:cv
+ldebug	    = -debug:full -debugtype:cv
 !else
-ldebug	= -release
+ldebug	    = -release
 !endif
 
 # declarations common to all linker options
-lflags	= -nologo -machine:$(MACHINE)
+lflags	    = -nologo -machine:$(MACHINE)
 
 # declarations for use on Intel i386, i486, and Pentium systems
 !IF "$(MACHINE)" == "IX86"
-DLLENTRY = @12
-dlllflags = $(lflags) -entry:_DllMainCRTStartup$(DLLENTRY) -dll
+DLLENTRY    = @12
+dlllflags   = $(lflags) -entry:_DllMainCRTStartup$(DLLENTRY) -dll
 !ELSE IF "$(MACHINE)" == "IA64"
-DLLENTRY = @12
-dlllflags = $(lflags) -dll
+DLLENTRY    = @12
+dlllflags   = $(lflags) -dll
 !ELSE
-dlllflags = $(lflags) -entry:_DllMainCRTStartup$(DLLENTRY) -dll
+dlllflags   = $(lflags) -entry:_DllMainCRTStartup$(DLLENTRY) -dll
 !ENDIF
 
-conlflags = $(lflags) -subsystem:console -entry:mainCRTStartup
-guilflags = $(lflags) -subsystem:windows -entry:WinMainCRTStartup
+conlflags   = $(lflags) -subsystem:console -entry:mainCRTStartup
+guilflags   = $(lflags) -subsystem:windows -entry:WinMainCRTStartup
 
-baselibs   = kernel32.lib advapi32.lib user32.lib
-guilibs	   = $(baselibs) gdi32.lib comdlg32.lib winspool.lib imm32.lib comctl32.lib
+baselibs    = kernel32.lib advapi32.lib user32.lib
+guilibs	    = $(baselibs) gdi32.lib comdlg32.lib winspool.lib imm32.lib comctl32.lib
 
 
 #---------------------------------------------------------------------
@@ -445,7 +445,7 @@ guilibs	   = $(baselibs) gdi32.lib comdlg32.lib winspool.lib imm32.lib comctl32.
 #---------------------------------------------------------------------
 
 !if "$(TESTPAT)" != ""
-TESTFLAGS = -file $(TESTPAT)
+TESTFLAGS   = -file $(TESTPAT)
 !endif
 
 
@@ -534,16 +534,15 @@ $(CAT32): $(WINDIR)\cat.c
 
 install-binaries:
 	@$(MKDIR) "$(BIN_INSTALL_DIR)"
-	copy $(TKDLL) "$(BIN_INSTALL_DIR)"
 	copy $(WISH) "$(BIN_INSTALL_DIR)"
 	@$(MKDIR) "$(LIB_INSTALL_DIR)"
-!if "$(TKLIB)" != "$(TKIMPLIB)"
 	@copy "$(TKLIB)" "$(BIN_INSTALL_DIR)"
-!endif
+!if "$(TKLIB)" != "$(TKIMPLIB)"
 	@copy $(TKIMPLIB) "$(LIB_INSTALL_DIR)"
-	@if exist $(TKHLP) $(MKDIR) "$(DOC_INSTALL_DIR)"
-	@if exist $(TKHLP) copy "$(TKHLP)" "$(DOC_INSTALL_DIR)"
-	@if exist $(TKHLPCNT) copy "$(TKHLPCNT)" "$(DOC_INSTALL_DIR)"
+!endif
+#	@if exist $(TKHLP) $(MKDIR) "$(DOC_INSTALL_DIR)"
+#	@if exist $(TKHLP) copy "$(TKHLP)" "$(DOC_INSTALL_DIR)"
+#	@if exist $(TKHLPCNT) copy "$(TKHLPCNT)" "$(DOC_INSTALL_DIR)"
 
 install-libraries:
 	@$(MKDIR) "$(INCLUDE_INSTALL_DIR)"
