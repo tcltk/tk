@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.17.2.3 2004/07/21 03:07:06 hobbs Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.17.2.4 2004/07/21 04:27:55 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -1373,6 +1373,10 @@ TkQueueEventForAllChildren(winPtr, eventPtr)
 {
     TkWindow *childPtr;
 
+    if (!Tk_IsMapped(winPtr)) {
+        return;
+    }
+    
     eventPtr->xany.window = winPtr->window;
     Tk_QueueWindowEvent(eventPtr, TCL_QUEUE_TAIL);
     
