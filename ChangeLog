@@ -1,3 +1,8 @@
+1999-05-20    <redman@scriptics.com>
+
+	* library/console.tcl: Changed copyright string to read 1999
+	Scriptics Corp. in wish console about box.
+	
 1999-05-19    <redman@scriptics.com>
 
 	* generic/tk.h: Add extern "C" block around entire header file for
