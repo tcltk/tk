@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.12 2002/06/14 22:25:12 jenglish Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.13 2002/11/07 19:10:30 pspjuth Exp $
  */
 
 #include "tkPort.h"
@@ -735,7 +735,11 @@ PlaceInfoCommand(interp, tkwin)
     if (slavePtr == NULL) {
 	return TCL_OK;
     }
-    sprintf(buffer, "-x %d", slavePtr->x);
+    if (slavePtr->masterPtr != NULL) {
+	Tcl_AppendElement(interp, "-in");
+	Tcl_AppendElement(interp, Tk_PathName(slavePtr->masterPtr->tkwin));
+    }
+    sprintf(buffer, " -x %d", slavePtr->x);
     Tcl_AppendResult(interp, buffer, (char *) NULL);
     sprintf(buffer, " -relx %.4g", slavePtr->relX);
     Tcl_AppendResult(interp, buffer, (char *) NULL);
@@ -768,22 +772,10 @@ PlaceInfoCommand(interp, tkwin)
 	Tcl_AppendResult(interp, " -relheight {}", (char *) NULL);
     }
     
-    Tcl_AppendResult(interp, " -anchor ",
-	    Tk_NameOfAnchor(slavePtr->anchor),
-	    (char *) NULL);
-    if (slavePtr->borderMode == BM_OUTSIDE) {
-	Tcl_AppendResult(interp, " -bordermode outside",
-		(char *) NULL);
-    } else if (slavePtr->borderMode == BM_IGNORE) {
-	Tcl_AppendResult(interp, " -bordermode ignore", (char *) NULL);
-    }
-    if ((slavePtr->masterPtr != NULL)
-	    && (slavePtr->masterPtr->tkwin !=
-		    Tk_Parent(slavePtr->tkwin))) {
-	Tcl_AppendResult(interp, " -in ",
-		Tk_PathName(slavePtr->masterPtr->tkwin),
-		(char *) NULL);
-    }
+    Tcl_AppendElement(interp, "-anchor");
+    Tcl_AppendElement(interp, Tk_NameOfAnchor(slavePtr->anchor));
+    Tcl_AppendElement(interp, "-bordermode");
+    Tcl_AppendElement(interp, borderModeStrings[slavePtr->borderMode]);
     return TCL_OK;
 }
 
