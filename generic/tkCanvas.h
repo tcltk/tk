@@ -6,11 +6,12 @@
  *
  * Copyright (c) 1991-1994 The Regents of the University of California.
  * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.h,v 1.1.4.1 1998/09/30 02:16:49 stanton Exp $
+ * RCS: @(#) $Id: tkCanvas.h,v 1.1.4.2 1998/11/25 21:16:31 stanton Exp $
  */
 
 #ifndef _TKCANVAS
@@ -208,6 +209,7 @@ typedef struct TkCanvas {
 				 * Postscript for the canvas.  NULL means
 				 * no Postscript is currently being
 				 * generated. */
+    Tcl_HashTable idTable;	/* Table of integer indices. */
 } TkCanvas;
 
 /*

@@ -6,11 +6,12 @@
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.1.4.1 1998/09/30 02:16:55 stanton Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.1.4.2 1998/11/25 21:16:31 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -129,7 +130,8 @@ static unsigned long eventMasks[TK_LASTEVENT] = {
     0,					/* Mapping Notify */
     VirtualEventMask,			/* VirtualEvents */
     ActivateMask,			/* ActivateNotify */
-    ActivateMask			/* DeactivateNotify */
+    ActivateMask,			/* DeactivateNotify */
+    MouseWheelMask			/* MouseWheelEvent */
 };
 
 /*
@@ -546,10 +548,13 @@ Tk_HandleEvent(eventPtr)
     
 	/*
 	 * Redirect KeyPress and KeyRelease events to the focus window,
-	 * or ignore them entirely if there is no focus window.
+	 * or ignore them entirely if there is no focus window.  We also
+	 * route the MouseWheel event to the focus window.  The MouseWheel
+	 * event is an extension to the X event set.  Currently, it is only
+	 * available on the Windows version of Tk.
 	 */
     
-	if (mask & (KeyPressMask|KeyReleaseMask)) {
+	if (mask & (KeyPressMask|KeyReleaseMask|MouseWheelMask)) {
 	    winPtr->dispPtr->lastEventTime = eventPtr->xkey.time;
 	    winPtr = TkFocusKeyEvent(winPtr, eventPtr);
 	    if (winPtr == NULL) {

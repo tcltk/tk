@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.1.4.2 1998/09/30 02:18:18 stanton Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.1.4.3 1998/11/25 21:16:37 stanton Exp $
  */
 
 #include <Gestalt.h>
@@ -4229,10 +4229,13 @@ TkpWmSetState(winPtr, state)
  * TkMacHaveAppearance --
  *
  *	Determine if the appearance manager is available on this Mac.
- *	We cache the result so future calls are fast.
+ *	We cache the result so future calls are fast.  Return a different
+ *      value if 1.0.1 is present, since many interfaces were added in
+ *      1.0.1
  *
  * Results:
- *	True if the appearance manager is present, false otherwise.
+ *	1 if the appearance manager is present, 2 if the appearance
+ *      manager version is 1.0.1 or greater, 0 if it is not present.
  *
  * Side effects:
  *	Calls Gestalt to query system values.
@@ -4244,14 +4247,18 @@ int
 TkMacHaveAppearance()
 {
     static initialized = false;
-    static int TkMacHaveAppearance = false;
+    static int TkMacHaveAppearance = 0;
     long response = 0;
     OSErr err = noErr;
     
     if (!initialized) {
 	err = Gestalt(gestaltAppearanceAttr, &response);
 	if (err == noErr) {
-	    TkMacHaveAppearance = true;
+	    TkMacHaveAppearance = 1;
+	}
+	err = Gestalt(gestaltAppearanceVersion, &response);
+	if (err == noErr) {
+	    TkMacHaveAppearance = 2;
 	}
     }
 

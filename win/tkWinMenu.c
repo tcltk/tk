@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.1.4.5 1998/11/24 21:42:48 stanton Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.1.4.6 1998/11/25 21:16:42 stanton Exp $
  */
 
 #define OEMRESOURCE
@@ -600,14 +600,21 @@ ReconfigureWindowsMenu(
 		if ((menuPtr->menuType == MENUBAR) 
 			&& !(mePtr->childMenuRefPtr->menuPtr->menuFlags
 				& MENU_SYSTEM_MENU)) {
+		    Tcl_DString ds;
 		    TkMenuReferences *menuRefPtr;
 		    TkMenu *systemMenuPtr = mePtr->childMenuRefPtr
 			->menuPtr;
-		    char *systemMenuName = ckalloc(strlen(
-			Tk_PathName(menuPtr->masterMenuPtr->tkwin))
-			    + strlen(".system") + 1);
+
+		    Tcl_DStringInit(&ds);
+		    Tcl_DStringAppend(&ds,
+			    Tk_PathName(menuPtr->masterMenuPtr->tkwin), -1);
+		    Tcl_DStringAppend(&ds, ".system", 7);
+
 		    menuRefPtr = TkFindMenuReferences(menuPtr->interp,
-			    systemMenuName);
+			    Tcl_DStringValue(&ds));
+		    
+		    Tcl_DStringFree(&ds);
+
 		    if ((menuRefPtr != NULL) 
 			    && (menuRefPtr->menuPtr != NULL)
 			    && (menuPtr->parentTopLevelPtr != NULL)
@@ -632,7 +639,6 @@ ReconfigureWindowsMenu(
 			    }
 			}
 		    }
-		    ckfree(systemMenuName);
 		}
 		if (mePtr->childMenuRefPtr->menuPtr->menuFlags 
 			& MENU_SYSTEM_MENU) {

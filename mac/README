@@ -8,7 +8,7 @@ Jim Ingham
 Cygnus Solutions
 jingham@cygnus.com
 
-RCS: @(#) $Id: README,v 1.1.4.2 1998/09/30 02:17:59 stanton Exp $
+RCS: @(#) $Id: README,v 1.1.4.3 1998/11/25 21:16:35 stanton Exp $
 
 1. Introduction
 ---------------
@@ -96,12 +96,6 @@ mactk-source-8.1.sea.hqx
     are included.  However, you must already have the More Files
     package to compile this code.
 
-UNIX Tar file distribution.
-    The standard Tcl/Tk source distribution has Mac project files
-    in it.  Be warned that the Tk project file is lacking one minor
-    change compared to the ones in the installers listed above
-    having to do with locking down the MDEF resource.
-
 5. Documentation
 ----------------
 
@@ -163,7 +157,14 @@ Special notes:
 
 * We are starting to support the new Appearance Manager that shipped
   with MacOS 8.0.  The Tk 8.0.3 release is the first Tk release
-  that supports the Appearance Manager well.
+  that supports the Appearance Manager well.  Tk 8.0.4 extends this support
+  to the menu system, though you have to have Appearance 1.0.1 or later
+  installed for this to work.
+  
+* If you get the Unix tar file, it will untar into a directory tcl8.0.4.  However,
+  the Macintosh project files expect the folder to be called tcl8.0.  You will need
+  to rename the folder to tcl8.0, or change all the paths in the project files.
+
 
 7. About Dialog
 ---------------

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.1.4.2 1998/09/30 02:16:46 stanton Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.1.4.3 1998/11/25 21:16:31 stanton Exp $
  */
 
 #include <stdio.h>
@@ -86,7 +86,7 @@ static Tk_ConfigSpec configSpecs[] = {
 	"center", Tk_Offset(TextItem, anchor),
 	TK_CONFIG_DONT_SET_DEFAULT},
     {TK_CONFIG_COLOR, "-fill", (char *) NULL, (char *) NULL,
-	"black", Tk_Offset(TextItem, color), 0},
+	"black", Tk_Offset(TextItem, color), TK_CONFIG_NULL_OK},
     {TK_CONFIG_FONT, "-font", (char *) NULL, (char *) NULL,
 	DEF_CANVTEXT_FONT, Tk_Offset(TextItem, tkfont), 0},
     {TK_CONFIG_JUSTIFY, "-justify", (char *) NULL, (char *) NULL,

@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.1.4.4 1998/10/06 20:34:11 stanton Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.1.4.5 1998/11/25 21:16:42 stanton Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -233,11 +233,11 @@ guilflags = $(lflags) -subsystem:windows -entry:WinMainCRTStartup
 dlllflags = $(lflags) -entry:_DllMainCRTStartup$(DLLENTRY) -dll
 
 !IF "$(MACHINE)" == "PPC"
-libc = libc.lib
-libcdll = crtdll.lib
+libc = libc$(DBGX).lib
+libcdll = crtdll$(DBGX).lib
 !ELSE
-libc = libc.lib oldnames.lib
-libcdll = msvcrt.lib oldnames.lib
+libc = libc$(DBGX).lib oldnames.lib
+libcdll = msvcrt$(DBGX).lib oldnames.lib
 !ENDIF
 
 baselibs   = kernel32.lib $(optlibs) advapi32.lib

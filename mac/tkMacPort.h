@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacPort.h,v 1.1.4.2 1998/09/30 02:18:13 stanton Exp $
+ * RCS: @(#) $Id: tkMacPort.h,v 1.1.4.3 1998/11/25 21:16:37 stanton Exp $
  */
 
 #ifndef _TKMACPORT
@@ -142,5 +142,6 @@ extern int		strncasecmp _ANSI_ARGS_((CONST char *s1,
 #define MENU_BACKGROUND_PIXEL		47
 #define MENU_DISABLED_PIXEL		49
 #define MENU_TEXT_PIXEL			51
+#define APPEARANCE_PIXEL		52
 
 #endif /* _TKMACPORT */

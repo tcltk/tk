@@ -6,11 +6,12 @@
  *
  * Copyright (c) 1989-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.1.4.2 1998/09/30 02:16:38 stanton Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.1.4.3 1998/11/25 21:16:30 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -339,6 +340,8 @@ typedef struct BindInfo {
     PendingBinding *pendingList;/* The list of pending C bindings, kept in
 				 * case a C or Tcl binding causes the target
 				 * window to be deleted. */
+    int deleted;		/* 1 the application has been deleted but
+				 * the structure has been preserved. */
 } BindInfo;
     
 /*
@@ -495,6 +498,7 @@ static EventInfo eventArray[] = {
     {"Colormap",	ColormapNotify,		ColormapChangeMask},
     {"Activate",	ActivateNotify,		ActivateMask},
     {"Deactivate",	DeactivateNotify,	ActivateMask},
+    {"MouseWheel",	MouseWheelEvent,	MouseWheelMask},
     {(char *) NULL,	0,			0}
 };
 static Tcl_HashTable eventTable;
@@ -567,7 +571,8 @@ static int flagArray[TK_LASTEVENT] = {
    /* MappingNotify */		0,
    /* VirtualEvent */		VIRTUAL,
    /* Activate */		ACTIVATE,	    
-   /* Deactivate */		ACTIVATE
+   /* Deactivate */		ACTIVATE,
+   /* MouseWheel */		KEY
 };
 
 /*
@@ -763,6 +768,7 @@ TkBindInit(mainPtr)
     bindInfoPtr->screenInfo.curScreenIndex = -1;
     bindInfoPtr->screenInfo.bindingDepth = 0;
     bindInfoPtr->pendingList = NULL;
+    bindInfoPtr->deleted = 0;
     mainPtr->bindInfo = (TkBindInfo) bindInfoPtr;
 
     TkpInitializeMenuBindings(mainPtr->interp, mainPtr->bindingTable);
@@ -796,7 +802,8 @@ TkBindFree(mainPtr)
 
     bindInfoPtr = (BindInfo *) mainPtr->bindInfo;
     DeleteVirtualEventTable(&bindInfoPtr->virtualEventTable);
-    ckfree((char *) bindInfoPtr);
+    bindInfoPtr->deleted = 1;
+    Tcl_EventuallyFree((ClientData) bindInfoPtr, Tcl_Free);
     mainPtr->bindInfo = NULL;
 }
 
@@ -1735,10 +1742,11 @@ Tk_BindEvent(bindingTable, eventPtr, tkwin, numObjects, objectPtr)
      * winPtr->mainPtr == NULL.
      */
 
+    Tcl_Preserve((ClientData) bindInfoPtr);
     while (p < end) {
 	int code;
 	
-	if (winPtr->mainPtr != NULL) {
+	if (!bindInfoPtr->deleted) {
 	    screenPtr->bindingDepth++;
 	}
 	Tcl_AllowExceptions(interp);
@@ -1767,7 +1775,7 @@ Tk_BindEvent(bindingTable, eventPtr, tkwin, numObjects, objectPtr)
 	}
 	p++;
 
-	if (winPtr->mainPtr != NULL) {
+	if (!bindInfoPtr->deleted) {
 	    screenPtr->bindingDepth--;
 	}
 	if (code != TCL_OK) {
@@ -1799,8 +1807,7 @@ Tk_BindEvent(bindingTable, eventPtr, tkwin, numObjects, objectPtr)
 	}
     }
 
-    if ((winPtr->mainPtr != NULL)
-	    && (screenPtr->bindingDepth != 0)
+    if (!bindInfoPtr->deleted && (screenPtr->bindingDepth != 0)
 	    && ((oldDispPtr != screenPtr->curDispPtr)
                     || (oldScreen != screenPtr->curScreenIndex))) {
 
@@ -1818,7 +1825,7 @@ Tk_BindEvent(bindingTable, eventPtr, tkwin, numObjects, objectPtr)
     Tcl_DStringFree(&scripts);
 
     if (matchCount > 0) {
-	if (winPtr->mainPtr != NULL) {
+	if (!bindInfoPtr->deleted) {
 	    /*
 	     * Delete the pending list from the list of pending scripts
 	     * for this window.
@@ -1838,6 +1845,7 @@ Tk_BindEvent(bindingTable, eventPtr, tkwin, numObjects, objectPtr)
 	    ckfree((char *) pendingPtr);
 	}
     }
+    Tcl_Release((ClientData) bindInfoPtr);
 }
 
 /*
@@ -2416,6 +2424,13 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		goto doString;
 	    case 'B':
 		number = eventPtr->xcreatewindow.border_width;
+		goto doNumber;
+	    case 'D':
+		/*
+		 * This is used only by the MouseWheel event.
+		 */
+		    
+		number = eventPtr->xkey.keycode;
 		goto doNumber;
 	    case 'E':
 		number = (int) eventPtr->xany.send_event;
@@ -3155,7 +3170,8 @@ HandleEventGenerate(interp, mainWin, objc, objv)
     unsigned long eventMask;
     static char *fieldStrings[] = {
 	"-when",	"-above",	"-borderwidth",	"-button",
-	"-count",	"-detail",	"-focus",	"-height",
+	"-count",	"-delta",	"-detail",	"-focus",
+	"-height",
 	"-keycode",	"-keysym",	"-mode",	"-override",
 	"-place",	"-root",	"-rootx",	"-rooty",
 	"-sendevent",	"-serial",	"-state",	"-subwindow",
@@ -3164,7 +3180,8 @@ HandleEventGenerate(interp, mainWin, objc, objv)
     };
     enum field {
 	EVENT_WHEN,	EVENT_ABOVE,	EVENT_BORDER,	EVENT_BUTTON,
-	EVENT_COUNT,	EVENT_DETAIL,	EVENT_FOCUS,	EVENT_HEIGHT,
+	EVENT_COUNT,	EVENT_DELTA,	EVENT_DETAIL,	EVENT_FOCUS,
+	EVENT_HEIGHT,
 	EVENT_KEYCODE,	EVENT_KEYSYM,	EVENT_MODE,	EVENT_OVERRIDE,
 	EVENT_PLACE,	EVENT_ROOT,	EVENT_ROOTX,	EVENT_ROOTY,
 	EVENT_SEND,	EVENT_SERIAL,	EVENT_STATE,	EVENT_SUBWINDOW,
@@ -3190,6 +3207,7 @@ HandleEventGenerate(interp, mainWin, objc, objv)
     name = Tcl_GetStringFromObj(objv[1], NULL);
 
     p = name;
+    eventMask = 0;
     count = ParseEventDescription(interp, &p, &pat, &eventMask);
     if (count == 0) {
 	return TCL_ERROR;
@@ -3215,7 +3233,7 @@ HandleEventGenerate(interp, mainWin, objc, objv)
     flags = flagArray[event.xany.type];
     if (flags & (KEY_BUTTON_MOTION_VIRTUAL)) {
 	event.xkey.state = pat.needMods;
-	if (flags & KEY) {
+	if ((flags & KEY) && (event.xany.type != MouseWheelEvent)) {
 	    SetKeycodeAndState(tkwin, pat.detail.keySym, &event);
 	} else if (flags & BUTTON) {
 	    event.xbutton.button = pat.detail.button;
@@ -3316,6 +3334,17 @@ HandleEventGenerate(interp, mainWin, objc, objv)
 		}
 		break;
 	    }
+	    case EVENT_DELTA: {
+		if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+		if ((flags & KEY) && (event.xkey.type == MouseWheelEvent)) {
+		    event.xkey.keycode = number;
+		} else {
+		    goto badopt;
+		}
+		break;
+	    }
 	    case EVENT_DETAIL: {
 		number = TkFindStateNumObj(interp, optionPtr, notifyDetail,
 			valuePtr);
@@ -3359,7 +3388,7 @@ HandleEventGenerate(interp, mainWin, objc, objv)
 		if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		    return TCL_ERROR;
 		}
-		if (flags & KEY) {
+		if ((flags & KEY) && (event.xkey.type != MouseWheelEvent)) {
 		    event.xkey.keycode = number;
 		} else {
 		    goto badopt;
@@ -3384,7 +3413,7 @@ HandleEventGenerate(interp, mainWin, objc, objv)
 			    "\"", (char *) NULL);
 		    return TCL_ERROR;
 		}
-		if ((flags & KEY) == 0) {
+		if (!(flags & KEY) || (event.xkey.type == MouseWheelEvent)) {
 		    goto badopt;
 		}
 		break;
@@ -3662,14 +3691,13 @@ NameToWindow(interp, mainWin, objPtr, tkwinPtr)
     return TCL_OK;
 }
 
-		/*
-		 * When mapping from a keysym to a keycode, need
-		 * information about the modifier state that should be used
-		 * so that when they call XKeycodeToKeysym taking into
-		 * account the xkey.state, they will get back the original
-		 * keysym.
-		 */
-
+/*
+ * When mapping from a keysym to a keycode, need
+ * information about the modifier state that should be used
+ * so that when they call XKeycodeToKeysym taking into
+ * account the xkey.state, they will get back the original
+ * keysym.
+ */
 
 static void
 SetKeycodeAndState(tkwin, keySym, eventPtr)

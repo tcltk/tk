@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.1.4.2 1998/09/30 02:17:39 stanton Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.1.4.3 1998/11/25 21:16:34 stanton Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -529,7 +529,7 @@ proc tkMotifFDialog_BrowseDList {w} {
     set list [tkMotifFDialog_InterpFilter $w]
     set data(filter) [lindex $list 1]
 
-    case $subdir {
+    switch -- $subdir {
 	. {
 	    set newSpec [tkFDialog_JoinFile $data(selectPath) $data(filter)]
 	}
@@ -571,7 +571,7 @@ proc tkMotifFDialog_ActivateDList {w} {
 
     $data(fList) selection clear 0 end
 
-    case $subdir {
+    switch -- $subdir {
 	. {
 	    set newDir $data(selectPath)
 	}

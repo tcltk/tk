@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.1.4.3 1998/11/25 04:10:24 stanton Exp $
+RCS: @(#) $Id: changes,v 1.1.4.4 1998/11/25 21:16:28 stanton Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4250,6 +4250,40 @@ on windows.  If you build your own Tk main program, you no longer
 need to compile and link this yourself. (SKS)
 
 -------- Released 8.0.3 to the Tcl Consortium CD-ROM project, 8/13/98 ------
+
+10/5/98 (new feature) Added the event "MouseWheel" that will fire on
+Windows applications in response to mouse wheel movement.  You can
+bind to the MouseWheel event and use the %D substitution to get the
+delta the wheel moved.  The "event generate" command has also been
+enhanced with the -delta flag so you can generate these events from
+Tcl.  See the bind and event man pages for more details.  The listbox
+and text widgets' default bindings have been updated to understand
+MouseWheel events. (RJ)
+
+10/12/98 (performance improvement) Added hash table to canvas widget
+that holds numeric ids for items.  The hash table makes item lookup
+almost constant time which improves certain canvas operations
+(exspecially for canvases with large number items).  Thanks to Mark
+Weissman <weissman@gte.com> and Jan Nijtmans <Jan.Nijtmans@wxs.nl>
+for submitting this improvement.  (RJ)
+
+10/15/98 (bug fix) The -fill option to text items in the canvas did
+not allow the empty string as an argument (meaning transparent) even
+though every other item type did.  Thanks to Sebastian Wangnick
+<sebastian.wangnick@eurocontrol.be> for supplying this patch. (RJ)
+
+10/20/98 (feature change) The Makefile and configure scripts have been
+changed for IRIX to build n32 binaries instead of the old 32 abi
+format.  If you have extensions built with the o32 abi's you will need
+to update them to n32 for them to work with Tcl.  (RJ)
+*** POTENTIAL INCOMPATIBILITY ***
+
+11/10/98 (feature change) The Macintosh menus will use the Appearance Theme 
+backgrounds, separators and menu shape, if Appearance version 1.0.1 or 
+greater is installed.  The version of Appearance that shipped with MacOS 8.0 
+so it will not work with a straight 8.0, but it will with MacOS 8.1 or later. (JI)
+
+----------------- Released 8.0.4, 11/20/98 -----------------------
 
 ----------------------------------------------------------
 Changes for Tk 8.0 go above this line.

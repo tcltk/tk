@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: scale.test,v 1.1.4.2 1998/09/30 02:18:53 stanton Exp $
+# RCS: @(#) $Id: scale.test,v 1.1.4.3 1998/11/25 21:16:40 stanton Exp $
 
 if {[info procs test] != "test"} {
     source defs
@@ -330,7 +330,7 @@ test scale-6.7 {ComputeFormat procedure} {
     .s configure -from 1000000000 -to 10000000000 -resolution 1000000000
     .s set 4930000000
     expr {[.s get] == 5.0e+09}
-} {1}
+} 1
 test scale-6.8 {ComputeFormat procedure} {
     .s configure -from .1 -to 1 -resolution .1
     .s set .6

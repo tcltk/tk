@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.1.4.3 1998/10/21 22:12:43 stanton Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.1.4.4 1998/11/25 21:16:31 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -1993,31 +1993,6 @@ Tk_ComputeTextLayout(tkfont, string, numChars, wrapLength, justify, flags,
 	}
     }	    
 
-    /*
-     * Using maximum line length, shift all the chunks so that the lines are
-     * all justified correctly.
-     */
-    
-    curLine = 0;
-    chunkPtr = layoutPtr->chunks;
-    y = chunkPtr->y;
-    lineLengths = (int *) Tcl_DStringValue(&lineBuffer);
-    for (n = 0; n < layoutPtr->numChunks; n++) {
-	int extra;
-
-	if (chunkPtr->y != y) {
-	    curLine++;
-	    y = chunkPtr->y;
-	}
-	extra = maxWidth - lineLengths[curLine];
-	if (justify == TK_JUSTIFY_CENTER) {
-	    chunkPtr->x += extra / 2;
-	} else if (justify == TK_JUSTIFY_RIGHT) {
-	    chunkPtr->x += extra;
-	}
-	chunkPtr++;
-    }
-
     layoutPtr->width = maxWidth;
     layoutHeight = baseline - fmPtr->ascent;
     if (layoutPtr->numChunks == 0) {
@@ -2037,6 +2012,31 @@ Tk_ComputeTextLayout(tkfont, string, numChars, wrapLength, justify, flags,
 	layoutPtr->chunks[0].y			= fmPtr->ascent;
 	layoutPtr->chunks[0].totalWidth		= 0;
 	layoutPtr->chunks[0].displayWidth	= 0;
+    } else {
+	/*
+	 * Using maximum line length, shift all the chunks so that the lines
+	 * are all justified correctly.
+	 */
+    
+	curLine = 0;
+	chunkPtr = layoutPtr->chunks;
+	y = chunkPtr->y;
+	lineLengths = (int *) Tcl_DStringValue(&lineBuffer);
+	for (n = 0; n < layoutPtr->numChunks; n++) {
+	    int extra;
+
+	    if (chunkPtr->y != y) {
+		curLine++;
+		y = chunkPtr->y;
+	    }
+	    extra = maxWidth - lineLengths[curLine];
+	    if (justify == TK_JUSTIFY_CENTER) {
+		chunkPtr->x += extra / 2;
+	    } else if (justify == TK_JUSTIFY_RIGHT) {
+		chunkPtr->x += extra;
+	    }
+	    chunkPtr++;
+	}
     }
 
     if (widthPtr != NULL) {

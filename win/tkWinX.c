@@ -5,14 +5,21 @@
  *
  * Copyright (c) 1995-1996 Sun Microsystems, Inc.
  * Copyright (c) 1994 Software Research Associates, Inc.
+ * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.1.4.4 1998/11/20 02:35:15 stanton Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.1.4.5 1998/11/25 21:16:44 stanton Exp $
  */
 
 #include "tkWinInt.h"
+
+/*
+ * The zmouse.h file includes the definition for WM_MOUSEWHEEL.
+ */
+
+#include <zmouse.h>
 
 /*
  * Definitions of extern variables supplied by this file.
@@ -590,6 +597,7 @@ Tk_TranslateWinEvent(hwnd, message, wParam, lParam, resultPtr)
 	case WM_SYSKEYUP:
 	case WM_KEYDOWN:
 	case WM_KEYUP:
+	case WM_MOUSEWHEEL:
  	    GenerateXEvent(hwnd, message, wParam, lParam);
 	    return 1;
 	case WM_MENUCHAR:
@@ -697,6 +705,13 @@ GenerateXEvent(hwnd, message, wParam, lParam)
 	    event.xselectionclear.time = TkpGetMS();
 	    break;
 	    
+	case WM_MOUSEWHEEL:
+	    /*
+	     * The mouse wheel event is closer to a key event than a
+	     * mouse event in that the message is sent to the window
+	     * that has focus.
+	     */
+	    
 	case WM_CHAR:
 	case WM_SYSKEYDOWN:
 	case WM_SYSKEYUP:
@@ -738,6 +753,18 @@ GenerateXEvent(hwnd, message, wParam, lParam)
 	     */
 
 	    switch (message) {
+		case WM_MOUSEWHEEL:
+		    /*
+		     * We have invented a new X event type to handle
+		     * this event.  It still uses the KeyPress struct.
+		     * However, the keycode field has been overloaded
+		     * to hold the zDelta of the wheel.
+		     */
+		    
+		    event.type = MouseWheelEvent;
+		    event.xany.send_event = -1;
+		    event.xkey.keycode = (short) HIWORD(wParam);
+		    break;
 		case WM_SYSKEYDOWN:
 		case WM_KEYDOWN:
 		    /*

@@ -3,10 +3,11 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.1.4.2 1998/09/30 02:17:37 stanton Exp $
+# RCS: @(#) $Id: text.tcl,v 1.1.4.3 1998/11/25 21:16:33 stanton Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
+# Copyright (c) 1998 by Scriptics Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -446,6 +447,14 @@ bind Text <B2-Motion> {
     }
 }
 set tkPriv(prevPos) {}
+
+# The MouseWheel will typically only fire on Windows.  However,
+# someone could use the "event generate" command to produce one
+# on other platforms.
+
+bind Text <MouseWheel> {
+    %W yview scroll [expr - (%D / 120) * 4] units
+}
 
 # tkTextClosestGap --
 # Given x and y coordinates, this procedure finds the closest boundary

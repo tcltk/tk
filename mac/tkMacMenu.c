@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.1.4.3 1998/11/24 21:42:44 stanton Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.1.4.4 1998/11/25 21:16:36 stanton Exp $
  */
 
 #include <Menus.h>
@@ -18,11 +18,13 @@
 #include <string.h>
 #include <ToolUtils.h>
 #include <Balloons.h>
-#include "tkMenu.h"
-#include "tkMacInt.h"
-#include "tkMenubutton.h"
+#include <Appearance.h>
 #undef Status
 #include <Devices.h>
+#include "tkMenu.h"
+#include "tkMacInt.h"
+#include "tkMenuButton.h"
+#include "tkColor.h"
 
 typedef struct MacMenu {
     MenuHandle menuHdl;		/* The Menu Manager data structure. */
@@ -33,6 +35,12 @@ typedef struct MacMenu {
     				 * through. */
 } MacMenu;
 
+typedef struct MenuEntryUserData {
+    Drawable mdefDrawable;
+    TkMenuEntry *mePtr;
+    Tk_Font tkfont;
+    Tk_FontMetrics *fmPtr;
+} MenuEntryUserData;
 /*
  * Various geometry definitions:
  */
@@ -207,6 +215,14 @@ static RgnHandle utilRgn = NULL;/* Used when creating the region that is to
 
 static TopLevelMenubarList *windowListPtr;
 				/* A list of windows that have menubars set. */
+static MenuItemDrawingUPP tkThemeMenuItemDrawingUPP; 
+				/* Points to the UPP for theme Item drawing. */
+
+static GC     appearanceGC = NULL; /* The fake appearance GC.  If you
+				      pass the foreground of this to TkMacSetColor, 
+				      it will return false, so you will know 
+				      not to set the foreground color */
+					  
 				
 /*
  * Forward declarations for procedures defined later in this file:
@@ -215,6 +231,8 @@ static TopLevelMenubarList *windowListPtr;
 static void		CompleteIdlers _ANSI_ARGS_((TkMenu *menuPtr));
 static void		DrawMenuBarWhenIdle _ANSI_ARGS_((
 			    ClientData clientData));
+static void 		DrawMenuBackground _ANSI_ARGS_((
+    			    Rect *menuRectPtr, Drawable d, ThemeMenuType type));
 static void		DrawMenuEntryAccelerator _ANSI_ARGS_((
 			    TkMenu *menuPtr, TkMenuEntry *mePtr, 
 			    Drawable d, GC gc, Tk_Font tkfont,
@@ -294,6 +312,13 @@ static int		SetMenuCascade _ANSI_ARGS_((TkMenu *menuPtr));
 static void		SetMenuIndicator _ANSI_ARGS_((TkMenuEntry *mePtr));
 static void		SetMenuTitle _ANSI_ARGS_((MenuHandle menuHdl,
 			    Tcl_Obj *titlePtr));
+static void		AppearanceEntryDrawWrapper _ANSI_ARGS_((TkMenuEntry *mePtr, 
+			    Rect * menuRectPtr, TkMenuLowMemGlobals *globalsPtr,     
+			    Drawable d, Tk_FontMetrics *fmPtr, Tk_Font tkfont,
+			    int x, int y, int width, int height));
+pascal void 		tkThemeMenuItemDrawingProc _ANSI_ARGS_ ((const Rect *inBounds,
+			    SInt16 inDepth, Boolean inIsColorDevice, 
+			    SInt32 inUserData));
 
 
 /*
@@ -1129,9 +1154,14 @@ ReconfigureIndividualMenu(
 			    	->menuPtr->platformData)->menuHdl;
 		    }
 		    if (childMenuHdl != NULL) {
+		        if (TkMacHaveAppearance() > 1) {
+		            SetMenuItemHierarchicalID(macMenuHdl, base + index,
+				    (*childMenuHdl)->menuID);
+		        } else {
 	    	    	SetItemMark(macMenuHdl, base + index,
 				(*childMenuHdl)->menuID);
 	    	    	SetItemCmd(macMenuHdl, base + index, CASCADE_CMD);
+	    	    }
 	    	    }
 	    	    /*
 	    	     * If we changed the highligthing of this menu, its
@@ -2200,8 +2230,16 @@ GetMenuSeparatorGeometry(
     int *widthPtr,			/* The resulting width */
     int *heightPtr)			/* The resulting height */
 {
-    *widthPtr = 0;
-    *heightPtr = fmPtr->linespace;
+    if (TkMacHaveAppearance() > 1) {
+        SInt16 outHeight;
+        
+        GetThemeMenuSeparatorHeight(&outHeight);
+        *widthPtr = 0;
+        *heightPtr = outHeight;
+    } else {
+        *widthPtr = 0;
+        *heightPtr = fmPtr->linespace;
+    }
 }
 
 /*
@@ -2258,6 +2296,46 @@ DrawMenuEntryIndicator(
             }
 	}
     }    
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DrawMenuBackground --
+ *
+ *	If Appearance is present, draws the Appearance background
+ *
+ * Results:
+ *	Nothing
+ *
+ * Side effects:
+ *	Commands are output to X to display the menu in its
+ *	current mode.
+ *
+ *----------------------------------------------------------------------
+ */
+static void
+DrawMenuBackground(
+    Rect     *menuRectPtr,	/* The menu rect */
+    Drawable d,			/* What we are drawing into */
+    ThemeMenuType type			/* Type of menu */    
+    )
+{
+    if (!TkMacHaveAppearance()) {
+    	return;
+    } else {
+	CGrafPtr saveWorld;
+	GDHandle saveDevice;
+	GWorldPtr destPort;
+
+	destPort = TkMacGetDrawablePort(d);
+	GetGWorld(&saveWorld, &saveDevice);
+	SetGWorld(destPort, NULL);
+	TkMacSetUpClippingRgn(d);
+	DrawThemeMenuBackground (menuRectPtr, type);
+	SetGWorld(saveWorld, saveDevice);    
+    	return;
+    }
 }
 
 /*
@@ -2372,6 +2450,11 @@ DrawMenuEntryAccelerator(
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
     	    &activeBorderWidth);
     if (mePtr->type == CASCADE_ENTRY) {
+        /*
+         * Under Appearance, we let the Appearance Manager draw the icon
+         */
+         
+        if (!TkMacHaveAppearance()) {
     	if (0 == DrawSICN(SICN_RESOURCE_NUMBER, CASCADE_ARROW, d, gc,
     		x + width - SICN_HEIGHT, (y + (height / 2))
     		- (SICN_HEIGHT / 2))) {
@@ -2389,6 +2472,7 @@ DrawMenuEntryAccelerator(
 		Tk_Fill3DPolygon(menuPtr->tkwin, d, activeBorder, points, 
 			3, DECORATION_BORDER_WIDTH, TK_RELIEF_FLAT);
 	    }
+	}
 	}
     } else if (mePtr->accelLength != 0) {
     	int leftEdge = x + width;
@@ -2480,7 +2564,15 @@ DrawMenuSeparator(
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(destPort, NULL);
     TkMacSetUpClippingRgn(d);
-    
+    if (TkMacHaveAppearance() > 1) {
+        Rect r;
+        r.top = y;
+        r.left = x;
+        r.bottom = y + height;
+        r.right = x + width;
+         
+        DrawThemeMenuSeparator(&r);
+    } else {
     /*
      * We don't want to use the text GC for drawing the separator. It
      * needs to be the same color as disabled items.
@@ -2491,6 +2583,7 @@ DrawMenuSeparator(
     MoveTo(x, y + (height / 2));
     Line(width, 0);
     SetGWorld(saveWorld, saveDevice);
+}
 }
 
 /*
@@ -2610,10 +2703,29 @@ MenuDefProc(
 	    SetEmptyRgn(utilRgn);
 	    
 	    /*
+	     * Now draw the background if Appearance is present...
+	     */
+	     
+    	    GetGWorld(&macMDEFDrawable.portPtr, &device);
+	    if (TkMacHaveAppearance() > 1) {
+	        ThemeMenuType menuType;
+	        
+	        if (menuPtr->menuRefPtr->topLevelListPtr != NULL) {
+	            menuType = kThemeMenuTypePullDown;
+	        } else if (menuPtr->menuRefPtr->parentEntryPtr != NULL) {
+	            menuType = kThemeMenuTypeHierarchical;
+	        } else {
+	            menuType = kThemeMenuTypePopUp;
+	        }
+	            
+	        DrawMenuBackground(menuRectPtr, (Drawable) &macMDEFDrawable, 
+	        	menuType);
+	    }
+	    
+	    /*
 	     * Next, figure out scrolling information.
 	     */
 	    
-    	    GetGWorld(&macMDEFDrawable.portPtr, &device);
 	    menuClipRect = *menuRectPtr;
 	    if ((menuClipRect.bottom - menuClipRect.top) 
 	    	    < menuPtr->totalHeight) {
@@ -2656,7 +2768,7 @@ MenuDefProc(
     	    		> menuClipRect.bottom) {
     	    	    continue;
     	    	}
-	 	ClipRect(&menuClipRect);
+	 	/* ClipRect(&menuClipRect); */
     	    	if (mePtr->fontPtr == NULL) {
     	    	    fmPtr = &fontMetrics;
     	    	    tkfont = menuFont;
@@ -2665,12 +2777,13 @@ MenuDefProc(
     	    	    Tk_GetFontMetrics(tkfont, &entryMetrics);
     	    	    fmPtr = &entryMetrics;
     	    	}
-    	    	TkpDrawMenuEntry(mePtr, (Drawable) &macMDEFDrawable,
-    	    		tkfont, fmPtr, menuRectPtr->left + mePtr->x, 
-    	    		globalsPtr->menuTop + mePtr->y,
-    	    		(mePtr->entryFlags & ENTRY_LAST_COLUMN) ?
-    	    		menuPtr->totalWidth - mePtr->x : mePtr->width,
-    	    		menuPtr->entries[i]->height, 0, 1);
+    	    	AppearanceEntryDrawWrapper(mePtr, menuRectPtr, globalsPtr,
+    	    		(Drawable) &macMDEFDrawable, fmPtr, tkfont, 
+    	    		menuRectPtr->left + mePtr->x,
+     	    		globalsPtr->menuTop + mePtr->y,
+   	    		(mePtr->entryFlags & ENTRY_LAST_COLUMN) ?
+	        	    menuPtr->totalWidth - mePtr->x : mePtr->width,
+	        	menuPtr->entries[i]->height);
      	    }
      	    globalsPtr->menuBottom = globalsPtr->menuTop 
      	    	    + menuPtr->totalHeight;
@@ -2696,11 +2809,15 @@ MenuDefProc(
 
 	    if (TkSetMacColor(menuPtr->textGC->foreground, 
 	    	    &foreColor) == true) {
-	    	RGBForeColor(&foreColor);
+	    	if (!TkMacHaveAppearance()) {
+	    	    RGBForeColor(&foreColor);
+	    	}
 	    }
 	    if (TkSetMacColor(menuPtr->textGC->background, 
 	    	    &backColor) == true) {
-	    	RGBBackColor(&backColor);
+	    	if (!TkMacHaveAppearance()) {
+	    	    RGBBackColor(&backColor);
+	    	}
 	    }
 
 	    /*
@@ -2804,13 +2921,13 @@ MenuDefProc(
 				mePtr->fontPtr);
 		    }
 		    Tk_GetFontMetrics(tkfont, &fontMetrics);
-		    TkpDrawMenuEntry(mePtr, (Drawable) &macMDEFDrawable,
-			    tkfont, &fontMetrics, 
-			    menuRectPtr->left + mePtr->x,
-		    	    globalsPtr->menuTop + mePtr->y,
-		    	    (mePtr->entryFlags & ENTRY_LAST_COLUMN)
-		    	    ? menuPtr->totalWidth - mePtr->x
-		    	    : mePtr->width, mePtr->height, 0, 1);
+    	    	    AppearanceEntryDrawWrapper(mePtr, menuRectPtr, globalsPtr,
+    	    		(Drawable) &macMDEFDrawable, &fontMetrics, tkfont, 
+    	    		menuRectPtr->left + mePtr->x,
+     	    		globalsPtr->menuTop + mePtr->y,
+   	    		(mePtr->entryFlags & ENTRY_LAST_COLUMN) ?
+	        	    menuPtr->totalWidth - mePtr->x : mePtr->width,
+	        	mePtr->height);
 		}
 		if (newItem != -1) {
 		    int oldActiveItem = menuPtr->active;
@@ -2827,14 +2944,13 @@ MenuDefProc(
 				mePtr->fontPtr);
 		    }
 		    Tk_GetFontMetrics(tkfont, &fontMetrics);
-		    TkpDrawMenuEntry(mePtr, (Drawable) &macMDEFDrawable,
-		    	    tkfont, &fontMetrics, 
-		    	    menuRectPtr->left + mePtr->x,
-		    	    globalsPtr->menuTop + mePtr->y,
-		    	    (mePtr->entryFlags & ENTRY_LAST_COLUMN)
-		    	    ? menuPtr->totalWidth - mePtr->x
-		    	    : mePtr->width, mePtr->height, 
-		    	    0, 1);
+    	    	    AppearanceEntryDrawWrapper(mePtr, menuRectPtr, globalsPtr,
+    	    		(Drawable) &macMDEFDrawable, &fontMetrics, tkfont, 
+    	    		menuRectPtr->left + mePtr->x,
+     	    		globalsPtr->menuTop + mePtr->y,
+   	    		(mePtr->entryFlags & ENTRY_LAST_COLUMN) ?
+	        	    menuPtr->totalWidth - mePtr->x : mePtr->width,
+	        	mePtr->height);
 		}
 
 		tkUseMenuCascadeRgn = 1;
@@ -2922,12 +3038,13 @@ MenuDefProc(
     	    	    	Tk_GetFontMetrics(tkfont, &entryMetrics);
     	    	    	fmPtr = &entryMetrics;
     	    	    }
-    	    	    TkpDrawMenuEntry(mePtr, (Drawable) &macMDEFDrawable,
-    	    		    tkfont, fmPtr, menuRectPtr->left + mePtr->x, 
-    	    		    globalsPtr->menuTop + mePtr->y,
-    	    		    (mePtr->entryFlags & ENTRY_LAST_COLUMN) ?
-    	    		    menuPtr->totalWidth - mePtr->x : mePtr->width,
-    	    		    menuPtr->entries[i]->height, 0, 1);
+    	    	    AppearanceEntryDrawWrapper(mePtr, menuRectPtr, globalsPtr,
+    	    		(Drawable) &macMDEFDrawable, fmPtr, tkfont, 
+    	    		menuRectPtr->left + mePtr->x,
+     	    		globalsPtr->menuTop + mePtr->y,
+   	    		(mePtr->entryFlags & ENTRY_LAST_COLUMN) ?
+	        	    menuPtr->totalWidth - mePtr->x : mePtr->width,
+	        	menuPtr->entries[i]->height);
      	    	}	    	
 	    }
 
@@ -3071,6 +3188,108 @@ MenuDefProc(
 /*
  *----------------------------------------------------------------------
  *
+ *   AppearanceEntryDrawWrapper --
+ *
+ *	This routine wraps the TkpDrawMenuEntry function.  Under Appearance, 
+ *      it routes to the Appearance Managers DrawThemeEntry, otherwise it
+ *      just goes straight to TkpDrawMenuEntry.
+ *
+ * Results:
+ *	A menu entry is drawn
+ *
+ * Side effects:
+ *	None
+ *
+ *----------------------------------------------------------------------
+ */
+static void 
+AppearanceEntryDrawWrapper(
+    TkMenuEntry *mePtr,
+    Rect *menuRectPtr,
+    TkMenuLowMemGlobals *globalsPtr,     
+    Drawable d,
+    Tk_FontMetrics *fmPtr, 
+    Tk_Font tkfont, 
+    int x, 
+    int y, 
+    int width, 
+    int height)
+{
+    if (TkMacHaveAppearance() > 1) {
+        MenuEntryUserData meData;
+        Rect itemRect;
+        ThemeMenuState theState;
+        ThemeMenuItemType theType;
+    
+        meData.mePtr = mePtr;
+        meData.mdefDrawable = d;
+        meData.fmPtr = fmPtr;
+        meData.tkfont = tkfont;
+    
+        itemRect.top = y;
+        itemRect.left = x;
+        itemRect.bottom = itemRect.top + height;
+        itemRect.right = itemRect.left + width;
+    
+        if (mePtr->state == tkActiveUid) {
+            theState = kThemeMenuSelected;
+        } else if (mePtr->state == tkDisabledUid) {
+    	    theState = kThemeMenuDisabled;
+        } else {
+    	    theState = kThemeMenuActive;
+        }
+        
+        if (mePtr->type == CASCADE_ENTRY) {
+            theType = kThemeMenuItemHierarchical;
+        } else {
+            theType = kThemeMenuItemPlain;
+        }
+        
+        DrawThemeMenuItem (menuRectPtr, &itemRect,
+    	        globalsPtr->menuTop, globalsPtr->menuBottom, theState,
+    	        theType, tkThemeMenuItemDrawingUPP, 
+    	        (unsigned long) &meData);
+    	
+    } else {
+        TkpDrawMenuEntry(mePtr, d, tkfont, fmPtr,
+	        x, y, width, height, 0, 1);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ *  tkThemeMenuItemDrawingProc --
+ *
+ *	This routine is called from the Appearance DrawThemeMenuEntry
+ *
+ * Results:
+ *	A menu entry is drawn
+ *
+ * Side effects:
+ *	None
+ *
+ *----------------------------------------------------------------------
+ */
+pascal void
+tkThemeMenuItemDrawingProc (
+	const Rect *inBounds,
+	SInt16 inDepth, 
+	Boolean inIsColorDevice, 
+	SInt32 inUserData)
+{
+    MenuEntryUserData *meData = (MenuEntryUserData *) inUserData;
+
+    TkpDrawMenuEntry(meData->mePtr, meData->mdefDrawable,
+    	 meData->tkfont, meData->fmPtr, inBounds->left, 
+    	 inBounds->top, inBounds->right - inBounds->left,
+    	 inBounds->bottom - inBounds->top, 0, 1);
+
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkMacHandleTearoffMenu() --
  *
  *	This routine sees if the MDEF has set a menu and a mouse position
@@ -3202,8 +3421,7 @@ DrawTearoffEntry(
     int margin, segmentWidth, maxX;
     Tk_3DBorder border;
 
-    if ((menuPtr->menuType != MASTER_MENU)
-	    || (GetResource('MDEF', 591) != NULL)) {
+    if ((menuPtr->menuType != MASTER_MENU) || (FixMDEF() != NULL)) {
 	return;
     }
     
@@ -3343,12 +3561,19 @@ TkpDrawMenuEntry(
 
     /*
      * Choose the gc for drawing the foreground part of the entry.
+     * Under Appearance, we pass a null (appearanceGC) to tell 
+     * ourselves not to change whatever color the appearance manager has set.
      */
 
     if ((mePtr->state == ENTRY_ACTIVE) && !strictMotif) {
 	gc = mePtr->activeGC;
 	if (gc == NULL) {
-	    gc = menuPtr->activeGC;
+	    if ((TkMacHaveAppearance() > 1) && (menuPtr->menuType != TEAROFF_MENU)) {
+	        SetThemeTextColor(kThemeSelectedMenuItemTextColor,32,true);
+	        gc = appearanceGC;
+	    } else {
+	        gc = menuPtr->activeGC;
+	    }
 	}
     } else {
     	TkMenuEntry *cascadeEntryPtr;
@@ -3372,15 +3597,26 @@ TkpDrawMenuEntry(
 		&& (menuPtr->disabledFgPtr != NULL)) {
 	    gc = mePtr->disabledGC;
 	    if (gc == NULL) {
+	        if ((TkMacHaveAppearance() > 1) && (mePtr->bitmap == NULL)) {
+	            SetThemeTextColor(kThemeDisabledMenuItemTextColor,32,true);
+	            gc = appearanceGC;
+	        } else {
 		gc = menuPtr->disabledGC;
+	    }
 	    }
 	} else {
 	    gc = mePtr->textGC;
 	    if (gc == NULL) {
-		gc = menuPtr->textGC;
+	        if ((TkMacHaveAppearance() > 1) && (mePtr->bitmap == NULL)) {
+	            SetThemeTextColor(kThemeActiveMenuItemTextColor,32,true);
+	            gc = appearanceGC;
+	        } else {
+		    gc = menuPtr->textGC;
+	        }
 	    }
-	}
+        }
     }
+    
     indicatorGC = mePtr->indicatorGC;
     if (indicatorGC == NULL) {
 	indicatorGC = menuPtr->indicatorGC;
@@ -3429,6 +3665,7 @@ TkpDrawMenuEntry(
 	    DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont,
 		    fmPtr, x, adjustedY, width, adjustedHeight);
 	}
+    
     }
 }
 
@@ -3746,8 +3983,10 @@ DrawMenuEntryLabel(
 
     if (mePtr->state == ENTRY_DISABLED) {
 	if (menuPtr->disabledFgPtr == NULL) {
-	    XFillRectangle(menuPtr->display, d, menuPtr->disabledGC, x, y,
-		    (unsigned) width, (unsigned) height);
+	    if (!TkMacHaveAppearance()) {
+	        XFillRectangle(menuPtr->display, d, menuPtr->disabledGC, x, y,
+		        (unsigned) width, (unsigned) height);
+	    }
 	} else if ((mePtr->image != NULL) 
 		&& (menuPtr->disabledImageGC != None)) {
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledImageGC,
@@ -3763,7 +4002,9 @@ DrawMenuEntryLabel(
  *
  * DrawMenuEntryBackground --
  *
- *	This procedure draws the background part of a menu.
+ *	This procedure draws the background part of a menu entry.
+ *      Under Appearance, we only draw the background if the entry's
+ *      border is set, we DO NOT inherit it from the menu...
  *
  * Results:
  *	None.
@@ -3787,11 +4028,17 @@ DrawMenuEntryBackground(
     int width,				/* width of rectangle to draw */
     int height)				/* height of rectangle to draw */
 {
-    if (mePtr->state == ENTRY_ACTIVE) {
-	bgBorder = activeBorder;
+    if (!TkMacHaveAppearance()
+            || (menuPtr->menuType == TEAROFF_MENU)
+            || ((mePtr->state == ENTRY_ACTIVE)
+		    && (mePtr->activeBorder != NULL)) 
+            || ((mePtr->state != ENTRY_ACTIVE) && (mePtr->border != NULL))) {
+        if (mePtr->state == ENTRY_ACTIVE) {
+	    bgBorder = activeBorder;
+        }
+        Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder,
+    	        x, y, width, height, 0, TK_RELIEF_FLAT);
     }
-    Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder,
-    	    x, y, width, height, 0, TK_RELIEF_FLAT);
 }
 
 /*
@@ -4000,8 +4247,7 @@ TkMacClearMenubarActive(void) {
     	if ((menuBarRefPtr != NULL) && (menuBarRefPtr->menuPtr != NULL)) {
     	    TkMenu *menuPtr;
     	    
-    	    for (menuPtr = menuBarRefPtr->menuPtr->masterMenuPtr; 
-                    menuPtr != NULL;
+    	    for (menuPtr = menuBarRefPtr->menuPtr->masterMenuPtr; menuPtr != NULL;
     	    	    menuPtr = menuPtr->nextInstancePtr) {
     	    	if (menuPtr->menuType == MENUBAR) {
     	    	    RecursivelyClearActiveMenu(menuPtr);
@@ -4117,6 +4363,24 @@ TkpMenuInit(void)
     currentMenuBarInterp = NULL;
     currentMenuBarName = NULL;
     windowListPtr = NULL;
+    
+    /*
+     * Get the GC that we will use as the sign to the font
+     * routines that they should not muck with the foreground color...
+     */
+    
+    if (TkMacHaveAppearance() > 1) {
+        XGCValues tmpValues;
+        TkColor *tmpColorPtr;
+        
+        tmpColorPtr = TkpGetColor(NULL, "systemAppearanceColor");
+        tmpValues.foreground = tmpColorPtr->color.pixel;
+        tmpValues.background = tmpColorPtr->color.pixel;
+        appearanceGC = XCreateGC(NULL, NULL, GCForeground | GCBackground, &tmpValues);
+        ckfree((char *) tmpColorPtr);
+        
+        tkThemeMenuItemDrawingUPP = NewMenuItemDrawingProc(tkThemeMenuItemDrawingProc);				
+    }
     FixMDEF();
 
     

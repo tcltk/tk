@@ -3,10 +3,11 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: listbox.tcl,v 1.1.4.2 1998/09/30 02:17:33 stanton Exp $
+# RCS: @(#) $Id: listbox.tcl,v 1.1.4.3 1998/11/25 21:16:33 stanton Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
+# Copyright (c) 1998 by Scriptics Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -169,6 +170,14 @@ bind Listbox <2> {
 }
 bind Listbox <B2-Motion> {
     %W scan dragto %x %y
+}
+
+# The MouseWheel will typically only fire on Windows.  However,
+# someone could use the "event generate" command to produce one
+# on other platforms.
+
+bind Listbox <MouseWheel> {
+    %W yview scroll [expr - (%D / 120) * 4] units
 }
 
 # tkListboxBeginSelect --

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.1.4.2 1998/09/30 02:16:35 stanton Exp $
+ * RCS: @(#) $Id: tk.h,v 1.1.4.3 1998/11/25 21:16:29 stanton Exp $
  */
 
 #ifndef _TK
@@ -25,6 +25,7 @@
  * unix/configure.in
  * win/makefile.bc	(Not for patch release updates)
  * win/makefile.vc	(Not for patch release updates)
+ * win/README
  * library/tk.tcl
  * README, win/README, unix/README, and mac/README
  *
@@ -546,11 +547,14 @@ typedef struct Tk_GeomMgr {
 #define VirtualEvent	    (LASTEvent)
 #define ActivateNotify	    (LASTEvent + 1)
 #define DeactivateNotify    (LASTEvent + 2)
-#define TK_LASTEVENT	    (LASTEvent + 3)
+#define MouseWheelEvent     (LASTEvent + 3)
+#define TK_LASTEVENT	    (LASTEvent + 4)
 
-#define VirtualEventMask    (1L << 30)
+#define MouseWheelMask	    (1L << 28)
+
 #define ActivateMask	    (1L << 29)
-#define TK_LASTEVENT	    (LASTEvent + 3)
+#define VirtualEventMask    (1L << 30)
+#define TK_LASTEVENT	    (LASTEvent + 4)
 
 
 /*
@@ -797,10 +801,13 @@ typedef struct Tk_Item  {
 					 * pixel drawn in item.  Item area
 					 * includes x1 and y1 but not x2
 					 * and y2. */
+    struct Tk_Item *prevPtr;		/* Previous in display list of all
+					 * items in this canvas. Later items
+					 * in list are drawn just below earlier
+					 * ones. */
     int   reserved1;			/* This padding is for compatibility */
     char *reserved2;			/* with Jan Nijtmans dash patch */
     int   reserved3;
-    char *reserved4;
 
     /*
      *------------------------------------------------------------------

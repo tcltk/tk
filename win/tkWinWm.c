@@ -7,11 +7,12 @@
  *	to the window manager.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.1.4.4 1998/11/20 02:35:12 stanton Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.1.4.5 1998/11/25 21:16:43 stanton Exp $
  */
 
 #include "tkWinInt.h"
