@@ -1,3 +1,8 @@
+2002-11-22  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkTextDisp.c (TkTextSeeCmd): handle see for unmapped
+	text displays. [Bug #641778]
+
 2002-10-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	************************

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.9.2.1 2002/06/15 03:02:09 dgp Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.9.2.2 2002/11/22 23:26:08 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -3318,11 +3318,17 @@ TkTextSeeCmd(textPtr, interp, argc, argv)
 
     /*
      * Find the chunk that contains the desired index.
+     * dlPtr may be NULL if the widget is not mapped. [Bug #641778]
      */
 
     dlPtr = FindDLine(dInfoPtr->dLinePtr, &index);
+    if (dlPtr == NULL) {
+	return TCL_OK;
+    }
+
     byteCount = index.byteIndex - dlPtr->index.byteIndex;
-    for (chunkPtr = dlPtr->chunkPtr; chunkPtr!=NULL ; chunkPtr = chunkPtr->nextPtr) {
+    for (chunkPtr = dlPtr->chunkPtr; chunkPtr!=NULL ;
+	 chunkPtr = chunkPtr->nextPtr) {
 	if (byteCount < chunkPtr->numBytes) {
 	    break;
 	}
@@ -3332,35 +3338,37 @@ TkTextSeeCmd(textPtr, interp, argc, argv)
     /*
      * Call a chunk-specific procedure to find the horizontal range of
      * the character within the chunk.
+     * chunkPtr is NULL if trying to see in elided region
      */
 
-    if (chunkPtr!=NULL) {       /* chunkPtr==NULL iff trying to see in elided region */
-    (*chunkPtr->bboxProc)(chunkPtr, byteCount, dlPtr->y + dlPtr->spaceAbove,
-	    dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
-	    dlPtr->baseline - dlPtr->spaceAbove, &x, &y, &width,
-	    &height);
-    delta = x - dInfoPtr->curPixelOffset;
-    oneThird = lineWidth/3;
-    if (delta < 0) {
-	if (delta < -oneThird) {
-	    dInfoPtr->newByteOffset = (x - lineWidth/2)/textPtr->charWidth;
-	} else {
-	    dInfoPtr->newByteOffset -= ((-delta) + textPtr->charWidth - 1)
-		/ textPtr->charWidth;
-	}
-    } else {
-	delta -= (lineWidth - width);
-	if (delta > 0) {
-	    if (delta > oneThird) {
+    if (chunkPtr != NULL) {
+	(*chunkPtr->bboxProc)(chunkPtr, byteCount, dlPtr->y + dlPtr->spaceAbove,
+		dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
+		dlPtr->baseline - dlPtr->spaceAbove, &x, &y, &width,
+		&height);
+	delta = x - dInfoPtr->curPixelOffset;
+	oneThird = lineWidth/3;
+	if (delta < 0) {
+	    if (delta < -oneThird) {
 		dInfoPtr->newByteOffset = (x - lineWidth/2)/textPtr->charWidth;
 	    } else {
-		dInfoPtr->newByteOffset += (delta + textPtr->charWidth - 1)
+		dInfoPtr->newByteOffset -= ((-delta) + textPtr->charWidth - 1)
 		    / textPtr->charWidth;
 	    }
 	} else {
-	    return TCL_OK;
+	    delta -= (lineWidth - width);
+	    if (delta > 0) {
+		if (delta > oneThird) {
+		    dInfoPtr->newByteOffset = (x - lineWidth/2)/textPtr->charWidth;
+		} else {
+		    dInfoPtr->newByteOffset += (delta + textPtr->charWidth - 1)
+			/ textPtr->charWidth;
+		}
+	    } else {
+		return TCL_OK;
+	    }
 	}
-    }}
+    }
     dInfoPtr->flags |= DINFO_OUT_OF_DATE;
     if (!(dInfoPtr->flags & REDRAW_PENDING)) {
 	dInfoPtr->flags |= REDRAW_PENDING;
