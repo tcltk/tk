@@ -734,12 +734,12 @@ TestmakeexistCmd(clientData, interp, argc, argv)
     int argc;				/* Number of arguments. */
     char **argv;			/* Argument strings. */
 {
-    Tk_Window main = (Tk_Window) clientData;
+    Tk_Window mainwin = (Tk_Window) clientData;
     int i;
     Tk_Window tkwin;
 
     for (i = 1; i < argc; i++) {
-	tkwin = Tk_NameToWindow(interp, argv[i], main);
+	tkwin = Tk_NameToWindow(interp, argv[i], mainwin);
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
 	}
@@ -776,7 +776,7 @@ TestmenubarCmd(clientData, interp, argc, argv)
     char **argv;			/* Argument strings. */
 {
 #ifdef __UNIX__
-    Tk_Window main = (Tk_Window) clientData;
+    Tk_Window mainwin = (Tk_Window) clientData;
     Tk_Window tkwin, menubar;
 
     if (argc < 2) {
@@ -791,14 +791,14 @@ TestmenubarCmd(clientData, interp, argc, argv)
 		    "window toplevel menubar\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	tkwin = Tk_NameToWindow(interp, argv[2], main);
+	tkwin = Tk_NameToWindow(interp, argv[2], mainwin);
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
 	}
 	if (argv[3][0] == 0) {
 	    TkUnixSetMenubar(tkwin, NULL);
 	} else {
-	    menubar = Tk_NameToWindow(interp, argv[3], main);
+	    menubar = Tk_NameToWindow(interp, argv[3], mainwin);
 	    if (menubar == NULL) {
 		return TCL_ERROR;
 	    }
@@ -927,7 +927,7 @@ TestpropCmd(clientData, interp, argc, argv)
     int argc;				/* Number of arguments. */
     char **argv;			/* Argument strings. */
 {
-    Tk_Window main = (Tk_Window) clientData;
+    Tk_Window mainwin = (Tk_Window) clientData;
     int result, actualFormat;
     unsigned long bytesAfter, length, value;
     Atom actualType, propName;
@@ -942,9 +942,9 @@ TestpropCmd(clientData, interp, argc, argv)
     }
 
     w = strtoul(argv[1], &end, 0);
-    propName = Tk_InternAtom(main, argv[2]);
+    propName = Tk_InternAtom(mainwin, argv[2]);
     property = NULL;
-    result = XGetWindowProperty(Tk_Display(main),
+    result = XGetWindowProperty(Tk_Display(mainwin),
 	    w, propName, 0, 100000, False, AnyPropertyType,
 	    &actualType, &actualFormat, &length,
 	    &bytesAfter, (unsigned char **) &property);

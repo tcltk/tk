@@ -452,7 +452,7 @@ Tk_LowerCmd(clientData, interp, argc, argv)
     int argc;			/* Number of arguments. */
     char **argv;		/* Argument strings. */
 {
-    Tk_Window main = (Tk_Window) clientData;
+    Tk_Window mainwin = (Tk_Window) clientData;
     Tk_Window tkwin, other;
 
     if ((argc != 2) && (argc != 3)) {
@@ -461,14 +461,14 @@ Tk_LowerCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
 
-    tkwin = Tk_NameToWindow(interp, argv[1], main);
+    tkwin = Tk_NameToWindow(interp, argv[1], mainwin);
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
     if (argc == 2) {
 	other = NULL;
     } else {
-	other = Tk_NameToWindow(interp, argv[2], main);
+	other = Tk_NameToWindow(interp, argv[2], mainwin);
 	if (other == NULL) {
 	    return TCL_ERROR;
 	}
@@ -507,7 +507,7 @@ Tk_RaiseCmd(clientData, interp, argc, argv)
     int argc;			/* Number of arguments. */
     char **argv;		/* Argument strings. */
 {
-    Tk_Window main = (Tk_Window) clientData;
+    Tk_Window mainwin = (Tk_Window) clientData;
     Tk_Window tkwin, other;
 
     if ((argc != 2) && (argc != 3)) {
@@ -516,14 +516,14 @@ Tk_RaiseCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
 
-    tkwin = Tk_NameToWindow(interp, argv[1], main);
+    tkwin = Tk_NameToWindow(interp, argv[1], mainwin);
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
     if (argc == 2) {
 	other = NULL;
     } else {
-	other = Tk_NameToWindow(interp, argv[2], main);
+	other = Tk_NameToWindow(interp, argv[2], mainwin);
 	if (other == NULL) {
 	    return TCL_ERROR;
 	}
