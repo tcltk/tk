@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.10 2001/08/18 20:03:17 pspjuth Exp $
+# RCS: @(#) $Id: grid.test,v 1.11 2001/08/21 20:21:36 pspjuth Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -46,7 +46,7 @@ test grid-1.1 {basic argument checking} {
 
 test grid-1.2 {basic argument checking} {
 	list [catch {grid foo bar} msg] $msg
-} {1 {bad option "foo":  must be bbox, columnconfigure, configure, forget, info, location, propagate, remove, rowconfigure, size, or slaves.}}
+} {1 {bad option "foo": must be bbox, columnconfigure, configure, forget, info, location, propagate, remove, rowconfigure, size, or slaves}}
 
 test grid-1.3 {basic argument checking} {
 	button .b
@@ -98,7 +98,7 @@ test grid-2.2 {bbox} {
 
 test grid-2.3 {bbox: argument checking} {
 	list [catch {grid bbox . 0 0 5} msg] $msg
-} {1 {wrong number of arguments: must be "grid bbox master ?column row ?column row??"}}
+} {1 {wrong # args: should be "grid bbox master ?column row ?column row??"}}
 
 test grid-2.4 {bbox} {
 	list [catch {grid bbox .bad 0 0} msg] $msg
@@ -190,6 +190,19 @@ test grid-3.7 {configure: basic argument checking} {
     list [catch {grid .f .f.b} msg] $msg
 } {1 {can't put .f.b inside .}}
 grid_reset 3.7
+
+test grid-3.8 {configure: basic argument checking} {
+    button .b
+    grid configure x .b
+    grid slaves .
+} {.b}
+grid_reset 3.8
+
+test grid-3.9 {configure: basic argument checking} {
+    button .b
+    list [catch {grid configure y .b} msg] $msg
+} {1 {invalid window shortcut, "y" should be '-', 'x', or '^'}}
+grid_reset 3.9
 
 test grid-4.1 {forget: basic argument checking} {
     list [catch {grid forget foo} msg] $msg
@@ -501,19 +514,19 @@ test grid-9.3 {slaves} {
 
 test grid-9.4 {slaves} {
 	list [catch {grid slaves . a b} msg] $msg
-} {1 {invalid args: should be "grid slaves window ?-option value...?"}}
+} {1 {bad option "a": must be -column or -row}}
 
 test grid-9.5 {slaves} {
-	list [catch {grid slaves . -foo x} msg] $msg
+	list [catch {grid slaves . -column x} msg] $msg
 } {1 {expected integer but got "x"}}
 
 test grid-9.6 {slaves} {
-	list [catch {grid slaves . -foo -3} msg] $msg
-} {1 {-foo is an invalid value: should NOT be < 0}}
+	list [catch {grid slaves . -row -3} msg] $msg
+} {1 {-row is an invalid value: should NOT be < 0}}
 
 test grid-9.7 {slaves} {
 	list [catch {grid slaves . -foo 3} msg] $msg
-} {1 {-foo is an invalid option: should be "-row, -column"}}
+} {1 {bad option "-foo": must be -column or -row}}
 
 test grid-9.8 {slaves} {
 	list [catch {grid slaves .x -row 3} msg] $msg
@@ -584,7 +597,7 @@ grid_reset 10.6
 
 test grid-10.7 {column/row configure} {
 	list [catch {grid columnconfigure . 0 -foo} msg] $msg
-} {1 {invalid arg "-foo": expecting -minsize, -pad, or -weight.}}
+} {1 {bad option "-foo": must be -minsize, -pad, or -weight}}
 grid_reset 10.7
 
 test grid-10.8 {column/row configure} {
@@ -606,34 +619,34 @@ grid_reset 10.10
 test grid-10.11 {column/row configure} {
 	list [catch {grid columnconfigure . 0 -weight bad} msg] $msg
 } {1 {expected integer but got "bad"}}
-grid_reset 10.10a
+grid_reset 10.11
 
 test grid-10.12 {column/row configure} {
 	list [catch {grid columnconfigure . 0 -weight -3} msg] $msg
 } {1 {invalid arg "-weight": should be non-negative}}
-grid_reset 10.11
+grid_reset 10.12
 
 test grid-10.13 {column/row configure} {
 	grid columnconfigure . 0 -weight 3
 	grid columnconfigure . 0 -weight
 } {3}
-grid_reset 10.12
+grid_reset 10.13
 
 test grid-10.14 {column/row configure} {
 	list [catch {grid columnconfigure . 0 -pad foo} msg] $msg
 } {1 {bad screen distance "foo"}}
-grid_reset 10.13
+grid_reset 10.14
 
 test grid-10.15 {column/row configure} {
 	list [catch {grid columnconfigure . 0 -pad -3} msg] $msg
 } {1 {invalid arg "-pad": should be non-negative}}
-grid_reset 10.14
+grid_reset 10.15
 
 test grid-10.16 {column/row configure} {
 	grid columnconfigure . 0 -pad 3
 	grid columnconfigure . 0 -pad
 } {3}
-grid_reset 10.15
+grid_reset 10.16
 
 test grid-10.17 {column/row configure} {
 	frame .f
@@ -649,17 +662,24 @@ test grid-10.17 {column/row configure} {
 	grid columnconfigure .f 0 -weight 0
 	set a
 } {0 1 0 1}
-grid_reset 10.16
+grid_reset 10.17
 
 test grid-10.18 {column/row configure} {
 	frame .f
-	grid columnconfigure .f 0 -minsize 10 -weight 1
+	grid columnconfigure .f {0 2} -minsize 10 -weight 1
 	list [grid columnconfigure .f 0 -minsize] \
 		[grid columnconfigure .f 1 -minsize] \
+		[grid columnconfigure .f 2 -minsize] \
 		[grid columnconfigure .f 0 -weight] \
-		[grid columnconfigure .f 1 -weight]
-}  {10 0 1 0}
-grid_reset 10.17
+		[grid columnconfigure .f 1 -weight] \
+		[grid columnconfigure .f 2 -weight]
+}  {10 0 10 1 0 1}
+grid_reset 10.18
+
+test grid-10.19 {column/row configure} {
+	list [catch {grid columnconfigure . {0 -1 2} -weight 1} msg] $msg
+} {1 {grid columnconfigure: "-1" is out of range}}
+grid_reset 10.19
 
 # auto-placement tests
 
@@ -804,7 +824,7 @@ grid_reset 11.13
 
 test grid-11.14 {default widget placement} {
     foreach i {1 2 3} {
-	frame .f$i -width 50 -height 50 -highlightthickness 0 -bg red
+	frame .f$i -width 60 -height 60 -highlightthickness 0 -bg red
     }
     grid .f1 .f2
     grid  ^  .f3
@@ -815,7 +835,7 @@ test grid-11.14 {default widget placement} {
 		[winfo width .f$i],[winfo height .f$i]"
     }
     set a
-} {{0,25  50,50} {50,0  50,50} {50,50  50,50}}
+} {{0,30  60,60} {60,0  60,60} {60,60  60,60}}
 grid_reset 11.14
 
 test grid-11.15 {^ ^ test with multiple windows} {
