@@ -1,3 +1,18 @@
+2003-07-17  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Makefile: Changes for new tcl buildsystem.
+
+	* macosx/Wish.pbproj/jingham.pbxuser:
+	* macosx/Wish.pbproj/project.pbxproj:
+	Changes for new tcl buildsystem.
+	Changed build to include tk specific html help in Tk.framework
+	instead of Tcl.framework.
+	Set default SYMROOT in target options to simplify setting up PB
+	(manually setting common build folder for tcl & tk no longer needed).
+
+	* macosx/README: Updated info for changes to buildsystem,
+	html help location and PB setup.
+
 2003-07-17  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* doc/photo.n: [$photo put] has been able to take rectangles of
