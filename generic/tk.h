@@ -40,10 +40,10 @@
 #define TK_MAJOR_VERSION   8
 #define TK_MINOR_VERSION   0
 #define TK_RELEASE_LEVEL   2
-#define TK_RELEASE_SERIAL  2
+#define TK_RELEASE_SERIAL  3
 
 #define TK_VERSION "8.0"
-#define TK_PATCH_LEVEL "8.0p2"
+#define TK_PATCH_LEVEL "8.0.3-1"
 
 /* 
  * A special definition used to allow this header file to be included 
@@ -660,6 +660,10 @@ typedef struct Tk_Item  {
 					 * pixel drawn in item.  Item area
 					 * includes x1 and y1 but not x2
 					 * and y2. */
+    int   reserved1;			/* This padding is for compatibility */
+    char *reserved2;			/* with Jan Nijtmans dash patch */
+    int   reserved3;
+    char *reserved4;
 
     /*
      *------------------------------------------------------------------
@@ -762,6 +766,10 @@ typedef struct Tk_ItemType {
 					 * from an item. */
     struct Tk_ItemType *nextPtr;	/* Used to link types together into
 					 * a list. */
+    char *reserved1;			/* Reserved for future extension. */
+    int   reserved2;			/* Carefully compatible with */
+    char *reserved3;			/* Jan Nijtmans dash patch */
+    char *reserved4;
 } Tk_ItemType;
 
 /*
@@ -864,6 +872,7 @@ struct Tk_ImageType {
 				/* Next in list of all image types currently
 				 * known.  Filled in by Tk, not by image
 				 * manager. */
+    char *reserved;		/* reserved for future expansion */
 };
 
 /*
@@ -896,6 +905,7 @@ typedef struct Tk_PhotoImageBlock {
     int		offset[3];	/* Address differences between the red, green
 				 * and blue components of the pixel and the
 				 * pixel as a whole. */
+    int		reserved;	/* Reserved for extensions (dash patch) */
 } Tk_PhotoImageBlock;
 
 /*
