@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacXStubs.c,v 1.12 2002/04/05 08:37:52 hobbs Exp $
+ * RCS: @(#) $Id: tkMacXStubs.c,v 1.13 2002/04/12 07:31:20 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -106,6 +106,7 @@ TkpOpenDisplay(
 
     graphicsDevice = GetMainDevice();
     display = (Display *) ckalloc(sizeof(Display));
+    memset(display, 0, sizeof(Display));
     display->resource_alloc = MacXIdAlloc;
     screen = (Screen *) ckalloc(sizeof(Screen) * 2);
     display->default_screen = 0;
@@ -138,6 +139,7 @@ TkpOpenDisplay(
     screen->root_visual->map_entries = 2 ^ 8;
 
     gMacDisplay = (TkDisplay *) ckalloc(sizeof(TkDisplay));
+    memset(gMacDisplay, 0, sizeof(TkDisplay));
     gMacDisplay->display = display;
     return gMacDisplay;
 }
