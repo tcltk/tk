@@ -1,3 +1,7 @@
+2004-07-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/place.n, doc/pack.n: Doc fixes. [Tcl Bug 983146]
+
 2004-06-30  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	TIP#153 IMPLEMENTATION
