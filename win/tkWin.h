@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin.h,v 1.6 1999/04/16 01:51:48 stanton Exp $
+ * RCS: @(#) $Id: tkWin.h,v 1.7 2004/12/18 20:21:09 chengyemao Exp $
  */
 
 #ifndef _TKWIN
@@ -29,14 +29,14 @@
 #endif
 
 /*
- * The following messages are use to communicate between a Tk toplevel
+ * The following messages are used to communicate between a Tk toplevel
  * and its container window.
  */
 
-#define TK_CLAIMFOCUS	(WM_USER)
-#define TK_GEOMETRYREQ	(WM_USER+1)
-#define TK_ATTACHWINDOW	(WM_USER+2)
-#define TK_DETACHWINDOW	(WM_USER+3)
+#define TK_CLAIMFOCUS	(WM_USER)   /* an embedded window requests to focus */
+#define TK_GEOMETRYREQ	(WM_USER+1) /* an embedded window requests to change size */
+#define TK_ATTACHWINDOW	(WM_USER+2) /* an embedded window requests to attach */
+#define TK_DETACHWINDOW	(WM_USER+3) /* an embedded window requests to detach */
 
 
 /*
