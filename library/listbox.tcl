@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: listbox.tcl,v 1.9 2000/01/06 02:22:24 hobbs Exp $
+# RCS: @(#) $Id: listbox.tcl,v 1.10 2000/02/10 08:52:50 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -181,6 +181,23 @@ bind Listbox <B2-Motion> {
 
 bind Listbox <MouseWheel> {
     %W yview scroll [expr {- (%D / 120) * 4}] units
+}
+
+if {[string equal "unix" $tcl_platform(platform)]} {
+    # Support for mousewheels on Linux/Unix commonly comes through mapping
+    # the wheel to the extended buttons.  If you have a mousewheel, find
+    # Linux configuration info at:
+    #	http://www.inria.fr/koala/colas/mouse-wheel-scroll/
+    bind Listbox <4> {
+	if {!$tk_strictMotif} {
+	    %W yview scroll -5 units
+	}
+    }
+    bind Listbox <5> {
+	if {!$tk_strictMotif} {
+	    %W yview scroll 5 units
+	}
+    }
 }
 
 # tkListboxBeginSelect --

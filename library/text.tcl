@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.9 2000/01/21 03:54:57 hobbs Exp $
+# RCS: @(#) $Id: text.tcl,v 1.10 2000/02/10 08:52:50 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -454,6 +454,23 @@ set tkPriv(prevPos) {}
 
 bind Text <MouseWheel> {
     %W yview scroll [expr {- (%D / 120) * 4}] units
+}
+
+if {[string equal "unix" $tcl_platform(platform)]} {
+    # Support for mousewheels on Linux/Unix commonly comes through mapping
+    # the wheel to the extended buttons.  If you have a mousewheel, find
+    # Linux configuration info at:
+    #	http://www.inria.fr/koala/colas/mouse-wheel-scroll/
+    bind Text <4> {
+	if {!$tk_strictMotif} {
+	    %W yview scroll -5 units
+	}
+    }
+    bind Text <5> {
+	if {!$tk_strictMotif} {
+	    %W yview scroll 5 units
+	}
+    }
 }
 
 # tkTextClosestGap --
