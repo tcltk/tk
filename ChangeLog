@@ -1,3 +1,11 @@
+2001-11-15  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* doc/text.n: Overhauled the documentation of undo to make it
+	easier to understand.
+	* library/tk.tcl (::tk::EventMotifBindings): Added Emacs-like undo
+	binding, but not behaviour (we separate undo and redo.)
+	* library/demos/text.tcl: Show off our undo capability!
+
 2001-11-12  David Gravereaux <davygrvy@pobox.com>
 
 	* win/mkd.bat:

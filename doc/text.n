@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.10 2001/11/13 00:19:05 hobbs Exp $
+'\" RCS: @(#) $Id: text.n,v 1.11 2001/11/15 11:55:26 dkf Exp $
 '\" 
 .so man.macros
 .TH text n 4.0 Tk "Tk Built-In Commands"
@@ -20,7 +20,7 @@ text, tk_textCopy, tk_textCut, tk_textPaste \- Create and manipulate text widget
 \fBtk_textCopy\fR \fIpathName\fR
 \fBtk_textCut\fR \fIpathName\fR
 \fBtk_textPaste\fR \fIpathName\fR
-.VE
+.VE 8.4
 .SO
 \-background	\-highlightthickness	\-relief
 \-borderwidth	\-insertbackground	\-selectbackground
@@ -33,8 +33,11 @@ text, tk_textCopy, tk_textCut, tk_textPaste \- Create and manipulate text widget
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-autoseparators autoSseparators AutoSeparators
-Specifies whether separators are automatically inserted in the undo
-stack. Is only active when the \fB\-undo\fR option is true.
+.VS 8.4
+Specifies a boolean that says whether separators are automatically
+inserted in the undo stack. Only meaningful when the \fB\-undo\fR
+option is true.
+.VE 8.4
 .OP \-height height Height
 Specifies the desired height for the window, in units of characters
 in the font given by the \fB\-font\fR option.
@@ -93,8 +96,10 @@ If no \fB\-tabs\fR option is specified, or if it is specified as
 an empty list, then Tk uses default tabs spaced every eight
 (average size) characters.
 .OP \-undo undo Undo
-Specifies whether the undo mechanism is active (value \fB0\fR) or
-not (value \fB1\fR).
+.VS 8.4
+Specifies a boolean that says whether the undo mechanism is active or
+not.
+.VE 8.4
 .OP \-width width Width
 Specifies the desired width for the window in units of characters
 in the font given by the \fB\-font\fR option.
@@ -127,10 +132,8 @@ path name of the new window.
 .PP
 A text widget displays one or more lines of text and allows that
 text to be edited.
-.VS
 Text widgets support four different kinds of annotations on the
 text, called tags, marks, embedded windows or embedded images.
-.VE
 Tags allow different portions of the text
 to be displayed with different fonts and colors.
 In addition, Tcl commands can be associated with tags so
@@ -148,14 +151,14 @@ The third form of annotation allows arbitrary windows to be
 embedded in a text widget.
 See EMBEDDED WINDOWS below for more details.
 .PP
-.VS
 The fourth form of annotation allows Tk images to be embedded in a text
 widget.
 See EMBEDDED IMAGES below for more details.
-.VE
 .PP
-The text widget also has a built-in undo/redo mechanism. See 
-UNDO MECHANISM below for more details.
+.VS 8.4
+The text widget also has a built-in undo/redo mechanism.
+See UNDO MECHANISM below for more details.
+.VE 8.4
 
 .SH INDICES
 .PP
@@ -212,13 +215,11 @@ Indicates the position of the embedded window whose name is
 This form generates an error if there is no embedded window
 by the given name.
 .TP 12
-.VS
 \fIimageName\fR
 Indicates the position of the embedded image whose name is
 \fIimageName\fR.
 This form generates an error if there is no embedded image
 by the given name.
-.VE
 .PP
 If the \fIbase\fP could match more than one of the above forms, such
 as a \fImark\fP and \fIimageName\fP both having the same value, then
@@ -611,7 +612,6 @@ stretched.
 \fB\-window \fIpathName\fR
 Specifies the name of a window to display in the annotation.
 
-.VS
 .SH "EMBEDDED IMAGES"
 .PP
 The final form of annotation in text widgets is an embedded image.
@@ -679,7 +679,6 @@ It may have any of the usual forms defined for a screen distance.
 \fIPixels\fR specifies the amount of extra space to leave on
 the top and on the bottom of the embedded image.
 It may have any of the usual forms defined for a screen distance.
-.VE
 
 .SH "THE SELECTION"
 .PP
@@ -730,36 +729,36 @@ more details.
 
 .SH "THE UNDO MECHANISM"
 .PP
-The text widget has an unlimited undo and redo mechanism. This undo 
-mechanism is only active when the \fB-undo\fR widget option is true.
-Every insert and delete action is recorded on this stack.
+.VS 8.4
+The text widget has an unlimited undo and redo mechanism (when the
+\fB-undo\fR widget option is true) which records every insert and
+delete action is recorded on a stack.
 .PP
-Boundaries are inserted between edit actions: the so-called 
-separators. The purpose of these separators is to group inserts and
-deletes into one compound edit action. When undoing a change everything
-between two separators will be undone. The undone changes are then
-moved to the redo stack, so that an undone edit can be redone again.
-The redo stack is cleared whenever new edit actions are recorded
-on the undo stack. The undo and redo stacks can be cleared to keep 
-their depth under control.
+Boundaries (called "separators") are inserted between edit actions.
+The purpose of these separators is to group inserts and deletes into
+one compound edit action.  When undoing a change everything between
+two separators will be undone.  The undone changes are then moved to
+the redo stack, so that an undone edit can be redone again.  The redo
+stack is cleared whenever new edit actions are recorded on the undo
+stack.  The undo and redo stacks can be cleared to keep their depth
+under control.
 .PP
-Separators are inserted automatically when the 
-\fB-autoseparators\fR widget option is true. You can insert separators
-programatically as well. If a separator is already present at the top
-of the undo stack no other will inserted. That means that two 
-separators on the undo stack are always separated by at least one 
-insert or delete action.
+Separators are inserted automatically when the \fB-autoseparators\fR
+widget option is true.  You can insert separators programatically as
+well.  If a separator is already present at the top of the undo stack
+no other will inserted.  That means that two separators on the undo
+stack are always separated by at least one insert or delete action.
 .PP
-The undo mechanism is also linked to the modified flag. This means
-that undoing or redoing changes can take a modified text widget back 
-to the unmodified state or vice versa. The modified flag
-will be set to automatically to the appropriate state. This 
-automatic coupling does not work when the modified flag has been 
-set by the user, until the flag has been reset again. 
-
+The undo mechanism is also linked to the modified flag.  This means
+that undoing or redoing changes can take a modified text widget back
+to the unmodified state or vice versa.  The modified flag will be set
+to automatically to the appropriate state.  This automatic coupling
+does not work when the modified flag has been set by the user, until
+the flag has been reset again.
 .PP
-See below for the \fBedit\fR widget command that controls the 
-undo mechanism.
+See below for the \fBedit\fR widget command that controls the undo
+mechanism.
+.VE 8.4
 
 .SH "WIDGET COMMAND"
 .PP
@@ -837,7 +836,7 @@ When debugging is turned on, the drawing routines of the text widget
 set the global variables \fBtk_textRedraw\fR and \fBtk_textRelayout\fR
 to the lists of indices that are redrawn.  The values of these variables
 are tested by Tk's test suite.
-.VE
+.VE 8.4
 .TP
 \fIpathName \fBdelete \fIindex1 \fR?\fIindex2\fR?
 Delete a range of characters from the text.
@@ -930,39 +929,40 @@ window by its index position to get more information.
 .RE
 .TP
 \fIpathName \fBedit \fIoption \fR?\fIarg arg ...\fR?
-This command controls the undo mechanism and the modified flag.  
-The exact behavior of the command depends on the \fIoption\fR 
-argument that follows the \fBedit\fR argument.  The following 
-forms of the command are currently supported:
+.VS 8.4
+This command controls the undo mechanism and the modified flag.  The
+exact behavior of the command depends on the \fIoption\fR argument
+that follows the \fBedit\fR argument.  The following forms of the
+command are currently supported:
 .RS
 .TP
 \fIpathName \fBedit modified ?\fIboolean\fR?
-If \fIboolean\fR is not specified, returns the modified flag of
-the widget. The insert, delete, edit undo and edit redo commands
-or the user can set or clear the modified flag.
-If \fIboolean\fR is specified, sets the modified flag of the widget
-to \fIboolean\fR.
+If \fIboolean\fR is not specified, returns the modified flag of the
+widget. The insert, delete, edit undo and edit redo commands or the
+user can set or clear the modified flag.  If \fIboolean\fR is
+specified, sets the modified flag of the widget to \fIboolean\fR.
 .TP
 \fIpathName \fBedit redo\fR
-When the \fB-undo\fR option is true, reapplies the last undone 
-edits provided no other edits were done since then. Generates an
-error when the redo stack is empty.
-Does nothing when the \fB-undo\fR option is false.
+When the \fB-undo\fR option is true, reapplies the last undone edits
+provided no other edits were done since then. Generates an error when
+the redo stack is empty.  Does nothing when the \fB-undo\fR option is
+false.
 .TP
 \fIpathName \fBedit reset\fR
 Clears the undo and redo stacks.
 .TP
 \fIpathName \fBedit separator\fR
-Inserts a separator (boundary) on the undo stack. Does nothing
-when the \fB-undo\fR option is false.
+Inserts a separator (boundary) on the undo stack. Does nothing when
+the \fB-undo\fR option is false.
 .TP
 \fIpathName \fBedit undo\fR
-Undoes the last edit action when the \fB-undo\fR option is true. 
-An edit action is defined as all the insert and delete commands that are 
-recorded on the undo stack in between two separators. Generates an error
-when the undo stack is empty.
-Does nothing when the \fB-undo\fR option is false.
+Undoes the last edit action when the \fB-undo\fR option is true.  An
+edit action is defined as all the insert and delete commands that are
+recorded on the undo stack in between two separators. Generates an
+error when the undo stack is empty.  Does nothing when the \fB-undo\fR
+option is false.
 .RE
+.VE 8.4
 .TP
 \fIpathName \fBget \fIindex1 \fR?\fIindex2\fR?
 Return a range of characters from the text.
@@ -1657,14 +1657,14 @@ The F16 key (labelled Copy on many Sun workstations) or Meta-w
 copies the selection in the widget to the clipboard, if there is a selection.
 .VS 8.4
 This action is carried out by the command \fBtk_textCopy\fR.
-.VE
+.VE 8.4
 .IP [21]
 The F20 key (labelled Cut on many Sun workstations) or Control-w
 copies the selection in the widget to the clipboard and deletes
 the selection.
 .VS 8.4
 This action is carried out by the command \fBtk_textCut\fR.
-.VE
+.VE 8.4
 If there is no selection in the widget then these keys have no effect.
 .IP [22]
 The F18 key (labelled Paste on many Sun workstations) or Control-y
@@ -1672,7 +1672,7 @@ inserts the contents of the clipboard at the position of the
 insertion cursor.
 .VS 8.4
 This action is carried out by the command \fBtk_textPaste\fR.
-.VE
+.VE 8.4
 .IP [23]
 The Delete key deletes the selection, if there is one in the widget.
 If there is no selection, it deletes the character to the right of
@@ -1702,11 +1702,14 @@ Control-x deletes whatever is selected in the text widget.
 Control-t reverses the order of the two characters to the right of
 the insertion cursor. 
 .IP [32]
-Control-z undoes the last edit action if the \fB-undo\fR option is
-true. Does nothing otherwise.
+.VS 8.4
+Control-z (and Control-underscore on UNIX when \fBtk_strictMotif\fR is
+true) undoes the last edit action if the \fB-undo\fR option is true.
+Does nothing otherwise.
 .IP [33]
-Control-Z reapplies the last undone edit action if the \fB-undo\fR 
-option is true. Does nothing otherwise.
+Control-Z (or Control-y on Windows) reapplies the last undone edit
+action if the \fB-undo\fR option is true. Does nothing otherwise.
+.VE 8.4
 .PP
 If the widget is disabled using the \fB\-state\fR option, then its
 view can still be adjusted and text can still be selected,
