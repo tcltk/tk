@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.14 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.15 2001/08/06 18:29:41 dgp Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -286,7 +286,7 @@ proc ::tk::MessageBox {args} {
     }    
 
     if {[string equal $tcl_platform(platform) "macintosh"]} {
-	unsupported1 style $w dBoxProc
+	unsupported::MacWindowStyle style $w dBoxProc
     }
 
     frame $w.bot

@@ -3,11 +3,12 @@
 # Drag & Drop Tclets
 # by Ray Johnson
 #
-# A simple way to create Tcl applications.  This applications will copy a droped Tcl file
-# into a copy of a stub application (the user can pick).  The file is placed into the
-# TEXT resource named "tclshrc" which is automatically executed on startup.
+# A simple way to create Tcl applications.  This applications will copy a
+# droped Tcl file into a copy of a stub application (the user can pick).
+# The file is placed into the TEXT resource named "tclshrc" which is
+# automatically executed on startup.
 #
-# RCS: @(#) $Id: tclets.tcl,v 1.2 1998/09/14 18:23:33 stanton Exp $
+# RCS: @(#) $Id: tclets.tcl,v 1.3 2001/08/06 18:29:41 dgp Exp $
 #
 # Copyright (c) 1997 Sun Microsystems, Inc.
 #
@@ -15,13 +16,17 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
 
-# tkOpenDocument --
+namespace eval ::tk {}
+namespace eval ::tk::mac {}
+
+# ::tk::mac::OpenDocument --
 #
 #	This procedure is a called whenever Wish recieves an "Open" event.  The
-#	procedure must be named tkOpenDocument for this to work.  Passed in files
-#	are assumed to be Tcl files that the user wants to be made into Tclets.
-#	(Only the first one is used.)  The procedure then creates a copy of the
-#	stub app and places the Tcl file in the new application's resource fork.
+#	procedure must be named ::tk::mac::OpenDocument for this to work.
+#	Passed in files are assumed to be Tcl files that the user wants to be
+#	made into Tclets.  (Only the first one is used.)  The procedure then
+#	creates a copy of the stub app and places the Tcl file in the new
+#	application's resource fork.
 #
 # Parameters:
 #	args		List of files
@@ -29,8 +34,8 @@
 # Results:
 # 	One success a new Tclet is created.
 
-proc tkOpenDocument {args} {
-    global droped_to_start
+proc ::tk::mac::OpenDocument {args} {
+    variable Droped_to_start
     
     # We only deal with the one file droped on the App
     set tclFile [lindex $args 0]
@@ -38,7 +43,7 @@ proc tkOpenDocument {args} {
     
     # Give a helper screen to guide user
     toplevel .helper -menu .bar
-    unsupported1 style .helper dBoxProc
+    ::tk::unsupported::MacWindowStyle style .helper dBoxProc
     message .helper.m -aspect 300 -text \
 	"Select the name & location of your target Tcl application."
     pack .helper.m
@@ -59,10 +64,10 @@ proc tkOpenDocument {args} {
     close $id
     
     # This is a hint to the start-up code - always set to true
-    set droped_to_start true
+    set Droped_to_start true
 }
 
-# GetStub --
+# ::tk::mac::GetStub --
 #
 #	Get the location of our stub application.  The value may be cached,
 #	in the preferences file, or we may need to ask the user.
@@ -73,11 +78,12 @@ proc tkOpenDocument {args} {
 # Results:
 # 	A path to the stub application.
 
-proc GetStub {} {
-    global env stub_location
+proc ::tk::mac::GetStub {} {
+    global env
+    variable Stub_location
     
-    if {[info exists stub_location]} {
-	return $stub_location
+    if {[info exists Stub_location]} {
+	return $Stub_location
     }
     
     set file $env(PREF_FOLDER)
@@ -86,21 +92,21 @@ proc GetStub {} {
     
     if {[file exists $file]} {
 	uplevel #0 [list source $file]
-	if {[info exists stub_location] && [file exists $stub_location]} {
-	    return $stub_location
+	if {[info exists Stub_location] && [file exists $Stub_location]} {
+	    return $Stub_location
 	}
     }
 
     SelectStub
 
-    if {[info exists stub_location]} {
-	return $stub_location
+    if {[info exists Stub_location]} {
+	return $Stub_location
     } else {
 	exit
     }
 }
 
-# SelectStub --
+# ::tk::mac::SelectStub --
 #
 #	This procedure uses tk_getOpenFile to allow the user to select
 #	the copy of "Wish" that is used as the basis for Tclets.  The
@@ -112,12 +118,13 @@ proc GetStub {} {
 # Results:
 # 	None.  The prefernce file is updated.
 
-proc SelectStub {} {
-    global env stub_location
+proc ::tk::mac::SelectStub {} {
+    global env 
+    variable Stub_location
 
     # Give a helper screen to guide user
     toplevel .helper -menu .bar
-    unsupported1 style .helper dBoxProc
+    ::tk::unsupported::MacWindowStyle style .helper dBoxProc
     message .helper.m -aspect 300 -text \
         "Select \"Wish\" stub to clone.  A copy of this application will be made to create your Tclet." \
 	
@@ -128,16 +135,17 @@ proc SelectStub {} {
     set new_location [tk_getOpenFile]
     destroy .helper
     if {$new_location != ""} {
-	set stub_location $new_location
+	set Stub_location $new_location
 	set file [file join $env(PREF_FOLDER) "D&D Tclet Preferences"]
     
 	set id [open $file w]
-	puts $id [list set stub_location $stub_location]
+	puts $id [list set [namespace which -variable Stub_location] \
+		$Stub_location]
 	close $id
     }
 }
 
-# CreateMenus --
+# ::tk::mac::CreateMenus --
 #
 #	Create the menubar for this application.
 #
@@ -147,23 +155,25 @@ proc SelectStub {} {
 # Results:
 # 	None.
 
-proc CreateMenus {} {
+proc ::tk::mac::CreateMenus {} {
     menu .bar
     .bar add cascade -menu .bar.file -label File
     .bar add cascade -menu .bar.apple
     . configure -menu .bar
     
     menu .bar.apple -tearoff 0
-    .bar.apple add command -label "About Drag & Drop Tclets..." -command {ShowAbout}
+    .bar.apple add command -label "About Drag & Drop Tclets..." \
+	    -command [namespace code ShowAbout]
 
     menu .bar.file -tearoff 0
     .bar.file add command -label "Show Console..." -command {console show}
-    .bar.file add command -label "Select Wish Stub..." -command {SelectStub}
+    .bar.file add command -label "Select Wish Stub..." \
+	    -command [namespace code SelectStub]
     .bar.file add separator
     .bar.file add command -label "Quit" -accel Command-Q -command exit
 }
 
-# ShowAbout --
+# ::tk::mac::ShowAbout --
 #
 #	Show the about box for Drag & Drop Tclets.
 #
@@ -173,14 +183,14 @@ proc CreateMenus {} {
 # Results:
 # 	None.
 
-proc ShowAbout {} {
+proc ::tk::mac::ShowAbout {} {
     tk_messageBox -icon info -type ok -message \
 "Drag & Drop Tclets
 by Ray Johnson\n\n\
 Copyright (c) 1997 Sun Microsystems, Inc."
 }
 
-# Start --
+# ::tk::mac::Start --
 #
 #	This procedure provides the main start-up code for the application.
 #	It should be run first thing on start up.  It will create the UI
@@ -192,8 +202,8 @@ Copyright (c) 1997 Sun Microsystems, Inc."
 # Results:
 # 	None.
 
-proc Start {} {
-    global droped_to_start
+proc ::tk::mac::Start {} {
+    variable Droped_to_start
 
     # Hide . & console - see if we ran as a droped item
     wm geometry . 1x1-25000-25000
@@ -201,9 +211,9 @@ proc Start {} {
 
     # Run update - if we get any drop events we know that we were
     # started by a drag & drop - if so, we quit automatically when done
-    set droped_to_start false
+    set Droped_to_start false
     update
-    if {$droped_to_start == "true"} {
+    if {$Droped_to_start == "true"} {
 	exit
     }
     
@@ -212,4 +222,4 @@ proc Start {} {
 }
 
 # Now that everything is defined, lets start the app!
-Start
+::tk::mac::Start

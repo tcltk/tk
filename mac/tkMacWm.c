@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.10 2000/04/25 01:02:13 hobbs Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.11 2001/08/06 18:29:41 dgp Exp $
  */
 
 #include <Gestalt.h>
@@ -3744,9 +3744,9 @@ TkMacZoomToplevel(
  *
  * TkUnsupported1Cmd --
  *
- *	This procedure is invoked to process the "unsupported1" Tcl 
- *	command.  This command allows you to set the style of decoration
- *	for a Macintosh window.
+ *	This procedure is invoked to process the 
+ *	"::tk::unsupported::MacWindowStyle" Tcl command.  This command
+ *	allows you to set the style of decoration for a Macintosh window.
  *
  * Results:
  *	A standard Tcl result.
