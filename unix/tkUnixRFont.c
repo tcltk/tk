@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.3 2003/05/31 23:00:36 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.4 2003/06/09 20:39:48 jenglish Exp $
  */
 
 #include "tkUnixInt.h"
@@ -72,10 +72,24 @@ GetFont (UnixFtFont *fontPtr, FcChar32 ucs4)
     return fontPtr->faces[i].ftFont;
 }
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * InitFont --
+ *
+ *	Initializes the fields of a UnixFtFont structure.
+ *	If fontPtr is NULL, also allocates a new UnixFtFont.
+ * 
+ * Results:
+ * 	On error, frees fontPtr and returns NULL, otherwise
+ * 	returns fontPtr.
+ *
+ *---------------------------------------------------------------------------
+ */
+
 static UnixFtFont *
-InitFont (Tk_Window tkwin, FcPattern *pattern)
+InitFont (Tk_Window tkwin, FcPattern *pattern, UnixFtFont *fontPtr)
 {
-    UnixFtFont		*fontPtr;
     TkFontAttributes	*faPtr;
     TkFontMetrics	*fmPtr;
     char		*family;
@@ -88,7 +102,8 @@ InitFont (Tk_Window tkwin, FcPattern *pattern)
     int			i;
     XftFont		*ftFont;
     
-    fontPtr = (UnixFtFont *) ckalloc (sizeof (UnixFtFont));
+    if (!fontPtr)
+	fontPtr = (UnixFtFont *) ckalloc (sizeof (UnixFtFont));
     if (!fontPtr)
 	return NULL;
     
@@ -249,7 +264,7 @@ TkpGetNativeFont(tkwin, name)
      * work on XLFD names under Unix.
      */
 
-    fontPtr = InitFont (tkwin, pattern);
+    fontPtr = InitFont(tkwin, pattern, NULL);
     if (!fontPtr)
 	return NULL;
     return &fontPtr->font;
@@ -308,7 +323,11 @@ TkpGetFontFromAttributes(tkFontPtr, tkwin, faPtr)
     }
     XftPatternAddInteger (pattern, XFT_SLANT, slant);
 
-    fontPtr = InitFont (tkwin, pattern);
+    fontPtr = (UnixFtFont *) tkFontPtr;
+    if (fontPtr != NULL) {
+	FiniFont(fontPtr);
+    }
+    fontPtr = InitFont(tkwin, pattern, fontPtr);
     if (!fontPtr)
 	return NULL;
     return &fontPtr->font;
@@ -324,6 +343,21 @@ TkpDeleteFont(tkFontPtr)
     /* XXX tkUnixFont.c doesn't free tkFontPtr... */
 }
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkpGetFontFamilies --
+ *
+ *	Return information about the font families that are available
+ *	on the display of the given window.
+ *
+ * Results:
+ *	Modifies interp's result object to hold a list of all the available
+ *	font families.
+ *
+ *---------------------------------------------------------------------------
+ */
+
 void
 TkpGetFontFamilies(interp, tkwin)
     Tcl_Interp *interp;		/* Interp to hold result. */
@@ -334,7 +368,7 @@ TkpGetFontFamilies(interp, tkwin)
     int		i;
     char	*family;
 
-    resultPtr = Tcl_GetObjResult(interp);    
+    resultPtr = Tcl_NewListObj(0, NULL);
 
     list = XftListFonts (Tk_Display (tkwin),
 			 Tk_ScreenNumber (tkwin),
@@ -350,7 +384,21 @@ TkpGetFontFamilies(interp, tkwin)
 	}
     }
     XftFontSetDestroy (list);
+
+    Tcl_SetObjResult(interp, resultPtr);
 }
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * TkpGetSubFonts --
+ *	Called by [testfont subfonts] in the Tk testing package.
+ *
+ * Results:
+ *	Sets interp's result to a list of the faces used by tkfont
+ *
+ *-------------------------------------------------------------------------
+ */
 
 void
 TkpGetSubFonts(interp, tkfont)
@@ -358,33 +406,43 @@ TkpGetSubFonts(interp, tkfont)
     Tk_Font tkfont;
 {
     Tcl_Obj	*objv[3];
-    Tcl_Obj	*resultPtr, *listPtr;
+    Tcl_Obj	*listPtr, *resultPtr;
     UnixFtFont	*fontPtr = (UnixFtFont *) tkfont;
+    FcPattern	*pattern;
     char	*family, *foundry, *encoding;
-    XftFont	*ftFont = GetFont (fontPtr, 0);
-    
-    resultPtr = Tcl_GetObjResult(interp);    
-    if (XftPatternGetString (ftFont->pattern, XFT_FAMILY, 
-			     0, &family) != XftResultMatch)
+    int 	i;
+
+    resultPtr = Tcl_NewListObj(0, NULL);
+
+    for (i = 0; i < fontPtr->nfaces ; ++i)
     {
-	family = "Unknown";
+ 	pattern = /* fontPtr->faces[i].source; */
+ 	    FcFontRenderPrepare(0, fontPtr->pattern, fontPtr->faces[i].source);
+
+	if (XftPatternGetString(pattern, XFT_FAMILY, 
+				 0, &family) != XftResultMatch)
+	{
+	    family = "Unknown";
+	}
+	if (XftPatternGetString(pattern, XFT_FOUNDRY,
+				 0, &foundry) != XftResultMatch)
+	{
+	    foundry = "Unknown";
+	}
+	if (XftPatternGetString(pattern, XFT_ENCODING,
+				 0, &encoding) != XftResultMatch)
+	{
+	    encoding = "Unknown";
+	}
+	objv[0] = Tcl_NewStringObj(family, -1);
+	objv[1] = Tcl_NewStringObj(foundry, -1);
+	objv[2] = Tcl_NewStringObj(encoding, -1);
+	listPtr = Tcl_NewListObj(3, objv);
+	Tcl_ListObjAppendElement (NULL, resultPtr, listPtr);
     }
-    if (XftPatternGetString (ftFont->pattern, XFT_FOUNDRY,
-			     0, &foundry) != XftResultMatch)
-    {
-	foundry = "Unknown";
-    }
-    if (XftPatternGetString (ftFont->pattern, XFT_ENCODING,
-			     0, &encoding))
-    {
-	encoding = "Unknown";
-    }
-    objv[0] = Tcl_NewStringObj(family, -1);
-    objv[1] = Tcl_NewStringObj(foundry, -1);
-    objv[2] = Tcl_NewStringObj(encoding, -1);
-    listPtr = Tcl_NewListObj (3, objv);
-    Tcl_ListObjAppendElement (NULL, resultPtr, listPtr);
+    Tcl_SetObjResult(interp, resultPtr);
 }
+
 int
 Tk_MeasureChars(tkfont, source, numBytes, maxLength, flags, lengthPtr)
     Tk_Font tkfont;		/* Font in which characters will be drawn. */
