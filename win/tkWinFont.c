@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.19 2003/12/05 16:05:31 cc_benny Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.20 2003/12/10 12:00:22 cc_benny Exp $
  */
 
 #include "tkWinInt.h"
@@ -643,6 +643,7 @@ Tk_MeasureChars(
             familyPtr = lastSubFontPtr->familyPtr;
             Tcl_UtfToExternalDString(familyPtr->encoding, start, 
                     (int) (p - start), &runString);
+            size.cx = 0;
             (*familyPtr->getTextExtentPoint32Proc)(hdc, 
                     Tcl_DStringValue(&runString),
                     Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
@@ -671,6 +672,7 @@ Tk_MeasureChars(
 	familyPtr = lastSubFontPtr->familyPtr;
         Tcl_UtfToExternalDString(familyPtr->encoding, start,
                 (int) (p - start), &runString);
+        size.cx = 0;
 	(*familyPtr->getTextExtentPoint32Proc)(hdc,
 		Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont, 
@@ -694,7 +696,7 @@ Tk_MeasureChars(
 
         char buf[16];
         int dstWrote;
-        int lastSize;
+        int lastSize = 0;
 
 	familyPtr = lastSubFontPtr->familyPtr;
         Tcl_DStringInit(&runString);
@@ -704,6 +706,7 @@ Tk_MeasureChars(
                     (int) (next - p), 0, NULL, buf, sizeof(buf), NULL,
                     &dstWrote, NULL);
             Tcl_DStringAppend(&runString,buf,dstWrote);
+            size.cx = 0;
             (*familyPtr->getTextExtentPoint32Proc)(hdc, 
                     Tcl_DStringValue(&runString),
                     Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
