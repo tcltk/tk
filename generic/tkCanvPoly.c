@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.11 2003/05/11 00:52:41 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvPoly.c,v 1.12 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include <stdio.h>
@@ -267,7 +267,7 @@ CreatePolygon(interp, canvas, itemPtr, objc, objv)
     int i;
 
     if (objc == 0) {
-	panic("canvas did not pass any coords\n");
+	Tcl_Panic("canvas did not pass any coords\n");
     }
 
     /*

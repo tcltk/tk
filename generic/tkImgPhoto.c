@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.42 2003/10/31 18:56:30 hobbs Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.43 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -1436,7 +1436,7 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	}
 
 	}
-	panic("unexpected fallthrough");
+	Tcl_Panic("unexpected fallthrough");
     }
 
     case PHOTO_WRITE: {
@@ -1558,7 +1558,7 @@ ImgPhotoCmd(clientData, interp, objc, objv)
     }
 
     }
-    panic("unexpected fallthrough");
+    Tcl_Panic("unexpected fallthrough");
     return TCL_ERROR; /* NOT REACHED */
 }
 
@@ -2434,7 +2434,7 @@ ImgPhotoGet(tkwin, masterData)
 	XFree((char *) visInfoPtr);
 
     } else {
-	panic("ImgPhotoGet couldn't find visual for window");
+	Tcl_Panic("ImgPhotoGet couldn't find visual for window");
     }
 
     sprintf(buf, ((mono) ? "%d": "%d/%d/%d"), nRed, nGreen, nBlue);
@@ -2827,7 +2827,7 @@ ImgPhotoDelete(masterData)
 
     while ((instancePtr = masterPtr->instancePtr) != NULL) {
 	if (instancePtr->refCount > 0) {
-	    panic("tried to delete photo image when instances still exist");
+	    Tcl_Panic("tried to delete photo image when instances still exist");
 	}
 	Tcl_CancelIdleCall(DisposeInstance, (ClientData) instancePtr);
 	DisposeInstance((ClientData) instancePtr);
@@ -3111,7 +3111,7 @@ ImgPhotoInstanceSetSize(instancePtr)
 		(masterPtr->height > 0) ? masterPtr->height: 1,
 		instancePtr->visualInfo.depth);
         if (!newPixmap) {
-            panic("Fail to create pixmap with Tk_GetPixmap in ImgPhotoInstanceSetSize.\n");
+            Tcl_Panic("Fail to create pixmap with Tk_GetPixmap in ImgPhotoInstanceSetSize.\n");
             return;
         }
 
@@ -3789,7 +3789,7 @@ DisposeColorTable(clientData)
 
     entry = Tcl_FindHashEntry(&imgPhotoColorHash, (char *) &colorPtr->id);
     if (entry == NULL) {
-	panic("DisposeColorTable couldn't find hash entry");
+	Tcl_Panic("DisposeColorTable couldn't find hash entry");
     }
     Tcl_DeleteHashEntry(entry);
 
@@ -4417,7 +4417,7 @@ Tk_PhotoPutBlock(interp, handle, blockPtr, x, y, width, height, compRule)
 				break;
 
 			    default:
-				panic("unknown compositing rule: %d", compRule);
+				Tcl_Panic("unknown compositing rule: %d", compRule);
 			    }
 			    srcPtr += blockPtr->pixelSize;
 			}
@@ -4724,7 +4724,7 @@ Tk_PhotoPutZoomedBlock(interp, handle, blockPtr, x, y, width, height,
 			    destPtr += 4;
 			    break;
 			default:
-			    panic("unknown compositing rule: %d", compRule);
+			    Tcl_Panic("unknown compositing rule: %d", compRule);
 			}
 		    }
 		    srcPtr += blockXSkip;
@@ -5938,7 +5938,7 @@ Tk_PhotoPutBlock_NoComposite(handle, blockPtr, x, y, width, height)
 {
     if (Tk_PhotoPutBlock(NULL, handle, blockPtr, x, y, width, height,
 	    TK_PHOTO_COMPOSITE_OVERLAY) != TCL_OK) {
-	panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
+	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
     }
 }
 
@@ -5952,7 +5952,7 @@ Tk_PhotoPutZoomedBlock_NoComposite(handle, blockPtr, x, y, width, height,
     if (Tk_PhotoPutZoomedBlock(NULL, handle, blockPtr, x, y, width, height,
 	    zoomX, zoomY, subsampleX, subsampleY,
 	    TK_PHOTO_COMPOSITE_OVERLAY) != TCL_OK) {
-	panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
+	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
     }
 }
 
@@ -5977,7 +5977,7 @@ Tk_PhotoExpand_Panic(handle, width, height)
     int width, height;
 {
     if (Tk_PhotoExpand(NULL, handle, width, height) != TCL_OK) {
-	panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
+	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
     }
 }
 
@@ -5989,7 +5989,7 @@ Tk_PhotoPutBlock_Panic(handle, blockPtr, x, y, width, height, compRule)
 {
     if (Tk_PhotoPutBlock(NULL, handle, blockPtr, x, y, width, height,
 	    compRule) != TCL_OK) {
-	panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
+	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
     }
 }
 
@@ -6002,7 +6002,7 @@ Tk_PhotoPutZoomedBlock_Panic(handle, blockPtr, x, y, width, height,
 {
     if (Tk_PhotoPutZoomedBlock(NULL, handle, blockPtr, x, y, width, height,
 	    zoomX, zoomY, subsampleX, subsampleY, compRule) != TCL_OK) {
-	panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
+	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
     }
 }
 
@@ -6012,6 +6012,6 @@ Tk_PhotoSetSize_Panic(handle, width, height)
     int width, height;
 {
     if (Tk_PhotoSetSize(NULL, handle, width, height) != TCL_OK) {
-	panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
+	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
     }
 }

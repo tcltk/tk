@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.10 2002/10/08 19:57:59 hobbs Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.11 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -234,7 +234,7 @@ Tk_FocusObjCmd(clientData, interp, objc, objv)
 	    break;
 	}
 	default: {
-	    panic("bad const entries to focusOptions in focus command");
+	    Tcl_Panic("bad const entries to focusOptions in focus command");
 	}
     }
     return TCL_OK;

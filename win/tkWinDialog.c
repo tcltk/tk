@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.32 2003/07/28 22:12:33 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.33 2004/01/13 02:06:01 davygrvy Exp $
  *
  */
 
@@ -16,6 +16,9 @@
 #include "tkFileFilter.h"
 
 #include <commdlg.h>    /* includes common dialog functionality */
+#ifdef _MSC_VER
+#   pragma comment (lib, "comdlg32.lib")
+#endif
 #include <dlgs.h>       /* includes common dialog template defines */
 #include <cderr.h>      /* includes the common dialog error codes */
 
@@ -25,6 +28,9 @@
 #define USE_NEW_CHOOSEDIR 1
 #ifdef USE_NEW_CHOOSEDIR
 #include <shlobj.h>     /* includes SHBrowseForFolder */
+#ifdef _MSC_VER
+#   pragma comment (lib, "shell32.lib")
+#endif
 
 /* These needed for compilation with VC++ 5.2 */
 #ifndef BIF_EDITBOX

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.19 2003/12/21 23:50:13 davygrvy Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.20 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tkPort.h"
@@ -927,7 +927,7 @@ Tk_HandleEvent(eventPtr)
 		    preedit_attr = XVaCreateNestedList(0, XNSpotLocation,
 			    &spot, XNFontSet, dispPtr->inputXfs, NULL);
 		    if (winPtr->inputContext != NULL)
-		        panic("inputContext not NULL");
+		        Tcl_Panic("inputContext not NULL");
 		    winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
 			    XNInputStyle, XIMPreeditPosition|XIMStatusNothing,
 			    XNClientWindow, winPtr->window,
@@ -937,7 +937,7 @@ Tk_HandleEvent(eventPtr)
 		    XFree(preedit_attr);
 		} else {
 		    if (winPtr->inputContext != NULL)
-		        panic("inputContext not NULL");
+		        Tcl_Panic("inputContext not NULL");
 		    winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
 			    XNInputStyle, XIMPreeditNothing|XIMStatusNothing,
 			    XNClientWindow, winPtr->window,
@@ -946,7 +946,7 @@ Tk_HandleEvent(eventPtr)
 		}
 #else
 		if (winPtr->inputContext != NULL)
-		    panic("inputContext not NULL");
+		    Tcl_Panic("inputContext not NULL");
 		winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
 			XNInputStyle, XIMPreeditNothing|XIMStatusNothing,
 			XNClientWindow, winPtr->window,
@@ -1348,7 +1348,7 @@ Tk_QueueWindowEvent(eventPtr, position)
 	 */
 
 	if (dispPtr->delayedMotionPtr != NULL) {
-	    panic("Tk_QueueWindowEvent found unexpected delayed motion event");
+	    Tcl_Panic("Tk_QueueWindowEvent found unexpected delayed motion event");
 	}
 	dispPtr->delayedMotionPtr = wevPtr;
 	Tcl_DoWhenIdle(DelayedMotionProc, (ClientData) dispPtr);
@@ -1474,7 +1474,7 @@ DelayedMotionProc(clientData)
     TkDisplay *dispPtr = (TkDisplay *) clientData;
 
     if (dispPtr->delayedMotionPtr == NULL) {
-	panic("DelayedMotionProc found no delayed mouse motion event");
+	Tcl_Panic("DelayedMotionProc found no delayed mouse motion event");
     }
     Tcl_QueueEvent(&dispPtr->delayedMotionPtr->header, TCL_QUEUE_TAIL);
     dispPtr->delayedMotionPtr = NULL;

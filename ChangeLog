@@ -1,3 +1,97 @@
+2004-01-12  David Gravereaux <davygrvy@pobox.com>
+
+	* generic/tk3d.c:	All uses of 'panic' (the macro) changed
+	* generic/tkBind.c:	to 'Tcl_Panic' (the function).  The #define
+	* generic/tkBitmap.c:	of panic in tcl.h clearly states it is
+	* generic/tkCanvArc.c:	deprecated in the comments.
+	* generic/tkCanvBmap.c: [Tcl Patch 865264]
+	* generic/tkCanvImg.c:
+	* generic/tkCanvLine.c:
+	* generic/tkCanvPoly.c:
+	* generic/tkCanvText.c:
+	* generic/tkCanvWind.c:
+	* generic/tkColor.c:
+	* generic/tkConfig.c:
+	* generic/tkCursor.c:
+	* generic/tkError.c:
+	* generic/tkEvent.c:
+	* generic/tkFocus.c:
+	* generic/tkFont.c:
+	* generic/tkFrame.c:
+	* generic/tkGC.c:
+	* generic/tkGrid.c:
+	* generic/tkImgBmap.c:
+	* generic/tkImgPhoto.c:
+	* generic/tkImgUtil.c:
+	* generic/tkMenu.c:
+	* generic/tkObj.c:
+	* generic/tkPack.c:
+	* generic/tkPlace.c:
+	* generic/tkRectOval.c:
+	* generic/tkSelect.c:
+	* generic/tkText.c:
+	* generic/tkTextBTree.c:
+	* generic/tkTextDisp.c:
+	* generic/tkTextImage.c:
+	* generic/tkTextIndex.c:
+	* generic/tkTextMark.c:
+	* generic/tkTextWind.c:
+	* generic/tkVisual.c:
+	* generic/tkWindow.c:
+	* mac/tkMacAppInit.c:
+	* mac/tkMacAppearanceStubs.c:
+	* mac/tkMacButton.c:
+	* mac/tkMacDraw.c:
+	* mac/tkMacEmbed.c:
+	* mac/tkMacFont.c:
+	* mac/tkMacInit.c:
+	* mac/tkMacMenus.c:
+	* mac/tkMacPort.h:
+	* mac/tkMacSubwindows.c:
+	* mac/tkMacWm.c:
+	* mac/tkMacXStubs.c:
+	* macosx/tkMacOSXEmbed.c:
+	* macosx/tkMacOSXFont.c:
+	* macosx/tkMacOSXMenus.c:
+	* macosx/tkMacOSXNotify.c:
+	* macosx/tkMacOSXPort.h:
+	* macosx/tkMacOSXSubwindows.c:
+	* macosx/tkMacOSXWm.c:
+	* macosx/tkMacOSXXStubs.c:
+	* unix/tkUnix3d.c:
+	* unix/tkUnixColor.c:
+	* unix/tkUnixEmbed.c:
+	* unix/tkUnixEvent.c:
+	* unix/tkUnixFocus.c:
+	* unix/tkUnixFont.c:
+	* unix/tkUnixSelect.c:
+	* unix/tkUnixSend.c:
+	* unix/tkUnixWm.c:
+	* win/tkWin3d.c:
+	* win/tkWinButton.c:
+	* win/tkWinColor.c:
+	* win/tkWinDialog.c:
+	* win/tkWinDraw.c:
+	* win/tkWinEmbed.c:
+	* win/tkWinFont.c:
+	* win/tkWinPixmap.c:
+	* win/tkWinPointer.c:
+	* win/tkWinScrlbr.c:
+	* win/tkWinWm.c:
+	* win/tkWinX.c:
+
+	* win/rc/tk.rc:
+	* win/rc/tk_base.rc:
+	* win/rc/wish.rc:
+	* win/makefile.vc:  Refreshed how the resource files are built.
+	Should be a bit easier for people linking with a static Tk library.
+
+	* win/lamp.bmp (deleted):
+	* win/rc/lamp.bmp (new): Moved.
+
+	* win/rules.vc:  Sync'd to Tcl, respects the CHECKS=nodep
+	commandline macro and was used to verify the Tcl_Panic change above.
+
 2004-01-09  Peter Spjuth  <peter.spjuth@space.se>
 	* doc/grid.n:
 	* tests/grid.test:

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinScrlbr.c,v 1.9 2003/02/21 02:07:50 hobbs Exp $
+ * RCS: @(#) $Id: tkWinScrlbr.c,v 1.10 2004/01/13 02:06:02 davygrvy Exp $
  */
 
 #include "tkWinInt.h"
@@ -515,7 +515,7 @@ ScrollbarProc(hwnd, message, wParam, lParam)
     Tk_Window tkwin = Tk_HWNDToWindow(hwnd);
 
     if (tkwin == NULL) {
-	panic("ScrollbarProc called on an invalid HWND");
+	Tcl_Panic("ScrollbarProc called on an invalid HWND");
     }
     scrollPtr = (WinScrollbar *)((TkWindow*)tkwin)->instanceData;
 

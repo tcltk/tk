@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixColor.c,v 1.2 1998/09/14 18:23:55 stanton Exp $
+ * RCS: @(#) $Id: tkUnixColor.c,v 1.3 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include <tkColor.h>
@@ -269,7 +269,7 @@ FindClosestColor(tkwin, desiredColorPtr, actualColorPtr)
 	    visInfoPtr = XGetVisualInfo(Tk_Display(tkwin),
 		    VisualIDMask, &template, &numFound);
 	    if (numFound < 1) {
-		panic("FindClosestColor couldn't lookup visual");
+		Tcl_Panic("FindClosestColor couldn't lookup visual");
 	    }
 	    stressPtr->numColors = visInfoPtr->colormap_size;
 	    XFree((char *) visInfoPtr);
@@ -299,7 +299,7 @@ FindClosestColor(tkwin, desiredColorPtr, actualColorPtr)
 
     while (1)  {
 	if (stressPtr->numColors == 0) {
-	    panic("FindClosestColor ran out of colors");
+	    Tcl_Panic("FindClosestColor ran out of colors");
 	}
 	closestDistance = 1e30;
 	closest = 0;

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.61 2003/12/21 23:50:13 davygrvy Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.62 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tkPort.h"
@@ -864,7 +864,7 @@ TkCreateMainWindow(interp, screenName, baseName)
      */
 
     if (sizeof(TkWindow) != sizeof(Tk_FakeWin)) {
-	panic("TkWindow and Tk_FakeWin are not the same size");
+	Tcl_Panic("TkWindow and Tk_FakeWin are not the same size");
     }
 
     /*
@@ -929,7 +929,7 @@ TkCreateMainWindow(interp, screenName, baseName)
     isSafe = Tcl_IsSafe(interp);
     for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
 	if ((cmdPtr->cmdProc == NULL) && (cmdPtr->objProc == NULL)) {
-	    panic("TkCreateMainWindow: builtin command with NULL string and object procs");
+	    Tcl_Panic("TkCreateMainWindow: builtin command with NULL string and object procs");
 	}
 	if (cmdPtr->passMainWindow) {
 	    clientData = (ClientData) tkwin;
@@ -1430,7 +1430,7 @@ Tk_DestroyWindow(tkwin)
 	halfdeadPtr = halfdeadPtr->nextPtr;
     }
     if (halfdeadPtr == NULL)
-        panic("window not found on half dead list");
+        Tcl_Panic("window not found on half dead list");
 
     /*
      * Cleanup the data structures associated with this window.
@@ -1580,7 +1580,7 @@ Tk_DestroyWindow(tkwin)
                     backDispPtr = theDispPtr;
                 }
                 if (theDispPtr == NULL) {
-                    panic("could not find display to close!");
+                    Tcl_Panic("could not find display to close!");
                 }
                 if (backDispPtr == NULL) {
                     tsdPtr->displayList = theDispPtr->nextPtr;
@@ -1847,7 +1847,7 @@ Tk_ConfigureWindow(tkwin, valueMask, valuePtr)
 	winPtr->changes.border_width = valuePtr->border_width;
     }
     if (valueMask & (CWSibling|CWStackMode)) {
-	panic("Can't set sibling or stack mode from Tk_ConfigureWindow.");
+	Tcl_Panic("Can't set sibling or stack mode from Tk_ConfigureWindow.");
     }
 
     if (winPtr->window != None) {
@@ -2434,7 +2434,7 @@ UnlinkWindow(winPtr)
 	while (prevPtr->nextPtr != winPtr) {
 	    prevPtr = prevPtr->nextPtr;
 	    if (prevPtr == NULL) {
-		panic("UnlinkWindow couldn't find child in parent");
+		Tcl_Panic("UnlinkWindow couldn't find child in parent");
 	    }
 	}
 	prevPtr->nextPtr = winPtr->nextPtr;

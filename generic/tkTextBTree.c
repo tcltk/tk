@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.12 2004/01/07 16:28:23 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.13 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -633,7 +633,7 @@ SplitSeg(indexPtr)
 	    return prevPtr;
 	}
     }
-    panic("SplitSeg reached end of line!");
+    Tcl_Panic("SplitSeg reached end of line!");
     return NULL;
 }
 
@@ -940,7 +940,7 @@ TkBTreeFindLine(tree, line)
 		nodePtr->numLines <= linesLeft;
 		nodePtr = nodePtr->nextPtr) {
 	    if (nodePtr == NULL) {
-		panic("TkBTreeFindLine ran out of nodes");
+		Tcl_Panic("TkBTreeFindLine ran out of nodes");
 	    }
 	    linesLeft -= nodePtr->numLines;
 	}
@@ -953,7 +953,7 @@ TkBTreeFindLine(tree, line)
     for (linePtr = nodePtr->children.linePtr; linesLeft > 0;
 	    linePtr = linePtr->nextPtr) {
 	if (linePtr == NULL) {
-	    panic("TkBTreeFindLine ran out of lines");
+	    Tcl_Panic("TkBTreeFindLine ran out of lines");
 	}
 	linesLeft -= 1;
     }
@@ -1003,7 +1003,7 @@ TkBTreeFindPixelLine(tree, pixels, pixelOffset)
     }
 
     if (nodePtr->numPixels == 0) {
-	panic("TkBTreeFindPixelLine called with empty window");
+	Tcl_Panic("TkBTreeFindPixelLine called with empty window");
     }
     
     /*
@@ -1016,7 +1016,7 @@ TkBTreeFindPixelLine(tree, pixels, pixelOffset)
 		nodePtr->numPixels <= pixelsLeft;
 		nodePtr = nodePtr->nextPtr) {
 	    if (nodePtr == NULL) {
-		panic("TkBTreeFindPixelLine ran out of nodes");
+		Tcl_Panic("TkBTreeFindPixelLine ran out of nodes");
 	    }
 	    pixelsLeft -= nodePtr->numPixels;
 	}
@@ -1030,7 +1030,7 @@ TkBTreeFindPixelLine(tree, pixels, pixelOffset)
 	    linePtr->pixelHeight < pixelsLeft;
 	    linePtr = linePtr->nextPtr) {
 	if (linePtr == NULL) {
-	    panic("TkBTreeFindPixelLine ran out of lines");
+	    Tcl_Panic("TkBTreeFindPixelLine ran out of lines");
 	}
 	pixelsLeft -= linePtr->pixelHeight;
     }
@@ -1129,7 +1129,7 @@ TkBTreePreviousLine(linePtr)
 	}
 	prevPtr = prevPtr->nextPtr;
 	if (prevPtr == (TkTextLine *) NULL) {
-	    panic("TkBTreePreviousLine ran out of lines");
+	    Tcl_Panic("TkBTreePreviousLine ran out of lines");
 	}
     }
 
@@ -1205,7 +1205,7 @@ TkBTreePixels(linePtr)
     for (linePtr2 = nodePtr->children.linePtr; linePtr2 != linePtr;
 	    linePtr2 = linePtr2->nextPtr) {
 	if (linePtr2 == NULL) {
-	    panic("TkBTreePixels couldn't find line");
+	    Tcl_Panic("TkBTreePixels couldn't find line");
 	}
 	index += linePtr2->pixelHeight;
     }
@@ -1221,7 +1221,7 @@ TkBTreePixels(linePtr)
 	for (nodePtr2 = parentPtr->children.nodePtr; nodePtr2 != nodePtr;
 		nodePtr2 = nodePtr2->nextPtr) {
 	    if (nodePtr2 == NULL) {
-		panic("TkBTreePixels couldn't find node");
+		Tcl_Panic("TkBTreePixels couldn't find node");
 	    }
 	    index += nodePtr2->numPixels;
 	}
@@ -1266,7 +1266,7 @@ TkBTreeLineIndex(linePtr)
     for (linePtr2 = nodePtr->children.linePtr; linePtr2 != linePtr;
 	    linePtr2 = linePtr2->nextPtr) {
 	if (linePtr2 == NULL) {
-	    panic("TkBTreeLineIndex couldn't find line");
+	    Tcl_Panic("TkBTreeLineIndex couldn't find line");
 	}
 	index += 1;
     }
@@ -1282,7 +1282,7 @@ TkBTreeLineIndex(linePtr)
 	for (nodePtr2 = parentPtr->children.nodePtr; nodePtr2 != nodePtr;
 		nodePtr2 = nodePtr2->nextPtr) {
 	    if (nodePtr2 == NULL) {
-		panic("TkBTreeLineIndex couldn't find node");
+		Tcl_Panic("TkBTreeLineIndex couldn't find node");
 	    }
 	    index += nodePtr2->numLines;
 	}
@@ -1604,7 +1604,7 @@ ChangeNodeToggleCount(nodePtr, tagPtr, delta)
 		 * first place).
 		 */
 
-		panic("ChangeNodeToggleCount: bad toggle count (%d) max (%d)",
+		Tcl_Panic("ChangeNodeToggleCount: bad toggle count (%d) max (%d)",
 		    summaryPtr->toggleCount, tagPtr->toggleCount);
 	    }
     
@@ -2212,7 +2212,7 @@ TkBTreeNextTag(searchPtr)
 		}
 		searchPtr->linesLeft -= nodePtr->numLines;
 		if (nodePtr->nextPtr == NULL) {
-		    panic("TkBTreeNextTag found incorrect tag summary info.");
+		    Tcl_Panic("TkBTreeNextTag found incorrect tag summary info.");
 		}
 	    }
 	    nextChild:
@@ -2426,7 +2426,7 @@ TkBTreePrevTag(searchPtr)
 		continue;
 	    }
 	    if (prevNodePtr == NULL) {
-		panic("TkBTreePrevTag found incorrect tag summary info.");
+		Tcl_Panic("TkBTreePrevTag found incorrect tag summary info.");
 	    }
 	    searchPtr->linesLeft -= linesSkipped;
 	    nodePtr = prevNodePtr;
@@ -2993,21 +2993,21 @@ TkBTreeCheck(tree)
 	nodePtr = tagPtr->tagRootPtr;
 	if (nodePtr == (Node *) NULL) {
 	    if (tagPtr->toggleCount != 0) {
-		panic("TkBTreeCheck found \"%s\" with toggles (%d) but no root",
+		Tcl_Panic("TkBTreeCheck found \"%s\" with toggles (%d) but no root",
 		    tagPtr->name, tagPtr->toggleCount);
 	    }
 	    continue;		/* no ranges for the tag */
 	} else if (tagPtr->toggleCount == 0) {
-	    panic("TkBTreeCheck found root for \"%s\" with no toggles",
+	    Tcl_Panic("TkBTreeCheck found root for \"%s\" with no toggles",
 		    tagPtr->name);
 	} else if (tagPtr->toggleCount & 1) {
-	    panic("TkBTreeCheck found odd toggle count for \"%s\" (%d)",
+	    Tcl_Panic("TkBTreeCheck found odd toggle count for \"%s\" (%d)",
 		    tagPtr->name, tagPtr->toggleCount);
 	}
 	for (summaryPtr = nodePtr->summaryPtr; summaryPtr != NULL;
 		summaryPtr = summaryPtr->nextPtr) {
 	    if (summaryPtr->tagPtr == tagPtr) {
-		panic("TkBTreeCheck found root node with summary info");
+		Tcl_Panic("TkBTreeCheck found root node with summary info");
 	    }
 	}
 	count = 0;
@@ -3035,7 +3035,7 @@ TkBTreeCheck(tree)
 	    }
 	}
 	if (count != tagPtr->toggleCount) {
-	    panic("TkBTreeCheck toggleCount (%d) wrong for \"%s\" should be (%d)",
+	    Tcl_Panic("TkBTreeCheck toggleCount (%d) wrong for \"%s\" should be (%d)",
 		tagPtr->toggleCount, tagPtr->name, count);
 	}
     }
@@ -3053,7 +3053,7 @@ TkBTreeCheck(tree)
      */
 
     if (nodePtr->numLines < 2) {
-	panic("TkBTreeCheck: less than 2 lines in tree");
+	Tcl_Panic("TkBTreeCheck: less than 2 lines in tree");
     }
     while (nodePtr->level > 0) {
 	nodePtr = nodePtr->children.nodePtr;
@@ -3078,17 +3078,17 @@ TkBTreeCheck(tree)
 	segPtr = segPtr->nextPtr;
     }
     if (segPtr->typePtr != &tkTextCharType) {
-	panic("TkBTreeCheck: last line has bogus segment type");
+	Tcl_Panic("TkBTreeCheck: last line has bogus segment type");
     }
     if (segPtr->nextPtr != NULL) {
-	panic("TkBTreeCheck: last line has too many segments");
+	Tcl_Panic("TkBTreeCheck: last line has too many segments");
     }
     if (segPtr->size != 1) {
-	panic("TkBTreeCheck: last line has wrong # characters: %d",
+	Tcl_Panic("TkBTreeCheck: last line has wrong # characters: %d",
 		segPtr->size);
     }
     if ((segPtr->body.chars[0] != '\n') || (segPtr->body.chars[1] != 0)) {
-	panic("TkBTreeCheck: last line had bad value: %s",
+	Tcl_Panic("TkBTreeCheck: last line had bad value: %s",
 		segPtr->body.chars);
     }
 }
@@ -3132,7 +3132,7 @@ CheckNodeConsistency(nodePtr)
     }
     if ((nodePtr->numChildren < minChildren)
 	    || (nodePtr->numChildren > MAX_CHILDREN)) {
-	panic("CheckNodeConsistency: bad child count (%d)",
+	Tcl_Panic("CheckNodeConsistency: bad child count (%d)",
 		nodePtr->numChildren);
     }
 
@@ -3143,10 +3143,10 @@ CheckNodeConsistency(nodePtr)
 	for (linePtr = nodePtr->children.linePtr; linePtr != NULL;
 		linePtr = linePtr->nextPtr) {
 	    if (linePtr->parentPtr != nodePtr) {
-		panic("CheckNodeConsistency: line doesn't point to parent");
+		Tcl_Panic("CheckNodeConsistency: line doesn't point to parent");
 	    }
 	    if (linePtr->segPtr == NULL) {
-		panic("CheckNodeConsistency: line has no segments");
+		Tcl_Panic("CheckNodeConsistency: line has no segments");
 	    }
 	    for (segPtr = linePtr->segPtr; segPtr != NULL;
 		    segPtr = segPtr->nextPtr) {
@@ -3157,11 +3157,11 @@ CheckNodeConsistency(nodePtr)
 			&& (segPtr->nextPtr != NULL)
 			&& (segPtr->nextPtr->size == 0)
 			&& (segPtr->nextPtr->typePtr->leftGravity)) {
-		    panic("CheckNodeConsistency: wrong segment order for gravity");
+		    Tcl_Panic("CheckNodeConsistency: wrong segment order for gravity");
 		}
 		if ((segPtr->nextPtr == NULL)
 			&& (segPtr->typePtr != &tkTextCharType)) {
-		    panic("CheckNodeConsistency: line ended with wrong type");
+		    Tcl_Panic("CheckNodeConsistency: line ended with wrong type");
 		}
 	    }
 	    numChildren++;
@@ -3172,10 +3172,10 @@ CheckNodeConsistency(nodePtr)
 	for (childNodePtr = nodePtr->children.nodePtr; childNodePtr != NULL;
 		childNodePtr = childNodePtr->nextPtr) {
 	    if (childNodePtr->parentPtr != nodePtr) {
-		panic("CheckNodeConsistency: node doesn't point to parent");
+		Tcl_Panic("CheckNodeConsistency: node doesn't point to parent");
 	    }
 	    if (childNodePtr->level != (nodePtr->level-1)) {
-		panic("CheckNodeConsistency: level mismatch (%d %d)",
+		Tcl_Panic("CheckNodeConsistency: level mismatch (%d %d)",
 			nodePtr->level, childNodePtr->level);
 	    }
 	    CheckNodeConsistency(childNodePtr);
@@ -3187,7 +3187,7 @@ CheckNodeConsistency(nodePtr)
 			if (summaryPtr->tagPtr->tagRootPtr == nodePtr) {
 			    break;
 			}
-			panic("CheckNodeConsistency: node tag \"%s\" not %s",
+			Tcl_Panic("CheckNodeConsistency: node tag \"%s\" not %s",
 				summaryPtr->tagPtr->name,
 				"present in parent summaries");
 		    }
@@ -3202,22 +3202,22 @@ CheckNodeConsistency(nodePtr)
 	}
     }
     if (numChildren != nodePtr->numChildren) {
-	panic("CheckNodeConsistency: mismatch in numChildren (%d %d)",
+	Tcl_Panic("CheckNodeConsistency: mismatch in numChildren (%d %d)",
 		numChildren, nodePtr->numChildren);
     }
     if (numLines != nodePtr->numLines) {
-	panic("CheckNodeConsistency: mismatch in numLines (%d %d)",
+	Tcl_Panic("CheckNodeConsistency: mismatch in numLines (%d %d)",
 		numLines, nodePtr->numLines);
     }
     if (numPixels != nodePtr->numPixels) {
-	panic("CheckNodeConsistency: mismatch in numPixels (%d %d)",
+	Tcl_Panic("CheckNodeConsistency: mismatch in numPixels (%d %d)",
 	      numPixels, nodePtr->numPixels);
     }
 
     for (summaryPtr = nodePtr->summaryPtr; summaryPtr != NULL;
 	    summaryPtr = summaryPtr->nextPtr) {
 	if (summaryPtr->tagPtr->toggleCount == summaryPtr->toggleCount) {
-	    panic("CheckNodeConsistency: found unpruned root for \"%s\"",
+	    Tcl_Panic("CheckNodeConsistency: found unpruned root for \"%s\"",
 		summaryPtr->tagPtr->name);
 	}
 	toggleCount = 0;
@@ -3249,13 +3249,13 @@ CheckNodeConsistency(nodePtr)
 	    }
 	}
 	if (toggleCount != summaryPtr->toggleCount) {
-	    panic("CheckNodeConsistency: mismatch in toggleCount (%d %d)",
+	    Tcl_Panic("CheckNodeConsistency: mismatch in toggleCount (%d %d)",
 		    toggleCount, summaryPtr->toggleCount);
 	}
 	for (summaryPtr2 = summaryPtr->nextPtr; summaryPtr2 != NULL;
 		summaryPtr2 = summaryPtr2->nextPtr) {
 	    if (summaryPtr2->tagPtr == summaryPtr->tagPtr) {
-		panic("CheckNodeConsistency: duplicated node tag: %s",
+		Tcl_Panic("CheckNodeConsistency: duplicated node tag: %s",
 			summaryPtr->tagPtr->name);
 	    }
 	}
@@ -3844,18 +3844,18 @@ CharCheckProc(segPtr, linePtr)
      */
 
     if (segPtr->size <= 0) {
-	panic("CharCheckProc: segment has size <= 0");
+	Tcl_Panic("CharCheckProc: segment has size <= 0");
     }
     if (strlen(segPtr->body.chars) != (size_t) segPtr->size) {
-	panic("CharCheckProc: segment has wrong size");
+	Tcl_Panic("CharCheckProc: segment has wrong size");
     }
     if (segPtr->nextPtr == NULL) {
 	if (segPtr->body.chars[segPtr->size-1] != '\n') {
-	    panic("CharCheckProc: line doesn't end with newline");
+	    Tcl_Panic("CharCheckProc: line doesn't end with newline");
 	}
     } else {
 	if (segPtr->nextPtr->typePtr == &tkTextCharType) {
-	    panic("CharCheckProc: adjacent character segments weren't merged");
+	    Tcl_Panic("CharCheckProc: adjacent character segments weren't merged");
 	}
     }
 }
@@ -4033,24 +4033,24 @@ ToggleCheckProc(segPtr, linePtr)
     int needSummary;
 
     if (segPtr->size != 0) {
-	panic("ToggleCheckProc: segment had non-zero size");
+	Tcl_Panic("ToggleCheckProc: segment had non-zero size");
     }
     if (!segPtr->body.toggle.inNodeCounts) {
-	panic("ToggleCheckProc: toggle counts not updated in nodes");
+	Tcl_Panic("ToggleCheckProc: toggle counts not updated in nodes");
     }
     needSummary = (segPtr->body.toggle.tagPtr->tagRootPtr != linePtr->parentPtr);
     for (summaryPtr = linePtr->parentPtr->summaryPtr; ;
 	    summaryPtr = summaryPtr->nextPtr) {
 	if (summaryPtr == NULL) {
 	    if (needSummary) {
-		panic("ToggleCheckProc: tag not present in node");
+		Tcl_Panic("ToggleCheckProc: tag not present in node");
 	    } else {
 		break;
 	    }
 	}
 	if (summaryPtr->tagPtr == segPtr->body.toggle.tagPtr) {
 	    if (!needSummary) {
-		panic("ToggleCheckProc: tag present in root node summary");
+		Tcl_Panic("ToggleCheckProc: tag present in root node summary");
 	    }
 	    break;
 	}

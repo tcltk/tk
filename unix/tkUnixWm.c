@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.38 2003/10/15 20:04:03 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.39 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tkPort.h"
@@ -787,7 +787,7 @@ TkWmDeadWindow(winPtr)
 	for (prevPtr = (WmInfo *) winPtr->dispPtr->firstWmPtr; ;
                 prevPtr = prevPtr->nextPtr) {
 	    if (prevPtr == NULL) {
-		panic("couldn't unlink window in TkWmDeadWindow");
+		Tcl_Panic("couldn't unlink window in TkWmDeadWindow");
 	    }
 	    if (prevPtr->nextPtr == wmPtr) {
 		prevPtr->nextPtr = wmPtr->nextPtr;
@@ -875,7 +875,7 @@ TkWmDeadWindow(winPtr)
 	}
     }
     if (wmPtr->numTransients != 0)
-        panic("numTransients should be 0");
+        Tcl_Panic("numTransients should be 0");
 
     if (wmPtr->masterPtr != NULL) {
 	wmPtr2 = wmPtr->masterPtr->wmInfoPtr;
@@ -2716,7 +2716,7 @@ WmStackorderCmd(tkwin, winPtr, interp, objc, objv)
     if (objc == 3) {
 	windows = TkWmStackorderToplevel(winPtr);
 	if (windows == NULL) {
-	    panic("TkWmStackorderToplevel failed");
+	    Tcl_Panic("TkWmStackorderToplevel failed");
 	} else {
 	    for (window_ptr = windows; *window_ptr ; window_ptr++) {
 		Tcl_AppendElement(interp, (*window_ptr)->pathName);
@@ -2771,9 +2771,9 @@ WmStackorderCmd(tkwin, winPtr, interp, objc, objv)
 		    index2 = (window_ptr - windows);
 	    }
 	    if (index1 == -1)
-		panic("winPtr window not found");
+		Tcl_Panic("winPtr window not found");
 	    if (index2 == -1)
-		panic("winPtr2 window not found");
+		Tcl_Panic("winPtr2 window not found");
 
 	    ckfree((char *) windows);
 	}
@@ -5189,7 +5189,7 @@ Tk_MoveToplevelWindow(tkwin, x, y)
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (!(winPtr->flags & TK_TOP_LEVEL)) {
-	panic("Tk_MoveToplevelWindow called with non-toplevel window");
+	Tcl_Panic("Tk_MoveToplevelWindow called with non-toplevel window");
     }
     wmPtr->x = x;
     wmPtr->y = y;
@@ -5469,7 +5469,7 @@ TkWmStackorderToplevel(parentPtr)
             }
         }
         if ((window_ptr - windows) != table.numEntries)
-            panic("num matched toplevel windows does not equal num children");
+            Tcl_Panic("num matched toplevel windows does not equal num children");
         *window_ptr = NULL;
 	if (numChildren) {
 	    XFree((char *) children);
@@ -6114,7 +6114,7 @@ TkUnixSetMenubar(tkwin, menubar)
     } else {
 	if ((menubarPtr->flags & TK_TOP_LEVEL)
 	     || (Tk_Screen(menubar) != Tk_Screen(tkwin))) {
-	    panic("TkUnixSetMenubar got bad menubar");
+	    Tcl_Panic("TkUnixSetMenubar got bad menubar");
 	}
 	wmPtr->menuHeight = Tk_ReqHeight(menubar);
 	if (wmPtr->menuHeight == 0) {

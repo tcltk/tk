@@ -29,7 +29,7 @@ MoveWindowStructure(
     short hGlobal, 
     short vGlobal)
 {
-    panic("Error: Running stub for PPC-Only routine");
+    Tcl_Panic("Error: Running stub for PPC-Only routine");
     return noErr;
 
 }
@@ -41,7 +41,7 @@ CreateNewWindow(
     const Rect *bounds, 
     WindowPtr *outWindow)
 {
-    panic("Error: Running stub for PPC-Only routine");
+    Tcl_Panic("Error: Running stub for PPC-Only routine");
     return noErr;
 
 }
@@ -49,7 +49,7 @@ CreateNewWindow(
 pascal WindowPtr
 FrontNonFloatingWindow()
 {
-    panic("Error: Running stub for PPC-Only routine");
+    Tcl_Panic("Error: Running stub for PPC-Only routine");
     return NULL;
 }
 
@@ -58,7 +58,7 @@ GetWindowClass(
     WindowPtr window,
     WindowClass *outClass)
 {
-    panic("Error: Running stub for PPC-Only routine");
+    Tcl_Panic("Error: Running stub for PPC-Only routine");
     return noErr;
 }
 
@@ -70,35 +70,35 @@ ApplyThemeBackground(
     SInt16 inDepth,
     Boolean inColorDev)
 {
-    panic("Error: Running stub for PPC-Only routine");
+    Tcl_Panic("Error: Running stub for PPC-Only routine");
     return noErr;
 }
 
 pascal OSStatus
 InitFloatingWindows(void)
 {
-    panic("Error: Running stub for PPC-Only routine");
+    Tcl_Panic("Error: Running stub for PPC-Only routine");
     return noErr;
 }
 
 pascal OSStatus
 ShowFloatingWindows(void)
 {
-    panic("Error: Running stub for PPC-Only routine");
+    Tcl_Panic("Error: Running stub for PPC-Only routine");
     return noErr;
 }
 
 pascal OSStatus
 HideFloatingWindows(void)
 {
-    panic("Error: Running stub for PPC-Only routine");
+    Tcl_Panic("Error: Running stub for PPC-Only routine");
     return noErr;
 }
 
 pascal Boolean
 IsValidWindowPtr(GrafPtr grafPort)
 {
-    panic("Error: Running stub for PPC-Only routine");
+    Tcl_Panic("Error: Running stub for PPC-Only routine");
     return true;
 }
 

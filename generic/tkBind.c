@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.29 2003/04/14 23:34:41 mdejong Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.30 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "tkPort.h"
@@ -746,7 +746,7 @@ TkBindInit(mainPtr)
     BindInfo *bindInfoPtr;
 
     if (sizeof(XEvent) < sizeof(XVirtualEvent)) {
-	panic("TkBindInit: virtual events can't be supported");
+	Tcl_Panic("TkBindInit: virtual events can't be supported");
     }
 
     /*
@@ -1177,7 +1177,7 @@ Tk_DeleteBinding(interp, bindingTable, object, eventString)
 
     hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, (char *) object);
     if (hPtr == NULL) {
-	panic("Tk_DeleteBinding couldn't find object table entry");
+	Tcl_Panic("Tk_DeleteBinding couldn't find object table entry");
     }
     prevPtr = (PatSeq *) Tcl_GetHashValue(hPtr);
     if (prevPtr == psPtr) {
@@ -1185,7 +1185,7 @@ Tk_DeleteBinding(interp, bindingTable, object, eventString)
     } else {
 	for ( ; ; prevPtr = prevPtr->nextObjPtr) {
 	    if (prevPtr == NULL) {
-		panic("Tk_DeleteBinding couldn't find on object list");
+		Tcl_Panic("Tk_DeleteBinding couldn't find on object list");
 	    }
 	    if (prevPtr->nextObjPtr == psPtr) {
 		prevPtr->nextObjPtr = psPtr->nextObjPtr;
@@ -1203,7 +1203,7 @@ Tk_DeleteBinding(interp, bindingTable, object, eventString)
     } else {
 	for ( ; ; prevPtr = prevPtr->nextSeqPtr) {
 	    if (prevPtr == NULL) {
-		panic("Tk_DeleteBinding couldn't find on hash chain");
+		Tcl_Panic("Tk_DeleteBinding couldn't find on hash chain");
 	    }
 	    if (prevPtr->nextSeqPtr == psPtr) {
 		prevPtr->nextSeqPtr = psPtr->nextSeqPtr;
@@ -1375,7 +1375,7 @@ Tk_DeleteAllBindings(bindingTable, object)
 	} else {
 	    for ( ; ; prevPtr = prevPtr->nextSeqPtr) {
 		if (prevPtr == NULL) {
-		    panic("Tk_DeleteAllBindings couldn't find on hash chain");
+		    Tcl_Panic("Tk_DeleteAllBindings couldn't find on hash chain");
 		}
 		if (prevPtr->nextSeqPtr == psPtr) {
 		    prevPtr->nextSeqPtr = psPtr->nextSeqPtr;
@@ -1664,7 +1664,7 @@ Tk_BindEvent(bindingTable, eventPtr, tkwin, numObjects, objectPtr)
     
 	if (matchPtr != NULL) {
 	    if (sourcePtr->eventProc == NULL) {
-		panic("Tk_BindEvent: missing command");
+		Tcl_Panic("Tk_BindEvent: missing command");
 	    }
 	    if (sourcePtr->eventProc == EvalTclBinding) {
 		ExpandPercents(winPtr, (char *) sourcePtr->clientData,
@@ -2200,7 +2200,7 @@ MatchPatterns(dispPtr, bindPtr, psPtr, bestPtr, objectPtr, sourcePtrPtr)
 		    virtMatchPtr = (PatSeq *) Tcl_GetHashValue(hPtr);
 		    if ((virtMatchPtr->numPats != 1)
 			    || (virtMatchPtr->nextSeqPtr != NULL)) {
-			panic("MatchPattern: badly constructed virtual event");
+			Tcl_Panic("MatchPattern: badly constructed virtual event");
 		    }
 		    sourcePtr = virtMatchPtr;
 		    goto match;
@@ -3101,7 +3101,7 @@ DeleteVirtualEvent(interp, vetPtr, virtString, eventString)
 		}
 	    }
 	    if (iVirt == voPtr->numOwners) {
-		panic("DeleteVirtualEvent: couldn't find owner");
+		Tcl_Panic("DeleteVirtualEvent: couldn't find owner");
 	    }
 	    voPtr->numOwners--;
 	    if (voPtr->numOwners == 0) {
@@ -3120,7 +3120,7 @@ DeleteVirtualEvent(interp, vetPtr, virtString, eventString)
 		} else {
 		    for ( ; ; prevPtr = prevPtr->nextSeqPtr) {
 			if (prevPtr == NULL) {
-			    panic("DeleteVirtualEvent couldn't find on hash chain");
+			    Tcl_Panic("DeleteVirtualEvent couldn't find on hash chain");
 			}
 			if (prevPtr->nextSeqPtr == psPtr) {
 			    prevPtr->nextSeqPtr = psPtr->nextSeqPtr;
