@@ -1,5 +1,7 @@
 2003-10-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* library/scale.tcl: Clear bug with chording mouse buttons.
+
 	* library/console.tcl: Avoid including the console in the list
 	of interpreters exposed by [winfo interps].
 
