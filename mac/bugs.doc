@@ -1,10 +1,15 @@
 Known bug list for Tk 8.0 for Macintosh
 
-by Ray Johnson
+Originally by Ray Johnson
 Sun Microsystems Laboratories
 rjohnson@eng.sun.com
 
-RCS: @(#) $Id: bugs.doc,v 1.4 1999/04/16 01:51:29 stanton Exp $
+Maintained by:
+Jim Ingham
+Cygnus Solutions, a Red Hat Company
+jingham@cygnus.com
+
+RCS: @(#) $Id: bugs.doc,v 1.5 2000/02/10 08:47:16 jingham Exp $
 
 We are now very close to passing the test suite for Tk.  We are very
 interested in finding remaining bugs that still linger.  Please let us
@@ -46,4 +51,4 @@ are reported at least once.  Send those bug reports in!
 
 
 
-Ray
+Jim
