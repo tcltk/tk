@@ -1,3 +1,12 @@
+2004-10-28  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWin32Dll.c (DllMain, _except_dllmain_detach_handler):
+	Rework pushing of exception handler function pointer
+	so that compiling with gcc -O3 works. Remove empty
+	function call to avoid compiler warning. Mark the
+	DllMain function as noinline to avoid compiler
+	error from duplicated asm labels in generated code.
+
 2004-10-28  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* unix/tkUnixScale.c (DisplayHorizontalValue): Fix for #220927 by 
