@@ -268,9 +268,13 @@ if test -r FreeXId.3; then
 fi
 if test -r GeomReq.3; then
     rm -f Tk_GeometryRequest.3
+    rm -f Tk_SetMinimumRequestSize.3
     rm -f Tk_SetInternalBorder.3
+    rm -f Tk_SetInternalBorderEx.3
     ln GeomReq.3 Tk_GeometryRequest.3
+    ln GeomReq.3 Tk_SetMinimumRequestSize.3
     ln GeomReq.3 Tk_SetInternalBorder.3
+    ln GeomReq.3 Tk_SetInternalBorderEx.3
 fi
 if test -r GetAnchor.3; then
     rm -f Tk_GetAnchorFromObj.3
@@ -566,6 +570,10 @@ if test -r SetClass.3; then
     ln SetClass.3 Tk_SetClass.3
     ln SetClass.3 Tk_Class.3
 fi
+if test -r SetClassProcs.3; then
+    rm -f Tk_SetClassProcs.3
+    ln SetClassProcs.3 Tk_SetClassProcs.3
+fi
 if test -r SetGrid.3; then
     rm -f Tk_SetGrid.3
     rm -f Tk_UnsetGrid.3
@@ -647,9 +655,14 @@ if test -r WindowId.3; then
     rm -f Tk_IsEmbedded.3
     rm -f Tk_IsMapped.3
     rm -f Tk_IsTopLevel.3
+    rm -f Tk_MinReqWidth.3
+    rm -f Tk_MinReqHeight.3
     rm -f Tk_ReqWidth.3
     rm -f Tk_ReqHeight.3
-    rm -f Tk_InternalBorderWidth.3
+    rm -f Tk_InternalBorderLeft.3
+    rm -f Tk_InternalBorderRight.3
+    rm -f Tk_InternalBorderTop.3
+    rm -f Tk_InternalBorderBottom.3
     rm -f Tk_Visual.3
     rm -f Tk_Depth.3
     rm -f Tk_Colormap.3
@@ -669,9 +682,14 @@ if test -r WindowId.3; then
     ln WindowId.3 Tk_IsEmbedded.3
     ln WindowId.3 Tk_IsMapped.3
     ln WindowId.3 Tk_IsTopLevel.3
+    ln WindowId.3 Tk_MinReqWidth.3
+    ln WindowId.3 Tk_MinReqHeight.3
     ln WindowId.3 Tk_ReqWidth.3
     ln WindowId.3 Tk_ReqHeight.3
-    ln WindowId.3 Tk_InternalBorderWidth.3
+    ln WindowId.3 Tk_InternalBorderLeft.3
+    ln WindowId.3 Tk_InternalBorderRight.3
+    ln WindowId.3 Tk_InternalBorderTop.3
+    ln WindowId.3 Tk_InternalBorderBottom.3
     ln WindowId.3 Tk_Visual.3
     ln WindowId.3 Tk_Depth.3
     ln WindowId.3 Tk_Colormap.3
@@ -702,6 +720,10 @@ if test -r getOpenFile.n; then
     ln getOpenFile.n tk_getOpenFile.n
     ln getOpenFile.n tk_getSaveFile.n
 fi
+if test -r menu.n; then
+    rm -f tk_menuSetFocus.n
+    ln menu.n tk_menuSetFocus.n
+fi
 if test -r menubar.n; then
     rm -f tk_menuBar.n
     rm -f tk_bindForTraversal.n
@@ -725,5 +747,13 @@ fi
 if test -r popup.n; then
     rm -f tk_popup.n
     ln popup.n tk_popup.n
+fi
+if test -r text.n; then
+    rm -f tk_textCopy.n
+    rm -f tk_textCut.n
+    rm -f tk_textPaste.n
+    ln text.n tk_textCopy.n
+    ln text.n tk_textCut.n
+    ln text.n tk_textPaste.n
 fi
 exit 0

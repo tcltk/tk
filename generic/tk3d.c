@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.10 2000/05/17 21:17:20 ericm Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.10.2.1 2002/04/02 21:00:45 hobbs Exp $
  */
 
 #include "tk3d.h"
@@ -20,7 +20,7 @@
  * used by Tk_GetReliefFromObj.
  */
 
-static char *reliefStrings[] = {"flat", "groove", "raised",
+static CONST char *reliefStrings[] = {"flat", "groove", "raised",
 				    "ridge", "solid", "sunken", 
 				    (char *) NULL};
 
@@ -46,7 +46,7 @@ static void		ShiftLine _ANSI_ARGS_((XPoint *p1Ptr, XPoint *p2Ptr,
  * is set.
  */
 
-static Tcl_ObjType borderObjType = {
+Tcl_ObjType tkBorderObjType = {
     "border",			/* name */
     FreeBorderObjProc,		/* freeIntRepProc */
     DupBorderObjProc,		/* dupIntRepProc */
@@ -87,7 +87,7 @@ Tk_Alloc3DBorderFromObj(interp, tkwin, objPtr)
 {
     TkBorder *borderPtr;
 
-    if (objPtr->typePtr != &borderObjType) {
+    if (objPtr->typePtr != &tkBorderObjType) {
 	InitBorderObj(objPtr);
     }
     borderPtr = (TkBorder *) objPtr->internalRep.twoPtrValue.ptr1;
@@ -1263,7 +1263,7 @@ Tk_Get3DBorderFromObj(tkwin, objPtr)
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &borderObjType) {
+    if (objPtr->typePtr != &tkBorderObjType) {
 	InitBorderObj(objPtr);
     }
 
@@ -1356,7 +1356,7 @@ InitBorderObj(objPtr)
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	(*typePtr->freeIntRepProc)(objPtr);
     }
-    objPtr->typePtr = &borderObjType;
+    objPtr->typePtr = &tkBorderObjType;
     objPtr->internalRep.twoPtrValue.ptr1 = (VOID *) NULL;
 }
 

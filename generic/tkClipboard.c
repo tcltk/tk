@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkClipboard.c,v 1.7 2000/08/01 18:52:45 ericm Exp $
+ * RCS: @(#) $Id: tkClipboard.c,v 1.7.2.1 2002/04/02 21:00:47 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -434,7 +434,7 @@ Tk_ClipboardObjCmd(clientData, interp, objc, objv)
     Tk_Window tkwin = (Tk_Window) clientData;
     char *path = NULL;
     Atom selection;
-    static char *optionStrings[] = { "append", "clear", "get", NULL };
+    static CONST char *optionStrings[] = { "append", "clear", "get", NULL };
     enum options { CLIPBOARD_APPEND, CLIPBOARD_CLEAR, CLIPBOARD_GET };
     int index, i;
 
@@ -454,8 +454,9 @@ Tk_ClipboardObjCmd(clientData, interp, objc, objv)
 	    char *targetName = NULL;
 	    char *formatName = NULL;
 	    char *string;
-	    static char *appendOptionStrings[] = { "-displayof", "-format",
-					     "-type", NULL };
+	    static CONST char *appendOptionStrings[] = {
+		"-displayof", "-format", "-type", NULL
+	    };
 	    enum appendOptions { APPEND_DISPLAYOF, APPEND_FORMAT,
 				     APPEND_TYPE };
 	    int subIndex, length;
@@ -525,7 +526,7 @@ Tk_ClipboardObjCmd(clientData, interp, objc, objv)
 		    Tcl_GetString(objv[i]));
 	}
 	case CLIPBOARD_CLEAR: {
-	    static char *clearOptionStrings[] = { "-displayof", NULL };
+	    static CONST char *clearOptionStrings[] = { "-displayof", NULL };
 	    enum clearOptions { CLEAR_DISPLAYOF };
 	    int subIndex;
 	    if (objc != 2 && objc != 4) {
@@ -556,7 +557,9 @@ Tk_ClipboardObjCmd(clientData, interp, objc, objv)
 	    Tcl_DString selBytes;
 	    int result;
 	    char *string;
-	    static char *getOptionStrings[] = { "-displayof", "-type", NULL };
+	    static CONST char *getOptionStrings[] = {
+		"-displayof", "-type", NULL
+	    };
 	    enum getOptions { APPEND_DISPLAYOF, APPEND_TYPE };
 	    int subIndex;
 

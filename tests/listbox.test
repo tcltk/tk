@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.13 2000/07/28 16:34:55 ericm Exp $
+# RCS: @(#) $Id: listbox.test,v 1.13.2.1 2002/04/02 20:57:57 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -940,11 +940,19 @@ test listbox-4.18 {ConfigureListbox, no listvar -> bad listvar} {
     catch {destroy .l}
     listbox .l
     .l insert end a b c d
-    set x {this is a " bad list}
+    set x "this is a \" bad list"
     catch {.l configure -listvar x} result
     list [.l get 0 end] [.l cget -listvar] $result
 } [list [list a b c d] {} \
-	"unmatched open quote in list: invalid listvar value"]
+	"unmatched open quote in list: invalid -listvariable value"]
+test listbox-4.19 {ConfigureListbox, no listvar -> bad non-existent listvar} {
+    catch {destroy .l}
+    listbox .l -listvar foo
+    .l insert end a b c d
+    catch {.l configure -listvar ::zoo::bar::foo} result
+    list [.l get 0 end] [.l cget -listvar] $foo $result
+} [list [list a b c d] foo [list a b c d] \
+	{can't set "::zoo::bar::foo": parent namespace doesn't exist}]
 
 # No tests for DisplayListbox:  I don't know how to test this procedure.
 
@@ -1848,7 +1856,7 @@ test listbox-21.11 {ListboxListVarProc, bad list} {
     catch {unset x}
     listbox .l -listvar x
     set x [list a b c d]
-    catch {set x {this is a " bad list}} result
+    catch {set x "this is a \" bad list"} result
     set result
 } {can't set "x": invalid listvar value}
 test listbox-21.12 {ListboxListVarProc, cleanup item attributes} {
@@ -1966,7 +1974,7 @@ test listbox-23.5 {ConfigureListboxItem, multiple calls} {
     catch {destroy .l}
     listbox .l
     set i 0
-    foreach color {red orange yellow green blue darkblue violet} {
+    foreach color {red orange yellow green blue white violet} {
 	.l insert end $color
 	.l itemconfigure $i -bg $color
 	incr i
@@ -1976,7 +1984,7 @@ test listbox-23.5 {ConfigureListboxItem, multiple calls} {
     list [.l itemcget 0 -bg] [.l itemcget 1 -bg] [.l itemcget 2 -bg] \
 	    [.l itemcget 3 -bg] [.l itemcget 4 -bg] [.l itemcget 5 -bg] \
 	    [.l itemcget 6 -bg]
-} {red orange yellow green blue darkblue violet}
+} {red orange yellow green blue white violet}
 catch {destroy .l}
 listbox .l
 .l insert end a b c d
@@ -1997,7 +2005,7 @@ foreach test {
     } [list [lindex $test 2] [lindex $test 2]]
     incr i
     if {[lindex $test 3] != ""} {
-	test listbox-1.$i {configuration options} {
+	test listbox-23.$i {configuration options} {
 	    list [catch {.l configure $name [lindex $test 3]} msg] $msg
 	} [list 1 [lindex $test 4]]
     }
@@ -2100,11 +2108,17 @@ test listbox-26.5 {listbox disabled state disallows active modification} {
     .l index active
 } 0
 
+test listbox-27.1 {widget deletion while active} {
+    destroy .l
+    pack [listbox .l]
+    update
+    .l configure -cursor xterm -xscrollcommand { destroy .l }
+    update idle
+    winfo exists .l
+} 0
+
 resetGridInfo
-catch {destroy .l2}
-catch {destroy .t}
-catch {destroy .e}
-catch {destroy .partial}
+eval destroy [winfo children .]
 option clear
 
 # cleanup

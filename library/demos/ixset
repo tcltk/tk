@@ -1,6 +1,6 @@
 #!/bin/sh
 # the next line restarts using wish \
-exec wish "$0" "$@"
+exec wish "$0" ${1+"$@"}
 
 # ixset --
 # A nice interface to "xset" to change X server settings
@@ -9,7 +9,7 @@ exec wish "$0" "$@"
 #   91/11/23 : pda@masi.ibp.fr, jt@ratp.fr : design
 #   92/08/01 : pda@masi.ibp.fr : cleaning
 #
-# RCS: @(#) $Id: ixset,v 1.2 1998/09/14 18:23:29 stanton Exp $
+# RCS: @(#) $Id: ixset,v 1.2.20.1 2002/04/02 20:58:50 hobbs Exp $
 
 #
 # Button actions
@@ -27,10 +27,15 @@ proc ok {} {
 proc cancel {} {
     readsettings
     dispsettings
+    .buttons.apply configure -state disabled
+    .buttons.cancel configure -state disabled
 }
 
-# apply is just "writesettings"
-
+proc apply {} {
+    writesettings
+    .buttons.apply configure -state disabled
+    .buttons.cancel configure -state disabled
+}
 
 #
 # Read current settings
@@ -120,8 +125,8 @@ proc writesettings {} {
     set mouseacc	[.mouse.hor.acc.entry get]
     set mousethr	[.mouse.hor.thr.entry get]
 
-    set screentim	[.screen.val.le.tim.entry get]
-    set screencyc	[.screen.val.le.cyc.entry get]
+    set screentim	[.screen.tim.entry get]
+    set screencyc	[.screen.cyc.entry get]
 
     exec xset \
 	b $bellvol $bellpit $belldur \
@@ -155,12 +160,12 @@ proc dispsettings {} {
     .mouse.hor.thr.entry delete 0 end
     .mouse.hor.thr.entry insert 0 $mousethr
 
-    .screen.val.rb.blank [expr "{$screenbla}=={blank} ? {select} : {deselect}"]
-    .screen.val.rb.pat   [expr "{$screenbla}!={blank} ? {select} : {deselect}"]
-    .screen.val.le.tim.entry delete 0 end
-    .screen.val.le.tim.entry insert 0 $screentim
-    .screen.val.le.cyc.entry delete 0 end
-    .screen.val.le.cyc.entry insert 0 $screencyc
+    .screen.blank [expr "{$screenbla}=={blank} ? {select} : {deselect}"]
+    .screen.pat   [expr "{$screenbla}!={blank} ? {select} : {deselect}"]
+    .screen.tim.entry delete 0 end
+    .screen.tim.entry insert 0 $screentim
+    .screen.cyc.entry delete 0 end
+    .screen.cyc.entry insert 0 $screencyc
 }
 
 
@@ -168,12 +173,17 @@ proc dispsettings {} {
 # Create all windows, and pack them
 #
 
-proc labelentry {path text length} {
+proc labelentry {path text length {range {}}} {
     frame $path
     label $path.label -text $text
-    entry $path.entry -width $length -relief sunken
-    pack $path.label -side left -expand y
-    pack $path.entry -side right -expand y
+    if {[llength $range]} {
+	spinbox $path.entry -width $length -relief sunken \
+		-from [lindex $range 0] -to [lindex $range 1]
+    } else {
+	entry $path.entry -width $length -relief sunken
+    }
+    pack $path.label -side left
+    pack $path.entry -side right -expand y -fill x
 }
 
 proc createwindows {} {
@@ -182,38 +192,57 @@ proc createwindows {} {
     #
 
     frame .buttons
-    button .buttons.ok		-command "ok"			-text "Ok"
-    button .buttons.apply	-command "writesettings"	-text "Apply"
-    button .buttons.cancel	-command "cancel"		-text "Cancel"
-    button .buttons.quit	-command "quit"			-text "Quit"
+    button .buttons.ok	   -default active -command ok     -text "Ok"    
+    button .buttons.apply  -default normal -command apply  -text "Apply" \
+	    -state disabled
+    button .buttons.cancel -default normal -command cancel -text "Cancel" \
+	    -state disabled
+    button .buttons.quit   -default normal -command quit   -text "Quit"  
 
     pack .buttons.ok .buttons.apply .buttons.cancel .buttons.quit \
 	    -side left -expand yes -pady 5
+
+    bind . <Return> {.buttons.ok   flash; .buttons.ok   invoke}
+    bind . <Escape> {.buttons.quit flash; .buttons.quit invoke}
+    bind . <1> {
+	if {![string match .buttons* %W]} {
+	    .buttons.apply  configure -state normal
+	    .buttons.cancel configure -state normal
+	}
+    }
+    bind . <Key> {
+	if {![string match .buttons* %W]} {
+	    switch -glob %K {
+		Return - Escape - Tab - *Shift* {}
+		default {
+		    .buttons.apply  configure -state normal
+		    .buttons.cancel configure -state normal
+		}
+	    }
+	}
+    }
 
     #
     # Bell settings
     #
 
-    frame .bell -relief raised -borderwidth 2
-    label .bell.label	-text "Bell Settings"
+    labelframe .bell -text "Bell Settings" -padx 1.5m -pady 1.5m
     scale .bell.vol \
 	    -from 0 -to 100 -length 200 -tickinterval 20 \
 	    -label "Volume (%)" -orient horizontal
 
     frame .bell.val
-    labelentry .bell.val.pit "Pitch (Hz)"    6
-    labelentry .bell.val.dur "Duration (ms)" 6
+    labelentry .bell.val.pit "Pitch (Hz)"    6 {25 20000}
+    labelentry .bell.val.dur "Duration (ms)" 6 {1 10000}
     pack .bell.val.pit -side left -padx 5
     pack .bell.val.dur -side right -padx 5
-    pack .bell.label .bell.vol .bell.val -side top -expand yes
+    pack .bell.vol .bell.val -side top -expand yes
 
     #
     # Keyboard settings
     #
 
-    frame .kbd -relief raised -borderwidth 2
-
-    label .kbd.label -text "Keyboard Repeat Settings"
+    labelframe .kbd -text "Keyboard Repeat Settings" -padx 1.5m -pady 1.5m
 
     frame .kbd.val
     checkbutton .kbd.val.onoff \
@@ -223,62 +252,52 @@ proc createwindows {} {
     scale .kbd.val.cli \
 	    -from 0 -to 100 -length 200 -tickinterval 20 \
 	    -label "Click Volume (%)" -orient horizontal
-    pack .kbd.val.onoff -side left -expand yes -fill both
-    pack .kbd.val.cli -side left -expand yes
+    pack .kbd.val.onoff -side left -fill x -expand yes -padx {0 1m}
+    pack .kbd.val.cli -side left -expand yes -fill x -padx {1m 0}
 
-    pack .kbd.label -side top -expand yes
     pack .kbd.val -side top -expand yes -pady 2 -fill x
 
     #
     # Mouse settings
     #
 
-    frame .mouse -relief raised -borderwidth 2
+    labelframe .mouse -text "Mouse Settings" -padx 1.5m -pady 1.5m
 
-    label .mouse.label -text "Mouse Settings"
     frame .mouse.hor
-    labelentry .mouse.hor.acc "Acceleration" 3
-    labelentry .mouse.hor.thr "Threshold (pixels)" 3
+    labelentry .mouse.hor.acc "Acceleration" 5
+    labelentry .mouse.hor.thr "Threshold (pixels)" 3 {1 2000}
 
-    pack .mouse.hor.acc -side left
-    pack .mouse.hor.thr -side right
+    pack .mouse.hor.acc -side left -padx {0 1m}
+    pack .mouse.hor.thr -side right -padx {1m 0}
 
-    pack .mouse.label -side top
     pack .mouse.hor -side top -expand yes
 
     #
     # Screen Saver settings
     #
 
-    frame .screen -relief raised -borderwidth 2
+    labelframe .screen -text "Screen-saver Settings" -padx 1.5m -pady 1.5m
 
-    label .screen.label -text "Screen-saver Settings"
-    frame .screen.val
-
-    frame .screen.val.rb
-    radiobutton .screen.val.rb.blank \
+    radiobutton .screen.blank \
 	    -variable screenblank -text "Blank" -relief flat \
-	    -value "blank" -variable screenbla
-    radiobutton .screen.val.rb.pat \
+	    -value "blank" -variable screenbla -anchor w
+    radiobutton .screen.pat \
 	    -variable screenblank -text "Pattern" -relief flat \
-	    -value "noblank" -variable screenbla
-    pack .screen.val.rb.blank .screen.val.rb.pat -side top -pady 2 -anchor w
-    frame .screen.val.le
-    labelentry .screen.val.le.tim "Timeout (s)" 5
-    labelentry .screen.val.le.cyc "Cycle (s)" 5
-    pack .screen.val.le.tim .screen.val.le.cyc -side top -pady 2 -anchor e
+	    -value "noblank" -variable screenbla -anchor w
+    labelentry .screen.tim "Timeout (s)" 5 {1 100000}
+    labelentry .screen.cyc "Cycle (s)" 5 {1 100000}
 
-    pack .screen.val.rb .screen.val.le -side left
-
-    pack .screen.label -side top
-    pack .screen.val -side top -expand y
+    grid .screen.blank .screen.tim -sticky e
+    grid .screen.pat   .screen.cyc -sticky e
+    grid configure .screen.blank .screen.pat -sticky ew
 
     #
     # Main window
     #
 
     pack .buttons -side top -fill both
-    pack .bell .kbd .mouse .screen -side top -fill both -ipady 5 -expand yes
+    pack .bell .kbd .mouse .screen -side top -fill both -expand yes \
+	    -padx 1m -pady 1m
 
     #
     # Let the user resize our window
@@ -310,3 +329,7 @@ dispsettings
 #
 # Now, wait for user actions...
 #
+
+# Local Variables:
+# mode: tcl
+# End:

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.h,v 1.5 1999/12/14 06:52:30 hobbs Exp $
+ * RCS: @(#) $Id: tkScrollbar.h,v 1.5.4.1 2002/04/02 21:00:59 hobbs Exp $
  */
 
 #ifndef _TKSCROLLBAR
@@ -171,7 +171,7 @@ typedef struct TkScrollbar {
  * Declaration of scrollbar class procedures structure.
  */
 
-extern TkClassProcs tkpScrollbarProcs;
+extern Tk_ClassProcs tkpScrollbarProcs;
 
 /*
  * Declaration of scrollbar configuration options.

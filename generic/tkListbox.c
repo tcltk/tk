@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.18 2000/07/28 16:41:40 ericm Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.18.2.1 2002/04/02 21:00:53 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -321,7 +321,7 @@ static Tk_OptionSpec itemAttrOptionSpecs[] = {
  * commands) and map the indexes into the string tables into 
  * enumerated types used to dispatch the listbox widget command.
  */
-static char *commandNames[] = {
+static CONST char *commandNames[] = {
     "activate", "bbox", "cget", "configure", "curselection", "delete", "get",
 	"index", "insert", "itemcget", "itemconfigure", "nearest", "scan",
 	"see", "selection", "size", "xview", "yview",
@@ -336,7 +336,7 @@ enum command {
 	COMMAND_SIZE, COMMAND_XVIEW, COMMAND_YVIEW
 };
 
-static char *selCommandNames[] = {
+static CONST char *selCommandNames[] = {
     "anchor", "clear", "includes", "set", (char *) NULL
 };
 
@@ -344,7 +344,7 @@ enum selcommand {
     SELECTION_ANCHOR, SELECTION_CLEAR, SELECTION_INCLUDES, SELECTION_SET
 };
 
-static char *scanCommandNames[] = {
+static CONST char *scanCommandNames[] = {
     "mark", "dragto", (char *) NULL
 };
 
@@ -352,7 +352,7 @@ enum scancommand {
     SCAN_MARK, SCAN_DRAGTO
 };
 
-static char *indexNames[] = {
+static CONST char *indexNames[] = {
     "active", "anchor", "end", (char *)NULL
 };
 
@@ -425,7 +425,7 @@ static void		ListboxWorldChanged _ANSI_ARGS_((
 static int		NearestListboxElement _ANSI_ARGS_((Listbox *listPtr,
 			    int y));
 static char *		ListboxListVarProc _ANSI_ARGS_ ((ClientData clientData,
-	                    Tcl_Interp *interp, char *name1, char *name2,
+	                    Tcl_Interp *interp, char *name1, CONST char *name2,
  	                    int flags));
 static void		MigrateHashEntries _ANSI_ARGS_ ((Tcl_HashTable *table,
 			    int first, int last, int offset));
@@ -434,10 +434,9 @@ static void		MigrateHashEntries _ANSI_ARGS_ ((Tcl_HashTable *table,
  * that can be invoked from generic window code.
  */
 
-static TkClassProcs listboxClass = {
-    NULL,			/* createProc. */
-    ListboxWorldChanged,	/* geometryProc. */
-    NULL			/* modalProc. */
+static Tk_ClassProcs listboxClass = {
+    sizeof(Tk_ClassProcs),	/* size */
+    ListboxWorldChanged,	/* worldChangedProc */
 };
 
 
@@ -461,7 +460,7 @@ static TkClassProcs listboxClass = {
 
 int
 Tk_ListboxObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Either NULL or pointer to option table */
+    ClientData clientData;	/* NULL. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
@@ -470,18 +469,28 @@ Tk_ListboxObjCmd(clientData, interp, objc, objv)
     Tk_Window tkwin;
     ListboxOptionTables *optionTables;
 
-    optionTables = (ListboxOptionTables *)clientData;
-    if (optionTables == NULL) {
-	Tcl_CmdInfo info;
-	char *name;
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
+	return TCL_ERROR;
+    }
 
+    tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp),
+	    Tcl_GetString(objv[1]), (char *) NULL);
+    if (tkwin == NULL) {
+	return TCL_ERROR;
+    }
+
+    optionTables = (ListboxOptionTables *)
+	Tcl_GetAssocData(interp, "ListboxOptionTables", NULL);
+    if (optionTables == NULL) {
 	/*
 	 * We haven't created the option tables for this widget class yet.
 	 * Do it now and save the a pointer to them as the ClientData for
 	 * the command, so future invocations will have access to it.
 	 */
-	optionTables =
-	    (ListboxOptionTables *) ckalloc(sizeof(ListboxOptionTables));
+
+	optionTables = (ListboxOptionTables *)
+	    ckalloc(sizeof(ListboxOptionTables));
 	/* Set up an exit handler to free the optionTables struct */
 	Tcl_SetAssocData(interp, "ListboxOptionTables",
 		DestroyListboxOptionTables, (ClientData) optionTables);
@@ -491,23 +500,6 @@ Tk_ListboxObjCmd(clientData, interp, objc, objv)
 	    Tk_CreateOptionTable(interp, optionSpecs);
 	optionTables->itemAttrOptionTable =
 	    Tk_CreateOptionTable(interp, itemAttrOptionSpecs);
-
-	/* Store a pointer to the tables as the ClientData for the command */
-	name = Tcl_GetString(objv[0]);
-	Tcl_GetCommandInfo(interp, name, &info);
-	info.objClientData = (ClientData) optionTables;
-	Tcl_SetCommandInfo(interp, name, &info);
-    }
-
-    if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
-	return TCL_ERROR;
-    }
-
-    tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp),
-            Tcl_GetString(objv[1]), (char *) NULL);
-    if (tkwin == NULL) {
-	return TCL_ERROR;
     }
 
     /*
@@ -516,6 +508,8 @@ Tk_ListboxObjCmd(clientData, interp, objc, objv)
      * initialized already (e.g. resource pointers).
      */
     listPtr 				= (Listbox *) ckalloc(sizeof(Listbox));
+    memset((void *) listPtr, 0, (sizeof(Listbox)));
+
     listPtr->tkwin 			= tkwin;
     listPtr->display 			= Tk_Display(tkwin);
     listPtr->interp 			= interp;
@@ -524,59 +518,32 @@ Tk_ListboxObjCmd(clientData, interp, objc, objv)
 	    (ClientData) listPtr, ListboxCmdDeletedProc);
     listPtr->optionTable 		= optionTables->listboxOptionTable;
     listPtr->itemAttrOptionTable	= optionTables->itemAttrOptionTable;
-    listPtr->listVarName 		= NULL;
-    listPtr->listObj 			= NULL;
     listPtr->selection 			=
 	(Tcl_HashTable *) ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(listPtr->selection, TCL_ONE_WORD_KEYS);
     listPtr->itemAttrTable 		=
 	(Tcl_HashTable *) ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(listPtr->itemAttrTable, TCL_ONE_WORD_KEYS);
-    listPtr->nElements 			= 0;
-    listPtr->normalBorder 		= NULL;
-    listPtr->borderWidth 		= 0;
     listPtr->relief 			= TK_RELIEF_RAISED;
-    listPtr->highlightWidth 		= 0;
-    listPtr->highlightBgColorPtr 	= NULL;
-    listPtr->highlightColorPtr 		= NULL;
-    listPtr->inset 			= 0;
-    listPtr->tkfont 			= NULL;
-    listPtr->fgColorPtr 		= NULL;
-    listPtr->dfgColorPtr 		= NULL;
     listPtr->textGC 			= None;
-    listPtr->selBorder 			= NULL;
-    listPtr->selBorderWidth 		= 0;
     listPtr->selFgColorPtr 		= None;
     listPtr->selTextGC 			= None;
-    listPtr->width 			= 0;
-    listPtr->height 			= 0;
-    listPtr->lineHeight 		= 0;
-    listPtr->topIndex 			= 0;
     listPtr->fullLines 			= 1;
-    listPtr->partialLine 		= 0;
-    listPtr->setGrid 			= 0;
-    listPtr->maxWidth 			= 0;
     listPtr->xScrollUnit 		= 1;
-    listPtr->xOffset 			= 0;
-    listPtr->selectMode 		= NULL;
-    listPtr->numSelected 		= 0;
-    listPtr->selectAnchor 		= 0;
     listPtr->exportSelection 		= 1;
-    listPtr->active 			= 0;
-    listPtr->scanMarkX 			= 0;
-    listPtr->scanMarkY 			= 0;
-    listPtr->scanMarkXOffset 		= 0;
-    listPtr->scanMarkYIndex 		= 0;
     listPtr->cursor 			= None;
-    listPtr->takeFocus 			= NULL;
-    listPtr->xScrollCmd 		= NULL;
-    listPtr->yScrollCmd 		= NULL;
     listPtr->state			= STATE_NORMAL;
     listPtr->gray			= None;
-    listPtr->flags 			= 0;
+
+    /*
+     * Keep a hold of the associated tkwin until we destroy the listbox,
+     * otherwise Tk might free it while we still need it.
+     */
+
+    Tcl_Preserve((ClientData) listPtr->tkwin);
 
     Tk_SetClass(listPtr->tkwin, "Listbox");
-    TkSetClassProcs(listPtr->tkwin, &listboxClass, (ClientData) listPtr);
+    Tk_SetClassProcs(listPtr->tkwin, &listboxClass, (ClientData) listPtr);
     Tk_CreateEventHandler(listPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    ListboxEventProc, (ClientData) listPtr);
@@ -630,7 +597,6 @@ ListboxWidgetObjCmd(clientData, interp, objc, objv)
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
-    Tcl_Preserve((ClientData)listPtr);
 
     /*
      * Parse the command by looking up the second argument in the list
@@ -639,10 +605,10 @@ ListboxWidgetObjCmd(clientData, interp, objc, objv)
     result = Tcl_GetIndexFromObj(interp, objv[1], commandNames,
 	    "option", 0, &cmdIndex);
     if (result != TCL_OK) {
-	Tcl_Release((ClientData)listPtr);
 	return result;
     }
 
+    Tcl_Preserve((ClientData)listPtr);
     /* The subcommand was valid, so continue processing */
     switch (cmdIndex) {
 	case COMMAND_ACTIVATE: {
@@ -1457,16 +1423,6 @@ DestroyListbox(memPtr)
     Tcl_HashEntry *entry;
     Tcl_HashSearch search;
 
-    listPtr->flags |= LISTBOX_DELETED;
-
-    Tcl_DeleteCommandFromToken(listPtr->interp, listPtr->widgetCmd);
-    if (listPtr->setGrid) {
-	Tk_UnsetGrid(listPtr->tkwin);
-    }
-    if (listPtr->flags & REDRAW_PENDING) {
-	Tcl_CancelIdleCall(DisplayListbox, (ClientData) listPtr);
-    }
-
     /* If we have an internal list object, free it */
     if (listPtr->listObj != NULL) {
 	Tcl_DecrRefCount(listPtr->listObj);
@@ -1509,6 +1465,7 @@ DestroyListbox(memPtr)
 
     Tk_FreeConfigOptions((char *)listPtr, listPtr->optionTable,
 	    listPtr->tkwin);
+    Tcl_Release((ClientData) listPtr->tkwin);
     listPtr->tkwin = NULL;
     ckfree((char *) listPtr);
 }
@@ -1572,7 +1529,8 @@ ConfigureListbox(interp, listPtr, objc, objv, flags)
 {
     Tk_SavedOptions savedOptions;
     Tcl_Obj *oldListObj = NULL;
-    int oldExport;
+    Tcl_Obj *errorResult = NULL;
+    int oldExport, error;
 
     oldExport = listPtr->exportSelection;
     if (listPtr->listVarName != NULL) {
@@ -1580,99 +1538,118 @@ ConfigureListbox(interp, listPtr, objc, objv, flags)
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ListboxListVarProc, (ClientData) listPtr);
     }
-    
-    if (Tk_SetOptions(interp, (char *)listPtr,
-	    listPtr->optionTable, objc, objv, listPtr->tkwin,
-	    &savedOptions, (int *)NULL) != TCL_OK) {
-	Tk_RestoreSavedOptions(&savedOptions);
-	return TCL_ERROR;
-    }
-    
-    /*
-     * A few options need special processing, such as setting the
-     * background from a 3-D border.
-     */
 
-    Tk_SetBackgroundFromBorder(listPtr->tkwin, listPtr->normalBorder);
+    for (error = 0; error <= 1; error++) {
+	if (!error) {
+	    /*
+	     * First pass: set options to new values.
+	     */
 
-    if (listPtr->highlightWidth < 0) {
-	listPtr->highlightWidth = 0;
-    }
-    listPtr->inset = listPtr->highlightWidth + listPtr->borderWidth;
-
-    /*
-     * Claim the selection if we've suddenly started exporting it and
-     * there is a selection to export.
-     */
-
-    if (listPtr->exportSelection && !oldExport
-	    && (listPtr->numSelected != 0)) {
-	Tk_OwnSelection(listPtr->tkwin, XA_PRIMARY, ListboxLostSelection,
-		(ClientData) listPtr);
-    }
-
-    
-    /* Verify the current status of the list var.
-     * PREVIOUS STATE    | NEW STATE     | ACTION
-     * ------------------+---------------+----------------------------------
-     * no listvar        | listvar       | If listvar does not exist, create
-     *                                     it and copy the internal list obj's
-     *                                     content to the new var.  If it does
-     *                                     exist, toss the internal list obj.
-     *
-     * listvar           | no listvar    | Copy old listvar content to the
-     *                                     internal list obj
-     *
-     * listvar           | listvar       | no special action
-     *
-     * no listvar        | no listvar    | no special action
-     */
-    oldListObj = listPtr->listObj;
-    if (listPtr->listVarName != NULL) {
-	Tcl_Obj *listVarObj = Tcl_GetVar2Ex(interp, listPtr->listVarName,
-		(char *)NULL, TCL_GLOBAL_ONLY);
-	int dummy;
-	if (listVarObj == NULL) {
-	    if (listPtr->listObj != NULL) {
-		listVarObj = listPtr->listObj;
-	    } else {
-		listVarObj = Tcl_NewObj();
+	    if (Tk_SetOptions(interp, (char *) listPtr,
+		    listPtr->optionTable, objc, objv,
+		    listPtr->tkwin, &savedOptions, (int *) NULL) != TCL_OK) {
+		continue;
 	    }
-	    if (Tcl_SetVar2Ex(interp, listPtr->listVarName, (char *)NULL,
-		    listVarObj, TCL_GLOBAL_ONLY) == NULL) {
-		Tcl_DecrRefCount(listVarObj);
-		Tk_RestoreSavedOptions(&savedOptions);
-		return TCL_ERROR;
-	    }
-	}
-	/* Make sure the object is a good list object */
-	if (Tcl_ListObjLength(listPtr->interp, listVarObj, &dummy) != TCL_OK) {
+	} else {
+	    /*
+	     * Second pass: restore options to old values.
+	     */
+
+	    errorResult = Tcl_GetObjResult(interp);
+	    Tcl_IncrRefCount(errorResult);
 	    Tk_RestoreSavedOptions(&savedOptions);
-	    Tcl_AppendResult(listPtr->interp, ": invalid listvar value",
-		    (char *)NULL);
-	    return TCL_ERROR;
 	}
-    
-	listPtr->listObj = listVarObj;
-	Tcl_TraceVar(listPtr->interp, listPtr->listVarName,
-                TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-                ListboxListVarProc, (ClientData) listPtr);
-    } else {
-	if (listPtr->listObj == NULL) {
+
+	/*
+	 * A few options need special processing, such as setting the
+	 * background from a 3-D border.
+	 */
+
+	Tk_SetBackgroundFromBorder(listPtr->tkwin, listPtr->normalBorder);
+
+	if (listPtr->highlightWidth < 0) {
+	    listPtr->highlightWidth = 0;
+	}
+	listPtr->inset = listPtr->highlightWidth + listPtr->borderWidth;
+
+	/*
+	 * Claim the selection if we've suddenly started exporting it and
+	 * there is a selection to export.
+	 */
+
+	if (listPtr->exportSelection && !oldExport
+		&& (listPtr->numSelected != 0)) {
+	    Tk_OwnSelection(listPtr->tkwin, XA_PRIMARY, ListboxLostSelection,
+		    (ClientData) listPtr);
+	}
+
+	/* Verify the current status of the list var.
+	 * PREVIOUS STATE | NEW STATE  | ACTION
+	 * ---------------+------------+----------------------------------
+	 * no listvar     | listvar    | If listvar does not exist, create
+	 *                               it and copy the internal list obj's
+	 *                               content to the new var.  If it does
+	 *                               exist, toss the internal list obj.
+	 *
+	 * listvar        | no listvar | Copy old listvar content to the
+	 *                               internal list obj
+	 *
+	 * listvar        | listvar    | no special action
+	 *
+	 * no listvar     | no listvar | no special action
+	 */
+	oldListObj = listPtr->listObj;
+	if (listPtr->listVarName != NULL) {
+	    Tcl_Obj *listVarObj = Tcl_GetVar2Ex(interp, listPtr->listVarName,
+		    (char *) NULL, TCL_GLOBAL_ONLY);
+	    int dummy;
+	    if (listVarObj == NULL) {
+		listVarObj = (oldListObj ? oldListObj : Tcl_NewObj());
+		if (Tcl_SetVar2Ex(interp, listPtr->listVarName, (char *) NULL,
+			listVarObj, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
+			== NULL) {
+		    if (oldListObj == NULL) {
+			Tcl_DecrRefCount(listVarObj);
+		    }
+		    continue;
+		}
+	    }
+	    /* Make sure the object is a good list object */
+	    if (Tcl_ListObjLength(listPtr->interp, listVarObj, &dummy)
+		    != TCL_OK) {
+		Tcl_AppendResult(listPtr->interp,
+			": invalid -listvariable value", (char *) NULL);
+		continue;
+	    }
+
+	    listPtr->listObj = listVarObj;
+	    Tcl_TraceVar(listPtr->interp, listPtr->listVarName,
+		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		    ListboxListVarProc, (ClientData) listPtr);
+	} else if (listPtr->listObj == NULL) {
 	    listPtr->listObj = Tcl_NewObj();
 	}
+	Tcl_IncrRefCount(listPtr->listObj);
+	if (oldListObj != NULL) {
+	    Tcl_DecrRefCount(oldListObj);
+	}
+	break;
     }
-    Tcl_IncrRefCount(listPtr->listObj);
-    if (oldListObj != NULL) {
-	Tcl_DecrRefCount(oldListObj);
+    if (!error) {
+	Tk_FreeSavedOptions(&savedOptions);
     }
 
     /* Make sure that the list length is correct */
     Tcl_ListObjLength(listPtr->interp, listPtr->listObj, &listPtr->nElements);
     
-    Tk_FreeSavedOptions(&savedOptions);
-    ListboxWorldChanged((ClientData) listPtr);
-    return TCL_OK;
+    if (error) {
+        Tcl_SetObjResult(interp, errorResult);
+	Tcl_DecrRefCount(errorResult);
+	return TCL_ERROR;
+    } else {
+	ListboxWorldChanged((ClientData) listPtr);
+	return TCL_OK;
+    }
 }
 
 /*
@@ -1835,6 +1812,9 @@ DisplayListbox(clientData)
     Pixmap pixmap;
 
     listPtr->flags &= ~REDRAW_PENDING;
+    if (listPtr->flags & LISTBOX_DELETED) {
+	return;
+    }
 
     if (listPtr->flags & MAXWIDTH_IS_STALE) {
 	ListboxComputeGeometry(listPtr, 0, 1, 0);
@@ -1842,16 +1822,23 @@ DisplayListbox(clientData)
 	listPtr->flags |= UPDATE_H_SCROLLBAR;
     }
 
+    Tcl_Preserve((ClientData) listPtr);
     if (listPtr->flags & UPDATE_V_SCROLLBAR) {
 	ListboxUpdateVScrollbar(listPtr);
+	if ((listPtr->flags & LISTBOX_DELETED) || !Tk_IsMapped(tkwin)) {
+	    Tcl_Release((ClientData) listPtr);
+	    return;
+	}
     }
     if (listPtr->flags & UPDATE_H_SCROLLBAR) {
 	ListboxUpdateHScrollbar(listPtr);
+	if ((listPtr->flags & LISTBOX_DELETED) || !Tk_IsMapped(tkwin)) {
+	    Tcl_Release((ClientData) listPtr);
+	    return;
+	}
     }
     listPtr->flags &= ~(REDRAW_PENDING|UPDATE_V_SCROLLBAR|UPDATE_H_SCROLLBAR);
-    if ((listPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
-	return;
-    }
+    Tcl_Release((ClientData) listPtr);
 
     /*
      * Redrawing is done in a temporary pixmap that is allocated
@@ -2454,7 +2441,17 @@ ListboxEventProc(clientData, eventPtr)
 		NearestListboxElement(listPtr, eventPtr->xexpose.y
 		+ eventPtr->xexpose.height));
     } else if (eventPtr->type == DestroyNotify) {
-	DestroyListbox((char *) clientData);
+	if (!(listPtr->flags & LISTBOX_DELETED)) {
+	    listPtr->flags |= LISTBOX_DELETED;
+	    Tcl_DeleteCommandFromToken(listPtr->interp, listPtr->widgetCmd);
+	    if (listPtr->setGrid) {
+		Tk_UnsetGrid(listPtr->tkwin);
+	    }
+	    if (listPtr->flags & REDRAW_PENDING) {
+		Tcl_CancelIdleCall(DisplayListbox, clientData);
+	    }
+	    Tcl_EventuallyFree(clientData, DestroyListbox);
+	}
     } else if (eventPtr->type == ConfigureNotify) {
 	int vertSpace;
 
@@ -2696,8 +2693,12 @@ ChangeListboxOffset(listPtr, offset)
     /*
      * Make sure that the new offset is within the allowable range, and
      * round it off to an even multiple of xScrollUnit.
+     *
+     * Add half a scroll unit to do entry/text-like synchronization.
+     * [Bug #225025]
      */
 
+    offset += listPtr->xScrollUnit / 2;
     maxOffset = listPtr->maxWidth - (Tk_Width(listPtr->tkwin) -
 	    2*listPtr->inset - 2*listPtr->selBorderWidth)
 	    + listPtr->xScrollUnit - 1;
@@ -3068,7 +3069,7 @@ EventuallyRedrawRange(listPtr, first, last)
     /* We don't have to register a redraw callback if one is already pending,
      * or if the window doesn't exist, or if the window isn't mapped */
     if ((listPtr->flags & REDRAW_PENDING)
-	    || (listPtr->tkwin == NULL)
+	    || (listPtr->flags & LISTBOX_DELETED)
 	    || !Tk_IsMapped(listPtr->tkwin)) {
 	return;
     }
@@ -3223,7 +3224,7 @@ ListboxListVarProc(clientData, interp, name1, name2, flags)
     ClientData clientData;      /* Information about button. */
     Tcl_Interp *interp;         /* Interpreter containing variable. */
     char *name1;                /* Not used. */
-    char *name2;                /* Not used. */
+    CONST char *name2;          /* Not used. */
     int flags;                  /* Information about what happened. */
 {
     Listbox *listPtr = (Listbox *)clientData;

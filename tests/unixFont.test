@@ -12,16 +12,35 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixFont.test,v 1.4 1999/12/14 06:53:15 hobbs Exp $
+# RCS: @(#) $Id: unixFont.test,v 1.4.4.1 2002/04/02 20:57:59 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
-if {$tcl_platform(platform)!="unix"} {
+if {$tcl_platform(platform) != "unix"} {
     puts "skipping: Unix only tests..."
     ::tcltest::cleanupTests
     return
+}
+
+set ::tcltest::testConfig(hasArial) 1
+set ::tcltest::testConfig(hasCourierNew) 1
+set ::tcltest::testConfig(hasTimesNew) 1
+set xlsf [auto_execok xlsfonts]
+if {$xlsf != ""} {
+    foreach {constraint font} {
+	hasArial	arial
+	hasCourierNew	"courier new"
+	hasTimesNew	"times new roman"
+    } {
+	if {![catch {exec $xlsf *-$font-*} res] \
+		&& ![string match "*unmatched*" $res]} {
+	    # Newer Unix systems have more default fonts installed, so we can't
+	    # rely on fallbacks for fonts to need to fall back on anything.
+	    set ::tcltest::testConfig($constraint) 0
+	}
+    }
 }
 
 catch {destroy .b}
@@ -62,21 +81,21 @@ test unixfont-2.1 {TkpGetFontFromAttributes procedure: no family} {
     set x {}
 } {}
 test unixfont-2.2 {TkpGetFontFromAttributes procedure: Times relatives} \
-	{noExceed} {
+	{noExceed hasTimesNew} {
     set x {}
     lappend x [lindex [font actual {-family "Times New Roman"}] 1]
     lappend x [lindex [font actual {-family "New York"}] 1]
     lappend x [lindex [font actual {-family "Times"}] 1]
 } {times times times}
 test unixfont-2.3 {TkpGetFontFromAttributes procedure: Courier relatives} \
-	{noExceed} {
+	{noExceed hasCourierNew} {
     set x {}
     lappend x [lindex [font actual {-family "Courier New"}] 1]
     lappend x [lindex [font actual {-family "Monaco"}] 1]
     lappend x [lindex [font actual {-family "Courier"}] 1]
 } {courier courier courier}
 test unixfont-2.4 {TkpGetFontFromAttributes procedure: Helvetica relatives} \
-	{noExceed} {
+	{noExceed hasArial} {
     set x {}
     lappend x [lindex [font actual {-family "Arial"}] 1]
     lappend x [lindex [font actual {-family "Geneva"}] 1]

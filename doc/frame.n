@@ -6,10 +6,10 @@
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
 '\"
-'\" RCS: @(#) $Id: frame.n,v 1.3 2000/08/25 06:58:32 ericm Exp $
+'\" RCS: @(#) $Id: frame.n,v 1.3.2.1 2002/04/02 20:57:53 hobbs Exp $
 '\" 
 .so man.macros
-.TH frame n 8.0 Tk "Tk Built-In Commands"
+.TH frame n 8.4 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
@@ -17,9 +17,9 @@ frame \- Create and manipulate frame widgets
 .SH SYNOPSIS
 \fBframe\fR \fIpathName\fR ?\fIoptions\fR?
 .SO
-\-borderwidth	\-highlightcolor	\-takefocus
-\-cursor	\-highlightthickness
-\-highlightbackground	\-relief
+\-borderwidth	\-highlightcolor	\-pady
+\-cursor	\-highlightthickness	\-relief
+\-highlightbackground	\-padx	\-takefocus
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-background background Background
@@ -46,7 +46,6 @@ If the \fBcolormap\fR option is not specified, the new window
 uses the same colormap as its parent.
 This option may not be changed with the \fBconfigure\fR
 widget command.
-.VS "" br
 .OP \-container container Container
 The value must be a boolean.  If true, it means that this window will
 be used as a container in which some other application will be embedded
@@ -56,7 +55,6 @@ things like geometry requests.  The window should not have any
 children of its own in this application.
 This option may not be changed with the \fBconfigure\fR
 widget command.
-.VE
 .OP \-height height Height
 Specifies the desired height for the window in any of the forms
 acceptable to \fBTk_GetPixels\fR.
@@ -130,6 +128,9 @@ command.
 .PP
 When a new frame is created, it has no default event bindings:
 frames are not intended to be interactive.
+
+.SH "SEE ALSO"
+labelframe(n), toplevel(n)
 
 .SH KEYWORDS
 frame, widget

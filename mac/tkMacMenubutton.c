@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenubutton.c,v 1.6 1999/09/21 06:42:33 hobbs Exp $
+ * RCS: @(#) $Id: tkMacMenubutton.c,v 1.6.4.1 2002/04/02 20:57:54 hobbs Exp $
  */
 
 #include "tkMenubutton.h"
@@ -34,10 +34,9 @@ typedef struct MacMenuButton {
  * procedures that can be invoked from generic window code.
  */
 
-TkClassProcs tkpMenubuttonClass = {
-    NULL,			/* createProc. */
-    TkMenuButtonWorldChanged,	/* geometryProc. */
-    NULL			/* modalProc. */
+Tk_ClassProcs tkpMenubuttonClass = {
+    sizeof(Tk_ClassProcs),	/* size */
+    TkMenuButtonWorldChanged,	/* worldChangedProc */
 };
 
 /*
@@ -93,7 +92,9 @@ TkpDisplayMenuButton(
 				 * compiler warning. */
     int y;
     Tk_Window tkwin = mbPtr->tkwin;
-    int width, height;
+    int width, height, fullWidth, fullHeight;
+    int imageXOffset, imageYOffset, textXOffset, textYOffset;
+    int haveImage = 0, haveText = 0;
     MacMenuButton * macMBPtr = (MacMenuButton *) mbPtr;
     GWorldPtr destPort;
     CGrafPtr saveWorld;
@@ -120,6 +121,15 @@ TkpDisplayMenuButton(
     }
     border = mbPtr->normalBorder;
 
+    if (mbPtr->image != None) {
+        Tk_SizeOfImage(mbPtr->image, &width, &height);
+        haveImage = 1;
+    } else if (mbPtr->bitmap != None) {
+        Tk_SizeOfBitmap(mbPtr->display, mbPtr->bitmap, &width, &height);
+        haveImage = 1;
+    }
+    haveText = (mbPtr->textWidth != 0 && mbPtr->textHeight != 0);
+
     /*
      * In order to avoid screen flashes, this procedure redraws
      * the menu button in a pixmap, then copies the pixmap to the
@@ -130,6 +140,108 @@ TkpDisplayMenuButton(
     Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border, 0, 0,
 	    Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
 
+    imageXOffset = 0;
+    imageYOffset = 0;
+    textXOffset = 0;
+    textYOffset = 0;
+    fullWidth = 0;
+    fullHeight = 0;
+
+    if (mbPtr->compound != COMPOUND_NONE && haveImage && haveText) {
+        switch ((enum compound) mbPtr->compound) {
+            case COMPOUND_TOP:
+            case COMPOUND_BOTTOM: {
+                /* Image is above or below text */
+                if (mbPtr->compound == COMPOUND_TOP) {
+                    textYOffset = height + mbPtr->padY;
+                } else {
+                    imageYOffset = mbPtr->textHeight + mbPtr->padY;
+                }
+                fullHeight = height + mbPtr->textHeight + mbPtr->padY;
+                fullWidth = (width > mbPtr->textWidth ? width :
+                        mbPtr->textWidth);
+                textXOffset = (fullWidth - mbPtr->textWidth)/2;
+                imageXOffset = (fullWidth - width)/2;
+                break;
+            }
+            case COMPOUND_LEFT:
+            case COMPOUND_RIGHT: {
+                /* Image is left or right of text */
+                if (mbPtr->compound == COMPOUND_LEFT) {
+                    textXOffset = width + mbPtr->padX;
+                } else {
+                    imageXOffset = mbPtr->textWidth + mbPtr->padX;
+                }
+                fullWidth = mbPtr->textWidth + mbPtr->padX + width;
+                fullHeight = (height > mbPtr->textHeight ? height :
+                        mbPtr->textHeight);
+                textYOffset = (fullHeight - mbPtr->textHeight)/2;
+                imageYOffset = (fullHeight - height)/2;
+                break;
+            }
+            case COMPOUND_CENTER: {
+                /* Image and text are superimposed */
+                fullWidth = (width > mbPtr->textWidth ? width :
+                        mbPtr->textWidth);
+                fullHeight = (height > mbPtr->textHeight ? height :
+                        mbPtr->textHeight);
+                textXOffset = (fullWidth - mbPtr->textWidth)/2;
+                imageXOffset = (fullWidth - width)/2;
+                textYOffset = (fullHeight - mbPtr->textHeight)/2;
+                imageYOffset = (fullHeight - height)/2;
+                break;
+            }
+            case COMPOUND_NONE: {break;}
+        }
+
+
+        TkComputeAnchor(mbPtr->anchor, tkwin, 0, 0,
+                mbPtr->indicatorWidth + fullWidth, fullHeight,
+                &x, &y);
+
+        if (mbPtr->image != NULL) {
+            Tk_RedrawImage(mbPtr->image, 0, 0, width, height, Tk_WindowId(tkwin),
+                    x + imageXOffset, y + imageYOffset);
+        }
+        if (mbPtr->bitmap != None) {
+            XCopyPlane(mbPtr->display, mbPtr->bitmap, Tk_WindowId(tkwin),
+                    gc, 0, 0, (unsigned) width, (unsigned) height,
+                    x + imageXOffset, y + imageYOffset, 1);
+        }
+        if (haveText) {
+            Tk_DrawTextLayout(mbPtr->display, Tk_WindowId(tkwin), gc,
+                    mbPtr->textLayout, x  + textXOffset, y + textYOffset ,
+                    0, -1);
+            Tk_UnderlineTextLayout(mbPtr->display, Tk_WindowId(tkwin), gc,
+                    mbPtr->textLayout, x + textXOffset, y + textYOffset ,
+                    mbPtr->underline);
+        }
+    } else {
+       if (mbPtr->image != NULL) {
+           TkComputeAnchor(mbPtr->anchor, tkwin, 0, 0,
+                   width + mbPtr->indicatorWidth, height, &x, &y);
+           Tk_RedrawImage(mbPtr->image, 0, 0, width, height, Tk_WindowId(tkwin),
+                   x + imageXOffset, y + imageYOffset);
+       } else if (mbPtr->bitmap != None) {
+           TkComputeAnchor(mbPtr->anchor, tkwin, 0, 0,
+                   width + mbPtr->indicatorWidth, height, &x, &y);
+           XCopyPlane(mbPtr->display, mbPtr->bitmap, Tk_WindowId(tkwin),
+                   gc, 0, 0, (unsigned) width, (unsigned) height,
+                   x + imageXOffset, y + imageYOffset, 1);
+       } else {
+           TkComputeAnchor(mbPtr->anchor, tkwin, mbPtr->padX, mbPtr->padY,
+                   mbPtr->textWidth + mbPtr->indicatorWidth,
+                   mbPtr->textHeight, &x, &y);
+           Tk_DrawTextLayout(mbPtr->display, Tk_WindowId(tkwin), gc,
+                   mbPtr->textLayout, x  + textXOffset, y + textYOffset,
+                   0, -1);
+           Tk_UnderlineTextLayout(mbPtr->display, Tk_WindowId(tkwin), gc,
+                   mbPtr->textLayout, x + textXOffset, y + textYOffset ,
+                   mbPtr->underline);
+        }
+    }
+
+#if 0		/* this is the original code */
     /*
      * Display image or bitmap or text for button.
      */
@@ -157,6 +269,7 @@ TkpDisplayMenuButton(
 	Tk_DrawTextLayout(mbPtr->display, Tk_WindowId(tkwin), gc,
 		mbPtr->textLayout, x, y, 0, -1);
     }
+#endif
 
     /*
      * If the menu button is disabled with a stipple rather than a special
@@ -283,7 +396,7 @@ void
 TkpComputeMenuButtonGeometry(mbPtr)
     register TkMenuButton *mbPtr;		/* Widget record for menu button. */
 {
-    int width, height, mm, pixels;
+    int width=0, height=0, textwidth=0, textheight=0, mm, pixels, noimage=0;
 
     mbPtr->inset = mbPtr->highlightWidth + mbPtr->borderWidth;
     if (mbPtr->image != None) {
@@ -303,23 +416,54 @@ TkpComputeMenuButtonGeometry(mbPtr)
 	    height = mbPtr->height;
 	}
     } else {
+    noimage=1;
+    }
+    
+    if ( noimage || mbPtr->compound != COMPOUND_NONE ) {
 	Tk_FreeTextLayout(mbPtr->textLayout);
 	mbPtr->textLayout = Tk_ComputeTextLayout(mbPtr->tkfont, mbPtr->text,
 		-1, mbPtr->wrapLength, mbPtr->justify, 0, &mbPtr->textWidth,
 		&mbPtr->textHeight);
-	width = mbPtr->textWidth;
-	height = mbPtr->textHeight;
+	textwidth = mbPtr->textWidth;
+	textheight = mbPtr->textHeight;
 	if (mbPtr->width > 0) {
-	    width = mbPtr->width * Tk_TextWidth(mbPtr->tkfont, "0", 1);
+	    textwidth = mbPtr->width * Tk_TextWidth(mbPtr->tkfont, "0", 1);
 	}
 	if (mbPtr->height > 0) {
 	    Tk_FontMetrics fm;
 
 	    Tk_GetFontMetrics(mbPtr->tkfont, &fm);
-	    height = mbPtr->height * fm.linespace;
+	    textheight = mbPtr->height * fm.linespace;
 	}
-	width += 2*mbPtr->padX;
-	height += 2*mbPtr->padY;
+	textwidth += 2*mbPtr->padX;
+	textheight +=  2*mbPtr->padY;
+    }
+    
+	switch ((enum compound) mbPtr->compound) {
+	  case COMPOUND_TOP:
+	  case COMPOUND_BOTTOM: {
+	      height += textheight + mbPtr->padY;
+	      width = (width > textwidth ? width : textwidth);
+	      break;
+	  }
+	  case COMPOUND_LEFT:
+	  case COMPOUND_RIGHT: {
+	      height = (height > textheight ? height : textheight);
+	      width += textwidth + mbPtr->padX;
+	      break;
+	  }
+	  case COMPOUND_CENTER: {
+	      height = (height > textheight ? height : textheight);
+	      width = (width > textwidth ? width : textwidth);
+	      break;
+	  }
+	  case COMPOUND_NONE: {
+	     if (noimage) {
+	     	height = textheight;
+	     	width = textwidth;
+	     }
+	     break;
+	}
     }
 
     if (mbPtr->indicatorOn) {

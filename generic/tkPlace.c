@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.8 2000/08/10 00:21:07 ericm Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.8.2.1 2002/04/02 21:00:57 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -199,7 +199,7 @@ static void		UnlinkSlave _ANSI_ARGS_((Slave *slavePtr));
 
 int
 Tk_PlaceObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Main window associated with interpreter. */
+    ClientData clientData;	/* NULL. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
@@ -208,9 +208,10 @@ Tk_PlaceObjCmd(clientData, interp, objc, objv)
     Slave *slavePtr;
     char *string;
     TkDisplay *dispPtr;
-    Tk_OptionTable optionTable = (Tk_OptionTable)clientData;
-    static char *optionStrings[] = { "configure", "forget", "info", "slaves",
-					 (char *) NULL };
+    Tk_OptionTable optionTable;
+    static CONST char *optionStrings[] = {
+	"configure", "forget", "info", "slaves", (char *) NULL
+    };
     enum options { PLACE_CONFIGURE, PLACE_FORGET, PLACE_INFO, PLACE_SLAVES };
     int index;
     
@@ -220,23 +221,12 @@ Tk_PlaceObjCmd(clientData, interp, objc, objv)
 	return TCL_ERROR;
     }
 
-    if (optionTable == NULL) {
-	Tcl_CmdInfo info;
-	char *name;
-	
-	/*
-	 * We haven't created the option table for this widget class
-	 * yet.  Do it now and save the table as the clientData for
-	 * the command, so we'll have access to it in future
-	 * invocations of the command.
-	 */
-	
-	optionTable = Tk_CreateOptionTable(interp, optionSpecs);
-	name = Tcl_GetString(objv[0]);
-	Tcl_GetCommandInfo(interp, name, &info);
-	info.objClientData = (ClientData) optionTable;
-	Tcl_SetCommandInfo(interp, name, &info);
-    }
+    /*
+     * Create the option table for this widget class.  If it has already
+     * been created, the cached pointer will be returned.
+     */
+
+    optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
     /*
      * Handle special shortcut where window name is first argument.
@@ -821,7 +811,7 @@ RecomputePlacement(clientData)
     register Master *masterPtr = (Master *) clientData;
     register Slave *slavePtr;
     int x, y, width, height, tmp;
-    int masterWidth, masterHeight, masterBW;
+    int masterWidth, masterHeight, masterX, masterY;
     double x1, y1, x2, y2;
 
     masterPtr->flags &= ~PARENT_RECONFIG_PENDING;
@@ -838,25 +828,29 @@ RecomputePlacement(clientData)
 	 * account desired border mode.
 	 */
 
-	masterBW = 0;
+	masterX = masterY = 0;
 	masterWidth = Tk_Width(masterPtr->tkwin);
 	masterHeight = Tk_Height(masterPtr->tkwin);
 	if (slavePtr->borderMode == BM_INSIDE) {
-	    masterBW = Tk_InternalBorderWidth(masterPtr->tkwin);
+	    masterX = Tk_InternalBorderLeft(masterPtr->tkwin);
+	    masterY = Tk_InternalBorderTop(masterPtr->tkwin);
+            masterWidth -= masterX + Tk_InternalBorderRight(masterPtr->tkwin);
+            masterHeight -= masterY +
+		    Tk_InternalBorderBottom(masterPtr->tkwin);
 	} else if (slavePtr->borderMode == BM_OUTSIDE) {
-	    masterBW = -Tk_Changes(masterPtr->tkwin)->border_width;
+	    masterX = masterY = -Tk_Changes(masterPtr->tkwin)->border_width;
+            masterWidth -= 2 * masterX;
+            masterHeight -= 2 * masterY;
 	}
-	masterWidth -= 2*masterBW;
-	masterHeight -= 2*masterBW;
 
 	/*
 	 * Step 2:  compute size of slave (outside dimensions including
 	 * border) and location of anchor point within master.
 	 */
 
-	x1 = slavePtr->x + masterBW + (slavePtr->relX*masterWidth);
+	x1 = slavePtr->x + masterX + (slavePtr->relX*masterWidth);
 	x = (int) (x1 + ((x1 > 0) ? 0.5 : -0.5));
-	y1 = slavePtr->y + masterBW + (slavePtr->relY*masterHeight);
+	y1 = slavePtr->y + masterY + (slavePtr->relY*masterHeight);
 	y = (int) (y1 + ((y1 > 0) ? 0.5 : -0.5));
 	if (slavePtr->flags & (CHILD_WIDTH|CHILD_REL_WIDTH)) {
 	    width = 0;

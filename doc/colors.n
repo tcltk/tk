@@ -2,7 +2,7 @@
 '\" Copyright (c) 1998-2000 by Scriptics Corporation.
 '\" All rights reserved.
 '\" 
-'\" RCS: @(#) $Id: colors.n,v 1.2 2000/06/30 20:33:44 ericm Exp $
+'\" RCS: @(#) $Id: colors.n,v 1.2.2.1 2002/04/02 20:57:53 hobbs Exp $
 '\" 
 '\"
 .so man.macros
@@ -45,12 +45,12 @@ bisque4                    139   125   125
 black                        0     0     0
 blanched almond            255   235   235
 BlanchedAlmond             255   235   235
-blue                         0     0     0
+blue                         0     0   255
 blue violet                138    43    43
-blue1                        0     0     0
-blue2                        0     0     0
-blue3                        0     0     0
-blue4                        0     0     0
+blue1                        0     0   255
+blue2                        0     0   238
+blue3                        0     0   205
+blue4                        0     0   139
 BlueViolet                 138    43    43
 brown                      165    42    42
 brown1                     255    64    64
@@ -95,7 +95,7 @@ cyan1                        0   255   255
 cyan2                        0   238   238
 cyan3                        0   205   205
 cyan4                        0   139   139
-dark blue                    0     0     0
+dark blue                    0     0   139
 dark cyan                    0   139   139
 dark goldenrod             184   134   134
 dark gray                  169   169   169
@@ -114,7 +114,7 @@ dark slate gray             47    79    79
 dark slate grey             47    79    79
 dark turquoise               0   206   206
 dark violet                148     0     0
-DarkBlue                     0     0     0
+DarkBlue                     0     0   139
 DarkCyan                     0   139   139
 DarkGoldenrod              184   134   134
 DarkGoldenrod1             255   185   185
@@ -538,7 +538,7 @@ maroon2                    238    48    48
 maroon3                    205    41    41
 maroon4                    139    28    28
 medium aquamarine          102   205   205
-medium blue                  0     0     0
+medium blue                  0     0   205
 medium orchid              186    85    85
 medium purple              147   112   112
 medium sea green            60   179   179
@@ -547,7 +547,7 @@ medium spring green          0   250   250
 medium turquoise            72   209   209
 medium violet red          199    21    21
 MediumAquamarine           102   205   205
-MediumBlue                   0     0     0
+MediumBlue                   0     0   205
 MediumOrchid               186    85    85
 MediumOrchid1              224   102   102
 MediumOrchid2              209    95    95
@@ -580,9 +580,9 @@ NavajoWhite1               255   222   222
 NavajoWhite2               238   207   207
 NavajoWhite3               205   179   179
 NavajoWhite4               139   121   121
-navy                         0     0     0
-navy blue                    0     0     0
-NavyBlue                     0     0     0
+navy                         0     0   128
+navy blue                    0     0   128
+NavyBlue                     0     0   128
 old lace                   253   245   245
 OldLace                    253   245   245
 olive drab                 107   142   142

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.8 2000/05/30 17:35:19 ericm Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.8.2.1 2002/04/02 21:00:56 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -262,8 +262,8 @@ void
 Tk_AddOption(tkwin, name, value, priority)
     Tk_Window tkwin;		/* Window token;  option will be associated
 				 * with main window for this window. */
-    char *name;			/* Multi-element name of option. */
-    char *value;		/* String value for option. */
+    CONST char *name;		/* Multi-element name of option. */
+    CONST char *value;		/* String value for option. */
     int priority;		/* Overall priority level to use for
 				 * this option, such as TK_USER_DEFAULT_PRIO
 				 * or TK_INTERACTIVE_PRIO.  Must be between
@@ -273,8 +273,8 @@ Tk_AddOption(tkwin, name, value, priority)
     register ElArray **arrayPtrPtr;
     register Element *elPtr;
     Element newEl;
-    register char *p;
-    char *field;
+    register CONST char *p;
+    CONST char *field;
     int count, firstField, length;
 #define TMP_SIZE 100
     char tmp[TMP_SIZE+1];
@@ -638,7 +638,7 @@ Tk_OptionObjCmd(clientData, interp, objc, objv)
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    static char *optionCmds[] = {
+    static CONST char *optionCmds[] = {
 	"add", "clear", "get", "readfile", NULL
     };
 
@@ -1091,7 +1091,8 @@ ReadOptionFile(interp, tkwin, fileName, priority)
 				 * or TK_INTERACTIVE_PRIO.  Must be between
 				 * 0 and TK_MAX_PRIO. */
 {
-    char *realName, *buffer;
+    CONST char *realName;
+    char *buffer;
     int result, bufferSize;
     Tcl_Channel chan;
     Tcl_DString newName;
@@ -1124,8 +1125,8 @@ ReadOptionFile(interp, tkwin, fileName, priority)
      * overallocate if we are performing CRLF translation.
      */
     
-    bufferSize = Tcl_Seek(chan, 0L, SEEK_END);
-    (void) Tcl_Seek(chan, 0L, SEEK_SET);
+    bufferSize = (int) Tcl_Seek(chan, (Tcl_WideInt) 0, SEEK_END);
+    (void) Tcl_Seek(chan, (Tcl_WideInt) 0, SEEK_SET);
 
     if (bufferSize < 0) {
 	Tcl_AppendResult(interp, "error seeking to end of file \"",

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDefault.h,v 1.9 2000/07/28 16:34:55 ericm Exp $
+ * RCS: @(#) $Id: tkMacDefault.h,v 1.9.2.1 2002/04/02 20:57:54 hobbs Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -190,11 +190,24 @@
 #define DEF_FRAME_HIGHLIGHT_BG		NORMAL_BG
 #define DEF_FRAME_HIGHLIGHT		BLACK
 #define DEF_FRAME_HIGHLIGHT_WIDTH	"0"
+#define DEF_FRAME_PADX			"0"
+#define DEF_FRAME_PADY			"0"
 #define DEF_FRAME_RELIEF		"flat"
 #define DEF_FRAME_TAKE_FOCUS		"0"
-#define DEF_FRAME_USE			""
 #define DEF_FRAME_VISUAL		""
 #define DEF_FRAME_WIDTH			"0"
+
+/*
+ * Defaults for labelframes:
+ */
+
+#define DEF_LABELFRAME_BORDER_WIDTH	"2"
+#define DEF_LABELFRAME_CLASS		"Labelframe"
+#define DEF_LABELFRAME_RELIEF		"groove"
+#define DEF_LABELFRAME_FG		"systemButtonText"
+#define DEF_LABELFRAME_FONT		"system"
+#define DEF_LABELFRAME_TEXT		""
+#define DEF_LABELFRAME_LABELANCHOR	"nw"
 
 /*
  * Defaults for listboxes:
@@ -237,6 +250,7 @@
 #define DEF_MENU_ENTRY_BITMAP		None
 #define DEF_MENU_ENTRY_COLUMN_BREAK	"0"
 #define DEF_MENU_ENTRY_COMMAND		(char *) NULL
+#define DEF_MENU_ENTRY_COMPOUND 	"none"
 #define DEF_MENU_ENTRY_FG		(char *) NULL
 #define DEF_MENU_ENTRY_FONT		(char *) NULL
 #define DEF_MENU_ENTRY_HIDE_MARGIN	"0"
@@ -346,6 +360,40 @@
 #define DEF_MESSAGE_WIDTH		"0"
 
 /*
+ * Defaults for panedwindows
+ */
+
+#define DEF_PANEDWINDOW_BG_COLOR	NORMAL_BG
+#define DEF_PANEDWINDOW_BG_MONO		WHITE
+#define DEF_PANEDWINDOW_BORDERWIDTH	"2"
+#define DEF_PANEDWINDOW_CURSOR		""
+#define DEF_PANEDWINDOW_HANDLEPAD	"8"
+#define DEF_PANEDWINDOW_HANDLESIZE	"8"
+#define DEF_PANEDWINDOW_HEIGHT		""
+#define DEF_PANEDWINDOW_OPAQUERESIZE	"0"
+#define DEF_PANEDWINDOW_ORIENT		"horizontal"
+#define DEF_PANEDWINDOW_RELIEF		"flat"
+#define DEF_PANEDWINDOW_SASHCURSOR	""
+#define DEF_PANEDWINDOW_SASHPAD		"2"
+#define DEF_PANEDWINDOW_SASHRELIEF	"raised"
+#define DEF_PANEDWINDOW_SASHWIDTH	"2"
+#define DEF_PANEDWINDOW_SHOWHANDLE	"0"
+#define DEF_PANEDWINDOW_WIDTH		""
+
+/*
+ * Defaults for panedwindow panes
+ */
+
+#define DEF_PANEDWINDOW_PANE_AFTER	""
+#define DEF_PANEDWINDOW_PANE_BEFORE	""
+#define DEF_PANEDWINDOW_PANE_HEIGHT	""
+#define DEF_PANEDWINDOW_PANE_MINSIZE	"0"
+#define DEF_PANEDWINDOW_PANE_PADX	"0"
+#define DEF_PANEDWINDOW_PANE_PADY	"0"
+#define DEF_PANEDWINDOW_PANE_STICKY	"nsew"
+#define DEF_PANEDWINDOW_PANE_WIDTH	""
+
+/*
  * Defaults for scales:
  */
 
@@ -419,6 +467,7 @@
  * Defaults for texts:
  */
 
+#define DEF_TEXT_AUTO_SEPARATORS	"1"
 #define DEF_TEXT_BG_COLOR		NORMAL_BG
 #define DEF_TEXT_BG_MONO		WHITE
 #define DEF_TEXT_BORDER_WIDTH		"0"
@@ -453,6 +502,7 @@
 #define DEF_TEXT_STATE			"normal"
 #define DEF_TEXT_TABS			""
 #define DEF_TEXT_TAKE_FOCUS		(char *) NULL
+#define DEF_TEXT_UNDO    		"0"
 #define DEF_TEXT_WIDTH			"80"
 #define DEF_TEXT_WRAP			"char"
 #define DEF_TEXT_XSCROLL_COMMAND	""
@@ -472,5 +522,6 @@
 #define DEF_TOPLEVEL_CLASS		"Toplevel"
 #define DEF_TOPLEVEL_MENU		""
 #define DEF_TOPLEVEL_SCREEN		""
+#define DEF_TOPLEVEL_USE		""
 
 #endif /* _TKMACDEFAULT */

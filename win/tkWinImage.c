@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinImage.c,v 1.3.4.1 2000/11/03 22:49:27 hobbs Exp $
+ * RCS: @(#) $Id: tkWinImage.c,v 1.3.4.2 2002/04/02 21:17:04 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -221,7 +221,7 @@ XCreateImage(display, visual, depth, format, offset, data, width, height,
     imagePtr->data = data;
     imagePtr->byte_order = LSBFirst;
     imagePtr->bitmap_unit = 8;
-    imagePtr->bitmap_bit_order = MSBFirst;
+    imagePtr->bitmap_bit_order = LSBFirst;
     imagePtr->bitmap_pad = bitmap_pad;
     imagePtr->bits_per_pixel = depth;
     imagePtr->depth = depth;

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.13 2000/04/19 01:06:50 ericm Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.13.4.1 2002/04/02 21:00:46 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -20,6 +20,11 @@
 #ifdef __WIN32__
 #include "tkWinInt.h"
 #endif
+
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#include "tkUnixInt.h"
+#endif
+
 
 /*
  * File structure:
@@ -293,7 +298,7 @@ typedef struct PhysicalsOwned {
  * One of the following structures exists for each interpreter.  This
  * structure keeps track of the current display and screen in the
  * interpreter, so that a script can be invoked whenever the display/screen
- * changes (the script does things like point tkPriv at a display-specific
+ * changes (the script does things like point tk::Priv at a display-specific
  * structure).
  */
 
@@ -805,7 +810,7 @@ TkBindFree(mainPtr)
     bindInfoPtr = (BindInfo *) mainPtr->bindInfo;
     DeleteVirtualEventTable(&bindInfoPtr->virtualEventTable);
     bindInfoPtr->deleted = 1;
-    Tcl_EventuallyFree((ClientData) bindInfoPtr, Tcl_Free);
+    Tcl_EventuallyFree((ClientData) bindInfoPtr, TCL_DYNAMIC);
     mainPtr->bindInfo = NULL;
 }
 
@@ -1426,7 +1431,7 @@ Tk_BindEvent(bindingTable, eventPtr, tkwin, numObjects, objectPtr)
     PendingBinding staticPending;
     TkWindow *winPtr = (TkWindow *)tkwin;
     PatternTableKey key;
-
+    Tk_ClassModalProc *modalProc;
     /*
      * Ignore events on windows that don't have names: these are windows
      * like wrapper windows that shouldn't be visible to the
@@ -1805,7 +1810,10 @@ Tk_BindEvent(bindingTable, eventPtr, tkwin, numObjects, objectPtr)
 	winPtr->flags = (winPtr->flags & (unsigned int) ~TK_DEFER_MODAL) 
 	    | (flags & TK_DEFER_MODAL);
 	if (deferModal) {
-	    (*winPtr->classProcsPtr->modalProc)(tkwin, eventPtr);
+	    modalProc = Tk_GetClassProc(winPtr->classProcsPtr, modalProc);
+	    if (modalProc != NULL) {
+		(*modalProc)(tkwin, eventPtr);
+	    }
 	}
     }
 
@@ -2295,7 +2303,7 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 	    /* Empty loop body. */
 	}
 	if (string != before) {
-	    Tcl_DStringAppend(dsPtr, before, string-before);
+	    Tcl_DStringAppend(dsPtr, before, (int) (string-before));
 	    before = string;
 	}
 	if (*before == 0) {
@@ -2542,16 +2550,16 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
  *
  *	This procedure is invoked whenever the current screen changes
  *	in an application.  It invokes a Tcl procedure named
- *	"tkScreenChanged", passing it the screen name as argument.
- *	tkScreenChanged does things like making the tkPriv variable
+ *	"tk::ScreenChanged", passing it the screen name as argument.
+ *	tk::ScreenChanged does things like making the tk::Priv variable
  *	point to an array for the current display.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Depends on what tkScreenChanged does.  If an error occurs
- *	them tkError will be invoked.
+ *	Depends on what tk::ScreenChanged does.  If an error occurs
+ *	them bgerror will be invoked.
  *
  *----------------------------------------------------------------------
  */
@@ -2568,7 +2576,7 @@ ChangeScreen(interp, dispName, screenIndex)
     char screen[TCL_INTEGER_SPACE];
 
     Tcl_DStringInit(&cmd);
-    Tcl_DStringAppend(&cmd, "tkScreenChanged ", 16);
+    Tcl_DStringAppend(&cmd, "tk::ScreenChanged ", 18);
     Tcl_DStringAppend(&cmd, dispName, -1);
     sprintf(screen, ".%d", screenIndex);
     Tcl_DStringAppend(&cmd, screen, -1);
@@ -2609,7 +2617,7 @@ Tk_EventObjCmd(clientData, interp, objc, objv)
     Tk_Window tkwin;
     VirtualEventTable *vetPtr;
     TkBindInfo bindInfo;
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"add",		"delete",	"generate",	"info",
 	NULL
     };
@@ -2933,7 +2941,7 @@ DeleteVirtualEvent(interp, vetPtr, virtString, eventString)
 	eventPSPtr = FindSequence(interp, &vetPtr->patternTable, NULL,
 		eventString, 0, 0, &eventMask);
 	if (eventPSPtr == NULL) {
-	    char *string;
+	    CONST char *string;
 
 	    string = Tcl_GetStringResult(interp); 
 	    return (string[0] != '\0') ? TCL_ERROR : TCL_OK;
@@ -3178,7 +3186,7 @@ HandleEventGenerate(interp, mainWin, objc, objv)
     Tk_Window tkwin, tkwin2;
     TkWindow *mainPtr;
     unsigned long eventMask;
-    static char *fieldStrings[] = {
+    static CONST char *fieldStrings[] = {
 	"-when",	"-above",	"-borderwidth",	"-button",
 	"-count",	"-delta",	"-detail",	"-focus",
 	"-height",
@@ -3712,8 +3720,8 @@ NameToWindow(interp, mainWin, objPtr, tkwinPtr)
 {
     char *name;
     Tk_Window tkwin;
-    int id;
-    
+    Window id;
+
     name = Tcl_GetStringFromObj(objPtr, NULL);
     if (name[0] == '.') {
 	tkwin = Tk_NameToWindow(interp, name, mainWin);
@@ -3722,12 +3730,18 @@ NameToWindow(interp, mainWin, objPtr, tkwinPtr)
 	}
 	*tkwinPtr = tkwin;
     } else {
-	if (TkpScanWindowId(NULL, name, &id) != TCL_OK) {
+	/*
+	 * Check for the winPtr being valid, even if it looks ok to
+	 * TkpScanWindowId.  [Bug #411307]
+	 */
+
+	if ((TkpScanWindowId(NULL, name, &id) != TCL_OK) ||
+		((*tkwinPtr = Tk_IdToWindow(Tk_Display(mainWin), id))
+			== NULL)) {
 	    Tcl_AppendResult(interp, "bad window name/identifier \"",
 		    name, "\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	*tkwinPtr = Tk_IdToWindow(Tk_Display(mainWin), (Window) id);
     }
     return TCL_OK;
 }

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinCursor.c,v 1.4 1999/12/16 21:59:35 hobbs Exp $
+ * RCS: @(#) $Id: tkWinCursor.c,v 1.4.4.1 2002/04/02 21:17:04 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -111,7 +111,7 @@ TkGetCursorByName(interp, tkwin, string)
     }
     if (string[0] == '@') {
 	int argc;
-	char **argv = NULL;
+	CONST char **argv = NULL;
 	if (Tcl_SplitList(interp, string, &argc, &argv) != TCL_OK) {
 	    return NULL;
 	}

@@ -1,20 +1,40 @@
+#! /bin/bash -norc
 # This file is an input file used by the GNU "autoconf" program to
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.24 2000/10/31 01:28:26 davidg Exp $
+# RCS: @(#) $Id: configure.in,v 1.24.2.1 2002/04/02 21:17:03 hobbs Exp $
 
 AC_INIT(../generic/tk.h)
 
 TK_VERSION=8.4
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=4
-TK_PATCH_LEVEL="a2"
+TK_PATCH_LEVEL="a5"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
+
+#------------------------------------------------------------------------
+# Handle the --prefix=... option
+#------------------------------------------------------------------------
+
+if test "${prefix}" = "NONE"; then
+    prefix=/usr/local
+fi
+if test "${exec_prefix}" = "NONE"; then
+    exec_prefix=$prefix
+fi
+# libdir must be a fully qualified path and (not ${exec_prefix}/lib)
+eval libdir="$libdir"
 
 #------------------------------------------------------------------------
 # Standard compiler checks
 #------------------------------------------------------------------------
+
+# If the user did not set CFLAGS, set it now to keep
+# the AC_PROG_CC macro from adding "-g -O2".
+if test "${CFLAGS+set}" != "set" ; then
+    CFLAGS=""
+fi
 
 AC_PROG_CC
 
@@ -89,8 +109,6 @@ AC_SUBST(MAN2TCLFLAGS)
 
 SC_ENABLE_SYMBOLS
 
-CFLAGS=${CFLAGS_DEFAULT}
-LDFLAGS=${LDFLAGS_DEFAULT}
 TK_DBGX=${DBGX}
 
 #--------------------------------------------------------------------
@@ -150,20 +168,20 @@ CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 # on symbols and static vs. shared.
 #--------------------------------------------------------------------
 
-if test "$SHARED_BUILD" = 0 -o $TCL_NEEDS_EXP_FILE = 0; then
+if test "$SHARED_BUILD" = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
     if test "${DBGX}" = "d"; then
-        RC_DEFINES="-d STATIC_BUILD -d DEBUG"
+        RC_DEFINES="${RC_DEFINE} STATIC_BUILD ${RC_DEFINE} DEBUG"
     else
-        RC_DEFINES="-d STATIC_BUILD"
+        RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
     fi
     TK_RES=""
 else
     if test "${DBGX}" = "d"; then
-        RC_DEFINES="-d DEBUG"
+        RC_DEFINES="${RC_DEFINE} DEBUG"
     else
         RC_DEFINES=""
     fi
-    TK_RES=tk.res
+    TK_RES='tk.$(RES)'
 fi
 
 AC_SUBST(TK_VERSION)
@@ -196,12 +214,9 @@ AC_SUBST(CFG_TK_UNSHARED_LIB_SUFFIX)
 AC_SUBST(CFG_TK_EXPORT_FILE_SUFFIX)
 AC_SUBST(TK_SHARED_BUILD)
 
-AC_SUBST(PATHTYPE)
 AC_SUBST(CYGPATH)
-AC_SUBST(VPSEP)
-AC_SUBST(CFLAGS_DEBUG)
-AC_SUBST(CFLAGS_OPTIMIZE)
-AC_SUBST(CFLAGS_WARNING)
+AC_SUBST(DEPARG)
+AC_SUBST(CFLAGS_DEFAULT)
 AC_SUBST(EXTRA_CFLAGS)
 AC_SUBST(STLIB_LD)
 AC_SUBST(SHLIB_LD)
@@ -210,7 +225,7 @@ AC_SUBST(SHLIB_CFLAGS)
 AC_SUBST(SHLIB_SUFFIX)
 AC_SUBST(CC_OBJNAME)
 AC_SUBST(CC_EXENAME)
-AC_SUBST(LDFLAGS)
+AC_SUBST(LDFLAGS_DEFAULT)
 AC_SUBST(LDFLAGS_DEBUG)
 AC_SUBST(LDFLAGS_OPTIMIZE)
 AC_SUBST(LDFLAGS_CONSOLE)
@@ -221,6 +236,7 @@ AC_SUBST(RC)
 AC_SUBST(RC_OUT)
 AC_SUBST(RC_TYPE)
 AC_SUBST(RC_INCLUDE)
+AC_SUBST(RC_DEFINE)
 AC_SUBST(RC_DEFINES)
 AC_SUBST(TK_RES)
 AC_SUBST(RES)
@@ -235,7 +251,15 @@ AC_SUBST(MAKE_LIB)
 AC_SUBST(POST_MAKE_LIB)
 AC_SUBST(MAKE_DLL)
 AC_SUBST(MAKE_EXE)
-AC_SUBST(TK_XINCLUDES)
-AC_SUBST(XINCLUDES)
+
+# undefined at this point for win
+AC_SUBST(TK_BUILD_LIB_SPEC)
+AC_SUBST(TK_CC_SEARCH_FLAGS)
+AC_SUBST(TK_LD_SEARCH_FLAGS)
+AC_SUBST(TK_LIB_FLAG)
+AC_SUBST(TK_LIB_SPEC)
+AC_SUBST(TK_STUB_LIB_SPEC)
+AC_SUBST(TK_BUILD_STUB_LIB_PATH)
+AC_SUBST(TK_STUB_LIB_PATH)
 
 AC_OUTPUT(Makefile tkConfig.sh)

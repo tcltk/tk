@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.8 2000/03/27 18:02:59 ericm Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.8.4.1 2002/04/02 20:58:02 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -196,7 +196,7 @@ typedef struct TkWmInfo {
     ProtocolHandler *protPtr;	/* First in list of protocol handlers for
 				 * this window (NULL means none). */
     int cmdArgc;		/* Number of elements in cmdArgv below. */
-    char **cmdArgv;		/* Array of strings to store in the
+    CONST char **cmdArgv;	/* Array of strings to store in the
 				 * WM_COMMAND property.  NULL means nothing
 				 * available. */
     char *clientMachine;	/* String to store in WM_CLIENT_MACHINE
@@ -300,7 +300,7 @@ static Tk_GeomMgr menubarMgrType = {
 
 typedef struct WaitRestrictInfo {
     Display *display;		/* Window belongs to this display. */
-    Window window;		/* We're waiting for events on this window. */
+    WmInfo *wmInfoPtr;
     int type;			/* We only care about this type of event. */
     XEvent *eventPtr;		/* Where to store the event when it's found. */
     int foundEvent;		/* Non-zero means that an event of the
@@ -323,6 +323,9 @@ static int		ParseGeometry _ANSI_ARGS_((Tcl_Interp *interp,
 			    char *string, TkWindow *winPtr));
 static void		ReparentEvent _ANSI_ARGS_((WmInfo *wmPtr,
 			    XReparentEvent *eventPtr));
+static void		TkWmStackorderToplevelWrapperMap _ANSI_ARGS_((
+			    TkWindow *winPtr,
+			    Tcl_HashTable *reparentTable));
 static void		TopLevelReqProc _ANSI_ARGS_((ClientData dummy,
 			    Tk_Window tkwin));
 static void		UpdateCommand _ANSI_ARGS_((TkWindow *winPtr));
@@ -335,7 +338,7 @@ static void		UpdateWmProtocols _ANSI_ARGS_((WmInfo *wmPtr));
 static void		WaitForConfigureNotify _ANSI_ARGS_((TkWindow *winPtr,
 			    unsigned long serial));
 static int		WaitForEvent _ANSI_ARGS_((Display *display,
-			    Window window, int type, XEvent *eventPtr));
+			    WmInfo *wmInfoPtr, int type, XEvent *eventPtr));
 static void		WaitForMapNotify _ANSI_ARGS_((TkWindow *winPtr,
 			    int mapped));
 static Tk_RestrictAction
@@ -818,7 +821,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
     if (winPtr == NULL) {
 	return TCL_ERROR;
     }
-    if (!(winPtr->flags & TK_TOP_LEVEL)) {
+    if (!Tk_IsTopLevel(winPtr)) {
 	Tcl_AppendResult(interp, "window \"", winPtr->pathName,
 		"\" isn't a top-level window", (char *) NULL);
 	return TCL_ERROR;
@@ -917,7 +920,8 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	Window *cmapList;
 	TkWindow *winPtr2;
 	int count, i, windowArgc, gotToplevel;
-	char buffer[20], **windowArgv;
+	CONST char **windowArgv;
+	char buffer[20];
 
 	if ((argc != 3) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
@@ -990,7 +994,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
     } else if ((c == 'c') && (strncmp(argv[1], "command", length) == 0)
 	    && (length >= 3)) {
 	int cmdArgc;
-	char **cmdArgv;
+	CONST char **cmdArgv;
 
 	if ((argc != 3) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
@@ -1748,6 +1752,99 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	}
 	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
 	goto updateGeom;
+    } else if ((c == 's') && (strncmp(argv[1], "stackorder", length) == 0)
+	    && (length >= 2)) {
+	TkWindow **windows, **window_ptr;
+
+	if ((argc != 3) && (argc != 5)) {
+	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
+		    argv[0],
+		    " stackorder window ?isabove|isbelow? ?window?\"",
+		    (char *) NULL);
+	    return TCL_ERROR;
+	}
+
+	if (argc == 3) {
+            windows = TkWmStackorderToplevel(winPtr);
+            if (windows == NULL) {
+                panic("TkWmStackorderToplevel failed");
+	    } else {
+                for (window_ptr = windows; *window_ptr ; window_ptr++) {
+                    Tcl_AppendElement(interp, (*window_ptr)->pathName);
+                }
+                ckfree((char *) windows);
+                return TCL_OK;
+	    }
+	} else {
+	    TkWindow *winPtr2;
+	    int index1=-1, index2=-1, result;
+
+	    winPtr2 = (TkWindow *) Tk_NameToWindow(interp, argv[4], tkwin);
+	    if (winPtr2 == NULL) {
+		return TCL_ERROR;
+	    }
+
+	    if (!Tk_IsTopLevel(winPtr2)) {
+		Tcl_AppendResult(interp, "window \"", winPtr2->pathName,
+		    "\" isn't a top-level window", (char *) NULL);
+		return TCL_ERROR;
+	    }
+
+	    if (!Tk_IsMapped(winPtr)) {
+		Tcl_AppendResult(interp, "window \"", winPtr->pathName,
+		    "\" isn't mapped", (char *) NULL);
+		return TCL_ERROR;
+	    }
+
+	    if (!Tk_IsMapped(winPtr2)) {
+		Tcl_AppendResult(interp, "window \"", winPtr2->pathName,
+		    "\" isn't mapped", (char *) NULL);
+		return TCL_ERROR;
+	    }
+
+            /*
+             * Lookup stacking order of all toplevels that are children
+             * of "." and find the position of winPtr and winPtr2
+             * in the stacking order.
+             */
+
+            windows = TkWmStackorderToplevel(winPtr->mainPtr->winPtr);
+
+            if (windows == NULL) {
+                Tcl_AppendResult(interp, "TkWmStackorderToplevel failed",
+                    (char *) NULL);
+                return TCL_ERROR;
+	    } else {
+                for (window_ptr = windows; *window_ptr ; window_ptr++) {
+                    if (*window_ptr == winPtr)
+                        index1 = (window_ptr - windows);
+                    if (*window_ptr == winPtr2)
+                        index2 = (window_ptr - windows);
+                }
+                if (index1 == -1)
+                    panic("winPtr window not found");
+                if (index2 == -1)
+                    panic("winPtr2 window not found");
+
+                ckfree((char *) windows);
+	    }
+
+	    c = argv[3][0];
+	    length = strlen(argv[3]);
+	    if ((length > 2) && (c == 'i')
+		    && (strncmp(argv[3], "isabove", length) == 0)) {
+		result = index1 > index2;
+	    } else if ((length > 2) && (c == 'i')
+		    && (strncmp(argv[3], "isbelow", length) == 0)) {
+		result = index1 < index2;
+	    } else {
+		Tcl_AppendResult(interp, "bad argument \"", argv[3],
+			"\": must be isabove or isbelow", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    Tcl_SetIntObj(Tcl_GetObjResult(interp), result);
+	    return TCL_OK;
+	}
     } else if ((c == 's') && (strncmp(argv[1], "state", length) == 0)
 	    && (length >= 2)) {
 	if ((argc < 3) || (argc > 4)) {
@@ -1954,8 +2051,8 @@ Tk_WmCmd(clientData, interp, argc, argv)
 		"focusmodel, frame, geometry, grid, group, iconbitmap, ",
 		"iconify, iconmask, iconname, iconposition, ",
 		"iconwindow, maxsize, minsize, overrideredirect, ",
-		"positionfrom, protocol, resizable, sizefrom, state, title, ",
-		"transient, or withdraw",
+		"positionfrom, protocol, resizable, sizefrom, stackorder, ",
+		"state, title, transient, or withdraw",
 		(char *) NULL);
 	return TCL_ERROR;
     }
@@ -2411,6 +2508,8 @@ ReparentEvent(wmPtr, reparentEventPtr)
 	wmPtr->xInParent = wmPtr->yInParent = 0;
 	wrapperPtr->changes.x = reparentEventPtr->x;
 	wrapperPtr->changes.y = reparentEventPtr->y;
+	wmPtr->winPtr->changes.x = reparentEventPtr->x;
+	wmPtr->winPtr->changes.y = reparentEventPtr->y + wmPtr->menuHeight;
 	return;
     }
 
@@ -2851,7 +2950,8 @@ UpdateGeometryInfo(clientData)
     serial = NextRequest(winPtr->display);
     height += wmPtr->menuHeight;
     if (wmPtr->flags & WM_MOVE_PENDING) {
-	if ((x == winPtr->changes.x) && (y == winPtr->changes.y)
+	if ((x + wmPtr->xInParent == winPtr->changes.x) &&
+		(y + wmPtr->yInParent + wmPtr->menuHeight == winPtr->changes.y)
 		&& (width == wmPtr->wrapperPtr->changes.width)
 		&& (height == wmPtr->wrapperPtr->changes.height)) {
 	    /*
@@ -3084,8 +3184,7 @@ WaitForConfigureNotify(winPtr, serial)
 
     while (!gotConfig) {
 	wmPtr->flags |= WM_SYNC_PENDING;
-	code = WaitForEvent(winPtr->display, wmPtr->wrapperPtr->window,
-		ConfigureNotify, &event);
+	code = WaitForEvent(winPtr->display, wmPtr, ConfigureNotify, &event);
 	wmPtr->flags &= ~WM_SYNC_PENDING;
 	if (code != TCL_OK) {
 	    if (winPtr->dispPtr->wmTracing) {
@@ -3131,9 +3230,9 @@ WaitForConfigureNotify(winPtr, serial)
  */
 
 static int
-WaitForEvent(display, window, type, eventPtr)
+WaitForEvent(display, wmInfoPtr, type, eventPtr)
     Display *display;		/* Display event is coming from. */
-    Window window;		/* Window for which event is desired. */
+    WmInfo *wmInfoPtr;		/* Window for which event is desired. */
     int type;			/* Type of event that is wanted. */
     XEvent *eventPtr;		/* Place to store event. */
 {
@@ -3149,7 +3248,7 @@ WaitForEvent(display, window, type, eventPtr)
      */
 
     info.display = display;
-    info.window = window;
+    info.wmInfoPtr = wmInfoPtr;
     info.type = type;
     info.eventPtr = eventPtr;
     info.foundEvent = 0;
@@ -3203,7 +3302,8 @@ WaitRestrictProc(clientData, eventPtr)
     if (eventPtr->type == ReparentNotify) {
 	return TK_PROCESS_EVENT;
     }
-    if ((eventPtr->xany.window != infoPtr->window)
+    if (((eventPtr->xany.window != infoPtr->wmInfoPtr->wrapperPtr->window)
+	    && (eventPtr->xany.window != infoPtr->wmInfoPtr->reparent))
 	    || (eventPtr->xany.display != infoPtr->display)) {
 	return TK_DEFER_EVENT;
     }
@@ -3265,7 +3365,7 @@ WaitForMapNotify(winPtr, mapped)
 	    break;
 	}
 	wmPtr->flags |= WM_SYNC_PENDING;
-	code = WaitForEvent(winPtr->display, wmPtr->wrapperPtr->window,
+	code = WaitForEvent(winPtr->display, wmPtr,
 		mapped ? MapNotify : UnmapNotify, &event);
 	wmPtr->flags &= ~WM_SYNC_PENDING;
 	if (code != TCL_OK) {
@@ -4070,6 +4170,135 @@ TkWmProtocolEventProc(winPtr, eventPtr)
 /*
  *----------------------------------------------------------------------
  *
+ * TkWmStackorderToplevelWrapperMap --
+ *
+ *	This procedure will create a table that maps the reparent wrapper
+ *	X id for a toplevel to the TkWindow structure that is wraps.
+ *	Tk keeps track of a mapping from the window X id to the TkWindow
+ *	structure but that does us no good here since we only get the X
+ *	id of the wrapper window. Only those toplevel windows that are
+ *	mapped have a position in the stacking order.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Adds entries to the passed hashtable.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkWmStackorderToplevelWrapperMap(winPtr, table)
+    TkWindow *winPtr;				/* TkWindow to recurse on */
+    Tcl_HashTable *table;			/* Maps X id to TkWindow */
+{
+    TkWindow *childPtr;
+    Tcl_HashEntry *hPtr;
+    Window wrapper;
+    int newEntry;
+
+    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr)) {
+        wrapper = (winPtr->wmInfoPtr->reparent != None)
+            ? winPtr->wmInfoPtr->reparent
+            : winPtr->wmInfoPtr->wrapperPtr->window;
+
+        hPtr = Tcl_CreateHashEntry(table,
+            (char *) wrapper, &newEntry);
+        Tcl_SetHashValue(hPtr, winPtr);
+    }
+
+    for (childPtr = winPtr->childList; childPtr != NULL;
+            childPtr = childPtr->nextPtr) {
+        TkWmStackorderToplevelWrapperMap(childPtr, table);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWmStackorderToplevel --
+ *
+ *	This procedure returns the stack order of toplevel windows.
+ *
+ * Results:
+ *	An array of pointers to tk window objects in stacking order
+ *	or else NULL if there was an error.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TkWindow **
+TkWmStackorderToplevel(parentPtr)
+    TkWindow *parentPtr;		/* Parent toplevel window. */
+{
+    Window dummy1, dummy2, vRoot;
+    Window *children;
+    unsigned int numChildren, i;
+    TkWindow *childWinPtr, **windows, **window_ptr;
+    Tcl_HashTable table;
+    Tcl_HashEntry *hPtr;
+    Tcl_HashSearch search;
+
+    /*
+     * Map X Window ids to a TkWindow of the wrapped toplevel.
+     */
+
+    Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
+    TkWmStackorderToplevelWrapperMap(parentPtr, &table);
+
+    window_ptr = windows = (TkWindow **) ckalloc((table.numEntries+1)
+        * sizeof(TkWindow *));
+
+    /*
+     * Special cases: If zero or one toplevels were mapped
+     * there is no need to call XQueryTree.
+     */
+
+    switch (table.numEntries) {
+    case 0:
+        windows[0] = NULL;
+        goto done;
+    case 1:
+        hPtr = Tcl_FirstHashEntry(&table, &search);
+        windows[0] = (TkWindow *) Tcl_GetHashValue(hPtr);
+        windows[1] = NULL;
+        goto done;
+    }
+
+    vRoot = parentPtr->wmInfoPtr->vRoot;
+    if (vRoot == None) {
+        vRoot = RootWindowOfScreen(Tk_Screen((Tk_Window) parentPtr));
+    }
+
+    if (XQueryTree(parentPtr->display, vRoot, &dummy1, &dummy2,
+            &children, &numChildren) == 0) {
+        ckfree((char *) windows);
+        windows = NULL;
+    } else {
+        for (i = 0; i < numChildren; i++) {
+            hPtr = Tcl_FindHashEntry(&table, (char *) children[i]);
+            if (hPtr != NULL) {
+                childWinPtr = (TkWindow *) Tcl_GetHashValue(hPtr);
+                *window_ptr++ = childWinPtr;
+            }
+        }
+        if ((window_ptr - windows) != table.numEntries)
+            panic("num matched toplevel windows does not equal num children");
+        *window_ptr = NULL;
+    }
+
+    done:
+    Tcl_DeleteHashTable(&table);
+    return windows;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWmRestackToplevel --
  *
  *	This procedure restacks a top-level window.
@@ -4104,8 +4333,6 @@ TkWmRestackToplevel(winPtr, aboveBelow, otherPtr)
     int desiredIndex = 0;	/* Initialized to stop gcc warnings. */
     int ourIndex = 0;		/* Initialized to stop gcc warnings. */
     unsigned long serial;
-    XEvent event;
-    int diff;
     Tk_ErrorHandler handler;
     TkWindow *wrapperPtr;
 
@@ -4258,9 +4485,12 @@ TkWmRestackToplevel(winPtr, aboveBelow, otherPtr)
     if (window == wrapperPtr->window) {
 	WaitForConfigureNotify(winPtr, serial);
     } else {
+	XEvent event;
+	int diff;
+
 	while (1) {
-	    if (WaitForEvent(winPtr->display, window, ConfigureNotify,
-		    &event) != TCL_OK) {
+	    if (WaitForEvent(winPtr->display, winPtr->wmInfoPtr,
+		    ConfigureNotify, &event) != TCL_OK) {
 		break;
 	    }
 	    diff = event.xconfigure.serial - serial;
@@ -4268,7 +4498,6 @@ TkWmRestackToplevel(winPtr, aboveBelow, otherPtr)
 		break;
 	    }
 	}
-
 	/*
 	 * Ignore errors that occur when we are de-selecting events on
 	 * window, since it's possible that the window doesn't exist

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.28 2000/11/03 19:38:25 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.28.2.1 2002/04/02 21:01:00 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -106,11 +106,11 @@ static TkCmd commands[] = {
     {"focus",		NULL,			Tk_FocusObjCmd,		1, 1},
     {"font",		NULL,			Tk_FontObjCmd,		1, 1},
     {"grab",		NULL,			Tk_GrabObjCmd,		0, 1},
-    {"grid",		Tk_GridCmd,		NULL,			1, 1},
+    {"grid",		NULL,			Tk_GridObjCmd,		1, 1},
     {"image",		NULL,			Tk_ImageObjCmd,		1, 1},
     {"lower",		NULL,			Tk_LowerObjCmd,		1, 1},
     {"option",		NULL,			Tk_OptionObjCmd,	1, 1},
-    {"pack",		Tk_PackCmd,		NULL,			1, 1},
+    {"pack",		NULL,			Tk_PackObjCmd,		1, 1},
     {"place",		NULL,			Tk_PlaceObjCmd,		1, 0},
     {"raise",		NULL,			Tk_RaiseObjCmd,		1, 1},
     {"selection",	NULL,			Tk_SelectionObjCmd,	0, 1},
@@ -137,24 +137,27 @@ static TkCmd commands[] = {
     {"canvas",		NULL,			Tk_CanvasObjCmd,	1, 1},
     {"checkbutton",	NULL,			Tk_CheckbuttonObjCmd,	1, 0},
     {"entry",		NULL,                   Tk_EntryObjCmd,		1, 0},
-    {"frame",		NULL,			Tk_FrameObjCmd,		1, 1},
+    {"frame",		NULL,			Tk_FrameObjCmd,		1, 0},
     {"label",		NULL,			Tk_LabelObjCmd,		1, 0},
+    {"labelframe",	NULL,			Tk_LabelframeObjCmd,	1, 0},
     {"listbox",		NULL,			Tk_ListboxObjCmd,	1, 0},
     {"menubutton",	NULL,                   Tk_MenubuttonObjCmd,	1, 0},
     {"message",		NULL,			Tk_MessageObjCmd,	1, 0},
+    {"panedwindow",	NULL,			Tk_PanedWindowObjCmd,	1, 0},
     {"radiobutton",	NULL,			Tk_RadiobuttonObjCmd,	1, 0},
     {"scale",		NULL,	                Tk_ScaleObjCmd,		1, 0},
     {"scrollbar",	Tk_ScrollbarCmd,	NULL,			1, 1},
     {"spinbox",		NULL,                   Tk_SpinboxObjCmd,	1, 0},
     {"text",		Tk_TextCmd,		NULL,			1, 1},
-    {"toplevel",	NULL,			Tk_ToplevelObjCmd,	0, 1},
+    {"toplevel",	NULL,			Tk_ToplevelObjCmd,	0, 0},
 
     /*
      * Misc.
      */
 
 #ifdef MAC_TCL
-    {"unsupported1",	TkUnsupported1Cmd,	NULL,			1, 1},
+    {"::tk::unsupported::MacWindowStyle",
+	    		TkUnsupported1Cmd,	NULL,			1, 1},
 #endif
     {(char *) NULL,	(int (*) _ANSI_ARGS_((ClientData, Tcl_Interp *, int, char **))) NULL, NULL, 0}
 };
@@ -204,7 +207,7 @@ static Tk_Window	CreateTopLevelWindow _ANSI_ARGS_((Tcl_Interp *interp,
 static void		DeleteWindowsExitProc _ANSI_ARGS_((
 			    ClientData clientData));
 static TkDisplay *	GetScreen _ANSI_ARGS_((Tcl_Interp *interp,
-			    char *screenName, int *screenPtr));
+			    CONST char *screenName, int *screenPtr));
 static int		Initialize _ANSI_ARGS_((Tcl_Interp *interp));
 static int		NameWindow _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkWindow *winPtr, TkWindow *parentPtr,
@@ -354,12 +357,12 @@ CreateTopLevelWindow(interp, parent, name, screenName, flags)
 static TkDisplay *
 GetScreen(interp, screenName, screenPtr)
     Tcl_Interp *interp;		/* Place to leave error message. */
-    char *screenName;		/* Name for screen.  NULL or empty means
+    CONST char *screenName;	/* Name for screen.  NULL or empty means
 				 * use DISPLAY envariable. */
     int *screenPtr;		/* Where to store screen number. */
 {
     register TkDisplay *dispPtr;
-    char *p;
+    CONST char *p;
     int screenId;
     size_t length;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
@@ -469,6 +472,7 @@ GetScreen(interp, screenName, screenPtr)
 	    dispPtr->useInputMethods = 0;
 	    OpenIM(dispPtr);
 	    TkInitXId(dispPtr);
+	    dispPtr->deletionEpoch = 0L;
 
 	    tsdPtr->displayList = dispPtr;
 	    break;
@@ -647,11 +651,16 @@ TkAllocWindow(dispPtr, screenNum, parentPtr)
     winPtr->geomMgrPtr = NULL;
     winPtr->geomData = NULL;
     winPtr->reqWidth = winPtr->reqHeight = 1;
-    winPtr->internalBorderWidth = 0;
+    winPtr->internalBorderLeft = 0;
     winPtr->wmInfoPtr = NULL;
     winPtr->classProcsPtr = NULL;
     winPtr->instanceData = NULL;
     winPtr->privatePtr = NULL;
+    winPtr->internalBorderRight = 0;
+    winPtr->internalBorderTop = 0;
+    winPtr->internalBorderBottom = 0;
+    winPtr->minReqWidth = 0;
+    winPtr->minReqHeight = 0;
 
     return winPtr;
 }
@@ -1047,8 +1056,6 @@ Tk_CreateAnonymousWindow(interp, parent, screenName)
 	if (NameWindow(interp, winPtr, parentPtr, (char *)NULL) != TCL_OK) {
 	    Tk_DestroyWindow((Tk_Window) winPtr);
 	    return NULL;
-	} else {
-            return (Tk_Window) winPtr;
 	}
 	return (Tk_Window) winPtr;
     } else {
@@ -1119,7 +1126,7 @@ Tk_CreateWindowFromPath(interp, tkwin, pathName, screenName)
 		"\"", (char *) NULL);
 	return NULL;
     }
-    numChars = p-pathName;
+    numChars = (int) (p-pathName);
     if (numChars > FIXED_SPACE) {
 	p = (char *) ckalloc((unsigned) (numChars+1));
     } else {
@@ -1386,6 +1393,10 @@ Tk_DestroyWindow(tkwin)
 		    (ClientData) winPtr->pathName);
 	    Tcl_DeleteHashEntry(Tcl_FindHashEntry(&winPtr->mainPtr->nameTable,
 		    winPtr->pathName));
+	    /*
+	     * Invalidate all objects referring to windows on this display.
+	     */
+	    dispPtr->deletionEpoch++;
 	}
 	winPtr->mainPtr->refCount--;
 	if (winPtr->mainPtr->refCount == 0) {
@@ -1394,12 +1405,12 @@ Tk_DestroyWindow(tkwin)
 	    /*
 	     * We just deleted the last window in the application.  Delete
 	     * the TkMainInfo structure too and replace all of Tk's commands
-	     * with dummy commands that return errors.  Also delete the
+	     * with dummy commands that return errors.	Also delete the
 	     * "send" command to unregister the interpreter.
-             *
-             * NOTE: Only replace the commands it if the interpreter is
-             * not being deleted. If it *is*, the interpreter cleanup will
-             * do all the needed work.
+	     *
+	     * NOTE: Only replace the commands it if the interpreter is
+	     * not being deleted. If it *is*, the interpreter cleanup will
+	     * do all the needed work.
 	     */
 
             if ((winPtr->mainPtr->interp != NULL) &&
@@ -1494,7 +1505,7 @@ Tk_DestroyWindow(tkwin)
             }
 	}
     }
-    ckfree((char *) winPtr);
+    Tcl_EventuallyFree((ClientData) winPtr, TCL_DYNAMIC);
 }
 
 /*
@@ -1578,6 +1589,7 @@ Tk_MakeWindowExist(tkwin)
     TkWindow *winPtr2;
     Window parent;
     Tcl_HashEntry *hPtr;
+    Tk_ClassCreateProc *createProc;
     int new;
 
     if (winPtr->window != None) {
@@ -1593,10 +1605,9 @@ Tk_MakeWindowExist(tkwin)
 	parent = winPtr->parentPtr->window;
     }
 
-    if (winPtr->classProcsPtr != NULL
-	    && winPtr->classProcsPtr->createProc != NULL) {
-	winPtr->window = (*winPtr->classProcsPtr->createProc)(tkwin, parent,
-		winPtr->instanceData);
+    createProc = Tk_GetClassProc(winPtr->classProcsPtr, createProc);
+    if (createProc != NULL) {
+	winPtr->window = (*createProc)(tkwin, parent, winPtr->instanceData);
     } else {
 	winPtr->window = TkpMakeWindow(winPtr, parent);
     }
@@ -2149,7 +2160,7 @@ Tk_SetClass(tkwin, className)
 /*
  *----------------------------------------------------------------------
  *
- * TkSetClassProcs --
+ * Tk_SetClassProcs --
  *
  *	This procedure is used to set the class procedures and
  *	instance data for a window.
@@ -2165,9 +2176,9 @@ Tk_SetClass(tkwin, className)
  */
 
 void
-TkSetClassProcs(tkwin, procs, instanceData)
+Tk_SetClassProcs(tkwin, procs, instanceData)
     Tk_Window tkwin;		/* Token for window to modify. */
-    TkClassProcs *procs;	/* Class procs structure. */
+    Tk_ClassProcs *procs;	/* Class procs structure. */
     ClientData instanceData;	/* Data to be passed to class procedures. */
 {
     register TkWindow *winPtr = (TkWindow *) tkwin;
@@ -2199,7 +2210,7 @@ TkSetClassProcs(tkwin, procs, instanceData)
 Tk_Window
 Tk_NameToWindow(interp, pathName, tkwin)
     Tcl_Interp *interp;		/* Where to report errors. */
-    char *pathName;		/* Path name of window. */
+    CONST char *pathName;	/* Path name of window. */
     Tk_Window tkwin;		/* Token for window:  name is assumed to
 				 * belong to the same main window as tkwin. */
 {
@@ -2492,8 +2503,18 @@ Tk_MainWindow(interp)
 					 * reporting also. */
 {
     TkMainInfo *mainPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr;
+
+    if (interp == NULL) {
+	return NULL;
+    }
+#ifdef USE_TCL_STUBS
+    if (tclStubsPtr == NULL) {
+	return NULL;
+    }
+#endif
+    tsdPtr = (ThreadSpecificData *) 
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (mainPtr = tsdPtr->mainWindowList; mainPtr != NULL;
 	    mainPtr = mainPtr->nextPtr) {
@@ -2561,6 +2582,11 @@ OpenIM(dispPtr)
 #else
     unsigned short i;
     XIMStyles *stylePtr;
+    char *modifier_list;
+
+    if ((modifier_list = XSetLocaleModifiers("")) == NULL) {
+	goto error;
+    }
 
     dispPtr->inputMethod = XOpenIM(dispPtr->display, NULL, NULL, NULL);
     if (dispPtr->inputMethod == NULL) {
@@ -2612,8 +2638,16 @@ OpenIM(dispPtr)
 int
 Tk_GetNumMainWindows()
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr;
+
+#ifdef USE_TCL_STUBS
+    if (tclStubsPtr == NULL) {
+	return 0;
+    }
+#endif
+
+    tsdPtr = (ThreadSpecificData *) 
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->numMainWindows;
 }
@@ -2815,7 +2849,9 @@ Initialize(interp)
 {
     char *p;
     int argc, code;
-    char **argv, *args[20];
+    CONST char **argv; 
+    char *args[20];
+    CONST char *argString = NULL;
     Tcl_DString class;
     ThreadSpecificData *tsdPtr;
     
@@ -2827,6 +2863,11 @@ Initialize(interp)
     if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
         return TCL_ERROR;
     }
+
+    /*
+     * Ensure that our obj-types are registered with the Tcl runtime.
+     */
+    TkRegisterObjTypes();
 
     tsdPtr = (ThreadSpecificData *) 
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -2920,7 +2961,7 @@ Initialize(interp)
 	 * cross interp refcounting and changing the code below.
 	 */
 
-	p = Tcl_GetStringResult(master);
+	argString = Tcl_GetStringResult(master);
     } else {
 	/*
 	 * If there is an "argv" variable, get its value, extract out
@@ -2928,13 +2969,13 @@ Initialize(interp)
 	 * the arguments that we used.
 	 */
 
-	p = Tcl_GetVar2(interp, "argv", (char *) NULL, TCL_GLOBAL_ONLY);
+	argString = Tcl_GetVar2(interp, "argv", (char *) NULL, TCL_GLOBAL_ONLY);
     }
     argv = NULL;
-    if (p != NULL) {
+    if (argString != NULL) {
 	char buffer[TCL_INTEGER_SPACE];
 
-	if (Tcl_SplitList(interp, p, &argc, &argv) != TCL_OK) {
+	if (Tcl_SplitList(interp, argString, &argc, &argv) != TCL_OK) {
 	    argError:
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (processing arguments in argv variable)");

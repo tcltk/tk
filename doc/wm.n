@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.5 2000/01/12 11:44:42 hobbs Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.5.4.1 2002/04/02 20:57:53 hobbs Exp $
 '\" 
 .so man.macros
 .TH wm n 4.3 Tk "Tk Built-In Commands"
@@ -208,7 +208,16 @@ bitmap is cancelled for \fIwindow\fR.
 If \fIbitmap\fR is specified then the command returns an empty string.
 Otherwise it returns the name of
 the current icon bitmap associated with \fIwindow\fR, or an empty
-string if \fIwindow\fR has no icon bitmap.
+string if \fIwindow\fR has no icon bitmap.  On the Windows operating
+system, an additional flag is supported: 
+\fBwm iconbitmap \fIwindow\fR ?\fI-default\fR? ?\fIimage\fR?.  
+If the \fI-default\fR
+flag is given, the icon is applied to all toplevel windows (existing
+and future) to which no other specific icon has yet been applied.
+In addition to bitmap image types, any file which contains a valid
+Windows icon is also accepted (usually .ico or .icr files).  Tcl will
+first test if the files contains an icon, and if that fails, test for
+a bitmap.
 .TP
 \fBwm iconify \fIwindow\fR
 Arrange for \fIwindow\fR to be iconified.  It \fIwindow\fR hasn't
@@ -391,6 +400,19 @@ source of the window's current size, or an empty string if
 no source has been specified yet.  Most window managers interpret
 ``no source'' as equivalent to \fBprogram\fR.
 .TP
+\fBwm stackorder \fIwindow\fR ?\fIisabove|isbelow\fR? \fI?window?\fR
+The stackorder command returns a list of toplevel windows
+in stacking order, from lowest to highest. When a single toplevel
+window is passed, the returned list recursively includes all of the
+window's children that are toplevels. Only those toplevels
+that are currently mapped to the screen are returned.
+The stackorder command can also be used to determine if one
+toplevel is positioned above or below a second toplevel.
+When two window arguments separated by either \fIisabove\fR or
+\fIisbelow\fR are passed, a boolean result indicates whether
+or not the first window is currently above or below the second
+window in the stacking order.
+.TP
 \fBwm state \fIwindow\fR ?newstate?
 If \fInewstate\fR is specified, the window will be set to the new state,
 otherwise it returns the current state of \fIwindow\fR: either
@@ -501,6 +523,9 @@ Most existing window managers appear to have bugs that affect the
 operation of the \fBwm\fR command.  For example, some changes won't
 take effect if the window is already active:  the window will have
 to be withdrawn and de-iconified in order to make the change happen.
+.PP
+On the Windows operating system \fIwm iconbitmap\fR has no effect when
+passed a bitmap: only icon files currently work properly.
 
 .SH KEYWORDS
 aspect ratio, deiconify, focus model, geometry, grid, group, icon, iconify, increments, position, size, title, top-level window, units, window manager

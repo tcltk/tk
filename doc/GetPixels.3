@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetPixels.3,v 1.3 1999/04/16 01:51:08 stanton Exp $
+'\" RCS: @(#) $Id: GetPixels.3,v 1.3.14.1 2002/04/02 20:57:53 hobbs Exp $
 '\" 
 .so man.macros
 .TH Tk_GetPixelsFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -42,7 +42,7 @@ units and pixels.
 .AP Tcl_Obj *objPtr in/out
 String value specifies a distance on the screen;
 internal rep will be modified to cache converted distance.
-.AP char *string in
+.AP "CONST char" *string in
 Same as \fIobjPtr\fR except specification of distance is passed as
 a string.
 .VE

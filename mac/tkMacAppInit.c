@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacAppInit.c,v 1.12 2000/02/10 08:53:06 jingham Exp $
+ * RCS: @(#) $Id: tkMacAppInit.c,v 1.12.4.1 2002/04/02 20:57:54 hobbs Exp $
  */
 
 #include <Gestalt.h>
@@ -51,12 +51,6 @@ long			ReadCharsFromConsole _ANSI_ARGS_((char *buff, long n));
 extern char *		__ttyname _ANSI_ARGS_((long fildes));
 short			SIOUXHandleOneEvent _ANSI_ARGS_((EventRecord *event));
 
-/*
- * Prototypes for functions from the tkConsole.c file.
- */
- 
-EXTERN void		TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
-			    int devId, char *buffer, long size));
 /*
  * Forward declarations for procedures defined later in this file:
  */

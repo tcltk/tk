@@ -3,7 +3,7 @@
 # This demonstration script creates a canvas widget with a text
 # item that can be edited and reconfigured in various ways.
 #
-# RCS: @(#) $Id: ctext.tcl,v 1.2 1998/09/14 18:23:27 stanton Exp $
+# RCS: @(#) $Id: ctext.tcl,v 1.2.20.1 2002/04/02 20:58:50 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -58,7 +58,7 @@ $c bind text <2> "textPaste $c @%x,%y"
 # to be edited.
 
 proc mkTextConfig {w x y option value color} {
-    set item [$w create rect [expr $x] [expr $y] [expr $x+30] [expr $y+30] \
+    set item [$w create rect $x $y [expr {$x+30}] [expr {$y+30}] \
 	    -outline black -fill $color -width 1]
     $w bind $item <1> "$w itemconf text $option $value"
     $w addtag config withtag $item
@@ -68,19 +68,20 @@ set x 50
 set y 50
 set color LightSkyBlue1
 mkTextConfig $c $x $y -anchor se $color
-mkTextConfig $c [expr $x+30] [expr $y] -anchor s $color
-mkTextConfig $c [expr $x+60] [expr $y] -anchor sw $color
-mkTextConfig $c [expr $x] [expr $y+30] -anchor e $color
-mkTextConfig $c [expr $x+30] [expr $y+30] -anchor center $color
-mkTextConfig $c [expr $x+60] [expr $y+30] -anchor w $color
-mkTextConfig $c [expr $x] [expr $y+60] -anchor ne $color
-mkTextConfig $c [expr $x+30] [expr $y+60] -anchor n $color
-mkTextConfig $c [expr $x+60] [expr $y+60] -anchor nw $color
-set item [$c create rect [expr $x+40] [expr $y+40] [expr $x+50] [expr $y+50] \
+mkTextConfig $c [expr {$x+30}] [expr {$y   }] -anchor s      $color
+mkTextConfig $c [expr {$x+60}] [expr {$y   }] -anchor sw     $color
+mkTextConfig $c [expr {$x   }] [expr {$y+30}] -anchor e      $color
+mkTextConfig $c [expr {$x+30}] [expr {$y+30}] -anchor center $color
+mkTextConfig $c [expr {$x+60}] [expr {$y+30}] -anchor w      $color
+mkTextConfig $c [expr {$x   }] [expr {$y+60}] -anchor ne     $color
+mkTextConfig $c [expr {$x+30}] [expr {$y+60}] -anchor n      $color
+mkTextConfig $c [expr {$x+60}] [expr {$y+60}] -anchor nw     $color
+set item [$c create rect \
+	[expr {$x+40}] [expr {$y+40}] [expr {$x+50}] [expr {$y+50}] \
 	-outline black -fill red]
 $c bind $item <1> "$c itemconf text -anchor center"
-$c create text [expr $x+45] [expr $y-5] -text {Text Position} -anchor s \
-	-font {Times 24} -fill brown
+$c create text [expr {$x+45}] [expr {$y-5}] \
+	-text {Text Position}  -anchor s  -font {Times 24}  -fill brown
 
 # Lastly, create some items that allow the text's justification to be
 # changed.
@@ -89,10 +90,10 @@ set x 350
 set y 50
 set color SeaGreen2
 mkTextConfig $c $x $y -justify left $color
-mkTextConfig $c [expr $x+30] [expr $y] -justify center $color
-mkTextConfig $c [expr $x+60] [expr $y] -justify right $color
-$c create text [expr $x+45] [expr $y-5] -text {Justification} -anchor s \
-	-font {Times 24} -fill brown
+mkTextConfig $c [expr {$x+30}] $y -justify center $color
+mkTextConfig $c [expr {$x+60}] $y -justify right $color
+$c create text [expr {$x+45}] [expr {$y-5}] \
+	-text {Justification}  -anchor s  -font {Times 24}  -fill brown
 
 $c bind config <Enter> "textEnter $c"
 $c bind config <Leave> "$c itemconf current -fill \$textConfigFill"
@@ -131,7 +132,7 @@ proc textB1Move {w x y} {
 }
 
 proc textBs {w} {
-    if ![catch {$w dchars text sel.first sel.last}] {
+    if {![catch {$w dchars text sel.first sel.last}]} {
 	return
     }
     set char [expr {[$w index text insert] - 1}]
@@ -139,7 +140,7 @@ proc textBs {w} {
 }
 
 proc textDel {w} {
-    if ![catch {$w dchars text sel.first sel.last}] {
+    if {![catch {$w dchars text sel.first sel.last}]} {
 	return
     }
     $w dchars text insert

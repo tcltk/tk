@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: button.test,v 1.9 2000/05/25 16:57:24 ericm Exp $
+# RCS: @(#) $Id: button.test,v 1.9.2.1 2002/04/02 20:57:57 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -749,7 +749,9 @@ test button-11.1 {ButtonTextVarProc procedure} {
 } {Label Label New}
 test button-11.2 {ButtonTextVarProc procedure} {
     eval destroy [winfo children .]
-    set x Label
+    # Windows buttons have a default min width, so we have to
+    # set this to be longer to force the wider button.
+    set x ExtraLongLabel
     button .b1 -textvariable x
     set old [winfo reqwidth .b1]
     set x New

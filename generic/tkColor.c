@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.c,v 1.7 2000/05/11 22:37:06 hobbs Exp $
+ * RCS: @(#) $Id: tkColor.c,v 1.7.2.1 2002/04/02 21:00:48 hobbs Exp $
  */
 
 #include "tkColor.h"
@@ -54,7 +54,7 @@ static void		InitColorObj _ANSI_ARGS_((Tcl_Obj *objPtr));
  * ptr1 field of the Tcl_Obj points to a TkColor object.
  */
 
-static Tcl_ObjType colorObjType = {
+Tcl_ObjType tkColorObjType = {
     "color",			/* name */
     FreeColorObjProc,		/* freeIntRepProc */
     DupColorObjProc,		/* dupIntRepProc */
@@ -98,7 +98,7 @@ Tk_AllocColorFromObj(interp, tkwin, objPtr)
 {
     TkColor *tkColPtr;
 
-    if (objPtr->typePtr != &colorObjType) {
+    if (objPtr->typePtr != &tkColorObjType) {
 	InitColorObj(objPtr);
     }
     tkColPtr = (TkColor *) objPtr->internalRep.twoPtrValue.ptr1;
@@ -643,7 +643,7 @@ Tk_GetColorFromObj(tkwin, objPtr)
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &colorObjType) {
+    if (objPtr->typePtr != &tkColorObjType) {
 	InitColorObj(objPtr);
     }
   
@@ -731,7 +731,7 @@ InitColorObj(objPtr)
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	(*typePtr->freeIntRepProc)(objPtr);
     }
-    objPtr->typePtr = &colorObjType;
+    objPtr->typePtr = &tkColorObjType;
     objPtr->internalRep.twoPtrValue.ptr1 = (VOID *) NULL;
 }
 

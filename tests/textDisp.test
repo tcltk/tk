@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.4 1999/12/14 06:53:14 hobbs Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.4.4.1 2002/04/02 20:57:58 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -46,11 +46,7 @@ foreach i [winfo child .] {
 frame .f -width 100 -height 20
 pack append . .f left
 
-if {$tcl_platform(platform) == "windows"} {
-    set fixedFont {Courier -14}
-} else {
-    set fixedFont {Courier -12}
-}
+set fixedFont {Courier -12}
 set fixedHeight [font metrics $fixedFont -linespace]
 set fixedWidth [font measure $fixedFont m]
 
@@ -557,7 +553,7 @@ test textDisp-4.11 {UpdateDisplayInfo, filling in extra vertical space} {
 } {6.40 {13.0 7.0 6.80 6.60 6.40} {6.40 6.60 6.80 7.0 13.0}}
 test textDisp-4.12 {UpdateDisplayInfo, filling in extra vertical space} {
     .t delete 1.0 end
-    .t insert end "1\n2\n3\n4\n5\n7\n8\n9\n10\n11\n12"
+    .t insert end "1\n2\n3\n4\n5\n7\n8\n9\n10\n11\n12\n13"
     button .b -text "Test" -bd 2 -highlightthickness 2
     .t window create 3.end -window .b
     .t yview moveto 1
@@ -2869,16 +2865,3 @@ option clear
 # cleanup
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

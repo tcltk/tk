@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: msgbox.test,v 1.4 2000/04/18 02:18:34 ericm Exp $
+# RCS: @(#) $Id: msgbox.test,v 1.4.4.1 2002/04/02 20:57:58 hobbs Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
@@ -72,7 +72,7 @@ test msgbox-1.10 {tk_messageBox command} {
     list [catch {tk_messageBox -parent foo.bar} msg] $msg
 } {1 {bad window path name "foo.bar"}}
 
-if {[info commands tkMessageBox] == ""} {
+if {[info commands tk::MessageBox] == ""} {
     set isNative 1
 } else {
     set isNative 0

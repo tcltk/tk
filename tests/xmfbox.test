@@ -9,7 +9,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: xmfbox.test,v 1.4 2000/03/24 23:13:19 ericm Exp $
+# RCS: @(#) $Id: xmfbox.test,v 1.4.4.1 2002/04/02 20:57:59 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -59,82 +59,82 @@ proc cleanup {} {
     catch {destroy .foo}
 }
 
-test xmfbox-1.1 {tkMotifFDialog_Create, -parent switch} {unixOnly} {
+test xmfbox-1.1 {tk::MotifFDialog_Create, -parent switch} {unixOnly} {
     catch {unset foo}
-    set x [tkMotifFDialog_Create foo open {-parent .}]
+    set x [tk::MotifFDialog_Create foo open {-parent .}]
     catch {destroy $x}
     set x
 } .foo
 
-test xmfbox-1.2 {tkMotifFDialog_Create, -parent switch} {unixOnly} {
+test xmfbox-1.2 {tk::MotifFDialog_Create, -parent switch} {unixOnly} {
     catch {unset foo}
     toplevel .bar
     wm geometry .bar +0+0
-    set x [tkMotifFDialog_Create foo open {-parent .bar}]
+    set x [tk::MotifFDialog_Create foo open {-parent .bar}]
     catch {destroy $x}
     catch {destroy .bar}
     set x
 } .bar.foo
 
-test xmfbox-2.1 {tkMotifFDialog_InterpFilter, ~ in dir names} {unixOnly} {
+test xmfbox-2.1 {tk::MotifFDialog_InterpFilter, ~ in dir names} {unixOnly} {
     cleanup
     file mkdir ./~nosuchuser1
-    set x [tkMotifFDialog_Create foo open {}]
+    set x [tk::MotifFDialog_Create foo open {}]
     $::tk::dialog::file::foo(fEnt) delete 0 end
     $::tk::dialog::file::foo(fEnt) insert 0 [pwd]/~nosuchuser1
-    set kk [tkMotifFDialog_InterpFilter $x]
+    set kk [tk::MotifFDialog_InterpFilter $x]
 } [list $testPWD/~nosuchuser1 *]
 
-test xmfbox-2.2 {tkMotifFDialog_InterpFilter, ~ in file names} {unixOnly} {
+test xmfbox-2.2 {tk::MotifFDialog_InterpFilter, ~ in file names} {unixOnly} {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
-    set x [tkMotifFDialog_Create foo open {}]
+    set x [tk::MotifFDialog_Create foo open {}]
     $::tk::dialog::file::foo(fEnt) delete 0 end
     $::tk::dialog::file::foo(fEnt) insert 0 [pwd]/~nosuchuser1
-    set kk [tkMotifFDialog_InterpFilter $x]
+    set kk [tk::MotifFDialog_InterpFilter $x]
 } [list $testPWD ./~nosuchuser1]
 
-test xmfbox-2.3 {tkMotifFDialog_Update, ~ in file names} {unixOnly} {
+test xmfbox-2.3 {tk::MotifFDialog_Update, ~ in file names} {unixOnly} {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
-    set x [tkMotifFDialog_Create foo open {}]
+    set x [tk::MotifFDialog_Create foo open {}]
     $::tk::dialog::file::foo(fEnt) delete 0 end
     $::tk::dialog::file::foo(fEnt) insert 0 [pwd]/~nosuchuser1
-    tkMotifFDialog_InterpFilter $x
-    tkMotifFDialog_Update $x
+    tk::MotifFDialog_InterpFilter $x
+    tk::MotifFDialog_Update $x
     $::tk::dialog::file::foo(fList) get end
 } ~nosuchuser1
 
-test xmfbox-2.4 {tkMotifFDialog_LoadFile, ~ in file names} {unixOnly} {
+test xmfbox-2.4 {tk::MotifFDialog_LoadFile, ~ in file names} {unixOnly} {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
-    set x [tkMotifFDialog_Create foo open {}]
+    set x [tk::MotifFDialog_Create foo open {}]
     set i [lsearch [$::tk::dialog::file::foo(fList) get 0 end] ~nosuchuser1]
     expr {$i >= 0}
 } 1
 
-test xmfbox-2.5 {tkMotifFDialog_BrowseFList, ~ in file names} {unixOnly} {
+test xmfbox-2.5 {tk::MotifFDialog_BrowseFList, ~ in file names} {unixOnly} {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
-    set x [tkMotifFDialog_Create foo open {}]
+    set x [tk::MotifFDialog_Create foo open {}]
     set i [lsearch [$::tk::dialog::file::foo(fList) get 0 end] ~nosuchuser1]
     $::tk::dialog::file::foo(fList) selection clear 0 end
     $::tk::dialog::file::foo(fList) selection set $i
-    tkMotifFDialog_BrowseFList $x
+    tk::MotifFDialog_BrowseFList $x
     $::tk::dialog::file::foo(sEnt) get
 } $testPWD/~nosuchuser1
 
-test xmfbox-2.5 {tkMotifFDialog_ActivateFList, ~ in file names} {unixOnly} {
+test xmfbox-2.5 {tk::MotifFDialog_ActivateFList, ~ in file names} {unixOnly} {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
-    set x [tkMotifFDialog_Create foo open {}]
+    set x [tk::MotifFDialog_Create foo open {}]
     set i [lsearch [$::tk::dialog::file::foo(fList) get 0 end] ~nosuchuser1]
     $::tk::dialog::file::foo(fList) selection clear 0 end
     $::tk::dialog::file::foo(fList) selection set $i
-    tkMotifFDialog_BrowseFList $x
-    tkMotifFDialog_ActivateFList $x
+    tk::MotifFDialog_BrowseFList $x
+    tk::MotifFDialog_ActivateFList $x
     list $::tk::dialog::file::foo(selectPath) \
-	    $::tk::dialog::file::foo(selectFile) $tkPriv(selectFilePath)
+	    $::tk::dialog::file::foo(selectFile) $tk::Priv(selectFilePath)
 } [list $testPWD ~nosuchuser1 $testPWD/~nosuchuser1]
 
 # cleanup

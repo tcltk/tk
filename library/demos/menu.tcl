@@ -3,7 +3,7 @@
 # This demonstration script creates a window with a bunch of menus
 # and cascaded menus using menubars.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.2 1998/09/14 18:23:29 stanton Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.2.20.1 2002/04/02 20:58:50 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -130,6 +130,12 @@ $w.menu add cascade -label "More" -menu $m -underline 0
 menu $m -tearoff 0
 foreach i {{An entry} {Another entry} {Does nothing} {Does almost nothing} {Make life meaningful}} {
     $m add command -label $i -command [list puts "You invoked \"$i\""]
+}
+$m entryconfigure "Does almost nothing" \
+	-bitmap questhead  -compound left  -command {
+    tk_dialog .compound {Compound Menu Entry} {The menu entry you invoked\
+	    displays both a bitmap and a text string.  Other than this, it\
+	    is just like any other menu entry.} {} 0 OK
 }
 
 set m $w.menu.colors

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: pack.test,v 1.5 1999/04/21 21:53:29 rjohnson Exp $
+# RCS: @(#) $Id: pack.test,v 1.5.14.1 2002/04/02 20:57:58 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -75,6 +75,12 @@ test pack-1.4 {-side option} {
 test pack-2.1 {x padding and filling} {
     pack1 -side right -padx 20
 } {20x40+260+80 240x200+0+0}
+test pack-2.1.1 {x padding and filling} {
+    pack1 -side right -padx {10 30}
+} {20x40+250+80 240x200+0+0}
+test pack-2.1.2 {x padding and filling} {
+    pack1 -side right -padx {35 5}
+} {20x40+275+80 240x200+0+0}
 test pack-2.2 {x padding and filling} {
     pack1 -side right -ipadx 20
 } {60x40+240+80 240x200+0+0}
@@ -84,30 +90,51 @@ test pack-2.3 {x padding and filling} {
 test pack-2.4 {x padding and filling} {
     pack1 -side right -padx 20 -fill x
 } {20x40+260+80 240x200+0+0}
+test pack-2.4.1 {x padding and filling} {
+    pack1 -side right -padx {9 31} -fill x
+} {20x40+249+80 240x200+0+0}
 test pack-2.5 {x padding and filling} {
     pack1 -side right -ipadx 20 -fill x
 } {60x40+240+80 240x200+0+0}
 test pack-2.6 {x padding and filling} {
     pack1 -side right -ipadx 5 -padx 10 -fill x
 } {30x40+260+80 250x200+0+0}
+test pack-2.6.1 {x padding and filling} {
+    pack1 -side right -ipadx 5 -padx {5 15} -fill x
+} {30x40+255+80 250x200+0+0}
 test pack-2.7 {x padding and filling} {
     pack1 -side top -padx 20
 } {20x40+140+0 300x160+0+40}
+test pack-2.7.1 {x padding and filling} {
+    pack1 -side top -padx {0 40}
+} {20x40+120+0 300x160+0+40}
+test pack-2.7.2 {x padding and filling} {
+    pack1 -side top -padx {31 9}
+} {20x40+151+0 300x160+0+40}
 test pack-2.8 {x padding and filling} {
     pack1 -side top -ipadx 20
 } {60x40+120+0 300x160+0+40}
 test pack-2.9 {x padding and filling} {
     pack1 -side top -ipadx 5 -padx 10
 } {30x40+135+0 300x160+0+40}
+test pack-2.9.1 {x padding and filling} {
+    pack1 -side top -ipadx 5 -padx {5 15}
+} {30x40+130+0 300x160+0+40}
 test pack-2.10 {x padding and filling} {
     pack1 -side top -padx 20 -fill x
 } {260x40+20+0 300x160+0+40}
+test pack-2.10.1 {x padding and filling} {
+    pack1 -side top -padx {25 15} -fill x
+} {260x40+25+0 300x160+0+40}
 test pack-2.11 {x padding and filling} {
     pack1 -side top -ipadx 20 -fill x
 } {300x40+0+0 300x160+0+40}
 test pack-2.12 {x padding and filling} {
     pack1 -side top -ipadx 5 -padx 10 -fill x
 } {280x40+10+0 300x160+0+40}
+test pack-2.12 {x padding and filling} {
+    pack1 -side top -ipadx 5 -padx {5 15} -fill x
+} {280x40+5+0 300x160+0+40}
 set pad [winfo pixels .pack 1c]
 test pack-2.13 {x padding and filling} {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -125,39 +152,66 @@ test pack-2.14 {x padding and filling} {
 test pack-3.1 {y padding and filling} {
     pack1 -side right -pady 20
 } {20x40+280+80 280x200+0+0}
+test pack-3.1.1 {y padding and filling} {
+    pack1 -side right -pady {5 35}
+} {20x40+280+65 280x200+0+0}
+test pack-3.1.2 {y padding and filling} {
+    pack1 -side right -pady {40 0}
+} {20x40+280+100 280x200+0+0}
 test pack-3.2 {y padding and filling} {
     pack1 -side right -ipady 20
 } {20x80+280+60 280x200+0+0}
 test pack-3.3 {y padding and filling} {
     pack1 -side right -ipady 5 -pady 10
 } {20x50+280+75 280x200+0+0}
+test pack-3.3.1 {y padding and filling} {
+    pack1 -side right -ipady 5 -pady {5 15}
+} {20x50+280+70 280x200+0+0}
 test pack-3.4 {y padding and filling} {
     pack1 -side right -pady 20 -fill y
 } {20x160+280+20 280x200+0+0}
+test pack-3.4.1 {y padding and filling} {
+    pack1 -side right -pady {35 5} -fill y
+} {20x160+280+35 280x200+0+0}
 test pack-3.5 {y padding and filling} {
     pack1 -side right -ipady 20 -fill y
 } {20x200+280+0 280x200+0+0}
 test pack-3.6 {y padding and filling} {
     pack1 -side right -ipady 5 -pady 10 -fill y
 } {20x180+280+10 280x200+0+0}
+test pack-3.6.1 {y padding and filling} {
+    pack1 -side right -ipady 5 -pady {0 20} -fill y
+} {20x180+280+0 280x200+0+0}
 test pack-3.7 {y padding and filling} {
     pack1 -side top -pady 20
 } {20x40+140+20 300x120+0+80}
+test pack-3.7.1 {y padding and filling} {
+    pack1 -side top -pady {40 0}
+} {20x40+140+40 300x120+0+80}
 test pack-3.8 {y padding and filling} {
     pack1 -side top -ipady 20
 } {20x80+140+0 300x120+0+80}
 test pack-3.9 {y padding and filling} {
     pack1 -side top -ipady 5 -pady 10
 } {20x50+140+10 300x130+0+70}
+test pack-3.9.1 {y padding and filling} {
+    pack1 -side top -ipady 5 -pady {3 17}
+} {20x50+140+3 300x130+0+70}
 test pack-3.10 {y padding and filling} {
     pack1 -side top -pady 20 -fill y
 } {20x40+140+20 300x120+0+80}
+test pack-3.10.1 {y padding and filling} {
+    pack1 -side top -pady {39 1} -fill y
+} {20x40+140+39 300x120+0+80}
 test pack-3.11 {y padding and filling} {
     pack1 -side top -ipady 20 -fill y
 } {20x80+140+0 300x120+0+80}
 test pack-3.12 {y padding and filling} {
     pack1 -side top -ipady 5 -pady 10 -fill y
 } {20x50+140+10 300x130+0+70}
+test pack-3.12.1 {y padding and filling} {
+    pack1 -side top -ipady 5 -pady {1 19} -fill y
+} {20x50+140+1 300x130+0+70}
 set pad [winfo pixels .pack 1c]
 test pack-3.13 {y padding and filling} {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -595,9 +649,15 @@ test pack-11.11 {info option} {
 test pack-11.12 {info option} {
     pack4 -padx 2
 } 2
+test pack-11.12.1 {info option} {
+    pack4 -padx {2 9}
+} {2 9}
 test pack-11.13 {info option} {
     pack4 -pady 3
 } 3
+test pack-11.13.1 {info option} {
+    pack4 -pady {3 11}
+} {3 11}
 test pack-11.14 {info option} {
     pack4 -side top
 } top
@@ -644,7 +704,7 @@ test pack-12.8 {command options and errors} {
 test pack-12.9 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -anchor gorp} msg] $msg
-} {1 {bad anchor position "gorp": must be n, ne, e, se, s, sw, w, nw, or center}}
+} {1 {bad anchor "gorp": must be n, ne, e, se, s, sw, w, nw, or center}}
 test pack-12.10 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -before gorp} msg] $msg
@@ -670,34 +730,58 @@ test pack-12.15 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -padx abc} msg] $msg
 } {1 {bad pad value "abc": must be positive screen distance}}
+test pack-12.15.1 {command options and errors} {
+    pack forget .pack.a .pack.b .pack.c .pack.d
+    list [catch {pack .pack.a -padx {5 abc}} msg] $msg
+} {1 {bad 2nd pad value "abc": must be positive screen distance}}
 test pack-12.16 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -padx -1} msg] $msg
 } {1 {bad pad value "-1": must be positive screen distance}}
+test pack-12.16.1 {command options and errors} {
+    pack forget .pack.a .pack.b .pack.c .pack.d
+    list [catch {pack .pack.a -padx {5 -1}} msg] $msg
+} {1 {bad 2nd pad value "-1": must be positive screen distance}}
 test pack-12.17 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -pady abc} msg] $msg
 } {1 {bad pad value "abc": must be positive screen distance}}
+test pack-12.17.1 {command options and errors} {
+    pack forget .pack.a .pack.b .pack.c .pack.d
+    list [catch {pack .pack.a -pady {0 abc}} msg] $msg
+} {1 {bad 2nd pad value "abc": must be positive screen distance}}
 test pack-12.18 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -pady -1} msg] $msg
 } {1 {bad pad value "-1": must be positive screen distance}}
+test pack-12.18.1 {command options and errors} {
+    pack forget .pack.a .pack.b .pack.c .pack.d
+    list [catch {pack .pack.a -pady {0 -1}} msg] $msg
+} {1 {bad 2nd pad value "-1": must be positive screen distance}}
 test pack-12.19 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -ipadx abc} msg] $msg
-} {1 {bad pad value "abc": must be positive screen distance}}
+} {1 {bad ipadx value "abc": must be positive screen distance}}
 test pack-12.20 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -ipadx -1} msg] $msg
-} {1 {bad pad value "-1": must be positive screen distance}}
+} {1 {bad ipadx value "-1": must be positive screen distance}}
+test pack-12.20.1 {command options and errors} {
+    pack forget .pack.a .pack.b .pack.c .pack.d
+    list [catch {pack .pack.a -ipadx {5 5}} msg] $msg
+} {1 {bad ipadx value "5 5": must be positive screen distance}}
 test pack-12.21 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -ipady abc} msg] $msg
-} {1 {bad pad value "abc": must be positive screen distance}}
+} {1 {bad ipady value "abc": must be positive screen distance}}
 test pack-12.22 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -ipady -1} msg] $msg
-} {1 {bad pad value "-1": must be positive screen distance}}
+} {1 {bad ipady value "-1": must be positive screen distance}}
+test pack-12.22.1 {command options and errors} {
+    pack forget .pack.a .pack.b .pack.c .pack.d
+    list [catch {pack .pack.a -ipady {5 5}} msg] $msg
+} {1 {bad ipady value "5 5": must be positive screen distance}}
 test pack-12.23 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -side bac} msg] $msg
@@ -705,7 +789,7 @@ test pack-12.23 {command options and errors} {
 test pack-12.24 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -lousy bac} msg] $msg
-} {1 {unknown or ambiguous option "-lousy": must be -after, -anchor, -before, -expand, -fill, -in, -ipadx, -ipady, -padx, -pady, or -side}}
+} {1 {bad option "-lousy": must be -after, -anchor, -before, -expand, -fill, -in, -ipadx, -ipady, -padx, -pady, or -side}}
 test pack-12.25 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -padx} msg] $msg
@@ -713,7 +797,7 @@ test pack-12.25 {command options and errors} {
 test pack-12.26 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a {} 22} msg] $msg
-} {1 {unknown or ambiguous option "": must be -after, -anchor, -before, -expand, -fill, -in, -ipadx, -ipady, -padx, -pady, or -side}}
+} {1 {bad option "": must be -after, -anchor, -before, -expand, -fill, -in, -ipadx, -ipady, -padx, -pady, or -side}}
 test pack-12.27 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -in .} msg] $msg
@@ -976,6 +1060,42 @@ test pack-18.2 {unmap slaves when master unmapped} {
     update
     lappend result [winfo ismapped .pack.b]
 } {1 0 100 30 0 1}
+
+test pack-19.1 {test respect for internalborder} {
+    catch {eval pack forget [pack slaves .pack]}
+    destroy .pack.l .pack.lf
+    wm geometry .pack 200x200
+    frame .pack.l -width 15 -height 10
+    labelframe .pack.lf -labelwidget .pack.l
+    pack .pack.lf -fill both -expand 1
+    frame .pack.lf.f
+    pack .pack.lf.f -fill both -expand 1
+    update
+    set res [list [winfo geometry .pack.lf.f]]
+    .pack.lf configure -labelanchor e -padx 3 -pady 5
+    update
+    lappend res [winfo geometry .pack.lf.f]
+    destroy .pack.l .pack.lf
+    set res
+} {196x188+2+10 177x186+5+7}
+test pack-19.2 {test support for minreqsize} {
+    catch {eval pack forget [pack slaves .pack]}
+    destroy .pack.l .pack.lf
+    wm geometry .pack {}
+    frame .pack.l -width 150 -height 100
+    labelframe .pack.lf -labelwidget .pack.l
+    pack .pack.lf -fill both -expand 1
+    frame .pack.lf.f -width 20 -height 25
+    pack .pack.lf.f
+    update
+    set res [list [winfo geometry .pack.lf]]
+    .pack.lf configure -labelanchor ws
+    update
+    lappend res [winfo geometry .pack.lf]
+    destroy .pack.l .pack.lf
+    set res
+} {162x127+0+0 172x112+0+0}
+
 destroy .pack
 foreach i {pack1 pack2 pack3 pack4} {
     rename $i {}
@@ -984,16 +1104,3 @@ foreach i {pack1 pack2 pack3 pack4} {
 # cleanup
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

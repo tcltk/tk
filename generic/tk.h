@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.52 2000/10/05 18:31:25 ericm Exp $
+ * RCS: @(#) $Id: tk.h,v 1.52.2.1 2002/04/02 21:00:45 hobbs Exp $
  */
 
 #ifndef _TK
@@ -39,7 +39,7 @@ extern "C" {
  * win/README		(not patchlevel)
  * unix/README		(not patchlevel)
  * unix/tk.spec		(3 LOC Major/Minor, 2 LOC patch)
- * win/aclocal.m4	(not patchlevel)
+ * win/tcl.m4		(not patchlevel)
  *
  * You may also need to update some of these files when the numbers change
  * for the version of Tcl that this release of Tk is compiled against.
@@ -48,10 +48,10 @@ extern "C" {
 #define TK_MAJOR_VERSION   8
 #define TK_MINOR_VERSION   4
 #define TK_RELEASE_LEVEL   TCL_ALPHA_RELEASE
-#define TK_RELEASE_SERIAL  2
+#define TK_RELEASE_SERIAL  5
 
 #define TK_VERSION	"8.4"
-#define TK_PATCH_LEVEL	"8.4a2"
+#define TK_PATCH_LEVEL	"8.4a5"
 
 /*
  * The following definitions set up the proper options for Macintosh
@@ -548,6 +548,51 @@ typedef struct Tk_FontMetrics {
 #define TK_IGNORE_NEWLINES	16
 
 /*
+ * Widget class procedures used to implement platform specific widget
+ * behavior.
+ */
+
+typedef Window (Tk_ClassCreateProc) _ANSI_ARGS_((Tk_Window tkwin,
+	Window parent, ClientData instanceData));
+typedef void (Tk_ClassWorldChangedProc) _ANSI_ARGS_((ClientData instanceData));
+typedef void (Tk_ClassModalProc) _ANSI_ARGS_((Tk_Window tkwin,
+	XEvent *eventPtr));
+
+typedef struct Tk_ClassProcs {
+    unsigned int size;
+    Tk_ClassWorldChangedProc *worldChangedProc;
+				/* Procedure to invoke when the widget needs to
+				 * respond in some way to a change in the
+				 * world (font changes, etc.) */
+    Tk_ClassCreateProc *createProc;
+				/* Procedure to invoke when the
+				 * platform-dependent window needs to be
+                                 * created. */
+    Tk_ClassModalProc *modalProc;
+				/* Procedure to invoke after all bindings on a
+				 * widget have been triggered in order to
+				 * handle a modal loop. */
+} Tk_ClassProcs;
+
+/*
+ * Simple accessor for Tk_ClassProcs structure.  Checks that the structure
+ * is not NULL, then checks the size field and returns either the requested
+ * field, if present, or NULL if the structure is too small to have the field
+ * (or NULL if the structure is NULL).
+ *
+ * A more general version of this function may be useful if other
+ * size-versioned structure pop up in the future:
+ *
+ *	#define Tk_GetField(name, who, which) \
+ *	    (((who) == NULL) ? NULL :
+ *	    (((who)->size <= Tk_Offset(name, which)) ? NULL :(name)->which))
+ */
+
+#define Tk_GetClassProc(procs, which) \
+    (((procs) == NULL) ? NULL : \
+    (((procs)->size <= Tk_Offset(Tk_ClassProcs, which)) ? NULL:(procs)->which))
+
+/*
  * Each geometry manager (the packer, the placer, etc.) is represented
  * by a structure of the following form, which indicates procedures
  * to invoke in the geometry manager to carry out certain functions.
@@ -672,8 +717,19 @@ typedef XActivateDeactivateEvent XDeactivateEvent;
     (((Tk_FakeWin *) (tkwin))->flags & TK_TOP_LEVEL)
 #define Tk_ReqWidth(tkwin)		(((Tk_FakeWin *) (tkwin))->reqWidth)
 #define Tk_ReqHeight(tkwin)		(((Tk_FakeWin *) (tkwin))->reqHeight)
+/* Tk_InternalBorderWidth is deprecated */
 #define Tk_InternalBorderWidth(tkwin) \
-    (((Tk_FakeWin *) (tkwin))->internalBorderWidth)
+    (((Tk_FakeWin *) (tkwin))->internalBorderLeft)
+#define Tk_InternalBorderLeft(tkwin) \
+    (((Tk_FakeWin *) (tkwin))->internalBorderLeft)
+#define Tk_InternalBorderRight(tkwin) \
+    (((Tk_FakeWin *) (tkwin))->internalBorderRight)
+#define Tk_InternalBorderTop(tkwin) \
+    (((Tk_FakeWin *) (tkwin))->internalBorderTop)
+#define Tk_InternalBorderBottom(tkwin) \
+    (((Tk_FakeWin *) (tkwin))->internalBorderBottom)
+#define Tk_MinReqWidth(tkwin)		(((Tk_FakeWin *) (tkwin))->minReqWidth)
+#define Tk_MinReqHeight(tkwin)		(((Tk_FakeWin *) (tkwin))->minReqHeight)
 #define Tk_Parent(tkwin)		(((Tk_FakeWin *) (tkwin))->parentPtr)
 #define Tk_Colormap(tkwin)		(((Tk_FakeWin *) (tkwin))->atts.colormap)
 
@@ -719,11 +775,16 @@ typedef struct Tk_FakeWin {
     char *dummy14;		/* geomMgrPtr */
     ClientData dummy15;		/* geomData */
     int reqWidth, reqHeight;
-    int internalBorderWidth;
+    int internalBorderLeft;
     char *dummy16;		/* wmInfoPtr */
     char *dummy17;		/* classProcPtr */
     ClientData dummy18;		/* instanceData */
     char *dummy19;		/* privatePtr */
+    int internalBorderRight;
+    int internalBorderTop;
+    int internalBorderBottom;
+    int minReqWidth;
+    int minReqHeight;
 } Tk_FakeWin;
 
 /*
@@ -1344,7 +1405,7 @@ EXTERN void		Tk_CreateOldPhotoImageFormat _ANSI_ARGS_((
 #define Tk_Main(argc, argv, proc) \
     Tk_MainEx(argc, argv, proc, Tcl_CreateInterp())
 
-char *Tk_InitStubs _ANSI_ARGS_((Tcl_Interp *interp, char *version, int exact));
+CONST char *Tk_InitStubs _ANSI_ARGS_((Tcl_Interp *interp, char *version, int exact));
 
 #ifndef USE_TK_STUBS
 

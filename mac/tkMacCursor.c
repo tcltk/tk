@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacCursor.c,v 1.5 1999/04/16 01:51:30 stanton Exp $
+ * RCS: @(#) $Id: tkMacCursor.c,v 1.5.14.1 2002/04/02 20:57:54 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -80,7 +80,7 @@ static int gTkOwnsCursor = true;             /* A boolean indicating whether
  */
 
 static  void FindCursorByName _ANSI_ARGS_ ((TkMacCursor *macCursorPtr,
-	             char *string));
+	             CONST char *string));
 
 /*
  *----------------------------------------------------------------------
@@ -105,7 +105,7 @@ static  void FindCursorByName _ANSI_ARGS_ ((TkMacCursor *macCursorPtr,
 void 
 FindCursorByName(
     TkMacCursor *macCursorPtr,
-    char *string)
+    CONST char *string)
 {
     Handle resource;
     Str255 curName;
@@ -200,7 +200,7 @@ TkGetCursorByName(
         FindCursorByName(macCursorPtr, string);
 
 	if (macCursorPtr->macCursor == NULL) {
-	    char **argv;
+	    CONST char **argv;
 	    int argc, err;
 	    
 	    /*

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacHLEvents.c,v 1.4 1999/12/21 23:55:36 hobbs Exp $
+ * RCS: @(#) $Id: tkMacHLEvents.c,v 1.4.4.1 2002/04/02 20:57:54 hobbs Exp $
  */
 
 #include "tcl.h"
@@ -202,7 +202,7 @@ OdocHandler(
      */
 
     if ((interp == NULL) || 
-    	(Tcl_GetCommandInfo(interp, "tkOpenDocument", &dummy)) == 0) {
+    	(Tcl_GetCommandInfo(interp, "::tk::mac::OpenDocument", &dummy)) == 0) {
     	return noErr;
     }
     
@@ -228,7 +228,7 @@ OdocHandler(
     }
 
     Tcl_DStringInit(&command);
-    Tcl_DStringAppend(&command, "tkOpenDocument", -1);
+    Tcl_DStringAppend(&command, "::tk::mac::OpenDocument", -1);
     for (index = 1; index <= count; index++) {
 	int length;
 	Handle fullPath;

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixScale.c,v 1.6 2000/04/14 08:34:49 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixScale.c,v 1.6.4.1 2002/04/02 20:58:02 hobbs Exp $
  */
 
 #include "tkScale.h"
@@ -271,7 +271,7 @@ DisplayVerticalValue(scalePtr, drawable, value, rightEdge)
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
     y = TkScaleValueToPixel(scalePtr, value) + fm.ascent/2;
     sprintf(valueString, scalePtr->format, value);
-    length = strlen(valueString);
+    length = (int) strlen(valueString);
     width = Tk_TextWidth(scalePtr->tkfont, valueString, length);
 
     /*
@@ -488,7 +488,7 @@ DisplayHorizontalValue(scalePtr, drawable, value, top)
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
     y = top + fm.ascent;
     sprintf(valueString, scalePtr->format, value);
-    length = strlen(valueString);
+    length = (int) strlen(valueString);
     width = Tk_TextWidth(scalePtr->tkfont, valueString, length);
 
     /*
@@ -559,7 +559,7 @@ TkpDisplayScale(clientData)
     scalePtr->flags &= ~INVOKE_COMMAND;
     if (scalePtr->flags & SCALE_DELETED) {
 	Tcl_Release((ClientData) scalePtr);
-	goto done;
+	return;
     }
     Tcl_Release((ClientData) scalePtr);
 

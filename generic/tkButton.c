@@ -11,11 +11,16 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.11 2000/10/01 21:35:27 ericm Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.11.2.1 2002/04/02 21:00:46 hobbs Exp $
  */
 
 #include "tkButton.h"
 #include "default.h"
+
+typedef struct ThreadSpecificData { 
+    int defaultsInitialized;
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Class names for buttons, indexed by one of the type values defined
@@ -476,7 +481,7 @@ static Tk_OptionSpec *optionSpecs[] = {
  * into a single enumerated type used to dispatch the widget command.
  */
 
-static char *commandNames[][8] = {
+static CONST char *commandNames[][8] = {
     {"cget", "configure", (char *) NULL},
     {"cget", "configure", "flash", "invoke", (char *) NULL},
     {"cget", "configure", "deselect", "flash", "invoke", "select",
@@ -515,10 +520,10 @@ static void		ButtonSelectImageProc _ANSI_ARGS_((
 			    ClientData clientData, int x, int y, int width,
 			    int height, int imgWidth, int imgHeight));
 static char *		ButtonTextVarProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, char *name1, char *name2,
+			    Tcl_Interp *interp, char *name1, CONST char *name2,
 			    int flags));
 static char *		ButtonVarProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, char *name1, char *name2,
+			    Tcl_Interp *interp, char *name1, CONST char *name2,
 			    int flags));
 static int		ButtonWidgetObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
@@ -607,8 +612,7 @@ Tk_RadiobuttonObjCmd(clientData, interp, objc, objv)
 
 static int
 ButtonCreate(clientData, interp, objc, objv, type)
-    ClientData clientData;	/* Option table for this widget class, or
-				 * NULL if not created yet. */
+    ClientData clientData;	/* NULL. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument values. */
@@ -619,25 +623,12 @@ ButtonCreate(clientData, interp, objc, objv, type)
     TkButton *butPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    optionTable = (Tk_OptionTable) clientData;
-    if (optionTable == NULL) {
-	Tcl_CmdInfo info;
-	char *name;
-
-	/*
-	 * We haven't created the option table for this widget class
-	 * yet.  Do it now and save the table as the clientData for
-	 * the command, so we'll have access to it in future
-	 * invocations of the command.
-	 */
-
+    if (!tsdPtr->defaultsInitialized) {
 	TkpButtonSetDefaults(optionSpecs[type]);
-	optionTable = Tk_CreateOptionTable(interp, optionSpecs[type]);
-	name = Tcl_GetString(objv[0]);
-	Tcl_GetCommandInfo(interp, name, &info);
-	info.objClientData = (ClientData) optionTable;
-	Tcl_SetCommandInfo(interp, name, &info);
+	tsdPtr->defaultsInitialized = 1;
     }
 
     if (objc < 2) {
@@ -655,10 +646,17 @@ ButtonCreate(clientData, interp, objc, objv, type)
 	return TCL_ERROR;
     }
 
+    /*
+     * Create the option table for this widget class.  If it has already
+     * been created, the cached pointer will be returned.
+     */
+
+    optionTable = Tk_CreateOptionTable(interp, optionSpecs[type]);
+
     Tk_SetClass(tkwin, classNames[type]);
     butPtr = TkpCreateButton(tkwin);
 
-    TkSetClassProcs(tkwin, &tkpButtonProcs, (ClientData) butPtr);
+    Tk_SetClassProcs(tkwin, &tkpButtonProcs, (ClientData) butPtr);
 
     /*
      * Initialize the data structure for the button.
@@ -944,9 +942,9 @@ static void
 DestroyButton(butPtr)
     TkButton *butPtr;		/* Info about button widget. */
 {
+    butPtr->flags |= BUTTON_DELETED;
     TkpDestroyButton(butPtr);
 
-    butPtr->flags |= BUTTON_DELETED;
     if (butPtr->flags & REDRAW_PENDING) {
 	Tcl_CancelIdleCall(TkpDisplayButton, (ClientData) butPtr);
     }
@@ -1541,7 +1539,7 @@ ButtonVarProc(clientData, interp, name1, name2, flags)
     ClientData clientData;	/* Information about button. */
     Tcl_Interp *interp;		/* Interpreter containing variable. */
     char *name1;		/* Name of variable. */
-    char *name2;		/* Second part of variable name. */
+    CONST char *name2;		/* Second part of variable name. */
     int flags;			/* Information about what happened. */
 {
     register TkButton *butPtr = (TkButton *) clientData;
@@ -1620,12 +1618,16 @@ ButtonTextVarProc(clientData, interp, name1, name2, flags)
     ClientData clientData;	/* Information about button. */
     Tcl_Interp *interp;		/* Interpreter containing variable. */
     char *name1;		/* Not used. */
-    char *name2;		/* Not used. */
+    CONST char *name2;		/* Not used. */
     int flags;			/* Information about what happened. */
 {
     TkButton *butPtr = (TkButton *) clientData;
     char *name;
     Tcl_Obj *valuePtr;
+
+    if (butPtr->flags & BUTTON_DELETED) {
+	return (char *) NULL;
+    }
 
     name = Tcl_GetString(butPtr->textVarNamePtr);
 

@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.49 2000/09/29 21:40:54 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.49.2.1 2002/04/02 20:58:00 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -101,7 +101,12 @@ CFLAGS_OPTIMIZE		= @CFLAGS_OPTIMIZE@
 #CFLAGS			= $(CFLAGS_DEBUG)
 #CFLAGS			= $(CFLAGS_OPTIMIZE)
 #CFLAGS			= $(CFLAGS_DEBUG) $(CFLAGS_OPTIMIZE)
-CFLAGS			= @CFLAGS@
+CFLAGS			= @CFLAGS@ @CFLAGS_DEFAULT@
+
+# Flags to pass to the linker
+LDFLAGS_DEBUG		= @LDFLAGS_DEBUG@
+LDFLAGS_OPTIMIZE	= @LDFLAGS_OPTIMIZE@
+LDFLAGS			= @LDFLAGS@ @LDFLAGS_DEFAULT@
 
 # A "-I" switch that can be used when compiling to make all of the
 # X11 include files accessible (the configure script will try to
@@ -159,11 +164,11 @@ INSTALL			= @srcdir@/install-sh -c
 INSTALL_PROGRAM		= ${INSTALL}
 INSTALL_DATA		= ${INSTALL} -m 644
 
-# The following specifies which Tcl executable to use for make targets
-# below.  This can generally be 'tclsh', meaning all targets will work
-# once we have created the initial executable, but in some cases you
-# may want to use a target without having made tclsh on these sources
-# (like for make genstubs)
+# TCL_EXE is the name of a tclsh executable that is available *BEFORE*
+# running make for the first time. Certain build targets (make genstubs)
+# need it to be available on the PATH. This executable should *NOT* be
+# required just to do a normal build although it can be required to run
+# make dist.
 TCL_EXE			= tclsh
 
 # The symbols below provide support for dynamic loading and shared
@@ -174,7 +179,7 @@ TCL_EXE			= tclsh
 SHLIB_CFLAGS		= @SHLIB_CFLAGS@
 
 # To enable support for stubs in Tcl.
-STUB_LIB_FILE		= @STUB_LIB_FILE@
+STUB_LIB_FILE		= @TK_STUB_LIB_FILE@
 
 TK_STUB_LIB_FILE	= @TK_STUB_LIB_FILE@
 #TK_STUB_LIB_FILE	= libtkstub.a
@@ -188,8 +193,9 @@ TK_LIB_FILE		= @TK_LIB_FILE@
 TK_LIB_FLAG		= @TK_LIB_FLAG@
 #TK_LIB_FLAG		= -ltk
 
-#TCL_LIB_SPEC		= @TCL_BUILD_LIB_SPEC@
 TCL_LIB_SPEC		= @TCL_LIB_SPEC@
+TCL_STUB_LIB_SPEC	= @TCL_STUB_LIB_SPEC@
+TCL_STUB_LIB_FLAG	= @TCL_STUB_LIB_FLAG@
 TK_EXP_FILE		= @TK_EXP_FILE@
 TK_BUILD_EXP_FILE	= @TK_BUILD_EXP_FILE@
 
@@ -197,13 +203,14 @@ TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
-LIBS = @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@ -lc
-WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@ -lc
+LIBS = @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@
+WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@
 
 # The symbol below provides support for dynamic loading and shared
 # libraries.  See configure.in for a description of what it means.
 # The values of the symbolis normally set by the configure script.
 
+STLIB_LD		= @STLIB_LD@
 SHLIB_LD		= @SHLIB_LD@
 SHLIB_LD_LIBS		= @SHLIB_LD_LIBS@
 
@@ -220,6 +227,7 @@ TK_LD_SEARCH_FLAGS	= @TK_LD_SEARCH_FLAGS@
 #----------------------------------------------------------------
 
 AC_FLAGS		= @EXTRA_CFLAGS@ @DEFS@
+AR			= @AR@
 RANLIB			= @RANLIB@
 SRC_DIR			= @srcdir@/..
 TOP_DIR			= @srcdir@/..
@@ -257,8 +265,8 @@ TCLTEST_OBJS = ${TCL_BIN_DIR}/tclTest.o ${TCL_BIN_DIR}/tclThreadTest.o \
 TKTEST_OBJS = $(TCLTEST_OBJS) tkTestInit.o tkTest.o tkSquare.o
 
 WIDGOBJS = tkButton.o tkEntry.o tkFrame.o tkListbox.o \
-	tkMenu.o tkMenubutton.o tkMenuDraw.o tkMessage.o tkScale.o \
-	tkScrollbar.o
+	tkMenu.o tkMenubutton.o tkMenuDraw.o tkMessage.o \
+	tkPanedWindow.o tkScale.o tkScrollbar.o
 
 CANVOBJS = tkCanvas.o tkCanvArc.o tkCanvBmap.o tkCanvImg.o \
 	tkCanvLine.o tkCanvPoly.o tkCanvPs.o tkCanvText.o \
@@ -308,6 +316,7 @@ SRCS = \
 	$(GENERIC_DIR)/tkListbox.c $(GENERIC_DIR)/tkMenu.c \
 	$(GENERIC_DIR)/tkMenubutton.c $(GENERIC_DIR)/tkMenuDraw.c \
 	$(GENERIC_DIR)/tkMessage.c \
+	$(GENERIC_DIR)/tkPanedWindow.c \
 	$(GENERIC_DIR)/tkScale.c $(GENERIC_DIR)/tkScrollbar.c \
 	$(GENERIC_DIR)/tkCanvas.c $(GENERIC_DIR)/tkCanvArc.c \
 	$(GENERIC_DIR)/tkCanvBmap.c $(GENERIC_DIR)/tkCanvImg.c \
@@ -385,7 +394,7 @@ objs: ${OBJS}
 
 
 wish: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE)
-	$(CC) @LDFLAGS@ $(WISH_OBJS) \
+	$(CC) $(LDFLAGS) $(WISH_OBJS) \
 		@TK_BUILD_LIB_SPEC@ \
 		$(WISH_LIBS) $(TK_CC_SEARCH_FLAGS) -o wish
 
@@ -393,15 +402,28 @@ wish: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE)
 # building tcltest in the Tcl bin directory. Just do it for them.
 ${TCL_BIN_DIR}/tcltest:
 	cd ${TCL_BIN_DIR} ; \
-	make tcltest
+	$(MAKE) tcltest
+
+# Resetting the LIB_RUNTIME_DIR below is required so that
+# the generated tktest executable gets the build directory
+# burned into its ld search path. This keeps tktest from
+# picking up an already installed version of the Tcl or
+# Tk shared libraries.
 
 tktest: ${TCL_BIN_DIR}/tcltest $(TKTEST_OBJS) $(TK_LIB_FILE)
-	${CC} @LDFLAGS@ $(TKTEST_OBJS) \
+	$(MAKE) tktest-real LIB_RUNTIME_DIR=`pwd`:$(TCL_BIN_DIR)
+
+tktest-real:
+	${CC} $(LDFLAGS) $(TKTEST_OBJS) \
 		@TK_BUILD_LIB_SPEC@ \
 		$(WISH_LIBS) $(TK_CC_SEARCH_FLAGS) -o tktest
 
+# FIXME: This xttest rule seems to be broken in a number of ways.
+# It should use TK_CC_SEARCH_FLAGS, it does not include the shared
+# lib location logic from tktest, and it is not clear where this
+# test.o object file comes from.
 xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE)
-	${CC} @LDFLAGS@ test.o tkTest.o tkSquare.o \
+	${CC} $(LDFLAGS) test.o tkTest.o tkSquare.o \
 		@TK_BUILD_LIB_SPEC@ \
 		$(WISH_LIBS) $(TK_LD_SEARCH_FLAGS) -lXt -o xttest
 
@@ -413,11 +435,6 @@ xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE)
 #	% make test TESTFLAGS="-verbose bps -file fileName.test"
 
 test: tktest
-	LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}; \
-	export LD_LIBRARY_PATH; \
-	LIBPATH=`pwd`:${TCL_BIN_DIR}:${LIBPATH}; export LIBPATH; \
-	SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}; \
-	export SHLIB_PATH; \
 	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
 	./tktest $(TOP_DIR)/tests/all.tcl -geometry +0+0 \
@@ -425,11 +442,6 @@ test: tktest
 
 # Tests with different languages
 testlang: tktest
-	LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}; \
-	export LD_LIBRARY_PATH; \
-	LIBPATH=`pwd`:${TCL_BIN_DIR}:${LIBPATH}; export LIBPATH; \
-	SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}; \
-	export SHLIB_PATH; \
 	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
 	for lang in $(LOCALES) ;  \
@@ -441,13 +453,31 @@ testlang: tktest
 
 # Useful target to launch a built tktest with the proper path,...
 runtest: tktest
-	LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}; \
-	export LD_LIBRARY_PATH; \
-	LIBPATH=`pwd`:${TCL_BIN_DIR}:${LIBPATH}; export LIBPATH; \
-	SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}; export SHLIB_PATH; \
 	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
 	./tktest
+
+# This target can be used to run wish from the build directory
+# via `make shell` or `make shell SCRIPT=/tmp/foo.tcl`
+shell: wish
+	LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}; \
+	export LD_LIBRARY_PATH; \
+	LIBPATH=`pwd`:${TCL_BIN_DIR}:${LIBPATH}; export LIBPATH; \
+	SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}; \
+	export SHLIB_PATH; \
+	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
+	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
+	./wish $(SCRIPT)
+
+# This target can be used to run wish inside either gdb or insight
+gdb: wish
+	@echo "set env LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}" > gdb.run
+	@echo "set env LIBPATH=`pwd`:${TCL_BIN_DIR}:${LIBPATH}" >> gdb.run
+	@echo "set env SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}" >> gdb.run
+	@echo "set env TCL_LIBRARY=@TCL_SRC_DIR@/library" >> gdb.run
+	@echo "set env TK_LIBRARY=@TK_SRC_DIR@/library" >> gdb.run
+	gdb ./wish --command=gdb.run
+	rm gdb.run
 
 install: all install-binaries install-libraries install-demos install-doc
 
@@ -752,6 +782,9 @@ tkMenuDraw.o: $(GENERIC_DIR)/tkMenuDraw.c
 tkMessage.o: $(GENERIC_DIR)/tkMessage.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkMessage.c
 
+tkPanedWindow.o: $(GENERIC_DIR)/tkPanedWindow.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkPanedWindow.c
+
 tkScale.o: $(GENERIC_DIR)/tkScale.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkScale.c
 
@@ -933,8 +966,14 @@ checkuchar:
 checkexports: $(TK_LIB_FILE)
 	-nm -p $(TK_LIB_FILE) | awk '$$2 ~ /[TDB]/ { print $$3 }' | sort -n | grep -v '^[Tt]k'
 
-# Target to regenerate header files and stub files from the *.decls tables.
+
 #
+# Regenerate the stubs files.
+#
+
+$(GENERIC_DIR)/tkStubInit.c: $(GENERIC_DIR)/tk.decls \
+		$(GENERIC_DIR)/tkInt.decls
+	@echo "Warning: run \"make genstubs\" to regenerate tkStubInit.c"
 
 genstubs:
 	$(TCL_EXE) $(TOOL_DIR)/genStubs.tcl $(GENERIC_DIR) \
@@ -994,8 +1033,8 @@ dist:   $(UNIX_DIR)/configure
 	cp -p $(UNIX_DIR)/*.c $(UNIX_DIR)/*.h $(DISTDIR)/unix
 	cp $(TOP_DIR)/license.terms $(UNIX_DIR)/Makefile.in $(DISTDIR)/unix
 	chmod 664 $(DISTDIR)/unix/Makefile.in
-	cp $(UNIX_DIR)/configure $(UNIX_DIR)/configure.in \
-		$(UNIX_DIR)/aclocal.m4 $(UNIX_DIR)/tk.spec \
+	cp $(UNIX_DIR)/configure $(UNIX_DIR)/configure.in $(UNIX_DIR)/tk.spec \
+		$(UNIX_DIR)/aclocal.m4 $(UNIX_DIR)/tcl.m4 \
 		$(UNIX_DIR)/tkConfig.sh.in $(TCLDIR)/unix/install-sh \
 		$(UNIX_DIR)/README $(DISTDIR)/unix
 	chmod 775 $(DISTDIR)/unix/configure $(DISTDIR)/unix/configure.in
@@ -1023,17 +1062,24 @@ dist:   $(UNIX_DIR)/configure
 	cp $(TOP_DIR)/win/configure.in \
 		$(TOP_DIR)/win/configure \
 		$(TOP_DIR)/win/tkConfig.sh.in \
-		$(TOP_DIR)/win/aclocal.m4 \
+		$(TOP_DIR)/win/aclocal.m4 $(TOP_DIR)/win/tcl.m4 \
 		$(DISTDIR)/win
 	cp -p $(TOP_DIR)/win/*.c $(TOP_DIR)/win/*.h $(DISTDIR)/win
 	cp -p $(TOP_DIR)/win/*.bat $(DISTDIR)/win
+	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/*.bat
 	cp -p $(TOP_DIR)/win/makefile.* $(DISTDIR)/win
+	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/makefile.*
+	cp -p $(TOP_DIR)/win/rules.vc $(DISTDIR)/win
+	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/rules.vc
 	cp -p $(TOP_DIR)/win/README $(DISTDIR)/win
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/win
 	mkdir $(DISTDIR)/win/rc
+	cp -p $(TOP_DIR)/win/rc/wish.exe.manifest $(TOP_DIR)/win/rc/
 	cp -p $(TOP_DIR)/win/rc/*.rc $(TOP_DIR)/win/rc/*.cur \
 		$(TOP_DIR)/win/rc/*.ico $(TOP_DIR)/win/rc/*.bmp \
 		$(DISTDIR)/win/rc
+	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/rc/*.rc
+	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/rc/wish.exe.manifest
 	mkdir $(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/tkMacProjects.sea.hqx $(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/*.c $(TOP_DIR)/mac/*.h $(TOP_DIR)/mac/*.r \
@@ -1042,7 +1088,6 @@ dist:   $(UNIX_DIR)/configure
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/*.pch $(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/*.doc $(DISTDIR)/mac
-	cp -p $(TOP_DIR)/mac/*.exp $(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/*.tcl $(DISTDIR)/mac
 	mkdir $(DISTDIR)/compat
 	cp -p $(TOP_DIR)/license.terms $(TCLDIR)/compat/unistd.h \
@@ -1060,6 +1105,12 @@ dist:   $(UNIX_DIR)/configure
 		$(DISTDIR)/library
 	mkdir $(DISTDIR)/library/images
 	@(cd $(TOP_DIR); for i in library/images/* ; do \
+	    if [ -f $$i ] ; then \
+		cp $$i $(DISTDIR)/$$i; \
+	    fi; \
+	done;)
+	mkdir $(DISTDIR)/library/msgs
+	@(cd $(TOP_DIR); for i in library/msgs/*.msg ; do \
 	    if [ -f $$i ] ; then \
 		cp $$i $(DISTDIR)/$$i; \
 	    fi; \

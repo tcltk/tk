@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clrpick.test,v 1.5 2000/03/02 03:02:13 ericm Exp $
+# RCS: @(#) $Id: clrpick.test,v 1.5.4.1 2002/04/02 20:57:57 hobbs Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
@@ -54,7 +54,7 @@ test clrpick-1.7 {tk_chooseColor command} {
     list [catch {tk_chooseColor -initialcolor ##badbadbaadcolor} msg] $msg
 } {1 {invalid color name "##badbadbaadcolor"}}
 
-if {[info commands tkColorDialog] == ""} {
+if {[info commands tk::dialog::color::] == ""} {
     set isNative 1
 } else {
     set isNative 0
@@ -82,7 +82,7 @@ proc PressButton {btn} {
 
 proc ChooseColorByKey {parent r g b} {
     set w .__tk__color
-    upvar #0 $w data
+    upvar ::tk::dialog::color::[winfo name $w] data
 
     update
     $data(red,entry)   delete 0 end
@@ -96,14 +96,14 @@ proc ChooseColorByKey {parent r g b} {
     # Manually force the refresh of the color values instead
     # of counting on the timing of the event stream to change
     # the values for us.
-    tkColorDialog_HandleRGBEntry $w
+    tk::dialog::color::HandleRGBEntry $w
 
     SendButtonPress $parent ok mouse
 }
 
 proc SendButtonPress {parent btn type} {
     set w .__tk__color
-    upvar #0 $w data
+    upvar ::tk::dialog::color::[winfo name $w] data
 
     set button $data($btn\Btn)
     if ![winfo ismapped $button] {

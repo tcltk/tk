@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacPort.h,v 1.9 2000/04/17 02:17:05 jingham Exp $
+ * RCS: @(#) $Id: tkMacPort.h,v 1.9.4.1 2002/04/02 20:57:54 hobbs Exp $
  */
 
 #ifndef _TKMACPORT
@@ -71,14 +71,14 @@ extern int errno;
  */
 
 #ifndef panic	/* In a stubs-aware setting, this could confuse the #define */
-extern void 		panic  _ANSI_ARGS_(TCL_VARARGS(char *, string));
+EXTERN void 		panic  _ANSI_ARGS_(TCL_VARARGS(char *, string));
 #endif
 #ifndef strcasecmp
-extern int		strcasecmp _ANSI_ARGS_((CONST char *s1,
+EXTERN int		strcasecmp _ANSI_ARGS_((CONST char *s1,
 			    CONST char *s2));
 #endif
 #ifndef strncasecmp			    
-extern int		strncasecmp _ANSI_ARGS_((CONST char *s1,
+EXTERN int		strncasecmp _ANSI_ARGS_((CONST char *s1,
 			    CONST char *s2, size_t n));
 #endif
 /*
@@ -120,17 +120,18 @@ extern int		strncasecmp _ANSI_ARGS_((CONST char *s1,
 
 /*
  * This macro stores a representation of the window handle in a string.
+ * This should perhaps use the real size of an XID.
  */
 
 #define TkpPrintWindowId(buf,w) \
 	sprintf((buf), "0x%x", (unsigned int) (w))
-	    
+
 /*
  * TkpScanWindowId is just an alias for Tcl_GetInt on Unix.
  */
 
 #define TkpScanWindowId(i,s,wp) \
-	Tcl_GetInt((i),(s),(wp))
+	Tcl_GetInt((i),(s),(int *)(wp))
 
 /*
  * Magic pixel values for dynamic (or active) colors.
@@ -148,5 +149,14 @@ extern int		strncasecmp _ANSI_ARGS_((CONST char *s1,
 #define MENU_DISABLED_PIXEL		49
 #define MENU_TEXT_PIXEL			51
 #define APPEARANCE_PIXEL		52
+
+/*
+ * The following declaration is used to get access to a private Tcl interface
+ * that is needed for portability reasons.
+ */
+
+#ifndef _TCLINT
+#include <tclInt.h>
+#endif
 
 #endif /* _TKMACPORT */

@@ -7,7 +7,7 @@ exec wish "$0" "$@"
 # Tk applications.  It allows you to select an application and
 # then type commands to that application.
 #
-# RCS: @(#) $Id: rmt,v 1.2 1998/09/14 18:23:29 stanton Exp $
+# RCS: @(#) $Id: rmt,v 1.2.20.1 2002/04/02 20:58:51 hobbs Exp $
 
 wm title . "Tk Remote Controller"
 wm iconname . "Tk Remote"
@@ -32,22 +32,21 @@ set lastCommand ""
 # Create menu bar.  Arrange to recreate all the information in the
 # applications sub-menu whenever it is cascaded to.
 
-frame .menu -relief raised -bd 2
-pack .menu -side top -fill x
-menubutton .menu.file -text "File" -menu .menu.file.m -underline 0
-menu .menu.file.m
-.menu.file.m add cascade -label "Select Application" \
-	-menu .menu.file.m.apps -underline 0
-.menu.file.m add command -label "Quit" -command "destroy ." -underline 0
-menu .menu.file.m.apps  -postcommand fillAppsMenu
-pack .menu.file -side left
+. configure -menu [menu .menu]
+menu .menu.file
+menu .menu.file.apps  -postcommand fillAppsMenu
+.menu add cascade  -label "File"  -underline 0  -menu .menu.file
+.menu.file add cascade  -label "Select Application"  -underline 0 \
+	-menu .menu.file.apps
+.menu.file add command  -label "Quit"  -command "destroy ."  -underline 0
 
 # Create text window and scrollbar.
 
 text .t -relief sunken -bd 2 -yscrollcommand ".s set" -setgrid true
 scrollbar .s -command ".t yview"
-pack .s -side right -fill both
-pack .t -side left
+grid .t .s -sticky nsew
+grid rowconfigure . 0 -weight 1
+grid columnconfigure . 0 -weight 1
 
 # Create a binding to forward commands to the target application,
 # plus modify many of the built-in bindings so that only information
@@ -123,6 +122,7 @@ proc tkTextInsert {w s} {
     $w see insert
 }
 
+.t configure -font {Courier 12}
 .t tag configure bold -font {Courier 12 bold}
 
 # The procedure below is used to print out a prompt at the
@@ -193,13 +193,18 @@ proc newApp appName {
 # of all the applications that currently exist.
 
 proc fillAppsMenu {} {
-    catch {.menu.file.m.apps delete 0 last}
+    set m .menu.file.apps
+    catch {$m delete 0 last}
     foreach i [lsort [winfo interps]] {
-	.menu.file.m.apps add command -label $i -command [list newApp $i]
+	$m add command -label $i -command [list newApp $i]
     }
-    .menu.file.m.apps add command -label local -command {newApp local}
+    $m add command -label local -command {newApp local}
 }
 
 set app [winfo name .]
 prompt
 focus .t
+
+# Local Variables:
+# mode: tcl
+# End:

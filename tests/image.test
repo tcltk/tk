@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: image.test,v 1.4 2000/05/15 18:21:47 ericm Exp $
+# RCS: @(#) $Id: image.test,v 1.4.2.1 2002/04/02 20:57:57 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -80,6 +80,20 @@ test image-1.9 {Tk_ImageCmd procedure, "create" option} {
     eval image delete [image names]
     list [catch {image create test -badName foo} msg] $msg [image names]
 } {1 {bad option name "-badName"} {}}
+test image-1.10 {Tk_ImageCmd procedure, "create" option with "." as name} {
+    catch {removeFile script}
+    set fd [open script w]
+    puts $fd {
+	update
+	puts [list [catch {image create photo .} msg] $msg]
+	exit
+    }
+    close $fd
+    set x [list [catch {exec $::tcltest::tktest <script} msg] $msg]
+    file delete -force script
+    set x
+} {0 {1 {this isn't a Tk applicationNULL main window}}}
+# I don't like the error message!
 
 test image-2.1 {Tk_ImageCmd procedure, "delete" option} {
     list [catch {image delete} msg] $msg
@@ -371,20 +385,6 @@ destroy .c
 eval image delete [image names]
 
 # cleanup
+catch {removeFile script}
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.14 2000/10/12 21:14:33 ericm Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.14.2.1 2002/04/02 21:00:48 hobbs Exp $
  */
 
 /*
@@ -140,7 +140,7 @@ static int		SetOptionFromAny _ANSI_ARGS_((Tcl_Interp *interp,
  * and the internalPtr2 field points to the entry that matched.
  */
 
-Tcl_ObjType optionType = {
+Tcl_ObjType tkOptionObjType = {
     "option",				/* name */
     (Tcl_FreeInternalRepProc *) NULL,	/* freeIntRepProc */
     (Tcl_DupInternalRepProc *) NULL,	/* dupIntRepProc */
@@ -743,7 +743,7 @@ DoObjConfig(interp, recordPtr, optionPtr, valuePtr, tkwin, savedOptionPtr)
 	    int new;
 
 	    if (Tcl_GetIndexFromObj(interp, valuePtr,
-		    (char **) optionPtr->specPtr->clientData,
+		    (CONST char **) optionPtr->specPtr->clientData,
 		    optionPtr->specPtr->optionName+1, 0, &new) != TCL_OK) {
 		return TCL_ERROR;
 	    }
@@ -1042,7 +1042,7 @@ GetOptionFromObj(interp, objPtr, tablePtr)
      * First, check to see if the object already has the answer cached.
      */
 
-    if (objPtr->typePtr == &optionType) {
+    if (objPtr->typePtr == &tkOptionObjType) {
 	if (objPtr->internalRep.twoPtrValue.ptr1 == (VOID *) tablePtr) {
 	    return (Option *) objPtr->internalRep.twoPtrValue.ptr2;
 	}
@@ -1108,7 +1108,7 @@ GetOptionFromObj(interp, objPtr, tablePtr)
     }
     objPtr->internalRep.twoPtrValue.ptr1 = (VOID *) tablePtr;
     objPtr->internalRep.twoPtrValue.ptr2 = (VOID *) bestPtr;
-    objPtr->typePtr = &optionType;
+    objPtr->typePtr = &tkOptionObjType;
     return bestPtr;
 
     error:

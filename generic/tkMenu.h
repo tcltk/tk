@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.h,v 1.5 1999/04/16 01:51:19 stanton Exp $
+ * RCS: @(#) $Id: tkMenu.h,v 1.5.14.1 2002/04/02 21:00:54 hobbs Exp $
  */
 
 #ifndef _TKMENU
@@ -37,6 +37,15 @@
 
 typedef struct TkMenuPlatformData_ *TkMenuPlatformData;
 typedef struct TkMenuPlatformEntryData_ *TkMenuPlatformEntryData;
+
+/*
+ * Legal values for the "compound" field of TkMenuEntry and TkMenuButton records.
+ */
+
+enum compound {
+    COMPOUND_BOTTOM, COMPOUND_CENTER, COMPOUND_LEFT, COMPOUND_NONE,
+	COMPOUND_RIGHT, COMPOUND_TOP
+};
 
 /*
  * One of the following data structures is kept for each entry of each
@@ -115,6 +124,9 @@ typedef struct TkMenuEntry {
 				 * entry. */
     int labelWidth;		/* Number of pixels to allow for displaying
 				 * labels in menu entries. */
+    int compound;		/* Value of -compound option; specifies whether
+				 * the entry should show both an image and
+				 * text, and, if so, how. */
 
     /*
      * Information used to implement this entry's action:

@@ -3,7 +3,7 @@
 # This demonstration script creates a text widget that describes
 # the basic editing functions.
 #
-# RCS: @(#) $Id: text.tcl,v 1.2 1998/09/14 18:23:30 stanton Exp $
+# RCS: @(#) $Id: text.tcl,v 1.2.20.1 2002/04/02 20:58:51 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -23,7 +23,7 @@ button $w.buttons.code -text "See Code" -command "showCode $w"
 pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
 
 text $w.text -relief sunken -bd 2 -yscrollcommand "$w.scroll set" -setgrid 1 \
-	-height 30
+	-height 30 -undo 1 -autosep 1
 scrollbar $w.scroll -command "$w.text yview"
 pack $w.scroll -side right -fill y
 pack $w.text -expand yes -fill both
@@ -66,7 +66,19 @@ the insertion cursor to the end of the line, or it deletes the newline
 character if that is the only thing left on the line.  Control-o opens
 a new line by inserting a newline character to the right of the insertion
 cursor.  Control-t transposes the two characters on either side of the
-insertion cursor.
+insertion cursor.  Control-z undoes the last editing action performed,
+and }
+
+switch $tcl_platform(platform) {
+    "unix" - "macintosh" {
+	$w.text insert end "Control-Shift-z"
+    }
+    "windows" {
+	$w.text insert end "Control-y"
+    }
+}
+
+$w.text insert end { redoes undone edits.
 
 7. Resize the window.  This widget has been configured with the "setGrid"
 option on, so that if you resize the window it will always resize to an

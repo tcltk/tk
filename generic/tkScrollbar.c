@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.c,v 1.4 1999/12/14 06:52:30 hobbs Exp $
+ * RCS: @(#) $Id: tkScrollbar.c,v 1.4.4.1 2002/04/02 21:00:58 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -153,7 +153,7 @@ Tk_ScrollbarCmd(clientData, interp, argc, argv)
     Tk_SetClass(new, "Scrollbar");
     scrollPtr = TkpCreateScrollbar(new);
 
-    TkSetClassProcs(new, &tkpScrollbarProcs, (ClientData) scrollPtr);
+    Tk_SetClassProcs(new, &tkpScrollbarProcs, (ClientData) scrollPtr);
 
     /*
      * Initialize fields that won't be initialized by ConfigureScrollbar,

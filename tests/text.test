@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.12 2000/07/25 00:05:40 ericm Exp $
+# RCS: @(#) $Id: text.test,v 1.12.2.1 2002/04/02 20:57:58 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -51,6 +51,7 @@ catch {destroy .t2}
 text .t2
 set i 0
 foreach test {
+    {-autoseparators yes 1 nah}
     {-background #ff00ff #ff00ff <gorp>}
     {-bd 4 4 foo}
     {-bg blue blue #xx}
@@ -83,6 +84,7 @@ foreach test {
     {-spacing3 -10 0 bogus}
     {-state d disabled foo}
     {-tabs {1i 2i 3i 4i} {1i 2i 3i 4i} bad_tabs}
+    {-undo 1 1 eh}
     {-width 73 73 2.4}
     {-wrap w word bad_wrap}
 } {
@@ -111,7 +113,7 @@ test text-1.[incr i] {text options} {
 	lappend result [lindex $i 4]
     }
     set result
-} {blue {} {} 7 watch 0 {} fixed #012 5 #123 #234 0 green 45 100 47 2 3 82 raised #ffff01234567 21 yellow 0 0 0 0 disabled {1i 2i 3i 4i} {any old thing} 73 word {x scroll command} {test command}}
+} {1 blue {} {} 7 watch 0 {} fixed #012 5 #123 #234 0 green 45 100 47 2 3 82 raised #ffff01234567 21 yellow 0 0 0 0 disabled {1i 2i 3i 4i} {any old thing} 1 73 word {x scroll command} {test command}}
 
 test text-2.1 {Tk_TextCmd procedure} {
     list [catch {text} msg] $msg
@@ -150,7 +152,7 @@ test text-3.1 {TextWidgetCmd procedure, basics} {
 } {1 {wrong # args: should be ".t option ?arg arg ...?"}}
 test text-3.2 {TextWidgetCmd procedure} {
     list [catch {.t gorp 1.0 z 1.2} msg] $msg
-} {1 {bad option "gorp": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
+} {1 {bad option "gorp": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
 
 test text-4.1 {TextWidgetCmd procedure, "bbox" option} {
     list [catch {.t bbox} msg] $msg
@@ -218,7 +220,7 @@ test text-6.13 {TextWidgetCmd procedure, "compare" option} {
 } {1 {bad comparison operator "z": must be <, <=, ==, >=, >, or !=}}
 test text-6.14 {TextWidgetCmd procedure, "compare" option} {
     list [catch {.t co 1.0 z 1.2} msg] $msg
-} {1 {bad option "co": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
+} {1 {bad option "co": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
 
 # "configure" option is already covered above
 
@@ -227,7 +229,7 @@ test text-7.1 {TextWidgetCmd procedure, "debug" option} {
 } {1 {wrong # args: should be ".t debug boolean"}}
 test text-7.2 {TextWidgetCmd procedure, "debug" option} {
     list [catch {.t de 0 1} msg] $msg
-} {1 {bad option "de": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
+} {1 {bad option "de": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
 test text-7.3 {TextWidgetCmd procedure, "debug" option} {
     .t debug true
     .t deb
@@ -310,7 +312,7 @@ test text-10.2 {TextWidgetCmd procedure, "index" option} {
 } {1 {wrong # args: should be ".t index index"}}
 test text-10.3 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t in a b} msg] $msg
-} {1 {bad option "in": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
+} {1 {bad option "in": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
 test text-10.4 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t index @xyz} msg] $msg
 } {1 {bad text index "@xyz"}}
@@ -369,7 +371,7 @@ test text-11.10 {TextWidgetCmd procedure, "insert" option} {
     list [.t get 1.0 1.end] [.t tag ranges bold] [.t tag ranges silly]
 } {{First second} {1.0 1.5} {1.5 1.12}}
 
-# Mark, scan, search, see, tag, window, xview, and yview actions are tested elsewhere.
+# Edit, mark, scan, search, see, tag, window, xview, and yview actions are tested elsewhere.
 
 test text-12.1 {ConfigureText procedure} {
     list [catch {.t2 configure -state foobar} msg] $msg
@@ -964,7 +966,7 @@ test text-20.35 {TextSearchCmd procedure, firstChar and lastChar} {
 test text-20.36 {TextSearchCmd procedure, regexp finds empty lines} {
     # Test for fix of bug #1643
     .t insert end "\n"
-    tkTextSetCursor .t 4.0
+    tk::TextSetCursor .t 4.0
     .t search -forward -regexp {^$} insert end
 } {4.0}
     
@@ -1362,9 +1364,122 @@ test text-24.1 {bug fix - 1642} {
     .t insert end "line 3\n"
     .t insert end "line 4\n"
     .t insert end "line 5\n"
-    tkTextSetCursor .t 3.0
+    tk::TextSetCursor .t 3.0
     .t search -backward -regexp "\$" insert 1.0
 } {2.6}
+
+test text-25.1 {TextEditCmd procedure, argument parsing} {
+    list [catch {.t edit} msg] $msg
+} {1 {wrong # args: should be ".t edit option ?arg arg ...?"}}
+
+test text-25.2 {TextEditCmd procedure, argument parsing} {
+    list [catch {.t edit gorp} msg] $msg
+} {1 {bad edit option "gorp": must be modified, redo, reset, separator or undo}}
+
+test text-25.3 {TextEditUndo procedure, undoing changes} {
+    catch {destroy .t}
+    text .t -undo 1
+    pack .t
+    .t insert end "line 1\n"
+    .t delete 1.4 1.6
+    .t insert end "should be gone after undo\n"
+    .t edit undo
+    .t get 1.0 end
+} "line\n\n"
+
+test text-25.4 {TextEditRedo procedure, redoing changes} {
+    catch {destroy .t}
+    text .t -undo 1
+    pack .t
+    .t insert end "line 1\n"
+    .t delete 1.4 1.6
+    .t insert end "should be back after redo\n"
+    .t edit undo
+    .t edit redo
+    .t get 1.0 end
+} "line\nshould be back after redo\n\n"
+
+test text-25.5 {TextEditUndo procedure, resetting stack} {
+    catch {destroy .t}
+    text .t -undo 1
+    pack .t
+    .t insert end "line 1\n"
+    .t delete 1.4 1.6
+    .t insert end "should be back after redo\n"
+    .t edit reset
+    catch {.t edit undo} msg
+    set msg
+} "nothing to undo"
+
+test text-25.6 {TextEditCmd procedure, insert separator} {
+    catch {destroy .t}
+    text .t -undo 1
+    pack .t
+    .t insert end "line 1\n"
+    .t edit separator
+    .t insert end "line 2\n"
+    .t edit undo
+    .t get 1.0 end
+} "line 1\n\n"
+
+test text-25.7 {-autoseparators configuration option} {
+    catch {destroy .t}
+    text .t -undo 1 -autoseparators 0
+    pack .t
+    .t insert end "line 1\n"
+    .t delete 1.4 1.6
+    .t insert end "line 2\n"
+    .t edit undo
+    .t get 1.0 end
+} "\n"
+
+test text-25.8 {TextEditCmd procedure, modified flag} {
+    catch {destroy .t}
+    text .t
+    pack .t
+    .t insert end "line 1\n"
+    .t edit modified
+} {1}
+
+test text-25.9 {TextEditCmd procedure, reset modified flag} {
+    catch {destroy .t}
+    text .t
+    pack .t
+    .t insert end "line 1\n"
+    .t edit modified 0
+    .t edit modified
+} {0}
+
+test text-25.10 {TextEditCmd procedure, set modified flag} {
+    catch {destroy .t}
+    text .t
+    pack .t
+    .t edit modified 1
+    .t edit modified
+} {1}
+
+test text-25.11 {<<Modified>> virtual event} {
+    set ::retval unmodified
+    catch {destroy .t}
+    text .t -undo 1
+    pack .t
+    bind .t <<Modified>> "set ::retval modified"
+    update idletasks
+    .t insert end "nothing special\n"
+    set ::retval
+} {modified}
+
+test text-25.12 {<<Selection>> virtual event} {
+    set ::retval no_selection
+    catch {destroy .t}
+    text .t -undo 1
+    pack .t
+    bind .t <<Selection>> "set ::retval selection_changed"
+    update idletasks
+    .t insert end "nothing special\n"
+    .t tag add sel 1.0 1.1
+    set ::retval
+} {selection_changed}
 
 eval destroy [winfo child .]
 option clear

@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.13 2000/02/10 08:52:34 hobbs Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.13.4.1 2002/04/02 21:00:52 hobbs Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
@@ -231,7 +231,7 @@ EXTERN Status		XSendEvent _ANSI_ARGS_((Display* d, Window w, Bool b,
 				long l, XEvent* x));
 /* 62 */
 EXTERN void		XSetCommand _ANSI_ARGS_((Display* d, Window w, 
-				char** c, int i));
+				CONST char** c, int i));
 /* 63 */
 EXTERN void		XSetIconName _ANSI_ARGS_((Display* d, Window w, 
 				_Xconst char* c));
@@ -720,7 +720,7 @@ typedef struct TkIntXlibStubs {
     void (*xResizeWindow) _ANSI_ARGS_((Display* d, Window w, unsigned int ui1, unsigned int ui2)); /* 59 */
     void (*xSelectInput) _ANSI_ARGS_((Display* d, Window w, long l)); /* 60 */
     Status (*xSendEvent) _ANSI_ARGS_((Display* d, Window w, Bool b, long l, XEvent* x)); /* 61 */
-    void (*xSetCommand) _ANSI_ARGS_((Display* d, Window w, char** c, int i)); /* 62 */
+    void (*xSetCommand) _ANSI_ARGS_((Display* d, Window w, CONST char** c, int i)); /* 62 */
     void (*xSetIconName) _ANSI_ARGS_((Display* d, Window w, _Xconst char* c)); /* 63 */
     void (*xSetInputFocus) _ANSI_ARGS_((Display* d, Window w, int i, Time t)); /* 64 */
     void (*xSetSelectionOwner) _ANSI_ARGS_((Display* d, Atom a, Window w, Time t)); /* 65 */

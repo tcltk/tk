@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.10 2000/02/03 21:27:26 ericm Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.10.4.1 2002/04/02 21:00:49 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -168,7 +168,7 @@ static TkStateMap xlfdSetwidthMap[] = {
  * when configuring a set of font attributes.
  */
 
-static char *fontOpt[] = {
+static CONST char *fontOpt[] = {
     "-family",
     "-size",
     "-weight",
@@ -355,7 +355,7 @@ static void		UpdateDependentFonts _ANSI_ARGS_((TkFontInfo *fiPtr,
  * NULL.
  */
 
-static Tcl_ObjType fontObjType = {
+Tcl_ObjType tkFontObjType = {
     "font",			/* name */
     FreeFontObjProc,		/* freeIntRepProc */
     DupFontObjProc,		/* dupIntRepProc */
@@ -479,7 +479,7 @@ Tk_FontObjCmd(clientData, interp, objc, objv)
     int index;
     Tk_Window tkwin;
     TkFontInfo *fiPtr;
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"actual",	"configure",	"create",	"delete",
 	"families",	"measure",	"metrics",	"names",
 	NULL
@@ -684,7 +684,7 @@ Tk_FontObjCmd(clientData, interp, objc, objv)
 	    Tk_Font tkfont;
 	    int skip, index, i;
 	    CONST TkFontMetrics *fmPtr;
-	    static char *switches[] = {
+	    static CONST char *switches[] = {
 		"-ascent", "-descent", "-linespace", "-fixed", NULL
 	    };
 
@@ -831,10 +831,30 @@ static void
 RecomputeWidgets(winPtr)
     TkWindow *winPtr;		/* Window to which command is sent. */
 {
-    if ((winPtr->classProcsPtr != NULL)
-	    && (winPtr->classProcsPtr->geometryProc != NULL)) {
-	(*winPtr->classProcsPtr->geometryProc)(winPtr->instanceData);
+    Tk_ClassWorldChangedProc *proc;
+    proc = Tk_GetClassProc(winPtr->classProcsPtr, worldChangedProc);
+    if (proc != NULL) {
+	(*proc)(winPtr->instanceData);
     }
+
+    /*
+     * Notify all the descendants of this window that the world has changed.
+     *
+     * This could be done recursively or iteratively.  The recursive version
+     * is easier to implement and understand, and typically, windows with a
+     * -font option will be leaf nodes in the widget heirarchy (buttons,
+     * labels, etc.), so the recursion depth will be shallow.
+     *
+     * However, the additional overhead of the recursive calls may become
+     * a performance problem if typical usage alters such that -font'ed widgets
+     * appear high in the heirarchy, causing deep recursion.  This could happen
+     * with text widgets, or more likely with the (not yet existant) labeled
+     * frame widget.  With these widgets it is possible, even likely, that a
+     * -font'ed widget (text or labeled frame) will not be a leaf node, but
+     * will instead have many descendants.  If this is ever found to cause
+     * a performance problem, it may be worth investigating an iterative
+     * version of the code below.
+     */
     for (winPtr = winPtr->childList; winPtr != NULL; winPtr = winPtr->nextPtr) {
 	RecomputeWidgets(winPtr);
     }
@@ -985,7 +1005,7 @@ Tk_AllocFontFromObj(interp, tkwin, objPtr)
     NamedFont *nfPtr;
 
     fiPtr = ((TkWindow *) tkwin)->mainPtr->fontInfoPtr;
-    if (objPtr->typePtr != &fontObjType) {
+    if (objPtr->typePtr != &tkFontObjType) {
 	SetFontFromAny(interp, objPtr);
     }
 
@@ -1152,7 +1172,7 @@ Tk_GetFontFromObj(tkwin, objPtr)
     TkFont *fontPtr;
     Tcl_HashEntry *hashPtr;
  
-    if (objPtr->typePtr != &fontObjType) {
+    if (objPtr->typePtr != &tkFontObjType) {
 	SetFontFromAny((Tcl_Interp *) NULL, objPtr);
     }
 
@@ -1210,7 +1230,7 @@ Tk_GetFontFromObj(tkwin, objPtr)
  *	Always returns TCL_OK.
  *
  * Side effects:
- *	The object is left with its typePtr pointing to fontObjType.
+ *	The object is left with its typePtr pointing to tkFontObjType.
  *	The TkFont pointer is NULL.
  *
  *----------------------------------------------------------------------
@@ -1232,7 +1252,7 @@ SetFontFromAny(interp, objPtr)
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	(*typePtr->freeIntRepProc)(objPtr);
     }
-    objPtr->typePtr = &fontObjType;
+    objPtr->typePtr = &tkFontObjType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 
     return TCL_OK;

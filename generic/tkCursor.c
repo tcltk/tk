@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCursor.c,v 1.6 2000/07/06 06:38:09 ericm Exp $
+ * RCS: @(#) $Id: tkCursor.c,v 1.6.2.1 2002/04/02 21:00:48 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -58,7 +58,7 @@ static void		InitCursorObj _ANSI_ARGS_((Tcl_Obj *objPtr));
  * option is set.
  */
 
-static Tcl_ObjType cursorObjType = {
+Tcl_ObjType tkCursorObjType = {
     "cursor",			/* name */
     FreeCursorObjProc,		/* freeIntRepProc */
     DupCursorObjProc,		/* dupIntRepProc */
@@ -101,7 +101,7 @@ Tk_AllocCursorFromObj(interp, tkwin, objPtr)
 {
     TkCursor *cursorPtr;
 
-    if (objPtr->typePtr != &cursorObjType) {
+    if (objPtr->typePtr != &tkCursorObjType) {
 	InitCursorObj(objPtr);
     }
     cursorPtr = (TkCursor *) objPtr->internalRep.twoPtrValue.ptr1;
@@ -276,13 +276,12 @@ GetCursor(interp, tkwin, string)
     cursorPtr->objRefCount = 0;
     cursorPtr->otherTable = &dispPtr->cursorNameTable;
     cursorPtr->hashPtr = nameHashPtr;
-	cursorPtr->nextPtr = NULL;
+    cursorPtr->nextPtr = existingCursorPtr;
     cursorPtr->idHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorIdTable, 
             (char *) cursorPtr->cursor, &new);
     if (!new) {
 	panic("cursor already registered in Tk_GetCursor");
     }
-    cursorPtr->nextPtr = existingCursorPtr;
     Tcl_SetHashValue(nameHashPtr, cursorPtr);
     Tcl_SetHashValue(cursorPtr->idHashPtr, cursorPtr);
 
@@ -384,6 +383,7 @@ Tk_GetCursorFromData(interp, tkwin, source, mask, width, height,
     cursorPtr->objRefCount = 0;
     cursorPtr->idHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorIdTable, 
             (char *) cursorPtr->cursor, &new);
+    cursorPtr->nextPtr = NULL;
 
     if (!new) {
 	panic("cursor already registered in Tk_GetCursorFromData");
@@ -694,7 +694,7 @@ GetCursorFromObj(tkwin, objPtr)
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &cursorObjType) {
+    if (objPtr->typePtr != &tkCursorObjType) {
 	InitCursorObj(objPtr);
     }
 
@@ -770,7 +770,7 @@ InitCursorObj(objPtr)
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	(*typePtr->freeIntRepProc)(objPtr);
     }
-    objPtr->typePtr = &cursorObjType;
+    objPtr->typePtr = &tkCursorObjType;
     objPtr->internalRep.twoPtrValue.ptr1 = (VOID *) NULL;
 }
 

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.11 1999/12/14 06:52:28 hobbs Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.11.4.1 2002/04/02 21:00:50 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -498,7 +498,8 @@ TkGetBitmapData(interp, string, fileName, widthPtr, heightPtr,
     int *hotXPtr, *hotYPtr;		/* Position of hot spot or -1,-1. */
 {
     int width, height, numBytes, hotX, hotY;
-    char *p, *end, *expandedFileName;
+    CONST char *expandedFileName;
+    char *p, *end;
     ParseInfo pi;
     char *data = NULL;
     Tcl_DString buffer;
@@ -761,7 +762,7 @@ ImgBmapCmd(clientData, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    static char *bmapOptions[] = {"cget", "configure", (char *) NULL};
+    static CONST char *bmapOptions[] = {"cget", "configure", (char *) NULL};
     BitmapMaster *masterPtr = (BitmapMaster *) clientData;
     int code, index;
 
@@ -1105,13 +1106,106 @@ GetByte(chan)
 /*
  *----------------------------------------------------------------------
  *
- * ImgBmapPostscript --
+ * ImgBmapPsImagemask --
  *
- *	This procedure is called by the image code to create
- *	postscript output for an image.
+ *	This procedure generates postscript suitable for rendering a
+ *      single bitmap of an image.  A single bitmap image might contain both
+ *      a foreground and a background bitmap.  This routine is called once
+ *      for each such bitmap in a bitmap image.
+ *
+ *      Prior to invoking this routine, the following setup has occurred:
+ *
+ *	   1.  The postscript foreground color has been set to the color
+ *	       used to render the bitmap.
+ *
+ *	   2.  The origin of the postscript coordinate system is set to
+ *             the lower left corner of the bitmap.
+ *
+ *	   3.  The postscript coordinate system has been scaled so that
+ *	       the entire bitmap is one unit squared.
+ *
+ * 	Some postscript implementations cannot handle bitmap strings
+ *	longer than about 60k characters.  If the bitmap data is that big
+ *	or bigger, then we render it by splitting it into several smaller
+ *	bitmaps.
  *
  * Results:
- *	None.
+ *	Returns TCL_OK on success.  Returns TCL_ERROR and leaves and error
+ *	message in interp->result if there is a problem.
+ *
+ * Side effects:
+ *	Postscript code is appended to interp->result.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+ImgBmapPsImagemask(interp, width, height, data)
+    Tcl_Interp *interp;       /* Append postscript to this interpreter */
+    int width, height;        /* Width and height of the bitmap in pixels */
+    char *data;               /* Data for the bitmap */
+{
+    int i, j, nBytePerRow;
+    char buffer[200];
+
+    /* 
+     * The bit order of bitmaps in Tk is the opposite of the bit order that
+     * postscript uses.  (In Tk, the least significant bit is on the right
+     * side of the bitmap and in postscript the least significant bit is shown
+     * on the left.)  The following array is used to reverse the order of bits
+     * within a byte so that the bits will be in the order postscript expects.
+     */
+    static unsigned char bit_reverse[] = {
+       0, 128, 64, 192, 32, 160,  96, 224, 16, 144, 80, 208, 48, 176, 112, 240,
+       8, 136, 72, 200, 40, 168, 104, 232, 24, 152, 88, 216, 56, 184, 120, 248,
+       4, 132, 68, 196, 36, 164, 100, 228, 20, 148, 84, 212, 52, 180, 116, 244,
+      12, 140, 76, 204, 44, 172, 108, 236, 28, 156, 92, 220, 60, 188, 124, 252,
+       2, 130, 66, 194, 34, 162,  98, 226, 18, 146, 82, 210, 50, 178, 114, 242,
+      10, 138, 74, 202, 42, 170, 106, 234, 26, 154, 90, 218, 58, 186, 122, 250,
+       6, 134, 70, 198, 38, 166, 102, 230, 22, 150, 86, 214, 54, 182, 118, 246,
+      14, 142, 78, 206, 46, 174, 110, 238, 30, 158, 94, 222, 62, 190, 126, 254,
+       1, 129, 65, 193, 33, 161,  97, 225, 17, 145, 81, 209, 49, 177, 113, 241,
+       9, 137, 73, 201, 41, 169, 105, 233, 25, 153, 89, 217, 57, 185, 121, 249,
+       5, 133, 69, 197, 37, 165, 101, 229, 21, 149, 85, 213, 53, 181, 117, 245,
+      13, 141, 77, 205, 45, 173, 109, 237, 29, 157, 93, 221, 61, 189, 125, 253,
+       3, 131, 67, 195, 35, 163,  99, 227, 19, 147, 83, 211, 51, 179, 115, 243,
+      11, 139, 75, 203, 43, 171, 107, 235, 27, 155, 91, 219, 59, 187, 123, 251,
+       7, 135, 71, 199, 39, 167, 103, 231, 23, 151, 87, 215, 55, 183, 119, 247,
+      15, 143, 79, 207, 47, 175, 111, 239, 31, 159, 95, 223, 63, 191, 127, 255,
+    };
+
+    if (width*height > 60000) {
+	Tcl_ResetResult(interp);
+	Tcl_AppendResult(interp, "unable to generate postscript for bitmaps "
+		"larger than 60000 pixels", 0);
+	return TCL_ERROR;
+    }
+    sprintf(buffer, "0 0 moveto %d %d true [%d 0 0 %d 0 %d] {<\n",
+      width, height, width, -height, height);
+    Tcl_AppendResult(interp, buffer, 0);
+    nBytePerRow = (width+7)/8;
+    for(i=0; i<height; i++){
+      for(j=0; j<nBytePerRow; j++){
+        sprintf(buffer, " %02x", bit_reverse[0xff & data[i*nBytePerRow + j]]);
+        Tcl_AppendResult(interp, buffer, 0);
+      }
+      Tcl_AppendResult(interp, "\n", 0);
+    }
+    Tcl_AppendResult(interp, ">} imagemask \n", 0);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ImgBmapPostscript --
+ *
+ *	This procedure generates postscript for rendering a bitmap image.
+ *
+ * Results:
+ *	On success, this routine writes postscript code into interp->result
+ *      and returns TCL_OK  TCL_ERROR is returned and an error
+ *      message is left in interp->result if anything goes wrong.
  *
  * Side effects:
  *	None.
@@ -1129,73 +1223,74 @@ ImgBmapPostscript(clientData, interp, tkwin, psinfo, x, y, width, height,
     int x, y, width, height, prepass;
 {
     BitmapMaster *masterPtr = (BitmapMaster *) clientData;
-    int rowsAtOnce, rowsThisTime;
-    int curRow, yy;
     char buffer[200];
 
     if (prepass) {
 	return TCL_OK;
     }
-    /*
-     * Color the background, if there is one.
-     */
 
-    if (masterPtr->bgUid != NULL) {
-	XColor color;
-	XParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin), masterPtr->bgUid,
-		&color);
-	sprintf(buffer,
-		"%d %d moveto %d 0 rlineto 0 %d rlineto %d %s\n",
-		x, y, width, height, -width,"0 rlineto closepath");
-	Tcl_AppendResult(interp, buffer, (char *) NULL);
-	if (Tk_PostscriptColor(interp, psinfo, &color) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	Tcl_AppendResult(interp, "fill\n", (char *) NULL);
+    /*
+     * There is nothing to do for bitmaps with zero width or height
+     */
+    if( width<=0 || height<=0 || masterPtr->width<=0 || masterPtr->height<=0 ){
+	return TCL_OK;
     }
 
     /*
-     * Draw the bitmap, if there is a foreground color.  If the bitmap
-     * is very large, then chop it up into multiple bitmaps, each
-     * consisting of one or more rows.  This is needed because Postscript
-     * can't handle single strings longer than 64 KBytes long.
+     * Translate the origin of the coordinate system to be the lower-left
+     * corner of the bitmap and adjust the scale of the coordinate system
+     * so that entire bitmap covers one square unit of the page.
+     * The calling function put a "gsave" into the postscript and
+     * will add a "grestore" at after this routine returns, so it is safe
+     * to make whatever changes are necessary here.
      */
+    if( x!=0 || y!=0 ){
+	sprintf(buffer, "%d %d moveto\n", x, y);
+	Tcl_AppendResult(interp, buffer, 0);
+    }
+    if( width!=1 || height!=1 ){
+	sprintf(buffer, "%d %d scale\n", width, height);
+ 	Tcl_AppendResult(interp, buffer, 0);
+    }
 
-    if (masterPtr->fgUid != NULL) {
+    /*
+     * Color the background, if there is one.  This step is skipped if the
+     * background is transparent.  If the background is not transparent and
+     * there is no background mask, then color the complete rectangle that
+     * encloses the bitmap.  If there is a background mask, then only apply
+     * color to the bits specified by the mask.
+     */
+    if ((masterPtr->bgUid != NULL) && (masterPtr->bgUid[0] != '\000')) {
+	XColor color;
+	XParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin), masterPtr->bgUid,
+		&color);
+	if (Tk_PostscriptColor(interp, psinfo, &color) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (masterPtr->maskData == NULL) {
+	    Tcl_AppendResult(interp,
+		"0 0 moveto 1 0 rlineto 0 1 rlineto -1 0 rlineto "
+		"closepath fill\n", 0
+	    );
+	} else if (ImgBmapPsImagemask(interp, masterPtr->width,
+		     masterPtr->height, masterPtr->maskData) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+    }
+
+    /*
+     * Draw the bitmap foreground, assuming there is one.
+     */
+    if ( (masterPtr->fgUid != NULL) && (masterPtr->data != NULL) ) {
 	XColor color;
 	XParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin), masterPtr->fgUid,
 		&color);
 	if (Tk_PostscriptColor(interp, psinfo, &color) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (width > 60000) {
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "can't generate Postscript",
-		    " for bitmaps more than 60000 pixels wide",
-		    (char *) NULL);
+	if (ImgBmapPsImagemask(interp, masterPtr->width, masterPtr->height,
+		masterPtr->data) != TCL_OK) {
 	    return TCL_ERROR;
-	}
-	rowsAtOnce = 60000/width;
-	if (rowsAtOnce < 1) {
-	    rowsAtOnce = 1;
-	}
-	sprintf(buffer, "%d %d translate\n", x, y);
-	Tcl_AppendResult(interp, buffer, (char *) NULL);
-	for (curRow = y+height-1; curRow >= y; curRow -= rowsAtOnce) {
-	    rowsThisTime = rowsAtOnce;
-	    if (rowsThisTime > (curRow + 1 - y)) {
-		rowsThisTime = curRow + 1 - y;
-	    }
-	    sprintf(buffer, "%d %d", width, rowsThisTime);
-	    Tcl_AppendResult(interp, buffer, " true matrix {\n<",
-		    (char *) NULL);
-	    for (yy = curRow; yy >= (curRow - rowsThisTime + 1); yy--) {
-		sprintf(buffer, "row %d\n", yy);
-		Tcl_AppendResult(interp, buffer, (char *) NULL);
-	    }
-	    sprintf(buffer, "0 %.15g", (double) rowsThisTime);
-	    Tcl_AppendResult(interp, ">\n} imagemask\n", buffer,
-		    " translate\n", (char *) NULL);
 	}
     }
     return TCL_OK;

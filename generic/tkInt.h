@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.33 2000/08/08 19:21:19 ericm Exp $ 
+ * RCS: $Id: tkInt.h,v 1.33.2.1 2002/04/02 21:00:51 hobbs Exp $ 
  */
 
 #ifndef _TKINT
@@ -46,32 +46,6 @@ typedef int (TkBindEvalProc) _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, XEvent *eventPtr, Tk_Window tkwin,
 	KeySym keySym));
 typedef void (TkBindFreeProc) _ANSI_ARGS_((ClientData clientData));
-typedef Window (TkClassCreateProc) _ANSI_ARGS_((Tk_Window tkwin,
-	Window parent, ClientData instanceData));
-typedef void (TkClassGeometryProc) _ANSI_ARGS_((ClientData instanceData));
-typedef void (TkClassModalProc) _ANSI_ARGS_((Tk_Window tkwin,
-	XEvent *eventPtr));
-
-
-/*
- * Widget class procedures used to implement platform specific widget
- * behavior.
- */
-
-typedef struct TkClassProcs {
-    TkClassCreateProc *createProc;
-				/* Procedure to invoke when the
-                                   platform-dependent window needs to be
-                                   created. */
-    TkClassGeometryProc *geometryProc;
-				/* Procedure to invoke when the geometry of a
-				   window needs to be recalculated as a result
-				   of some change in the system. */
-    TkClassModalProc *modalProc;
-				/* Procedure to invoke after all bindings on a
-				   widget have been triggered in order to
-				   handle a modal loop. */
-} TkClassProcs;
 
 /*
  * One of the following structures is maintained for each cursor in
@@ -395,6 +369,7 @@ typedef struct TkDisplay {
     Atom applicationAtom;	/* Atom for TK_APPLICATION. */
     Atom windowAtom;		/* Atom for TK_WINDOW. */
     Atom clipboardAtom;		/* Atom for CLIPBOARD. */
+    Atom utf8Atom;		/* Atom for UTF8_STRING. */
 
     Tk_Window clipWindow;	/* Window used for clipboard ownership and to
 				 * retrieve selections between processes. NULL
@@ -499,6 +474,11 @@ typedef struct TkDisplay {
     int warpX;
     int warpY;
     int useInputMethods;	/* Whether to use input methods */
+
+    /*
+     * The following field(s) were all added for Tk8.4
+     */
+    long deletionEpoch;		/* Incremented by window deletions */
 } TkDisplay;
 
 /*
@@ -763,10 +743,12 @@ typedef struct TkWindow {
 				 * Tk_GeometryRequest, or 0's if
 				 * Tk_GeometryRequest hasn't been
 				 * called. */
-    int internalBorderWidth;	/* Width of internal border of window
+    int internalBorderLeft;	/* Width of internal border of window
 				 * (0 means no internal border).  Geometry
 				 * managers should not normally place children
-				 * on top of the border. */
+				 * on top of the border. 
+				 * Fields for the other three sides are found 
+				 * below. */
 
     /*
      * Information maintained by tkWm.c for window manager communication.
@@ -782,7 +764,7 @@ typedef struct TkWindow {
      * Information used by widget classes.
      */
 
-    TkClassProcs *classProcsPtr;
+    Tk_ClassProcs *classProcsPtr;
     ClientData instanceData;
 
     /*
@@ -790,6 +772,18 @@ typedef struct TkWindow {
      */
 
     struct TkWindowPrivate *privatePtr;
+
+    /*
+     * More information used by tkGeometry.c for geometry management.
+     */
+
+    /* The remaining fields of internal border. */
+    int internalBorderRight; 
+    int internalBorderTop;
+    int internalBorderBottom;
+    
+    int minReqWidth;		/* Minimum requested width. */
+    int minReqHeight;		/* Minimum requested height. */
 } TkWindow;
 
 /*
@@ -858,6 +852,19 @@ extern TkDisplay *tkDisplayList;
 
 #define META_MASK	(AnyModifier<<1)
 #define ALT_MASK	(AnyModifier<<2)
+
+/*
+ * Object types not declared in tkObj.c need to be mentioned here so
+ * they can be properly registered with Tcl:
+ */
+
+extern Tcl_ObjType tkBorderObjType;
+extern Tcl_ObjType tkBitmapObjType;
+extern Tcl_ObjType tkColorObjType;
+extern Tcl_ObjType tkCursorObjType;
+extern Tcl_ObjType tkFontObjType;
+extern Tcl_ObjType tkOptionObjType;
+extern Tcl_ObjType tkStateKeyObjType;
 
 /*
  * Miscellaneous variables shared among Tk modules but not exported
@@ -949,12 +956,16 @@ EXTERN int              Tk_GetSaveFileObjCmd _ANSI_ARGS_((
 EXTERN int		Tk_GrabObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
-EXTERN int		Tk_GridCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_GridObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_ImageObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_LabelObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
+EXTERN int		Tk_LabelframeObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_ListboxObjCmd _ANSI_ARGS_((ClientData clientData,
@@ -972,11 +983,16 @@ EXTERN int              Tk_MessageBoxObjCmd _ANSI_ARGS_((ClientData clientData,
 EXTERN int		Tk_MessageObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
+EXTERN int		Tk_PanedWindowObjCmd _ANSI_ARGS_((
+			    ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_OptionObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 	                    Tcl_Obj *CONST objv[]));
-EXTERN int		Tk_PackCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_PackObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_PlaceObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
@@ -1023,10 +1039,12 @@ EXTERN int		Tk_WinfoObjCmd _ANSI_ARGS_((ClientData clientData,
 EXTERN int		Tk_WmCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 
-void	TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
-			    int devId, char *buffer, long size));
+EXTERN void		TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
+			    int devId, CONST char *buffer, long size));
 
 EXTERN void		TkEventInit _ANSI_ARGS_((void));
+
+EXTERN void		TkRegisterObjTypes _ANSI_ARGS_((void));
 
 EXTERN int		TkCreateMenuCmd _ANSI_ARGS_((Tcl_Interp *interp));
 EXTERN int		TkDeadAppCmd _ANSI_ARGS_((ClientData clientData,

@@ -6,11 +6,12 @@
  *
  * Copyright (c) 1997 Sun Microsystems, Inc.
  * Copyright (c) 2000 by Scriptics Corporation.
+ * Copyright (c) 2001 by ActiveState Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.4 2000/05/11 23:53:46 hobbs Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.4.2.1 2002/04/02 21:17:05 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -65,6 +66,90 @@ TkplatformtestInit(
 /*
  *----------------------------------------------------------------------
  *
+ * AppendSystemError --
+ *
+ *	This routine formats a Windows system error message and places
+ *	it into the interpreter result.  Originally from tclWinReg.c.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+AppendSystemError(
+    Tcl_Interp *interp,		/* Current interpreter. */
+    DWORD error)		/* Result code from error. */
+{
+    int length;
+    WCHAR *wMsgPtr;
+    char *msg;
+    char id[TCL_INTEGER_SPACE], msgBuf[24 + TCL_INTEGER_SPACE];
+    Tcl_DString ds;
+    Tcl_Obj *resultPtr = Tcl_GetObjResult(interp);
+
+    length = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM
+	    | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error,
+	    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (WCHAR *) &wMsgPtr,
+	    0, NULL);
+    if (length == 0) {
+	char *msgPtr;
+
+	length = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM
+		| FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (char *) &msgPtr,
+		0, NULL);
+	if (length > 0) {
+	    wMsgPtr = (WCHAR *) LocalAlloc(LPTR, (length + 1) * sizeof(WCHAR));
+	    MultiByteToWideChar(CP_ACP, 0, msgPtr, length + 1, wMsgPtr,
+		    length + 1);
+	    LocalFree(msgPtr);
+	}
+    }
+    if (length == 0) {
+	if (error == ERROR_CALL_NOT_IMPLEMENTED) {
+	    msg = "function not supported under Win32s";
+	} else {
+	    sprintf(msgBuf, "unknown error: %ld", error);
+	    msg = msgBuf;
+	}
+    } else {
+	Tcl_Encoding encoding;
+
+	encoding = Tcl_GetEncoding(NULL, "unicode");
+	msg = Tcl_ExternalToUtfDString(encoding, (char *) wMsgPtr, -1, &ds);
+	Tcl_FreeEncoding(encoding);
+	LocalFree(wMsgPtr);
+
+	length = Tcl_DStringLength(&ds);
+
+	/*
+	 * Trim the trailing CR/LF from the system message.
+	 */
+	if (msg[length-1] == '\n') {
+	    msg[--length] = 0;
+	}
+	if (msg[length-1] == '\r') {
+	    msg[--length] = 0;
+	}
+    }
+
+    sprintf(id, "%ld", error);
+    Tcl_SetErrorCode(interp, "WINDOWS", id, msg, (char *) NULL);
+    Tcl_AppendToObj(resultPtr, msg, length);
+
+    if (length != 0) {
+	Tcl_DStringFree(&ds);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TestclipboardObjCmd --
  *
  *	This procedure implements the testclipboard command. It provides
@@ -114,7 +199,8 @@ TestclipboardObjCmd(clientData, interp, objc, objv)
 	CloseClipboard();
 	return code;
     } else {
-	Tcl_AppendResult(interp, "couldn't open clipboard", (char *) NULL);
+	Tcl_AppendResult(interp, "couldn't open clipboard: ", (char *) NULL);
+	AppendSystemError(interp, GetLastError());
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -144,7 +230,7 @@ TestwineventCmd(clientData, interp, argc, argv)
     int argc;				/* Number of arguments. */
     char **argv;			/* Argument strings. */
 {
-    HWND hwnd;
+    HWND hwnd = 0;
     int id;
     char *rest;
     UINT message;
@@ -160,12 +246,12 @@ TestwineventCmd(clientData, interp, argc, argv)
     };
 
     if ((argc == 3) && (strcmp(argv[1], "debug") == 0)) {
-	int i;
+	int b;
 
-	if (Tcl_GetBoolean(interp, argv[2], &i) != TCL_OK) {
+	if (Tcl_GetBoolean(interp, argv[2], &b) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	TkWinDialogDebug(i);
+	TkWinDialogDebug(b);
 	return TCL_OK;
     }
 
@@ -173,14 +259,24 @@ TestwineventCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
 
+#if 0
+    TkpScanWindowId(interp, argv[1], &id);
+    if (
+#ifdef _WIN64
+	(sscanf(string, "0x%p", &number) != 1) &&
+#endif
+	Tcl_GetInt(interp, string, (int *)&number) != TCL_OK) {
+	return TCL_ERROR;
+    }
+#endif
     hwnd = (HWND) strtol(argv[1], &rest, 0);
-    if (rest == argv[2]) {
+    if (rest == argv[1]) {
 	hwnd = FindWindow(NULL, argv[1]);
 	if (hwnd == NULL) {
 	    Tcl_SetResult(interp, "no such window", TCL_STATIC);
 	    return TCL_ERROR;
 	}
-    } 
+    }
     UpdateWindow(hwnd);
 
     id = strtol(argv[2], &rest, 0);

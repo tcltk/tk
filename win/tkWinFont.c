@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.12.2.1 2000/11/03 22:49:26 hobbs Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.12.2.2 2002/04/02 21:17:04 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -677,7 +677,7 @@ Tk_MeasureChars(
             if (thisSubFontPtr != lastSubFontPtr) {
 		familyPtr = lastSubFontPtr->familyPtr;
 		Tcl_UtfToExternalDString(familyPtr->encoding, source, 
-			p - source, &runString);
+			(int) (p - source), &runString);
 		(*familyPtr->getTextExtentPoint32Proc)(hdc, 
 			Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
@@ -692,8 +692,8 @@ Tk_MeasureChars(
             p = next;
         }
 	familyPtr = lastSubFontPtr->familyPtr;
-	Tcl_UtfToExternalDString(familyPtr->encoding, source, p - source, 
-		&runString);
+	Tcl_UtfToExternalDString(familyPtr->encoding, source,
+		(int) (p - source), &runString);
 	(*familyPtr->getTextExtentPoint32Proc)(hdc,
 		Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont, 
@@ -739,8 +739,9 @@ Tk_MeasureChars(
 		    lastSubFontPtr = thisSubFontPtr;
 		}
 		familyPtr = lastSubFontPtr->familyPtr;
-		Tcl_UtfToExternal(NULL, familyPtr->encoding, p, next - p, 
-			0, NULL, buf, sizeof(buf), NULL, &dstWrote, NULL);
+		Tcl_UtfToExternal(NULL, familyPtr->encoding, p,
+			(int) (next - p), 0, NULL, buf, sizeof(buf), NULL,
+			&dstWrote, NULL);
 		(*familyPtr->getTextExtentPoint32Proc)(hdc, buf, 
 			dstWrote >> familyPtr->isWideFont, &size);
 		newX += size.cx;
@@ -796,7 +797,7 @@ Tk_MeasureChars(
 	}
 
 	curX = termX;
-	curByte = term - source;	
+	curByte = (int) (term - source);	
     }
 
 #ifdef USE_RESEL 
@@ -860,7 +861,16 @@ Tk_DrawChars(
 
     dc = TkWinGetDrawableDC(display, drawable, &state);
 
+#if 1 /* Tk Win Speedup */
     CkSetROP2(dc, tkpWinRopModes[gc->function]);
+#else
+    SetROP2(dc, tkpWinRopModes[gc->function]);
+    
+    if ((gc->clip_mask != None) && 
+            ((TkpClipMask*)gc->clip_mask)->type == TKP_CLIP_REGION) {
+        SelectClipRgn(dc, (HRGN)((TkpClipMask*)gc->clip_mask)->value.region);
+    }
+#endif
 
     if ((gc->fill_style == FillStippled
 	    || gc->fill_style == FillOpaqueStippled)
@@ -993,7 +1003,7 @@ MultiFontTextOut(
             if (p > source) {
 		familyPtr = lastSubFontPtr->familyPtr;
  		Tcl_UtfToExternalDString(familyPtr->encoding, source,
-			p - source, &runString);
+			(int) (p - source), &runString);
 		(*familyPtr->textOutProc)(hdc, x, y, 
 			Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
@@ -1012,8 +1022,8 @@ MultiFontTextOut(
     }
     if (p > source) {
 	familyPtr = lastSubFontPtr->familyPtr;
- 	Tcl_UtfToExternalDString(familyPtr->encoding, source, p - source,
-		&runString);
+ 	Tcl_UtfToExternalDString(familyPtr->encoding, source,
+		(int) (p - source), &runString);
 	(*familyPtr->textOutProc)(hdc, x, y, Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
 	Tcl_DStringFree(&runString);

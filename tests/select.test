@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: select.test,v 1.5 2000/08/07 21:49:17 ericm Exp $
+# RCS: @(#) $Id: select.test,v 1.5.2.1 2002/04/02 20:57:58 hobbs Exp $
 
 #
 # Note: Multiple display selection handling will only be tested if the
@@ -16,6 +16,8 @@
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
+
+set ::tcltest::testConfig(altDisplay) [info exists env(TK_ALT_DISPLAY)]
 
 eval destroy [winfo child .]
 
@@ -129,7 +131,13 @@ test select-1.3 {Tk_CreateSelHandler procedure} {
     set selInfo ""
     list [selection get TEST] $selInfo
 } {{Test value} {TEST 0 4000}}
-test select-1.4 {Tk_CreateSelHandler procedure} {
+test select-1.4.1 {Tk_CreateSelHandler procedure} {unixOnly} {
+    setup
+    selection handle .f1 {handler TEST} TEST
+    selection handle .f1 {handler STRING}
+    lsort [selection get TARGETS]
+} {MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING}
+test select-1.4.2 {Tk_CreateSelHandler procedure} {macOrPc} {
     setup
     selection handle .f1 {handler TEST} TEST
     selection handle .f1 {handler STRING}
@@ -144,7 +152,20 @@ test select-1.5 {Tk_CreateSelHandler procedure} {
     set selInfo ""
     list [selection get] $selInfo
 } {{} {STRING 0 4000}}
-test select-1.6 {Tk_CreateSelHandler procedure} {
+test select-1.6.1 {Tk_CreateSelHandler procedure} {unixOnly} {
+    global selValue selInfo
+    setup
+    selection handle .f1 {handler TEST} TEST
+    selection handle .f1 {handler STRING}
+    set selValue ""
+    set selInfo ""
+    selection get
+    selection get -type TEST
+    selection handle .f1 {handler TEST2} TEST
+    selection get -type TEST
+    list [set selInfo] [lsort [selection get TARGETS]]
+} {{STRING 0 4000 TEST 0 4000 TEST2 0 4000} {MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING}}
+test select-1.6.2 {Tk_CreateSelHandler procedure} {macOrPc} {
     global selValue selInfo
     setup
     selection handle .f1 {handler TEST} TEST
@@ -157,7 +178,15 @@ test select-1.6 {Tk_CreateSelHandler procedure} {
     selection get -type TEST
     list [set selInfo] [lsort [selection get TARGETS]]
 } {{STRING 0 4000 TEST 0 4000 TEST2 0 4000} {MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW}}
-test select-1.7 {Tk_CreateSelHandler procedure} {
+test select-1.7.1 {Tk_CreateSelHandler procedure} {unixOnly} {
+    setup
+    selection own -selection CLIPBOARD .f1
+    selection handle -selection CLIPBOARD .f1 {handler TEST} TEST
+    selection handle -selection PRIMARY .f1 {handler TEST2} STRING
+    list [lsort [selection get -selection PRIMARY TARGETS]] \
+	[lsort [selection get -selection CLIPBOARD TARGETS]] 
+} {{MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING} {MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW}}
+test select-1.7.2 {Tk_CreateSelHandler procedure} {macOrPc} {
     setup
     selection own -selection CLIPBOARD .f1
     selection handle -selection CLIPBOARD .f1 {handler TEST} TEST
@@ -173,7 +202,34 @@ test select-1.8 {Tk_CreateSelHandler procedure} {
 
 ##############################################################################
 
-test select-2.1 {Tk_DeleteSelHandler procedure} {
+test select-2.1 {Tk_DeleteSelHandler procedure} {unixOnly} {
+    setup
+    selection handle .f1 {handler STRING} 
+    selection handle -type TEST .f1 {handler TEST} 
+    selection handle -type USER .f1 {handler USER} 
+    set result [list [lsort [selection get TARGETS]]]
+    selection handle -type TEST .f1 {}
+    lappend result [lsort [selection get TARGETS]]
+} {{MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW USER UTF8_STRING} {MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW USER UTF8_STRING}}
+test select-2.2 {Tk_DeleteSelHandler procedure} {unixOnly} {
+    setup
+    selection handle .f1 {handler STRING} 
+    selection handle -type TEST .f1 {handler TEST} 
+    selection handle -type USER .f1 {handler USER} 
+    set result [list [lsort [selection get TARGETS]]]
+    selection handle -type USER .f1 {}
+    lappend result [lsort [selection get TARGETS]]
+} {{MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW USER UTF8_STRING} {MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING}}
+test select-2.3 {Tk_DeleteSelHandler procedure} {unixOnly} {
+    setup
+    selection own -selection CLIPBOARD .f1
+    selection handle -selection PRIMARY .f1 {handler STRING} 
+    selection handle -selection CLIPBOARD .f1 {handler STRING} 
+    selection handle -selection CLIPBOARD .f1 {}
+    list [lsort [selection get TARGETS]] \
+	[lsort [selection get -selection CLIPBOARD TARGETS]]
+} {{MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
+test select-2.4 {Tk_DeleteSelHandler procedure} {macOrPc} {
     setup
     selection handle .f1 {handler STRING} 
     selection handle -type TEST .f1 {handler TEST} 
@@ -182,7 +238,7 @@ test select-2.1 {Tk_DeleteSelHandler procedure} {
     selection handle -type TEST .f1 {}
     lappend result [lsort [selection get TARGETS]]
 } {{MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW USER} {MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW USER}}
-test select-2.2 {Tk_DeleteSelHandler procedure} {
+test select-2.5 {Tk_DeleteSelHandler procedure} {macOrPc} {
     setup
     selection handle .f1 {handler STRING} 
     selection handle -type TEST .f1 {handler TEST} 
@@ -191,7 +247,7 @@ test select-2.2 {Tk_DeleteSelHandler procedure} {
     selection handle -type USER .f1 {}
     lappend result [lsort [selection get TARGETS]]
 } {{MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW USER} {MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW}}
-test select-2.3 {Tk_DeleteSelHandler procedure} {
+test select-2.6 {Tk_DeleteSelHandler procedure} {macOrPc} {
     setup
     selection own -selection CLIPBOARD .f1
     selection handle -selection PRIMARY .f1 {handler STRING} 
@@ -200,7 +256,7 @@ test select-2.3 {Tk_DeleteSelHandler procedure} {
     list [lsort [selection get TARGETS]] \
 	[lsort [selection get -selection CLIPBOARD TARGETS]]
 } {{MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
-test select-2.4 {Tk_DeleteSelHandler procedure} {
+test select-2.7 {Tk_DeleteSelHandler procedure} {
     setup
     selection handle .f1 {handler STRING}
     list [selection handle .f1 {}] [selection handle .f1 {}]
@@ -279,27 +335,24 @@ test select-3.9 {Tk_OwnSelection procedure} {
 } {}
 
 # multiple display tests
-if {[info exists env(TK_ALT_DISPLAY)]} {
-
-    test select-3.10 {Tk_OwnSelection procedure} {
-	setup .f1
-	setup .f2 $env(TK_ALT_DISPLAY)
-	list [selection own -displayof .f1] [selection own -displayof .f2]
-    } {.f1 .f2}
-    test select-3.11 {Tk_OwnSelection procedure} {
-	setup .f1
-	setup .f2 $env(TK_ALT_DISPLAY)
-	setupbg
-	update
-	set result ""
-	lappend result [dobg "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection own .t; update"]
-	lappend result [selection own -displayof .f1] \
+test select-3.10 {Tk_OwnSelection procedure} {altDisplay} {
+    setup .f1
+    setup .f2 $env(TK_ALT_DISPLAY)
+    list [selection own -displayof .f1] [selection own -displayof .f2]
+} {.f1 .f2}
+test select-3.11 {Tk_OwnSelection procedure} {altDisplay} {
+    setup .f1
+    setup .f2 $env(TK_ALT_DISPLAY)
+    setupbg
+    update
+    set result ""
+    lappend result [dobg "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection own .t; update"]
+    lappend result [selection own -displayof .f1] \
 	    [selection own -displayof .f2]
-	cleanupbg
-	set result
-    } {{} .f1 {}}
+    cleanupbg
+    set result
+} {{} .f1 {}}
 
-}
 ##############################################################################
 
 test select-4.1 {Tk_ClearSelection procedure} {
@@ -333,38 +386,36 @@ test select-4.4 {Tk_ClearSelection procedure} {unixOnly} {
 } {{} {}}
 
 # multiple display tests
-if {[info exists env(TK_ALT_DISPLAY)]} {
-    test select-4.5 {Tk_ClearSelection procedure} {
-	global lostSel lostSel2
-	setup .f1
-	setup .f2 $env(TK_ALT_DISPLAY)
-	set lostSel {owned}
-	set lostSel2 {owned2}
-	selection own -command { set lostSel {lost1} } .f1
-	selection own -command { set lostSel2 {lost2} } .f2
-	update
-	selection clear -displayof .f2
-	update
-	list $lostSel $lostSel2
-    } {owned lost2}
-    test select-4.6 {Tk_ClearSelection procedure} {unixOnly} {
-	setup .f1
-	setup .f2 $env(TK_ALT_DISPLAY)
-	setupbg
-	set lostSel {owned}
-	set lostSel2 {owned2}
-	selection own -command { set lostSel {lost1} } .f1
-	selection own -command { set lostSel2 {lost2} } .f2
-	update
-	set result ""
-	lappend result [dobg "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection own .t; update"]
-	lappend result [selection own -displayof .f1] \
+test select-4.5 {Tk_ClearSelection procedure} {altDisplay} {
+    global lostSel lostSel2
+    setup .f1
+    setup .f2 $env(TK_ALT_DISPLAY)
+    set lostSel {owned}
+    set lostSel2 {owned2}
+    selection own -command { set lostSel {lost1} } .f1
+    selection own -command { set lostSel2 {lost2} } .f2
+    update
+    selection clear -displayof .f2
+    update
+    list $lostSel $lostSel2
+} {owned lost2}
+test select-4.6 {Tk_ClearSelection procedure} {unixOnly altDisplay} {
+    setup .f1
+    setup .f2 $env(TK_ALT_DISPLAY)
+    setupbg
+    set lostSel {owned}
+    set lostSel2 {owned2}
+    selection own -command { set lostSel {lost1} } .f1
+    selection own -command { set lostSel2 {lost2} } .f2
+    update
+    set result ""
+    lappend result [dobg "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection own .t; update"]
+    lappend result [selection own -displayof .f1] \
 	    [selection own -displayof .f2] $lostSel $lostSel2
-	cleanupbg
-	set result
-    } {{} .f1 {} owned lost2}
+    cleanupbg
+    set result
+} {{} .f1 {} owned lost2}
 
-}
 ##############################################################################
 
 test select-5.1 {Tk_GetSelection procedure} {
@@ -457,71 +508,70 @@ test select-5.10 {Tk_GetSelection procedure} {unixOnly} {
 } {{selection owner didn't respond} {}}
 
 # multiple display tests
-if {[info exists env(TK_ALT_DISPLAY)]} {
-    test select-5.11 {Tk_GetSelection procedure} {
-	setup .f1
-	setup .f2 $env(TK_ALT_DISPLAY)
-	selection handle -selection PRIMARY .f1 {handler TEST} TEST
-	selection handle -selection PRIMARY .f2 {handler TEST2} TEST
-	set selValue "Test value"
-	set selInfo ""
-	set result [list [selection get TEST] $selInfo]
-	set selValue "Test value2"
-	set selInfo ""
-	lappend result [selection get -displayof .f2 TEST] $selInfo
-    } {{Test value} {TEST 0 4000} {Test value2} {TEST2 0 4000}}
-    test select-5.12 {Tk_GetSelection procedure} {
-	global lostSel lostSel2
-	setup .f1
-	setup .f2 $env(TK_ALT_DISPLAY)
-	selection handle -selection PRIMARY .f1 {handler TEST} TEST
-	selection handle -selection PRIMARY .f2 {} TEST
-	set selValue "Test value"
-	set selInfo ""
-	set result [list [catch {selection get TEST} msg] $msg $selInfo]
-	set selValue "Test value2"
-	set selInfo ""
-	lappend result [catch {selection get -displayof .f2 TEST} msg] $msg \
-	    $selInfo
-    } {0 {Test value} {TEST 0 4000} 1 {PRIMARY selection doesn't exist or form "TEST" not defined} {}}
-    test select-5.13 {Tk_GetSelection procedure} {unixOnly} {
-	setup .f1
-	setup .f2 $env(TK_ALT_DISPLAY)
-	setupbg
-	selection handle -selection PRIMARY .f1 {handler TEST} TEST
-	selection own .f1
-	selection handle -selection PRIMARY .f2 {handler TEST2} TEST
-	selection own .f2
-	set selValue "Test value"
-	set selInfo ""
-	update
-	set result ""
-	lappend result [dobg "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection get -displayof .t TEST"]
-	set selValue "Test value2"
-	lappend result [dobg "selection get TEST"]
-	cleanupbg
-	lappend result $selInfo
-    } {{Test value} {Test value2} {TEST2 0 4000 TEST 0 4000}}
-    test select-5.14 {Tk_GetSelection procedure} {unixOnly} {
-	setup .f1
-	setup .f2 $env(TK_ALT_DISPLAY)
-	setupbg
-	selection handle -selection PRIMARY .f1 {handler TEST} TEST
-	selection own .f1
-	selection handle -selection PRIMARY .f2 {} TEST
-	selection own .f2
-	set selValue "Test value"
-	set selInfo ""
-	update
-	set result ""
-	lappend result [dobg "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection get -displayof .t TEST"]
-	set selValue "Test value2"
-	lappend result [dobg "selection get TEST"]
-	cleanupbg
-	lappend result $selInfo
-    } {{PRIMARY selection doesn't exist or form "TEST" not defined} {Test value2} {TEST 0 4000}}
 
-}
+test select-5.11 {Tk_GetSelection procedure} {altDisplay} {
+    setup .f1
+    setup .f2 $env(TK_ALT_DISPLAY)
+    selection handle -selection PRIMARY .f1 {handler TEST} TEST
+    selection handle -selection PRIMARY .f2 {handler TEST2} TEST
+    set selValue "Test value"
+    set selInfo ""
+    set result [list [selection get TEST] $selInfo]
+    set selValue "Test value2"
+    set selInfo ""
+    lappend result [selection get -displayof .f2 TEST] $selInfo
+} {{Test value} {TEST 0 4000} {Test value2} {TEST2 0 4000}}
+test select-5.12 {Tk_GetSelection procedure} {altDisplay} {
+    global lostSel lostSel2
+    setup .f1
+    setup .f2 $env(TK_ALT_DISPLAY)
+    selection handle -selection PRIMARY .f1 {handler TEST} TEST
+    selection handle -selection PRIMARY .f2 {} TEST
+    set selValue "Test value"
+    set selInfo ""
+    set result [list [catch {selection get TEST} msg] $msg $selInfo]
+    set selValue "Test value2"
+    set selInfo ""
+    lappend result [catch {selection get -displayof .f2 TEST} msg] $msg \
+	    $selInfo
+} {0 {Test value} {TEST 0 4000} 1 {PRIMARY selection doesn't exist or form "TEST" not defined} {}}
+test select-5.13 {Tk_GetSelection procedure} {unixOnly altDisplay} {
+    setup .f1
+    setup .f2 $env(TK_ALT_DISPLAY)
+    setupbg
+    selection handle -selection PRIMARY .f1 {handler TEST} TEST
+    selection own .f1
+    selection handle -selection PRIMARY .f2 {handler TEST2} TEST
+    selection own .f2
+    set selValue "Test value"
+    set selInfo ""
+    update
+    set result ""
+    lappend result [dobg "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection get -displayof .t TEST"]
+    set selValue "Test value2"
+    lappend result [dobg "selection get TEST"]
+    cleanupbg
+    lappend result $selInfo
+} {{Test value} {Test value2} {TEST2 0 4000 TEST 0 4000}}
+test select-5.14 {Tk_GetSelection procedure} {unixOnly altDisplay} {
+    setup .f1
+    setup .f2 $env(TK_ALT_DISPLAY)
+    setupbg
+    selection handle -selection PRIMARY .f1 {handler TEST} TEST
+    selection own .f1
+    selection handle -selection PRIMARY .f2 {} TEST
+    selection own .f2
+    set selValue "Test value"
+    set selInfo ""
+    update
+    set result ""
+    lappend result [dobg "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection get -displayof .t TEST"]
+    set selValue "Test value2"
+    lappend result [dobg "selection get TEST"]
+    cleanupbg
+    lappend result $selInfo
+} {{PRIMARY selection doesn't exist or form "TEST" not defined} {Test value2} {TEST 0 4000}}
+
 ##############################################################################
 
 test select-6.1 {Tk_SelectionCmd procedure} {

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.6 2000/08/07 21:49:16 ericm Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.6.2.1 2002/04/02 21:00:59 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -177,6 +177,48 @@ Tk_CreateSelHandler(tkwin, selection, target, proc, clientData, format)
     } else {
 	selPtr->size = 32;
     }
+
+    if ((target == XA_STRING) && (winPtr->dispPtr->utf8Atom != (Atom) NULL)) {
+	/*
+	 * If the user asked for a STRING handler and we understand
+	 * UTF8_STRING, we implicitly create a UTF8_STRING handler for them.
+	 */
+
+	target = winPtr->dispPtr->utf8Atom;
+	for (selPtr = winPtr->selHandlerList; ;
+	     selPtr = selPtr->nextPtr) {
+	    if (selPtr == NULL) {
+		selPtr = (TkSelHandler *) ckalloc(sizeof(TkSelHandler));
+		selPtr->nextPtr = winPtr->selHandlerList;
+		winPtr->selHandlerList = selPtr;
+		selPtr->selection = selection;
+		selPtr->target = target;
+		selPtr->format = target; /* We want UTF8_STRING format */
+		selPtr->proc = proc;
+		if (selPtr->proc == HandleTclCommand) {
+		    /*
+		     * The clientData is selection controlled memory, so
+		     * we should make a copy for this selPtr.
+		     */
+		    selPtr->clientData =
+			(ClientData) ckalloc(sizeof(clientData));
+		    memcpy(selPtr->clientData, clientData, sizeof(clientData));
+		} else {
+		    selPtr->clientData = clientData;
+		}
+		selPtr->size = 8;
+		break;
+	    }
+	    if ((selPtr->selection == selection)
+		    && (selPtr->target == target)) {
+		/*
+		 * Looks like we had a utf-8 target already.  Leave it alone.
+		 */
+
+		break;
+	    }
+	}
+    }
 }
 
 /*
@@ -247,13 +289,43 @@ Tk_DeleteSelHandler(tkwin, selection, target)
     } else {
 	prevPtr->nextPtr = selPtr->nextPtr;
     }
+
+    if ((target == XA_STRING) && (winPtr->dispPtr->utf8Atom != (Atom) NULL)) {
+	/*
+	 * If the user asked for a STRING handler and we understand
+	 * UTF8_STRING, we may have implicitly created a UTF8_STRING handler
+	 * for them.  Look for it and delete it as necessary.
+	 */
+	TkSelHandler *utf8selPtr;
+
+	target = winPtr->dispPtr->utf8Atom;
+	for (utf8selPtr = winPtr->selHandlerList; utf8selPtr != NULL;
+	     utf8selPtr = utf8selPtr->nextPtr) {
+	    if ((utf8selPtr->selection == selection)
+		    && (utf8selPtr->target == target)) {
+		break;
+	    }
+	}
+	if (utf8selPtr != NULL) {
+	    if ((utf8selPtr->format == target)
+		    && (utf8selPtr->proc == selPtr->proc)
+		    && (utf8selPtr->size == selPtr->size)) {
+		/*
+		 * This recursive call is OK, because we've
+		 * changed the value of 'target'
+		 */
+		Tk_DeleteSelHandler(tkwin, selection, target);
+	    }
+	}
+    }
+
     if (selPtr->proc == HandleTclCommand) {
 	/*
 	 * Mark the CommandInfo as deleted and free it if we can.
 	 */
 
 	((CommandInfo*)selPtr->clientData)->interp = NULL;
-	Tcl_EventuallyFree(selPtr->clientData, Tcl_Free);
+	Tcl_EventuallyFree(selPtr->clientData, TCL_DYNAMIC);
     }
     ckfree((char *) selPtr);
 }
@@ -524,8 +596,8 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
 	TkSelInProgress ip;
 
 	for (selPtr = ((TkWindow *) infoPtr->owner)->selHandlerList;
-		selPtr != NULL; selPtr = selPtr->nextPtr) {
-	    if ((selPtr->target == target)
+	     selPtr != NULL; selPtr = selPtr->nextPtr) {
+	    if  ((selPtr->target == target)
 		    && (selPtr->selection == selection)) {
 		break;
 	    }
@@ -618,8 +690,9 @@ Tk_SelectionObjCmd(clientData, interp, objc, objv)
     char *selName = NULL, *string;
     int count, index;
     Tcl_Obj **objs;
-    static char *optionStrings[] = { "clear", "get", "handle", "own",
-					 (char *) NULL };
+    static CONST char *optionStrings[] = {
+	"clear", "get", "handle", "own", (char *) NULL
+    };
     enum options { SELECTION_CLEAR, SELECTION_GET, SELECTION_HANDLE,
 		       SELECTION_OWN };
     
@@ -635,8 +708,9 @@ Tk_SelectionObjCmd(clientData, interp, objc, objv)
 
     switch ((enum options) index) {
 	case SELECTION_CLEAR: {
-	    static char *clearOptionStrings[] = { "-displayof", "-selection",
-						      (char *) NULL };
+	    static CONST char *clearOptionStrings[] = {
+		"-displayof", "-selection", (char *) NULL
+	    };
 	    enum clearOptions { CLEAR_DISPLAYOF, CLEAR_SELECTION };
 	    int clearIndex;
 	    
@@ -692,8 +766,9 @@ Tk_SelectionObjCmd(clientData, interp, objc, objv)
 	    char *targetName = NULL;
 	    Tcl_DString selBytes;
 	    int result;
-	    static char *getOptionStrings[] = { "-displayof", "-selection",
-						    "-type", (char *) NULL };
+	    static CONST char *getOptionStrings[] = {
+		"-displayof", "-selection", "-type", (char *) NULL
+	    };
 	    enum getOptions { GET_DISPLAYOF, GET_SELECTION, GET_TYPE };
 	    int getIndex;
 	    
@@ -765,8 +840,9 @@ Tk_SelectionObjCmd(clientData, interp, objc, objv)
 	    char *formatName = NULL;
 	    register CommandInfo *cmdInfoPtr;
 	    int cmdLength;
-	    static char *handleOptionStrings[] = { "-format", "-selection",
-						    "-type", (char *) NULL };
+	    static CONST char *handleOptionStrings[] = {
+		"-format", "-selection", "-type", (char *) NULL
+	    };
 	    enum handleOptions { HANDLE_FORMAT, HANDLE_SELECTION,
 				     HANDLE_TYPE };
 	    int handleIndex;
@@ -851,10 +927,9 @@ Tk_SelectionObjCmd(clientData, interp, objc, objv)
 	    register LostCommand *lostPtr;
 	    char *script = NULL;
 	    int cmdLength;
-	    static char *ownOptionStrings[] = { "-command",
-						    "-displayof",
-						    "-selection",
-						    (char *) NULL };
+	    static CONST char *ownOptionStrings[] = {
+		"-command", "-displayof", "-selection", (char *) NULL
+	    };
 	    enum ownOptions { OWN_COMMAND, OWN_DISPLAYOF, OWN_SELECTION };
 	    int ownIndex;
 	    
@@ -1047,11 +1122,11 @@ TkSelDeadWindow(winPtr)
 	}
 	if (selPtr->proc == HandleTclCommand) {
 	    /*
-	     * Mark the CommandInfo as deleted and free it if we can.
+	     * Mark the CommandInfo as deleted and free it when we can.
 	     */
 
 	    ((CommandInfo*)selPtr->clientData)->interp = NULL;
-	    Tcl_EventuallyFree(selPtr->clientData, Tcl_Free);
+	    Tcl_EventuallyFree(selPtr->clientData, TCL_DYNAMIC);
 	}
 	ckfree((char *) selPtr);
     }
@@ -1106,15 +1181,29 @@ TkSelInit(tkwin)
      * Fetch commonly-used atoms.
      */
 
-    dispPtr->multipleAtom = Tk_InternAtom(tkwin, "MULTIPLE");
-    dispPtr->incrAtom = Tk_InternAtom(tkwin, "INCR");
-    dispPtr->targetsAtom = Tk_InternAtom(tkwin, "TARGETS");
-    dispPtr->timestampAtom = Tk_InternAtom(tkwin, "TIMESTAMP");
-    dispPtr->textAtom = Tk_InternAtom(tkwin, "TEXT");
-    dispPtr->compoundTextAtom = Tk_InternAtom(tkwin, "COMPOUND_TEXT");
-    dispPtr->applicationAtom = Tk_InternAtom(tkwin, "TK_APPLICATION");
-    dispPtr->windowAtom = Tk_InternAtom(tkwin, "TK_WINDOW");
-    dispPtr->clipboardAtom = Tk_InternAtom(tkwin, "CLIPBOARD");
+    dispPtr->multipleAtom	= Tk_InternAtom(tkwin, "MULTIPLE");
+    dispPtr->incrAtom		= Tk_InternAtom(tkwin, "INCR");
+    dispPtr->targetsAtom	= Tk_InternAtom(tkwin, "TARGETS");
+    dispPtr->timestampAtom	= Tk_InternAtom(tkwin, "TIMESTAMP");
+    dispPtr->textAtom		= Tk_InternAtom(tkwin, "TEXT");
+    dispPtr->compoundTextAtom	= Tk_InternAtom(tkwin, "COMPOUND_TEXT");
+    dispPtr->applicationAtom	= Tk_InternAtom(tkwin, "TK_APPLICATION");
+    dispPtr->windowAtom		= Tk_InternAtom(tkwin, "TK_WINDOW");
+    dispPtr->clipboardAtom	= Tk_InternAtom(tkwin, "CLIPBOARD");
+
+    /*
+     * Using UTF8_STRING instead of the XA_UTF8_STRING macro allows us
+     * to support older X servers that didn't have UTF8_STRING yet.
+     * This is necessary on Unix systems.
+     * For more information, see:
+     *    http://www.cl.cam.ac.uk/~mgk25/unicode.html#x11
+     */
+
+#if !defined(__WIN32__) && !defined(MAC_TCL)
+    dispPtr->utf8Atom		= Tk_InternAtom(tkwin, "UTF8_STRING");
+#else
+    dispPtr->utf8Atom		= (Atom) NULL;
+#endif
 }
 
 /*
@@ -1251,7 +1340,7 @@ HandleTclCommand(clientData, offset, buffer, maxBytes)
     Tcl_DString oldResult;
     Tcl_Obj *objPtr;
     int extraBytes, charOffset, count, numChars;
-    char *p;
+    CONST char *p;
 
     /*
      * We must also protect the interpreter and the command from being

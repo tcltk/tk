@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.9.2.1 2000/11/03 22:49:25 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.9.2.2 2002/04/02 21:17:04 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -743,6 +743,8 @@ TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x,
 		image->data, infoPtr, DIB_RGB_COLORS);
 	ckfree((char *) infoPtr);
     }
+#if 1 /* Tk Win Speedup */
+
 #ifdef USE_CKGRAPH_IMP
     CkSelectBitmap(dcMem, bitmap);
 #else
@@ -754,6 +756,19 @@ TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x,
     CkDeleteBitmap(bitmap);
 #else
     CkDeleteBitmap(CkSelectBitmap(dcMem, bitmap));
+#endif
+
+#else
+    if(!bitmap) {
+	panic("Fail to allocate bitmap\n");
+	DeleteDC(dcMem);
+    	TkWinReleaseDrawableDC(d, dc, &state);
+	return;
+    }
+    bitmap = SelectObject(dcMem, bitmap);
+    BitBlt(dc, dest_x, dest_y, width, height, dcMem, src_x, src_y, SRCCOPY);
+    DeleteObject(SelectObject(dcMem, bitmap));
+    DeleteDC(dcMem);
 #endif
     TkWinReleaseDrawableDC(d, dc, &state);
     GTRACE(("end TkPutImage\n");)

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.h,v 1.5 1999/04/16 01:51:19 stanton Exp $
+ * RCS: @(#) $Id: tkMenubutton.h,v 1.5.14.1 2002/04/02 21:00:55 hobbs Exp $
  */
 
 #ifndef _TKMENUBUTTON
@@ -17,6 +17,10 @@
 
 #ifndef _TKINT
 #include "tkInt.h"
+#endif
+
+#ifndef _TKMENU
+#include "tkMenu.h"
 #endif
 
 #ifdef BUILD_tk
@@ -162,6 +166,10 @@ typedef struct {
      * Miscellaneous information:
      */
 
+    int compound;               /* Value of -compound option; specifies whether
+                                 * the menubutton should show both an image and
+                                 * text, and, if so, how. */
+
     enum direction direction;	/* Direction for where to pop the menu.
     				 * Valid directions are "above", "below",
     				 * "left", "right", and "flush". "flush"
@@ -211,7 +219,7 @@ typedef struct {
  * Declaration of variables shared between the files in the button module.
  */
 
-extern TkClassProcs tkpMenubuttonClass;
+extern Tk_ClassProcs tkpMenubuttonClass;
 
 /*
  * Declaration of procedures used in the implementation of the button

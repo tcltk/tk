@@ -31,7 +31,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacSend.c,v 1.4 1999/05/22 06:35:10 jingham Exp $
+ * RCS: @(#) $Id: tkMacSend.c,v 1.4.12.1 2002/04/02 20:57:56 hobbs Exp $
  */
 
 #include <Gestalt.h>
@@ -361,7 +361,7 @@ Tk_SendObjCmd(
     int objc,			/* Number of arguments */
     Tcl_Obj *CONST objv[])	/* The arguments */
 {
-    static char *sendOptions[] = {"-async", "-displayof", "-", (char *) NULL};
+    static CONST char *sendOptions[] = {"-async", "-displayof", "-", (char *) NULL};
     char *stringRep, *destName;
     int async = 0;
     int i, index, firstArg;
