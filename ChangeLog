@@ -1,3 +1,15 @@
+2003-10-28  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tkUnixFont.c (GetFontAttributes): place extra check for NULL
+	family against bad X servers.
+
+	* win/tkWinImage.c (XGetImageZPixmap): add separate 16bpp
+	XGetImage code to correctly handle 16bpp requests.  This appears
+	to never have worked correctly.
+
+	* tests/focusTcl.test (setup1): expand frame size to allow for
+	correct visibility of windows that use larger default fonts.
+
 2003-10-28  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/tk.tcl (::tk::PlaceWindow): Added check for empty string
