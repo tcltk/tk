@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.19 2004/10/08 23:15:32 dkf Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.20 2004/10/28 12:25:53 dkf Exp $
 '\" 
 .so man.macros
 .TH wm n 8.5 Tk "Tk Built-In Commands"
@@ -62,11 +62,13 @@ On Windows, \fB\-disabled\fR gets or sets whether the window is in a
 disabled state. \fB\-toolwindow\fR gets or sets the style of the window
 to toolwindow (as defined in the MSDN). \fB\-topmost\fR gets or sets
 whether this is a topmost window (displays above all other windows).
+.VS 8.5
 \fB\-alpha\fR sets the alpha transparency level of the toplevel.  It accepts
 a value from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque).  Values
 outside that range will be constrained.  This is supported on Windows
 2000/XP+.  Where not supported, the \fB\-alpha\fR value remains at
 \fB1.0\fR.
+.VE 8.5
 .PP
 On Macintosh, there are currently two attribute values:
 \fB\-modified\fR and \fB\-titlepath\fR.
@@ -578,8 +580,8 @@ to be withdrawn and de-iconified in order to make the change happen.
 A fixed-size window that says that it is fixed-size too:
 .CS
 toplevel .fixed
-\fBwm\fR title     .fixed "Fixed-size Window"
-\fBwm\fR resizable .fixed 0 0
+\fBwm title\fR     .fixed "Fixed-size Window"
+\fBwm resizable\fR .fixed 0 0
 .CE
 .PP
 A simple dialog-like window, centred on the screen:
@@ -596,14 +598,14 @@ pack .msg.l  \-expand 1    \-fill both
 # But first, we need the geometry managers to finish setting
 # up the interior of the dialog, for which we need to run the
 # event loop with the widget hidden completely...
-\fBwm\fR withdraw .msg
+\fBwm withdraw\fR .msg
 update
 set x [expr {([winfo screenwidth .]\-[winfo width .msg])/2}]
 set y [expr {([winfo screenheight .]\-[winfo height .msg])/2}]
-\fBwm\fR geometry  .msg +$x+$y
-\fBwm\fR transient .msg .
-\fBwm\fR title     .msg "Dialog demo"
-\fBwm\fR deiconify .msg
+\fBwm geometry\fR  .msg +$x+$y
+\fBwm transient\fR .msg .
+\fBwm title\fR     .msg "Dialog demo"
+\fBwm deiconify\fR .msg
 .CE
 
 .SH "SEE ALSO"

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: option.n,v 1.4 2004/06/21 19:42:12 dkf Exp $
+'\" RCS: @(#) $Id: option.n,v 1.5 2004/10/28 12:25:53 dkf Exp $
 '\" 
 .so man.macros
 .TH option n "" Tk "Tk Built-In Commands"
@@ -89,7 +89,7 @@ levels other than the ones given above.
 Instruct every button in the application to have red text on it unless
 explicitly overridden:
 .CS
-\fBoption\fR add *button.foreground red startupFile
+\fBoption add\fR *button.foreground red startupFile
 .CE
 .PP
 Allow users to control what happens in an entry widget when the Return
@@ -97,8 +97,8 @@ key is pressed by specifying a script in the option database and add a
 default option for that which rings the bell:
 .CS
 entry .e
-bind .e <Return> [\fBoption\fR get .e returnCommand Command]
-\fBoption\fR add *.e.returnCommand bell widgetDefault
+bind .e <Return> [\fBoption get\fR .e returnCommand Command]
+\fBoption add\fR *.e.returnCommand bell widgetDefault
 .CE
 
 .SH KEYWORDS

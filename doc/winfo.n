@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: winfo.n,v 1.6 2004/06/30 22:17:59 dkf Exp $
+'\" RCS: @(#) $Id: winfo.n,v 1.7 2004/10/28 12:25:53 dkf Exp $
 '\" 
 .so man.macros
 .TH winfo n 4.3 Tk "Tk Built-In Commands"
@@ -332,9 +332,9 @@ has no border).
 .SH EXAMPLE
 Print where the mouse pointer is and what window it is currently over:
 .CS
-lassign [\fBwinfo\fR pointerxy .] x y
+lassign [\fBwinfo pointerxy\fR .] x y
 puts -nonewline "Mouse pointer at ($x,$y) which is "
-set win [\fBwinfo\fR containing $x $y]
+set win [\fBwinfo containing\fR $x $y]
 if {$win eq ""} {
     puts "over no window"
 } else {
