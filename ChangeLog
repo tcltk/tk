@@ -1,3 +1,10 @@
+2001-11-20  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkText.c (TextGetText): reworked to use DString for
+	improved speed. (callewaert, darley)
+	(DestroyText): plugged mem leak when not clearing stack (callewaert)
+	(TextGetText): more efficient string size calculation (darley)
+
 2001-11-19  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/demos/entry3.tcl: New demo showing off validation and
