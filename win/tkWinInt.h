@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.14.2.5 2004/09/23 01:49:08 hobbs Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.14.2.5.2.1 2005/01/04 05:07:03 chengyemao Exp $
  */
 
 #ifndef _TKWININT
@@ -221,5 +221,14 @@ extern Tcl_Encoding TkWinGetUnicodeEncoding _ANSI_ARGS_((void));
 #define TK_THEME_WIN_CLASSIC    1
 #define TK_THEME_WIN_XP         2
 
+/*
+ *  The following is implemented in tkWinWm and used by tkWinEmbed.c
+ */
+void	TkpWinToplevelWithDraw		_ANSI_ARGS_((TkWindow *winPtr));
+void	TkpWinToplevelIconify		_ANSI_ARGS_((TkWindow *winPtr));
+void	TkpWinToplevelDeiconify		_ANSI_ARGS_((TkWindow *winPtr));
+long	TkpWinToplevelIsControlledByWm	_ANSI_ARGS_((TkWindow *winPtr));
+long	TkpWinToplevelMove		_ANSI_ARGS_((TkWindow *winPtr, int x, int y));
+long	TkpWinToplevelOverrideRedirect	_ANSI_ARGS_((TkWindow *winPtr, int reqValue));
 #endif /* _TKWININT */
 

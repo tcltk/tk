@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin.h,v 1.6 1999/04/16 01:51:48 stanton Exp $
+ * RCS: @(#) $Id: tkWin.h,v 1.6.24.1 2005/01/04 05:07:03 chengyemao Exp $
  */
 
 #ifndef _TKWIN
@@ -29,15 +29,26 @@
 #endif
 
 /*
- * The following messages are use to communicate between a Tk toplevel
- * and its container window.
+ * The following messages are used to communicate between a Tk toplevel
+ * and its container window. A zero should be returned if a Tk container
+ * is not able to provide a requested service. A Tk container may not be
+ * able to provide service to all of the following requests at the moment.
+ * But an embedded Tk window will send out these requests to support 
+ * external Tk container application.
  */
 
-#define TK_CLAIMFOCUS	(WM_USER)
-#define TK_GEOMETRYREQ	(WM_USER+1)
-#define TK_ATTACHWINDOW	(WM_USER+2)
-#define TK_DETACHWINDOW	(WM_USER+3)
-
+#define TK_CLAIMFOCUS	    (WM_USER)	    /* an embedded window requests to focus */
+#define TK_GEOMETRYREQ	    (WM_USER+1)	    /* an embedded window requests to change size */
+#define TK_ATTACHWINDOW	    (WM_USER+2)	    /* an embedded window requests to attach */
+#define TK_DETACHWINDOW	    (WM_USER+3)	    /* an embedded window requests to detach */
+#define TK_MOVEWINDOW	    (WM_USER+4)	    /* an embedded window requests to move */
+#define TK_RAISEWINDOW	    (WM_USER+5)	    /* an embedded window requests to raise */
+#define TK_ICONIFY	    (WM_USER+6)	    /* an embedded window requests to iconify */
+#define TK_DEICONIFY	    (WM_USER+7)	    /* an embedded window requests to deiconify */
+#define TK_WITHDRAW	    (WM_USER+8)	    /* an embedded window requests to withdraw */
+#define TK_GETFRAMEWID	    (WM_USER+9)	    /* an embedded window requests a frame window id */
+#define TK_OVERRIDEREDIRECT (WM_USER+10)    /* an embedded window requests to overrideredirect */
+#define TK_SETMENU	    (WM_USER+11)    /* am embedded widnow requests to set menu */
 
 /*
  *--------------------------------------------------------------
