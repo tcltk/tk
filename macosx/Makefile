@@ -3,7 +3,7 @@
 # Simple makefile for building on Mac OS X with the
 # Project Builder command line tool 'pbxbuild'
 #
-# RCS: @(#) $Id: Makefile,v 1.4 2002/09/26 17:07:33 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.5 2002/10/09 13:02:08 das Exp $
 #
 ################################################################################
 
@@ -79,7 +79,7 @@ forceRelink:
 
 forceRelinkTcl:
 	@-cd ${BUILD_DIR}; \
-	rm -rf Tcl.framework tclsh8.4 \
+	rm -rf Tcl.framework \
 	Development.build/Tcl.build/Tcl Deployment.build/Tcl.build/Tcl
 
 cleanup-embedded:
