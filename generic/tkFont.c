@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.20 2002/08/31 06:12:20 das Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.21 2002/09/02 19:13:47 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -3753,7 +3753,7 @@ TkFontGetFirstTextLayout(
     }
     chunkPtr = layoutPtr->chunks;
     numBytesInChunk = chunkPtr->numBytes;
-    strncpy(dst, chunkPtr->start, numBytesInChunk);
+    strncpy(dst, chunkPtr->start, (size_t) numBytesInChunk);
     *font = layoutPtr->tkfont;
     return numBytesInChunk;
 }
