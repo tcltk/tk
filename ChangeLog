@@ -1,5 +1,9 @@
 2000-07-28  Eric Melski  <ericm@ajubasolutions.com>
 
+	* win/tkWinMenu.c (ReconfigureWindowsMenu): Added MF_GRAYED bit
+	for disabled menu entries, to ensure that those which are drawn by
+	the system are shown grayed (such as entries on menubars) [Bug: 4372].
+
 	* doc/label.n: Added -disabledforeground to list of options [Bug:
 	6053].
 
