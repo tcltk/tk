@@ -1,5 +1,5 @@
 @echo off
-rem RCS: @(#) $Id: rmd.bat,v 1.3 1998/09/30 20:19:59 escoffon Exp $
+rem RCS: @(#) $Id: rmd.bat,v 1.4 2001/09/08 22:34:42 mdejong Exp $
 
 if not exist %1\tag.txt goto end
 
@@ -23,3 +23,4 @@ if errorlevel 1 goto end
 echo deleted directory %1
 
 :end
+
