@@ -4,7 +4,7 @@
 	containerPtr but can't get to the if (containerPtr == NULL) test due
 	to the unhandled read memory exception for when it really is NULL.
 
-	* win/tkWinX.c (TkWinXInit): Don't restric InitCommonControlsEx.
+	* win/tkWinX.c (TkWinXInit): Don't restrict InitCommonControlsEx.
 	It's valid on all platforms given IE 3.0+ is installed.  As tkWinX.c
 	does set #define _WIN32_IE 0x0300, I guess we can accept IE3 as the
 	lowest denominator and use the version 4.71 features of Comctl32.dll
