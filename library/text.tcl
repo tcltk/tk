@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.24.2.2 2004/02/17 07:17:17 das Exp $
+# RCS: @(#) $Id: text.tcl,v 1.24.2.3 2004/08/26 18:04:08 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -205,7 +205,7 @@ bind Text <Return> {
     if {[%W cget -autoseparators]} {%W edit separator}
 }
 bind Text <Delete> {
-    if {[string compare [%W tag nextrange sel 1.0 end] ""]} {
+    if {[%W tag nextrange sel 1.0 end] ne ""} {
 	%W delete sel.first sel.last
     } else {
 	%W delete insert
@@ -213,7 +213,7 @@ bind Text <Delete> {
     }
 }
 bind Text <BackSpace> {
-    if {[string compare [%W tag nextrange sel 1.0 end] ""]} {
+    if {[%W tag nextrange sel 1.0 end] ne ""} {
 	%W delete sel.first sel.last
     } elseif {[%W compare insert != 1.0]} {
 	%W delete insert-1c
@@ -347,7 +347,7 @@ bind Text <<Redo>> {
     catch { %W edit redo }
 }
 
-if {[string compare $tcl_platform(platform) "windows"]} {
+if {$tcl_platform(platform) ne "windows"} {
 bind Text <Control-v> {
     if {!$tk_strictMotif} {
 	tk::TextScrollPages %W 1
@@ -603,7 +603,7 @@ proc ::tk::TextSelectTo {w x y {extend 0}} {
 	    }
 	}
     }
-    if {$Priv(mouseMoved) || [string compare $Priv(selectMode) "char"]} {
+    if {$Priv(mouseMoved) || $Priv(selectMode) ne "char"} {
 	$w tag remove sel 0.0 end
 	$w mark set insert $cur
 	$w tag add sel $first $last
@@ -859,7 +859,7 @@ proc ::tk::TextUpDownLine {w n} {
 
     set i [$w index insert]
     scan $i "%d.%d" line char
-    if {[string compare $Priv(prevPos) $i]} {
+    if {$Priv(prevPos) ne $i} {
 	set Priv(char) $char
     }
     set new [$w index [expr {$line + $n}].$Priv(char)]
@@ -883,8 +883,7 @@ proc ::tk::TextPrevPara {w pos} {
     set pos [$w index "$pos linestart"]
     while {1} {
 	if {([string equal [$w get "$pos - 1 line"] "\n"] \
-		&& [string compare [$w get $pos] "\n"]) \
-		|| [string equal $pos "1.0"]} {
+		 && [$w get $pos] ne "\n") || [string equal $pos 1.0]} {
 	    if {[regexp -indices {^[ 	]+(.)} [$w get $pos "$pos lineend"] \
 		    dummy index]} {
 		set pos [$w index "$pos + [lindex $index 0] chars"]
@@ -908,13 +907,13 @@ proc ::tk::TextPrevPara {w pos} {
 
 proc ::tk::TextNextPara {w start} {
     set pos [$w index "$start linestart + 1 line"]
-    while {[string compare [$w get $pos] "\n"]} {
+    while {[$w get $pos] ne "\n"} {
 	if {[$w compare $pos == end]} {
 	    return [$w index "end - 1c"]
 	}
 	set pos [$w index "$pos + 1 line"]
     }
-    while {[string equal [$w get $pos] "\n"]} {
+    while {[$w get $pos] eq "\n"} {
 	set pos [$w index "$pos + 1 line"]
 	if {[$w compare $pos == end]} {
 	    return [$w index "end - 1c"]
@@ -967,9 +966,19 @@ proc ::tk::TextTranspose w {
     if {[$w compare "$pos - 1 char" == 1.0]} {
 	return
     }
+    # ensure this is seen as an atomic op to undo
+    set autosep [$w cget -autoseparators]
+    if {$autosep} {
+	$w configure -autoseparators 0
+	$w edit separator
+    }
     $w delete "$pos - 2 char" $pos
     $w insert insert $new
     $w see insert
+    if {$autosep} {
+	$w edit separator
+	$w configure -autoseparators $autosep
+    }
 }
 
 # ::tk_textCopy --
@@ -1012,12 +1021,13 @@ proc ::tk_textCut w {
 proc ::tk_textPaste w {
     global tcl_platform
     if {![catch {::tk::GetSelection $w CLIPBOARD} sel]} {
+	# ensure this is seen as an atomic op to undo
 	set oldSeparator [$w cget -autoseparators]
 	if { $oldSeparator } {
 	    $w configure -autoseparators 0
 	    $w edit separator
 	}
-	if {[string compare [tk windowingsystem] "x11"]} {
+	if {[tk windowingsystem] ne "x11"} {
 	    catch { $w delete sel.first sel.last }
 	}
 	$w insert insert $sel
