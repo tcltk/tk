@@ -1,5 +1,13 @@
 2000-08-02  Eric Melski  <ericm@ajubasolutions.com>
 
+	* generic/tkCmds.c (Tk_TkwaitObjCmd): Tcl_Obj'ified [tkwait] command.
+
+	* generic/tkWindow.c: Updated "tkwait" command entry to use
+	Tcl_Obj'ified command.
+
+	* generic/tkInt.h: Replace Tk_TkwaitCmd prototype with
+	Tk_TkwaitObjCmd prototype.
+
 	* generic/tkGrid.c (Tk_GridCmd): Split [grid] subcommands into
 	separate functions instead of inlining them all in Tk_GridCmd.
 

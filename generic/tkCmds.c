@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.14 2000/05/17 22:44:09 hobbs Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.15 2000/08/02 23:08:20 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -695,7 +695,7 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 /*
  *----------------------------------------------------------------------
  *
- * Tk_TkwaitCmd --
+ * Tk_TkwaitObjCmd --
  *
  *	This procedure is invoked to process the "tkwait" Tcl command.
  *	See the user documentation for details on what it does.
@@ -711,87 +711,97 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 
 	/* ARGSUSED */
 int
-Tk_TkwaitCmd(clientData, interp, argc, argv)
+Tk_TkwaitObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Main window associated with
 				 * interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
-    int c, done;
-    size_t length;
-
-    if (argc != 3) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " variable|visibility|window name\"", (char *) NULL);
+    int done, index;
+    static char *optionStrings[] = { "variable", "visibility", "window",
+					 (char *) NULL };
+    enum options { TKWAIT_VARIABLE, TKWAIT_VISIBILITY, TKWAIT_WINDOW };
+    
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 1, objv, "variable|visibility|window name");
 	return TCL_ERROR;
     }
-    c = argv[1][0];
-    length = strlen(argv[1]);
-    if ((c == 'v') && (strncmp(argv[1], "variable", length) == 0)
-	    && (length >= 2)) {
-	if (Tcl_TraceVar(interp, argv[2],
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		WaitVariableProc, (ClientData) &done) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	done = 0;
-	while (!done) {
-	    Tcl_DoOneEvent(0);
-	}
-	Tcl_UntraceVar(interp, argv[2],
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		WaitVariableProc, (ClientData) &done);
-    } else if ((c == 'v') && (strncmp(argv[1], "visibility", length) == 0)
-	    && (length >= 2)) {
-	Tk_Window window;
 
-	window = Tk_NameToWindow(interp, argv[2], tkwin);
-	if (window == NULL) {
-	    return TCL_ERROR;
-	}
-	Tk_CreateEventHandler(window, VisibilityChangeMask|StructureNotifyMask,
-	    WaitVisibilityProc, (ClientData) &done);
-	done = 0;
-	while (!done) {
-	    Tcl_DoOneEvent(0);
-	}
-	if (done != 1) {
-	    /*
-	     * Note that we do not delete the event handler because it
-	     * was deleted automatically when the window was destroyed.
-	     */
-
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "window \"", argv[2],
-		    "\" was deleted before its visibility changed",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	Tk_DeleteEventHandler(window, VisibilityChangeMask|StructureNotifyMask,
-	    WaitVisibilityProc, (ClientData) &done);
-    } else if ((c == 'w') && (strncmp(argv[1], "window", length) == 0)) {
-	Tk_Window window;
-
-	window = Tk_NameToWindow(interp, argv[2], tkwin);
-	if (window == NULL) {
-	    return TCL_ERROR;
-	}
-	Tk_CreateEventHandler(window, StructureNotifyMask,
-	    WaitWindowProc, (ClientData) &done);
-	done = 0;
-	while (!done) {
-	    Tcl_DoOneEvent(0);
-	}
-	/*
-	 * Note:  there's no need to delete the event handler.  It was
-	 * deleted automatically when the window was destroyed.
-	 */
-    } else {
-	Tcl_AppendResult(interp, "bad option \"", argv[1],
-		"\": must be variable, visibility, or window", (char *) NULL);
+    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
+	    &index) != TCL_OK) {
 	return TCL_ERROR;
+    }
+
+    switch ((enum options) index) {
+	case TKWAIT_VARIABLE: {
+	    if (Tcl_TraceVar(interp, Tcl_GetString(objv[2]),
+		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		    WaitVariableProc, (ClientData) &done) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    done = 0;
+	    while (!done) {
+		Tcl_DoOneEvent(0);
+	    }
+	    Tcl_UntraceVar(interp, Tcl_GetString(objv[2]),
+		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		    WaitVariableProc, (ClientData) &done);
+	    break;
+	}
+	
+	case TKWAIT_VISIBILITY: {
+	    Tk_Window window;
+
+	    window = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
+	    if (window == NULL) {
+		return TCL_ERROR;
+	    }
+	    Tk_CreateEventHandler(window,
+		    VisibilityChangeMask|StructureNotifyMask,
+		    WaitVisibilityProc, (ClientData) &done);
+	    done = 0;
+	    while (!done) {
+		Tcl_DoOneEvent(0);
+	    }
+	    if (done != 1) {
+		/*
+		 * Note that we do not delete the event handler because it
+		 * was deleted automatically when the window was destroyed.
+		 */
+		
+		Tcl_ResetResult(interp);
+		Tcl_AppendResult(interp, "window \"", Tcl_GetString(objv[2]),
+			"\" was deleted before its visibility changed",
+			(char *) NULL);
+		return TCL_ERROR;
+	    }
+	    Tk_DeleteEventHandler(window,
+		    VisibilityChangeMask|StructureNotifyMask,
+		    WaitVisibilityProc, (ClientData) &done);
+	    break;
+	}
+	
+	case TKWAIT_WINDOW: {
+	    Tk_Window window;
+	    
+	    window = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
+	    if (window == NULL) {
+		return TCL_ERROR;
+	    }
+	    Tk_CreateEventHandler(window, StructureNotifyMask,
+		    WaitWindowProc, (ClientData) &done);
+	    done = 0;
+	    while (!done) {
+		Tcl_DoOneEvent(0);
+	    }
+	    /*
+	     * Note:  there's no need to delete the event handler.  It was
+	     * deleted automatically when the window was destroyed.
+	     */
+	    break;
+	}
     }
 
     /*
