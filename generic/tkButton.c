@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.17 2002/05/26 09:25:56 pspjuth Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.18 2002/06/17 10:54:29 drh Exp $
  */
 
 #include "tkButton.h"
@@ -310,6 +310,8 @@ static Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	DEF_BUTTON_INDICATOR, -1, Tk_Offset(TkButton, indicatorOn), 0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_BUTTON_JUSTIFY, -1, Tk_Offset(TkButton, justify), 0, 0, 0},
+    {TK_OPTION_RELIEF, "-offrelief", "offRelief", "OffRelief",
+	 DEF_BUTTON_RELIEF, -1, Tk_Offset(TkButton, offRelief), 0, 0, 0},
     {TK_OPTION_STRING, "-offvalue", "offValue", "Value",
 	DEF_BUTTON_OFF_VALUE, Tk_Offset(TkButton, offValuePtr), -1, 0, 0, 0},
     {TK_OPTION_STRING, "-onvalue", "onValue", "Value",
@@ -418,6 +420,8 @@ static Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_BUTTON_JUSTIFY, -1, Tk_Offset(TkButton, justify), 0, 0, 0},
+    {TK_OPTION_RELIEF, "-offrelief", "offRelief", "OffRelief",
+	 DEF_BUTTON_RELIEF, -1, Tk_Offset(TkButton, offRelief), 0, 0, 0},
     {TK_OPTION_RELIEF, "-overrelief", "overRelief", "OverRelief",
 	 DEF_BUTTON_OVER_RELIEF, -1, Tk_Offset(TkButton, overRelief),
 	 TK_OPTION_NULL_OK, 0, 0},

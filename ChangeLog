@@ -1,3 +1,15 @@
+2002-06-17  D. Richard Hipp  <drh@hwaci.com>
+
+	* doc/checkbutton.n:
+	* doc/radiobutton.n:
+	* generic/tkButton.c:
+	* generic/tkButton.h:
+	* mac/tkMacButton.c:
+	* tests/button.test:
+	* unix/tkUnixButton.c:
+	* win/tkWinButton.c: Implementation of TIP#82 - Added the
+	-offrelief option to checkbutton and radiobutton.
+
 2002-06-14  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* generic/tkWindow.c (Tk_DestroyWindow): Set the pathName
