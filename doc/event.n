@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: event.n,v 1.8 2004/06/18 21:18:37 dkf Exp $
+'\" RCS: @(#) $Id: event.n,v 1.9 2004/08/20 10:56:36 dkf Exp $
 '\" 
 .so man.macros
 .TH event n 8.3 Tk "Tk Built-In Commands"
@@ -196,7 +196,7 @@ Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
 events.  Corresponds to the \fB%X\fR substitution for binding scripts.
 .TP
 \fB\-rooty\fI coord\fR
-\fICoord\fR must be a screen distance;  it specifies th \fIy_root\fR
+\fICoord\fR must be a screen distance;  it specifies the \fIy_root\fR
 field for the event.
 Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBLeave\fR, and \fBMotion\fR
@@ -204,7 +204,7 @@ events.
 Corresponds to the \fB%Y\fR substitution for binding scripts.
 .TP
 \fB\-sendevent\fI boolean\fR
-\fBBoolean\fR must be a boolean value;  it specifies the \fIsend_event\fR
+\fIBoolean\fR must be a boolean value;  it specifies the \fIsend_event\fR
 field for the event.  Valid for all events.  Corresponds to the
 \fB%E\fR substitution for binding scripts.
 .TP
