@@ -2,7 +2,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.8 1999/08/10 23:16:42 redman Exp $
+# RCS: @(#) $Id: configure.in,v 1.9 1999/09/10 00:23:12 wart Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -139,5 +139,7 @@ AC_SUBST(EXESUFFIX)
 AC_SUBST(LIBRARIES)
 AC_SUBST(MAKE_LIB)
 AC_SUBST(MAKE_DLL)
+AC_SUBST(TK_XINCLUDES)
+AC_SUBST(XINCLUDES)
 
 AC_OUTPUT(Makefile tkConfig.sh)
