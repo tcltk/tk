@@ -1,3 +1,11 @@
+
+1998-12-11    === Tk 8.1b1 Release ===
+	
+1998-12-11    <stanton@GASPODE>
+
+	* generic/tkMain.c (Tk_Main): Fixed improper command line encoding
+	handling. 
+
 1998-12-08    <stanton@GASPODE>
 
 	* win/tkWinClipboard.c (TkSelGetSelection, TkWinClipboardRender):
