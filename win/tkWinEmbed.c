@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.10 2004/01/13 02:06:02 davygrvy Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.11 2004/12/17 14:17:54 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -44,8 +44,6 @@ typedef struct ThreadSpecificData {
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
-static void		CleanupContainerList _ANSI_ARGS_((
-    			    ClientData clientData));
 static void		ContainerEventProc _ANSI_ARGS_((ClientData clientData,
 			    XEvent *eventPtr));
 static void		EmbeddedEventProc _ANSI_ARGS_((
@@ -57,7 +55,7 @@ static void		EmbedWindowDeleted _ANSI_ARGS_((TkWindow *winPtr));
 /*
  *----------------------------------------------------------------------
  *
- * CleanupContainerList --
+ * TkWinCleanupContainerList --
  *
  *	Finalizes the list of containers.
  *
@@ -70,10 +68,7 @@ static void		EmbedWindowDeleted _ANSI_ARGS_((TkWindow *winPtr));
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
-static void
-CleanupContainerList(clientData)
-    ClientData clientData;
+void TkWinCleanupContainerList(void)
 {
     Container *nextPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
@@ -201,15 +196,6 @@ TkpUseWindow(interp, tkwin, string)
 
     Tk_CreateEventHandler(tkwin, StructureNotifyMask, EmbeddedEventProc,
 	    (ClientData) winPtr);
-
-    /*
-     * If this is the first container, register an exit handler so that
-     * things will get cleaned up at finalization.
-     */
-
-    if (tsdPtr->firstContainerPtr == (Container *) NULL) {
-        TkCreateExitHandler(CleanupContainerList, (ClientData) NULL);
-    }
     
     /*
      * Save information about the container and the embedded window
@@ -277,15 +263,6 @@ TkpMakeContainer(tkwin)
     Container *containerPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    /*
-     * If this is the first container, register an exit handler so that
-     * things will get cleaned up at finalization.
-     */
-
-    if (tsdPtr->firstContainerPtr == (Container *) NULL) {
-        TkCreateExitHandler(CleanupContainerList, (ClientData) NULL);
-    }
     
     /*
      * Register the window as a container so that, for example, we can
@@ -395,7 +372,7 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
     }
 
     switch (message) {
-      case TK_ATTACHWINDOW:
+	case TK_ATTACHWINDOW:
 	/* An embedded window (either from this application or from
 	 * another application) is trying to attach to this container.
 	 * We attach it only if this container is not yet containing any
@@ -406,9 +383,14 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	} else {
 	    return 0;
 	}
-
 	break;
-      case TK_GEOMETRYREQ:
+
+	case TK_DETACHWINDOW:
+	containerPtr->embeddedHWnd = NULL;
+	containerPtr->parentPtr->flags &= ~TK_BOTH_HALVES;
+	break;
+
+	case TK_GEOMETRYREQ:
 	EmbedGeometryRequest(containerPtr, (int) wParam, lParam);
 	break;
     }
@@ -492,9 +474,6 @@ ContainerEventProc(clientData, eventPtr)
     Tk_Window tkwin = (Tk_Window)containerPtr->parentPtr;
 
     if (eventPtr->type == ConfigureNotify) {
-	if (containerPtr->embeddedPtr == NULL) {
-	    return;
-	}
 	/* Resize the embedded window, if there is any */
 	if (containerPtr->embeddedHWnd) {
 	    SetWindowPos(containerPtr->embeddedHWnd, NULL,

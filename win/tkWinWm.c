@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.79 2004/10/29 22:28:31 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.80 2004/12/17 14:17:54 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -2190,7 +2190,13 @@ UpdateWrapper(winPtr)
     }
 
     wmPtr->flags &= ~WM_NEVER_MAPPED;
-    SendMessage(wmPtr->wrapper, TK_ATTACHWINDOW, (WPARAM) child, 0);
+    if (winPtr->flags & TK_EMBEDDED) {
+	if(SendMessage(wmPtr->wrapper, TK_ATTACHWINDOW, (WPARAM) child, 0))
+	{
+	    SendMessage(wmPtr->wrapper, TK_GEOMETRYREQ, 
+		Tk_ReqWidth((Tk_Window)winPtr), Tk_ReqHeight((Tk_Window)winPtr));
+	}
+    }
 
     /*
      * Force an initial transition from withdrawn to the real
@@ -2549,6 +2555,10 @@ TkWmDeadWindow(winPtr)
 	    DestroyWindow(wmPtr->wrapper);
 	} else {
 	    DestroyWindow(Tk_GetHWND(winPtr->window));
+	}
+    } else {
+	if (wmPtr->wrapper != NULL) {
+	    SendMessage(wmPtr->wrapper, TK_DETACHWINDOW, 0, 0);
 	}
     }
     if (wmPtr->iconPtr != NULL) {
@@ -5335,16 +5345,6 @@ TopLevelEventProc(clientData, eventPtr)
 		    (Tk_ErrorProc *) NULL, (ClientData) NULL);
 	    Tk_DestroyWindow((Tk_Window) winPtr);
 	    Tk_DeleteErrorHandler(handler);
-	}
-    }
-    else if (eventPtr->type == ConfigureNotify) {
-	WmInfo *wmPtr;
-	wmPtr = winPtr->wmInfoPtr;
-
-	if (winPtr->flags & TK_EMBEDDED) {
-	    Tk_Window tkwin = (Tk_Window)winPtr;
-	    SendMessage(wmPtr->wrapper, TK_GEOMETRYREQ, Tk_ReqWidth(tkwin),
-	        Tk_ReqHeight(tkwin));
 	}
     }
 }
