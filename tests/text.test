@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.25 2003/11/08 17:22:46 vincentdarley Exp $
+# RCS: @(#) $Id: text.test,v 1.26 2003/12/04 12:28:37 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2898,6 +2898,24 @@ test text-26.1 {bug fix - 624372, ControlUtfProc long lines} {
     pack [text .t -wrap none]
     .t insert end [string repeat "\1" 500]
 } {}
+
+test text-27.1 {tabs - must be positive and must be increasing} {
+    destroy .t
+    pack [text .t -wrap none]
+    list [catch {.t configure -tabs {0}} msg] $msg
+} {1 {tab stop "0" is not at a positive distance}}
+
+test text-27.2 {tabs - must be positive and must be increasing} {
+    destroy .t
+    pack [text .t -wrap none]
+    list [catch {.t configure -tabs {-5}} msg] $msg
+} {1 {tab stop "-5" is not at a positive distance}}
+
+test text-27.3 {tabs - must be positive and must be increasing} {
+    destroy .t
+    pack [text .t -wrap none]
+    list [catch {.t configure -tabs {10c 5c}} msg] $msg
+} {1 {tabs must be monotonically increasing, but "5c" is smaller than or equal to the previous tab}}
 
 deleteWindows
 option clear

@@ -3,7 +3,7 @@
 # This demonstration script creates a text widget with a bunch of
 # embedded windows.
 #
-# RCS: @(#) $Id: twind.tcl,v 1.4 2003/08/20 23:02:18 hobbs Exp $
+# RCS: @(#) $Id: twind.tcl,v 1.5 2003/12/04 12:28:37 vincentdarley Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -12,7 +12,7 @@ if {![info exists widgetDemo]} {
 set w .twind
 catch {destroy $w}
 toplevel $w
-wm title $w "Text Demonstration - Embedded Windows"
+wm title $w "Text Demonstration - Embedded Windows and Other Features"
 wm iconname $w "Embedded Windows"
 positionWindow $w
 
@@ -40,6 +40,12 @@ button $t.click -text "Click Here" -command "textWindPlot $t" \
 	-cursor top_left_arrow
 button $t.delete -text "Delete" -command "textWindDel $w" \
 	-cursor top_left_arrow
+
+$t insert end "A text widget can contain many different kinds of items, "
+$t insert end "both active and passive.  It can lay these out in various "
+$t insert end "ways, with wrapping, tabs, centering, etc.  In addition, "
+$t insert end "when the contents are too big for the window, smooth "
+$t insert end "scrolling in all directions is provided.\n\n"
 
 $t insert end "A text widget can contain other widgets embedded "
 $t insert end "it.  These are called \"embedded windows\", "
@@ -96,6 +102,63 @@ foreach color {AntiqueWhite3 Bisque1 Bisque2 Bisque3 Bisque4
     incr i
 }
 $t tag add buttons $t.default end
+
+button $t.bigB -text "Big borders" -command "textWindBigB $t" \
+  -cursor top_left_arrow
+button $t.smallB -text "Small borders" -command "textWindSmallB $t" \
+  -cursor top_left_arrow
+button $t.bigH -text "Big highlight" -command "textWindBigH $t" \
+  -cursor top_left_arrow
+button $t.smallH -text "Small highlight" -command "textWindSmallH $t" \
+  -cursor top_left_arrow
+button $t.bigP -text "Big pad" -command "textWindBigP $t" \
+  -cursor top_left_arrow
+button $t.smallP -text "Small pad" -command "textWindSmallP $t" \
+  -cursor top_left_arrow
+
+set text_normal(border) [$t cget -borderwidth]
+set text_normal(highlight) [$t cget -highlightthickness]
+set text_normal(pad) [$t cget -padx]
+
+$t insert end "\nYou can also change the usual border width and "
+$t insert end "highlightthickness and padding.\n"
+$t window create end -window $t.bigB
+$t window create end -window $t.smallB
+$t window create end -window $t.bigH
+$t window create end -window $t.smallH
+$t window create end -window $t.bigP
+$t window create end -window $t.smallP
+
+$t insert end "\n\nFinally, images fit comfortably in text widgets too:"
+
+$t image create end -image \
+  [image create bitmap -file [file join $tk_demoDirectory images face.bmp]]
+
+
+proc textWindBigB w {
+    $w configure -borderwidth 15 
+}
+
+proc textWindBigH w {
+    $w configure -highlightthickness 15
+}
+
+proc textWindBigP w {
+    $w configure -padx 15 -pady 15
+}
+
+proc textWindSmallB w {
+    $w configure -borderwidth $::text_normal(border)
+}
+
+proc textWindSmallH w {
+    $w configure -highlightthickness $::text_normal(highlight)
+}
+
+proc textWindSmallP w {
+    $w configure -padx $::text_normal(pad) -pady $::text_normal(pad)
+}
+
 
 proc textWindOn w {
     catch {destroy $w.scroll2}

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.10 2003/11/07 15:36:26 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.11 2003/12/04 12:28:37 vincentdarley Exp $
  */
 
 #include "tk.h"
@@ -711,9 +711,9 @@ EmbImageBboxProc(chunkPtr, index, y, lineHeight, baseline, xPtr, yPtr,
     int *xPtr, *yPtr;			/* Gets filled in with coords of
 					 * character's upper-left pixel. */
     int *widthPtr;			/* Gets filled in with width of
-					 * character, in pixels. */
+					 * image, in pixels. */
     int *heightPtr;			/* Gets filled in with height of
-					 * character, in pixels. */
+					 * image, in pixels. */
 {
     TkTextSegment *eiPtr = (TkTextSegment *) chunkPtr->clientData;
     Tk_Image image;

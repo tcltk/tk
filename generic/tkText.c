@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.45 2003/11/21 18:51:18 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.46 2003/12/04 12:28:37 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -1713,7 +1713,8 @@ TextWorldChanged(textPtr, mask)
                          * has changed */
 {
     Tk_FontMetrics fm;
-
+    int border;
+    
     textPtr->charWidth = Tk_TextWidth(textPtr->tkfont, "0", 1);
     if (textPtr->charWidth <= 0) {
 	textPtr->charWidth = 1;
@@ -1724,14 +1725,17 @@ TextWorldChanged(textPtr, mask)
     if (textPtr->charHeight <= 0) {
 	textPtr->charHeight = 1;
     }
+    border = textPtr->borderWidth + textPtr->highlightWidth;
     Tk_GeometryRequest(textPtr->tkwin,
-	    textPtr->width * textPtr->charWidth + 2*textPtr->borderWidth
-		    + 2*textPtr->padX + 2*textPtr->highlightWidth,
+	    textPtr->width * textPtr->charWidth 
+		    + 2*textPtr->padX + 2*border,
 	    textPtr->height * (fm.linespace + textPtr->spacing1
-		    + textPtr->spacing3) + 2*textPtr->borderWidth
-		    + 2*textPtr->padY + 2*textPtr->highlightWidth);
-    Tk_SetInternalBorder(textPtr->tkwin,
-	    textPtr->borderWidth + textPtr->highlightWidth);
+		    + textPtr->spacing3) 
+		    + 2*textPtr->padY + 2*border);
+
+    Tk_SetInternalBorderEx(textPtr->tkwin, 
+			   border + textPtr->padX, border + textPtr->padX,
+			   border + textPtr->padY, border + textPtr->padY);
     if (textPtr->setGrid) {
 	Tk_SetGrid(textPtr->tkwin, textPtr->width, textPtr->height,
 		textPtr->charWidth, textPtr->charHeight);
@@ -3352,6 +3356,13 @@ TkTextGetTabs(interp, tkwin, stringPtr)
 		!= TCL_OK) {
 	    goto error;
 	}
+
+	if (tabPtr->location <= 0) {
+	    Tcl_AppendResult(interp, 
+		 "tab stop \"", Tcl_GetString(objv[i]),
+		 "\" is not at a positive distance", NULL);
+	    goto error;
+	}
 	
 	prevStop = lastStop;
 	if (Tk_GetMMFromObj(interp, tkwin, objv[i], &lastStop) != TCL_OK) {
@@ -3359,6 +3370,19 @@ TkTextGetTabs(interp, tkwin, stringPtr)
 	}
 	lastStop *= WidthOfScreen(Tk_Screen(tkwin));
 	lastStop /= WidthMMOfScreen(Tk_Screen(tkwin));
+	
+	if (i > 0 && (tabPtr->location <= (tabPtr-1)->location)) {
+	    /* 
+	     * This tab is actually to the left of the previous
+	     * one, which is illegal.
+	     */
+	    Tcl_AppendResult(interp, 
+		 "tabs must be monotonically increasing, but \"",
+		 Tcl_GetString(objv[i]), 
+		 "\" is smaller than or equal to the previous tab",
+		 NULL);
+	    goto error;
+	}
 	
 	tabArrayPtr->numTabs++;
 
@@ -3388,7 +3412,9 @@ TkTextGetTabs(interp, tkwin, stringPtr)
     /*
      * For when we need to interpolate tab stops, store
      * these two so we know the tab stop size to very
-     * high precision.
+     * high precision.  With the above checks, we can
+     * guarantee that tabIncrement is strictly positive
+     * here.
      */
     tabArrayPtr->lastTab = lastStop;
     tabArrayPtr->tabIncrement = lastStop - prevStop;

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.35 2003/11/21 18:51:18 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.36 2003/12/04 12:28:37 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -418,7 +418,7 @@ static DLine *		LayoutDLine _ANSI_ARGS_((TkText *textPtr,
 			    CONST TkTextIndex *indexPtr));
 static int		MeasureChars _ANSI_ARGS_((Tk_Font tkfont,
 			    CONST char *source, int maxBytes, int startX,
-			    int maxX, int tabOrigin, int *nextXPtr));
+			    int maxX, int *nextXPtr));
 static void		MeasureUp _ANSI_ARGS_((TkText *textPtr,
 			    CONST TkTextIndex *srcPtr, int distance,
 			    TkTextIndex *dstPtr, int *overlap));
@@ -5285,14 +5285,13 @@ GetXView(interp, textPtr, report)
     dInfoPtr->xScrollFirst = first;
     dInfoPtr->xScrollLast = last;
     if (textPtr->xScrollCmd != NULL) {
-	listObj = Tcl_NewStringObj(textPtr->xScrollCmd, -1);
-	code = Tcl_ListObjAppendElement(interp, listObj, 
-					Tcl_NewDoubleObj(first));
-	if (code == TCL_OK) {
-	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewDoubleObj(last));
-	    code = Tcl_EvalObjEx(interp, listObj, 
-				 TCL_EVAL_DIRECT | TCL_EVAL_GLOBAL);
-	}
+	char buf1[TCL_DOUBLE_SPACE+1];
+	char buf2[TCL_DOUBLE_SPACE+1];
+	buf1[0] = ' ';
+	buf2[0] = ' ';
+	Tcl_PrintDouble(NULL, first, buf1+1);
+	Tcl_PrintDouble(NULL, last, buf2+1);
+	code = Tcl_VarEval(interp, textPtr->xScrollCmd, buf1, buf2, NULL);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
 		"\n    (horizontal scrolling command executed by text)");
@@ -5543,14 +5542,13 @@ GetYView(interp, textPtr, report)
     dInfoPtr->yScrollFirst = first;
     dInfoPtr->yScrollLast = last;
     if (textPtr->yScrollCmd != NULL) {
-        listObj = Tcl_NewStringObj(textPtr->yScrollCmd, -1);
-	code = Tcl_ListObjAppendElement(interp, listObj, 
-		Tcl_NewDoubleObj(first));
-	if (code == TCL_OK) {
-	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewDoubleObj(last));
-	    code = Tcl_EvalObjEx(interp, listObj, 
-		    TCL_EVAL_DIRECT | TCL_EVAL_GLOBAL);
-	}
+	char buf1[TCL_DOUBLE_SPACE+1];
+	char buf2[TCL_DOUBLE_SPACE+1];
+	buf1[0] = ' ';
+	buf2[0] = ' ';
+	Tcl_PrintDouble(NULL, first, buf1+1);
+	Tcl_PrintDouble(NULL, last, buf2+1);
+	code = Tcl_VarEval(interp, textPtr->yScrollCmd, buf1, buf2, NULL);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (vertical scrolling command executed by text)");
@@ -6228,14 +6226,14 @@ TkTextCharLayoutProc(textPtr, indexPtr, segPtr, byteOffset, maxX, maxBytes,
 
     p = segPtr->body.chars + byteOffset;
     tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
-    bytesThatFit = MeasureChars(tkfont, p, maxBytes, chunkPtr->x, maxX, 0,
-	    &nextX);
+    bytesThatFit = MeasureChars(tkfont, p, maxBytes, chunkPtr->x, maxX,
+				&nextX);
     if (bytesThatFit < maxBytes) {
 	if ((bytesThatFit == 0) && noCharsYet) {
 	    Tcl_UniChar ch;
 	    
 	    bytesThatFit = MeasureChars(tkfont, p, Tcl_UtfToUniChar(p, &ch),
-		    chunkPtr->x, -1, 0, &nextX);
+		    chunkPtr->x, -1, &nextX);
 	}
 	if ((nextX < maxX) && ((p[bytesThatFit] == ' ')
 		|| (p[bytesThatFit] == '\t'))) {
@@ -6382,7 +6380,7 @@ CharDisplayProc(chunkPtr, x, y, height, baseline, display, dst, screenY)
     offsetBytes = 0;
     if (x < 0) {
 	offsetBytes = MeasureChars(sValuePtr->tkfont, ciPtr->chars,
-		ciPtr->numBytes, x, 0, x - chunkPtr->x, &offsetX);
+		ciPtr->numBytes, x, 0, &offsetX);
     }
 
     /*
@@ -6475,7 +6473,7 @@ CharMeasureProc(chunkPtr, x)
     int endX;
 
     return MeasureChars(chunkPtr->stylePtr->sValuePtr->tkfont, ciPtr->chars,
-	    chunkPtr->numBytes - 1, chunkPtr->x, x, 0, &endX);
+	    chunkPtr->numBytes - 1, chunkPtr->x, x, &endX);
 						/* CHAR OFFSET */
 }
 
@@ -6527,7 +6525,7 @@ CharBboxProc(chunkPtr, byteIndex, y, lineHeight, baseline, xPtr, yPtr,
 
     maxX = chunkPtr->width + chunkPtr->x;
     MeasureChars(chunkPtr->stylePtr->sValuePtr->tkfont, ciPtr->chars,
-	    byteIndex, chunkPtr->x, -1, 0, xPtr);
+	    byteIndex, chunkPtr->x, -1, xPtr);
 
     if (byteIndex == ciPtr->numBytes) {
 	/*
@@ -6547,7 +6545,7 @@ CharBboxProc(chunkPtr, byteIndex, y, lineHeight, baseline, xPtr, yPtr,
 	*widthPtr = maxX - *xPtr;
     } else {
 	MeasureChars(chunkPtr->stylePtr->sValuePtr->tkfont, 
-		ciPtr->chars + byteIndex, 1, *xPtr, -1, 0, widthPtr);
+		ciPtr->chars + byteIndex, 1, *xPtr, -1, widthPtr);
 	if (*widthPtr > maxX) {
 	    *widthPtr = maxX - *xPtr;
 	} else {
@@ -6698,7 +6696,7 @@ AdjustForTab(textPtr, tabArrayPtr, index, chunkPtr)
 
 	ciPtr = (CharInfo *) decimalChunkPtr->clientData;
 	MeasureChars(decimalChunkPtr->stylePtr->sValuePtr->tkfont,
-		ciPtr->chars, decimal, decimalChunkPtr->x, -1, 0, &curX);
+		ciPtr->chars, decimal, decimalChunkPtr->x, -1, &curX);
 	desired = tabX - (curX - x);
 	goto update;
     } else {
@@ -6723,7 +6721,7 @@ AdjustForTab(textPtr, tabArrayPtr, index, chunkPtr)
 
     update:
     delta = desired - x;
-    MeasureChars(textPtr->tkfont, " ", 1, 0, -1, 0, &spaceWidth);
+    MeasureChars(textPtr->tkfont, " ", 1, 0, -1, &spaceWidth);
     if (delta < spaceWidth) {
 	delta = spaceWidth;
     }
@@ -6852,7 +6850,7 @@ SizeOfTab(textPtr, tabArrayPtr, indexPtr, x, maxX)
     }
 
     done:
-    MeasureChars(textPtr->tkfont, " ", 1, 0, -1, 0, &spaceWidth);
+    MeasureChars(textPtr->tkfont, " ", 1, 0, -1, &spaceWidth);
     if (result < spaceWidth) {
 	result = spaceWidth;
     }
@@ -6911,15 +6909,14 @@ NextTabStop(tkfont, x, tabOrigin)
  *
  *	Determine the number of characters from the string that will fit
  *	in the given horizontal span.  The measurement is done under the
- *	assumption that Tk_DrawTextLayout will be used to actually display
+ *	assumption that Tk_DrawChars will be used to actually display
  *	the characters.
  *
  *	If tabs are encountered in the string, they will be expanded
- *	to the next tab stop, unless the TK_IGNORE_TABS flag is specified.
+ *	to the next tab stop.
  *
  *	If a newline is encountered in the string, the line will be
- *	broken at that point, unless the TK_NEWSLINES_NOT_SPECIAL flag
- *	is specified.  
+ *	broken at that point.
  *
  * Results:
  *	The return value is the number of bytes from source
@@ -6935,7 +6932,7 @@ NextTabStop(tkfont, x, tabOrigin)
  */
 
 static int
-MeasureChars(tkfont, source, maxBytes, startX, maxX, tabOrigin, nextXPtr)
+MeasureChars(tkfont, source, maxBytes, startX, maxX, nextXPtr)
     Tk_Font tkfont;		/* Font in which to draw characters. */
     CONST char *source;		/* Characters to be displayed.  Need not
 				 * be NULL-terminated. */
@@ -6945,8 +6942,6 @@ MeasureChars(tkfont, source, maxBytes, startX, maxX, tabOrigin, nextXPtr)
 				 * be drawn. */
     int maxX;			/* Don't consider any character that would
 				 * cross this x-position. */
-    int tabOrigin;		/* X-location that serves as "origin" for
-				 * tab stops. */
     int *nextXPtr;		/* Return x-position of terminating
 				 * character here. */
 {
@@ -6979,8 +6974,8 @@ MeasureChars(tkfont, source, maxBytes, startX, maxX, tabOrigin, nextXPtr)
 	if ((maxX >= 0) && (curX >= maxX)) {
 	    break;
 	}
-	start += Tk_MeasureChars(tkfont, start, special - start, maxX - curX,
-		0, &width);
+	start += Tk_MeasureChars(tkfont, start, special - start, 
+				 maxX - curX, 0, &width);
 	curX += width;
 	if (start < special) {
 	    /*

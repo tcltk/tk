@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.10 2003/11/15 02:33:51 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.11 2003/12/04 12:28:37 vincentdarley Exp $
  */
 
 #include "tk.h"
@@ -997,9 +997,9 @@ EmbWinBboxProc(chunkPtr, index, y, lineHeight, baseline, xPtr, yPtr,
     int *xPtr, *yPtr;			/* Gets filled in with coords of
 					 * character's upper-left pixel. */
     int *widthPtr;			/* Gets filled in with width of
-					 * character, in pixels. */
+					 * window, in pixels. */
     int *heightPtr;			/* Gets filled in with height of
-					 * character, in pixels. */
+					 * window, in pixels. */
 {
     TkTextSegment *ewPtr = (TkTextSegment *) chunkPtr->clientData;
     Tk_Window tkwin;

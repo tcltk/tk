@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.20 2003/11/05 13:31:12 dkf Exp $
+# RCS: @(#) $Id: widget,v 1.21 2003/12/04 12:28:37 vincentdarley Exp $
 
 package require Tcl	8.4
 package require Tk	8.4
@@ -298,7 +298,7 @@ addDemoSection "Text" {
     text	"Basic editable text"
     style	"Text display styles"
     bind	"Hypertext (tag bindings)"
-    twind	"A text widget with embedded windows"
+    twind	"A text widget with embedded windows and other features"
     search	"A search tool built with a text widget"
 }
 addDemoSection "Canvases" {
