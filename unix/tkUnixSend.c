@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.2 1998/09/14 18:23:58 stanton Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.3 1999/02/04 21:00:36 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -255,7 +255,7 @@ static int		ValidateName _ANSI_ARGS_((TkDisplay *dispPtr,
  *	If "lock" is set then the server will be locked.  It is the
  *	caller's responsibility to call RegClose when finished with
  *	the registry, so that we can write back the registry if
- *	neeeded, unlock the server if needed, and free memory.
+ *	needed, unlock the server if needed, and free memory.
  *
  *----------------------------------------------------------------------
  */
@@ -781,6 +781,7 @@ Tk_SetAppName(tkwin, name)
 	    riPtr->interp = interp;
 	    riPtr->dispPtr = winPtr->dispPtr;
 	    riPtr->nextPtr = registry;
+	    riPtr->name = NULL;
 	    registry = riPtr;
 	    Tcl_CreateCommand(interp, "send", Tk_SendCmd, (ClientData) riPtr,
 		    DeleteProc);
@@ -795,8 +796,10 @@ Tk_SetAppName(tkwin, name)
 	     * the name registry.
 	     */
 
-	    RegDeleteName(regPtr, riPtr->name);
-	    ckfree(riPtr->name);
+	    if (riPtr->name) {
+		RegDeleteName(regPtr, riPtr->name);
+		ckfree(riPtr->name);
+	    }
 	    break;
 	}
     }
