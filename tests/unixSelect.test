@@ -9,17 +9,16 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: unixSelect.test,v 1.2 1999/07/09 02:10:07 stanton Exp $
+# RCS: @(#) $Id: unixSelect.test,v 1.3 2002/07/12 13:41:00 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-if {$tcl_platform(platform) != "unix"} {
-    puts "skipping: Unix only tests..."
-    ::tcltest::cleanupTests
-    return
-}
+package require tcltest 2.1
+namespace import -force tcltest::test
+namespace import -force tcltest::testsDirectory
+namespace import -force tcltest::configure
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
+eval configure $argv
 
 eval destroy [winfo child .]
 

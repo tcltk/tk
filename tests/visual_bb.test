@@ -6,11 +6,18 @@
 # at the window to make sure it appears as expected.  Individual tests
 # are kept in separate ".tcl" files in this directory.
 #
-# RCS: @(#) $Id: visual_bb.test,v 1.4 2002/07/11 13:01:31 dkf Exp $
+# RCS: @(#) $Id: visual_bb.test,v 1.5 2002/07/12 13:41:01 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::test
+namespace import -force tcltest::testConstraint
+namespace import -force tcltest::testsDirectory
+namespace import -force tcltest::cleanupTests
+namespace import -force tcltest::configure
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
+eval configure $argv
 
 set auto_path ". $auto_path"
 wm title . "Visual Tests for Tk"
@@ -23,7 +30,7 @@ proc runTest {file} {
     global testNum
 
     test "2.$testNum" "testing $file" {userInteraction} {
-	uplevel \#0 source [file join $::tcltest::testsDir $file]
+	uplevel \#0 source [file join [testsDirectory] $file]
 	concat ""
     } {}
     incr testNum
@@ -56,7 +63,7 @@ test 1.1 "running visual tests" {userInteraction} {
 
     menubutton .menu.file -text "File" -menu .menu.file.m
     menu .menu.file.m
-    .menu.file.m add command -label "Quit" -command ::tcltest::cleanupTests
+    .menu.file.m add command -label "Quit" -command cleanupTests
     
     menubutton .menu.group1 -text "Group 1" -menu .menu.group1.m
     menu .menu.group1.m
@@ -79,7 +86,7 @@ test 1.1 "running visual tests" {userInteraction} {
     .menu.ps.m add command -label "Bitmaps" \
 	    -command {runTest canvPsBmap.tcl}
     .menu.ps.m add command -label "Images" \
-	    -command {source canvPsImg.tcl}
+	    -command {runTest canvPsImg.tcl}
     .menu.ps.m add command -label "Arcs" \
 	    -command {runTest canvPsArc.tcl}
     
@@ -102,6 +109,6 @@ test 1.1 "running visual tests" {userInteraction} {
     concat ""
 } {}
 
-if {!$::tcltest::testConfig(userInteraction)} {
-    ::tcltest::cleanupTests
+if {![testConstraint userInteraction]} {
+    cleanupTests
 }

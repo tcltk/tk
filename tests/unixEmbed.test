@@ -6,17 +6,17 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixEmbed.test,v 1.8 2001/03/28 17:27:10 dgp Exp $
+# RCS: @(#) $Id: unixEmbed.test,v 1.9 2002/07/12 13:40:59 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-if {$tcl_platform(platform) != "unix"} {
-    puts "skipping: Unix only tests..."
-    ::tcltest::cleanupTests
-    return
-}
+package require tcltest 2.1
+namespace import -force tcltest::test
+namespace import -force tcltest::testConstraint
+namespace import -force tcltest::testsDirectory
+namespace import -force tcltest::configure
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
+eval configure $argv
 
 eval destroy [winfo children .]
 wm geometry . {}
@@ -65,15 +65,15 @@ proc colorsFree {w {red 31} {green 245} {blue 192}} {
 	    && ([lindex $vals 2]/256 == $blue)
 }
 
-test unixEmbed-1.1 {TkpUseWindow procedure, bad window identifier} {
+test unixEmbed-1.1 {TkpUseWindow procedure, bad window identifier} unix {
     catch {destroy .t}
     list [catch {toplevel .t -use xyz} msg] $msg
 } {1 {expected integer but got "xyz"}}
-test unixEmbed-1.2 {TkpUseWindow procedure, bad window identifier} {
+test unixEmbed-1.2 {TkpUseWindow procedure, bad window identifier} unix {
     catch {destroy .t}
     list [catch {toplevel .t -use 47} msg] $msg
 } {1 {couldn't create child of window "47"}}
-test unixEmbed-1.3 {TkpUseWindow procedure, inheriting colormap} {nonPortable} {
+test unixEmbed-1.3 {TkpUseWindow procedure, inheriting colormap} {unix nonPortable} {
     catch {destroy .t}
     catch {destroy .x}
     toplevel .t -colormap new
@@ -85,7 +85,7 @@ test unixEmbed-1.3 {TkpUseWindow procedure, inheriting colormap} {nonPortable} {
     destroy .t
     set result
 } {0}
-test unixEmbed-1.4 {TkpUseWindow procedure, inheriting colormap} {nonPortable} {
+test unixEmbed-1.4 {TkpUseWindow procedure, inheriting colormap} {unix nonPortable} {
     catch {destroy .t}
     catch {destroy .t2}
     catch {destroy .x}
@@ -98,15 +98,9 @@ test unixEmbed-1.4 {TkpUseWindow procedure, inheriting colormap} {nonPortable} {
     set result
 } {1}
 
-if {[string compare testembed [info commands testembed]] != 0} {
-    puts "This application hasn't been compiled with the testembed command,"
-    puts "therefore I am skipping all of these tests."
-    cleanupbg
-    ::tcltest::cleanupTests
-    return
-}
+testConstraint testembed [llength [info commands testembed]]
 
-test unixEmbed-1.5 {TkpUseWindow procedure, creating Container records} {
+test unixEmbed-1.5 {TkpUseWindow procedure, creating Container records} {unix testembed} {
     eval destroy [winfo child .]
     frame .f1 -container 1 -width 200 -height 50
     frame .f2 -container 1 -width 200 -height 50
@@ -118,7 +112,7 @@ test unixEmbed-1.5 {TkpUseWindow procedure, creating Container records} {
 	list [testembed] [expr [lindex [lindex [testembed all] 0] 0] - $w]
     }
 } {{{XXX {} {} .t}} 0}
-test unixEmbed-1.6 {TkpUseWindow procedure, creating Container records} {
+test unixEmbed-1.6 {TkpUseWindow procedure, creating Container records} {unix testembed} {
     eval destroy [winfo child .]
     frame .f1 -container 1 -width 200 -height 50
     frame .f2 -container 1 -width 200 -height 50
@@ -132,7 +126,7 @@ test unixEmbed-1.6 {TkpUseWindow procedure, creating Container records} {
 	testembed
     }
 } {{XXX {} {} .t2} {XXX {} {} .t1}}
-test unixEmbed-1.7 {TkpUseWindow procedure, container and embedded in same app} {
+test unixEmbed-1.7 {TkpUseWindow procedure, container and embedded in same app} {unix testembed} {
     eval destroy [winfo child .]
     frame .f1 -container 1 -width 200 -height 50
     frame .f2 -container 1 -width 200 -height 50
@@ -145,7 +139,7 @@ test unixEmbed-1.7 {TkpUseWindow procedure, container and embedded in same app} 
 # Can't think of any way to test the procedures TkpMakeWindow,
 # TkpMakeContainer, or EmbedErrorProc.
 
-test unixEmbed-2.1 {EmbeddedEventProc procedure} {
+test unixEmbed-2.1 {EmbeddedEventProc procedure} {unix testembed} {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -163,7 +157,7 @@ test unixEmbed-2.1 {EmbeddedEventProc procedure} {
 	testembed
     }
 } {}
-test unixEmbed-2.2 {EmbeddedEventProc procedure} {
+test unixEmbed-2.2 {EmbeddedEventProc procedure} {unix testembed} {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -178,7 +172,7 @@ test unixEmbed-2.2 {EmbeddedEventProc procedure} {
 	testembed
     }
 } {}
-test unixEmbed-2.3 {EmbeddedEventProc procedure} {
+test unixEmbed-2.3 {EmbeddedEventProc procedure} {unix testembed} {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -189,7 +183,7 @@ test unixEmbed-2.3 {EmbeddedEventProc procedure} {
     destroy .f1
     testembed
 } {}
-test unixEmbed-2.4 {EmbeddedEventProc procedure} {
+test unixEmbed-2.4 {EmbeddedEventProc procedure} {unix testembed} {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -204,7 +198,7 @@ test unixEmbed-2.4 {EmbeddedEventProc procedure} {
 } {{{XXX .f1 {} {}}} {}}
 
 test unixEmbed-3.1 {ContainerEventProc procedure, detect creation} \
-	{nonPortable} {
+	{unix testembed nonPortable} {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -219,7 +213,7 @@ test unixEmbed-3.1 {ContainerEventProc procedure, detect creation} \
     }
     list $x [testembed]
 } {{{XXX .f1 {} {}}} {{XXX .f1 XXX {}}}}
-test unixEmbed-3.2 {ContainerEventProc procedure, set size on creation} {
+test unixEmbed-3.2 {ContainerEventProc procedure, set size on creation} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -229,7 +223,7 @@ test unixEmbed-3.2 {ContainerEventProc procedure, set size on creation} {
     update
     wm geometry .t2
 } {200x200+0+0}
-test unixEmbed-3.2 {ContainerEventProc procedure, disallow position changes} {
+test unixEmbed-3.2 {ContainerEventProc procedure, disallow position changes} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -247,7 +241,7 @@ test unixEmbed-3.2 {ContainerEventProc procedure, disallow position changes} {
 	wm geometry .t1
     }
 } {200x200+0+0}
-test unixEmbed-3.3 {ContainerEventProc procedure, disallow position changes} {
+test unixEmbed-3.3 {ContainerEventProc procedure, disallow position changes} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -265,7 +259,7 @@ test unixEmbed-3.3 {ContainerEventProc procedure, disallow position changes} {
 	wm geometry .t1
     }
 } {300x100+0+0}
-test unixEmbed-3.4 {ContainerEventProc procedure, geometry requests} {
+test unixEmbed-3.4 {ContainerEventProc procedure, geometry requests} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -283,7 +277,7 @@ test unixEmbed-3.4 {ContainerEventProc procedure, geometry requests} {
     update
     list [winfo width .f1] [winfo height .f1] [dobg {wm geometry .t1}]
 } {300 80 300x80+0+0}
-test unixEmbed-3.5 {ContainerEventProc procedure, map requests} {
+test unixEmbed-3.5 {ContainerEventProc procedure, map requests} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -303,7 +297,7 @@ test unixEmbed-3.5 {ContainerEventProc procedure, map requests} {
 	set x
     }
 } {mapped}
-test unixEmbed-3.6 {ContainerEventProc procedure, destroy events} {
+test unixEmbed-3.6 {ContainerEventProc procedure, destroy events} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -324,7 +318,7 @@ test unixEmbed-3.6 {ContainerEventProc procedure, destroy events} {
     list $x [winfo exists .f1]
 } {dead 0}
 
-test unixEmbed-4.1 {EmbedStructureProc procedure, configure events} {
+test unixEmbed-4.1 {EmbedStructureProc procedure, configure events} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -344,7 +338,7 @@ test unixEmbed-4.1 {EmbedStructureProc procedure, configure events} {
 	winfo geometry .t1
     }
 } {180x100+0+0}
-test unixEmbed-4.2 {EmbedStructureProc procedure, destroy events} {
+test unixEmbed-4.2 {EmbedStructureProc procedure, destroy events} {unix testembed} {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -361,7 +355,7 @@ test unixEmbed-4.2 {EmbedStructureProc procedure, destroy events} {
     list $x [testembed]
 } {{{XXX .f1 XXX {}}} {}}
 
-test unixEmbed-5.1 {EmbedFocusProc procedure, FocusIn events} {
+test unixEmbed-5.1 {EmbedFocusProc procedure, FocusIn events} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -379,7 +373,7 @@ test unixEmbed-5.1 {EmbedFocusProc procedure, FocusIn events} {
     update
     dobg {set x}
 } {{focus in .t1}}
-test unixEmbed-5.2 {EmbedFocusProc procedure, focusing on dead window} {
+test unixEmbed-5.2 {EmbedFocusProc procedure, focusing on dead window} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -398,7 +392,7 @@ test unixEmbed-5.2 {EmbedFocusProc procedure, focusing on dead window} {
     focus -force .f1
     update
 } {}
-test unixEmbed-5.3 {EmbedFocusProc procedure, FocusOut events} {
+test unixEmbed-5.3 {EmbedFocusProc procedure, FocusOut events} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -420,7 +414,7 @@ test unixEmbed-5.3 {EmbedFocusProc procedure, FocusOut events} {
     list $x [dobg {update; set x}]
 } {{{focus in .t1}} {{focus in .t1} {focus out .t1}}}
 
-test unixEmbed-6.1 {EmbedGeometryRequest procedure, window changes size} {
+test unixEmbed-6.1 {EmbedGeometryRequest procedure, window changes size} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -440,7 +434,7 @@ test unixEmbed-6.1 {EmbedGeometryRequest procedure, window changes size} {
 	list $x [winfo geom .t1]
     }
 } {{{configure .t1 300 120}} 300x120+0+0}
-test unixEmbed-6.2 {EmbedGeometryRequest procedure, window changes size} {
+test unixEmbed-6.2 {EmbedGeometryRequest procedure, window changes size} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -464,7 +458,7 @@ test unixEmbed-6.2 {EmbedGeometryRequest procedure, window changes size} {
 
 # Can't think up any tests for TkpGetOtherWindow procedure.
 
-test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} {
+test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -489,7 +483,7 @@ test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} {
     bind . <KeyPress> {}
     list $x $y
 } {{{key a 1}} {}}
-test unixEmbed-7.2 {TkpRedirectKeyEvent procedure, don't forward keystroke width} {
+test unixEmbed-7.2 {TkpRedirectKeyEvent procedure, don't forward keystroke width} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -517,7 +511,7 @@ test unixEmbed-7.2 {TkpRedirectKeyEvent procedure, don't forward keystroke width
     list $x $y
 } {{} {{key b}}}
 
-test unixEmbed-8.1 {TkpClaimFocus procedure} {
+test unixEmbed-8.1 {TkpClaimFocus procedure} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -540,7 +534,7 @@ test unixEmbed-8.1 {TkpClaimFocus procedure} {
 	lappend x [focus]
     }] [focus]
 } {{{} .t1} .f1}
-test unixEmbed-8.2 {TkpClaimFocus procedure} {
+test unixEmbed-8.2 {TkpClaimFocus procedure} unix {
     catch {interp delete child}
     foreach w [winfo child .] {
 	catch {destroy $w}
@@ -565,7 +559,7 @@ test unixEmbed-8.2 {TkpClaimFocus procedure} {
 } {{{} .} .f1}
 catch {interp delete child}
 
-test unixEmbed-9.1 {EmbedWindowDeleted procedure, check parentPtr} {
+test unixEmbed-9.1 {EmbedWindowDeleted procedure, check parentPtr} {unix testembed} {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -582,7 +576,7 @@ test unixEmbed-9.1 {EmbedWindowDeleted procedure, check parentPtr} {
     }
     set x
 } {{{XXX .f4 {} {}} {XXX .f3 {} {}} {XXX .f2 {} {}} {XXX .f1 {} {}}} {{XXX .f4 {} {}} {XXX .f2 {} {}} {XXX .f1 {} {}}} {{XXX .f2 {} {}} {XXX .f1 {} {}}} {{XXX .f2 {} {}}} {}}
-test unixEmbed-9.2 {EmbedWindowDeleted procedure, check embeddedPtr} {
+test unixEmbed-9.2 {EmbedWindowDeleted procedure, check embeddedPtr} {unix testembed} {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -599,7 +593,7 @@ test unixEmbed-9.2 {EmbedWindowDeleted procedure, check embeddedPtr} {
     }
 } {{{XXX {} {} .t1}} {}}
 
-test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} {
+test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }
@@ -611,7 +605,7 @@ test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} {
     update
     wm geometry .t1
 } {150x80+0+0}
-test unixEmbed-10.2 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} {
+test unixEmbed-10.2 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} unix {
     foreach w [winfo child .] {
 	catch {destroy $w}
     }

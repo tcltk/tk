@@ -6,11 +6,12 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winfo.test,v 1.6 2002/06/14 07:17:53 mdejong Exp $
+# RCS: @(#) $Id: winfo.test,v 1.7 2002/07/12 13:41:01 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::test
+namespace import -force tcltest::testConstraint
+eval tcltest::configure $argv
 
 foreach i [winfo children .] {
     catch {destroy $i}
@@ -19,8 +20,7 @@ wm geometry . {}
 raise .
 
 # Some tests require the testwrapper command
-set ::tcltest::testConfig(testwrapper) \
-	[expr {[info commands testwrapper] != {}}]
+testConstraint testwrapper [llength [info commands testwrapper]]
 
 # eatColors --
 # Creates a toplevel window and allocates enough colors in it to
@@ -92,8 +92,8 @@ test winfo-2.7 {"winfo atom" command} {
 } SECONDARY
 
 # Some tests require the "pseudocolor" visual class.
-set ::tcltest::testConfig(pseudocolor) \
-	[expr {([winfo depth .] == 8) && ([winfo visual .] == "pseudocolor")}]
+testConstraint pseudocolor [expr { ([winfo depth .] == 8) 
+				&& ([winfo visual .] == "pseudocolor")}]
 
 test winfo-3.1 {"winfo colormapfull" command} {pseudocolor} {
     list [catch {winfo colormapfull} msg] $msg

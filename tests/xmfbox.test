@@ -7,13 +7,13 @@
 #
 # Copyright (c) 1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
+# Contributions from Don Porter, NIST, 2002.  (not subject to US copyright)
 # All rights reserved.
 #
-# RCS: @(#) $Id: xmfbox.test,v 1.5 2001/08/01 16:21:12 dgp Exp $
+# RCS: @(#) $Id: xmfbox.test,v 1.6 2002/07/12 13:41:01 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::test
 
 set testPWD [pwd]
 eval destroy [winfo children .]
@@ -124,7 +124,7 @@ test xmfbox-2.5 {tk::MotifFDialog_BrowseFList, ~ in file names} {unixOnly} {
     $::tk::dialog::file::foo(sEnt) get
 } $testPWD/~nosuchuser1
 
-test xmfbox-2.5 {tk::MotifFDialog_ActivateFList, ~ in file names} {unixOnly} {
+test xmfbox-2.6 {tk::MotifFDialog_ActivateFList, ~ in file names} {unixOnly} {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tk::MotifFDialog_Create foo open {}]
