@@ -1,4 +1,12 @@
-2003-10-10  Jeff Hobbs  <jeffh@ActiveState.com>
+2003-10-12  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/listbox.test (13.3): correct result size
+	(4.7): correct test for possible window drift [Bug #701931] (dgp)
+
+	* unix/mkLinks:
+	* doc/GetHWND.3: add Tk_AttachHWND docs [Bug #220803]
+
+2003-10-10  Jeff Hobbs	<jeffh@ActiveState.com>
 
 	* mac/tkMacButton.c (TkpDisplayButton):
 	* macosx/tkMacOSXButton.c (TkpDisplayButton):
@@ -10,29 +18,29 @@
 	* generic/tkObj.c (TkRegisterObjTypes): Register the type of text
 	indexes.
 
-2003-10-09  Jeff Hobbs  <jeffh@ActiveState.com>
+2003-10-09  Jeff Hobbs	<jeffh@ActiveState.com>
 
 	* win/tkWinButton.c (TkpDisplayButton): correct imageYOffset for
 	buttons with just images.
 
-2003-10-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
+2003-10-08  Pat Thoyts	<patthoyts@users.sourceforge.net>
 
-	* win/tcl.m4:         Add TIP #150 items to the TEA makefiles.
+	* win/tcl.m4:	      Add TIP #150 items to the TEA makefiles.
 	* win/configure:
 	* win/Makefile.in:
 
 	* win/tkWinSend.c:    Clean up some warnings from gcc -Wall.
 	* win/tkWinSendCom.c:
 
-2003-10-06  Joe English  <jenglish@users.sourceforge.net>
-	* library/text.tcl, doc/text.n:  Text widget binding for 
+2003-10-06  Joe English	 <jenglish@users.sourceforge.net>
+	* library/text.tcl, doc/text.n:	 Text widget binding for 
 	Control-v is now Mac-only, since it conflicts with standard 
 	<<Paste>> binding on other platforms.  [Bug #605277]
 
-2003-10-06  Joe English  <jenglish@users.sourceforge.net>
+2003-10-06  Joe English	 <jenglish@users.sourceforge.net>
 	* generic/tkStyle.c: Fix double-free in style engine [Bug #798211]
 
-2003-10-06  Jeff Hobbs  <jeffh@ActiveState.com>
+2003-10-06  Jeff Hobbs	<jeffh@ActiveState.com>
 
 	* win/configure:
 	* win/tcl.m4: removed incorrect checks for existence of
@@ -41,8 +49,8 @@
 
 2003-10-06  Don Porter	<dgp@users.sourceforge.net>
 
-        * doc/ConfigWidg.3:     Removed reference to Tk_Offset from the
-        NAME section to resolve mkLinks conflict with SetOptions.3 [Bug 404197]
+	* doc/ConfigWidg.3:	Removed reference to Tk_Offset from the
+	NAME section to resolve mkLinks conflict with SetOptions.3 [Bug 404197]
 
 	* unix/configure.in:	 Reconfigured to use $TCL_PREFIX as the
 	default value of --prefix, and also added warning when a TK_PREFIX
