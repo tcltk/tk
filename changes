@@ -4215,3 +4215,9 @@ under Windows, resulting in annoying beeps. (SS)
 
 8/4/98 (bug fix) Fixed bug in Windows menubar handling that allowed
 a shared menubar to be deleted when any window using it was deleted. (SS)
+
+8/4/98 (feature change) Introduced TkReadBitmapFile to replace
+XReadBitmapFile so that all Tk file opens go through the Tcl channel
+mechanism.  This lets us wrap applications that define their own
+bitmaps and cursors. Note that XReadBitmapFile is no longer
+emulated for non-unix platforms platforms (RJ, BW)
