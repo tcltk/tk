@@ -2,7 +2,7 @@
 #
 # This demonstration script prompts the user to select a file.
 #
-# RCS: @(#) $Id: filebox.tcl,v 1.3 2001/06/14 10:56:58 dkf Exp $
+# RCS: @(#) $Id: filebox.tcl,v 1.3.4.1 2004/09/10 20:48:41 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -39,6 +39,10 @@ if {![string compare $tcl_platform(platform) unix]} {
     checkbutton $w.strict -text "Use Motif Style Dialog" \
 	-variable tk_strictMotif -onvalue 1 -offvalue 0
     pack $w.strict -anchor c
+
+    # This binding ensures that we don't run the rest of the demos
+    # with motif style interactions
+    bind $w.strict <Destroy> {set tk_strictMotif 0}
 }
 
 proc fileDialog {w ent operation} {
