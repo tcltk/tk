@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.12 2000/08/29 21:00:13 ericm Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.13 2001/09/21 21:34:10 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -648,7 +648,7 @@ Tk_MeasureChars(
             if (thisSubFontPtr != lastSubFontPtr) {
 		familyPtr = lastSubFontPtr->familyPtr;
 		Tcl_UtfToExternalDString(familyPtr->encoding, source, 
-			p - source, &runString);
+			(int) (p - source), &runString);
 		(*familyPtr->getTextExtentPoint32Proc)(hdc, 
 			Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
@@ -663,8 +663,8 @@ Tk_MeasureChars(
             p = next;
         }
 	familyPtr = lastSubFontPtr->familyPtr;
-	Tcl_UtfToExternalDString(familyPtr->encoding, source, p - source, 
-		&runString);
+	Tcl_UtfToExternalDString(familyPtr->encoding, source,
+		(int) (p - source), &runString);
 	(*familyPtr->getTextExtentPoint32Proc)(hdc,
 		Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont, 
@@ -710,8 +710,9 @@ Tk_MeasureChars(
 		    lastSubFontPtr = thisSubFontPtr;
 		}
 		familyPtr = lastSubFontPtr->familyPtr;
-		Tcl_UtfToExternal(NULL, familyPtr->encoding, p, next - p, 
-			0, NULL, buf, sizeof(buf), NULL, &dstWrote, NULL);
+		Tcl_UtfToExternal(NULL, familyPtr->encoding, p,
+			(int) (next - p), 0, NULL, buf, sizeof(buf), NULL,
+			&dstWrote, NULL);
 		(*familyPtr->getTextExtentPoint32Proc)(hdc, buf, 
 			dstWrote >> familyPtr->isWideFont, &size);
 		newX += size.cx;
@@ -767,7 +768,7 @@ Tk_MeasureChars(
 	}
 
 	curX = termX;
-	curByte = term - source;	
+	curByte = (int) (term - source);	
     }
 
     SelectObject(hdc, oldFont);
@@ -950,7 +951,7 @@ MultiFontTextOut(
             if (p > source) {
 		familyPtr = lastSubFontPtr->familyPtr;
  		Tcl_UtfToExternalDString(familyPtr->encoding, source,
-			p - source, &runString);
+			(int) (p - source), &runString);
 		(*familyPtr->textOutProc)(hdc, x, y, 
 			Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
@@ -969,8 +970,8 @@ MultiFontTextOut(
     }
     if (p > source) {
 	familyPtr = lastSubFontPtr->familyPtr;
- 	Tcl_UtfToExternalDString(familyPtr->encoding, source, p - source,
-		&runString);
+ 	Tcl_UtfToExternalDString(familyPtr->encoding, source,
+		(int) (p - source), &runString);
 	(*familyPtr->textOutProc)(hdc, x, y, Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
 	Tcl_DStringFree(&runString);
