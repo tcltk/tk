@@ -144,16 +144,38 @@ namespace eval tk {
 namespace import -force tk::test::*
 
 namespace import -force tcltest::testConstraint
+
 testConstraint userInteraction 0
-testConstraint nonUnixUserInteraction [expr {[testConstraint userInteraction]
-                                                || [testConstraint unix]}]
-testConstraint altDisplay [info exists env(TK_ALT_DISPLAY)]
-testConstraint noExceed [expr {![testConstraint unix]
-			|| [catch {font actual "\{xyz"}]}]
+testConstraint nonUnixUserInteraction [expr {
+    [testConstraint userInteraction] || [testConstraint unix]
+}]
+testConstraint haveDISPLAY [info exists env(DISPLAY)]
+testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
+testConstraint noExceed [expr {
+    ![testConstraint unix] || [catch {font actual "\{xyz"}]
+}]
+
+# constraints for testing facilities defined in the tktest executable...
 testConstraint testImageType [expr {[lsearch [image types] test] >= 0}]
-testConstraint testembed [llength [info commands testembed]]
-testConstraint testwrapper [llength [info commands testwrapper]]
-testConstraint testfont [llength [info commands testfont]]
+testConstraint testbitmap    [llength [info commands testbitmap]]
+testConstraint testborder    [llength [info commands testborder]]
+testConstraint testcbind     [llength [info commands testcbind]]
+testConstraint testclipboard [llength [info commands testclipboard]]
+testConstraint testcolor     [llength [info commands testcolor]]
+testConstraint testcursor    [llength [info commands testcursor]]
+testConstraint testembed     [llength [info commands testembed]]
+testConstraint testfont      [llength [info commands testfont]]
+testConstraint testmakeexist [llength [info commands testmakeexist]]
+testConstraint testmenubar   [llength [info commands testmenubar]]
+testConstraint testmenubar   [llength [info commands testmenubar]]
+testConstraint testmetrics   [llength [info commands testmetrics]]
+testConstraint testobjconfig [llength [info commands testobjconfig]]
+testConstraint testsend      [llength [info commands testsend]]
+testConstraint testtext      [llength [info commands testtext]]
+testConstraint testwinevent  [llength [info commands testwinevent]]
+testConstraint testwrapper   [llength [info commands testwrapper]]
+
+# constraint to see what sort of fonts are available
 testConstraint fonts 1
 destroy .e
 entry .e -width 0 -font {Helvetica -12} -bd 1
@@ -172,11 +194,28 @@ destroy .t
 if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
     testConstraint fonts 0
 }
-testConstraint pseudocolor8 [expr {([catch {
-                        toplevel .t -visual {pseudocolor 8} -colormap new
-                        }] == 0) && ([winfo depth .t] == 8)}]
+testConstraint textfonts [expr {
+    [testConstraint fonts] || $tcl_platform(platform) eq "windows"
+}]
+
+# constraints for the visuals available..
+testConstraint pseudocolor8 [expr {
+    ([catch {
+	toplevel .t -visual {pseudocolor 8} -colormap new
+    }] == 0) && ([winfo depth .t] == 8)
+}]
 destroy .t
-testConstraint haveTruecolor24 [expr {[lsearch [winfo visualsavailable .] {truecolor 24}] != -1}]
+testConstraint haveTruecolor24 [expr {
+    [lsearch -exact [winfo visualsavailable .] {truecolor 24}] >= 0
+}]
+testConstraint haveGrayscale8 [expr {
+    [lsearch -exact [winfo visualsavailable .] {grayscale 8}] >= 0
+}]
+testConstraint defaultPseudocolor8 [expr {
+    ([winfo visual .] eq "pseudocolor") && ([winfo depth .] == 8)
+}]
+
+# constraint based on whether our display is secure
 setupbg
 set app [dobg {tk appname}]
 testConstraint secureserver 0

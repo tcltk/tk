@@ -10,7 +10,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winClipboard.test,v 1.12 2003/04/01 21:07:00 dgp Exp $
+# RCS: @(#) $Id: winClipboard.test,v 1.13 2004/06/17 22:38:57 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -18,8 +18,6 @@ tcltest::loadTestedCommands
 
 # Note that these tests may fail if another application is grabbing the
 # clipboard (e.g. an X server)
-
-testConstraint testclipboard [llength [info commands testclipboard]]
 
 test winClipboard-1.1 {TkSelGetSelection} {pcOnly} {
     clipboard clear
