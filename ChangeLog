@@ -32,13 +32,13 @@
 	* macosx/Makefile: added support to tk framework build to
 	optionally install tk manpages in addition to html help,
 	similarly to tcl/macosx/Makefile.
-	
+
 	* macosx/Wish.pbproj/project.pbxproj: fixes for building with
 	non-default SYMROOT/OBJROOT/SRCROOT, added support for using a
 	Tcl.framework in DYLIB_INSTALL_PATH != /Library/Frameworks,
 	added optional support for building html help without tcl sources 
 	present by giving explicit location of tcltk-man2html script.
-	
+
 	* macosx/tkMacOSXMenu.c: fixed #include case sensitivity bug.
 
 	* unix/Makefile.in:
@@ -267,7 +267,7 @@
 
 	* tkMacOSXDialog.c (Tk_MessageBoxObjCmd): Turn on the -detail
 	option for Mac OS X.
-	
+
 2004-05-23  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* ChangeLog.2002: Split older ChangeLog entries off into a
@@ -367,7 +367,7 @@
 	Mac OS X: Fix several problems with Icelandic (and Faroese) keyboards
 	reported by Jérôme Gagnon-Voyer <gagnonje5000<at>mac<dot>com> on
 	tcl-mac on 2004-03-22.
-	
+
 	* macosx/tkMacOSXKeyEvent.c (KLSInit): Add.
 	(GetKeyboardLayout): Add calls to Keyboard Layout Services, if
 	present.  Rework classic handling.  Use GetKCHREncoding().  Add
@@ -403,7 +403,7 @@
 
 	* tkMacOSXMenu.c (EventuallyInvokeMenu): Report errors from invoking
 	menu commands as background errors. [Bug 220871]
-	
+
 2004-03-31  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkImgPhoto.c:	Removed outdated #include's of the tclMath.h
