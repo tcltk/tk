@@ -3,7 +3,7 @@
 # This demonstration script creates a canvas widget that displays a
 # large line with an arrowhead whose shape can be edited interactively.
 #
-# RCS: @(#) $Id: arrow.tcl,v 1.4 2003/08/20 23:02:18 hobbs Exp $
+# RCS: @(#) $Id: arrow.tcl,v 1.5 2003/11/03 15:31:18 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -107,7 +107,6 @@ proc arrowSetup c {
 }
 
 set w .arrow
-global tk_library
 catch {destroy $w}
 toplevel $w
 wm title $w "Arrowhead Editor Demonstration"
@@ -140,8 +139,9 @@ if {[winfo depth $c] > 1} {
     set demo_arrowInfo(boxStyle) "-fill {} -outline black -width 1"
     set demo_arrowInfo(activeStyle) "-fill red -outline black -width 1"
 } else {
+    # Main widget program sets variable tk_demoDirectory
     set demo_arrowInfo(bigLineStyle) "-fill black \
-	-stipple @[file join $tk_library demos images grey.25]"
+	-stipple @[file join $tk_demoDirectory images grey.25]"
     set demo_arrowInfo(boxStyle) "-fill {} -outline black -width 1"
     set demo_arrowInfo(activeStyle) "-fill black -outline black -width 1"
 }

@@ -3,7 +3,7 @@
 # This demonstration script creates a canvas that displays the
 # canvas item types.
 #
-# RCS: @(#) $Id: items.tcl,v 1.4 2003/08/20 23:02:18 hobbs Exp $
+# RCS: @(#) $Id: items.tcl,v 1.5 2003/11/03 15:31:18 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -75,8 +75,9 @@ $c create line 6.33c 1c 6.33c 4c -arrow both -tags item
 $c create line 5c 6c 9c 6c 9c 1c 8c 1c 8c 4.8c 8.8c 4.8c 8.8c 1.2c \
 	8.2c 1.2c 8.2c 4.6c 8.6c 4.6c 8.6c 1.4c 8.4c 1.4c 8.4c 4.4c \
 	-width 3 -fill $red -tags item
+# Main widget program sets variable tk_demoDirectory
 $c create line 1c 5c 7c 5c 7c 7c 9c 7c -width .5c \
-	-stipple @[file join $tk_library demos images gray25.bmp] \
+	-stipple @[file join $tk_demoDirectory images gray25.bmp] \
 	-arrow both -arrowshape {15 15 7} -tags item
 $c create line 1c 7c 1.75c 5.8c 2.5c 7c 3.25c 5.8c 4c 7c -width .5c \
 	-cap round -join round -tags item
@@ -88,7 +89,7 @@ $c create line 15.5c 1c 19.5c 1.5c 15.5c 4.5c 19.5c 4c -smooth on \
 	-arrow both -width 3 -tags item
 $c create line 12c 6c 13.5c 4.5c 16.5c 7.5c 18c 6c \
 	16.5c 4.5c 13.5c 7.5c 12c 6c -smooth on -width 3m -cap round \
-	-stipple @[file join $tk_library demos images gray25.bmp] \
+	-stipple @[file join $tk_demoDirectory images gray25.bmp] \
 	-fill $red -tags item
 
 $c create text 25c .2c -text Polygons -anchor n
@@ -99,21 +100,21 @@ $c create polygon 25c 4c 25c 4c 25c 1c 26c 1c 27c 4c 28c 1c \
 	29c 1c 29c 4c 29c 4c -fill $red -smooth on -tags item
 $c create polygon 22c 4.5c 25c 4.5c 25c 6.75c 28c 6.75c \
 	28c 5.25c 24c 5.25c 24c 6.0c 26c 6c 26c 7.5c 22c 7.5c \
-	-stipple @[file join $tk_library demos images gray25.bmp] \
+	-stipple @[file join $tk_demoDirectory images gray25.bmp] \
 	-outline black -tags item
 
 $c create text 5c 8.2c -text Rectangles -anchor n
 $c create rectangle 1c 9.5c 4c 12.5c -outline $red -width 3m -tags item
 $c create rectangle 0.5c 13.5c 4.5c 15.5c -fill $green -tags item
 $c create rectangle 6c 10c 9c 15c -outline {} \
-	-stipple @[file join $tk_library demos images gray25.bmp] \
+	-stipple @[file join $tk_demoDirectory images gray25.bmp] \
 	-fill $blue -tags item
 
 $c create text 15c 8.2c -text Ovals -anchor n
 $c create oval 11c 9.5c 14c 12.5c -outline $red -width 3m -tags item
 $c create oval 10.5c 13.5c 14.5c 15.5c -fill $green -tags item
 $c create oval 16c 10c 19c 15c -outline {} \
-	-stipple @[file join $tk_library demos images gray25.bmp] \
+	-stipple @[file join $tk_demoDirectory images gray25.bmp] \
 	-fill $blue -tags item
 
 $c create text 25c 8.2c -text Text -anchor n
@@ -133,7 +134,7 @@ $c create arc 0.5c 17c 7c 20c -fill $green -outline black \
 	-start 45 -extent 270 -style pieslice -tags item
 $c create arc 6.5c 17c 9.5c 20c -width 4m -style arc \
 	-outline $blue -start -135 -extent 270 -tags item \
-	-outlinestipple @[file join $tk_library demos images gray25.bmp]
+	-outlinestipple @[file join $tk_demoDirectory images gray25.bmp]
 $c create arc 0.5c 20c 9.5c 24c -width 4m -style pieslice \
 	-fill {} -outline $red -start 225 -extent -90 -tags item
 $c create arc 5.5c 20.5c 9.5c 23.5c -width 4m -style chord \
@@ -141,11 +142,11 @@ $c create arc 5.5c 20.5c 9.5c 23.5c -width 4m -style chord \
 
 $c create text 15c 16.2c -text Bitmaps -anchor n
 $c create bitmap 13c 20c -tags item \
-	-bitmap @[file join $tk_library demos images face.bmp]
+	-bitmap @[file join $tk_demoDirectory images face.bmp]
 $c create bitmap 17c 18.5c -tags item \
-	-bitmap @[file join $tk_library demos images noletter.bmp]
+	-bitmap @[file join $tk_demoDirectory images noletter.bmp]
 $c create bitmap 17c 21.5c -tags item \
-	-bitmap @[file join $tk_library demos images letters.bmp]
+	-bitmap @[file join $tk_demoDirectory images letters.bmp]
 
 $c create text 25c 16.2c -text Windows -anchor n
 button $c.button -text "Press Me" -command "butPress $c $red"

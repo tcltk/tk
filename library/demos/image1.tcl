@@ -2,7 +2,7 @@
 #
 # This demonstration script displays two image widgets.
 #
-# RCS: @(#) $Id: image1.tcl,v 1.3 2003/08/20 23:02:18 hobbs Exp $
+# RCS: @(#) $Id: image1.tcl,v 1.4 2003/11/03 15:31:18 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -22,13 +22,14 @@ pack $w.msg -side top
 set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
 
+# Main widget program sets variable tk_demoDirectory
 catch {image delete image1a}
-image create photo image1a -file [file join $tk_library demos images earth.gif]
+image create photo image1a -file [file join $tk_demoDirectory images earth.gif]
 label $w.l1 -image image1a -bd 1 -relief sunken
 
 catch {image delete image1b}
 image create photo image1b \
-  -file [file join $tk_library demos images earthris.gif]
+	-file [file join $tk_demoDirectory images earthris.gif]
 label $w.l2 -image image1b -bd 1 -relief sunken
 
 pack $w.l1 $w.l2 -side top -padx .5m -pady .5m
