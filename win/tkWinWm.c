@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.38 2002/05/27 22:54:42 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.39 2002/06/12 19:02:50 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -392,7 +392,7 @@ static void		UpdateGeometryInfo _ANSI_ARGS_((
 static void		UpdateWrapper _ANSI_ARGS_((TkWindow *winPtr));
 static LRESULT CALLBACK	WmProc _ANSI_ARGS_((HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam));
-static void		WmWaitVisibilityProc _ANSI_ARGS_((
+static void		WmWaitVisibilityOrMapProc _ANSI_ARGS_((
 			    ClientData clientData, XEvent *eventPtr));
 static BlockOfIconImagesPtr   ReadIconFromICOFile _ANSI_ARGS_((
 			    Tcl_Interp *interp, char* fileName));
@@ -1521,10 +1521,10 @@ UpdateWrapper(winPtr)
     if (winPtr->flags & TK_EMBEDDED) {
 	wmPtr->wrapper = (HWND) winPtr->privatePtr;
 	if (wmPtr->wrapper == NULL) {
-	    panic("TkWmMapWindow: Cannot find container window");
+	    panic("UpdateWrapper: Cannot find container window");
 	}
 	if (!IsWindow(wmPtr->wrapper)) {
-	    panic("TkWmMapWindow: Container was destroyed");
+	    panic("UpdateWrapper: Container was destroyed");
 	}
 
     } else {
@@ -1790,7 +1790,17 @@ TkWmMapWindow(winPtr)
 	InitWm();
     }
 
-    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
+    if (wmPtr->flags & WM_NEVER_MAPPED) {
+	/*
+	 * Don't map a transient if the master is not mapped.
+	 */
+
+	if (wmPtr->masterPtr != NULL &&
+	        !Tk_IsMapped(wmPtr->masterPtr)) {
+	    wmPtr->hints.initial_state = WithdrawnState;
+	    return;
+	}
+    } else {
 	if (wmPtr->hints.initial_state == WithdrawnState) {
 	    return;
 	}
@@ -1867,8 +1877,7 @@ TkpWmSetState(winPtr, state)
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int cmd;
 
-    if ((wmPtr->flags & WM_NEVER_MAPPED) ||
-	    (wmPtr->masterPtr && !Tk_IsMapped(wmPtr->masterPtr))) {
+    if (wmPtr->flags & WM_NEVER_MAPPED) {
 	wmPtr->hints.initial_state = state;
 	return;
     }
@@ -1944,6 +1953,10 @@ TkWmDeadWindow(winPtr)
     for (wmPtr2 = winPtr->dispPtr->firstWmPtr; wmPtr2 != NULL;
 	 wmPtr2 = wmPtr2->nextPtr) {
 	if (wmPtr2->masterPtr == winPtr) {
+	    wmPtr->numTransients--;
+	    Tk_DeleteEventHandler((Tk_Window) wmPtr2->masterPtr,
+	            VisibilityChangeMask|StructureNotifyMask,
+	            WmWaitVisibilityOrMapProc, (ClientData) wmPtr2->winPtr);
 	    wmPtr2->masterPtr = NULL;
 	    if ((wmPtr2->wrapper != None)
 		    && !(wmPtr2->flags & (WM_NEVER_MAPPED))) {
@@ -1951,6 +1964,8 @@ TkWmDeadWindow(winPtr)
 	    }
 	}
     }
+    if (wmPtr->numTransients != 0)
+        panic("numTransients should be 0");
     
     if (wmPtr->hints.flags & IconPixmapHint) {
 	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
@@ -1996,8 +2011,8 @@ TkWmDeadWindow(winPtr)
 	    wmPtr2->numTransients--;
 	}
 	Tk_DeleteEventHandler((Tk_Window) wmPtr->masterPtr,
-		VisibilityChangeMask,
-		WmWaitVisibilityProc, (ClientData) winPtr);
+		VisibilityChangeMask|StructureNotifyMask,
+		WmWaitVisibilityOrMapProc, (ClientData) winPtr);
 	wmPtr->masterPtr = NULL;
     }
 
@@ -3274,17 +3289,19 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    }
 	    return TCL_OK;
 	}
-	if (masterPtr != NULL) {
-	    /*
-	     * If we had a master, tell them that we aren't tied
-	     * to them anymore
-	     */
-	    masterPtr->wmInfoPtr->numTransients--;
-	    Tk_DeleteEventHandler((Tk_Window) masterPtr,
-		    VisibilityChangeMask,
-		    WmWaitVisibilityProc, (ClientData) winPtr);
-	}
 	if (argv[3][0] == '\0') {
+	    if (masterPtr != NULL) {
+	        /*
+	         * If we had a master, tell them that we aren't tied
+	         * to them anymore
+	         */
+
+	        masterPtr->wmInfoPtr->numTransients--;
+	        Tk_DeleteEventHandler((Tk_Window) masterPtr,
+	                VisibilityChangeMask|StructureNotifyMask,
+	                WmWaitVisibilityOrMapProc, (ClientData) winPtr);
+            }
+
 	    wmPtr->masterPtr = NULL;
 	} else {
 	    masterPtr = (TkWindow*) Tk_NameToWindow(interp, argv[3], tkwin);
@@ -3324,23 +3341,35 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	                (char *) NULL);
 	        return TCL_ERROR;
 	    } else if (masterPtr != wmPtr->masterPtr) {
-		wmPtr->masterPtr = masterPtr;
-		masterPtr->wmInfoPtr->numTransients++;
-
 		/*
-		 * Bind a visibility event handler to the master window,
-		 * to ensure that when it is mapped, the children will
-		 * have their state set properly.
+		 * Remove old master map/unmap binding before setting
+		 * the new master. The event handler will ensure that
+		 * transient states reflect the state of the master.
 		 */
 
+		if (wmPtr->masterPtr == NULL) {
+		    masterPtr->wmInfoPtr->numTransients++;
+		} else {
+		    Tk_DeleteEventHandler((Tk_Window) wmPtr->masterPtr,
+		            VisibilityChangeMask|StructureNotifyMask,
+		            WmWaitVisibilityOrMapProc, (ClientData) winPtr);
+		}
+
 		Tk_CreateEventHandler((Tk_Window) masterPtr,
-			VisibilityChangeMask,
-			WmWaitVisibilityProc, (ClientData) winPtr);
+			VisibilityChangeMask|StructureNotifyMask,
+			WmWaitVisibilityOrMapProc, (ClientData) winPtr);
+
+		wmPtr->masterPtr = masterPtr;
 	    }
 	}
 	if (!((wmPtr->flags & WM_NEVER_MAPPED)
 		&& !(winPtr->flags & TK_EMBEDDED))) {
-	    UpdateWrapper(winPtr);
+	    if (wmPtr->masterPtr != NULL &&
+	            !Tk_IsMapped(wmPtr->masterPtr)) {
+	        TkpWmSetState(winPtr, WithdrawnState);
+	    } else {
+	        UpdateWrapper(winPtr);
+	    }
 	}
     } else if ((c == 'w') && (strncmp(argv[1], "withdraw", length) == 0)) {
 	if (argc != 3) {
@@ -3377,14 +3406,23 @@ Tk_WmCmd(clientData, interp, argc, argv)
 }
 	/*ARGSUSED*/
 static void
-WmWaitVisibilityProc(clientData, eventPtr)
+WmWaitVisibilityOrMapProc(clientData, eventPtr)
     ClientData clientData;	/* Pointer to window. */
     XEvent *eventPtr;		/* Information about event. */
 {
     TkWindow *winPtr = (TkWindow *) clientData;
     TkWindow *masterPtr = winPtr->wmInfoPtr->masterPtr;
 
-    if ((eventPtr->type == VisibilityNotify) && (masterPtr != NULL)) {
+    if (masterPtr == NULL)
+	return;
+
+    if (eventPtr->type == MapNotify) {
+	TkpWmSetState(winPtr, NormalState);
+    } else if (eventPtr->type == UnmapNotify) {
+	TkpWmSetState(winPtr, WithdrawnState);
+    }
+
+    if (eventPtr->type == VisibilityNotify) {
 	int state = masterPtr->wmInfoPtr->hints.initial_state;
 
 	if ((state == NormalState) || (state == ZoomState)) {
