@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.42 2004/07/11 22:21:19 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.43 2004/07/15 00:05:54 dgp Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -1661,7 +1661,7 @@ proc ::tk::dialog::file::CancelCmd {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
     variable ::tk::Priv
 
-    $data(okBtn) configure <Destroy> {}
+    bind $data(okBtn) <Destroy> {}
     set Priv(selectFilePath) ""
 }
 
@@ -1792,6 +1792,6 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
 	    }
 	}
     }
-    $data(okBtn) configure <Destroy> {}
+    bind $data(okBtn) <Destroy> {}
     set Priv(selectFilePath) $selectFilePath
 }
