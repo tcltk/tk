@@ -1,3 +1,27 @@
+2001-04-02  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/image.n: added warning about names chosen for images.
+
+	* generic/tkImgPhoto.c (ImgPhotoCmd): corrected the src and dest
+	values for $imageName put when -format and -to are used.
+	[Bug #232741]
+
+	* tests/listbox.test: added test listbox-27.1, delete during
+	scrollbar update
+	* generic/tkListbox.c (DestroyListbox, ListboxEventProc):
+	corrected listbox to make proper use of Tcl_EventuallyFree and
+	protect against unusual listbox deletion.
+
+	* tests/entry.test: added tests entry-20.*, delete during widget
+	activity
+	* generic/tkEntry.c (DestroyEntry, EntryEventProc): fixed the
+	entry widget to survive deletion while processing scrollbar
+	updates and validation.
+
+	* tests/canvas.test: test of canvas delete during event
+	* generic/tkCanvas.c (DestroyCanvas, CanvasEventProc): fixed the
+	canvas to survive deletion during event processing. [Bug #228024]
+
 2001-04-01  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* README:
