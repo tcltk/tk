@@ -1,3 +1,24 @@
+2001-10-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* README:
+	* generic/tk.h:
+	* mac/README:
+	* unix/Makefile.in:
+	* unix/README:
+	* unix/aclocal.m4:
+	* unix/configure:
+	* unix/configure.in:
+	* unix/tcl.m4:
+	* unix/tk.spec:
+	* win/Makefile.in:
+	* win/makefile.vc:
+	* win/README:
+	* win/configure:
+	* win/configure.in:
+	* win/tcl.m4: updated patchlevel to 8.3.4.
+	updated READMEs to point to www.tcl-tk.net where applicable.
+	added proper Win64 support to makefiles.
+
 2001-09-20  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/configure: regen'ed

@@ -1,22 +1,22 @@
 README:  Tk
-    This is the Tk 8.3.3 source distribution.
-    You can get any release of Tcl from:
-        http://dev.scriptics.com/registration/<version>.html
+    This is the Tk 8.3.4 source distribution.
     Tcl/Tk is also available through NetCVS:
 	http://tcl.sourceforge.net/
+    You can get any source release of Tcl from the file distributions
+    link at the above URL.
 
-RCS: @(#) $Id: README,v 1.25.2.2 2001/04/04 07:57:16 hobbs Exp $
+RCS: @(#) $Id: README,v 1.25.2.3 2001/10/03 22:04:52 hobbs Exp $
 
 1. Introduction
 ---------------
 
-This directory contains the sources and documentation for Tk, an X11
-toolkit implemented with the Tcl scripting language.
+This directory contains the sources and documentation for Tk, a
+cross-platform UI toolkit implemented with the Tcl scripting language.
 
 For details on features, incompatibilities, and potential problems with
 this release, see the Tcl/Tk 8.3 Web page at
 
-	http://dev.scriptics.com/software/tcltk/8.3.html
+	http://www.tcl-tk.net/software/tcltk/8.3.html
 
 or refer to the "changes" file in this directory, which contains a
 historical record of all changes to Tk.
@@ -29,7 +29,7 @@ SourceForge at:
 
 with the Tcl Developer Xchange at:
 
-	http://dev.scriptics.com
+	http://www.tcl-tk.net/
 
 Tk is a freely available open source package.  You can do virtually
 anything you like with it, such as modifying it, redistributing it,

@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.24.2.6 2001/08/04 00:32:53 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.24.2.7 2001/10/03 22:04:53 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -85,16 +85,12 @@ TCL_BIN_DIR		= @TCL_BIN_DIR@
 # been replaced by the configure script):
 TCL_GENERIC_DIR	= @TCL_SRC_DIR@/generic
 
-# This is a switch passed to a Cygwin script that generates file
-# names based on the platform.
-PATHTYPE		= @PATHTYPE@
-
-# This program converts between Windows native and Cygwin POSIX pathnames.
+# Converts a POSIX path to a Windows native path.
 CYGPATH			= @CYGPATH@
 
 # The name of the Tcl library.
-TCL_LIB_FILE	  = "$(shell $(CYGPATH) $(PATHTYPE) '@TCL_BIN_DIR@/@TCL_LIB_FILE@')"
-TCL_STUB_LIB_FILE = "$(shell $(CYGPATH) $(PATHTYPE) '@TCL_BIN_DIR@/@TCL_STUB_LIB_FILE@')"
+TCL_LIB_FILE	  = "$(shell $(CYGPATH) '@TCL_BIN_DIR@/@TCL_LIB_FILE@')"
+TCL_STUB_LIB_FILE = "$(shell $(CYGPATH) '@TCL_BIN_DIR@/@TCL_STUB_LIB_FILE@')"
 
 SRC_DIR			= @srcdir@
 ROOT_DIR		= $(SRC_DIR)/..
@@ -105,15 +101,15 @@ BITMAP_DIR		= $(ROOT_DIR)/bitmaps
 XLIB_DIR		= $(ROOT_DIR)/xlib
 RC_DIR			= $(WIN_DIR)/rc
 
-ROOT_DIR_NATIVE	   	= $(shell $(CYGPATH) $(PATHTYPE) '$(ROOT_DIR)')
-WIN_DIR_NATIVE	   	= $(shell $(CYGPATH) $(PATHTYPE) '$(WIN_DIR)')
-GENERIC_DIR_NATIVE 	= $(shell $(CYGPATH) $(PATHTYPE) '$(GENERIC_DIR)')
-BITMAP_DIR_NATIVE	= $(shell $(CYGPATH) $(PATHTYPE) '$(ROOT_DIR)/bitmaps')
-XLIB_DIR_NATIVE		= $(shell $(CYGPATH) $(PATHTYPE) '$(ROOT_DIR)/xlib')
-TCL_GENERIC_NATIVE	= $(shell $(CYGPATH) $(PATHTYPE) '$(TCL_GENERIC_DIR)')
-TCL_SRC_DIR_NATIVE      = $(shell $(CYGPATH) $(PATHTYPE) '$(TCL_SRC_DIR)')
-TCL_BIN_DIR_NATIVE      = $(shell $(CYGPATH) $(PATHTYPE) '$(TCL_BIN_DIR)')
-RC_DIR_NATIVE      	= $(shell $(CYGPATH) $(PATHTYPE) '$(RC_DIR)')
+ROOT_DIR_NATIVE	   	= $(shell $(CYGPATH) '$(ROOT_DIR)')
+WIN_DIR_NATIVE	   	= $(shell $(CYGPATH) '$(WIN_DIR)')
+GENERIC_DIR_NATIVE 	= $(shell $(CYGPATH) '$(GENERIC_DIR)')
+BITMAP_DIR_NATIVE	= $(shell $(CYGPATH) '$(ROOT_DIR)/bitmaps')
+XLIB_DIR_NATIVE		= $(shell $(CYGPATH) '$(ROOT_DIR)/xlib')
+TCL_GENERIC_NATIVE	= $(shell $(CYGPATH) '$(TCL_GENERIC_DIR)')
+TCL_SRC_DIR_NATIVE      = $(shell $(CYGPATH) '$(TCL_SRC_DIR)')
+TCL_BIN_DIR_NATIVE      = $(shell $(CYGPATH) '$(TCL_BIN_DIR)')
+RC_DIR_NATIVE      	= $(shell $(CYGPATH) '$(RC_DIR)')
 
 DLLSUFFIX		= @DLLSUFFIX@
 LIBSUFFIX		= @LIBSUFFIX@
@@ -127,23 +123,18 @@ SHARED_LIBRARIES 	= $(TK_DLL_FILE) $(TK_STUB_LIB_FILE)
 STATIC_LIBRARIES	= $(TK_LIB_FILE)
 
 WISH			= wish$(VER)${EXESUFFIX}
+TCLTEST			= $(TCL_BIN_DIR)/tcltest${EXEEXT}
 TKTEST			= tktest${EXEEXT}
 CAT32			= cat32$(EXEEXT)
 MAN2TCL			= man2tcl$(EXEEXT)
 
 @SET_MAKE@
 
-# Macro that expands to the first dependency argument with the appropriate
-# path type already resolved.
-
-DEPARG = "$(shell $(CYGPATH) $(PATHTYPE) $<)"
-
 # Setting the VPATH variable to a list of paths will cause the 
 # makefile to look into these paths when resolving .c to .obj
-# dependencies. Note the ':' to avoid autoconf's habit of deleting
-# all VPATH lines without an explicit ':' in it.
+# dependencies.
 
-VPATH = $(GENERIC_DIR)@VPSEP@$(WIN_DIR)@VPSEP@$(UNIX_DIR)@VPSEP@$(XLIB_DIR)@VPSEP@$(RC_DIR) # : 
+VPATH = $(GENERIC_DIR):$(WIN_DIR):$(UNIX_DIR):$(XLIB_DIR):$(RC_DIR)
 
 # warning flags
 CFLAGS_WARNING	= @CFLAGS_WARNING@
@@ -161,7 +152,7 @@ LDFLAGS_OPTIMIZE = @LDFLAGS_OPTIMIZE@
 #CFLAGS		= $(CFLAGS_DEBUG)
 #CFLAGS		= $(CFLAGS_OPTIMIZE)
 #CFLAGS		= $(CFLAGS_DEBUG) $(CFLAGS_OPTIMIZE)
-CFLAGS		= @CFLAGS@
+CFLAGS		= @CFLAGS@ @CFLAGS_DEFAULT@
 
 # Special compiler flags to use when building man2tcl on Windows.
 MAN2TCLFLAGS	= @MAN2TCLFLAGS@
@@ -174,7 +165,7 @@ RES		= @RES@
 TK_RES		= @TK_RES@
 AC_FLAGS	= @EXTRA_CFLAGS@ @DEFS@
 CPPFLAGS	= @CPPFLAGS@
-LDFLAGS		= @LDFLAGS@
+LDFLAGS		= @LDFLAGS@ @LDFLAGS_DEFAULT@
 LDFLAGS_CONSOLE	= @LDFLAGS_CONSOLE@
 LDFLAGS_WINDOW	= @LDFLAGS_WINDOW@
 EXEEXT		= @EXEEXT@
@@ -392,7 +383,7 @@ test: binaries $(TKTEST)
 	./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/all.tcl" $(TESTFLAGS) \
 	| ./$(CAT32)
 
-runtest: tktest
+runtest: $(TKTEST)
 	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/library"; export TCL_LIBRARY; \
 	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
 	PATH="$(PATH):$(TCL_BIN_DIR)"; export PATH; \
@@ -496,19 +487,25 @@ install-demos:
 install-doc: doc
 
 
-$(WISH): $(TK_LIB_FILE) $(WISH_OBJS) wish.$(RES)
+$(WISH): $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(WISH_OBJS) wish.$(RES)
 	$(CC) $(CFLAGS) $(WISH_OBJS) $(TCL_LIB_FILE) $(TK_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 
 tktest : $(TKTEST)
 
-$(TKTEST): $(TK_LIB_FILE) $(TKTEST_OBJS) wish.$(RES) $(CAT32)
+# This rule is executed if the user tried to run tktest without first
+# building tcltest in the Tcl bin directory. Just do it for them.
+$(TCLTEST):
+	cd ${TCL_BIN_DIR} ; \
+	make tcltest
+
+$(TKTEST): $(TCLTEST) $(TK_LIB_FILE) $(TKTEST_OBJS) wish.$(RES) $(CAT32)
 	$(CC) $(CFLAGS) $(TKTEST_OBJS_NATIVE) $(TCL_LIB_FILE) \
 	$(TK_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 
 cat32.${OBJEXT}: $(TCL_SRC_DIR)/win/cat.c
-	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
+	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 $(CAT32): cat32.${OBJEXT}
 	$(CC) $(CFLAGS) cat32.$(OBJEXT) $(CC_EXENAME) $(LDFLAGS_CONSOLE)
@@ -533,19 +530,19 @@ ${TK_LIB_FILE}: ${TK_OBJS}
 # Special case object file targets
 
 winMain.$(OBJEXT): winMain.c
-	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
+	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 testMain.$(OBJEXT): winMain.c
-	$(CC) -c $(CC_SWITCHES) $(DEPARG) -DTK_TEST $(CC_OBJNAME)
+	$(CC) -c $(CC_SWITCHES) @DEPARG@ -DTK_TEST $(CC_OBJNAME)
 
 tkTest.$(OBJEXT): tkTest.c
-	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
+	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 tkWinTest.$(OBJEXT): tkWinTest.c
-	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
+	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 tkSquare.$(OBJEXT): tkSquare.c
-	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
+	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 tclThreadTest.$(OBJEXT): $(TCL_BIN_DIR)/tclThreadTest.$(OBJEXT)
 
@@ -559,10 +556,10 @@ tclThreadTest.$(OBJEXT): $(TCL_BIN_DIR)/tclThreadTest.$(OBJEXT)
 # Implicit rule for all object files that will end up in the Tcl library
 
 .c.$(OBJEXT):
-	$(CC) -c $(STUB_CC_SWITCHES) -DBUILD_tk ${DEPARG} $(CC_OBJNAME)
+	$(CC) -c $(STUB_CC_SWITCHES) -DBUILD_tk @DEPARG@ $(CC_OBJNAME)
 
 .rc.$(RES):
-	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_DEFINES@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_GENERIC_NATIVE)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" $(DEPARG)
+	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_DEFINES@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_GENERIC_NATIVE)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" @DEPARG@
 
 depend:
 
