@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.8 2000/01/21 03:55:06 hobbs Exp $
+# RCS: @(#) $Id: text.test,v 1.9 2000/01/21 17:25:43 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -961,6 +961,13 @@ test text-20.34 {TextSearchCmd procedure, firstChar and lastChar} {
 test text-20.35 {TextSearchCmd procedure, firstChar and lastChar} {
     .t search {} end
 } {1.0}
+test text-20.36 {TextSearchCmd procedure, regexp finds empty lines} {
+    # Test for fix of bug #1643
+    .t insert end "\n"
+    tkTextSetCursor .t 4.0
+    .t search -forward -regexp {^$} insert end
+} {4.0}
+    
 catch {destroy .t2}
 toplevel .t2
 wm geometry .t2 +0+0

@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.12 2000/01/21 03:54:42 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.13 2000/01/21 17:25:43 ericm Exp $
  */
 
 #include "default.h"
@@ -1884,7 +1884,8 @@ TextSearchCmd(textPtr, interp, argc, argv)
 		 */
 
 		firstByte = indexInDString;
-		if (firstByte >= Tcl_DStringLength(&line)) {
+		if ((firstByte >= Tcl_DStringLength(&line))
+			&& !((Tcl_DStringLength(&line) == 0) && !exact)) {
 		    goto nextLine;
 		}
 	    } else {
