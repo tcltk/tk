@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCursor.c,v 1.4 1999/09/02 17:02:28 hobbs Exp $
+ * RCS: @(#) $Id: tkCursor.c,v 1.5 2000/05/11 22:37:06 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -561,6 +561,7 @@ Tk_FreeCursorFromObj(tkwin, objPtr)
     Tcl_Obj *objPtr;		/* The Tcl_Obj * to be freed. */
 {
     FreeCursor(GetCursorFromObj(tkwin, objPtr));
+    FreeCursorObjProc(objPtr);
 }
 
 /*
@@ -696,28 +697,31 @@ GetCursorFromObj(tkwin, objPtr)
 	InitCursorObj(objPtr);
     }
 
+    /*
+     * The internal representation is a cache of the last cursor used
+     * with the given name.  But there can be lots different cursors
+     * for each cursor name; one cursor for each display.  Check to
+     * see if the cursor we have cached is the one that is needed.
+     */
     cursorPtr = (TkCursor *) objPtr->internalRep.twoPtrValue.ptr1;
-    if (cursorPtr != NULL) {
-	if (Tk_Display(tkwin) == cursorPtr->display) {
-	    return cursorPtr;
-	}
-	hashPtr = cursorPtr->hashPtr;
-    } else {
-	hashPtr = Tcl_FindHashEntry(&dispPtr->cursorNameTable, 
-                Tcl_GetString(objPtr));
-	if (hashPtr == NULL) {
-	    goto error;
-	}
+    if ((cursorPtr != NULL) && (Tk_Display(tkwin) == cursorPtr->display)) {
+	return cursorPtr;
     }
 
     /*
-     * At this point we've got a hash table entry, off of which hang
-     * one or more TkCursor structures.  See if any of them will work.
+     * If we get to here, it means the cursor we need is not in the cache.
+     * Try to look up the cursor in the TkDisplay structure of the window.
      */
 
+    hashPtr = Tcl_FindHashEntry(&dispPtr->cursorNameTable,
+	    Tcl_GetString(objPtr));
+    if (hashPtr == NULL) {
+	goto error;
+    }
     for (cursorPtr = (TkCursor *) Tcl_GetHashValue(hashPtr);
 	    cursorPtr != NULL; cursorPtr = cursorPtr->nextPtr) {
 	if (Tk_Display(tkwin) == cursorPtr->display) {
+	    FreeCursorObjProc(objPtr);
 	    objPtr->internalRep.twoPtrValue.ptr1 = (VOID *) cursorPtr;
 	    cursorPtr->objRefCount++;
 	    return cursorPtr;
