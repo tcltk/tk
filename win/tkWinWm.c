@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.89 2005/01/09 00:22:48 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.90 2005/01/09 18:28:06 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -2204,7 +2204,7 @@ UpdateWrapper(winPtr)
 	{
 	    SendMessage(wmPtr->wrapper, TK_GEOMETRYREQ, 
 		Tk_ReqWidth((Tk_Window)winPtr), Tk_ReqHeight((Tk_Window)winPtr));
-	    SendMessage(wmPtr->wrapper, TK_SETMENU, (WPARAM)wmPtr->hMenu, 0);
+	    SendMessage(wmPtr->wrapper, TK_SETMENU, (WPARAM)wmPtr->hMenu, (LPARAM)Tk_GetMenuHWND((Tk_Window)winPtr));
 	}
     }
 
@@ -7949,4 +7949,37 @@ long TkpWinToplevelOverrideRedirect(winPtr, reqValue)
 	}
     }
     return reqValue;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWinToplevelDetachWindow --
+ *
+ *	This function is to be usd for changing a toplevel's wrapper or
+ *	container.
+ *
+ * Results:
+ *	The window's wrapper/container is removed.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void TkpWinToplevelDetachWindow(winPtr)
+    TkWindow *winPtr;
+{
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    if(winPtr->flags & TK_EMBEDDED) {
+	int state = SendMessage(wmPtr->wrapper, TK_STATE, -1, -1);
+        SendMessage(wmPtr->wrapper, TK_SETMENU, 0, 0);
+        SendMessage(wmPtr->wrapper, TK_DETACHWINDOW, 0, 0);
+        winPtr->flags &= ~TK_EMBEDDED;
+	winPtr->privatePtr = NULL;
+        wmPtr->wrapper = None;
+	wmPtr->hints.initial_state = state;
+    }
+    TkpWinToplevelOverrideRedirect(winPtr, 1);
 }

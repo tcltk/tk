@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.3 2004/01/13 02:06:01 davygrvy Exp $
+ *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.4 2005/01/09 18:28:06 chengyemao Exp $
  */
 
 #include "tkInt.h"
@@ -242,7 +242,8 @@ TkpUseWindow(
     int result;
 
     if (winPtr->window != None) {
-        Tcl_Panic("TkpUseWindow: X window already assigned");
+	Tcl_AppendResult(interp, "can't modify container after widget is created", (char *) NULL);
+	return TCL_ERROR;
     }
     
     /*
