@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.8 2000/01/06 02:22:24 hobbs Exp $
+# RCS: @(#) $Id: text.tcl,v 1.9 2000/01/21 03:54:57 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -986,9 +986,15 @@ proc tkTextNextPos {w start op} {
     set text ""
     set cur $start
     while {[$w compare $cur < end]} {
-	set text "$text[$w get $cur "$cur lineend + 1c"]"
+	set text $text[$w get $cur "$cur lineend + 1c"]
 	set pos [$op $text 0]
 	if {$pos >= 0} {
+	    ## Adjust for embedded windows and images
+	    ## dump gives us 3 items per window/image
+	    set dump [$w dump -image -window $start "$start + $pos c"]
+	    if {[llength $dump]} {
+		set pos [expr {$pos + ([llength $dump]/3)}]
+	    }
 	    return [$w index "$start + $pos c"]
 	}
 	set cur [$w index "$cur lineend +1c"]
@@ -1009,13 +1015,24 @@ proc tkTextPrevPos {w start op} {
     set text ""
     set cur $start
     while {[$w compare $cur > 0.0]} {
-	set text "[$w get "$cur linestart - 1c" $cur]$text"
+	set text [$w get "$cur linestart - 1c" $cur]$text
 	set pos [$op $text end]
 	if {$pos >= 0} {
+	    ## Adjust for embedded windows and images
+	    ## dump gives us 3 items per window/image
+	    set dump [$w dump -image -window "$cur linestart" "$start - 1c"]
+	    if {[llength $dump]} {
+		## This is a hokey extra hack for control-arrow movement
+		## that should be in a while loop to be correct (hobbs)
+		if {[$w compare [lindex $dump 2] > \
+			"$cur linestart - 1c + $pos c"]} {
+		    incr pos -1
+		}
+		set pos [expr {$pos + ([llength $dump]/3)}]
+	    }
 	    return [$w index "$cur linestart - 1c + $pos c"]
 	}
 	set cur [$w index "$cur linestart - 1c"]
     }
     return 0.0
 }
-
