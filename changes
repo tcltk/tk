@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.49 2002/02/27 04:19:21 dgp Exp $
+RCS: @(#) $Id: changes,v 1.50 2002/03/02 04:03:19 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5170,5 +5170,14 @@ Use -DUSE_NON_CONST to suppress source incompatibility
 2002-02-19 (bug fix) updates to image code calls of Tcl_Seek/Tcl_Tell to
 address TIP 72 changes (64-bit) in Tcl (fellows)
 
- * (updated demos) many updates to show new features (fellows)
+2002-02-21 (new widget)[TIP 41] added [panedwindow] (hobbs)
 
+2002-02-22 (new feature)  64-bit support for xlc compiler on AIX-4 (hobbs)
+
+2002-02-25 (bug fix)[503772] blinking cursor fix in [text] (hobbs)
+
+2002-02-25 (bug fix)[503613] [listbox] handling of invalid listvar (hobbs)
+
+2002-02-25 (feature change)[493145] mirror B2 bindings to B3 on Windows (hobbs)
+
+ * (updated demos) many updates to show new features (fellows)
