@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: clipboard.n,v 1.2 1998/09/14 18:22:55 stanton Exp $
+'\" RCS: @(#) $Id: clipboard.n,v 1.3 2000/05/14 23:25:03 ericm Exp $
 '\" 
 .so man.macros
 .TH clipboard n 4.0 Tk "Tk Built-In Commands"
@@ -76,6 +76,13 @@ next argument will always be used as \fIdata\fR.
 This feature may be convenient if, for example, \fIdata\fR starts
 with a \fB\-\fR.
 .RE
+.TP
+\fBclipboard get\fR ?\fB\-displayof\fR \fIwindow\fR? ?\fB\-type\fR?
+Retrieve data from the clipboard on \fIwindow\fR's display.
+\fIwindow\fR defaults to ".".  \fIType\fR specifies the form in which
+the data is to be returned and should be an atom name such as STRING
+or FILE_NAME.  \fIType\fR defaults to STRING.  This command is
+equivalent to \fBselection get -selection CLIPBOARD\fR.
 
 .SH KEYWORDS
 clear, format, clipboard, append, selection, type

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clipboard.test,v 1.3 1999/04/16 01:51:35 stanton Exp $
+# RCS: @(#) $Id: clipboard.test,v 1.4 2000/05/14 23:25:04 ericm Exp $
 
 #
 # Note: Multiple display clipboard handling will only be tested if the
@@ -31,13 +31,13 @@ foreach i {a b c d e f g j h i j k l m o p q r s t u v w x y z} {
 test clipboard-1.1 {ClipboardHandler procedure} {
     clipboard clear
     clipboard append "test"
-    selection get -s CLIPBOARD
+    clipboard get
 } {test}
 test clipboard-1.2 {ClipboardHandler procedure} {
     clipboard clear
     clipboard append "test"
     clipboard append "ing"
-    selection get -s CLIPBOARD
+    clipboard get
 } {testing}
 test clipboard-1.3 {ClipboardHandler procedure} {
     clipboard clear
@@ -45,43 +45,43 @@ test clipboard-1.3 {ClipboardHandler procedure} {
     clipboard append "e"
     clipboard append "s"
     clipboard append "t"
-    selection get -s CLIPBOARD
+    clipboard get
 } {test}
 test clipboard-1.4 {ClipboardHandler procedure} {
     clipboard clear
     clipboard append $longValue
-    selection get -s CLIPBOARD
+    clipboard get
 } "$longValue"
 test clipboard-1.5 {ClipboardHandler procedure} {
     clipboard clear
     clipboard append $longValue
     clipboard append "test"
-    selection get -s CLIPBOARD
+    clipboard get
 } "${longValue}test"
 test clipboard-1.6 {ClipboardHandler procedure} {
     clipboard clear
     clipboard append -t TEST $longValue
     clipboard append -t STRING "test"
-    list [selection get -s CLIPBOARD -t STRING] \
-	[selection get -s CLIPBOARD -t TEST]
+    list [clipboard get -t STRING] \
+	[clipboard get -t TEST]
 } [list test $longValue]
 test clipboard-1.7 {ClipboardHandler procedure} {
     clipboard clear
     clipboard append -t TEST [string range $longValue 1 4000]
     clipboard append -t STRING "test"
-    list [selection get -s CLIPBOARD -t STRING] \
-	[selection get -s CLIPBOARD -t TEST]
+    list [clipboard get -t STRING] \
+	[clipboard get -t TEST]
 } [list test [string range $longValue 1 4000]]
 test clipboard-1.8 {ClipboardHandler procedure} {
     clipboard clear
     clipboard append ""
-    selection get -s CLIPBOARD
+    clipboard get
 } {}
 test clipboard-1.9 {ClipboardHandler procedure} {
     clipboard clear
     clipboard append ""
     clipboard append "Test"
-    selection get -s CLIPBOARD
+    clipboard get
 } {Test}
 
 ##############################################################################
@@ -114,15 +114,15 @@ test clipboard-4.1 {ClipboardLostSel procedure} {
     clipboard clear
     clipboard append "Test"
     selection clear -s CLIPBOARD
-    list [catch {selection get -s CLIPBOARD} msg] $msg
+    list [catch {clipboard get} msg] $msg
 } {1 {CLIPBOARD selection doesn't exist or form "STRING" not defined}}
 test clipboard-4.2 {ClipboardLostSel procedure} {
     clipboard clear
     clipboard append "Test"
     clipboard append -t TEST "Test2"
     selection clear -s CLIPBOARD
-    list [catch {selection get -s CLIPBOARD} msg] $msg \
-	[catch {selection get -s CLIPBOARD -t TEST} msg] $msg
+    list [catch {clipboard get} msg] $msg \
+	[catch {clipboard get -t TEST} msg] $msg
 } {1 {CLIPBOARD selection doesn't exist or form "STRING" not defined} 1 {CLIPBOARD selection doesn't exist or form "TEST" not defined}}
 test clipboard-4.3 {ClipboardLostSel procedure} {
     clipboard clear
@@ -130,8 +130,8 @@ test clipboard-4.3 {ClipboardLostSel procedure} {
     clipboard append -t TEST "Test2"
     clipboard append "Test3"
     selection clear -s CLIPBOARD
-    list [catch {selection get -s CLIPBOARD} msg] $msg \
-	[catch {selection get -s CLIPBOARD -t TEST} msg] $msg
+    list [catch {clipboard get} msg] $msg \
+	[catch {clipboard get -t TEST} msg] $msg
 } {1 {CLIPBOARD selection doesn't exist or form "STRING" not defined} 1 {CLIPBOARD selection doesn't exist or form "TEST" not defined}}
 
 ##############################################################################
@@ -139,19 +139,19 @@ test clipboard-4.3 {ClipboardLostSel procedure} {
 test clipboard-5.1 {Tk_ClipboardClear procedure} {
     clipboard clear
     clipboard append -t TEST "test"
-    set result [lsort [selection get -s CLIPBOARD TARGETS]]
+    set result [lsort [clipboard get TARGETS]]
     clipboard clear
-    list $result [lsort [selection get -s CLIPBOARD TARGETS]]
+    list $result [lsort [clipboard get TARGETS]]
 } {{MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
 test clipboard-5.2 {Tk_ClipboardClear procedure} {
     clipboard clear
     clipboard append -t TEST "test"
-    set result [lsort [selection get -s CLIPBOARD TARGETS]]
+    set result [lsort [clipboard get TARGETS]]
     selection own -s CLIPBOARD .
-    lappend result [lsort [selection get -s CLIPBOARD TARGETS]]
+    lappend result [lsort [clipboard get TARGETS]]
     clipboard clear
     clipboard append -t TEST "test"
-    lappend result [lsort [selection get -s CLIPBOARD TARGETS]]
+    lappend result [lsort [clipboard get TARGETS]]
 } {MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW} {MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW}}
 
 ##############################################################################
@@ -162,14 +162,14 @@ test clipboard-6.1 {Tk_ClipboardAppend procedure} {
     selection own -s CLIPBOARD .
     list [catch {
 	clipboard append " second chunk"
-	selection get -s CLIPBOARD
+	clipboard get
     } msg] $msg
 } {0 {first chunk second chunk}}
 test clipboard-6.2 {Tk_ClipboardAppend procedure} {unixOnly} {
     setupbg
     clipboard clear
     clipboard append -f INTEGER -t TEST "16"
-    set result [dobg {selection get -s CLIPBOARD TEST}]
+    set result [dobg {clipboard get TEST}]
     cleanupbg
     set result
 } {0x10}
@@ -230,7 +230,7 @@ test clipboard-7.13 {Tk_ClipboardCmd procedure} {
 
 test clipboard-7.14 {Tk_ClipboardCmd procedure} {
     list [catch {clipboard error} msg] $msg
-} {1 {bad option "error": must be clear or append}}
+} {1 {bad option "error": must be append, clear, or get}}
 
 # cleanup
 ::tcltest::cleanupTests

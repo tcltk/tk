@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkClipboard.c,v 1.5 1999/04/21 21:53:25 rjohnson Exp $
+ * RCS: @(#) $Id: tkClipboard.c,v 1.6 2000/05/14 23:25:04 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -30,6 +30,8 @@ static int		ClipboardWindowHandler _ANSI_ARGS_((
 			    ClientData clientData, int offset, char *buffer,
 			    int maxBytes));
 static void		ClipboardLostSel _ANSI_ARGS_((ClientData clientData));
+static int		ClipboardGetProc _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, char *portion));
 
 /*
  *----------------------------------------------------------------------
@@ -432,6 +434,7 @@ Tk_ClipboardCmd(clientData, interp, argc, argv)
     Tk_Window tkwin = (Tk_Window) clientData;
     char *path = NULL;
     size_t length;
+    Atom selection;
     int count;
     char c;
     char **args;
@@ -527,10 +530,67 @@ Tk_ClipboardCmd(clientData, interp, argc, argv)
 	    return TCL_ERROR;
 	}
 	return Tk_ClipboardClear(interp, tkwin);
+    } else if ((c == 'g') && (strncmp(argv[1], "get", length) == 0)) {
+	Atom target;
+	char *targetName = NULL;
+	Tcl_DString selBytes;
+	int result;
+	for (count = argc-2, args = argv+2; count > 0; count -= 2, args += 2) {
+	    if (args[0][0] != '-') {
+		break;
+	    }
+	    if (count < 2) {
+		Tcl_AppendResult(interp, "value for \"", *args,
+			"\" missing", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    c = args[0][1];
+	    length = strlen(args[0]);
+	    if ((c == 'd') && (strncmp(args[0], "-displayof", length) == 0)) {
+		path = args[1];
+	    } else if ((c == 't')
+		    && (strncmp(args[0], "-type", length) == 0)) {
+		targetName = args[1];
+	    } else {
+		Tcl_AppendResult(interp, "unknown option \"", args[0],
+			"\"", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	}
+	if (path != NULL) {
+	    tkwin = Tk_NameToWindow(interp, path, tkwin);
+	}
+	if (tkwin == NULL) {
+	    return TCL_ERROR;
+	}
+	selection = Tk_InternAtom(tkwin, "CLIPBOARD");
+
+	if (count > 1) {
+	    Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
+		    " get ?options?\"", (char *) NULL);
+	    return TCL_ERROR;
+	} else if (count == 1) {
+	    target = Tk_InternAtom(tkwin, args[0]);
+	} else if (targetName != NULL) {
+	    target = Tk_InternAtom(tkwin, targetName);
+	} else {
+	    target = XA_STRING;
+	}
+
+	Tcl_DStringInit(&selBytes);
+	result = Tk_GetSelection(interp, tkwin, selection, target,
+		ClipboardGetProc, (ClientData) &selBytes);
+	if (result == TCL_OK) {
+	    Tcl_DStringResult(interp, &selBytes);
+	} else {
+	    Tcl_DStringFree(&selBytes);
+	}
+	return result;
     } else {
 	char buf[100 + TCL_INTEGER_SPACE];
 	
-	sprintf(buf, "bad option \"%.50s\": must be clear or append", argv[1]);
+	sprintf(buf, "bad option \"%.50s\": must be append, clear, or get",
+		argv[1]);
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	return TCL_ERROR;
     }
@@ -605,3 +665,35 @@ TkClipInit(interp, dispPtr)
 	    (ClientData) dispPtr, XA_STRING);
     return TCL_OK;
 }
+
+/*
+ *--------------------------------------------------------------
+ *
+ * ClipboardGetProc --
+ *
+ *	This procedure is invoked to process pieces of the selection
+ *	as they arrive during "clipboard get" commands.
+ *
+ * Results:
+ *	Always returns TCL_OK.
+ *
+ * Side effects:
+ *	Bytes get appended to the dynamic string pointed to by the
+ *	clientData argument.
+ *
+ *--------------------------------------------------------------
+ */
+
+	/* ARGSUSED */
+static int
+ClipboardGetProc(clientData, interp, portion)
+    ClientData clientData;	/* Dynamic string holding partially
+				 * assembled selection. */
+    Tcl_Interp *interp;		/* Interpreter used for error
+				 * reporting (not used). */
+    char *portion;		/* New information to be appended. */
+{
+    Tcl_DStringAppend((Tcl_DString *) clientData, portion, -1);
+    return TCL_OK;
+}
+

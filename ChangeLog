@@ -1,5 +1,13 @@
 2000-05-14  Eric Melski  <ericm@scriptics.com>
 
+	* doc/clipboard.n: Added documentation for "clipboard get".
+
+	* generic/tkClipboard.c (Tk_ClipboardCmd): Added "clipboard get"
+	subcommand [RFE: 4628].
+
+	* tests/clipboard.test: Updated to use "clipboard get" instead of
+	"selection get -s CLIPBOARD".
+
 	* library/entry.tcl: Adjusted Button-1 binding to set focus to the
 	entry when it is readonly or normal.
 
