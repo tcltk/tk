@@ -1,3 +1,10 @@
+2003-01-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkFrame.c (CreateFrame): throw a Tcl error instead of a
+	panic when we cannot get a main window and appname is NULL.  This
+	can indicate that a user tried to create a frame/toplevel while Tk
+	was dying. [Bug #661792]
+
 2002-12-27  David Gravereaux <davygrvy@pobox.com>
 
 	* generic/tkText.h: ANSI unfriendly typedef for TkTextBTree
