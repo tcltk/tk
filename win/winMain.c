@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.8 1999/11/10 02:56:42 hobbs Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.9 1999/12/02 02:05:46 redman Exp $
  */
 
 #include <tk.h>
@@ -72,16 +72,32 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 {
     char **argv;
     int argc;
+    char buffer[MAX_PATH+1];
+    char *p;
+    
+    /*
+     * The following #if block allows you to change the AppInit
+     * function by using a #define of TCL_LOCAL_APPINIT instead
+     * of rewriting this entire file.  The #if checks for that
+     * #define and uses Tcl_AppInit if it doesn't exist.
+     */
+    
+#ifndef TK_LOCAL_APPINIT
+#define TK_LOCAL_APPINIT Tcl_AppInit    
+#endif
+    extern int TK_LOCAL_APPINIT _ANSI_ARGS_((Tcl_Interp *interp));
+    
+    /*
+     * The following #if block allows you to change how Tcl finds the startup
+     * script, prime the library or encoding paths, fiddle with the argv,
+     * etc., without needing to rewrite Tk_Main()
+     */
+    
+#ifdef TK_LOCAL_MAIN_HOOK
+    extern int TK_LOCAL_MAIN_HOOK _ANSI_ARGS_((int *argc, char ***argv));
+#endif
 
     Tcl_SetPanicProc(WishPanic);
-
-    /*
-     * Set up the default locale to be standard "C" locale so parsing
-     * is performed correctly.
-     */
-
-    setlocale(LC_ALL, "C");
-    setargv(&argc, &argv);
 
     /*
      * Increase the application queue size from default value of 8.
@@ -101,7 +117,32 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 
     consoleRequired = TRUE;
 
-    Tk_Main(argc, argv, Tcl_AppInit);
+    /*
+     * Set up the default locale to be standard "C" locale so parsing
+     * is performed correctly.
+     */
+
+    setlocale(LC_ALL, "C");
+    setargv(&argc, &argv);
+
+    /*
+     * Replace argv[0] with full pathname of executable, and forward
+     * slashes substituted for backslashes.
+     */
+
+    GetModuleFileName(NULL, buffer, sizeof(buffer));
+    argv[0] = buffer;
+    for (p = buffer; *p != '\0'; p++) {
+	if (*p == '\\') {
+	    *p = '/';
+	}
+    }
+
+#ifdef TK_LOCAL_MAIN_HOOK
+    TK_LOCAL_MAIN_HOOK(&argc, &argv);
+#endif
+
+    Tk_Main(argc, argv, TK_LOCAL_APPINIT);
     return 1;
 }
 

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.5 1999/04/28 18:18:06 redman Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.6 1999/12/02 02:05:34 redman Exp $
  */
 
 #include <ctype.h>
@@ -137,7 +137,8 @@ Tk_MainEx(argc, argv, appInitProc, interp)
      * use it as the name of a script file to process.
      */
 
-    fileName = NULL;
+    fileName = TclGetStartupScriptFileName();
+
     if (argc > 1) {
 	length = strlen(argv[1]);
 	if ((length >= 2) && (strncmp(argv[1], "-file", length) == 0)) {
@@ -145,12 +146,14 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 	    argv++;
 	}
     }
-    if ((argc > 1) && (argv[1][0] != '-')) {
-	fileName = argv[1];
-	argc--;
-	argv++;
+    if (fileName == NULL) {
+	if ((argc > 1) && (argv[1][0] != '-')) {
+	    fileName = argv[1];
+	    argc--;
+	    argv++;
+	}
     }
-
+    
     /*
      * Make command-line arguments available in the Tcl variables "argc"
      * and "argv".
