@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.46 2003/02/18 21:24:39 hobbs Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.46.2.1 2003/10/28 15:59:34 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -79,7 +79,11 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
     wm withdraw $w
     update idletasks
     set checkBounds 1
-    if {[string equal -len [string length $place] $place "pointer"]} {
+    if {[string equal $place ""]} {
+	set x [expr {([winfo screenwidth $w]-[winfo reqwidth $w])/2}]
+	set y [expr {([winfo screenheight $w]-[winfo reqheight $w])/2}]
+	set checkBounds 0
+    } elseif {[string equal -len [string length $place] $place "pointer"]} {
 	## place at POINTER (centered if $anchor == center)
 	if {[string equal -len [string length $anchor] $anchor "center"]} {
 	    set x [expr {[winfo pointerx $w]-[winfo reqwidth $w]/2}]
