@@ -1,4 +1,4 @@
-# $Id: tk.spec,v 1.3.2.2 2001/04/04 07:57:18 hobbs Exp $
+# $Id: tk.spec,v 1.3.2.3 2001/04/05 22:02:20 hobbs Exp $
 # This file is the basis for a binary Tk Linux RPM.
 
 %define version 8.3.3
@@ -11,8 +11,8 @@ Release: 1
 Copyright: BSD
 Group: Development/Languages
 Source: ftp://ftp.scriptics.com/pub/tcl/tcl8_3/tk%{version}.tar.gz
-URL: http://dev.scriptics.com/
-Packager: Scriptics Corporation
+URL: http://tcl.activestate.com/
+Packager: ActiveState Tool Corporation
 Buildroot: /var/tmp/%{name}%{version}
 Requires: XFree86-libs >= 3.3.3, XFree86-devel >= 3.3.3, tcl = 8.3.3
 

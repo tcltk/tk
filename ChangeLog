@@ -1,3 +1,19 @@
+2001-04-05  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tkUnixFont.c: Corrected support for iso10646 (X11 Unicode)
+	fonts on Unix. This adds a ucs-2be (UCS-2 Big Endian) encoding in
+	Tk on Unix that is used for those fonts (X11 requires
+	big-endianness). (welch) [Patch #406411; Bug #220890 #220899]
+	Added alias for jisx0201* fonts to jis0201 encoding. [Bug #414033]
+
+	* mac/tkMacProjects.sea.hqx: this was accidently swapped with the
+	tcl project files.
+
+	* tests/listbox.test: labelled listbox-27.1 knownBug as it isn't
+	really fixed.
+	* generic/tkListbox.c: reverted listbox back to 8.3.2 version
+	because the fixes weren't 100% correct for the problem.
+
 2001-04-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	** Start changes for improved mac build (steffen)  **
