@@ -1,52 +1,64 @@
+2001-08-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/winMain.c (WishPanic): fixed CONST changes to go with
+	CONST-ification in Tcl.
+
+	* win/configure: regenerated
+	* win/tcl.m4: fixed DLLSUFFIX definition to always be ${DBGX}.dll.
+	This is necessary for TEA compliant builds that build shared
+	against a static-built Tk.
+	* win/Makefile.in ($(WISH)): added $(TK_STUB_LIB_FILE) to build
+	target, otherwise it wouldn't get generated in a static build.
+
 2001-08-01  Don Porter  <dgp@users.sourceforge.net>
 
 	* doc/console.n:
- 	* doc/menu.n:
- 	* doc/text.n:
- 	* doc/tkvars.n:
- 	* generic/tkBind.c:
- 	* generic/tkMenu.c:
- 	* library/bgerror.tcl:
- 	* library/button.tcl:
- 	* library/choosedir.tcl:
- 	* library/clrpick.tcl:
- 	* library/comdlg.tcl:
- 	* library/console.tcl:
- 	* library/dialog.tcl:
- 	* library/entry.tcl:
- 	* library/focus.tcl:
- 	* library/listbox.tcl:
- 	* library/menu.tcl:
- 	* library/msgbox.tcl:
- 	* library/optMenu.tcl:
- 	* library/palette.tcl:
- 	* library/scale.tcl:
- 	* library/scrlbar.tcl:
- 	* library/spinbox.tcl:
- 	* library/tclIndex:
- 	* library/tearoff.tcl:
- 	* library/text.tcl:
- 	* library/tk.tcl:
- 	* library/tkfbox.tcl:
- 	* library/unsupported.tcl:
- 	* library/xmfbox.tcl:
- 	* mac/tkMacMenu.c:
- 	* tests/clrpick.test:
- 	* tests/filebox.test:
- 	* tests/macMenu.test:
- 	* tests/menu.test:
- 	* tests/menuDraw.test:
- 	* tests/msgbox.test:
- 	* tests/text.test:
- 	* tests/unixMenu.test:
- 	* tests/winMenu.test:
- 	* tests/xmfbox.test:
- 	* unix/mkLinks:
- 	* unix/tkUnixDialog.c: Merged changes from feature branch
- 	dgp-privates-into-namespace, implementing TIP 44.  All
- 	Tk commands and variables matching tk[A-Z]* are now in the
- 	::tk namespace.  See "BRANCH: dgp-privates-into-namespace"
- 	entries below for details.  [FR 220936]
+	* doc/menu.n:
+	* doc/text.n:
+	* doc/tkvars.n:
+	* generic/tkBind.c:
+	* generic/tkMenu.c:
+	* library/bgerror.tcl:
+	* library/button.tcl:
+	* library/choosedir.tcl:
+	* library/clrpick.tcl:
+	* library/comdlg.tcl:
+	* library/console.tcl:
+	* library/dialog.tcl:
+	* library/entry.tcl:
+	* library/focus.tcl:
+	* library/listbox.tcl:
+	* library/menu.tcl:
+	* library/msgbox.tcl:
+	* library/optMenu.tcl:
+	* library/palette.tcl:
+	* library/scale.tcl:
+	* library/scrlbar.tcl:
+	* library/spinbox.tcl:
+	* library/tclIndex:
+	* library/tearoff.tcl:
+	* library/text.tcl:
+	* library/tk.tcl:
+	* library/tkfbox.tcl:
+	* library/unsupported.tcl:
+	* library/xmfbox.tcl:
+	* mac/tkMacMenu.c:
+	* tests/clrpick.test:
+	* tests/filebox.test:
+	* tests/macMenu.test:
+	* tests/menu.test:
+	* tests/menuDraw.test:
+	* tests/msgbox.test:
+	* tests/text.test:
+	* tests/unixMenu.test:
+	* tests/winMenu.test:
+	* tests/xmfbox.test:
+	* unix/mkLinks:
+	* unix/tkUnixDialog.c: Merged changes from feature branch
+	dgp-privates-into-namespace, implementing TIP 44.  All
+	Tk commands and variables matching tk[A-Z]* are now in the
+	::tk namespace.  See "BRANCH: dgp-privates-into-namespace"
+	entries below for details.  [FR 220936]
  
 2001-07-24  Mo DeJong  <mdejong@redhat.com>
 
