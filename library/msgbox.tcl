@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.1.4.3 1998/11/25 21:16:33 stanton Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.1.4.4 1999/04/06 03:52:56 stanton Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -51,13 +51,11 @@ proc tkMessageBox {args} {
     if {[lsearch {info warning error question} $data(-icon)] == -1} {
 	error "bad -icon value \"$data(-icon)\": must be error, info, question, or warning"
     }
-    if {$tcl_platform(platform) == "macintosh"} {
-	if {$data(-icon) == "error"} {
-	    set data(-icon) "stop"
-	} elseif {$data(-icon) == "warning"} {
-	    set data(-icon) "caution"
-	} elseif {$data(-icon) == "info"} {
-	    set data(-icon) "note"
+    if {![string compare $tcl_platform(platform) "macintosh"]} {
+      switch -- $data(-icon) {
+          "error"     {set data(-icon) "stop"}
+          "warning"   {set data(-icon) "caution"}
+          "info"      {set data(-icon) "note"}
 	}
     }
 
@@ -77,7 +75,7 @@ proc tkMessageBox {args} {
 	    set buttons {
 		{ok -width 6 -text OK -under 0}
 	    }
-	    if {$data(-default) == ""} {
+          if {![string compare $data(-default) ""]} {
 		set data(-default) "ok"
 	    }
 	}
@@ -142,7 +140,7 @@ proc tkMessageBox {args} {
     wm iconname $w Dialog
     wm protocol $w WM_DELETE_WINDOW { }
     wm transient $w $data(-parent)
-    if {$tcl_platform(platform) == "macintosh"} {
+    if {![string compare $tcl_platform(platform) "macintosh"]} {
 	unsupported1 style $w dBoxProc
     }
 
@@ -150,7 +148,7 @@ proc tkMessageBox {args} {
     pack $w.bot -side bottom -fill both
     frame $w.top
     pack $w.top -side top -fill both -expand 1
-    if {$tcl_platform(platform) != "macintosh"} {
+    if {[string compare $tcl_platform(platform) "macintosh"]} {
 	$w.bot configure -relief raised -bd 1
 	$w.top configure -relief raised -bd 1
     }
@@ -160,7 +158,7 @@ proc tkMessageBox {args} {
     # overridden by the caller).
 
     option add *Dialog.msg.wrapLength 3i widgetDefault
-    if {$tcl_platform(platform) == "macintosh"} {
+    if {![string compare $tcl_platform(platform) "macintosh"]} {
 	option add *Dialog.msg.font system widgetDefault
     } else {
 	option add *Dialog.msg.font {Times 18} widgetDefault
@@ -168,7 +166,7 @@ proc tkMessageBox {args} {
 
     label $w.msg -justify left -text $data(-message)
     pack $w.msg -in $w.top -side right -expand 1 -fill both -padx 3m -pady 3m
-    if {$data(-icon) != ""} {
+    if {[string compare $data(-icon) ""]} {
 	label $w.bitmap -bitmap $data(-icon)
 	pack $w.bitmap -in $w.top -side left -padx 3m -pady 3m
     }
@@ -179,29 +177,27 @@ proc tkMessageBox {args} {
     foreach but $buttons {
 	set name [lindex $but 0]
 	set opts [lrange $but 1 end]
-	if {![string compare $opts {}]} {
+      if {![llength $opts]} {
 	    # Capitalize the first letter of $name
-	    set capName \
-		[string toupper \
+          set capName [string toupper \
 		    [string index $name 0]][string range $name 1 end]
 	    set opts [list -text $capName]
 	}
 
-	eval button $w.$name $opts -command [list "set tkPriv(button) $name"]
+      eval button [list $w.$name] $opts [list -command [list set tkPriv(button) $name]]
 
 	if {![string compare $name $data(-default)]} {
 	    $w.$name configure -default active
 	}
-	pack $w.$name -in $w.bot -side left -expand 1 \
-	    -padx 3m -pady 2m
+      pack $w.$name -in $w.bot -side left -expand 1 -padx 3m -pady 2m
 
 	# create the binding for the key accelerator, based on the underline
 	#
 	set underIdx [$w.$name cget -under]
 	if {$underIdx >= 0} {
 	    set key [string index [$w.$name cget -text] $underIdx]
-	    bind $w <Alt-[string tolower $key]>  "$w.$name invoke"
-	    bind $w <Alt-[string toupper $key]>  "$w.$name invoke"
+          bind $w <Alt-[string tolower $key]>  [list $w.$name invoke]
+          bind $w <Alt-[string toupper $key]>  [list $w.$name invoke]
 	}
 	incr i
     }
@@ -210,7 +206,7 @@ proc tkMessageBox {args} {
     # default button.
 
     if {[string compare $data(-default) ""]} {
-	bind $w <Return> "tkButtonInvoke $w.$data(-default)"
+      bind $w <Return> [list tkButtonInvoke $w.$data(-default)]
     }
 
     # 7. Withdraw the window, then update all the geometry information
@@ -230,7 +226,7 @@ proc tkMessageBox {args} {
 
     set oldFocus [focus]
     set oldGrab [grab current $w]
-    if {$oldGrab != ""} {
+    if {[string compare $oldGrab ""]} {
 	set grabStatus [grab status $oldGrab]
     }
     grab $w
@@ -249,8 +245,8 @@ proc tkMessageBox {args} {
     tkwait variable tkPriv(button)
     catch {focus $oldFocus}
     destroy $w
-    if {$oldGrab != ""} {
-	if {$grabStatus == "global"} {
+    if {[string compare $oldGrab ""]} {
+      if {![string compare $grabStatus "global"]} {
 	    grab -global $oldGrab
 	} else {
 	    grab $oldGrab

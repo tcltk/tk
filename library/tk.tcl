@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.1.4.4 1999/01/29 00:34:33 stanton Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.1.4.5 1999/04/06 03:53:00 stanton Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -56,27 +56,29 @@ proc tkScreenChanged screen {
 	set tkPriv(screen) $screen
 	return
     }
-    set tkPriv(activeMenu) {}
-    set tkPriv(activeItem) {}
-    set tkPriv(afterId) {}
-    set tkPriv(buttons) 0
-    set tkPriv(buttonWindow) {}
-    set tkPriv(dragging) 0
-    set tkPriv(focus) {}
-    set tkPriv(grab) {}
-    set tkPriv(initPos) {}
-    set tkPriv(inMenubutton) {}
-    set tkPriv(listboxPrev) {}
-    set tkPriv(menuBar) {}
-    set tkPriv(mouseMoved) 0
-    set tkPriv(oldGrab) {}
-    set tkPriv(popup) {}
-    set tkPriv(postedMb) {}
-    set tkPriv(pressX) 0
-    set tkPriv(pressY) 0
-    set tkPriv(prevPos) 0
+    array set tkPriv {
+      activeMenu      {}
+      activeItem      {}
+      afterId         {}
+      buttons         0
+      buttonWindow    {}
+      dragging        0
+      focus           {}
+      grab            {}
+      initPos         {}
+      inMenubutton    {}
+      listboxPrev     {}
+      menuBar         {}
+      mouseMoved      0
+      oldGrab         {}
+      popup           {}
+      postedMb        {}
+      pressX          0
+      pressY          0
+      prevPos         0
+      selectMode      char
+    }
     set tkPriv(screen) $screen
-    set tkPriv(selectMode) char
     if {[string compare $tcl_platform(platform) "unix"] == 0} {
 	set tkPriv(tearoff) 1
     } else {
@@ -118,12 +120,12 @@ proc tkEventMotifBindings {n1 dummy dummy} {
 # using compiled code.
 #----------------------------------------------------------------------
 
-if {[info commands tk_chooseColor] == ""} {
+if {![string compare [info commands tk_chooseColor] ""]} {
     proc tk_chooseColor {args} {
 	return [eval tkColorDialog $args]
     }
 }
-if {[info commands tk_getOpenFile] == ""} {
+if {![string compare [info commands tk_getOpenFile] ""]} {
     proc tk_getOpenFile {args} {
 	if {$::tk_strictMotif} {
 	    return [eval tkMotifFDialog open $args]
@@ -132,7 +134,7 @@ if {[info commands tk_getOpenFile] == ""} {
 	}
     }
 }
-if {[info commands tk_getSaveFile] == ""} {
+if {![string compare [info commands tk_getSaveFile] ""]} {
     proc tk_getSaveFile {args} {
 	if {$::tk_strictMotif} {
 	    return [eval tkMotifFDialog save $args]
@@ -141,7 +143,7 @@ if {[info commands tk_getSaveFile] == ""} {
 	}
     }
 }
-if {[info commands tk_messageBox] == ""} {
+if {![string compare [info commands tk_messageBox] ""]} {
     proc tk_messageBox {args} {
 	return [eval tkMessageBox $args]
     }
@@ -179,7 +181,7 @@ switch $tcl_platform(platform) {
 # Read in files that define all of the class bindings.
 # ----------------------------------------------------------------------
 
-if {$tcl_platform(platform) != "macintosh"} {
+if {[string compare $tcl_platform(platform) "macintosh"]} {
     source [file join $tk_library button.tcl]
     source [file join $tk_library entry.tcl]
     source [file join $tk_library listbox.tcl]
@@ -219,7 +221,7 @@ proc tkCancelRepeat {} {
 # w - Window to which focus should be set.
 
 proc tkTabToWindow {w} {
-    if {"[winfo class $w]" == "Entry"} {
+    if {![string compare [winfo class $w] Entry]} {
 	$w select range 0 end
 	$w icur end
     }

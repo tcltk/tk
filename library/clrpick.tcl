@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# RCS: @(#) $Id: clrpick.tcl,v 1.1.4.2 1998/09/30 02:17:30 stanton Exp $
+# RCS: @(#) $Id: clrpick.tcl,v 1.1.4.3 1999/04/06 03:52:51 stanton Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -84,7 +84,7 @@ proc tkColorDialog {args} {
 
     set oldFocus [focus]
     set oldGrab [grab current $w]
-    if {$oldGrab != ""} {
+    if {[string compare $oldGrab ""]} {
 	set grabStatus [grab status $oldGrab]
     }
     grab $w
@@ -101,8 +101,8 @@ proc tkColorDialog {args} {
     grab release $w
     destroy $w
     unset data
-    if {$oldGrab != ""} {
-	if {$grabStatus == "global"} {
+    if {[string compare $oldGrab ""]} {
+	if {![string compare $grabStatus "global"]} {
 	    grab -global $oldGrab
 	} else {
 	    grab $oldGrab

@@ -4,7 +4,7 @@
 # posts a dialog box with the error message and gives the user a chance
 # to see a more detailed stack trace.
 #
-# RCS: @(#) $Id: bgerror.tcl,v 1.1.4.3 1999/01/29 00:34:33 stanton Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.1.4.4 1999/04/06 03:52:49 stanton Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -62,7 +62,7 @@ proc bgerror err {
     wm title $w "Stack Trace for Error"
     wm iconname $w "Stack Trace"
     button $w.ok -text OK -command "destroy $w" -default active
-    if {$tcl_platform(platform) == "macintosh"} {
+    if {![string compare $tcl_platform(platform) "macintosh"]} {
       text $w.text -relief flat -bd 2 -highlightthickness 0 -setgrid true \
 	    -yscrollcommand "$w.scroll set" -width 60 -height 20
     } else {
@@ -94,7 +94,7 @@ proc bgerror err {
     # screen, since they could make it impossible for the user
     # to interact with the stack trace.
 
-    if {[grab current .] != ""} {
+    if {[string compare [grab current .] ""]} {
 	grab release [grab current .]
     }
 }

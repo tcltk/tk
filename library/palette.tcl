@@ -3,7 +3,7 @@
 # This file contains procedures that change the color palette used
 # by Tk.
 #
-# RCS: @(#) $Id: palette.tcl,v 1.1.4.2 1998/09/30 02:17:35 stanton Exp $
+# RCS: @(#) $Id: palette.tcl,v 1.1.4.3 1999/04/06 03:52:57 stanton Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 #
@@ -187,23 +187,22 @@ proc tkRecolorTree {w colors} {
 #		by 10%.
 
 proc tkDarken {color percent} {
-    set l [winfo rgb . $color]
-    set red [expr {[lindex $l 0]/256}]
-    set green [expr {[lindex $l 1]/256}]
-    set blue [expr {[lindex $l 2]/256}]
-    set red [expr {($red*$percent)/100}]
+    foreach {red green blue} [winfo rgb . $color] {
+      set red [expr {($red/256)*$percent/100}]
+      set green [expr {($green/256)*$percent/100}]
+      set blue [expr {($blue/256)*$percent/100}]
+      break
+    }
     if {$red > 255} {
 	set red 255
     }
-    set green [expr {($green*$percent)/100}]
     if {$green > 255} {
 	set green 255
     }
-    set blue [expr {($blue*$percent)/100}]
     if {$blue > 255} {
 	set blue 255
     }
-    format #%02x%02x%02x $red $green $blue
+    return [format "#%02x%02x%02x" $red $green $blue]
 }
 
 # tk_bisque --
