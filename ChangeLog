@@ -15,6 +15,9 @@
 
 2003-10-06  Don Porter	<dgp@users.sourceforge.net>
 
+        * doc/ConfigWidg.3:     Removed reference to Tk_Offset from the
+        NAME section to resolve mkLinks conflict with SetOptions.3 [Bug 404197]
+
 	* unix/configure.in:	 Reconfigured to use $TCL_PREFIX as the
 	default value of --prefix, and also added warning when a TK_PREFIX
 	value different from TCL_PREFIX is selected, since [package require Tk]
@@ -29,6 +32,7 @@
 	verify that's what we have.  [Bug 749088]
 
 	* unix/configure:	autoconf (2.57)
+	* unix/mkLinks:		make mklinks
 
 2003-10-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
