@@ -1,5 +1,15 @@
 2000-01-26  Eric Melski  <ericm@scriptics.com>
 
+	* doc/getOpenFile.n: 
+	* doc/chooseDirectory.n: Man page/cross links for
+	tk_chooseDirectory (bug #1786).
+
+	* library/tk.tcl: 
+	* library/tclIndex: Added hooks for tk_chooseDirectory. (bug #1786)
+
+	* library/choosedir.tcl: tk_chooseDirectory implementation for
+	Unix/Mac (bug #1786).
+
 	* generic/tkImgPhoto.c: Added some comments regarding slow
 	processing of transparent images.
 

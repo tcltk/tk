@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.14 2000/01/26 21:11:00 ericm Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.15 2000/01/27 01:28:37 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -1671,7 +1671,7 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
     }
     if (data) {
 	if (data->length
-		|| (data->typePtr == &tclByteArrayType
+		|| (data->typePtr == Tcl_GetObjType("bytearray")
 			&& data->internalRep.otherValuePtr != NULL)) {
 	    Tcl_IncrRefCount(data);
 	} else {
