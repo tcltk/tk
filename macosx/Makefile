@@ -3,7 +3,7 @@
 # Makefile to build AquaTk on Mac OS X packaged as a Framework
 #	uses Project Builder command line tool 'pbxbuild'
 #
-# RCS: @(#) $Id: Makefile,v 1.13 2004/02/23 22:49:26 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.14 2004/07/20 11:49:16 das Exp $
 #
 ################################################################################
 
@@ -24,9 +24,13 @@ APPLICATION_INSTALL_PATH ?= /Applications/Utilities
 
 PREFIX			?= /usr
 BINDIR			?= ${PREFIX}/bin
+MANDIR			?= ${PREFIX}/man
 
 TCL_FRAMEWORK_DIR	?= ${BUILD_DIR}/tcl
 TCLSH_DIR		?= ${TCL_FRAMEWORK_DIR}
+
+# set to non-empty value to install manpages in addition to html help:
+INSTALL_MANPAGES 	?= 
 
 #-------------------------------------------------------------------------------
 
@@ -83,6 +87,12 @@ install-develop:
 
 install-deploy:
 	${DEPBUILD} install ${INSTALLOPTS}
+ifneq (${INSTALL_MANPAGES},)
+# install manpages
+	${MAKE} -C "$(CURDIR)/../unix" -f Makefile.in install-doc \
+	        SRC_DIR="$(CURDIR)/.." UNIX_DIR="$(CURDIR)/../unix" \
+	        mandir="$(MANDIR)" ${INSTALLOPTS} ${EXTRA_MAKE_ARGS}
+endif
 
 embedded-develop:
 	${DEVBUILD} ${EMBEDDEDOPTS}
