@@ -1,3 +1,9 @@
+2003-11-04  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* library/demos/widget (showCode,printCode): Added code to print
+	the source code on Unix and Win, courtesy of Arjen Markus and the
+	Wiki.  [Patch 835644]
+
 2003-11-03  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkTextDisp.c
