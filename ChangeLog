@@ -1,3 +1,8 @@
+2003-11-03  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkTextDisp.c (TextGetScrollInfoObj): Stop complaints
+	about signed vs. unsigned for the length of strings.
+
 2003-11-01  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/msgs/nl.msg: Updated messages from Arjen Markus and
