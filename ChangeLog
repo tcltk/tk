@@ -1,5 +1,24 @@
 2000-05-17  Eric Melski  <ericm@scriptics.com>
 
+	Overall change:  Added "-readonlybackground" option for entries,
+	to enable a visual change when state goes to readonly.
+
+	* mac/tkMacDefault.h (DEF_ENTRY_READONLY_BG_COLOR,
+	DEF_ENTRY_READONLY_BG_COLOR):
+	* win/tkWinDefault.h (DEF_ENTRY_READONLY_BG_COLOR,
+	DEF_ENTRY_READONLY_BG_COLOR):
+	* unix/tkUnixDefault.h (DEF_ENTRY_READONLY_BG_COLOR,
+	DEF_ENTRY_READONLY_BG_COLOR): Added default values for entry
+	-readonlybackground option.
+
+	* generic/tkEntry.c: Added -readonlybackground option, cleaned up
+	excessive use of graphics contexts.
+
+	* tests/entry.test: Added configuration test for
+	-readonlybackground option.
+
+	* doc/entry.n: Added documentation for -readonlybackground option.
+
 	Overall change:  changed implementation of "link" relief for
 	buttons.  Instead of a new relief style (-relief link), there is a
 	new option, -overrelief, which if set is used when the mouse is

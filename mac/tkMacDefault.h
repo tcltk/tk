@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDefault.h,v 1.7 2000/05/17 21:17:21 ericm Exp $
+ * RCS: @(#) $Id: tkMacDefault.h,v 1.8 2000/05/17 22:23:26 ericm Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -158,6 +158,8 @@
 /* #define DEF_ENTRY_INSERT_WIDTH		"2" */
 #define DEF_ENTRY_INSERT_WIDTH		"1"
 #define DEF_ENTRY_JUSTIFY		"left"
+#define DEF_ENTRY_READONLY_BG_COLOR	NORMAL_BG
+#define DEF_ENTRY_READONLY_BG_MONO	WHITE
 /* #define DEF_ENTRY_RELIEF		"sunken" */
 #define DEF_ENTRY_RELIEF		"solid"
 #define DEF_ENTRY_SCROLL_COMMAND	""

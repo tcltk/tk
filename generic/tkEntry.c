@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.15 2000/05/14 20:45:37 ericm Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.16 2000/05/17 22:23:25 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -74,6 +74,9 @@ typedef struct {
 				 * window, plus used for background. */
     Tk_3DBorder disabledBorder;	/* Used for drawing  border around whole
 				 * window in disabled state, plus used for
+				 * background. */
+    Tk_3DBorder readonlyBorder;	/* Used for drawing  border around whole
+				 * window in readonly state, plus used for
 				 * background. */
     int borderWidth;		/* Width of 3-D border around window. */
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
@@ -150,7 +153,6 @@ typedef struct {
 				/* Timer handler used to blink cursor on and
 				 * off. */
     GC textGC;			/* For drawing normal text. */
-    GC disabledTextGC;		/* For drawing disabled text. */
     GC selTextGC;		/* For drawing selected text. */
     GC highlightGC;		/* For drawing traversal highlight. */
     int avgWidth;		/* Width of average character. */
@@ -310,6 +312,10 @@ static Tk_OptionSpec optionSpecs[] = {
 	(char *) NULL, 0, -1, 0, (ClientData) "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, -1, Tk_Offset(Entry, justify), 0, 0, 0},
+    {TK_OPTION_BORDER, "-readonlybackground", "readonlyBackground",
+	 "ReadonlyBackground", DEF_ENTRY_READONLY_BG_COLOR, -1,
+	 Tk_Offset(Entry, readonlyBorder), TK_OPTION_NULL_OK,
+	 (ClientData) DEF_ENTRY_READONLY_BG_MONO, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_ENTRY_RELIEF, -1, Tk_Offset(Entry, relief), 
         0, 0, 0},
@@ -534,6 +540,7 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
 
     entryPtr->normalBorder	= NULL;
     entryPtr->disabledBorder	= NULL;
+    entryPtr->readonlyBorder	= NULL;
     entryPtr->borderWidth	= 0;
     entryPtr->cursor		= None;
     entryPtr->exportSelection	= 1;
@@ -571,7 +578,6 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
     entryPtr->leftIndex		= 0;
     entryPtr->insertBlinkHandler	= (Tcl_TimerToken) NULL;
     entryPtr->textGC		= None;
-    entryPtr->disabledTextGC	= None;
     entryPtr->selTextGC		= None;
     entryPtr->highlightGC	= None;
     entryPtr->avgWidth		= 1;
@@ -1088,9 +1094,6 @@ DestroyEntry(memPtr)
     if (entryPtr->textGC != None) {
 	Tk_FreeGC(entryPtr->display, entryPtr->textGC);
     }
-    if (entryPtr->disabledTextGC != None) {
-	Tk_FreeGC(entryPtr->display, entryPtr->disabledTextGC);
-    }
     if (entryPtr->selTextGC != None) {
 	Tk_FreeGC(entryPtr->display, entryPtr->selTextGC);
     }
@@ -1182,6 +1185,9 @@ ConfigureEntry(interp, entryPtr, objc, objv, flags)
 	if (entryPtr->state == STATE_DISABLED &&
 		entryPtr->disabledBorder != NULL) {
 	    border = entryPtr->disabledBorder;
+	} else if (entryPtr->state == STATE_READONLY &&
+		entryPtr->readonlyBorder != NULL) {
+	    border = entryPtr->readonlyBorder;
 	} else {
 	    border = entryPtr->normalBorder;
 	}
@@ -1293,7 +1299,9 @@ EntryWorldChanged(instanceData)
     GC gc = None;
     unsigned long mask;
     Entry *entryPtr;
-
+    Tk_3DBorder border;
+    XColor *colorPtr;
+    
     entryPtr = (Entry *) instanceData;
 
     entryPtr->avgWidth = Tk_TextWidth(entryPtr->tkfont, "0", 1);
@@ -1301,14 +1309,32 @@ EntryWorldChanged(instanceData)
 	entryPtr->avgWidth = 1;
     }
 
-    if (entryPtr->state == STATE_DISABLED &&
-	    entryPtr->disabledBorder != NULL) {
-	Tk_SetBackgroundFromBorder(entryPtr->tkwin, entryPtr->disabledBorder);
-    } else if (entryPtr->normalBorder != NULL) {
-	Tk_SetBackgroundFromBorder(entryPtr->tkwin, entryPtr->normalBorder);
+    /*
+     * Default background and foreground are from the normal state.
+     * In a disabled state, both of those may be overridden; in the readonly
+     * state, the background may be overridden.
+     */
+     
+    border	= entryPtr->normalBorder;
+    colorPtr	= entryPtr->fgColorPtr;
+    switch (entryPtr->state) {
+	case STATE_DISABLED:
+	    if (entryPtr->disabledBorder != NULL) {
+		border = entryPtr->disabledBorder;
+	    }
+	    if (entryPtr->dfgColorPtr != NULL) {
+		colorPtr = entryPtr->dfgColorPtr;
+	    }
+	    break;
+	case STATE_READONLY:
+	    if (entryPtr->readonlyBorder != NULL) {
+		border = entryPtr->readonlyBorder;
+	    }
+	    break;
     }
-
-    gcValues.foreground = entryPtr->fgColorPtr->pixel;
+    
+    Tk_SetBackgroundFromBorder(entryPtr->tkwin, border);
+    gcValues.foreground = colorPtr->pixel;
     gcValues.font = Tk_FontId(entryPtr->tkfont);
     gcValues.graphics_exposures = False;
     mask = GCForeground | GCFont | GCGraphicsExposures;
@@ -1326,20 +1352,6 @@ EntryWorldChanged(instanceData)
 	Tk_FreeGC(entryPtr->display, entryPtr->selTextGC);
     }
     entryPtr->selTextGC = gc;
-
-    if (entryPtr->dfgColorPtr != NULL) {
-	gcValues.foreground = entryPtr->dfgColorPtr->pixel;
-	gcValues.font = Tk_FontId(entryPtr->tkfont);
-	gcValues.graphics_exposures = False;
-	mask = GCForeground | GCFont | GCGraphicsExposures;
-	gc = Tk_GetGC(entryPtr->tkwin, mask, &gcValues);
-    } else {
-	gc = None;
-    }
-    if (entryPtr->disabledTextGC != None) {
-	Tk_FreeGC(entryPtr->display, entryPtr->disabledTextGC);
-    }
-    entryPtr->disabledTextGC = gc;
 
     /*
      * Recompute the window's geometry and arrange for it to be
@@ -1378,7 +1390,6 @@ DisplayEntry(clientData)
     Tk_FontMetrics fm;
     Pixmap pixmap;
     int showSelection;
-    GC textGC;
     Tk_3DBorder border;
     
     entryPtr->flags &= ~REDRAW_PENDING;
@@ -1435,6 +1446,9 @@ DisplayEntry(clientData)
     if (entryPtr->state == STATE_DISABLED &&
 	    entryPtr->disabledBorder != NULL) {
 	border = entryPtr->disabledBorder;
+    } else if (entryPtr->state == STATE_READONLY &&
+	    entryPtr->readonlyBorder != NULL) {
+	border = entryPtr->readonlyBorder;
     } else {
 	border = entryPtr->normalBorder;
     }
@@ -1498,17 +1512,12 @@ DisplayEntry(clientData)
      * selected portion on top of it.
      */
 
-    if (entryPtr->state == STATE_DISABLED && entryPtr->dfgColorPtr != NULL) {
-	textGC = entryPtr->disabledTextGC;
-    } else {
-	textGC = entryPtr->textGC;
-    }
-    Tk_DrawTextLayout(entryPtr->display, pixmap, textGC,
+    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
 	    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
 	    entryPtr->leftIndex, entryPtr->numChars);
 
     if (showSelection && entryPtr->state != STATE_DISABLED
-	    && (entryPtr->selTextGC != textGC)
+	    && (entryPtr->selTextGC != entryPtr->textGC)
 	    && (entryPtr->selectFirst < entryPtr->selectLast)) {
 	int selFirst;
 
@@ -1553,7 +1562,7 @@ DisplayEntry(clientData)
      * and free up the pixmap.
      */
 
-    XCopyArea(entryPtr->display, pixmap, Tk_WindowId(tkwin), textGC,
+    XCopyArea(entryPtr->display, pixmap, Tk_WindowId(tkwin), entryPtr->textGC,
 	    0, 0, (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin),
 	    0, 0);
     Tk_FreePixmap(entryPtr->display, pixmap);

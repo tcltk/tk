@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDefault.h,v 1.7 2000/05/17 21:17:22 ericm Exp $
+ * RCS: @(#) $Id: tkUnixDefault.h,v 1.8 2000/05/17 22:23:26 ericm Exp $
  */
 
 #ifndef _TKUNIXDEFAULT
@@ -153,6 +153,8 @@
 #define DEF_ENTRY_INSERT_ON_TIME	"600"
 #define DEF_ENTRY_INSERT_WIDTH		"2"
 #define DEF_ENTRY_JUSTIFY		"left"
+#define DEF_ENTRY_READONLY_BG_COLOR	NORMAL_BG
+#define DEF_ENTRY_READONLY_BG_MONO	WHITE
 #define DEF_ENTRY_RELIEF		"sunken"
 #define DEF_ENTRY_SCROLL_COMMAND	""
 #define DEF_ENTRY_SELECT_COLOR		SELECT_BG
