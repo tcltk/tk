@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: button.n,v 1.5 2000/05/17 21:17:20 ericm Exp $
+'\" RCS: @(#) $Id: button.n,v 1.6 2000/08/25 06:58:31 ericm Exp $
 '\" 
 .so man.macros
 .TH button n 4.4 Tk "Tk Built-In Commands"
@@ -16,15 +16,15 @@ button \- Create and manipulate button widgets
 .SH SYNOPSIS
 \fBbutton\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-activebackground      \-activeforeground       \-anchor
-\-background            \-bitmap                 \-borderwidth
-\-cursor                \-disabledforeground     \-font
-\-foreground            \-highlightbackground    \-highlightcolor
-\-highlightthickness    \-image                  \-justify
-\-padx                  \-pady                   \-relief
-\-repeatdelay           \-repeatinterval         \-takefocus
-\-text                  \-textvariable           \-underline
-\-wraplength
+\-activebackground	\-foreground	\-repeatdelay
+\-activeforeground	\-highlightbackground	\-repeatinterval
+\-anchor	\-highlightcolor	\-takefocus
+\-background	\-highlightthickness	\-text
+\-bitmap	\-image	\-textvariable
+\-borderwidth	\-justify	\-underline
+\-cursor	\-padx	\-wraplength
+\-disabledforeground	\-pady
+\-font	\-relief
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-command command Command

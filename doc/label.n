@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: label.n,v 1.4 2000/07/28 16:41:40 ericm Exp $
+'\" RCS: @(#) $Id: label.n,v 1.5 2000/08/25 06:58:32 ericm Exp $
 '\" 
 .so man.macros
 .TH label n 4.0 Tk "Tk Built-In Commands"
@@ -16,14 +16,14 @@ label \- Create and manipulate label widgets
 .SH SYNOPSIS
 \fBlabel\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-activebackground         \-activeforeground         \-anchor
-\-background               \-bitmap                   \-borderwidth
-\-cursor                   \-disabledforeground       \-font
-\-foreground               \-highlightbackground      \-highlightcolor
-\-highlightthickness       \-image                    \-justify
-\-padx                     \-pady                     \-relief
-\-takefocus                \-text                     \-textvariable
-\-underline                \-wraplength
+\-activebackground	\-font	\-pady
+\-activeforeground	\-foreground	\-relief
+\-anchor	\-highlightbackground	\-takefocus
+\-background	\-highlightcolor	\-text
+\-bitmap	\-highlightthickness	\-textvariable
+\-borderwidth	\-image	\-underline
+\-cursor	\-justify	\-wraplength
+\-disabledforeground	\-padx	
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-height height Height

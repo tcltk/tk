@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.9 2000/07/25 21:14:34 jenglish Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.10 2000/08/25 06:58:31 ericm Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -17,13 +17,13 @@ canvas \- Create and manipulate canvas widgets
 .SH SYNOPSIS
 \fBcanvas\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-background            \-borderwidth           \-cursor
-\-highlightbackground   \-highlightcolor        \-highlightthickness
-\-insertbackground      \-insertborderwidth     \-insertofftime
-\-insertontime          \-insertwidth           \-relief
-\-state                 \-selectbackground      \-selectborderwidth
-\-selectforeground      \-takefocus             \-xscrollcommand
-\-yscrollcommand
+\-background	\-insertborderwidth	\-selectborderwidth
+\-borderwidth	\-insertofftime	\-selectforeground
+\-cursor	\-insertontime	\-takefocus
+\-highlightbackground	\-insertwidth	\-xscrollcommand
+\-highlightcolor	\-relief	\-yscrollcommand
+\-highlightthickness	\-state
+\-insertbackground	\-selectbackground
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-closeenough closeEnough CloseEnough
