@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.1.4.4 1998/11/25 21:16:28 stanton Exp $
+RCS: @(#) $Id: changes,v 1.1.4.5 1998/12/11 01:31:02 stanton Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4378,3 +4378,23 @@ XLFD (no XA_FONT attribute) would lead to dereferencing NULL. (CCS)
 
 10/21/98 (bug fix) Tk_UnderlineChars did not handle UTF strings properly
 so underline indices were in bytes instead of characters. (stanton)
+
+11/19/98 (bug fix) Fixed menus and titles so they properly display
+Unicode characters under Windows. [Bug: 819] (stanton)
+
+11/24/98 (bug fix) Fixed a bunch of memory leaks in the Windows menu
+code. [Bug: 620] (stanton)
+
+11/25/98 (bug fix) Various small bug fixes: (stanton)
+	- hidemargin option was not honored properly in menus [Bug: 859]
+	- disabled menu entries were getting reenabled whenever the
+	mouse passed over the entry [Bug: 860]
+	- fixed deletion order bug where a crash would result if a
+	binding deleted "."
+
+11/30/98 (bug fix) The error result was getting lost when restoring
+configuration options in buttons. [Bug: 619] (stanton)
+
+12/8/98 (bug fix) The Windows clipboard was not correctly traslating
+multibyte characters. [Bug: 935] (stanton)
+
