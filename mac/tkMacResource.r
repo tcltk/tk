@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacResource.r,v 1.6 1999/08/16 08:51:46 jingham Exp $
+ * RCS: @(#) $Id: tkMacResource.r,v 1.7 2001/11/23 02:06:18 das Exp $
  */
 
 /*
@@ -46,20 +46,7 @@
 #   define MINOR_VERSION TK_MINOR_VERSION * 16
 #endif
 
-resource 'vers' (1) {
-	TK_MAJOR_VERSION, MINOR_VERSION,
-	RELEASE_LEVEL, 0x00, verUS,
-	TK_PATCH_LEVEL,
-	TK_PATCH_LEVEL ", by Ray Johnson & Jim Ingham " "\n" "© 1993-1997 Sun Microsystems" "\n" "© 1998-1999 Scriptics Inc."
-};
-
-resource 'vers' (2) {
-	TK_MAJOR_VERSION, MINOR_VERSION,
-	RELEASE_LEVEL, 0x00, verUS,
-	TK_PATCH_LEVEL,
-	"Wish " TK_PATCH_LEVEL " © 1993-1999"
-};
-
+#define TK_LIBRARY_RESOURCES 3000
 
 /* 
  * The mechanisim below loads Tcl source into the resource fork of the
@@ -73,45 +60,41 @@ resource 'vers' (2) {
  * will load the TEXT resource named "Init".
  */
 
-#include "tclMacTclCode.r"
+read 'TEXT' (TK_LIBRARY_RESOURCES+1, "tk", purgeable,preload) 
+	"::library:tk.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+2, "button", purgeable) 
+	"::library:button.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+3, "dialog", purgeable) 
+	"::library:dialog.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+4, "entry", purgeable) 
+	"::library:entry.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+5, "focus", purgeable) 
+	"::library:focus.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+6, "listbox", purgeable) 
+	"::library:listbox.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+7, "menu", purgeable) 
+	"::library:menu.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+8, "optMenu", purgeable) 
+	"::library:optMenu.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+9, "palette", purgeable) 
+	"::library:palette.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+10, "scale", purgeable) 
+	"::library:scale.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+11, "scrlbar", purgeable) 
+	"::library:scrlbar.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+12, "tearoff", purgeable) 
+	"::library:tearoff.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+13, "text", purgeable) 
+	"::library:text.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+14, "bgerror", purgeable) 
+	"::library:bgerror.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+15, "console", purgeable) 
+	"::library:console.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+16, "msgbox", purgeable) 
+	"::library:msgbox.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+17, "comdlg", purgeable) 
+	"::library:comdlg.tcl";
 
-read 'TEXT' (10, "tk", purgeable, preload) "::library:tk.tcl";
-read 'TEXT' (11, "button", purgeable, preload) "::library:button.tcl";
-read 'TEXT' (12, "dialog", purgeable, preload) "::library:dialog.tcl";
-read 'TEXT' (13, "entry", purgeable, preload) "::library:entry.tcl";
-read 'TEXT' (14, "focus", purgeable, preload) "::library:focus.tcl";
-read 'TEXT' (15, "listbox", purgeable, preload) "::library:listbox.tcl";
-read 'TEXT' (16, "menu", purgeable, preload) "::library:menu.tcl";
-read 'TEXT' (17, "optionMenu", purgeable, preload) "::library:optMenu.tcl";
-read 'TEXT' (18, "palette", purgeable, preload) "::library:palette.tcl";
-read 'TEXT' (19, "scale", purgeable, preload) "::library:scale.tcl";
-read 'TEXT' (20, "scrollbar", purgeable, preload) "::library:scrlbar.tcl";
-read 'TEXT' (21, "tearoff", purgeable, preload) "::library:tearoff.tcl";
-read 'TEXT' (22, "text", purgeable, preload) "::library:text.tcl";
-read 'TEXT' (23, "tkerror", purgeable, preload) "::library:bgerror.tcl";
-read 'TEXT' (24, "Console", purgeable, preload) "::library:console.tcl";
-read 'TEXT' (25, "msgbox", purgeable, preload) "::library:msgbox.tcl";
-read 'TEXT' (26, "comdlg", purgeable, preload) "::library:comdlg.tcl";
-
-/*
- * The following resource is used when creating the 'env' variable in
- * the Macintosh environment.  The creation mechanisim looks for the
- * 'STR#' resource named "Tcl Environment Variables" rather than a
- * specific resource number.  (In other words, feel free to change the
- * resource id if it conflicts with your application.)  Each string in
- * the resource must be of the form "KEYWORD=SOME STRING".  See Tcl
- * documentation for futher information about the env variable.
- */
- 
-/* A good example of something you may want to set is:
- * "TCL_LIBRARY=My disk:etc." 
- */
-		
-resource 'STR#' (128, "Tcl Environment Variables") {
-	{	"SCHEDULE_NAME=Agent Controller Schedule",
-		"SCHEDULE_PATH=Lozoya:System Folder:Tcl Lib:Tcl-Scheduler"
-	};
-};
 
 /*
  * The following two resources define the default "About Box" for Mac Tk.
@@ -133,9 +116,9 @@ resource 'DITL' (128, "About Box", purgeable) {
 	{ 14, 108, 137, 314}, StaticText    {disabled, 
 	    "Wish - Windowing Shell" "\n" "based on Tcl " 
 	    TCL_PATCH_LEVEL " & Tk " TK_PATCH_LEVEL "\n\n" 
-            "Ray Johnson & Jim Ingham" "\n"
-	    "Scriptics Inc." "\n"
-            "jim.ingham@cygnus.com"},	    
+            "Jim Ingham & Ray Johnson" "\n"
+	    "© 2001 Tcl Core Team" "\n"
+            "jingham@apple.com"},	    
         { 19,  24, 119,  92}, Picture  {enabled, 128}
     }
 };

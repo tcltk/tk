@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.21 2001/09/25 16:25:20 dgp Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.22 2001/11/23 02:04:56 das Exp $
 
 library tk
 
@@ -556,9 +556,10 @@ declare 119 {mac win} {
 	    TkRegion src, TkRegion dr_return)
 }
 
-declare 120 mac {
-    void TkGenerateActivateEvents (TkWindow *winPtr, int active)
-}
+# removed duplicate from tkIntPlat table
+#declare 120 mac {
+#    void TkGenerateActivateEvents (TkWindow *winPtr, int active)
+#}
 
 declare 121 mac {
     Pixmap TkpCreateNativeBitmap (Display *display, char * source)
@@ -568,48 +569,50 @@ declare 122 mac {
     void TkpDefineNativeBitmaps (void)
 }
 
-declare 123 mac {
-    unsigned long TkpGetMS (void)
-}
+# removed duplicate from tkIntPlat table
+#declare 123 mac {
+#    unsigned long TkpGetMS (void)
+#}
 
 declare 124 mac {
     Pixmap TkpGetNativeAppBitmap (Display *display, \
  	    CONST char *name, int *width, int *height)
 }
 
-declare 125 mac {
-    void TkPointerDeadWindow (TkWindow *winPtr)
-}
-
-declare 126 mac {
-    void TkpSetCapture (TkWindow *winPtr)
-}
-
-declare 127 mac {
-    void TkpSetCursor (TkpCursor cursor)
-}
-
-declare 128 mac {
-    void TkpWmSetState (TkWindow *winPtr, int state)
-}
-
-declare 130 mac {
-    Window  TkGetTransientMaster (TkWindow *winPtr)
-}
-
-declare 131 mac {
-    int  TkGenerateButtonEvent (int x, int y, \
- 	    Window window, unsigned int state)
-}
-
-declare 133 mac {
-    void  TkGenWMDestroyEvent (Tk_Window tkwin)
-}
-
-declare 134 mac {
-    void  TkGenWMConfigureEvent (Tk_Window tkwin, int x, int y, \
- 	    int width, int height, int flags)
-}
+# removed duplicates from tkIntPlat table
+#declare 125 mac {
+#    void TkPointerDeadWindow (TkWindow *winPtr)
+#}
+#
+#declare 126 mac {
+#    void TkpSetCapture (TkWindow *winPtr)
+#}
+#
+#declare 127 mac {
+#    void TkpSetCursor (TkpCursor cursor)
+#}
+#
+#declare 128 mac {
+#    void TkpWmSetState (TkWindow *winPtr, int state)
+#}
+#
+#declare 130 mac {
+#    Window  TkGetTransientMaster (TkWindow *winPtr)
+#}
+#
+#declare 131 mac {
+#    int  TkGenerateButtonEvent (int x, int y, \
+# 	    Window window, unsigned int state)
+#}
+#
+#declare 133 mac {
+#    void  TkGenWMDestroyEvent (Tk_Window tkwin)
+#}
+#
+#declare 134 mac {
+#    void  TkGenWMConfigureEvent (Tk_Window tkwin, int x, int y, \
+# 	    int width, int height, int flags)
+#}
 
 declare 135 generic {
     void TkpDrawHighlightBorder (Tk_Window tkwin, GC fgGC, GC bgGC, \
@@ -833,13 +836,14 @@ declare 0 mac {
     void TkGenerateActivateEvents (TkWindow *winPtr, int active)
 }
 
-declare 1 mac {
-    Pixmap TkpCreateNativeBitmap (Display *display, char * source)
-}
-
-declare 2 mac {
-    void TkpDefineNativeBitmaps (void)
-}
+# removed duplicates from tkInt table
+#declare 1 mac {
+#    Pixmap TkpCreateNativeBitmap (Display *display, char * source)
+#}
+#
+#declare 2 mac {
+#    void TkpDefineNativeBitmaps (void)
+#}
 
 declare 3 mac {
     unsigned long TkpGetMS (void)
@@ -878,10 +882,11 @@ declare 16 mac {
     void  TkGenWMDestroyEvent (Tk_Window tkwin)
 }
 
-declare 17 mac {
-    void  TkGenWMConfigureEvent (Tk_Window tkwin, int x, int y, \
-	    int width, int height, int flags)
-}
+# removed duplicate from tkPlat table (tk.decls)
+#declare 17 mac {
+#    void  TkGenWMConfigureEvent (Tk_Window tkwin, int x, int y, \
+#	    int width, int height, int flags)
+#}
 
 declare 18 mac {
     unsigned int TkMacButtonKeyState (void)
@@ -891,9 +896,10 @@ declare 19 mac {
     void  TkMacClearMenubarActive (void)
 }
 
-declare 20 mac {
-    int  TkMacConvertEvent (EventRecord *eventPtr)
-}
+# removed duplicate from tkPlat table (tk.decls)
+#declare 20 mac {
+#    int  TkMacConvertEvent (EventRecord *eventPtr)
+#}
 
 declare 21 mac {
     int  TkMacDispatchMenuEvent (int menuID, int index)
@@ -903,17 +909,19 @@ declare 22 mac {
     void  TkMacInstallCursor (int resizeOverride)
 }
 
-declare 23 mac {
-    int  TkMacConvertTkEvent (EventRecord *eventPtr, Window window)
-}
+# removed duplicate from tkPlat table (tk.decls)
+#declare 23 mac {
+#    int  TkMacConvertTkEvent (EventRecord *eventPtr, Window window)
+#}
 
 declare 24 mac {
     void  TkMacHandleTearoffMenu (void)
 }
 
-declare 26 mac {
-    void  TkMacInvalClipRgns (TkWindow *winPtr)
-}
+# removed duplicate from tkPlat table (tk.decls)
+#declare 26 mac {
+#    void  TkMacInvalClipRgns (TkWindow *winPtr)
+#}
 
 declare 27 mac {
     void  TkMacDoHLEvent (EventRecord *theEvent)
@@ -923,9 +931,10 @@ declare 29 mac {
     Time  TkMacGenerateTime (void)
 }
 
-declare 30 mac {
-    GWorldPtr  TkMacGetDrawablePort (Drawable drawable)
-}
+# removed duplicate from tkPlat table (tk.decls)
+#declare 30 mac {
+#    GWorldPtr  TkMacGetDrawablePort (Drawable drawable)
+#}
 
 declare 31 mac {
     TkWindow *  TkMacGetScrollbarGrowWindow (TkWindow *winPtr)
@@ -943,17 +952,18 @@ declare 34 mac {
     void   TkMacHandleMenuSelect (long mResult, int optionKeyPressed)
 }
 
-declare 35 mac {
-    int  TkMacHaveAppearance (void)
-}
-
-declare 36 mac {
-    void  TkMacInitAppleEvents (Tcl_Interp *interp)
-}
-
-declare 37 mac {
-    void   TkMacInitMenus (Tcl_Interp  *interp)
-}
+# removed duplicates from tkPlat table (tk.decls)
+#declare 35 mac {
+#    int  TkMacHaveAppearance (void)
+#}
+#
+#declare 36 mac {
+#    void  TkMacInitAppleEvents (Tcl_Interp *interp)
+#}
+#
+#declare 37 mac {
+#    void   TkMacInitMenus (Tcl_Interp  *interp)
+#}
 
 declare 38 mac {
     void  TkMacInvalidateWindow (MacDrawable *macWin, int flag)
@@ -1056,6 +1066,9 @@ declare 65 mac {
     void TkMacPreprocessMenu (void)
 }
 
+declare 66 mac {
+    int TkpIsWindowFloating (WindowRef window)
+}
 
 ##############################################################################
 

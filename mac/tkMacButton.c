@@ -9,12 +9,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacButton.c,v 1.14 2000/11/22 01:49:38 ericm Exp $
+ * RCS: @(#) $Id: tkMacButton.c,v 1.15 2001/11/23 02:05:37 das Exp $
  */
 
 #include "tkButton.h"
 #include "tkMacInt.h"
 #include <Controls.h>
+#include <ControlDefinitions.h>
 #include <LowMem.h>
 #include <Appearance.h>
 
@@ -552,9 +553,15 @@ void
 TkpComputeButtonGeometry(
     TkButton *butPtr)	/* Button whose geometry may have changed. */
 {
-    int width, height, avgWidth, haveImage = 0;
+    int width, height, avgWidth, haveImage = 0, haveText = 0;
     int txtWidth, txtHeight;
     Tk_FontMetrics fm;
+
+    width = 0;
+    height = 0;
+    txtWidth = 0;
+    txtHeight = 0;
+    avgWidth = 0;
 
     /*
      * First figure out the size of the contents of the button.
@@ -568,12 +575,6 @@ TkpComputeButtonGeometry(
 	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
 	haveImage = 1;
     }
-
-    width = 0;
-    height = 0;
-    txtWidth = 0;
-    txtHeight = 0;
-    avgWidth = 0;
 
     if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
 	Tk_FreeTextLayout(butPtr->textLayout);
