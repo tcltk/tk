@@ -1,5 +1,14 @@
 2002-06-12  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* changes: Clearly label wm transient changes as
+	a POTENTIAL INCOMPATIBILITY. 
+	* doc/wm.n: Remove "some window managers will" text
+	and explicitly state what behavior a transient
+	window will display. Also mention that it is an
+	error to make a window a transient of itself.
+
+2002-06-12  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* library/choosedir.tcl (tk::dialog::file::chooseDir):
 	* library/clrpick.tcl (tk::dialog::file::chooseDir):
 	* library/msgbox.tcl (tk::MessageBox):
