@@ -8,23 +8,27 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMac.h,v 1.7 1999/05/22 06:32:05 jingham Exp $
+ * RCS: @(#) $Id: tkMac.h,v 1.8 2001/11/23 02:05:24 das Exp $
  */
 
 #ifndef _TKMAC
 #define _TKMAC
 
+#ifndef _TK
+#include <tk.h>
+#endif
+
+#ifndef _TKINT
+#include "tkInt.h"
+#endif
+
 #include <Windows.h>
 #include <QDOffscreen.h>
-#include "tkInt.h"
 
-/*
- * "export" is a MetroWerks specific pragma.  It flags the linker that  
- * any symbols that are defined when this pragma is on will be exported 
- * to shared libraries that link with this library.
- */
- 
-#pragma export on
+#ifdef BUILD_tk
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
+#endif
 
 /*
  * This variable is exported and can be used by extensions.  It is the
@@ -44,13 +48,9 @@ typedef int (Tk_MacEmbedMakeContainerExistProc) (Tk_Window window);
 typedef void (Tk_MacEmbedGetClipProc) (Tk_Window window, RgnHandle rgn); 
 typedef void (Tk_MacEmbedGetOffsetInParentProc) (Tk_Window window, Point *ulCorner);
 
-/*
- * These functions are currently in tkMacInt.h.  They are just copied over here
- * so they can be exported.
- */
-
 #include "tkPlatDecls.h"
 
-#pragma export reset
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKMAC */

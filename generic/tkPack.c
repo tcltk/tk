@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.13 2001/09/26 20:25:17 pspjuth Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.14 2001/11/23 02:06:57 das Exp $
  */
 
 #include "tkPort.h"
@@ -1221,7 +1221,7 @@ PackAfter(interp, prevPtr, masterPtr, objc, objv)
 	packPtr->flags |= OLD_STYLE;
 	for (index = 0 ; index < optionCount; index++) {
 	    Tcl_Obj *curOptPtr = options[index];
-	    char *curOpt = Tcl_GetStringFromObj(curOptPtr, &length);
+	    char *curOpt = Tcl_GetStringFromObj(curOptPtr, (int *) &length);
 
 	    c = curOpt[0];
 

@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.56 2001/11/11 03:21:24 mdejong Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.57 2001/11/23 02:04:21 das Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1071,7 +1071,6 @@ dist:   $(UNIX_DIR)/configure
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/*.pch $(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/*.doc $(DISTDIR)/mac
-	cp -p $(TOP_DIR)/mac/*.exp $(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/*.tcl $(DISTDIR)/mac
 	mkdir $(DISTDIR)/compat
 	cp -p $(TOP_DIR)/license.terms $(TCLDIR)/compat/unistd.h \

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWindowMgr.c,v 1.8 2000/04/17 02:17:24 jingham Exp $
+ * RCS: @(#) $Id: tkMacWindowMgr.c,v 1.9 2001/11/23 02:06:32 das Exp $
  */
 
 #include <Events.h>
@@ -273,13 +273,13 @@ TkAboutDlg()
     while (itemHit != 1) {
 	ModalDialog( NULL, &itemHit);
     }
-    DisposDialog(aboutDlog);
+    DisposeDialog(aboutDlog);
     aboutDlog = NULL;
 	
     if (TkMacHaveAppearance() >= 0x110) {
-    SelectWindow(FrontWindow());
-    } else {
         SelectWindow(FrontNonFloatingWindow());
+    } else {
+    SelectWindow(FrontWindow());
     }
 
     return;
@@ -1234,7 +1234,11 @@ TkMacConvertEvent(
 	    /* fall through */
 	    
 	case keyUp:
+	    if (TkMacHaveAppearance() >= 0x110) {
 	    whichWindow = FrontNonFloatingWindow();
+	    } else {
+	        whichWindow = FrontWindow();
+	    }
 	    if (whichWindow == NULL) {
 	        /*
 	         * This happens if we get a key event before Tk has had a
@@ -1715,7 +1719,7 @@ BringWindowForward(
     WindowRef wRef)
 {
     if (!TkpIsWindowFloating(wRef)) {
-        if (IsValidWindowPtr(wRef))
+        if ((TkMacHaveAppearance() < 0x110) || IsValidWindowPtr(wRef))
         SelectWindow(wRef);
     }
 }

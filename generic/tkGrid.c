@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.17 2001/09/30 19:01:58 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.18 2001/11/23 02:04:48 das Exp $
  */
 
 #include "tkInt.h"
@@ -2554,7 +2554,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
     firstChar = 0;
     for (numWindows = i = 0; i < objc; i++) {
 	prevChar = firstChar;
-	string = Tcl_GetStringFromObj(objv[i], &length);
+	string = Tcl_GetStringFromObj(objv[i], (int *) &length);
     	firstChar = string[0];
 	
 	if (firstChar == '.') {
