@@ -1,3 +1,8 @@
+2000-07-20  Eric Melski  <ericm@ajubasolutions.com>
+
+	* win/makefile.vc: Applied patch from Don Porter to enhance nmake
+	support on NT/Alpha [RFE: 5939].
+
 2000-07-19  Eric Melski  <ericm@ajubasolutions.com>
 
 	* library/text.tcl: Enhanced <Tab> binding to behave like normal
