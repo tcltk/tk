@@ -1,3 +1,14 @@
+2003-12-27  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWinMenu.c (DrawWindowsSystemBitmap):
+	Fix a strange Win32 bug where the logical
+	coordinates returned by a call to DPtoLP
+	are wrong the first time a menu is posted.
+	This bug manifested itself by drawing the
+	bitmap in the wrong place in a menu.
+	The fix was to pass the newly created DC
+	instead of the DC from the window.
+
 2003-12-26  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/tkWinMenu.c (DrawMenuEntryAccelerator,
