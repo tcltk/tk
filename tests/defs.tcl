@@ -11,7 +11,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: defs.tcl,v 1.1.2.3 1999/03/24 01:16:43 hershey Exp $
+# RCS: @(#) $Id: defs.tcl,v 1.1.2.4 1999/03/24 01:37:59 hershey Exp $
 
 # Initialize wish shell
 if {[info exists tk_version]} {
@@ -26,7 +26,7 @@ if {[info exists tk_version]} {
 namespace eval tcltest {
     set procList [list test cleanupTests dotests saveState restoreState \
 	    normalizeMsg makeFile removeFile makeDirectory removeDirectory \
-	    viewFile safeFetch bytestring set_iso8859_1_locale restore_locale \
+	    viewFile bytestring set_iso8859_1_locale restore_locale \
 	    setTmpDir]
     if {[info exists tk_version]} {
 	lappend procList setupbg dobg bgReady cleanupbg fixfocus
@@ -665,6 +665,21 @@ proc ::tcltest::test {name description script expectedAnswer args} {
 	}
     }
 }
+
+# ::tcltest::dotests --
+#
+#	takes two arguments--the name of the test file (such
+#	as "parse.test"), and a pattern selecting the tests you want to
+#	execute.  It sets ::tcltest::matching to the second argument, calls
+#	"source" on the file specified in the first argument, and restores
+#	::tcltest::matching to its pre-call value at the end.
+#
+# Arguments:
+#	file    name of tests file to source
+#	args    pattern selecting the tests you want to execute
+#
+# Results:
+#	none
 
 proc ::tcltest::dotests {file args} {
     set savedTests $::tcltest::matchingTests
