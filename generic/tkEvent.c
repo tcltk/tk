@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.17 2003/02/18 06:22:44 mdejong Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.18 2003/07/19 01:01:36 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -912,8 +912,7 @@ Tk_HandleEvent(eventPtr)
 			    XNPreeditAttributes, preedit_attr,
 			    NULL);
 		    XFree(preedit_attr);
-		} else
-#endif
+		} else {
 		    if (winPtr->inputContext != NULL)
 		        panic("inputContext not NULL");
 		    winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
@@ -921,6 +920,16 @@ Tk_HandleEvent(eventPtr)
 			    XNClientWindow, winPtr->window,
 			    XNFocusWindow, winPtr->window,
 			    NULL);
+		}
+#else
+		if (winPtr->inputContext != NULL)
+		    panic("inputContext not NULL");
+		winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
+			XNInputStyle, XIMPreeditNothing|XIMStatusNothing,
+			XNClientWindow, winPtr->window,
+			XNFocusWindow, winPtr->window,
+			NULL);
+#endif
 	    }
 	}
 	if (XFilterEvent(eventPtr, None)) {
