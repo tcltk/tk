@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.15 2004/02/07 16:21:08 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.16 2004/02/14 16:32:39 cc_benny Exp $
  */
 
 #include "tkInt.h"
