@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.8 1999/05/25 01:31:06 stanton Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.9 1999/06/16 20:11:29 surles Exp $
  */
 
 #include "tkInt.h"
@@ -565,6 +565,7 @@ TkIntXlibStubs tkIntXlibStubs = {
     XGetVisualInfo, /* 101 */
     XSetWMClientMachine, /* 102 */
     XStringListToTextProperty, /* 103 */
+    XDrawLine, /* 104 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     NULL, /* 0 */
@@ -649,6 +650,7 @@ TkIntXlibStubs tkIntXlibStubs = {
     XStringListToTextProperty, /* 79 */
     XDrawSegments, /* 80 */
     XForceScreenSaver, /* 81 */
+    XDrawLine, /* 82 */
 #endif /* MAC_TCL */
 };
 

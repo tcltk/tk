@@ -10,15 +10,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.3 1999/04/16 01:51:23 stanton Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.4 1999/06/16 20:11:29 surles Exp $
  */
 
 #ifndef _TKTEXT
 #define _TKTEXT
 
-#ifndef _TK
-#include "tk.h"
-#endif
+#include "tkInt.h"
 
 /*
  * Opaque types for structures whose guts are only needed by a single
@@ -780,23 +778,14 @@ extern TkTextTag *	TkTextCreateTag _ANSI_ARGS_((TkText *textPtr,
 extern void		TkTextFreeDInfo _ANSI_ARGS_((TkText *textPtr));
 extern void		TkTextFreeTag _ANSI_ARGS_((TkText *textPtr,
 			    TkTextTag *tagPtr));
-extern int		TkTextGetIndex _ANSI_ARGS_((Tcl_Interp *interp,
-			    TkText *textPtr, char *string,
-			    TkTextIndex *indexPtr));
 extern TkTextTabArray *	TkTextGetTabs _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window tkwin, char *string));
-extern void		TkTextIndexBackBytes _ANSI_ARGS_((
-			    CONST TkTextIndex *srcPtr, int count,
-			    TkTextIndex *dstPtr));
 extern void		TkTextIndexBackChars _ANSI_ARGS_((
 			    CONST TkTextIndex *srcPtr, int count,
 			    TkTextIndex *dstPtr));
 extern int		TkTextIndexCmp _ANSI_ARGS_((
 			    CONST TkTextIndex *index1Ptr,
 			    CONST TkTextIndex *index2Ptr));
-extern void		TkTextIndexForwBytes _ANSI_ARGS_((
-			    CONST TkTextIndex *srcPtr, int count,
-			    TkTextIndex *dstPtr));
 extern void		TkTextIndexForwChars _ANSI_ARGS_((
 			    CONST TkTextIndex *srcPtr, int count,
 			    TkTextIndex *dstPtr));
@@ -808,12 +797,6 @@ extern void		TkTextInsertDisplayProc _ANSI_ARGS_((
 			    int screenY));
 extern void		TkTextLostSelection _ANSI_ARGS_((
 			    ClientData clientData));
-extern TkTextIndex *	TkTextMakeCharIndex _ANSI_ARGS_((TkTextBTree tree,
-			    int lineIndex, int charIndex,
-			    TkTextIndex *indexPtr));
-extern TkTextIndex *	TkTextMakeByteIndex _ANSI_ARGS_((TkTextBTree tree,
-			    int lineIndex, int byteIndex,
-			    TkTextIndex *indexPtr));
 extern int		TkTextMarkCmd _ANSI_ARGS_((TkText *textPtr,
 			    Tcl_Interp *interp, int argc, char **argv));
 extern int		TkTextMarkNameToIndex _ANSI_ARGS_((TkText *textPtr,
@@ -825,8 +808,6 @@ extern void		TkTextPickCurrent _ANSI_ARGS_((TkText *textPtr,
 			    XEvent *eventPtr));
 extern void		TkTextPixelIndex _ANSI_ARGS_((TkText *textPtr,
 			    int x, int y, TkTextIndex *indexPtr));
-extern void		TkTextPrintIndex _ANSI_ARGS_((
-			    CONST TkTextIndex *indexPtr, char *string));
 extern void		TkTextRedrawRegion _ANSI_ARGS_((TkText *textPtr,
 			    int x, int y, int width, int height));
 extern void		TkTextRedrawTag _ANSI_ARGS_((TkText *textPtr,
@@ -840,8 +821,6 @@ extern int		TkTextSeeCmd _ANSI_ARGS_((TkText *textPtr,
 extern int		TkTextSegToOffset _ANSI_ARGS_((
 			    CONST TkTextSegment *segPtr,
 			    CONST TkTextLine *linePtr));
-extern TkTextSegment *	TkTextSetMark _ANSI_ARGS_((TkText *textPtr, char *name,
-			    TkTextIndex *indexPtr));
 extern void		TkTextSetYView _ANSI_ARGS_((TkText *textPtr,
 			    TkTextIndex *indexPtr, int pickPlace));
 extern int		TkTextTagCmd _ANSI_ARGS_((TkText *textPtr,

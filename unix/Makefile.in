@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.18 1999/06/15 22:23:19 wart Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.19 1999/06/16 20:11:29 surles Exp $
 
 # Current Tk version;  used in various names.
 
@@ -76,7 +76,6 @@ MANN_INSTALL_DIR =	$(MAN_INSTALL_DIR)/mann
 # for this version of Tk ("srcdir" will be replaced or has already
 # been replaced by the configure script):
 TCL_GENERIC_DIR =	@TCL_SRC_DIR@/generic
-TCL_UNIX_DIR =		@TCL_SRC_DIR@/unix
 
 # The directory containing the Tcl library archive file appropriate
 # for this version of Tk:

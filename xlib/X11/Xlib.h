@@ -1195,19 +1195,6 @@ _XFUNCPROTOBEGIN
 
 
 
-extern void XDrawLine(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    Drawable		/* d */,
-    GC			/* gc */,
-    int			/* x1 */,
-    int			/* y1 */,
-    int			/* x2 */,
-    int			/* y2 */
-#endif
-);
-
-
 extern void XFillRectangle(
 #if NeedFunctionPrototypes
     Display*		/* display */,

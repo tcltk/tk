@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.7 1999/05/25 01:31:05 stanton Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.8 1999/06/16 20:11:28 surles Exp $
 
 library tk
 
@@ -1501,6 +1501,10 @@ declare 103 win {
     Status XStringListToTextProperty(char** list, int count, \
 	    XTextProperty* text_prop_return)
 }
+declare 104 win {
+    void XDrawLine (Display* d, Drawable dr, GC g, int x1, int y1, \
+	    int x2, int y2)
+}
 
 # X functions for Mac
 
@@ -1872,4 +1876,8 @@ declare 80 mac {
 }
 declare 81 mac {
     void  XForceScreenSaver(Display* display, int mode)
+}
+declare 82 mac {
+    void XDrawLine (Display* d, Drawable dr, GC g, int x1, int y1, \
+	    int x2, int y2)
 }

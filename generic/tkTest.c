@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.5 1999/04/16 01:51:23 stanton Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.6 1999/06/16 20:11:29 surles Exp $
  */
 
 #include "tkInt.h"
@@ -206,7 +206,7 @@ extern int		TkplatformtestInit _ANSI_ARGS_((
 			    Tcl_Interp *interp));
 extern int              TclThread_Init _ANSI_ARGS_((Tcl_Interp *interp));
 
-#if !(defined(__WIN32__) || defined(MAC_TCL))
+#if !(defined(__WIN32__) && defined(MAC_TCL))
 #define TkplatformtestInit(x) TCL_OK
 #endif
 

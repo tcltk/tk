@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.9 1999/06/02 18:15:54 stanton Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.10 1999/06/16 20:11:28 surles Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
@@ -351,6 +351,9 @@ EXTERN void		XSetWMClientMachine _ANSI_ARGS_((Display* display,
 /* 103 */
 EXTERN Status		XStringListToTextProperty _ANSI_ARGS_((char** list, 
 				int count, XTextProperty* text_prop_return));
+/* 104 */
+EXTERN void		XDrawLine _ANSI_ARGS_((Display* d, Drawable dr, GC g, 
+				int x1, int y1, int x2, int y2));
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* Slot 0 is reserved */
@@ -605,6 +608,9 @@ EXTERN void		XDrawSegments _ANSI_ARGS_((Display * display,
 /* 81 */
 EXTERN void		XForceScreenSaver _ANSI_ARGS_((Display* display, 
 				int mode));
+/* 82 */
+EXTERN void		XDrawLine _ANSI_ARGS_((Display* d, Drawable dr, GC g, 
+				int x1, int y1, int x2, int y2));
 #endif /* MAC_TCL */
 
 typedef struct TkIntXlibStubs {
@@ -716,6 +722,7 @@ typedef struct TkIntXlibStubs {
     XVisualInfo * (*xGetVisualInfo) _ANSI_ARGS_((Display* display, long vinfo_mask, XVisualInfo* vinfo_template, int* nitems_return)); /* 101 */
     void (*xSetWMClientMachine) _ANSI_ARGS_((Display* display, Window w, XTextProperty* text_prop)); /* 102 */
     Status (*xStringListToTextProperty) _ANSI_ARGS_((char** list, int count, XTextProperty* text_prop_return)); /* 103 */
+    void (*xDrawLine) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int x1, int y1, int x2, int y2)); /* 104 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     void *reserved0;
@@ -800,6 +807,7 @@ typedef struct TkIntXlibStubs {
     Status (*xStringListToTextProperty) _ANSI_ARGS_((char** list, int count, XTextProperty* text_prop_return)); /* 79 */
     void (*xDrawSegments) _ANSI_ARGS_((Display * display, Drawable d, GC gc, XSegment * segments, int nsegments)); /* 80 */
     void (*xForceScreenSaver) _ANSI_ARGS_((Display* display, int mode)); /* 81 */
+    void (*xDrawLine) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int x1, int y1, int x2, int y2)); /* 82 */
 #endif /* MAC_TCL */
 } TkIntXlibStubs;
 
@@ -1228,6 +1236,10 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #define XStringListToTextProperty \
 	(tkIntXlibStubsPtr->xStringListToTextProperty) /* 103 */
 #endif
+#ifndef XDrawLine
+#define XDrawLine \
+	(tkIntXlibStubsPtr->xDrawLine) /* 104 */
+#endif
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* Slot 0 is reserved */
@@ -1554,6 +1566,10 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #ifndef XForceScreenSaver
 #define XForceScreenSaver \
 	(tkIntXlibStubsPtr->xForceScreenSaver) /* 81 */
+#endif
+#ifndef XDrawLine
+#define XDrawLine \
+	(tkIntXlibStubsPtr->xDrawLine) /* 82 */
 #endif
 #endif /* MAC_TCL */
 
