@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: photo.n,v 1.8 2002/02/01 14:27:30 dkf Exp $
+'\" RCS: @(#) $Id: photo.n,v 1.9 2002/03/02 23:37:13 hobbs Exp $
 '\" 
 .so man.macros
 .TH photo n 4.0 Tk "Tk Built-In Commands"
@@ -33,7 +33,7 @@ formats are supported, but an interface exists to allow additional
 image file formats to be added easily.  A photo image is transparent
 in regions where no image data has been supplied
 .VS 8.4
-or where it has been set transparent by the \fBtransparency set\fB
+or where it has been set transparent by the \fBtransparency set\fR
 subcommand.
 .VE 8.4
 
