@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixPort.h,v 1.8 2002/06/14 13:35:49 dkf Exp $
+ * RCS: @(#) $Id: tkUnixPort.h,v 1.9 2003/10/14 23:11:03 jenglish Exp $
  */
 
 #ifndef _UNIXPORT
@@ -155,9 +155,9 @@ extern int errno;
  * needed for X.
  */
 
-#define TkPutImage(colors, ncolors, display, pixels, gc, image, destx, desty, srcx, srcy, width, height) \
-	XPutImage(display, pixels, gc, image, destx, desty, srcx, \
-	srcy, width, height);
+#define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
+	XPutImage(display, pixels, gc, image, srcx, srcy, destx, \
+	desty, width, height);
 
 /*
  * Supply macros for seek offsets, if they're not already provided by
