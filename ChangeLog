@@ -1,0 +1,20 @@
+1998-11-24    <stanton@GASPODE>
+
+	* tkMacMenu.c, tkUnixMenu.c, tkWinMenu.c, tkMenuDraw.c, tkMenu.h,
+	* tkMenu.c: Backed out the previous fix for bug 620 and
+	eliminated a bunch of code that created unnecessary objects.
+	Changed back to using internal types instead of objects for many
+	configuration options.  There are many more fixes like this that
+	could be made, but some require a little restructuring of the
+	code. In any case the leaks are fixed and there is a lot less
+	allocation happening. [Bug: 620]
+
+1998-11-19    <stanton@GASPODE>
+
+	* tkMenu.c (DestroyMenuEntry): fixed memory leaks [Bug: 620]
+	
+	* tkWinX.c (GetTranslatedKey): fixed bad code merge
+
+	* tkWinWm.c, tkWinMenu.c: fixed titles and menus so they properly
+	display Unicode [Bug: 819]
+

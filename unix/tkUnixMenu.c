@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.1.4.2 1998/09/30 02:19:19 stanton Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.1.4.3 1998/11/24 21:42:47 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -323,12 +323,7 @@ GetMenuIndicatorGeometry(menuPtr, mePtr, tkfont, fmPtr, widthPtr, heightPtr)
 {
     if ((mePtr->type == CHECK_BUTTON_ENTRY)
 	    || (mePtr->type == RADIO_BUTTON_ENTRY)) {
-	int hideMargin;
-	int indicatorOn;
-
-	Tcl_GetBooleanFromObj(NULL, mePtr->hideMarginPtr, &hideMargin);
-	Tcl_GetBooleanFromObj(NULL, mePtr->indicatorOnPtr, &indicatorOn);
-	if (!hideMargin && indicatorOn) {
+	if (!mePtr->hideMargin && mePtr->indicatorOn) {
 	    if ((mePtr->image != NULL) || (mePtr->bitmapPtr != NULL)) {
 		*widthPtr = (14 * mePtr->height) / 10;
 		*heightPtr = mePtr->height;
@@ -438,11 +433,7 @@ DrawMenuEntryBackground(menuPtr, mePtr, d, activeBorder, bgBorder, x, y,
     int width;			/* Width of entry rect */
     int height;			/* Height of entry rect */
 {
-    int state;
-
-    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings,
-	    NULL, 0, &state);
-    if (state == ENTRY_ACTIVE) {
+    if (mePtr->state == ENTRY_ACTIVE) {
 	int relief;
 	int activeBorderWidth;
 
@@ -572,17 +563,11 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr,
     int width;				/* Width of menu entry */
     int height;				/* Height of menu entry */
 {
-
     /*
      * Draw check-button indicator.
      */
 
-    if (mePtr->type == CHECK_BUTTON_ENTRY) {
-	int indicatorOn;
-
-	Tcl_GetBooleanFromObj(NULL, mePtr->indicatorOnPtr, &indicatorOn);
-
-	if (indicatorOn) {
+    if ((mePtr->type == CHECK_BUTTON_ENTRY) && mePtr->indicatorOn) {
 	    int dim, top, left;
 	    int activeBorderWidth;
 	    Tk_3DBorder border;
@@ -614,12 +599,7 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr,
      * Draw radio-button indicator.
      */
 
-    if (mePtr->type == RADIO_BUTTON_ENTRY) {
-	int indicatorOn;
-
-	Tcl_GetBooleanFromObj(NULL, mePtr->indicatorOnPtr, &indicatorOn);
-
-	if (indicatorOn) {
+    if ((mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn) {
 	    XPoint points[4];
 	    int radius;
 	    Tk_3DBorder border;
@@ -775,9 +755,7 @@ DrawMenuEntryLabel(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, y, width, height)
     	}
     }
 
-    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings, NULL,
-    	    0, &state);
-    if (state == ENTRY_DISABLED) {
+    if (mePtr->state == ENTRY_DISABLED) {
 	if (menuPtr->disabledFgPtr == NULL) {
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledGC, x, y,
 		    (unsigned) width, (unsigned) height);
@@ -1302,15 +1280,12 @@ TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
     int padY = (menuPtr->menuType == MENUBAR) ? 3 : 0;
     int adjustedY = y + padY;
     int adjustedHeight = height - 2 * padY;
-    int state;
 
     /*
      * Choose the gc for drawing the foreground part of the entry.
      */
 
-    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings, NULL,
-	    0, &state);
-    if ((state == ENTRY_ACTIVE) && !strictMotif) {
+    if ((mePtr->state == ENTRY_ACTIVE) && !strictMotif) {
 	gc = mePtr->activeGC;
 	if (gc == NULL) {
 	    gc = menuPtr->activeGC;
@@ -1327,11 +1302,7 @@ TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
 			NULL);
 
 		if (strcmp(name, Tk_PathName(menuPtr->tkwin)) == 0) {
-		    int cascadeState;
-
-		    Tcl_GetIndexFromObj(NULL, cascadeEntryPtr->statePtr, 
-		    	    tkMenuStateStrings, NULL, 0, &cascadeState);
-		    if (cascadeState == ENTRY_DISABLED) {
+		    if (cascadeEntryPtr->state == ENTRY_DISABLED) {
 			parentDisabled = 1;
 		    }
 		    break;
@@ -1392,14 +1363,11 @@ TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
 	DrawTearoffEntry(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, adjustedY,
 		width, adjustedHeight);
     } else {
-	int hideMargin;
-	
 	DrawMenuEntryLabel(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, adjustedY,
 		width, adjustedHeight);
 	DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 		activeBorder, x, adjustedY, width, adjustedHeight, drawArrow);
-	Tcl_GetBooleanFromObj(NULL, mePtr->hideMarginPtr, &hideMargin);
-	if (!hideMargin) {
+	if (!mePtr->hideMargin) {
 	    DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont,
 		    fmPtr, x, adjustedY, width, adjustedHeight);
 	}
@@ -1485,7 +1453,6 @@ TkpComputeStandardMenuGeometry(
     int i, j, lastColumnBreak = 0;
     TkMenuEntry *mePtr;
     int borderWidth, activeBorderWidth;
-    int columnBreak, hideMargin;
     
     if (menuPtr->tkwin == NULL) {
 	return;
@@ -1525,8 +1492,7 @@ TkpComputeStandardMenuGeometry(
 	    fmPtr = &entryMetrics;
 	}
 
-    	Tcl_GetBooleanFromObj(NULL, mePtr->columnBreakPtr, &columnBreak);
-	if ((i > 0) && columnBreak) {
+	if ((i > 0) && mePtr->columnBreak) {
 	    if (accelWidth != 0) {
 		labelWidth += accelSpace;
 	    }
@@ -1570,8 +1536,7 @@ TkpComputeStandardMenuGeometry(
 	    GetMenuLabelGeometry(mePtr, tkfont, fmPtr, &width,
 	    	    &height);
 	    mePtr->height = height;
-	    Tcl_GetBooleanFromObj(NULL, mePtr->hideMarginPtr, &hideMargin);
-	    if (!hideMargin) {
+	    if (!mePtr->hideMargin) {
 		width += MENU_MARGIN_WIDTH;
 	    }
 	    if (width > labelWidth) {
@@ -1583,7 +1548,7 @@ TkpComputeStandardMenuGeometry(
 	    if (height > mePtr->height) {
 	    	mePtr->height = height;
 	    }
-	    if (hideMargin) {
+	    if (mePtr->hideMargin) {
 		width += MENU_MARGIN_WIDTH;
 	    }
 	    if (width > accelWidth) {
@@ -1595,7 +1560,7 @@ TkpComputeStandardMenuGeometry(
 	    if (height > mePtr->height) {
 	    	mePtr->height = height;
 	    }
-	    if (hideMargin) {
+	    if (mePtr->hideMargin) {
 		width += MENU_MARGIN_WIDTH;
 	    }
 	    if (width > indicatorSpace) {

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.1.4.4 1998/11/20 02:36:27 stanton Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.1.4.5 1998/11/24 21:42:48 stanton Exp $
  */
 
 #define OEMRESOURCE
@@ -555,8 +555,6 @@ ReconfigureWindowsMenu(
 	if (mePtr->type == SEPARATOR_ENTRY) {
 	    flags |= MF_SEPARATOR;
 	} else {
-	    int columnBreak, state;
-
 	    itemText = GetEntryText(mePtr);
 	    if ((menuPtr->menuType == MENUBAR)
 		    || (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
@@ -571,9 +569,7 @@ ReconfigureWindowsMenu(
     	     * Set enabling and disabling correctly.
     	     */
 
-	    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings,
-		    NULL, 0, &state);
-	    if (state == ENTRY_DISABLED) {
+	    if (mePtr->state == ENTRY_DISABLED) {
 		flags |= MF_DISABLED;
 	    }
     	    
@@ -587,9 +583,7 @@ ReconfigureWindowsMenu(
 		flags |= MF_CHECKED;
 	    }
 
-	    Tcl_GetBooleanFromObj(NULL, mePtr->columnBreakPtr, 
-		    &columnBreak);
-	    if (columnBreak) {
+	    if (mePtr->columnBreak) {
 		flags |= MF_MENUBREAK;
 	    }
 
@@ -938,7 +932,6 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		if ((menuRefPtr != NULL)
 			&& (menuRefPtr->parentEntryPtr != NULL)) {
 		    char *name;
-		    int state;
 
 		    for (parentEntryPtr = menuRefPtr->parentEntryPtr;
 			 ; 
@@ -951,11 +944,8 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 			    break;
 			}
 		    }
-		    Tcl_GetIndexFromObj(NULL, parentEntryPtr->menuPtr
-			    ->entries[parentEntryPtr->index]
-			    ->statePtr, tkMenuStateStrings, NULL, 
-			    0, &state);
-		    if (state != ENTRY_DISABLED) {
+		    if (parentEntryPtr->menuPtr->entries[parentEntryPtr->index]
+			    ->state != ENTRY_DISABLED) {
 			TkActivateMenuEntry(parentEntryPtr->menuPtr, 
 				parentEntryPtr->index);
 		    }
@@ -1012,17 +1002,13 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 	    LPMEASUREITEMSTRUCT itemPtr = (LPMEASUREITEMSTRUCT) *plParam;
     
 	    if (itemPtr != NULL) {
-		int hideMargin;
-
 		mePtr = (TkMenuEntry *) itemPtr->itemData;
 		menuPtr = mePtr->menuPtr;
 
 		TkRecomputeMenu(menuPtr);
 		itemPtr->itemHeight = mePtr->height;
 		itemPtr->itemWidth = mePtr->width;
-		Tcl_GetBooleanFromObj(NULL, mePtr->hideMarginPtr,
-			&hideMargin);
-		if (hideMargin) {
+		if (mePtr->hideMargin) {
 		    itemPtr->itemWidth += 2 - indicatorDimensions[1];
 		} else {
 		    int activeBorderWidth;
@@ -1044,7 +1030,6 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 	    Tk_FontMetrics fontMetrics;
 
 	    if (itemPtr != NULL) {
-		int state;
 		Tk_Font tkfont;
 
 		mePtr = (TkMenuEntry *) itemPtr->itemData;
@@ -1053,9 +1038,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		twdPtr->type = TWD_WINDC;
 		twdPtr->winDC.hdc = itemPtr->hDC;
 
-		Tcl_GetIndexFromObj(NULL, mePtr->statePtr, 
-			tkMenuStateStrings, NULL, 0, &state);
-		if (state != ENTRY_DISABLED) {
+		if (mePtr->state != ENTRY_DISABLED) {
 		    if (itemPtr->itemState & ODS_SELECTED) {
 			TkActivateMenuEntry(menuPtr, mePtr->index);
 		    } else {
@@ -1099,8 +1082,6 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		}
 
 		if (menuPtr != NULL) {
-		    int state;
-
 	    	    mePtr = NULL;
 		    if (flags != 0xFFFF) {
 			if (flags & MF_POPUP) {
@@ -1115,16 +1096,10 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 			}
 		    }	 
 
-		    if (mePtr == NULL) {
+		    if ((mePtr == NULL) || (mePtr->state == ENTRY_DISABLED)) {
 			TkActivateMenuEntry(menuPtr, -1);
 		    } else {
-			Tcl_GetIndexFromObj(NULL, mePtr->statePtr,
-				tkMenuStateStrings, NULL, 0, &state);
-			if (state == ENTRY_DISABLED) {
-			    TkActivateMenuEntry(menuPtr, -1);
-			} else {
-			    TkActivateMenuEntry(menuPtr, mePtr->index);
-			}
+			TkActivateMenuEntry(menuPtr, mePtr->index);
 		    }
 		    MenuSelectEvent(menuPtr);
 		    Tcl_ServiceAll();
@@ -1273,11 +1248,8 @@ GetMenuIndicatorGeometry (
     int *widthPtr,			/* The resulting width */
     int *heightPtr)			/* The resulting height */
 {
-    int hideMargin;
-
     *heightPtr = indicatorDimensions[0];
-    Tcl_GetBooleanFromObj(NULL, mePtr->hideMarginPtr, &hideMargin);
-    if (hideMargin) {
+    if (mePtr->hideMargin) {
 	*widthPtr = 0;
     } else {
 	int borderWidth;
@@ -1498,18 +1470,11 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr, x,
 {
     if ((mePtr->type == CHECK_BUTTON_ENTRY) 
 	    || (mePtr->type == RADIO_BUTTON_ENTRY)) {
-	int indicatorOn;
-
-	Tcl_GetBooleanFromObj(NULL, mePtr->indicatorOnPtr, &indicatorOn);
-
-    	if (indicatorOn && (mePtr->entryFlags & ENTRY_SELECTED)) {
+    	if (mePtr->indicatorOn && (mePtr->entryFlags & ENTRY_SELECTED)) {
 	    RECT rect;
 	    GC whichGC;
-	    int state;
 	    int borderWidth, activeBorderWidth;
-	    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings,
-		    NULL, 0, &state);
-	    if (state != ENTRY_NORMAL) {
+	    if (mePtr->state != ENTRY_NORMAL) {
 		whichGC = gc;
 	    } else {
 		whichGC = indicatorGC;
@@ -1524,7 +1489,7 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr, x,
 	    rect.left = borderWidth + activeBorderWidth + x;
 	    rect.right = mePtr->indicatorSpace + x;
 
-	    if ((state == ENTRY_DISABLED)
+	    if ((mePtr->state == ENTRY_DISABLED)
 		    && (menuPtr->disabledFgPtr != NULL)
 		    && (versionInfo.dwMajorVersion >= 4)) {
 		RECT hilightRect;
@@ -1543,7 +1508,7 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr, x,
 	    DrawWindowsSystemBitmap(menuPtr->display, d, whichGC, &rect, 
 		    OBM_CHECK, 0);
 
-	    if ((state == ENTRY_DISABLED) 
+	    if ((mePtr->state == ENTRY_DISABLED) 
 		    && (menuPtr->disabledImageGC != None)
 		    && (versionInfo.dwMajorVersion < 4)) {
 		XFillRectangle(menuPtr->display, d, menuPtr->disabledImageGC,
@@ -1593,7 +1558,6 @@ DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 {
     int baseline;
     int leftEdge = x + mePtr->indicatorSpace + mePtr->labelWidth;
-    int state;
     char *accel;
     
     if (mePtr->accelPtr != NULL) {
@@ -1602,9 +1566,7 @@ DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 
     baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
 
-    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings, NULL,
-	    0, &state);
-    if ((state == ENTRY_DISABLED) && (menuPtr->disabledFgPtr != NULL)
+    if ((mePtr->state == ENTRY_DISABLED) && (menuPtr->disabledFgPtr != NULL)
 	    && ((mePtr->accelPtr != NULL)
 	    || ((mePtr->type == CASCADE_ENTRY) && drawArrow))) {
 	if (versionInfo.dwMajorVersion >= 4) {
@@ -1635,7 +1597,7 @@ DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 		mePtr->accelLength, leftEdge, baseline);
     }
 
-    if ((state == ENTRY_DISABLED) 
+    if ((mePtr->state == ENTRY_DISABLED) 
 	    && (menuPtr->disabledImageGC != None)
 	    && (versionInfo.dwMajorVersion < 4)) {
 	XFillRectangle(menuPtr->display, d, menuPtr->disabledImageGC,
@@ -1652,7 +1614,7 @@ DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 	rect.right = x + width - 1;
 	DrawWindowsSystemBitmap(menuPtr->display, d, gc, &rect, OBM_MNARROW, 
 		ALIGN_BITMAP_RIGHT);
-	if ((state == ENTRY_DISABLED) 
+	if ((mePtr->state == ENTRY_DISABLED) 
 		&& (menuPtr->disabledImageGC != None)
 		&& (versionInfo.dwMajorVersion < 4)) {
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledImageGC,
@@ -1930,7 +1892,6 @@ DrawMenuEntryLabel(
     int activeBorderWidth;
     int leftEdge;
     int imageHeight, imageWidth;
-    int state;
 
     Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
 	    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
@@ -1970,9 +1931,7 @@ DrawMenuEntryLabel(
     	}
     }
 
-    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings, NULL,
-	    0, &state);
-    if (state == ENTRY_DISABLED) {
+    if (mePtr->state == ENTRY_DISABLED) {
 	if (menuPtr->disabledFgPtr == NULL) {
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledGC, x, y,
 		    (unsigned) width, (unsigned) height);
@@ -2143,15 +2102,12 @@ TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
     int padY = (menuPtr->menuType == MENUBAR) ? 3 : 0;
     int adjustedY = y + padY;
     int adjustedHeight = height - 2 * padY;
-    int state;
 
     /*
      * Choose the gc for drawing the foreground part of the entry.
      */
 
-    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings, NULL,
-	    0, &state);
-    if ((state == ENTRY_ACTIVE) && !strictMotif) {
+    if ((mePtr->state == ENTRY_ACTIVE) && !strictMotif) {
 	gc = mePtr->activeGC;
 	if (gc == NULL) {
 	    gc = menuPtr->activeGC;
@@ -2166,14 +2122,14 @@ TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
     		cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
 	    name = Tcl_GetStringFromObj(cascadeEntryPtr->namePtr, NULL);
     	    if (strcmp(name, Tk_PathName(menuPtr->tkwin)) == 0) {
-    	    	if (state == ENTRY_DISABLED) {
+    	    	if (mePtr->state == ENTRY_DISABLED) {
     	    	    parentDisabled = 1;
     	    	}
     	    	break;
     	    }
     	}
 
-	if (((parentDisabled || (state == ENTRY_DISABLED)))
+	if (((parentDisabled || (mePtr->state == ENTRY_DISABLED)))
 		&& (menuPtr->disabledFgPtr != NULL)) {
 	    gc = mePtr->disabledGC;
 	    if (gc == NULL) {
@@ -2226,14 +2182,11 @@ TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
 	DrawTearoffEntry(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, adjustedY,
 		width, adjustedHeight);
     } else {
-	int hideMargin;
-
 	DrawMenuEntryLabel(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, adjustedY,
 		width, adjustedHeight);
 	DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 		activeBorder, x, adjustedY, width, adjustedHeight, drawArrow);
-	Tcl_GetBooleanFromObj(NULL, mePtr->hideMarginPtr, &hideMargin);
-	if (!hideMargin) {
+	if (!mePtr->hideMargin) {
 	    DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont,
 		    fmPtr, x, adjustedY, width, adjustedHeight);
 	}
@@ -2317,11 +2270,7 @@ DrawMenuEntryBackground(
     int width,				/* width of rectangle to draw */
     int height)				/* height of rectangle to draw */
 {
-    int state;
-
-    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings,
-	    NULL, 0, &state);
-    if (state == ENTRY_ACTIVE) {
+    if (mePtr->state == ENTRY_ACTIVE) {
 	bgBorder = activeBorder;
     }
     Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder,
@@ -2356,7 +2305,6 @@ TkpComputeStandardMenuGeometry(
     int x, y, height, width, indicatorSpace, labelWidth, accelWidth;
     int windowWidth, windowHeight, accelSpace;
     int i, j, lastColumnBreak = 0;
-    int columnBreak;
     int activeBorderWidth, borderWidth;
     
     if (menuPtr->tkwin == NULL) {
@@ -2396,10 +2344,7 @@ TkpComputeStandardMenuGeometry(
     	    Tk_GetFontMetrics(tkfont, &entryMetrics);
     	    fmPtr = &entryMetrics;
     	}
-
-	Tcl_GetBooleanFromObj(NULL, menuPtr->entries[i]->columnBreakPtr,
-		&columnBreak);
-	if ((i > 0) && columnBreak) {
+	if ((i > 0) && menuPtr->entries[i]->columnBreak) {
 	    if (accelWidth != 0) {
 		labelWidth += accelSpace;
 	    }

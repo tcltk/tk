@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.1.4.2 1998/09/30 02:17:08 stanton Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.1.4.3 1998/11/24 21:42:39 stanton Exp $
  */
 
 /*
@@ -105,7 +105,7 @@ Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	Tk_Offset(TkMenuEntry, bitmapPtr), -1, TK_OPTION_NULL_OK},
     {TK_OPTION_BOOLEAN, "-columnbreak", (char *) NULL, (char *) NULL,
 	DEF_MENU_ENTRY_COLUMN_BREAK,
-        Tk_Offset(TkMenuEntry, columnBreakPtr), -1},
+	-1, Tk_Offset(TkMenuEntry, columnBreak)},
     {TK_OPTION_STRING, "-command", (char *) NULL, (char *) NULL,
 	DEF_MENU_ENTRY_COMMAND,
 	Tk_Offset(TkMenuEntry, commandPtr), -1, TK_OPTION_NULL_OK},
@@ -117,7 +117,7 @@ Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	Tk_Offset(TkMenuEntry, fgPtr), -1, TK_OPTION_NULL_OK},
     {TK_OPTION_BOOLEAN, "-hidemargin", (char *) NULL, (char *) NULL,
 	DEF_MENU_ENTRY_HIDE_MARGIN,
-	Tk_Offset(TkMenuEntry, hideMarginPtr), -1},
+	-1, Tk_Offset(TkMenuEntry, hideMargin)},
     {TK_OPTION_STRING, "-image", (char *) NULL, (char *) NULL,
 	DEF_MENU_ENTRY_IMAGE,
 	Tk_Offset(TkMenuEntry, imagePtr), -1, TK_OPTION_NULL_OK},
@@ -126,7 +126,7 @@ Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	Tk_Offset(TkMenuEntry, labelPtr), -1, 0},
     {TK_OPTION_STRING_TABLE, "-state", (char *) NULL, (char *) NULL,
 	DEF_MENU_ENTRY_STATE,
-	Tk_Offset(TkMenuEntry, statePtr), -1, 0,
+	-1, Tk_Offset(TkMenuEntry, state), 0,
 	(ClientData) tkMenuStateStrings},
     {TK_OPTION_INT, "-underline", (char *) NULL, (char *) NULL,
 	DEF_MENU_ENTRY_UNDERLINE, -1, Tk_Offset(TkMenuEntry, underline)},
@@ -143,7 +143,7 @@ Tk_OptionSpec tkSeparatorEntryConfigSpecs[] = {
 Tk_OptionSpec tkCheckButtonEntryConfigSpecs[] = {
     {TK_OPTION_BOOLEAN, "-indicatoron", (char *) NULL, (char *) NULL,
 	DEF_MENU_ENTRY_INDICATOR,
-	Tk_Offset(TkMenuEntry, indicatorOnPtr), -1},
+	-1, Tk_Offset(TkMenuEntry, indicatorOn)},
     {TK_OPTION_STRING, "-offvalue", (char *) NULL, (char *) NULL,
 	DEF_MENU_ENTRY_OFF_VALUE,
 	Tk_Offset(TkMenuEntry, offValuePtr), -1},
@@ -166,7 +166,7 @@ Tk_OptionSpec tkCheckButtonEntryConfigSpecs[] = {
 Tk_OptionSpec tkRadioButtonEntryConfigSpecs[] = {
     {TK_OPTION_BOOLEAN, "-indicatoron", (char *) NULL, (char *) NULL,
 	DEF_MENU_ENTRY_INDICATOR,
-	Tk_Offset(TkMenuEntry, indicatorOnPtr), -1},
+	-1, Tk_Offset(TkMenuEntry, indicatorOn)},
     {TK_OPTION_COLOR, "-selectcolor", (char *) NULL, (char *) NULL,
 	DEF_MENU_ENTRY_SELECT,
 	Tk_Offset(TkMenuEntry, indicatorFgPtr), -1, TK_OPTION_NULL_OK},
@@ -196,7 +196,7 @@ Tk_OptionSpec tkTearoffEntryConfigSpecs[] = {
 	DEF_MENU_ENTRY_BG,
 	Tk_Offset(TkMenuEntry, borderPtr), -1, TK_OPTION_NULL_OK},
     {TK_OPTION_STRING_TABLE, "-state", (char *) NULL, (char *) NULL,
-	DEF_MENU_ENTRY_STATE, Tk_Offset(TkMenuEntry, statePtr), -1, 0,
+	DEF_MENU_ENTRY_STATE, -1, Tk_Offset(TkMenuEntry, state), 0,
 	(ClientData) tkMenuStateStrings},
     {TK_OPTION_END}
 };
@@ -260,8 +260,7 @@ Tk_OptionSpec tkMenuConfigSpecs[] = {
 	DEF_MENU_TAKE_FOCUS,
 	Tk_Offset(TkMenu, takeFocusPtr), -1, TK_OPTION_NULL_OK},
     {TK_OPTION_BOOLEAN, "-tearoff", "tearOff", "TearOff",
-	DEF_MENU_TEAROFF,
-	Tk_Offset(TkMenu, tearoffPtr), -1},
+	DEF_MENU_TEAROFF, -1, Tk_Offset(TkMenu, tearoff)},
     {TK_OPTION_STRING, "-tearoffcommand", "tearOffCommand", 
 	"TearOffCommand", DEF_MENU_TEAROFF_CMD,
 	Tk_Offset(TkMenu, tearoffCommandPtr), -1, TK_OPTION_NULL_OK},
@@ -484,7 +483,7 @@ MenuCmd(clientData, interp, objc, objv)
     menuPtr->disabledFgPtr = NULL;
     menuPtr->activeFgPtr = NULL;
     menuPtr->indicatorFgPtr = NULL;
-    menuPtr->tearoffPtr = NULL;
+    menuPtr->tearoff = 0;
     menuPtr->tearoffCommandPtr = NULL;
     menuPtr->cursorPtr = None;
     menuPtr->takeFocusPtr = NULL;
@@ -692,17 +691,10 @@ MenuWidgetObjCmd(clientData, interp, objc, objv)
 	    if (menuPtr->active == index) {
 		goto done;
 	    }
-	    if (index >= 0) {
-		if (menuPtr->entries[index]->type == SEPARATOR_ENTRY) {
-		    int state;
-		    
-		    Tcl_GetIndexFromObj(interp, 
-			    menuPtr->entries[index]->statePtr, 
-			    tkMenuStateStrings, NULL, 0, &state);
-		    if (state == ENTRY_DISABLED) {
-			index = -1;
-		    }
-		}
+	    if ((index >= 0) 
+		    && (menuPtr->entries[index]->type == SEPARATOR_ENTRY)
+		    && (menuPtr->entries[index]->state == ENTRY_DISABLED)) {
+		index = -1;
 	    }
 	    result = TkActivateMenuEntry(menuPtr, index);
 	    break;
@@ -774,7 +766,7 @@ MenuWidgetObjCmd(clientData, interp, objc, objv)
 	    break;
 	}
 	case MENU_DELETE: {
-	    int first, last, tearoff;
+	    int first, last;
 	    
 	    if ((objc != 3) && (objc != 4)) {
 		Tcl_WrongNumArgs(interp, 1, objv, "delete first ?last?");
@@ -792,8 +784,7 @@ MenuWidgetObjCmd(clientData, interp, objc, objv)
 		    goto error;
 		}
 	    }
-	    Tcl_GetBooleanFromObj(interp, menuPtr->tearoffPtr, &tearoff);
-	    if (tearoff && (first == 0)) {
+	    if (menuPtr->tearoff && (first == 0)) {
 
 		/*
 		 * Sorry, can't delete the tearoff entry;  must reconfigure
@@ -889,9 +880,9 @@ MenuWidgetObjCmd(clientData, interp, objc, objv)
 		goto error;
 	    }
 	    if (index < 0) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj("none", -1));
+		Tcl_SetResult(interp, "none", TCL_STATIC);
 	    } else {
-		Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+		Tcl_SetIntObj(Tcl_GetObjResult(interp), index);
 	    }
 	    break;
 	}
@@ -985,11 +976,11 @@ MenuWidgetObjCmd(clientData, interp, objc, objv)
 		goto done;
 	    }
 	    if (menuPtr->entries[index]->type == TEAROFF_ENTRY) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj("tearoff", -1));
+		Tcl_SetResult(interp, "tearoff", TCL_STATIC);
 	    } else {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			menuEntryTypeStrings[menuPtr->entries[index]->type], 
-			-1));
+		Tcl_SetResult(interp,
+			menuEntryTypeStrings[menuPtr->entries[index]->type],
+			TCL_STATIC);
 	    }
 	    break;
 	}
@@ -1045,28 +1036,22 @@ TkInvokeMenu(interp, menuPtr, index)
 {
     int result = TCL_OK;
     TkMenuEntry *mePtr;
-    int state;
     
     if (index < 0) {
     	goto done;
     }
     mePtr = menuPtr->entries[index];
-    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings, NULL, 0,
-	    &state);
-    if (state == ENTRY_DISABLED) {
+    if (mePtr->state == ENTRY_DISABLED) {
 	goto done;
     }
     Tcl_Preserve((ClientData) mePtr);
     if (mePtr->type == TEAROFF_ENTRY) {
-	Tcl_Obj *objv[2];
-
-	objv[0] = Tcl_NewStringObj("tkTearOffMenu", -1);
-	Tcl_IncrRefCount(objv[0]);
-	objv[1] = Tcl_NewStringObj(Tk_PathName(menuPtr->tkwin), -1);
-	Tcl_IncrRefCount(objv[1]);
-	result = Tcl_EvalObjv(interp, 2, objv, "", -1, 0);
-	Tcl_DecrRefCount(objv[0]);
-	Tcl_DecrRefCount(objv[1]);
+	Tcl_DString ds;
+	Tcl_DStringInit(&ds);
+	Tcl_DStringAppend(&ds, "tkTearOffMenu ", -1);
+	Tcl_DStringAppend(&ds, Tk_PathName(menuPtr->tkwin), -1);
+	result = Tcl_Eval(interp, Tcl_DStringValue(&ds));
+	Tcl_DStringFree(&ds);
     } else if ((mePtr->type == CHECK_BUTTON_ENTRY)
 	    && (mePtr->namePtr != NULL)) {
 	Tcl_Obj *valuePtr;
@@ -1078,7 +1063,7 @@ TkInvokeMenu(interp, menuPtr, index)
 	    valuePtr = mePtr->onValuePtr;
 	}
 	if (valuePtr == NULL) {
-	    valuePtr = Tcl_NewStringObj("", -1);
+	    valuePtr = Tcl_NewObj();
 	}
 	Tcl_IncrRefCount(valuePtr);
 	name = Tcl_GetStringFromObj(mePtr->namePtr, NULL);
@@ -1093,7 +1078,7 @@ TkInvokeMenu(interp, menuPtr, index)
 	char *name = Tcl_GetStringFromObj(mePtr->namePtr, NULL);
 	
 	if (valuePtr == NULL) {
-	    valuePtr = Tcl_NewStringObj("", -1);
+	    valuePtr = Tcl_NewObj();
 	}
 	Tcl_IncrRefCount(valuePtr);
 	if (Tcl_SetObjVar2(interp, name, NULL, valuePtr,
@@ -1490,7 +1475,6 @@ ConfigureMenu(interp, menuPtr, objc, objv)
     int i;
     TkMenu *menuListPtr, *cleanupPtr;
     int result;
-    int tearoff;
     
     for (menuListPtr = menuPtr->masterMenuPtr; menuListPtr != NULL;
 	    menuListPtr = menuListPtr->nextInstancePtr) {
@@ -1543,8 +1527,7 @@ ConfigureMenu(interp, menuPtr, objc, objv)
 	 * isn't an initial tear-off entry at the beginning of the menu.
 	 */
 	
-	Tcl_GetBooleanFromObj(NULL, menuListPtr->tearoffPtr, &tearoff);
-	if (tearoff) {
+	if (menuListPtr->tearoff) {
 	    if ((menuListPtr->numEntries == 0)
 		    || (menuListPtr->entries[0]->type != TEAROFF_ENTRY)) {
 		if (MenuNewEntry(menuListPtr, 0, TEAROFF_ENTRY) == NULL) {
@@ -1817,8 +1800,8 @@ PostProcessEntry(mePtr)
 		char *name = Tcl_GetStringFromObj(mePtr->namePtr, NULL);
 		Tcl_SetObjVar2(menuPtr->interp, name, NULL,
 			(mePtr->type == CHECK_BUTTON_ENTRY)
-			? mePtr->offValuePtr : 
-			Tcl_NewStringObj("", 0),
+			? mePtr->offValuePtr
+			: Tcl_NewObj(),
 			TCL_GLOBAL_ONLY);
 	    }
 	}
@@ -2233,20 +2216,16 @@ MenuNewEntry(menuPtr, index, type)
     mePtr->selectImage = NULL;
     mePtr->accelPtr = NULL;
     mePtr->accelLength = 0;
-    mePtr->statePtr = Tcl_NewStringObj("disabled", -1);
-    Tcl_IncrRefCount(mePtr->statePtr);
+    mePtr->state = ENTRY_DISABLED;
     mePtr->borderPtr = NULL;
     mePtr->fgPtr = NULL;
     mePtr->activeBorderPtr = NULL;
     mePtr->activeFgPtr = NULL;
     mePtr->fontPtr = NULL;
-    mePtr->indicatorOnPtr = Tcl_NewBooleanObj(1);
-    Tcl_IncrRefCount(mePtr->indicatorOnPtr);
+    mePtr->indicatorOn = 0;
     mePtr->indicatorFgPtr = NULL;
-    mePtr->columnBreakPtr = Tcl_NewBooleanObj(0);
-    Tcl_IncrRefCount(mePtr->columnBreakPtr);
-    mePtr->hideMarginPtr = Tcl_NewBooleanObj(0);
-    Tcl_IncrRefCount(mePtr->hideMarginPtr);
+    mePtr->columnBreak = 0;
+    mePtr->hideMargin = 0;
     mePtr->commandPtr = NULL;
     mePtr->namePtr = NULL;
     mePtr->childMenuRefPtr = NULL;
@@ -2304,7 +2283,6 @@ MenuAddOrInsert(interp, menuPtr, indexPtr, objc, objv)
     int type, index;
     TkMenuEntry *mePtr;
     TkMenu *menuListPtr;
-    int tearoff;
 
     if (indexPtr != NULL) {
 	if (TkGetMenuIndex(interp, menuPtr, indexPtr, 1, &index)
@@ -2320,8 +2298,7 @@ MenuAddOrInsert(interp, menuPtr, indexPtr, objc, objv)
 		 (char *) NULL);
 	return TCL_ERROR;
     }
-    Tcl_GetBooleanFromObj(NULL, menuPtr->tearoffPtr, &tearoff);
-    if (tearoff && (index == 0)) {
+    if (menuPtr->tearoff && (index == 0)) {
 	index = 1;
     }
 
@@ -2529,7 +2506,6 @@ TkActivateMenuEntry(menuPtr, index)
 {
     register TkMenuEntry *mePtr;
     int result = TCL_OK;
-    int state;
 
     if (menuPtr->active >= 0) {
 	mePtr = menuPtr->entries[menuPtr->active];
@@ -2539,21 +2515,15 @@ TkActivateMenuEntry(menuPtr, index)
 	 * might already have been changed to disabled).
 	 */
 
-	Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings,
-		NULL, 0, &state);
-	if (state == ENTRY_ACTIVE) {
-	    Tcl_DecrRefCount(mePtr->statePtr);
-	    mePtr->statePtr = Tcl_NewStringObj("normal", -1);
-	    Tcl_IncrRefCount(mePtr->statePtr);
+	if (mePtr->state == ENTRY_ACTIVE) {
+	    mePtr->state = ENTRY_NORMAL;
 	}
 	TkEventuallyRedrawMenu(menuPtr, menuPtr->entries[menuPtr->active]);
     }
     menuPtr->active = index;
     if (index >= 0) {
 	mePtr = menuPtr->entries[index];
-    	Tcl_DecrRefCount(mePtr->statePtr);
-	mePtr->statePtr = Tcl_NewStringObj("active", -1);
-	Tcl_IncrRefCount(mePtr->statePtr);
+	mePtr->state = ENTRY_ACTIVE;
 	TkEventuallyRedrawMenu(menuPtr, mePtr);
     }
     return result;
@@ -3134,7 +3104,7 @@ TkSetWindowMenuBar(interp, tkwin, oldMenuName, menuName)
             if ((cloneMenuRefPtr != NULL)
 		    && (cloneMenuRefPtr->menuPtr != NULL)) {
 		Tcl_Obj *cursorPtr = Tcl_NewStringObj("-cursor", -1);
-		Tcl_Obj *nullPtr = Tcl_NewStringObj("", -1);
+		Tcl_Obj *nullPtr = Tcl_NewObj();
             	cloneMenuRefPtr->menuPtr->parentTopLevelPtr = tkwin;
             	menuBarPtr = cloneMenuRefPtr->menuPtr;
 		newObjv[0] = cursorPtr;

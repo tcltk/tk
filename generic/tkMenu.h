@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.h,v 1.1.4.2 1998/09/30 02:17:09 stanton Exp $
+ * RCS: @(#) $Id: tkMenu.h,v 1.1.4.3 1998/11/24 21:42:43 stanton Exp $
  */
 
 #ifndef _TKMENU
@@ -51,7 +51,7 @@ typedef struct TkMenuEntry {
     Tcl_Obj *labelPtr;		/* Main text label displayed in entry (NULL
 				 * if no label). */
     int labelLength;		/* Number of non-NULL characters in label. */
-    Tcl_Obj *statePtr;		/* State of button for display purposes:
+    int state;			/* State of button for display purposes:
 				 * normal, active, or disabled. */
     int underline;		/* Value of -underline option: specifies index
 				 * of character to underline (<0 means don't
@@ -74,8 +74,9 @@ typedef struct TkMenuEntry {
 				 * accelerator.  Malloc'ed. */
     int accelLength;		/* Number of non-NULL characters in
 				 * accelerator. */
-    Tcl_Obj *indicatorOnPtr;	/* True means draw indicator, false means
-				 * don't draw it. */
+    int indicatorOn;		/* True means draw indicator, false means
+				 * don't draw it. This field is ignored unless
+				 * the entry is a radio or check button. */
     /*
      * Display attributes
      */
@@ -96,21 +97,22 @@ typedef struct TkMenuEntry {
 				 * GC from menu. */
     Tcl_Obj *fontPtr;		/* Text font for menu entries.  NULL means
 				 * use overall font for menu. */
-    Tcl_Obj *columnBreakPtr;	/* If this is 0, this item appears below
+    int columnBreak;		/* If this is 0, this item appears below
 				 * the item in front of it. If this is
-				 * 1, this item starts a new column. */
-    Tcl_Obj *hideMarginPtr;	/* If this is 0, then the item has enough
-    				 * margin to accomodate a standard check
-    				 * mark and a default right margin. If this 
-    				 * is 1, then the item has no such margins.
-    				 * and checkbuttons and radiobuttons with
-    				 * this set will have a rectangle drawn
-    				 * in the indicator around the item if
-    				 * the item is checked.
-    				 * This is useful palette menus.*/ 
+				 * 1, this item starts a new column. This
+				 * field is always 0 for tearoff and separator
+				 * entries. */
+    int hideMargin;		/* If this is 0, then the item has enough
+    				 * margin to accomodate a standard check mark
+    				 * and a default right margin. If this is 1,
+    				 * then the item has no such margins.  and
+    				 * checkbuttons and radiobuttons with this set
+    				 * will have a rectangle drawn in the indicator
+    				 * around the item if the item is checked. This
+    				 * is useful for palette menus.  This field is
+    				 * ignored for separators and tearoffs. */
     int indicatorSpace;		/* The width of the indicator space for this
-				 * entry.
-				 */
+				 * entry. */
     int labelWidth;		/* Number of pixels to allow for displaying
 				 * labels in menu entries. */
 
@@ -307,7 +309,7 @@ typedef struct TkMenu {
      * Miscellaneous information:
      */
 
-    Tcl_Obj *tearoffPtr;	/* 1 means this menu can be torn off. On some
+    int tearoff;		/* 1 means this menu can be torn off. On some
     				 * platforms, the user can drag an outline
     				 * of the menu by just dragging outside of
     				 * the menu, and the tearoff is created where

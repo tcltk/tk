@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.1.4.2 1998/09/30 02:18:11 stanton Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.1.4.3 1998/11/24 21:42:44 stanton Exp $
  */
 
 #include <Menus.h>
@@ -800,7 +800,6 @@ SetMenuIndicator(
     TkMenu *menuPtr = mePtr->menuPtr;
     MenuHandle macMenuHdl = ((MacMenu *) menuPtr->platformData)->menuHdl;
     char markChar;
-    int indicatorOn;
 
     /*
      * There can be no indicators on menus that are not checkbuttons
@@ -819,8 +818,7 @@ SetMenuIndicator(
     markChar = 0;
     if ((mePtr->type == RADIO_BUTTON_ENTRY) 
     	    || (mePtr->type == CHECK_BUTTON_ENTRY)) {
-    	Tcl_GetBooleanFromObj(NULL, mePtr->indicatorOnPtr, &indicatorOn);
-    	if (indicatorOn && (mePtr->entryFlags & ENTRY_SELECTED)) {
+    	if (mePtr->indicatorOn && (mePtr->entryFlags & ENTRY_SELECTED)) {
     	    markChar = FindMarkCharacter(mePtr);
     	}
     }
@@ -1050,9 +1048,7 @@ ReconfigureIndividualMenu(
     		: Tcl_GetStringFromObj(mePtr->namePtr, NULL);
     	
     	if (strcmp(Tk_PathName(menuPtr->tkwin), name) == 0) {
-	    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings,
-		    NULL, 0, &state);
-    	    if (state == ENTRY_DISABLED) {
+    	    if (mePtr->state == ENTRY_DISABLED) {
     	    	parentDisabled = 1;
     	    }
     	    break;
@@ -1099,9 +1095,7 @@ ReconfigureIndividualMenu(
     	     * Set enabling and disabling correctly.
     	     */
 
-	    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings,
-		    NULL, 0, &state);
-	    if (parentDisabled || (state == ENTRY_DISABLED)) {
+	    if (parentDisabled || (mePtr->state == ENTRY_DISABLED)) {
 	    	DisableItem(macMenuHdl, base + index);
 	    } else {
 	    	EnableItem(macMenuHdl, base + index);
@@ -1114,13 +1108,9 @@ ReconfigureIndividualMenu(
 	    SetItemMark(macMenuHdl, base + index, 0);		
 	    if ((mePtr->type == CHECK_BUTTON_ENTRY)
 		    || (mePtr->type == RADIO_BUTTON_ENTRY)) {
-		int indicatorOn;
-		
-		Tcl_GetBooleanFromObj(NULL, mePtr->indicatorOnPtr,
-			&indicatorOn);
 	    	CheckItem(macMenuHdl, base + index, (mePtr->entryFlags
-		    	& ENTRY_SELECTED) && (indicatorOn));
-		if ((indicatorOn)
+		    	& ENTRY_SELECTED) && mePtr->indicatorOn);
+		if (mePtr->indicatorOn
 			&& (mePtr->entryFlags & ENTRY_SELECTED)) {
 		    SetItemMark(macMenuHdl, base + index,
 		    	    FindMarkCharacter(mePtr));
@@ -1607,13 +1597,8 @@ DrawMenuBarWhenIdle(
         if (menuBarPtr == NULL) {
             SetDefaultMenubar();
         } else {
-            int menuBarTearoff, menuTearoff;
-            
-            Tcl_GetBooleanFromObj(NULL, menuBarPtr->tearoffPtr,
-		    &menuBarTearoff);
-            Tcl_GetBooleanFromObj(NULL, menuPtr->tearoffPtr, &menuTearoff);
-	    if (menuBarTearoff != menuTearoff) {
-	    	if (menuBarTearoff) {
+	    if (menuBarPtr->tearoff != menuPtr->tearoff) {
+	    	if (menuBarPtr->tearoff) {
 	    	    appleIndex = (-1 == appleIndex) ? appleIndex
 	    	    	    : appleIndex + 1;
 	    	    helpIndex = (-1 == helpIndex) ? helpIndex
@@ -1661,12 +1646,7 @@ DrawMenuBarWhenIdle(
 	    
 	    for (i = 0; i < menuBarPtr->numEntries; i++) {
 	    	if (i == appleIndex) {
-	    	    int state;
-	    	    
-		    Tcl_GetIndexFromObj(NULL,
-			    menuBarPtr->entries[i]->statePtr, 
-		    	    tkMenuStateStrings, NULL, 0, &state);
-	    	    if (state == ENTRY_DISABLED) {
+	    	    if (menuBarPtr->entries[i]->state == ENTRY_DISABLED) {
 	    	    	DisableItem(((MacMenu *) menuBarPtr->entries[i]
 	    	    		->childMenuRefPtr->menuPtr
 	    	    		->platformData)->menuHdl,
@@ -1702,8 +1682,6 @@ DrawMenuBarWhenIdle(
 	    	    if ((menuBarPtr->entries[i]->childMenuRefPtr != NULL)
 	    		    && menuBarPtr->entries[i]->childMenuRefPtr
 			    ->menuPtr != NULL) {
-			int state;
-			
 	    	    	cascadeMenuPtr = menuBarPtr->entries[i]
 			    	->childMenuRefPtr->menuPtr;
 	    	    	macMenuHdl = ((MacMenu *) cascadeMenuPtr
@@ -1711,10 +1689,7 @@ DrawMenuBarWhenIdle(
 		    	DeleteMenu((*macMenuHdl)->menuID);
 	    	    	InsertMenu(macMenuHdl, 0);
 	    	    	RecursivelyInsertMenu(cascadeMenuPtr);
-		    	Tcl_GetIndexFromObj(NULL, 
-		    		menuBarPtr->entries[i]->statePtr, 
-		    		tkMenuStateStrings, NULL, 0, &state);
-	    	    	if (state == ENTRY_DISABLED) {
+	    	    	if (menuBarPtr->entries[i]->state == ENTRY_DISABLED) {
 	    	    	    DisableItem(((MacMenu *) menuBarPtr->entries[i]
 	    	    	    	    ->childMenuRefPtr->menuPtr
 	    	    	    	    ->platformData)->menuHdl,
@@ -2262,11 +2237,7 @@ DrawMenuEntryIndicator(
 {
     if ((mePtr->type == CHECK_BUTTON_ENTRY) || 
     	    (mePtr->type == RADIO_BUTTON_ENTRY)) {
-    	int indicatorOn;
-    	
-    	Tcl_GetBooleanFromObj(NULL, mePtr->indicatorOnPtr, &indicatorOn);
-    	
-    	if ((indicatorOn)
+    	if (mePtr->indicatorOn
     	    	&& (mePtr->entryFlags & ENTRY_SELECTED)) {
 	    int baseline;
 	    short markShort;
@@ -2711,7 +2682,7 @@ MenuDefProc(
     	    break;
 
     	case mChooseMsg: {
-    	    int hasTopScroll, hasBottomScroll, tearoff;
+    	    int hasTopScroll, hasBottomScroll;
     	    enum {
     	    	DONT_SCROLL, DOWN_SCROLL, UP_SCROLL
     	    } scrollDirection;
@@ -2753,12 +2724,8 @@ MenuDefProc(
 	    	    itemRect.bottom = itemRect.top
 			    + menuPtr->entries[i]->height;
 	    	    if (PtInRect(hitPt, &itemRect)) {
-	    	    	int state;
-	    	    	
-		    	Tcl_GetIndexFromObj(NULL, mePtr->statePtr, 
-		    		tkMenuStateStrings, NULL, 0, &state);
 	    	        if ((mePtr->type == SEPARATOR_ENTRY)
-	    	        	|| (state == ENTRY_DISABLED)) {
+	    	        	|| (mePtr->state == ENTRY_DISABLED)) {
 	    	            newItem = -1;
 	    	        } else {
 	    	            TkMenuEntry *cascadeEntryPtr;
@@ -2775,11 +2742,7 @@ MenuDefProc(
 	    	            		cascadeEntryPtr->namePtr, NULL);
 				if (strcmp(name, Tk_PathName(menuPtr->tkwin)) 
 					== 0) {
-	    			    Tcl_GetIndexFromObj(NULL, 
-	    			    	    cascadeEntryPtr->statePtr, 
-	    			    	    tkMenuStateStrings, NULL, 0,
-					    &state);
-				    if (state == ENTRY_DISABLED) {
+				    if (cascadeEntryPtr->state == ENTRY_DISABLED) {
 				    	parentDisabled = 1;
 				    }
 				    break;
@@ -2831,8 +2794,6 @@ MenuDefProc(
 	    ClipRect(&menuClipRect);
 
 	    if (oldItem != newItem) {
-		int state;
-		
 	        if (oldItem >= 0) {
 		    mePtr = menuPtr->entries[oldItem];
 		    if (mePtr->fontPtr == NULL) {
@@ -2855,9 +2816,7 @@ MenuDefProc(
 		    int oldActiveItem = menuPtr->active;
 		    
 		    mePtr = menuPtr->entries[newItem];
-	    	    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, 
-	    	    	    tkMenuStateStrings, NULL, 0, &state);
-		    if (state != ENTRY_DISABLED) {
+		    if (mePtr->state != ENTRY_DISABLED) {
 		    	TkActivateMenuEntry(menuPtr, newItem);
 		    }
 		    if (mePtr->fontPtr == NULL) {
@@ -2882,9 +2841,7 @@ MenuDefProc(
 		MenuSelectEvent(menuPtr);
 		Tcl_ServiceAll();
 		tkUseMenuCascadeRgn = 0;
-	    	Tcl_GetIndexFromObj(NULL, mePtr->statePtr,
-			tkMenuStateStrings, NULL, 0, &state);
-		if (state != ENTRY_DISABLED) {
+		if (mePtr->state != ENTRY_DISABLED) {
 		    TkActivateMenuEntry(menuPtr, -1);
 		}
 	    	*whichItem = newItem + 1;
@@ -3006,8 +2963,7 @@ MenuDefProc(
 	 	}
     	    }
     	    
-    	    Tcl_GetBooleanFromObj(NULL, menuPtr->tearoffPtr, &tearoff);
-	    if (tearoff) {
+	    if (menuPtr->tearoff) {
    	    	scratchRect = *menuRectPtr;
 		if (tearoffStruct.menuPtr == NULL) {
    	    	    scratchRect.top -= 10;
@@ -3389,9 +3345,7 @@ TkpDrawMenuEntry(
      * Choose the gc for drawing the foreground part of the entry.
      */
 
-    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings, NULL,
-	    0, &state);
-    if ((state == ENTRY_ACTIVE) && !strictMotif) {
+    if ((mePtr->state == ENTRY_ACTIVE) && !strictMotif) {
 	gc = mePtr->activeGC;
 	if (gc == NULL) {
 	    gc = menuPtr->activeGC;
@@ -3407,11 +3361,7 @@ TkpDrawMenuEntry(
     	    	    : Tcl_GetStringFromObj(cascadeEntryPtr->namePtr, NULL);
     	 
     	    if (strcmp(name, Tk_PathName(menuPtr->tkwin)) == 0) {
-    	    	int cascadeState;
-    	    	
-    	    	Tcl_GetIndexFromObj(NULL, cascadeEntryPtr->statePtr, 
-    	    		tkMenuStateStrings, NULL, 0, &cascadeState);
-    	    	if (cascadeState == ENTRY_DISABLED) {
+    	    	if (cascadeEntryPtr->state == ENTRY_DISABLED) {
     	    	    parentDisabled = 1;
     	    	}
     	    	break;
@@ -3471,14 +3421,11 @@ TkpDrawMenuEntry(
 	DrawTearoffEntry(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, adjustedY,
 		width, adjustedHeight);
     } else {
-    	int hideMargin;
-    	
 	DrawMenuEntryLabel(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, 
 		adjustedY, width, adjustedHeight);
 	DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 		activeBorder, x, adjustedY, width, adjustedHeight, drawArrow);
-	Tcl_GetBooleanFromObj(NULL, mePtr->hideMarginPtr, &hideMargin);
-	if (!hideMargin) {
+	if (!mePtr->hideMargin) {
 	    DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont,
 		    fmPtr, x, adjustedY, width, adjustedHeight);
 	}
@@ -3548,8 +3495,6 @@ TkpComputeStandardMenuGeometry(
     Tk_GetFontMetrics(menuFont, &menuMetrics);
 
     for (i = 0; i < menuPtr->numEntries; i++) {
-    	int columnBreak;
-    	
     	mePtr = menuPtr->entries[i];
     	if (mePtr->fontPtr == NULL) {
 	    tkfont = menuFont;
@@ -3560,8 +3505,7 @@ TkpComputeStandardMenuGeometry(
     	    fmPtr = &entryMetrics;
     	}
     	
-    	Tcl_GetBooleanFromObj(NULL, mePtr->columnBreakPtr, &columnBreak);
-	if ((i > 0) && columnBreak) {
+	if ((i > 0) && mePtr->columnBreak) {
 	    if (maxIndicatorSpace != 0) {
 		maxIndicatorSpace += 2;
 	    }
@@ -3605,10 +3549,6 @@ TkpComputeStandardMenuGeometry(
 	    	    fmPtr, &entryWidth, &height);
 	    mePtr->height = height;
 	} else {
-	    int hideMargin;
-	    	
-	    Tcl_GetBooleanFromObj(NULL, mePtr->hideMarginPtr, &hideMargin);
-	    
 	    /*
 	     * For each entry, compute the height required by that
 	     * particular entry, plus three widths:  the width of the
@@ -3628,8 +3568,8 @@ TkpComputeStandardMenuGeometry(
 	    		&modifierWidth, &accelWidth, &height);
 	    	nonAccelMargin = 0;
 	    } else if (mePtr->accelLength == 0) {
-	    	nonAccelMargin = hideMargin ? 0 
-	    		: Tk_TextWidth(tkfont, "m", 1);
+	    	nonAccelMargin = mePtr->hideMargin ? 0
+		    : Tk_TextWidth(tkfont, "m", 1);
 	    	accelWidth = modifierWidth = 0;
 	    } else {
 	    	labelWidth += Tk_TextWidth(tkfont, "m", 1);
@@ -3641,7 +3581,7 @@ TkpComputeStandardMenuGeometry(
 	    	nonAccelMargin = 0;
 	    }
 
-	    if (!(hideMargin)) {
+	    if (!(mePtr->hideMargin)) {
 	    	GetMenuIndicatorGeometry(menuPtr, mePtr, tkfont, 
 	    	    	fmPtr, &indicatorSpace, &height);
 	    	if (height > mePtr->height) {
@@ -3804,9 +3744,7 @@ DrawMenuEntryLabel(
     	}
     }
 
-    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings, NULL,
-	    0, &state);
-    if (state == ENTRY_DISABLED) {
+    if (mePtr->state == ENTRY_DISABLED) {
 	if (menuPtr->disabledFgPtr == NULL) {
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledGC, x, y,
 		    (unsigned) width, (unsigned) height);
@@ -3849,11 +3787,7 @@ DrawMenuEntryBackground(
     int width,				/* width of rectangle to draw */
     int height)				/* height of rectangle to draw */
 {
-    int state;
-    
-    Tcl_GetIndexFromObj(NULL, mePtr->statePtr, tkMenuStateStrings, NULL,
-	    0, &state);
-    if (state == ENTRY_ACTIVE) {
+    if (mePtr->state == ENTRY_ACTIVE) {
 	bgBorder = activeBorder;
     }
     Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder,
