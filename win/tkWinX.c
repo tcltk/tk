@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.22 2002/06/17 20:09:01 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.23 2002/06/19 19:37:55 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -558,7 +558,6 @@ TkpCloseDisplay(dispPtr)
         ckfree((char *) display->screens);
     }
     ckfree((char *) display);
-    ckfree((char *) dispPtr);
 }
 
 /*

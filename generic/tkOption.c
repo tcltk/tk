@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.13 2002/06/15 21:02:20 mdejong Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.14 2002/06/19 19:37:54 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -787,7 +787,7 @@ TkOptionDeadWindow(winPtr)
      * database.
      */
 
-    if ((winPtr->mainPtr->winPtr == winPtr)
+    if ((winPtr->mainPtr != NULL) && (winPtr->mainPtr->winPtr == winPtr)
 	    && (winPtr->mainPtr->optionRootPtr != NULL)) {
 	ClearOptionTree(winPtr->mainPtr->optionRootPtr);
 	winPtr->mainPtr->optionRootPtr = NULL;

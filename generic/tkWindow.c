@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.49 2002/06/18 23:51:46 dkf Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.50 2002/06/19 19:37:54 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -240,8 +240,6 @@ TkCloseDisplay(TkDisplay *dispPtr)
 	ckfree(dispPtr->name);
     }
 
-    Tcl_DeleteHashTable(&dispPtr->winTable);
-
     if (dispPtr->atomInit) {
 	Tcl_DeleteHashTable(&dispPtr->nameTable);
 	Tcl_DeleteHashTable(&dispPtr->atomTable);
@@ -261,6 +259,15 @@ TkCloseDisplay(TkDisplay *dispPtr)
     TkGCCleanup(dispPtr);
 
     TkpCloseDisplay(dispPtr);
+
+    /*
+     * Delete winTable after TkpCloseDisplay since special windows
+     * may need call Tk_DestroyWindow and it checks the winTable.
+     */
+
+    Tcl_DeleteHashTable(&dispPtr->winTable);
+
+    ckfree((char *) dispPtr);
 
     /*
      * There is more to clean up, we leave it at this for the time being.
@@ -1262,7 +1269,7 @@ Tk_DestroyWindow(tkwin)
      * can be closed and its data structures deleted.
      */
 
-    if (winPtr->mainPtr->winPtr == winPtr) {
+    if (winPtr->mainPtr != NULL && winPtr->mainPtr->winPtr == winPtr) {
         dispPtr->refCount--;
 	if (tsdPtr->mainWindowList == winPtr->mainPtr) {
 	    tsdPtr->mainWindowList = winPtr->mainPtr->nextPtr;
@@ -1388,6 +1395,7 @@ Tk_DestroyWindow(tkwin)
 #ifdef TK_USE_INPUT_METHODS
     if (winPtr->inputContext != NULL) {
 	XDestroyIC(winPtr->inputContext);
+	winPtr->inputContext = NULL;
     }
 #endif /* TK_USE_INPUT_METHODS */
     if (winPtr->tagPtr != NULL) {
