@@ -1,3 +1,24 @@
+2003-04-04  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* unix/Makefile.in: Subst TCL_LIBS instead of
+	DL_LIBS and MATH_LIBS.
+	* unix/configure: Regen.
+	* unix/configure.in: Remove SC_ENABLE_THREADS
+	invocation. Thread support in an extension
+	should be automatic when Tcl is compiled
+	with thread support. Add AC_DEFINE calls
+	to set TCL_THREADS, _REENTRANT, and
+	_THREAD_SAFE since this was done in
+	SC_ENABLE_THREADS. Remove socket and math
+	lib checks since these are already done in
+	the Tcl configure script.
+	* unix/tcl.m4: Update from Tcl to get
+	TCL_LIBS fix. This fixes bug 597847
+	which was caused by improper linking.
+	* unix/tkConfig.sh.in: Subst TCL_LIBS
+	instead of MATH_LIBS and DL_LIBS.
+	[Bug 597847]
+
 2003-04-02  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/configure: Regen.
