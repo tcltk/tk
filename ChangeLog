@@ -1,3 +1,18 @@
+2004-09-09  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinWm.c: backport of several items from 8.5 head:
+	(ReadIconFromFile): when using SHGetFileInfo to retrieve icon, get
+	regular icon as well for correct Alt-Tab icon. (hobbs)
+	Fix for #742882 "Potential division by zero in gridded wm
+	geometry" (jenglish)
+	(UpdateWrapper): Let overrideredirect'ed window's wrapper be the
+	child of desktop window, thus making it to behave more similarly
+	to X11 Override Redirect. Esp. useful for combobox-like
+	megawidgets. (kovalenko)
+	(InstallColormaps): Check for TK_ALREADY_DEAD to avoid handling of
+	dead windows. (kovalenko)
+	Change 'panic' to 'Tcl_Panic' (davygrvy)
+
 2004-09-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/tkfbox.tcl (::tk::dialog::file::Create): use label
