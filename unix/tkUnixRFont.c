@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.6 2003/11/17 23:48:47 dkf Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.7 2004/10/08 16:16:54 jenglish Exp $
  */
 
 #include "tkUnixInt.h"
@@ -37,10 +37,27 @@ typedef struct _UnixFtFont {
     XftColor	    color;
 } UnixFtFont;
 
+
+/*
+ * Package initialization:
+ * 	Nothing to do here except register the fact that we're using Xft
+ * 	in the TIP 59 configuration database. 
+ */
+
+#ifndef TCL_CFGVAL_ENCODING
+#define TCL_CFGVAL_ENCODING "ascii"
+#endif
+
+static Tcl_Config cfg[] = {
+    { "fontsystem", 	"xft" },
+    { 0,0 }
+};
+
 void
 TkpFontPkgInit(mainPtr)
     TkMainInfo *mainPtr;	/* The application being created. */
 {
+    Tcl_RegisterConfig(mainPtr->interp, "tk", cfg, TCL_CFGVAL_ENCODING);
 }
 
 static XftFont *
