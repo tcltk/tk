@@ -297,8 +297,6 @@ AC_DEFUN(SC_ENABLE_SYMBOLS, [
 #		LDFLAGS_WINDOW
 #		CC_OBJNAME
 #		CC_EXENAME
-#		PATHTYPE
-#		VPSEP
 #		CYGPATH
 #		STLIB_LD
 #		SHLIB_LD
@@ -366,15 +364,8 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    extra_cflags="-mno-cygwin"
 	    extra_ldflags="-mno-cygwin"
 	else
-	    mno_cygwin="no"
 	    extra_cflags=""
 	    extra_ldflags=""
-	fi
-
-	if test "$cross_compiling" = "yes" -o "$mno_cygwin" = "yes"; then
-	    PATHTYPE=''
-	    CYGPATH='echo '
-	    VPSEP=':'
 	fi
 
 	if test "${SHARED_BUILD}" = "0" ; then
@@ -482,7 +473,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	
 	# Specify the CC output file names based on the target name
 	CC_OBJNAME="-Fo\[$]@"
-	CC_EXENAME="-Fe\"\$(shell \$(CYGPATH) \$(PATHTYPE) '\[$]@')\""
+	CC_EXENAME="-Fe\"\$(shell \$(CYGPATH) '\[$]@')\""
 
 	# Specify linker flags depending on the type of app being 
 	# built -- Console vs. Window.
