@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.		|
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.20 2002/02/19 14:05:43 dkf Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.21 2002/06/14 13:35:48 dkf Exp $
  */
 
 /*
@@ -481,7 +481,8 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	break;
     }
 
-    Tk_PhotoPutBlock(imageHandle, &block, destX, destY, width, height);
+    Tk_PhotoPutBlock(imageHandle, &block, destX, destY, width, height,
+	    TK_PHOTO_COMPOSITE_SET);
 
     noerror:
     if (block.pixelPtr) {

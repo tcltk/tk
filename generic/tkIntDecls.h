@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.17 2002/04/12 10:10:48 hobbs Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.18 2002/06/14 13:35:49 dkf Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -489,6 +489,16 @@ EXTERN void		TkFocusFree _ANSI_ARGS_((TkMainInfo * mainPtr));
 EXTERN void		TkClipCleanup _ANSI_ARGS_((TkDisplay * dispPtr));
 /* 144 */
 EXTERN void		TkGCCleanup _ANSI_ARGS_((TkDisplay * dispPtr));
+#ifdef __WIN32__
+/* 145 */
+EXTERN void		TkSubtractRegion _ANSI_ARGS_((TkRegion sra, 
+				TkRegion srcb, TkRegion dr_return));
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+/* 145 */
+EXTERN void		TkSubtractRegion _ANSI_ARGS_((TkRegion sra, 
+				TkRegion srcb, TkRegion dr_return));
+#endif /* MAC_TCL */
 
 typedef struct TkIntStubs {
     int magic;
@@ -719,6 +729,15 @@ typedef struct TkIntStubs {
     void (*tkFocusFree) _ANSI_ARGS_((TkMainInfo * mainPtr)); /* 142 */
     void (*tkClipCleanup) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 143 */
     void (*tkGCCleanup) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 144 */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    void *reserved145;
+#endif /* UNIX */
+#ifdef __WIN32__
+    void (*tkSubtractRegion) _ANSI_ARGS_((TkRegion sra, TkRegion srcb, TkRegion dr_return)); /* 145 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    void (*tkSubtractRegion) _ANSI_ARGS_((TkRegion sra, TkRegion srcb, TkRegion dr_return)); /* 145 */
+#endif /* MAC_TCL */
 } TkIntStubs;
 
 #ifdef __cplusplus
@@ -1338,6 +1357,18 @@ extern TkIntStubs *tkIntStubsPtr;
 #define TkGCCleanup \
 	(tkIntStubsPtr->tkGCCleanup) /* 144 */
 #endif
+#ifdef __WIN32__
+#ifndef TkSubtractRegion
+#define TkSubtractRegion \
+	(tkIntStubsPtr->tkSubtractRegion) /* 145 */
+#endif
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+#ifndef TkSubtractRegion
+#define TkSubtractRegion \
+	(tkIntStubsPtr->tkSubtractRegion) /* 145 */
+#endif
+#endif /* MAC_TCL */
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 

@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: photo.n,v 1.10 2002/03/14 10:19:40 dkf Exp $
+'\" RCS: @(#) $Id: photo.n,v 1.11 2002/06/14 13:35:47 dkf Exp $
 '\" 
 .so man.macros
 .TH photo n 4.0 Tk "Tk Built-In Commands"
@@ -189,6 +189,18 @@ only every \fIx\fRth pixel in the X direction and \fIy\fRth pixel in
 the Y direction.  Negative values will cause the image to be flipped
 about the Y or X axes, respectively.  If \fIy\fR is not given, the
 default value is the same as \fIx\fR.
+.TP
+\fB\-compositingrule \fIrule\fR
+.VS 8.4
+Specifies how transparent pixels in the source image are combined with
+the destination image.  When a compositing rule of \fIoverlay\fR is
+set, the old contents of the destination image are visible, as if the
+source image were printed on a piece of transparent film and placed
+over the top of the destination.  When a compositing rule of \fIset\R
+is set, the old contents of the destination image are discarded and
+the source image is used as-is.  The default compositing rule is
+\fIoverlay\fR.
+.VE 8.4
 .RE
 .TP
 \fIimageName \fBdata ?\fIoption value(s) ...\fR?

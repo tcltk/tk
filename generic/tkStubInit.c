@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.33 2002/05/27 19:49:32 mdejong Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.34 2002/06/14 13:35:49 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -272,6 +272,15 @@ TkIntStubs tkIntStubs = {
     TkFocusFree, /* 142 */
     TkClipCleanup, /* 143 */
     TkGCCleanup, /* 144 */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 145 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    TkSubtractRegion, /* 145 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkSubtractRegion, /* 145 */
+#endif /* MAC_TCL */
 };
 
 TkIntPlatStubs tkIntPlatStubs = {
@@ -785,8 +794,8 @@ TkStubs tkStubs = {
     Tk_NameToWindow, /* 141 */
     Tk_OwnSelection, /* 142 */
     Tk_ParseArgv, /* 143 */
-    Tk_PhotoPutBlock, /* 144 */
-    Tk_PhotoPutZoomedBlock, /* 145 */
+    Tk_PhotoPutBlock_Old, /* 144 */
+    Tk_PhotoPutZoomedBlock_Old, /* 145 */
     Tk_PhotoGetImage, /* 146 */
     Tk_PhotoBlank, /* 147 */
     Tk_PhotoExpand, /* 148 */
@@ -887,6 +896,8 @@ TkStubs tkStubs = {
     Tk_SetInternalBorderEx, /* 243 */
     Tk_SetMinimumRequestSize, /* 244 */
     Tk_SetCaretPos, /* 245 */
+    Tk_PhotoPutBlock, /* 246 */
+    Tk_PhotoPutZoomedBlock, /* 247 */
 };
 
 /* !END!: Do not edit above this line. */

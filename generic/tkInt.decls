@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.26 2002/05/27 19:49:32 mdejong Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.27 2002/06/14 13:35:48 dkf Exp $
 
 library tk
 
@@ -655,6 +655,10 @@ declare 143 generic {
 
 declare 144 generic {
     void TkGCCleanup(TkDisplay *dispPtr)
+}
+
+declare 145 {mac win} {
+    void TkSubtractRegion (TkRegion sra, TkRegion srcb, TkRegion dr_return)
 }
 
 ##############################################################################
