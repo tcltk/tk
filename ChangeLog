@@ -1,3 +1,8 @@
+2003-01-14  Joe English  <jenglish@users.sourceforge.net>
+	* generic/tkSelect.c (Tk_CreateSelHandler):
+	Fix for #666346 "Selection handling crashes under KDE 3.0"
+	* tests/unixSelect.test (unixSelect-1.20): Added test case.
+
 2003-01-13  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/tkWinDialog.c (Tk_ChooseDirectoryObjCmd,
