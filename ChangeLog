@@ -1,3 +1,10 @@
+2001-01-27  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkFileFilter.c:
+	* mac/tkMacInit.c:
+	* mac/tkMacKeyboard.c:
+	* mac/tkMacMenus.c: TIP 27 CONSTification induced changes
+
 2002-01-25  Don Porter  <dgp@users.sourceforge.net>
 
 	* All changes below are Patch 505159

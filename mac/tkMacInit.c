@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacInit.c,v 1.6 2002/01/25 21:09:37 dgp Exp $
+ * RCS: @(#) $Id: tkMacInit.c,v 1.7 2002/01/27 11:10:53 das Exp $
  */
 
 #include <Resources.h>
@@ -170,6 +170,7 @@ TkpGetAppName(
 {
     int argc;
     CONST char **argv = NULL, *name, *p;
+    int nameLength = -1;
     Handle h = NULL;
 
     h = GetNamedResource('STR ', "\pTk App Name");
@@ -188,16 +189,17 @@ TkpGetAppName(
 	    name = argv[argc-1];
 	    p = strrchr(name, '.');
 	    if (p != NULL) {
-		*p = '\0';
+		nameLength = p - name;
 	    }
 	} else {
 	    name = NULL;
 	}
     }
-    if ((name == NULL) || (*name == 0)) {
+    if ((name == NULL) || (*name == 0) || (nameLength == 0)) {
 	name = "tk";
+	nameLength = -1;
     }
-    Tcl_DStringAppend(namePtr, name, -1);
+    Tcl_DStringAppend(namePtr, name, nameLength);
     if (argv != NULL) {
 	ckfree((char *)argv);
     }
