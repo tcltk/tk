@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.11 2004/12/02 02:07:42 hobbs Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.12 2004/12/03 13:16:35 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -4454,20 +4454,20 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height, compRule)
 			     * Combine according to the compositing rule.
 			     */
 			    switch (compRule) {
-			    case TK_PHOTO_COMPOSITE_SET:
-				*destPtr++ = srcPtr[0];
-				*destPtr++ = srcPtr[greenOffset];
-				*destPtr++ = srcPtr[blueOffset];
-				*destPtr++ = alpha;
-				break;
-
 			    case TK_PHOTO_COMPOSITE_OVERLAY:
 				if (!destPtr[3]) {
 				    /*
-				     * There must be a better way to select a
-				     * background colour!
+				     * The destination is entirely
+				     * blank, so set it to the source,
+				     * just as if we used the SET
+				     * compositing rule.
 				     */
-				    destPtr[0] = destPtr[1] = destPtr[2] = 0xd9;
+				case TK_PHOTO_COMPOSITE_SET:
+				    *destPtr++ = srcPtr[0];
+				    *destPtr++ = srcPtr[greenOffset];
+				    *destPtr++ = srcPtr[blueOffset];
+				    *destPtr++ = alpha;
+				    break;
 				}
 
 				if (alpha) {
@@ -4581,6 +4581,12 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height, compRule)
 	TkUnionRectWithRegion(&rect, masterPtr->validRegion,
 		masterPtr->validRegion);
     }
+
+    /*
+     * Check if display code needs alpha blending...
+     */
+
+    ToggleComplexAlphaIfNeeded(masterPtr);
 
     /*
      * Update each instance.
@@ -4768,19 +4774,19 @@ Tk_PhotoPutZoomedBlock(handle, blockPtr, x, y, width, height, zoomX, zoomY,
  			}
 
 			switch (compRule) {
-			case TK_PHOTO_COMPOSITE_SET:
-			    *destPtr++ = srcPtr[0];
-			    *destPtr++ = srcPtr[greenOffset];
-			    *destPtr++ = srcPtr[blueOffset];
-			    *destPtr++ = alpha;
-			    break;
 			case TK_PHOTO_COMPOSITE_OVERLAY:
 			    if (!destPtr[3]) {
 				/*
-				 * There must be a better way to select a
-				 * background colour!
+				 * The destination is entirely blank,
+				 * so set it to the source, just as if
+				 * we used the SET compositing rule.
 				 */
-				destPtr[0] = destPtr[1] = destPtr[2] = 0xd9;
+			    case TK_PHOTO_COMPOSITE_SET:
+				*destPtr++ = srcPtr[0];
+				*destPtr++ = srcPtr[greenOffset];
+				*destPtr++ = srcPtr[blueOffset];
+				*destPtr++ = alpha;
+				break;
 			    }
 			    if (alpha) {
 				int Alpha = destPtr[3];
@@ -4867,6 +4873,12 @@ Tk_PhotoPutZoomedBlock(handle, blockPtr, x, y, width, height, zoomX, zoomY,
 	TkUnionRectWithRegion(&rect, masterPtr->validRegion,
 		masterPtr->validRegion);
     }
+
+    /*
+     * Check if display code needs alpha blending...
+     */
+
+    ToggleComplexAlphaIfNeeded(masterPtr);
 
     /*
      * Update each instance.
