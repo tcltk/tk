@@ -1,3 +1,8 @@
+2002-10-17  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/text.test:                    properly return the number of
+	* unix/tkUnixFont.c (ControlUtfProc): bytes consumed. [Bug #624732]
+
 2002-10-17  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/README: info specific to building and running

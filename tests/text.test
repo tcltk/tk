@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.18 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: text.test,v 1.19 2002/10/17 23:38:01 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -1573,22 +1573,15 @@ test text-25.13 {-maxundo configuration option} {
     .t get 1.0 end
 } "line 1\n\n"
 
+test text-26.1 {bug fix - 624372, ControlUtfProc long lines} {
+    destroy .t
+    pack [text .t -wrap none]
+    .t insert end [string repeat "\1" 500]
+} {}
+
 deleteWindows
 option clear
 
 # cleanup
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
