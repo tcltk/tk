@@ -369,6 +369,7 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 	TCL_THREADS=0
 	AC_MSG_RESULT([no (default)])
     fi
+    AC_SUBST(TCL_THREADS)
 ])
 
 #------------------------------------------------------------------------
@@ -586,7 +587,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     TCL_EXP_FILE=""
     STLIB_LD="ar cr"
     case $system in
-	AIX-5*)
+	AIX-5.*)
 	    if test "${TCL_THREADS}" = "1" -a "$using_gcc" = "no" ; then
 		# AIX requires the _r compiler when gcc isn't being used
 		if test "${CC}" != "cc_r" ; then
@@ -986,6 +987,12 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    TCL_LIB_VERSIONS_OK=nodots
 	    ;;
 	SunOS-5.[[0-6]]*)
+
+	    # Note: If _REENTRANT isn't defined, then Solaris
+	    # won't define thread-safe library routines.
+
+	    AC_DEFINE(_REENTRANT)
+
 	    SHLIB_CFLAGS="-KPIC"
 	    SHLIB_LD="/usr/ccs/bin/ld -G -z text"
 
@@ -1000,6 +1007,12 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    LD_SEARCH_FLAGS='-Wl,-R,${LIB_RUNTIME_DIR}'
 	    ;;
 	SunOS-5*)
+
+	    # Note: If _REENTRANT isn't defined, then Solaris
+	    # won't define thread-safe library routines.
+
+	    AC_DEFINE(_REENTRANT)
+
 	    SHLIB_CFLAGS="-KPIC"
 	    SHLIB_LD="/usr/ccs/bin/ld -G -z text"
 	    LDFLAGS=""
@@ -1185,7 +1198,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     if test "$DL_OBJS" != "tclLoadNone.o" ; then
 	if test "$using_gcc" = "yes" ; then
 	    case $system in
-		AIX-[[1-4]]*)
+		AIX-*)
 		    ;;
 		BSD/OS*)
 		    ;;
@@ -1287,8 +1300,68 @@ main()
     }
     return 1;
 }], tk_ok=sgtty, tk_ok=none, tk_ok=none)
+
     if test $tk_ok = sgtty; then
 	AC_DEFINE(USE_SGTTY)
+    else
+	AC_TRY_RUN([
+#include <termios.h>
+#include <errno.h>
+
+main()
+{
+    struct termios t;
+    if (tcgetattr(0, &t) == 0
+	|| errno == ENOTTY || errno == ENXIO || errno == EINVAL) {
+	cfsetospeed(&t, 0);
+	t.c_cflag |= PARENB | PARODD | CSIZE | CSTOPB;
+	return 0;
+    }
+    return 1;
+}], tk_ok=termios, tk_ok=no, tk_ok=no)
+
+    if test $tk_ok = termios; then
+	AC_DEFINE(USE_TERMIOS)
+    else
+	AC_TRY_RUN([
+#include <termio.h>
+#include <errno.h>
+
+main()
+{
+    struct termio t;
+    if (ioctl(0, TCGETA, &t) == 0
+	|| errno == ENOTTY || errno == ENXIO || errno == EINVAL) {
+	t.c_cflag |= CBAUD | PARENB | PARODD | CSIZE | CSTOPB;
+	return 0;
+    }
+    return 1;
+    }], tk_ok=termio, tk_ok=no, tk_ok=no)
+
+    if test $tk_ok = termio; then
+	AC_DEFINE(USE_TERMIO)
+    else
+	AC_TRY_RUN([
+#include <sgtty.h>
+#include <errno.h>
+
+main()
+{
+    struct sgttyb t;
+    if (ioctl(0, TIOCGETP, &t) == 0
+	|| errno == ENOTTY || errno == ENXIO || errno == EINVAL) {
+	t.sg_ospeed = 0;
+	t.sg_flags |= ODDP | EVENP | RAW;
+	return 0;
+    }
+    return 1;
+}], tk_ok=sgtty, tk_ok=none, tk_ok=none)
+
+    if test $tk_ok = sgtty; then
+	AC_DEFINE(USE_SGTTY)
+    fi
+    fi
+    fi
     fi
     fi
     fi
@@ -1563,6 +1636,8 @@ AC_DEFUN(SC_TIME_HANDLER, [
     AC_HEADER_TIME
     AC_STRUCT_TIMEZONE
 
+    AC_CHECK_FUNCS(gmtime_r localtime_r)
+
     AC_MSG_CHECKING([tm_tzadj in struct tm])
     AC_TRY_COMPILE([#include <time.h>], [struct tm tm; tm.tm_tzadj;],
 	    [AC_DEFINE(HAVE_TM_TZADJ)
@@ -1603,6 +1678,7 @@ AC_DEFUN(SC_TIME_HANDLER, [
 	    AC_MSG_RESULT(yes)],
 	    AC_MSG_RESULT(no))
     fi
+
 ])
 
 #--------------------------------------------------------------------
