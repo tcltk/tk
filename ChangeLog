@@ -1,18 +1,50 @@
+2004-02-15  Jim Ingham  <jingham@apple.com>
+
+        * tkMacOSXDialog.c (MatchOneType): If the Macintosh filetype
+	is 0, then automatically pass the fileType check.
+
+	* tkMacOSXCarbonEvents.c: New file - this doesn't do anything
+	yet - just registers for a couple of App Events.
+
+	* tkMacOSXInit.c (TkpInit.c): Call TkMacOSXInitCarbonEvents.c.
+	
+	* tkMacOSXAppInit.c: Formatting cleanups.
+	* tkMacOSXButton.c: Ditto
+	* tkMacOSXClipboard.c: Ditto
+	* tkMacOSXDebug.c: Ditto
+	* tkMacOSXDialog.c: Ditto
+	* tkMacOSXDraw.c: Ditto
+	* tkMacOSXEvent.c: Ditto
+	* tkMacOSXFont.c: Ditto
+	* tkMacOSXHLEvents.c: Ditto
+	* tkMacOSXInit.c: Ditto
+	* tkMacOSXInt.h
+	* tkMacOSXKeyEvent.c: Ditto
+	* tkMacOSXMenu.c: Ditto
+	* tkMacOSXMenubutton.c: Ditto
+	* tkMacOSXMouseEvent.c: Ditto
+	* tkMacOSXNotify.c: Ditto
+	* tkMacOSXScale.c: Ditto
+	* tkMacOSXScrlbr.c: Ditto
+	* tkMacOSXSubwindows.c: Ditto
+	* tkMacOSXWindowEvent.c: Ditto
+	* tkMacOSXWm.c: Ditto
+	
 2004-02-13  Jim Ingham  <jingham@apple.com>
 
-	        * tkMacOSXDialog.c (Tk_GetOpenFileObjCmd): Use CFStringRef for
-	        title & message options, not pascal strings.
-	        (Tk_GetSaveFileObjCmd): Ditto
-	        (Tk_ChooseDirectoryObjCmd): Ditto
-	        (NavServicesGetFile): Now that we get CFStrings, we don't need
-	        to convert them here.
+	* tkMacOSXDialog.c (Tk_GetOpenFileObjCmd): Use CFStringRef for
+	title & message options, not pascal strings.
+	(Tk_GetSaveFileObjCmd): Ditto
+	(Tk_ChooseDirectoryObjCmd): Ditto
+	(NavServicesGetFile): Now that we get CFStrings, we don't need
+	to convert them here.
 
-	        * tkMacOSXMenu.c (TkMacOSXDispatchMenuEvent): Cleanup, we don't
-	        need to handle the Apple Menu picks any more, but the code didn't
-	        reflect that.
+	* tkMacOSXMenu.c (TkMacOSXDispatchMenuEvent): Cleanup, we don't
+	need to handle the Apple Menu picks any more, but the code didn't
+	reflect that.
 
-	        * tkMacOSXWm.c (TkSetWMName): Use CFStrings for the Window Title
-	        name, not Pascal strings.  
+	* tkMacOSXWm.c (TkSetWMName): Use CFStrings for the Window Title
+	name, not Pascal strings.  
 
 2004-02-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
