@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.18 2003/02/25 02:59:27 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.19 2003/05/15 18:05:06 hobbs Exp $
  */
  
 #include "tkUnixInt.h"
@@ -176,7 +176,7 @@ static Tcl_ThreadDataKey dataKey;
  */
  
 static EncodingAlias encodingAliases[] = {
-    {"gb2312",		"gb2312*"},
+    {"gb2312-raw",	"gb2312*"},
     {"big5",		"big5*"},
     {"cns11643-1",	"cns11643*-1"},
     {"cns11643-1",	"cns11643*.1-0"},
