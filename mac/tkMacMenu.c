@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.17 1999/12/16 21:58:02 hobbs Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.18 2000/02/10 08:55:47 jingham Exp $
  */
 
 #include "tkMacInt.h"
@@ -1881,8 +1881,15 @@ TkpSetMainMenubar(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     WindowRef macWindowPtr = (WindowRef) TkMacGetDrawablePort(winPtr->window);
+    WindowRef frontNonFloating;
     
-    if ((macWindowPtr == NULL) || (macWindowPtr != FrontWindow())) {
+    if (TkMacHaveAppearance() >= 0x110) {
+        frontNonFloating = FrontNonFloatingWindow();
+    } else {
+        frontNonFloating = FrontWindow();
+    }
+    
+    if ((macWindowPtr == NULL) || (macWindowPtr != frontNonFloating)) {
     	return;
     }
 

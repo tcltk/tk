@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacSubwindows.c,v 1.5 1999/04/16 01:51:32 stanton Exp $
+ * RCS: @(#) $Id: tkMacSubwindows.c,v 1.6 2000/02/10 08:56:24 jingham Exp $
  */
 
 #include "tkInt.h"
@@ -938,7 +938,15 @@ TkMacGetDrawablePort(
     	} 
 	
 	if (resultPort == NULL) {
-    	    panic("TkMacGetDrawablePort couldn't find container");
+	    /*
+	     * FIXME:
+	     *
+	     * So far as I can tell, the only time that this happens is when
+	     * we are tearing down an embedded child interpreter, and most
+	     * of the time, this is harmless...  However, we really need to
+	     * find why the embedding loses.
+	     */
+	    DebugStr("\pTkMacGetDrawablePort couldn't find container");
     	    return NULL;
     	}	
 	    
@@ -1075,9 +1083,13 @@ tkMacMoveWindow(
 {
     int xOffset, yOffset;
 
+    if (TkMacHaveAppearance() >= 0x110) {
+        MoveWindowStructure((WindowRef) window, (short) x, (short) y);
+    } else {
     TkMacWindowOffset(window, &xOffset, &yOffset);
     MoveWindow((WindowRef) window, 
 	(short) (x + xOffset), (short) (y + yOffset), false);
+}
 }
 
 /*

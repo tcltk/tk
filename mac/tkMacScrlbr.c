@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacScrlbr.c,v 1.3 1999/08/10 05:05:18 jingham Exp $
+ * RCS: @(#) $Id: tkMacScrlbr.c,v 1.4 2000/02/10 08:56:12 jingham Exp $
  */
 
 #include "tkScrollbar.h"
@@ -242,6 +242,7 @@ TkpDisplayScrollbar(
 
     if (macScrollPtr->sbHandle == NULL) {
         Rect r;
+        WindowRef frontNonFloating;
         
         r.left = r.top = 0;
         r.right = r.bottom = 1;
@@ -252,7 +253,14 @@ TkpDisplayScrollbar(
 	/*
 	 * If we are foremost than make us active.
 	 */
-	if ((WindowPtr) destPort == FrontWindow()) {
+	
+	if (TkMacHaveAppearance() >= 0x110) {
+	    frontNonFloating = FrontNonFloatingWindow();
+	} else {
+	    frontNonFloating = FrontWindow();
+	}
+	
+	if ((WindowPtr) destPort == FrontWindow() || TkpIsWindowFloating((WindowPtr) destPort)) {
 	    macScrollPtr->macFlags |= ACTIVE;
 	}
     }

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenus.c,v 1.4 1999/05/22 06:33:41 jingham Exp $
+ * RCS: @(#) $Id: tkMacMenus.c,v 1.5 2000/02/10 08:56:03 jingham Exp $
  */
 
 #include "tcl.h"
@@ -120,7 +120,11 @@ TkMacHandleMenuSelect(
 		    break;
 		case kCloseItem:
 		    /* Send close event */
-		    window = TkMacGetXWindow(FrontWindow());
+		    if (TkMacHaveAppearance() >= 0x110) {
+		        window = TkMacGetXWindow(FrontNonFloatingWindow());
+		    } else {
+		        window = TkMacGetXWindow(FrontWindow());
+		    }
 		    dispPtr = TkGetDisplayList();
 		    tkwin = Tk_IdToWindow(dispPtr->display, window);
 		    TkGenWMDestroyEvent(tkwin);
@@ -255,7 +259,11 @@ GenerateEditEvent(
     Window window;
     TkDisplay *dispPtr;
 
-    window = TkMacGetXWindow(FrontWindow());
+    if (TkMacHaveAppearance() >= 0x110) {
+        window = TkMacGetXWindow(FrontNonFloatingWindow());
+    } else {
+        window = TkMacGetXWindow(FrontWindow());
+    }
     dispPtr = TkGetDisplayList();
     tkwin = Tk_IdToWindow(dispPtr->display, window);
     tkwin = (Tk_Window) ((TkWindow *) tkwin)->dispPtr->focusPtr;

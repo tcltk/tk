@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacInt.h,v 1.8 1999/05/22 06:32:55 jingham Exp $
+ * RCS: @(#) $Id: tkMacInt.h,v 1.9 2000/02/10 08:55:18 jingham Exp $
  */
 
 #ifndef _TKMACINT
@@ -205,5 +205,9 @@ typedef TkMenuDefProcPtr TkMenuDefUPP;
 #endif
 
 #include "tkIntPlatDecls.h"
+
+/* FIXME - This has to go in the tkInt.decls!!! */
+
+int             TkpIsWindowFloating _ANSI_ARGS_((WindowRef window));
 
 #endif /* _TKMACINT */

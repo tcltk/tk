@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWindowMgr.c,v 1.6 1999/12/07 03:51:11 hobbs Exp $
+ * RCS: @(#) $Id: tkMacWindowMgr.c,v 1.7 2000/02/10 08:56:38 jingham Exp $
  */
 
 #include <Events.h>
@@ -99,7 +99,7 @@ WindowManagerMouse(
     EventRecord *eventPtr,	/* Macintosh event record. */
     Window window)		/* Window pointer. */
 {
-    WindowRef whichWindow, frontWindow;
+    WindowRef whichWindow, frontWindow, frontNonFloating;
     Tk_Window tkwin;
     Point where, where2;
     int xOffset, yOffset;
@@ -107,6 +107,11 @@ WindowManagerMouse(
     TkDisplay *dispPtr;
 				
     frontWindow = FrontWindow();
+    if (TkMacHaveAppearance() >= 0x110) {
+        frontNonFloating = FrontNonFloatingWindow();
+    } else {
+        frontNonFloating = frontWindow;				
+    }
 
     /* 
      * The window manager only needs to know about mouse down events
@@ -130,7 +135,7 @@ WindowManagerMouse(
 	    SystemClick(eventPtr, (GrafPort *) whichWindow);
 	    return false;
 	case inDrag:
-	    if (whichWindow != frontWindow) {
+	    if (!(TkpIsWindowFloating(whichWindow)) && (whichWindow != frontNonFloating)) {
 		if (!(eventPtr->modifiers & cmdKey)) {
 		    if ((gGrabWinPtr != NULL) && (gGrabWinPtr != tkwin)) {
 			SysBeep(1);
@@ -164,7 +169,8 @@ WindowManagerMouse(
 	    return true;
 	case inGrow:
 	case inContent:
-	    if (whichWindow != frontWindow ) {
+	    if (!(TkpIsWindowFloating(whichWindow)) 
+	            && (whichWindow != frontNonFloating)) {
 		/*
 		 * This click moves the window forward.  We don't want
 		 * the corasponding mouse-up to be reported to the application
@@ -174,9 +180,9 @@ WindowManagerMouse(
 		    SysBeep(1);
 		    return false;
 		}
-		BringWindowForward(whichWindow);
 		gEatButtonUp = true;
 		SetPort((GrafPort *) whichWindow);
+		BringWindowForward(whichWindow);
 		return false;
 	    } else {
 		/*
@@ -270,7 +276,11 @@ TkAboutDlg()
     DisposDialog(aboutDlog);
     aboutDlog = NULL;
 	
+    if (TkMacHaveAppearance() >= 0x110) {
     SelectWindow(FrontWindow());
+    } else {
+        SelectWindow(FrontNonFloatingWindow());
+    }
 
     return;
 }
@@ -483,9 +493,14 @@ TkGenerateButtonEvent(
     where.h = x;
     where.v = y;
     FindWindow(where, &whichWin);
-    frontWin = FrontWindow();
-			
-    if ((frontWin == NULL) || (frontWin != whichWin && gGrabWinPtr == NULL)) {
+    if (TkMacHaveAppearance() >= 0x110) {
+        frontWin = FrontNonFloatingWindow();
+    } else {
+        frontWin = FrontWindow();
+    }
+        		
+    if ((frontWin == NULL) || ((!(TkpIsWindowFloating(whichWin)) && (frontWin != whichWin))
+            && gGrabWinPtr == NULL)) {
 	return false;
     }
 
@@ -800,7 +815,7 @@ GeneratePollingEvents()
 {
     Tk_Window tkwin, rootwin;
     Window window;
-    WindowRef whichwindow, frontWin;
+    WindowRef whichWindow, frontWin, frontNonFloating;
     Point whereLocal, whereGlobal;
     Boolean inContentRgn;
     short part;
@@ -822,13 +837,31 @@ GeneratePollingEvents()
     whereGlobal = whereLocal;
     LocalToGlobal(&whereGlobal);
 	
-    part = FindWindow(whereGlobal, &whichwindow);
+    part = FindWindow(whereGlobal, &whichWindow);
     inContentRgn = (part == inContent || part == inGrow);
 
-    if ((frontWin != whichwindow) || !inContentRgn) {
+    if (TkMacHaveAppearance() >= 0x110) {
+        /* 
+         * If the mouse is over the front non-floating window, then we
+         * need to set the local coordinates relative to that window
+         * rather than a possibly floating window above it.
+         */
+         
+        frontNonFloating = FrontNonFloatingWindow();
+        if (whichWindow == frontNonFloating 
+                && (whichWindow != frontWin)) {
+            SetPort((GrafPort *) frontNonFloating);
+            whereLocal = whereGlobal;
+            GlobalToLocal(&whereLocal);
+        }
+    } else {
+        frontNonFloating = frontWin;
+    }
+
+    if ((!TkpIsWindowFloating(whichWindow) && (frontNonFloating != whichWindow)) || !inContentRgn) {
 	tkwin = NULL;
     } else {
-	window = TkMacGetXWindow(whichwindow);
+	window = TkMacGetXWindow(whichWindow);
 	dispPtr = TkGetDisplayList();
 	rootwin = Tk_IdToWindow(dispPtr->display, window);
 	if (rootwin == NULL) {
@@ -1197,7 +1230,7 @@ TkMacConvertEvent(
 	    /* fall through */
 	    
 	case keyUp:
-	    whichWindow = FrontWindow();
+	    whichWindow = FrontNonFloatingWindow();
 	    if (whichWindow == NULL) {
 	        /*
 	         * This happens if we get a key event before Tk has had a
@@ -1250,6 +1283,13 @@ TkMacConvertEvent(
 			TkSuspendClipboard();
 		    }
 		    tkMacAppInFront = (eventPtr->message & resumeFlag);
+		    if (TkMacHaveAppearance() >= 0x110) {
+		        if (tkMacAppInFront) {
+		            ShowFloatingWindows();
+		        } else {
+		            HideFloatingWindows();
+		        }
+		    }
 		    break;
 	    }
 	    break;
@@ -1408,6 +1448,13 @@ TkMacConvertTkEvent(
 			TkSuspendClipboard();
 		    }
 		    tkMacAppInFront = (eventPtr->message & resumeFlag);
+		    if (TkMacHaveAppearance() >= 0x110) {
+		        if (tkMacAppInFront) {
+		            ShowFloatingWindows();
+		        } else {
+		            HideFloatingWindows();
+		        }
+		    }
 		    break;
 	    }
 	    break;
@@ -1542,6 +1589,12 @@ TkMacWindowOffset(
 
 	if (!strucRgn || !contRgn) {
 	    err = MemError( );
+	    
+	} else if (TkMacHaveAppearance()) {
+	    GetWindowRegion(wRef, kWindowStructureRgn, strucRgn);
+	    GetWindowRegion(wRef, kWindowContentRgn, contRgn);
+	    strucRect = (**strucRgn).rgnBBox;
+	    contRect = (**contRgn).rgnBBox;
 	} else {
 	    CopyRgn(wPeek->strucRgn, strucRgn);
 	    CopyRgn(wPeek->contRgn, contRgn);
@@ -1657,7 +1710,10 @@ static void
 BringWindowForward(
     WindowRef wRef)
 {
-    SelectWindow(wRef);
+    if (!TkpIsWindowFloating(wRef)) {
+        if (IsValidWindowPtr(wRef))
+        SelectWindow(wRef);
+    }
 }
 
 /*
@@ -1694,4 +1750,34 @@ TkpGetMS()
     *int64Ptr /= 1000;
 
     return (long) *int64Ptr;
+}
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpIsWindowFloating --
+ *
+ *	Returns 1 if a window is floating, 0 otherwise.
+ *
+ * Results:
+ *	1 or 0 depending on window's floating attribute.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpIsWindowFloating(WindowRef wRef)
+{
+    WindowClass class;
+    
+    if (TkMacHaveAppearance() < 0x110) {
+        return 0;
+    }
+    
+    GetWindowClass(wRef, &class);
+    
+    return (class == kFloatingWindowClass);
+        
 }
