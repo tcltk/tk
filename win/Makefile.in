@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.24.2.1 2000/07/11 04:53:13 welch Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.24.2.2 2000/07/23 04:48:16 welch Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -121,6 +121,9 @@ TK_DLL_FILE		= @TK_DLL_FILE@
 
 SHARED_LIBRARIES 	= $(TK_DLL_FILE) $(TK_STUB_LIB_FILE)
 STATIC_LIBRARIES	= $(TK_LIB_FILE)
+
+WISH_RES		= @WISH_RES@
+TK_RES			= @TK_RES@
 
 WISH			= wish$(VER)${EXESUFFIX}
 TKTEST			= tktest${EXEEXT}
@@ -482,22 +485,35 @@ install-demos:
 install-doc:
 
 
-$(WISH): $(TK_LIB_FILE) $(WISH_OBJS) wish.res
+$(WISH): $(TK_LIB_FILE) $(WISH_OBJS) $(WISH_RES)
 	$(CC) $(CFLAGS) $(WISH_OBJS) $(TCL_LIB_FILE) $(TK_LIB_FILE) $(LIBS) \
-	wish.res $(CC_EXENAME) -link $(LDFLAGS_WINDOW)
+	$(WISH_RES) $(CC_EXENAME) -link $(LDFLAGS_WINDOW)
 
 tktest : $(TKTEST)
 
-$(TKTEST): $(TK_LIB_FILE) $(TKTEST_OBJS) wish.res $(CAT32)
+$(TKTEST): $(TK_LIB_FILE) $(TKTEST_OBJS) $(WISH_RES) $(CAT32)
 	$(CC) $(CFLAGS) $(TKTEST_OBJS_NATIVE) $(TCL_LIB_FILE) \
 	$(TK_LIB_FILE) $(LIBS) \
-	wish.res $(CC_EXENAME) -link $(LDFLAGS_WINDOW)
+	$(WISH_RES) $(CC_EXENAME) -link $(LDFLAGS_WINDOW)
 
 cat32.${OBJEXT}: $(TCL_SRC_DIR)/cat.c
 	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
 
 $(CAT32): cat32.${OBJEXT}
 	$(CC) $(CFLAGS) cat32.$(OBJEXT) $(CC_EXENAME) -link $(LDFLAGS_CONSOLE)
+
+# WISH_RES 
+$(RC_DIR)/wish_static.rc : $(RC_DIR)/wish.rc $(RC_DIR)/tk_base.rc
+	cat $(RC_DIR)/wish.rc $(RC_DIR)/tk_base.rc > $(RC_DIR)/wish_static.rc
+wish_static.res : $(RC_DIR)/wish_static.rc
+	$(RC) -fo $@ -r -i "$(GENERIC_DIR_NATIVE)" -i "$(TCL_GENERIC_NATIVE)" $(DEPARG)
+
+
+# TK_RES
+$(RC_DIR)/tk_dll.rc : $(RC_DIR)/tk.rc $(RC_DIR)/tk_base.rc
+	cat $(RC_DIR)/tk.rc $(RC_DIR)/tk_base.rc > $(RC_DIR)/tk_dll.rc
+tk_dll.res : $(RC_DIR)/tk_dll.rc
+	$(RC) -fo $@ -r -i "$(GENERIC_DIR_NATIVE)" -i "$(TCL_GENERIC_NATIVE)" $(DEPARG)
 
 # The following targets are configured by autoconf to generate either
 # a shared library or static library
@@ -506,9 +522,9 @@ ${TK_STUB_LIB_FILE}: ${STUB_OBJS}
 	@$(RM) ${TK_STUB_LIB_FILE}
 	@MAKE_LIB@ ${STUB_OBJS}
 
-${TK_DLL_FILE}: ${TK_OBJS} tk.res
+${TK_DLL_FILE}: ${TK_OBJS} $(TK_RES)
 	@$(RM) ${TK_DLL_FILE}
-	@MAKE_DLL@ ${TK_OBJS} tk.res
+	@MAKE_DLL@ ${TK_OBJS} $(TK_RES)
 
 ${TK_LIB_FILE}: ${TK_OBJS}
 	@$(RM) ${TK_LIB_FILE}

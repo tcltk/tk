@@ -2,7 +2,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.16.2.1 2000/07/11 04:53:13 welch Exp $
+# RCS: @(#) $Id: configure.in,v 1.16.2.2 2000/07/23 04:48:17 welch Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -104,9 +104,13 @@ eval "EXESUFFIX=${EXESUFFIX}"
 if test "$SHARED_BUILD" = 0 -o $TCL_NEEDS_EXP_FILE = 0; then
     TK_BUILD_LIB_SPEC="`pwd`/${TK_LIB_FILE}"
     TK_LIB_SPEC="${exec_prefix}/lib/${TK_LIB_FILE}"
+    WISH_RES=wish_static.res
+    TK_RES=
 else
     TK_BUILD_LIB_SPEC="`pwd`/${TK_DLL_FILE}"
     TK_LIB_SPEC="${exec_prefix}/lib/${TK_DLL_FILE}"
+    WISH_RES=wish_static.res
+    TK_RES=tk_dll.res
 fi
 TK_SHARED_BUILD=${SHARED_BUILD}
 
@@ -126,6 +130,8 @@ AC_SUBST(TK_BUILD_LIB_SPEC)
 AC_SUBST(TK_LIB_SPEC)
 AC_SUBST(TK_SHARED_BUILD)
 AC_SUBST(GRAPHIC_LIBS)
+AC_SUBST(WISH_RES)
+AC_SUBST(TK_RES)
 
 AC_SUBST(TCL_VERSION)
 AC_SUBST(TCL_MAJOR_VERSION)
