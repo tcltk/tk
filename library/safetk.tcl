@@ -2,7 +2,7 @@
 #
 # Support procs to use Tk in safe interpreters.
 #
-# RCS: @(#) $Id: safetk.tcl,v 1.7 2000/08/06 00:11:18 hobbs Exp $
+# RCS: @(#) $Id: safetk.tcl,v 1.8 2000/10/31 01:11:51 hobbs Exp $
 #
 # Copyright (c) 1997 Sun Microsystems, Inc.
 #
@@ -40,7 +40,7 @@ namespace eval ::safe {
 	# We have to make sure that the tk_library variable uses a file
 	# pathname that works better in Tk (of the style returned by
 	# [file join], ie C:/path/to/tk/lib, not C:\path\to\tk\lib
-	set tk_library [eval [list file join] [file split $tk_library]]
+	set tk_library [file join $tk_library]
 
 	# Clear Tk's access for that interp (path).
 	allowTk $slave $argv
