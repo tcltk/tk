@@ -1441,19 +1441,17 @@ fi
 
     if test "$tcl_ok" = "yes"; then
 	CFLAGS_DEFAULT='$(CFLAGS_DEBUG)'
-	LDFLAGS_DEFAULT="${LDFLAGS_DEBUG}"
+	LDFLAGS_DEFAULT='$(LDFLAGS_DEBUG})'
 	DBGX=d
 	echo "$ac_t""yes" 1>&6
     else
 	CFLAGS_DEFAULT='$(CFLAGS_OPTIMIZE)'
-	LDFLAGS_DEFAULT="${LDFLAGS_OPTIMIZE}"
+	LDFLAGS_DEFAULT='$(LDFLAGS_OPTIMIZE)'
 	DBGX=""
 	echo "$ac_t""no" 1>&6
     fi
 
 
-CFLAGS=${CFLAGS_DEFAULT}
-LDFLAGS=${LDFLAGS_DEFAULT}
 TK_DBGX=${DBGX}
 
 #--------------------------------------------------------------------
@@ -1462,7 +1460,7 @@ TK_DBGX=${DBGX}
 
 
     echo $ac_n "checking the location of tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1466: checking the location of tclConfig.sh" >&5
+echo "configure:1464: checking the location of tclConfig.sh" >&5
 
     if test -d ../../tcl8.4$TK_PATCH_LEVEL/win;  then
 	TCL_BIN_DIR_DEFAULT=../../tcl8.4$TK_PATCH_LEVEL/win
@@ -1488,7 +1486,7 @@ fi
 
 
     echo $ac_n "checking for existence of $TCL_BIN_DIR/tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1492: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
+echo "configure:1490: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
     if test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
         echo "$ac_t""loading" 1>&6
@@ -1510,7 +1508,7 @@ echo "configure:1492: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
 
     echo $ac_n "checking for tclsh""... $ac_c" 1>&6
-echo "configure:1514: checking for tclsh" >&5
+echo "configure:1512: checking for tclsh" >&5
 
     if eval "test \"`echo '$''{'ac_cv_path_tclsh'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1604,6 +1602,7 @@ else
     fi
     TK_RES=tk.res
 fi
+
 
 
 
@@ -1863,6 +1862,7 @@ s%@TK_SHARED_BUILD@%$TK_SHARED_BUILD%g
 s%@PATHTYPE@%$PATHTYPE%g
 s%@CYGPATH@%$CYGPATH%g
 s%@VPSEP@%$VPSEP%g
+s%@CFLAGS_DEFAULT@%$CFLAGS_DEFAULT%g
 s%@CFLAGS_DEBUG@%$CFLAGS_DEBUG%g
 s%@CFLAGS_OPTIMIZE@%$CFLAGS_OPTIMIZE%g
 s%@CFLAGS_WARNING@%$CFLAGS_WARNING%g
@@ -1874,6 +1874,7 @@ s%@SHLIB_CFLAGS@%$SHLIB_CFLAGS%g
 s%@SHLIB_SUFFIX@%$SHLIB_SUFFIX%g
 s%@CC_OBJNAME@%$CC_OBJNAME%g
 s%@CC_EXENAME@%$CC_EXENAME%g
+s%@LDFLAGS_DEFAULT@%$LDFLAGS_DEFAULT%g
 s%@LDFLAGS_DEBUG@%$LDFLAGS_DEBUG%g
 s%@LDFLAGS_OPTIMIZE@%$LDFLAGS_OPTIMIZE%g
 s%@LDFLAGS_CONSOLE@%$LDFLAGS_CONSOLE%g

@@ -1,5 +1,24 @@
 2001-06-22  Mo DeJong  <mdejong@redhat.com>
 
+	* unix/Makefile.in: Set CFLAGS to @CFLAGS@ and @CFLAGS_DEFAULT@.
+	Set LDFLAGS to @LDFLAGS@ and @LDFLAGS_DEFAULT@. Add LDFLAGS_DEBUG
+	and LDFLAGS_OPTIMIZE to match the way CFLAGS_DEFAULT works. Use
+	new LDFLAGS variable in the Makefile instead of @LDFLAGS@.
+	* unix/configure: Regen.
+	* unix/configure.in: Don't set CFLAGS to CFLAGS_DEFAULT, instead
+	subst CFLAGS_DEFAULT into the Makefile. Add AC_SUBST for CFLAGS_DEBUG,
+	CFLAGS_OPTIMIZE, LDFLAGS_DEFAULT, LDFLAGS_DEBUG, and LDFLAGS_OPTIMIZE.
+	Remove unused LD_FLAGS subst.
+	* unix/tcl.m4: Update from Tcl.
+	* win/Makefile.in: Set CFLAGS to @CFLAGS@ and @CFLAGS_DEFAULT@.
+	Set LDFLAGS to @LDFLAGS@ and @LDFLAGS_DEFAULT@.
+	* win/configure: Regen.
+	* win/configure.in: Don't set CFLAGS or LDFLAGS, instead subst
+	CFLAGS_DEFAULT and LDFLAGS_DEFAULT into the Makefile.
+	* win/tcl.m4: Update from Tcl.
+
+2001-06-22  Mo DeJong  <mdejong@redhat.com>
+
 	* win/configure:
 	* win/tcl.m4: Update From Tcl.
 
