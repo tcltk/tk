@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPointer.c,v 1.6 1999/04/16 01:51:53 stanton Exp $
+ * RCS: @(#) $Id: tkWinPointer.c,v 1.7 1999/12/14 06:53:54 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -330,6 +330,42 @@ XQueryPointer(display, w, root_return, child_return, root_x_return,
     TkGetPointerCoords(NULL, root_x_return, root_y_return);
     *mask_return = TkWinGetModifierState();
     return True;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XWarpPointer --
+ *
+ *	Move pointer to new location.  This is not a complete
+ *	implementation of this function.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Mouse pointer changes position on screen.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+XWarpPointer(display, src_w, dest_w, src_x, src_y, src_width,
+	src_height, dest_x, dest_y)
+    Display* display;
+    Window src_w;
+    Window dest_w;
+    int src_x;
+    int src_y;
+    unsigned int src_width;
+    unsigned int src_height;
+    int dest_x;
+    int dest_y;
+{
+    RECT r;
+
+    GetWindowRect(Tk_GetHWND(dest_w), &r);
+    SetCursorPos(r.left+dest_x, r.top+dest_y);    
 }
 
 /*
