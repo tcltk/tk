@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: event.test,v 1.15 2003/11/13 18:27:00 vincentdarley Exp $
+# RCS: @(#) $Id: event.test,v 1.16 2004/07/05 21:07:59 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -18,7 +18,7 @@ tcltest::loadTestedCommands
 
 # Setup table used to query key events.
 
-proc _init_keypress_lookup { } {
+proc _init_keypress_lookup {} {
     global keypress_lookup
 
     scan A %c start
@@ -45,42 +45,46 @@ proc _init_keypress_lookup { } {
         set keypress_lookup($l) $l
     }
 
+    # Most punctuation
+    array set keypress_lookup {
+        ! exclam
+        % percent
+        & ampersand
+        ( parenleft
+        ) parenright
+        * asterisk
+        + plus
+        , comma
+        - minus
+        . period
+        / slash
+        : colon
+        < less
+        = equal
+        > greater
+        ? question
+        @ at
+        ^ asciicircum
+        _ underscore
+        | bar
+        ~ asciitilde
+        ' apostrophe
+    }
+    # Characters with meaning to Tcl...
     array set keypress_lookup [list \
-        " " space \
-        ! exclam \
-        \" quotedbl \
-        \# numbersign \
-        \$ dollar \
-        % percent \
-        & ampersand \
-        ( parenleft \
-        ) parenright \
-        * asterisk \
-        + plus \
-        , comma \
-        - minus \
-        . period \
-        / slash \
-        : colon \
-        \; semicolon \
-        < less \
-        = equal \
-        > greater \
-        ? question \
-        @ at \
-        \[ bracketleft \
-        \\ backslash \
-        \] bracketright \
-        ^ asciicircum \
-        _ underscore \
-        \{ braceleft \
-        | bar \
-        \} braceright \
-        ~ asciitilde \
-        ' apostrophe \
-        "\n" Return]
+	    \"   quotedbl \
+	    \#   numbersign \
+	    \$   dollar \
+	    \;   semicolon \
+	    \[   bracketleft \
+	    \\   backslash \
+	    \]   bracketright \
+	    \{   braceleft \
+	    \}   braceright \
+	    " "  space \
+	    "\n" Return \
+	    "\t" Tab]
 }
-
 
 # Lookup an event in the keypress table.
 # For example:
@@ -90,7 +94,7 @@ proc _init_keypress_lookup { } {
 # Delete -> Delete
 # Escape -> Escape
 
-proc _keypress_lookup { char } {
+proc _keypress_lookup {char} {
     global keypress_lookup
 
     if {! [info exists keypress_lookup]} {
@@ -108,10 +112,9 @@ proc _keypress_lookup { char } {
     }
 }
 
-
 # Lookup and generate a pair of KeyPress and KeyRelease events
 
-proc _keypress { win key } {
+proc _keypress {win key} {
     set keysym [_keypress_lookup $key]
 
     # Force focus to the window before delivering
@@ -133,7 +136,7 @@ proc _keypress { win key } {
 
 # Call _keypress for each character in the given string
 
-proc _keypress_string { win string } {
+proc _keypress_string {win string} {
     foreach letter [split $string ""] {
         _keypress $win $letter
     }
@@ -141,7 +144,7 @@ proc _keypress_string { win string } {
 
 # Delay script execution for a given amount of time
 
-proc _pause { {msecs 1000} } {
+proc _pause {{msecs 1000}} {
     global _pause
 
     if {! [info exists _pause(number)]} {
@@ -158,7 +161,7 @@ proc _pause { {msecs 1000} } {
 
 # Helper proc to convert index to x y position
 
-proc _text_ind_to_x_y { text ind } {
+proc _text_ind_to_x_y {text ind} {
     set bbox [$text bbox $ind]
     if {[llength $bbox] != 4} {
         error "got bbox \{$bbox\} from $text, index $ind"
@@ -170,7 +173,7 @@ proc _text_ind_to_x_y { text ind } {
 
 # Return selection only if owned by the given widget
 
-proc _get_selection { widget } {
+proc _get_selection {widget} {
     if {[string compare $widget [selection own]] != 0} {
         return ""
     }
@@ -199,7 +202,6 @@ test event-1.1 {Tk_HandleEvent procedure, filter events for dead windows} {
     destroy .b
     set x
 } {destroy}
-
 test event-1.2 {event generate <Alt-z>} {
 	catch {destroy .e}
 	catch {unset ::event12result}
@@ -212,9 +214,7 @@ test event-1.2 {event generate <Alt-z>} {
 	set ::event12result
 } 1
 
-
-
-test event-keypress-1.1 { type into entry widget and hit Return } {
+test event-2.1(keypress) {type into entry widget and hit Return} {
     destroy .t
     set t [toplevel .t]
     set e [entry $t.e]
@@ -225,9 +225,7 @@ test event-keypress-1.1 { type into entry widget and hit Return } {
     _keypress_string $e HELLO\n
     list [$e get] $return_binding
 } {HELLO 1}
-
-
-test event-keypress-1.2 { type into entry widget and then delete some text } {
+test event-2.2(keypress) {type into entry widget and then delete some text} {
     destroy .t
     set t [toplevel .t]
     set e [entry $t.e]
@@ -238,9 +236,8 @@ test event-keypress-1.2 { type into entry widget and then delete some text } {
     _keypress $e BackSpace
     $e get
 } MEL
-
-test event-keypress-1.3 { type into entry widget, triple click,
-                          hit Delete key, and then type some more } {
+test event-2.3(keypress) {type into entry widget, triple click,\
+	hit Delete key, and then type some more} {
     destroy .t
     set t [toplevel .t]
     set e [entry $t.e]
@@ -262,9 +259,7 @@ test event-keypress-1.3 { type into entry widget, triple click,
     _keypress_string $e UP
     lappend result [$e get]
 } {JUMP UP}
-
-
-test event-keypress-1.4 { type into text widget and hit Return } {
+test event-1.4(keypress) {type into text widget and hit Return} {
     destroy .t
     set t [toplevel .t]
     set e [text $t.e]
@@ -275,8 +270,7 @@ test event-keypress-1.4 { type into text widget and hit Return } {
     _keypress_string $e HELLO\n
     list [$e get 1.0 end] $return_binding
 } [list "HELLO\n\n" 1]
-
-test event-keypress-1.5 { type into text widget and then delete some text } {
+test event-2.5(keypress) {type into text widget and then delete some text} {
     destroy .t
     set t [toplevel .t]
     set e [text $t.e]
@@ -287,9 +281,8 @@ test event-keypress-1.5 { type into text widget and then delete some text } {
     _keypress $e BackSpace
     $e get 1.0 1.end
 } MEL
-
-test event-keypress-1.6 { type into text widget, triple click,
-                          hit Delete key, and then type some more } {
+test event-2.6(keypress) {type into text widget, triple click,\
+	hit Delete key, and then type some more} {
     destroy .t
     set t [toplevel .t]
     set e [text $t.e]
@@ -312,10 +305,8 @@ test event-keypress-1.6 { type into text widget, triple click,
     lappend result [$e get 1.0 1.end]
 } {JUMP UP}
 
-
-
-test event-click-drag-1.1 { click and drag in a text widget, this
-                            tests tkTextSelectTo in text.tcl } {
+test event-3.1(click-drag) {click and drag in a text widget, this tests\
+	tkTextSelectTo in text.tcl} {
     destroy .t
     set t [toplevel .t]
     set e [text $t.e]
@@ -378,12 +369,8 @@ test event-click-drag-1.1 { click and drag in a text widget, this
     lappend result [_get_selection $e]
 
 } {{A Tcl/Tk selection test!} 1.6 1.18 {Tk selection} 1.2 {Tcl/Tk selection}}
-
-
-
-
-test event-click-drag-1.2 { click and drag in an entry widget, this
-                            tests tkEntryMouseSelect in entry.tcl } {
+test event-3.2(click-drag) {click and drag in an entry widget, this\
+	tests tkEntryMouseSelect in entry.tcl} {
     destroy .t
     set t [toplevel .t]
     set e [entry $t.e]
@@ -447,10 +434,8 @@ test event-click-drag-1.2 { click and drag in an entry widget, this
 
 } {{A Tcl/Tk selection!} 6 18 {Tk selection} 2 {Tcl/Tk selection}}
 
-
-
-test event-double-click-drag-1.1 { click down, click up, click down again,
-                            then drag in a text widget } {
+test event-4.1(double-click-drag) {click down, click up, click down again,\
+	then drag in a text widget} {
     destroy .t
     set t [toplevel .t]
     set e [text $t.e]
@@ -516,11 +501,8 @@ test event-double-click-drag-1.1 { click down, click up, click down again,
 
     set result
 } {select 1.5 1.7 select 1.4 { select} {Word select} 1.2}
-
-
-
-test event-double-click-drag-1.2 { click down, click up, click down again,
-                            then drag in an entry widget } {
+test event-4.2(double-click-drag) {click down, click up, click down again,\
+	then drag in an entry widget} {
     destroy .t
     set t [toplevel .t]
     set e [entry $t.e]
@@ -587,9 +569,8 @@ test event-double-click-drag-1.2 { click down, click up, click down again,
     set result
 } {select 11 7 select 4 { select} {Word select} 2}
 
-
-test event-triple-click-drag-1.1 { Triple click and drag across lines in
-        a text widget, this should extend the selection to the new line } {
+test event-5.1(triple-click-drag) {Triple click and drag across lines in\
+        a text widget, this should extend the selection to the new line} {
     destroy .t
     set t [toplevel .t]
     set e [text $t.e]
@@ -646,10 +627,10 @@ test event-triple-click-drag-1.1 { Triple click and drag across lines in
 } [list "LINE THREE\n" "LINE TWO\nLINE THREE\n" \
         "LINE ONE\nLINE TWO\nLINE THREE\n"]
 
-test event-button-state-1.1 { button press in a window that is then
-        destroyed, when the mouse is moved into another window it
-        should not generate a <B1-motion> event since the mouse
-        was not pressed down in that window. } {
+test event-6.1(button-state) {button press in a window that is then\
+        destroyed, when the mouse is moved into another window it\
+        should not generate a <B1-motion> event since the mouse\
+        was not pressed down in that window} {
     destroy .t
     set t [toplevel .t]
 
@@ -662,8 +643,8 @@ test event-button-state-1.1 { button press in a window that is then
     set motion
 } nomotion
 
-test event-double-click-1.1 { A double click on a lone character
-	in a text widget should select that character. } {
+test event-7.1(double-click) {A double click on a lone character
+	in a text widget should select that character} {
     destroy .t
     set t [toplevel .t]
     set e [text $t.e]
@@ -725,10 +706,8 @@ test event-double-click-1.1 { A double click on a lone character
 
     set result
 } {1.3 A 1.3 A}
-
-
-test event-double-click-1.2 { A double click on a lone character
-	in an entry widget should select that character. } {knownBug} {
+test event-7.2(double-click) {A double click on a lone character\
+	in an entry widget should select that character} {knownBug} {
     destroy .t
     set t [toplevel .t]
     set e [entry $t.e]
@@ -805,4 +784,3 @@ rename _get_selection {}
 
 cleanupTests
 return
-
