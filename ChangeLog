@@ -1,3 +1,8 @@
+2003-09-30  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* tests/safe.test:    Accomodate TIP #150 in the results.
+	* tests/textWind.test: Fix a dependancy on font size in 10.1
+
 2003-09-30  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkCanvas.c (TkGetStringsFromObjs): 
