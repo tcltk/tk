@@ -1,5 +1,10 @@
 2003-02-21  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* library/tkfbox.tcl (file::Create): This procedure was really
+	very crufty in how it went about creating the GUI.  It is far
+	easier and more robust to use the grid geometry manager than it is
+	to tune the results of pack with tweaks to -width.  [Bug #673722]
+
 	* library/comdlg.tcl (FDGetFileTypes): Set an upper limit on how
 	long a file type item description string can get due to appending
 	of types. [Bug #617392]
