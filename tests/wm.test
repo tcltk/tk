@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.12 2002/06/24 02:17:57 mdejong Exp $
+# RCS: @(#) $Id: wm.test,v 1.13 2002/06/24 20:34:40 mdejong Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -742,6 +742,62 @@ test wm-minsize-1.6 {usage} {
     wm minsize .t 200 150
     wm minsize .t
 } {200 150}
+
+
+test wm-deiconify-1.1 {usage} {
+    list [catch {wm deiconify} err] $err
+} {1 {wrong # args: should be "wm option window ?arg ...?"}}
+
+test wm-deiconify-1.2 {usage} {
+    list [catch {wm deiconify . _} err] $err
+} {1 {wrong # arguments: must be "wm deiconify window"}}
+
+test wm-deiconify-1.3 {usage} {
+    list [catch {wm deiconify _} err] $err
+} {1 {bad window path name "_"}}
+
+test wm-deiconify-2.1 {a window that has never been mapped
+        should not be mapped by a call to deiconify} {
+    deleteWindows
+    toplevel .t
+    wm deiconify .t
+    winfo ismapped .t
+} 0
+
+test wm-deiconify-2.2 {a window that has already been
+        mapped should be mapped by deiconify} {
+    deleteWindows
+    toplevel .t
+    update idletasks
+    wm withdraw .t
+    wm deiconify .t
+    winfo ismapped .t
+} 1
+
+test wm-deiconify-2.3 {geometry for an unmapped window
+        should not be calculated by a call to deiconify,
+        it should be done at idle time} {
+    deleteWindows
+    set results {}
+    toplevel .t -width 200 -height 200
+    lappend results [wm geometry .t]
+    wm deiconify .t
+    lappend results [wm geometry .t]
+    update idletasks
+    lappend results [lindex [split \
+        [wm geometry .t] +] 0]
+} {1x1+0+0 1x1+0+0 200x200}
+
+test wm-deiconify-2.4 {invoking destroy after a deiconify
+        should not result in a crash because of a callback
+        set on the toplevel} {
+    deleteWindows
+    toplevel .t
+    wm withdraw .t
+    wm deiconify .t
+    destroy .t
+    update
+} {}
 
 
 # FIXME:

@@ -1,3 +1,24 @@
+2002-06-24  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* tests/winWm.test: Verify that both an unmapped
+	and already mapped toplevel are raised and receive
+	the focus when deiconified.
+	* tests/wm.test: Add wm deiconify tests. Check that
+	a toplevel that has never been mapped is not mapped
+	by the deiconify command since it should be done
+	at idle by MapFrame.
+	* win/tkWinWm.c (Tk_WmCmd): Check the WM_NEVER_MAPPED
+	flag while processing the wm deiconify command.
+	The WM_UPDATE_PENDING flag should never be set when
+	WM_NEVER_MAPPED is set, but double check so that
+	the implementation is more explicit and matches
+	the comment just above.
+	Return without invoking TkWmRestackToplevel or
+	TkSetFocusWin on a toplevel that has never been
+	mapped. This fixes a bug where a toplevel is mapped
+	with the wrong size and is then resized by the
+	idle call to MapFrame. [Tk bug 233150]
+
 2002-06-23  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinWm.c (UpdateGeometryInfo): remove the check for a null

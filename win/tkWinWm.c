@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.45 2002/06/24 05:31:35 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.46 2002/06/24 20:34:40 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -2436,11 +2436,12 @@ Tk_WmCmd(clientData, interp, argc, argv)
 
 	/*
 	 * If WM_UPDATE_PENDING is true, a pending UpdateGeometryInfo may
-	 * need to be called first to update a withdrew toplevel's geometry
+	 * need to be called first to update a withdrawn toplevel's geometry
 	 * before it is deiconified by TkpWmSetState.
 	 * Don't bother if we've never been mapped.
 	 */
-	if ((wmPtr->flags & WM_UPDATE_PENDING)) {
+	if ((wmPtr->flags & WM_UPDATE_PENDING) &&
+	        !(wmPtr->flags & WM_NEVER_MAPPED)) {
 	    Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData) winPtr);
 	    UpdateGeometryInfo((ClientData) winPtr);
 	}
@@ -2453,6 +2454,15 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    TkpWmSetState(winPtr, ZoomState);
 	} else {
 	    TkpWmSetState(winPtr, NormalState);
+	}
+
+	/*
+	 * An unmapped window will be mapped at idle time
+	 * by a call to MapFrame. That calls CreateWrapper
+	 * which sets the focus and raises the window.
+	 */
+	if (wmPtr->flags & WM_NEVER_MAPPED) {
+	    return TCL_OK;
 	}
 
 	/*
