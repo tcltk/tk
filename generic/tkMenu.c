@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.17 2002/03/20 22:55:16 dgp Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.18 2002/04/12 07:28:06 hobbs Exp $
  */
 
 /*
@@ -1536,6 +1536,11 @@ ConfigureMenu(interp, menuPtr, objc, objv)
 		ckfree((char *) cleanupPtr->errorStructPtr);
 		cleanupPtr->errorStructPtr = NULL;
 	    }
+	    if (menuListPtr->errorStructPtr != NULL) {
+		Tk_RestoreSavedOptions(menuListPtr->errorStructPtr);
+		ckfree((char *) menuListPtr->errorStructPtr);
+		menuListPtr->errorStructPtr = NULL;
+	    }
 	    return TCL_ERROR;
 	}
 
@@ -1576,17 +1581,17 @@ ConfigureMenu(interp, menuPtr, objc, objv)
 	    if ((menuListPtr->numEntries == 0)
 		    || (menuListPtr->entries[0]->type != TEAROFF_ENTRY)) {
 		if (MenuNewEntry(menuListPtr, 0, TEAROFF_ENTRY) == NULL) {
-		    if (menuListPtr->errorStructPtr != NULL) {
-			for (cleanupPtr = menuPtr->masterMenuPtr;
-				cleanupPtr != menuListPtr;
-				cleanupPtr = cleanupPtr->nextInstancePtr) {
-			    Tk_RestoreSavedOptions(cleanupPtr->errorStructPtr);
-			    ckfree((char *) cleanupPtr->errorStructPtr);
-			    cleanupPtr->errorStructPtr = NULL;
-			}
+		    for (cleanupPtr = menuPtr->masterMenuPtr;
+			 cleanupPtr != menuListPtr;
+			 cleanupPtr = cleanupPtr->nextInstancePtr) {
 			Tk_RestoreSavedOptions(cleanupPtr->errorStructPtr);
 			ckfree((char *) cleanupPtr->errorStructPtr);
 			cleanupPtr->errorStructPtr = NULL;
+		    }
+		    if (menuListPtr->errorStructPtr != NULL) {
+			Tk_RestoreSavedOptions(menuListPtr->errorStructPtr);
+			ckfree((char *) menuListPtr->errorStructPtr);
+			menuListPtr->errorStructPtr = NULL;
 		    }
 		    return TCL_ERROR;
 		}
