@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.12 2000/11/22 01:49:38 ericm Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.13 2001/09/21 21:19:43 hobbs Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -511,9 +511,9 @@ EXTERN KeySym		TkpGetKeySym _ANSI_ARGS_((TkDisplay * dispPtr,
 				XEvent * eventPtr));
 /* 139 */
 EXTERN void		TkpInitKeymapInfo _ANSI_ARGS_((TkDisplay * dispPtr));
-
 /* 140 */
-EXTERN TkRegion		TkPhotoGetValidRegion _ANSI_ARGS_((Tk_PhotoHandle handle));
+EXTERN TkRegion		TkPhotoGetValidRegion _ANSI_ARGS_((
+				Tk_PhotoHandle handle));
 
 typedef struct TkIntStubs {
     int magic;
