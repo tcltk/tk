@@ -1,3 +1,8 @@
+2004-09-22  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWinWm.c: Rework WS_EX_LAYERED and LWA_ALPHA
+	defines so that compiling with mingw works again.
+
 2004-09-20  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinWm.c (UpdateWrapper, WmAttributesCmd): handle attribute
