@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.29 2003/11/15 02:33:50 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.30 2003/11/15 02:49:36 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -4698,7 +4698,7 @@ TkTextXviewCmd(textPtr, interp, objc, objv)
 				 * objv[1] is "xview". */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
-    int type, charsPerPage, count, newOffset;
+    int type, count;
     double fraction;
 
     if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
@@ -4710,7 +4710,6 @@ TkTextXviewCmd(textPtr, interp, objc, objv)
 	return TCL_OK;
     }
 
-    newOffset = dInfoPtr->newXPixelOffset;
     type = TextGetScrollInfoObj(interp, textPtr, objc, objv, 
 				&fraction, &count);
     switch (type) {
@@ -4723,23 +4722,26 @@ TkTextXviewCmd(textPtr, interp, objc, objv)
 	    if (fraction < 0) {
 		fraction = 0;
 	    }
-	    newOffset = (int) (fraction * dInfoPtr->maxLength + 0.5);
+	    dInfoPtr->newXPixelOffset = (int) (fraction 
+					       * dInfoPtr->maxLength + 0.5);
 	    break;
-	case TKTEXT_SCROLL_PAGES:
-	    charsPerPage = (dInfoPtr->maxX-dInfoPtr->x)/textPtr->charWidth - 2;
-	    if (charsPerPage < 1) {
-		charsPerPage = 1;
+	case TKTEXT_SCROLL_PAGES: {
+	    int pixelsPerPage;
+	    pixelsPerPage = (dInfoPtr->maxX-dInfoPtr->x) - 2*textPtr->charWidth;
+	    if (pixelsPerPage < 1) {
+		pixelsPerPage = 1;
 	    }
-	    newOffset += charsPerPage * count * textPtr->charWidth;
+	    dInfoPtr->newXPixelOffset += pixelsPerPage * count;
 	    break;
+	}
 	case TKTEXT_SCROLL_UNITS:
-	    newOffset += count * textPtr->charWidth;
+	    dInfoPtr->newXPixelOffset += count * textPtr->charWidth;
 	    break;
 	case TKTEXT_SCROLL_PIXELS:
-	    newOffset += count;
+	    dInfoPtr->newXPixelOffset += count;
 	    break;
     }
-    dInfoPtr->newXPixelOffset = newOffset;
+
     dInfoPtr->flags |= DINFO_OUT_OF_DATE;
     if (!(dInfoPtr->flags & REDRAW_PENDING)) {
 	dInfoPtr->flags |= REDRAW_PENDING;
@@ -6900,12 +6902,12 @@ MeasureChars(tkfont, source, maxBytes, startX, maxX, tabOrigin, nextXPtr)
  *
  * TextGetScrollInfoObj --
  *
- *	This procedure is invoked to parse "yview" scrolling commands for
- *	text widgets using the new scrolling command syntax ("moveto" or
- *	"scroll" options).  It extends the public Tk_GetScrollInfoObj
- *	function with the addition of "pixels" as a valid unit alongside
- *	"pages" and "units".  It is a shame the core API isn't more
- *	flexible in this regard.
+ *	This procedure is invoked to parse "xview" and "yview" scrolling
+ *	commands for text widgets using the new scrolling command syntax
+ *	("moveto" or "scroll" options).  It extends the public
+ *	Tk_GetScrollInfoObj function with the addition of "pixels" as a
+ *	valid unit alongside "pages" and "units".  It is a shame the core
+ *	API isn't more flexible in this regard.
  *
  * Results:
  *	The return value is either TKTEXT_SCROLL_MOVETO,
