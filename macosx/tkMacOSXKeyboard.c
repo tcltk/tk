@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.11 2003/12/15 18:48:07 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.12 2003/12/15 19:32:17 cc_benny Exp $
  */
 
 #include "tkInt.h"
@@ -604,7 +604,6 @@ TkpSetKeycodeAndState(
 {
     if (keysym == NoSymbol) {
         eventPtr->xkey.keycode = 0;
-        eventPtr->xkey.state = 0;
     } else {
         Display *display = Tk_Display(tkwin);
         int macKeycode = XKeysymToMacKeycode(display, keysym);
@@ -620,7 +619,6 @@ TkpSetKeycodeAndState(
         }
         eventPtr->xkey.keycode |= (macKeycode & MAC_KEYCODE_MASK) << 16;
 
-        eventPtr->xkey.state = 0;
         if (shiftKey & macKeycode) {
             eventPtr->xkey.state |= ShiftMask;
         }
