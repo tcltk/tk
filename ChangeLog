@@ -1,3 +1,16 @@
+2000-04-14  Eric Melski  <ericm@scriptics.com>
+
+	* win/tkWinKey.c: Added check for ASCII delete character in
+	KeycodeToKeysym, to fix [Bug: 5090].  See comment in code for more
+	information.
+
+	* generic/ks_names.h: Added Scroll_Lock and Sys_Req definitions.
+
+	* win/tkWinKey.c: Changed implementation of KeycodeToKeysym,
+	et. al., to use a keycode table for lookups; this will result in
+	faster keycode -> keysym translations for non-ASCII keys like
+	Control, Alt, etc.
+
 2000-04-14  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* generic/tkCanvas.c (CanvasEventProc:2451): corrected cast

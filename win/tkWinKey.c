@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinKey.c,v 1.10 2000/04/15 00:33:08 ericm Exp $
+ * RCS: @(#) $Id: tkWinKey.c,v 1.11 2000/04/15 02:50:26 ericm Exp $
  */
 
 #include "tkWinInt.h"
@@ -264,9 +264,29 @@ KeycodeToKeysym(keycode, state, noascii)
     /*
      * Keycode mapped to a valid Latin-1 character.  Since the keysyms
      * for alphanumeric characters map onto Latin-1, we just return it.
+     *
+     * We treat 0x7F as a special case mostly for backwards compatibility.
+     * In older versions of Tk, Control-Backspace returned "XK_BackSpace"
+     * as the X Keysym.  This was due to the fact that we did not
+     * initialize the keys array properly when we passed it to ToAscii, above.
+     * We had previously not been setting the state bit for the Control key.
+     * When we fixed that, we found that Control-Backspace on Windows is
+     * interpreted as ASCII-127 (0x7F), which corresponds to the Delete key.
+     *
+     * Upon discovering this, we realized we had two choices:  return XK_Delete
+     * or return XK_BackSpace.  If we returned XK_Delete, that could be
+     * considered "more correct" (although the correctness would be dependant
+     * on whether you believe that ToAscii is doing the right thing in that
+     * case); however, this would break backwards compatibility, and worse,
+     * it would limit application programmers -- they would effectively be
+     * unable to bind to <Control-Backspace> on Windows.  We therefore chose
+     * instead to return XK_BackSpace (handled here by letting the code
+     * "fall-through" to the return statement below, which works because the
+     * keycode for this event is VK_BACKSPACE, and the keymap table maps that
+     * keycode to XK_BackSpace).
      */
 
-    if (result == 1 && UCHAR(buf[0]) >= 0x20) {
+    if (result == 1 && UCHAR(buf[0]) >= 0x20 && UCHAR(buf[0]) != 0x7F) {
 	return (KeySym) UCHAR(buf[0]);
     }
 
