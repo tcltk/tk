@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.31 2003/11/15 12:47:15 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.32 2003/11/15 16:57:57 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -5286,6 +5286,13 @@ GetXView(interp, textPtr, report)
  *
  *	How many pixels are there between the absolute top of the
  *	widget and the top of the given DLine.
+ *	
+ *	This is only ever called when dlPtr is the first display
+ *	line in the widget (by 'GetYView').  We have to be careful
+ *	if dlPtr's logical line wraps enough times to fill the
+ *	text widget's current view -- in this case we won't have
+ *	enough dlPtrs in the linked list to be able to subtract off
+ *	what we want.
  *
  * Results:
  *	The number of pixels.
@@ -5307,7 +5314,17 @@ GetPixelCount(textPtr, dlPtr)
      * Get the pixel count of one pixel beyond the 
      * botton of the given line.
      */
-    int count = TkBTreePixels(linePtr) + linePtr->pixelHeight;
+    int count = TkBTreePixels(linePtr);
+   
+    /* 
+     * For the common case where this dlPtr is also the start of 
+     * the logical line, we can return right away.
+     */
+    if (dlPtr->index.byteIndex == 0) {
+        return count;
+    }
+    
+    count += linePtr->pixelHeight;
 
     /* 
      * Now we have to subtract off the distance between the top of this
@@ -5315,8 +5332,32 @@ GetPixelCount(textPtr, dlPtr)
      */
     do {
 	count -= dlPtr->height;
-	dlPtr = dlPtr->nextPtr;
-    } while (dlPtr != NULL && (dlPtr->index.linePtr == linePtr));
+	if (dlPtr->nextPtr == NULL) {
+	    /* We've run out of lines */
+	    TkTextIndex index;
+	    DLine *dlPrev = NULL;
+	    while (1) {
+		TkTextIndexForwBytes(&dlPtr->index, dlPtr->byteCount, &index);
+		if (index.linePtr != linePtr) {
+		    break;
+		}
+		if (dlPrev != NULL) {
+		    FreeDLines(textPtr, dlPrev, (DLine *) NULL, 
+			       DLINE_FREE_TEMP);
+		}
+		dlPtr = LayoutDLine(textPtr, &index);
+		dlPrev = dlPtr;
+		count -= dlPtr->height;
+	    }
+	    if (dlPrev != NULL) {
+		FreeDLines(textPtr, dlPrev, (DLine *) NULL, 
+			   DLINE_FREE_TEMP);
+	    }
+	    break;
+	} else {
+	    dlPtr = dlPtr->nextPtr;
+	}
+    } while (dlPtr->index.linePtr == linePtr);
     
     return count;
 }
@@ -5374,7 +5415,7 @@ GetYView(interp, textPtr, report)
 	last = 1.0;
     } else {
 	/* 
-	 * Get the pixel count for the first display visible pixel of the
+	 * Get the pixel count for the first visible pixel of the
 	 * first visible line.  If the first visible line is only
 	 * partially visible, then we use 'topPixelOffset' to get the
 	 * difference.
