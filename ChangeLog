@@ -1,3 +1,9 @@
+2002-08-13  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/button.tcl: change the bindings to use Priv($w,relief)
+	instead of just Priv(relief).  This ensures that neighboring
+	buttons don't confuse (over)relief settings.
+
 2002-08-13  Reinhard Max  <max@suse.de>
 
 	* unix/tkUnixSend.c (Tk_SetAppName): Fixed a compiler warning.
