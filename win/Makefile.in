@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.1 1999/06/16 22:54:03 surles Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.2 1999/06/18 17:35:06 redman Exp $
 
 TCLVERSION = @TCL_VERSION@
 VERSION = @TK_VERSION@
@@ -167,7 +167,7 @@ SHLIB_CFLAGS	= @SHLIB_CFLAGS@
 SHLIB_SUFFIX	= @SHLIB_SUFFIX@
 VER		= @TK_MAJOR_VERSION@@TK_MINOR_VERSION@
 DOTVER		= @TK_MAJOR_VERSION@.@TK_MINOR_VERSION@
-LIBS		= @LIBS@
+LIBS		= @LIBS@ gdi32.lib comdlg32.lib
 RMDIR		= rm -rf
 MKDIR		= mkdir -p
 RM		= rm -f
@@ -346,12 +346,14 @@ install-binaries:
 	@echo "Installing $(WISH)"
 	@$(INSTALL_PROGRAM) $(WISH) $(BIN_INSTALL_DIR)/$(WISH)
 	@echo "Installing tkConfig.sh"
-	@$(INSTALL_DATA) tkConfig.sh $(LIB_INSTALL_DIR)/tkConfig.sh
 	@if test "$(TK_STUB_LIB_FILE)" != "" ; then \
-	    echo "Installing $(TK_STUB_LIB_FILE)"; \
-	    $(INSTALL_DATA) $(TK_STUB_LIB_FILE) \
+	    if [ -f $(TK_STUB_LIB_FILE) ]; then \
+	        @$(INSTALL_DATA) tkConfig.sh $(LIB_INSTALL_DIR)/tkConfig.sh; \
+	        echo "Installing $(TK_STUB_LIB_FILE)"; \
+	        $(INSTALL_DATA) $(TK_STUB_LIB_FILE) \
 			 $(LIB_INSTALL_DIR)/$(TK_STUB_LIB_FILE); \
-	    fi
+	    fi; \
+        fi
 
 install-libraries:
 	@echo "Install Directories:"
@@ -475,7 +477,7 @@ tkSquare.obj: tkSquare.c
 	$(CC) -c $(STUB_CC_SWITCHES) -DBUILD_tk ${DEPARG} $(CC_OBJNAME)
 
 .rc.res:
-	$(RC) -fo $@ -r -i "$(GENERIC_DIR_NATIVE)" -i "$(TCL_GENERIC_NATIVE)" $<
+	$(RC) -fo $@ -r -i "$(GENERIC_DIR_NATIVE)" -i "$(TCL_GENERIC_NATIVE)" $(DEPARG)
 
 depend:
 
