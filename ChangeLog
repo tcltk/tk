@@ -1,5 +1,7 @@
 2002-08-08  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	*** 8.4b2 TAGGED FOR RELEASE ***
+
 	* generic/tkButton.c (TkButtonWorldChanged): added GCFont handling
 	to the disabledGc of buttons when compound != none.  The drawing
 	appears to be incorrect across platforms still.  [Bug #477740]
