@@ -1,3 +1,7 @@
+2003-01-10  Joe English  <jenglish@users.sourceforge.net>
+	* unix/tkUnixEvent.c (OpenIM): Remove unused variable
+	(Fixes: #664780 "SGI warning: OpenIM")
+
 2003-01-08  D. Richard Hipp <drh@hwaci.com>
 
 	* generic/tkCanvLine.c:
