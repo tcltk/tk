@@ -1,3 +1,8 @@
+2005-03-15  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* unix/tcl.m4:    Updated the OpenBSD configuration and regenerated
+	* unix/configure: the configure script.
+
 2005-03-14  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* generic/tkEvent.c (InvokeClientMessageHandlers): Ensure that
