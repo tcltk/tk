@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.3 1999/04/16 01:51:21 stanton Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.4 1999/06/03 18:50:46 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -26,6 +26,11 @@
 typedef struct {
     Tcl_Interp *interp;		/* Interpreter in which to invoke command. */
     int cmdLength;		/* # of non-NULL bytes in command. */
+    int charOffset;		/* The offset of the next char to retrieve. */
+    int byteOffset;		/* The expected byte offset of the next
+				 * chunk. */
+    char buffer[TCL_UTF_MAX];	/* A buffer to hold part of a UTF character
+				 * that is split across chunks.*/
     char command[4];		/* Command to invoke.  Actual space is
 				 * allocated as large as necessary.  This
 				 * must be the last entry in the structure. */
@@ -243,7 +248,12 @@ Tk_DeleteSelHandler(tkwin, selection, target)
 	prevPtr->nextPtr = selPtr->nextPtr;
     }
     if (selPtr->proc == HandleTclCommand) {
-	ckfree((char *) selPtr->clientData);
+	/*
+	 * Mark the CommandInfo as deleted and free it if we can.
+	 */
+
+	((CommandInfo*)selPtr->clientData)->interp = NULL;
+	Tcl_EventuallyFree(selPtr->clientData, Tcl_Free);
     }
     ckfree((char *) selPtr);
 }
@@ -793,6 +803,9 @@ Tk_SelectionCmd(clientData, interp, argc, argv)
 	    cmdInfoPtr = (CommandInfo *) ckalloc((unsigned) (
 		    sizeof(CommandInfo) - 3 + cmdLength));
 	    cmdInfoPtr->interp = interp;
+	    cmdInfoPtr->charOffset = 0;
+	    cmdInfoPtr->byteOffset = 0;
+	    cmdInfoPtr->buffer[0] = '\0';
 	    cmdInfoPtr->cmdLength = cmdLength;
 	    strcpy(cmdInfoPtr->command, args[1]);
 	    Tk_CreateSelHandler(tkwin, selection, target, HandleTclCommand,
@@ -989,7 +1002,12 @@ TkSelDeadWindow(winPtr)
 	    }
 	}
 	if (selPtr->proc == HandleTclCommand) {
-	    ckfree((char *) selPtr->clientData);
+	    /*
+	     * Mark the CommandInfo as deleted and free it if we can.
+	     */
+
+	    ((CommandInfo*)selPtr->clientData)->interp = NULL;
+	    Tcl_EventuallyFree(selPtr->clientData, Tcl_Free);
 	}
 	ckfree((char *) selPtr);
     }
@@ -1184,19 +1202,40 @@ HandleTclCommand(clientData, offset, buffer, maxBytes)
     int spaceNeeded, length;
 #define MAX_STATIC_SIZE 100
     char staticSpace[MAX_STATIC_SIZE];
-    char *command;
-    Tcl_Interp *interp;
+    char *command, *string;
+    Tcl_Interp *interp = cmdInfoPtr->interp;
     Tcl_DString oldResult;
+    Tcl_Obj *objPtr;
+    int extraBytes, charOffset, count, numChars;
+    char *p;
 
     /*
-     * We must copy the interpreter pointer from CommandInfo because the
-     * command could delete the handler, freeing the CommandInfo data before we
-     * are done using it. We must also protect the interpreter from being
-     * deleted too soo.
+     * We must also protect the interpreter and the command from being
+     * deleted too soon.
      */
 
-    interp = cmdInfoPtr->interp;
+    Tcl_Preserve(clientData);
     Tcl_Preserve((ClientData) interp);
+
+    /*
+     * Compute the proper byte offset in the case where the last chunk
+     * split a character.
+     */
+
+    if (offset == cmdInfoPtr->byteOffset) {
+	charOffset = cmdInfoPtr->charOffset;
+	extraBytes = strlen(cmdInfoPtr->buffer);
+	if (extraBytes > 0) {
+	    strcpy(buffer, cmdInfoPtr->buffer);
+	    maxBytes -= extraBytes;
+	    buffer += extraBytes;
+	}
+    } else {
+	cmdInfoPtr->byteOffset = 0;
+	cmdInfoPtr->charOffset = 0;
+	extraBytes = 0;
+	charOffset = 0;
+    }
 
     /*
      * First, generate a command by taking the command string
@@ -1209,7 +1248,7 @@ HandleTclCommand(clientData, offset, buffer, maxBytes)
     } else {
 	command = (char *) ckalloc((unsigned) spaceNeeded);
     }
-    sprintf(command, "%s %d %d", cmdInfoPtr->command, offset, maxBytes);
+    sprintf(command, "%s %d %d", cmdInfoPtr->command, charOffset, maxBytes);
 
     /*
      * Execute the command.  Be sure to restore the state of the
@@ -1219,15 +1258,41 @@ HandleTclCommand(clientData, offset, buffer, maxBytes)
     Tcl_DStringInit(&oldResult);
     Tcl_DStringGetResult(interp, &oldResult);
     if (TkCopyAndGlobalEval(interp, command) == TCL_OK) {
-	length = strlen(Tcl_GetStringResult(interp));
-	if (length > maxBytes) {
-	    length = maxBytes;
+	objPtr = Tcl_GetObjResult(interp);
+	string = Tcl_GetStringFromObj(objPtr, &length);
+	count = (length > maxBytes) ? maxBytes : length;
+	memcpy((VOID *) buffer, (VOID *) string, (size_t) count);
+	buffer[count] = '\0';
+
+	/*
+	 * Update the partial character information for the next
+	 * retrieval if the command has not been deleted.
+	 */
+
+	if (cmdInfoPtr->interp != NULL) {
+	    if (length <= maxBytes) {
+		cmdInfoPtr->charOffset += Tcl_NumUtfChars(string, -1);
+		cmdInfoPtr->buffer[0] = '\0';
+	    } else {
+		p = string;
+		string += count;
+		numChars = 0;
+		while (p < string) {
+		    p = Tcl_UtfNext(p);
+		    numChars++;
+		}
+		cmdInfoPtr->charOffset += numChars;
+		length = p - string;
+		if (length > 0) {
+		    strncpy(cmdInfoPtr->buffer, string, (size_t) length);
+		}
+		cmdInfoPtr->buffer[length] = '\0';
+	    }		
+	    cmdInfoPtr->byteOffset += count + extraBytes;
 	}
-	memcpy((VOID *) buffer, (VOID *) Tcl_GetStringResult(interp),
-		(size_t) length);
-	buffer[length] = '\0';
+	count += extraBytes;
     } else {
-	length = -1;
+	count = -1;
     }
     Tcl_DStringResult(interp, &oldResult);
 
@@ -1235,8 +1300,10 @@ HandleTclCommand(clientData, offset, buffer, maxBytes)
 	ckfree(command);
     }
 
+
+    Tcl_Release(clientData);
     Tcl_Release((ClientData) interp);
-    return length;
+    return count;
 }
 
 /*
@@ -1364,7 +1431,7 @@ TkSelDefaultSelection(infoPtr, target, buffer, maxBytes, typePtr)
 
 static void
 LostSelection(clientData)
-    ClientData clientData;		/* Pointer to CommandInfo structure. */
+    ClientData clientData;		/* Pointer to LostCommand structure. */
 {
     LostCommand *lostPtr = (LostCommand *) clientData;
     Tcl_Obj *objPtr;

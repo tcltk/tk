@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.5 1999/06/01 18:51:20 stanton Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.6 1999/06/03 18:50:46 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -24,7 +24,7 @@ typedef struct ConvertInfo {
 				 * offset of the next chunk of data to
 				 * transfer. */
     Tcl_EncodingState state;	/* The encoding state needed across chunks. */
-    char buffer[TCL_UTF_MAX+1];	/* A buffer to hold part of a UTF character
+    char buffer[TCL_UTF_MAX];	/* A buffer to hold part of a UTF character
 				 * that is split across chunks.*/
 } ConvertInfo;
 
@@ -322,6 +322,7 @@ TkSelPropProc(eventPtr)
 		 */
 
 		numItems = 0;
+		length = 0;
 	    } else {
 		TkSelInProgress ip;
 		ip.selPtr = selPtr;
@@ -424,6 +425,10 @@ TkSelPropProc(eventPtr)
 		}
 		Tcl_DStringSetLength(&ds, soFar);
 
+		if (encoding) {
+		    Tcl_FreeEncoding(encoding);
+		}
+
 		/*
 		 * Set the property to the encoded string value.
 		 */
@@ -484,7 +489,12 @@ TkSelPropProc(eventPtr)
 		    incrPtr->converts[i].offset = -2;
 		}
 	    } else {
-		incrPtr->converts[i].offset += numItems;
+		/*
+		 * Advance over the selection data that was consumed
+		 * this time.
+		 */
+ 
+		incrPtr->converts[i].offset += numItems - length;
 	    }
 	    return;
 	}
