@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.13 2000/08/29 21:00:13 ericm Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.14 2001/04/04 18:37:18 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -1101,8 +1101,8 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 	    TkMenuInit();
 
 	    if ((flags == 0xFFFF) && (*plParam == 0)) {
-		Tcl_SetServiceMode(tsdPtr->oldServiceMode);
 		if (tsdPtr->modalMenuPtr != NULL) {
+		    Tcl_SetServiceMode(tsdPtr->oldServiceMode);
 		    RecursivelyClearActiveMenu(tsdPtr->modalMenuPtr);
 		}
 	    } else {
