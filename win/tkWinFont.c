@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.18 2003/12/04 12:09:55 vincentdarley Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.19 2003/12/05 16:05:31 cc_benny Exp $
  */
 
 #include "tkWinInt.h"
@@ -637,28 +637,28 @@ Tk_MeasureChars(
     start = source;
     end = start + numBytes;
     for (p = start; p < end; ) {
-            next = p + Tcl_UtfToUniChar(p, &ch);
-            thisSubFontPtr = FindSubFontForChar(fontPtr, ch);
-            if (thisSubFontPtr != lastSubFontPtr) {
-		familyPtr = lastSubFontPtr->familyPtr;
+        next = p + Tcl_UtfToUniChar(p, &ch);
+        thisSubFontPtr = FindSubFontForChar(fontPtr, ch);
+        if (thisSubFontPtr != lastSubFontPtr) {
+            familyPtr = lastSubFontPtr->familyPtr;
             Tcl_UtfToExternalDString(familyPtr->encoding, start, 
                     (int) (p - start), &runString);
-		(*familyPtr->getTextExtentPoint32Proc)(hdc, 
-			Tcl_DStringValue(&runString),
-			Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
-			&size);
+            (*familyPtr->getTextExtentPoint32Proc)(hdc, 
+                    Tcl_DStringValue(&runString),
+                    Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
+                    &size);
+            Tcl_DStringFree(&runString);
             if (maxLength >= 0 && (curX+size.cx) > maxLength) {
                 moretomeasure = 1;
                 break;
             }
-	    curX += size.cx;
-	    Tcl_DStringFree(&runString);
-	    lastSubFontPtr = thisSubFontPtr;
+            curX += size.cx;
+            lastSubFontPtr = thisSubFontPtr;
             start = p;
-
-	    SelectObject(hdc, lastSubFontPtr->hFont);
-	}
-	p = next;
+                
+            SelectObject(hdc, lastSubFontPtr->hFont);
+        }
+        p = next;
     }
 
     if (!moretomeasure) {
@@ -675,11 +675,11 @@ Tk_MeasureChars(
 		Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont, 
 		&size);
+        Tcl_DStringFree(&runString);
         if (maxLength >= 0 && (curX+size.cx) > maxLength) {
             moretomeasure = 1;
         } else {
 	    curX += size.cx;
-	    Tcl_DStringFree(&runString);
             p = end;
         }
     }
@@ -700,9 +700,9 @@ Tk_MeasureChars(
         Tcl_DStringInit(&runString);
         for (p = start; p < end; ) {
             next = p + Tcl_UtfToUniChar(p, &ch);
-		Tcl_UtfToExternal(NULL, familyPtr->encoding, p,
-			(int) (next - p), 0, NULL, buf, sizeof(buf), NULL,
-			&dstWrote, NULL);
+            Tcl_UtfToExternal(NULL, familyPtr->encoding, p,
+                    (int) (next - p), 0, NULL, buf, sizeof(buf), NULL,
+                    &dstWrote, NULL);
             Tcl_DStringAppend(&runString,buf,dstWrote);
             (*familyPtr->getTextExtentPoint32Proc)(hdc, 
                     Tcl_DStringValue(&runString),
@@ -742,34 +742,26 @@ Tk_MeasureChars(
     SelectObject(hdc, oldFont);
     ReleaseDC(fontPtr->hwnd, hdc);
 
-    if ((flags & TK_WHOLE_WORDS) && (p < end)
-            && !((ch < 128) && isspace(ch))) {
+    if ((flags & TK_WHOLE_WORDS) && (p < end) && (ch != ' ')) {
 
-	/*
-         * This is never used by Tk itself, but others may want it.
-         * Scan the string for the last word break and repeat the
+        /*
+         * Scan the string for the last word break and than repeat the
          * whole procedure without the maxLength limit or any flags.
-	 */
+         */
 
         CONST char *lastWordBreak = NULL;
-        CONST char *nextafter = NULL;
         Tcl_UniChar ch2;
 
         end = p;
-        start = source;
+        p = source + Tcl_UtfToUniChar(source, &ch);
+        for ( ; p < end; p = next) {
+            next = p + Tcl_UtfToUniChar(p, &ch2);
+            if ((ch != ' ') && (ch2 == ' ')) {
+                lastWordBreak = p;
+            }
+        }
 
-        next = p + Tcl_UtfToUniChar(p, &ch);
-        for (p = start; next < end; ) {
-            nextafter = next + Tcl_UtfToUniChar(next, &ch2);
-            if (((ch >= 128) || !isspace(ch))
-                    && ((ch2 < 128) && isspace(ch2))) {
-                lastWordBreak = next;
-	    }
-            p = next;
-            next = nextafter;
-	}
-
-        if (NULL != lastWordBreak) {
+        if (lastWordBreak != NULL) {
             return Tk_MeasureChars(
                 tkfont, source, lastWordBreak-source, -1, 0, lengthPtr );
         } else {
