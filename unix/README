@@ -20,7 +20,7 @@ SGI, as well as PCs running Linux, BSDI, and SCO UNIX.  To compile for
 a PC running Windows, see the README file in the directory ../win.  To
 compile for a Macintosh, see the README file in the directory ../mac.
 
-RCS: @(#) $Id: README,v 1.14 2002/03/05 20:34:15 hobbs Exp $
+RCS: @(#) $Id: README,v 1.15 2002/06/25 16:45:12 rmax Exp $
 
 How To Compile And Install Tk:
 ------------------------------
@@ -64,6 +64,10 @@ How To Compile And Install Tk:
 	--disable-64bit		disable 64bit support (where applicable)
 	--enable-64bit-vis	enable 64bit Sparc VIS support
 	--disable-64bit-vis	disable 64bit Sparc VIS support
+	--enable-man-symlinks	Use symlinks for linking the manpages that
+				should be reachable under several names.
+	--enable-man-compression=PROG
+				Compress the manpages using PROG.
 
     Note: by default gcc will be used if it can be located on the PATH.
     if you want to use cc instead of gcc, set the CC environment variable
