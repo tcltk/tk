@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.21 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: console.tcl,v 1.22 2003/02/21 03:34:29 das Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -455,6 +455,12 @@ proc ::tk::ConsoleBind {w} {
 	} else {
 	    source [file join $tk_library console.tcl]
 	}
+    }
+    if {[string equal $::tcl_platform(platform) "macintosh"]
+	   || [string equal [tk windowingsystem] "aqua"]} {
+	    bind Console <Command-q> {
+		exit
+	    }
     }
     bind Console <<Cut>> {
         # Same as the copy event
