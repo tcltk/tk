@@ -1,8 +1,18 @@
+2002-10-09  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* generic/tkImgPhoto.c (ImgPhotoSetSize): Only error-out if we
+	fail to allocate a non-empty buffer; getting a NULL when we
+	allocate an empty buffer is no problem since nothing will look at
+	the value anyway. [Bug 619544]
+	Also tidied up file to take into account the fact that we're using
+	32 bits per pixel in the master to accommodate the alpha channel
+	as well as RGB.
+
 2002-10-02  Jim Ingham  <jingham@apple.com>
 
-        * macosx/tkMacOSXScrlbr.c (TkpDisplayScrollbar): Put the Tk scrollbar
-        pointer into the control reference data for the Mac scrollbar, so we
-        can get it out again in the ScrollbarActionProc.
+	* macosx/tkMacOSXScrlbr.c (TkpDisplayScrollbar): Put the Tk scrollbar
+	pointer into the control reference data for the Mac scrollbar, so we
+	can get it out again in the ScrollbarActionProc.
         
 2002-10-02  Jeff Hobbs  <jeffh@ActiveState.com>
 

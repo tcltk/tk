@@ -2,8 +2,8 @@
  * tkImgPhoto.c --
  *
  *	Implements images of type "photo" for Tk.  Photo images are
- *	stored in full color (32 bits per pixel) and displayed using
- *	dithering if necessary.
+ *	stored in full color (32 bits per pixel including alpha channel)
+ *	and displayed using dithering if necessary.
  *
  * Copyright (c) 1994 The Australian National University.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -16,7 +16,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.34 2002/08/05 04:30:39 dgp Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.35 2002/10/09 09:32:24 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -162,7 +162,7 @@ typedef struct PhotoMaster {
     Tcl_Obj *dataString;	/* Object to use as contents of image. */
     Tcl_Obj *format;		/* User-specified format of data in image
 				 * file or string value. */
-    unsigned char *pix24;	/* Local storage for 24-bit image. */
+    unsigned char *pix32;	/* Local storage for 32-bit image. */
     int ditherX, ditherY;	/* Location of first incorrectly
 				 * dithered pixel in image. */
     TkRegion validRegion;	/* Tk region indicating which parts of
@@ -589,7 +589,7 @@ ImgPhotoCreate(interp, name, objc, objv, typePtr, master, clientDataPtr)
     masterPtr->imageCmd = Tcl_CreateObjCommand(interp, name, ImgPhotoCmd,
 	    (ClientData) masterPtr, ImgPhotoCmdDeletedProc);
     masterPtr->palette = NULL;
-    masterPtr->pix24 = NULL;
+    masterPtr->pix32 = NULL;
     masterPtr->instancePtr = NULL;
     masterPtr->validRegion = TkCreateRegion();
 
@@ -997,7 +997,7 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	 * Extract the value of the desired pixel and format it as a string.
 	 */
 
-	pixelPtr = masterPtr->pix24 + (y * masterPtr->width + x) * 4;
+	pixelPtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
 	sprintf(string, "%d %d %d", pixelPtr[0], pixelPtr[1],
 		pixelPtr[2]);
 	Tcl_AppendResult(interp, string, (char *) NULL);
@@ -1358,7 +1358,7 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	    setBox.y = y;
 	    setBox.width = 1;
 	    setBox.height = 1;
-	    pixelPtr = masterPtr->pix24 + (y * masterPtr->width + x) * 4;
+	    pixelPtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
 
 	    if (transFlag) {
 		/*
@@ -2179,7 +2179,7 @@ ImgPhotoConfigureInstance(instancePtr)
 	     * image in those situations where the server's endianness
 	     * is different from ours.
 	     *
-	     * Can't we use autoconf to figure this out?
+	     * FIXME: use autoconf to figure this out.
 	     */
 
 	    if (imagePtr != NULL) {
@@ -2561,8 +2561,8 @@ ImgPhotoDelete(masterData)
     if (masterPtr->imageCmd != NULL) {
 	Tcl_DeleteCommandFromToken(masterPtr->interp, masterPtr->imageCmd);
     }
-    if (masterPtr->pix24 != NULL) {
-	ckfree((char *) masterPtr->pix24);
+    if (masterPtr->pix32 != NULL) {
+	ckfree((char *) masterPtr->pix32);
     }
     if (masterPtr->validRegion != NULL) {
 	TkDestroyRegion(masterPtr->validRegion);
@@ -2631,7 +2631,7 @@ ImgPhotoSetSize(masterPtr, width, height)
     PhotoMaster *masterPtr;
     int width, height;
 {
-    unsigned char *newPix24 = NULL;
+    unsigned char *newPix32 = NULL;
     int h, offset, pitch;
     unsigned char *srcPtr, *destPtr;
     XRectangle validBox, clipBox;
@@ -2652,10 +2652,18 @@ ImgPhotoSetSize(masterPtr, width, height)
      * that any failures will leave the photo unchanged.
      */
     if ((width != masterPtr->width) || (height != masterPtr->height)
-	    || (masterPtr->pix24 == NULL)) {
-	newPix24 = (unsigned char *)
-		attemptckalloc((unsigned) (height * pitch));
-	if (newPix24 == NULL) {
+	    || (masterPtr->pix32 == NULL)) {
+	/*
+	 * Not a u-long, but should be one.
+	 */
+	unsigned /*long*/ newPixSize = (unsigned /*long*/) (height * pitch);
+
+	newPix32 = (unsigned char *) attemptckalloc(newPixSize);
+	/*
+	 * The result could validly be NULL if the number of bytes
+	 * requested was 0. [Bug 619544]
+	 */
+	if (newPix32 == NULL && newPixSize != 0) {
 	    return TCL_ERROR;
 	}
     }
@@ -2681,32 +2689,32 @@ ImgPhotoSetSize(masterPtr, width, height)
     }
 
     /*
-     * Use the reallocated storage (allocation above) for the 24-bit
+     * Use the reallocated storage (allocation above) for the 32-bit
      * image and copy over valid regions.  Note that this test is true
      * precisely when the allocation has already been done.
      */
-    if (newPix24 != NULL) {
+    if (newPix32 != NULL) {
 	/*
 	 * Zero the new array.  The dithering code shouldn't read the
 	 * areas outside validBox, but they might be copied to another
 	 * photo image or written to a file.
 	 */
 
-	if ((masterPtr->pix24 != NULL)
+	if ((masterPtr->pix32 != NULL)
 	    && ((width == masterPtr->width) || (width == validBox.width))) {
 	    if (validBox.y > 0) {
-		memset((VOID *) newPix24, 0, (size_t) (validBox.y * pitch));
+		memset((VOID *) newPix32, 0, (size_t) (validBox.y * pitch));
 	    }
 	    h = validBox.y + validBox.height;
 	    if (h < height) {
-		memset((VOID *) (newPix24 + h * pitch), 0,
+		memset((VOID *) (newPix32 + h * pitch), 0,
 			(size_t) ((height - h) * pitch));
 	    }
 	} else {
-	    memset((VOID *) newPix24, 0, (size_t) (height * pitch));
+	    memset((VOID *) newPix32, 0, (size_t) (height * pitch));
 	}
 
-	if (masterPtr->pix24 != NULL) {
+	if (masterPtr->pix32 != NULL) {
 
 	    /*
 	     * Copy the common area over to the new array array and
@@ -2720,8 +2728,8 @@ ImgPhotoSetSize(masterPtr, width, height)
 		 */
 
 		offset = validBox.y * pitch;
-		memcpy((VOID *) (newPix24 + offset),
-			(VOID *) (masterPtr->pix24 + offset),
+		memcpy((VOID *) (newPix32 + offset),
+			(VOID *) (masterPtr->pix32 + offset),
 			(size_t) (validBox.height * pitch));
 
 	    } else if ((validBox.width > 0) && (validBox.height > 0)) {
@@ -2730,8 +2738,8 @@ ImgPhotoSetSize(masterPtr, width, height)
 		 * Area to be copied is not contiguous - copy line by line.
 		 */
 
-		destPtr = newPix24 + (validBox.y * width + validBox.x) * 4;
-		srcPtr = masterPtr->pix24 + (validBox.y * masterPtr->width
+		destPtr = newPix32 + (validBox.y * width + validBox.x) * 4;
+		srcPtr = masterPtr->pix32 + (validBox.y * masterPtr->width
 			+ validBox.x) * 4;
 		for (h = validBox.height; h > 0; h--) {
 		    memcpy((VOID *) destPtr, (VOID *) srcPtr,
@@ -2741,10 +2749,10 @@ ImgPhotoSetSize(masterPtr, width, height)
 		}
 	    }
 
-	    ckfree((char *) masterPtr->pix24);
+	    ckfree((char *) masterPtr->pix32);
 	}
 
-	masterPtr->pix24 = newPix24;
+	masterPtr->pix32 = newPix32;
 	masterPtr->width = width;
 	masterPtr->height = height;
 
@@ -4027,11 +4035,11 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height, compRule)
     }
 
     /*
-     * Copy the data into our local 24-bit/pixel array.
+     * Copy the data into our local 32-bit/pixel array.
      * If we can do it with a single memcpy, we do.
      */
 
-    destLinePtr = masterPtr->pix24 + (y * masterPtr->width + x) * 4;
+    destLinePtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
     pitch = masterPtr->width * 4;
 
     /*
@@ -4170,7 +4178,7 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height, compRule)
 	    TkDestroyRegion(workRgn);
 	}
 
-	destLinePtr = masterPtr->pix24 + (y * masterPtr->width + x) * 4 + 3;
+	destLinePtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4 + 3;
 	for (y1 = 0; y1 < height; y1++) {
 	    x1 = 0;
 	    destPtr = destLinePtr;
@@ -4293,13 +4301,13 @@ Tk_PhotoPutZoomedBlock(handle, blockPtr, x, y, width, height, zoomX, zoomY,
     xEnd = x + width;
     yEnd = y + height;
     if ((xEnd > masterPtr->width) || (yEnd > masterPtr->height)) {
-	int sameSrc = (blockPtr->pixelPtr == masterPtr->pix24);
+	int sameSrc = (blockPtr->pixelPtr == masterPtr->pix32);
 	if (ImgPhotoSetSize(masterPtr, MAX(xEnd, masterPtr->width),
 		MAX(yEnd, masterPtr->height)) == TCL_ERROR) {
 	    panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
 	}
 	if (sameSrc) {
-	    blockPtr->pixelPtr = masterPtr->pix24;
+	    blockPtr->pixelPtr = masterPtr->pix32;
 	}
     }
 
@@ -4353,10 +4361,10 @@ Tk_PhotoPutZoomedBlock(handle, blockPtr, x, y, width, height, zoomX, zoomY,
     }
 
     /*
-     * Copy the data into our local 24-bit/pixel array.
+     * Copy the data into our local 32-bit/pixel array.
      */
 
-    destLinePtr = masterPtr->pix24 + (y * masterPtr->width + x) * 4;
+    destLinePtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
     srcOrigPtr = blockPtr->pixelPtr + blockPtr->offset[0];
     if (subsampleX < 0) {
 	srcOrigPtr += (blockPtr->width - 1) * blockPtr->pixelSize;
@@ -4453,7 +4461,7 @@ Tk_PhotoPutZoomedBlock(handle, blockPtr, x, y, width, height, zoomX, zoomY,
 	    TkDestroyRegion(workRgn);
 	}
 
-	destLinePtr = masterPtr->pix24 + (y * masterPtr->width + x) * 4 + 3;
+	destLinePtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4 + 3;
 	for (y1 = 0; y1 < height; y1++) {
 	    x1 = 0;
 	    destPtr = destLinePtr;
@@ -4672,7 +4680,7 @@ DitherInstance(instancePtr, xStart, yStart, width, height)
     firstBit = bigEndian? (1 << (imagePtr->bitmap_unit - 1)): 1;
 
     lineLength = masterPtr->width * 3;
-    srcLinePtr = masterPtr->pix24 + (yStart * masterPtr->width + xStart) * 4;
+    srcLinePtr = masterPtr->pix32 + (yStart * masterPtr->width + xStart) * 4;
     errLinePtr = instancePtr->error + yStart * lineLength + xStart * 3;
     xEnd = xStart + width;
 
@@ -4964,11 +4972,11 @@ Tk_PhotoBlank(handle)
     masterPtr->validRegion = TkCreateRegion();
 
     /*
-     * Clear out the 24-bit pixel storage array.
+     * Clear out the 32-bit pixel storage array.
      * Clear out the dithering error arrays for each instance.
      */
 
-    memset((VOID *) masterPtr->pix24, 0,
+    memset((VOID *) masterPtr->pix32, 0,
 	    (size_t) (masterPtr->width * masterPtr->height * 4));
     for (instancePtr = masterPtr->instancePtr; instancePtr != NULL;
 	    instancePtr = instancePtr->nextPtr) {
@@ -5396,7 +5404,7 @@ Tk_PhotoGetImage(handle, blockPtr)
     PhotoMaster *masterPtr;
 
     masterPtr = (PhotoMaster *) handle;
-    blockPtr->pixelPtr = masterPtr->pix24;
+    blockPtr->pixelPtr = masterPtr->pix32;
     blockPtr->width = masterPtr->width;
     blockPtr->height = masterPtr->height;
     blockPtr->pitch = masterPtr->width * 4;
