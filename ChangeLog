@@ -1,17 +1,3 @@
-2000-07-20  Brent Welch <welch@ajubasolutions.com>
-
-	* win/tkConfig.sh.in:
-	Made corresponding changes to match gcc for windows mods
-	to the rest of the files.
-
-2000-07-28  Mo DeJong  <mdejong@redhat.com>
-
-	* win/Makefile.in:
-	* win/aclocal.m4:
-	* win/configure.in:
-	* win/tcl.m4: Back port of gcc for windows
-	build system from 8.4.
-
 2000-07-26  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* unix/configure.in (TK_PATCH_LEVEL): updated to 8.3.2

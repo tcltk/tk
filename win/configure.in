@@ -2,7 +2,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.16.2.4 2000/07/28 08:12:06 mo Exp $
+# RCS: @(#) $Id: configure.in,v 1.16.2.3 2000/07/27 01:05:58 hobbs Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -75,9 +75,9 @@ AC_SUBST(MAN2TCLFLAGS)
 
 SC_ENABLE_SYMBOLS
 
+TK_DBGX=${DBGX}
 CFLAGS=${CFLAGS_DEFAULT}
 LDFLAGS=${LDFLAGS_DEFAULT}
-TK_DBGX=${DBGX}
 
 #--------------------------------------------------------------------
 # Locate and source the tclConfig.sh file.
@@ -88,62 +88,33 @@ SC_LOAD_TCLCONFIG
 
 SC_PROG_TCLSH
 
-#------------------------------------------------------------------------
-# tkConfig.sh refers to this by a different name
-#------------------------------------------------------------------------
-
-TK_SHARED_BUILD=${SHARED_BUILD}
-
 #--------------------------------------------------------------------
 # Perform final evaluations of variables with possible substitutions.
 #--------------------------------------------------------------------
 
-TK_SHARED_LIB_SUFFIX="\${NODOT_VERSION}${DLLSUFFIX}"
-TK_UNSHARED_LIB_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
-TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
-
-eval "TK_SRC_DIR=`cd $srcdir/..; pwd`"
-
+eval "TK_SRC_DIR=`cd $srcdir; pwd`"
 eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
-eval "TK_LIB_FILE=${LIBPREFIX}tk$VER${LIBSUFFIX}"
-eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}"
-
-# FIXME: All of this var junk needs to be done in tcl.m4 !!!!
-# I left out the other vars that also need to get defined here.
-# we also need to double check about including DBGX in lib names
-# and spaces in file or directory names for the eval
-eval "TK_STUB_LIB_FLAG=\"-ltkstub${VER}${TCL_DBGX}\""
-eval "TK_BUILD_STUB_LIB_SPEC=\"-L`pwd` ${TK_STUB_LIB_FLAG}\""
-
-eval "TCL_DLL_FILE=\"tcl$VER${DLLSUFFIX}\""
-eval "TCL_LIB_FILE=\"${LIBPREFIX}tcl$VER${LIBSUFFIX}\""
-
-eval "TCL_STUB_LIB_FILE=\"${LIBPREFIX}tclstub${VER}${LIBSUFFIX}\""
-eval "TCL_STUB_LIB_FLAG=\"-ltclstub${VER}${TCL_DBGX}\""
-
-eval "TCL_BUILD_STUB_LIB_SPEC=\"-L`pwd` ${TCL_STUB_LIB_FLAG}\""
-
-eval "DLLSUFFIX=${DLLSUFFIX}"
-eval "LIBPREFIX=${LIBPREFIX}"
-eval "LIBSUFFIX=${LIBSUFFIX}"
+eval "TK_LIB_FILE=tk$VER${LIBSUFFIX}"
+eval "TK_STUB_LIB_FILE=tkstub$VER${LIBSUFFIX}"
+eval "TCL_DLL_FILE=tcl$VER${DLLSUFFIX}"
+eval "TCL_LIB_FILE=tcl$VER${LIBSUFFIX}"
+eval "TCL_STUB_LIB_FILE=tclstub$VER${LIBSUFFIX}"
 eval "EXESUFFIX=${EXESUFFIX}"
 
 if test "$SHARED_BUILD" = 0 -o $TCL_NEEDS_EXP_FILE = 0; then
     TK_BUILD_LIB_SPEC="`pwd`/${TK_LIB_FILE}"
     TK_LIB_SPEC="${exec_prefix}/lib/${TK_LIB_FILE}"
-    WISH_RES=wish_static.${RES}
+    WISH_RES=wish_static.res
     TK_RES=
 else
     TK_BUILD_LIB_SPEC="`pwd`/${TK_DLL_FILE}"
     TK_LIB_SPEC="${exec_prefix}/lib/${TK_DLL_FILE}"
-    WISH_RES=wish_static.${RES}
-    TK_RES=tk_dll.${RES}
+    WISH_RES=wish_static.res
+    TK_RES=tk_dll.res
 fi
 TK_SHARED_BUILD=${SHARED_BUILD}
 
-CFG_TK_SHARED_LIB_SUFFIX=${TK_SHARED_LIB_SUFFIX}
-CFG_TK_UNSHARED_LIB_SUFFIX=${TK_UNSHARED_LIB_SUFFIX}
-CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
+GRAPHIC_LIBS="gdi32.lib comdlg32.lib"
 
 AC_SUBST(TK_VERSION)
 AC_SUBST(TK_MAJOR_VERSION)
@@ -153,13 +124,12 @@ AC_SUBST(TK_DBGX)
 AC_SUBST(TK_LIB_FILE)
 AC_SUBST(TK_DLL_FILE)
 AC_SUBST(TK_STUB_LIB_FILE)
-AC_SUBST(TK_STUB_LIB_FLAG)
-AC_SUBST(TK_BUILD_STUB_LIB_SPEC)
 AC_SUBST(TK_SRC_DIR)
 AC_SUBST(TK_BIN_DIR)
 AC_SUBST(TK_BUILD_LIB_SPEC)
 AC_SUBST(TK_LIB_SPEC)
 AC_SUBST(TK_SHARED_BUILD)
+AC_SUBST(GRAPHIC_LIBS)
 AC_SUBST(WISH_RES)
 AC_SUBST(TK_RES)
 
@@ -170,24 +140,16 @@ AC_SUBST(TCL_PATCH_LEVEL)
 AC_SUBST(TCL_LIB_FILE)
 AC_SUBST(TCL_DLL_FILE)
 AC_SUBST(TCL_STUB_LIB_FILE)
-AC_SUBST(TCL_STUB_LIB_FLAG)
-AC_SUBST(TCL_BUILD_STUB_LIB_SPEC)
 AC_SUBST(TCL_SRC_DIR)
 AC_SUBST(TCL_BIN_DIR)
 AC_SUBST(TCL_DBGX)
-AC_SUBST(CFG_TK_SHARED_LIB_SUFFIX)
-AC_SUBST(CFG_TK_UNSHARED_LIB_SUFFIX)
-AC_SUBST(CFG_TK_EXPORT_FILE_SUFFIX)
-AC_SUBST(TK_SHARED_BUILD)
+
 
 AC_SUBST(PATHTYPE)
-AC_SUBST(CYGPATH)
-AC_SUBST(VPSEP)
 AC_SUBST(CFLAGS_DEBUG)
 AC_SUBST(CFLAGS_OPTIMIZE)
 AC_SUBST(CFLAGS_WARNING)
 AC_SUBST(EXTRA_CFLAGS)
-AC_SUBST(STLIB_LD)
 AC_SUBST(SHLIB_LD)
 AC_SUBST(SHLIB_LD_LIBS)
 AC_SUBST(SHLIB_CFLAGS)
@@ -200,23 +162,13 @@ AC_SUBST(LDFLAGS_OPTIMIZE)
 AC_SUBST(LDFLAGS_CONSOLE)
 AC_SUBST(LDFLAGS_WINDOW)
 AC_SUBST(AR)
-AC_SUBST(RANLIB)
 AC_SUBST(RC)
-AC_SUBST(RC_OUT)
-AC_SUBST(RC_TYPE)
-AC_SUBST(RC_INCLUDE)
-AC_SUBST(RES)
-AC_SUBST(LIBS)
-AC_SUBST(LIBS_GUI)
 AC_SUBST(DLLSUFFIX)
-AC_SUBST(LIBPREFIX)
 AC_SUBST(LIBSUFFIX)
 AC_SUBST(EXESUFFIX)
 AC_SUBST(LIBRARIES)
 AC_SUBST(MAKE_LIB)
-AC_SUBST(POST_MAKE_LIB)
 AC_SUBST(MAKE_DLL)
-AC_SUBST(MAKE_EXE)
 AC_SUBST(TK_XINCLUDES)
 AC_SUBST(XINCLUDES)
 
