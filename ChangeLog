@@ -1,3 +1,15 @@
+2002-12-01  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* tests/wm.test: Add wm-transient-6.3 to
+	check that a transient remains withdrawn
+	when it is first withdrawn and then turned
+	into a transient.
+	* unix/tkUnixWm.c:
+	* win/tkWinWm.c: Replace WM_TRANSIENT_WITHDRAWN
+	with WM_WITHDRAWN and set this flag whenever
+	a window is explicitly withdrawn. This fixes
+	the test case added above. [Bug 644356]
+
 2002-11-22  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* tests/textDisp.test:

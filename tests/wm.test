@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.19 2002/09/02 21:21:13 hobbs Exp $
+# RCS: @(#) $Id: wm.test,v 1.20 2002/12/01 23:37:53 mdejong Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -1388,6 +1388,21 @@ test wm-transient-6.2 { a withdrawn transient does not track
     lappend results [wm state .subject]
 } {withdrawn normal withdrawn normal}
 
+test wm-transient-6.3 { a withdrawn transient does not track
+        state changes in the master } {
+    deleteWindows
+    toplevel .master
+    toplevel .subject
+    update
+    # withdraw before making window a transient
+    wm withdraw .subject
+    wm transient .subject .master
+    wm withdraw .master
+    wm deiconify .master
+    # idle handler should not map the transient
+    update
+    wm state .subject
+} {withdrawn}
 
 # wm-transient-7.*: See SF Tk Bug #592201 "wm transient fails with two masters"
 # wm-transient-7.3 through 7.5 all caused panics on Unix in Tk 8.4b1.

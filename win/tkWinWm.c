@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.52 2002/08/08 22:32:12 jenglish Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.53 2002/12/01 23:37:54 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -292,8 +292,8 @@ typedef struct TkWmInfo {
  *				allow the user to change the height of the
  *				window (controlled by "wm resizable"
  *				command).
- * WM_TRANSIENT_WITHDRAWN -	non-zero means that this is a transient window
- *				that has explicitly been withdrawn. It should
+ * WM_WITHDRAWN -		non-zero means that this window has explicitly
+ *				been withdrawn. If it's a transient, it should
  *				not mirror state changes in the master.
  */
 
@@ -309,7 +309,7 @@ typedef struct TkWmInfo {
 #define WM_ADDED_TOPLEVEL_COLORMAP	(1<<9)
 #define WM_WIDTH_NOT_RESIZABLE		(1<<10)
 #define WM_HEIGHT_NOT_RESIZABLE		(1<<11)
-#define WM_TRANSIENT_WITHDRAWN		(1<<12)
+#define WM_WITHDRAWN			(1<<12)
 
 /*
  * Window styles for various types of toplevel windows.
@@ -2982,9 +2982,7 @@ WmDeiconifyCmd(tkwin, winPtr, interp, objc, objv)
 	return TCL_ERROR;
     }
 
-    if (wmPtr->flags & WM_TRANSIENT_WITHDRAWN) {
-	wmPtr->flags &= ~WM_TRANSIENT_WITHDRAWN;
-    }
+    wmPtr->flags &= ~WM_WITHDRAWN;
 
     /*
      * If WM_UPDATE_PENDING is true, a pending UpdateGeometryInfo may
@@ -4415,9 +4413,7 @@ WmStateCmd(tkwin, winPtr, interp, objc, objv)
 	}
 
 	if (index == OPT_NORMAL) {
-	    if (wmPtr->flags & WM_TRANSIENT_WITHDRAWN) {
-		wmPtr->flags &= ~WM_TRANSIENT_WITHDRAWN;
-	    }
+	    wmPtr->flags &= ~WM_WITHDRAWN;
 	    TkpWmSetState(winPtr, NormalState);
 	    /*
 	     * This varies from 'wm deiconify' because it does not
@@ -4439,9 +4435,7 @@ WmStateCmd(tkwin, winPtr, interp, objc, objv)
 	    }
 	    TkpWmSetState(winPtr, IconicState);
 	} else if (index == OPT_WITHDRAWN) {
-	    if (wmPtr->masterPtr != NULL) {
-		wmPtr->flags |= WM_TRANSIENT_WITHDRAWN;
-	    }
+	    wmPtr->flags |= WM_WITHDRAWN;
 	    TkpWmSetState(winPtr, WithdrawnState);
 	} else { /* OPT_ZOOMED */
 	    TkpWmSetState(winPtr, ZoomState);
@@ -4689,9 +4683,7 @@ WmWithdrawCmd(tkwin, winPtr, interp, objc, objv)
 		(char *) NULL);
 	return TCL_ERROR;
     }
-    if (wmPtr->masterPtr != NULL) {
-	wmPtr->flags |= WM_TRANSIENT_WITHDRAWN;
-    }
+    wmPtr->flags |= WM_WITHDRAWN;
     TkpWmSetState(winPtr, WithdrawnState);
     return TCL_OK;
 }
@@ -4724,7 +4716,7 @@ WmWaitVisibilityOrMapProc(clientData, eventPtr)
 	return;
 
     if (eventPtr->type == MapNotify) {
-	if (!(winPtr->wmInfoPtr->flags & WM_TRANSIENT_WITHDRAWN))
+	if (!(winPtr->wmInfoPtr->flags & WM_WITHDRAWN))
 	    TkpWmSetState(winPtr, NormalState);
     } else if (eventPtr->type == UnmapNotify) {
 	TkpWmSetState(winPtr, WithdrawnState);
