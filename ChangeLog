@@ -4,7 +4,21 @@
 	-headerpad_max_install_names to allow use of 'install_name_tool'.
 	fixed tkConfig.sh generation and redo_prebinding in the case where
 	Tk is not installed alongside Tcl.
-	
+
+2002-11-03  David Gravereaux <davygrvy@pobox.com>
+
+	* win/winMain.c (Tcl_AppInit): Calls Registry_Init() and
+	Dde_Init() when STATIC_BUILD and TCL_USE_STATIC_PACKAGES macros
+	are set.
+
+	* win/makefile.vc:  linkexten option now sets the
+	TCL_USE_STATIC_PACKAGES	macro which also adds the registry and
+	dde static lib files to the link of the shell. [Patch 479697]
+
+	* win/rules.vc: Matches the one from Tcl.
+
+	* win/buildall.vc.bat: More useful commentary.
+
 2002-11-01  Andreas Kupries  <andreask@activestate.com>
 
 	* win/makefile.vc (TCLREGLIBNAME): Updated to registry 1.1.
