@@ -1,3 +1,10 @@
+2004-02-07  David Gravereaux <davygrvy@pobox.com>
+
+	* win/makefile.vc:
+	* win/rules.vc:
+	* win/rc/tk.rc:
+	* win/rc/wish.rc:  Now supports the 'unchecked' option when building.
+
 2004-02-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* doc/menubutton.n: 
@@ -8,7 +15,7 @@
 	* win/lamp.bmp (deleted): using win/rc/lamp.bmp instead.
 
 	* win/winMain.c: Removed our custom setargv() in favor of __argc
-	and __argv exported by the c-runtime.
+	and __argv exported by the C run-time.
 
 	* win/makefile.vc:
 	* win/rc/tk.rc:
