@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.54 2002/06/13 06:33:36 mdejong Exp $
+RCS: @(#) $Id: changes,v 1.55 2002/06/24 06:50:39 andreas_kupries Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5184,9 +5184,102 @@ address TIP 72 changes (64-bit) in Tcl (fellows)
 
 --- Released 8.4a4, March 5, 2002 --- See ChangeLog for details ---
 
+2002-03-06 (bug fix) Mingw fix: _WIN32_IE = 0x0300 (dejong)
+
+2002-03-07 (bug fix) TextPaste correction: insert selection only once  (fellows)
+
+2002-03-19 (bug fix) Tk_ConfigureValue, Preventing NULL in interp result (hobbs)
+
+2002-03-20 (feature change)[TIP 27][532644] Constness changes (porter)
+
+2002-03-21 (bug fix)[528441] Change in optimization flags for windows (gravereaux)
+
+2002-03-26 (bug fix) HPUX fix for missing htons declaration (kupries)
+
+2002-04-08 (bug fix) MSL stdin/out fixes prevent crash on exit  (steffen)
+
+2002-04-12 (bug fix) Centralized closing of display, mem-leak fixes (hobbs)
+
+2002-04-22 (bug fix)[223739] More robust FP comparisons for odd architectures (fellows)
+
+2002-04-22 (bug fix)[541999] Fixed posible overun of 16-bit size limit
+of X windows in drawchars (hobbs,bonfield)
+
+2002-04-22 (bug fix)[541849] ButtonLeave implementation corrected (hobbs)
+
+2002-04-24 (new feature) TCLTK_NO_LIBRARY_TEXT_RESOURCES check added,
+allowing disable of inclusion of tk lib into resources (steffen)
+
+2002-04-26 (bug fix) HP-11 SHLIB_LD_LIBS from "" to ${LIBS} to find
+dependent libraries (hobbs)
+
+2002-05-07 (bug fix)[553208] Makefile/Win fix (TCLDIR, INSTALLDIR
+forward slash trouble resolved) (gravereaux)
+
+2002-05-20 (bug fix) msgcat added to resources, fixed setup of bindings
+on startup (steffen, porter)
+
+2002-05-21 (bug fix) Build system fix, SC_ENABLE_SHARED before
+SC_CONFIG_CFLAGS for usage for SHARED_BUILD (dejong)
+
+2002-05-26 (bug fix)[556526] Fixed rounding error causing 1-pixel
+displacement (spjuth)
+
+2002-05-26 (bug fix)[548765] Fixed -value "" redraw error for variable
+created by radiobutton (spjuth)
+
 2002-05-27 (feature change) [wm transient .t .t] now raises an error (dejong)
 	*** POTENTIAL INCOMPATIBILITY ***
+
+2002-06-05 (bug fix)[559435][559437] Tk_DrawChars fixed to handle
+multibyte characters and font changes (kovalenko)
+
+2002-06-09 (bug fix) tk::dialog::error::bgerror no transient of itself (dejong)
+
+2002-06-10 (new feature)[566605] Utilities for -underline, ampersand magic (kovalenko)
 
 2002-06-12 (feature change) A transient toplevel now mirrors state
 changes in the master. (dejong)
 	*** POTENTIAL INCOMPATIBILITY ***
+
+2002-06-13 (bug fix) Fixed handling of cursor specs across platforms to
+be consistent. (fellows)
+
+2002-06-14 (new feature) [TIP 98] Enhanced photo compositing (fellows)
+
+2002-06-14 (bug fix) Fixed test for compiler optimizations (gravereaux, terry)
+
+2002-06-14 (bug fix) Removed references to matherr (kupries)
+
+2002-06-14 (new feature) [TIP 47] Reorganized Tk to allow usage in
+writing an X wm (english)
+
+2002-06-14 (new feature) [TIP 84] Full motion events upon request (hobbs)
+
+2002-06-14 (bug fix)[521946] Null pathname of destroyed window to
+prevent crash (dejong)
+
+2002-06-17 (new feature) [TIP 82] -offrelief option for check/radiobutton (hipp)
+
+2002-06-17 (enhancement) Added msg catalog for UK English. (porter)
+
+2002-06-17 (new feature) [TIP 96] Added caret handling (hobbs)
+
+2002-06-17 (bug fix) Preserve/release window of image (dejong)
+
+2002-06-19 (new feature) [TIP 48] Added style engine (fellows)
+
+2002-06-19 (bug fix)[570902] Reorganized Tk shutdown to work around bugs in X (dejong)
+
+2002-06-19 (bug fix)[548727] sash index checks lower bounds (hobbs)
+
+2002-06-20 (new feature) [TIP 94] Added -activestyle for [listbox] (hobbs)
+
+2002-06-21 (new feature) [TIP 104] generalized text undo/redo (hobbs)
+
+2002-06-22 (new feature) [TIP 95] Added [wm attributes] command (hobbs)
+
+2002-06-22 (new feature) [TIP 93] enhanced get/delete to accept accept
+multiple range pairs (hobbs)
+
+--- Released 8.4b1, June 24, 2002 --- See ChangeLog for details ---
