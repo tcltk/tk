@@ -5,16 +5,22 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.8 2000/08/25 06:58:33 ericm Exp $
+'\" RCS: @(#) $Id: text.n,v 1.8.4.1 2001/03/13 00:32:37 dgp Exp $
 '\" 
 .so man.macros
 .TH text n 4.0 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-text \- Create and manipulate text widgets
+text, tk_textCopy, tk_textCut, tk_textPaste \- Create and manipulate text widgets
 .SH SYNOPSIS
+.nf
 \fBtext\fR \fIpathName \fR?\fIoptions\fR?
+.VS 8.4
+\fBtk_textCopy\fR \fIpathName\fR
+\fBtk_textCut\fR \fIpathName\fR
+\fBtk_textPaste\fR \fIpathName\fR
+.VE
 .SO
 \-background	\-highlightthickness	\-relief
 \-borderwidth	\-insertbackground	\-selectbackground
@@ -772,6 +778,13 @@ There is a single debugging switch shared by all text widgets:  turning
 debugging on or off in any widget turns it on or off for all widgets.
 For widgets with large amounts of text, the consistency checks may
 cause a noticeable slow-down.
+.PP
+.VS 8.4
+When debugging is turned on, the drawing routines of the text widget
+set the global variables \fBtk_textRedraw\fR and \fBtk_textRelayout\fR
+to the lists of indices that are redrawn.  The values of these variables
+are tested by Tk's test suite.
+.VE
 .TP
 \fIpathName \fBdelete \fIindex1 \fR?\fIindex2\fR?
 Delete a range of characters from the text.
@@ -1554,15 +1567,24 @@ Control-\e clears any selection in the widget.
 .IP [20]
 The F16 key (labelled Copy on many Sun workstations) or Meta-w
 copies the selection in the widget to the clipboard, if there is a selection.
+.VS 8.4
+This action is carried out by the command \fBtk_textCopy\fR.
+.VE
 .IP [21]
 The F20 key (labelled Cut on many Sun workstations) or Control-w
 copies the selection in the widget to the clipboard and deletes
 the selection.
+.VS 8.4
+This action is carried out by the command \fBtk_textCut\fR.
+.VE
 If there is no selection in the widget then these keys have no effect.
 .IP [22]
 The F18 key (labelled Paste on many Sun workstations) or Control-y
 inserts the contents of the clipboard at the position of the
 insertion cursor.
+.VS 8.4
+This action is carried out by the command \fBtk_textPaste\fR.
+.VE
 .IP [23]
 The Delete key deletes the selection, if there is one in the widget.
 If there is no selection, it deletes the character to the right of
@@ -1634,4 +1656,4 @@ The display line with the insert cursor is redrawn each time the
 cursor blinks, which causes a steady stream of graphics traffic.
 Set the \fBinsertOffTime\fP attribute to 0 avoid this.
 .SH KEYWORDS
-text, widget
+text, widget, tkvars
