@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.5 1999/11/17 21:56:37 ericm Exp $
+# RCS: @(#) $Id: listbox.test,v 1.6 1999/11/17 22:13:03 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1803,7 +1803,48 @@ test listbox-21.8 {ListboxListVarProc, test selection after listvar mod} {
     set x [list a b c]
     .l curselection
 } 2
+test listbox-21.9 {ListboxListVarProc, test hscrollbar after listvar mod} {
+    catch {destroy .l}
+    catch {unset x}
+    set log {}
+    listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
+    pack .l
+    update
+    lappend x "0000000000"
+    update
+    lappend x "00000000000000000000"
+    update
+    set log
+} [list {x 0 1} {x 0 1} {x 0 0.5}]
+test listbox-21.10 {ListboxListVarProc, test hscrollbar after listvar mod} {
+    catch {destroy .l}
+    catch {unset x}
+    set log {}
+    listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
+    pack .l
+    update
+    lappend x "0000000000"
+    update
+    lappend x "00000000000000000000"
+    update
+    set x [list "0000000000"]
+    update
+    set log
+} [list {x 0 1} {x 0 1} {x 0 0.5} {x 0 1}]
     
+# UpdateHScrollbar
+test listbox-22.1 {UpdateHScrollbar} {
+    catch {destroy .l}
+    set log {}
+    listbox .l -font $fixed -width 10 -xscrollcommand "record x"
+    pack .l
+    update
+    .l insert end "0000000000"
+    update
+    .l insert end "00000000000000000000"
+    update
+    set log
+} [list {x 0 1} {x 0 1} {x 0 0.5}]
 
 resetGridInfo
 catch {destroy .l2}

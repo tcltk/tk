@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.6 1999/11/17 21:56:37 ericm Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.7 1999/11/17 22:13:02 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -2667,7 +2667,7 @@ static void
 ListboxUpdateVScrollbar(listPtr)
     register Listbox *listPtr;		/* Information about widget. */
 {
-    char string[100];
+    char string[TCL_DOUBLE_SPACE * 2];
     double first, last;
     int result;
     Tcl_Interp *interp;
@@ -2729,7 +2729,7 @@ static void
 ListboxUpdateHScrollbar(listPtr)
     register Listbox *listPtr;		/* Information about widget. */
 {
-    char string[60];
+    char string[TCL_DOUBLE_SPACE * 2];
     int result, windowWidth;
     double first, last;
     Tcl_Interp *interp;
