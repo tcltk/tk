@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: button.n,v 1.3 2000/05/10 00:09:38 ericm Exp $
+'\" RCS: @(#) $Id: button.n,v 1.4 2000/05/13 00:39:06 ericm Exp $
 '\" 
 .so man.macros
 .TH button n 4.4 Tk "Tk Built-In Commands"
@@ -16,18 +16,31 @@ button \- Create and manipulate button widgets
 .SH SYNOPSIS
 \fBbutton\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-activebackground	\-cursor	\-highlightthickness	\-takefocus
-\-activeforeground	\-disabledforeground	\-image	\-text
-\-anchor	\-font	\-justify	\-textvariable
-\-background	\-foreground	\-padx	\-underline
-\-bitmap	\-highlightbackground	\-pady	\-wraplength
-\-borderwidth	\-highlightcolor	\-relief
+\-activebackground      \-activeforeground       \-anchor
+\-background            \-bitmap                 \-borderwidth
+\-cursor                \-disabledforeground     \-font
+\-foreground            \-highlightbackground    \-highlightcolor
+\-highlightthickness    \-image                  \-justify
+\-padx                  \-pady                   \-relief
+\-repeatdelay           \-repeatinterval         \-takefocus
+\-text                  \-textvariable           \-underline
+\-wraplength
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-command command Command
 Specifies a Tcl command to associate with the button.  This command
 is typically invoked when mouse button 1 is released over the button
 window.
+.VS 8.4
+.OP \-compound compound Compound
+Specifies whether the button should display both an image and text,
+and if so, where the image should be placed relative to the text.
+Valid values for this option are \fBbottom\fR, \fBcenter\fR,
+\fBleft\fR, \fBnone\fR, \fBright\fR and \fBtop\fR.  The default value
+is \fBnone\fR, meaning that the button will display either an image or
+text, depending on the values of the \fB\-image\fR and \fB\-bitmap\fR
+options.
+.VE
 .OP \-default default Default
 .VS
 Specifies one of three states for the default ring: \fBnormal\fR,

@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: button.test,v 1.6 2000/05/10 00:09:40 ericm Exp $
+# RCS: @(#) $Id: button.test,v 1.7 2000/05/13 00:39:09 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -64,6 +64,7 @@ foreach test {
 	    {1 1 1 1}}
     {-borderwidth 1.3 1.3 badValue {bad screen distance "badValue"} {1 1 1 1}}
     {-command "set x" {set x} {} {} {0 1 1 1}}
+    {-compound left left bogus {bad compound "bogus": must be bottom, center, left, none, right, or top} {1 1 1 1}}
     {-cursor arrow arrow badValue {bad cursor spec "badValue"} {1 1 1 1}}
     {-default active active huh?
 	    {bad default "huh?": must be active, disabled, or normal}
@@ -88,6 +89,8 @@ foreach test {
     {-offvalue fantastic fantastic {} {} {0 0 1 0}}
     {-padx 12m 12m 420x {bad screen distance "420x"} {1 1 1 1}}
     {-pady 12m 12m 420x {bad screen distance "420x"} {1 1 1 1}}
+    {-repeatdelay 100 100 foo {expected integer but got "foo"} {0 1 0 0}}
+    {-repeatinterval 100 100 foo {expected integer but got "foo"} {0 1 0 0}}
     {-selectcolor #110022 #110022 bogus {unknown color name "bogus"} {0 0 1 1}}
     {-selectimage image1 image1 bogus {image "bogus" doesn't exist} {0 0 1 1}}
     {-state normal normal bogus {bad state "bogus": must be active, disabled, or normal} {1 1 1 1}}
@@ -236,7 +239,7 @@ test button-4.13 {ButtonWidgetCmd procedure, "cget" option} {
 } {1 {unknown option "-onvalue"}}
 test button-4.14 {ButtonWidgetCmd procedure, "configure" option} {
     llength [.c configure]
-} {36}
+} {37}
 test button-4.15 {ButtonWidgetCmd procedure, "configure" option} {
     list [catch {.b configure -gorp} msg] $msg
 } {1 {unknown option "-gorp"}}

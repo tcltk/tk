@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDefault.h,v 1.4 1999/11/17 02:40:55 ericm Exp $
+ * RCS: @(#) $Id: tkWinDefault.h,v 1.5 2000/05/13 00:39:09 ericm Exp $
  */
 
 #ifndef _TKWINDEFAULT
@@ -58,6 +58,7 @@
 #define DEF_BUTTON_BORDER_WIDTH	"2"
 #define DEF_BUTTON_CURSOR		""
 #define DEF_BUTTON_COMMAND		""
+#define DEF_BUTTON_COMPOUND		"none"
 #define DEF_BUTTON_DEFAULT		"disabled"
 #define DEF_BUTTON_DISABLED_FG_COLOR	DISABLED
 #define DEF_BUTTON_DISABLED_FG_MONO	""
@@ -75,13 +76,15 @@
 #define DEF_BUTTON_JUSTIFY		"center"
 #define DEF_BUTTON_OFF_VALUE		"0"
 #define DEF_BUTTON_ON_VALUE		"1"
-#define DEF_BUTTON_PADX		"1"
+#define DEF_BUTTON_PADX			"1"
 #define DEF_LABCHKRAD_PADX		"1"
-#define DEF_BUTTON_PADY		"1"
+#define DEF_BUTTON_PADY			"1"
 #define DEF_LABCHKRAD_PADY		"1"
 #define DEF_BUTTON_RELIEF		"raised"
 #define DEF_LABCHKRAD_RELIEF		"flat"
-#define DEF_BUTTON_SELECT_COLOR	INDICATOR
+#define DEF_BUTTON_REPEAT_DELAY		"0"
+#define DEF_BUTTON_REPEAT_INTERVAL	"0"
+#define DEF_BUTTON_SELECT_COLOR		INDICATOR
 #define DEF_BUTTON_SELECT_MONO		BLACK
 #define DEF_BUTTON_SELECT_IMAGE		(char *) NULL
 #define DEF_BUTTON_STATE		"normal"

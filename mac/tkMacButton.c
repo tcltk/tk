@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacButton.c,v 1.11 2000/05/10 00:09:39 ericm Exp $
+ * RCS: @(#) $Id: tkMacButton.c,v 1.12 2000/05/13 00:39:08 ericm Exp $
  */
 
 #include "tkButton.h"
@@ -167,7 +167,9 @@ TkpDisplayButton(
 				 * compiler warning. */
     int y, relief;
     register Tk_Window tkwin = butPtr->tkwin;
-    int width, height;
+    int width, height, fullWidth, fullHeight;
+    int imageXOffset, imageYOffset, textXOffset, textYOffset;
+    int haveImage = 0, haveText = 0;
     int offset;			/* 0 means this is a normal widget.  1 means
 				 * it is an image button, so we offset the
 				 * image to make the button appear to move
@@ -237,7 +239,7 @@ TkpDisplayButton(
      */
 
     if ((butPtr->type == TYPE_BUTTON) && butPtr->relief == TK_RELIEF_LINK) {
-	if (butPtr->state == STATE_ACTIVE) {
+	if ((butPtr->flags & MOUSE_IN_BUTTON) == MOUSE_IN_BUTTON) {
 	    relief = TK_RELIEF_RAISED;
 	} else {
 	    relief = TK_RELIEF_FLAT;
@@ -339,51 +341,157 @@ TkpDisplayButton(
 
     if ((drawType == DRAW_BEVEL) && TkMacHaveAppearance()) {
 	/* Empty Body */
-    } else if (butPtr->image != None) {
-	Tk_SizeOfImage(butPtr->image, &width, &height);
+    } else {
+	if (butPtr->image != None) {
+	    Tk_SizeOfImage(butPtr->image, &width, &height);
+	    haveImage = 1;
+	} else if (butPtr->bitmap != None) {
+	    Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
+	    haveImage = 1;
+	}
+	haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
 
-	imageOrBitmap:
-	TkComputeAnchor(butPtr->anchor, tkwin, 0, 0,
-		butPtr->indicatorSpace + width, height, &x, &y);
-	x += butPtr->indicatorSpace;
-
-	x += offset;
-	y += offset;
-	if (relief == TK_RELIEF_RAISED) {
-	    x -= offset;
-	    y -= offset;
-	} else if (relief == TK_RELIEF_SUNKEN) {
+	if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
+	    imageXOffset = 0;
+	    imageYOffset = 0;
+	    textXOffset = 0;
+	    textYOffset = 0;
+	    fullWidth = 0;
+	    fullHeight = 0;
+	    
+	    switch ((enum compound) butPtr->compound) {
+		case COMPOUND_TOP: 
+		case COMPOUND_BOTTOM: {
+		    /* Image is above or below text */
+		    if (butPtr->compound == COMPOUND_TOP) {
+			textYOffset = height + butPtr->padY;
+		    } else {
+			imageYOffset = butPtr->textHeight + butPtr->padY;
+		    }
+		    fullHeight = height + butPtr->textHeight + butPtr->padY;
+		    fullWidth = (width > butPtr->textWidth ? width :
+			    butPtr->textWidth);
+		    textXOffset = (fullWidth - butPtr->textWidth)/2;
+		    imageXOffset = (fullWidth - width)/2;
+		    break;
+		}
+		case COMPOUND_LEFT:
+		case COMPOUND_RIGHT: {
+		    /* Image is left or right of text */
+		    if (butPtr->compound == COMPOUND_LEFT) {
+			textXOffset = width + butPtr->padX;
+		    } else {
+			imageXOffset = butPtr->textWidth + butPtr->padX;
+		    }
+		    fullWidth = butPtr->textWidth + butPtr->padX + width;
+		    fullHeight = (height > butPtr->textHeight ? height :
+			    butPtr->textHeight);
+		    textYOffset = (fullHeight - butPtr->textHeight)/2;
+		    imageYOffset = (fullHeight - height)/2;
+		    break;
+		}
+		case COMPOUND_CENTER: {
+		    /* Image and text are superimposed */
+		    fullWidth = (width > butPtr->textWidth ? width :
+			    butPtr->textWidth);
+		    fullHeight = (height > butPtr->textHeight ? height :
+			    butPtr->textHeight);
+		    textXOffset = (fullWidth - butPtr->textWidth)/2;
+		    imageXOffset = (fullWidth - width)/2;
+		    textYOffset = (fullHeight - butPtr->textHeight)/2;
+		    imageYOffset = (fullHeight - height)/2;
+		    break;
+		}
+		case COMPOUND_NONE: {break;}
+	    }
+	    
+	    TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
+		    butPtr->indicatorSpace + fullWidth, fullHeight, &x, &y);
+	    
+	    x += butPtr->indicatorSpace;
+	    
 	    x += offset;
 	    y += offset;
-	}
-	if (butPtr->image != NULL) {
-	    if ((butPtr->selectImage != NULL) && (butPtr->flags & SELECTED)) {
-		Tk_RedrawImage(butPtr->selectImage, 0, 0, width, height,
-			pixmap, x, y);
-	    } else {
-		Tk_RedrawImage(butPtr->image, 0, 0, width, height, pixmap,
-			x, y);
+	    if (relief == TK_RELIEF_RAISED) {
+		x -= offset;
+		y -= offset;
+	    } else if (relief == TK_RELIEF_SUNKEN) {
+		x += offset;
+		y += offset;
 	    }
+	    
+	    if (butPtr->image != NULL) {
+		if ((butPtr->selectImage != NULL) &&
+			(butPtr->flags & SELECTED)) {
+		    Tk_RedrawImage(butPtr->selectImage, 0, 0,
+			    width, height, pixmap, x + imageXOffset,
+			    y + imageYOffset);
+		} else {
+		    Tk_RedrawImage(butPtr->image, 0, 0, width,
+			    height, pixmap, x + imageXOffset,
+			    y + imageYOffset);
+		}
+	    } else {
+		XSetClipOrigin(butPtr->display, gc, x + imageXOffset,
+			y + imageYOffset);
+		XCopyPlane(butPtr->display, butPtr->bitmap, pixmap, gc,
+			0, 0, (unsigned int) width,
+			(unsigned int) height, x + imageXOffset,
+			y + imageYOffset, 1);
+		XSetClipOrigin(butPtr->display, gc, 0, 0);
+	    }
+	    
+	    Tk_DrawTextLayout(butPtr->display, pixmap, gc, butPtr->textLayout,
+		    x + textXOffset, y + textYOffset, 0, -1);
+	    Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
+		    butPtr->textLayout, x + textXOffset, y + textYOffset,
+		    butPtr->underline);
+	    y += fullHeight/2;
 	} else {
-	    XSetClipOrigin(butPtr->display, gc, x, y);
-	    XCopyPlane(butPtr->display, butPtr->bitmap, pixmap, gc, 0, 0,
-		    (unsigned int) width, (unsigned int) height, x, y, 1);
-	    XSetClipOrigin(butPtr->display, gc, 0, 0);
+	    if (haveImage) {
+		TkComputeAnchor(butPtr->anchor, tkwin, 0, 0,
+			butPtr->indicatorSpace + width, height, &x, &y);
+		x += butPtr->indicatorSpace;
+		
+		x += offset;
+		y += offset;
+		if (relief == TK_RELIEF_RAISED) {
+		    x -= offset;
+		    y -= offset;
+		} else if (relief == TK_RELIEF_SUNKEN) {
+		    x += offset;
+		    y += offset;
+		}
+		if (butPtr->image != NULL) {
+		    if ((butPtr->selectImage != NULL) &&
+			    (butPtr->flags & SELECTED)) {
+			Tk_RedrawImage(butPtr->selectImage, 0, 0, width,
+				height,	pixmap, x, y);
+		    } else {
+			Tk_RedrawImage(butPtr->image, 0, 0, width, height,
+				pixmap, x, y);
+		    }
+		} else {
+		    XSetClipOrigin(butPtr->display, gc, x, y);
+		    XCopyPlane(butPtr->display, butPtr->bitmap, pixmap, gc,
+			    0, 0, (unsigned int) width,
+			    (unsigned int) height, x, y, 1);
+		    XSetClipOrigin(butPtr->display, gc, 0, 0);
+		}
+		y += height/2;
+	    } else {
+		TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX,
+			butPtr->padY,
+			butPtr->indicatorSpace + butPtr->textWidth,
+			butPtr->textHeight, &x, &y);
+		
+		x += butPtr->indicatorSpace;
+		
+		Tk_DrawTextLayout(butPtr->display, pixmap, gc,
+			butPtr->textLayout, x, y, 0, -1);
+		y += butPtr->textHeight/2;
+	    }
 	}
-	y += height/2;
-    } else if (butPtr->bitmap != None) {
-	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
-	goto imageOrBitmap;
-    } else {
-	TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
-		butPtr->indicatorSpace + butPtr->textWidth, butPtr->textHeight,
-		&x, &y);
-
-	x += butPtr->indicatorSpace;
-
-	Tk_DrawTextLayout(butPtr->display, pixmap, gc, butPtr->textLayout,
-		x, y, 0, -1);
-	y += butPtr->textHeight/2;
     }
 
     /*
@@ -458,9 +566,9 @@ void
 TkpComputeButtonGeometry(
     TkButton *butPtr)	/* Button whose geometry may have changed. */
 {
-    int width, height, avgWidth;
+    int width, height, avgWidth, haveImage = 0;
+    int txtWidth, txtHeight;
     Tk_FontMetrics fm;
-
 
     /*
      * First figure out the size of the contents of the button.
@@ -469,13 +577,69 @@ TkpComputeButtonGeometry(
     butPtr->indicatorSpace = 0;
     if (butPtr->image != NULL) {
 	Tk_SizeOfImage(butPtr->image, &width, &height);
-	imageOrBitmap:
+	haveImage = 1;
+    } else if (butPtr->bitmap != None) {
+	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
+	haveImage = 1;
+    }
+
+    width = 0;
+    height = 0;
+    txtWidth = 0;
+    txtHeight = 0;
+    avgWidth = 0;
+
+    if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
+	Tk_FreeTextLayout(butPtr->textLayout);
+	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
+		Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
+		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
+
+	txtWidth = butPtr->textWidth;
+	txtHeight = butPtr->textHeight;
+	avgWidth = Tk_TextWidth(butPtr->tkfont, "0", 1);
+	Tk_GetFontMetrics(butPtr->tkfont, &fm);
+	haveText = (txtWidth != 0 && txtHeight != 0);
+    }
+
+    /*
+     * If the button is compound (ie, it shows both an image and text),
+     * the new geometry is a combination of the image and text geometry.
+     * We only honor the compound bit if the button has both text and an
+     * image, because otherwise it is not really a compound button.
+     */
+
+    if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
+	switch ((enum compound) butPtr->compound) {
+	    case COMPOUND_TOP:
+	    case COMPOUND_BOTTOM: {
+		/* Image is above or below text */
+		height += txtHeight + butPtr->padY;
+		width = (width > txtWidth ? width : txtWidth);
+		break;
+	    }
+	    case COMPOUND_LEFT:
+	    case COMPOUND_RIGHT: {
+		/* Image is left or right of text */
+		width += txtWidth + butPtr->padX;
+		height = (height > txtHeight ? height : txtHeight);
+		break;
+	    }
+	    case COMPOUND_CENTER: {
+		/* Image and text are superimposed */
+		width = (width > txtWidth ? width : txtWidth);
+		height = (height > txtHeight ? height : txtHeight);
+		break;
+	    }
+	    case COMPOUND_NONE: {break;}
+	}
 	if (butPtr->width > 0) {
 	    width = butPtr->width;
 	}
 	if (butPtr->height > 0) {
 	    height = butPtr->height;
 	}
+
 	if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
 	    butPtr->indicatorSpace = height;
 	    if (butPtr->type == TYPE_CHECK_BUTTON) {
@@ -484,32 +648,43 @@ TkpComputeButtonGeometry(
 		butPtr->indicatorDiameter = (75*height)/100;
 	    }
 	}
-    } else if (butPtr->bitmap != None) {
-	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
-	goto imageOrBitmap;
+
+	width += 2*butPtr->padX;
+	height += 2*butPtr->padY;
+
     } else {
-	Tk_FreeTextLayout(butPtr->textLayout);
-	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-		Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
-		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
-
-	width = butPtr->textWidth;
-	height = butPtr->textHeight;
-	avgWidth = Tk_TextWidth(butPtr->tkfont, "0", 1);
-	Tk_GetFontMetrics(butPtr->tkfont, &fm);
-
-	if (butPtr->width > 0) {
-	    width = butPtr->width * avgWidth;
-	}
-	if (butPtr->height > 0) {
-	    height = butPtr->height * fm.linespace;
-	}
-	if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-	    butPtr->indicatorDiameter = fm.linespace;
-	    if (butPtr->type == TYPE_CHECK_BUTTON) {
-		butPtr->indicatorDiameter = (80*butPtr->indicatorDiameter)/100;
+	if (haveImage) {
+	    if (butPtr->width > 0) {
+		width = butPtr->width;
 	    }
-	    butPtr->indicatorSpace = butPtr->indicatorDiameter + avgWidth;
+	    if (butPtr->height > 0) {
+		height = butPtr->height;
+	    }
+	    if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
+		butPtr->indicatorSpace = height;
+		if (butPtr->type == TYPE_CHECK_BUTTON) {
+		    butPtr->indicatorDiameter = (65*height)/100;
+		} else {
+		    butPtr->indicatorDiameter = (75*height)/100;
+		}
+	    }
+	} else {
+	    width = txtWidth;
+	    height = txtHeight;
+	    if (butPtr->width > 0) {
+		width = butPtr->width * avgWidth;
+	    }
+	    if (butPtr->height > 0) {
+		height = butPtr->height * fm.linespace;
+	    }
+	    if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
+		butPtr->indicatorDiameter = fm.linespace;
+		if (butPtr->type == TYPE_CHECK_BUTTON) {
+		    butPtr->indicatorDiameter =
+			(80*butPtr->indicatorDiameter)/100;
+		}
+		butPtr->indicatorSpace = butPtr->indicatorDiameter + avgWidth;
+	    }
 	}
     }
 

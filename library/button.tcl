@@ -4,7 +4,7 @@
 # checkbutton, and radiobutton widgets and provides procedures
 # that help in implementing those bindings.
 #
-# RCS: @(#) $Id: button.tcl,v 1.6 1999/09/02 17:02:52 hobbs Exp $
+# RCS: @(#) $Id: button.tcl,v 1.7 2000/05/13 00:39:08 ericm Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -203,6 +203,14 @@ proc tkButtonDown w {
     if {[string compare [$w cget -state] "disabled"]} {
 	set tkPriv(buttonWindow) $w
 	$w configure -relief sunken -state active
+
+	# If this button has a repeatdelay set up, get it going with an after
+	after cancel $tkPriv(afterId)
+	set delay [$w cget -repeatdelay]
+	set tkPriv(repeated) 0
+	if {$delay > 0} {
+	    set tkPriv(afterId) [after $delay [list tkButtonAutoInvoke $w]]
+	}
     }
 }
 
@@ -240,7 +248,12 @@ proc tkButtonUp w {
 	if {[string equal $tkPriv(window) $w]
               && [string compare [$w cget -state] "disabled"]} {
 	    $w configure -state normal
-	    uplevel #0 [list $w invoke]
+
+	    # Only invoke the command if it wasn't already invoked by the
+	    # auto-repeater functionality
+	    if { $tkPriv(repeated) == 0 } {
+		uplevel #0 [list $w invoke]
+	    }
 	}
     }
 }
@@ -308,6 +321,14 @@ proc tkButtonDown w {
     if {[string compare [$w cget -state] "disabled"]} {
 	set tkPriv(buttonWindow) $w
 	$w configure -relief sunken
+
+	# If this button has a repeatdelay set up, get it going with an after
+	after cancel $tkPriv(afterId)
+	set delay [$w cget -repeatdelay]
+	set tkPriv(repeated) 0
+	if {$delay > 0} {
+	    set tkPriv(afterId) [after $delay [list tkButtonAutoInvoke $w]]
+	}
     }
 }
 
@@ -324,9 +345,15 @@ proc tkButtonUp w {
     if {[string equal $w $tkPriv(buttonWindow)]} {
 	set tkPriv(buttonWindow) ""
 	$w configure -relief $tkPriv(relief)
+	after cancel $tkPriv(afterId)
 	if {[string equal $w $tkPriv(window)] \
 		&& [string compare [$w cget -state] "disabled"]} {
-	    uplevel #0 [list $w invoke]
+
+	    # Only invoke the command if it wasn't already invoked by the
+	    # auto-repeater functionality
+	    if { $tkPriv(repeated) == 0 } {
+		uplevel #0 [list $w invoke]
+	    }
 	}
     }
 }
@@ -389,6 +416,14 @@ proc tkButtonDown w {
     if {[string compare [$w cget -state] "disabled"]} {
 	set tkPriv(buttonWindow) $w
 	$w configure -state active
+
+	# If this button has a repeatdelay set up, get it going with an after
+	after cancel $tkPriv(afterId)
+	set delay [$w cget -repeatdelay]
+	set tkPriv(repeated) 0
+	if {$delay > 0} {
+	    set tkPriv(afterId) [after $delay [list tkButtonAutoInvoke $w]]
+	}
     }
 }
 
@@ -407,7 +442,11 @@ proc tkButtonUp w {
 	set tkPriv(buttonWindow) ""
 	if {[string equal $w $tkPriv(window)]
               && [string compare [$w cget -state] "disabled"]} {
-	    uplevel #0 [list $w invoke]
+	    # Only invoke the command if it wasn't already invoked by the
+	    # auto-repeater functionality
+	    if { $tkPriv(repeated) == 0 } {
+		uplevel #0 [list $w invoke]
+	    }
 	}
     }
 }
@@ -434,6 +473,32 @@ proc tkButtonInvoke w {
 	after 100
 	$w configure -state $oldState -relief $oldRelief
 	uplevel #0 [list $w invoke]
+    }
+}
+
+# tkButtonAutoInvoke --
+#
+#	Invoke an auto-repeating button, and set it up to continue to repeat.
+#
+# Arguments:
+#	w	button to invoke.
+#
+# Results:
+#	None.
+#
+# Side effects:
+#	May create an after event to call tkButtonAutoInvoke.
+
+proc tkButtonAutoInvoke {w} {
+    global tkPriv
+    after cancel $tkPriv(afterId)
+    set delay [$w cget -repeatinterval]
+    if { [string equal $tkPriv(window) $w] } {
+	incr tkPriv(repeated)
+	uplevel #0 [list $w invoke]
+    }
+    if {$delay > 0} {
+	set tkPriv(afterId) [after $delay [list tkButtonAutoInvoke $w]]
     }
 }
 

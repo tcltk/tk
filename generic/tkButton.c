@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.5 2000/05/10 00:09:39 ericm Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.6 2000/05/13 00:39:07 ericm Exp $
  */
 
 #include "tkButton.h"
@@ -43,6 +43,15 @@ static char *stateStrings[] = {
 };
 
 /*
+ * The following table defines the legal values for the -compound option.
+ * It is used with the "enum compound" declaration in tkButton.h
+ */
+
+static char *compoundStrings[] = {
+    "bottom", "center", "left", "none", "right", "top", (char *) NULL
+};
+
+/*
  * Information used for parsing configuration options.  There is a
  * separate table for each of the four widget classes.
  */
@@ -63,6 +72,9 @@ static Tk_OptionSpec labelOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_BUTTON_BORDER_WIDTH, Tk_Offset(TkButton, borderWidthPtr),
 	Tk_Offset(TkButton, borderWidth), 0, 0, 0},
+    {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
+	 DEF_BUTTON_COMPOUND, -1, Tk_Offset(TkButton, compound), 0,
+	 (ClientData) compoundStrings, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_BUTTON_CURSOR, -1, Tk_Offset(TkButton, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -149,6 +161,9 @@ static Tk_OptionSpec buttonOptionSpecs[] = {
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_BUTTON_COMMAND, Tk_Offset(TkButton, commandPtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
+	 DEF_BUTTON_COMPOUND, -1, Tk_Offset(TkButton, compound), 0,
+	 (ClientData) compoundStrings, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_BUTTON_CURSOR, -1, Tk_Offset(TkButton, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -192,6 +207,12 @@ static Tk_OptionSpec buttonOptionSpecs[] = {
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_BUTTON_RELIEF, -1, Tk_Offset(TkButton, relief),
 	 TK_OPTION_LINK_OK, 0, 0},
+    {TK_OPTION_INT, "-repeatdelay", "repeatDelay", "RepeatDelay",
+	 DEF_BUTTON_REPEAT_DELAY, -1, Tk_Offset(TkButton, repeatDelay),
+	 0, 0, 0},
+    {TK_OPTION_INT, "-repeatinterval", "repeatInterval", "RepeatInterval",
+	 DEF_BUTTON_REPEAT_INTERVAL, -1, Tk_Offset(TkButton, repeatInterval),
+	 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_BUTTON_STATE, -1, Tk_Offset(TkButton, state),
 	0, (ClientData) stateStrings, 0},
@@ -239,6 +260,9 @@ static Tk_OptionSpec checkbuttonOptionSpecs[] = {
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_BUTTON_COMMAND, Tk_Offset(TkButton, commandPtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
+	 DEF_BUTTON_COMPOUND, -1, Tk_Offset(TkButton, compound), 0,
+	 (ClientData) compoundStrings, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_BUTTON_CURSOR, -1, Tk_Offset(TkButton, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -340,6 +364,9 @@ static Tk_OptionSpec radiobuttonOptionSpecs[] = {
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_BUTTON_COMMAND, Tk_Offset(TkButton, commandPtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
+	 DEF_BUTTON_COMPOUND, -1, Tk_Offset(TkButton, compound), 0,
+	 (ClientData) compoundStrings, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_BUTTON_CURSOR, -1, Tk_Offset(TkButton, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -686,7 +713,7 @@ ButtonCreate(clientData, interp, objc, objv, type)
     butPtr->flags = 0;
 
     Tk_CreateEventHandler(butPtr->tkwin,
-	    ExposureMask|StructureNotifyMask|FocusChangeMask,
+	    ExposureMask|StructureNotifyMask|FocusChangeMask|EnterWindowMask|LeaveWindowMask,
 	    ButtonEventProc, (ClientData) butPtr);
 
     if (Tk_InitOptions(interp, (char *) butPtr, optionTable, tkwin)
@@ -1370,6 +1397,12 @@ ButtonEventProc(clientData, eventPtr)
 		goto redraw;
 	    }
 	}
+    } else if (eventPtr->type == EnterNotify) {
+	butPtr->flags |= MOUSE_IN_BUTTON;
+	goto redraw;
+    } else if (eventPtr->type == LeaveNotify) {
+	butPtr->flags &= ~MOUSE_IN_BUTTON;
+	goto redraw;
     }
     return;
 

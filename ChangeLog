@@ -1,3 +1,31 @@
+2000-05-12  Eric Melski  <ericm@scriptics.com>
+
+	* unix/tkUnixButton.c (TkpDisplayButton, TkpComputeButtonGeometry): 
+	* mac/tkMacButton.c (TkpDisplayButton, TkpComputeButtonGeometry): 
+	* win/tkWinButton.c (TkpDisplayButton, TkpComputeButtonGeometry): 
+	Added code for drawing compound buttons.
+
+	* tests/button.test: Added configuration tests for -repeatdelay,
+	-repeatinterval, -compound.
+
+	* library/button.tcl: Added support for -repeatedelay,
+	-repeatinterval options.
+
+	* generic/tkOldConfig.c: Changed handling of link relief so that
+	proper error messages are used.
+
+	* generic/tkButton.h: Added -compound, -repeatdelay,
+	-repeatinterval options.
+
+	* generic/tkButton.c: Added event watchers for enter/leave events,
+	for link relief support.
+
+	* generic/tk3d.c: Changed handling of link relief so that proper
+	error messages are used.
+
+	* generic/tk.h: Changed values of
+	TK_OPTION_LINK_OK/TK_CONFIG_LINK_OK for link relief support.
+
 2000-05-12  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* win/tkWinFont.c (LoadFontRanges): improved support for all chars
