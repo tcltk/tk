@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"::tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.17.2.2 2002/06/10 05:38:24 wolfsuit Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.17.2.3 2002/08/20 20:27:10 das Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Scriptics Corporation
@@ -107,7 +107,16 @@ proc ::tk::MotifFDialog_Create {dataName type argList} {
     }
     MotifFDialog_SetListMode $w
 
-    wm transient $w $data(-parent)
+    # Dialog boxes should be transient with respect to their parent,
+    # so that they will always stay on top of their parent window.  However,
+    # some window managers will create the window as withdrawn if the parent
+    # window is withdrawn or iconified.  Combined with the grab we put on the
+    # window, this can hang the entire application.  Therefore we only make
+    # the dialog transient if the parent is viewable.
+
+    if {[winfo viewable [winfo toplevel $data(-parent)]] } {
+	wm transient $w $data(-parent)
+    }
 
     MotifFDialog_FileTypes $w
     MotifFDialog_Update $w
@@ -323,7 +332,8 @@ proc ::tk::MotifFDialog_BuildUI {w} {
 
     # The Filter box
     #
-    label $f1.lab -text [mc "Filter:"] -under 3 -anchor w
+    bind [::tk::AmpWidget label $f1.lab -text [mc "Fil&ter:"] -anchor w] \
+	<<AltUnderlined>> [list focus $f1.ent]
     entry $f1.ent
     pack $f1.lab -side top -fill x -padx 6 -pady 4
     pack $f1.ent -side top -fill x -padx 4 -pady 0
@@ -332,13 +342,14 @@ proc ::tk::MotifFDialog_BuildUI {w} {
     # The file and directory lists
     #
     set data(dList) [MotifFDialog_MakeSList $w $f2a \
-	    [mc "Directory:"] 0 DList]
+	    [mc "&Directory:"] DList]
     set data(fList) [MotifFDialog_MakeSList $w $f2b \
-	    [mc "Files:"]     2 FList]
+	    [mc "Fi&les:"]     FList]
 
     # The Selection box
     #
-    label $f3.lab -text [mc "Selection:"] -under 0 -anchor w
+    bind [::tk::AmpWidget label $f3.lab -text [mc "&Selection:"] -anchor w] \
+	<<AltUnderlined>> [list focus $f3.ent]
     entry $f3.ent
     pack $f3.lab -side top -fill x -padx 6 -pady 0
     pack $f3.ent -side top -fill x -padx 4 -pady 4
@@ -346,16 +357,16 @@ proc ::tk::MotifFDialog_BuildUI {w} {
 
     # The buttons
     #
-    set maxWidth [mcmax OK Filter Cancel]
+    set maxWidth [::tk::mcmaxamp &OK &Filter &Cancel]
     set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
-    set data(okBtn) [button $bot.ok -text [mc "OK"] \
-	    -width $maxWidth -under 0 \
+    set data(okBtn) [::tk::AmpWidget button $bot.ok -text [mc "&OK"] \
+	    -width $maxWidth \
 	    -command [list tk::MotifFDialog_OkCmd $w]]
-    set data(filterBtn) [button $bot.filter -text [mc "Filter"] \
-	    -width $maxWidth -under 0 \
+    set data(filterBtn) [::tk::AmpWidget button $bot.filter -text [mc "&Filter"] \
+	    -width $maxWidth \
 	    -command [list tk::MotifFDialog_FilterCmd $w]]
-    set data(cancelBtn) [button $bot.cancel -text [mc "Cancel"] \
-	    -width $maxWidth -under 0 \
+    set data(cancelBtn) [::tk::AmpWidget button $bot.cancel -text [mc "&Cancel"] \
+	    -width $maxWidth \
 	    -command [list tk::MotifFDialog_CancelCmd $w]]
 
     pack $bot.ok $bot.filter $bot.cancel -padx 10 -pady 10 -expand yes \
@@ -363,14 +374,7 @@ proc ::tk::MotifFDialog_BuildUI {w} {
 
     # Create the bindings:
     #
-    bind $w <Alt-t> [list focus $data(fEnt)]
-    bind $w <Alt-d> [list focus $data(dList)]
-    bind $w <Alt-l> [list focus $data(fList)]
-    bind $w <Alt-s> [list focus $data(sEnt)]
-
-    bind $w <Alt-o> [list tk::ButtonInvoke $bot.ok]
-    bind $w <Alt-f> [list tk::ButtonInvoke $bot.filter]
-    bind $w <Alt-c> [list tk::ButtonInvoke $bot.cancel]
+    bind $w <Alt-Key> [list ::tk::AltKeyInDialog $w %A]
 
     bind $data(fEnt) <Return> [list tk::MotifFDialog_ActivateFEnt $w]
     bind $data(sEnt) <Return> [list tk::MotifFDialog_ActivateSEnt $w]
@@ -405,8 +409,9 @@ proc ::tk::MotifFDialog_SetListMode {w} {
 #	cmdPrefix	Specifies procedures to call when the listbox is
 #			browsed or activated.
 
-proc ::tk::MotifFDialog_MakeSList {w f label under cmdPrefix} {
-    label $f.lab -text $label -under $under -anchor w
+proc ::tk::MotifFDialog_MakeSList {w f label cmdPrefix} {
+    bind [::tk::AmpWidget label $f.lab -text $label -anchor w] \
+	<<AltUnderlined>> [list focus $f.l]
     listbox $f.l -width 12 -height 5 -exportselection 0\
 	-xscrollcommand [list $f.h set]	-yscrollcommand [list $f.v set]
     scrollbar $f.v -orient vertical   -takefocus 0 -command [list $f.l yview]

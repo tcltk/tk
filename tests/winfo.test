@@ -6,21 +6,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winfo.test,v 1.5 2000/03/02 23:52:57 hobbs Exp $
+# RCS: @(#) $Id: winfo.test,v 1.5.8.1 2002/08/20 20:27:16 das Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-foreach i [winfo children .] {
-    catch {destroy $i}
-}
-wm geometry . {}
-raise .
-
-# Some tests require the testwrapper command
-set ::tcltest::testConfig(testwrapper) \
-	[expr {[info commands testwrapper] != {}}]
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 # eatColors --
 # Creates a toplevel window and allocates enough colors in it to
@@ -92,8 +85,8 @@ test winfo-2.7 {"winfo atom" command} {
 } SECONDARY
 
 # Some tests require the "pseudocolor" visual class.
-set ::tcltest::testConfig(pseudocolor) \
-	[expr {([winfo depth .] == 8) && ([winfo visual .] == "pseudocolor")}]
+testConstraint pseudocolor [expr { ([winfo depth .] == 8) 
+				&& ([winfo visual .] == "pseudocolor")}]
 
 test winfo-3.1 {"winfo colormapfull" command} {pseudocolor} {
     list [catch {winfo colormapfull} msg] $msg
@@ -247,7 +240,7 @@ test winfo-9.5 {"winfo viewable" command} {
     list [winfo viewable .f1] [winfo viewable .f1.f2]
 } {1 1}
 test winfo-9.6 {"winfo viewable" command} {
-    eval destroy [winfo child .]
+    deleteWindows
     frame .f1 -width 100 -height 100 -relief raised -bd 2
     frame .f1.f2 -width 50 -height 50 -relief raised -bd 2
     place .f1.f2 -x 0 -y 0
@@ -255,7 +248,7 @@ test winfo-9.6 {"winfo viewable" command} {
     list [winfo viewable .f1] [winfo viewable .f1.f2]
 } {0 0}
 test winfo-9.7 {"winfo viewable" command} {
-    eval destroy [winfo child .]
+    deleteWindows
     frame .f1 -width 100 -height 100 -relief raised -bd 2
     place .f1 -x 0 -y 0
     frame .f1.f2 -width 50 -height 50 -relief raised -bd 2
@@ -265,7 +258,7 @@ test winfo-9.7 {"winfo viewable" command} {
     list [winfo viewable .f1] [winfo viewable .f1.f2]
 } {0 0}
 wm deiconify .
-eval destroy [winfo child .]
+deleteWindows
 
 test winfo-10.1 {"winfo visualid" command} {
     list [catch {winfo visualid} msg] $msg
@@ -329,9 +322,7 @@ test winfo-13.2 {destroying embedded toplevel} {
     expr [winfo exists .emb.b] || [winfo exists .con]
 } 0
 
-foreach i [winfo children .] {
-    destroy $i
-}
+deleteWindows
 
 test winfo-13.3 {destroying container window} {
     MakeEmbed
@@ -343,9 +334,7 @@ test winfo-13.3 {destroying container window} {
     set z
 } 0
 
-foreach i [winfo children .] {
-    destroy $i
-}
+deleteWindows
 
 test winfo-13.4 {[winfo containing] with embedded windows} {
     MakeEmbed
@@ -360,10 +349,28 @@ test winfo-13.4 {[winfo containing] with embedded windows} {
     set z
 } 0
 
-foreach i [winfo children .] {
-    catch {destroy $i}
-}
+test winfo-14.1 {usage} {
+    list [catch {winfo ismapped} msg] $msg
+} {1 {wrong # args: should be "winfo ismapped window"}}
 
+test winfo-14.2 {usage} {
+    list [catch {winfo ismapped . .} msg] $msg
+} {1 {wrong # args: should be "winfo ismapped window"}}
+
+test winfo-14.3 {initially unmapped} {
+    catch {destroy .t}
+    toplevel .t
+    winfo ismapped .t
+} 0
+
+test winfo-14.4 {mapped at idle time} {
+    catch {destroy .t}
+    toplevel .t
+    update idletasks
+    winfo ismapped .t
+} 1
+
+deleteWindows
 # cleanup
 ::tcltest::cleanupTests
 return

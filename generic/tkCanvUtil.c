@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvUtil.c,v 1.5.8.1 2002/02/05 02:25:14 wolfsuit Exp $
+ * RCS: @(#) $Id: tkCanvUtil.c,v 1.5.8.2 2002/08/20 20:27:02 das Exp $
  */
 
 #include "tkInt.h"
@@ -369,7 +369,7 @@ Tk_CanvasTagsParseProc(clientData, interp, tkwin, value, widgRec, offset)
     ClientData clientData;		/* Not used.*/
     Tcl_Interp *interp;			/* Used for reporting errors. */
     Tk_Window tkwin;			/* Window containing canvas widget. */
-    char *value;			/* Value of option (list of tag
+    CONST char *value;			/* Value of option (list of tag
 					 * names). */
     char *widgRec;			/* Pointer to record for item. */
     int offset;				/* Offset into item (ignored). */
@@ -706,7 +706,14 @@ TkSmoothParseProc(clientData, interp, tkwin, value, widgRec, offset)
     if (smooth) {
 	*smoothPtr = smooth;
 	return TCL_OK;
+    } else if (strncmp(value, tkBezierSmoothMethod.name, length) == 0) {
+	/*
+	 * We need to do handle the built-in bezier method.
+	 */
+	*smoothPtr = &tkBezierSmoothMethod;
+	return TCL_OK;
     }
+
 
     if (Tcl_GetBoolean(interp, (char *) value, &b) != TCL_OK) {
 	return TCL_ERROR;

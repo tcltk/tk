@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.h,v 1.8 2000/11/22 01:49:37 ericm Exp $
+ * RCS: @(#) $Id: tkButton.h,v 1.8.4.1 2002/08/20 20:27:01 das Exp $
  */
 
 #ifndef _TKBUTTON
@@ -120,6 +120,11 @@ typedef struct {
 				 * effect for the border, such as
 				 * TK_RELIEF_RAISED, to be used when the mouse
 				 * is over the button. */
+    int offRelief;		/* Value of -offrelief option: specifies a 3-d
+				 * effect for the border, such as
+				 * TK_RELIEF_RAISED, to be used when a
+				 * checkbutton or radiobutton without 
+				 * indicator is off */
     Tcl_Obj *highlightWidthPtr;	/* Value of -highlightthickness option:
 				 * specifies width in pixels of highlight to
 				 * draw around widget when it has the focus.

@@ -10,22 +10,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkAppInit.c,v 1.5 1999/12/02 02:05:39 redman Exp $
+ * RCS: @(#) $Id: tkAppInit.c,v 1.5.8.1 2002/08/20 20:27:18 das Exp $
  */
 
 #include "tk.h"
 #include "locale.h"
 
-/*
- * The following variable is a special hack that is needed in order for
- * Sun shared libraries to be used for Tcl.
- */
-
-extern int matherr();
-int *tclDummyMathPtr = (int *) matherr;
-
 #ifdef TK_TEST
-extern int		Tcltest_Init _ANSI_ARGS_((Tcl_Interp *interp));
 extern int		Tktest_Init _ANSI_ARGS_((Tcl_Interp *interp));
 #endif /* TK_TEST */
 
@@ -109,11 +100,6 @@ Tcl_AppInit(interp)
     }
     Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
 #ifdef TK_TEST
-    if (Tcltest_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-    Tcl_StaticPackage(interp, "Tcltest", Tcltest_Init,
-            (Tcl_PackageInitProc *) NULL);
     if (Tktest_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }

@@ -7,25 +7,18 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: image.test,v 1.6 2000/11/29 15:47:05 dkf Exp $
+# RCS: @(#) $Id: image.test,v 1.6.4.1 2002/08/20 20:27:14 das Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
-if {[lsearch [image types] test] < 0} {
-    puts "This application hasn't been compiled with the \"test\" image"
-    puts "type, so I can't run this test.  Are you sure you're using"
-    puts "tktest instead of wish?"
-    ::tcltest::cleanupTests
-    return
-}
-
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
+namespace import -force tcltest::interpreter
+namespace import -force tcltest::makeFile
+namespace import -force tcltest::removeFile
 
 eval image delete [image names]
 canvas .c -highlightthickness 2
@@ -43,16 +36,16 @@ test image-1.3 {Tk_ImageCmd procedure, "create" option} {
 test image-1.4 {Tk_ImageCmd procedure, "create" option} {
     list [catch {image c bad_type} msg] $msg
 } {1 {image type "bad_type" doesn't exist}}
-test image-1.5 {Tk_ImageCmd procedure, "create" option} {
+test image-1.5 {Tk_ImageCmd procedure, "create" option} testImageType {
     list [image create test myimage] [image names]
 } {myimage myimage}
-test image-1.6 {Tk_ImageCmd procedure, "create" option} {
+test image-1.6 {Tk_ImageCmd procedure, "create" option} testImageType {
     scan [image create test] image%d first
     image create test myimage
     scan [image create test -variable x] image%d second
     expr $second-$first
 } {1}
-test image-1.7 {Tk_ImageCmd procedure, "create" option} {
+test image-1.7 {Tk_ImageCmd procedure, "create" option} testImageType {
     image delete myimage
     image create test myimage -variable x
     .c create image 100 50 -image myimage
@@ -63,7 +56,7 @@ test image-1.7 {Tk_ImageCmd procedure, "create" option} {
     update
     set x
 } {{myimage free} {myimage free} {myimage delete} {myimage get} {myimage get} {myimage display 0 0 30 15 30 30} {myimage display 0 0 30 15 30 130}}
-test image-1.8 {Tk_ImageCmd procedure, "create" option} {
+test image-1.8 {Tk_ImageCmd procedure, "create" option} testImageType {
     .c delete all
     image create test myimage -variable x
     .c create image 100 50 -image myimage
@@ -75,22 +68,19 @@ test image-1.8 {Tk_ImageCmd procedure, "create" option} {
     update
     set x
 } {{myimage get} {myimage get} {myimage display 0 0 30 15 30 30} {myimage display 0 0 30 15 30 130}}
-test image-1.9 {Tk_ImageCmd procedure, "create" option} {
+test image-1.9 {Tk_ImageCmd procedure, "create" option} testImageType {
     .c delete all
     eval image delete [image names]
     list [catch {image create test -badName foo} msg] $msg [image names]
 } {1 {bad option name "-badName"} {}}
 test image-1.10 {Tk_ImageCmd procedure, "create" option with "." as name} {
-    catch {removeFile script}
-    set fd [open script w]
-    puts $fd {
+    set script [makeFile {
 	update
 	puts [list [catch {image create photo .} msg] $msg]
 	exit
-    }
-    close $fd
-    set x [list [catch {exec $::tcltest::tktest <script} msg] $msg]
-    file delete -force script
+    } script]
+    set x [list [catch {exec [interpreter] <$script} msg] $msg]
+    removeFile script
     set x
 } {0 {1 {this isn't a Tk applicationNULL main window}}}
 # I don't like the error message!
@@ -98,7 +88,7 @@ test image-1.10 {Tk_ImageCmd procedure, "create" option with "." as name} {
 test image-2.1 {Tk_ImageCmd procedure, "delete" option} {
     list [catch {image delete} msg] $msg
 } {0 {}}
-test image-2.2 {Tk_ImageCmd procedure, "delete" option} {
+test image-2.2 {Tk_ImageCmd procedure, "delete" option} testImageType {
     .c delete all
     eval image delete [image names]
     image create test myimage
@@ -108,7 +98,7 @@ test image-2.2 {Tk_ImageCmd procedure, "delete" option} {
     image d myimage img2
     lappend result [image names]
 } {{img2 myimage} {}}
-test image-2.3 {Tk_ImageCmd procedure, "delete" option} {
+test image-2.3 {Tk_ImageCmd procedure, "delete" option} testImageType {
     .c delete all
     eval image delete [image names]
     image create test myimage
@@ -125,7 +115,7 @@ test image-3.2 {Tk_ImageCmd procedure, "height" option} {
 test image-3.3 {Tk_ImageCmd procedure, "height" option} {
     list [catch {image height foo} msg] $msg
 } {1 {image "foo" doesn't exist}}
-test image-3.4 {Tk_ImageCmd procedure, "height" option} {
+test image-3.4 {Tk_ImageCmd procedure, "height" option} testImageType {
     image create test myimage
     set x [image h myimage]
     myimage changed 0 0 0 0 60 50
@@ -135,7 +125,7 @@ test image-3.4 {Tk_ImageCmd procedure, "height" option} {
 test image-4.1 {Tk_ImageCmd procedure, "names" option} {
     list [catch {image names x} msg] $msg
 } {1 {wrong # args: should be "image names"}}
-test image-4.2 {Tk_ImageCmd procedure, "names" option} {
+test image-4.2 {Tk_ImageCmd procedure, "names" option} testImageType {
     .c delete all
     eval image delete [image names]
     image create test myimage
@@ -158,11 +148,11 @@ test image-5.2 {Tk_ImageCmd procedure, "type" option} {
 test image-5.3 {Tk_ImageCmd procedure, "type" option} {
     list [catch {image type foo} msg] $msg
 } {1 {image "foo" doesn't exist}}
-test image-5.4 {Tk_ImageCmd procedure, "type" option} {
+test image-5.4 {Tk_ImageCmd procedure, "type" option} testImageType {
     image create test myimage
     image type myimage
 } {test}
-test image-5.5 {Tk_ImageCmd procedure, "type" option} {
+test image-5.5 {Tk_ImageCmd procedure, "type" option} testImageType {
     image create test myimage
     .c create image 50 50 -image myimage
     image delete myimage
@@ -172,7 +162,7 @@ test image-5.5 {Tk_ImageCmd procedure, "type" option} {
 test image-6.1 {Tk_ImageCmd procedure, "types" option} {
     list [catch {image types x} msg] $msg
 } {1 {wrong # args: should be "image types"}}
-test image-6.2 {Tk_ImageCmd procedure, "types" option} {
+test image-6.2 {Tk_ImageCmd procedure, "types" option} testImageType {
     lsort [image types]
 } {bitmap photo test}
 
@@ -185,14 +175,14 @@ test image-7.2 {Tk_ImageCmd procedure, "width" option} {
 test image-7.3 {Tk_ImageCmd procedure, "width" option} {
     list [catch {image width foo} msg] $msg
 } {1 {image "foo" doesn't exist}}
-test image-7.4 {Tk_ImageCmd procedure, "width" option} {
+test image-7.4 {Tk_ImageCmd procedure, "width" option} testImageType {
     image create test myimage
     set x [image w myimage]
     myimage changed 0 0 0 0 60 50
     list $x [image width myimage]
 } {30 60}
 
-test image-8.1 {Tk_ImageCmd procedure, "inuse" option} {
+test image-8.1 {Tk_ImageCmd procedure, "inuse" option} testImageType {
     catch {image delete myimage2}
     image create test myimage2
     set res {}
@@ -206,7 +196,7 @@ test image-8.1 {Tk_ImageCmd procedure, "inuse" option} {
 } [list 0 1]
     
 
-test image-9.1 {Tk_ImageChanged procedure} {
+test image-9.1 {Tk_ImageChanged procedure} testImageType {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -217,7 +207,7 @@ test image-9.1 {Tk_ImageChanged procedure} {
     update
     set x
 } {{foo display 5 6 7 8 30 30}}
-test image-9.2 {Tk_ImageChanged procedure} {
+test image-9.2 {Tk_ImageChanged procedure} testImageType {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -233,7 +223,7 @@ test image-9.2 {Tk_ImageChanged procedure} {
 test image-10.1 {Tk_GetImage procedure} {
     list [catch {.c create image 100 10 -image bad_name} msg] $msg
 } {1 {image "bad_name" doesn't exist}}
-test image-10.2 {Tk_GetImage procedure} {
+test image-10.2 {Tk_GetImage procedure} testImageType {
     image create test mytest
     catch {destroy .l}
     label .l -image mytest
@@ -243,7 +233,7 @@ test image-10.2 {Tk_GetImage procedure} {
     set result
 } {1 {image "mytest" doesn't exist}}
 
-test image-11.1 {Tk_FreeImage procedure} {
+test image-11.1 {Tk_FreeImage procedure} testImageType {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -257,7 +247,7 @@ test image-11.1 {Tk_FreeImage procedure} {
     update
     list [image names] $x
 } {foo {{foo free} {foo display 0 0 30 15 103 121}}}
-test image-11.2 {Tk_FreeImage procedure} {
+test image-11.2 {Tk_FreeImage procedure} testImageType {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -276,7 +266,7 @@ test image-11.2 {Tk_FreeImage procedure} {
 # Non-portable, apparently due to differences in rounding:
 
 test image-12.1 {Tk_RedrawImage procedure, redisplay area clipping} \
-	{nonPortable} {
+	{testImageType nonPortable} {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -288,7 +278,7 @@ test image-12.1 {Tk_RedrawImage procedure, redisplay area clipping} \
     set x
 } {{foo display 0 0 5 5 50 50}}
 test image-12.2 {Tk_RedrawImage procedure, redisplay area clipping} \
-	{nonPortable} {
+	{testImageType nonPortable} {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -300,7 +290,7 @@ test image-12.2 {Tk_RedrawImage procedure, redisplay area clipping} \
     set x
 } {{foo display 10 0 20 5 30 50}}
 test image-12.3 {Tk_RedrawImage procedure, redisplay area clipping} \
-	{nonPortable} {
+	{testImageType nonPortable} {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -312,7 +302,7 @@ test image-12.3 {Tk_RedrawImage procedure, redisplay area clipping} \
     set x
 } {{foo display 10 10 20 5 30 30}}
 test image-12.4 {Tk_RedrawImage procedure, redisplay area clipping} \
-	{nonPortable} {
+	{testImageType nonPortable} {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -324,7 +314,7 @@ test image-12.4 {Tk_RedrawImage procedure, redisplay area clipping} \
     set x
 } {{foo display 0 10 5 5 50 30}}
 test image-12.5 {Tk_RedrawImage procedure, redisplay area clipping} \
-	{nonPortable} {
+	{testImageType nonPortable} {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -336,7 +326,7 @@ test image-12.5 {Tk_RedrawImage procedure, redisplay area clipping} \
     set x
 } {{foo display 0 0 30 15 70 70}}
 test image-12.6 {Tk_RedrawImage procedure, redisplay area clipping} \
-	{nonPortable} {
+	{testImageType nonPortable} {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -348,7 +338,7 @@ test image-12.6 {Tk_RedrawImage procedure, redisplay area clipping} \
     set x
 } {{foo display 5 5 20 5 30 30}}
 
-test image-13.1 {Tk_SizeOfImage procedure} {
+test image-13.1 {Tk_SizeOfImage procedure} testImageType {
     eval image delete [image names]
     image create test foo -variable x
     set result [list [image width foo] [image height foo]]
@@ -356,7 +346,7 @@ test image-13.1 {Tk_SizeOfImage procedure} {
     lappend result [image width foo] [image height foo]
 } {30 15 85 60}
 
-test image-13.2 {DeleteImage procedure} {
+test image-13.2 {DeleteImage procedure} testImageType {
     .c delete all
     eval image delete [image names]
     image create test foo -variable x
@@ -385,6 +375,5 @@ destroy .c
 eval image delete [image names]
 
 # cleanup
-catch {removeFile script}
 ::tcltest::cleanupTests
 return

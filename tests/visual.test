@@ -7,17 +7,15 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: visual.test,v 1.3 1999/04/16 01:51:43 stanton Exp $
+# RCS: @(#) $Id: visual.test,v 1.3.18.1 2002/08/20 20:27:16 das Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
 update
 
 # eatColors --
@@ -272,9 +270,7 @@ if {([winfo visual .] == "pseudocolor") && ([winfo depth .] == 8)} {
 }
 
 test visual-8.1 {Tk_FreeColormap procedure} {
-    foreach w [winfo child .] {
-	destroy $w
-    }
+    deleteWindows
     toplevel .t1 -width 300 -height 180 -colormap new
     wm geometry .t1 +0+0
     foreach i {.t2 .t3 .t4} {
@@ -288,9 +284,7 @@ test visual-8.1 {Tk_FreeColormap procedure} {
 } {}
 if {$other != {}} {
     test visual-8.2 {Tk_FreeColormap procedure} {
-	foreach w [winfo child .] {
-	    destroy $w
-	}
+	deleteWindows
 	toplevel .t1 -width 300 -height 180 -visual $other
 	wm geometry .t1 +0+0
 	foreach i {.t2 .t3 .t4} {
@@ -304,9 +298,7 @@ if {$other != {}} {
     } {}
 }
 
-foreach w [winfo child .] {
-    destroy $w
-}
+deleteWindows
 rename eatColors {}
 rename colorsFree {}
 

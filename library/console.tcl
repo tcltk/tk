@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.13.2.3 2002/06/10 05:38:24 wolfsuit Exp $
+# RCS: @(#) $Id: console.tcl,v 1.13.2.4 2002/08/20 20:27:09 das Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -14,7 +14,6 @@
 #
 
 # TODO: history - remember partially written command
-package require msgcat
 
 namespace eval ::tk::console {
     variable blinkTime   500 ; # msecs to blink braced range for
@@ -26,10 +25,11 @@ namespace eval ::tk::console {
     variable inPlugin [info exists embed_args]
     variable defaultPrompt  ; # default prompt if tcl_prompt1 isn't used
 
+
     if {$inPlugin} {
-	set defaultPrompt {subst "[history nextid] % "}
+	set defaultPrompt {subst {[history nextid] % }}
     } else {
-	set defaultPrompt {subst "([file tail [pwd]]) [history nextid] % "}
+	set defaultPrompt {subst {([file tail [pwd]]) [history nextid] % }}
     }
 }
 
@@ -64,7 +64,7 @@ proc ::tk::ConsoleInit {} {
     .menubar.file add command -label [mc "Source..."] \
 	    -underline 0 -command tk::ConsoleSource
     .menubar.file add command -label [mc "Hide Console"] \
-	    -underline 0  -command {wm withdraw .}
+	    -underline 0 -command {wm withdraw .}
     .menubar.file add command -label [mc "Clear Console"] \
 	    -underline 0 -command {.console delete 1.0 "promptEnd linestart"}
    if {[string equal $tcl_platform(platform) "macintosh"]
@@ -320,6 +320,7 @@ proc ::tk::ConsoleBind {w} {
 	<<Console_PrevSearch>>		<Control-Key-r>
 	<<Console_NextSearch>>		<Control-Key-s>
 
+	<<Console_Expand>>		<Key-Tab>
 	<<Console_Expand>>		<Key-Escape>
 	<<Console_ExpandFile>>		<Control-Shift-Key-F>
 	<<Console_ExpandProc>>		<Control-Shift-Key-P>
@@ -339,11 +340,6 @@ proc ::tk::ConsoleBind {w} {
 	bind Console $key {}
     }
 
-    bind Console <Tab> {
-	tk::ConsoleInsert %W \t
-	focus %W
-	break
-    }
     bind Console <<Console_Expand>> {
 	if {[%W compare insert > promptEnd]} {::tk::console::Expand %W}
     }

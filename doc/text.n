@@ -5,10 +5,10 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.9.2.1 2002/02/05 02:25:14 wolfsuit Exp $
+'\" RCS: @(#) $Id: text.n,v 1.9.2.2 2002/08/20 20:27:00 das Exp $
 '\" 
 .so man.macros
-.TH text n 4.0 Tk "Tk Built-In Commands"
+.TH text n 8.4 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
@@ -32,7 +32,7 @@ text, tk_textCopy, tk_textCut, tk_textPaste \- Create and manipulate text widget
 \-highlightcolor	\-pady	\-yscrollcommand
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
-.OP \-autoseparators autoSseparators AutoSeparators
+.OP \-autoseparators autoSeparators AutoSeparators
 .VS 8.4
 Specifies a boolean that says whether separators are automatically
 inserted in the undo stack. Only meaningful when the \fB\-undo\fR
@@ -42,6 +42,11 @@ option is true.
 Specifies the desired height for the window, in units of characters
 in the font given by the \fB\-font\fR option.
 Must be at least one.
+.OP \-maxundo maxUndo MaxUndo
+.VS 8.4
+Specifies the maximum number of compound undo actions on the undo
+stack. A zero or a negative value imply an unlimited undo stack.
+.VE 8.4
 .OP \-spacing1 spacing1 Spacing1
 Requests additional space above each text line in the widget,
 using any of the standard forms for screen distances.
@@ -732,7 +737,7 @@ more details.
 .VS 8.4
 The text widget has an unlimited undo and redo mechanism (when the
 \fB-undo\fR widget option is true) which records every insert and
-delete action is recorded on a stack.
+delete action on a stack.
 .PP
 Boundaries (called "separators") are inserted between edit actions.
 The purpose of these separators is to group inserts and deletes into
@@ -746,13 +751,13 @@ under control.
 Separators are inserted automatically when the \fB-autoseparators\fR
 widget option is true.  You can insert separators programatically as
 well.  If a separator is already present at the top of the undo stack
-no other will inserted.  That means that two separators on the undo
+no other will be inserted.  That means that two separators on the undo
 stack are always separated by at least one insert or delete action.
 .PP
 The undo mechanism is also linked to the modified flag.  This means
 that undoing or redoing changes can take a modified text widget back
 to the unmodified state or vice versa.  The modified flag will be set
-to automatically to the appropriate state.  This automatic coupling
+automatically to the appropriate state.  This automatic coupling
 does not work when the modified flag has been set by the user, until
 the flag has been reset again.
 .PP
@@ -838,7 +843,7 @@ to the lists of indices that are redrawn.  The values of these variables
 are tested by Tk's test suite.
 .VE 8.4
 .TP
-\fIpathName \fBdelete \fIindex1 \fR?\fIindex2\fR?
+\fIpathName \fBdelete \fIindex1 \fR?\fIindex2 ...\fR?
 Delete a range of characters from the text.
 If both \fIindex1\fR and \fIindex2\fR are specified, then delete
 all the characters starting with the one given by \fIindex1\fR
@@ -851,6 +856,16 @@ If \fIindex2\fR isn't specified then the single character at
 It is not allowable to delete characters in a way that would leave
 the text without a newline as the last character.
 The command returns an empty string.
+.VS 8.4
+If more indices are given, multiple ranges of text will be deleted.
+All indices are first checked for validity before any deletions are made.
+They are sorted and the text is removed from the last range to the
+first range to deleted text does not cause a undesired index shifting
+side-effects.  If multiple ranges with the same start index are given,
+then the longest range is used.  If overlapping ranges are given, then
+they will be merged into spans that do not cause deletion of text
+outside the given ranges due to text shifted during deletion.
+.VE 8.4
 .TP
 \fIpathName \fBdlineinfo \fIindex\fR
 Returns a list with five elements describing the area occupied
@@ -964,7 +979,7 @@ option is false.
 .RE
 .VE 8.4
 .TP
-\fIpathName \fBget \fIindex1 \fR?\fIindex2\fR?
+\fIpathName \fBget \fIindex1 \fR?\fIindex2 ...\fR?
 Return a range of characters from the text.
 The return value will be all the characters in the text starting
 with the one whose index is \fIindex1\fR and ending just before
@@ -977,6 +992,11 @@ is past the end of the file or \fIindex2\fR is less than or equal
 to \fIindex1\fR) then an empty string is returned.
 If the specified range contains embedded windows, no information
 about them is included in the returned string.
+.VS 8.4
+If multiple index pairs are given, multiple ranges of text will be returned
+in a list.  Invalid ranges will not be represented with empty strings in
+the list.  The ranges are returned in the order passed to \fBget\fR.
+.VE 8.4
 .TP
 \fIpathName \fBimage \fIoption \fR?\fIarg arg ...\fR?
 This command is used to manipulate embedded images.

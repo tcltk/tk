@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.16.2.1 2002/02/05 02:25:18 wolfsuit Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.16.2.2 2002/08/20 20:27:19 das Exp $
  */
 
 #define OEMRESOURCE
@@ -1240,16 +1240,15 @@ TkpSetWindowMenuBar(tkwin, menuPtr)
 	Tcl_SetHashValue(hashEntryPtr, (char *) menuPtr);
 	menuPtr->platformData = (TkMenuPlatformData) winMenuHdl;
 	TkWinSetMenu(tkwin, winMenuHdl);
-	if (menuPtr->menuFlags & MENU_RECONFIGURE_PENDING) {
-	    Tcl_DoWhenIdle(ReconfigureWindowsMenu, (ClientData) menuPtr);
+	if (!(menuPtr->menuFlags & MENU_RECONFIGURE_PENDING)) {
 	    menuPtr->menuFlags |= MENU_RECONFIGURE_PENDING;
+	    Tcl_DoWhenIdle(ReconfigureWindowsMenu, (ClientData) menuPtr);
 	}
     } else {
 	TkWinSetMenu(tkwin, NULL);
     }
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -2744,8 +2743,8 @@ MenuExitHandler(
 Tcl_Obj *
 TkWinGetMenuSystemDefault(
     Tk_Window tkwin,		/* A window to use. */
-    char *dbName,		/* The option database name. */
-    char *className)		/* The name of the option class. */
+    CONST char *dbName,		/* The option database name. */
+    CONST char *className)	/* The name of the option class. */
 {
     Tcl_Obj *valuePtr = NULL;
 

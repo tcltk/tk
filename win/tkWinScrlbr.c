@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinScrlbr.c,v 1.7 2000/11/22 01:49:38 ericm Exp $
+ * RCS: @(#) $Id: tkWinScrlbr.c,v 1.7.4.1 2002/08/20 20:27:19 das Exp $
  */
 
 #include "tkWinInt.h"
@@ -242,7 +242,7 @@ CreateProc(tkwin, parentWin, instanceData)
 
     for (winPtr = ((TkWindow*)tkwin)->nextPtr; winPtr != NULL;
 	 winPtr = winPtr->nextPtr) {
-	if ((winPtr->window != None) && !(winPtr->flags & TK_TOP_LEVEL)) {
+	if ((winPtr->window != None) && !(winPtr->flags & TK_TOP_HIERARCHY)) {
 	    TkWinSetWindowPos(scrollPtr->hwnd, Tk_GetHWND(winPtr->window),
 		    Below);
 	    break;

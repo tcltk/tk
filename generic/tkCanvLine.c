@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.9.2.1 2002/02/05 02:25:14 wolfsuit Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.9.2.2 2002/08/20 20:27:01 das Exp $
  */
 
 #include <stdio.h>
@@ -496,8 +496,8 @@ ConfigureLine(interp, canvas, itemPtr, objc, objv, flags)
     Tk_State state;
 
     tkwin = Tk_CanvasTkwin(canvas);
-    if (Tk_ConfigureWidget(interp, tkwin, configSpecs, objc, (char **) objv,
-	    (char *) linePtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
+    if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
+	    (CONST char **) objv, (char *) linePtr, flags|TK_CONFIG_OBJS)) {
 	return TCL_ERROR;
     }
 

@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.17.2.3 2002/06/10 05:38:24 wolfsuit Exp $
-# $Id: bgerror.tcl,v 1.17.2.3 2002/06/10 05:38:24 wolfsuit Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.17.2.4 2002/08/20 20:27:09 das Exp $
+# $Id: bgerror.tcl,v 1.17.2.4 2002/08/20 20:27:09 das Exp $
 
 namespace eval ::tk {
     namespace eval dialog {
@@ -140,9 +140,6 @@ proc ::tk::dialog::error::bgerror err {
     wm iconname .bgerrorDialog ErrorDialog
     wm protocol .bgerrorDialog WM_DELETE_WINDOW { }
 
-    # The following, though surprising, works.
-    wm transient .bgerrorDialog .bgerrorDialog
-
     if {($tcl_platform(platform) eq "macintosh") 
             || ($tcl_platform(windowingsystem) eq "aqua")} {
 	::tk::unsupported::MacWindowStyle style .bgerrorDialog dBoxProc
@@ -179,7 +176,13 @@ proc ::tk::dialog::error::bgerror err {
 
     # 2. Fill the top part with bitmap and message
 
-    label .bgerrorDialog.msg -justify left -text $text -font $messageFont
+    # Max-width of message is the width of the screen...
+    set wrapwidth [winfo screenwidth .bgerrorDialog]
+    # ...minus the width of the icon, padding and a fudge factor for
+    # the window manager decorations and aesthetics.
+    set wrapwidth [expr {$wrapwidth-60-[winfo pixels .bgerrorDialog 9m]}]
+    label .bgerrorDialog.msg -justify left -text $text -font $messageFont \
+	    -wraplength $wrapwidth
     if {($tcl_platform(platform) eq "macintosh")
             || ($tcl_platform(windowingsystem) eq "aqua")} {
 	# On the Macintosh, use the stop bitmap
@@ -196,9 +199,9 @@ proc ::tk::dialog::error::bgerror err {
 	    -row 0			\
 	    -padx 3m			\
 	    -pady 3m
-    grid configure		.bgerrorDialog.msg -sticky nsw
-    grid rowconfigure		.bgerrorDialog.top 1 -weight 1
-    grid columnconfigure	.bgerrorDialog.top 1 -weight 1
+    grid configure	 .bgerrorDialog.msg -sticky nsw -padx {0 3m}
+    grid rowconfigure	 .bgerrorDialog.top 1 -weight 1
+    grid columnconfigure .bgerrorDialog.top 1 -weight 1
 
     # 3. Create a row of buttons at the bottom of the dialog.
 

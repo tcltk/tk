@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixCursor.c,v 1.4.18.1 2002/02/05 02:25:18 wolfsuit Exp $
+ * RCS: @(#) $Id: tkUnixCursor.c,v 1.4.18.2 2002/08/20 20:27:18 das Exp $
  */
 
 #include "tkPort.h"
@@ -352,8 +352,8 @@ TkCursor *
 TkCreateCursorFromData(tkwin, source, mask, width, height, xHot, yHot,
 	fgColor, bgColor)
     Tk_Window tkwin;		/* Window in which cursor will be used. */
-    char *source;		/* Bitmap data for cursor shape. */
-    char *mask;			/* Bitmap data for cursor mask. */
+    CONST char *source;		/* Bitmap data for cursor shape. */
+    CONST char *mask;		/* Bitmap data for cursor mask. */
     int width, height;		/* Dimensions of cursor. */
     int xHot, yHot;		/* Location of hot-spot in cursor. */
     XColor fgColor;		/* Foreground color for cursor. */

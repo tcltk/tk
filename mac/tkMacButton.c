@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacButton.c,v 1.14.4.1 2002/02/05 02:25:16 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacButton.c,v 1.14.4.2 2002/08/20 20:27:10 das Exp $
  */
 
 #include "tkButton.h"
@@ -228,7 +228,7 @@ TkpDisplayButton(
     if ((butPtr->type >= TYPE_CHECK_BUTTON) && !butPtr->indicatorOn) { 
 	if (!TkMacHaveAppearance() || !hasImageOrBitmap) {
 	    relief = (butPtr->flags & SELECTED) ? TK_RELIEF_SUNKEN
-		: TK_RELIEF_RAISED;
+		: butPtr->offRelief;
 	}
     }
 

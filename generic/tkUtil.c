@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.11 2001/09/26 20:25:17 pspjuth Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.11.2.1 2002/08/20 20:27:09 das Exp $
  */
 
 #include "tkInt.h"
@@ -630,7 +630,7 @@ int
 Tk_GetScrollInfo(interp, argc, argv, dblPtr, intPtr)
     Tcl_Interp *interp;			/* Used for error reporting. */
     int argc;				/* # arguments for command. */
-    char **argv;			/* Arguments for command. */
+    CONST char **argv;			/* Arguments for command. */
     double *dblPtr;			/* Filled in with argument "moveto"
 					 * option, if any. */
     int *intPtr;			/* Filled in with number of pages

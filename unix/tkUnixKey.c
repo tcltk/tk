@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixKey.c,v 1.5.8.1 2002/06/10 05:38:27 wolfsuit Exp $
+ * RCS: @(#) $Id: tkUnixKey.c,v 1.5.8.2 2002/08/20 20:27:18 das Exp $
  */
 
 #include "tkInt.h"
@@ -17,10 +17,6 @@
 /*
  * Prototypes for local procedures defined in this file:
  */
-
-#ifdef TK_USE_INPUT_METHODS
-static int caretX = 0, caretY = 0;
-#endif
 
 
 /*
@@ -31,6 +27,7 @@ static int caretX = 0, caretY = 0;
  *	This enables correct placement of the XIM caret.  This is called
  *	by widgets to indicate their cursor placement, and the caret
  *	location is used by TkpGetString to place the XIM caret.
+ *	This is currently only used for over-the-spot XIM.
  *
  * Results:
  *	None
@@ -48,13 +45,16 @@ Tk_SetCaretPos(tkwin, x, y, height)
     int	      y;
     int	      height;
 {
-#ifdef TK_USE_INPUT_METHODS
+    TkCaret *caretPtr = &(((TkWindow *) tkwin)->dispPtr->caret);
+
     /*
      * Use height for best placement of the XIM over-the-spot box.
      */
-    caretX = x;
-    caretY = y + height;
-#endif
+
+    caretPtr->winPtr = ((TkWindow *) tkwin);
+    caretPtr->x = x;
+    caretPtr->y = y;
+    caretPtr->height = height;
 }
 
 /*
@@ -86,6 +86,9 @@ TkpGetString(winPtr, eventPtr, dsPtr)
     int len;
     Tcl_DString buf;
     Status status;
+#ifdef TK_USE_INPUT_METHODS
+    TkDisplay *dispPtr = winPtr->dispPtr;
+#endif
 
     /*
      * Overallocate the dstring to the maximum stack amount.
@@ -95,7 +98,7 @@ TkpGetString(winPtr, eventPtr, dsPtr)
     Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
 
 #ifdef TK_USE_INPUT_METHODS
-    if (winPtr->dispPtr->useInputMethods
+    if ((dispPtr->flags & TK_DISPLAY_USE_IM)
 	    && (winPtr->inputContext != NULL)
 	    && (eventPtr->type == KeyPress)) {
 #if TK_XIM_SPOT
@@ -121,13 +124,17 @@ TkpGetString(winPtr, eventPtr, dsPtr)
 
 #if TK_XIM_SPOT
 	/*
-	 * Adjust the XIM caret position.
+	 * Adjust the XIM caret position.  We might want to check that
+	 * this is the right caret.winPtr as well.
 	 */
-	spot.x = caretX; spot.y = caretY;
-	preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
-	XSetICValues(winPtr->inputContext,
-		XNPreeditAttributes, preedit_attr, NULL);
-	XFree(preedit_attr);
+	if (dispPtr->flags & TK_DISPLAY_XIM_SPOT) {
+	    spot.x = dispPtr->caret.x;
+	    spot.y = dispPtr->caret.y + dispPtr->caret.height;
+	    preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
+	    XSetICValues(winPtr->inputContext,
+		    XNPreeditAttributes, preedit_attr, NULL);
+	    XFree(preedit_attr);
+	}
 #endif
     } else {
 	len = XLookupString(&eventPtr->xkey, Tcl_DStringValue(&buf),
@@ -181,7 +188,7 @@ TkpSetKeycodeAndState(tkwin, keySym, eventPtr)
 		if (state & 2) {
 		    TkDisplay *dispPtr;
 
-		    dispPtr = ((TkWindow *) tkwin)->dispPtr; 
+		    dispPtr = ((TkWindow *) tkwin)->dispPtr;
 		    eventPtr->xkey.state |= dispPtr->modeModMask;
 		}
 		break;

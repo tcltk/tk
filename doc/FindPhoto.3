@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: FindPhoto.3,v 1.3 1999/10/29 03:57:40 hobbs Exp $
+'\" RCS: @(#) $Id: FindPhoto.3,v 1.3.8.1 2002/08/20 20:27:00 das Exp $
 '\"
 .so man.macros
 .TH Tk_FindPhoto 3 8.0 Tk "Tk Library Procedures"
@@ -27,11 +27,11 @@ Tk_PhotoHandle
 .VE
 .sp
 void
-\fBTk_PhotoPutBlock\fR(\fIhandle, blockPtr, x, y, width, height\fR)
+\fBTk_PhotoPutBlock\fR(\fIhandle, blockPtr, x, y, width, height, compRule\fR)
 .sp
 void
 \fBTk_PhotoPutZoomedBlock\fR(\fIhandle, blockPtr, x, y, width, height,\
-zoomX, zoomY, subsampleX, subsampleY\fR)
+zoomX, zoomY, subsampleX, subsampleY, compRule\fR)
 .sp
 int
 \fBTk_PhotoGetImage\fR(\fIhandle, blockPtr\fR)
@@ -53,7 +53,7 @@ void
 .VS
 Interpreter in which image was created.
 .VE
-.AP char *imageName in
+.AP "CONST char" *imageName in
 Name of the photo image.
 .AP Tk_PhotoHandle handle in
 Opaque handle identifying the photo image to be affected.
@@ -69,6 +69,16 @@ to be placed within the image.
 Specifies the width of the image area to be affected (for
 \fBTk_PhotoPutBlock\fR) or the desired image width (for
 \fBTk_PhotoExpand\fR and \fBTk_PhotoSetSize\fR).
+.VS 8.4
+.AP int compRule in
+Specifies the compositing rule used when combining transparent pixels
+in a block of data with a photo image.  Must be one of
+TK_PHOTO_COMPOSITE_OVERLAY (which puts the block of data over the top
+of the existing photo image, with the previous contents showing
+through in the transparent bits) or TK_PHOTO_COMPOSITE_SET (which
+discards the existing photo image contents in the rectangle covered by
+the data block.)
+.VE 8.4
 .AP int height in
 Specifies the height of the image area to be affected (for
 \fBTk_PhotoPutBlock\fR) or the desired image height (for
@@ -135,6 +145,17 @@ to the addresses of the bytes containing the red, green, blue and alpha
 have other values, e.g., for images that are stored as separate red,
 green and blue planes.
 .PP
+.VS 8.4
+The \fIcompRule\fR parameter to \fBTk_PhotoPutBlock\fR specifies a
+compositing rule that says what to do with transparent pixels.  The
+value TK_PHOTO_COMPOSITE_OVERLAY says that the previous contents of
+the photo image should show through, and the value
+TK_PHOTO_COMPOSITE_SET says that the previous contents of the photo
+image should be completely ignored, and the values from the block be
+copied directly across.  The behavior in Tk8.3 and earlier was
+equivalent to having TK_PHOTO_COMPOSITE_OVERLAY as a compositing rule.
+.VE 8.4
+.PP
 The value given for the \fIwidth\fR and \fIheight\fR parameters to
 \fBTk_PhotoPutBlock\fR do not have to correspond to the values specified
 in \fIblock\fR.  If they are smaller, \fBTk_PhotoPutBlock\fR extracts a
@@ -192,6 +213,17 @@ calls to \fBTk_PhotoPutBlock\fR, \fBTk_PhotoPutZoomedBlock\fR or
 .PP
 \fBTk_PhotoGetSize\fR returns the dimensions of the image in
 *\fIwidthPtr\fR and *\fIheightPtr\fR.
+
+.SH PORTABILITY
+.VS 8.4
+.PP
+In Tk 8.3 and earlier, \fBTk_PhotoPutBlock\fR and
+\fBTk_PhotoPutZoomedBlock\fR had different signatures. If you want to
+compile code that uses the old interface against 8.4 without updating
+your code, compile it with the flag
+-DUSE_COMPOSITELESS_PHOTO_PUT_BLOCK.  Code linked using Stubs against
+older versions of Tk will continue to work.
+.VE 8.4
 
 .SH CREDITS
 .PP

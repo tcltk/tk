@@ -7,26 +7,19 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scrollbar.test,v 1.7 2001/09/21 20:37:40 hobbs Exp $
+# RCS: @(#) $Id: scrollbar.test,v 1.7.2.1 2002/08/20 20:27:15 das Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 ## testmetrics is a win/mac only test command
 ##
-if {[string compare unix $tcl_platform(platform)] && \
-	[string equal {} [info commands testmetrics]]} {
-    puts "\"testmetrics\" isn't defined, skipping scrollbar tests"
-    ::tcltest::cleanupTests
-    return
-}
+testConstraint testmetrics [llength [info commands testmetrics]]
 
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
 update
 
 proc scroll args {
@@ -35,8 +28,7 @@ proc scroll args {
 }
 
 proc getTroughSize {w} {
-    global tcl_platform
-    if {$tcl_platform(platform) == "windows"} {
+    if {[testConstraint testmetrics]} {
 	if [string match v* [$w cget -orient]] {
 	    return [expr [winfo height $w] - 2*[testmetrics cyvscroll]]
 	} else {
@@ -269,13 +261,13 @@ test scrollbar-3.35 {ScrollbarWidgetCmd procedure, "fraction" option} {
 test scrollbar-3.36 {ScrollbarWidgetCmd procedure, "fraction" option} {unixOnly} {
     .s fraction 4 179
 } {1}
-test scrollbar-3.37 {ScrollbarWidgetCmd procedure, "fraction" option} {macOrPc} {
+test scrollbar-3.37 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics} {
     .s fraction 4 [expr 200 - [testmetrics cyvscroll .s]]
 } {1}
 test scrollbar-3.38 {ScrollbarWidgetCmd procedure, "fraction" option} {unixOnly} {
     .s fraction 4 178
 } {0.993711}
-test scrollbar-3.39 {ScrollbarWidgetCmd procedure, "fraction" option} {pcOnly} {
+test scrollbar-3.39 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics pcOnly} {
     expr [.s fraction 4 [expr 200 - [testmetrics cyvscroll .s] - 2]] \
 	== [format %g [expr (200.0 - [testmetrics cyvscroll .s]*2 - 2) \
 			   / ($height - 1 - [testmetrics cyvscroll .s]*2)]]
@@ -293,7 +285,7 @@ update
 test scrollbar-3.41 {ScrollbarWidgetCmd procedure, "fraction" option} {
     .t.s fraction 100 0
 } {0.5}
-if {$tcl_platform(platform) == "windows"} {
+if {[testConstraint testmetrics]} {
     place configure .t.s -width [expr 2*[testmetrics cxhscroll]+1]
 } else {
     place configure .t.s -width [expr [winfo reqwidth .t.s] - 4]
@@ -489,7 +481,7 @@ test scrollbar-6.13 {ScrollbarPosition procedure} {macOnly} {
 test scrollbar-6.14 {ScrollbarPosition procedure} {pcOnly} {
     .s identify [expr [winfo width .s] / 2] 0 
 } {arrow1}
-test scrollbar-6.15 {ScrollbarPosition procedure} {pcOnly} {
+test scrollbar-6.15 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .s identify [expr [winfo width .s] / 2] [expr [testmetrics cyvscroll] - 1]
 } {arrow1}
 
@@ -501,10 +493,10 @@ test scrollbar-6.17 {ScrollbarPosition procedure} {macOrUnix nonPortable} {
     # some platforms.
     .s identify 8 51
 } {trough1}
-test scrollbar-6.18 {ScrollbarPosition procedure} {pcOnly} {
+test scrollbar-6.18 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .s identify [expr [winfo width .s] / 2] [testmetrics cyvscroll]
 } {trough1}
-test scrollbar-6.19 {ScrollbarPosition procedure} {pcOnly} {
+test scrollbar-6.19 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .s identify [expr [winfo width .s] / 2] [expr int(.2 / [.s delta 0 1]) \
 						+ [testmetrics cyvscroll] - 1]
 } {trough1}
@@ -517,11 +509,11 @@ test scrollbar-6.21 {ScrollbarPosition procedure} {macOrUnix nonPortable} {
     # some platforms.
     .s identify 8 83
 } {slider}
-test scrollbar-6.22 {ScrollbarPosition procedure} {pcOnly} {
+test scrollbar-6.22 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .s identify [expr [winfo width .s] / 2] [expr int(.2 / [.s delta 0 1]) \
 						+ [testmetrics cyvscroll]]
 } {slider}
-test scrollbar-6.23 {ScrollbarPosition procedure} {pcOnly} {
+test scrollbar-6.23 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .s identify [expr [winfo width .s] / 2] [expr int(.4 / [.s delta 0 1]) \
 						 + [testmetrics cyvscroll] - 1]
 } {slider}
@@ -535,7 +527,7 @@ test scrollbar-6.25 {ScrollbarPosition procedure} {unixOnly} {
 test scrollbar-6.26 {ScrollbarPosition procedure} {macOnly} {
     .s identify 8 179
 } {arrow2}
-test scrollbar-6.27 {ScrollbarPosition procedure} {pcOnly knownBug} {
+test scrollbar-6.27 {ScrollbarPosition procedure} {testmetrics pcOnly knownBug} {
     # This asks for 8,21, which is actually the slider, but there is a
     # bug in that GetSystemMetrics(SM_CYVTHUMB) actually returns a value
     # that is larger than the thumb displayed, skewing the ability to
@@ -543,7 +535,7 @@ test scrollbar-6.27 {ScrollbarPosition procedure} {pcOnly knownBug} {
     .s identify [expr [winfo width .s] / 2] [expr int(.4 / [.s delta 0 1]) \
 						 + [testmetrics cyvscroll]]
 } {trough2}
-test scrollbar-6.28 {ScrollbarPosition procedure} {pcOnly} {
+test scrollbar-6.28 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .s identify [expr [winfo width .s] / 2] [expr [winfo height .s] \
 						 - [testmetrics cyvscroll] - 1]
 } {trough2}
@@ -557,7 +549,7 @@ test scrollbar-6.30 {ScrollbarPosition procedure} {unixOnly} {
 test scrollbar-6.31 {ScrollbarPosition procedure} {macOnly} {
     .s identify 8 195
 } {}
-test scrollbar-6.32 {ScrollbarPosition procedure} {pcOnly} {
+test scrollbar-6.32 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .s identify [expr [winfo width .s] / 2]  [expr [winfo height .s] \
 						  - [testmetrics cyvscroll]]
 } {arrow2}
@@ -600,7 +592,7 @@ test scrollbar-6.41 {ScrollbarPosition procedure} {unixOnly} {
 test scrollbar-6.42 {ScrollbarPosition procedure} {macOnly} {
     .t.s identify 82 8
 } {}
-test scrollbar-6.43 {ScrollbarPosition procedure} {pcOnly} {
+test scrollbar-6.43 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .t.s identify [expr int(.4 / [.t.s delta 1 0]) + [testmetrics cxhscroll] \
 		       - 1] [expr [winfo height .t.s] / 2] 
 } {slider}
@@ -664,7 +656,7 @@ test scrollbar-8.2 {TkScrollbarEventProc: recursive deletion} {
 } {1 0 1}
 
 set l [interp hidden]
-eval destroy [winfo children .]
+deleteWindows
 
 test scrollbar-9.1 {scrollbar widget vs hidden commands} {
     catch {destroy .s}

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.c,v 1.5 2000/11/22 01:49:38 ericm Exp $
+ * RCS: @(#) $Id: tkScrollbar.c,v 1.5.4.1 2002/08/20 20:27:07 das Exp $
  */
 
 #include "tkPort.h"
@@ -102,12 +102,12 @@ Tk_ConfigSpec tkpScrollbarConfigSpecs[] = {
  */
 
 static int		ConfigureScrollbar _ANSI_ARGS_((Tcl_Interp *interp,
-			    TkScrollbar *scrollPtr, int argc, char **argv,
+			    TkScrollbar *scrollPtr, int argc, CONST char **argv,
 			    int flags));
 static void		ScrollbarCmdDeletedProc _ANSI_ARGS_((
 			    ClientData clientData));
 static int		ScrollbarWidgetCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *, int argc, char **argv));
+			    Tcl_Interp *, int argc, CONST char **argv));
 
 /*
  *--------------------------------------------------------------
@@ -133,7 +133,7 @@ Tk_ScrollbarCmd(clientData, interp, argc, argv)
 				 * interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    CONST char **argv;		/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     register TkScrollbar *scrollPtr;
@@ -231,7 +231,7 @@ ScrollbarWidgetCmd(clientData, interp, argc, argv)
 					 * widget. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
     register TkScrollbar *scrollPtr = (TkScrollbar *) clientData;
     int result = TCL_OK;
@@ -538,7 +538,7 @@ ConfigureScrollbar(interp, scrollPtr, argc, argv, flags)
 					 * may not already have values for
 					 * some fields. */
     int argc;				/* Number of valid entries in argv. */
-    char **argv;			/* Arguments. */
+    CONST char **argv;			/* Arguments. */
     int flags;				/* Flags to pass to
 					 * Tk_ConfigureWidget. */
 {

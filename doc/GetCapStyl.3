@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetCapStyl.3,v 1.2 1998/09/14 18:22:48 stanton Exp $
+'\" RCS: @(#) $Id: GetCapStyl.3,v 1.2.24.1 2002/08/20 20:27:00 das Exp $
 '\" 
 .so man.macros
 .TH Tk_GetCapStyle 3 "" Tk "Tk Library Procedures"
@@ -19,13 +19,13 @@ Tk_GetCapStyle, Tk_NameOfCapStyle \- translate between strings and cap styles
 int
 \fBTk_GetCapStyle(\fIinterp, string, capPtr\fB)\fR
 .sp
-char *
+CONST char *
 \fBTk_NameOfCapStyle(\fIcap\fB)\fR
 .SH ARGUMENTS
 .AS "Tcl_Interp" *capPtr
 .AP Tcl_Interp *interp in
 Interpreter to use for error reporting.
-.AP char *string in
+.AP "CONST char" *string in
 String containing name of cap style: one of ```butt'', ``projecting'',
 or ``round''.
 .AP int *capPtr out

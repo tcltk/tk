@@ -31,7 +31,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacSend.c,v 1.4.16.1 2002/02/05 02:25:17 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacSend.c,v 1.4.16.2 2002/08/20 20:27:11 das Exp $
  */
 
 #include <Gestalt.h>
@@ -234,12 +234,12 @@ static int		ValidateName _ANSI_ARGS_((TkDisplay *dispPtr,
  *--------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_SetAppName(
     Tk_Window tkwin,		/* Token for any window in the application
 				 * to be named:  it is just used to identify
 				 * the application and the display.  */
-    char *name)			/* The name that will be used to
+    CONST char *name)		/* The name that will be used to
 				 * refer to the interpreter in later
 				 * "send" commands.  Must be globally
 				 * unique. */

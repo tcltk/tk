@@ -7,15 +7,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: focusTcl.test,v 1.3 1999/04/16 01:51:37 stanton Exp $
+# RCS: @(#) $Id: focusTcl.test,v 1.3.18.1 2002/08/20 20:27:13 das Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-eval destroy [winfo children .]
-wm geometry . {}
-raise .
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 proc setup1 w {
     if {$w == "."} {
@@ -30,7 +29,9 @@ proc setup1 w {
 	button $w.b.$i -text "Button $w.b.$i"
 	pack $w.b.$i -side left
     }
-    tkwait visibility $w.b.z
+    if {![winfo ismapped $w.b.z]} {
+	tkwait visibility $w.b.z
+    }
 }
 
 option add *takeFocus 1
@@ -74,7 +75,7 @@ test focusTcl-1.11 {tk_focusNext procedure, basic tree traversal} {
     tk_focusNext .b.z
 } {.}
 test focusTcl-1.12 {tk_focusNext procedure, basic tree traversal} {
-    eval destroy [winfo child .]
+    deleteWindows
     setup1 .
     update
     . configure -takefocus 0
@@ -82,7 +83,7 @@ test focusTcl-1.12 {tk_focusNext procedure, basic tree traversal} {
 } {.a}
 . configure -takefocus 1
 
-eval destroy [winfo child .]
+deleteWindows
 setup1 .
 toplevel .t
 wm geom .t +0+0
@@ -107,7 +108,7 @@ test focusTcl-2.5 {tk_focusNext procedure, toplevels} {
     tk_focusNext .t.b.z
 } {.t}
 
-eval destroy [winfo child .]
+deleteWindows
 test focusTcl-3.1 {tk_focusPrev procedure, no children} {
     tk_focusPrev .
 } {.}
@@ -137,7 +138,7 @@ test focusTcl-3.9 {tk_focusPrev procedure, basic tree traversal} {
     tk_focusPrev .a
 } {.}
 
-eval destroy [winfo child .]
+deleteWindows
 setup1 .
 toplevel .t
 wm geom .t +0+0
@@ -164,15 +165,15 @@ test focusTcl-4.5 {tk_focusPrev procedure, toplevels} {
     tk_focusPrev .t.a
 } {.t.b.z}
 
-eval destroy [winfo child .]
+deleteWindows
 test focusTcl-5.1 {tkFocusOK procedure, -takefocus 0} {
-    eval destroy [winfo child .]
+    deleteWindows
     setup1 .
     .b.x configure -takefocus 0
     tk_focusNext .b
 } {.b.y}
 test focusTcl-5.2 {tkFocusOK procedure, -takefocus 1} {
-    eval destroy [winfo child .]
+    deleteWindows
     setup1 .
     pack forget .b
     update
@@ -190,7 +191,7 @@ test focusTcl-5.3 {tkFocusOK procedure, -takefocus procedure} {
 	}
 	return 0
     }
-    eval destroy [winfo child .]
+    deleteWindows
     setup1 .
     pack forget .b.y
     update
@@ -201,14 +202,14 @@ test focusTcl-5.3 {tkFocusOK procedure, -takefocus procedure} {
     list [tk_focusNext .a] [tk_focusNext .b.x]
 } {.b.x .d}
 test focusTcl-5.4 {tkFocusOK procedure, -takefocus ""} {
-    eval destroy [winfo child .]
+    deleteWindows
     setup1 .
     .b.x configure -takefocus ""
     update
     tk_focusNext .b
 } {.b.x}
 test focusTcl-5.5 {tkFocusOK procedure, -takefocus "", not mapped} {
-    eval destroy [winfo child .]
+    deleteWindows
     setup1 .
     .b.x configure -takefocus ""
     pack unpack .b.x
@@ -216,7 +217,7 @@ test focusTcl-5.5 {tkFocusOK procedure, -takefocus "", not mapped} {
     tk_focusNext .b
 } {.b.y}
 test focusTcl-5.6 {tkFocusOK procedure, -takefocus "", not mapped} {
-    eval destroy [winfo child .]
+    deleteWindows
     setup1 .
     foreach w {.b.x .b.y .b.z} {
 	$w configure -takefocus ""
@@ -226,7 +227,7 @@ test focusTcl-5.6 {tkFocusOK procedure, -takefocus "", not mapped} {
     tk_focusNext .b
 } {.c}
 test focusTcl-5.7 {tkFocusOK procedure, -takefocus "", not mapped} {
-    eval destroy [winfo child .]
+    deleteWindows
     setup1 .
     .b.y configure -takefocus 1
     pack unpack .b.y
@@ -235,7 +236,7 @@ test focusTcl-5.7 {tkFocusOK procedure, -takefocus "", not mapped} {
 } {.b.z}
 test focusTcl-5.8 {tkFocusOK procedure, -takefocus "", not mapped} {
     proc always args {return 1}
-    eval destroy [winfo child .]
+    deleteWindows
     setup1 .
     .b.y configure -takefocus always
     pack unpack .b.y
@@ -243,7 +244,7 @@ test focusTcl-5.8 {tkFocusOK procedure, -takefocus "", not mapped} {
     tk_focusNext .b.x
 } {.b.y}
 test focusTcl-5.9 {tkFocusOK procedure, -takefocus "", window disabled} {
-    eval destroy [winfo child .]
+    deleteWindows
     setup1 .
     foreach w {.b.x .b.y .b.z} {
 	$w configure -takefocus ""
@@ -253,7 +254,7 @@ test focusTcl-5.9 {tkFocusOK procedure, -takefocus "", window disabled} {
     tk_focusNext .b
 } {.b.y}
 test focusTcl-5.10 {tkFocusOK procedure, -takefocus "", check for bindings} {
-    eval destroy [winfo child .]
+    deleteWindows
     setup1 .
     foreach w {.a .b .c .d} {
 	$w configure -takefocus ""
@@ -263,7 +264,7 @@ test focusTcl-5.10 {tkFocusOK procedure, -takefocus "", check for bindings} {
     list [tk_focusNext .] [tk_focusNext .a]
 } {.a .b.x}
 test focusTcl-5.11 {tkFocusOK procedure, -takefocus "", check for bindings} {
-    eval destroy [winfo child .]
+    deleteWindows
     setup1 .
     foreach w {.a .b .c .d} {
 	$w configure -takefocus ""

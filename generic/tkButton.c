@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.13.2.2 2002/06/10 05:38:23 wolfsuit Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.13.2.3 2002/08/20 20:27:01 das Exp $
  */
 
 #include "tkButton.h"
@@ -310,6 +310,8 @@ static Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	DEF_BUTTON_INDICATOR, -1, Tk_Offset(TkButton, indicatorOn), 0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_BUTTON_JUSTIFY, -1, Tk_Offset(TkButton, justify), 0, 0, 0},
+    {TK_OPTION_RELIEF, "-offrelief", "offRelief", "OffRelief",
+	 DEF_BUTTON_RELIEF, -1, Tk_Offset(TkButton, offRelief), 0, 0, 0},
     {TK_OPTION_STRING, "-offvalue", "offValue", "Value",
 	DEF_BUTTON_OFF_VALUE, Tk_Offset(TkButton, offValuePtr), -1, 0, 0, 0},
     {TK_OPTION_STRING, "-onvalue", "onValue", "Value",
@@ -418,6 +420,8 @@ static Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_BUTTON_JUSTIFY, -1, Tk_Offset(TkButton, justify), 0, 0, 0},
+    {TK_OPTION_RELIEF, "-offrelief", "offRelief", "OffRelief",
+	 DEF_BUTTON_RELIEF, -1, Tk_Offset(TkButton, offRelief), 0, 0, 0},
     {TK_OPTION_RELIEF, "-overrelief", "overRelief", "OverRelief",
 	 DEF_BUTTON_OVER_RELIEF, -1, Tk_Offset(TkButton, overRelief),
 	 TK_OPTION_NULL_OK, 0, 0},
@@ -520,11 +524,11 @@ static void		ButtonSelectImageProc _ANSI_ARGS_((
 			    ClientData clientData, int x, int y, int width,
 			    int height, int imgWidth, int imgHeight));
 static char *		ButtonTextVarProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, char *name1, CONST char *name2,
-			    int flags));
+			    Tcl_Interp *interp, CONST char *name1,
+			    CONST char *name2, int flags));
 static char *		ButtonVarProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, char *name1, CONST char *name2,
-			    int flags));
+			    Tcl_Interp *interp, CONST char *name1,
+			    CONST char *name2, int flags));
 static int		ButtonWidgetObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
@@ -1344,6 +1348,9 @@ TkButtonWorldChanged(instanceData)
     } else {
 	gcValues.foreground = gcValues.background;
 	mask = GCForeground;
+	if (butPtr->compound != COMPOUND_NONE) {
+	    mask |= GCFont;
+	}
 	if (butPtr->gray == None) {
 	    butPtr->gray = Tk_GetBitmap(NULL, butPtr->tkwin, "gray50");
 	}
@@ -1548,7 +1555,7 @@ static char *
 ButtonVarProc(clientData, interp, name1, name2, flags)
     ClientData clientData;	/* Information about button. */
     Tcl_Interp *interp;		/* Interpreter containing variable. */
-    char *name1;		/* Name of variable. */
+    CONST char *name1;		/* Name of variable. */
     CONST char *name2;		/* Second part of variable name. */
     int flags;			/* Information about what happened. */
 {
@@ -1627,7 +1634,7 @@ static char *
 ButtonTextVarProc(clientData, interp, name1, name2, flags)
     ClientData clientData;	/* Information about button. */
     Tcl_Interp *interp;		/* Interpreter containing variable. */
-    char *name1;		/* Not used. */
+    CONST char *name1;		/* Not used. */
     CONST char *name2;		/* Not used. */
     int flags;			/* Information about what happened. */
 {

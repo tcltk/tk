@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.13.2.1 2002/02/05 02:25:15 wolfsuit Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.13.2.2 2002/08/20 20:27:06 das Exp $
  */
 
 #include "tkPort.h"
@@ -1190,7 +1190,7 @@ PackAfter(interp, prevPtr, masterPtr, objc, objv)
 	    if (ancestor == parent) {
 		break;
 	    }
-	    if (((Tk_FakeWin *) (ancestor))->flags & TK_TOP_LEVEL) {
+	    if (((Tk_FakeWin *) (ancestor))->flags & TK_TOP_HIERARCHY) {
 		badWindow:
 		Tcl_AppendResult(interp, "can't pack ", Tcl_GetString(objv[0]),
 			" inside ", Tk_PathName(masterPtr->tkwin),
@@ -1198,7 +1198,7 @@ PackAfter(interp, prevPtr, masterPtr, objc, objv)
 		return TCL_ERROR;
 	    }
 	}
-	if (((Tk_FakeWin *) (tkwin))->flags & TK_TOP_LEVEL) {
+	if (((Tk_FakeWin *) (tkwin))->flags & TK_TOP_HIERARCHY) {
 	    goto badWindow;
 	}
 	if (tkwin == masterPtr->tkwin) {
@@ -1589,7 +1589,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	if (TkGetWindowFromObj(interp, tkwin, objv[j], &slave) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (Tk_IsTopLevel(slave)) {
+	if (Tk_TopWinHierarchy(slave)) {
 	    Tcl_AppendResult(interp, "can't pack \"", Tcl_GetString(objv[j]),
 		    "\": it's a top-level window", (char *) NULL);
 	    return TCL_ERROR;
@@ -1795,7 +1795,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	    if (ancestor == parent) {
 		break;
 	    }
-	    if (Tk_IsTopLevel(ancestor)) {
+	    if (Tk_TopWinHierarchy(ancestor)) {
 		Tcl_AppendResult(interp, "can't pack ", Tcl_GetString(objv[j]),
 			" inside ", Tk_PathName(masterPtr->tkwin),
 			(char *) NULL);

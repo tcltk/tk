@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.4 1999/12/14 06:52:33 hobbs Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.4.8.1 2002/08/20 20:27:08 das Exp $
  */
 
 #include "tk.h"
@@ -55,8 +55,8 @@ static Tk_GeomMgr textGeomType = {
  */
 
 static int		AlignParseProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, Tk_Window tkwin, char *value,
-			    char *widgRec, int offset));
+			    Tcl_Interp *interp, Tk_Window tkwin,
+			    CONST char *value, char *widgRec, int offset));
 static char *		AlignPrintProc _ANSI_ARGS_((ClientData clientData,
 			    Tk_Window tkwin, char *widgRec, int offset,
 			    Tcl_FreeProc **freeProcPtr));
@@ -69,7 +69,7 @@ static void		EmbWinBboxProc _ANSI_ARGS_((TkTextDispChunk *chunkPtr,
 			    int *xPtr, int *yPtr, int *widthPtr,
 			    int *heightPtr));
 static int		EmbWinConfigure _ANSI_ARGS_((TkText *textPtr,
-			    TkTextSegment *ewPtr, int argc, char **argv));
+			    TkTextSegment *ewPtr, int argc, CONST char **argv));
 static void		EmbWinDelayedUnmap _ANSI_ARGS_((
 			    ClientData clientData));
 static int		EmbWinDeleteProc _ANSI_ARGS_((TkTextSegment *segPtr,
@@ -155,7 +155,7 @@ TkTextWindowCmd(textPtr, interp, argc, argv)
     register TkText *textPtr;	/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings.  Someone else has already
+    CONST char **argv;		/* Argument strings.  Someone else has already
 				 * parsed this command enough to know that
 				 * argv[1] is "window". */
 {
@@ -327,7 +327,7 @@ EmbWinConfigure(textPtr, ewPtr, argc, argv)
 				 * contains embedded window. */
     TkTextSegment *ewPtr;	/* Embedded window to be configured. */
     int argc;			/* Number of strings in argv. */
-    char **argv;		/* Array of strings describing configuration
+    CONST char **argv;		/* Array of strings describing configuration
 				 * options. */
 {
     Tk_Window oldWindow;
@@ -370,7 +370,7 @@ EmbWinConfigure(textPtr, ewPtr, argc, argv)
 		if (ancestor == parent) {
 		    break;
 		}
-		if (Tk_IsTopLevel(ancestor)) {
+		if (Tk_TopWinHierarchy(ancestor)) {
 		    badMaster:
 		    Tcl_AppendResult(textPtr->interp, "can't embed ",
 			    Tk_PathName(ewPtr->body.ew.tkwin), " in ",
@@ -379,7 +379,7 @@ EmbWinConfigure(textPtr, ewPtr, argc, argv)
 		    return TCL_ERROR;
 		}
 	    }
-	    if (Tk_IsTopLevel(ewPtr->body.ew.tkwin)
+	    if (Tk_TopWinHierarchy(ewPtr->body.ew.tkwin)
 		    || (ewPtr->body.ew.tkwin == textPtr->tkwin)) {
 		goto badMaster;
 	    }
@@ -435,7 +435,7 @@ AlignParseProc(clientData, interp, tkwin, value, widgRec, offset)
     ClientData clientData;		/* Not used.*/
     Tcl_Interp *interp;			/* Used for reporting errors. */
     Tk_Window tkwin;			/* Window for text widget. */
-    char *value;			/* Value of option. */
+    CONST char *value;			/* Value of option. */
     char *widgRec;			/* Pointer to TkTextEmbWindow
 					 * structure. */
     int offset;				/* Offset into item (ignored). */
@@ -790,7 +790,7 @@ EmbWinLayoutProc(textPtr, indexPtr, ewPtr, offset, maxX, maxChars,
 	    if (ancestor == Tk_Parent(ewPtr->body.ew.tkwin)) {
 		break;
 	    }
-	    if (Tk_IsTopLevel(ancestor)) {
+	    if (Tk_TopWinHierarchy(ancestor)) {
 		badMaster:
 		Tcl_AppendResult(textPtr->interp, "can't embed ",
 			Tk_PathName(ewPtr->body.ew.tkwin), " relative to ",
@@ -800,7 +800,7 @@ EmbWinLayoutProc(textPtr, indexPtr, ewPtr, offset, maxX, maxChars,
 		goto gotWindow;
 	    }
 	}
-	if (Tk_IsTopLevel(ewPtr->body.ew.tkwin)
+	if (Tk_TopWinHierarchy(ewPtr->body.ew.tkwin)
 		|| (textPtr->tkwin == ewPtr->body.ew.tkwin)) {
 	    goto badMaster;
 	}
@@ -1158,7 +1158,7 @@ EmbWinDelayedUnmap(clientData)
 int
 TkTextWindowIndex(textPtr, name, indexPtr)
     TkText *textPtr;		/* Text widget containing window. */
-    char *name;			/* Name of window. */
+    CONST char *name;		/* Name of window. */
     TkTextIndex *indexPtr;	/* Index information gets stored here. */
 {
     Tcl_HashEntry *hPtr;

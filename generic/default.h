@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: default.h,v 1.3.2.2 2001/10/17 07:02:07 wolfsuit Exp $
+ * RCS: @(#) $Id: default.h,v 1.3.2.3 2002/08/20 20:27:00 das Exp $
  */
 
 #ifndef _DEFAULT
@@ -23,7 +23,7 @@
 #   if defined(MAC_OSX_TK)
 #	include "tkMacOSXDefault.h"
 #   elif defined(MAC_TCL)
-#       include "tkMacDefault.h"
+#	include "tkMacDefault.h"
 #   else
 #	include "tkUnixDefault.h"
 #   endif

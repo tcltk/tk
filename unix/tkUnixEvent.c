@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.3.18.2 2002/06/10 05:38:27 wolfsuit Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.3.18.3 2002/08/20 20:27:18 das Exp $
  */
 
 #include "tkInt.h"
@@ -172,15 +172,16 @@ TkpCloseDisplay(dispPtr)
 	XFreeFontSet(dispPtr->display, dispPtr->inputXfs);
     }
 #endif
-#if ! defined(SOLARIS2) || defined(HAVE_X11R6)
     if (dispPtr->inputMethod) {
 	/*
-	 * This causes core dumps on some systems (e.g. Solaris 2.3 as of
-	 * 1/6/95), but is OK with X11R6
+	 * This caused core dumps on some systems (Solaris 2.3 1/6/95).
+	 * The most likely cause of this is a bug in X that accesses
+	 * memory that was already deallocated inside XCloseIM().
+	 * One can work around this issue by making sure a XDestroyIC()
+	 * gets invoked for each XCreateIC().
 	 */
 	XCloseIM(dispPtr->inputMethod);
     }
-#endif
 #endif
 
     if (dispPtr->display != 0) {
@@ -188,8 +189,6 @@ TkpCloseDisplay(dispPtr)
 	(void) XSync(dispPtr->display, False);
 	(void) XCloseDisplay(dispPtr->display);
     }
-
-    ckfree((char *) dispPtr);
 }
 
 /*
@@ -583,14 +582,23 @@ OpenIM(dispPtr)
 	    NULL) != NULL) || (stylePtr == NULL)) {
 	goto error;
     }
+#if TK_XIM_SPOT
+    /*
+     * If we want to do over-the-spot XIM, we have to check that this
+     * mode is supported.  If not we will fall-through to the check below.
+     */
     for (i = 0; i < stylePtr->count_styles; i++) {
 	if (stylePtr->supported_styles[i]
-#if TK_XIM_SPOT
-		== (XIMPreeditPosition | XIMStatusNothing)
-#else
-		== (XIMPreeditNothing | XIMStatusNothing)
+		== (XIMPreeditPosition | XIMStatusNothing)) {
+	    dispPtr->flags |= TK_DISPLAY_XIM_SPOT;
+	    XFree(stylePtr);
+	    return;
+	}
+    }
 #endif
-	    ) {
+    for (i = 0; i < stylePtr->count_styles; i++) {
+	if (stylePtr->supported_styles[i]
+		== (XIMPreeditNothing | XIMStatusNothing)) {
 	    XFree(stylePtr);
 	    return;
 	}
@@ -601,12 +609,10 @@ OpenIM(dispPtr)
 
     if (dispPtr->inputMethod) {
 	/*
-	 * This causes core dumps on some systems (e.g. Solaris 2.3 as of
-	 * 1/6/95), but is OK with X11R6
+	 * This call should not suffer from any core dumping problems
+	 * since we have not allocated any input contexts.
 	 */
-#if ! defined (SOLARIS2) || defined (HAVE_X11R6)
 	XCloseIM(dispPtr->inputMethod);
-#endif
 	dispPtr->inputMethod = NULL;
     }
 }

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.7.2.3 2002/02/05 02:25:15 wolfsuit Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.7.2.4 2002/08/20 20:27:07 das Exp $
  */
 
 #include "tkInt.h"
@@ -1488,7 +1488,7 @@ TkSelDefaultSelection(infoPtr, target, buffer, maxBytes, typePtr)
 
     if (target == dispPtr->targetsAtom) {
 	register TkSelHandler *selPtr;
-	char *atomString;
+	CONST char *atomString;
 	int length, atomLength;
 
 	if (maxBytes < 50) {
@@ -1517,7 +1517,7 @@ TkSelDefaultSelection(infoPtr, target, buffer, maxBytes, typePtr)
 
     if (target == dispPtr->applicationAtom) {
 	int length;
-	char *name = winPtr->mainPtr->winPtr->nameUid;
+	Tk_Uid name = winPtr->mainPtr->winPtr->nameUid;
 
 	length = strlen(name);
 	if (maxBytes <= length) {

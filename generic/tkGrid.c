@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.17.2.1 2002/02/05 02:25:15 wolfsuit Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.17.2.2 2002/08/20 20:27:04 das Exp $
  */
 
 #include "tkInt.h"
@@ -767,7 +767,7 @@ GridPropagateCommand(tkwin, interp, objc, objv)
 {
     Tk_Window master;
     Gridder *masterPtr;
-    int propagate;
+    int propagate, old;
     
     if (objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?boolean?");
@@ -789,7 +789,8 @@ GridPropagateCommand(tkwin, interp, objc, objv)
     
     /* Only request a relayout if the propagation bit changes */
     
-    if ((!propagate) ^ (masterPtr->flags&DONT_PROPAGATE)) {
+    old = !(masterPtr->flags & DONT_PROPAGATE);
+    if (propagate != old) {
 	if (propagate) {
 	    masterPtr->flags &= ~DONT_PROPAGATE;
 	} else {
@@ -899,7 +900,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	
 	if (objc == 4) {
 	    int minsize = 0, pad = 0, weight = 0;
-	    char *uniform = NULL;
+	    Tk_Uid uniform = NULL;
 	    Tcl_Obj *res = Tcl_NewListObj(0, NULL);
 	 
 	    if (ok == TCL_OK) {
@@ -967,7 +968,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	    }
 	    else if (index == ROWCOL_UNIFORM) {
 		if (objc == 5) {
-		    char *value;
+		    Tk_Uid value;
 		    value = (ok == TCL_OK) ? slotPtr[slot].uniform : "";
 		    if (value == NULL) {
 			value = "";
@@ -1201,7 +1202,7 @@ GridReqProc(clientData, tkwin)
     register Gridder *gridPtr = (Gridder *) clientData;
 
     gridPtr = gridPtr->masterPtr;
-    if (!(gridPtr->flags & REQUESTED_RELAYOUT)) {
+    if (gridPtr && !(gridPtr->flags & REQUESTED_RELAYOUT)) {
 	gridPtr->flags |= REQUESTED_RELAYOUT;
 	Tcl_DoWhenIdle(ArrangeGrid, (ClientData) gridPtr);
     }
@@ -2642,7 +2643,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	    return TCL_ERROR;
 	}
 
-	if (Tk_IsTopLevel(slave)) {
+	if (Tk_TopWinHierarchy(slave)) {
 	    Tcl_AppendResult(interp, "can't manage \"", Tcl_GetString(objv[j]),
 		    "\": it's a top-level window", (char *) NULL);
 	    return TCL_ERROR;
@@ -2806,7 +2807,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	    if (ancestor == parent) {
 		break;
 	    }
-	    if (Tk_IsTopLevel(ancestor)) {
+	    if (Tk_TopWinHierarchy(ancestor)) {
 		Tcl_AppendResult(interp, "can't put ", Tcl_GetString(objv[j]),
 			" inside ", Tk_PathName(masterPtr->tkwin),
 			(char *) NULL);

@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bind.n,v 1.5 2000/05/23 00:31:36 hobbs Exp $
+'\" RCS: @(#) $Id: bind.n,v 1.5.6.1 2002/08/20 20:27:00 das Exp $
 '\" 
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
@@ -162,18 +162,18 @@ few extra abbreviations.  The \fItype\fR field will also accept a
 couple non-standard X event types that were added to better support
 the Macintosh and Windows platforms.  Below is a list of all the valid
 types; where two names appear together, they are synonyms.
-.DS C
+.DS
 .ta 5c 10c
-\fBActivate	Enter	Map
-ButtonPress, Button	Expose	Motion
-.VS
-ButtonRelease	FocusIn	MouseWheel	
-.VE
-Circulate	FocusOut	Property
+\fBActivate	Destroy	Map
+ButtonPress, Button	Enter	MapRequest
+ButtonRelease	Expose	Motion
+Circulate	FocusIn	MouseWheel	
+CirculateRequest	FocusOut	Property
 Colormap	Gravity	Reparent
-Configure	KeyPress, Key	Unmap
-Deactivate	KeyRelease	Visibility
-Destroy	Leave\fR
+Configure	KeyPress, Key	ResizeRequest
+ConfigureRequest	KeyRelease	Unmap
+Create	Leave	Visibility
+Deactivate\fR
 .DE
 .PP
 .VS
@@ -290,6 +290,13 @@ NotifyDetailNone	NotifyPointer
 NotifyInferior	NotifyPointerRoot
 NotifyNonlinear	NotifyVirtual\fR
 .DE
+For \fBConfigureRequest\fR events, the string will be one of:
+.DS
+.ta 6c
+\fBAbove	Opposite
+Below	None
+BottomIf	TopIf\fR
+.DE
 For events other than these, the substituted string is undefined.
 .RE
 .IP \fB%f\fR 5
@@ -297,9 +304,13 @@ The \fIfocus\fR field from the event (\fB0\fR or \fB1\fR).  Valid only
 for \fBEnter\fR and \fBLeave\fR events.
 .IP \fB%h\fR 5
 .VS
-The \fIheight\fR field from the event.  Valid for the \fBConfigure\fR and
+The \fIheight\fR field from the event.  Valid for the \fBConfigure\fR,
+\fBConfigureRequest\fR, \fBCreate\fR, \fBResizeRequest\fR, and
 \fBExpose\fR events.
 .VE
+.IP \fB%i\fR 5
+The \fIwindow\fR field from the event, represented as a hexadecimal
+integer.
 .IP \fB%k\fR 5
 The \fIkeycode\fR field from the event.  Valid only for \fBKeyPress\fR
 and \fBKeyRelease\fR events.
@@ -316,7 +327,7 @@ The \fIoverride_redirect\fR field from the event.  Valid only for
 .IP \fB%p\fR 5
 The \fIplace\fR field from the event, substituted as one of the
 strings \fBPlaceOnTop\fR or \fBPlaceOnBottom\fR.  Valid only
-for \fBCirculate\fR events.
+for \fBCirculate\fR and \fBCirculateRequest\fR events.
 .IP \fB%s\fR 5
 The \fIstate\fR field from the event.  For \fBButtonPress\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBKeyPress\fR, \fBKeyRelease\fR,
@@ -330,7 +341,8 @@ contain a \fItime\fR field.
 .IP \fB%w\fR 5
 The \fIwidth\fR field from the event.  Valid only for
 .VS
-\fBConfigure\fR and \fBExpose\fR events.
+\fBConfigure\fR, \fBConfigureRequest\fR, \fBCreate\fR,
+\fBResizeRequest\fR, and \fBExpose\fR events.
 .VE
 .IP \fB%x\fR 5
 The \fIx\fR field from the event.  Valid only for events containing
@@ -346,7 +358,7 @@ work of translating from the event to an ASCII character.
 Valid only for \fBKeyPress\fR and \fBKeyRelease\fR events.
 .IP \fB%B\fR 5
 The \fIborder_width\fR field from the event.  Valid only for
-\fBConfigure\fR events.
+\fBConfigure\fR, \fBConfigureRequest\fR, and \fBCreate\fR events.
 .VS
 .IP \fB%D\fR 5
 This reports the \fIdelta\fR value of a \fBMouseWheel\fR event.  The
@@ -416,7 +428,7 @@ string (open square bracket) as its first argument.
 If the extra backslash hadn't been added, Tcl would not have been
 able to parse the script correctly.
 
-.SH MULTIPLE MATCHES
+.SH "MULTIPLE MATCHES"
 .PP
 It is possible for several bindings to match a given X event.
 If the bindings are associated with different \fItag\fR's,
@@ -436,7 +448,6 @@ associated with other \fItag\fR's.
 If the \fBbreak\fR command is invoked within a binding script,
 then that script terminates and no other scripts will be invoked
 for the event.
-.VS
 .PP
 If more than one binding matches a particular event and they
 have the same \fItag\fR, then the most specific binding
@@ -450,7 +461,6 @@ of events matched) is more specific than a shorter sequence;
 (c) if the modifiers specified in one pattern are a subset of the
 modifiers in another pattern, then the pattern with more modifiers
 is more specific.
-.VS
 (d) a virtual event whose physical pattern matches the sequence is less
 specific than the same physical pattern that is not associated with a 
 virtual event.
@@ -477,7 +487,6 @@ If the user types Control-y, the \fB<<Paste>>\fR binding
 will be invoked, but if the user presses button 2 then one of
 either the \fB<<Paste>>\fR or the \fB<<Scroll>>\fR bindings will
 be invoked, but exactly which one gets invoked is undefined.
-.VE
 .PP
 If an X event does not match any of the existing bindings, then the
 event is ignored.

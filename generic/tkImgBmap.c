@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.12.2.1 2002/02/05 02:25:15 wolfsuit Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.12.2.2 2002/08/20 20:27:05 das Exp $
  */
 
 #include "tkInt.h"
@@ -254,7 +254,7 @@ ImgBmapConfigureMaster(masterPtr, objc, objv, flags)
     BitmapInstance *instancePtr;
     int maskWidth, maskHeight, dummy1, dummy2;
 
-    char **argv = (char **) ckalloc((objc+1) * sizeof(char *));
+    CONST char **argv = (CONST char **) ckalloc((objc+1) * sizeof(char *));
     for (dummy1 = 0; dummy1 < objc; dummy1++) {
 	argv[dummy1]=Tcl_GetString(objv[dummy1]);
     }

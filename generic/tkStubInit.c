@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.28.2.5 2002/06/10 05:38:24 wolfsuit Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.28.2.6 2002/08/20 20:27:07 das Exp $
  */
 
 #include "tkInt.h"
@@ -172,7 +172,7 @@ TkIntStubs tkIntStubs = {
     TkpGetSubFonts, /* 110 */
     TkpGetSystemDefault, /* 111 */
     TkpMenuThreadInit, /* 112 */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     NULL, /* 113 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -184,7 +184,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TK
     TkClipBox, /* 113 */
 #endif /* MAC_OSX_TK */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     NULL, /* 114 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -196,7 +196,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TK
     TkCreateRegion, /* 114 */
 #endif /* MAC_OSX_TK */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     NULL, /* 115 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -208,7 +208,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TK
     TkDestroyRegion, /* 115 */
 #endif /* MAC_OSX_TK */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     NULL, /* 116 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -220,7 +220,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TK
     TkIntersectRegion, /* 116 */
 #endif /* MAC_OSX_TK */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     NULL, /* 117 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -232,7 +232,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TK
     TkRectInRegion, /* 117 */
 #endif /* MAC_OSX_TK */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     NULL, /* 118 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -244,7 +244,7 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TK
     TkSetRegion, /* 118 */
 #endif /* MAC_OSX_TK */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     NULL, /* 119 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -257,7 +257,7 @@ TkIntStubs tkIntStubs = {
     TkUnionRectWithRegion, /* 119 */
 #endif /* MAC_OSX_TK */
     NULL, /* 120 */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     NULL, /* 121 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -266,10 +266,10 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_TCL
     TkpCreateNativeBitmap, /* 121 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
     TkpCreateNativeBitmap, /* 121 */
-#endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
+#endif /* MAC_OSX_TK */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     NULL, /* 122 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -278,11 +278,11 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_TCL
     TkpDefineNativeBitmaps, /* 122 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
     TkpDefineNativeBitmaps, /* 122 */
-#endif /* MAC_OSX_TCL */
+#endif /* MAC_OSX_TK */
     NULL, /* 123 */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     NULL, /* 124 */
 #endif /* UNIX */
 #ifdef __WIN32__
@@ -291,9 +291,9 @@ TkIntStubs tkIntStubs = {
 #ifdef MAC_TCL
     TkpGetNativeAppBitmap, /* 124 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
+#ifdef MAC_OSX_TK
     TkpGetNativeAppBitmap, /* 124 */
-#endif /* MAC_OSX_TCL */
+#endif /* MAC_OSX_TK */
     NULL, /* 125 */
     NULL, /* 126 */
     NULL, /* 127 */
@@ -314,26 +314,25 @@ TkIntStubs tkIntStubs = {
     TkFocusFree, /* 142 */
     TkClipCleanup, /* 143 */
     TkGCCleanup, /* 144 */
+#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+    NULL, /* 145 */
+#endif /* UNIX */
+#ifdef __WIN32__
+    TkSubtractRegion, /* 145 */
+#endif /* __WIN32__ */
+#ifdef MAC_TCL
+    TkSubtractRegion, /* 145 */
+#endif /* MAC_TCL */
+#ifdef MAC_OSX_TK
+    TkSubtractRegion, /* 145 */
+#endif /* MAC_OSX_TK */
+    TkStylePkgInit, /* 146 */
+    TkStylePkgFree, /* 147 */
 };
 
 TkIntPlatStubs tkIntPlatStubs = {
     TCL_STUB_MAGIC,
     NULL,
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
-    TkCreateXEventSource, /* 0 */
-    TkFreeWindowId, /* 1 */
-    TkInitXId, /* 2 */
-    TkpCmapStressed, /* 3 */
-    TkpSync, /* 4 */
-    TkUnixContainerId, /* 5 */
-    TkUnixDoOneXEvent, /* 6 */
-    TkUnixSetMenubar, /* 7 */
-    TkpScanWindowId, /* 8 */
-    TkWmCleanup, /* 9 */
-    TkSendCleanup, /* 10 */
-    TkFreeXId, /* 11 */
-    TkpWmSetState, /* 12 */
-#endif /* UNIX */
 #ifdef __WIN32__
     TkAlignImageData, /* 0 */
     NULL, /* 1 */
@@ -495,6 +494,21 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkGenWMConfigureEvent, /* 52 */
     TkpGetMS, /* 53 */
 #endif /* MAC_OSX_TK */
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)) /* X11 */
+    TkCreateXEventSource, /* 0 */
+    TkFreeWindowId, /* 1 */
+    TkInitXId, /* 2 */
+    TkpCmapStressed, /* 3 */
+    TkpSync, /* 4 */
+    TkUnixContainerId, /* 5 */
+    TkUnixDoOneXEvent, /* 6 */
+    TkUnixSetMenubar, /* 7 */
+    TkpScanWindowId, /* 8 */
+    TkWmCleanup, /* 9 */
+    TkSendCleanup, /* 10 */
+    TkFreeXId, /* 11 */
+    TkpWmSetState, /* 12 */
+#endif /* X11 */
 };
 
 TkIntXlibStubs tkIntXlibStubs = {
@@ -988,8 +1002,8 @@ TkStubs tkStubs = {
     Tk_NameToWindow, /* 141 */
     Tk_OwnSelection, /* 142 */
     Tk_ParseArgv, /* 143 */
-    Tk_PhotoPutBlock, /* 144 */
-    Tk_PhotoPutZoomedBlock, /* 145 */
+    Tk_PhotoPutBlock_NoComposite, /* 144 */
+    Tk_PhotoPutZoomedBlock_NoComposite, /* 145 */
     Tk_PhotoGetImage, /* 146 */
     Tk_PhotoBlank, /* 147 */
     Tk_PhotoExpand, /* 148 */
@@ -1090,6 +1104,25 @@ TkStubs tkStubs = {
     Tk_SetInternalBorderEx, /* 243 */
     Tk_SetMinimumRequestSize, /* 244 */
     Tk_SetCaretPos, /* 245 */
+    Tk_PhotoPutBlock, /* 246 */
+    Tk_PhotoPutZoomedBlock, /* 247 */
+    Tk_CollapseMotionEvents, /* 248 */
+    Tk_RegisterStyleEngine, /* 249 */
+    Tk_GetStyleEngine, /* 250 */
+    Tk_RegisterStyledElement, /* 251 */
+    Tk_GetElementId, /* 252 */
+    Tk_CreateStyle, /* 253 */
+    Tk_GetStyle, /* 254 */
+    Tk_FreeStyle, /* 255 */
+    Tk_NameOfStyle, /* 256 */
+    Tk_AllocStyleFromObj, /* 257 */
+    Tk_GetStyleFromObj, /* 258 */
+    Tk_FreeStyleFromObj, /* 259 */
+    Tk_GetStyledElement, /* 260 */
+    Tk_GetElementSize, /* 261 */
+    Tk_GetElementBox, /* 262 */
+    Tk_GetElementBorderWidth, /* 263 */
+    Tk_DrawElement, /* 264 */
 };
 
 /* !END!: Do not edit above this line. */

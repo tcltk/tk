@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.6.6.3 2002/02/05 02:25:15 wolfsuit Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.6.6.4 2002/08/20 20:27:04 das Exp $
  */
 
 #include "tkPort.h"
@@ -432,6 +432,7 @@ Tk_Grab(interp, tkwin, grabGlobal)
 	}
 	Tk_Ungrab((Tk_Window) dispPtr->eventualGrabWinPtr);
     }
+
     Tk_MakeWindowExist(tkwin);
     if (!grabGlobal) {
 	Window dummy1, dummy2;
@@ -479,7 +480,7 @@ Tk_Grab(interp, tkwin, grabGlobal)
 
 	grabResult = 0;			/* Needed only to prevent gcc
 					 * compiler warnings. */
-    	for (numTries = 0; numTries < 10; numTries++) {
+	for (numTries = 0; numTries < 10; numTries++) {
 	    grabResult = XGrabPointer(dispPtr->display, winPtr->window,
 		    True, ButtonPressMask|ButtonReleaseMask|ButtonMotionMask
 		    |PointerMotionMask, GrabModeAsync, GrabModeAsync, None,
@@ -741,7 +742,7 @@ TkPointerEvent(eventPtr, winPtr)
 
 	if (eventPtr->xcrossing.send_event != GENERATED_EVENT_MAGIC) {
 	    if ((eventPtr->type == LeaveNotify) &&
-		    (winPtr->flags & TK_TOP_LEVEL)) {
+		    (winPtr->flags & TK_TOP_HIERARCHY)) {
 		dispPtr->serverWinPtr = NULL;
 	    } else {
 		dispPtr->serverWinPtr = winPtr;
@@ -940,7 +941,7 @@ TkChangeEventWindow(eventPtr, winPtr)
 	eventPtr->xmotion.subwindow = None;
 	for (childPtr = winPtr->childList; childPtr != NULL;
 		childPtr = childPtr->nextPtr) {
-	    if (childPtr->flags & TK_TOP_LEVEL) {
+	    if (childPtr->flags & TK_TOP_HIERARCHY) {
 		continue;
 	    }
 	    x = eventPtr->xmotion.x - childPtr->changes.x;
@@ -1225,7 +1226,7 @@ TkGrabDeadWindow(winPtr)
 	ReleaseButtonGrab(dispPtr);
     }
     if (dispPtr->serverWinPtr == winPtr) {
-	if (winPtr->flags & TK_TOP_LEVEL) {
+	if (winPtr->flags & TK_TOP_HIERARCHY) {
 	    dispPtr->serverWinPtr = NULL;
 	} else {
 	    dispPtr->serverWinPtr = winPtr->parentPtr;
@@ -1450,7 +1451,7 @@ FindCommonAncestor(winPtr1, winPtr2, countPtr1, countPtr2)
     if (winPtr1 != NULL) {
 	for (winPtr = winPtr1; winPtr != NULL; winPtr = winPtr->parentPtr) {
 	    winPtr->flags |= TK_GRAB_FLAG;
-	    if (winPtr->flags & TK_TOP_LEVEL) {
+	    if (winPtr->flags & TK_TOP_HIERARCHY) {
 		break;
 	    }
 	}
@@ -1470,7 +1471,7 @@ FindCommonAncestor(winPtr1, winPtr2, countPtr1, countPtr2)
 		ancestorPtr = winPtr;
 		break;
 	    }
-	    if (winPtr->flags & TK_TOP_LEVEL)  {
+	    if (winPtr->flags & TK_TOP_HIERARCHY)  {
 		count2++;
 		break;
 	    }
@@ -1492,7 +1493,7 @@ FindCommonAncestor(winPtr1, winPtr2, countPtr1, countPtr2)
 	    if (winPtr == ancestorPtr) {
 		count1 = i;
 	    }
-	    if (winPtr->flags & TK_TOP_LEVEL) {
+	    if (winPtr->flags & TK_TOP_HIERARCHY) {
 		if (count1 == -1) {
 		    count1 = i+1;
 		}
@@ -1542,7 +1543,7 @@ TkPositionInTree(winPtr, treePtr)
 		if (winPtr2 == winPtr) {
 		    return TK_GRAB_ANCESTOR;
 		}
-		if (winPtr2->flags & TK_TOP_LEVEL) {
+		if (winPtr2->flags & TK_TOP_HIERARCHY) {
 		    break;
 		}
 	    }

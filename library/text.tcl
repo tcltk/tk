@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.17.2.3 2002/06/10 05:38:24 wolfsuit Exp $
+# RCS: @(#) $Id: text.tcl,v 1.17.2.4 2002/08/20 20:27:09 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -340,15 +340,11 @@ bind Text <Control-t> {
 }
 
 bind Text <<Undo>> {
-    if { ! [ catch { %W edit undo } ] } {
-       %W see insert
-    }
+    catch { %W edit undo }
 }
 
 bind Text <<Redo>> {
-    if { ! [ catch { %W edit redo } ] } {
-       %W see insert
-    }
+    catch { %W edit redo }
 }
 
 if {[string compare $tcl_platform(platform) "windows"]} {

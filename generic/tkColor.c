@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.c,v 1.8 2001/08/15 15:44:36 dkf Exp $
+ * RCS: @(#) $Id: tkColor.c,v 1.8.2.1 2002/08/20 20:27:03 das Exp $
  */
 
 #include "tkColor.h"
@@ -187,7 +187,7 @@ Tk_GetColor(interp, tkwin, name)
     Tcl_Interp *interp;		/* Place to leave error message if
 				 * color can't be found. */
     Tk_Window tkwin;		/* Window in which color will be used. */
-    char *name;			/* Name of color to be allocated (in form
+    Tk_Uid name;		/* Name of color to be allocated (in form
 				 * suitable for passing to XParseColor). */
 {
     Tcl_HashEntry *nameHashPtr;
@@ -363,7 +363,7 @@ Tk_GetColorByValue(tkwin, colorPtr)
  *--------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_NameOfColor(colorPtr)
     XColor *colorPtr;		/* Color whose name is desired. */
 {

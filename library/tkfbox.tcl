@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.31.2.2 2002/06/10 05:38:24 wolfsuit Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.31.2.3 2002/08/20 20:27:09 das Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -814,7 +814,17 @@ proc ::tk::dialog::file:: {type args} {
 	set data(cancelBtn) $w.f3.cancel
 	::tk::dialog::file::SetSelectMode $w $data(-multiple)
     }
-    wm transient $w $data(-parent)
+
+    # Dialog boxes should be transient with respect to their parent,
+    # so that they will always stay on top of their parent window.  However,
+    # some window managers will create the window as withdrawn if the parent
+    # window is withdrawn or iconified.  Combined with the grab we put on the
+    # window, this can hang the entire application.  Therefore we only make
+    # the dialog transient if the parent is viewable.
+
+    if {[winfo viewable [winfo toplevel $data(-parent)]] } {
+	wm transient $w $data(-parent)
+    }
 
     # Add traces on the selectPath variable
     #
@@ -979,7 +989,9 @@ proc ::tk::dialog::file::Create {w class} {
     # f1: the frame with the directory option menu
     #
     set f1 [frame $w.f1]
-    label $f1.lab -text "[mc "Directory:"]" -under 0
+    bind [::tk::AmpWidget label $f1.lab -text "[mc "&Directory:"]" ] \
+	<<AltUnderlined>> [list focus $f1.menu]
+    
     set data(dirMenuBtn) $f1.menu
     set data(dirMenu) [tk_optionMenu $f1.menu [format %s(selectPath) ::tk::dialog::file::$dataName] ""]
     set data(upBtn) [button $f1.up]
@@ -1007,18 +1019,16 @@ static char updir_bits[] = {
     #
     if { [string equal $class TkFDialog] } {
 	if { $data(-multiple) } {
-	    set fNameCaption "[mc {File names:}]"
+	    set fNameCaption "[mc {File &names:}]"
 	} else {
-	    set fNameCaption "[mc {File name:}]"
+	    set fNameCaption "[mc {File &name:}]"
 	}
-	set fTypeCaption [mc "Files of type:"]
-	set fCaptionWidth [mcmax $fNameCaption $fTypeCaption]
+	set fTypeCaption [mc "Files of &type:"]
+	set fCaptionWidth [::tk::mcmaxamp $fNameCaption $fTypeCaption]
 	set fCaptionWidth [expr {$fCaptionWidth<14?14:$fCaptionWidth}]
-	set fNameUnder 5
 	set iconListCommand [list ::tk::dialog::file::OkCmd $w]
     } else {
-	set fNameCaption [mc "Selection:"]
-	set fNameUnder 0
+	set fNameCaption [mc "&Selection:"]
 	set fCaptionWidth [string length $fNameCaption]
 	set iconListCommand [list ::tk::dialog::file::chooseDir::DblClick $w]
     }
@@ -1031,8 +1041,8 @@ static char updir_bits[] = {
     # f2: the frame with the OK button and the "file name" field
     #
     set f2 [frame $w.f2 -bd 0]
-    label $f2.lab -text $fNameCaption -anchor e -width $fCaptionWidth \
-	    -under $fNameUnder -pady 0
+    bind [::tk::AmpWidget label $f2.lab -text $fNameCaption -anchor e -width $fCaptionWidth \
+	    -pady 0] <<AltUnderlined>> [list focus $f2.ent]
     set data(ent) [entry $f2.ent]
 
     # The font to use for the icons. The default Canvas font on Unix
@@ -1051,8 +1061,8 @@ static char updir_bits[] = {
 	# use a button widget to emulate a label widget (by setting its
 	# bindtags)
 	
-	set data(typeMenuLab) [button $f3.lab -text $fTypeCaption \
-		-anchor e -width $fCaptionWidth -under 9 \
+	set data(typeMenuLab) [::tk::AmpWidget button $f3.lab -text $fTypeCaption \
+		-anchor e -width $fCaptionWidth \
 		-bd [$f2.lab cget -bd] \
 		-highlightthickness [$f2.lab cget -highlightthickness] \
 		-relief [$f2.lab cget -relief] \
@@ -1060,22 +1070,23 @@ static char updir_bits[] = {
 		-pady [$f2.lab cget -pady]]
 	bindtags $data(typeMenuLab) [list $data(typeMenuLab) Label \
 		[winfo toplevel $data(typeMenuLab)] all]
-	
 	set data(typeMenuBtn) [menubutton $f3.menu -indicatoron 1 \
 		-menu $f3.menu.m]
 	set data(typeMenu) [menu $data(typeMenuBtn).m -tearoff 0]
 	$data(typeMenuBtn) config -takefocus 1 -highlightthickness 2 \
 		-relief raised -bd 2 -anchor w
+        bind $data(typeMenuLab) <<AltUnderlined>> [list focus \
+	    $data(typeMenuBtn)]
     }
 
     # the okBtn is created after the typeMenu so that the keyboard traversal
     # is in the right order
-	set maxWidth [mcmax OK Cancel]
+	set maxWidth [::tk::mcmaxamp &OK &Cancel]
 	set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
-    set data(okBtn)     [button $f2.ok     -text "[mc "OK"]" \
-	-under 0 -width $maxWidth -default active -pady 3]
-    set data(cancelBtn) [button $f3.cancel -text "[mc "Cancel"]" \
-	-under 0 -width $maxWidth -default normal -pady 3]
+    set data(okBtn)     [::tk::AmpWidget button $f2.ok     -text "[mc "&OK"]" \
+	-width $maxWidth -default active -pady 3]
+    set data(cancelBtn) [::tk::AmpWidget button $f3.cancel -text "[mc "&Cancel"]" \
+	-width $maxWidth -default normal -pady 3]
 
     # pack the widgets in f2 and f3
     #
@@ -1103,9 +1114,7 @@ static char updir_bits[] = {
     $data(upBtn)     config -command [list ::tk::dialog::file::UpDirCmd $w]
     $data(cancelBtn) config -command [list ::tk::dialog::file::CancelCmd $w]
     bind $w <KeyPress-Escape> [list tk::ButtonInvoke $data(cancelBtn)]
-    bind $w <Alt-c> [list tk::ButtonInvoke $data(cancelBtn)]
-    bind $w <Alt-d> [list focus $data(dirMenuBtn)]
-
+    bind $w <Alt-Key> [list tk::AltKeyInDialog $w %A]
     # Set up event handlers specific to File or Directory Dialogs
     #
 
@@ -1117,9 +1126,6 @@ static char updir_bits[] = {
 		focus %s
 	    }
 	} $data(typeMenuBtn) $data(typeMenuBtn)]
-	bind $w <Alt-n> [list focus $data(ent)]
-	bind $w <Alt-o> [list ::tk::dialog::file::InvokeBtn $w Open]
-	bind $w <Alt-s> [list ::tk::dialog::file::InvokeBtn $w Save]
     } else {
 	set okCmd [list ::tk::dialog::file::chooseDir::OkCmd $w]
 	bind $data(ent) <Return> $okCmd
@@ -1150,13 +1156,12 @@ proc ::tk::dialog::file::SetSelectMode {w multi} {
     set dataName __tk_filedialog
     upvar ::tk::dialog::file::$dataName data
     if { $multi } {
-	set fNameCaption "[mc {File names:}]"
+	set fNameCaption "[mc {File &names:}]"
     } else {
-	set fNameCaption "[mc {File name:}]"
+	set fNameCaption "[mc {File &name:}]"
     }
-    set fNameUnder 5
     set iconListCommand [list ::tk::dialog::file::OkCmd $w]
-    $w.f2.lab configure -text $fNameCaption -under $fNameUnder
+    ::tk::SetAmpText $w.f2.lab $fNameCaption 
     ::tk::IconList_Config $data(icons) \
 	    [list -multiple $multi -command $iconListCommand]
     return
@@ -1307,19 +1312,19 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	# Restore the Open/Save Button if this is a File Dialog
 	#
 	if {[string equal $data(type) open]} {
-	    $data(okBtn) config -text "[mc "Open"]"
-		set maxWidth [string length [mc "Open"]]
-		if {$maxWidth>[$data(okBtn) cget -width]} {
-			$data(okBtn) config -width $maxWidth
-			$data(cancelBtn) config -width $maxWidth
-		}
+	    ::tk::SetAmpText $data(okBtn) [mc "&Open"]
+	    set maxWidth [::tk::mcmaxamp [mc "&Open"]]
+	    if {$maxWidth>[$data(okBtn) cget -width]} {
+		    $data(okBtn) config -width $maxWidth
+		    $data(cancelBtn) config -width $maxWidth
+	    }
 	} else {
-	    $data(okBtn) config -text "[mc "Save"]"
-		set maxWidth [string length [mc "Save"]]
-		if {$maxWidth>[$data(okBtn) cget -width]} {
-			$data(okBtn) config -width $maxWidth
-			$data(cancelBtn) config -width $maxWidth
-		}
+	    ::tk::SetAmpText $data(okBtn) [mc "&Save"]
+	    set maxWidth [::tk::mcmaxamp [mc "&Save"]]
+	    if {$maxWidth>[$data(okBtn) cget -width]} {
+		    $data(okBtn) config -width $maxWidth
+		    $data(cancelBtn) config -width $maxWidth
+	    }
 	}
     }
 
@@ -1508,9 +1513,9 @@ proc ::tk::dialog::file::EntFocusIn {w} {
     if { [string equal [winfo class $w] TkFDialog] } {
 	# If this is a File Dialog, make sure the buttons are labeled right.
 	if {[string equal $data(type) open]} {
-	    $data(okBtn) config -text "[mc "Open"]"
+	    ::tk::SetAmpText $data(okBtn) [mc "&Open"]
 	} else {
-	    $data(okBtn) config -text "[mc "Save"]"
+	    ::tk::SetAmpText $data(okBtn) [mc "&Save"]
 	}
     }
 }
@@ -1710,14 +1715,14 @@ proc ::tk::dialog::file::ListBrowse {w} {
 
 	if { [string equal [winfo class $w] TkFDialog] } {
 	    if {[string equal $data(type) open]} {
-		$data(okBtn) config -text "[mc "Open"]"
+		::tk::SetAmpText $data(okBtn) [mc "&Open"]
 	    } else {
-		$data(okBtn) config -text "[mc "Save"]"
+		::tk::SetAmpText $data(okBtn) [mc "&Save"]
 	    }
 	}
     } else {
 	if { [string equal [winfo class $w] TkFDialog] } {
-	    $data(okBtn) config -text "[mc "Open"]"
+	    ::tk::SetAmpText $data(okBtn) [mc "&Open"]
 	}
     }
 }

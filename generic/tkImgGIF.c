@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.		|
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.18.2.2 2002/06/10 05:38:23 wolfsuit Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.18.2.3 2002/08/20 20:27:05 das Exp $
  */
 
 /*
@@ -469,19 +469,20 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	block.height = height;
 	block.pixelSize = (transparent>=0) ? 4 : 3;
 	block.offset[3] = (transparent>=0) ? 3 : 0;
-	block.pitch = block.pixelSize * width;
-	nBytes = block.pitch * height;
+	block.pitch = block.pixelSize * fileWidth;
+	nBytes = block.pitch * fileHeight;
 	block.pixelPtr = (unsigned char *) ckalloc((unsigned) nBytes);
 
-	if (ReadImage(interp, (char *) block.pixelPtr, chan, width,
-		height, colorMap, fileWidth, fileHeight, srcX, srcY,
+	if (ReadImage(interp, (char *) block.pixelPtr, chan, fileWidth,
+		fileHeight, colorMap, fileWidth, fileHeight, srcX, srcY,
 		BitSet(buf[8], INTERLACE), transparent) != TCL_OK) {
 	    goto error;
 	}
 	break;
     }
 
-    Tk_PhotoPutBlock(imageHandle, &block, destX, destY, width, height);
+    Tk_PhotoPutBlock(imageHandle, &block, destX, destY, width, height,
+	    TK_PHOTO_COMPOSITE_SET);
 
     noerror:
     if (block.pixelPtr) {

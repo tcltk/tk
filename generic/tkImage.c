@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.12.2.1 2002/02/05 02:25:15 wolfsuit Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.12.2.2 2002/08/20 20:27:05 das Exp $
  */
 
 #include "tkInt.h"
@@ -257,6 +257,7 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 		masterPtr->instancePtr = NULL;
 		masterPtr->deleted = 0;
 		masterPtr->winPtr = winPtr->mainPtr->winPtr;
+		Tcl_Preserve((ClientData) masterPtr->winPtr);
 		Tcl_SetHashValue(hPtr, masterPtr);
 	    } else {
 		/*
@@ -505,7 +506,7 @@ Tk_ImageChanged(imageMaster, x, y, width, height, imageWidth,
  *----------------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_NameOfImage(imageMaster)
     Tk_ImageMaster imageMaster;		/* Token for image. */
 {
@@ -543,7 +544,7 @@ Tk_GetImage(interp, tkwin, name, changeProc, clientData)
 				 * can't be found. */
     Tk_Window tkwin;		/* Token for window in which image will
 				 * be used. */
-    char *name;			/* Name of desired image. */
+    CONST char *name;		/* Name of desired image. */
     Tk_ImageChangedProc *changeProc;
 				/* Procedure to invoke when redisplay is
 				 * needed because image's pixels or size
@@ -852,7 +853,7 @@ void
 Tk_DeleteImage(interp, name)
     Tcl_Interp *interp;		/* Interpreter in which the image was
 				 * created. */
-    char *name;			/* Name of image. */
+    CONST char *name;		/* Name of image. */
 {
     Tcl_HashEntry *hPtr;
     TkWindow *winPtr;
@@ -910,6 +911,7 @@ DeleteImage(masterPtr)
         if ((masterPtr->winPtr->flags & TK_ALREADY_DEAD) == 0) {
 	    Tcl_DeleteHashEntry(masterPtr->hPtr);
 	}
+	Tcl_Release((ClientData) masterPtr->winPtr);
 	ckfree((char *) masterPtr);
     }
 }
@@ -1002,7 +1004,7 @@ ClientData
 Tk_GetImageMasterData(interp, name, typePtrPtr)
     Tcl_Interp *interp;		/* Interpreter in which the image was
 				 * created. */
-    char *name;			/* Name of image. */
+    CONST char *name;		/* Name of image. */
     Tk_ImageType **typePtrPtr;	/* Points to location to fill in with
 				 * pointer to type information for image. */
 {
@@ -1048,7 +1050,7 @@ Tk_SetTSOrigin(tkwin, gc, x, y)
     GC gc;
     int x, y;
 {
-    while (!Tk_IsTopLevel(tkwin)) {
+    while (!Tk_TopWinHierarchy(tkwin)) {
 	x -= Tk_X(tkwin) + Tk_Changes(tkwin)->border_width;
 	y -= Tk_Y(tkwin) + Tk_Changes(tkwin)->border_width;
 	tkwin = Tk_Parent(tkwin);

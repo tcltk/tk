@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.12.4.2 2002/06/10 05:38:27 wolfsuit Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.12.4.3 2002/08/20 20:27:19 das Exp $
  */
 
 #define OEMRESOURCE
@@ -353,6 +353,8 @@ TkpDisplayButton(clientData)
 				 * it is a flavor of button, so we offset
 				 * the text to make the button appear to
 				 * move up and down as the relief changes. */
+    int textXOffset = 0, textYOffset = 0; /* text offsets for use with
+					   * compound buttons and focus ring */
     DWORD *boxesPalette;
 
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
@@ -387,7 +389,7 @@ TkpDisplayButton(clientData)
     relief = butPtr->relief;
     if ((butPtr->type >= TYPE_CHECK_BUTTON) && !butPtr->indicatorOn) {
 	relief = (butPtr->flags & SELECTED) ? TK_RELIEF_SUNKEN
-		: TK_RELIEF_RAISED;
+		: butPtr->offRelief;
     }
 
     /*
@@ -434,12 +436,10 @@ TkpDisplayButton(clientData)
     haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
     
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
-	int imageXOffset, imageYOffset, textXOffset, textYOffset, fullWidth,
+	int imageXOffset, imageYOffset, fullWidth,
 	    fullHeight;
 	imageXOffset = 0;
 	imageYOffset = 0;
-	textXOffset = 0;
-	textYOffset = 0;
 	fullWidth = 0;
 	fullHeight = 0;
 
@@ -573,7 +573,8 @@ TkpDisplayButton(clientData)
     /*
      * Draw the focus ring.  If this is a push button then we need to
      * put it around the inner edge of the border, otherwise we put it
-     * around the text.
+     * around the text.  The text offsets are only non-zero when this
+     * is a compound button.
      */
     
     if (drawRing && butPtr->flags & GOT_FOCUS && butPtr->type != TYPE_LABEL) {
@@ -584,10 +585,10 @@ TkpDisplayButton(clientData)
 	    rect.right = Tk_Width(tkwin) - rect.left;
 	    rect.bottom = Tk_Height(tkwin) - rect.top;
 	} else {
-	    rect.top = y-1;
-	    rect.left = x-1;
-	    rect.right = x+butPtr->textWidth + 1;
-	    rect.bottom = y+butPtr->textHeight + 2;
+	    rect.top = y-1 + textYOffset;
+	    rect.left = x-1 + textXOffset;
+	    rect.right = x+butPtr->textWidth + 1 + textXOffset;
+	    rect.bottom = y+butPtr->textHeight + 2 + textYOffset;
 	}
 	SetTextColor(dc, gc->foreground);
 	SetBkColor(dc, gc->background);

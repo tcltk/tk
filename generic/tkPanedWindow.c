@@ -12,69 +12,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.3.2.2 2002/06/10 05:38:23 wolfsuit Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.3.2.3 2002/08/20 20:27:06 das Exp $
  */
 
 #include "tkPort.h"
 #include "default.h"
 #include "tkInt.h"
-
-#if ((TCL_MAJOR_VERSION > 8) || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION >= 4))
-#define TCL_84
-#endif
-
-/*
- * We need to have TK_OPTION_CUSTOM, et al defined to compile with any
- * stubs-enable version of Tk, but we'll only allow the widget to
- * be created in 8.4+.  These are taken from 8.4+ tk.h.
- */
-#ifndef TCL_84
-
-/*
- * Generating code for accessing these parts of the stub table when
- * compiling against a core older than 8.4a2 is a hassle because
- * we have to write up some macros hiding some very hackish pointer
- * arithmetics to get at these fields. We assume that pointer to
- * functions are always of the same size.
- */
-
-#define STUB_BASE   ((char*)(&(tkStubsPtr->tk_GetAnchorFromObj))) /*field 200*/
-#define procPtrSize (sizeof(Tcl_DriverBlockModeProc *))
-#define IDX(n)      (((n)-200) * procPtrSize)
-#define SLOT(n)     (STUB_BASE + IDX(n))
-
-typedef Tk_Window (tk_CreateAnonymousWindow) _ANSI_ARGS_((Tcl_Interp * interp,
-	Tk_Window parent, char * screenName)); /* 241 */
-#define Tk_CreateAnonymousWindow (*((tk_CreateAnonymousWindow**) (SLOT(241))))
-
-#define TK_OPTION_CUSTOM (TK_OPTION_END + 1)
-typedef int (Tk_CustomOptionSetProc) _ANSI_ARGS_((ClientData clientData,
-	Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj **value, char *widgRec,
-	int offset, char *saveInternalPtr, int flags));
-typedef Tcl_Obj *(Tk_CustomOptionGetProc) _ANSI_ARGS_((ClientData clientData,
-	Tk_Window tkwin, char *widgRec, int offset));
-typedef void (Tk_CustomOptionRestoreProc) _ANSI_ARGS_((ClientData clientData,
-	Tk_Window tkwin, char *internalPtr, char *saveInternalPtr));
-typedef void (Tk_CustomOptionFreeProc) _ANSI_ARGS_((ClientData clientData,
-	Tk_Window tkwin, char *internalPtr));
-   
-typedef struct Tk_ObjCustomOption {
-    char *name;				/* Name of the custom option. */
-    Tk_CustomOptionSetProc *setProc;	/* Function to use to set a record's
-					 * option value from a Tcl_Obj */
-    Tk_CustomOptionGetProc *getProc;	/* Function to use to get a Tcl_Obj
-					 * representation from an internal
-					 * representation of an option. */
-    Tk_CustomOptionRestoreProc *restoreProc;	/* Function to use to restore a
-						 * saved value for the internal
-						 * representation. */
-    Tk_CustomOptionFreeProc *freeProc;	/* Function to use to free the internal
-					 * representation of an option. */
-    ClientData clientData;		/* Arbitrary one-word value passed to
-					 * the handling procs. */
-} Tk_ObjCustomOption;
-
-#endif
 
 /* Flag values for "sticky"ness  The 16 combinations subsume the packer's
  * notion of anchor and fill.
@@ -191,6 +134,11 @@ typedef struct PanedWindow {
  *
  * WIDGET_DELETED:		Non-zero means that the paned window has
  *				been, or is in the process of being, deleted.
+ *
+ * RESIZE_PENDING:		Non-zero means that the window might need to
+ *				change its size (or the size of its panes)
+ *				because of a change in the size of one of its
+ *				children.
  */
 
 #define REDRAW_PENDING		0x0001
@@ -198,6 +146,8 @@ typedef struct PanedWindow {
 #define REQUESTED_RELAYOUT	0x0004
 #define RECOMPUTE_GEOMETRY	0x0008
 #define PROXY_REDRAW_PENDING	0x0010
+#define RESIZE_PENDING		0x0020
+
 /*
  * Forward declarations for procedures defined later in this file:
  */
@@ -252,6 +202,9 @@ static int	ObjectIsEmpty _ANSI_ARGS_((Tcl_Obj *objPtr));
 static char *	ComputeSlotAddress _ANSI_ARGS_((char *recordPtr, int offset));
 static int	PanedWindowIdentifyCoords _ANSI_ARGS_((PanedWindow *pwPtr,
 			Tcl_Interp *interp, int x, int y));
+
+#define ValidSashIndex(pwPtr, sash) \
+	(((sash) >= 0) && ((sash) < (pwPtr)->numSlaves))
 
 static Tk_GeomMgr panedWindowMgrType = {
     "panedwindow",		/* name */
@@ -415,7 +368,7 @@ Tk_PanedWindowObjCmd(clientData, interp, objc, objv)
 	pwOpts->slaveOpts = Tk_CreateOptionTable(interp, slaveOptionSpecs);
     }
 
-    Tk_SetClass(tkwin, "PanedWindow");
+    Tk_SetClass(tkwin, "Panedwindow");
 
     /*
      * Allocate and initialize the widget record.
@@ -1077,7 +1030,7 @@ PanedWindowSashCommand(pwPtr, interp, objc, objv)
 		return TCL_ERROR;
 	    }
 
-	    if (sash >= pwPtr->numSlaves - 1) {
+	    if (!ValidSashIndex(pwPtr, sash)) {
 		Tcl_ResetResult(interp);
 		Tcl_SetResult(interp, "invalid sash index", TCL_STATIC);
 		return TCL_ERROR;
@@ -1100,7 +1053,7 @@ PanedWindowSashCommand(pwPtr, interp, objc, objv)
 		return TCL_ERROR;
 	    }
 
-	    if (sash >= pwPtr->numSlaves - 1) {
+	    if (!ValidSashIndex(pwPtr, sash)) {
 		Tcl_ResetResult(interp);
 		Tcl_SetResult(interp, "invalid sash index", TCL_STATIC);
 		return TCL_ERROR;
@@ -1137,7 +1090,7 @@ PanedWindowSashCommand(pwPtr, interp, objc, objv)
 		return TCL_ERROR;
 	    }
 
-	    if (sash >= pwPtr->numSlaves - 1) {
+	    if (!ValidSashIndex(pwPtr, sash)) {
 		Tcl_ResetResult(interp);
 		Tcl_SetResult(interp, "invalid sash index", TCL_STATIC);
 		return TCL_ERROR;
@@ -1490,7 +1443,10 @@ DestroyPanedWindow(pwPtr)
     if (pwPtr->flags & REDRAW_PENDING) {
 	Tcl_CancelIdleCall(DisplayPanedWindow, (ClientData) pwPtr);
     }
-    
+    if (pwPtr->flags & RESIZE_PENDING) {
+	Tcl_CancelIdleCall(ArrangePanes, (ClientData) pwPtr);
+    }
+
     /*
      * Clean up the slave list; foreach slave:
      *  o  Cancel the slave's structure notification callback
@@ -1555,7 +1511,14 @@ PanedWindowReqProc(clientData, tkwin)
 {
     Slave *panePtr = (Slave *) clientData;
     PanedWindow *pwPtr = (PanedWindow *) (panePtr->masterPtr);
-    ComputeGeometry(pwPtr);
+    if (Tk_IsMapped(pwPtr->tkwin)) {
+	if (!(pwPtr->flags & RESIZE_PENDING)) {
+	    pwPtr->flags |= RESIZE_PENDING;
+	    Tcl_DoWhenIdle(ArrangePanes, (ClientData) pwPtr);
+	}
+    } else {
+	ComputeGeometry(pwPtr);
+    }
 }
 
 /*
@@ -1626,7 +1589,7 @@ ArrangePanes(clientData)
     int i, slaveWidth, slaveHeight, slaveX, slaveY, paneWidth, paneHeight;
     int doubleBw;
     
-    pwPtr->flags &= ~REQUESTED_RELAYOUT;
+    pwPtr->flags &= ~(REQUESTED_RELAYOUT|RESIZE_PENDING);
 
     /*
      * If the parent has no slaves anymore, then don't do anything
@@ -1864,7 +1827,7 @@ ComputeGeometry(pwPtr)
     int i, x, y, doubleBw, internalBw;
     int reqWidth, reqHeight, sashWidth, sxOff, syOff, hxOff, hyOff, dim;
     Slave *slavePtr;
-    
+
     pwPtr->flags |= REQUESTED_RELAYOUT;
 
     x = y = internalBw = Tk_InternalBorderWidth(pwPtr->tkwin);

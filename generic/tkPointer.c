@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPointer.c,v 1.4.18.3 2002/02/05 02:25:15 wolfsuit Exp $
+ * RCS: @(#) $Id: tkPointer.c,v 1.4.18.4 2002/08/20 20:27:06 das Exp $
  */
 
 #include "tkInt.h"
@@ -25,7 +25,7 @@
 #define Cursor XCursor
 #endif
 
-# if defined(MAC_OSX_TK)
+#if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #define Cursor XCursor
 #endif
@@ -567,7 +567,7 @@ UpdateCursor(winPtr)
 	if (winPtr->atts.cursor != None) {
 	    cursor = winPtr->atts.cursor;
 	    break;
-	} else if (winPtr->flags & TK_TOP_LEVEL) {
+	} else if (winPtr->flags & TK_TOP_HIERARCHY) {
 	    break;
 	}
 	winPtr = winPtr->parentPtr;

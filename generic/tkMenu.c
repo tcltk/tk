@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.13.2.2 2002/06/10 05:38:23 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.13.2.3 2002/08/20 20:27:05 das Exp $
  */
 
 /*
@@ -360,8 +360,8 @@ static void		MenuCmdDeletedProc _ANSI_ARGS_((
 static TkMenuEntry *	MenuNewEntry _ANSI_ARGS_((TkMenu *menuPtr, int index,
 			    int type));
 static char *		MenuVarProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, char *name1, CONST char *name2,
-			    int flags));
+			    Tcl_Interp *interp, CONST char *name1,
+			    CONST char *name2, int flags));
 static int		MenuWidgetObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));
@@ -2468,7 +2468,7 @@ static char *
 MenuVarProc(clientData, interp, name1, name2, flags)
     ClientData clientData;	/* Information about menu entry. */
     Tcl_Interp *interp;		/* Interpreter containing variable. */
-    char *name1;		/* First part of variable's name. */
+    CONST char *name1;		/* First part of variable's name. */
     CONST char *name2;		/* Second part of variable's name. */
     int flags;			/* Describes what just happened. */
 {

@@ -6,23 +6,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.1.4.2 2002/06/10 05:38:26 wolfsuit Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.1.4.3 2002/08/20 20:27:15 das Exp $
 
-if {[info tclversion] < 8.4} {
-    puts "panedwindow requires Tk 8.4"
-    exit
-}
-
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-foreach i [winfo children .] {
-    destroy $i
-}
-
-wm geometry . {}
-raise .
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 set i 1
 panedwindow .p
@@ -241,6 +232,27 @@ test panedwindow-6.7 {sash coord subcommand, sashes correctly placed} {
     destroy .p .p.f .p.f2 .p.f3
     set result
 } [list 0 50]
+test panedwindow-6.8 {sash coord subcommand, errors} {
+    panedwindow .p
+    set result [list \
+	    [catch {.p sash coord -1} msg] $msg \
+	    [catch {.p sash coord  0} msg] $msg \
+	    [catch {.p sash coord  1} msg] $msg \
+	    ]
+    destroy .p
+    set result
+} [list 1 "invalid sash index" 1 "invalid sash index" 1 "invalid sash index"]
+test panedwindow-6.9 {sash coord subcommand, errors} {
+    panedwindow .p
+    .p add [frame .p.f]
+    set result [list \
+	    [catch {.p sash coord -1} msg] $msg \
+	    [catch {.p sash coord  0} msg] \
+	    [catch {.p sash coord  1} msg] $msg \
+	    ]
+    destroy .p
+    set result
+} [list 1 "invalid sash index" 0 1 "invalid sash index"]
 
 test panedwindow-8.1 {sash mark subcommand, errors} {
     panedwindow .p
@@ -325,7 +337,7 @@ test panedwindow-9.5 {sash dragto subcommand, errors} {
     
 test panedwindow-10.1 {sash mark/sash dragto interaction} {
     panedwindow .p -borderwidth 0 -sashpad 0 -sashwidth 4 -showhandle false
-    .p add [frame .f -width 20 -height 20] [button .c]
+    .p add [frame .f -width 20 -height 20] [button .c -text foobar]
     .p sash mark 0 10 10
     .p sash dragto 0 20 10
     set result [.p sash coord 0]
@@ -335,7 +347,7 @@ test panedwindow-10.1 {sash mark/sash dragto interaction} {
 test panedwindow-10.2 {sash mark/sash dragto interaction} {
     panedwindow .p -borderwidth 0 -sashpad 0 -sashwidth 4 -orient vertical \
             -showhandle false
-    .p add [frame .p.f -width 20 -height 20] [button .p.c]
+    .p add [frame .p.f -width 20 -height 20] [button .p.c -text foobar]
     .p sash mark 0 10 10
     .p sash dragto 0 10 20
     set result [.p sash coord 0]
@@ -411,7 +423,7 @@ test panedwindow-11.8 {sash place subcommand, respects minsize} {
 
 test panedwindow-12.1 {moving sash changes size of pane to left} {
     panedwindow .p -borderwidth 0 -sashpad 0 -sashwidth 4 -showhandle false
-    .p add [frame .f -width 20 -height 20] [button .c] -sticky nsew
+    .p add [frame .f -width 20 -height 20] [button .c -text foobar] -sticky nsew
     .p sash place 0 30 0
     pack .p
     update
@@ -442,7 +454,7 @@ test panedwindow-12.3 {moving sash does not change reqsize of panedwindow} {
 test panedwindow-12.4 {moving sash changes size of pane above} {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 4 \
             -orient vertical
-    .p add [frame .f -width 20 -height 10] [button .c] -sticky nsew
+    .p add [frame .f -width 20 -height 10] [button .c -text foobar] -sticky nsew
     .p sash place 0 0 20
     pack .p
     update

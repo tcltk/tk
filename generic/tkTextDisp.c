@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.9.8.1 2002/06/10 05:38:24 wolfsuit Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.9.8.2 2002/08/20 20:27:08 das Exp $
  */
 
 #include "tkPort.h"
@@ -3299,7 +3299,7 @@ TkTextSeeCmd(textPtr, interp, argc, argv)
     TkText *textPtr;		/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings.  Someone else has already
+    CONST char **argv;		/* Argument strings.  Someone else has already
 				 * parsed this command enough to know that
 				 * argv[1] is "see". */
 {
@@ -3421,7 +3421,7 @@ TkTextXviewCmd(textPtr, interp, argc, argv)
     TkText *textPtr;		/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings.  Someone else has already
+    CONST char **argv;		/* Argument strings.  Someone else has already
 				 * parsed this command enough to know that
 				 * argv[1] is "xview". */
 {
@@ -3609,7 +3609,7 @@ TkTextYviewCmd(textPtr, interp, argc, argv)
     TkText *textPtr;		/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings.  Someone else has already
+    CONST char **argv;		/* Argument strings.  Someone else has already
 				 * parsed this command enough to know that
 				 * argv[1] is "yview". */
 {
@@ -3775,7 +3775,7 @@ TkTextScanCmd(textPtr, interp, argc, argv)
     register TkText *textPtr;	/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings.  Someone else has already
+    CONST char **argv;		/* Argument strings.  Someone else has already
 				 * parsed this command enough to know that
 				 * argv[1] is "scan". */
 {
@@ -4411,7 +4411,7 @@ ElideMeasureProc(chunkPtr, x)
  *
  *	This procedure is the "layoutProc" for character segments.
  *
-n * Results:
+ * Results:
  *	If there is something to display for the chunk then a
  *	non-zero value is returned and the fields of chunkPtr
  *	will be filled in (see the declaration of TkTextDispChunk

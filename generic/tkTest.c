@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.15.6.3 2002/02/05 02:25:15 wolfsuit Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.15.6.4 2002/08/20 20:27:07 das Exp $
  */
 
 #include "tkInt.h"
@@ -157,9 +157,9 @@ static int		CBindingEvalProc _ANSI_ARGS_((ClientData clientData,
 static void		CBindingFreeProc _ANSI_ARGS_((ClientData clientData));
 int			Tktest_Init _ANSI_ARGS_((Tcl_Interp *interp));
 static int		ImageCmd _ANSI_ARGS_((ClientData dummy,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 static int		TestcbindCmd _ANSI_ARGS_((ClientData dummy,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 static int		TestbitmapObjCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * CONST objv[]));
@@ -173,17 +173,17 @@ static int		TestcursorObjCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * CONST objv[]));
 static int		TestdeleteappsCmd _ANSI_ARGS_((ClientData dummy,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 static int		TestfontObjCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
 static int		TestmakeexistCmd _ANSI_ARGS_((ClientData dummy,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 static int		TestmenubarCmd _ANSI_ARGS_((ClientData dummy,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 #if defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)
 static int		TestmetricsCmd _ANSI_ARGS_((ClientData dummy,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 #endif
 static int		TestobjconfigObjCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Interp *interp, int objc,
@@ -200,14 +200,14 @@ static void	CustomOptionRestore _ANSI_ARGS_((ClientData clientData,
 static void	CustomOptionFree _ANSI_ARGS_((ClientData clientData,
 			Tk_Window tkwin, char *internalPtr));
 static int		TestpropCmd _ANSI_ARGS_((ClientData dummy,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 static int		TestsendCmd _ANSI_ARGS_((ClientData dummy,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 static int		TesttextCmd _ANSI_ARGS_((ClientData dummy,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 #if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
 static int		TestwrapperCmd _ANSI_ARGS_((ClientData dummy,
-			    Tcl_Interp *interp, int argc, char **argv));
+			    Tcl_Interp *interp, int argc, CONST char **argv));
 #endif
 static void		TrivialCmdDeletedProc _ANSI_ARGS_((
 			    ClientData clientData));
@@ -222,7 +222,6 @@ static void		TrivialEventProc _ANSI_ARGS_((ClientData clientData,
  */
 
 extern int		TkplatformtestInit _ANSI_ARGS_((Tcl_Interp *interp));
-extern int              TclThread_Init _ANSI_ARGS_((Tcl_Interp *interp));
 
 #if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
 #define TkplatformtestInit(x) TCL_OK
@@ -282,16 +281,20 @@ Tktest_Init(interp)
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateCommand(interp, "testmakeexist", TestmakeexistCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
+#if !(defined(__WIN32__) || defined(MAC_TCL))
     Tcl_CreateCommand(interp, "testmenubar", TestmenubarCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
+#endif
 #if defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)
     Tcl_CreateCommand(interp, "testmetrics", TestmetricsCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
 #endif
     Tcl_CreateCommand(interp, "testprop", TestpropCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
+#if !(defined(__WIN32__) || defined(MAC_TCL))
     Tcl_CreateCommand(interp, "testsend", TestsendCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
+#endif
     Tcl_CreateCommand(interp, "testtext", TesttextCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
 #if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
@@ -299,12 +302,6 @@ Tktest_Init(interp)
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
 #endif
 
-#ifdef TCL_THREADS
-    if (TclThread_Init(interp) != TCL_OK) {
-	return TCL_ERROR;
-    }
-#endif
-    
     /*
      * Create test image type.
      */
@@ -343,7 +340,7 @@ TestcbindCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
     TkWindow *winPtr;
     Tk_Window tkwin;
@@ -592,7 +589,7 @@ TestdeleteappsCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
     NewApp *nextPtr;
 
@@ -1703,7 +1700,7 @@ ImageCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
     TImageMaster *timPtr = (TImageMaster *) clientData;
     int x, y, width, height;
@@ -1926,7 +1923,7 @@ TestmakeexistCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
     Tk_Window mainWin = (Tk_Window) clientData;
     int i;
@@ -1967,7 +1964,7 @@ TestmenubarCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
 #ifdef __UNIX__
     Tk_Window mainWin = (Tk_Window) clientData;
@@ -2035,7 +2032,7 @@ TestmetricsCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
     char buf[TCL_INTEGER_SPACE];
 
@@ -2065,7 +2062,7 @@ TestmetricsCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     TkWindow *winPtr;
@@ -2120,7 +2117,7 @@ TestpropCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
     Tk_Window mainWin = (Tk_Window) clientData;
     int result, actualFormat;
@@ -2193,16 +2190,15 @@ TestpropCmd(clientData, interp, argc, argv)
  */
 
 	/* ARGSUSED */
+#if !(defined(__WIN32__) || defined(MAC_TCL))
 static int
 TestsendCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
     TkWindow *winPtr = (TkWindow *) clientData;
-#endif
 
     if (argc < 2) {
 	Tcl_AppendResult(interp, "wrong # args;  must be \"", argv[0],
@@ -2210,7 +2206,6 @@ TestsendCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
 
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
     if (strcmp(argv[1], "bogus") == 0) {
 	XChangeProperty(winPtr->dispPtr->display,
 		RootWindow(winPtr->dispPtr->display, 0),
@@ -2259,14 +2254,21 @@ TestsendCmd(clientData, interp, argc, argv)
 	    if (argv[4][0] == 0) {
 		XDeleteProperty(winPtr->dispPtr->display, w, propName);
 	    } else {
-		for (p = argv[4]; *p != 0; p++) {
+		Tcl_DString tmp;
+
+		Tcl_DStringInit(&tmp);
+		for (p = Tcl_DStringAppend(&tmp, argv[4], strlen(argv[4]));
+			*p != 0; p++) {
 		    if (*p == '\n') {
 			*p = 0;
 		    }
 		}
+
 		XChangeProperty(winPtr->dispPtr->display,
 			w, propName, XA_STRING, 8, PropModeReplace,
-			(unsigned char *) argv[4], p-argv[4]);
+			(unsigned char *) Tcl_DStringValue(&tmp),
+			p-Tcl_DStringValue(&tmp));
+		Tcl_DStringFree(&tmp);
 	    }
 	}
     } else if (strcmp(argv[1], "serial") == 0) {
@@ -2279,9 +2281,9 @@ TestsendCmd(clientData, interp, argc, argv)
 		"\": must be bogus, prop, or serial", (char *) NULL);
 	return TCL_ERROR;
     }
-#endif
     return TCL_OK;
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -2306,7 +2308,7 @@ TesttextCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
     TkText *textPtr;
     size_t len;
@@ -2387,7 +2389,7 @@ TestwrapperCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
     TkWindow *winPtr, *wrapperPtr;
     Tk_Window tkwin;

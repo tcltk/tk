@@ -9,15 +9,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winWm.test,v 1.4 2000/01/12 11:45:36 hobbs Exp $
+# RCS: @(#) $Id: winWm.test,v 1.4.8.1 2002/08/20 20:27:16 das Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-foreach i [winfo children .] {
-    catch {destroy $i}
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 # Measure the height of a single menu line
 
@@ -229,18 +228,49 @@ test winWm-5.2 {UpdateGeometryInfo: menu resizing} {pcOnly} {
     set result
 } {50 50 0}
 
+test winWm-6.1 {wm attributes} {pcOnly} {
+    destroy .t
+    toplevel .t
+    wm attributes .t
+} {-disabled 0 -toolwindow 0 -topmost 0}
+test winWm-6.2 {wm attributes} {pcOnly} {
+    destroy .t
+    toplevel .t
+    wm attributes .t -disabled
+} {0}
+test winWm-6.3 {wm attributes} {pcOnly} {
+    # This isn't quite the correct error message yet, but it works.
+    destroy .t
+    toplevel .t
+    list [catch {wm attributes .t -foo} msg] $msg
+} {1 {wrong # args: should be "wm attributes window ?-disabled ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}}
+
+destroy .t
+
+test winWm-6.1 {deiconify on an unmapped toplevel
+        will raise the window and set the focus} {pcOnly} {
+    destroy .t
+    toplevel .t
+    lower .t
+    focus -force .
+    wm deiconify .t
+    update
+    list [wm stackorder .t isabove .] [focus]
+} {1 .t}
+
+test winWm-6.2 {deiconify on an already mapped toplevel
+        will raise the window and set the focus} {pcOnly} {
+    destroy .t
+    toplevel .t
+    lower .t
+    update
+    focus -force .
+    wm deiconify .t
+    update
+    list [wm stackorder .t isabove .] [focus]
+} {1 .t}
+
+
 # cleanup
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-

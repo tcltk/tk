@@ -11,12 +11,16 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.22.2.2 2002/06/10 05:38:23 wolfsuit Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.22.2.3 2002/08/20 20:27:05 das Exp $
  */
 
 #include "tkPort.h"
 #include "default.h"
 #include "tkInt.h"
+
+#ifdef WIN32
+#include "tkWinInt.h"
+#endif
 
 typedef struct {
     Tk_OptionTable listboxOptionTable;	/* Table defining configuration options
@@ -128,6 +132,8 @@ typedef struct {
     int active;			/* Index of "active" element (the one that
 				 * has been selected by keyboard traversal).
 				 * -1 means none. */
+    int activeStyle;		/* style in which to draw the active element.
+				 * One of: underline, none, dotbox */
 
     /*
      * Information for scanning:
@@ -210,11 +216,22 @@ static char *stateStrings[] = {
     "disabled", "normal", (char *) NULL
 };
 
+enum activeStyle {
+    ACTIVE_STYLE_DOTBOX, ACTIVE_STYLE_NONE, ACTIVE_STYLE_UNDERLINE
+};
+
+static char *activeStyleStrings[] = {
+    "dotbox", "none", "underline", (char *) NULL
+};
+
 /*
  * The optionSpecs table defines the valid configuration options for the
  * listbox widget
  */
 static Tk_OptionSpec optionSpecs[] = {
+    {TK_OPTION_STRING_TABLE, "-activestyle", "activeStyle", "ActiveStyle",
+	DEF_LISTBOX_ACTIVE_STYLE, -1, Tk_Offset(Listbox, activeStyle),
+        0, (ClientData) activeStyleStrings, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	 DEF_LISTBOX_BG_COLOR, -1, Tk_Offset(Listbox, normalBorder),
 	 0, (ClientData) DEF_LISTBOX_BG_MONO, 0},
@@ -294,26 +311,26 @@ static Tk_OptionSpec optionSpecs[] = {
  */
 static Tk_OptionSpec itemAttrOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	 (char *)NULL, -1, Tk_Offset(ItemAttr, border),
-	 TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
+     (char *)NULL, -1, Tk_Offset(ItemAttr, border),
+     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
      (ClientData) DEF_LISTBOX_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bg", (char *) NULL, (char *) NULL,
-	 (char *) NULL, 0, -1, 0, (ClientData) "-background", 0},
+     (char *) NULL, 0, -1, 0, (ClientData) "-background", 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", (char *) NULL,
-	 (char *) NULL, 0, -1, 0, (ClientData) "-foreground", 0},
+     (char *) NULL, 0, -1, 0, (ClientData) "-foreground", 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-	 (char *) NULL, -1, Tk_Offset(ItemAttr, fgColor),
-	 TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
+     (char *) NULL, -1, Tk_Offset(ItemAttr, fgColor),
+     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
-	 (char *) NULL, -1, Tk_Offset(ItemAttr, selBorder),
-	 TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
+     (char *) NULL, -1, Tk_Offset(ItemAttr, selBorder),
+     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
      (ClientData) DEF_LISTBOX_SELECT_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
-	 (char *) NULL, -1, Tk_Offset(ItemAttr, selFgColor),
-	 TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
+     (char *) NULL, -1, Tk_Offset(ItemAttr, selFgColor),
+     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
      (ClientData) DEF_LISTBOX_SELECT_FG_MONO, 0},
     {TK_OPTION_END, (char *) NULL, (char *) NULL, (char *) NULL,
-	 (char *) NULL, 0, -1, 0, 0, 0}
+     (char *) NULL, 0, -1, 0, 0, 0}
 };
 
 /*
@@ -323,17 +340,17 @@ static Tk_OptionSpec itemAttrOptionSpecs[] = {
  */
 static CONST char *commandNames[] = {
     "activate", "bbox", "cget", "configure", "curselection", "delete", "get",
-	"index", "insert", "itemcget", "itemconfigure", "nearest", "scan",
-	"see", "selection", "size", "xview", "yview",
+    "index", "insert", "itemcget", "itemconfigure", "nearest", "scan",
+    "see", "selection", "size", "xview", "yview",
     (char *) NULL
 };
 
 enum command {
     COMMAND_ACTIVATE, COMMAND_BBOX, COMMAND_CGET, COMMAND_CONFIGURE,
-	COMMAND_CURSELECTION, COMMAND_DELETE, COMMAND_GET, COMMAND_INDEX,
-	COMMAND_INSERT, COMMAND_ITEMCGET, COMMAND_ITEMCONFIGURE,
-	COMMAND_NEAREST, COMMAND_SCAN, COMMAND_SEE, COMMAND_SELECTION,
-	COMMAND_SIZE, COMMAND_XVIEW, COMMAND_YVIEW
+    COMMAND_CURSELECTION, COMMAND_DELETE, COMMAND_GET, COMMAND_INDEX,
+    COMMAND_INSERT, COMMAND_ITEMCGET, COMMAND_ITEMCONFIGURE,
+    COMMAND_NEAREST, COMMAND_SCAN, COMMAND_SEE, COMMAND_SELECTION,
+    COMMAND_SIZE, COMMAND_XVIEW, COMMAND_YVIEW
 };
 
 static CONST char *selCommandNames[] = {
@@ -425,8 +442,8 @@ static void		ListboxWorldChanged _ANSI_ARGS_((
 static int		NearestListboxElement _ANSI_ARGS_((Listbox *listPtr,
 			    int y));
 static char *		ListboxListVarProc _ANSI_ARGS_ ((ClientData clientData,
-	                    Tcl_Interp *interp, char *name1, CONST char *name2,
- 	                    int flags));
+	                    Tcl_Interp *interp, CONST char *name1,
+			    CONST char *name2, int flags));
 static void		MigrateHashEntries _ANSI_ARGS_ ((Tcl_HashTable *table,
 			    int first, int last, int offset));
 /*
@@ -1796,7 +1813,7 @@ DisplayListbox(clientData)
     register Listbox *listPtr = (Listbox *) clientData;
     register Tk_Window tkwin = listPtr->tkwin;
     GC gc;
-    int i, limit, x, y, width, prevSelected;
+    int i, limit, x, y, width, prevSelected, freeGC;
     Tk_FontMetrics fm;
     Tcl_Obj *curElement;
     Tcl_HashEntry *entry;
@@ -1873,6 +1890,7 @@ DisplayListbox(clientData)
 	y = ((i - listPtr->topIndex) * listPtr->lineHeight) 
 		+ listPtr->inset;
 	gc = listPtr->textGC;
+	freeGC = 0;
 	/*
 	 * Lookup this item in the item attributes table, to see if it has
 	 * special foreground/background colors
@@ -1908,27 +1926,29 @@ DisplayListbox(clientData)
 		    if (attrs->selFgColor != NULL) {
 			gcValues.foreground = attrs->selFgColor->pixel;
 			gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
+			freeGC = 1;
 		    }
 		}
-		
+
 		Tk_Fill3DRectangle(tkwin, pixmap, selectedBg, x, y,
 			width, listPtr->lineHeight, 0, TK_RELIEF_FLAT);
 
 		/*
 		 * Draw beveled edges around the selection, if there are
-		 * visible edges next to this element.  Special considerations:
+		 * visible edges next to this element. Special considerations:
+		 *
 		 * 1. The left and right bevels may not be visible if
-		 *	horizontal scrolling is enabled (the "left" and "right"
+		 *	horizontal scrolling is enabled (the "left" & "right"
 		 *	variables are zero to indicate that the corresponding
 		 *	bevel is visible).
 		 * 2. Top and bottom bevels are only drawn if this is the
 		 *	first or last seleted item.
-		 * 3. If the left or right bevel isn't visible, then the "left"
-		 *	and "right" variables, computed above, have non-zero
+		 * 3. If the left or right bevel isn't visible, then the
+		 *	"left" & "right" vars, computed above, have non-zero
 		 *	values that extend the top and bottom bevels so that
 		 *	the mitered corners are off-screen.
 		 */
-		
+
 		/* Draw left bevel */
 		if (left == 0) {
 		    Tk_3DVerticalBevel(tkwin, pixmap, selectedBg,
@@ -1990,11 +2010,13 @@ DisplayListbox(clientData)
 			    && attrs->fgColor != NULL) {
 			gcValues.foreground = attrs->fgColor->pixel;
 			gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
+			freeGC = 1;
 		    }
 		}
 		prevSelected = 0;
 	    }
 	}
+
 	/* Draw the actual text of this item */
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	y += fm.ascent + listPtr->selBorderWidth;
@@ -2004,10 +2026,68 @@ DisplayListbox(clientData)
 	Tk_DrawChars(listPtr->display, pixmap, gc, listPtr->tkfont,
 		stringRep, stringLen, x, y);
 
-	/* If this is the active element, underline it. */
+	/* If this is the active element, apply the activestyle to it. */
 	if ((i == listPtr->active) && (listPtr->flags & GOT_FOCUS)) {
-	    Tk_UnderlineChars(listPtr->display, pixmap, gc, listPtr->tkfont,
-		    stringRep, x, y, 0, stringLen);
+	    if (listPtr->activeStyle == ACTIVE_STYLE_UNDERLINE) {
+		/* Underline the text. */
+		Tk_UnderlineChars(listPtr->display, pixmap, gc,
+			listPtr->tkfont, stringRep, x, y, 0, stringLen);
+	    } else if (listPtr->activeStyle == ACTIVE_STYLE_DOTBOX) {
+#ifdef WIN32
+		/*
+		 * This provides for exact default look and feel on Windows.
+		 */
+		TkWinDCState state;
+		HDC dc;
+		RECT rect;
+
+		dc = TkWinGetDrawableDC(listPtr->display, pixmap, &state);
+		rect.left   = listPtr->inset;
+		rect.top    = ((i - listPtr->topIndex) * listPtr->lineHeight) 
+		    + listPtr->inset;
+		rect.right  = rect.left + width;
+		rect.bottom = rect.top + listPtr->lineHeight;
+		DrawFocusRect(dc, &rect);
+		TkWinReleaseDrawableDC(pixmap, dc, &state);
+#else
+		/*
+		 * Draw a dotted box around the text.
+		 */
+		x = listPtr->inset;
+		y = ((i - listPtr->topIndex) * listPtr->lineHeight)
+		    + listPtr->inset;
+		width = Tk_Width(tkwin) - 2*listPtr->inset - 1;
+
+		gcValues.line_style  = LineOnOffDash;
+		gcValues.line_width  = listPtr->selBorderWidth;
+		if (gcValues.line_width <= 0) {
+		    gcValues.line_width  = 1;
+		}
+		gcValues.dash_offset = 0;
+		gcValues.dashes      = 1;
+		/*
+		 * You would think the XSetDashes was necessary, but it
+		 * appears that the default dotting for just saying we
+		 * want dashes appears to work correctly.
+		 static char dashList[] = { 1 };
+		 static int  dashLen    = sizeof(dashList);
+		 XSetDashes(listPtr->display, gc, 0, dashList, dashLen);
+		 */
+		mask = GCLineWidth | GCLineStyle | GCDashList | GCDashOffset;
+		XChangeGC(listPtr->display, gc, mask, &gcValues);
+		XDrawRectangle(listPtr->display, pixmap, gc, x, y,
+			(unsigned) width, (unsigned) listPtr->lineHeight - 1);
+		if (!freeGC) {
+		    /* Don't bother changing if it is about to be freed. */
+		    gcValues.line_style = LineSolid;
+		    XChangeGC(listPtr->display, gc, GCLineStyle, &gcValues);
+		}
+#endif
+	    }
+	}
+
+	if (freeGC) {
+	    Tk_FreeGC(listPtr->display, gc);
 	}
     }
 
@@ -3223,7 +3303,7 @@ static char *
 ListboxListVarProc(clientData, interp, name1, name2, flags)
     ClientData clientData;      /* Information about button. */
     Tcl_Interp *interp;         /* Interpreter containing variable. */
-    char *name1;                /* Not used. */
+    CONST char *name1;          /* Not used. */
     CONST char *name2;          /* Not used. */
     int flags;                  /* Information about what happened. */
 {

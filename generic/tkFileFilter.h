@@ -9,16 +9,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFileFilter.h,v 1.4.24.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkFileFilter.h,v 1.4.24.2 2002/08/20 20:27:04 das Exp $
  *
  */
 
 #ifndef _TK_FILE_FILTER
 #define _TK_FILE_FILTER
 
-#if defined(MAC_TCL)
+#ifdef MAC_TCL
 #include <StandardFile.h>
-#define OSType long
 #else
 #define OSType long
 #endif

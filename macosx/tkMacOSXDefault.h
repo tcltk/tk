@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.1.2.3 2002/06/10 05:38:26 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.1.2.4 2002/08/20 20:27:11 das Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -216,6 +216,7 @@
  * Defaults for listboxes:
  */
 
+#define DEF_LISTBOX_ACTIVE_STYLE	"underline"
 #define DEF_LISTBOX_BG_COLOR		NORMAL_BG
 #define DEF_LISTBOX_BG_MONO		WHITE
 #define DEF_LISTBOX_BORDER_WIDTH	"1"
@@ -487,6 +488,7 @@
 #define DEF_TEXT_INSERT_OFF_TIME	"300"
 #define DEF_TEXT_INSERT_ON_TIME		"600"
 #define DEF_TEXT_INSERT_WIDTH		"1"
+#define DEF_TEXT_MAX_UNDO    	"0"
 #define DEF_TEXT_PADX			"1"
 #define DEF_TEXT_PADY			"1"
 #define DEF_TEXT_RELIEF			"flat"

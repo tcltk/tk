@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.3.18.1 2002/02/05 02:25:16 wolfsuit Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.3.18.2 2002/08/20 20:27:08 das Exp $
  */
 
 #include "default.h"
@@ -28,9 +28,9 @@
  * Forward declarations for procedures defined later in this file:
  */
 
-static char *		ForwBack _ANSI_ARGS_((char *string,
+static CONST char *	ForwBack _ANSI_ARGS_((CONST char *string,
 			    TkTextIndex *indexPtr));
-static char *		StartEnd _ANSI_ARGS_(( char *string,
+static CONST char *	StartEnd _ANSI_ARGS_((CONST char *string,
 			    TkTextIndex *indexPtr));
 
 /*
@@ -314,7 +314,7 @@ int
 TkTextGetIndex(interp, textPtr, string, indexPtr)
     Tcl_Interp *interp;		/* Use this for error reporting. */
     TkText *textPtr;		/* Information about text widget. */
-    char *string;		/* Textual description of position. */
+    CONST char *string;		/* Textual description of position. */
     TkTextIndex *indexPtr;	/* Index structure to fill in. */
 {
     char *p, *end, *endOfBase;
@@ -324,6 +324,8 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
     TkTextIndex first, last;
     int wantLast, result;
     char c;
+    CONST char *cp;
+    Tcl_DString copy;
 
     /*
      *---------------------------------------------------------------------
@@ -354,7 +356,8 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
      * funny characters like "@" or "+1c".
      */
 
-    p = strrchr(string, '.');
+    Tcl_DStringInit(&copy);
+    p = strrchr(Tcl_DStringAppend(&copy, string, -1), '.');
     if (p != NULL) {
 	if ((p[1] == 'f') && (strncmp(p+1, "first", 5) == 0)) {
 	    wantLast = 0;
@@ -366,7 +369,7 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
 	    goto tryxy;
 	}
 	*p = 0;
-	hPtr = Tcl_FindHashEntry(&textPtr->tagTable, string);
+	hPtr = Tcl_FindHashEntry(&textPtr->tagTable, Tcl_DStringValue(&copy));
 	*p = '.';
 	if (hPtr == NULL) {
 	    goto tryxy;
@@ -377,10 +380,12 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
 		&last);
 	TkBTreeStartSearch(&first, &last, tagPtr, &search);
 	if (!TkBTreeCharTagged(&first, tagPtr) && !TkBTreeNextTag(&search)) {
+	    Tcl_ResetResult(interp);
 	    Tcl_AppendResult(interp,
 		    "text doesn't contain any characters tagged with \"",
 		    Tcl_GetHashKey(&textPtr->tagTable, hPtr), "\"",
 			    (char *) NULL);
+	    Tcl_DStringFree(&copy);
 	    return TCL_ERROR;
 	}
 	*indexPtr = search.curIndex;
@@ -400,14 +405,14 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
 
 	int x, y;
 
-	p = string+1;
-	x = strtol(p, &end, 0);
-	if ((end == p) || (*end != ',')) {
+	cp = string+1;
+	x = strtol(cp, &end, 0);
+	if ((end == cp) || (*end != ',')) {
 	    goto error;
 	}
-	p = end+1;
-	y = strtol(p, &end, 0);
-	if (end == p) {
+	cp = end+1;
+	y = strtol(cp, &end, 0);
+	if (end == cp) {
 	    goto error;
 	}
 	TkTextPixelIndex(textPtr, x, y, indexPtr);
@@ -441,7 +446,7 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
 	goto gotBase;
     }
 
-    for (p = string; *p != 0; p++) {
+    for (p = Tcl_DStringValue(&copy); *p != 0; p++) {
 	if (isspace(UCHAR(*p)) || (*p == '+') || (*p == '-')) {
 	    break;
 	}
@@ -454,14 +459,15 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
 
 	c = *endOfBase;
 	*endOfBase = 0;
-	result = TkTextWindowIndex(textPtr, string, indexPtr);
+	result = TkTextWindowIndex(textPtr, Tcl_DStringValue(&copy), indexPtr);
 	*endOfBase = c;
 	if (result != 0) {
 	    goto gotBase;
 	}
     }
     if ((string[0] == 'e')
-	    && (strncmp(string, "end", (size_t) (endOfBase-string)) == 0)) {
+	    && (strncmp(string, "end",
+	    (size_t) (endOfBase-Tcl_DStringValue(&copy))) == 0)) {
 	/*
 	 * Base position is end of text.
 	 */
@@ -476,7 +482,8 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
 
 	c = *endOfBase;
 	*endOfBase = 0;
-	result = TkTextMarkNameToIndex(textPtr, string, indexPtr);
+	result = TkTextMarkNameToIndex(textPtr, Tcl_DStringValue(&copy),
+		indexPtr);
 	*endOfBase = c;
 	if (result == TCL_OK) {
 	    goto gotBase;
@@ -488,7 +495,7 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
 
 	c = *endOfBase;
 	*endOfBase = 0;
-	result = TkTextImageIndex(textPtr, string, indexPtr);
+	result = TkTextImageIndex(textPtr, Tcl_DStringValue(&copy), indexPtr);
 	*endOfBase = c;
 	if (result != 0) {
 	    goto gotBase;
@@ -506,27 +513,30 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
      */
 
     gotBase:
-    p = endOfBase;
+    cp = endOfBase;
     while (1) {
-	while (isspace(UCHAR(*p))) {
-	    p++;
+	while (isspace(UCHAR(*cp))) {
+	    cp++;
 	}
-	if (*p == 0) {
+	if (*cp == 0) {
 	    break;
 	}
     
-	if ((*p == '+') || (*p == '-')) {
-	    p = ForwBack(p, indexPtr);
+	if ((*cp == '+') || (*cp == '-')) {
+	    cp = ForwBack(cp, indexPtr);
 	} else {
-	    p = StartEnd(p, indexPtr);
+	    cp = StartEnd(cp, indexPtr);
 	}
-	if (p == NULL) {
+	if (cp == NULL) {
 	    goto error;
 	}
     }
+    Tcl_DStringFree(&copy);
     return TCL_OK;
 
     error:
+    Tcl_DStringFree(&copy);
+    Tcl_ResetResult(interp);
     Tcl_AppendResult(interp, "bad text index \"", string, "\"",
 	    (char *) NULL);
     return TCL_ERROR;
@@ -645,16 +655,16 @@ TkTextIndexCmp(index1Ptr, index2Ptr)
  *---------------------------------------------------------------------------
  */
 
-static char *
+static CONST char *
 ForwBack(string, indexPtr)
-    char *string;		/* String to parse for additional info
+    CONST char *string;		/* String to parse for additional info
 				 * about modifier (count and units). 
 				 * Points to "+" or "-" that starts
 				 * modifier. */
     TkTextIndex *indexPtr;	/* Index to update as specified in string. */
 {
-    register char *p;
-    char *end, *units;
+    register CONST char *p, *units;
+    char *end;
     int count, lineIndex;
     size_t length;
 
@@ -1085,15 +1095,15 @@ TkTextIndexBackChars(srcPtr, charCount, dstPtr)
  *----------------------------------------------------------------------
  */
 
-static char *
+static CONST char *
 StartEnd(string, indexPtr)
-    char *string;		/* String to parse for additional info
+    CONST char *string;		/* String to parse for additional info
 				 * about modifier (count and units). 
 				 * Points to first character of modifer
 				 * word. */
     TkTextIndex *indexPtr;	/* Index to mdoify based on string. */
 {
-    char *p;
+    CONST char *p;
     int c, offset;
     size_t length;
     register TkTextSegment *segPtr;

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.15.2.1 2002/02/05 02:25:14 wolfsuit Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.15.2.2 2002/08/20 20:27:03 das Exp $
  */
 
 /*
@@ -127,6 +127,8 @@ static Tcl_Obj *	GetConfigList _ANSI_ARGS_((char *recordPtr,
 			    Option *optionPtr, Tk_Window tkwin));
 static Tcl_Obj *	GetObjectForOption _ANSI_ARGS_((char *recordPtr,
 			    Option *optionPtr, Tk_Window tkwin));
+static Option *		GetOption _ANSI_ARGS_((CONST char *name,
+			    OptionTable *tablePtr));
 static Option *		GetOptionFromObj _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tcl_Obj *objPtr, OptionTable *tablePtr));
 static int		ObjectIsEmpty _ANSI_ARGS_((Tcl_Obj *objPtr));
@@ -463,7 +465,7 @@ Tk_InitOptions(interp, recordPtr, optionTable, tkwin)
     OptionTable *tablePtr = (OptionTable *) optionTable;
     Option *optionPtr;
     int count;
-    char *value;
+    Tk_Uid value;
     Tcl_Obj *valuePtr;
     enum {
 	OPTION_DATABASE, SYSTEM_DEFAULT, TABLE_DEFAULT
@@ -789,6 +791,24 @@ DoObjConfig(interp, recordPtr, optionPtr, valuePtr, tkwin, savedOptionPtr)
 	    }
 	    break;
 	}
+	case TK_OPTION_STYLE: {
+	    Tk_Style new;
+
+	    if (nullOK && ObjectIsEmpty(valuePtr)) {
+		valuePtr = NULL;
+		new = NULL;
+	    } else {
+		new = Tk_AllocStyleFromObj(interp, valuePtr);
+		if (new == NULL) {
+		    return TCL_ERROR;
+		}
+	    }
+	    if (internalPtr != NULL) {
+		*((Tk_Style *) oldInternalPtr) = *((Tk_Style *) internalPtr);
+		*((Tk_Style *) internalPtr) = new;
+	    }
+	    break;
+	}
 	case TK_OPTION_BITMAP: {
 	    Pixmap new;
 
@@ -1004,53 +1024,38 @@ ObjectIsEmpty(objPtr)
 /*
  *----------------------------------------------------------------------
  *
- * GetOptionFromObj --
+ * GetOption --
  *
  *	This procedure searches through a chained option table to find
  *	the entry for a particular option name.
  *
  * Results:
  *	The return value is a pointer to the matching entry, or NULL
- *	if no matching entry could be found.  If NULL is returned and
- *	interp is not NULL than an error message is left in its result.
+ *	if no matching entry could be found.
  *	Note: if the matching entry is a synonym then this procedure
  *	returns a pointer to the synonym entry, *not* the "real" entry
  *	that the synonym refers to.
  *
  * Side effects:
- *	Information about the matching entry is cached in the object
- *	containing the name, so that future lookups can proceed more
- *	quickly.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
 
 static Option *
-GetOptionFromObj(interp, objPtr, tablePtr)
-    Tcl_Interp *interp;		/* Used only for error reporting; if NULL
-				 * no message is left after an error. */
-    Tcl_Obj *objPtr;		/* Object whose string value is to be
-				 * looked up in the option table. */
-    OptionTable *tablePtr;	/* Table in which to look up objPtr. */
+GetOption(name, tablePtr)
+    CONST char *name;		/* String balue to be looked up in the
+				 * option table. */
+    OptionTable *tablePtr;	/* Table in which to look up name. */
 {
     Option *bestPtr, *optionPtr;
     OptionTable *tablePtr2;
-    char *p1, *p2, *name;
+    CONST char *p1, *p2;
     int count;
 
     /*
-     * First, check to see if the object already has the answer cached.
-     */
-
-    if (objPtr->typePtr == &tkOptionObjType) {
-	if (objPtr->internalRep.twoPtrValue.ptr1 == (VOID *) tablePtr) {
-	    return (Option *) objPtr->internalRep.twoPtrValue.ptr2;
-	}
-    }
-
-    /*
-     * The answer isn't cached.  Search through all of the option tables
-     * in the chain to find the best match.  Some tricky aspects:
+     * Search through all of the option tables in the chain to find the
+     * best match.  Some tricky aspects:
      *
      * 1. We have to accept unique abbreviations.
      * 2. The same name could appear in different tables in the chain.
@@ -1060,7 +1065,6 @@ GetOptionFromObj(interp, objPtr, tablePtr)
      */
 
     bestPtr = NULL;
-    name = Tcl_GetStringFromObj(objPtr, (int *) NULL);
     for (tablePtr2 = tablePtr; tablePtr2 != NULL;
 	    tablePtr2 = tablePtr2->nextPtr) {
 	for (optionPtr = tablePtr2->options, count = tablePtr2->numOptions;
@@ -1097,11 +1101,69 @@ GetOptionFromObj(interp, objPtr, tablePtr)
 	    }
 	}
     }
+
+    done:
+    return bestPtr;
+
+    error:
+    return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetOptionFromObj --
+ *
+ *      This procedure searches through a chained option table to find
+ *      the entry for a particular option name.
+ *
+ * Results:
+ *      The return value is a pointer to the matching entry, or NULL
+ *      if no matching entry could be found.  If NULL is returned and
+ *      interp is not NULL than an error message is left in its result.
+ *      Note: if the matching entry is a synonym then this procedure
+ *      returns a pointer to the synonym entry, *not* the "real" entry
+ *      that the synonym refers to.
+ *
+ * Side effects:
+ *      Information about the matching entry is cached in the object
+ *      containing the name, so that future lookups can proceed more
+ *      quickly.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static Option *
+GetOptionFromObj(interp, objPtr, tablePtr)
+    Tcl_Interp *interp;         /* Used only for error reporting; if NULL
+                                 * no message is left after an error. */
+    Tcl_Obj *objPtr;            /* Object whose string value is to be
+                                 * looked up in the option table. */
+    OptionTable *tablePtr;      /* Table in which to look up objPtr. */
+{
+    Option *bestPtr;
+    char *name;
+
+    /*
+     * First, check to see if the object already has the answer cached.
+     */
+
+    if (objPtr->typePtr == &tkOptionObjType) {
+        if (objPtr->internalRep.twoPtrValue.ptr1 == (VOID *) tablePtr) {
+            return (Option *) objPtr->internalRep.twoPtrValue.ptr2;
+        }
+    }
+
+    /*
+     * The answer isn't cached.
+     */
+
+    name = Tcl_GetStringFromObj(objPtr, (int *) NULL);
+    bestPtr = GetOption(name, tablePtr);
     if (bestPtr == NULL) {
 	goto error;
     }
 
-    done:
     if ((objPtr->typePtr != NULL)
 	    && (objPtr->typePtr->freeIntRepProc != NULL)) {
 	objPtr->typePtr->freeIntRepProc(objPtr);
@@ -1117,6 +1179,44 @@ GetOptionFromObj(interp, objPtr, tablePtr)
 		"\"", (char *) NULL);
     }
     return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGetOptionSpec --
+ *
+ *      This procedure searches through a chained option table to find
+ *      the option spec for a particular option name.
+ *
+ * Results:
+ *      The return value is a pointer to the option spec of the matching
+ *      entry, or NULL if no matching entry could be found.
+ *      Note: if the matching entry is a synonym then this procedure
+ *      returns a pointer to the option spec of the synonym entry, *not*
+ *      the "real" entry that the synonym refers to.
+ *      Note: this call is primarily used by the style management code
+ *      (tkStyle.c) to look up an element's option spec into a widget's
+ *      option table.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+CONST Tk_OptionSpec *
+TkGetOptionSpec(name, optionTable)
+    CONST char *name;			/* String value to be looked up. */
+    Tk_OptionTable optionTable;		/* Table in which to look up name. */
+{
+    Option *optionPtr;
+
+    optionPtr = GetOption(name, (OptionTable *) optionTable);
+    if (optionPtr == NULL) {
+	return NULL;
+    }
+    return optionPtr->specPtr;
 }
 
 /*
@@ -1397,6 +1497,11 @@ Tk_RestoreSavedOptions(savePtr)
 			    = *((Tk_Font *) &savePtr->items[i].internalForm);
 		    break;
 		}
+		case TK_OPTION_STYLE: {
+		    *((Tk_Style *) internalPtr)
+			    = *((Tk_Style *) &savePtr->items[i].internalForm);
+		    break;
+		}
 		case TK_OPTION_BITMAP: {
 		    *((Pixmap *) internalPtr)
 			    = *((Pixmap *) &savePtr->items[i].internalForm);
@@ -1625,6 +1730,14 @@ FreeResources(optionPtr, objPtr, internalPtr, tkwin)
 		*((Tk_Font *) internalPtr) = NULL;
 	    } else if (objPtr != NULL) {
 		Tk_FreeFontFromObj(tkwin, objPtr);
+	    }
+	    break;
+	case TK_OPTION_STYLE:
+	    if (internalFormExists) {
+		Tk_FreeStyle(*((Tk_Style *) internalPtr));
+		*((Tk_Style *) internalPtr) = NULL;
+	    } else if (objPtr != NULL) {
+		Tk_FreeStyleFromObj(objPtr);
 	    }
 	    break;
 	case TK_OPTION_BITMAP:
@@ -1897,6 +2010,13 @@ GetObjectForOption(recordPtr, optionPtr, tkwin)
 	    Tk_Font tkfont = *((Tk_Font *) internalPtr);
 	    if (tkfont != NULL) {
 		objPtr = Tcl_NewStringObj(Tk_NameOfFont(tkfont), -1);
+	    }
+	    break;
+	}
+	case TK_OPTION_STYLE: {
+	    Tk_Style style = *((Tk_Style *) internalPtr);
+	    if (style != NULL) {
+		objPtr = Tcl_NewStringObj(Tk_NameOfStyle(style), -1);
 	    }
 	    break;
 	}

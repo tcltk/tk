@@ -13,7 +13,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPPM.c,v 1.8.2.1 2002/06/10 05:38:23 wolfsuit Exp $
+ * RCS: @(#) $Id: tkImgPPM.c,v 1.8.2.2 2002/08/20 20:27:05 das Exp $
  */
 
 #define USE_OLD_IMAGE
@@ -228,7 +228,8 @@ FileReadPPM(interp, chan, fileName, formatString, imageHandle, destX, destY,
 	    }
 	}
 	block.height = nLines;
-	Tk_PhotoPutBlock(imageHandle, &block, destX, destY, width, nLines);
+	Tk_PhotoPutBlock(imageHandle, &block, destX, destY, width, nLines,
+		TK_PHOTO_COMPOSITE_SET);
 	destY += nLines;
     }
 

@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.21.2.4 2002/06/10 05:38:23 wolfsuit Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.21.2.5 2002/08/20 20:27:05 das Exp $
 
 library tk
 
@@ -73,14 +73,14 @@ declare 10 generic {
 declare 11 generic {
     unsigned long TkCreateBindingProcedure (Tcl_Interp *interp, \
 	    Tk_BindingTable bindingTable, \
-	    ClientData object, char *eventString, \
+	    ClientData object, CONST char *eventString, \
 	    TkBindEvalProc *evalProc, TkBindFreeProc *freeProc, \
 	    ClientData clientData)
 }
 
 declare 12 generic {
     TkCursor * TkCreateCursorFromData (Tk_Window tkwin, \
-	    char *source, char *mask, int width, int height, \
+	    CONST char *source, CONST char *mask, int width, int height, \
 	    int xHot, int yHot, XColor fg, XColor bg)
 }
 
@@ -92,7 +92,7 @@ declare 13 generic {
 
 declare 14 generic {
     Tk_Window TkCreateMainWindow (Tcl_Interp *interp, \
-	    char *screenName, char *baseName)
+	    CONST char *screenName, char *baseName)
 }
 
 declare 15 generic {
@@ -178,7 +178,7 @@ declare 32 generic {
 }
 
 declare 33 generic {
-    CONST char * TkGetDefaultScreenName (Tcl_Interp *interp, \
+    CONST84_RETURN char * TkGetDefaultScreenName (Tcl_Interp *interp, \
 	    CONST char *screenName)
 }
 
@@ -358,7 +358,7 @@ declare 74 generic {
 }
 
 declare 75 generic {
-    int TkpUseWindow (Tcl_Interp *interp, Tk_Window tkwin, char *string)
+    int TkpUseWindow (Tcl_Interp *interp, Tk_Window tkwin, CONST char *string)
 }
 
 declare 76 generic {
@@ -520,7 +520,7 @@ declare 110 generic {
 
 declare 111 generic {
     Tcl_Obj * TkpGetSystemDefault (Tk_Window tkwin, \
-	    char *dbName, char *className)
+	    CONST char *dbName, CONST char *className)
 }
 
 declare 112 generic {
@@ -558,59 +558,59 @@ declare 119 {mac aqua win} {
 }
 
 # removed duplicate from tkIntPlat table
-#declare 120 {mac macosx} {
+#declare 120 mac {
 #    void TkGenerateActivateEvents (TkWindow *winPtr, int active)
 #}
 
-declare 121 {mac macosx} {
+declare 121 {mac aqua} {
     Pixmap TkpCreateNativeBitmap (Display *display, char * source)
 }
 
-declare 122 {mac macosx} {
+declare 122 {mac aqua} {
     void TkpDefineNativeBitmaps (void)
 }
 
 # removed duplicate from tkIntPlat table
-#declare 123 {mac macosx} {
+#declare 123 mac {
 #    unsigned long TkpGetMS (void)
 #}
 
-declare 124 {mac macosx} {
+declare 124 {mac aqua} {
     Pixmap TkpGetNativeAppBitmap (Display *display, \
  	    CONST char *name, int *width, int *height)
 }
 
 # removed duplicates from tkIntPlat table
-#declare 125 {mac macosx} {
+#declare 125 mac {
 #    void TkPointerDeadWindow (TkWindow *winPtr)
 #}
 #
-#declare 126 {mac macosx} {
+#declare 126 mac {
 #    void TkpSetCapture (TkWindow *winPtr)
 #}
 #
-#declare 127 {mac macosx} {
+#declare 127 mac {
 #    void TkpSetCursor (TkpCursor cursor)
 #}
 #
-#declare 128 {mac macosx} {
+#declare 128 mac {
 #    void TkpWmSetState (TkWindow *winPtr, int state)
 #}
 #
-#declare 130 {mac macosx} {
+#declare 130 mac {
 #    Window  TkGetTransientMaster (TkWindow *winPtr)
 #}
 #
-#declare 131 {mac macosx} {
+#declare 131 mac {
 #    int  TkGenerateButtonEvent (int x, int y, \
 # 	    Window window, unsigned int state)
 #}
 #
-#declare 133 {mac macosx} {
+#declare 133 mac {
 #    void  TkGenWMDestroyEvent (Tk_Window tkwin)
 #}
 #
-#declare 134 {mac macosx} {
+#declare 134 mac {
 #    void  TkGenWMConfigureEvent (Tk_Window tkwin, int x, int y, \
 # 	    int width, int height, int flags)
 #}
@@ -657,6 +657,17 @@ declare 144 generic {
     void TkGCCleanup(TkDisplay *dispPtr)
 }
 
+declare 145 {mac win aqua} {
+    void TkSubtractRegion (TkRegion sra, TkRegion srcb, TkRegion dr_return)
+}
+
+declare 146 generic {
+    void TkStylePkgInit (TkMainInfo *mainPtr)
+}
+declare 147 generic {
+    void TkStylePkgFree (TkMainInfo *mainPtr)
+}
+
 ##############################################################################
 
 # Define the platform specific internal Tcl interface. These functions are
@@ -667,55 +678,55 @@ interface tkIntPlat
 #########################
 # Unix specific functions
 
-declare 0 unix {
+declare 0 x11 {
     void TkCreateXEventSource (void)
 }
 
-declare 1 unix {
+declare 1 x11 {
     void TkFreeWindowId (TkDisplay *dispPtr, Window w)
 }
 
-declare 2 unix {
+declare 2 x11 {
     void TkInitXId (TkDisplay *dispPtr)
 }
 
-declare 3 unix {
+declare 3 x11 {
     int TkpCmapStressed (Tk_Window tkwin, Colormap colormap)
 }
 
-declare 4 unix {
+declare 4 x11 {
     void TkpSync (Display *display)
 }
 
-declare 5 unix {
+declare 5 x11 {
     Window TkUnixContainerId (TkWindow *winPtr)
 }
 
-declare 6 unix {
+declare 6 x11 {
     int TkUnixDoOneXEvent (Tcl_Time *timePtr)
 }
 
-declare 7 unix {
+declare 7 x11 {
     void TkUnixSetMenubar (Tk_Window tkwin, Tk_Window menubar)
 }
 
-declare 8 unix {
+declare 8 x11 {
     int TkpScanWindowId (Tcl_Interp *interp, CONST char *string, Window *idPtr)
 }
 
-declare 9 unix {
+declare 9 x11 {
     void TkWmCleanup (TkDisplay *dispPtr)
 }
 
-declare 10 unix {
+declare 10 x11 {
     void TkSendCleanup (TkDisplay *dispPtr)
 }
 
-declare 11 unix {
+declare 11 x11 {
     void TkFreeXId (TkDisplay *dispPtr)
 }
 
-declare 12 unix {
+declare 12 x11 {
     int TkpWmSetState (TkWindow *winPtr, int state)
 }
 
@@ -855,7 +866,7 @@ declare 31 win {
 
 declare 32 win {
     Tcl_Obj * TkWinGetMenuSystemDefault (Tk_Window tkwin, \
-	    char *dbName, char *className)
+	    CONST char *dbName, CONST char *className)
 }
 
 declare 33 win {
@@ -870,11 +881,11 @@ declare 0 mac {
 }
 
 # removed duplicates from tkInt table
-#declare 1 {mac macosx} {
+#declare 1 mac {
 #    Pixmap TkpCreateNativeBitmap (Display *display, char * source)
 #}
 #
-#declare 2 {mac macosx} {
+#declare 2 mac {
 #    void TkpDefineNativeBitmaps (void)
 #}
 

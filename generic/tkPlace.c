@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.10.2.1 2002/02/05 02:25:15 wolfsuit Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.10.2.2 2002/08/20 20:27:06 das Exp $
  */
 
 #include "tkPort.h"
@@ -593,7 +593,7 @@ ConfigureSlave(interp, tkwin, table, objc, objv)
     int result = TCL_OK;
     Slave *slavePtr;
     
-    if (Tk_IsTopLevel(tkwin)) {
+    if (Tk_TopWinHierarchy(tkwin)) {
 	Tcl_AppendResult(interp, "can't use placer on top-level window \"",
 		Tk_PathName(tkwin), "\"; use wm command instead",
 		(char *) NULL);
@@ -626,7 +626,7 @@ ConfigureSlave(interp, tkwin, table, objc, objv)
 	    if (ancestor == Tk_Parent(slavePtr->tkwin)) {
 		break;
 	    }
-	    if (Tk_IsTopLevel(ancestor)) {
+	    if (Tk_TopWinHierarchy(ancestor)) {
 		Tcl_AppendResult(interp, "can't place ",
 			Tk_PathName(slavePtr->tkwin), " relative to ",
 			Tk_PathName(tkwin), (char *) NULL);

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXConfig.c,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXConfig.c,v 1.1.2.2 2002/08/20 20:27:11 das Exp $
  */
 
 #include "tk.h"
@@ -39,8 +39,8 @@
 Tcl_Obj *
 TkpGetSystemDefault(
     Tk_Window tkwin,                /* A window to use. */
-    char *dbName,                /* The option database name. */
-    char *className)                /* The name of the option class. */
+    CONST char *dbName,                /* The option database name. */
+    CONST char *className)                /* The name of the option class. */
 {
     return NULL;
 }

@@ -5,7 +5,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.11.2.1 2002/06/10 05:38:24 wolfsuit Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.11.2.2 2002/08/20 20:27:09 das Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -51,7 +51,17 @@ proc ::tk::dialog::file::chooseDir:: {args} {
 	set data(okBtn) $w.f2.ok
 	set data(cancelBtn) $w.f3.cancel
     }
-    wm transient $w $data(-parent)
+
+    # Dialog boxes should be transient with respect to their parent,
+    # so that they will always stay on top of their parent window.  However,
+    # some window managers will create the window as withdrawn if the parent
+    # window is withdrawn or iconified.  Combined with the grab we put on the
+    # window, this can hang the entire application.  Therefore we only make
+    # the dialog transient if the parent is viewable.
+
+    if {[winfo viewable [winfo toplevel $data(-parent)]] } {
+	wm transient $w $data(-parent)
+    }
 
     trace variable data(selectPath) w [list ::tk::dialog::file::SetPath $w]
     $data(dirMenuBtn) configure \

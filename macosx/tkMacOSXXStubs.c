@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.1.2.3 2002/06/10 05:38:26 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.1.2.4 2002/08/20 20:27:11 das Exp $
  */
 
 #include "tkInt.h"
@@ -191,7 +191,6 @@ TkpCloseDisplay(
         ckfree((char *) display->screens);
     }
     ckfree((char *) display);
-    ckfree((char *) displayPtr);
 }
 
 /*

@@ -6,17 +6,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvText.test,v 1.9 2000/02/03 21:27:27 ericm Exp $
+# RCS: @(#) $Id: canvText.test,v 1.9.8.1 2002/08/20 20:27:13 das Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 canvas .c -width 400 -height 300 -bd 2 -relief sunken
 pack .c
@@ -493,9 +490,9 @@ test canvText-17.1 {TextToPostscript procedure} {
 } "/Courier-Oblique findfont [font actual $font -size] scalefont ISOEncode setfont
 0.000 0.000 0.000 setrgbcolor AdjustColor
 100 200 \[
-(000)
-(000)
-(00)
+\[(000)\]
+\[(000)\]
+\[(00)\]
 ] $ay -0.5 0 0 false DrawText
 grestore
 restore showpage

@@ -10,39 +10,17 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: send.test,v 1.5 2001/09/21 20:38:18 hobbs Exp $
+# RCS: @(#) $Id: send.test,v 1.5.2.1 2002/08/20 20:27:15 das Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
-# 'send' is only available on Unix...
-
-set ::tcltest::testConfig(xhost) [string compare {} [auto_execok xhost]]
-set ::tcltest::testConfig(testsend) [llength [info commands testsend]]
-set ::tcltest::testConfig(altDisplay) [info exists env(TK_ALT_DISPLAY)]
-
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
-
-# If send is disabled because of inadequate security, don't run any
-# of these tests at all.
-
-setupbg
-set app [dobg {tk appname}]
-if {[catch {send $app set a 0} msg] == 1} {
-    if {[string match "X server insecure *" $msg]} {
-	puts "Your X server is insecure - \"send\" can't be used;\
-		skipping \"send\" tests."
-	cleanupbg
-	::tcltest::cleanupTests
-	return
-    }
-}
-cleanupbg
+testConstraint xhost [llength [auto_execok xhost]]
+testConstraint testsend [llength [info commands testsend]]
 
 # Compute a script that will load Tk into a child interpreter.
 
@@ -63,6 +41,7 @@ proc newApp {screen name class} {
 }
 
 set name [tk appname]
+set commId ""
 catch {
     set registry [testsend prop root InterpRegistry]
     set commId [lindex [testsend prop root InterpRegistry] 0]
@@ -71,19 +50,19 @@ tk appname tktest
 catch {send t_s_1 destroy .}
 catch {send t_s_2 destroy .}
 
-test send-1.1 {RegOpen procedure, bogus property} {unixOnly testsend} {
+test send-1.1 {RegOpen procedure, bogus property} {secureserver testsend} {
     testsend bogus
     set result [winfo interps]
     tk appname tktest
     list $result [winfo interps]
 } {{} tktest}
-test send-1.2 {RegOpen procedure, bogus property} {unixOnly testsend} {
+test send-1.2 {RegOpen procedure, bogus property} {secureserver testsend} {
     testsend prop root InterpRegistry {}
     set result [winfo interps]
     tk appname tktest
     list $result [winfo interps]
 } {{} tktest}
-test send-1.3 {RegOpen procedure, bogus property} {unixOnly testsend} {
+test send-1.3 {RegOpen procedure, bogus property} {secureserver testsend} {
     testsend prop root InterpRegistry abcdefg
     tk appname tktest
     set x [testsend prop root InterpRegistry]
@@ -92,52 +71,52 @@ test send-1.3 {RegOpen procedure, bogus property} {unixOnly testsend} {
 
 frame .f -width 1 -height 1
 set id [string range [winfo id .f] 2 end]
-test send-2.1 {RegFindName procedure} {unixOnly testsend} {
+test send-2.1 {RegFindName procedure} {secureserver testsend} {
     testsend prop root InterpRegistry {}
     list [catch {send foo bar} msg] $msg
 } {1 {no application named "foo"}}
-test send-2.2 {RegFindName procedure} {unixOnly testsend} {
+test send-2.2 {RegFindName procedure} {secureserver testsend} {
     testsend prop root InterpRegistry " abc\n def\nghi\n\n$id foo\n"
     tk appname foo
 } {foo #2}
-test send-2.3 {RegFindName procedure} {unixOnly testsend} {
+test send-2.3 {RegFindName procedure} {secureserver testsend} {
     testsend prop root InterpRegistry "gyz foo\n"
     tk appname foo
 } {foo}
-test send-2.4 {RegFindName procedure} {unixOnly testsend} {
+test send-2.4 {RegFindName procedure} {secureserver testsend} {
     testsend prop root InterpRegistry "${id}z foo\n"
     tk appname foo
 } {foo}
 
-test send-3.1 {RegDeleteName procedure} {unixOnly testsend} {
+test send-3.1 {RegDeleteName procedure} {secureserver testsend} {
     tk appname tktest
     testsend prop root InterpRegistry "012345 gorp\n12345 foo\n12345 tktest"
     tk appname x
     set x [testsend prop root InterpRegistry]
     string range $x [string first " " $x] end
 } " x\n012345 gorp\n12345 foo\n"
-test send-3.2 {RegDeleteName procedure} {unixOnly testsend} {
+test send-3.2 {RegDeleteName procedure} {secureserver testsend} {
     tk appname tktest
     testsend prop root InterpRegistry "012345 gorp\n12345 tktest\n23456 tktest"
     tk appname x
     set x [testsend prop root InterpRegistry]
     string range $x [string first " " $x] end
 } " x\n012345 gorp\n23456 tktest\n"
-test send-3.3 {RegDeleteName procedure} {unixOnly testsend} {
+test send-3.3 {RegDeleteName procedure} {secureserver testsend} {
     tk appname tktest
     testsend prop root InterpRegistry "012345 tktest\n12345 bar\n23456 tktest"
     tk appname x
     set x [testsend prop root InterpRegistry]
     string range $x [string first " " $x] end
 } " x\n12345 bar\n23456 tktest\n"
-test send-3.4 {RegDeleteName procedure} {unixOnly testsend} {
+test send-3.4 {RegDeleteName procedure} {secureserver testsend} {
     tk appname tktest
     testsend prop root InterpRegistry "foo"
     tk appname x
     set x [testsend prop root InterpRegistry]
     string range $x [string first " " $x] end
 } " x\nfoo\n"
-test send-3.5 {RegDeleteName procedure} {unixOnly testsend} {
+test send-3.5 {RegDeleteName procedure} {secureserver testsend} {
     tk appname tktest
     testsend prop root InterpRegistry ""
     tk appname x
@@ -145,12 +124,12 @@ test send-3.5 {RegDeleteName procedure} {unixOnly testsend} {
     string range $x [string first " " $x] end
 } " x\n"
 
-test send-4.1 {RegAddName procedure} {unixOnly testsend} {
+test send-4.1 {RegAddName procedure} {secureserver testsend} {
     testsend prop root InterpRegistry ""
     tk appname bar
     testsend prop root InterpRegistry
 } "$commId bar\n"
-test send-4.2 {RegAddName procedure} {unixOnly testsend} {
+test send-4.2 {RegAddName procedure} {secureserver testsend} {
     testsend prop root InterpRegistry "abc def"
     tk appname bar
     tk appname foo
@@ -159,25 +138,25 @@ test send-4.2 {RegAddName procedure} {unixOnly testsend} {
 
 # Previous checks should already cover the Regclose procedure.
 
-test send-5.1 {ValidateName procedure} {unixOnly testsend} {
+test send-5.1 {ValidateName procedure} {secureserver testsend} {
     testsend prop root InterpRegistry "123 abc\n"
     winfo interps
 } {}
-test send-5.2 {ValidateName procedure} {unixOnly testsend} {
+test send-5.2 {ValidateName procedure} {secureserver testsend} {
     testsend prop root InterpRegistry "$id Hi there"
     winfo interps
 } {{Hi there}}
-test send-5.3 {ValidateName procedure} {unixOnly testsend} {
+test send-5.3 {ValidateName procedure} {secureserver testsend} {
     testsend prop root InterpRegistry "$id Bogus"
     list [catch {send Bogus set a 44} msg] $msg
 } {1 {target application died or uses a Tk version before 4.0}}
-test send-5.4 {ValidateName procedure} {unixOnly testsend} {
+test send-5.4 {ValidateName procedure} {secureserver testsend} {
     tk appname test
     testsend prop root InterpRegistry "$commId Bogus\n$commId test\n"
     winfo interps
 } {test}
 
-if {$::tcltest::testConfig(xhost)} {
+if {[testConstraint xhost]} {
     winfo interps
     tk appname tktest
     update
@@ -188,43 +167,43 @@ if {$::tcltest::testConfig(xhost)} {
     }
 }
 
-test send-6.1 {ServerSecure procedure} {nonPortable unixOnly} {
+test send-6.1 {ServerSecure procedure} {nonPortable secureserver} {
     set a 44
     list [dobg [list send [tk appname] set a 55]] $a
 } {55 55}
-test send-6.2 {ServerSecure procedure} {nonPortable unixOnly} {
+test send-6.2 {ServerSecure procedure} {nonPortable secureserver} {
     set a 22
     exec xhost [exec hostname]
     list [catch {dobg [list send [tk appname] set a 33]} msg] $a $msg
 } {0 22 {X server insecure (must use xauth-style authorization); command ignored}}
-test send-6.3 {ServerSecure procedure} {nonPortable unixOnly} {
+test send-6.3 {ServerSecure procedure} {nonPortable secureserver} {
     set a abc
     exec xhost - [exec hostname]
     list [dobg [list send [tk appname] set a new]] $a
 } {new new}
 cleanupbg
 
-test send-7.1 {Tk_SetAppName procedure} {unixOnly testsend} {
+test send-7.1 {Tk_SetAppName procedure} {secureserver testsend} {
     testsend prop root InterpRegistry ""
     tk appname newName
     list [tk appname oldName] [testsend prop root InterpRegistry]
 } "oldName {$commId oldName\n}"
-test send-7.2 {Tk_SetAppName procedure, name not in use} {unixOnly testsend} {
+test send-7.2 {Tk_SetAppName procedure, name not in use} {secureserver testsend} {
     testsend prop root InterpRegistry ""
     list [tk appname gorp] [testsend prop root InterpRegistry]
 } "gorp {$commId gorp\n}"
-test send-7.3 {Tk_SetAppName procedure, name in use by us} {unixOnly testsend} {
+test send-7.3 {Tk_SetAppName procedure, name in use by us} {secureserver testsend} {
     tk appname name1
     testsend prop root InterpRegistry "$commId name2\n"
     list [tk appname name2] [testsend prop root InterpRegistry]
 } "name2 {$commId name2\n}"
-test send-7.4 {Tk_SetAppName procedure, name in use} {unixOnly testsend} {
+test send-7.4 {Tk_SetAppName procedure, name in use} {secureserver testsend} {
     tk appname name1
     testsend prop root InterpRegistry "$id foo\n$id foo #2\n$id foo #3\n"
     list [tk appname foo] [testsend prop root InterpRegistry]
 } "{foo #4} {$commId foo #4\n$id foo\n$id foo #2\n$id foo #3\n}"
 
-test send-8.1 {Tk_SendCmd procedure, options} {unixOnly} {
+test send-8.1 {Tk_SendCmd procedure, options} {secureserver} {
     setupbg
     set app [dobg {tk appname}]
     set a 66
@@ -235,7 +214,7 @@ test send-8.1 {Tk_SendCmd procedure, options} {unixOnly} {
     cleanupbg
     lappend result $a
 } {66 77}
-test send-8.2 {Tk_SendCmd procedure, options} {unixOnly altDisplay} {
+test send-8.2 {Tk_SendCmd procedure, options} {secureserver altDisplay} {
     setupbg -display $env(TK_ALT_DISPLAY)
     tk appname xyzgorp
     set a homeDisplay
@@ -249,29 +228,29 @@ test send-8.2 {Tk_SendCmd procedure, options} {unixOnly altDisplay} {
     cleanupbg
     set result
 } {altDisplay homeDisplay}
-test send-8.3 {Tk_SendCmd procedure, options} {unixOnly} {
+test send-8.3 {Tk_SendCmd procedure, options} {secureserver} {
     list [catch {send -- -async foo bar baz} msg] $msg
 } {1 {no application named "-async"}}
-test send-8.4 {Tk_SendCmd procedure, options} {unixOnly} {
+test send-8.4 {Tk_SendCmd procedure, options} {secureserver} {
     list [catch {send -gorp foo bar baz} msg] $msg
 } {1 {bad option "-gorp": must be -async, -displayof, or --}}
-test send-8.5 {Tk_SendCmd procedure, options} {unixOnly} {
+test send-8.5 {Tk_SendCmd procedure, options} {secureserver} {
     list [catch {send -async foo} msg] $msg
 } {1 {wrong # args: should be "send ?options? interpName arg ?arg ...?"}}
-test send-8.6 {Tk_SendCmd procedure, options} {unixOnly} {
+test send-8.6 {Tk_SendCmd procedure, options} {secureserver} {
     list [catch {send foo} msg] $msg
 } {1 {wrong # args: should be "send ?options? interpName arg ?arg ...?"}}
-test send-8.7 {Tk_SendCmd procedure, local execution} {unixOnly} {
+test send-8.7 {Tk_SendCmd procedure, local execution} {secureserver} {
     set a initial
     send [tk appname] {set a new}
     set a
 } {new}
-test send-8.8 {Tk_SendCmd procedure, local execution} {unixOnly} {
+test send-8.8 {Tk_SendCmd procedure, local execution} {secureserver} {
     set a initial
     send [tk appname] set a new
     set a
 } {new}
-test send-8.9 {Tk_SendCmd procedure, local execution} {unixOnly} {
+test send-8.9 {Tk_SendCmd procedure, local execution} {secureserver} {
     set a initial
     string tolower [list [catch {send [tk appname] open bad_file} msg] \
 	    $msg $errorInfo $errorCode]
@@ -280,7 +259,7 @@ test send-8.9 {Tk_SendCmd procedure, local execution} {unixOnly} {
 "open bad_file"
     invoked from within
 "send [tk appname] open bad_file"} {posix enoent {no such file or directory}}}
-test send-8.10 {Tk_SendCmd procedure, no such interpreter} {unixOnly} {
+test send-8.10 {Tk_SendCmd procedure, no such interpreter} {secureserver} {
     list [catch {send bogus_name bogus_command} msg] $msg
 } {1 {no application named "bogus_name"}}
 
@@ -289,29 +268,29 @@ catch {
     t_s_1 eval wm withdraw .
 }
 
-test send-8.11 {Tk_SendCmd procedure, local execution, different interp} {unixOnly testsend} {
+test send-8.11 {Tk_SendCmd procedure, local execution, different interp} {secureserver testsend} {
     set a us
     send t_s_1 set a them
     list $a [send t_s_1 set a]
 } {us them}
-test send-8.12 {Tk_SendCmd procedure, local execution, different interp} {unixOnly testsend} {
+test send-8.12 {Tk_SendCmd procedure, local execution, different interp} {secureserver testsend} {
     set a us
     send t_s_1 {set a them}
     list $a [send t_s_1 {set a}]
 } {us them}
-test send-8.13 {Tk_SendCmd procedure, local execution, different interp} {unixOnly testsend} {
+test send-8.13 {Tk_SendCmd procedure, local execution, different interp} {secureserver testsend} {
     set a us
     send t_s_1 {set a them}
     list $a [send t_s_1 {set a}]
 } {us them}
-test send-8.14 {Tk_SendCmd procedure, local interp killed by send} {unixOnly testsend} {
+test send-8.14 {Tk_SendCmd procedure, local interp killed by send} {secureserver testsend} {
     newApp "" t_s_2 Test
     list [catch {send t_s_2 {destroy .; concat result}} msg] $msg
 } {0 result}
 
 catch {interp delete t_s_2}
 
-test send-8.15 {Tk_SendCmd procedure, local interp, error info} {unixOnly testsend} {
+test send-8.15 {Tk_SendCmd procedure, local interp, error info} {secureserver testsend} {
     catch {error foo}
     list [catch {send t_s_1 {if 1 {open bogus_file_name}}} msg] $msg $errorInfo $errorCode
 } {1 {couldn't open "bogus_file_name": no such file or directory} {couldn't open "bogus_file_name": no such file or directory
@@ -321,7 +300,7 @@ test send-8.15 {Tk_SendCmd procedure, local interp, error info} {unixOnly testse
 "if 1 {open bogus_file_name}"
     invoked from within
 "send t_s_1 {if 1 {open bogus_file_name}}"} {POSIX ENOENT {no such file or directory}}}
-test send-8.16 {Tk_SendCmd procedure, bogusCommWindow} {unixOnly testsend} {
+test send-8.16 {Tk_SendCmd procedure, bogusCommWindow} {secureserver testsend} {
     testsend prop root InterpRegistry "10234 bogus\n"
     set result [list [catch {send bogus bogus command} msg] $msg]
     winfo interps
@@ -331,7 +310,7 @@ test send-8.16 {Tk_SendCmd procedure, bogusCommWindow} {unixOnly testsend} {
 
 catch {interp delete t_s_1}
 
-test send-8.17 {Tk_SendCmd procedure, deferring events} {unixOnly nonPortable} {
+test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortable} {
     # Non-portable because some window managers ignore "raise"
     # requests so can't guarantee that new app's window won't
     # obscure .f, thereby masking the Expose event.
@@ -351,7 +330,7 @@ test send-8.17 {Tk_SendCmd procedure, deferring events} {unixOnly nonPortable} {
     cleanupbg
     lappend result $a
 } {{no event yet} {no event yet} exposed}
-test send-8.18 {Tk_SendCmd procedure, error in remote app} {unixOnly} {
+test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver} {
     setupbg
     set app [dobg {tk appname}]
     set result [string tolower [list [catch {send $app open bad_name} msg] \
@@ -363,7 +342,7 @@ test send-8.18 {Tk_SendCmd procedure, error in remote app} {unixOnly} {
 "open bad_name"
     invoked from within
 "send $app open bad_name"} {posix enoent {no such file or directory}}}
-test send-8.19 {Tk_SendCmd, using modal timeouts} {unixOnly} {
+test send-8.19 {Tk_SendCmd, using modal timeouts} {secureserver} {
     setupbg
     set app [dobg {tk appname}]
     set x no
@@ -381,30 +360,30 @@ catch {destroy .f}
 frame .f
 set id [string range [winfo id .f] 2 end]
 
-test send-9.1 {Tk_GetInterpNames procedure} {unixOnly testsend} {
+test send-9.1 {Tk_GetInterpNames procedure} {secureserver testsend} {
     testsend prop root InterpRegistry \
 	    "$commId tktest\nfoo bar\n$commId tktest\n$id frame .f\n\n\n"
     list [winfo interps] [testsend prop root InterpRegistry]
 } "{tktest tktest {frame .f}} {$commId tktest\n$commId tktest\n$id frame .f
 }"
-test send-9.2 {Tk_GetInterpNames procedure} {unixOnly testsend} {
+test send-9.2 {Tk_GetInterpNames procedure} {secureserver testsend} {
     testsend prop root InterpRegistry \
 	    "$commId tktest\nfoobar\n$commId gorp\n"
     list [winfo interps] [testsend prop root InterpRegistry]
 } "tktest {$commId tktest\n}"
-test send-9.3 {Tk_GetInterpNames procedure} {unixOnly testsend} {
+test send-9.3 {Tk_GetInterpNames procedure} {secureserver testsend} {
     testsend prop root InterpRegistry {}
     list [winfo interps] [testsend prop root InterpRegistry]
 } {{} {}}
 
 catch {testsend prop root InterpRegistry "$commId tktest\n$id dummy\n"}
 
-test send-10.1 {SendEventProc procedure, bogus comm property} {unixOnly testsend} {
+test send-10.1 {SendEventProc procedure, bogus comm property} {secureserver testsend} {
     testsend prop comm Comm {abc def}
     testsend prop comm Comm {}
     update
 } {}
-test send-10.2 {SendEventProc procedure, simultaneous messages} {unixOnly testsend} {
+test send-10.2 {SendEventProc procedure, simultaneous messages} {secureserver testsend} {
     testsend prop comm Comm \
 	    "c\n-n tktest\n-s set a 44\nc\n-n tktest\n-s set b 45\n"
     set a null
@@ -412,7 +391,7 @@ test send-10.2 {SendEventProc procedure, simultaneous messages} {unixOnly testse
     update
     list $a $b
 } {44 45}
-test send-10.3 {SendEventProc procedure, simultaneous messages} {unixOnly testsend} {
+test send-10.3 {SendEventProc procedure, simultaneous messages} {secureserver testsend} {
     testsend prop comm Comm \
 	    "c\n-n tktest\n-s set a newA\nr\n-s [testsend serial]\n-r 12345\nc\n-n tktest\n-s set b newB\n"
     set a null
@@ -420,21 +399,21 @@ test send-10.3 {SendEventProc procedure, simultaneous messages} {unixOnly testse
     set x [send dummy bogus]
     list $x $a $b
 } {12345 newA newB}
-test send-10.4 {SendEventProc procedure, leading nulls, bogus commands} {unixOnly testsend} {
+test send-10.4 {SendEventProc procedure, leading nulls, bogus commands} {secureserver testsend} {
     testsend prop comm Comm \
 	    "\n\nx\n-bogus\n\nc\n-n tktest\n-s set a 44\n"
     set a null
     update
     set a
 } {44}
-test send-10.5 {SendEventProc procedure, extraneous command options} {unixOnly testsend} {
+test send-10.5 {SendEventProc procedure, extraneous command options} {secureserver testsend} {
     testsend prop comm Comm \
 	    "c\n-n tktest\n-x miscellanous\n-y who knows?\n-s set a new\n"
     set a null
     update
     set a
 } {new}
-test send-10.6 {SendEventProc procedure, unknown interpreter} {unixOnly testsend} {
+test send-10.6 {SendEventProc procedure, unknown interpreter} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
 	    "c\n-n unknown\n-r $id 44\n-s set a new\n"
@@ -442,7 +421,7 @@ test send-10.6 {SendEventProc procedure, unknown interpreter} {unixOnly testsend
     update
     list [testsend prop [winfo id .f] Comm] $a
 } "{\nr\n-s 44\n-r receiver never heard of interpreter \"unknown\"\n-c 1\n} null"
-test send-10.7 {SendEventProc procedure, error in script} {unixOnly testsend} {
+test send-10.7 {SendEventProc procedure, error in script} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
 	    "c\n-n tktest\n-r $id 62\n-s foreach i {1 2 3} {error {test error} {Initial errorInfo} {test code}}\n"
@@ -459,7 +438,7 @@ r
 -e test code
 -c 1
 }
-test send-10.8 {SendEventProc procedure, exceptional return} {unixOnly testsend} {
+test send-10.8 {SendEventProc procedure, exceptional return} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
 	    "c\n-n tktest\n-r $id 62\n-s break\n"
@@ -471,7 +450,7 @@ r
 -r 
 -c 3
 }
-test send-10.9 {SendEventProc procedure, empty return} {unixOnly testsend} {
+test send-10.9 {SendEventProc procedure, empty return} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
 	    "c\n-n tktest\n-r $id 62\n-s concat\n"
@@ -482,76 +461,76 @@ r
 -s 62
 -r 
 }
-test send-10.10 {SendEventProc procedure, asynchronous calls} {unixOnly testsend} {
+test send-10.10 {SendEventProc procedure, asynchronous calls} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
 	    "c\n-n tktest\n-s foreach i {1 2 3} {error {test error} {Initial errorInfo} {test code}}\n"
     update
     testsend prop [winfo id .f] Comm
 } {}
-test send-10.11 {SendEventProc procedure, exceptional return} {unixOnly testsend} {
+test send-10.11 {SendEventProc procedure, exceptional return} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
 	    "c\n-n tktest\n-s break\n"
     update
     testsend prop [winfo id .f] Comm
 } {}
-test send-10.12 {SendEventProc procedure, empty return} {unixOnly testsend} {
+test send-10.12 {SendEventProc procedure, empty return} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
 	    "c\n-n tktest\n-s concat\n"
     update
     testsend prop [winfo id .f] Comm
 } {}
-test send-10.13 {SendEventProc procedure, return processing} {unixOnly testsend} {
+test send-10.13 {SendEventProc procedure, return processing} {secureserver testsend} {
     testsend prop comm Comm \
 	    "r\n-c 1\n-e test1\n-i test2\n-r test3\n-s [testsend serial]\n"
     list [catch {send dummy foo} msg] $msg $errorInfo $errorCode
 } {1 test3 {test2
     invoked from within
 "send dummy foo"} test1}
-test send-10.14 {SendEventProc procedure, extraneous return options} {unixOnly testsend} {
+test send-10.14 {SendEventProc procedure, extraneous return options} {secureserver testsend} {
     testsend prop comm Comm \
 	    "r\n-x test1\n-y test2\n-r result\n-s [testsend serial]\n"
     list [catch {send dummy foo} msg] $msg
 } {0 result}
-test send-10.15 {SendEventProc procedure, serial number} {unixOnly testsend} {
+test send-10.15 {SendEventProc procedure, serial number} {secureserver testsend} {
     testsend prop comm Comm \
 	    "r\n-r response\n"
     list [catch {send dummy foo} msg] $msg
 } {1 {target application died or uses a Tk version before 4.0}}
-test send-10.16 {SendEventProc procedure, serial number} {unixOnly testsend} {
+test send-10.16 {SendEventProc procedure, serial number} {secureserver testsend} {
     testsend prop comm Comm \
 	    "r\n-r response\n\n-s 0"
     list [catch {send dummy foo} msg] $msg
 } {1 {target application died or uses a Tk version before 4.0}}
-test send-10.17 {SendEventProc procedure, errorCode and errorInfo} {unixOnly testsend} {
+test send-10.17 {SendEventProc procedure, errorCode and errorInfo} {secureserver testsend} {
     testsend prop comm Comm \
 	    "r\n-i test1\n-e test2\n-c 4\n-s [testsend serial]\n"
     set errorCode oldErrorCode
     set errorInfo oldErrorInfo
     list [catch {send dummy foo} msg] $msg $errorInfo $errorCode
 } {4 {} oldErrorInfo oldErrorCode}
-test send-10.18 {SendEventProc procedure, send kills application} {unixOnly testsend} {
+test send-10.18 {SendEventProc procedure, send kills application} {secureserver testsend} {
     setupbg
     dobg {tk appname t_s_3}
     set x [list [catch {send t_s_3 destroy .} msg] $msg]
     cleanupbg
     set x
 } {0 {}}
-test send-10.19 {SendEventProc procedure, send exits} {unixOnly testsend} {
+test send-10.19 {SendEventProc procedure, send exits} {secureserver testsend} {
     setupbg
     dobg {tk appname t_s_3}
     set x [list [catch {send t_s_3 exit} msg] $msg]
-    close $::tcltest::fd
+    cleanupbg
     set x
 } {1 {target application died}}
 
-test send-11.1 {AppendPropCarefully and AppendErrorProc procedures} {unixOnly testsend} {
+test send-11.1 {AppendPropCarefully and AppendErrorProc procedures} {secureserver testsend} {
     testsend prop root InterpRegistry "0x21447 dummy\n"
     list [catch {send dummy foo} msg] $msg
 } {1 {no application named "dummy"}}
-test send-11.2 {AppendPropCarefully and AppendErrorProc procedures} {unixOnly testsend} {
+test send-11.2 {AppendPropCarefully and AppendErrorProc procedures} {secureserver testsend} {
     testsend prop comm Comm "c\n-r0x123 44\n-n tktest\n-s concat a b c\n"
     update
 } {}
@@ -562,40 +541,38 @@ catch {destroy .f}
 frame .f
 set id [string range [winfo id .f] 2 end]
 
-test send-12.1 {TimeoutProc procedure} {unixOnly testsend} {
+test send-12.1 {TimeoutProc procedure} {secureserver testsend} {
     testsend prop root InterpRegistry "$id dummy\n"
     list [catch {send dummy foo} msg] $msg
 } {1 {target application died or uses a Tk version before 4.0}}
 
 catch {testsend prop root InterpRegistry ""}
 
-test send-12.2 {TimeoutProc procedure} {unixOnly} {
+test send-12.2 {TimeoutProc procedure} {secureserver} {
     winfo interps
     tk appname tktest
     update
     setupbg
-    puts $::tcltest::fd {after 10 {after 5000; exit}; puts [tk appname]; puts **DONE**; flush stdout}
-    set ::tcltest::bgDone 0
-    set ::tcltest::bgData {}
-    flush $::tcltest::fd
-    tkwait variable ::tcltest::bgDone
-    set app $::tcltest::bgData
+    set app [dobg {
+	after 10 {after 10 {after 5000; exit}}
+	tk appname
+    }]
     after 200
     set result [list [catch {send $app foo} msg] $msg]
-    close $::tcltest::fd
+    cleanupbg
     set result
 } {1 {target application died}}
 
 winfo interps
 tk appname tktest
-test send-13.1 {DeleteProc procedure} {unixOnly} {
+test send-13.1 {DeleteProc procedure} {secureserver} {
     setupbg
     set app [dobg {rename send {}; tk appname}]
     set result [list [catch {send $app foo} msg] $msg [winfo interps]]
     cleanupbg
     set result
 } {1 {no application named "tktest #2"} tktest}
-test send-13.2 {DeleteProc procedure} {unixOnly} {
+test send-13.2 {DeleteProc procedure} {secureserver} {
     winfo interps
     tk appname tktest
     rename send {}
@@ -605,7 +582,7 @@ test send-13.2 {DeleteProc procedure} {unixOnly} {
     lappend result [winfo interps] [info commands send]
 } {{} {} foo send}
 
-test send-14.1 {SendRestrictProc procedure, sends crossing from different displays} {unixOnly altDisplay} {
+test send-14.1 {SendRestrictProc procedure, sends crossing from different displays} {secureserver altDisplay} {
     setupbg -display $env(TK_ALT_DISPLAY)
     set result [dobg "
     toplevel .t -screen [winfo screen .]
@@ -628,7 +605,7 @@ catch {
     testsend prop root InterpRegister $registry
     tk appname tktest
 }
-test send-15.1 {UpdateCommWindow procedure} {unixOnly testsend} {
+test send-15.1 {UpdateCommWindow procedure} {secureserver testsend} {
     set x [list [testsend prop comm TK_APPLICATION]]
     newApp "" t_s_1 Test
     send t_s_1 wm withdraw .

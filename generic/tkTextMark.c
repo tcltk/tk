@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextMark.c,v 1.4.8.1 2002/06/10 05:38:24 wolfsuit Exp $
+ * RCS: @(#) $Id: tkTextMark.c,v 1.4.8.2 2002/08/20 20:27:08 das Exp $
  */
 
 #include "tkInt.h"
@@ -42,9 +42,9 @@ static int		MarkLayoutProc _ANSI_ARGS_((TkText *textPtr,
 			    int noCharsYet, TkWrapMode wrapMode,
 			    TkTextDispChunk *chunkPtr));
 static int		MarkFindNext _ANSI_ARGS_((Tcl_Interp *interp,
-			    TkText *textPtr, char *markName));
+			    TkText *textPtr, CONST char *markName));
 static int		MarkFindPrev _ANSI_ARGS_((Tcl_Interp *interp,
-			    TkText *textPtr, char *markName));
+			    TkText *textPtr, CONST char *markName));
 
 
 /*
@@ -99,7 +99,7 @@ TkTextMarkCmd(textPtr, interp, argc, argv)
     register TkText *textPtr;	/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings.  Someone else has already
+    CONST char **argv;		/* Argument strings.  Someone else has already
 				 * parsed this command enough to know that
 				 * argv[1] is "mark". */
 {
@@ -235,7 +235,7 @@ TkTextMarkCmd(textPtr, interp, argc, argv)
 TkTextSegment *
 TkTextSetMark(textPtr, name, indexPtr)
     TkText *textPtr;		/* Text widget in which to create mark. */
-    char *name;			/* Name of mark to set. */
+    CONST char *name;			/* Name of mark to set. */
     TkTextIndex *indexPtr;	/* Where to set mark. */
 {
     Tcl_HashEntry *hPtr;
@@ -350,7 +350,7 @@ TkTextMarkSegToIndex(textPtr, markPtr, indexPtr)
 int
 TkTextMarkNameToIndex(textPtr, name, indexPtr)
     TkText *textPtr;		/* Text widget containing mark. */
-    char *name;			/* Name of mark. */
+    CONST char *name;		/* Name of mark. */
     TkTextIndex *indexPtr;	/* Index information gets stored here. */
 {
     Tcl_HashEntry *hPtr;
@@ -647,7 +647,7 @@ static int
 MarkFindNext(interp, textPtr, string)
     Tcl_Interp *interp;			/* For error reporting */
     TkText *textPtr;			/* The widget */
-    char *string;			/* The starting index or mark name */
+    CONST char *string;			/* The starting index or mark name */
 {
     TkTextIndex index;
     Tcl_HashEntry *hPtr;
@@ -721,7 +721,7 @@ static int
 MarkFindPrev(interp, textPtr, string)
     Tcl_Interp *interp;			/* For error reporting */
     TkText *textPtr;			/* The widget */
-    char *string;			/* The starting index or mark name */
+    CONST char *string;			/* The starting index or mark name */
 {
     TkTextIndex index;
     Tcl_HashEntry *hPtr;

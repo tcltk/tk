@@ -1,18 +1,20 @@
 /* 
  * Entry.c --
  *
- *	This module implements entry widgets for the Tk
- *	toolkit.  An entry displays a string and allows
- *	the string to be edited.
+ *	This module implements entry and spinbox widgets for the Tk toolkit.
+ *	An entry displays a string and allows the string to be edited.
+ *	A spinbox expands on the entry by adding up/down buttons that control
+ *	the value of the entry widget.
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  * Copyright (c) 2000 Ajuba Solutions.
+ * Copyright (c) 2002 ActiveState Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.23.2.2 2002/06/10 05:38:23 wolfsuit Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.23.2.3 2002/08/20 20:27:04 das Exp $
  */
 
 #include "tkInt.h"
@@ -694,8 +696,8 @@ static void		EntrySetValue _ANSI_ARGS_((Entry *entryPtr,
 static void		EntrySelectTo _ANSI_ARGS_((
 			    Entry *entryPtr, int index));
 static char *		EntryTextVarProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, char *name1, CONST char *name2,
-			    int flags));
+			    Tcl_Interp *interp, CONST char *name1,
+			    CONST char *name2, int flags));
 static void		EntryUpdateScrollbar _ANSI_ARGS_((Entry *entryPtr));
 static int		EntryValidate _ANSI_ARGS_((Entry *entryPtr,
 			    char *cmd));
@@ -1590,6 +1592,22 @@ ConfigureEntry(interp, entryPtr, objc, objv, flags)
 	Tk_FreeSavedOptions(&savedOptions);
     }
 
+    /*
+     * If the entry is tied to the value of a variable, create the variable if
+     * it doesn't exist, and set the entry's value from the variable's value.
+     */
+
+    if (entryPtr->textVarName != NULL) {
+	CONST char *value;
+
+	value = Tcl_GetVar(interp, entryPtr->textVarName, TCL_GLOBAL_ONLY);
+	if (value == NULL) {
+	    EntryValueChanged(entryPtr, NULL);
+	} else {
+	    EntrySetValue(entryPtr, value);
+	}
+    }
+
     if (entryPtr->type == TK_SPINBOX) {
 	ComputeFormat(sbPtr);
 
@@ -1631,20 +1649,11 @@ ConfigureEntry(interp, entryPtr, objc, objv, flags)
     }
 
     /*
-     * If the entry is tied to the value of a variable, then set up
-     * a trace on the variable's value, create the variable if it doesn't
-     * exist, and set the entry's value from the variable's value.
+     * Set up a trace on the variable's value after we've possibly
+     * constrained the value according to new -from/-to values.
      */
 
     if (entryPtr->textVarName != NULL) {
-	CONST char *value;
-
-	value = Tcl_GetVar(interp, entryPtr->textVarName, TCL_GLOBAL_ONLY);
-	if (value == NULL) {
-	    EntryValueChanged(entryPtr, NULL);
-	} else {
-	    EntrySetValue(entryPtr, value);
-	}
 	Tcl_TraceVar(interp, entryPtr->textVarName,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		EntryTextVarProc, (ClientData) entryPtr);
@@ -1897,11 +1906,11 @@ DisplayEntry(clientData)
     if ((entryPtr->state == STATE_NORMAL) && (entryPtr->flags & GOT_FOCUS)) {
 	Tk_CharBbox(entryPtr->textLayout, entryPtr->insertPos, &cursorX, NULL,
 		NULL, NULL);
+	cursorX += entryPtr->layoutX;
+	cursorX -= (entryPtr->insertWidth)/2;
 	Tk_SetCaretPos(entryPtr->tkwin, cursorX, baseY - fm.ascent,
 		fm.ascent + fm.descent);
 	if (entryPtr->insertPos >= entryPtr->leftIndex) {
-	    cursorX += entryPtr->layoutX;
-	    cursorX -= (entryPtr->insertWidth)/2;
 	    if (cursorX < xBound) {
 		if (entryPtr->flags & CURSOR_ON) {
 		    Tk_Fill3DRectangle(tkwin, pixmap, entryPtr->insertBorder,
@@ -3279,7 +3288,7 @@ static char *
 EntryTextVarProc(clientData, interp, name1, name2, flags)
     ClientData clientData;	/* Information about button. */
     Tcl_Interp *interp;		/* Interpreter containing variable. */
-    char *name1;		/* Not used. */
+    CONST char *name1;		/* Not used. */
     CONST char *name2;		/* Not used. */
     int flags;			/* Information about what happened. */
 {

@@ -5,10 +5,10 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.6.4.2 2002/06/10 05:38:23 wolfsuit Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.6.4.3 2002/08/20 20:27:00 das Exp $
 '\" 
 .so man.macros
-.TH wm n 4.3 Tk "Tk Built-In Commands"
+.TH wm n 8.4 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
@@ -44,6 +44,30 @@ a Tcl list containing four elements, which are the current values
 of \fIminNumer\fR, \fIminDenom\fR, \fImaxNumer\fR, and \fImaxDenom\fR
 (if no aspect restrictions are in effect, then an empty string is
 returned).
+.VS 8.4
+.TP
+\fBwm attributes \fIwindow\fR
+.TP
+\fBwm attributes \fIwindow\fR ?\fBoption\fR?
+.TP
+\fBwm attributes \fIwindow\fR ?\fBoption value option value...\fR?
+.RS
+This subcommand returns or sets platform specific attributes associated
+with a window. The first form returns a list of the platform specific
+flags and their values. The second form returns the value for the
+specific option. The third form sets one or more of the values. The
+values are as follows:
+.PP
+On Windows, \fB-disabled\fR gets or sets whether the window is in a
+disabled state. \fB-toolwindow\fR gets or sets the style of the window
+to toolwindow (as defined in the MSDN). \fB-topmost\fR gets or sets
+whether this is a topmost window (displays above all other windows).
+.PP
+On Macintosh,
+.PP
+On Unix, there are currently no special attribute values.
+.RE
+.VE 8.4
 .TP
 \fBwm client \fIwindow\fR ?\fIname\fR?
 If \fIname\fR is specified, this command stores \fIname\fR (which
@@ -214,9 +238,12 @@ system, an additional flag is supported:
 If the \fI-default\fR
 flag is given, the icon is applied to all toplevel windows (existing
 and future) to which no other specific icon has yet been applied.
-In addition to bitmap image types, any file which contains a valid
-Windows icon is also accepted (usually .ico or .icr files).  Tcl will
-first test if the files contains an icon, and if that fails, test for
+In addition to bitmap image types, a full path specification to
+any file which contains a valid
+Windows icon is also accepted (usually .ico or .icr files), or any
+file for which the shell has assigned an icon.  Tcl will
+first test if the file contains an icon, then if it has an assigned
+icon, and finally, if that fails, test for
 a bitmap.
 .TP
 \fBwm iconify \fIwindow\fR
@@ -435,13 +462,14 @@ specified then the command returns the current title for the
 If \fImaster\fR is specified, then the window manager is informed
 that \fIwindow\fR is a transient window (e.g. pull-down menu) working
 on behalf of \fImaster\fR (where \fImaster\fR is the
-path name for a top-level window).  Some window managers will use
-this information to manage \fIwindow\fR specially.  If \fImaster\fR
+path name for a top-level window).  If \fImaster\fR
 is specified as an empty string then \fIwindow\fR is marked as not
-being a transient window any more.  If \fImaster\fR is specified,
-then the command returns an empty string.  Otherwise the command
+being a transient window any more.  Otherwise the command
 returns the path name of \fIwindow\fR's current master, or an
 empty string if \fIwindow\fR isn't currently a transient window.
+A transient window will mirror state changes in the master and
+inherit the state of the master when initially mapped. It is an
+error to attempt to make a window a transient of itself.
 .TP
 \fBwm withdraw \fIwindow\fR
 Arranges for \fIwindow\fR to be withdrawn from the screen.  This
@@ -523,9 +551,6 @@ Most existing window managers appear to have bugs that affect the
 operation of the \fBwm\fR command.  For example, some changes won't
 take effect if the window is already active:  the window will have
 to be withdrawn and de-iconified in order to make the change happen.
-.PP
-On the Windows operating system \fIwm iconbitmap\fR has no effect when
-passed a bitmap: only icon files currently work properly.
 
 .SH KEYWORDS
 aspect ratio, deiconify, focus model, geometry, grid, group, icon, iconify, increments, position, size, title, top-level window, units, window manager

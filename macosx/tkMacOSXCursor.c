@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.1.2.2 2002/08/20 20:27:11 das Exp $
  */
 
 #include "tkPort.h"
@@ -248,8 +248,8 @@ TkGetCursorByName(
 TkCursor *
 TkCreateCursorFromData(
     Tk_Window tkwin,                /* Window in which cursor will be used. */
-    char *source,                /* Bitmap data for cursor shape. */
-    char *mask,                        /* Bitmap data for cursor mask. */
+    CONST char *source,                /* Bitmap data for cursor shape. */
+    CONST char *mask,                        /* Bitmap data for cursor mask. */
     int width, int height,        /* Dimensions of cursor. */
     int xHot, int yHot,                /* Location of hot-spot in cursor. */
     XColor fgColor,                /* Foreground color for cursor. */

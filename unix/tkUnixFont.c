@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.9.2.1 2002/06/10 05:38:27 wolfsuit Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.9.2.2 2002/08/20 20:27:18 das Exp $
  */
  
 #include "tkUnixInt.h"
@@ -202,7 +202,7 @@ static void		FontPkgCleanup _ANSI_ARGS_((ClientData clientData));
 static FontFamily *	AllocFontFamily _ANSI_ARGS_((Display *display,
 			    XFontStruct *fontStructPtr, int base));
 static SubFont *	CanUseFallback _ANSI_ARGS_((UnixFont *fontPtr,
-			    char *fallbackName, int ch));
+			    CONST char *fallbackName, int ch));
 static SubFont *	CanUseFallbackWithAliases _ANSI_ARGS_((
 			    UnixFont *fontPtr, char *fallbackName,
 			    int ch, Tcl_DString *nameTriedPtr));
@@ -1158,7 +1158,8 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
     int xStart, needWidth, window_width;
     Tcl_UniChar ch;
     FontFamily *familyPtr;
-    int rx, ry, width, height, border_width, depth;
+    int rx, ry;
+    unsigned int width, height, border_width, depth;
     int do_width;
     Drawable root;
 
@@ -1801,7 +1802,8 @@ FindSubFontForChar(fontPtr, ch)
     int ch;			/* The Unicode character to be displayed. */
 {
     int i, j, k, numNames;
-    char *faceName, *fallback;
+    Tk_Uid faceName; 
+    char *fallback;
     char **aliases, **nameList, **anyFallbacks;
     char ***fontFallbacks;
     SubFont *subFontPtr;
@@ -2220,7 +2222,7 @@ static SubFont *
 CanUseFallback(fontPtr, faceName, ch)
     UnixFont *fontPtr;		/* The font object that will own the new
 				 * screen font. */
-    char *faceName;		/* Desired face name for new screen font. */
+    CONST char *faceName;	/* Desired face name for new screen font. */
     int ch;			/* The Unicode character that the new
 				 * screen font must be able to display. */
 {

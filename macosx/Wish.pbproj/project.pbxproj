@@ -45,7 +45,6 @@
 				F51D9048018149FD01DC9062,
 			);
 			isa = PBXCopyFilesBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F51D9040018149FD01DC9062 = {
 			fileRef = F53755CE016C389901DC9062;
@@ -136,6 +135,7 @@
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
+				OTHER_LDFLAGS = "\U0001-prebind";
 			};
 			isa = PBXBuildStyle;
 			name = Development;
@@ -146,6 +146,7 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				OPTIMIZATION_CFLAGS = "-O3";
+				OTHER_LDFLAGS = "\U0001-prebind";
 			};
 			isa = PBXBuildStyle;
 			name = Deployment;
@@ -184,6 +185,7 @@
 				F537557D016C37A601DC9062,
 				F537557E016C37A601DC9062,
 				F537557F016C37A601DC9062,
+				F5BFE58F02F8C45B01DC9062,
 			);
 			isa = PBXGroup;
 			name = Headers;
@@ -252,6 +254,7 @@
 				F53755B9016C389901DC9062,
 				F53755BA016C389901DC9062,
 				F53755BB016C389901DC9062,
+				F5BFE58B02F8C41501DC9062,
 				F53755BC016C389901DC9062,
 				F53755BD016C389901DC9062,
 				F53755BE016C389901DC9062,
@@ -262,6 +265,7 @@
 				F53755C3016C389901DC9062,
 				F53755C4016C389901DC9062,
 				F53755C5016C389901DC9062,
+				F5BFE58C02F8C41501DC9062,
 				F53755C6016C389901DC9062,
 				F53755C7016C389901DC9062,
 				F53755C8016C389901DC9062,
@@ -1352,7 +1356,7 @@
 				SECTORDER_FLAGS = "";
 				TK_MAJOR_VERSION = 8;
 				TK_MINOR_VERSION = 4;
-				TK_PATCH_LEVEL = a4;
+				TK_PATCH_LEVEL = b2;
 				USE_GCC3_PFE_SUPPORT = NO;
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
 				WRAPPER_EXTENSION = framework;
@@ -1365,15 +1369,15 @@
 			productName = TkLibrary;
 			productReference = F53755DE016C38D201DC9062;
 			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
-<plist version=\"1.0\">
+<!DOCTYPE plist SYSTEM \"file://localhost/System/Library/DTDs/PropertyList.dtd\">
+<plist version=\"0.9\">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
 	<string>Tk</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Tk Library 8.4a4
+	<string>Tk Library 8.4b2
 MacOS X Port by Jim Ingham &amp; Ian Reid
 jingham@apple.com
 Copyright Apple Computer, Inc 2001</string>
@@ -1384,15 +1388,15 @@ Copyright Apple Computer, Inc 2001</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Tk Library 8.4a4</string>
+	<string>Tk Library 8.4b2</string>
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>libtk8.4a4</string>
+	<string>libtk8.4b2</string>
 	<key>CFBundleSignature</key>
 	<string>WiSH</string>
 	<key>CFBundleVersion</key>
-	<string>8.4a4</string>
+	<string>8.4b2</string>
 </dict>
 </plist>
 ";
@@ -1451,9 +1455,9 @@ Copyright Apple Computer, Inc 2001</string>
 				F537569A016C3F1001DC9062,
 				F537569B016C3F1001DC9062,
 				F537569C016C3F1001DC9062,
+				F5BFE59002F8C45B01DC9062,
 			);
 			isa = PBXHeadersBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53755E1016C38D301DC9062 = {
 			buildActionMask = 2147483647;
@@ -1462,7 +1466,6 @@ Copyright Apple Computer, Inc 2001</string>
 				F5C8865D017D625C01DC9062,
 			);
 			isa = PBXResourcesBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53755E2016C38D301DC9062 = {
 			buildActionMask = 2147483647;
@@ -1575,9 +1578,10 @@ Copyright Apple Computer, Inc 2001</string>
 				F537567B016C3A6D01DC9062,
 				F537569E016C49C301DC9062,
 				F55BC46902B2D38B01DC9062,
+				F5BFE58D02F8C41501DC9062,
+				F5BFE58E02F8C41501DC9062,
 			);
 			isa = PBXSourcesBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53755E3016C38D301DC9062 = {
 			buildActionMask = 2147483647;
@@ -1587,7 +1591,6 @@ Copyright Apple Computer, Inc 2001</string>
 				F50D96130196176E01DC9062,
 			);
 			isa = PBXFrameworksBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53755E4016C38D301DC9062 = {
 			buildActionMask = 2147483647;
@@ -1598,7 +1601,6 @@ Copyright Apple Computer, Inc 2001</string>
 				F5375682016C3ADB01DC9062,
 			);
 			isa = PBXRezBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53755E5016C390401DC9062 = {
 			fileRef = F5375569016C37A601DC9062;
@@ -2735,18 +2737,18 @@ Copyright Apple Computer, Inc 2001</string>
 			productName = "Wish Shell";
 			productReference = F537569F016C4DD401DC9062;
 			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
-<plist version=\"1.0\">
+<!DOCTYPE plist SYSTEM \"file://localhost/System/Library/DTDs/PropertyList.dtd\">
+<plist version=\"0.9\">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
 	<string>Wish Shell</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Wish Shell 8.4a4
+	<string>Wish Shell 8.4b2
 MacOS X Port by Jim Ingham &amp; Ian Reid
 jingham@apple.com
-Copyright Apple Computer, Inc 2001</string>
+Copyright Apple Computer, Inc 2002</string>
 	<key>CFBundleIconFile</key>
 	<string>Wish.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -2758,11 +2760,11 @@ Copyright Apple Computer, Inc 2001</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>Wish8.4a4</string>
+	<string>Wish8.4b2</string>
 	<key>CFBundleSignature</key>
 	<string>WiSH</string>
 	<key>CFBundleVersion</key>
-	<string>8.4a4</string>
+	<string>8.4b2</string>
 </dict>
 </plist>
 ";
@@ -2776,7 +2778,6 @@ Copyright Apple Computer, Inc 2001</string>
 				F53756AE016C4E1D01DC9062,
 			);
 			isa = PBXHeadersBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53756A2016C4DD401DC9062 = {
 			buildActionMask = 2147483647;
@@ -2786,7 +2787,6 @@ Copyright Apple Computer, Inc 2001</string>
 				F5C8865F017D625C01DC9062,
 			);
 			isa = PBXResourcesBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53756A3016C4DD401DC9062 = {
 			fileRef = F537553B016C376E01DC9062;
@@ -2800,7 +2800,6 @@ Copyright Apple Computer, Inc 2001</string>
 				F53756A5016C4DD401DC9062,
 			);
 			isa = PBXSourcesBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53756A5016C4DD401DC9062 = {
 			fileRef = F5375548016C376E01DC9062;
@@ -2817,7 +2816,6 @@ Copyright Apple Computer, Inc 2001</string>
 				F50D96140196176E01DC9062,
 			);
 			isa = PBXFrameworksBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53756A7016C4DD401DC9062 = {
 			fileRef = F53755DE016C38D201DC9062;
@@ -2836,7 +2834,6 @@ Copyright Apple Computer, Inc 2001</string>
 			files = (
 			);
 			isa = PBXRezBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F53756AC016C4E1D01DC9062 = {
 			fileRef = F537556B016C37A601DC9062;
@@ -2893,7 +2890,6 @@ Copyright Apple Computer, Inc 2001</string>
 			isa = PBXShellScriptBuildPhase;
 			neededFileNames = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "rm -rf \"${SYMROOT}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/A\"";
 		};
@@ -2946,7 +2942,6 @@ Copyright Apple Computer, Inc 2001</string>
 				F5B1FC26016FFE3501DC9062,
 			);
 			isa = PBXCopyFilesBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F5B1FC09016FFE3501DC9062 = {
 			fileRef = F5DF0928016CD3F901DC9062;
@@ -3128,6 +3123,42 @@ Copyright Apple Computer, Inc 2001</string>
 			settings = {
 			};
 		};
+		F5BFE58B02F8C41501DC9062 = {
+			isa = PBXFileReference;
+			name = tkStyle.c;
+			path = ../generic/tkStyle.c;
+			refType = 2;
+		};
+		F5BFE58C02F8C41501DC9062 = {
+			isa = PBXFileReference;
+			name = tkUndo.c;
+			path = ../generic/tkUndo.c;
+			refType = 2;
+		};
+		F5BFE58D02F8C41501DC9062 = {
+			fileRef = F5BFE58B02F8C41501DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5BFE58E02F8C41501DC9062 = {
+			fileRef = F5BFE58C02F8C41501DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5BFE58F02F8C45B01DC9062 = {
+			isa = PBXFileReference;
+			name = tkUndo.h;
+			path = ../generic/tkUndo.h;
+			refType = 2;
+		};
+		F5BFE59002F8C45B01DC9062 = {
+			fileRef = F5BFE58F02F8C45B01DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F5C1D51901B88F9A01DC9062 = {
 			buildActionMask = 8;
 			files = (
@@ -3137,7 +3168,6 @@ Copyright Apple Computer, Inc 2001</string>
 			isa = PBXShellScriptBuildPhase;
 			neededFileNames = (
 			);
-			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
 			shellScript = "source buildConfig";
 		};
@@ -3416,7 +3446,6 @@ Copyright Apple Computer, Inc 2001</string>
 			isa = PBXShellScriptBuildPhase;
 			neededFileNames = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = pwd;
 		};

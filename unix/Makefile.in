@@ -5,12 +5,15 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.54.2.2 2002/06/10 05:38:26 wolfsuit Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.54.2.3 2002/08/20 20:27:16 das Exp $
 
 # Current Tk version;  used in various names.
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
+MAJOR_VERSION		= @TK_MAJOR_VERSION@
+MINOR_VERSION		= @TK_MINOR_VERSION@
+PATCH_LEVEL		= @TK_PATCH_LEVEL@
 LOCALES			= @LOCALES@
 
 #----------------------------------------------------------------
@@ -89,6 +92,15 @@ TCL_LIB_FLAG		= @TCL_LIB_FLAG@
 # Libraries built with optimization switches have this additional extension
 TK_DBGX			= @TK_DBGX@
 
+# Flag, 1: we're building a shared lib, 0 we're not
+TK_SHARED_BUILD		= @TK_SHARED_BUILD@
+
+# Directory in which to install the pkgIndex.tcl file for loadable Tk
+PKG_INSTALL_DIR		= $(LIB_INSTALL_DIR)/tk$(VERSION)$(TK_DBGX)
+
+# Package index file for loadable Tk
+PKG_INDEX		= $(PKG_INSTALL_DIR)/pkgIndex.tcl
+
 # warning flags
 CFLAGS_WARNING		= @CFLAGS_WARNING@
 
@@ -162,6 +174,7 @@ SHELL			= /bin/sh
 
 INSTALL			= @srcdir@/install-sh -c
 INSTALL_PROGRAM		= ${INSTALL}
+INSTALL_LIBRARY		= ${INSTALL}
 INSTALL_DATA		= ${INSTALL} -m 644
 
 # TCL_EXE is the name of a tclsh executable that is available *BEFORE*
@@ -184,11 +197,17 @@ STUB_LIB_FILE		= @TK_STUB_LIB_FILE@
 TK_STUB_LIB_FILE	= @TK_STUB_LIB_FILE@
 #TK_STUB_LIB_FILE	= libtkstub.a
 
+# Generic stub lib name used in rules that apply to tcl and tk
+STUB_LIB_FILE		= ${TK_STUB_LIB_FILE}
+
 TK_STUB_LIB_FLAG	= @TK_STUB_LIB_FLAG@
 #TK_STUB_LIB_FLAG	= -ltkstub
 
 TK_LIB_FILE		= @TK_LIB_FILE@
 #TK_LIB_FILE		= libtk.a
+
+# Generic lib name used in rules that apply to tcl and tk
+LIB_FILE		= ${TK_LIB_FILE}
 
 TK_LIB_FLAG		= @TK_LIB_FLAG@
 #TK_LIB_FLAG		= -ltk
@@ -217,8 +236,8 @@ SHLIB_LD_LIBS		= @SHLIB_LD_LIBS@
 # Additional search flags needed to find the various shared libraries
 # at run-time.  The first symbol is for use when creating a binary
 # with cc, and the second is for use when running ld directly.
-TK_CC_SEARCH_FLAGS	= @TK_CC_SEARCH_FLAGS@
-TK_LD_SEARCH_FLAGS	= @TK_LD_SEARCH_FLAGS@
+CC_SEARCH_FLAGS	= @CC_SEARCH_FLAGS@
+LD_SEARCH_FLAGS	= @LD_SEARCH_FLAGS@
 
 #----------------------------------------------------------------
 # The information below is modified by the configure script when
@@ -242,6 +261,10 @@ TOOL_DIR		= @TCL_SRC_DIR@/tools
 # either.
 #----------------------------------------------------------------
 
+# Flags to be passed to mkLinks to control whether the manpages
+# should be compressed and linked with softlinks
+MKLINKS_FLAGS           = @MKLINKS_FLAGS@
+
 CC			= @CC@
 
 CC_SWITCHES_NO_STUBS = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
@@ -260,9 +283,7 @@ ${KEYSYM_FLAGS}
 
 WISH_OBJS = tkAppInit.o
 
-TCLTEST_OBJS = ${TCL_BIN_DIR}/tclTest.o ${TCL_BIN_DIR}/tclThreadTest.o \
-        ${TCL_BIN_DIR}/tclUnixTest.o
-TKTEST_OBJS = $(TCLTEST_OBJS) tkTestInit.o tkTest.o tkSquare.o
+TKTEST_OBJS = tkTestInit.o tkTest.o tkSquare.o
 
 WIDGOBJS = tkButton.o tkEntry.o tkFrame.o tkListbox.o \
 	tkMenu.o tkMenubutton.o tkMenuDraw.o tkMessage.o \
@@ -289,7 +310,7 @@ OBJS =  tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkClipboard.o tkCmds.o \
 	tkColor.o tkConfig.o tkConsole.o tkCursor.o tkError.o tkEvent.o \
 	tkFocus.o tkFont.o tkGet.o tkGC.o tkGeometry.o tkGrab.o tkGrid.o \
 	tkMain.o tkObj.o tkOldConfig.o tkOption.o tkPack.o tkPlace.o \
-	tkSelect.o tkUtil.o tkVisual.o tkWindow.o  \
+	tkSelect.o tkStyle.o tkUndo.o tkUtil.o tkVisual.o tkWindow.o  \
 	$(UNIXOBJS) $(WIDGOBJS) $(CANVOBJS) $(IMAGEOBJS) $(TEXTOBJS)
 
 TK_DECLS = \
@@ -309,14 +330,14 @@ SRCS = \
 	$(GENERIC_DIR)/tkGrid.c $(GENERIC_DIR)/tkConsole.c \
 	$(GENERIC_DIR)/tkMain.c $(GENERIC_DIR)/tkOption.c \
 	$(GENERIC_DIR)/tkPack.c $(GENERIC_DIR)/tkPlace.c \
-	$(GENERIC_DIR)/tkSelect.c $(GENERIC_DIR)/tkUtil.c \
+	$(GENERIC_DIR)/tkSelect.c $(GENERIC_DIR)/tkStyle.c \
+	$(GENERIC_DIR)/tkUndo.c $(GENERIC_DIR)/tkUtil.c \
 	$(GENERIC_DIR)/tkVisual.c $(GENERIC_DIR)/tkWindow.c \
 	$(GENERIC_DIR)/tkButton.c $(GENERIC_DIR)/tkObj.c \
 	$(GENERIC_DIR)/tkEntry.c $(GENERIC_DIR)/tkFrame.c \
 	$(GENERIC_DIR)/tkListbox.c $(GENERIC_DIR)/tkMenu.c \
 	$(GENERIC_DIR)/tkMenubutton.c $(GENERIC_DIR)/tkMenuDraw.c \
-	$(GENERIC_DIR)/tkMessage.c \
-	$(GENERIC_DIR)/tkPanedWindow.c \
+	$(GENERIC_DIR)/tkMessage.c $(GENERIC_DIR)/tkPanedWindow.c \
 	$(GENERIC_DIR)/tkScale.c $(GENERIC_DIR)/tkScrollbar.c \
 	$(GENERIC_DIR)/tkCanvas.c $(GENERIC_DIR)/tkCanvArc.c \
 	$(GENERIC_DIR)/tkCanvBmap.c $(GENERIC_DIR)/tkCanvImg.c \
@@ -360,7 +381,7 @@ DEMOPROGS = browse hello ixset rmt rolodex square tcolor timer widget
 
 all: binaries libraries doc
 
-binaries: ${TK_LIB_FILE} ${STUB_LIB_FILE} wish
+binaries: ${LIB_FILE} ${STUB_LIB_FILE} wish
 
 libraries:
 
@@ -372,15 +393,13 @@ doc: $(SRC_DIR)/doc/man.macros
 
 # The following target is configured by autoconf to generate either
 # a shared library or non-shared library for Tk.
-${TK_LIB_FILE}: ${OBJS}
-	rm -f ${TK_LIB_FILE}
+${LIB_FILE}: ${OBJS}
+	rm -f $@
 	@MAKE_LIB@
-	$(RANLIB) ${TK_LIB_FILE}
 
 ${STUB_LIB_FILE}: ${STUB_LIB_OBJS}
-	rm -f ${STUB_LIB_FILE}
+	rm -f $@
 	@MAKE_STUB_LIB@
-	$(RANLIB) ${STUB_LIB_FILE}
 
 # Make target which outputs the list of the .o contained in the Tk lib
 # usefull to build a single big shared library containing Tcl/Tk and other
@@ -396,13 +415,7 @@ objs: ${OBJS}
 wish: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE)
 	$(CC) $(LDFLAGS) $(WISH_OBJS) \
 		@TK_BUILD_LIB_SPEC@ \
-		$(WISH_LIBS) $(TK_CC_SEARCH_FLAGS) -o wish
-
-# This rule is executed if the user tried to run tktest without first
-# building tcltest in the Tcl bin directory. Just do it for them.
-${TCL_BIN_DIR}/tcltest:
-	cd ${TCL_BIN_DIR} ; \
-	$(MAKE) tcltest
+		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o wish
 
 # Resetting the LIB_RUNTIME_DIR below is required so that
 # the generated tktest executable gets the build directory
@@ -410,22 +423,22 @@ ${TCL_BIN_DIR}/tcltest:
 # picking up an already installed version of the Tcl or
 # Tk shared libraries.
 
-tktest: ${TCL_BIN_DIR}/tcltest $(TKTEST_OBJS) $(TK_LIB_FILE)
+tktest: $(TKTEST_OBJS) $(TK_LIB_FILE)
 	$(MAKE) tktest-real LIB_RUNTIME_DIR=`pwd`:$(TCL_BIN_DIR)
 
 tktest-real:
 	${CC} $(LDFLAGS) $(TKTEST_OBJS) \
 		@TK_BUILD_LIB_SPEC@ \
-		$(WISH_LIBS) $(TK_CC_SEARCH_FLAGS) -o tktest
+		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o tktest
 
 # FIXME: This xttest rule seems to be broken in a number of ways.
-# It should use TK_CC_SEARCH_FLAGS, it does not include the shared
+# It should use CC_SEARCH_FLAGS, it does not include the shared
 # lib location logic from tktest, and it is not clear where this
 # test.o object file comes from.
 xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE)
 	${CC} $(LDFLAGS) test.o tkTest.o tkSquare.o \
 		@TK_BUILD_LIB_SPEC@ \
-		$(WISH_LIBS) $(TK_LD_SEARCH_FLAGS) -lXt -o xttest
+		$(WISH_LIBS) $(LD_SEARCH_FLAGS) -lXt -o xttest
 
 # Note, in the target below TCL_LIBRARY needs to be set or else
 # "make test" won't work in the case where the compilation directory
@@ -486,7 +499,7 @@ install: all install-binaries install-libraries install-demos install-doc
 # possible (e.g. if installing as root).
 
 install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
-	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) ; \
+	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) $(PKG_INSTALL_DIR); \
 	    do \
 	    if [ ! -d $$i ] ; then \
 		echo "Making directory $$i"; \
@@ -498,13 +511,19 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	@if test ! -x $(UNIX_DIR)/install-sh; then \
 	    chmod +x $(UNIX_DIR)/install-sh; \
 	    fi
-	@if test ! -x $(UNIX_DIR)/mkLinks; then \
-	    chmod +x $(UNIX_DIR)/mkLinks; \
+	@if test "x$(TK_SHARED_BUILD)" = "x1"; then \
+	    echo "Creating package index $(PKG_INDEX)"; \
+	    rm -f $(PKG_INDEX); \
+	    (\
+	    echo "if {[package vcompare [package provide Tcl]\
+		$(TCLVERSION)] != 0} { return }";\
+	    echo "package ifneeded Tk $(VERSION)\
+		[list load [file join \$$dir .. $(TK_LIB_FILE)] Tk]";\
+	    ) > $(PKG_INDEX); \
 	    fi
-	@echo "Installing $(TK_LIB_FILE) to $(LIB_INSTALL_DIR)/"
-	@$(INSTALL_DATA) $(TK_LIB_FILE) $(LIB_INSTALL_DIR)/$(TK_LIB_FILE)
-	@(cd $(LIB_INSTALL_DIR); $(RANLIB) $(TK_LIB_FILE))
-	@chmod 555 $(LIB_INSTALL_DIR)/$(TK_LIB_FILE)
+	@echo "Installing $(LIB_FILE) to $(LIB_INSTALL_DIR)/"
+	@@INSTALL_LIB@
+	@chmod 555 $(LIB_INSTALL_DIR)/$(LIB_FILE)
 	@echo "Installing wish as $(BIN_INSTALL_DIR)/wish$(VERSION)"
 	@$(INSTALL_PROGRAM) wish $(BIN_INSTALL_DIR)/wish$(VERSION)
 	@echo "Installing tkConfig.sh to $(LIB_INSTALL_DIR)/"
@@ -513,12 +532,11 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	    echo "Installing $(TK_EXP_FILE) to $(LIB_INSTALL_DIR)/"; \
 	    $(INSTALL_DATA) $(TK_BUILD_EXP_FILE) \
 			$(LIB_INSTALL_DIR)/$(TK_EXP_FILE); \
-	    fi
-	@if test "$(TK_STUB_LIB_FILE)" != "" ; then \
-	    echo "Installing $(TK_STUB_LIB_FILE) to $(LIB_INSTALL_DIR)/"; \
-	    $(INSTALL_DATA) $(STUB_LIB_FILE) \
-			 $(LIB_INSTALL_DIR)/$(TK_STUB_LIB_FILE); \
-	    fi
+	fi
+	@if test "$(STUB_LIB_FILE)" != "" ; then \
+	    echo "Installing $(STUB_LIB_FILE) to $(LIB_INSTALL_DIR)/"; \
+	    @INSTALL_STUB_LIB@ ; \
+	fi
 
 install-libraries:
 	@for i in $(INCLUDE_INSTALL_DIR) \
@@ -595,6 +613,9 @@ install-demos:
 	    done;
 
 install-doc:
+	@if test ! -x $(UNIX_DIR)/mkLinks; then \
+	    chmod +x $(UNIX_DIR)/mkLinks; \
+	    fi
 	@for i in $(MAN_INSTALL_DIR) $(MAN1_INSTALL_DIR) $(MAN3_INSTALL_DIR) $(MANN_INSTALL_DIR) ; \
 	    do \
 	    if [ ! -d $$i ] ; then \
@@ -613,7 +634,7 @@ install-doc:
 	    chmod 444 $(MAN1_INSTALL_DIR)/$$i; \
 	    done;
 	@echo "Cross-linking top-level (.1) docs";
-	@$(UNIX_DIR)/mkLinks $(MAN1_INSTALL_DIR)
+	@$(UNIX_DIR)/mkLinks $(MKLINKS_FLAGS) $(MAN1_INSTALL_DIR)
 	@echo "Installing C API (.3) docs";
 	@cd $(SRC_DIR)/doc; for i in *.3; \
 	    do \
@@ -623,7 +644,7 @@ install-doc:
 	    chmod 444 $(MAN3_INSTALL_DIR)/$$i; \
 	    done;
 	@echo "Cross-linking top-level (.3) docs";
-	@$(UNIX_DIR)/mkLinks $(MAN3_INSTALL_DIR)
+	@$(UNIX_DIR)/mkLinks $(MKLINKS_FLAGS) $(MAN3_INSTALL_DIR)
 	@echo "Installing command (.n) docs";
 	@cd $(SRC_DIR)/doc; for i in *.n; \
 	    do \
@@ -633,7 +654,7 @@ install-doc:
 	    chmod 444 $(MANN_INSTALL_DIR)/$$i; \
 	    done;
 	@echo "Cross-linking command (.n) docs";
-	@$(UNIX_DIR)/mkLinks $(MANN_INSTALL_DIR)
+	@$(UNIX_DIR)/mkLinks $(MKLINKS_FLAGS) $(MANN_INSTALL_DIR)
 
 Makefile: $(UNIX_DIR)/Makefile.in
 	$(SHELL) config.status
@@ -748,6 +769,9 @@ tkPlace.o: $(GENERIC_DIR)/tkPlace.c
 
 tkSelect.o: $(GENERIC_DIR)/tkSelect.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkSelect.c
+
+tkStyle.o: $(GENERIC_DIR)/tkStyle.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStyle.c
 
 tkUtil.o: $(GENERIC_DIR)/tkUtil.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkUtil.c
@@ -884,6 +908,9 @@ tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
 tkStubImg.o: $(GENERIC_DIR)/tkStubImg.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubImg.c
 
+tkUndo.o: $(GENERIC_DIR)/tkUndo.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkUndo.c
+
 tkUnix.o: $(UNIX_DIR)/tkUnix.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnix.c
 
@@ -973,7 +1000,9 @@ checkexports: $(TK_LIB_FILE)
 
 $(GENERIC_DIR)/tkStubInit.c: $(GENERIC_DIR)/tk.decls \
 		$(GENERIC_DIR)/tkInt.decls
-	@echo "Warning: run \"make genstubs\" to regenerate tkStubInit.c"
+	@echo "Warning: tkStubInit.c may be out of date."
+	@echo "Developers may want to run \"make genstubs\" to regenerate."
+	@echo "This warning can be safely ignored, do not report as a bug!"
 
 genstubs:
 	$(TCL_EXE) $(TOOL_DIR)/genStubs.tcl $(GENERIC_DIR) \
@@ -1012,6 +1041,11 @@ rpm: all /bin/rpm
 	mv RPMS/i386/*.rpm .
 	rm -rf RPMS THIS.TK.SPEC
 
+mklinks:
+	$(TCL_EXE) $(TCLDIR)/unix/mkLinks.tcl \
+		$(UNIX_DIR)/../doc/*.[13n] > $(UNIX_DIR)/mkLinks
+	chmod +x $(UNIX_DIR)/mkLinks
+
 #
 # Target to create a proper Tk distribution from information in the
 # master source directory.  DISTDIR must be defined to indicate where
@@ -1019,14 +1053,14 @@ rpm: all /bin/rpm
 #
 
 DISTROOT = /tmp/dist
-DISTNAME =	tk@TK_VERSION@@TK_PATCH_LEVEL@
-ZIPNAME =	tk@TK_MAJOR_VERSION@@TK_MINOR_VERSION@@TK_PATCH_LEVEL@.zip
+DISTNAME =	tk${VERSION}${PATCH_LEVEL}
+ZIPNAME =	tk${MAJOR_VERSION}${MINOR_VERSION}${PATCH_LEVEL}.zip
 DISTDIR =	$(DISTROOT)/$(DISTNAME)
 TCLDIR = 	@TCL_SRC_DIR@
 $(UNIX_DIR)/configure: $(UNIX_DIR)/configure.in
 	autoconf $(UNIX_DIR)/configure.in > $(UNIX_DIR)/configure
 
-dist:   $(UNIX_DIR)/configure
+dist:   $(UNIX_DIR)/configure mklinks
 	rm -rf $(DISTDIR)
 	mkdir -p $(DISTDIR)
 	mkdir $(DISTDIR)/unix
@@ -1036,12 +1070,9 @@ dist:   $(UNIX_DIR)/configure
 	cp $(UNIX_DIR)/configure $(UNIX_DIR)/configure.in $(UNIX_DIR)/tk.spec \
 		$(UNIX_DIR)/aclocal.m4 $(UNIX_DIR)/tcl.m4 \
 		$(UNIX_DIR)/tkConfig.sh.in $(TCLDIR)/unix/install-sh \
-		$(UNIX_DIR)/README $(DISTDIR)/unix
+		$(UNIX_DIR)/README $(UNIX_DIR)/mkLinks $(DISTDIR)/unix
 	chmod 775 $(DISTDIR)/unix/configure $(DISTDIR)/unix/configure.in
 	chmod +x $(DISTDIR)/unix/install-sh
-	$(TCL_EXE) $(TCLDIR)/unix/mkLinks.tcl $(TOP_DIR)/doc/*.[13n] \
-		> $(DISTDIR)/unix/mkLinks
-	chmod +x $(DISTDIR)/unix/mkLinks
 	mkdir $(DISTDIR)/bitmaps
 	@(cd $(TOP_DIR); for i in bitmaps/* ; do \
 	    if [ -f $$i ] ; then \
@@ -1072,9 +1103,10 @@ dist:   $(UNIX_DIR)/configure
 	cp -p $(TOP_DIR)/win/rules.vc $(DISTDIR)/win
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/rules.vc
 	cp -p $(TOP_DIR)/win/README $(DISTDIR)/win
+	cp -p $(TOP_DIR)/win/lamp.bmp $(DISTDIR)/win
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/win
 	mkdir $(DISTDIR)/win/rc
-	cp -p $(TOP_DIR)/win/rc/wish.exe.manifest $(TOP_DIR)/win/rc/
+	cp -p $(TOP_DIR)/win/rc/wish.exe.manifest $(DISTDIR)/win/rc/
 	cp -p $(TOP_DIR)/win/rc/*.rc $(TOP_DIR)/win/rc/*.cur \
 		$(TOP_DIR)/win/rc/*.ico $(TOP_DIR)/win/rc/*.bmp \
 		$(DISTDIR)/win/rc

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.10.2.2 2002/06/10 05:38:23 wolfsuit Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.10.2.3 2002/08/20 20:27:01 das Exp $
  */
 
 #include <stdio.h>
@@ -407,8 +407,8 @@ ConfigureText(interp, canvas, itemPtr, objc, objv, flags)
     Tk_State state;
 
     tkwin = Tk_CanvasTkwin(canvas);
-    if (Tk_ConfigureWidget(interp, tkwin, configSpecs, objc, (char **) objv,
-	    (char *) textPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
+    if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
+	    (CONST char **) objv, (char *) textPtr, flags|TK_CONFIG_OBJS)) {
 	return TCL_ERROR;
     }
 

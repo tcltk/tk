@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinCursor.c,v 1.4.8.2 2002/06/10 05:38:28 wolfsuit Exp $
+ * RCS: @(#) $Id: tkWinCursor.c,v 1.4.8.3 2002/08/20 20:27:19 das Exp $
  */
 
 #include "tkWinInt.h"
@@ -99,13 +99,13 @@ TkGetCursorByName(interp, tkwin, string)
 	return NULL;
     }
     if (argc != 1) {
-	ckfree((char *) argv);
 	goto badCursorSpec;
     }
 
     cursorPtr = (TkWinCursor *) ckalloc(sizeof(TkWinCursor));
     cursorPtr->info.cursor = (Tk_Cursor) cursorPtr;
     cursorPtr->winCursor = NULL;
+    cursorPtr->system = 0;
 
     if (argv[0][0] == '@') {
 	/*
@@ -126,37 +126,37 @@ TkGetCursorByName(interp, tkwin, string)
 	    return NULL;
 	}
 	cursorPtr->winCursor = LoadCursorFromFile(&(argv[0][1]));
-	cursorPtr->system = 0;
     } else {
 	/*
 	 * Check for the cursor in the system cursor set.
 	 */
-
 	for (namePtr = cursorNames; namePtr->name != NULL; namePtr++) {
-	    if (strcmp(namePtr->name, name[0]) == 0) {
-		/*
-		 * It is either a system cursor or one of ours!
-		 */
+	    if (strcmp(namePtr->name, argv[0]) == 0) {
 		cursorPtr->winCursor = LoadCursor(NULL, namePtr->id);
-		if (cursorPtr->winCursor == NULL) {
-		    cursorPtr->winCursor =
-			    LoadCursor(Tk_GetHINSTANCE(), name[0]);
-		    cursorPtr->system = 0;
-		} else {
-		    cursorPtr->system = 1;
-		}
+		break;
 	    }
 	}
+
+	if (cursorPtr->winCursor == NULL) {
+	    /*
+	     * Hmm, it is not in the system cursor set.  Check to see
+	     * if it is one of our application resources.
+	     */
+	    cursorPtr->winCursor = LoadCursor(Tk_GetHINSTANCE(), argv[0]);
+	} else {
+	    cursorPtr->system = 1;
+	}
     }
-    ckfree((char *) argv);
 
     if (cursorPtr->winCursor == NULL) {
-    badCursorSpec:
 	ckfree((char *) cursorPtr);
+    badCursorSpec:
+	ckfree((char *) argv);
 	Tcl_AppendResult(interp, "bad cursor spec \"", string, "\"",
 		(char *) NULL);
 	return NULL;
     } else {
+	ckfree((char *) argv);
 	return (TkCursor *) cursorPtr;
     }
 }
@@ -181,8 +181,8 @@ TkCursor *
 TkCreateCursorFromData(tkwin, source, mask, width, height, xHot, yHot,
 	fgColor, bgColor)
     Tk_Window tkwin;		/* Window in which cursor will be used. */
-    char *source;		/* Bitmap data for cursor shape. */
-    char *mask;			/* Bitmap data for cursor mask. */
+    CONST char *source;		/* Bitmap data for cursor shape. */
+    CONST char *mask;		/* Bitmap data for cursor mask. */
     int width, height;		/* Dimensions of cursor. */
     int xHot, yHot;		/* Location of hot-spot in cursor. */
     XColor fgColor;		/* Foreground color for cursor. */

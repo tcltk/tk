@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.10.2.2 2002/06/10 05:38:23 wolfsuit Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.10.2.3 2002/08/20 20:27:04 das Exp $
  */
 
 #include "default.h"
@@ -484,7 +484,7 @@ CreateFrame(clientData, interp, objc, objv, type, appName)
     Frame *framePtr;
     Tk_OptionTable optionTable;
     Tk_Window new;
-    char *className, *screenName, *visualName, *colormapName, *arg, *useOption;
+    CONST char *className, *screenName, *visualName, *colormapName, *arg, *useOption;
     int i, c, depth;
     size_t length;
     unsigned int mask;

@@ -10,11 +10,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: macFont.test,v 1.4 2001/09/21 20:38:18 hobbs Exp $
+# RCS: @(#) $Id: macFont.test,v 1.4.2.1 2002/08/20 20:27:14 das Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 catch {destroy .b}
 toplevel .b
@@ -39,11 +42,11 @@ proc getsize {} {
     return "[winfo reqwidth .b.l] [winfo reqheight .b.l]"
 }
 
-set ::tcltest::testConfig(gothic) 0
+testConstraint gothic 0
 set gothic {gothic 12}
 set mx [font measure  $gothic \u4e4e]
 if {[font actual $gothic -family] != [font actual system -family]} {
-    set ::tcltest::testConfig(gothic) 1
+    testConstraint gothic 1
 }
 
 test macFont-1.1 {TkpFontPkgInit} {macOnly} {
@@ -125,7 +128,7 @@ test macFont-5.1 {TkpGetFontFamilies} {macOnly} {
     expr {[lsearch [font families] Geneva] > 0}
 } {1}
 
-test macFont-6.1 {TkpGetSubFonts} {gothic macOnly} {
+test macFont-6.1 {TkpGetSubFonts} {testfont gothic macOnly} {
     .b.l config -text "abc\u4e4e" 
     update
     set x [testfont subfonts $fixed]

@@ -4,17 +4,14 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: spinbox.test,v 1.1 2000/05/29 01:43:15 hobbs Exp $
+# RCS: @(#) $Id: spinbox.test,v 1.1.6.1 2002/08/20 20:27:15 das Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 proc scroll args {
     global scrollInfo
@@ -1078,7 +1075,7 @@ test spinbox-11.1 {SpinboxEventProc procedure} {
     update
 } {}
 test spinbox-11.2 {SpinboxEventProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     spinbox .e1 -fg #112233
     rename .e1 .e2
     set x {}
@@ -1089,7 +1086,7 @@ test spinbox-11.2 {SpinboxEventProc procedure} {
 } {.e1 #112233 {} {}}
 
 test spinbox-12.1 {SpinboxCmdDeletedProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     button .e1 -text "xyz_123"
     rename .e1 {}
     list [info command .e*] [winfo children .]
@@ -1290,7 +1287,7 @@ test spinbox-17.4 {SpinboxUpdateScrollbar procedure} {
     (horizontal scrolling command executed by .e)}}
 
 set l [interp hidden]
-eval destroy [winfo children .]
+deleteWindows
 
 test spinbox-18.1 {Spinbox widget vs hiding} {
     destroy .e
@@ -1559,6 +1556,21 @@ test spinbox-21.1 {spinbox button, out of range checking} {
     lappend out [.e get]; # 20
 
 } {-10 20 20 -10 -10 -10 20 20 18 -10 -10 -8 -10 -8 -10 20 18 20}
+
+test spinbox-22.1 {spinbox config, -from changes SF bug 559078} {
+    set val 5
+    destroy .s
+    spinbox .s -from 1 -to 10 -textvariable val
+    set val
+} {5}
+test spinbox-22.2 {spinbox config, -from changes SF bug 559078} {
+    .s configure -from 3 -to 10
+    set val
+} {5}
+test spinbox-22.3 {spinbox config, -from changes SF bug 559078} {
+    .s configure -from 6 -to 10
+    set val
+} {6}
 
 destroy .e
 catch {unset ::e ::vVals}

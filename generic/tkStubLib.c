@@ -10,7 +10,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.6.2.3 2002/02/05 02:25:15 wolfsuit Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.6.2.4 2002/08/20 20:27:07 das Exp $
+ */
+
+
+/*
+ * We need to ensure that we use the stub macros so that this file contains
+ * no references to any of the stub functions.  This will make it possible
+ * to build an extension that references Tk_InitStubs but doesn't end up
+ * including the rest of the stub functions.
  */
 
 /*
@@ -23,14 +31,7 @@
 
 #include "tkInt.h"
 #include "tkPort.h"
-#endif /* MAC_TCL */
-
-/*
- * We need to ensure that we use the stub macros so that this file contains
- * no references to any of the stub functions.  This will make it possible
- * to build an extension that references Tk_InitStubs but doesn't end up
- * including the rest of the stub functions.
- */
+#endif /* MAC_OSX_TK */
 
 #ifndef USE_TCL_STUBS
 #define USE_TCL_STUBS

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.18.2.3 2002/02/05 02:25:14 wolfsuit Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.18.2.4 2002/08/20 20:27:01 das Exp $
  */
 
 #include "tkPort.h"
@@ -506,6 +506,11 @@ static EventInfo eventArray[] = {
     {"Activate",	ActivateNotify,		ActivateMask},
     {"Deactivate",	DeactivateNotify,	ActivateMask},
     {"MouseWheel",	MouseWheelEvent,	MouseWheelMask},
+    {"CirculateRequest", CirculateRequest,	SubstructureRedirectMask},
+    {"ConfigureRequest", ConfigureRequest,	SubstructureRedirectMask},
+    {"Create",		CreateNotify,		SubstructureNotifyMask},
+    {"MapRequest",	MapRequest,             SubstructureRedirectMask},
+    {"ResizeRequest",	ResizeRequest,		ResizeRedirectMask},
     {(char *) NULL,	0,			0}
 };
 static Tcl_HashTable eventTable;
@@ -537,6 +542,10 @@ static Tcl_HashTable eventTable;
 #define COLORMAP		0x10000
 #define VIRTUAL			0x20000
 #define ACTIVATE		0x40000
+#define	MAPREQ			0x80000
+#define	CONFIGREQ		0x100000
+#define	RESIZEREQ		0x200000
+#define CIRCREQ			0x400000
 
 #define KEY_BUTTON_MOTION_VIRTUAL	(KEY|BUTTON|MOTION|VIRTUAL)
 
@@ -561,12 +570,12 @@ static int flagArray[TK_LASTEVENT] = {
    /* DestroyNotify */		DESTROY,
    /* UnmapNotify */		UNMAP,
    /* MapNotify */		MAP,
-   /* MapRequest */		0,
+   /* MapRequest */		MAPREQ,
    /* ReparentNotify */		REPARENT,
    /* ConfigureNotify */	CONFIG,
-   /* ConfigureRequest */	0,
+   /* ConfigureRequest */	CONFIGREQ,
    /* GravityNotify */		GRAVITY,
-   /* ResizeRequest */		0,
+   /* ResizeRequest */		RESIZEREQ,
    /* CirculateNotify */	CIRC,
    /* CirculateRequest */	0,
    /* PropertyNotify */		PROP,
@@ -636,6 +645,22 @@ static TkStateMap visNotify[] = {
     {-1, NULL}
 };
 
+static TkStateMap configureRequestDetail[] = {
+    {None,		"None"},
+    {Above,		"Above"},
+    {Below,		"Below"},
+    {BottomIf,		"BottomIf"},
+    {TopIf,		"TopIf"},
+    {Opposite,		"Opposite"},
+    {-1, NULL}
+};
+
+static TkStateMap propNotify[] = {
+    {PropertyNewValue,	"NewValue"},
+    {PropertyDelete,	"Delete"},
+    {-1, NULL}
+};
+
 /*
  * Prototypes for local procedures defined in this file:
  */
@@ -651,13 +676,13 @@ static int		DeleteVirtualEvent _ANSI_ARGS_((Tcl_Interp *interp,
 static void		DeleteVirtualEventTable _ANSI_ARGS_((
 			    VirtualEventTable *vetPtr));
 static void		ExpandPercents _ANSI_ARGS_((TkWindow *winPtr,
-			    char *before, XEvent *eventPtr, KeySym keySym,
+			    CONST char *before, XEvent *eventPtr, KeySym keySym,
 			    Tcl_DString *dsPtr));
 static void		FreeTclBinding _ANSI_ARGS_((ClientData clientData));
 static PatSeq *		FindSequence _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tcl_HashTable *patternTablePtr, ClientData object,
-			    char *eventString, int create, int allowVirtual,
-			    unsigned long *maskPtr));
+			    CONST char *eventString, int create,
+			    int allowVirtual, unsigned long *maskPtr));
 static void		GetAllVirtualEvents _ANSI_ARGS_((Tcl_Interp *interp,
 			    VirtualEventTable *vetPtr));
 static char *		GetField _ANSI_ARGS_((char *p, char *copy, int size));
@@ -680,7 +705,7 @@ static int		NameToWindow _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window main, Tcl_Obj *objPtr,
 			    Tk_Window *tkwinPtr));
 static int		ParseEventDescription _ANSI_ARGS_((Tcl_Interp *interp,
-			    char **eventStringPtr, Pattern *patPtr,
+			    CONST char **eventStringPtr, Pattern *patPtr,
 			    unsigned long *eventMaskPtr));
 static void		DoWarp _ANSI_ARGS_((ClientData clientData));
 
@@ -947,9 +972,9 @@ Tk_CreateBinding(interp, bindingTable, object, eventString, command, append)
 				/* Table in which to create binding. */
     ClientData object;		/* Token for object with which binding is
 				 * associated. */
-    char *eventString;		/* String describing event sequence that
+    CONST char *eventString;	/* String describing event sequence that
 				 * triggers binding. */
-    char *command;		/* Contains Tcl command to execute when
+    CONST char *command;	/* Contains Tcl command to execute when
 				 * binding triggers. */
     int append;			/* 0 means replace any existing binding for
 				 * eventString; 1 means append to that
@@ -1051,7 +1076,7 @@ TkCreateBindingProcedure(interp, bindingTable, object, eventString,
 				/* Table in which to create binding. */
     ClientData object;		/* Token for object with which binding is
 				 * associated. */
-    char *eventString;		/* String describing event sequence that
+    CONST char *eventString;	/* String describing event sequence that
 				 * triggers binding. */
     TkBindEvalProc *eventProc;	/* Procedure to invoke when binding
 				 * triggers.  Must not be NULL. */
@@ -1129,7 +1154,7 @@ Tk_DeleteBinding(interp, bindingTable, object, eventString)
     Tk_BindingTable bindingTable;	/* Table in which to delete binding. */
     ClientData object;			/* Token for object with which binding
 					 * is associated. */
-    char *eventString;			/* String describing event sequence
+    CONST char *eventString;		/* String describing event sequence
 					 * that triggers binding. */
 {
     BindingTable *bindPtr = (BindingTable *) bindingTable;
@@ -1218,14 +1243,14 @@ Tk_DeleteBinding(interp, bindingTable, object, eventString)
  *--------------------------------------------------------------
  */
 
-char *
+CONST char *
 Tk_GetBinding(interp, bindingTable, object, eventString)
     Tcl_Interp *interp;			/* Interpreter for error reporting. */
     Tk_BindingTable bindingTable;	/* Table in which to look for
 					 * binding. */
     ClientData object;			/* Token for object with which binding
 					 * is associated. */
-    char *eventString;			/* String describing event sequence
+    CONST char *eventString;		/* String describing event sequence
 					 * that triggers binding. */
 {
     BindingTable *bindPtr = (BindingTable *) bindingTable;
@@ -1238,7 +1263,7 @@ Tk_GetBinding(interp, bindingTable, object, eventString)
 	return NULL;
     }
     if (psPtr->eventProc == EvalTclBinding) {
-	return (char *) psPtr->clientData;
+	return (CONST char *) psPtr->clientData;
     }
     return "";
 }
@@ -1882,6 +1907,13 @@ TkBindDeadWindow(winPtr)
     BindInfo *bindInfoPtr;
     PendingBinding *curPtr;
 
+    /*
+     * Certain special windows like those used for send and clipboard
+     * have no mainPtr.
+     */
+    if (winPtr->mainPtr == NULL)
+        return;
+
     bindInfoPtr = (BindInfo *) winPtr->mainPtr->bindInfo;
     curPtr = bindInfoPtr->pendingList;
     while (curPtr != NULL) {
@@ -2032,6 +2064,10 @@ MatchPatterns(dispPtr, bindPtr, psPtr, bestPtr, objectPtr, sourcePtrPtr)
 		}
 		goto nextEvent;
 	    }
+	    if (eventPtr->xany.type == CreateNotify
+		&& eventPtr->xcreatewindow.parent != window) {
+		goto nextSequence;
+	    } else 
 	    if (eventPtr->xany.window != window) {
 		goto nextSequence;
 	    }
@@ -2245,6 +2281,7 @@ MatchPatterns(dispPtr, bindPtr, psPtr, bestPtr, objectPtr, sourcePtrPtr)
     *sourcePtrPtr = bestSourcePtr;
     return bestPtr;
 }
+
 
 /*
  *--------------------------------------------------------------
@@ -2269,7 +2306,7 @@ static void
 ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
     TkWindow *winPtr;		/* Window where event occurred:  needed to
 				 * get input context. */
-    char *before;		/* Command containing percent expressions
+    CONST char *before;		/* Command containing percent expressions
 				 * to be replaced. */
     XEvent *eventPtr;		/* X event containing information to be
 				 * used in % replacements. */
@@ -2282,7 +2319,7 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 				 * list element. */
     int number, flags, length;
 #define NUM_SIZE 40
-    char *string;
+    CONST char *string;
     Tcl_DString buf;
     char numStorage[NUM_SIZE+1];
 
@@ -2343,6 +2380,14 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		    }
 		    string = TkFindStateString(notifyDetail, number);
 		}
+		else if (flags & CONFIGREQ) {
+		    if (eventPtr->xconfigurerequest.value_mask & CWStackMode) {
+			string = TkFindStateString(configureRequestDetail,
+					eventPtr->xconfigurerequest.detail);
+		    } else {
+			string = "";
+		    }
+		}
 		goto doString;
 	    case 'f':
 		number = eventPtr->xcrossing.focus;
@@ -2353,7 +2398,26 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		} else if (flags & (CONFIG)) {
 		    number = eventPtr->xconfigure.height;
 		}
+		else if (flags & CREATE) {
+		    number = eventPtr->xcreatewindow.height;
+		} else if (flags & CONFIGREQ) {
+		    number =  eventPtr->xconfigurerequest.height;
+		} else if (flags & RESIZEREQ) {
+		    number =  eventPtr->xresizerequest.height;
+		}
 		goto doNumber;
+	    case 'i':
+		if (flags & CREATE) {
+		    TkpPrintWindowId(numStorage, eventPtr->xcreatewindow.window);
+		} else if (flags & CONFIGREQ) {
+		    TkpPrintWindowId(numStorage, eventPtr->xconfigurerequest.window);
+		} else if (flags & MAPREQ) {
+		    TkpPrintWindowId(numStorage, eventPtr->xmaprequest.window);
+		} else {
+		    TkpPrintWindowId(numStorage, eventPtr->xany.window);
+		}
+		string = numStorage;
+		goto doString;
 	    case 'k':
 		number = eventPtr->xkey.keycode;
 		goto doNumber;
@@ -2377,13 +2441,21 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		}
 		goto doNumber;
 	    case 'p':
-		string = TkFindStateString(circPlace, eventPtr->xcirculate.place);
+		if (flags & CIRC) {
+		    string = TkFindStateString(circPlace, eventPtr->xcirculate.place);
+		} else if (flags & CIRCREQ) {
+		    string = TkFindStateString(circPlace, eventPtr->xcirculaterequest.place);
+		}
 		goto doString;
 	    case 's':
 		if (flags & (KEY_BUTTON_MOTION_VIRTUAL)) {
 		    number = eventPtr->xkey.state;
 		} else if (flags & CROSSING) {
 		    number = eventPtr->xcrossing.state;
+		} else if (flags & PROP) {
+		    string = TkFindStateString(propNotify,
+			    eventPtr->xproperty.state);
+		    goto doString;
 		} else if (flags & VISIBILITY) {
 		    string = TkFindStateString(visNotify,
 			    eventPtr->xvisibility.state);
@@ -2408,6 +2480,13 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		} else if (flags & CONFIG) {
 		    number = eventPtr->xconfigure.width;
 		}
+		else if (flags & CREATE) {
+		    number = eventPtr->xcreatewindow.width;
+		} else if (flags & CONFIGREQ) {
+		    number =  eventPtr->xconfigurerequest.width;
+		} else if (flags & RESIZEREQ) {
+		    number =  eventPtr->xresizerequest.width;
+		}
 		goto doNumber;
 	    case 'x':
 		if (flags & (KEY_BUTTON_MOTION_VIRTUAL)) {
@@ -2420,6 +2499,11 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		    number = eventPtr->xcreatewindow.x;
 		} else if (flags & REPARENT) {
 		    number = eventPtr->xreparent.x;
+		}
+		else if (flags & CREATE) {
+		    number = eventPtr->xcreatewindow.x;
+		} else if (flags & CONFIGREQ) {
+		    number =  eventPtr->xconfigurerequest.x;
 		}
 		goto doNumber;
 	    case 'y':
@@ -2435,6 +2519,11 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		    number = eventPtr->xcrossing.y;
 
 		}
+		else if (flags & CREATE) {
+		    number = eventPtr->xcreatewindow.y;
+		} else if (flags & CONFIGREQ) {
+		    number =  eventPtr->xconfigurerequest.y;
+		}
 		goto doNumber;
 	    case 'A':
 		if (flags & KEY) {
@@ -2443,7 +2532,13 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		}
 		goto doString;
 	    case 'B':
-		number = eventPtr->xcreatewindow.border_width;
+		if (flags & CREATE) {
+		    number = eventPtr->xcreatewindow.border_width;
+		} else if (flags & CONFIGREQ) {
+		    number = eventPtr->xconfigurerequest.border_width;
+		} else {
+		    number = eventPtr->xconfigure.border_width;
+		}
 		goto doNumber;
 	    case 'D':
 		/*
@@ -2468,6 +2563,11 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 	    case 'N':
 		number = (int) keySym;
 		goto doNumber;
+	    case 'P':
+		if (flags & PROP) {
+		    string = Tk_GetAtomName((Tk_Window) winPtr, eventPtr->xproperty.atom);
+		}
+		goto doString;
 	    case 'R':
 		TkpPrintWindowId(numStorage, eventPtr->xkey.root);
 		string = numStorage;
@@ -3179,7 +3279,8 @@ HandleEventGenerate(interp, mainWin, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     XEvent event;    
-    char *name, *p, *windowName;
+    CONST char *p;
+    char *name, *windowName;
     int count, flags, synch, i, number, warp;
     Tcl_QueuePosition pos;
     Pattern pat;
@@ -3699,9 +3800,9 @@ HandleEventGenerate(interp, mainWin, objc, objv)
     if ((warp != 0) && Tk_IsMapped(tkwin)) {
 	TkDisplay *dispPtr;
 	dispPtr = TkGetDisplay(event.xmotion.display);
-	if (!dispPtr->warpInProgress) {
+	if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
 	    Tcl_DoWhenIdle(DoWarp, (ClientData) dispPtr);
-	    dispPtr->warpInProgress = 1;
+	    dispPtr->flags |= TK_DISPLAY_IN_WARP;
 	}
 	dispPtr->warpWindow = event.xany.window;
 	dispPtr->warpX = event.xkey.x;
@@ -3770,7 +3871,7 @@ DoWarp(clientData)
     XWarpPointer(dispPtr->display, (Window) None, (Window) dispPtr->warpWindow,
                      0, 0, 0, 0, (int) dispPtr->warpX, (int) dispPtr->warpY);
     XForceScreenSaver(dispPtr->display, ScreenSaverReset);
-    dispPtr->warpInProgress = 0;
+    dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
 }
 
 /*
@@ -3851,7 +3952,7 @@ FindSequence(interp, patternTablePtr, object, eventString, create,
     ClientData object;		/* For binding table, token for object with
 				 * which binding is associated.
 				 * For virtual event table, NULL. */
-    char *eventString;		/* String description of pattern to
+    CONST char *eventString;	/* String description of pattern to
 				 * match on.  See user documentation
 				 * for details. */
     int create;			/* 0 means don't create the entry if
@@ -3867,7 +3968,7 @@ FindSequence(interp, patternTablePtr, object, eventString, create,
 
     Pattern pats[EVENT_BUFFER_SIZE];
     int numPats, virtualFound;
-    char *p;
+    CONST char *p;
     Pattern *patPtr;
     PatSeq *psPtr;
     Tcl_HashEntry *hPtr;
@@ -4022,7 +4123,7 @@ static int
 ParseEventDescription(interp, eventStringPtr, patPtr,
 	eventMaskPtr)
     Tcl_Interp *interp;		/* For error messages. */
-    char **eventStringPtr;	/* On input, holds a pointer to start of
+    CONST char **eventStringPtr;/* On input, holds a pointer to start of
 				 * event string.  On exit, gets pointer to
 				 * rest of string after parsed event. */
     Pattern *patPtr;		/* Filled with the pattern parsed from the
@@ -4036,8 +4137,10 @@ ParseEventDescription(interp, eventStringPtr, patPtr,
 #define FIELD_SIZE 48
     char field[FIELD_SIZE];
     Tcl_HashEntry *hPtr;
+    Tcl_DString copy;
 
-    p = *eventStringPtr;
+    Tcl_DStringInit(&copy);
+    p = Tcl_DStringAppend(&copy, *eventStringPtr, -1);
 
     patPtr->eventType = -1;
     patPtr->needMods = 0;
@@ -4066,7 +4169,8 @@ ParseEventDescription(interp, eventStringPtr, patPtr,
 		
 		sprintf(buf, "bad ASCII character 0x%x", (unsigned char) *p);
 		Tcl_SetResult(interp, buf, TCL_VOLATILE);
-		return 0;
+		count = 0;
+		goto done;
 	    }
 	}
 	p++;
@@ -4107,12 +4211,14 @@ ParseEventDescription(interp, eventStringPtr, patPtr,
 	if (p == field) {
 	    Tcl_SetResult(interp, "virtual event \"<<>>\" is badly formed",
 		    TCL_STATIC);
-	    return 0;
+	    count = 0;
+	    goto done;
 	}	    
 	if ((p == NULL) || (p[1] != '>')) {
 	    Tcl_SetResult(interp, "missing \">\" in virtual binding",
 		    TCL_STATIC);
-	    return 0;
+	    count = 0;
+	    goto done;
 	}
 	*p = '\0';
 	patPtr->eventType = VirtualEvent;
@@ -4175,7 +4281,8 @@ ParseEventDescription(interp, eventStringPtr, patPtr,
 	    } else if ((eventFlags & BUTTON) == 0) {
 		Tcl_AppendResult(interp, "specified button \"", field,
 			"\" for non-button event", (char *) NULL);
-		return 0;
+		count = 0;
+		goto done;
 	    }
 	    patPtr->detail.button = (*field - '0');
 	} else {
@@ -4184,7 +4291,8 @@ ParseEventDescription(interp, eventStringPtr, patPtr,
 	    if (patPtr->detail.keySym == NoSymbol) {
 		Tcl_AppendResult(interp, "bad event type or keysym \"",
 			field, "\"", (char *) NULL);
-		return 0;
+		count = 0;
+		goto done;
 	    }
 	    if (eventFlags == 0) {
 		patPtr->eventType = KeyPress;
@@ -4192,13 +4300,15 @@ ParseEventDescription(interp, eventStringPtr, patPtr,
 	    } else if ((eventFlags & KEY) == 0) {
 		Tcl_AppendResult(interp, "specified keysym \"", field,
 			"\" for non-key event", (char *) NULL);
-		return 0;
+		count = 0;
+		goto done;
 	    }
 	}
     } else if (eventFlags == 0) {
 	Tcl_SetResult(interp, "no event type or button # or keysym",
 		TCL_STATIC);
-	return 0;
+	count = 0;
+	goto done;
     }
 
     while ((*p == '-') || isspace(UCHAR(*p))) {
@@ -4211,17 +4321,21 @@ ParseEventDescription(interp, eventStringPtr, patPtr,
 		Tcl_SetResult(interp,
 			"extra characters after detail in binding",
 			TCL_STATIC);
-		return 0;
+		count = 0;
+		goto done;
 	    }
 	}
 	Tcl_SetResult(interp, "missing \">\" in binding", TCL_STATIC);
-	return 0;
+	count = 0;
+	goto done;
     }
     p++;
 
 end:
-    *eventStringPtr = p;
+    *eventStringPtr += (p - Tcl_DStringValue(&copy));
     *eventMaskPtr |= eventMask;
+done:
+    Tcl_DStringFree(&copy);
     return count;
 }
 

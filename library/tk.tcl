@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.31.2.3 2002/06/10 05:38:24 wolfsuit Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.31.2.4 2002/08/20 20:27:09 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -154,8 +154,12 @@ proc ::tk::SetFocusGrab {grab {focus {}}} {
 #
 proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
     set index "$grab,$focus"
-    foreach {oldFocus oldGrab oldStatus} $::tk::FocusGrab($index) { break }
-    unset ::tk::FocusGrab($index)
+    if {[info exists ::tk::FocusGrab($index)]} {
+	foreach {oldFocus oldGrab oldStatus} $::tk::FocusGrab($index) { break }
+	unset ::tk::FocusGrab($index)
+    } else {
+	set oldGrab ""
+    }
 
     catch {focus $oldFocus}
     grab release $grab
@@ -362,6 +366,8 @@ switch $tcl_platform(windowingsystem) {
 	event add <<Copy>> <Control-Key-c> <Control-Key-Insert>
 	event add <<Paste>> <Control-Key-v> <Shift-Key-Insert>
 	event add <<PasteSelection>> <ButtonRelease-2>
+  	event add <<Undo>> <Control-Key-z>
+	event add <<Redo>> <Control-Key-y>
     }
     "aqua" {
 	event add <<Cut>> <Control-Key-x> <Key-F2> 
@@ -451,6 +457,116 @@ proc ::tk::TabToWindow {w} {
     focus $w
 }
 
+# ::tk::UnderlineAmpersand --
+# This procedure takes some text with ampersand and returns
+# text w/o ampersand and position of the ampersand.
+# Double ampersands are converted to single ones.
+# Position returned is -1 when there is no ampersand.
+#
+proc ::tk::UnderlineAmpersand {text} {
+    set idx [string first "&" $text]
+    if {$idx >= 0} {
+	set underline $idx
+	# ignore "&&"
+	while {[string match "&" [string index $text [expr {$idx + 1}]]]} {
+	    set base [expr {$idx + 2}]
+	    set idx  [string first "&" [string range $text $base end]]
+	    if {$idx < 0} {
+		break
+	    } else {
+		set underline [expr {$underline + $idx + 1}]
+		incr idx $base
+	    }
+	}
+    }
+    if {$idx >= 0} {
+	regsub -all -- {&([^&])} $text {\1} text
+    } 
+    return [list $text $idx]
+}
+
+# ::tk::SetAmpText -- 
+# Given widget path and text with "magic ampersands",
+# sets -text and -underline options for the widget
+#
+proc ::tk::SetAmpText {widget text} {
+    foreach {newtext under} [::tk::UnderlineAmpersand $text] {
+	$widget configure -text $newtext -underline $under
+    }
+}
+
+# ::tk::AmpWidget --
+# Creates new widget, turning -text option into -text and
+# -underline options, returned by ::tk::UnderlineAmpersand.
+#
+proc ::tk::AmpWidget {class path args} {
+    set wcmd [list $class $path]
+    foreach {opt val} $args {
+	if {[string equal $opt {-text}]} {
+	    foreach {newtext under} [::tk::UnderlineAmpersand $val] {
+		lappend wcmd -text $newtext -underline $under
+	    }
+	} else {
+	    lappend wcmd $opt $val
+	}
+    }
+    eval $wcmd
+    if {$class=="button"} {
+	bind $path <<AltUnderlined>> [list $path invoke]
+    }
+    return $path
+}
+
+# ::tk::FindAltKeyTarget --
+# search recursively through the hierarchy of visible widgets
+# to find button or label which has $char as underlined character
+#
+proc ::tk::FindAltKeyTarget {path char} {
+    switch [winfo class $path] {
+	Button -
+	Label {
+	    if {[string equal -nocase $char \
+		[string index [$path cget -text] \
+		[$path cget -underline]]]} {return $path} else {return {}}
+	}
+	default {
+	    foreach child \
+		[concat [grid slaves $path] \
+		[pack slaves $path] \
+		[place slaves $path] ] {
+		if {""!=[set target [::tk::FindAltKeyTarget $child $char]]} {
+		    return $target
+		}
+	    }
+	}
+    }
+    return {}
+}
+
+# ::tk::AltKeyInDialog --
+# <Alt-Key> event handler for standard dialogs. Sends <<AltUnderlined>>
+# to button or label which has appropriate underlined character
+#
+proc ::tk::AltKeyInDialog {path key} {
+    set target [::tk::FindAltKeyTarget $path $key]
+    if { $target == ""} return
+    event generate $target <<AltUnderlined>>
+}
+
+# ::tk::mcmaxamp --
+# Replacement for mcmax, used for texts with "magic ampersand" in it.
+#
+
+proc ::tk::mcmaxamp {args} {
+    set maxlen 0
+    foreach arg $args {
+	set length [string length [lindex [::tk::UnderlineAmpersand [mc $arg]] 0]]
+	if {$length>$maxlen} {
+	    set maxlen $length
+	}
+    }
+    return $maxlen
+}
 # For now, turn off the custom mdef proc for the mac:
 
 if {[string equal $tcl_platform(windowingsystem) "aqua"]} {

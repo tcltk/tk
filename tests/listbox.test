@@ -6,17 +6,15 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.16.2.2 2002/06/10 05:38:26 wolfsuit Exp $
+# RCS: @(#) $Id: listbox.test,v 1.16.2.3 2002/08/20 20:27:14 das Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
 set fixed {Courier -12}
 
 proc record args {
@@ -73,6 +71,7 @@ resetGridInfo
 set i 1
 
 foreach test {
+    {-activestyle under underline foo {bad activestyle "foo": must be dotbox, none, or underline}}
     {-background #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"}}
     {-bd 4 4 badValue {bad screen distance "badValue"}}
@@ -241,7 +240,7 @@ test listbox-3.22 {ListboxWidgetCmd procedure, "cget" option} {
 } {0}
 test listbox-3.23 {ListboxWidgetCmd procedure, "configure" option} {
     llength [.l configure]
-} {26}
+} {27}
 test listbox-3.24 {ListboxWidgetCmd procedure, "configure" option} {
     list [catch {.l configure -gorp} msg] $msg
 } {1 {unknown option "-gorp"}}
@@ -1296,7 +1295,7 @@ test listbox-8.2 {ListboxEventProc procedure} {fonts} {
     list [.l xview] [.l yview]
 } {{0 0.222222} {0 0.333333}}
 test listbox-8.3 {ListboxEventProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     listbox .l1 -bg #543210
     rename .l1 .l2
     set x {}
@@ -1307,7 +1306,7 @@ test listbox-8.3 {ListboxEventProc procedure} {
 } {.l1 #543210 {} {}}
 
 test listbox-9.1 {ListboxCmdDeletedProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     listbox .l1
     rename .l1 {}
     list [info command .l*] [winfo children .]
@@ -1750,7 +1749,7 @@ test listbox-19.2 {ListboxUpdateVScrollbar procedure} {
     (horizontal scrolling command executed by listbox)}}
 
 set l [interp hidden]
-eval destroy [winfo children .]
+deleteWindows
 
 test listbox-20.1 {listbox vs hidden commands} {
     catch {destroy .l}
@@ -2117,8 +2116,24 @@ test listbox-27.1 {widget deletion while active} {
     winfo exists .l
 } 0
 
+test listbox-28.1 {listbox -activestyle} {
+    catch {destroy .l}
+    listbox .l -activ non
+    .l cget -activestyle
+} none
+test listbox-28.2 {listbox -activestyle} {
+    catch {destroy .l}
+    listbox .l
+    .l cget -activestyle
+} underline
+test listbox-28.3 {listbox -activestyle} {
+    catch {destroy .l}
+    listbox .l -activestyle dot
+    .l cget -activestyle
+} dotbox
+
 resetGridInfo
-eval destroy [winfo children .]
+deleteWindows
 option clear
 
 # cleanup

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.13.2.2 2002/06/10 05:38:23 wolfsuit Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.13.2.3 2002/08/20 20:27:03 das Exp $
  */
 
 #include "tk.h"
@@ -48,12 +48,12 @@ TCL_DECLARE_MUTEX(consoleMutex)
  */
  
 static int	ConsoleCmd _ANSI_ARGS_((ClientData clientData,
-		    Tcl_Interp *interp, int argc, char **argv));
+		    Tcl_Interp *interp, int argc, CONST char **argv));
 static void	ConsoleDeleteProc _ANSI_ARGS_((ClientData clientData));
 static void	ConsoleEventProc _ANSI_ARGS_((ClientData clientData,
 		    XEvent *eventPtr));
 static int	InterpreterCmd _ANSI_ARGS_((ClientData clientData,
-		    Tcl_Interp *interp, int argc, char **argv));
+		    Tcl_Interp *interp, int argc, CONST char **argv));
 
 static int	ConsoleInput _ANSI_ARGS_((ClientData instanceData,
 		    char *buf, int toRead, int *errorCode));
@@ -560,7 +560,7 @@ ConsoleCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Not used. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
     ConsoleInfo *info = (ConsoleInfo *) clientData;
     char c;
@@ -637,7 +637,7 @@ InterpreterCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Not used. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
     ConsoleInfo *info = (ConsoleInfo *) clientData;
     char c;

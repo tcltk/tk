@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.5.16.2 2002/06/10 05:38:23 wolfsuit Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.5.16.3 2002/08/20 20:27:04 das Exp $
  */
 
 #include "tkInt.h"
@@ -216,7 +216,7 @@ Tk_FocusObjCmd(clientData, interp, objc, objv)
 	    }
 	    for (topLevelPtr = newPtr; topLevelPtr != NULL;
 		    topLevelPtr = topLevelPtr->parentPtr)  {
-		if (topLevelPtr->flags & TK_TOP_LEVEL) {
+		if (topLevelPtr->flags & TK_TOP_HIERARCHY) {
 		    for (tlFocusPtr = newPtr->mainPtr->tlFocusPtr;
 			    tlFocusPtr != NULL;
 			    tlFocusPtr = tlFocusPtr->nextPtr) {
@@ -588,7 +588,7 @@ TkSetFocusWin(winPtr, force)
 	if (!(topLevelPtr->flags & TK_MAPPED)) {
 	    allMapped = 0;
 	}
-	if (topLevelPtr->flags & TK_TOP_LEVEL) {
+	if (topLevelPtr->flags & TK_TOP_HIERARCHY) {
 	    break;
 	}
     }
@@ -811,6 +811,14 @@ TkFocusDeadWindow(winPtr)
     ToplevelFocusInfo *tlFocusPtr, *prevPtr;
     DisplayFocusInfo *displayFocusPtr;
     TkDisplay *dispPtr = winPtr->dispPtr;
+
+    /*
+     * Certain special windows like those used for send and clipboard
+     * have no mainPtr.
+     */
+
+    if (winPtr->mainPtr == NULL)
+        return;
 
     /*
      * Search for focus records that refer to this window either as

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.8.6.2 2002/06/10 05:38:23 wolfsuit Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.8.6.3 2002/08/20 20:27:06 das Exp $
  */
 
 #include "tkPort.h"
@@ -422,8 +422,8 @@ Tk_Uid
 Tk_GetOption(tkwin, name, className)
     Tk_Window tkwin;		/* Token for window that option is
 				 * associated with. */
-    char *name;			/* Name of option. */
-    char *className;		/* Class of option.  NULL means there
+    CONST char *name;		/* Name of option. */
+    CONST char *className;	/* Class of option.  NULL means there
 				 * is no class for this option:  just
 				 * check for name. */
 {
@@ -555,7 +555,7 @@ Tk_GetOption(tkwin, name, className)
 	 */
 	
 	classNameLength	= (unsigned int)(masqName - name);
-	masqClass	= (char *)malloc(classNameLength + 1);
+	masqClass	= (char *)ckalloc(classNameLength + 1);
 	strncpy(masqClass, name, classNameLength);
 	masqClass[classNameLength] = '\0';
 	
@@ -713,7 +713,7 @@ Tk_OptionObjCmd(clientData, interp, objc, objv)
 	    value = Tk_GetOption(window, Tcl_GetString(objv[3]),
 		    Tcl_GetString(objv[4]));
 	    if (value != NULL) {
-		Tcl_SetResult(interp, value, TCL_STATIC);
+		Tcl_SetResult(interp, (char *)value, TCL_STATIC);
 	    }
 	    break;
 	}
@@ -787,7 +787,7 @@ TkOptionDeadWindow(winPtr)
      * database.
      */
 
-    if ((winPtr->mainPtr->winPtr == winPtr)
+    if ((winPtr->mainPtr != NULL) && (winPtr->mainPtr->winPtr == winPtr)
 	    && (winPtr->mainPtr->optionRootPtr != NULL)) {
 	ClearOptionTree(winPtr->mainPtr->optionRootPtr);
 	winPtr->mainPtr->optionRootPtr = NULL;

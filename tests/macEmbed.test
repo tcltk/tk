@@ -6,16 +6,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: macEmbed.test,v 1.5.2.2 2002/06/10 05:38:26 wolfsuit Exp $
+# RCS: @(#) $Id: macEmbed.test,v 1.5.2.3 2002/08/20 20:27:14 das Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-eval destroy [winfo children .]
-wm geometry . {}
-raise .
-
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 test macEmbed-1.1 {TkpUseWindow procedure, bad window identifier} {macOnly} {
     catch {destroy .t}
@@ -26,15 +24,8 @@ test macEmbed-1.2 {TkpUseWindow procedure, bad window identifier} {macOnly} {
     list [catch {toplevel .t -use 47} msg] $msg
 } {1 {The window ID 47 does not correspond to a valid Tk Window.}}
 
-if {[string compare testembed [info commands testembed]] != 0} {
-    puts "This application hasn't been compiled with the testembed command,"
-    puts "therefore I am skipping all of these tests."
-    ::tcltest::cleanupTests
-    return
-}
-
-test macEmbed-1.3 {TkpUseWindow procedure, creating Container records} {macOnly} {
-    eval destroy [winfo child .]
+test macEmbed-1.3 {TkpUseWindow procedure, creating Container records} {testembed macOnly} {
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     frame .f2 -container 1 -width 200 -height 50
     pack .f1 .f2
@@ -42,8 +33,8 @@ test macEmbed-1.3 {TkpUseWindow procedure, creating Container records} {macOnly}
 	toplevel .t -use $w
 	list [testembed] [expr [lindex [lindex [testembed all] 1] 0] - $w]
 } {{{XXX .f2 {} {}} {XXX .f1 XXX .t}} 0}
-test macEmbed-1.4 {TkpUseWindow procedure, creating Container records} {macOnly} {
-    eval destroy [winfo child .]
+test macEmbed-1.4 {TkpUseWindow procedure, creating Container records} {testembed macOnly} {
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     frame .f2 -container 1 -width 200 -height 50
     pack .f1 .f2
@@ -57,10 +48,8 @@ test macEmbed-1.4 {TkpUseWindow procedure, creating Container records} {macOnly}
 # Can't think of any way to test the procedures TkpMakeWindow,
 # TkpMakeContainer, or EmbedErrorProc.
 
-test macEmbed-2.1 {EmbeddedEventProc procedure} {macOnly} {
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+test macEmbed-2.1 {EmbeddedEventProc procedure} {testembed macOnly} {
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     set w1 [winfo id .f1]
@@ -70,10 +59,8 @@ test macEmbed-2.1 {EmbeddedEventProc procedure} {macOnly} {
     update
 	testembed
 } {}
-test macEmbed-2.2 {EmbeddedEventProc procedure} {macOnly} {
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+test macEmbed-2.2 {EmbeddedEventProc procedure} {testembed macOnly} {
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     toplevel .t1 -use [winfo id .f1]
@@ -81,10 +68,8 @@ test macEmbed-2.2 {EmbeddedEventProc procedure} {macOnly} {
     destroy .f1
     testembed
 } {}
-test macEmbed-2.3 {EmbeddedEventProc procedure} {macOnly} {
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+test macEmbed-2.3 {EmbeddedEventProc procedure} {testembed macOnly} {
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     toplevel .t1 -use [winfo id .f1]
@@ -94,10 +79,8 @@ test macEmbed-2.3 {EmbeddedEventProc procedure} {macOnly} {
     list [testembed] [winfo children .]
 } {{} {}}
 
-test macEmbed-3.1 {EmbeddedEventProc procedure, detect creation} {macOnly} {
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+test macEmbed-3.1 {EmbeddedEventProc procedure, detect creation} {testembed macOnly} {
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     set w1 [winfo id .f1]
@@ -108,9 +91,7 @@ test macEmbed-3.1 {EmbeddedEventProc procedure, detect creation} {macOnly} {
 } {{{XXX .f1 {} {}}} {{XXX .f1 XXX .t1}}}
 test macEmbed-3.2 {EmbeddedEventProc procedure, disallow position changes} \
 	{macOnly} {
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     set w1 [winfo id .f1]
@@ -122,9 +103,7 @@ test macEmbed-3.2 {EmbeddedEventProc procedure, disallow position changes} \
 } {200x200+0+0}
 test macEmbed-3.3 {EmbeddedEventProc procedure, disallow position changes} \
 	{macOnly} {
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     set w1 [winfo id .f1]
@@ -135,9 +114,7 @@ test macEmbed-3.3 {EmbeddedEventProc procedure, disallow position changes} \
 	wm geometry .t1
 } {300x100+0+0}
 test macEmbed-3.4 {EmbeddedEventProc procedure, geometry requests} {macOnly} {
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+    deleteWindows
     toplevel .t1 -container 1 -width 200 -height 50
     set w1 [winfo id .t1]
 	toplevel .t2 -use $w1
@@ -147,9 +124,7 @@ test macEmbed-3.4 {EmbeddedEventProc procedure, geometry requests} {macOnly} {
     list [winfo width .t1] [winfo height .t1] [wm geometry .t2]
 } {300 80 300x80+0+0}
 test macEmbed-3.5 {EmbeddedEventProc procedure, map requests} {macOnly} {
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     set w1 [winfo id .f1]
@@ -162,9 +137,7 @@ test macEmbed-3.5 {EmbeddedEventProc procedure, map requests} {macOnly} {
 	set x
 } {mapped}
 test macEmbed-3.6 {EmbeddedEventProc procedure, destroy events} {macOnly} {
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     set w1 [winfo id .f1]
@@ -178,9 +151,7 @@ test macEmbed-3.6 {EmbeddedEventProc procedure, destroy events} {macOnly} {
 } {dead 0}
 
 test macEmbed-4.1 {EmbedStructureProc procedure, configure events} {macOnly} {
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     set w1 [winfo id .f1]
@@ -190,10 +161,8 @@ test macEmbed-4.1 {EmbedStructureProc procedure, configure events} {macOnly} {
     update
 	winfo geometry .t1
 } {180x100+0+0}
-test macEmbed-4.2 {EmbedStructureProc procedure, destroy events} {macOnly} {
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+test macEmbed-4.2 {EmbedStructureProc procedure, destroy events} {testembed macOnly} {
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     set w1 [winfo id .f1]
@@ -208,9 +177,7 @@ test macEmbed-4.2 {EmbedStructureProc procedure, destroy events} {macOnly} {
 
 test unixEmbed-5.1 {TkpClaimFocus procedure} {macOnly tempNotMac} {
     catch {interp delete child}
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     frame .f2 -width 200 -height 50
     pack .f1 .f2
@@ -231,10 +198,8 @@ test unixEmbed-5.1 {TkpClaimFocus procedure} {macOnly tempNotMac} {
 } {{{} .} .f1}
 catch {interp delete child}
 
-test macEmbed-6.1 {EmbedWindowDeleted procedure, check parentPtr} {macOnly} {
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+test macEmbed-6.1 {EmbedWindowDeleted procedure, check parentPtr} {testembed macOnly} {
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     frame .f2 -container 1 -width 200 -height 50
     frame .f3 -container 1 -width 200 -height 50
@@ -248,10 +213,8 @@ test macEmbed-6.1 {EmbedWindowDeleted procedure, check parentPtr} {macOnly} {
     }
     set x
 } {{{XXX .f4 {} {}} {XXX .f3 {} {}} {XXX .f2 {} {}} {XXX .f1 {} {}}} {{XXX .f4 {} {}} {XXX .f2 {} {}} {XXX .f1 {} {}}} {{XXX .f2 {} {}} {XXX .f1 {} {}}} {{XXX .f2 {} {}}} {}}
-test macEmbed-6.2 {EmbedWindowDeleted procedure, check embeddedPtr} {macOnly} {
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+test macEmbed-6.2 {EmbedWindowDeleted procedure, check embeddedPtr} {testembed macOnly} {
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     set w1 [winfo id .f1]
@@ -264,9 +227,7 @@ test macEmbed-6.2 {EmbedWindowDeleted procedure, check embeddedPtr} {macOnly} {
 } {{{XXX .f1 XXX .t1}} {}}
 
 test macEmbed-7.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} {macOnly} {
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     toplevel .t1 -use [winfo id .f1] -width 150 -height 80
@@ -276,9 +237,7 @@ test macEmbed-7.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} {macOn
     wm geometry .t1
 } {150x80+0+0}
 test macEmbed-7.2 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} {macOnly} {
-    foreach w [winfo child .] {
-	catch {destroy $w}
-    }
+    deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     toplevel .t1 -use [winfo id .f1] -width 150 -height 80
@@ -290,9 +249,7 @@ test macEmbed-7.2 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} {macOn
 
 
 
-foreach w [winfo child .] {
-    catch {destroy $w}
-}
+deleteWindows
 
 # cleanup
 ::tcltest::cleanupTests

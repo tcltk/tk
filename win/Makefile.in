@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.44.2.2 2002/06/10 05:38:27 wolfsuit Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.44.2.3 2002/08/20 20:27:18 das Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -72,6 +72,12 @@ MANN_INSTALL_DIR	= $(MAN_INSTALL_DIR)/mann
 
 # Libraries built with optimization switches have this additional extension
 TK_DBGX			= @TK_DBGX@
+
+# Directory in which to install the pkgIndex.tcl file for loadable Tk
+PKG_INSTALL_DIR		= $(LIB_INSTALL_DIR)/tk$(VERSION)$(TK_DBGX)
+
+# Package index file for loadable Tk
+PKG_INDEX		= $(PKG_INSTALL_DIR)/pkgIndex.tcl
 
 # The directory containing the Tcl source and header files.
 TCL_SRC_DIR		= @TCL_SRC_DIR@
@@ -330,6 +336,7 @@ TK_OBJS = \
 	tkScale.$(OBJEXT) \
 	tkScrollbar.$(OBJEXT) \
 	tkSelect.$(OBJEXT) \
+	tkStyle.$(OBJEXT) \
 	tkText.$(OBJEXT) \
 	tkTextBTree.$(OBJEXT) \
 	tkTextDisp.$(OBJEXT) \
@@ -339,6 +346,7 @@ TK_OBJS = \
 	tkTextTag.$(OBJEXT) \
 	tkTextWind.$(OBJEXT) \
 	tkTrig.$(OBJEXT) \
+	tkUndo.$(OBJEXT) \
 	tkUtil.$(OBJEXT) \
 	tkVisual.$(OBJEXT) \
 	tkStubInit.$(OBJEXT) \
@@ -412,12 +420,12 @@ gdb: binaries
 	@echo "set env TK_LIBRARY=$(ROOT_DIR_NATIVE)/library" >> gdb.run
 	PATH="$(PATH):$(TCL_BIN_DIR)"; export PATH; \
 	gdb ./$(WISH) --command=gdb.run
-	rm gdb.run
+	@$(RM) gdb.run
 
 install: all install-binaries install-libraries install-doc install-demos
 
 install-binaries: binaries
-	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) ; \
+	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) $(PKG_INSTALL_DIR); \
 	    do \
 	    if [ ! -d $$i ] ; then \
 		echo "Making directory $$i"; \
@@ -433,6 +441,14 @@ install-binaries: binaries
 		$(COPY) $$i "$(BIN_INSTALL_DIR)"; \
 	    fi; \
 	    done
+	@echo "Creating package index $(PKG_INDEX)"; 
+	@$(RM) $(PKG_INDEX);
+	@(\
+	echo "if {[package vcompare [package provide Tcl]\
+		$(TCLVERSION)] != 0} { return }";\
+	echo "package ifneeded Tk $(VERSION)\
+		[list load [file join \$$dir .. .. bin $(TK_DLL_FILE)] Tk]";\
+	) > $(PKG_INDEX);
 	@for i in tkConfig.sh $(TK_LIB_FILE) $(TK_STUB_LIB_FILE); \
 	    do \
 	    if [ -f $$i ]; then \
@@ -608,7 +624,9 @@ Makefile: $(SRC_DIR)/Makefile.in
 
 $(GENERIC_DIR)/tkStubInit.c: $(GENERIC_DIR)/tk.decls \
 		$(GENERIC_DIR)/tkInt.decls
-	@echo "Warning: run \"make genstubs\" to regenerate tkStubInit.c"
+	@echo "Warning: tkStubInit.c may be out of date."
+	@echo "Developers may want to run \"make genstubs\" to regenerate."
+	@echo "This warning can be safely ignored, do not report as a bug!"
 
 genstubs:
 	$(TCL_EXE) "$(TCL_TOOL_DIR}\genStubs.tcl" \

@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.42.2.1 2002/06/10 05:38:27 wolfsuit Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.42.2.2 2002/08/20 20:27:18 das Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -351,6 +351,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkScale.obj \
 	$(TMP_DIR)\tkScrollbar.obj \
 	$(TMP_DIR)\tkSelect.obj \
+	$(TMP_DIR)\tkStyle.obj \
 	$(TMP_DIR)\tkText.obj \
 	$(TMP_DIR)\tkTextBTree.obj \
 	$(TMP_DIR)\tkTextDisp.obj \
@@ -360,6 +361,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkTextTag.obj \
 	$(TMP_DIR)\tkTextWind.obj \
 	$(TMP_DIR)\tkTrig.obj \
+	$(TMP_DIR)\tkUndo.obj \
 	$(TMP_DIR)\tkUtil.obj \
 	$(TMP_DIR)\tkVisual.obj \
 	$(TMP_DIR)\tkStubInit.obj \
@@ -465,7 +467,7 @@ conlflags = $(lflags) -subsystem:console
 guilflags = $(lflags) -subsystem:windows
 
 baselibs   = kernel32.lib advapi32.lib user32.lib
-guilibs	    = $(baselibs) gdi32.lib comdlg32.lib winspool.lib imm32.lib comctl32.lib
+guilibs	    = $(baselibs) shell32.lib gdi32.lib comdlg32.lib winspool.lib imm32.lib comctl32.lib
 
 
 #---------------------------------------------------------------------
@@ -574,9 +576,12 @@ install-libraries:
 	@xcopy /i /y "$(GENERICDIR)\tkPlatDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@xcopy /i /y "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@xcopy /i /y "$(XLIBDIR)\X11\*.h" "$(INCLUDE_INSTALL_DIR)\X11\"
-	@xcopy /i /y "$(ROOT)\library" "$(SCRIPT_INSTALL_DIR)\" /s /exclude:<<
-CVS
-<<
+	@xcopy /i /y "$(ROOT)\library\*" "$(SCRIPT_INSTALL_DIR)\"
+	@xcopy /i /y "$(ROOT)\library\*" "$(SCRIPT_INSTALL_DIR)\"
+	@xcopy /i /y "$(ROOT)\library\demos\*" "$(SCRIPT_INSTALL_DIR)\demos\"
+	@xcopy /i /y "$(ROOT)\library\demos\images\*" "$(SCRIPT_INSTALL_DIR)\demos\images\"
+	@xcopy /i /y "$(ROOT)\library\images\*" "$(SCRIPT_INSTALL_DIR)\images\"
+	@xcopy /i /y "$(ROOT)\library\msgs\*" "$(SCRIPT_INSTALL_DIR)\msgs\"
 
 
 #---------------------------------------------------------------------
@@ -754,6 +759,7 @@ $(GENERICDIR)/tkScrollbar.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkText.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkTextIndex.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkTextTag.c: $(GENERICDIR)/default.h
+$(GENERICDIR)/tkUndo.c: $(GENERICDIR)/tkUndo.h
 
 $(GENERICDIR)/tkText.c: $(GENERICDIR)/tkText.h
 $(GENERICDIR)/tkTextBTree.c: $(GENERICDIR)/tkText.h
