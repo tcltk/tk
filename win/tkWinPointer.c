@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPointer.c,v 1.7 1999/12/14 06:53:54 hobbs Exp $
+ * RCS: @(#) $Id: tkWinPointer.c,v 1.8 2000/04/19 01:06:51 ericm Exp $
  */
 
 #include "tkWinInt.h"
@@ -63,7 +63,7 @@ TkWinGetModifierState()
 	state |= ControlMask;
     }
     if (GetKeyState(VK_MENU) & 0x8000) {
-	state |= Mod2Mask;
+	state |= ALT_MASK;
     }
     if (GetKeyState(VK_CAPITAL) & 0x0001) {
 	state |= LockMask;

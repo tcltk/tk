@@ -1,9 +1,53 @@
-2000-04-18    <redman@HILO>
+2000-04-18  Eric Melski  <ericm@scriptics.com>
+
+	* win/tkWinPointer.c: Changed Mod2Mask in TkWinGetModifierState to
+	ALT_MASK, to fix some event problems [Bugs: 1160, 5088].
+
+	* win/tkWinX.c: Changed Mod2Mask in GetState to ALT_MASK, to fix
+	some event problems [Bugs: 1160, 5088].
+
+	* generic/tkInt.h: Moved definition of ALT_MASK and META_MASK here
+	so that it would be accessible from other modules than tkBind.c.
+
+	* generic/tkBind.c: Added code in BindEvent to check for ALT_MASK
+	and META_MASK in the event state field, as this field may not be
+	set up with the correct display modifier mask bits if the XEvent
+	structure was created by [event generate] or by the Windows X
+	emulation. [Bugs: 1160, 5088].
+
+2000-04-18  Scott Redman  <redman@HILO>
 
 	* win/tk.rc:
 	* win/wish.rc:
 	* win/wish.ico:  Modified copyright dates in Windows resource
 	files.  Updated the icon for wish.exe.
+
+2000-04-17  Eric Melski  <ericm@scriptics.com>
+
+	* win/tkWinDialog.c: Added checks for visibility of parent window
+	before creating MessageBox and ChooseColor dialogs; this prevents
+	the application from locking when the parent is withdrawn and the
+	message box is created.  In these cases, the window will be
+	created without a parent.
+
+	* unix/mkLinks: Added WinViewable.3.
+
+	* tests/msgbox.test: Added tests for patch from [Bug: 4997].
+
+	* library/msgbox.tcl: 
+	* library/dialog.tcl: Applied patch from [Bug: 4997]; detaches
+	dialog window from parent if parent is not viewable.
+
+	* library/bgerror.tcl: Removed workaround from [Bug: 4370]; this
+	is superceeded by patches to dialog.tcl.
+
+	* generic/tkCmds.c: Changed WinfoObjCmd to use Tk_IsViewable
+	function to determine visibility of windows instead of inlining
+	the code.
+
+	* generic/tkStubInit.c: 
+	* generic/tkDecls.h: 
+	* generic/tk.decls: Added Tk_IsViewable declaration.
 
 2000-04-17  Eric Melski  <ericm@scriptics.com>
 

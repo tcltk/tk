@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.9 2000/04/12 18:51:11 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.10 2000/04/19 01:06:51 ericm Exp $
  */
 
 #include "tkWinInt.h"
@@ -965,7 +965,7 @@ GetState(message, wParam, lParam)
 		mask = ControlMask;
 		break;
 	    case VK_MENU:
-		mask = Mod2Mask;
+		mask = ALT_MASK;
 		break;
 	    case VK_CAPITAL:
 		if (message == WM_SYSKEYDOWN || message == WM_KEYDOWN) {

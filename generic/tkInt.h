@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.22 2000/03/24 23:13:18 ericm Exp $ 
+ * RCS: $Id: tkInt.h,v 1.23 2000/04/19 01:06:51 ericm Exp $ 
  */
 
 #ifndef _TKINT
@@ -849,6 +849,15 @@ extern TkDisplay *tkDisplayList;
  */
 
 #define EMBEDDED_APP_WANTS_FOCUS (NotifyNormal + 20)
+
+/*
+ * The following special modifier mask bits are defined, to indicate
+ * logical modifiers such as Meta and Alt that may float among the
+ * actual modifier bits.
+ */
+
+#define META_MASK	(AnyModifier<<1)
+#define ALT_MASK	(AnyModifier<<2)
 
 /*
  * Miscellaneous variables shared among Tk modules but not exported
