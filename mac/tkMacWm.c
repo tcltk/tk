@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.18 2002/06/14 22:25:12 jenglish Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.19 2002/06/22 10:13:26 hobbs Exp $
  */
 
 #include <Gestalt.h>
@@ -739,7 +739,8 @@ Tk_WmCmd(
 	return TCL_ERROR;
     }
     wmPtr = winPtr->wmInfoPtr;
-    if ((c == 'a') && (strncmp(argv[1], "aspect", length) == 0)) {
+    if ((c == 'a') && (strncmp(argv[1], "aspect", length) == 0)
+	    && (length >= 2)) {
 	int numer1, denom1, numer2, denom2;
 
 	if ((argc != 3) && (argc != 7)) {
@@ -782,6 +783,14 @@ Tk_WmCmd(
 	}
 	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
 	goto updateGeom;
+    } else if ((c == 'a') && (strncmp(argv[1], "attributes", length) == 0)
+	    && (length >= 2)) {
+	if (argc != 3) {
+	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
+		    argv[0], " attributes window",
+		    "\"", (char *) NULL);
+	    return TCL_ERROR;
+	}
     } else if ((c == 'c') && (strncmp(argv[1], "client", length) == 0)
 	    && (length >= 2)) {
 	if ((argc != 3) && (argc != 4)) {
@@ -4120,7 +4129,7 @@ TkUnsupported1Cmd(
 		    Tcl_SetResult(interp, "floatSideZoomProc", TCL_STATIC);
 		    break;
 		default:
-		   panic("invalid style");
+		    panic("invalid style");
 	    }
 	    if (appearanceSpec) {
 	        Tcl_Obj *attributeList, *newResult;
@@ -4153,11 +4162,11 @@ TkUnsupported1Cmd(
                     Tcl_ListObjAppendElement(interp, attributeList, 
                             Tcl_NewStringObj("none", -1));
                 } else if (wmPtr->attributes == kWindowStandardDocumentAttributes) {
-                     Tcl_ListObjAppendElement(interp, attributeList, 
+		    Tcl_ListObjAppendElement(interp, attributeList, 
                             Tcl_NewStringObj("standardDocument", -1));
                 } else if (wmPtr->attributes == kWindowStandardFloatingAttributes) {
-                     Tcl_ListObjAppendElement(interp, attributeList, 
-                            Tcl_NewStringObj("standardFloating", -1));                  
+		    Tcl_ListObjAppendElement(interp, attributeList, 
+                            Tcl_NewStringObj("standardFloating", -1));
                 } else {
                     if (wmPtr->attributes & kWindowCloseBoxAttribute) {
                         Tcl_ListObjAppendElement(interp, attributeList, 
@@ -4197,48 +4206,48 @@ TkUnsupported1Cmd(
 	    }
 	    return TCL_OK;
         } else if (argc == 4) {
-	if (strcmp(argv[3], "documentProc") == 0) {
-	    wmPtr->style = documentProc;
-	} else if (strcmp(argv[3], "noGrowDocProc") == 0) {
-	    wmPtr->style = documentProc;
-	} else if (strcmp(argv[3], "dBoxProc") == 0) {
-	    wmPtr->style = dBoxProc;
-	} else if (strcmp(argv[3], "plainDBox") == 0) {
-	    wmPtr->style = plainDBox;
-	} else if (strcmp(argv[3], "altDBoxProc") == 0) {
-	    wmPtr->style = altDBoxProc;
-	} else if (strcmp(argv[3], "movableDBoxProc") == 0) {
-	    wmPtr->style = movableDBoxProc;
-	} else if (strcmp(argv[3], "zoomDocProc") == 0) {
-	    wmPtr->style = zoomDocProc;
-	} else if (strcmp(argv[3], "zoomNoGrow") == 0) {
-	    wmPtr->style = zoomNoGrow;
-	} else if (strcmp(argv[3], "rDocProc") == 0) {
-	    wmPtr->style = rDocProc;
-	} else if (strcmp(argv[3], "floatProc") == 0) {
-	    wmPtr->style = floatGrowProc;
-	} else if (strcmp(argv[3], "floatGrowProc") == 0) {
-	    wmPtr->style = floatGrowProc;
-	} else if (strcmp(argv[3], "floatZoomProc") == 0) {
-	    wmPtr->style = floatZoomGrowProc;
-	} else if (strcmp(argv[3], "floatZoomGrowProc") == 0) {
-	    wmPtr->style = floatZoomGrowProc;
-	} else if (strcmp(argv[3], "floatSideProc") == 0) {
-	    wmPtr->style = floatSideGrowProc;
-	} else if (strcmp(argv[3], "floatSideGrowProc") == 0) {
-	    wmPtr->style = floatSideGrowProc;
-	} else if (strcmp(argv[3], "floatSideZoomProc") == 0) {
-	    wmPtr->style = floatSideZoomGrowProc;
-	} else if (strcmp(argv[3], "floatSideZoomGrowProc") == 0) {
-	    wmPtr->style = floatSideZoomGrowProc;
-	} else {
-	    Tcl_AppendResult(interp, "bad style: should be documentProc, ",
-	    	    "dBoxProc, plainDBox, altDBoxProc, movableDBoxProc, ",
-	    	    "zoomDocProc, rDocProc, floatProc, floatZoomProc, ",
-		    "floatSideProc, or floatSideZoomProc",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
+	    if (strcmp(argv[3], "documentProc") == 0) {
+		wmPtr->style = documentProc;
+	    } else if (strcmp(argv[3], "noGrowDocProc") == 0) {
+		wmPtr->style = documentProc;
+	    } else if (strcmp(argv[3], "dBoxProc") == 0) {
+		wmPtr->style = dBoxProc;
+	    } else if (strcmp(argv[3], "plainDBox") == 0) {
+		wmPtr->style = plainDBox;
+	    } else if (strcmp(argv[3], "altDBoxProc") == 0) {
+		wmPtr->style = altDBoxProc;
+	    } else if (strcmp(argv[3], "movableDBoxProc") == 0) {
+		wmPtr->style = movableDBoxProc;
+	    } else if (strcmp(argv[3], "zoomDocProc") == 0) {
+		wmPtr->style = zoomDocProc;
+	    } else if (strcmp(argv[3], "zoomNoGrow") == 0) {
+		wmPtr->style = zoomNoGrow;
+	    } else if (strcmp(argv[3], "rDocProc") == 0) {
+		wmPtr->style = rDocProc;
+	    } else if (strcmp(argv[3], "floatProc") == 0) {
+		wmPtr->style = floatGrowProc;
+	    } else if (strcmp(argv[3], "floatGrowProc") == 0) {
+		wmPtr->style = floatGrowProc;
+	    } else if (strcmp(argv[3], "floatZoomProc") == 0) {
+		wmPtr->style = floatZoomGrowProc;
+	    } else if (strcmp(argv[3], "floatZoomGrowProc") == 0) {
+		wmPtr->style = floatZoomGrowProc;
+	    } else if (strcmp(argv[3], "floatSideProc") == 0) {
+		wmPtr->style = floatSideGrowProc;
+	    } else if (strcmp(argv[3], "floatSideGrowProc") == 0) {
+		wmPtr->style = floatSideGrowProc;
+	    } else if (strcmp(argv[3], "floatSideZoomProc") == 0) {
+		wmPtr->style = floatSideZoomGrowProc;
+	    } else if (strcmp(argv[3], "floatSideZoomGrowProc") == 0) {
+		wmPtr->style = floatSideZoomGrowProc;
+	    } else {
+		Tcl_AppendResult(interp, "bad style: should be documentProc, ",
+			"dBoxProc, plainDBox, altDBoxProc, movableDBoxProc, ",
+			"zoomDocProc, rDocProc, floatProc, floatZoomProc, ",
+			"floatSideProc, or floatSideZoomProc",
+			(char *) NULL);
+		return TCL_ERROR;
+	    }
 	} else if (argc == 5) {
 	    int oldClass = wmPtr->macClass;
 	    int oldAttributes = wmPtr->attributes;
@@ -4278,7 +4287,7 @@ TkUnsupported1Cmd(
 	        if (Tcl_SplitList(interp, argv[4], &attrArgc, &attrArgv) != TCL_OK) {
 	            wmPtr->macClass = oldClass;
 	            Tcl_AppendResult(interp, "Ill-formed attributes list: \"",
-	                argv[4], "\".", (char *) NULL);
+			    argv[4], "\".", (char *) NULL);
 	            return TCL_ERROR;
 	        }
 	        	        
@@ -4341,7 +4350,7 @@ TkUnsupported1Cmd(
 		(char *) NULL);
 	return TCL_ERROR;
     }
-    
+   
     return TCL_OK;
 }
 

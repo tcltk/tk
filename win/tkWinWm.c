@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.42 2002/06/22 01:43:47 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.43 2002/06/22 10:13:26 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -2146,80 +2146,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
     wmPtr = winPtr->wmInfoPtr;
-    if ((c == 'a') && (strncmp(argv[1], "attributes", length) == 0)
-	    && (length >= 2)) {
-	LONG style, exStyle, styleBit, *stylePtr;
-	char buf[TCL_INTEGER_SPACE];
-	int i, boolean;
-
-	if (argc < 3) {
-	    configArgs:
-	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
-		    argv[0], " attributes window",
-		    " ?-disabled ?bool??",
-		    " ?-toolwindow ?bool??",
-		    " ?-topmost ?bool??\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	exStyle = wmPtr->exStyleConfig;
-	style   = wmPtr->styleConfig;
-	if (argc == 3) {
-	    sprintf(buf, "%d", ((style & WS_DISABLED) != 0));
-            Tcl_AppendResult(interp, "-disabled ", buf, (char *) NULL);
-	    sprintf(buf, "%d", ((exStyle & WS_EX_TOOLWINDOW) != 0));
-            Tcl_AppendResult(interp, " -toolwindow ", buf, (char *) NULL);
-	    sprintf(buf, "%d", ((exStyle & WS_EX_TOPMOST) != 0));
-            Tcl_AppendResult(interp, " -topmost ", buf, (char *) NULL);
-	    return TCL_OK;
-	}
-	for (i = 3; i < argc; i += 2) {
-	    length = strlen(argv[i]);
-	    if ((length < 2) || (argv[i][0] != '-')) {
-		goto configArgs;
-	    }
-	    if ((i < argc-1) &&
-		    (Tcl_GetBoolean(interp, argv[i+1], &boolean) != TCL_OK)) {
-		return TCL_ERROR;
-	    }
-	    if (strncmp(argv[i], "-disabled", length) == 0) {
-		stylePtr = &style;
-		styleBit = WS_DISABLED;
-	    } else if ((strncmp(argv[i], "-toolwindow", length) == 0)
-		    && (length >= 3)) {
-		stylePtr = &exStyle;
-		styleBit = WS_EX_TOOLWINDOW;
-	    } else if ((strncmp(argv[i], "-topmost", length) == 0)
-		    && (length >= 3)) {
-		stylePtr = &exStyle;
-		styleBit = WS_EX_TOPMOST;
-		if ((i < argc-1) &&
-			(winPtr->flags & TK_EMBEDDED)) {
-		    Tcl_AppendResult(interp, "can't set topmost flag on ",
-			    winPtr->pathName, ": it is an embedded window",
-			    (char *) NULL);
-		    return TCL_ERROR;
-		}
-	    } else {
-		goto configArgs;
-	    }
-	    if (i == argc-1) {
-		Tcl_SetIntObj(Tcl_GetObjResult(interp),
-			((*stylePtr & styleBit) != 0));
-	    } else if (boolean) {
-		*stylePtr |= styleBit;
-	    } else {
-		*stylePtr &= ~styleBit;
-	    }
-	}
-	if ((wmPtr->styleConfig != style) ||
-		(wmPtr->exStyleConfig != exStyle)) {
-	    wmPtr->styleConfig = style;
-	    wmPtr->exStyleConfig = exStyle;
-	    UpdateWrapper(winPtr);
-	}
-	return TCL_OK;
-    } else if ((c == 'a') && (strncmp(argv[1], "aspect", length) == 0)
+    if ((c == 'a') && (strncmp(argv[1], "aspect", length) == 0)
 	    && (length >= 2)) {
 	int numer1, denom1, numer2, denom2;
 
@@ -2262,6 +2189,77 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    wmPtr->sizeHintsFlags |= PAspect;
 	}
 	goto updateGeom;
+    } else if ((c == 'a') && (strncmp(argv[1], "attributes", length) == 0)
+	    && (length >= 2)) {
+	LONG style, exStyle, styleBit, *stylePtr;
+	char buf[TCL_INTEGER_SPACE];
+	int i, boolean;
+
+	if (argc < 3) {
+	    configArgs:
+	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
+		    argv[0], " attributes window",
+		    " ?-disabled ?bool??",
+		    " ?-toolwindow ?bool??",
+		    " ?-topmost ?bool??",
+		    "\"", (char *) NULL);
+	    return TCL_ERROR;
+	}
+	exStyle = wmPtr->exStyleConfig;
+	style   = wmPtr->styleConfig;
+	if (argc == 3) {
+	    sprintf(buf, "%d", ((style & WS_DISABLED) != 0));
+            Tcl_AppendResult(interp, "-disabled ", buf, (char *) NULL);
+	    sprintf(buf, "%d", ((exStyle & WS_EX_TOOLWINDOW) != 0));
+            Tcl_AppendResult(interp, " -toolwindow ", buf, (char *) NULL);
+	    sprintf(buf, "%d", ((exStyle & WS_EX_TOPMOST) != 0));
+            Tcl_AppendResult(interp, " -topmost ", buf, (char *) NULL);
+	    return TCL_OK;
+	}
+	for (i = 3; i < argc; i += 2) {
+	    length = strlen(argv[i]);
+	    if ((length < 2) || (argv[i][0] != '-')) {
+		goto configArgs;
+	    }
+	    if ((i < argc-1) &&
+		    (Tcl_GetBoolean(interp, argv[i+1], &boolean) != TCL_OK)) {
+		return TCL_ERROR;
+	    }
+	    if (strncmp(argv[i], "-disabled", length) == 0) {
+		stylePtr = &style;
+		styleBit = WS_DISABLED;
+	    } else if ((strncmp(argv[i], "-toolwindow", length) == 0)
+		    && (length >= 3)) {
+		stylePtr = &exStyle;
+		styleBit = WS_EX_TOOLWINDOW;
+	    } else if ((strncmp(argv[i], "-topmost", length) == 0)
+		    && (length >= 3)) {
+		stylePtr = &exStyle;
+		styleBit = WS_EX_TOPMOST;
+		if ((i < argc-1) && (winPtr->flags & TK_EMBEDDED)) {
+		    Tcl_AppendResult(interp, "can't set topmost flag on ",
+			    winPtr->pathName, ": it is an embedded window",
+			    (char *) NULL);
+		    return TCL_ERROR;
+		}
+	    } else {
+		goto configArgs;
+	    }
+	    if (i == argc-1) {
+		Tcl_SetIntObj(Tcl_GetObjResult(interp),
+			((*stylePtr & styleBit) != 0));
+	    } else if (boolean) {
+		*stylePtr |= styleBit;
+	    } else {
+		*stylePtr &= ~styleBit;
+	    }
+	}
+	if ((wmPtr->styleConfig != style) ||
+		(wmPtr->exStyleConfig != exStyle)) {
+	    wmPtr->styleConfig = style;
+	    wmPtr->exStyleConfig = exStyle;
+	    UpdateWrapper(winPtr);
+	}
     } else if ((c == 'c') && (strncmp(argv[1], "client", length) == 0)
 	    && (length >= 2)) {
 	if ((argc != 3) && (argc != 4)) {
@@ -3484,7 +3482,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	TkpWmSetState(winPtr, WithdrawnState);
     } else {
 	Tcl_AppendResult(interp, "unknown or ambiguous option \"", argv[1],
-		"\": must be aspect, client, command, deiconify, ",
+		"\": must be aspect, attributes, client, command, deiconify, ",
 		"focusmodel, frame, geometry, grid, group, iconbitmap, ",
 		"iconify, iconmask, iconname, iconposition, ",
 		"iconwindow, maxsize, minsize, overrideredirect, ",
