@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.58 2003/05/19 13:04:23 vincentdarley Exp $ 
+ * RCS: $Id: tkInt.h,v 1.59 2003/10/10 15:56:22 dkf Exp $ 
  */
 
 #ifndef _TKINT
@@ -911,6 +911,7 @@ extern Tcl_ObjType tkCursorObjType;
 extern Tcl_ObjType tkFontObjType;
 extern Tcl_ObjType tkOptionObjType;
 extern Tcl_ObjType tkStateKeyObjType;
+extern Tcl_ObjType tkTextIndexType;
 
 /*
  * Miscellaneous variables shared among Tk modules but not exported

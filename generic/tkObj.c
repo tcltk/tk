@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.8 2003/01/28 20:39:16 jenglish Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.9 2003/10/10 15:56:22 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -857,4 +857,5 @@ TkRegisterObjTypes()
     Tcl_RegisterObjType(&pixelObjType);
     Tcl_RegisterObjType(&tkStateKeyObjType);
     Tcl_RegisterObjType(&windowObjType);
+    Tcl_RegisterObjType(&tkTextIndexType);
 }
