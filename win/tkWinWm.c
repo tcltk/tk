@@ -731,6 +731,13 @@ UpdateWrapper(winPtr)
     if (oldWrapper && (oldWrapper != wmPtr->wrapper) 
 	    && (oldWrapper != GetDesktopWindow())) {
 	SetWindowLong(oldWrapper, GWL_USERDATA, (LONG) NULL);
+
+	/*
+	 * Remove the menubar before destroying the window so the menubar
+	 * isn't destroyed.
+	 */
+
+	SetMenu(oldWrapper, NULL);
 	DestroyWindow(oldWrapper);
     }
     wmPtr->flags &= ~WM_NEVER_MAPPED;
