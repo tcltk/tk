@@ -3,21 +3,21 @@
 # fashion for Tcl tests.
 #
 # Copyright (c) 1997 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: winDialog.test,v 1.1.2.2 1998/09/30 02:19:06 stanton Exp $
+# RCS: @(#) $Id: winDialog.test,v 1.1.2.3 1999/03/11 18:51:21 hershey Exp $
 
 if {$tcl_platform(os) != "Windows NT"} {
+    puts "skipping: Windows NT only tests..."
     return 
 }
 
-if {[info procs test] != "test"} {
-    source defs
+if {[lsearch [namespace children] ::test] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
-set testConfig(interactive)	[info exists INTERACTIVE]
+set ::test::testConfig(interactive)	[info exists INTERACTIVE]
 
 testwinevent debug 1
 
@@ -314,3 +314,7 @@ test winDialog-7.1 {Tk_MessageBoxObjCmd} {
 } {}
 
 testwinevent debug 0
+
+# cleanup
+::test::cleanupTests
+return

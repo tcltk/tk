@@ -6,18 +6,18 @@
 # generates output for errors.  No output means no errors were found.
 #
 # Copyright (c) 1996 by Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: winWm.test,v 1.1.4.1 1998/09/30 02:19:08 stanton Exp $
+# RCS: @(#) $Id: winWm.test,v 1.1.4.2 1999/03/11 18:51:23 hershey Exp $
 
 if {$tcl_platform(platform) != "windows"} {
+    puts "skipping: Windows only tests..."
     return
 }
 
-if {[info procs test] != "test"} {
-    source defs
+if {[lsearch [namespace children] ::test] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 foreach i [winfo children .] {
@@ -217,3 +217,7 @@ test winWm-5.2 {UpdateGeometryInfo: menu resizing} {
     destroy .t
     set result
 } {50 50 0}
+
+# cleanup
+::test::cleanupTests
+return

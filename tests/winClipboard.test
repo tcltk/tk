@@ -7,18 +7,18 @@
 # generates output for errors.  No output means no errors were found.
 #
 # Copyright (c) 1997 by Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: winClipboard.test,v 1.1.4.2 1998/11/25 21:16:40 stanton Exp $
+# RCS: @(#) $Id: winClipboard.test,v 1.1.4.3 1999/03/11 18:51:20 hershey Exp $
 
 if {$tcl_platform(platform)!="windows"} {
+    puts "skipping: Windows only tests..."
     return
 }
 
-if {[string compare test [info procs test]] == 1} {
-    source defs
+if {[lsearch [namespace children] ::test] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 # Note that these tests may fail if another application is grabbing the
@@ -45,3 +45,6 @@ test winClipboard-1.4 {TkSelGetSelection & TkWinClipboardRender} {
     list [selection get -selection CLIPBOARD] [testclipboard]
 } [list "line 1\nline 2" "line 1\r\nline 2"]
 
+# cleanup
+::test::cleanupTests
+return

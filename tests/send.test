@@ -4,11 +4,10 @@
 #
 # Copyright (c) 1994 Sun Microsystems, Inc.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: send.test,v 1.1.4.3 1998/12/08 02:02:41 stanton Exp $
+# RCS: @(#) $Id: send.test,v 1.1.4.4 1999/03/11 18:51:08 hershey Exp $
 
 if {$tcl_platform(platform) == "macintosh"} {
     puts "send is not available on the Mac - skipping tests"
@@ -23,8 +22,8 @@ if {[auto_execok xhost] == ""} {
     return
 }
 
-if {[info procs test] != "test"} {
-    source defs
+if {[lsearch [namespace children] ::test] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 if {[info commands testsend] == "testsend"} {
     set gotTestCmds 1
@@ -580,11 +579,11 @@ test send-12.2 {TimeoutProc procedure} {
     update
     setupbg
     puts $fd {after 10 {after 5000; exit}; puts [tk appname]; puts **DONE**; flush stdout}
-    set bgDone 0
-    set bgData {}
+    set ::test::bgDone 0
+    set ::test::bgData {}
     flush $fd
-    tkwait variable bgDone
-    set app $bgData
+    tkwait variable ::test::bgDone
+    set app $::test::bgData
     after 200
     set result [list [catch {send $app foo} msg] $msg]
     close $fd
@@ -656,3 +655,7 @@ if $gotTestCmds {
     testdeleteapps
 }
 rename newApp {}
+
+# cleanup
+::test::cleanupTests
+return

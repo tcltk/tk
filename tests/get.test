@@ -3,14 +3,13 @@
 # white-box tests.
 #
 # Copyright (c) 1998 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: get.test,v 1.1.2.2 1998/09/30 02:18:39 stanton Exp $
+# RCS: @(#) $Id: get.test,v 1.1.2.3 1999/03/11 18:50:52 hershey Exp $
 
-if {[info procs test] != "test"} {
-    source defs
+if {[lsearch [namespace children] ::test] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 eval destroy [winfo children .]
@@ -79,3 +78,7 @@ test get-2.3 {Tk_GetJustifyFromObj} {
 test get-2.4 {Tk_GetJustifyFromObj - error} {
     list [catch {.b configure -justify stupid} msg] $msg
 } {1 {bad justification "stupid": must be left, right, or center}}
+
+# cleanup
+::test::cleanupTests
+return

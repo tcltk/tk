@@ -3,14 +3,13 @@
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: grid.test,v 1.1.4.2 1999/01/29 00:34:34 stanton Exp $
+# RCS: @(#) $Id: grid.test,v 1.1.4.3 1999/03/11 18:50:52 hershey Exp $
 
-if {[string compare test [info procs test]] == 1} then \
-  {source ../tests/defs}
+if {[lsearch [namespace children] ::test] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
+}
 
 # helper routine to return "." to a sane state after a test
 # The variable GRID_VERBOSE can be used to "look" at the result
@@ -1212,3 +1211,7 @@ test grid-17.1 {forget and pending idle handlers} {
     destroy .t
     set result ok
 } ok
+
+# cleanup
+::test::cleanupTests
+return

@@ -7,18 +7,18 @@
 # but there are no results that can be checked.  
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: macFont.test,v 1.1.4.2 1998/09/30 02:18:45 stanton Exp $
+# RCS: @(#) $Id: macFont.test,v 1.1.4.3 1999/03/11 18:50:57 hershey Exp $
 
 if {$tcl_platform(platform)!="macintosh"} {
+    puts "skipping: Mac only tests..."
     return
 }
 
-if {[string compare test [info procs test]] != 0} {
-    source defs
+if {[lsearch [namespace children] ::test] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 catch {destroy .b}
@@ -44,11 +44,11 @@ proc getsize {} {
     return "[winfo reqwidth .b.l] [winfo reqheight .b.l]"
 }
 
-set testConfig(gothic) 0
+set ::test::testConfig(gothic) 0
 set gothic {gothic 12}
 set mx [font measure  $gothic \u4e4e]
 if {[font actual $gothic -family] != [font actual system -family]} {
-    set testConfig(gothic) 1
+    set ::test::testConfig(gothic) 1
 }
 
 test macFont-1.1 {TkpFontPkgInit} {
@@ -282,3 +282,7 @@ test macFont-9.4 {AllocMacFont: extract text metrics} {
 } {1}
 
 destroy .b
+
+# cleanup
+::test::cleanupTests
+return

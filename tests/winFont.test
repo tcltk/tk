@@ -7,18 +7,18 @@
 # but there are no results that can be checked.  
 #
 # Copyright (c) 1996-1997 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: winFont.test,v 1.1.4.1 1998/09/30 02:19:06 stanton Exp $
+# RCS: @(#) $Id: winFont.test,v 1.1.4.2 1999/03/11 18:51:21 hershey Exp $
 
 if {$tcl_platform(platform)!="windows"} {
+    puts "skipping: Windows only tests..."
     return
 }
 
-if {[string compare test [info procs test]] != 0} {
-    source defs
+if {[lsearch [namespace children] ::test] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 catch {destroy .b}
@@ -182,4 +182,7 @@ test winfont-7.4 {AllocFont procedure: extract info from textmetric} {
     font metric systemfixed -fixed
 } {1}
 
+# cleanup
 destroy .b
+::test::cleanupTests
+return

@@ -3,14 +3,13 @@
 # TkCanvPostscriptCmd in generic/tkCanvPs.c
 #
 # Copyright (c) 1995 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: canvPs.test,v 1.1.4.1 1998/09/30 02:18:27 stanton Exp $
+# RCS: @(#) $Id: canvPs.test,v 1.1.4.2 1999/03/11 18:50:40 hershey Exp $
 
-if {[info procs test] != "test"} {
-    source defs
+if {[lsearch [namespace children] ::test] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 foreach i [winfo children .] {
@@ -95,11 +94,11 @@ test canvPs-2.4 {test writing to channel and file, same output} {pcOnly} {
     set status
 } ok
 
-# Clean-up
-
+# cleanup
 removeFile foo.ps
 removeFile bar.ps
-
 foreach i [winfo children .] {
     destroy $i
 }
+::test::cleanupTests
+return

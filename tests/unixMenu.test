@@ -4,13 +4,13 @@
 # system.
 #
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: unixMenu.test,v 1.1.4.2 1998/09/30 02:19:02 stanton Exp $
+# RCS: @(#) $Id: unixMenu.test,v 1.1.4.3 1999/03/11 18:51:16 hershey Exp $
 
 if {$tcl_platform(platform) != "unix"} {
+    puts "skipping: Unix only tests..."
     return
 }
 
@@ -21,8 +21,8 @@ if {[lsearch [image types] test] < 0} {
     return
 }
 
-if {[info procs test] != "test"} {
-    source defs
+if {[lsearch [namespace children] ::test] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 proc deleteWindows {} {
@@ -966,4 +966,7 @@ test unixMenu-25.20 {TkpComputeStandardMenuGeometry - hide margin} {
 
 test unixMenu-26.1 {TkpMenuInit - nothing to do} {} {}
 
+# cleanup
 deleteWindows
+::test::cleanupTests
+return

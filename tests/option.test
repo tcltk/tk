@@ -3,14 +3,14 @@
 #
 # Copyright (c) 1991-1993 The Regents of the University of California.
 # Copyright (c) 1994 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: option.test,v 1.1.4.1 1998/09/30 02:18:50 stanton Exp $
+# RCS: @(#) $Id: option.test,v 1.1.4.2 1999/03/11 18:51:03 hershey Exp $
 
-if {[string compare test [info procs test]] == 1} then \
-  {source defs}
+if {[lsearch [namespace children] ::test] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
+}
 
 catch {destroy .op1}
 catch {destroy .op2}
@@ -186,13 +186,13 @@ test option-14.12 {error conditions} {
 } {1 {bad window path name ".gorp.gorp"}}
 
 if {$tcl_platform(os) == "Win32s"} {
-    set option1 OPTION~2.FIL
-    set option2 OPTION~1.FIL
-    set option3 OPTION~3.FIL
+    set option1 [file join $::test::testsDir OPTION~2.FIL]
+    set option2 [file join $::test::testsDir OPTION~1.FIL]
+    set option3 [file join $::test::testsDir OPTION~3.FIL]
 } else {
-    set option1 option.file1
-    set option2 option.file2
-    set option3 option.file3
+    set option1 [file join $::test::testsDir option.file1]
+    set option2 [file join $::test::testsDir option.file2]
+    set option3 [file join $::test::testsDir option.file3]
 }
 
 test option-15.1 {database files} {
@@ -229,4 +229,7 @@ test option-16.1 {ReadOptionFile} {
 
 catch {destroy .op1}
 catch {destroy .op2}
-concat {}
+
+# cleanup
+::test::cleanupTests
+return

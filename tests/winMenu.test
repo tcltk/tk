@@ -4,13 +4,13 @@
 # system.
 #
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: winMenu.test,v 1.1.4.2 1998/09/30 02:19:07 stanton Exp $
+# RCS: @(#) $Id: winMenu.test,v 1.1.4.3 1999/03/11 18:51:22 hershey Exp $
 
 if {$tcl_platform(platform) != "windows"} {
+    puts "skipping: Windows only tests..."
     return
 }
 
@@ -19,9 +19,9 @@ if {![info exists INTERACTIVE]} {
     puts " automatically on this platform. If you wish to execute them"
     puts " interactively, set the TCL variable INTERACTIVE and re-run"
     puts " the test."
-    set testConfig(menuInteractive) 0
+    set ::test::testConfig(menuInteractive) 0
 } else {
-    set testConfig(menuInteractive) 1
+    set ::test::testConfig(menuInteractive) 1
 }
 
 if {[lsearch [image types] test] < 0} {
@@ -31,8 +31,8 @@ if {[lsearch [image types] test] < 0} {
     return
 }
 
-if {[info procs test] != "test"} {
-    source defs
+if {[lsearch [namespace children] ::test] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 proc deleteWindows {} {
@@ -1042,4 +1042,7 @@ test winMenu-33.2 {TkpNotifyTopLevelCreate - menu} {
 
 test winMenu-34.1 {TkpMenuInit called at boot time} {} {}
 
+# cleanup
 deleteWindows
+::test::cleanupTests
+return

@@ -4,16 +4,15 @@
 #
 # Copyright (c) 1994 The Australian National University
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
-#
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.1.4.2 1998/12/10 03:43:54 stanton Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.1.4.3 1999/03/11 18:50:55 hershey Exp $
 
-if {[info procs test] != "test"} {
-    source defs
+if {[lsearch [namespace children] ::test] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 foreach i [winfo children .] {
@@ -28,13 +27,20 @@ canvas .c
 pack .c
 update
 
+# temporarily copy the README fiel from testsDir to tmpDir
+if {![file exists README]} {
+    set newREADME [file join $::test::tmpDir README]
+    file copy [file join $::test::testsDir README] $newREADME
+    set removeREADME 1
+}
+
 # find the teapot.ppm file for use in these tests
 # first look in $tk_library/demos/images/teapot.ppm
 # then look in <this file>/../../library/demos/images/teapot.ppm
 # skip this file if you can't find the teapot.ppm file.
 set teapotPhotoFile [file join $tk_library demos images teapot.ppm]
 if {![file exists $teapotPhotoFile]} {
-    set newLib [file dirname [file dirname [info script]]]
+    set newLib [file dirname $::test::testsDir]
     set teapotPhotoFile \
 	[file join $newLib library demos images teapot.ppm]
     if {![file exists $teapotPhotoFile]} {
@@ -432,3 +438,10 @@ test imgPhoto-13.1 {check separation of images in different interpreters} {
 
 destroy .c
 eval image delete [image names]
+
+# cleanup
+if {[info exists removeREADME]} {
+    catch {file delete -force $newREADME}
+}
+::test::cleanupTests
+return
