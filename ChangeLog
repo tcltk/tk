@@ -1,5 +1,20 @@
 2002-05-27  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* changes: Document [wm transient .t .t] error.
+	* tests/wm.test: Check that setting a window
+	as a transient of itself raises an error. Check
+	that passing a non-toplevel window to the wm
+	transient command uses the enclosing toplevel.
+	* unix/tkUnixWm.c (Tk_WmCmd): Raise an error
+	if the user tries to make a toplevel a
+	transient of itself.
+	* win/tkWinWm.c (Tk_WmCmd): Raise an error
+	if the user tries to make a toplevel a
+	transient of itself. Test for other error
+	before checking for the transient self error.
+
+2002-05-27  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* unix/tkUnixWm.c (WmInfo, TkWmCleanup, TkWmNewWindow,
 	TkWmMapWindow, TkWmDeadWindow, Tk_WmCmd): Replace
 	WmInfo's master and masterWindowName members with
