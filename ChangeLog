@@ -1,3 +1,11 @@
+2004-11-19  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.pbproj/project.pbxproj: reverted earlier changes for
+	tclConfig.h changes to tcl, since those have been reverted for now.
+	
+	Note that newly added macosx/Wish.xcode will not work without
+	tclConfig.h, this project has not been removed again.
+
 2004-11-18  Reinhard Max  <max@suse.de>
 
         * unix/tcl.m4 (SC_CONFIG_MANPAGES): Applied an improved version of
