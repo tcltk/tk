@@ -1,3 +1,15 @@
+2000-05-17  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* doc/bell.n:
+	* tests/bell.test:
+	* generic/tkCmds.c (Tk_BellObjCmd): added -nice option to
+	optionally avoid resetting screen saver [Bug: 4279]
+
+2000-05-15  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* win/tkWinWm.c (Tk_WmCmd): changed wm deiconify from using idle
+	callback to calling restack and focus code immediately.
+
 2000-05-17  Eric Melski  <ericm@scriptics.com>
 
 	Overall change:  Added "-readonlybackground" option for entries,
