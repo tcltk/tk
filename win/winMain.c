@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.13 2002/09/27 00:48:06 hobbs Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.14 2002/10/19 02:10:07 hobbs Exp $
  */
 
 #include <tk.h>
@@ -93,16 +93,6 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
     char *p;
 
     Tcl_SetPanicProc(WishPanic);
-
-    /*
-     * Increase the application queue size from default value of 8.
-     * At the default value, cross application SendMessage of WM_KILLFOCUS
-     * will fail because the handler will not be able to do a PostMessage!
-     * This is only needed for Windows 3.x, since NT dynamically expands
-     * the queue.
-     */
-
-    SetMessageQueue(64);
 
     /*
      * Create the console channels and install them as the standard
@@ -383,15 +373,6 @@ int main(int argc, char **argv)
      */
 
     setlocale(LC_ALL, "C");
-    /*
-     * Increase the application queue size from default value of 8.
-     * At the default value, cross application SendMessage of WM_KILLFOCUS
-     * will fail because the handler will not be able to do a PostMessage!
-     * This is only needed for Windows 3.x, since NT dynamically expands
-     * the queue.
-     */
-
-    SetMessageQueue(64);
 
     /*
      * Create the console channels and install them as the standard
@@ -405,4 +386,3 @@ int main(int argc, char **argv)
     return 0;
 }
 #endif /* !__GNUC__ || TK_TEST */
-
