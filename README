@@ -1,12 +1,14 @@
 The Tk Toolkit
 
-SCCS: %Z% $Id: README,v 1.5 1998/07/20 17:04:41 welch Exp $ 
+SCCS: %Z% $Id: README,v 1.6 1998/07/29 22:58:24 welch Exp $ 
 
 0. Preface
 ----------
-This is a pre-release of 8.0.3, tk_patchLevel "8.0.3-3"
-we expect the 8.0.3 release to continue to change with the adoption
-of more patches, etc.  This release is being made early to help
+This is a pre-release of 8.0.3, tk_patchLevel "8.0.3-4"
+This is close to final, with the exception of one important
+windows bug that we plan to fix in the next week or two.
+(See the tcl/README file)
+This release is being made early to help
 with the Consortium CD project.  Please do not advertise or
 circulate this release widely.  If you have problems, please figure
 out a fix and include a patch or a lot of detail, then send 
@@ -77,7 +79,7 @@ that summarizes the new features and discusses how to deal with the
 changes in Tk 4.0 that are not backwards compatible.
 
 There is also an official home for Tcl and Tk on the Web:
-	http://www.smli.com/research/tcl
+	http://www.scriptics.com/
 These Web pages include release updates, reports on bug fixes and porting
 issues, HTML versions of the manual pages, and pointers to many other
 Tcl/Tk Web pages at other sites.  Check them out!
@@ -87,7 +89,7 @@ Tcl/Tk Web pages at other sites.  Check them out!
 
 This release contains everything you should need to compile and run
 Tk under UNIX, Macintoshes, and PCs (either Windows NT, Windows 95,
-or Win 3.1 with Win32s).
+or Windows 98.)
 
 Before trying to compile Tk you should do the following things:
 

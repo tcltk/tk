@@ -23,8 +23,8 @@
  *
  * README
  * unix/configure.in
- * win/makefile.bc
- * win/makefile.vc
+ * win/makefile.bc	(Not for patch release updates)
+ * win/makefile.vc	(Not for patch release updates)
  * library/tk.tcl
  *
  * The release level should be  0 for alpha, 1 for beta, and 2 for
@@ -44,7 +44,7 @@
 #define TK_RELEASE_SERIAL  3
 
 #define TK_VERSION "8.0"
-#define TK_PATCH_LEVEL "8.0.3-3"
+#define TK_PATCH_LEVEL "8.0.3-4"
 
 /* 
  * A special definition used to allow this header file to be included 
