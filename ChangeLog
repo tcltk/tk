@@ -1,3 +1,9 @@
+2004-02-12  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinDialog.c (ChooseDirectoryValidateProc): create a pidl
+	for -initialdir if we have a UNC path because BFFM_SETSELECTION
+	doesn't support UNC paths in strings.
+
 2004-02-10  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/msgs/eo.msg:	Language support for Esperanto and Polish from
