@@ -6,7 +6,7 @@
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
 '\"
-'\" RCS: @(#) $Id: frame.n,v 1.4 2001/09/26 21:36:19 pspjuth Exp $
+'\" RCS: @(#) $Id: frame.n,v 1.5 2004/11/07 22:21:13 pspjuth Exp $
 '\" 
 .so man.macros
 .TH frame n 8.4 Tk "Tk Built-In Commands"
@@ -57,9 +57,12 @@ This option may not be changed with the \fBconfigure\fR
 widget command.
 .OP \-height height Height
 Specifies the desired height for the window in any of the forms
-acceptable to \fBTk_GetPixels\fR.
-If this option is less than or equal to zero then the window will
-not request any size at all.
+acceptable to \fBTk_GetPixels\fR.  If this option is less than or equal
+to zero then the window will not request any size at all.  Note that this
+sets the total height of the frame, any \fB-borderwidth\fR or similar is
+not added.  Normally \fB\-height\fR should not be used if a propagating
+geometry manager, such as \fBgrid\fR or \fBpack\fR, is used within the
+frame since the geometry manager will override the height of the frame.
 .OP \-visual visual Visual
 Specifies visual information for the new window in any of the
 forms accepted by \fBTk_GetVisual\fR.
@@ -69,9 +72,12 @@ The \fBvisual\fR option may not be modified with the \fBconfigure\fR
 widget command.
 .OP \-width width Width
 Specifies the desired width for the window in any of the forms
-acceptable to \fBTk_GetPixels\fR.
-If this option is less than or equal to zero then the window will
-not request any size at all.
+acceptable to \fBTk_GetPixels\fR.  If this option is less than or equal
+to zero then the window will not request any size at all.  Note that this
+sets the total width of the frame, any \fB-borderwidth\fR or similar is
+not added.  Normally \fB\-width\fR should not be used if a propagating
+geometry manager, such as \fBgrid\fR or \fBpack\fR, is used within the
+frame since the geometry manager will override the width of the frame.
 .BE
 
 .SH DESCRIPTION
