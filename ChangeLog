@@ -1,5 +1,6 @@
 2002-11-07  Daniel Steffen  <das@users.sourceforge.net>
 
+	* unix/Makefile.in: added macosx/README to dist target.
 	* macosx/Wish.pbproj/project.pbxproj: fix to 'wish' script
 	to allow it to work when not installed into '/'.
 
