@@ -1,5 +1,10 @@
 2003-09-25  Daniel Steffen  <das@users.sourceforge.net>
 
+	* library/demos/widget: don't create iconwindow on aqua, but add
+	about menu like on classic.
+	* macosx/Makefile: pass MAKEOVERRIDES to pxbuild.
+	* macosx/tkMacOSXButton.c: added -compound support for bevel buttons.
+
 	* unix/configure:
 	* unix/configure.in:
 	* unix/tkConfig.sh.in: added TK_INCLUDE_SPEC to allow extensions to
