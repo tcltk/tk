@@ -1,3 +1,8 @@
+2003-08-13  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/scale.tcl: Fix for bug #787065 for Button-2 press.
+	* tests/scale.test:  Added test for this bug.
+
 2003-08-12  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXMenu.c: fixed C99'ism that breaks gcc 2.95.
