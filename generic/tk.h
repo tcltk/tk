@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.61 2002/06/14 22:25:11 jenglish Exp $
+ * RCS: @(#) $Id: tk.h,v 1.62 2002/06/18 00:34:45 davygrvy Exp $
  */
 
 #ifndef _TK
@@ -73,7 +73,7 @@ extern "C" {
  * in resource files.
  */
 
-#ifndef RESOURCE_INCLUDED
+#ifndef RC_INVOKED
 
 #ifndef _XLIB_H
 #   ifdef MAC_TCL
@@ -1512,7 +1512,7 @@ typedef int (Tk_SelectionProc) _ANSI_ARGS_((ClientData clientData,
  */
 
 
-#endif /* RESOURCE_INCLUDED */
+#endif /* RC_INVOKED */
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
