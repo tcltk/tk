@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.90 2003/10/06 15:34:18 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.91 2003/10/06 17:11:31 dgp Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.57)
@@ -15,12 +15,25 @@ TK_PATCH_LEVEL="a0"
 VERSION=${TK_VERSION}
 LOCALES="cs de el en en_gb es fr it nl ru"
 
+#--------------------------------------------------------------------
+# Find and load the tclConfig.sh file
+#--------------------------------------------------------------------
+
+SC_PATH_TCLCONFIG
+SC_LOAD_TCLCONFIG
+
+if test "${TCL_VERSION}" != "${TK_VERSION}"; then
+    AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}.])
+fi
+
 #------------------------------------------------------------------------
 # Handle the --prefix=... option
 #------------------------------------------------------------------------
 
 if test "${prefix}" = "NONE"; then
-    prefix=/usr/local
+    prefix="$TCL_PREFIX"
 fi
 if test "${exec_prefix}" = "NONE"; then
     exec_prefix=$prefix
@@ -79,13 +92,6 @@ SC_TCL_EARLY_FLAGS
 
 SC_TCL_64BIT_FLAGS
 
-#--------------------------------------------------------------------
-# Find and load the tclConfig.sh file
-#--------------------------------------------------------------------
-
-SC_PATH_TCLCONFIG
-SC_LOAD_TCLCONFIG
-
 #------------------------------------------------------------------------
 # Threads support
 #------------------------------------------------------------------------
@@ -100,12 +106,6 @@ if test "${TCL_THREADS}" = 1; then
     AC_DEFINE(TCL_THREADS)
     AC_DEFINE(_REENTRANT)
     AC_DEFINE(_THREAD_SAFE)
-fi
-
-if test "${TCL_VERSION}" != "${TK_VERSION}"; then
-    AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}.])
 fi
 
 #--------------------------------------------------------------------
@@ -129,6 +129,12 @@ TK_DBGX=${DBGX}
 
 if test "$TCL_EXEC_PREFIX" != "$exec_prefix"; then
     LIB_RUNTIME_DIR="${LIB_RUNTIME_DIR}:${TCL_EXEC_PREFIX}/lib"
+fi
+
+if test "$TCL_PREFIX" != "$prefix"; then
+    AC_MSG_WARN([
+        Different --prefix selected for Tk and Tcl!
+        [[package require Tk]] may not work correctly in tclsh.])
 fi
 
 #--------------------------------------------------------------------

@@ -308,7 +308,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS MKLINKS_FLAGS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP EGREP TCL_VERSION TCL_BIN_DIR TCL_SRC_DIR TCL_LIB_FILE TCL_LIB_FLAG TCL_LIB_SPEC TCL_STUB_LIB_FILE TCL_STUB_LIB_FLAG TCL_STUB_LIB_SPEC RANLIB ac_ct_RANLIB AR LIBOBJS TCL_LIBS DL_LIBS DL_OBJS PLAT_OBJS CFLAGS_DEBUG CFLAGS_OPTIMIZE CFLAGS_WARNING EXTRA_CFLAGS LDFLAGS_DEBUG LDFLAGS_OPTIMIZE CC_SEARCH_FLAGS LD_SEARCH_FLAGS STLIB_LD SHLIB_LD TCL_SHLIB_LD_EXTRAS TK_SHLIB_LD_EXTRAS SHLIB_LD_FLAGS SHLIB_LD_LIBS SHLIB_CFLAGS SHLIB_SUFFIX MAKE_LIB MAKE_STUB_LIB INSTALL_LIB INSTALL_STUB_LIB CFLAGS_DEFAULT LDFLAGS_DEFAULT XFT_CFLAGS XFT_LIBS UNIX_FONT_OBJS TK_VERSION TK_MAJOR_VERSION TK_MINOR_VERSION TK_PATCH_LEVEL TK_DBGX TK_STUB_LIB_FILE TK_STUB_LIB_FLAG TK_BUILD_STUB_LIB_SPEC TK_STUB_LIB_SPEC TK_BUILD_STUB_LIB_PATH TK_STUB_LIB_PATH TK_STUB_FLAGS TK_BUILD_EXP_FILE TK_EXP_FILE TCL_STUB_FLAGS LD_LIBRARY_PATH_VAR TK_BUILD_LIB_SPEC TK_LIB_FILE TK_LIB_FLAG TK_LIB_SPEC TK_INCLUDE_SPEC TK_SRC_DIR XINCLUDES XLIBSW TK_SHARED_BUILD LOCALES LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS TCL_VERSION TCL_BIN_DIR TCL_SRC_DIR TCL_LIB_FILE TCL_LIB_FLAG TCL_LIB_SPEC TCL_STUB_LIB_FILE TCL_STUB_LIB_FLAG TCL_STUB_LIB_SPEC MKLINKS_FLAGS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP EGREP RANLIB ac_ct_RANLIB AR LIBOBJS TCL_LIBS DL_LIBS DL_OBJS PLAT_OBJS CFLAGS_DEBUG CFLAGS_OPTIMIZE CFLAGS_WARNING EXTRA_CFLAGS LDFLAGS_DEBUG LDFLAGS_OPTIMIZE CC_SEARCH_FLAGS LD_SEARCH_FLAGS STLIB_LD SHLIB_LD TCL_SHLIB_LD_EXTRAS TK_SHLIB_LD_EXTRAS SHLIB_LD_FLAGS SHLIB_LD_LIBS SHLIB_CFLAGS SHLIB_SUFFIX MAKE_LIB MAKE_STUB_LIB INSTALL_LIB INSTALL_STUB_LIB CFLAGS_DEFAULT LDFLAGS_DEFAULT XFT_CFLAGS XFT_LIBS UNIX_FONT_OBJS TK_VERSION TK_MAJOR_VERSION TK_MINOR_VERSION TK_PATCH_LEVEL TK_DBGX TK_STUB_LIB_FILE TK_STUB_LIB_FLAG TK_BUILD_STUB_LIB_SPEC TK_STUB_LIB_SPEC TK_BUILD_STUB_LIB_PATH TK_STUB_LIB_PATH TK_STUB_FLAGS TK_BUILD_EXP_FILE TK_EXP_FILE TCL_STUB_FLAGS LD_LIBRARY_PATH_VAR TK_BUILD_LIB_SPEC TK_LIB_FILE TK_LIB_FLAG TK_LIB_SPEC TK_INCLUDE_SPEC TK_SRC_DIR XINCLUDES XLIBSW TK_SHARED_BUILD LOCALES LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1283,12 +1283,178 @@ TK_PATCH_LEVEL="a0"
 VERSION=${TK_VERSION}
 LOCALES="cs de el en en_gb es fr it nl ru"
 
+#--------------------------------------------------------------------
+# Find and load the tclConfig.sh file
+#--------------------------------------------------------------------
+
+
+    #
+    # Ok, lets find the tcl configuration
+    # First, look for one uninstalled.
+    # the alternative search directory is invoked by --with-tcl
+    #
+
+    if test x"${no_tcl}" = x ; then
+	# we reset no_tcl in case something fails here
+	no_tcl=true
+
+# Check whether --with-tcl or --without-tcl was given.
+if test "${with_tcl+set}" = set; then
+  withval="$with_tcl"
+  with_tclconfig=${withval}
+fi;
+	echo "$as_me:$LINENO: checking for Tcl configuration" >&5
+echo $ECHO_N "checking for Tcl configuration... $ECHO_C" >&6
+	if test "${ac_cv_c_tclconfig+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+
+	    # First check to see if --with-tcl was specified.
+	    if test x"${with_tclconfig}" != x ; then
+		if test -f "${with_tclconfig}/tclConfig.sh" ; then
+		    ac_cv_c_tclconfig=`(cd ${with_tclconfig}; pwd)`
+		else
+		    { { echo "$as_me:$LINENO: error: ${with_tclconfig} directory doesn't contain tclConfig.sh" >&5
+echo "$as_me: error: ${with_tclconfig} directory doesn't contain tclConfig.sh" >&2;}
+   { (exit 1); exit 1; }; }
+		fi
+	    fi
+
+	    # then check for a private Tcl installation
+	    if test x"${ac_cv_c_tclconfig}" = x ; then
+		for i in \
+                        ../tcl \
+                        `ls -dr ../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \
+                        `ls -dr ../tcl[8-9].[0-9] 2>/dev/null` \
+                        `ls -dr ../tcl[8-9].[0-9]* 2>/dev/null` \
+                        ../../tcl \
+                        `ls -dr ../../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \                        `ls -dr ../../tcl[8-9].[0-9] 2>/dev/null` \
+                        `ls -dr ../../tcl[8-9].[0-9]* 2>/dev/null` \
+                        ../../../tcl \
+                        `ls -dr ../../../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \
+                        `ls -dr ../../../tcl[8-9].[0-9] 2>/dev/null` \
+                        `ls -dr ../../../tcl[8-9].[0-9]* 2>/dev/null` ; do
+		    if test -f "$i/unix/tclConfig.sh" ; then
+			ac_cv_c_tclconfig=`(cd $i/unix; pwd)`
+			break
+		    fi
+		done
+	    fi
+
+	    # check in a few common install locations
+	    if test x"${ac_cv_c_tclconfig}" = x ; then
+		for i in `ls -d ${libdir} 2>/dev/null` \
+			`ls -d /usr/local/lib 2>/dev/null` \
+			`ls -d /usr/contrib/lib 2>/dev/null` \
+			`ls -d /usr/lib 2>/dev/null` \
+			; do
+		    if test -f "$i/tclConfig.sh" ; then
+			ac_cv_c_tclconfig=`(cd $i; pwd)`
+			break
+		    fi
+		done
+	    fi
+
+	    # check in a few other private locations
+	    if test x"${ac_cv_c_tclconfig}" = x ; then
+		for i in \
+			${srcdir}/../tcl \
+                        `ls -dr ${srcdir}/../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \
+                        `ls -dr ${srcdir}/../tcl[8-9].[0-9] 2>/dev/null` \
+                        `ls -dr ${srcdir}/../tcl[8-9].[0-9]* 2>/dev/null` ; do
+		    if test -f "$i/unix/tclConfig.sh" ; then
+		    ac_cv_c_tclconfig=`(cd $i/unix; pwd)`
+		    break
+		fi
+		done
+	    fi
+
+fi
+
+
+	if test x"${ac_cv_c_tclconfig}" = x ; then
+	    TCL_BIN_DIR="# no Tcl configs found"
+	    { echo "$as_me:$LINENO: WARNING: Can't find Tcl configuration definitions" >&5
+echo "$as_me: WARNING: Can't find Tcl configuration definitions" >&2;}
+	    exit 0
+	else
+	    no_tcl=
+	    TCL_BIN_DIR=${ac_cv_c_tclconfig}
+	    echo "$as_me:$LINENO: result: found $TCL_BIN_DIR/tclConfig.sh" >&5
+echo "${ECHO_T}found $TCL_BIN_DIR/tclConfig.sh" >&6
+	fi
+    fi
+
+
+    echo "$as_me:$LINENO: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
+echo $ECHO_N "checking for existence of $TCL_BIN_DIR/tclConfig.sh... $ECHO_C" >&6
+
+    if test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
+        echo "$as_me:$LINENO: result: loading" >&5
+echo "${ECHO_T}loading" >&6
+	. $TCL_BIN_DIR/tclConfig.sh
+    else
+        echo "$as_me:$LINENO: result: file not found" >&5
+echo "${ECHO_T}file not found" >&6
+    fi
+
+    #
+    # If the TCL_BIN_DIR is the build directory (not the install directory),
+    # then set the common variable name to the value of the build variables.
+    # For example, the variable TCL_LIB_SPEC will be set to the value
+    # of TCL_BUILD_LIB_SPEC. An extension should make use of TCL_LIB_SPEC
+    # instead of TCL_BUILD_LIB_SPEC since it will work with both an
+    # installed and uninstalled version of Tcl.
+    #
+
+    if test -f $TCL_BIN_DIR/Makefile ; then
+        TCL_LIB_SPEC=${TCL_BUILD_LIB_SPEC}
+        TCL_STUB_LIB_SPEC=${TCL_BUILD_STUB_LIB_SPEC}
+        TCL_STUB_LIB_PATH=${TCL_BUILD_STUB_LIB_PATH}
+    fi
+
+    #
+    # eval is required to do the TCL_DBGX substitution
+    #
+
+    eval "TCL_LIB_FILE=\"${TCL_LIB_FILE}\""
+    eval "TCL_LIB_FLAG=\"${TCL_LIB_FLAG}\""
+    eval "TCL_LIB_SPEC=\"${TCL_LIB_SPEC}\""
+
+    eval "TCL_STUB_LIB_FILE=\"${TCL_STUB_LIB_FILE}\""
+    eval "TCL_STUB_LIB_FLAG=\"${TCL_STUB_LIB_FLAG}\""
+    eval "TCL_STUB_LIB_SPEC=\"${TCL_STUB_LIB_SPEC}\""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if test "${TCL_VERSION}" != "${TK_VERSION}"; then
+    { { echo "$as_me:$LINENO: error: ${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}." >&5
+echo "$as_me: error: ${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
 #------------------------------------------------------------------------
 # Handle the --prefix=... option
 #------------------------------------------------------------------------
 
 if test "${prefix}" = "NONE"; then
-    prefix=/usr/local
+    prefix="$TCL_PREFIX"
 fi
 if test "${exec_prefix}" = "NONE"; then
     exec_prefix=$prefix
@@ -3339,162 +3505,6 @@ _ACEOF
 echo "${ECHO_T}${tcl_cv_type_off64_t}" >&6
     fi
 
-#--------------------------------------------------------------------
-# Find and load the tclConfig.sh file
-#--------------------------------------------------------------------
-
-
-    #
-    # Ok, lets find the tcl configuration
-    # First, look for one uninstalled.
-    # the alternative search directory is invoked by --with-tcl
-    #
-
-    if test x"${no_tcl}" = x ; then
-	# we reset no_tcl in case something fails here
-	no_tcl=true
-
-# Check whether --with-tcl or --without-tcl was given.
-if test "${with_tcl+set}" = set; then
-  withval="$with_tcl"
-  with_tclconfig=${withval}
-fi;
-	echo "$as_me:$LINENO: checking for Tcl configuration" >&5
-echo $ECHO_N "checking for Tcl configuration... $ECHO_C" >&6
-	if test "${ac_cv_c_tclconfig+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-
-
-	    # First check to see if --with-tcl was specified.
-	    if test x"${with_tclconfig}" != x ; then
-		if test -f "${with_tclconfig}/tclConfig.sh" ; then
-		    ac_cv_c_tclconfig=`(cd ${with_tclconfig}; pwd)`
-		else
-		    { { echo "$as_me:$LINENO: error: ${with_tclconfig} directory doesn't contain tclConfig.sh" >&5
-echo "$as_me: error: ${with_tclconfig} directory doesn't contain tclConfig.sh" >&2;}
-   { (exit 1); exit 1; }; }
-		fi
-	    fi
-
-	    # then check for a private Tcl installation
-	    if test x"${ac_cv_c_tclconfig}" = x ; then
-		for i in \
-                        ../tcl \
-                        `ls -dr ../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \
-                        `ls -dr ../tcl[8-9].[0-9] 2>/dev/null` \
-                        `ls -dr ../tcl[8-9].[0-9]* 2>/dev/null` \
-                        ../../tcl \
-                        `ls -dr ../../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \                        `ls -dr ../../tcl[8-9].[0-9] 2>/dev/null` \
-                        `ls -dr ../../tcl[8-9].[0-9]* 2>/dev/null` \
-                        ../../../tcl \
-                        `ls -dr ../../../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \
-                        `ls -dr ../../../tcl[8-9].[0-9] 2>/dev/null` \
-                        `ls -dr ../../../tcl[8-9].[0-9]* 2>/dev/null` ; do
-		    if test -f "$i/unix/tclConfig.sh" ; then
-			ac_cv_c_tclconfig=`(cd $i/unix; pwd)`
-			break
-		    fi
-		done
-	    fi
-
-	    # check in a few common install locations
-	    if test x"${ac_cv_c_tclconfig}" = x ; then
-		for i in `ls -d ${libdir} 2>/dev/null` \
-			`ls -d /usr/local/lib 2>/dev/null` \
-			`ls -d /usr/contrib/lib 2>/dev/null` \
-			`ls -d /usr/lib 2>/dev/null` \
-			; do
-		    if test -f "$i/tclConfig.sh" ; then
-			ac_cv_c_tclconfig=`(cd $i; pwd)`
-			break
-		    fi
-		done
-	    fi
-
-	    # check in a few other private locations
-	    if test x"${ac_cv_c_tclconfig}" = x ; then
-		for i in \
-			${srcdir}/../tcl \
-                        `ls -dr ${srcdir}/../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \
-                        `ls -dr ${srcdir}/../tcl[8-9].[0-9] 2>/dev/null` \
-                        `ls -dr ${srcdir}/../tcl[8-9].[0-9]* 2>/dev/null` ; do
-		    if test -f "$i/unix/tclConfig.sh" ; then
-		    ac_cv_c_tclconfig=`(cd $i/unix; pwd)`
-		    break
-		fi
-		done
-	    fi
-
-fi
-
-
-	if test x"${ac_cv_c_tclconfig}" = x ; then
-	    TCL_BIN_DIR="# no Tcl configs found"
-	    { echo "$as_me:$LINENO: WARNING: Can't find Tcl configuration definitions" >&5
-echo "$as_me: WARNING: Can't find Tcl configuration definitions" >&2;}
-	    exit 0
-	else
-	    no_tcl=
-	    TCL_BIN_DIR=${ac_cv_c_tclconfig}
-	    echo "$as_me:$LINENO: result: found $TCL_BIN_DIR/tclConfig.sh" >&5
-echo "${ECHO_T}found $TCL_BIN_DIR/tclConfig.sh" >&6
-	fi
-    fi
-
-
-    echo "$as_me:$LINENO: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
-echo $ECHO_N "checking for existence of $TCL_BIN_DIR/tclConfig.sh... $ECHO_C" >&6
-
-    if test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
-        echo "$as_me:$LINENO: result: loading" >&5
-echo "${ECHO_T}loading" >&6
-	. $TCL_BIN_DIR/tclConfig.sh
-    else
-        echo "$as_me:$LINENO: result: file not found" >&5
-echo "${ECHO_T}file not found" >&6
-    fi
-
-    #
-    # If the TCL_BIN_DIR is the build directory (not the install directory),
-    # then set the common variable name to the value of the build variables.
-    # For example, the variable TCL_LIB_SPEC will be set to the value
-    # of TCL_BUILD_LIB_SPEC. An extension should make use of TCL_LIB_SPEC
-    # instead of TCL_BUILD_LIB_SPEC since it will work with both an
-    # installed and uninstalled version of Tcl.
-    #
-
-    if test -f $TCL_BIN_DIR/Makefile ; then
-        TCL_LIB_SPEC=${TCL_BUILD_LIB_SPEC}
-        TCL_STUB_LIB_SPEC=${TCL_BUILD_STUB_LIB_SPEC}
-        TCL_STUB_LIB_PATH=${TCL_BUILD_STUB_LIB_PATH}
-    fi
-
-    #
-    # eval is required to do the TCL_DBGX substitution
-    #
-
-    eval "TCL_LIB_FILE=\"${TCL_LIB_FILE}\""
-    eval "TCL_LIB_FLAG=\"${TCL_LIB_FLAG}\""
-    eval "TCL_LIB_SPEC=\"${TCL_LIB_SPEC}\""
-
-    eval "TCL_STUB_LIB_FILE=\"${TCL_STUB_LIB_FILE}\""
-    eval "TCL_STUB_LIB_FLAG=\"${TCL_STUB_LIB_FLAG}\""
-    eval "TCL_STUB_LIB_SPEC=\"${TCL_STUB_LIB_SPEC}\""
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #------------------------------------------------------------------------
 # Threads support
 #------------------------------------------------------------------------
@@ -3515,16 +3525,6 @@ _ACEOF
 #define _THREAD_SAFE 1
 _ACEOF
 
-fi
-
-if test "${TCL_VERSION}" != "${TK_VERSION}"; then
-    { { echo "$as_me:$LINENO: error: ${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}." >&5
-echo "$as_me: error: ${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}." >&2;}
-   { (exit 1); exit 1; }; }
 fi
 
 #--------------------------------------------------------------------
@@ -5751,6 +5751,15 @@ if test "$TCL_EXEC_PREFIX" != "$exec_prefix"; then
     LIB_RUNTIME_DIR="${LIB_RUNTIME_DIR}:${TCL_EXEC_PREFIX}/lib"
 fi
 
+if test "$TCL_PREFIX" != "$prefix"; then
+    { echo "$as_me:$LINENO: WARNING:
+        Different --prefix selected for Tk and Tcl!
+        [package require Tk] may not work correctly in tclsh." >&5
+echo "$as_me: WARNING:
+        Different --prefix selected for Tk and Tcl!
+        [package require Tk] may not work correctly in tclsh." >&2;}
+fi
+
 #--------------------------------------------------------------------
 # Supply a substitute for stdlib.h if it doesn't define strtol,
 # strtoul, or strtod (which it doesn't in some versions of SunOS).
@@ -7972,6 +7981,15 @@ s,@ECHO_C@,$ECHO_C,;t t
 s,@ECHO_N@,$ECHO_N,;t t
 s,@ECHO_T@,$ECHO_T,;t t
 s,@LIBS@,$LIBS,;t t
+s,@TCL_VERSION@,$TCL_VERSION,;t t
+s,@TCL_BIN_DIR@,$TCL_BIN_DIR,;t t
+s,@TCL_SRC_DIR@,$TCL_SRC_DIR,;t t
+s,@TCL_LIB_FILE@,$TCL_LIB_FILE,;t t
+s,@TCL_LIB_FLAG@,$TCL_LIB_FLAG,;t t
+s,@TCL_LIB_SPEC@,$TCL_LIB_SPEC,;t t
+s,@TCL_STUB_LIB_FILE@,$TCL_STUB_LIB_FILE,;t t
+s,@TCL_STUB_LIB_FLAG@,$TCL_STUB_LIB_FLAG,;t t
+s,@TCL_STUB_LIB_SPEC@,$TCL_STUB_LIB_SPEC,;t t
 s,@MKLINKS_FLAGS@,$MKLINKS_FLAGS,;t t
 s,@CC@,$CC,;t t
 s,@CFLAGS@,$CFLAGS,;t t
@@ -7982,15 +8000,6 @@ s,@EXEEXT@,$EXEEXT,;t t
 s,@OBJEXT@,$OBJEXT,;t t
 s,@CPP@,$CPP,;t t
 s,@EGREP@,$EGREP,;t t
-s,@TCL_VERSION@,$TCL_VERSION,;t t
-s,@TCL_BIN_DIR@,$TCL_BIN_DIR,;t t
-s,@TCL_SRC_DIR@,$TCL_SRC_DIR,;t t
-s,@TCL_LIB_FILE@,$TCL_LIB_FILE,;t t
-s,@TCL_LIB_FLAG@,$TCL_LIB_FLAG,;t t
-s,@TCL_LIB_SPEC@,$TCL_LIB_SPEC,;t t
-s,@TCL_STUB_LIB_FILE@,$TCL_STUB_LIB_FILE,;t t
-s,@TCL_STUB_LIB_FLAG@,$TCL_STUB_LIB_FLAG,;t t
-s,@TCL_STUB_LIB_SPEC@,$TCL_STUB_LIB_SPEC,;t t
 s,@RANLIB@,$RANLIB,;t t
 s,@ac_ct_RANLIB@,$ac_ct_RANLIB,;t t
 s,@AR@,$AR,;t t
