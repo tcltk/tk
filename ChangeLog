@@ -1,3 +1,9 @@
+2001-09-15  Don Porter <dgp@users.sourceforge.net>
+
+	* doc/getOpenFile.n: Removed docs for the -multiple and
+	-message options that are not provided in Tk 8.3.  They
+	are only available in Tk 8.4.  [Bug 461760]
+
 2001-09-14  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
 
 	* generic/tkImgGIF.c:
