@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.4 1998/11/25 01:48:54 stanton Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.4.4.1 1999/03/06 02:23:18 redman Exp $
  */
  
 #include "tkPort.h"
@@ -141,7 +141,7 @@ TkpGetNativeFont(tkwin, name)
      */
 
     hasSpace = dashes = hasWild = 0;
-    for (p = name; *p != '\0'; p++) {
+    for (p = (char *) name; *p != '\0'; p++) {
 	if (*p == ' ') {
 	    if (p[1] == '-') {
 		return NULL;

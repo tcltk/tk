@@ -8,11 +8,16 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.1.2.2 1999/03/06 01:54:59 redman Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.1.2.3 1999/03/06 02:23:17 redman Exp $
  */
 
 #include "tkInt.h"
 #include "tkPort.h"
+#include "tkDecls.h"
+#include "tkPlatDecls.h"
+#include "tkIntDecls.h"
+#include "tkIntPlatDecls.h"
+#include "tkIntXlibDecls.h"
 
 /*
  * Remove macros that will interfere with the definitions below.

@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 AC_INIT(../generic/tk.h)
-# RCS: @(#) $Id: configure.in,v 1.26 1999/02/04 21:00:29 stanton Exp $
+# RCS: @(#) $Id: configure.in,v 1.26.4.1 1999/03/06 02:23:18 redman Exp $
 
 TK_VERSION=8.0
 TK_MAJOR_VERSION=8
@@ -434,6 +434,42 @@ fi
 TK_BUILD_LIB_SPEC="-L`pwd` ${TK_LIB_FLAG}"
 TK_LIB_SPEC="-L${exec_prefix}/lib ${TK_LIB_FLAG}"
 
+#--------------------------------------------------------------------
+#       The statements below define various symbols relating to Tcl
+#       stub support.
+#--------------------------------------------------------------------
+# Replace ${VERSION} with contents of ${TK_VERSION}
+eval "STUB_LIB_FILE=libtkstub${TCL_UNSHARED_LIB_SUFFIX}"
+
+# Replace DBGX with TCL_DBGX
+eval "STUB_LIB_FILE=\"${STUB_LIB_FILE}\""
+
+MAKE_STUB_LIB="ar cr \${STUB_LIB_FILE} \${STUB_LIB_OBJS}"
+
+TK_STUB_LIB_FILE=${STUB_LIB_FILE}
+
+if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
+    TK_STUB_LIB_FLAG="-ltkstub${TK_VERSION}\${TCL_DBGX}"
+else
+    TK_STUB_LIB_FLAG="-ltkstub`echo ${TK_VERSION} | tr -d .`\${TCL_DBGX}"
+fi
+
+TK_BUILD_STUB_LIB_SPEC="-L`pwd` ${TK_STUB_LIB_FLAG}"
+TL_STUB_LIB_SPEC="-L${exec_prefix}/lib ${TK_STUB_LIB_FLAG}"
+TK_BUILD_STUB_LIB_PATH="`pwd`/${TK_STUB_LIB_FILE}"
+TK_STUB_LIB_PATH="${exec_prefix}/lib/${TK_STUB_LIB_FILE}"
+
+AC_SUBST(STUB_LIB_FILE)
+
+AC_SUBST(TK_STUB_LIB_FILE)
+AC_SUBST(TK_STUB_LIB_FLAG)
+AC_SUBST(TK_BUILD_STUB_LIB_SPEC)
+AC_SUBST(TK_STUB_LIB_SPEC)
+AC_SUBST(TK_BUILD_STUB_LIB_PATH)
+AC_SUBST(TK_STUB_LIB_PATH)
+AC_SUBST(MAKE_STUB_LIB)
+
+
 AC_SUBST(CFLAGS_DEBUG)
 AC_SUBST(CFLAGS_DEFAULT)
 AC_SUBST(CFLAGS_OPTIMIZE)
@@ -451,6 +487,7 @@ AC_SUBST(SHLIB_SUFFIX)
 AC_SUBST(SHLIB_VERSION)
 AC_SUBST(TCL_BIN_DIR)
 AC_SUBST(TCL_BUILD_LIB_SPEC)
+AC_SUBST(TCL_BUILD_STUB_LIB_SPEC)
 AC_SUBST(TCL_DBGX)
 AC_SUBST(TCL_LIB_FLAG)
 AC_SUBST(TCL_SRC_DIR)

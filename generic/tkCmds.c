@@ -11,15 +11,19 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.4.4.1 1999/03/06 00:08:02 redman Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.4.4.2 1999/03/06 02:23:16 redman Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
 #include <errno.h>
 
-#ifdef __WIN32__
+#if defined(__WIN32__)
 #include "tkWinInt.h"
+#elif defined(MAC_TCL)
+#include "tkMacInt.h"
+#else
+#include "tkUnixInt.h"
 #endif
 
 /*
