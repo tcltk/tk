@@ -9,13 +9,16 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xgc.c,v 1.4 1999/12/14 06:55:39 hobbs Exp $
+ * RCS: @(#) $Id: xgc.c,v 1.5 2000/02/10 08:53:32 hobbs Exp $
  */
 
 #include <tkInt.h>
 
 #ifdef MAC_TCL
 #	include <Xlib.h>
+#	include <X.h>
+#	define Cursor XCursor
+#	define Region XRegion
 #else
 #	include <X11/Xlib.h>
 #endif
@@ -435,6 +438,7 @@ XDrawPoints(display, d, gc, points, npoints, mode)
     }
 }
 
+#ifndef MAC_TCL
 void
 XDrawSegments(display, d, gc, segments, nsegments)
     Display* display;
@@ -444,6 +448,7 @@ XDrawSegments(display, d, gc, segments, nsegments)
     int nsegments;
 {
 }
+#endif
 
 char *
 XFetchBuffer(display, nbytes_return, buffer)
