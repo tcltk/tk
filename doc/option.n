@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: option.n,v 1.3 2004/06/18 21:50:16 dkf Exp $
+'\" RCS: @(#) $Id: option.n,v 1.4 2004/06/21 19:42:12 dkf Exp $
 '\" 
 .so man.macros
 .TH option n "" Tk "Tk Built-In Commands"
@@ -14,13 +14,12 @@
 .SH NAME
 option \- Add/retrieve window options to/from the option database
 .SH SYNOPSIS
+.nf
 \fBoption add \fIpattern value \fR?\fIpriority\fR?
-.sp
 \fBoption clear\fR
-.sp
 \fBoption get \fIwindow name class\fR
-.sp
 \fBoption readfile \fIfileName \fR?\fIpriority\fR?
+.fi
 .BE
 
 .SH DESCRIPTION
