@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.92 2005/01/12 02:58:29 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.93 2005/01/13 01:48:03 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -7502,7 +7502,6 @@ WmProc(hwnd, message, wParam, lParam)
 	case WM_MENUSELECT:
 	case WM_ENTERIDLE:
 	case WM_INITMENUPOPUP:
-	case WM_UNINITMENUPOPUP:
 	{
 	    HWND hMenuHWnd = Tk_GetEmbeddedMenuHWND((Tk_Window)winPtr);
 	    if(hMenuHWnd) {
