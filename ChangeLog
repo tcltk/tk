@@ -1,3 +1,12 @@
+2004-09-14  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWinWm.c (WmIconwindowCmd): Replace bogus
+	call to XWithdrawWindow with proper code. This
+	avoids a "couldn't send withdraw message to window manager"
+	error when the iconwindow is already mapped.
+	The wm iconwindow command does not seem to do much
+	under Win32, but at least this avoids an error message.
+
 2004-09-13  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinWm.c (ReadIconFromFile): fix mem alloc to get the right
