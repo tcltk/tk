@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.11 2003/07/17 00:39:53 hobbs Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.12 2003/07/18 10:02:03 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2496,6 +2496,23 @@ test panedwindow-30.1 {display on depths other than the default one} {
 	toplevel .t -visual {truecolor 24}
 	pack [panedwindow .t.p]
 	.t.p add [frame .t.p.f1] [frame .t.p.f2]
+	update
+	# If we got here, we didn't crash and that's good
+    }
+    -cleanup {destroy .t}
+    -result {}
+}
+test panedwindow-30.2 {display on depths other than the default one} {
+    -constraints {pseudocolor8 haveTruecolor24}
+    -body {
+	toplevel .t -visual {pseudocolor 8}
+	pack [frame .t.f -visual {truecolor 24}]
+	pack [panedwindow .t.f.p]
+	.t.f.p add [frame .t.f.p.f1 -width 5] [frame .t.f.p.f2 -width 5]
+	update
+	.t.f.p proxy place 1 1
+	update
+	.t.f.p proxy forget
 	update
 	# If we got here, we didn't crash and that's good
     }
