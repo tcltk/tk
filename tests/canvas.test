@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.6 1999/12/14 06:53:12 hobbs Exp $
+# RCS: @(#) $Id: canvas.test,v 1.7 2000/03/02 21:52:25 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -355,16 +355,3 @@ test canvas-10.12 {multple events bound to same tag expr} {
 # cleanup
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
