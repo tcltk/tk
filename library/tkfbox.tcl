@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.34 2002/06/10 00:15:42 a_kovalenko Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.35 2002/06/12 23:08:12 mdejong Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -814,7 +814,17 @@ proc ::tk::dialog::file:: {type args} {
 	set data(cancelBtn) $w.f3.cancel
 	::tk::dialog::file::SetSelectMode $w $data(-multiple)
     }
-    wm transient $w $data(-parent)
+
+    # Dialog boxes should be transient with respect to their parent,
+    # so that they will always stay on top of their parent window.  However,
+    # some window managers will create the window as withdrawn if the parent
+    # window is withdrawn or iconified.  Combined with the grab we put on the
+    # window, this can hang the entire application.  Therefore we only make
+    # the dialog transient if the parent is viewable.
+
+    if {[winfo viewable [winfo toplevel $data(-parent)]] } {
+	wm transient $w $data(-parent)
+    }
 
     # Add traces on the selectPath variable
     #

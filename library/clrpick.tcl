@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# RCS: @(#) $Id: clrpick.tcl,v 1.16 2002/06/10 00:15:42 a_kovalenko Exp $
+# RCS: @(#) $Id: clrpick.tcl,v 1.17 2002/06/12 23:08:12 mdejong Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -77,7 +77,16 @@ proc ::tk::dialog::color:: {args} {
 	BuildDialog $w
     }
 
-    wm transient $w $data(-parent)
+    # Dialog boxes should be transient with respect to their parent,
+    # so that they will always stay on top of their parent window.  However,
+    # some window managers will create the window as withdrawn if the parent
+    # window is withdrawn or iconified.  Combined with the grab we put on the
+    # window, this can hang the entire application.  Therefore we only make
+    # the dialog transient if the parent is viewable.
+
+    if {[winfo viewable [winfo toplevel $data(-parent)]] } {
+	wm transient $w $data(-parent)
+    }
 
     # 5. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
