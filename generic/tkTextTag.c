@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.13 2003/11/12 17:19:18 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.14 2003/11/15 02:33:51 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -160,7 +160,7 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 				 "tagName index1 ?index2 index1 index2 ...?");
 		return TCL_ERROR;
 	    }
-	    tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]));
+	    tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]), NULL);
 	    for (i = 4; i < objc; i += 2) {
 		if (TkTextGetObjIndex(interp, textPtr, objv[i], 
 				      &index1) != TCL_OK) {
@@ -176,7 +176,8 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 		    }
 		} else {
 		    index2 = index1;
-		    TkTextIndexForwChars(NULL,&index2, 1, &index2, COUNT_INDICES);
+		    TkTextIndexForwChars(NULL,&index2, 1, &index2, 
+					 COUNT_INDICES);
 		}
 
 		if (tagPtr->affectsDisplay) {
@@ -208,11 +209,13 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 
 			memset((VOID *) &event, 0, sizeof(event));
 			event.xany.type = VirtualEvent;
-			event.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
+			event.xany.serial = 
+			  NextRequest(Tk_Display(textPtr->tkwin));
 			event.xany.send_event = False;
 			event.xany.window = Tk_WindowId(textPtr->tkwin);
 			event.xany.display = Tk_Display(textPtr->tkwin);
-			((XVirtualEvent *) &event)->name = Tk_GetUid("Selection");
+			((XVirtualEvent *) &event)->name = 
+			  Tk_GetUid("Selection");
 			Tk_HandleEvent(&event);
 
 			if (addTag && textPtr->exportSelection
@@ -229,10 +232,11 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 	}
 	case TAG_BIND: {
 	    if ((objc < 4) || (objc > 6)) {
-		Tcl_WrongNumArgs(interp, 3, objv, "tagName ?sequence? ?command?");
+		Tcl_WrongNumArgs(interp, 3, objv, 
+				 "tagName ?sequence? ?command?");
 		return TCL_ERROR;
 	    }
-	    tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]));
+	    tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]), NULL);
 
 	    /*
 	     * Make a binding table if the widget doesn't already have
@@ -271,8 +275,8 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 			    (ClientData) tagPtr, Tcl_GetString(objv[4]));
 		    Tcl_ResetResult(interp);
 		    Tcl_AppendResult(interp, "requested illegal events; ",
-			    "only key, button, motion, enter, leave, and virtual ",
-			    "events may be used", (char *) NULL);
+			 "only key, button, motion, enter, leave, and virtual ",
+			 "events may be used", (char *) NULL);
 		    return TCL_ERROR;
 		}
 	    } else if (objc == 5) {
@@ -315,7 +319,8 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 		    return TCL_ERROR;
 		}
 		objPtr = Tk_GetOptionValue(interp, (char *) tagPtr,
-					   tagPtr->optionTable, objv[4], textPtr->tkwin);
+					   tagPtr->optionTable, objv[4], 
+					   textPtr->tkwin);
 		if (objPtr == NULL) {
 		    return TCL_ERROR;
 		} else {
@@ -326,11 +331,13 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 	    break;
 	}
 	case TAG_CONFIGURE: {
+	    int newTag;
 	    if (objc < 4) {
-		Tcl_WrongNumArgs(interp, 3, objv, "tagName ?option? ?value? ?option value ...?");
+		Tcl_WrongNumArgs(interp, 3, objv, 
+				 "tagName ?option? ?value? ?option value ...?");
 		return TCL_ERROR;
 	    }
-	    tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]));
+	    tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]), &newTag);
 	    if (objc <= 5) {
 		Tcl_Obj* objPtr = Tk_GetOptionInfo(interp, (char *) tagPtr,
 						   tagPtr->optionTable,
@@ -373,18 +380,19 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 		}
 		if (tagPtr->lMargin1String != NULL) {
 		    if (Tk_GetPixels(interp, textPtr->tkwin,
-			    tagPtr->lMargin1String, &tagPtr->lMargin1) != TCL_OK) {
+		      tagPtr->lMargin1String, &tagPtr->lMargin1) != TCL_OK) {
 			return TCL_ERROR;
 		    }
 		}
 		if (tagPtr->lMargin2String != NULL) {
 		    if (Tk_GetPixels(interp, textPtr->tkwin,
-			    tagPtr->lMargin2String, &tagPtr->lMargin2) != TCL_OK) {
+		      tagPtr->lMargin2String, &tagPtr->lMargin2) != TCL_OK) {
 			return TCL_ERROR;
 		    }
 		}
 		if (tagPtr->offsetString != NULL) {
-		    if (Tk_GetPixels(interp, textPtr->tkwin, tagPtr->offsetString,
+		    if (Tk_GetPixels(interp, textPtr->tkwin, 
+				     tagPtr->offsetString,
 			    &tagPtr->offset) != TCL_OK) {
 			return TCL_ERROR;
 		    }
@@ -397,13 +405,13 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 		}
 		if (tagPtr->rMarginString != NULL) {
 		    if (Tk_GetPixels(interp, textPtr->tkwin,
-			    tagPtr->rMarginString, &tagPtr->rMargin) != TCL_OK) {
+			  tagPtr->rMarginString, &tagPtr->rMargin) != TCL_OK) {
 			return TCL_ERROR;
 		    }
 		}
 		if (tagPtr->spacing1String != NULL) {
 		    if (Tk_GetPixels(interp, textPtr->tkwin,
-			    tagPtr->spacing1String, &tagPtr->spacing1) != TCL_OK) {
+		      tagPtr->spacing1String, &tagPtr->spacing1) != TCL_OK) {
 			return TCL_ERROR;
 		    }
 		    if (tagPtr->spacing1 < 0) {
@@ -412,7 +420,7 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 		}
 		if (tagPtr->spacing2String != NULL) {
 		    if (Tk_GetPixels(interp, textPtr->tkwin,
-			    tagPtr->spacing2String, &tagPtr->spacing2) != TCL_OK) {
+		      tagPtr->spacing2String, &tagPtr->spacing2) != TCL_OK) {
 			return TCL_ERROR;
 		    }
 		    if (tagPtr->spacing2 < 0) {
@@ -421,7 +429,7 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 		}
 		if (tagPtr->spacing3String != NULL) {
 		    if (Tk_GetPixels(interp, textPtr->tkwin,
-			    tagPtr->spacing3String, &tagPtr->spacing3) != TCL_OK) {
+		      tagPtr->spacing3String, &tagPtr->spacing3) != TCL_OK) {
 			return TCL_ERROR;
 		    }
 		    if (tagPtr->spacing3 < 0) {
@@ -492,14 +500,15 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 			|| (tagPtr->underlineString != NULL)) {
 		    tagPtr->affectsDisplay = 1;
 		}
-		/* 
-		 * This line is totally unnecessary if this is a new
-		 * tag, since it can't possibly have been applied to
-		 * anything yet.  We might wish to test for that
-		 * case specially
-		 */
-		TkTextRedrawTag(textPtr, (TkTextIndex *) NULL,
-			(TkTextIndex *) NULL, tagPtr, 1);
+		if (!newTag) {
+		    /* 
+		     * This line is not necessary if this is a new tag,
+		     * since it can't possibly have been applied to
+		     * anything yet.
+		     */
+		    TkTextRedrawTag(textPtr, (TkTextIndex *) NULL,
+				    (TkTextIndex *) NULL, tagPtr, 1);
+		}
 		return result;
 	    }
 	    break;
@@ -512,7 +521,8 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 		return TCL_ERROR;
 	    }
 	    for (i = 3; i < objc; i++) {
-		hPtr = Tcl_FindHashEntry(&textPtr->tagTable, Tcl_GetString(objv[i]));
+		hPtr = Tcl_FindHashEntry(&textPtr->tagTable, 
+					 Tcl_GetString(objv[i]));
 		if (hPtr == NULL) {
 		    continue;
 		}
@@ -525,8 +535,9 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 			    (TkTextIndex *) NULL, tagPtr, 1);
 		}
 		TkTextMakeByteIndex(textPtr->tree, 0, 0, &first);
-		TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree),
-			0, &last),
+		TkTextMakeByteIndex(textPtr->tree, 
+				    TkBTreeNumLines(textPtr->tree),
+				    0, &last),
 		TkBTreeTag(&first, &last, tagPtr, 0);
 
 		if (tagPtr == textPtr->selTagPtr) {
@@ -589,8 +600,9 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 		prio = 0;
 	    }
 	    ChangeTagPriority(textPtr, tagPtr, prio);
-	    TkTextRedrawTag(textPtr, (TkTextIndex *) NULL, (TkTextIndex *) NULL,
-		    tagPtr, 1);
+	    TkTextRedrawTag(textPtr, (TkTextIndex *) NULL, 
+			    (TkTextIndex *) NULL,
+			    tagPtr, 1);
 	    break;
 	}
 	case TAG_NAMES: {
@@ -608,7 +620,8 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 
 		arrayPtr = (TkTextTag **) ckalloc((unsigned)
 			(textPtr->numTags * sizeof(TkTextTag *)));
-		for (i = 0, hPtr = Tcl_FirstHashEntry(&textPtr->tagTable, &search);
+		for (i = 0, hPtr = Tcl_FirstHashEntry(&textPtr->tagTable, 
+						      &search);
 			hPtr != NULL; i++, hPtr = Tcl_NextHashEntry(&search)) {
 		    arrayPtr[i] = (TkTextTag *) Tcl_GetHashValue(hPtr);
 		}
@@ -747,8 +760,9 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 	    }
 	    if (tSearch.segPtr->typePtr == &tkTextToggleOnType) {
 		TkTextPrintIndex(&tSearch.curIndex, position1);
-		TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree),
-			0, &last);
+		TkTextMakeByteIndex(textPtr->tree, 
+				    TkBTreeNumLines(textPtr->tree),
+				    0, &last);
 		TkBTreeStartSearch(&tSearch.curIndex, &last, tagPtr, &tSearch);
 		TkBTreeNextTag(&tSearch);
 		TkTextPrintIndex(&tSearch.curIndex, position2);
@@ -844,15 +858,20 @@ TkTextTagCmd(textPtr, interp, objc, objv)
  */
 
 TkTextTag *
-TkTextCreateTag(textPtr, tagName)
+TkTextCreateTag(textPtr, tagName, newTag)
     TkText *textPtr;		/* Widget in which tag is being used. */
     CONST char *tagName;	/* Name of desired tag. */
+    int *newTag;                /* If non-NULL, then return 1 if new,
+                                 * or 0 if already exists. */
 {
     register TkTextTag *tagPtr;
     Tcl_HashEntry *hPtr;
     int new;
 
     hPtr = Tcl_CreateHashEntry(&textPtr->tagTable, tagName, &new);
+    if (newTag != NULL) {
+        *newTag = new;
+    }
     if (!new) {
 	return (TkTextTag *) Tcl_GetHashValue(hPtr);
     }

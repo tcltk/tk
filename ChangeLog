@@ -1,3 +1,15 @@
+2003-11-15  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* generic/tkText.h: 
+	* generic/tkText.c: 
+	* generic/tkTextDisp.c: 
+	* generic/tkTextWind.c: 
+	* generic/tkTextTag.c: 
+	* tests/textDisp.test: fixes to another pair of old Tk bugs
+	[Bug 220816] (can't scroll horizontally to display all of last
+	character), [Bug 842498] (xview confused on window creation),
+	and more efficiency in tag creation.  Added new tests.
+	
 2003-11-14  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkTextDisp.c (TkTextRedrawTag): Get the correct number
