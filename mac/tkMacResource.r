@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacResource.r,v 1.7 2001/11/23 02:06:18 das Exp $
+ * RCS: @(#) $Id: tkMacResource.r,v 1.8 2001/12/27 22:45:16 das Exp $
  */
 
 /*
@@ -31,20 +31,6 @@
 #define RESOURCE_INCLUDED
 #include "tcl.h"
 #include "tk.h"
-
-#if (TK_RELEASE_LEVEL == 0)
-#   define RELEASE_LEVEL alpha
-#elif (TK_RELEASE_LEVEL == 1)
-#   define RELEASE_LEVEL beta
-#elif (TK_RELEASE_LEVEL == 2)
-#   define RELEASE_LEVEL final
-#endif
-
-#if (TK_RELEASE_LEVEL == 2)
-#   define MINOR_VERSION (TK_MINOR_VERSION * 16) + TK_RELEASE_SERIAL
-#else
-#   define MINOR_VERSION TK_MINOR_VERSION * 16
-#endif
 
 #define TK_LIBRARY_RESOURCES 3000
 
@@ -94,6 +80,8 @@ read 'TEXT' (TK_LIBRARY_RESOURCES+16, "msgbox", purgeable)
 	"::library:msgbox.tcl";
 read 'TEXT' (TK_LIBRARY_RESOURCES+17, "comdlg", purgeable) 
 	"::library:comdlg.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+18, "spinbox", purgeable) 
+	"::library:spinbox.tcl";
 
 
 /*

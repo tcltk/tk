@@ -1,3 +1,12 @@
+2001-12-28  Daniel Steffen <das@users.sourceforge.net>
+
+	* mac/mac/tkMacInit.c:
+	* mac/mac/tkMacResource.r: synced up tkInit features to unix/win:
+	use existing tkInit proc if defined. Added spinbox.tcl resource.
+	Used TclGetEnv() instead of Tcl_GetVar2(interp, env)
+	* mac/tkMacApplication.r:
+	* mac/tkMacLibrary.r: minor version resources cleanup
+
 2001-12-20  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/configure: Regen.

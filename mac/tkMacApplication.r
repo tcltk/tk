@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacApplication.r,v 1.5 2001/11/23 02:05:32 das Exp $
+ * RCS: @(#) $Id: tkMacApplication.r,v 1.6 2001/12/27 22:45:07 das Exp $
  */
 
 #include <Types.r>
@@ -35,22 +35,22 @@
 
 #if (TK_RELEASE_LEVEL == 2)
 #   define MINOR_VERSION (TK_MINOR_VERSION * 16) + TK_RELEASE_SERIAL
+#   define RELEASE_CODE 0x00
 #else
 #   define MINOR_VERSION TK_MINOR_VERSION * 16
+#   define RELEASE_CODE TK_RELEASE_SERIAL
 #endif
-
-#define RELEASE_CODE 0x00
 
 resource 'vers' (1) {
 	TK_MAJOR_VERSION, MINOR_VERSION,
-	RELEASE_LEVEL, 0x00, verUS,
+	RELEASE_LEVEL, RELEASE_CODE, verUS,
 	TK_PATCH_LEVEL,
 	TK_PATCH_LEVEL ", by Ray Johnson & Jim Ingham" "\n" "© 2001 Tcl Core Team"
 };
 
 resource 'vers' (2) {
 	TK_MAJOR_VERSION, MINOR_VERSION,
-	RELEASE_LEVEL, 0x00, verUS,
+	RELEASE_LEVEL, RELEASE_CODE, verUS,
 	TK_PATCH_LEVEL,
 	"Wish " TK_PATCH_LEVEL " © 1993-2001"
 };
