@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.17 2000/11/02 02:19:57 ericm Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.18 2000/11/03 01:22:16 hobbs Exp $
  *
  */
 
@@ -184,7 +184,7 @@ Tk_ChooseColorObjCmd(clientData, interp, objc, objv)
     HWND hWnd;
     int i, oldMode, winCode, result;
     CHOOSECOLOR chooseColor;
-    static inited = 0;
+    static int inited = 0;
     static COLORREF dwCustColors[16];
     static long oldColor;		/* the color selected last time */
     static char *optionStrings[] = {
@@ -219,7 +219,7 @@ Tk_ChooseColorObjCmd(clientData, interp, objc, objv)
     chooseColor.lpCustColors	= dwCustColors;
     chooseColor.Flags		= CC_RGBINIT | CC_FULLOPEN | CC_ENABLEHOOK;
     chooseColor.lCustData	= (LPARAM) NULL;
-    chooseColor.lpfnHook	= ColorDlgHookProc;
+    chooseColor.lpfnHook	= (LPOFNHOOKPROC) ColorDlgHookProc;
     chooseColor.lpTemplateName	= (LPTSTR) interp;
 
     for (i = 1; i < objc; i += 2) {
@@ -603,8 +603,13 @@ GetFileNameW(clientData, interp, objc, objv, open)
 
     ofn.lStructSize		= sizeof(ofn);
     ofn.hwndOwner		= hWnd;
+#ifdef _WIN64
+    ofn.hInstance		= (HINSTANCE) GetWindowLongPtr(ofn.hwndOwner, 
+					GWLP_HINSTANCE);
+#else
     ofn.hInstance		= (HINSTANCE) GetWindowLong(ofn.hwndOwner, 
 					GWL_HINSTANCE);
+#endif
     ofn.lpstrFilter		= NULL;
     ofn.lpstrCustomFilter	= NULL;
     ofn.nMaxCustFilter		= 0;
@@ -620,7 +625,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
     ofn.nFileOffset		= 0;
     ofn.nFileExtension		= 0;
     ofn.lpstrDefExt		= NULL;
-    ofn.lpfnHook		= OFNHookProcW;
+    ofn.lpfnHook		= (LPOFNHOOKPROC) OFNHookProcW;
     ofn.lCustData		= (LPARAM) interp;
     ofn.lpTemplateName		= NULL;
 
@@ -877,7 +882,11 @@ OFNHookProcW(
     OPENFILENAMEW *ofnPtr;
 
     if (uMsg == WM_INITDIALOG) {
+#ifdef _WIN64
+	SetWindowLongPtr(hdlg, GWLP_USERDATA, lParam);
+#else
 	SetWindowLong(hdlg, GWL_USERDATA, lParam);
+#endif
     } else if (uMsg == WM_WINDOWPOSCHANGED) {
 	/*
 	 * This message is delivered at the right time to enable Tk
@@ -886,12 +895,20 @@ OFNHookProcW(
 	 * WM_WINDOWPOSCHANGED message.
 	 */
 
+#ifdef _WIN64
+        ofnPtr = (OPENFILENAMEW *) GetWindowLongPtr(hdlg, GWLP_USERDATA);
+#else
         ofnPtr = (OPENFILENAMEW *) GetWindowLong(hdlg, GWL_USERDATA);
+#endif
 	if (ofnPtr != NULL) {
 	    hdlg = GetParent(hdlg);
 	    tsdPtr->debugInterp = (Tcl_Interp *) ofnPtr->lCustData;
 	    Tcl_DoWhenIdle(SetTkDialog, (ClientData) hdlg);
+#ifdef _WIN64
+	    SetWindowLongPtr(hdlg, GWLP_USERDATA, (LPARAM) NULL);
+#else
 	    SetWindowLong(hdlg, GWL_USERDATA, (LPARAM) NULL);
+#endif
 	}
     }
     return 0;
@@ -1035,8 +1052,13 @@ GetFileNameA(clientData, interp, objc, objv, open)
 
     ofn.lStructSize		= sizeof(ofn);
     ofn.hwndOwner		= hWnd;
+#ifdef _WIN64
+    ofn.hInstance		= (HINSTANCE) GetWindowLongPtr(ofn.hwndOwner, 
+					GWLP_HINSTANCE);
+#else
     ofn.hInstance		= (HINSTANCE) GetWindowLong(ofn.hwndOwner, 
 					GWL_HINSTANCE);
+#endif
     ofn.lpstrFilter		= NULL;
     ofn.lpstrCustomFilter	= NULL;
     ofn.nMaxCustFilter		= 0;
@@ -1052,7 +1074,7 @@ GetFileNameA(clientData, interp, objc, objv, open)
     ofn.nFileOffset		= 0;
     ofn.nFileExtension		= 0;
     ofn.lpstrDefExt		= NULL;
-    ofn.lpfnHook		= OFNHookProc;
+    ofn.lpfnHook		= (LPOFNHOOKPROC) OFNHookProc;
     ofn.lCustData		= (LPARAM) interp;
     ofn.lpTemplateName		= NULL;
 
@@ -1231,7 +1253,11 @@ OFNHookProc(
     OPENFILENAME *ofnPtr;
 
     if (uMsg == WM_INITDIALOG) {
+#ifdef _WIN64
+	SetWindowLongPtr(hdlg, GWLP_USERDATA, lParam);
+#else
 	SetWindowLong(hdlg, GWL_USERDATA, lParam);
+#endif
     } else if (uMsg == WM_WINDOWPOSCHANGED) {
 	/*
 	 * This message is delivered at the right time to both 
@@ -1241,14 +1267,22 @@ OFNHookProc(
 	 * WM_WINDOWPOSCHANGED message.
 	 */
 
+#ifdef _WIN64
+        ofnPtr = (OPENFILENAME *) GetWindowLongPtr(hdlg, GWLP_USERDATA);
+#else
         ofnPtr = (OPENFILENAME *) GetWindowLong(hdlg, GWL_USERDATA);
+#endif
 	if (ofnPtr != NULL) {
 	    if (ofnPtr->Flags & OFN_EXPLORER) {
 		hdlg = GetParent(hdlg);
 	    }
 	    tsdPtr->debugInterp = (Tcl_Interp *) ofnPtr->lCustData;
 	    Tcl_DoWhenIdle(SetTkDialog, (ClientData) hdlg);
+#ifdef _WIN64
+	    SetWindowLongPtr(hdlg, GWLP_USERDATA, (LPARAM) NULL);
+#else
 	    SetWindowLong(hdlg, GWL_USERDATA, (LPARAM) NULL);
+#endif
 	}
     }
     return 0;
@@ -1497,8 +1531,13 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
 
     ofn.lStructSize		= sizeof(ofn);
     ofn.hwndOwner		= hWnd;
+#ifdef _WIN64
+    ofn.hInstance		= (HINSTANCE) GetWindowLongPtr(ofn.hwndOwner, 
+					GWLP_HINSTANCE);
+#else
     ofn.hInstance		= (HINSTANCE) GetWindowLong(ofn.hwndOwner, 
 					GWL_HINSTANCE);
+#endif
     ofn.lpstrFilter		= NULL;
     ofn.lpstrCustomFilter	= NULL;
     ofn.nMaxCustFilter		= 0;
@@ -1515,7 +1554,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     ofn.nFileExtension		= 0;
     ofn.lpstrDefExt		= NULL;
     ofn.lCustData		= (LPARAM) &cd;
-    ofn.lpfnHook		= ChooseDirectoryHookProc;
+    ofn.lpfnHook		= (LPOFNHOOKPROC) ChooseDirectoryHookProc;
     ofn.lpTemplateName		= MAKEINTRESOURCE(FILEOPENORD);
 
     if (Tcl_DStringValue(&utfDirString)[0] != '\0') {
@@ -1642,12 +1681,20 @@ ChooseDirectoryHookProc(
      * GWL_USERDATA keeps track of ofnPtr.
      */
     
+#ifdef _WIN64
+    ofnPtr = (OPENFILENAME *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
+#else
     ofnPtr = (OPENFILENAME *) GetWindowLong(hwnd, GWL_USERDATA);
+#endif
 
     if (message == WM_INITDIALOG) {
         ChooseDir *cdPtr;
 
+#ifdef _WIN64
+	SetWindowLongPtr(hwnd, GWLP_USERDATA, lParam);
+#else
 	SetWindowLong(hwnd, GWL_USERDATA, lParam);
+#endif
 	ofnPtr = (OPENFILENAME *) lParam;
 	cdPtr = (ChooseDir *) ofnPtr->lCustData;
 	cdPtr->lastCtrl = 0;
@@ -1994,6 +2041,10 @@ SetTkDialog(ClientData clientData)
 
     hwnd = (HWND) clientData;
 
+#ifdef _WIN64
+    sprintf(buf, "0x%16x", hwnd);
+#else
     sprintf(buf, "0x%08x", hwnd);
+#endif
     Tcl_SetVar(tsdPtr->debugInterp, "tk_dialog", buf, TCL_GLOBAL_ONLY);
 }

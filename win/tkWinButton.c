@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.10 2000/07/06 03:17:44 mo Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.11 2000/11/03 01:22:16 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -271,8 +271,13 @@ CreateProc(tkwin, parentWin, instanceData)
 	    parent, NULL, Tk_GetHINSTANCE(), NULL);
     SetWindowPos(butPtr->hwnd, HWND_TOP, 0, 0, 0, 0,
 		    SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+#ifdef _WIN64
+    butPtr->oldProc = (WNDPROC)SetWindowLongPtr(butPtr->hwnd, GWLP_WNDPROC,
+	    (LONG_PTR) ButtonProc);
+#else
     butPtr->oldProc = (WNDPROC)SetWindowLong(butPtr->hwnd, GWL_WNDPROC,
 	    (DWORD) ButtonProc);
+#endif
 
     window = Tk_AttachHWND(tkwin, butPtr->hwnd);
     return window;
@@ -301,7 +306,11 @@ TkpDestroyButton(butPtr)
     WinButton *winButPtr = (WinButton *)butPtr;
     HWND hwnd = winButPtr->hwnd;
     if (hwnd) {
+#ifdef _WIN64
+	SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR) winButPtr->oldProc);
+#else
 	SetWindowLong(hwnd, GWL_WNDPROC, (DWORD) winButPtr->oldProc);
+#endif
     }
 }
 
