@@ -1,3 +1,32 @@
+2000-01-05  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* doc/text.n:
+	* generic/tkText.c:
+	* generic/tkText.h:
+	* generic/tkTextBTree.c:
+	* generic/tkTextDisp.c:
+	* generic/tkTextTag.c: removed the -state option for text tags,
+	and reoriented it around -elide, as -state disabled was never
+	implemented, and -state hidden is better as -elide.
+
+	* mac/tkMacClipboard.c: fixed i18n problems with clipboard [Bug: 3544]
+
+	* entry.tcl:
+	* focus.tcl:
+	* listbox.tcl:
+	* scale.tcl:
+	* scrlbar.tcl:
+	* tearoff.tcl:
+	* text.tcl:
+	* tkfbox.tcl:
+	* xmfbox.tcl: fixed unprotected arg parsing through eval/after
+	[Bug: 3943]
+
+	* unix/Makefile.in: added unix/aclocal.m4 to distribution [Bug: 3938]
+	* unix/aclocal.m4: changed NetBSD SHLIB_CFLAGS from -fpic to -fPIC
+
+	* win/tkWinImage.c: added static declaration to function
+
 1999-12-22  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* changes: updated changes file
