@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinColor.c,v 1.4 2000/03/02 23:52:36 hobbs Exp $
+ * RCS: @(#) $Id: tkWinColor.c,v 1.5 2000/04/17 06:26:09 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -156,9 +156,13 @@ FindSystemColor(name, colorPtr, indexPtr)
 
     *indexPtr = sysColors[i].index;
     colorPtr->pixel = GetSysColor(sysColors[i].index);
-    colorPtr->red = GetRValue(colorPtr->pixel) << 8;
-    colorPtr->green = GetGValue(colorPtr->pixel) << 8;
-    colorPtr->blue = GetBValue(colorPtr->pixel) << 8;
+    /*
+     * x257 is (value<<8 + value) to get the properly bit shifted
+     * and padded value.  [Bug: 4919]
+     */
+    colorPtr->red = GetRValue(colorPtr->pixel) * 257;
+    colorPtr->green = GetGValue(colorPtr->pixel) * 257;
+    colorPtr->blue = GetBValue(colorPtr->pixel) * 257;
     colorPtr->flags = DoRed|DoGreen|DoBlue;
     colorPtr->pad = 0;
     return 1;
@@ -338,7 +342,7 @@ XAllocColor(display, colormap, color)
     TkWinColormap *cmap = (TkWinColormap *) colormap;
     PALETTEENTRY entry, closeEntry;
     HDC dc = GetDC(NULL);
-    
+
     entry.peRed = (color->red) >> 8;
     entry.peGreen = (color->green) >> 8;
     entry.peBlue = (color->blue) >> 8;
@@ -373,9 +377,9 @@ XAllocColor(display, colormap, color)
 	
 	if ((index >= cmap->size) || (newPixel != closePixel)) {
 	    if (cmap->size == sizePalette) {
-		color->red   = (closeEntry.peRed << 8) | closeEntry.peRed;
-		color->green = (closeEntry.peGreen << 8) | closeEntry.peGreen;
-		color->blue  = (closeEntry.peBlue << 8) | closeEntry.peBlue;
+		color->red   = closeEntry.peRed * 257;
+		color->green = closeEntry.peGreen * 257;
+		color->blue  = closeEntry.peBlue * 257;
 		entry = closeEntry;
 		if (index >= cmap->size) {
 		    OutputDebugString("XAllocColor: Colormap is bigger than we thought");
@@ -404,12 +408,9 @@ XAllocColor(display, colormap, color)
 	
 	color->pixel = GetNearestColor(dc,
 		RGB(entry.peRed, entry.peGreen, entry.peBlue));
-	color->red    = GetRValue(color->pixel);
-	color->red   |= (color->red << 8);
-	color->green  = GetGValue(color->pixel);
-	color->green |= (color->green << 8);
-	color->blue   = GetBValue(color->pixel);
-	color->blue  |= (color->blue << 8);
+	color->red    = GetRValue(color->pixel) * 257;
+	color->green  = GetGValue(color->pixel) * 257;
+	color->blue   = GetBValue(color->pixel) * 257;
     }
 
     ReleaseDC(NULL, dc);
