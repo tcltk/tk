@@ -1,3 +1,16 @@
+2002-01-16  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkCanvText.c (GetSelText):
+	* generic/tkEntry.c (Entry{FetchSelection,Setvalue},ExpandPercents):
+	* generic/tkSelect.c (HandleTclCommand):
+	* generic/tkText.c (TextSearchCmd):
+	* generic/tkTextIndex.c (TkTextMakeByteIndex,TkTextIndexBackChars):
+	* mac/tkMacFont.c (Tk_MeasureChars,BreakLine):
+	* unix/tkUnixMenu.c (DrawMenuUnderline):
+	* win/tkWinMenu.c (GetEntryText,DrawMenuUnderline):  Updated
+	callers of Tcl_Utf* and Tcl_Regexp* APIs to reflect TIP 27 API
+	changes (see Tcl Patch 471509). [Patch 471513]
+
 2002-01-16  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/configure: Regen.

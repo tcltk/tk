@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.8 2002/01/04 16:35:04 dgp Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.9 2002/01/17 03:35:00 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -1336,7 +1336,7 @@ HandleTclCommand(clientData, offset, buffer, maxBytes)
     Tcl_DString oldResult;
     Tcl_Obj *objPtr;
     int extraBytes, charOffset, count, numChars;
-    char *p;
+    CONST char *p;
 
     /*
      * We must also protect the interpreter and the command from being
