@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.21 2001/11/21 01:36:33 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.22 2001/11/21 02:05:54 hobbs Exp $
  */
 
 #include "default.h"
@@ -2503,7 +2503,7 @@ static void pushStack ( stack, elem )
  *    None.
  */
  
-TkTextEditAtom * popStack ( stack )
+static TkTextEditAtom * popStack ( stack )
     TkTextEditAtom ** stack ;
 { 
     TkTextEditAtom * elem = NULL;
@@ -2866,7 +2866,7 @@ TextEditCmd(textPtr, interp, argc, argv)
  *    Memory will be allocated for the DString.  Remember to free it.
  */
 
-void 
+static void 
 TextGetText(indexPtr1,indexPtr2, dsPtr)
     TkTextIndex *indexPtr1;
     TkTextIndex *indexPtr2;
