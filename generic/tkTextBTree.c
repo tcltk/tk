@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.13 2004/01/13 02:06:00 davygrvy Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.14 2004/06/07 16:23:52 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -538,16 +538,6 @@ TkBTreeInsertChars(indexPtr, string)
     }
 
     /*
-     * Cleanup the starting line for the insertion, plus the ending
-     * line if it's different.
-     */
-
-    CleanupLine(indexPtr->linePtr);
-    if (linePtr != indexPtr->linePtr) {
-	CleanupLine(linePtr);
-    }
-    
-    /*
      * I don't believe it's possible for either of the two lines
      * passed to this function to be the last line of text, but
      * the function is robust to that case anyway.  (We must never
@@ -557,6 +547,16 @@ TkBTreeInsertChars(indexPtr, string)
 				indexPtr->linePtr, changeToLineCount, 
 				TK_TEXT_INVALIDATE_INSERT);
 
+    /*
+     * Cleanup the starting line for the insertion, plus the ending
+     * line if it's different.
+     */
+
+    CleanupLine(indexPtr->linePtr);
+    if (linePtr != indexPtr->linePtr) {
+	CleanupLine(linePtr);
+    }
+    
     /*
      * Increment the line and pixel counts in all the parent nodes of the
      * insertion point, then rebalance the tree if necessary.
