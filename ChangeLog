@@ -1,3 +1,9 @@
+2004-06-16  Joe English  <jenglish@users.sourceforge.net>
+
+	* unix/tkUnixWm.c, win/tkWinWm.c, macosx/tkMacOSXWm.c,
+	tests/wm.test, tests/unixWm.test: Fix for #742882
+	"Potential division by zero in gridded wm geometry"
+
 2004-06-15  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
 
 	* win/tkWinButton.c: Add a 3D highlight to disabled *buttons and
