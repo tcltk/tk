@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.61 2003/12/21 23:50:13 davygrvy Exp $ 
+ * RCS: $Id: tkInt.h,v 1.62 2004/07/05 21:21:52 dkf Exp $ 
  */
 
 #ifndef _TKINT
@@ -898,6 +898,7 @@ extern TkDisplay *tkDisplayList;
 
 #define META_MASK	(AnyModifier<<1)
 #define ALT_MASK	(AnyModifier<<2)
+#define EXTENDED_MASK	(AnyModifier<<3)
 
 /*
  * Object types not declared in tkObj.c need to be mentioned here so

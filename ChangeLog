@@ -1,3 +1,13 @@
+2004-07-05  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	TIP#158 IMPLEMENTATION
+
+	* tests/bind.test:		   Allow Win apps to distinguish keys
+	* win/tkWinX.c (GetState):	   on the keypad using the Extended
+	* generic/tkInt.h (EXTENDED_MASK): modifier.  Thanks to Wolfgang
+	* generic/tkBind.c:		   Grossbauer and Kevin Kenny for
+	* doc/bind.n:			   developing this patch [Patch 797404]
+
 2004-07-05  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tkUnixWm.c: Set _NET_WM_NAME and _NET_WM_ICON_NAME

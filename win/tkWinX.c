@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.30 2004/05/03 22:40:30 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.31 2004/07/05 21:21:53 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -1175,6 +1175,13 @@ GetState(message, wParam, lParam)
 	    state |= mask;
 	} else {
 	    state &= ~mask;
+	}
+	if (HIWORD(lParam) & KF_EXTENDED) {
+	    if (message == WM_SYSKEYDOWN || message == WM_KEYDOWN) {
+		state |= EXTENDED_MASK;
+	    } else {
+		state &= ~EXTENDED_MASK;
+	    }
 	}
     }
     return state;

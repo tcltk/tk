@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bind.n,v 1.14 2004/06/21 19:32:54 dkf Exp $
+'\" RCS: @(#) $Id: bind.n,v 1.15 2004/07/05 21:21:52 dkf Exp $
 '\" 
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
@@ -117,6 +117,7 @@ Modifiers consist of any of the following values:
 \fBButton4, B4\fR	\fBDouble\fR
 \fBButton5, B5\fR	\fBTriple\fR
 \fBMod1, M1\fR	\fBQuadruple\fR
+\fBExtended\fR
 .DE
 Where more than one value is listed, separated by commas, the values
 are equivalent.
@@ -151,6 +152,14 @@ pattern, all of the events must occur close together in time and without
 substantial mouse motion in between.  For example, \fB<Double-Button-1>\fR
 is equivalent to \fB<Button-1><Button-1>\fR with the extra time and space
 requirement.
+.PP
+The \fBExtended\fR modifier is, at present, specific to Windows.  It
+appears on events that are associated with the keys on the "extended
+keyboard."  On a US keyboard, the extended keys include the \fBAlt\fR
+and \fBControl\fR keys at the right of the keyboard, the cursor keys
+in the cluster to the left of the numeric pad, the \fBNumLock\fR key,
+the \fBBreak\fR key, the \fBPrintScreen\fR key, and the \fB/\fR and
+\fBEnter\fR keys in the numeric keypad.
 .SS "EVENT TYPES"
 .PP
 The \fItype\fR field may be any of the standard X event types, with a
