@@ -3,7 +3,7 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# RCS: @(#) $Id: dialog.tcl,v 1.10 2001/08/06 18:29:41 dgp Exp $
+# RCS: @(#) $Id: dialog.tcl,v 1.11 2001/08/09 00:47:09 dgp Exp $
 #
 # Copyright (c) 1992-1993 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -104,7 +104,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 
     set i 0
     foreach but $args {
-	button $w.button$i -text $but -command [list set Priv(button) $i]
+	button $w.button$i -text $but -command [list set ::tk::Priv(button) $i]
 	if {$i == $default} {
 	    $w.button$i configure -default active
 	} else {
@@ -130,7 +130,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 	[list $w.button$default] configure -state active -relief sunken
 	update idletasks
 	after 100
-	set Priv(button) $default
+	set ::tk::Priv(button) $default
 	"
     }
 
@@ -138,7 +138,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     # button variable to -1;  this is needed in case something happens
     # that destroys the window, such as its parent window being destroyed.
 
-    bind $w <Destroy> {set Priv(button) -1}
+    bind $w <Destroy> {set ::tk::Priv(button) -1}
 
     # 6. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
@@ -178,7 +178,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     catch {
 	# It's possible that the window has already been destroyed,
 	# hence this "catch".  Delete the Destroy handler so that
-	# tk::Priv(button) doesn't get reset by it.
+	# Priv(button) doesn't get reset by it.
 
 	bind $w <Destroy> {}
 	destroy $w
