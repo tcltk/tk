@@ -3,7 +3,7 @@
 # Synthesize tkConfig.sh for Mac OS X based
 # on tclConfig.sh and tkConfig.sh.in
 #
-# RCS: @(#) $Id: buildTkConfig.tcl,v 1.1 2002/09/26 17:07:33 das Exp $
+# RCS: @(#) $Id: buildTkConfig.tcl,v 1.1.2.1 2003/07/21 12:37:08 das Exp $
 #
 # the next line restarts using tclsh \
 exec tclsh8.4 "$0" "$@"
@@ -27,7 +27,7 @@ proc main {tclConfigFile tkConfigFileIn tkConfigFile} {
 		regsub -line -- "^TK_$var=.*\$" $tkConfig "TK_$var=$val" tkConfig
 	}
 	regsub -line -all -- {@[^@]+@} $tkConfig {} tkConfig
-	regsub -line -all -- {/[^/]+\.build/Tk.build} $tkConfig {} tkConfig
+	regsub -line -all -- {(/tk)/(?:Development|Deployment)} $tkConfig {\1} tkConfig
 	regsub -line {^(TK_DEFS=')} $tkConfig {\1 -DMAC_OSX_TK} tkConfig
 	
 	set out [open $tkConfigFile w]
