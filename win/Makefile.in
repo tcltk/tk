@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.32 2000/10/06 21:24:48 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.33 2000/10/31 00:52:28 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -369,7 +369,7 @@ $(ROOT_DIR)/doc/man.macros:
 doc: $(ROOT_DIR)/doc/man.macros
 
 winhelp: $(TCL_SRC_DIR_NATIVE)/../tools/man2help.tcl $(MAN2TCL)
-	TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/../library"; export TCL_LIBRARY; \
+	TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/library"; export TCL_LIBRARY; \
 	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
 	PATH="$(PATH):$(TCL_BIN_DIR)"; export PATH; \
 	$(TCLSH_PROG) "$(TCL_SRC_DIR_NATIVE)"/../tools/man2help.tcl tcl "$(VER)" $(CORE_DOCS)
@@ -385,14 +385,14 @@ $(MAN2TCL): $(TCL_SRC_DIR_NATIVE)/../tools/man2tcl.c
 #	% make test TESTFLAGS="-verbose bps -file fileName.test"
 
 test: binaries $(TKTEST)
-	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/../library"; export TCL_LIBRARY; \
+	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/library"; export TCL_LIBRARY; \
 	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
 	PATH="$(PATH):$(TCL_BIN_DIR)"; export PATH; \
 	./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/all.tcl" $(TESTFLAGS) \
 	| ./$(CAT32)
 
 runtest: tktest
-	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/../library"; export TCL_LIBRARY; \
+	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/library"; export TCL_LIBRARY; \
 	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
 	PATH="$(PATH):$(TCL_BIN_DIR)"; export PATH; \
 	./$(TKTEST) 
