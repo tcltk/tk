@@ -537,7 +537,7 @@ fi
 TK_VERSION=8.3
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=3
-TK_PATCH_LEVEL=".4"
+TK_PATCH_LEVEL=".5"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -1620,12 +1620,30 @@ echo "configure:1604: checking compiler flags" >&5
 	MAKE_EXE="\${CC} -o \$@"
 	LIBPREFIX="lib"
 
+	#if test "$ac_cv_cygwin" = "yes"; then
+	#    extra_cflags="-mno-cygwin"
+	#    extra_ldflags="-mno-cygwin"
+	#else
+	#    extra_cflags=""
+	#    extra_ldflags=""
+	#fi
+
 	if test "$ac_cv_cygwin" = "yes"; then
-	    extra_cflags="-mno-cygwin"
-	    extra_ldflags="-mno-cygwin"
+	  touch ac$$.c
+	  if ${CC} -c -mwin32 ac$$.c >/dev/null 2>&1; then
+	    case "$extra_cflags" in
+	      *-mwin32*) ;;
+	      *) extra_cflags="-mwin32 $extra_cflags" ;;
+	    esac
+	    case "$extra_ldflags" in
+	      *-mwin32*) ;;
+	      *) extra_ldflags="-mwin32 $extra_ldflags" ;;
+	    esac
+	  fi
+	  rm -f ac$$.o ac$$.c
 	else
-	    extra_cflags=""
-	    extra_ldflags=""
+	  extra_cflags=''
+	  extra_ldflags=''
 	fi
 
 	if test "${SHARED_BUILD}" = "0" ; then
@@ -1678,14 +1696,19 @@ echo "configure:1604: checking compiler flags" >&5
 	# Specify linker flags depending on the type of app being 
 	# built -- Console vs. Window.
 	#
+	# ORIGINAL COMMENT:
 	# We need to pass -e _WinMain@16 so that ld will use
 	# WinMain() instead of main() as the entry point. We can't
 	# use autoconf to check for this case since it would need
 	# to run an executable and that does not work when
 	# cross compiling. Remove this -e workaround once we
 	# require a gcc that does not have this bug.
+	#
+	# MK NOTE: Tk should use a different mechanism. This causes 
+	# interesting problems, such as wish dying at startup.
+	#LDFLAGS_WINDOW="-mwindows -e _WinMain@16 ${extra_ldflags}"
 	LDFLAGS_CONSOLE="-mconsole ${extra_ldflags}"
-	LDFLAGS_WINDOW="-mwindows -e _WinMain@16 ${extra_ldflags}"
+	LDFLAGS_WINDOW="-mwindows ${extra_ldflags}"
     else
 	if test "${SHARED_BUILD}" = "0" ; then
 	    # static
@@ -1787,7 +1810,7 @@ echo "configure:1604: checking compiler flags" >&5
 #--------------------------------------------------------------------
 
 echo $ac_n "checking how to run the C preprocessor""... $ac_c" 1>&6
-echo "configure:1791: checking how to run the C preprocessor" >&5
+echo "configure:1814: checking how to run the C preprocessor" >&5
 # On Suns, sometimes $CPP names a directory.
 if test -n "$CPP" && test -d "$CPP"; then
   CPP=
@@ -1802,13 +1825,13 @@ else
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp.
   cat > conftest.$ac_ext <<EOF
-#line 1806 "configure"
+#line 1829 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1812: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1835: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1819,13 +1842,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -E -traditional-cpp"
   cat > conftest.$ac_ext <<EOF
-#line 1823 "configure"
+#line 1846 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1829: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1852: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1836,13 +1859,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -nologo -E"
   cat > conftest.$ac_ext <<EOF
-#line 1840 "configure"
+#line 1863 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1846: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1869: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1868,17 +1891,17 @@ echo "$ac_t""$CPP" 1>&6
 
 ac_safe=`echo "errno.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for errno.h""... $ac_c" 1>&6
-echo "configure:1872: checking for errno.h" >&5
+echo "configure:1895: checking for errno.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1877 "configure"
+#line 1900 "configure"
 #include "confdefs.h"
 #include <errno.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1882: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1905: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1910,7 +1933,7 @@ fi
 
 
     echo $ac_n "checking for build with symbols""... $ac_c" 1>&6
-echo "configure:1914: checking for build with symbols" >&5
+echo "configure:1937: checking for build with symbols" >&5
     # Check whether --enable-symbols or --disable-symbols was given.
 if test "${enable_symbols+set}" = set; then
   enableval="$enable_symbols"
@@ -1919,17 +1942,36 @@ else
   tcl_ok=no
 fi
 
-
-    if test "$tcl_ok" = "yes"; then
-	CFLAGS_DEFAULT='$(CFLAGS_DEBUG)'
-	LDFLAGS_DEFAULT='$(LDFLAGS_DEBUG)'
-	DBGX=d
-	echo "$ac_t""yes" 1>&6
-    else
+# FIXME: Currently, LDFLAGS_DEFAULT is not used, it should work like CFLAGS_DEFAULT.
+    if test "$tcl_ok" = "no"; then
 	CFLAGS_DEFAULT='$(CFLAGS_OPTIMIZE)'
 	LDFLAGS_DEFAULT='$(LDFLAGS_OPTIMIZE)'
 	DBGX=""
 	echo "$ac_t""no" 1>&6
+    else
+	CFLAGS_DEFAULT='$(CFLAGS_DEBUG)'
+	LDFLAGS_DEFAULT='$(LDFLAGS_DEBUG)'
+	DBGX=g
+	if test "$tcl_ok" = "yes"; then
+	    echo "$ac_t""yes (standard debugging)" 1>&6
+	fi
+    fi
+    
+    
+
+    if test "$tcl_ok" = "mem" -o "$tcl_ok" = "all"; then
+	cat >> confdefs.h <<\EOF
+#define TCL_MEM_DEBUG 1
+EOF
+
+    fi
+
+    if test "$tcl_ok" != "yes" -a "$tcl_ok" != "no"; then
+	if test "$tcl_ok" = "all"; then
+	    echo "$ac_t""enabled symbols mem debugging" 1>&6
+	else
+	    echo "$ac_t""enabled $tcl_ok debugging" 1>&6
+	fi
     fi
 
 
@@ -1941,14 +1983,16 @@ TK_DBGX=${DBGX}
 
 
     echo $ac_n "checking the location of tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1945: checking the location of tclConfig.sh" >&5
+echo "configure:1987: checking the location of tclConfig.sh" >&5
 
     if test -d ../../tcl8.3$TK_PATCH_LEVEL/win;  then
 	TCL_BIN_DIR_DEFAULT=../../tcl8.3$TK_PATCH_LEVEL/win
-    else
+    elif test -d ../../tcl8.3/win;  then
 	TCL_BIN_DIR_DEFAULT=../../tcl8.3/win
+    else
+	TCL_BIN_DIR_DEFAULT=../../tcl/win
     fi
-    
+
     # Check whether --with-tcl or --without-tcl was given.
 if test "${with_tcl+set}" = set; then
   withval="$with_tcl"
@@ -1967,7 +2011,7 @@ fi
 
 
     echo $ac_n "checking for existence of $TCL_BIN_DIR/tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1971: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
+echo "configure:2015: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
     if test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
         echo "$ac_t""loading" 1>&6
@@ -1989,7 +2033,7 @@ echo "configure:1971: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
 
     echo $ac_n "checking for tclsh""... $ac_c" 1>&6
-echo "configure:1993: checking for tclsh" >&5
+echo "configure:2037: checking for tclsh" >&5
 
     if eval "test \"`echo '$''{'ac_cv_path_tclsh'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2324,6 +2368,8 @@ s%@CFLAGS_OPTIMIZE@%$CFLAGS_OPTIMIZE%g
 s%@CFLAGS_WARNING@%$CFLAGS_WARNING%g
 s%@CPP@%$CPP%g
 s%@MAN2TCLFLAGS@%$MAN2TCLFLAGS%g
+s%@CFLAGS_DEFAULT@%$CFLAGS_DEFAULT%g
+s%@LDFLAGS_DEFAULT@%$LDFLAGS_DEFAULT%g
 s%@TCL_BIN_DIR@%$TCL_BIN_DIR%g
 s%@TCL_SRC_DIR@%$TCL_SRC_DIR%g
 s%@TCL_LIB_FILE@%$TCL_LIB_FILE%g
@@ -2354,7 +2400,6 @@ s%@CFG_TK_UNSHARED_LIB_SUFFIX@%$CFG_TK_UNSHARED_LIB_SUFFIX%g
 s%@CFG_TK_EXPORT_FILE_SUFFIX@%$CFG_TK_EXPORT_FILE_SUFFIX%g
 s%@TK_SHARED_BUILD@%$TK_SHARED_BUILD%g
 s%@DEPARG@%$DEPARG%g
-s%@CFLAGS_DEFAULT@%$CFLAGS_DEFAULT%g
 s%@EXTRA_CFLAGS@%$EXTRA_CFLAGS%g
 s%@STLIB_LD@%$STLIB_LD%g
 s%@SHLIB_LD@%$SHLIB_LD%g
@@ -2363,7 +2408,6 @@ s%@SHLIB_CFLAGS@%$SHLIB_CFLAGS%g
 s%@SHLIB_SUFFIX@%$SHLIB_SUFFIX%g
 s%@CC_OBJNAME@%$CC_OBJNAME%g
 s%@CC_EXENAME@%$CC_EXENAME%g
-s%@LDFLAGS_DEFAULT@%$LDFLAGS_DEFAULT%g
 s%@LDFLAGS_DEBUG@%$LDFLAGS_DEBUG%g
 s%@LDFLAGS_OPTIMIZE@%$LDFLAGS_OPTIMIZE%g
 s%@LDFLAGS_CONSOLE@%$LDFLAGS_CONSOLE%g

@@ -22,10 +22,12 @@ AC_DEFUN(SC_PATH_TCLCONFIG, [
 
     if test -d ../../tcl8.3$1/win;  then
 	TCL_BIN_DIR_DEFAULT=../../tcl8.3$1/win
-    else
+    elif test -d ../../tcl8.3/win;  then
 	TCL_BIN_DIR_DEFAULT=../../tcl8.3/win
+    else
+	TCL_BIN_DIR_DEFAULT=../../tcl/win
     fi
-    
+
     AC_ARG_WITH(tcl, [  --with-tcl=DIR          use Tcl 8.3 binaries from DIR],
 	    TCL_BIN_DIR=$withval, TCL_BIN_DIR=`cd $TCL_BIN_DIR_DEFAULT; pwd`)
     if test ! -d $TCL_BIN_DIR; then
@@ -60,10 +62,12 @@ AC_DEFUN(SC_PATH_TKCONFIG, [
 
     if test -d ../../tk8.3$1/win;  then
 	TK_BIN_DIR_DEFAULT=../../tk8.3$1/win
-    else
+    elif test -d ../../tk8.3/win;  then
 	TK_BIN_DIR_DEFAULT=../../tk8.3/win
+    else
+	TK_BIN_DIR_DEFAULT=../../tk/win
     fi
-    
+
     AC_ARG_WITH(tk, [  --with-tk=DIR          use Tk 8.3 binaries from DIR],
 	    TK_BIN_DIR=$withval, TK_BIN_DIR=`cd $TK_BIN_DIR_DEFAULT; pwd`)
     if test ! -d $TK_BIN_DIR; then
@@ -310,20 +314,35 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 AC_DEFUN(SC_ENABLE_SYMBOLS, [
     AC_MSG_CHECKING([for build with symbols])
     AC_ARG_ENABLE(symbols, [  --enable-symbols        build with debugging symbols [--disable-symbols]],    [tcl_ok=$enableval], [tcl_ok=no])
-
-    if test "$tcl_ok" = "yes"; then
-	CFLAGS_DEFAULT='$(CFLAGS_DEBUG)'
-	LDFLAGS_DEFAULT='$(LDFLAGS_DEBUG)'
-	DBGX=d
-	AC_MSG_RESULT([yes])
-    else
+# FIXME: Currently, LDFLAGS_DEFAULT is not used, it should work like CFLAGS_DEFAULT.
+    if test "$tcl_ok" = "no"; then
 	CFLAGS_DEFAULT='$(CFLAGS_OPTIMIZE)'
 	LDFLAGS_DEFAULT='$(LDFLAGS_OPTIMIZE)'
 	DBGX=""
 	AC_MSG_RESULT([no])
+    else
+	CFLAGS_DEFAULT='$(CFLAGS_DEBUG)'
+	LDFLAGS_DEFAULT='$(LDFLAGS_DEBUG)'
+	DBGX=g
+	if test "$tcl_ok" = "yes"; then
+	    AC_MSG_RESULT([yes (standard debugging)])
+	fi
+    fi
+    AC_SUBST(CFLAGS_DEFAULT)
+    AC_SUBST(LDFLAGS_DEFAULT)
+
+    if test "$tcl_ok" = "mem" -o "$tcl_ok" = "all"; then
+	AC_DEFINE(TCL_MEM_DEBUG)
+    fi
+
+    if test "$tcl_ok" != "yes" -a "$tcl_ok" != "no"; then
+	if test "$tcl_ok" = "all"; then
+	    AC_MSG_RESULT([enabled symbols mem debugging])
+	else
+	    AC_MSG_RESULT([enabled $tcl_ok debugging])
+	fi
     fi
 ])
-
 
 #--------------------------------------------------------------------
 # SC_CONFIG_CFLAGS
@@ -413,12 +432,30 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	MAKE_EXE="\${CC} -o \[$]@"
 	LIBPREFIX="lib"
 
+	#if test "$ac_cv_cygwin" = "yes"; then
+	#    extra_cflags="-mno-cygwin"
+	#    extra_ldflags="-mno-cygwin"
+	#else
+	#    extra_cflags=""
+	#    extra_ldflags=""
+	#fi
+
 	if test "$ac_cv_cygwin" = "yes"; then
-	    extra_cflags="-mno-cygwin"
-	    extra_ldflags="-mno-cygwin"
+	  touch ac$$.c
+	  if ${CC} -c -mwin32 ac$$.c >/dev/null 2>&1; then
+	    case "$extra_cflags" in
+	      *-mwin32*) ;;
+	      *) extra_cflags="-mwin32 $extra_cflags" ;;
+	    esac
+	    case "$extra_ldflags" in
+	      *-mwin32*) ;;
+	      *) extra_ldflags="-mwin32 $extra_ldflags" ;;
+	    esac
+	  fi
+	  rm -f ac$$.o ac$$.c
 	else
-	    extra_cflags=""
-	    extra_ldflags=""
+	  extra_cflags=''
+	  extra_ldflags=''
 	fi
 
 	if test "${SHARED_BUILD}" = "0" ; then
@@ -471,14 +508,19 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	# Specify linker flags depending on the type of app being 
 	# built -- Console vs. Window.
 	#
+	# ORIGINAL COMMENT:
 	# We need to pass -e _WinMain@16 so that ld will use
 	# WinMain() instead of main() as the entry point. We can't
 	# use autoconf to check for this case since it would need
 	# to run an executable and that does not work when
 	# cross compiling. Remove this -e workaround once we
 	# require a gcc that does not have this bug.
+	#
+	# MK NOTE: Tk should use a different mechanism. This causes 
+	# interesting problems, such as wish dying at startup.
+	#LDFLAGS_WINDOW="-mwindows -e _WinMain@16 ${extra_ldflags}"
 	LDFLAGS_CONSOLE="-mconsole ${extra_ldflags}"
-	LDFLAGS_WINDOW="-mwindows -e _WinMain@16 ${extra_ldflags}"
+	LDFLAGS_WINDOW="-mwindows ${extra_ldflags}"
     else
 	if test "${SHARED_BUILD}" = "0" ; then
 	    # static

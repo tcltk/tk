@@ -1,4 +1,20 @@
+2002-10-15  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* README:
+	* generic/tk.h:
+	* mac/README:
+	* unix/README:
+	* unix/configure:
+	* unix/configure.in:
+	* unix/tcl.m4:
+	* unix/tk.spec:
+	* win/README:
+	* win/configure:
+	* win/configure.in:
+	* win/tcl.m4:
+
 2002-10-11  Joe English  <jenglish@flightlab.com>
+
 	* unix/tkUnixWm.c: (rev. 1.8.1.3) Backported changes for
 	TIP 107 ("Fix the 2-second raise delay") to core-8-3-1-branch 
 	[Patch #601518]

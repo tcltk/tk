@@ -3,7 +3,7 @@ Tk 8.3 for Macintosh
 Originally by Ray Johnson while at Sun Microsystems Labs
 with major help from Jim Ingham while at Cygnus Solutions
 
-RCS: @(#) $Id: README,v 1.13.2.2 2001/10/03 22:04:52 hobbs Exp $
+RCS: @(#) $Id: README,v 1.13.2.3 2002/10/16 01:05:57 hobbs Exp $
 
 1. Introduction
 ---------------
@@ -20,7 +20,7 @@ directory.
 There are several features or enhancements in Tk that are unique to 
 the Macintosh version of Tk.  The list of these features is
 maintained at
-	http://www.tcl-tk.net/software/mac/features.html
+	http://www.tcl.tk/software/mac/features.html
 
 4. The Distribution
 -------------------
