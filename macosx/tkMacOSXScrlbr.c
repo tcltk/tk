@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.3 2002/09/22 07:46:53 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.4 2002/10/03 06:24:54 wolfsuit Exp $
  */
 
 #include "tkScrollbar.h"
@@ -252,15 +252,12 @@ TkpDisplayScrollbar(
         procID = kControlScrollBarLiveProc;
 
         windowRef = GetWindowFromPort(destPort);
-        CreateScrollBarControl (windowRef, &r, initialValue,
+        CreateScrollBarControl(windowRef, &r, initialValue,
                                 minValue, maxValue,
                                 maxValue - minValue, true,
                                 NULL, &(macScrollPtr->sbHandle));
+        SetControlReference(macScrollPtr->sbHandle, (SInt32) scrollPtr);
         
-        /* macScrollPtr->sbHandle = NewControl(windowRef, &r, "\p",
-                false, initialValue,minValue,maxValue,
-                procID, (SInt32) scrollPtr); */
-
         /*
          * If we are foremost then make us active.
          */
@@ -366,8 +363,8 @@ TkpComputeScrollbarGeometry(
     if (fieldLength < 0) {
         fieldLength = 0;
     }
-    scrollPtr->sliderFirst = fieldLength*scrollPtr->firstFraction;
-    scrollPtr->sliderLast = fieldLength*scrollPtr->lastFraction;
+    scrollPtr->sliderFirst = fieldLength * scrollPtr->firstFraction;
+    scrollPtr->sliderLast = fieldLength * scrollPtr->lastFraction;
 
     /*
      * Adjust the slider so that some piece of it is always
