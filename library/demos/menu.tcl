@@ -3,7 +3,7 @@
 # This demonstration script creates a window with a bunch of menus
 # and cascaded menus using menubars.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.4 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.4.2.1 2005/01/18 11:51:04 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -116,14 +116,15 @@ $m invoke 7
 set m $w.menu.icon
 $w.menu add cascade -label "Icons" -menu $m -underline 0
 menu $m -tearoff 0
-$m add command \
-    -bitmap @[file join $tk_library demos images pattern.bmp] \
-    -hidemargin 1 \
-    -command {
-	tk_dialog .pattern {Bitmap Menu Entry} {The menu entry you invoked displays a bitmap rather than a text string.  Other than this, it is just like any other menu entry.} {} 0 OK
-}
+$m add command -bitmap @[file join $tk_library demos images pattern.bmp] \
+	-hidemargin 1 -command [list \
+	tk_dialog $w.pattern {Bitmap Menu Entry} \
+		"The menu entry you invoked displays a bitmap rather than\
+		a text string.  Other than this, it is just like any other\
+		menu entry." {} 0 OK ]
 foreach i {info questhead error} {
-    $m add command -bitmap $i -command "puts {You invoked the $i bitmap}" -hidemargin 1
+    $m add command -bitmap $i -hidemargin 1 -command [list \
+	    puts "You invoked the $i bitmap" ]
 }
 $m entryconfigure 2 -columnbreak 1
 
@@ -133,19 +134,20 @@ menu $m -tearoff 0
 foreach i {{An entry} {Another entry} {Does nothing} {Does almost nothing} {Make life meaningful}} {
     $m add command -label $i -command [list puts "You invoked \"$i\""]
 }
-$m entryconfigure "Does almost nothing" \
-	-bitmap questhead  -compound left  -command {
-    tk_dialog .compound {Compound Menu Entry} {The menu entry you invoked\
-	    displays both a bitmap and a text string.  Other than this, it\
-	    is just like any other menu entry.} {} 0 OK
+$m entryconfigure "Does almost nothing" -bitmap questhead -compound left \
+	-command [list \
+	tk_dialog $w.compound {Compound Menu Entry} \
+		"The menu entry you invoked displays both a bitmap and a\
+		text string.  Other than this, it is just like any other\
+		menu entry." {} 0 OK ]
 }
 
 set m $w.menu.colors
 $w.menu add cascade -label "Colors" -menu $m -underline 1
 menu $m
 foreach i {red orange yellow green blue} {
-    $m add command -label $i -background $i \
-	    -command [list puts "You invoked \"$i\""]
+    $m add command -label $i -background $i -command [list \
+	    puts "You invoked \"$i\"" ]
 }
 
 $w configure -menu $w.menu
