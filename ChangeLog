@@ -1,3 +1,9 @@
+2005-03-14  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* generic/tkEvent.c (InvokeClientMessageHandlers): Ensure that
+	client messages are handled correctly. Thanks to George Petasis
+	for tracking this down. [Bug 1162356]
+
 2005-03-11  Jim Ingham  <jingham@apple.com>
 
 	* macosx/tkMacOSXButton.c (TkpDisplayButton): Set the port to
@@ -6,8 +12,8 @@
 	Also, a little cleanup - move x & y into the branches where they are
 	used, and don't compute the TextAnchor if we are using the native 
 	button text, since we aren't going to use it.
-	(TkMacOSXDrawControl): Call ShowControl & SetControlVisibility in a more
-	logical order.
+	(TkMacOSXDrawControl): Call ShowControl & SetControlVisibility in a
+	more logical order.
 
 	* tkMacOSXInt.h: Add TkMacOSXGenerateFocusEvent.
 	* tkMacOSXSubwindows.c (XDestroyWindow): We don't get Activate events
@@ -21,9 +27,9 @@
 	
 2005-03-10  Jim Ingham  <jingham@apple.com>
 
-        * macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent): In
-        the inDrag section, set the GrafPort to the drag window's GrafPort
-        before doing LocalToGlobal. [Bug 1160025]
+	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent): In
+	the inDrag section, set the GrafPort to the drag window's GrafPort
+	before doing LocalToGlobal. [Bug 1160025]
 
 2005-03-09  Jim Ingham  <jingham@apple.com>
 
