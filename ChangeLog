@@ -1,3 +1,8 @@
+2001-10-09  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/console.tcl: added more smarts extracted from tkcon to
+	the default console.
+
 2001-10-01  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinTest.c: better error reporting from testclipboard
