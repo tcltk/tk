@@ -1,3 +1,21 @@
+2003-12-21  David Gravereaux <davygrvy@pobox.com>
+
+	* generic/tkEvent.c:  Added three new functions: TkCreateExitHandler,
+	* generic/tkInt.h:    TkDeleteExitHandler, and TkFinalize.  This adds
+	* generic/tkMenu.c:   an insertion point so Tk's exit handlers can be
+	* generic/tkWindow.c: called on their own from tk85.dll's DllMain
+	* mac/tkMacButton.c:  for DLL_PROCESS_DETACH.  These are private to
+	* unix/tkUnixEvent.c: the binary and not exported.  It is possible
+	* win/tkWin32Dll.c:   the Windows OS can unload Tk _prior_ to Tcl
+	* win/tkWinEmbed.c:   under some conditions such as ExitProcess().
+	* win/tkWinMenu.c:    This avoids a dangling pointer problem when Tcl
+	* win/tkWinX.c:	      does Tcl_Finalize after Tk has been unloaded.
+	* win/winMain.c:      DllMain's DLL_PROCESS_DETACH now protected with
+			      SEH as DeleteWindowsExitProc is causing an
+			      exception of its own under some teardown
+			      conditions.  AT&T assembly syntax has not been
+			      added for MinGW yet.  [Tcl Patch 858493]
+
 2003-12-20  Joe English  <jenglish@users.sourceforge.net>
 	* library/bgerror.tcl: Truncate displayed error message
 	if it's too long (fixes: #231251)
