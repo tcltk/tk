@@ -1,5 +1,8 @@
 2004-07-14  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkUndo.c (TkUndoSetDepth): correct -maxundo
+	segfault. [Bug #969358] (jiangwu)
+
 	* generic/tk.h (TK_PATCH_LEVEL): 
 	* README, macosx/Wish.pbproj/project.pbxproj:      bumped to
 	* unix/configure, unix/configure.in, unix/tk.spec: patchlevel 8.4.7
