@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.24 2004/05/05 16:49:53 hobbs Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.25 2004/08/09 23:45:58 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -764,7 +764,7 @@ Tk_MeasureChars(
 
         end = p;
         p = source;
-        ch = 0;
+        ch = ' ';
         while (p < end) {
             next = p + Tcl_UtfToUniChar(p, &ch2);
             if ((ch != ' ') && (ch2 == ' ')) {

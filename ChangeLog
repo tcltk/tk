@@ -1,3 +1,13 @@
+2004-08-09  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* tests/canvText.test:
+	* win/tkWinFont.c (Tk_MeasureChars): Fix for text
+	wrapping problem that appeared using canvas text
+	under Win32. A long wrapping string that had
+	leading spaces was being incorrectly wrapped.
+	This change makes the Win32 implementation behave
+	the same as the Unix implementation. [Patch 1006286]
+
 2004-08-05  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/clrpick.tcl (BuildDialog): 

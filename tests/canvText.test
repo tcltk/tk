@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvText.test,v 1.14 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: canvText.test,v 1.15 2004/08/09 23:45:57 mdejong Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -512,6 +512,61 @@ test canvText-18.1 {bug fix 2525, find enclosed on text with newlines} {
     update
     .c find enclosed 99 99 [expr $x2 + $i] [expr $y2 + 1]
 } 1
+
+test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} {
+    catch {destroy .c}
+    set c [canvas .c -bg black -width 964]
+    pack $c
+    $c delete all
+    after 1000 "set done 1" ; vwait done
+
+    set f {Arial 28 bold}
+
+    set s1 {    Yeah-ah-ah-ah-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-Yow}
+    set s2 {    Yeah ah ah ah oh oh oh oh oh oh oh oh oh oh oh oh oh oh oh oh Yow}
+
+    $c create text 21 18 \
+        -font $f \
+        -text $s1 \
+        -fill white \
+        -width 922 \
+        -anchor nw \
+        -tags tbox1
+    eval {$c create rect} [$c bbox tbox1] -outline red
+
+    $c create text 21 160 \
+        -font $f \
+        -text $s2 \
+        -fill white \
+        -width 922 \
+        -anchor nw \
+        -tags tbox2
+    eval {$c create rect} [$c bbox tbox2] -outline red
+
+    after 1000 "set done 1" ; vwait done
+
+    set results [list]
+
+    $c select from tbox2 4
+    $c select to tbox2 8
+    lappend results [selection get]
+
+    $c select from tbox1 4
+    $c select to tbox1 8
+    lappend results [selection get]
+
+    array set metrics [font metrics $f]
+    set x [expr {21 + [font measure $f "    "] \
+        + ([font measure {Arial 28 bold} "Y"] / 2)}]
+    set y1 [expr {18 + ($metrics(-linespace) / 2)}]
+    set y2 [expr {160 + ($metrics(-linespace) / 2)}]
+    
+    lappend results [$c index tbox1 @$x,$y1]
+    lappend results [$c index tbox2 @$x,$y2]
+
+    set results
+} {{Yeah } Yeah- 4 4}
+
 
 # cleanup
 cleanupTests
