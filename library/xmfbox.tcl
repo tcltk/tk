@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.13 2000/06/30 06:38:39 ericm Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.14 2000/06/30 20:19:07 ericm Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Scriptics Corporation
@@ -217,9 +217,12 @@ proc tkMotifFDialog_Config {dataName type argList} {
 	{-initialfile "" "" ""}
 	{-parent "" "" "."}
 	{-title "" "" ""}
-	{-multiple "" "" "0"}
+    }
+    if { [string equal $type "open"] } {
+	lappend specs {-multiple "" "" "0"}
     }
 
+    set data(-multiple) 0
     # 2: default values depending on the type of the dialog
     #
     if {![info exists data(selectPath)]} {

@@ -1,3 +1,16 @@
+2000-06-30  Eric Melski  <ericm@scriptics.com>
+
+	* tests/filebox.test: Adjusted tests to accomodate -multiple.
+
+	* library/xmfbox.tcl: Adjusted arguments list construction such
+	that -multiple is not presented as an option for tk_getSaveFile.
+
+	* library/tk.tcl: Added test for safe interpreter status before
+	attempting to load message catalogs (which is impossible in a
+	standard safe interpreter).  This means that SafeTk will not have
+	localized dialogs, unless a means is found for loading the message
+	catalog files.
+
 2000-06-29  Eric Melski  <ericm@scriptics.com>
 
 	* library/msgs/de.msg: German message catalog.

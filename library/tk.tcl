@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.23 2000/06/30 06:38:38 ericm Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.24 2000/06/30 20:19:06 ericm Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -17,7 +17,9 @@
 package require -exact Tk 8.4
 package require -exact Tcl 8.4
 package require msgcat
-::msgcat::mcload [file join $::tk_library msgs]
+if { ![interp issafe] } {
+    ::msgcat::mcload [file join $::tk_library msgs]
+}
 
 # Add Tk's directory to the end of the auto-load search path, if it
 # isn't already on the path:

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: filebox.test,v 1.9 2000/03/24 19:38:57 ericm Exp $
+# RCS: @(#) $Id: filebox.test,v 1.10 2000/06/30 20:19:07 ericm Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
@@ -105,7 +105,8 @@ if {$tcl_platform(platform) == "unix"} {
     set modes 1
 }
 
-set unknownOptionsMsg {1 {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -parent, or -title}}
+set unknownOptionsMsg(tk_getOpenFile) {1 {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -multiple, -parent, or -title}}
+set unknownOptionsMsg(tk_getSaveFile) {1 {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -parent, or -title}}
 
 set tmpFile "filebox.tmp"
 makeFile {
@@ -130,7 +131,7 @@ foreach mode $modes {
     foreach command "tk_getOpenFile tk_getSaveFile" {
 	test filebox-1.1 "$command command" {
 	    list [catch {$command -foo} msg] $msg
-	} $unknownOptionsMsg
+	} $unknownOptionsMsg($command)
 
 	catch {$command -foo 1} msg
 	regsub -all ,      $msg "" options
@@ -146,7 +147,7 @@ foreach mode $modes {
 
 	test filebox-1.3 "$command command" {
 	    list [catch {$command -foo bar} msg] $msg
-	} $unknownOptionsMsg
+	} $unknownOptionsMsg($command)
 
 	test filebox-1.4 "$command command" {
 	    list [catch {$command -initialdir} msg] $msg
