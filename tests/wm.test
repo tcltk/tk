@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.27 2004/06/24 12:45:44 dkf Exp $
+# RCS: @(#) $Id: wm.test,v 1.28 2004/09/19 00:10:25 hobbs Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -129,7 +129,7 @@ test wm-attributes-1.1 {usage} {
 
 test wm-attributes-1.2.1 {usage} win {
     list [catch {wm attributes . _} err] $err
-} {1 {wrong # args: should be "wm attributes window ?-disabled ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}}
+} {1 {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-disabled ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}}
 
 test wm-attributes-1.2.2 {usage} unix {
     list [catch {wm attributes . _} err] $err
