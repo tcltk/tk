@@ -2,7 +2,7 @@
 #
 # This file contains procedures that implement tear-off menus.
 #
-# RCS: @(#) $Id: tearoff.tcl,v 1.7 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: tearoff.tcl,v 1.8 2003/05/27 23:44:36 vincentdarley Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -37,6 +37,11 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
     }
     if {$y == 0} {
     	set y [winfo rooty $w]
+	if {[tk windowingsystem] eq "macintosh" \
+		|| [tk windowingsystem] eq "aqua"} {
+	    # Avoid the native menu bar which sits on top of everything.
+	    if {$y < 20} { set y 20 }
+	}
     }
 
     set parent [winfo parent $w]
