@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.2 2002/08/31 06:12:30 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3 2002/10/16 19:44:05 das Exp $
  */
 
 #include "tkInt.h"
@@ -72,7 +72,7 @@ static Map scriptMap[] = {
 
 Tcl_Encoding TkMacOSXCarbonEncoding = NULL;
 
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -111,6 +111,7 @@ TkpInit(interp)
         Tk_MacOSXSetupTkNotifier();
         TkMacOSXInitAppleEvents(interp);
         TkMacOSXInitMenus(interp);
+        TkMacOSXUseAntialiasedText(interp, TRUE);
     }
  
     if (carbonEncodingInitialized == false) {
