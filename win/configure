@@ -2639,6 +2639,7 @@ echo "${ECHO_T}using static flags" >&6
 	    runtime=
 	    MAKE_DLL="echo "
 	    LIBSUFFIX="s\${DBGX}.a"
+	    LIBFLAGSUFFIX="s\${DBGX}"
 	    LIBRARIES="\${STATIC_LIBRARIES}"
 	    EXESUFFIX="s\${DBGX}.exe"
 	else
@@ -2666,6 +2667,7 @@ echo "$as_me: error: ${CC} does not support the -shared option.
 	        -Wl,--out-implib,\$(patsubst %.dll,lib%.a,\$@)"
 
 	    LIBSUFFIX="\${DBGX}.a"
+	    LIBFLAGSUFFIX="\${DBGX}"
 	    EXESUFFIX="\${DBGX}.exe"
 	    LIBRARIES="\${SHARED_LIBRARIES}"
 	fi
@@ -2710,6 +2712,7 @@ echo "${ECHO_T}using static flags" >&6
 	    runtime=-MT
 	    MAKE_DLL="echo "
 	    LIBSUFFIX="s\${DBGX}.lib"
+	    LIBFLAGSUFFIX="s\${DBGX}"
 	    LIBRARIES="\${STATIC_LIBRARIES}"
 	    EXESUFFIX="s\${DBGX}.exe"
 	    SHLIB_LD_LIBS=""
@@ -2721,6 +2724,7 @@ echo "${ECHO_T}using shared flags" >&6
 	    # Add SHLIB_LD_LIBS to the Make rule, not here.
 	    MAKE_DLL="\${SHLIB_LD} \$(LDFLAGS) -out:\$@"
 	    LIBSUFFIX="\${DBGX}.lib"
+	    LIBFLAGSUFFIX="\${DBGX}"
 	    EXESUFFIX="\${DBGX}.exe"
 	    LIBRARIES="\${SHARED_LIBRARIES}"
 	    SHLIB_LD_LIBS='${LIBS}'
@@ -3641,7 +3645,7 @@ eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}"
 # I left out the other vars that also need to get defined here.
 # we also need to double check about including DBGX in lib names
 # and spaces in file or directory names for the eval
-eval "TK_STUB_LIB_FLAG=\"-ltkstub${VER}${TCL_DBGX}\""
+eval "TK_STUB_LIB_FLAG=\"-ltkstub${VER}${LIBFLAGSUFFIX}\""
 eval "TK_BUILD_STUB_LIB_SPEC=\"-L`pwd` ${TK_STUB_LIB_FLAG}\""
 
 eval "DLLSUFFIX=${DLLSUFFIX}"
