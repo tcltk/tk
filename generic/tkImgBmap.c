@@ -5,11 +5,12 @@
  *
  * Copyright (c) 1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1999 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.6 1999/04/16 01:51:15 stanton Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.7 1999/04/17 02:35:37 rjohnson Exp $
  */
 
 #include "tkInt.h"
@@ -630,8 +631,10 @@ TkGetBitmapData(interp, string, fileName, widthPtr, heightPtr,
     return data;
 
     error:
-    Tcl_SetResult(interp, "format error in bitmap data", TCL_STATIC);
-
+    if (interp != NULL) {
+	Tcl_SetResult(interp, "format error in bitmap data", TCL_STATIC);
+    }
+    
     errorCleanup:
     if (data != NULL) {
 	ckfree(data);

@@ -9,11 +9,12 @@
  *
  * Copyright (c) 1992-1994 The Regents of the University of California.
  * Copyright (c) 1994-1996 Sun Microsystems, Inc.
+ * Copyright (c) 1999 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.4 1999/04/17 02:31:20 rjohnson Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.5 1999/04/17 02:35:38 rjohnson Exp $
  */
 
 #include "default.h"
