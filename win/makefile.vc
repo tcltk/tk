@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.53 2002/03/28 23:23:03 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.54 2002/03/28 23:29:44 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -527,8 +527,8 @@ $(TKLIB): $(TKOBJS)
 $**
 <<
 !else
-	$(link32) $(ldebug) $(dlllflags) -base:@$(COFFBASE),tk -out:$@ \
-		$(guilibs) $(TCLSTUBLIB) @<<
+	$(link32) $(dlllflags) -base:@$(COFFBASE),tk -out:$@ $(guilibs) \
+		$(TCLSTUBLIB) @<<
 $**
 <<
 	-@del $*.exp
@@ -540,13 +540,13 @@ $(TKSTUBLIB): $(TKSTUBOBJS)
 
 
 $(WISH): $(WISHOBJS) $(TKIMPLIB)
-	$(link32) $(ldebug) $(guilflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
+	$(link32) $(guilflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
 
 $(WISHC): $(WISHOBJS) $(TKIMPLIB)
-	$(link32) $(ldebug) $(conlflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
+	$(link32) $(conlflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
 
 $(TKTEST): $(TKTESTOBJS) $(TKIMPLIB)
-	$(link32) $(ldebug) $(guilflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
+	$(link32) $(guilflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
 
 
 $(CAT32): $(TCLDIR)\win\cat.c
