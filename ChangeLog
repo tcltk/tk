@@ -1,3 +1,8 @@
+2003-07-16  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkPack.c (ConfigureSlaves): silence compiler warning
+	[Bug 771982]
+
 2003-07-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinImage.c (XGetImage): correct init of biSizeImage in
