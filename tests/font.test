@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: font.test,v 1.10 2004/03/17 18:15:49 das Exp $
+# RCS: @(#) $Id: font.test,v 1.11 2004/05/23 17:34:48 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -672,54 +672,70 @@ test font-21.9 {Tk_PostscriptFontName procedure: spaces} {unixOnly} {
 } {NewCenturySchlbk-Roman}
 set i 10
 foreach p {
-    {"avantgarde" AvantGarde-Book AvantGarde-Demi AvantGarde-BookOblique AvantGarde-DemiOblique}
-    {"bookman" Bookman-Light Bookman-Demi Bookman-LightItalic Bookman-DemiItalic}
-    {"courier" Courier Courier-Bold Courier-Oblique Courier-BoldOblique}
-    {"helvetica" Helvetica Helvetica-Bold Helvetica-Oblique Helvetica-BoldOblique}
-    {"new century schoolbook" NewCenturySchlbk-Roman NewCenturySchlbk-Bold NewCenturySchlbk-Italic NewCenturySchlbk-BoldItalic}
-    {"palatino" Palatino-Roman Palatino-Bold Palatino-Italic Palatino-BoldItalic}
-    {"symbol" Symbol Symbol Symbol Symbol}
-    {"times" Times-Roman Times-Bold Times-Italic Times-BoldItalic}
-    {"zapfchancery" ZapfChancery-MediumItalic ZapfChancery-MediumItalic ZapfChancery-MediumItalic ZapfChancery-MediumItalic}
-    {"zapfdingbats" ZapfDingbats ZapfDingbats ZapfDingbats ZapfDingbats}
+    {font-21.10 "avantgarde"
+	    AvantGarde-Book AvantGarde-Demi
+	    AvantGarde-BookOblique AvantGarde-DemiOblique}
+    {font-21.11 "bookman"
+	    Bookman-Light Bookman-Demi Bookman-LightItalic Bookman-DemiItalic}
+    {font-21.12 "courier"
+	    Courier Courier-Bold Courier-Oblique Courier-BoldOblique}
+    {font-21.13 "helvetica"
+	    Helvetica Helvetica-Bold Helvetica-Oblique Helvetica-BoldOblique}
+    {font-21.14 "new century schoolbook"
+	    NewCenturySchlbk-Roman NewCenturySchlbk-Bold
+	    NewCenturySchlbk-Italic NewCenturySchlbk-BoldItalic}
+    {font-21.15 "palatino"
+	    Palatino-Roman Palatino-Bold Palatino-Italic Palatino-BoldItalic}
+    {font-21.16 "symbol"
+	    Symbol Symbol Symbol Symbol}
+    {font-21.17 "times"
+	    Times-Roman Times-Bold Times-Italic Times-BoldItalic}
+    {font-21.18 "zapfchancery"
+	    ZapfChancery-MediumItalic ZapfChancery-MediumItalic
+	    ZapfChancery-MediumItalic ZapfChancery-MediumItalic}
+    {font-21.19 "zapfdingbats"
+	    ZapfDingbats ZapfDingbats ZapfDingbats ZapfDingbats}
 } {
-    test font-21.$i {Tk_PostscriptFontName procedure: exhaustive} {unixOnly} {
-	set family [lindex $p 0]
+    set values [lassign $p testName family]
+    test $testName {Tk_PostscriptFontName procedure: exhaustive} unixOnly {
 	set x {}
-	set i 1
+	set j 0
 	foreach slant {roman italic} {
 	    foreach weight {normal bold} {
 		set name [list $family 12 $slant $weight]
 		if {[font actual $name -family] == $family} {
 		    lappend x [psfontname $name]
 		} else {
-		    lappend x [lindex $p $i]
+		    lappend x [lindex $values $j]
 		}
-		incr i
+		incr j
 	    }
 	}
-        incr i
 	set x
-    } [lrange $p 1 end]
+    } $values
 }
 foreach p {
-    {"arial" Helvetica Helvetica-Bold Helvetica-Oblique Helvetica-BoldOblique}
-    {"courier new" Courier Courier-Bold Courier-Oblique Courier-BoldOblique}
-    {"helvetica" Helvetica Helvetica-Bold Helvetica-Oblique Helvetica-BoldOblique}
-    {"symbol" Symbol Symbol-Bold Symbol-Italic Symbol-BoldItalic}
-    {"times new roman" Times-Roman Times-Bold Times-Italic Times-BoldItalic}
+    {font-21.20 "arial"
+	    Helvetica Helvetica-Bold Helvetica-Oblique Helvetica-BoldOblique}
+    {font-21.21 "courier new"
+	    Courier Courier-Bold Courier-Oblique Courier-BoldOblique}
+    {font-21.22 "helvetica"
+	    Helvetica Helvetica-Bold Helvetica-Oblique Helvetica-BoldOblique}
+    {font-21.23 "symbol"
+	    Symbol Symbol-Bold Symbol-Italic Symbol-BoldItalic}
+    {font-21.24 "times new roman"
+	    Times-Roman Times-Bold Times-Italic Times-BoldItalic}
 } {
-    test font-21.$i {Tk_PostscriptFontName procedure: exhaustive} {pcOnly} {
-	set family [lindex $p 0]
+    set values [lassign $p testName family]
+    test $testName {Tk_PostscriptFontName procedure: exhaustive} pcOnly {
 	set x {}
 	foreach slant {roman italic} {
 	    foreach weight {normal bold} {
 		lappend x [psfontname [list $family 12 "$slant $weight"]]
 	    }
 	}
-        incr i
 	set x
-    } [lrange $p 1 end]
+    } $values
 }
 
 test font-22.1 {Tk_TextWidth procedure} {
@@ -1115,48 +1131,47 @@ test font-32.1 {Tk_TextLayoutToPostscript: ensure buffer doesn't overflow} {
 test font-33.1 {Tk_TextWidth procedure} {
 } {}
 
-test font-33.2 {ConfigAttributesObj procedure: arguments} {
+test font-34.1 {ConfigAttributesObj procedure: arguments} {
     # (Tcl_GetIndexFromObj() != TCL_OK)
     setup
     list [catch {font create xyz -xyz} msg] $msg
 } {1 {bad option "-xyz": must be -family, -size, -weight, -slant, -underline, or -overstrike}}
-test font-34.1 {ConfigAttributesObj procedure: arguments} {
+test font-34.2 {ConfigAttributesObj procedure: arguments} {
     # (objc & 1)
     setup
     list [catch {font create xyz -family} msg] $msg
 } {1 {value for "-family" option missing}}
-set i 3
 foreach p {
-    {family xyz times}
-    {size 20 40}
-    {weight normal bold}
-    {slant roman italic}
-    {underline 0 1}
-    {overstrike 0 1}
+    {font-34.3 family xyz times}
+    {font-34.4 size 20 40}
+    {font-34.5 weight normal bold}
+    {font-34.6 slant roman italic}
+    {font-34.7 underline 0 1}
+    {font-34.8 overstrike 0 1}
 } {
-    set opt [lindex $p 0]
-    test font-34.$i "ConfigAttributesObj procedure: $opt" {
+    lassign $p testName opt val1 val2
+    test $testName "ConfigAttributesObj procedure: $opt" {
 	setup
 	set x {}
-	font create xyz -$opt [lindex $p 1]
+	font create xyz -$opt $val1
 	lappend x [font config xyz -$opt]
-	font config xyz -$opt [lindex $p 2]
+	font config xyz -$opt $val2
 	lappend x [font config xyz -$opt]
-    } [lrange $p 1 2]
-    incr i
+    } [list $val1 $val2]
 }
 foreach p {
-    {size	xyz {1 {expected integer but got "xyz"}}}
-    {weight	xyz {1 {bad -weight value "xyz": must be normal, or bold}}}
-    {slant	xyz {1 {bad -slant value "xyz": must be roman, or italic}}}
-    {underline	xyz {1 {expected boolean value but got "xyz"}}}
-    {overstrike	xyz {1 {expected boolean value but got "xyz"}}}
+    {font-34.9  size   xyz {expected integer but got "xyz"}}
+    {font-34.10 weight xyz {bad -weight value "xyz": must be normal, or bold}}
+    {font-34.11 slant  xyz {bad -slant value "xyz": must be roman, or italic}}
+    {font-34.12 underline  xyz {expected boolean value but got "xyz"}}
+    {font-34.13 overstrike xyz {expected boolean value but got "xyz"}}
 } {
-    test font-34.$i "ConfigAttributesObj procedure: [lindex $p 0]" {
+    lassign $p testName opt val result
+    test $testName "ConfigAttributesObj procedure: $opt" -setup {
 	setup
-	list [catch {font create xyz -[lindex $p 0] [lindex $p 1]} msg] $msg
-    } [lindex $p 2]
-    incr i
+    } -body {
+	font create xyz -$opt $val
+    } -returnCodes error -result $result
 }
 
 test font-35.1 {GetAttributeInfoObj procedure: one attribute} {
@@ -1165,12 +1180,14 @@ test font-35.1 {GetAttributeInfoObj procedure: one attribute} {
     font create xyz -family xyz
     font config xyz -family
 } {xyz}
+
 test font-36.1 {GetAttributeInfoObj procedure: unknown attribute} {
     # (Tcl_GetIndexFromObj() != TCL_OK)
     setup
     font create xyz
     list [catch {font config xyz -xyz} msg] $msg
 } {1 {bad option "-xyz": must be -family, -size, -weight, -slant, -underline, or -overstrike}}
+
 test font-37.1 {GetAttributeInfoObj procedure: all attributes} {
     # not (objPtr != NULL) 
     setup
@@ -1179,19 +1196,20 @@ test font-37.1 {GetAttributeInfoObj procedure: all attributes} {
 } {-family xyz -size 0 -weight normal -slant roman -underline 0 -overstrike 0}
 set i 4
 foreach p {
-    {family	xyz	xyz}
-    {size	20	20}
-    {weight	normal	normal}
-    {slant	italic	italic}
-    {underline	yes	1}
-    {overstrike	false	0}
+    {font-37.2 family     xyz    xyz}
+    {font-37.3 size       20     20}
+    {font-37.4 weight     normal normal}
+    {font-37.5 slant      italic italic}
+    {font-37.6 underline  yes    1}
+    {font-37.7 overstrike false  0}
 } {
-    test font-31.$i "GetAttributeInfo procedure: [lindex $p 0]" {
+    lassign $p testName opt val expected
+    test $testName "GetAttributeInfo procedure: $opt" -setup {
 	setup
-	font create xyz -[lindex $p 0] [lindex $p 1]
-	font config xyz -[lindex $p 0]
-    } [lindex $p 2]
-    incr i
+    } -body {
+	font create xyz -$opt $val
+	font config xyz -$opt
+    } -result $expected
 }
 
 # In tests below, one field is set to "xyz" so that font name doesn't
@@ -1319,16 +1337,3 @@ destroy .b
 # cleanup
 cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

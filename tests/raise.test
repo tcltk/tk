@@ -8,7 +8,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: raise.test,v 1.8 2003/04/01 21:06:50 dgp Exp $
+# RCS: @(#) $Id: raise.test,v 1.9 2004/05/23 17:34:49 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -289,16 +289,3 @@ deleteWindows
 # cleanup
 cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: choosedir.test,v 1.11 2003/04/01 21:06:19 dgp Exp $
+# RCS: @(#) $Id: choosedir.test,v 1.12 2004/05/23 17:34:48 dkf Exp $
 #
 
 package require tcltest 2.1
@@ -89,7 +89,7 @@ set real [file join $dir choosedirTest]
 set parent .
 
 foreach opt {-initialdir -mustexist -parent -title} {
-    test choosedir-1.1 "tk_chooseDirectory command" unixOnly {
+    test choosedir-1.1$opt "tk_chooseDirectory command" unixOnly {
 	list [catch {tk_chooseDirectory $opt} msg] $msg
     } [list 1 "value for \"$opt\" missing"]
 }
