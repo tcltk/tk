@@ -3,7 +3,7 @@
 #	Some functions needed for the common dialog boxes. Probably need to go
 #	in a different file.
 #
-# RCS: @(#) $Id: comdlg.tcl,v 1.9 2003/02/21 13:32:14 dkf Exp $
+# RCS: @(#) $Id: comdlg.tcl,v 1.10 2005/04/05 13:56:35 dgp Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -279,6 +279,15 @@ proc ::tk::FDGetFileTypes {string} {
 	    continue
 	}
 
+	# Validate each macType.  This is to agree with the 
+	# behaviour of TkGetFileFilters().  This list may be
+	# empty.
+	foreach macType [lindex $t 2] {
+	    if {[string length $macType] != 4} {
+		error "bad Macintosh file type \"$macType\""
+	    }
+	}
+	
 	set name "$label ("
 	set sep ""
 	set doAppend 1
