@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkRectOval.c,v 1.5 2000/01/12 11:45:03 hobbs Exp $
+ * RCS: @(#) $Id: tkRectOval.c,v 1.6 2000/02/01 11:41:10 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -439,7 +439,7 @@ ConfigureRectOval(interp, canvas, itemPtr, argc, argv, flags)
      */
 
     if (rectOvalPtr->outline.activeWidth > rectOvalPtr->outline.width ||
-	    rectOvalPtr->outline.activeDash.number > 0 ||
+	    rectOvalPtr->outline.activeDash.number != 0 ||
 	    rectOvalPtr->outline.activeColor != NULL ||
 	    rectOvalPtr->outline.activeStipple != None ||
 	    rectOvalPtr->activeFillColor != NULL ||

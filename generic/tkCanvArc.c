@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvArc.c,v 1.7 1999/12/14 06:52:25 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvArc.c,v 1.8 2000/02/01 11:41:09 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -482,7 +482,7 @@ ConfigureArc(interp, canvas, itemPtr, argc, argv, flags)
      */
 
     if (arcPtr->outline.activeWidth > arcPtr->outline.width ||
-	    arcPtr->outline.activeDash.number > 0 ||
+	    arcPtr->outline.activeDash.number != 0 ||
 	    arcPtr->outline.activeColor != NULL ||
 	    arcPtr->outline.activeStipple != None ||
 	    arcPtr->activeFillColor != NULL ||
@@ -842,17 +842,17 @@ DisplayArc(canvas, itemPtr, display, drawable, x, y, width, height)
 	if (arcPtr->outline.activeWidth>lineWidth) {
 	    lineWidth = arcPtr->outline.activeWidth;
 	}
-	if (arcPtr->outline.activeDash.number>0) {
+	if (arcPtr->outline.activeDash.number != 0) {
 	    dashnumber = arcPtr->outline.activeDash.number;
 	}
 	if (arcPtr->activeFillStipple != None) {
 	    stipple = arcPtr->activeFillStipple;
 	}
     } else if (state==TK_STATE_DISABLED) {
-	if (arcPtr->outline.disabledWidth>0) {
+	if (arcPtr->outline.disabledWidth > 0) {
 	    lineWidth = arcPtr->outline.disabledWidth;
 	}
-	if (arcPtr->outline.disabledDash.number>0) {
+	if (arcPtr->outline.disabledDash.number != 0) {
 	    dashnumber = arcPtr->outline.disabledDash.number;
 	}
 	if (arcPtr->disabledFillStipple != None) {
@@ -931,7 +931,7 @@ DisplayArc(canvas, itemPtr, display, drawable, x, y, width, height)
 	 * the outline is dashed, because then polygons don't work.
 	 */
 
-	if (lineWidth < 1.5 || dashnumber > 0) {
+	if (lineWidth < 1.5 || dashnumber != 0) {
 	    Tk_CanvasDrawableCoords(canvas, arcPtr->center1[0],
 		    arcPtr->center1[1], &x1, &y1);
 	    Tk_CanvasDrawableCoords(canvas, arcPtr->center2[0],

@@ -18,7 +18,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.10 1999/12/22 20:01:07 hobbs Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.11 2000/02/01 11:41:10 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -531,7 +531,7 @@ DestroyScale(memPtr)
     scalePtr->flags |= SCALE_DELETED;
 
     Tcl_DeleteCommandFromToken(scalePtr->interp, scalePtr->widgetCmd);
-    if (scalePtr->flags & REDRAW_ALL) {
+    if (scalePtr->flags & REDRAW_PENDING) {
 	Tcl_CancelIdleCall(TkpDisplayScale, (ClientData) scalePtr);
     }
 
@@ -1147,20 +1147,21 @@ TkRoundToResolution(scalePtr, value)
     TkScale *scalePtr;		/* Information about scale widget. */
     double value;		/* Value to round. */
 {
-    double rem, new;
+    double rem, new, tick;
 
     if (scalePtr->resolution <= 0) {
 	return value;
     }
-    new = scalePtr->resolution * floor(value/scalePtr->resolution);
+    tick = floor(value/scalePtr->resolution);
+    new = scalePtr->resolution * tick;
     rem = value - new;
     if (rem < 0) {
 	if (rem <= -scalePtr->resolution/2) {
-	    new -= scalePtr->resolution;
+	    new = (tick - 1.0) * scalePtr->resolution;
 	}
     } else {
 	if (rem >= scalePtr->resolution/2) {
-	    new += scalePtr->resolution;
+	    new = (tick + 1.0) * scalePtr->resolution;
 	}
     }
     return new;

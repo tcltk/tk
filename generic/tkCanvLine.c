@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.6 2000/01/21 03:54:41 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.7 2000/02/01 11:41:09 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -514,7 +514,7 @@ ConfigureLine(interp, canvas, itemPtr, argc, argv, flags)
     }
 
     if (linePtr->outline.activeWidth > linePtr->outline.width ||
-	    linePtr->outline.activeDash.number > 0 ||
+	    linePtr->outline.activeDash.number != 0 ||
 	    linePtr->outline.activeColor != NULL ||
 	    linePtr->outline.activeStipple != None) {
 	itemPtr->redraw_flags |= TK_ITEM_STATE_DEPENDANT;

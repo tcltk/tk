@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.4 1999/12/14 06:52:26 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvPoly.c,v 1.5 2000/02/01 11:41:09 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -464,7 +464,7 @@ ConfigurePolygon(interp, canvas, itemPtr, argc, argv, flags)
     state = itemPtr->state;
 
     if (polyPtr->outline.activeWidth > polyPtr->outline.width ||
-	    polyPtr->outline.activeDash.number > 0 ||
+	    polyPtr->outline.activeDash.number != 0 ||
 	    polyPtr->outline.activeColor != NULL ||
 	    polyPtr->outline.activeStipple != None ||
 	    polyPtr->activeFillColor != NULL ||
