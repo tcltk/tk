@@ -1,3 +1,40 @@
+2000-03-31  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* doc/DrawFocHlt.3: doc name correction
+
+	* generic/tkEntry.c: set TK_OPTION_NULL_OK bit on -invcmd option
+	and removed #ifdef ENTRY_VALIDATE expressions
+
+	* library/menu.tcl (tkMenuInvoke): corrected naming of tearoffs
+	[Bug: 4506]
+
+	* library/tkfbox.tcl (tkIconList_Goto): caused browsecmd to be
+	called in tkIconList_Select.  This causes the entry to be set
+	properly when using the type-in-name-in-listbox bindings.
+
+	* win/tkWinDialog.c: added unicode-aware open/save file dialogs
+
+	* win/tkWinFont.c (TkpFontPkgInit): move private ref to platformId
+	to TkWinGetPlatformId
+
+	* win/tkWinMenu.c (SetDefaults): moved private use of versionInfo
+	to TkWinGetPlatformId and removed all code for
+	(versionInfo.dwMajorVersion < 4) (== Win32s)
+
+	* win/tkWinX.c:
+	* win/tkWin32Dll.c: moved TkWinGetPlatformId to tkWinX.c
+	* win/tkWinInit.c: added TkWinXInit to TkpInit to ensure that its
+	called for static Windows shells. [Bug: 3647]
+
+	* win/tkWinInt.h:
+	* win/tkWinX.c:
+	* win/tkWinDraw.c (SetUpGraphicsPort): 
+	* win/tkWinScrlbr.c (UpdateScrollbar): removed use of tkpIsWin32s
+
+	* win/tkWinInt.h (TkWinDCState struct): added bkmode value
+	* win/tkWinDraw.c (TkWinGetDrawableDC, et al): added support for
+	properly transparent dashed lines on Windows. [Bug: 4617]
+
 2000-03-30  Eric Melski  <ericm@scriptics.com>
 
 	* generic/tkImgGIF.c: Fixed some ANSI specific bits to avoid
@@ -63,7 +100,7 @@
 
 2000-03-22  Eric Melski  <ericm@scriptics.com>
 
-	* library/listbox.tcl: (tkListboxCancel) Added a check for empty
+	* library/listbox.tcl (tkListboxCancel): Added a check for empty
 	string value for tkPriv(listboxPrev).  Without this check, it's
 	possible to get a stack trace under certain conditions. [Bug: 4373].
 
