@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetCursor.3,v 1.5 2002/08/05 04:30:38 dgp Exp $
+'\" RCS: @(#) $Id: GetCursor.3,v 1.6 2004/08/22 15:43:20 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_AllocCursorFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -118,7 +118,7 @@ will also accept any of the standard Mac cursors
 including \fBibeam\fR, \fBcrosshair\fR, \fBwatch\fR, \fBplus\fR, and
 \fBarrow\fR.  In addition, Tk will load Macintosh cursor resources of
 the types \fBcrsr\fR (color) and \fBCURS\fR (black and white) by the
-name of the of the resource.  The application and all its open
+name of the resource.  The application and all its open
 dynamic library's resource files will be searched for the named
 cursor.  If there are conflicts color cursors will always be loaded
 in preference to black and white cursors.
