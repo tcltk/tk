@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.70 2003/03/23 02:17:44 kennykb Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.71 2003/05/13 14:15:08 vincentdarley Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -656,7 +656,7 @@ while {![eof $$f]} {
     }
 }
 close $$f
-set f [open $(DOC_INSTALL_DIR:\=/)/tcl$(VERSION).cnt a]
+set f [open "$(DOC_INSTALL_DIR:\=/)/tcl$(VERSION).cnt" a]
 puts $$f {:Include $(HLPBASE).cnt}
 close $$f
 <<
