@@ -974,7 +974,6 @@ proc tkFDialog_Update {w} {
     global tk_library tkPriv
     catch {unset data(updateId)}
 
-    set TRANSPARENT_GIF_COLOR [$w cget -bg]
     if {![info exists tkPriv(folderImage)]} {
 	set tkPriv(folderImage) [image create photo -data {
 R0lGODlhEAAMAKEAAAD//wAAAPD/gAAAACH5BAEAAAAALAAAAAAQAAwAAAIghINhyycvVFsB
