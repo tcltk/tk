@@ -206,9 +206,15 @@ test winfo-7.6 {"winfo pathname" command} {
 test winfo-7.7 {"winfo pathname" command} {
     winfo pathname -displayof .b [winfo id .]
 } {.}
-test winfo-7.8 {"winfo pathname" command} {unixOnly} {
-    winfo pathname [testwrapper .]
-} {}
+
+if {[string compare testwrapper [info commands testwrapper]] == 0} {
+    puts "This application hasn't been compiled with the testwrapper command,"
+    puts "therefore I am skipping all of these tests."
+
+    test winfo-7.8 {"winfo pathname" command} {unixOnly} {
+        winfo pathname [testwrapper .]
+    } {}
+}
 
 test winfo-8.1 {"winfo pointerx" command} {
     catch [winfo pointerx .b]

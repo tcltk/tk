@@ -80,6 +80,12 @@ test window-2.3 {Tk_DestroyWindow procedure, destroy handler deletes parent} {
     destroy .f
 } {}
 
+if {[string compare testmenubar [info commands testmenubar]] != 0} {
+    puts "This application hasn't been compiled with the testmenubar command,"
+    puts "therefore I am skipping all of these tests."
+    return
+}
+
 test window-3.1 {Tk_MakeWindowExist procedure, stacking order and menubars} unixOnly {
     catch {destroy .t}
     toplevel .t -width 300 -height 200

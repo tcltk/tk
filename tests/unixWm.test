@@ -352,6 +352,12 @@ test unixWm-8.9 {icon windows} {nonPortable} {
     lappend result [winfo ismapped .icon] [wm state .icon]
 } {icon 1 0 0 withdrawn 1 normal}
 
+if {[string compare testwrapper [info commands testwrapper]] != 0} {
+    puts "This application hasn't been compiled with the testwrapper command,"
+    puts "therefore I am skipping all of these tests."
+    return
+}
+
 test unixWm-9.1 {TkWmMapWindow procedure, client property} {unixOnly} {
     catch {destroy .t}
     toplevel .t -width 100 -height 50
