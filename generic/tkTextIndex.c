@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.20 2004/10/05 01:26:10 hobbs Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.21 2005/02/14 23:00:46 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -1016,11 +1016,21 @@ TkTextPrintIndex(textPtr, indexPtr, string)
 				 * at least TK_POS_CHARS characters. */
 {
     TkTextSegment *segPtr;
+    TkTextLine *linePtr;
     int numBytes, charIndex;
 
     numBytes = indexPtr->byteIndex;
     charIndex = 0;
-    for (segPtr = indexPtr->linePtr->segPtr; ; segPtr = segPtr->nextPtr) {
+    linePtr = indexPtr->linePtr;
+    for (segPtr = linePtr->segPtr; ; segPtr = segPtr->nextPtr) {
+	if (segPtr == NULL) {
+	    /* 
+	     * Two logical lines merged into one display line 
+	     * through eliding of a newline
+	     */
+	    linePtr = TkBTreeNextLine(NULL, linePtr);
+	    segPtr = linePtr->segPtr;
+	}
 	if (numBytes <= segPtr->size) {
 	    break;
 	}
@@ -1777,6 +1787,9 @@ TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type)
  *	*dstPtr is modified to refer to the character "count" bytes before
  *	srcPtr, or to the first character in the TkText if there aren't
  *	"count" bytes earlier than srcPtr.
+ *	
+ *	Returns 1 if we couldn't use all of 'byteCount' because we 
+ *	have run into the beginning or end of the text, and zero otherwise.
  *
  * Side effects:
  *	None.
@@ -1784,7 +1797,7 @@ TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type)
  *---------------------------------------------------------------------------
  */
 
-void
+int
 TkTextIndexBackBytes(textPtr, srcPtr, byteCount, dstPtr)
     CONST TkText *textPtr;
     CONST TkTextIndex *srcPtr;	/* Source index. */
@@ -1796,8 +1809,7 @@ TkTextIndexBackBytes(textPtr, srcPtr, byteCount, dstPtr)
     int lineIndex;
 
     if (byteCount < 0) {
-	TkTextIndexForwBytes(textPtr, srcPtr, -byteCount, dstPtr);
-	return;
+	return TkTextIndexForwBytes(textPtr, srcPtr, -byteCount, dstPtr);
     }
 
     *dstPtr = *srcPtr;
@@ -1814,7 +1826,7 @@ TkTextIndexBackBytes(textPtr, srcPtr, byteCount, dstPtr)
 	}
 	if (lineIndex == 0) {
 	    dstPtr->byteIndex = 0;
-	    return;
+	    return 1;
 	}
 	lineIndex--;
 	dstPtr->linePtr = TkBTreeFindLine(dstPtr->tree, textPtr, lineIndex);
@@ -1828,6 +1840,7 @@ TkTextIndexBackBytes(textPtr, srcPtr, byteCount, dstPtr)
 	    dstPtr->byteIndex += segPtr->size;
 	}
     }
+    return 0;
 }
 
 /*
@@ -1895,7 +1908,16 @@ TkTextIndexBackChars(textPtr, srcPtr, charCount, dstPtr, type)
 	segPtr = infoPtr->segPtr;
 	segSize -= infoPtr->segOffset;
     } else {
-	for (segPtr = dstPtr->linePtr->segPtr; ; segPtr = segPtr->nextPtr) {
+	TkTextLine *linePtr = dstPtr->linePtr;
+	for (segPtr = linePtr->segPtr; ; segPtr = segPtr->nextPtr) {
+	    if (segPtr == NULL) {
+		/* 
+		 * Two logical lines merged into one display line 
+		 * through eliding of a newline
+		 */
+		linePtr = TkBTreeNextLine(NULL, linePtr);
+		segPtr = linePtr->segPtr;
+	    }
 	    if (segSize <= segPtr->size) {
 		break;
 	    }
@@ -1967,7 +1989,7 @@ TkTextIndexBackChars(textPtr, srcPtr, charCount, dstPtr, type)
 		for (p = end; ; p = Tcl_UtfPrev(p, start)) {
 		    if (charCount == 0) {
 			dstPtr->byteIndex -= (end - p);
-			goto backwadCharDone;
+			goto backwardCharDone;
 		    }
 		    if (p == start) {
 			break;
@@ -1978,7 +2000,7 @@ TkTextIndexBackChars(textPtr, srcPtr, charCount, dstPtr, type)
 		if (type & COUNT_INDICES) {
 		    if (charCount <= segSize) {
 			dstPtr->byteIndex -= charCount;
-			goto backwadCharDone;
+			goto backwardCharDone;
 		    }
 		    charCount -= segSize;
 		}
@@ -2009,7 +2031,7 @@ TkTextIndexBackChars(textPtr, srcPtr, charCount, dstPtr, type)
 	}
 	if (lineIndex == 0) {
 	    dstPtr->byteIndex = 0;
-	    goto backwadCharDone;
+	    goto backwardCharDone;
 	}
 	lineIndex--;
 	dstPtr->linePtr = TkBTreeFindLine(dstPtr->tree, textPtr, lineIndex);
@@ -2026,7 +2048,7 @@ TkTextIndexBackChars(textPtr, srcPtr, charCount, dstPtr, type)
 	segPtr = oldPtr;
 	segSize = segPtr->size;
     }
-  backwadCharDone:
+  backwardCharDone:
     if (infoPtr != NULL) {
 	TkTextFreeElideInfo(infoPtr);
 	ckfree((char*) infoPtr);

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.15 2004/09/10 12:13:41 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.16 2005/02/14 23:00:44 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -919,11 +919,19 @@ DeleteSummaries(summaryPtr)
  */
 
 int
-TkBTreeAdjustPixelHeight(textPtr, linePtr, newPixelHeight)
+TkBTreeAdjustPixelHeight(textPtr, linePtr, newPixelHeight, mergedLogicalLines)
     CONST TkText *textPtr;              /* Client of the B-tree */
     register TkTextLine *linePtr;	/* The logical line to update */
     int newPixelHeight;			/* The line's known height 
                        			 * in pixels */
+    int mergedLogicalLines;             /* The number of extra logical
+                                         * lines which have been merged
+                                         * with this one (due to elided
+                                         * eols).  They will have their
+                                         * pixel height set to zero, and
+                                         * the total pixel height
+                                         * associated with the given
+                                         * linePtr.  */
 {
     register Node *nodePtr;
     int changeToPixelCount;		/* Counts change to total number of
@@ -947,6 +955,17 @@ TkBTreeAdjustPixelHeight(textPtr, linePtr, newPixelHeight)
 
     linePtr->pixels[2*pixelReference] = newPixelHeight;
     
+    /* 
+     * Any merged logical lines must have their height set to zero. 
+     */
+    while (mergedLogicalLines-- > 0) {
+        linePtr = TkBTreeNextLine(textPtr, linePtr);
+	TkBTreeAdjustPixelHeight(textPtr, linePtr, 0, 0);
+    }
+    
+    /*
+     * Return total number of pixels in the tree.
+     */
     return nodePtr->numPixels[pixelReference];
 }
 
@@ -1161,11 +1180,14 @@ SplitSeg(indexPtr)
 					 * at which to split a segment. */
 {
     TkTextSegment *prevPtr, *segPtr;
-    int count;
-
-    for (count = indexPtr->byteIndex, prevPtr = NULL,
-	    segPtr = indexPtr->linePtr->segPtr; segPtr != NULL;
-	    count -= segPtr->size, prevPtr = segPtr, segPtr = segPtr->nextPtr) {
+    TkTextLine *linePtr;
+    
+    int count = indexPtr->byteIndex;
+    linePtr = indexPtr->linePtr;
+    prevPtr = NULL;
+    segPtr = linePtr->segPtr;
+    
+    while (segPtr != NULL) {
 	if (segPtr->size > count) {
 	    if (count == 0) {
 		return prevPtr;
@@ -1180,6 +1202,21 @@ SplitSeg(indexPtr)
 	} else if ((segPtr->size == 0) && (count == 0)
 		&& !segPtr->typePtr->leftGravity) {
 	    return prevPtr;
+	}
+    
+	count -= segPtr->size;
+	prevPtr = segPtr;
+	segPtr = segPtr->nextPtr;
+	if (segPtr == NULL) {
+	    /* 
+	     * Two logical lines merged into one display line 
+	     * through eliding of a newline
+	     */
+	    linePtr = TkBTreeNextLine(NULL, linePtr);
+	    if (linePtr == NULL) {
+		/* Reached end of the text */
+	    }
+	    segPtr = linePtr->segPtr;
 	}
     }
     Tcl_Panic("SplitSeg reached end of line!");
@@ -2014,9 +2051,18 @@ TkBTreeUnlinkSegment(segPtr, linePtr)
     if (linePtr->segPtr == segPtr) {
 	linePtr->segPtr = segPtr->nextPtr;
     } else {
-	for (prevPtr = linePtr->segPtr; prevPtr->nextPtr != segPtr;
-		prevPtr = prevPtr->nextPtr) {
-	    /* Empty loop body. */
+	prevPtr = linePtr->segPtr;
+	while (prevPtr->nextPtr != segPtr) {
+	    prevPtr = prevPtr->nextPtr;
+	    
+	    if (prevPtr == NULL) {
+		/* 
+		 * Two logical lines merged into one display line 
+		 * through eliding of a newline
+		 */
+		linePtr = TkBTreeNextLine(NULL, linePtr);
+		prevPtr = linePtr->segPtr;
+	    }
 	}
 	prevPtr->nextPtr = segPtr->nextPtr;
     }
@@ -3251,6 +3297,7 @@ TkBTreeGetTags(indexPtr, textPtr, numTagsPtr)
     register Node *nodePtr;
     register TkTextLine *siblingLinePtr;
     register TkTextSegment *segPtr;
+    TkTextLine *linePtr;
     int src, dst, index;
     TagInfo tagInfo;
 #define NUM_TAG_INFOS 10
@@ -3267,12 +3314,24 @@ TkBTreeGetTags(indexPtr, textPtr, numTagsPtr)
      * indexPtr.
      */
 
-    for (index = 0, segPtr = indexPtr->linePtr->segPtr;
-	    (index + segPtr->size) <= indexPtr->byteIndex;
-	    index += segPtr->size, segPtr = segPtr->nextPtr) {
+    linePtr = indexPtr->linePtr;
+    index = 0;
+    segPtr = linePtr->segPtr;
+    while ((index + segPtr->size) <= indexPtr->byteIndex) {
 	if ((segPtr->typePtr == &tkTextToggleOnType)
 		|| (segPtr->typePtr == &tkTextToggleOffType)) {
 	    IncCount(segPtr->body.toggle.tagPtr, 1, &tagInfo);
+	}
+	index += segPtr->size;
+	segPtr = segPtr->nextPtr;
+	
+	if (segPtr == NULL) {
+	    /* 
+	     * Two logical lines merged into one display line 
+	     * through eliding of a newline
+	     */
+	    linePtr = TkBTreeNextLine(NULL, linePtr);
+	    segPtr = linePtr->segPtr;
 	}
     }
 
@@ -3389,6 +3448,7 @@ TkTextIsElided(textPtr, indexPtr, elideInfo)
     register TkTextTag *tagPtr = NULL;
     register int i, index;
     register TkTextElideInfo *infoPtr;
+    TkTextLine *linePtr;
     int elide;
     
     if (elideInfo == NULL) {
@@ -3419,9 +3479,10 @@ TkTextIsElided(textPtr, indexPtr, elideInfo)
      * indexPtr.
      */
 
-    for (index = 0, segPtr = indexPtr->linePtr->segPtr;
-	 (index + segPtr->size) <= indexPtr->byteIndex;
-	 index += segPtr->size, segPtr = segPtr->nextPtr) {
+    index = 0;
+    linePtr = indexPtr->linePtr;
+    segPtr = linePtr->segPtr;
+    while ((index + segPtr->size) <= indexPtr->byteIndex) {
 	if ((segPtr->typePtr == &tkTextToggleOnType)
 		|| (segPtr->typePtr == &tkTextToggleOffType)) {
 	    tagPtr = segPtr->body.toggle.tagPtr;
@@ -3429,6 +3490,17 @@ TkTextIsElided(textPtr, indexPtr, elideInfo)
 		infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
 		infoPtr->tagCnts[tagPtr->priority]++;
 	    }
+	}
+       
+	index += segPtr->size;
+	segPtr = segPtr->nextPtr;
+	if (segPtr == NULL) {
+	    /* 
+	     * Two logical lines merged into one display line 
+	     * through eliding of a newline
+	     */
+	    linePtr = TkBTreeNextLine(NULL, linePtr);
+	    segPtr = linePtr->segPtr;
 	}
     }
     /* 
