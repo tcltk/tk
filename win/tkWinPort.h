@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPort.h,v 1.5 1999/04/16 01:51:53 stanton Exp $
+ * RCS: @(#) $Id: tkWinPort.h,v 1.6 1999/07/22 21:51:25 redman Exp $
  */
 
 #ifndef _WINPORT
@@ -31,7 +31,16 @@
 #include <limits.h>
 #include <fcntl.h>
 #include <io.h>
+
+/*
+ * Need to block out this include for building extensions with MetroWerks
+ * compiler for Win32.
+ */
+
+#ifndef __MWERKS__
 #include <sys/stat.h>
+#endif
+
 #include <time.h>
 #include <tchar.h>
 

@@ -1,5 +1,13 @@
 1999-07-22    <redman@scriptics.com>
 
+	* Changed version to 8.2b2
+
+	* win/tkWinPort.h: Block out include of sys/stat.h in order to
+	build extensions with MetroWerks compiler for Win32. [Bug: 2385]
+	
+	* unix/Makefile.in: Need to make install-sh executable before
+	calling (with chmod +x).  [Bug: 2413]
+	
 	* library/menu.tcl: Applied patch from Jeff Hobbs to fix typo.
 	[Bug: 2425]
 	
