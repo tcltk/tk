@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.65 2002/11/04 07:49:43 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.66 2002/12/10 22:06:40 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -206,8 +206,7 @@ TKTESTOBJS = \
 	$(TMP_DIR)\tkTest.obj \
 	$(TMP_DIR)\tkSquare.obj \
 	$(TMP_DIR)\testMain.obj \
-	$(TMP_DIR)\tkWinTest.obj \
-	$(TCLTMP_DIR)\tclThreadTest.obj
+	$(TMP_DIR)\tkWinTest.obj
 
 XLIBOBJS = \
 	$(TMP_DIR)\xcolors.obj \
