@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.95 2004/07/16 23:40:29 hobbs Exp $
+# RCS: @(#) $Id: configure.in,v 1.96 2004/11/15 11:39:41 dkf Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.57)
@@ -138,7 +138,7 @@ AC_HEADER_EGREP(strtol, stdlib.h, tk_ok=yes, tk_ok=no)
 AC_HEADER_EGREP(strtoul, stdlib.h, , tk_ok=no)
 AC_HEADER_EGREP(strtod, stdlib.h, , tk_ok=no)
 if test $tk_ok = no; then
-    AC_DEFINE(NO_STDLIB_H)
+    AC_DEFINE(NO_STDLIB_H, 1, [Do we have a working <stdlib.h> to include?])
 fi
 AC_MSG_RESULT($tk_ok)
 
@@ -158,12 +158,12 @@ AC_TRY_COMPILE([#include <sys/types.h>],
 if test $tk_ok = no; then
     AC_HEADER_EGREP(fd_mask, sys/select.h, tk_ok=yes)
     if test $tk_ok = yes; then
-	AC_DEFINE(HAVE_SYS_SELECT_H)
+	AC_DEFINE(HAVE_SYS_SELECT_H, 1, [Should we include <sys/select.h>?])
     fi
 fi
 AC_MSG_RESULT($tk_ok)
 if test $tk_ok = no; then
-    AC_DEFINE(NO_FD_SET)
+    AC_DEFINE(NO_FD_SET, 1, [Do we have access to the fd_set type?])
 fi
 
 #--------------------------------------------------------------------
@@ -192,7 +192,7 @@ AC_TRY_COMPILE([#include <pwd.h>],
       [struct passwd pwd; pwd.pw_gecos;], tk_ok=yes, tk_ok=no)
 AC_MSG_RESULT($tk_ok)
 if test $tk_ok = yes; then
-    AC_DEFINE(HAVE_PW_GECOS)
+    AC_DEFINE(HAVE_PW_GECOS, 1, [Does struct password have a pw_gecos field?])
 fi
 
 #--------------------------------------------------------------------
@@ -307,7 +307,7 @@ if test "$enable_xft" = "yes" ; then
 fi
 if test $enable_xft = "yes" ; then
     UNIX_FONT_OBJS=tkUnixRFont.o
-    AC_DEFINE(HAVE_XFT)
+    AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
 else
     UNIX_FONT_OBJS=tkUnixFont.o
 fi
