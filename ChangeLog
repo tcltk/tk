@@ -6,8 +6,12 @@
 	* macosx/tkMacOSXWm.c: more fixed for encodings, and addition
 	of support for 'wm attributes' and 'wm iconbitmap' to MacOS X.
 	The latter sets the proxy icon for a window, and the former
-	has one option at present: to set the 'modified' state of the 
-	proxy icon.
+	has two options at present: to set the 'modified' state of the 
+	proxy icon, and to set the filepath of the titlebar proxy.
+	* macosx/tkMacOSXButton.c: 
+	* macosx/tkMacOSXMenubutton.c: fix for final encoding issues.
+	* generic/tkFont.c: fix to the MacOSX-added function to allow 
+	multi-byte chars to work properly.
 	
 2002-07-17  Vince Darley  <vincentdarley@users.sourceforge.net>
 

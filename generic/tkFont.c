@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.12.2.3 2002/02/05 02:25:15 wolfsuit Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.12.2.4 2002/07/21 20:40:34 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -3694,7 +3694,7 @@ Tk_GetFirstTextLayout(
 {
     TextLayout  *layoutPtr;
     LayoutChunk *chunkPtr;
-    int numDisplayChars;
+    int numBytesInChunk;
 
     layoutPtr = (TextLayout *)layout;
     if ((layoutPtr==NULL)
@@ -3704,10 +3704,10 @@ Tk_GetFirstTextLayout(
         return 0;
     }
     chunkPtr = layoutPtr->chunks;
-    numDisplayChars = chunkPtr->numDisplayChars;
-    strncpy(dst, chunkPtr->start, numDisplayChars);
+    numBytesInChunk = chunkPtr->numBytes;
+    strncpy(dst, chunkPtr->start, numBytesInChunk);
     *font = layoutPtr->tkfont;
-    return numDisplayChars;
+    return numBytesInChunk;
 }
 
 

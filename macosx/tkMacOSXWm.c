@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.1.2.4 2002/07/21 11:11:55 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.1.2.5 2002/07/21 20:40:34 vincentdarley Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -531,7 +531,7 @@ Tk_WmCmd(
     } else if ((c == 'a') && (strncmp(argv[1], "attributes", length) == 0)
 	    && (length >= 2)) {
 	char buf[TCL_INTEGER_SPACE];
-	int i, boolean;
+	int i;
         WindowRef macWindow;
 
 	if (argc < 3) {
@@ -544,8 +544,16 @@ Tk_WmCmd(
 	}
         macWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
 	if (argc == 3) {
+	    FSSpec spec;
 	    sprintf(buf, "%d", (IsWindowModified(macWindow) == true));
             Tcl_AppendResult(interp, "-modified ", buf, (char *) NULL);
+	    if (GetWindowProxyFSSpec(macWindow, &spec) == noErr) {
+		Tcl_AppendResult(interp, " -titlepath", (char *) NULL);
+		/* Need to get the path from the spec */
+                Tcl_AppendElement(interp, "<read_unimplemented>");
+	    } else {
+		Tcl_AppendResult(interp, " -titlepath {}", (char *) NULL);
+	    }
 	    return TCL_OK;
 	}
 	for (i = 3; i < argc; i += 2) {
@@ -553,18 +561,40 @@ Tk_WmCmd(
 	    if ((length < 2) || (argv[i][0] != '-')) {
 		goto configArgs;
 	    }
-	    if ((i < argc-1) &&
-		    (Tcl_GetBoolean(interp, argv[i+1], &boolean) != TCL_OK)) {
-		return TCL_ERROR;
-	    }
 	    if (strncmp(argv[i], "-modified", length) == 0) {
-		SetWindowModified(macWindow, boolean);
+		int boolean;
+		if (i < argc-1) {
+		    if (Tcl_GetBoolean(interp, argv[i+1], &boolean) != TCL_OK) {
+			return TCL_ERROR;
+		    }
+		    SetWindowModified(macWindow, boolean);
+		}
+            } else if (strncmp(argv[i], "-titlepath", length) == 0) {
+		if (i < argc-1) {
+		    OSErr err;
+		    FSSpec spec;
+		    FSRef ref;
+		    Boolean isDirectory;
+		    err = FSPathMakeRef(argv[i+1], &ref, &isDirectory);     
+		    if (err == noErr) {
+			err = FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL, 
+					       &spec, NULL);
+			if (err == noErr) {
+			    if (SetWindowProxyFSSpec(macWindow,&spec) != noErr) {
+                                Tcl_AppendResult(interp, "couldn't set window proxy title path",
+                                    (char *) NULL);
+                                return TCL_ERROR;
+                            }
+			}
+		    }
+		}
             } else {
 		goto configArgs;
 	    }
-	    if (i == argc-1) {
-		Tcl_SetIntObj(Tcl_GetObjResult(interp), boolean);
-	    }
+            if (i == argc-2) {
+                /* Want to return last result */
+                Tcl_SetResult(interp, argv[i+1], TCL_VOLATILE);
+            }
 	}
     } else if ((c == 'c') && (strncmp(argv[1], "client", length) == 0)
 	    && (length >= 2)) {
