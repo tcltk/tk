@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.36 2004/09/21 19:13:58 mdejong Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.37 2004/12/28 08:45:31 chengyemao Exp $
  */
 
 #define OEMRESOURCE
@@ -3081,6 +3081,36 @@ TkpMenuInit()
 
     TkCreateExitHandler(MenuExitHandler, (ClientData) NULL);
     SetDefaults(1);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetMenuHWND --
+ *
+ *	This function returns the HWND of a hidden menu Window that
+ *	processes messages of a popup menu.  This hidden menu window
+ *	is used to handle either a dynamic popup menu in the same 
+ *	process or a pull-down menu of an embedded window in a 
+ *	different process.
+ *
+ * Results:
+ *	Returns the HWND of the hidden menu Window.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+HWND
+Tk_GetMenuHWND(tkwin)
+    Tk_Window tkwin;
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    TkMenuInit();
+    return tsdPtr->menuHWND;
 }
 
 /*
