@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: %Z% $Id: tkInt.h,v 1.5 1998/07/29 13:14:12 escoffon Exp $ 
+ * SCCS: %Z% $Id: tkInt.h,v 1.6 1998/08/04 12:19:22 escoffon Exp $ 
  */
 
 #ifndef _TKINT
@@ -28,8 +28,8 @@
 #endif
 
 #ifdef BUILD_tk
-# undef EXPORT
-# define EXPORT DLLEXPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -1002,7 +1002,7 @@ EXTERN int		TkXFileProc _ANSI_ARGS_((ClientData clientData,
 EXTERN int		TkUnsupported1Cmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 
-#undef EXPORT
-#define EXPORT DLLIMPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif  /* _TKINT */

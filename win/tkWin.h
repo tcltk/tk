@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWin.h 1.6 96/08/15 13:19:41
+ * SCCS: %Z% $Id: tkWin.h,v 1.3 1998/08/04 12:20:01 escoffon Exp $ 
  */
 
 #ifndef _TKWIN
@@ -24,8 +24,8 @@
 #undef WIN32_LEAN_AND_MEAN
 
 #ifdef BUILD_tk
-# undef EXPORT
-# define EXPORT DLLEXPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -58,7 +58,7 @@ EXTERN int		Tk_TranslateWinEvent _ANSI_ARGS_((HWND hwnd,
 			    UINT message, WPARAM wParam, LPARAM lParam,
 			    LRESULT *result));
 
-#undef EXPORT
-#define EXPORT DLLIMPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKWIN */

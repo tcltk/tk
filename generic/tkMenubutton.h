@@ -20,8 +20,8 @@
 #endif
 
 #ifdef BUILD_tk
-# undef EXPORT
-# define EXPORT DLLEXPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -209,7 +209,7 @@ EXTERN void 		TkpDestroyMenuButton _ANSI_ARGS_((
 EXTERN void		TkMenuButtonWorldChanged _ANSI_ARGS_((
 			    ClientData instanceData));
 
-#undef EXPORT
-#define EXPORT DLLIMPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKMENUBUTTON */

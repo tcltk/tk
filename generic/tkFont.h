@@ -17,8 +17,8 @@
 #define _TKFONT
 
 #ifdef BUILD_tk
-# undef EXPORT
-# define EXPORT DLLEXPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -210,7 +210,7 @@ EXTERN void		TkpGetFontFamilies _ANSI_ARGS_((Tcl_Interp *interp,
 EXTERN TkFont *		TkpGetNativeFont _ANSI_ARGS_((Tk_Window tkwin,
 			    CONST char *name));
 
-#undef EXPORT
-#define EXPORT DLLIMPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif	/* _TKFONT */

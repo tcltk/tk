@@ -23,8 +23,8 @@
 #endif
 
 #ifdef BUILD_tk
-# undef EXPORT
-# define EXPORT DLLEXPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 typedef struct GlobPattern {
@@ -86,7 +86,7 @@ EXTERN int		TkGetFileFilters _ANSI_ARGS_ ((Tcl_Interp *interp,
     			    FileFilterList * flistPtr, char * string,
 			    int isWindows));
 
-#undef EXPORT
-#define EXPORT DLLIMPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif

@@ -20,8 +20,8 @@
 #endif
 
 #ifdef BUILD_tk
-# undef EXPORT
-# define EXPORT DLLEXPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -227,7 +227,7 @@ EXTERN void		TkpSetScaleValue _ANSI_ARGS_((TkScale *scalePtr,
 EXTERN int		TkpValueToPixel _ANSI_ARGS_((TkScale *scalePtr,
 			    double value));
 
-#undef EXPORT
-#define EXPORT DLLIMPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKSCALE */

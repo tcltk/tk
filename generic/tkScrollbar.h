@@ -20,8 +20,8 @@
 #endif
 
 #ifdef BUILD_tk
-# undef EXPORT
-# define EXPORT DLLEXPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -202,7 +202,7 @@ EXTERN void		TkpConfigureScrollbar _ANSI_ARGS_((
 EXTERN int		TkpScrollbarPosition _ANSI_ARGS_((
 			    TkScrollbar *scrollPtr, int x, int y));
 
-#undef EXPORT
-#define EXPORT DLLIMPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKSCROLLBAR */

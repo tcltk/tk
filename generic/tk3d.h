@@ -18,8 +18,8 @@
 #include <tkInt.h>
 
 #ifdef BUILD_tk
-# undef EXPORT
-# define EXPORT DLLEXPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -81,7 +81,7 @@ EXTERN void		TkpGetShadows _ANSI_ARGS_((TkBorder *borderPtr,
 			    Tk_Window tkwin));
 EXTERN void		TkpFreeBorder _ANSI_ARGS_((TkBorder *borderPtr));
 
-#undef EXPORT
-#define EXPORT DLLIMPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TK3D */

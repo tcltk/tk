@@ -18,8 +18,8 @@
 #include <tkInt.h>
 
 #ifdef BUILD_tk
-# undef EXPORT
-# define EXPORT DLLEXPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -62,7 +62,7 @@ EXTERN TkColor *	TkpGetColor _ANSI_ARGS_((Tk_Window tkwin,
 EXTERN TkColor *	TkpGetColorByValue _ANSI_ARGS_((Tk_Window tkwin,
 			    XColor *colorPtr));	
 
-#undef EXPORT
-#define EXPORT DLLIMPORT
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKCOLOR */
