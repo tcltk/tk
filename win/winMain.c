@@ -9,14 +9,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.20 2004/02/01 10:44:54 davygrvy Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.21 2004/02/02 08:12:58 davygrvy Exp $
  */
 
 #include <tk.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
-#include <malloc.h>
 #include <locale.h>
 
 #include "tkInt.h"
