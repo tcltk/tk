@@ -1,3 +1,8 @@
+2002-06-25  Reinhard Max  <max@suse.de>
+
+	* unix/configure:                  Replaced ${exec_prefix}/lib
+	* unix/tcl.m4 (SC_PATH_TCLCONFIG): by ${libdir}.
+
 2002-06-24  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* tests/winWm.test: Verify that both an unmapped
