@@ -1,3 +1,9 @@
+2005-01-11  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* generic/tkTextDisp.c: fix to scrollbar height calculations
+	of text widgets containing a single very long (wrapped) line.
+	This fixes at least part of [Bug 1093631].
+
 2005-01-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkObj.c (TkParsePadAmount):
