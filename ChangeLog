@@ -27,6 +27,11 @@
 	* generic/tkGrid.c: Fixed a bug in grid geometry calculations for
 	a shrinking grid. [Bug 899246]
 
+2004-02-17  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
+
+	* macosx/tkMacOSXKeyboard.c (TkpInitKeymapInfo): Don't make <Alt> and
+	<Meta> synonyms for <Command> and <Option> for now.
+
 2004-02-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkBind.c (HandleEventGenerate): only modify root[xy]
