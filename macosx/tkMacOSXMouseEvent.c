@@ -82,6 +82,8 @@ static int gEatButtonUp = 0;       /* 1 if we need to eat the next * up event */
 static void BringWindowForward _ANSI_ARGS_((WindowRef wRef));
 static int GeneratePollingEvents(MouseEventData * medPtr);
 static int GenerateMouseWheelEvent(MouseEventData * medPtr);
+static int HandleInGoAway(Tk_Window tkwin, WindowRef winPtr, Point where);
+static OSErr HandleInCollapse(WindowRef win);
 
 extern int TkMacOSXGetEatButtonUp();
 extern void TkMacOSXSetEatButtonUp(int f);
@@ -124,11 +126,9 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
         case kEventMouseWheelMoved:
             break;
         default:
-            statusPtr->handledByTk = 1;
             return 0;
             break;
     }
-    statusPtr->handledByTk = 1;
     status = GetEventParameter(eventPtr->eventRef, 
             kEventParamMouseLocation,
             typeQDPoint, NULL, 
@@ -172,7 +172,6 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
     medPtr->windowPart= FindWindow(where, &medPtr->whichWin);
     window = TkMacOSXGetXWindow(medPtr->whichWin);
     if (medPtr->whichWin != NULL && window == None) {
-        statusPtr->handledByTk = 0;
         return 0;
     }
     
@@ -279,9 +278,35 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
                  SysBeep(1);  
                  return false;
              }
-             TkMacOSXSetEatButtonUp(true);
-             BringWindowForward(medPtr->whichWin);
-             return false;
+
+             /*
+              * Clicks in the stoplights on a MacOS X title bar are processed
+              * directly even for background windows.  Do that here.
+              */
+             
+             switch (medPtr->windowPart) {
+                 case inGoAway:
+                     return HandleInGoAway(tkwin, medPtr->whichWin, where);
+                     break;
+                 case inCollapseBox:
+                     err = HandleInCollapse(medPtr->whichWin);
+                     if (err = noErr) {
+                         statusPtr->err = 1;
+                     }
+                     statusPtr->stopProcessing = 1;
+                     return false;
+                     break;
+                 case inZoomIn:
+                     return false;
+                     break;
+                 case inZoomOut:
+                     return false;
+                     break;
+                 default:
+                     TkMacOSXSetEatButtonUp(true);
+                     BringWindowForward(medPtr->whichWin);
+                     return false;
+             }
          }
     }
 
@@ -320,14 +345,7 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
             }
             break;
         case inGoAway:
-            if (TrackGoAway(medPtr->whichWin,where)) {
-                if (tkwin == NULL) {
-                    return false;
-                }
-                TkGenWMDestroyEvent(tkwin);
-                return true;
-            }
-            return false;
+            return HandleInGoAway(tkwin, medPtr->whichWin, where);
             break;
         case inMenuBar:
             {
@@ -359,19 +377,77 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
             }
             break;
         case inCollapseBox:
-             if ((err = CollapseWindow(medPtr->whichWin,
-                 !IsWindowCollapsed(medPtr->whichWin)))!=noErr) {
-                 fprintf(stderr,"CollapseWindow failed,%d\n", err);
-                 statusPtr->err = 1;
-             }
-             break;
+            err = HandleInCollapse(medPtr->whichWin);
+            if (err == noErr) {
+                statusPtr->err = 1;
+            }
+            statusPtr->stopProcessing = 1;
+            break;
         default:
             return false;
             break;
     }
     return 0;
 }
-
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * HandleInGoAway --
+ *
+ *        Tracks the cursor in the go away box and deletes the window
+ *        if the button stays depressed on button up.
+ *
+ * Results:
+ *        True if no errors - false otherwise.
+ *
+ * Side effects:
+ *        The window tkwin may be destroyed.
+ *
+ *----------------------------------------------------------------------
+ */
+int
+HandleInGoAway(Tk_Window tkwin, WindowRef win, Point where)
+{
+    if (TrackGoAway(win, where)) {
+        if (tkwin == NULL) {
+            return false;
+        }
+        TkGenWMDestroyEvent(tkwin);
+        return true;
+    }
+    return false;    
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * HandleInCollapse --
+ *
+ *        Tracks the cursor in the collapse box and colapses the window
+ *        if the button stays depressed on button up.
+ *
+ * Results:
+ *        Error return from CollapseWindow
+ *
+ * Side effects:
+ *        The window win may be collapsed.
+ *
+ *----------------------------------------------------------------------
+ */
+OSErr
+HandleInCollapse(WindowRef win)
+{
+    OSErr err;
+    
+    err = CollapseWindow(win,
+                         !IsWindowCollapsed(win));
+    if (err != noErr) {
+        fprintf(stderr,"CollapseWindow failed,%d\n", err);
+    }
+    return err;
+}
+
 /*
  *----------------------------------------------------------------------
  *

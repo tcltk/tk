@@ -1,10 +1,7 @@
 /* 
  * tkMacOSXEvent.c --
  *
- * This file contains most of the X calls called by Tk.  Many of
- * these calls are just stubs and either don't make sense on the
- * Macintosh or thier implamentation just doesn't do anything.  Other
- * calls will eventually be moved into other files.
+ * This file contains the basic Mac OS X Event handling routines.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001, Apple Computer, Inc.
@@ -12,57 +9,47 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.2 2002/08/31 06:12:29 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.3 2003/02/19 19:27:46 wolfsuit Exp $
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <pthread.h>
-#include <sys/types.h>
-#include <sys/ioctl.h>
 
 #include "tkMacOSXInt.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
 
-#define TK_MAC_DEBUG 1
-
 /*
- * The following are undocumented event classes
- *
+ * Enable this define to get debug printing for events not handled.
  */
-enum {
-    kEventClassUser = 'user',
-    kEventClassCgs  = 'cgs ',
-};
- 
-/*  
- * The following are undocumented event kinds 
- * 
- */ 
-enum {
-    kEventMouse8 = 8,
-    kEventMouse9 = 9, 
-    kEventApp103 = 103
-};   
 
-EventRef TkMacOSXCreateFakeEvent ();
+ /*#define TK_MAC_DEBUG 1 */
 
 /*   
  * Forward declarations of procedures used in this file.
  */ 
-static int ReceiveAndProcessEvent _ANSI_ARGS_(());
+
+static int TkMacOSXProcessAppleEvent(
+        TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr);
+static int TkMacOSXProcessEvent(
+        TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr);
+
+static int ReceiveAndProcessEvent (void);
+
+/*   
+ * Global data used in this file.
+ */ 
 
 static EventTargetRef targetRef;
 
+
 /*
  *----------------------------------------------------------------------
  *
  * tkMacOSXFlushWindows --
  *
- *      This routine flushes all the Carbon windows of the application
- *      It is called by the setup procedure for the Tcl/Carbon event source
+ *      This routine flushes all the Carbon windows of the application.  It
+ *      is called by the setup procedure for the Tcl/Carbon event source.
+ *
  * Results:
  *      None.
  *
@@ -84,22 +71,24 @@ tkMacOSXFlushWindows ()
         }
         wRef=GetNextWindow(wRef);
     }
-}
+}
+
 /*
  *----------------------------------------------------------------------
  *
  * TkMacOSXCountAndProcessMacEvents --
  *
- *      This routine receives any Carbon events that aare in the 
- *      queue and converts them to tk events
- *      It is called by the event set-up and check routines
+ *      This routine receives any Carbon events that are in the queue and
+ *      converts them to Tk events.  It is called by the event set-up and
+ *      check routines
+ *
  * Results:
  *      The number of events in the queue.
  *
  * Side effects:
- *      Tells the Window Manager to deliver events to the event 
- *      queue of the current thread.
- *      Receives any Carbon events on the queue and converts them to tk events
+ *      Tells the Window Manager to deliver events to the event queue of the
+ *      current thread.  Receives any Carbon events on the queue and converts
+ *      them to Tk events.
  *
  *----------------------------------------------------------------------
  */
@@ -118,7 +107,8 @@ TkMacOSXCountAndProcessMacEvents()
         }
     }
     return eventCount;
-}
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -127,11 +117,11 @@ TkMacOSXCountAndProcessMacEvents()
  *      This processes Apple events
  *
  * Results:
- *               0 on success
- *               -1 on failure
+ *      0 on success
+ *      -1 on failure
  *
  * Side effects:
- *               Calls the Tk high-level event handler
+ *      Calls the Tk high-level event handler
  *
  *----------------------------------------------------------------------
  */
@@ -152,8 +142,6 @@ TkMacOSXProcessAppleEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
                 CarbonEventToAscii(eventPtr->eventRef, buf1),
                 ClassicEventToAscii(&eventRecord,buf2), err);
             statusPtr->err = 1;
-        } else {
-            statusPtr->handledByTk = 1;
         }
     } else {
         statusPtr->err = 1;
@@ -162,12 +150,19 @@ TkMacOSXProcessAppleEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
     return 0;
 }
 
+
 /*      
  *----------------------------------------------------------------------
  *   
  * TkMacOSXProcessEvent --
  *   
  *      This dispatches a filtered Carbon event to the appropriate handler
+ *
+ *      Note on MacEventStatus.stopProcessing: Please be conservative in the
+ *      individual handlers and don't assume the event is fully handled
+ *      unless you *really* need to ensure that other handlers don't see the
+ *      event anymore.  Some OS manager or library might be interested in
+ *      events even after they are already handled on the Tk level.
  *
  * Results: 
  *      0 on success
@@ -198,10 +193,8 @@ TkMacOSXProcessEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
         case kEventClassAppleEvent:
             TkMacOSXProcessAppleEvent(eventPtr, statusPtr);
             break;  
-        case kEventClassCgs:
-        case kEventClassUser:
         case kEventClassWish: 
-            statusPtr->handledByTk = 1;
+            statusPtr->stopProcessing = 1;
             break;  
         default:
 #ifdef TK_MAC_DEBUG
@@ -217,21 +210,22 @@ TkMacOSXProcessEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
     }   
     return 0;
 }   
+
 
 /*
  *----------------------------------------------------------------------
  *
  * ReceiveAndProcessEvent --
  *
- *      This receives a carbon event and converts it to a tk event
+ *      This receives a carbon event and converts it to a Tk event
  *
  * Results:
  *      0 on success
  *      Mac OS error number on failure
  *
  * Side effects:
- *      This receives the next Carbon event
- *      and converts it to the appropriate tk event
+ *      This receives the next Carbon event and converts it to the
+ *      appropriate Tk event
  *
  *----------------------------------------------------------------------
  */
@@ -258,13 +252,17 @@ ReceiveAndProcessEvent()
         macEvent.eKind = GetEventKind(macEvent.eventRef);
         bzero(&eventStatus, sizeof(eventStatus));
         TkMacOSXProcessEvent(&macEvent,&eventStatus);
-        if (!eventStatus.handledByTk) {
+        if (!eventStatus.stopProcessing) {
             if (!targetRef) {
                 targetRef=GetEventDispatcherTarget();
             }
             
             err= SendEventToEventTarget(macEvent.eventRef,targetRef);
-            if (err != noErr /* && err != eventNotHandledErr */) {
+            if (err != noErr
+#if !TK_MAC_DEBUG
+                    && err != eventNotHandledErr
+#endif
+                ) {
                 fprintf(stderr,
                         "RCNE SendEventToEventTarget (%s) failed, %d\n",
                         CarbonEventToAscii(macEvent.eventRef,buf ),err);
