@@ -1,3 +1,9 @@
+2002-02-25  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* tests/filebox.test: Reorganised and fixed so that tests are
+	executed fewer times (!) and the automatic extension adding
+	behaviour of tk_getSaveFile is tested.
+
 2002-02-23  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/configure: Regen.
