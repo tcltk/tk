@@ -1,7 +1,7 @@
 TclTkAqua README 
 ----------------
 
-RCS: @(#) $Id: README,v 1.6.2.1 2003/03/18 13:55:51 das Exp $
+RCS: @(#) $Id: README,v 1.6.2.2 2003/07/18 01:06:33 das Exp $
 
 This is the README file for the Mac OS X native versions of Tcl & Tk.
 
@@ -19,7 +19,7 @@ before asking on the list, many questions have already been answered).
 but also check the Tcl'ers Wiki for a wealth of information:
 	http://wiki.tcl.tk/
 
-- The wiki has a page listing known bugs in Mac OS X Tk (and other tips)
+- The wiki has a page listing known bugs in Mac OS X Tcl/Tk (and other tips)
 	http://wiki.tcl.tk/MacOS%20X
 as well as a page with info on building Tcl/Tk on Mac OS X
 	http://wiki.tcl.tk/Steps%20to%20build%20Tcl/Tk%208.4.0%20on%20MacOS%20X
@@ -58,11 +58,11 @@ $pkg/Resources/Scripts/pkgIndex.tcl as well as the usual $pkg/pkgIndex.tcl.
 This allows building extensions as frameworks with all script files contained
 in the Resources/Scripts directory of the framework.
 
-- Tcl.framework contains the Tcl and Tk documentation in html format in the
+- The Tcl and Tk frameworks contain documentation in html format in the
 standard location for frameworks:
 	Tcl.framework/Resources/English.lproj/Documentation/Reference/Tcl
-Tk.framework contains no documentation. No manpages are installed by
-default for either tcl or tk.
+	Tk.framework/Resources/English.lproj/Documentation/Reference/Tk
+No manpages are installed by default for either tcl or tk.
 
 - the frameworks Tcl.framework and Tk.framework can be placed in any of the
 system's standard framework directories:
@@ -124,10 +124,14 @@ retail or should be present as a disk image on new macs that came with OSX
 preinstalled. It can also be downloaded from http://connect.apple.com (after you
 register for free ADC membership).
 
-- Tcl and TkAqua are built as Mac OS X frameworks using Apple's ProjectBuilder
-IDE, but you do not have to deal with the IDE if you don't want to: there are
-Makefiles available in tcl/macosx and tk/macosx that take care of calling the
-ProjectBuilder command line tool with all the details taken care of. 
+- Tcl is built as a Mac OS X framework via the Makefile in tcl/macosx, but can
+also be built from Apple's ProjectBuilder IDE using the Tcl.pbproj project (which
+calls through to the Makefile).
+
+- TkAqua is built as a Mac OS X frameworks using Apple's ProjectBuilder
+IDE, but you do not have to deal with the IDE if you don't want to, the
+Makefile in tk/macosx takes care of calling the ProjectBuilder command line tool
+with all the details taken care of. 
 
 - Unpack the tcl and tk source release archives and place the tcl and tk source
 trees in a common parent directory.
@@ -198,23 +202,10 @@ Notes:
   auto_path. Thus you can place tcl extensions in this directory (i.e. embed
   them in the app package) and load them with [package require].
 
-- To build from the IDE using the projects directly without going through the
-Makefiles you need so setup a common build folder for the projects. A simple way
-to achieve this is to make symbolic links
-	ln -fs ../../build tcl/macosx/build
-	ln -fs ../../build tk/macosx/build
-(this location of the build folder is compatible with the Makefiles).
-
-Another way is to set the build folder location directly in
-tcl/macosx/Tcl.pbproj and tk/macosx/Wish/pbproj using ProjectBuilder's
-"Project->Show Info" on the topmost icon in the filelist. Switch to "Place build
-products in a separate location" with a setting of "$SRCROOT/../../build"
-(this gets stored in Tcl.pbproj/${USER}.pbxuser & Wish.pbproj/${USER}.pbxuser).
-
-- It is possible to build Tk without a common build folder with Tcl, or even
-without the tcl sourcetree itself; but in that case you need to tell the Tk
-Makefile where the copies of 'Tcl.framework' and 'tclsh8.4' are located that
-you want to build & link against (their default location is the ${BUILD_DIR}).
+- It is possible to build Tk without without the tcl sourcetree; but in that
+case you need to tell the Tk Makefile where the copies of 'Tcl.framework' and 
+'tclsh8.4' are located that you want to build & link against 
+(their default location is ${BUILD_DIR}/tcl).
 
 For instance to use their default systemwide install locations:
 	make -C tk${ver}/macosx \
@@ -232,4 +223,7 @@ or to use an earlier install of Tcl into INSTALL_ROOT="${TCLTK}/" :
 	    TCL_FRAMEWORK_DIR=${TCLTK}/Library/Frameworks TCLSH_DIR=${TCLTK}/usr/bin
 
 The Makefile variables TCL_FRAMEWORK_DIR and TCLSH_DIR were added in Tk 8.4.3.
+
+Note that html help in Tk.framework is only built if TCL_FRAMEWORK_DIR contains
+the tcl Makefile (as is the case for the default value of TCL_FRAMEWORK_DIR).
 
