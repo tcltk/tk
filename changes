@@ -4136,3 +4136,6 @@ Apple Universal Headers V. 3.0 so we can compile with CW Pro 2.0 (JI)
 
 6/12/98 (feature change) Focus -force now sets the foreground window
 on Windows platforms in addition to moving the focus. (SS)
+
+6/12/98 (bug fix) Fixed bug in Windows font measurement that did not
+take kerning into account. (BS)
