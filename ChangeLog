@@ -1,5 +1,8 @@
 2003-11-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/configure:
+	* win/tcl.m4: add necessary ole libs to VC LIBS_GUI line.
+
 	* win/tkWinDraw.c (XFillRectangles): correctly handle the
 	XGCValues.function parameter when filling rectangles.
 	[Bug #820278] [Patch #820282]

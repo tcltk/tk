@@ -607,7 +607,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 
 	SHLIB_LD="${LINKBIN} -dll -nologo -incremental:no"
 	LIBS="user32.lib advapi32.lib"
-	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib"
+	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib"
 	RC_OUT=-fo
 	RC_TYPE=-r
 	RC_INCLUDE=-i
