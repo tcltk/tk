@@ -1,3 +1,13 @@
+2000-11-01  Jeff Hobbs  <hobbs@ajubasolutions.com>
+
+	* win/tkWinDialog.c (GetFileNameW, GetFileNameA,
+	Tk_ChooseDirectoryObjCmd): created
+	work-around for change in NT5.0/98 that caused no initialdir
+	setting to open the browser up in the user's documents dir.
+
+	* tests/color.test: marked color-2.6 nonPortable as we can't
+	reliably assume what 'red' maps to.
+
 2000-11-01  Eric Melski  <ericm@ajubasolutions.com>
 
 	* win/tkWinDialog.c: Added branch for 0 return from
