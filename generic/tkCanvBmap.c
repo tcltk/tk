@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvBmap.c,v 1.7 2003/02/09 07:48:22 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvBmap.c,v 1.8 2003/04/18 21:54:27 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -105,7 +105,7 @@ static void		ComputeBitmapBbox _ANSI_ARGS_((Tk_Canvas canvas,
 static int		ConfigureBitmap _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
 			    Tcl_Obj *CONST objv[], int flags));
-static int		CreateBitmap _ANSI_ARGS_((Tcl_Interp *interp,
+static int		TkcCreateBitmap _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
 			    int objc, Tcl_Obj *CONST objv[]));
 static void		DeleteBitmap _ANSI_ARGS_((Tk_Canvas canvas,
@@ -127,7 +127,7 @@ static void		TranslateBitmap _ANSI_ARGS_((Tk_Canvas canvas,
 Tk_ItemType tkBitmapType = {
     "bitmap",				/* name */
     sizeof(BitmapItem),			/* itemSize */
-    CreateBitmap,			/* createProc */
+    TkcCreateBitmap,			/* createProc */
     configSpecs,			/* configSpecs */
     ConfigureBitmap,			/* configureProc */
     BitmapCoords,			/* coordProc */
@@ -150,7 +150,7 @@ Tk_ItemType tkBitmapType = {
 /*
  *--------------------------------------------------------------
  *
- * CreateBitmap --
+ * TkcCreateBitmap --
  *
  *	This procedure is invoked to create a new bitmap
  *	item in a canvas.
@@ -168,7 +168,7 @@ Tk_ItemType tkBitmapType = {
  */
 
 static int
-CreateBitmap(interp, canvas, itemPtr, objc, objv)
+TkcCreateBitmap(interp, canvas, itemPtr, objc, objv)
     Tcl_Interp *interp;			/* Interpreter for error reporting. */
     Tk_Canvas canvas;			/* Canvas to hold new item. */
     Tk_Item *itemPtr;			/* Record to hold new item;  header
