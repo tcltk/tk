@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.18 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.19 2003/06/26 17:15:48 vincentdarley Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -1186,9 +1186,13 @@ proc ::tk::PostOverPoint {menu x y {entry {}}}  {
 	incr x [expr {-[winfo reqwidth $menu]/2}]
     }
     if {$tcl_platform(platform) == "windows"} {
-	# We need to fix some problems with menu posting on Windows.
+	# We need to fix some problems with menu posting on Windows,
+	# where, if the menu would overlap top or bottom of screen,
+	# Windows puts it in the wrong place for us.  We must also
+	# subtract an extra amount for half the height of the current
+	# entry.  To be safe we subtract an extra 10.
 	set yoffset [expr {[winfo screenheight $menu] \
-		- $y - [winfo reqheight $menu]}]
+		- $y - [winfo reqheight $menu] - 10}]
 	if {$yoffset < 0} {
 	    # The bottom of the menu is offscreen, so adjust upwards
 	    incr y $yoffset
