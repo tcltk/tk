@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.25.2.3 2004/09/23 00:56:15 mdejong Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.25.2.4 2004/09/23 01:49:08 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -348,7 +348,7 @@ TkWinXCleanup(hInstance)
  *----------------------------------------------------------------------
  */
 
-int		
+int
 TkWinGetPlatformId()
 {
     if (tkPlatformId == 0) {
@@ -406,7 +406,7 @@ TkWinGetPlatformId()
  *----------------------------------------------------------------------
  */
 
-int		
+int
 TkWinGetPlatformTheme()
 {
     if (tkPlatformId == 0) {
@@ -446,6 +446,100 @@ TkGetDefaultScreenName(interp, screenName)
 /*
  *----------------------------------------------------------------------
  *
+ * TkWinDisplayChanged --
+ *
+ *	Called to set up initial screen info or when an event indicated
+ *	display (screen) change.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May change info regarding the screen.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWinDisplayChanged(Display *display)
+{
+    HDC dc;
+    Screen *screen;
+
+    if (display == NULL || display->screens == NULL) {
+	return;
+    }
+    screen = display->screens;
+
+    dc = GetDC(NULL);
+    screen->width = GetDeviceCaps(dc, HORZRES);
+    screen->height = GetDeviceCaps(dc, VERTRES);
+    screen->mwidth = MulDiv(screen->width, 254,
+	    GetDeviceCaps(dc, LOGPIXELSX) * 10);
+    screen->mheight = MulDiv(screen->height, 254,
+	    GetDeviceCaps(dc, LOGPIXELSY) * 10);
+
+    /*
+     * On windows, when creating a color bitmap, need two pieces of
+     * information: the number of color planes and the number of pixels per
+     * plane.  Need to remember both quantities so that when constructing an
+     * HBITMAP for offscreen rendering, we can specify the correct value for
+     * the number of planes.  Otherwise the HBITMAP won't be compatible with
+     * the HWND and we'll just get blank spots copied onto the screen.
+     */
+
+    screen->ext_data = (XExtData *) GetDeviceCaps(dc, PLANES);
+    screen->root_depth = GetDeviceCaps(dc, BITSPIXEL) * (int) screen->ext_data;
+
+    if (screen->root_visual != NULL) {
+	ckfree((char *) screen->root_visual);
+    }
+    screen->root_visual = (Visual *) ckalloc(sizeof(Visual));
+    screen->root_visual->visualid = 0;
+    if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
+	screen->root_visual->map_entries = GetDeviceCaps(dc, SIZEPALETTE);
+	screen->root_visual->class = PseudoColor;
+	screen->root_visual->red_mask = 0x0;
+	screen->root_visual->green_mask = 0x0;
+	screen->root_visual->blue_mask = 0x0;
+    } else if (screen->root_depth == 4) {
+	screen->root_visual->class = StaticColor;
+	screen->root_visual->map_entries = 16;
+    } else if (screen->root_depth == 8) {
+	screen->root_visual->class = StaticColor;
+	screen->root_visual->map_entries = 256;
+    } else if (screen->root_depth == 12) {
+	screen->root_visual->class = TrueColor;
+	screen->root_visual->map_entries = 32;
+	screen->root_visual->red_mask = 0xf0;
+	screen->root_visual->green_mask = 0xf000;
+	screen->root_visual->blue_mask = 0xf00000;
+    } else if (screen->root_depth == 16) {
+	screen->root_visual->class = TrueColor;
+	screen->root_visual->map_entries = 64;
+	screen->root_visual->red_mask = 0xf8;
+	screen->root_visual->green_mask = 0xfc00;
+	screen->root_visual->blue_mask = 0xf80000;
+    } else if (screen->root_depth >= 24) {
+	screen->root_visual->class = TrueColor;
+	screen->root_visual->map_entries = 256;
+	screen->root_visual->red_mask = 0xff;
+	screen->root_visual->green_mask = 0xff00;
+	screen->root_visual->blue_mask = 0xff0000;
+    }
+    screen->root_visual->bits_per_rgb = screen->root_depth;
+    ReleaseDC(NULL, dc);
+
+    if (screen->cmap != None) {
+	XFreeColormap(display, screen->cmap);
+    }
+    screen->cmap = XCreateColormap(display, None, screen->root_visual,
+	    AllocNone);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkpOpenDisplay --
  *
  *	Create the Display structure and fill it with device
@@ -465,7 +559,6 @@ TkpOpenDisplay(display_name)
     CONST char *display_name;
 {
     Screen *screen;
-    HDC dc;
     TkWinDrawable *twdPtr;
     Display *display;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
@@ -487,21 +580,14 @@ TkpOpenDisplay(display_name)
     strcpy(display->display_name, display_name);
 
     display->cursor_font = 1;
-    display->nscreens = 1;
-    display->request = 1;
-    display->qlen = 0;
+    display->nscreens    = 1;
+    display->request     = 1;
+    display->qlen        = 0;
 
     screen = (Screen *) ckalloc(sizeof(Screen));
+    ZeroMemory(screen, sizeof(Screen));
     screen->display = display;
 
-    dc = GetDC(NULL);
-    screen->width = GetDeviceCaps(dc, HORZRES);
-    screen->height = GetDeviceCaps(dc, VERTRES);
-    screen->mwidth = MulDiv(screen->width, 254,
-	    GetDeviceCaps(dc, LOGPIXELSX) * 10);
-    screen->mheight = MulDiv(screen->height, 254,
-	    GetDeviceCaps(dc, LOGPIXELSY) * 10);
-    
     /*
      * Set up the root window.
      */
@@ -516,72 +602,24 @@ TkpOpenDisplay(display_name)
     screen->root = (Window)twdPtr;
 
     /*
-     * On windows, when creating a color bitmap, need two pieces of 
-     * information: the number of color planes and the number of 
-     * pixels per plane.  Need to remember both quantities so that
-     * when constructing an HBITMAP for offscreen rendering, we can
-     * specify the correct value for the number of planes.  Otherwise
-     * the HBITMAP won't be compatible with the HWND and we'll just
-     * get blank spots copied onto the screen.
-     */
-
-    screen->ext_data = (XExtData *) GetDeviceCaps(dc, PLANES);
-    screen->root_depth = GetDeviceCaps(dc, BITSPIXEL) * (int) screen->ext_data;
-
-    screen->root_visual = (Visual *) ckalloc(sizeof(Visual));
-    screen->root_visual->visualid = 0;
-    if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
-	screen->root_visual->map_entries = GetDeviceCaps(dc, SIZEPALETTE);
-	screen->root_visual->class = PseudoColor;
-	screen->root_visual->red_mask = 0x0;
-	screen->root_visual->green_mask = 0x0;
-	screen->root_visual->blue_mask = 0x0;
-    } else {
-	if (screen->root_depth == 4) {
-	    screen->root_visual->class = StaticColor;
-	    screen->root_visual->map_entries = 16;
-	} else if (screen->root_depth == 8) {
-	    screen->root_visual->class = StaticColor;
-	    screen->root_visual->map_entries = 256;
-	} else if (screen->root_depth == 12) {
-	    screen->root_visual->class = TrueColor;
-	    screen->root_visual->map_entries = 32;
-	    screen->root_visual->red_mask = 0xf0;
-	    screen->root_visual->green_mask = 0xf000;
-	    screen->root_visual->blue_mask = 0xf00000;
-	} else if (screen->root_depth == 16) {
-	    screen->root_visual->class = TrueColor;
-	    screen->root_visual->map_entries = 64;
-	    screen->root_visual->red_mask = 0xf8;
-	    screen->root_visual->green_mask = 0xfc00;
-	    screen->root_visual->blue_mask = 0xf80000;
-	} else if (screen->root_depth >= 24) {
-	    screen->root_visual->class = TrueColor;
-	    screen->root_visual->map_entries = 256;
-	    screen->root_visual->red_mask = 0xff;
-	    screen->root_visual->green_mask = 0xff00;
-	    screen->root_visual->blue_mask = 0xff0000;
-	}
-    }
-    screen->root_visual->bits_per_rgb = screen->root_depth;
-    ReleaseDC(NULL, dc);
-
-    /*
      * Note that these pixel values are not palette relative.
      */
 
     screen->white_pixel = RGB(255, 255, 255);
     screen->black_pixel = RGB(0, 0, 0);
+    screen->cmap        = None;
 
     display->screens		= screen;
     display->nscreens		= 1;
     display->default_screen	= 0;
-    screen->cmap = XCreateColormap(display, None, screen->root_visual,
-	    AllocNone);
+
+    TkWinDisplayChanged(display);
+
     tsdPtr->winDisplay = (TkDisplay *) ckalloc(sizeof(TkDisplay));
     ZeroMemory(tsdPtr->winDisplay, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
+
     return tsdPtr->winDisplay;
 }
 
