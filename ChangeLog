@@ -1,3 +1,59 @@
+1999-02-04    <stanton@GASPODE>
+
+	* library/prolog.ps: Changed string that determines font height to
+	include European character with an umlaut.
+
+	* generic/tkImgBmap.c (ImgBmapConfigureInstance): If an image
+	mask changed but ended up with the same XID, the GC failed to be
+	updated and so the new mask was not used. [Bug: 970]
+
+	* generic/tkFocus.c (SetFocus): Changed to focus window is always
+	set if -force is specified.  This fixes the problem on Windows
+	where Tk does not activate the window if it already has focus.
+
+	* generic/tkConsole.c: Fixed so errors in console eval are
+	reported properly.  Eliminated duplicate result messages. [Bug: 973]
+
+	* win/tkWinWm.c: Changed so windows that aren't resizable don't
+	have resize handles and the zoom box is disabled.
+
+	* win/tkWinInt.h:
+	* win/tkWinPointer.c: Changed to cancel the mouse timer when a
+	user initiated move/resize loop begins.
+
+	* unix/configure.in: TK_LD_SEARCH_FLAGS was set incorrectly if
+	SHLIB_LD_LIBS='${LIBS}', and shared linking is performed through
+	the C compiler. Systems affected are Linux, MP-RAS and NEXTSTEP,
+	but also with gcc on many more systems. [Bug: 908]
+
+	* win/makefile.vc: First stab at install target.  Fixed quoting so
+	paths with spaces work.
+	
+	* tests/main.test:
+	* tests/unixWm.test: Better cleanup of temporary files.
+	
+	* mac/tkMacAppInit.c:
+	* generic/tkTest.c:
+	* generic/tkAppInit.c:
+	* win/winMain.c: Changed some EXTERN declarations to extern
+	since they are not defining exported interfaces.  This avoids
+	generating useless declspec() attributes and makes the windows
+	makefile simpler.
+
+	* library/menu.tcl (tkMenuFind): Changed so keyboard shortcuts
+	will only be found in the current toplevel.  Previously, they
+	might be found in menus attached to other toplevels that might not
+	even be mapped. [Bug: 924]
+
+	* generic/tkCanvLine.c: Changed to treat zero width lines like
+	they have width 1 for purposes of selection. [Bug: 925]
+
+	* win/tkWinFont.c (Tk_MeasureChars): Added a workaround for a bug
+	in GetTextExtentExPoint on Win NT 4.0/Japanese. [Bug: 1006]
+
+	* unix/tkUnixSend.c (Tk_SetAppName): Fixed uninitialized memory
+	access bug. [Bug: 919]
+
 1998-12-30    <stanton@GASPODE>
 
 	* generic/tkGrid.c: Fixed bug in "grid forget" that failed to cancel

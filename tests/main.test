@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: main.test,v 1.3 1998/12/29 19:34:50 hershey Exp $
+# RCS: @(#) $Id: main.test,v 1.4 1999/02/04 21:03:28 stanton Exp $
 
 if {[info procs test] != "test"} {
     source defs
@@ -30,3 +30,8 @@ test main-1.1 {StdinProc} {unixOnly} {
     file delete -force script
     list $error $msg
 } {0 {}}
+
+#
+# Clean up.
+#
+catch {removeFile script}
