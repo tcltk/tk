@@ -1,3 +1,28 @@
+2002-09-26  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Makefile: preserve environment value of INSTALL_ROOT.
+	When embedding only use deployment build. Force relink before
+	embedded build to ensure new linker flags are picked up.
+
+	* macosx/buildTkConfig.tcl (new):
+	* macosx/Wish.pbproj/project.pbxproj: synthesize tkConfig.sh
+	based on tclConfig.sh in Tcl.framework and tkConfig.sh.in.
+	Add symbolic links to debug lib, stub libs and tkConfig.sh
+	in framework toplevel. Made tkIntXlibDecls.h a public header
+	since Headers/X11/Xlib.h includes it. Install wish8.4 script
+	that runs "Wish Shell.app" and corresponding wish link.
+	Use tcl headers from built Tcl.framework instead of from tcl
+	source directory.	
+
+        * macosx/tkMacOSXPort.h: added missing standard unix includes 
+        and defines, similarly to tkUnixPort.h.
+        * macosx/tkMacOSXNotify.c: removed dependency on internal tcl
+        header "tclPort.h"
+
+	* unix/Makefile.in:
+	* unix/install-sh: copied support for 'install-strip' target
+	over from tcl/unix/{Makefile.in,install-sh}
+
 2002-09-22  Jim Ingham <jingham@apple.com>
 
 	* macosx/tkMacOSXScrlbr.c (UpdateControlValue): HiliteControl

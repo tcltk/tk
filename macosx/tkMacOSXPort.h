@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPort.h,v 1.2 2002/08/31 06:12:30 das Exp $
+ * RCS: @(#) $Id: tkMacOSXPort.h,v 1.3 2002/09/26 17:07:33 das Exp $
  */
 
 #ifndef _TKMACPORT
@@ -32,17 +32,46 @@
 #   endif
 #endif
 
+#include <stdio.h>
+#include <ctype.h>
+#include <fcntl.h>
+#ifdef HAVE_LIMITS_H
+#   include <limits.h>
+#else
+#   include "../compat/limits.h"
+#endif
+#include <math.h>
+#include <pwd.h>
+#ifdef NO_STDLIB_H
+#   include "../compat/stdlib.h"
+#else
+#   include <stdlib.h>
+#endif
+#include <string.h>
+#include <sys/types.h>
+#include <sys/file.h>
+#ifdef HAVE_SYS_SELECT_H
+#   include <sys/select.h>
+#endif
+#include <sys/stat.h>
 #ifndef _TCL
 #   include <tcl.h>
 #endif
-
-#include <time.h>
-#include <stdlib.h>
-#include <string.h>
-#include "tclMath.h"
-#include <ctype.h>
-#include <limits.h>
-
+#if TIME_WITH_SYS_TIME
+#   include <sys/time.h>
+#   include <time.h>
+#else
+#   if HAVE_SYS_TIME_H
+#       include <sys/time.h>
+#   else
+#       include <time.h>
+#   endif
+#endif
+#ifdef HAVE_UNISTD_H
+#   include <unistd.h>
+#else
+#   include "../compat/unistd.h"
+#endif
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
@@ -50,6 +79,43 @@
 #include <X11/Xfuncproto.h>
 #include <X11/Xutil.h>
 #include "tkIntXlibDecls.h"
+
+/*
+ * The following macro defines the type of the mask arguments to
+ * select:
+ */
+
+#ifndef NO_FD_SET
+#   define SELECT_MASK fd_set
+#else
+#   ifndef _AIX
+	typedef long fd_mask;
+#   endif
+#   if defined(_IBMR2)
+#	define SELECT_MASK void
+#   else
+#	define SELECT_MASK int
+#   endif
+#endif
+
+/*
+ * The following macro defines the number of fd_masks in an fd_set:
+ */
+
+#ifndef FD_SETSIZE
+#   ifdef OPEN_MAX
+#	define FD_SETSIZE OPEN_MAX
+#   else
+#	define FD_SETSIZE 256
+#   endif
+#endif
+#if !defined(howmany)
+#   define howmany(x, y) (((x)+((y)-1))/(y))
+#endif
+#ifndef NFDBITS
+#   define NFDBITS NBBY*sizeof(fd_mask)
+#endif
+#define MASK_SIZE howmany(FD_SETSIZE, NFDBITS)
 
 /*
  * Not all systems declare the errno variable in errno.h. so this

@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.82 2002/09/10 09:59:15 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.83 2002/09/26 17:07:33 das Exp $
 
 # Current Tk version;  used in various names.
 
@@ -171,6 +171,9 @@ SHELL			= /bin/sh
 # for installing, but there are just too many different versions of
 # "install" around;  better to use the install-sh script that comes
 # with the distribution, which is slower but guaranteed to work.
+
+INSTALL_STRIP_PROGRAM   = -s
+INSTALL_STRIP_LIBRARY   = -S -S
 
 INSTALL			= @srcdir@/install-sh -c
 INSTALL_PROGRAM		= ${INSTALL}
@@ -492,6 +495,11 @@ gdb: wish
 	rm gdb.run
 
 install: all install-binaries install-libraries install-demos install-doc
+
+install-strip:
+	$(MAKE) install \
+		INSTALL_PROGRAM="$(INSTALL_PROGRAM) ${INSTALL_STRIP_PROGRAM}" \
+		INSTALL_LIBRARY="$(INSTALL_LIBRARY) ${INSTALL_STRIP_LIBRARY}"
 
 # Note: before running ranlib below, must cd to target directory because
 # some ranlibs write to current directory, and this might not always be
