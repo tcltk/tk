@@ -1,3 +1,8 @@
+2003-11-13  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* tests/event.test:
+	* library/text.tcl: fixed the text widget portion of [Bug 542199]
+	
 2003-11-13  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkMenuDraw.c (TkPostSubmenu,AdjustMenuCoords): Rewrote
