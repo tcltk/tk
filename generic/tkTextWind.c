@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.4 1999/12/14 06:52:33 hobbs Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.5 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include "tk.h"
@@ -370,7 +370,7 @@ EmbWinConfigure(textPtr, ewPtr, argc, argv)
 		if (ancestor == parent) {
 		    break;
 		}
-		if (Tk_IsTopLevel(ancestor)) {
+		if (Tk_TopWinHierarchy(ancestor)) {
 		    badMaster:
 		    Tcl_AppendResult(textPtr->interp, "can't embed ",
 			    Tk_PathName(ewPtr->body.ew.tkwin), " in ",
@@ -379,7 +379,7 @@ EmbWinConfigure(textPtr, ewPtr, argc, argv)
 		    return TCL_ERROR;
 		}
 	    }
-	    if (Tk_IsTopLevel(ewPtr->body.ew.tkwin)
+	    if (Tk_TopWinHierarchy(ewPtr->body.ew.tkwin)
 		    || (ewPtr->body.ew.tkwin == textPtr->tkwin)) {
 		goto badMaster;
 	    }
@@ -790,7 +790,7 @@ EmbWinLayoutProc(textPtr, indexPtr, ewPtr, offset, maxX, maxChars,
 	    if (ancestor == Tk_Parent(ewPtr->body.ew.tkwin)) {
 		break;
 	    }
-	    if (Tk_IsTopLevel(ancestor)) {
+	    if (Tk_TopWinHierarchy(ancestor)) {
 		badMaster:
 		Tcl_AppendResult(textPtr->interp, "can't embed ",
 			Tk_PathName(ewPtr->body.ew.tkwin), " relative to ",
@@ -800,7 +800,7 @@ EmbWinLayoutProc(textPtr, indexPtr, ewPtr, offset, maxX, maxChars,
 		goto gotWindow;
 	    }
 	}
-	if (Tk_IsTopLevel(ewPtr->body.ew.tkwin)
+	if (Tk_TopWinHierarchy(ewPtr->body.ew.tkwin)
 		|| (textPtr->tkwin == ewPtr->body.ew.tkwin)) {
 	    goto badMaster;
 	}

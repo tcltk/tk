@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.14 2002/02/03 22:33:07 ericm Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.15 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -1048,7 +1048,7 @@ Tk_SetTSOrigin(tkwin, gc, x, y)
     GC gc;
     int x, y;
 {
-    while (!Tk_IsTopLevel(tkwin)) {
+    while (!Tk_TopWinHierarchy(tkwin)) {
 	x -= Tk_X(tkwin) + Tk_Changes(tkwin)->border_width;
 	y -= Tk_Y(tkwin) + Tk_Changes(tkwin)->border_width;
 	tkwin = Tk_Parent(tkwin);

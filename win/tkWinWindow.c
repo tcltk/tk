@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWindow.c,v 1.9 2001/10/01 21:22:35 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWindow.c,v 1.10 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include "tkWinInt.h"
@@ -371,13 +371,13 @@ XMapWindow(display, w)
      * its mapped children have just become visible.
      */
 
-    if (!(winPtr->flags & TK_TOP_LEVEL)) {
+    if (!(winPtr->flags & TK_TOP_HIERARCHY)) {
 	for (parentPtr = winPtr->parentPtr; ;
 	        parentPtr = parentPtr->parentPtr) {
 	    if ((parentPtr == NULL) || !(parentPtr->flags & TK_MAPPED)) {
 		return;
 	    }
-	    if (parentPtr->flags & TK_TOP_LEVEL) {
+	    if (parentPtr->flags & TK_TOP_HIERARCHY) {
 		break;
 	    }
 	}
@@ -478,7 +478,7 @@ XUnmapWindow(display, w)
     ShowWindow(Tk_GetHWND(w), SW_HIDE);
     winPtr->flags &= ~TK_MAPPED;
 
-    if (winPtr->flags & TK_TOP_LEVEL) {
+    if (winPtr->flags & TK_WIN_MANAGED) {
 	event.type = UnmapNotify;
 	event.xunmap.serial = display->request;
 	event.xunmap.send_event = False;

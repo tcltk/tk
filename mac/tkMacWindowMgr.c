@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWindowMgr.c,v 1.9 2001/11/23 02:06:32 das Exp $
+ * RCS: @(#) $Id: tkMacWindowMgr.c,v 1.10 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include <Events.h>
@@ -426,7 +426,7 @@ GenerateUpdates(
      
     for (childPtr = winPtr->childList; childPtr != NULL;
 				       childPtr = childPtr->nextPtr) {
-	if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
+	if (!Tk_IsMapped(childPtr) || Tk_TopWinHierarchy(childPtr)) {
 	    continue;
 	}
 
@@ -1546,7 +1546,7 @@ void
 TkpSetCapture(
     TkWindow *winPtr)			/* Capture window, or NULL. */
 {
-    while ((winPtr != NULL) && !Tk_IsTopLevel(winPtr)) {
+    while ((winPtr != NULL) && !Tk_TopWinHierarchy(winPtr)) {
 	winPtr = winPtr->parentPtr;
     }
     gGrabWinPtr = (Tk_Window) winPtr;

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.17 2002/05/24 09:50:11 mdejong Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.18 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include <Gestalt.h>
@@ -1870,10 +1870,13 @@ Tk_SetGrid(
      * information.
      */
 
-    while (!(winPtr->flags & TK_TOP_LEVEL)) {
+    while (!(winPtr->flags & TK_TOP_HIERARCHY)) {
 	winPtr = winPtr->parentPtr;
     }
     wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr == NULL) {
+	return;
+    }
 
     if ((wmPtr->gridWin != NULL) && (wmPtr->gridWin != tkwin)) {
 	return;
@@ -1955,10 +1958,14 @@ Tk_UnsetGrid(
      * information.
      */
 
-    while (!(winPtr->flags & TK_TOP_LEVEL)) {
+    while (!(winPtr->flags & TK_TOP_HIERARCHY)) {
 	winPtr = winPtr->parentPtr;
     }
     wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr == NULL) {
+	return;
+    }
+
     if (tkwin != wmPtr->gridWin) {
 	return;
     }
@@ -2511,7 +2518,7 @@ Tk_GetRootCoords(
     while (1) {
 	x += winPtr->changes.x + winPtr->changes.border_width;
 	y += winPtr->changes.y + winPtr->changes.border_width;
-	if (winPtr->flags & TK_TOP_LEVEL) {
+	if (winPtr->flags & TK_TOP_HIERARCHY) {
 	    if (!(Tk_IsEmbedded(winPtr))) {
 	    	x += winPtr->wmInfoPtr->xInParent;
 	    	y += winPtr->wmInfoPtr->yInParent;
@@ -2560,6 +2567,9 @@ Tk_GetRootCoords(
 		    break;
 		}
 	    }
+	}
+	if (winPtr->flags & TK_TOP_HIERARCHY) {
+	    break; /* Punt */
 	}
 	winPtr = winPtr->parentPtr;
     }
@@ -2668,7 +2678,7 @@ Tk_CoordsToWindow(
 	    for (childPtr = winPtr->childList; childPtr != NULL;
 		    childPtr = childPtr->nextPtr) {
 	        if (!Tk_IsMapped(childPtr) ||
-			(childPtr->flags & TK_TOP_LEVEL)) {
+			(childPtr->flags & TK_TOP_HIERARCHY)) {
 		    continue;
 	        }
 	        tmpx = x - childPtr->changes.x;
@@ -2762,7 +2772,7 @@ Tk_TopCoordsToWindow(
 	    for (childPtr = winPtr->childList; childPtr != NULL;
 					   childPtr = childPtr->nextPtr) {
 	        if (!Tk_IsMapped(childPtr) ||
-			(childPtr->flags & TK_TOP_LEVEL)) {
+			(childPtr->flags & TK_TOP_HIERARCHY)) {
 		    continue;
 	        }
 	        if (x < childPtr->changes.x || y < childPtr->changes.y) {
@@ -2895,10 +2905,13 @@ Tk_GetVRootGeometry(
      * information for that window.
      */
 
-    while (!(winPtr->flags & TK_TOP_LEVEL)) {
+    while (!(winPtr->flags & TK_TOP_HIERARCHY)) {
 	winPtr = winPtr->parentPtr;
     }
     wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr == NULL) {
+	return; /* Punt */
+    }
 
     /*
      * Make sure that the geometry information is up-to-date, then copy
@@ -3322,10 +3335,14 @@ TkWmAddToColormapWindows(
 
 	    return;
 	}
-	if (topPtr->flags & TK_TOP_LEVEL) {
+	if (topPtr->flags & TK_TOP_HIERARCHY) {
 	    break;
 	}
     }
+    if (topPtr->wmInfoPtr == NULL) {
+	return;
+    }
+
     if (topPtr->wmInfoPtr->flags & WM_COLORMAPS_EXPLICIT) {
 	return;
     }
@@ -3412,7 +3429,7 @@ TkWmRemoveFromColormapWindows(
 
 	    return;
 	}
-	if (topPtr->flags & TK_TOP_LEVEL) {
+	if (topPtr->flags & TK_TOP_HIERARCHY) {
 	    break;
 	}
     }
@@ -3429,6 +3446,10 @@ TkWmRemoveFromColormapWindows(
      * Find the window and slide the following ones down to cover
      * it up.
      */
+
+    if (topPtr->wmInfoPtr == NULL) {
+	return;
+    }
 
     count = topPtr->wmInfoPtr->cmapCount;
     oldPtr = topPtr->wmInfoPtr->cmapList;
@@ -4648,7 +4669,7 @@ TkWmFocusToplevel(
     TkWindow *winPtr)		/* Window that received a focus-related
 				 * event. */
 {
-    if (!(winPtr->flags & TK_TOP_LEVEL)) {
+    if (!(winPtr->flags & TK_TOP_HIERARCHY)) {
 	return NULL;
     }
     return winPtr;

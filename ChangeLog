@@ -1,3 +1,20 @@
+2002-06-14  Joe English  <jenglish@users.sf.net>
+	* doc/bind.n, generic/tk.h, generic/tkBind.c,
+	generic/tkCanvWind.c, generic/tkCmds.c, generic/tkEvent.c,
+	generic/tkFocus.c, generic/tkGrab.c, generic/tkGrid.c,
+	generic/tkImage.c, generic/tkPack.c, generic/tkPlace.c,
+	generic/tkPointer.c, generic/tkTextWind.c,
+	generic/tkWindow.c, mac/tkMacSubwindows.c,
+	mac/tkMacWindowMgr.c, mac/tkMacWm.c, unix/Makefile.in,
+	unix/tkUnixEmbed.c, unix/tkUnixWm.c, win/tkWinScrlbr.c,
+	win/tkWinWindow.c, win/tkWinWm.c: Implementation for
+	TIP #47 "Modifying Tk to Allow Writing X Window managers"
+	(patch from Neil McKay).
+	* Add CirculateRequest, Create, MapRequest, ResizeRequest, 
+	  and ConfigureRequest event types;
+	* Split TK_TOPLEVEL flag into TK_TOPLEVEL, TK_HAS_WRAPPER,
+	  TK_WIN_MANAGED, and TK_TOP_HIERARCHY.
+
 2002-06-14  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
 
 	* unix/tkAppInit.c: Removed now unneeded and erroneous reference

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.9 2002/04/05 08:41:07 hobbs Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.10 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -519,6 +519,91 @@ TkEventInit _ANSI_ARGS_((void))
 /*
  *--------------------------------------------------------------
  *
+ * TkXErrorHandler --
+ *
+ *	TkXErrorHandler is an error handler, to be installed
+ *	via Tk_CreateErrorHandler, that will set a flag if an
+ *	X error occurred.
+ *
+ * Results:
+ *	Always returns 0, indicating that the X error was
+ *	handled.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+TkXErrorHandler (clientData, errEventPtr)
+    ClientData clientData;      /* Pointer to flag we set       */
+    XErrorEvent *errEventPtr;   /* X error info                 */
+{
+    int *error;
+
+    error = (int *) clientData;
+    *error = 1;
+    return 0;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * ParentXId --
+ *
+ *	Returns the parent of the given window, or "None"
+ *	if the window doesn't exist.
+ *
+ * Results:
+ *	Returns an X window ID.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static Window
+ParentXId(display, w)
+    Display *display;
+    Window w;
+{
+    Tk_ErrorHandler handler;
+    int gotXError;
+    Status status;
+    Window parent;
+    Window root;
+    Window *childList;
+    unsigned int nChildren;
+
+    /* Handle errors ourselves. */
+
+    gotXError = 0;
+    handler = Tk_CreateErrorHandler(display, -1, -1, -1,
+			TkXErrorHandler, (ClientData) (&gotXError));
+
+    /* Get the parent window. */
+
+    status = XQueryTree(display, w, &root, &parent, &childList, &nChildren);
+
+    /* Do some cleanup; gotta return "None" if we got an error. */
+
+    Tk_DeleteErrorHandler(handler);
+    XSync(display, False);
+    if (status != 0 && childList != NULL) {
+	XFree(childList);
+    }
+    if (status == 0) {
+        parent = None;
+    }
+
+    return parent;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * Tk_HandleEvent --
  *
  *	Given an event, invoke all the handlers that have
@@ -544,6 +629,7 @@ Tk_HandleEvent(eventPtr)
     unsigned long mask;
     InProgress ip;
     Window handlerWindow;
+    Window parentXId;
     TkDisplay *dispPtr;
     Tcl_Interp *interp = (Tcl_Interp *) NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
@@ -655,18 +741,38 @@ Tk_HandleEvent(eventPtr)
     }
     winPtr = (TkWindow *) Tk_IdToWindow(eventPtr->xany.display, handlerWindow);
     if (winPtr == NULL) {
-
 	/*
 	 * There isn't a TkWindow structure for this window.
 	 * However, if the event is a PropertyNotify event then call
 	 * the selection manager (it deals beneath-the-table with
-	 * certain properties).
+	 * certain properties). Also, if the window's parent is a
+	 * Tk window that has the TK_PROP_PROPCHANGE flag set, then
+	 * we must propagate the PropertyNotify event up to the parent.
 	 */
 
-	if (eventPtr->type == PropertyNotify) {
-	    TkSelPropProc(eventPtr);
+	if (eventPtr->type != PropertyNotify) {
+	    return;
 	}
-	return;
+
+	TkSelPropProc(eventPtr);
+
+	/* Get handlerWindow's parent. */
+
+	parentXId = ParentXId(eventPtr->xany.display, handlerWindow);
+	if (parentXId == None) {
+	    return;
+	}
+
+	winPtr = (TkWindow *) Tk_IdToWindow(eventPtr->xany.display, parentXId);
+	if (winPtr == NULL) {
+	    return;
+	}
+
+	if (!(winPtr->flags & TK_PROP_PROPCHANGE)) {
+	    return;
+	}
+
+	handlerWindow = parentXId;
     }
 
     /*
@@ -893,7 +999,14 @@ Tk_HandleEvent(eventPtr)
 	 * these events here than in the lower-level procedures.
 	 */
 
-	if ((ip.winPtr != None) && (mask != SubstructureNotifyMask)) {
+	/*
+	 * ...well, except when we use the tkwm patches, in which case
+	 * we DO handle CreateNotify events, so we gotta pass 'em through.
+	 */
+
+	if ((ip.winPtr != None)
+		&& ((mask != SubstructureNotifyMask)
+				|| (eventPtr->type == CreateNotify))) {
 	    TkBindEventProc(winPtr, eventPtr);
 	}
     }
@@ -1172,7 +1285,7 @@ TkQueueEventForAllChildren(winPtr, eventPtr)
     
     childPtr = winPtr->childList;
     while (childPtr != NULL) {
-	if (!Tk_IsTopLevel(childPtr)) {
+	if (!Tk_TopWinHierarchy(childPtr)) {
 	    TkQueueEventForAllChildren(childPtr, eventPtr);
 	}
 	childPtr = childPtr->nextPtr;

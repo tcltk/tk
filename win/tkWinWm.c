@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.39 2002/06/12 19:02:50 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.40 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include "tkWinInt.h"
@@ -3308,7 +3308,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    if (masterPtr == NULL) {
 		return TCL_ERROR;
 	    }
-	    while (!(masterPtr->flags & TK_TOP_LEVEL)) {
+	    while (!(masterPtr->flags & TK_TOP_HIERARCHY)) {
 	        /*
 	         * Ensure that the master window is actually a Tk toplevel.
 	         */
@@ -3476,10 +3476,13 @@ Tk_SetGrid(tkwin, reqWidth, reqHeight, widthInc, heightInc)
      * information.
      */
 
-    while (!(winPtr->flags & TK_TOP_LEVEL)) {
+    while (!(winPtr->flags & TK_TOP_HIERARCHY)) {
 	winPtr = winPtr->parentPtr;
     }
     wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr == NULL) {
+	return;
+    }
 
     if ((wmPtr->gridWin != NULL) && (wmPtr->gridWin != tkwin)) {
 	return;
@@ -3560,10 +3563,14 @@ Tk_UnsetGrid(tkwin)
      * information.
      */
 
-    while (!(winPtr->flags & TK_TOP_LEVEL)) {
+    while (!(winPtr->flags & TK_TOP_HIERARCHY)) {
 	winPtr = winPtr->parentPtr;
     }
     wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr == NULL) {
+	return;
+    }
+
     if (tkwin != wmPtr->gridWin) {
 	return;
     }
@@ -4592,10 +4599,14 @@ TkWmAddToColormapWindows(winPtr)
 
 	    return;
 	}
-	if (topPtr->flags & TK_TOP_LEVEL) {
+	if (topPtr->flags & TK_TOP_HIERARCHY) {
 	    break;
 	}
     }
+    if (topPtr->wmInfoPtr == NULL) {
+	return;
+    }
+
     if (topPtr->wmInfoPtr->flags & WM_COLORMAPS_EXPLICIT) {
 	return;
     }
@@ -4696,6 +4707,10 @@ TkWmRemoveFromColormapWindows(winPtr)
 	 * the WM_COLORMAP_WINDOWS property.
 	 */
 
+	return;
+    }
+
+    if (topPtr->wmInfoPtr == NULL) {
 	return;
     }
 
@@ -5201,7 +5216,7 @@ InvalidateSubTree(winPtr, colormap)
 	 * toplevel window.  
 	 */
 
-	if (!Tk_IsTopLevel(childPtr) && Tk_IsMapped(childPtr)) {
+	if (!Tk_TopWinHierarchy(childPtr) && Tk_IsMapped(childPtr)) {
 	    InvalidateSubTree(childPtr, colormap);
 	}
     }
@@ -5679,7 +5694,7 @@ TkWmFocusToplevel(winPtr)
     TkWindow *winPtr;		/* Window that received a focus-related
 				 * event. */
 {
-    if (!(winPtr->flags & TK_TOP_LEVEL)) {
+    if (!(winPtr->flags & TK_TOP_HIERARCHY)) {
 	return NULL;
     }
     return winPtr;
@@ -5709,7 +5724,7 @@ TkpGetWrapperWindow(
     TkWindow *winPtr)		/* Window that received a focus-related
 				 * event. */
 {
-    if (!(winPtr->flags & TK_TOP_LEVEL)) {
+    if (!(winPtr->flags & TK_TOP_HIERARCHY)) {
 	return NULL;
     }
     return winPtr;

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.7 2002/04/12 10:03:24 hobbs Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.8 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -216,7 +216,7 @@ Tk_FocusObjCmd(clientData, interp, objc, objv)
 	    }
 	    for (topLevelPtr = newPtr; topLevelPtr != NULL;
 		    topLevelPtr = topLevelPtr->parentPtr)  {
-		if (topLevelPtr->flags & TK_TOP_LEVEL) {
+		if (topLevelPtr->flags & TK_TOP_HIERARCHY) {
 		    for (tlFocusPtr = newPtr->mainPtr->tlFocusPtr;
 			    tlFocusPtr != NULL;
 			    tlFocusPtr = tlFocusPtr->nextPtr) {
@@ -588,7 +588,7 @@ TkSetFocusWin(winPtr, force)
 	if (!(topLevelPtr->flags & TK_MAPPED)) {
 	    allMapped = 0;
 	}
-	if (topLevelPtr->flags & TK_TOP_LEVEL) {
+	if (topLevelPtr->flags & TK_TOP_HIERARCHY) {
 	    break;
 	}
     }
