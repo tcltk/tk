@@ -1,3 +1,7 @@
+2004-09-24  Don Porter  <dgp@users.sourceforge.net>
+
+        * generic/tkCursor.c:  Add missing initialization in debug routine.
+
 2004-09-24  Vince Darley  <vincentdarley@users.sourceforge.net>
 
 	* library/text.tcl: corrected mousewheel scrolling [Bug 960190]
