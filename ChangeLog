@@ -1,3 +1,8 @@
+2004-11-16  Don Porter	<dgp@users.sourceforge.net>
+
+	* library/msgs/it.msg:	Updated Italian message catalog.
+	Thanks to Roberto Ugoccioni [Bug 1063675].
+
 2004-11-12  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXXStubs.c: implemented XGetGeometry().
