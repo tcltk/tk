@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.1.4.3 1998/11/25 21:16:30 stanton Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.1.4.4 1998/12/10 04:29:42 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -2664,7 +2664,6 @@ Tk_EventObjCmd(clientData, interp, objc, objv)
 		return TCL_ERROR;
 	    }
 	    return HandleEventGenerate(interp, tkwin, objc - 2, objv + 2);
-	    break;
 	}
 	case EVENT_INFO: {
 	    if (objc == 2) {
@@ -2677,7 +2676,6 @@ Tk_EventObjCmd(clientData, interp, objc, objv)
 		Tcl_WrongNumArgs(interp, 2, objv, "?virtual?");
 		return TCL_ERROR;
 	    }
-	    break;
 	}
     }
     return TCL_OK;
