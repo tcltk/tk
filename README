@@ -1,14 +1,33 @@
 The Tk Toolkit
 
-SCCS: @(#) README 1.47 97/11/20 12:48:16
+SCCS: %Z% $Id: README,v 1.2 1998/06/29 23:03:54 welch Exp $ 
+
+0. Preface
+----------
+This is a pre-release of 8.0.3, tk_patchLevel "8.0.3-1"
+we expect the 8.0.3 release to continue to change with the adoption
+of more patches, etc.  This release is being made early to help
+with the Consortium CD project.  Please do not advertise or
+circulate this release widely.  If you have problems, please figure
+out a fix and include a patch or a lot of detail, then send 
+email to <bugs@scriptics.com>
+Brent Welch
+
+Summary of changes:
+1. Various bug fixes from Scriptics.
+2. Adopted changes from the 2.0 plugin release for security fixes
+and improved Macintosh embedding code.
+3. Adopted Nijtmans' compatibility patch to add reserved fields to
+certain Tk structures.  This means extensions should work with
+either vanilla Tk or a dash-patched version.
 
 1. Introduction
 ---------------
 
 This directory and its descendants contain the sources and documentation
 for Tk, an X11 toolkit implemented with the Tcl scripting language.  The
-information here corresponds to Tk 8.0p2, which is the second patch update
-for Tk 8.0.  This release is designed to work with Tcl 8.0p2 and may not
+information here corresponds to Tk 8.0.3, which is the third patch update
+for Tk 8.0.  This release is designed to work with Tcl 8.0.3 and may not
 work with any other version of Tcl.
 
 Tk 8.0 is a major release with significant new features such as native
@@ -75,8 +94,8 @@ Before trying to compile Tk you should do the following things:
         available now for PCs and Macintoshes, and several flavors of
         UNIX.  Binary releases are much easier to install than source
         releases.  To find out whether a binary release is available for
-        your platform, check the home page for the Sun Tcl/Tk project
-        (http://www.sunlabs.com/research/tcl) and also check in the FTP
+        your platform, check the home page for Tcl/Tk
+        (http://www.scriptics.com/) and also check in the FTP
         directory from which you retrieved the base distribution.
 
     (b) Make sure you have the most recent patch release.  Look in the
@@ -268,19 +287,11 @@ reading software to ensure that it is supplying valid e-mail addresses.
 
 A couple of  Mailing List have been set up to discuss Macintosh or
 Windows related Tcl issues.  In order to use these Mailing Lists you
-must have access to the internet.  If you have access to the WWW the
-home pages for these mailing lists are located at the following URLs:
-
-	http://www.sunlabs.com/research/tcl/lists/mactcl-list.html
-
-		-and-
-
-	http://www.sunlabs.com/research/tcl/lists/wintcl-list.html
-
-The home pages contain information about the lists and an HTML archive
-of all the past messages on the list.  To subscribe send a message to:
+must have access to the internet. To subscribe send a message to:
 	
-	listserv@sunlabs.sun.com
+	wintcl-request@tclconsorium.org
+	or
+	mactcl-request@tclconsorium.org
 	
 In the body of the message (the subject will be ignored) put:
 	
@@ -311,7 +322,7 @@ that are commonly encountered by TCL newcomers.
 
 We're very interested in receiving bug reports and suggestions for
 improvements.  We prefer that you send this information to the
-comp.lang.tcl newsgroup rather than to any of us at Sun.  We'll see
+comp.lang.tcl newsgroup rather than to any of us at Scriptics.  We'll see
 anything on comp.lang.tcl, and in addition someone else who reads 
 comp.lang.tcl may be able to offer a solution.  The normal turn-around
 time for bugs is 3-6 weeks.  Enhancements may take longer and may not
@@ -337,11 +348,15 @@ support for users.  If you need help we suggest that you post questions
 to comp.lang.tcl.  We read the newsgroup and will attempt to answer
 esoteric questions for which no-one else is likely to know the answer.
 In addition, Tcl/Tk support and training are available commercially from
-NeoSoft (info@neosoft.com), Computerized Processes Unlimited
-(gwl@cpu.com), and Data Kinetics (education@dkl.com).
+Scriptics (info@scriptics.com), NeoSoft (info@neosoft.com),
+Computerized Processes Unlimited (gwl@cpu.com),
+and Data Kinetics (education@dkl.com).
 
 10. Release organization
 ------------------------
+
+The version numbers described below are available to Tcl scripts
+as the tk_version and tk_patchLevel Tcl variables.
 
 Each Tk release is identified by two numbers separated by a dot, e.g.
 3.2 or 3.3.  If a new release contains changes that are likely to break
@@ -375,7 +390,9 @@ incompatibility.  Once the official release is made then there won't
 be any more incompatibilities until the next release with a new major
 version number.
 
-Patch releases have a suffix such as p1 or p2.  These releases contain
-bug fixes only.  A patch release (e.g Tk 4.1p2) should be completely
-compatible with the base release from which it is derived (e.g. Tk
-4.1), and you should normally use the highest available patch release.
+Patch releases used to have a suffix such as p1 or p2.  Now we use
+a 3-part version number: major.minor.patchlevel. (e.g., 8.0.3)
+These releases contain bug fixes only.  A patch release (e.g Tk 4.1p2)
+should be completely compatible with the base release from which it is
+derived (e.g. Tk 4.1), and you should normally use the highest available
+patch release.
