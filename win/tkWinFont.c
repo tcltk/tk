@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.23 2004/05/05 09:39:39 dkf Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.24 2004/05/05 16:49:53 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -149,6 +149,7 @@ typedef struct CanUse {
     Tcl_DString *nameTriedPtr;
     int ch;
     SubFont *subFontPtr;
+    SubFont **subFontPtrPtr;
 } CanUse;
 
 /*
@@ -189,14 +190,14 @@ static Tcl_Encoding systemEncoding;
 static FontFamily *	AllocFontFamily(HDC hdc, HFONT hFont, int base);
 static SubFont *	CanUseFallback(HDC hdc, WinFont *fontPtr, 
 			    char *fallbackName,	int ch,
-			    SubFont **subfontPtrPtr);
+			    SubFont **subFontPtrPtr);
 static SubFont *	CanUseFallbackWithAliases(HDC hdc, WinFont *fontPtr, 
 			    char *faceName, int ch, Tcl_DString *nameTriedPtr,
-			    SubFont **subfontPtrPtr);
+			    SubFont **subFontPtrPtr);
 static int		FamilyExists(HDC hdc, CONST char *faceName);
 static char *		FamilyOrAliasExists(HDC hdc, CONST char *faceName);
 static SubFont *	FindSubFontForChar(WinFont *fontPtr, int ch,
-			    SubFont **subfontPtrPtr);
+			    SubFont **subFontPtrPtr);
 static void		FontMapInsert(SubFont *subFontPtr, int ch);
 static void		FontMapLoadPage(SubFont *subFontPtr, int row);
 static int		FontMapLookup(SubFont *subFontPtr, int ch);
@@ -1449,7 +1450,7 @@ FindSubFontForChar(
     WinFont *fontPtr,		/* The font object with which the character
 				 * will be displayed. */
     int ch,			/* The Unicode character to be displayed. */
-    SubFont **subfontPtrPtr)	/* Pointer to var to be fixed up if we
+    SubFont **subFontPtrPtr)	/* Pointer to var to be fixed up if we
 				 * reallocate the subfont table. */
 {
     HDC hdc;
@@ -1514,7 +1515,7 @@ FindSubFontForChar(
 	for (j = 0; fontFallbacks[i][j] != NULL; j++) {
 	    fallbackName = fontFallbacks[i][j];
 	    subFontPtr = CanUseFallbackWithAliases(hdc, fontPtr, fallbackName,
-		    ch, &ds, subfontPtrPtr);
+		    ch, &ds, subFontPtrPtr);
 	    if (subFontPtr != NULL) {
 		goto end;
 	    }
@@ -1529,7 +1530,7 @@ FindSubFontForChar(
     for (i = 0; anyFallbacks[i] != NULL; i++) {
 	fallbackName = anyFallbacks[i];
 	subFontPtr = CanUseFallbackWithAliases(hdc, fontPtr, fallbackName, 
-		ch, &ds, subfontPtrPtr);
+		ch, &ds, subFontPtrPtr);
 	if (subFontPtr != NULL) {
 	    goto end;
 	}
@@ -1545,6 +1546,7 @@ FindSubFontForChar(
     canUse.nameTriedPtr = &ds;
     canUse.ch = ch;
     canUse.subFontPtr = NULL;
+    canUse.subFontPtrPtr = subFontPtrPtr;
     if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	EnumFontFamiliesW(hdc, NULL, (FONTENUMPROCW) WinFontCanUseProc,
 		(LPARAM) &canUse);
@@ -1598,7 +1600,7 @@ WinFontCanUseProc(
 
     if (SeenName(fallbackName, nameTriedPtr) == 0) {
 	subFontPtr = CanUseFallback(hdc, fontPtr, fallbackName, ch,
-		subfontPtrPtr);
+		canUsePtr->subFontPtrPtr);
 	if (subFontPtr != NULL) {
 	    canUsePtr->subFontPtr = subFontPtr;
 	    Tcl_DStringFree(&faceString);
@@ -1810,7 +1812,7 @@ CanUseFallbackWithAliases(
 				 * been tried.  It is possible for the same
 				 * face name to be queried multiple times when
 				 * trying to find a suitable screen font. */
-    SubFont **subfontPtrPtr)	/* Variable to fixup if we reallocate the
+    SubFont **subFontPtrPtr)	/* Variable to fixup if we reallocate the
 				 * array of subfonts. */
 {
     int i;
@@ -1818,7 +1820,7 @@ CanUseFallbackWithAliases(
     SubFont *subFontPtr;
     
     if (SeenName(faceName, nameTriedPtr) == 0) {
-	subFontPtr = CanUseFallback(hdc, fontPtr, faceName, ch, subfontPtrPtr);
+	subFontPtr = CanUseFallback(hdc, fontPtr, faceName, ch, subFontPtrPtr);
 	if (subFontPtr != NULL) {
 	    return subFontPtr;
 	}
@@ -1828,7 +1830,7 @@ CanUseFallbackWithAliases(
 	for (i = 0; aliases[i] != NULL; i++) {
 	    if (SeenName(aliases[i], nameTriedPtr) == 0) {
 		subFontPtr = CanUseFallback(hdc, fontPtr, aliases[i], ch,
-			subfontPtrPtr);
+			subFontPtrPtr);
 		if (subFontPtr != NULL) {
 		    return subFontPtr;
 		}
@@ -1909,7 +1911,7 @@ CanUseFallback(
     char *faceName,		/* Desired face name for new screen font. */
     int ch,			/* The Unicode character that the new
 				 * screen font must be able to display. */
-    SubFont **subfontPtrPtr)	/* Variable to fix-up if we realloc the array
+    SubFont **subFontPtrPtr)	/* Variable to fix-up if we realloc the array
 				 * of subfonts. */
 {
     int i;
@@ -1958,10 +1960,10 @@ CanUseFallback(
 	    ckfree((char *) fontPtr->subFontArray);
 	}
 	/*
-	 * Fix up the variable pointed to by subfontPtrPtr so it still
+	 * Fix up the variable pointed to by subFontPtrPtr so it still
 	 * points into the live array.  [Bug 618872]
 	 */
-	*subfontPtrPtr = newPtr + (*subfontPtrPtr - fontPtr->subFontArray);
+	*subFontPtrPtr = newPtr + (*subFontPtrPtr - fontPtr->subFontArray);
 	fontPtr->subFontArray = newPtr;
     }
     fontPtr->subFontArray[fontPtr->numSubFonts] = subFont;
