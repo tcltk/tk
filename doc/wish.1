@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wish.1,v 1.2 1998/09/14 18:23:01 stanton Exp $
+'\" RCS: @(#) $Id: wish.1,v 1.3 2003/02/13 22:09:12 kennykb Exp $
 '\" 
 .so man.macros
 .TH wish 1 8.0 Tk "Tk Applications"
@@ -72,8 +72,9 @@ If \fBwish\fR is invoked with an initial \fIfileName\fR argument, then
 presumably creates a user interface), then it will respond to events
 until all windows have been deleted.
 Commands will not be read from standard input.
-There is no automatic evaluation of \fB.wishrc\fR in this
-case, but the script file can always \fBsource\fR it if desired.
+There is no automatic evaluation of \fB.wishrc\fR when the name
+of a script file is presented on the \fBwish\fR command line,
+but the script file can always \fBsource\fR it if desired.
 
 .SH "OPTIONS"
 .PP
@@ -168,7 +169,16 @@ instead to start up \fBwish\fR to reprocess the entire script.
 When \fBwish\fR starts up, it treats all three lines as comments,
 since the backslash at the end of the second line causes the third
 line to be treated as part of the comment on the second line.
-
+.PP
+.VS 8.4
+The end of a script file may be marked either by the physical end of
+the medium, or by the character, '\\032' ('\\u001a', control-Z).
+If this character is present in the file, the \fBwish\fR application
+will read text up to but not including the character.  An application
+that requires this character in the file may encode it as
+``\\032'', ``\\x1a'', or ``\\u001a''; or may generate it by use of commands 
+such as \fBformat\fR or \fBbinary\fR.
+.VE
 .SH PROMPTS
 .PP
 When \fBwish\fR is invoked interactively it normally prompts for each
