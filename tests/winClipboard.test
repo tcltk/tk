@@ -10,17 +10,18 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winClipboard.test,v 1.9 2001/09/21 20:38:18 hobbs Exp $
+# RCS: @(#) $Id: winClipboard.test,v 1.10 2002/07/12 13:41:01 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::test
+namespace import -force tcltest::testConstraint
+namespace import -force tcltest::bytestring
+eval tcltest::configure $argv
 
 # Note that these tests may fail if another application is grabbing the
 # clipboard (e.g. an X server)
 
-set ::tcltest::testConfig(testclipboard) \
-	[llength [info commands testclipboard]]
+testConstraint testclipboard [llength [info commands testclipboard]]
 
 test winClipboard-1.1 {TkSelGetSelection} {pcOnly} {
     clipboard clear
