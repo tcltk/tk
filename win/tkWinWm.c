@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.4 2004/09/10 18:47:21 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.5 2004/09/10 20:51:07 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -315,7 +315,7 @@ typedef struct TkWmInfo {
  * Window styles for various types of toplevel windows.
  */
 
-#define WM_OVERRIDE_STYLE (WS_CHILD|WS_CLIPCHILDREN|WS_CLIPSIBLINGS|CS_DBLCLKS)
+#define WM_OVERRIDE_STYLE (WS_CLIPCHILDREN|WS_CLIPSIBLINGS|CS_DBLCLKS)
 #define EX_OVERRIDE_STYLE (WS_EX_TOOLWINDOW)
 
 #define WM_TOPLEVEL_STYLE (WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN|CS_DBLCLKS)
@@ -1934,17 +1934,26 @@ UpdateWrapper(winPtr)
     } else {
 	/*
 	 * Pick the decorative frame style.  Override redirect windows get
-	 * created as undecorated popups.  Transient windows get a modal
-	 * dialog frame.  Neither override, nor transient windows appear in
-	 * the Windows taskbar.  Note that a transient window does not resize
-	 * by default, so we need to explicitly add the WS_THICKFRAME style
-	 * if we want it to be resizeable.
+	 * created as undecorated popups if they have no transient parent,
+	 * otherwise they are children.  This allows splash screens to operate
+	 * as an independent window, while having dropdows (like for a
+	 * combobox) not grab focus away from their parent.  Transient windows
+	 * get a modal dialog frame.  Neither override, nor transient windows
+	 * appear in the Windows taskbar.  Note that a transient window does
+	 * not resize by default, so we need to explicitly add the
+	 * WS_THICKFRAME style if we want it to be resizeable.
 	 */
 
 	if (winPtr->atts.override_redirect) {
 	    wmPtr->style = WM_OVERRIDE_STYLE;
 	    wmPtr->exStyle = EX_OVERRIDE_STYLE;
+	    /* parent must be desktop even if we have a transient parent */
 	    parentHWND = GetDesktopWindow();
+	    if (wmPtr->masterPtr) {
+		wmPtr->style |= WS_CHILD;
+	    } else {
+		wmPtr->style |= WS_POPUP;
+	    }
 	} else if (wmPtr->masterPtr) {
 	    wmPtr->style = WM_TRANSIENT_STYLE;
 	    wmPtr->exStyle = EX_TRANSIENT_STYLE;
@@ -2152,13 +2161,6 @@ UpdateWrapper(winPtr)
 	ckfree((char *) childStateInfo);
     }
 
-    /*
-     * To keep the standard Tk behavior, we must raise override_redirected 
-     * window manually
-     */
-    if (winPtr->atts.override_redirect) {
-	TkWinSetWindowPos(wmPtr->wrapper, NULL, Above);
-    } 
     /*
      * If this is the first window created by the application, then
      * we should activate the initial window.
