@@ -1,5 +1,10 @@
 2000-10-01  Eric Melski  <ericm@ajubasolutions.com>
 
+	* generic/tkButton.c (ConfigureButton): Added tests for -compound
+	option, so that when there is a textvariable and an image, and
+	-compound is not none, the button will display both the
+	textvariable and the image.
+
 	* doc/SetOptions.3: Added note that restoreProc and freeProc may
 	be NULL.
 
