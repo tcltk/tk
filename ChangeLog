@@ -1,3 +1,7 @@
+2005-02-14  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/options.n: note -cursor {} behavior. [Bug 965618]
+
 2005-02-14  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* tests/all.tcl: Add a [package require Tk] so that a missing
