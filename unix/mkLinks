@@ -624,6 +624,14 @@ if test -r TextLayout.3; then
     ln TextLayout.3 Tk_IntersectTextLayout.3
 fi
 if test -r WindowId.3; then
+    rm -f Tk_IsContainer.3
+    ln WindowId.3 Tk_IsContainer.3
+fi
+if test -r WindowId.3; then
+    rm -f Tk_IsEmbedded.3
+    ln WindowId.3 Tk_IsEmbedded.3
+fi
+if test -r WindowId.3; then
     rm -f Tk_IsMapped.3
     ln WindowId.3 Tk_IsMapped.3
 fi
