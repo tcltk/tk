@@ -464,7 +464,7 @@ clean:
 
 distclean: clean
 	rm -f Makefile config.status config.cache config.log tkConfig.sh \
-		SUNWtk.* prototype
+		$(PACKAGE).* prototype
 
 depend:
 	makedepend -- $(DEPEND_SWITCHES) -- $(SRCS)
@@ -765,9 +765,10 @@ checkexports: $(TK_LIB_FILE)
 # to put the distribution.  DISTDIR must be an absolute path name.
 #
 
+DISTROOT = /tmp/dist
 DISTNAME =	tk@TK_VERSION@@TK_PATCH_LEVEL@
 ZIPNAME =	tk@TK_MAJOR_VERSION@@TK_MINOR_VERSION@@TK_PATCH_LEVEL@.zip
-DISTDIR =	/proj/tcl/dist/$(DISTNAME)
+DISTDIR =	$(DISTROOT)/$(DISTNAME)
 TCLDIR = 	@TCL_SRC_DIR@
 $(UNIX_DIR)/configure: $(UNIX_DIR)/configure.in
 	autoconf $(UNIX_DIR)/configure.in > $(UNIX_DIR)/configure
@@ -864,7 +865,6 @@ dist:   $(UNIX_DIR)/configure
 	mkdir $(DISTDIR)/doc
 	cp -p $(TOP_DIR)/license.terms $(TOP_DIR)/doc/*.[13n] \
 		$(TCLDIR)/doc/man.macros $(DISTDIR)/doc
-	cp /home/ouster/papers/tk4.0/tk4.0.ps $(DISTDIR)/doc
 	mkdir $(DISTDIR)/tests
 	cp -p $(TOP_DIR)/license.terms $(TOP_DIR)/tests/*.test \
 		$(TOP_DIR)/tests/visual $(TOP_DIR)/tests/*.tcl \
@@ -878,10 +878,10 @@ dist:   $(UNIX_DIR)/configure
 #
 
 alldist: dist
-	rm -f /proj/tcl/dist/$(DISTNAME).tar.Z \
-		/proj/tcl/dist/$(DISTNAME).tar.gz \
-		/proj/tcl/dist/$(ZIPNAME)
-	cd /proj/tcl/dist; tar cf $(DISTNAME).tar $(DISTNAME); \
+	rm -f $(DISTROOT)/$(DISTNAME).tar.Z \
+		$(DISTROOT)/$(DISTNAME).tar.gz \
+		$(DISTROOT)/$(ZIPNAME)
+	cd $(DISTROOT); tar cf $(DISTNAME).tar $(DISTNAME); \
 		gzip -9 -c $(DISTNAME).tar > $(DISTNAME).tar.gz; \
 		compress $(DISTNAME).tar; zip -r8 $(ZIPNAME) $(DISTNAME)
 
@@ -894,16 +894,16 @@ alldist: dist
 #
 
 allpatch: dist
-	rm -f /proj/tcl/dist/$(DISTNAME).tar.Z \
-		/proj/tcl/dist/$(DISTNAME).tar.gz \
-		/proj/tcl/dist/$(ZIPNAME)
-	mv /proj/tcl/dist/tk${VERSION} /proj/tcl/dist/old
-	mv /proj/tcl/dist/$(DISTNAME) /proj/tcl/dist/tk${VERSION}
-	cd /proj/tcl/dist; tar cf $(DISTNAME).tar tk${VERSION}; \
+	rm -f $(DISTROOT)/$(DISTNAME).tar.Z \
+		$(DISTROOT)/$(DISTNAME).tar.gz \
+		$(DISTROOT)/$(ZIPNAME)
+	mv $(DISTROOT)/tk${VERSION} $(DISTROOT)/old
+	mv $(DISTROOT)/$(DISTNAME) $(DISTROOT)/tk${VERSION}
+	cd $(DISTROOT); tar cf $(DISTNAME).tar tk${VERSION}; \
 		gzip -9 -c $(DISTNAME).tar > $(DISTNAME).tar.gz; \
 		compress $(DISTNAME).tar; zip -r8 $(ZIPNAME) tk${VERSION}
-	mv /proj/tcl/dist/tk${VERSION} /proj/tcl/dist/$(DISTNAME)
-	mv /proj/tcl/dist/old /proj/tcl/dist/tk${VERSION}
+	mv $(DISTROOT)/tk${VERSION} $(DISTROOT)/$(DISTNAME)
+	mv $(DISTROOT)/old $(DISTROOT)/tk${VERSION}
 
 #
 # Target to create a Macintosh version of the distribution.  This will
@@ -934,12 +934,14 @@ macdist: dist
 #     make DISTDIR=<distdir> package-quick
 #
 # <distdir> is the absolute path to a directory where the build should
-# take place.  These steps will generate the SUNWtk.sun4 and
-# SUNWtk.i86pc stream packages.  It is important that the packages be
+# take place.  These steps will generate the $(PACKAGE).sun4 and
+# $(PACKAGE).i86pc stream packages.  It is important that the packages be
 # built in this fashion in order to ensure that the architecture
 # independent files are exactly the same, including timestamps, in
 # both packages.
 #
+
+PACKAGE=SCRPtk
 
 package: dist package-config package-common package-binaries package-generate
 package-quick: package-config package-binaries package-generate
@@ -997,7 +999,7 @@ package-generate:
 	| tclsh $(TCLDIR)/unix/mkProto.tcl $(TCLVERSION) \
 		$(UNIX_DIR) > prototype
 	pkgmk -o -d . -f prototype -a `arch`
-	pkgtrans -s . SUNWtk.`arch` SUNWtk
-	rm -rf SUNWtk
+	pkgtrans -s . $(PACKAGE).`arch` $(PACKAGE)
+	rm -rf $(PACKAGE)
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
