@@ -1,13 +1,19 @@
-2003-06-01  Joe English <jenglish@users.sourceforge.net>
+2003-06-09  Joe English  <jenglish@users.sourceforge.net>
+	* unix/tkUnixRFont.c: fix for [Bug#751553] "Xft: 
+	[font configure] does not update in-use fonts".
+	Fixed TkpGetSubFonts() to return information about
+	all subfonts, not just the first one.
+
+2003-06-01  Joe English  <jenglish@users.sourceforge.net>
 	* unix/configure.in: BUGFIX, --enable-xft test was broken.
 	* unix/configure: regen
 
-2003-05-31  Joe English <jenglish@users.sourceforge.net>
+2003-05-31  Joe English  <jenglish@users.sourceforge.net>
 	* unix/tkUnixRFont.c (InitFont): Fill in TkFontAttributes from
 	pattern returned from GetFont (actual font) instead of the 
 	query pattern (requested font).
 
-2003-05-31  Joe English <jenglish@users.sourceforge.net>
+2003-05-31  Joe English  <jenglish@users.sourceforge.net>
 	* unix/tkUnixRFont.c: New file 
 	* unix/tkUnixDefault.h: Use different default fonts if HAVE_XFT
 	* unix/Makefile.in:
@@ -23,7 +29,7 @@
 	* tests/menu.test: fixed complex bug in menu clone cleanup
 	[Bug#465324] and removed 'knownBug' from a test.
 	
-2003-05-29  Joe English <jenglish@users.sourceforge.net>
+2003-05-29  Joe English  <jenglish@users.sourceforge.net>
 	* doc/text.n: Fixed markup errors.
 
 2003-05-28  Miguel Bañón <bagnonm@users.sourceforge.net>
