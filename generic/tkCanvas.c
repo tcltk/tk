@@ -7,11 +7,12 @@
  *
  * Copyright (c) 1991-1994 The Regents of the University of California.
  * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.2 1998/09/14 18:23:06 stanton Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.3 1998/10/13 18:13:06 rjohnson Exp $
  */
 
 #include "default.h"
@@ -25,18 +26,19 @@
 
 /*
  * The structure defined below is used to keep track of a tag search
- * in progress.  Only the "prevPtr" field should be accessed by anyone
- * other than StartTagSearch and NextItem.
+ * in progress.  No field should be accessed by anyone other than
+ * StartTagSearch and NextItem.
  */
 
 typedef struct TagSearch {
     TkCanvas *canvasPtr;	/* Canvas widget being searched. */
     Tk_Uid tag;			/* Tag to search for.   0 means return
 				 * all items. */
-    Tk_Item *prevPtr;		/* Item just before last one found (or NULL
-				 * if last one found was first in the item
-				 * list of canvasPtr). */
     Tk_Item *currentPtr;	/* Pointer to last item returned. */
+    Tk_Item *lastPtr;		/* The item right before the currentPtr
+				 * is tracked so if the currentPtr is
+				 * deleted we don't have to start from the
+				 * beginning. */
     int searchOver;		/* Non-zero means NextItem should always
 				 * return NULL. */
 } TagSearch;
@@ -353,7 +355,8 @@ Tk_CanvasCmd(clientData, interp, argc, argv)
     canvasPtr->flags = 0;
     canvasPtr->nextId = 1;
     canvasPtr->psInfoPtr = NULL;
-
+    Tcl_InitHashTable(&canvasPtr->idTable, TCL_ONE_WORD_KEYS);
+    
     Tk_SetClass(canvasPtr->tkwin, "Canvas");
     TkSetClassProcs(canvasPtr->tkwin, &canvasClass, (ClientData) canvasPtr);
     Tk_CreateEventHandler(canvasPtr->tkwin,
@@ -494,18 +497,18 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	if (isdigit(UCHAR(argv[2][0]))) {
 	    int id;
 	    char *end;
+	    Tcl_HashEntry *entryPtr;
 
 	    id = strtoul(argv[2], &end, 0);
 	    if (*end != 0) {
 		goto bindByTag;
 	    }
-	    for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
-		    itemPtr = itemPtr->nextPtr) {
-		if (itemPtr->id == id) {
-		    object = (ClientData) itemPtr;
-		    break;
-		}
+	    entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable, (char *) id);
+	    if (entryPtr != NULL) {
+		itemPtr = (Tk_Item *) Tcl_GetHashValue(entryPtr);
+		object = (ClientData) itemPtr;
 	    }
+
 	    if (object == 0) {
 		Tcl_AppendResult(interp, "item \"", argv[2],
 			"\" doesn't exist", (char *) NULL);
@@ -664,7 +667,9 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	Tk_ItemType *typePtr;
 	Tk_ItemType *matchPtr = NULL;
 	Tk_Item *itemPtr;
-
+	int isNew = 0;
+	Tcl_HashEntry *entryPtr;
+	
 	if (argc < 3) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
 		    argv[0], " create type ?arg arg ...?\"", (char *) NULL);
@@ -702,6 +707,10 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	    goto error;
 	}
 	itemPtr->nextPtr = NULL;
+	entryPtr = Tcl_CreateHashEntry(&canvasPtr->idTable,
+		(char *) itemPtr->id, &isNew);
+	Tcl_SetHashValue(entryPtr, itemPtr);
+	itemPtr->prevPtr = canvasPtr->lastItemPtr;
 	canvasPtr->hotPtr = itemPtr;
 	canvasPtr->hotPrevPtr = canvasPtr->lastItemPtr;
 	if (canvasPtr->lastItemPtr == NULL) {
@@ -760,6 +769,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
     } else if ((c == 'd') && (strncmp(argv[1], "delete", length) == 0)
 	    && (length >= 2)) {
 	int i;
+	Tcl_HashEntry *entryPtr;
 
 	for (i = 2; i < argc; i++) {
 	    for (itemPtr = StartTagSearch(canvasPtr, argv[i], &search);
@@ -775,16 +785,23 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 		if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
 		    ckfree((char *) itemPtr->tagPtr);
 		}
-		if (search.prevPtr == NULL) {
+		entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable,
+			(char *) itemPtr->id);
+		Tcl_DeleteHashEntry(entryPtr);
+		if (itemPtr->nextPtr != NULL) {
+		    itemPtr->nextPtr->prevPtr = itemPtr->prevPtr;
+		}
+		if (itemPtr->prevPtr != NULL) {
+		    itemPtr->prevPtr->nextPtr = itemPtr->nextPtr;
+		}
+		if (canvasPtr->firstItemPtr == itemPtr) {
 		    canvasPtr->firstItemPtr = itemPtr->nextPtr;
 		    if (canvasPtr->firstItemPtr == NULL) {
 			canvasPtr->lastItemPtr = NULL;
 		    }
-		} else {
-		    search.prevPtr->nextPtr = itemPtr->nextPtr;
 		}
 		if (canvasPtr->lastItemPtr == itemPtr) {
-		    canvasPtr->lastItemPtr = search.prevPtr;
+		    canvasPtr->lastItemPtr = itemPtr->prevPtr;
 		}
 		ckfree((char *) itemPtr);
 		if (itemPtr == canvasPtr->currentItemPtr) {
@@ -1027,7 +1044,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	    }
 	}
     } else if ((c == 'l') && (strncmp(argv[1], "lower", length) == 0)) {
-	Tk_Item *prevPtr;
+	Tk_Item *itemPtr;
 
 	if ((argc != 3) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -1042,18 +1059,17 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	 */
 
 	if (argc == 3) {
-	    prevPtr = NULL;
+	    itemPtr = NULL;
 	} else {
-	    prevPtr = StartTagSearch(canvasPtr, argv[3], &search);
-	    if (prevPtr != NULL) {
-		prevPtr = search.prevPtr;
-	    } else {
+	    itemPtr = StartTagSearch(canvasPtr, argv[3], &search);
+	    if (itemPtr == NULL) {
 		Tcl_AppendResult(interp, "tag \"", argv[3],
 			"\" doesn't match any items", (char *) NULL);
 		goto error;
 	    }
+	    itemPtr = itemPtr->prevPtr;
 	}
-	RelinkItems(canvasPtr, argv[2], prevPtr);
+	RelinkItems(canvasPtr, argv[2], itemPtr);
     } else if ((c == 'm') && (strncmp(argv[1], "move", length) == 0)) {
 	double xAmount, yAmount;
 
@@ -1434,6 +1450,7 @@ DestroyCanvas(memPtr)
      * stuff.
      */
 
+    Tcl_DeleteHashTable(&canvasPtr->idTable);
     if (canvasPtr->pixmapGC != None) {
 	Tk_FreeGC(canvasPtr->display, canvasPtr->pixmapGC);
     }
@@ -2162,7 +2179,7 @@ StartTagSearch(canvasPtr, tag, searchPtr)
 					 * will be initialized here. */
 {
     int id;
-    Tk_Item *itemPtr, *prevPtr;
+    Tk_Item *itemPtr, *lastPtr;
     Tk_Uid *tagPtr;
     Tk_Uid uid;
     int count;
@@ -2183,27 +2200,28 @@ StartTagSearch(canvasPtr, tag, searchPtr)
 
     if (isdigit(UCHAR(*tag))) {
 	char *end;
-
+	Tcl_HashEntry *entryPtr;
+	
 	numIdSearches++;
 	id = strtoul(tag, &end, 0);
 	if (*end == 0) {
 	    itemPtr = canvasPtr->hotPtr;
-	    prevPtr = canvasPtr->hotPrevPtr;
-	    if ((itemPtr == NULL) || (itemPtr->id != id) || (prevPtr == NULL)
-		    || (prevPtr->nextPtr != itemPtr)) {
+	    lastPtr = canvasPtr->hotPrevPtr;
+	    if ((itemPtr == NULL) || (itemPtr->id != id) || (lastPtr == NULL)
+		    || (lastPtr->nextPtr != itemPtr)) {
 		numSlowSearches++;
-		for (prevPtr = NULL, itemPtr = canvasPtr->firstItemPtr;
-			itemPtr != NULL;
-			prevPtr = itemPtr, itemPtr = itemPtr->nextPtr) {
-		    if (itemPtr->id == id) {
-			break;
-		    }
+		entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable, (char *) id);
+		if (entryPtr != NULL) {
+		    itemPtr = (Tk_Item *)Tcl_GetHashValue(entryPtr);
+		    lastPtr = itemPtr->prevPtr;
+		} else {
+		    lastPtr = itemPtr = NULL;
 		}
 	    }
-	    searchPtr->prevPtr = prevPtr;
+	    searchPtr->lastPtr = lastPtr;
 	    searchPtr->searchOver = 1;
 	    canvasPtr->hotPtr = itemPtr;
-	    canvasPtr->hotPrevPtr = prevPtr;
+	    canvasPtr->hotPrevPtr = lastPtr;
 	    return itemPtr;
 	}
     }
@@ -2216,7 +2234,7 @@ StartTagSearch(canvasPtr, tag, searchPtr)
 	 */
 
 	searchPtr->tag = NULL;
-	searchPtr->prevPtr = NULL;
+	searchPtr->lastPtr = NULL;
 	searchPtr->currentPtr = canvasPtr->firstItemPtr;
 	return canvasPtr->firstItemPtr;
     }
@@ -2225,18 +2243,18 @@ StartTagSearch(canvasPtr, tag, searchPtr)
      * None of the above.  Search for an item with a matching tag.
      */
 
-    for (prevPtr = NULL, itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
-	    prevPtr = itemPtr, itemPtr = itemPtr->nextPtr) {
+    for (lastPtr = NULL, itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
+	    lastPtr = itemPtr, itemPtr = itemPtr->nextPtr) {
 	for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
 		count > 0; tagPtr++, count--) {
 	    if (*tagPtr == uid) {
-		searchPtr->prevPtr = prevPtr;
+		searchPtr->lastPtr = lastPtr;
 		searchPtr->currentPtr = itemPtr;
 		return itemPtr;
 	    }
 	}
     }
-    searchPtr->prevPtr = prevPtr;
+    searchPtr->lastPtr = lastPtr;
     searchPtr->searchOver = 1;
     return NULL;
 }
@@ -2267,7 +2285,7 @@ NextItem(searchPtr)
     TagSearch *searchPtr;		/* Record describing search in
 					 * progress. */
 {
-    Tk_Item *itemPtr, *prevPtr;
+    Tk_Item *itemPtr, *lastPtr;
     int count;
     Tk_Uid uid;
     Tk_Uid *tagPtr;
@@ -2277,11 +2295,11 @@ NextItem(searchPtr)
      * one to return), and return if there are no items left.
      */
 
-    prevPtr = searchPtr->prevPtr;
-    if (prevPtr == NULL) {
+    lastPtr = searchPtr->lastPtr;
+    if (lastPtr == NULL) {
 	itemPtr = searchPtr->canvasPtr->firstItemPtr;
     } else {
-	itemPtr = prevPtr->nextPtr;
+	itemPtr = lastPtr->nextPtr;
     }
     if ((itemPtr == NULL) || (searchPtr->searchOver)) {
 	searchPtr->searchOver = 1;
@@ -2291,12 +2309,12 @@ NextItem(searchPtr)
 	/*
 	 * The structure of the list has changed.  Probably the
 	 * previously-returned item was removed from the list.
-	 * In this case, don't advance prevPtr;  just return
+	 * In this case, don't advance lastPtr;  just return
 	 * its new successor (i.e. do nothing here).
 	 */
     } else {
-	prevPtr = itemPtr;
-	itemPtr = prevPtr->nextPtr;
+	lastPtr = itemPtr;
+	itemPtr = lastPtr->nextPtr;
     }
 
     /*
@@ -2305,7 +2323,7 @@ NextItem(searchPtr)
 
     uid = searchPtr->tag;
     if (uid == NULL) {
-	searchPtr->prevPtr = prevPtr;
+	searchPtr->lastPtr = lastPtr;
 	searchPtr->currentPtr = itemPtr;
 	return itemPtr;
     }
@@ -2314,17 +2332,17 @@ NextItem(searchPtr)
      * Look for an item with a particular tag.
      */
 
-    for ( ; itemPtr != NULL; prevPtr = itemPtr, itemPtr = itemPtr->nextPtr) {
+    for ( ; itemPtr != NULL; lastPtr = itemPtr, itemPtr = itemPtr->nextPtr) {
 	for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
 		count > 0; tagPtr++, count--) {
 	    if (*tagPtr == uid) {
-		searchPtr->prevPtr = prevPtr;
+		searchPtr->lastPtr = lastPtr;
 		searchPtr->currentPtr = itemPtr;
 		return itemPtr;
 	    }
 	}
     }
-    searchPtr->prevPtr = prevPtr;
+    searchPtr->lastPtr = lastPtr;
     searchPtr->searchOver = 1;
     return NULL;
 }
@@ -2493,14 +2511,16 @@ FindItems(interp, canvasPtr, argc, argv, newTag, cmdName, option)
 	    DoItem(interp, itemPtr, uid);
 	}
     } else if ((c == 'b') && (strncmp(argv[0], "below", length) == 0)) {
+	Tk_Item *itemPtr;
+
 	if (argc != 2) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
 		    cmdName, option, " below tagOrId", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	(void) StartTagSearch(canvasPtr, argv[1], &search);
-	if (search.prevPtr != NULL) {
-	    DoItem(interp, search.prevPtr, uid);
+	itemPtr = StartTagSearch(canvasPtr, argv[1], &search);
+	if (itemPtr->prevPtr != NULL) {
+	    DoItem(interp, itemPtr->prevPtr, uid);
 	}
     } else if ((c == 'c') && (strncmp(argv[0], "closest", length) == 0)) {
 	double closestDist;
@@ -2773,19 +2793,27 @@ RelinkItems(canvasPtr, tag, prevPtr)
 	     * moved!  Switch to insert after its predecessor.
 	     */
 
-	    prevPtr = search.prevPtr;
+	    prevPtr = prevPtr->prevPtr;
 	}
-	if (search.prevPtr == NULL) {
+	if (itemPtr->prevPtr == NULL) {
+	    if (itemPtr->nextPtr != NULL) {
+		itemPtr->nextPtr->prevPtr = NULL;
+	    }
 	    canvasPtr->firstItemPtr = itemPtr->nextPtr;
 	} else {
-	    search.prevPtr->nextPtr = itemPtr->nextPtr;
+	    if (itemPtr->nextPtr != NULL) {
+		itemPtr->nextPtr->prevPtr = itemPtr->prevPtr;
+	    }
+	    itemPtr->prevPtr->nextPtr = itemPtr->nextPtr;
 	}
 	if (canvasPtr->lastItemPtr == itemPtr) {
-	    canvasPtr->lastItemPtr = search.prevPtr;
+	    canvasPtr->lastItemPtr = itemPtr->prevPtr;
 	}
 	if (firstMovePtr == NULL) {
+	    itemPtr->prevPtr = NULL;
 	    firstMovePtr = itemPtr;
 	} else {
+	    itemPtr->prevPtr = lastMovePtr;
 	    lastMovePtr->nextPtr = itemPtr;
 	}
 	lastMovePtr = itemPtr;
@@ -2803,10 +2831,19 @@ RelinkItems(canvasPtr, tag, prevPtr)
 	return;
     }
     if (prevPtr == NULL) {
+	if (canvasPtr->firstItemPtr != NULL) {
+	    canvasPtr->firstItemPtr->prevPtr = lastMovePtr;
+	}
 	lastMovePtr->nextPtr = canvasPtr->firstItemPtr;
 	canvasPtr->firstItemPtr = firstMovePtr;
     } else {
+	if (prevPtr->nextPtr != NULL) {
+	    prevPtr->nextPtr->prevPtr = lastMovePtr;
+	}
 	lastMovePtr->nextPtr = prevPtr->nextPtr;
+	if (firstMovePtr != NULL) {
+	    firstMovePtr->prevPtr = prevPtr;
+	}
 	prevPtr->nextPtr = firstMovePtr;
     }
     if (canvasPtr->lastItemPtr == prevPtr) {

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.14 1998/10/10 00:30:35 rjohnson Exp $
+ * RCS: @(#) $Id: tk.h,v 1.15 1998/10/13 18:13:06 rjohnson Exp $
  */
 
 #ifndef _TK
@@ -670,10 +670,13 @@ typedef struct Tk_Item  {
 					 * pixel drawn in item.  Item area
 					 * includes x1 and y1 but not x2
 					 * and y2. */
+    struct Tk_Item *prevPtr;		/* Previous in display list of all
+					 * items in this canvas. Later items
+					 * in list are drawn just below earlier
+					 * ones. */
     int   reserved1;			/* This padding is for compatibility */
     char *reserved2;			/* with Jan Nijtmans dash patch */
     int   reserved3;
-    char *reserved4;
 
     /*
      *------------------------------------------------------------------

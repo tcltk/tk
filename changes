@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.22 1998/10/10 00:30:34 rjohnson Exp $
+RCS: @(#) $Id: changes,v 1.23 1998/10/13 18:13:05 rjohnson Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4260,3 +4260,9 @@ Tcl.  See the bind and event man pages for more details.  The listbox
 and text widgets' default bindings have been updated to understand
 MouseWheel events. (RJ)
 
+10/12/98 (performance improvement) Added hash table to canvas widget
+that holds numeric ids for items.  The hash table makes item lookup
+almost constant time which improves certain canvas operations
+(exspecially for canvases with large number items).  Thanks to Mark
+Weissman <weissman@gte.com> and Jan Nijtmans <Jan.Nijtmans@wxs.nl>
+for submitting this improvement.  (RJ)
