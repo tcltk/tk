@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.36 2002/05/23 19:55:19 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.37 2002/05/24 09:50:11 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -3261,6 +3261,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
     } else if ((c == 't') && (strncmp(argv[1], "transient", length) == 0)
 	    && (length >= 3)) {
 	TkWindow *masterPtr = wmPtr->masterPtr;
+	WmInfo *wmPtr2;
 
 	if ((argc != 3) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
@@ -3302,6 +3303,25 @@ Tk_WmCmd(clientData, interp, argc, argv)
 		while (!(masterPtr->flags & TK_TOP_LEVEL)) {
 		    masterPtr = masterPtr->parentPtr;
 		}
+
+		if (wmPtr->iconFor != NULL) {
+		    Tcl_AppendResult(interp, "can't make \"", argv[2],
+		            "\" a transient: it is an icon for ",
+		            Tk_PathName(wmPtr->iconFor),
+		            (char *) NULL);
+		    return TCL_ERROR;
+		}
+
+		wmPtr2 = masterPtr->wmInfoPtr;
+
+		if (wmPtr2->iconFor != NULL) {
+		    Tcl_AppendResult(interp, "can't make \"", argv[3],
+		            "\" a master: it is an icon for ",
+		            Tk_PathName(wmPtr2->iconFor),
+		            (char *) NULL);
+		    return TCL_ERROR;
+		}
+
 		wmPtr->masterPtr = masterPtr;
 		masterPtr->wmInfoPtr->numTransients++;
 

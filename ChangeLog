@@ -1,3 +1,15 @@
+2002-05-24  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* mac/tkMacWm.c (Tk_WmCmd):
+	* tests/unixWm.test: Move wm transient checks over
+	to wm.test so they will be run on all systems.
+	* tests/wm.test: Add tests to check for error when
+	an iconwindow is passed to the wm transient command.
+	* unix/tkUnixWm.c (Tk_WmCmd):
+	* win/tkWinWm.c (Tk_WmCmd): Raise an error if one
+	of the windows passed to the wm transient command
+	is an iconwindow for another toplevel.
+
 2002-05-23  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* mac/tkMacWm.c (TkWmStackorderToplevelWrapperMap):
