@@ -377,7 +377,6 @@ if test -r GetBitmap.3; then
     rm -f Tk_SizeOfBitmap.3 Tk_SizeOfBitmap.3.* 
     rm -f Tk_FreeBitmapFromObj.3 Tk_FreeBitmapFromObj.3.* 
     rm -f Tk_FreeBitmap.3 Tk_FreeBitmap.3.* 
-    rm -f Tk_GetBitmapFromData.3 Tk_GetBitmapFromData.3.* 
     ln $S GetBitmap.3$Z Tk_AllocBitmapFromObj.3$Z 
     ln $S GetBitmap.3$Z Tk_GetBitmap.3$Z 
     ln $S GetBitmap.3$Z Tk_GetBitmapFromObj.3$Z 
@@ -386,7 +385,6 @@ if test -r GetBitmap.3; then
     ln $S GetBitmap.3$Z Tk_SizeOfBitmap.3$Z 
     ln $S GetBitmap.3$Z Tk_FreeBitmapFromObj.3$Z 
     ln $S GetBitmap.3$Z Tk_FreeBitmap.3$Z 
-    ln $S GetBitmap.3$Z Tk_GetBitmapFromData.3$Z 
 fi
 if test -r GetCapStyl.3; then
     rm -f GetCapStyl.3.*
