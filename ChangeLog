@@ -1,3 +1,42 @@
+2004-11-11  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkMain.c:
+	* macosx/tkMacOSXAppInit.c (removed):
+	* macosx/Wish.pbproj/project.pbxproj: 
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXInt.h: changes to make TkAqua dynamically loadable,
+	enabling [package require Tk] from tclsh. Startup code from
+	tkMacOSXAppInit.c moved into tkMacOSXInit.c, added code that
+	notifies the window server that an unbundled executable is a full
+	GUI application after loading Tk. [Patch 1035348]
+
+	* doc/wm.n: documented [wm attributes] on Mac OS X. [Bug 606665]
+	* macosx/tkMacOSXWm.c: implemented TIP 222 [wm attributes -alpha] on
+	Mac OS X. [Patch 892194]
+	WmIconbitmapCmd: adopted FSRef changes from [wm atttrs -titlepath].
+
+	* macosx/tkMacOSXSubwindows.c: synced spacing/formatting with
+	core-8-4-branch.
+
+	* generic/tkRectOval.c:
+	* macosx/README:
+	* macosx/tkMacOSXDefault.h:
+	* macosx/tkMacOSXDraw.c:
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXInt.h:
+	* macosx/tkMacOSXMenu.c:
+	* macosx/tkMacOSXWm.c: forward port from core-8-4-branch of Jim's
+	and my changes for CG drawing and [wm attributes] (corresponds to
+	8.4 changes dating from 09-18, 07-27, 07-24).
+
+	* macosx/tkMacOSXMouseEvent.c: endianness fixes.
+
+	* macosx/Wish.pbproj/project.pbxproj: corrected path to html help
+	inside framework.
+
+	* macosx/Makefile: prevent parallel make from building several
+	targets at the same time.
+
 2004-11-09  Vince Darley  <vincentdarley@users.sourceforge.net>
 
 	* macosx/tkMacOSXButton.c: fix to dynamic reconfiguration of

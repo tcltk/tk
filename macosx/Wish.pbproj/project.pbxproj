@@ -58,8 +58,7 @@
 //F53
 //F54
 		F50D96120196176E01DC9062 = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = ApplicationServices.framework;
 			path = /System/Library/Frameworks/ApplicationServices.framework;
@@ -163,7 +162,7 @@
 			isa = PBXShellScriptBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"${BUILD_STYLE}\" = \"Development\" ]; then\n\t# keep copy of debug library around, so that\n\t# Deployment build can be installed on top\n\t# of Development build without overwriting it\n\tcd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}\"\n\tcp -fp \"${PRODUCT_NAME}\" \"${PRODUCT_NAME}_debug\"\n\tln -fs \"Versions/Current/${PRODUCT_NAME}_debug\" ../..\n\tcp -fp \"libtkstub${FRAMEWORK_VERSION}.a\" \"libtkstub${FRAMEWORK_VERSION}g.a\"\n\n\t# force Deployment build to be relinked next time\n\tif [ -f \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nelse\n\t# force Development build to be relinked next time\n\tif [ -f \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nfi\n\n# fixup Framework structure\ncd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}\"\nln -fs `ls libtkstub* | sed -e \"s|.*|Versions/${FRAMEWORK_VERSION}/&|\"` ../..\nln -fs \"Versions/Current/tkConfig.sh\" ../..\nranlib libtkstub${FRAMEWORK_VERSION}*.a";
+			shellScript = "if [ \"${BUILD_STYLE}\" = \"Development\" ]; then\n\t# keep copy of debug library around, so that\n\t# Deployment build can be installed on top\n\t# of Development build without overwriting it\n\tcd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}\"\n\tcp -fp \"${PRODUCT_NAME}\" \"${PRODUCT_NAME}_debug\"\n\tln -fs \"Versions/Current/${PRODUCT_NAME}_debug\" ../..\n\tcp -fp \"libtkstub${FRAMEWORK_VERSION}.a\" \"libtkstub${FRAMEWORK_VERSION}g.a\"\n\n\t# force Deployment build to be relinked next time\n\tif [ -f \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nelse\n\t# force Development build to be relinked next time\n\tif [ -f \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nfi\n\n# fixup Framework structure\ncd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}\"\nln -fs `ls libtkstub* | sed -e \"s|.*|Versions/${FRAMEWORK_VERSION}/&|\"` ../..\nln -fs \"Versions/Current/tkConfig.sh\" ../..\nranlib libtkstub${FRAMEWORK_VERSION}*.a\n\n# create pkgIndex\n( echo \"if {[package vcompare [package provide Tcl] ${FRAMEWORK_VERSION}] != 0} { return }\" && \\\n  echo \"package ifneeded Tk ${FRAMEWORK_VERSION} [list load [file join \\$dir .. .. Tk] Tk]\" \\\n) > \"Resources/Scripts/pkgIndex.tcl\"";
 		};
 		F537552A016C352C01DC9062 = {
 			buildSettings = {
@@ -202,8 +201,6 @@
 			sourceTree = "<group>";
 		};
 		F537552C016C352C01DC9062 = {
-			buildRules = (
-			);
 			buildSettings = {
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
@@ -218,8 +215,6 @@
 			name = Development;
 		};
 		F537552D016C352C01DC9062 = {
-			buildRules = (
-			);
 			buildSettings = {
 				DEBUGGING_SYMBOLS = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
@@ -502,7 +497,6 @@
 		};
 		F5375546016C376E01DC9062 = {
 			children = (
-				F5375548016C376E01DC9062,
 				F5375549016C376E01DC9062,
 				F537554A016C376E01DC9062,
 				4C8A204405E0421900C18A82,
@@ -543,9 +537,10 @@
 			fileEncoding = 5;
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.c.c;
-			path = tkMacOSXAppInit.c;
-			refType = 4;
-			sourceTree = "<group>";
+			name = tkAppInit.c;
+			path = ../unix/tkAppInit.c;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		F5375549016C376E01DC9062 = {
 			fileEncoding = 5;
@@ -1645,6 +1640,7 @@
 		};
 		F53755C9016C389901DC9062 = {
 			children = (
+				F5375548016C376E01DC9062,
 				F53755CA016C389901DC9062,
 				F53755CB016C389901DC9062,
 			);
@@ -1850,8 +1846,7 @@
 		};
 		F53755DE016C38D201DC9062 = {
 			explicitFileType = wrapper.framework;
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			path = Tk.framework;
 			refType = 3;
 			sourceTree = BUILT_PRODUCTS_DIR;
@@ -1873,7 +1868,7 @@
 				F9A61D2F04C2C861006F5A0B,
 			);
 			buildSettings = {
-				DOCDIR = "${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}/Resources/English.lproj/Documentation/Reference";
+				DOCDIR = "${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}/Resources/Documentation/Reference";
 				DYLIB_COMPATIBILITY_VERSION = 8.5;
 				DYLIB_CURRENT_VERSION = "$(FRAMEWORK_VERSION)";
 				DYLIB_INSTALL_PATH = /Library/Frameworks;
@@ -1917,7 +1912,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Tk</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Tk Library 8.5, Copyright Â© 2003 Tcl Core Team.
+	<string>Tk Library 8.5, Copyright Â© 2004 Tcl Core Team.
 MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â© 2001-2002, Apple Computer, Inc.</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
@@ -3056,8 +3051,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			sourceTree = "<group>";
 		};
 		F537567D016C3ADB01DC9062 = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = Carbon.framework;
 			path = /System/Library/Frameworks/Carbon.framework;
@@ -3260,8 +3254,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 		};
 		F537569F016C4DD401DC9062 = {
 			explicitFileType = wrapper.application;
-			fallbackIsa = PBXFileReference;
-			isa = PBXApplicationReference;
+			isa = PBXFileReference;
 			path = "Wish Shell.app";
 			refType = 3;
 			sourceTree = BUILT_PRODUCTS_DIR;
@@ -3360,8 +3353,6 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			buildActionMask = 2147483647;
 			files = (
 				F53756AC016C4E1D01DC9062,
-				F53756AD016C4E1D01DC9062,
-				F53756AE016C4E1D01DC9062,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3428,18 +3419,6 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 		};
 		F53756AC016C4E1D01DC9062 = {
 			fileRef = F537556B016C37A601DC9062;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F53756AD016C4E1D01DC9062 = {
-			fileRef = F5375570016C37A601DC9062;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F53756AE016C4E1D01DC9062 = {
-			fileRef = F537553E016C376E01DC9062;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -3514,8 +3493,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 		};
 		F548F8CF0313CEF0016F146B = {
 			explicitFileType = "compiled.mach-o.dylib";
-			fallbackIsa = PBXFileReference;
-			isa = PBXLibraryReference;
+			isa = PBXFileReference;
 			path = libtkstub8.5.a;
 			refType = 3;
 			sourceTree = BUILT_PRODUCTS_DIR;
@@ -3576,8 +3554,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			};
 		};
 		F5875C7B016FEF1D01DC9062 = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = Tcl.framework;
 			path = ../tcl/Tcl.framework;
@@ -4051,9 +4028,8 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			sourceTree = SOURCE_ROOT;
 		};
 		F5DF092E016CD3F901DC9062 = {
-			fallbackIsa = PBXFileReference;
 			includeInIndex = 0;
-			isa = PBXFolderReference;
+			isa = PBXFileReference;
 			lastKnownFileType = folder;
 			name = demos;
 			path = ../library/demos;
@@ -4085,9 +4061,8 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			sourceTree = SOURCE_ROOT;
 		};
 		F5DF0932016CD3F901DC9062 = {
-			fallbackIsa = PBXFileReference;
 			includeInIndex = 0;
-			isa = PBXFolderReference;
+			isa = PBXFileReference;
 			lastKnownFileType = folder;
 			name = images;
 			path = ../library/images;
@@ -4119,9 +4094,8 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			sourceTree = SOURCE_ROOT;
 		};
 		F5DF0936016CD3F901DC9062 = {
-			fallbackIsa = PBXFileReference;
 			includeInIndex = 0;
-			isa = PBXFolderReference;
+			isa = PBXFileReference;
 			lastKnownFileType = folder;
 			name = msgs;
 			path = ../library/msgs;

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.15 2004/09/03 14:09:05 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.16 2004/11/11 01:24:32 das Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenubutton.h"
@@ -141,9 +141,6 @@ typedef struct TopLevelMenubarList {
 #define CASCADE_CMD (0x1b)    	
 				/* The special command char for cascade
 			         * menus. */
-#define SEPARATOR_TEXT "\p(-"
-				/* The text for a menu separator. */
-
 #define MENUBAR_REDRAW_PENDING 1
 #define SCREEN_MARGIN 5
 
@@ -1079,7 +1076,9 @@ ReconfigureIndividualMenu(
     	 */
     
     	if (mePtr->type == SEPARATOR_ENTRY) {
-    	    AppendMenu(macMenuHdl, SEPARATOR_TEXT);
+    	    AppendMenuItemTextWithCFString (macMenuHdl, NULL, 
+                    kMenuItemAttrSeparator | kMenuItemAttrDisabled,
+                    0, NULL);
     	} else {
     	    Tcl_DString itemTextDString;
     	    int destWrote;
@@ -1087,13 +1086,12 @@ ReconfigureIndividualMenu(
 	    GetEntryText(mePtr, &itemTextDString);
             cf = CFStringCreateWithCString(NULL,
                   Tcl_DStringValue(&itemTextDString), kCFStringEncodingUTF8);
-	    AppendMenu(macMenuHdl, "\px");
 	    if (cf != NULL) {
-	      SetMenuItemTextWithCFString(macMenuHdl, base + index, cf);
+              AppendMenuItemTextWithCFString (macMenuHdl, cf, 0, 0, NULL);
 	      CFRelease(cf);
 	    } else {
 	      cf = CFSTR ("<Error>");
-	      SetMenuItemTextWithCFString(macMenuHdl, base + index, cf);
+              AppendMenuItemTextWithCFString (macMenuHdl, cf, 0, 0, NULL);
 	    }
 	    Tcl_DStringFree(&itemTextDString);
 	
@@ -2103,6 +2101,7 @@ EventuallyInvokeMenu (ClientData data)
 
     code = TkInvokeMenu(realData->menuPtr->interp, realData->menuPtr,
             realData->index);
+            
     if (code != TCL_OK && code != TCL_CONTINUE
             && code != TCL_BREAK) {
         Tcl_AddErrorInfo(realData->menuPtr->interp, "\n    (menu invoke)");

@@ -3,7 +3,7 @@
 # Makefile to build AquaTk on Mac OS X packaged as a Framework
 #	uses Project Builder command line tool 'pbxbuild'
 #
-# RCS: @(#) $Id: Makefile,v 1.14 2004/07/20 11:49:16 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.15 2004/11/11 01:24:32 das Exp $
 #
 ################################################################################
 
@@ -127,5 +127,7 @@ cleanup-embedded:
 .PHONY: all install embedded clean develop deploy install-develop install-deploy \
 embedded-develop embedded-deploy install-embedded-develop install-embedded-deploy \
 clean-develop clean-deploy cleanup-embedded
+
+.NOTPARALLEL:
 
 ################################################################################
