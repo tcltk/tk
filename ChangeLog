@@ -2,6 +2,10 @@
 
 	* generic/tkCanvas.c: Make tag search subsystem use symbolic names
 	for type flags for easier maintenance.
+	(FIRST_CANVAS_ITEM_MATCHING,FOR_EVERY_CANVAS_ITEM_MATCHING):
+	Factorize out searching idioms into macros to reduce the #ifdef
+	count and make braces match.
+	(ScrollFractions): Really create a list Tcl_Obj.
 
 2004-06-12  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
 
