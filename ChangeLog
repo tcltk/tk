@@ -1,3 +1,13 @@
+2002-04-24  Daniel Steffen  <das@users.sourceforge.net>
+
+	* mac/tkMacTclCode.r:
+	* mac/tkMacResource.r: added check of
+	TCLTK_NO_LIBRARY_TEXT_RESOURCES #define to allow disabling the
+	inclusion of the tk library code in the resource fork of Tk
+	executables and shared libraries.
+	Moved tk library code inclusion to separate file like in tcl.
+	Added 'panedwindow' resource.
+
 2002-04-22  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/button.tcl (ButtonLeave): corrected the 3
