@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.8 2003/10/31 09:02:10 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.9 2003/11/07 15:36:26 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -2036,7 +2036,7 @@ TkBTreeStartSearchBack(index1Ptr, index2Ptr, tagPtr, searchPtr)
 	searchPtr->curIndex = index0;
 	index1Ptr = &index0;
     } else {
-	TkTextIndexBackChars(index1Ptr, 1, &searchPtr->curIndex, 
+	TkTextIndexBackChars(NULL,index1Ptr, 1, &searchPtr->curIndex, 
 			     COUNT_INDICES);
     }
     searchPtr->segPtr = NULL;
@@ -2053,7 +2053,7 @@ TkBTreeStartSearchBack(index1Ptr, index2Ptr, tagPtr, searchPtr)
 	backOne = *index2Ptr;
 	searchPtr->lastPtr = NULL;	/* Signals special case for 1.0 */
     } else {
-	TkTextIndexBackChars(index2Ptr, 1, &backOne, COUNT_INDICES);
+	TkTextIndexBackChars(NULL, index2Ptr, 1, &backOne, COUNT_INDICES);
 	searchPtr->lastPtr = TkTextIndexToSeg(&backOne, (int *) NULL);
     }
     searchPtr->tagPtr = tagPtr;
@@ -2698,33 +2698,43 @@ TkBTreeGetTags(indexPtr, numTagsPtr)
 
 	/* ARGSUSED */
 int
-TkTextIsElided(textPtr, indexPtr)
+TkTextIsElided(textPtr, indexPtr, elideInfo)
     CONST TkText *textPtr;	/* Overall information about text widget. */
     CONST TkTextIndex *indexPtr;/* The character in the text for which
 				 * display information is wanted. */
+    TkTextElideInfo *elideInfo; /* NULL or a pointer to a structure in
+                                 * which indexPtr's elide state will
+                                 * be stored and returned. */
 {
-#define LOTSA_TAGS 1000
-    int elide = 0;		/* if nobody says otherwise, it's visible */
-
-    int deftagCnts[LOTSA_TAGS];
-    int *tagCnts = deftagCnts;
-    TkTextTag *deftagPtrs[LOTSA_TAGS];
-    TkTextTag **tagPtrs = deftagPtrs;
-    int numTags = textPtr->numTags;
     register Node *nodePtr;
     register TkTextLine *siblingLinePtr;
     register TkTextSegment *segPtr;
     register TkTextTag *tagPtr = NULL;
     register int i, index;
+    register TkTextElideInfo *infoPtr;
+    int elide;
+    
+    if (elideInfo == NULL) {
+	infoPtr = (TkTextElideInfo*)ckalloc((unsigned)sizeof(TkTextElideInfo));
+    } else {
+	infoPtr = elideInfo;
+    }
+    
+    infoPtr->elide = 0;		/* if nobody says otherwise, it's visible */
+    infoPtr->tagCnts = infoPtr->deftagCnts;
+    infoPtr->tagPtrs = infoPtr->deftagPtrs;
+    infoPtr->numTags = textPtr->numTags;
 
     /* Almost always avoid malloc, so stay out of system calls */
-    if (LOTSA_TAGS < numTags) {
-	tagCnts = (int *)ckalloc((unsigned)sizeof(int) * numTags);
-	tagPtrs = (TkTextTag **)ckalloc((unsigned)sizeof(TkTextTag *) * numTags);
+    if (LOTSA_TAGS < infoPtr->numTags) {
+	infoPtr->tagCnts = (int *)ckalloc((unsigned)sizeof(int) 
+					  * infoPtr->numTags);
+	infoPtr->tagPtrs = (TkTextTag **)ckalloc((unsigned)sizeof(TkTextTag*) 
+						 * infoPtr->numTags);
     }
  
-    for (i=0; i<numTags; i++) {
-	tagCnts[i] = 0;
+    for (i=0; i<infoPtr->numTags; i++) {
+	infoPtr->tagCnts[i] = 0;
     }
 
     /*
@@ -2739,8 +2749,8 @@ TkTextIsElided(textPtr, indexPtr)
 		|| (segPtr->typePtr == &tkTextToggleOffType)) {
 	    tagPtr = segPtr->body.toggle.tagPtr;
 	    if (tagPtr->elideString != NULL) {
-		tagPtrs[tagPtr->priority] = tagPtr;
-		tagCnts[tagPtr->priority]++;
+		infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
+		infoPtr->tagCnts[tagPtr->priority]++;
 	    }
 	}
     }
@@ -2759,8 +2769,8 @@ TkTextIsElided(textPtr, indexPtr)
 		    || (segPtr->typePtr == &tkTextToggleOffType)) {
 		tagPtr = segPtr->body.toggle.tagPtr;
 		if (tagPtr->elideString != NULL) {
-		    tagPtrs[tagPtr->priority] = tagPtr;
-		    tagCnts[tagPtr->priority]++;
+		    infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
+		    infoPtr->tagCnts[tagPtr->priority]++;
 		}
 	    }
 	}
@@ -2783,8 +2793,8 @@ TkTextIsElided(textPtr, indexPtr)
 		if (summaryPtr->toggleCount & 1) {
 		    tagPtr = summaryPtr->tagPtr;
 		    if (tagPtr->elideString != NULL) {
-			tagPtrs[tagPtr->priority] = tagPtr;
-			tagCnts[tagPtr->priority] += summaryPtr->toggleCount;
+			infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
+			infoPtr->tagCnts[tagPtr->priority] += summaryPtr->toggleCount;
 		    }
 		}
 	    }
@@ -2796,8 +2806,9 @@ TkTextIsElided(textPtr, indexPtr)
      * take elided value from first odd count (= on)
      */
 
-    for (i = numTags-1; i >=0; i--) {
-	if (tagCnts[i] & 1) {
+    infoPtr->elidePriority = -1;
+    for (i = infoPtr->numTags-1; i >=0; i--) {
+	if (infoPtr->tagCnts[i] & 1) {
 #ifndef ALWAYS_SHOW_SELECTION
 	    /* who would make the selection elided? */
 	    if ((tagPtr == textPtr->selTagPtr)
@@ -2805,14 +2816,20 @@ TkTextIsElided(textPtr, indexPtr)
 		continue;
 	    }
 #endif
-	    elide = tagPtrs[i]->elide;
+	    infoPtr->elide = infoPtr->tagPtrs[i]->elide;
+	    infoPtr->elidePriority = i;
 	    break;
 	}
     }
 
-    if (LOTSA_TAGS < numTags) {
-	ckfree((char *) tagCnts);
-	ckfree((char *) tagPtrs);
+    if (LOTSA_TAGS < infoPtr->numTags) {
+	ckfree((char *) infoPtr->tagCnts);
+	ckfree((char *) infoPtr->tagPtrs);
+    }
+    elide = infoPtr->elide;
+    
+    if (elideInfo == NULL) {
+	ckfree((char*) infoPtr);
     }
 
     return elide;
