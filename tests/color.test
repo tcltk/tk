@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: color.test,v 1.1.4.6 1999/03/26 00:07:53 hershey Exp $
+# RCS: @(#) $Id: color.test,v 1.1.4.7 1999/04/06 05:20:12 rjohnson Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -178,7 +178,7 @@ test color-1.4 {Tk_AllocColorFromObj - try other colors in list} {
 } {{{1 1}} {{1 1} {1 0}} {{1 0} {2 1}}}
 
 test color-2.1 {Tk_GetColor procedure} {
-    c255 [winfo rgb .t red]
+    c255 [winfo rgb .t #FF0000]
 } {255 0 0}
 test color-2.2 {Tk_GetColor procedure} {
     list [catch {winfo rgb .t noname} msg] $msg
