@@ -1,3 +1,9 @@
+2002-06-10  David Gravereaux <davygrvy@pobox.com>
+
+	* win/makefile.vc: Fixed a win98 issue where the /exclude option
+	for xcopy is unsupported.
+	Reported by Roy Terry <royterry@earthlink.net>.
+
 2002-06-10  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
 
 	* library/tk.tcl: added utility functions to get "-underline" and 

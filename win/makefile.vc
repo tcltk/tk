@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.59 2002/05/08 02:22:37 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.60 2002/06/10 22:45:51 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -574,9 +574,12 @@ install-libraries:
 	@xcopy /i /y "$(GENERICDIR)\tkPlatDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@xcopy /i /y "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@xcopy /i /y "$(XLIBDIR)\X11\*.h" "$(INCLUDE_INSTALL_DIR)\X11\"
-	@xcopy /i /y "$(ROOT)\library" "$(SCRIPT_INSTALL_DIR)\" /s /exclude:<<
-CVS
-<<
+	@xcopy /i /y "$(ROOT)\library\*" "$(SCRIPT_INSTALL_DIR)\"
+	@xcopy /i /y "$(ROOT)\library\*" "$(SCRIPT_INSTALL_DIR)\"
+	@xcopy /i /y "$(ROOT)\library\demos\*" "$(SCRIPT_INSTALL_DIR)\demos\"
+	@xcopy /i /y "$(ROOT)\library\demos\images\*" "$(SCRIPT_INSTALL_DIR)\demos\images\"
+	@xcopy /i /y "$(ROOT)\library\images\*" "$(SCRIPT_INSTALL_DIR)\images\"
+	@xcopy /i /y "$(ROOT)\library\msgs\*" "$(SCRIPT_INSTALL_DIR)\msgs\"
 
 
 #---------------------------------------------------------------------
