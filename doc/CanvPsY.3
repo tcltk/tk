@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CanvPsY.3,v 1.5 2000/07/25 21:14:34 jenglish Exp $
+'\" RCS: @(#) $Id: CanvPsY.3,v 1.6 2004/09/19 16:05:36 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_CanvasPs 3 4.0 Tk "Tk Library Procedures"
@@ -85,15 +85,15 @@ transformation.
 of a bitmap.
 The Postscript is generated in proper image data format for Postscript,
 i.e., as data between angle brackets, one bit per pixel.
-The Postscript is appended to \fIinterp->result\fR and TCL_OK is returned
-unless an error occurs, in which case TCL_ERROR is returned and
+The Postscript is appended to \fIinterp->result\fR and \fBTCL_OK\fR is returned
+unless an error occurs, in which case \fBTCL_ERROR\fR is returned and
 \fIinterp->result\fR is overwritten with an error message.
 .PP
 \fBTk_CanvasPsColor\fR generates Postscript to set the current color
 to correspond to its \fIcolorPtr\fR argument, taking into account any
 color map specified in the \fBpostscript\fR command.
 It appends the Postscript to \fIinterp->result\fR and returns
-TCL_OK unless an error occurs, in which case TCL_ERROR is returned and
+\fBTCL_OK\fR unless an error occurs, in which case \fBTCL_ERROR\fR is returned and
 \fIinterp->result\fR is overwritten with an error message.
 .PP
 \fBTk_CanvasPsFont\fR generates Postscript that sets the current font
@@ -101,8 +101,8 @@ to match \fItkFont\fR as closely as possible.
 \fBTk_CanvasPsFont\fR takes into account any font map specified
 in the \fBpostscript\fR command, and it does
 the best it can at mapping X fonts to Postscript fonts.
-It appends the Postscript to \fIinterp->result\fR and returns TCL_OK
-unless an error occurs, in which case TCL_ERROR is returned and
+It appends the Postscript to \fIinterp->result\fR and returns \fBTCL_OK\fR
+unless an error occurs, in which case \fBTCL_ERROR\fR is returned and
 \fIinterp->result\fR is overwritten with an error message.
 .PP
 \fBTk_CanvasPsPath\fR generates Postscript to set the current path
@@ -114,8 +114,8 @@ current path in stippled fashion.
 It uses \fIbitmap\fR as the stipple pattern and the current Postscript
 color;  ones in the stipple bitmap are drawn in the current color, and
 zeroes are not drawn at all.
-The Postscript is appended to \fIinterp->result\fR and TCL_OK is
-returned, unless an error occurs, in which case TCL_ERROR is returned and
+The Postscript is appended to \fIinterp->result\fR and \fBTCL_OK\fR is
+returned, unless an error occurs, in which case \fBTCL_ERROR\fR is returned and
 \fIinterp->result\fR is overwritten with an error message.
 
 .SH KEYWORDS

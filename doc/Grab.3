@@ -2,7 +2,7 @@
 '\" Copyright (c) 1998-2000 by Scriptics Corporation.
 '\" All rights reserved.
 '\" 
-'\" RCS: @(#) $Id: Grab.3,v 1.1 2000/04/25 02:12:15 ericm Exp $
+'\" RCS: @(#) $Id: Grab.3,v 1.2 2004/09/19 16:05:36 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_Grab 3 "" Tk "Tk Library Procedures"
@@ -47,8 +47,8 @@ keyboard events intended for a windows within the same application
 specifies the window on whose behalf the pointer is to be grabbed.
 \fIGrabGlobal\fR indicates whether the grab should be global or
 application local; if it is non-zero, it means the grab should be
-global.  Normally, \fBTk_Grab\fR returns TCL_OK; if an error occurs
-and the grab cannot be set, TCL_ERROR is returned and an error message
+global.  Normally, \fBTk_Grab\fR returns \fBTCL_OK\fR; if an error occurs
+and the grab cannot be set, \fBTCL_ERROR\fR is returned and an error message
 is left if \fIinterp\fR's result.  Once this call completes
 successfully, no window outside the tree rooted at \fItkwin\fR will
 receive pointer- or keyboard-related events until the next call to

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: 3DBorder.3,v 1.4 2002/08/05 04:30:38 dgp Exp $
+'\" RCS: @(#) $Id: 3DBorder.3,v 1.5 2004/09/19 16:05:36 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_Alloc3DBorderFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -100,8 +100,8 @@ given by \fIx\fR, \fIy\fR, \fIwidth\fR, \fIheight\fR, negative means
 border is outside rectangle.
 .AP int relief in
 Indicates 3-D position of interior of object relative to exterior;
-should be TK_RELIEF_RAISED, TK_RELIEF_SUNKEN, TK_RELIEF_GROOVE, 
-TK_RELIEF_SOLID, or TK_RELIEF_RIDGE (may also be TK_RELIEF_FLAT
+should be \fBTK_RELIEF_RAISED\fR, \fBTK_RELIEF_SUNKEN\fR, \fBTK_RELIEF_GROOVE\fR,
+\fBTK_RELIEF_SOLID\fR, or \fBTK_RELIEF_RIDGE\fR (may also be \fBTK_RELIEF_FLAT\fR
 for \fBTk_Fill3DRectangle\fR).
 .AP XPoint *pointPtr in
 Pointer to array of points describing the set of vertices in a polygon.
@@ -112,14 +112,14 @@ Number of points at \fI*pointPtr\fR.
 .AP int polyBorderWidth in
 Width of border in pixels.  If positive, border is drawn to left of
 trajectory given by \fIpointPtr\fR;  if negative, border is drawn to
-right of trajectory.  If \fIleftRelief\fR is TK_RELIEF_GROOVE or
-TK_RELIEF_RIDGE then the border is centered on the trajectory.
+right of trajectory.  If \fIleftRelief\fR is \fBTK_RELIEF_GROOVE\fR or
+\fBTK_RELIEF_RIDGE\fR then the border is centered on the trajectory.
 .AP int leftRelief in
-Height of left side of polygon's path relative to right.  TK_RELIEF_RAISED
-means left side should appear higher and TK_RELIEF_SUNKEN means right side
+Height of left side of polygon's path relative to right.  \fBTK_RELIEF_RAISED\fR
+means left side should appear higher and \fBTK_RELIEF_SUNKEN\fR means right side
 should appear higher;
-TK_RELIEF_GROOVE and TK_RELIEF_RIDGE mean the obvious things.
-For \fBTk_Fill3DPolygon\fR, TK_RELIEF_FLAT may also be specified to
+\fBTK_RELIEF_GROOVE\fR and \fBTK_RELIEF_RIDGE\fR mean the obvious things.
+For \fBTk_Fill3DPolygon\fR, \fBTK_RELIEF_FLAT\fR may also be specified to
 indicate no difference in height.
 .AP int leftBevel in
 Non-zero means this bevel forms the left side of the object;  zero means
@@ -140,7 +140,7 @@ Non-zero means this bevel forms the top side of the object;  zero means
 it forms the bottom side.
 .AP int which in
 Specifies which of the border's graphics contexts is desired.
-Must be TK_3D_FLAT_GC, TK_3D_LIGHT_GC, or TK_3D_DARK_GC.
+Must be \fBTK_3D_FLAT_GC\fR, \fBTK_3D_LIGHT_GC\fR, or \fBTK_3D_DARK_GC\fR.
 .BE
 
 .SH DESCRIPTION
@@ -199,10 +199,10 @@ within \fIdrawable\fR (usually \fIx\fR and \fIy\fR are zero and
 \fIborderWidth\fR specifies the number of pixels actually
 occupied by the border.  The \fIrelief\fR argument indicates
 which of several three-dimensional effects is desired:
-TK_RELIEF_RAISED means that the interior of the rectangle should appear raised
-relative to the exterior of the rectangle, and
-TK_RELIEF_SUNKEN means that the interior should appear depressed.
-TK_RELIEF_GROOVE and TK_RELIEF_RIDGE mean that there should appear to be
+\fBTK_RELIEF_RAISED\fR means that the interior of the rectangle should
+appear raised relative to the exterior of the rectangle, and
+\fBTK_RELIEF_SUNKEN\fR means that the interior should appear depressed.
+\fBTK_RELIEF_GROOVE\fR and \fBTK_RELIEF_RIDGE\fR mean that there should appear to be
 a groove or ridge around the exterior of the rectangle.
 .PP
 \fBTk_Fill3DRectangle\fR is somewhat like \fBTk_Draw3DRectangle\fR except
@@ -211,7 +211,7 @@ that it first fills the rectangular area with the background color
 to the color used to create \fIborder\fR).  Then it calls
 \fBTk_Draw3DRectangle\fR to draw a border just inside the outer edge of
 the rectangular area.  The argument \fIrelief\fR indicates the desired
-effect (TK_RELIEF_FLAT means no border should be drawn; all that
+effect (\fBTK_RELIEF_FLAT\fR means no border should be drawn; all that
 happens is to fill the rectangle with the background color).
 .PP
 The procedure \fBTk_Draw3DPolygon\fR may be used to draw more complex
@@ -230,7 +230,7 @@ it's not clear how useful this is.
 \fBTk_Fill3DRectangle\fR is to \fBTk_Draw3DRectangle\fR:  it fills
 the polygonal area with the background color from \fIborder\fR,
 then calls \fBTk_Draw3DPolygon\fR to draw a border around the
-area (unless \fIleftRelief\fR is TK_RELIEF_FLAT;  in this case no
+area (unless \fIleftRelief\fR is \fBTK_RELIEF_FLAT\fR; in this case no
 border is drawn).
 .PP
 The procedures \fBTk_3DVerticalBevel\fR and \fBTk_3DHorizontalBevel\fR
@@ -284,9 +284,9 @@ as long as \fIborder\fR exists.
 The procedure \fBTk_3DBorderGC\fR returns one of the X graphics contexts
 that are used to draw the border.
 The argument \fIwhich\fR selects which one of the three possible GC's:
-TK_3D_FLAT_GC returns the context used for flat surfaces,
-TK_3D_LIGHT_GC returns the context for light shadows,
-and TK_3D_DARK_GC returns the context for dark shadows.
+\fBTK_3D_FLAT_GC\fR returns the context used for flat surfaces,
+\fBTK_3D_LIGHT_GC\fR returns the context for light shadows,
+and \fBTK_3D_DARK_GC\fR returns the context for dark shadows.
 .PP
 .VS 8.1
 When a border is no longer needed, \fBTk_Free3DBorderFromObj\fR
