@@ -1,4 +1,12 @@
+2004-12-01  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tkUnixButton.c (TkpDisplayButton): constrain coords to
+	Tk_RedrawImage to display only portion that is valid.
+	* generic/tkImgPhoto.c (ImgPhotoDisplay): add X error suppression
+	around XGetImage to prevent app abort. [Bug 979239]
+
 2004-11-28  Joe English  <jenglish@users.sourceforge.net>
+
 	* unix/tkUnixRFont.c(Tk_DrawChars): Check for short integer overflow
 	in x,y coordinates [Fixes: #942320 "Tk, Xft, text and long lines"]
 
