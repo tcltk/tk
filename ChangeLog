@@ -1,3 +1,14 @@
+1999-10-30  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* win/tkWinKey.c: fixed XKeysymToKeycode to handle mapping of
+	symbolic keysyms (Left, Home, ...) with event generate
+
+	* library/entry.tcl: change tkEntrySeeInsert to avoid the use
+	of a while loop that could eat CPU tremendously.  Behavior of
+	moving the cursor at the right edge changes slightly (previously
+	it tried to keep the cursor at the right edge, now it moves the
+	cursor to a "central right" location - better IMHO).
+
 1999-10-28  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* doc/CrtImgType.3:
