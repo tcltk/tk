@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: label.n,v 1.5 2000/08/25 06:58:32 ericm Exp $
+'\" RCS: @(#) $Id: label.n,v 1.6 2002/12/18 21:46:48 tmh Exp $
 '\" 
 .so man.macros
 .TH label n 4.0 Tk "Tk Built-In Commands"
@@ -26,6 +26,14 @@ label \- Create and manipulate label widgets
 \-disabledforeground	\-padx	
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
+.OP \-compound compound Compound
+Specifies whether the label should display both an image and text,
+and if so, where the image should be placed relative to the text.
+Valid values for this option are \fBbottom\fR, \fBcenter\fR,
+\fBleft\fR, \fBnone\fR, \fBright\fR and \fBtop\fR.  The default value
+is \fBnone\fR, meaning that the label will display either an image or
+text, depending on the values of the \fB\-image\fR and \fB\-bitmap\fR
+options.
 .OP \-height height Height
 Specifies a desired height for the label.
 If an image or bitmap is being displayed in the label then the value is in
