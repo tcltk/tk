@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.7 1999/11/18 01:47:08 ericm Exp $
+# RCS: @(#) $Id: listbox.test,v 1.8 1999/11/18 02:24:41 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -941,7 +941,8 @@ test listbox-4.18 {ConfigureListbox, no listvar -> bad listvar} {
     set x {this is a " bad list}
     catch {.l configure -listvar x} result
     list [.l get 0 end] [.l cget -listvar] $result
-} [list [list a b c d] {} "unmatched open quote in list"]
+} [list [list a b c d] {} \
+	"unmatched open quote in list: invalid listvar value"]
 
 # No tests for DisplayListbox:  I don't know how to test this procedure.
 
@@ -1845,9 +1846,9 @@ test listbox-21.11 {ListboxListVarProc, bad list} {
     catch {unset x}
     listbox .l -listvar x
     set x [list a b c d]
-    set x {this is a " bad list}
-    set x
-} [list a b c d]
+    catch {set x {this is a " bad list}} result
+    set result
+} {can't set "x": invalid listvar value}
 
 # UpdateHScrollbar
 test listbox-22.1 {UpdateHScrollbar} {
