@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinKey.c,v 1.11 2000/04/15 02:50:26 ericm Exp $
+ * RCS: @(#) $Id: tkWinKey.c,v 1.12 2000/04/15 17:41:20 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -266,7 +266,7 @@ KeycodeToKeysym(keycode, state, noascii)
      * for alphanumeric characters map onto Latin-1, we just return it.
      *
      * We treat 0x7F as a special case mostly for backwards compatibility.
-     * In older versions of Tk, Control-Backspace returned "XK_BackSpace"
+     * In versions of Tk<=8.2, Control-Backspace returned "XK_BackSpace"
      * as the X Keysym.  This was due to the fact that we did not
      * initialize the keys array properly when we passed it to ToAscii, above.
      * We had previously not been setting the state bit for the Control key.
