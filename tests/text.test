@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.14 2001/11/13 00:19:05 hobbs Exp $
+# RCS: @(#) $Id: text.test,v 1.15 2002/06/21 23:09:53 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -70,6 +70,7 @@ foreach test {
     {-insertofftime 100 100 2.4}
     {-insertontime 47 47 e1}
     {-insertwidth 2.3 2 47d}
+    {-maxundo 5 5 noway}
     {-padx 3.4 3 2.4.}
     {-pady 82 82 bogus}
     {-relief raised raised bumpy}
@@ -113,7 +114,7 @@ test text-1.[incr i] {text options} {
 	lappend result [lindex $i 4]
     }
     set result
-} {1 blue {} {} 7 watch 0 {} fixed #012 5 #123 #234 0 green 45 100 47 2 3 82 raised #ffff01234567 21 yellow 0 0 0 0 disabled {1i 2i 3i 4i} {any old thing} 1 73 word {x scroll command} {test command}}
+} {1 blue {} {} 7 watch 0 {} fixed #012 5 #123 #234 0 green 45 100 47 2 5 3 82 raised #ffff01234567 21 yellow 0 0 0 0 disabled {1i 2i 3i 4i} {any old thing} 1 73 word {x scroll command} {test command}}
 
 test text-2.1 {Tk_TextCmd procedure} {
     list [catch {text} msg] $msg
@@ -1480,6 +1481,19 @@ test text-25.12 {<<Selection>> virtual event} {
     .t tag add sel 1.0 1.1
     set ::retval
 } {selection_changed}
+
+test text-25.13 {-maxundo configuration option} {
+    catch {destroy .t}
+    text .t -undo 1  -autoseparators 1 -maxundo 2
+    pack .t
+    .t insert end "line 1\n"
+    .t delete 1.4 1.6
+    .t insert end "line 2\n"
+    catch {.t edit undo}
+    catch {.t edit undo}
+    catch {.t edit undo}
+    .t get 1.0 end
+} "line 1\n\n"
 
 eval destroy [winfo child .]
 option clear

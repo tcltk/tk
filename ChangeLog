@@ -1,3 +1,19 @@
+2002-06-21  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/text.n:          TIP #104 implementation which generalizes the
+	* generic/tkText.c:    undo/redo stack to not be tied solely to the
+	* generic/tkText.h:    text widget.  The APIs are still private.
+	* generic/tkUndo.c:    This also adds a stack limiting ability and
+	* generic/tkUndo.h:    a -maxundo option to the text widget (in
+	* library/text.tcl:    addition to the options from TIP #26) should
+	* mac/tkMacDefault.h:  users want to limit the undo/redo stack
+	* tests/text.test:     (should not be necessary in most cases).
+	* unix/Makefile.in:    [Patch #554763] (callewart)
+	* unix/tkUnixDefault.h:
+	* win/Makefile.in:
+	* win/makefile.vc:
+	* win/tkWinDefault.h:
+
 2002-06-21  Don Porter <dgp@users.sf.net>
 
 	* unix/Makefile.in:	Removed unnecessary dependence of tktest

@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.61 2002/06/18 23:51:46 dkf Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.62 2002/06/21 23:09:54 hobbs Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -361,6 +361,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkTextTag.obj \
 	$(TMP_DIR)\tkTextWind.obj \
 	$(TMP_DIR)\tkTrig.obj \
+	$(TMP_DIR)\tkUndo.obj \
 	$(TMP_DIR)\tkUtil.obj \
 	$(TMP_DIR)\tkVisual.obj \
 	$(TMP_DIR)\tkStubInit.obj \
@@ -758,6 +759,7 @@ $(GENERICDIR)/tkScrollbar.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkText.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkTextIndex.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkTextTag.c: $(GENERICDIR)/default.h
+$(GENERICDIR)/tkUndo.c: $(GENERICDIR)/tkUndo.h
 
 $(GENERICDIR)/tkText.c: $(GENERICDIR)/tkText.h
 $(GENERICDIR)/tkTextBTree.c: $(GENERICDIR)/tkText.h
