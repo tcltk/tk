@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.18 2004/12/06 19:42:10 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.64.2.18.2.1 2005/01/04 05:13:45 chengyemao Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5741,3 +5741,9 @@ on buttons on unix to avoid X error (hobbs, petasis)
 compositing of partially transparent areas.
 
 --- Released 8.4.9, December 6, 2004 --- See ChangeLog for details ---
+
+--- Started 8-4-9-branch Jan. 3, 2005 ---
+
+2005-01-03 Bug fix (crashes/panics during finalization/exit); feature 
+implementation for embedding/embedded Tk (Windows). See Tk 8.5 changes 
+(2004-12-17 to 2005-01-03) for details. (chengyemao)
