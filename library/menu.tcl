@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.1.4.4 1999/03/26 19:37:12 surles Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.1.4.5 1999/03/26 20:01:25 surles Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -493,7 +493,7 @@ proc tkMbButtonUp w {
 
     set menu [$w cget -menu]
     set tearoff [expr {($tcl_platform(platform) == "unix") \
-	    || (($menu != {}) && ([ cget -type] == "tearoff"))}]
+	    || (($menu != {}) && ([$menu cget -type] == "tearoff"))}]
     if {($tearoff != 0) && ($tkPriv(postedMb) == $w) 
 	    && ($tkPriv(inMenubutton) == $w)} {
 	tkMenuFirstEntry [$tkPriv(postedMb) cget -menu]
