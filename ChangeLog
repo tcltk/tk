@@ -1,3 +1,19 @@
+2001-11-09  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/configure:
+	* unix/tcl.m4: added -lc to AIX libs, fixed path to ldAix
+
+	* win/configure:
+	* win/tcl.m4:
+	* win/makefile.vc: add comctl32.lib to build libs.
+	* win/tkWinX.c (TkWinXInit): added InitCommonControlsEx call.
+	* win/rc/tk.rc:
+	* win/rc/wish.rc:
+	* win/rc/wish.exe.manifest: added resources that specify using v6
+	of the MS Common Controls library when available (WinXP+).  This
+	enables use of the themeable widgets (like scrollbars) to be used
+	in Tk. [Patch #478933]
+
 2001-11-09  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/configure:

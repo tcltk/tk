@@ -10,10 +10,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.15 2001/09/21 21:26:09 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.16 2001/11/10 00:58:51 hobbs Exp $
  */
 
 #include "tkWinInt.h"
+#include <commctrl.h>
 
 /*
  * The zmouse.h file includes the definition for WM_MOUSEWHEEL.
@@ -153,6 +154,17 @@ TkWinXInit(hInstance)
 	return;
     }
     childClassInitialized = 1;
+
+    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
+	/*
+	 * This is necessary to enable the use of themeable elements on XP,
+	 * so we don't even try and call it for Win9*.
+	 */
+
+	INITCOMMONCONTROLSEX comctl;
+	ZeroMemory(&comctl, sizeof(comctl));
+	(void) InitCommonControlsEx(&comctl);
+    }
 
     tkInstance = hInstance;
 
