@@ -814,6 +814,7 @@ dist:   $(UNIX_DIR)/configure
 	rm -f $(DISTDIR)/generic/blt*.[ch]
 	mkdir $(DISTDIR)/win
 	cp -p $(TOP_DIR)/win/*.c $(TOP_DIR)/win/*.h $(DISTDIR)/win
+	cp -p $(TOP_DIR)/win/*.bat $(DISTDIR)/win
 	cp -p $(TOP_DIR)/win/makefile.* $(DISTDIR)/win
 	cp -p $(TOP_DIR)/win/README $(DISTDIR)/win
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/win
@@ -822,10 +823,10 @@ dist:   $(UNIX_DIR)/configure
 		$(TOP_DIR)/win/rc/*.ico $(TOP_DIR)/win/rc/*.bmp \
 		$(DISTDIR)/win/rc
 	mkdir $(DISTDIR)/mac
-	sccs edit -s $(TOP_DIR)/mac/tkMacProjects.sit.hqx
-	cp -p tkMacProjects.sit.hqx $(DISTDIR)/mac
-	sccs unedit $(TOP_DIR)/mac/tkMacProjects.sit.hqx
-	rm -f tkMacProjects.sit.hqx
+	sccs edit -s $(TOP_DIR)/mac/tkMacProjects.sea.hqx
+	cp -p tkMacProjects.sea.hqx $(DISTDIR)/mac
+	sccs unedit $(TOP_DIR)/mac/tkMacProjects.sea.hqx
+	rm -f tkMacProjects.sea.hqx
 	cp -p $(TOP_DIR)/mac/*.c $(TOP_DIR)/mac/*.h $(TOP_DIR)/mac/*.r \
 		$(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/README $(DISTDIR)/mac
@@ -923,7 +924,7 @@ allpatch: dist
 #
 
 macdist: dist
-	rm -f $(DISTDIR)/mac/tkMacProjects.sit.hqx
+	rm -f $(DISTDIR)/mac/tkMacProjects.sea.hqx
 	tclsh $(TOOL_DIR)/man2html.tcl $(DISTDIR)/tmp ../.. tk$(VERSION)
 	mv $(DISTDIR)/tmp/tk$(VERSION) $(DISTDIR)/html
 	rm -rf $(DISTDIR)/doc
