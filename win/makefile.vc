@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.1.4.16 1999/03/11 23:48:11 hershey Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.1.4.17 1999/03/12 22:40:45 hershey Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -339,7 +339,7 @@ tktest: setup $(TKTEST) $(CAT32)
 test:	setup $(TKTEST) $(TKLIB) $(CAT32)
 	set TCL_LIBRARY=$(TCLDIR)/library
 	set PATH=$(TCLDIR)\win\$(TMPDIRNAME);$(PATH)
-	$(TKTEST) $(ROOT)/tests/all.tcl
+	$(TKTEST) $(ROOT)/tests/all.tcl | $(CAT32)
 
 #       copy $(TCLDIR)\bin\pkgIndex.tcl $(OUTDIR)
 
