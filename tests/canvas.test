@@ -6,7 +6,7 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.8.2.3 2001/04/06 01:10:17 hobbs Exp $
+# RCS: @(#) $Id: canvas.test,v 1.8.2.4 2002/07/24 19:40:27 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -410,6 +410,33 @@ test canvas-13.1 {canvas delete during event, SF bug-228024} {knownBug} {
     }
     set ::x
 } okokokokokokokokokokokokokokokokokokokokokokokokokokokokokok
+
+test canvas-14.1 {canvas scan SF bug 581560} {
+    destroy .c; canvas .c
+    list [catch {.c scan} msg] $msg
+} {1 {wrong # args: should be ".c scan mark|dragto x y ?dragGain?"}}
+test canvas-14.2 {canvas scan} {
+    destroy .c; canvas .c
+    list [catch {.c scan bogus} msg] $msg
+} {1 {wrong # args: should be ".c scan mark|dragto x y ?dragGain?"}}
+test canvas-14.3 {canvas scan} {
+    destroy .c; canvas .c
+    list [catch {.c scan mark} msg] $msg
+} {1 {wrong # args: should be ".c scan mark|dragto x y ?dragGain?"}}
+test canvas-14.4 {canvas scan} {
+    destroy .c; canvas .c
+    list [catch {.c scan mark 10 10} msg] $msg
+} {0 {}}
+test canvas-14.5 {canvas scan} {
+    destroy .c; canvas .c
+    list [catch {.c scan mark 10 10 5} msg] $msg
+} {1 {wrong # args: should be ".c scan mark x y"}}
+test canvas-14.6 {canvas scan} {
+    destroy .c; canvas .c
+    list [catch {.c scan dragto 10 10 5} msg] $msg
+} {0 {}}
+
+destroy .c
 
 # cleanup
 ::tcltest::cleanupTests
