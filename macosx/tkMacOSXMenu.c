@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.10 2003/08/12 08:49:22 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.11 2004/02/14 01:26:49 wolfsuit Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -1044,7 +1044,6 @@ ReconfigureIndividualMenu(
     int count;
     int index;
     TkMenuEntry *mePtr;
-    Str255 itemText;
     int parentDisabled = 0;
 
     for (mePtr = menuPtr->menuRefPtr->parentEntryPtr; mePtr != NULL;
@@ -2158,9 +2157,11 @@ TkMacOSXDispatchMenuEvent(
                 TkMenu *menuPtr = (TkMenu *) Tcl_GetHashValue(commandEntryPtr);
                 if ((currentAppleMenuID == menuID)
                     && (index > menuPtr->numEntries + 1)) {
-                    Str255 itemText;
-
-                    GetMenuItemText(GetMenuHandle(menuID), index, itemText);
+                    /* 
+                     * We don't need to do anything here, the standard
+                     * Application event handler will open the built-in
+                     * Apple menu item for us.
+                     */
                     result = TCL_OK;
                 } else {
                     struct MenuCommandHandlerData *data
