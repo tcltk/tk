@@ -1,3 +1,10 @@
+2002-03-06  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* README, generic/tk.h, unix/configure.in, unix/tk.spec:
+	* win/configure.in: Bumped patchlevel; this might need to change
+	in the future, but it will help us distinguish between the CVS
+	version and the most recent released version.
+
 2002-03-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	*** 8.4a4 TAGGED FOR RELEASE ***
