@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTrig.c,v 1.4 1999/12/14 06:52:33 hobbs Exp $
+ * RCS: @(#) $Id: tkTrig.c,v 1.5 2004/08/19 14:41:52 dkf Exp $
  */
 
 #include <stdio.h>
@@ -918,7 +918,7 @@ TkIncludePoint(itemPtr, pointPtr)
  * TkBezierScreenPoints --
  *
  *	Given four control points, create a larger set of XPoints
- *	for a Bezier spline based on the points.
+ *	for a Bezier curve based on the points.
  *
  * Results:
  *	The array at *xPointPtr gets filled in with numSteps XPoints
@@ -969,7 +969,7 @@ TkBezierScreenPoints(canvas, control, numSteps, xPointPtr)
  * TkBezierPoints --
  *
  *	Given four control points, create a larger set of points
- *	for a Bezier spline based on the points.
+ *	for a Bezier curve based on the points.
  *
  * Results:
  *	The array at *coordPtr gets filled in with 2*numSteps
@@ -1019,10 +1019,12 @@ TkBezierPoints(control, numSteps, coordPtr)
  *	parabolic splines to the line segments connecting the original
  *	points.  Produces output points in either of two forms.
  *
- *	Note: in spite of this procedure's name, it does *not* generate
- *	Bezier curves.  Since only three control points are used for
- *	each curve segment, not four, the curves are actually just
- *	parabolic.
+ *	Note: the name of this procedure should *not* be taken to 
+ *	mean that it interprets the input points as directly defining
+ *	Bezier curves.  Rather, it internally computes a Bezier curve
+ *	representation of each parabolic spline segment. (These 
+ *	Bezier curves are then flattened to produce the points 
+ *	filled into the output arrays.)
  *
  * Results:
  *	Either or both of the xPoints or dblPoints arrays are filled
@@ -1196,6 +1198,185 @@ TkMakeBezierCurve(canvas, pointPtr, numPoints, numSteps, xPoints, dblPoints)
 /*
  *--------------------------------------------------------------
  *
+ * TkMakeRawCurve --
+ *
+ *	Interpret the given set of points as the raw knots and
+ *	control points defining a sequence of cubic Bezier curves.
+ *	Create a new set of points that fit these Bezier curves.
+ *	Output points are produced in either of two forms.
+ *
+ * Results:
+ *	Either or both of the xPoints or dblPoints arrays are filled
+ *	in.  The return value is the number of points placed in the
+ *	arrays.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+int
+TkMakeRawCurve(canvas, pointPtr, numPoints, numSteps, xPoints, dblPoints)
+    Tk_Canvas canvas;			/* Canvas in which curve is to be
+					 * drawn. */
+    double *pointPtr;			/* Array of input coordinates:  x0,
+					 * y0, x1, y1, etc.. */
+    int numPoints;			/* Number of points at pointPtr. */
+    int numSteps;			/* Number of steps to use for each
+					 * curve segment (determines
+					 * smoothness of curve). */
+    XPoint xPoints[];			/* Array of XPoints to fill in (e.g.
+					 * for display.  NULL means don't
+					 * fill in any XPoints. */
+    double dblPoints[];			/* Array of points to fill in as
+					 * doubles, in the form x0, y0,
+					 * x1, y1, ....  NULL means don't
+					 * fill in anything in this form.
+					 * Caller must make sure that this
+					 * array has enough space. */
+{
+    int outputPoints, i;
+    int numSegments = (numPoints+1)/3;
+    double *segPtr;
+
+    /*
+     * The input describes a curve with s Bezier curve segments if
+     * there are 3s+1, 3s, or 3s-1 input points. In the last two
+     * cases, 1 or 2 initial points from the first curve segment
+     * are reused as defining points also for the last curve segment.
+     * In the case of 3s input points, this will automatically close
+     * the curve.
+     */
+
+    if (!pointPtr) {
+	/*
+	 * If pointPtr == NULL, this function returns an upper limit.
+	 * of the array size to store the coordinates. This can be
+	 * used to allocate storage, before the actual coordinates
+	 * are calculated.
+	 */
+	return 1 + numSegments * numSteps;
+    }
+
+    outputPoints = 0;
+    if (xPoints != NULL) {
+	Tk_CanvasDrawableCoords(canvas, pointPtr[0], pointPtr[1],
+		&xPoints->x, &xPoints->y);
+	xPoints += 1;
+    }
+    if (dblPoints != NULL) {
+	dblPoints[0] = pointPtr[0];
+	dblPoints[1] = pointPtr[1];
+	dblPoints += 2;
+    }
+    outputPoints += 1;
+
+    /*
+     * The next loop handles all curve segments except one that
+     * overlaps the end of the list of coordinates.
+     */
+
+    for (i=numPoints,segPtr=pointPtr ; i>=4 ; i-=3,segPtr+=6) {
+	if (segPtr[0]==segPtr[2] && segPtr[1]==segPtr[3] &&
+		segPtr[4]==segPtr[6] && segPtr[5]==segPtr[7]) {
+	    /*
+	     * The control points on this segment are equal to
+	     * their neighbouring knots, so this segment is just
+	     * a straight line. A single point is sufficient.
+	     */
+	    if (xPoints != NULL) {
+		Tk_CanvasDrawableCoords(canvas, segPtr[6], segPtr[7],
+			&xPoints->x, &xPoints->y);
+		xPoints += 1;
+	    }
+	    if (dblPoints != NULL) {
+		dblPoints[0] = segPtr[6];
+		dblPoints[1] = segPtr[7];
+		dblPoints += 2;
+	    }
+	    outputPoints += 1;
+	} else {
+	    /*
+	     * This is a generic Bezier curve segment.
+	     */
+	    if (xPoints != NULL) {
+		TkBezierScreenPoints(canvas, segPtr, numSteps, xPoints);
+		xPoints += numSteps;
+	    }
+	    if (dblPoints != NULL) {
+		TkBezierPoints(segPtr, numSteps, dblPoints);
+		dblPoints += 2*numSteps;
+	    }
+	    outputPoints += numSteps;
+	}
+    }
+
+    /*
+     * If at this point i>1, then there is some point which has not
+     * yet been used. Make another curve segment.
+     */
+
+    if (i>1) {
+	int j;
+	double control[8];
+
+	/*
+	 * Copy the relevant coordinates to control[], so that
+	 * it can be passed as a unit to e.g. TkBezierPoints.
+	 */
+
+	for (j=0; j<2*i; j++) {
+	    control[j] = segPtr[j];
+	}
+	for (; j<8; j++) {
+	    control[j] = pointPtr[j-2*i];
+	}
+
+	/*
+	 * Then we just do the same things as above.
+	 */
+
+	if (control[0]==control[2] && control[1]==control[3] &&
+		control[4]==control[6] && control[5]==control[7]) {
+	    /*
+	     * The control points on this segment are equal to
+	     * their neighbouring knots, so this segment is just
+	     * a straight line. A single point is sufficient.
+	     */
+	    if (xPoints != NULL) {
+		Tk_CanvasDrawableCoords(canvas, control[6], control[7],
+			&xPoints->x, &xPoints->y);
+		xPoints += 1;
+	    }
+	    if (dblPoints != NULL) {
+		dblPoints[0] = control[6];
+		dblPoints[1] = control[7];
+		dblPoints += 2;
+	    }
+	    outputPoints += 1;
+	} else {
+	    /*
+	     * This is a generic Bezier curve segment.
+	     */
+	    if (xPoints != NULL) {
+		TkBezierScreenPoints(canvas, control, numSteps, xPoints);
+		xPoints += numSteps;
+	    }
+	    if (dblPoints != NULL) {
+		TkBezierPoints(control, numSteps, dblPoints);
+		dblPoints += 2*numSteps;
+	    }
+	    outputPoints += numSteps;
+	}
+    }
+
+    return outputPoints;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * TkMakeBezierPostscript --
  *
  *	This procedure generates Postscript commands that create
@@ -1286,6 +1467,108 @@ TkMakeBezierPostscript(interp, canvas, pointPtr, numPoints)
 		control[2], Tk_CanvasPsY(canvas, control[3]),
 		control[4], Tk_CanvasPsY(canvas, control[5]),
 		control[6], Tk_CanvasPsY(canvas, control[7]));
+	Tcl_AppendResult(interp, buffer, (char *) NULL);
+    }
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkMakeRawCurvePostscript --
+ *
+ *	This procedure interprets the input points as the raw knot
+ *	and control points for a curve composed of Bezier curve
+ *	segments, just like TkMakeRawCurve. It generates Postscript
+ *	commands that create a path corresponding to this given curve.
+ *
+ * Results:
+ *	None.  Postscript commands to generate the path are appended
+ *	to the interp's result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+TkMakeRawCurvePostscript(interp, canvas, pointPtr, numPoints)
+    Tcl_Interp *interp;			/* Interpreter in whose result the
+					 * Postscript is to be stored. */
+    Tk_Canvas canvas;			/* Canvas widget for which the
+					 * Postscript is being generated. */
+    double *pointPtr;			/* Array of input coordinates:  x0,
+					 * y0, x1, y1, etc.. */
+    int numPoints;			/* Number of points at pointPtr. */
+{
+    int i;
+    double *segPtr;
+    char buffer[200];
+
+    /*
+     * Put the first point into the path.
+     */
+
+    sprintf(buffer, "%.15g %.15g moveto\n",
+	    pointPtr[0], Tk_CanvasPsY(canvas, pointPtr[1]));
+    Tcl_AppendResult(interp, buffer, (char *) NULL);
+
+    /*
+     * Loop through all the remaining points in the curve, generating
+     * a straight line or curve section for every three of them.
+     */
+
+    for (i=numPoints-1,segPtr=pointPtr ; i>=3 ; i-=3,segPtr+=6) {
+	if (segPtr[0]==segPtr[2] && segPtr[1]==segPtr[3] &&
+		segPtr[4]==segPtr[6] && segPtr[5]==segPtr[7]) {
+	    /*
+	     * The control points on this segment are equal to
+	     * their neighbouring knots, so this segment is just
+	     * a straight line.
+	     */
+	    sprintf(buffer, "%.15g %.15g lineto\n",
+		    segPtr[6], Tk_CanvasPsY(canvas, segPtr[7]));
+	} else {
+	    /*
+	     * This is a generic Bezier curve segment.
+	     */
+	    sprintf(buffer, "%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
+		    segPtr[2], Tk_CanvasPsY(canvas, segPtr[3]),
+		    segPtr[4], Tk_CanvasPsY(canvas, segPtr[5]),
+		    segPtr[6], Tk_CanvasPsY(canvas, segPtr[7]));
+	}
+	Tcl_AppendResult(interp, buffer, (char *) NULL);
+    }
+
+    /*
+     * If there are any points left that haven't been used,
+     * then build the last segment and generate Postscript in
+     * the same way for that.
+     */
+
+    if (i>0) {
+	int j;
+	double control[8];
+
+	for (j=0; j<2*i+2; j++) {
+	    control[j] = segPtr[j];
+	}
+	for (; j<8; j++) {
+	    control[j] = pointPtr[j-2*i-2];
+	}
+
+	if (control[0]==control[2] && control[1]==control[3] &&
+		control[4]==control[6] && control[5]==control[7]) {
+	    /* Straight line */
+	    sprintf(buffer, "%.15g %.15g lineto\n",
+		    control[6], Tk_CanvasPsY(canvas, control[7]));
+	} else {
+	    /* Bezier curve segment */
+	    sprintf(buffer, "%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
+		    control[2], Tk_CanvasPsY(canvas, control[3]),
+		    control[4], Tk_CanvasPsY(canvas, control[5]),
+		    control[6], Tk_CanvasPsY(canvas, control[7]));
+	}
 	Tcl_AppendResult(interp, buffer, (char *) NULL);
     }
 }

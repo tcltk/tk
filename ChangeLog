@@ -1,3 +1,18 @@
+2004-08-19  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	TIP#168 IMPLEMENTATION
+
+	* generic/tkTrig.c (TkMakeRawCurve, TkMakeRawCurvePostscript):
+	* generic/tkInt.decls: New functions to handle the geometry for
+	"raw" bezier curves.
+	* generic/tkCanvUtil.c (tkRawSmoothMethod, InitSmoothMethods)
+	(TkSmoothParseProc): Add new type of smoothing method, simplify
+	the method initialization, and change the old smoothing method to
+	be called "true" and just keep "bezier" as an alias.
+	* tests/canvas.test (canvas-17.1): Basic test of built-in
+	smoothing method support.
+	* doc/canvas.n: Documentation updates.
+
 2004-08-18  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkPanedWindow.c (optionSpecs): Add missing GEOMETRY flag

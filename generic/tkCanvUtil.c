@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvUtil.c,v 1.11 2004/03/16 19:53:18 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvUtil.c,v 1.12 2004/08/19 14:41:52 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -18,6 +18,45 @@
 #include "tkPort.h"
 #include <assert.h>
 
+/*
+ * Structures defined only in this file.
+ */
+
+typedef struct SmoothAssocData {
+    struct SmoothAssocData *nextPtr;	/* pointer to next SmoothAssocData */
+    Tk_SmoothMethod smooth;		/* name and functions associated with
+					 * this option */
+} SmoothAssocData;
+
+Tk_SmoothMethod tkBezierSmoothMethod = {
+    "true",
+    TkMakeBezierCurve,
+    (void (*) _ANSI_ARGS_((Tcl_Interp *interp, Tk_Canvas canvas,
+	    double *coordPtr, int numPoints, int numSteps)))
+		TkMakeBezierPostscript,
+};
+static Tk_SmoothMethod tkRawSmoothMethod = {
+    "raw",
+    TkMakeRawCurve,
+    (void (*) _ANSI_ARGS_((Tcl_Interp *interp, Tk_Canvas canvas,
+	    double *coordPtr, int numPoints, int numSteps)))
+		TkMakeRawCurvePostscript,
+};
+
+/*
+ * Function forward-declarations.
+ */
+
+static void		SmoothMethodCleanupProc _ANSI_ARGS_((
+			    ClientData clientData, Tcl_Interp *interp));
+static SmoothAssocData *InitSmoothMethods _ANSI_ARGS_((Tcl_Interp *interp));
+static int		DashConvert _ANSI_ARGS_((char *l, CONST char *p,
+			    int n, double width));
+static void		translateAndAppendCoords _ANSI_ARGS_((
+			    TkCanvas *canvPtr, double x, double y,
+			    XPoint *outArr, int numOut));
+
+#define ABS(a) ((a>=0)?(a):(-(a)))
 
 /*
  *----------------------------------------------------------------------
@@ -458,11 +497,6 @@ Tk_CanvasTagsPrintProc(clientData, tkwin, widgRec, offset, freeProcPtr)
     return Tcl_Merge(itemPtr->numTags, (CONST char **) itemPtr->tagPtr);
 }
 
-
-static int	DashConvert _ANSI_ARGS_((char *l, CONST char *p,
-			int n, double width));
-#define ABS(a) ((a>=0)?(a):(-(a)))
-
 /*
  *--------------------------------------------------------------
  *
@@ -557,6 +591,49 @@ TkCanvasDashPrintProc(clientData, tkwin, widgRec, offset, freeProcPtr)
 /*
  *--------------------------------------------------------------
  *
+ * InitSmoothMethods --
+ *
+ *	This procedure is invoked to set up the initial state of the
+ *	list of "-smooth" methods.  It should only be called when the
+ *	list installed in the interpreter is NULL.
+ *
+ * Results:
+ *	Pointer to the start of the list of default smooth methods.
+ *
+ * Side effects:
+ *	A linked list of smooth methods is created and attached to the
+ *	interpreter's association key "smoothMethod"
+ *
+ *--------------------------------------------------------------
+ */
+
+static SmoothAssocData *
+InitSmoothMethods(interp)
+    Tcl_Interp *interp;
+{
+    SmoothAssocData *methods, *ptr;
+
+    methods = (SmoothAssocData *) ckalloc(sizeof(SmoothAssocData));
+    methods->smooth.name = tkRawSmoothMethod.name;
+    methods->smooth.coordProc = tkRawSmoothMethod.coordProc;
+    methods->smooth.postscriptProc = tkRawSmoothMethod.postscriptProc;
+
+    methods->nextPtr = (SmoothAssocData *) ckalloc(sizeof(SmoothAssocData));
+
+    ptr = methods->nextPtr;
+    ptr->smooth.name = tkBezierSmoothMethod.name;
+    ptr->smooth.coordProc = tkBezierSmoothMethod.coordProc;
+    ptr->smooth.postscriptProc = tkBezierSmoothMethod.postscriptProc;
+    ptr->nextPtr = NULL;
+
+    Tcl_SetAssocData(interp, "smoothMethod", SmoothMethodCleanupProc,
+		(ClientData) methods);
+    return methods;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * Tk_CreateSmoothMethod --
  *
  *	This procedure is invoked to add additional values
@@ -572,23 +649,6 @@ TkCanvasDashPrintProc(clientData, tkwin, widgRec, offset, freeProcPtr)
  *--------------------------------------------------------------
  */
 
-Tk_SmoothMethod tkBezierSmoothMethod = {
-    "bezier",
-    TkMakeBezierCurve,
-    (void (*) _ANSI_ARGS_((Tcl_Interp *interp, Tk_Canvas canvas,
-	    double *coordPtr, int numPoints, int numSteps)))
-		TkMakeBezierPostscript,
-};
-
-static void SmoothMethodCleanupProc _ANSI_ARGS_((ClientData clientData,
-		Tcl_Interp *interp));
-
-typedef struct SmoothAssocData {
-    struct SmoothAssocData *nextPtr;	/* pointer to next SmoothAssocData */
-    Tk_SmoothMethod smooth;		/* name and functions associated with this
-					 * option */
-} SmoothAssocData;
-
 void
 Tk_CreateSmoothMethod(interp, smooth)
     Tcl_Interp *interp;
@@ -597,6 +657,14 @@ Tk_CreateSmoothMethod(interp, smooth)
     SmoothAssocData *methods, *typePtr2, *prevPtr, *ptr;
     methods = (SmoothAssocData *) Tcl_GetAssocData(interp, "smoothMethod",
 	    (Tcl_InterpDeleteProc **) NULL);
+
+    /*
+     * Initialize if we were not previously initialized.
+     */
+
+    if (methods == NULL) {
+	methods = InitSmoothMethods(interp);
+    }
 
     /*
      * If there's already a smooth method with the given name, remove it.
@@ -680,7 +748,7 @@ TkSmoothParseProc(clientData, interp, tkwin, value, widgRec, offset)
     int offset;				/* Offset into item. */
 {
     register Tk_SmoothMethod **smoothPtr =
-	(Tk_SmoothMethod **) (widgRec + offset);
+	    (Tk_SmoothMethod **) (widgRec + offset);
     Tk_SmoothMethod *smooth = NULL;
     int b;
     size_t length;
@@ -693,10 +761,22 @@ TkSmoothParseProc(clientData, interp, tkwin, value, widgRec, offset)
     length = strlen(value);
     methods = (SmoothAssocData *) Tcl_GetAssocData(interp, "smoothMethod",
 	    (Tcl_InterpDeleteProc **) NULL);
+    /*
+     * Not initialized yet; fix that now.
+     */
+    if (methods == NULL) {
+	methods = InitSmoothMethods(interp);
+    }
+    /*
+     * Backward compatability hack
+     */
+    if (strncmp(value, "bezier", length) == 0) {
+	smooth = &tkBezierSmoothMethod;
+    }
     while (methods != (SmoothAssocData *) NULL) {
 	if (strncmp(value, methods->smooth.name, length) == 0) {
 	    if (smooth != (Tk_SmoothMethod *) NULL) {
-		Tcl_AppendResult(interp, "ambigeous smooth method \"", value,
+		Tcl_AppendResult(interp, "ambiguous smooth method \"", value,
 			"\"", (char *) NULL);
 		return TCL_ERROR;
 	    }
@@ -707,14 +787,7 @@ TkSmoothParseProc(clientData, interp, tkwin, value, widgRec, offset)
     if (smooth) {
 	*smoothPtr = smooth;
 	return TCL_OK;
-    } else if (strncmp(value, tkBezierSmoothMethod.name, length) == 0) {
-	/*
-	 * We need to do handle the built-in bezier method.
-	 */
-	*smoothPtr = &tkBezierSmoothMethod;
-	return TCL_OK;
     }
-
 
     if (Tcl_GetBoolean(interp, (char *) value, &b) != TCL_OK) {
 	return TCL_ERROR;

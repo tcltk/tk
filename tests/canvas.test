@@ -6,7 +6,7 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.19 2004/06/15 21:06:40 dkf Exp $
+# RCS: @(#) $Id: canvas.test,v 1.20 2004/08/19 14:41:52 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -475,6 +475,16 @@ test canvas-16.1 {arc coords check} {
     set id [.c create arc {0 10 20 30} -start 33]
     .c itemcget $id -start
 } {33.0}
+
+test canvas-17.1 {default smooth method handling} {
+    destroy .c; canvas .c
+    set id [.c create line {0 0 1 1 2 2 3 3 4 4 5 5 6 6}]
+    set result [.c itemcget $id -smooth]
+    foreach smoother {yes 1 bezier raw r b} {
+	.c itemconfigure $id -smooth $smoother
+	lappend result [.c itemcget $id -smooth]
+    }
+} {0 true true true raw raw true}
 
 destroy .c
 
