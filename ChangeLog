@@ -1,3 +1,8 @@
+2002-06-14  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* generic/tkBind.c (ExpandPercents): Cast argument to
+	Tk_GetAtomName in order to avoid compiler warning.
+
 2002-06-14  Joe English  <jenglish@users.sf.net>
 
 	* doc/bind.n:
