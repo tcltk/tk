@@ -1,3 +1,17 @@
+2004-02-16  Jim Ingham  <jingham@apple.com>
+
+	Fix for MouseWheel Events (from Daniel Steffen):
+
+	* generic/tkEvent.c (Tk_HandleEvent): On Mac OS X, don't route
+	MouseWheel events to the Focus window.  They are sent to the
+	window under the pointer on X (and the GenerateMouseWheelEvent
+	already got this right.)
+	* library/listbox.tcl: On Mac OS, don't use the magic 120
+	divisor that is used on Windows.  We may come up with a cleaner
+	way to do this for the TOT, but this is simple and will do for the
+	8.4 branch.
+	* library/text.tcl: Ditto.
+	
 2004-02-15  Jim Ingham  <jingham@apple.com>
 
 	Backport Mac OS X specific fixes from TOT:
@@ -7,10 +21,11 @@
 	* macosx/tkMacOSXKeyboard.c: Add PowerBook keycode 0x34 as <Return>.
 	[Benjamin Riefenstahl]
 
-        * macosx/tkMacOSXScrlbr.c: Reworking Vince's fix to [Bug 842952].  This
-	version is clearer, and works helps keep the mouse better pinned to the
-	scrollbar.  I also removed the glitch where the scrollbar would jump get
-	its middle over the mouse when you first moved it.
+        * macosx/tkMacOSXScrlbr.c: Reworking Vince's fix to [Bug 842952].
+	This version is clearer, and works helps keep the mouse better
+	pinned to the scrollbar.  I also removed the glitch where the
+	scrollbar would jump get its middle over the mouse when you first
+	moved it.
 	
         * macosx/tkMacOSXClipboard.c (TkSuspendClipboard, TkSelGetSelection):
         add unicode clipboard support. [Patch #840107] (senn)	
