@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.4.6.1 2001/02/28 23:29:56 dgp Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.4.6.2 2001/03/09 00:00:50 dgp Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -432,7 +432,7 @@ test textDisp-4.1 {UpdateDisplayInfo, basic} {fonts} {
     .t delete 2.0 2.end
     .t insert 2.0 "New Line 2"
     update
-    list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 3.0] $tk::textRelayout
+    list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 3.0] $tk_textRelayout
 } {{5 5 7 13} {5 18 7 13} {5 31 7 13} 2.0}
 test textDisp-4.2 {UpdateDisplayInfo, re-use tail of text line} {fonts} {
     .t delete 1.0 end
@@ -442,7 +442,7 @@ test textDisp-4.2 {UpdateDisplayInfo, re-use tail of text line} {fonts} {
     .t delete 2.2
     .t insert 2.0 X
     update
-    list [.t bbox 2.0] [.t bbox x] [.t bbox 3.0] $tk::textRelayout
+    list [.t bbox 2.0] [.t bbox x] [.t bbox 3.0] $tk_textRelayout
 } {{5 18 7 13} {12 31 7 13} {5 44 7 13} {2.0 2.20}}
 test textDisp-4.3 {UpdateDisplayInfo, tail of text line shifts} {fonts} {
     .t delete 1.0 end
@@ -451,7 +451,7 @@ test textDisp-4.3 {UpdateDisplayInfo, tail of text line shifts} {fonts} {
     .t mark set x 2.21
     .t delete 2.2
     update
-    list [.t bbox 2.0] [.t bbox x] [.t bbox 3.0] $tk::textRelayout
+    list [.t bbox 2.0] [.t bbox x] [.t bbox 3.0] $tk_textRelayout
 } {{5 18 7 13} {5 31 7 13} {5 44 7 13} {2.0 2.20}}
 .t mark unset x
 test textDisp-4.4 {UpdateDisplayInfo, wrap-mode "none"} {fonts} {
@@ -459,7 +459,7 @@ test textDisp-4.4 {UpdateDisplayInfo, wrap-mode "none"} {fonts} {
     .t delete 1.0 end
     .t insert end "Line 1\nLine 2 is so long that it wraps around\nLine 3"
     update
-    list [.t bbox 2.0] [.t bbox 2.25] [.t bbox 3.0] $tk::textRelayout
+    list [.t bbox 2.0] [.t bbox 2.25] [.t bbox 3.0] $tk_textRelayout
 } {{5 18 7 13} {} {5 31 7 13} {1.0 2.0 3.0}}
 test textDisp-4.5 {UpdateDisplayInfo, tiny window} {fonts} {
     wm geom . 103x$height
@@ -468,7 +468,7 @@ test textDisp-4.5 {UpdateDisplayInfo, tiny window} {fonts} {
     .t delete 1.0 end
     .t insert end "Line 1\nLine 2 is so long that it wraps around\nLine 3"
     update
-    list [.t bbox 2.0] [.t bbox 2.1] [.t bbox 3.0] $tk::textRelayout
+    list [.t bbox 2.0] [.t bbox 2.1] [.t bbox 3.0] $tk_textRelayout
 } {{5 18 1 13} {} {5 31 1 13} {1.0 2.0 3.0}}
 test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
     # This test was failing on Windows because the title bar on .
@@ -489,7 +489,7 @@ test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
     .t delete 1.0 end
     .t insert end "Line 1\nLine 2 is so long that it wraps around\nLine 3"
     update
-    set x [list [.t bbox 1.0] [.t bbox 2.0] $tk::textRelayout]
+    set x [list [.t bbox 1.0] [.t bbox 2.0] $tk_textRelayout]
     wm overrideredirect . 0
     update
     set x
@@ -515,7 +515,7 @@ test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
     update
     .t yview 16.0
     update
-    set x [list [.t index @0,0] $tk::textRelayout $tk::textRedraw]
+    set x [list [.t index @0,0] $tk_textRelayout $tk_textRedraw]
     wm overrideredirect . 0
     update 
     set x
@@ -527,7 +527,7 @@ test textDisp-4.8 {UpdateDisplayInfo, filling in extra vertical space} {
     update
     .t delete 5.0 14.0
     update
-    set x [list [.t index @0,0] $tk::textRelayout $tk::textRedraw]
+    set x [list [.t index @0,0] $tk_textRelayout $tk_textRedraw]
 } {1.0 {5.0 4.0 3.0 2.0 1.0} {1.0 2.0 3.0 4.0 5.0 eof}}
 test textDisp-4.9 {UpdateDisplayInfo, filling in extra vertical space} {fonts} {
     .t delete 1.0 end
@@ -544,7 +544,7 @@ test textDisp-4.10 {UpdateDisplayInfo, filling in extra vertical space} {
     update
     .t delete 13.0 end
     update
-    list [.t index @0,0] $tk::textRelayout $tk::textRedraw
+    list [.t index @0,0] $tk_textRelayout $tk_textRedraw
 } {5.0 {12.0 7.0 6.40 6.20 6.0 5.0} {5.0 6.0 6.20 6.40 7.0 12.0}}
 test textDisp-4.11 {UpdateDisplayInfo, filling in extra vertical space} {
     .t delete 1.0 end
@@ -553,7 +553,7 @@ test textDisp-4.11 {UpdateDisplayInfo, filling in extra vertical space} {
     update
     .t delete 14.0 end
     update
-    list [.t index @0,0] $tk::textRelayout $tk::textRedraw
+    list [.t index @0,0] $tk_textRelayout $tk_textRedraw
 } {6.40 {13.0 7.0 6.80 6.60 6.40} {6.40 6.60 6.80 7.0 13.0}}
 test textDisp-4.12 {UpdateDisplayInfo, filling in extra vertical space} {
     .t delete 1.0 end
@@ -581,7 +581,7 @@ test textDisp-4.13 {UpdateDisplayInfo, special handling for top/bottom lines} {
     update
     .t yview scroll 3 units
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{11.0 12.0 13.0} {4.0 10.0 11.0 12.0 13.0}}
 test textDisp-4.14 {UpdateDisplayInfo, special handling for top/bottom lines} {
     .t tag remove x 1.0 end
@@ -589,7 +589,7 @@ test textDisp-4.14 {UpdateDisplayInfo, special handling for top/bottom lines} {
     update
     .t yview scroll 3 units
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{11.0 12.0 13.0} {11.0 12.0 13.0}}
 test textDisp-4.15 {UpdateDisplayInfo, special handling for top/bottom lines} {
     .t tag add x 1.0 end
@@ -597,7 +597,7 @@ test textDisp-4.15 {UpdateDisplayInfo, special handling for top/bottom lines} {
     update
     .t yview scroll -2 units
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{2.0 3.0} {2.0 3.0 4.0 11.0}}
 test textDisp-4.16 {UpdateDisplayInfo, special handling for top/bottom lines} {
     .t tag remove x 1.0 end
@@ -605,7 +605,7 @@ test textDisp-4.16 {UpdateDisplayInfo, special handling for top/bottom lines} {
     update
     .t yview scroll -2 units
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{2.0 3.0} {2.0 3.0}}
 test textDisp-4.17 {UpdateDisplayInfo, horizontal scrolling} {fonts} {
     .t configure -wrap none
@@ -615,7 +615,7 @@ test textDisp-4.17 {UpdateDisplayInfo, horizontal scrolling} {fonts} {
     update
     .t xview scroll 3 units
     update
-    list $tk::textRelayout $tk::textRedraw [.t bbox 2.0] [.t bbox 2.5] \
+    list $tk_textRelayout $tk_textRedraw [.t bbox 2.0] [.t bbox 2.5] \
 	    [.t bbox 2.23]
 } {{} {1.0 2.0 3.0 4.0} {} {17 16 7 13} {}}
 test textDisp-4.18 {UpdateDisplayInfo, horizontal scrolling} {fonts} {
@@ -626,7 +626,7 @@ test textDisp-4.18 {UpdateDisplayInfo, horizontal scrolling} {fonts} {
     update
     .t xview scroll 100 units
     update
-    list $tk::textRelayout $tk::textRedraw [.t bbox 2.25]
+    list $tk_textRelayout $tk_textRedraw [.t bbox 2.25]
 } {{} {1.0 2.0 3.0 4.0} {10 16 7 13}}
 test textDisp-4.19 {UpdateDisplayInfo, horizontal scrolling} {fonts} {
     .t configure -wrap none
@@ -637,7 +637,7 @@ test textDisp-4.19 {UpdateDisplayInfo, horizontal scrolling} {fonts} {
     .t xview moveto 0
     .t xview scroll -10 units
     update
-    list $tk::textRelayout $tk::textRedraw [.t bbox 2.5]
+    list $tk_textRelayout $tk_textRedraw [.t bbox 2.5]
 } {{} {1.0 2.0 3.0 4.0} {38 16 7 13}}
 test textDisp-4.20 {UpdateDisplayInfo, horizontal scrolling} {fonts} {
     .t configure -wrap none
@@ -649,7 +649,7 @@ test textDisp-4.20 {UpdateDisplayInfo, horizontal scrolling} {fonts} {
     update
     .t delete 2.30 2.44
     update
-    list $tk::textRelayout $tk::textRedraw [.t bbox 2.25]
+    list $tk_textRelayout $tk_textRedraw [.t bbox 2.25]
 } {2.0 {1.0 2.0 3.0 4.0} {108 16 7 13}}
 test textDisp-4.21 {UpdateDisplayInfo, horizontal scrolling} {fonts} {
     .t configure -wrap none
@@ -660,7 +660,7 @@ test textDisp-4.21 {UpdateDisplayInfo, horizontal scrolling} {fonts} {
     update
     .t xview moveto .6
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{} {}}
 test textDisp-4.22 {UpdateDisplayInfo, no horizontal scrolling except for -wrap none} {fonts} {
     .t configure -wrap none
@@ -726,7 +726,7 @@ test textDisp-6.1 {scrolling in DisplayText, scroll up} {
     update
     .t delete 2.0 3.0
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{2.0 10.0} {2.0 10.0}}
 test textDisp-6.2 {scrolling in DisplayText, scroll down} {
     .t delete 1.0 end
@@ -737,7 +737,7 @@ test textDisp-6.2 {scrolling in DisplayText, scroll down} {
     update
     .t insert 2.0 "New Line 2\n"
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{2.0 3.0} {2.0 3.0}}
 test textDisp-6.3 {scrolling in DisplayText, multiple scrolls} {
     .t configure -wrap char
@@ -750,7 +750,7 @@ test textDisp-6.3 {scrolling in DisplayText, multiple scrolls} {
     .t insert 2.end "is so long that it wraps"
     .t insert 4.end "is so long that it wraps"
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 4.0 4.20} {2.0 2.20 4.0 4.20}}
 test textDisp-6.4 {scrolling in DisplayText, scrolls interfere} {
     .t configure -wrap char
@@ -763,7 +763,7 @@ test textDisp-6.4 {scrolling in DisplayText, scrolls interfere} {
     .t insert 2.end "is so long that it wraps around, not once but three times"
     .t insert 4.end "is so long that it wraps"
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 2.40 2.60 4.0 4.20} {2.0 2.20 2.40 2.60 4.0 4.20 6.0}}
 test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {nonPortable} {
     .t configure -wrap char
@@ -778,7 +778,7 @@ test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {nonPortabl
     .t delete 1.6 1.end
     update
     destroy .f2
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{1.0 9.0 10.0} {1.0 4.0 5.0 9.0 10.0}}
 test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {unixOnly nonPortable} {
     # this test depends on all of the expose events being handled at once
@@ -795,7 +795,7 @@ test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {unixOn
     .t delete 1.6 1.end
     destroy .f2
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{1.0 9.0 10.0} {borders 1.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0}}
 .t configure -bd 0
 test textDisp-6.7 {DisplayText, vertical scrollbar updates} {
@@ -845,7 +845,7 @@ test textDisp-7.1 {TkTextRedrawRegion} {nonPortable} {
     update
     destroy .f2
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{} {1.40 2.0 3.0 4.0 5.0 6.0}}
 test textDisp-7.2 {TkTextRedrawRegion} {nonPortable} {
     frame .f2 -bg #ff0000
@@ -853,7 +853,7 @@ test textDisp-7.2 {TkTextRedrawRegion} {nonPortable} {
     update
     destroy .f2
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{} {borders 1.0 1.20 1.40 2.0 3.0}}
 test textDisp-7.3 {TkTextRedrawRegion} {nonPortable} {
     frame .f2 -bg #ff0000
@@ -861,7 +861,7 @@ test textDisp-7.3 {TkTextRedrawRegion} {nonPortable} {
     update
     destroy .f2
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{} {borders 4.0 5.0 6.0 7.0 8.0}}
 test textDisp-7.4 {TkTextRedrawRegion} {nonPortable} {
     frame .f2 -bg #ff0000
@@ -870,7 +870,7 @@ test textDisp-7.4 {TkTextRedrawRegion} {nonPortable} {
     update
     destroy .f2
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{} {borders 1.0 1.20}}
 test textDisp-7.5 {TkTextRedrawRegion} {nonPortable} {
     frame .f2 -bg #ff0000
@@ -879,7 +879,7 @@ test textDisp-7.5 {TkTextRedrawRegion} {nonPortable} {
     update
     destroy .f2
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{} {borders 7.0 8.0}}
 test textDisp-7.6 {TkTextRedrawRegion} {nonPortable} {
     frame .f2 -bg #ff0000
@@ -888,7 +888,7 @@ test textDisp-7.6 {TkTextRedrawRegion} {nonPortable} {
     update
     destroy .f2
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{} {borders 3.0 4.0 5.0}}
 test textDisp-7.7 {TkTextRedrawRegion} {nonPortable} {
     frame .f2 -bg #ff0000
@@ -897,7 +897,7 @@ test textDisp-7.7 {TkTextRedrawRegion} {nonPortable} {
     update
     destroy .f2
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{} {borders 3.0 4.0 5.0}}
 test textDisp-7.8 {TkTextRedrawRegion} {nonPortable} {
     .t delete 1.0 end
@@ -908,7 +908,7 @@ test textDisp-7.8 {TkTextRedrawRegion} {nonPortable} {
     update
     destroy .f2
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{} {borders 4.0 5.0 6.0 7.0 eof}}
 .t configure -bd 0
 
@@ -922,7 +922,7 @@ test textDisp-8.1 {TkTextChanged: redisplay whole lines} {fonts} {
     update
     .t delete 2.36 2.38
     update
-    list $tk::textRelayout $tk::textRedraw [.t bbox 2.32]
+    list $tk_textRelayout $tk_textRedraw [.t bbox 2.32]
 } {{2.0 2.18 2.38} {2.0 2.18 2.38} {101 29 7 13}}
 .t configure -wrap char
 test textDisp-8.2 {TkTextChanged, redisplay whole lines} {
@@ -934,7 +934,7 @@ test textDisp-8.2 {TkTextChanged, redisplay whole lines} {
     update
     .t insert 1.2 xx
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{1.0 1.20 1.40} {1.0 1.20 1.40}}
 test textDisp-8.3 {TkTextChanged} {
     .t delete 1.0 end
@@ -945,7 +945,7 @@ test textDisp-8.3 {TkTextChanged} {
     update
     .t insert 2.0 xx
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {2.0 2.0}
 test textDisp-8.4 {TkTextChanged} {
     .t delete 1.0 end
@@ -956,7 +956,7 @@ test textDisp-8.4 {TkTextChanged} {
     update
     .t delete 1.5
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{1.0 1.20 1.40} {1.0 1.20 1.40}}
 test textDisp-8.5 {TkTextChanged} {
     .t delete 1.0 end
@@ -967,7 +967,7 @@ test textDisp-8.5 {TkTextChanged} {
     update
     .t delete 1.40 1.44
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{1.0 1.20 1.40} {1.0 1.20 1.40}}
 test textDisp-8.6 {TkTextChanged} {
     .t delete 1.0 end
@@ -978,7 +978,7 @@ test textDisp-8.6 {TkTextChanged} {
     update
     .t delete 1.41 1.44
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{1.0 1.20 1.40} {1.0 1.20 1.40}}
 test textDisp-8.7 {TkTextChanged} {
     .t delete 1.0 end
@@ -989,7 +989,7 @@ test textDisp-8.7 {TkTextChanged} {
     update
     .t delete 1.2 1.end
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{1.0 9.0 10.0} {1.0 9.0 10.0}}
 test textDisp-8.8 {TkTextChanged} {
     .t delete 1.0 end
@@ -1000,7 +1000,7 @@ test textDisp-8.8 {TkTextChanged} {
     update
     .t delete 2.2
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {2.0 2.0}
 test textDisp-8.9 {TkTextChanged} {
     .t delete 1.0 end
@@ -1011,7 +1011,7 @@ test textDisp-8.9 {TkTextChanged} {
     update
     .t delete 2.0 3.0
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{2.0 8.0} {2.0 8.0}}
 test textDisp-8.10 {TkTextChanged} {
     .t configure -wrap char
@@ -1021,7 +1021,7 @@ test textDisp-8.10 {TkTextChanged} {
     update
     .t delete 2.19
     update
-    set tk::textRedraw
+    set tk_textRedraw
 } {2.0 2.20 eof}
 test textDisp-8.11 {TkTextChanged, scrollbar notification when changes are off-screen} {
     .t delete 1.0 end
@@ -1042,7 +1042,7 @@ test textDisp-9.1 {TkTextRedrawTag} {
     update
     .t tag add big 2.2 2.4
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.18} {2.0 2.18}}
 test textDisp-9.2 {TkTextRedrawTag} {fonts} {
     .t configure -wrap char
@@ -1051,7 +1051,7 @@ test textDisp-9.2 {TkTextRedrawTag} {fonts} {
     update
     .t tag add big 1.2 2.4
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{1.0 2.0 2.17} {1.0 2.0 2.17}}
 test textDisp-9.3 {TkTextRedrawTag} {
     .t configure -wrap char
@@ -1061,7 +1061,7 @@ test textDisp-9.3 {TkTextRedrawTag} {
     .t tag add big 2.2 2.4
     .t tag remove big 1.0 end
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {2.0 2.0}
 test textDisp-9.4 {TkTextRedrawTag} {
     .t configure -wrap char
@@ -1071,7 +1071,7 @@ test textDisp-9.4 {TkTextRedrawTag} {
     .t tag add big 2.2 2.20
     .t tag remove big 1.0 end
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {2.0 2.0}
 test textDisp-9.5 {TkTextRedrawTag} {
     .t configure -wrap char
@@ -1081,7 +1081,7 @@ test textDisp-9.5 {TkTextRedrawTag} {
     .t tag add big 2.2 2.end
     .t tag remove big 1.0 end
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20}}
 test textDisp-9.6 {TkTextRedrawTag} {
     .t configure -wrap char
@@ -1091,7 +1091,7 @@ test textDisp-9.6 {TkTextRedrawTag} {
     .t tag add big 2.2 3.5
     .t tag remove big 1.0 end
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 3.0} {2.0 2.20 3.0}}
 test textDisp-9.7 {TkTextRedrawTag} {
     .t configure -wrap char
@@ -1101,7 +1101,7 @@ test textDisp-9.7 {TkTextRedrawTag} {
     update
     .t tag remove big 2.19
     update
-    set tk::textRedraw
+    set tk_textRedraw
 } {2.0 2.20 eof}
 test textDisp-9.8 {TkTextRedrawTag} {fonts} {
     .t configure -wrap char
@@ -1111,7 +1111,7 @@ test textDisp-9.8 {TkTextRedrawTag} {fonts} {
     update
     .t tag add big 2.0 2.5
     update
-    set tk::textRedraw
+    set tk_textRedraw
 } {2.0 2.17}
 test textDisp-9.9 {TkTextRedrawTag} {fonts} {
     .t configure -wrap char
@@ -1121,7 +1121,7 @@ test textDisp-9.9 {TkTextRedrawTag} {fonts} {
     update
     .t tag add big 1.5 2.5
     update
-    set tk::textRedraw
+    set tk_textRedraw
 } {2.0 2.17}
 test textDisp-9.10 {TkTextRedrawTag} {
     .t configure -wrap char
@@ -1129,10 +1129,10 @@ test textDisp-9.10 {TkTextRedrawTag} {
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
     .t tag add big 1.0 2.0
     update
-    set tk::textRedraw {none}
+    set tk_textRedraw {none}
     .t tag add big 1.3 1.5
     update
-    set tk::textRedraw
+    set tk_textRedraw
 } {none}
 test textDisp-9.11 {TkTextRedrawTag} {
     .t configure -wrap char
@@ -1142,7 +1142,7 @@ test textDisp-9.11 {TkTextRedrawTag} {
     update
     .t tag add big 1.0 2.0
     update
-    set tk::textRedraw
+    set tk_textRedraw
 } {}
 
 test textDisp-10.1 {TkTextRelayoutWindow} {
@@ -1152,7 +1152,7 @@ test textDisp-10.1 {TkTextRelayoutWindow} {
     update
     .t configure -bg black
     update
-    list $tk::textRelayout $tk::textRedraw
+    list $tk_textRelayout $tk_textRedraw
 } {{1.0 2.0 2.20 3.0 3.20 4.0} {borders 1.0 2.0 2.20 3.0 3.20 4.0 eof}}
 .t configure -bg [lindex [.t configure -bg] 3]
 test textDisp-10.2 {TkTextRelayoutWindow} {
@@ -1185,86 +1185,86 @@ test textDisp-11.2 {TkTextSetYView} {
     update
     .t yview 32.0
     update
-    list [.t index @0,0] $tk::textRedraw
+    list [.t index @0,0] $tk_textRedraw
 } {32.0 {40.0 41.0}}
 test textDisp-11.3 {TkTextSetYView} {
     .t yview 30.0
     update
     .t yview 28.0
     update
-    list [.t index @0,0] $tk::textRedraw
+    list [.t index @0,0] $tk_textRedraw
 } {28.0 {28.0 29.0}}
 test textDisp-11.4 {TkTextSetYView} {
     .t yview 30.0
     update
     .t yview 31.4
     update
-    list [.t index @0,0] $tk::textRedraw
+    list [.t index @0,0] $tk_textRedraw
 } {31.0 40.0}
 test textDisp-11.5 {TkTextSetYView} {
     .t yview 30.0
     update
-    set tk::textRedraw {}
+    set tk_textRedraw {}
     .t yview -pickplace 31.0
     update
-    list [.t index @0,0] $tk::textRedraw
+    list [.t index @0,0] $tk_textRedraw
 } {30.0 {}}
 test textDisp-11.6 {TkTextSetYView} {
     .t yview 30.0
     update
-    set tk::textRedraw {}
+    set tk_textRedraw {}
     .t yview -pickplace 28.0
     update
-    list [.t index @0,0] $tk::textRedraw
+    list [.t index @0,0] $tk_textRedraw
 } {28.0 {28.0 29.0}}
 test textDisp-11.7 {TkTextSetYView} {
     .t yview 30.0
     update
-    set tk::textRedraw {}
+    set tk_textRedraw {}
     .t yview -pickplace 26.0
     update
-    list [.t index @0,0] $tk::textRedraw
+    list [.t index @0,0] $tk_textRedraw
 } {22.0 {22.0 23.0 24.0 25.0 26.0 27.0 28.0 29.0}}
 test textDisp-11.8 {TkTextSetYView} {
     .t yview 30.0
     update
-    set tk::textRedraw {}
+    set tk_textRedraw {}
     .t yview -pickplace 41.0
     update
-    list [.t index @0,0] $tk::textRedraw
+    list [.t index @0,0] $tk_textRedraw
 } {32.0 {40.0 41.0}}
 test textDisp-11.9 {TkTextSetYView} {
     .t yview 30.0
     update
-    set tk::textRedraw {}
+    set tk_textRedraw {}
     .t yview -pickplace 43.0
     update
-    list [.t index @0,0] $tk::textRedraw
+    list [.t index @0,0] $tk_textRedraw
 } {39.0 {40.0 41.0 42.0 43.0 44.0 45.0 46.0 47.0 48.0}}
 test textDisp-11.10 {TkTextSetYView} {
     .t yview 30.0
     update
-    set tk::textRedraw {}
+    set tk_textRedraw {}
     .t yview 10000.0
     update
-    list [.t index @0,0] $tk::textRedraw
+    list [.t index @0,0] $tk_textRedraw
 } {191.0 {191.0 192.0 193.0 194.0 195.0 196.0 197.0 198.0 199.0 200.0}}
 test textDisp-11.11 {TkTextSetYView} {
     .t yview 195.0
     update
-    set tk::textRedraw {}
+    set tk_textRedraw {}
     .t yview 197.0
     update
-    list [.t index @0,0] $tk::textRedraw
+    list [.t index @0,0] $tk_textRedraw
 } {191.0 {191.0 192.0 193.0 194.0 195.0 196.0}}
 test textDisp-11.12 {TkTextSetYView, wrapped line is off-screen} {
     .t insert 10.0 "Long line with enough text to wrap\n"
     .t yview 1.0
     update
-    set tk::textRedraw {}
+    set tk_textRedraw {}
     .t see 10.30
     update
-    list [.t index @0,0] $tk::textRedraw
+    list [.t index @0,0] $tk_textRedraw
 } {2.0 10.20}
 .t delete 10.0 11.0
 test textDisp-11.13 {TkTestSetYView, partially-visible last line} {
@@ -1283,10 +1283,10 @@ test textDisp-11.13 {TkTestSetYView, partially-visible last line} {
     update
     .top.t yview 1.0
     update
-    set tk::textRedraw {}
+    set tk_textRedraw {}
     .top.t see 5.0
     update
-    list [.top.t index @0,0] $tk::textRedraw
+    list [.top.t index @0,0] $tk_textRedraw
 } {2.0 {5.0 6.0}}
 catch {destroy .top}
 toplevel .top
