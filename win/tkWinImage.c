@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinImage.c,v 1.3.2.1 2002/10/10 07:27:12 hobbs Exp $
+ * RCS: @(#) $Id: tkWinImage.c,v 1.3.2.2 2002/10/10 21:02:09 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -292,17 +292,14 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
     XImage *ret_image;
-    unsigned char *smallBitData, *smallBitBase, *bigBitData;
     HDC hdc, hdcMem;
     HBITMAP hbmp, hbmpPrev;
     BITMAPINFO *bmInfo = NULL;
     HPALETTE hPal, hPalPrev1, hPalPrev2;
-    unsigned int byte_width;
-    unsigned int h, w, n;
-    unsigned char plmr, plmg, plmb;
-    unsigned char *data;
     int size;
+    unsigned int n;
     unsigned int depth;
+    unsigned char *data;
     TkWinDCState state;
     BOOL ret;
 
@@ -443,43 +440,54 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
 	    goto cleanup;
 	}
 
-	byte_width = ((width * 3 + 3) & ~3);
-	smallBitBase = ckalloc(byte_width * height);
-	if (!smallBitBase) {
-	    ckfree((char *) ret_image->data);
-	    ckfree((char *) ret_image);
-	    ret_image = NULL;
-	    goto cleanup;
-	}
-	smallBitData = smallBitBase;
+	if (depth <= 24) {
+	    unsigned char *smallBitData, *smallBitBase, *bigBitData;
+	    unsigned int byte_width, h, w;
 
-	/* Get the BITMAP info into the Image. */
-	if (GetDIBits(hdcMem, hbmp, 0, height, smallBitData, bmInfo,
-		DIB_RGB_COLORS) == 0) {
-	    ckfree((char *) ret_image->data);
-	    ckfree((char *) ret_image);
-	    ret_image = NULL;
-	    goto cleanup;
-	}
+	    byte_width = ((width * 3 + 3) & ~3);
+	    smallBitBase = ckalloc(byte_width * height);
+	    if (!smallBitBase) {
+		ckfree((char *) ret_image->data);
+		ckfree((char *) ret_image);
+		ret_image = NULL;
+		goto cleanup;
+	    }
+	    smallBitData = smallBitBase;
 
-	plmr = (unsigned char) (plane_mask & 0xff0000) >> 16;
-	plmg = (unsigned char) (plane_mask & 0x00ff00) >> 8;
-	plmb = (unsigned char) (plane_mask & 0x0000ff);
+	    /* Get the BITMAP info into the Image. */
+	    if (GetDIBits(hdcMem, hbmp, 0, height, smallBitData, bmInfo,
+		    DIB_RGB_COLORS) == 0) {
+		ckfree((char *) ret_image->data);
+		ckfree((char *) ret_image);
+		ckfree((char *) smallBitBase);
+		ret_image = NULL;
+		goto cleanup;
+	    }
 
-	/* Copy the 24 Bit Pixmap to a 32-Bit one. */
-	for (h = 0; h < height; h++) {
-	    bigBitData = ret_image->data + h * ret_image->bytes_per_line;
-	    smallBitData = smallBitBase + h * byte_width;
-
-	    for (w = 0; w < width; w++) {
-		*bigBitData++ = ((*smallBitData++)) /* & plmr */;
-		*bigBitData++ = ((*smallBitData++)) /* & plmg */;
-		*bigBitData++ = ((*smallBitData++)) /* & plmb */;
-		*bigBitData++ = 0;
+	    /* Copy the 24 Bit Pixmap to a 32-Bit one. */
+	    for (h = 0; h < height; h++) {
+		bigBitData   = ret_image->data + h * ret_image->bytes_per_line;
+		smallBitData = smallBitBase + h * byte_width;
+		
+		for (w = 0; w < width; w++) {
+		    *bigBitData++ = ((*smallBitData++));
+		    *bigBitData++ = ((*smallBitData++));
+		    *bigBitData++ = ((*smallBitData++));
+		    *bigBitData++ = 0;
+		}
+	    }
+	    /* Free the Device contexts, and the Bitmap */
+	    ckfree((char *) smallBitBase);
+	} else {
+	    /* Get the BITMAP info directly into the Image. */
+	    if (GetDIBits(hdcMem, hbmp, 0, height, ret_image->data, bmInfo,
+		    DIB_RGB_COLORS) == 0) {
+		ckfree((char *) ret_image->data);
+		ckfree((char *) ret_image);
+		ret_image = NULL;
+		goto cleanup;
 	    }
 	}
-	/* Free the Device contexts, and the Bitmap */
-	ckfree((char *) smallBitBase);
     }
 
   cleanup:
@@ -537,21 +545,14 @@ XGetImage(display, d, x, y, width, height, plane_mask, format)
 	return NULL;
     }
 
-    if (format == ZPixmap) {
+    if (twdPtr->type != TWD_BITMAP) {
 	/*
-	 * This actually handles most TWD_WINDOW requests, but it varies
-	 * from the one below in that it really does a screen capture of
-	 * an area, but that is consistent with the Unix behavior -- hobbs
-	 */
-	imagePtr = XGetImageZPixmap(display, d, x, y,
-		width, height, plane_mask, format);
-    } else if (twdPtr->type != TWD_BITMAP) {
-	/*
-	 * This handles TWD_WINDOW or TWD_WINDC.
-	 * If the window being copied isn't visible (unmapped or obscured),
-	 * we quietly stop copying (no user error).  The user will see black
-	 * where the widget should be.
-	 * This branch is likely not followed in favor of XGetImageZPixmap.
+	 * This handles TWD_WINDOW or TWD_WINDC, always creating a 32bit
+	 * image.  If the window being copied isn't visible (unmapped or
+	 * obscured), we quietly stop copying (no user error).
+	 * The user will see black where the widget should be.
+	 * This branch is likely followed in favor of XGetImageZPixmap as
+	 * postscript printed widgets require RGB data.
 	 */
 	TkWinDCState state;
 	unsigned int xx, yy, size;
@@ -559,7 +560,7 @@ XGetImage(display, d, x, y, width, height, plane_mask, format)
 
 	dc = TkWinGetDrawableDC(display, d, &state);
 
-	imagePtr = XCreateImage(display, NULL, (TkWinGetWinPtr(d))->depth,
+	imagePtr = XCreateImage(display, NULL, 32,
 		format, 0, NULL, width, height, 32, 0);
 	size = imagePtr->bytes_per_line * imagePtr->height;
 	imagePtr->data = ckalloc(size);
@@ -576,6 +577,15 @@ XGetImage(display, d, x, y, width, height, plane_mask, format)
 	}
 
 	TkWinReleaseDrawableDC(d, dc, &state);
+    } else if (format == ZPixmap) {
+	/*
+	 * This actually handles most TWD_WINDOW requests, but it varies
+	 * from the above in that it really does a screen capture of
+	 * an area, which is consistent with the Unix behavior, but does
+	 * not appear to handle all bit depths correctly. -- hobbs
+	 */
+	imagePtr = XGetImageZPixmap(display, d, x, y,
+		width, height, plane_mask, format);
     } else {
 	char *errMsg = NULL;
 	char infoBuf[sizeof(BITMAPINFO) + sizeof(RGBQUAD)];

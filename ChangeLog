@@ -2,10 +2,11 @@
 
 	* generic/tkCanvas.h: moved TkColormapData struct to tkCanvPs.c
 	* generic/tkCanvPs.c (TkImageGetColor): corrected bogus use of
-	TkColormapData on Windows.  Non-separated data may need correction
-	as well.
+	TkColormapData on Windows (Windows now requires RGB pixel data
+	from image).
 	* win/tkWinImage.c (XGetImage, XGetImageZPixmap): added support
-	for generating ps for embedded windows on canvases.
+	for generating ps for embedded widgets on canvases on Windows,
+	tested for 8, 16, 24 and 32-bit depths (XGetImageZPixmap not used).
 
 	* unix/configure: regen
 	* unix/tcl.m4: replaced SC_ENABLE_MEMDEBUG with a more intelligent
