@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.41 2000/02/10 09:55:46 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.42 2000/04/26 00:23:44 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4842,3 +4842,61 @@ for Appearance Manager (ingham)
 mousewheel style scrolling in listbox and text widget for Unix.
 
 --- Released 8.3.0, February 10, 2000 --- See ChangeLog for details ---
+
+2000-03-02 (bug fix) fixed crash in listbox when cursor was configure and
+then widget was destroyed (hobbs)
+
+2000-03-02 (feature enhancement) added %V substitution to entry widget
+validation to clarify type of validation occuring (hobbs)
+
+2000-03-29 (config enhancement) improved build support for gcc/mingw on
+Windows (nijtmans, hobbs) and added RPM target (melski)
+
+2000-03-24 (bug fixes) numerous corrections for more correct Unix dialog
+behaviors (melski)
+
+2000-03-27 (bug fix) fixed mem leak in wm commands (hu)
+
+2000-03-31 (bug fix) correct initialization of Windows static builds and
+added Unicode aware open/save file dialogs on Windows (hobbs)
+
+2000-03 (bug fix) canvas: corrected support for transparency in dashed
+lines on Windows (nijtmans); added support for postscript generation of
+images on Windows, also fixing transparency printing (biancardi); corrected
+handling of configure options in non-empty canvas (melski)
+
+2000-04-07 (bug fix) correct font name length restriction that prevented
+the use of long named (>16 char) fonts on NT/2000 (hobbs)
+
+2000-04-07 (bug fix) fixed safe Tk to work in base cases (hobbs)
+
+2000-04-10 (bug fix) corrected Alt-Key event generation and handling of
+Alt-sequence Windows special char generation and (Control|Shift|Alt)_L/_R
+determination (melski)
+
+2000-04-10 (bug fix) correctly check state of parent when popping up
+bgerror dialog. (melski)
+
+2000-04-11 (feature enhancement) msgcat now searches up the namespace chain
+for a match instead of just in the local namespace (hershey)
+
+2000-04-12 (bug fix) corrected handling of Windows clipboard to allow for
+use of user-defined types within the Tk app (hobbs)
+
+2000-04-13 (feature enhancement) improved handling of shadow determination
+for 3D borders in very light/dark cases (hipp, melski)
+
+2000-04-13 (bug fix) correctly color separator bg in menus on Windows
+(melski)
+
+2000-04-14 (bug fix) improved handling of scale widget, reduced number of
+redraws (hobbs)
+
+2000-04-17 (feature enhancement) made shift-selection more Windows-like
+(intuitive) in text widget (melski)
+
+2000-04-22 (bug fix) mac bug fixes, nav services handling (ingham)
+
+2000-04 more docs for public APIs (melski)
+
+--- Released 8.3.1, April 26, 2000 --- See ChangeLog for details ---

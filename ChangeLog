@@ -1,5 +1,7 @@
 2000-04-25  Jeff Hobbs  <hobbs@scriptics.com>
 
+	8.3.1 RELEASE
+
 	* unix/Makefile.in:
 	* win/Makefile.in: makefile cleanup
 
