@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.9 2001/08/22 17:29:08 hobbs Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.10 2001/09/17 23:16:26 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -1141,7 +1141,7 @@ PackAfter(interp, prevPtr, masterPtr, objc, objv)
 {
     register Packer *packPtr;
     Tk_Window tkwin, ancestor, parent;
-    size_t length;
+    int length;
     Tcl_Obj **options;
     int index, optionCount, c;
 

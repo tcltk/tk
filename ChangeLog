@@ -1,3 +1,11 @@
+2001-09-17  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkGrid.c (ConfigureSlaves):
+	* generic/tkPack.c (PackAfter):  Corrected type definition of
+	argument passed to Tcl_GetStringFromObj() from size_t to int.
+	Incorrect type broke [pack] and [grid] on systems where
+	sizeof(size_t) != sizeof(int).  [Bugs 462375, 462342, 462338]
+
 2001-09-17  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/choosedir.tcl (DblClick): 
