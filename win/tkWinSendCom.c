@@ -17,7 +17,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSendCom.c,v 1.2 2003/10/08 21:49:57 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinSendCom.c,v 1.3 2003/11/20 19:36:58 vincentdarley Exp $
  */
 
 #include "tkWinSendCom.h"
@@ -260,27 +260,26 @@ WinSendCom_Invoke(
     HRESULT hr = DISP_E_MEMBERNOTFOUND;
     TkWinSendCom *this = (TkWinSendCom*)This;
     
-    switch (dispidMember)
-    {
+    switch (dispidMember) {
 	case TKWINSENDCOM_DISPID_SEND:
-	    if (wFlags | DISPATCH_METHOD)
-	    {
-		if (pDispParams->cArgs != 1)
+	    if (wFlags | DISPATCH_METHOD) {
+		if (pDispParams->cArgs != 1) {
 		    hr = DISP_E_BADPARAMCOUNT;
-		else
+		} else {
 		    hr = Send(this, pDispParams->rgvarg[0],
 			    pvarResult, pExcepInfo, puArgErr);
+		}
 	    }
 	    break;
 	    
 	case TKWINSENDCOM_DISPID_ASYNC:
-	    if (wFlags | DISPATCH_METHOD)
-	    {
-		if (pDispParams->cArgs != 1)
+	    if (wFlags | DISPATCH_METHOD) {
+		if (pDispParams->cArgs != 1) {
 		    hr = DISP_E_BADPARAMCOUNT;
-		else
+		} else {
 		    hr = Async(this, pDispParams->rgvarg[0],
 			    pExcepInfo, puArgErr);
+		}
 	    }
 	    break;
 	    
@@ -349,7 +348,7 @@ static HRESULT
 Async(TkWinSendCom* obj, VARIANT Cmd, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HRESULT hr = S_OK;
-    int r = TCL_OK;
+    int result = TCL_OK;
     VARIANT vCmd;
     
     VariantInit(&vCmd);
@@ -363,13 +362,11 @@ Async(TkWinSendCom* obj, VARIANT Cmd, EXCEPINFO *pExcepInfo, UINT *puArgErr)
     }
     
     
-    if (SUCCEEDED(hr))
-    {
-        if (obj->interp)
-        {
+    if (SUCCEEDED(hr)) {
+        if (obj->interp) {
             Tcl_Obj *scriptPtr = Tcl_NewUnicodeObj(vCmd.bstrVal,
 		    (int)SysStringLen(vCmd.bstrVal));
-            r = TkWinSend_QueueCommand(obj->interp, scriptPtr);
+            result = TkWinSend_QueueCommand(obj->interp, scriptPtr);
         }
     }
     
@@ -402,28 +399,24 @@ Send(TkWinSendCom* obj, VARIANT vCmd,
      VARIANT* pvResult, EXCEPINFO* pExcepInfo, UINT *puArgErr)
 {
     HRESULT hr = S_OK;
-    int r = TCL_OK;
+    int result = TCL_OK;
     VARIANT v;
     
     VariantInit(&v);
     hr = VariantChangeType(&v, &vCmd, 0, VT_BSTR);
-    if (SUCCEEDED(hr))
-    {
-        if (obj->interp)
-        {
+    if (SUCCEEDED(hr)) {
+        if (obj->interp) {
             Tcl_Obj *scriptPtr = Tcl_NewUnicodeObj(v.bstrVal,
 		    (int)SysStringLen(v.bstrVal));
             
-            r = Tcl_EvalObjEx(obj->interp, scriptPtr,
+            result = Tcl_EvalObjEx(obj->interp, scriptPtr,
 		    TCL_EVAL_DIRECT | TCL_EVAL_GLOBAL);
-            if (pvResult)
-            {
+            if (pvResult) {
                 VariantInit(pvResult);
                 pvResult->vt = VT_BSTR;
                 pvResult->bstrVal = SysAllocString(Tcl_GetUnicode(Tcl_GetObjResult(obj->interp)));
             }
-            if (r == TCL_ERROR)
-            {
+            if (result == TCL_ERROR) {
                 hr = DISP_E_EXCEPTION;
                 SetExcepInfo(obj->interp, pExcepInfo);
             }
@@ -433,10 +426,3 @@ Send(TkWinSendCom* obj, VARIANT vCmd,
     return hr;
 }
 
-/*
- * Local Variables:
- *   mode: c
- *   tab-width: 8
- *   c-indentation-style: tcltk
- * End:
- */
