@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scrollbar.test,v 1.11 2004/03/17 18:15:49 das Exp $
+# RCS: @(#) $Id: scrollbar.test,v 1.12 2004/05/23 17:34:49 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -96,7 +96,7 @@ foreach test {
 	lindex [.s configure $name] 4
     } [lindex $test 2]
     incr i
-    if {[lindex $test 3] != ""} {
+    if {[lindex $test 3] ne ""} {
 	test scrollbar-1.2 {configuration options} {
 	    list [catch {.s configure $name [lindex $test 3]} msg] $msg
 	} [list 1 [lindex $test 4]]
@@ -639,16 +639,3 @@ catch {destroy .t}
 # cleanup
 cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

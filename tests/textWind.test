@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textWind.test,v 1.15 2003/12/10 12:14:05 vincentdarley Exp $
+# RCS: @(#) $Id: textWind.test,v 1.16 2004/05/23 17:34:49 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -27,11 +27,7 @@ if {[tcltest::testConstraint fonts]} {
 
 option add *Text.borderWidth 2
 option add *Text.highlightThickness 2
-if {$tcl_platform(platform) == "windows"} {
-    option add *Text.font {Courier -12}
-} else {   
-    option add *Text.font {Courier -12}
-}
+option add *Text.font {Courier -12}
 
 set fixedFont {Courier -12}
 # 15 on XP, 13 on Solaris 8
@@ -51,11 +47,7 @@ pack append . .t {top expand fill}
 update
 .t debug on
 wm geometry . {}
-if {[winfo depth .t] > 1} {
-    set color green
-} else {
-    set color black
-}
+set color [expr {[winfo depth .t] > 1 ? "green" : "black"}]
   
 # The statements below reset the main window;  it's needed if the window
 # manager is mwm to make mwm forget about a previous minimum size setting.
@@ -885,16 +877,3 @@ option clear
 # cleanup
 cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

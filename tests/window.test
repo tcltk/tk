@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: window.test,v 1.9 2003/11/18 01:47:51 dgp Exp $
+# RCS: @(#) $Id: window.test,v 1.10 2004/05/23 17:34:50 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -304,15 +304,3 @@ test window-5.1 {Tk_MakeWindowExist procedure, stacking order and menubars} \
 # cleanup
 cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-

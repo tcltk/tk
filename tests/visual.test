@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: visual.test,v 1.7 2003/04/01 21:06:58 dgp Exp $
+# RCS: @(#) $Id: visual.test,v 1.8 2004/05/23 17:34:49 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -69,43 +69,46 @@ if {[llength $avail] > 1} {
 	}
     }
 }
+tcltest::testConstraint haveOtherVisual [expr {$other ne ""}]
+tcltest::testConstraint havePseudocolorVisual [string match *pseudocolor* $avail]
+tcltest::testConstraint haveMultipleVisuals [expr {[llength $avail] > 1}]
+tktest::testConstraint defaultPseudocolor8 [expr {
+    ([winfo visual .] == "pseudocolor") && ([winfo depth .] == 8)
+}]
 
 test visual-1.1 {Tk_GetVisual, copying from other window} {
     list [catch {toplevel .t -visual .foo.bar} msg] $msg
 } {1 {bad window path name ".foo.bar"}}
-if {$other != ""} {
-    test visual-1.2 {Tk_GetVisual, copying from other window} {nonPortable} {
-	catch {destroy .t1}
-	catch {destroy .t2}
-	toplevel .t1 -width 250 -height 100 -visual $other
-	wm geom .t1 +0+0
-	toplevel .t2 -width 200 -height 80 -visual .t1
-	wm geom .t2 +5+5
-	concat "[winfo visual .t2] [winfo depth .t2]"
-    } $other
-    test visual-1.3 {Tk_GetVisual, copying from other window} {
-	catch {destroy .t1}
-	catch {destroy .t2}
-	toplevel .t1 -width 250 -height 100 -visual $other
-	wm geom .t1 +0+0
-	toplevel .t2 -width 200 -height 80 -visual .
-	wm geom .t2 +5+5
-	concat "[winfo visual .t2] [winfo depth .t2]"
-    } $default
-
-    # Make sure reference count is incremented when copying visual (the
-    # following test will cause the colormap to be freed prematurely if
-    # the reference count isn't incremented).
-    test visual-1.4 {Tk_GetVisual, colormap reference count} {
-	catch {destroy .t1}
-	catch {destroy .t2}
-	toplevel .t1 -width 250 -height 100 -visual $other
-	wm geom .t1 +0+0
-	set result [list [catch {toplevel .t2 -gorp 80 -visual .t1} msg] $msg]
-	update
-	set result
-    } {1 {unknown option "-gorp"}}
-}
+test visual-1.2 {Tk_GetVisual, copying from other window} {haveOtherVisual nonPortable} {
+    catch {destroy .t1}
+    catch {destroy .t2}
+    toplevel .t1 -width 250 -height 100 -visual $other
+    wm geom .t1 +0+0
+    toplevel .t2 -width 200 -height 80 -visual .t1
+    wm geom .t2 +5+5
+    concat "[winfo visual .t2] [winfo depth .t2]"
+} $other
+test visual-1.3 {Tk_GetVisual, copying from other window} haveOtherVisual {
+    catch {destroy .t1}
+    catch {destroy .t2}
+    toplevel .t1 -width 250 -height 100 -visual $other
+    wm geom .t1 +0+0
+    toplevel .t2 -width 200 -height 80 -visual .
+    wm geom .t2 +5+5
+    concat "[winfo visual .t2] [winfo depth .t2]"
+} $default
+# Make sure reference count is incremented when copying visual (the
+# following test will cause the colormap to be freed prematurely if
+# the reference count isn't incremented).
+test visual-1.4 {Tk_GetVisual, colormap reference count} haveOtherVisual {
+    catch {destroy .t1}
+    catch {destroy .t2}
+    toplevel .t1 -width 250 -height 100 -visual $other
+    wm geom .t1 +0+0
+    set result [list [catch {toplevel .t2 -gorp 80 -visual .t1} msg] $msg]
+    update
+    set result
+} {1 {unknown option "-gorp"}}
 test visual-1.5 {Tk_GetVisual, default colormap} {
     catch {destroy .t1}
     toplevel .t1 -width 250 -height 100 -visual default
@@ -163,7 +166,7 @@ test visual-3.5 {Tk_GetVisual, parsing visual string} {
     } msg] $msg
 } {1 {expected integer but got "48x"}}
 
-if {$other != ""} {
+test visual-4.1 {Tk_GetVisual, numerical visual id} -setup {
     catch {destroy .t1}
     catch {destroy .t2}
     catch {destroy .t3}
@@ -173,95 +176,93 @@ if {$other != ""} {
     wm geom .t2 +5+5
     toplevel .t3 -width 150 -height 250 -visual [winfo visual .t1]
     wm geom .t3 +10+10
-    test visual-4.1 {Tk_GetVisual, numerical visual id} nonPortable {
-	list [winfo visualid .t2] [winfo visualid .t3]
-    } [list [winfo visualid .] [winfo visualid .t1]]
+} -constraints {haveOtherVisual nonPortable} -body {
+    set v1 [list [winfo visualid .t2] [winfo visualid .t3]]
+    set v2 [list [winfo visualid .] [winfo visualid .t1]]
+    expr {$v1 eq $v2 ? "OK" : "[list $v1] ne [list $v2]"}
+} -result OK -cleanup {
     destroy .t1 .t2 .t3
 }
 test visual-4.2 {Tk_GetVisual, numerical visual id} {
     catch {destroy .t1}
     list [catch {toplevel .t1 -visual 12xyz} msg] $msg
-} {1 {bad X identifier for visual: 12xyz"}}
+} {1 {bad X identifier for visual: "12xyz"}}
 test visual-4.3 {Tk_GetVisual, numerical visual id} {
     catch {destroy .t1}
     list [catch {toplevel .t1 -visual 1291673} msg] $msg
 } {1 {couldn't find an appropriate visual}}
 
-if ![string match *pseudocolor* $avail] {
-    test visual-5.1 {Tk_GetVisual, no matching visual} {
-	catch {destroy .t1}
-	list [catch {
-	    toplevel .t1 -width 250 -height 100 -visual "pseudocolor 8"
-	    wm geometry .t1 +0+0
-	} msg] $msg
-    } {1 {couldn't find an appropriate visual}}
-}
-
-if {[string match *pseudocolor* $avail] && ([llength $avail] > 1)} {
-    test visual-6.1 {Tk_GetVisual, no matching visual} {nonPortable} {
-	catch {destroy .t1}
-	toplevel .t1 -width 250 -height 100 -visual "best"
+test visual-5.1 {Tk_GetVisual, no matching visual} !havePseudocolorVisual {
+    catch {destroy .t1}
+    list [catch {
+	toplevel .t1 -width 250 -height 100 -visual "pseudocolor 8"
 	wm geometry .t1 +0+0
-	update
-	winfo visual .t1
-    } {pseudocolor}
-}
+    } msg] $msg
+} {1 {couldn't find an appropriate visual}}
+
+test visual-6.1 {Tk_GetVisual, no matching visual} {havePseudocolorVisual haveMultipleVisuals nonPortable} {
+    catch {destroy .t1}
+    toplevel .t1 -width 250 -height 100 -visual "best"
+    wm geometry .t1 +0+0
+    update
+    winfo visual .t1
+} {pseudocolor}
 
 # These tests are non-portable due to variations in how many colors
 # are already in use on the screen.
 
-if {([winfo visual .] == "pseudocolor") && ([winfo depth .] == 8)} {
+if {[tktest::testConstraint defaultPseudocolor8]} {
     eatColors .t1
-    test visual-7.1 {Tk_GetColormap, "new"} {nonPortable} {
-	toplevel .t2 -width 30 -height 20
-	wm geom .t2 +0+0
-	update
-	colorsFree .t2
-    } {0}
-    test visual-7.2 {Tk_GetColormap, "new"} {nonPortable} {
-	catch {destroy .t2}
-	toplevel .t2 -width 30 -height 20 -colormap new
-	wm geom .t2 +0+0
-	update
-	colorsFree .t2
-    } {1}
-    test visual-7.3 {Tk_GetColormap, copy from other window} {nonPortable} {
-	catch {destroy .t2}
-	toplevel .t3 -width 400 -height 50 -colormap new
-	wm geom .t3 +0+0
-	catch {destroy .t2}
-	toplevel .t2 -width 30 -height 20 -colormap .t3
-	wm geom .t2 +0+0
-	update
-	destroy .t3
-	colorsFree .t2
-    } {1}
-    test visual-7.4 {Tk_GetColormap, copy from other window} {nonPortable} {
-	catch {destroy .t2}
-	toplevel .t3 -width 400 -height 50 -colormap new
-	wm geom .t3 +0+0
-	catch {destroy .t2}
-	toplevel .t2 -width 30 -height 20 -colormap .
-	wm geom .t2 +0+0
-	update
-	destroy .t3
-	colorsFree .t2
-    } {0}
-    test visual-7.5 {Tk_GetColormap, copy from other window} {nonPortable} {
-	catch {destroy .t1}
-	list [catch {toplevel .t1 -width 400 -height 50 \
-		-colormap .choke.lots} msg] $msg
-    } {1 {bad window path name ".choke.lots"}}
-    if {$other != {}} {
-	test visual-7.6 {Tk_GetColormap, copy from other window} {nonPortable} {
-	    catch {destroy .t1}
-	    catch {destroy .t2}
-	    toplevel .t1 -width 300 -height 150 -visual $other
-	    wm geometry .t1 +0+0
-	    list [catch {toplevel .t2 -width 400 -height 50 \
-		    -colormap .t1} msg] $msg
-	} {1 {can't use colormap for .t1: incompatible visuals}}
-    }
+}
+test visual-7.1 {Tk_GetColormap, "new"} {defaultPseudocolor8 nonPortable} {
+    toplevel .t2 -width 30 -height 20
+    wm geom .t2 +0+0
+    update
+    colorsFree .t2
+} {0}
+test visual-7.2 {Tk_GetColormap, "new"} {defaultPseudocolor8 nonPortable} {
+    catch {destroy .t2}
+    toplevel .t2 -width 30 -height 20 -colormap new
+    wm geom .t2 +0+0
+    update
+    colorsFree .t2
+} {1}
+test visual-7.3 {Tk_GetColormap, copy from other window} {defaultPseudocolor8 nonPortable} {
+    catch {destroy .t2}
+    toplevel .t3 -width 400 -height 50 -colormap new
+    wm geom .t3 +0+0
+    catch {destroy .t2}
+    toplevel .t2 -width 30 -height 20 -colormap .t3
+    wm geom .t2 +0+0
+    update
+    destroy .t3
+    colorsFree .t2
+} {1}
+test visual-7.4 {Tk_GetColormap, copy from other window} {defaultPseudocolor8 nonPortable} {
+    catch {destroy .t2}
+    toplevel .t3 -width 400 -height 50 -colormap new
+    wm geom .t3 +0+0
+    catch {destroy .t2}
+    toplevel .t2 -width 30 -height 20 -colormap .
+    wm geom .t2 +0+0
+    update
+    destroy .t3
+    colorsFree .t2
+} {0}
+test visual-7.5 {Tk_GetColormap, copy from other window} {defaultPseudocolor8 nonPortable} {
+    catch {destroy .t1}
+    list [catch {
+	toplevel .t1 -width 400 -height 50 -colormap .choke.lots
+    } msg] $msg
+} {1 {bad window path name ".choke.lots"}}
+test visual-7.6 {Tk_GetColormap, copy from other window} {defaultPseudocolor8 haveOtherVisual nonPortable} {
+    catch {destroy .t1}
+    catch {destroy .t2}
+    toplevel .t1 -width 300 -height 150 -visual $other
+    wm geometry .t1 +0+0
+    list [catch {toplevel .t2 -width 400 -height 50 -colormap .t1} msg] $msg
+} {1 {can't use colormap for .t1: incompatible visuals}}
+if {[tktest::testConstraint defaultPseudocolor8]} {
     catch {destroy .t1}
     catch {destroy .t2}
 }
@@ -279,21 +280,19 @@ test visual-8.1 {Tk_FreeColormap procedure} {
     destroy .t4
     update
 } {}
-if {$other != {}} {
-    test visual-8.2 {Tk_FreeColormap procedure} {
-	deleteWindows
-	toplevel .t1 -width 300 -height 180 -visual $other
-	wm geometry .t1 +0+0
-	foreach i {.t2 .t3 .t4} {
-	    toplevel $i -width 250 -height 150 -visual $other
-	    wm geometry $i +0+0
-	}
-	destroy .t2
-	destroy .t3
-	destroy .t4
-	update
-    } {}
-}
+test visual-8.2 {Tk_FreeColormap procedure} haveOtherVisual {
+    deleteWindows
+    toplevel .t1 -width 300 -height 180 -visual $other
+    wm geometry .t1 +0+0
+    foreach i {.t2 .t3 .t4} {
+	toplevel $i -width 250 -height 150 -visual $other
+	wm geometry $i +0+0
+    }
+    destroy .t2
+    destroy .t3
+    destroy .t4
+    update
+} {}
 
 deleteWindows
 rename eatColors {}
@@ -302,16 +301,3 @@ rename colorsFree {}
 # cleanup
 cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

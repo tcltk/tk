@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixEmbed.test,v 1.12 2003/04/01 21:06:55 dgp Exp $
+# RCS: @(#) $Id: unixEmbed.test,v 1.13 2004/05/23 17:34:49 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -559,16 +559,3 @@ deleteWindows
 cleanupbg
 cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

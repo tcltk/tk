@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.16 2004/03/17 18:15:49 das Exp $
+# RCS: @(#) $Id: entry.test,v 1.17 2004/05/23 17:34:48 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -81,16 +81,16 @@ foreach test {
     {-width 402 402 3p {expected integer but got "3p"}}
     {-xscrollcommand {Some command} {Some command} {} {}}
 } {
-    set name [lindex $test 0]
+    lassign $test name goodValue goodResult badValue badResult
     test entry-1.$i {configuration options} {
-	.e configure $name [lindex $test 1]
+	.e configure $name $goodValue
 	list [lindex [.e configure $name] 4] [.e cget $name]
-    } [list [lindex $test 2] [lindex $test 2]]
+    } [list $goodResult $goodResult]
     incr i
-    if {[lindex $test 3] != ""} {
-	test entry-1.$i {configuration options} {
-	    list [catch {.e configure $name [lindex $test 3]} msg] $msg
-	} [list 1 [lindex $test 4]]
+    if {$badValue ne ""} {
+	test entry-1.$i {configuration options} -body {
+	    .e configure $name $badValue
+	} -returnCodes error -result $badResult
     }
     .e configure $name [lindex [.e configure $name] 3]
     incr i

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvText.test,v 1.13 2003/04/01 21:06:19 dgp Exp $
+# RCS: @(#) $Id: canvText.test,v 1.14 2004/05/23 17:34:48 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -35,16 +35,16 @@ foreach test {
     {-text xyz xyz {} {}}
     {-width 6 6 xyz {bad screen distance "xyz"}}
 } {
-    set name [lindex $test 0]
-    test canvText-1.$i {configuration options} {
-	.c itemconfigure test $name [lindex $test 1]
+    lassign $test name goodValue goodResult badValue badResult
+    test canvText-1.$i "configuration options: good value for $name" {
+	.c itemconfigure test $name $goodValue
 	list [lindex [.c itemconfigure test $name] 4] [.c itemcget test $name]
-    } [list [lindex $test 2] [lindex $test 2]]
+    } [list $goodResult $goodResult]
     incr i
-    if {[lindex $test 3] != ""} {
-	test canvText-1.$i {configuration options} {
-	    list [catch {.c itemconfigure test $name [lindex $test 3]} msg] $msg
-	} [list 1 [lindex $test 4]]
+    if {$badValue ne ""} {
+	test canvText-1.$i "configuration options: bad value for $name" -body {
+	    .c itemconfigure test $name $badValue
+	} -returnCodes error -result $badResult
     }
     incr i
 }
@@ -516,16 +516,3 @@ test canvText-18.1 {bug fix 2525, find enclosed on text with newlines} {
 # cleanup
 cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

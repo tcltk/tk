@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textImage.test,v 1.8 2003/10/31 09:02:16 vincentdarley Exp $
+# RCS: @(#) $Id: textImage.test,v 1.9 2004/05/23 17:34:49 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -352,16 +352,3 @@ font delete test_font
 # cleanup
 cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

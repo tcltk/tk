@@ -6,11 +6,13 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: option.test,v 1.5 2003/04/01 21:06:48 dgp Exp $
+# RCS: @(#) $Id: option.test,v 1.6 2004/05/23 17:34:49 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+testConstraint appNameIsTktest [expr {[winfo name .] eq "tktest"}]
 
 catch {destroy .op1}
 catch {destroy .op2}
@@ -193,9 +195,7 @@ test option-15.1 {database files} {
 } {1 {couldn't open "non-existent": no such file or directory}}
 option read $option1
 test option-15.2 {database files} {option get . x1 color} blue
-if {$appName == "tktest"} {
-    test option-15.3 {database files} {option get . x2 color} green
-}
+test option-15.3 {database files} appNameIsTktest {option get . x2 color} green
 test option-15.4 {database files} {option get . x3 color} purple
 test option-15.5 {database files} {option get . {x 4} color} brown
 test option-15.6 {database files} {option get . x6 color} {}
@@ -227,16 +227,3 @@ catch {destroy .op2}
 # cleanup
 cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
