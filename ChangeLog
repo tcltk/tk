@@ -1,3 +1,18 @@
+2001-08-29  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/config.test: added config-14.1 to test namespace import
+	evaluation of widgets.
+	* generic/tkButton.c (ButtonCreate):
+	* generic/tkFrame.c (CreateFrame):
+	* generic/tkMenubutton.c (Tk_MenubuttonObjCmd):
+	* generic/tkPlace.c (Tk_PlaceObjCmd):
+	* generic/tkScale.c (Tk_ScaleObjCmd):
+	* generic/tkMessage.c (Tk_MessageObjCmd):
+	* generic/tkEntry.c (Tk_EntryObjCmd, Tk_SpinboxObjCmd):
+	* generic/tkSquare.c (SquareObjCmd): redid the handling of
+	optionTables in widgets to allow them to be imported into other
+	namespaces. [Bug #456632]
+
 2001-08-28  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinDialog.c (ChooseDirectoryHookProc): work-around for MS

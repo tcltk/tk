@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.8 2001/05/28 16:56:02 pspjuth Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.9 2001/08/29 23:22:24 hobbs Exp $
  */
 
 #include "default.h"
@@ -309,7 +309,7 @@ TkCreateFrame(clientData, interp, argc, argv, toplevel, appName)
 
 static int
 CreateFrame(clientData, interp, objc, objv, type, appName)
-    ClientData clientData;	/* Either NULL or pointer to option table. */
+    ClientData clientData;	/* NULL. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
@@ -330,29 +330,17 @@ CreateFrame(clientData, interp, objc, objv, type, appName)
     Colormap colormap;
     Visual *visual;
 
-    optionTable = (Tk_OptionTable) clientData;
-    if (optionTable == NULL) {
-	Tcl_CmdInfo info;
-	char *name;
-
-	/*
-	 * We haven't created the option table for this widget class
-	 * yet.  Do it now and save the table as the clientData for
-	 * the command, so we'll have access to it in future
-	 * invocations of the command.
-	 */
-
-	optionTable = Tk_CreateOptionTable(interp, optionSpecs[type]);
-	name = Tcl_GetString(objv[0]);
-	Tcl_GetCommandInfo(interp, name, &info);
-	info.objClientData = (ClientData) optionTable;
-	Tcl_SetCommandInfo(interp, name, &info);
-    }
-
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
 	return TCL_ERROR;
     }
+
+    /*
+     * Create the option table for this widget class.  If it has already
+     * been created, the cached pointer will be returned.
+     */
+
+    optionTable = Tk_CreateOptionTable(interp, optionSpecs[type]);
 
     /*
      * Pre-process the argument list.  Scan through it to find any
@@ -482,34 +470,19 @@ CreateFrame(clientData, interp, objc, objv, type, appName)
      * in the widget record from the special options.
      */
 
-    framePtr = (Frame *) ckalloc(sizeof(Frame));
-    framePtr->tkwin = new;
-    framePtr->display = Tk_Display(new);
-    framePtr->interp = interp;
-    framePtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    framePtr			= (Frame *) ckalloc(sizeof(Frame));
+    memset((void *) framePtr, 0, (sizeof(Frame)));
+    framePtr->tkwin		= new;
+    framePtr->display		= Tk_Display(new);
+    framePtr->interp		= interp;
+    framePtr->widgetCmd		= Tcl_CreateObjCommand(interp,
 	    Tk_PathName(new), FrameWidgetObjCmd,
 	    (ClientData) framePtr, FrameCmdDeletedProc);
-    framePtr->optionTable = optionTable;
-    framePtr->className = NULL;
-    framePtr->type = type;
-    framePtr->screenName = NULL;
-    framePtr->visualName = NULL;
-    framePtr->colormapName = NULL;
-    framePtr->menuName = NULL;
-    framePtr->colormap = colormap;
-    framePtr->border = NULL;
-    framePtr->borderWidth = 0;
-    framePtr->relief = TK_RELIEF_FLAT;
-    framePtr->highlightWidth = 0;
-    framePtr->highlightBgColorPtr = NULL;
-    framePtr->highlightColorPtr = NULL;
-    framePtr->width = 0;
-    framePtr->height = 0;
-    framePtr->cursor = None;
-    framePtr->takeFocus = NULL;
-    framePtr->isContainer = 0;
-    framePtr->useThis = NULL;
-    framePtr->flags = 0;
+    framePtr->optionTable	= optionTable;
+    framePtr->type		= type;
+    framePtr->colormap		= colormap;
+    framePtr->relief		= TK_RELIEF_FLAT;
+    framePtr->cursor		= None;
 
     /*
      * Store backreference to frame widget in window structure.

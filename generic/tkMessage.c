@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMessage.c,v 1.9 2000/11/22 01:49:38 ericm Exp $
+ * RCS: @(#) $Id: tkMessage.c,v 1.10 2001/08/29 23:22:24 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -221,8 +221,7 @@ static Tk_ClassProcs messageClass = {
 
 int
 Tk_MessageObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Main window associated with
-				 * interpreter. */
+    ClientData clientData;	/* NULL. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument strings. */
@@ -231,24 +230,6 @@ Tk_MessageObjCmd(clientData, interp, objc, objv)
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
 
-    optionTable = (Tk_OptionTable) clientData;
-    if (optionTable == NULL) {
-	Tcl_CmdInfo info;
-	char *name;
-	/*
-	 * We haven't created the option table for this widget class
-	 * yet.  Do it now and save the table as the clientData for
-	 * the command, so we'll have access to it in future
-	 * invocations of the command.
-	 */
-
-	optionTable = Tk_CreateOptionTable(interp, optionSpecs);
-	name = Tcl_GetString(objv[0]);
-	Tcl_GetCommandInfo(interp, name, &info);
-	info.objClientData = (ClientData) optionTable;
-	Tcl_SetCommandInfo(interp, name, &info);
-    }
-	
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
 	return TCL_ERROR;
@@ -259,6 +240,13 @@ Tk_MessageObjCmd(clientData, interp, objc, objv)
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
+
+    /*
+     * Create the option table for this widget class.  If it has already
+     * been created, the cached pointer will be returned.
+     */
+
+    optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
     msgPtr = (Message *) ckalloc(sizeof(Message));
     memset(msgPtr, 0, (size_t) sizeof(Message));
