@@ -1,3 +1,10 @@
+2002-01-30  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tk.decls:  The POTENTIAL INCOMPATIBILITY in the changing
+	interface of Tk_ParseArgv can now be removed by the -DUSE_NON_CONST
+	compiler flag.
+	* generic/tkDecls.h: make genstubs
+
 2002-01-29  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
 
 	* win/tkWinInit.c (TkpGetAppName): TIP 27 fixup. The code now does
