@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.42.2.2 2001/04/04 23:16:47 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.42.2.3 2001/10/18 23:17:59 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4967,3 +4967,39 @@ screens (hipp)
 (melski)
 
 --- Released 8.3.3, April 6, 2001 --- See ChangeLog for details ---
+
+2001-08-06 (new feature) added GNU (HURD) build support. (brinkman)
+
+2001-08-23 (new feature) added QNX-6 build support. (loverso)
+
+2001-08-24 (bug fix) correct several possible free memory reads and array
+bounds read errors reported by purify. (hobbs)
+
+2001-08-27 (new feature) added call to Tcl_SetMainLoop which enables Tk to
+be loaded interactively into tclsh and have the event loop kick in
+correctly. (hobbs)
+
+2001-08-28 (bug fix) fixed tk_chooseDirectory crash on Win95. (baker)
+
+2001-08-28 (bug fix) removed 2 second 'raise' delay seen by some Unix
+window managers. (hobbs, baker)
+
+2001-09-14 (bug fix) fixed memory leaks that occured if errors were
+thrown while initializing the channel for an image. (darley)
+
+2001-09-20 (new feature) --enable-64bit support was added for HP 11 when
+using the native compiler.
+
+2001-10-03 (new feature) finalized Win64 support with latest RC1 release
+and SDK. (hobbs, stacy)
+
+2001-10-04 (new feature) added enhanced bgerror dialog from Hipp. (hobbs)
+
+2001-10-09 (new feature) added brace/quote matching and file/path/var
+expansion to the Win/Mac console. (hobbs)
+
+2001-10-17 (bug fix) fixed file filtering in the motif file dialog (nelson)
+
+2001-10-17 (bug fix) updated Mac build support. (steffen)
+
+--- Released 8.3.4, October 19, 2001 --- See ChangeLog for details ---
