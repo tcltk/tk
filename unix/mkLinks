@@ -170,6 +170,12 @@ if test -r CoordToWin.3; then
     rm -f Tk_CoordsToWindow.3
     ln CoordToWin.3 Tk_CoordsToWindow.3
 fi
+if test -r CrtCmHdlr.3; then
+    rm -f Tk_CreateClientMessageHandler.3
+    rm -f Tk_DeleteClientMessageHandler.3
+    ln CrtCmHdlr.3 Tk_CreateClientMessageHandler.3
+    ln CrtCmHdlr.3 Tk_DeleteClientMessageHandler.3
+fi
 if test -r CrtErrHdlr.3; then
     rm -f Tk_CreateErrorHandler.3
     rm -f Tk_DeleteErrorHandler.3
