@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.7 2001/11/13 00:00:24 hobbs Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.8 2003/01/19 07:46:43 hobbs Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
@@ -415,7 +415,7 @@ to an empty string to enable a textual label to be displayed.
 If a \fB\-image\fR option has been specified, it overrides
 \fB\-bitmap\fR.
 This option is not available for separator or tear-off entries.
-.VS
+.VS 8.0
 .TP
 \fB\-columnbreak \fIvalue\fR
 When this option is zero, the appears below the previous entry. When
@@ -426,8 +426,8 @@ menu.
 \fB\-command \fIvalue\fR
 Specifies a Tcl command to execute when the menu entry is invoked.
 Not available for separator or tear-off entries.
-.TP
 .VS 8.4
+.TP
 \fB\-compound \fIvalue\fR
 Specifies whether the menu entry should display both an image and text,
 and if so, where the image should be placed relative to the text.
