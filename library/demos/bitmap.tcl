@@ -3,11 +3,13 @@
 # This demonstration script creates a toplevel window that displays
 # all of Tk's built-in bitmaps.
 #
-# RCS: @(#) $Id: bitmap.tcl,v 1.4 2003/11/03 15:31:18 dkf Exp $
+# RCS: @(#) $Id: bitmap.tcl,v 1.5 2004/12/21 11:56:35 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
+
+package require Tk
 
 # bitmapRow --
 # Create a row of bitmap items in a window.

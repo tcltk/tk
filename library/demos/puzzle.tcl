@@ -3,11 +3,13 @@
 # This demonstration script creates a 15-puzzle game using a collection
 # of buttons.
 #
-# RCS: @(#) $Id: puzzle.tcl,v 1.5 2003/08/20 23:02:18 hobbs Exp $
+# RCS: @(#) $Id: puzzle.tcl,v 1.6 2004/12/21 11:56:35 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
+
+package require Tk
 
 # puzzleSwitch --
 # This procedure is invoked when the user clicks on a particular button;

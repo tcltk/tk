@@ -3,11 +3,13 @@
 # This demonstration script creates a toplevel window containing
 # several checkbuttons.
 #
-# RCS: @(#) $Id: check.tcl,v 1.4 2004/02/18 00:40:24 hobbs Exp $
+# RCS: @(#) $Id: check.tcl,v 1.5 2004/12/21 11:56:35 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
+
+package require Tk
 
 set w .check
 catch {destroy $w}

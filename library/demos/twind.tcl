@@ -3,11 +3,13 @@
 # This demonstration script creates a text widget with a bunch of
 # embedded windows.
 #
-# RCS: @(#) $Id: twind.tcl,v 1.7 2004/10/19 15:25:07 dkf Exp $
+# RCS: @(#) $Id: twind.tcl,v 1.8 2004/12/21 11:56:35 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
+
+package require Tk
 
 set w .twind
 catch {destroy $w}

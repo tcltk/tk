@@ -3,11 +3,13 @@
 # This demonstration script creates a canvas that displays the
 # canvas item types.
 #
-# RCS: @(#) $Id: items.tcl,v 1.6 2004/10/19 15:25:06 dkf Exp $
+# RCS: @(#) $Id: items.tcl,v 1.7 2004/12/21 11:56:35 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
+
+package require Tk
 
 set w .items
 catch {destroy $w}
