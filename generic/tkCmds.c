@@ -6,11 +6,12 @@
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright (c) 2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.13 2000/04/19 23:11:23 ericm Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.14 2000/05/17 22:44:09 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -62,30 +63,42 @@ Tk_BellObjCmd(clientData, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    static char *bellOptions[] = {"-displayof", (char *) NULL};
+    static char *bellOptions[] = {"-displayof", "-nice", (char *) NULL};
+    enum options { TK_BELL_DISPLAYOF, TK_BELL_NICE };
     Tk_Window tkwin = (Tk_Window) clientData;
-    char *displayName;
-    int index;
+    int i, index, nice = 0;
 
-    if ((objc != 1) && (objc != 3)) {
-	Tcl_WrongNumArgs(interp, 1, objv, "?-displayof window?");
+    if (objc > 4) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?-displayof window? ?-nice?");
 	return TCL_ERROR;
     }
 
-    if (objc == 3) {
-	if (Tcl_GetIndexFromObj(interp, objv[1], bellOptions, "option", 0,
+    for (i = 1; i < objc; i++) {
+	if (Tcl_GetIndexFromObj(interp, objv[i], bellOptions, "option", 0,
 		&index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	displayName = Tcl_GetStringFromObj(objv[2], (int *) NULL);
-	
-	tkwin = Tk_NameToWindow(interp, displayName, tkwin);
-	if (tkwin == NULL) {
-	    return TCL_ERROR;
+	switch ((enum options) index) {
+	    case TK_BELL_DISPLAYOF:
+		if (++i >= objc) {
+		    Tcl_WrongNumArgs(interp, 1, objv,
+			    "?-displayof window? ?-nice?");
+		    return TCL_ERROR;
+		}
+		tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[i]), tkwin);
+		if (tkwin == NULL) {
+		    return TCL_ERROR;
+		}
+		break;
+	    case TK_BELL_NICE:
+		nice = 1;
+		break;
 	}
     }
     XBell(Tk_Display(tkwin), 0);
-    XForceScreenSaver(Tk_Display(tkwin), ScreenSaverReset);
+    if (!nice) {
+	XForceScreenSaver(Tk_Display(tkwin), ScreenSaverReset);
+    }
     XFlush(Tk_Display(tkwin));
     return TCL_OK;
 }

@@ -1,20 +1,21 @@
 '\"
 '\" Copyright (c) 1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
+'\" Copyright (c) 2000 Scriptics Corporation.
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bell.n,v 1.2 1998/09/14 18:22:54 stanton Exp $
+'\" RCS: @(#) $Id: bell.n,v 1.3 2000/05/17 22:44:09 hobbs Exp $
 '\" 
 .so man.macros
-.TH bell n 4.0 Tk "Tk Built-In Commands"
+.TH bell n 8.4 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
 bell \- Ring a display's bell
 .SH SYNOPSIS
-\fBbell \fR?\fB\-displayof \fIwindow\fR?
+\fBbell \fR?\fB\-displayof \fIwindow\fR? \fR?\fB\-nice\fR?
 .BE
 
 .SH DESCRIPTION
@@ -26,9 +27,9 @@ application's main window is used by default.
 The command uses the current bell-related settings for the display, which
 may be modified with programs such as \fBxset\fR.
 .PP
-This command also resets the screen saver for the screen.  Some
-screen savers will ignore this, but others will reset so that the
-screen becomes visible again.
+If \fB\-nice\fR is not specified, this command also resets the screen saver
+for the screen.  Some screen savers will ignore this, but others will reset
+so that the screen becomes visible again.
 
 .SH KEYWORDS
 beep, bell, ring
