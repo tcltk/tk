@@ -1,3 +1,8 @@
+1998-12-30    <stanton@GASPODE>
+
+	* generic/tkGrid.c: Fixed bug in "grid forget" that failed to cancel
+	pending idle handlers, resulting in a crash in a few odd cases.
+
 1998-11-24    <stanton@GASPODE>
 
 	* unix/tkUnixFont.c (TkpGetNativeFont): On some X servers,

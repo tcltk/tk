@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.2 1998/09/14 18:23:12 stanton Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.3 1999/01/06 21:10:46 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -440,6 +440,9 @@ Tk_GridCmd(clientData, interp, argc, argv)
 		    slavePtr->padX = slavePtr->padY = 0;
 		    slavePtr->iPadX = slavePtr->iPadY = 0;
 		    slavePtr->doubleBw = 2*Tk_Changes(tkwin)->border_width;
+		    if (slavePtr->flags & REQUESTED_RELAYOUT) {
+			Tk_CancelIdleCall(ArrangeGrid, (ClientData) slavePtr);
+		    }
 		    slavePtr->flags = 0;
 		    slavePtr->sticky = 0;
 	    	}
