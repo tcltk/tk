@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.13 1999/11/24 20:59:06 hobbs Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.14 1999/11/30 00:02:12 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -68,10 +68,18 @@ proc ::tk::PlaceWindow {w {placement ""} {anchor ""}} {
 	set x [expr {([winfo screenwidth $w]-[winfo reqwidth $w])/2}]
 	set y [expr {([winfo screenheight $w]-[winfo reqheight $w])/2}]
     }
-    wm geometry +$x+$y
+    wm geometry $w +$x+$y
     wm deiconify $w
 }
 
+# ::tk::SetFocusGrab --
+#   swap out current focus and grab temporarily (for dialogs)
+# Arguments:
+#   grab	new window to grab
+#   focus	window to give focus to
+# Results:
+#   Returns nothing
+#
 proc ::tk::SetFocusGrab {grab {focus {}}} {
     set index "$grab,$focus"
     upvar ::tk::FocusGrab($index) data
@@ -88,6 +96,15 @@ proc ::tk::SetFocusGrab {grab {focus {}}} {
     }
 }
 
+# ::tk::RestoreFocusGrab --
+#   restore old focus and grab (for dialogs)
+# Arguments:
+#   grab	window that had taken grab
+#   focus	window that had taken focus
+#   destroy	destroy|withdraw - how to handle the old grabbed window
+# Results:
+#   Returns nothing
+#
 proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
     set index "$grab,$focus"
     foreach {oldFocus oldGrab oldStatus} $::tk::FocusGrab($index) { break }
