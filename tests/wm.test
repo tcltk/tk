@@ -7,15 +7,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.13 2002/06/24 20:34:40 mdejong Exp $
+# RCS: @(#) $Id: wm.test,v 1.14 2002/07/12 13:41:01 dgp Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
 # platform should be placed in unixWm.test or winWm.test.
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::test
 
 proc deleteWindows {} {
     foreach i [winfo children .] {
@@ -26,7 +25,10 @@ proc deleteWindows {} {
 
 deleteWindows
 
-wm deicon .
+wm deiconify .
+if {![winfo ismapped .]} {
+    tkwait visibility .
+}
 
 test wm-stackorder-1.1 {usage} {
     list [catch {wm stackorder} err] $err
@@ -808,7 +810,7 @@ test wm-deiconify-2.4 {invoking destroy after a deiconify
 
 
 deleteWindows
-
+tcltest::cleanupTests
 return
 
 

@@ -2,7 +2,7 @@
 # for images in canvases.  It is part of the Tk visual test suite,
 # which is invoked via the "visual" script.
 #
-# RCS: @(#) $Id: canvPsImg.tcl,v 1.1 1999/12/14 06:53:12 hobbs Exp $
+# RCS: @(#) $Id: canvPsImg.tcl,v 1.2 2002/07/12 13:40:59 dgp Exp $
 
 # Build a test image in a canvas
 proc BuildTestImage {} {
@@ -69,7 +69,7 @@ foreach l { monochrome gray color } {
     pack .t.$l -in .t.top.r -anchor w
 }
 
-set BitmapImage [image create bitmap -file $tk_library/demos/images/face \
+set BitmapImage [image create bitmap -file $tk_library/demos/images/face.bmp \
 	-background white -foreground black]
 set PhotoImage [image create photo -file $tk_library/demos/images/teapot.ppm]
 
