@@ -1,3 +1,34 @@
+2000-04-10  Eric Melski  <ericm@scriptics.com>
+
+	* library/bgerror.tcl: Added check for withdrawn state of . and
+	unsetting of transient bit for .bgerrorDialog if . is not
+	viewable; this protects against the application hanging on systems
+	like Windows, where transient windows are withdrawn with their
+	parents. [Bug: 4370].
+
+	* tests/event.test: Added test for [event generate $widget
+	<Alt-z>] [Bug: 4611].
+
+	* tests/choosedir.test: Changed "namespace import ::tcltest" to
+	"namespace import -force ::tcltest".
+
+	* win/tkWinKey.c: 
+	* unix/tkUnixKey.c: 
+	* mac/tkMacKeyboard.c: Changed InitKeymapInfo to
+	TkpInitKeymapInfo. [Bug: 4611].
+
+	* generic/tkStubInit.c: 
+	* generic/tkIntDecls.h: Re-gen'd from tkInt.decls.
+
+	* generic/tkInt.decls: Added TkpInitKeymapInfo to list of function
+	decls.
+
+	* generic/tkBind.c (HandleEventGenerate): Added code to initialize
+	keymap info if necessary, and to correctly set modifier bits in
+	XEvent structure create to handle [event generate] calls.
+	Previously, the alt/meta bits were not set correctly, so [event
+	generate $widget <Alt-z>] would always fail. [Bug: 4611]
+
 2000-04-07  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* generic/tkGrid.c (InitMasterData): fixed uninit'd data in
