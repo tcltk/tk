@@ -1,3 +1,16 @@
+2002-06-25  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
+
+	* library/mkpsenc.tcl: (added) utilities to generate
+	Postscript prolog for current system encoding.
+	* generic/tkCanvPs.c (TkCanvPostscriptCmd): now
+	uses mkpsenc.tcl to generate Postscript prolog.
+	* generic/tkFont.c (TkTextLayoutToPostscript): modified
+	according to patch #546910. Now outputs system-encoded
+	characters (for unibyte) or Adobe glyph names (for
+	multibyte or outside-locale).
+	* tests/canvText.test (canvText-17.1): updated this test
+	to expect the new behavior of canvas postscript.
+
 2002-06-25  Reinhard Max  <max@suse.de>
 
 	* unix/configure:                  Replaced ${exec_prefix}/lib
