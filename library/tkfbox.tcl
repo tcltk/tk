@@ -632,7 +632,6 @@ proc tkFDialog {args} {
     global tkPriv
     set w __tk_filedialog
     upvar #0 $w data
-
     if ![string compare [lindex [info level 0] 0] tk_getOpenFile] {
 	set type open
     } else {
@@ -771,11 +770,19 @@ proc tkFDialog_Config {w type argList} {
     #    settings
     #
     if [string compare $data(-initialdir) ""] {
+	
 	if [file isdirectory $data(-initialdir)] {
 	    set data(selectPath) [glob $data(-initialdir)]
 	} else {
-	    error "\"$data(-initialdir)\" is not a valid directory"
+	    set data(selectPath) [pwd]
 	}
+
+	# Convert the initialdir to an absolute path name.
+
+	set old [pwd]
+	cd $data(selectPath)
+	set data(selectPath) [pwd]
+	cd $old
     }
     set data(selectFile) $data(-initialfile)
 
