@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.23 2002/01/17 05:13:11 dgp Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.24 2002/01/18 02:55:06 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -2673,8 +2673,12 @@ ChangeListboxOffset(listPtr, offset)
     /*
      * Make sure that the new offset is within the allowable range, and
      * round it off to an even multiple of xScrollUnit.
+     *
+     * Add half a scroll unit to do entry/text-like synchronization.
+     * [Bug #225025]
      */
 
+    offset += listPtr->xScrollUnit / 2;
     maxOffset = listPtr->maxWidth - (Tk_Width(listPtr->tkwin) -
 	    2*listPtr->inset - 2*listPtr->selBorderWidth)
 	    + listPtr->xScrollUnit - 1;
