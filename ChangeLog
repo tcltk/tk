@@ -1,3 +1,10 @@
+2003-05-23  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* unix/mkLinks: Set the var S to "" at the top
+	of the file to avoid error when user has set S
+	to something.
+	[Tk Bug #739833]
+
 2003-05-21  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkPanedWindow.c (PanedWindowReqProc): Thanks very much
