@@ -2,7 +2,8 @@
 
 	* library/palette.tcl (tk_setPalette): Added heuristic to guess
 	from the background whether to use black or white for the
-	foreground when not told specifically.  Suggested by Chris Nelson.
+	foreground when not told specifically.  Suggested by Chris Nelson,
+	this makes the command fit the documentation better!
 
 2001-11-27  David Gravereaux <davygrvy@pobox.com>
 
