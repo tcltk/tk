@@ -1,3 +1,21 @@
+2004-03-31  Jim Ingham  <jingham@apple.com>
+
+	* tkMacOSXCarbonEvents.c (AppEventHandlerProc): Handle the 
+	kEventAppHidden and kEventAppShown events.
+	(TkMacOSXInitCarbonEvents): Register for the above events.
+	* tkMacOSXKeyEvent.c (TkMacOSXProcessKeyboardEvent): Steal
+	the Command-H menu key event and allow the Application
+	handler to have it.  This is currently the only way to get
+	the Hide behavior to work. [Bug 917557]
+
+	* tkMacOSMenus.c (TkMacOSXHandleMenuSelect): Remove the Quit menu
+	handler - this was for the Quit item in the File menu, but it doesn't
+	belong there.
+	(TkMacOSXInitMenus): Remove the Quit menu item from the File menu.
+
+	* tkMacOSXMenu.c (EventuallyInvokeMenu): Report errors from invoking
+	menu commands as background errors. [Bug 220871]
+	
 2004-03-31  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkImgPhoto.c:	Removed outdated #include's of the tclMath.h

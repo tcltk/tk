@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.12 2004/02/16 00:19:42 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.13 2004/04/01 18:33:30 wolfsuit Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -2099,11 +2099,18 @@ EventuallyInvokeMenu (ClientData data)
 {
     struct MenuCommandHandlerData *realData
             = (struct MenuCommandHandlerData *) data;
+    int code;
 
+    code = TkInvokeMenu(realData->menuPtr->interp, realData->menuPtr,
+            realData->index);
+    if (code != TCL_OK && code != TCL_CONTINUE
+            && code != TCL_BREAK) {
+        Tcl_AddErrorInfo(realData->menuPtr->interp, "\n    (menu invoke)");
+        Tcl_BackgroundError(realData->menuPtr->interp);
+    }
+    
     Tcl_Release(realData->menuPtr->interp);
     Tcl_Release(realData->menuPtr);
-    TkInvokeMenu(realData->menuPtr->interp, realData->menuPtr,
-            realData->index);
 }
 
 /*
