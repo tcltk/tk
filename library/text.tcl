@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.16 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: text.tcl,v 1.17 2001/08/27 01:44:48 dgp Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -108,7 +108,7 @@ bind Text <Shift-Right> {
     tk::TextKeySelect %W [%W index {insert + 1c}]
 }
 bind Text <Shift-Up> {
-    tkT::extKeySelect %W [tk::TextUpDownLine %W -1]
+    tk::TextKeySelect %W [tk::TextUpDownLine %W -1]
 }
 bind Text <Shift-Down> {
     tk::TextKeySelect %W [tk::TextUpDownLine %W 1]
