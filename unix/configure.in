@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 AC_INIT(../generic/tk.h)
-# RCS: @(#) $Id: configure.in,v 1.43 1999/12/21 23:56:33 hobbs Exp $
+# RCS: @(#) $Id: configure.in,v 1.44 2000/01/12 11:46:05 hobbs Exp $
 
 TK_VERSION=8.3
 TK_MAJOR_VERSION=8
@@ -379,6 +379,7 @@ else
     TK_BUILD_LIB_SPEC="-bI:`pwd`/${TK_BUILD_EXP_FILE}"
     TK_LIB_SPEC="-bI:${exec_prefix}/lib/${TK_EXP_FILE}"
 fi
+TK_SHARED_BUILD=${SHARED_BUILD}
 
 #--------------------------------------------------------------------
 # The statements below define various symbols relating to creating

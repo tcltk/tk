@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.36 2000/01/06 02:22:44 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.37 2000/01/12 11:46:05 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -437,7 +437,12 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	    done;
 	@echo "Installing $(TK_LIB_FILE)"
 	chmod +x $(UNIX_DIR)/install-sh
-	chmod +x $(UNIX_DIR)/mkLinks
+	@if test ! -x $(UNIX_DIR)/install-sh; then \
+	    chmod +x $(UNIX_DIR)/install-sh; \
+	    fi
+	@if test ! -x $(UNIX_DIR)/mkLinks; then \
+	    chmod +x $(UNIX_DIR)/mkLinks; \
+	    fi
 	@$(INSTALL_DATA) $(TK_LIB_FILE) $(LIB_INSTALL_DIR)/$(TK_LIB_FILE)
 	@(cd $(LIB_INSTALL_DIR); $(RANLIB) $(TK_LIB_FILE))
 	@chmod 555 $(LIB_INSTALL_DIR)/$(TK_LIB_FILE)
@@ -467,7 +472,9 @@ install-libraries:
 		else true; \
 		fi; \
 	    done;
-	chmod +x $(UNIX_DIR)/install-sh
+	@if test ! -x $(UNIX_DIR)/install-sh; then \
+	    chmod +x $(UNIX_DIR)/install-sh; \
+	    fi
 	@for i in $(GENERIC_DIR)/tk.h $(GENERIC_DIR)/tkDecls.h ; \
 	    do \
 	    echo "Installing $$i"; \

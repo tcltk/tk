@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.5 1999/12/21 23:56:34 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.6 2000/01/12 11:46:05 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1538,7 +1538,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	goto updateGeom;
     } else if ((c == 'o')
 	    && (strncmp(argv[1], "overrideredirect", length) == 0)) {
-	int boolean;
+	int boolean, curValue;
 	XSetWindowAttributes atts;
 
 	if ((argc != 3) && (argc != 4)) {
@@ -1547,24 +1547,27 @@ Tk_WmCmd(clientData, interp, argc, argv)
 		    (char *) NULL);
 	    return TCL_ERROR;
 	}
+	curValue = Tk_Attributes((Tk_Window) winPtr)->override_redirect;
 	if (argc == 3) {
-	    if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
-		Tcl_SetResult(interp, "1", TCL_STATIC);
-	    } else {
-		Tcl_SetResult(interp, "0", TCL_STATIC);
-	    }
+	    Tcl_SetBooleanObj(Tcl_GetObjResult(interp), curValue);
 	    return TCL_OK;
 	}
 	if (Tcl_GetBoolean(interp, argv[3], &boolean) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	atts.override_redirect = (boolean) ? True : False;
-	Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect,
-		&atts);
-	if (winPtr->wmInfoPtr->wrapperPtr != NULL) {
-	    Tk_ChangeWindowAttributes(
+	if (curValue != boolean) {
+	    /*
+	     * Only do this if we are really changing value, because it
+	     * causes some funky stuff to occur
+	     */
+	    atts.override_redirect = (boolean) ? True : False;
+	    Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect,
+		    &atts);
+	    if (winPtr->wmInfoPtr->wrapperPtr != NULL) {
+		Tk_ChangeWindowAttributes(
 		    (Tk_Window) winPtr->wmInfoPtr->wrapperPtr,
 		    CWOverrideRedirect, &atts);
+	    }
 	}
     } else if ((c == 'p') && (strncmp(argv[1], "positionfrom", length) == 0)
 	    && (length >= 2)) {
@@ -1741,21 +1744,95 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	goto updateGeom;
     } else if ((c == 's') && (strncmp(argv[1], "state", length) == 0)
 	    && (length >= 2)) {
-	if (argc != 3) {
+	if ((argc < 3) || (argc > 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
-		    argv[0], " state window\"", (char *) NULL);
+		    argv[0], " state window ?state?\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	if (wmPtr->iconFor != NULL) {
-	    Tcl_SetResult(interp, "icon", TCL_STATIC);
-	} else if (wmPtr->withdrawn) {
-	    Tcl_SetResult(interp, "withdrawn", TCL_STATIC);
-	} else if (Tk_IsMapped((Tk_Window) winPtr)
-		|| ((wmPtr->flags & WM_NEVER_MAPPED)
-		&& (wmPtr->hints.initial_state == NormalState))) {
-	    Tcl_SetResult(interp, "normal", TCL_STATIC);
+	if (argc == 4) {
+	    if (wmPtr->iconFor != NULL) {
+		Tcl_AppendResult(interp, "can't change state of ", argv[2],
+			": it is an icon for ", Tk_PathName(wmPtr->iconFor),
+			(char *) NULL);
+		return TCL_ERROR;
+	    }
+
+	    c = argv[3][0];
+	    length = strlen(argv[3]);
+
+	    if ((c == 'n') && (strncmp(argv[3], "normal", length) == 0)) {
+		wmPtr->hints.initial_state = NormalState;
+		wmPtr->withdrawn = 0;
+		if (wmPtr->flags & WM_NEVER_MAPPED) {
+		    return TCL_OK;
+		}
+		UpdateHints(winPtr);
+		Tk_MapWindow((Tk_Window) winPtr);
+	    } else if ((c == 'i')
+		    && (strncmp(argv[3], "iconic", length) == 0)) {
+		if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
+		    Tcl_AppendResult(interp, "can't iconify \"",
+			    winPtr->pathName,
+			    "\": override-redirect flag is set",
+			    (char *) NULL);
+		    return TCL_ERROR;
+		}
+		if (wmPtr->master != None) {
+		    Tcl_AppendResult(interp, "can't iconify \"",
+			    winPtr->pathName,
+			    "\": it is a transient", (char *) NULL);
+		    return TCL_ERROR;
+		}
+		wmPtr->hints.initial_state = IconicState;
+		if (wmPtr->flags & WM_NEVER_MAPPED) {
+		    return TCL_OK;
+		}
+		if (wmPtr->withdrawn) {
+		    UpdateHints(winPtr);
+		    Tk_MapWindow((Tk_Window) winPtr);
+		    wmPtr->withdrawn = 0;
+		} else {
+		    if (XIconifyWindow(winPtr->display,
+			    wmPtr->wrapperPtr->window,
+			    winPtr->screenNum) == 0) {
+			Tcl_SetResult(interp, "couldn't send iconify message to window manager", TCL_STATIC);
+			return TCL_ERROR;
+		    }
+		    WaitForMapNotify(winPtr, 0);
+		}
+	    } else if ((c == 'w')
+		    && (strncmp(argv[3], "withdrawn", length) == 0)) {
+		wmPtr->hints.initial_state = WithdrawnState;
+		wmPtr->withdrawn = 1;
+		if (wmPtr->flags & WM_NEVER_MAPPED) {
+		    return TCL_OK;
+		}
+		if (XWithdrawWindow(winPtr->display, wmPtr->wrapperPtr->window,
+			winPtr->screenNum) == 0) {
+		    Tcl_SetResult(interp,
+			    "couldn't send withdraw message to window manager",
+			    TCL_STATIC);
+		    return TCL_ERROR;
+		}
+		WaitForMapNotify(winPtr, 0);
+	    } else {
+		Tcl_AppendResult(interp, "bad argument \"", argv[3],
+			"\": must be normal, iconic or withdrawn",
+			(char *) NULL);
+		return TCL_ERROR;
+	    }
 	} else {
-	    Tcl_SetResult(interp, "iconic", TCL_STATIC);
+	    if (wmPtr->iconFor != NULL) {
+		Tcl_SetResult(interp, "icon", TCL_STATIC);
+	    } else if (wmPtr->withdrawn) {
+		Tcl_SetResult(interp, "withdrawn", TCL_STATIC);
+	    } else if (Tk_IsMapped((Tk_Window) winPtr)
+		    || ((wmPtr->flags & WM_NEVER_MAPPED)
+			    && (wmPtr->hints.initial_state == NormalState))) {
+		Tcl_SetResult(interp, "normal", TCL_STATIC);
+	    } else {
+		Tcl_SetResult(interp, "iconic", TCL_STATIC);
+	    }
 	}
     } else if ((c == 't') && (strncmp(argv[1], "title", length) == 0)
 	    && (length >= 2)) {
@@ -2074,6 +2151,7 @@ ConfigureEvent(wmPtr, configEventPtr)
     TkWindow *wrapperPtr = wmPtr->wrapperPtr;
     TkWindow *winPtr = wmPtr->winPtr;
     TkDisplay *dispPtr = wmPtr->winPtr->dispPtr;
+    Tk_ErrorHandler handler;
 
     /* 
      * Update size information from the event.  There are a couple of
@@ -2201,12 +2279,15 @@ ConfigureEvent(wmPtr, configEventPtr)
 
     /*
      * Make sure that the toplevel and menubar are properly positioned within
-     * the wrapper.
+     * the wrapper.  If the menuHeight happens to be zero, we'll get a
+     * BadValue X error that we want to ignore [Bug: 3377]
      */
-
+    handler = Tk_CreateErrorHandler(winPtr->display, -1, -1, -1,
+	    (Tk_ErrorProc *) NULL, (ClientData) NULL);
     XMoveResizeWindow(winPtr->display, winPtr->window, 0,
 	    wmPtr->menuHeight, (unsigned) wrapperPtr->changes.width,
 	    (unsigned) (wrapperPtr->changes.height - wmPtr->menuHeight));
+    Tk_DeleteErrorHandler(handler);
     if ((wmPtr->menubar != NULL)
 	    && ((Tk_Width(wmPtr->menubar) != wrapperPtr->changes.width)
 	    || (Tk_Height(wmPtr->menubar) != wmPtr->menuHeight))) {
@@ -3534,8 +3615,11 @@ Tk_CoordsToWindow(rootX, rootY, tkwin)
     while (1) {
 	if (XTranslateCoordinates(Tk_Display(tkwin), parent, window,
 		x, y, &childX, &childY, &child) == False) {
-	    fprintf (stderr, "Tk_CoordsToWindow got False return from XTranslateCoordinates\n");
-	    fflush (stderr);
+	    /*
+	     * We can end up here when the window is in the middle of
+	     * being deleted
+	     */
+	    Tk_DeleteErrorHandler(handler);
 	    return NULL;
 	}
 	if (child == None) {

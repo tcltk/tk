@@ -1563,6 +1563,8 @@ AC_DEFUN(SC_TIME_HANDLER, [
 #	terminating character under some conditions.  Check for this
 #	and if the problem exists use a substitute procedure
 #	"fixstrtod" (provided by Tcl) that corrects the error.
+#	Also, on Compaq's Tru64 Unix 5.0,
+#	strtod(" ") returns 0.0 instead of a failure to convert.
 #
 # Arguments:
 #	none
@@ -1582,10 +1584,15 @@ AC_DEFUN(SC_BUGGY_STRTOD, [
 	    extern double strtod();
 	    int main()
 	    {
-		char *string = "NaN";
+		char *string = "NaN", *spaceString = " ";
 		char *term;
-		strtod(string, &term);
+		double value;
+		value = strtod(string, &term);
 		if ((term != string) && (term[-1] == 0)) {
+		    exit(1);
+		}
+		value = strtod(string, &term);
+		if (term == (string+1)) {
 		    exit(1);
 		}
 		exit(0);
