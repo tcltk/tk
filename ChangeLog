@@ -26,7 +26,12 @@
 	widget, the '-blockcursor' option, and in particular provides
 	correct, smooth pixel-based scrolling of the widget under all
 	circumstances.  See the text.n man page for the complete new
-	documentation.
+	documentation.  This also fixes [Bug 559450], [Bug 778511],
+	[Bug 779174].
+
+	* generic/tkTextDisp.c
+	* tests/textDisp.test: tests and fix to the promptly 
+	reported [Bug 833627]
 
 2003-10-31  Vince Darley <vincentdarley@users.sourceforge.net>
 

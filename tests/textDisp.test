@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.10 2003/10/31 09:02:16 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.11 2003/10/31 14:21:49 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -3223,6 +3223,29 @@ test textDisp-31.6 {line update index shifting} {
     lappend res [.t count -ypixels 1.0 end]
     set res
 } {190 220 135 105 190}
+
+test textDisp-32.0 {everything elided} {
+    # Must not crash
+    pack [text .tt]
+    .tt insert 0.0 HELLO
+    .tt tag configure HIDE -elide 1
+    .tt tag add HIDE 0.0 end
+    update ; update ; update ; update
+    destroy .tt
+} {}
+
+test textDisp-32.1 {everything elided} {
+    # Must not crash
+    pack [text .tt]
+    update
+    .tt insert 0.0 HELLO
+    update
+    .tt tag configure HIDE -elide 1
+    update
+    .tt tag add HIDE 0.0 end
+    update ; update ; update ; update
+    destroy .tt
+} {}
 
 deleteWindows
 option clear
