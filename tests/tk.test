@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 2002 ActiveState Corporation.
 #
-# RCS: @(#) $Id: tk.test,v 1.11 2004/03/17 18:15:50 das Exp $
+# RCS: @(#) $Id: tk.test,v 1.12 2004/06/24 12:45:44 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -25,7 +25,7 @@ test tk-2.1 {tk command: appname} {
 test tk-2.2 {tk command: appname} {
     tk appname foobazgarply
 } {foobazgarply}
-test tk-2.3 {tk command: appname} {unixOnly} {
+test tk-2.3 {tk command: appname} unix {
     tk appname bazfoogarply
     expr {[lsearch -exact [winfo interps] [tk appname]] >= 0}
 } {1}
@@ -94,7 +94,7 @@ test tk-4.4 {tk command: useinputmethods: set new} {
 test tk-4.5 {tk command: useinputmethods: set new} {
     list [catch {tk useinputmethods -displayof . xyz} msg] $msg
 } {1 {expected boolean value but got "xyz"}}
-test tk-4.6 {tk command: useinputmethods: set new} {unixOnly} {
+test tk-4.6 {tk command: useinputmethods: set new} unix {
     # This isn't really a test, but more of a check...
     # The answer is what was given, because we may be on a Unix
     # system that doesn't have the XIM stuff
@@ -103,7 +103,7 @@ test tk-4.6 {tk command: useinputmethods: set new} {unixOnly} {
     }
     set useim
 } $useim
-test tk-4.7 {tk command: useinputmethods: set new} {pcOnly} {
+test tk-4.7 {tk command: useinputmethods: set new} win {
     # Mac and Windows don't have X Input Methods, so this should
     # always return 0
     tk useinputmethods 1
