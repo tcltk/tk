@@ -1,3 +1,17 @@
+2002-03-28  David Gravereaux <davygrvy@pobox.com>
+
+	* win/.cvsignore (new):
+	* win/lamp.bmp (new):
+	* win/makefile.vc:
+	* win/nmakehlp.c (new):
+	* win/rules.vc:  Brought the makefile up-to-date with Tcl's one.
+	This now has support for Win9x issues and the winhelp target now
+	exists.  Color scheme can be changed.  I'm just imparting a first
+	suggestion using orange :)  I'll have to think about the install
+	portion of the helpfile as I'll need to do some tricks to insert
+	tk's contents file into Tcl's using some special winhlp32.exe
+	switches.  [Bug 533862 527941]
+
 2002-03-26  Andreas Kupries  <andreask_kupries@users.sourceforge.net>
 
 	* unix/tkUnixFont.c: Added inclusion of <arpa/inet.h>. This fixes
