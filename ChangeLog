@@ -1,3 +1,9 @@
+2003-11-18  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	*** 8.4.5 TAGGED FOR RELEASE ***
+
+	* changes: updated for 8.4.5 release
+
 2003-11-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkMenubutton.h: fixed compound menubutton handling like

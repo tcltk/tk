@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.2 2003/07/21 22:37:32 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.64.2.3 2003/11/18 23:37:38 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5544,3 +5544,48 @@ on unix.
 while moving the thumb.
 
 --- Released 8.4.4, July 22, 2003 --- See ChangeLog for details ---
+
+2003-08-13 (bug fix)[787065] Fix Button-2 binding for scale widget.
+
+2003-08-19 (bug fix)[791500] Fix panedwindow refresh glitches for bg.
+
+2003-09-17 (bug fix)[808039] Prevent [image create] from generating an
+image command name that overwrites and existing command.
+
+2003-09-25 (enhancement) Added -compound support for OS X bevel buttons.
+
+2003-10-10 (bug fix) Fix image offset stippling for disabled buttons.
+
+2003-10-22 (enhancement)[827535] Constring tk_dialog to be sensibly sized and
+placed
+
+2003-10-28 (bug fix) Add 16bpp XGetImage support on Windows
+
+2003-10-29 (enhancement)[795717] Allow some control of foreground and
+background colors on Tk's tk_getOpenFile/tk_chooseDirectory.
+
+2003-11-01 (enhancement)[820519] Updated Dutch (nl) message catalog.
+
+2003-11-10 (enhancement)[826614] Provide more Tk build info in tkConfig.sh.
+
+2003-11-10 (enhancement)[809157] Add alpha blending for images with partial
+transparency on Windows and Unix on 15bpp+ displays.
+
+2003-11-10 (enhancement)[820282] Use the XGCValues.function parameter when
+filling rectangles with XFillRectangles on Windows.
+
+2003-11-11 (enhancement)[840107] Add OS X unicode clipboard support.
+
+2003-11-11 (enhancement)[833819] Improve Tk's
+tk_getOpenFile/tk_chooseDirectory directory glob'ing speed.
+
+2003-11-11 (bug fix)[836483] Fix mem leak in '$listbox itemconfigure'.
+
+2003-11-11 (bug fix)[723856] Correctly handle menu (un)posting on menus
+with spaces in their names.
+
+2003-11-11 (enhancement) Improve AIX-64 build configuration.
+
+2003-11-17 (bug fix) Fix menubutton -compound state disabled drawing.
+
+--- Released 8.4.5, November 20, 2003 --- See ChangeLog for details ---
