@@ -3,13 +3,13 @@
 # Simple makefile for building on Mac OS X with the
 # Project Builder command line tool 'pbxbuild'
 #
-# RCS: @(#) $Id: Makefile,v 1.3 2002/09/10 09:59:16 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.4 2002/09/26 17:07:33 das Exp $
 #
 ################################################################################
 
-INSTALL_ROOT	=
+INSTALL_ROOT	?=
 
-BUILD_DIR	= ../../build
+BUILD_DIR	?= ${CURDIR}/../../build
 
 TARGET		= Wish
 
@@ -33,9 +33,9 @@ all: develop deploy
 
 install: install-develop install-deploy
 
-embedded: embedded-develop embedded-deploy
+embedded: embedded-deploy
 
-install-embedded: install-embedded-develop install-embedded-deploy cleanup-embedded
+install-embedded: install-embedded-deploy cleanup-embedded forceRelink forceRelinkTcl
 
 clean: clean-develop clean-deploy
 
@@ -53,13 +53,13 @@ install-develop:
 install-deploy:
 	${DEPBUILD} install ${INSTALLOPTS}
 
-embedded-develop: 
+embedded-develop: forceRelink
 	${DEVBUILD} ${EMBEDDEDOPTS}
 
-embedded-deploy:
+embedded-deploy: forceRelink
 	${DEPBUILD} ${EMBEDDEDOPTS}
 
-install-embedded-develop: 
+install-embedded-develop:
 	${DEVBUILD} install ${INSTALLOPTS} ${EMBEDDEDOPTS}
 
 install-embedded-deploy:
@@ -73,14 +73,28 @@ clean-deploy:
 
 ################################################################################
 
+forceRelink:
+	@-cd ${BUILD_DIR}; \
+	rm -rf Tk.framework Wish\ Shell.app libtkstub8.4.a
+
+forceRelinkTcl:
+	@-cd ${BUILD_DIR}; \
+	rm -rf Tcl.framework tclsh8.4 \
+	Development.build/Tcl.build/Tcl Deployment.build/Tcl.build/Tcl
+
 cleanup-embedded:
-	@( \
-	cd ${INSTALL_ROOT}; \
+	@-cd ${INSTALL_ROOT}; \
 	rm -f Frameworks; \
 	rm -rf @executable_path; \
 	rm -rf Library/Frameworks/Tcl.framework; \
 	rm -rf Library/Frameworks/Tk.framework; \
-	if [ -d Library/Frameworks ]; then rmdir -p Library/Frameworks; fi; \
-	)
+	rmdir -p Library/Frameworks 2>&-;
+
+################################################################################
+
+.PHONY: all install embedded clean develop deploy install-develop install-deploy \
+embedded-develop embedded-deploy install-embedded-develop install-embedded-deploy \
+clean-develop clean-deploy forceRelinkTcl \
+cleanup-embedded
 
 ################################################################################

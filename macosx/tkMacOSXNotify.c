@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.4 2002/09/23 07:17:16 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.5 2002/09/26 17:07:33 das Exp $
  */
 
 #include "tclInt.h"
@@ -23,7 +23,6 @@
 #include "tkMacOSX.h"
 #include "tkMacOSXEvent.h"
 
-#include "tclPort.h"
 #include <signal.h> 
 
 extern TclStubs tclStubs;
