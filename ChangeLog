@@ -1,3 +1,22 @@
+2000-08-09  Eric Melski  <ericm@ajubasolutions.com>
+
+	* doc/SetOptions.3: Updated documentation to reflect support for
+	TK_OPTION_NULL_OK for TK_OPTION_DOUBLE and TK_OPTION_PIXELS.
+
+	* generic/tkConfig.c: Added for TK_OPTION_NULL_OK support for
+	TK_OPTION_DOUBLE and TK_OPTION_PIXELS.
+
+	* doc/place.n: Updated, reformatted manual entry.
+
+	* tests/place.test: Added many tests.
+
+	* generic/tkPlace.c (Tk_PlaceObjCmd): Updated to use Tk
+	widget-option management facilities to manage place options (-x,
+	-y, etc.), which simplifies the placer code.  Added support for
+	[place configure pathName] and [place configure pathName -option],
+	similar to the behavior of the configure subcommand supported by
+	widgets.
+
 2000-08-08  Eric Melski  <ericm@ajubasolutions.com>
 
 	* tests/place.test: Extended test suite to test error returns from
