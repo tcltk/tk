@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clipboard.test,v 1.4 2000/05/14 23:25:04 ericm Exp $
+# RCS: @(#) $Id: clipboard.test,v 1.5 2000/08/01 18:52:45 ericm Exp $
 
 #
 # Note: Multiple display clipboard handling will only be tested if the
@@ -196,7 +196,7 @@ test clipboard-7.3 {Tk_ClipboardCmd procedure} {
 } {0 {} information}
 test clipboard-7.4 {Tk_ClipboardCmd procedure} {
     list [catch {clipboard append --x a b} msg] $msg
-} {1 {unknown option "--x"}}
+} {1 {bad option "--x": must be -displayof, -format, or -type}}
 test clipboard-7.5 {Tk_ClipboardCmd procedure} {
     list [catch {clipboard append -- a b} msg] $msg
 } {1 {wrong # args: should be "clipboard append ?options? data"}}
@@ -207,7 +207,7 @@ test clipboard-7.6 {Tk_ClipboardCmd procedure} {
 } {0 {} -format}
 test clipboard-7.7 {Tk_ClipboardCmd procedure} {
     list [catch {clipboard append -displayofoo f} msg] $msg
-} {1 {unknown option "-displayofoo"}}
+} {1 {bad option "-displayofoo": must be -displayof, -format, or -type}}
 test clipboard-7.8 {Tk_ClipboardCmd procedure} {
     list [catch {clipboard append -type TEST} msg] $msg
 } {1 {wrong # args: should be "clipboard append ?options? data"}}
@@ -217,13 +217,13 @@ test clipboard-7.9 {Tk_ClipboardCmd procedure} {
 
 test clipboard-7.10 {Tk_ClipboardCmd procedure} {
     list [catch {clipboard clear -displayof} msg] $msg
-} {1 {value for "-displayof" missing}}
+} {1 {wrong # args: should be "clipboard clear ?-displayof window?"}}
 test clipboard-7.11 {Tk_ClipboardCmd procedure} {
     list [catch {clipboard clear -displayofoo f} msg] $msg
-} {1 {unknown option "-displayofoo"}}
+} {1 {bad option "-displayofoo": must be -displayof}}
 test clipboard-7.12 {Tk_ClipboardCmd procedure} {
     list [catch {clipboard clear foo} msg] $msg
-} {1 {wrong # args: should be "clipboard clear ?options?"}}
+} {1 {wrong # args: should be "clipboard clear ?-displayof window?"}}
 test clipboard-7.13 {Tk_ClipboardCmd procedure} {
     list [catch {clipboard clear -displayof foo} msg] $msg
 } {1 {bad window path name "foo"}}
@@ -231,6 +231,17 @@ test clipboard-7.13 {Tk_ClipboardCmd procedure} {
 test clipboard-7.14 {Tk_ClipboardCmd procedure} {
     list [catch {clipboard error} msg] $msg
 } {1 {bad option "error": must be append, clear, or get}}
+
+test clipboard-7.15 {Tk_ClipboardCmd procedure} {
+    clipboard clear
+    list [catch {clipboard append -displayof} msg] $msg \
+	    [selection get -selection CLIPBOARD]
+} {0 {} -displayof}
+test clipboard-7.16 {Tk_ClipboardCmd procedure} {
+    clipboard clear
+    list [catch {clipboard append -type} msg] $msg \
+	    [selection get -selection CLIPBOARD]
+} {0 {} -type}
 
 # cleanup
 ::tcltest::cleanupTests
