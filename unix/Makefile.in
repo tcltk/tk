@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.88 2003/04/04 19:29:38 mdejong Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.89 2003/05/31 18:32:20 jenglish Exp $
 
 # Current Tk version;  used in various names.
 
@@ -129,7 +129,7 @@ X11_INCLUDES		= @XINCLUDES@
 # Linker switch(es) to use to link with the X11 library archive (the
 # configure script will try to set this value automatically, but you
 # can override it).
-X11_LIB_SWITCHES	= @XLIBSW@
+X11_LIB_SWITCHES	= @XLIBSW@ $(XFT_LIBS)
 
 
 # To turn off the security checks that disallow incoming sends when
@@ -247,6 +247,10 @@ LD_SEARCH_FLAGS	= @LD_SEARCH_FLAGS@
 # support for embedded libraries on Darwin / Mac OS X
 DYLIB_INSTALL_DIR	= ${LIB_RUNTIME_DIR}
 
+# support for Xft:
+XFT_CFLAGS		= @XFT_CFLAGS@
+XFT_LIBS		= @XFT_LIBS@
+
 #----------------------------------------------------------------
 # The information below is modified by the configure script when
 # Makefile is generated from Makefile.in.  You shouldn't normally
@@ -306,9 +310,13 @@ IMAGEOBJS = tkImage.o tkImgBmap.o tkImgGIF.o tkImgPPM.o tkImgPhoto.o
 TEXTOBJS = tkText.o tkTextBTree.o tkTextDisp.o tkTextImage.o tkTextIndex.o \
 	tkTextMark.o tkTextTag.o tkTextWind.o
 
+# either tkUnixFont.o (default) or tkUnixRFont.o (if --enable-xft)
+# 
+FONTOBJS = @UNIX_FONT_OBJS@
+
 UNIXOBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
 	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o \
-	tkUnixFocus.o tkUnixFont.o tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
+	tkUnixFocus.o tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
 	tkUnixSend.o tkUnixWm.o tkUnixXId.o tkStubInit.o tkStubLib.o
 
@@ -319,7 +327,7 @@ OBJS =  tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkClipboard.o tkCmds.o \
 	tkFocus.o tkFont.o tkGet.o tkGC.o tkGeometry.o tkGrab.o tkGrid.o \
 	tkMain.o tkObj.o tkOldConfig.o tkOption.o tkPack.o tkPlace.o \
 	tkSelect.o tkStyle.o tkUndo.o tkUtil.o tkVisual.o tkWindow.o  \
-	$(UNIXOBJS) $(WIDGOBJS) $(CANVOBJS) $(IMAGEOBJS) $(TEXTOBJS)
+	$(UNIXOBJS) $(FONTOBJS) $(WIDGOBJS) $(CANVOBJS) $(IMAGEOBJS) $(TEXTOBJS)
 
 TK_DECLS = \
 	$(GENERIC_DIR)/tk.decls \
@@ -372,6 +380,7 @@ SRCS = \
 	$(UNIX_DIR)/tkUnixDraw.c \
 	$(UNIX_DIR)/tkUnixEmbed.c $(UNIX_DIR)/tkUnixEvent.c \
 	$(UNIX_DIR)/tkUnixFocus.c \
+	$(UNIX_DIR)/tkUnixRFont.c \
 	$(UNIX_DIR)/tkUnixFont.c $(UNIX_DIR)/tkUnixInit.c \
 	$(UNIX_DIR)/tkUnixKey.c \
 	$(UNIX_DIR)/tkUnixMenu.c $(UNIX_DIR)/tkUnixMenubu.c \
@@ -951,6 +960,10 @@ tkUnixFocus.o: $(UNIX_DIR)/tkUnixFocus.c
 
 tkUnixFont.o: $(UNIX_DIR)/tkUnixFont.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixFont.c
+
+# NB: tkUnixRFont.o uses nondefault CFLAGS
+tkUnixRFont.o: $(UNIX_DIR)/tkUnixRFont.c
+	$(CC) -c $(CC_SWITCHES) $(XFT_CFLAGS) $(UNIX_DIR)/tkUnixRFont.c
 
 tkUnixInit.o: $(UNIX_DIR)/tkUnixInit.c $(GENERIC_DIR)/tkInitScript.h tkConfig.sh
 	$(CC) -c $(CC_SWITCHES) -DTK_LIBRARY=\"${TK_LIBRARY}\" \

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDefault.h,v 1.16 2002/06/21 23:09:54 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixDefault.h,v 1.17 2003/05/31 18:32:21 jenglish Exp $
  */
 
 #ifndef _TKUNIXDEFAULT
@@ -37,6 +37,23 @@
 #define DISABLED	"#a3a3a3"
 
 /*
+ * The definitions below provide symbolic names for the default fonts.
+ * NORMAL_FONT -	Normal font
+ * BOLD_FONT -		Bold font 
+ * FIXED_FONT -		Fixed-width font 
+ */
+
+#if HAVE_XFT
+#	define	NORMAL_FONT 	"sans-serif -12"
+#	define	BOLD_FONT 	"sans-serif -12 bold"
+#	define	FIXED_FONT 	"monospace -12"
+#else
+#	define	NORMAL_FONT 	"Helvetica -12"
+#	define	BOLD_FONT 	"Helvetica -12 bold"
+#	define	FIXED_FONT 	"Courier -12"
+#endif
+
+/*
  * Defaults for labels, buttons, checkbuttons, and radiobuttons:
  */
 
@@ -58,7 +75,7 @@
 #define DEF_BUTTON_DISABLED_FG_MONO	""
 #define DEF_BUTTON_FG			BLACK
 #define DEF_CHKRAD_FG			DEF_BUTTON_FG
-#define DEF_BUTTON_FONT			"Helvetica -12 bold"
+#define DEF_BUTTON_FONT			BOLD_FONT
 #define DEF_BUTTON_HEIGHT		"0"
 #define DEF_BUTTON_HIGHLIGHT_BG_COLOR	DEF_BUTTON_BG_COLOR
 #define DEF_BUTTON_HIGHLIGHT_BG_MONO	DEF_BUTTON_BG_MONO
@@ -141,7 +158,7 @@
 #define DEF_ENTRY_DISABLED_BG_MONO	WHITE
 #define DEF_ENTRY_DISABLED_FG		DISABLED
 #define DEF_ENTRY_EXPORT_SELECTION	"1"
-#define DEF_ENTRY_FONT			"Helvetica -12"
+#define DEF_ENTRY_FONT			NORMAL_FONT
 #define DEF_ENTRY_FG			BLACK
 #define DEF_ENTRY_HIGHLIGHT_BG		NORMAL_BG
 #define DEF_ENTRY_HIGHLIGHT		BLACK
@@ -200,7 +217,7 @@
 #define DEF_LABELFRAME_CLASS		"Labelframe"
 #define DEF_LABELFRAME_RELIEF		"groove"
 #define DEF_LABELFRAME_FG		BLACK
-#define DEF_LABELFRAME_FONT		"Helvetica -12 bold"
+#define DEF_LABELFRAME_FONT		BOLD_FONT
 #define DEF_LABELFRAME_TEXT		""
 #define DEF_LABELFRAME_LABELANCHOR	"nw"
 
@@ -215,7 +232,7 @@
 #define DEF_LISTBOX_CURSOR		""
 #define DEF_LISTBOX_DISABLED_FG		DISABLED
 #define DEF_LISTBOX_EXPORT_SELECTION	"1"
-#define DEF_LISTBOX_FONT		"Helvetica -12 bold"
+#define DEF_LISTBOX_FONT		BOLD_FONT
 #define DEF_LISTBOX_FG			BLACK
 #define DEF_LISTBOX_HEIGHT		"10"
 #define DEF_LISTBOX_HIGHLIGHT_BG	NORMAL_BG
@@ -279,7 +296,7 @@
 #define DEF_MENU_CURSOR			"arrow"
 #define DEF_MENU_DISABLED_FG_COLOR	DISABLED
 #define DEF_MENU_DISABLED_FG_MONO	""
-#define DEF_MENU_FONT			"Helvetica -12 bold"
+#define DEF_MENU_FONT			BOLD_FONT
 #define DEF_MENU_FG			BLACK
 #define DEF_MENU_POST_COMMAND		""
 #define DEF_MENU_RELIEF			"raised"
@@ -308,7 +325,7 @@
 #define DEF_MENUBUTTON_DIRECTION	"below"
 #define DEF_MENUBUTTON_DISABLED_FG_COLOR DISABLED
 #define DEF_MENUBUTTON_DISABLED_FG_MONO	""
-#define DEF_MENUBUTTON_FONT		"Helvetica -12 bold"
+#define DEF_MENUBUTTON_FONT		BOLD_FONT
 #define DEF_MENUBUTTON_FG		BLACK
 #define DEF_MENUBUTTON_HEIGHT		"0"
 #define DEF_MENUBUTTON_HIGHLIGHT_BG_COLOR DEF_MENUBUTTON_BG_COLOR
@@ -341,7 +358,7 @@
 #define DEF_MESSAGE_BORDER_WIDTH	"2"
 #define DEF_MESSAGE_CURSOR		""
 #define DEF_MESSAGE_FG			BLACK
-#define DEF_MESSAGE_FONT		"Helvetica -12 bold"
+#define DEF_MESSAGE_FONT		BOLD_FONT
 #define DEF_MESSAGE_HIGHLIGHT_BG	NORMAL_BG
 #define DEF_MESSAGE_HIGHLIGHT		BLACK
 #define DEF_MESSAGE_HIGHLIGHT_WIDTH	"0"
@@ -401,7 +418,7 @@
 #define DEF_SCALE_COMMAND		""
 #define DEF_SCALE_CURSOR		""
 #define DEF_SCALE_DIGITS		"0"
-#define DEF_SCALE_FONT			"Helvetica -12 bold"
+#define DEF_SCALE_FONT			BOLD_FONT
 #define DEF_SCALE_FG_COLOR		BLACK
 #define DEF_SCALE_FG_MONO		BLACK
 #define DEF_SCALE_FROM			"0"
@@ -465,7 +482,7 @@
 #define DEF_TEXT_CURSOR			"xterm"
 #define DEF_TEXT_FG			BLACK
 #define DEF_TEXT_EXPORT_SELECTION	"1"
-#define DEF_TEXT_FONT			"Courier -12"
+#define DEF_TEXT_FONT			FIXED_FONT
 #define DEF_TEXT_HEIGHT			"24"
 #define DEF_TEXT_HIGHLIGHT_BG		NORMAL_BG
 #define DEF_TEXT_HIGHLIGHT		BLACK
@@ -504,7 +521,7 @@
  * Defaults for canvas text:
  */
 
-#define DEF_CANVTEXT_FONT		"Helvetica -12"
+#define DEF_CANVTEXT_FONT		NORMAL_FONT
 
 /*
  * Defaults for toplevels (most of the defaults for frames also apply

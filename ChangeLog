@@ -1,3 +1,11 @@
+2003-05-31  Joe English <jenglish@users.sourceforge.net>
+	* unix/tkUnixRFont.c: New file 
+	* unix/tkUnixDefault.h: Use different default fonts if HAVE_XFT
+	* unix/Makefile.in:
+	* unix/configure.in: Add --enable-xft flag
+	* unix/configure: regen
+	Experimental support for antialiased text under X11 [Patch#535541]
+
 2003-05-30  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkMenu.c

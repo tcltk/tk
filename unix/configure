@@ -308,7 +308,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS MKLINKS_FLAGS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP EGREP TCL_VERSION TCL_BIN_DIR TCL_SRC_DIR TCL_LIB_FILE TCL_LIB_FLAG TCL_LIB_SPEC TCL_STUB_LIB_FILE TCL_STUB_LIB_FLAG TCL_STUB_LIB_SPEC RANLIB ac_ct_RANLIB AR LIBOBJS TCL_LIBS DL_LIBS DL_OBJS PLAT_OBJS CFLAGS_DEBUG CFLAGS_OPTIMIZE CFLAGS_WARNING EXTRA_CFLAGS LDFLAGS_DEBUG LDFLAGS_OPTIMIZE CC_SEARCH_FLAGS LD_SEARCH_FLAGS STLIB_LD SHLIB_LD TCL_SHLIB_LD_EXTRAS TK_SHLIB_LD_EXTRAS SHLIB_LD_FLAGS SHLIB_LD_LIBS SHLIB_CFLAGS SHLIB_SUFFIX MAKE_LIB MAKE_STUB_LIB INSTALL_LIB INSTALL_STUB_LIB CFLAGS_DEFAULT LDFLAGS_DEFAULT TK_VERSION TK_MAJOR_VERSION TK_MINOR_VERSION TK_PATCH_LEVEL TK_DBGX TK_STUB_LIB_FILE TK_STUB_LIB_FLAG TK_BUILD_STUB_LIB_SPEC TK_STUB_LIB_SPEC TK_BUILD_STUB_LIB_PATH TK_STUB_LIB_PATH TK_STUB_FLAGS TK_BUILD_EXP_FILE TK_EXP_FILE TCL_STUB_FLAGS LD_LIBRARY_PATH_VAR TK_BUILD_LIB_SPEC TK_LIB_FILE TK_LIB_FLAG TK_LIB_SPEC TK_SRC_DIR XINCLUDES XLIBSW TK_SHARED_BUILD LOCALES LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS MKLINKS_FLAGS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP EGREP TCL_VERSION TCL_BIN_DIR TCL_SRC_DIR TCL_LIB_FILE TCL_LIB_FLAG TCL_LIB_SPEC TCL_STUB_LIB_FILE TCL_STUB_LIB_FLAG TCL_STUB_LIB_SPEC RANLIB ac_ct_RANLIB AR LIBOBJS TCL_LIBS DL_LIBS DL_OBJS PLAT_OBJS CFLAGS_DEBUG CFLAGS_OPTIMIZE CFLAGS_WARNING EXTRA_CFLAGS LDFLAGS_DEBUG LDFLAGS_OPTIMIZE CC_SEARCH_FLAGS LD_SEARCH_FLAGS STLIB_LD SHLIB_LD TCL_SHLIB_LD_EXTRAS TK_SHLIB_LD_EXTRAS SHLIB_LD_FLAGS SHLIB_LD_LIBS SHLIB_CFLAGS SHLIB_SUFFIX MAKE_LIB MAKE_STUB_LIB INSTALL_LIB INSTALL_STUB_LIB CFLAGS_DEFAULT LDFLAGS_DEFAULT XFT_CFLAGS XFT_LIBS UNIX_FONT_OBJS TK_VERSION TK_MAJOR_VERSION TK_MINOR_VERSION TK_PATCH_LEVEL TK_DBGX TK_STUB_LIB_FILE TK_STUB_LIB_FLAG TK_BUILD_STUB_LIB_SPEC TK_STUB_LIB_SPEC TK_BUILD_STUB_LIB_PATH TK_STUB_LIB_PATH TK_STUB_FLAGS TK_BUILD_EXP_FILE TK_EXP_FILE TCL_STUB_FLAGS LD_LIBRARY_PATH_VAR TK_BUILD_LIB_SPEC TK_LIB_FILE TK_LIB_FLAG TK_LIB_SPEC TK_SRC_DIR XINCLUDES XLIBSW TK_SHARED_BUILD LOCALES LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -851,6 +851,7 @@ Optional Features:
   --enable-64bit-vis      enable 64bit Sparc VIS support
   --disable-load          disallow dynamic loading and "load" command
   --enable-symbols        build with debugging symbols --disable-symbols
+  --enable-xft         Use freetype/fontconfig/xft --disable-xft
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -6931,6 +6932,47 @@ rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 fi
 
 #--------------------------------------------------------------------
+#	Check for freetype / fontconfig / Xft support.
+#--------------------------------------------------------------------
+
+# Check whether --enable-xft or --disable-xft was given.
+if test "${enable_xft+set}" = set; then
+  enableval="$enable_xft"
+  enable_xft=$enableval
+else
+  enable_xft="no"
+fi;
+
+XFT_CFLAGS=""
+XFT_LIBS=""
+if test "$enable_xft" = "yes" ; then
+    echo "$as_me:$LINENO: checking for xft configuration" >&5
+echo $ECHO_N "checking for xft configuration... $ECHO_C" >&6
+    XFT_CFLAGS=`pkg-config --cflags xft` || enable_xft="no"
+    XFT_LIBS=`pkg-config --libs xft` || enable_xft="no"
+    if test "$enable_xft" = "yes" ; then
+    	echo "$as_me:$LINENO: result: ok" >&5
+echo "${ECHO_T}ok" >&6
+    else
+    	{ echo "$as_me:$LINENO: WARNING: Can't find xft configuration" >&5
+echo "$as_me: WARNING: Can't find xft configuration" >&2;}
+    fi
+fi
+if test enable_xft="yes" ; then
+    UNIX_FONT_OBJS=tkUnixRFont.o
+    cat >>confdefs.h <<\_ACEOF
+#define HAVE_XFT 1
+_ACEOF
+
+else
+    UNIX_FONT_OBJS=tkUnixFont.o
+fi
+
+
+
+
+
+#--------------------------------------------------------------------
 #	Figure out whether "char" is unsigned.  If so, set a
 #	#define for __CHAR_UNSIGNED__.
 #--------------------------------------------------------------------
@@ -7941,6 +7983,9 @@ s,@INSTALL_LIB@,$INSTALL_LIB,;t t
 s,@INSTALL_STUB_LIB@,$INSTALL_STUB_LIB,;t t
 s,@CFLAGS_DEFAULT@,$CFLAGS_DEFAULT,;t t
 s,@LDFLAGS_DEFAULT@,$LDFLAGS_DEFAULT,;t t
+s,@XFT_CFLAGS@,$XFT_CFLAGS,;t t
+s,@XFT_LIBS@,$XFT_LIBS,;t t
+s,@UNIX_FONT_OBJS@,$UNIX_FONT_OBJS,;t t
 s,@TK_VERSION@,$TK_VERSION,;t t
 s,@TK_MAJOR_VERSION@,$TK_MAJOR_VERSION,;t t
 s,@TK_MINOR_VERSION@,$TK_MINOR_VERSION,;t t
