@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.8 2000/03/31 09:24:26 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.9 2000/10/24 23:51:33 ericm Exp $
  */
 
 #include "tkWinInt.h"
@@ -745,15 +745,13 @@ RenderObject(dc, gc, points, npoints, mode, pen, func)
 	}
 
 	/*
-	 * Grow the bounding box enough to account for wide lines.
+	 * Grow the bounding box enough to account for line width.
 	 */
 
-	if (gc->line_width > 1) {
-	    rect.left -= gc->line_width;
-	    rect.top -= gc->line_width;
-	    rect.right += gc->line_width;
-	    rect.bottom += gc->line_width;
-	}
+	rect.left -= gc->line_width;
+	rect.top -= gc->line_width;
+	rect.right += gc->line_width;
+	rect.bottom += gc->line_width;
 
 	width = rect.right - rect.left;
 	height = rect.bottom - rect.top;

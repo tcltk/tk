@@ -1,5 +1,15 @@
 2000-10-18  Eric Melski  <ericm@ajubasolutions.com>
 
+	* win/tkWinDraw.c (RenderObject): Applied patch from [Bug: 6368],
+	which corrects rendering of 1-pixel wide stippled lines on Windows.
+
+	* generic/tkCanvLine.c (DisplayLine): Applied patch from 
+	[Bug: 6368], corrects bugs relating to use of active- and
+	disabledwidth values for displaying lines (disabledwidth was never
+	used, and activewidth/disablewidths would only possibly be used
+	when greater than default width, rather than when simply not equal
+	to default width).
+
 	* library/tkfbox.tcl (OkCmd): Applied patch from [Bug: 6365],
 	which adds safety for directory names containing spaces or which
 	are non-lists.
