@@ -1,5 +1,7 @@
 2000-05-25  Eric Melski  <ericm@scriptics.com>
 
+	* library/button.tcl: Tweaks for -overrelief handling on Windows.
+
 	* doc/radiobutton.n: Added documentation for -overrelief option.
 
 	* doc/checkbutton.n: Added documentation for -overrelief option.
