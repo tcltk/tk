@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinKey.c,v 1.7 2000/02/09 02:13:56 hobbs Exp $
+ * RCS: @(#) $Id: tkWinKey.c,v 1.8 2000/04/10 22:43:13 ericm Exp $
  */
 
 #include "tkWinInt.h"
@@ -91,8 +91,6 @@ static Keys keymap[] = {
 
 static KeySym		KeycodeToKeysym _ANSI_ARGS_((unsigned int keycode,
 			    int state, int noascii));
-static void		InitKeymapInfo _ANSI_ARGS_((TkDisplay *dispPtr));
-
 
 /*
  *----------------------------------------------------------------------
@@ -351,7 +349,7 @@ TkpGetKeySym(dispPtr, eventPtr)
      */
 
     if (dispPtr->bindInfoStale) {
-	InitKeymapInfo(dispPtr);
+	TkpInitKeymapInfo(dispPtr);
     }
 
     sym = KeycodeToKeysym(eventPtr->xkey.keycode, state, 0);
@@ -375,7 +373,7 @@ TkpGetKeySym(dispPtr, eventPtr)
 /*
  *--------------------------------------------------------------
  *
- * InitKeymapInfo --
+ * TkpInitKeymapInfo --
  *
  *	This procedure is invoked to scan keymap information
  *	to recompute stuff that's important for binding, such
@@ -391,8 +389,8 @@ TkpGetKeySym(dispPtr, eventPtr)
  *--------------------------------------------------------------
  */
 
-static void
-InitKeymapInfo(dispPtr)
+void
+TkpInitKeymapInfo(dispPtr)
     TkDisplay *dispPtr;		/* Display for which to recompute keymap
 				 * information. */
 {

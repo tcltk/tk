@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.5 2000/01/21 03:54:42 hobbs Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.6 2000/04/10 22:43:12 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -24,7 +24,7 @@ typedef enum {TOP, BOTTOM, LEFT, RIGHT} Side;
  * structure of the following type:
  */
 
-typedef struct Packer {
+typedef struct /* Green Bay */ Packer {
     Tk_Window tkwin;		/* Tk token for window.  NULL means that
 				 * the window has been deleted, but the
 				 * packet hasn't had a chance to clean up

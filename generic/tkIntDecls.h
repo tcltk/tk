@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.9 2000/02/09 02:13:51 hobbs Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.10 2000/04/10 22:43:12 ericm Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -512,6 +512,8 @@ EXTERN void		TkpSetKeycodeAndState _ANSI_ARGS_((Tk_Window tkwin,
 /* 138 */
 EXTERN KeySym		TkpGetKeySym _ANSI_ARGS_((TkDisplay * dispPtr, 
 				XEvent * eventPtr));
+/* 139 */
+EXTERN void		TkpInitKeymapInfo _ANSI_ARGS_((TkDisplay * dispPtr));
 
 typedef struct TkIntStubs {
     int magic;
@@ -816,6 +818,7 @@ typedef struct TkIntStubs {
     void (*tkSetFocusWin) _ANSI_ARGS_((TkWindow * winPtr, int force)); /* 136 */
     void (*tkpSetKeycodeAndState) _ANSI_ARGS_((Tk_Window tkwin, KeySym keySym, XEvent * eventPtr)); /* 137 */
     KeySym (*tkpGetKeySym) _ANSI_ARGS_((TkDisplay * dispPtr, XEvent * eventPtr)); /* 138 */
+    void (*tkpInitKeymapInfo) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 139 */
 } TkIntStubs;
 
 #ifdef __cplusplus
@@ -1463,6 +1466,10 @@ extern TkIntStubs *tkIntStubsPtr;
 #ifndef TkpGetKeySym
 #define TkpGetKeySym \
 	(tkIntStubsPtr->tkpGetKeySym) /* 138 */
+#endif
+#ifndef TkpInitKeymapInfo
+#define TkpInitKeymapInfo \
+	(tkIntStubsPtr->tkpInitKeymapInfo) /* 139 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

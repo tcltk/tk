@@ -5,12 +5,12 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: choosedir.test,v 1.8 2000/03/24 19:38:57 ericm Exp $
+# RCS: @(#) $Id: choosedir.test,v 1.9 2000/04/10 22:43:13 ericm Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     package require tcltest
-    namespace import ::tcltest::*
+    namespace import -force ::tcltest::*
 }
 
 #----------------------------------------------------------------------

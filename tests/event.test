@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: event.test,v 1.4 1999/12/14 06:53:13 hobbs Exp $
+# RCS: @(#) $Id: event.test,v 1.5 2000/04/10 22:43:13 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -40,6 +40,17 @@ test event-1.1 {Tk_HandleEvent procedure, filter events for dead windows} {
     set x
 } {destroy}
 
+test event-1.2 {event generate <Alt-z>} {
+	catch {destroy .e}
+	catch {unset ::event12result}
+	set ::event12result 0
+	pack [entry .e]
+	update
+	bind .e <Alt-z> {set ::event12result "1"}
+	focus -force .e ; event generate .e <Alt-z>
+	destroy .e
+	set ::event12result
+} 1
 # cleanup
 ::tcltest::cleanupTests
 return

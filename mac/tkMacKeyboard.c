@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacKeyboard.c,v 1.4 2000/02/09 02:13:53 hobbs Exp $
+ * RCS: @(#) $Id: tkMacKeyboard.c,v 1.5 2000/04/10 22:43:12 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -72,7 +72,6 @@ static Ptr KCHRPtr;			/* Pointer to 'KCHR' resource. */
  * Prototypes for static functions used in this file.
  */
 static void	InitKeyMaps _ANSI_ARGS_((void));
-static void	InitKeymapInfo _ANSI_ARGS_((TkDisplay *dispPtr));
 
 
 /*
@@ -466,7 +465,7 @@ TkpGetKeySym(dispPtr, eventPtr)
      */
 
     if (dispPtr->bindInfoStale) {
-	InitKeymapInfo(dispPtr);
+	TkpInitKeymapInfo(dispPtr);
     }
 
     /*
@@ -519,7 +518,7 @@ TkpGetKeySym(dispPtr, eventPtr)
 /*
  *--------------------------------------------------------------
  *
- * InitKeymapInfo --
+ * TkpInitKeymapInfo --
  *
  *	This procedure is invoked to scan keymap information
  *	to recompute stuff that's important for binding, such
@@ -535,8 +534,8 @@ TkpGetKeySym(dispPtr, eventPtr)
  *--------------------------------------------------------------
  */
 
-static void
-InitKeymapInfo(dispPtr)
+void
+TkpInitKeymapInfo(dispPtr)
     TkDisplay *dispPtr;		/* Display for which to recompute keymap
 				 * information. */
 {
