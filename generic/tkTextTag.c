@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.12 2003/11/07 15:36:26 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.13 2003/11/12 17:19:18 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -1267,7 +1267,7 @@ TkTextPickCurrent(textPtr, eventPtr)
     TkTextTag **copyArrayPtr = NULL;	/* Initialization needed to prevent
 					 * compiler warning. */
 
-    int numOldTags, numNewTags, i, j, size;
+    int numOldTags, numNewTags, i, j, size, nearby;
     XEvent event;
 
     /*
@@ -1336,9 +1336,14 @@ TkTextPickCurrent(textPtr, eventPtr)
 
     if (textPtr->pickEvent.type != LeaveNotify) {
 	TkTextPixelIndex(textPtr, textPtr->pickEvent.xcrossing.x,
-		textPtr->pickEvent.xcrossing.y, &index);
-	newArrayPtr = TkBTreeGetTags(&index, &numNewTags);
-	SortTags(numNewTags, newArrayPtr);
+		textPtr->pickEvent.xcrossing.y, &index, &nearby);
+	if (nearby) {
+	    newArrayPtr = NULL;
+	    numNewTags = 0;
+	} else {
+	    newArrayPtr = TkBTreeGetTags(&index, &numNewTags);
+	    SortTags(numNewTags, newArrayPtr);
+	}
     } else {
 	newArrayPtr = NULL;
 	numNewTags = 0;
@@ -1409,11 +1414,11 @@ TkTextPickCurrent(textPtr, eventPtr)
      */
 
     TkTextPixelIndex(textPtr, textPtr->pickEvent.xcrossing.x,
-	    textPtr->pickEvent.xcrossing.y, &index);
+	    textPtr->pickEvent.xcrossing.y, &index, &nearby);
     TkTextSetMark(textPtr, "current", &index);
     if (numNewTags != 0) {
 	if ((textPtr->bindingTable != NULL) && (textPtr->tkwin != NULL)
-	  && !(textPtr->flags & DESTROYED)) {
+	  && !(textPtr->flags & DESTROYED) && !nearby) {
 	    event = textPtr->pickEvent;
 	    event.type = EnterNotify;
 	    event.xcrossing.detail = NotifyAncestor;
