@@ -1,3 +1,9 @@
+2004-11-11  Reinhard Max  <max@suse.de>
+
+	* generic/tkEvent.c (InvokeInputMethods): Call XSetICFocus
+	whenever the window receives focus. This fixes bug #905830 but
+	avoids #1000051.
+
 2004-11-11  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkMain.c:
