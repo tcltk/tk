@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.6 2000/02/01 11:41:43 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.7 2000/03/16 03:20:52 sven Exp $
  *
  */
 
@@ -1147,7 +1147,7 @@ ChooseDirectoryHookProc(
 
 	GetCurrentDirectory(MAX_PATH, cdPtr->path);
 	if (idCtrl == lst2) {
-	    if ((cdPtr->lastIdx < 0) || (cdPtr->lastIdx == thisItem)) {
+	    if (cdPtr->lastIdx == thisItem) {
 		EndDialog(hwnd, IDOK);
 		return 1;
 	    }
@@ -1267,18 +1267,13 @@ ChooseDirectoryHookProc(
 	    }
 	} else if (idCtrl == IDOK) {
 	    /* 
-	     * The OK button was clicked.  Return the path currently specified
-	     * in the listbox.  
-	     *
-	     * The directory has not yet been changed to the one specified in
-	     * the listbox.  Returning 0 allows the default dialog proc to 
-	     * change the directory to the one specified in the listbox and 
-	     * then causes it to send a WM_LBSELCHANGED back to the hook proc.  
-	     * When we get that message, we will record the current directory
-	     * and then quit.
+	     * The OK button was clicked. Return the value currently selected
+             * in the entry.
 	     */
 
-	    cdPtr->lastIdx = -1;
+	    GetCurrentDirectory(MAX_PATH, cdPtr->path);
+	    EndDialog(hwnd, IDOK);
+	    return 1;
 	}
     }
     return 0;
