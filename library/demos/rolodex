@@ -8,7 +8,9 @@ exec wish "$0" ${1+"$@"}
 # feel of a rolodex program, although it's lifeless and doesn't
 # actually do the rolodex application.
 #
-# RCS: @(#) $Id: rolodex,v 1.4 2001/11/05 10:13:53 dkf Exp $
+# RCS: @(#) $Id: rolodex,v 1.5 2003/09/30 14:54:30 dkf Exp $
+
+package require Tk
 
 foreach i [winfo child .] {
     catch {destroy $i}
@@ -42,6 +44,10 @@ pack .buttons.clear .buttons.add .buttons.search .buttons.delete \
 #------------------------------------------
 # Phase 1: Add menus, dialog boxes
 #------------------------------------------
+
+# DKF - note that this is an old-style menu bar; I just have not yet
+# got around to converting the context help code to work with the new
+# menu system and its <<MenuSelect>> virtual event.
 
 frame .menu -relief raised -borderwidth 1
 pack .menu -before .frame -side top -fill x
@@ -194,3 +200,7 @@ set helpTopics(version) "This is version $version."
 	-underline 3
 .menu.help.m add command -label "On Version..." -command {Help version}  \
 	-underline 3
+
+# Local Variables:
+# mode: tcl
+# End:
