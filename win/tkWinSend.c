@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSend.c,v 1.5 2003/10/08 21:49:57 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinSend.c,v 1.6 2003/11/08 22:53:01 patthoyts Exp $
  */
 
 #include "tkPort.h"
@@ -585,11 +585,11 @@ RegisterInterp(CONST char *name, RegisteredInterp *riPtr)
     int i, offset;
     CONST char *actualName = name;
     Tcl_DString dString;
-    
+    Tcl_DStringInit(&dString);
+
     hr = GetRunningObjectTable(0, &pROT);
     if (SUCCEEDED(hr)) {
 
-	Tcl_DStringInit(&dString);
 	offset = 0;
 
 	for (i = 1; SUCCEEDED(hr); i++) {
@@ -621,12 +621,13 @@ RegisterInterp(CONST char *name, RegisteredInterp *riPtr)
 		break;
 	}
 	
-	Tcl_DStringFree(&dString);
 	pROT->lpVtbl->Release(pROT);
     }
 
     if (SUCCEEDED(hr))
 	riPtr->name = strdup(actualName);
+
+    Tcl_DStringFree(&dString);
     return hr;
 }
 
