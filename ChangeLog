@@ -1,3 +1,10 @@
+2002-08-14  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* win/tkWinDialog.c:
+	* win/makefile.vc: broken compilation and link from changes
+	Hobbs-08-07 fixed.
+	* win/tkWinTest.c: CONST problem resolved.
+
 2002-08-13  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/button.tcl: change the bindings to use Priv($w,relief)

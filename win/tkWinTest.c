@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.6 2002/02/08 02:57:11 dgp Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.7 2002/08/14 15:31:21 vincentdarley Exp $
  */
 
 #include "tkWinInt.h"
@@ -27,7 +27,7 @@ static int		TestclipboardObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]);
 static int		TestwineventCmd(ClientData clientData, 
-			    Tcl_Interp *interp, int argc, char **argv);
+			    Tcl_Interp *interp, int argc, CONST char **argv);
 
 
 /*
@@ -228,7 +228,7 @@ TestwineventCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    CONST char **argv;			/* Argument strings. */
 {
     HWND hwnd = 0;
     int id;
