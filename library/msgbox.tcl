@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.17 2002/06/06 01:09:41 a_kovalenko Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.18 2002/06/10 00:15:42 a_kovalenko Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -170,72 +170,43 @@ proc ::tk::MessageBox {args} {
     }
 
     switch -- $data(-type) {
-	abortretryignore {
-	    set maxWidth [mcmax Abort Retry Ignore]
-	    set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
-	    set buttons [list \
-		[list abort  -width $maxWidth -text [mc "Abort"] \
-		    -under 0]\
-		[list retry  -width $maxWidth -text [mc "Retry"] \
-		    -under 0]\
-		[list ignore -width $maxWidth -text [mc "Ignore"] \
-		    -under 0]\
-	    ]
+	abortretryignore { 
+	    set names [list abort retry ignore]
+	    set labels [list &Abort &Retry &Ignore]
 	}
 	ok {
-	    set buttons [list \
-		[list ok -width [mcmax OK] \
-		    -text [mc {OK}] -under 0] \
-	    ]
-	    if {[string equal $data(-default) ""]} {
-		set data(-default) "ok"
-	    }
+	    set names [list ok]
+	    set labels {&OK}
 	}
 	okcancel {
-	    set maxWidth [mcmax OK Cancel]
-	    set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
-	    set buttons [list \
-		[list ok     -width $maxWidth \
-		    -text [mc "OK"]     -under 0] \
-		[list cancel -width $maxWidth \
-		    -text [mc "Cancel"] -under 0] \
-	    ]
+	    set names [list ok cancel]
+	    set labels [list &OK &Cancel]
 	}
 	retrycancel {
-	    set maxWidth [mcmax Retry Cancel]
-	    set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
-	    set buttons [list \
-		[list retry  -width $maxWidth \
-		    -text [mc "Retry"]  -under 0] \
-		[list cancel -width $maxWidth \
-		    -text [mc "Cancel"] -under 0] \
-	    ]
+	    set names [list retry cancel]
+	    set labels [list &Retry &Cancel]
 	}
 	yesno {
-	    set maxWidth [mcmax Yes No]
-	    set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
-	    set buttons [list \
-		[list yes    -width $maxWidth \
-		    -text [mc "Yes"] -under 0]\
-		[list no     -width $maxWidth \
-		    -text [mc "No"]  -under 0]\
-	    ]
+	    set names [list yes no]
+	    set labels [list &Yes &No]
 	}
 	yesnocancel {
-	    set maxWidth [mcmax Yes No Cancel]
-	    set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
-	    set buttons [list \
-		[list yes    -width $maxWidth \
-		    -text [mc "Yes"] -under 0]\
-		[list no     -width $maxWidth \
-		    -text [mc "No"]  -under 0]\
-		[list cancel -width $maxWidth \
-		    -text [mc "Cancel"] -under 0]\
-	    ]
+	    set names [list yes no cancel]
+	    set labels [list &Yes &No &Cancel]
 	}
 	default {
 	    error "bad -type value \"$data(-type)\": must be abortretryignore, ok, okcancel, retrycancel, yesno, or yesnocancel"
 	}
+    }
+    
+    set maxWidth [eval mcmaxamp $labels]
+    if {$maxWidth <6} {
+	set maxWidth 6
+    }
+
+    set buttons {}
+    foreach name $names lab $labels {
+	lappend buttons [list $name -width $maxWidth -text [mc $lab]]
     }
 
     # If no default button was specified, the default default is the 
@@ -365,7 +336,8 @@ proc ::tk::MessageBox {args} {
 	    set opts [list -text $capName]
 	}
 
-	eval button [list $w.$name] $opts [list -command [list set tk::Priv(button) $name]]
+	eval tk::AmpWidget \
+	    button [list $w.$name] $opts [list -command [list set tk::Priv(button) $name]]
 
 	if {[string equal $name $data(-default)]} {
 	    $w.$name configure -default active
@@ -376,14 +348,15 @@ proc ::tk::MessageBox {args} {
 
 	# create the binding for the key accelerator, based on the underline
 	#
-	set underIdx [$w.$name cget -under]
-	if {$underIdx >= 0} {
-	    set key [string index [$w.$name cget -text] $underIdx]
-	    bind $w <Alt-[string tolower $key]>  [list $w.$name invoke]
-	    bind $w <Alt-[string toupper $key]>  [list $w.$name invoke]
-	}
-	incr i
+        # set underIdx [$w.$name cget -under]
+        # if {$underIdx >= 0} {
+        #     set key [string index [$w.$name cget -text] $underIdx]
+        #     bind $w <Alt-[string tolower $key]>  [list $w.$name invoke]
+        #     bind $w <Alt-[string toupper $key]>  [list $w.$name invoke]
+        # }
+        # incr i
     }
+    bind $w <Alt-Key> [list ::tk::AltKeyInDialog $w %A]
 
     if {[string compare {} $data(-default)]} {
 	bind $w <FocusIn> {
