@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.39 1999/12/22 20:00:58 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.40 2000/01/14 03:25:35 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4693,9 +4693,9 @@ tkPriv(relief) in order to avoid spurious release events (hobbs)
 --- Released 8.2.2, November 04, 1999 --- See ChangeLog for details ---
 
 11/19/99 (bug fix) fixed expression error that could cause
-'malformed bucket chain' error in tkEntry.c.
+'malformed bucket chain' error in tkEntry.c. (hobbs)
 
-11/19/99 (bug fix) fixed Tk_NameOfColor
+11/19/99 (bug fix) fixed Tk_NameOfColor (hobbs)
 
 --- Released 8.2.3, December 16, 1999 --- See ChangeLog for details ---
 
@@ -4706,20 +4706,20 @@ Tcl functions where appropriate
 makes the image command Tcl_Obj-based, adds support for binary -data args,
 adds alpha channel to images, adds GIF write capability (RLE).  Binary
 compatability is maintained, and source level compatibility is retained
-with -DUSE_OLD_IMAGE.
+with -DUSE_OLD_IMAGE. (nijtmans)
 
 1999-11-16 (feature enhancement) made listbox Tcl_Obj based, added
 -listvariable option and itemconfigure command to allow coloring
-individual items.
+individual items. (melski)
 
 1999-11-23 (feature enhancement) added TK_OPTION_DONT_SET_DEFAULT as an
-equivalent to TK_CONFIG_DONT_SET_DEFAULT
+equivalent to TK_CONFIG_DONT_SET_DEFAULT (hobbs)
 
 1999-11-24 (feature enhancement) updated dialogs to use color icons on
-Unix, center properly over -parent.
+Unix, center properly over -parent. (hipp, hobbs)
 
 1999-12-01 (feature enhancement) added hooks into main() code to support
-"big" shells more easily.
+"big" shells more easily. (redman)
 
 1999-12-02 (feature enhancement) converted Tk_DestroyCmd, Tk_LowerCmd and
 Tk_RaiseCmd to their ObjCmd equivalent.
@@ -4735,9 +4735,10 @@ widgets, new -state -active* -disabled* -offset options to canvas items
 the canvas, -elide support for TkMan, postscript printing of images and
 windows from the canvas.  Binary compatibility is maintained with 8.2, and
 source level compatibility is kept by using -DUSE_OLD_CANVAS.
+(hobbs, nijtmans, et al)
 
 1999-12-16 (feature enhancement) added "bitstream cyberbit" to list of
-font fallbacks.
+font fallbacks. (hobbs)
 
 1999-12-16 (feature enhancement) added new 'tk useinputmethods ...' command
 to provide support for disabling/enabling the use of XIM on X.  This was
@@ -4745,23 +4746,45 @@ previously all done at compile time, and always on.  Now it is turned off
 by default, even when available, and the user must turn it on to use XIM
 (per display).
 	*** POTENTIAL INCOMPATIBILITY ***
-user must add 'tk useinputmethods 1' to retain old style.
+user must add 'tk useinputmethods 1' to retain old style. (hobbs)
 
 1999-12-16 (feature enhancement) added proper support for -initialfile
 to tk_get*File, and made Unix version better match Windows file box
-that it was emulating.
+that it was emulating. (hobbs)
 
 1999-12-16 (bug fix) removed necessity of 'update idle' before 'wm
-deiconify' on Windows.
+deiconify' on Windows. (mao)
 
 1999-12-16 (feature enhancement) added support for Windows system cursors
-to TkGetCursorByName (use -cursor @filename).
+to TkGetCursorByName (use -cursor @filename)
 
-1999-12-21 (bug fix) fixed lack of refresh for thin frames
+1999-12-21 (bug fix) fixed lack of refresh for thin frames (darley)
 
 1999-12-21 (bug fix) fixed panic in Tk_CoordsToWindow to print error
-to stderr instead (for Tix)
+to stderr instead (for Tix) (hobbs)
 
-1999-12-21 (bug fix) fixed segv with scale widget when using -cursor
+1999-12-21 (bug fix) fixed segv with scale widget when using -cursor (hobbs)
 
 --- Released 8.3b1, December 22, 1999 --- See ChangeLog for details ---
+
+2000-01-05 (bug fix) Applied fixes for unprotected arg passing through eval
+and after in Tk runtime code [Bug: 3943] (hobbs)
+
+2000-01-05 (bug fix) Applied fix for i18n problems with Mac clipboard
+[Bug: 3544] (hobbs)
+
+2000-01-05 (feature change) removed the 8.3b1 introduced -state option
+for text tags, and documented -elide (-state hidden == -elide true) (hobbs)
+
+2000-01-12 (bug fix) fix Windows 'wm deiconify' to zoomed state [Bug: 2077]
+and fixed possible flashing of unmapped toplevel in deiconify [Bug: 3338]
+and fixed unwanted mapping of transient window [Bug: 572] (hobbs)
+
+2000-01-12 (feature enhancement) extended 'wm state' to accept a state
+to set for the toplevel, and added support for zoomed (maximized) state
+on Windows (hobbs)
+
+2000-01-12 (bug fix) Applied fix for cursor to not blink when entry or
+text widget was disabled [Bug: 1807] (hobbs)
+
+--- Released 8.3b2, January 13, 2000 --- See ChangeLog for details ---

@@ -1,3 +1,15 @@
+2000-01-13  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* changes: updated changes file to reflect 8.3b2 mods
+	* README:
+	* generic/tk.h:
+	* unix/configure.in:
+	* win/configure.in: updated to patchlevel 8.3b2
+
+	* win/tkWinWm.c: added visibility event handler to make sure
+	that transient window wrappers would be updated when the master
+	was initially mapped.
+
 2000-01-12  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* tests/text.test: changed test to reflect change of -hidden
