@@ -1506,14 +1506,16 @@
 				F5C1D51901B88F9A01DC9062,
 				F52D38C5031F4259016F146B,
 				F5877FBC031FA968016F146B,
+				F9A61D2F04C2C861006F5A0B,
 			);
 			buildSettings = {
+				DOCDIR = "${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}/Resources/English.lproj/Documentation/Reference";
 				DYLIB_COMPATIBILITY_VERSION = 8.5;
 				DYLIB_CURRENT_VERSION = "$(FRAMEWORK_VERSION)";
 				DYLIB_INSTALL_PATH = /Library/Frameworks;
 				FRAMEWORK_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)\"";
 				FRAMEWORK_VERSION = 8.5;
- 				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
+				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
 				HEADER_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/PrivateHeaders\" ../bitmaps ../generic ../xlib";
 				INSTALL_PATH = "${DYLIB_INSTALL_PATH}";
 				LIBRARY_SEARCH_PATHS = "";
@@ -1526,8 +1528,9 @@
 				PRINCIPAL_CLASS = "";
 				PRODUCT_NAME = Tk;
 				SECTORDER_FLAGS = "";
+				SYMROOT = "${SRCROOT}/../../build/tk";
 				TCLSH_DIR = "$(TCL_FRAMEWORK_DIR)";
-				TCL_FRAMEWORK_DIR = "$(SYMROOT)";
+				TCL_FRAMEWORK_DIR = "$(SYMROOT)/../tcl";
 				USE_GCC3_PFE_SUPPORT = YES;
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
 				WRAPPER_EXTENSION = framework;
@@ -2879,7 +2882,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)\" \"$(SYMROOT)\"";
 				FRAMEWORK_VERSION = 8.5;
- 				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
+				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
 				HEADER_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/PrivateHeaders\" ../generic ../xlib";
 				INSTALL_PATH = /Applications/Utilities;
 				LIBRARY_SEARCH_PATHS = "";
@@ -2889,7 +2892,8 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				OTHER_REZFLAGS = "-i \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" -i \"../generic\"";
 				PRODUCT_NAME = "Wish Shell";
 				SECTORDER_FLAGS = "";
-				TCL_FRAMEWORK_DIR = "$(SYMROOT)";
+				SYMROOT = "${SRCROOT}/../../build/tk";
+				TCL_FRAMEWORK_DIR = "$(SYMROOT)/../tcl";
 				USE_GCC3_PFE_SUPPORT = NO;
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
 				WRAPPER_EXTENSION = app;
@@ -3093,7 +3097,8 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				PRODUCT_NAME = libtkstub8.5.a;
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
-				TCL_FRAMEWORK_DIR = "$(SYMROOT)";
+				SYMROOT = "${SRCROOT}/../../build/tk";
+				TCL_FRAMEWORK_DIR = "$(SYMROOT)/../tcl";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
 			};
 			dependencies = (
@@ -3136,7 +3141,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ -n \"${EMBEDDED_BUILD:-}\" ]; then\ncd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents\"\n\n# if we are embedding frameworks, copy them into the app\nrm -rf \"Frameworks\"\nmkdir -p \"Frameworks\"\nif [ \"${DEPLOYMENT_LOCATION:-}\" = \"YES\" -o \"${ACTION}\" = \"install\" ]; then\n    FWKDIR=\"${INSTALL_ROOT}/Library/Frameworks\"\nelse\n    FWKDIR=\"${TARGET_BUILD_DIR}\"\nfi\ncp -fRP \"${FWKDIR}/Tcl.framework\" \"Frameworks\"\ncp -fRP \"${FWKDIR}/Tk.framework\" \"Frameworks\"\n\n# fix install names when embedding\nfix_install_id ( ) {\n    chmod -RH a+w \"$1\"\n    install_name_tool -id $(otool -L \"$1\" | awk \"/$(basename \"$1\")\\.framework.*[^:]\\$/ {sub(\\\"^.*/Frameworks\\\",\\\"@executable_path/../Frameworks\\\",\\$1); print \\$1}\") \"$1\"\n    chmod -RH a-w \"$1\"   \n}\nfix_install_name ( ) {\n    chmod -RH a+w \"$1\"\n    install_name_tool -change $(otool -L \"$1\" | awk \"/$2\\.framework.*[^:]\\$/ {print \\$1; sub(\\\"^.*/Frameworks\\\",\\\"@executable_path/../Frameworks\\\",\\$1); print \\$1}\") \"$1\"\n    chmod -RH a-w \"$1\"   \n}\nfix_install_id Frameworks/Tcl.framework/Tcl\nfix_install_id Frameworks/Tk.framework/Tk\nfix_install_name Frameworks/Tk.framework/Tk Tcl\nfix_install_name \"MacOS/${PRODUCT_NAME}\" Tcl\nfix_install_name \"MacOS/${PRODUCT_NAME}\" Tk\n\nfi";
+			shellScript = "if [ -n \"${EMBEDDED_BUILD:-}\" ]; then\ncd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents\"\n\n# if we are embedding frameworks, copy them into the app\nrm -rf \"Frameworks\"\nmkdir -p \"Frameworks\"\nif [ \"${DEPLOYMENT_LOCATION:-}\" = \"YES\" -o \"${ACTION}\" = \"install\" ]; then\n    FWKDIR=\"${INSTALL_ROOT}/Library/Frameworks\"\nelse\n    FWKDIR=\"${TARGET_BUILD_DIR}\"\nfi\ncp -fRPH \"${FWKDIR}/Tcl.framework\" \"Frameworks\"\ncp -fRPH \"${FWKDIR}/Tk.framework\" \"Frameworks\"\n\n# fix install names when embedding\nfix_install_id ( ) {\n    chmod -RH a+w \"$1\"\n    install_name_tool -id $(otool -L \"$1\" | awk \"/$(basename \"$1\")\\.framework.*[^:]\\$/ {sub(\\\"^.*/Frameworks\\\",\\\"@executable_path/../Frameworks\\\",\\$1); print \\$1}\") \"$1\"\n    chmod -RH a-w \"$1\"   \n}\nfix_install_name ( ) {\n    chmod -RH a+w \"$1\"\n    install_name_tool -change $(otool -L \"$1\" | awk \"/$2\\.framework.*[^:]\\$/ {print \\$1; sub(\\\"^.*/Frameworks\\\",\\\"@executable_path/../Frameworks\\\",\\$1); print \\$1}\") \"$1\"\n    chmod -RH a-w \"$1\"   \n}\nfix_install_id Frameworks/Tcl.framework/Tcl\nfix_install_id Frameworks/Tk.framework/Tk\nfix_install_name Frameworks/Tk.framework/Tk Tcl\nfix_install_name \"MacOS/${PRODUCT_NAME}\" Tcl\nfix_install_name \"MacOS/${PRODUCT_NAME}\" Tk\n\nfi";
 		};
 		F55BC46802B2D38B01DC9062 = {
 			fileEncoding = 5;
@@ -3165,7 +3170,8 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 		};
 		F5875C7B016FEF1D01DC9062 = {
 			isa = PBXFrameworkReference;
-			path = Tcl.framework;
+			name = Tcl.framework;
+			path = ../tcl/Tcl.framework;
 			refType = 3;
 		};
 		F5875C7D016FEF1D01DC9062 = {
@@ -3797,7 +3803,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"${BUILD_STYLE}\" = \"Development\" ]; then\n\t# force Deployment build to be relinked next time\n\tif [ -f \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nelse\n\t# force Development build to be relinked next time\n\tif [ -f \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nfi";
+			shellScript = "if [ \"${BUILD_STYLE}\" = \"Development\" ]; then\n\t# force Deployment build to be relinked next time\n\tif [ -f \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nelse\n\t# force Development build to be relinked next time\n\tif [ -f \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nfi\n# create symbolic link to Tcl.framework if necessary\ncd \"${SYMROOT}\"\nif [ ! -e Tcl.framework -o -L Tcl.framework ]; then\n\trm -f Tcl.framework && ln -s \"${TCL_FRAMEWORK_DIR}/Tcl.framework\" .\nfi";
 		};
 //F50
 //F51
@@ -3815,6 +3821,19 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			name = ChangeLog;
 			path = ../ChangeLog;
 			refType = 2;
+		};
+		F9A61D2F04C2C861006F5A0B = {
+			buildActionMask = 8;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			neededFileNames = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "if [ -z \"${EMBEDDED_BUILD:-}\" ]; then\n# build html documentation\nif [ \"${BUILD_STYLE}\" = \"Deployment\" ]; then\n\texport DYLD_FRAMEWORK_PATH=\"${TCL_FRAMEWORK_DIR}\"\n\tif [ -e \"${TCL_FRAMEWORK_DIR}/Deployment/Makefile\" ]; then\n\t\tcd \"${TCL_FRAMEWORK_DIR}/Deployment\"\n\t\texport DYLD_FRAMEWORK_PATH=\"${TCL_FRAMEWORK_DIR}\"\n\t\tgnumake html-tk DISTDIR=\"${INSTALL_ROOT}${DOCDIR}\" TCL_EXE=\"${TCLSH_DIR}/tclsh${FRAMEWORK_VERSION}\"\n\t\tcd \"${INSTALL_ROOT}${DOCDIR}\"\n\t\tln -fs contents.htm html/${PRODUCT_NAME}TOC.html\n\t\trm -fr \"${PRODUCT_NAME}\"; mv -f html \"${PRODUCT_NAME}\"\n\telse\n\t\techo \"Couldn't build html documentation!\"\n\tfi\nfi\nfi";
 		};
 	};
 	rootObject = F537552A016C352C01DC9062;
