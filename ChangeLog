@@ -1,3 +1,9 @@
+2004-07-05  George Peter Staplin <GeorgePS@XMission.com>
+
+	* generic/tkEvent.c: TK_XIM_SPOT preprocessor usage was modified
+	slightly to fix a bug that occured when TK_XIM_SPOT was defined as
+	0.  Thanks to Joe Mistachkin for reporting this bug.
+
 2004-07-05  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	TIP#158 IMPLEMENTATION
