@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.1.2.2 2002/02/05 02:25:17 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.1.2.3 2002/06/12 03:37:37 wolfsuit Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -3512,6 +3512,12 @@ TkUnsupported1Cmd(
 	            case kDocumentWindowClass:
 	                newResult = Tcl_NewStringObj("document", -1);
 	                break;
+                    case kHelpWindowClass:
+                        newResult = Tcl_NewStringObj("help", -1);
+                        break;
+                    case kToolbarWindowClass:
+                        newResult = Tcl_NewStringObj("toolbar", -1);
+                        break;
                     default:
                         panic("invalid class");
                 }
@@ -3626,13 +3632,17 @@ TkUnsupported1Cmd(
 	        wmPtr->macClass = kMovableModalWindowClass;
 	    } else if (strcmp(argv[3], "floating") == 0) {
 	        wmPtr->macClass = kFloatingWindowClass;
-	    } else if (strcmp(argv[3], "document") == 0) {
-	        wmPtr->macClass = kDocumentWindowClass;
+            } else if (strcmp(argv[3], "document") == 0) {
+                wmPtr->macClass = kDocumentWindowClass;
+            } else if (strcmp(argv[3], "help") == 0) {
+                wmPtr->macClass = kHelpWindowClass;
+            } else if (strcmp(argv[3], "toolbar") == 0) {
+                wmPtr->macClass = kToolbarWindowClass;
 	    } else {
 	        wmPtr->macClass = oldClass;
 	        Tcl_AppendResult(interp, "bad class: should be alert, ",
 	    	        "moveableAlert, modal, moveableModal, floating, ",
-	    	        "or document",
+	    	        "help, or document",
 		        (char *) NULL);
 	        return TCL_ERROR;
 	    }
