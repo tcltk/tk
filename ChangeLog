@@ -1,3 +1,8 @@
+2001-02-13  Eric Melski  <ericm@interwoven.com>
+
+	* doc/photo.n: [Bug 132213] Added clarification on interpretation
+	of ranges for "photoName data -from" subcommand.
+
 2001-02-12  D. Richard Hipp  <drh@hwaci.com>
 
         TIP #21: Asymmetric padding in the pack and grid geometry managers.
