@@ -1,5 +1,10 @@
 2003-02-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tkWinInt.h:
+	* win/tkWinDraw.c:
+	* win/tkWinFont.c (Tk_DrawChars): add support for simple XOR text
+	drawing on Windows. [Patch #685388] (martin)
+
 	* generic/tkMenu.c (TkMenuCleanup): make sure to reset static
 	menusInitialized on finalize. [Bug #548729]
 

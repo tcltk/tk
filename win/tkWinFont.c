@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.16 2002/08/05 14:01:15 dgp Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.17 2003/02/26 02:47:05 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -895,11 +895,45 @@ Tk_DrawChars(
 	DeleteDC(dcMem);
 	SelectObject(dc, oldBrush);
 	DeleteObject(stipple);
-    } else {
+    } else if (gc->function == GXcopy) {
 	SetTextAlign(dc, TA_LEFT | TA_BASELINE);
 	SetTextColor(dc, gc->foreground);
 	SetBkMode(dc, TRANSPARENT);
 	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y);
+    } else {
+	HBITMAP oldBitmap, bitmap;
+	HDC dcMem;
+	TEXTMETRIC tm;
+	SIZE size;
+
+	dcMem = CreateCompatibleDC(dc);
+
+	SetTextAlign(dcMem, TA_LEFT | TA_BASELINE);
+	SetTextColor(dcMem, gc->foreground);
+	SetBkMode(dcMem, TRANSPARENT);
+	SetBkColor(dcMem, RGB(0, 0, 0));
+
+	/*
+	 * Compute the bounding box and create a compatible bitmap.
+	 */
+
+	GetTextExtentPoint(dcMem, source, numBytes, &size);
+	GetTextMetrics(dcMem, &tm);
+	size.cx -= tm.tmOverhang;
+	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
+	oldBitmap = SelectObject(dcMem, bitmap);
+
+	MultiFontTextOut(dcMem, fontPtr, source, numBytes, 0, tm.tmAscent);
+	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
+		0, 0, tkpWinBltModes[gc->function]);
+
+	/*
+	 * Destroy the temporary bitmap and restore the device context.
+	 */
+
+	SelectObject(dcMem, oldBitmap);
+	DeleteObject(bitmap);
+	DeleteDC(dcMem);
     }
     TkWinReleaseDrawableDC(drawable, dc, &state);
 }
