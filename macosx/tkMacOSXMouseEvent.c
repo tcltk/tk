@@ -470,28 +470,38 @@ HandleInCollapse(WindowRef win)
 static int
 GeneratePollingEvents(MouseEventData * medPtr)
 {
-    Tk_Window tkwin, rootwin, grabWin;
+    Tk_Window tkwin, rootwin, grabWin, topPtr;
     Window window;
     int local_x, local_y;
     TkDisplay *dispPtr;
 
-    /* 
-     * I really do not understand this complicated logic.  Surely the event
-     * should be to either: (1) medPtr->whichWin, the window under the mouse
-     * (from which we then obviously extract the correct Tk subwindow), or
-     * (2) the current grab window.  I really don't see why anything else is
-     * relevant.
-     */
-#if 0
+
+    grabWin = TkMacOSXGetCapture();
+
     if ((!TkpIsWindowFloating(medPtr->whichWin) 
             && (medPtr->activeNonFloating != medPtr->whichWin))) {
-        tkwin = NULL;
+        /*
+         * If the window for this event is not floating, and is not the
+         * active non-floating window, don't generate polling events.
+         * We don't send events to backgrounded windows.  So either send
+         * it to the grabWin, or NULL if there is no grabWin.
+         */
+
+        tkwin = grabWin;
     } else {
+        /*
+         * First check whether the toplevel containing this mouse
+         * event is the grab window.  If not, then send the event
+         * to the grab window.  Otherwise, set tkWin to the subwindow  
+         * which most closely contains the mouse event.
+         */
+       
         window = TkMacOSXGetXWindow(medPtr->whichWin);
         dispPtr = TkGetDisplayList();
         rootwin = Tk_IdToWindow(dispPtr->display, window);
-        if (rootwin == NULL) {
-            tkwin = NULL;
+        if ((rootwin == NULL) 
+                || ((grabWin != NULL) && (rootwin != grabWin))) {
+            tkwin = grabWin;
         } else {
             tkwin = Tk_TopCoordsToWindow(rootwin, 
                     medPtr->local.h, medPtr->local.v, 
@@ -504,28 +514,6 @@ GeneratePollingEvents(MouseEventData * medPtr)
      * adjust any state that Tk must remember.
      */
 
-    grabWin = TkMacOSXGetCapture();
-
-    if ((tkwin == NULL) && (grabWin != NULL)) {
-        tkwin = grabWin;
-    }
-#else
-    grabWin = TkMacOSXGetCapture();
-    if (grabWin != NULL) {
-	tkwin = grabWin;
-    } else {
-	window = TkMacOSXGetXWindow(medPtr->whichWin);
-	dispPtr = TkGetDisplayList();
-	rootwin = Tk_IdToWindow(dispPtr->display, window);
-	if (rootwin == NULL) {
-	    tkwin = NULL;
-	} else {
-	    tkwin = Tk_TopCoordsToWindow(rootwin, 
-		    medPtr->local.h, medPtr->local.v, 
-		    &local_x, &local_y);
-	}
-    }
-#endif
     Tk_UpdatePointer(tkwin, medPtr->global.h, medPtr->global.v,
             medPtr->state);
     
