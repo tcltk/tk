@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.5 1999/04/16 01:51:51 stanton Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.6 1999/12/16 21:59:35 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -657,7 +657,7 @@ Tk_MeasureChars(
 			p - source, &runString);
 		(*familyPtr->getTextExtentPoint32Proc)(hdc, 
 			Tcl_DStringValue(&runString),
-			Tcl_DStringLength(&runString) >> familyPtr->isWideFont, 
+			Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 			&size);
 		curX += size.cx;
 		Tcl_DStringFree(&runString);
@@ -685,7 +685,7 @@ Tk_MeasureChars(
 	FontFamily *familyPtr;
 	SubFont *thisSubFontPtr;
 	CONST char *term, *end, *p, *next;
-	int newX, termX, sawNonSpace, srcRead, dstWrote;
+	int newX, termX, sawNonSpace, dstWrote;
 
 	/*
 	 * How many chars will fit in the space allotted? 
@@ -717,7 +717,7 @@ Tk_MeasureChars(
 		}
 		familyPtr = lastSubFontPtr->familyPtr;
 		Tcl_UtfToExternal(NULL, familyPtr->encoding, p, next - p, 
-			0, NULL, buf, sizeof(buf), &srcRead, &dstWrote, NULL);
+			0, NULL, buf, sizeof(buf), NULL, &dstWrote, NULL);
 		(*familyPtr->getTextExtentPoint32Proc)(hdc, buf, 
 			dstWrote >> familyPtr->isWideFont, &size);
 		newX += size.cx;

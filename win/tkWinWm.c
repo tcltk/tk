@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.11 1999/09/21 06:43:06 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.12 1999/12/16 21:59:35 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1389,6 +1389,17 @@ Tk_WmCmd(clientData, interp, argc, argv)
                     ": it is an embedded window", (char *) NULL);
             return TCL_ERROR;
         }
+	/*
+	 * If WM_UPDATE_PENDING is true, a pending UpdateGeometryInfo may
+	 * need to be called first to update a withdrew toplevel's geometry
+	 * before it is deiconified by TkpWmSetState.
+	 * UpdateGeometryInfo has no effect on an iconified toplevel.
+	 */
+	if (wmPtr->flags & WM_UPDATE_PENDING) {
+	    Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData) winPtr);
+	    UpdateGeometryInfo((ClientData) winPtr);
+	}
+
 	TkpWmSetState(winPtr, NormalState);
 	/*
 	 * Follow Windows-like style here:
