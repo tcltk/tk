@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.18 2004/10/07 17:39:51 hobbs Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.19 2004/10/08 23:15:32 dkf Exp $
 '\" 
 .so man.macros
 .TH wm n 8.5 Tk "Tk Built-In Commands"
@@ -58,17 +58,18 @@ flags and their values. The second form returns the value for the
 specific option. The third form sets one or more of the values. The
 values are as follows:
 .PP
-On Windows, \fB-disabled\fR gets or sets whether the window is in a
-disabled state. \fB-toolwindow\fR gets or sets the style of the window
-to toolwindow (as defined in the MSDN). \fB-topmost\fR gets or sets
+On Windows, \fB\-disabled\fR gets or sets whether the window is in a
+disabled state. \fB\-toolwindow\fR gets or sets the style of the window
+to toolwindow (as defined in the MSDN). \fB\-topmost\fR gets or sets
 whether this is a topmost window (displays above all other windows).
-\fB-alpha\fR sets the alpha transparency level of the toplevel.  It accepts
+\fB\-alpha\fR sets the alpha transparency level of the toplevel.  It accepts
 a value from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque).  Values
 outside that range will be constrained.  This is supported on Windows
-2000/XP+.  Where not supported, the \fB-alpha\fR value remains at
+2000/XP+.  Where not supported, the \fB\-alpha\fR value remains at
 \fB1.0\fR.
 .PP
-On Macintosh,
+On Macintosh, there are currently two attribute values:
+\fB\-modified\fR and \fB\-titlepath\fR.
 .PP
 On Unix, there are currently no special attribute values.
 .RE
@@ -239,8 +240,8 @@ Otherwise it returns the name of
 the current icon bitmap associated with \fIwindow\fR, or an empty
 string if \fIwindow\fR has no icon bitmap.  On the Windows operating
 system, an additional flag is supported: 
-\fBwm iconbitmap \fIwindow\fR ?\fI-default\fR? ?\fIimage\fR?.  
-If the \fI-default\fR
+\fBwm iconbitmap \fIwindow\fR ?\fB\-default\fR? ?\fIimage\fR?.  
+If the \fB\-default\fR
 flag is given, the icon is applied to all toplevel windows (existing
 and future) to which no other specific icon has yet been applied.
 In addition to bitmap image types, a full path specification to
@@ -281,10 +282,10 @@ case the window manager will normally display the window's title,
 as specified with the \fBwm title\fR command).
 .VS 8.5
 .TP
-\fBwm iconphoto \fIwindow\fR ?\fI-default\fR? \fIimage1\fR ?\fIimage2 ...\fR?
+\fBwm iconphoto \fIwindow\fR ?\fB\-default\fR? \fIimage1\fR ?\fIimage2 ...\fR?
 .RS
 Sets the titlebar icon for \fIwindow\fR based on the named photo images.
-If \fI-default\fR is specified, this is applied to all future created
+If \fB\-default\fR is specified, this is applied to all future created
 toplevels as well.  The data in the images is taken as a snapshot at the
 time of invocation.  If the images are later changed, this is not
 reflected to the titlebar icons.  Multiple images are accepted to allow

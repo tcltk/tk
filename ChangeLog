@@ -1,3 +1,8 @@
+2004-10-09  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/wm.n: Recorded what attribute values are supported on OSX
+	though I don't know what they do.
+
 2004-10-08  Joe English  <jenglish@users.sourceforge.net>
 
 	TIP#205 IMPLEMENTATION
