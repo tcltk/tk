@@ -2,7 +2,7 @@
 #
 # Support procs to use Tk in safe interpreters.
 #
-# RCS: @(#) $Id: safetk.tcl,v 1.6 2000/04/08 06:59:28 hobbs Exp $
+# RCS: @(#) $Id: safetk.tcl,v 1.6.2.1 2000/08/05 23:52:07 hobbs Exp $
 #
 # Copyright (c) 1997 Sun Microsystems, Inc.
 #
@@ -36,6 +36,11 @@ namespace eval ::safe {
     #
     proc ::safe::tkInterpInit {slave argv} {
 	global env tk_library
+
+	# We have to make sure that the tk_library variable uses a file
+	# pathname that works better in Tk (of the style returned by
+	# [file join], ie C:/path/to/tk/lib, not C:\path\to\tk\lib
+	set tk_library [eval [list file join] [file split $tk_library]]
 
 	# Clear Tk's access for that interp (path).
 	allowTk $slave $argv
