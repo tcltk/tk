@@ -551,7 +551,7 @@ fi
 TK_VERSION=8.4
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=4
-TK_PATCH_LEVEL=".8"
+TK_PATCH_LEVEL=".9"
 VERSION=${TK_VERSION}
 LOCALES="cs de el en en_gb es fr it nl ru"
 
@@ -2401,7 +2401,7 @@ fi
 	    # is kind of overkill but it works.
 	    # Disable inlining only when one of the
 	    # files in compat/*.c is being linked in.
-            if test x"${LIBOBJS}" != x ; then
+	    if test x"${LIBOBJS}" != x ; then
 	        CFLAGS="$CFLAGS -fno-inline"
 	    fi
 
