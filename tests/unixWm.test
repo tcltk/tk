@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.1.4.9 1999/04/02 18:06:45 hershey Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.1.4.10 1999/04/07 02:16:37 surles Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1311,7 +1311,7 @@ test unixWm-41.1 {ConfigureEvent procedure, internally generated size changes} {
     sleep 500
     lappend result [winfo width .t] [winfo height .t]
 } {400 150 200 300}
-test unixWm-41.2 {ConfigureEvent procedure, menubars} {unixOnly} {
+test unixWm-41.2 {ConfigureEvent procedure, menubars} {nonPortable} {
     catch {destroy .t}
     toplevel .t -width 300 -height 200 -bd 2 -relief raised
     wm geom .t +0+0
