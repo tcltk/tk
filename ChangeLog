@@ -1,3 +1,25 @@
+1999-10-30  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* unix/configure.in:
+	* README:
+	* win/configure.in:
+	* generic/tk.h: updated to patchlevel 2
+
+	* win/tkWinKey.c: fixed XKeysymToKeycode to handle mapping of
+	symbolic keysyms (Left, Home, ...) with event generate
+
+	* library/entry.tcl: change tkEntrySeeInsert to avoid the use
+	of a while loop that could eat CPU tremendously.  Behavior of
+	moving the cursor at the right edge changes slightly (previously
+	it tried to keep the cursor at the right edge, now it moves the
+	cursor to a "central right" location - better IMHO). [Bug: 3195]
+
+	* library/scrlbar.tcl: changed tkScrollButtonUp to check for
+	existence of tkPriv(relief) in order to avoid spurious release
+	events
+
+	* unix/Makefile.in: added ChangeLog to dist archive
+
 1999-09-30  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* All frozen for 10/4/99 8.2.1 release
