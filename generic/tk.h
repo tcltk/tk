@@ -7,12 +7,12 @@
  * Copyright (c) 1989-1994 The Regents of the University of California.
  * Copyright (c) 1994 The Australian National University.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998 by Scriptics Corporation.
+ * Copyright (c) 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.17 1998/10/16 17:22:59 escoffon Exp $
+ * RCS: @(#) $Id: tk.h,v 1.18 1999/01/04 19:25:26 rjohnson Exp $
  */
 
 #ifndef _TK
@@ -27,7 +27,8 @@
  * win/makefile.bc	(Not for patch release updates)
  * win/makefile.vc	(Not for patch release updates)
  * win/README
- * library/tk.tcl
+ * mac/README
+ * library/tk.tcl	(Not for patch release updates)
  *
  * The release level should be  0 for alpha, 1 for beta, and 2 for
  * final/patch.  The release serial value is the number that follows the
@@ -43,10 +44,10 @@
 #define TK_MAJOR_VERSION   8
 #define TK_MINOR_VERSION   0
 #define TK_RELEASE_LEVEL   2
-#define TK_RELEASE_SERIAL  4
+#define TK_RELEASE_SERIAL  5
 
 #define TK_VERSION "8.0"
-#define TK_PATCH_LEVEL "8.0.4"
+#define TK_PATCH_LEVEL "8.0.5"
 
 /* 
  * A special definition used to allow this header file to be included 

@@ -1,4 +1,4 @@
-Tk 8.0.4 for Macintosh
+Tk 8.0.5 for Macintosh
 
 by Ray Johnson
 Scriptics Corporation
@@ -8,7 +8,7 @@ Jim Ingham
 Cygnus Solutions
 jingham@cygnus.com
 
-RCS: @(#) $Id: README,v 1.5 1998/11/12 05:59:13 jingham Exp $
+RCS: @(#) $Id: README,v 1.6 1999/01/04 19:25:27 rjohnson Exp $
 
 1. Introduction
 ---------------
@@ -44,7 +44,7 @@ the documentation for more details.  Syd Polk <icepick@eng.sun.com> is
 the author of the new menu code.  Feel free to contact him if you
 have questions or comments about the menu mechanism.
 
-As of Tk 8.0.4, MacTk menus will adopt the backgrounds, shape, separator, etc
+As of Tk 8.0.5, MacTk menus will adopt the backgrounds, shape, separator, etc
 of the current theme. 
 
 The "tk_messageBox" command on the Macintosh is now much more
@@ -114,7 +114,7 @@ Macintosh Tk is distributed in three different forms.  This
 should make it easier to only download what you need.  The 
 packages are as follows:
 
-mactk8.0.4.sea.hqx
+mactk8.0.5.sea.hqx
 
     This distribution is a "binary" only release.  It contains an
     installer program that will install a 68k, PowerPC, or Fat
@@ -122,13 +122,13 @@ mactk8.0.4.sea.hqx
     the Tcl & Tk libraries in the Extensions folder inside your
     System Folder.  (No "INIT"'s or Control Pannels are installed.)
 
-mactcltk-full-8.0.4.sea.hqx
+mactcltk-full-8.0.5.sea.hqx
 
     This release contains the full release of Tcl and Tk for the
     Macintosh plus the More Files package on which Macintosh Tcl and
     Tk rely.
 
-mactk-source-8.0.4.sea.hqx
+mactk-source-8.0.5.sea.hqx
 
     This release contains the complete source to Tk for the Macintosh
     In addition, Metrowerks CodeWarrior libraries and project files
@@ -182,7 +182,7 @@ following items:
 
 	CodeWarrior Pro 1 or higher (CodeWarrior release 9 or higher can work
 		and we have project files, but we are depricating support)
-		8.0.4 was build with CW Pro 3.
+		8.0.5 was build with CW Pro 3.
 	Mac Tcl 8.0 (source)
 	  (which requires More Files 1.4.2 or 1.4.3)
 	Mac Tk 8.0 (source)
@@ -203,10 +203,10 @@ Special notes:
   to the menu system, though you have to have Appearance 1.0.1 or later
   installed for this to work.
   
-* If you get the Unix tar file, it will untar into a directory tcl8.0.4.  However,
-  the Macintosh project files expect the folder to be called tcl8.0.  You will need
-  to rename the folder to tcl8.0, or change all the paths in the project files.
-
+* If you get the Unix tar file, it will untar into a directory
+  tcl8.0.5.  However, the Macintosh project files expect the folder to
+  be called tcl8.0.  You will need to rename the folder to tcl8.0, or
+  change all the paths in the project files.
 
 7. About Dialog
 ---------------

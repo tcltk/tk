@@ -1,10 +1,10 @@
-Tk 8.0.4 for Windows
+Tk 8.0.5 for Windows
 
 by Scott Stanton
 Scriptics Corporation
 scott.stanton@scriptics.com
 
-RCS: @(#) $Id: README,v 1.6 1998/10/16 17:22:59 escoffon Exp $
+RCS: @(#) $Id: README,v 1.7 1999/01/04 19:25:28 rjohnson Exp $
 
 1. Introduction
 ---------------
@@ -43,7 +43,7 @@ In order to compile Tk for Windows, you need the following items:
 	  or
 	Visual C++ 2.x or later
 
-In practice, 8.0.4 was built with Visual C++ 5.0
+In practice, 8.0.5 was built with Visual C++ 5.0
 
 In the "win" subdirectory of the source release, you will find two
 files called "makefile.bc" and "makefile.vc".  These are the makefiles

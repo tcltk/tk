@@ -4,7 +4,7 @@
 # posts a dialog box with the error message and gives the user a chance
 # to see a more detailed stack trace.
 #
-# RCS: @(#) $Id: bgerror.tcl,v 1.3 1998/09/14 18:23:22 stanton Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.4 1999/01/04 19:25:27 rjohnson Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -35,7 +35,8 @@ proc bgerror err {
     #  code from the tkerror trial, other ret codes are passed back
     #  to our caller (tcl background error handler) so the called "tkerror"
     #  can still use  return -code break, to skip remaining messages
-    #  in the error queue for instance)  -- dl
+    #  in the error queue for instance) 
+
     set ret [catch {tkerror $err} msg];
     if {$ret != 1} {return -code $ret $msg}
 

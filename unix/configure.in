@@ -3,12 +3,12 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 AC_INIT(../generic/tk.h)
-# RCS: @(#) $Id: configure.in,v 1.23 1998/12/07 04:48:07 rjohnson Exp $
+# RCS: @(#) $Id: configure.in,v 1.24 1999/01/04 19:25:27 rjohnson Exp $
 
 TK_VERSION=8.0
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=0
-TK_PATCH_LEVEL=".4"
+TK_PATCH_LEVEL=".5"
 VERSION=${TK_VERSION}
 
 if test "${prefix}" = "NONE"; then
