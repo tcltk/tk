@@ -1,7 +1,7 @@
 TclTkAqua README 
 ----------------
 
-RCS: @(#) $Id: README,v 1.6 2003/02/27 00:09:26 hobbs Exp $
+RCS: @(#) $Id: README,v 1.6.2.1 2003/03/18 13:55:51 das Exp $
 
 This is the README file for the Mac OS X native versions of Tcl & Tk.
 
@@ -131,32 +131,38 @@ ProjectBuilder command line tool with all the details taken care of.
 
 - Unpack the tcl and tk source release archives and place the tcl and tk source
 trees in a common parent directory.
- [ If you don't want have the two source trees in one directory, you'll need to
- [ create the following symbolic link for the build to work as setup by default
- [      ln -fs /path_to_tcl/build /path_to_tk/build
- [ (where /path_to_{tcl,tk} is the directory containing the tcl resp. tk tree)
- [ or you can pass an argument of BUILD_DIR=/somewhere to the tcl and tk make.
+[ If you don't want have the two source trees in one directory, you'll need to ]
+[ create the following symbolic link for the build to work as setup by default ]
+[      ln -fs /path_to_tcl/build /path_to_tk/build                             ]
+[ (where /path_to_{tcl,tk} is the directory containing the tcl resp. tk tree)  ]
+[ or you can pass an argument of BUILD_DIR=/somewhere to the tcl and tk make.  ]
 
 - The following instructions assume the tcl and tk source trees are named
-'tcl<ver>' and 'tk<ver>', respectively, where <ver> is the version number (for
-example 'tcl8.4.2'). This will be the case if you are building from a release
-archive. If you are building from CVS, the version numbers will be missing;
-adapt the instructions below accordingly.
+"tcl${ver}" and "tk${ver}", respectively, where ${ver} is a shell variable
+containing the tcl and tk version number (for example '8.4.2').
+Setup the shell variable as follows:
+	set ver="8.4.2" ;: if your shell is csh
+	ver="8.4.2"     ;: if your shell is sh
+The source trees will be named this way only if you are building from a release
+archive, if you are building from CVS, the version numbers will be missing; so
+set ${ver} to the empty string instead:
+	set ver=""     ;: if your shell is csh
+	ver=""         ;: if your shell is sh
 
 - If you're only interested in _building_ TclTkAqua and don't plan on doing
 development with the ProjectBuilder projects, using the Makefiles is easiest.
 The following steps will build Tcl and Tk from the Terminal, assuming you are
 located in the directory containing the tcl and tk source trees:
-	make -C tcl<ver>/macosx
-	make -C tk<ver>/macosx
+	make -C tcl${ver}/macosx
+	make -C tk${ver}/macosx
 and the following will then install Tcl and Tk onto the root volume (admin
 password required):
-	sudo make -C tcl<ver>/macosx install
-	sudo make -C tk<ver>/macosx  install
+	sudo make -C tcl${ver}/macosx install
+	sudo make -C tk${ver}/macosx  install
 if you don't have the admin password, you can install into your home directory,
 instead by passing an INSTALL_ROOT argument to make:
-	make -C tcl<ver>/macosx install INSTALL_ROOT=$HOME
-	make -C tk<ver>/macosx  install INSTALL_ROOT=$HOME
+	make -C tcl${ver}/macosx install INSTALL_ROOT="${HOME}/"
+	make -C tk${ver}/macosx  install INSTALL_ROOT="${HOME}/"
 
 - The default Makefile targets will build _both_ debug and optimized versions of
 the Tcl and Tk frameworks with the standard convention of naming the debug
@@ -168,10 +174,10 @@ This allows you to dynamically link to the debug libraries at runtime by setting
 If you only want to build and install the debug or optimized build, use the
 'develop' or 'deploy' target variants of the Makefiles, respectively.
 For example, to build and install only the optimized versions:
-	make -C tcl<ver>/macosx deploy
-	make -C tk<ver>/macosx deploy
-	sudo make -C tcl<ver>/macosx install-deploy
-	sudo make -C tk<ver>/macosx  install-deploy
+	make -C tcl${ver}/macosx deploy
+	make -C tk${ver}/macosx deploy
+	sudo make -C tcl${ver}/macosx install-deploy
+	sudo make -C tk${ver}/macosx  install-deploy
 
 - The Makefiles can also build a version of 'Wish Shell' that has the Tcl and Tk
 frameworks embedded in its application package. This allows for standalone
@@ -179,10 +185,10 @@ deployment of the application with no installation required, e.g. from read-only
 media. To build & install in this manner, use the 'embedded' target variants of
 the Makefiles. For example, to build a standalone 'Wish Shell.app'
 in ./embedded/Applications/Utilities:
-	make -C tcl<ver>/macosx embedded
-	make -C tk<ver>/macosx embedded
-	sudo make -C tcl<ver>/macosx install-embedded INSTALL_ROOT=`pwd`/embedded
-	sudo make -C tk<ver>/macosx  install-embedded INSTALL_ROOT=`pwd`/embedded
+	make -C tcl${ver}/macosx embedded
+	make -C tk${ver}/macosx embedded
+	sudo make -C tcl${ver}/macosx install-embedded INSTALL_ROOT=`pwd`/embedded/
+	sudo make -C tk${ver}/macosx  install-embedded INSTALL_ROOT=`pwd`/embedded/
 Notes:
   * if you've already built standard TclTkAqua, building embedded does not
   require any new compiling or linking, so you can skip the first two makes.
@@ -203,5 +209,27 @@ Another way is to set the build folder location directly in
 tcl/macosx/Tcl.pbproj and tk/macosx/Wish/pbproj using ProjectBuilder's
 "Project->Show Info" on the topmost icon in the filelist. Switch to "Place build
 products in a separate location" with a setting of "$SRCROOT/../../build"
-(this gets stored in Tcl.pbproj/$USER.pbxuser & Wish.pbproj/$USER.pbxuser).
+(this gets stored in Tcl.pbproj/${USER}.pbxuser & Wish.pbproj/${USER}.pbxuser).
+
+- It is possible to build Tk without a common build folder with Tcl, or even
+without the tcl sourcetree itself; but in that case you need to tell the Tk
+Makefile where the copies of 'Tcl.framework' and 'tclsh8.4' are located that
+you want to build & link against (their default location is the ${BUILD_DIR}).
+
+For instance to use their default systemwide install locations:
+	make -C tk${ver}/macosx \
+	    TCL_FRAMEWORK_DIR=/Library/Frameworks TCLSH_DIR=/usr/bin
+	sudo make -C tk${ver}/macosx install \
+	    TCL_FRAMEWORK_DIR=/Library/Frameworks TCLSH_DIR=/usr/bin
+[ of course this will only work if /Library/Frameworks does indeed contain a  ]
+[ Tcl.framework corresponding in version to the Tk.framework you're trying to ]
+[ build, and if TCLSH_DIR contains a corresponding /usr/bin/tclsh8.4          ]
+
+or to use an earlier install of Tcl into INSTALL_ROOT="${TCLTK}/" :
+	make -C tk${ver}/macosx \
+	    TCL_FRAMEWORK_DIR=${TCLTK}/Library/Frameworks TCLSH_DIR=${TCLTK}/usr/bin
+	sudo make -C tk${ver}/macosx install INSTALL_ROOT="${TCLTK}/" \
+	    TCL_FRAMEWORK_DIR=${TCLTK}/Library/Frameworks TCLSH_DIR=${TCLTK}/usr/bin
+
+The Makefile variables TCL_FRAMEWORK_DIR and TCLSH_DIR were added in Tk 8.4.3.
 
