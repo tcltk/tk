@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.11.2.2 2003/04/26 02:53:47 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.11.2.3 2003/04/26 02:58:17 hobbs Exp $
  */
 
 #include "tkButton.h"
@@ -271,10 +271,6 @@ TkpDisplayButton(clientData)
 	    XSetClipOrigin(butPtr->display, gc, 0, 0);
 	}
 
-	/*
-	 * Use normalTextGC in this case since we have both text and image,
-	 * the whole button will later be stippled 50% grey.
-	 */
 	Tk_DrawTextLayout(butPtr->display, pixmap, gc,
 		butPtr->textLayout, x + textXOffset, y + textYOffset, 0, -1);
 	Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
