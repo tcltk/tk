@@ -16,7 +16,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.31 2002/06/14 13:35:48 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.32 2002/06/14 14:07:51 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -5505,16 +5505,16 @@ ImgPhotoPostscript(clientData, interp, tkwin, psInfo,
 /*
  *----------------------------------------------------------------------
  *
- * Tk_PhotoPutBlock_Old, Tk_PhotoPutZoomedBlock_Old --
+ * Tk_PhotoPutBlock_NoComposite, Tk_PhotoPutZoomedBlock_NoComposite --
  *
  * These backward-compatability functions just exist to fill slots in
- * stubs table.  For the behaviour of *_Old, refer to the
+ * stubs table.  For the behaviour of *_NoComposite, refer to the
  * corresponding function without the extra suffix.
  *
  *----------------------------------------------------------------------
  */
 void
-Tk_PhotoPutBlock_Old(handle, blockPtr, x, y, width, height)
+Tk_PhotoPutBlock_NoComposite(handle, blockPtr, x, y, width, height)
      Tk_PhotoHandle handle;
      Tk_PhotoImageBlock *blockPtr;
      int x, y, width, height;
@@ -5524,8 +5524,8 @@ Tk_PhotoPutBlock_Old(handle, blockPtr, x, y, width, height)
 }
 
 void
-Tk_PhotoPutZoomedBlock_Old(handle, blockPtr, x, y, width, height,
-			   zoomX, zoomY, subsampleX, subsampleY)
+Tk_PhotoPutZoomedBlock_NoComposite(handle, blockPtr, x, y, width, height,
+				   zoomX, zoomY, subsampleX, subsampleY)
      Tk_PhotoHandle handle;
      Tk_PhotoImageBlock *blockPtr;
      int x, y, width, height, zoomX, zoomY, subsampleX, subsampleY;

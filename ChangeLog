@@ -1,5 +1,10 @@
 2002-06-14  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* doc/FindPhoto.3, generic/tk.h, generic/tk.decls:
+	* generic/tkImgPhoto.c: Changed *_Old to *_NoComposite and
+	USE_OLD_PHOTO_PUT_BLOCK to USE_COMPOSITELESS_PHOTO_PUT_BLOCK
+	following a suggestion from Don Porter. 
+
 	* tests/imgPhoto.test: Added tests of -compositingrule
 
 	* doc/photo.n: Added documentation for "-compositingrule".
