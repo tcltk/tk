@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.90 2005/01/09 18:28:06 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.91 2005/01/10 15:32:28 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -3318,7 +3318,7 @@ WmDeiconifyCmd(tkwin, winPtr, interp, objc, objv)
     if (winPtr->flags & TK_EMBEDDED) {
 	if(!SendMessage(wmPtr->wrapper, TK_DEICONIFY, 0, 0)) {
 	    Tcl_AppendResult(interp, "can't deiconify ", winPtr->pathName,
-		": it is an embedded window", (char *) NULL);
+		": the container does not support the request", (char *) NULL);
 	    return TCL_ERROR;
 	}
 	return TCL_OK;
@@ -3819,7 +3819,7 @@ WmIconifyCmd(tkwin, winPtr, interp, objc, objv)
     if (winPtr->flags & TK_EMBEDDED) {
 	if(!SendMessage(wmPtr->wrapper, TK_ICONIFY, 0, 0)) {
 	    Tcl_AppendResult(interp, "can't iconify ", winPtr->pathName,
-		": it is an embedded window", (char *) NULL);
+		": the container does not support the request", (char *) NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -4851,7 +4851,7 @@ WmStateCmd(tkwin, winPtr, interp, objc, objv)
 
 	    if(state != SendMessage(wmPtr->wrapper, TK_STATE, state, 0)) {
 	        Tcl_AppendResult(interp, "can't change state of ",
-		    winPtr->pathName, ": it is an embedded window",
+		    winPtr->pathName, ": the container does not support the request",
 		    (char *) NULL);
 		return TCL_ERROR;
 	    }
@@ -4957,7 +4957,7 @@ WmTitleCmd(tkwin, winPtr, interp, objc, objv)
 	wrapper = wmPtr->wrapper;
     }
     if (objc == 3) {
-	if(winPtr->flags & TK_EMBEDDED) {
+	if(wrapper) {
 	    char buf[256];
 	    GetWindowText(wrapper, buf, 256);
 	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
@@ -5150,7 +5150,11 @@ WmWithdrawCmd(tkwin, winPtr, interp, objc, objv)
     }
 
     if(winPtr->flags & TK_EMBEDDED) {
-	SendMessage(wmPtr->wrapper, TK_WITHDRAW, 0, 0);
+	if(SendMessage(wmPtr->wrapper, TK_WITHDRAW, 0, 0) < 0) {
+	    Tcl_AppendResult(interp, "can't withdraw", Tcl_GetString(objv[2]),
+		": the container does not support the request", NULL);
+	    return TCL_ERROR;
+	}
     } else {
 	wmPtr->flags |= WM_WITHDRAWN;
 	TkpWmSetState(winPtr, WithdrawnState);
@@ -7979,7 +7983,7 @@ void TkpWinToplevelDetachWindow(winPtr)
         winPtr->flags &= ~TK_EMBEDDED;
 	winPtr->privatePtr = NULL;
         wmPtr->wrapper = None;
-	wmPtr->hints.initial_state = state;
+	if(state >= 0 && state <= 3) wmPtr->hints.initial_state = state;
     }
     TkpWinToplevelOverrideRedirect(winPtr, 1);
 }
