@@ -205,8 +205,12 @@ if {$tcl_platform(platform) == "macintosh"} {
 	bind Entry <Command-KeyPress> {# nothing}
 }
 
-bind Entry <Insert> {
-    catch {tkEntryInsert %W [selection get -displayof %W]}
+# On Windows, paste is done using Shift-Insert.  Shift-Insert already
+# generates the <<Paste>> event, so we don't need to do anything here.
+if {$tcl_platform(platform) != "windows"} {
+    bind Entry <Insert> {
+	catch {tkEntryInsert %W [selection get -displayof %W]}
+    }
 }
 
 # Additional emacs-like bindings:
