@@ -12,10 +12,10 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.67.2.6 2004/05/10 08:30:30 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.67.2.7 2004/10/27 00:36:33 davygrvy Exp $
 #------------------------------------------------------------------------------
 
-!if "$(MSVCDIR)" == ""
+!if !defined(MSDEVDIR) && !defined(MSVCDIR)
 MSG = ^
 You'll need to run vcvars32.bat from Developer Studio, first, to setup^
 the environment.  Jump to this line to read the new instructions.
@@ -165,16 +165,26 @@ PROJECT	= tk
 !endif
 
 STUBPREFIX = $(PROJECT)stub
-DOTVERSION = 8.4
+!if [nmakehlp -g ../generic/tk.h TK_VERSION] == 84
+DOTVERSION	= 8.5
+!elseif [nmakehlp -g ../generic/tk.h TK_VERSION] == 85
+DOTVERSION	= 8.5
+!elseif [nmakehlp -g ../generic/tk.h TK_VERSION] == 86
+DOTVERSION	= 8.6
+!elseif [nmakehlp -g ../generic/tk.h TK_VERSION] == 90
+DOTVERSION	= 9.0
+!elseif [nmakehlp -g ../generic/tk.h TK_VERSION] == 0
+MSG =^
+Can't get version string from ../generic/tk.h
+!error $(MSG)
+!endif
 VERSION = $(DOTVERSION:.=)
 WISHNAMEPREFIX = wish
 
 BINROOT		= .
 ROOT		= ..
 
-#TCLIMPLIBNAME	= tcl$(VERSION)$(SUFX).lib
-#TCLLIB	= tcl$(VERSION)$(SUFX).$(EXT)
-#TCLSTUBLIBNAME	= tclstub$(VERSION).lib
+TK_LIBRARY	= $(ROOT)\library
 
 TKIMPLIB	= "$(OUT_DIR)\$(PROJECT)$(VERSION)$(SUFX).lib"
 TKLIBNAME	= $(PROJECT)$(VERSION)$(SUFX).$(EXT)
@@ -452,6 +462,7 @@ tktest:	  setup $(TKTEST) $(CAT32)
 
 test: setup $(TKTEST) $(TKLIB) $(CAT32)
 	set TCL_LIBRARY=$(TCL_LIBRARY)
+	set TK_LIBRARY=$(TK_LIBRARY)
 !if $(TCLINSTALL)
 	set PATH=$(_TCLDIR)\bin;$(PATH)
 !else
@@ -465,6 +476,7 @@ test: setup $(TKTEST) $(TKLIB) $(CAT32)
 
 runtest: setup $(TKTEST) $(TKLIB) $(CAT32)
 	set TCL_LIBRARY=$(TCL_LIBRARY)
+	set TK_LIBRARY=$(TK_LIBRARY)
 !if $(TCLINSTALL)
 	set PATH=$(_TCLDIR)\bin;$(PATH)
 !else
@@ -555,6 +567,7 @@ install-libraries:
 #---------------------------------------------------------------------
 
 genstubs:
+	set TCL_LIBRARY=$(TCL_LIBRARY)
 	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
 		$(GENERICDIR)\$(PROJECT).decls $(GENERICDIR)\$(PROJECT)Int.decls
 
@@ -567,6 +580,7 @@ depend:
 !if !exist($(TCLSH))
 	@echo Build tclsh first!
 !else
+	set TCL_LIBRARY=$(TCL_LIBRARY)
 	$(TCLSH) $(TOOLSDIR:\=/)/mkdepend.tcl -vc32 -out:"$(OUT_DIR)\depend.mk" \
 		-passthru:"-DBUILD_tcl $(TK_INCLUDES:"="")" $(GENERICDIR) \
 		$(COMPATDIR) $(WINDIR) @<<
