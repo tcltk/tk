@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.24 2003/10/31 09:02:08 vincentdarley Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.25 2004/06/15 10:15:25 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -87,6 +87,17 @@ typedef struct TagSearch {
 
     TagSearchExpr *expr;	/* compiled tag expression */
 } TagSearch;
+
+/*
+ * Values for the TagSearch type field.
+ */
+
+#define SEARCH_TYPE_EMPTY	0	/* Looking for empty tag */
+#define SEARCH_TYPE_ID		1	/* Looking for an item by id */
+#define SEARCH_TYPE_ALL		2	/* Looking for all items */
+#define SEARCH_TYPE_TAG		3	/* Looking for an item by simple tag */
+#define SEARCH_TYPE_EXPR	4	/* Compound search */
+
 #endif /* USE_OLD_TAG_SEARCH */
 
 /*
@@ -677,7 +688,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	if ((result = TagSearchScan(canvasPtr, objv[2], &searchPtr)) != TCL_OK) {
 	    goto done;
 	}
-	if (searchPtr->type == 1) {
+	if (searchPtr->type == SEARCH_TYPE_ID) {
 	    Tcl_HashEntry *entryPtr;
 
 	    entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable, (char *) searchPtr->id);
@@ -717,7 +728,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 		goto done;
 	    }
 #ifndef USE_OLD_TAG_SEARCH
-	    if (searchPtr->type == 4) {
+	    if (searchPtr->type == SEARCH_TYPE_EXPR) {
 	        /*
 	         * if new tag expression, then insert in linked list
 	         */
@@ -3127,7 +3138,7 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
     /* Initialize search */
     searchPtr->canvasPtr = canvasPtr;
     searchPtr->searchOver = 0;
-    searchPtr->type = 0;
+    searchPtr->type = SEARCH_TYPE_EMPTY;
 
     /*
      * Find the first matching item in one of several ways. If the tag
@@ -3141,7 +3152,7 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
 
         searchPtr->id = strtoul(tag, &end, 0);
         if (*end == 0) {
-            searchPtr->type = 1;
+            searchPtr->type = SEARCH_TYPE_ID;
             return TCL_OK;
 	}
     }
@@ -3179,7 +3190,7 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
              || (tag[i] == '|' && tag[i+1] == '|')
              || (tag[i] == '^')
              || (tag[i] == '!')) {
-                searchPtr->type = 4;
+                searchPtr->type = SEARCH_TYPE_EXPR;
                 break;
             }
         }
@@ -3187,7 +3198,7 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
 
     searchPtr->string = tag;
     searchPtr->stringIndex = 0;
-    if (searchPtr->type == 4) {
+    if (searchPtr->type == SEARCH_TYPE_EXPR) {
         /*
          * an operator was found in the prescan, so
          * now compile the tag expression into array of Tk_Uid
@@ -3204,12 +3215,12 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
             /*
              * All items match.
              */
-            searchPtr->type = 2;
+            searchPtr->type = SEARCH_TYPE_ALL;
         } else {
             /*
              * Optimized single-tag search
              */
-            searchPtr->type = 3;
+            searchPtr->type = SEARCH_TYPE_TAG;
         }
     }
     return TCL_OK;
@@ -3664,15 +3675,15 @@ TagSearchFirst(searchPtr)
      * hot item, in which case the search can be skipped.
      */
 
-    if (searchPtr->type == 1) {
+    if (searchPtr->type == SEARCH_TYPE_ID) {
         Tcl_HashEntry *entryPtr;
 
         itemPtr = searchPtr->canvasPtr->hotPtr;
         lastPtr = searchPtr->canvasPtr->hotPrevPtr;
         if ((itemPtr == NULL) || (itemPtr->id != searchPtr->id) || (lastPtr == NULL)
-            || (lastPtr->nextPtr != itemPtr)) {
+		|| (lastPtr->nextPtr != itemPtr)) {
             entryPtr = Tcl_FindHashEntry(&searchPtr->canvasPtr->idTable,
-                (char *) searchPtr->id);
+		    (char *) searchPtr->id);
             if (entryPtr != NULL) {
                 itemPtr = (Tk_Item *)Tcl_GetHashValue(entryPtr);
                 lastPtr = itemPtr->prevPtr;
@@ -3687,7 +3698,7 @@ TagSearchFirst(searchPtr)
         return itemPtr;
     }
 
-    if (searchPtr->type == 2) {
+    if (searchPtr->type == SEARCH_TYPE_ALL) {
 
         /*
          * All items match.
@@ -3698,7 +3709,7 @@ TagSearchFirst(searchPtr)
         return searchPtr->canvasPtr->firstItemPtr;
     }
 
-    if (searchPtr->type == 3) {
+    if (searchPtr->type == SEARCH_TYPE_TAG) {
 
         /*
          * Optimized single-tag search
@@ -3718,19 +3729,19 @@ TagSearchFirst(searchPtr)
         }
     } else {
 
-    /*
-         * None of the above.  Search for an item matching the tag expression.
-     */
+	/*
+	 * None of the above.  Search for an item matching the tag expression.
+	 */
 
-    for (lastPtr = NULL, itemPtr = searchPtr->canvasPtr->firstItemPtr;
-                itemPtr != NULL; lastPtr = itemPtr, itemPtr = itemPtr->nextPtr) {
+	for (lastPtr = NULL, itemPtr = searchPtr->canvasPtr->firstItemPtr;
+		itemPtr != NULL; lastPtr = itemPtr, itemPtr = itemPtr->nextPtr) {
 	    searchPtr->expr->index = 0;
 	    if (TagSearchEvalExpr(searchPtr->expr, itemPtr)) {
-            searchPtr->lastPtr = lastPtr;
-            searchPtr->currentPtr = itemPtr;
-            return itemPtr;
-        }
-        }
+		searchPtr->lastPtr = lastPtr;
+		searchPtr->currentPtr = itemPtr;
+		return itemPtr;
+	    }
+	}
     }
     searchPtr->lastPtr = lastPtr;
     searchPtr->searchOver = 1;
@@ -3794,7 +3805,7 @@ TagSearchNext(searchPtr)
         itemPtr = lastPtr->nextPtr;
     }
 
-    if (searchPtr->type == 2) {
+    if (searchPtr->type == SEARCH_TYPE_ALL) {
 
         /*
          * All items match.
@@ -3805,7 +3816,7 @@ TagSearchNext(searchPtr)
         return itemPtr;
     }
 
-    if (searchPtr->type == 3) {
+    if (searchPtr->type == SEARCH_TYPE_TAG) {
 
         /*
          * Optimized single-tag search
