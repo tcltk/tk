@@ -631,6 +631,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 		fi
 		AC_MSG_RESULT(Using $CC for compiling with threads)
 	    fi
+	    LIBS="$LIBS -lc"
 	    # AIX-5 uses ELF style dynamic libraries
 	    SHLIB_CFLAGS=""
 	    SHLIB_LD="/usr/ccs/bin/ld -G -z text"
@@ -668,8 +669,9 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 		fi
 		AC_MSG_RESULT(Using $CC for compiling with threads)
 	    fi
+	    LIBS="$LIBS -lc"
 	    SHLIB_CFLAGS=""
-	    SHLIB_LD="$fullSrcDir/ldAix /bin/ld -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+	    SHLIB_LD="${TCL_SRC_DIR}/unix/ldAix /bin/ld -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
 	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
