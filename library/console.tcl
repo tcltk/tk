@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.8.2.5 2002/03/01 00:03:57 dgp Exp $
+# RCS: @(#) $Id: console.tcl,v 1.8.2.6 2002/06/22 08:52:24 hobbs Exp $
 #
 # Copyright (c) 1998-1999 Scriptics Corp.
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
@@ -27,9 +27,9 @@ namespace eval ::tk::console {
     variable defaultPrompt  ; # default prompt if tcl_prompt1 isn't used
 
     if {$inPlugin} {
-	set defaultPrompt {subst "[history nextid] % "}
+	set defaultPrompt {subst {[history nextid] % }}
     } else {
-	set defaultPrompt {subst "([file tail [pwd]]) [history nextid] % "}
+	set defaultPrompt {subst {([file tail [pwd]]) [history nextid] % }}
     }
 }
 
@@ -309,6 +309,7 @@ proc tkConsoleBind {w} {
 	<<Console_PrevSearch>>		<Control-Key-r>
 	<<Console_NextSearch>>		<Control-Key-s>
 
+	<<Console_Expand>>		<Key-Tab>
 	<<Console_Expand>>		<Key-Escape>
 	<<Console_ExpandFile>>		<Control-Shift-Key-F>
 	<<Console_ExpandProc>>		<Control-Shift-Key-P>
@@ -328,11 +329,6 @@ proc tkConsoleBind {w} {
 	bind Console $key {}
     }
 
-    bind Console <Tab> {
-	tkConsoleInsert %W \t
-	focus %W
-	break
-    }
     bind Console <<Console_Expand>> {
 	if {[%W compare insert > promptEnd]} {::tk::console::Expand %W}
     }
