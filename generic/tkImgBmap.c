@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.8 1999/04/21 21:53:26 rjohnson Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.9 1999/04/24 01:50:47 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -512,6 +512,15 @@ TkGetBitmapData(interp, string, fileName, widthPtr, heightPtr,
 	    }
 	    return NULL;
 	}
+	
+        if (Tcl_SetChannelOption(interp, pi.chan, "-translation", "binary")
+		!= TCL_OK) {
+            return NULL;
+        }
+        if (Tcl_SetChannelOption(interp, pi.chan, "-encoding", "binary")
+		!= TCL_OK) {
+            return NULL;
+        }
     } else {
 	pi.chan = NULL;
     }

@@ -1,3 +1,24 @@
+1999-04-23    <stanton@scriptics.com>
+
+	* generic/tkInt.decls: Added TkClipBox, XDrawSegments, and
+	XForceScreenSaver to stubs.
+
+	* generic/tkStubLib.c: Reordered declarations to avoid
+	circularities and forward references.
+
+	* generic/tkStubInit.c: Added includes for Mac.
+
+	* generic/tkMenubutton.c: lint
+
+	* generic/tkEntry.c: Fixed bad option table entry.
+
+1999-04-22    <redman@scriptics.com>
+
+	* generic/tkImgBmap.c:
+	* generic/tkImgPPM.c:
+	* generic/tkImgPhoto.c: Set the -translation and -encoding options
+	to binary for image files. (reported by Marco Gazzetta)
+	
 1999-04-20    <redman@scriptics.com>
 
 	* xlib/X11/Xlib.h: changed definition of Status type to use a

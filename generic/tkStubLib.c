@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.3 1999/04/16 01:51:22 stanton Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.4 1999/04/24 01:50:50 stanton Exp $
  */
 
 /*
@@ -31,11 +31,14 @@
 #endif
 #undef USE_TK_STUB_PROCS
 
-#include "tkInt.h"
 #include "tkPort.h"
+#include "tkInt.h"
 
 #ifdef __WIN32__
 #include "tkWinInt.h"
+#endif
+#ifdef MAC_TCL
+#include "tkMacInt.h"
 #endif
 
 #include "tkDecls.h"

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.3 1999/04/16 01:51:19 stanton Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.4 1999/04/24 01:50:49 stanton Exp $
  */
 
 #include "tkMenubutton.h"
@@ -148,7 +148,7 @@ static char *commandNames[] = {
 };
 
 enum command {
-    COMMAND_CGET, COMMAND_CONFIGURE, 
+    COMMAND_CGET, COMMAND_CONFIGURE
 };
 
 /*
