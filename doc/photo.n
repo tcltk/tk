@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: photo.n,v 1.12 2002/06/22 00:37:16 dkf Exp $
+'\" RCS: @(#) $Id: photo.n,v 1.13 2002/12/17 15:28:19 dkf Exp $
 '\" 
 .so man.macros
 .TH photo n 4.0 Tk "Tk Built-In Commands"
@@ -241,12 +241,13 @@ image as a list of three integers between 0 and 255, representing the
 red, green and blue components respectively.
 .TP
 \fIimageName \fBput\fR \fIdata\fR ?\fIoption value(s) ...\fR?
-Sets pixels in \fI imageName\fR to the data specified in
-\fIdata\fR. This command first searches the list of image file
-format handlers for a handler that can interpret the data
-in \fIdata\fR, and then reads the image in \fIfilename\fR into
-\fIimageName\fR (the destination image). The following options
-may be specified:
+Sets pixels in \fI imageName\fR to the data specified in \fIdata\fR.
+This command first searches the list of image file format handlers for
+a handler that can interpret the data in \fIdata\fR, and then reads
+the image encoded within into \fIimageName\fR (the destination image).
+Note that \fIdata\fR may also be a single color name if you wish to
+fill a rectangular region with that color.  The following options may
+be specified:
 .RS
 .TP
 \fB\-format \fIformat-name\fR
