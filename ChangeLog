@@ -1,5 +1,8 @@
 2003-02-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/tk.tcl (::tk::TabToWindow): auto-highlight spinboxes as
+	well as entries when tabbing in. [Patch #683813] (bron)
+
 	* library/xmfbox.tcl (::tk::MotifFDialog_ActivateSEnt): correct
 	sub on embedded newlines. [Patch #688572] (bonfield)
 
