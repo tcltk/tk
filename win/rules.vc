@@ -10,7 +10,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: rules.vc,v 1.2 2002/03/28 23:23:03 davygrvy Exp $
+# RCS: @(#) $Id: rules.vc,v 1.3 2002/06/14 14:43:18 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !ifndef _RULES_VC
@@ -46,7 +46,7 @@ MACHINE		= IX86
 #----------------------------------------------------------
 
 ### test for optimizations
-!if [nmakehlp -c -Ox]
+!if [nmakehlp -c -Otip]
 !message *** Compiler has 'Optimizations'
 OPTIMIZING	= 1
 !else
