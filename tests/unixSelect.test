@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: unixSelect.test,v 1.7 2002/10/01 08:48:09 dkf Exp $
+# RCS: @(#) $Id: unixSelect.test,v 1.8 2003/01/14 19:24:51 jenglish Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -348,6 +348,16 @@ test unixSelect-1.19 {TkSelGetSelection procedure: INCR i18n text, utf-8} {unixO
     list [string equal i[string repeat [string repeat \u00c4\u00e4 50]\n 21] $x] \
 	    [string length $x] [string bytelength $x]
 } {1 2122 4222}
+test unixSelect-1.20 {Automatic UTF8_STRING support for selection handle} {unixOnly} {
+    # See Bug #666346 "Selection handling crashes under KDE 3.0"
+    label .l 
+    selection handle .l  [list handler STRING]
+    set selValue "This is the selection value"
+    selection own .l
+    set result [selection get -type UTF8_STRING]
+    destroy .l
+    set result
+} "This is the selection value"
 
 # cleanup
 ::tcltest::cleanupTests

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.12 2002/08/31 06:12:26 das Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.13 2003/01/14 19:24:56 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -200,9 +200,10 @@ Tk_CreateSelHandler(tkwin, selection, target, proc, clientData, format)
 		     * The clientData is selection controlled memory, so
 		     * we should make a copy for this selPtr.
 		     */
-		    selPtr->clientData =
-			(ClientData) ckalloc(sizeof(clientData));
-		    memcpy(selPtr->clientData, clientData, sizeof(clientData));
+		    unsigned cmdInfoLen = sizeof(CommandInfo) + 
+			    ((CommandInfo*)clientData)->cmdLength - 3;
+		    selPtr->clientData = (ClientData)ckalloc(cmdInfoLen);
+		    memcpy(selPtr->clientData, clientData, cmdInfoLen);
 		} else {
 		    selPtr->clientData = clientData;
 		}
