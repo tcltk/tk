@@ -1,6 +1,37 @@
+2001-08-24  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkWindow.c (Tk_DestroyWindow): changed to use
+	Tcl_EventuallyFree instead of ckfree so that widgets that have
+	references to a tkwin can use them.
+
+	* generic/tkCanvArc.c:
+	* generic/tkCanvBmap.c:
+	* generic/tkCanvLine.c:
+	* generic/tkCanvPoly.c:
+	* generic/tkCanvText.c:
+	* generic/tkCanvWind.c:
+	* generic/tkRectOval.c: corrected argument handling in
+	Create<Item> functions that could lead to ABRs or FMRs and
+	corrected names of argc/argv to objc/objv.
+
+	* generic/tkImgGIF.c (Mgetc): corrected screwy use of ternary
+	operator and possible FMR.
+
+	* tests/listbox.test: 
+	* generic/tkListbox.c: made use of Tcl_Preserve/Tcl_Release to
+	prevent FMR errors in Display functions.
+	* generic/tkEntry.c: corrected missing Tcl_Release that caused
+	font not freed complaints when trying valid cleanup calls.
+
+	* generic/tkEntry.c (DestroyEntry): used Tcl_EventuallyFree
+	instead of ckfree for entryPtr to prevent FMRs. [Bug #413904]
+
+	* unix/tkUnixScale.c (TkpDisplayScale): corrected FMR when scale
+	was deleted while calling its command.
+
 2001-08-24  Don Porter <dgp@users.sourceforge.net>
 
-        * tests/dialog.test:  New file testing [tk_dialog].
+	* tests/dialog.test:  New file testing [tk_dialog].
 
 2001-08-23  Jeff Hobbs  <jeffh@ActiveState.com>
 
