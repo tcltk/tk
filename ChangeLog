@@ -1,3 +1,15 @@
+2002-09-27  Don Porter <dgp@users.sf.net>
+
+	* README:		Bumped to version 8.4.1 to avoid confusion
+	* generic/tk.h:		of CVS snapshots with release 8.4.0.
+	* unix/README:
+	* unix/configure.in:
+	* unix/tk.spec
+	* win/configure.in:
+
+	* unix/configure:	autoconf
+	* win/configure:
+
 2002-09-26  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/configure: regen.
