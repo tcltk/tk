@@ -5,18 +5,15 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: window.test,v 1.5 2002/07/12 13:41:01 dgp Exp $
+# RCS: @(#) $Id: window.test,v 1.6 2002/07/13 20:28:36 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-namespace import -force tcltest::testConstraint
-eval tcltest::configure $argv
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
 update
 
 # XXX This file is woefully incomplete.  Right now it only tests

@@ -1,31 +1,12 @@
 package require Tcl 8.4
-package require Tk 8.4
-package require tcltest 2.1
-namespace import -force tcltest::testConstraint
-testConstraint userInteraction 0
-testConstraint altDisplay [info exists env(TK_ALT_DISPLAY)]
-testConstraint noExceed [expr {![testConstraint unix]
-			|| [catch {font actual "\{xyz"}]}]
-testConstraint testImageType [expr {[lsearch [image types] test] >= 0}]
-testConstraint fonts 1
-destroy .e
-entry .e -width 0 -font {Helvetica -12} -bd 1
-.e insert end a.bcd
-if {([winfo reqwidth .e] != 37) || ([winfo reqheight .e] != 20)} {
-    testConstraint fonts 0
-}
-destroy .e
-text .t -width 80 -height 20 -font {Times -14} -bd 1
-pack .t
-.t insert end "This is\na dot."
-update
-set x [list [.t bbox 1.3] [.t bbox 2.5]]
-destroy .t
-if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
-    testConstraint fonts 0
-}
 
-namespace eval ::tk {
+package require Tk 8.4
+tk appname tktest
+wm title . tktest
+
+package require tcltest 2.1
+
+namespace eval tk {
     if {[namespace exists test]} {
 	namespace delete test
     }
@@ -110,8 +91,47 @@ namespace eval ::tk {
 	Export bg::setup as setupbg
 	Export bg::cleanup as cleanupbg
 	Export bg::do as dobg
+
+	namespace export deleteWindows
+	proc deleteWindows {} {
+	    eval destroy [winfo children .]
+	}
     }
 }
 
-namespace import -force ::tk::test::*
+namespace import -force tk::test::*
+
+namespace import -force tcltest::testConstraint
+testConstraint userInteraction 0
+testConstraint nonUnixUserInteraction [expr {[testConstraint userInteraction]
+                                                || [testConstraint unix]}]
+testConstraint altDisplay [info exists env(TK_ALT_DISPLAY)]
+testConstraint noExceed [expr {![testConstraint unix]
+			|| [catch {font actual "\{xyz"}]}]
+testConstraint testImageType [expr {[lsearch [image types] test] >= 0}]
+testConstraint fonts 1
+destroy .e
+entry .e -width 0 -font {Helvetica -12} -bd 1
+.e insert end a.bcd
+if {([winfo reqwidth .e] != 37) || ([winfo reqheight .e] != 20)} {
+    testConstraint fonts 0
+}
+destroy .e
+destroy .t
+text .t -width 80 -height 20 -font {Times -14} -bd 1
+pack .t
+.t insert end "This is\na dot."
+update
+set x [list [.t bbox 1.3] [.t bbox 2.5]]
+destroy .t
+if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
+    testConstraint fonts 0
+}
+
+eval tcltest::configure $argv
+namespace import -force tcltest::test
+
+deleteWindows
+wm geometry . {}
+raise .
 

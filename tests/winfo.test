@@ -6,18 +6,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winfo.test,v 1.7 2002/07/12 13:41:01 dgp Exp $
+# RCS: @(#) $Id: winfo.test,v 1.8 2002/07/13 20:28:36 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-namespace import -force tcltest::testConstraint
-eval tcltest::configure $argv
-
-foreach i [winfo children .] {
-    catch {destroy $i}
-}
-wm geometry . {}
-raise .
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 # Some tests require the testwrapper command
 testConstraint testwrapper [llength [info commands testwrapper]]
@@ -247,7 +243,7 @@ test winfo-9.5 {"winfo viewable" command} {
     list [winfo viewable .f1] [winfo viewable .f1.f2]
 } {1 1}
 test winfo-9.6 {"winfo viewable" command} {
-    eval destroy [winfo child .]
+    deleteWindows
     frame .f1 -width 100 -height 100 -relief raised -bd 2
     frame .f1.f2 -width 50 -height 50 -relief raised -bd 2
     place .f1.f2 -x 0 -y 0
@@ -255,7 +251,7 @@ test winfo-9.6 {"winfo viewable" command} {
     list [winfo viewable .f1] [winfo viewable .f1.f2]
 } {0 0}
 test winfo-9.7 {"winfo viewable" command} {
-    eval destroy [winfo child .]
+    deleteWindows
     frame .f1 -width 100 -height 100 -relief raised -bd 2
     place .f1 -x 0 -y 0
     frame .f1.f2 -width 50 -height 50 -relief raised -bd 2
@@ -265,7 +261,7 @@ test winfo-9.7 {"winfo viewable" command} {
     list [winfo viewable .f1] [winfo viewable .f1.f2]
 } {0 0}
 wm deiconify .
-eval destroy [winfo child .]
+deleteWindows
 
 test winfo-10.1 {"winfo visualid" command} {
     list [catch {winfo visualid} msg] $msg
@@ -329,9 +325,7 @@ test winfo-13.2 {destroying embedded toplevel} {
     expr [winfo exists .emb.b] || [winfo exists .con]
 } 0
 
-foreach i [winfo children .] {
-    destroy $i
-}
+deleteWindows
 
 test winfo-13.3 {destroying container window} {
     MakeEmbed
@@ -343,9 +337,7 @@ test winfo-13.3 {destroying container window} {
     set z
 } 0
 
-foreach i [winfo children .] {
-    destroy $i
-}
+deleteWindows
 
 test winfo-13.4 {[winfo containing] with embedded windows} {
     MakeEmbed
@@ -381,11 +373,7 @@ test winfo-14.4 {mapped at idle time} {
     winfo ismapped .t
 } 1
 
-
-foreach i [winfo children .] {
-    catch {destroy $i}
-}
-
+deleteWindows
 # cleanup
 ::tcltest::cleanupTests
 return

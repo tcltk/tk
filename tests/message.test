@@ -6,11 +6,14 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: message.test,v 1.1 2000/08/02 01:33:34 ericm Exp $
+# RCS: @(#) $Id: message.test,v 1.2 2002/07/13 20:28:35 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 option add *Message.borderWidth 2
 option add *Message.highlightThickness 2

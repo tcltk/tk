@@ -6,22 +6,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scale.test,v 1.11 2002/07/13 00:30:25 dgp Exp $
+# RCS: @(#) $Id: scale.test,v 1.12 2002/07/13 20:28:35 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-namespace import -force tcltest::testsDirectory
 namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
 configure -testdir [file join [pwd] [file dirname [info script]]]
 configure -loadfile [file join [testsDirectory] constraints.tcl]
 tcltest::loadTestedCommands
-eval configure $argv
-
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
 
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
@@ -623,7 +615,7 @@ test scale-11.1 {ScaleEventProc procedure} {
     set x
 } {initial 1 0 {}}
 test scale-11.2 {ScaleEventProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     scale .s1 -bg #543210
     rename .s1 .s2
     set x {}
@@ -634,7 +626,7 @@ test scale-11.2 {ScaleEventProc procedure} {
 } {.s1 #543210 {} {}}
 
 test scale-12.1 {ScaleCmdDeletedProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     scale .s1
     rename .s1 {}
     list [info command .s*] [winfo children .]
@@ -791,7 +783,7 @@ test scale-15.6 {ScaleVarProc procedure, don't call -command} {
 } {untouched 60}
 
 set l [interp hidden]
-eval destroy [winfo children .]
+deleteWindows
 
 test scale-16.1 {scale widget vs hidden commands} {
     catch {destroy .s}

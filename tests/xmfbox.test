@@ -10,13 +10,16 @@
 # Contributions from Don Porter, NIST, 2002.  (not subject to US copyright)
 # All rights reserved.
 #
-# RCS: @(#) $Id: xmfbox.test,v 1.6 2002/07/12 13:41:01 dgp Exp $
+# RCS: @(#) $Id: xmfbox.test,v 1.7 2002/07/13 20:28:36 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::test
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 set testPWD [pwd]
-eval destroy [winfo children .]
 catch {unset foo}
 
 catch {unset data foo}

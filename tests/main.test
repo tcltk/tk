@@ -8,30 +8,33 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: main.test,v 1.5 1999/04/16 01:51:39 stanton Exp $
+# RCS: @(#) $Id: main.test,v 1.6 2002/07/13 20:28:35 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
-test main-1.1 {StdinProc} {unixOnly} {
-    catch {removeFile script}
-    set fd [open script w]
-    puts $fd {
+namespace import -force tcltest::interpreter
+namespace import -force tcltest::makeFile
+namespace import -force tcltest::removeFile
+
+test main-1.1 {StdinProc} {unix} {
+    set script [makeFile {
 	close stdin; exit
-    }
-    close $fd
-    if {[catch {exec $::tcltest::tktest <script} msg]} {
+    } script]
+    if {[catch {exec [interpreter] <$script} msg]} {
 	set error 1
     } else {
 	set error 0
     }
-    file delete -force script
+    removeFile script
     list $error $msg
 } {0 {}}
 
 # cleanup
-catch {removeFile script}
 ::tcltest::cleanupTests
 return
 

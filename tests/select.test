@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: select.test,v 1.8 2002/07/13 00:30:25 dgp Exp $
+# RCS: @(#) $Id: select.test,v 1.9 2002/07/13 20:28:35 dgp Exp $
 
 #
 # Note: Multiple display selection handling will only be tested if the
@@ -14,16 +14,13 @@
 #
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-namespace import -force tcltest::testsDirectory
 namespace import -force tcltest::configure
-namespace import -force tcltest::interpreter
+namespace import -force tcltest::testsDirectory
 configure -testdir [file join [pwd] [file dirname [info script]]]
 configure -loadfile [file join [testsDirectory] constraints.tcl]
 tcltest::loadTestedCommands
-eval configure $argv
 
-eval destroy [winfo child .]
+namespace import -force tcltest::interpreter
 
 global longValue selValue selInfo
 

@@ -7,23 +7,18 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.14 2002/07/12 13:41:01 dgp Exp $
+# RCS: @(#) $Id: wm.test,v 1.15 2002/07/13 20:28:36 dgp Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
 # platform should be placed in unixWm.test or winWm.test.
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-
-proc deleteWindows {} {
-    foreach i [winfo children .] {
-    	destroy $i
-    }
-}
-
-
-deleteWindows
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 wm deiconify .
 if {![winfo ismapped .]} {

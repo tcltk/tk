@@ -7,22 +7,19 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scrollbar.test,v 1.8 2002/07/13 00:30:25 dgp Exp $
+# RCS: @(#) $Id: scrollbar.test,v 1.9 2002/07/13 20:28:35 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-namespace import -force tcltest::testConstraint
-eval tcltest::configure $argv
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 ## testmetrics is a win/mac only test command
 ##
 testConstraint testmetrics [llength [info commands testmetrics]]
 
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
 update
 
 proc scroll args {
@@ -659,7 +656,7 @@ test scrollbar-8.2 {TkScrollbarEventProc: recursive deletion} {
 } {1 0 1}
 
 set l [interp hidden]
-eval destroy [winfo children .]
+deleteWindows
 
 test scrollbar-9.1 {scrollbar widget vs hidden commands} {
     catch {destroy .s}
