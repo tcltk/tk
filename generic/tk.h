@@ -1552,7 +1552,7 @@ EXTERN int		Tk_WmCmd _ANSI_ARGS_((ClientData clientData,
 
 #endif /* RESOURCE_INCLUDED */
 
-#undef EXPORT
-#define EXPORT DLLIMPORT
+#undef TCL_STORAGE_CLASS
+#define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TK */
