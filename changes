@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.76 2004/12/20 15:38:52 chengyemao Exp $
+RCS: @(#) $Id: changes,v 1.77 2004/12/28 09:04:43 chengyemao Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5913,3 +5913,11 @@ overrideredirect for an embedded window. (chengyemao)
 overrideredirect for an embedded toplevel; correctly updated a frame's upper left
 x and y of an embedded toplevel after its container (of another process) moved.
 (chengyemao) 
+
+2004-12-28 (feature implementatoin of embedded/embedding Tk) Implemented
+embedded/embedding toplevel menu. A menu may be embedded in a container of 
+either the same process of a different process. Need to improve drawing 
+an embedded menu in an different process. Currently, if an embedded menu
+is in a different process, the menu items may not draw at pull-down time
+and require the mouse moves over the menu items to complete display. 
+(chengyemao)
