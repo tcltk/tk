@@ -2,6 +2,8 @@
 
 	* tests/text.test: fix to test's platform sensitivities 
 	[Bug 1025871]
+	* tests/textDisp.test: made test less timing sensitive 
+	[Bug 1034171]
 
 2004-11-19  Daniel Steffen  <das@users.sourceforge.net>
 
