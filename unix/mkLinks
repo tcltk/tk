@@ -587,6 +587,10 @@ if test -r GetScroll.3; then
     rm -f Tk_GetScrollInfo.3
     ln GetScroll.3 Tk_GetScrollInfo.3
 fi
+if test -r GetScroll.3; then
+    rm -f Tk_GetScrollInfoObj.3
+    ln GetScroll.3 Tk_GetScrollInfoObj.3
+fi
 if test -r GetSelect.3; then
     rm -f Tk_GetSelection.3
     ln GetSelect.3 Tk_GetSelection.3

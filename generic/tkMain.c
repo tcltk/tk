@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.7 1999/12/08 00:11:54 redman Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.8 2000/04/25 17:25:27 ericm Exp $
  */
 
 #include <ctype.h>
@@ -72,7 +72,7 @@ static void		StdinProc _ANSI_ARGS_((ClientData clientData,
 /*
  *----------------------------------------------------------------------
  *
- * TkMainEx --
+ * Tk_MainEx --
  *
  *	Main program for Wish and most other Tk-based applications.
  *
