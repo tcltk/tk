@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.23 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.24 2003/02/21 14:40:26 dkf Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -201,15 +201,10 @@ proc ::tk::MessageBox {args} {
 		    yesno, or yesnocancel"
 	}
     }
-    
-    set maxWidth [eval mcmaxamp $labels]
-    if {$maxWidth <6} {
-	set maxWidth 6
-    }
 
     set buttons {}
     foreach name $names lab $labels {
-	lappend buttons [list $name -width $maxWidth -text [mc $lab]]
+	lappend buttons [list $name -text [mc $lab]]
     }
 
     # If no default button was specified, the default default is the 
@@ -355,7 +350,9 @@ proc ::tk::MessageBox {args} {
 	} else {
 	    $w.$name configure -default normal
 	}
-	pack $w.$name -in $w.bot -side left -expand 1 -padx 3m -pady 2m
+	grid $w.$name -in $w.bot -row 0 -column $i -padx 3m -pady 2m -sticky ew
+	grid columnconfigure $w.bot $i -weight 1 -uniform buttons
+        incr i
 
 	# create the binding for the key accelerator, based on the underline
 	#
@@ -365,7 +362,6 @@ proc ::tk::MessageBox {args} {
         #     bind $w <Alt-[string tolower $key]>  [list $w.$name invoke]
         #     bind $w <Alt-[string toupper $key]>  [list $w.$name invoke]
         # }
-        # incr i
     }
     bind $w <Alt-Key> [list ::tk::AltKeyInDialog $w %A]
 
