@@ -4,8 +4,9 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.4 1999/04/16 01:51:26 stanton Exp $
+# RCS: @(#) $Id: console.tcl,v 1.5 1999/05/22 01:59:21 stanton Exp $
 #
+# Copyright (c) 1998-1999 Scriptics Corp.
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
@@ -470,7 +471,7 @@ proc tkConsoleExit {} {
 proc tkConsoleAbout {} {
     global tk_patchLevel
     tk_messageBox -type ok -message "Tcl for Windows
-Copyright \251 1996 Sun Microsystems, Inc.
+Copyright \251 1999 Scriptics Corporation
 
 Tcl [info patchlevel]
 Tk $tk_patchLevel"
