@@ -1,3 +1,8 @@
+2001-10-09  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/console.tcl:  added more smarts extracted from tkcon to
+	the default console.
+
 2001-10-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/bgerror.tcl: back-ported bgerror dialog from 8.4 (that
