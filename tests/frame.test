@@ -7,19 +7,11 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: frame.test,v 1.12 2004/06/06 11:28:14 patthoyts Exp $
+# RCS: @(#) $Id: frame.test,v 1.13 2004/06/17 22:38:57 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
-
-testConstraint haveDISPLAY [info exists env(DISPLAY)]
-testConstraint edibleColors [expr {
-    ([winfo visual .] == "pseudocolor") && ([winfo depth .] == 8)
-}]
-testConstraint haveGrayscale8 [expr {
-    [lsearch -exact [winfo visualsavailable .] {grayscale 8}] >= 0
-}]
 
 # eatColors --
 # Creates a toplevel window and allocates enough colors in it to
@@ -349,28 +341,29 @@ test frame-3.10 {TkCreateFrame procedure, -use option} -setup {
     option clear
 } -result {0 0 140 300}
 
-# The tests below require specific display characteristics.  Even so,
-# they are non-portable:  some machines don't seem to ever run out of
+# The tests below require specific display characteristics (i.e. that
+# they are run on a pseudocolor display of depth 8).  Even so, they
+# are non-portable: some machines don't seem to ever run out of
 # colors.
 
-if {[testConstraint edibleColors]} {
+if {[testConstraint defaultPseudocolor8]} {
     eatColors .t1
 }
-test frame-3.11 {TkCreateFrame procedure} {edibleColors nonPortable} {
+test frame-3.11 {TkCreateFrame procedure} {defaultPseudocolor8 nonPortable} {
     catch {destroy .t}
     toplevel .t -width 300 -height 200 -bg #475601
     wm geometry .t +0+0
     update
     colorsFree .t
 } {0}
-test frame-3.12 {TkCreateFrame procedure} {edibleColors nonPortable} {
+test frame-3.12 {TkCreateFrame procedure} {defaultPseudocolor8 nonPortable} {
     catch {destroy .t}
     toplevel .t -width 300 -height 200 -bg #475601 -colormap new
     wm geometry .t +0+0
     update
     colorsFree .t
 } {1}
-test frame-3.13 {TkCreateFrame procedure} {edibleColors nonPortable} {
+test frame-3.13 {TkCreateFrame procedure} {defaultPseudocolor8 nonPortable} {
     catch {destroy .t}
     option add *t.class Toplevel2
     option add *Toplevel2.colormap new
@@ -380,7 +373,7 @@ test frame-3.13 {TkCreateFrame procedure} {edibleColors nonPortable} {
     option clear
     colorsFree .t
 } {1}
-test frame-3.14 {TkCreateFrame procedure} {edibleColors nonPortable} {
+test frame-3.14 {TkCreateFrame procedure} {defaultPseudocolor8 nonPortable} {
     catch {destroy .t}
     option add *t.class Toplevel3
     option add *Toplevel3.Colormap new
@@ -393,7 +386,7 @@ test frame-3.14 {TkCreateFrame procedure} {edibleColors nonPortable} {
 test frame-3.15 {TkCreateFrame procedure, -use and -colormap} -setup {
     catch {destroy .t}
     catch {destroy .x}
-} -constraints {edibleColors unixOnly nonPortable} -body {
+} -constraints {defaultPseudocolor8 unixOnly nonPortable} -body {
     toplevel .t -container 1 -width 300 -height 120
     wm geometry .t +0+0
     toplevel .x -width 140 -height 300 -use [winfo id .t] -bg green -colormap new
@@ -402,14 +395,14 @@ test frame-3.15 {TkCreateFrame procedure, -use and -colormap} -setup {
 } -cleanup {
     destroy .t
 } -result {0 1}
-test frame-3.16 {TkCreateFrame procedure} {edibleColors nonPortable} {
+test frame-3.16 {TkCreateFrame procedure} {defaultPseudocolor8 nonPortable} {
     catch {destroy .t}
     toplevel .t -width 300 -height 200 -bg #475601 -visual default
     wm geometry .t +0+0
     update
     colorsFree .t
 } {0}
-test frame-3.17 {TkCreateFrame procedure} {edibleColors nonPortable} {
+test frame-3.17 {TkCreateFrame procedure} {defaultPseudocolor8 nonPortable} {
     catch {destroy .t}
     toplevel .t -width 300 -height 200 -bg #475601 -visual default \
 	    -colormap new
@@ -417,14 +410,14 @@ test frame-3.17 {TkCreateFrame procedure} {edibleColors nonPortable} {
     update
     colorsFree .t
 } {1}
-test frame-3.18 {TkCreateFrame procedure} {edibleColors haveGrayscale8 nonPortable} {
+test frame-3.18 {TkCreateFrame procedure} {defaultPseudocolor8 haveGrayscale8 nonPortable} {
     catch {destroy .t}
     toplevel .t -visual {grayscale 8} -width 300 -height 200 -bg #434343 
     wm geometry .t +0+0
     update
     colorsFree .t 131 131 131
 } {1}
-test frame-3.19 {TkCreateFrame procedure} {edibleColors haveGrayscale8 nonPortable} {
+test frame-3.19 {TkCreateFrame procedure} {defaultPseudocolor8 haveGrayscale8 nonPortable} {
     catch {destroy .t}
     option add *t.class T4
     option add *T4.visual {grayscale 8}
@@ -434,7 +427,7 @@ test frame-3.19 {TkCreateFrame procedure} {edibleColors haveGrayscale8 nonPortab
     option clear
     list [colorsFree .t 131 131 131] [lindex [.t configure -visual] 4]
 } {1 {grayscale 8}}
-test frame-3.20 {TkCreateFrame procedure} {edibleColors haveGrayscale8 nonPortable} {
+test frame-3.20 {TkCreateFrame procedure} {defaultPseudocolor8 haveGrayscale8 nonPortable} {
     catch {destroy .t}
     set x ok
     option add *t.class T5
@@ -445,7 +438,7 @@ test frame-3.20 {TkCreateFrame procedure} {edibleColors haveGrayscale8 nonPortab
     option clear
     list [colorsFree .t 131 131 131] [lindex [.t configure -visual] 4]
 } {1 {grayscale 8}}
-test frame-3.21 {TkCreateFrame procedure} {edibleColors haveGrayscale8 nonPortable} {
+test frame-3.21 {TkCreateFrame procedure} {defaultPseudocolor8 haveGrayscale8 nonPortable} {
     catch {destroy .t}
     set x ok
     toplevel .t -visual {grayscale 8} -width 300 -height 200 -bg #434343 
@@ -453,7 +446,7 @@ test frame-3.21 {TkCreateFrame procedure} {edibleColors haveGrayscale8 nonPortab
     update
     colorsFree .t 131 131 131
 } {1}
-if {[testConstraint edibleColors]} {
+if {[testConstraint defaultPseudocolor8]} {
     destroy .t1
 }
 test frame-3.22 {TkCreateFrame procedure, default dimensions} -setup {

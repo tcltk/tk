@@ -5,12 +5,46 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clrpick.test,v 1.10 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: clrpick.test,v 1.11 2004/06/17 22:38:57 dkf Exp $
 #
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+if {[testConstraint defaultPseudocolor8]} {
+    # let's soak up a bunch of colors...so that
+    # machines with small color palettes still fail.
+    # some tests will be skipped if there are no more colors
+    set numcolors 32
+    testConstraint colorsLeftover 1
+    set i 0
+    canvas .c
+    pack .c -expand 1 -fill both
+    while {$i<$numcolors} {
+	set color \#[format "%02x%02x%02x" $i [expr $i+1] [expr $i+3]]
+	.c create rectangle [expr 10+$i] [expr 10+$i] [expr 50+$i] [expr 50+$i] -fill $color -outline $color
+	incr i
+    }
+    set i 0
+    while {$i<$numcolors} {
+	set color [.c itemcget $i -fill]
+	if {$color != ""} {
+	    foreach {r g b} [winfo rgb . $color] {}
+	    set r [expr $r/256]
+	    set g [expr $g/256]
+	    set b [expr $b/256]
+	    if {"$color" != "#[format %02x%02x%02x $r $g $b]"} {
+		testConstraint colorsLeftover 0
+	    }
+	}
+	.c delete $i
+	incr i
+    }
+    destroy .c
+} else {
+    testConstraint colorsLeftover 0
+}
 
 test clrpick-1.1 {tk_chooseColor command} {
     list [catch {tk_chooseColor -foo} msg] $msg
@@ -31,19 +65,15 @@ foreach option $options {
 test clrpick-1.3 {tk_chooseColor command} {
     list [catch {tk_chooseColor -foo bar} msg] $msg
 } {1 {bad option "-foo": must be -initialcolor, -parent, or -title}}
-
 test clrpick-1.4 {tk_chooseColor command} {
     list [catch {tk_chooseColor -initialcolor} msg] $msg
 } {1 {value for "-initialcolor" missing}}
-
 test clrpick-1.5 {tk_chooseColor command} {
     list [catch {tk_chooseColor -parent foo.bar} msg] $msg
 } {1 {bad window path name "foo.bar"}}
-
 test clrpick-1.6 {tk_chooseColor command} {
     list [catch {tk_chooseColor -initialcolor badbadbaadcolor} msg] $msg
 } {1 {unknown color name "badbadbaadcolor"}}
-
 test clrpick-1.7 {tk_chooseColor command} {
     list [catch {tk_chooseColor -initialcolor ##badbadbaadcolor} msg] $msg
 } {1 {invalid color name "##badbadbaadcolor"}}
@@ -126,37 +156,6 @@ set verylongstring $verylongstring$verylongstring
 #set verylongstring $verylongstring$verylongstring
 #set verylongstring $verylongstring$verylongstring
 
-# let's soak up a bunch of colors...so that
-# machines with small color palettes still fail.
-# some tests will be skipped if there are no more colors
-set numcolors 32
-testConstraint colorsLeftover 1
-set i 0
-canvas .c
-pack .c -expand 1 -fill both
-while {$i<$numcolors} {
-    set color \#[format "%02x%02x%02x" $i [expr $i+1] [expr $i+3]]
-    .c create rectangle [expr 10+$i] [expr 10+$i] [expr 50+$i] [expr 50+$i] -fill $color -outline $color
-    incr i
-}
-set i 0
-while {$i<$numcolors} {
-    set color [.c itemcget $i -fill]
-    if {$color != ""} {
-	foreach {r g b} [winfo rgb . $color] {}
-	set r [expr $r/256]
-	set g [expr $g/256]
-	set b [expr $b/256]
-	if {"$color" != "#[format %02x%02x%02x $r $g $b]"} {
-	    testConstraint colorsLeftover 0
-	}
-    }
-    .c delete $i
-    incr i
-}
-
-destroy .c
-
 set color #404040
 test clrpick-2.1 {tk_chooseColor command} \
 	{nonUnixUserInteraction colorsLeftover} {
@@ -164,7 +163,6 @@ test clrpick-2.1 {tk_chooseColor command} \
     tk_chooseColor -title "Press Ok $verylongstring" -initialcolor $color \
 	    -parent $parent
 } "$color"
-
 set color #808040
 test clrpick-2.2 {tk_chooseColor command} \
 	{nonUnixUserInteraction colorsLeftover} {
@@ -172,13 +170,11 @@ test clrpick-2.2 {tk_chooseColor command} \
     ToChooseColorByKey $parent 128 128 64
     tk_chooseColor -parent $parent -title "choose $colors"
 } "$color"
-
 test clrpick-2.3 {tk_chooseColor command} \
 	{nonUnixUserInteraction colorsLeftover} {
     ToPressButton $parent ok
     tk_chooseColor -parent $parent -title "Press OK"
 } "$color"
-
 test clrpick-2.4 {tk_chooseColor command} {nonUnixUserInteraction} {
     ToPressButton $parent cancel
     tk_chooseColor -parent $parent -title "Press Cancel"
