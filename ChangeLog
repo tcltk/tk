@@ -2,6 +2,7 @@
 
 	* generic/tkPort.h:
 	* unix/Makefile.in:
+	* win/makefile.bc: 
 	* win/Makefile.in: followup on tcl header reform [FR 922727]:
 	removed use of relative #include paths in tkPort.h to allow
 	installation of private headers outside of tk source tree; added
