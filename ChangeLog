@@ -1,3 +1,7 @@
+2002-06-11  Joe English  <jenglish@users.sf.net>
+	* library/menu.tcl: fix for bug report #530212 "Bad Window Path 
+	  Name in tkMenuFind"
+
 2002-06-10  David Gravereaux <davygrvy@pobox.com>
 
 	* win/makefile.vc: Fixed a win98 issue where the /exclude option
