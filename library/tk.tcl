@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.14 1999/11/30 00:02:12 hobbs Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.15 1999/12/03 07:15:02 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -45,19 +45,20 @@ namespace eval ::tk {
 # Results:
 #   Returns nothing
 #
-proc ::tk::PlaceWindow {w {placement ""} {anchor ""}} {
+proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
     wm withdraw $w
     update idletasks
-    if {[string match p* $placement]} {
+    set checkBounds 1
+    if {[string equal -len [string length $place] $place "pointer"]} {
 	## place at POINTER (centered if $anchor == center)
-	if {[string match "c*" $anchor]} {
+	if {[string equal -len [string length $anchor] $anchor "center"]} {
 	    set x [expr {[winfo pointerx $w]-[winfo reqwidth $w]/2}]
 	    set y [expr {[winfo pointery $w]-[winfo reqheight $w]/2}]
 	} else {
 	    set x [winfo pointerx $w]
 	    set y [winfo pointery $w]
 	}
-    } elseif {[string match w* $placement] && \
+    } elseif {[string equal -len [string length $place] $place "widget"] && \
 	    [winfo exists $anchor] && [winfo ismapped $anchor]} {
 	## center about WIDGET $anchor, widget must be mapped
 	set x [expr {[winfo rootx $anchor] + \
@@ -67,6 +68,19 @@ proc ::tk::PlaceWindow {w {placement ""} {anchor ""}} {
     } else {
 	set x [expr {([winfo screenwidth $w]-[winfo reqwidth $w])/2}]
 	set y [expr {([winfo screenheight $w]-[winfo reqheight $w])/2}]
+	set checkBounds 0
+    }
+    if {$checkBounds} {
+	if {$x < 0} {
+	    set x 0
+	} elseif {$x > ([winfo screenwidth $w]-[winfo reqwidth $w])} {
+	    set x [expr {[winfo screenwidth $w]-[winfo reqwidth $w]}]
+	}
+	if {$y < 0} {
+	    set y 0
+	} elseif {$y > ([winfo screenheight $w]-[winfo reqheight $w])} {
+	    set y [expr {[winfo screenheight $w]-[winfo reqheight $w]}]
+	}
     }
     wm geometry $w +$x+$y
     wm deiconify $w
