@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.87 2004/10/27 00:56:33 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.88 2004/11/26 20:53:26 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if !defined(MSDEVDIR) && !defined(MSVCDIR)
@@ -546,13 +546,13 @@ $(TKSTUBLIB): $(TKSTUBOBJS)
 
 
 $(WISH): $(WISHOBJS) $(TKIMPLIB)
-	$(link32) $(guilflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
+	$(link32) $(guilflags) -stack:2300000 -out:$@ $(guilibs) $(TCLIMPLIB) $**
 
 $(WISHC): $(WISHOBJS) $(TKIMPLIB)
-	$(link32) $(conlflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
+	$(link32) $(conlflags) -stack:2300000 -out:$@ $(guilibs) $(TCLIMPLIB) $**
 
 $(TKTEST): $(TKTESTOBJS) $(TKIMPLIB)
-	$(link32) $(guilflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
+	$(link32) $(guilflags) -stack:2300000 -out:$@ $(guilibs) $(TCLIMPLIB) $**
 
 
 $(CAT32): $(_TCLDIR)\win\cat.c
