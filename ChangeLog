@@ -1,6 +1,13 @@
+2003-07-17  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* generic/tkImgPhoto.c (ImgPhotoCmd): Rewrote subcommand processing
+	to never jump to the end of the switch.  I find that confusing as
+	I can't see whether there's processing still to be done from a
+	quick glance at the code, unlike with a direct return. [Bug 771988]
+
 2003-07-16  Don Porter  <dgp@users.sourceforge.net>
 
-        * generic/tkPack.c (ConfigureSlaves): silence compiler warning
+	* generic/tkPack.c (ConfigureSlaves): silence compiler warning
 	[Bug 771982]
 
 2003-07-16  Jeff Hobbs  <jeffh@ActiveState.com>
@@ -59,7 +66,7 @@
 2003-06-26  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* library/menu.tcl: workaround problem on some Windows systems
-        by trying to avoid posting a menu offscreen.
+	by trying to avoid posting a menu offscreen.
 
 2003-06-09  Joe English  <jenglish@users.sourceforge.net>
 
@@ -232,12 +239,12 @@
 
 2003-04-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* generic/tkButton.h:                         Rewrote the handling
+	* generic/tkButton.h:			      Rewrote the handling
 	* generic/tkButton.c (TkButtonWorldChanged):  of compound *buttons
-	* mac/tkMacButton.c (TkpDisplayButton):       to correctly display
+	* mac/tkMacButton.c (TkpDisplayButton):	      to correctly display
 	* macosx/tkMacOSXButton.c (TkpDisplayButton): mixture of disabledfg,
 	* unix/tkUnixButton.c (TkpDisplayButton):     selectcolor, indicator,
-	* win/tkWinButton.c (TkpDisplayButton):       etc.  *buttons will
+	* win/tkWinButton.c (TkpDisplayButton):	      etc.  *buttons will
 	now only stipple the image, unless no disabledfg is given, in which 
 	case it will stipple the whole button.
 
@@ -380,8 +387,8 @@
 
 2003-03-18  Don Porter  <dgp@users.sourceforge.net>
 
-        * tests/unixWm.test (unixWm-41.2): Corrected typo in 2003-03-13
-        commit.  Thanks Larry Virden.  [Bug 705567]
+	* tests/unixWm.test (unixWm-41.2): Corrected typo in 2003-03-13
+	commit.  Thanks Larry Virden.  [Bug 705567]
 
 2003-03-18  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -1233,7 +1240,7 @@
 	* generic/tkImgPhoto.c (ImgPhotoConfigureMaster): fix arg handling
 	for missing -format or -data options. [Bug #624974]
 
-	* tests/text.test:                    properly return the number of
+	* tests/text.test:		      properly return the number of
 	* unix/tkUnixFont.c (ControlUtfProc): bytes consumed. [Bug #624732]
 
 2002-10-17  Daniel Steffen  <das@users.sourceforge.net>
