@@ -1,3 +1,13 @@
+1999-03-01    <redman@scriptics.com>
+
+	* win/tkWinWm.c:
+	* win/tkWinPointer.c:
+	* win/tkWinInt.h: Fix "focus -force" for Windows.  The Win32 API
+	function SetForegroundWindow() does not work unless the window
+	handle is a toplevel window (a Windows toplevel).  The handle
+	being passed was a Tk toplevel, which is a child of the Windows
+	toplevel.
+
 1999-02-26    <redman@scriptics.com>
 
 	* win/cat.c: Remove this file, use the one in the Tcl source directory.
