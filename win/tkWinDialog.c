@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.27 2002/07/11 22:42:40 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.28 2002/08/08 01:42:44 hobbs Exp $
  *
  */
 
@@ -20,13 +20,9 @@
 #include <cderr.h>      /* includes the common dialog error codes */
 
 /*
- * The new choose directory dialog is almost ready for prime time, but
- * it has a very long first load time that needs to be checked to see
- * if it can be sped up, as well as checked for cleanup. -- hobbs
- * See Patch #468139
- *
-#define USE_NEW_CHOOSEDIR 1
+ * This controls the use of the new style tk_chooseDirectory dialog.
  */
+#define USE_NEW_CHOOSEDIR 1
 #ifdef USE_NEW_CHOOSEDIR
 #include <shlobj.h>     /* includes SHBrowseForFolder */
 
