@@ -119,6 +119,7 @@
 				F537552C016C352C01DC9062,
 				F537552D016C352C01DC9062,
 			);
+			hasScannedForEncodings = 1;
 			isa = PBXProject;
 			mainGroup = F537552B016C352C01DC9062;
 			productRefGroup = F53755DD016C38D201DC9062;
@@ -131,6 +132,7 @@
 		};
 		F537552B016C352C01DC9062 = {
 			children = (
+				F92ED9910403D0F0006F146B,
 				F5C88659017D625C01DC9062,
 				F5DF07A7016CD03801DC9062,
 				F5375688016C3F1001DC9062,
@@ -315,36 +317,43 @@
 			refType = 4;
 		};
 		F5375533016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkAboutDlg.r;
 			refType = 4;
 		};
 		F5375534016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXApplication.r;
 			refType = 4;
 		};
 		F5375535016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXCursors.r;
 			refType = 4;
 		};
 		F5375536016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXLibrary.r;
 			refType = 4;
 		};
 		F5375538016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXMenu.r;
 			refType = 4;
 		};
 		F5375539016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXResource.r;
 			refType = 4;
 		};
 		F537553A016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXXCursors.r;
 			refType = 4;
@@ -379,41 +388,49 @@
 			refType = 4;
 		};
 		F537553E016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSX.h;
 			refType = 2;
 		};
 		F537553F016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXDebug.h;
 			refType = 2;
 		};
 		F5375540016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXDefault.h;
 			refType = 2;
 		};
 		F5375541016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXEvent.h;
 			refType = 2;
 		};
 		F5375542016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXInt.h;
 			refType = 2;
 		};
 		F5375543016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXPort.h;
 			refType = 2;
 		};
 		F5375544016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXUtil.h;
 			refType = 2;
 		};
 		F5375545016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXWm.h;
 			refType = 2;
@@ -457,731 +474,858 @@
 			refType = 4;
 		};
 		F5375548016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXAppInit.c;
 			refType = 4;
 		};
 		F5375549016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXBitmap.c;
 			refType = 4;
 		};
 		F537554A016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXButton.c;
 			refType = 4;
 		};
 		F537554B016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXClipboard.c;
 			refType = 4;
 		};
 		F537554C016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXColor.c;
 			refType = 4;
 		};
 		F537554D016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXConfig.c;
 			refType = 4;
 		};
 		F537554E016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXCursor.c;
 			refType = 4;
 		};
 		F537554F016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXDebug.c;
 			refType = 4;
 		};
 		F5375550016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXDialog.c;
 			refType = 4;
 		};
 		F5375551016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXDraw.c;
 			refType = 4;
 		};
 		F5375552016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXEmbed.c;
 			refType = 4;
 		};
 		F5375553016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXEvent.c;
 			refType = 4;
 		};
 		F5375554016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXFont.c;
 			refType = 4;
 		};
 		F5375555016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXHLEvents.c;
 			refType = 4;
 		};
 		F5375556016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXInit.c;
 			refType = 4;
 		};
 		F5375557016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXKeyboard.c;
 			refType = 4;
 		};
 		F5375558016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXKeyEvent.c;
 			refType = 4;
 		};
 		F5375559016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXMenu.c;
 			refType = 4;
 		};
 		F537555A016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXMenubutton.c;
 			refType = 4;
 		};
 		F537555B016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXMenus.c;
 			refType = 4;
 		};
 		F537555C016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXMouseEvent.c;
 			refType = 4;
 		};
 		F537555D016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXNotify.c;
 			refType = 4;
 		};
 		F537555E016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXRegion.c;
 			refType = 4;
 		};
 		F5375560016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXScrlbr.c;
 			refType = 4;
 		};
 		F5375561016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXSend.c;
 			refType = 4;
 		};
 		F5375562016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXSubwindows.c;
 			refType = 4;
 		};
 		F5375563016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXTest.c;
 			refType = 4;
 		};
 		F5375564016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXUtil.c;
 			refType = 4;
 		};
 		F5375565016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXWindowEvent.c;
 			refType = 4;
 		};
 		F5375567016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXWm.c;
 			refType = 4;
 		};
 		F5375568016C376E01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXXStubs.c;
 			refType = 4;
 		};
 		F5375569016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = default.h;
 			path = ../generic/default.h;
 			refType = 2;
 		};
 		F537556A016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = ks_names.h;
 			path = ../generic/ks_names.h;
 			refType = 2;
 		};
 		F537556B016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tk.h;
 			path = ../generic/tk.h;
 			refType = 2;
 		};
 		F537556C016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tk3d.h;
 			path = ../generic/tk3d.h;
 			refType = 2;
 		};
 		F537556D016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkButton.h;
 			path = ../generic/tkButton.h;
 			refType = 2;
 		};
 		F537556E016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkCanvas.h;
 			path = ../generic/tkCanvas.h;
 			refType = 2;
 		};
 		F537556F016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkColor.h;
 			path = ../generic/tkColor.h;
 			refType = 2;
 		};
 		F5375570016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkDecls.h;
 			path = ../generic/tkDecls.h;
 			refType = 2;
 		};
 		F5375571016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkFileFilter.h;
 			path = ../generic/tkFileFilter.h;
 			refType = 2;
 		};
 		F5375572016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkFont.h;
 			path = ../generic/tkFont.h;
 			refType = 2;
 		};
 		F5375573016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkInitScript.h;
 			path = ../generic/tkInitScript.h;
 			refType = 2;
 		};
 		F5375574016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkInt.h;
 			path = ../generic/tkInt.h;
 			refType = 2;
 		};
 		F5375575016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkIntDecls.h;
 			path = ../generic/tkIntDecls.h;
 			refType = 2;
 		};
 		F5375576016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkIntPlatDecls.h;
 			path = ../generic/tkIntPlatDecls.h;
 			refType = 2;
 		};
 		F5375577016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkIntXlibDecls.h;
 			path = ../generic/tkIntXlibDecls.h;
 			refType = 2;
 		};
 		F5375578016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkMenu.h;
 			path = ../generic/tkMenu.h;
 			refType = 2;
 		};
 		F5375579016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkMenubutton.h;
 			path = ../generic/tkMenubutton.h;
 			refType = 2;
 		};
 		F537557A016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkPlatDecls.h;
 			path = ../generic/tkPlatDecls.h;
 			refType = 2;
 		};
 		F537557B016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkPort.h;
 			path = ../generic/tkPort.h;
 			refType = 2;
 		};
 		F537557C016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkScale.h;
 			path = ../generic/tkScale.h;
 			refType = 2;
 		};
 		F537557D016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkScrollbar.h;
 			path = ../generic/tkScrollbar.h;
 			refType = 2;
 		};
 		F537557E016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkSelect.h;
 			path = ../generic/tkSelect.h;
 			refType = 2;
 		};
 		F537557F016C37A601DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkText.h;
 			path = ../generic/tkText.h;
 			refType = 2;
 		};
 		F5375580016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tk3d.c;
 			path = ../generic/tk3d.c;
 			refType = 2;
 		};
 		F5375581016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkArgv.c;
 			path = ../generic/tkArgv.c;
 			refType = 2;
 		};
 		F5375582016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkAtom.c;
 			path = ../generic/tkAtom.c;
 			refType = 2;
 		};
 		F5375583016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkBind.c;
 			path = ../generic/tkBind.c;
 			refType = 2;
 		};
 		F5375584016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkBitmap.c;
 			path = ../generic/tkBitmap.c;
 			refType = 2;
 		};
 		F5375585016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkButton.c;
 			path = ../generic/tkButton.c;
 			refType = 2;
 		};
 		F5375586016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkCanvArc.c;
 			path = ../generic/tkCanvArc.c;
 			refType = 2;
 		};
 		F5375587016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkCanvas.c;
 			path = ../generic/tkCanvas.c;
 			refType = 2;
 		};
 		F5375588016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkCanvBmap.c;
 			path = ../generic/tkCanvBmap.c;
 			refType = 2;
 		};
 		F5375589016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkCanvImg.c;
 			path = ../generic/tkCanvImg.c;
 			refType = 2;
 		};
 		F537558A016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkCanvLine.c;
 			path = ../generic/tkCanvLine.c;
 			refType = 2;
 		};
 		F537558B016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkCanvPoly.c;
 			path = ../generic/tkCanvPoly.c;
 			refType = 2;
 		};
 		F537558C016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkCanvPs.c;
 			path = ../generic/tkCanvPs.c;
 			refType = 2;
 		};
 		F537558D016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkCanvText.c;
 			path = ../generic/tkCanvText.c;
 			refType = 2;
 		};
 		F537558E016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkCanvUtil.c;
 			path = ../generic/tkCanvUtil.c;
 			refType = 2;
 		};
 		F537558F016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkCanvWind.c;
 			path = ../generic/tkCanvWind.c;
 			refType = 2;
 		};
 		F5375590016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkClipboard.c;
 			path = ../generic/tkClipboard.c;
 			refType = 2;
 		};
 		F5375591016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkCmds.c;
 			path = ../generic/tkCmds.c;
 			refType = 2;
 		};
 		F5375592016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkColor.c;
 			path = ../generic/tkColor.c;
 			refType = 2;
 		};
 		F5375593016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkConfig.c;
 			path = ../generic/tkConfig.c;
 			refType = 2;
 		};
 		F5375594016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkConsole.c;
 			path = ../generic/tkConsole.c;
 			refType = 2;
 		};
 		F5375595016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkCursor.c;
 			path = ../generic/tkCursor.c;
 			refType = 2;
 		};
 		F5375596016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkEntry.c;
 			path = ../generic/tkEntry.c;
 			refType = 2;
 		};
 		F5375597016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkError.c;
 			path = ../generic/tkError.c;
 			refType = 2;
 		};
 		F5375598016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkEvent.c;
 			path = ../generic/tkEvent.c;
 			refType = 2;
 		};
 		F5375599016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkFileFilter.c;
 			path = ../generic/tkFileFilter.c;
 			refType = 2;
 		};
 		F537559A016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkFocus.c;
 			path = ../generic/tkFocus.c;
 			refType = 2;
 		};
 		F537559B016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkFont.c;
 			path = ../generic/tkFont.c;
 			refType = 2;
 		};
 		F537559C016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkFrame.c;
 			path = ../generic/tkFrame.c;
 			refType = 2;
 		};
 		F537559D016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkGC.c;
 			path = ../generic/tkGC.c;
 			refType = 2;
 		};
 		F537559E016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkGeometry.c;
 			path = ../generic/tkGeometry.c;
 			refType = 2;
 		};
 		F537559F016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkGet.c;
 			path = ../generic/tkGet.c;
 			refType = 2;
 		};
 		F53755A0016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkGrab.c;
 			path = ../generic/tkGrab.c;
 			refType = 2;
 		};
 		F53755A1016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkGrid.c;
 			path = ../generic/tkGrid.c;
 			refType = 2;
 		};
 		F53755A2016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkImage.c;
 			path = ../generic/tkImage.c;
 			refType = 2;
 		};
 		F53755A3016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkImgBmap.c;
 			path = ../generic/tkImgBmap.c;
 			refType = 2;
 		};
 		F53755A4016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkImgGIF.c;
 			path = ../generic/tkImgGIF.c;
 			refType = 2;
 		};
 		F53755A5016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkImgPhoto.c;
 			path = ../generic/tkImgPhoto.c;
 			refType = 2;
 		};
 		F53755A6016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkImgPPM.c;
 			path = ../generic/tkImgPPM.c;
 			refType = 2;
 		};
 		F53755A7016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkImgUtil.c;
 			path = ../generic/tkImgUtil.c;
 			refType = 2;
 		};
 		F53755A8016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkListbox.c;
 			path = ../generic/tkListbox.c;
 			refType = 2;
 		};
 		F53755A9016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkMacWinMenu.c;
 			path = ../generic/tkMacWinMenu.c;
 			refType = 2;
 		};
 		F53755AA016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkMain.c;
 			path = ../generic/tkMain.c;
 			refType = 2;
 		};
 		F53755AB016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkMenu.c;
 			path = ../generic/tkMenu.c;
 			refType = 2;
 		};
 		F53755AC016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkMenubutton.c;
 			path = ../generic/tkMenubutton.c;
 			refType = 2;
 		};
 		F53755AD016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkMenuDraw.c;
 			path = ../generic/tkMenuDraw.c;
 			refType = 2;
 		};
 		F53755AE016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkMessage.c;
 			path = ../generic/tkMessage.c;
 			refType = 2;
 		};
 		F53755AF016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkObj.c;
 			path = ../generic/tkObj.c;
 			refType = 2;
 		};
 		F53755B0016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkOldConfig.c;
 			path = ../generic/tkOldConfig.c;
 			refType = 2;
 		};
 		F53755B1016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkOption.c;
 			path = ../generic/tkOption.c;
 			refType = 2;
 		};
 		F53755B2016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkPack.c;
 			path = ../generic/tkPack.c;
 			refType = 2;
 		};
 		F53755B3016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkPlace.c;
 			path = ../generic/tkPlace.c;
 			refType = 2;
 		};
 		F53755B4016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkPointer.c;
 			path = ../generic/tkPointer.c;
 			refType = 2;
 		};
 		F53755B5016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkRectOval.c;
 			path = ../generic/tkRectOval.c;
 			refType = 2;
 		};
 		F53755B6016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkScale.c;
 			path = ../generic/tkScale.c;
 			refType = 2;
 		};
 		F53755B7016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkScrollbar.c;
 			path = ../generic/tkScrollbar.c;
 			refType = 2;
 		};
 		F53755B8016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkSelect.c;
 			path = ../generic/tkSelect.c;
 			refType = 2;
 		};
 		F53755B9016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkStubImg.c;
 			path = ../generic/tkStubImg.c;
 			refType = 2;
 		};
 		F53755BA016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkStubInit.c;
 			path = ../generic/tkStubInit.c;
 			refType = 2;
 		};
 		F53755BB016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkStubLib.c;
 			path = ../generic/tkStubLib.c;
 			refType = 2;
 		};
 		F53755BC016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkTest.c;
 			path = ../generic/tkTest.c;
 			refType = 2;
 		};
 		F53755BD016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkText.c;
 			path = ../generic/tkText.c;
 			refType = 2;
 		};
 		F53755BE016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkTextBTree.c;
 			path = ../generic/tkTextBTree.c;
 			refType = 2;
 		};
 		F53755BF016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkTextDisp.c;
 			path = ../generic/tkTextDisp.c;
 			refType = 2;
 		};
 		F53755C0016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkTextImage.c;
 			path = ../generic/tkTextImage.c;
 			refType = 2;
 		};
 		F53755C1016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkTextIndex.c;
 			path = ../generic/tkTextIndex.c;
 			refType = 2;
 		};
 		F53755C2016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkTextMark.c;
 			path = ../generic/tkTextMark.c;
 			refType = 2;
 		};
 		F53755C3016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkTextTag.c;
 			path = ../generic/tkTextTag.c;
 			refType = 2;
 		};
 		F53755C4016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkTextWind.c;
 			path = ../generic/tkTextWind.c;
 			refType = 2;
 		};
 		F53755C5016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkTrig.c;
 			path = ../generic/tkTrig.c;
 			refType = 2;
 		};
 		F53755C6016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkUtil.c;
 			path = ../generic/tkUtil.c;
 			refType = 2;
 		};
 		F53755C7016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkVisual.c;
 			path = ../generic/tkVisual.c;
 			refType = 2;
 		};
 		F53755C8016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkWindow.c;
 			path = ../generic/tkWindow.c;
@@ -1197,12 +1341,14 @@
 			refType = 4;
 		};
 		F53755CA016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkUnix3d.c;
 			path = ../unix/tkUnix3d.c;
 			refType = 2;
 		};
 		F53755CB016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkUnixScale.c;
 			path = ../unix/tkUnixScale.c;
@@ -1234,54 +1380,63 @@
 			refType = 4;
 		};
 		F53755CE016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = xbytes.h;
 			path = ../xlib/xbytes.h;
 			refType = 2;
 		};
 		F53755CF016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = cursorfont.h;
 			path = ../xlib/X11/cursorfont.h;
 			refType = 2;
 		};
 		F53755D0016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = keysym.h;
 			path = ../xlib/X11/keysym.h;
 			refType = 2;
 		};
 		F53755D1016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = keysymdef.h;
 			path = ../xlib/X11/keysymdef.h;
 			refType = 2;
 		};
 		F53755D2016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = X.h;
 			path = ../xlib/X11/X.h;
 			refType = 2;
 		};
 		F53755D3016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = Xatom.h;
 			path = ../xlib/X11/Xatom.h;
 			refType = 2;
 		};
 		F53755D4016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = Xfuncproto.h;
 			path = ../xlib/X11/Xfuncproto.h;
 			refType = 2;
 		};
 		F53755D5016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = Xlib.h;
 			path = ../xlib/X11/Xlib.h;
 			refType = 2;
 		};
 		F53755D6016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = Xutil.h;
 			path = ../xlib/X11/Xutil.h;
@@ -1300,30 +1455,35 @@
 			refType = 4;
 		};
 		F53755D8016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = xcolors.c;
 			path = ../xlib/xcolors.c;
 			refType = 2;
 		};
 		F53755D9016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = xdraw.c;
 			path = ../xlib/xdraw.c;
 			refType = 2;
 		};
 		F53755DA016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = xgc.c;
 			path = ../xlib/xgc.c;
 			refType = 2;
 		};
 		F53755DB016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = ximage.c;
 			path = ../xlib/ximage.c;
 			refType = 2;
 		};
 		F53755DC016C389901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = xutil.c;
 			path = ../xlib/xutil.c;
@@ -1424,7 +1584,6 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 </dict>
 </plist>
 ";
-			shouldUseHeadermap = 0;
 		};
 		F53755E0016C38D201DC9062 = {
 			buildActionMask = 2147483647;
@@ -2817,7 +2976,6 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 </dict>
 </plist>
 ";
-			shouldUseHeadermap = 0;
 		};
 		F53756A1016C4DD401DC9062 = {
 			buildActionMask = 2147483647;
@@ -2970,7 +3128,6 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			productInstallPath = /usr/local/lib;
 			productName = TkStub;
 			productReference = F548F8CF0313CEF0016F146B;
-			shouldUseHeadermap = 0;
 		};
 		F548F8CF0313CEF0016F146B = {
 			isa = PBXLibraryReference;
@@ -3004,9 +3161,10 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# if we are embedding frameworks, copy them into the app\nif [ `echo \"${DYLIB_INSTALL_PATH:-}\" | grep -c \"@executable_path\"` -gt 0 ]; then\nrm -rf \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\nmkdir -p \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\nif [ \"${DEPLOYMENT_LOCATION:-}\" = \"YES\" -o \"${ACTION}\" = \"install\" ]; then\n    FWKDIR=\"${INSTALL_ROOT}/Library/Frameworks\"\nelse\n    FWKDIR=\"${TARGET_BUILD_DIR}\"\nfi\ncp -fRP \"${FWKDIR}/Tcl.framework\" \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\ncp -fRP \"${FWKDIR}/Tk.framework\" \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/Frameworks\"\nfi";
+			shellScript = "if [ -n \"${EMBEDDED_BUILD:-}\" ]; then\ncd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents\"\n\n# if we are embedding frameworks, copy them into the app\nrm -rf \"Frameworks\"\nmkdir -p \"Frameworks\"\nif [ \"${DEPLOYMENT_LOCATION:-}\" = \"YES\" -o \"${ACTION}\" = \"install\" ]; then\n    FWKDIR=\"${INSTALL_ROOT}/Library/Frameworks\"\nelse\n    FWKDIR=\"${TARGET_BUILD_DIR}\"\nfi\ncp -fRP \"${FWKDIR}/Tcl.framework\" \"Frameworks\"\ncp -fRP \"${FWKDIR}/Tk.framework\" \"Frameworks\"\n\n# fix install names when embedding\nfix_install_id ( ) {\n    chmod -RH a+w \"$1\"\n    install_name_tool -id $(otool -L \"$1\" | awk \"/$(basename \"$1\")\\.framework.*[^:]\\$/ {sub(\\\"^.*/Frameworks\\\",\\\"@executable_path/../Frameworks\\\",\\$1); print \\$1}\") \"$1\"\n    chmod -RH a-w \"$1\"   \n}\nfix_install_name ( ) {\n    chmod -RH a+w \"$1\"\n    install_name_tool -change $(otool -L \"$1\" | awk \"/$2\\.framework.*[^:]\\$/ {print \\$1; sub(\\\"^.*/Frameworks\\\",\\\"@executable_path/../Frameworks\\\",\\$1); print \\$1}\") \"$1\"\n    chmod -RH a-w \"$1\"   \n}\nfix_install_id Frameworks/Tcl.framework/Tcl\nfix_install_id Frameworks/Tk.framework/Tk\nfix_install_name Frameworks/Tk.framework/Tk Tcl\nfix_install_name \"MacOS/${PRODUCT_NAME}\" Tcl\nfix_install_name \"MacOS/${PRODUCT_NAME}\" Tk\n\nfi";
 		};
 		F55BC46802B2D38B01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkPanedWindow.c;
 			path = ../generic/tkPanedWindow.c;
@@ -3052,7 +3210,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "# ensure we can overwrite a previous install\nif [ -d \"${INSTALL_ROOT}/${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\" ]; then\n    chmod -RH u+w \"${INSTALL_ROOT}/${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\"\nfi\n\n# if we are embedding frameworks, fix things so that install works with the embedding INSTALL_PATH\nif [ `echo \"${DYLIB_INSTALL_PATH:-}\" | grep -c \"@executable_path\"` -gt 0 ]; then\n    cd \"${INSTALL_ROOT}\"\n    if [ ! -d \"Library/Frameworks/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\" ]; then\n    mkdir -p Library/Frameworks\n    mv \"Frameworks/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\" Library/Frameworks\n    fi\n    rm -r Frameworks\n    ln -fs Library/Frameworks\nfi";
+			shellScript = "# ensure we can overwrite a previous install\nif [ -d \"${INSTALL_ROOT}/${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\" ]; then\n    chmod -RH u+w \"${INSTALL_ROOT}/${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}\"\nfi";
 		};
 		F5877FB8031F982D016F146B = {
 			buildActionMask = 8;
@@ -3103,7 +3261,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "# redo prebinding\ncd \"${INSTALL_ROOT}\"\nif [ ! -d usr/lib ]; then mkdir -p usr; ln -fs /usr/lib usr/; RM_USRLIB=1; fi\nif [ ! -d System ]; then ln -fs /System .; RM_SYSTEM=1; fi\nif [ ! -d Library/Frameworks/Tcl.framework ]; then ln -fs ${SYMROOT}/Tcl.framework Library/Frameworks; RM_TCL=1; fi\nredo_prebinding -r . \"./${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/MacOS/${PRODUCT_NAME}\"\nif [ -n \"${RM_USRLIB:-}\" ]; then rm -f usr/lib; rmdir -p usr 2>&-; fi\nif [ -n \"${RM_SYSTEM:-}\" ]; then rm -f System; fi\nif [ -n \"${RM_TCL:-}\" ]; then rm -f Library/Frameworks/Tcl.framework; fi\n\n# install wish script & symbolic links\nif [ `echo \"${DYLIB_INSTALL_PATH:-}\" | grep -c \"@executable_path\"` -eq 0 ]; then\nmkdir -p \"${INSTALL_ROOT}/usr/bin\"\nrm -f \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\"\ncat > \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\" <<EOF\n#!/bin/sh\n\"\\$(dirname \\$0)/../..${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/MacOS/${PRODUCT_NAME}\" \"\\$@\"\nEOF\nchmod a+x \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\"\nln -fs \"wish${FRAMEWORK_VERSION}\" \"${INSTALL_ROOT}/usr/bin/wish\"\nfi";
+			shellScript = "# redo prebinding\ncd \"${INSTALL_ROOT}\"\nEXECUTABLE_DIR=\"./${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/MacOS\"\nif [ -n \"${EMBEDDED_BUILD:-}\" ]; then\n    ln -fs \"${EXECUTABLE_DIR}\" @executable_path\nelse\n    if [ ! -d usr/lib ]; then mkdir -p usr; ln -fs /usr/lib usr/; RM_USRLIB=1; fi\n    if [ ! -d System ]; then ln -fs /System .; RM_SYSTEM=1; fi\n    if [ ! -d Library/Frameworks/Tcl.framework ]; then ln -fs ${SYMROOT}/Tcl.framework Library/Frameworks; RM_TCL=1; fi\n    PREBIND_OPTS=\"-r .\"\nfi\nredo_prebinding ${PREBIND_OPTS:-} \"${EXECUTABLE_DIR}/${PRODUCT_NAME}\"\nif [ -n \"${EMBEDDED_BUILD:-}\" ]; then\n    rm -f @executable_path\nelse\n    if [ -n \"${RM_USRLIB:-}\" ]; then rm -f usr/lib; rmdir -p usr 2>&-; fi\n    if [ -n \"${RM_SYSTEM:-}\" ]; then rm -f System; fi\n    if [ -n \"${RM_TCL:-}\" ]; then rm -f Library/Frameworks/Tcl.framework; fi\nfi\n\n# install wish script & symbolic links\nif [ -z \"${EMBEDDED_BUILD:-}\" ]; then\nmkdir -p \"${INSTALL_ROOT}/usr/bin\"\nrm -f \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\"\ncat > \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\" <<EOF\n#!/bin/sh\n\"\\$(dirname \\$0)/../../${EXECUTABLE_DIR}/${PRODUCT_NAME}\" \"\\$@\"\nEOF\nchmod a+x \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\"\nln -fs \"wish${FRAMEWORK_VERSION}\" \"${INSTALL_ROOT}/usr/bin/wish\"\nfi";
 		};
 		F59D847903390D7E016F146B = {
 			buildActionMask = 2147483647;
@@ -3340,12 +3498,14 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			};
 		};
 		F5BFE58B02F8C41501DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkStyle.c;
 			path = ../generic/tkStyle.c;
 			refType = 2;
 		};
 		F5BFE58C02F8C41501DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkUndo.c;
 			path = ../generic/tkUndo.c;
@@ -3364,6 +3524,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			};
 		};
 		F5BFE58F02F8C45B01DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tkUndo.h;
 			path = ../generic/tkUndo.h;
@@ -3608,6 +3769,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			refType = 2;
 		};
 		F5DF093F016CD3F901DC9062 = {
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			name = tclIndex;
 			path = ../library/tclIndex;
@@ -3661,6 +3823,23 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if [ \"${BUILD_STYLE}\" = \"Development\" ]; then\n\t# force Deployment build to be relinked next time\n\tif [ -f \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nelse\n\t# force Development build to be relinked next time\n\tif [ -f \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nfi";
+		};
+//F50
+//F51
+//F52
+//F53
+//F54
+//F90
+//F91
+//F92
+//F93
+//F94
+		F92ED9910403D0F0006F146B = {
+			fileEncoding = 5;
+			isa = PBXFileReference;
+			name = ChangeLog;
+			path = ../ChangeLog;
+			refType = 2;
 		};
 	};
 	rootObject = F537552A016C352C01DC9062;
