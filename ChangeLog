@@ -1,3 +1,8 @@
+1999-12-06  Scott Redman  <redman@scriptics.com>
+
+	* generic/tkMain.c: need to include tclInt.h for new hook
+	functions that are internal-use-only.
+
 1999-12-06  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* library/comdlg.tcl: removed tclVerifyInteger and tclSortNoCase,
