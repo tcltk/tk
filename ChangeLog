@@ -1,3 +1,9 @@
+2003-01-23  D. Richard Hipp  <drh@hwaci.com>
+
+	* library/entry.tcl: Fix the KeyPress binding on the entry widget
+	so that it enters text from left to right (not right to left) even
+	if the mouse button is being held down.  [Bug #673687]
+
 2003-01-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkFrame.c (TkToplevelWindowForCommand): Added way of
