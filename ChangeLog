@@ -1,3 +1,14 @@
+2003-12-22  David Gravereaux <davygrvy@pobox.com>
+
+	* win/nmakehlp.c:
+	* win/rules.vc: sync'd to Tcl.
+
+	* win/makefile.vc: Uses new features of nmakehlp to get the version
+	strings from header files without the use of hardcoded values.
+
+	* generic/tk.h: removed the note about having to update makefile.vc
+	when the version changes.
+
 2003-12-22  Joe English  <jenglish@users.sourceforge.net>
 	* doc/text.n: Fix markup errors (".t" at beginning of line).
 
