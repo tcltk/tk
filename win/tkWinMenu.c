@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.21 2002/08/08 01:42:57 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.1 2004/05/03 22:40:58 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -570,7 +570,7 @@ ReconfigureWindowsMenu(
 	itemText = GetEntryText(mePtr);
 	if ((menuPtr->menuType == MENUBAR)
 		|| (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
-	    Tcl_UtfToExternalDString(NULL, itemText, -1, &translatedText);
+	    Tcl_WinUtfToTChar(itemText, -1, &translatedText);
 	    lpNewItem = Tcl_DStringValue(&translatedText);
 	} else {
 	    lpNewItem = (LPCTSTR) mePtr;
@@ -669,7 +669,8 @@ ReconfigureWindowsMenu(
 	    }
 	}
 	if (!systemMenu) {
-	    InsertMenu(winMenuHdl, 0xFFFFFFFF, flags, itemID, lpNewItem);
+	    (*tkWinProcs->insertMenu)(winMenuHdl, 0xFFFFFFFF, flags,
+		    itemID, lpNewItem);
 	}
 	Tcl_DStringFree(&translatedText);
 	if (itemText != NULL) {
