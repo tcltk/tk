@@ -12,17 +12,19 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.11 2004/09/21 00:08:56 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.12 2004/09/23 00:35:09 mdejong Exp $
  */
 
 #include "tkWinInt.h"
 #include <shellapi.h>
 
-#ifndef WS_EX_LAYERED
 /*
- * This is only valid on Win2K/XP+.
+ * These next two defines are only valid on Win2K/XP+.
  */
+#ifndef WS_EX_LAYERED
 #define WS_EX_LAYERED	0x00080000
+#endif
+#ifndef LWA_ALPHA
 #define LWA_ALPHA	0x00000002
 #endif
 
