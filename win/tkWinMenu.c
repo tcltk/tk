@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.1 2004/05/03 22:40:58 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.2 2004/05/03 23:23:42 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -1976,10 +1976,24 @@ DrawMenuEntryLabel(
 		break;
 	    }
 	    case COMPOUND_LEFT: {
+		/*
+		 * The standard image position on Windows is in the indicator
+		 * space to the left of the entries, unless this entry is a
+		 * radio|check button because then the indicator space will
+		 * be used.
+		 */
 		textXOffset = imageWidth + 2;
 		textYOffset = 0;
 		imageXOffset = 0;
 		imageYOffset = 0;
+		if ((mePtr->type != CHECK_BUTTON_ENTRY) 
+			&& (mePtr->type != RADIO_BUTTON_ENTRY)) {
+		    textXOffset -= indicatorSpace;
+		    if (textXOffset < 0) {
+			textXOffset = 0;
+		    }
+		    imageXOffset = -indicatorSpace;
+		}
 		break;
 	    }
 	    case COMPOUND_RIGHT: {

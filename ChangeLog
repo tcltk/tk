@@ -1,5 +1,9 @@
 2004-05-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tkWinMenu.c, unix/tkUnixMenu.c (DrawMenuEntryLabel): place
+	images of compound menu entries in indicator space if not a radio
+	of checkbutton. [Bug #756952] (eserte)
+
 	* win/tkWinX.c:                fix drawing of unicode chars in menu
 	* win/tkWinInt.h (TkWinProcs): titles. [Bug #904371] (riefenstahl)
 	* win/tkWinMenu.c (ReconfigureWindowsMenu):
