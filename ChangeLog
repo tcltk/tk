@@ -1,3 +1,10 @@
+2003-03-13  Don Porter  <dgp@users.sourceforge.net>
+
+        * tests/unixWm.test:  Constrained all tests older than revision 1.21
+        to run only on Unix.  Alternative approach did not match maintainer
+        habits.
+        * tests/spinbox.test (spinbox-17.4): Avoid long failure message.
+
 2003-03-13  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	Require autoconf 2.57 or newer, see TIP 34
