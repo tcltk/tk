@@ -7,15 +7,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.8 2002/05/27 22:54:42 mdejong Exp $
+# RCS: @(#) $Id: wm.test,v 1.9 2002/06/12 19:02:49 mdejong Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
 # platform should be placed in unixWm.test or winWm.test.
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
-    package require tcltest
-    namespace import -force ::tcltest::*
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 proc deleteWindows {} {
@@ -381,6 +380,134 @@ test wm-transient-2.2 { first toplevel parent of
     wm transient .subject
 } {.master}
 
+test wm-transient-3.1 { transient toplevel is withdrawn
+        when mapped if master is withdrawn } {
+    deleteWindows
+    toplevel .master
+    wm withdraw .master
+    update
+    toplevel .subject
+    wm transient .subject .master
+    update
+    list [wm state .subject] [winfo ismapped .subject]
+} {withdrawn 0}
+
+test wm-transient-3.2 { already mapped transient toplevel
+        takes on withdrawn state of master } {
+    deleteWindows
+    toplevel .master
+    wm withdraw .master
+    update
+    toplevel .subject
+    update
+    wm transient .subject .master
+    update
+    list [wm state .subject] [winfo ismapped .subject]
+} {withdrawn 0}
+
+test wm-transient-3.3 { withdraw/deiconify on the master
+        also does a withdraw/deiconify on the transient } {
+    deleteWindows
+    set results [list]
+    toplevel .master
+    toplevel .subject
+    update
+    wm transient .subject .master
+    wm withdraw .master
+    update
+    lappend results [wm state .subject] \
+        [winfo ismapped .subject]
+    wm deiconify .master
+    update
+    lappend results [wm state .subject] \
+        [winfo ismapped .subject]
+    set results
+} {withdrawn 0 normal 1}
+
+test wm-transient-4.1 { transient toplevel is withdrawn
+        when mapped if master is iconic } {
+    deleteWindows
+    toplevel .master
+    wm iconify .master
+    update
+    toplevel .subject
+    wm transient .subject .master
+    update
+    list [wm state .subject] [winfo ismapped .subject]
+} {withdrawn 0}
+
+test wm-transient-4.2 { already mapped transient toplevel
+        is withdrawn if master is iconic } {
+    deleteWindows
+    toplevel .master
+    wm iconify .master
+    update
+    toplevel .subject
+    update
+    wm transient .subject .master
+    update
+    list [wm state .subject] [winfo ismapped .subject]
+} {withdrawn 0}
+
+test wm-transient-4.3 { iconify/deiconify on the master
+        does a withdraw/deiconify on the transient } {
+    deleteWindows
+    set results [list]
+    toplevel .master
+    toplevel .subject
+    update
+    wm transient .subject .master
+    wm iconify .master
+    update
+    lappend results [wm state .subject] \
+        [winfo ismapped .subject]
+    wm deiconify .master
+    update
+    lappend results [wm state .subject] \
+        [winfo ismapped .subject]
+    set results
+} {withdrawn 0 normal 1}
+
+test wm-transient-5.1 { an error during transient command should not
+        cause the map/unmap binding to be deleted } {
+    deleteWindows
+    set results [list]
+    toplevel .master
+    toplevel .subject
+    update
+    wm transient .subject .master
+    # Expect a bad window path error here
+    lappend results [catch {wm transient .subject .bad}]
+    wm withdraw .master
+    update
+    lappend results [wm state .subject]
+    wm deiconify .master
+    update
+    lappend results [wm state .subject]
+    set results
+} {1 withdrawn normal}
+
+test wm-transient-5.2 { remove transient property when master
+        is destroyed } {
+    deleteWindows
+    toplevel .master
+    toplevel .subject
+    wm transient .subject .master
+    update
+    destroy .master
+    update
+    wm transient .subject
+} {}
+
+test wm-transient-5.3 { remove transient property from window
+        that had never been mapped when master is destroyed } {
+    deleteWindows
+    toplevel .master
+    toplevel .subject
+    wm transient .subject .master
+    destroy .master
+    wm transient .subject
+} {}
 
 
 test wm-state-1.1 {usage} {

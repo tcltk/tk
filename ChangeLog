@@ -1,4 +1,35 @@
+2002-06-12  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* changes: Add note about new transient behavior.
+	* tests/unixWm.test: Check that the WM_TRANSIENT_FOR
+	property for a transient window is being cleared
+	when the master is destroyed.
+	* tests/wm.test: Source defs.tcl instead of using
+	tcltest to match the rest of Tk's test files.
+	Add new tests that ensure that a transient's state
+	mirrors the state of the master.
+	* unix/tkUnixWm.c (WmInfo, TkWmNewWindow, TkWmMapWindow,
+	TkWmDeadWindow, Tk_WmCmd, WmWaitMapProc): Add numTransients
+	member to WmInfo structure. Keep state of master and
+	transient in sync using a callback that tracks MapNotify
+	and UnmapNotify events. When the master is mapped, map
+	the transient. When the master is unmapped or iconified,
+	withdraw the transient.
+	* win/tkWinWm.c (TkWmMapWindow, TkpWmSetState,
+	TkWmDeadWindow, Tk_WmCmd, WmWaitVisibilityOrMapProc):
+	Keep state of master and transient in sync using a
+	callback that tracks MapNotify and UnmapNotify events.
+	Move masterPtr check from TkpWmSetState into TkWmMapWindow
+	to deal with WM_NEVER_MAPPED transients. Cleanup
+	numTransients and the callback in TkWmDeadWindow.
+	Cleanup numTransients and the callback only after
+	deleting a master in wm transient command to avoid
+	deleting the callback when an error is raised.
+	Add support for MapNotify and UnmapNotify events
+	to the master callback.
+
 2002-06-11  Joe English  <jenglish@users.sf.net>
+
 	* library/menu.tcl: fix for bug report #530212 "Bad Window Path 
 	  Name in tkMenuFind"
 

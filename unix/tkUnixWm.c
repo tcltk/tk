@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.20 2002/05/27 22:54:42 mdejong Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.21 2002/06/12 19:02:49 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -197,6 +197,7 @@ typedef struct TkWmInfo {
     char *clientMachine;	/* String to store in WM_CLIENT_MACHINE
 				 * property, or NULL. */
     int flags;			/* Miscellaneous flags, defined below. */
+    int numTransients;		/* number of transients on this window */
     struct TkWmInfo *nextPtr;	/* Next in list of all top-level windows. */
 } WmInfo;
 
@@ -341,6 +342,8 @@ static Tk_RestrictAction
 			    XEvent *eventPtr));
 static void		WrapperEventProc _ANSI_ARGS_((ClientData clientData,
 			    XEvent *eventPtr));
+static void		WmWaitMapProc _ANSI_ARGS_((
+			    ClientData clientData, XEvent *eventPtr));
 
 /*
  *--------------------------------------------------------------
@@ -431,6 +434,7 @@ TkWmNewWindow(winPtr)
     wmPtr->winPtr = winPtr;
     wmPtr->reparent = None;
     wmPtr->masterPtr = NULL;
+    wmPtr->numTransients = 0;
     wmPtr->hints.flags = InputHint | StateHint;
     wmPtr->hints.input = True;
     wmPtr->hints.initial_state = NormalState;
@@ -549,8 +553,17 @@ TkWmMapWindow(winPtr)
 	}
     
 	if (wmPtr->masterPtr != NULL) {
-	    XSetTransientForHint(winPtr->display, wmPtr->wrapperPtr->window,
-		    wmPtr->masterPtr->wmInfoPtr->wrapperPtr->window);
+	    /*
+	     * Don't map a transient if the master is not mapped.
+	     */
+
+	    if (!Tk_IsMapped(wmPtr->masterPtr)) {
+	        wmPtr->withdrawn = 1;
+	        wmPtr->hints.initial_state = WithdrawnState;
+	    } else {
+	        XSetTransientForHint(winPtr->display, wmPtr->wrapperPtr->window,
+		        wmPtr->masterPtr->wmInfoPtr->wrapperPtr->window);
+	    }
 	}
     
 	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
@@ -742,6 +755,44 @@ TkWmDeadWindow(winPtr)
     }
     if (wmPtr->flags & WM_UPDATE_PENDING) {
 	Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData) winPtr);
+    }
+    /*
+     * Reset all transient windows whose master is the dead window.
+     */
+
+    for (wmPtr2 = winPtr->dispPtr->firstWmPtr; wmPtr2 != NULL;
+	 wmPtr2 = wmPtr2->nextPtr) {
+	if (wmPtr2->masterPtr == winPtr) {
+	    wmPtr->numTransients--;
+	    Tk_DeleteEventHandler((Tk_Window) wmPtr2->masterPtr,
+	            StructureNotifyMask,
+	            WmWaitMapProc, (ClientData) wmPtr2->winPtr);
+	    wmPtr2->masterPtr = NULL;
+	    if (!(wmPtr2->flags & WM_NEVER_MAPPED)) {
+		XSetTransientForHint(wmPtr2->winPtr->display,
+		        wmPtr2->wrapperPtr->window, None);
+		/* FIXME: Need a call like Win32's UpdateWrapper() so
+		   we can recreate the wrapper and get rid of the
+		   transient window decorations. */
+	    }
+	}
+    }
+    if (wmPtr->numTransients != 0)
+        panic("numTransients should be 0");
+
+    if (wmPtr->masterPtr != NULL) {
+	wmPtr2 = wmPtr->masterPtr->wmInfoPtr;
+	/*
+	 * If we had a master, tell them that we aren't tied
+	 * to them anymore
+	 */
+	if (wmPtr2 != NULL) {
+	    wmPtr2->numTransients--;
+	}
+	Tk_DeleteEventHandler((Tk_Window) wmPtr->masterPtr,
+		StructureNotifyMask,
+		WmWaitMapProc, (ClientData) winPtr);
+	wmPtr->masterPtr = NULL;
     }
     ckfree((char *) wmPtr);
     winPtr->wmInfoPtr = NULL;
@@ -1978,6 +2029,21 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    return TCL_OK;
 	}
 	if (argv[3][0] == '\0') {
+	    if (masterPtr != NULL) {
+	        /*
+	         * If we had a master, tell them that we aren't tied
+	         * to them anymore
+	         */
+	        masterPtr->wmInfoPtr->numTransients--;
+	        Tk_DeleteEventHandler((Tk_Window) masterPtr,
+		        StructureNotifyMask,
+		        WmWaitMapProc, (ClientData) winPtr);
+
+	        /* FIXME: Need a call like Win32's UpdateWrapper() so
+	           we can recreate the wrapper and get rid of the
+	           transient window decorations. */
+	    }
+
 	    wmPtr->masterPtr = NULL;
 	} else {
 	    masterPtr = (TkWindow *) Tk_NameToWindow(interp, argv[3], tkwin);
@@ -2020,14 +2086,41 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	                (char *) NULL);
 	        return TCL_ERROR;
 	    } else if (masterPtr != wmPtr->masterPtr) {
+		/*
+		 * Remove old master map/unmap binding before setting
+		 * the new master. The event handler will ensure that
+		 * transient states reflect the state of the master.
+		 */
+
+		if (wmPtr->masterPtr == NULL) {
+		    masterPtr->wmInfoPtr->numTransients++;
+		} else {
+		    Tk_DeleteEventHandler((Tk_Window) wmPtr->masterPtr,
+		            StructureNotifyMask,
+		            WmWaitMapProc, (ClientData) winPtr);
+		}
+
+		Tk_CreateEventHandler((Tk_Window) masterPtr,
+			StructureNotifyMask,
+			WmWaitMapProc, (ClientData) winPtr);
+
 	        wmPtr->masterPtr = masterPtr;
 	    }
 	}
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
-	    Window xwin = (wmPtr->masterPtr == NULL) ? None :
-	            wmPtr->masterPtr->wmInfoPtr->wrapperPtr->window;
-	    XSetTransientForHint(winPtr->display, wmPtr->wrapperPtr->window,
-		    xwin);
+	    if (wmPtr->masterPtr != NULL && !Tk_IsMapped(wmPtr->masterPtr)) {
+	        if (TkpWmSetState(winPtr, WithdrawnState) == 0) {
+	            Tcl_SetResult(interp,
+	                    "couldn't send withdraw message to window manager",
+	                    TCL_STATIC);
+	            return TCL_ERROR;
+	        }
+	    } else {
+	        Window xwin = (wmPtr->masterPtr == NULL) ? None :
+	                wmPtr->masterPtr->wmInfoPtr->wrapperPtr->window;
+	        XSetTransientForHint(winPtr->display, wmPtr->wrapperPtr->window,
+	                xwin);
+	    }
 	}
     } else if ((c == 'w') && (strncmp(argv[1], "withdraw", length) == 0)
 	    && (length >= 2)) {
@@ -2067,6 +2160,28 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
     return TCL_OK;
+}
+
+/*
+ * Invoked when a MapNotify or UnmapNotify event is delivered for a
+ * toplevel that is the master of a transient toplevel.
+ */
+static void
+WmWaitMapProc(clientData, eventPtr)
+    ClientData clientData;	/* Pointer to window. */
+    XEvent *eventPtr;		/* Information about event. */
+{
+    TkWindow *winPtr = (TkWindow *) clientData;
+    TkWindow *masterPtr = winPtr->wmInfoPtr->masterPtr;
+
+    if (masterPtr == NULL)
+        return;
+
+    if (eventPtr->type == MapNotify) {
+        (void) TkpWmSetState(winPtr, NormalState);
+    } else if (eventPtr->type == UnmapNotify) {
+        (void) TkpWmSetState(winPtr, WithdrawnState);
+    }
 }
 
 /*
