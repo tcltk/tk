@@ -1,3 +1,12 @@
+1999-02-26    <redman@scriptics.com>
+
+	* win/cat.c: Remove this file, use the one in the Tcl source directory.
+
+	* win/makefile.vc: Remove the wishc.exe from the default targets.  Add
+	a separate console-wish target to build it.  The need for a 
+	console-wish will go away soon, so we don't want to encourage its
+	use.
+
 1999-02-25    <redman@scriptics.com>
 
 	* win/tkWinWm.c: Properly initialize the tsdPtr->firstWindow field.
