@@ -1,3 +1,10 @@
+2003-12-11  David Gravereaux <davygrvy@pobox.com>
+
+	win/winMain.c: Backed-out yesterdays change.  Reverted to 1.15 for
+	two reasons.  1) problem is best addressed in Tcl's DllMain() and
+	2) needs a MinGW custom assembly implimentation as it doesn't
+	understand SEH syntax.
+
 2003-12-10  David Gravereaux <davygrvy@pobox.com>
 
 	* win/winMain.c (WishPanic) : placed ExitProcess() in a __try block
