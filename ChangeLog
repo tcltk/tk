@@ -1,3 +1,7 @@
+2001-09-12  D. Richard Hipp  <drh@hwaci.com>
+
+	* Fix a bug in library/tkxbox.tcl
+
 2001-09-10  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/configure:
