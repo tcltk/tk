@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.28 2000/11/03 19:38:25 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.29 2000/11/22 01:49:38 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -1578,6 +1578,7 @@ Tk_MakeWindowExist(tkwin)
     TkWindow *winPtr2;
     Window parent;
     Tcl_HashEntry *hPtr;
+    Tk_ClassCreateProc *createProc;
     int new;
 
     if (winPtr->window != None) {
@@ -1593,10 +1594,9 @@ Tk_MakeWindowExist(tkwin)
 	parent = winPtr->parentPtr->window;
     }
 
-    if (winPtr->classProcsPtr != NULL
-	    && winPtr->classProcsPtr->createProc != NULL) {
-	winPtr->window = (*winPtr->classProcsPtr->createProc)(tkwin, parent,
-		winPtr->instanceData);
+    createProc = Tk_GetClassProc(winPtr->classProcsPtr, createProc);
+    if (createProc != NULL) {
+	winPtr->window = (*createProc)(tkwin, parent, winPtr->instanceData);
     } else {
 	winPtr->window = TkpMakeWindow(winPtr, parent);
     }
@@ -2149,7 +2149,7 @@ Tk_SetClass(tkwin, className)
 /*
  *----------------------------------------------------------------------
  *
- * TkSetClassProcs --
+ * Tk_SetClassProcs --
  *
  *	This procedure is used to set the class procedures and
  *	instance data for a window.
@@ -2165,9 +2165,9 @@ Tk_SetClass(tkwin, className)
  */
 
 void
-TkSetClassProcs(tkwin, procs, instanceData)
+Tk_SetClassProcs(tkwin, procs, instanceData)
     Tk_Window tkwin;		/* Token for window to modify. */
-    TkClassProcs *procs;	/* Class procs structure. */
+    Tk_ClassProcs *procs;	/* Class procs structure. */
     ClientData instanceData;	/* Data to be passed to class procedures. */
 {
     register TkWindow *winPtr = (TkWindow *) tkwin;

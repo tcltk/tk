@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenubutton.c,v 1.6 1999/09/21 06:42:33 hobbs Exp $
+ * RCS: @(#) $Id: tkMacMenubutton.c,v 1.7 2000/11/22 01:49:38 ericm Exp $
  */
 
 #include "tkMenubutton.h"
@@ -34,10 +34,9 @@ typedef struct MacMenuButton {
  * procedures that can be invoked from generic window code.
  */
 
-TkClassProcs tkpMenubuttonClass = {
-    NULL,			/* createProc. */
-    TkMenuButtonWorldChanged,	/* geometryProc. */
-    NULL			/* modalProc. */
+Tk_ClassProcs tkpMenubuttonClass = {
+    sizeof(Tk_ClassProcs),	/* size */
+    TkMenuButtonWorldChanged,	/* worldChangedProc */
 };
 
 /*

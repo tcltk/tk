@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.13 2000/10/21 21:22:42 ericm Exp $
+# RCS: @(#) $Id: tk.decls,v 1.14 2000/11/22 01:49:37 ericm Exp $
 
 library tk
 
@@ -1142,7 +1142,10 @@ declare 241 generic {
     Tk_Window Tk_CreateAnonymousWindow (Tcl_Interp *interp, \
 	    Tk_Window parent, char *screenName)
 }
-
+declare 242 generic {
+    void Tk_SetClassProcs (Tk_Window tkwin, \
+	    Tk_ClassProcs *procs, ClientData instanceData)
+}
 
 # Define the platform specific public Tk interface.  These functions are
 # only available on the designated platform.

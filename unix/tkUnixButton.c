@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.7 2000/07/29 01:08:54 ericm Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.8 2000/11/22 01:49:38 ericm Exp $
  */
 
 #include "tkButton.h"
@@ -26,10 +26,9 @@ typedef struct UnixButton {
  * The class procedure table for the button widgets.
  */
 
-TkClassProcs tkpButtonProcs = { 
-    NULL,			/* createProc. */
-    TkButtonWorldChanged,	/* geometryProc. */
-    NULL			/* modalProc. */
+Tk_ClassProcs tkpButtonProcs = {
+    sizeof(Tk_ClassProcs),	/* size */
+    TkButtonWorldChanged,	/* worldChangedProc */
 };
 
 /*

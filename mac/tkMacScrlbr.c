@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacScrlbr.c,v 1.4 2000/02/10 08:56:12 jingham Exp $
+ * RCS: @(#) $Id: tkMacScrlbr.c,v 1.5 2000/11/22 01:49:38 ericm Exp $
  */
 
 #include "tkScrollbar.h"
@@ -113,13 +113,13 @@ static pascal void	ThumbActionProc _ANSI_ARGS_((void));
 static void		UpdateControlValues _ANSI_ARGS_((MacScrollbar *macScrollPtr));
 		    
 /*
- * The class procedure table for the scrollbar widget.
+ * The class procedure table for the scrollbar widget.  Leave the proc fields
+ * initialized to NULL, which should happen automatically because of the scope
+ * at which the variable is declared.
  */
 
-TkClassProcs tkpScrollbarProcs = { 
-    NULL,			/* createProc. */
-    NULL,			/* geometryProc. */
-    NULL			/* modalProc */
+Tk_ClassProcs tkpScrollbarProcs = {
+    sizeof(Tk_ClassProcs)	/* size */
 };
 
 /*

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.h,v 1.7 2000/05/17 21:17:20 ericm Exp $
+ * RCS: @(#) $Id: tkButton.h,v 1.8 2000/11/22 01:49:37 ericm Exp $
  */
 
 #ifndef _TKBUTTON
@@ -287,7 +287,7 @@ typedef struct {
  * Declaration of variables shared between the files in the button module.
  */
 
-extern TkClassProcs tkpButtonProcs;
+extern Tk_ClassProcs tkpButtonProcs;
 
 /*
  * Declaration of procedures used in the implementation of the button

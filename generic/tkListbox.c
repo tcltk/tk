@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.18 2000/07/28 16:41:40 ericm Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.19 2000/11/22 01:49:38 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -434,10 +434,9 @@ static void		MigrateHashEntries _ANSI_ARGS_ ((Tcl_HashTable *table,
  * that can be invoked from generic window code.
  */
 
-static TkClassProcs listboxClass = {
-    NULL,			/* createProc. */
-    ListboxWorldChanged,	/* geometryProc. */
-    NULL			/* modalProc. */
+static Tk_ClassProcs listboxClass = {
+    sizeof(Tk_ClassProcs),	/* size */
+    ListboxWorldChanged,	/* worldChangedProc */
 };
 
 
@@ -576,7 +575,7 @@ Tk_ListboxObjCmd(clientData, interp, objc, objv)
     listPtr->flags 			= 0;
 
     Tk_SetClass(listPtr->tkwin, "Listbox");
-    TkSetClassProcs(listPtr->tkwin, &listboxClass, (ClientData) listPtr);
+    Tk_SetClassProcs(listPtr->tkwin, &listboxClass, (ClientData) listPtr);
     Tk_CreateEventHandler(listPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    ListboxEventProc, (ClientData) listPtr);

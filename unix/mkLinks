@@ -28,6 +28,10 @@ if test "$x" != "xyzzyTestingAVeryLongFileName.foo"; then
     exit
 fi
 
+if test -r SetClassProcs.3; then
+    rm -f Tk_SetClassProcs.3
+    ln SetClassProcs.3 Tk_SetClassProcs.3
+fi
 if test -r 3DBorder.3; then
     rm -f Tk_Alloc3DBorderFromObj.3
     rm -f Tk_Get3DBorder.3

@@ -18,7 +18,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.12 2000/04/14 08:33:16 hobbs Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.13 2000/11/22 01:49:38 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -185,10 +185,9 @@ static void		ScaleSetVariable _ANSI_ARGS_((TkScale *scalePtr));
  * that can be invoked from generic window code.
  */
 
-static TkClassProcs scaleClass = {
-    NULL,			/* createProc. */
-    ScaleWorldChanged,		/* geometryProc. */
-    NULL			/* modalProc. */
+static Tk_ClassProcs scaleClass = {
+    sizeof(Tk_ClassProcs),	/* size */
+    ScaleWorldChanged,		/* worldChangedProc */
 };
 
 
@@ -314,7 +313,7 @@ Tk_ScaleObjCmd(clientData, interp, objc, objv)
     scalePtr->takeFocusPtr	= NULL;
     scalePtr->flags		= NEVER_SET;
 
-    TkSetClassProcs(scalePtr->tkwin, &scaleClass, (ClientData) scalePtr);
+    Tk_SetClassProcs(scalePtr->tkwin, &scaleClass, (ClientData) scalePtr);
     Tk_CreateEventHandler(scalePtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    ScaleEventProc, (ClientData) scalePtr);

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.14 2000/04/14 08:33:15 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.15 2000/11/22 01:49:37 ericm Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -330,10 +330,9 @@ static Tk_Item *	TagSearchNext _ANSI_ARGS_((TagSearch *searchPtr));
  * that can be invoked from generic window code.
  */
 
-static TkClassProcs canvasClass = {
-    NULL,			/* createProc. */
-    CanvasWorldChanged,		/* geometryProc. */
-    NULL			/* modalProc. */
+static Tk_ClassProcs canvasClass = {
+    sizeof(Tk_ClassProcs),	/* size */
+    CanvasWorldChanged,		/* worldChangedProc */
 };
 
 
@@ -467,7 +466,7 @@ Tk_CanvasObjCmd(clientData, interp, argc, argv)
     Tcl_InitHashTable(&canvasPtr->idTable, TCL_ONE_WORD_KEYS);
 
     Tk_SetClass(canvasPtr->tkwin, "Canvas");
-    TkSetClassProcs(canvasPtr->tkwin, &canvasClass, (ClientData) canvasPtr);
+    Tk_SetClassProcs(canvasPtr->tkwin, &canvasClass, (ClientData) canvasPtr);
     Tk_CreateEventHandler(canvasPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    CanvasEventProc, (ClientData) canvasPtr);
