@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvText.test,v 1.11 2002/07/14 05:48:46 dgp Exp $
+# RCS: @(#) $Id: canvText.test,v 1.12 2003/02/09 07:48:22 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -61,7 +61,7 @@ test canvText-1.$i {configuration options} {
 
 test canvText-2.1 {CreateText procedure: args} {
     list [catch {.c create text} msg] $msg
-} {1 {wrong # args: should be ".c create text x y ?options?"}}
+} {1 {wrong # args: should be ".c create text coords ?arg arg ...?"}}
 test canvText-2.2 {CreateText procedure: args} {
     list [catch {.c create text xyz 0} msg] $msg
 } {1 {bad screen distance "xyz"}}

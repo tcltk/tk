@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvArc.c,v 1.10 2002/08/05 04:30:38 dgp Exp $
+ * RCS: @(#) $Id: tkCanvArc.c,v 1.11 2003/02/09 07:48:22 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -295,23 +295,10 @@ CreateArc(interp, canvas, itemPtr, objc, objv)
     Tcl_Obj *CONST objv[];		/* Arguments describing arc. */
 {
     ArcItem *arcPtr = (ArcItem *) itemPtr;
-    int i = 4;
+    int i;
 
-    if (objc == 1) {
-	i = 1;
-    } else if (objc > 1) {
-	char *arg = Tcl_GetString(objv[1]);
-	if ((arg[0] == '-') && (arg[1] >= 'a') && (arg[1] <= 'z')) {
-	    i = 1;
-	}
-    }
-
-    if (objc < i) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		Tk_PathName(Tk_CanvasTkwin(canvas)), " create ",
-		itemPtr->typePtr->name, " x1 y1 x2 y2 ?options?\"",
-		(char *) NULL);
-	return TCL_ERROR;
+    if (objc == 0) {
+	panic("canvas did not pass any coords\n");
     }
 
     /*
@@ -340,10 +327,16 @@ CreateArc(interp, canvas, itemPtr, objc, objv)
      * Process the arguments to fill in the item record.
      */
 
-    if ((ArcCoords(interp, canvas, itemPtr, i, objv) != TCL_OK)) {
+    for (i = 1; i < objc; i++) {
+	char *arg = Tcl_GetString(objv[i]);
+	if ((arg[0] == '-') && (arg[1] >= 'a') && (arg[1] <= 'z')) {
+	    break;
+	}
+    }
+    if (ArcCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
 	goto error;
     }
-    if (ConfigureArc(interp, canvas, itemPtr, objc-4, objv+4, 0) == TCL_OK) {
+    if (ConfigureArc(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
 	return TCL_OK;
     }
     error:

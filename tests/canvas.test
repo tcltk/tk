@@ -6,7 +6,7 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.15 2002/07/24 19:41:38 hobbs Exp $
+# RCS: @(#) $Id: canvas.test,v 1.16 2003/02/09 07:48:22 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -451,6 +451,28 @@ test canvas-14.6 {canvas scan} {
     destroy .c; canvas .c
     list [catch {.c scan dragto 10 10 5} msg] $msg
 } {0 {}}
+
+set i 0
+proc create {w type args} {
+    eval [list $w create $type] $args
+}
+foreach type {arc bitmap image line oval polygon rect text window} {
+    test canvas-15.[incr i] "basic types check: $type" {
+	destroy .c; canvas .c
+	list [catch {.c create $type} msg] $msg
+    } [format {1 {wrong # args: should be ".c create %s coords ?arg arg ...?"}} $type]
+    test canvas-15.[incr i] "basic coords check: $type" {
+	destroy .c; canvas .c
+	list [catch {.c create $type 0} msg] \
+		[string match "wrong # coordinates: expected*" $msg]
+    } {1 1}
+}
+
+test canvas-16.1 {arc coords check} {
+    destroy .c; canvas .c
+    set id [.c create arc {0 10 20 30} -start 33]
+    .c itemcget $id -start
+} {33.0}
 
 destroy .c
 

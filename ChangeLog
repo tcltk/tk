@@ -1,4 +1,20 @@
+2003-02-08  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkCanvArc.c (CreateArc):       Rework canvas create item
+	* generic/tkCanvBmap.c (CreateBitmap):   type coords handling to be
+	* generic/tkCanvImg.c (CreateImage):     consistent across types
+	* generic/tkCanvPoly.c (CreatePolygon):  and not pass empty coords
+	* generic/tkCanvLine.c (CreateLine):     to item creation procs.
+	* generic/tkCanvText.c (CreateText):
+	* generic/tkCanvWind.c (CreateWinItem):
+	* generic/tkCanvas.c (CanvasWidgetCmd CANV_CREATE):
+	* generic/tkRectOval.c (CreateRectOval):
+	* tests/canvRect.test:
+	* tests/canvText.test:
+	* tests/canvas.test:
+
 2003-01-28  Joe English  <jenglish@users.sourceforge.net>
+
 	* generic/tkInt.h (TkDisplay,TkMainInfo):
 	* generic/tkObj.c (windowObjType):
 	* generic/tkWindow.c (Tk_DestroyWindow):
