@@ -1,3 +1,17 @@
+2004-06-04  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* generic/tkTextIndex.c: 
+	* generic/tkText.c: 
+	* generic/tkTextDisp.c: 
+	* doc/text.n: fix to shimmering infinite loop scrolling problem
+	in text widget under some rare circumstances (Bug 965398).
+	Improved comments and documentation.
+
+	* tests/textDisp.test: corrected rounding from float to int
+	in test, fixing occasional failures
+
+	* library/text.tcl: corrected mousewheel bindings for TkAqua
+
 2004-05-29  Joe English  <jenglish@users.sourceforge.net>
 
 	* doc/messageBox.n: Fix minor markup errors (backslash 

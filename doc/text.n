@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.25 2004/03/04 00:17:07 hobbs Exp $
+'\" RCS: @(#) $Id: text.n,v 1.26 2004/06/04 10:51:17 vincentdarley Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -1706,21 +1706,27 @@ It can take any of the following forms:
 \fIpathName \fByview\fR
 Returns a list containing two elements, both of which are real fractions
 between 0 and 1.
-The first element gives the position of the first character in the
+The first element gives the position of the first visible pixel of the
+first character (or image, etc) in the
 top line in the window, relative to the text as a whole (0.5 means
 it is halfway through the text, for example).
-The second element gives the position of the character just after
-the last one in the bottom line of the window,
+The second element gives the position of the first pixel just after the
+last visible one in the bottom line of the window,
 relative to the text as a whole.
 These are the same values passed to scrollbars via the \fB\-yscrollcommand\fR
 option.
 .TP
 \fIpathName \fByview moveto\fI fraction\fR
-Adjusts the view in the window so that the character given by \fIfraction\fR
-appears on the top line of the window.
+Adjusts the view in the window so that the pixel given by \fIfraction\fR
+appears at the top of the top line of the window.
 \fIFraction\fR is a fraction between 0 and 1;  0 indicates the first
-character in the text, 0.33 indicates the character one-third the
-way through the text, and so on.
+pixel of the first character in the text, 0.33 indicates the pixel that is
+one-third the way through the text; and so on.  Values close to 1 will 
+indicate values close to the last pixel in the text (1 actually refers
+to one pixel beyond the last pixel), but in such cases the widget will
+never scroll beyond the last pixel, and so a value of 1 will effectively
+be rounded back to whatever fraction ensures the last pixel is at the
+bottom of the window, and some other pixel is at the top.
 .TP
 \fIpathName \fByview scroll \fInumber what\fR
 This command adjust the view in the window up or down according to

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.25 2004/05/23 17:34:49 dkf Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.26 2004/06/04 10:51:18 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -3153,8 +3153,10 @@ test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential
 	set tab [expr {$tab + $cm}]
     }
     # Now we've calculated to the end of the tab after 'a', add one
-    # more for 'bb\t' and we're there, with 4 for the border
-    set tab [expr {4 + int($tab + $cm)}]
+    # more for 'bb\t' and we're there, with 4 for the border.  Since
+    # Tk_GetPixelsFromObj uses the standard 'int(0.5 + float)' rounding,
+    # so must we.
+    set tab [expr {4 + int(0.5 + $tab + $cm)}]
     update
     set res [.t bbox 2.23]
     lset res 0 [expr {[lindex $res 0] - $tab}]

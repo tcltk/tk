@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.49 2004/03/17 18:15:44 das Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.50 2004/06/04 10:51:18 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -3361,6 +3361,11 @@ TkTextGetTabs(interp, textPtr, stringPtr)
     for (i = 0, tabPtr = &tabArrayPtr->tabs[0]; i  < objc; i++, tabPtr++) {
 	int index;
 	
+	/* 
+	 * This will round fractional pixels above 0.5 upwards, and
+	 * otherwise downwards, to find the right integer pixel
+	 * position.
+	 */
 	if (Tk_GetPixelsFromObj(interp, textPtr->tkwin, objv[i], 
 				&tabPtr->location) != TCL_OK) {
 	    goto error;
