@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenuDraw.c,v 1.3 1999/04/16 01:51:19 stanton Exp $
+ * RCS: @(#) $Id: tkMenuDraw.c,v 1.4 2003/05/30 11:03:00 vincentdarley Exp $
  */
 
 #include "tkMenu.h"
@@ -769,15 +769,26 @@ TkMenuEventProc(clientData, eventPtr)
 	}
     } else if (eventPtr->type == DestroyNotify) {
 	if (menuPtr->tkwin != NULL) {
-	    TkDestroyMenu(menuPtr);
+	    if (!(menuPtr->menuFlags & MENU_DELETION_PENDING)) {
+		TkDestroyMenu(menuPtr);
+	    }
 	    menuPtr->tkwin = NULL;
+	}
+	if (menuPtr->menuFlags & MENU_WIN_DESTRUCTION_PENDING) {
+	    return;
+	}
+	menuPtr->menuFlags |= MENU_WIN_DESTRUCTION_PENDING;
+	if (menuPtr->widgetCmd != NULL) {
 	    Tcl_DeleteCommandFromToken(menuPtr->interp, menuPtr->widgetCmd);
+	    menuPtr->widgetCmd = NULL;
 	}
 	if (menuPtr->menuFlags & REDRAW_PENDING) {
 	    Tcl_CancelIdleCall(DisplayMenu, (ClientData) menuPtr);
+	    menuPtr->menuFlags &= ~REDRAW_PENDING;
 	}
 	if (menuPtr->menuFlags & RESIZE_PENDING) {
 	    Tcl_CancelIdleCall(ComputeMenuGeometry, (ClientData) menuPtr);
+	    menuPtr->menuFlags &= ~RESIZE_PENDING;
 	}
 	Tcl_EventuallyFree((ClientData) menuPtr, TCL_DYNAMIC);
     }
