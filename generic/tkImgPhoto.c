@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.48 2004/08/04 14:24:00 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.49 2004/08/04 14:47:33 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -2602,8 +2602,8 @@ static void
 ImgPhotoBlendComplexAlpha(bgImg, iPtr, xOffset, yOffset, width, height)
     XImage *bgImg;		/* background image to draw on */
     PhotoInstance *iPtr;	/* image instance to draw */
-    int xOffset, int yOffset;	/* X & Y offset into image instance to draw */
-    int width, int height;	/* width & height of image to draw */
+    int xOffset, yOffset;	/* X & Y offset into image instance to draw */
+    int width, height;		/* width & height of image to draw */
 {
     int x, y, line;
     unsigned long pixel;
