@@ -1,3 +1,9 @@
+2003-11-25  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
+
+	* generic/tkPointer.c (Tk_UpdatePointer): corrected targetWinPtr
+	check (line 369) so any pointer event with winPtr==0
+	is really redirected to the grab or restrict window (if any).
+
 2003-11-21  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkTextDisp.c: 
