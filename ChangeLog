@@ -1,3 +1,21 @@
+2003-03-04  Don Porter <dgp@users.sf.net>
+
+        * README:                               Bumped version number of
+        * generic/tk.h:                         Tk to 8.5a0.
+        * library/tk.tcl:
+        * mac/README:
+        * macosx/Wish.pbproj/project.pbxproj:
+	* unix/README:
+        * unix/configure.in:
+        * unix/tk.spec:
+        * win/README:
+        * win/configure.in:
+        * win/makefile.vc:
+        * win/tcl.m4:
+
+        * unix/configure:      autoconf
+        * win/configure:
+
 2003-03-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	*** 8.4.2 TAGGED FOR RELEASE ***

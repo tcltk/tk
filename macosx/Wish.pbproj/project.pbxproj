@@ -1529,11 +1529,11 @@
 				F5877FBC031FA968016F146B,
 			);
 			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 8.4;
-				DYLIB_CURRENT_VERSION = 8.4;
+				DYLIB_COMPATIBILITY_VERSION = 8.5;
+				DYLIB_CURRENT_VERSION = 8.5;
 				DYLIB_INSTALL_PATH = /Library/Frameworks;
 				FRAMEWORK_SEARCH_PATHS = "\"$(SYMROOT)\"";
-				FRAMEWORK_VERSION = 8.4;
+				FRAMEWORK_VERSION = 8.5;
 				GLOBAL_CFLAGS = "`source \"${SYMROOT}/Tcl.framework/Resources/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
 				HEADER_SEARCH_PATHS = "\"$(SYMROOT)/Tcl.framework/Headers\" \"$(SYMROOT)/Tcl.framework/PrivateHeaders\" ../bitmaps ../generic ../xlib";
 				INSTALL_PATH = "${DYLIB_INSTALL_PATH}";
@@ -1550,7 +1550,7 @@
 				TK_MAJOR_VERSION = 8;
 				TK_MINOR_VERSION = 4;
 				TK_PATCH_LEVEL = .1;
-				TK_VERSION = 8.4;
+				TK_VERSION = 8.5;
 				USE_GCC3_PFE_SUPPORT = YES;
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
 				WRAPPER_EXTENSION = framework;
@@ -1572,7 +1572,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Tk</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Tk Library 8.4, Copyright Â© 2002 Tcl Core Team.
+	<string>Tk Library 8.5, Copyright Â© 2002 Tcl Core Team.
 MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â© 2001-2002, Apple Computer, Inc.</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
@@ -1581,15 +1581,15 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Tk Library 8.4</string>
+	<string>Tk Library 8.5</string>
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>8.4.2</string>
+	<string>8.5a0</string>
 	<key>CFBundleSignature</key>
 	<string>WiSH</string>
 	<key>CFBundleVersion</key>
-	<string>8.4.2</string>
+	<string>8.5a0</string>
 </dict>
 </plist>
 ";
@@ -2901,7 +2901,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "\"$(SYMROOT)\"";
-				FRAMEWORK_VERSION = 8.4;
+				FRAMEWORK_VERSION = 8.5;
 				GLOBAL_CFLAGS = "`source \"${SYMROOT}/Tcl.framework/Resources/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
 				HEADER_SEARCH_PATHS = "\"$(SYMROOT)/Tcl.framework/Headers\" \"$(SYMROOT)/Tcl.framework/PrivateHeaders\" ../generic ../xlib";
 				INSTALL_PATH = /Applications/Utilities;
@@ -2950,7 +2950,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 	<key>CFBundleExecutable</key>
 	<string>Wish Shell</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Wish Shell 8.4, Copyright Â© 2002 Tcl Core Team.
+	<string>Wish Shell 8.5, Copyright Â© 2002 Tcl Core Team.
 MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â© 2001-2002, Apple Computer, Inc.</string>
 	<key>CFBundleIconFile</key>
 	<string>Wish.icns</string>
@@ -2963,11 +2963,11 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>8.4.2</string>
+	<string>8.5a0</string>
 	<key>CFBundleSignature</key>
 	<string>WiSH</string>
 	<key>CFBundleVersion</key>
-	<string>8.4.2</string>
+	<string>8.5a0</string>
 </dict>
 </plist>
 ";
@@ -3112,7 +3112,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				OTHER_CFLAGS = "-DMAC_OSX_TK -DTCL_WIDE_INT_TYPE=\"long long\"";
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
-				PRODUCT_NAME = libtkstub8.4.a;
+				PRODUCT_NAME = libtkstub8.5.a;
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
@@ -3127,7 +3127,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 		};
 		F548F8CF0313CEF0016F146B = {
 			isa = PBXLibraryReference;
-			path = libtkstub8.4.a;
+			path = libtkstub8.5.a;
 			refType = 3;
 		};
 		F548F8D00313CF11016F146B = {
