@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.6 2004/11/11 01:26:43 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.7 2005/03/12 00:49:38 wolfsuit Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -5049,6 +5049,7 @@ TkpMakeMenuWindow(
     }
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -5156,7 +5157,7 @@ TkMacOSXMakeRealWindowExist(
     listPtr->winPtr = winPtr;
     tkMacOSXWindowListPtr = listPtr;
     
-    macWin->grafPtr = GetWindowPort ( newWindow );
+    macWin->grafPtr = GetWindowPort (newWindow);
     macWin->rootControl = rootControl;
     MoveWindowStructure(newWindow, geometry.left, geometry.top);
     SetPort(GetWindowPort(newWindow));

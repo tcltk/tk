@@ -1,3 +1,24 @@
+2005-03-11  Jim Ingham  <jingham@apple.com>
+
+	* macosx/tkMacOSXButton.c (TkpDisplayButton): Set the port to
+	the Button window's port BEFORE you set the clip, otherwise you 
+	are setting the clip on the wrong window!
+	Also, a little cleanup - move x & y into the branches where they are
+	used, and don't compute the TextAnchor if we are using the native 
+	button text, since we aren't going to use it.
+	(TkMacOSXDrawControl): Call ShowControl & SetControlVisibility in a more
+	logical order.
+
+	* tkMacOSXInt.h: Add TkMacOSXGenerateFocusEvent.
+	* tkMacOSXSubwindows.c (XDestroyWindow): We don't get Activate events
+	for the remaining windows when a Floating window is destroyed.  This 
+	can cause the focus to disappear.  So catch this case when the window
+	is being destroyed and move the focus here.
+	* tkMacOSXWindowEvent.c (TkMacOSXGenerateFocusEvent): Make this public
+	(used to be GenerateFocusEvent) since we need it here and in 
+	tkMacOSXSubwindows.c.  Then change the name everywhere it is used.
+	[Bug 1124237]
+	
 2005-03-10  Jim Ingham  <jingham@apple.com>
 
 	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent): In
