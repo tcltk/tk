@@ -1,10 +1,27 @@
+2002-06-14  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkEvent.c (Tk_HandleEvent): 
+	* unix/tkUnixEvent.c (OpenIM): 
+	* unix/tkUnixKey.c (TkpGetString): 
+	* generic/tkInt.h: added TK_USE_XIM_SPOT flag bit for TkDisplay
+	and used this to allow a runtime check to see if over-the-spot XIM
+	is possible.  If not it will try and fallback to the old-style
+	input context, which handles things like dead keys input.
+
+	* generic/tk.decls:     added TIP #84 implementation that adds a
+	* generic/tkDecls.h:    Tk_CollapseMotionEvents API which controls
+	* generic/tkEvent.c:    Tk's collapsing of incoming motion events
+	* generic/tkInt.h:      on its windows.  The default remains to do
+	* generic/tkStubInit.c: collapsing.  Added a flags parameter to the
+	* generic/tkWindow.c:   internal display structure to support this
+	* doc/QWinEvent.3:      and be used in the future for other bits.
+
+	* unix/mkLinks: updated from current docs
+
 2002-06-14  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* generic/tkBind.c (TkXErrorHandler): Declare static
 	function to avoid compiler error with VC++.
-
-2002-06-14  Mo DeJong  <mdejong@users.sourceforge.net>
-
 	* generic/tkBind.c (ExpandPercents): Cast argument to
 	Tk_GetAtomName in order to avoid compiler warning.
 
@@ -33,8 +50,8 @@
 	* unix/tkUnixWm.c:
 	* win/tkWinScrlbr.c:
 	* win/tkWinWindow.c:
-	* win/tkWinWm.c: Implementation of TIP #47
-	"Modifying Tk to Allow Writing X Window managers" (patch from Neil McKay).
+	* win/tkWinWm.c: Implementation of TIP #47 by Neil McKay
+	"Modifying Tk to Allow Writing X Window managers".
 	Add CirculateRequest, Create, MapRequest, ResizeRequest, 
 	and ConfigureRequest event types;
 	Split TK_TOPLEVEL flag into TK_TOPLEVEL, TK_HAS_WRAPPER,

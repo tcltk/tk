@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.45 2002/06/15 00:21:42 hobbs Exp $ 
+ * RCS: $Id: tkInt.h,v 1.46 2002/06/15 01:09:36 hobbs Exp $ 
  */
 
 #ifndef _TKINT
@@ -499,9 +499,14 @@ typedef struct TkDisplay {
 
 /*
  * Flag values for TkDisplay flags.
+ *  TK_DISPLAY_COLLAPSE_MOTION_EVENTS:	(default on)
+ *	Indicates that we should collapse motion events on this display
+ *  TK_USE_INPUT_METHODS:		(default off)
+ *	Indicates that we should use over-the-spot XIM on this display
  */
 
 #define TK_DISPLAY_COLLAPSE_MOTION_EVENTS	(1 << 0)
+#define TK_USE_XIM_SPOT				(1 << 1)
 
 /*
  * One of the following structures exists for each error handler

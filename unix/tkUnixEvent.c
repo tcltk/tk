@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.6 2002/04/12 10:20:05 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.7 2002/06/15 01:09:36 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -583,14 +583,23 @@ OpenIM(dispPtr)
 	    NULL) != NULL) || (stylePtr == NULL)) {
 	goto error;
     }
+#if TK_XIM_SPOT
+    /*
+     * If we want to do over-the-spot XIM, we have to check that this
+     * mode is supported.  If not we will fall-through to the check below.
+     */
     for (i = 0; i < stylePtr->count_styles; i++) {
 	if (stylePtr->supported_styles[i]
-#if TK_XIM_SPOT
-		== (XIMPreeditPosition | XIMStatusNothing)
-#else
-		== (XIMPreeditNothing | XIMStatusNothing)
+		== (XIMPreeditPosition | XIMStatusNothing)) {
+	    dispPtr->flags |= TK_USE_XIM_SPOT;
+	    XFree(stylePtr);
+	    return;
+	}
+    }
 #endif
-	    ) {
+    for (i = 0; i < stylePtr->count_styles; i++) {
+	if (stylePtr->supported_styles[i]
+		== (XIMPreeditNothing | XIMStatusNothing)) {
 	    XFree(stylePtr);
 	    return;
 	}
