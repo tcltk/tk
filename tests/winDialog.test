@@ -6,15 +6,15 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 1998-1999 ActiveState Corporation.
 #
-# RCS: @(#) $Id: winDialog.test,v 1.10 2003/04/01 21:07:00 dgp Exp $
+# RCS: @(#) $Id: winDialog.test,v 1.11 2004/06/17 22:38:57 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint testwinevent [llength [info commands testwinevent]]
-
-catch {testwinevent debug 1}
+if {[testConstraint testwinevent]} {
+    catch {testwinevent debug 1}
+}
 
 proc start {arg} {
     set ::tk_dialog 0
@@ -317,7 +317,9 @@ test winDialog-9.8 {Tk_ChooseDirectoryObjCmd:\
     list [catch {tk_chooseDirectory -initialdir ~12x/455} msg] $msg
 } {1 {user "12x" doesn't exist}}
 
-catch {testwinevent debug 0}
+if {[testConstraint testwinevent]} {
+    catch {testwinevent debug 0}
+}
 
 # cleanup
 cleanupTests

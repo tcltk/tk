@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: window.test,v 1.10 2004/05/23 17:34:50 dkf Exp $
+# RCS: @(#) $Id: window.test,v 1.11 2004/06/17 22:38:57 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -244,9 +244,6 @@ test window-2.11 {Tk_DestroyWindow, don't reanimate a half-dead window} \
     removeFile script
     list $error $msg
 } {0 YES}
-
-# Some tests require the testmenubar command
-testConstraint testmenubar [llength [info commands testmenubar]]
 
 test window-3.1 {Tk_MakeWindowExist procedure, stacking order and menubars} \
 	{unixOnly testmenubar} {

@@ -8,13 +8,11 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: raise.test,v 1.9 2004/05/23 17:34:49 dkf Exp $
+# RCS: @(#) $Id: raise.test,v 1.10 2004/06/17 22:38:57 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
-
-testConstraint testmakeexist [llength [info commands testmakeexist]]
 
 # Procedure to create a bunch of overlapping windows, which should
 # make it easy to detect differences in order.

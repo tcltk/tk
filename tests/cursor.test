@@ -6,13 +6,11 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: cursor.test,v 1.12 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: cursor.test,v 1.13 2004/06/17 22:38:57 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
-
-testConstraint testcursor [llength [info commands testcursor]]
 
 test cursor-1.1 {Tk_AllocCursorFromObj - converting internal reps} {testcursor} {
     set x watch
