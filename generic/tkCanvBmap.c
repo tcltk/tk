@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvBmap.c,v 1.4 1999/12/14 06:52:25 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvBmap.c,v 1.5 2001/07/03 06:03:44 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -92,8 +92,8 @@ static Tk_ConfigSpec configSpecs[] = {
  */
 
 static int		BitmapCoords _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
-			    Tcl_Obj *CONST argv[]));
+			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
+			    Tcl_Obj *CONST objv[]));
 static int		BitmapToArea _ANSI_ARGS_((Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr));
 static double		BitmapToPoint _ANSI_ARGS_((Tk_Canvas canvas,
@@ -103,11 +103,11 @@ static int		BitmapToPostscript _ANSI_ARGS_((Tcl_Interp *interp,
 static void		ComputeBitmapBbox _ANSI_ARGS_((Tk_Canvas canvas,
 			    BitmapItem *bmapPtr));
 static int		ConfigureBitmap _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
-			    Tcl_Obj *CONST argv[], int flags));
+			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
+			    Tcl_Obj *CONST objv[], int flags));
 static int		CreateBitmap _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *CONST argv[]));
+			    int objc, Tcl_Obj *CONST objv[]));
 static void		DeleteBitmap _ANSI_ARGS_((Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display));
 static void		DisplayBitmap _ANSI_ARGS_((Tk_Canvas canvas,
@@ -168,22 +168,22 @@ Tk_ItemType tkBitmapType = {
  */
 
 static int
-CreateBitmap(interp, canvas, itemPtr, argc, argv)
+CreateBitmap(interp, canvas, itemPtr, objc, objv)
     Tcl_Interp *interp;			/* Interpreter for error reporting. */
     Tk_Canvas canvas;			/* Canvas to hold new item. */
     Tk_Item *itemPtr;			/* Record to hold new item;  header
 					 * has been initialized by caller. */
-    int argc;				/* Number of arguments in argv. */
-    Tcl_Obj *CONST argv[];		/* Arguments describing rectangle. */
+    int objc;				/* Number of arguments in objv. */
+    Tcl_Obj *CONST objv[];		/* Arguments describing rectangle. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
     int i;
 
-    if (argc==1) {
+    if (objc==1) {
 	i = 1;
     } else {
-	char *arg = Tcl_GetStringFromObj(argv[1], NULL);
-	if (((argc>1) && (arg[0] == '-')
+	char *arg = Tcl_GetStringFromObj(objv[1], NULL);
+	if (((objc>1) && (arg[0] == '-')
 		&& (arg[1] >= 'a') && (arg[1] <= 'z'))) {
 	    i = 1;
 	} else {
@@ -191,7 +191,7 @@ CreateBitmap(interp, canvas, itemPtr, argc, argv)
 	}
     }
 
-    if (argc < i) {
+    if (objc < i) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
 		Tk_PathName(Tk_CanvasTkwin(canvas)), " create ",
 		itemPtr->typePtr->name, " x y ?options?\"",
@@ -219,10 +219,10 @@ CreateBitmap(interp, canvas, itemPtr, argc, argv)
      * Process the arguments to fill in the item record.
      */
 
-    if ((BitmapCoords(interp, canvas, itemPtr, i, argv) != TCL_OK)) {
+    if ((BitmapCoords(interp, canvas, itemPtr, i, objv) != TCL_OK)) {
 	goto error;
     }
-    if (ConfigureBitmap(interp, canvas, itemPtr, argc-i, argv+i, 0) == TCL_OK) {
+    if (ConfigureBitmap(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
 	return TCL_OK;
     }
 
@@ -250,40 +250,40 @@ CreateBitmap(interp, canvas, itemPtr, argc, argv)
  */
 
 static int
-BitmapCoords(interp, canvas, itemPtr, argc, argv)
+BitmapCoords(interp, canvas, itemPtr, objc, objv)
     Tcl_Interp *interp;			/* Used for error reporting. */
     Tk_Canvas canvas;			/* Canvas containing item. */
     Tk_Item *itemPtr;			/* Item whose coordinates are to be
 					 * read or modified. */
-    int argc;				/* Number of coordinates supplied in
-					 * argv. */
-    Tcl_Obj *CONST argv[];		/* Array of coordinates: x1, y1,
+    int objc;				/* Number of coordinates supplied in
+					 * objv. */
+    Tcl_Obj *CONST objv[];		/* Array of coordinates: x1, y1,
 					 * x2, y2, ... */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
 
-    if (argc == 0) {
+    if (objc == 0) {
 	Tcl_Obj *obj = Tcl_NewObj();
 	Tcl_Obj *subobj = Tcl_NewDoubleObj(bmapPtr->x);
 	Tcl_ListObjAppendElement(interp, obj, subobj);
 	subobj = Tcl_NewDoubleObj(bmapPtr->y);
 	Tcl_ListObjAppendElement(interp, obj, subobj);
 	Tcl_SetObjResult(interp, obj);
-    } else if (argc <3) {
-	if (argc==1) {
-	    if (Tcl_ListObjGetElements(interp, argv[0], &argc,
-		    (Tcl_Obj ***) &argv) != TCL_OK) {
+    } else if (objc <3) {
+	if (objc==1) {
+	    if (Tcl_ListObjGetElements(interp, objv[0], &objc,
+		    (Tcl_Obj ***) &objv) != TCL_OK) {
 		return TCL_ERROR;
-	    } else if (argc != 2) {
+	    } else if (objc != 2) {
 		char buf[64 + TCL_INTEGER_SPACE];
 
-		sprintf(buf, "wrong # coordinates: expected 2, got %d", argc);
+		sprintf(buf, "wrong # coordinates: expected 2, got %d", objc);
 		Tcl_SetResult(interp, buf, TCL_VOLATILE);
 		return TCL_ERROR;
 	    }
 	}
-	if ((Tk_CanvasGetCoordFromObj(interp, canvas, argv[0], &bmapPtr->x) != TCL_OK)
-		|| (Tk_CanvasGetCoordFromObj(interp, canvas, argv[1], &bmapPtr->y)
+	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0], &bmapPtr->x) != TCL_OK)
+		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1], &bmapPtr->y)
  		    != TCL_OK)) {
 	    return TCL_ERROR;
 	}
@@ -291,7 +291,7 @@ BitmapCoords(interp, canvas, itemPtr, argc, argv)
     } else {
 	char buf[64 + TCL_INTEGER_SPACE];
 
-	sprintf(buf, "wrong # coordinates: expected 0 or 2, got %d", argc);
+	sprintf(buf, "wrong # coordinates: expected 0 or 2, got %d", objc);
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	return TCL_ERROR;
     }
@@ -317,12 +317,12 @@ BitmapCoords(interp, canvas, itemPtr, argc, argv)
  */
 
 static int
-ConfigureBitmap(interp, canvas, itemPtr, argc, argv, flags)
+ConfigureBitmap(interp, canvas, itemPtr, objc, objv, flags)
     Tcl_Interp *interp;		/* Used for error reporting. */
     Tk_Canvas canvas;		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr;		/* Bitmap item to reconfigure. */
-    int argc;			/* Number of elements in argv.  */
-    Tcl_Obj *CONST argv[];	/* Arguments describing things to configure. */
+    int objc;			/* Number of elements in objv.  */
+    Tcl_Obj *CONST objv[];	/* Arguments describing things to configure. */
     int flags;			/* Flags to pass to Tk_ConfigureWidget. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
@@ -336,7 +336,7 @@ ConfigureBitmap(interp, canvas, itemPtr, argc, argv, flags)
     Tk_State state;
 
     tkwin = Tk_CanvasTkwin(canvas);
-    if (Tk_ConfigureWidget(interp, tkwin, configSpecs, argc, (char **) argv,
+    if (Tk_ConfigureWidget(interp, tkwin, configSpecs, objc, (char **) objv,
 	    (char *) bmapPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
 	return TCL_ERROR;
     }
