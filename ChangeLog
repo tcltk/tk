@@ -1,3 +1,9 @@
+2000-07-21  Mo DeJong  <mdejong@redhat.com>
+
+	* win/configure.in: Add TK_STUB_LIB_FLAG and
+	TK_BUILD_STUB_LIB_SPEC. These are needed to
+	build a stub enabled extension.
+
 2000-07-20  Eric Melski  <ericm@ajubasolutions.com>
 
 	* unix/tkUnixDraw.c (TkScrollWindow): Replaced a use of a trinary
