@@ -5,29 +5,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menuDraw.test,v 1.4 2001/08/01 16:21:12 dgp Exp $
+# RCS: @(#) $Id: menuDraw.test,v 1.5 2002/07/13 20:28:35 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-if {[lsearch [image types] test] < 0} {
-    puts "This application hasn't been compiled with the \"test\" image"
-    puts "type, so I can't run this test.  Are you sure you're using"
-    puts "tktest instead of wish?"
-    ::tcltest::cleanupTests
-    return
-}
-
-proc deleteWindows {} {
-    foreach i [winfo children .] {
-    	catch [destroy $i]
-    }
-}
-
-deleteWindows
-wm geometry . {}
-raise .
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 test menuDraw-1.1 {TkMenuInitializeDrawingFields} {
     catch {destroy .m1}
@@ -236,7 +221,7 @@ test menuDraw-10.4 {ComputeMenuGeometry - resize not necessary} {
     list [update idletasks] [destroy .m1]
 } {{} {}}
 
-test menuDraw-11.1 {TkMenuSelectImageProc - entry selected; redraw not pending} {
+test menuDraw-11.1 {TkMenuSelectImageProc - entry selected; redraw not pending} testImageType {
     catch {destroy .m1}
     catch {eval image delete [image names]}
     image create test image1
@@ -248,7 +233,7 @@ test menuDraw-11.1 {TkMenuSelectImageProc - entry selected; redraw not pending} 
     update idletasks
     list [image delete image2] [destroy .m1] [eval image delete [image names]]
 } {{} {} {}}
-test menuDraw-11.2 {TkMenuSelectImageProc - entry selected; redraw pending} {
+test menuDraw-11.2 {TkMenuSelectImageProc - entry selected; redraw pending} testImageType {
     catch {destroy .m1}
     catch {eval image delete [image names]}
     image create test image1
@@ -259,7 +244,7 @@ test menuDraw-11.2 {TkMenuSelectImageProc - entry selected; redraw pending} {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [image delete image2] [destroy .m1] [eval image delete [image names]]
 } {{} {} {}}
-test menuDraw-11.3 {TkMenuSelectImageProc - entry not selected} {
+test menuDraw-11.3 {TkMenuSelectImageProc - entry not selected} testImageType {
     catch {destroy .m1}
     catch {eval image delete [image names]}
     image create test image1
@@ -388,7 +373,7 @@ test menuDraw-13.5 {TkMenuEventProc - nothing pending} {
     list [destroy .m1]
 } {{}}
 
-test menuDraw-14.1 {TkMenuImageProc} {
+test menuDraw-14.1 {TkMenuImageProc} testImageType {
     catch {destroy .m1}
     catch {image delete image1}
     menu .m1
@@ -397,7 +382,7 @@ test menuDraw-14.1 {TkMenuImageProc} {
     update idletasks
     list [image delete image1] [destroy .m1]
 } {{} {}}
-test menuDraw-14.2 {TkMenuImageProc} {
+test menuDraw-14.2 {TkMenuImageProc} testImageType {
     catch {destroy .m1}
     catch {image delete image1}
     menu .m1

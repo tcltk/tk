@@ -1,3 +1,8 @@
+2002-07-12  Don Porter <dgp@users.sf.net>
+
+	* tests/constraints.tcl:	Converted more files to tcltest and
+	* tests/[m-x]*.test:		factored out common code.
+
 2002-07-11  Don Porter <dgp@users.sf.net>
 	
 	* tests/canvPsImg.tcl:			Converted several files in the

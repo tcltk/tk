@@ -10,27 +10,17 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: send.test,v 1.6 2002/07/13 00:30:25 dgp Exp $
+# RCS: @(#) $Id: send.test,v 1.7 2002/07/13 20:28:35 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-namespace import -force tcltest::testsDirectory
 namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
 configure -testdir [file join [pwd] [file dirname [info script]]]
 configure -loadfile [file join [testsDirectory] constraints.tcl]
 tcltest::loadTestedCommands
-eval configure $argv
-
-# 'send' is only available on Unix...
 
 testConstraint xhost [llength [auto_execok xhost]]
 testConstraint testsend [llength [info commands testsend]]
-
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
 
 # If send is disabled because of inadequate security, don't run any
 # of these tests at all.

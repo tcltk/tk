@@ -8,12 +8,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: raise.test,v 1.6 2002/07/13 00:30:25 dgp Exp $
+# RCS: @(#) $Id: raise.test,v 1.7 2002/07/13 20:28:35 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-namespace import -force tcltest::testConstraint
-eval tcltest::configure $argv
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 testConstraint testmakeexist [llength [info commands testmakeexist]]
 
@@ -53,9 +55,7 @@ proc raise_getOrder {} {
 # Procedure to set up a collection of top-level windows
 
 proc raise_makeToplevels {} {
-    foreach i [winfo child .] {
-	destroy $i
-    }
+    deleteWindows
     foreach i {.raise1 .raise2 .raise3} {
 	toplevel $i
 	wm geom $i 150x100+0+0
@@ -63,15 +63,12 @@ proc raise_makeToplevels {} {
     }
 }
 
-foreach i [winfo child .] {
-    destroy $i
-}
 toplevel .raise
 wm geom .raise 250x200+0+0
 
 test raise-1.1 {preserve creation order} {
     raise_setup
-    update
+    tkwait visibility .raise.e
     raise_getOrder
 } {d d d b c e e e}
 test raise-1.2 {preserve creation order} testmakeexist {
@@ -290,9 +287,7 @@ test raise-7.8 {errors in raise/lower commands} {
     list [catch {lower . badName4} msg] $msg
 } {1 {bad window path name "badName4"}}
 
-foreach i [winfo child .] {
-    destroy $i
-}
+deleteWindows
 
 # cleanup
 ::tcltest::cleanupTests

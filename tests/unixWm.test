@@ -7,19 +7,18 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.21 2002/07/12 21:08:49 dgp Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.22 2002/07/13 20:28:36 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-namespace import -force tcltest::testsDirectory
 namespace import -force tcltest::configure
-namespace import -force tcltest::interpreter
-namespace import -force tcltest::makeFile
-namespace import -force tcltest::removeFile
+namespace import -force tcltest::testsDirectory
 configure -testdir [file join [pwd] [file dirname [info script]]]
 configure -loadfile [file join [testsDirectory] constraints.tcl]
 tcltest::loadTestedCommands
-eval configure $argv
+
+namespace import -force tcltest::interpreter
+namespace import -force tcltest::makeFile
+namespace import -force tcltest::removeFile
 
 proc sleep ms {
     global x
@@ -30,9 +29,7 @@ proc sleep ms {
 # Procedure to set up a collection of top-level windows
 
 proc makeToplevels {} {
-    foreach i [winfo child .] {
-	destroy $i
-    }
+    deleteWindows
     foreach i {.raise1 .raise2 .raise3} {
 	toplevel $i
 	wm geom $i 150x100+0+0
@@ -1719,12 +1716,10 @@ test unixWm-49.2 {Tk_GetRootCoords procedure, menubars} {unix testmenubar} {
 	    [expr [winfo rootx .t.f] - $x] [expr [winfo rooty .t.f] - $y] 
 } {52 7 12 62}
 
-foreach w [winfo children .] {
-    catch {destroy $w}
-}
+deleteWindows
 wm iconify .
 test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords} {
-    eval destroy [winfo children .]
+    deleteWindows
     toplevel .t -width 300 -height 400 -bg green
     wm geom .t +40+0
     tkwait visibility .t
@@ -1744,7 +1739,7 @@ test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords} {
 	    [winfo containing [expr $x + 220] [expr $y + 250]]
 } {{} {} .t {} .t2 .t2 {} .t}
 test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and overrideredirect} {
-    eval destroy [winfo children .]
+    deleteWindows
     toplevel .t -width 300 -height 400 -bg yellow
     wm geom .t +0+50
     tkwait visibility .t
@@ -1766,7 +1761,7 @@ test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and 
 	    [winfo containing [expr $x +150] [expr $y + 450]]
 } {{} {} .t .t .t2 .t2 .t {}}
 test unixWm-50.3 {Tk_CoordsToWindow procedure, finding a toplevel with embedding} {
-    eval destroy [winfo children .]
+    deleteWindows
     toplevel .t -width 300 -height 400 -bg blue
     wm geom .t +0+50
     frame .t.f -container 1
@@ -1804,7 +1799,7 @@ test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} {
     set result
 } {{} .}
 test unixWm-50.5 {Tk_CoordsToWindow procedure, handling menubars} {unix testmenubar} {
-    eval destroy [winfo children .]
+    deleteWindows
     toplevel .t -width 300 -height 400 -bd 2 -relief raised
     frame .t.f -width 150 -height 120 -bg green
     place .t.f -x 10 -y 150
@@ -1826,7 +1821,7 @@ test unixWm-50.5 {Tk_CoordsToWindow procedure, handling menubars} {unix testmenu
 		[winfo containing [expr $x + 12] [expr $y + 152]]
 } {{} .t.menu .t.menu .t.menu.f .t .t .t.f}
 test unixWm-50.6 {Tk_CoordsToWindow procedure, embedding within one app.} {
-    eval destroy [winfo children .]
+    deleteWindows
     toplevel .t -width 300 -height 400 -bg orange
     wm geom .t +0+50
     frame .t.f -container 1
@@ -1902,7 +1897,7 @@ test unixWm-50.10 {Tk_CoordsToWindow procedure, unmapped windows} {
     update
     lappend result [winfo containing 100 100]
 } {.t.f .t}
-eval destroy [winfo children .]
+deleteWindows
 wm deiconify .
 
 # No tests for UpdateVRootGeometry, Tk_GetVRootGeometry,
@@ -1959,9 +1954,7 @@ test unixWm-51.5 {TkWmRestackToplevel procedure, basic tests} {nonPortable} {
     list $result [winfo containing [winfo rootx .raise2] \
 	    [winfo rooty .raise2]]
 } {.raise1 .raise3}
-foreach w [winfo children .] {
-    catch {destroy $w}
-}
+deleteWindows
 test unixWm-51.6 {TkWmRestackToplevel procedure, window to be stacked isn't mapped} {
     catch {destroy .t}
     toplevel .t -width 200 -height 200 -bg green

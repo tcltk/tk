@@ -6,12 +6,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textMark.test,v 1.4 2002/07/12 21:08:49 dgp Exp $
+# RCS: @(#) $Id: textMark.test,v 1.5 2002/07/13 20:28:35 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-namespace import -force tcltest::testConstraint
-eval tcltest::configure $argv
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 catch {destroy .t}
 testConstraint courier12 [expr {[catch {

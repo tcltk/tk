@@ -6,18 +6,16 @@
 # at the window to make sure it appears as expected.  Individual tests
 # are kept in separate ".tcl" files in this directory.
 #
-# RCS: @(#) $Id: visual_bb.test,v 1.5 2002/07/12 13:41:01 dgp Exp $
+# RCS: @(#) $Id: visual_bb.test,v 1.6 2002/07/13 20:28:36 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-namespace import -force tcltest::testConstraint
-namespace import -force tcltest::testsDirectory
-namespace import -force tcltest::cleanupTests
 namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
 configure -testdir [file join [pwd] [file dirname [info script]]]
 configure -loadfile [file join [testsDirectory] constraints.tcl]
 tcltest::loadTestedCommands
-eval configure $argv
+
+namespace import -force tcltest::cleanupTests
 
 set auto_path ". $auto_path"
 wm title . "Visual Tests for Tk"

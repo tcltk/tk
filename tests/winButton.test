@@ -8,25 +8,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winButton.test,v 1.7 2002/07/12 13:41:01 dgp Exp $
+# RCS: @(#) $Id: winButton.test,v 1.8 2002/07/13 20:28:36 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-eval tcltest::configure $argv
-
-if {[lsearch [image types] test] < 0} {
-    puts "This application hasn't been compiled with the \"test\""
-    puts "image, so I can't run this test.  Are you sure you're using"
-    puts "tktest instead of wish?"
-    ::tcltest::cleanupTests
-    return
-}
-
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 proc bogusTrace args {
     error "trace aborted"
@@ -35,7 +24,9 @@ catch {unset value}
 catch {unset value2}
 
 eval image delete [image names]
-image create test image1
+if {[testConstraint testImageType]} {
+    image create test image1
+}
 label .l -text Label
 button .b -text Button
 checkbutton .c -text Checkbutton
@@ -43,8 +34,8 @@ radiobutton .r -text Radiobutton
 pack .l .b .c .r
 update
 
-test winbutton-1.1 {TkpComputeButtonGeometry procedure} {pcOnly} {
-    eval destroy [winfo children .]
+test winbutton-1.1 {TkpComputeButtonGeometry procedure} {testImageType pcOnly} {
+    deleteWindows
     image create test image1
     image1 changed 0 0 0 0 60 40
     label .b1 -image image1 -bd 4 -padx 0 -pady 2
@@ -61,7 +52,7 @@ test winbutton-1.1 {TkpComputeButtonGeometry procedure} {pcOnly} {
 	    [winfo reqwidth .b4] [winfo reqheight .b4]
 } {68 48 70 50 90 52 90 52}
 test winbutton-1.2 {TkpComputeButtonGeometry procedure} {pcOnly} {
-    eval destroy [winfo children .]
+    deleteWindows
     label .b1 -bitmap question -bd 3 -padx 0 -pady 2
     button .b2 -bitmap question -bd 3 -padx 0 -pady 2
     checkbutton .b3 -bitmap question -bd 3 -padx 1 -pady 1
@@ -76,7 +67,7 @@ test winbutton-1.2 {TkpComputeButtonGeometry procedure} {pcOnly} {
 	    [winfo reqwidth .b4] [winfo reqheight .b4]
 } {23 33 25 35 45 37 45 37}
 test winbutton-1.3 {TkpComputeButtonGeometry procedure} {pcOnly} {
-    eval destroy [winfo children .]
+    deleteWindows
     label .b1 -bitmap question -bd 3 -highlightthickness 4
     button .b2 -bitmap question -bd 3 -highlightthickness 0
     checkbutton .b3 -bitmap question -bd 3 -highlightthickness 1 \
@@ -92,7 +83,7 @@ test winbutton-1.3 {TkpComputeButtonGeometry procedure} {pcOnly} {
 	    [winfo reqwidth .b4] [winfo reqheight .b4]
 } {31 41 23 33 27 37 27 37}
 test winbutton-1.4 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
-    eval destroy [winfo children .]
+    deleteWindows
     label .b1 -text Xagqpim -bd 2 -padx 0 -pady 2 -font {{MS Sans Serif} 8}
     button .b2 -text Xagqpim -bd 2 -padx 0 -pady 2 -font {{MS Sans Serif} 8}
     checkbutton .b3 -text Xagqpim -bd 2 -padx 1 -pady 1 -font {{MS Sans Serif} 8}
@@ -105,21 +96,21 @@ test winbutton-1.4 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
 	    [winfo reqwidth .b4] [winfo reqheight .b4]
 } {58 24 67 33 88 30 90 28} 
 test winbutton-1.5 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
-    eval destroy [winfo children .]
+    deleteWindows
     label .l1 -text "This is a long string that will wrap around on several lines.\n\nIt also has a blank line (above)." -wraplength 1.5i -padx 0 -pady 0
     pack .l1
     update
     list [winfo reqwidth .l1] [winfo reqheight .l1]
 } {178 84}
 test winbutton-1.6 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
-    eval destroy [winfo children .]
+    deleteWindows
     label .l1 -text "This is a long string without wrapping.\n\nIt also has a blank line (above)." -padx 0 -pady 0
     pack .l1
     update
     list [winfo reqwidth .l1] [winfo reqheight .l1]
 } {222 52}
 test winbutton-1.7 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
-    eval destroy [winfo children .]
+    deleteWindows
     label .b1 -text Xagqpim -bd 2 -padx 0 -pady 2 -width 10
     button .b2 -text Xagqpim -bd 2 -padx 0 -pady 2 -height 5
     checkbutton .b3 -text Xagqpim -bd 2 -padx 1 -pady 1 -width 20 -height 2
@@ -132,7 +123,7 @@ test winbutton-1.7 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
 	    [winfo reqwidth .b4] [winfo reqheight .b4]
 } {74 24 67 97 174 46 64 28}
 test winbutton-1.8 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
-    eval destroy [winfo children .]
+    deleteWindows
     label .b1 -text Xagqpim -bd 2 -padx 0 -pady 2 \
 	-highlightthickness 4
     button .b2 -text Xagqpim -bd 2 -padx 0 -pady 2 \
@@ -148,12 +139,12 @@ test winbutton-1.8 {TkpComputeButtonGeometry procedure} {pcOnly nonPortable} {
 	    [winfo reqwidth .b4] [winfo reqheight .b4]
 } {66 32 65 31 69 31 71 29}
 test winbutton-1.9 {TkpComputeButtonGeometry procedure} {pcOnly} {
-    eval destroy [winfo children .]
+    deleteWindows
     button .b2 -bitmap question -default normal
     list [winfo reqwidth .b2] [winfo reqheight .b2]
 } {23 33}
 
 # cleanup
-eval destroy [winfo children .]
+deleteWindows
 ::tcltest::cleanupTests
 return

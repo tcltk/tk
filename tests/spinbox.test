@@ -4,22 +4,14 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: spinbox.test,v 1.2 2002/07/13 00:30:25 dgp Exp $
+# RCS: @(#) $Id: spinbox.test,v 1.3 2002/07/13 20:28:35 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::test
-namespace import -force tcltest::testsDirectory
 namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
 configure -testdir [file join [pwd] [file dirname [info script]]]
 configure -loadfile [file join [testsDirectory] constraints.tcl]
 tcltest::loadTestedCommands
-eval configure $argv
-
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
 
 proc scroll args {
     global scrollInfo
@@ -1083,7 +1075,7 @@ test spinbox-11.1 {SpinboxEventProc procedure} {
     update
 } {}
 test spinbox-11.2 {SpinboxEventProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     spinbox .e1 -fg #112233
     rename .e1 .e2
     set x {}
@@ -1094,7 +1086,7 @@ test spinbox-11.2 {SpinboxEventProc procedure} {
 } {.e1 #112233 {} {}}
 
 test spinbox-12.1 {SpinboxCmdDeletedProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     button .e1 -text "xyz_123"
     rename .e1 {}
     list [info command .e*] [winfo children .]
@@ -1295,7 +1287,7 @@ test spinbox-17.4 {SpinboxUpdateScrollbar procedure} {
     (horizontal scrolling command executed by .e)}}
 
 set l [interp hidden]
-eval destroy [winfo children .]
+deleteWindows
 
 test spinbox-18.1 {Spinbox widget vs hiding} {
     destroy .e
