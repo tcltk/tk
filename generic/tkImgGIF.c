@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.13 2000/02/26 00:51:17 ericm Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.14 2000/03/30 19:44:41 ericm Exp $
  */
 
 /*
@@ -789,8 +789,8 @@ ReadImage(interp, imagePtr, chan, len, rows, cmap,
     int v;
     int xpos = 0, ypos = 0, pass = 0, i;
     register char *pixelPtr;
-    const static int interlaceStep[] = { 8, 8, 4, 2 };
-    const static int interlaceStart[] = { 0, 4, 2, 1 };
+    CONST static int interlaceStep[] = { 8, 8, 4, 2 };
+    CONST static int interlaceStart[] = { 0, 4, 2, 1 };
     unsigned short prefix[(1 << MAX_LWZ_BITS)];
     unsigned char  append[(1 << MAX_LWZ_BITS)];
     unsigned char  stack[(1 << MAX_LWZ_BITS)*2];
@@ -1703,7 +1703,7 @@ static int set_verbose(void)
 #endif
 
 
-static const char *
+static CONST char *
 binformat(v, nbits)
     unsigned int v;
     int nbits;
@@ -1717,7 +1717,7 @@ binformat(v, nbits)
  bhand --;
  if (bhand < 0) bhand = (sizeof(bufs)/sizeof(bufs[0]))-1;
  bp = &bufs[bhand][0];
- for (bno=nbits-1,bit=1U<<bno;bno>=0;bno--,bit>>=1)
+ for (bno=nbits-1,bit=((unsigned int)1)<<bno;bno>=0;bno--,bit>>=1)
   { *bp++ = (v & bit) ? '1' : '0';
     if (((bno&3) == 0) && (bno != 0)) *bp++ = '.';
   }

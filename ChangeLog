@@ -1,3 +1,16 @@
+2000-03-30  Eric Melski  <ericm@scriptics.com>
+
+	* generic/tkImgGIF.c: Fixed some ANSI specific bits to avoid
+	compile problems with non-ANSI compilers (ie, replace const with
+	CONST, etc).  [Bug: 4223].
+
+	* unix/configure.in: Applied patch from [Bug: 4237]; ensures that
+	srcdir is fully qualified.
+
+	* unix/Makefile.in: Applied patch from [Bug: 4237]; if tcltest was
+	not compiled, make test/tktest failed.  Now it has a rule to build
+	tcltest if it has not been built.
+
 2000-03-28  Eric Melski  <ericm@scriptics.com>
 
 	* library/tkfbox.tcl: Moved an overlooked tkFDialog* function in
