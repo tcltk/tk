@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.21 2002/06/12 19:02:49 mdejong Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.22 2002/06/14 22:25:12 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -1299,7 +1299,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    if (tkwin2 == NULL) {
 		return TCL_ERROR;
 	    }
-	    while (!Tk_IsTopLevel(tkwin2)) {
+	    while (!Tk_TopWinHierarchy(tkwin2)) {
 		/*
 		 * Ensure that the group leader is actually a Tk toplevel.
 		 */
@@ -2050,7 +2050,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    if (masterPtr == NULL) {
 		return TCL_ERROR;
 	    }
-	    while (!Tk_IsTopLevel(masterPtr)) {
+	    while (!Tk_TopWinHierarchy(masterPtr)) {
 		/*
 		 * Ensure that the master window is actually a Tk toplevel.
 		 */
@@ -2226,7 +2226,7 @@ Tk_SetGrid(tkwin, reqWidth, reqHeight, widthInc, heightInc)
      * information.
      */
 
-    while (!(winPtr->flags & TK_TOP_LEVEL)) {
+    while (!(winPtr->flags & TK_TOP_HIERARCHY)) {
 	winPtr = winPtr->parentPtr;
 	if (winPtr == NULL) {
 	    /*
@@ -2237,6 +2237,9 @@ Tk_SetGrid(tkwin, reqWidth, reqHeight, widthInc, heightInc)
 	}
     }
     wmPtr = winPtr->wmInfoPtr;
+    if(wmPtr == NULL) {
+	return;
+    }
 
     if ((wmPtr->gridWin != NULL) && (wmPtr->gridWin != tkwin)) {
 	return;
@@ -2318,7 +2321,7 @@ Tk_UnsetGrid(tkwin)
      * information.
      */
 
-    while (!(winPtr->flags & TK_TOP_LEVEL)) {
+    while (!(winPtr->flags & TK_TOP_HIERARCHY)) {
 	winPtr = winPtr->parentPtr;
 	if (winPtr == NULL) {
 	    /*
@@ -2329,6 +2332,10 @@ Tk_UnsetGrid(tkwin)
 	}
     }
     wmPtr = winPtr->wmInfoPtr;
+    if(wmPtr == NULL) {
+	return;
+    }
+
     if (tkwin != wmPtr->gridWin) {
 	return;
     }
@@ -3936,7 +3943,7 @@ Tk_CoordsToWindow(rootX, rootY, tkwin)
 	nextPtr = NULL;
 	for (childPtr = winPtr->childList; childPtr != NULL;
 		childPtr = childPtr->nextPtr) {
-	    if (!Tk_IsMapped(childPtr) || (childPtr->flags & TK_TOP_LEVEL)) {
+	    if (!Tk_IsMapped(childPtr) || (childPtr->flags & TK_TOP_HIERARCHY)) {
 		continue;
 	    }
 	    if (childPtr->flags & TK_REPARENTED) {
@@ -4086,10 +4093,18 @@ Tk_GetVRootGeometry(tkwin, xPtr, yPtr, widthPtr, heightPtr)
      * information for that window.
      */
 
-    while (!(winPtr->flags & TK_TOP_LEVEL) && (winPtr->parentPtr != NULL)) {
+    while (!(winPtr->flags & TK_TOP_HIERARCHY) && (winPtr->parentPtr != NULL)) {
 	winPtr = winPtr->parentPtr;
     }
     wmPtr = winPtr->wmInfoPtr;
+    if(wmPtr == NULL) {
+	/* Punt. */
+	*xPtr = 0;
+	*yPtr = 0;
+	*widthPtr = 0;
+	*heightPtr = 0;
+    }
+
 
     /*
      * Make sure that the geometry information is up-to-date, then copy
@@ -4676,10 +4691,14 @@ TkWmAddToColormapWindows(winPtr)
 
 	    return;
 	}
-	if (topPtr->flags & TK_TOP_LEVEL) {
+	if (topPtr->flags & TK_TOP_HIERARCHY) {
 	    break;
 	}
     }
+    if(topPtr->wmInfoPtr == NULL) {
+	return;
+    }
+
     if (topPtr->wmInfoPtr->flags & WM_COLORMAPS_EXPLICIT) {
 	return;
     }
@@ -4776,7 +4795,7 @@ TkWmRemoveFromColormapWindows(winPtr)
 
 	    return;
 	}
-	if (topPtr->flags & TK_TOP_LEVEL) {
+	if (topPtr->flags & TK_TOP_HIERARCHY) {
 	    break;
 	}
     }
@@ -4788,6 +4807,10 @@ TkWmRemoveFromColormapWindows(winPtr)
 
 	return;
     }
+    if (topPtr->wmInfoPtr == NULL) {
+	return;
+    }
+
     if (topPtr->wmInfoPtr->wrapperPtr == NULL) {
 	CreateWrapper(topPtr->wmInfoPtr);
     }
@@ -4963,7 +4986,7 @@ TkpMakeMenuWindow(tkwin, transient)
     XSetWindowAttributes atts;
     TkWindow *wrapperPtr;
 
-    if (!Tk_IsTopLevel(tkwin)) {
+    if (!Tk_HasWrapper(tkwin)) {
 	return;
     }
     wmPtr = ((TkWindow *) tkwin)->wmInfoPtr;
