@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.9 2000/04/17 17:40:27 ericm Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.10 2000/08/02 20:52:34 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -236,6 +236,22 @@ static int	ConfigureSlaves _ANSI_ARGS_((Tcl_Interp *interp,
 			Tk_Window tkwin, int argc, char *argv[]));
 static void	DestroyGrid _ANSI_ARGS_((char *memPtr));
 static Gridder *GetGrid _ANSI_ARGS_((Tk_Window tkwin));
+static int	GridBboxCommand _ANSI_ARGS_((Tk_Window tkwin,
+			Tcl_Interp *interp, int argc, char **argv));
+static int	GridForgetRemoveCommand _ANSI_ARGS_((Tk_Window tkwin,
+			Tcl_Interp *interp, int argc, char **argv));
+static int	GridInfoCommand _ANSI_ARGS_((Tk_Window tkwin,
+			Tcl_Interp *interp, int argc, char **argv));
+static int	GridLocationCommand _ANSI_ARGS_((Tk_Window tkwin,
+			Tcl_Interp *interp, int argc, char **argv));
+static int	GridPropagateCommand _ANSI_ARGS_((Tk_Window tkwin,
+			Tcl_Interp *interp, int argc, char **argv));
+static int	GridRowColumnConfigureCommand _ANSI_ARGS_((Tk_Window tkwin,
+			Tcl_Interp *interp, int argc, char **argv));
+static int	GridSizeCommand _ANSI_ARGS_((Tk_Window tkwin,
+			Tcl_Interp *interp, int argc, char **argv));
+static int	GridSlavesCommand _ANSI_ARGS_((Tk_Window tkwin,
+			Tcl_Interp *interp, int argc, char **argv));
 static void	GridStructureProc _ANSI_ARGS_((
 			ClientData clientData, XEvent *eventPtr));
 static void	GridLostSlaveProc _ANSI_ARGS_((ClientData clientData,
@@ -282,8 +298,6 @@ Tk_GridCmd(clientData, interp, argc, argv)
     char **argv;		/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
-    Gridder *masterPtr;		/* master grid record */
-    GridMaster *gridPtr;	/* pointer to grid data */
     size_t length;		/* streing length of argument */
     char c;			/* 1st character of argument */
   
@@ -300,108 +314,8 @@ Tk_GridCmd(clientData, interp, argc, argv)
     length = strlen(argv[1]);
   
     if ((c == 'b') && (strncmp(argv[1], "bbox", length) == 0)) {
-	Tk_Window master;
-	int row, column;	/* origin for bounding box */
-	int row2, column2;	/* end of bounding box */
-	int endX, endY;		/* last column/row in the layout */
-	int x=0, y=0;		/* starting pixels for this bounding box */
-	int width, height;	/* size of the bounding box */
-	char buf[TCL_INTEGER_SPACE * 4];
-
-	if (argc!=3 && argc != 5 && argc != 7) {
-	    Tcl_AppendResult(interp, "wrong number of arguments: ",
-		    "must be \"",argv[0],
-		    " bbox master ?column row ?column row??\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-        
-	master = Tk_NameToWindow(interp, argv[2], tkwin);
-	if (master == NULL) {
-	    return TCL_ERROR;
-	}
-	masterPtr = GetGrid(master);
-
-	if (argc >= 5) {
-	    if (Tcl_GetInt(interp, argv[3], &column) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	    if (Tcl_GetInt(interp, argv[4], &row) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	    column2 = column;
-	    row2 = row;
-	}
-
-	if (argc == 7) {
-	    if (Tcl_GetInt(interp, argv[5], &column2) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	    if (Tcl_GetInt(interp, argv[6], &row2) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	}
-
-	gridPtr = masterPtr->masterDataPtr;
-	if (gridPtr == NULL) {
-	    Tcl_SetResult(interp, "0 0 0 0", TCL_STATIC);
-	    return(TCL_OK);
-	}
-
-	SetGridSize(masterPtr);
-	endX = MAX(gridPtr->columnEnd, gridPtr->columnMax);
-	endY = MAX(gridPtr->rowEnd, gridPtr->rowMax);
-
-	if ((endX == 0) || (endY == 0)) {
-	    Tcl_SetResult(interp, "0 0 0 0", TCL_STATIC);
-	    return(TCL_OK);
-	}
-	if (argc == 3) {
-	    row = column = 0;
-	    row2 = endY;
-	    column2 = endX;
-	}
-
-	if (column > column2) {
-	    int temp = column;
-	    column = column2, column2 = temp;
-	}
-	if (row > row2) {
-	    int temp = row;
-	    row = row2, row2 = temp;
-	}
-
-	if (column > 0 && column < endX) {
-	    x = gridPtr->columnPtr[column-1].offset;
-	} else if  (column > 0) {
-	    x = gridPtr->columnPtr[endX-1].offset;
-	}
-
-	if (row > 0 && row < endY) {
-	    y = gridPtr->rowPtr[row-1].offset;
-	} else if (row > 0) {
-	    y = gridPtr->rowPtr[endY-1].offset;
-	}
-
-	if (column2 < 0) {
-	    width = 0;
-	} else if (column2 >= endX) {
-	    width = gridPtr->columnPtr[endX-1].offset - x;
-	} else {
-	    width = gridPtr->columnPtr[column2].offset - x;
-	} 
-
-	if (row2 < 0) {
-	    height = 0;
-	} else if (row2 >= endY) {
-	    height = gridPtr->rowPtr[endY-1].offset - y;
-	} else {
-	    height = gridPtr->rowPtr[row2].offset - y;
-	} 
-
-	sprintf(buf, "%d %d %d %d", x + gridPtr->startX, y + gridPtr->startY,
-		width, height);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	return GridBboxCommand(tkwin, interp, argc, argv);
+	
     } else if ((c == 'c') && (strncmp(argv[1], "configure", length) == 0)) {
 	if (argv[2][0] != '.') {
 	    Tcl_AppendResult(interp, "bad argument \"", argv[2],
@@ -409,284 +323,27 @@ Tk_GridCmd(clientData, interp, argc, argv)
 	    return TCL_ERROR;
 	}
 	return ConfigureSlaves(interp, tkwin, argc-2, argv+2);
+	
     } else if (((c == 'f') && (strncmp(argv[1], "forget", length) == 0))  || 
 	    ((c == 'r') && (strncmp(argv[1], "remove", length) == 0))) {
-	Tk_Window slave;
-	Gridder *slavePtr;
-	int i;
-    
-	for (i = 2; i < argc; i++) {
-	    slave = Tk_NameToWindow(interp, argv[i], tkwin);
-	    if (slave == NULL) {
-		return TCL_ERROR;
-	    }
-	    slavePtr = GetGrid(slave);
-	    if (slavePtr->masterPtr != NULL) {
-
-	    	/*
-	    	 * For "forget", reset all the settings to their defaults
-	    	 */
-
-	    	if (c == 'f') {
-		    slavePtr->column = slavePtr->row = -1;
-		    slavePtr->numCols = 1;
-		    slavePtr->numRows = 1;
-		    slavePtr->padX = slavePtr->padY = 0;
-		    slavePtr->iPadX = slavePtr->iPadY = 0;
-		    slavePtr->doubleBw = 2*Tk_Changes(tkwin)->border_width;
-		    if (slavePtr->flags & REQUESTED_RELAYOUT) {
-			Tcl_CancelIdleCall(ArrangeGrid, (ClientData) slavePtr);
-		    }
-		    slavePtr->flags = 0;
-		    slavePtr->sticky = 0;
-	    	}
-		Tk_ManageGeometry(slave, (Tk_GeomMgr *) NULL,
-			(ClientData) NULL);
-		if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
-		    Tk_UnmaintainGeometry(slavePtr->tkwin,
-			    slavePtr->masterPtr->tkwin);
-		}
-		Unlink(slavePtr);
-		Tk_UnmapWindow(slavePtr->tkwin);
-	    }
-	}
+	return GridForgetRemoveCommand(tkwin, interp, argc, argv);
+	
     } else if ((c == 'i') && (strncmp(argv[1], "info", length) == 0)) {
-	register Gridder *slavePtr;
-	Tk_Window slave;
-	char buffer[64 + TCL_INTEGER_SPACE * 4];
-    
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " info window\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	slave = Tk_NameToWindow(interp, argv[2], tkwin);
-	if (slave == NULL) {
-	    return TCL_ERROR;
-	}
-	slavePtr = GetGrid(slave);
-	if (slavePtr->masterPtr == NULL) {
-	    Tcl_ResetResult(interp);
-	    return TCL_OK;
-	}
-    
-	Tcl_AppendElement(interp, "-in");
-	Tcl_AppendElement(interp, Tk_PathName(slavePtr->masterPtr->tkwin));
-	sprintf(buffer, " -column %d -row %d -columnspan %d -rowspan %d",
-		slavePtr->column, slavePtr->row,
-		slavePtr->numCols, slavePtr->numRows);
-	Tcl_AppendResult(interp, buffer, (char *) NULL);
-	sprintf(buffer, " -ipadx %d -ipady %d -padx %d -pady %d",
-		slavePtr->iPadX/2, slavePtr->iPadY/2, slavePtr->padX/2,
-		slavePtr->padY/2);
-	Tcl_AppendResult(interp, buffer, (char *) NULL);
-	StickyToString(slavePtr->sticky,buffer);
-	Tcl_AppendResult(interp, " -sticky ", buffer, (char *) NULL);
+	return GridInfoCommand(tkwin, interp, argc, argv);
+
     } else if((c == 'l') && (strncmp(argv[1], "location", length) == 0)) {
-	Tk_Window master;
-	register SlotInfo *slotPtr;
-	int x, y;		/* Offset in pixels, from edge of parent. */
-	int i, j;		/* Corresponding column and row indeces. */
-	int endX, endY;		/* end of grid */
-	char buf[TCL_INTEGER_SPACE * 2];
+	return GridLocationCommand(tkwin, interp, argc, argv);
 
-	if (argc != 5) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " location master x y\"", (char *)NULL);
-	    return TCL_ERROR;
-	}
-
-	master = Tk_NameToWindow(interp, argv[2], tkwin);
-	if (master == NULL) {
-	    return TCL_ERROR;
-	}
-
-	if (Tk_GetPixels(interp, master, argv[3], &x) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	if (Tk_GetPixels(interp, master, argv[4], &y) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-
-	masterPtr = GetGrid(master);
-	if (masterPtr->masterDataPtr == NULL) {
-	    Tcl_SetResult(interp, "-1 -1", TCL_STATIC);
-	    return TCL_OK;
-	}
-	gridPtr = masterPtr->masterDataPtr;
-
-	/* 
-	 * Update any pending requests.  This is not always the
-	 * steady state value, as more configure events could be in
-	 * the pipeline, but its as close as its easy to get.
-	 */
-
-	while (masterPtr->flags & REQUESTED_RELAYOUT) {
-	    Tcl_CancelIdleCall(ArrangeGrid, (ClientData) masterPtr);
-	    ArrangeGrid ((ClientData) masterPtr);
-	}
-	SetGridSize(masterPtr);
-	endX = MAX(gridPtr->columnEnd, gridPtr->columnMax);
-	endY = MAX(gridPtr->rowEnd, gridPtr->rowMax);
-
-	slotPtr  = masterPtr->masterDataPtr->columnPtr;
-	if (x < masterPtr->masterDataPtr->startX) {
-	    i = -1;
-	} else {
-	    x -= masterPtr->masterDataPtr->startX;
-	    for (i=0;slotPtr[i].offset < x && i < endX; i++) {
-		/* null body */
-	    }
-	}
-
-	slotPtr  = masterPtr->masterDataPtr->rowPtr;
-	if (y < masterPtr->masterDataPtr->startY) {
-	    j = -1;
-	} else {
-	    y -= masterPtr->masterDataPtr->startY;
-	    for (j=0;slotPtr[j].offset < y && j < endY; j++) {
-		/* null body */
-	    }
-	}
-
-	sprintf(buf, "%d %d", i, j);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
     } else if ((c == 'p') && (strncmp(argv[1], "propagate", length) == 0)) {
-	Tk_Window master;
-	int propagate;
-    
-	if (argc > 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " propagate window ?boolean?\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	master = Tk_NameToWindow(interp, argv[2], tkwin);
-	if (master == NULL) {
-	    return TCL_ERROR;
-	}
-	masterPtr = GetGrid(master);
-	if (argc == 3) {
-	    Tcl_SetResult(interp,
-		    ((masterPtr->flags & DONT_PROPAGATE) ? "0" : "1"),
-		    TCL_STATIC);
-	    return TCL_OK;
-	}
-	if (Tcl_GetBoolean(interp, argv[3], &propagate) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	
-	/* Only request a relayout if the propagation bit changes */
-	
-	if ((!propagate) ^ (masterPtr->flags&DONT_PROPAGATE)) {
-	    if (propagate) {
-		masterPtr->flags &= ~DONT_PROPAGATE;
-	    } else {
-		masterPtr->flags |= DONT_PROPAGATE;
-	    }
-      
-	    /*
-	     * Re-arrange the master to allow new geometry information to
-	     * propagate upwards to the master's master.
-	     */
-      
-	    if (masterPtr->abortPtr != NULL) {
-		*masterPtr->abortPtr = 1;
-	    }
-	    if (!(masterPtr->flags & REQUESTED_RELAYOUT)) {
-		masterPtr->flags |= REQUESTED_RELAYOUT;
-		Tcl_DoWhenIdle(ArrangeGrid, (ClientData) masterPtr);
-	    }
-	}
+	return GridPropagateCommand(tkwin, interp, argc, argv);
+
     } else if ((c == 's') && (strncmp(argv[1], "size", length) == 0)
 	    && (length > 1)) {
-	Tk_Window master;
-
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " size window\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	master = Tk_NameToWindow(interp, argv[2], tkwin);
-	if (master == NULL) {
-	    return TCL_ERROR;
-	}
-	masterPtr = GetGrid(master);
-
-	if (masterPtr->masterDataPtr != NULL) {
-	    char buf[TCL_INTEGER_SPACE * 2];
-
-	    SetGridSize(masterPtr);
-	    gridPtr = masterPtr->masterDataPtr;
-	    sprintf(buf, "%d %d",
-		    MAX(gridPtr->columnEnd, gridPtr->columnMax),
-		    MAX(gridPtr->rowEnd, gridPtr->rowMax));
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
-	} else {
-	    Tcl_SetResult(interp, "0 0", TCL_STATIC);
-	}
+	return GridSizeCommand(tkwin, interp, argc, argv);
+	
     } else if ((c == 's') && (strncmp(argv[1], "slaves", length) == 0)
 	    && (length > 1)) {
-	Tk_Window master;
-	Gridder *slavePtr;
-	int i, value;
-	int row = -1, column = -1;
- 
-	if ((argc < 3) || ((argc%2) == 0)) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " slaves window ?-option value...?\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-
-	for (i=3; i<argc; i+=2) {
-	    length = strlen(argv[i]);
-	    if ((*argv[i] != '-') || (length < 2)) {
-		Tcl_AppendResult(interp, "invalid args: should be \"",
-			argv[0], " slaves window ?-option value...?\"",
-			(char *) NULL);
-		return TCL_ERROR;
-	    }
-	    if (Tcl_GetInt(interp, argv[i+1], &value) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	    if (value < 0) {
-		Tcl_AppendResult(interp, argv[i],
-			" is an invalid value: should NOT be < 0",
-			(char *) NULL);
-		return TCL_ERROR;
-	    }
-	    if (strncmp(argv[i], "-column", length) == 0) {
-		column = value;
-	    } else if (strncmp(argv[i], "-row", length) == 0) {
-		row = value;
-	    } else {
-		Tcl_AppendResult(interp, argv[i],
-			" is an invalid option: should be \"",
-			"-row, -column\"",
-			(char *) NULL);
-		return TCL_ERROR;
-	    }
-	}
-	master = Tk_NameToWindow(interp, argv[2], tkwin);
-	if (master == NULL) {
-	    return TCL_ERROR;
-	}
-	masterPtr = GetGrid(master);
-
-	for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
-					     slavePtr = slavePtr->nextPtr) {
-	    if (column>=0 && (slavePtr->column > column
-		    || slavePtr->column+slavePtr->numCols-1 < column)) {
-		continue;
-	    }
-	    if (row>=0 && (slavePtr->row > row ||
-		    slavePtr->row+slavePtr->numRows-1 < row)) {
-		continue;
-	    }
-	    Tcl_AppendElement(interp, Tk_PathName(slavePtr->tkwin));
-	}
-
+	return GridSlavesCommand(tkwin, interp, argc, argv);
     /*
      * Sample argument combinations:
      *  grid columnconfigure <master> <index> -option
@@ -700,205 +357,807 @@ Tk_GridCmd(clientData, interp, argc, argv)
 	    && (length >= 3)) ||
             ((c == 'r') && (strncmp(argv[1], "rowconfigure", length) == 0) 
             && (length >=2))) {
-	Tk_Window master;
-	SlotInfo *slotPtr = NULL;
-	int slot;		/* the column or row number */
-	size_t length;		/* the # of chars in the "-option" string */
-	int slotType;		/* COLUMN or ROW */
-	int size;		/* the configuration value */
-	int checkOnly;		/* check the size only */
-	int argcPtr;		/* Number of items in index list */
-	char **argvPtr;		/* array of indeces */
-	char **indexP;		/* String value of current index list item. */
-	int ok;			/* temporary TCL result code */
-	int i;
-
-	if (((argc%2 != 0) && (argc>6)) || (argc < 4)) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		    " ", argv[1], " master index ?-option value...?\"",
-		    (char *)NULL);
-	    return TCL_ERROR;
-	}
-
-	master = Tk_NameToWindow(interp, argv[2], tkwin);
-	if (master == NULL) {
-	    return TCL_ERROR;
-	}
-
-	if (Tcl_SplitList(interp, argv[3], &argcPtr, &argvPtr) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-
-	checkOnly = ((argc == 4) || (argc == 5));
-	masterPtr = GetGrid(master);
-	slotType = (c == 'c') ? COLUMN : ROW;
-	if (checkOnly && argcPtr > 1) {
-	    Tcl_AppendResult(interp, argv[3],
-		    " must be a single element.", (char *) NULL);
-	    Tcl_Free((char *)argvPtr);
-	    return TCL_ERROR;
-	}
-	for (indexP=argvPtr; *indexP != NULL; indexP++) {
-	    if (Tcl_GetInt(interp, *indexP, &slot) != TCL_OK) {
-		Tcl_Free((char *)argvPtr);
-		return TCL_ERROR;
-	    }
-	    ok = CheckSlotData(masterPtr, slot, slotType, checkOnly);
-	    if ((ok!=TCL_OK) && ((argc<4) || (argc>5))) {
-		Tcl_AppendResult(interp, argv[0],
-			" ", argv[1], ": \"", *argvPtr,"\" is out of range",
-			(char *) NULL);
-		Tcl_Free((char *)argvPtr);
-		return TCL_ERROR;
-	    } else if (ok == TCL_OK) {
-		slotPtr = (slotType == COLUMN) ?
-			masterPtr->masterDataPtr->columnPtr :
-			masterPtr->masterDataPtr->rowPtr;
-	    }
-
-	    /*
-	     * Return all of the options for this row or column.  If the
-	     * request is out of range, return all 0's.
-	     */
-
-	    if (argc == 4) {
-		Tcl_Free((char *)argvPtr);
-	    }
-	    if ((argc == 4) && (ok == TCL_OK)) {
-		char buf[64 + TCL_INTEGER_SPACE * 3];
-		
-		sprintf(buf, "-minsize %d -pad %d -weight %d",
-			slotPtr[slot].minSize,slotPtr[slot].pad,
-			slotPtr[slot].weight);
-		Tcl_SetResult(interp, buf, TCL_VOLATILE);
-		return (TCL_OK);
-	    } else if (argc == 4) {
-		Tcl_SetResult(interp, "-minsize 0 -pad 0 -weight 0",
-			TCL_STATIC);
-		return (TCL_OK);
-	    }
-
-	    /*
-	     * Loop through each option value pair, setting the values as required.
-	     * If only one option is given, with no value, the current value is
-	     * returned.
-	     */
-
-	    for (i=4; i<argc; i+=2) {
-		length = strlen(argv[i]);
-		if ((*argv[i] != '-') || length < 2) {
-		    Tcl_AppendResult(interp, "invalid arg \"",
-			    argv[i], "\" :expecting -minsize, -pad, or -weight.",
-			    (char *) NULL);
-		    Tcl_Free((char *)argvPtr);
-		    return TCL_ERROR;
-		}
-		if (strncmp(argv[i], "-minsize", length) == 0) {
-		    if (argc == 5) {
-			char buf[TCL_INTEGER_SPACE];
-		    	int value;
-
-			value = (ok == TCL_OK) ? slotPtr[slot].minSize : 0;
-			sprintf(buf, "%d", value);
-			Tcl_SetResult(interp, buf, TCL_VOLATILE);
-		    } else if (Tk_GetPixels(interp, master, argv[i+1], &size)
-			    != TCL_OK) {
-			Tcl_Free((char *)argvPtr);
-			return TCL_ERROR;
-		    } else {
-			slotPtr[slot].minSize = size;
-		    }
-		}
-		else if (strncmp(argv[i], "-weight", length) == 0) {
-		    int wt;
-		    if (argc == 5) {
-			char buf[TCL_INTEGER_SPACE];
-		    	int value;
-
-			value = (ok == TCL_OK) ? slotPtr[slot].weight : 0;
-			sprintf(buf, "%d", value);
-			Tcl_SetResult(interp, buf, TCL_VOLATILE);
-		    } else if (Tcl_GetInt(interp, argv[i+1], &wt) != TCL_OK) {
-			Tcl_Free((char *)argvPtr);
-			return TCL_ERROR;
-		    } else if (wt < 0) {
-			Tcl_AppendResult(interp, "invalid arg \"", argv[i],
-				"\": should be non-negative", (char *) NULL);
-			Tcl_Free((char *)argvPtr);
-			return TCL_ERROR;
-		    } else {
-			slotPtr[slot].weight = wt;
-		    }
-		}
-		else if (strncmp(argv[i], "-pad", length) == 0) {
-		    if (argc == 5) {
-			char buf[TCL_INTEGER_SPACE];
-		    	int value;
-
-			value = (ok == TCL_OK) ? slotPtr[slot].pad : 0;
-			sprintf(buf, "%d", value);
-			Tcl_SetResult(interp, buf, TCL_VOLATILE);
-		    } else if (Tk_GetPixels(interp, master, argv[i+1], &size)
-			    != TCL_OK) {
-			Tcl_Free((char *)argvPtr);
-			return TCL_ERROR;
-		    } else if (size < 0) {
-			Tcl_AppendResult(interp, "invalid arg \"", argv[i],
-				"\": should be non-negative", (char *) NULL);
-			Tcl_Free((char *)argvPtr);
-			return TCL_ERROR;
-		    } else {
-			slotPtr[slot].pad = size;
-		    }
-		} else {
-		    Tcl_AppendResult(interp, "invalid arg \"",
-			    argv[i], "\": expecting -minsize, -pad, or -weight.",
-			    (char *) NULL);
-		    Tcl_Free((char *)argvPtr);
-		    return TCL_ERROR;
-		}
-	    }
-	}
-	Tcl_Free((char *)argvPtr);
-
-	/*
-	 * If we changed a property, re-arrange the table,
-	 * and check for constraint shrinkage.
-	 */
-
-	if (argc != 5) {
-	    if (slotType == ROW) {
-		int last = masterPtr->masterDataPtr->rowMax - 1;
-		while ((last >= 0) && (slotPtr[last].weight == 0)
-			&& (slotPtr[last].pad == 0)
-			&& (slotPtr[last].minSize == 0)) {
-		    last--;
-		}
-		masterPtr->masterDataPtr->rowMax = last+1;
-	    } else {
-		int last = masterPtr->masterDataPtr->columnMax - 1;
-		while ((last >= 0) && (slotPtr[last].weight == 0)
-			&& (slotPtr[last].pad == 0)
-			&& (slotPtr[last].minSize == 0)) {
-		    last--;
-		}
-		masterPtr->masterDataPtr->columnMax = last + 1;
-	    }
-
-	    if (masterPtr->abortPtr != NULL) {
-		*masterPtr->abortPtr = 1;
-	    }
-	    if (!(masterPtr->flags & REQUESTED_RELAYOUT)) {
-		masterPtr->flags |= REQUESTED_RELAYOUT;
-		Tcl_DoWhenIdle(ArrangeGrid, (ClientData) masterPtr);
-	    }
-	}
+	return GridRowColumnConfigureCommand(tkwin, interp, argc, argv);
+	
     } else {
 	Tcl_AppendResult(interp, "bad option \"", argv[1],
 		"\":  must be bbox, columnconfigure, configure, forget, info, ",
 		"location, propagate, remove, rowconfigure, size, or slaves.",
 		(char *) NULL);
 	return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GridBboxCommand --
+ *
+ *	Implementation of the [grid bbox] subcommand.
+ *
+ * Results:
+ *	Standard Tcl result.
+ *
+ * Side effects:
+ *	Places bounding box information in the interp's result field.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+GridBboxCommand(tkwin, interp, argc, argv)
+    Tk_Window tkwin;		/* Main window of the application. */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int argc;			/* Number of arguments. */
+    char **argv;		/* Argument strings. */
+{
+    Tk_Window master;
+    Gridder *masterPtr;		/* master grid record */
+    GridMaster *gridPtr;	/* pointer to grid data */
+    int row, column;		/* origin for bounding box */
+    int row2, column2;		/* end of bounding box */
+    int endX, endY;		/* last column/row in the layout */
+    int x=0, y=0;		/* starting pixels for this bounding box */
+    int width, height;		/* size of the bounding box */
+    char buf[TCL_INTEGER_SPACE * 4];
+    
+    if (argc!=3 && argc != 5 && argc != 7) {
+	Tcl_AppendResult(interp, "wrong number of arguments: ",
+		"must be \"",argv[0],
+		" bbox master ?column row ?column row??\"",
+		(char *) NULL);
+	return TCL_ERROR;
+    }
+    
+    master = Tk_NameToWindow(interp, argv[2], tkwin);
+    if (master == NULL) {
+	return TCL_ERROR;
+    }
+    masterPtr = GetGrid(master);
+    
+    if (argc >= 5) {
+	if (Tcl_GetInt(interp, argv[3], &column) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (Tcl_GetInt(interp, argv[4], &row) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	column2 = column;
+	row2 = row;
+    }
+    
+    if (argc == 7) {
+	if (Tcl_GetInt(interp, argv[5], &column2) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (Tcl_GetInt(interp, argv[6], &row2) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+    }
+    
+    gridPtr = masterPtr->masterDataPtr;
+    if (gridPtr == NULL) {
+	Tcl_SetResult(interp, "0 0 0 0", TCL_STATIC);
+	return TCL_OK;
+    }
+    
+    SetGridSize(masterPtr);
+    endX = MAX(gridPtr->columnEnd, gridPtr->columnMax);
+    endY = MAX(gridPtr->rowEnd, gridPtr->rowMax);
+    
+    if ((endX == 0) || (endY == 0)) {
+	Tcl_SetResult(interp, "0 0 0 0", TCL_STATIC);
+	return TCL_OK;
+    }
+    if (argc == 3) {
+	row = column = 0;
+	row2 = endY;
+	column2 = endX;
+    }
+    
+    if (column > column2) {
+	int temp = column;
+	column = column2, column2 = temp;
+    }
+    if (row > row2) {
+	int temp = row;
+	row = row2, row2 = temp;
+    }
+    
+    if (column > 0 && column < endX) {
+	x = gridPtr->columnPtr[column-1].offset;
+    } else if  (column > 0) {
+	x = gridPtr->columnPtr[endX-1].offset;
+    }
+    
+    if (row > 0 && row < endY) {
+	y = gridPtr->rowPtr[row-1].offset;
+    } else if (row > 0) {
+	y = gridPtr->rowPtr[endY-1].offset;
+    }
+    
+    if (column2 < 0) {
+	width = 0;
+    } else if (column2 >= endX) {
+	width = gridPtr->columnPtr[endX-1].offset - x;
+    } else {
+	width = gridPtr->columnPtr[column2].offset - x;
+    } 
+    
+    if (row2 < 0) {
+	height = 0;
+    } else if (row2 >= endY) {
+	height = gridPtr->rowPtr[endY-1].offset - y;
+    } else {
+	height = gridPtr->rowPtr[row2].offset - y;
+    } 
+    
+    sprintf(buf, "%d %d %d %d", x + gridPtr->startX, y + gridPtr->startY,
+	    width, height);
+    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GridForgetRemoveCommand --
+ *
+ *	Implementation of the [grid forget]/[grid remove] subcommands.
+ *	See the user documentation for details on what these do.
+ *
+ * Results:
+ *	Standard Tcl result.
+ *
+ * Side effects:
+ *	Removes a window from a grid layout.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+GridForgetRemoveCommand(tkwin, interp, argc, argv)
+    Tk_Window tkwin;		/* Main window of the application. */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int argc;			/* Number of arguments. */
+    char **argv;		/* Argument strings. */
+{
+    Tk_Window slave;
+    Gridder *slavePtr;
+    int i;
+    char c = argv[1][0];
+    
+    for (i = 2; i < argc; i++) {
+	slave = Tk_NameToWindow(interp, argv[i], tkwin);
+	if (slave == NULL) {
+	    return TCL_ERROR;
+	}
+	slavePtr = GetGrid(slave);
+	if (slavePtr->masterPtr != NULL) {
+	    
+	    /*
+	     * For "forget", reset all the settings to their defaults
+	     */
+	    
+	    if (c == 'f') {
+		slavePtr->column = slavePtr->row = -1;
+		slavePtr->numCols = 1;
+		slavePtr->numRows = 1;
+		slavePtr->padX = slavePtr->padY = 0;
+		slavePtr->iPadX = slavePtr->iPadY = 0;
+		slavePtr->doubleBw = 2*Tk_Changes(tkwin)->border_width;
+		if (slavePtr->flags & REQUESTED_RELAYOUT) {
+		    Tcl_CancelIdleCall(ArrangeGrid, (ClientData) slavePtr);
+		}
+		slavePtr->flags = 0;
+		slavePtr->sticky = 0;
+	    }
+	    Tk_ManageGeometry(slave, (Tk_GeomMgr *) NULL,
+		    (ClientData) NULL);
+	    if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
+		Tk_UnmaintainGeometry(slavePtr->tkwin,
+			slavePtr->masterPtr->tkwin);
+	    }
+	    Unlink(slavePtr);
+	    Tk_UnmapWindow(slavePtr->tkwin);
+	}
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GridInfoCommand --
+ *
+ *	Implementation of the [grid info] subcommand.  See the user
+ *	documentation for details on what it does.
+ *
+ * Results:
+ *	Standard Tcl result.
+ *
+ * Side effects:
+ *	Puts gridding information in the interpreter's result.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+GridInfoCommand(tkwin, interp, argc, argv)
+    Tk_Window tkwin;		/* Main window of the application. */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int argc;			/* Number of arguments. */
+    char **argv;		/* Argument strings. */
+{
+    register Gridder *slavePtr;
+    Tk_Window slave;
+    char buffer[64 + TCL_INTEGER_SPACE * 4];
+    
+    if (argc != 3) {
+	Tcl_AppendResult(interp, "wrong # args: should be \"",
+		argv[0], " info window\"", (char *) NULL);
+	return TCL_ERROR;
+    }
+    slave = Tk_NameToWindow(interp, argv[2], tkwin);
+    if (slave == NULL) {
+	return TCL_ERROR;
+    }
+    slavePtr = GetGrid(slave);
+    if (slavePtr->masterPtr == NULL) {
+	Tcl_ResetResult(interp);
+	return TCL_OK;
+    }
+    
+    Tcl_AppendElement(interp, "-in");
+    Tcl_AppendElement(interp, Tk_PathName(slavePtr->masterPtr->tkwin));
+    sprintf(buffer, " -column %d -row %d -columnspan %d -rowspan %d",
+	    slavePtr->column, slavePtr->row,
+	    slavePtr->numCols, slavePtr->numRows);
+    Tcl_AppendResult(interp, buffer, (char *) NULL);
+    sprintf(buffer, " -ipadx %d -ipady %d -padx %d -pady %d",
+	    slavePtr->iPadX/2, slavePtr->iPadY/2, slavePtr->padX/2,
+	    slavePtr->padY/2);
+    Tcl_AppendResult(interp, buffer, (char *) NULL);
+    StickyToString(slavePtr->sticky,buffer);
+    Tcl_AppendResult(interp, " -sticky ", buffer, (char *) NULL);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GridLocationCommand --
+ *
+ *	Implementation of the [grid location] subcommand.  See the user
+ *	documentation for details on what it does.
+ *
+ * Results:
+ *	Standard Tcl result.
+ *
+ * Side effects:
+ *	Puts location information in the interpreter's result field.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+GridLocationCommand(tkwin, interp, argc, argv)
+    Tk_Window tkwin;		/* Main window of the application. */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int argc;			/* Number of arguments. */
+    char **argv;		/* Argument strings. */
+{
+    Tk_Window master;
+    Gridder *masterPtr;		/* master grid record */
+    GridMaster *gridPtr;	/* pointer to grid data */
+    register SlotInfo *slotPtr;
+    int x, y;		/* Offset in pixels, from edge of parent. */
+    int i, j;		/* Corresponding column and row indeces. */
+    int endX, endY;		/* end of grid */
+    char buf[TCL_INTEGER_SPACE * 2];
+    
+    if (argc != 5) {
+	Tcl_AppendResult(interp, "wrong # args: should be \"",
+		argv[0], " location master x y\"", (char *)NULL);
+	return TCL_ERROR;
+    }
+    
+    master = Tk_NameToWindow(interp, argv[2], tkwin);
+    if (master == NULL) {
+	return TCL_ERROR;
+    }
+    
+    if (Tk_GetPixels(interp, master, argv[3], &x) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (Tk_GetPixels(interp, master, argv[4], &y) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    
+    masterPtr = GetGrid(master);
+    if (masterPtr->masterDataPtr == NULL) {
+	Tcl_SetResult(interp, "-1 -1", TCL_STATIC);
+	return TCL_OK;
+    }
+    gridPtr = masterPtr->masterDataPtr;
+    
+    /* 
+     * Update any pending requests.  This is not always the
+     * steady state value, as more configure events could be in
+     * the pipeline, but its as close as its easy to get.
+     */
+    
+    while (masterPtr->flags & REQUESTED_RELAYOUT) {
+	Tcl_CancelIdleCall(ArrangeGrid, (ClientData) masterPtr);
+	ArrangeGrid ((ClientData) masterPtr);
+    }
+    SetGridSize(masterPtr);
+    endX = MAX(gridPtr->columnEnd, gridPtr->columnMax);
+    endY = MAX(gridPtr->rowEnd, gridPtr->rowMax);
+    
+    slotPtr  = masterPtr->masterDataPtr->columnPtr;
+    if (x < masterPtr->masterDataPtr->startX) {
+	i = -1;
+    } else {
+	x -= masterPtr->masterDataPtr->startX;
+	for (i=0;slotPtr[i].offset < x && i < endX; i++) {
+	    /* null body */
+	}
+    }
+    
+    slotPtr  = masterPtr->masterDataPtr->rowPtr;
+    if (y < masterPtr->masterDataPtr->startY) {
+	j = -1;
+    } else {
+	y -= masterPtr->masterDataPtr->startY;
+	for (j=0;slotPtr[j].offset < y && j < endY; j++) {
+	    /* null body */
+	}
+    }
+    
+    sprintf(buf, "%d %d", i, j);
+    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GridPropagateCommand --
+ *
+ *	Implementation of the [grid propagate] subcommand.  See the user
+ *	documentation for details on what it does.
+ *
+ * Results:
+ *	Standard Tcl result.
+ *
+ * Side effects:
+ *	May alter geometry propagation for a widget.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+GridPropagateCommand(tkwin, interp, argc, argv)
+    Tk_Window tkwin;		/* Main window of the application. */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int argc;			/* Number of arguments. */
+    char **argv;		/* Argument strings. */
+{
+    Tk_Window master;
+    Gridder *masterPtr;
+    int propagate;
+    
+    if (argc > 4) {
+	Tcl_AppendResult(interp, "wrong # args: should be \"",
+		argv[0], " propagate window ?boolean?\"",
+		(char *) NULL);
+	return TCL_ERROR;
+    }
+    master = Tk_NameToWindow(interp, argv[2], tkwin);
+    if (master == NULL) {
+	return TCL_ERROR;
+    }
+    masterPtr = GetGrid(master);
+    if (argc == 3) {
+	Tcl_SetResult(interp,
+		((masterPtr->flags & DONT_PROPAGATE) ? "0" : "1"),
+		TCL_STATIC);
+	return TCL_OK;
+    }
+    if (Tcl_GetBoolean(interp, argv[3], &propagate) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    
+    /* Only request a relayout if the propagation bit changes */
+    
+    if ((!propagate) ^ (masterPtr->flags&DONT_PROPAGATE)) {
+	if (propagate) {
+	    masterPtr->flags &= ~DONT_PROPAGATE;
+	} else {
+	    masterPtr->flags |= DONT_PROPAGATE;
+	}
+	
+	/*
+	 * Re-arrange the master to allow new geometry information to
+	 * propagate upwards to the master's master.
+	 */
+	
+	if (masterPtr->abortPtr != NULL) {
+	    *masterPtr->abortPtr = 1;
+	}
+	if (!(masterPtr->flags & REQUESTED_RELAYOUT)) {
+	    masterPtr->flags |= REQUESTED_RELAYOUT;
+	    Tcl_DoWhenIdle(ArrangeGrid, (ClientData) masterPtr);
+	}
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GridRowColumnConfigureCommand --
+ *
+ *	Implementation of the [grid rowconfigure] and [grid columnconfigure]
+ *	subcommands.  See the user documentation for details on what these
+ *	do.
+ *
+ * Results:
+ *	Standard Tcl result.
+ *
+ * Side effects:
+ *	Depends on arguments; see user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+GridRowColumnConfigureCommand(tkwin, interp, argc, argv)
+    Tk_Window tkwin;		/* Main window of the application. */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int argc;			/* Number of arguments. */
+    char **argv;		/* Argument strings. */
+{
+    Tk_Window master;
+    Gridder *masterPtr;
+    SlotInfo *slotPtr = NULL;
+    int slot;		/* the column or row number */
+    size_t length;		/* the # of chars in the "-option" string */
+    int slotType;		/* COLUMN or ROW */
+    int size;		/* the configuration value */
+    int checkOnly;		/* check the size only */
+    int argcPtr;		/* Number of items in index list */
+    char **argvPtr;		/* array of indeces */
+    char **indexP;		/* String value of current index list item. */
+    int ok;			/* temporary TCL result code */
+    int i;
+    char c;
+    
+    if (((argc%2 != 0) && (argc>6)) || (argc < 4)) {
+	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
+		" ", argv[1], " master index ?-option value...?\"",
+		(char *)NULL);
+	return TCL_ERROR;
+    }
+    
+    master = Tk_NameToWindow(interp, argv[2], tkwin);
+    if (master == NULL) {
+	return TCL_ERROR;
+    }
+    
+    if (Tcl_SplitList(interp, argv[3], &argcPtr, &argvPtr) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    
+    c = argv[1][0];
+    checkOnly = ((argc == 4) || (argc == 5));
+    masterPtr = GetGrid(master);
+    slotType = (c == 'c') ? COLUMN : ROW;
+    if (checkOnly && argcPtr > 1) {
+	Tcl_AppendResult(interp, argv[3],
+		" must be a single element.", (char *) NULL);
+	Tcl_Free((char *)argvPtr);
+	return TCL_ERROR;
+    }
+    for (indexP=argvPtr; *indexP != NULL; indexP++) {
+	if (Tcl_GetInt(interp, *indexP, &slot) != TCL_OK) {
+	    Tcl_Free((char *)argvPtr);
+	    return TCL_ERROR;
+	}
+	ok = CheckSlotData(masterPtr, slot, slotType, checkOnly);
+	if ((ok!=TCL_OK) && ((argc<4) || (argc>5))) {
+	    Tcl_AppendResult(interp, argv[0],
+		    " ", argv[1], ": \"", *argvPtr,"\" is out of range",
+		    (char *) NULL);
+	    Tcl_Free((char *)argvPtr);
+	    return TCL_ERROR;
+	} else if (ok == TCL_OK) {
+	    slotPtr = (slotType == COLUMN) ?
+		masterPtr->masterDataPtr->columnPtr :
+		masterPtr->masterDataPtr->rowPtr;
+	}
+	
+	/*
+	 * Return all of the options for this row or column.  If the
+	 * request is out of range, return all 0's.
+	 */
+	
+	if (argc == 4) {
+	    Tcl_Free((char *)argvPtr);
+	}
+	if ((argc == 4) && (ok == TCL_OK)) {
+	    char buf[64 + TCL_INTEGER_SPACE * 3];
+	    
+	    sprintf(buf, "-minsize %d -pad %d -weight %d",
+		    slotPtr[slot].minSize,slotPtr[slot].pad,
+		    slotPtr[slot].weight);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	    return (TCL_OK);
+	} else if (argc == 4) {
+	    Tcl_SetResult(interp, "-minsize 0 -pad 0 -weight 0",
+		    TCL_STATIC);
+	    return (TCL_OK);
+	}
+	
+	/*
+	 * Loop through each option value pair, setting the values as
+	 * required.  If only one option is given, with no value, the
+	 * current value is returned.
+	 */
+	
+	for (i=4; i<argc; i+=2) {
+	    length = strlen(argv[i]);
+	    if ((*argv[i] != '-') || length < 2) {
+		Tcl_AppendResult(interp, "invalid arg \"", argv[i],
+			"\" :expecting -minsize, -pad, or -weight.",
+			(char *) NULL);
+		Tcl_Free((char *)argvPtr);
+		return TCL_ERROR;
+	    }
+	    if (strncmp(argv[i], "-minsize", length) == 0) {
+		if (argc == 5) {
+		    char buf[TCL_INTEGER_SPACE];
+		    int value;
+		    
+		    value = (ok == TCL_OK) ? slotPtr[slot].minSize : 0;
+		    sprintf(buf, "%d", value);
+		    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+		} else if (Tk_GetPixels(interp, master, argv[i+1], &size)
+			!= TCL_OK) {
+		    Tcl_Free((char *)argvPtr);
+		    return TCL_ERROR;
+		} else {
+		    slotPtr[slot].minSize = size;
+		}
+	    }
+	    else if (strncmp(argv[i], "-weight", length) == 0) {
+		int wt;
+		if (argc == 5) {
+		    char buf[TCL_INTEGER_SPACE];
+		    int value;
+		    
+		    value = (ok == TCL_OK) ? slotPtr[slot].weight : 0;
+		    sprintf(buf, "%d", value);
+		    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+		} else if (Tcl_GetInt(interp, argv[i+1], &wt) != TCL_OK) {
+		    Tcl_Free((char *)argvPtr);
+		    return TCL_ERROR;
+		} else if (wt < 0) {
+		    Tcl_AppendResult(interp, "invalid arg \"", argv[i],
+			    "\": should be non-negative", (char *) NULL);
+		    Tcl_Free((char *)argvPtr);
+		    return TCL_ERROR;
+		} else {
+		    slotPtr[slot].weight = wt;
+		}
+	    }
+	    else if (strncmp(argv[i], "-pad", length) == 0) {
+		if (argc == 5) {
+		    char buf[TCL_INTEGER_SPACE];
+		    int value;
+		    
+		    value = (ok == TCL_OK) ? slotPtr[slot].pad : 0;
+		    sprintf(buf, "%d", value);
+		    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+		} else if (Tk_GetPixels(interp, master, argv[i+1], &size)
+			!= TCL_OK) {
+		    Tcl_Free((char *)argvPtr);
+		    return TCL_ERROR;
+		} else if (size < 0) {
+		    Tcl_AppendResult(interp, "invalid arg \"", argv[i],
+			    "\": should be non-negative", (char *) NULL);
+		    Tcl_Free((char *)argvPtr);
+		    return TCL_ERROR;
+		} else {
+		    slotPtr[slot].pad = size;
+		}
+	    } else {
+		Tcl_AppendResult(interp, "invalid arg \"",
+			argv[i], "\": expecting -minsize, -pad, or -weight.",
+			(char *) NULL);
+		Tcl_Free((char *)argvPtr);
+		return TCL_ERROR;
+	    }
+	}
+    }
+    Tcl_Free((char *)argvPtr);
+    
+    /*
+     * If we changed a property, re-arrange the table,
+     * and check for constraint shrinkage.
+     */
+    
+    if (argc != 5) {
+	if (slotType == ROW) {
+	    int last = masterPtr->masterDataPtr->rowMax - 1;
+	    while ((last >= 0) && (slotPtr[last].weight == 0)
+		    && (slotPtr[last].pad == 0)
+		    && (slotPtr[last].minSize == 0)) {
+		last--;
+	    }
+	    masterPtr->masterDataPtr->rowMax = last+1;
+	} else {
+	    int last = masterPtr->masterDataPtr->columnMax - 1;
+	    while ((last >= 0) && (slotPtr[last].weight == 0)
+		    && (slotPtr[last].pad == 0)
+		    && (slotPtr[last].minSize == 0)) {
+		last--;
+	    }
+	    masterPtr->masterDataPtr->columnMax = last + 1;
+	}
+	
+	if (masterPtr->abortPtr != NULL) {
+	    *masterPtr->abortPtr = 1;
+	}
+	if (!(masterPtr->flags & REQUESTED_RELAYOUT)) {
+	    masterPtr->flags |= REQUESTED_RELAYOUT;
+	    Tcl_DoWhenIdle(ArrangeGrid, (ClientData) masterPtr);
+	}
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GridSizeCommand --
+ *
+ *	Implementation of the [grid size] subcommand.  See the user
+ *	documentation for details on what it does.
+ *
+ * Results:
+ *	Standard Tcl result.
+ *
+ * Side effects:
+ *	Puts grid size information in the interpreter's result.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+GridSizeCommand(tkwin, interp, argc, argv)
+    Tk_Window tkwin;		/* Main window of the application. */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int argc;			/* Number of arguments. */
+    char **argv;		/* Argument strings. */
+{
+    Tk_Window master;
+    Gridder *masterPtr;
+    GridMaster *gridPtr;	/* pointer to grid data */
+    
+    if (argc != 3) {
+	Tcl_AppendResult(interp, "wrong # args: should be \"",
+		argv[0], " size window\"", (char *) NULL);
+	return TCL_ERROR;
+    }
+    master = Tk_NameToWindow(interp, argv[2], tkwin);
+    if (master == NULL) {
+	return TCL_ERROR;
+    }
+    masterPtr = GetGrid(master);
+    
+    if (masterPtr->masterDataPtr != NULL) {
+	char buf[TCL_INTEGER_SPACE * 2];
+	
+	SetGridSize(masterPtr);
+	gridPtr = masterPtr->masterDataPtr;
+	sprintf(buf, "%d %d",
+		MAX(gridPtr->columnEnd, gridPtr->columnMax),
+		MAX(gridPtr->rowEnd, gridPtr->rowMax));
+	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+    } else {
+	Tcl_SetResult(interp, "0 0", TCL_STATIC);
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GridSlavesCommand --
+ *
+ *	Implementation of the [grid slaves] subcommand.  See the user
+ *	documentation for details on what it does.
+ *
+ * Results:
+ *	Standard Tcl result.
+ *
+ * Side effects:
+ *	Places a list of slaves of the specified window in the
+ *	interpreter's result field.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+GridSlavesCommand(tkwin, interp, argc, argv)
+    Tk_Window tkwin;		/* Main window of the application. */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int argc;			/* Number of arguments. */
+    char **argv;		/* Argument strings. */
+{
+    Tk_Window master;
+    Gridder *masterPtr;		/* master grid record */
+    Gridder *slavePtr;
+    int i, value;
+    size_t length;
+    int row = -1, column = -1;
+    
+    if ((argc < 3) || ((argc%2) == 0)) {
+	Tcl_AppendResult(interp, "wrong # args: should be \"",
+		argv[0], " slaves window ?-option value...?\"",
+		(char *) NULL);
+	return TCL_ERROR;
+    }
+    
+    for (i=3; i<argc; i+=2) {
+	length = strlen(argv[i]);
+	if ((*argv[i] != '-') || (length < 2)) {
+	    Tcl_AppendResult(interp, "invalid args: should be \"",
+		    argv[0], " slaves window ?-option value...?\"",
+		    (char *) NULL);
+	    return TCL_ERROR;
+	}
+	if (Tcl_GetInt(interp, argv[i+1], &value) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (value < 0) {
+	    Tcl_AppendResult(interp, argv[i],
+		    " is an invalid value: should NOT be < 0",
+		    (char *) NULL);
+	    return TCL_ERROR;
+	}
+	if (strncmp(argv[i], "-column", length) == 0) {
+	    column = value;
+	} else if (strncmp(argv[i], "-row", length) == 0) {
+	    row = value;
+	} else {
+	    Tcl_AppendResult(interp, argv[i],
+		    " is an invalid option: should be \"",
+		    "-row, -column\"",
+		    (char *) NULL);
+	    return TCL_ERROR;
+	}
+    }
+    master = Tk_NameToWindow(interp, argv[2], tkwin);
+    if (master == NULL) {
+	return TCL_ERROR;
+    }
+    masterPtr = GetGrid(master);
+    
+    for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
+	 slavePtr = slavePtr->nextPtr) {
+	if (column>=0 && (slavePtr->column > column
+		|| slavePtr->column+slavePtr->numCols-1 < column)) {
+	    continue;
+	}
+	if (row>=0 && (slavePtr->row > row ||
+		slavePtr->row+slavePtr->numRows-1 < row)) {
+	    continue;
+	}
+	Tcl_AppendElement(interp, Tk_PathName(slavePtr->tkwin));
     }
     return TCL_OK;
 }

@@ -1,3 +1,8 @@
+2000-08-02  Eric Melski  <ericm@ajubasolutions.com>
+
+	* generic/tkGrid.c (Tk_GridCmd): Split [grid] subcommands into
+	separate functions instead of inlining them all in Tk_GridCmd.
+
 2000-08-01  Eric Melski  <ericm@ajubasolutions.com>
 
 	* generic/tkInt.h: Replaced prototype for Tk_MessageCmd with
