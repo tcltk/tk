@@ -2754,7 +2754,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "-DMAC_OSX_TK -DTCL_WIDE_INT_TYPE=\"long long\"";
-				OTHER_LDFLAGS = "-sectcreate __TEXT __info_plist \"$TEMP_DIR/Info.plist\"";
+				OTHER_LDFLAGS = "-sectcreate __TEXT __info_plist \"$TEMP_DIR/Info.plist\" -headerpad_max_install_names";
 				OTHER_REZFLAGS = "-i \"$(SYMROOT)/Tcl.framework/Headers\" -i \"../generic\"";
 				PRODUCT_NAME = "Wish Shell";
 				SECTORDER_FLAGS = "";
@@ -3090,7 +3090,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "# redo prebinding\ncd \"${INSTALL_ROOT}\"\nif [ ! -d usr/lib ]; then mkdir -p usr; ln -fs /usr/lib usr/; RM_USRLIB=1; fi\nif [ ! -d System ]; then ln -fs /System .; RM_SYSTEM=1; fi\nredo_prebinding -r . \"./${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}/${PRODUCT_NAME}\"\nif [ -n \"${RM_USRLIB:-}\" ]; then rm -f usr/lib; rmdir -p usr 2>&-; fi\nif [ -n \"${RM_SYSTEM:-}\" ]; then rm -f System; fi\n\n# fix permissions on uninstalled products\nchmod a+w \"${TEMP_ROOT}/UninstalledProducts\"\nrm -f \"${TEMP_ROOT}\"/UninstalledProducts/libtkstub*.a";
+			shellScript = "# redo prebinding\ncd \"${INSTALL_ROOT}\"\nif [ ! -d usr/lib ]; then mkdir -p usr; ln -fs /usr/lib usr/; RM_USRLIB=1; fi\nif [ ! -d System ]; then ln -fs /System .; RM_SYSTEM=1; fi\nif [ ! -d Library/Frameworks/Tcl.framework ]; then ln -fs ${SYMROOT}/Tcl.framework Library/Frameworks; RM_TCL=1; fi\nredo_prebinding -r . \"./${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}/${PRODUCT_NAME}\"\nif [ -n \"${RM_USRLIB:-}\" ]; then rm -f usr/lib; rmdir -p usr 2>&-; fi\nif [ -n \"${RM_SYSTEM:-}\" ]; then rm -f System; fi\nif [ -n \"${RM_TCL:-}\" ]; then rm -f Library/Frameworks/Tcl.framework; fi\n\n# fix permissions on uninstalled products\nchmod a+w \"${TEMP_ROOT}/UninstalledProducts\"\nrm -f \"${TEMP_ROOT}\"/UninstalledProducts/libtkstub*.a";
 		};
 		F5877FBD031FAC6A016F146B = {
 			buildActionMask = 8;
@@ -3103,7 +3103,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "# redo prebinding\ncd \"${INSTALL_ROOT}\"\nif [ ! -d usr/lib ]; then mkdir -p usr; ln -fs /usr/lib usr/; RM_USRLIB=1; fi\nif [ ! -d System ]; then ln -fs /System .; RM_SYSTEM=1; fi\nredo_prebinding -r . \"./${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/MacOS/${PRODUCT_NAME}\"\nif [ -n \"${RM_USRLIB:-}\" ]; then rm -f usr/lib; rmdir -p usr 2>&-; fi\nif [ -n \"${RM_SYSTEM:-}\" ]; then rm -f System; fi\n\n# install wish script & symbolic links\nif [ `echo \"${DYLIB_INSTALL_PATH:-}\" | grep -c \"@executable_path\"` -eq 0 ]; then\nmkdir -p \"${INSTALL_ROOT}/usr/bin\"\nrm -f \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\"\ncat > \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\" <<EOF\n#!/bin/sh\n\"${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/MacOS/${PRODUCT_NAME}\" \"\\$@\"\nEOF\nchmod a+x \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\"\nln -fs \"wish${FRAMEWORK_VERSION}\" \"${INSTALL_ROOT}/usr/bin/wish\"\nfi";
+			shellScript = "# redo prebinding\ncd \"${INSTALL_ROOT}\"\nif [ ! -d usr/lib ]; then mkdir -p usr; ln -fs /usr/lib usr/; RM_USRLIB=1; fi\nif [ ! -d System ]; then ln -fs /System .; RM_SYSTEM=1; fi\nif [ ! -d Library/Frameworks/Tcl.framework ]; then ln -fs ${SYMROOT}/Tcl.framework Library/Frameworks; RM_TCL=1; fi\nredo_prebinding -r . \"./${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/MacOS/${PRODUCT_NAME}\"\nif [ -n \"${RM_USRLIB:-}\" ]; then rm -f usr/lib; rmdir -p usr 2>&-; fi\nif [ -n \"${RM_SYSTEM:-}\" ]; then rm -f System; fi\nif [ -n \"${RM_TCL:-}\" ]; then rm -f Library/Frameworks/Tcl.framework; fi\n\n# install wish script & symbolic links\nif [ `echo \"${DYLIB_INSTALL_PATH:-}\" | grep -c \"@executable_path\"` -eq 0 ]; then\nmkdir -p \"${INSTALL_ROOT}/usr/bin\"\nrm -f \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\"\ncat > \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\" <<EOF\n#!/bin/sh\n\"../..${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/MacOS/${PRODUCT_NAME}\" \"\\$@\"\nEOF\nchmod a+x \"${INSTALL_ROOT}/usr/bin/wish${FRAMEWORK_VERSION}\"\nln -fs \"wish${FRAMEWORK_VERSION}\" \"${INSTALL_ROOT}/usr/bin/wish\"\nfi";
 		};
 		F59D847903390D7E016F146B = {
 			buildActionMask = 2147483647;
@@ -3386,7 +3386,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# synthesize tkConfig.sh via buildTkConfig.tcl script\nexport DYLD_FRAMEWORK_PATH=${SYMROOT}\n\"${SYMROOT}/tclsh${FRAMEWORK_VERSION}\" \"${SRCROOT}/buildTkConfig.tcl\" \"${TARGET_BUILD_DIR}/Tcl.${WRAPPER_EXTENSION}/Resources/tclConfig.sh\" \"${SRCROOT}/../unix/tkConfig.sh.in\" \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Resources/tkConfig.sh\"";
+			shellScript = "# synthesize tkConfig.sh via buildTkConfig.tcl script\nexport DYLD_FRAMEWORK_PATH=${SYMROOT}\n\"${SYMROOT}/tclsh${FRAMEWORK_VERSION}\" \"${SRCROOT}/buildTkConfig.tcl\" \"${SYMROOT}/Tcl.${WRAPPER_EXTENSION}/Resources/tclConfig.sh\" \"${SRCROOT}/../unix/tkConfig.sh.in\" \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Resources/tkConfig.sh\"";
 		};
 		F5C2EA33034D71B2016F146B = {
 			isa = PBXFileReference;
