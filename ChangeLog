@@ -1,3 +1,10 @@
+2004-12-03  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkImgPhoto.c (Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock):
+	Make overlay compositing where the target is empty no longer set
+	the target to magical gray, and also make sure that the
+	complex-alpha flag is toggled when necessary. [Patch 848161]
+
 2004-12-01  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/tkUnixButton.c (TkpDisplayButton): constrain coords to
