@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.13 2000/01/21 17:25:43 ericm Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.14 2000/02/03 17:29:57 ericm Exp $
  */
 
 #include "default.h"
@@ -302,7 +302,7 @@ static void		DumpLine _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkText *textPtr, int what, TkTextLine *linePtr,
 			    int start, int end, int lineno, char *command));
 static int		DumpSegment _ANSI_ARGS_((Tcl_Interp *interp, char *key,
-			    char *value, char * command, int lineno, int offset,
+			    char *value, char * command, TkTextIndex *index,
 			    int what));
 
 /*
@@ -2222,7 +2222,7 @@ TextDumpCmd(textPtr, interp, argc, argv)
     if (TkTextGetIndex(interp, textPtr, argv[arg], &index1) != TCL_OK) {
 	return TCL_ERROR;
     }
-    lineno = TkBTreeLineIndex(index1.linePtr) + 1;
+    lineno = TkBTreeLineIndex(index1.linePtr);
     arg++;
     atEnd = 0;
     if (argc == arg) {
@@ -2290,6 +2290,7 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
 {
     int offset;
     TkTextSegment *segPtr;
+    TkTextIndex index;
     /*
      * Must loop through line looking at its segments.
      * character
@@ -2298,6 +2299,7 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
      * image
      * window
      */
+
     for (offset = 0, segPtr = linePtr->segPtr ;
 	    (offset < endByte) && (segPtr != (TkTextSegment *)NULL) ;
 	    offset += segPtr->size, segPtr = segPtr->nextPtr) {
@@ -2314,31 +2316,37 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
 	    }
 	    savedChar = segPtr->body.chars[last];
 	    segPtr->body.chars[last] = '\0';
+	    
+	    TkTextMakeByteIndex(textPtr->tree, lineno, offset + first, &index);
 	    DumpSegment(interp, "text", segPtr->body.chars + first,
-		    command, lineno, offset + first, what);
+		    command, &index, what);
 	    segPtr->body.chars[last] = savedChar;
 	} else if ((offset >= startByte)) {
 	    if ((what & TK_DUMP_MARK) && (segPtr->typePtr->name[0] == 'm')) {
 		TkTextMark *markPtr = (TkTextMark *)&segPtr->body;
 		char *name = Tcl_GetHashKey(&textPtr->markTable, markPtr->hPtr);
-		DumpSegment(interp, "mark", name,
-			command, lineno, offset, what);
+
+		TkTextMakeByteIndex(textPtr->tree, lineno, offset, &index);
+		DumpSegment(interp, "mark", name, command, &index, what);
 	    } else if ((what & TK_DUMP_TAG) &&
 			(segPtr->typePtr == &tkTextToggleOnType)) {
+		TkTextMakeByteIndex(textPtr->tree, lineno, offset, &index);
 		DumpSegment(interp, "tagon",
 			segPtr->body.toggle.tagPtr->name,
-			command, lineno, offset, what);
+			command, &index, what);
 	    } else if ((what & TK_DUMP_TAG) && 
 			(segPtr->typePtr == &tkTextToggleOffType)) {
+		TkTextMakeByteIndex(textPtr->tree, lineno, offset, &index);
 		DumpSegment(interp, "tagoff",
 			segPtr->body.toggle.tagPtr->name,
-			command, lineno, offset, what);
+			command, &index, what);
 	    } else if ((what & TK_DUMP_IMG) && 
 			(segPtr->typePtr->name[0] == 'i')) {
 		TkTextEmbImage *eiPtr = (TkTextEmbImage *)&segPtr->body;
 		char *name = (eiPtr->name ==  NULL) ? "" : eiPtr->name;
+		TkTextMakeByteIndex(textPtr->tree, lineno, offset, &index);
 		DumpSegment(interp, "image", name,
-			command, lineno, offset, what);
+			command, &index, what);
 	    } else if ((what & TK_DUMP_WIN) && 
 			(segPtr->typePtr->name[0] == 'w')) {
 		TkTextEmbWindow *ewPtr = (TkTextEmbWindow *)&segPtr->body;
@@ -2348,8 +2356,9 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
 		} else {
 		    pathname = Tk_PathName(ewPtr->tkwin);
 		}
+		TkTextMakeByteIndex(textPtr->tree, lineno, offset, &index);
 		DumpSegment(interp, "window", pathname,
-			command, lineno, offset, what);
+			command, &index, what);
 	    }
 	}
     }
@@ -2367,17 +2376,16 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
  *	Either evals the callback or appends elements to the result string.
  */
 static int
-DumpSegment(interp, key, value, command, lineno, offset, what)
+DumpSegment(interp, key, value, command, index, what)
     Tcl_Interp *interp;
     char *key;			/* Segment type key */
     char *value;		/* Segment value */
     char *command;		/* Script callback */
-    int lineno;			/* Line number for indices dump */
-    int offset;			/* Byte position */
+    TkTextIndex *index;         /* index with line/byte position info */
     int what;			/* Look for TK_DUMP_INDEX bit */
 {
-    char buffer[30];
-    sprintf(buffer, "%d.%d", lineno, offset);		
+    char buffer[TCL_INTEGER_SPACE*2];
+    TkTextPrintIndex(index, buffer);
     if (command == (char *) NULL) {
 	Tcl_AppendElement(interp, key);
 	Tcl_AppendElement(interp, value);

@@ -1,3 +1,11 @@
+2000-02-03  Eric Melski  <ericm@scriptics.com>
+
+	* tests/text.test: 
+	* generic/tkText.c (DumpLine/DumpSegment): Changed DumpSegment to
+	take a TkTextIndex instead of two integer offsets, so that it
+	could use TkTextPrintIndex to format the offsets into an index,
+	which makes it UTF smart (bug #2582).
+
 2000-02-01  Eric Melski  <ericm@scriptics.com>
 
 	* library/tk.tcl: 
