@@ -1,5 +1,8 @@
 2003-11-11  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* unix/configure:
+	* unix/tcl.m4: improve AIX --enable-64bit handling
+
 	* generic/tkButton.c (ConfigureButton): abort option processing if
 	the button was deleted. [Bug #824479]
 
