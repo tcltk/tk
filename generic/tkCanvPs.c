@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.12 2002/10/10 21:01:17 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.13 2003/02/18 21:54:18 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1209,7 +1209,7 @@ TkPostscriptImage(interp, tkwin, psInfo, ximage, x, y, width, height)
     int bytesPerLine=0, maxWidth=0;
     int level = psInfoPtr->colorLevel;
     Colormap cmap;
-    int i, depth, ncolors;
+    int i, ncolors;
     Visual *visual;
     TkColormapData cdata;
 
@@ -1218,7 +1218,6 @@ TkPostscriptImage(interp, tkwin, psInfo, ximage, x, y, width, height)
     }
 
     cmap = Tk_Colormap(tkwin);
-    depth = Tk_Depth(tkwin);
     visual = Tk_Visual(tkwin);
 
     /*
