@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: checkbutton.n,v 1.4.6.1 2002/08/20 20:27:00 das Exp $
+'\" RCS: @(#) $Id: checkbutton.n,v 1.4.6.2 2002/08/30 15:36:13 das Exp $
 '\" 
 .so man.macros
 .TH checkbutton n 4.4 Tk "Tk Built-In Commands"
@@ -46,7 +46,13 @@ selected and raised otherwise.
 .VS 8.4
 .OP \-offrelief offRelief OffRelief
 Specifies the relief for the checkbutton when the indicator is not drawn and
-the checkbutton is off.  The default value is "raised".
+the checkbutton is off.  The default value is "raised".  By setting this option
+to "flat" and setting -indicatoron to false and -overrelief to raised,
+the effect is achieved 
+of having a flat button that raises on mouse-over and which is
+depressed when activated.  This is the behavior typically exhibited by
+the Bold, Italic, and Underline checkbuttons on the toolbar of a 
+word-processor, for example.
 .VE 8.4
 .OP \-offvalue offValue Value
 Specifies value to store in the button's associated variable whenever

@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.44.2.3 2002/08/20 20:27:18 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.44.2.4 2002/08/30 15:36:13 das Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -115,7 +115,6 @@ BITMAP_DIR_NATIVE	= $(shell $(CYGPATH) '$(ROOT_DIR)/bitmaps')
 XLIB_DIR_NATIVE		= $(shell $(CYGPATH) '$(ROOT_DIR)/xlib')
 TCL_GENERIC_NATIVE	= $(shell $(CYGPATH) '$(TCL_GENERIC_DIR)')
 TCL_SRC_DIR_NATIVE      = $(shell $(CYGPATH) '$(TCL_SRC_DIR)')
-TCL_BIN_DIR_NATIVE      = $(shell $(CYGPATH) '$(TCL_BIN_DIR)')
 RC_DIR_NATIVE      	= $(shell $(CYGPATH) '$(RC_DIR)')
 
 DLLSUFFIX		= @DLLSUFFIX@
@@ -130,7 +129,6 @@ SHARED_LIBRARIES 	= $(TK_DLL_FILE) $(TK_STUB_LIB_FILE)
 STATIC_LIBRARIES	= $(TK_LIB_FILE)
 
 WISH			= wish$(VER)${EXESUFFIX}
-TCLTEST			= $(TCL_BIN_DIR)/tcltest${EXEEXT}
 TKTEST			= tktest${EXEEXT}
 CAT32			= cat32$(EXEEXT)
 MAN2TCL			= man2tcl$(EXEEXT)
@@ -223,21 +221,7 @@ INSTALL_DATA	= ${INSTALL}
 WISH_OBJS = \
 	winMain.$(OBJEXT)
 
-TCLTEST_OBJS = \
-	${TCL_BIN_DIR}/tclThreadTest.$(OBJEXT)
-
-TCLTEST_OBJS_NATIVE = \
-	"${TCL_BIN_DIR_NATIVE}/tclThreadTest.$(OBJEXT)"
-
 TKTEST_OBJS = \
-	$(TCLTEST_OBJS) \
-	testMain.$(OBJEXT) \
-	tkSquare.$(OBJEXT) \
-	tkTest.$(OBJEXT) \
-	tkWinTest.$(OBJEXT)
-
-TKTEST_OBJS_NATIVE = \
-	$(TCLTEST_OBJS_NATIVE) \
 	testMain.$(OBJEXT) \
 	tkSquare.$(OBJEXT) \
 	tkTest.$(OBJEXT) \
@@ -534,14 +518,8 @@ $(WISH): $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(WISH_OBJS) wish.$(RES)
 
 tktest : $(TKTEST)
 
-# This rule is executed if the user tried to run tktest without first
-# building tcltest in the Tcl bin directory. Just do it for them.
-$(TCLTEST):
-	cd ${TCL_BIN_DIR} ; \
-	$(MAKE) tcltest
-
-$(TKTEST): $(TCLTEST) $(TK_LIB_FILE) $(TKTEST_OBJS) wish.$(RES) $(CAT32)
-	$(CC) $(CFLAGS) $(TKTEST_OBJS_NATIVE) $(TCL_LIB_FILE) \
+$(TKTEST): $(TK_LIB_FILE) $(TKTEST_OBJS) wish.$(RES) $(CAT32)
+	$(CC) $(CFLAGS) $(TKTEST_OBJS) $(TCL_LIB_FILE) \
 	$(TK_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 
@@ -584,8 +562,6 @@ tkWinTest.$(OBJEXT): tkWinTest.c
 
 tkSquare.$(OBJEXT): tkSquare.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
-
-tclThreadTest.$(OBJEXT): $(TCL_BIN_DIR)/tclThreadTest.$(OBJEXT)
 
 # Add the object extension to the implicit rules.  By default .obj is not
 # automatically added.

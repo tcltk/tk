@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.11 2001/08/04 00:29:43 hobbs Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.11.2.1 2002/08/30 15:36:13 das Exp $
  */
 
 #include <tk.h>
@@ -37,11 +37,6 @@ static void		WishPanic _ANSI_ARGS_(TCL_VARARGS(CONST char *,format));
 #ifdef TK_TEST
 extern int		Tktest_Init(Tcl_Interp *interp);
 #endif /* TK_TEST */
-
-#ifdef TCL_TEST
-extern int		TclObjTest_Init _ANSI_ARGS_((Tcl_Interp *interp));
-extern int		Tcltest_Init _ANSI_ARGS_((Tcl_Interp *interp));
-#endif /* TCL_TEST */
 
 static BOOL consoleRequired = TRUE;
 
@@ -188,17 +183,6 @@ Tcl_AppInit(interp)
 	    goto error;
 	}
     }
-
-#ifdef TCL_TEST
-    if (Tcltest_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-    Tcl_StaticPackage(interp, "Tcltest", Tcltest_Init,
-            (Tcl_PackageInitProc *) NULL);
-    if (TclObjTest_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-#endif /* TCL_TEST */
 
 #ifdef TK_TEST
     if (Tktest_Init(interp) == TCL_ERROR) {
