@@ -409,6 +409,15 @@ TkpChangeFocus(winPtr, force)
     if (winPtr->window == None) {
 	panic("ChangeXFocus got null X window");
     }
+ 
+    /*
+     * Change the foreground window so the focus window is raised to the top of
+     * the system stacking order and gets the keyboard focus.
+     */
+
+    if (force) {
+	SetForegroundWindow(Tk_GetHWND(winPtr->window));
+    }
     XSetInputFocus(dispPtr->display, winPtr->window, RevertToParent,
 	    CurrentTime);
 
