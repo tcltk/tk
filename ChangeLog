@@ -1,5 +1,9 @@
 2002-10-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* tests/imgPhoto.test:
+	* generic/tkImgPhoto.c (ImgPhotoConfigureMaster): fix arg handling
+	for missing -format or -data options. [Bug #624974]
+
 	* tests/text.test:                    properly return the number of
 	* unix/tkUnixFont.c (ControlUtfProc): bytes consumed. [Bug #624732]
 
