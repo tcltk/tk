@@ -1,6 +1,16 @@
-2004-07-26  Jeff Hobbs  <jeffh@ActiveState.com>
+2004-07-27  Daniel Steffen  <das@users.sourceforge.net>
 
 	*** 8.4.7 TAGGED FOR RELEASE ***
+
+	* generic/tkRectOval.c (ComputeRectOvalBbox): Mac OS X specific
+	fix to rounding in bounding box 'bloat' calculation to avoid drawing
+	outside of bounding box when CG drawing enabled. Fix probably
+	correct on other platforms as well?
+	
+	* macosx/tkMacOSXDraw.c (TkMacOSXInitCGDrawing): fixed LinkVar type
+	for tkMacOSXCGAntiAliasLimit.
+
+2004-07-26  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* changes:	Updated for Tcl 8.4.7 release.
 
