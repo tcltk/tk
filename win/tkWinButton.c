@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.24 2004/01/13 02:06:01 davygrvy Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.25 2004/02/18 00:40:24 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -530,6 +530,9 @@ TkpDisplayButton(clientData)
 	    if ((butPtr->selectImage != NULL) && (butPtr->flags & SELECTED)) {
 		Tk_RedrawImage(butPtr->selectImage, 0, 0,
 			width, height, pixmap, imageXOffset, imageYOffset);
+	    } else if ((butPtr->tristateImage != NULL) && (butPtr->flags & TRISTATED)) {
+		Tk_RedrawImage(butPtr->tristateImage, 0, 0,
+			width, height, pixmap, imageXOffset, imageYOffset);
 	    } else {
 		Tk_RedrawImage(butPtr->image, 0, 0,
 			width, height, pixmap, imageXOffset, imageYOffset);
@@ -565,6 +568,10 @@ TkpDisplayButton(clientData)
 		if ((butPtr->selectImage != NULL) &&
 			(butPtr->flags & SELECTED)) {
 		    Tk_RedrawImage(butPtr->selectImage, 0, 0, width, height,
+			    pixmap, imageXOffset, imageYOffset);
+		} else if ((butPtr->tristateImage != NULL) &&
+			(butPtr->flags & TRISTATED)) {
+		    Tk_RedrawImage(butPtr->tristateImage, 0, 0, width, height,
 			    pixmap, imageXOffset, imageYOffset);
 		} else {
 		    Tk_RedrawImage(butPtr->image, 0, 0, width, height, pixmap,
@@ -638,7 +645,7 @@ TkpDisplayButton(clientData)
 	x -= butPtr->indicatorSpace;
 	y -= butPtr->indicatorDiameter / 2;
 
-	xSrc = (butPtr->flags & SELECTED) ? tsdPtr->boxWidth : 0;
+	xSrc = (butPtr->flags & (SELECTED|TRISTATED)) ? tsdPtr->boxWidth : 0;
 	if (butPtr->state == STATE_ACTIVE) {
 	    xSrc += tsdPtr->boxWidth*2;
 	}
@@ -668,7 +675,7 @@ TkpDisplayButton(clientData)
 		border, TK_3D_LIGHT2));
 	boxesPalette[PAL_BOTTOM_OUTER] = FlipColor(TkWinGetBorderPixels(tkwin,
 		border, TK_3D_LIGHT_GC));
-	if (butPtr->state == STATE_DISABLED) {
+	if ((butPtr->state == STATE_DISABLED) || (butPtr->flags & TRISTATED)) {
 	    boxesPalette[PAL_INTERIOR] = FlipColor(TkWinGetBorderPixels(tkwin,
 		border, TK_3D_LIGHT2));
 	} else if (butPtr->selectBorder != NULL) {
