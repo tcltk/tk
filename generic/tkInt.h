@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.49 2002/06/15 02:15:51 hobbs Exp $ 
+ * RCS: $Id: tkInt.h,v 1.50 2002/06/17 20:09:01 hobbs Exp $ 
  */
 
 #ifndef _TKINT
@@ -90,6 +90,21 @@ typedef struct TkCursor {
 #ifndef TK_XIM_SPOT
 #   define TK_XIM_SPOT	1
 #endif
+
+/*
+ * The following structure is kept one-per-TkDisplay to maintain information
+ * about the caret (cursor location) on this display.  This is used to
+ * dictate global focus location (Windows Accessibility guidelines) and to
+ * position the IME or XIM over-the-spot window.
+ */
+
+typedef struct TkCaret {
+    struct TkWindow *winPtr;	/* the window on which we requested caret
+				 * placement */
+    int x;			/* relative x coord of the caret */
+    int y;			/* relative y coord of the caret */
+    int height;			/* specified height of the window */
+} TkCaret;
 
 /*
  * One of the following structures is maintained for each display
@@ -488,6 +503,8 @@ typedef struct TkDisplay {
     long deletionEpoch;		/* Incremented by window deletions */
     unsigned int flags;		/* Various flag values:  these are all
 				 * defined in below. */
+    TkCaret caret;		/* information about the caret for this
+				 * display.  This is not a pointer. */
 } TkDisplay;
 
 /*
