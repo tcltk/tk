@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# RCS: @(#) $Id: clrpick.tcl,v 1.4 1999/04/16 01:51:26 stanton Exp $
+# RCS: @(#) $Id: clrpick.tcl,v 1.5 1999/08/10 15:27:49 hobbs Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -445,7 +445,7 @@ proc tkColorDialog_DrawColorScale {w c {create 0}} {
 		    [expr {[winfo height $col] + $highlightW}]\
 	        -fill $color -outline $color]
 	} else {
-	    $col itemconf $l -fill $color -outline $color
+	    $col itemconfigure $l -fill $color -outline $color
 	    incr l
 	}
     }
@@ -484,7 +484,7 @@ proc tkColorDialog_RedrawFinalColor {w} {
     set color [format "#%02x%02x%02x" $data(red,intensity) \
 	$data(green,intensity) $data(blue,intensity)]
     
-    $data(finalCanvas) conf -bg $color
+    $data(finalCanvas) configure -bg $color
     set data(finalColor) $color
     set data(selection) $color
     set data(finalRGB) [list \
@@ -603,7 +603,7 @@ proc tkColorDialog_ResizeColorBars {w} {
     }
     tkColorDialog_InitValues $w
     foreach color { red green blue } {
-	$data($color,col) conf -width $data(canvasWidth)
+	$data($color,col) configure -width $data(canvasWidth)
 	tkColorDialog_DrawColorScale $w $color 1
     }
 }

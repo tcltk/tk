@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.5 1999/05/22 01:59:21 stanton Exp $
+# RCS: @(#) $Id: console.tcl,v 1.6 1999/08/10 15:27:49 hobbs Exp $
 #
 # Copyright (c) 1998-1999 Scriptics Corp.
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
@@ -70,7 +70,7 @@ proc tkConsoleInit {} {
 	    -command tkConsoleAbout
     }
 
-    . conf -menu .menubar
+    . configure -menu .menubar
 
     text .console  -yscrollcommand ".sb set" -setgrid true 
     scrollbar .sb -command ".console yview"

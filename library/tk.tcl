@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.8 1999/06/25 23:30:25 welch Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.9 1999/08/10 15:27:49 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -222,8 +222,8 @@ proc tkCancelRepeat {} {
 
 proc tkTabToWindow {w} {
     if {![string compare [winfo class $w] Entry]} {
-	$w select range 0 end
-	$w icur end
+	$w selection range 0 end
+	$w icursor end
     }
     focus $w
 }

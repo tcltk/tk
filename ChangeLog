@@ -1,3 +1,10 @@
+1999-08-10  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* library/clrpick.tcl:
+	* library/console.tcl:
+	* library/tk.tcl: fixed code where abbreviations where used
+	in calling widget methods (confuses iWidgets) [Bug: 2422]
+
 1999-08-09  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* library/button.tcl: cleaned up programming (config -> configure)
