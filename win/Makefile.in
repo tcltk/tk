@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.59 2003/01/13 07:30:58 mdejong Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.60 2003/10/08 21:49:56 patthoyts Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -259,6 +259,7 @@ TK_OBJS = \
 	tkWinRegion.$(OBJEXT) \
 	tkWinScrlbr.$(OBJEXT) \
 	tkWinSend.$(OBJEXT) \
+	tkWinSendCom.$(OBJEXT) \
 	tkWinWindow.$(OBJEXT) \
 	tkWinWm.$(OBJEXT) \
 	tkWinX.$(OBJEXT) \

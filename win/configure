@@ -2599,7 +2599,7 @@ echo "$as_me: WARNING: \"64bit mode not supported with GCC on Windows\"" >&2;}
 	SHLIB_LD=""
 	SHLIB_LD_LIBS=""
 	LIBS=""
-	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32"
+	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32 -lole32 -loleaut32 -luuid"
 	STLIB_LD='${AR} cr'
 	RC_OUT=-o
 	RC_TYPE=
@@ -2778,7 +2778,7 @@ echo "$as_me: WARNING: \"could not find 64-bit SDK to enable 64bit mode\"" >&2;}
 
 	SHLIB_LD="${LINKBIN} -dll -nologo -incremental:no"
 	LIBS="user32.lib advapi32.lib"
-	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib"
+	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib"
 	RC_OUT=-fo
 	RC_TYPE=-r
 	RC_INCLUDE=-i
