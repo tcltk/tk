@@ -9,10 +9,9 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.9 2000/05/31 23:28:46 ericm Exp $
-# $Id: bgerror.tcl,v 1.9 2000/05/31 23:28:46 ericm Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.10 2000/06/05 23:03:30 ericm Exp $
+# $Id: bgerror.tcl,v 1.10 2000/06/05 23:03:30 ericm Exp $
 
-option add *ErrorDialog.message.wrapLength 3.5i widgetDefault
 option add *ErrorDialog.function.text "Save To Log" widgetDefault
 option add *ErrorDialog.function.command "::tk::dialog::error::saveToLog"
 
@@ -62,7 +61,7 @@ proc ::tk::dialog::error::saveToLog {text} {
 	return
     }
     set f [open $filename w]
-    puts -nonewline $text
+    puts -nonewline $f $text
     close $f
 }
 
@@ -153,9 +152,7 @@ proc bgerror err {
     $W.text mark set insert 0.0
     $W.text configure -state disabled
 
-    # 2. Fill the top part with bitmap and message (use the option
-    # database for -wraplength so that it can be overridden by
-    # the caller).
+    # 2. Fill the top part with bitmap and message
 
     label .bgerrorDialog.msg -justify left -text $text -font $messageFont
     if { [string equal $tcl_platform(platform) "macintosh"] } {
