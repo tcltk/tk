@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.10 2000/04/19 23:11:24 ericm Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.11 2000/06/15 15:54:50 ericm Exp $
  *
  */
 
@@ -189,10 +189,10 @@ Tk_ChooseColorObjCmd(clientData, interp, objc, objv)
     static COLORREF dwCustColors[16];
     static long oldColor;		/* the color selected last time */
     static char *optionStrings[] = {
-	"-initialcolor",    "-parent",	    "-title",	    NULL
+	"-initialcolor", "-parent", "-title", NULL
     };
     enum options {
-	COLOR_INITIAL,	    COLOR_PARENT,   COLOR_TITLE
+	COLOR_INITIAL, COLOR_PARENT, COLOR_TITLE
     };
 
     if (inited == 0) {
@@ -457,7 +457,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
     Tcl_Encoding unicodeEncoding = Tcl_GetEncoding(NULL, "unicode");
     OPENFILENAMEW ofn;
     WCHAR file[MAX_PATH];
-    int result, winCode, oldMode, i;
+    int result, winCode, oldMode, i, multi = 0;
     char *extension, *filter, *title;
     Tk_Window tkwin;
     HWND hWnd;
@@ -467,11 +467,11 @@ GetFileNameW(clientData, interp, objc, objv, open)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     static char *optionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-parent",	"-title",	NULL
+	    "-multiple", "-parent", "-title", NULL
     };
     enum options {
-	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR,	FILE_INITFILE,
-	FILE_PARENT,	FILE_TITLE
+	FILE_DEFAULT, FILE_TYPES, FILE_INITDIR, FILE_INITFILE,
+	    FILE_MULTIPLE, FILE_PARENT,	FILE_TITLE
     };
 
     result = TCL_ERROR;
@@ -543,6 +543,13 @@ GetFileNameW(clientData, interp, objc, objv, open)
 			sizeof(file), NULL, NULL, NULL);
 		break;
 	    }
+	    case FILE_MULTIPLE: {
+		if (Tcl_GetBooleanFromObj(interp, valuePtr,
+			&multi) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+		break;
+	    }
 	    case FILE_PARENT: {
 		tkwin = Tk_NameToWindow(interp, string, tkwin);
 		if (tkwin == NULL) {
@@ -599,6 +606,10 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	ofn.Flags |= OFN_ENABLEHOOK;
     }
 
+    if (multi != 0) {
+	ofn.Flags |= OFN_ALLOWMULTISELECT;
+    }
+
     if (extension != NULL) {
 	Tcl_UtfToExternalDString(unicodeEncoding, extension, -1, &extString);
 	ofn.lpstrDefExt = (WCHAR *) Tcl_DStringValue(&extString);
@@ -650,21 +661,94 @@ GetFileNameW(clientData, interp, objc, objv, open)
      */
 
     if (winCode != 0) {
-	char *p;
-	Tcl_DString ds;
-
-	Tcl_ExternalToUtfDString(unicodeEncoding, (char *) ofn.lpstrFile, -1, &ds);
-	for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
-	    /*
-	     * Change the pathname to the Tcl "normalized" pathname, where
-	     * back slashes are used instead of forward slashes
+	if (ofn.Flags & OFN_ALLOWMULTISELECT) {
+            /*
+	     * The result in custData->szFile contains many items,
+	     * separated with null characters.  It is terminated with
+	     * two nulls in a row.  The first element is the directory
+	     * path.
 	     */
-	    if (*p == '\\') {
-		*p = '/';
+	    char *dir;
+	    int dirlen;
+	    char *p;
+	    char *file;
+	    WCHAR *files;
+	    Tcl_DString ds;
+	    Tcl_DString fullname, filename;
+	    Tcl_Obj *returnList;
+	    int count = 0;
+	    
+	    returnList = Tcl_NewObj();
+	    Tcl_IncrRefCount(returnList);
+
+	    files = ofn.lpstrFile;
+	    Tcl_ExternalToUtfDString(unicodeEncoding, (char *) files, -1, &ds);
+	    
+	    /* Get directory */
+	    dir = Tcl_DStringValue(&ds);
+	    for (p = dir; p && *p; p++) {
+		/*
+		 * Change the pathname to the Tcl "normalized" pathname, where
+		 * back slashes are used instead of forward slashes
+		 */
+		if (*p == '\\') {
+		    *p = '/';
+		}
 	    }
+	    
+	    while (*files != '\0') {
+		while (*files != '\0') {
+		    files++;
+		}
+		files++;
+		if (*files != '\0') {
+		    count++;
+		    Tcl_ExternalToUtfDString(unicodeEncoding,
+			    (char *)files, -1, &filename);
+		    file = Tcl_DStringValue(&filename);
+		    for (p = file; *p != '\0'; p++) {
+			if (*p == '\\') {
+			    *p = '/';
+			}
+		    }
+		    Tcl_DStringInit(&fullname);
+		    Tcl_DStringAppend(&fullname, dir, -1);
+		    Tcl_DStringAppend(&fullname, "/", -1);
+		    Tcl_DStringAppend(&fullname, file, -1);
+		    Tcl_ListObjAppendElement(interp, returnList,
+			    Tcl_NewStringObj(Tcl_DStringValue(&fullname), -1));
+		    Tcl_DStringFree(&fullname);
+		    Tcl_DStringFree(&filename);
+		}
+	    }
+	    if (count == 0) {
+		/*
+		 * Only one file was returned.
+		 */
+		Tcl_ListObjAppendElement(interp, returnList,
+			Tcl_NewStringObj(dir, -1));
+	    }
+	    Tcl_SetObjResult(interp, returnList);
+	    Tcl_DecrRefCount(returnList);
+	    Tcl_DStringFree(&ds);
+	} else {
+	    char *p;
+	    Tcl_DString ds;
+	    
+	    Tcl_ExternalToUtfDString(unicodeEncoding,
+		    (char *) ofn.lpstrFile, -1, &ds);
+	    for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
+		/*
+		 * Change the pathname to the Tcl "normalized" pathname, where
+		 * back slashes are used instead of forward slashes
+		 */
+		if (*p == '\\') {
+		    *p = '/';
+		}
+	    }
+	    Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
+	    Tcl_DStringFree(&ds);
 	}
-	Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
-	Tcl_DStringFree(&ds);
     }
 
     if (ofn.lpstrTitle != NULL) {
