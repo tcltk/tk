@@ -1,11 +1,11 @@
 '\"
 '\" Copyright (c) 1996 Sun Microsystems, Inc.
-'\" Copyright (c) 1998 by Scriptics Corporation.
+'\" Copyright (c) 1998-2000 Ajuba Solutions.
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: event.n,v 1.5 2000/01/13 02:07:08 hobbs Exp $
+'\" RCS: @(#) $Id: event.n,v 1.6 2000/11/03 01:13:51 hobbs Exp $
 '\" 
 .so man.macros
 .TH event n 8.3 Tk "Tk Built-In Commands"
@@ -68,7 +68,8 @@ EVENT FIELDS below.  If the \fB\-when\fR option is not specified, the
 event is processed immediately:  all of the handlers for the event
 will complete before the \fBevent generate\fR command returns.
 If the \fB\-when\fR option is specified then it determines when the
-event is processed.
+event is processed.  Certain events, such as key events, require
+that the window has focus to receive the event properly.
 .TP
 \fBevent info \fR?<<\fIvirtual\fB>>\fR?
 Returns information about virtual events.
