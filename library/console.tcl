@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.25 2004/03/17 18:15:44 das Exp $
+# RCS: @(#) $Id: console.tcl,v 1.26 2004/11/17 22:16:44 hobbs Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -948,7 +948,7 @@ proc ::tk::console::ExpandVariable str {
 		lappend vars $ary\($var\)
 	    }
 	    return $vars
-	} else {
+	} elseif {[llength $match] == 1} {
 	    set match $ary\($match\)
 	}
 	## Space transformation avoided for array names.
