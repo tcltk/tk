@@ -1,3 +1,11 @@
+2002-05-21  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* unix/configure: Regen.
+	* unix/configure.in: Invoke SC_ENABLE_SHARED before
+	calling SC_CONFIG_CFLAGS so that the SHARED_BUILD
+	variable can be checked inside SC_CONFIG_CFLAGS.
+	* unix/tcl.m4: Update from Tcl.
+
 2002-05-20  Don Porter  <dgp@users.sourceforge.net>
 
 	* library/tk.tcl:  A little namespace cleanup on Daniel Steffen's
