@@ -6,11 +6,11 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: safe.test,v 1.7 2001/03/31 05:46:10 hobbs Exp $
+# RCS: @(#) $Id: safe.test,v 1.8 2002/07/13 00:30:25 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::test
+eval tcltest::configure $argv
 
 ## NOTE: Any time tests fail here with an error like:
 

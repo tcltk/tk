@@ -3,6 +3,7 @@ package require Tk 8.4
 package require tcltest 2.1
 namespace import -force tcltest::testConstraint
 testConstraint userInteraction 0
+testConstraint altDisplay [info exists env(TK_ALT_DISPLAY)]
 testConstraint noExceed [expr {![testConstraint unix]
 			|| [catch {font actual "\{xyz"}]}]
 testConstraint testImageType [expr {[lsearch [image types] test] >= 0}]
@@ -37,10 +38,9 @@ namespace eval ::tk {
 
 	    proc cleanup {} {
 		variable fd
-		catch {
-		    puts $fd exit
-		    close $fd
-		}
+		# catch in case the background process has closed $fd
+		catch {puts $fd exit}
+		catch {close $fd}
 		set fd ""
 	    }
 	    proc setup args {
@@ -75,16 +75,29 @@ namespace eval ::tk {
 		    append Data $x
 		}
 	    }
-	    proc do {cmd} {
+	    proc do {cmd {block 0}} {
 		variable fd
 		variable Data
 		variable Done
+		if {$block} {
+		    fileevent $fd readable {}
+		}
 		puts $fd "[list catch $cmd msg]; update; puts \$msg;\
 			puts **DONE**; flush stdout"
 		flush $fd
-		set Done 0
 		set Data {}
-		vwait [namespace which -variable Done]
+		if {$block} {
+		    while {![eof $fd]} {
+			set line [gets $fd]
+			if {$line eq "**DONE**"} {
+			    break
+			}
+			append Data $line
+		    }
+		} else {
+		    set Done 0
+		    vwait [namespace which -variable Done]
+		}
 		return $Data
 	    }
 	}

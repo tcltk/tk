@@ -6,18 +6,22 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: select.test,v 1.7 2001/08/30 01:51:42 hobbs Exp $
+# RCS: @(#) $Id: select.test,v 1.8 2002/07/13 00:30:25 dgp Exp $
 
 #
 # Note: Multiple display selection handling will only be tested if the
 # environment variable TK_ALT_DISPLAY is set to an alternate display.
 #
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-set ::tcltest::testConfig(altDisplay) [info exists env(TK_ALT_DISPLAY)]
+package require tcltest 2.1
+namespace import -force tcltest::test
+namespace import -force tcltest::testsDirectory
+namespace import -force tcltest::configure
+namespace import -force tcltest::interpreter
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
+eval configure $argv
 
 eval destroy [winfo child .]
 
@@ -499,10 +503,7 @@ test select-5.10 {Tk_GetSelection procedure} {unixOnly} {
     set selInfo ""
     selection own .f1
     set result ""
-    fileevent $::tcltest::fd readable {}
-    puts $::tcltest::fd {catch {selection get TEST} msg; update; puts $msg; flush stdout}
-    flush $::tcltest::fd
-    lappend result [gets $::tcltest::fd]
+    lappend result [dobg {selection get TEST} 1]
     cleanupbg
     lappend result $selInfo
 } {{selection owner didn't respond} {}}
@@ -858,19 +859,29 @@ test select-9.4 {SelCvtToX and SelCvtFromX procedures} {unixOnly} {
 # most control paths have been exercised above
 test select-10.1 {ConvertSelection procedure, race with selection clear} {unixOnly} {
     setup
-    setupbg
+    proc Ready {fd} {
+	variable x
+	lappend x [gets $fd]
+    }
+    set fd [open "|[list [interpreter] -geometry +0+0 -name tktest]" r+]
+    puts $fd "puts foo; flush stdout"
+    flush $fd
+    gets $fd
+    fileevent $fd readable [list Ready $fd]
     set selValue "Just a simple test"
     set selInfo ""
     selection handle .f1 {handler STRING}
     update
-    puts $::tcltest::fd {puts "[catch {selection get} msg] $msg"; puts **DONE**; flush stdout}
-    flush $::tcltest::fd
+    puts $fd {puts "[catch {selection get} msg] $msg"; puts **DONE**; flush stdout}
+    flush $fd
     after 200
     selection own .
-    set ::tcltest::bgData {}
-    tkwait variable ::tcltest::bgDone
-    cleanupbg
-    list $::tcltest::bgData $selInfo
+    set x {}
+    vwait [namespace which -variable x]
+    puts $fd {exit}
+    flush $fd
+    close $fd
+    lappend x $selInfo
 } {{1 PRIMARY selection doesn't exist or form "STRING" not defined} {}}
 test select-10.2 {ConvertSelection procedure} {unixOnly} {
     setup

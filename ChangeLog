@@ -2,7 +2,7 @@
 	
 	* tests/canvPsImg.tcl:			Converted several files in the
 	* tests/constraints.tcl (new file):	Tk test suite for testing by
-	* tests/[t-x]*.test:			tcltest 2.1.
+	* tests/[r-x]*.test:			tcltest 2.1.
 	* unix/Makefile.in:
 
 2002-07-11  Jeff Hobbs  <jeffh@ActiveState.com>
