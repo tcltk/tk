@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenuDraw.c,v 1.6 2003/11/13 16:07:06 dkf Exp $
+ * RCS: @(#) $Id: tkMenuDraw.c,v 1.7 2003/11/18 23:39:43 dkf Exp $
  */
 
 #include "tkMenu.h"
@@ -1010,7 +1010,7 @@ TkPostSubmenu(interp, menuPtr, mePtr)
 	subary[0] = mePtr->namePtr;
 	subary[1] = Tcl_NewStringObj("post", -1);
 	subary[2] = Tcl_NewIntObj(x);
-	subary[3] = Tcl_NewIntObj(x);
+	subary[3] = Tcl_NewIntObj(y);
 	Tcl_IncrRefCount(subary[1]);
 	Tcl_IncrRefCount(subary[2]);
 	Tcl_IncrRefCount(subary[3]);
