@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.15 2000/11/02 00:18:02 ericm Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.16 2000/11/02 01:18:20 hobbs Exp $
  *
  */
 
@@ -577,7 +577,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	    }
 	    case FILE_INITDIR: {
 		Tcl_DStringFree(&utfDirString);
-		if (Tcl_TranslateFileName(interp, string, 
+		if (Tcl_TranslateFileName(interp, string,
 			&utfDirString) == NULL) {
 		    goto end;
 		}
@@ -675,8 +675,26 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	Tcl_UtfToExternalDString(unicodeEncoding,
 		Tcl_DStringValue(&utfDirString),
 		Tcl_DStringLength(&utfDirString), &dirString);
-        ofn.lpstrInitialDir = (WCHAR *) Tcl_DStringValue(&dirString);
+    } else {
+	/*
+	 * NT 5.0 changed the meaning of lpstrInitialDir, so we have
+	 * to ensure that we set the [pwd] if the user didn't specify
+	 * anything else.
+	 */
+	Tcl_DString cwd;
+
+	Tcl_DStringFree(&utfDirString);
+	if ((Tcl_GetCwd(interp, &utfDirString) == (char *) NULL) ||
+		(Tcl_TranslateFileName(interp,
+			Tcl_DStringValue(&utfDirString), &cwd) == NULL)) {
+	    Tcl_ResetResult(interp);
+	} else {
+	    Tcl_UtfToExternalDString(unicodeEncoding, Tcl_DStringValue(&cwd),
+		    Tcl_DStringLength(&cwd), &dirString);
+	}
+	Tcl_DStringFree(&cwd);
     }
+    ofn.lpstrInitialDir = (WCHAR *) Tcl_DStringValue(&dirString);
 
     if (title != NULL) {
 	Tcl_UtfToExternalDString(unicodeEncoding, title, -1, &titleString);
@@ -1094,8 +1112,27 @@ GetFileNameA(clientData, interp, objc, objv, open)
     if (Tcl_DStringValue(&utfDirString)[0] != '\0') {
 	Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&utfDirString),
 		Tcl_DStringLength(&utfDirString), &dirString);
-        ofn.lpstrInitialDir = (LPTSTR) Tcl_DStringValue(&dirString);
+    } else {
+	/*
+	 * NT 5.0 changed the meaning of lpstrInitialDir, so we have
+	 * to ensure that we set the [pwd] if the user didn't specify
+	 * anything else.
+	 */
+	Tcl_DString cwd;
+
+	Tcl_DStringFree(&utfDirString);
+	if ((Tcl_GetCwd(interp, &utfDirString) == (char *) NULL) ||
+		(Tcl_TranslateFileName(interp,
+			Tcl_DStringValue(&utfDirString), &cwd) == NULL)) {
+	    Tcl_ResetResult(interp);
+	} else {
+	    Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&cwd),
+		    Tcl_DStringLength(&cwd), &dirString);
+	}
+	Tcl_DStringFree(&cwd);
     }
+    ofn.lpstrInitialDir = (LPTSTR) Tcl_DStringValue(&dirString);
+
     if (title != NULL) {
 	Tcl_UtfToExternalDString(NULL, title, -1, &titleString);
 	ofn.lpstrTitle = (LPTSTR) Tcl_DStringValue(&titleString);
@@ -1531,8 +1568,27 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     if (Tcl_DStringValue(&utfDirString)[0] != '\0') {
 	Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&utfDirString), 
 		Tcl_DStringLength(&utfDirString), &dirString);
-	ofn.lpstrInitialDir = (LPTSTR) Tcl_DStringValue(&dirString);
+    } else {
+	/*
+	 * NT 5.0 changed the meaning of lpstrInitialDir, so we have
+	 * to ensure that we set the [pwd] if the user didn't specify
+	 * anything else.
+	 */
+	Tcl_DString cwd;
+
+	Tcl_DStringFree(&utfDirString);
+	if ((Tcl_GetCwd(interp, &utfDirString) == (char *) NULL) ||
+		(Tcl_TranslateFileName(interp,
+			Tcl_DStringValue(&utfDirString), &cwd) == NULL)) {
+	    Tcl_ResetResult(interp);
+	} else {
+	    Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&cwd),
+		    Tcl_DStringLength(&cwd), &dirString);
+	}
+	Tcl_DStringFree(&cwd);
     }
+    ofn.lpstrInitialDir = (LPTSTR) Tcl_DStringValue(&dirString);
+
     if (mustExist) {
 	ofn.Flags |= OFN_PATHMUSTEXIST;
     }
