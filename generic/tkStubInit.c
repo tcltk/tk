@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.40 2002/12/08 00:46:51 hobbs Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.41 2003/01/22 14:33:00 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -328,6 +328,7 @@ TkIntStubs tkIntStubs = {
 #endif /* MAC_OSX_TK */
     TkStylePkgInit, /* 146 */
     TkStylePkgFree, /* 147 */
+    TkToplevelWindowForCommand, /* 148 */
 };
 
 TkIntPlatStubs tkIntPlatStubs = {

@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: image.test,v 1.7 2002/07/13 21:52:34 dgp Exp $
+# RCS: @(#) $Id: image.test,v 1.8 2003/01/22 14:32:59 dkf Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -73,7 +73,7 @@ test image-1.9 {Tk_ImageCmd procedure, "create" option} testImageType {
     eval image delete [image names]
     list [catch {image create test -badName foo} msg] $msg [image names]
 } {1 {bad option name "-badName"} {}}
-test image-1.10 {Tk_ImageCmd procedure, "create" option with "." as name} {
+test image-1.10 {Tk_ImageCmd procedure, "create" option with same name as main window} {
     set script [makeFile {
 	update
 	puts [list [catch {image create photo .} msg] $msg]
@@ -82,8 +82,17 @@ test image-1.10 {Tk_ImageCmd procedure, "create" option with "." as name} {
     set x [list [catch {exec [interpreter] <$script} msg] $msg]
     removeFile script
     set x
-} {0 {1 {this isn't a Tk applicationNULL main window}}}
-# I don't like the error message!
+} {0 {1 {images may not be named the same as the main window}}}
+test image-1.11 {Tk_ImageCmd procedure, "create" option with same name as main window after renaming} {
+    set script [makeFile {
+	update
+	puts [list [catch {rename . foo;image create photo foo} msg] $msg]
+	exit
+    } script]
+    set x [list [catch {exec [interpreter] <$script} msg] $msg]
+    removeFile script
+    set x
+} {0 {1 {images may not be named the same as the main window}}}
 
 test image-2.1 {Tk_ImageCmd procedure, "delete" option} {
     list [catch {image delete} msg] $msg

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.14 2003/01/03 22:43:45 hobbs Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.15 2003/01/22 14:32:59 dkf Exp $
  */
 
 #include "default.h"
@@ -1932,4 +1932,46 @@ FrameLostSlaveProc(clientData, tkwin)
 	labelframePtr->labelWin = NULL;
     }
     FrameWorldChanged((ClientData) framePtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkToplevelWindowFromCommandToken --
+ *
+ *	If the given command name to the command for a toplevel window
+ *	in the given interpreter, return the tkwin for that toplevel
+ *	window.  Note that this lookup can't be done using the
+ *	standard tkwin internal table because the command might have
+ *	been renamed.
+ *
+ * Results:
+ *	A Tk_Window token, or NULL if the name does not refer to a
+ *	toplevel window.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+Tk_Window
+TkToplevelWindowForCommand(interp, cmdName)
+    Tcl_Interp *interp;
+    CONST char *cmdName;
+{
+    Tcl_CmdInfo cmdInfo;
+    Frame *framePtr;
+
+    if (Tcl_GetCommandInfo(interp, cmdName, &cmdInfo) == 0) {
+	return NULL;
+    }
+    if (cmdInfo.objProc != FrameWidgetObjCmd) {
+	return NULL;
+    }
+    framePtr = (Frame *) cmdInfo.objClientData;
+    if (framePtr->type != TYPE_TOPLEVEL) {
+	return NULL;
+    }
+    return framePtr->tkwin;
 }
