@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.20 2001/09/21 21:19:43 hobbs Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.21 2001/09/25 16:25:20 dgp Exp $
 
 library tk
 
@@ -679,6 +679,10 @@ declare 7 unix {
     void TkUnixSetMenubar (Tk_Window tkwin, Tk_Window menubar)
 }
 
+declare 8 unix {
+    int TkpScanWindowId (Tcl_Interp *interp, CONST char *string, Window *idPtr)
+}
+
 ############################
 # Windows specific functions
 
@@ -703,7 +707,7 @@ declare 5 win {
 }
 
 declare 6 win {
-    int TkpScanWindowId (Tcl_Interp *interp, char *string, Window *idPtr)
+    int TkpScanWindowId (Tcl_Interp *interp, CONST char *string, Window *idPtr)
 }
 
 declare 7 win {
