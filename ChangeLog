@@ -1,3 +1,10 @@
+2001-08-22  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkPack.c (TkParsePadAmount): added lint init for sepChar.
+
+	* tests/dialog.test (HitReturn): fixed failing dialog-2.1 test
+	because it wasn't always getting focus properly.
+
 2001-08-21  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* tests/unixFont.test (unixFont-2.[234]): fixed to be more
