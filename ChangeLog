@@ -1,3 +1,15 @@
+2004-10-28  Don Porter	<dgp@users.sourceforge.net>
+
+	* README:				Bumped to patch level 8.4.8
+	* generic/tk.h:				to prepare for next patch
+	* macosx/Wish.pbproj/project.pbxproj:	release.
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf (2.13)
+	* win/configure:
+
 2004-10-28  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* unix/tkUnixScale.c (DisplayHorizontalValue): Backport fix for
