@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: button.test,v 1.12 2002/07/14 05:48:46 dgp Exp $
+# RCS: @(#) $Id: button.test,v 1.13 2002/09/02 23:32:35 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -772,6 +772,36 @@ test button-13.1 {button widget vs hidden commands} {
     destroy .b
     list [winfo children .] [interp hidden]
 } [list {} $l]
+
+deleteWindows
+
+test button-14.1 {size behaviouor} {
+    set res {}
+    foreach class {label button radiobutton checkbutton} {
+	eval destroy [winfo children .]
+
+	$class .a -text Hej 
+	$class .b -text Hej -width 10 -height 1
+	$class .c -text "" -width 10 -height 1
+
+	for {set t 0} {$t < 2} {incr t} {
+	    set res2 {}
+	    # With -width, width should not be affected by text change
+	    lappend res2 [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
+	    # With -height, height should not be affected by text change
+	    lappend res2 [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
+	    # A one line text should be as high as -height 1
+	    lappend res2 [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
+	    lappend res $res2
+	    
+	    # Do the second round with another font
+	    .a configure -font "Arial 20"
+	    .b configure -font "Arial 20"
+	    .c configure -font "Arial 20"
+	}
+    }
+    set res
+} {{1 1 1} {1 1 1} {1 1 1} {1 1 1} {1 1 1} {1 1 1} {1 1 1} {1 1 1}}
 
 deleteWindows
 
