@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.36 1999/08/04 21:32:32 redman Exp $
+RCS: @(#) $Id: changes,v 1.37 1999/08/13 18:30:40 redman Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4663,3 +4663,9 @@ avoid compiler errors on Macintosh.  Patch from Vince Darley.
 [Bug: 2389] (hobbs)
 
 --------------- Released 8.2b2, August 5, 1999 ----------------------
+
+8/13/99 (Mac) Rearranged the projects in the tkMacProjects.sea.hqx so
+that the build directory is separate from the sources.  Fixed bug in
+Tk_DrawChars(). (Jim Ingham)
+
+--------------- Released 8.2.0, August 17, 1999 ----------------------
