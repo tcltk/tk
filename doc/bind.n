@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bind.n,v 1.3 1998/10/10 00:30:35 rjohnson Exp $
+'\" RCS: @(#) $Id: bind.n,v 1.3.18.1 2001/04/04 07:23:48 hobbs Exp $
 '\" 
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
@@ -119,7 +119,7 @@ Modifiers consist of any of the following values:
 \fBButton3, B3\fR	\fBAlt\fR
 \fBButton4, B4\fR	\fBDouble\fR
 \fBButton5, B5\fR	\fBTriple\fR
-\fBMod1, M1\fR
+\fBMod1, M1\fR	\fBQuadruple\fR
 .DE
 Where more than one value is listed, separated by commas, the values
 are equivalent.
@@ -145,16 +145,15 @@ Similarly, the \fBAlt\fR modifier refers to whichever modifier
 is associated with the alt key(s) on the keyboard (keysyms
 \fBAlt_L\fR and \fBAlt_R\fR).
 .PP
-The \fBDouble\fR and \fBTriple\fR modifiers are a convenience
-for specifying double mouse clicks and other repeated
-events. They cause a particular event pattern to be
-repeated 2 or 3 times, and also place a time and space requirement
-on the sequence:  for a sequence of events to match a \fBDouble\fR
-or \fBTriple\fR pattern, all of the events must occur close together
-in time and without substantial mouse motion in between.
-For example, \fB<Double-Button-1>\fR
-is equivalent to \fB<Button-1><Button-1>\fR with the extra
-time and space requirement.
+The \fBDouble\fR, \fBTriple\fR and \fBQuadruple\fR modifiers are a
+convenience for specifying double mouse clicks and other repeated
+events. They cause a particular event pattern to be repeated 2, 3 or 4
+times, and also place a time and space requirement on the sequence: for a
+sequence of events to match a \fBDouble\fR, \fBTriple\fR or \fBQuadruple\fR
+pattern, all of the events must occur close together in time and without
+substantial mouse motion in between.  For example, \fB<Double-Button-1>\fR
+is equivalent to \fB<Button-1><Button-1>\fR with the extra time and space
+requirement.
 
 .SH "EVENT TYPES"
 .PP
@@ -517,7 +516,7 @@ The \fBbgerror\fR command will be executed at global level
 (outside the context of any Tcl procedure).
 
 .SH "SEE ALSO"
-bgerror
+bgerror, keysyms
 
 .SH KEYWORDS
 form, manual

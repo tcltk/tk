@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.6 2000/02/01 11:40:58 hobbs Exp $
+'\" RCS: @(#) $Id: text.n,v 1.6.2.1 2001/04/04 07:23:48 hobbs Exp $
 '\" 
 .so man.macros
 .TH text n 4.0 Tk "Tk Built-In Commands"
@@ -16,12 +16,14 @@ text \- Create and manipulate text widgets
 .SH SYNOPSIS
 \fBtext\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-background	\-highlightbackground	\-insertontime	\-selectborderwidth
-\-borderwidth	\-highlightcolor	\-insertwidth	\-selectforeground
-\-cursor	\-highlightthickness	\-padx	\-setgrid
-\-exportselection	\-insertbackground	\-pady	\-takefocus
-\-font	\-insertborderwidth	\-relief	\-xscrollcommand
-\-foreground	\-insertofftime	\-selectbackground	\-yscrollcommand
+\-background	\-highlightthickness	\-relief
+\-borderwidth	\-insertbackground	\-selectbackground
+\-cursor	\-insertborderwidth	\-selectborderwidth
+\-exportselection	\-insertofftime	\-selectforeground
+\-font	\-insertontime	\-setgrid
+\-foreground	\-insertwidth	\-takefocus
+\-highlightbackground	\-padx	\-xscrollcommand
+\-highlightcolor	\-pady	\-yscrollcommand
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-height height Height
@@ -339,7 +341,7 @@ as an empty string, then a solid fill will be used.
 .TP
 \fB\-font \fIfontName\fR
 \fIFontName\fR is the name of a font to use for drawing characters.
-It may have any of the forms accepted by \fBTk_GetFontStruct\fR.
+It may have any of the forms accepted by \fBTk_GetFont\fR.
 .TP
 \fB\-foreground \fIcolor\fR
 \fIColor\fR specifies the color to use when drawing text and other
@@ -524,7 +526,7 @@ motions if a mouse button is down;  the update will be deferred
 until all mouse buttons have been released).
 Neither of these special marks may be deleted.
 
-.SH EMBEDDED WINDOWS
+.SH "EMBEDDED WINDOWS"
 .PP
 The third form of annotation in text widgets is an embedded window.
 Each embedded window annotation causes a window to be displayed
@@ -595,7 +597,7 @@ stretched.
 Specifies the name of a window to display in the annotation.
 
 .VS
-.SH EMBEDDED IMAGES
+.SH "EMBEDDED IMAGES"
 .PP
 The final form of annotation in text widgets is an embedded image.
 Each embedded image annotation causes an image to be displayed
@@ -664,7 +666,7 @@ the top and on the bottom of the embedded image.
 It may have any of the usual forms defined for a screen distance.
 .VE
 
-.SH THE SELECTION
+.SH "THE SELECTION"
 .PP
 Selection support is implemented via tags.
 If the \fBexportSelection\fR option for the text widget is true
@@ -690,7 +692,7 @@ the text widget are tied to the \fB\-background\fR,
 tag:  changes in either will automatically be reflected in the
 other.
 
-.SH THE INSERTION CURSOR
+.SH "THE INSERTION CURSOR"
 .PP
 The mark named \fBinsert\fR has special significance in text widgets.
 It is defined automatically when a text widget is created and it

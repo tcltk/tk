@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.6 2000/01/21 03:54:20 hobbs Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.6.2.1 2001/04/04 07:23:48 hobbs Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -17,11 +17,13 @@ canvas \- Create and manipulate canvas widgets
 .SH SYNOPSIS
 \fBcanvas\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-background	\-highlightthickness	\-insertwidth	\-relief
-\-borderwidth	\-insertbackground	\-state
-\-cursor	\-insertborderwidth	\-selectbackground	\-takefocus
-\-highlightbackground	\-insertofftime	\-selectborderwidth	\-xscrollcommand
-\-highlightcolor	\-insertontime	\-selectforeground	\-yscrollcommand
+\-background	\-insertborderwidth	\-selectborderwidth
+\-borderwidth	\-insertofftime	\-selectforeground
+\-cursor	\-insertontime	\-takefocus
+\-highlightbackground	\-insertwidth	\-xscrollcommand
+\-highlightcolor	\-relief	\-yscrollcommand
+\-highlightthickness	\-state
+\-insertbackground	\-selectbackground
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-closeenough closeEnough CloseEnough
@@ -167,7 +169,7 @@ item or a tag that selects zero or more items.
 tags by using operators: '&&', '||', '^' '!', and parenthezised
 subexpressions.  For example:
 .CS
-      .c find withtag {(a&&!b)|(!a&&b)}
+      .c find withtag {(a&&!b)||(!a&&b)}
 .CE
 or equivalently:
 .CS
@@ -196,6 +198,11 @@ the screen;  if it is \fBc\fR then the distance is in centimeters;
 \fBi\fR means inches, and \fBp\fR means printers points (1/72 inch).
 Larger y-coordinates refer to points lower on the screen;  larger
 x-coordinates refer to points farther to the right.
+.VS
+Coordinates can be specified either as an even number of parameters,
+or as a single list parameter containing an even number of x and y
+coordinate values.
+.VE
 
 .SH TRANSFORMATIONS
 .PP
@@ -283,7 +290,7 @@ are drawn transparant.
 The second possible syntax is a character list containing only
 5 possible characters \fB[.,-_ ]\fR. The space can be used
 to enlarge the space between other line elements, and can not
-occur as the first posibion in the string. Some examples:
+occur as the first position in the string. Some examples:
     -dash .	= -dash {2 4}
     -dash -     = -dash {6 4}
     -dash -.    = -dash {6 4 2 4}
@@ -297,11 +304,11 @@ list will be multiplied by the line width before display. This
 assures that "." will always be displayed as a dot and "-"
 always as a dash regardless of the line width.
 .PP
-On systems where only a limited set of dash patterns, the dash
-pattern will be displayed as the most close dash pattern that
-is available. For example, on Windows only the first 4 of the
-above examples are available. The last 2 examples will be
-displayed identically as the first one.
+On systems which support only a limited set of dash patterns, the dash
+pattern will be displayed as the closest dash pattern that is available.
+For example, on Windows only the first 4 of the above examples are
+available.  The last 2 examples will be displayed identically to the first
+one.
 
 .SH "WIDGET COMMAND"
 .PP
@@ -485,6 +492,8 @@ this case the command returns an empty string.
 command.
 .TP
 \fIpathName\fR \fBcoords \fItagOrId \fR?\fIx0 y0 ...\fR?
+.TP
+\fIpathName\fR \fBcoords \fItagOrId \fR?\fIcoordList\fR?
 Query or modify the coordinates that define an item.
 If no coordinates are specified, this command returns a list
 whose elements are the coordinates of the item named by
@@ -495,6 +504,8 @@ If \fItagOrId\fR refers to multiple items, then
 the first one in the display list is used.
 .TP
 \fIpathName \fBcreate \fItype x y \fR?\fIx y ...\fR? ?\fIoption value ...\fR?
+.TP
+\fIpathName \fBcreate \fItype coordList \fR?\fIoption value ...\fR?
 Create a new item in \fIpathName\fR of type \fItype\fR.
 The exact format of the arguments after \fBtype\fR depends
 on \fBtype\fR, but usually they consist of the coordinates for
@@ -1023,15 +1034,17 @@ explained here, and then referred to be each widget type for brevity.
 \fB\-activedash \fIpattern\fR
 .TP
 \fB\-disableddash \fIpattern\fR
-This option specifies dash patterns for the normal state, the active
-state, and the disabled state of an arc item.
+This option specifies dash patterns for the normal, active
+state, and disabled state of an item.
 \fIpattern\fR may have any of the forms accepted by \fBTk_GetDash\fR.
 If the dash options are omitted then the default is a solid outline.
 See "DASH PATTERNS" for more information.
 .TP
 \fB\-dashoffset \fIoffset\fR
-The starting \fIoffset\fR into the pattern provided by the \fB\-dash\fR option.
-\fB\-dashoffset\fR is ignored if there is no \fB-dash\fR pattern.
+The starting \fIoffset\fR in pixels into the pattern provided by the
+\fB\-dash\fR option.  \fB\-dashoffset\fR is ignored if there is no
+\fB-dash\fR pattern.  The \fIoffset\fR may have any of the forms described
+in the COORDINATES section above.
 .TP
 \fB\-fill \fIcolor\fR
 .TP
@@ -1064,7 +1077,7 @@ Specifies the offset of stipples.  The offset value can be of the form
 first case the origin is the origin of the toplevel of the current window.
 For the canvas itself and canvas objects the origin is the canvas origin,
 but putting \fB#\fR in front of the coordinate pair indicates using the
-toplevel origin in stead. For canvas objects, the \fB-offset\fR option is
+toplevel origin instead. For canvas objects, the \fB-offset\fR option is
 used for stippling as well.  For the line and polygon canvas items you can
 also specify an index as argument, which connects the stipple origin to one
 of the coordinate points of the line/polygon.
@@ -1132,8 +1145,9 @@ one of several ways (specified by the \fB\-style\fR option).
 Arcs are created with widget commands of the following form:
 .CS
 \fIpathName \fBcreate arc \fIx1 y1 x2 y2 \fR?\fIoption value option value ...\fR?
+\fIpathName \fBcreate arc \fIcoordList\fR ?\fIoption value option value ...\fR?
 .CE
-The arguments \fIx1\fR, \fIy1\fR, \fIx2\fR, and \fIy2\fR give
+The arguments \fIx1\fR, \fIy1\fR, \fIx2\fR, and \fIy2\fR or \fIcoordList\fR give
 the coordinates of two diagonally opposite corners of a
 rectangular region enclosing the oval that defines the arc.
 After the coordinates there may be any number of \fIoption\fR\-\fIvalue\fR
@@ -1202,8 +1216,9 @@ two colors, foreground and background.
 Bitmaps are created with widget commands of the following form:
 .CS
 \fIpathName \fBcreate bitmap \fIx y \fR?\fIoption value option value ...\fR?
+\fIpathName \fBcreate bitmap \fIcoordList\fR ?\fIoption value option value ...\fR?
 .CE
-The arguments \fIx\fR and \fIy\fR specify the coordinates of a
+The arguments \fIx\fR and \fIy\fR or \fIcoordList\fR specify the coordinates of a
 point used to position the bitmap on the display (see the \fB\-anchor\fR
 option below for more information on how bitmaps are displayed).
 After the coordinates there may be any number of \fIoption\fR\-\fIvalue\fR
@@ -1266,8 +1281,9 @@ canvas.
 Images are created with widget commands of the following form:
 .CS
 \fIpathName \fBcreate image \fIx y \fR?\fIoption value option value ...\fR?
+\fIpathName \fBcreate image \fIcoordList\fR ?\fIoption value option value ...\fR?
 .CE
-The arguments \fIx\fR and \fIy\fR specify the coordinates of a
+The arguments \fIx\fR and \fIy\fR or \fIcoordList\fR specify the coordinates of a
 point used to position the image on the display (see the \fB\-anchor\fR
 option below for more information).
 After the coordinates there may be any number of \fIoption\fR\-\fIvalue\fR
@@ -1311,8 +1327,9 @@ widget commands: \fBdchars, index, insert.\fR
 Lines are created with widget commands of the following form:
 .CS
 \fIpathName \fBcreate line \fIx1 y1... xn yn \fR?\fIoption value option value ...\fR?
+\fIpathName \fBcreate line \fIcoordList\fR ?\fIoption value option value ...\fR?
 .CE
-The arguments \fIx1\fR through \fIyn\fR give
+The arguments \fIx1\fR through \fIyn\fR or \fIcoordList\fR give
 the coordinates for a series of two or more points that describe
 a series of connected line segments.
 After the coordinates there may be any number of \fIoption\fR\-\fIvalue\fR
@@ -1401,8 +1418,9 @@ both.  Ovals are created with widget commands of the
 following form:
 .CS
 \fIpathName \fBcreate oval \fIx1 y1 x2 y2 \fR?\fIoption value option value ...\fR?
+\fIpathName \fBcreate oval \fIcoordList\fR ?\fIoption value option value ...\fR?
 .CE
-The arguments \fIx1\fR, \fIy1\fR, \fIx2\fR, and \fIy2\fR give
+The arguments \fIx1\fR, \fIy1\fR, \fIx2\fR, and \fIy2\fR or \fIcoordList\fR give
 the coordinates of two diagonally opposite corners of a
 rectangular region enclosing the oval.
 The oval will include the top and left edges of the rectangle
@@ -1450,8 +1468,9 @@ widget commands: \fBdchars, index, insert.\fR
 Polygons are created with widget commands of the following form:
 .CS
 \fIpathName \fBcreate polygon \fIx1 y1 ... xn yn \fR?\fIoption value option value ...\fR?
+\fIpathName \fBcreate polygon \fIcoordList\fR ?\fIoption value option value ...\fR?
 .CE
-The arguments \fIx1\fR through \fIyn\fR specify the coordinates for
+The arguments \fIx1\fR through \fIyn\fR or \fIcoordList\fR specify the coordinates for
 three or more points that define a polygon.
 The first point should not be repeated as the last to
 close the shape; Tk will automatically close the periphery between
@@ -1528,8 +1547,9 @@ both.  Rectangles are created with widget commands of the
 following form:
 .CS
 \fIpathName \fBcreate rectangle \fIx1 y1 x2 y2 \fR?\fIoption value option value ...\fR?
+\fIpathName \fBcreate rectangle \fIcoordList\fR ?\fIoption value option value ...\fR?
 .CE
-The arguments \fIx1\fR, \fIy1\fR, \fIx2\fR, and \fIy2\fR give
+The arguments \fIx1\fR, \fIy1\fR, \fIx2\fR, and \fIy2\fR or \fIcoordList\fR give
 the coordinates of two diagonally opposite corners of the rectangle
 (the rectangle will include its upper and left edges but not
 its lower or right edges).
@@ -1577,8 +1597,9 @@ Text items are created with widget commands of the following
 form:
 .CS
 \fIpathName \fBcreate text \fIx y \fR?\fIoption value option value ...\fR?
+\fIpathName \fBcreate text \fIcoordList\fR ?\fIoption value option value ...\fR?
 .CE
-The arguments \fIx\fR and \fIy\fR specify the coordinates of a
+The arguments \fIx\fR and \fIy\fR or \fIcoordList\fR specify the coordinates of a
 point used to position the text on the display (see the options
 below for more information on how text is displayed).
 After the coordinates there may be any number of \fIoption\fR\-\fIvalue\fR
@@ -1612,7 +1633,7 @@ This option defaults to \fBcenter\fR.
 .TP
 \fB\-font \fIfontName\fR
 Specifies the font to use for the text item.
-\fIFontName\fR may be any string acceptable to \fBTk_GetFontStruct\fR.
+\fIFontName\fR may be any string acceptable to \fBTk_GetFont\fR.
 If this option isn't specified, it defaults to a system-dependent
 font.
 .TP
@@ -1649,8 +1670,9 @@ at a given position on the canvas.
 Window items are created with widget commands of the following form:
 .CS
 \fIpathName \fBcreate window \fIx y \fR?\fIoption value option value ...\fR?
+\fIpathName \fBcreate window \fIcoordList\fR ?\fIoption value option value ...\fR?
 .CE
-The arguments \fIx\fR and \fIy\fR specify the coordinates of a
+The arguments \fIx\fR and \fIy\fR or \fIcoordList\fR specify the coordinates of a
 point used to position the window on the display (see the \fB\-anchor\fR
 option below for more information on how bitmaps are displayed).
 After the coordinates there may be any number of \fIoption\fR\-\fIvalue\fR

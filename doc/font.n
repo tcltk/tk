@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: font.n,v 1.2 1998/09/14 18:22:56 stanton Exp $
+'\" RCS: @(#) $Id: font.n,v 1.2.18.1 2001/04/04 07:23:48 hobbs Exp $
 '\" 
 .so man.macros
 .TH font n 8.0 Tk "Tk Built-In Commands"
@@ -269,12 +269,14 @@ All valid X font names, including those listed by xlsfonts(1), are available.
 .TP
 MS Windows:
 .DS
+.ta 3c 6c
 \fBsystem	ansi	device
 systemfixed	ansifixed	oemfixed\fR
 .DE
 .TP
 Macintosh:
 .DS
+.ta 3c 6c
 \fBsystem	application\fR
 .DE
 .RE

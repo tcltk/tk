@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ConfigWidg.3,v 1.5 1999/04/21 21:53:20 rjohnson Exp $
+'\" RCS: @(#) $Id: ConfigWidg.3,v 1.5.12.1 2001/04/04 07:23:48 hobbs Exp $
 '\" 
 .so man.macros
 .TH Tk_ConfigureWidget 3 4.1 Tk "Tk Library Procedures"
@@ -66,6 +66,12 @@ Display containing widget whose record is being freed;  needed in
 order to free up resources.
 .BE
 .SH DESCRIPTION
+.VS 8.1 
+.PP 
+Note: \fBTk_ConfigureWidget\fP should be replaced with the new
+\fBTcl_Obj\fP based API \fBTk_SetOptions\fP.  The old interface is
+retained for backward compatibility.
+.VE 
 .PP
 \fBTk_ConfigureWidget\fR is called to configure various aspects of a
 widget, such as colors, fonts, border width, etc.
@@ -259,7 +265,7 @@ will never match any arguments.
 \fBTK_CONFIG_FONT\fR
 The value must be an ASCII string identifying a font in a form
 suitable for passing to \fBTk_GetFont\fR.  The value is converted
-to an (\fBXFontStruct *\fR) by calling \fBTk_GetFont\fR and the result
+to a \fBTk_Font\fR by calling \fBTk_GetFont\fR and the result
 is stored in the target.
 If TK_CONFIG_NULL_OK is specified in \fIspecFlags\fR then the value
 may be an empty string, in which case the target will be set to NULL.
@@ -612,6 +618,9 @@ The library implementation of frames
 (tkFrame.c) has a simple configuration table, and the library
 implementation of buttons (tkButton.c) has a much more complex
 table that uses many of the fancy \fIspecFlags\fR mechanisms.
+
+.SH "SEE ALSO"
+Tk_SetOptions(3)
 
 .SH KEYWORDS
 anchor, bitmap, boolean, border, cap style, color, configuration options,

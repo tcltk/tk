@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: scrollbar.n,v 1.2 1998/09/14 18:22:59 stanton Exp $
+'\" RCS: @(#) $Id: scrollbar.n,v 1.2.18.1 2001/04/04 07:23:48 hobbs Exp $
 '\" 
 .so man.macros
 .TH scrollbar n 4.1 Tk "Tk Built-In Commands"
@@ -16,10 +16,11 @@ scrollbar \- Create and manipulate scrollbar widgets
 .SH SYNOPSIS
 \fBscrollbar\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-activebackground	\-highlightbackground	\-orient	\-takefocus
-\-background	\-highlightcolor	\-relief	\-troughcolor
-\-borderwidth	\-highlightthickness	\-repeatdelay
-\-cursor	\-jump	\-repeatinterval
+\-activebackground	\-highlightcolor	\-repeatdelay
+\-background	\-highlightthickness	\-repeatinterval
+\-borderwidth	\-jump	\-takefocus
+\-cursor	\-orient	\-troughcolor
+\-highlightbackground	\-relief
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-activerelief activeRelief ActiveRelief
