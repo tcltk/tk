@@ -1,3 +1,8 @@
+2004-07-07  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/canvas.n: Add paragraph to make clearer what is going on
+	with the default canvas origin. [Bug 956681]
+
 2004-07-05  George Peter Staplin <GeorgePS@XMission.com>
 
 	* generic/tkEvent.c: TK_XIM_SPOT preprocessor usage was modified

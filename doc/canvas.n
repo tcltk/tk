@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.13 2002/08/08 04:54:01 hobbs Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.14 2004/07/07 09:27:10 dkf Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -106,7 +106,6 @@ so that the command is invoked whenever button 1 is pressed with
 the mouse cursor over an item.
 This means that items in a canvas can have behaviors defined by
 the Tcl scripts bound to them.
-
 .SH "DISPLAY LIST"
 .PP
 The items in a canvas are ordered for purposes of display,
@@ -125,7 +124,6 @@ window systems require them always to be drawn on top of other items.
 In addition, the stacking order of window items
 is not affected by any of the canvas widget commands; you must use
 the \fBraise\fR and \fBlower\fR Tk commands instead.
-
 .SH "ITEM IDS AND TAGS"
 .PP
 Items in a canvas widget may be named in either of two ways:
@@ -184,7 +182,6 @@ the command to use the first (lowest) of these items in
 the display list that is suitable for the command.
 Exceptions are noted in the widget command descriptions
 below.
-
 .SH "COORDINATES"
 .PP
 All coordinates related to canvases are stored as floating-point
@@ -203,8 +200,7 @@ Coordinates can be specified either as an even number of parameters,
 or as a single list parameter containing an even number of x and y
 coordinate values.
 .VE
-
-.SH TRANSFORMATIONS
+.SS TRANSFORMATIONS
 .PP
 Normally the origin of the canvas coordinate system is at the
 upper-left corner of the window containing the canvas.
@@ -217,7 +213,16 @@ system relative to the window coordinate system.
 .PP
 Individual items may be moved or scaled using widget commands
 described below, but they may not be rotated.
-
+.PP
+Note that the default origin of the canvas's visible area is
+coincident with the origin for the whole window as that makes bindings
+using the mouse position easier to work with; you only need to use the
+\fBcanvasx\fR and \fBcanvasy\fR widget commands if you adjust the
+origin of the visible area.  However, this also means that any focus
+ring (as controlled by the \fB\-highlightthickness\fR option) and
+window border (as controlled by the \fB\-borderwidth\fR option) must
+be taken into account before you get to the visible area of the
+canvas.
 .SH "INDICES"
 .PP
 Text items support the notion of an \fIindex\fR for identifying
@@ -277,7 +282,6 @@ system of the canvas.
 If \fIx\fR and \fIy\fR lie outside the coordinates covered by the
 text item, then they refer to the first or last character in the
 line that is closest to the given point.
-
 .SH "DASH PATTERNS"
 .PP
 Many items support the notion of an dash pattern for outlines.
@@ -309,7 +313,6 @@ pattern will be displayed as the closest dash pattern that is available.
 For example, on Windows only the first 4 of the above examples are
 available.  The last 2 examples will be displayed identically to the first
 one.
-
 .SH "WIDGET COMMAND"
 .PP
 The \fBcanvas\fR command creates a new Tcl command whose
@@ -1006,7 +1009,6 @@ If \fInumber\fR is negative then higher information becomes
 visible;  if it is positive then lower information
 becomes visible.
 .RE
-
 .SH "OVERVIEW OF ITEM TYPES"
 .PP
 The sections below describe the various types of items supported
@@ -1022,8 +1024,7 @@ in the descriptions below.
 At present, text, line and polygon items provide this support.
 For lines and polygons the indexing facility is used to manipulate
 the coordinates of the item.
-
-.SH "COMMON ITEM OPTIONS"
+.SS "COMMON ITEM OPTIONS"
 .PP
 Many items share a common set of options.  These options are
 explained here, and then referred to be each widget type for brevity.
@@ -1135,7 +1136,6 @@ If the \fB\-outline\fR option has been specified as an empty string then
 this option has no effect.  This option defaults to 1.0.
 For arcs, wide outlines will be drawn centered on the edges of the
 arc's region.
-
 .SH "ARC ITEMS"
 .PP
 Items of type \fBarc\fR appear on the display as arc-shaped regions.
@@ -1208,7 +1208,6 @@ connecting the two end points of the perimeter section.
 If \fItype\fR is \fBarc\fR then the arc's region consists of
 a section of the perimeter alone.
 In this last case the \fB\-fill\fR option is ignored.
-
 .SH "BITMAP ITEMS"
 .PP
 Items of type \fBbitmap\fR appear on the display as images with
@@ -1273,7 +1272,6 @@ Specifies the color to use for each of the bitmap's '1' valued pixels
 in its normal, active and disabled states.
 \fIColor\fR may have any of the forms accepted by \fBTk_GetColor\fR and
 defaults to \fBblack\fR.
-
 .SH "IMAGE ITEMS"
 .PP
 Items of type \fBimage\fR are used to display images on a
@@ -1317,7 +1315,6 @@ Specifies the name of the images to display in the item in is normal,
 active and disabled states.
 This image must have been created previously with the
 \fBimage create\fR command.
-
 .SH "LINE ITEMS"
 .PP
 Items of type \fBline\fR appear on the display as one or more connected
@@ -1413,7 +1410,6 @@ a curve by duplicating the end-points of the desired line segment.
 Specifies the degree of smoothness desired for curves:  each spline
 will be approximated with \fInumber\fR line segments.  This
 option is ignored unless the \fB\-smooth\fR option is true.
-
 .SH "OVAL ITEMS"
 .PP
 Items of type \fBoval\fR appear as circular or oval regions on
@@ -1462,7 +1458,6 @@ The following standard options are supported by ovals:
 \-activewidth
 \-disabledwidth
 .CE
-
 .SH "POLYGON ITEMS"
 .PP
 Items of type \fBpolygon\fR appear as polygonal or curved filled regions
@@ -1542,7 +1537,6 @@ interior point is considered to be inside the item only if the item
 is filled or if it has neither a fill nor an outline.  If you would
 like an unfilled polygon whose interior points are not considered
 to be inside the polygon, use a line item instead.
-
 .SH "RECTANGLE ITEMS"
 .PP
 Items of type \fBrectangle\fR appear as rectangular regions on
@@ -1588,7 +1582,6 @@ The following standard options are supported by rectangles:
 \-activewidth
 \-disabledwidth
 .CE
-
 .SH "TEXT ITEMS"
 .PP
 A text item displays a string of characters on the screen in one
@@ -1666,7 +1659,6 @@ be longer than \fIlineLength\fR is broken just before a space
 character to make the line shorter than \fIlineLength\fR;  the
 space character is treated as if it were a newline
 character.
-
 .SH "WINDOW ITEMS"
 .PP
 Items of type \fBwindow\fR cause a particular window to be displayed
@@ -1725,13 +1717,11 @@ Note:  due to restrictions in the ways that windows are managed, it is not
 possible to draw other graphical items (such as lines and images) on top
 of window items.  A window item always obscures any graphics that
 overlap it, regardless of their order in the display list.
-
 .SH "APPLICATION-DEFINED ITEM TYPES"
 .PP
 It is possible for individual applications to define new item
 types for canvas widgets using C code.
 See the documentation for \fBTk_CreateItemType\fR.
-
 .SH BINDINGS
 .PP
 In the current implementation, new canvases are not given any
@@ -1745,6 +1735,9 @@ Tk's canvas widget is a blatant ripoff of ideas from Joel Bartlett's
 environment and preceded canvases by a year or two.  Its simple
 mechanisms for placing and animating graphical objects inspired the
 functions of canvases.
+
+.SH "SEE ALSO"
+bind(n), font(n), image(n), scrollbar(n)
 
 .SH KEYWORDS
 canvas, widget
