@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.13 2002/06/05 22:11:09 a_kovalenko Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.14 2002/06/26 23:02:45 dgp Exp $
  */
  
 #include "tkUnixInt.h"
@@ -1158,7 +1158,8 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
     int xStart, needWidth, window_width;
     Tcl_UniChar ch;
     FontFamily *familyPtr;
-    int rx, ry, width, height, border_width, depth;
+    int rx, ry;
+    unsigned int width, height, border_width, depth;
     int do_width;
     Drawable root;
 
