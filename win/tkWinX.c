@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.35 2004/10/27 00:56:33 davygrvy Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.36 2004/12/17 14:17:56 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -332,6 +332,7 @@ TkWinXCleanup(clientData)
      */
     
     TkWinWmCleanup(hInstance);
+    TkWinCleanupContainerList();
 }
 
 /*
