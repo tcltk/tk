@@ -27,7 +27,7 @@
 	* unix/tkUnixEmbed.c:
 	* unix/tkUnixWm.c:
 	* win/tkWinScrlbr.c:
-	* win/tkWinWindow.c
+	* win/tkWinWindow.c:
 	* win/tkWinWm.c: Implementation of TIP #47
 	"Modifying Tk to Allow Writing X Window managers" (patch from Neil McKay).
 	Add CirculateRequest, Create, MapRequest, ResizeRequest, 
@@ -407,7 +407,7 @@
 
 2002-04-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
-	* generic/tkTextDisp.c (GetXView,GetYView): Comparison with
+	* generic/tkTextDisp.c (GetXView, GetYView): Comparison with
 	previous values of scrollbar range are now done in a way that is
 	sensitive to the bizarreness of floating-point on architectures
 	where IEEE-FP is not used on the processor.  Also increased the
@@ -914,31 +914,31 @@
 	Includes a source incompatibility in the argv argument of Tcl_ParseArgv.
 
 	* generic/tkBind.c (DeleteVirtualEvent):
-	* generic/tkCanvas.c (ScrollFractions,CanvasWidgetCmd,
+	* generic/tkCanvas.c (ScrollFractions, CanvasWidgetCmd,
 	  CanvasUpdateScrollbars):
 	* generic/tkTestTag.c (TkTextTagCmd): Updated callers of
 	Tcl_GetStringResult.  Rewrote PrintScrollFractions to
 	ScrollFractions to stop scribbling directly on interp->result.
 
-	* generic/tkInt.decls (TkGetDefaultScreenName,TkpDisplayWarning,
+	* generic/tkInt.decls (TkGetDefaultScreenName, TkpDisplayWarning,
 	  TkpOpenDisplay):
-	* generic/tkCanvPs.c (Tk_PostscriptColor,Tk_PostscriptFont):
-	* generic/tkEntry.c (EntrySetValue,EntryValidateChange,ExpandPercents,
-	  EntryValueChanged,Tk_EntryObjCmd,DestroyEntry,ConfigureEntry,
-	  EntryComputeGeometry,InsertChars,DeleteChars,EntryFetchSelection,
-	  EntryTextVarProc,Tk_SpinBoxObjCmd,SpinboxWidgetObjCmd):
+	* generic/tkCanvPs.c (Tk_PostscriptColor, Tk_PostscriptFont):
+	* generic/tkEntry.c (EntrySetValue, EntryValidateChange, ExpandPercents,
+	  EntryValueChanged, Tk_EntryObjCmd, DestroyEntry, ConfigureEntry,
+	  EntryComputeGeometry, InsertChars, DeleteChars, EntryFetchSelection,
+	  EntryTextVarProc, Tk_SpinBoxObjCmd, SpinboxWidgetObjCmd):
 	* generic/tkMain.c (Prompt):
 	* generic/tkMenu.c (MenuVarProc):
-	* generic/tkMenubutton.c (ConfigureMenuButton,MenuButtonTextVarProc):
-	* generic/tkMessage.c (ConfigureMessage,MessageTextVarProc):
-	* generic/tkWindow.c (GetScreen,Initialize):
-	* mac/tkMacInit.c (TkpInit,TkpDisplayWarning):
-	* mac/tkMacXStubs.c (TkGetDefaultScreenName,TkpOpenDisplay):
+	* generic/tkMenubutton.c (ConfigureMenuButton, MenuButtonTextVarProc):
+	* generic/tkMessage.c (ConfigureMessage, MessageTextVarProc):
+	* generic/tkWindow.c (GetScreen, Initialize):
+	* mac/tkMacInit.c (TkpInit, TkpDisplayWarning):
+	* mac/tkMacXStubs.c (TkGetDefaultScreenName, TkpOpenDisplay):
 	* unix/tkUnix.c (TkGetDefaultScreenName):
 	* unix/tkUnixEvent.c (TkpOpenDisplay):
-	* unix/tkUnixInit.c (TkpGetAppName,TkpDisplayWarning):
+	* unix/tkUnixInit.c (TkpGetAppName, TkpDisplayWarning):
 	* unix/tkUnixSend.c (SendEventProc):
-	* win/tkWinInit.c (TkpGetAppName,TkpDisplayWarning):
+	* win/tkWinInit.c (TkpGetAppName, TkpDisplayWarning):
 	* win/tkWinX.c (TkGetDefaultScreenName,TkpOpenDisplay): Updated
 	callers of Tcl_GetVar, Tcl_GetVar2
 	* generic/tkIntDecls.h: make genstubs
@@ -946,7 +946,7 @@
 	* generic/tkCanvPs.c (TkCanvPostscriptCmd):
 	* generic/tkImgBmap.c (TkGetBitmapData):
 	* generic/tkOption.c (ReadOptionFile):
-	* mac/tkMacInit.c (TkpInit,TkpGetAppName):
+	* mac/tkMacInit.c (TkpInit, TkpGetAppName):
 	* win/tkWinInit.c (TkpGetAppName): Updated callers of
 	Tcl_SplitPath, Tcl_JoinPath, and Tcl_TranslateFileName.
 
@@ -978,34 +978,34 @@
 	* generic/tkButton.c (ButtonWidgetObjCmd): 
 	* generic/tkCanvas.c (CanvasWidgetCmd,FindItems): 
 	* generic/tkClipboard.c (Tk_ClipboardObjCmd): 
-	* generic/tkCmds.c (Tk_BellObjCmd,Tk_TkObjCmd,Tk_TkwaitObjCmd,
-	  Tk_UpdateObjCmd,Tk_WinfoObjCmd,Tk_WmObjCmd): 
+	* generic/tkCmds.c (Tk_BellObjCmd, Tk_TkObjCmd, Tk_TkwaitObjCmd,
+	  Tk_UpdateObjCmd, Tk_WinfoObjCmd, Tk_WmObjCmd): 
 	* generic/tkConfig.c (DoObjConfig): 
-	* generic/tkEntry.c (EntryWidgetObjCmd,SpinboxWidgetObjCmd):
+	* generic/tkEntry.c (EntryWidgetObjCmd, SpinboxWidgetObjCmd):
 	* generic/tkFocus.c (Tk_FocusObjCmd):
-	* generic/tkFont.c (Tk_FocusObjCmd,ConfigAttributesObj):
+	* generic/tkFont.c (Tk_FocusObjCmd, ConfigAttributesObj):
 	* generic/tkFrame.c (Tk_FrameObjCmd):
-	* generic/tkGet.c (Tk_GetAnchorFromObj,Tk_GetJustifyFromObj):
+	* generic/tkGet.c (Tk_GetAnchorFromObj, Tk_GetJustifyFromObj):
 	* generic/tkGrab.c (Tk_GrabObjCmd):
 	* generic/tkGrid.c (Tk_GridObjCmd,GridRowColumnConfigureCommand,
-	  GridSlavesCommand,ConfigureSlaves):
+	  GridSlavesCommand, ConfigureSlaves):
 	* generic/tkImage.c (Tk_ImageObjCmd):
 	* generic/tkImgBmap.c (ImgBmapCmd):
 	* generic/tkImgGIF.c (FileReadGIF):
 	* generic/tkImgPhoto.c (ImgPhotoCmd):
-	* generic/tkListbox.c (ListboxWidgetObjCmd,ListboxSelectionSubCmd,
+	* generic/tkListbox.c (ListboxWidgetObjCmd, ListboxSelectionSubCmd,
 	  GetListboxIndex):
-	* generic/tkMenu.c (MenuWidgetObjCmd,MenuAddOrInsert,MenuCmd,
-	  ConfigureMenu,CloneMenu):
+	* generic/tkMenu.c (MenuWidgetObjCmd, MenuAddOrInsert, MenuCmd,
+	  ConfigureMenu, CloneMenu):
 	* generic/tkMenubutton.c (MenuButtonWidgetObjCmd): 
 	* generic/tkMessage.c (MessageWidgetObjCmd): 
 	* generic/tkOption.c (Tk_OptionObjCmd):
-	* generic/tkPack.c (Tk_PackObjCmd,ConfigureSlaves):
+	* generic/tkPack.c (Tk_PackObjCmd, ConfigureSlaves):
 	* generic/tkPlace.c (Tk_PlaceObjCmd):
 	* generic/tkScale.c (ScaleWidgetObjCmd): 
 	* generic/tkSelect.c (Tk_SelectionObjCmd): 
 	* generic/tkSquare.c (SquareWidgetObjCmd): 
-	* generic/tkTest.c (TestobjconfigObjCmd,TrivialConfigObjCmd,
+	* generic/tkTest.c (TestobjconfigObjCmd, TrivialConfigObjCmd,
 	  TestfontObjCmd): Updates to handle change in type of tablePtr
 	argument of Tcl_GetIndexFromObj(Struct) from (char **) to
 	(CONST char **).  [TIP 27] [Patch 504705]
@@ -1014,10 +1014,10 @@
 	* generic/tkEntry.c (Entry{FetchSelection,Setvalue},ExpandPercents):
 	* generic/tkSelect.c (HandleTclCommand):
 	* generic/tkText.c (TextSearchCmd):
-	* generic/tkTextIndex.c (TkTextMakeByteIndex,TkTextIndexBackChars):
-	* mac/tkMacFont.c (Tk_MeasureChars,BreakLine):
+	* generic/tkTextIndex.c (TkTextMakeByteIndex, TkTextIndexBackChars):
+	* mac/tkMacFont.c (Tk_MeasureChars, BreakLine):
 	* unix/tkUnixMenu.c (DrawMenuUnderline):
-	* win/tkWinMenu.c (GetEntryText,DrawMenuUnderline):  Updated
+	* win/tkWinMenu.c (GetEntryText, DrawMenuUnderline):  Updated
 	callers of Tcl_Utf* and Tcl_Regexp* APIs to reflect TIP 27 API
 	changes (see Tcl Patch 471509). [Patch 471513]
 
@@ -1033,7 +1033,7 @@
 	* generic/tkMain.c (Tk_MainEx):  Updated callers of CONSTified
 	Tcl interfaces Tcl_EvalFile and TclGetStartupScriptFileName.
 
-	* generic/tkConsole.c (ConsoleOutputProc,TkConsolePrint):  
+	* generic/tkConsole.c (ConsoleOutputProc, TkConsolePrint):  
 	* generic/tkInt.h (TkConsolePrint):
 	* mac/tkMacAppInit.c (TkConsolePrint): Updated Tk's console to
 	CONSTified channel driver interface.  [Tcl Patch 503565, Tk Patch
