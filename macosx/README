@@ -1,7 +1,7 @@
 TclTkAqua README 
 ----------------
 
-RCS: @(#) $Id: README,v 1.6.2.5 2004/07/27 18:52:26 wolfsuit Exp $
+RCS: @(#) $Id: README,v 1.6.2.6 2004/09/18 00:48:14 das Exp $
 
 This is the README file for the Mac OS X native versions of Tcl & Tk.
 
@@ -100,7 +100,8 @@ is set to 3 pixel width lines.  You can change this if you want by putting:
 
 set tk::mac::CGAntialiasLimit <limit>
 
-in your script before drawing, in which case only lines thinner that <limit> pixels will be antialiased.
+in your script before drawing, in which case only lines thinner that <limit> pixels 
+will not be antialiased.
 
 - Quickdraw text antialiasing is enabled by default when available (from 10.1.5
 onwards). Changing the global boolean variable '::tk::mac::antialiasedtext'
