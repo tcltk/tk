@@ -1,7 +1,7 @@
 TclTkAqua README 
 ----------------
 
-RCS: @(#) $Id: README,v 1.3 2002/10/29 00:51:12 das Exp $
+RCS: @(#) $Id: README,v 1.4 2003/02/11 07:26:18 wolfsuit Exp $
 
 This is the README file for the Mac OS X native versions of Tcl & Tk.
 
@@ -89,6 +89,30 @@ allows to dis/enable antialiasing on the fly from tcl (even for existing text).
 - the format of binary extensions expected by [load] is that of ordinary shared
 libraries (.dylib) and not MachO bundles, at present loading of MachO bundles is
 not supported.
+
+- Scrollbars: There are two scrollbar variants in Aqua, normal & small.  The 
+normal scrollbar has a small dimension of 16, the small variant 12.  Access
+to the small variant was added in Tk 8.4.3.
+
+- Cursors: You can now put up and spin the Classic MacOS spinner, and the 
+counting hands and watch cursor.  The way this is done is each of the spinners
+have a base name:
+
+    spinning: The circular B&W circular spinner
+    countinguphand: The counting up hand
+    countingdownhand: The counting down hand
+    countingupanddownhand: The counting up then down hand
+    watch: The watch cursor
+
+Then to get the sequential variants, add an integer to the end of the base 
+name.  So, for instance this code will spin the spinner:
+
+proc spinCursor {widget count} {
+    $widget configure -cursor spinning$count
+    after 100 spinCursor [incr count]
+}
+
+This was added in Tk 8.4.3
 
 
 3. Building TclTkAqua
