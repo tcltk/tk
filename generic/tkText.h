@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.15 2003/05/27 15:35:53 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.16 2003/09/29 23:15:20 dkf Exp $
  */
 
 #ifndef _TKTEXT
@@ -950,7 +950,7 @@ EXTERN int		TkTextXviewCmd _ANSI_ARGS_((TkText *textPtr,
 EXTERN int		TkTextYviewCmd _ANSI_ARGS_((TkText *textPtr,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
 /* Use a helper from tkCanvas.c */
-EXTERN CONST char**	GetStringsFromObjs _ANSI_ARGS_((int argc,
+EXTERN CONST char**	TkGetStringsFromObjs _ANSI_ARGS_((int argc,
 			    Tcl_Obj *CONST *objv));
 
 # undef TCL_STORAGE_CLASS
