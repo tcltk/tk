@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.41 2005/01/13 01:48:03 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.42 2005/01/17 07:00:11 chengyemao Exp $
  */
 
 #define OEMRESOURCE
@@ -1096,9 +1096,9 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		    Tcl_BackgroundError(interp);
 		}
 		Tcl_Release((ClientData)interp);
+		*plResult = 0;
+		returnResult = 1;
 	    }
-	    *plResult = 0;
-	    returnResult = 1;
 	    break;
 	}
 
@@ -1210,9 +1210,9 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 			- itemPtr->rcItem.top, 0, drawArrow);
 
 		ckfree((char *) twdPtr);
-		*plResult = 1;
-		returnResult = 1;
 	    }
+    	    *plResult = 1;
+	    returnResult = 1;
 	    break;
 	}
 
@@ -1262,6 +1262,8 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		    }
 		    MenuSelectEvent(menuPtr);
 		    Tcl_ServiceAll();
+		    *plResult = 0;
+		    returnResult = 1;
 		}
 	    }
 	    break;
