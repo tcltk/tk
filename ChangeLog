@@ -1,3 +1,10 @@
+2003-02-19  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.pbproj/project.pbxproj:
+	* macosx/Makefile: reworked embedded build to no longer require
+	relinking but to use install_name_tool instead to change the
+	install_names for embedded frameworks.
+
 2003-02-19  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/demos/widget:		New part for the widget demo showing
