@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPort.h,v 1.6 1999/07/22 21:51:25 redman Exp $
+ * RCS: @(#) $Id: tkWinPort.h,v 1.7 1999/11/19 22:00:19 hobbs Exp $
  */
 
 #ifndef _WINPORT
@@ -48,8 +48,10 @@
 #    define hypot _hypot
 #endif /* _MSC_VER */
 
-#define strncasecmp strnicmp
-#define strcasecmp stricmp
+#ifndef __GNUC__
+#    define strncasecmp strnicmp
+#    define strcasecmp stricmp
+#endif
 
 #define NBBY 8
 

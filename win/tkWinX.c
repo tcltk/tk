@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.6 1999/07/09 02:10:07 stanton Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.7 1999/11/19 22:00:19 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1128,5 +1128,5 @@ TkWinResendEvent(wndproc, hwnd, eventPtr)
 unsigned long
 TkpGetMS()
 {
-    return GetCurrentTime();
+    return GetTickCount();
 }
