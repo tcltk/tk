@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.12 1999/08/07 18:54:37 jingham Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.13 1999/08/13 08:07:02 jingham Exp $
  */
 
 #include "tkMacInt.h"
@@ -3971,13 +3971,27 @@ DrawMenuEntryLabel(
 	    	(int) (y + (mePtr->height - height)/2), 1);
     } else {
     	if (mePtr->labelLength > 0) {
-    	    Tcl_DString itemTextDString;
+    	    Tcl_DString itemTextDString, convertedTextDString;
     	    
     	    GetEntryText(mePtr, &itemTextDString);
-	    Tk_DrawChars(menuPtr->display, d, gc,
+    	    
+    	    /* Somehow DrawChars is changing the colors, it is odd, since
+    	       it works for the Apple Platinum Appearance, but not for
+    	       some Kaleidoscope Themes...  Untill I can figure out what
+    	       exactly is going on, this will have to do: */
+    	    
+            TkMacSetUpGraphicsPort(gc);
+	    MoveTo((short) leftEdge, (short) baseline);
+	    Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&itemTextDString), 
+	            Tcl_DStringLength(&itemTextDString), &convertedTextDString);
+	    DrawText(Tcl_DStringValue(&convertedTextDString), 0, 
+	            Tcl_DStringLength(&convertedTextDString));
+	    
+	    /* Tk_DrawChars(menuPtr->display, d, gc,
 		    tkfont, Tcl_DStringValue(&itemTextDString), 
 		    Tcl_DStringLength(&itemTextDString),
-		    leftEdge, baseline);
+		    leftEdge, baseline); */
+		    
 	    Tcl_DStringFree(&itemTextDString);
     	}
     }
