@@ -1,3 +1,14 @@
+2003-04-02  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/configure: Regen.
+	* win/configure.in: Don't set TCL_DLL_FILE,
+	TCL_LIB_FILE, TCL_STUB_LIB_FILE, TCL_STUB_LIB_FLAG,
+	and TCL_BUILD_STUB_LIB_SPEC. These variables are
+	already set in tclConfig.sh. Don't subst vars
+	that are either not used, or already covered by
+	a subst in SC_LOAD_TCLCONFIG.
+	[Bug 691908]
+
 2003-04-01  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/configure: Regen.
