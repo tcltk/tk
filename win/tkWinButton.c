@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.12 2000/11/22 01:49:38 ericm Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.13 2001/11/17 22:44:04 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -584,10 +584,10 @@ TkpDisplayButton(clientData)
 	    rect.right = Tk_Width(tkwin) - rect.left;
 	    rect.bottom = Tk_Height(tkwin) - rect.top;
 	} else {
-	    rect.top = y-2;
-	    rect.left = x-2;
+	    rect.top = y-1;
+	    rect.left = x-1;
 	    rect.right = x+butPtr->textWidth + 1;
-	    rect.bottom = y+butPtr->textHeight + 1;
+	    rect.bottom = y+butPtr->textHeight + 2;
 	}
 	SetTextColor(dc, gc->foreground);
 	SetBkColor(dc, gc->background);
@@ -739,11 +739,16 @@ void
 TkpComputeButtonGeometry(butPtr)
     register TkButton *butPtr;	/* Button whose geometry may have changed. */
 {
-    int width, height, avgWidth, txtWidth, txtHeight, drawRing = 0;
-    int haveImage = 0, haveText = 0;
+    int txtWidth, txtHeight;		/* Width and height of text */
+    int imgWidth, imgHeight;		/* Width and height of image */
+    int width = 0, height = 0;		/* Width and height of button */
+    int haveImage, haveText;
+    int avgWidth;
+    /* Vertical and horizontal dialog units size in pixels. */
+    double vDLU, hDLU;
     Tk_FontMetrics fm;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (butPtr->highlightWidth < 0) {
 	butPtr->highlightWidth = 0;
@@ -755,36 +760,155 @@ TkpComputeButtonGeometry(butPtr)
 	InitBoxes();
     }
 
-    width = 0;
-    height = 0;
-    txtWidth = 0;
-    txtHeight = 0;
-    avgWidth = 0;
-
+    /* Figure out image metrics */
     if (butPtr->image != NULL) {
-	Tk_SizeOfImage(butPtr->image, &width, &height);
+	Tk_SizeOfImage(butPtr->image, &imgWidth, &imgHeight);
 	haveImage = 1;
     } else if (butPtr->bitmap != None) {
-	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
+	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap,
+			&imgWidth, &imgHeight);
 	haveImage = 1;
+    } else {
+	imgWidth = 0;
+	imgHeight = 0;
+	haveImage = 0;
     }
 
-    if (!haveImage || butPtr->compound != COMPOUND_NONE) {
-	/* Calculate geometry for the text */
-	Tk_FreeTextLayout(butPtr->textLayout);
-	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-		Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
-		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
+    /* 
+     * Figure out font metrics (even if we don't have text because we need
+     * DLUs (based on font, not text) for some spacing calculations below).
+     */
 
-	txtWidth = butPtr->textWidth;
-	txtHeight = butPtr->textHeight;
-	haveText = (txtWidth != 0 && txtHeight != 0);
-	avgWidth = Tk_TextWidth(butPtr->tkfont, "0", 1);
-	Tk_GetFontMetrics(butPtr->tkfont, &fm);
-    }
-    
+    Tk_FreeTextLayout(butPtr->textLayout);
+    butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
+	    Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
+	    butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
+
+    txtWidth = butPtr->textWidth;
+    txtHeight = butPtr->textHeight;
+    haveText = (*(Tcl_GetString(butPtr->textPtr)) != '\0');
+    avgWidth = (Tk_TextWidth(butPtr->tkfont,
+	    "abcdefghijklmnopqurstuvwzyABCDEFGHIJKLMNOPQURSTUVWZY",
+	    52) + 26) / 52;
+    Tk_GetFontMetrics(butPtr->tkfont, &fm);
+
+    /* Compute dialog units for layout calculations. */
+    hDLU = avgWidth / 4.0;
+    vDLU = fm.linespace / 8.0;
+
     /*
-     * If the button is compound (ie, it shows both an image and text),
+     * First, let's try to compute button size "by the book" (See "Microsoft
+     * Windows User Experience" (ISBN 0-7356-0566-1), Chapter 14 - Visual
+     * Design, Section 4 - Layout (page 448)).
+     *
+     * Note, that Tk "buttons" are Microsoft "Command buttons", Tk
+     * "checkbuttons" are Microsoft "check boxes", Tk "radiobuttons" are
+     * Microsoft "option buttons", and Tk "labels" are Microsoft "text
+     * labels".
+     */
+
+    /*
+     * Set width and height by button type; See User Experience table, p449.
+     */
+    if (haveText) {
+	switch (butPtr->type) {
+	    case TYPE_BUTTON: {
+		width = (int)(0.5 + (50 * hDLU));
+		/*
+		 * If the text is wider than the default button width,
+		 * adjust the button width up to suit.  We'll allow 6 DLUs
+		 * left and right.  There is no rule but this is consistent
+		 * with the fact that button text is 8 DLUs high and buttons
+		 * are 14 DLUs high.
+		 */
+		if (txtWidth + (int)(0.5 + (6 * hDLU)) > width) {
+		    width = txtWidth + (int)(0.5 + (6 * hDLU));
+		}
+
+		/*
+		 * The User Experience says 14 DLUs.  Since text is, by
+		 * definition, 8 DLU/line, this allows for multi-line text
+		 * while working perfectly for single-line text.
+		 */
+		height = txtHeight + (int)(0.5 + (6 * vDLU));
+
+		/*
+		 * The above includes 6 DLUs of padding which should include
+		 * defaults of 1 pixel of highlightwidth, 2 pixels of 
+		 * borderwidth, 1 pixel of padding and 1 pixel of extra inset 
+		 * on each side.  Those will be added later so reduce width 
+		 * and height now to compensate.
+		 */
+		width  -= 10;
+		height -= 10;
+
+		/*
+		 * Extra inset for the focus ring.
+		 */
+
+		butPtr->inset += 1;
+		break;
+	    }
+
+	    case TYPE_LABEL: {
+		/*
+		 * The User Experience says, "as wide as needed".
+		 */
+		width = txtWidth;
+
+		/*
+		 * The User Experience says, "8 (DLUs) per line of text."
+		 * Since text is, by definition, 8 DLU/line, this allows
+		 * for multi-line text while working perfectly for single-line
+		 * text.
+		 */
+		height = txtHeight;
+		break;
+	    }
+
+	    case TYPE_RADIO_BUTTON:
+	    case TYPE_CHECK_BUTTON: {
+		/* See note for TYPE_LABEL */
+		width = txtWidth;
+		/*
+		 * The User Experience says 10 DLUs.  (Is that one DLU above
+		 * and below for the focus ring?)	 See note above about
+		 * multi-line text and 8 DLU/line.
+		 */
+		height = txtHeight + (int)(0.5 + (2.0 * vDLU));
+
+		/*
+		 * The above includes 2 DLUs of padding which should include
+		 * defaults of 1 pixel of highlightwidth, 0 pixels of 
+		 * borderwidth, and 1 pixel of padding on each side.  Those
+		 * will be added later so reduce height now to compensate.
+		 */
+		height -= 4;
+
+		/*
+		 * Extra inset for the focus ring.
+		 */
+
+		butPtr->inset += 1;
+		break;
+	    }
+
+	    default:
+	    {
+		/* WUZ - error here */
+	    }
+	} /* switch */
+    }
+
+    /*
+     * At this point, the width and height are correct for a Tk text
+     * button, excluding padding and inset, but we have to allow for
+     * compound buttons.  The image may be above, below, left, or right
+     * of the text.
+     */
+
+    /*
+     * If the button is compound (i.e., it shows both an image and text),
      * the new geometry is a combination of the image and text geometry.
      * We only honor the compound bit if the button has both text and an
      * image, because otherwise it is not really a compound button.
@@ -795,32 +919,47 @@ TkpComputeButtonGeometry(butPtr)
 	    case COMPOUND_TOP:
 	    case COMPOUND_BOTTOM: {
 		/* Image is above or below text */
-		height += txtHeight + butPtr->padY;
-		width = (width > txtWidth ? width : txtWidth);
+		if (imgWidth > width) {
+		    width = imgWidth;
+		}
+		height += imgHeight + butPtr->padY;
 		break;
 	    }
 	    case COMPOUND_LEFT:
 	    case COMPOUND_RIGHT: {
 		/* Image is left or right of text */
-		width += txtWidth + butPtr->padX;
-		height = (height > txtHeight ? height : txtHeight);
+		/*
+		 * Only increase width of button if image doesn't fit in
+		 * slack space of default button width
+		 */
+		if ((imgWidth + txtWidth + butPtr->padX) > width) {
+		    width = imgWidth + txtWidth + butPtr->padX;
+		}
+
+		if (imgHeight > height) {
+		    height = imgHeight;
+		}
 		break;
 	    }
 	    case COMPOUND_CENTER: {
 		/* Image and text are superimposed */
-		width = (width > txtWidth ? width : txtWidth);
-		height = (height > txtHeight ? height : txtHeight);
+		if (imgWidth > width) {
+		    width = imgWidth;
+		}
+		if (imgHeight > height) {
+		    height = imgHeight;
+		}
 		break;
 	    }
-	    case COMPOUND_NONE: {break;}
-	}
+	} /* switch */
+
 	if (butPtr->width > 0) {
 	    width = butPtr->width;
 	}
 	if (butPtr->height > 0) {
 	    height = butPtr->height;
 	}
-	
+
 	if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
 	    butPtr->indicatorSpace = tsdPtr->boxWidth * 2;
 	    butPtr->indicatorDiameter = tsdPtr->boxHeight;
@@ -828,63 +967,64 @@ TkpComputeButtonGeometry(butPtr)
 
 	width += 2*butPtr->padX;
 	height += 2*butPtr->padY;
-	drawRing = 1;
-    } else {
-	if (haveImage) {
-	    if (butPtr->width > 0) {
-		width = butPtr->width;
-	    }
-	    if (butPtr->height > 0) {
-		height = butPtr->height;
-	    }
-	    if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-		butPtr->indicatorSpace = tsdPtr->boxWidth * 2;
-		butPtr->indicatorDiameter = tsdPtr->boxHeight;
-	    }
+    } else if (haveImage) {
+	if (butPtr->width > 0) {
+	    width = butPtr->width;
 	} else {
-	    width = txtWidth;
-	    height = txtHeight;
-	    if (butPtr->width > 0) {
-		width = butPtr->width * avgWidth;
-	    }
-	    if (butPtr->height > 0) {
-		height = butPtr->height * fm.linespace;
-	    }
+	    width = imgWidth;
+	}
+	if (butPtr->height > 0) {
+	    height = butPtr->height;
+	} else {
+	    height = imgHeight;
+	}
+    } else {
+	/*
+	 * butPtr->width is in characters.  We need to allow for that
+	 * many characters on the face, not in the over-all button width
+	 */
+	if (butPtr->width > 0) {
+	    width = butPtr->width * avgWidth;
+	}
+
+	/*
+	 * butPtr->height is in lines of text.	We need to allow for
+	 * that many lines on the face, not in the over-all button
+	 * height.
+	 */
+	if (butPtr->height > 0) {
+	    height = butPtr->height * fm.linespace;
+	}
 	    
-	    if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-		butPtr->indicatorDiameter = tsdPtr->boxHeight;
-		butPtr->indicatorSpace = butPtr->indicatorDiameter + avgWidth;
-	    }
-	    drawRing = 1;
+	width  += 2 * butPtr->padX;
+	height += 2 * butPtr->padY;
+    }
+
+    /* Compute indicator spacing for radio and check buttons. */
+    if (butPtr->type == TYPE_RADIO_BUTTON
+	    || butPtr->type == TYPE_CHECK_BUTTON) {
+	if (butPtr->indicatorOn) {
+	    butPtr->indicatorDiameter = tsdPtr->boxHeight;
+
+	    /*
+	     * There is no rule for space between the indicator and
+	     * the text (the two are atomic on 'Windows) but the User
+	     * Experience page 451 says leave 3 hDLUs between "text
+	     * labels and their associated controls".
+	     */
+	    butPtr->indicatorSpace = butPtr->indicatorDiameter +
+		(int)(0.5 + (3.0 * hDLU));
+	    width += butPtr->indicatorSpace;
 	}
     }
 
     /*
-     * Increase the inset to allow for the focus ring.
+     * Inset is always added to the size.
      */
-    
-    if (drawRing && butPtr->type != TYPE_LABEL) {
-	butPtr->inset += 3;
-    }
-    
-    /*
-     * When issuing the geometry request, add extra space for the indicator,
-     * if any, and for the border and padding, plus an extra pixel so the
-     * display can be offset by 1 pixel in either direction for the raised
-     * or lowered effect.
-     */
+    width  += 2 * butPtr->inset;
+    height += 2 * butPtr->inset;
 
-    if ((butPtr->image == NULL) && (butPtr->bitmap == None)) {
-	width += 2*butPtr->padX;
-	height += 2*butPtr->padY;
-    }
-    if ((butPtr->type == TYPE_BUTTON)
-	    || ((butPtr->type >= TYPE_CHECK_BUTTON) && !butPtr->indicatorOn)) {
-	width += 1;
-	height += 1;
-    }
-    Tk_GeometryRequest(butPtr->tkwin, (int) (width + butPtr->indicatorSpace
-	    + 2*butPtr->inset), (int) (height + 2*butPtr->inset));
+    Tk_GeometryRequest(butPtr->tkwin, width, height);
     Tk_SetInternalBorder(butPtr->tkwin, butPtr->inset);
 }
 
