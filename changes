@@ -4185,8 +4185,8 @@ had been previously used as file dialog parents. (SS)
 6/29/98 (compatibility patch)  Added reserved fields to several Tk
 structures to match additions made by Jan Nijtmans dash patch.  This
 means that extensions can be compiled against the dash patch
-and still work with unpatched Tk, and vice versa.  However, if your
-extension is compiled against 8.0p2, then it must be recompiled,
-so we must note
-*** POTENTIAL INCOMPATIBILITY *** (recompile required)
+and still work with unpatched Tk, and vice versa.
 
+7/6/98 (bug fix) Added keysym definitions for the new keys on the
+Microsoft keyboards.  You can bind to <App>, <Win_L>, and <Win_R>,
+but you cannot use the Win keys as modifiers. (SS, BW)
