@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.12 2000/10/05 18:31:25 ericm Exp $
+# RCS: @(#) $Id: tk.decls,v 1.13 2000/10/21 21:22:42 ericm Exp $
 
 library tk
 
@@ -1136,6 +1136,8 @@ declare 240 generic {
     void Tk_DeleteClientMessageHandler (Tk_ClientMessageProc *proc)
 }
 
+# New in 8.4a2
+#
 declare 241 generic {
     Tk_Window Tk_CreateAnonymousWindow (Tcl_Interp *interp, \
 	    Tk_Window parent, char *screenName)
