@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnix3d.c,v 1.4 2000/04/13 18:25:44 ericm Exp $
+ * RCS: @(#) $Id: tkUnix3d.c,v 1.5 2000/04/14 01:36:35 ericm Exp $
  */
 
 #include <tk3d.h>
@@ -407,7 +407,7 @@ TkpGetShadows(borderPtr, tkwin)
 	 * Compute the light shadow color
 	 */
 
-	if (g > MAX_INTENSITY*85/100) {
+	if (g > MAX_INTENSITY*0.95) {
 	    lightColor.red = (90 * r)/100;
 	    lightColor.green = (90 * g)/100;
 	    lightColor.blue = (90 * b)/100;

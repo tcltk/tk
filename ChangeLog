@@ -1,5 +1,8 @@
 2000-04-13  Eric Melski  <ericm@scriptics.com>
 
+	* win/tkWinKey.c: Added smarts to check whether the left or right
+	Control, Shift, or Alt key was pressed.  [Bug: 870].
+
 	* win/tkWinMenu.c: Corrected code that created separator items on
 	menus; originally, it requested that the system be responsible for
 	drawing those items, so it would ignore configuration items like
