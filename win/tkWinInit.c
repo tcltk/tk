@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInit.c,v 1.7 2002/01/25 21:09:37 dgp Exp $
+ * RCS: @(#) $Id: tkWinInit.c,v 1.8 2002/01/29 20:51:24 andreas_kupries Exp $
  */
 
 #include "tkWinInt.h"
@@ -75,17 +75,18 @@ TkpGetAppName(interp, namePtr)
     Tcl_Interp *interp;
     Tcl_DString *namePtr;	/* A previously initialized Tcl_DString. */
 {
-    int argc;
+    int argc, namelength;
     CONST char **argv = NULL, *name, *p;
 
     name = Tcl_GetVar(interp, "argv0", TCL_GLOBAL_ONLY);
+    namelength = -1;
     if (name != NULL) {
 	Tcl_SplitPath(name, &argc, &argv);
 	if (argc > 0) {
 	    name = argv[argc-1];
 	    p = strrchr(name, '.');
 	    if (p != NULL) {
-		*p = '\0';
+		namelength = p - name;
 	    }
 	} else {
 	    name = NULL;
@@ -93,8 +94,9 @@ TkpGetAppName(interp, namePtr)
     }
     if ((name == NULL) || (*name == 0)) {
 	name = "tk";
+	namelength = -1;
     }
-    Tcl_DStringAppend(namePtr, name, -1);
+    Tcl_DStringAppend(namePtr, name, namelength);
     if (argv != NULL) {
 	ckfree((char *)argv);
     }
