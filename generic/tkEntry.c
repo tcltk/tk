@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.11 2000/03/07 22:27:46 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.12 2000/03/31 09:24:00 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -155,14 +155,12 @@ typedef struct {
 				 * definitions. */
     Tk_TSOffset tsoffset;
 
-#ifdef ENTRY_VALIDATE
     char *validateCmd;          /* Command prefix to use when invoking
 				 * validate command.  NULL means don't
 				 * invoke commands.  Malloc'ed. */
     int validate;               /* Non-zero means try to validate */
     char *invalidCmd;		/* Command called when a validation returns 0
 				 * (successfully fails), defaults to {}. */
-#endif /* ENTRY_VALIDATE */
 } Entry;
 
 /*
@@ -196,11 +194,9 @@ typedef struct {
 #define UPDATE_SCROLLBAR	0x10
 #define GOT_SELECTION		0x20
 #define ENTRY_DELETED           0x40
-#ifdef ENTRY_VALIDATE
 #define VALIDATING              0x80
 #define VALIDATE_VAR            0x100
 #define VALIDATE_ABORT          0x200
-#endif /* ENTRY_VALIDATE */
 
 /*
  * The following macro defines how many extra pixels to leave on each
@@ -224,7 +220,6 @@ static char *stateStrings[] = {
     "disabled", "normal", (char *) NULL
 };
 
-#ifdef ENTRY_VALIDATE
 /*
  * Definitions for -validate option values:
  */
@@ -242,8 +237,6 @@ enum validateType {
 };
 #define DEF_ENTRY_VALIDATE	"none"
 #define DEF_ENTRY_INVALIDCMD	""
-
-#endif /* ENTRY_VALIDATE */
 
 /*
  * Information used for argv parsing.
@@ -300,13 +293,11 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
 	DEF_ENTRY_INSERT_WIDTH, -1, Tk_Offset(Entry, insertWidth), 
         0, 0, 0},
-#ifdef ENTRY_VALIDATE
     {TK_OPTION_STRING, "-invalidcommand", "invalidCommand", "InvalidCommand",
 	DEF_ENTRY_INVALIDCMD, -1, Tk_Offset(Entry, invalidCmd),
-	0, 0, 0},
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-invcmd", (char *) NULL, (char *) NULL,
 	(char *) NULL, 0, -1, 0, (ClientData) "-invalidcommand", 0},
-#endif /* ENTRY_VALIDATE */
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, -1, Tk_Offset(Entry, justify), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
@@ -334,7 +325,6 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
 	DEF_ENTRY_TEXT_VARIABLE, -1, Tk_Offset(Entry, textVarName),
 	TK_CONFIG_NULL_OK, 0, 0},
-#ifdef ENTRY_VALIDATE
     {TK_OPTION_STRING_TABLE, "-validate", "validate", "Validate",
        DEF_ENTRY_VALIDATE, -1, Tk_Offset(Entry, validate),
        0, (ClientData) validateStrings, 0},
@@ -343,7 +333,6 @@ static Tk_OptionSpec optionSpecs[] = {
        TK_CONFIG_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-vcmd", (char *) NULL, (char *) NULL,
 	(char *) NULL, 0, -1, 0, (ClientData) "-validatecommand", 0},
-#endif /* ENTRY_VALIDATE */
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_ENTRY_WIDTH, -1, Tk_Offset(Entry, prefWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
@@ -368,21 +357,13 @@ static Tk_OptionSpec optionSpecs[] = {
 
 static char *commandNames[] = {
     "bbox", "cget", "configure", "delete", "get", "icursor", "index", 
-    "insert", "scan", "selection",
-#ifdef ENTRY_VALIDATE
-    "validate",
-#endif
-    "xview", (char *) NULL
+    "insert", "scan", "selection", "validate", "xview", (char *) NULL
 };
 
 enum command {
     COMMAND_BBOX, COMMAND_CGET, COMMAND_CONFIGURE, COMMAND_DELETE, 
     COMMAND_GET, COMMAND_ICURSOR, COMMAND_INDEX, COMMAND_INSERT, 
-    COMMAND_SCAN, COMMAND_SELECTION,
-#ifdef ENTRY_VALIDATE
-    COMMAND_VALIDATE,
-#endif
-    COMMAND_XVIEW
+    COMMAND_SCAN, COMMAND_SELECTION, COMMAND_VALIDATE, COMMAND_XVIEW
 };
 
 static char *selCommandNames[] = {
@@ -427,7 +408,6 @@ static char *		EntryTextVarProc _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, char *name1, char *name2,
 			    int flags));
 static void		EntryUpdateScrollbar _ANSI_ARGS_((Entry *entryPtr));
-#ifdef ENTRY_VALIDATE
 static int		EntryValidate _ANSI_ARGS_((Entry *entryPtr,
 			    char *cmd));
 static int		EntryValidateChange _ANSI_ARGS_((Entry *entryPtr,
@@ -435,7 +415,6 @@ static int		EntryValidateChange _ANSI_ARGS_((Entry *entryPtr,
 static void		ExpandPercents _ANSI_ARGS_((Entry *entryPtr,
 			    char *before, char *change, char *new,
 			    int index, int type, Tcl_DString *dsPtr));
-#endif /* ENTRY_VALIDATE */
 static void		EntryValueChanged _ANSI_ARGS_((Entry *entryPtr));
 static void		EntryVisibleRange _ANSI_ARGS_((Entry *entryPtr,
 			    double *firstPtr, double *lastPtr));
@@ -584,11 +563,9 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
     entryPtr->highlightGC = None;
     entryPtr->avgWidth = 1;
     entryPtr->flags = 0;
-#ifdef ENTRY_VALIDATE
     entryPtr->validateCmd	= NULL;
     entryPtr->validate		= VALIDATE_NONE;
     entryPtr->invalidCmd	= NULL;
-#endif /* ENTRY_VALIDATE */
 
     Tk_SetClass(entryPtr->tkwin, "Entry");
     TkSetClassProcs(entryPtr->tkwin, &entryClass, (ClientData) entryPtr);
@@ -962,7 +939,6 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	    break;
 	}
 
-#ifdef ENTRY_VALIDATE
         case COMMAND_VALIDATE: {
 	    int code;
 
@@ -980,7 +956,6 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj((code == TCL_OK)));
 	    break;
 	}
-#endif
 
         case COMMAND_XVIEW: {
 	    int index;
@@ -1699,7 +1674,6 @@ InsertChars(entryPtr, index, value)
     strcpy(new + byteIndex, value);
     strcpy(new + byteIndex + byteCount, string + byteIndex);
 
-#ifdef ENTRY_VALIDATE
     if ((entryPtr->validate == VALIDATE_KEY ||
 	 entryPtr->validate == VALIDATE_ALL) &&
 	EntryValidateChange(entryPtr, value, new, index,
@@ -1707,7 +1681,6 @@ InsertChars(entryPtr, index, value)
 	ckfree(new);
 	return;
     }
-#endif /* ENTRY_VALIDATE */
 
     ckfree(string);
     entryPtr->string = new;
@@ -1783,10 +1756,7 @@ DeleteChars(entryPtr, index, count)
     int count;			/* How many characters to delete. */
 {
     int byteIndex, byteCount, newByteCount;
-    char *new, *string;
-#ifdef ENTRY_VALIDATE
-    char *todelete;
-#endif
+    char *new, *string, *todelete;
 
     if ((index + count) > entryPtr->numChars) {
 	count = entryPtr->numChars - index;
@@ -1804,7 +1774,6 @@ DeleteChars(entryPtr, index, count)
     memcpy(new, string, (size_t) byteIndex);
     strcpy(new + byteIndex, string + byteIndex + byteCount);
 
-#ifdef ENTRY_VALIDATE
     todelete = (char *) ckalloc((unsigned) (byteCount + 1));
     memcpy(todelete, string + byteIndex, (size_t) byteCount);
     todelete[byteCount] = '\0';
@@ -1819,8 +1788,6 @@ DeleteChars(entryPtr, index, count)
     }
 
     ckfree(todelete);
-#endif /* ENTRY_VALIDATE */
-
     ckfree(entryPtr->string);
     entryPtr->string = new;
     entryPtr->numChars -= count;
@@ -1960,7 +1927,6 @@ EntrySetValue(entryPtr, value)
     char *value;		/* New text to display in entry. */
 {
     char *oldSource;
-#ifdef ENTRY_VALIDATE
     int code, valueLen, malloced = 0;
 
     if (strcmp(value, entryPtr->string) == 0) {
@@ -1995,7 +1961,6 @@ EntrySetValue(entryPtr, value)
 	    return;
 	}
     }
-#endif /* ENTRY_VALIDATE */
 
     oldSource = entryPtr->string;
     ckfree(entryPtr->string);
@@ -2659,25 +2624,21 @@ EntryFocusProc(entryPtr, gotFocus)
 		    entryPtr->insertOnTime, EntryBlinkProc,
 		    (ClientData) entryPtr);
 	}
-#ifdef ENTRY_VALIDATE
 	if (entryPtr->validate == VALIDATE_ALL ||
 	    entryPtr->validate == VALIDATE_FOCUS ||
 	    entryPtr->validate == VALIDATE_FOCUSIN) {
 	    EntryValidateChange(entryPtr, (char *) NULL,
 				entryPtr->string, -1, VALIDATE_FOCUSIN);
 	}
-#endif /* ENTRY_VALIDATE */
     } else {
 	entryPtr->flags &= ~(GOT_FOCUS | CURSOR_ON);
 	entryPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
-#ifdef ENTRY_VALIDATE
 	if (entryPtr->validate == VALIDATE_ALL ||
 	    entryPtr->validate == VALIDATE_FOCUS ||
 	    entryPtr->validate == VALIDATE_FOCUSOUT) {
 	    EntryValidateChange(entryPtr, (char *) NULL,
 				entryPtr->string, -1, VALIDATE_FOCUSOUT);
 	}
-#endif /* ENTRY_VALIDATE */
     }
     EventuallyRedraw(entryPtr);
 }
@@ -2739,16 +2700,9 @@ EntryTextVarProc(clientData, interp, name1, name2, flags)
     if (value == NULL) {
 	value = "";
     }
-#ifdef ENTRY_VALIDATE
     EntrySetValue(entryPtr, value);
-#else
-    if (strcmp(value, entryPtr->string) != 0) {
-	EntrySetValue(entryPtr, value);
-    }
-#endif /* ENTRY_VALIDATE */
     return (char *) NULL;
 }
-#ifdef ENTRY_VALIDATE
 
 /*
  *--------------------------------------------------------------
@@ -3050,4 +3004,3 @@ ExpandPercents(entryPtr, before, change, new, index, type, dsPtr)
 	Tcl_DStringSetLength(dsPtr, length + spaceNeeded);
     }
 }
-#endif /* ENTRY_VALIDATE */
