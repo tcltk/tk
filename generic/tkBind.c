@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.22 2002/06/14 22:25:12 jenglish Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.23 2002/06/14 23:16:24 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -2558,7 +2558,7 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		goto doNumber;
 	    case 'P':
 		if (flags & PROP) {
-		    string = Tk_GetAtomName(winPtr, eventPtr->xproperty.atom);
+		    string = Tk_GetAtomName((Tk_Window) winPtr, eventPtr->xproperty.atom);
 		}
 		goto doString;
 	    case 'R':
