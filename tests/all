@@ -2,7 +2,7 @@
 # tests.  Execute it by invoking "source all" when running tclTest
 # in this directory.
 #
-# RCS: @(#) $Id: all,v 1.4 1998/12/07 23:29:00 hershey Exp $
+# RCS: @(#) $Id: all,v 1.4.2.1 1999/03/22 06:42:59 jingham Exp $
 
 set TESTS_DIR [file join [pwd] [file dirname [info script]]]
 source [file join $TESTS_DIR defs]
@@ -73,5 +73,10 @@ if {[info exists TMP_DIR]} {
     cd $currentDir
 }
 
-catch {destroy .}
-exit
+# Don't exit at the end of all the tests on the Mac, since
+# this destroys the window that contains the test results...
+
+if {[string compare $tcl_platform(platform) macintosh]} {
+    catch {destroy .}
+    exit
+}
