@@ -1,3 +1,31 @@
+2001-10-12  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinDialog.c: Win64 pointer fixes
+
+	* win/tkWinWm.c (WinSetIcon): closed channels in the error case.
+
+	* generic/tkBind.c (NameToWindow):
+	* generic/tkCmds.c (Tk_WinfoObjCmd):
+	* generic/tkInt.decls (TkpScanWindowId):
+	* generic/tkIntPlatDecls.h:
+	* generic/tkStubInit.c:
+	* mac/tkMacPort.h (TkpPrintWindowId,TkpScanWindowId):
+	* unix/tkUnixPort.h (TkpPrintWindowId,TkpScanWindowId):
+	* unix/tkUnixXId.c (TkpScanWindowId):
+	* win/tkWinWindow.c (TkpScanWindowId): Corrected definition of
+	TkpScanWindowId to handle situation where types Window and int
+	do not have the same number of bits.  CONST-ified too.
+
+	* xlib/X11/X.h: made XID __int64 type for Win64.
+
+	* win/tkWinX.c (TkGetServerInfo): added recognition of Win64.
+
+	* tests/scrollbar.test (scrollbar-6.27): marked knownBug because
+	it is skewed by bad dimensions returned by Windows.
+
+	* tests/textDisp.test (textDisp-4.12): corrected test to work
+	properly on Windows.
+
 2001-10-12  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/demos/rolodex: Minor updates.
