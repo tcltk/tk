@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.29 2001/03/30 21:52:56 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.30 2001/09/21 20:38:35 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -814,7 +814,15 @@ WinSetIcon(interp, titlebaricon, tkw)
 	    }
 	} else {
 	    ThreadSpecificData *tsdPtr;
-	    if (!SetClassLong(hwnd, GCL_HICONSM, (LPARAM)GetIcon(titlebaricon, ICON_SMALL))) {
+	    if (
+#ifdef _WIN64
+		!SetClassLongPtr(hwnd, GCLP_HICONSM,
+			(LPARAM)GetIcon(titlebaricon, ICON_SMALL))
+#else
+		!SetClassLong(hwnd, GCL_HICONSM,
+			(LPARAM)GetIcon(titlebaricon, ICON_SMALL))
+#endif
+		) {
 		/* 
 		 * For some reason this triggers, even though it seems
 		 * to be successful This is probably related to the
@@ -827,7 +835,15 @@ WinSetIcon(interp, titlebaricon, tkw)
 		 * return TCL_ERROR;
 		 */
 	    }
-	    if (!SetClassLong(hwnd, GCL_HICON, (LPARAM)GetIcon(titlebaricon, ICON_BIG))) {
+	    if (
+#ifdef _WIN64
+		!SetClassLongPtr(hwnd, GCLP_HICON,
+			(LPARAM)GetIcon(titlebaricon, ICON_BIG))
+#else
+		!SetClassLong(hwnd, GCL_HICON,
+			(LPARAM)GetIcon(titlebaricon, ICON_BIG))
+#endif
+		) {
 		Tcl_AppendResult(interp,"Unable to set new icon", (char*)NULL);
 		return TCL_ERROR;
 	    }
