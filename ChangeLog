@@ -1,5 +1,11 @@
 2003-07-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkEvent.c (Tk_HandleEvent): correct XCreateIC call for
+	TK_XIM_SPOT usage. [Bug 742660] (takahashi)
+
+	* win/tkWinCursor.c (TkGetCursorByName): Fix bug 420510 to provide
+	consistency between unix and windows -cursor option. (thoyts)
+
 	* win/tkWinDialog.c: doubled the TK_MULTI_MAX_PATH value to ~10K.
 	This is a short-term solution until the -multiple option is
 	extended.  [Bug 641261]
