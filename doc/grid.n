@@ -4,10 +4,10 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: grid.n,v 1.4 2001/08/18 20:03:16 pspjuth Exp $
+'\" RCS: @(#) $Id: grid.n,v 1.5 2001/09/30 19:01:58 pspjuth Exp $
 '\" 
 .so man.macros
-.TH grid n 4.1 Tk "Tk Built-In Commands"
+.TH grid n 8.4 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
@@ -46,11 +46,12 @@ indicated is returned.
 \fBgrid columnconfigure \fImaster index \fR?\fI\-option value...\fR?
 Query or set the column properties of the \fIindex\fP column of the 
 geometry master, \fImaster\fP.
-The valid options are \fB\-minsize\fP, \fB\-weight\fP and \fB-pad\fP.
-.VS
+.VS 8.4
+The valid options are \fB\-minsize\fP, \fB\-weight\fP, \fB\-uniform\fP
+and \fB-pad\fP.
+.VE
 If one or more options are provided, then \fIindex\fP may be given as 
 a list of column indeces to which the configuration options will operate on.
-.VE
 The \fB\-minsize\fP option sets the minimum size, in screen units,
 that will be permitted for this column.
 The \fB\-weight\fP option (an integer value)
@@ -60,6 +61,14 @@ columns.
 A weight of zero (0) indicates the column will not deviate from its requested
 size.  A column whose weight is two will grow at twice the rate as a column
 of weight one when extra space is allocated to the layout.
+.VS 8.4
+The \fB-uniform\fP option, when a non-empty value is supplied, places
+the column in a \fIuniform group\fP with other columns that have the
+same value for \fB-uniform\fP.  The space for columns belonging to a
+uniform group is allocated so that their sizes are always in strict
+proportion to their \fB-weight\fP values.  See
+``THE GRID ALGORITHM'' below for further details.
+.VE
 The \fB-pad\fP option specifies the number of screen units that will be
 added to the largest window contained completely in that column when the
 grid geometry manager requests a size from the containing window.
@@ -195,11 +204,12 @@ Propagation is enabled by default.
 \fBgrid rowconfigure \fImaster index \fR?\fI\-option value...\fR?
 Query or set the row properties of the \fIindex\fP row of the 
 geometry master, \fImaster\fP.
-The valid options are \fB\-minsize\fP, \fB\-weight\fP and \fB-pad\fP.
-.VS
+.VS 8.4
+The valid options are \fB\-minsize\fP, \fB\-weight\fP, \fB\-uniform\fP
+and \fB-pad\fP.
+.VE
 If one or more options are provided, then \fIindex\fP may be given as 
 a list of row indeces to which the configuration options will operate on.
-.VE
 The \fB\-minsize\fP option sets the minimum size, in screen units,
 that will be permitted for this row.
 The \fB\-weight\fP option (an integer value)
@@ -209,6 +219,14 @@ rows.
 A weight of zero (0) indicates the row will not deviate from its requested
 size.  A row whose weight is two will grow at twice the rate as a row
 of weight one when extra space is allocated to the layout.
+.VS 8.4
+The \fB-uniform\fP option, when a non-empty value is supplied, places
+the row in a \fIuniform group\fP with other rows that have the
+same value for \fB-uniform\fP.  The space for rows belonging to a
+uniform group is allocated so that their sizes are always in strict
+proportion to their \fB-weight\fP values.  See
+``THE GRID ALGORITHM'' below for further details.
+.VE
 The \fB-pad\fP option specifies the number of screen units that will be
 added to the largest window contained completely in that row when the
 grid geometry manager requests a size from the containing window.
@@ -286,13 +304,30 @@ To compute the minimum size of a layout, the grid geometry manager
 first looks at all slaves whose columnspan and rowspan values are one,
 and computes the nominal size of each row or column to be either the
 \fIminsize\fP for that row or column, or the sum of the \fIpad\fPding
-plus the size of the largest slave, whichever is greater.  Then the
-slaves whose rowspans or columnspans are greater than one are
+plus the size of the largest slave, whichever is greater.  After that
+the rows or columns in each uniform group adapt to each other.  Then
+the slaves whose rowspans or columnspans are greater than one are
 examined.  If a group of rows or columns need to be increased in size
 in order to accommodate these slaves, then extra space is added to each
 row or column in the group according to its \fIweight\fP.  For each
 group whose weights are all zero, the additional space is apportioned
 equally.
+.PP
+When multiple rows or columns belong to a uniform group, the space
+allocated to them is always in proportion to their weights. (A weight
+of zero is considered to be 1.)  In other words, a row or column
+configured with \fB-weight 1 -uniform a\fP will have exactly the same
+size as any other row or column configured with \fB-weight 1 -uniform
+a\fP.  A row or column configured with \fB-weight 2 -uniform b\fR will 
+be exactly twice as large as one that is configured with \fB-weight 1
+-uniform b\fP.  
+.PP
+More technically, each row or column in the group will have a size
+equal to \fIk*weight\fP for some constant \fIk\fP.  The constant
+\fIk\fP is chosen so that no row or column becomes smaller than its
+minimum size.  For example, if all rows or columns in a group have the
+same weight, then each row or column will have the same size as the
+largest row or column in the group.
 .PP
 For masters whose size is larger than the requested layout, the additional
 space is apportioned according to the row and column weights.  If all of
