@@ -1,3 +1,12 @@
+2003-07-15  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* generic/tkMenu.c
+	* generic/tkMenu.h
+	* generic/tkMenuDraw.c: 
+	* tests/menu.test: fixed complex bug in menu clone cleanup
+	[Bug#465324] and removed 'knownBug' from a test.
+        (This was applied to cvs head on 2003-05-03).
+	
 2003-07-09  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* tests/send.test: Strengthened constraints to stop accidental
