@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.9 2000/03/07 01:02:26 ericm Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.10 2000/03/10 22:16:36 ericm Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -350,8 +350,10 @@ proc tkMbPost {w {x {}} {y {}}} {
     set tkPriv(tearoff) $tearoff
     if {$tearoff != 0} {
     	focus $menu
-    	tkSaveGrabInfo $w
-    	grab -global $w
+	if {[winfo viewable $w]} {
+	    tkSaveGrabInfo $w
+	    grab -global $w
+	}
     }
 }
 
@@ -561,7 +563,8 @@ proc tkMenuButtonDown menu {
         return
     }
     $menu postcascade active
-    if {[string compare $tkPriv(postedMb) ""]} {
+    if {[string compare $tkPriv(postedMb) ""] && \
+	    [winfo viewable $tkPriv(postedMb)]} {
 	grab -global $tkPriv(postedMb)
     } else {
 	while {[string equal [$menu cget -type] "normal"] \

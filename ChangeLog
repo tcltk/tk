@@ -1,3 +1,14 @@
+2000-03-10  Eric Melski  <ericm@scriptics.com>
+
+	* library/menu.tcl: Applied patch from [Bug: 4155]; protects
+	against grabs on non-viewable windows.
+
+2000-03-08  Eric Melski  <ericm@scriptics.com>
+
+	* tests/choosedir.test: Modified test 3.1 (-mustexist works) to be
+	more careful about cleaning up its potentially troublesome after 
+	events.
+
 2000-03-07  Eric Melski  <ericm@scriptics.com>
 
 	* tests/button.test: 
