@@ -1,3 +1,12 @@
+2002-05-23  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* mac/tkMacWm.c (TkWmStackorderToplevelWrapperMap):
+	* tests/wm.test: Add embedded Window test case for
+	the stackorder command.
+	* unix/tkUnixWm.c (TkWmStackorderToplevelWrapperMap):
+	* win/tkWinWm.c (TkWmStackorderToplevelWrapperMap):
+	Ignore embedded windows during wm stackorder command.
+
 2002-05-21  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/configure: Regen.

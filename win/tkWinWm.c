@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.35 2002/04/10 19:39:01 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.36 2002/05/23 19:55:19 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -4335,7 +4335,8 @@ TkWmStackorderToplevelWrapperMap(winPtr, table)
     HWND wrapper;
     int newEntry;
 
-    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr)) {
+    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr) &&
+            !Tk_IsEmbedded(winPtr)) {
         wrapper = TkWinGetWrapperWindow((Tk_Window) winPtr);
 
         /*fprintf(stderr, "Mapped HWND %d to %x (%s)\n", wrapper,

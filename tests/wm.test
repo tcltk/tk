@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.3 2002/04/10 19:39:01 mdejong Exp $
+# RCS: @(#) $Id: wm.test,v 1.4 2002/05/23 19:55:18 mdejong Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -293,14 +293,17 @@ test wm-stackorder-5.3 {An overrideredirect window
     wm stackorder .t isbelow .
 } 1
 
-
-deleteWindows
+test wm-stackorder-6.1 {An embedded toplevel does not
+        appear in the stacking order} {
+    deleteWindows
+    toplevel .real
+    toplevel .embd -bg blue -use [winfo id .real]
+    update
+    wm stackorder .
+} {. .real}
 
 
 # FIXME:
-
-# Need test cases for embedded Windows, they should not appear in
-# the stacking order since they are not actually toplevel Windows.
 
 # Test delivery of virtual events to the WM. We could check to see
 # if the window was raised after a button click for example.
