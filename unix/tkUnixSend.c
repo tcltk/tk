@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.10 2002/08/05 04:30:41 dgp Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.11 2002/08/13 16:20:49 rmax Exp $
  */
 
 #include "tkPort.h"
@@ -816,17 +816,15 @@ Tk_SetAppName(tkwin, name)
 					 * set" compiler warnings. */
     for (i = 1; ; i++) {
 	if (i > 1) {
-	    char *copy;
 	    if (i == 2) {
 		Tcl_DStringInit(&dString);
 		Tcl_DStringAppend(&dString, name, -1);
 		Tcl_DStringAppend(&dString, " #", 2);
 		offset = Tcl_DStringLength(&dString);
 		Tcl_DStringSetLength(&dString, offset+TCL_INTEGER_SPACE);
-		copy = Tcl_DStringValue(&dString);
-		actualName = copy;
+		actualName = Tcl_DStringValue(&dString);
 	    }
-	    sprintf(copy + offset, "%d", i);
+	    sprintf(Tcl_DStringValue(&dString) + offset, "%d", i);
 	}
 	w = RegFindName(regPtr, actualName);
 	if (w == None) {
