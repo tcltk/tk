@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.10 2000/06/05 23:03:30 ericm Exp $
-# $Id: bgerror.tcl,v 1.10 2000/06/05 23:03:30 ericm Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.11 2000/06/19 18:28:56 ericm Exp $
+# $Id: bgerror.tcl,v 1.11 2000/06/19 18:28:56 ericm Exp $
 
 option add *ErrorDialog.function.text "Save To Log" widgetDefault
 option add *ErrorDialog.function.command "::tk::dialog::error::saveToLog"
@@ -103,9 +103,29 @@ proc bgerror err {
 	set textHilight	1
     }
 
+
+    # Truncate the message if it is too wide (longer than 30 characacters) or
+    # too tall (more than 4 newlines).  Truncation occurs at the first point at
+    # which one of those conditions is met.
+    set displayedErr ""
+    set lines 0
+    foreach line [split $err "\n"] {
+	if { [string length $line] > 30 } {
+	    append displayedErr "[string range $line 0 29]..."
+	    break
+	}
+	if { $lines > 4 } {
+	    append displayedErr "..."
+	    break
+	} else {
+	    append displayedErr "${line}\n"
+	}
+	incr lines
+    }
+
     set w .bgerrorDialog
     set title "Application Error"
-    set text "Error: $err"
+    set text "Error:  $displayedErr"
     set buttons [list ok $ok dismiss "Skip Messages" function "Details >>"]
 
     # 1. Create the top-level window and divide it into top
@@ -148,7 +168,7 @@ proc bgerror err {
     scrollbar $W.scroll -relief sunken -command "$W.text yview"
     pack $W.scroll -side right -fill y
     pack $W.text -side left -expand yes -fill both
-    $W.text insert 0.0 $info
+    $W.text insert 0.0 "$err\n$info"
     $W.text mark set insert 0.0
     $W.text configure -state disabled
 

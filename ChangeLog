@@ -1,3 +1,13 @@
+2000-06-19  Eric Melski  <ericm@scriptics.com>
+
+	* library/bgerror.tcl: Added auto-truncation for long error
+	messages (more than 30 characters wide, or more than 4 lines
+	long), so that the dialog remains a manageable size. [RFE: 5782]
+
+2000-06-15  Eric Melski  <ericm@scriptics.com>
+
+	* win/tkWinDialog.c: Patched to support tk_getOpenFile -multiple.
+
 2000-06-13  Eric Melski  <ericm@scriptics.com>
 
 	* win/aclocal.m4: 
