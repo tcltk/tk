@@ -1,3 +1,17 @@
+2003-12-28  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWinMenu.c (ReconfigureWindowsMenu,
+	TkWinHandleMenuEvent, DrawMenuEntryArrow):
+	Fix drawing of a disabled cascade menu
+	arrow. Tk was displaying a disabled cascade
+	menu arrow in black instead of gray. This
+	was caused by a bug in the Win32 code for
+	user drawn menu items. The fix is to avoid
+	telling Windows that the menu item is a
+	cascade type and then draw the gray arrow
+	bitmap on our own.
+	[Patch 865842]
+
 2003-12-27  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/tkWinMenu.c (DrawWindowsSystemBitmap):
