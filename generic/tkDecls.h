@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.11 2000/04/25 01:03:06 hobbs Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.12 2000/06/03 08:58:15 hobbs Exp $
  */
 
 #ifndef _TKDECLS
@@ -820,6 +820,12 @@ EXTERN int		Tk_PostscriptPhoto _ANSI_ARGS_((Tcl_Interp * interp,
 				Tk_PhotoImageBlock * blockPtr, 
 				Tk_PostscriptInfo psInfo, int width, 
 				int height));
+/* 239 */
+EXTERN void		Tk_CreateClientMessageHandler _ANSI_ARGS_((
+				Tk_ClientMessageProc * proc));
+/* 240 */
+EXTERN void		Tk_DeleteClientMessageHandler _ANSI_ARGS_((
+				Tk_ClientMessageProc * proc));
 
 typedef struct TkStubHooks {
     struct TkPlatStubs *tkPlatStubs;
@@ -1071,6 +1077,8 @@ typedef struct TkStubs {
     int (*tk_PostscriptStipple) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Window tkwin, Tk_PostscriptInfo psInfo, Pixmap bitmap)); /* 236 */
     double (*tk_PostscriptY) _ANSI_ARGS_((double y, Tk_PostscriptInfo psInfo)); /* 237 */
     int (*tk_PostscriptPhoto) _ANSI_ARGS_((Tcl_Interp * interp, Tk_PhotoImageBlock * blockPtr, Tk_PostscriptInfo psInfo, int width, int height)); /* 238 */
+    void (*tk_CreateClientMessageHandler) _ANSI_ARGS_((Tk_ClientMessageProc * proc)); /* 239 */
+    void (*tk_DeleteClientMessageHandler) _ANSI_ARGS_((Tk_ClientMessageProc * proc)); /* 240 */
 } TkStubs;
 
 #ifdef __cplusplus
@@ -2036,6 +2044,14 @@ extern TkStubs *tkStubsPtr;
 #ifndef Tk_PostscriptPhoto
 #define Tk_PostscriptPhoto \
 	(tkStubsPtr->tk_PostscriptPhoto) /* 238 */
+#endif
+#ifndef Tk_CreateClientMessageHandler
+#define Tk_CreateClientMessageHandler \
+	(tkStubsPtr->tk_CreateClientMessageHandler) /* 239 */
+#endif
+#ifndef Tk_DeleteClientMessageHandler
+#define Tk_DeleteClientMessageHandler \
+	(tkStubsPtr->tk_DeleteClientMessageHandler) /* 240 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

@@ -6,12 +6,12 @@
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1995 Sun Microsystems, Inc.
- * Copyright (c) 1998 by Scriptics Corporation.
+ * Copyright (c) 1998-2000 Ajuba Solutions.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.7 1999/12/16 21:57:36 hobbs Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.8 2000/06/03 08:58:16 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -130,17 +130,16 @@ static unsigned long eventMasks[TK_LASTEVENT] = {
  */
 
 typedef struct ThreadSpecificData {
-
-    int genericHandlersActive;
-                                /* The following variable has a non-zero 
+    int handlersActive;		/* The following variable has a non-zero 
 				 * value when a handler is active. */
-    InProgress *pendingPtr;
-				/* Topmost search in progress, or
+    InProgress *pendingPtr;	/* Topmost search in progress, or
 				 * NULL if none. */
-    GenericHandler *genericList;
-				/* First handler in the list, or NULL. */
-    GenericHandler *lastGenericPtr;
-				/* Last handler in list. */
+
+    GenericHandler *genericList; /* First handler in the list, or NULL. */
+    GenericHandler *lastGenericPtr;	/* Last handler in list. */
+
+    GenericHandler *cmList; /* First handler in the list, or NULL. */
+    GenericHandler *lastCmPtr;	/* Last handler in list. */
 
     /*
      * If someone has called Tk_RestrictEvents, the information below
@@ -150,7 +149,7 @@ typedef struct ThreadSpecificData {
     Tk_RestrictProc *restrictProc;
 				/* Procedure to call.  NULL means no
 				 * restrictProc is currently in effect. */
-    ClientData restrictArg;     /* Argument to pass to restrictProc. */
+    ClientData restrictArg;	/* Argument to pass to restrictProc. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -162,6 +161,7 @@ static Tcl_ThreadDataKey dataKey;
 static void		DelayedMotionProc _ANSI_ARGS_((ClientData clientData));
 static int		WindowEventProc _ANSI_ARGS_((Tcl_Event *evPtr,
 			    int flags));
+
 
 /*
  *--------------------------------------------------------------
@@ -354,16 +354,16 @@ Tk_CreateGenericHandler(proc, clientData)
     
     handlerPtr = (GenericHandler *) ckalloc (sizeof (GenericHandler));
     
-    handlerPtr->proc = proc;
-    handlerPtr->clientData = clientData;
-    handlerPtr->deleteFlag = 0;
-    handlerPtr->nextPtr = NULL;
+    handlerPtr->proc		= proc;
+    handlerPtr->clientData	= clientData;
+    handlerPtr->deleteFlag	= 0;
+    handlerPtr->nextPtr		= NULL;
     if (tsdPtr->genericList == NULL) {
-	tsdPtr->genericList = handlerPtr;
+	tsdPtr->genericList	= handlerPtr;
     } else {
 	tsdPtr->lastGenericPtr->nextPtr = handlerPtr;
     }
-    tsdPtr->lastGenericPtr = handlerPtr;
+    tsdPtr->lastGenericPtr	= handlerPtr;
 }
 
 /*
@@ -392,10 +392,90 @@ Tk_DeleteGenericHandler(proc, clientData)
 {
     GenericHandler * handler;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     
     for (handler = tsdPtr->genericList; handler; handler = handler->nextPtr) {
 	if ((handler->proc == proc) && (handler->clientData == clientData)) {
+	    handler->deleteFlag = 1;
+	}
+    }
+}
+
+/*--------------------------------------------------------------
+ *
+ * Tk_CreateClientMessageHandler --
+ *
+ *	Register a procedure to be called on each ClientMessage event.
+ *	ClientMessage handlers are useful for Drag&Drop extensions.
+ *
+ * Results:
+ *	None.
+ *
+ * Side Effects:
+ *	From now on, whenever a ClientMessage event is received that isn't
+ *	a WM_PROTOCOL event or SelectionEvent, invoke proc, giving it
+ *	tkwin and the event as arguments.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+Tk_CreateClientMessageHandler(proc)
+     Tk_ClientMessageProc *proc;	/* Procedure to call on event. */
+{
+    GenericHandler *handlerPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    /*
+     * We use a GenericHandler struct, because it's basically the same,
+     * except with an extra clientData field we'll never use.
+     */
+    handlerPtr = (GenericHandler *)
+	ckalloc (sizeof (GenericHandler));
+
+    handlerPtr->proc		= (Tk_GenericProc *) proc;
+    handlerPtr->clientData	= NULL;	/* never used */
+    handlerPtr->deleteFlag	= 0;
+    handlerPtr->nextPtr		= NULL;
+    if (tsdPtr->cmList == NULL) {
+	tsdPtr->cmList		= handlerPtr;
+    } else {
+	tsdPtr->lastCmPtr->nextPtr = handlerPtr;
+    }
+    tsdPtr->lastCmPtr		= handlerPtr;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * Tk_DeleteClientMessageHandler --
+ *
+ *	Delete a previously-created ClientMessage handler.
+ *
+ * Results:
+ *	None.
+ *
+ * Side Effects:
+ *	If there existed a handler as described by the parameters,
+ *	that handler is logically deleted so that proc will not be
+ *	invoked again.  The physical deletion happens in the event
+ *	loop in TkClientMessageEventProc.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+Tk_DeleteClientMessageHandler(proc)
+     Tk_ClientMessageProc *proc;
+{
+    GenericHandler * handler;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    for (handler = tsdPtr->cmList; handler != NULL;
+	 handler = handler->nextPtr) {
+	if (handler->proc == (Tk_GenericProc *) proc) {
 	    handler->deleteFlag = 1;
 	}
     }
@@ -424,14 +504,16 @@ void
 TkEventInit _ANSI_ARGS_((void))
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    tsdPtr->genericHandlersActive = 0;
-    tsdPtr->pendingPtr = NULL;
-    tsdPtr->genericList = NULL;
-    tsdPtr->lastGenericPtr = NULL;
-    tsdPtr->restrictProc = NULL;
-    tsdPtr->restrictArg = NULL;
+    tsdPtr->handlersActive	= 0;
+    tsdPtr->pendingPtr		= NULL;
+    tsdPtr->genericList		= NULL;
+    tsdPtr->lastGenericPtr	= NULL;
+    tsdPtr->cmList		= NULL;
+    tsdPtr->lastCmPtr		= NULL;
+    tsdPtr->restrictProc	= NULL;
+    tsdPtr->restrictArg		= NULL;
 }
 
 /*
@@ -465,7 +547,7 @@ Tk_HandleEvent(eventPtr)
     TkDisplay *dispPtr;
     Tcl_Interp *interp = (Tcl_Interp *) NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Hack for simulated X-events: Correct the state field
@@ -503,7 +585,7 @@ Tk_HandleEvent(eventPtr)
     for (genPrevPtr = NULL, genericPtr = tsdPtr->genericList;  
             genericPtr != NULL; ) {
 	if (genericPtr->deleteFlag) {
-	    if (!tsdPtr->genericHandlersActive) {
+	    if (!tsdPtr->handlersActive) {
 		GenericHandler *tmpPtr;
 
 		/*
@@ -528,9 +610,9 @@ Tk_HandleEvent(eventPtr)
 	} else {
 	    int done;
 
-	    tsdPtr->genericHandlersActive++;
+	    tsdPtr->handlersActive++;
 	    done = (*genericPtr->proc)(genericPtr->clientData, eventPtr);
-	    tsdPtr->genericHandlersActive--;
+	    tsdPtr->handlersActive--;
 	    if (done) {
 		return;
 	    }
@@ -710,10 +792,55 @@ Tk_HandleEvent(eventPtr)
 		|| (eventPtr->type == SelectionRequest)
 		|| (eventPtr->type == SelectionNotify)) {
 	    TkSelEventProc((Tk_Window) winPtr, eventPtr);
-	} else if ((eventPtr->type == ClientMessage)
-		&& (eventPtr->xclient.message_type ==
-		    Tk_InternAtom((Tk_Window) winPtr, "WM_PROTOCOLS"))) {
-	    TkWmProtocolEventProc(winPtr, eventPtr);
+	} else if (eventPtr->type == ClientMessage) {
+	    if (eventPtr->xclient.message_type ==
+		    Tk_InternAtom((Tk_Window) winPtr, "WM_PROTOCOLS")) {
+		TkWmProtocolEventProc(winPtr, eventPtr);
+	    } else {
+		/* 
+		 * Finally, invoke any ClientMessage event handlers.
+		 */
+
+		for (genPrevPtr = NULL, genericPtr = tsdPtr->cmList;  
+		     genericPtr != NULL; ) {
+		    if (genericPtr->deleteFlag) {
+			if (!tsdPtr->handlersActive) {
+			    GenericHandler *tmpPtr;
+
+			    /*
+			     * This handler needs to be deleted and there are
+			     * no calls pending through any handlers, so now
+			     * is a safe time to delete it.
+			     */
+
+			    tmpPtr = genericPtr->nextPtr;
+			    if (genPrevPtr == NULL) {
+				tsdPtr->cmList = tmpPtr;
+			    } else {
+				genPrevPtr->nextPtr = tmpPtr;
+			    }
+			    if (tmpPtr == NULL) {
+				tsdPtr->lastGenericPtr = genPrevPtr;
+			    }
+			    (void) ckfree((char *) genericPtr);
+			    genericPtr = tmpPtr;
+			    continue;
+			}
+		    } else {
+			int done;
+
+			tsdPtr->handlersActive++;
+			done = (*(Tk_ClientMessageProc *)genericPtr->proc)
+			    ((Tk_Window) winPtr, eventPtr);
+			tsdPtr->handlersActive--;
+			if (done) {
+			    break;
+			}
+		    }
+		    genPrevPtr	= genericPtr;
+		    genericPtr	= genPrevPtr->nextPtr;
+		}
+	    }
 	}
     } else {
 	for (handlerPtr = winPtr->handlerList; handlerPtr != NULL; ) {

@@ -7,12 +7,12 @@
  * Copyright (c) 1989-1994 The Regents of the University of California.
  * Copyright (c) 1994 The Australian National University.
  * Copyright (c) 1994-1998 Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 Scriptics Corporation.
+ * Copyright (c) 1998-2000 Ajuba Solutions.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.44 2000/05/29 01:42:47 hobbs Exp $
+ * RCS: @(#) $Id: tk.h,v 1.45 2000/06/03 08:58:15 hobbs Exp $
  */
 
 #ifndef _TK
@@ -1339,6 +1339,8 @@ typedef int (Tk_ErrorProc) _ANSI_ARGS_((ClientData clientData,
 typedef void (Tk_EventProc) _ANSI_ARGS_((ClientData clientData,
 	XEvent *eventPtr));
 typedef int (Tk_GenericProc) _ANSI_ARGS_((ClientData clientData,
+	XEvent *eventPtr));
+typedef int (Tk_ClientMessageProc) _ANSI_ARGS_((Tk_Window tkwin,
 	XEvent *eventPtr));
 typedef int (Tk_GetSelProc) _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, char *portion));
