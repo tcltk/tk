@@ -1,3 +1,19 @@
+1999-11-19  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* generic/tkColor.c:
+	* generic/tkColor.h: fixed Tk_NameOfColor to work correctly,
+	with minor change to TkColor struct.
+
+	* generic/tkConsole.c: added static declaration to
+	ConsoleDeleteProc function (proto already had it)
+
+	* win/tkWinInt.h: removed TkFontAttributes typedef (was
+	redundant with tkFont.h).
+	* win/tkWinPort.h: put #ifndef __GNUC__ around redefinition
+	of str[n]casecmp, as cygwin uses the originals.
+	* win/tkWinX.c: changed GetCurrentTime to GetTickCount (the
+	former is deprecated).  [Bug: 2053]
+
 1999-11-17  Eric Melski  <ericm@scriptics.com>
 
 	* tests/listbox.test: Updated tests for new error messages.
