@@ -1,5 +1,10 @@
 2001-03-29  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/msgs/de.msg: fixed translations. [Patch #403525]
+
+	* doc/canvas.n: Noted ability to specify coords as a list in the
+	docs. (techentin) [Patch #403660]
+
 	* tests/canvas.test: added test case to check obj conversion
 	* generic/tkObj.c (UpdateStringOfMM, SetMMFromAny): better
 	obj-aware screen distances.  (pgbaum, hobbs) [Patch #403327]
