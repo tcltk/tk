@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.81 2004/02/01 10:41:18 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.82 2004/02/08 01:38:03 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -69,7 +69,7 @@ the environment.  Jump to this line to read the new instructions.
 #		Sets where to install Tcl from the built binaries.
 #		C:\Progra~1\Tcl is assumed when not specified.
 #
-#	OPTS=static,msvcrt,linkexten,threads,symbols,profile,none
+#	OPTS=static,msvcrt,linkexten,threads,symbols,profile,unchecked,none
 #		Sets special options for the core.  The default is for none.
 #		Any combination of the above may be used (comma separated).
 #		'none' will over-ride everything to nothing.
@@ -88,6 +88,9 @@ the environment.  Jump to this line to read the new instructions.
 #		profile =  Adds profiling hooks.  Map file is assumed.
 #		loimpact =  Adds a flag for how NT treats the heap to keep memory
 #			   in use, low.  This is said to impact alloc performance.
+#		unchecked = Allows a symbols build to not use the debug
+#			   enabled runtime (msvcrt.dll not msvcrtd.dll
+#			   or libcmt.lib not libcmtd.lib).
 #
 #	STATS=memdbg,compdbg,none
 #		Sets optional memory and bytecode compiler debugging code added
@@ -364,16 +367,20 @@ TK_DEFINES	= $(OPTDEFINES)
 # Compile flags
 #---------------------------------------------------------------------
 
-!if $(DEBUG)
-!if "$(MACHINE)" == "IA64"
-cdebug = -Od -Zi
+!if !$(DEBUG)
+!if $(OPTIMIZING)
+### This cranks the optimization level up.  We can't use -02 because
+### sometimes it causes problems.
+cdebug	= -Oti
 !else
-cdebug = -Z7 -Od -WX -GZ
+cdebug	=
 !endif
+!else if "$(MACHINE)" == "IA64"
+### Warnings are too many, can't support warnings into errors for
+### an IA64 build.
+cdebug	= -Z7 -Od -GZ
 !else
-# This cranks the optimization level up.  We can't use -02 because sometimes
-# it causes problems.
-cdebug = -Oti
+cdebug	= -Z7 -WX -Od -GZ
 !endif
 
 # declarations common to all compiler options
@@ -394,13 +401,13 @@ cflags = $(cflags) -QIA64_Bx
 !endif
 
 !if $(MSVCRT)
-!if $(DEBUG)
+!if $(DEBUG) && !$(UNCHECKED)
 crt = -MDd
 !else
 crt = -MD
 !endif
 !else
-!if $(DEBUG)
+!if $(DEBUG) && !$(UNCHECKED)
 crt = -MTd
 !else
 crt = -MT
@@ -776,7 +783,8 @@ $<
 
 {$(RCDIR)}.rc{$(TMP_DIR)}.res:
 	$(rc32) -fo $@ -r -i "$(GENERICDIR)" $(TCL_INCLUDES) \
-	    -d DEBUG=$(DEBUG) -d TCL_THREADS=$(TCL_THREADS) \
+	    -d DEBUG=$(DEBUG) -d UNCHECKED=$(UNCHECKED) \
+	    -d TCL_THREADS=$(TCL_THREADS) \
 	    -d STATIC_BUILD=$(STATIC_BUILD) \
 	    $<
 
