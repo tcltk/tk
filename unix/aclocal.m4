@@ -594,7 +594,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
-	    DL_LIBS="-ldl ${TCL_BUILD_LIB_SPEC}"
+	    DL_LIBS="-ldl"
 	    LDFLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;

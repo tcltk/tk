@@ -1,3 +1,16 @@
+1999-09-24  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* */README:
+	* win/makefile.vc:
+	* */configure.in:
+	* generic/tk.h:
+	* library/tk.tcl: up'd to 8.3a1
+
+	* unix/Makefile.in: changed 'mkdir' to 'mkdir -p'
+
+	* library/dialog.tcl: changed {Times 18} to {Times 12} for
+	dialog font.
+
 1999-09-16  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* generic/tkFont.c: fixed processing of font options and error

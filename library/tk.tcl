@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.11 1999/09/02 17:02:53 hobbs Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.12 1999/10/01 22:45:19 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -14,8 +14,8 @@
 
 # Insist on running with compatible versions of Tcl and Tk.
 
-package require -exact Tk 8.2
-package require -exact Tcl 8.2
+package require -exact Tk 8.3
+package require -exact Tcl 8.3
 
 # Add Tk's directory to the end of the auto-load search path, if it
 # isn't already on the path:

@@ -16,14 +16,14 @@ SGI, as well as PCs running Linux, BSDI, and SCO UNIX.  To compile for
 a PC running Windows, see the README file in the directory ../win.  To
 compile for a Macintosh, see the README file in the directory ../mac.
 
-RCS: @(#) $Id: README,v 1.6 1999/06/25 23:30:26 welch Exp $
+RCS: @(#) $Id: README,v 1.7 1999/10/01 22:45:27 hobbs Exp $
 
 How To Compile And Install Tk:
 ------------------------------
 
-(a) Make sure that the Tcl 8.2 release is present in the directory
-    ../../tcl8.2 (or else use the "--with-tcl" switch described below). 
-    This release of Tk will only work with Tcl 8.2. Also, be sure that
+(a) Make sure that the Tcl 8.3 release is present in the directory
+    ../../tcl8.3 (or else use the "--with-tcl" switch described below). 
+    This release of Tk will only work with Tcl 8.3. Also, be sure that
     you have configured Tcl before you configure Tk.
 
 (b) Check for patches as described in ../README.
@@ -84,9 +84,9 @@ How To Compile And Install Tk:
     TCL_LIBRARY environment variable as well (see the Tcl README file
     for information on this).  Note that installed versions of wish,
     libtk.a, libtk.so, and the Tk library have a version number in their
-    names, such as "wish8.2" or "libtk8.2.so"; to use the installed
+    names, such as "wish8.3" or "libtk8.3.so"; to use the installed
     versions, either specify the version number or create a symbolic
-    link (e.g. from "wish" to "wish8.2").
+    link (e.g. from "wish" to "wish8.3").
 
 If you have trouble compiling Tk, read through the file
 "porting.notes".  It contains information that people have provided

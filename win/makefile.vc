@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.27 1999/07/31 02:31:57 redman Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.28 1999/10/01 22:45:31 hobbs Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -28,7 +28,7 @@
 ROOT		= ..
 TOOLS32		= c:\program files\devstudio\vc
 TOOLS32_rc	= c:\program files\devstudio\sharedide
-TCLDIR		= ..\..\tcl8.2
+TCLDIR		= ..\..\tcl8.3
 INSTALLDIR      = c:\program files\tcl
 
 # Set this to the appropriate value of /MACHINE: for your platform
@@ -50,8 +50,8 @@ NODEBUG = 1
 TCLNAMEPREFIX = tcl
 TKNAMEPREFIX = tk
 WISHNAMEPREFIX = wish
-VERSION = 82
-DOTVERSION = 8.2
+VERSION = 83
+DOTVERSION = 8.3
 
 TCLSTUBPREFIX = $(TCLNAMEPREFIX)stub
 TKSTUBPREFIX  = $(TKNAMEPREFIX)stub

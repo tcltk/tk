@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.30 1999/08/10 23:16:42 redman Exp $
+ * RCS: @(#) $Id: tk.h,v 1.31 1999/10/01 22:45:16 hobbs Exp $
  */
 
 #ifndef _TK
@@ -30,26 +30,26 @@ extern "C" {
  * When version numbers change here, you must also go into the following files
  * and update the version numbers:
  *
+ * library/tk.tcl	(only if Major.minor changes, not patchlevel)
  * unix/configure.in
- * README
  * win/configure.in
- * win/makefile.vc	(only if major.minor changes, not patchlevel)
- * library/tk.tcl	(only if major.minor changes, not patchlevel)
- * mac/README		(only if major.minor changes, not patchlevel)
- * win/README		(only if major.minor changes, not patchlevel)
- * unix/README		(only if major.minor changes, not patchlevel)
+ * win/makefile.vc	(not patchlevel)
+ * README
+ * mac/README		(not patchlevel)
+ * win/README		(not patchlevel)
+ * unix/README		(not patchlevel)
 
  * You may also need to update some of these files when the numbers change
  * for the version of Tcl that this release of Tk is compiled against.
  */
 
 #define TK_MAJOR_VERSION   8
-#define TK_MINOR_VERSION   2
-#define TK_RELEASE_LEVEL   TCL_FINAL_RELEASE
-#define TK_RELEASE_SERIAL  0
+#define TK_MINOR_VERSION   3
+#define TK_RELEASE_LEVEL   TCL_ALPHA_RELEASE
+#define TK_RELEASE_SERIAL  1
 
-#define TK_VERSION "8.2"
-#define TK_PATCH_LEVEL "8.2.0"
+#define TK_VERSION	"8.3"
+#define TK_PATCH_LEVEL	"8.3a1"
 
 /*
  * The following definitions set up the proper options for Macintosh
