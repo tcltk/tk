@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.26 2003/03/12 00:09:36 mdejong Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.27 2003/09/16 21:47:15 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -1703,6 +1703,7 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
     int uniformGroupsAlloced;	/* Size of allocated space for uniform groups.
 				 */
     int weight, minSize;
+    int prevGrow, accWeight, grow;
 
     /*
      * For typical sized tables, we'll use stack space for the layout data
@@ -2017,8 +2018,8 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 	 * It might not be possible to give the span all of the space
 	 * available on this pass without violating the size constraints 
 	 * of one or more of the internal slot boundaries.
-	 * Determine the maximum amount of space that when added to the
-	 * entire span, would cause a slot boundary to have its possible
+	 * Try to determine the maximum amount of space that when added to
+	 * the entire span, would cause a slot boundary to have its possible
 	 * range reduced to one value, and reduce the amount of extra
 	 * space allocated on this pass accordingly.
 	 * 
@@ -2026,29 +2027,94 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 	 * roundoff errors.
 	 */
 
-	for (weight=0,slot=start; slot<end; slot++) {
-	    int diff = layoutPtr[slot].maxOffset - layoutPtr[slot].minOffset;
-	    weight += noWeights ? 1 : layoutPtr[slot].weight;
-	    if ((noWeights || layoutPtr[slot].weight>0) &&
-		    (diff*totalWeight/weight) < (have-need)) {
-		have = diff * totalWeight / weight + need;
-	    }
-	}
+        while (1) {
+            int prevMinOffset = layoutPtr[start - 1].minOffset;
+            prevGrow = 0;
+            accWeight = 0;
+            for (slot = start; slot <= end; slot++) {
+                weight = noWeights ? 1 : layoutPtr[slot].weight;
+                accWeight += weight;
+                grow = (have - need) * accWeight / totalWeight - prevGrow;
+                prevGrow += grow;
+
+                if ((weight > 0) &&
+                        ((prevMinOffset + layoutPtr[slot].minSize + grow)
+                        > layoutPtr[slot].maxOffset)) {
+                    int newHave;
+                    /* 
+                     * There is not enough room to grow that much.
+                     * Calculate how much this slot can grow and how much
+                     * "have" that corresponds to.
+                     */
+
+                    grow = layoutPtr[slot].maxOffset -
+                            layoutPtr[slot].minSize - prevMinOffset;
+                    newHave = grow * totalWeight / weight;
+                    if (newHave > totalWeight) {
+                        /*
+                         * By distributing multiples of totalWeight
+                         * we minimize rounding errors since they will
+                         * only happen in the last loop(s).
+                         */
+
+                        newHave = newHave / totalWeight * totalWeight;
+                    }
+                    if (newHave <= 0) {
+                        /* 
+                         * We can end up with a "have" of 0 here if
+                         * the previous slots have taken all the space.
+                         * In that case we cannot guess an appropriate
+                         * "have" so we just try some lower "have" that
+                         * is >= 1, to make sure this terminates.
+                         */
+
+                        newHave = (have - need) - 1;
+                        if (newHave > (3 * totalWeight)) {
+                            /* Go down 25% for large values */
+                            newHave = newHave * 3 / 4;
+                        }
+                        if (newHave > totalWeight) {
+                            /* Round down to a multiple of totalWeight. */
+                            newHave = newHave / totalWeight * totalWeight;
+                        }
+                        if (newHave <= 0) {
+                            newHave = 1;
+                        }
+                    }
+                    have = newHave + need;
+                    /*
+                     * Restart loop to check if the new "have" will fit.
+                     */
+
+                    break;
+                }
+                prevMinOffset += layoutPtr[slot].minSize + grow;
+                if (prevMinOffset < layoutPtr[slot].minOffset) {
+                    prevMinOffset = layoutPtr[slot].minOffset;
+                } 
+            }
+            /* Quit the loop if the for loop ran all the way */
+            if (slot > end) break;
+        }
 
 	/*
 	 * Now distribute the extra space among the slots by
 	 * adjusting the minSizes and minOffsets.
 	 */
 
-	for (weight=0,slot=start; slot<end; slot++) {
-	    weight += noWeights ? 1 : layoutPtr[slot].weight;
-	    layoutPtr[slot].minOffset +=
-		(int)((double) (have-need) * weight/totalWeight + 0.5);
-	    layoutPtr[slot].minSize = layoutPtr[slot].minOffset 
-		    - layoutPtr[slot-1].minOffset;
-	}
-	layoutPtr[slot].minSize = layoutPtr[slot].minOffset 
-		- layoutPtr[slot-1].minOffset;
+        prevGrow = 0;
+        accWeight = 0;
+        for (slot = start; slot <= end; slot++) {
+            accWeight += noWeights ? 1 : layoutPtr[slot].weight;
+            grow = (have - need) * accWeight / totalWeight - prevGrow;
+            prevGrow += grow;
+            layoutPtr[slot].minSize += grow;
+            if ((layoutPtr[slot-1].minOffset + layoutPtr[slot].minSize)
+                    > layoutPtr[slot].minOffset) {
+                layoutPtr[slot].minOffset = layoutPtr[slot-1].minOffset +
+                        layoutPtr[slot].minSize;
+            }
+        }
 
 	/*
 	 * Having pushed the top/left boundaries of the slots to

@@ -1,3 +1,8 @@
+2003-09-16  Peter Spjuth  <peter.spjuth@space.se>
+	* tests/grid.test:
+	* generic/tkGrid.c: Reworked a part of grid's geometry computations
+	to handle some tricky cases better. [Bug #792387]
+
 2003-09-05  Joe English  <jenglish@users.sourceforge.net>
 	* doc/bind.n: Describe %P and %s substitution for
 	Property events. [BUG #577906 "%P substitution not documented"]
