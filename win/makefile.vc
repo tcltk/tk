@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2003 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.79 2004/01/13 13:43:36 vincentdarley Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.80 2004/01/15 21:46:22 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -433,7 +433,7 @@ dlllflags = $(lflags) -dll
 conlflags = $(lflags) -subsystem:console
 guilflags = $(lflags) -subsystem:windows
 
-baselibs  = kernel32.lib user32.lib ole32.lib oleaut32.lib uuid.lib
+baselibs  = kernel32.lib user32.lib
 guilibs	  = $(baselibs) gdi32.lib
 
 
@@ -799,10 +799,10 @@ $<
 #---------------------------------------------------------------------
 
 clean:
-	-@$(RMDIR) $(TMP_DIR)
+	-$(RMDIR) $(TMP_DIR)
 
 hose: clean
-	-@$(RMDIR) $(OUT_DIR)
+	-$(RMDIR) $(OUT_DIR)
 
 
 .SUFFIXES:

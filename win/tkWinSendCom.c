@@ -17,10 +17,16 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSendCom.c,v 1.3 2003/11/20 19:36:58 vincentdarley Exp $
+ * RCS: @(#) $Id: tkWinSendCom.c,v 1.4 2004/01/15 21:46:22 davygrvy Exp $
  */
 
 #include "tkWinSendCom.h"
+
+#ifdef _MSC_VER
+#   pragma comment (lib, "ole32.lib")
+#   pragma comment (lib, "oleaut32.lib")
+#   pragma comment (lib, "uuid.lib")
+#endif
 
 /*
  * ----------------------------------------------------------------------
