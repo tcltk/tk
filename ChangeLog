@@ -1,3 +1,21 @@
+2005-03-23  Jim Ingham  <jingham@apple.com>
+
+        This is cleanup thanks to Neil Madden <nem@cs.nott.ac.uk>.
+	
+	* macosx/tkMacOSXWm.c (TkMacOSXWinStyle) New function.
+	(TkUnsupported1ObjCmd): New function, replaces the un-objectified
+	version of the command.
+	* generic/tkInt.h: Swap TkUnsupported1Cmd for TkUnsupported1ObjCmd.
+	* generic/tkWindow.c (): Ditto.
+
+	This adds a "-notify" flag to "wm attributes" that will bounce the
+	dock icon on Mac OS X.  This is from Revar Desmera <revarbat@gmail.com>
+
+	* macosx/tkMacOSXWm.c (WmAttrGetNotifyStatus, WmAttrSetNotifyStatus):
+	New functions.
+	(WmAttributesCmd): Add the -notify.
+	* doc/wm.n: Document -notify.
+	
 2005-03-19  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkConsole.c (Tk_CreateConsoleWindow,TkConsolePrint):
