@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.5 1999/12/14 06:52:26 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.6 2000/01/21 03:54:41 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -414,6 +414,11 @@ LineCoords(interp, canvas, itemPtr, argc, argv)
     if (argc & 1) {
 	Tcl_AppendResult(interp,
 		"odd number of coordinates specified for line",
+		(char *) NULL);
+	return TCL_ERROR;
+    } else if (argc < 4) {
+	Tcl_AppendResult(interp,
+		"too few coordinates specified for line",
 		(char *) NULL);
 	return TCL_ERROR;
     } else {

@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.11 2000/01/12 11:45:03 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.12 2000/01/21 03:54:42 hobbs Exp $
  */
 
 #include "default.h"
@@ -771,8 +771,8 @@ TextWidgetCmd(clientData, interp, argc, argv)
     } else {
 	Tcl_AppendResult(interp, "bad option \"", argv[1],
 		"\": must be bbox, cget, compare, configure, debug, delete, ",
-		"dlineinfo, get, image, index, insert, mark, scan, search, see, ",
-		"tag, window, xview, or yview",
+		"dlineinfo, dump, get, image, index, insert, mark, scan, ",
+		"search, see, tag, window, xview, or yview",
 		(char *) NULL);
 	result = TCL_ERROR;
     }
@@ -1695,8 +1695,8 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	if (length < 2) {
 	    badSwitch:
 	    Tcl_AppendResult(interp, "bad switch \"", arg,
-		    "\": must be -forward, -backward, -exact, -regexp, ",
-		    "-nocase, -count, -elide, or --", (char *) NULL);
+		    "\": must be --, -backward, -count, -elide, -exact, ",
+		    "-forward, -nocase, or -regexp", (char *) NULL);
 	    return TCL_ERROR;
 	}
 	c = arg[1];
@@ -1738,7 +1738,7 @@ TextSearchCmd(textPtr, interp, argc, argv)
     argsLeft = argc - (i+2);
     if ((argsLeft != 0) && (argsLeft != 1)) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " search ?switches? pattern index ?stopIndex?",
+		argv[0], " search ?switches? pattern index ?stopIndex?\"",
 		(char *) NULL);
 	return TCL_ERROR;
     }

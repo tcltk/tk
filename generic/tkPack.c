@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.4 1999/09/21 06:42:30 hobbs Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.5 2000/01/21 03:54:42 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1313,7 +1313,6 @@ PackStructureProc(clientData, eventPtr)
     XEvent *eventPtr;			/* Describes what just happened. */
 {
     register Packer *packPtr = (Packer *) clientData;
-    TkDisplay *dispPtr;
 
     if (eventPtr->type == ConfigureNotify) {
 	if ((packPtr->slavePtr != NULL)
@@ -1345,7 +1344,7 @@ PackStructureProc(clientData, eventPtr)
 	    slavePtr->nextPtr = NULL;
 	}
 	if (packPtr->tkwin != NULL) {
-	    dispPtr = ((TkWindow *) packPtr->tkwin)->dispPtr;
+	    TkDisplay *dispPtr = ((TkWindow *) packPtr->tkwin)->dispPtr;
             Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->packerHashTable,
 		    (char *) packPtr->tkwin));
 	}

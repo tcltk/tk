@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.14 1999/11/29 18:16:21 hobbs Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.15 2000/01/21 03:54:42 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -231,13 +231,13 @@ static Tk_OptionSpec optionSpecs[] = {
 	 Tk_Offset(Listbox, highlightWidth), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	 DEF_LISTBOX_RELIEF, -1, Tk_Offset(Listbox, relief), 0, 0, 0},
-    {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Background",
+    {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
 	 DEF_LISTBOX_SELECT_COLOR, -1, Tk_Offset(Listbox, selBorder),
 	 0, (ClientData) DEF_LISTBOX_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
 	 "BorderWidth", DEF_LISTBOX_SELECT_BD, -1,
 	 Tk_Offset(Listbox, selBorderWidth), 0, 0, 0},
-    {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Foreground",
+    {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	 DEF_LISTBOX_SELECT_FG_COLOR, -1, Tk_Offset(Listbox, selFgColorPtr),
 	 0, (ClientData) DEF_LISTBOX_SELECT_FG_MONO, 0},
     {TK_OPTION_STRING, "-selectmode", "selectMode", "SelectMode",
@@ -279,11 +279,11 @@ static Tk_OptionSpec itemAttrOptionSpecs[] = {
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
 	 (char *) NULL, -1, Tk_Offset(ItemAttr, fgColor),
 	 TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
-    {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Background",
+    {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
 	 (char *) NULL, -1, Tk_Offset(ItemAttr, selBorder),
 	 TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
      (ClientData) DEF_LISTBOX_SELECT_MONO, 0},
-    {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Foreground",
+    {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	 (char *) NULL, -1, Tk_Offset(ItemAttr, selFgColor),
 	 TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
      (ClientData) DEF_LISTBOX_SELECT_FG_MONO, 0},
@@ -2513,16 +2513,16 @@ GetListboxIndex(interp, listPtr, indexObj, endIsSize, indexPtr)
 	strtol(start, &end, 0);
 	if ((start == end) || (*end != ',')) {
 	    Tcl_AppendResult(interp, "bad listbox index \"", stringRep,
-		    "\": must be active, anchor, end, @x,y, or a "
-		    "number", (char *)NULL);
+		    "\": must be active, anchor, end, @x,y, or a number",
+		    (char *)NULL);
 	    return TCL_ERROR;
 	}
 	start = end+1;
 	y = strtol(start, &end, 0);
 	if ((start == end) || (*end != '\0')) {
 	    Tcl_AppendResult(interp, "bad listbox index \"", stringRep,
-		    "\": must be active, anchor, end, @x,y, or a "
-		    "number", (char *)NULL);
+		    "\": must be active, anchor, end, @x,y, or a number",
+		    (char *)NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = NearestListboxElement(listPtr, y);

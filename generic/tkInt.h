@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.20 1999/12/16 21:57:36 hobbs Exp $ 
+ * RCS: $Id: tkInt.h,v 1.21 2000/01/21 03:54:41 hobbs Exp $ 
  */
 
 #ifndef _TKINT
@@ -482,7 +482,6 @@ typedef struct TkDisplay {
 #ifdef TK_USE_INPUT_METHODS
     XIM inputMethod;		/* Input method for this display */
 #endif /* TK_USE_INPUT_METHODS */
-    int useInputMethods;	/* Whether to use input methods */
     Tcl_HashTable winTable;	/* Maps from X window ids to TkWindow ptrs. */
 
     int refCount;		/* Reference count of how many Tk applications
@@ -490,12 +489,16 @@ typedef struct TkDisplay {
                                  * the display when we no longer have any
                                  * Tk applications using it.
                                  */
+    /*
+     * The following field were all added for Tk8.3
+     */
     int mouseButtonState;	/* current mouse button state for this
 				 * display */
     int warpInProgress;
     Window warpWindow;
     int warpX;
     int warpY;
+    int useInputMethods;	/* Whether to use input methods */
 } TkDisplay;
 
 /*
