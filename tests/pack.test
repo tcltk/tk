@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: pack.test,v 1.8 2001/09/23 11:30:44 pspjuth Exp $
+# RCS: @(#) $Id: pack.test,v 1.9 2001/09/26 21:36:19 pspjuth Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1060,6 +1060,42 @@ test pack-18.2 {unmap slaves when master unmapped} {
     update
     lappend result [winfo ismapped .pack.b]
 } {1 0 100 30 0 1}
+
+test pack-19.1 {test respect for internalborder} {
+    catch {eval pack forget [pack slaves .pack]}
+    destroy .pack.l .pack.lf
+    wm geometry .pack 200x200
+    frame .pack.l -width 15 -height 10
+    labelframe .pack.lf -labelwidget .pack.l
+    pack .pack.lf -fill both -expand 1
+    frame .pack.lf.f
+    pack .pack.lf.f -fill both -expand 1
+    update
+    set res [list [winfo geometry .pack.lf.f]]
+    .pack.lf configure -labelanchor e -padx 3 -pady 5
+    update
+    lappend res [winfo geometry .pack.lf.f]
+    destroy .pack.l .pack.lf
+    set res
+} {196x188+2+10 177x186+5+7}
+test pack-19.2 {test support for minreqsize} {
+    catch {eval pack forget [pack slaves .pack]}
+    destroy .pack.l .pack.lf
+    wm geometry .pack {}
+    frame .pack.l -width 150 -height 100
+    labelframe .pack.lf -labelwidget .pack.l
+    pack .pack.lf -fill both -expand 1
+    frame .pack.lf.f -width 20 -height 25
+    pack .pack.lf.f
+    update
+    set res [list [winfo geometry .pack.lf]]
+    .pack.lf configure -labelanchor ws
+    update
+    lappend res [winfo geometry .pack.lf]
+    destroy .pack.l .pack.lf
+    set res
+} {162x127+0+0 172x112+0+0}
+
 destroy .pack
 foreach i {pack1 pack2 pack3 pack4} {
     rename $i {}

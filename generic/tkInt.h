@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.39 2001/09/26 20:25:17 pspjuth Exp $ 
+ * RCS: $Id: tkInt.h,v 1.40 2001/09/26 21:36:19 pspjuth Exp $ 
  */
 
 #ifndef _TKINT
@@ -963,6 +963,9 @@ EXTERN int		Tk_ImageObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_LabelObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
+EXTERN int		Tk_LabelframeObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_ListboxObjCmd _ANSI_ARGS_((ClientData clientData,
