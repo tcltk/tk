@@ -1,3 +1,9 @@
+1998-12-07    <stanton@GASPODE>
+
+	* library/xmfbox.tcl (tkMotifFDialog_Create): In the cached case,
+	the data array was not being initialized with the correct set of
+	widgets.
+
 1998-12-4    <welch@SAGE>
 
 	* Changed patchLevel to 8.1b1
