@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.11 1998/10/20 20:02:37 rjohnson Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.12 1999/03/06 00:23:43 stanton Exp $
 
 # Current Tk version;  used in various names.
 
@@ -166,8 +166,8 @@ TK_LIB_FILE = @TK_LIB_FILE@
 TK_LIB_FLAG = @TK_LIB_FLAG@
 #TK_LIB_FLAG = -ltk
 
-TCL_LIB_FLAG = @TCL_LIB_FLAG@
-#TCL_LIB_FLAG = -ltcl
+TK_EXP_FILE = @TK_EXP_FILE@
+TK_BUILD_EXP_FILE = @TK_BUILD_EXP_FILE@
 
 # The symbol below provides support for dynamic loading and shared
 # libraries.  See configure.in for a description of what it means.
@@ -365,7 +365,7 @@ install: install-binaries install-libraries install-demos install-man
 # some ranlibs write to current directory, and this might not always be
 # possible (e.g. if installing as root).
 
-install-binaries: $(TK_LIB_FILE) wish
+install-binaries: $(TK_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) ; \
 	    do \
 	    if [ ! -d $$i ] ; then \
@@ -379,6 +379,11 @@ install-binaries: $(TK_LIB_FILE) wish
 	@$(INSTALL_DATA) $(TK_LIB_FILE) $(LIB_INSTALL_DIR)/$(TK_LIB_FILE)
 	@(cd $(LIB_INSTALL_DIR); $(RANLIB) $(TK_LIB_FILE))
 	@chmod 555 $(LIB_INSTALL_DIR)/$(TK_LIB_FILE)
+	@if test "$(TK_BUILD_EXP_FILE)" != ""; then \
+	    echo "Installing $(TK_EXP_FILE)"; \
+	    $(INSTALL_DATA) $(TK_BUILD_EXP_FILE) \
+			$(LIB_INSTALL_DIR)/$(TK_EXP_FILE); \
+	    fi
 	@echo "Installing wish"
 	@$(INSTALL_PROGRAM) wish $(BIN_INSTALL_DIR)/wish$(VERSION)
 	@echo "Installing tkConfig.sh"

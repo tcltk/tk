@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 AC_INIT(../generic/tk.h)
-# RCS: @(#) $Id: configure.in,v 1.26 1999/02/04 21:00:29 stanton Exp $
+# RCS: @(#) $Id: configure.in,v 1.27 1999/03/06 00:23:43 stanton Exp $
 
 TK_VERSION=8.0
 TK_MAJOR_VERSION=8
@@ -426,13 +426,21 @@ eval "TK_LIB_FILE=${TK_LIB_FILE}"
 # AIX remembers this path and will attempt to use it at run-time to look
 # up the Tcl library.
 
-if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-    TK_LIB_FLAG="-ltk${VERSION}\${TK_DBGX}"
+if test $TK_SHARED_BUILD = 0 -o $TCL_NEEDS_EXP_FILE = 0; then
+    if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
+	TK_LIB_FLAG="-ltk${VERSION}\${TK_DBGX}"
+    else
+	TK_LIB_FLAG="-ltk`echo ${VERSION} | tr -d .`\${TK_DBGX}"
+    fi
+    TK_BUILD_LIB_SPEC="-L`pwd` ${TK_LIB_FLAG}"
+    TK_LIB_SPEC="-L${exec_prefix}/lib/tk${VERSION} ${TK_LIB_FLAG}"
 else
-    TK_LIB_FLAG="-ltk`echo ${VERSION} | tr -d .`\${TK_DBGX}"
+    TK_BUILD_EXP_FILE="lib.exp"
+    eval "TK_EXP_FILE=libtk${TCL_EXPORT_FILE_SUFFIX}"
+    
+    TK_BUILD_LIB_SPEC="-bI:`pwd`/${TK_BUILD_EXP_FILE}"
+    TK_LIB_SPEC="-bI:${exec_prefix}/lib/tk${VERSION}/${TK_EXP_FILE}"
 fi
-TK_BUILD_LIB_SPEC="-L`pwd` ${TK_LIB_FLAG}"
-TK_LIB_SPEC="-L${exec_prefix}/lib ${TK_LIB_FLAG}"
 
 AC_SUBST(CFLAGS_DEBUG)
 AC_SUBST(CFLAGS_DEFAULT)
@@ -460,6 +468,8 @@ AC_SUBST(TK_CC_SEARCH_FLAGS)
 AC_SUBST(TK_LD_SEARCH_FLAGS)
 AC_SUBST(TK_LIB_FILE)
 AC_SUBST(TK_LIB_FLAG)
+AC_SUBST(TK_BUILD_EXP_FILE)
+AC_SUBST(TK_EXP_FILE)
 AC_SUBST(TK_LIB_SPEC)
 AC_SUBST(TK_MAJOR_VERSION)
 AC_SUBST(TK_MINOR_VERSION)
