@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.14 2001/04/03 04:41:08 hobbs Exp $
+# RCS: @(#) $Id: listbox.test,v 1.15 2001/07/03 00:57:44 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1966,7 +1966,7 @@ test listbox-23.5 {ConfigureListboxItem, multiple calls} {
     catch {destroy .l}
     listbox .l
     set i 0
-    foreach color {red orange yellow green blue darkblue violet} {
+    foreach color {red orange yellow green blue white violet} {
 	.l insert end $color
 	.l itemconfigure $i -bg $color
 	incr i
@@ -1976,7 +1976,7 @@ test listbox-23.5 {ConfigureListboxItem, multiple calls} {
     list [.l itemcget 0 -bg] [.l itemcget 1 -bg] [.l itemcget 2 -bg] \
 	    [.l itemcget 3 -bg] [.l itemcget 4 -bg] [.l itemcget 5 -bg] \
 	    [.l itemcget 6 -bg]
-} {red orange yellow green blue darkblue violet}
+} {red orange yellow green blue white violet}
 catch {destroy .l}
 listbox .l
 .l insert end a b c d
