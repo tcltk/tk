@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.43 2003/11/12 17:38:48 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.44 2003/11/15 02:33:50 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -451,7 +451,7 @@ Tk_TextObjCmd(clientData, interp, objc, objv)
     textPtr->selBorderWidth = 0;
     textPtr->selBorderWidthPtr = NULL;
     textPtr->selFgColorPtr = NULL;
-    textPtr->selTagPtr = TkTextCreateTag(textPtr, "sel");
+    textPtr->selTagPtr = TkTextCreateTag(textPtr, "sel", NULL);
     textPtr->selTagPtr->reliefString =
 	    (char *) ckalloc(sizeof(DEF_TEXT_SELECT_RELIEF));
     strcpy(textPtr->selTagPtr->reliefString, DEF_TEXT_SELECT_RELIEF);
@@ -1778,7 +1778,7 @@ TextEventProc(clientData, eventPtr)
 		|| (textPtr->prevHeight != Tk_Height(textPtr->tkwin))) {
 	    int mask = 0;
 	    if (textPtr->prevWidth != Tk_Width(textPtr->tkwin)) {
-	        mask = 1;
+	        mask = TK_TEXT_LINE_GEOMETRY;
 	    }
 	    TkTextRelayoutWindow(textPtr, mask);
 	    textPtr->prevWidth = Tk_Width(textPtr->tkwin);
@@ -2690,8 +2690,9 @@ TextInsertCmd(textPtr, interp, objc, objv, indexPtr, noViewUpdate)
 		
 		for (i = 0; i < numTags; i++) {
 		    TkBTreeTag(&index1, &index2,
-		      TkTextCreateTag(textPtr, 
-		      Tcl_GetString(tagNamePtrs[i])), 1);
+			       TkTextCreateTag(textPtr, 
+				   Tcl_GetString(tagNamePtrs[i]), NULL),
+			       1);
 		}
 		index1 = index2;
 	    }
