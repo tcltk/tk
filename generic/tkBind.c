@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.20 2002/01/17 05:13:11 dgp Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.21 2002/01/25 21:09:36 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -2941,7 +2941,7 @@ DeleteVirtualEvent(interp, vetPtr, virtString, eventString)
 	eventPSPtr = FindSequence(interp, &vetPtr->patternTable, NULL,
 		eventString, 0, 0, &eventMask);
 	if (eventPSPtr == NULL) {
-	    char *string;
+	    CONST char *string;
 
 	    string = Tcl_GetStringResult(interp); 
 	    return (string[0] != '\0') ? TCL_ERROR : TCL_OK;

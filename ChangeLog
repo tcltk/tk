@@ -1,3 +1,75 @@
+2002-01-25  Don Porter  <dgp@users.sourceforge.net>
+
+	* doc/AddOption.3:
+	* doc/CanvTkWin.3:
+	* doc/GetPixels.3:
+	* doc/Name.3:
+	* doc/ParseArgv.3:
+	* generic/tk.decls (Tk_AddOption,Tk_CanvasGetCoord,Tk_GetPixels,
+	  Tk_GetScreenMM,Tk_NameToWindow,Tk_ParseArgv):
+	* generic/tkArgv.c (Tk_ParseArgv):
+	* generic/tkCanvLine.c (ParseArrowShape):
+	* generic/tkCanvUtil.c (Tk_CanvasGetCoord,Tk_CanvasTagsParseProc,
+	  Tk_CanvasTagsPrintProc,Tk_GetDash):
+	* generic/tkCanvas.c (ConfigureCanvas):
+	* generic/tkGet.c (Tk_GetPixels,Tk_GetScreenMM):
+	* generic/tkImgPhoto.c (ImgPhotoCmd):
+	* generic/tkMain.c (Tk_MainEx):
+	* generic/tkOldConfig.c (FormatConfigInfo):
+	* generic/tkOption.c (Tk_AddOption):
+	* generic/tkText.c (TextWidgetCmd,TkTextGetTabs,DumpSegment):
+	* generic/tkText.h (TkTextCreateTag):
+	* generic/tkTextTag.c (TkTextCreateTag):
+	* generic/tkWindow.c (Tk_NameToWindow,Initialize):
+	* mac/tkMacCursor.c (FindCursorByName,TkGetCursorByName):
+	* mac/tkMacWm.c (Tk_WmCmd):
+	* unix/tkUnixCursor.c (TkGetCursorByName):
+	* unix/tkUnixSend.c (ValidateName):
+	* unix/tkUnixWm.c (Tk_WmCmd):
+	* win/tkWinCursor.c (TkGetCursorByName):
+	* win/tkWinWm.c (Tk_WmCmd): Updated callers of Tcl_SplitList and
+	Tcl_Merge.
+	* generic/tkDecls.h: make genstubs
+	***POTENTIAL INCOMPATIBILITY***
+	Includes a source incompatibility in the argv argument of Tcl_ParseArgv.
+
+	* generic/tkBind.c (DeleteVirtualEvent):
+	* generic/tkCanvas.c (ScrollFractions,CanvasWidgetCmd,
+	  CanvasUpdateScrollbars):
+	* generic/tkTestTag.c (TkTextTagCmd): Updated callers of
+	Tcl_GetStringResult.  Rewrote PrintScrollFractions to
+	ScrollFractions to stop scribbling directly on interp->result.
+
+	* generic/tkInt.decls (TkGetDefaultScreenName,TkpDisplayWarning,
+	  TkpOpenDisplay):
+	* generic/tkCanvPs.c (Tk_PostscriptColor,Tk_PostscriptFont):
+	* generic/tkEntry.c (EntrySetValue,EntryValidateChange,ExpandPercents,
+	  EntryValueChanged,Tk_EntryObjCmd,DestroyEntry,ConfigureEntry,
+	  EntryComputeGeometry,InsertChars,DeleteChars,EntryFetchSelection,
+	  EntryTextVarProc,Tk_SpinBoxObjCmd,SpinboxWidgetObjCmd):
+	* generic/tkMain.c (Prompt):
+	* generic/tkMenu.c (MenuVarProc):
+	* generic/tkMenubutton.c (ConfigureMenuButton,MenuButtonTextVarProc):
+	* generic/tkMessage.c (ConfigureMessage,MessageTextVarProc):
+	* generic/tkWindow.c (GetScreen,Initialize):
+	* mac/tkMacInit.c (TkpInit,TkpDisplayWarning):
+	* mac/tkMacXStubs.c (TkGetDefaultScreenName,TkpOpenDisplay):
+	* unix/tkUnix.c (TkGetDefaultScreenName):
+	* unix/tkUnixEvent.c (TkpOpenDisplay):
+	* unix/tkUnixInit.c (TkpGetAppName,TkpDisplayWarning):
+	* unix/tkUnixSend.c (SendEventProc):
+	* win/tkWinInit.c (TkpGetAppName,TkpDisplayWarning):
+	* win/tkWinX.c (TkGetDefaultScreenName,TkpOpenDisplay): Updated
+	callers of Tcl_GetVar, Tcl_GetVar2
+	* generic/tkIntDecls.h: make genstubs
+
+	* generic/tkCanvPs.c (TkCanvPostscriptCmd):
+	* generic/tkImgBmap.c (TkGetBitmapData):
+	* generic/tkOption.c (ReadOptionFile):
+	* mac/tkMacInit.c (TkpInit,TkpGetAppName):
+	* win/tkWinInit.c (TkpGetAppName): Updated callers of
+	Tcl_SplitPath, Tcl_JoinPath, and Tcl_TranslateFileName.
+
 2002-01-18  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* tests/wm.test: Rewrite stackorder tests that

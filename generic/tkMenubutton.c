@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.9 2002/01/17 05:13:11 dgp Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.10 2002/01/25 21:09:37 dgp Exp $
  */
 
 #include "tkMenubutton.h"
@@ -627,7 +627,7 @@ ConfigureMenuButton(interp, mbPtr, objc, objv)
        * current value.
        */
 
-      char *value;
+      CONST char *value;
 
       value = Tcl_GetVar(interp, mbPtr->textVarName, TCL_GLOBAL_ONLY);
       if (value == NULL) {
@@ -872,7 +872,7 @@ MenuButtonTextVarProc(clientData, interp, name1, name2, flags)
     int flags;			/* Information about what happened. */
 {
     register TkMenuButton *mbPtr = (TkMenuButton *) clientData;
-    char *value;
+    CONST char *value;
 
     /*
      * If the variable is unset, then immediately recreate it unless

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.13 2002/01/17 05:13:11 dgp Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.14 2002/01/25 21:09:37 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -498,7 +498,8 @@ TkGetBitmapData(interp, string, fileName, widthPtr, heightPtr,
     int *hotXPtr, *hotYPtr;		/* Position of hot spot or -1,-1. */
 {
     int width, height, numBytes, hotX, hotY;
-    char *p, *end, *expandedFileName;
+    CONST char *expandedFileName;
+    char *p, *end;
     ParseInfo pi;
     char *data = NULL;
     Tcl_DString buffer;

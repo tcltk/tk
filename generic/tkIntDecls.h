@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.15 2001/12/04 03:07:43 mdejong Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.16 2002/01/25 21:09:37 dgp Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -141,8 +141,8 @@ EXTERN void		TkGetButtPoints _ANSI_ARGS_((double p1[],
 EXTERN TkCursor *	TkGetCursorByName _ANSI_ARGS_((Tcl_Interp * interp, 
 				Tk_Window tkwin, Tk_Uid string));
 /* 33 */
-EXTERN char *		TkGetDefaultScreenName _ANSI_ARGS_((
-				Tcl_Interp * interp, char * screenName));
+EXTERN CONST char *	TkGetDefaultScreenName _ANSI_ARGS_((
+				Tcl_Interp * interp, CONST char * screenName));
 /* 34 */
 EXTERN TkDisplay *	TkGetDisplay _ANSI_ARGS_((Display * display));
 /* 35 */
@@ -214,8 +214,8 @@ EXTERN void		TkpCloseDisplay _ANSI_ARGS_((TkDisplay * dispPtr));
 EXTERN void		TkpClaimFocus _ANSI_ARGS_((TkWindow * topLevelPtr, 
 				int force));
 /* 58 */
-EXTERN void		TkpDisplayWarning _ANSI_ARGS_((char * msg, 
-				char * title));
+EXTERN void		TkpDisplayWarning _ANSI_ARGS_((CONST char * msg, 
+				CONST char * title));
 /* 59 */
 EXTERN void		TkpGetAppName _ANSI_ARGS_((Tcl_Interp * interp, 
 				Tcl_DString * name));
@@ -241,7 +241,8 @@ EXTERN Window		TkpMakeWindow _ANSI_ARGS_((TkWindow * winPtr,
 EXTERN void		TkpMenuNotifyToplevelCreate _ANSI_ARGS_((
 				Tcl_Interp * interp1, char * menuName));
 /* 68 */
-EXTERN TkDisplay *	TkpOpenDisplay _ANSI_ARGS_((char * display_name));
+EXTERN TkDisplay *	TkpOpenDisplay _ANSI_ARGS_((
+				CONST char * display_name));
 /* 69 */
 EXTERN int		TkPointerEvent _ANSI_ARGS_((XEvent * eventPtr, 
 				TkWindow * winPtr));
@@ -520,7 +521,7 @@ typedef struct TkIntStubs {
     char * (*tkGetBitmapData) _ANSI_ARGS_((Tcl_Interp * interp, char * string, char * fileName, int * widthPtr, int * heightPtr, int * hotXPtr, int * hotYPtr)); /* 30 */
     void (*tkGetButtPoints) _ANSI_ARGS_((double p1[], double p2[], double width, int project, double m1[], double m2[])); /* 31 */
     TkCursor * (*tkGetCursorByName) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Window tkwin, Tk_Uid string)); /* 32 */
-    char * (*tkGetDefaultScreenName) _ANSI_ARGS_((Tcl_Interp * interp, char * screenName)); /* 33 */
+    CONST char * (*tkGetDefaultScreenName) _ANSI_ARGS_((Tcl_Interp * interp, CONST char * screenName)); /* 33 */
     TkDisplay * (*tkGetDisplay) _ANSI_ARGS_((Display * display)); /* 34 */
     int (*tkGetDisplayOf) _ANSI_ARGS_((Tcl_Interp * interp, int objc, Tcl_Obj *CONST objv[], Tk_Window * tkwinPtr)); /* 35 */
     TkWindow * (*tkGetFocusWin) _ANSI_ARGS_((TkWindow * winPtr)); /* 36 */
@@ -545,7 +546,7 @@ typedef struct TkIntStubs {
     int (*tkpChangeFocus) _ANSI_ARGS_((TkWindow * winPtr, int force)); /* 55 */
     void (*tkpCloseDisplay) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 56 */
     void (*tkpClaimFocus) _ANSI_ARGS_((TkWindow * topLevelPtr, int force)); /* 57 */
-    void (*tkpDisplayWarning) _ANSI_ARGS_((char * msg, char * title)); /* 58 */
+    void (*tkpDisplayWarning) _ANSI_ARGS_((CONST char * msg, CONST char * title)); /* 58 */
     void (*tkpGetAppName) _ANSI_ARGS_((Tcl_Interp * interp, Tcl_DString * name)); /* 59 */
     TkWindow * (*tkpGetOtherWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 60 */
     TkWindow * (*tkpGetWrapperWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 61 */
@@ -555,7 +556,7 @@ typedef struct TkIntStubs {
     void (*tkpMakeMenuWindow) _ANSI_ARGS_((Tk_Window tkwin, int transient)); /* 65 */
     Window (*tkpMakeWindow) _ANSI_ARGS_((TkWindow * winPtr, Window parent)); /* 66 */
     void (*tkpMenuNotifyToplevelCreate) _ANSI_ARGS_((Tcl_Interp * interp1, char * menuName)); /* 67 */
-    TkDisplay * (*tkpOpenDisplay) _ANSI_ARGS_((char * display_name)); /* 68 */
+    TkDisplay * (*tkpOpenDisplay) _ANSI_ARGS_((CONST char * display_name)); /* 68 */
     int (*tkPointerEvent) _ANSI_ARGS_((XEvent * eventPtr, TkWindow * winPtr)); /* 69 */
     int (*tkPolygonToArea) _ANSI_ARGS_((double * polyPtr, int numPoints, double * rectPtr)); /* 70 */
     double (*tkPolygonToPoint) _ANSI_ARGS_((double * polyPtr, int numPoints, double * pointPtr)); /* 71 */

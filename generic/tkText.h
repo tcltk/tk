@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.9 2001/12/05 18:18:22 hobbs Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.10 2002/01/25 21:09:37 dgp Exp $
  */
 
 #ifndef _TKTEXT
@@ -834,7 +834,7 @@ EXTERN int		TkTextDLineInfo _ANSI_ARGS_((TkText *textPtr,
 			    TkTextIndex *indexPtr, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr, int *basePtr));
 EXTERN TkTextTag *	TkTextCreateTag _ANSI_ARGS_((TkText *textPtr,
-			    char *tagName));
+			    CONST char *tagName));
 EXTERN void		TkTextFreeDInfo _ANSI_ARGS_((TkText *textPtr));
 EXTERN void		TkTextFreeTag _ANSI_ARGS_((TkText *textPtr,
 			    TkTextTag *tagPtr));

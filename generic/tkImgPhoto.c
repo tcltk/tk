@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.26 2002/01/17 05:13:11 dgp Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.27 2002/01/25 21:09:37 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -578,8 +578,8 @@ ImgPhotoCmd(clientData, interp, objc, objv)
     int dataWidth, dataHeight;
     struct SubcommandOptions options;
     int listArgc;
-    char **listArgv;
-    char **srcArgv;
+    CONST char **listArgv;
+    CONST char **srcArgv;
     unsigned char *pixelPtr;
     Tk_PhotoImageBlock block;
     Tk_Window tkwin;
