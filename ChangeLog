@@ -1,3 +1,15 @@
+2005-02-16  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* doc/wm.n: Add documentation for -fullscreen attribute.
+	* tests/winWm.test: Add -fullscreen to wm attribute
+	usage message.
+	* tests/wm.test: Add -fullscreen to wm attribute
+	usage message. Add -fullscreen attribute test cases
+	for Windows.
+	* win/tkWinWm.c (WmInfo, UpdateWrapper, TkpWmSetFullScreen,
+	WmAttributesCmd, UpdateGeometryInfo):
+	Implement TIP 223 [wm attributes -fullscreen].
+
 2005-02-14  Vince Darley  <vincentdarley@users.sourceforge.net>
 
 	* generic/tkText.c: 

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.96 2005/02/11 20:36:28 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.97 2005/02/17 00:06:09 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -230,6 +230,8 @@ typedef struct TkWmInfo {
 				 * pixels for the current style/exStyle.  This
 				 * includes the border on both sides of the
 				 * window. */
+    int configX, configY;	/* x,y position of toplevel when window is
+				 * switched into fullscreen state, */
     int configWidth, configHeight;
 				/* Dimensions passed to last request that we
 				 * issued to change geometry of window.  Used
@@ -307,6 +309,9 @@ typedef struct TkWmInfo {
  * WM_WITHDRAWN -		non-zero means that this window has explicitly
  *				been withdrawn. If it's a transient, it should
  *				not mirror state changes in the master.
+ * WM_FULLSCREEN -		non-zero means that this window has been placed
+ *				in the full screen mode. It should be mapped at
+ *				0,0 and be the width and height of the screen.
  */
 
 #define WM_NEVER_MAPPED			(1<<0)
@@ -322,6 +327,7 @@ typedef struct TkWmInfo {
 #define WM_WIDTH_NOT_RESIZABLE		(1<<10)
 #define WM_HEIGHT_NOT_RESIZABLE		(1<<11)
 #define WM_WITHDRAWN			(1<<12)
+#define WM_FULLSCREEN			(1<<13)
 
 /*
  * Window styles for various types of toplevel windows.
@@ -329,6 +335,9 @@ typedef struct TkWmInfo {
 
 #define WM_OVERRIDE_STYLE (WS_CLIPCHILDREN|WS_CLIPSIBLINGS|CS_DBLCLKS)
 #define EX_OVERRIDE_STYLE (WS_EX_TOOLWINDOW)
+
+#define WM_FULLSCREEN_STYLE (WS_POPUP|WM_OVERRIDE_STYLE)
+#define EX_FULLSCREEN_STYLE (WS_EX_APPWINDOW)
 
 #define WM_TOPLEVEL_STYLE (WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN|CS_DBLCLKS)
 #define EX_TOPLEVEL_STYLE (0)
@@ -2020,6 +2029,9 @@ UpdateWrapper(winPtr)
 	    } else {
 		wmPtr->style |= WS_POPUP;
 	    }
+	} else if (wmPtr->flags & WM_FULLSCREEN) {
+	    wmPtr->style = WM_FULLSCREEN_STYLE;
+	    wmPtr->exStyle = EX_FULLSCREEN_STYLE;
 	} else if (wmPtr->masterPtr) {
 	    wmPtr->style = WM_TRANSIENT_STYLE;
 	    wmPtr->exStyle = EX_TRANSIENT_STYLE;
@@ -2055,10 +2067,16 @@ UpdateWrapper(winPtr)
 	/*
 	 * Set the initial position from the user or program specified
 	 * location.  If nothing has been specified, then let the system
-	 * pick a location.
+	 * pick a location. In full screen mode the x,y origin is 0,0
+	 * and the window width and height match that of the screen.
 	 */
 
-	if (!(wmPtr->sizeHintsFlags & (USPosition | PPosition))
+	if (wmPtr->flags & WM_FULLSCREEN) {
+	    x = 0;
+	    y = 0;
+	    width = WidthOfScreen(Tk_Screen(winPtr));
+	    height = HeightOfScreen(Tk_Screen(winPtr));
+	} else if (!(wmPtr->sizeHintsFlags & (USPosition | PPosition))
 		&& (wmPtr->flags & WM_NEVER_MAPPED)) {
 	    x = CW_USEDEFAULT;
 	    y = CW_USEDEFAULT;
@@ -2435,6 +2453,73 @@ TkpWmSetState(winPtr, state)
 
     ShowWindow(wmPtr->wrapper, cmd);
     wmPtr->flags &= ~WM_SYNC_PENDING;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWmSetFullScreen --
+ *
+ *	Sets the fullscreen state for a toplevel window.
+ *
+ * Results:
+ *	The WM_FULLSCREEN flag is updated.
+ *
+ * Side effects:
+ *	May create a new wrapper window and raise it.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static
+void
+TkpWmSetFullScreen(winPtr, full_screen_state)
+     TkWindow *winPtr;		/* Toplevel window to operate on. */
+     int full_screen_state;		/* True if window should be full screen */
+{
+    int changed = 0;
+    int full_screen = False;
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    TkWindow *focusWinPtr;
+
+    if (full_screen_state) {
+	if (! (wmPtr->flags & WM_FULLSCREEN)) {
+	    full_screen = True;
+	    changed = 1;
+	}
+    } else {
+	if (wmPtr->flags & WM_FULLSCREEN) {
+	    full_screen = False;
+	    changed = 1;
+	}
+    }
+
+    if (changed) {
+	if (full_screen) {
+	    wmPtr->flags |= WM_FULLSCREEN;
+	    wmPtr->configX = wmPtr->x;
+	    wmPtr->configY = wmPtr->y;
+	} else {
+	    wmPtr->flags &= ~WM_FULLSCREEN;
+	    wmPtr->x = wmPtr->configX;
+	    wmPtr->y = wmPtr->configY;
+	}
+
+	/* If the window has been mapped, then we need to
+	 * update the native wrapper window, and reset
+	 * the focus to the widget that had it before.
+	 */
+
+	if (!(wmPtr->flags & (WM_NEVER_MAPPED)
+		&& !(winPtr->flags & TK_EMBEDDED))) {
+	    UpdateWrapper(winPtr);
+
+	    if (focusWinPtr = TkGetFocusWin(winPtr)) {
+	        TkSetFocusWin(focusWinPtr, 1);
+	    }
+	}   
+    }
 }
 
 /*
@@ -2906,6 +2991,8 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
     LONG style, exStyle, styleBit, *stylePtr;
     char *string;
     int i, boolean, length;
+    int config_fullscreen = 0;
+    int fullscreen_attr_changed = 0, fullscreen_attr = 0;
 
     if ((objc < 3) || ((objc > 5) && ((objc%2) == 0))) {
         configArgs:
@@ -2913,6 +3000,7 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 		"window"
 		" ?-alpha ?double??"
 		" ?-disabled ?bool??"
+		" ?-fullscreen ?bool??"
 		" ?-toolwindow ?bool??"
 		" ?-topmost ?bool??");
 	return TCL_ERROR;
@@ -2928,6 +3016,10 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 		Tcl_NewStringObj("-disabled", -1));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewBooleanObj((style & WS_DISABLED)));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-fullscreen", -1));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewBooleanObj((wmPtr->flags & WM_FULLSCREEN)));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-toolwindow", -1));
 	Tcl_ListObjAppendElement(NULL, objPtr,
@@ -2950,6 +3042,9 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 	} else if (strncmp(string, "-alpha", length) == 0) {
 	    stylePtr = &exStyle;
 	    styleBit = WS_EX_LAYERED;
+	} else if (strncmp(string, "-fullscreen", length) == 0) {
+	    config_fullscreen = 1;
+	    styleBit = 0;
 	} else if ((length > 3)
 		   && (strncmp(string, "-toolwindow", length) == 0)) {
 	    stylePtr = &exStyle;
@@ -3012,7 +3107,16 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 			    != TCL_OK)) {
 		return TCL_ERROR;
 	    }
-	    if (objc == 4) {
+	    if (config_fullscreen) {
+		if (objc == 4) {
+		    Tcl_SetBooleanObj(Tcl_GetObjResult(interp),
+		        (wmPtr->flags & WM_FULLSCREEN));
+		} else {
+		    fullscreen_attr_changed = 1;
+		    fullscreen_attr = boolean;
+		}
+		config_fullscreen = 0;
+	    } else if (objc == 4) {
 		Tcl_SetIntObj(Tcl_GetObjResult(interp),
 			((*stylePtr & styleBit) != 0));
 	    } else if (boolean) {
@@ -3043,6 +3147,34 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 	    UpdateWrapper(winPtr);
 	}
     }
+    if (fullscreen_attr_changed) {
+	if (fullscreen_attr) {
+	    if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
+	        Tcl_AppendResult(interp, "can't set fullscreen attribute for \"",
+	            winPtr->pathName,
+	            "\": override-redirect flag is set",
+	            (char *) NULL);
+	        return TCL_ERROR;
+	    }
+	    /* Check max width and height if set by the user,
+	     * don't worry about the default values since they
+	     * will likely be smaller than screen width/height.
+             */
+	    if (((wmPtr->maxWidth > 0) &&
+	            (WidthOfScreen(Tk_Screen(winPtr)) > wmPtr->maxWidth)) ||
+	            ((wmPtr->maxHeight > 0) &&
+	            (HeightOfScreen(Tk_Screen(winPtr)) > wmPtr->maxHeight))) {
+	        Tcl_AppendResult(interp, "can't set fullscreen attribute for \"",
+	            winPtr->pathName,
+	            "\": max width/height is too small",
+	            (char *) NULL);
+	        return TCL_ERROR;
+	    }
+        }
+
+        TkpWmSetFullScreen(winPtr, fullscreen_attr);
+    }
+
     return TCL_OK;
 }
 
@@ -5508,7 +5640,7 @@ UpdateGeometryInfo(clientData)
      */
 
     if (wmPtr->wrapper && (IsIconic(wmPtr->wrapper) ||
-	    IsZoomed(wmPtr->wrapper))) {
+	    IsZoomed(wmPtr->wrapper) || (wmPtr->flags & WM_FULLSCREEN))) {
 	return;
     }
 
