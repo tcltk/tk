@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.12 2002/07/14 05:48:46 dgp Exp $
+# RCS: @(#) $Id: entry.test,v 1.13 2002/10/02 20:59:28 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -1586,6 +1586,16 @@ test entry-20.6 {widget deletion while active} {
     update
     .e config -xscrollcommand { destroy .e }
     update idle
+    winfo exists .e
+} 0
+test entry-20.7 {widget deletion with textvariable active} {
+    # SF bugs 607390 and 617446
+    destroy .e
+    set FOO init
+    entry .e -textvariable FOO -validate all \
+	    -vcmd {%W configure -bg white; format 1}
+    bind .e <Destroy> { set FOO hello }
+    destroy .e
     winfo exists .e
 } 0
 
