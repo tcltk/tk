@@ -1,5 +1,13 @@
-2002-07-14  Don Porter <dgp@users.sf.net>
+2002-07-15  Don Porter <dgp@users.sf.net>
 
+	* Fixes for [Bug 581627].
+	* generic/tkTest.c:		Test commands not supported on non-Unix
+	  platforms should not be defined there in the first place.
+	* tests/constraints.tcl:	Fixed "secureserver" constraint.
+	* tests/unixWm.test:		Some tests needed "unix" constraint.
+	* win/tkWinWm.c:		Typo in error message.
+
+2002-07-14  Don Porter <dgp@users.sf.net>
 	* tests/event.test:	Fixes to enable testing of only userInteraction
 	* tests/visual_bb.test:	tests.
 

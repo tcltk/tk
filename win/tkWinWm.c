@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.46 2002/06/24 20:34:40 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.47 2002/07/15 16:56:32 dgp Exp $
  */
 
 #include "tkWinInt.h"
@@ -3496,7 +3496,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 		"focusmodel, frame, geometry, grid, group, iconbitmap, ",
 		"iconify, iconmask, iconname, iconposition, ",
 		"iconwindow, maxsize, minsize, overrideredirect, ",
-		"positionfrom, protocol, resizable, sizefrom, stackorder ",
+		"positionfrom, protocol, resizable, sizefrom, stackorder, ",
 		"state, title, transient, or withdraw",
 		(char *) NULL);
 	return TCL_ERROR;
