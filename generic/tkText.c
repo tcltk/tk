@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.34 2003/05/19 13:04:23 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.35 2003/05/19 14:37:20 dkf Exp $
  */
 
 #include "default.h"
@@ -176,6 +176,8 @@ static Tk_OptionSpec optionSpecs[] = {
  * We have abstracted this code away from the text widget to try to
  * keep Tk as modular as possible.
  */
+
+struct SearchSpec;	/* Forward declaration. */
 
 typedef ClientData      SearchAddLineProc _ANSI_ARGS_((int lineNum,
 			    struct SearchSpec *searchSpecPtr, 
@@ -2103,7 +2105,17 @@ TextSearchCmd(textPtr, interp, objc, objv)
 {
     int i, argsLeft, code;
     SearchSpec searchSpec;
-    
+
+    static CONST char *switchStrings[] = {
+	"--", "-all", "-backward", "-count", "-elide", "-exact",
+	"-forward", "-hidden", "-nocase", "-nolinestop", "-regexp", NULL
+    };
+    enum SearchSwitches {
+	SEARCH_END, SEARCH_ALL, SEARCH_BACK, SEARCH_COUNT, SEARCH_ELIDE,
+	SEARCH_EXACT, SEARCH_FWD, SEARCH_HIDDEN, SEARCH_NOCASE,
+	SEARCH_NOLINE, SEARCH_REGEXP
+    };
+
     /* 
      * Set up the search specification, including
      * the last 4 fields which are text widget specific
@@ -2128,29 +2140,36 @@ TextSearchCmd(textPtr, interp, objc, objv)
      */
 
     for (i = 2; i < objc; i++) {
-	int length;
-	char c;
-	
-	CONST char *arg = Tcl_GetStringFromObj(objv[i],&length);
-	
-	if (arg[0] != '-') {
+	int index;
+	if (Tcl_GetString(objv[i])[0] != '-') {
 	    break;
 	}
-	if (length < 2) {
-	    badSwitch:
-	    Tcl_AppendResult(interp, "bad switch \"", arg,
+
+	if (Tcl_GetIndexFromObj(interp, objv[i], switchStrings, "switch", 0,
+		&index) != TCL_OK) {
+	    /*
+	     * Hide the -hidden option
+	     */
+	    Tcl_ResetResult(interp);
+	    Tcl_AppendResult(interp, "bad switch \"", objv[i],
 		    "\": must be --, -all, -backward, -count, ",
 		    "-elide, -exact, -forward, -nocase, ",
 		    "-nolinestop, or -regexp", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	c = arg[1];
-	if ((c == 'a') && (strncmp(arg, "-all", length) == 0)) {
+
+	switch ((enum SearchSwitches) index) {
+	case SEARCH_END:
+	    i++;
+	    goto endOfSwitchProcessing;
+	case SEARCH_ALL:
 	    searchSpec.all = 1;
-	} else if ((c == 'b') && (strncmp(arg, "-backwards", length) == 0)) {
+	    break;
+	case SEARCH_BACK:
 	    searchSpec.backwards = 1;
-	} else if ((c == 'c') && (strncmp(arg, "-count", length) == 0)) {
-	    if (i >= (objc-1)) {
+	    break;
+	case SEARCH_COUNT:
+	    if (i >= objc-1) {
 		Tcl_SetResult(interp, "no value given for \"-count\" option",
 			TCL_STATIC);
 		return TCL_ERROR;
@@ -2161,35 +2180,32 @@ TextSearchCmd(textPtr, interp, objc, objv)
 	     * this procedure, which is fair.
 	     */
 	    searchSpec.varPtr = objv[i];
-	} else if ((c == 'e') && (length > 2)
-		&& (strncmp(arg, "-exact", length) == 0)) {
-	    searchSpec.exact = 1;
-	} else if ((c == 'e') && (length > 2)
-		&& (strncmp(arg, "-elide", length) == 0)) {
-	    searchSpec.searchElide = 1;
-	} else if ((c == 'h') && (strncmp(arg, "-hidden", length) == 0)) {
-	    /*
-	     * -hidden is kept around for backwards compatibility with
-	     * the dash patch, but -elide is the official option
-	     */
-	    searchSpec.searchElide = 1;
-	} else if ((c == 'f') && (strncmp(arg, "-forwards", length) == 0)) {
-	    searchSpec.backwards = 0;
-	} else if ((c == 'n') && (length > 3) 
-		   && (strncmp(arg, "-nocase", length) == 0)) {
-	    searchSpec.noCase = 1;
-	} else if ((c == 'n') && (length > 3) 
-		   && (strncmp(arg, "-nolinestop", length) == 0)) {
-	    searchSpec.noLineStop = 1;
-	} else if ((c == 'r') && (strncmp(arg, "-regexp", length) == 0)) {
-	    searchSpec.exact = 0;
-	} else if ((c == '-') && (strncmp(arg, "--", length) == 0)) {
-	    i++;
 	    break;
-	} else {
-	    goto badSwitch;
+	case SEARCH_ELIDE:
+	case SEARCH_HIDDEN:
+	    searchSpec.searchElide = 1;
+	    break;
+	case SEARCH_EXACT:
+	    searchSpec.exact = 1;
+	    break;
+	case SEARCH_FWD:
+	    searchSpec.backwards = 1;
+	    break;
+	case SEARCH_NOCASE:
+	    searchSpec.noCase = 1;
+	    break;
+	case SEARCH_NOLINE:
+	    searchSpec.noLineStop = 1;
+	    break;
+	case SEARCH_REGEXP:
+	    searchSpec.exact = 0;
+	    break;
+	default:
+	    panic("unexpected switch fallthrough");
 	}
     }
+  endOfSwitchProcessing:
+
     argsLeft = objc - (i+2);
     if ((argsLeft != 0) && (argsLeft != 1)) {
 	Tcl_WrongNumArgs(interp, 2, objv, 
@@ -2750,42 +2766,60 @@ TextDumpCmd(textPtr, interp, objc, objv)
 #define TK_DUMP_IMG	0x10
 #define TK_DUMP_ALL	(TK_DUMP_TEXT|TK_DUMP_MARK|TK_DUMP_TAG| \
 	TK_DUMP_WIN|TK_DUMP_IMG)
+    static CONST char *optStrings[] = {
+	"-all", "-command", "-image", "-mark", "-tag", "-text", "-window",
+	NULL
+    };
+    enum opts {
+	DUMP_ALL, DUMP_CMD, DUMP_IMG, DUMP_MARK, DUMP_TAG, DUMP_TXT, DUMP_WIN
+    };
 
     for (arg=2 ; arg < objc ; arg++) {
-	int len;
-	char *str = Tcl_GetStringFromObj(objv[arg],&len);
-	if (str[0] != '-') {
+	int index;
+	if (Tcl_GetString(objv[arg])[0] != '-') {
 	    break;
 	}
-	if (strncmp("-all", str, len) == 0) {
+	if (Tcl_GetIndexFromObj(interp, objv[arg], optStrings, "option", 0,
+		&index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	switch ((enum opts) index) {
+	case DUMP_ALL:
 	    what = TK_DUMP_ALL;
-	} else if (strncmp("-text", str, len) == 0) {
+	    break;
+	case DUMP_TXT:
 	    what |= TK_DUMP_TEXT;
-	} else if (strncmp("-tag", str, len) == 0) {
+	    break;
+	case DUMP_TAG:
 	    what |= TK_DUMP_TAG;
-	} else if (strncmp("-mark", str, len) == 0) {
+	    break;
+	case DUMP_MARK:
 	    what |= TK_DUMP_MARK;
-	} else if (strncmp("-image", str, len) == 0) {
+	    break;
+	case DUMP_IMG:
 	    what |= TK_DUMP_IMG;
-	} else if (strncmp("-window", str, len) == 0) {
+	    break;
+	case DUMP_WIN:
 	    what |= TK_DUMP_WIN;
-	} else if (strncmp("-command", str, len) == 0) {
+	    break;
+	case DUMP_CMD:
 	    arg++;
 	    if (arg >= objc) {
 		Tcl_AppendResult(interp, "Usage: ", Tcl_GetString(objv[0]), 
-		" dump ?-all -image -text -mark -tag -window? ?-command script? index ?index2?", NULL);
+			" dump ?-all -image -text -mark -tag -window? ",
+			"?-command script? index ?index2?", NULL);
 		return TCL_ERROR;
 	    }
 	    command = Tcl_GetString(objv[arg]);
-	} else {
-	    Tcl_AppendResult(interp, "Usage: ", Tcl_GetString(objv[0]), 
-			     " dump ?-all -image -text -mark -tag -window? ?-command script? index ?index2?", NULL);
-	    return TCL_ERROR;
+	    break;
+	default:
+	    panic("unexpected switch fallthrough");
 	}
     }
-    if (arg >= objc) {
+    if (arg >= objc || arg+2 < objc) {
 	Tcl_AppendResult(interp, "Usage: ", Tcl_GetString(objv[0]), 
-			 " dump ?-all -image -text -mark -tag -window? ?-command script? index ?index2?", NULL);
+		" dump ?-all -image -text -mark -tag -window? ",
+		"?-command script? index ?index2?", NULL);
 	return TCL_ERROR;
     }
     if (what == 0) {
@@ -2800,11 +2834,13 @@ TextDumpCmd(textPtr, interp, objc, objv)
     if (objc == arg) {
 	TkTextIndexForwChars(&index1, 1, &index2);
     } else {
+	int length;
+	char *str;
 	if (TkTextGetObjIndex(interp, textPtr, objv[arg], &index2) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (strncmp(Tcl_GetString(objv[arg]), "end", 
-		  strlen(Tcl_GetString(objv[arg]))) == 0) {
+	str = Tcl_GetStringFromObj(objv[arg], &length);
+	if (strncmp(str, "end", (unsigned)length) == 0) {
 	    atEnd = 1;
 	}
     }
@@ -2813,7 +2849,7 @@ TextDumpCmd(textPtr, interp, objc, objv)
     }
     if (index1.linePtr == index2.linePtr) {
 	DumpLine(interp, textPtr, what, index1.linePtr,
-	    index1.byteIndex, index2.byteIndex, lineno, command);
+		index1.byteIndex, index2.byteIndex, lineno, command);
     } else {
 	DumpLine(interp, textPtr, what, index1.linePtr,
 		index1.byteIndex, 32000000, lineno, command);
@@ -2835,7 +2871,6 @@ TextDumpCmd(textPtr, interp, objc, objv)
     if (atEnd) {
 	DumpLine(interp, textPtr, what & ~TK_DUMP_TEXT, index2.linePtr,
 		0, 1, lineno, command);			    
-
     }
     return TCL_OK;
 }
@@ -3583,7 +3618,7 @@ SearchCore(interp, searchSpecPtr, patObj)
 		    if (firstNewLine == -1) break;
 		    if (firstNewLine >= (lastOffset - firstOffset)) break;
 		    p = startOfLine + lastOffset - firstNewLine - 1;
-		    if (strncmp(p, pattern, firstNewLine + 1)) {
+		    if (strncmp(p, pattern, ((unsigned)firstNewLine) + 1)) {
 			break;
 		    } else {
 			int extraLines = 1;
@@ -3628,13 +3663,15 @@ SearchCore(interp, searchSpecPtr, patObj)
 			         * we make a final test and break
 			         * whatever the result
 			         */
-				if (strncmp(p, pattern, matchLength)) {
+				if (strncmp(p, pattern,
+					(unsigned)matchLength)) {
 				    p = NULL;
 				}
 				break;
 			    } else {
 				/* Not enough text yet, but check the prefix */
-				if (strncmp(p, pattern, (len - skipFirst))) {
+				if (strncmp(p, pattern,
+					(unsigned)(len - skipFirst))) {
 				    p = NULL;
 				    break;
 				}
