@@ -1,5 +1,10 @@
 2004-05-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/panedwindow.tcl (MarkSash): call DragSash to stop sash
+	jump when B1 is pressed and released without moving. [Bug #932155]
+	Make the panedwindow -opaqueresize option work as per the docs.
+	[Bug #778893]
+
 	* tests/panedwindow.test: panedwindow-25.1
 	* generic/tkPanedWindow.c (Unlink): clean up -before/-after refs
 	to a slave when removing it. [Bug #928413] (griffin)
