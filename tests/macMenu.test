@@ -7,25 +7,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: macMenu.test,v 1.5 2001/08/01 16:21:12 dgp Exp $
+# RCS: @(#) $Id: macMenu.test,v 1.6 2001/09/21 20:38:18 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
-if {$tcl_platform(platform) != "macintosh"} {
-    puts "skipping: Mac only tests..."
-    ::tcltest::cleanupTests
-    return
-}
-
-if {[lsearch [image types] test] < 0} {
-    puts "This application hasn't been compiled with the \"test\" image"
-    puts "type, so I can't run this test.  Are you sure you're using"
-    puts "tktest instead of wish?"
-    ::tcltest::cleanupTests
-    return
-}
+set ::tcltest::testConfig(testimage) \
+	[expr {[lsearch [image types] test] >= 0}]
 
 proc deleteWindows {} {
     foreach i [winfo children .] {
@@ -37,21 +26,21 @@ deleteWindows
 wm geometry . {}
 raise .
 
-test macMenu-1.0 {TkMacUseMenuID} {} {
+test macMenu-1.0 {TkMacUseMenuID} {macOnly} {
     # Can't really test TkMacUseMenuID; it's only called on startup.
 } {}
 
-test macMenu-2.1 {GetNewID} {
+test macMenu-2.1 {GetNewID} {macOnly} {
     catch {destroy .m1}
     list [catch {menu .m1} msg] $msg [destroy .m1]
 } {0 .m1 {}}
-test macMenu-2.2 {GetNewID - cascade menu} {
+test macMenu-2.2 {GetNewID - cascade menu} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -menu .m2
     list [catch {menu .m2} msg] $msg [destroy .m1] [destroy .m2]
 } {0 .m2 {} {}}
-test macMenu-2.3 {GetNewID - running out of ids} {
+test macMenu-2.3 {GetNewID - running out of ids} {macOnly} {
     deleteWindows
     menu .menu
     for {set i 0} {$i < 230} {incr i} {
@@ -62,18 +51,18 @@ test macMenu-2.3 {GetNewID - running out of ids} {
     list [catch {.menu add cascade -menu .breaker} msg] $msg [deleteWindows]
 } {1 {No more menus can be allocated.} {}}
 
-test macMenu-3.1 {FreeID} {
+test macMenu-3.1 {FreeID} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {destroy .m1} msg] $msg
 } {0 {}}
 
 # No way to test running out of ids in TkpNewPlatformMenu
-test macMenu-4.1 {TkpNewMenu} {
+test macMenu-4.1 {TkpNewMenu} {macOnly} {
     catch {destroy .m1}
     list [catch {menu .m1} msg] $msg [catch {destroy .m1} msg2] $msg2
 } {0 .m1 0 {}}
-test macMenu-4.2 {TkpNewMenu - checking for help menu when one is there} {
+test macMenu-4.2 {TkpNewMenu - checking for help menu when one is there} {macOnly} {
     catch {destroy .m1}
     catch {destroy .m2}
     menu .m1
@@ -84,7 +73,7 @@ test macMenu-4.2 {TkpNewMenu - checking for help menu when one is there} {
     update
     list [catch {menu .m2} msg] $msg [destroy .m1] [destroy .m2] [. configure -menu ""]
 } {0 .m2 {} {} {}}
-test macMenu-4.3 {TkpNewMenu - menubar set but different interp} {
+test macMenu-4.3 {TkpNewMenu - menubar set but different interp} {macOnly} {
     catch {interp delete testinterp}
     catch {destroy .m1}
     interp create testinterp
@@ -95,7 +84,7 @@ test macMenu-4.3 {TkpNewMenu - menubar set but different interp} {
     interp eval testinterp {update}
     list [catch {menu .m1} msg] $msg [destroy .m1] [interp delete testinterp]
 } {0 .m1 {} {}}
-test macMenu-4.4 {TkpNewMenu - menubar set but new menu has different parent} {
+test macMenu-4.4 {TkpNewMenu - menubar set but new menu has different parent} {macOnly} {
     catch {destroy .m1}
     catch {destroy .m2}
     menu .m1 -tearoff 0
@@ -107,7 +96,7 @@ test macMenu-4.4 {TkpNewMenu - menubar set but new menu has different parent} {
     update
     list [catch {menu .m2.help} msg] $msg [. configure -menu ""] [destroy .m1] [destroy .m2]
 } {0 .m2.help {} {} {}}
-test macMenu-4.5 {TkpNewMenu - menubar set, same parent, not .help} {
+test macMenu-4.5 {TkpNewMenu - menubar set, same parent, not .help} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     .m1 add cascade -menu .m1.help
@@ -116,7 +105,7 @@ test macMenu-4.5 {TkpNewMenu - menubar set, same parent, not .help} {
     update
     list [catch {menu .m1.foo} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 .m1.foo {} {}}
-test macMenu-4.6 {TkpNewMenu - creating the help menu} {
+test macMenu-4.6 {TkpNewMenu - creating the help menu} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     .m1 add cascade -menu .m1.help
@@ -126,12 +115,12 @@ test macMenu-4.6 {TkpNewMenu - creating the help menu} {
     list [catch {menu .m1.help} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 .m1.help {} {}}
 
-test macMenu-5.1 {TkpDestroyMenu} {
+test macMenu-5.1 {TkpDestroyMenu} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {destroy .m1} msg] $msg
 } {0 {}}
-test macMenu-5.2 {TkpDestroyMenu - help menu} {
+test macMenu-5.2 {TkpDestroyMenu - help menu} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     .m1 add cascade -menu .m1.help
@@ -141,13 +130,13 @@ test macMenu-5.2 {TkpDestroyMenu - help menu} {
     update
     list [catch {destroy .m1.help} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-5.3 {TkpDestroyMenu - idle handler pending} {
+test macMenu-5.3 {TkpDestroyMenu - idle handler pending} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label test
     list [catch {destroy .m1} msg] $msg
 } {0 {}}
-test macMenu-5.4 {TkpDestroyMenu - idle handler not pending} {
+test macMenu-5.4 {TkpDestroyMenu - idle handler not pending} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label test
@@ -155,14 +144,14 @@ test macMenu-5.4 {TkpDestroyMenu - idle handler not pending} {
     list [catch {destroy .m1} msg] $msg
 } {0 {}}
 
-test macMenu-6.1 {SetMenuCascade} {
+test macMenu-6.1 {SetMenuCascade} {macOnly} {
     catch {destroy .m1}
     catch {destroy .m2}
     menu .m1
     menu .m2
     list [catch {.m2 add cascade -menu .m1} msg] $msg [destroy .m1 .m2]
 } {0 {} {}}
-test macMenu-6.2 {SetMenuCascade - running out of ids} {
+test macMenu-6.2 {SetMenuCascade - running out of ids} {macOnly} {
     deleteWindows
     menu .menu
     for {set i 0} {$i < 230} {incr i} {
@@ -173,13 +162,13 @@ test macMenu-6.2 {SetMenuCascade - running out of ids} {
     list [catch {.menu add cascade -menu .breaker} msg] $msg [deleteWindows]
 } {1 {No more menus can be allocated.} {}}
 
-test macMenu-7.1 {TkpDestroyMenuEntry} {
+test macMenu-7.1 {TkpDestroyMenuEntry} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "test"
     list [catch {.m1 delete 1} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-7.2 {TkpDestroyMenuEntry - help menu} {
+test macMenu-7.2 {TkpDestroyMenuEntry - help menu} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -menu .m1.help
@@ -191,60 +180,60 @@ test macMenu-7.2 {TkpDestroyMenuEntry - help menu} {
     list [catch {.m1.help delete test} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
 
-test macMenu-8.1 {GetEntryText} {
+test macMenu-8.1 {GetEntryText} {macOnly} {
     catch {destroy .m1}
     list [catch {menu .m1} msg] $msg [destroy .m1]
 } {0 .m1 {}}
-test macMenu-8.2 {GetEntryText} {
+test macMenu-8.2 {GetEntryText} {macOnly testimage} {
     catch {destroy .m1}
     catch {image delete image1}
     menu .m1
     image create test image1
     list [catch {.m1 add command -image image1} msg] $msg [destroy .m1] [image delete image1]
 } {0 {} {} {}}
-test macMenu-8.3 {GetEntryText} {
+test macMenu-8.3 {GetEntryText} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -bitmap questhead} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-8.4 {GetEntryText} {
+test macMenu-8.4 {GetEntryText} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-8.5 {GetEntryText} {
+test macMenu-8.5 {GetEntryText} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "foo"
     list [catch {.m1 add command -label "foo"} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-8.6 {GetEntryText} {
+test macMenu-8.6 {GetEntryText} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -label "This is a very long string. 9012345678900123456789001234567890012345678900123456789001234567890012345678900123456789001234567890012345678900123456789001234567890012345678900123456789001234567890012345678900123456789001234567890012345678900123456789001234567890"} \
     	    msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-8.7 {GetEntryText - elipses character} {
+test macMenu-8.7 {GetEntryText - elipses character} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -label "foo..."} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-8.8 {GetEntryText - false elipses character} {
+test macMenu-8.8 {GetEntryText - false elipses character} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -label "foo."} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-8.9 {GetEntryText - false elipses character} {
+test macMenu-8.9 {GetEntryText - false elipses character} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -label "foo.."} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-8.10 {GetEntryText - false elipses character} {
+test macMenu-8.10 {GetEntryText - false elipses character} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -label "foo.b"} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-8.11 {GetEntryText - false elipses character} {
+test macMenu-8.11 {GetEntryText - false elipses character} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -label "foo..b"} msg] $msg [destroy .m1]
@@ -252,7 +241,7 @@ test macMenu-8.11 {GetEntryText - false elipses character} {
 
 
 # test macMenu-9.1 - assumes some fonts
-test macMenu-9.1 {FindMarkCharacter} {
+test macMenu-9.1 {FindMarkCharacter} {macOnly} {
     catch {destroy .m1}
     menu .m1 -font "Helvetica 12" -tearoff 0
     .m1 add checkbutton -label test
@@ -261,40 +250,40 @@ test macMenu-9.1 {FindMarkCharacter} {
 } {0 {} {}}
 # All standard fonts have "¥" defined. We can't test further.
 
-test macMenu-10.1 {SetMenuIndicator - cascade entry} {
+test macMenu-10.1 {SetMenuIndicator - cascade entry} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add cascade -label foo} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-10.2 {SetMenuIndicator - not radio or checkbutton} {
+test macMenu-10.2 {SetMenuIndicator - not radio or checkbutton} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -label foo} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-10.3 {SetMenuIndicator - indiatorOn false} {
+test macMenu-10.3 {SetMenuIndicator - indiatorOn false} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add checkbutton -label foo -indicatoron 0} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-10.4 {SetMenuIndicator - entry not selected} {
+test macMenu-10.4 {SetMenuIndicator - entry not selected} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add checkbutton -label foo} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-10.5 {SetMenuIndicator - checkbutton} {
+test macMenu-10.5 {SetMenuIndicator - checkbutton} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label foo
     list [catch {.m1 invoke foo} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-10.6 {SetMenuIndicator - radio button} {
+test macMenu-10.6 {SetMenuIndicator - radio button} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add radiobutton -label foo
     list [catch {.m1 invoke foo} msg] $msg [destroy .m1]
 } {0 {} {}}
 
-test macMenu-11.1 {SetMenuTitle} {
+test macMenu-11.1 {SetMenuTitle} {macOnly} {
     catch {destroy .m1}
     catch {destroy .container}
     menu .container
@@ -303,7 +292,7 @@ test macMenu-11.1 {SetMenuTitle} {
     .container add cascade -label "File" -menu .m1
     list [catch {. configure -menu .container} msg] $msg [. configure -menu ""] [destroy .container .m1]
 } {0 {} {} {}}
-test macMenu-11.2 {SetMenuTitle} {
+test macMenu-11.2 {SetMenuTitle} {macOnly} {
     menu .container
     menu .m1
     . configure -menu ""
@@ -312,14 +301,14 @@ test macMenu-11.2 {SetMenuTitle} {
     list [catch {. configure -menu .container} msg] $msg [. configure -menu ""] [destroy .container .m1]
 } {0 {} {} {}}
 
-test macMenu-12.1 {TkpConfigureMenuEntry} {
+test macMenu-12.1 {TkpConfigureMenuEntry} {macOnly} {
     catch {destroy .m1}
     . configure -menu ""
     menu .m1
     .m1 add cascade -menu .m3
     list [catch {.m1 entryconfigure 1 -menu .m2} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-12.2 {TkpConfigureMenuEntry} {
+test macMenu-12.2 {TkpConfigureMenuEntry} {macOnly} {
     catch {destroy .m1}
     catch {destroy .m2}
     . configure -menu ""
@@ -328,7 +317,7 @@ test macMenu-12.2 {TkpConfigureMenuEntry} {
     menu .m2
     list [catch {.m1 entryconfigure 1 -menu .m2} msg] $msg [destroy .m1 .m2]
 } {0 {} {}}
-test macMenu-12.3 {TkpConfigureMenuEntry - running out of ids} {
+test macMenu-12.3 {TkpConfigureMenuEntry - running out of ids} {macOnly} {
     deleteWindows
     menu .menu
     for {set i 0} {$i < 230} {incr i} {
@@ -338,63 +327,63 @@ test macMenu-12.3 {TkpConfigureMenuEntry - running out of ids} {
     menu .breaker
     list [catch {.menu add cascade -menu .breaker} msg] $msg [deleteWindows]
 } {1 {No more menus can be allocated.} {}}
-test macMenu-12.4 {TkpConfigureMenuEntry - Control} {
+test macMenu-12.4 {TkpConfigureMenuEntry - Control} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -accel "Control+S"} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-12.5 {TkpConfigureMenuEntry - Ctrl} {
+test macMenu-12.5 {TkpConfigureMenuEntry - Ctrl} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -accel "Ctrl+S"} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-12.6 {TkpConfigureMenuEntry - Shift} {
+test macMenu-12.6 {TkpConfigureMenuEntry - Shift} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -accel "Shift+S"} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-12.7 {TkpConfigureMenuEntry - Option} {
+test macMenu-12.7 {TkpConfigureMenuEntry - Option} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -accel "Opt+S"} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-12.8 {TkpConfigureMenuEntry - Command} {
+test macMenu-12.8 {TkpConfigureMenuEntry - Command} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -accel "Command+S"} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-12.9 {TkpConfigureMenuEntry - Cmd} {
+test macMenu-12.9 {TkpConfigureMenuEntry - Cmd} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -accel "Cmd+S"} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-12.10 {TkpConfigureMenuEntry - Alt} {
+test macMenu-12.10 {TkpConfigureMenuEntry - Alt} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -accel "Alt+S"} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-12.11 {TkpConfigureMenuEntry - Meta} {
+test macMenu-12.11 {TkpConfigureMenuEntry - Meta} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -accel "Meta+S"} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-12.12 {TkpConfigureMenuEntry - Two modifiers} {
+test macMenu-12.12 {TkpConfigureMenuEntry - Two modifiers} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -accel "Cmd+Shift+S"} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-12.13 {TkpConfigureMenuEntry - dash instead of plus} {
+test macMenu-12.13 {TkpConfigureMenuEntry - dash instead of plus} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -accel "Command-S"} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-12.14 {TkpConfigureMenuEntry - idler pending} {
+test macMenu-12.14 {TkpConfigureMenuEntry - idler pending} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     .m1 add command -label test
     list [catch {.m1 entryconfigure test -label test2} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-12.15 {TkpConfigureMenuEntry - idler not pending} {
+test macMenu-12.15 {TkpConfigureMenuEntry - idler not pending} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     .m1 add command -label test
@@ -402,13 +391,13 @@ test macMenu-12.15 {TkpConfigureMenuEntry - idler not pending} {
     list [catch {.m1 entryconfigure test -label test2} msg] $msg [destroy .m1]
 } {0 {} {}}
 
-test macMenu-13.1 {ReconfigureIndividualMenu - getting rid of zero items} {
+test macMenu-13.1 {ReconfigureIndividualMenu - getting rid of zero items} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     .m1 add command -label test
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-13.2 {ReconfigureIndividualMenu - getting rid of one item} {
+test macMenu-13.2 {ReconfigureIndividualMenu - getting rid of one item} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     .m1 add command -label test
@@ -416,7 +405,7 @@ test macMenu-13.2 {ReconfigureIndividualMenu - getting rid of one item} {
     .m1 delete test
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-13.3 {ReconfigureIndividualMenu - getting rid of more than one} {
+test macMenu-13.3 {ReconfigureIndividualMenu - getting rid of more than one} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     .m1 add command -label test
@@ -425,67 +414,67 @@ test macMenu-13.3 {ReconfigureIndividualMenu - getting rid of more than one} {
     .m1 entryconfigure test2 -label "test two"
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-13.4 {ReconfigureIndividualMenu - separator} {
+test macMenu-13.4 {ReconfigureIndividualMenu - separator} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add separator
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-13.5 {ReconfigureIndividualMenu - disabled} {
+test macMenu-13.5 {ReconfigureIndividualMenu - disabled} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command
     .m1 entryconfigure 1 -state disabled
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-13.6 {ReconfigureIndividualMenu - active} {
+test macMenu-13.6 {ReconfigureIndividualMenu - active} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command
     .m1 entryconfigure 1 -state active
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-13.7 {ReconfigureIndividualMenu - checkbutton not checked} {
+test macMenu-13.7 {ReconfigureIndividualMenu - checkbutton not checked} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label test
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-13.8 {ReconfigureIndividualMenu - checkbutton - indicator off} {
+test macMenu-13.8 {ReconfigureIndividualMenu - checkbutton - indicator off} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label test -indicatoron 0
     .m1 invoke test
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-13.9 {ReconfigureIndividualMenu - checkbutton on} {
+test macMenu-13.9 {ReconfigureIndividualMenu - checkbutton on} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label test
     .m1 invoke test
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-13.10 {ReconfigureIndividualMenu - radiobutton not checked} {
+test macMenu-13.10 {ReconfigureIndividualMenu - radiobutton not checked} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add radiobutton -label test
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-13.11 {ReconfigureIndividualMenu - radiobutton - indicator off} {
+test macMenu-13.11 {ReconfigureIndividualMenu - radiobutton - indicator off} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add radiobutton -label test -indicatoron 0
     .m1 invoke test
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-13.12 {ReconfigureIndividualMenu - radiobutton on} {
+test macMenu-13.12 {ReconfigureIndividualMenu - radiobutton on} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add radiobutton -label test
     .m1 invoke test
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-13.13 {ReconfigureIndividualMenu} {
+test macMenu-13.13 {ReconfigureIndividualMenu} {macOnly} {
     catch {destroy .m1}
     . configure -menu ""
     menu .m1
@@ -493,7 +482,7 @@ test macMenu-13.13 {ReconfigureIndividualMenu} {
     .m1 entryconfigure 1 -menu .m2
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-13.14 {ReconfigureIndividualMenu} {
+test macMenu-13.14 {ReconfigureIndividualMenu} {macOnly} {
     catch {destroy .m1}
     catch {destroy .m2}
     . configure -menu ""
@@ -503,13 +492,13 @@ test macMenu-13.14 {ReconfigureIndividualMenu} {
     .m1 entryconfigure 1 -menu .m2
     list [catch {update idletasks} msg] $msg [destroy .m1 .m2]
 } {0 {} {}}
-test macMenu-13.15 {ReconfigureIndividualMenu - accelerator} {
+test macMenu-13.15 {ReconfigureIndividualMenu - accelerator} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -accel "Command-S"
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-13.16 {ReconfigureIndividualMenu - parent is disabled} {
+test macMenu-13.16 {ReconfigureIndividualMenu - parent is disabled} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -label .m1.edit -label "Edit" -state disabled
@@ -517,7 +506,7 @@ test macMenu-13.16 {ReconfigureIndividualMenu - parent is disabled} {
     .m1.edit add command -label foo
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-13.17 {ReconfigureIndividualMenu - disabling parent} {
+test macMenu-13.17 {ReconfigureIndividualMenu - disabling parent} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -label .m1.edit -label Edit
@@ -527,13 +516,13 @@ test macMenu-13.17 {ReconfigureIndividualMenu - disabling parent} {
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
 
-test macMenu-14.1 {ReconfigureMacintoshMenu - normal menu} {
+test macMenu-14.1 {ReconfigureMacintoshMenu - normal menu} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     .m1 add command -label test
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-14.2 {ReconfigureMacintoshMenu - apple menu} {
+test macMenu-14.2 {ReconfigureMacintoshMenu - apple menu} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -menu .m1.apple
@@ -543,7 +532,7 @@ test macMenu-14.2 {ReconfigureMacintoshMenu - apple menu} {
     raise .
     list [catch {update idletasks} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-14.3 {ReconfigureMacintoshMenu - help menu} {
+test macMenu-14.3 {ReconfigureMacintoshMenu - help menu} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -menu .m1.help
@@ -553,7 +542,7 @@ test macMenu-14.3 {ReconfigureMacintoshMenu - help menu} {
     raise .
     list [catch {update idletasks} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-14.4 {ReconfigureMacintoshMenu - menubar} {
+test macMenu-14.4 {ReconfigureMacintoshMenu - menubar} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -menu .m1.file -label "foo"
@@ -564,20 +553,20 @@ test macMenu-14.4 {ReconfigureMacintoshMenu - menubar} {
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
 
-test macMenu-15.1 {CompleteIdlers - no idle pending} {
+test macMenu-15.1 {CompleteIdlers - no idle pending} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label test
     update idletasks
     list [catch {.m1 post 40 40} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-15.2 {CompleteIdlers - idle pending} {
+test macMenu-15.2 {CompleteIdlers - idle pending} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label test
     list [catch {.m1 post 40 40} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-15.3 {CompleteIdlers - recursive} {
+test macMenu-15.3 {CompleteIdlers - recursive} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -menu .m1.m2 -label test
@@ -587,38 +576,38 @@ test macMenu-15.3 {CompleteIdlers - recursive} {
 } {0 {} {}}
 
 #Don't know how to generate nested post menus
-test macMenu-16.1 {TkpPostMenu} {
+test macMenu-16.1 {TkpPostMenu} {macOnly} {
     catch {destroy .m1}
     menu .m1 -postcommand "destroy .m1"
     list [catch {.m1 post 40 40} msg] $msg
 } {0 {}}
-test macMenu-16.2 {TkpPostMenu} {
+test macMenu-16.2 {TkpPostMenu} {macOnly} {
     catch {destroy .m1}
     menu .m1 -postcommand "blork"
     list [catch {.m1 post 40 40} msg] $msg [destroy .m1]
 } {1 {invalid command name "blork"} {}}
 # We need to write the interactive test for menu posting.
 
-test macMenu-17.1 {TkpMenuNewEntry - no idle pending} {
+test macMenu-17.1 {TkpMenuNewEntry - no idle pending} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [catch {.m1 add command -label test} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-17.2 {TkpMenuNewEntry - idle pending} {
+test macMenu-17.2 {TkpMenuNewEntry - idle pending} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label test
     list [catch {.m1 add command -label test2} msg] $msg [destroy .m1]
 } {0 {} {}}
 
-test macMenu-18.1 {DrawMenuBarWhenIdle} {
+test macMenu-18.1 {DrawMenuBarWhenIdle} {macOnly} {
     catch {destroy .m1}
     . configure -menu ""
     menu .m1
     . configure -menu .m1
     list [catch {update idletasks} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-18.2 {DrawMenuBarWhenIdle - clearing old apple menu out} {
+test macMenu-18.2 {DrawMenuBarWhenIdle - clearing old apple menu out} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -menu .m1.apple
@@ -631,7 +620,7 @@ test macMenu-18.2 {DrawMenuBarWhenIdle - clearing old apple menu out} {
     raise .
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-18.3 {DrawMenuBarWhenIdle - clearing out old help menu} {
+test macMenu-18.3 {DrawMenuBarWhenIdle - clearing out old help menu} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -menu .m1.help
@@ -644,27 +633,27 @@ test macMenu-18.3 {DrawMenuBarWhenIdle - clearing out old help menu} {
     raise .
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-18.4 {DrawMenuBarWhenIdle - menu not there} {
+test macMenu-18.4 {DrawMenuBarWhenIdle - menu not there} {macOnly} {
     catch {destroy .m1}
     . configure -menu .m1
     raise .
     list [catch {update} msg] $msg [. configure -menu ""]
 } {0 {} {}}
-test macMenu-18.5 {DrawMenuBarWhenIdle - menu there} {
+test macMenu-18.5 {DrawMenuBarWhenIdle - menu there} {macOnly} {
     catch {destroy .m1}
     menu .m1
     . configure -menu .m1
     raise .
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-18.6 {DrawMenuBarWhenIdle - no apple menu} {
+test macMenu-18.6 {DrawMenuBarWhenIdle - no apple menu} {macOnly} {
     catch {destroy .m1}
     menu .m1
     . configure -menu .m1
     raise .
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-18.7 {DrawMenuBarWhenIdle - apple menu references but not there} {
+test macMenu-18.7 {DrawMenuBarWhenIdle - apple menu references but not there} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -menu .m1.apple
@@ -672,7 +661,7 @@ test macMenu-18.7 {DrawMenuBarWhenIdle - apple menu references but not there} {
     raise .
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-18.8 {DrawMenuBarWhenIdle - apple menu there} {
+test macMenu-18.8 {DrawMenuBarWhenIdle - apple menu there} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -menu .m1.apple
@@ -682,7 +671,7 @@ test macMenu-18.8 {DrawMenuBarWhenIdle - apple menu there} {
     raise .
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-18.9 {DrawMenuBarWhenIdle - apple menu there; no idle handler} {
+test macMenu-18.9 {DrawMenuBarWhenIdle - apple menu there; no idle handler} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -menu .m1.apple
@@ -693,14 +682,14 @@ test macMenu-18.9 {DrawMenuBarWhenIdle - apple menu there; no idle handler} {
     update idletasks
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-18.10 {DrawMenuBarWhenIdle - no help menu} {
+test macMenu-18.10 {DrawMenuBarWhenIdle - no help menu} {macOnly} {
     catch {destroy .m1}
     menu .m1
     . configure -menu .m1
     raise .
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-18.11 {DrawMenuBarWhenIdle - help menu referenced but not there} {
+test macMenu-18.11 {DrawMenuBarWhenIdle - help menu referenced but not there} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -menu .m1.help
@@ -708,7 +697,7 @@ test macMenu-18.11 {DrawMenuBarWhenIdle - help menu referenced but not there} {
     raise .
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-18.12 {DrawMenuBarWhenIdle - help menu there} {
+test macMenu-18.12 {DrawMenuBarWhenIdle - help menu there} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -menu .m1.help
@@ -718,7 +707,7 @@ test macMenu-18.12 {DrawMenuBarWhenIdle - help menu there} {
     raise .
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-18.13 {DrawMenuBarWhenIdle - help menu there - no idlers} {
+test macMenu-18.13 {DrawMenuBarWhenIdle - help menu there - no idlers} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -menu .m1.help
@@ -730,7 +719,7 @@ test macMenu-18.13 {DrawMenuBarWhenIdle - help menu there - no idlers} {
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
 # Can't generate no menubar clone
-test macMenu-18.14 {DrawMenuBarWhenIdle - apple and help menus in tearoff menubar} {
+test macMenu-18.14 {DrawMenuBarWhenIdle - apple and help menus in tearoff menubar} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -menu .m1.apple
@@ -741,7 +730,7 @@ test macMenu-18.14 {DrawMenuBarWhenIdle - apple and help menus in tearoff menuba
     raise .
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-18.15 {DrawMenuBarWhenIdle - apple and help menus in non-tearoff menubar} {
+test macMenu-18.15 {DrawMenuBarWhenIdle - apple and help menus in non-tearoff menubar} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     .m1 add cascade -menu .m1.apple
@@ -752,14 +741,14 @@ test macMenu-18.15 {DrawMenuBarWhenIdle - apple and help menus in non-tearoff me
     raise .
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-18.16 {DrawMenuBarWhenIdle - no apple menu} {
+test macMenu-18.16 {DrawMenuBarWhenIdle - no apple menu} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     . configure -menu .m1
     raise .
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-18.17 {DrawMenuBarWhenIdle - apple menu} {
+test macMenu-18.17 {DrawMenuBarWhenIdle - apple menu} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     . configure -menu .m1
@@ -770,7 +759,7 @@ test macMenu-18.17 {DrawMenuBarWhenIdle - apple menu} {
     raise .
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-18.18 {DrawMenuBarWhenIdle - big for loop} {
+test macMenu-18.18 {DrawMenuBarWhenIdle - big for loop} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     menu .m1.apple -tearoff 0
@@ -783,7 +772,7 @@ test macMenu-18.18 {DrawMenuBarWhenIdle - big for loop} {
     raise .
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-18.19 {DrawMenuBarWhenIdle = disabled menu} {
+test macMenu-18.19 {DrawMenuBarWhenIdle = disabled menu} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     menu .m1.edit -tearoff 0
@@ -794,7 +783,7 @@ test macMenu-18.19 {DrawMenuBarWhenIdle = disabled menu} {
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
 
-test macMenu-19.1 {RecursivelyInsertMenu} {
+test macMenu-19.1 {RecursivelyInsertMenu} {macOnly} {
     catch {destroy .m1}
     catch {destroy .m2}
     catch {destroy .main}
@@ -810,7 +799,7 @@ test macMenu-19.1 {RecursivelyInsertMenu} {
     .m2 add command -label "Test 3"
     list [catch {raise .t2} msg] $msg [destroy .t2 .main .m1 .m2]
 } {0 {} {}}
-test macMenu-19.2 {RecursivelyInsertMenu} {
+test macMenu-19.2 {RecursivelyInsertMenu} {macOnly} {
     catch {destroy .m1}
     catch {destroy .m2}
     catch {destroy .main}
@@ -827,13 +816,13 @@ test macMenu-19.2 {RecursivelyInsertMenu} {
     list [catch {raise .t2} msg] $msg [destroy .t2 .main .m1 .m2]
 } {0 {} {}}
 
-test macMenu-20.1 {SetDefaultMenuBar} {
+test macMenu-20.1 {SetDefaultMenuBar} {macOnly} {
     . configure -menu ""
     raise .
     list [catch {update} msg] $msg
 } {0 {}}
 
-test macMenu-21.1 {TkpSetMainMenubar - not front window} {
+test macMenu-21.1 {TkpSetMainMenubar - not front window} {macOnly} {
     catch {destroy .m1}
     catch {destroy .t2}
     toplevel .t2
@@ -843,12 +832,12 @@ test macMenu-21.1 {TkpSetMainMenubar - not front window} {
     update
     list [catch {.t2 configure -menu .m1} msg] $msg [destroy .t2] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-21.2 {TkpSetMainMenubar - menu null} {
+test macMenu-21.2 {TkpSetMainMenubar - menu null} {macOnly} {
     . configure -menu ""
     raise .
     list [catch {update} msg] $msg
 } {0 {}}
-test macMenu-21.3 {TkpSetMainMenubar - different interps} {
+test macMenu-21.3 {TkpSetMainMenubar - different interps} {macOnly} {
     catch {destroy .m1}
     catch {interp delete testinterp}
     interp create testinterp
@@ -862,7 +851,7 @@ test macMenu-21.3 {TkpSetMainMenubar - different interps} {
     interp eval testinterp {raise .}
     list [catch {interp eval testinterp {update}} msg] $msg [interp delete testinterp] [. configure -menu ""] [destroy .m1]
 } {0 {} {} {} {}}
-test macMenu-21.4 {TkpSetMainMenubar - different windows} {
+test macMenu-21.4 {TkpSetMainMenubar - different windows} {macOnly} {
     catch {destroy .m1}
     catch {destroy .t2}
     menu .m1
@@ -875,7 +864,7 @@ test macMenu-21.4 {TkpSetMainMenubar - different windows} {
     raise .t2
     list [catch {update} msg] $msg [destroy .t2] [. configure -menu ""] [destroy .m1]
 } {0 {} {} {} {}}
-test macMenu-21.5 {TkpSetMainMenubar - old menu was null} {
+test macMenu-21.5 {TkpSetMainMenubar - old menu was null} {macOnly} {
     catch {destroy .m1}
     . configure -menu ""
     update
@@ -884,7 +873,7 @@ test macMenu-21.5 {TkpSetMainMenubar - old menu was null} {
     raise .
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1]
 } {0 {} {} {}}
-test macMenu-21.6 {TkpSetMainMenubar - old menu different} {
+test macMenu-21.6 {TkpSetMainMenubar - old menu different} {macOnly} {
     catch {destroy .m1}
     catch {destroy .m2}
     menu .m1
@@ -896,7 +885,7 @@ test macMenu-21.6 {TkpSetMainMenubar - old menu different} {
     raise .
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1] [destroy .m2]
 } {0 {} {} {} {}}
-test macMenu-21.7 {TkpSetMainMenubar - child window NULL - parent window now} {
+test macMenu-21.7 {TkpSetMainMenubar - child window NULL - parent window now} {macOnly} {
     catch {destroy .m1}
     catch {destroy .t2}
     toplevel .t2 
@@ -908,7 +897,7 @@ test macMenu-21.7 {TkpSetMainMenubar - child window NULL - parent window now} {
     raise .t2
     list [catch {update} msg] $msg [. configure -menu ""] [destroy .m1] [destroy .t2]
 } {0 {} {} {} {}}
-test macMenu-21.8 {TkpSetMainMenubar - tearoff window} {
+test macMenu-21.8 {TkpSetMainMenubar - tearoff window} {macOnly} {
     catch {destroy .t2}
     toplevel .t2 -menu .t2.m1
     menu .t2.m1
@@ -920,14 +909,14 @@ test macMenu-21.8 {TkpSetMainMenubar - tearoff window} {
     list [catch {update} msg] $msg [destroy .t2]
 } {0 {} {}}
 
-test macMenu-22.1 {TkSetWindowMenuBar} {
+test macMenu-22.1 {TkSetWindowMenuBar} {macOnly} {
 } {}
 
-test macMenu-23.1 {TkMacDispatchMenuEvent} {
+test macMenu-23.1 {TkMacDispatchMenuEvent} {macOnly} {
     # needs to be interactive.
 } {}
 
-test macMenu-24.1 {GetMenuIndicatorGeometry} {
+test macMenu-24.1 {GetMenuIndicatorGeometry} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label foo
@@ -935,80 +924,80 @@ test macMenu-24.1 {GetMenuIndicatorGeometry} {
     list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
 
-test macMenu-25.1 {GetMenuAccelGeometry - cascade entry} {
+test macMenu-25.1 {GetMenuAccelGeometry - cascade entry} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -label foo
     list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
-test macMenu-25.2 {GetMenuAccelGeometry - no accel} {
+test macMenu-25.2 {GetMenuAccelGeometry - no accel} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command
     list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
-test macMenu-25.3 {GetMenuAccelGeometry - no special chars - arbitrary string} {
+test macMenu-25.3 {GetMenuAccelGeometry - no special chars - arbitrary string} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -accel "Test"
     list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
-test macMenu-25.4 {GetMenuAccelGeometry - Command} {
+test macMenu-25.4 {GetMenuAccelGeometry - Command} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -accel "Cmd+S"
     list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
-test macMenu-25.5 {GetMenuAccelGeometry - Control} {
+test macMenu-25.5 {GetMenuAccelGeometry - Control} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -accel "Ctrl+S"
     list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
-test macMenu-25.6 {GetMenuAccelGeometry - Shift} {
+test macMenu-25.6 {GetMenuAccelGeometry - Shift} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -accel "Shift+S"
     list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
-test macMenu-25.7 {GetMenuAccelGeometry - Option} {
+test macMenu-25.7 {GetMenuAccelGeometry - Option} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -accel "Opt+S"
     list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
-test macMenu-25.8 {GetMenuAccelGeometry - Combination} {
+test macMenu-25.8 {GetMenuAccelGeometry - Combination} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -accel "Cmd+Shift+S"
     list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
-test macMenu-25.9 {GetMenuAccelGeometry - extra text} {
+test macMenu-25.9 {GetMenuAccelGeometry - extra text} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -accel "Command+Delete"
     list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
     
-test macMenu-26.1 {GetTearoffEntryGeometry} {
+test macMenu-26.1 {GetTearoffEntryGeometry} {macOnly} {
     # can't call this on power mac.
 } {}
 
-test macMenu-27.1 {GetMenuSeparatorGeometry} {
+test macMenu-27.1 {GetMenuSeparatorGeometry} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add separator
     list [catch {tk::TearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
 
-test macMenu-28.1 {DrawMenuEntryIndicator - non-checkbutton} {
+test macMenu-28.1 {DrawMenuEntryIndicator - non-checkbutton} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-28.2 {DrawMenuEntryIndicator - indicator off} {
+test macMenu-28.2 {DrawMenuEntryIndicator - indicator off} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label foo -indicatoron 0
@@ -1016,14 +1005,14 @@ test macMenu-28.2 {DrawMenuEntryIndicator - indicator off} {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-28.3 {DrawMenuEntryIndicator - not selected} {
+test macMenu-28.3 {DrawMenuEntryIndicator - not selected} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label foo
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-28.4 {DrawMenuEntryIndicator - checkbutton} {
+test macMenu-28.4 {DrawMenuEntryIndicator - checkbutton} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label foo
@@ -1031,7 +1020,7 @@ test macMenu-28.4 {DrawMenuEntryIndicator - checkbutton} {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-28.5 {DrawMenuEntryIndicator - radiobutton} {
+test macMenu-28.5 {DrawMenuEntryIndicator - radiobutton} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add radiobutton -label foo
@@ -1041,7 +1030,7 @@ test macMenu-28.5 {DrawMenuEntryIndicator - radiobutton} {
 } {0 {} {}}
 
 # Cannot reproduce resources missing or color allocation failing easily.
-test macMenu-29.1 {DrawSICN} {
+test macMenu-29.1 {DrawSICN} {macOnly} {
    catch {destroy .m1}
    menu .m1
    .m1 add command -label foo -accel "Cmd+S"
@@ -1050,56 +1039,56 @@ test macMenu-29.1 {DrawSICN} {
 } {0 {} {}}
 
 # Cannot reproduce resources missing
-test macMenu-30.1 {DrawMenuEntryAccelerator - cascade entry} {
+test macMenu-30.1 {DrawMenuEntryAccelerator - cascade entry} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -label foo
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-30.2 {DrawMenuEntryAccelerator - no accel string} {
+test macMenu-30.2 {DrawMenuEntryAccelerator - no accel string} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-30.3 {DrawMenuEntryAccelerator - random accel string} {
+test macMenu-30.3 {DrawMenuEntryAccelerator - random accel string} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -accel foo
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-30.4 {DrawMenuEntryAccelerator - Command} {
+test macMenu-30.4 {DrawMenuEntryAccelerator - Command} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -accel "Cmd+S"
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-30.5 {DrawMenuEntryAccelerator - Option} {
+test macMenu-30.5 {DrawMenuEntryAccelerator - Option} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -accel "Opt+S"
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-30.6 {DrawMenuEntryAccelerator - Shift} {
+test macMenu-30.6 {DrawMenuEntryAccelerator - Shift} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -accel "Shift+S"
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-30.7 {DrawMenuEntryAccelerator - Control} {
+test macMenu-30.7 {DrawMenuEntryAccelerator - Control} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -accel "Ctrl+S"
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
-test macMenu-30.8 {DrawMenuEntryAccelerator - combination} {
+test macMenu-30.8 {DrawMenuEntryAccelerator - combination} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -accel "Cmd+Shift+S"
@@ -1107,7 +1096,7 @@ test macMenu-30.8 {DrawMenuEntryAccelerator - combination} {
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 
-test macMenu-31.1 {DrawMenuSeparator} {
+test macMenu-31.1 {DrawMenuSeparator} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add separator
@@ -1115,7 +1104,7 @@ test macMenu-31.1 {DrawMenuSeparator} {
     list [catch {update} msg] $msg [destroy .m1]
 } {0 {} {}}
 
-test macMenu-32.1 {TkpDrawMenuEntryLabel} {
+test macMenu-32.1 {TkpDrawMenuEntryLabel} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
@@ -1127,7 +1116,7 @@ test macMenu-33.1 {MenuDefProc - No way to test automatically.} {} {}
 test macMenu-34.1 {TkMacHandleTearoffMenu - no way to test automatically} {} {}
 test macMenu-35.1 {TkpInitializeMenuBindings - nothing to do} {} {}
 
-test macMenu-36.1 {TkpComputeMenubarGeometry} {
+test macMenu-36.1 {TkpComputeMenubarGeometry} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -label foo
@@ -1139,7 +1128,7 @@ test macMenu-37.1 {DrawTearoffEntry - can't do automatically} {} {}
 test macMenu-38.1 {TkMacSetHelpMenuItemCount - called at boot time} {} {}
 test macMenu-39.1 {TkMacMenuClick - can't do automatically} {} {}
 
-test macMenu-40.1 {TkpDrawMenuEntry - gc for active and not strict motif} {
+test macMenu-40.1 {TkpDrawMenuEntry - gc for active and not strict motif} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
@@ -1147,7 +1136,7 @@ test macMenu-40.1 {TkpDrawMenuEntry - gc for active and not strict motif} {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.2 {TkpDrawMenuEntry - gc for active menu item with its own gc} {
+test macMenu-40.2 {TkpDrawMenuEntry - gc for active menu item with its own gc} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -activeforeground red
@@ -1155,7 +1144,7 @@ test macMenu-40.2 {TkpDrawMenuEntry - gc for active menu item with its own gc} {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.3 {TkpDrawMenuEntry - gc for active and strict motif} {
+test macMenu-40.3 {TkpDrawMenuEntry - gc for active and strict motif} {macOnly} {
     catch {destroy .m1}
     menu .m1
     set tk_strictMotif 1
@@ -1164,42 +1153,42 @@ test macMenu-40.3 {TkpDrawMenuEntry - gc for active and strict motif} {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1] [set tk_strictMotif 0]
 } {{} {} 0}
-test macMenu-40.4 {TkpDrawMenuEntry - gc for disabled with disabledfg and custom entry} {
+test macMenu-40.4 {TkpDrawMenuEntry - gc for disabled with disabledfg and custom entry} {macOnly} {
     catch {destroy .m1}
     menu .m1 -disabledforeground blue
     .m1 add command -label foo -state disabled -background red
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.5 {TkpDrawMenuEntry - gc for disabled with disabledFg} {
+test macMenu-40.5 {TkpDrawMenuEntry - gc for disabled with disabledFg} {macOnly} {
     catch {destroy .m1}
     menu .m1 -disabledforeground blue
     .m1 add command -label foo -state disabled
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.6 {TkpDrawMenuEntry - gc for disabled - no disabledFg} {
+test macMenu-40.6 {TkpDrawMenuEntry - gc for disabled - no disabledFg} {macOnly} {
     catch {destroy .m1}
     menu .m1 -disabledforeground ""
     .m1 add command -label foo -state disabled
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.7 {TkpDrawMenuEntry - gc for normal - custom entry} {
+test macMenu-40.7 {TkpDrawMenuEntry - gc for normal - custom entry} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -foreground red
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.8 {TkpDrawMenuEntry - gc for normal} {
+test macMenu-40.8 {TkpDrawMenuEntry - gc for normal} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.9 {TkpDrawMenuEntry - gc for indicator - custom entry} {
+test macMenu-40.9 {TkpDrawMenuEntry - gc for indicator - custom entry} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label foo -selectcolor orange
@@ -1207,7 +1196,7 @@ test macMenu-40.9 {TkpDrawMenuEntry - gc for indicator - custom entry} {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.10 {TkpDrawMenuEntry - gc for indicator} {
+test macMenu-40.10 {TkpDrawMenuEntry - gc for indicator} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label foo
@@ -1215,7 +1204,7 @@ test macMenu-40.10 {TkpDrawMenuEntry - gc for indicator} {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.11 {TkpDrawMenuEntry - border - custom entry} {
+test macMenu-40.11 {TkpDrawMenuEntry - border - custom entry} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -activebackground green
@@ -1223,7 +1212,7 @@ test macMenu-40.11 {TkpDrawMenuEntry - border - custom entry} {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.12 {TkpDrawMenuEntry - border} {
+test macMenu-40.12 {TkpDrawMenuEntry - border} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
@@ -1231,7 +1220,7 @@ test macMenu-40.12 {TkpDrawMenuEntry - border} {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.13 {TkpDrawMenuEntry - active border - strict motif} {
+test macMenu-40.13 {TkpDrawMenuEntry - active border - strict motif} {macOnly} {
     catch {destroy .m1}
     set tk_strictMotif 1
     menu .m1
@@ -1240,7 +1229,7 @@ test macMenu-40.13 {TkpDrawMenuEntry - active border - strict motif} {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1] [set tk_strictMotif 0]
 } {{} {} 0}
-test macMenu-40.14 {TkpDrawMenuEntry - active border - custom entry} {
+test macMenu-40.14 {TkpDrawMenuEntry - active border - custom entry} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -activeforeground yellow
@@ -1248,7 +1237,7 @@ test macMenu-40.14 {TkpDrawMenuEntry - active border - custom entry} {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.15 {TkpDrawMenuEntry - active border} {
+test macMenu-40.15 {TkpDrawMenuEntry - active border} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
@@ -1256,35 +1245,35 @@ test macMenu-40.15 {TkpDrawMenuEntry - active border} {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.16 {TkpDrawMenuEntry - font - custom entry} {
+test macMenu-40.16 {TkpDrawMenuEntry - font - custom entry} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo -font "Helvectica 72"
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.17 {TkpDrawMenuEntry - font} {
+test macMenu-40.17 {TkpDrawMenuEntry - font} {macOnly} {
     catch {destroy .m1}
     menu .m1 -font "Courier 72"
     .m1 add command -label foo
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.18 {TkpDrawMenuEntry - separator} {
+test macMenu-40.18 {TkpDrawMenuEntry - separator} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add separator
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.19 {TkpDrawMenuEntry - standard} {
+test macMenu-40.19 {TkpDrawMenuEntry - standard} {macOnly} {
     catch {destroy .mb}
     menu .m1
     .m1 add command -label foo
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.20 {TkpDrawMenuEntry - disabled cascade item} {
+test macMenu-40.20 {TkpDrawMenuEntry - disabled cascade item} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -label File -menu .m1.file
@@ -1294,7 +1283,7 @@ test macMenu-40.20 {TkpDrawMenuEntry - disabled cascade item} {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.21 {TkpDrawMenuEntry - indicator} {
+test macMenu-40.21 {TkpDrawMenuEntry - indicator} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label macMenu-40.20
@@ -1302,7 +1291,7 @@ test macMenu-40.21 {TkpDrawMenuEntry - indicator} {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-40.22 {TkpDrawMenuEntry - indicator - hideMargin} {
+test macMenu-40.22 {TkpDrawMenuEntry - indicator - hideMargin} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label macMenu-40.21 -hidemargin 1
@@ -1311,84 +1300,84 @@ test macMenu-40.22 {TkpDrawMenuEntry - indicator - hideMargin} {
     list [update] [destroy .m1]
 } {{} {}}
 
-test macMenu-41.1 {TkpComputeStandardMenuGeometry - no entries} {
+test macMenu-41.1 {TkpComputeStandardMenuGeometry - no entries} {macOnly} {
     catch {destroy .m1}
     menu .m1
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.2 {TkpComputeStandardMenuGeometry - one entry} {
+test macMenu-41.2 {TkpComputeStandardMenuGeometry - one entry} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "one"
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.3 {TkpComputeStandardMenuGeometry - more than one entry} {
+test macMenu-41.3 {TkpComputeStandardMenuGeometry - more than one entry} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "one"
     .m1 add command -label "two"
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.4 {TkpComputeStandardMenuGeometry - separator} {
+test macMenu-41.4 {TkpComputeStandardMenuGeometry - separator} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add separator
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.5 {TkpComputeStandardMenuGeometry - standard label geometry} {
+test macMenu-41.5 {TkpComputeStandardMenuGeometry - standard label geometry} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "test"
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.6 {TkpComputeStandardMenuGeometry - different font for entry} {
+test macMenu-41.6 {TkpComputeStandardMenuGeometry - different font for entry} {macOnly} {
     catch {destroy .m1}
     menu .m1 -font "Helvetica 12"
     .m1 add command -label "test" -font "Courier 12"
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.7 {TkpComputeStandardMenuGeometry - second entry larger} {
+test macMenu-41.7 {TkpComputeStandardMenuGeometry - second entry larger} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "test"
     .m1 add command -label "test test"
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.8 {TkpComputeStandardMenuGeometry - first entry larger} {
+test macMenu-41.8 {TkpComputeStandardMenuGeometry - first entry larger} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "test test"
     .m1 add command -label "test"
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.9 {TkpComputeStandardMenuGeometry - accelerator} {
+test macMenu-41.9 {TkpComputeStandardMenuGeometry - accelerator} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "test" -accel "Ctrl+S"
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.10 {TkpComputeStandardMenuGeometry - second accel larger} {
+test macMenu-41.10 {TkpComputeStandardMenuGeometry - second accel larger} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "test" -accel "1"
     .m1 add command -label "test" -accel "1 1"
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.11 {TkpComputeStandardMenuGeometry - second accel smaller} {
+test macMenu-41.11 {TkpComputeStandardMenuGeometry - second accel smaller} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "test" -accel "1 1"
     .m1 add command -label "test" -accel "1"
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.12 {TkpComputeStandardMenuGeometry - indicator} {
+test macMenu-41.12 {TkpComputeStandardMenuGeometry - indicator} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label test
     .m1 invoke 1
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.13 {TkpComputeStandardMenuGeometry - second indicator less or equal } {
+test macMenu-41.13 {TkpComputeStandardMenuGeometry - second indicator less or equal } {macOnly testimage} {
     catch {destroy .m1}
     catch {image delete image1}
     image create test image1
@@ -1399,19 +1388,19 @@ test macMenu-41.13 {TkpComputeStandardMenuGeometry - second indicator less or eq
     .m1 invoke 2
     list [update idletasks] [destroy .m1] [image delete image1]
 } {{} {} {}}
-test macMenu-41.14 {TkpComputeStandardMenuGeometry - hidden margin} {
+test macMenu-41.14 {TkpComputeStandardMenuGeometry - hidden margin} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label macMenu-41.15 -hidemargin 1
     .m1 invoke macMenu-41.15
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.15 {TkpComputeStandardMenuGeometry - zero sized menus} {
+test macMenu-41.15 {TkpComputeStandardMenuGeometry - zero sized menus} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.16 {TkpComputeStandardMenuGeometry - first column bigger} {
+test macMenu-41.16 {TkpComputeStandardMenuGeometry - first column bigger} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label one
@@ -1419,7 +1408,7 @@ test macMenu-41.16 {TkpComputeStandardMenuGeometry - first column bigger} {
     .m1 add command -label three -columnbreak 1
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.17 {TkpComputeStandardMenuGeometry - second column bigger} {
+test macMenu-41.17 {TkpComputeStandardMenuGeometry - second column bigger} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     .m1 add command -label one
@@ -1427,7 +1416,7 @@ test macMenu-41.17 {TkpComputeStandardMenuGeometry - second column bigger} {
     .m1 add command -label three
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.18 {TkpComputeStandardMenuGeometry - three columns} {
+test macMenu-41.18 {TkpComputeStandardMenuGeometry - three columns} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     .m1 add command -label one
@@ -1438,14 +1427,14 @@ test macMenu-41.18 {TkpComputeStandardMenuGeometry - three columns} {
     .m1 add command -label six
     list [update idletasks] [destroy .m1]    
 } {{} {}}
-test macMenu-41.19 {TkpComputeStandardMenuGeometry - entry without accel long} {
+test macMenu-41.19 {TkpComputeStandardMenuGeometry - entry without accel long} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     .m1 add command -label "This is a long item with no accel."
     .m1 add command -label foo -accel "Cmd+S"
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-41.20 {TkpComputeStandardMenuGeometry - entry with accel long} {
+test macMenu-41.20 {TkpComputeStandardMenuGeometry - entry with accel long} {macOnly} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     .m1 add command -label foo
@@ -1453,14 +1442,14 @@ test macMenu-41.20 {TkpComputeStandardMenuGeometry - entry with accel long} {
     list [update idletasks] [destroy .m1]
 } {{} {}}
 
-test macMenu-42.1 {DrawMenuEntryLabel - setting indicatorSpace} {
+test macMenu-42.1 {DrawMenuEntryLabel - setting indicatorSpace} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "foo"
     set tearoff [tk::TearOffMenu .m1]
     list [update idletasks] [destroy .m1]    
 } {{} {}}
-test macMenu-42.2 {DrawMenuEntryLabel - drawing image} {
+test macMenu-42.2 {DrawMenuEntryLabel - drawing image} {macOnly testimage} {
     catch {destroy .m1}
     catch {image delete image1}
     image create test image1
@@ -1469,7 +1458,7 @@ test macMenu-42.2 {DrawMenuEntryLabel - drawing image} {
     set tearoff [tk::TearOffMenu .m1]
     list [update idletasks] [destroy .m1] [image delete image1]
 } {{} {} {}}
-test macMenu-42.3 {DrawMenuEntryLabel - drawing select image} {
+test macMenu-42.3 {DrawMenuEntryLabel - drawing select image} {macOnly testimage} {
     catch {destroy .m1}
     catch {eval image delete [image names]}
     image create test image1
@@ -1480,35 +1469,35 @@ test macMenu-42.3 {DrawMenuEntryLabel - drawing select image} {
     set tearoff [tk::TearOffMenu .m1]
     list [update idletasks] [destroy .m1] [eval image delete [image names]]
 } {{} {} {}}
-test macMenu-42.4 {DrawMenuEntryLabel - drawing a bitmap} {
+test macMenu-42.4 {DrawMenuEntryLabel - drawing a bitmap} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -bitmap questhead
     set tearoff [tk::TearOffMenu .m1]
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-42.5 {DrawMenuEntryLabel - drawing null label} {
+test macMenu-42.5 {DrawMenuEntryLabel - drawing null label} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command
     set tearoff [tk::TearOffMenu .m1]
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-42.6 {DrawMenuEntryLabel - drawing real label} {
+test macMenu-42.6 {DrawMenuEntryLabel - drawing real label} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "This is a long label" -underline 3
     set tearoff [tk::TearOffMenu .m1]
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-42.7 {DrawMenuEntryLabel - drawing disabled label} {
+test macMenu-42.7 {DrawMenuEntryLabel - drawing disabled label} {macOnly} {
 	catch {destroy .m1}
 	menu .m1 -disabledforeground ""
 	.m1 add command -label "This is a long label" -state disabled
 	set tearoff [tk::TearOffMenu .m1]
 	list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-42.8 {DrawMenuEntryLabel - disabled images} {
+test macMenu-42.8 {DrawMenuEntryLabel - disabled images} {macOnly testimage} {
 	catch {destroy .m1}
 	catch {image delete image1}
 	image create test image1
@@ -1518,7 +1507,7 @@ test macMenu-42.8 {DrawMenuEntryLabel - disabled images} {
 	list [update idletasks] [destroy .m1] [image delete image1]
 } {{} {} {}}
 
-test macMenu-43.1 {GetMenuLabelGeometry - image} {
+test macMenu-43.1 {GetMenuLabelGeometry - image} {macOnly testimage} {
     catch {destroy .m1}
     catch {image delete image1}
     menu .m1
@@ -1526,33 +1515,33 @@ test macMenu-43.1 {GetMenuLabelGeometry - image} {
     .m1 add command -image image1
     list [update idletasks] [destroy .m1] [image delete image1]
 } {{} {} {}}
-test macMenu-43.2 {GetMenuLabelGeometry - bitmap} {
+test macMenu-43.2 {GetMenuLabelGeometry - bitmap} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -bitmap questhead
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-43.3 {GetMenuLabelGeometry - no text} {
+test macMenu-43.3 {GetMenuLabelGeometry - no text} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command
     list [update idletasks] [destroy .m1]
 } {{} {}}
-test macMenu-43.4 {GetMenuLabelGeometry - text} {
+test macMenu-43.4 {GetMenuLabelGeometry - text} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "This is a test."
     list [update idletasks] [destroy .m1]
 } {{} {}}
 
-test macMenu-44.1 {DrawMenuEntryBackground} {
+test macMenu-44.1 {DrawMenuEntryBackground} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } {{} {}}
-test macMenu-44.2 {DrawMenuEntryBackground} {
+test macMenu-44.2 {DrawMenuEntryBackground} {macOnly} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label foo
@@ -1561,22 +1550,10 @@ test macMenu-44.2 {DrawMenuEntryBackground} {
     list [update] [destroy .m1]
 } {{} {}}
 
-test macMenu-45.1 {TkpMenuInit - called at boot time} {} {}
+test macMenu-45.1 {TkpMenuInit - called at boot time} {macOnly} {
+} {}
 
 # cleanup
 deleteWindows
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
