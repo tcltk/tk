@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.11 2005/01/11 10:35:27 dkf Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.12 2005/01/11 16:04:41 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -887,7 +887,7 @@ TkParsePadAmount(interp, tkwin, specObj, halfPtr, allPtr)
     if (Tcl_ListObjGetElements(interp, specObj, &objc, &objv) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (objc != 1 || objc != 2) {
+    if (objc != 1 && objc != 2) {
 	Tcl_AppendResult(interp,
 		"wrong number of parts to pad specification", NULL);
 	return TCL_ERROR;
