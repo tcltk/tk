@@ -1,3 +1,8 @@
+2001-12-03  David Gravereaux <davygrvy@pobox.com>
+
+	* win/makefile.vc: install target changes by request from
+	Ryan Casey <scfiead@hotmail.com>.
+
 2001-11-30  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/demos/widget: Further overhauling; shrank fonts, made
