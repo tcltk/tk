@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.3 1999/04/16 01:51:10 stanton Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.4 2000/03/08 03:19:31 ericm Exp $
  */
 
 #include "tkButton.h"
@@ -66,6 +66,10 @@ static Tk_OptionSpec labelOptionSpecs[] = {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_BUTTON_CURSOR, -1, Tk_Offset(TkButton, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
+	"DisabledForeground", DEF_BUTTON_DISABLED_FG_COLOR,
+	-1, Tk_Offset(TkButton, disabledFg), TK_OPTION_NULL_OK,
+	(ClientData) DEF_BUTTON_DISABLED_FG_MONO, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", (char *) NULL,
 	(char *) NULL, 0, -1, 0, (ClientData) "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -98,6 +102,9 @@ static Tk_OptionSpec labelOptionSpecs[] = {
 	Tk_Offset(TkButton, padY), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_LABCHKRAD_RELIEF, -1, Tk_Offset(TkButton, relief), 0, 0, 0},
+    {TK_OPTION_STRING_TABLE, "-state", "state", "State",
+	DEF_BUTTON_STATE, -1, Tk_Offset(TkButton, state),
+	0, (ClientData) stateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_LABEL_TAKE_FOCUS, Tk_Offset(TkButton, takeFocusPtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -1271,29 +1278,31 @@ TkButtonWorldChanged(instanceData)
 	butPtr->activeTextGC = newGC;
     }
 
-    if (butPtr->type != TYPE_LABEL) {
-	gcValues.background = Tk_3DBorderColor(butPtr->normalBorder)->pixel;
-	if ((butPtr->disabledFg != NULL) && (butPtr->imagePtr == NULL)) {
-	    gcValues.foreground = butPtr->disabledFg->pixel;
-	    mask = GCForeground | GCBackground | GCFont;
-	} else {
-	    gcValues.foreground = gcValues.background;
-	    mask = GCForeground;
-	    if (butPtr->gray == None) {
-		butPtr->gray = Tk_GetBitmap(NULL, butPtr->tkwin, "gray50");
-	    }
-	    if (butPtr->gray != None) {
-		gcValues.fill_style = FillStippled;
-		gcValues.stipple = butPtr->gray;
-		mask |= GCFillStyle | GCStipple;
-	    }
+    /*
+     * Allocate the disabled graphics context, for drawing the widget in
+     * its disabled state
+     */
+    gcValues.background = Tk_3DBorderColor(butPtr->normalBorder)->pixel;
+    if ((butPtr->disabledFg != NULL) && (butPtr->imagePtr == NULL)) {
+	gcValues.foreground = butPtr->disabledFg->pixel;
+	mask = GCForeground | GCBackground | GCFont;
+    } else {
+	gcValues.foreground = gcValues.background;
+	mask = GCForeground;
+	if (butPtr->gray == None) {
+	    butPtr->gray = Tk_GetBitmap(NULL, butPtr->tkwin, "gray50");
 	}
-	newGC = Tk_GetGC(butPtr->tkwin, mask, &gcValues);
-	if (butPtr->disabledGC != None) {
-	    Tk_FreeGC(butPtr->display, butPtr->disabledGC);
+	if (butPtr->gray != None) {
+	    gcValues.fill_style = FillStippled;
+	    gcValues.stipple = butPtr->gray;
+	    mask |= GCFillStyle | GCStipple;
 	}
-	butPtr->disabledGC = newGC;
     }
+    newGC = Tk_GetGC(butPtr->tkwin, mask, &gcValues);
+    if (butPtr->disabledGC != None) {
+	Tk_FreeGC(butPtr->display, butPtr->disabledGC);
+    }
+    butPtr->disabledGC = newGC;
 
     if (butPtr->copyGC == None) {
 	butPtr->copyGC = Tk_GetGC(butPtr->tkwin, 0, &gcValues);

@@ -1,3 +1,8 @@
+2000-03-07  Eric Melski  <ericm@scriptics.com>
+
+	* tests/button.test: 
+	* generic/tkButton.c: Added -disabledforeground/-state to labels.
+
 2000-03-07  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* tests/entry.test:
@@ -7,6 +12,14 @@
 	validation.  Improved use of Tcl_WrongNumArgs. [Bug: 4320]
 
 2000-03-06  Eric Melski  <ericm@scriptics.com>
+
+	* library/menu.tcl: Added a check in tkMenuFirstEntry that changes
+	menu behavior to only auto-post an immediate child cascade if we
+	are currently on a menubar menu.  This prevents massive
+	auto-cascading in cases where the first entry of the cascade is
+	itself a cascade, and the first entry of that cascade is a
+	cascade, and the first entry of that cascade is a cascade
+	... [Bug: 676].
 
 	* generic/tkOldConfig.c: Added check for NULL tkwin value in
 	Tk_ConfigureWidget [Bug: 4079]
