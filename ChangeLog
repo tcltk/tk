@@ -1,5 +1,8 @@
 2004-06-15  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* doc/image.n: Enhanced the documentation to take into account the
+	concerns raised in [RFE 803060]
+
 	* tests/canvas.test: Updated tests affected by the change to
 	ScrollFractions, which is now clean about result generation.
 
