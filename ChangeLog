@@ -68,6 +68,9 @@
 	* generic/tkUtil.c: new option table parsing routines
 	* generic/tkWindow.c: init'ing of warp stuff, mouseButtonState
 
+	related bug ids for the fixes:
+	[Bug: 648 1541 1540 1779 2168 2311 2297 2340 2348 2578 3386]
+
 	* tests/bind.test:
 	* tests/canvImg.test:
 	* tests/canvPsArc.tcl:
