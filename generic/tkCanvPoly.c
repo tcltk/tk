@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.7 2001/07/03 06:03:44 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvPoly.c,v 1.8 2001/07/04 00:40:11 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -1484,20 +1484,15 @@ PolygonToArea(canvas, itemPtr, rectPtr)
 	polyPoints = polyPtr->coordPtr;
     }
 
-    if (polyPtr->fillGC != None) {
-	inside = TkPolygonToArea(polyPoints, numPoints, rectPtr);
-	if (inside==0) goto donearea;
-    } else {
-	if ((polyPoints[0] >= rectPtr[0])
-		&& (polyPoints[0] <= rectPtr[2])
-		&& (polyPoints[1] >= rectPtr[1])
-		&& (polyPoints[1] <= rectPtr[3])) {
-	    inside = 1;
-	}
-    }
+    /*
+     * Simple test to see if we are in the polygon.  Polygons are
+     * different from othe canvas items in that they register points
+     * being inside even if it isn't filled.
+     */
+    inside = TkPolygonToArea(polyPoints, numPoints, rectPtr);
+    if (inside==0) goto donearea;
 
     if (polyPtr->outline.gc == None) goto donearea ;
-
 
     /*
      * Iterate through all of the edges of the line, computing a polygon
