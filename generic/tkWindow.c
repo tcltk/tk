@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.31 2001/07/03 05:59:50 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.32 2001/08/06 18:29:41 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -154,7 +154,8 @@ static TkCmd commands[] = {
      */
 
 #ifdef MAC_TCL
-    {"unsupported1",	TkUnsupported1Cmd,	NULL,			1, 1},
+    {"::tk::unsupported::MacWindowStyle",
+	    		TkUnsupported1Cmd,	NULL,			1, 1},
 #endif
     {(char *) NULL,	(int (*) _ANSI_ARGS_((ClientData, Tcl_Interp *, int, char **))) NULL, NULL, 0}
 };

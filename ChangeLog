@@ -1,3 +1,18 @@
+2001-08-06  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkConsole.c:
+	* generic/tkWindow.c:
+	* library/bgerror.tcl:
+	* library/dialog.tcl:
+	* library/msgbox.tcl:
+	* library/unsupported.tcl:
+	* mac/tclets.tcl:
+	* mac/tkMacHLEvents.c:
+	* mac/tkMacWm.c:  TIP 44 changes specific to the Mac and
+	Windows platforms that were overlooked before: tkOpenDocument,
+	tkConsoleExit, tkConsoleOutput, unsupported1 out of namespace :: .
+	Thanks to Vince Darley for prompting another look.
+
 2001-08-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/winMain.c (WishPanic): fixed CONST changes to go with

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.12 2000/07/18 02:31:06 davidg Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.13 2001/08/06 18:29:41 dgp Exp $
  */
 
 #include "tk.h"
@@ -708,13 +708,13 @@ ConsoleDeleteProc(clientData)
  *	This event procedure is registered on the main window of the
  *	slave interpreter.  If the user or a running script causes the
  *	main window to be destroyed, then we need to inform the console
- *	interpreter by invoking "tkConsoleExit".
+ *	interpreter by invoking "::tk::ConsoleExit".
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Invokes the "tkConsoleExit" procedure in the console interp.
+ *	Invokes the "::tk::ConsoleExit" procedure in the console interp.
  *
  *----------------------------------------------------------------------
  */
@@ -745,7 +745,7 @@ ConsoleEventProc(clientData, eventPtr)
             return;
         }
         Tcl_Preserve((ClientData) consoleInterp);
-	Tcl_DStringAppend(&dString, "tkConsoleExit", -1);
+	Tcl_DStringAppend(&dString, "::tk::ConsoleExit", -1);
 	Tcl_Eval(consoleInterp, Tcl_DStringValue(&dString));
 	Tcl_DStringFree(&dString);
         Tcl_Release((ClientData) consoleInterp);
@@ -790,9 +790,9 @@ TkConsolePrint(interp, devId, buffer, size)
     }
     
     if (devId == TCL_STDERR) {
-	cmd = "tkConsoleOutput stderr ";
+	cmd = "::tk::ConsoleOutput stderr ";
     } else {
-	cmd = "tkConsoleOutput stdout ";
+	cmd = "::tk::ConsoleOutput stdout ";
     }
     
     result = Tcl_GetCommandInfo(interp, "console", &cmdInfo);

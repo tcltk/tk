@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.16 2001/08/01 16:21:11 dgp Exp $
-# $Id: bgerror.tcl,v 1.16 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.17 2001/08/06 18:29:41 dgp Exp $
+# $Id: bgerror.tcl,v 1.17 2001/08/06 18:29:41 dgp Exp $
 
 option add *ErrorDialog.function.text [::msgcat::mc "Save To Log"] \
 	widgetDefault
@@ -143,7 +143,7 @@ proc ::bgerror err {
     wm transient .bgerrorDialog .bgerrorDialog
 
     if {$tcl_platform(platform) == "macintosh"} {
-	unsupported1 style .bgerrorDialog dBoxProc
+	::tk::unsupported::MacWindowStyle style .bgerrorDialog dBoxProc
     }
 
     frame .bgerrorDialog.bot
