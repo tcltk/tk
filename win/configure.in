@@ -2,7 +2,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.25 2001/04/02 02:08:55 hobbs Exp $
+# RCS: @(#) $Id: configure.in,v 1.26 2001/06/06 07:58:23 mdejong Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -11,6 +11,17 @@ TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=4
 TK_PATCH_LEVEL="a3"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
+
+#------------------------------------------------------------------------
+# Handle the --prefix=... option
+#------------------------------------------------------------------------
+
+if test "${prefix}" = "NONE"; then
+    prefix=/usr/local
+fi
+if test "${exec_prefix}" = "NONE"; then
+    exec_prefix=$prefix
+fi
 
 #------------------------------------------------------------------------
 # Standard compiler checks
