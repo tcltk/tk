@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.21 2002/08/08 01:42:57 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.22 2003/04/14 23:34:50 mdejong Exp $
  */
 
 #define OEMRESOURCE
@@ -147,10 +147,9 @@ static void		GetTearoffEntryGeometry _ANSI_ARGS_((TkMenu *menuPtr,
 			    int *heightPtr));
 static int		GetNewID _ANSI_ARGS_((TkMenuEntry *mePtr,
 			    int *menuIDPtr));
-static int		MenuKeyBindProc _ANSI_ARGS_((
-			    ClientData clientData, 
-			    Tcl_Interp *interp, XEvent *eventPtr,
-			    Tk_Window tkwin, KeySym keySym));
+static int		TkWinMenuKeyObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+			    Tcl_Obj *CONST objv[]));
 static void		MenuSelectEvent _ANSI_ARGS_((TkMenu *menuPtr));
 static void		ReconfigureWindowsMenu _ANSI_ARGS_((
 			    ClientData clientData));
@@ -1740,11 +1739,12 @@ DrawMenuUnderline(
 /*
  *--------------------------------------------------------------
  *
- * MenuKeyBindProc --
+ * TkWinMenuKeyObjCmd --
  *
  *	This procedure is invoked when keys related to pulling
  *	down menus is pressed. The corresponding Windows events
  *	are generated and passed to DefWindowProc if appropriate.
+ *	This cmd is registered as tk::tkWinMenuKey in the interp.
  *
  * Results:
  *	Always returns TCL_OK.
@@ -1757,17 +1757,43 @@ DrawMenuUnderline(
  */
 
 static int
-MenuKeyBindProc(clientData, interp, eventPtr, tkwin, keySym)
-    ClientData clientData;	/* not used in this proc */
-    Tcl_Interp *interp;		/* The interpreter of the receiving window. */
-    XEvent *eventPtr;		/* The XEvent to process */
-    Tk_Window tkwin;		/* The window receiving the event */
-    KeySym keySym;		/* The key sym that is produced. */
+TkWinMenuKeyObjCmd(clientData, interp, objc, objv)
+    ClientData clientData;	/* Unused. */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     UINT scanCode;
     UINT virtualKey;
-    TkWindow *winPtr = (TkWindow *)tkwin;
+    XEvent *eventPtr;
+    Tk_Window tkwin;
+    TkWindow *winPtr;
+    KeySym keySym;
     int i;
+
+    if (objc != 3) {
+	Tcl_AppendResult(interp, "wrong # args: should be \"",
+	        Tcl_GetString(objv[0]),
+	        " window keySym\"", (char *) NULL);
+	return TCL_ERROR;
+    }
+
+    eventPtr = TkpGetBindingXEvent(interp);
+
+    tkwin = Tk_NameToWindow(interp,
+	Tcl_GetString(objv[1]),
+	Tk_MainWindow(interp));
+
+    if (tkwin == NULL) {
+        return TCL_ERROR;
+    }
+
+    winPtr = (TkWindow *)tkwin;
+
+    if (Tcl_GetIntFromObj(interp, objv[2], &i) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    keySym = i;
 
     if (eventPtr->type == KeyPress) {
 	switch (keySym) {
@@ -1837,7 +1863,7 @@ MenuKeyBindProc(clientData, interp, eventPtr, tkwin, keySym)
 	}
     }
     return TCL_OK;
-}   
+}
 
 /*
  *--------------------------------------------------------------
@@ -1851,7 +1877,7 @@ MenuKeyBindProc(clientData, interp, eventPtr, tkwin, keySym)
  *	None.
  *
  * Side effects:
- *	C-level bindings are setup for the interp which will
+ *	bindings are setup for the interp which will
  *	handle Alt-key sequences for menus without beeping
  *	or interfering with user-defined Alt-key bindings.
  *
@@ -1867,27 +1893,63 @@ TkpInitializeMenuBindings(interp, bindingTable)
 
     /*
      * We need to set up the bindings for menubars. These have to
-     * recreate windows events, so we need to have a C-level
-     * binding for this. We have to generate the WM_SYSKEYDOWNS
-     * and WM_SYSKEYUPs appropriately.
+     * recreate windows events, so we need to invoke C code to
+     * generate the WM_SYSKEYDOWNS and WM_SYSKEYUPs appropriately.
+     * Trick is, we can't create a C level binding directly since
+     * we may want to modify the binding in Tcl code.
      */
-    
-    TkCreateBindingProcedure(interp, bindingTable, (ClientData)uid, 
-	    "<Alt_L>", MenuKeyBindProc, NULL, NULL);
-    TkCreateBindingProcedure(interp, bindingTable, (ClientData)uid,
-	    "<KeyRelease-Alt_L>", MenuKeyBindProc, NULL, NULL);
-    TkCreateBindingProcedure(interp, bindingTable, (ClientData)uid, 
-	    "<Alt_R>", MenuKeyBindProc, NULL, NULL);
-    TkCreateBindingProcedure(interp, bindingTable, (ClientData)uid,
-	    "<KeyRelease-Alt_R>", MenuKeyBindProc, NULL, NULL);
-    TkCreateBindingProcedure(interp, bindingTable, (ClientData)uid,
-	    "<Alt-KeyPress>", MenuKeyBindProc, NULL, NULL);
-    TkCreateBindingProcedure(interp, bindingTable, (ClientData)uid,
-	    "<Alt-KeyRelease>", MenuKeyBindProc, NULL, NULL);
-    TkCreateBindingProcedure(interp, bindingTable, (ClientData)uid,
-	    "<KeyPress-F10>", MenuKeyBindProc, NULL, NULL);
-    TkCreateBindingProcedure(interp, bindingTable, (ClientData)uid,
-	    "<KeyRelease-F10>", MenuKeyBindProc, NULL, NULL);
+
+    (void) Tcl_CreateObjCommand(interp, "tk::tkWinMenuKey",
+	    TkWinMenuKeyObjCmd,
+	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
+
+    (void) Tk_CreateBinding(interp, bindingTable,
+        (ClientData) uid,
+        "<Alt_L>",
+        "tk::tkWinMenuKey %W %N",
+        0);
+
+    (void) Tk_CreateBinding(interp, bindingTable,
+        (ClientData) uid,
+        "<KeyRelease-Alt_L>",
+        "tk::tkWinMenuKey %W %N",
+        0);
+
+    (void) Tk_CreateBinding(interp, bindingTable,
+        (ClientData) uid,
+        "<Alt_R>",
+        "tk::tkWinMenuKey %W %N",
+        0);
+
+    (void) Tk_CreateBinding(interp, bindingTable,
+        (ClientData) uid,
+        "<KeyRelease-Alt_R>",
+        "tk::tkWinMenuKey %W %N",
+        0);
+
+    (void) Tk_CreateBinding(interp, bindingTable,
+        (ClientData) uid,
+        "<Alt-KeyPress>",
+        "tk::tkWinMenuKey %W %N",
+        0);
+
+    (void) Tk_CreateBinding(interp, bindingTable,
+        (ClientData) uid,
+        "<Alt-KeyRelease>",
+        "tk::tkWinMenuKey %W %N",
+        0);
+
+    (void) Tk_CreateBinding(interp, bindingTable,
+        (ClientData) uid,
+        "<KeyPress-F10>",
+        "tk::tkWinMenuKey %W %N",
+        0);
+
+    (void) Tk_CreateBinding(interp, bindingTable,
+        (ClientData) uid,
+        "<KeyRelease-F10>",
+        "tk::tkWinMenuKey %W %N",
+        0);
 }
 
 /*
