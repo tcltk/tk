@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvUtil.c,v 1.9 2003/01/08 23:02:30 drh Exp $
+ * RCS: @(#) $Id: tkCanvUtil.c,v 1.10 2003/01/17 19:54:09 drh Exp $
  */
 
 #include "tkInt.h"
@@ -1582,18 +1582,27 @@ TkCanvTranslatePath (canvPtr, numVertex, coordArr, closedPath, outArr)
     double limit[4];          /* Boundries at which clipping occurs */
     double staticSpace[480];  /* Temp space from the stack */
 
-    /* Constrain all vertices of the path to be within a box that is 1000
-    ** pixels larger than the size of the visible canvas.
+    /*
+    ** Constrain all vertices of the path to be within a box that is no
+    ** larger than 32000 pixels wide or height.  The top-left corner of
+    ** this clipping box is 1000 pixels above and to the left of the top
+    ** left corner of the window on which the canvas is displayed.
     **
-    ** The complete canvas is used rather than just the redrawing pixmap,
-    ** so that the line path will always be the same length.  Having the
-    ** same path length is important if the line is dotted or dashed.
+    ** This means that a canvas will not display properly on a canvas
+    ** window that is larger than 31000 pixels wide or high.  That is not
+    ** a problem today, but might someday become a factor for ultra-high
+    ** resolutions displays.
+    **
+    ** The X11 protocol allows us (in theory) to expand the size of the
+    ** clipping box to 32767 pixels.  But we have found experimentally that
+    ** XFree86 sometimes fails to draw lines correctly if they are longer
+    ** than about 32500 pixels.  So we have left a little margin in the
+    ** size to mask that bug.
     */
-    assert( canvPtr->tkwin!=NULL );
-    lft = canvPtr->xOrigin - 1000;
-    top = canvPtr->yOrigin - 1000;
-    rgh = lft + Tk_Width(canvPtr->tkwin) + 2000;
-    btm = top + Tk_Height(canvPtr->tkwin) + 2000;
+    lft = canvPtr->xOrigin - 1000.0;
+    top = canvPtr->yOrigin - 1000.0;
+    rgh = lft + 32000.0;
+    btm = top + 32000.0;
 
     /* Try the common case first - no clipping.  Loop over the input
     ** coordinates and translate them into appropriate output coordinates.
