@@ -261,9 +261,9 @@ TkpMakeWindow(winPtr, parent)
      * stacking order.
      */
 
-    hwnd = CreateWindow(TK_WIN_CHILD_CLASS_NAME, NULL, style,
-	    Tk_X(winPtr), Tk_Y(winPtr), Tk_Width(winPtr), Tk_Height(winPtr),
-	    parentWin, NULL, Tk_GetHINSTANCE(), NULL);
+    hwnd = CreateWindowEx(WS_EX_NOPARENTNOTIFY, TK_WIN_CHILD_CLASS_NAME, NULL,
+	    style, Tk_X(winPtr), Tk_Y(winPtr), Tk_Width(winPtr),
+	    Tk_Height(winPtr), parentWin, NULL, Tk_GetHINSTANCE(), NULL);
     SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0,
 		    SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     return Tk_AttachHWND((Tk_Window)winPtr, hwnd);
