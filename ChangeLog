@@ -1,3 +1,11 @@
+2003-10-12  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/listbox.test (13.3): correct result size
+	(4.7): correct test for possible window drift [Bug #701931] (dgp)
+
+	* unix/mkLinks:
+	* doc/GetHWND.3: add Tk_AttachHWND docs [Bug #220803]
+
 2003-10-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* mac/tkMacButton.c (TkpDisplayButton):
@@ -5,12 +13,12 @@
 	* unix/tkUnixButton.c (TkpDisplayButton): correct imageYOffset for
 	buttons with just images.
 
-2003-10-09  Jeff Hobbs  <jeffh@ActiveState.com>
+2003-10-09  Jeff Hobbs	<jeffh@ActiveState.com>
 
 	* win/tkWinButton.c (TkpDisplayButton): correct imageYOffset for
 	buttons with just images.
 
-2003-10-06  Don Porter  <dgp@users.sourceforge.net>
+2003-10-06  Don Porter	<dgp@users.sourceforge.net>
 
 	* doc/ConfigWidg.3:	Removed reference to Tk_Offset from the
 	NAME section to resolve mkLinks conflict with SetOptions.3 [Bug 404197]
@@ -20,8 +28,8 @@
 	value different from TCL_PREFIX is selected, since [package require Tk]
 	fails in that configuration. [Bugs 428627,765642]
 
-        * unix/tcl.m4 (SC_PATH_TCLCONFIG):      Corrected search path so
-        that alpha and beta releases of Tcl are not favored. [Bug 608698]
+	* unix/tcl.m4 (SC_PATH_TCLCONFIG):	Corrected search path so
+	that alpha and beta releases of Tcl are not favored. [Bug 608698]
 
 	* unix/configure.in:	Added check that version of Tcl header found
 	by configure matches that of the Tk we wish to build.  As long as
