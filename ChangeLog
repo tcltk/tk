@@ -1,5 +1,11 @@
 2003-11-11  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/tkfbox.tcl (::tk::dialog::file::Update): optimize the
+	dir/files list separation by using the -tails, -directory and
+	-type option of 'glob'.  Also passes the glob the -filetypes
+	filters instead of calling string match over each file.
+	[Patch #833819]
+
 	* generic/tkListbox.c (ListboxDeleteSubCmd, ListboxListVarProc):
 	free itemconfig data when removing it from table. [Bug #836483]
 
