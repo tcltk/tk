@@ -1,3 +1,8 @@
+2003-03-26  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* unix/configure: Regen.
+	* unix/tcl.m4: Update from Tcl to get BeOS changes.
+
 2003-03-22  Kevin Kenny  <kennykb@acm.org>
 
 	* win/makefile.vc:
