@@ -1,3 +1,9 @@
+2000-07-27  Mo DeJong  <mdejong@redhat.com>
+
+	* win/configure.in: TCL_STUB_LIB_FLAG and
+	TK_STUB_LIB_FLAG should not include ${TCL_DBGX}
+	in win/tkConfig.sh, fix that.
+
 2000-07-25  Joe English  <jenglish@flightlab.com>
 	* doc: CanvPsY.3, ConfigWidg.3, CrtImgType.3, CrtItemType.3, 
 	FontId.3, GetFont.3, canvas.n, font.n, options.n, text.n:
