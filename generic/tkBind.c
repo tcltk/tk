@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.1.4.7 1999/03/10 07:13:37 stanton Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.1.4.8 1999/04/03 02:54:15 redman Exp $
  */
 
 #include "tkPort.h"
@@ -2312,8 +2312,10 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		number = eventPtr->xany.serial;
 		goto doNumber;
 	    case 'a':
-		TkpPrintWindowId(numStorage, eventPtr->xconfigure.above);
-		string = numStorage;
+		if (flags & CONFIG) {
+		    TkpPrintWindowId(numStorage, eventPtr->xconfigure.above);
+		    string = numStorage;
+		}
 		goto doString;
 	    case 'b':
 		number = eventPtr->xbutton.button;
