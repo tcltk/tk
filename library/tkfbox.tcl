@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.38.2.1 2003/10/29 09:40:34 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.38.2.2 2003/11/11 22:39:36 hobbs Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -773,7 +773,7 @@ proc ::tk::IconList_Reset {w} {
 
 namespace eval ::tk::dialog {}
 namespace eval ::tk::dialog::file {
-    namespace import ::tk::msgcat::*
+    namespace import -force ::tk::msgcat::*
 }
 
 # ::tk::dialog::file:: --
@@ -1195,8 +1195,7 @@ proc ::tk::dialog::file::Update {w} {
 	return
     }
     set class [winfo class $w]
-    if { [string compare $class TkFDialog] && \
-	    [string compare $class TkChooseDir] } {
+    if {($class ne "TkFDialog") && ($class ne "TkChooseDir")} {
 	return
     }
 
@@ -1225,9 +1224,8 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	# should have been checked before ::tk::dialog::file::Update is called, so
 	# we normally won't come to here. Anyways, give an error and abort
 	# action.
-	tk_messageBox -type ok -parent $w -message \
-	    "[mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $data(selectPath)]"\
-	    -icon warning
+	tk_messageBox -type ok -parent $w -icon warning -message \
+	    [mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $data(selectPath)]
 	cd $appPWD
 	return
     }
@@ -1240,47 +1238,33 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     $data(ent) config -cursor watch
     $w         config -cursor watch
     update idletasks
-    
+
     ::tk::IconList_DeleteAll $data(icons)
 
     # Make the dir list
     #
-    set completeFileList [lsort -dictionary -unique [glob -nocomplain .* *]]
+    set dirs [lsort -dictionary -unique \
+		     [glob -tails -directory . -type d -nocomplain .* *]]
     set dirList {}
-    foreach f $completeFileList {
-	if {[string equal $f .]} {
+    foreach d $dirs {
+	if {$d eq "." || $d eq ".."} {
 	    continue
 	}
-	if {[string equal $f ..]} {
-	    continue
-	}
-	if {[file isdir ./$f]} {
-	    lappend dirList $f
-	}
+	lappend dirList $d
     }
     ::tk::IconList_Add $data(icons) $folder $dirList
-    if { [string equal $class TkFDialog] } {
-	# Make the file list if this is a File Dialog
+
+    if {$class eq "TkFDialog"} {
+	# Make the file list if this is a File Dialog, selecting all
+	# but 'd'irectory type files.
 	#
+	set cmd [list glob -tails -directory . -type {f b c l p s} -nocomplain]
 	if {[string equal $data(filter) *]} {
-	    set files $completeFileList
+	    lappend cmd .* *
 	} else {
-	    set files {}
-	    foreach f $completeFileList {
-		foreach pat $data(filter) {
-		    if { [string match $pat $f] } {
-			lappend files $f
-			break
-		    }
-		}
-	    }
+	    eval [list lappend cmd] $data(filter)
 	}
-	set fileList {}
-	foreach f $files {
-	    if {![file isdir ./$f]} {
-		lappend fileList $f
-	    }
-	}
+	set fileList [lsort -dictionary -unique [eval $cmd]]
 	::tk::IconList_Add $data(icons) $file $fileList
     }
 
