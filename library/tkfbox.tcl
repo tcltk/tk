@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.43 2004/07/15 00:05:54 dgp Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.44 2004/07/22 22:22:39 hobbs Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -773,7 +773,7 @@ proc ::tk::IconList_Reset {w} {
 
 namespace eval ::tk::dialog {}
 namespace eval ::tk::dialog::file {
-    namespace import ::tk::msgcat::*
+    namespace import -force ::tk::msgcat::*
 }
 
 # ::tk::dialog::file:: --
@@ -1229,7 +1229,7 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	# should have been checked before ::tk::dialog::file::Update is called, so
 	# we normally won't come to here. Anyways, give an error and abort
 	# action.
-	tk_messageBox -type ok -parent $w -message -icon warning \
+	tk_messageBox -type ok -parent $w -icon warning -message \
 	    [mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $data(selectPath)]
 	cd $appPWD
 	return
@@ -1247,9 +1247,9 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     ::tk::IconList_DeleteAll $data(icons)
 
     # Make the dir list
-    #
+    # Using -directory [pwd] is better in some VFS cases.
     set dirs [lsort -dictionary -unique \
-		     [glob -tails -directory . -type d -nocomplain .* *]]
+		  [glob -tails -directory [pwd] -type d -nocomplain .* *]]
     set dirList {}
     foreach d $dirs {
 	if {$d eq "." || $d eq ".."} {
@@ -1263,7 +1263,8 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	# Make the file list if this is a File Dialog, selecting all
 	# but 'd'irectory type files.
 	#
-	set cmd [list glob -tails -directory . -type {f b c l p s} -nocomplain]
+	set cmd [list glob -tails -directory [pwd] \
+		     -type {f b c l p s} -nocomplain]
 	if {[string equal $data(filter) *]} {
 	    lappend cmd .* *
 	} else {
