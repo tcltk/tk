@@ -1,3 +1,10 @@
+2003-08-14  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	TIP #109 IMPLEMENTATION FROM Brian Griffin <bgriffin@model.com>
+	* unix/tkUnixButton.c (TkpDrawCheckIndicator, TkpDisplayButton):
+	* unix/tkUnixMenu.c (DrawMenuEntryIndicator, TkpDrawMenuEntry):
+	Much improved display of checkbuttons and radiobuttons on UNIX/X.
+
 2003-08-13  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/scale.tcl: Fix for bug #787065 for Button-2 press.
