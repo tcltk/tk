@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinKey.c,v 1.4 1999/04/16 01:51:52 stanton Exp $
+ * RCS: @(#) $Id: tkWinKey.c,v 1.4.6.1 1999/10/30 09:36:39 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -228,16 +228,11 @@ XKeysymToKeycode(display, keysym)
     Keys* key;
     SHORT result;
 
-    if (keysym >= 0x20) {
-	result = VkKeyScan((char) keysym);
-	if (result != -1) {
-	    return (KeyCode) (result & 0xff);
-	}
-    }
-
     /*
-     * Couldn't map the character to a virtual keycode, so do a
-     * table lookup.
+     * We check our private map first for a virtual keycode,
+     * as VkKeyScan will return values that don't map to X
+     * for the "extended" Syms.  This may be due to just casting
+     * problems below, but this works.
      */
 
     for (key = keymap; key->keycode != 0; key++) {
@@ -245,6 +240,14 @@ XKeysymToKeycode(display, keysym)
 	    return key->keycode;
 	}
     }
+
+    if (keysym >= 0x20) {
+	result = VkKeyScan((char) keysym);
+	if (result != -1) {
+	    return (KeyCode) (result & 0xff);
+	}
+    }
+
     return 0;
 }
 
@@ -354,5 +357,3 @@ XKeysymToString(keysym)
 {
     return NULL;
 }
-
-
