@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.28 2003/11/13 14:44:22 vincentdarley Exp $
+# RCS: @(#) $Id: text.tcl,v 1.29 2003/11/13 18:27:00 vincentdarley Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -521,6 +521,14 @@ proc ::tk::TextButton1 {w x y} {
     set Priv(pressX) $x
     $w mark set insert [TextClosestGap $w $x $y]
     $w mark set anchor insert
+    # Set the anchor mark's gravity depending on the click position
+    # relative to the gap
+    set bbox [$w bbox [$w index anchor]]
+    if {$x > [lindex $bbox 0]} {
+	$w mark gravity anchor right
+    } else {
+	$w mark gravity anchor left
+    }
     # Allow focus in any case on Windows, because that will let the
     # selection be displayed even for state disabled text widgets.
     if {[string equal $::tcl_platform(platform) "windows"] \
@@ -552,7 +560,7 @@ proc ::tk::TextSelectTo {w x y {extend 0}} {
     if {[$w compare $cur != $anchor] || (abs($Priv(pressX) - $x) >= 3)} {
 	set Priv(mouseMoved) 1
     }
-    switch $Priv(selectMode) {
+    switch -- $Priv(selectMode) {
 	char {
 	    if {[$w compare $cur < anchor]} {
 		set first $cur
@@ -563,30 +571,38 @@ proc ::tk::TextSelectTo {w x y {extend 0}} {
 	    }
 	}
 	word {
-	    if {[$w compare $cur < anchor]} {
-		set first [TextPrevPos $w "$cur + 1c" tcl_wordBreakBefore]
-		if { !$extend } {
-		    set last [TextNextPos $w "anchor" tcl_wordBreakAfter]
-		} else {
-		    set last anchor
-		}
+	    # Set initial range based only on the anchor (1 char min width)
+	    if {[string equal [$w mark gravity anchor] "right"]} {
+		set first "anchor"
+		set last "anchor + 1c"
 	    } else {
-		set last [TextNextPos $w "$cur - 1c" tcl_wordBreakAfter]
-		if { !$extend } {
-		    set first [TextPrevPos $w anchor tcl_wordBreakBefore]
-		} else {
-		    set first anchor
-		}
+		set first "anchor - 1c"
+		set last "anchor"
 	    }
+	    # Extend range (if necessary) based on the current point
+	    if {[$w compare $cur < $first]} {
+		set first $cur
+	    } elseif {[$w compare $cur > $last]} {
+		set last $cur
+	    }
+	    
+	    # Now find word boundaries
+	    set first [TextPrevPos $w "$first + 1c" tcl_wordBreakBefore]
+	    set last [TextNextPos $w "$last - 1c" tcl_wordBreakAfter]
 	}
 	line {
-	    if {[$w compare $cur < anchor]} {
-		set first [$w index "$cur linestart"]
-		set last [$w index "anchor - 1c lineend + 1c"]
-	    } else {
-		set first [$w index "anchor linestart"]
-		set last [$w index "$cur lineend + 1c"]
+	    # Set initial range based only on the anchor
+	    set first "anchor linestart" 
+	    set last "anchor lineend"
+
+	    # Extend range (if necessary) based on the current point
+	    if {[$w compare $cur < $first]} {
+		set first "$cur linestart"
+	    } elseif {[$w compare $cur > $last]} {
+		set last "$cur lineend"
 	    }
+	    set first [$w index $first]
+	    set last [$w index "$last + 1c"]
 	}
     }
     if {$Priv(mouseMoved) || ($Priv(selectMode) ne "char")} {
