@@ -1,5 +1,8 @@
 2003-03-06  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* doc/FindPhoto.3: Documentation of the photo API changes due to
+	TIP#116
+
 	* generic/tkImgPhoto.c (Tk_PhotoExpand, Tk_PhotoPutBlock,
 	Tk_PhotoPutZoomedBlock, Tk_PhotoSetSize): Added interp argument to
 	these functions and made them return a standard Tcl result, with
@@ -22,21 +25,21 @@
 
 2003-03-04  Don Porter <dgp@users.sf.net>
 
-        * README:                               Bumped version number of
-        * generic/tk.h:                         Tk to 8.5a0.
-        * library/tk.tcl:
-        * mac/README:
-        * macosx/Wish.pbproj/project.pbxproj:
+	* README:				Bumped version number of
+	* generic/tk.h:				Tk to 8.5a0.
+	* library/tk.tcl:
+	* mac/README:
+	* macosx/Wish.pbproj/project.pbxproj:
 	* unix/README:
-        * unix/configure.in:
-        * unix/tk.spec:
-        * win/README:
-        * win/configure.in:
-        * win/makefile.vc:
-        * win/tcl.m4:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/README:
+	* win/configure.in:
+	* win/makefile.vc:
+	* win/tcl.m4:
 
-        * unix/configure:      autoconf
-        * win/configure:
+	* unix/configure:      autoconf
+	* win/configure:
 
 2003-03-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
