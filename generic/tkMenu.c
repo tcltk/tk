@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.20.2.3 2004/09/16 20:05:44 hobbs Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.20.2.4 2004/10/27 00:37:38 davygrvy Exp $
  */
 
 /*
@@ -370,7 +370,7 @@ static void		MenuWorldChanged _ANSI_ARGS_((
 static int		PostProcessEntry _ANSI_ARGS_((TkMenuEntry *mePtr));
 static void		RecursivelyDeleteMenu _ANSI_ARGS_((TkMenu *menuPtr));
 static void		UnhookCascadeEntry _ANSI_ARGS_((TkMenuEntry *mePtr));
-static void		TkMenuCleanup _ANSI_ARGS_((ClientData unused));
+static Tcl_ExitProc	TkMenuCleanup;
 
 /*
  * The structure below is a list of procs that respond to certain window
@@ -3594,7 +3594,7 @@ TkMenuInit()
 	/* 
 	 * Make sure we cleanup on finalize. 
 	 */ 
-	Tcl_CreateExitHandler((Tcl_ExitProc *) TkMenuCleanup, NULL); 
+	TkCreateExitHandler(TkMenuCleanup, NULL); 
 	Tcl_MutexUnlock(&menuMutex);
     }
     if (!tsdPtr->menusInitialized) {
