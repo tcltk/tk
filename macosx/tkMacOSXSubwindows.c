@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2 2002/08/31 06:12:30 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.1 2004/02/16 00:42:34 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -898,8 +898,8 @@ TkMacOSXInvalidateWindow(
     WindowRef windowRef;
     CGrafPtr  grafPtr;
 
-    grafPtr=TkMacOSXGetDrawablePort((Drawable)macWin);
-    windowRef=GetWindowFromPort(grafPtr);
+    grafPtr = TkMacOSXGetDrawablePort((Drawable)macWin);
+    windowRef = GetWindowFromPort(grafPtr);
     
     if (flag == TK_WINDOW_ONLY) {
 	InvalWindowRgn(windowRef,macWin->clipRgn);

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.3 2004/02/14 01:08:28 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.4 2004/02/16 00:42:34 wolfsuit Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -262,7 +262,7 @@ static void		DrawTearoffEntry _ANSI_ARGS_((TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Drawable d, GC gc, 
 			    Tk_Font tkfont, CONST Tk_FontMetrics *fmPtr, 
 			    int x, int y, int width, int height));
-static void 	EventuallyInvokeMenu (ClientData data);
+static void             EventuallyInvokeMenu (ClientData data);
 static void		GetEntryText _ANSI_ARGS_((TkMenuEntry *mePtr,
 			    Tcl_DString *dStringPtr));
 static void		GetMenuAccelGeometry _ANSI_ARGS_((TkMenu *menuPtr,
@@ -1039,7 +1039,7 @@ ReconfigureIndividualMenu(
     int base)			/* The last index that we do not want
     				 * touched. 0 for normal menus;
     				 * # of system help menu items
-    				 * for help menus. */
+                                 * for help menus. */
 {
     int count;
     int index;
@@ -1954,7 +1954,7 @@ TkpSetMainMenubar(
     WindowRef macWindowPtr;
     WindowRef frontNonFloating;
 
-    winPort=TkMacOSXGetDrawablePort(winPtr->window);
+    winPort = TkMacOSXGetDrawablePort(winPtr->window);
     if (!winPort) {
         return;
     }
@@ -2076,7 +2076,7 @@ TkpSetWindowMenuBar(
     	listPtr->menuPtr = menuPtr;
     }
 }
-
+
 static void 
 /*
  *----------------------------------------------------------------------
@@ -2105,7 +2105,7 @@ EventuallyInvokeMenu (ClientData data)
     TkInvokeMenu(realData->menuPtr->interp, realData->menuPtr,
             realData->index);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2141,10 +2141,10 @@ TkMacOSXDispatchMenuEvent(
     	    		helpMenuName);
     	    	ckfree(helpMenuName);
     	    	if ((helpMenuRef != NULL) && (helpMenuRef->menuPtr != NULL)) {
-    	    	    MenuRef outHelpMenu;
-    	    	    MenuItemIndex itemIndex;
-    	    	    int newIndex;
-    	    	    HMGetHelpMenu(&outHelpMenu, &itemIndex);
+		    MenuRef outHelpMenu;
+		    MenuItemIndex itemIndex;
+		    int newIndex;
+		    HMGetHelpMenu(&outHelpMenu, &itemIndex);
     	    	    newIndex = index - itemIndex;
     	    	    result = TkInvokeMenu(currentMenuBarInterp,
     	    	    	    helpMenuRef->menuPtr, newIndex);
@@ -2182,7 +2182,7 @@ TkMacOSXDispatchMenuEvent(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -3429,6 +3429,8 @@ DrawMenuEntryLabel(
             GDHandle saveDevice;
             GWorldPtr destPort;
 #ifdef USE_ATSU
+            int xLocation;
+            int yLocation;
             int runLengths;
             CFStringRef stringRef;
             ATSUTextLayout textLayout;
@@ -3455,7 +3457,8 @@ DrawMenuEntryLabel(
             tag = kATSUSizeTag;
             valueSize = sizeof(fixedSize);
             valuePtr = &fixedSize;
-            if ((err=ATSUSetAttributes(style, 1, &tag, &valueSize, &valuePtr))!= noErr) {
+	    err = ATSUSetAttributes(style, 1, &tag, &valueSize, &valuePtr);
+            if (err != noErr) {
                 fprintf(stderr,"ATSUSetAttributes failed,%d\n", err );
             }
 
@@ -3464,7 +3467,8 @@ DrawMenuEntryLabel(
             tag = kATSUFontTag;
             valueSize = sizeof(fontID);
             valuePtr = &fontID;
-            if ((err=ATSUSetAttributes(style, 1, &tag, &valueSize, &valuePtr))!= noErr) {
+	    err = ATSUSetAttributes(style, 1, &tag, &valueSize, &valuePtr);
+            if (err != noErr) {
                 fprintf(stderr,"ATSUSetAttributes failed,%d\n", err );
             }
 
@@ -3474,12 +3478,15 @@ DrawMenuEntryLabel(
 #ifdef USE_ATSU
             runLengths = 1;
             length = Tcl_DStringLength(&itemTextDString);
-            stringRef = CFStringCreateWithCString(NULL, Tcl_DStringValue(&itemTextDString), GetApplicationTextEncoding());
+            stringRef = CFStringCreateWithCString(NULL, Tcl_DStringValue(&itemTextDString), 
+						  kCFStringEncodingUTF8);
             if (!stringRef) {
                 fprintf(stderr,"CFStringCreateWithCString failed\n");
             }
-            if ((err=ATSUCreateTextLayoutWithTextPtr(CFStringGetCharactersPtr(stringRef), 0, length, length,
-                    1, &runLengths, &style, &textLayout)) != noErr) {
+	    err = ATSUCreateTextLayoutWithTextPtr(CFStringGetCharactersPtr(stringRef), 
+                    0, length, length,
+		    1, &runLengths, &style, &textLayout)
+            if (err != noErr) {
                 fprintf(stderr,"ATSUCreateTextLayoutWithTextPtr failed, %d\n", err);
                 return;
             }
@@ -3496,11 +3503,11 @@ DrawMenuEntryLabel(
             TkMacOSXSetUpGraphicsPort(gc, destPort);
 
 	    MoveTo((short) leftEdge, (short) baseline);
-	    Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&itemTextDString), 
+	    Tcl_UtfToExternalDString(TkMacOSXCarbonEncoding, Tcl_DStringValue(&itemTextDString), 
 	            Tcl_DStringLength(&itemTextDString), &convertedTextDString);
 #ifdef USE_ATSU
-            xLocation = leftEdge<<16;
-            yLocation = baseline<<16;
+            xLocation = leftEdge << 16;
+            yLocation = baseline << 16;
             ATSUDrawText(textLayout,kATSUFromTextBeginning, kATSUToTextEnd, xLocation, yLocation);
             ATSUDisposeTextLayout(textLayout);
             CFRelease(stringRef);
