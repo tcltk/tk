@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.25 2001/03/30 06:02:20 hobbs Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.26 2001/07/19 20:15:55 drh Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -42,6 +42,7 @@ proc tkIconList {w args} {
 proc tkIconList_Index {w i} {
     upvar #0 $w data
     upvar #0 $w:itemList itemList
+    if {![info exists data(list)]} {set data(list) {}}
     switch -regexp -- $i {
 	"^-?[0-9]+$" {
 	    if { $i < 0 } {
