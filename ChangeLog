@@ -1,3 +1,8 @@
+2000-07-05  Eric Melski  <ericm@ajubasolutions.com>
+
+	* library/msgs/nl.msg: Dutch message catalog for dialogs, from Jan
+	Nijtmans.
+
 2000-06-30  Eric Melski  <ericm@scriptics.com>
 
 	* doc/keysyms.n: 
