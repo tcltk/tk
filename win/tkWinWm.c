@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.27 2000/11/03 01:22:17 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.28 2001/01/02 19:13:02 andreas_kupries Exp $
  */
 
 #include "tkWinInt.h"
@@ -52,6 +52,80 @@ typedef struct ProtocolHandler {
 
 #define HANDLER_SIZE(cmdLength) \
     ((unsigned) (sizeof(ProtocolHandler) - 3 + cmdLength))
+
+/* 
+ * This structure represents the contents of a icon, in terms of its
+ * image.  The HICON is an internal Windows format.  Most of these
+ * icon-specific-structures originated with the Winico extension.
+ * We stripped out unused parts of that code, and integrated the
+ * code more naturally with Tcl.
+ */
+typedef struct {
+	UINT			Width, Height, Colors; /*  Width, Height and bpp */
+	LPBYTE			lpBits;                /*  ptr to DIB bits */
+	DWORD			dwNumBytes;            /*  how many bytes? */
+	LPBITMAPINFO	lpbi;                          /*  ptr to header */
+	LPBYTE			lpXOR;                 /*  ptr to XOR image bits */
+	LPBYTE			lpAND;                 /*  ptr to AND image bits */
+	HICON			hIcon;                 /*  DAS ICON */
+} ICONIMAGE, *LPICONIMAGE;
+/* 
+ * This structure is how we represent a block of the above
+ * items.  We will reallocate these structures according to
+ * how many images they need to contain.
+ */
+typedef struct {
+	int		nNumImages;                      /*  How many images? */
+	ICONIMAGE	IconImages[1];                   /*  Image entries */
+} BlockOfIconImages, *BlockOfIconImagesPtr;
+/* 
+ * These two structures are used to read in icons from an
+ * 'icon directory' (i.e. the contents of a .icr file, say).
+ * We only use these structures temporarily, since we copy
+ * the information we want into a BlockOfIconImages.
+ */
+typedef struct {
+	BYTE	bWidth;               /*  Width of the image */
+	BYTE	bHeight;              /*  Height of the image (times 2) */
+	BYTE	bColorCount;          /*  Number of colors in image (0 if >=8bpp) */
+	BYTE	bReserved;            /*  Reserved */
+	WORD	wPlanes;              /*  Color Planes */
+	WORD	wBitCount;            /*  Bits per pixel */
+	DWORD	dwBytesInRes;         /*  how many bytes in this resource? */
+	DWORD	dwImageOffset;        /*  where in the file is this image */
+} ICONDIRENTRY, *LPICONDIRENTRY;
+typedef struct {
+	WORD			idReserved;   /*  Reserved */
+	WORD			idType;       /*  resource type (1 for icons) */
+	WORD			idCount;      /*  how many images? */
+	ICONDIRENTRY	idEntries[1];         /*  the entries for each image */
+} ICONDIR, *LPICONDIR;
+
+/* 
+ * A pointer to one of these strucutures is associated with each
+ * toplevel.  This allows us to free up all memory associated with icon
+ * resources when a window is deleted or if the window's icon is
+ * changed.  They are simply reference counted according to:
+ * 
+ * (i) how many WmInfo structures point to this object
+ * (ii) whether the ThreadSpecificData defined in this file contains
+ * a pointer to this object.
+ * 
+ * The former count is for windows whose icons are individually
+ * set, and the latter is for the global default icon choice.
+ * 
+ * Icons loaded from .icr/.icr use the iconBlock field, icons
+ * loaded from .exe/.dll use the hIcon field.
+ */
+typedef struct WinIconInstance {
+    int refCount;		 /* Number of instances that share this
+				  * data structure. */
+    BlockOfIconImagesPtr iconBlock; 
+                                 /* Pointer to icon resource data for 
+                                  * image. */
+} WinIconInstance;
+
+typedef struct WinIconInstance *WinIconPtr;
 
 /*
  * A data structure of the following type holds window-manager-related
@@ -165,6 +239,8 @@ typedef struct TkWmInfo {
 				 * property, or NULL. */
     int flags;			/* Miscellaneous flags, defined below. */
     int numTransients;		/* number of transients on this window */
+    WinIconPtr iconPtr;         /* pointer to titlebar icon structure for
+                                 * this window, or NULL. */
     struct TkWmInfo *nextPtr;	/* Next in list of all top-level windows. */
 } WmInfo;
 
@@ -256,6 +332,8 @@ typedef struct ThreadSpecificData {
 				  * been initialized. */
     int firstWindow;             /* Flag, cleared when the first window
 				  * is mapped in a non-iconic state. */
+    WinIconPtr iconPtr;   /* IconPtr being used as default for all
+                                  * toplevels, or NULL. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -268,7 +346,6 @@ static WNDCLASS toplevelClass; /* Class for toplevel windows. */
 static int initialized;        /* Flag indicating whether module has
 				* been initialized. */
 TCL_DECLARE_MUTEX(winWmMutex)
-
 
 /*
  * Forward declarations for procedures defined in this file:
@@ -307,11 +384,267 @@ static LRESULT CALLBACK	WmProc _ANSI_ARGS_((HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam));
 static void		WmWaitVisibilityProc _ANSI_ARGS_((
 			    ClientData clientData, XEvent *eventPtr));
+static BlockOfIconImagesPtr   ReadIconFromICOFile _ANSI_ARGS_((
+			    Tcl_Interp *interp, char* fileName));
+static WinIconPtr       ReadIconFromFile _ANSI_ARGS_((
+			    Tcl_Interp *interp, char *fileName));
+static int     		ReadICOHeader _ANSI_ARGS_((Tcl_Channel channel));
+static BOOL 		AdjustIconImagePointers _ANSI_ARGS_((LPICONIMAGE lpImage));
+static HICON 		MakeIconFromResource _ANSI_ARGS_((LPICONIMAGE lpIcon));
+static HICON 		GetIcon _ANSI_ARGS_((WinIconPtr titlebaricon, 
+			    int icon_size));
+static int 		WinSetIcon _ANSI_ARGS_((Tcl_Interp *interp, 
+			    WinIconPtr titlebaricon, Tk_Window tkw));
+static void 		FreeIconBlock _ANSI_ARGS_((BlockOfIconImagesPtr lpIR));
+static void  	 	DecrIconRefCount _ANSI_ARGS_((WinIconPtr titlebaricon));
+
+/* Used in BytesPerLine */
+#define WIDTHBYTES(bits)      ((((bits) + 31)>>5)<<2)
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DIBNumColors --
+ *
+ *	Calculates the number of entries in the color table, given by 
+ *	LPSTR lpbi - pointer to the CF_DIB memory block.  Used by
+ *	titlebar icon code.
+ *
+ * Results:
+ *	
+ *      WORD - Number of entries in the color table.
+ *
+ * Side effects: None.
+ *	
+ *
+ *----------------------------------------------------------------------
+ */
+static WORD DIBNumColors( LPSTR lpbi )
+{
+    WORD wBitCount;
+    DWORD dwClrUsed;
+
+    dwClrUsed = ((LPBITMAPINFOHEADER) lpbi)->biClrUsed;
+
+    if (dwClrUsed)
+	return (WORD) dwClrUsed;
+
+    wBitCount = ((LPBITMAPINFOHEADER) lpbi)->biBitCount;
+
+    switch (wBitCount)
+    {
+	case 1: return 2;
+	case 4: return 16;
+	case 8:	return 256;
+	default:return 0;
+    }
+}
 
 /*
  *----------------------------------------------------------------------
  *
- * InitWm --
+ * PaletteSize --
+ *
+ *	Calculates the number of bytes in the color table, as given by
+ *	LPSTR lpbi - pointer to the CF_DIB memory block.  Used by
+ *	titlebar icon code.
+ *
+ * Results:
+ *	number of bytes in the color table
+ *
+ * Side effects: None.
+ *	
+ *
+ *----------------------------------------------------------------------
+ */
+static WORD PaletteSize( LPSTR lpbi )
+{
+    return ((WORD)( DIBNumColors( lpbi ) * sizeof( RGBQUAD )) );
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * FindDIBits --
+ *
+ *	Locate the image bits in a CF_DIB format DIB, as given by
+ *	LPSTR lpbi - pointer to the CF_DIB memory block.  Used by
+ *	titlebar icon code.
+ *
+ * Results:
+ *	pointer to the image bits
+ *
+ * Side effects: None
+ *	
+ *
+ *----------------------------------------------------------------------
+ */
+static LPSTR FindDIBBits( LPSTR lpbi )
+{
+   return ( lpbi + *(LPDWORD)lpbi + PaletteSize( lpbi ) );
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * BytesPerLine --
+ *
+ *	Calculates the number of bytes in one scan line, as given by
+ *	LPBITMAPINFOHEADER lpBMIH - pointer to the BITMAPINFOHEADER
+ *	that begins the CF_DIB block.  Used by titlebar icon code.
+ *
+ * Results:
+ *	number of bytes in one scan line (DWORD aligned)
+ *
+ * Side effects: None
+ *	
+ *
+ *----------------------------------------------------------------------
+ */
+static DWORD BytesPerLine( LPBITMAPINFOHEADER lpBMIH )
+{
+    return WIDTHBYTES(lpBMIH->biWidth * lpBMIH->biPlanes * lpBMIH->biBitCount);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * AdjustIconImagePointers --
+ *
+ *	Adjusts internal pointers in icon resource struct, as given
+ *	by LPICONIMAGE lpImage - the resource to handle.  Used by
+ *	titlebar icon code.
+ *
+ * Results:
+ *	BOOL - TRUE for success, FALSE for failure
+ *
+ * Side effects:
+ *	
+ *
+ *----------------------------------------------------------------------
+ */
+BOOL AdjustIconImagePointers( LPICONIMAGE lpImage )
+{
+    /*  Sanity check */
+    if (lpImage==NULL)
+	return FALSE;
+    /*  BITMAPINFO is at beginning of bits */
+    lpImage->lpbi = (LPBITMAPINFO)lpImage->lpBits;
+    /*  Width - simple enough */
+    lpImage->Width = lpImage->lpbi->bmiHeader.biWidth;
+    /*  Icons are stored in funky format where height is doubled - account for it */
+    lpImage->Height = (lpImage->lpbi->bmiHeader.biHeight)/2;
+    /*  How many colors? */
+    lpImage->Colors = lpImage->lpbi->bmiHeader.biPlanes * lpImage->lpbi->bmiHeader.biBitCount;
+    /*  XOR bits follow the header and color table */
+    lpImage->lpXOR = (LPBYTE)FindDIBBits(((LPSTR)lpImage->lpbi));
+    /*  AND bits follow the XOR bits */
+    lpImage->lpAND = lpImage->lpXOR + (lpImage->Height*BytesPerLine((LPBITMAPINFOHEADER)(lpImage->lpbi)));
+    return TRUE;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MakeIconFromResource --
+ *
+ *	Construct an actual HICON structure from the information
+ *	in a resource.
+ *
+ * Results:
+ *	
+ *
+ * Side effects:
+ *	
+ *
+ *----------------------------------------------------------------------
+ */
+static HICON MakeIconFromResource( LPICONIMAGE lpIcon ){
+    HICON hIcon ;
+    static FARPROC pfnCreateIconFromResourceEx=NULL;
+    static int initinfo=0;
+    /*  Sanity Check */
+    if (lpIcon == NULL)
+	return NULL;
+    if (lpIcon->lpBits == NULL)
+	return NULL;
+    if (!initinfo) {
+	HMODULE hMod = GetModuleHandleA("USER32.DLL");
+	initinfo=1;
+	if(hMod){
+	    pfnCreateIconFromResourceEx = GetProcAddress(hMod,"CreateIconFromResourceEx");
+	}
+    }
+    /*  Let the OS do the real work :) */
+    if (pfnCreateIconFromResourceEx!=NULL) {
+	hIcon = (HICON) (pfnCreateIconFromResourceEx)
+	(lpIcon->lpBits, lpIcon->dwNumBytes, TRUE, 0x00030000,
+	 (*(LPBITMAPINFOHEADER)(lpIcon->lpBits)).biWidth,
+	 (*(LPBITMAPINFOHEADER)(lpIcon->lpBits)).biHeight/2, 0 );
+    } else {
+	 hIcon = NULL;
+    }
+    /*  It failed, odds are good we're on NT so try the non-Ex way */
+    if (hIcon == NULL)    {
+	/*  We would break on NT if we try with a 16bpp image */
+	if (lpIcon->lpbi->bmiHeader.biBitCount != 16) {
+	    hIcon = CreateIconFromResource( lpIcon->lpBits, lpIcon->dwNumBytes, TRUE, 0x00030000 );
+	}
+    }
+    return hIcon;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ReadICOHeader --
+ *
+ *	Reads the header from an ICO file, as specfied by channel.
+ *
+ * Results:
+ *	UINT - Number of images in file, -1 for failure.
+ *	If this succeeds, there is a decent chance this is a 
+ *	valid icon file.
+ *
+ * Side effects:
+ *	
+ *
+ *----------------------------------------------------------------------
+ */
+static int ReadICOHeader( Tcl_Channel channel )
+{
+    WORD    Input;
+    DWORD	dwBytesRead;
+
+    /*  Read the 'reserved' WORD */
+    dwBytesRead = Tcl_Read( channel, (char*)&Input, sizeof( WORD ));
+    /*  Did we get a WORD? */
+    if (dwBytesRead != sizeof( WORD ))
+	return -1;
+    /*  Was it 'reserved' ?   (ie 0) */
+    if (Input != 0)
+	return -1;
+    /*  Read the type WORD */
+    dwBytesRead = Tcl_Read( channel, (char*)&Input, sizeof( WORD ));
+    /*  Did we get a WORD? */
+    if (dwBytesRead != sizeof( WORD ))
+	return -1;
+    /*  Was it type 1? */
+    if (Input != 1)
+	return -1;
+    /*  Get the count of images */
+    dwBytesRead = Tcl_Read( channel, (char*)&Input, sizeof( WORD ));
+    /*  Did we get a WORD? */
+    if (dwBytesRead != sizeof( WORD ))
+	return -1;
+    /*  Return the count */
+    return (int)Input;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * InitWindowClass --
  *
  *	This routine creates the Wm toplevel decorative frame class.
  *
@@ -323,38 +656,36 @@ static void		WmWaitVisibilityProc _ANSI_ARGS_((
  *
  *----------------------------------------------------------------------
  */
-
-static void
-InitWm(void)
-{
+static int InitWindowClass(WinIconPtr titlebaricon) {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     WNDCLASS * classPtr;
+    classPtr = &toplevelClass;
 
     if (! tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
 	tsdPtr->firstWindow = 1;
+	tsdPtr->iconPtr = NULL;
     }
     if (! initialized) {
 	Tcl_MutexLock(&winWmMutex);
 	if (! initialized) {
 	    initialized = 1;
-	    classPtr = &toplevelClass;
 
-    /*
-     * When threads are enabled, we cannot use CLASSDC because
-     * threads will then write into the same device context.
-     * 
-     * This is a hack; we should add a subsystem that manages
-     * device context on a per-thread basis.  See also tkWinX.c,
-     * which also initializes a WNDCLASS structure.
-     */
+	    /*
+	     * When threads are enabled, we cannot use CLASSDC because
+	     * threads will then write into the same device context.
+	     * 
+	     * This is a hack; we should add a subsystem that manages
+	     * device context on a per-thread basis.  See also tkWinX.c,
+	     * which also initializes a WNDCLASS structure.
+	     */
 
-#ifdef TCL_THREADS
+	#ifdef TCL_THREADS
 	    classPtr->style = CS_HREDRAW | CS_VREDRAW;
-#else
+	#else
 	    classPtr->style = CS_HREDRAW | CS_VREDRAW | CS_CLASSDC;
-#endif
+	#endif
 	    classPtr->cbClsExtra = 0;
 	    classPtr->cbWndExtra = 0;
 	    classPtr->hInstance = Tk_GetHINSTANCE();
@@ -362,7 +693,19 @@ InitWm(void)
 	    classPtr->lpszMenuName = NULL;
 	    classPtr->lpszClassName = TK_WIN_TOPLEVEL_CLASS_NAME;
 	    classPtr->lpfnWndProc = WmProc;
-	    classPtr->hIcon = LoadIcon(Tk_GetHINSTANCE(), "tk");
+	    if (titlebaricon == NULL) {
+		classPtr->hIcon = LoadIcon(Tk_GetHINSTANCE(), "tk");
+	    } else {
+		classPtr->hIcon = GetIcon(titlebaricon, ICON_BIG);
+		if (classPtr->hIcon == NULL) {
+		    return TCL_ERROR;
+		}
+		/* 
+		 * Store pointer to default icon so we know when 
+		 * we need to free that information
+		 */
+		tsdPtr->iconPtr = titlebaricon;
+	    }
 	    classPtr->hCursor = LoadCursor(NULL, IDC_ARROW);
 
 	    if (!RegisterClass(classPtr)) {
@@ -371,6 +714,456 @@ InitWm(void)
 	}
 	Tcl_MutexUnlock(&winWmMutex);
     }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * InitWm --
+ *
+ *	This initialises the window manager
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Registers a new window class.
+ *
+ *----------------------------------------------------------------------
+ */
+static void
+InitWm(void)
+{
+    /* Ignore return result */
+    (void) InitWindowClass(NULL);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WinSetIcon --
+ *
+ *	Sets either the default toplevel titlebar icon, or the icon
+ *	for a specific toplevel (if tkw is given, then only that
+ *	window is used).
+ *	
+ *	The ref-count of the titlebaricon is NOT changed.  If this
+ *	function returns successfully, the caller should assume
+ *	the icon was used (and therefore the ref-count should 
+ *	be adjusted to reflect that fact).  If the function returned
+ *	an error, the caller should assume the icon was not used
+ *	(and may wish to free the memory associated with it).
+ *
+ * Results:
+ *	A standard Tcl return code.
+ *
+ * Side effects:
+ *	One or all windows may have their icon changed.
+ *	The Tcl result may be modified.
+ *	The window-manager will be initialised if it wasn't already.
+ *	The given window will be forced into existence.
+ *
+ *----------------------------------------------------------------------
+ */
+int
+WinSetIcon(interp, titlebaricon, tkw)
+    Tcl_Interp *interp;
+    WinIconPtr titlebaricon;
+    Tk_Window tkw;
+{
+    WmInfo *wmPtr;
+    HWND hwnd;
+    int application = 0;
+    
+    if (tkw == NULL) {
+        tkw = Tk_MainWindow(interp);
+	application = 1;
+    }
+    
+    if (!(Tk_IsTopLevel(tkw))) {
+	Tcl_AppendResult(interp, "window \"", Tk_PathName(tkw), 
+		"\" isn't a top-level window", (char *) NULL);
+	return TCL_ERROR;
+    }
+    if (Tk_WindowId(tkw) == None) {
+	Tk_MakeWindowExist(tkw);
+    }
+    /* We must get the window's wrapper, not the window itself */
+    wmPtr = ((TkWindow*)tkw)->wmInfoPtr;
+    hwnd = wmPtr->wrapper;
+
+    if (application) {
+	if (hwnd == NULL) {
+	    /* 
+	     * I don't actually think this is ever the correct thing, unless
+	     * perhaps the window doesn't have a wrapper.  But I believe all
+	     * windows have wrappers.
+	     */
+	    hwnd = Tk_GetHWND(Tk_WindowId(tkw));
+	}
+	/* 
+	 * If we aren't initialised, then just initialise with the user's
+	 * icon.  Otherwise our icon choice will be ignored moments later
+	 * when Tk finishes initialising.
+	 */
+	if (!initialized) {
+	    if (InitWindowClass(titlebaricon) != TCL_OK) {
+		Tcl_AppendResult(interp,"Unable to set icon", (char*)NULL);
+		return TCL_ERROR;
+	    }
+	} else {
+	    ThreadSpecificData *tsdPtr;
+	    if (!SetClassLong(hwnd, GCL_HICONSM, (LPARAM)GetIcon(titlebaricon, ICON_SMALL))) {
+		/* 
+		 * For some reason this triggers, even though it seems
+		 * to be successful This is probably related to the
+		 * WNDCLASS vs WNDCLASSEX difference.  Anyway it seems
+		 * we have to ignore errors returned here.
+		 */
+		
+		/*
+		 * Tcl_AppendResult(interp,"Unable to set new small icon", (char*)NULL);
+		 * return TCL_ERROR;
+		 */
+	    }
+	    if (!SetClassLong(hwnd, GCL_HICON, (LPARAM)GetIcon(titlebaricon, ICON_BIG))) {
+		Tcl_AppendResult(interp,"Unable to set new icon", (char*)NULL);
+		return TCL_ERROR;
+	    }
+	    tsdPtr = (ThreadSpecificData *) 
+		    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    if (tsdPtr->iconPtr != NULL) {
+		DecrIconRefCount(tsdPtr->iconPtr);
+	    }
+	    tsdPtr->iconPtr = titlebaricon;
+	}
+    } else {
+	if (!initialized) {
+	    /* 
+	     * Need to initialise the wm otherwise we will fail on
+	     * code which tries to set a toplevel's icon before that
+	     * happens.  Ignore return result.
+	     */
+	    (void)InitWindowClass(NULL);
+	}
+	/* 
+	 * The following code is exercised if you do
+	 * 
+	 *   toplevel .t ; wm titlebaricon .t foo.icr
+	 * 
+	 * i.e. the wm hasn't had time to properly create
+	 * the '.t' window before you set the icon.
+	 */
+	if (hwnd == NULL) {
+	    /* 
+	     * This little snippet is copied from the 'Map' function,
+	     * and should probably be placed in one proper location
+	     */
+	    if (wmPtr->titleUid == NULL) {
+		wmPtr->titleUid = wmPtr->winPtr->nameUid;
+	    }
+	    UpdateWrapper(wmPtr->winPtr);
+	    wmPtr = ((TkWindow*)tkw)->wmInfoPtr;
+	    hwnd = wmPtr->wrapper;
+	    if (hwnd == NULL) {
+		Tcl_AppendResult(interp,"Can't set icon; window has no wrapper.", (char*)NULL);
+		return TCL_ERROR;
+	    }
+	}
+	SendMessage(hwnd,WM_SETICON,ICON_SMALL,(LPARAM)GetIcon(titlebaricon, ICON_SMALL));
+	SendMessage(hwnd,WM_SETICON,ICON_BIG,(LPARAM)GetIcon(titlebaricon, ICON_BIG));
+	
+	/* Update the iconPtr we keep for each WmInfo structure. */
+	if (wmPtr->iconPtr != NULL) {
+	    /* Free any old icon ptr which is associated with this window. */
+	    DecrIconRefCount(wmPtr->iconPtr);
+	}
+	/* 
+	 * We do not need to increment the ref count for the
+	 * titlebaricon, because it was already incremented when we
+	 * retrieved it.
+	 */
+	wmPtr->iconPtr = titlebaricon;
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ReadIconFromFile --
+ *
+ *	Read the contents of a file (usually .ico, .icr) and extract an
+ *	icon resource, if possible, otherwise NULL is returned, and an
+ *	error message will already be in the interpreter.
+ *
+ * Results:
+ *	A WinIconPtr structure containing the icons in the file, with
+ *	its ref count already incremented. The calling procedure should
+ *	either place this structure inside a WmInfo structure, or it should
+ *	pass it on to DecrIconRefCount() to ensure no memory leaks occur.
+ *	
+ *	If the given fileName did not contain a valid icon structure,
+ *	return NULL.
+ *
+ * Side effects:
+ *	Memory is allocated for the returned structure and the icons
+ *	it contains.  If the structure is not wanted, it should be
+ *	passed to DecrIconRefCount, and in any case a valid ref count
+ *	should be ensured to avoid memory leaks.
+ *	
+ *	Currently icon resources are not shared, so the ref count of
+ *	one of these structures will always be 0 or 1.  However all we
+ *	need do is implement some sort of lookup function between
+ *	filenames and WinIconPtr structures and no other code will need
+ *	to be changed.  The pseudo-code for this is implemented below
+ *	in the 'if (0)' branch.  It did not seem necessary to implement
+ *	this optimisation here, since moving to icon<->image 
+ *	conversions will probably make it obsolete.
+ *
+ *----------------------------------------------------------------------
+ */
+static WinIconPtr 
+ReadIconFromFile(interp, fileName) 
+    Tcl_Interp *interp;
+    char *fileName;
+{
+    WinIconPtr titlebaricon = NULL;
+
+    if (0 /* If we already have an icon for this filename */) {
+	titlebaricon = NULL; /* Get the real value from a lookup */
+	titlebaricon->refCount++;
+	return titlebaricon;
+    } else {
+	BlockOfIconImagesPtr lpIR = ReadIconFromICOFile(interp, fileName);
+	if (lpIR != NULL) {
+	    titlebaricon = (WinIconPtr) ckalloc(sizeof(WinIconInstance));
+	    titlebaricon->iconBlock = lpIR;
+	    titlebaricon->refCount = 1;
+	}
+	return titlebaricon;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DecrIconRefCount --
+ *
+ *	Reduces the reference count.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	If the ref count falls to zero, free the memory associated
+ *	with the icon resource structures.  In this case the pointer
+ *	passed into this function is no longer valid.
+ *
+ *----------------------------------------------------------------------
+ */
+static void DecrIconRefCount(WinIconPtr titlebaricon) {
+    titlebaricon->refCount--;
+    
+    if (titlebaricon->refCount <= 0) {
+	if (titlebaricon->iconBlock != NULL) {
+	    FreeIconBlock(titlebaricon->iconBlock);
+	}
+	titlebaricon->iconBlock = NULL;
+
+	ckfree((char*)titlebaricon);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * FreeIconBlock --
+ *
+ *	Frees all memory associated with a previously loaded 
+ *	titlebaricon.  The icon block pointer is no longer
+ *	valid once this function returns.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	
+ *
+ *----------------------------------------------------------------------
+ */
+static void FreeIconBlock(BlockOfIconImagesPtr lpIR) {
+    int i;
+    
+    /* Free all the bits */
+    for (i=0; i< lpIR->nNumImages; i++) {
+	if (lpIR->IconImages[i].lpBits != NULL) {
+	    ckfree((char*)lpIR->IconImages[i].lpBits);
+	}
+	if (lpIR->IconImages[i].hIcon != NULL) {
+	    DestroyIcon(lpIR->IconImages[i].hIcon);
+	}
+    }
+    ckfree ((char*)lpIR);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetIcon --
+ *
+ *	Extracts an icon of a given size from an icon resource
+ *
+ * Results:
+ *	Returns the icon, if found, else NULL.
+ *
+ * Side effects:
+ *	
+ *
+ *----------------------------------------------------------------------
+ */
+static HICON GetIcon(WinIconPtr titlebaricon, int icon_size) {
+    BlockOfIconImagesPtr lpIR = titlebaricon->iconBlock;
+    if (lpIR == NULL) {
+	return NULL;
+    } else {
+	unsigned int size = (icon_size == 0 ? 16 : 32);
+	int i;
+	
+	for (i = 0; i < lpIR->nNumImages; i++) {
+	    /* Take the first or a 32x32 16 color icon*/
+	    if((lpIR->IconImages[i].Height == size)
+	       && (lpIR->IconImages[i].Width == size)
+	       && (lpIR->IconImages[i].Colors >= 4)) {
+		return lpIR->IconImages[i].hIcon;
+	    }
+	}
+    }
+    return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ReadIconFromICOFile --
+ *
+ *	Reads an Icon Resource from an ICO file, as given by 
+ *	char* fileName - Name of the ICO file. This name should
+ *	be in Utf format.
+ *
+ * Results:
+ *	Returns an icon resource, if found, else NULL.
+ *
+ * Side effects:
+ *      May leave error messages in the Tcl interpreter.
+ *
+ *----------------------------------------------------------------------
+ */
+BlockOfIconImagesPtr ReadIconFromICOFile(Tcl_Interp* interp, char* fileName){
+    BlockOfIconImagesPtr    	lpIR , lpNew ;
+    Tcl_Channel         channel;
+    int                 i;
+    DWORD            	dwBytesRead;
+    LPICONDIRENTRY    	lpIDE;
+
+    /*  Open the file */
+    if ((channel = Tcl_OpenFileChannel(interp, fileName, "r", 0)) == NULL) {
+	Tcl_AppendResult(interp,"Error opening file \"", fileName, 
+	                 "\" for reading",(char*)NULL);
+	return NULL;
+    }
+    if (Tcl_SetChannelOption(interp, channel, "-translation", "binary")
+	    != TCL_OK) {
+	return NULL;
+    }
+    if (Tcl_SetChannelOption(interp, channel, "-encoding", "binary")
+	    != TCL_OK) {
+	return NULL;
+    }
+    /*  Allocate memory for the resource structure */
+    if ((lpIR = (BlockOfIconImagesPtr) ckalloc( sizeof(BlockOfIconImages) )) == NULL)    {
+	Tcl_AppendResult(interp,"Error allocating memory",(char*)NULL);
+	Tcl_Close(NULL, channel);
+	return NULL;
+    }
+    /*  Read in the header */
+    if ((lpIR->nNumImages = ReadICOHeader( channel )) == -1)    {
+	Tcl_AppendResult(interp,"Invalid file header",(char*)NULL);
+	Tcl_Close(NULL, channel);
+	ckfree((char*) lpIR );
+	return NULL;
+    }
+    /*  Adjust the size of the struct to account for the images */
+    if ((lpNew = (BlockOfIconImagesPtr) ckrealloc( (char*)lpIR, sizeof(BlockOfIconImages) + ((lpIR->nNumImages-1) * sizeof(ICONIMAGE)) )) == NULL)    {
+	Tcl_AppendResult(interp,"Error allocating memory",(char*)NULL);
+	Tcl_Close(NULL, channel);
+	ckfree( (char*)lpIR );
+	return NULL;
+    }
+    lpIR = lpNew;
+    /*  Allocate enough memory for the icon directory entries */
+    if ((lpIDE = (LPICONDIRENTRY) ckalloc( lpIR->nNumImages * sizeof( ICONDIRENTRY ) ) ) == NULL)     {
+	Tcl_AppendResult(interp,"Error allocating memory",(char*)NULL);
+	Tcl_Close(NULL, channel);
+	ckfree( (char*)lpIR );
+	return NULL;
+    }
+    /*  Read in the icon directory entries */
+    dwBytesRead = Tcl_Read( channel, (char*)lpIDE, lpIR->nNumImages * sizeof( ICONDIRENTRY ));
+    if (dwBytesRead != lpIR->nNumImages * sizeof( ICONDIRENTRY ))    {
+	Tcl_AppendResult(interp,"Error reading file",(char*)NULL);
+	Tcl_Close(NULL, channel);
+	ckfree( (char*)lpIR );
+	return NULL;
+    }
+    /*  Loop through and read in each image */
+    for( i = 0; i < lpIR->nNumImages; i++ )    {
+	/*  Allocate memory for the resource */
+	if ((lpIR->IconImages[i].lpBits = (LPBYTE) ckalloc(lpIDE[i].dwBytesInRes)) == NULL)
+	{
+	    Tcl_AppendResult(interp,"Error allocating memory",(char*)NULL);
+	    Tcl_Close(NULL, channel);
+	    ckfree( (char*)lpIR );
+	    ckfree( (char*)lpIDE );
+	    return NULL;
+	}
+	lpIR->IconImages[i].dwNumBytes = lpIDE[i].dwBytesInRes;
+	/*  Seek to beginning of this image */
+	if (Tcl_Seek(channel, lpIDE[i].dwImageOffset, FILE_BEGIN) == -1) {
+	    Tcl_AppendResult(interp,"Error seeking in file",(char*)NULL);
+	    Tcl_Close(NULL, channel);
+	    ckfree( (char*)lpIR );
+	    ckfree( (char*)lpIDE );
+	    return NULL;
+	}
+	/*  Read it in */
+	dwBytesRead = Tcl_Read( channel, lpIR->IconImages[i].lpBits, lpIDE[i].dwBytesInRes);
+	if (dwBytesRead != lpIDE[i].dwBytesInRes) {
+	    Tcl_AppendResult(interp,"Error reading file",(char*)NULL);
+	    Tcl_Close(NULL, channel);
+	    ckfree( (char*)lpIDE );
+	    ckfree( (char*)lpIR );
+	    return NULL;
+	}
+	/*  Set the internal pointers appropriately */
+	if (!AdjustIconImagePointers( &(lpIR->IconImages[i]))) {
+	    Tcl_AppendResult(interp,"Error converting to internal format",(char*)NULL);
+	    Tcl_Close(NULL, channel);
+	    ckfree( (char*)lpIDE );
+	    ckfree( (char*)lpIR );
+	    return NULL;
+	}
+	lpIR->IconImages[i].hIcon=MakeIconFromResource(&(lpIR->IconImages[i]));
+    }
+    /*  Clean up */
+    ckfree((char*)lpIDE);
+    Tcl_Close(NULL, channel);
+    if (lpIR == NULL){
+	Tcl_AppendResult(interp,"Reading of ",fileName," failed!",(char*)NULL);
+	return NULL;
+    }
+    return lpIR;
 }
 
 /*
@@ -389,7 +1182,6 @@ InitWm(void)
  *
  *----------------------------------------------------------------------
  */
-
 static TkWindow *
 GetTopLevel(hwnd)
     HWND hwnd;
@@ -625,6 +1417,7 @@ TkWmNewWindow(winPtr)
     wmPtr->cmdArgv = NULL;
     wmPtr->clientMachine = NULL;
     wmPtr->flags = WM_NEVER_MAPPED;
+    wmPtr->iconPtr = NULL;
     wmPtr->nextPtr = winPtr->dispPtr->firstWmPtr;
     winPtr->dispPtr->firstWmPtr = wmPtr;
 
@@ -673,6 +1466,8 @@ UpdateWrapper(winPtr)
     HWND child = TkWinGetHWND(winPtr->window);
     int x, y, width, height, state;
     WINDOWPLACEMENT place;
+    HICON hSmallIcon = NULL;
+    HICON hBigIcon = NULL;
     Tcl_DString titleString;
     int *childStateInfo = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
@@ -795,6 +1590,11 @@ UpdateWrapper(winPtr)
 #endif
     }
     oldWrapper = SetParent(child, wmPtr->wrapper);
+    if (oldWrapper) {
+	hSmallIcon = (HICON) SendMessage(oldWrapper,WM_GETICON,ICON_SMALL,(LPARAM)NULL);
+	hBigIcon = (HICON) SendMessage(oldWrapper,WM_GETICON,ICON_BIG,(LPARAM)NULL);
+    }
+    
     if (oldWrapper && (oldWrapper != wmPtr->wrapper) 
 	    && (oldWrapper != GetDesktopWindow())) {
 #ifdef _WIN64
@@ -834,7 +1634,7 @@ UpdateWrapper(winPtr)
 
     wmPtr->flags &= ~WM_NEVER_MAPPED;
     SendMessage(wmPtr->wrapper, TK_ATTACHWINDOW, (WPARAM) child, 0);
-
+    
     /*
      * Force an initial transition from withdrawn to the real
      * initial state.	 
@@ -843,6 +1643,13 @@ UpdateWrapper(winPtr)
     state = wmPtr->hints.initial_state;
     wmPtr->hints.initial_state = WithdrawnState;
     TkpWmSetState(winPtr, state);
+
+    if (hSmallIcon != NULL) {
+	SendMessage(wmPtr->wrapper,WM_SETICON,ICON_SMALL,(LPARAM)hSmallIcon);
+    }
+    if (hBigIcon != NULL) {
+	SendMessage(wmPtr->wrapper,WM_SETICON,ICON_BIG,(LPARAM)hBigIcon);
+    }
 
     /*
      * If we are embedded then force a mapping of the window now,
@@ -1158,6 +1965,15 @@ TkWmDeadWindow(winPtr)
 	    DestroyWindow(Tk_GetHWND(winPtr->window));
 	}
     }
+    if (wmPtr->iconPtr != NULL) {
+	/* 
+	 * This may delete the icon resource data.  I believe we
+	 * should do this after destroying the decorative frame,
+	 * because the decorative frame is using this icon.
+	 */
+        DecrIconRefCount(wmPtr->iconPtr);
+    }
+    
     ckfree((char *) wmPtr);
     winPtr->wmInfoPtr = NULL;
 }
@@ -1674,15 +2490,25 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	}
     } else if ((c == 'i') && (strncmp(argv[1], "iconbitmap", length) == 0)
 	    && (length >= 5)) {
-	Pixmap pixmap;
-
-	if ((argc != 3) && (argc != 4)) {
+	/* If true, then set for all windows. */
+	int isDefault = 0;
+	
+	if ((argc < 3) || (argc > 5)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
-		    argv[0], " iconbitmap window ?bitmap?\"",
+		    argv[0], " iconbitmap window ?-default? ?image?\"",
 		    (char *) NULL);
 	    return TCL_ERROR;
-	}
-	if (argc == 3) {
+	} else if (argc == 5) {
+	    /* If we have 5 arguments, we must have a '-default' flag */
+	    if (strcmp(argv[3],"-default")) {
+		Tcl_AppendResult(interp, "illegal option \"", 
+			argv[3], " must be \"-default\"", 
+			(char *) NULL);
+		return TCL_ERROR;
+	    }
+	    isDefault = 1;
+	} else if (argc == 3) {
+	    /* No arguments were given */
 	    if (wmPtr->hints.flags & IconPixmapHint) {
 		Tcl_SetResult(interp,
 			Tk_NameOfBitmap(winPtr->display,
@@ -1690,19 +2516,60 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    }
 	    return TCL_OK;
 	}
-	if (*argv[3] == '\0') {
+	if (*argv[argc-1] == '\0') {
 	    if (wmPtr->hints.icon_pixmap != None) {
 		Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
 	    }
 	    wmPtr->hints.flags &= ~IconPixmapHint;
 	} else {
-	    pixmap = Tk_GetBitmap(interp, (Tk_Window) winPtr,
-		    Tk_GetUid(argv[3]));
-	    if (pixmap == None) {
-		return TCL_ERROR;
+	    /* 
+	     * In the future this block of code will use Tk's 'image'
+	     * functionality to allow all supported image formats.
+	     * However, this will require a change to the way icons are
+	     * handled.  We will need to add icon<->image conversions
+	     * routines.
+	     *
+	     * Until that happens we simply try to find an icon in the
+	     * given argument, and if that fails, we use the older
+	     * bitmap code.  We do things this way round (icon then
+	     * bitmap), because the bitmap code actually seems to have
+	     * no visible effect, so we want to give the icon code the
+	     * first try at doing something.
+	     */
+	    
+	    /* 
+	     * Either return NULL, or return a valid titlebaricon with its
+	     * ref count already incremented.
+	     */
+	    WinIconPtr titlebaricon = ReadIconFromFile(interp, argv[argc-1]);
+	    if (titlebaricon != NULL) {
+		/* 
+		 * Try to set the icon for the window.  If it is a '-default'
+		 * icon, we must pass in NULL
+		 */
+		if (WinSetIcon(interp, titlebaricon, 
+			       (isDefault ? NULL : (Tk_Window) winPtr)) != TCL_OK) {
+		    /* We didn't use the titlebaricon after all */
+		    DecrIconRefCount(titlebaricon);
+		    titlebaricon = NULL;
+		}
 	    }
-	    wmPtr->hints.icon_pixmap = pixmap;
-	    wmPtr->hints.flags |= IconPixmapHint;
+	    if (titlebaricon == NULL) {
+		/* 
+		 * We didn't manage to handle the argument as a valid
+		 * icon.  Try as a bitmap.  First we must clear the
+		 * error message which was placed in the interpreter
+		 */
+		Pixmap pixmap;
+		Tcl_ResetResult(interp);
+		pixmap = Tk_GetBitmap(interp, (Tk_Window) winPtr,
+			Tk_GetUid(argv[argc-1]));
+		if (pixmap == None) {
+		    return TCL_ERROR;
+		}
+		wmPtr->hints.icon_pixmap = pixmap;
+		wmPtr->hints.flags |= IconPixmapHint;
+	    }
 	}
     } else if ((c == 'i') && (strncmp(argv[1], "iconify", length) == 0)
 	    && (length >= 5)) {
