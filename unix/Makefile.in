@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.16 1999/04/28 18:38:04 redman Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.17 1999/04/30 18:02:39 redman Exp $
 
 # Current Tk version;  used in various names.
 
@@ -273,7 +273,7 @@ OBJS =  tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkClipboard.o tkCmds.o \
 	tkColor.o tkConfig.o tkConsole.o tkCursor.o tkError.o tkEvent.o \
 	tkFocus.o tkFont.o tkGet.o tkGC.o tkGeometry.o tkGrab.o tkGrid.o \
 	tkMain.o tkObj.o tkOldConfig.o tkOption.o tkPack.o tkPlace.o \
-	tkSelect.o tkUtil.o tkVisual.o tkWindow.o tkConsole.o \
+	tkSelect.o tkUtil.o tkVisual.o tkWindow.o  \
 	$(UNIXOBJS) $(WIDGOBJS) $(CANVOBJS) $(IMAGEOBJS) $(TEXTOBJS)
 
 TK_DECLS = \
