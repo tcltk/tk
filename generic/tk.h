@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.26 1999/06/25 23:30:25 welch Exp $
+ * RCS: @(#) $Id: tk.h,v 1.27 1999/06/25 23:47:57 welch Exp $
  */
 
 #ifndef _TK
@@ -32,6 +32,7 @@ extern "C" {
  *
  * unix/configure.in
  * README
+ * win/configure.in
  * win/makefile.vc	(only if major.minor changes, not patchlevel)
  * library/tk.tcl	(only if major.minor changes, not patchlevel)
  * mac/README		(only if major.minor changes, not patchlevel)
