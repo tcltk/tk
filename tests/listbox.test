@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.20 2002/07/14 05:48:46 dgp Exp $
+# RCS: @(#) $Id: listbox.test,v 1.21 2003/02/25 02:07:25 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -2131,6 +2131,19 @@ test listbox-28.3 {listbox -activestyle} {
     listbox .l -activestyle dot
     .l cget -activestyle
 } dotbox
+
+test listbox-29.1 {listbox selection behavior, -state disabled} {
+    destroy .l
+    listbox .l
+    .l insert end 1 2 3
+    .l selection set 2
+    set out [.l selection includes 2]
+    .l configure -state disabled
+    # still return 1 when disabled, because 'selection get' will work,
+    # but selection cannot be changed (new behavior since 8.4)
+    .l selection set 3
+    lappend out [.l selection includes 2] [.l curselection]
+} {1 1 2}
 
 resetGridInfo
 deleteWindows
