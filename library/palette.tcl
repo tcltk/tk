@@ -3,7 +3,7 @@
 # This file contains procedures that change the color palette used
 # by Tk.
 #
-# RCS: @(#) $Id: palette.tcl,v 1.7 2001/11/15 14:02:47 dkf Exp $
+# RCS: @(#) $Id: palette.tcl,v 1.8 2001/11/29 10:54:21 dkf Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 #
@@ -40,10 +40,18 @@ proc ::tk_setPalette {args} {
     if {![info exists new(background)]} {
 	error "must specify a background color"
     }
-    if {![info exists new(foreground)]} {
-	set new(foreground) black
-    }
     set bg [winfo rgb . $new(background)]
+    if {![info exists new(foreground)]} {
+	# Note that the range of each value in the triple returned by
+	# [winfo rgb] is 0-65535, and your eyes are more sensitive to
+	# green than to red, and more to red than to blue.
+	foreach {r g b} $bg {break}
+	if {$r+1.5*$g+0.5*$b > 100000} {
+	    set new(foreground) black
+	} else {
+	    set new(foreground) white
+	}
+    }
     set fg [winfo rgb . $new(foreground)]
     set darkerBg [format #%02x%02x%02x [expr {(9*[lindex $bg 0])/2560}] \
 	    [expr {(9*[lindex $bg 1])/2560}] [expr {(9*[lindex $bg 2])/2560}]]
