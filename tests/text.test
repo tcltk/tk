@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.10 2000/02/03 17:29:58 ericm Exp $
+# RCS: @(#) $Id: text.test,v 1.11 2000/07/21 23:44:12 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1110,7 +1110,36 @@ test text-20.65 {TextSearchCmd, unicode with non-text segments} {
     set result
 } {1.3 3}
 
+test text-20.66 {TextSearchCmd, hidden text does not affect match index} {
+    eval destroy [winfo child .]
+    pack [text .t2]
+    .t2 insert end "12345H7890"
+    .t2 search 7 1.0
+} 1.6
+test text-20.67 {TextSearchCmd, hidden text does not affect match index} {
+    eval destroy [winfo child .]
+    pack [text .t2]
+    .t2 insert end "12345H7890"
+    .t2 tag configure hidden -elide true
+    .t2 tag add hidden 1.5
+    .t2 search 7 1.0
+} 1.6
+test text-20.68 {TextSearchCmd, hidden text does not affect match index} {
+    eval destroy [winfo child .]
+    pack [text .t2]
+    .t2 insert end "foobar\nbarbaz\nbazboo"
+    .t2 search boo 1.0
+} 3.3
+test text-20.69 {TextSearchCmd, hidden text does not affect match index} {
+    eval destroy [winfo child .]
+    pack [text .t2]
+    .t2 insert end "foobar\nbarbaz\nbazboo"
+    .t2 tag configure hidden -elide true
+    .t2 tag add hidden 2.0 3.0
+    .t2 search boo 1.0
+} 3.3
 
+    
 eval destroy [winfo child .]
 text .t2 -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
 pack .t2

@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.15 2000/07/19 18:13:50 ericm Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.16 2000/07/21 23:44:11 ericm Exp $
  */
 
 #include "default.h"
@@ -1952,7 +1952,8 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	    /*
 	     * The index information returned by the regular expression
 	     * parser only considers textual information:  it doesn't
-	     * account for embedded windows or any other non-textual info.
+	     * account for embedded windows, elided text (when we are not
+	     * searching elided text) or any other non-textual info.
 	     * Scan through the line's segments again to adjust both
 	     * matchChar and matchCount.
 	     *
@@ -1961,13 +1962,16 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	     * of the line.
 	     */
 
+	    curIndex.linePtr = linePtr; curIndex.byteIndex = 0;
 	    for (segPtr = linePtr->segPtr, leftToScan = matchByte;
 		    leftToScan >= 0 && segPtr; segPtr = segPtr->nextPtr) {
-		if (segPtr->typePtr != &tkTextCharType) {
+		if (segPtr->typePtr != &tkTextCharType || \
+			(!searchElide && TkTextIsElided(textPtr, &curIndex))) {
 		    matchByte += segPtr->size;
-		    continue;
+		} else {
+		    leftToScan -= segPtr->size;
 		}
-		leftToScan -= segPtr->size;
+		curIndex.byteIndex += segPtr->size;
 	    }
 	    for (leftToScan += matchLength; leftToScan > 0;
 		    segPtr = segPtr->nextPtr) {

@@ -1,8 +1,18 @@
+2000-07-21  Eric Melski  <ericm@ajubasolutions.com>
+
+	* tests/text.test: Added tests for searching when text is elided.
+
+	* generic/tkText.c (TextSearchCmd): Text search was not returning
+	the correct index when the search covered (but did not search)
+	elided characters; corrected this by adjusting the match index by
+	the number of elided characters preceeding the start of the match,
+	just as is done with embedded windows, etc. [Bug: 5470].
+
 2000-07-21  Mo DeJong  <mdejong@redhat.com>
 
 	* win/configure.in: Add TK_STUB_LIB_FLAG and
-	TK_BUILD_STUB_LIB_SPEC. These are needed to
-	build a stub enabled extension.
+	TK_BUILD_STUB_LIB_SPEC. These are needed to build a stub enabled
+	extension.
 
 2000-07-20  Eric Melski  <ericm@ajubasolutions.com>
 
