@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.12 2004/06/16 20:03:18 jenglish Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.13 2004/08/25 22:23:32 dgp Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -761,11 +761,8 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 
     if (objc < 3) {
 configArgs:
-        Tcl_AppendResult(interp, "wrong # arguments: must be \"",
-                         Tcl_GetStringFromObj (objv[0], NULL), " attributes window",
-                         " ?-modified ?bool??",
-                         " ?-titlepath ?path??",
-                         "\"", (char *) NULL);
+	Tcl_WrongNumArgs(interp, 1, objv,
+		"attributes window ?-modified ?bool?? ?-titlepath ?path??");
         return TCL_ERROR;
     }
     macWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
