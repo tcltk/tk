@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.9 2000/01/12 11:45:02 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.10 2000/03/02 21:52:40 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -181,6 +181,7 @@ typedef struct {
  * UPDATE_SCROLLBAR:		Non-zero means scrollbar should be updated
  *				during next redisplay operation.
  * GOT_SELECTION:		Non-zero means we've claimed the selection.
+ * ENTRY_DELETED:		This entry has been effectively destroyed.
  * VALIDATING:                  Non-zero means we are in a validateCmd
  * VALIDATE_VAR:                Non-zero means we are attempting to validate
  *                              the entry's textvariable with validateCmd
@@ -2818,13 +2819,13 @@ EntryValidateChange(entryPtr, change, new, index, type)
      int type;                  /* forced, delete, insert,
 				 * focusin or focusout */
 {
-    int code;
+    int code, varValidate = (entryPtr->flags & VALIDATE_VAR);
     char *p;
     Tcl_DString script;
     
     if (entryPtr->validateCmd == NULL ||
 	entryPtr->validate == VALIDATE_NONE) {
-	return (entryPtr->flags & VALIDATE_VAR) ? TCL_ERROR : TCL_OK;
+	return (varValidate ? TCL_ERROR : TCL_OK);
     }
 
     /*
@@ -2834,7 +2835,7 @@ EntryValidateChange(entryPtr, change, new, index, type)
      */
     if (entryPtr->flags & VALIDATING) {
 	entryPtr->validate = VALIDATE_NONE;
-	return (entryPtr->flags & VALIDATE_VAR) ? TCL_ERROR : TCL_OK;
+	return (varValidate ? TCL_ERROR : TCL_OK);
     }
 
     entryPtr->flags |= VALIDATING;
@@ -2853,12 +2854,13 @@ EntryValidateChange(entryPtr, change, new, index, type)
     Tcl_DStringFree(&script);
 
     /*
-     * If e->validate has become VALIDATE_NONE during the validation,
+     * If e->validate has become VALIDATE_NONE during the validation, or
+     * we now have VALIDATE_VAR set (from EntrySetValue) and didn't before,
      * it means that a loop condition almost occured.  Do not allow
      * this validation result to finish.
      */
-    if (entryPtr->validate == VALIDATE_NONE ||
-	(entryPtr->flags & VALIDATE_VAR)) {
+    if (entryPtr->validate == VALIDATE_NONE
+	    || (!varValidate && (entryPtr->flags & VALIDATE_VAR))) {
 	code = TCL_ERROR;
     }
     /*
@@ -2869,7 +2871,17 @@ EntryValidateChange(entryPtr, change, new, index, type)
     if (code == TCL_ERROR) {
 	entryPtr->validate = VALIDATE_NONE;
     } else if (code == TCL_BREAK) {
-	if (entryPtr->invalidCmd != NULL) {
+	/*
+	 * If we were doing forced validation (like via a variable
+	 * trace) and the command returned 0, the we turn off validation
+	 * because we assume that textvariables have precedence in
+	 * managing the value.  We also don't call the invcmd, as it
+	 * may want to do entry manipulation which the setting of the
+	 * var will later wipe anyway.
+	 */
+	if (varValidate) {
+	    entryPtr->validate = VALIDATE_NONE;
+	} else if (entryPtr->invalidCmd != NULL) {
 	    Tcl_DStringInit(&script);
 	    ExpandPercents(entryPtr, entryPtr->invalidCmd,
 			   change, new, index, type, &script);
@@ -2989,8 +3001,22 @@ ExpandPercents(entryPtr, before, change, new, index, type, dsPtr)
 	case 'S': /* string to be inserted/deleted, if any */
 	    string = change;
 	    break;
-	case 'v': /* type of validation */
+	case 'v': /* type of validation currently set */
 	    string = validateStrings[entryPtr->validate];
+	    break;
+	case 'V': /* type of validation in effect */
+	    switch (type) {
+	    case VALIDATE_INSERT:
+	    case VALIDATE_DELETE:
+		string = validateStrings[VALIDATE_KEY];
+		break;
+	    case VALIDATE_FORCED:
+		string = "forced";
+		break;
+	    default:
+		string = validateStrings[type];
+		break;
+	    }
 	    break;
 	case 'W': /* widget name */
 	    string = Tk_PathName(entryPtr->tkwin);

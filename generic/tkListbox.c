@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.15 2000/01/21 03:54:42 hobbs Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.16 2000/03/02 21:52:41 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -183,13 +183,15 @@ typedef struct {
  * GOT_FOCUS:			Non-zero means this widget currently
  *				has the input focus.
  * MAXWIDTH_IS_STALE:           Stored maxWidth may be out-of-date
+ * LISTBOX_DELETED:		This listbox has been effectively destroyed.
  */
 
 #define REDRAW_PENDING		1
 #define UPDATE_V_SCROLLBAR	2
 #define UPDATE_H_SCROLLBAR	4
 #define GOT_FOCUS		8
-#define MAXWIDTH_IS_STALE      16
+#define MAXWIDTH_IS_STALE	16
+#define LISTBOX_DELETED		32
 
 /*
  * The optionSpecs table defines the valid configuration options for the
@@ -1409,7 +1411,17 @@ DestroyListbox(memPtr)
     register Listbox *listPtr = (Listbox *) memPtr;
     Tcl_HashEntry *entry;
     Tcl_HashSearch search;
-    
+
+    listPtr->flags |= LISTBOX_DELETED;
+
+    Tcl_DeleteCommandFromToken(listPtr->interp, listPtr->widgetCmd);
+    if (listPtr->setGrid) {
+	Tk_UnsetGrid(listPtr->tkwin);
+    }
+    if (listPtr->flags & REDRAW_PENDING) {
+	Tcl_CancelIdleCall(DisplayListbox, (ClientData) listPtr);
+    }
+
     /* If we have an internal list object, free it */
     if (listPtr->listObj != NULL) {
 	Tcl_DecrRefCount(listPtr->listObj);
@@ -1448,6 +1460,7 @@ DestroyListbox(memPtr)
     }
     Tk_FreeConfigOptions((char *)listPtr, listPtr->optionTable,
 	    listPtr->tkwin);
+    listPtr->tkwin = NULL;
     ckfree((char *) listPtr);
 }
 
@@ -2352,17 +2365,7 @@ ListboxEventProc(clientData, eventPtr)
 		NearestListboxElement(listPtr, eventPtr->xexpose.y
 		+ eventPtr->xexpose.height));
     } else if (eventPtr->type == DestroyNotify) {
-	if (listPtr->tkwin != NULL) {
-	    if (listPtr->setGrid) {
-		Tk_UnsetGrid(listPtr->tkwin);
-	    }
-	    listPtr->tkwin = NULL;
-	    Tcl_DeleteCommandFromToken(listPtr->interp, listPtr->widgetCmd);
-	}
-	if (listPtr->flags & REDRAW_PENDING) {
-	    Tcl_CancelIdleCall(DisplayListbox, (ClientData) listPtr);
-	}
-	Tcl_EventuallyFree((ClientData) listPtr, DestroyListbox);
+	DestroyListbox((char *) clientData);
     } else if (eventPtr->type == ConfigureNotify) {
 	int vertSpace;
 
@@ -2421,7 +2424,6 @@ ListboxCmdDeletedProc(clientData)
     ClientData clientData;	/* Pointer to widget record for widget. */
 {
     Listbox *listPtr = (Listbox *) clientData;
-    Tk_Window tkwin = listPtr->tkwin;
 
     /*
      * This procedure could be invoked either because the window was
@@ -2430,12 +2432,8 @@ ListboxCmdDeletedProc(clientData)
      * destroys the widget.
      */
 
-    if (tkwin != NULL) {
-	if (listPtr->setGrid) {
-	    Tk_UnsetGrid(listPtr->tkwin);
-	}
-	listPtr->tkwin = NULL;
-	Tk_DestroyWindow(tkwin);
+    if (!(listPtr->flags & LISTBOX_DELETED)) {
+	Tk_DestroyWindow(listPtr->tkwin);
     }
 }
 
