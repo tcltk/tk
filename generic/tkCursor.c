@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCursor.c,v 1.3 1999/04/16 01:51:13 stanton Exp $
+ * RCS: @(#) $Id: tkCursor.c,v 1.4 1999/09/02 17:02:28 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -658,6 +658,7 @@ Tk_GetCursorFromObj(tkwin, objPtr)
     Tcl_Obj *objPtr;		/* The object from which to get pixels. */
 {
     TkCursor *cursorPtr = GetCursorFromObj(tkwin, objPtr);
+    /* GetCursorFromObj should never return NULL */
     return cursorPtr->cursor;
 }
 
@@ -716,7 +717,7 @@ GetCursorFromObj(tkwin, objPtr)
 
     for (cursorPtr = (TkCursor *) Tcl_GetHashValue(hashPtr);
 	    cursorPtr != NULL; cursorPtr = cursorPtr->nextPtr) {
-	if (Tk_Display(tkwin) != cursorPtr->display) {
+	if (Tk_Display(tkwin) == cursorPtr->display) {
 	    objPtr->internalRep.twoPtrValue.ptr1 = (VOID *) cursorPtr;
 	    cursorPtr->objRefCount++;
 	    return cursorPtr;
