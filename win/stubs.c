@@ -4,7 +4,7 @@
  * Undocumented Xlib internal function
  */
 
-_XInitImageFuncPtrs(XImage *image)
+int _XInitImageFuncPtrs(XImage *image)
 {
     return 0;
 }

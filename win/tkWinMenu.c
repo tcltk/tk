@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.8.2.1 2000/08/05 23:53:15 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.8.2.2 2001/04/04 07:57:18 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -1449,7 +1449,7 @@ DrawWindowsSystemBitmap(display, drawable, gc, rectPtr, bitmapID, alignFlags)
     DPtoLP(hdc, &ptSize, 1);
 
     ptOrg.y = ptOrg.x = 0;
-    DPtoLP(hdc, &ptOrg, 1);
+    DPtoLP(scratchDC, &ptOrg, 1);
 
     if (alignFlags & ALIGN_BITMAP_TOP) {
 	topOffset = 0;
@@ -2715,7 +2715,7 @@ SetDefaults(
      * documented.
      */
 
-    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_WINDOWS) {
+    if (TkWinGetPlatformId() >= VER_PLATFORM_WIN32_WINDOWS) {
 	indicatorDimensions[0] = GetSystemMetrics(SM_CYMENUCHECK);
 	indicatorDimensions[1] = ((GetSystemMetrics(SM_CXFIXEDFRAME) +
 		GetSystemMetrics(SM_CXBORDER) 

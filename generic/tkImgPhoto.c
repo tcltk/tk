@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.18 2000/04/25 01:03:06 hobbs Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.18.2.1 2001/04/04 07:57:16 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -963,7 +963,7 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	    }
 	    if ((*imageFormat->stringReadProc)(interp, data,
 		    format, (Tk_PhotoHandle) masterPtr,
-		    0, 0, imageWidth, imageHeight, options.toX, options.toY)
+		    options.toX, options.toY, imageWidth, imageHeight, 0, 0)
 		    != TCL_OK) {
 		return TCL_ERROR;
 	    }
@@ -1976,7 +1976,6 @@ ImgPhotoGet(tkwin, masterData)
     Colormap colormap;
     int mono, nRed, nGreen, nBlue;
     XVisualInfo visualInfo, *visInfoPtr;
-    XRectangle validBox;
     char buf[TCL_INTEGER_SPACE * 3];
     int numVisuals;
     XColor *white, *black;
@@ -2134,16 +2133,6 @@ ImgPhotoGet(tkwin, masterData)
     if (instancePtr->nextPtr == NULL) {
 	Tk_ImageChanged(masterPtr->tkMaster, 0, 0, 0, 0,
 		masterPtr->width, masterPtr->height);
-    }
-
-    /*
-     * Dither the image to fill in this instance's pixmap.
-     */
-
-    TkClipBox(masterPtr->validRegion, &validBox);
-    if ((validBox.width > 0) && (validBox.height > 0)) {
-	DitherInstance(instancePtr, validBox.x, validBox.y, validBox.width,
-		validBox.height);
     }
 
     return (ClientData) instancePtr;

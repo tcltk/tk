@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.10 2000/04/25 01:03:05 hobbs Exp $
+# RCS: @(#) $Id: tk.decls,v 1.10.2.1 2001/04/04 07:57:16 hobbs Exp $
 
 library tk
 
@@ -1124,6 +1124,15 @@ declare 238 generic {
     int	Tk_PostscriptPhoto (Tcl_Interp *interp, \
 	    Tk_PhotoImageBlock *blockPtr, Tk_PostscriptInfo psInfo, \
 	    int width, int height)
+}
+
+# New in 8.4a1 / 8.3.3
+#
+declare 239 generic {
+    void Tk_CreateClientMessageHandler (Tk_ClientMessageProc *proc)
+}
+declare 240 generic {
+    void Tk_DeleteClientMessageHandler (Tk_ClientMessageProc *proc)
 }
 
 # Define the platform specific public Tk interface.  These functions are

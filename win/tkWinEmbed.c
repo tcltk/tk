@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.3 1999/04/16 01:51:51 stanton Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.3.12.1 2001/04/04 07:57:18 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -397,7 +397,7 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 
 	break;
       case TK_GEOMETRYREQ:
-	EmbedGeometryRequest(containerPtr, wParam, lParam);
+	EmbedGeometryRequest(containerPtr, (int) wParam, lParam);
 	break;
     }
     return 1;

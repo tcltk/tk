@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.24.2.4 2000/08/05 23:52:32 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.24.2.5 2001/04/04 07:57:18 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -126,9 +126,6 @@ TK_DLL_FILE		= @TK_DLL_FILE@
 SHARED_LIBRARIES 	= $(TK_DLL_FILE) $(TK_STUB_LIB_FILE)
 STATIC_LIBRARIES	= $(TK_LIB_FILE)
 
-WISH_RES		= @WISH_RES@
-TK_RES			= @TK_RES@
-
 WISH			= wish$(VER)${EXESUFFIX}
 TKTEST			= tktest${EXEEXT}
 CAT32			= cat32$(EXEEXT)
@@ -174,6 +171,7 @@ RANLIB		= @RANLIB@
 CC		= @CC@
 RC		= @RC@
 RES		= @RES@
+TK_RES		= @TK_RES@
 AC_FLAGS	= @EXTRA_CFLAGS@ @DEFS@
 CPPFLAGS	= @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@
@@ -181,14 +179,14 @@ LDFLAGS_CONSOLE	= @LDFLAGS_CONSOLE@
 LDFLAGS_WINDOW	= @LDFLAGS_WINDOW@
 EXEEXT		= @EXEEXT@
 OBJEXT		= @OBJEXT@
-LIBS_GUI	= @LIBS_GUI@
+STLIB_LD	= @STLIB_LD@
 SHLIB_LD	= @SHLIB_LD@
+SHLIB_LD_LIBS	= @SHLIB_LD_LIBS@ $(TCL_STUB_LIB_FILE) $(LIBS)
 SHLIB_CFLAGS	= @SHLIB_CFLAGS@
-SHLIB_LD_LIBS	= @SHLIB_LD_LIBS@ $(TCL_STUB_LIB_FILE) $(LIBS_GUI)
 SHLIB_SUFFIX	= @SHLIB_SUFFIX@
 VER		= @TK_MAJOR_VERSION@@TK_MINOR_VERSION@
 DOTVER		= @TK_MAJOR_VERSION@.@TK_MINOR_VERSION@
-LIBS		= @LIBS@ $(LIBS_GUI)
+LIBS		= @LIBS@ @LIBS_GUI@
 RMDIR		= rm -rf
 MKDIR		= mkdir -p
 SHELL		= @SHELL@
@@ -367,7 +365,7 @@ binaries: @LIBRARIES@ $(WISH)
 libraries:
 
 $(ROOT_DIR)/doc/man.macros:
-	$(INSTALL_DATA) @TCL_SRC_DIR@/doc/man.macros $(ROOT_DIR)/doc/man.macros
+	$(INSTALL_DATA) "$(TCL_SRC_DIR)/doc/man.macros" "$(ROOT_DIR)/doc/man.macros"
 
 doc: $(ROOT_DIR)/doc/man.macros
 
@@ -375,13 +373,17 @@ winhelp: $(TCL_SRC_DIR_NATIVE)/tools/man2help.tcl $(MAN2TCL)
 	TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/library"; export TCL_LIBRARY; \
 	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
 	PATH="$(PATH):$(TCL_BIN_DIR)"; export PATH; \
-	$(TCLSH_PROG) "$(TCL_SRC_DIR_NATIVE)"/tools/man2help.tcl tcl "$(VER)" $(CORE_DOCS)
+	$(TCLSH_PROG) "$(TCL_SRC_DIR_NATIVE)/tools/man2help.tcl" tcl "$(VER)" $(CORE_DOCS)
 	$(COPY) "$(TCL_BIN_DIR)"/tcl.hpj ./
 	hcw /c /e tcl.hpj
 	$(COPY) ./tcl$(VER).cnt ./TCL$(VER).HLP "$(TCL_SRC_DIR_NATIVE)"/tools/
 
 $(MAN2TCL): $(TCL_SRC_DIR_NATIVE)/tools/man2tcl.c
 	$(CC) $(CFLAGS_OPTIMIZE) $(MAN2TCLFLAGS) -o $(MAN2TCL) "$(TCL_SRC_DIR_NATIVE)"/tools/man2tcl.c
+
+# Specifying TESTFLAGS on the command line is the standard way to pass
+# args to tcltest, ie:
+#	% make test TESTFLAGS="-verbose bps -file fileName.test"
 
 test: binaries $(TKTEST)
 	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/library"; export TCL_LIBRARY; \
@@ -398,7 +400,7 @@ runtest: tktest
 
 install: all install-binaries install-libraries install-doc install-demos
 
-install-binaries:
+install-binaries: binaries
 	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) ; \
 	    do \
 	    if [ ! -d $$i ] ; then \
@@ -427,7 +429,7 @@ install-binaries:
 	    fi; \
         fi
 
-install-libraries:
+install-libraries: libraries
 	@for i in $(INSTALL_ROOT)$(prefix)/lib \
 		$(INCLUDE_INSTALL_DIR) $(INCLUDE_INSTALL_DIR)/X11 \
 		$(SCRIPT_INSTALL_DIR) $(SCRIPT_INSTALL_DIR)/images; \
@@ -440,8 +442,8 @@ install-libraries:
 		fi; \
 	    done;
 	@echo "Installing header files";
-	@for i in $(GENERIC_DIR)/tk.h $(GENERIC_DIR)/tkDecls.h \
-		$(GENERIC_DIR)/tkIntXlibDecls.h ; \
+	@for i in $(GENERIC_DIR)/tk.h $(GENERIC_DIR)/tkPlatDecls.h \
+		$(GENERIC_DIR)/tkIntXlibDecls.h $(GENERIC_DIR)/tkDecls.h ; \
 	    do \
 	    $(INSTALL_DATA) $$i $(INCLUDE_INSTALL_DIR); \
 	    done;
@@ -495,40 +497,25 @@ install-demos:
 		fi; \
 	    done;
 
-install-doc:
+install-doc: doc
 
 
-$(WISH): $(TK_LIB_FILE) $(WISH_OBJS) $(WISH_RES)
+$(WISH): $(TK_LIB_FILE) $(WISH_OBJS) wish.$(RES)
 	$(CC) $(CFLAGS) $(WISH_OBJS) $(TCL_LIB_FILE) $(TK_LIB_FILE) $(LIBS) \
-	$(WISH_RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
+	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 
 tktest : $(TKTEST)
 
-$(TKTEST): $(TK_LIB_FILE) $(TKTEST_OBJS) $(WISH_RES) $(CAT32)
+$(TKTEST): $(TK_LIB_FILE) $(TKTEST_OBJS) wish.$(RES) $(CAT32)
 	$(CC) $(CFLAGS) $(TKTEST_OBJS_NATIVE) $(TCL_LIB_FILE) \
 	$(TK_LIB_FILE) $(LIBS) \
-	$(WISH_RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
+	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 
 cat32.${OBJEXT}: $(TCL_SRC_DIR)/win/cat.c
 	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
 
 $(CAT32): cat32.${OBJEXT}
 	$(CC) $(CFLAGS) cat32.$(OBJEXT) $(CC_EXENAME) $(LDFLAGS_CONSOLE)
-
-# WISH_RES 
-$(RC_DIR)/wish_static.rc : $(RC_DIR)/wish.rc $(RC_DIR)/tk_base.rc
-	cat $(RC_DIR)/wish.rc $(RC_DIR)/tk_base.rc > $(RC_DIR)/wish_static.rc
-
-wish_static.$(RES) : $(RC_DIR)/wish_static.rc
-	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_GENERIC_NATIVE)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" $(DEPARG)
-
-
-# TK_RES
-$(RC_DIR)/tk_dll.rc : $(RC_DIR)/tk.rc $(RC_DIR)/tk_base.rc
-	cat $(RC_DIR)/tk.rc $(RC_DIR)/tk_base.rc > $(RC_DIR)/tk_dll.rc
-
-tk_dll.$(RES) : $(RC_DIR)/tk_dll.rc
-	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_GENERIC_NATIVE)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" $(DEPARG)
 
 # The following targets are configured by autoconf to generate either
 # a shared library or static library
@@ -579,7 +566,7 @@ tclThreadTest.$(OBJEXT): $(TCL_BIN_DIR)/tclThreadTest.$(OBJEXT)
 	$(CC) -c $(STUB_CC_SWITCHES) -DBUILD_tk ${DEPARG} $(CC_OBJNAME)
 
 .rc.$(RES):
-	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_GENERIC_NATIVE)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" $(DEPARG)
+	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_DEFINES@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_GENERIC_NATIVE)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" $(DEPARG)
 
 depend:
 
@@ -587,7 +574,7 @@ cleanhelp:
 	$(RM) *.hlp *.cnt *.hpj *.GID *.rtf man2tcl${EXEEXT}
 
 clean: cleanhelp
-	$(RM) *.lib *.a *.exp *.dll *.$(RES) *.${OBJEXT} *~ \#* TAGS a.out
+	$(RM) *.lib *.a *.exp *.dll *.res *.${OBJEXT} *~ \#* TAGS a.out
 	$(RM) $(WISH) $(TKTEST) $(CAT32)
 	$(RM) *.pch *.ilk *.pdb
 

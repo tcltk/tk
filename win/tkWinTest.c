@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.3 2000/04/12 18:51:11 hobbs Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.3.2.1 2001/04/04 07:57:18 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -89,6 +89,7 @@ TestclipboardObjCmd(clientData, interp, objc, objv)
     TkWindow *winPtr = (TkWindow *) clientData;
     HGLOBAL handle;
     char *data;
+    int code = TCL_OK;
 
     if (objc != 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, (char *) NULL);
@@ -108,9 +109,10 @@ TestclipboardObjCmd(clientData, interp, objc, objv)
 	    GlobalUnlock(handle);
 	} else {
 	    Tcl_AppendResult(interp, "null clipboard handle", (char *) NULL);
-	    return TCL_ERROR;
+	    code = TCL_ERROR;
 	}
 	CloseClipboard();
+	return code;
     } else {
 	Tcl_AppendResult(interp, "couldn't open clipboard", (char *) NULL);
 	return TCL_ERROR;

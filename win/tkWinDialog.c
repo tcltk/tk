@@ -1,4 +1,3 @@
-
 /*
  * tkWinDialog.c --
  *
@@ -9,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.10 2000/04/19 23:11:24 ericm Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.10.2.1 2001/04/04 07:57:18 hobbs Exp $
  *
  */
 
@@ -81,6 +80,17 @@ static const struct {int type; int btnIds[3];} allowedTypes[] = {
 #define NUM_TYPES (sizeof(allowedTypes) / sizeof(allowedTypes[0]))
 
 /*
+ * The value of TK_MULTI_MAX_PATH dictactes how many files can
+ * be retrieved with tk_get*File -multiple 1.  It must be allocated
+ * on the stack, so make it large enough but not too large.  -- hobbs
+ * The data is stored as <dir>\0<file1>\0<file2>\0...<fileN>\0\0.
+ * MAX_PATH == 260 on Win2K/NT.
+ * 8.3 doesn't have -multiple, so this == MAX_PATH.
+ */
+
+#define TK_MULTI_MAX_PATH	(MAX_PATH)
+
+/*
  * The following structure is used to pass information between the directory
  * chooser procedure, Tk_ChooseDirectoryObjCmd(), and its dialog hook proc.
  */
@@ -123,7 +133,6 @@ static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam,
 static UINT APIENTRY	OFNHookProcW(HWND hdlg, UINT uMsg, WPARAM wParam, 
 			    LPARAM lParam);
 static void		SetTkDialog(ClientData clientData);
-static int		TrySetDirectory(HWND hwnd, const TCHAR *dir);
 
 /*
  *-------------------------------------------------------------------------
@@ -183,18 +192,19 @@ Tk_ChooseColorObjCmd(clientData, interp, objc, objv)
 {
     Tk_Window tkwin, parent;
     HWND hWnd;
-    int i, oldMode, winCode;
+    int i, oldMode, winCode, result;
     CHOOSECOLOR chooseColor;
-    static inited = 0;
+    static int inited = 0;
     static COLORREF dwCustColors[16];
     static long oldColor;		/* the color selected last time */
     static char *optionStrings[] = {
-	"-initialcolor",    "-parent",	    "-title",	    NULL
+	"-initialcolor", "-parent", "-title", NULL
     };
     enum options {
-	COLOR_INITIAL,	    COLOR_PARENT,   COLOR_TITLE
+	COLOR_INITIAL, COLOR_PARENT, COLOR_TITLE
     };
 
+    result = TCL_OK;
     if (inited == 0) {
 	/*
 	 * dwCustColors stores the custom color which the user can
@@ -219,7 +229,7 @@ Tk_ChooseColorObjCmd(clientData, interp, objc, objv)
     chooseColor.lpCustColors	= dwCustColors;
     chooseColor.Flags		= CC_RGBINIT | CC_FULLOPEN | CC_ENABLEHOOK;
     chooseColor.lCustData	= (LPARAM) NULL;
-    chooseColor.lpfnHook	= ColorDlgHookProc;
+    chooseColor.lpfnHook	= (LPOFNHOOKPROC) ColorDlgHookProc;
     chooseColor.lpTemplateName	= (LPTSTR) interp;
 
     for (i = 1; i < objc; i += 2) {
@@ -299,16 +309,18 @@ Tk_ChooseColorObjCmd(clientData, interp, objc, objv)
 	/*
 	 * User has selected a color
 	 */
-	char result[100];
+	char color[100];
 
-	sprintf(result, "#%02x%02x%02x",
-	GetRValue(chooseColor.rgbResult), 
+	sprintf(color, "#%02x%02x%02x",
+		GetRValue(chooseColor.rgbResult), 
 	        GetGValue(chooseColor.rgbResult), 
 		GetBValue(chooseColor.rgbResult));
-        Tcl_AppendResult(interp, result, NULL);
+        Tcl_AppendResult(interp, color, NULL);
 	oldColor = chooseColor.rgbResult;
+	result = TCL_OK;
     }
-    return TCL_OK;
+
+    return result;
 }
 
 /*
@@ -456,8 +468,8 @@ GetFileNameW(clientData, interp, objc, objv, open)
 {
     Tcl_Encoding unicodeEncoding = Tcl_GetEncoding(NULL, "unicode");
     OPENFILENAMEW ofn;
-    WCHAR file[MAX_PATH];
-    int result, winCode, oldMode, i;
+    WCHAR file[TK_MULTI_MAX_PATH];
+    int result, winCode, oldMode, i, multi = 0;
     char *extension, *filter, *title;
     Tk_Window tkwin;
     HWND hWnd;
@@ -467,8 +479,9 @@ GetFileNameW(clientData, interp, objc, objv, open)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     static char *optionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-parent",	"-title",	NULL
+	"-parent", "-title", NULL
     };
+
     enum options {
 	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR,	FILE_INITFILE,
 	FILE_PARENT,	FILE_TITLE
@@ -496,8 +509,8 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	optionPtr = objv[i];
 	valuePtr = objv[i + 1];
 
-	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings, "option", 
-		0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings,
+		"option", 0, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
@@ -526,7 +539,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	    }
 	    case FILE_INITDIR: {
 		Tcl_DStringFree(&utfDirString);
-		if (Tcl_TranslateFileName(interp, string, 
+		if (Tcl_TranslateFileName(interp, string,
 			&utfDirString) == NULL) {
 		    goto end;
 		}
@@ -538,8 +551,8 @@ GetFileNameW(clientData, interp, objc, objv, open)
 		if (Tcl_TranslateFileName(interp, string, &ds) == NULL) {
 		    goto end;
 		}
-		Tcl_UtfToExternal(NULL, unicodeEncoding, Tcl_DStringValue(&ds), 
-			Tcl_DStringLength(&ds), 0, NULL, (char *) file, 
+		Tcl_UtfToExternal(NULL, unicodeEncoding, Tcl_DStringValue(&ds),
+			Tcl_DStringLength(&ds), 0, NULL, (char *) file,
 			sizeof(file), NULL, NULL, NULL);
 		break;
 	    }
@@ -568,14 +581,19 @@ GetFileNameW(clientData, interp, objc, objv, open)
 
     ofn.lStructSize		= sizeof(ofn);
     ofn.hwndOwner		= hWnd;
+#ifdef _WIN64
+    ofn.hInstance		= (HINSTANCE) GetWindowLongPtr(ofn.hwndOwner, 
+					GWLP_HINSTANCE);
+#else
     ofn.hInstance		= (HINSTANCE) GetWindowLong(ofn.hwndOwner, 
 					GWL_HINSTANCE);
+#endif
     ofn.lpstrFilter		= NULL;
     ofn.lpstrCustomFilter	= NULL;
     ofn.nMaxCustFilter		= 0;
     ofn.nFilterIndex		= 0;
     ofn.lpstrFile		= (WCHAR *) file;
-    ofn.nMaxFile		= MAX_PATH;
+    ofn.nMaxFile		= TK_MULTI_MAX_PATH;
     ofn.lpstrFileTitle		= NULL;
     ofn.nMaxFileTitle		= 0;
     ofn.lpstrInitialDir		= NULL;
@@ -585,7 +603,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
     ofn.nFileOffset		= 0;
     ofn.nFileExtension		= 0;
     ofn.lpstrDefExt		= NULL;
-    ofn.lpfnHook		= OFNHookProcW;
+    ofn.lpfnHook		= (LPOFNHOOKPROC) OFNHookProcW;
     ofn.lCustData		= (LPARAM) interp;
     ofn.lpTemplateName		= NULL;
 
@@ -599,20 +617,44 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	ofn.Flags |= OFN_ENABLEHOOK;
     }
 
+    if (multi != 0) {
+	ofn.Flags |= OFN_ALLOWMULTISELECT;
+    }
+
     if (extension != NULL) {
 	Tcl_UtfToExternalDString(unicodeEncoding, extension, -1, &extString);
 	ofn.lpstrDefExt = (WCHAR *) Tcl_DStringValue(&extString);
     }
 
-    Tcl_UtfToExternalDString(unicodeEncoding, Tcl_DStringValue(&utfFilterString),
+    Tcl_UtfToExternalDString(unicodeEncoding,
+	    Tcl_DStringValue(&utfFilterString),
 	    Tcl_DStringLength(&utfFilterString), &filterString);
     ofn.lpstrFilter = (WCHAR *) Tcl_DStringValue(&filterString);
 
     if (Tcl_DStringValue(&utfDirString)[0] != '\0') {
-	Tcl_UtfToExternalDString(unicodeEncoding, Tcl_DStringValue(&utfDirString),
+	Tcl_UtfToExternalDString(unicodeEncoding,
+		Tcl_DStringValue(&utfDirString),
 		Tcl_DStringLength(&utfDirString), &dirString);
-        ofn.lpstrInitialDir = (WCHAR *) Tcl_DStringValue(&dirString);
+    } else {
+	/*
+	 * NT 5.0 changed the meaning of lpstrInitialDir, so we have
+	 * to ensure that we set the [pwd] if the user didn't specify
+	 * anything else.
+	 */
+	Tcl_DString cwd;
+
+	Tcl_DStringFree(&utfDirString);
+	if ((Tcl_GetCwd(interp, &utfDirString) == (char *) NULL) ||
+		(Tcl_TranslateFileName(interp,
+			Tcl_DStringValue(&utfDirString), &cwd) == NULL)) {
+	    Tcl_ResetResult(interp);
+	} else {
+	    Tcl_UtfToExternalDString(unicodeEncoding, Tcl_DStringValue(&cwd),
+		    Tcl_DStringLength(&cwd), &dirString);
+	}
+	Tcl_DStringFree(&cwd);
     }
+    ofn.lpstrInitialDir = (WCHAR *) Tcl_DStringValue(&dirString);
 
     if (title != NULL) {
 	Tcl_UtfToExternalDString(unicodeEncoding, title, -1, &titleString);
@@ -650,23 +692,130 @@ GetFileNameW(clientData, interp, objc, objv, open)
      */
 
     if (winCode != 0) {
-	char *p;
-	Tcl_DString ds;
-
-	Tcl_ExternalToUtfDString(unicodeEncoding, (char *) ofn.lpstrFile, -1, &ds);
-	for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
-	    /*
-	     * Change the pathname to the Tcl "normalized" pathname, where
-	     * back slashes are used instead of forward slashes
+	if (ofn.Flags & OFN_ALLOWMULTISELECT) {
+            /*
+	     * The result in custData->szFile contains many items,
+	     * separated with null characters.  It is terminated with
+	     * two nulls in a row.  The first element is the directory
+	     * path.
 	     */
-	    if (*p == '\\') {
-		*p = '/';
-	    }
-	}
-	Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
-	Tcl_DStringFree(&ds);
-    }
+	    char *dir;
+	    char *p;
+	    char *file;
+	    WCHAR *files;
+	    Tcl_DString ds;
+	    Tcl_DString fullname, filename;
+	    Tcl_Obj *returnList;
+	    int count = 0;
 
+	    returnList = Tcl_NewObj();
+	    Tcl_IncrRefCount(returnList);
+
+	    files = ofn.lpstrFile;
+	    Tcl_ExternalToUtfDString(unicodeEncoding, (char *) files, -1, &ds);
+
+	    /* Get directory */
+	    dir = Tcl_DStringValue(&ds);
+	    for (p = dir; p && *p; p++) {
+		/*
+		 * Change the pathname to the Tcl "normalized" pathname, where
+		 * back slashes are used instead of forward slashes
+		 */
+		if (*p == '\\') {
+		    *p = '/';
+		}
+	    }
+
+	    while (*files != '\0') {
+		while (*files != '\0') {
+		    files++;
+		}
+		files++;
+		if (*files != '\0') {
+		    count++;
+		    Tcl_ExternalToUtfDString(unicodeEncoding,
+			    (char *)files, -1, &filename);
+		    file = Tcl_DStringValue(&filename);
+		    for (p = file; *p != '\0'; p++) {
+			if (*p == '\\') {
+			    *p = '/';
+			}
+		    }
+		    Tcl_DStringInit(&fullname);
+		    Tcl_DStringAppend(&fullname, dir, -1);
+		    Tcl_DStringAppend(&fullname, "/", -1);
+		    Tcl_DStringAppend(&fullname, file, -1);
+		    Tcl_ListObjAppendElement(interp, returnList,
+			    Tcl_NewStringObj(Tcl_DStringValue(&fullname), -1));
+		    Tcl_DStringFree(&fullname);
+		    Tcl_DStringFree(&filename);
+		}
+	    }
+	    if (count == 0) {
+		/*
+		 * Only one file was returned.
+		 */
+		Tcl_ListObjAppendElement(interp, returnList,
+			Tcl_NewStringObj(dir, -1));
+	    }
+	    Tcl_SetObjResult(interp, returnList);
+	    Tcl_DecrRefCount(returnList);
+	    Tcl_DStringFree(&ds);
+	} else {
+	    char *p;
+	    Tcl_DString ds;
+	    
+	    Tcl_ExternalToUtfDString(unicodeEncoding,
+		    (char *) ofn.lpstrFile, -1, &ds);
+	    for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
+		/*
+		 * Change the pathname to the Tcl "normalized" pathname, where
+		 * back slashes are used instead of forward slashes
+		 */
+		if (*p == '\\') {
+		    *p = '/';
+		}
+	    }
+	    Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
+	    Tcl_DStringFree(&ds);
+	}
+	result = TCL_OK;
+    } else {
+	/*
+	 * Use the CommDlgExtendedError() function to retrieve the error code.
+	 * This function can return one of about two dozen codes; most of
+	 * these indicate some sort of gross system failure (insufficient
+	 * memory, bad window handles, etc.).  Most of the error codes will be
+	 * ignored; as we find we want more specific error messages for
+	 * particular errors, we can extend the code as needed.
+	 *
+	 * We could also check for FNERR_BUFFERTOOSMALL, but we can't
+	 * really do anything about it when it happens.
+	 */
+
+	if (CommDlgExtendedError() == FNERR_INVALIDFILENAME) {
+	    char *p;
+	    Tcl_DString ds;
+	    
+	    Tcl_ExternalToUtfDString(unicodeEncoding,
+		    (char *) ofn.lpstrFile, -1, &ds);
+	    for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
+		/*
+		 * Change the pathname to the Tcl "normalized" pathname,
+		 * where back slashes are used instead of forward slashes
+		 */
+		if (*p == '\\') {
+		    *p = '/';
+		}
+	    }
+	    Tcl_SetResult(interp, "invalid filename \"", TCL_STATIC);
+	    Tcl_AppendResult(interp, Tcl_DStringValue(&ds), "\"", NULL);
+	    Tcl_DStringFree(&ds);
+	} else {
+	    result = TCL_OK;
+	}
+    }
+    
     if (ofn.lpstrTitle != NULL) {
 	Tcl_DStringFree(&titleString);
     }
@@ -677,7 +826,6 @@ GetFileNameW(clientData, interp, objc, objv, open)
     if (ofn.lpstrDefExt != NULL) {
 	Tcl_DStringFree(&extString);
     }
-    result = TCL_OK;
 
     end:
     Tcl_DStringFree(&utfDirString);
@@ -716,7 +864,11 @@ OFNHookProcW(
     OPENFILENAMEW *ofnPtr;
 
     if (uMsg == WM_INITDIALOG) {
+#ifdef _WIN64
+	SetWindowLongPtr(hdlg, GWLP_USERDATA, lParam);
+#else
 	SetWindowLong(hdlg, GWL_USERDATA, lParam);
+#endif
     } else if (uMsg == WM_WINDOWPOSCHANGED) {
 	/*
 	 * This message is delivered at the right time to enable Tk
@@ -725,12 +877,20 @@ OFNHookProcW(
 	 * WM_WINDOWPOSCHANGED message.
 	 */
 
+#ifdef _WIN64
+        ofnPtr = (OPENFILENAMEW *) GetWindowLongPtr(hdlg, GWLP_USERDATA);
+#else
         ofnPtr = (OPENFILENAMEW *) GetWindowLong(hdlg, GWL_USERDATA);
+#endif
 	if (ofnPtr != NULL) {
 	    hdlg = GetParent(hdlg);
 	    tsdPtr->debugInterp = (Tcl_Interp *) ofnPtr->lCustData;
 	    Tcl_DoWhenIdle(SetTkDialog, (ClientData) hdlg);
+#ifdef _WIN64
+	    SetWindowLongPtr(hdlg, GWLP_USERDATA, (LPARAM) NULL);
+#else
 	    SetWindowLong(hdlg, GWL_USERDATA, (LPARAM) NULL);
+#endif
 	}
     }
     return 0;
@@ -762,8 +922,8 @@ GetFileNameA(clientData, interp, objc, objv, open)
 				 * call GetSaveFileName(). */
 {
     OPENFILENAME ofn;
-    TCHAR file[MAX_PATH], savePath[MAX_PATH];
-    int result, winCode, oldMode, i;
+    TCHAR file[TK_MULTI_MAX_PATH], savePath[MAX_PATH];
+    int result, winCode, oldMode, i, multi = 0;
     char *extension, *filter, *title;
     Tk_Window tkwin;
     HWND hWnd;
@@ -773,8 +933,9 @@ GetFileNameA(clientData, interp, objc, objv, open)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     static char *optionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-parent",	"-title",	NULL
+	"-parent", "-title", NULL
     };
+
     enum options {
 	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR,	FILE_INITFILE,
 	FILE_PARENT,	FILE_TITLE
@@ -802,8 +963,8 @@ GetFileNameA(clientData, interp, objc, objv, open)
 	optionPtr = objv[i];
 	valuePtr = objv[i + 1];
 
-	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings, "option", 
-		0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings,
+		"option", 0, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
@@ -832,7 +993,7 @@ GetFileNameA(clientData, interp, objc, objv, open)
 	    }
 	    case FILE_INITDIR: {
 		Tcl_DStringFree(&utfDirString);
-		if (Tcl_TranslateFileName(interp, string, 
+		if (Tcl_TranslateFileName(interp, string,
 			&utfDirString) == NULL) {
 		    goto end;
 		}
@@ -874,14 +1035,19 @@ GetFileNameA(clientData, interp, objc, objv, open)
 
     ofn.lStructSize		= sizeof(ofn);
     ofn.hwndOwner		= hWnd;
+#ifdef _WIN64
+    ofn.hInstance		= (HINSTANCE) GetWindowLongPtr(ofn.hwndOwner, 
+					GWLP_HINSTANCE);
+#else
     ofn.hInstance		= (HINSTANCE) GetWindowLong(ofn.hwndOwner, 
 					GWL_HINSTANCE);
+#endif
     ofn.lpstrFilter		= NULL;
     ofn.lpstrCustomFilter	= NULL;
     ofn.nMaxCustFilter		= 0;
     ofn.nFilterIndex		= 0;
     ofn.lpstrFile		= (LPTSTR) file;
-    ofn.nMaxFile		= MAX_PATH;
+    ofn.nMaxFile		= TK_MULTI_MAX_PATH;
     ofn.lpstrFileTitle		= NULL;
     ofn.nMaxFileTitle		= 0;
     ofn.lpstrInitialDir		= NULL;
@@ -891,7 +1057,7 @@ GetFileNameA(clientData, interp, objc, objv, open)
     ofn.nFileOffset		= 0;
     ofn.nFileExtension		= 0;
     ofn.lpstrDefExt		= NULL;
-    ofn.lpfnHook		= OFNHookProc;
+    ofn.lpfnHook		= (LPOFNHOOKPROC) OFNHookProc;
     ofn.lCustData		= (LPARAM) interp;
     ofn.lpTemplateName		= NULL;
 
@@ -905,6 +1071,10 @@ GetFileNameA(clientData, interp, objc, objv, open)
 	ofn.Flags |= OFN_ENABLEHOOK;
     }
 
+    if (multi != 0) {
+	ofn.Flags |= OFN_ALLOWMULTISELECT;
+    }
+
     if (extension != NULL) {
 	Tcl_UtfToExternalDString(NULL, extension, -1, &extString);
 	ofn.lpstrDefExt = (LPTSTR) Tcl_DStringValue(&extString);
@@ -916,15 +1086,34 @@ GetFileNameA(clientData, interp, objc, objv, open)
     if (Tcl_DStringValue(&utfDirString)[0] != '\0') {
 	Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&utfDirString),
 		Tcl_DStringLength(&utfDirString), &dirString);
-        ofn.lpstrInitialDir = (LPTSTR) Tcl_DStringValue(&dirString);
+    } else {
+	/*
+	 * NT 5.0 changed the meaning of lpstrInitialDir, so we have
+	 * to ensure that we set the [pwd] if the user didn't specify
+	 * anything else.
+	 */
+	Tcl_DString cwd;
+
+	Tcl_DStringFree(&utfDirString);
+	if ((Tcl_GetCwd(interp, &utfDirString) == (char *) NULL) ||
+		(Tcl_TranslateFileName(interp,
+			Tcl_DStringValue(&utfDirString), &cwd) == NULL)) {
+	    Tcl_ResetResult(interp);
+	} else {
+	    Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&cwd),
+		    Tcl_DStringLength(&cwd), &dirString);
+	}
+	Tcl_DStringFree(&cwd);
     }
+    ofn.lpstrInitialDir = (LPTSTR) Tcl_DStringValue(&dirString);
+
     if (title != NULL) {
 	Tcl_UtfToExternalDString(NULL, title, -1, &titleString);
 	ofn.lpstrTitle = (LPTSTR) Tcl_DStringValue(&titleString);
     }
 
     /*
-     * Popup the dialog.  
+     * Popup the dialog.
      */
 
     GetCurrentDirectory(MAX_PATH, savePath);
@@ -956,21 +1145,125 @@ GetFileNameA(clientData, interp, objc, objv, open)
      */
 
     if (winCode != 0) {
-	char *p;
-	Tcl_DString ds;
-
-	Tcl_ExternalToUtfDString(NULL, (char *) ofn.lpstrFile, -1, &ds);
-	for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
-	    /*
-	     * Change the pathname to the Tcl "normalized" pathname, where
-	     * back slashes are used instead of forward slashes
+	if (ofn.Flags & OFN_ALLOWMULTISELECT) {
+            /*
+	     * The result in custData->szFile contains many items,
+	     * separated with null characters.  It is terminated with
+	     * two nulls in a row.  The first element is the directory
+	     * path.
 	     */
-	    if (*p == '\\') {
-		*p = '/';
+	    char *dir;
+	    char *p;
+	    char *file;
+	    char *files;
+	    Tcl_DString ds;
+	    Tcl_DString fullname, filename;
+	    Tcl_Obj *returnList;
+	    int count = 0;
+
+	    returnList = Tcl_NewObj();
+	    Tcl_IncrRefCount(returnList);
+
+	    files = ofn.lpstrFile;
+	    Tcl_ExternalToUtfDString(NULL, (char *) files, -1, &ds);
+
+	    /* Get directory */
+	    dir = Tcl_DStringValue(&ds);
+	    for (p = dir; p && *p; p++) {
+		/*
+		 * Change the pathname to the Tcl "normalized" pathname, where
+		 * back slashes are used instead of forward slashes
+		 */
+		if (*p == '\\') {
+		    *p = '/';
+		}
 	    }
+
+	    while (*files != '\0') {
+		while (*files != '\0') {
+		    files++;
+		}
+		files++;
+		if (*files != '\0') {
+		    count++;
+		    Tcl_ExternalToUtfDString(NULL,
+			    (char *)files, -1, &filename);
+		    file = Tcl_DStringValue(&filename);
+		    for (p = file; *p != '\0'; p++) {
+			if (*p == '\\') {
+			    *p = '/';
+			}
+		    }
+		    Tcl_DStringInit(&fullname);
+		    Tcl_DStringAppend(&fullname, dir, -1);
+		    Tcl_DStringAppend(&fullname, "/", -1);
+		    Tcl_DStringAppend(&fullname, file, -1);
+		    Tcl_ListObjAppendElement(interp, returnList,
+			    Tcl_NewStringObj(Tcl_DStringValue(&fullname), -1));
+		    Tcl_DStringFree(&fullname);
+		    Tcl_DStringFree(&filename);
+		}
+	    }
+	    if (count == 0) {
+		/*
+		 * Only one file was returned.
+		 */
+		Tcl_ListObjAppendElement(interp, returnList,
+			Tcl_NewStringObj(dir, -1));
+	    }
+	    Tcl_SetObjResult(interp, returnList);
+	    Tcl_DecrRefCount(returnList);
+	    Tcl_DStringFree(&ds);
+	} else {
+	    char *p;
+	    Tcl_DString ds;
+
+	    Tcl_ExternalToUtfDString(NULL, (char *) ofn.lpstrFile, -1, &ds);
+	    for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
+		/*
+		 * Change the pathname to the Tcl "normalized" pathname, where
+		 * back slashes are used instead of forward slashes
+		 */
+		if (*p == '\\') {
+		    *p = '/';
+		}
+	    }
+	    Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
+	    Tcl_DStringFree(&ds);
 	}
-	Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
-	Tcl_DStringFree(&ds);
+	result = TCL_OK;
+    } else {
+	/*
+	 * Use the CommDlgExtendedError() function to retrieve the error code.
+	 * This function can return one of about two dozen codes; most of
+	 * these indicate some sort of gross system failure (insufficient
+	 * memory, bad window handles, etc.).  Most of the error codes will be
+	 * ignored;; as we find we want specific error messages for particular
+	 * errors, we can extend the code as needed.
+	 *
+	 * We could also check for FNERR_BUFFERTOOSMALL, but we can't
+	 * really do anything about it when it happens.
+	 */
+	if (CommDlgExtendedError() == FNERR_INVALIDFILENAME) {
+	    char *p;
+	    Tcl_DString ds;
+
+	    Tcl_ExternalToUtfDString(NULL, (char *) ofn.lpstrFile, -1, &ds);
+	    for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
+		/*
+		 * Change the pathname to the Tcl "normalized" pathname,
+		 * where back slashes are used instead of forward slashes
+		 */
+		if (*p == '\\') {
+		    *p = '/';
+		}
+	    }
+	    Tcl_SetResult(interp, "invalid filename \"", TCL_STATIC);
+	    Tcl_AppendResult(interp, Tcl_DStringValue(&ds), "\"", NULL);
+	    Tcl_DStringFree(&ds);
+	} else {
+	    result = TCL_OK;
+	}
     }
 
     if (ofn.lpstrTitle != NULL) {
@@ -983,7 +1276,6 @@ GetFileNameA(clientData, interp, objc, objv, open)
     if (ofn.lpstrDefExt != NULL) {
 	Tcl_DStringFree(&extString);
     }
-    result = TCL_OK;
 
     end:
     Tcl_DStringFree(&utfDirString);
@@ -1022,7 +1314,11 @@ OFNHookProc(
     OPENFILENAME *ofnPtr;
 
     if (uMsg == WM_INITDIALOG) {
+#ifdef _WIN64
+	SetWindowLongPtr(hdlg, GWLP_USERDATA, lParam);
+#else
 	SetWindowLong(hdlg, GWL_USERDATA, lParam);
+#endif
     } else if (uMsg == WM_WINDOWPOSCHANGED) {
 	/*
 	 * This message is delivered at the right time to both 
@@ -1032,14 +1328,22 @@ OFNHookProc(
 	 * WM_WINDOWPOSCHANGED message.
 	 */
 
+#ifdef _WIN64
+        ofnPtr = (OPENFILENAME *) GetWindowLongPtr(hdlg, GWLP_USERDATA);
+#else
         ofnPtr = (OPENFILENAME *) GetWindowLong(hdlg, GWL_USERDATA);
+#endif
 	if (ofnPtr != NULL) {
 	    if (ofnPtr->Flags & OFN_EXPLORER) {
 		hdlg = GetParent(hdlg);
 	    }
 	    tsdPtr->debugInterp = (Tcl_Interp *) ofnPtr->lCustData;
 	    Tcl_DoWhenIdle(SetTkDialog, (ClientData) hdlg);
+#ifdef _WIN64
+	    SetWindowLongPtr(hdlg, GWLP_USERDATA, (LPARAM) NULL);
+#else
 	    SetWindowLong(hdlg, GWL_USERDATA, (LPARAM) NULL);
+#endif
 	}
     }
     return 0;
@@ -1288,8 +1592,13 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
 
     ofn.lStructSize		= sizeof(ofn);
     ofn.hwndOwner		= hWnd;
+#ifdef _WIN64
+    ofn.hInstance		= (HINSTANCE) GetWindowLongPtr(ofn.hwndOwner, 
+					GWLP_HINSTANCE);
+#else
     ofn.hInstance		= (HINSTANCE) GetWindowLong(ofn.hwndOwner, 
 					GWL_HINSTANCE);
+#endif
     ofn.lpstrFilter		= NULL;
     ofn.lpstrCustomFilter	= NULL;
     ofn.nMaxCustFilter		= 0;
@@ -1306,14 +1615,33 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     ofn.nFileExtension		= 0;
     ofn.lpstrDefExt		= NULL;
     ofn.lCustData		= (LPARAM) &cd;
-    ofn.lpfnHook		= ChooseDirectoryHookProc;
+    ofn.lpfnHook		= (LPOFNHOOKPROC) ChooseDirectoryHookProc;
     ofn.lpTemplateName		= MAKEINTRESOURCE(FILEOPENORD);
 
     if (Tcl_DStringValue(&utfDirString)[0] != '\0') {
 	Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&utfDirString), 
 		Tcl_DStringLength(&utfDirString), &dirString);
-	ofn.lpstrInitialDir = (LPTSTR) Tcl_DStringValue(&dirString);
+    } else {
+	/*
+	 * NT 5.0 changed the meaning of lpstrInitialDir, so we have
+	 * to ensure that we set the [pwd] if the user didn't specify
+	 * anything else.
+	 */
+	Tcl_DString cwd;
+
+	Tcl_DStringFree(&utfDirString);
+	if ((Tcl_GetCwd(interp, &utfDirString) == (char *) NULL) ||
+		(Tcl_TranslateFileName(interp,
+			Tcl_DStringValue(&utfDirString), &cwd) == NULL)) {
+	    Tcl_ResetResult(interp);
+	} else {
+	    Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&cwd),
+		    Tcl_DStringLength(&cwd), &dirString);
+	}
+	Tcl_DStringFree(&cwd);
     }
+    ofn.lpstrInitialDir = (LPTSTR) Tcl_DStringValue(&dirString);
+
     if (mustExist) {
 	ofn.Flags |= OFN_PATHMUSTEXIST;
     }
@@ -1414,12 +1742,20 @@ ChooseDirectoryHookProc(
      * GWL_USERDATA keeps track of ofnPtr.
      */
     
+#ifdef _WIN64
+    ofnPtr = (OPENFILENAME *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
+#else
     ofnPtr = (OPENFILENAME *) GetWindowLong(hwnd, GWL_USERDATA);
+#endif
 
     if (message == WM_INITDIALOG) {
         ChooseDir *cdPtr;
 
+#ifdef _WIN64
+	SetWindowLongPtr(hwnd, GWLP_USERDATA, lParam);
+#else
 	SetWindowLong(hwnd, GWL_USERDATA, lParam);
+#endif
 	ofnPtr = (OPENFILENAME *) lParam;
 	cdPtr = (ChooseDir *) ofnPtr->lCustData;
 	cdPtr->lastCtrl = 0;
@@ -1766,6 +2102,10 @@ SetTkDialog(ClientData clientData)
 
     hwnd = (HWND) clientData;
 
+#ifdef _WIN64
+    sprintf(buf, "0x%16x", hwnd);
+#else
     sprintf(buf, "0x%08x", hwnd);
+#endif
     Tcl_SetVar(tsdPtr->debugInterp, "tk_dialog", buf, TCL_GLOBAL_ONLY);
 }

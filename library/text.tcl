@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.12 2000/04/17 23:24:29 ericm Exp $
+# RCS: @(#) $Id: text.tcl,v 1.12.2.1 2001/04/04 07:57:17 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -36,7 +36,7 @@
 #-------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------
-# The code below creates the default class bindings for entries.
+# The code below creates the default class bindings for text widgets.
 #-------------------------------------------------------------------------
 
 # Standard Motif bindings:
@@ -182,9 +182,11 @@ bind Text <Control-Shift-End> {
 }
 
 bind Text <Tab> {
-    tkTextInsert %W \t
-    focus %W
-    break
+    if { [string equal [%W cget -state] "normal"] } {
+	tkTextInsert %W \t
+	focus %W
+	break
+    }
 }
 bind Text <Shift-Tab> {
     # Needed only to keep <Tab> binding from triggering;  doesn't
@@ -579,15 +581,9 @@ proc tkTextSelectTo {w x y {extend 0}} {
 	}
     }
     if {$tkPriv(mouseMoved) || [string compare $tkPriv(selectMode) "char"]} {
-	if {[string compare $tcl_platform(platform) "unix"] \
-		&& [$w compare $cur < anchor]} {
-	    $w mark set insert $first
-	} else {
-	    $w mark set insert $last
-	}
-	$w tag remove sel 0.0 $first
+	$w tag remove sel 0.0 end
+	$w mark set insert $cur
 	$w tag add sel $first $last
-	$w tag remove sel $last end
 	update idletasks
     }
 }
@@ -740,7 +736,10 @@ proc tkTextResetAnchor {w index} {
     global tkPriv
 
     if {[string equal [$w tag ranges sel] ""]} {
-	$w mark set anchor $index
+	# Don't move the anchor if there is no selection now; this makes
+	# the widget behave "correctly" when the user clicks once, then
+	# shift-clicks somewhere -- ie, the area between the two clicks will be
+	# selected. [Bug: 5929].
 	return
     }
     set a [$w index $index]

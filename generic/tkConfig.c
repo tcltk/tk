@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.7 2000/04/25 01:02:30 hobbs Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.7.2.1 2001/04/04 07:57:16 hobbs Exp $
  */
 
 /*
@@ -539,6 +539,13 @@ Tk_InitOptions(interp, recordPtr, optionTable, tkwin)
 	    continue;
 	}
 
+	/*
+	 * Bump the reference count on valuePtr, so that it is strongly
+	 * referenced here, and will be properly free'd when finished,
+	 * regardless of what DoObjConfig does.
+	 */
+	Tcl_IncrRefCount(valuePtr);
+	
 	if (DoObjConfig(interp, recordPtr, optionPtr, valuePtr, tkwin,
 		(Tk_SavedOption *) NULL) != TCL_OK) {
 	    if (interp != NULL) {
@@ -563,8 +570,10 @@ Tk_InitOptions(interp, recordPtr, optionTable, tkwin)
 		}
 		Tcl_AddErrorInfo(interp, msg);
 	    }
+	    Tcl_DecrRefCount(valuePtr);
 	    return TCL_ERROR;
 	}
+	Tcl_DecrRefCount(valuePtr);
     }
     return TCL_OK;
 }

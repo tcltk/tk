@@ -6,7 +6,7 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.8.2.1 2000/08/05 23:53:14 hobbs Exp $
+# RCS: @(#) $Id: canvas.test,v 1.8.2.2 2001/04/04 07:57:17 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -366,6 +366,50 @@ test canvas-11.1 {canvas poly fill check, bug 5783} {
     .c create polygon 0 0 100 100 200 50 \
 	    -fill {} -stipple gray50 -outline black
 } 1
+
+test canvas-12.1 {canvas mm obj, patch SF-403327, 102471} {
+    destroy .c
+    pack [canvas .c]
+    set qx [expr {1.+1.}] 
+    # qx has type double and no string representation 
+    .c scale all $qx 0 1. 1.
+    # qx has now type MMRep and no string representation 
+    list $qx [string length $qx]
+} {2.0 3}
+test canvas-12.2 {canvas mm obj, patch SF-403327, 102471} {
+    destroy .c
+    pack [canvas .c]
+    set val 10
+    incr val
+    # qx has type double and no string representation 
+    .c scale all $val 0 1 1
+    # qx has now type MMRep and no string representation 
+    incr val
+} {12}
+
+proc kill_canvas {w} {
+    destroy $w
+    pack [canvas $w -height 200 -width 200] -fill both -expand yes
+    update idle
+    $w create rectangle 80 80 120 120 -fill blue -tags blue
+    # bind a button press to re-build the canvas
+    $w bind blue <ButtonRelease-1> [subst {
+	[lindex [info level 0] 0] $w
+	append ::x ok
+    }
+    ]
+}
+
+test canvas-13.1 {canvas delete during event, SF bug-228024} {
+    kill_canvas .c
+    set ::x {}
+    # do this many times to improve chances of triggering the crash
+    for {set i 0} {$i < 30} {incr i} {
+	event generate .c <1> -x 100 -y 100
+	event generate .c <ButtonRelease-1> -x 100 -y 100
+    }
+    set ::x
+} okokokokokokokokokokokokokokokokokokokokokokokokokokokokokok
 
 # cleanup
 ::tcltest::cleanupTests

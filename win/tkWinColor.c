@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinColor.c,v 1.5 2000/04/17 06:26:09 hobbs Exp $
+ * RCS: @(#) $Id: tkWinColor.c,v 1.5.2.1 2001/04/04 07:57:18 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -80,8 +80,6 @@ static Tcl_ThreadDataKey dataKey;
 
 static int	FindSystemColor _ANSI_ARGS_((const char *name,
 		    XColor *colorPtr, int *indexPtr));
-static int	GetColorByName _ANSI_ARGS_((char *name, XColor *color));
-static int	GetColorByValue _ANSI_ARGS_((char *value, XColor *color));
 
 /*
  *----------------------------------------------------------------------

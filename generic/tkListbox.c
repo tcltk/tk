@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.16 2000/03/02 21:52:41 hobbs Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.16.2.1 2001/04/04 07:57:17 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1412,16 +1412,6 @@ DestroyListbox(memPtr)
     Tcl_HashEntry *entry;
     Tcl_HashSearch search;
 
-    listPtr->flags |= LISTBOX_DELETED;
-
-    Tcl_DeleteCommandFromToken(listPtr->interp, listPtr->widgetCmd);
-    if (listPtr->setGrid) {
-	Tk_UnsetGrid(listPtr->tkwin);
-    }
-    if (listPtr->flags & REDRAW_PENDING) {
-	Tcl_CancelIdleCall(DisplayListbox, (ClientData) listPtr);
-    }
-
     /* If we have an internal list object, free it */
     if (listPtr->listObj != NULL) {
 	Tcl_DecrRefCount(listPtr->listObj);
@@ -1766,6 +1756,9 @@ DisplayListbox(clientData)
     Pixmap pixmap;
 
     listPtr->flags &= ~REDRAW_PENDING;
+    if (listPtr->flags & LISTBOX_DELETED) {
+	return;
+    }
 
     if (listPtr->flags & MAXWIDTH_IS_STALE) {
 	ListboxComputeGeometry(listPtr, 0, 1, 0);
@@ -1780,7 +1773,7 @@ DisplayListbox(clientData)
 	ListboxUpdateHScrollbar(listPtr);
     }
     listPtr->flags &= ~(REDRAW_PENDING|UPDATE_V_SCROLLBAR|UPDATE_H_SCROLLBAR);
-    if ((listPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
+    if ((listPtr->flags & LISTBOX_DELETED) || !Tk_IsMapped(tkwin)) {
 	return;
     }
 
@@ -2365,7 +2358,17 @@ ListboxEventProc(clientData, eventPtr)
 		NearestListboxElement(listPtr, eventPtr->xexpose.y
 		+ eventPtr->xexpose.height));
     } else if (eventPtr->type == DestroyNotify) {
-	DestroyListbox((char *) clientData);
+	if (!(listPtr->flags & LISTBOX_DELETED)) {
+	    listPtr->flags |= LISTBOX_DELETED;
+	    Tcl_DeleteCommandFromToken(listPtr->interp, listPtr->widgetCmd);
+	    if (listPtr->setGrid) {
+		Tk_UnsetGrid(listPtr->tkwin);
+	    }
+	    if (listPtr->flags & REDRAW_PENDING) {
+		Tcl_CancelIdleCall(DisplayListbox, clientData);
+	    }
+	    Tcl_EventuallyFree(clientData, DestroyListbox);
+	}
     } else if (eventPtr->type == ConfigureNotify) {
 	int vertSpace;
 
@@ -2979,7 +2982,7 @@ EventuallyRedrawRange(listPtr, first, last)
     /* We don't have to register a redraw callback if one is already pending,
      * or if the window doesn't exist, or if the window isn't mapped */
     if ((listPtr->flags & REDRAW_PENDING)
-	    || (listPtr->tkwin == NULL)
+	    || (listPtr->flags & LISTBOX_DELETED)
 	    || !Tk_IsMapped(listPtr->tkwin)) {
 	return;
     }

@@ -2,14 +2,14 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.16.2.4 2000/07/28 08:12:06 mo Exp $
+# RCS: @(#) $Id: configure.in,v 1.16.2.5 2001/04/04 07:57:18 hobbs Exp $
 
 AC_INIT(../generic/tk.h)
 
 TK_VERSION=8.3
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=3
-TK_PATCH_LEVEL=".2"
+TK_PATCH_LEVEL=".3"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #--------------------------------------------------------------------
@@ -19,6 +19,23 @@ VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 #--------------------------------------------------------------------
  
 SC_ENABLE_GCC
+#AC_PROG_CC
+
+# To properly support cross-compilation, one would
+# need to use these tool checks instead of
+# the ones below and reconfigure with
+# autoconf 2.50. You can also just set
+# the CC, AR, RANLIB, and RC environment
+# variables if you want to cross compile.
+#AC_CHECK_TOOL(AR, ar, :)
+#AC_CHECK_TOOL(RANLIB, ranlib, :)
+#AC_CHECK_TOOL(RC, windres, :)
+
+if test "${GCC}" = "yes" ; then
+    AC_CHECK_PROG(AR, ar, ar)
+    AC_CHECK_PROG(RANLIB, ranlib, ranlib)
+    AC_CHECK_PROG(RC, windres, windres)
+fi
 
 #--------------------------------------------------------------------
 # Checks to see if the make progeam sets the $MAKE variable.
@@ -120,7 +137,6 @@ eval "TCL_LIB_FILE=\"${LIBPREFIX}tcl$VER${LIBSUFFIX}\""
 
 eval "TCL_STUB_LIB_FILE=\"${LIBPREFIX}tclstub${VER}${LIBSUFFIX}\""
 eval "TCL_STUB_LIB_FLAG=\"-ltclstub${VER}${TCL_DBGX}\""
-
 eval "TCL_BUILD_STUB_LIB_SPEC=\"-L`pwd` ${TCL_STUB_LIB_FLAG}\""
 
 eval "DLLSUFFIX=${DLLSUFFIX}"
@@ -128,22 +144,30 @@ eval "LIBPREFIX=${LIBPREFIX}"
 eval "LIBSUFFIX=${LIBSUFFIX}"
 eval "EXESUFFIX=${EXESUFFIX}"
 
-if test "$SHARED_BUILD" = 0 -o $TCL_NEEDS_EXP_FILE = 0; then
-    TK_BUILD_LIB_SPEC="`pwd`/${TK_LIB_FILE}"
-    TK_LIB_SPEC="${exec_prefix}/lib/${TK_LIB_FILE}"
-    WISH_RES=wish_static.${RES}
-    TK_RES=
-else
-    TK_BUILD_LIB_SPEC="`pwd`/${TK_DLL_FILE}"
-    TK_LIB_SPEC="${exec_prefix}/lib/${TK_DLL_FILE}"
-    WISH_RES=wish_static.${RES}
-    TK_RES=tk_dll.${RES}
-fi
-TK_SHARED_BUILD=${SHARED_BUILD}
-
 CFG_TK_SHARED_LIB_SUFFIX=${TK_SHARED_LIB_SUFFIX}
 CFG_TK_UNSHARED_LIB_SUFFIX=${TK_UNSHARED_LIB_SUFFIX}
 CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
+
+#--------------------------------------------------------------------
+# Adjust the defines for how the resources are built depending
+# on symbols and static vs. shared.
+#--------------------------------------------------------------------
+
+if test "$SHARED_BUILD" = 0 -o $TCL_NEEDS_EXP_FILE = 0; then
+    if test "${DBGX}" = "d"; then
+        RC_DEFINES="-d STATIC_BUILD -d DEBUG"
+    else
+        RC_DEFINES="-d STATIC_BUILD"
+    fi
+    TK_RES=""
+else
+    if test "${DBGX}" = "d"; then
+        RC_DEFINES="-d DEBUG"
+    else
+        RC_DEFINES=""
+    fi
+    TK_RES=tk.res
+fi
 
 AC_SUBST(TK_VERSION)
 AC_SUBST(TK_MAJOR_VERSION)
@@ -157,11 +181,6 @@ AC_SUBST(TK_STUB_LIB_FLAG)
 AC_SUBST(TK_BUILD_STUB_LIB_SPEC)
 AC_SUBST(TK_SRC_DIR)
 AC_SUBST(TK_BIN_DIR)
-AC_SUBST(TK_BUILD_LIB_SPEC)
-AC_SUBST(TK_LIB_SPEC)
-AC_SUBST(TK_SHARED_BUILD)
-AC_SUBST(WISH_RES)
-AC_SUBST(TK_RES)
 
 AC_SUBST(TCL_VERSION)
 AC_SUBST(TCL_MAJOR_VERSION)
@@ -205,6 +224,8 @@ AC_SUBST(RC)
 AC_SUBST(RC_OUT)
 AC_SUBST(RC_TYPE)
 AC_SUBST(RC_INCLUDE)
+AC_SUBST(RC_DEFINES)
+AC_SUBST(TK_RES)
 AC_SUBST(RES)
 AC_SUBST(LIBS)
 AC_SUBST(LIBS_GUI)

@@ -1,11 +1,11 @@
 README:  Tk
-    This is the Tk 8.3.2 source distribution.
+    This is the Tk 8.3.3 source distribution.
     You can get any release of Tcl from:
         http://dev.scriptics.com/registration/<version>.html
     Tcl/Tk is also available through NetCVS:
-	http://dev.scriptics.com/software/tcltk/netcvs.html
+	http://tcl.sourceforge.net/
 
-RCS: @(#) $Id: README,v 1.25.2.1 2000/07/27 01:05:57 hobbs Exp $
+RCS: @(#) $Id: README,v 1.25.2.2 2001/04/04 07:57:16 hobbs Exp $
 
 1. Introduction
 ---------------
@@ -21,9 +21,13 @@ this release, see the Tcl/Tk 8.3 Web page at
 or refer to the "changes" file in this directory, which contains a
 historical record of all changes to Tk.
 
-Tk is maintained, enhanced, and distributed freely as a
-service to the Tcl community by Scriptics Corporation.
-The official home for Tcl/Tk is on the Scriptics Web site:
+Tk is maintained, enhanced, and distributed freely by members of the
+Tcl community.  The home for Tcl/Tk sources and bug database is on
+SourceForge at:
+
+	http://tcl.sourceforge.net/
+
+with the Tcl Developer Xchange at:
 
 	http://dev.scriptics.com
 

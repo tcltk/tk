@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.20 2000/03/24 19:38:57 ericm Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.20.2.1 2001/04/04 07:57:17 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -28,6 +28,11 @@ if {[info exists auto_path] && [string compare {} $tk_library] && \
 # Turn off strict Motif look and feel as a default.
 
 set tk_strictMotif 0
+
+# Turn on useinputmethods (X Input Methods) by default.
+# We catch this because safe interpreters may not allow the call.
+
+catch {tk useinputmethods 1}
 
 # Create a ::tk namespace
 
@@ -104,7 +109,9 @@ proc ::tk::SetFocusGrab {grab {focus {}}} {
     if {[winfo exists $oldGrab]} {
 	lappend data [grab status $oldGrab]
     }
-    grab $grab
+    # The "grab" command will fail if another application
+    # already holds the grab.  So catch it.
+    catch {grab $grab}
     if {[winfo exists $focus]} {
 	focus $focus
     }
@@ -280,7 +287,10 @@ switch $tcl_platform(platform) {
 	    switch $tcl_platform(os) {
 		"IRIX"  -
 		"Linux" { event add <<PrevWindow>> <ISO_Left_Tab> }
-		"HP-UX" { event add <<PrevWindow>> <hpBackTab> }
+		"HP-UX" {
+		    # This seems to be correct on *some* HP systems.
+		    catch { event add <<PrevWindow>> <hpBackTab> }
+		}
 	    }
 	}
 	trace variable tk_strictMotif w tkEventMotifBindings

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGeometry.c,v 1.3 1999/04/16 01:51:14 stanton Exp $
+ * RCS: @(#) $Id: tkGeometry.c,v 1.3.12.1 2001/04/04 07:57:16 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -250,6 +250,26 @@ Tk_MaintainGeometry(slave, master, x, y, width, height)
     Tk_Window ancestor, parent;
     TkDisplay *dispPtr = ((TkWindow *) master)->dispPtr;
 
+    if (master == Tk_Parent(slave)) {
+	/*
+	 * If the slave is a direct descendant of the master, don't bother
+	 * setting up the extra infrastructure for management, just make a
+	 * call to Tk_MoveResizeWindow; the parent/child relationship will
+	 * take care of the rest.
+	 */
+	Tk_MoveResizeWindow(slave, x, y, width, height);
+
+	/*
+	 * Map the slave if the master is already mapped; otherwise, wait
+	 * until the master is mapped later (in which case mapping the slave
+	 * is taken care of elsewhere).
+	 */
+	if (Tk_IsMapped(master)) {
+	    Tk_MapWindow(slave);
+	}
+	return;
+    }
+
     if (!dispPtr->geomInit) {
 	dispPtr->geomInit = 1;
 	Tcl_InitHashTable(&dispPtr->maintainHashTable, TCL_ONE_WORD_KEYS);
@@ -374,6 +394,15 @@ Tk_UnmaintainGeometry(slave, master)
     Tk_Window ancestor;
     TkDisplay *dispPtr = ((TkWindow *) slave)->dispPtr;
 
+    if (master == Tk_Parent(slave)) {
+	/*
+	 * If the slave is a direct descendant of the master,
+	 * Tk_MaintainGeometry will not have set up any of the extra
+	 * infrastructure.  Don't even bother to look for it, just return.
+	 */
+	return;
+    }
+    
     if (!dispPtr->geomInit) {
 	dispPtr->geomInit = 1;
 	Tcl_InitHashTable(&dispPtr->maintainHashTable, TCL_ONE_WORD_KEYS);

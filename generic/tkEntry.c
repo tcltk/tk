@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.14 2000/04/21 04:06:26 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.14.2.1 2001/04/04 07:57:16 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1043,12 +1043,6 @@ DestroyEntry(memPtr)
     char *memPtr;		/* Info about entry widget. */
 {
     Entry *entryPtr = (Entry *) memPtr;
-    entryPtr->flags |= ENTRY_DELETED;
-
-    Tcl_DeleteCommandFromToken(entryPtr->interp, entryPtr->widgetCmd);
-    if (entryPtr->flags & REDRAW_PENDING) {
-        Tcl_CancelIdleCall(DisplayEntry, (ClientData) entryPtr);
-    }
 
     /*
      * Free up all the stuff that requires special handling, then
@@ -1076,6 +1070,14 @@ DestroyEntry(memPtr)
     Tk_FreeConfigOptions((char *) entryPtr, entryPtr->optionTable,
 	    entryPtr->tkwin);
     entryPtr->tkwin = NULL;
+
+    /*
+     * Tcl_EventuallyFree should be used here or better yet in the
+     * DestroyNotify branch of EntryEventProc.  However, that can lead
+     * complications in Tk_FreeConfigOptions where the display for the
+     * entry has been deleted by Tk_DestroyWindow, which is needed
+     * when freeing the cursor option. 
+     */
     ckfree((char *) entryPtr);
 }
 
@@ -1324,13 +1326,12 @@ DisplayEntry(clientData)
     Entry *entryPtr = (Entry *) clientData;
     Tk_Window tkwin = entryPtr->tkwin;
     int baseY, selStartX, selEndX, cursorX;
-    int xBound;
+    int showSelection, xBound;
     Tk_FontMetrics fm;
     Pixmap pixmap;
-    int showSelection;
 
     entryPtr->flags &= ~REDRAW_PENDING;
-    if ((entryPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
+    if ((entryPtr->flags & ENTRY_DELETED) || !Tk_IsMapped(tkwin)) {
 	return;
     }
 
@@ -1343,6 +1344,15 @@ DisplayEntry(clientData)
     if (entryPtr->flags & UPDATE_SCROLLBAR) {
 	entryPtr->flags &= ~UPDATE_SCROLLBAR;
 	EntryUpdateScrollbar(entryPtr);
+    }
+
+    /*
+     * We do this check twice because updating the scrollbar can have
+     * the side-effect of destroying or unmapping the entry widget.
+     */
+
+    if ((entryPtr->flags & ENTRY_DELETED) || !Tk_IsMapped(tkwin)) {
+	return;
     }
 
     /*
@@ -2023,7 +2033,15 @@ EntryEventProc(clientData, eventPtr)
 	EventuallyRedraw(entryPtr);
 	entryPtr->flags |= BORDER_NEEDED;
     } else if (eventPtr->type == DestroyNotify) {
-        DestroyEntry((char *) clientData);
+	if (!(entryPtr->flags & ENTRY_DELETED)) {
+	    entryPtr->flags |= (ENTRY_DELETED | VALIDATE_ABORT);
+	    Tcl_DeleteCommandFromToken(entryPtr->interp,
+		    entryPtr->widgetCmd);
+	    if (entryPtr->flags & REDRAW_PENDING) {
+		Tcl_CancelIdleCall(DisplayEntry, clientData);
+	    }
+	    DestroyEntry((char *) entryPtr);
+	}
     } else if (eventPtr->type == ConfigureNotify) {
 	Tcl_Preserve((ClientData) entryPtr);
 	entryPtr->flags |= UPDATE_SCROLLBAR;
@@ -2431,7 +2449,7 @@ static void
 EventuallyRedraw(entryPtr)
     Entry *entryPtr;		/* Information about widget. */
 {
-    if ((entryPtr->tkwin == NULL) || !Tk_IsMapped(entryPtr->tkwin)) {
+    if ((entryPtr->flags & ENTRY_DELETED) || !Tk_IsMapped(entryPtr->tkwin)) {
 	return;
     }
 
@@ -2727,6 +2745,10 @@ EntryValidate(entryPtr, cmd)
 
     code = Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_GLOBAL | TCL_EVAL_DIRECT);
 
+    /*
+     * We accept TCL_OK and TCL_RETURN as valid return codes from the
+     * command callback.
+     */
     if (code != TCL_OK && code != TCL_RETURN) {
 	Tcl_AddErrorInfo(interp,
 			 "\n\t(in validation command executed by entry)");
@@ -2734,6 +2756,9 @@ EntryValidate(entryPtr, cmd)
 	return TCL_ERROR;
     }
 
+    /*
+     * The command callback should return an acceptable Tcl boolean.
+     */
     if (Tcl_GetBooleanFromObj(interp, Tcl_GetObjResult(interp),
 			      &bool) != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
@@ -2817,15 +2842,27 @@ EntryValidateChange(entryPtr, change, new, index, type)
      * it means that a loop condition almost occured.  Do not allow
      * this validation result to finish.
      */
+
     if (entryPtr->validate == VALIDATE_NONE
 	    || (!varValidate && (entryPtr->flags & VALIDATE_VAR))) {
 	code = TCL_ERROR;
     }
+
+    /*
+     * It's possible that the user deleted the entry during validation.
+     * In that case, abort future validation and return an error.
+     */
+
+    if (entryPtr->flags & ENTRY_DELETED) {
+	return TCL_ERROR;
+    }
+
     /*
      * If validate will return ERROR, then disallow further validations
      * Otherwise, if it didn't accept the new string (returned TCL_BREAK)
      * then eval the invalidCmd (if it's set)
      */
+
     if (code == TCL_ERROR) {
 	entryPtr->validate = VALIDATE_NONE;
     } else if (code == TCL_BREAK) {
@@ -2854,6 +2891,15 @@ EntryValidateChange(entryPtr, change, new, index, type)
 		entryPtr->validate = VALIDATE_NONE;
 	    }
 	    Tcl_DStringFree(&script);
+
+	    /*
+	     * It's possible that the user deleted the entry during validation.
+	     * In that case, abort future validation and return an error.
+	     */
+
+	    if (entryPtr->flags & ENTRY_DELETED) {
+		return TCL_ERROR;
+	    }
 	}
     }
 

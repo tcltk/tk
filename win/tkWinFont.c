@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.10 2000/04/07 20:57:10 hobbs Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.10.2.1 2001/04/04 07:57:18 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1931,6 +1931,7 @@ GetScreenFont(
     HFONT hFont;
     LOGFONTW lf;
 
+    memset(&lf, 0, sizeof(lf));
     lf.lfHeight		= -pixelSize;
     lf.lfWidth		= 0;
     lf.lfEscapement	= 0;
@@ -2314,6 +2315,17 @@ LoadFontRanges(
 		}
 	    }
 	}
+    } else if (GetTextCharset(hdc) == ANSI_CHARSET) {
+	/*
+	 * Bitmap font.  We should also support ranges for the other
+	 * *_CHARSET values.
+	 */
+	segCount = 1;
+	cbData = segCount * sizeof(USHORT);
+	startCount = (USHORT *) ckalloc(cbData);
+	endCount = (USHORT *) ckalloc(cbData);
+	startCount[0] = 0x0000;
+	endCount[0] = 0x00ff;
     }
     SelectObject(hdc, hFont);
 

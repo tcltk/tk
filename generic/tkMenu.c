@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.6.2.1 2000/08/05 23:53:12 hobbs Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.6.2.2 2001/04/04 07:57:17 hobbs Exp $
  */
 
 /*
@@ -1106,7 +1106,13 @@ TkInvokeMenu(interp, menuPtr, index)
 	}
 	Tcl_DecrRefCount(valuePtr);
     }
-    if ((result == TCL_OK) && (mePtr->commandPtr != NULL)) {
+    /*
+     * We check numEntries in addition to whether the menu entry
+     * has a command because that goes to zero if the menu gets
+     * deleted (e.g., during command evaluation).
+     */
+    if ((menuPtr->numEntries != 0) && (result == TCL_OK)
+	    && (mePtr->commandPtr != NULL)) {
 	Tcl_Obj *commandPtr = mePtr->commandPtr;
 
 	Tcl_IncrRefCount(commandPtr);

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDraw.c,v 1.5 1999/09/02 17:03:23 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixDraw.c,v 1.5.2.1 2001/04/04 07:57:18 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -94,7 +94,11 @@ TkScrollWindow(tkwin, gc, x, y, width, height, dx, dy, damageRgn)
     }
     Tk_RestrictEvents(oldProc, oldArg, &dummy);
 
-    return XEmptyRegion((Region) damageRgn) ? 0 : 1;
+    if (XEmptyRegion((Region) damageRgn)) {
+	return 0;
+    } else {
+	return 1;
+    }
 }
 
 /*

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.7 1999/04/16 01:51:10 stanton Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.7.12.1 2001/04/04 07:57:16 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -57,6 +57,7 @@ typedef struct TkBitmap {
 				 * and it isn't currently in use. */
     int width, height;		/* Dimensions of bitmap. */
     Display *display;		/* Display for which bitmap is valid. */
+    int screenNum;		/* Screen on which bitmap is valid */
     int resourceRefCount;	/* Number of active uses of this bitmap (each
 				 * active use corresponds to a call to
 				 * Tk_AllocBitmapFromObj or Tk_GetBitmap).
@@ -75,9 +76,9 @@ typedef struct TkBitmap {
 				 * (needed when deleting). */
     struct TkBitmap *nextPtr;	/* Points to the next TkBitmap structure with
 				 * the same name.  All bitmaps with the
-				 * same name (but different displays) are
-				 * chained together off a single entry in
-				 * nameTable. */
+				 * same name (but different displays or
+				 * screens) are chained together off a 
+				 * single entry in nameTable. */
 } TkBitmap;
 
 /* 
@@ -186,7 +187,8 @@ Tk_AllocBitmapFromObj(interp, tkwin, objPtr)
 
 	    FreeBitmapObjProc(objPtr);
 	    bitmapPtr = NULL;
-	} else if (Tk_Display(tkwin) == bitmapPtr->display) {
+	} else if ( (Tk_Display(tkwin) == bitmapPtr->display)
+		&& (Tk_ScreenNumber(tkwin) == bitmapPtr->screenNum) ) {
 	    bitmapPtr->resourceRefCount++;
 	    return bitmapPtr->bitmap;
 	}
@@ -204,7 +206,8 @@ Tk_AllocBitmapFromObj(interp, tkwin, objPtr)
 	FreeBitmapObjProc(objPtr);
 	for (bitmapPtr = firstBitmapPtr; bitmapPtr != NULL;
 		bitmapPtr = bitmapPtr->nextPtr) {
-	    if (Tk_Display(tkwin) == bitmapPtr->display) {
+	    if ( (Tk_Display(tkwin) == bitmapPtr->display) &&
+		    (Tk_ScreenNumber(tkwin) == bitmapPtr->screenNum) ) {
 		bitmapPtr->resourceRefCount++;
 		bitmapPtr->objRefCount++;
 		objPtr->internalRep.twoPtrValue.ptr1 = (VOID *) bitmapPtr;
@@ -321,7 +324,8 @@ GetBitmap(interp, tkwin, string)
 	existingBitmapPtr = (TkBitmap *) Tcl_GetHashValue(nameHashPtr);
 	for (bitmapPtr = existingBitmapPtr; bitmapPtr != NULL;
 		bitmapPtr = bitmapPtr->nextPtr) {
-	    if (Tk_Display(tkwin) == bitmapPtr->display) {
+	    if ( (Tk_Display(tkwin) == bitmapPtr->display) &&
+		    (Tk_ScreenNumber(tkwin) == bitmapPtr->screenNum) ) {
 		bitmapPtr->resourceRefCount++;
 		return bitmapPtr;
 	    }
@@ -418,6 +422,7 @@ GetBitmap(interp, tkwin, string)
     bitmapPtr->width = width;
     bitmapPtr->height = height;
     bitmapPtr->display = Tk_Display(tkwin);
+    bitmapPtr->screenNum = Tk_ScreenNumber(tkwin);
     bitmapPtr->resourceRefCount = 1;
     bitmapPtr->objRefCount = 0;
     bitmapPtr->nameHashPtr = nameHashPtr;

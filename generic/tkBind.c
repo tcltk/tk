@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.13 2000/04/19 01:06:50 ericm Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.13.2.1 2001/04/04 07:57:16 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -3722,12 +3722,18 @@ NameToWindow(interp, mainWin, objPtr, tkwinPtr)
 	}
 	*tkwinPtr = tkwin;
     } else {
-	if (TkpScanWindowId(NULL, name, &id) != TCL_OK) {
+	/*
+	 * Check for the winPtr being valid, even if it looks ok to
+	 * TkpScanWindowId.  [Bug #411307]
+	 */
+
+	if ((TkpScanWindowId(NULL, name, &id) != TCL_OK) ||
+		((*tkwinPtr = Tk_IdToWindow(Tk_Display(mainWin), (Window) id))
+			== NULL)) {
 	    Tcl_AppendResult(interp, "bad window name/identifier \"",
 		    name, "\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	*tkwinPtr = Tk_IdToWindow(Tk_Display(mainWin), (Window) id);
     }
     return TCL_OK;
 }

@@ -8,7 +8,7 @@ Jim Ingham
 Cygnus Solutions
 jingham@cygnus.com
 
-RCS: @(#) $Id: README,v 1.13 2000/04/26 17:37:35 hobbs Exp $
+RCS: @(#) $Id: README,v 1.13.2.1 2001/04/04 07:57:17 hobbs Exp $
 
 1. Introduction
 ---------------
@@ -83,5 +83,4 @@ Special notes:
   
 
 If you have comments or Bug reports, use our on-line database at
-	http://dev.scriptics.com/ticket/
-
+	http://tcl.sourceforge.net/

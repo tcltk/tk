@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFileFilter.c,v 1.3 1999/04/16 01:51:13 stanton Exp $
+ * RCS: @(#) $Id: tkFileFilter.c,v 1.3.12.1 2001/04/04 07:57:16 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -270,7 +270,7 @@ static int AddClause(interp, filterPtr, patternsStr, ostypesStr, isWindows)
 		/*
 		 * Prepend a "*" to patterns that do not have a leading "*"
 		 */
-		globPtr->pattern = (char*)ckalloc(len+1);
+		globPtr->pattern = (char*)ckalloc((unsigned int) len+1);
 		globPtr->pattern[0] = '*';
 		strcpy(globPtr->pattern+1, globList[i]);
 	    }
@@ -289,11 +289,11 @@ static int AddClause(interp, filterPtr, patternsStr, ostypesStr, isWindows)
 		    strcpy(globPtr->pattern, "*.");
 		}
 		else {
-		    globPtr->pattern = (char*)ckalloc(len);
+		    globPtr->pattern = (char*)ckalloc((unsigned int) len);
 		    strcpy(globPtr->pattern, globList[i]);
 		}
 	    } else {
-		globPtr->pattern = (char*)ckalloc(len);
+		globPtr->pattern = (char*)ckalloc((unsigned int) len);
 		strcpy(globPtr->pattern, globList[i]);
 	    }
 

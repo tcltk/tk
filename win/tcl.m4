@@ -373,6 +373,15 @@ AC_DEFUN(SC_ENABLE_SYMBOLS, [
 #--------------------------------------------------------------------
 
 AC_DEFUN(SC_CONFIG_CFLAGS, [
+
+    # Step 0: Enable 64 bit support?
+    # Currently Tk requires no extra flags for 64bit support.
+    # It just needs to find the right compiler, which is up to the user.
+
+    AC_MSG_CHECKING([if 64bit support is requested])
+    AC_ARG_ENABLE(64bit,[  --enable-64bit          enable 64bit support (where applicable)], [do64bit=$enableval], [do64bit=no])
+    AC_MSG_RESULT($do64bit)
+
     AC_MSG_CHECKING([compiler flags])
 
     # Set some defaults (may get changed below)
@@ -384,6 +393,9 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     # set various compiler flags depending on whether we are using gcc or cl
     
     if test "${GCC}" = "yes" ; then
+	if test "$do64bit" = "yes" ; then
+	    AC_MSG_WARN("64bit mode not supported with GCC on Windows")
+	fi
 	SHLIB_LD=""
 	SHLIB_LD_LIBS=""
 	LIBS=""
@@ -483,10 +495,10 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	LDFLAGS_CONSOLE="-mconsole ${extra_ldflags}"
 	LDFLAGS_WINDOW="-mwindows ${extra_ldflags}"
     else
-	SHLIB_LD="link -dll -nologo"
+	SHLIB_LD="link -dll -nologo -incremental:no"
 	SHLIB_LD_LIBS="user32.lib advapi32.lib"
 	LIBS="user32.lib advapi32.lib"
-	LIBS_GUI="gdi32.lib comdlg32.lib"
+	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib"
 	AR="lib -nologo"
 	STLIB_LD="lib -nologo"
 	RC="rc"
