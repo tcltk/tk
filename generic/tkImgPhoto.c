@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.23 2001/04/03 04:34:20 hobbs Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.24 2001/09/14 20:35:58 andreas_kupries Exp $
  */
 
 #include "tkInt.h"
@@ -1093,10 +1093,12 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	}
         if (Tcl_SetChannelOption(interp, chan, "-translation", "binary")
 		!= TCL_OK) {
+	    Tcl_Close(NULL, chan);
             return TCL_ERROR;
         }
         if (Tcl_SetChannelOption(interp, chan, "-encoding", "binary")
 		!= TCL_OK) {
+	    Tcl_Close(NULL, chan);
             return TCL_ERROR;
         }
     
@@ -1710,10 +1712,12 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
 	}
         if (Tcl_SetChannelOption(interp, chan, "-translation", "binary")
 		!= TCL_OK) {
+	    Tcl_Close(NULL, chan);
             return TCL_ERROR;
         }
         if (Tcl_SetChannelOption(interp, chan, "-encoding", "binary")
 		!= TCL_OK) {
+	    Tcl_Close(NULL, chan);
             return TCL_ERROR;
         }
 	if (MatchFileFormat(interp, chan, masterPtr->fileString,

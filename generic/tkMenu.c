@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.11 2001/08/01 16:21:11 dgp Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.12 2001/09/14 20:35:58 andreas_kupries Exp $
  */
 
 /*
@@ -2718,7 +2718,10 @@ CloneMenu(menuPtr, newMenuNamePtr, newMenuTypePtr)
    	    		== 0) {
    	    	    Tcl_Obj *newElementPtr = Tcl_NewStringObj(
    	    	    	    Tk_PathName(newMenuPtr->masterMenuPtr->tkwin), -1);
-		    Tcl_IncrRefCount(newElementPtr);
+		    /* 
+		     * The newElementPtr will have its refCount incremented
+		     * here, so we don't need to worry about it any more.
+		     */
    	    	    Tcl_ListObjReplace(menuPtr->interp, bindingsPtr,
    	    	    	    i + 1, 0, 1, &newElementPtr);
 		    newObjv[2] = bindingsPtr;
