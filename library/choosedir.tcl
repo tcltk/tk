@@ -5,7 +5,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.13 2002/06/12 23:08:12 mdejong Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.14 2002/06/13 06:17:21 mdejong Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -95,6 +95,13 @@ proc ::tk::dialog::file::chooseDir:: {args} {
     vwait ::tk::Priv(selectFilePath)
 
     ::tk::RestoreFocusGrab $w $data(ent) withdraw
+
+    # Remove the transient property to insulate the
+    # dialog from changes in the master's state.
+
+    if {[winfo exists $w]} {
+        wm transient $w {}
+    }
 
     # Cleanup traces on selectPath variable
     #

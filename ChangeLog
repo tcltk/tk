@@ -1,3 +1,15 @@
+2002-06-12  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* library/choosedir.tcl (tk::dialog::file::chooseDir):
+	* library/clrpick.tcl (tk::dialog::file::chooseDir):
+	* library/msgbox.tcl (tk::MessageBox):
+	* library/tkfbox.tcl (tk::dialog::file):
+	* library/xmfbox.tcl (tk::MotifFDialog): Remove the
+	transient property on dialogs after they have been
+	dismissed to insulate them from further state changes
+	in the master. This keeps a withdrawn dialog from
+	being mapped when the master is deiconified. [Tk patch 568278]
+
 2002-06-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinCursor.c (TkGetCursorByName): reverted fix from
@@ -46,7 +58,7 @@
 	deleting a master in wm transient command to avoid
 	deleting the callback when an error is raised.
 	Add support for MapNotify and UnmapNotify events
-	to the master callback.
+	to the master callback. [Tk patch 561708]
 
 2002-06-11  Joe English  <jenglish@users.sf.net>
 
