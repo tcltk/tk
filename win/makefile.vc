@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# SCCS: %Z% $Id: makefile.vc,v 1.8 1998/07/29 13:14:52 escoffon Exp $ 
+# SCCS: %Z% $Id: makefile.vc,v 1.9 1998/07/30 12:34:55 escoffon Exp $ 
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -355,19 +355,19 @@ $(DUMPEXTS): $(TCLDIR)\win\winDumpExts.c
 #
 
 $(TMPDIR)\testMain.obj: $(ROOT)\win\winMain.c
-	$(cc32) $(TK_CFLAGS) -DTK_TEST -Fo$@ $?
+	$(cc32) $(TK_CFLAGS) -DSTATIC_BUILD -DTK_TEST -Fo$@ $?
 
 $(TMPDIR)\tkConsole.obj: $(ROOT)\generic\tkConsole.c
-	$(cc32) $(TK_CFLAGS) -Fo$@ $?
+	$(cc32) $(TK_CFLAGS) -DSTATIC_BUILD -Fo$@ $?
 
 $(TMPDIR)\tkTest.obj: $(ROOT)\generic\tkTest.c
-	$(cc32) $(TK_CFLAGS) -Fo$@ $?
+	$(cc32) $(TK_CFLAGS) -DSTATIC_BUILD -Fo$@ $?
 
 $(TMPDIR)\tkSquare.obj: $(ROOT)\generic\tkSquare.c
 	$(cc32) $(TK_CFLAGS) -Fo$@ $?
 
 $(TMPDIR)\winMain.obj: $(ROOT)\win\winMain.c
-	$(cc32) $(TK_CFLAGS) -Fo$@ $?
+	$(cc32) $(TK_CFLAGS) -DSTATIC_BUILD -Fo$@ $?
 
 #
 # Implicit rules
