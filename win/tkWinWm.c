@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.43 2002/06/22 10:13:26 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.44 2002/06/24 02:17:57 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -3512,9 +3512,9 @@ WmWaitVisibilityOrMapProc(clientData, eventPtr)
     if (masterPtr == NULL)
 	return;
 
-    if (eventPtr->type == MapNotify &&
-            !(winPtr->wmInfoPtr->flags & WM_TRANSIENT_WITHDRAWN)) {
-	TkpWmSetState(winPtr, NormalState);
+    if (eventPtr->type == MapNotify) {
+	if (!(winPtr->wmInfoPtr->flags & WM_TRANSIENT_WITHDRAWN))
+	    TkpWmSetState(winPtr, NormalState);
     } else if (eventPtr->type == UnmapNotify) {
 	TkpWmSetState(winPtr, WithdrawnState);
     }
