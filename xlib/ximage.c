@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: ximage.c,v 1.4 2000/07/06 03:17:45 mo Exp $
+ * RCS: @(#) $Id: ximage.c,v 1.4.8.1 2004/02/23 10:49:29 das Exp $
  */
 
 #include "tkInt.h"
@@ -64,6 +64,9 @@ XCreateBitmapFromData(display, d, data, width, height)
     ximage.bitmap_bit_order = LSBFirst;
     ximage.bitmap_pad = 8;
     ximage.bytes_per_line = (width+7)/8;
+#ifdef MAC_OSX_TK
+    ximage.obdata = NULL;
+#endif
 
     TkPutImage(NULL, 0, display, pix, gc, &ximage, 0, 0, 0, 0, width, height);
     XFreeGC(display, gc);
