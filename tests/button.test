@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: button.test,v 1.19 2004/12/07 10:07:41 dkf Exp $
+# RCS: @(#) $Id: button.test,v 1.20 2004/12/07 21:22:19 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -115,14 +115,14 @@ foreach test {
 	set classname [winfo class $w]
 	if {$hasOption} {
 	    test button-1.$i "configuration option $name for $classname" \
-		-constraint testImageType -body "
+		-constraints testImageType -body "
 		    $w configure $name [list $value]
 		    lindex \[$w configure $name] 4
 		" -result $okResult
 	    incr i
 	    if {$badValue ne ""} {
 		test button-1.$i "configuration option $name for $classname" \
-		    -constraint testImageType \
+		    -constraints testImageType \
 		    -body [list $w configure $name $badValue] \
 		    -returnCodes error -result $badResult
 		incr i
@@ -130,7 +130,7 @@ foreach test {
 	    $w configure $name [lindex [$w configure $name] 3]
 	} else {
 	    test button-1.$i "configuration option $name for $classname" \
-		-constraint testImageType \
+		-constraints testImageType \
 		-body [list $w configure $name $value] \
 		-returnCodes error -result "unknown option \"$name\""
 	    incr i
