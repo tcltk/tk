@@ -1,5 +1,16 @@
 2000-08-29  Eric Melski  <ericm@ajubasolutions.com>
 
+	* win/tkWinMenu.c (DrawWindowsSystemBitmap): Use scratchDC
+	for determining the source's logical coordinates.  Patch from 
+	[Bug: 6134 (Markus Oberhumer)].
+
+	* win/tkWinMenu.c (SetDefaults): Compute the indicatorDimensions[]
+	under Windows NT/2000 in the same way as under Windows 95/98.
+	Patch from [Bug: 6134 (Markus Oberhumer)].
+
+	* win/tkWinFont.c (GetScreenFont): Added a memset() to
+	pacify memory checkers.  Patch from [Bug: 6134 (Markus Oberhumer)].
+
 	* library/tkfbox.tcl (::tk::dialog::file::Update): Corrected
 	handling of multi-pattern filters (eg, "* *.*"), which was broken
 	by the getOpenFile performance patches applied earlier.
