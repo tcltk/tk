@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDefault.h,v 1.14 2002/02/22 21:07:05 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixDefault.h,v 1.15 2002/06/21 02:38:54 hobbs Exp $
  */
 
 #ifndef _TKUNIXDEFAULT
@@ -208,6 +208,7 @@
  * Defaults for listboxes:
  */
 
+#define DEF_LISTBOX_ACTIVE_STYLE	"underline"
 #define DEF_LISTBOX_BG_COLOR		NORMAL_BG
 #define DEF_LISTBOX_BG_MONO		WHITE
 #define DEF_LISTBOX_BORDER_WIDTH	"2"

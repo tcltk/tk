@@ -5,10 +5,10 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: listbox.n,v 1.8 2000/08/25 06:58:32 ericm Exp $
+'\" RCS: @(#) $Id: listbox.n,v 1.9 2002/06/21 02:38:54 hobbs Exp $
 '\" 
 .so man.macros
-.TH listbox n 8.0 Tk "Tk Built-In Commands"
+.TH listbox n 8.4 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
@@ -16,15 +16,24 @@ listbox \- Create and manipulate listbox widgets
 .SH SYNOPSIS
 \fBlistbox\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-background	\-height	\-selectforeground
-\-borderwidth	\-highlightbackground	\-setgrid
-\-cursor	\-highlightcolor	\-state
-\-disabledforeground	\-highlightthickness	\-takefocus
-\-exportselection	\-relief	\-width
-\-font	\-selectbackground	\-xscrollcommand
-\-foreground	\-selectborderwidth	\-yscrollcommand
+\-activestyle	\-height	\-selectforeground
+\-background	\-highlightbackground	\-setgrid
+\-borderwidth	\-highlightcolor	\-state
+\-cursor	\-highlightthickness	\-takefocus
+\-disabledforeground	\-relief	\-width
+\-exportselection	\-selectbackground	\-xscrollcommand
+\-font	\-selectborderwidth	\-yscrollcommand
+\-foreground
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
+.VS 8.4
+.OP \-activestyle activeStyle ActiveStyle
+Specifies the style in which to draw the active element.  This must be
+one of \fBdotbox\fR (show a focus ring around the active element),
+\fBnone\fR (nospecial indication of active element) or
+\fBunderline\fR (underline the active element).
+The default is \fBunderline\fR.
+.VS 8.4
 .OP \-height height Height
 Specifies the desired height for the window, in lines.
 If zero or less, then the desired height for the window is made just
@@ -100,8 +109,8 @@ to the first element in the listbox.
 .TP 12
 \fBactive\fR
 Indicates the element that has the location cursor.  This element
-will be displayed with an underline when the listbox has the
-keyboard focus, and it is specified with the \fBactivate\fR
+will be displayed as specified by \fB\-activestyle\fR when the listbox
+has the keyboard focus, and it is specified with the \fBactivate\fR
 widget command.
 .TP 12
 \fBanchor\fR
@@ -145,8 +154,8 @@ Sets the active element to the one indicated by \fIindex\fR.
 If \fIindex\fR is outside the range of elements in the listbox
 then the closest element is activated.
 .VE
-The active element is drawn with an underline when the widget
-has the input focus, and its index may be retrieved with the
+The active element is drawn as specified by \fB\-activestyle\fR when the
+widget has the input focus, and its index may be retrieved with the
 index \fBactive\fR.
 .TP
 \fIpathName \fBbbox\fR \fIindex\fR
