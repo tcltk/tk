@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: entry.n,v 1.12 2003/12/08 18:47:23 hobbs Exp $
+'\" RCS: @(#) $Id: entry.n,v 1.13 2004/08/17 22:37:24 dkf Exp $
 '\" 
 .so man.macros
 .TH entry n 8.3 Tk "Tk Built-In Commands"
@@ -78,8 +78,8 @@ state which mode you wish to use.  See \fBValidation\fR below for more.
 .OP "\-validatecommand or \-vcmd" validateCommand ValidateCommand
 Specifies a script to eval when you want to validate the input into
 the entry widget.  Setting it to {} disables this feature (the default).
-This command must return a valid tcl boolean value.  If it returns 0 (or
-the valid tcl boolean equivalent) then it means you reject the new edition
+This command must return a valid Tcl boolean value.  If it returns 0 (or
+the valid Tcl boolean equivalent) then it means you reject the new edition
 and it will not occur and the \fBinvalidCommand\fR will be evaluated if it
 is set. If it returns 1, then the new edition occurs.
 See \fBValidation\fR below for more information.
@@ -183,7 +183,7 @@ when an error occurs evaluating the \fBvalidateCommand\fR.
 .PP
 Primarily, an error will occur when the \fBvalidateCommand\fR or
 \fBinvalidCommand\fR encounters an error in its script while evaluating or
-\fBvalidateCommand\fR does not return a valid tcl boolean value.  The
+\fBvalidateCommand\fR does not return a valid Tcl boolean value.  The
 \fBvalidate\fR option will also set itself to \fBnone\fR when you edit the
 entry widget from within either the \fBvalidateCommand\fR or the
 \fBinvalidCommand\fR.  Such editions will override the one that was being
@@ -334,7 +334,7 @@ has several forms, depending on \fIoption\fR:
 \fIpathName \fBselection adjust \fIindex\fR
 Locate the end of the selection nearest to the character given by
 \fIindex\fR, and adjust that end of the selection to be at \fIindex\fR
-(i.e including but not going beyond \fIindex\fR).  The other
+(i.e. including but not going beyond \fIindex\fR).  The other
 end of the selection is made the anchor point for future
 \fBselect to\fR commands.  If the selection
 isn't currently in the entry, then a new selection is created to
