@@ -1,3 +1,13 @@
+2003-02-20  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinScrlbr.c (UpdateScrollbar): use SIF_DISABLENOSCROLL to
+	"disable" scrollbar when on Windows when there is nothing to
+	scroll.  This is Windows style, and fixes [Bug #624116].
+
+	* tests/panedwindow.test: 
+	* generic/tkPanedWindow.c (ValidSashIndex): corrected to note that
+	2 panes must exist before any one sash does. [tcllib Bug #689258]
+
 2003-02-20  Peter Spjuth  <peter.spjuth@space.se>
 
 	* tests/panedwindow.test:

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinScrlbr.c,v 1.8 2002/06/14 22:25:12 jenglish Exp $
+ * RCS: @(#) $Id: tkWinScrlbr.c,v 1.9 2003/02/21 02:07:50 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -185,6 +185,12 @@ UpdateScrollbar(scrollPtr)
 		    * (MAX_SCROLL - (scrollInfo.nPage - 1)));
     } else {
 	scrollInfo.nPos = 0;
+	/*
+	 * Disable the scrollbar when there is nothing to scroll.
+	 * This is standard Windows style (see eg Notepad).
+	 * Also prevents possible crash on XP+ systems [Bug #624116].
+	 */
+	scrollInfo.fMask |= SIF_DISABLENOSCROLL;
     }
     SetScrollInfo(scrollPtr->hwnd, SB_CTL, &scrollInfo, TRUE);
 }
