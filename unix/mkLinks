@@ -663,6 +663,10 @@ if test -r MainWin.3; then
     rm -f Tk_MainWindow.3
     ln MainWin.3 Tk_MainWindow.3
 fi
+if test -r MainWin.3; then
+    rm -f Tk_GetNumMainWindows.3
+    ln MainWin.3 Tk_GetNumMainWindows.3
+fi
 if test -r MaintGeom.3; then
     rm -f Tk_MaintainGeometry.3
     ln MaintGeom.3 Tk_MaintainGeometry.3

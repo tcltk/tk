@@ -1,3 +1,11 @@
+2000-04-24  Eric Melski  <ericm@scriptics.com>
+
+	* unix/mkLinks: 
+	* doc/MainWin.3: Added entry for Tk_GetNumMainWindows [Bug: 1865].
+
+	* unix/mkLinks: 
+	* doc/GetHINSTANCE.3: Man page for Tk_GetHINSTANCE [Bug: 1862].
+
 2000-04-24  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* generic/tkImage.c (Tk_PostscriptImage): added check to create
