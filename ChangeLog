@@ -1,3 +1,9 @@
+2003-07-07  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* generic/tkImage.c (TkDeleteAllImages,etc.): Stopped the deleting
+	of hash entries from a table that has just been deleted by this
+	function when some images are Tcl_Preserve()d...  [Bug 749353]
+
 2003-05-20  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	*** 8.4.3 TAGGED FOR RELEASE ***
