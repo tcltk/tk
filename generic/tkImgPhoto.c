@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.20 2000/08/19 02:13:03 ericm Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.21 2000/08/21 22:45:15 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -3793,8 +3793,8 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height)
     
     /*
      * This block is grossly inefficient.  For each row in the image, it
-     * finds each continguous string of transparent pixels, then marks those
-     * areas as invalid in the validRegion mask.  This makes drawing very
+     * finds each continguous string of nontransparent pixels, then marks
+     * those areas as valid in the validRegion mask.  This makes drawing very
      * efficient, because of the way we use X:  we just say, here's your
      * mask, and here's your data.  We need not worry about the current
      * background color, etc.  But this costs us a lot on the image setup.
