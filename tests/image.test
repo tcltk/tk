@@ -7,11 +7,12 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: image.test,v 1.11 2003/09/17 23:45:35 dgp Exp $
+# RCS: @(#) $Id: image.test,v 1.12 2003/11/18 01:47:51 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+namespace import -force ::tk::test::loadTkCommand
 
 eval image delete [image names]
 canvas .c -highlightthickness 2
@@ -67,21 +68,25 @@ test image-1.9 {Tk_ImageCmd procedure, "create" option} testImageType {
     list [catch {image create test -badName foo} msg] $msg [image names]
 } {1 {bad option name "-badName"} {}}
 test image-1.10 {Tk_ImageCmd procedure, "create" option with same name as main window} {
-    set script [makeFile {
+    set code [loadTkCommand]
+    append code {
 	update
 	puts [list [catch {image create photo .} msg] $msg]
 	exit
-    } script]
+    }
+    set script [makeFile $code script]
     set x [list [catch {exec [interpreter] <$script} msg] $msg]
     removeFile script
     set x
 } {0 {1 {images may not be named the same as the main window}}}
 test image-1.11 {Tk_ImageCmd procedure, "create" option with same name as main window after renaming} {
-    set script [makeFile {
+    set code [loadTkCommand]
+    append code {
 	update
 	puts [list [catch {rename . foo;image create photo foo} msg] $msg]
 	exit
-    } script]
+    }
+    set script [makeFile $code script]
     set x [list [catch {exec [interpreter] <$script} msg] $msg]
     removeFile script
     set x
