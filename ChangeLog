@@ -1,6 +1,11 @@
 2002-05-20  Daniel Steffen  <das@users.sourceforge.net>
 
 	* mac/tkMacInit.c:
+	* mac/tkMacTclCode.r: include msgcat package in resources
+	as bgerror depends on it. Restores ability of mac static
+	build to run standalone (except for encoding file issues).
+
+	* mac/tkMacInit.c:
 	* library/console.tcl:
 	* library/tk.tcl: fix tk.tcl not sourcing library files
 	that define bindings at startup on mac. (independent of

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacInit.c,v 1.9 2002/05/20 10:21:31 das Exp $
+ * RCS: @(#) $Id: tkMacInit.c,v 1.10 2002/05/20 12:30:16 das Exp $
  */
 
 #include <Resources.h>
@@ -80,6 +80,7 @@ sourcePath focus\n\
 sourcePath optMenu\n\
 sourcePath palette\n\
 sourcePath tearoff\n\
+if {[catch {package require msgcat}]} {sourcePath msgcat}\n\
 sourcePath bgerror\n\
 sourcePath msgbox\n\
 sourcePath comdlg\n\
