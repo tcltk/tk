@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.66 2002/01/11 18:41:05 mdejong Exp $
+# RCS: @(#) $Id: configure.in,v 1.67 2002/01/11 20:56:38 mdejong Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -24,6 +24,8 @@ fi
 if test "${exec_prefix}" = "NONE"; then
     exec_prefix=$prefix
 fi
+# libdir must be a fully qualified path and (not ${exec_prefix}/lib)
+eval libdir="$libdir"
 # Make sure srcdir is fully qualified!
 srcdir=`cd $srcdir ; pwd`
 TK_SRC_DIR=`cd $srcdir/..; pwd`
@@ -375,7 +377,7 @@ if test "$SHARED_BUILD" = 0 -o $TCL_NEEDS_EXP_FILE = 0; then
 	eval TK_LIB_FLAG="-ltk`echo ${VERSION} | tr -d .`\${TK_DBGX}"
     fi
     TK_BUILD_LIB_SPEC="-L`pwd` ${TK_LIB_FLAG}"
-    TK_LIB_SPEC="-L${exec_prefix}/lib ${TK_LIB_FLAG}"
+    TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
     TK_BUILD_EXP_FILE=""
     TK_EXP_FILE=""
 else
@@ -384,10 +386,10 @@ else
 
     if test "$GCC" = "yes" ; then
 	TK_BUILD_LIB_SPEC="-Wl,-bI:`pwd`/${TK_BUILD_EXP_FILE} -L`pwd`"
-	TK_LIB_SPEC="-Wl,-bI:${exec_prefix}/lib/${TK_EXP_FILE} -L`pwd`"    
+	TK_LIB_SPEC="-Wl,-bI:${libdir}/${TK_EXP_FILE} -L`pwd`"    
     else
 	TK_BUILD_LIB_SPEC="-bI:`pwd`/${TK_BUILD_EXP_FILE}"
-	TK_LIB_SPEC="-bI:${exec_prefix}/lib/${TK_EXP_FILE}"    
+	TK_LIB_SPEC="-bI:${libdir}/${TK_EXP_FILE}"    
     fi
 fi
 TK_SHARED_BUILD=${SHARED_BUILD}
@@ -414,9 +416,9 @@ else
 fi
 
 TK_BUILD_STUB_LIB_SPEC="-L`pwd` ${TK_STUB_LIB_FLAG}"
-TK_STUB_LIB_SPEC="-L${exec_prefix}/lib ${TK_STUB_LIB_FLAG}"
+TK_STUB_LIB_SPEC="-L${libdir} ${TK_STUB_LIB_FLAG}"
 TK_BUILD_STUB_LIB_PATH="`pwd`/${TK_STUB_LIB_FILE}"
-TK_STUB_LIB_PATH="${exec_prefix}/lib/${TK_STUB_LIB_FILE}"
+TK_STUB_LIB_PATH="${libdir}/${TK_STUB_LIB_FILE}"
 
 eval "TK_LIB_FILE=${TK_LIB_FILE}"
 
