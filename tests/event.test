@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: event.test,v 1.14 2003/04/01 21:06:23 dgp Exp $
+# RCS: @(#) $Id: event.test,v 1.15 2003/11/13 18:27:00 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -475,7 +475,7 @@ test event-double-click-drag-1.1 { click down, click up, click down again,
     set result [list]
     lappend result [_get_selection $e]
 
-    # Insert cursor should be at end of "select"
+    # Insert cursor should be at beginning of "select"
     lappend result [$e index insert]
 
     # Move mouse one character to the left
@@ -515,7 +515,7 @@ test event-double-click-drag-1.1 { click down, click up, click down again,
     lappend result [$e index insert]
 
     set result
-} {select 1.11 1.7 select 1.4 { select} {Word select} 1.2}
+} {select 1.5 1.7 select 1.4 { select} {Word select} 1.2}
 
 
 
@@ -661,6 +661,135 @@ test event-button-state-1.1 { button press in a window that is then
     event generate $t <Motion>
     set motion
 } nomotion
+
+test event-double-click-1.1 { A double click on a lone character
+	in a text widget should select that character. } {
+    destroy .t
+    set t [toplevel .t]
+    set e [text $t.e]
+    pack $e
+    tkwait visibility $e
+    focus -force $e
+    _keypress_string $e "On A letter"
+
+    set anchor 1.3
+
+    # Get x,y coords just inside the left
+    # and right hand side of the letter A
+    foreach {x1 y1 width height} [$e bbox $anchor] break
+
+    set middle_y [expr {$y1 + ($height / 2)}]
+
+    set left_x [expr {$x1 + 2}]
+    set left_y $middle_y
+
+    set right_x [expr {($x1 + $width) - 2}]
+    set right_y $middle_y
+
+    # Double click near left hand egde of the letter A
+
+    event generate $e <Enter>
+    event generate $e <ButtonPress-1> -x $left_x -y $left_y
+    _pause 50
+    event generate $e <ButtonRelease-1> -x $left_x -y $left_y
+    _pause 50
+    event generate $e <ButtonPress-1> -x $left_x -y $left_y
+    _pause 50
+    event generate $e <ButtonRelease-1> -x $left_x -y $left_y
+    _pause 50
+
+    set result [list]
+    lappend result [$e index insert]
+    lappend result [_get_selection $e]
+
+    # Clear selection by clicking at 0,0
+
+    event generate $e <ButtonPress-1> -x 0 -y 0
+    _pause 50
+    event generate $e <ButtonRelease-1> -x 0 -y 0
+    _pause 50
+
+    # Double click near right hand edge of the letter A
+
+    event generate $e <ButtonPress-1> -x $right_x -y $right_y
+    _pause 50
+    event generate $e <ButtonRelease-1> -x $right_x -y $right_y
+    _pause 50
+    event generate $e <ButtonPress-1> -x $right_x -y $right_y
+    _pause 50
+    event generate $e <ButtonRelease-1> -x $right_x -y $right_y
+    _pause 50
+
+    lappend result [$e index insert]
+    lappend result [_get_selection $e]
+
+    set result
+} {1.3 A 1.3 A}
+
+
+test event-double-click-1.2 { A double click on a lone character
+	in an entry widget should select that character. } {knownBug} {
+    destroy .t
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    tkwait visibility $e
+    focus -force $e
+    _keypress_string $e "On A letter"
+
+    set anchor 3
+
+    # Get x,y coords just inside the left
+    # and right hand side of the letter A
+    foreach {x1 y1 width height} [$e bbox $anchor] break
+
+    set middle_y [expr {$y1 + ($height / 2)}]
+
+    set left_x [expr {$x1 + 2}]
+    set left_y $middle_y
+
+    set right_x [expr {($x1 + $width) - 2}]
+    set right_y $middle_y
+
+    # Double click near left hand egde of the letter A
+
+    event generate $e <Enter>
+    event generate $e <ButtonPress-1> -x $left_x -y $left_y
+    _pause 50
+    event generate $e <ButtonRelease-1> -x $left_x -y $left_y
+    _pause 50
+    event generate $e <ButtonPress-1> -x $left_x -y $left_y
+    _pause 50
+    event generate $e <ButtonRelease-1> -x $left_x -y $left_y
+    _pause 50
+
+    set result [list]
+    lappend result [$e index insert]
+    lappend result [_get_selection $e]
+  
+    # Clear selection by clicking at 0,0
+
+    event generate $e <ButtonPress-1> -x 0 -y 0
+    _pause 50
+    event generate $e <ButtonRelease-1> -x 0 -y 0
+    _pause 50
+
+    # Double click near right hand edge of the letter A
+
+    event generate $e <ButtonPress-1> -x $right_x -y $right_y
+    _pause 50
+    event generate $e <ButtonRelease-1> -x $right_x -y $right_y
+    _pause 50
+    event generate $e <ButtonPress-1> -x $right_x -y $right_y
+    _pause 50
+    event generate $e <ButtonRelease-1> -x $right_x -y $right_y
+    _pause 50
+
+    lappend result [$e index insert]
+    lappend result [_get_selection $e]
+
+    set result
+} {3 A 4 A}
 
 # cleanup
 
