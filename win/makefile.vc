@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.1.4.9 1999/02/12 01:09:03 stanton Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.1.4.10 1999/02/26 02:24:45 redman Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -71,9 +71,11 @@ TKPLUGINDLL 	= $(OUTDIR)\$(TKPLUGINDLLNAME)
 TKPLUGINLIB 	= $(OUTDIR)\$(TKNAMEPREFIX)$(VERSION)p$(DBGX).lib
 
 WISH 		= $(OUTDIR)\$(WISHNAMEPREFIX)$(VERSION)$(DBGX).exe
+WISHC 		= $(OUTDIR)\$(WISHNAMEPREFIX)c$(VERSION)$(DBGX).exe
 WISHP 		= $(OUTDIR)\$(WISHNAMEPREFIX)p$(VERSION)$(DBGX).exe
 TKTEST 		= $(OUTDIR)\$(TKNAMEPREFIX)test.exe
 DUMPEXTS 	= $(TMPDIR)\dumpexts.exe
+CAT32           = $(TMPDIR)\cat32.exe
 
 BIN_INSTALL_DIR = $(INSTALLDIR)\bin
 INCLUDE_INSTALL_DIR = $(INSTALLDIR)\include
@@ -249,7 +251,7 @@ libcdll = msvcrt$(DBGX).lib oldnames.lib
 baselibs   = kernel32.lib $(optlibs) advapi32.lib
 winlibs    = $(baselibs) user32.lib gdi32.lib comdlg32.lib winspool.lib
 guilibs	   = $(libc) $(winlibs)
-
+conlibs    = $(libc) $(baselibs)
 guilibsdll = $(libcdll) $(winlibs)
 
 ######################################################################
@@ -303,11 +305,17 @@ CON_CFLAGS	= $(cdebug) $(cflags) $(cvars) $(include32) -DCONSOLE
 # Project specific targets
 ######################################################################
 
-all:    setup $(WISH)
-test:	setup $(TKTEST)
+all:    setup $(WISH) $(WISHC) $(CAT32)
 install: install-binaries install-libraries
 plugin:	setup $(TKPLUGINDLL) $(WISHP)
-tktest: setup $(TKTEST)
+tktest: setup $(TKTEST) $(CAT32)
+test:	setup $(TKTEST) $(TKLIB) $(CAT32)
+	copy $(TCLDIR)\bin\pkgIndex.tcl $(OUTDIR)
+	set TCL_LIBRARY=$(TCLDIR)/library
+	$(TKTEST) << | $(CAT32)
+		cd ../tests
+		source all
+<<
 
 setup:
 	@mkd $(TMPDIR)
@@ -317,6 +325,7 @@ install-binaries:
 	@mkd "$(BIN_INSTALL_DIR)"
 	copy $(TKDLL) "$(BIN_INSTALL_DIR)"
 	copy $(WISH) "$(BIN_INSTALL_DIR)"
+	copy $(WISHC) "$(BIN_INSTALL_DIR)"
 	@mkd "$(LIB_INSTALL_DIR)"
 	copy $(TKLIB) "$(LIB_INSTALL_DIR)"
 
@@ -359,6 +368,11 @@ $(WISH): $(WISHOBJS) $(TKLIB) $(TMPDIR)\wish.res
 	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -out:$@ \
 		$(guilibsdll) $(TCLLIBDIR)\$(TCLLIB) $(TKLIB) $(WISHOBJS) 
 
+$(WISHC): $(WISHOBJS) $(TKLIB) $(TMPDIR)\wish.res
+	set LIB=$(TOOLS32)\lib
+	$(link32) $(ldebug) $(conlflags) $(TMPDIR)\wish.res -out:$@ \
+		$(guilibsdll) $(TCLLIBDIR)\$(TCLLIB) $(TKLIB) $(WISHOBJS) 
+
 $(WISHP): $(WISHOBJS) $(TKPLUGINLIB) $(TMPDIR)\wish.res
 	set LIB=$(TOOLS32)\lib
 	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -out:$@ \
@@ -385,6 +399,11 @@ $(DUMPEXTS): $(TCLDIR)\win\winDumpExts.c
 	set LIB=$(TOOLS32)\lib
 	$(link32) $(ldebug) $(conlflags) $(guilibs) -out:$@ \
 		$(TMPDIR)\winDumpExts.obj 
+
+$(CAT32): $(WINDIR)\cat.c
+	$(cc32) $(CON_CFLAGS) -Fo$(TMPDIR)\ $?
+	set LIB=$(TOOLS32)\lib
+	$(link32) $(conlflags) -out:$@ -stack:16384 $(TMPDIR)\cat.obj $(conlibs)
 
 #
 # Special case object file targets
