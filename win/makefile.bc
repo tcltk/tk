@@ -80,11 +80,9 @@ LNLIBS_dll =	$(TCLLIBDIR)\$(TCLLIB) import32 cw32mti
 .path.obj=$(TMPDIR)
 
 WISHOBJS = \
-	$(TMPDIR)\tkConsole.obj \
 	$(TMPDIR)\winMain.obj
 
 TKTESTOBJS = \
-	$(TMPDIR)\tkConsole.obj \
 	$(TMPDIR)\tkTest.obj \
 	$(TMPDIR)\tkSquare.obj \
 	$(TMPDIR)\testMain.obj
@@ -97,6 +95,7 @@ XLIBOBJS = \
 	$(TMPDIR)\xutil.obj
 
 TKOBJS = \
+	$(TMPDIR)\tkConsole.obj \
 	$(TMPDIR)\tkUnixMenubu.obj \
 	$(TMPDIR)\tkUnixScale.obj \
 	$(XLIBOBJS) \
