@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.15 2002/08/31 06:12:20 das Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.16 2002/10/09 11:56:33 das Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
@@ -651,6 +651,10 @@ EXTERN void		XQueryColor _ANSI_ARGS_((Display * display,
 EXTERN void		XQueryColors _ANSI_ARGS_((Display * display, 
 				Colormap colormap, XColor * defs_in_out, 
 				int ncolors));
+/* 90 */
+EXTERN Status		XQueryTree _ANSI_ARGS_((Display* d, Window w1, 
+				Window* w2, Window* w3, Window** w4, 
+				unsigned int* ui));
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 /* 0 */
@@ -937,6 +941,10 @@ EXTERN void		XQueryColor _ANSI_ARGS_((Display * display,
 EXTERN void		XQueryColors _ANSI_ARGS_((Display * display, 
 				Colormap colormap, XColor * defs_in_out, 
 				int ncolors));
+/* 90 */
+EXTERN Status		XQueryTree _ANSI_ARGS_((Display* d, Window w1, 
+				Window* w2, Window* w3, Window** w4, 
+				unsigned int* ui));
 #endif /* MAC_OSX_TK */
 
 typedef struct TkIntXlibStubs {
@@ -1143,6 +1151,7 @@ typedef struct TkIntXlibStubs {
     void (*xWarpPointer) _ANSI_ARGS_((Display* display, Window src_w, Window dest_w, int src_x, int src_y, unsigned int src_width, unsigned int src_height, int dest_x, int dest_y)); /* 87 */
     void (*xQueryColor) _ANSI_ARGS_((Display * display, Colormap colormap, XColor * def_in_out)); /* 88 */
     void (*xQueryColors) _ANSI_ARGS_((Display * display, Colormap colormap, XColor * defs_in_out, int ncolors)); /* 89 */
+    Status (*xQueryTree) _ANSI_ARGS_((Display* d, Window w1, Window* w2, Window* w3, Window** w4, unsigned int* ui)); /* 90 */
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
     void (*xSetDashes) _ANSI_ARGS_((Display* display, GC gc, int dash_offset, _Xconst char* dash_list, int n)); /* 0 */
@@ -1235,6 +1244,7 @@ typedef struct TkIntXlibStubs {
     void (*xWarpPointer) _ANSI_ARGS_((Display* display, Window src_w, Window dest_w, int src_x, int src_y, unsigned int src_width, unsigned int src_height, int dest_x, int dest_y)); /* 87 */
     void (*xQueryColor) _ANSI_ARGS_((Display * display, Colormap colormap, XColor * def_in_out)); /* 88 */
     void (*xQueryColors) _ANSI_ARGS_((Display * display, Colormap colormap, XColor * defs_in_out, int ncolors)); /* 89 */
+    Status (*xQueryTree) _ANSI_ARGS_((Display* d, Window w1, Window* w2, Window* w3, Window** w4, unsigned int* ui)); /* 90 */
 #endif /* MAC_OSX_TK */
 } TkIntXlibStubs;
 
@@ -2040,6 +2050,10 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #define XQueryColors \
 	(tkIntXlibStubsPtr->xQueryColors) /* 89 */
 #endif
+#ifndef XQueryTree
+#define XQueryTree \
+	(tkIntXlibStubsPtr->xQueryTree) /* 90 */
+#endif
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 #ifndef XSetDashes
@@ -2401,6 +2415,10 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #ifndef XQueryColors
 #define XQueryColors \
 	(tkIntXlibStubsPtr->xQueryColors) /* 89 */
+#endif
+#ifndef XQueryTree
+#define XQueryTree \
+	(tkIntXlibStubsPtr->xQueryTree) /* 90 */
 #endif
 #endif /* MAC_OSX_TK */
 
