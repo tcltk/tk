@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.42 2000/04/26 00:23:44 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.43 2000/06/05 23:09:17 ericm Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4900,3 +4900,44 @@ redraws (hobbs)
 2000-04 more docs for public APIs (melski)
 
 --- Released 8.3.1, April 26, 2000 --- See ChangeLog for details ---
+2000-04 (doc updates) extended, updated docs (melski)
+
+2000-05-09 (feature change) removed WS_EX_TOOLWINDOW style bit for
+transient windows on Windows platforms, so that transients have
+full-size titlebars (melski)
+
+2000-05-09 (bug fix) fixed calling of takeFocus proc (nemethi)
+
+2000-05-11 (bug fix) corrected handling of 3DBorder, Cursor and Color
+objects on multiple screens (hobbs)
+
+2000-05-12 (feature enhancement) improved support for chars in 0-255
+range for bitmap ANSI fonts (spjuth, hobbs)
+
+2000-05-12 (widget enhancement) added support for -repeatdelay,
+-repeatinterval for command buttons; and -compound (image and text
+simultaneously) for labels, check-, radio-, and command buttons (melski)
+
+2000-05-14 (widget change) added "readonly" state for entries and
+changed behavior of "disabled" entries; added -readonlybackground
+option for entries (melski)
+*** THIS IS A BACKWARDS INCOMPATIBLE BEHAVIOR CHANGE ***
+
+2000-05-15 (feature enhancement) added [image inuse] command (melski)
+
+2000-05-15 (feature enhancement) added -nice option to [bell] command (duncan)
+
+2000-05-17 (widget enhancement) added -overrelief option for
+check/radio/buttons (melski)
+
+2000-05-26 (feature change) added support for new syntax in
+Tk_OptionSpec tables; if the database name for an option contains an
+embedded "." it indicates that the name contains an overriding window
+class specifier in addition to the database name, which allows widgets
+to perform queries for certain options as if they were options for a
+different widget class (melski)
+
+2000-05-28 (new widget) added spinbox widget (hobbs)
+
+2000-05-31 (feature change) replaced bgerror dialog with a new and
+improved one (fellows, melski)
