@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.28 2001/01/02 19:13:02 andreas_kupries Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.29 2001/03/30 21:52:56 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1462,8 +1462,8 @@ UpdateWrapper(winPtr)
     TkWindow *winPtr;		/* Top-level window to redecorate. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    HWND parentHWND = NULL, oldWrapper;
-    HWND child = TkWinGetHWND(winPtr->window);
+    HWND parentHWND, oldWrapper;
+    HWND child;
     int x, y, width, height, state;
     WINDOWPLACEMENT place;
     HICON hSmallIcon = NULL;
@@ -1473,8 +1473,15 @@ UpdateWrapper(winPtr)
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    parentHWND = NULL;
+    if (winPtr->window == None) {
+	/*
+	 * Ensure existence of the window to update the wrapper for.
+	 */
+	Tk_MakeWindowExist((Tk_Window) winPtr);
+    }
+
     child = TkWinGetHWND(winPtr->window);
+    parentHWND = NULL;
 
     if (winPtr->flags & TK_EMBEDDED) {
 	wmPtr->wrapper = (HWND) winPtr->privatePtr;
