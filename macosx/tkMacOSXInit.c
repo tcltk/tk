@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.1.2.2 2001/11/11 17:54:40 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.1.2.3 2002/01/22 01:28:18 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -47,8 +47,21 @@ TkpInit(interp)
 {
     char tkLibPath[1024];
     int result;
-    
-    Tcl_SetVar2(interp, "tcl_platform", "windowingsystem", "aqua", TCL_GLOBAL_ONLY);
+    static int menusInitialized = false;
+
+    /* Since it is possible for TkInit to be called multiple times
+     * and we don't want to do the menu initialization multiple times
+     * we protect against doing it more than once.
+     */
+
+    if (menusInitialized == false) {
+    	menusInitialized = true;
+        Tk_MacOSXSetupTkNotifier();
+        TkMacOSXInitAppleEvents(interp);
+        TkMacOSXInitMenus(interp);
+    }
+    Tcl_SetVar2(interp, "tcl_platform", "windowingsystem", 
+            "aqua", TCL_GLOBAL_ONLY);
     
     /*
      * When Tk is in a framework, force tcl_findLibrary to look in the 

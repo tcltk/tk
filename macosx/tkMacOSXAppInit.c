@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.1.2.4 2001/11/11 17:54:40 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.1.2.5 2002/01/22 01:28:18 wolfsuit Exp $
  */
 #include <pthread.h>
 #include "tk.h"
@@ -25,9 +25,6 @@
 #ifndef MAX_PATH_LEN
     #define MAX_PATH_LEN 1024
 #endif
-
-extern void TkMacOSXInitAppleEvents(Tcl_Interp *interp);
-extern void TkMacOSXInitMenus(Tcl_Interp *interp);
 
 /*
  * The following variable is a special hack that is needed in order for
@@ -94,16 +91,7 @@ main(argc, argv)
 #endif
     extern int TK_LOCAL_APPINIT _ANSI_ARGS_((Tcl_Interp *interp));
 
-
-    /*
-     * NB - You have to swap in the Tk Notifier BEFORE you start up the
-     * Tcl interpreter for now.  It probably should work to do this
-     * in the other order, but for now it doesn't seem to.
-     */
-     
     scriptPath[0] = '\0';
-    
-    Tk_MacOSXSetupTkNotifier();
 
     /*
      * The following #if block allows you to change how Tcl finds the startup
@@ -245,9 +233,6 @@ Tcl_AppInit(interp)
         Tcl_SetVar(interp, "auto_path", scriptPath,
                 TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
     }
-    
-    TkMacOSXInitAppleEvents(interp);
-    TkMacOSXInitMenus(interp);
     
 #ifdef TK_TEST
     if (Tcltest_Init(interp) == TCL_ERROR) {

@@ -1,9 +1,9 @@
 /*
- * tclUnixNotify.c --
+ * tclMacOSXNotify.c --
  *
- *	This file contains the implementation of the select-based
- *	Unix-specific notifier, which is the lowest-level part of the
- *	Tcl event loop.  This file works together with
+ *	This file contains the implementation of a merged 
+ *	Carbon/select-based notifier, which is the lowest-level part 
+ *	of the Tcl event loop.  This file works together with
  *	../generic/tclNotify.c.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
@@ -12,13 +12,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.1.2.2 2002/01/22 01:28:18 wolfsuit Exp $
  */
 
 #include "tclInt.h"
 #include "tclPort.h"
 
-/* FIXME - Why do I need there here? */
+/* FIXME - Why do I need these here? */
 
 #undef environ
 #include "tkMacOSX.h"
@@ -228,6 +228,15 @@ Tk_MacOSXSetupTkNotifier()
     };
     
     Tcl_SetNotifier(&macNotifierProcs);
+
+    /* 
+     * Tcl_SetNotifier doesn't call the TclInitNotifier
+     * so we call it now. If we don't do this the
+     * ThreadSpecificData will keep a pointer to the original
+     * InitNotifier. See tclNotify.c:TclInitNotifier().
+     */
+
+    TclInitNotifier(); 
 }
 
 /*
@@ -673,7 +682,8 @@ FileHandlerEventProc(evPtr, flags)
     }
     return 1;
 }
-void
+
+void
 DoActualWait(timePtr)
     Tcl_Time *timePtr;		/* Maximum block time, or NULL. */
 {
