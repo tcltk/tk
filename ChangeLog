@@ -1,3 +1,8 @@
+1999-05-21    <stanton@scriptics.com>
+
+	* win/tkWinClipboard.c: Fixed clipboard code to handle lack of
+	CF_LOCALE information (e.g. from command.com).
+
 1999-05-20    <redman@scriptics.com>
 
 	* library/console.tcl: Changed copyright string to read 1999
