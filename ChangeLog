@@ -1,3 +1,9 @@
+2003-08-25   David Gravereaux <davygrvy@pobox.com>
+
+	* win/makefile.vc: Don't do a string compare on the $(DBGX)
+	variable, use the $(DEBUG) boolean directly.  Also, don't try
+	to regen the stubs table if $(TCLSH) doesn't exist.
+
 2003-08-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/demos/msgbox.tcl: Brought into line with the newer
