@@ -1,3 +1,46 @@
+2003-08-20  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/demos/widget:      Redo code view dialog, use named fonts,
+	* library/demos/arrow.tcl:   add basic see/dismiss routine with
+	* library/demos/bind.tcl:    images for better look & feel
+	* library/demos/bitmap.tcl:
+	* library/demos/button.tcl:
+	* library/demos/check.tcl:
+	* library/demos/clrpick.tcl:
+	* library/demos/colors.tcl:
+	* library/demos/cscroll.tcl:
+	* library/demos/ctext.tcl:
+	* library/demos/entry1.tcl:
+	* library/demos/entry2.tcl:
+	* library/demos/entry3.tcl:
+	* library/demos/filebox.tcl:
+	* library/demos/floor.tcl:
+	* library/demos/form.tcl:
+	* library/demos/hscale.tcl:
+	* library/demos/icon.tcl:
+	* library/demos/image1.tcl:
+	* library/demos/image2.tcl:
+	* library/demos/items.tcl:
+	* library/demos/label.tcl:
+	* library/demos/labelframe.tcl:
+	* library/demos/menu.tcl:
+	* library/demos/menubu.tcl:
+	* library/demos/paned1.tcl:
+	* library/demos/paned2.tcl:
+	* library/demos/plot.tcl:
+	* library/demos/puzzle.tcl:
+	* library/demos/radio.tcl:
+	* library/demos/ruler.tcl:
+	* library/demos/sayings.tcl:
+	* library/demos/search.tcl:
+	* library/demos/spin.tcl:
+	* library/demos/states.tcl:
+	* library/demos/style.tcl:
+	* library/demos/text.tcl:
+	* library/demos/twind.tcl:
+	* library/demos/unicodeout.tcl:
+	* library/demos/vscale.tcl:
+
 2003-08-20  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkCanvPs.c (Tk_PostscriptFont): Use Tcl_Obj-based

@@ -4,7 +4,7 @@
 # permitted input is constrained in some way.  It also shows off a
 # password entry.
 #
-# RCS: @(#) $Id: entry3.tcl,v 1.1 2001/11/19 14:02:29 dkf Exp $
+# RCS: @(#) $Id: entry3.tcl,v 1.2 2003/08/20 23:02:18 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -32,11 +32,9 @@ label $w.msg -font $font -wraplength 5i -justify left -text "Four different\
 	characters (silently ignoring further ones), and displaying them as\
 	asterisk characters."
 
-frame $w.buttons
-button $w.buttons.dismiss -text Dismiss -command "destroy $w"
-button $w.buttons.code -text "See Code" -command "showCode $w"
-pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
-
+## See Code / Dismiss buttons
+set btns [addSeeDismiss $w.buttons $w]
+pack $btns -side bottom -fill x
 
 # focusAndFlash --
 # Error handler for entry widgets that forces the focus onto the

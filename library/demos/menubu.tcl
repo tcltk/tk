@@ -3,7 +3,7 @@
 # This demonstration script creates a window with a bunch of menus
 # and cascaded menus using menubuttons.
 #
-# # RCS: @(#) $Id: menubu.tcl,v 1.3 2002/08/31 06:12:28 das Exp $
+# # RCS: @(#) $Id: menubu.tcl,v 1.4 2003/08/20 23:02:18 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -43,11 +43,9 @@ $w.body.above.m add command -label "Above menu: first item" -command "puts \"You
 $w.body.above.m add command -label "Above menu: second item" -command "puts \"You have selected the second item from the Above menu.\""
 grid $w.body.above -row 2 -column 1 -sticky s
 
-frame $w.buttons
-pack $w.buttons -side bottom -fill x -pady 2m
-button $w.buttons.dismiss -text Dismiss -command "destroy $w"
-button $w.buttons.code -text "See Code" -command "showCode .menubu"
-pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
+## See Code / Dismiss buttons
+set btns [addSeeDismiss $w.buttons $w]
+pack $btns -side bottom -fill x
 
 set body $w.body.center
 label $body.label -wraplength 300 -font "Helvetica 14" -justify left -text "This is a demonstration of menubuttons. The \"Below\" menubutton pops its menu below the button; the \"Right\" button pops to the right, etc. There are two option menus directly below this text; one is just a standard menu and the other is a 16-color palette."

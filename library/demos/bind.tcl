@@ -3,7 +3,7 @@
 # This demonstration script creates a text widget with bindings set
 # up for hypertext-like effects.
 #
-# RCS: @(#) $Id: bind.tcl,v 1.2 1998/09/14 18:23:26 stanton Exp $
+# RCS: @(#) $Id: bind.tcl,v 1.3 2003/08/20 23:02:18 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -16,11 +16,9 @@ wm title $w "Text Demonstration - Tag Bindings"
 wm iconname $w "bind"
 positionWindow $w
 
-frame $w.buttons
-pack $w.buttons -side bottom -fill x -pady 2m
-button $w.buttons.dismiss -text Dismiss -command "destroy $w"
-button $w.buttons.code -text "See Code" -command "showCode $w"
-pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
+## See Code / Dismiss buttons
+set btns [addSeeDismiss $w.buttons $w]
+pack $btns -side bottom -fill x
 
 text $w.text -yscrollcommand "$w.scroll set" -setgrid true \
 	-width 60 -height 24 -font $font -wrap word
