@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.4 1999/08/10 16:58:18 hobbs Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.5 2000/01/12 11:44:42 hobbs Exp $
 '\" 
 .so man.macros
 .TH wm n 4.3 Tk "Tk Built-In Commands"
@@ -391,14 +391,15 @@ source of the window's current size, or an empty string if
 no source has been specified yet.  Most window managers interpret
 ``no source'' as equivalent to \fBprogram\fR.
 .TP
-\fBwm state \fIwindow\fR
-Returns the current state of \fIwindow\fR:  either \fBnormal\fR,
-\fBiconic\fR, \fBwithdrawn\fR, or \fBicon\fR.  The difference
-between \fBiconic\fR and \fBicon\fR is that \fBiconic\fR refers
-to a window that has been iconified (e.g., with the \fBwm iconify\fR
-command) while \fBicon\fR refers to a window whose only purpose is
-to serve as the icon for some other window (via the \fBwm iconwindow\fR
-command).
+\fBwm state \fIwindow\fR ?newstate?
+If \fInewstate\fR is specified, the window will be set to the new state,
+otherwise it returns the current state of \fIwindow\fR: either
+\fBnormal\fR, \fBiconic\fR, \fBwithdrawn\fR, \fBicon\fR, or (Windows only)
+\fBzoomed\fR.  The difference between \fBiconic\fR and \fBicon\fR is that
+\fBiconic\fR refers to a window that has been iconified (e.g., with the
+\fBwm iconify\fR command) while \fBicon\fR refers to a window whose only
+purpose is to serve as the icon for some other window (via the \fBwm
+iconwindow\fR command).  The \fBicon\fR state cannot be set.
 .TP
 \fBwm title \fIwindow\fR ?\fIstring\fR?
 If \fIstring\fR is specified, then it will be passed to the window
