@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.62 2003/03/03 01:22:59 dgp Exp $
+RCS: @(#) $Id: changes,v 1.63 2003/03/03 15:54:49 dkf Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5372,83 +5372,92 @@ antialiasing from tcl.  (steffen)
 --- Released 8.4.1, October 22, 2002 --- See ChangeLog for details ---
 
 2002-11-07 (bug fix)[635025,532022] Make [place info] complete and bring into
-line with other geometry managers.
+line with other geometry managers. (spjuth)
 
-2002-11-14 (bug fix)[630533] Handle half-dead windows better.
+2002-11-14 (bug fix)[630533] Handle half-dead windows better. (dejong)
 
-2002-11-19 (bug fix) Better handling of narrow scrollbars on OSX.
+2002-11-19 (bug fix) Better handling of narrow scrollbars on OSX. (ingham)
 
-2002-11-22 (bug fix)[641778] Make the [text see] work when the widget is unmapped.
+2002-11-22 (bug fix)[641778] Make the [text see] work when the widget is
+unmapped. (hobbs)
 
 2002-12-01 (bug fix) Stopped [wm withdraw] and [wm transient] from interfering
-with each other.
+with each other. (dejong)
 
-2002-12-06 (bug fix) Improved DLL cleanup on Windows.
+2002-12-06 (bug fix) Improved DLL cleanup on Windows. (hobbs)
 
 2002-12-06 (new feature) New function TkWinSetHINSTANCE() as part of enabling
-dynamic Tk to load resources correctly.
+dynamic Tk to load resources correctly. (hobbs)
 
 2002-12-13 (bug fix)[616245] Use Tcl*StartupScript*() routines in Tk_Main.
+(porter)
 
 2002-12-27 (bug fix)[578569] Made sure that Tk always knows whether its windows
-are mapped or not.
+are mapped or not. (english)
 
-2003-01-03 (bug fix)[661792] Stopped crash when trying to create a toplevel when
-Tk is dying.
+2003-01-03 (bug fix)[661792] Stopped crash when trying to create a toplevel
+when Tk is dying. (hobbs)
 
 2003-01-08 (bug fix)[663981] Clip long lines so they show correctly even when
-they hit windowing-system limits.
+they hit windowing-system limits. (hipp)
 
 2003-01-14 (bug fix)[666346] Stopped selection handling crashes under KDE3.0.
+(english)
 
 2003-01-22 (bug fix)[220891] Image creation cannot trigger Tk's death.
+(fellows)
 
 2003-01-23 (bug fix)[673687] Entry typein works as expected even when the mouse
-button is pressed.
+button is pressed. (hipp)
 
 2003-01-28 (bug fix)[671330] Stopped segfaults from unsynchonized window
-deletion epochs.
+deletion epochs. (english)
 
 2003-02-08 (bug fix) Make canvas item coordinate list handling consistent to
-stop segfaults.  Cannot now create items without coordinates.
+stop segfaults.  Cannot now create items without coordinates. (hobbs)
 	*** POTENTIAL INCOMPATIBILITY ***
 
 2003-02-10 (bug fix) Better support for themed and animated cursors on OSX.
+(ingham)
 
 2003-02-17 (bug fix) Stopped motion events from morphing into button press
-and motion events.
+and motion events. (dejong)
 
-2003-02-18 (bug fix) Removed memory leak in GIF image loader.
+2003-02-18 (bug fix) Removed memory leak in GIF image loader. (fellows)
 
-2003-02-18 (bug fix) Made OSX menus support UTF8 text and icons.
+2003-02-18 (bug fix) Made OSX menus support UTF8 text and icons. (darley)
 
 2003-02-18 (bug fix)[608559] Stop message boxes from getting extremely wide.
+(hobbs)
 
-2003-02-18 (bug fix)[683813] Make focus behaviour of spinboxes more like entries.
+2003-02-18 (bug fix)[683813] Make focus behaviour of spinboxes more like
+entries. (bron)
 
 2003-02-19 (new demo)[627453] New demo showing off Tk's Unicode font handling.
+(fellows,suchenwirth)
 
 2003-02-19 (bug fix) Bring event handling more into line with the OSX standard.
-Also improves "dead key" handling.
+Also improves "dead key" handling. (riefenstahl,ingham)
 
 2003-02-20 (bug fix)[618872,689357] Stopped read of freed memory when working
-with large composite fonts.
+with large composite fonts. (fellows)
 
 2003-02-20 (bug fix)[689099,tcllib 689258] Improvements to [panedwindow] pane
-size and sash handling.
+size and sash handling. (spjuth,hobbs)
 
 2003-02-20 (bug fix)[624116] Stopped semi-crash in Windows scrollbar handling.
+(hobbs)
 
 2003-02-21 (bug fix)[671122] Stopped panedwindow from crashing when embedded
-in a window with a different visual to the root window.
+in a window with a different visual to the root window. (fellows)
 
 2003-02-21 (bug fix)[617392] Limit the screen-size of [tk_get*File] file type
-selection menu.
+selection menu. (fellows)
 
-2003-02-21 (bug fix)[673722] Rework standard dialogs to use [grid].
+2003-02-21 (bug fix)[673722] Rework standard dialogs to use [grid]. (fellows)
 
 2003-02-24 (bug fix)[637828] Report that entries can provide the selection,
-even if they're not displaying it.
+even if they're not displaying it. (hobbs)
 
 2003-02-24 (bug fix)[669595] Improved display of indicators in disabled
 checkbuttons and radiobuttons. (hintermayer)
@@ -5457,17 +5466,17 @@ checkbuttons and radiobuttons. (hintermayer)
 positively when disabled.
 
 2003-02-24 (bug fix)[647497] Make Tk pick the first best matching font on
-the font path.
+the font path. (dal zotto)
 	*** POTENTIAL VISUAL INCOMPATIBILITY ***
 
 2003-02-25 (bug fix)[621672] Fixed conversion of apple event parameters
-to posix path names.
+to posix path names. (steffen,riefenstahl)
 
 2003-02-25 (feature enhancement)[patch 685388] Support simple XOR text drawing
-on Windows.
+on Windows. (martin)
 
 2003-02-28 (bug fix)[612110] Make %-substitutions for events only read data out
-of the event structure when that field is valid for that event type.
+of the event structure when that field is valid for that event type. (fellows)
 	*** POTENTIAL INCOMPATIBILITY ***
 
 --- Released 8.4.2, March X, 2002 --- See ChangeLog for details ---
