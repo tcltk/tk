@@ -6,11 +6,12 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.22 2003/05/19 21:19:52 dkf Exp $
+# RCS: @(#) $Id: text.test,v 1.23 2003/10/31 09:02:15 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+namespace import -force tcltest::test
 
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
@@ -53,6 +54,7 @@ foreach test {
     {-background #ff00ff #ff00ff <gorp>}
     {-bd 4 4 foo}
     {-bg blue blue #xx}
+    {-blockcursor 0 0 xx}
     {-borderwidth 7 7 ++}
     {-cursor watch watch lousy}
     {-exportselection no 0 maybe}
@@ -112,7 +114,7 @@ test text-1.[incr i] {text options} {
 	lappend result [lindex $i 4]
     }
     set result
-} {1 blue {} {} 7 watch 0 {} fixed #012 5 #123 #234 0 green 45 100 47 2 5 3 82 raised #ffff01234567 21 yellow 0 0 0 0 disabled {1i 2i 3i 4i} {any old thing} 1 73 word {x scroll command} {test command}}
+} {1 blue {} {} 0 7 watch 0 {} fixed #012 5 #123 #234 0 green 45 100 47 2 5 3 82 raised #ffff01234567 21 yellow 0 0 0 0 disabled {1i 2i 3i 4i} {any old thing} 1 73 word {x scroll command} {test command}}
 
 test text-2.1 {Tk_TextCmd procedure} {
     list [catch {text} msg] $msg
@@ -151,7 +153,7 @@ test text-3.1 {TextWidgetCmd procedure, basics} {
 } {1 {wrong # args: should be ".t option ?arg arg ...?"}}
 test text-3.2 {TextWidgetCmd procedure} {
     list [catch {.t gorp 1.0 z 1.2} msg] $msg
-} {1 {bad option "gorp": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
+} {1 {bad option "gorp": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, replace, scan, search, see, tag, window, xview, or yview}}
 
 test text-4.1 {TextWidgetCmd procedure, "bbox" option} {
     list [catch {.t bbox} msg] $msg
@@ -219,7 +221,7 @@ test text-6.13 {TextWidgetCmd procedure, "compare" option} {
 } {1 {bad comparison operator "z": must be <, <=, ==, >=, >, or !=}}
 test text-6.14 {TextWidgetCmd procedure, "compare" option} {
     list [catch {.t co 1.0 z 1.2} msg] $msg
-} {1 {ambiguous option "co": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
+} {1 {ambiguous option "co": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, replace, scan, search, see, tag, window, xview, or yview}}
 
 # "configure" option is already covered above
 
@@ -228,7 +230,7 @@ test text-7.1 {TextWidgetCmd procedure, "debug" option} {
 } {1 {wrong # args: should be ".t debug boolean"}}
 test text-7.2 {TextWidgetCmd procedure, "debug" option} {
     list [catch {.t de 0 1} msg] $msg
-} {1 {ambiguous option "de": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
+} {1 {ambiguous option "de": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, replace, scan, search, see, tag, window, xview, or yview}}
 test text-7.3 {TextWidgetCmd procedure, "debug" option} {
     .t debug true
     .t deb
@@ -324,9 +326,30 @@ test text-8.16 {TextWidgetCmd procedure, "delete" option} {
 
 .t delete 1.0 end; .t insert 1.0 $prevtext
 
+test text-8.17 {TextWidgetCmd procedure, "replace" option} {
+    list [catch {.t replace 1.3 2.3} err] $err
+} {1 {wrong # args: should be ".t replace index1 index2 chars ?tagList chars tagList ...?"}}
+test text-8.18 {TextWidgetCmd procedure, "replace" option} {
+    list [catch {.t replace 3.1 2.3 foo} err] $err
+} {1 {Index "2.3" before "3.1" in the text.}}
+test text-8.19 {TextWidgetCmd procedure, "replace" option} {
+    list [catch {.t replace 2.1 2.3 foo} err] $err
+} {0 {}}
+.t delete 1.0 end; .t insert 1.0 $prevtext
+test text-8.20 {TextWidgetCmd procedure, "replace" option} {
+    .t configure -undo 1
+    # Ensure it is treated as a single undo action
+    .t replace 2.1 2.3 foo
+    .t edit undo
+    .t configure -undo 0
+    string equal [.t get 1.0 end-1c] $prevtext
+} {1}
+
+.t delete 1.0 end; .t insert 1.0 $prevtext
+
 test text-9.1 {TextWidgetCmd procedure, "get" option} {
     list [catch {.t get} msg] $msg
-} {1 {wrong # args: should be ".t get index1 ?index2 ...?"}}
+} {1 {wrong # args: should be ".t get ?-displaychars? ?--? index1 ?index2 ...?"}}
 test text-9.2 {TextWidgetCmd procedure, "get" option} {
     list [catch {.t get a b c} msg] $msg
 } {1 {bad text index "a"}}
@@ -376,9 +399,208 @@ test text-9.15 {TextWidgetCmd procedure, "get" option} {
     .t get 5.2 5.4 5.4 5.5 end-3c end
 } {{y } G { 7
 }}
+test text-9.16 {TextWidgetCmd procedure, "get" option} {
+    .t get 5.2 5.3 5.4 5.3
+} {y}
 test text-9.17 {TextWidgetCmd procedure, "get" option} {
+    .t index "5.2 +3 indices"
+} {5.5}
+test text-9.17 {TextWidgetCmd procedure, "get" option} {
+    .t index "5.2 +3chars"
+} {5.5}
+test text-9.17 {TextWidgetCmd procedure, "get" option} {
+    .t index "5.2 +3displayindices"
+} {5.5}
+.t tag configure elide -elide 1
+.t tag add elide 5.2 5.4
+test text-9.18 {TextWidgetCmd procedure, "get" option} {
     list [catch {.t get 5.2 5.4 5.5 foo} msg] $msg
 } {1 {bad text index "foo"}}
+test text-9.19 {TextWidgetCmd procedure, "get" option} {
+    .t get 5.2 5.4 5.4 5.5 end-3c end
+} {{y } G { 7
+}}
+test text-9.20 {TextWidgetCmd procedure, "get" option} {
+    .t get -displaychars 5.2 5.4 5.4 5.5 end-3c end
+} {{} G { 7
+}}
+test text-9.21 {TextWidgetCmd procedure, "get" option} {
+    list [.t index "5.1 +4indices"] [.t index "5.1+4d indices"]
+} {5.5 5.7}
+test text-9.22 {TextWidgetCmd procedure, "get" option} {
+    list [.t index "5.1 +4a chars"] [.t index "5.1+4d chars"]
+} {5.5 5.7}
+test text-9.23 {TextWidgetCmd procedure, "get" option} {
+    list [.t index "5.5 -4indices"] [.t index "5.7-4d indices"]
+} {5.1 5.1}
+test text-9.24 {TextWidgetCmd procedure, "get" option} {
+    list [.t index "5.5 -4a chars"] [.t index "5.7-4d chars"]
+} {5.1 5.1}
+.t window create 5.4
+test text-9.25 {TextWidgetCmd procedure, "get" option} {
+    list [.t index "5.1 +4indices"] [.t index "5.1+4d indices"]
+} {5.5 5.7}
+test text-9.26 {TextWidgetCmd procedure, "get" option} {
+    list [.t index "5.1 +4a chars"] [.t index "5.1+4d chars"]
+} {5.6 5.8}
+test text-9.25 {TextWidgetCmd procedure, "get" option} {
+    list [.t index "5.5 -4indices"] [.t index "5.7-4d indices"]
+} {5.1 5.1}
+test text-9.26 {TextWidgetCmd procedure, "get" option} {
+    list [.t index "5.6 -4a chars"] [.t index "5.8-4d chars"]
+} {5.1 5.1}
+.t delete 5.4 
+.t tag add elide 5.5 5.6
+test text-9.23 {TextWidgetCmd procedure, "get" option} {
+    .t get -displaychars 5.2 5.8
+} {Grl}
+.t tag delete elide
+.t mark unset a
+.t mark unset b
+.t mark unset c
+test text-9.2.1 {TextWidgetCmd procedure, "count" option} {
+    list [catch {.t count} msg] $msg
+} {1 {wrong # args: should be ".t count ?options? index1 index2"}}
+test text-9.2.2.1 {TextWidgetCmd procedure, "count" option} {
+    list [catch {.t count blah 1.0 2.0} msg] $msg
+} {1 {bad option "blah" must be -chars, -displaychars, -displayindices, -displaylines, -indices, -lines, -update, -xpixels, or -ypixels}}
+test text-9.2.2 {TextWidgetCmd procedure, "count" option} {
+    list [catch {.t count a b} msg] $msg
+} {1 {bad text index "a"}}
+test text-9.2.3 {TextWidgetCmd procedure, "count" option} {
+    list [catch {.t count @q 3.1} msg] $msg
+} {1 {bad text index "@q"}}
+test text-9.2.4 {TextWidgetCmd procedure, "count" option} {
+    list [catch {.t count 3.1 @r} msg] $msg
+} {1 {bad text index "@r"}}
+test text-9.2.5 {TextWidgetCmd procedure, "count" option} {
+    .t count 5.7 5.3
+} {-4}
+test text-9.2.6 {TextWidgetCmd procedure, "count" option} {
+    .t count 5.3 5.5
+} {2}
+test text-9.2.7 {TextWidgetCmd procedure, "count" option} {
+    .t count 5.3 end
+} {29}
+.t mark set a 5.3
+.t mark set b 5.3
+.t mark set c 5.5
+test text-9.2.8 {TextWidgetCmd procedure, "count" option} {
+    .t count 5.2 5.7
+} {5}
+test text-9.2.9 {TextWidgetCmd procedure, "count" option} {
+    .t count 5.2 5.3
+} {1}
+test text-9.2.10 {TextWidgetCmd procedure, "count" option} {
+    .t count 5.2 5.4
+} {2}
+test text-9.2.17 {TextWidgetCmd procedure, "count" option} {
+    list [catch {.t count 5.2 foo} msg] $msg
+} {1 {bad text index "foo"}}
+.t tag configure elide -elide 1
+.t tag add elide 2.2 3.4
+.t tag add elide 4.0 4.1
+test text-9.2.18 {TextWidgetCmd procedure, "count" option} {
+    .t count -displayindices 2.0 3.0
+} {2}
+test text-9.2.19 {TextWidgetCmd procedure, "count" option} {
+    .t count -displayindices 2.2 3.0
+} {0}
+test text-9.2.20 {TextWidgetCmd procedure, "count" option} {
+    .t count -displayindices 2.0 4.2
+} {5}
+# Create one visible and one invisible window
+frame .t.w1
+frame .t.w2
+.t mark set a 2.2
+# Creating this window here means that the elidden text
+# now starts at 2.3, but 'a' is automatically moved to 2.3
+.t window create 2.1 -window .t.w1
+.t window create 3.1 -window .t.w2
+test text-9.2.21 {TextWidgetCmd procedure, "count" option} {
+    .t count -displayindices 2.0 3.0
+} {3}
+test text-9.2.22 {TextWidgetCmd procedure, "count" option} {
+    .t count -displayindices 2.2 3.0
+} {1}
+test text-9.2.23 {TextWidgetCmd procedure, "count" option} {
+    .t count -displayindices a 3.0
+} {0}
+test text-9.2.24 {TextWidgetCmd procedure, "count" option} {
+    .t count -displayindices 2.0 4.2
+} {6}
+test text-9.2.25 {TextWidgetCmd procedure, "count" option} {
+    .t count -displaychars 2.0 3.0
+} {2}
+test text-9.2.26 {TextWidgetCmd procedure, "count" option} {
+    .t count -displaychars 2.2 3.0
+} {1}
+test text-9.2.27 {TextWidgetCmd procedure, "count" option} {
+    .t count -displaychars a 3.0
+} {0}
+test text-9.2.28 {TextWidgetCmd procedure, "count" option} {
+    .t count -displaychars 2.0 4.2
+} {5}
+test text-9.2.29 {TextWidgetCmd procedure, "count" option} {
+    list [.t count -indices 2.2 3.0] [.t count 2.2 3.0]
+} {10 10}
+test text-9.2.30 {TextWidgetCmd procedure, "count" option} {
+    list [.t count -indices a 3.0] [.t count a 3.0]
+} {9 9}
+test text-9.2.31 {TextWidgetCmd procedure, "count" option} {
+    .t count -indices 2.0 4.2
+} {21}
+test text-9.2.32 {TextWidgetCmd procedure, "count" option} {
+    .t count -chars 2.2 3.0
+} {10}
+test text-9.2.33 {TextWidgetCmd procedure, "count" option} {
+    .t count -chars a 3.0
+} {9}
+test text-9.2.34 {TextWidgetCmd procedure, "count" option} {
+    .t count -chars 2.0 4.2
+} {19}
+destroy .t.w1
+destroy .t.w2
+set current [.t get 1.0 end-1c]
+.t delete 1.0 end
+.t insert end [string repeat "abcde " 50]\n
+.t insert end [string repeat "fghij " 50]\n
+.t insert end [string repeat "klmno " 50]
+test text-9.2.35 {TextWidgetCmd procedure, "count" option} {
+    .t count -lines 1.0 end
+} {3}
+test text-9.2.36 {TextWidgetCmd procedure, "count" option} {
+    .t count -lines end 1.0
+} {-3}
+test text-9.2.37 {TextWidgetCmd procedure, "count" option} {
+    list [catch {.t count -lines 1.0 2.0 3.0} res] $res
+} {1 {bad option "1.0" must be -chars, -displaychars, -displayindices, -displaylines, -indices, -lines, -update, -xpixels, or -ypixels}}
+test text-9.2.38 {TextWidgetCmd procedure, "count" option} {
+    .t count -lines end end
+} {0}
+test text-9.2.39 {TextWidgetCmd procedure, "count" option} {
+    .t count -lines 1.5 2.5
+} {1}
+test text-9.2.40 {TextWidgetCmd procedure, "count" option} {
+    .t count -lines 2.5 "2.5 lineend"
+} {0}
+test text-9.2.41 {TextWidgetCmd procedure, "count" option} {
+    .t count -lines 2.7 "1.0 lineend"
+} {-1}
+test text-9.2.42 {TextWidgetCmd procedure, "count" option} {
+    set old_wrap [.t cget -wrap]
+    .t configure -wrap none
+    set res [.t count -displaylines 1.0 end]
+    .t configure -wrap $old_wrap
+    set res
+} {3}
+test text-9.2.43 {TextWidgetCmd procedure, "count" option} {
+    .t count -lines -chars -indices -displaylines 1.0 end
+} {3 903 903 45}
+.t configure -wrap none
+.t delete 1.0 end
+.t insert end $current
+unset current
 
 test text-10.1 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t index} msg] $msg
@@ -388,7 +610,7 @@ test text-10.2 {TextWidgetCmd procedure, "index" option} {
 } {1 {wrong # args: should be ".t index index"}}
 test text-10.3 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t in a b} msg] $msg
-} {1 {ambiguous option "in": must be bbox, cget, compare, configure, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, scan, search, see, tag, window, xview, or yview}}
+} {1 {ambiguous option "in": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, replace, scan, search, see, tag, window, xview, or yview}}
 test text-10.4 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t index @xyz} msg] $msg
 } {1 {bad text index "@xyz"}}
@@ -932,7 +1154,7 @@ test text-19.3 {TkTextLostSelection procedure} {
 .t insert end "xxyz xyz x. the\nfoo -forward bar xxxxx BaR foo\nxyz xxyzx"
 test text-20.1 {TextSearchCmd procedure, argument parsing} {
     list [catch {.t search -} msg] $msg
-} {1 {bad switch "-": must be --, -all, -backward, -count, -elide, -exact, -forward, -nocase, -nolinestop, or -regexp}}
+} {1 {bad switch "-": must be --, -all, -backward, -count, -elide, -exact, -forward, -nocase, -nolinestop, -overlap, -regexp, or -strictlimits}}
 test text-20.2 {TextSearchCmd procedure, -backwards option} {
     .t search -backwards xyz 1.4
 } {1.1}
@@ -960,7 +1182,7 @@ test text-20.8 {TextSearchCmd procedure, -nocase option} {
 } {2.13 2.23}
 test text-20.9 {TextSearchCmd procedure, -n ambiguous option} {
     list [catch {.t search -n BaR 1.1} msg] $msg
-} {1 {bad switch "-n": must be --, -all, -backward, -count, -elide, -exact, -forward, -nocase, -nolinestop, or -regexp}}
+} {1 {bad switch "-n": must be --, -all, -backward, -count, -elide, -exact, -forward, -nocase, -nolinestop, -overlap, -regexp, or -strictlimits}}
 test text-20.9.1 {TextSearchCmd procedure, -nocase option} {
     .t search -noc BaR 1.1
 } {2.13}
@@ -1112,10 +1334,16 @@ test text-20.47 {TextSearchCmd procedure, checking stopIndex} {
 } {{} 2.13 2.13 {}}
 test text-20.48 {TextSearchCmd procedure, checking stopIndex} {
     list [.t search -backwards bar 2.20 2.13] \
-	    [.t search -backwards bar 2.20 2.14] \
-	    [.t search -backwards bar 2.14 2.13] \
-	    [.t search -backwards bar 2.13 2.13]
+      [.t search -backwards bar 2.20 2.14] \
+      [.t search -backwards bar 2.14 2.13] \
+      [.t search -backwards bar 2.13 2.13]
 } {2.13 {} 2.13 {}}
+test text-20.48.1 {TextSearchCmd procedure, checking stopIndex} {
+    list [.t search -backwards -strict bar 2.20 2.13] \
+      [.t search -backwards -strict bar 2.20 2.14] \
+      [.t search -backwards -strict bar 2.14 2.13] \
+      [.t search -backwards -strict bar 2.13 2.13]
+} {2.13 {} {} {}}
 test text-20.49 {TextSearchCmd procedure, embedded windows and index/count} {
     frame .t.f1 -width 20 -height 20 -relief raised -bd 2
     frame .t.f2 -width 20 -height 20 -relief raised -bd 2
@@ -1174,6 +1402,9 @@ test text-20.61 {TextSearchCmd procedure, special cases} {
 test text-20.62 {TextSearchCmd, freeing copy of pattern} {
     # This test doesn't return a result, but it will generate
     # a core leak if the pattern copy isn't properly freed.
+    # (actually in Tk 8.5 objectification means there is no
+    # longer a copy of the pattern, but we leave this test in
+    # anyway).
 
     set p abcdefg1234567890
     set p $p$p$p$p$p$p$p$p
@@ -1276,6 +1507,16 @@ test text-20.75 {TextSearchCmd, hidden text inside match must count in length} {
     .t2 tag add hidden 1.2 1.4
     list [.t2 search -count foo foar 1.3] $foo
 } {1.0 6}
+test text-20.75.1 {TextSearchCmd, hidden text inside match must count in length} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    .t2 tag configure hidden -elide true
+    .t2 tag add hidden 1.2 1.4
+    list \
+      [.t2 search -strict -count foo foar 1.3] \
+      [.t2 search -strict -count foo foar 2.3] $foo
+} {{} 1.0 6}
 test text-20.76 {TextSearchCmd, hidden text and start index} {
     deleteWindows
     pack [text .t2]
@@ -1311,12 +1552,11 @@ test text-20.78.1 {TextSearchCmd, hidden text inside match must count in length}
 test text-20.78.2 {TextSearchCmd, hidden text inside match must count in length} {
     deleteWindows
     pack [text .t2]
-    .t2 insert end "foobar\nfoobar\nfoar"
+    .t2 insert end "foobar\nfoobar\nfoobar"
     .t2 tag configure hidden -elide true
     .t2 tag add hidden 1.2 1.4
-    .t2 tag add hidden 2.2 2.4
-    list [.t2 search -regexp -all -count foo foar 1.3] $foo
-} {{2.0 3.0 1.0} {6 4 6}}
+    .t2 search -strict -count foo foar 1.3
+} {}
 
 test text-20.78.3 {TextSearchCmd, hidden text inside match must count in length} {
     deleteWindows
@@ -1325,8 +1565,28 @@ test text-20.78.3 {TextSearchCmd, hidden text inside match must count in length}
     .t2 tag configure hidden -elide true
     .t2 tag add hidden 1.2 1.4
     .t2 tag add hidden 2.2 2.4
+    list [.t2 search -regexp -all -count foo foar 1.3] $foo
+} {{2.0 3.0 1.0} {6 4 6}}
+
+test text-20.78.4 {TextSearchCmd, hidden text inside match must count in length} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoar"
+    .t2 tag configure hidden -elide true
+    .t2 tag add hidden 1.2 1.4
+    .t2 tag add hidden 2.2 2.4
     list [.t2 search -all -count foo foar 1.3] $foo
 } {{2.0 3.0 1.0} {6 4 6}}
+
+test text-20.78.5 {TextSearchCmd, hidden text inside match must count in length} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoar"
+    .t2 tag configure hidden -elide true
+    .t2 tag add hidden 1.2 1.4
+    .t2 tag add hidden 2.2 2.4
+    list [.t2 search -strict -all -count foo foar 1.3] $foo
+} {{2.0 3.0} {6 4}}
 
 test text-20.79 {TextSearchCmd, multiline matching} {
     deleteWindows
@@ -1457,8 +1717,15 @@ test text-20.97 {TextSearchCmd, multiline matching} {
     deleteWindows
     pack [text .t2]
     .t2 insert end "foobar\nfoobar\nfoobar"
-    list [.t2 search -backwards -regexp -count foo foobar\nfoo 1.0] $foo
+    list [.t2 search -backwards -regexp -count foo foobar\nfoo end] $foo
 } {2.0 10}
+
+test text-20.97.1 {TextSearchCmd, multiline matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert end "foobar\nfoobar\nfoobar"
+    list [.t2 search -backwards -regexp -count foo foobar\nfo end] $foo
+} {2.0 9}
 
 test text-20.98 {TextSearchCmd, multiline matching} {
     deleteWindows
@@ -1521,7 +1788,7 @@ static Tcl_Obj*         FSNormalizeAbsolutePath
 } {}
 
 test text-20.106 {TextSearchCmd, multiline regexp matching} {
-    # Practical example which crashes Tk, but only after the
+    # Practical example which used to crash Tk, but only after the
     # search is complete.  This is memory corruption caused by
     # a bug in Tcl's handling of string objects.
     # (Tcl bug 635200)
@@ -1598,7 +1865,7 @@ test text-20.114 {TextSearchCmd, wrapping and limits} {
     pack [text .t2]
     .t2 insert end "if (stringPtr->uallocated > 0) \{x"
     .t2 search -backwards -all -regexp -- "\[\]\")\}\[(\{\]" "1.32" 1.0
-} {1.3 1.29 1.31}
+} {1.31 1.29 1.3}
 
 test text-20.115 {TextSearchCmd, wrapping and limits} {
     deleteWindows
@@ -1687,6 +1954,13 @@ test text-20.124 {TextSearchCmd, regexp linestop} {
     deleteWindows
     pack [text .t2]
     .t2 insert 1.0 "first line\nlast line of text"
+    .t2 search -regexp -all -overlap -- {i.*x} 1.0
+} {2.6}
+
+test text-20.124.1 {TextSearchCmd, regexp linestop} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "first line\nlast line of text"
     .t2 search -regexp -all -- {i.*x} 1.0
 } {2.6}
 
@@ -1694,8 +1968,15 @@ test text-20.125 {TextSearchCmd, multiline regexp nolinestop matching} {
     deleteWindows
     pack [text .t2]
     .t2 insert 1.0 "first line\nlast line of text"
-    .t2 search -regexp -all -nolinestop -- {i.*x} 1.0
-} {1.1 1.7 2.6}
+    list [.t2 search -regexp -all -overlap -count c -nolinestop -- {i.*x} 1.0] $c
+} {{1.1 2.6} {26 10}}
+
+test text-20.125.1 {TextSearchCmd, multiline regexp nolinestop matching} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "first line\nlast line of text"
+    list [.t2 search -regexp -all -count c -nolinestop -- {i.*x} 1.0] $c
+} {1.1 26}
 
 test text-20.126 {TextSearchCmd, stop at end of line} {
     deleteWindows
@@ -1703,13 +1984,453 @@ test text-20.126 {TextSearchCmd, stop at end of line} {
     .t2 insert 1.0 "  \t\n   last line of text"
     .t2 search -regexp -nolinestop -- {[^ \t]} 1.0
 } {1.3}
-
-test text-20.126 {TextSearchCmd, stop at end of line} {
+test text-20.127 {TextSearchCmd, overlapping all matches} {
     deleteWindows
     pack [text .t2]
-    .t2 insert 1.0 "  \t\n   last line of text"
-    .t2 search -regexp -- {[^ \t]} 1.0
-} {2.3}
+    .t2 insert 1.0 "abcde abcde"
+    list [.t2 search -regexp -all -overlap -count c -- {\w+} 1.0] $c
+} {{1.0 1.6} {5 5}}
+test text-20.127.1 {TextSearchCmd, non-overlapping all matches} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde abcde"
+    list [.t2 search -regexp -all -count c -- {\w+} 1.0] $c
+} {{1.0 1.6} {5 5}}
+test text-20.128 {TextSearchCmd, stop at end of line} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde abcde"
+    list [.t2 search -backwards -regexp -all -count c -- {\w+} 1.0] $c
+} {{1.6 1.0} {5 5}}
+test text-20.129 {TextSearchCmd, backwards search stop index } {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "bla ZabcZdefZghi and some text again"
+    list [.t2 search -backwards -regexp -count c -- {Z\w+} 1.21 1.5] $c
+} {1.8 8}
+test text-20.130 {TextSearchCmd, backwards search stop index } {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "bla ZabcZdefZghi and some text again"
+    list [.t2 search -backwards -all -overlap -regexp -count c -- {Z\w+} 1.21 1.5] $c
+} {1.8 8}
+test text-20.130.1 {TextSearchCmd, backwards search stop index } {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "bla ZabcZdefZghi and some text again"
+    list [.t2 search -backwards -all -regexp -count c -- {Z\w+} 1.21 1.5] $c
+} {1.8 8}
+test text-20.131 {TextSearchCmd, backwards search stop index } {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "bla ZabcZdefZghi and some text again"
+    list [.t2 search -backwards -overlap -all -regexp -count c -- {Z\w+} 1.21 1.1] $c
+} {1.4 12}
+test text-20.131.1 {TextSearchCmd, backwards search stop index } {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "bla ZabcZdefZghi and some text again"
+    list [.t2 search -backwards -overlap -all -regexp -count c -- {Z[^Z]+Z} 1.21 1.1] $c
+} {{1.8 1.4} {5 5}}
+test text-20.131.2 {TextSearchCmd, backwards search stop index } {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "bla ZabcZdefZghi and some text again"
+    list [.t2 search -backwards -all -regexp -count c -- {Z\w+} 1.21 1.1] $c
+} {1.4 12}
+test text-20.132 {TextSearchCmd, backwards search stop index } {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "bla ZabcZdefZghi and some text again"
+    .t2 insert 1.0 "bla ZabcZdefZghi and some text again\n"
+    list [.t2 search -backwards -all -overlap -regexp -count c -- {Z\w+} 2.21 1.5] $c
+} {{2.4 1.8} {12 8}}
+test text-20.132.1 {TextSearchCmd, backwards search stop index } {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "bla ZabcZdefZghi and some text again"
+    .t2 insert 1.0 "bla ZabcZdefZghi and some text again\n"
+    list [.t2 search -backwards -all -regexp -count c -- {Z\w+} 2.21 1.5] $c
+} {{2.4 1.8} {12 8}}
+test text-20.133 {TextSearchCmd, backwards search stop index } {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "bla ZabcZdefZghi and some text again"
+    .t2 insert 1.0 "bla ZabcZdefZghi and some text again\n"
+    list [.t2 search -backwards -overlap -all -regexp -count c -- {Z\w+} 2.21 1.1] $c
+} {{2.4 1.4} {12 12}}
+test text-20.133.1 {TextSearchCmd, backwards search stop index } {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "bla ZabcZdefZghi and some text again"
+    .t2 insert 1.0 "bla ZabcZdefZghi and some text again\n"
+    list [.t2 search -backwards -all -regexp -count c -- {Z\w+} 2.21 1.1] $c
+} {{2.4 1.4} {12 12}}
+test text-20.134 {TextSearchCmd, search -all example} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 {
+
+See the package: supersearch for more information.
+
+
+See the package: incrementalSearch for more information.
+
+package: Brws .
+
+
+See the package: marks for more information.
+
+}
+    set pat {package: ([a-zA-Z0-9][-a-zA-Z0-9._+#/]*)}
+    list [.t2 search -nolinestop -regexp -nocase -all -forwards \
+      -count c -- $pat 1.0 end] $c
+} {{3.8 6.8 8.0 11.8} {20 26 13 14}}
+
+test text-20.135 {TextSearchCmd, backwards search overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "foobarfoobaaaaaaaaaaarfoo"
+    .t2 search -backwards -regexp {fooba+rfoo} end
+} {1.6}
+test text-20.135.1 {TextSearchCmd, backwards search overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "foobarfoobaaaaaaaaaaarfoo"
+    .t2 search -backwards -overlap -all -regexp {fooba+rfoo} end
+} {1.6 1.0}
+
+test text-20.135.2 {TextSearchCmd, backwards search overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "foobarfoobaaaaaaaaaaarfoo"
+    .t2 search -backwards -all -regexp {fooba+rfoo} end
+} {1.6}
+
+test text-20.135.3 {TextSearchCmd, forwards search overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "foobarfoobaaaaaaaaaaarfoo"
+    .t2 search -all -overlap -regexp {fooba+rfoo} end
+} {1.0 1.6}
+
+test text-20.135.4 {TextSearchCmd, forwards search overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "foobarfoobaaaaaaaaaaarfoo"
+    .t2 search -all -regexp {fooba+rfoo} end
+} {1.0}
+
+test text-20.136 {TextSearchCmd, forward exact search overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abababab"
+    .t2 search -exact -overlap -all {abab} 1.0
+} {1.0 1.2 1.4}
+
+test text-20.136.1 {TextSearchCmd, forward exact search overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abababab"
+    .t2 search -exact -all {abab} 1.0
+} {1.0 1.4}
+
+test text-20.137 {TextSearchCmd, backward exact search overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "ababababab"
+    .t2 search -exact -overlap -backwards -all {abab} end
+} {1.6 1.4 1.2 1.0}
+
+test text-20.137.1 {TextSearchCmd, backward exact search overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "ababababab"
+    .t2 search -exact -backwards -all {abab} end
+} {1.6 1.2}
+
+test text-20.137.2 {TextSearchCmd, backward exact search overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abababababab"
+    .t2 search -exact -backwards -all {abab} end
+} {1.8 1.4 1.0}
+
+test text-20.138 {TextSearchCmd, forward exact search overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "foo\nbar\nfoo\nbar\nfoo\nbar\nfoo\n"
+    .t2 search -exact -overlap -all "foo\nbar\nfoo" 1.0
+} {1.0 3.0 5.0}
+
+test text-20.138.1 {TextSearchCmd, forward exact search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "foo\nbar\nfoo\nbar\nfoo\nbar\nfoo\n"
+    .t2 search -exact -all "foo\nbar\nfoo" 1.0
+} {1.0 5.0}
+
+test text-20.139 {TextSearchCmd, backward exact search overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "foo\nbar\nfoo\nbar\nfoo\nbar\nfoo\n"
+    .t2 search -exact -overlap -backward -all "foo\nbar\nfoo" end
+} {5.0 3.0 1.0}
+
+test text-20.140 {TextSearchCmd, backward exact search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "foo\nbar\nfoo\nbar\nfoo\nbar\nfoo\n"
+    .t2 search -exact -backward -all "foo\nbar\nfoo" end
+} {5.0 1.0}
+
+test text-20.141 {TextSearchCmd, backward exact search overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "foo\nbar\nfoo\nbar\nfoo\nbar\nfoo\n"
+    .t2 search -regexp -backward -overlap -all "foo\nbar\nfoo" end
+} {5.0 3.0 1.0}
+
+test text-20.142 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "foo\nbar\nfoo\nbar\nfoo\nbar\nfoo\n"
+    .t2 search -regexp -backward -all "foo\nbar\nfoo" end
+} {5.0 1.0}
+
+test text-20.142 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 " aasda asdj werwer"
+    .t2 search -regexp -backward -- {(\$)?[\w:_]+} 1.9
+} {1.7}
+
+test text-20.143 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 " aasda asdj werwer"
+    .t2 search -regexp -backward -- {(\$)?[\w:_]+} 1.9 1.5
+} {1.7}
+
+test text-20.144 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 " aasda asdj werwer"
+    .t2 search -regexp -backward -- {(\$)?[\w:_]+} 1.9 1.7
+} {1.7}
+
+test text-20.145 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 " aasda asdj werwer"
+    .t2 search -regexp -backward -- {(\$)?[\w:_]+} 1.9 1.8
+} {1.8}
+
+test text-20.146 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 " aasda asdj werwer"
+    .t2 search -regexp -backward -all -- {(\$)?[\w:_]+} 1.9 1.3
+} {1.7 1.3}
+
+test text-20.147 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 " aasda asdj werwer"
+    .t2 search -regexp -backward -all -- {(\$)?[\w:_]+} 1.9 1.13
+} {}
+
+test text-20.148 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 " aasda asdj werwer"
+    .t2 search -regexp -backward -all -- {(\$)?[\w:_]+} 2.0 1.3
+} {1.12 1.7 1.3}
+
+test text-20.149 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 " aasda asdj werwer"
+    .t2 search -regexp -backward -all -- {(\$)?[\w:_]+} 1.3
+} {1.1 1.12 1.7 1.3}
+
+test text-20.150 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde\nabcde\nabcde\n"
+    .t2 search -regexp -backward -all -- {(\w+\n)+} end
+} {1.0}
+
+test text-20.151 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde\nabcde\nabcde\n"
+    .t2 search -regexp -backward -all -- {(\w+\n)+} end 1.5
+} {2.0}
+
+test text-20.152 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde\nabcde\nabcde\na"
+    .t2 search -regexp -backward -all -- {(\w+\n\w)+} end 1.5
+} {2.0}
+
+test text-20.153 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde\nabcde\nabcde\na"
+    list [.t2 search -regexp -all -count foo -- {(\w+\n)+} 1.0] $foo
+} {1.0 20}
+
+test text-20.154 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde\nabcde\nabcde\na"
+    set res {}
+    lappend res \
+      [list [.t2 search -regexp -all -count foo -- {(\w+\n)+} 1.0] $foo] \
+      [list [.t2 search -regexp -all -count foo -- {(\w+)+} 1.0] $foo]
+} {{1.0 20} {{1.0 2.0 3.0 4.0} {5 5 5 1}}}
+
+test text-20.155 {TextSearchCmd, regexp search greedy} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde\nabcde\nabcde\na"
+    list [.t2 search -regexp -all -nolinestop -count foo -- {.*} 1.0] $foo
+} {1.0 20}
+
+test text-20.156 {TextSearchCmd, regexp search greedy} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde\nabcde\nabcde\na"
+    list [.t2 search -regexp -all -count foo -- {.*} 1.0] $foo
+} {{1.0 2.0 3.0 4.0} {5 5 5 1}}
+
+test text-20.157 {TextSearchCmd, regexp search greedy multi-line} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde\nabcde\nabcde\na"
+    list [.t2 search -regexp -count foo -- {(\w+\n\w)+} 1.0] $foo
+} {1.0 19}
+
+test text-20.158 {TextSearchCmd, regexp search greedy multi-line} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde\nabcde\nabcde\na"
+    list [.t2 search -regexp -backwards -count foo -- {(\w+\n\w)+} end] $foo
+} {1.0 19}
+
+test text-20.159 {TextSearchCmd, regexp search greedy multi-line} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde\nabcde\nabcde\na"
+    list [.t2 search -regexp -all -backwards -count foo -- {(\w+\n\w)+} end] $foo
+} {1.0 19}
+
+test text-20.160 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde\nabcde\nabcde\na"
+    .t2 search -regexp -backward -all -- {(\w+\n\w)+} end 1.5
+} {2.0}
+
+test text-20.161 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde\nabcde\nabcde\na"
+    .t2 search -regexp -backward -all -- {(\w+\n\w)+} end 1.3
+} {1.3}
+
+test text-20.162 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde\nabcde\nabcde\na"
+    list [.t2 search -regexp -forward -count foo -- {(\w+\n\w)+} 1.3] $foo
+} {1.3 16}
+
+test text-20.163 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde\nabcde\nabcde\na"
+    list [.t2 search -regexp -forward -all -count foo -- {(\w+\n\w)+} 1.3] $foo
+    # This result is somewhat debatable -- the two results do overlap,
+    # but only because the search has totally wrapped around back to
+    # the start.
+} {{1.3 1.0} {16 19}}
+
+test text-20.164 {TextSearchCmd, backward regexp search no-overlaps} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "abcde\nabcde\nabcde\na"
+    list [.t2 search -regexp -forward -all -count foo -- {(\w+\n\w)+} 1.0 1.3] $foo
+} {1.0 19}
+
+test text-20.165 {TextSearchCmd, regexp search multi-line} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "aaaa\nbbbb\naaaa\nbbbb\n"
+    list [.t2 search -regexp -forward -all -count foo -- {(a+\n(b+\n))+} 1.0] $foo
+} {1.0 20}
+
+test text-20.166 {TextSearchCmd, regexp search complex cases} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "aaaa\nbbbb\naaaa\nbbbb\n"
+    list [.t2 search -regexp -forward -all -count foo \
+      -- {(a+\n(b+\n))+} 1.0] $foo
+} {1.0 20}
+
+test text-20.167 {TextSearchCmd, regexp search multi-line} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "aaaa\nbbbb\ncccc\nbbbb\naaaa\n"
+    set foo {}
+    list [.t2 search -regexp -forward -all -count foo \
+      -- {(b+\nc+\nb+)\na+} 1.0] $foo
+} {2.0 19}
+
+test text-20.168 {TextSearchCmd, regexp search multi-line} {knownBug} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "aaaa\nbbbb\ncccc\nbbbb\naaaa\n"
+    set foo {}
+    list [.t2 search -regexp -forward -all -count foo \
+      -- {(a+|b+\nc+\nb+)\na+} 1.0] $foo
+} {2.0 19}
+
+test text-20.169 {TextSearchCmd, regexp search multi-line} {knownBug} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "aaaa\nbbbb\ncccc\nbbbb\naaaa\n"
+    set foo {}
+    list [.t2 search -regexp -forward -all -count foo \
+      -- {(a+|b+\nc+\nb+)+\na+} 1.0] $foo
+} {2.0 19}
+
+test text-20.170 {TextSearchCmd, regexp search multi-line} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "aaaa\nbbbb\ncccc\nbbbb\naaaa\n"
+    set foo {}
+    list [.t2 search -regexp -forward -all -count foo \
+      -- {((a+|b+\nc+\nb+)+\n)+a+} 1.0] $foo
+} {1.0 24}
+
+test text-20.171 {TextSearchCmd, regexp search multi-line} {knownBug} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "aaaa\nbbbb\nbbbb\nbbbb\nbbbb\n"
+    list [.t2 search -regexp -backward -all -count foo \
+      -- {b+\n|a+\n(b+\n)+} end] $foo
+} {1.0 25}
+
+test text-20.172 {TextSearchCmd, regexp search multi-line} {knownBug} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "aaaa\nbbbb\nbbbb\nbbbb\nbbbb\n"
+    .t2 search -regexp -backward -- {b+\n|a+\n(b+\n)+} end
+    # Should match at 1.0 for a true greedy match
+} {1.0}
 
 deleteWindows
 text .t2 -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100

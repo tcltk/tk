@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextMark.c,v 1.8 2003/05/19 14:37:20 dkf Exp $
+ * RCS: @(#) $Id: tkTextMark.c,v 1.9 2003/10/31 09:02:11 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -253,7 +253,7 @@ TkTextMarkCmd(textPtr, interp, objc, objv)
 TkTextSegment *
 TkTextSetMark(textPtr, name, indexPtr)
     TkText *textPtr;		/* Text widget in which to create mark. */
-    CONST char *name;			/* Name of mark to set. */
+    CONST char *name;		/* Name of mark to set. */
     TkTextIndex *indexPtr;	/* Where to set mark. */
 {
     Tcl_HashEntry *hPtr;
@@ -274,11 +274,15 @@ TkTextSetMark(textPtr, name, indexPtr)
 	if (markPtr == textPtr->insertMarkPtr) {
 	    TkTextIndex index, index2;
 	    TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
-	    TkTextIndexForwChars(&index, 1, &index2);
+	    TkTextIndexForwChars(&index, 1, &index2, COUNT_INDICES);
+	    /* 
+	     * While we wish to redisplay, no heights have changed, so
+	     * no need to call TkTextInvalidateLineMetrics.
+	     */
 	    TkTextChanged(textPtr, &index, &index2);
 	    if (TkBTreeLineIndex(indexPtr->linePtr)
 		    == TkBTreeNumLines(textPtr->tree))  {
-		TkTextIndexBackChars(indexPtr, 1, &insertIndex);
+		TkTextIndexBackChars(indexPtr, 1, &insertIndex, COUNT_INDICES);
 		indexPtr = &insertIndex;
 	    }
 	}
@@ -303,7 +307,11 @@ TkTextSetMark(textPtr, name, indexPtr)
     if (markPtr == textPtr->insertMarkPtr) {
 	TkTextIndex index2;
 
-	TkTextIndexForwChars(indexPtr, 1, &index2);
+	TkTextIndexForwChars(indexPtr, 1, &index2, COUNT_INDICES);
+	/* 
+	 * While we wish to redisplay, no heights have changed, so
+	 * no need to call TkTextInvalidateLineMetrics
+	 */
 	TkTextChanged(textPtr, indexPtr, &index2);
     }
     return markPtr;
@@ -540,9 +548,20 @@ TkTextInsertDisplayProc(chunkPtr, x, y, height, baseline, display, dst, screenY)
 					 * corresponds to y. */
 {
     TkText *textPtr = (TkText *) chunkPtr->clientData;
+    TkTextIndex index;
     int halfWidth = textPtr->insertWidth/2;
-
-    if ((x + halfWidth) < 0) {
+    int rightSideWidth;
+    int ix = 0, iy = 0, iw = 0, ih = 0, charWidth = 0;
+      
+    if(textPtr->insertCursorType) {
+	TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
+	TkTextCharBbox(textPtr, &index, &ix, &iy, &iw, &ih, &charWidth);
+	rightSideWidth = charWidth + halfWidth;
+    } else {
+	rightSideWidth = halfWidth;
+    }
+    
+    if ((x + rightSideWidth) < 0) {
 	/*
 	 * The insertion cursor is off-screen.
 	 * Indicate caret at 0,0 and return.
@@ -564,11 +583,11 @@ TkTextInsertDisplayProc(chunkPtr, x, y, height, baseline, display, dst, screenY)
 
     if (textPtr->flags & INSERT_ON) {
 	Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
-		x - halfWidth, y, textPtr->insertWidth, height,
+		x - halfWidth, y, charWidth + textPtr->insertWidth, height,
 		textPtr->insertBorderWidth, TK_RELIEF_RAISED);
     } else if (textPtr->selBorder == textPtr->insertBorder) {
 	Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->border,
-		x - halfWidth, y, textPtr->insertWidth, height,
+		x - halfWidth, y, charWidth + textPtr->insertWidth, height,
 		0, TK_RELIEF_FLAT);
     }
 }

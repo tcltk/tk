@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.7 2003/05/19 13:04:24 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.8 2003/10/31 09:02:12 vincentdarley Exp $
  */
 
 #include "tk.h"
@@ -59,10 +59,6 @@ static void		EmbWinDelayedUnmap _ANSI_ARGS_((
 			    ClientData clientData));
 static int		EmbWinDeleteProc _ANSI_ARGS_((TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone));
-static void		EmbWinDisplayProc _ANSI_ARGS_((
-			    TkTextDispChunk *chunkPtr, int x, int y,
-			    int lineHeight, int baseline, Display *display,
-			    Drawable dst, int screenY));
 static int		EmbWinLayoutProc _ANSI_ARGS_((TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    int offset, int maxX, int maxChars,
@@ -231,6 +227,13 @@ TkTextWindowCmd(textPtr, interp, objc, objv)
 		}
 	    } else {
 		TkTextChanged(textPtr, &index, &index);
+		/* 
+		 * It's probably not true that all window configuration
+		 * can change the line height, so we could be more
+		 * efficient here and only call this when necessary.
+		 */
+		TkTextInvalidateLineMetrics(textPtr, index.linePtr, 0,
+					    TK_TEXT_INVALIDATE_ONLY);
 		return EmbWinConfigure(textPtr, ewPtr, objc-4, objv+4);
 	    }
 	    break;
@@ -289,10 +292,12 @@ TkTextWindowCmd(textPtr, interp, objc, objv)
 	    if (EmbWinConfigure(textPtr, ewPtr, objc-4, objv+4) != TCL_OK) {
 		TkTextIndex index2;
 
-		TkTextIndexForwChars(&index, 1, &index2);
+		TkTextIndexForwChars(&index, 1, &index2, COUNT_INDICES);
 		TkBTreeDeleteChars(&index, &index2);
 		return TCL_ERROR;
 	    }
+	    TkTextInvalidateLineMetrics(textPtr, index.linePtr, 0,
+					TK_TEXT_INVALIDATE_ONLY);
 	    break;
 	}
 	case WIND_NAMES: {
@@ -463,6 +468,8 @@ EmbWinStructureProc(clientData, eventPtr)
     index.linePtr = ewPtr->body.ew.linePtr;
     index.byteIndex = TkTextSegToOffset(ewPtr, ewPtr->body.ew.linePtr);
     TkTextChanged(ewPtr->body.ew.textPtr, &index, &index);
+    TkTextInvalidateLineMetrics(ewPtr->body.ew.textPtr, 
+				index.linePtr, 0, TK_TEXT_INVALIDATE_ONLY);
 }
 
 /*
@@ -497,6 +504,8 @@ EmbWinRequestProc(clientData, tkwin)
     index.linePtr = ewPtr->body.ew.linePtr;
     index.byteIndex = TkTextSegToOffset(ewPtr, ewPtr->body.ew.linePtr);
     TkTextChanged(ewPtr->body.ew.textPtr, &index, &index);
+    TkTextInvalidateLineMetrics(ewPtr->body.ew.textPtr, 
+				index.linePtr, 0, TK_TEXT_INVALIDATE_ONLY);
 }
 
 /*
@@ -542,6 +551,8 @@ EmbWinLostSlaveProc(clientData, tkwin)
     index.linePtr = ewPtr->body.ew.linePtr;
     index.byteIndex = TkTextSegToOffset(ewPtr, ewPtr->body.ew.linePtr);
     TkTextChanged(ewPtr->body.ew.textPtr, &index, &index);
+    TkTextInvalidateLineMetrics(ewPtr->body.ew.textPtr, 
+				index.linePtr, 0, TK_TEXT_INVALIDATE_ONLY);
 }
 
 /*
@@ -763,7 +774,7 @@ EmbWinLayoutProc(textPtr, indexPtr, ewPtr, offset, maxX, maxChars,
      * Fill in the chunk structure.
      */
 
-    chunkPtr->displayProc = EmbWinDisplayProc;
+    chunkPtr->displayProc = TkTextEmbWinDisplayProc;
     chunkPtr->undisplayProc = EmbWinUndisplayProc;
     chunkPtr->measureProc = (Tk_ChunkMeasureProc *) NULL;
     chunkPtr->bboxProc = EmbWinBboxProc;
@@ -819,7 +830,7 @@ EmbWinCheckProc(ewPtr, linePtr)
 /*
  *--------------------------------------------------------------
  *
- * EmbWinDisplayProc --
+ * TkTextEmbWinDisplayProc --
  *
  *	This procedure is invoked by the text displaying code
  *	when it is time to actually draw an embedded window
@@ -835,8 +846,9 @@ EmbWinCheckProc(ewPtr, linePtr)
  *--------------------------------------------------------------
  */
 
-static void
-EmbWinDisplayProc(chunkPtr, x, y, lineHeight, baseline, display, dst, screenY)
+void
+TkTextEmbWinDisplayProc(chunkPtr, x, y, lineHeight, baseline, 
+			display, dst, screenY)
     TkTextDispChunk *chunkPtr;		/* Chunk that is to be drawn. */
     int x;				/* X-position in dst at which to
 					 * draw this chunk (differs from
@@ -848,8 +860,10 @@ EmbWinDisplayProc(chunkPtr, x, y, lineHeight, baseline, display, dst, screenY)
 					 * the chunk itself). */
     int lineHeight;			/* Total height of line. */
     int baseline;			/* Offset of baseline from y. */
-    Display *display;			/* Display to use for drawing. */
-    Drawable dst;			/* Pixmap or window in which to draw */
+    Display *display;			/* Display to use for drawing 
+                     			 * (unused).  */
+    Drawable dst;			/* Pixmap or window in which to draw
+                 			 * (unused).  */
     int screenY;			/* Y-coordinate in text window that
 					 * corresponds to y. */
 {

@@ -1,5 +1,35 @@
 2003-10-31  Vince Darley <vincentdarley@users.sourceforge.net>
 
+	* generic/tkText.c
+	* generic/tkTextIndex.c
+	* generic/tkTextDisp.c
+	* generic/tkTextWind.c
+	* generic/tkTextImage.c
+	* generic/tkTextTag.c
+	* generic/tkTextMark.c
+	* generic/tkTextBTree.c
+	* generic/tkText.h         
+	* doc/text.n
+	* tests/text.test
+	* tests/textDisp.test
+	* tests/textImage.test
+	* tests/textIndex.test
+	* tests/textWind.test
+	* library/text.tcl            
+	* generic/tkCanvas.c
+	* unix/tkUnixDefault.h
+	* win/tkWinDefault.h
+	* mac/tkMacDefault.h
+	* macosx/tkMacOSXDefault.h        -- TIP 155 implementation
+	
+	This adds the 'count' and 'replace' subcommands to the text
+	widget, the '-blockcursor' option, and in particular provides
+	correct, smooth pixel-based scrolling of the widget under all
+	circumstances.  See the text.n man page for the complete new
+	documentation.
+
+2003-10-31  Vince Darley <vincentdarley@users.sourceforge.net>
+
 	* win/tkWinMenu.c: more correct placing of images in compound
 	menu entries.
 

@@ -10,21 +10,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.8 2003/09/29 23:15:20 dkf Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.9 2003/10/31 09:02:11 vincentdarley Exp $
  */
 
 #include "tk.h"
 #include "tkText.h"
 #include "tkPort.h"
-
-/*
- * Definitions for alignment values:
- */
-
-#define ALIGN_BOTTOM		0
-#define ALIGN_CENTER		1
-#define ALIGN_TOP		2
-#define ALIGN_BASELINE		3
 
 /*
  * Macro that determines the size of an embedded image segment:
@@ -37,12 +28,6 @@
  * Prototypes for procedures defined in this file:
  */
 
-static int		AlignParseProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, Tk_Window tkwin,
-			    CONST char *value, char *widgRec, int offset));
-static char *		AlignPrintProc _ANSI_ARGS_((ClientData clientData,
-			    Tk_Window tkwin, char *widgRec, int offset,
-			    Tcl_FreeProc **freeProcPtr));
 static TkTextSegment *	EmbImageCleanupProc _ANSI_ARGS_((TkTextSegment *segPtr,
 			    TkTextLine *linePtr));
 static void		EmbImageCheckProc _ANSI_ARGS_((TkTextSegment *segPtr,
@@ -84,30 +69,40 @@ static Tk_SegType tkTextEmbImageType = {
 };
 
 /*
+ * Definitions for alignment values:
+ */
+
+static char *alignStrings[] = {
+    "baseline", "bottom", "center", "top", (char *) NULL
+};
+
+typedef enum {	
+    ALIGN_BASELINE, ALIGN_BOTTOM, ALIGN_CENTER, ALIGN_TOP
+} alignMode;
+
+/*
  * Information used for parsing image configuration options:
  */
 
-static Tk_CustomOption alignOption = {AlignParseProc, AlignPrintProc,
-	(ClientData) NULL};
-
-static Tk_ConfigSpec configSpecs[] = {
-    {TK_CONFIG_CUSTOM, "-align", (char *) NULL, (char *) NULL,
-	"center", 0, TK_CONFIG_DONT_SET_DEFAULT, &alignOption},
-    {TK_CONFIG_PIXELS, "-padx", (char *) NULL, (char *) NULL,
-	"0", Tk_Offset(TkTextEmbImage, padX),
-	TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_PIXELS, "-pady", (char *) NULL, (char *) NULL,
-	"0", Tk_Offset(TkTextEmbImage, padY),
-	TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_STRING, "-image", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextEmbImage, imageString),
-	TK_CONFIG_DONT_SET_DEFAULT|TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-name", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextEmbImage, imageName),
-	TK_CONFIG_DONT_SET_DEFAULT|TK_CONFIG_NULL_OK},
-    {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, 0}
+static Tk_OptionSpec optionSpecs[] = {
+    {TK_OPTION_STRING_TABLE, "-align", (char *) NULL, (char *) NULL,
+	"center", -1, Tk_Offset(TkTextEmbImage, align), 
+	0, (ClientData) alignStrings, 0},
+    {TK_OPTION_PIXELS, "-padx", (char *) NULL, (char *) NULL,
+	"0", -1, Tk_Offset(TkTextEmbImage, padX), 
+	0, 0, 0},
+    {TK_OPTION_PIXELS, "-pady", (char *) NULL, (char *) NULL,
+	"0", -1, Tk_Offset(TkTextEmbImage, padY), 
+	0, 0, 0},
+    {TK_OPTION_STRING, "-image", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextEmbImage, imageString),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-name", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextEmbImage, imageName),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_END}
 };
+
 
 /*
  *--------------------------------------------------------------
@@ -155,7 +150,8 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 	return TCL_ERROR;
     }
     switch ((enum opts) idx) {
-    case CMD_CGET:
+    case CMD_CGET: {
+        Tcl_Obj *objPtr;
 	if (objc != 5) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "index option");
 	    return TCL_ERROR;
@@ -169,9 +165,16 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 			     Tcl_GetString(objv[3]), "\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	return Tk_ConfigureValue(interp, textPtr->tkwin, configSpecs,
-		(char *) &eiPtr->body.ei, Tcl_GetString(objv[4]), 0);
-    case CMD_CONF:
+	objPtr = Tk_GetOptionValue(interp, (char *) &eiPtr->body.ei,
+		  eiPtr->body.ei.optionTable, objv[4], textPtr->tkwin);
+	if (objPtr == NULL) {
+	    return TCL_ERROR;
+	} else {
+	    Tcl_SetObjResult(interp, objPtr);
+	    return TCL_OK;
+	}
+    }
+    case CMD_CONF: {
 	if (objc < 4) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "index ?option value ...?");
 	    return TCL_ERROR;
@@ -185,16 +188,29 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 			     Tcl_GetString(objv[3]), "\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	if (objc == 4) {
-	    return Tk_ConfigureInfo(interp, textPtr->tkwin, configSpecs,
-		    (char *) &eiPtr->body.ei, (char *) NULL, 0);
-	} else if (objc == 5) {
-	    return Tk_ConfigureInfo(interp, textPtr->tkwin, configSpecs,
-		    (char *) &eiPtr->body.ei, Tcl_GetString(objv[4]), 0);
+	if (objc <= 5) {
+	    Tcl_Obj* objPtr = Tk_GetOptionInfo(interp, (char *) &eiPtr->body.ei,
+		    eiPtr->body.ei.optionTable,
+		    (objc == 5) ? objv[4] : (Tcl_Obj *) NULL,
+				      textPtr->tkwin);
+	    if (objPtr == NULL) {
+		return TCL_ERROR;
+	    } else {
+		Tcl_SetObjResult(interp, objPtr);
+		return TCL_OK;
+	    }
 	} else {
 	    TkTextChanged(textPtr, &index, &index);
+	    /* 
+	     * It's probably not true that all window configuration
+	     * can change the line height, so we could be more
+	     * efficient here and only call this when necessary.
+	     */
+	    TkTextInvalidateLineMetrics(textPtr, index.linePtr, 0,
+					TK_TEXT_INVALIDATE_ONLY);
 	    return EmbImageConfigure(textPtr, eiPtr, objc-4, objv+4);
 	}
+    }
     case CMD_CREATE: {
 	int lineIndex;
 
@@ -237,6 +253,7 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 	eiPtr->body.ei.align = ALIGN_CENTER;
 	eiPtr->body.ei.padX = eiPtr->body.ei.padY = 0;
 	eiPtr->body.ei.chunkCount = 0;
+	eiPtr->body.ei.optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
 	/*
 	 * Link the segment into the text widget, then configure it (delete
@@ -248,10 +265,12 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 	if (EmbImageConfigure(textPtr, eiPtr, objc-4, objv+4) != TCL_OK) {
 	    TkTextIndex index2;
 
-	    TkTextIndexForwChars(&index, 1, &index2);
+	    TkTextIndexForwChars(&index, 1, &index2, COUNT_INDICES);
 	    TkBTreeDeleteChars(&index, &index2);
 	    return TCL_ERROR;
 	}
+	TkTextInvalidateLineMetrics(textPtr, index.linePtr, 0,
+				    TK_TEXT_INVALIDATE_ONLY);
 	return TCL_OK;
     }
     case CMD_NAMES: {
@@ -312,16 +331,12 @@ EmbImageConfigure(textPtr, eiPtr, objc, objv)
     int count = 0;		/* The counter for picking a unique name */
     int conflict = 0;		/* True if we have a name conflict */
     unsigned int len;		/* length of image name */
-    CONST char **argv;
    
-    argv = TkGetStringsFromObjs(objc, objv);
-    if (Tk_ConfigureWidget(textPtr->interp, textPtr->tkwin, configSpecs,
-	    objc, argv, (char *) &eiPtr->body.ei,TK_CONFIG_ARGV_ONLY)
-	    != TCL_OK) {
-	if (argv) ckfree((char *) argv);
+    if (Tk_SetOptions(textPtr->interp, (char*)&eiPtr->body.ei, 
+	    eiPtr->body.ei.optionTable,
+	    objc, objv, textPtr->tkwin, NULL, NULL) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (argv) ckfree((char *) argv);
 
     /*
      * Create the image.  Save the old image around and don't free it
@@ -331,8 +346,9 @@ EmbImageConfigure(textPtr, eiPtr, objc, objv)
      */
 
     if (eiPtr->body.ei.imageString != NULL) {
-	image = Tk_GetImage(textPtr->interp, textPtr->tkwin, eiPtr->body.ei.imageString,
-		EmbImageProc, (ClientData) eiPtr);
+	image = Tk_GetImage(textPtr->interp, textPtr->tkwin, 
+			    eiPtr->body.ei.imageString, EmbImageProc, 
+			    (ClientData) eiPtr);
 	if (image == NULL) {
 	    return TCL_ERROR;
 	}
@@ -350,8 +366,8 @@ EmbImageConfigure(textPtr, eiPtr, objc, objv)
 
     /* 
      * Find a unique name for this image.  Use imageName (or imageString)
-     * if available, otherwise tack on a #nn and use it.  If a name is already
-     * associated with this image, delete the name.
+     * if available, otherwise tack on a #nn and use it.  If a name is
+     * already associated with this image, delete the name.
      */
 
     name = eiPtr->body.ei.imageName;
@@ -403,99 +419,6 @@ EmbImageConfigure(textPtr, eiPtr, objc, objv)
 /*
  *--------------------------------------------------------------
  *
- * AlignParseProc --
- *
- *	This procedure is invoked by Tk_ConfigureWidget during
- *	option processing to handle "-align" options for embedded
- *	images.
- *
- * Results:
- *	A standard Tcl return value.
- *
- * Side effects:
- *	The alignment for the embedded image may change.
- *
- *--------------------------------------------------------------
- */
-
-	/* ARGSUSED */
-static int
-AlignParseProc(clientData, interp, tkwin, value, widgRec, offset)
-    ClientData clientData;		/* Not used.*/
-    Tcl_Interp *interp;			/* Used for reporting errors. */
-    Tk_Window tkwin;			/* Window for text widget. */
-    CONST char *value;			/* Value of option. */
-    char *widgRec;			/* Pointer to TkTextEmbWindow
-					 * structure. */
-    int offset;				/* Offset into item (ignored). */
-{
-    register TkTextEmbImage *embPtr = (TkTextEmbImage *) widgRec;
-
-    if (strcmp(value, "baseline") == 0) {
-	embPtr->align = ALIGN_BASELINE;
-    } else if (strcmp(value, "bottom") == 0) {
-	embPtr->align = ALIGN_BOTTOM;
-    } else if (strcmp(value, "center") == 0) {
-	embPtr->align = ALIGN_CENTER;
-    } else if (strcmp(value, "top") == 0) {
-	embPtr->align = ALIGN_TOP;
-    } else {
-	Tcl_AppendResult(interp, "bad alignment \"", value,
-		"\": must be baseline, bottom, center, or top",
-		(char *) NULL);
-	return TCL_ERROR;
-    }
-    return TCL_OK;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * AlignPrintProc --
- *
- *	This procedure is invoked by the Tk configuration code
- *	to produce a printable string for the "-align" configuration
- *	option for embedded images.
- *
- * Results:
- *	The return value is a string describing the embedded
- *	images's current alignment.
- *
- * Side effects:
- *	None.
- *
- *--------------------------------------------------------------
- */
-
-	/* ARGSUSED */
-static char *
-AlignPrintProc(clientData, tkwin, widgRec, offset, freeProcPtr)
-    ClientData clientData;		/* Ignored. */
-    Tk_Window tkwin;			/* Window for text widget. */
-    char *widgRec;			/* Pointer to TkTextEmbImage
-					 * structure. */
-    int offset;				/* Ignored. */
-    Tcl_FreeProc **freeProcPtr;		/* Pointer to variable to fill in with
-					 * information about how to reclaim
-					 * storage for return string. */
-{
-    switch (((TkTextEmbImage *) widgRec)->align) {
-	case ALIGN_BASELINE:
-	    return "baseline";
-	case ALIGN_BOTTOM:
-	    return "bottom";
-	case ALIGN_CENTER:
-	    return "center";
-	case ALIGN_TOP:
-	    return "top";
-	default:
-	    return "??";
-    }
-}
-
-/*
- *--------------------------------------------------------------
- *
  * EmbImageDeleteProc --
  *
  *	This procedure is invoked by the text B-tree code whenever
@@ -536,11 +459,8 @@ EmbImageDeleteProc(eiPtr, linePtr, treeGone)
 	}
 	Tk_FreeImage(eiPtr->body.ei.image);
     }
-    Tk_FreeOptions(configSpecs, (char *) &eiPtr->body.ei,
-	    eiPtr->body.ei.textPtr->display, 0);
-    if (eiPtr->body.ei.name != NULL) {
-	ckfree(eiPtr->body.ei.name);
-    }
+    Tk_FreeConfigOptions((char *) &eiPtr->body.ei, eiPtr->body.ei.optionTable,
+			 eiPtr->body.ei.textPtr->tkwin);
     ckfree((char *) eiPtr);
     return 0;
 }
@@ -896,4 +816,11 @@ EmbImageProc(clientData, x, y, width, height, imgWidth, imgHeight)
     index.linePtr = eiPtr->body.ei.linePtr;
     index.byteIndex = TkTextSegToOffset(eiPtr, eiPtr->body.ei.linePtr);
     TkTextChanged(eiPtr->body.ei.textPtr, &index, &index);
+    /* 
+     * It's probably not true that all image changes
+     * can change the line height, so we could be more
+     * efficient here and only call this when necessary.
+     */
+    TkTextInvalidateLineMetrics(eiPtr->body.ei.textPtr, 
+				index.linePtr, 0, TK_TEXT_INVALIDATE_ONLY);
 }

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.18 2003/10/06 22:14:26 jenglish Exp $
+'\" RCS: @(#) $Id: text.n,v 1.19 2003/10/31 09:02:07 vincentdarley Exp $
 '\" 
 .so man.macros
 .TH text n 8.4 Tk "Tk Built-In Commands"
@@ -38,6 +38,12 @@ Specifies a boolean that says whether separators are automatically
 inserted in the undo stack. Only meaningful when the \fB\-undo\fR
 option is true.
 .VE 8.4
+.OP \-blockcursor blockCursor BlockCursor
+.VS 8.5
+Specifies a boolean that says whether the blinking insertion cursor 
+should be drawn as a character-sized rectangular block.  If false 
+(the default) a thin vertical line is used for the insertion cursor.
+.VE 8.5
 .OP \-height height Height
 Specifies the desired height for the window, in units of characters
 in the font given by the \fB\-font\fR option.
@@ -176,10 +182,20 @@ Indices have the syntax
 .CS
 \fIbase modifier modifier modifier ...\fR
 .CE
-Where \fIbase\fR gives a starting point and the \fImodifier\fRs
-adjust the index from the starting point (e.g. move forward or
-backward one character).  Every index must contain a \fIbase\fR,
-but the \fImodifier\fRs are optional.
+Where \fIbase\fR gives a starting point and the \fImodifier\fRs adjust
+the index from the starting point (e.g. move forward or backward one
+character).  Every index must contain a \fIbase\fR, but the
+\fImodifier\fRs are optional.  Most modifiers (as documented below) allow
+an optional submodifier.  Valid \fIsubmodifier\fRs are nothing, \fIany\fB
+or \fIdisplay\fB. If the submodifier is abbreviated, then it must be
+followed by whitespace, but otherwise there need be no space between the
+submodifier and the following \fImodifier\fR.  Typically the \fIdisplay\fB
+submodifier adjusts the meaning of the following \fImodifier\fR to make
+it refer to visual or non-elided units rather than logical units, but
+this is explained for each relevant case below.  Lastly, where \fIcount\fB
+is used as part of a modifier, it can be positive or negative, so '\fIbase\fR
+- -3 lines' is perfectly valid (and equivalent to '\fIbase\fR
++3lines').
 .PP
 The \fIbase\fR for an index must have one of the following forms:
 .TP 12
@@ -233,63 +249,116 @@ If modifiers follow the base index, each one of them must have one
 of the forms listed below.  Keywords such as \fBchars\fR and \fBwordend\fR
 may be abbreviated as long as the abbreviation is unambiguous.
 .TP
-\fB+ \fIcount\fB chars\fR
-Adjust the index forward by \fIcount\fR characters, moving to later
-lines in the text if necessary.  If there are fewer than \fIcount\fR
-characters in the text after the current index, then set the index
-to the last character in the text.
-Spaces on either side of \fIcount\fR are optional.
+\fB+ \fIcount\fB \fI?submodifier?\fB chars\fR
+Adjust the index forward by \fIcount\fR characters, moving to later lines
+in the text if necessary.  If there are fewer than \fIcount\fR characters
+in the text after the current index, then set the index to the last index
+in the text.  Spaces on either side of \fIcount\fR are optional.  If the
+\fIdisplay\fB submodifier is given, elided characters are skipped over
+without being counted.  If \fIany\fB is given, then all characters are
+counted.  For historical reasons, if neither modifier is given then the
+count actually takes place in units of index positions (see \fBindices\fR
+for details).  This behaviour may be changed in a future major release,
+so if you need an index count, you are encouraged to use \fBindices\fR
+instead wherever possible.
 .TP
-\fB\- \fIcount\fB chars\fR
+\fB\- \fIcount\fB \fI?submodifier?\fB chars\fR
 Adjust the index backward by \fIcount\fR characters, moving to earlier
 lines in the text if necessary.  If there are fewer than \fIcount\fR
-characters in the text before the current index, then set the index
-to the first character in the text.
-Spaces on either side of \fIcount\fR are optional.
+characters in the text before the current index, then set the index to
+the first index in the text (1.0).  Spaces on either side of \fIcount\fR
+are optional.  If the \fIdisplay\fB submodifier is given, elided
+characters are skipped over without being counted.  If \fIany\fB is
+given, then all characters are counted.  For historical reasons, if
+neither modifier is given then the count actually takes place in units of
+index positions (see \fBindices\fR for details).  This behaviour may be
+changed in a future major release, so if you need an index count, you are
+encouraged to use \fBindices\fR instead wherever possible.
 .TP
-\fB+ \fIcount\fB lines\fR
+\fB+ \fIcount\fB \fI?submodifier?\fB indices\fR
+Adjust the index forward by \fIcount\fR index positions, moving to later
+lines in the text if necessary.  If there are fewer than \fIcount\fR
+index positions in the text after the current index, then set the index
+to the last index position in the text.  Spaces on either side of
+\fIcount\fR are optional.  Note that an index position is either a single
+character or a single embedded image or embedded window.  If the
+\fIdisplay\fB submodifier is given, elided indices are skipped over
+without being counted.  If \fIany\fB is given, then all indices are
+counted, which is also the default behaviour if no modifier is given.
+.TP
+\fB\- \fIcount\fB \fI?submodifier?\fB indices\fR
+Adjust the index backward by \fIcount\fR index positions, moving to
+earlier lines in the text if necessary.  If there are fewer than
+\fIcount\fR index positions in the text before the current index, then
+set the index to the first index position (1.0) in the text.  Spaces on
+either side of \fIcount\fR are optional.  If the \fIdisplay\fB
+submodifier is given, elided indices are skipped over without being
+counted.  If \fIany\fB is given, then all indices are counted, which is
+also the default behaviour if no modifier is given.
+.TP
+\fB+ \fIcount\fB \fI?modifier?\fB lines\fR
 Adjust the index forward by \fIcount\fR lines, retaining the same
 character position within the line.  If there are fewer than \fIcount\fR
-lines after the line containing the current index, then set the index
-to refer to the same character position on the last line of the text.
-Then, if the line is not long enough to contain a character at the indicated
+lines after the line containing the current index, then set the index to
+refer to the same character position on the last line of the text.  Then,
+if the line is not long enough to contain a character at the indicated
 character position, adjust the character position to refer to the last
-character of the line (the newline).
-Spaces on either side of \fIcount\fR are optional.
+character of the line (the newline).  Spaces on either side of
+\fIcount\fR are optional.  If the \fIdisplay\fB submodifier is given,
+then each visual display line is counted separately.  Otherwise, if
+\fIany\fB (or no modifier) is given, then each logical line (no matter
+how many times it is visually wrapped) counts just once.  If the relevant
+lines are not wrapped, then these two methods of counting are equivalent.
 .TP
-\fB\- \fIcount\fB lines\fR
-Adjust the index backward by \fIcount\fR lines, retaining the same
-character position within the line.  If there are fewer than \fIcount\fR
-lines before the line containing the current index, then set the index
-to refer to the same character position on the first line of the text.
-Then, if the line is not long enough to contain a character at the indicated
-character position, adjust the character position to refer to the last
-character of the line (the newline).
-Spaces on either side of \fIcount\fR are optional.
+\fB\- \fIcount\fB \fI?submodifier?\fB lines\fR
+Adjust the index backward by \fIcount\fR logical lines, retaining the
+same character position within the line.  If there are fewer than
+\fIcount\fR lines before the line containing the current index, then set
+the index to refer to the same character position on the first line of
+the text.  Then, if the line is not long enough to contain a character at
+the indicated character position, adjust the character position to refer
+to the last character of the line (the newline).  Spaces on either side
+of \fIcount\fR are optional.  If the \fIdisplay\fB submodifier is given,
+then each visual display line is counted separately.  Otherwise, if
+\fIany\fB (or no modifier) is given, then each logical line (no matter
+how many times it is visually wrapped) counts just once.  If the relevant
+lines are not wrapped, then these two methods of counting are equivalent.
 .TP
-\fBlinestart\fR
-Adjust the index to refer to the first character on the line.
+\fB?submodifier? linestart\fR
+Adjust the index to refer to the first character on the line.  If the 
+\fIdisplay\fB submodifier is given, this is the first character on the 
+display line, otherwise on the logical line.
 .TP
-\fBlineend\fR
-Adjust the index to refer to the last character on the line (the newline).
+\fB?submodifier? lineend\fR
+Adjust the index to refer to the last character on the line (the
+newline).  If the \fIdisplay\fB submodifier is given, this is the last
+character on the display line, otherwise on the logical line.
 .TP
-\fBwordstart\fR
+\fB?submodifier? wordstart\fR
 Adjust the index to refer to the first character of the word containing
 the current index.  A word consists of any number of adjacent characters
-that are letters, digits, or underscores, or a single character that
-is not one of these.
+that are letters, digits, or underscores, or a single character that is
+not one of these.  If the \fIdisplay\fB submodifier is given, this only
+examines non-elided characters, otherwise all characters (elided or not)
+are examined.
 .TP
-\fBwordend\fR
+\fB?submodifier? wordend\fR
 Adjust the index to refer to the character just after the last one of the
-word containing the current index.  If the current index refers to the last
-character of the text then it is not modified.
+word containing the current index.  If the current index refers to the
+last character of the text then it is not modified.  If the \fIdisplay\fB
+submodifier is given, this only examines non-elided characters, otherwise
+all characters (elided or not) are examined.
 .PP
 If more than one modifier is present then they are applied in
 left-to-right order.  For example, the index ``\fBend \- 1 chars\fR''
 refers to the next-to-last character in the text and
 ``\fBinsert wordstart \- 1 c\fR'' refers to the character just before
 the first one in the word containing the insertion cursor.
-
+.PP
+Where modifiers result in index changes by display lines, display chars
+or display indices and the \fIbase\fP refers to an index which is elided,
+that base index is considered to be equivalent to the first following
+non-elided index.
 .SH TAGS
 .PP
 The first form of annotation in text widgets is a tag.
@@ -560,7 +629,7 @@ parent).
 The embedded window's position on the screen will be updated as the
 text is modified or scrolled, and it will be mapped and unmapped as
 it moves into and out of the visible area of the text widget.
-Each embedded window occupies one character's worth of index space
+Each embedded window occupies one unit's worth of index space
 in the text widget, and it may be referred to either by the name
 of its embedded window or by its position in the widget's
 index space.
@@ -627,7 +696,7 @@ and a particular image may be embedded in multiple places in the same
 text widget.
 The embedded image's position on the screen will be updated as the
 text is modified or scrolled.
-Each embedded image occupies one character's worth of index space
+Each embedded image occupies one unit's worth of index space
 in the text widget, and it may be referred to either by
 its position in the widget's index space, or the name it is assigned
 when the image is inserted into the text widget widh \fBimage create\fP.
@@ -739,14 +808,13 @@ The text widget has an unlimited undo and redo mechanism (when the
 \fB-undo\fR widget option is true) which records every insert and
 delete action on a stack.
 .PP
-Boundaries (called "separators") are inserted between edit actions.
-The purpose of these separators is to group inserts and deletes into
-one compound edit action.  When undoing a change everything between
-two separators will be undone.  The undone changes are then moved to
-the redo stack, so that an undone edit can be redone again.  The redo
-stack is cleared whenever new edit actions are recorded on the undo
-stack.  The undo and redo stacks can be cleared to keep their depth
-under control.
+Boundaries (called "separators") are inserted between edit actions.  The
+purpose of these separators is to group inserts, deletes and replaces
+into one compound edit action.  When undoing a change everything between
+two separators will be undone.  The undone changes are then moved to the
+redo stack, so that an undone edit can be redone again.  The redo stack
+is cleared whenever new edit actions are recorded on the undo stack.  The
+undo and redo stacks can be cleared to keep their depth under control.
 .PP
 Separators are inserted automatically when the \fB-autoseparators\fR
 widget option is true.  You can insert separators programatically as
@@ -820,6 +888,66 @@ modifies the given widget option(s) to have the given value(s);  in
 this case the command returns an empty string.
 \fIOption\fR may have any of the values accepted by the \fBtext\fR
 command.
+.TP
+\fIpathName \fBcount \fI?options\fI? \fIindex1 \fIindex2\fR 
+Counts the number of relevant things between the two indices.  If index1
+is after index2, the result will be a negative number (and this holds for
+each of the possible options).  The actual items which are counted depend
+on the options given.  The result is a list of integers, one for the
+result of each counting option given.  Valid counting options are
+'-chars', '-displaychars', '-displayindices', '-displaylines',
+'-indices', '-lines', '-xpixels' and '-ypixels'.  The default value, if
+no option is specified, is '-indices'.  There is an additional possible
+option '-update' which is a modifier.  If given, then all subsequent
+options ensure that any possible out of date information is recalculated.
+This currently only has any effect for the '-ypixels' count (which, if
+'update' is not given, will use the text widget's current cached value
+for each line).  The count options are interpreted as follows:
+.TP
+\fI-chars\fR - count all characters, whether elided or not.  Do not count
+embedded windows or images.
+.TP
+\fI-displaychars\fR - count all non-elided characters.
+.TP
+\fI-displayindices\fR - count all non-elided characters, windows and
+images.
+.TP
+\fI-displaylines\fR - count all display lines (i.e. counting one for each
+time a line wraps) from the line of the first index up to, but not
+including the display line of the second index.  Therefore if they are
+both on the same display line, zero will be returned.  By definition
+displaylines are visible and therefore this only counts portions of
+actual visible lines.
+.TP
+\fI-indices\fR - count all characters and embedded windows or images (i.e.
+everything which counts in text-widget index space), whether they are
+elided or not.
+.TP
+\fI-lines\fR - count all logical lines (irrespective of wrapping) from
+the line of the first index up to, but not including the line of the
+second index.  Therefore if they are both on the same line, zero will be
+returned.  Logical lines are counted whether they are currently visible
+(non-elided) or not.
+.TP
+\fI-xpixels\fR - count the number of horizontal pixels from the first
+pixel of the first index to (but not including) the first pixel of the
+second index.  To count the total desired width of the text widget
+(assuming wrapping is not enabled), first find the longest line and then
+use '.text count -xpixels "${line}.0" "${line}.0 lineend"'.
+.TP
+\fI-ypixels\fR - count the number of vertical pixels from the first pixel
+of the first index to (but not including) the first pixel of the second
+index.  If both indices are on the same display line, zero will be
+returned.  To count the total number of vertical pixels in the text
+widget, use '.text count -ypixels 1.0 end', and to ensure this is up to
+date, use '.text count -update -ypixels 1.0 end'.
+.TP
+The command returns a positive or negative integer corresponding to the 
+number of items counted between the two indices.  One such integer is
+returned for each counting option given, so a list is returned if more 
+than one option was supplied.  For example '.text count -xpixels
+-ypixels 1.3 4.5' is perfectly valid and will return a list of two
+elements.
 .TP
 \fIpathName \fBdebug \fR?\fIboolean\fR?
 If \fIboolean\fR is specified, then it must have one of the true or
@@ -979,7 +1107,7 @@ option is false.
 .RE
 .VE 8.4
 .TP
-\fIpathName \fBget \fIindex1 \fR?\fIindex2 ...\fR?
+\fIpathName \fBget \fI?-displaychars?\fR \fI--fR \fIindex1 \fR?\fIindex2 ...\fR?
 Return a range of characters from the text.
 The return value will be all the characters in the text starting
 with the one whose index is \fIindex1\fR and ending just before
@@ -997,6 +1125,11 @@ If multiple index pairs are given, multiple ranges of text will be returned
 in a list.  Invalid ranges will not be represented with empty strings in
 the list.  The ranges are returned in the order passed to \fBget\fR.
 .VE 8.4
+.VS 8.5
+If the \fI-displaychars\fR option is given, then, within each range,
+only those characters which are not elided will be returned.  This may 
+have the effect that some of the returned ranges are empty strings.
+.VE 8.5
 .TP
 \fIpathName \fBimage \fIoption \fR?\fIarg arg ...\fR?
 This command is used to manipulate embedded images.
@@ -1127,6 +1260,20 @@ returned by future calls to ``\fIpathName \fBmark names\fR''.
 This command returns an empty string.
 .RE
 .TP
+\fIpathName \fBreplace \fIindex1 \fIindex2 chars \fR?\fItagList chars tagList ...\fR?
+Replaces the range of characters between \fIindex1\fR and \fIindex2\fR 
+with the given characters and tags.  See the section on \fIpathName
+\fBinsert\fR for an explanation of the handling of the \fItagList...\fR
+arguments, and the section on \fIpathName
+\fBdelete\fR for an explanation of the handling of the indices.  If
+\fIindex2\fR corresponds to an index earlier in the text than
+\fIindex1\fR, an error will be generated.
+.TP
+The deletion and insertion are arranged so that no unnecessary
+scrolling of the window or movement of insertion cursor occurs.  In
+addition the undo/redo stack are correctly modified, if undo operations
+are active in the text widget.  The command returns an empty string.
+.TP
 \fIpathName \fBscan\fR \fIoption args\fR
 This command is used to implement scanning on texts.  It has
 two forms, depending on \fIoption\fR:
@@ -1164,11 +1311,12 @@ matching range starting at or after the position given by \fIindex\fR.
 This is the default.
 .TP
 \fB\-backwards\fR
-The search will proceed backward through the text, finding the
-matching range closest to \fIindex\fR whose first character
-is before \fIindex\fR.  Note that, for a variety of reasons, backwards
-searches can be substantially slower than forwards searches, so it is
-recommended that performance-critical code use forward searches.
+The search will proceed backward through the text, finding the matching
+range closest to \fIindex\fR whose first character is before \fIindex\fR
+(it is not allowed to be at \fIindex\fR).  Note that, for a variety of
+reasons, backwards searches can be substantially slower than forwards
+searches (particularly when using \fB\-regexp\fR), so it is recommended
+that performance-critical code use forward searches.
 .TP
 \fB\-exact\fR
 Use exact matching:  the characters in the matching range must be
@@ -1185,11 +1333,11 @@ to the regexp engine (unless \fB\-nolinestop\fR is used), so that
 sequences will never match the newline character \fI\en\fR.
 .TP
 \fB\-nolinestop\fR
-This allows 
-\fI.\fR and \fI[^\fR sequences to match the newline character \fI\en\fR,
-which they will otherwise not do (see the \fBregexp\fR
+This allows \fI.\fR and \fI[^\fR sequences to match the newline 
+character \fI\en\fR, which they will otherwise not do (see the \fBregexp\fR
 command for details). This option is only meaningful if \fB\-regexp\fR 
-is also given, and an error will be thrown otherwise.
+is also given, and an error will be thrown otherwise.  For example,
+to match the entire text, use 'search -nolinestop -regexp ".*" 1.0'.
 .TP
 \fB\-nocase\fR
 Ignore case differences between the pattern and the text.
@@ -1198,7 +1346,8 @@ Ignore case differences between the pattern and the text.
 The argument following \fB\-count\fR gives the name of a variable;
 if a match is found, the number of index positions between beginning and
 end of the matching range will be stored in the variable.  If there are no
-embedded images or windows in the matching range, this is equivalent to the
+embedded images or windows in the matching range (and there are no
+elided characters if \fB\-elide\fR is not given), this is equivalent to the
 number of characters matched.  In either case, the range \fImatchIdx\fR to
 \fImatchIdx + $count chars\fR will return the entire matched text.
 .TP
@@ -1208,7 +1357,22 @@ the first character of each match.  If a \fB\-count\fI varName\fR switch is
 given, then \fBvarName\fR is also set to a list containing one element 
 for each successful match.  Note that, even for exact searches, the
 elements of this list may be different, if there are embedded images,
-windows or hidden text. 
+windows or hidden text.  Searches with \fB\-all\fR behave very
+similarly to the Tcl command \fB\regexp -all\fR, in that overlapping
+matches are not normally returned.  For example, applying an \fB\-all\fR search 
+of the pattern '\\w+' against 'hello there' will just match twice, once
+for each word, and matching 'Z[a-z]+Z' against 'ZooZooZoo' will just
+match once.  
+.TP
+\fB\-overlap\fR 
+When performing \fB\-all\fR searches, the normal behaviour is that
+matches which overlap an already-found match will not be returned.  This
+switch changes that behaviour so that all matches which are not totally
+enclosed within another match are returned.  For example, applying an
+\fB\-overlap\fR search of the pattern '\\w+' against 'hello there' will
+just match twice (i.e. no different to just \fB\-all\fR), but matching
+'Z[a-z]+Z' against 'ZooZooZoo' will now match twice.  
+An error will be thrown if this switch is used without \fB\-all\fR.
 .TP
 \fB\-elide\fR
 Find elidden (hidden) text as well. By default only displayed text is
@@ -1219,11 +1383,11 @@ This switch has no effect except to terminate the list of switches:
 the next argument will be treated as \fIpattern\fR even if it starts
 with \fB\-\fR.
 .LP
-The matching range must be entirely within a single line of text.
-For regular expression matching the newlines are removed from the ends
-of the lines before matching:  use the \fB$\fR feature in regular
-expressions to match the end of a line.
-For exact matching the newlines are retained.
+The matching range may be within a single line of text, or run across
+multiple lines (if parts of the pattern can match a new-line).  For
+regular expression matching one can use the various newline-matching
+features such as \fB$\fR to match the end of a line, and to control
+whether \fB.\fR is allowed to match a new-line.
 If \fIstopIndex\fR is specified, the search stops at that index:
 for forward searches, no match at or after \fIstopIndex\fR will
 be considered;  for backward searches, no match earlier in the
@@ -1231,7 +1395,11 @@ text than \fIstopIndex\fR will be considered.
 If \fIstopIndex\fR is omitted, the entire text will be searched:
 when the beginning or end of the text is reached, the search
 continues at the other end until the starting location is reached
-again;  if \fIstopIndex\fR is specified, no wrap-around will occur.
+again;  if \fIstopIndex\fR is specified, no wrap-around will occur. 
+This means that, for example, if the search is \fB\-forwards\fR 
+but \fIstopIndex\fR is earlier in the text than \fIstartIndex\fR, 
+nothing will ever be found.  See "KNOWN BUGS" below for a number of
+minor limitations of the search command.
 .RE
 .TP
 \fIpathName \fBsee \fIindex\fR
@@ -1545,14 +1713,17 @@ way through the text, and so on.
 \fIpathName \fByview scroll \fInumber what\fR
 This command adjust the view in the window up or down according to
 \fInumber\fR and \fIwhat\fR.
-\fINumber\fR must be an integer.
-\fIWhat\fR must be either \fBunits\fR or \fBpages\fR.
-If \fIwhat\fR is \fBunits\fR, the view adjusts up or down by
-\fInumber\fR lines on the display;  if it is \fBpages\fR then
-the view adjusts by \fInumber\fR screenfuls.
-If \fInumber\fR is negative then earlier positions in the text
-become visible;  if it is positive then later positions in the text
-become visible.
+\fIWhat\fR must be \fBunits\fR, \fBpages\fR or \fBpixels\fR.
+If \fIwhat\fR is \fBunits\fR or \fBpages\fR then \fInumber\fR must be an
+integer, otherwise number may be specified in any of the forms acceptable
+to \fBTk_GetPixels\fR, such as ``2.0c'' or ``1i'' (the result is rounded
+to the nearest integer value.  If no units are given, pixels are
+assumed).  If \fIwhat\fR is \fBunits\fR, the view adjusts up or down by
+\fInumber\fR lines on the display; if it is \fBpages\fR then the view
+adjusts by \fInumber\fR screenfuls; if it is \fBpixels\fR then the view
+adjusts by \fInumber\fR pixels.  If \fInumber\fR is negative then earlier
+positions in the text become visible; if it is positive then later
+positions in the text become visible.
 .TP
 \fIpathName \fByview \fR?\fB\-pickplace\fR? \fIindex\fR
 Changes the view in the widget's window to make \fIindex\fR visible.
@@ -1759,6 +1930,18 @@ take place.
 The behavior of texts can be changed by defining new bindings for
 individual widgets or by redefining the class bindings.
 
+.SH "ISSUES CONCERNING CHARS AND INDICES"
+.PP
+Before Tk 8.5, the widget used the string "chars" to refer to index
+positions (which included characters, embedded windows and embedded
+images).  As of Tk 8.5 the text widget deals separately and correctly
+with "chars" and "indices".  For backwards compatibility, however, the
+index modifiers "+N chars" and "-N chars" continue to refer to indices.
+One must use any of the full forms "+N any chars" or "-N any chars" etc
+to refer to actual character indices.  This confusion may be fixed in a
+future release by making the widget correctly interpret "+N chars" as a
+synonym for "+N any chars".  
+
 .SH "PERFORMANCE ISSUES"
 .PP
 Text widgets should run efficiently under a variety
@@ -1792,5 +1975,54 @@ especially if they have many marks and tags within them.
 The display line with the insert cursor is redrawn each time the
 cursor blinks, which causes a steady stream of graphics traffic.
 Set the \fBinsertOffTime\fP attribute to 0 avoid this.
+
+.SH "KNOWN BUGS"
+.PP
+The \fB-elide\fP tag attribute, introduced in Tk 8.3, has one known
+limitation.  Newlines which have this attribute are only actually elided
+if their entire logical line is also elided.  Where there is a logical
+line which begins un-elided but terminates with an elided newline, that
+newline will still actually cause a line-break in the display.  The basic
+limitation is that while a single logical line can result in multiple
+display lines, a single display line cannot be derived from multiple
+logical lines.  This does mean, however, that logical lines which are
+completely elided have no problems.
+
+The \fBsearch -regexp\fR sub-command attempts to perform sophisticated
+regexp matching across multiple lines in an efficient fashion (since Tk
+8.5), examing each line individually, and then in small groups of lines,
+whether searching forwards or backwards.  Under certain conditions the
+search result might differ from that obtained by applying the same regexp
+to the entire text from the widget in one go.  For example, when
+searching with a greedy regexp, the widget will continue to attempt to
+add extra lines to the match as long as one of two conditions are true:
+either Tcl's regexp library returns a code to indicate a longer match is
+possible (but there are known bugs in Tcl which mean this code is not
+always correctly returned); or if each extra line added results in at
+least a partial match with the pattern.  This means in the case where the
+first extra line added results in no match and Tcl's regexp system
+returns the incorrect code and adding a second extra line would actually
+match, the text widget will return the wrong result.  In practice this is
+a rare problem, but it can occur, for example: \fBpack [text .t] ; .t
+insert 1.0 "aaaa\nbbbb\ncccc\nbbbb\naaaa\n" ; .t search -regexp --
+{(a+|b+\nc+\nb+)+\na+} 1.0\fR will not find a match when one exists of 19
+characters starting from the first 'b'.
+
+Whenever one possible match is fully enclosed in another, the search
+command will attempt to ensure only the larger match is returned.
+When performing backwards regexp searches it is possible that Tcl
+will not always achieve this, in the case where a match is preceded by 
+one or more short, non-overlapping matches, all of which are preceded
+by a large match which actually encompasses all of them.  The search
+algorithm used by the widget does not look back arbitrarily far for a
+possible match which might cover large portions of the widget.  For
+example: \fBpack [text .t] ; .t insert 1.0 "aaaa\nbbbb\nbbbb\nbbbb\nbbbb\n"
+; .t search -regexp -backward -- {b+\n|a+\n(b+\n)+} end\fR matches at
+'5.0' when a true greedy match would match at '1.0'.  Similarly if we
+add \fB-all\fR to this case, it matches at all of '5.0', '4.0', '3.0'
+and '1.0', when really it should only match at '1.0' since that match
+encloses all the others.
+
+
 .SH KEYWORDS
 text, widget, tkvars

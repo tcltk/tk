@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textImage.test,v 1.7 2003/05/19 21:19:52 dkf Exp $
+# RCS: @(#) $Id: textImage.test,v 1.8 2003/10/31 09:02:16 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -143,7 +143,7 @@ test textImage-1.15 {align argument checking} {
 	text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
 	pack .t
 	list [catch {.t image create end -image small -align wrong} msg] $msg
-} {1 {bad alignment "wrong": must be baseline, bottom, center, or top}}
+} {1 {bad align "wrong": must be baseline, bottom, center, or top}}
 
 test textImage-1.16 {configure} {
 	catch {
@@ -302,7 +302,9 @@ test textImage-4.2 {alignment checking - baseline} {
     .t image create end -image small -align baseline
     .t insert end test
     set result ""
-    foreach size {10 15 20 30} {
+    # Sizes larger than 25 can be too big and lead to a negative 'norm',
+    # at least on Windows XP with certain settings.
+    foreach size {10 15 20 25} {
 	font configure test_font2 -size $size
 	array set Metrics [font metrics test_font2]
 	update
@@ -316,7 +318,7 @@ test textImage-4.2 {alignment checking - baseline} {
     font delete test_font2
     unset Metrics
     set result
-} {{10 0} {15 0} {20 0} {30 0}}
+} {{10 0} {15 0} {20 0} {25 0}}
 
 test textImage-4.3 {alignment and padding checking} {fonts} {
     catch {

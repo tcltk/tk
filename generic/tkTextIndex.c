@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.8 2003/10/10 15:56:22 dkf Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.9 2003/10/31 09:02:11 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -25,18 +25,28 @@
 #define LAST_CHAR 1000000
 
 /*
+ * Modifiers for index parsing: 'display', 'any' or nothing.
+ */
+#define TKINDEX_NONE 0
+#define TKINDEX_DISPLAY 1
+#define TKINDEX_ANY 2
+
+/*
  * Forward declarations for procedures defined later in this file:
  */
 
-static CONST char *	ForwBack _ANSI_ARGS_((CONST char *string,
-			    TkTextIndex *indexPtr));
-static CONST char *	StartEnd _ANSI_ARGS_((CONST char *string,
-			    TkTextIndex *indexPtr));
+static CONST char *	ForwBack _ANSI_ARGS_((TkText *textPtr, 
+			    CONST char *string, TkTextIndex *indexPtr));
+static CONST char *	StartEnd _ANSI_ARGS_((TkText *textPtr, 
+			    CONST char *string, TkTextIndex *indexPtr));
 static int		GetIndex _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkText *textPtr, CONST char *string,
 			    TkTextIndex *indexPtr, int *canCachePtr));
 
-
+/*
+ * The "textindex" Tcl_Obj definition:
+ */
+
 static void		DupTextIndexInternalRep _ANSI_ARGS_((Tcl_Obj *srcPtr,
 			    Tcl_Obj *copyPtr));
 static void		FreeTextIndexInternalRep _ANSI_ARGS_((Tcl_Obj *listPtr));
@@ -96,7 +106,6 @@ DupTextIndexInternalRep(srcPtr, copyPtr)
     SET_TEXTINDEX(copyPtr, dupIndexPtr);
     SET_INDEXEPOCH(copyPtr, epoch);
 }
-
 /* 
  * This will not be called except by TkTextNewIndexObj below.
  * This is because if a TkTextIndex is no longer valid, it is
@@ -117,7 +126,6 @@ UpdateStringOfTextIndex(objPtr)
     strcpy(objPtr->bytes, buffer);
     objPtr->length = len;
 }
-    
 static int
 SetTextIndexFromAny(interp, objPtr)
     Tcl_Interp *interp;		/* Used for error reporting if not NULL. */
@@ -128,7 +136,7 @@ SetTextIndexFromAny(interp, objPtr)
 	-1);
     return TCL_ERROR;
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -176,7 +184,7 @@ MakeObjIndex(textPtr, objPtr, origPtr)
     }
     return indexPtr;
 }
-
+
 CONST TkTextIndex*
 TkTextGetIndexFromObj(interp, textPtr, objPtr)
     Tcl_Interp *interp;		/* Use this for error reporting. */
@@ -274,6 +282,62 @@ TkTextNewIndexObj(textPtr, indexPtr)
 /*
  *---------------------------------------------------------------------------
  *
+ * TkTextMakePixelIndex --
+ *
+ *	Given a pixel index and a byte index, look things up in the B-tree
+ *	and fill in a TkTextIndex structure.
+ *
+ * Results:
+ * 
+ *	The structure at *indexPtr is filled in with information about
+ *	the character at pixelIndex (or the closest existing character,
+ *	if the specified one doesn't exist), and the number of excess
+ *	pixels is returned as a result.  This means if the given pixel
+ *	index is exactly correct for the top-edge of the indexPtr, then
+ *	zero will be returned, and otherwise we will return the
+ *	calculation 'desired pixelIndex' - 'actual pixel index of
+ *	indexPtr'.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkTextMakePixelIndex(textPtr, pixelIndex, indexPtr)
+    TkText* textPtr;		/* The Text Widget */
+    int pixelIndex;		/* pixel-index of desired line (0 means first
+				 * pixel of first line of text). */
+    TkTextIndex *indexPtr;	/* Structure to fill in. */
+{
+    int pixelOffset = 0;
+
+    indexPtr->tree = textPtr->tree;
+    indexPtr->textPtr = textPtr;
+    
+    if (pixelIndex < 0) {
+	pixelIndex = 0;
+    }
+    indexPtr->linePtr = TkBTreeFindPixelLine(textPtr->tree, pixelIndex, 
+					     &pixelOffset);
+    if (indexPtr->linePtr == NULL) {
+	indexPtr->linePtr = TkBTreeFindPixelLine(textPtr->tree, 
+			      TkBTreeNumPixels(textPtr->tree)-1, &pixelOffset);
+	indexPtr->byteIndex = 0;
+	return pixelOffset;
+    }
+    indexPtr->byteIndex = 0;
+
+    if (pixelOffset <= 0) {
+	return 0;
+    }
+    return TkTextMeasureDown(textPtr, indexPtr, pixelOffset);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * TkTextMakeByteIndex --
  *
  *	Given a line index and a byte index, look things up in the B-tree
@@ -293,7 +357,7 @@ TkTextNewIndexObj(textPtr, indexPtr)
 
 TkTextIndex *
 TkTextMakeByteIndex(tree, lineIndex, byteIndex, indexPtr)
-    TkTextBTree tree;		/* Tree that lineIndex and charIndex refer
+    TkTextBTree tree;		/* Tree that lineIndex and byteIndex refer
 				 * to. */
     int lineIndex;		/* Index of desired line (0 means first
 				 * line of text). */
@@ -827,9 +891,9 @@ GetIndex(interp, textPtr, string, indexPtr, canCachePtr)
 	}
     
 	if ((*cp == '+') || (*cp == '-')) {
-	    cp = ForwBack(cp, indexPtr);
+	    cp = ForwBack(textPtr, cp, indexPtr);
 	} else {
-	    cp = StartEnd(cp, indexPtr);
+	    cp = StartEnd(textPtr, cp, indexPtr);
 	}
 	if (cp == NULL) {
 	    goto error;
@@ -965,7 +1029,8 @@ TkTextIndexCmp(index1Ptr, index2Ptr)
  */
 
 static CONST char *
-ForwBack(string, indexPtr)
+ForwBack(textPtr, string, indexPtr)
+    TkText *textPtr;		/* Information about text widget. */
     CONST char *string;		/* String to parse for additional info
 				 * about modifier (count and units). 
 				 * Points to "+" or "-" that starts
@@ -974,7 +1039,7 @@ ForwBack(string, indexPtr)
 {
     register CONST char *p, *units;
     char *end;
-    int count, lineIndex;
+    int count, lineIndex, modifier;
     size_t length;
 
     /*
@@ -996,8 +1061,12 @@ ForwBack(string, indexPtr)
 
     /*
      * Find the end of this modifier (next space or + or - character),
-     * then parse the unit specifier and update the position
-     * accordingly.
+     * then check if there is a textual 'display' or 'any' modifier.
+     * These modifiers can be their own word (in which case they can 
+     * be abbreviated) or they can follow on to the actual unit in
+     * a single word (in which case no abbreviation is allowed).  So,
+     * 'display lines', 'd lines', 'displaylin' are all ok, but 'dline'
+     * is not.
      */
 
     units = p; 
@@ -1005,43 +1074,166 @@ ForwBack(string, indexPtr)
 	p++;
     }
     length = p - units;
+    if ((*units == 'd') && (strncmp(units, "display", 
+				    (length > 7 ? 7 : length)) == 0)) {
+	modifier = TKINDEX_DISPLAY;
+	if (length > 7) {
+	    p -= (length - 7);
+	}
+    } else if ((*units == 'a') && (strncmp(units, "any", 
+					   (length > 3 ? 3 : length)) == 0)) {
+	modifier = TKINDEX_ANY;
+	if (length > 3) {
+	    p -= (length - 3);
+	}
+    } else {
+	modifier = TKINDEX_NONE;
+    }
+
+    /* 
+     * If we had a modifier, which we interpreted ok, so now forward
+     * to the actual units.
+     */
+    if (modifier != TKINDEX_NONE) {
+	while (isspace(UCHAR(*p))) {
+	    p++;
+	}
+	units = p; 
+	while ((*p != '\0') && !isspace(UCHAR(*p)) && (*p != '+') && (*p != '-')) {
+	    p++;
+	}
+	length = p - units;
+    }
+
+    /*
+     * Finally parse the units.
+     */
     if ((*units == 'c') && (strncmp(units, "chars", length) == 0)) {
-	if (*string == '+') {
-	    TkTextIndexForwChars(indexPtr, count, indexPtr);
+	TkTextCountType type;
+	if (modifier == TKINDEX_NONE) {
+	    type = COUNT_INDICES;
+	} else if (modifier == TKINDEX_ANY) {
+	    type = COUNT_CHARS;
 	} else {
-	    TkTextIndexBackChars(indexPtr, count, indexPtr);
+	    type = COUNT_DISPLAY_CHARS;
+	}
+	if (*string == '+') {
+	    TkTextIndexForwChars(indexPtr, count, indexPtr, type);
+	} else {
+	    TkTextIndexBackChars(indexPtr, count, indexPtr, type);
+	}
+    } else if ((*units == 'i') && (strncmp(units, "indices", length) == 0)) {
+	TkTextCountType type;
+	if (modifier == TKINDEX_DISPLAY) {
+	    type = COUNT_DISPLAY_INDICES;
+	} else {
+	    type = COUNT_INDICES;
+	}
+	if (*string == '+') {
+	    TkTextIndexForwChars(indexPtr, count, indexPtr, type);
+	} else {
+	    TkTextIndexBackChars(indexPtr, count, indexPtr, type);
 	}
     } else if ((*units == 'l') && (strncmp(units, "lines", length) == 0)) {
-	lineIndex = TkBTreeLineIndex(indexPtr->linePtr);
-	if (*string == '+') {
-	    lineIndex += count;
+	if (modifier == TKINDEX_DISPLAY) {
+	    /* 
+	     * Find the appropriate pixel offset of the current position
+	     * within its display line.  This also has the side-effect of
+	     * moving indexPtr, but that doesn't matter since we will do
+	     * it again below.
+	     * 
+	     * Then find the right display line, and finally calculated
+	     * the index we want in that display line, based on the
+	     * original pixel offset.
+	     */
+	    int xOffset, forward;
+	    if (TkTextIsElided(textPtr, indexPtr)) {
+	        /* Go forward to the first non-elided index */
+		TkTextIndexForwChars(indexPtr, 0, indexPtr, 
+				     COUNT_DISPLAY_INDICES | COUNT_IS_ELIDED);
+	    }
+	    /* 
+	     * Unlike the Forw/BackChars code, the display line code
+	     * is sensitive to whether we are genuinely going
+	     * forwards or backwards.  So, we need to determine that.
+	     * This is important in the case where we have "+ -3
+	     * displaylines", for example.
+	     */
+	    if ((count < 0) ^ (*string == '-')) {
+		forward = 0;
+	    } else {
+		forward = 1;
+	    }
+	    count = abs(count);
+	    if (count == 0) {
+		return p;
+	    }
+	    if (forward) {
+		TkTextFindDisplayLineEnd(textPtr, indexPtr, 1, &xOffset);
+		while (count-- > 0) {
+		    /* 
+		     * Go to the end of the line, then forward one
+		     * char/byte to get to the beginning of the next
+		     * line.
+		     */
+		    TkTextFindDisplayLineEnd(textPtr, indexPtr, 1, NULL);
+		    TkTextIndexForwChars(indexPtr, 1, indexPtr, 
+					 COUNT_DISPLAY_INDICES
+			| (COUNT_IS_ELIDED * TkTextIsElided(textPtr, indexPtr)));
+		}
+	    } else {
+		TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, &xOffset);
+		while (count-- > 0) {
+		    /* 
+		     * Go to the beginning of the line, then backward one
+		     * char/byte to get to the end of the previous line
+		     */
+		    TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
+		    TkTextIndexBackChars(indexPtr, 1, indexPtr, 
+					 COUNT_DISPLAY_INDICES 
+			| (COUNT_IS_ELIDED * TkTextIsElided(textPtr, indexPtr)));
+		}
+		TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
+	    }
+	    /* 
+	     * This call assumes indexPtr is the beginning of a display line
+	     * and moves it to the 'xOffset' position of that line, which is
+	     * just what we want.
+	     */
+	    TkTextIndexOfX(textPtr, xOffset, indexPtr);
 	} else {
-	    lineIndex -= count;
+	    lineIndex = TkBTreeLineIndex(indexPtr->linePtr);
+	    if (*string == '+') {
+		lineIndex += count;
+	    } else {
+		lineIndex -= count;
 
+		/*
+		 * The check below retains the character position, even
+		 * if the line runs off the start of the file.  Without
+		 * it, the character position will get reset to 0 by
+		 * TkTextMakeIndex.
+		 */
+
+		if (lineIndex < 0) {
+		    lineIndex = 0;
+		}
+	    }
 	    /*
-	     * The check below retains the character position, even
-	     * if the line runs off the start of the file.  Without
-	     * it, the character position will get reset to 0 by
-	     * TkTextMakeIndex.
+	     * This doesn't work quite right if using a proportional font or
+	     * UTF-8 characters with varying numbers of bytes, or if there
+	     * are embedded windows, images, etc.  The cursor will bop
+	     * around, keeping a constant number of bytes (not characters)
+	     * from the left edge (but making sure not to split any UTF-8
+	     * characters), regardless of the x-position the index
+	     * corresponds to.  The proper way to do this is to get the
+	     * x-position of the index and then pick the character at the
+	     * same x-position in the new line.
 	     */
 
-	    if (lineIndex < 0) {
-		lineIndex = 0;
-	    }
+	    TkTextMakeByteIndex(indexPtr->tree, lineIndex, indexPtr->byteIndex,
+		    indexPtr);
 	}
-	/*
-	 * This doesn't work quite right if using a proportional font or
-	 * UTF-8 characters with varying numbers of bytes.  The cursor will
-	 * bop around, keeping a constant number of bytes (not characters)
-	 * from the left edge (but making sure not to split any UTF-8
-	 * characters), regardless of the x-position the index corresponds
-	 * to.  The proper way to do this is to get the x-position of the
-	 * index and then pick the character at the same x-position in the
-	 * new line.
-	 */
-
-	TkTextMakeByteIndex(indexPtr->tree, lineIndex, indexPtr->byteIndex,
-		indexPtr);
     } else {
 	return NULL;
     }
@@ -1060,6 +1252,9 @@ ForwBack(string, indexPtr)
  *	*dstPtr is modified to refer to the character "count" bytes after
  *	srcPtr, or to the last character in the TkText if there aren't
  *	"count" bytes left.
+ *	
+ *	In this latter case, the function returns '1' to indicate
+ *	that not all of 'byteCount' could be used.
  *
  * Side effects:
  *	None.
@@ -1067,7 +1262,7 @@ ForwBack(string, indexPtr)
  *---------------------------------------------------------------------------
  */
 
-void
+int
 TkTextIndexForwBytes(srcPtr, byteCount, dstPtr)
     CONST TkTextIndex *srcPtr;	/* Source index. */
     int byteCount;		/* How many bytes forward to move.  May be
@@ -1080,7 +1275,7 @@ TkTextIndexForwBytes(srcPtr, byteCount, dstPtr)
 
     if (byteCount < 0) {
 	TkTextIndexBackBytes(srcPtr, -byteCount, dstPtr);
-	return;
+	return 0;
     }
 
     *dstPtr = *srcPtr;
@@ -1102,13 +1297,13 @@ TkTextIndexForwBytes(srcPtr, byteCount, dstPtr)
 	 */
 
 	if (dstPtr->byteIndex < lineLength) {
-	    return;
+	    return 0;
 	}
 	dstPtr->byteIndex -= lineLength;
 	linePtr = TkBTreeNextLine(dstPtr->linePtr);
 	if (linePtr == NULL) {
 	    dstPtr->byteIndex = lineLength - 1;
-	    return;
+	    return 1;
 	}
 	dstPtr->linePtr = linePtr;
     }
@@ -1120,12 +1315,18 @@ TkTextIndexForwBytes(srcPtr, byteCount, dstPtr)
  * TkTextIndexForwChars --
  *
  *	Given an index for a text widget, this procedure creates a new
- *	index that points "count" characters ahead of the source index.
+ *	index that points "count" items of type given by "type" ahead of
+ *	the source index.  "count" can be zero, which is useful in
+ *	the case where one wishes to move forward by display
+ *	(non-elided) chars or indices or one wishes to move forward
+ *	by chars, skipping any intervening indices.  In this case
+ *	dstPtr will point to the first acceptable index which is
+ *	encountered.
  *
  * Results:
- *	*dstPtr is modified to refer to the character "count" characters
+ *	*dstPtr is modified to refer to the character "count" items
  *	after srcPtr, or to the last character in the TkText if there
- *	aren't "count" characters left in the file.
+ *	aren't sufficient items left in the widget.
  *
  * Side effects:
  *	None.
@@ -1134,21 +1335,27 @@ TkTextIndexForwBytes(srcPtr, byteCount, dstPtr)
  */
 
 void
-TkTextIndexForwChars(srcPtr, charCount, dstPtr)
+TkTextIndexForwChars(srcPtr, charCount, dstPtr, type)
     CONST TkTextIndex *srcPtr;	/* Source index. */
     int charCount;		/* How many characters forward to move.
 				 * May be negative. */
     TkTextIndex *dstPtr;	/* Destination index: gets modified. */
+    TkTextCountType type;       /* The type of item to count */
 {
     TkTextLine *linePtr;
     TkTextSegment *segPtr;
     int byteOffset;
     char *start, *end, *p;
     Tcl_UniChar ch;
+    int elide = 0;
+    int checkElided = (type & COUNT_DISPLAY);
 
     if (charCount < 0) {
-	TkTextIndexBackChars(srcPtr, -charCount, dstPtr);
+	TkTextIndexBackChars(srcPtr, -charCount, dstPtr, type);
 	return;
+    }
+    if (checkElided) {
+	elide = ((type & COUNT_IS_ELIDED) ? 1 : 0);
     }
 
     *dstPtr = *srcPtr;
@@ -1166,23 +1373,49 @@ TkTextIndexForwChars(srcPtr, charCount, dstPtr)
 	 */
 
 	for ( ; segPtr != NULL; segPtr = segPtr->nextPtr) {
-	    if (segPtr->typePtr == &tkTextCharType) {
-		start = segPtr->body.chars + byteOffset;
-		end = segPtr->body.chars + segPtr->size;
-		for (p = start; p < end; p += Tcl_UtfToUniChar(p, &ch)) {
-		    if (charCount == 0) {
-			dstPtr->byteIndex += (p - start);
-			return;
+	    /*
+	     * If we do need to pay attention to the visibility of
+	     * characters/indices, check that first.  If the current
+	     * segment isn't visible, then we simply continue the
+	     * loop
+	     */
+	    if (checkElided) {
+		if ((segPtr->typePtr == &tkTextToggleOffType)
+		  || (segPtr->typePtr == &tkTextToggleOnType)) {		
+		    if (segPtr->body.toggle.tagPtr->elideString != NULL) {
+			if (elide) {
+			    elide = (segPtr->typePtr == &tkTextToggleOffType)
+			      & !segPtr->body.toggle.tagPtr->elide;
+			} else {
+			    elide = (segPtr->typePtr == &tkTextToggleOnType)
+			      & segPtr->body.toggle.tagPtr->elide;
+			}
 		    }
-		    charCount--;
 		}
-	    } else {
-		if (charCount < segPtr->size - byteOffset) {
-		    dstPtr->byteIndex += charCount;
-		    return;
-		}
-		charCount -= segPtr->size - byteOffset;
 	    }
+
+	    if (!elide) {
+	        if (segPtr->typePtr == &tkTextCharType) {
+		    start = segPtr->body.chars + byteOffset;
+		    end = segPtr->body.chars + segPtr->size;
+		    for (p = start; p < end; p += Tcl_UtfToUniChar(p, &ch)) {
+			if (charCount == 0) {
+			    dstPtr->byteIndex += (p - start);
+			    return;
+			}
+			charCount--;
+		    }
+		} else {
+		    if (type & COUNT_INDICES) {
+			if (charCount < segPtr->size - byteOffset) {
+			    dstPtr->byteIndex += charCount;
+			    return;
+			}
+			charCount -= segPtr->size - byteOffset;
+		    }
+		}
+	    }
+	    
 	    dstPtr->byteIndex += segPtr->size - byteOffset;
 	    byteOffset = 0;
 	}
@@ -1204,6 +1437,155 @@ TkTextIndexForwChars(srcPtr, charCount, dstPtr)
     }
 }
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkTextIndexCount --
+ *
+ *	Given an ordered pair of indices in a text widget, this
+ *	procedure counts how many characters (not bytes) are between 
+ *	the two indices.
+ *	
+ *	It is illegal to call this procedure with unordered indices.
+ *	
+ *	Note that 'textPtr' is only used if we need to check for
+ *	elided attributes, i.e. if type is COUNT_DISPLAY_INDICES or
+ *	COUNT_DISPLAY_CHARS.
+ *
+ * Results:
+ *	The number of characters in the given range, which meet
+ *	the appropriate 'type' attributes.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type)
+    CONST TkText *textPtr;	 /* Overall information about text widget. */
+    CONST TkTextIndex *indexPtr1;/* Index describing location of
+                                  * character from which to count. */
+    CONST TkTextIndex *indexPtr2;/* Index describing location of last
+				  * character at which to stop the
+				  * count. */
+    TkTextCountType type;        /* The kind of indices to count */
+{
+    TkTextLine *linePtr1;
+    TkTextSegment *segPtr, *seg2Ptr = NULL;
+    int byteOffset, maxBytes;
+    int count = 0;
+    int elide = 0;
+    int checkElided = (type & COUNT_DISPLAY);
+
+    /*
+     * Find seg that contains src index, and remember
+     * how many bytes not to count in the given segment.
+     */
+
+    segPtr = TkTextIndexToSeg(indexPtr1, &byteOffset);
+    linePtr1 = indexPtr1->linePtr;
+    
+    seg2Ptr = TkTextIndexToSeg(indexPtr2, &maxBytes);
+
+    if (checkElided) {
+	elide = TkTextIsElided(textPtr, indexPtr1);
+    }
+	
+    while (1) {
+	/*
+	 * Go through each segment in line adding up the number
+	 * of characters.
+	 */
+	
+	for ( ; segPtr != NULL; segPtr = segPtr->nextPtr) {
+	    /*
+	     * If we do need to pay attention to the visibility of
+	     * characters/indices, check that first.  If the current
+	     * segment isn't visible, then we simply continue the
+	     * loop
+	     */
+	    if (checkElided) {
+		if ((segPtr->typePtr == &tkTextToggleOffType)
+		  || (segPtr->typePtr == &tkTextToggleOnType)) {		
+		    if (segPtr->body.toggle.tagPtr->elideString != NULL) {
+			if (elide) {
+			    elide = (segPtr->typePtr == &tkTextToggleOffType)
+			      & !segPtr->body.toggle.tagPtr->elide;
+			} else {
+			    elide = (segPtr->typePtr == &tkTextToggleOnType)
+			      & segPtr->body.toggle.tagPtr->elide;
+			}
+		    }
+		}
+		if (elide) {
+		    if (segPtr == seg2Ptr) {
+			return count;
+		    }
+		    byteOffset = 0;
+		    continue;
+		}
+	    }
+	    
+	    if (segPtr->typePtr == &tkTextCharType) {
+		int byteLen = segPtr->size - byteOffset;
+		register unsigned char *str = 
+                  (unsigned char *) segPtr->body.chars + byteOffset;
+		register int i;
+
+		if (segPtr == seg2Ptr) {
+		    if (byteLen > (maxBytes - byteOffset)) {
+		        byteLen = maxBytes - byteOffset;
+		    }
+		}
+		i = byteLen;
+		
+		/*
+		 * This is a speed sensitive function, so run specially over the
+		 * string to count continuous ascii characters before resorting
+		 * to the Tcl_NumUtfChars call.  This is a long form of:
+		 * stringPtr->numChars = 
+		 *   Tcl_NumUtfChars(objPtr->bytes, objPtr->length);
+		 */
+
+		while (i && (*str < 0xC0)) { i--; str++; }
+		count += byteLen - i;
+		if (i) {
+		    count += Tcl_NumUtfChars(segPtr->body.chars + byteOffset
+			    + (byteLen - i), i);
+		}
+	    } else {
+		if (type & COUNT_INDICES) {
+		    int byteLen = segPtr->size - byteOffset;
+		    if (segPtr == seg2Ptr) {
+			if (byteLen > (maxBytes - byteOffset)) {
+			    byteLen = maxBytes - byteOffset;
+			}
+		    }
+		    count += byteLen;
+		}
+	    }
+	    if (segPtr == seg2Ptr) {
+		return count;
+	    }
+	    byteOffset = 0;
+	}
+
+	/*
+	 * Go to the next line.  If we are at the end of the text item,
+	 * back up one byte (for the terminal '\n' character) and return
+	 * that index.
+	 */
+	 
+	linePtr1 = TkBTreeNextLine(linePtr1);
+	if (linePtr1 == NULL) {
+	    panic("Reached end of text widget when counting characters");
+	}
+	segPtr = linePtr1->segPtr;
+    }
+}
+	
 /*
  *---------------------------------------------------------------------------
  *
@@ -1274,12 +1656,18 @@ TkTextIndexBackBytes(srcPtr, byteCount, dstPtr)
  * TkTextIndexBackChars --
  *
  *	Given an index for a text widget, this procedure creates a new
- *	index that points "count" characters earlier than the source index.
+ *	index that points "count" items of type given by "type" earlier
+ *	than the source index.  "count" can be zero, which is useful in
+ *	the case where one wishes to move backward by display
+ *	(non-elided) chars or indices or one wishes to move backward by
+ *	chars, skipping any intervening indices.  In this case the
+ *	returned index *dstPtr will point just _after_ the first
+ *	acceptable index which is encountered.
  *
  * Results:
- *	*dstPtr is modified to refer to the character "count" characters
- *	before srcPtr, or to the first character in the file if there
- *	aren't "count" characters earlier than srcPtr.
+ *	*dstPtr is modified to refer to the character "count" items
+ *	before srcPtr, or to the first index in the window if there
+ *	aren't sufficient items earlier than srcPtr.
  *
  * Side effects:
  *	None.
@@ -1288,21 +1676,27 @@ TkTextIndexBackBytes(srcPtr, byteCount, dstPtr)
  */
 
 void
-TkTextIndexBackChars(srcPtr, charCount, dstPtr)
+TkTextIndexBackChars(srcPtr, charCount, dstPtr, type)
     CONST TkTextIndex *srcPtr;	/* Source index. */
     int charCount;		/* How many characters backward to move.
 				 * May be negative. */
     TkTextIndex *dstPtr;	/* Destination index: gets modified. */
+    TkTextCountType type;       /* The type of item to count */
 {
     TkTextSegment *segPtr, *oldPtr;
     int lineIndex, segSize;
     CONST char *p, *start, *end;
+    int elide = 0;
+    int checkElided = (type & COUNT_DISPLAY);
 
-    if (charCount <= 0) {
-	TkTextIndexForwChars(srcPtr, -charCount, dstPtr);
+    if (charCount < 0) {
+	TkTextIndexForwChars(srcPtr, -charCount, dstPtr, type);
 	return;
     }
-
+    if (checkElided) {
+        elide = ((type & COUNT_IS_ELIDED) ? 1 : 0);
+    }
+    
     *dstPtr = *srcPtr;
 
     /*
@@ -1320,25 +1714,50 @@ TkTextIndexBackChars(srcPtr, charCount, dstPtr)
 	segSize -= segPtr->size;
     }
     while (1) {
-	if (segPtr->typePtr == &tkTextCharType) {
-	    start = segPtr->body.chars;
-	    end = segPtr->body.chars + segSize;
-	    for (p = end; ; p = Tcl_UtfPrev(p, start)) {
-		if (charCount == 0) {
-		    dstPtr->byteIndex -= (end - p);
-		    return;
+	/*
+	 * If we do need to pay attention to the visibility of
+	 * characters/indices, check that first.  If the current
+	 * segment isn't visible, then we simply continue the
+	 * loop
+	 */
+	if (checkElided) {
+	    if ((segPtr->typePtr == &tkTextToggleOffType)
+	      || (segPtr->typePtr == &tkTextToggleOnType)) {		
+		if (segPtr->body.toggle.tagPtr->elideString != NULL) {
+		    if (elide) {
+			elide = (segPtr->typePtr == &tkTextToggleOnType)
+			  & !segPtr->body.toggle.tagPtr->elide;
+		    } else {
+			elide = (segPtr->typePtr == &tkTextToggleOffType)
+			  & segPtr->body.toggle.tagPtr->elide;
+		    }
 		}
-		if (p == start) {
-		    break;
+	    }
+	}
+
+	if (!elide) {
+	    if (segPtr->typePtr == &tkTextCharType) {
+		start = segPtr->body.chars;
+		end = segPtr->body.chars + segSize;
+		for (p = end; ; p = Tcl_UtfPrev(p, start)) {
+		    if (charCount == 0) {
+			dstPtr->byteIndex -= (end - p);
+			return;
+		    }
+		    if (p == start) {
+			break;
+		    }
+		    charCount--;
 		}
-		charCount--;
+	    } else {
+		if (type & COUNT_INDICES) {
+		    if (charCount <= segSize) {
+			dstPtr->byteIndex -= charCount;
+			return;
+		    }
+		    charCount -= segSize;
+		}
 	    }
-	} else {
-	    if (charCount <= segSize) {
-		dstPtr->byteIndex -= charCount;
-		return;
-	    }
-	    charCount -= segSize;
 	}
 	dstPtr->byteIndex -= segSize;
 
@@ -1405,18 +1824,20 @@ TkTextIndexBackChars(srcPtr, charCount, dstPtr)
  */
 
 static CONST char *
-StartEnd(string, indexPtr)
+StartEnd(textPtr, string, indexPtr)
+    TkText *textPtr;		/* Information about text widget. */
     CONST char *string;		/* String to parse for additional info
 				 * about modifier (count and units). 
 				 * Points to first character of modifer
 				 * word. */
-    TkTextIndex *indexPtr;	/* Index to mdoify based on string. */
+    TkTextIndex *indexPtr;	/* Index to modify based on string. */
 {
     CONST char *p;
     int c, offset;
     size_t length;
     register TkTextSegment *segPtr;
-
+    int modifier;
+    
     /*
      * Find the end of the modifier word.
      */
@@ -1425,17 +1846,57 @@ StartEnd(string, indexPtr)
 	/* Empty loop body. */
     }
     length = p-string;
+    if ((*string == 'd') && (strncmp(string, "display", 
+				     (length > 7 ? 7 : length)) == 0)) {
+	modifier = TKINDEX_DISPLAY;
+	if (length > 7) {
+	    p -= (length - 7);
+	}
+    } else if ((*string == 'a') && (strncmp(string, "any", 
+					    (length > 3 ? 3 : length)) == 0)) {
+	modifier = TKINDEX_ANY;
+	if (length > 3) {
+	    p -= (length - 3);
+	}
+    } else {
+	modifier = TKINDEX_NONE;
+    }
+    
+    /* 
+     * If we had a modifier, which we interpreted ok, so now forward
+     * to the actual units.
+     */
+    if (modifier != TKINDEX_NONE) {
+	while (isspace(UCHAR(*p))) {
+	    p++;
+	}
+	string = p; 
+	while ((*p != '\0') && !isspace(UCHAR(*p)) && (*p != '+') && (*p != '-')) {
+	    p++;
+	}
+	length = p - string;
+    }
+
     if ((*string == 'l') && (strncmp(string, "lineend", length) == 0)
 	    && (length >= 5)) {
-	indexPtr->byteIndex = 0;
-	for (segPtr = indexPtr->linePtr->segPtr; segPtr != NULL;
-		segPtr = segPtr->nextPtr) {
-	    indexPtr->byteIndex += segPtr->size;
+	if (modifier == TKINDEX_DISPLAY) {
+	    TkTextFindDisplayLineEnd(textPtr, indexPtr, 1, NULL);
+	} else {
+	    indexPtr->byteIndex = 0;
+	    for (segPtr = indexPtr->linePtr->segPtr; segPtr != NULL;
+		    segPtr = segPtr->nextPtr) {
+		indexPtr->byteIndex += segPtr->size;
+	    }
+	    /* We know '\n' is encoded with a single byte index */
+	    indexPtr->byteIndex -= sizeof(char);
 	}
-	indexPtr->byteIndex -= sizeof(char);
     } else if ((*string == 'l') && (strncmp(string, "linestart", length) == 0)
 	    && (length >= 5)) {
-	indexPtr->byteIndex = 0;
+	if (modifier == TKINDEX_DISPLAY) {
+	    TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
+	} else {
+	    indexPtr->byteIndex = 0;
+	}
     } else if ((*string == 'w') && (strncmp(string, "wordend", length) == 0)
 	    && (length >= 5)) {
 	int firstChar = 1;
@@ -1446,6 +1907,10 @@ StartEnd(string, indexPtr)
 	 * a character that isn't part of a word and stop there.
 	 */
 
+	if (modifier == TKINDEX_DISPLAY) {
+	    TkTextIndexForwChars(indexPtr, 0, indexPtr, COUNT_DISPLAY_INDICES
+		| (COUNT_IS_ELIDED * TkTextIsElided(textPtr, indexPtr)));
+	}
 	segPtr = TkTextIndexToSeg(indexPtr, &offset);
 	while (1) {
 	    if (segPtr->typePtr == &tkTextCharType) {
@@ -1462,12 +1927,21 @@ StartEnd(string, indexPtr)
 	    }
 	}
 	if (firstChar) {
-	    TkTextIndexForwChars(indexPtr, 1, indexPtr);
+	    if (modifier == TKINDEX_DISPLAY) {
+		TkTextIndexForwChars(indexPtr, 1, indexPtr, COUNT_DISPLAY_INDICES
+		    | (COUNT_IS_ELIDED * TkTextIsElided(textPtr, indexPtr)));
+	    } else {
+		TkTextIndexForwChars(indexPtr, 1, indexPtr, COUNT_INDICES);
+	    }
 	}
     } else if ((*string == 'w') && (strncmp(string, "wordstart", length) == 0)
 	    && (length >= 5)) {
 	int firstChar = 1;
 
+	if (modifier == TKINDEX_DISPLAY) {
+	    TkTextIndexForwChars(indexPtr, 0, indexPtr, COUNT_DISPLAY_INDICES
+		| (COUNT_IS_ELIDED * TkTextIsElided(textPtr, indexPtr)));
+	}
 	/*
 	 * Starting with the current character, look for one that's not
 	 * part of a word and keep moving backward until you find one.
@@ -1495,7 +1969,12 @@ StartEnd(string, indexPtr)
 	    }
 	}
 	if (!firstChar) {
-	    TkTextIndexForwChars(indexPtr, 1, indexPtr);
+	    if (modifier == TKINDEX_DISPLAY) {
+		TkTextIndexForwChars(indexPtr, 1, indexPtr, COUNT_DISPLAY_INDICES
+		    | (COUNT_IS_ELIDED * TkTextIsElided(textPtr, indexPtr)));
+	    } else {
+		TkTextIndexForwChars(indexPtr, 1, indexPtr, COUNT_INDICES);
+	    }
 	}
     } else {
 	return NULL;
