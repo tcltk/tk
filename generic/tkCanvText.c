@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.12 2002/04/05 08:43:22 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.13 2002/05/26 09:09:19 pspjuth Exp $
  */
 
 #include <stdio.h>
@@ -635,8 +635,8 @@ ComputeTextBbox(canvas, textPtr)
      * of the bounding box for the text item.
      */
 
-    leftX = (int) (textPtr->x + 0.5);
-    topY = (int) (textPtr->y + 0.5);
+    leftX = (int) floor(textPtr->x + 0.5);
+    topY = (int) floor(textPtr->y + 0.5);
     switch (textPtr->anchor) {
 	case TK_ANCHOR_NW:
 	case TK_ANCHOR_N:

@@ -1,3 +1,9 @@
+2002-05-26  Peter Spjuth <peter.spjuth@space.se>
+
+	* generic/tkCanvText.c (ComputeTextBbox): Negative
+	coordinates were rounded badly causing a 1 pixel
+	displacement. [Bug #556526]
+	
 2002-05-24  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* mac/tkMacWm.c (Tk_WmCmd):
