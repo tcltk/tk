@@ -1,3 +1,7 @@
+2004-05-07  Chengye Mao <chengye.geo@yahoo.com>
+        * win/tkWinWm.c <UpdateWrapper>: handle and destroy old wrapper
+        correctly and fix crash problem in wish exiting [Bug 767176].
+
 2004-05-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinFont.c (FindSubFontForChar): corrections to dkf patch
