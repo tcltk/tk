@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.36 2004/11/20 15:45:35 vincentdarley Exp $
+# RCS: @(#) $Id: text.test,v 1.37 2004/12/04 00:04:41 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -489,10 +489,10 @@ test text-9.16 {TextWidgetCmd procedure, "get" option} {
 test text-9.17 {TextWidgetCmd procedure, "get" option} {
     .t index "5.2 +3 indices"
 } {5.5}
-test text-9.17 {TextWidgetCmd procedure, "get" option} {
+test text-9.17a {TextWidgetCmd procedure, "get" option} {
     .t index "5.2 +3chars"
 } {5.5}
-test text-9.17 {TextWidgetCmd procedure, "get" option} {
+test text-9.17b {TextWidgetCmd procedure, "get" option} {
     .t index "5.2 +3displayindices"
 } {5.5}
 .t tag configure elide -elide 1
@@ -524,18 +524,18 @@ test text-9.24 {TextWidgetCmd procedure, "get" option} {
 test text-9.25 {TextWidgetCmd procedure, "get" option} {
     list [.t index "5.1 +4indices"] [.t index "5.1+4d indices"]
 } {5.5 5.7}
-test text-9.26 {TextWidgetCmd procedure, "get" option} {
+test text-9.25a {TextWidgetCmd procedure, "get" option} {
     list [.t index "5.1 +4a chars"] [.t index "5.1+4d chars"]
 } {5.6 5.8}
-test text-9.25 {TextWidgetCmd procedure, "get" option} {
+test text-9.26 {TextWidgetCmd procedure, "get" option} {
     list [.t index "5.5 -4indices"] [.t index "5.7-4d indices"]
 } {5.1 5.1}
-test text-9.26 {TextWidgetCmd procedure, "get" option} {
+test text-9.26a {TextWidgetCmd procedure, "get" option} {
     list [.t index "5.6 -4a chars"] [.t index "5.8-4d chars"]
 } {5.1 5.1}
 .t delete 5.4 
 .t tag add elide 5.5 5.6
-test text-9.23 {TextWidgetCmd procedure, "get" option} {
+test text-9.27 {TextWidgetCmd procedure, "get" option} {
     .t get -displaychars 5.2 5.8
 } {Grl}
 .t tag delete elide
@@ -1491,7 +1491,7 @@ test text-20.34 {TextSearchCmd procedure, firstChar and lastChar} {
 test text-20.35 {TextSearchCmd procedure, firstChar and lastChar} {
     .t search {} end
 } {1.0}
-test text-20.36 {TextSearchCmd procedure, regexp finds empty lines} {
+test text-20.35a {TextSearchCmd procedure, regexp finds empty lines} {
     # Test for fix of bug #1643
     .t insert end "\n"
     tk::TextSetCursor .t 4.0
@@ -2415,7 +2415,7 @@ test text-20.142 {TextSearchCmd, backward regexp search no-overlaps} {
     .t2 search -regexp -backward -all "foo\nbar\nfoo" end
 } {5.0 1.0}
 
-test text-20.142 {TextSearchCmd, backward regexp search no-overlaps} {
+test text-20.142a {TextSearchCmd, backward regexp search no-overlaps} {
     deleteWindows
     pack [text .t2]
     .t2 insert 1.0 " aasda asdj werwer"

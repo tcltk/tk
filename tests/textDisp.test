@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.32 2004/11/22 17:54:32 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.33 2004/12/04 00:04:41 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2347,7 +2347,7 @@ test textDisp-19.11.15 {TextWidgetCmd procedure, "count -displaylines"} {
     .t tag add elide "16.0 +1displaylines" "16.0 +2displaylines"
     .t count -displaylines 16.0 "16.0 +4displaylines -1c"
 } {3}
-test textDisp-19.11.15 {TextWidgetCmd procedure, "count -displaylines"} {
+test textDisp-19.11.15a {TextWidgetCmd procedure, "count -displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "16.0 +1displaylines" "16.0 +2displaylines"
     .t count -displaylines 16.0 "16.0 +4displaylines"
