@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDraw.c,v 1.2.2.1 1999/03/22 06:43:33 jingham Exp $
+ * RCS: @(#) $Id: tkMacDraw.c,v 1.2.2.2 1999/03/24 07:33:00 jingham Exp $
  */
 
 #include "tkInt.h"
@@ -1180,18 +1180,18 @@ TkMacSetUpGraphicsPort(
 	gPenPat = NewPixPat();
     }
     
-    if (TkSetMacColor(gc->foreground, &macColor)) {
+    if (TkSetMacColor(gc->foreground, &macColor) == true) {
         /* TODO: cache RGBPats for preformace - measure gains...  */
 	MakeRGBPat(gPenPat, &macColor);
     
-    PenNormal();
-    if(gc->function == GXxor) {
-	PenMode(patXor);
+        PenNormal();
+        if(gc->function == GXxor) {
+	    PenMode(patXor);
+        }
+        if (gc->line_width > 1) {
+	    PenSize(gc->line_width, gc->line_width);
+        }
     }
-    if (gc->line_width > 1) {
-	PenSize(gc->line_width, gc->line_width);
-    }
-}
 }
 
 /*
