@@ -1,3 +1,8 @@
+2003-10-15  Joe English  <jenglish@users.sourceforge.net>
+	* unix/tkUnixWm.c, tests/unixWm.test: Delete WM_TRANSIENT_FOR
+	property instead of setting it to None when making a window
+	nontransient [Bug #632816 "cannot remove transient"]
+
 2003-10-14  Joe English  <jenglish@users.sourceforge.net>
 	* unix/tkUnixPort.h(TkPutImage): changed macro argument names
 	to match function argument names ('dest' and 'src' were
