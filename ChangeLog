@@ -1,3 +1,7 @@
+2004-06-06  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* tests/frame.test:     Fix frame-2.8 for ![info exists env(DISPLAY)]
+
 2004-06-04  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/filebox.test:	A few typo corrections in dkf's recent
