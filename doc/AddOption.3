@@ -2,7 +2,7 @@
 '\" Copyright (c) 1998-2000 by Scriptics Corporation.
 '\" All rights reserved.
 '\" 
-'\" RCS: @(#) $Id: AddOption.3,v 1.2 2002/01/25 21:09:36 dgp Exp $
+'\" RCS: @(#) $Id: AddOption.3,v 1.3 2004/09/19 16:05:36 dkf Exp $
 '\" 
 '\"
 .so man.macros
@@ -37,7 +37,7 @@ classes separated by asterisks or dots, in the usual X format.
 this value will be returned in calls to \fBTk_GetOption\fR.
 \fIPriority\fR specifies the priority of the value; when options are
 queried using \fBTk_GetOption\fR, the value with the highest priority
-is returned.  \fIPriority\fR must be between 0 and TK_MAX_PRIO.  Some
+is returned.  \fIPriority\fR must be between 0 and \fBTK_MAX_PRIO\fR.  Some
 common priority values are:
 .TP
 20

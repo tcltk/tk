@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CanvTkwin.3,v 1.3 2002/01/25 21:09:36 dgp Exp $
+'\" RCS: @(#) $Id: CanvTkwin.3,v 1.4 2004/09/19 16:05:36 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_CanvasTkwin 3 4.1 Tk "Tk Library Procedures"
@@ -87,9 +87,9 @@ coordinate (such as \fB2p\fR or \fB1.6c\fR) into a double-precision
 canvas coordinate.
 If \fIstring\fR is a valid coordinate description then \fBTk_CanvasGetCoord\fR
 stores the corresponding canvas coordinate at *\fIdoublePtr\fR
-and returns TCL_OK.
+and returns \fBTCL_OK\fR.
 Otherwise it stores an error message in \fIinterp->result\fR and
-returns TCL_ERROR.
+returns \fBTCL_ERROR\fR.
 .PP
 \fBTk_CanvasDrawableCoords\fR is called by type managers during
 redisplay to compute where to draw things.
@@ -146,14 +146,14 @@ structure for the \fB\-tags\fR option.   The code typically looks
 like this:
 .CS
 static Tk_CustomOption tagsOption = {Tk_CanvasTagsParseProc,
-	Tk_CanvasTagsPrintProc, (ClientData) NULL
+    Tk_CanvasTagsPrintProc, (ClientData) NULL
 };
 
 static Tk_ConfigSpec configSpecs[] = {
-	...
-	{TK_CONFIG_CUSTOM, "\-tags", (char *) NULL, (char *) NULL,
-		(char *) NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
-	...
+    ...
+    {TK_CONFIG_CUSTOM, "\-tags", (char *) NULL, (char *) NULL,
+        (char *) NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
+    ...
 };
 .CE
 

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ParseArgv.3,v 1.4 2004/08/20 14:15:29 dkf Exp $
+'\" RCS: @(#) $Id: ParseArgv.3,v 1.5 2004/09/19 16:05:36 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_ParseArgv 3 "" Tk "Tk Library Procedures"
@@ -33,12 +33,13 @@ Command line arguments passed to main program.  Modified to
 hold unprocessed arguments that remain after the call.
 .AP Tk_ArgvInfo *argTable in
 Array of argument descriptors, terminated by element with
-type TK_ARGV_END.
+type \fBTK_ARGV_END\fR.
 .AP int flags in
 If non-zero, then it specifies one or more flags that control the
 parsing of arguments.  Different flags may be OR'ed together.
-The flags currently defined are TK_ARGV_DONT_SKIP_FIRST_ARG,
-TK_ARGV_NO_ABBREV, TK_ARGV_NO_LEFTOVERS, and TK_ARGV_NO_DEFAULTS.
+The flags currently defined are \fBTK_ARGV_DONT_SKIP_FIRST_ARG\fR,
+\fBTK_ARGV_NO_ABBREV\fR, \fBTK_ARGV_NO_LEFTOVERS\fR, and
+\fBTK_ARGV_NO_DEFAULTS\fR.
 .BE
 .SH DESCRIPTION
 .PP
@@ -55,12 +56,12 @@ arguments that are left in \fIargv\fR, and \fIargv[*argcPtr]\fR
 will hold the value NULL.  Normally, \fBTk_ParseArgv\fR
 assumes that \fIargv[0]\fR is a command name, so it is treated like
 an argument that doesn't match \fIargTable\fR and returned to the
-caller;  however, if the TK_ARGV_DONT_SKIP_FIRST_ARG bit is set in
+caller;  however, if the \fBTK_ARGV_DONT_SKIP_FIRST_ARG\fR bit is set in
 \fIflags\fR then \fIargv[0]\fR will be processed just like the other
 elements of \fIargv\fR.
 .PP
-\fBTk_ParseArgv\fR normally returns the value TCL_OK.  If an error
-occurs while parsing the arguments, then TCL_ERROR is returned and
+\fBTk_ParseArgv\fR normally returns the value \fBTCL_OK\fR.  If an error
+occurs while parsing the arguments, then \fBTCL_ERROR\fR is returned and
 \fBTk_ParseArgv\fR will leave an error message in \fIinterp->result\fR
 in the standard Tcl fashion.  In
 the event of an error return, \fI*argvPtr\fR will not have been
@@ -71,11 +72,11 @@ The \fIargTable\fR array specifies the kinds of arguments that are
 expected;  each of its entries has the following structure:
 .CS
 typedef struct {
-	char *\fIkey\fR;
-	int \fItype\fR;
-	char *\fIsrc\fR;
-	char *\fIdst\fR;
-	char *\fIhelp\fR;
+    char *\fIkey\fR;
+    int \fItype\fR;
+    char *\fIsrc\fR;
+    char *\fIdst\fR;
+    char *\fIhelp\fR;
 } Tk_ArgvInfo;
 .CE
 The \fIkey\fR field is a string such as ``\-display'' or ``\-bg''
@@ -144,7 +145,7 @@ argument, and discards the matching and following arguments from
 \fIargv\fR.  \fISrc\fR is ignored.
 .TP
 \fBTK_ARGV_UID\fR
-This form is similar to TK_ARGV_STRING, except that the argument
+This form is similar to \fBTK_ARGV_STRING\fR, except that the argument
 is turned into a Tk_Uid by calling \fBTk_GetUid\fR.
 \fIDst\fR is treated as a pointer to a
 Tk_Uid; \fBTk_ParseArgv\fR stores at \fI*dst\fR the Tk_Uid
@@ -161,7 +162,7 @@ argument is discarded.  If \fItkwin\fR is NULL, then argument
 specifiers of this type are ignored (as if they did not exist).
 .TP
 \fBTK_ARGV_OPTION_VALUE\fR
-This form is similar to TK_ARGV_CONST_OPTION, except that the
+This form is similar to \fBTK_ARGV_CONST_OPTION\fR, except that the
 value of the option is taken from the following argument instead
 of from \fIsrc\fR.  \fIDst\fR is used as the name of the option.
 \fISrc\fR is ignored.  The matching and following arguments
@@ -180,12 +181,12 @@ specifiers of this type are ignored (as if they did not exist).
 When this kind of option is encountered, \fBTk_ParseArgv\fR uses the
 \fIhelp\fR fields of \fIargTable\fR to format a message describing
 all the valid arguments.  The message is placed in \fIinterp->result\fR
-and \fBTk_ParseArgv\fR returns TCL_ERROR.  When this happens, the
+and \fBTk_ParseArgv\fR returns \fBTCL_ERROR\fR.  When this happens, the
 caller normally prints the help message and aborts.  If the \fIkey\fR
-field of a TK_ARGV_HELP specifier is NULL, then the specifier will
+field of a \fBTK_ARGV_HELP\fR specifier is NULL, then the specifier will
 never match any arguments;  in this case the specifier simply provides
 extra documentation, which will be included when some other
-TK_ARGV_HELP entry causes help information to be returned.
+\fBTK_ARGV_HELP\fR entry causes help information to be returned.
 .TP
 \fBTK_ARGV_REST\fR
 This option is used by programs or commands that allow the last
@@ -208,9 +209,9 @@ The procedure should have the following structure:
 .CS
 int
 \fIfunc\fR(\fIdst\fR, \fIkey\fR, \fInextArg\fR)
-	char *\fIdst\fR;
-	char *\fIkey\fR;
-	char *\fInextArg\fR;
+    char *\fIdst\fR;
+    char *\fIkey\fR;
+    char *\fInextArg\fR;
 {
 }
 .CE
@@ -234,11 +235,11 @@ form:
 .CS
 int
 \fIgenfunc\fR(dst, interp, key, argc, argv)
-	char *\fIdst\fR;
-	Tcl_Interp *\fIinterp\fR;
-	char *\fIkey\fR;
-	int \fIargc\fR;
-	char **\fIargv\fR;
+    char *\fIdst\fR;
+    Tcl_Interp *\fIinterp\fR;
+    char *\fIkey\fR;
+    int \fIargc\fR;
+    char **\fIargv\fR;
 {
 }
 .CE
@@ -254,7 +255,7 @@ should return a count of how many arguments are left in \fIargv\fR;
 \fBTk_ParseArgv\fR will process them.  If \fIgenfunc\fR encounters
 an error then it should leave an error message in \fIinterp->result\fR,
 in the usual Tcl fashion, and return -1;  when this happens
-\fBTk_ParseArgv\fR will abort its processing and return TCL_ERROR.
+\fBTk_ParseArgv\fR will abort its processing and return \fBTCL_ERROR\fR.
 .RE
 
 .SH "FLAGS"
@@ -276,7 +277,7 @@ caller.  If this bit is set in \fIflags\fR then \fBTk_ParseArgv\fR
 will return an error if it encounters any argument that doesn't
 match \fIargTable\fR.  The only exception to this rule is \fIargv[0]\fR,
 which will be returned to the caller with no errors as
-long as TK_ARGV_DONT_SKIP_FIRST_ARG isn't specified.
+long as \fBTK_ARGV_DONT_SKIP_FIRST_ARG\fR isn't specified.
 .TP
 \fBTK_ARGV_NO_DEFAULTS\fR
 Normally, \fBTk_ParseArgv\fR searches an internal table of
@@ -305,32 +306,32 @@ Boolean exec = FALSE;
  * Define option descriptions.
  */
 Tk_ArgvInfo argTable[] = {
-	{"-X", TK_ARGV_CONSTANT, (char *) 1, (char *) &debugFlag,
-		"Turn on debugging printfs"},
-	{"-N", TK_ARGV_INT, (char *) NULL, (char *) &numReps,
-		"Number of repetitions"},
-	{"-of", TK_ARGV_STRING, (char *) NULL, (char *) &fileName,
-		"Name of file for output"},
-	{"x", TK_ARGV_REST, (char *) NULL, (char *) &exec,
-		"File to exec, followed by any arguments (must be last argument)."},
-	{(char *) NULL, TK_ARGV_END, (char *) NULL, (char *) NULL,
-	    (char *) NULL}
+    {"-X", TK_ARGV_CONSTANT, (char *) 1, (char *) &debugFlag,
+        "Turn on debugging printfs"},
+    {"-N", TK_ARGV_INT, (char *) NULL, (char *) &numReps,
+        "Number of repetitions"},
+    {"-of", TK_ARGV_STRING, (char *) NULL, (char *) &fileName,
+        "Name of file for output"},
+    {"x", TK_ARGV_REST, (char *) NULL, (char *) &exec,
+        "File to exec, followed by any arguments (must be last argument)."},
+    {(char *) NULL, TK_ARGV_END, (char *) NULL, (char *) NULL,
+        (char *) NULL}
 };
 
 main(argc, argv)
-	int argc;
-	char *argv[];
+    int argc;
+    char *argv[];
 {
-	\&...
+    \&...
 
-	if (Tk_ParseArgv(interp, tkwin, &argc, argv, argTable, 0) != TCL_OK) {
-		fprintf(stderr, "%s\en", interp->result);
-		exit(1);
-	}
+    if (Tk_ParseArgv(interp, tkwin, &argc, argv, argTable, 0) != TCL_OK) {
+        fprintf(stderr, "%s\en", interp->result);
+        exit(1);
+    }
 
-	/*
-	 * Remainder of the program.
-	 */
+    /*
+     * Remainder of the program.
+     */
 }
 .CE
 .PP
@@ -339,9 +340,9 @@ Note that default values can be assigned to variables named in
 particular arguments are present in \fIargv\fR.
 Here are some example command lines and their effects.
 .CS
-prog -N 200 infile		# just sets the numReps variable to 200
-prog -of out200 infile 	# sets fileName to reference "out200"
-prog -XN 10 infile		# sets the debug flag, also sets numReps
+prog -N 200 infile        # just sets the numReps variable to 200
+prog -of out200 infile    # sets fileName to reference "out200"
+prog -XN 10 infile        # sets the debug flag, also sets numReps
 .CE
 In all of the above examples, \fIargc\fR will be set by \fBTk_ParseArgv\fR to 2,
 \fIargv\fR[0] will be ``prog'', \fIargv\fR[1] will be ``infile'',

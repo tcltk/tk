@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CrtImgType.3,v 1.7 2003/12/10 09:42:17 dkf Exp $
+'\" RCS: @(#) $Id: CrtImgType.3,v 1.8 2004/09/19 16:05:36 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateImageType 3 8.3 Tk "Tk Library Procedures"
@@ -63,12 +63,12 @@ the name of the image type and pointers to five procedures provided
 by the image manager to deal with images of this type:
 .CS
 typedef struct Tk_ImageType {
-	char *\fIname\fR;
-	Tk_ImageCreateProc *\fIcreateProc\fR;
-	Tk_ImageGetProc *\fIgetProc\fR;
-	Tk_ImageDisplayProc *\fIdisplayProc\fR;
-	Tk_ImageFreeProc *\fIfreeProc\fR;
-	Tk_ImageDeleteProc *\fIdeleteProc\fR;
+    char *\fIname\fR;
+    Tk_ImageCreateProc *\fIcreateProc\fR;
+    Tk_ImageGetProc *\fIgetProc\fR;
+    Tk_ImageDisplayProc *\fIdisplayProc\fR;
+    Tk_ImageFreeProc *\fIfreeProc\fR;
+    Tk_ImageDeleteProc *\fIdeleteProc\fR;
 } Tk_ImageType;
 .CE
 The fields of this structure will be described in later subsections
@@ -97,7 +97,7 @@ option specified for a widget or canvas item.
 The following subsections describe the fields of a Tk_ImageType
 in more detail.
 
-.SH NAME
+.SS NAME
 .PP
 \fItypePtr->name\fR provides a name for the image type.
 Once \fBTk_CreateImageType\fR returns, this name may be used
@@ -106,7 +106,7 @@ type.
 If there already existed an image type by this name then
 the new image type replaces the old one.
 
-.SH PORTABILITY
+.SS PORTABILITY
 .PP
 In Tk 8.2 and earlier, the createProc below had a different
 signature. If you want to compile an image type using the
@@ -116,20 +116,20 @@ you are using Stubs, you need to call the function
 Tk_InitImageArgs(interp, argc, &argv) first in your
 createProc. See below for a description of this function.
 
-.SH CREATEPROC
+.SS CREATEPROC
 \fItypePtr->createProc\fR provides the address of a procedure for
 Tk to call whenever \fBimage create\fR is invoked to create
 an image of the new type.
 \fItypePtr->createProc\fR must match the following prototype:
 .CS
 typedef int Tk_ImageCreateProc(
-	Tcl_Interp *\fIinterp\fR,
-	char *\fIname\fR,
-	int \fIobjc\fR,
-	Tcl_Obj *CONST \fIobjv\fR[],
-	Tk_ImageType *\fItypePtr\fR,
-	Tk_ImageMaster \fImaster\fR,
-	ClientData *\fImasterDataPtr\fR);
+    Tcl_Interp *\fIinterp\fR,
+    char *\fIname\fR,
+    int \fIobjc\fR,
+    Tcl_Obj *CONST \fIobjv\fR[],
+    Tk_ImageType *\fItypePtr\fR,
+    Tk_ImageMaster \fImaster\fR,
+    ClientData *\fImasterDataPtr\fR);
 .CE
 The \fIinterp\fR argument is the interpreter in which the \fBimage\fR
 command was invoked, and \fIname\fR is the name for the new image,
@@ -156,15 +156,15 @@ it should return \fBTCL_OK\fR.
 \fIcreateProc\fR should call \fBTk_ImageChanged\fR in order to set the
 size of the image and request an initial redisplay.
 
-.SH GETPROC
+.SS GETPROC
 .PP
 \fItypePtr->getProc\fR is invoked by Tk whenever a widget
 calls \fBTk_GetImage\fR to use a particular image.
 This procedure must match the following prototype:
 .CS
 typedef ClientData Tk_ImageGetProc(
-	Tk_Window \fItkwin\fR,
-	ClientData \fImasterData\fR);
+    Tk_Window \fItkwin\fR,
+    ClientData \fImasterData\fR);
 .CE
 The \fItkwin\fR argument identifies the window in which the
 image will be used and \fImasterData\fR is the value
@@ -177,22 +177,22 @@ is typically the address of the instance data structure.
 Tk will pass this value back to the image manager when invoking
 its \fIdisplayProc\fR and \fIfreeProc\fR procedures.
 
-.SH DISPLAYPROC
+.SS DISPLAYPROC
 .PP
 \fItypePtr->displayProc\fR is invoked by Tk whenever an image needs
 to be displayed (i.e., whenever a widget calls \fBTk_RedrawImage\fR).
 \fIdisplayProc\fR must match the following prototype:
 .CS
 typedef void Tk_ImageDisplayProc(
-	ClientData \fIinstanceData\fR,
-	Display *\fIdisplay\fR,
-	Drawable \fIdrawable\fR,
-	int \fIimageX\fR,
-	int \fIimageY\fR,
-	int \fIwidth\fR,
-	int \fIheight\fR,
-	int \fIdrawableX\fR,
-	int \fIdrawableY\fR);
+    ClientData \fIinstanceData\fR,
+    Display *\fIdisplay\fR,
+    Drawable \fIdrawable\fR,
+    int \fIimageX\fR,
+    int \fIimageY\fR,
+    int \fIwidth\fR,
+    int \fIheight\fR,
+    int \fIdrawableX\fR,
+    int \fIdrawableY\fR);
 .CE
 The \fIinstanceData\fR will be the same as the value returned by
 \fIgetProc\fR when the instance was created.
@@ -210,7 +210,7 @@ the image should be displayed;  \fIdisplayProc\fR should display
 the given region of the image so that point (\fIimageX\fR, \fIimageY\fR)
 in the image appears at (\fIdrawableX\fR, \fIdrawableY\fR) in \fIdrawable\fR.
 
-.SH FREEPROC
+.SS FREEPROC
 .PP
 \fItypePtr->freeProc\fR contains the address of a procedure that
 Tk will invoke when an image instance is released (i.e., when
@@ -221,8 +221,8 @@ canvas item is changed.
 \fIfreeProc\fR must match the following prototype:
 .CS
 typedef void Tk_ImageFreeProc(
-	ClientData \fIinstanceData\fR,
-	Display *\fIdisplay\fR);
+    ClientData \fIinstanceData\fR,
+    Display *\fIdisplay\fR);
 .CE
 The \fIinstanceData\fR will be the same as the value returned by
 \fIgetProc\fR when the instance was created, and \fIdisplay\fR
@@ -230,7 +230,7 @@ is the display containing the window for the instance.
 \fIfreeProc\fR should release any resources associated with the
 image instance, since the instance will never be used again.
 
-.SH DELETEPROC
+.SS DELETEPROC
 .PP
 \fItypePtr->deleteProc\fR is a procedure that Tk invokes when an
 image is being deleted (i.e. when the \fBimage delete\fR command
@@ -240,7 +240,7 @@ each of the image's instances.
 \fIdeleteProc\fR must match the following prototype:
 .CS
 typedef void Tk_ImageDeleteProc(
-	ClientData \fImasterData\fR);
+    ClientData \fImasterData\fR);
 .CE
 The \fImasterData\fR argument will be the same as the value
 stored in \fI*masterDataPtr\fR by \fIcreateProc\fR when the
