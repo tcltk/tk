@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.54 2004/09/23 14:57:03 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.55 2004/11/15 13:09:07 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -5528,6 +5528,15 @@ SearchCore(interp, searchSpecPtr, patObj)
 			    && ((firstOffset + info.matches[0].end) 
 				< prevFullLine))
 			    || info.extendStart < 0) {
+			    break;
+			}
+			/*
+			 * If there is a match, but that match starts
+			 * after the end of the first line, then we'll
+			 * handle that next time around, when we're
+			 * actually looking at that line.
+			 */
+			if (match && (info.matches[0].start >= lastOffset)) {
 			    break;
 			}
 			if (match && ((firstOffset + info.matches[0].end) 
