@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.42 2004/06/16 20:03:19 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.43 2004/07/05 19:19:43 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -333,6 +333,7 @@ static void		UpdateGeometryInfo _ANSI_ARGS_((
 static void		UpdateHints _ANSI_ARGS_((TkWindow *winPtr));
 static void		UpdateSizeHints _ANSI_ARGS_((TkWindow *winPtr,
 			    int newWidth, int newHeight));
+static void		UpdateTitle _ANSI_ARGS_((TkWindow *winPtr));
 static void		UpdateVRootGeometry _ANSI_ARGS_((WmInfo *wmPtr));
 static void		UpdateWmProtocols _ANSI_ARGS_((WmInfo *wmPtr));
 static void		WaitForConfigureNotify _ANSI_ARGS_((TkWindow *winPtr,
@@ -607,7 +608,6 @@ TkWmMapWindow(winPtr)
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     XTextProperty textProp;
-    Tk_Uid string;
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	Tcl_DString ds;
@@ -629,24 +629,8 @@ TkWmMapWindow(winPtr)
 	 * window.
 	 */
 
-	string = (wmPtr->title != NULL) ? wmPtr->title : winPtr->nameUid;
-	Tcl_UtfToExternalDString(NULL, string, -1, &ds);
-	string = Tcl_DStringValue(&ds);
-	if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
-		&textProp)  != 0) {
-	    XSetWMName(winPtr->display, wmPtr->wrapperPtr->window, &textProp);
-	    XFree((char *) textProp.value);
-	}
-	Tcl_DStringFree(&ds);
-
 	TkWmSetClass(winPtr);
-
-	if (wmPtr->iconName != NULL) {
-	    Tcl_UtfToExternalDString(NULL, wmPtr->iconName, -1, &ds);
-	    XSetIconName(winPtr->display, wmPtr->wrapperPtr->window,
-		    Tcl_DStringValue(&ds));
-	    Tcl_DStringFree(&ds);
-	}
+	UpdateTitle(winPtr);
 
 	if (wmPtr->masterPtr != NULL) {
 	    /*
@@ -2046,12 +2030,7 @@ WmIconnameCmd(tkwin, winPtr, interp, objc, objv)
 	wmPtr->iconName = ckalloc((unsigned) (length + 1));
 	strcpy(wmPtr->iconName, argv3);
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
-	    Tcl_DString ds;
-
-	    Tcl_UtfToExternalDString(NULL, wmPtr->iconName, -1, &ds);
-	    XSetIconName(winPtr->display, wmPtr->wrapperPtr->window,
-		    Tcl_DStringValue(&ds));
-	    Tcl_DStringFree(&ds);
+	    UpdateTitle(winPtr);
 	}
     }
     return TCL_OK;
@@ -2944,17 +2923,7 @@ WmTitleCmd(tkwin, winPtr, interp, objc, objv)
 	strcpy(wmPtr->title, argv3);
 
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
-	    XTextProperty textProp;
-	    Tcl_DString ds;
-
-	    Tcl_UtfToExternalDString(NULL, wmPtr->title, -1, &ds);
-	    if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
-		    &textProp)  != 0) {
-		XSetWMName(winPtr->display, wmPtr->wrapperPtr->window,
-			&textProp);
-		XFree((char *) textProp.value);
-	    }
-	    Tcl_DStringFree(&ds);
+	    UpdateTitle(winPtr);
 	}
     }
     return TCL_OK;
@@ -4304,6 +4273,68 @@ UpdateSizeHints(winPtr, newWidth, newHeight)
     XSetWMNormalHints(winPtr->display, wmPtr->wrapperPtr->window, hintsPtr);
 
     XFree((char *) hintsPtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * UpdateTitle --
+ *
+ *	This procedure is called to update the window title and 
+ *	icon name.  It sets the ICCCM-defined properties WM_NAME
+ *	and WM_ICON_NAME for older window managers, and the 
+ *	freedesktop.org-defined _NET_WM_NAME and _NET_WM_ICON_NAME
+ *	properties for newer ones.  The ICCCM properties are
+ *	stored in the system encoding, the newer properties
+ *	are stored in UTF-8.
+ *
+ *	NOTE: the ICCCM specifies that WM_NAME and WM_ICON_NAME are 
+ *	stored in ISO-Latin-1.  Tk has historically used the default 
+ *	system encoding (since 8.1).  It's not clear whether this is 
+ *	correct or not.
+ *
+ * Side effects:
+ *	Properties get changed for winPtr.
+ *
+ *--------------------------------------------------------------
+ */
+static void
+UpdateTitle(winPtr)
+    TkWindow *winPtr;
+{
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    Atom XA_UTF8_STRING = Tk_InternAtom((Tk_Window) winPtr, "UTF8_STRING");
+    const char *string;
+    Tcl_DString ds;
+
+    /*
+     * Set window title:
+     */
+    string = (wmPtr->title != NULL) ? wmPtr->title : winPtr->nameUid;
+    Tcl_UtfToExternalDString(NULL, string, -1, &ds);
+    XStoreName(winPtr->display, wmPtr->wrapperPtr->window,
+	    Tcl_DStringValue(&ds));
+    Tcl_DStringFree(&ds);
+
+    XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
+	    Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_NAME"),
+	    XA_UTF8_STRING, 8, PropModeReplace, 
+	    string, (signed int)strlen(string));
+
+    /*
+     * Set icon name:
+     */
+    if (wmPtr->iconName != NULL) {
+	Tcl_UtfToExternalDString(NULL, wmPtr->iconName, -1, &ds);
+	XSetIconName(winPtr->display, wmPtr->wrapperPtr->window,
+		Tcl_DStringValue(&ds));
+	Tcl_DStringFree(&ds);
+
+	XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
+		Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_ICON_NAME"),
+		XA_UTF8_STRING, 8, PropModeReplace,
+		wmPtr->iconName, (signed int)strlen(wmPtr->iconName));
+    }
 }
 
 /*
