@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: console.n,v 1.5 2004/03/17 18:15:42 das Exp $
+'\" RCS: @(#) $Id: console.n,v 1.6 2004/06/21 21:56:44 dkf Exp $
 '\"
 .so man.macros
 .TH console n 8.4 Tk "Tk Built-In Commands"
@@ -13,13 +13,7 @@
 .SH NAME
 console \- Control the console on systems without a real console
 .SH SYNOPSIS
-\fBconsole title \fR?\fIstring\fR?
-.sp
-\fBconsole hide\fR
-.sp
-\fBconsole show\fR
-.sp
-\fBconsole eval \fIscript\fR
+\fBconsole\fR \fIsubcommand\fR ?\fIarg ...\fR?
 .BE
 
 .SH DESCRIPTION
@@ -52,7 +46,6 @@ not specified, queries the title of the console window, and sets the
 title of the console window to \fIstring\fR otherwise.  Precisely
 equivalent to using the \fBwm title\fR command in the console
 interpreter.
-
 .SH "ACCESS TO THE MAIN INTERPRETER"
 .PP
 The \fBconsoleinterp\fR command in the console interpreter allows
@@ -68,7 +61,6 @@ interpreter.
 Records and evaluates \fIscript\fR as a Tcl script at the global level
 in the main interpreter as if \fIscript\fR had been typed in at the
 console.
-
 .SH "ADDITIONAL TRAP CALLS"
 .PP
 There are several additional commands in the console interpreter that
@@ -88,7 +80,6 @@ When the \fB.\fR window of the main interpreter is destroyed, the
 \fBtk::ConsoleExit\fR command in the console interpreter is called
 (assuming the console interpreter has not already been deleted itself,
 that is.)
-
 .SH "DEFAULT BINDINGS"
 .PP
 The default script creates a console window (implemented using a text
@@ -134,6 +125,13 @@ and reloading the Tcl script that defined the console's behaviour.
 Most other behaviour is the same as a conventional text widget except
 for the way that the \fI<<Cut>>\fR event is handled identically to the
 \fI<<Copy>>\fR event.
+.SH EXAMPLE
+Not all platforms have the \fBconsole\fR command, so debugging code
+often has the following code fragment in it so output produced by
+\fBputs\fR can be seen while during development:
+.CS
+catch {\fBconsole\fR show}
+.CE
 
 .SH KEYWORDS
 console, interpreter, window, interactive, output channels
