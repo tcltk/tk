@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.36 2005/03/24 07:16:13 wolfsuit Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.37 2005/03/24 15:25:52 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -1539,7 +1539,10 @@ EntryWorldChanged(instanceData)
  */
 
 int
-TkpDrawEntryBorderAndFocus(Entry *entryPtr, Drawable pixmap, int isSpinbox)
+TkpDrawEntryBorderAndFocus(entryPtr, pixmap, isSpinbox)
+    Entry *entryPtr;
+    Drawable pixmap;
+    int isSpinbox;
 {
     return 0;
 }
@@ -1567,7 +1570,9 @@ TkpDrawEntryBorderAndFocus(Entry *entryPtr, Drawable pixmap, int isSpinbox)
  */
 
 int
-TkpDrawSpinboxButtons(Spinbox *sbPtr, pixmap)
+TkpDrawSpinboxButtons(sbPtr, pixmap)
+    Spinbox *sbPtr; 
+    Pixmap pixmap;
 {
     return 0;
 }
