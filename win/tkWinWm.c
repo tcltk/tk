@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.1.4.9 1999/03/01 19:35:28 redman Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.1.4.10 1999/03/09 01:47:27 lfb Exp $
  */
 
 #include "tkWinInt.h"
@@ -251,13 +251,24 @@ typedef struct ThreadSpecificData {
 				  * damage where it sends the
 				  * WM_GETMINMAXINFO message before the
 				  * WM_CREATE window. */
-    WNDCLASS toplevelClass;      /* Class for toplevel windows. */
-    int initialized;             /* Flag indicating whether module has 
-				  * been initialized yet. */
+    int initialized;             /* Flag indicating whether thread-
+				  * specific elements of module have 
+				  * been initialized. */
     int firstWindow;             /* Flag, cleared when the first window
 				  * is mapped in a non-iconic state. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
+
+/*
+ * The following variables cannot be placed in thread local storage
+ * because they must be shared across threads.
+ */
+
+static WNDCLASS toplevelClass; /* Class for toplevel windows. */
+static int initialized;        /* Flag indicating whether module has
+				* been initialized. */
+TCL_DECLARE_MUTEX(winWmMutex)
+
 
 /*
  * Forward declarations for procedures defined in this file:
@@ -320,26 +331,45 @@ InitWm(void)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     WNDCLASS * classPtr;
 
-    if (tsdPtr->initialized) {
-        return;
+    if (! tsdPtr->initialized) {
+	tsdPtr->initialized = 1;
+	tsdPtr->firstWindow = 1;
     }
-    tsdPtr->initialized = 1;
-    tsdPtr->firstWindow = 1;
-    classPtr = &tsdPtr->toplevelClass;
+    if (! initialized) {
+	Tcl_MutexLock(&winWmMutex);
+	if (! initialized) {
+	    initialized = 1;
+	    classPtr = &toplevelClass;
 
-    classPtr->style = CS_HREDRAW | CS_VREDRAW | CS_CLASSDC;
-    classPtr->cbClsExtra = 0;
-    classPtr->cbWndExtra = 0;
-    classPtr->hInstance = Tk_GetHINSTANCE();
-    classPtr->hbrBackground = NULL;
-    classPtr->lpszMenuName = NULL;
-    classPtr->lpszClassName = TK_WIN_TOPLEVEL_CLASS_NAME;
-    classPtr->lpfnWndProc = WmProc;
-    classPtr->hIcon = LoadIcon(Tk_GetHINSTANCE(), "tk");
-    classPtr->hCursor = LoadCursor(NULL, IDC_ARROW);
+    /*
+     * When threads are enabled, we cannot use CLASSDC because
+     * threads will then write into the same device context.
+     * 
+     * This is a hack; we should add a subsystem that manages
+     * device context on a per-thread basis.  See also tkWinX.c,
+     * which also initializes a WNDCLASS structure.
+     */
 
-    if (!RegisterClass(classPtr)) {
-	panic("Unable to register TkTopLevel class");
+#ifdef TCL_THREADS
+	    childClass.style = CS_HREDRAW | CS_VREDRAW;
+#else
+	    childClass.style = CS_HREDRAW | CS_VREDRAW | CS_CLASSDC;
+#endif
+	    classPtr->cbClsExtra = 0;
+	    classPtr->cbWndExtra = 0;
+	    classPtr->hInstance = Tk_GetHINSTANCE();
+	    classPtr->hbrBackground = NULL;
+	    classPtr->lpszMenuName = NULL;
+	    classPtr->lpszClassName = TK_WIN_TOPLEVEL_CLASS_NAME;
+	    classPtr->lpfnWndProc = WmProc;
+	    classPtr->hIcon = LoadIcon(Tk_GetHINSTANCE(), "tk");
+	    classPtr->hCursor = LoadCursor(NULL, IDC_ARROW);
+
+	    if (!RegisterClass(classPtr)) {
+		panic("Unable to register TkTopLevel class");
+	    }
+	}
+	Tcl_MutexUnlock(&winWmMutex);
     }
 }
 

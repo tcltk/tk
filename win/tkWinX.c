@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.1.4.8 1999/03/09 01:40:46 lfb Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.1.4.9 1999/03/09 01:47:28 lfb Exp $
  */
 
 #include "tkWinInt.h"
@@ -156,7 +156,8 @@ TkWinXInit(hInstance)
      * threads will then write into the same device context.
      * 
      * This is a hack; we should add a subsystem that manages
-     * device context on a per-thread basis.
+     * device context on a per-thread basis.  See also tkWinWm.c,
+     * which also initializes a WNDCLASS structure.
      */
 
 #ifdef TCL_THREADS
