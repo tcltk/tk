@@ -2,7 +2,7 @@
 #
 # Support procs to use Tk in safe interpreters.
 #
-# RCS: @(#) $Id: safetk.tcl,v 1.1.4.2 1998/09/30 02:17:36 stanton Exp $
+# RCS: @(#) $Id: safetk.tcl,v 1.1.4.3 1999/04/03 03:07:11 hershey Exp $
 #
 # Copyright (c) 1997 Sun Microsystems, Inc.
 #
@@ -62,65 +62,83 @@ namespace eval ::safe {
 # empty definition for auto_mkIndex
 proc ::safe::loadTk {} {}
    
-    ::tcl::OptProc loadTk {
-	{slave -interp "name of the slave interpreter"}
-	{-use  -windowId {} "window Id to use (new toplevel otherwise)"}
-	{-display -displayName {} "display name to use (current one otherwise)"}
-    } {
-	set displayGiven [::tcl::OptProcArgGiven "-display"]
-	if {!$displayGiven} {
-	    # Try to get the current display from "."
-	    # (which might not exist if the master is tk-less)
-	    if {[catch {set display [winfo screen .]}]} {
-		if {[info exists ::env(DISPLAY)]} {
-		    set display $::env(DISPLAY)
-		} else {
-		    Log $slave "no winfo screen . nor env(DISPLAY)" WARNING
-		    set display ":0.0"
-		}
-	    }
-	}
-	if {![::tcl::OptProcArgGiven "-use"]} {
-	    # create a decorated toplevel
-	    ::tcl::Lassign [tkTopLevel $slave $display] w use;
-	    # set our delete hook (slave arg is added by interpDelete)
-	    Set [DeleteHookName $slave] [list tkDelete {} $w];
-	} else {
-	    # Let's be nice and also accept tk window names instead of ids
-	    if {[string match ".*" $use]} {
-		set windowName $use
-		set use [winfo id $windowName]
-		set nDisplay [winfo screen $windowName]
+::tcl::OptProc loadTk {
+    {slave -interp "name of the slave interpreter"}
+    {-use  -windowId {} "window Id to use (new toplevel otherwise)"}
+    {-display -displayName {} "display name to use (current one otherwise)"}
+} {
+    set displayGiven [::tcl::OptProcArgGiven "-display"]
+    if {!$displayGiven} {
+	
+	# Try to get the current display from "."
+	# (which might not exist if the master is tk-less)
+	
+	if {[catch {set display [winfo screen .]}]} {
+	    if {[info exists ::env(DISPLAY)]} {
+		set display $::env(DISPLAY)
 	    } else {
-		# Check for a better -display value
-		# (works only for multi screens on single host, but not
-		#  cross hosts, for that a tk window name would be better
-		#  but embeding is also usefull for non tk names)
-		if {![catch {winfo pathname $use} name]} {
-		    set nDisplay [winfo screen $name]
-		} else {
-		    # Can't have a better one
-		    set nDisplay $display
-		}
-	    }
-	    if {[string compare $nDisplay $display]} {
-		if {$displayGiven} {
-		    error "conflicting -display $display and -use\
-			    $use -> $nDisplay"
-		} else {
-		    set display $nDisplay
-		}
+		Log $slave "no winfo screen . nor env(DISPLAY)" WARNING
+		set display ":0.0"
 	    }
 	}
-
-	# Prepares the slave for tk with those parameters
-
-	tkInterpInit $slave [list "-use" $use "-display" $display]
-
-	load {} Tk $slave
-
-	return $slave
     }
+    if {![::tcl::OptProcArgGiven "-use"]} {
+	
+	# create a decorated toplevel
+	
+	::tcl::Lassign [tkTopLevel $slave $display] w use;
+	
+	# set our delete hook (slave arg is added by interpDelete)
+	# to clean up both window related code and tkInit(slave)
+	Set [DeleteHookName $slave] [list tkDelete {} $w];
+
+    } else {
+
+	# set our delete hook (slave arg is added by interpDelete)
+	# to clean up tkInit(slave)
+	    
+	Set [DeleteHookName $slave] [list disallowTk]
+
+	# Let's be nice and also accept tk window names instead of ids
+	
+	if {[string match ".*" $use]} {
+	    set windowName $use
+	    set use [winfo id $windowName]
+	    set nDisplay [winfo screen $windowName]
+	} else {
+
+	    # Check for a better -display value
+	    # (works only for multi screens on single host, but not
+	    #  cross hosts, for that a tk window name would be better
+	    #  but embeding is also usefull for non tk names)
+	    
+	    if {![catch {winfo pathname $use} name]} {
+		set nDisplay [winfo screen $name]
+	    } else {
+
+		# Can't have a better one
+		
+		set nDisplay $display
+	    }
+	}
+	if {[string compare $nDisplay $display]} {
+	    if {$displayGiven} {
+		error "conflicting -display $display and -use\
+			$use -> $nDisplay"
+	    } else {
+		set display $nDisplay
+	    }
+	}
+    }
+
+    # Prepares the slave for tk with those parameters
+    
+    tkInterpInit $slave [list "-use" $use "-display" $display]
+    
+    load {} Tk $slave
+
+    return $slave
+}
 
 proc ::safe::TkInit {interpPath} {
     variable tkInit
@@ -135,25 +153,73 @@ proc ::safe::TkInit {interpPath} {
     }
 }
 
+# safe::allowTk --
+#
+#	Set tkInit(interpPath) to allow Tk to be initialized in
+#	safe::TkInit.
+#
+# Arguments:
+#	interpPath	slave interpreter handle
+#	argv		arguments passed to safe::TkInterpInit
+#
+# Results:
+#	none.
+
 proc ::safe::allowTk {interpPath argv} {
     variable tkInit
     set tkInit($interpPath) $argv
+    return
 }
 
-    proc ::safe::tkDelete {W window slave} {
-	# we are going to be called for each widget... skip untill it's
-	# top level
-	Log $slave "Called tkDelete $W $window" NOTICE;
-	if {[::interp exists $slave]} {
-	    if {[catch {::safe::interpDelete $slave} msg]} {
-		Log $slave "Deletion error : $msg";
-	    }
-	}
-	if {[winfo exists $window]} {
-	    Log $slave "Destroy toplevel $window" NOTICE;
-	    destroy $window;
+
+# safe::disallowTk --
+#
+#	Unset tkInit(interpPath) to disallow Tk from getting initialized
+#	in safe::TkInit.
+#
+# Arguments:
+#	interpPath	slave interpreter handle
+#
+# Results:
+#	none.
+
+proc ::safe::disallowTk {interpPath} {
+    variable tkInit
+    unset tkInit($interpPath)
+    none
+}
+
+
+# safe::disallowTk --
+#
+#	Clean up the window associated with the interp being deleted.
+#
+# Arguments:
+#	interpPath	slave interpreter handle
+#
+# Results:
+#	none.
+
+proc ::safe::tkDelete {W window slave} {
+
+    # we are going to be called for each widget... skip untill it's
+    # top level
+
+    Log $slave "Called tkDelete $W $window" NOTICE;
+    if {[::interp exists $slave]} {
+	if {[catch {::safe::interpDelete $slave} msg]} {
+	    Log $slave "Deletion error : $msg";
 	}
     }
+    if {[winfo exists $window]} {
+	Log $slave "Destroy toplevel $window" NOTICE;
+	destroy $window;
+    }
+    
+    # clean up tkInit(slave)
+    disallowTk $slave
+    return
+}
 
 proc ::safe::tkTopLevel {slave display} {
     variable tkSafeId;
