@@ -26,10 +26,10 @@ proc setup {} {
     update
 }
 
-label .b.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left -text "0" -font "Helvetica -12 bold"
+label .b.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left -text "0" -font "Courier -12"
 pack .b.l
 canvas .b.c -closeenough 0 
-.b.c create text 0 0 -tags text -anchor nw -just left -font "Helvetica -12 bold"
+.b.c create text 0 0 -tags text -anchor nw -just left -font "Courier -12"
 pack .b.c
 update
 
