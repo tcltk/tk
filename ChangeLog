@@ -1,3 +1,9 @@
+2004-10-20  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinWm.c (UpdateWrapper): pass SWP_NOOWNERZORDER to
+	SetWindowPos when maintaining win Z order, to prevent parent
+	from flashing (adjusting Z order).
+
 2004-10-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	Backport of 8.5 wm iconphoto that added support for Tk photo
