@@ -1,5 +1,16 @@
 2000-01-12  Jeff Hobbs  <hobbs@scriptics.com>
 
+	* tests/text.test: changed test to reflect change of -hidden
+	to -elide in search options.
+
+	* win/tkWinScrlbr.c: added check for valid hwnd in ModalLoopProc
+	to avoid crash when building statically
+
+	* doc/event.n:
+	* generic/tkBind.c: prevented core with event -warp on Windows
+	when window wasn't mapped [Bug: 4004] and added docs stating
+	the requirement for mapped windows.
+
 	* generic/tkCanvas.c: fixed mem leak with TagSearchExprInit
 	[Bug: 3977]
 
