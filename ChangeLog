@@ -1,3 +1,12 @@
+2002-10-11  Joe English  <jenglish@flightlab.com>
+	* unix/tkUnixWm.c: (rev. 1.8.1.3) Backported changes for
+	TIP 107 ("Fix the 2-second raise delay") to core-8-3-1-branch 
+	[Patch #601518]
+	* tests/unixWm.c (unixWm-51.7): added 200 ms delay after
+	'raise' and 'lower' commands, since these are now asynchronous.
+	(NB: there may be other regressions, this is the only one
+	I encountered)
+
 2002-10-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* tests/grid.test:
