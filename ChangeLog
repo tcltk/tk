@@ -1,3 +1,12 @@
+2003-10-23  Jim Ingham  <jingham@apple.com>
+
+        * macosx/tkMacOSXDialog.c (NavServicesGetFile): Minor cleanups.
+        (OpenFileFilterProc): Handle FSRef's as well as FSSpec's in the input
+        file.  Also convert the FSSpec filename to an C-string before passing
+        to MatchOneFile.  [bug 517600]
+        (MatchOneFile): Require the input filename to be a C-string, not a
+        pascal string.
+        
 2003-10-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/dialog.tcl (tk_dialog): Constrain the dialog to be
