@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.18 2000/02/08 11:31:49 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.19 2000/04/08 06:59:09 hobbs Exp $
 
 TCLVERSION = @TCL_VERSION@
 VERSION = @TK_VERSION@
@@ -214,13 +214,15 @@ TKTEST_OBJS = \
 	$(TCLTEST_OBJS) \
 	testMain.$(OBJEXT) \
 	tkSquare.$(OBJEXT) \
-	tkTest.$(OBJEXT)
+	tkTest.$(OBJEXT) \
+	tkWinTest.$(OBJEXT)
 
 TKTEST_OBJS_NATIVE = \
 	$(TCLTEST_OBJS_NATIVE) \
 	testMain.$(OBJEXT) \
 	tkSquare.$(OBJEXT) \
-	tkTest.$(OBJEXT)
+	tkTest.$(OBJEXT) \
+	tkWinTest.$(OBJEXT)
 
 XLIB_OBJS = \
 	xcolors.$(OBJEXT) \
@@ -254,7 +256,6 @@ TK_OBJS = \
 	tkWinRegion.$(OBJEXT) \
 	tkWinScrlbr.$(OBJEXT) \
 	tkWinSend.$(OBJEXT) \
-	tkWinTest.$(OBJEXT) \
 	tkWinWindow.$(OBJEXT) \
 	tkWinWm.$(OBJEXT) \
 	tkWinX.$(OBJEXT) \
@@ -512,6 +513,9 @@ testMain.$(OBJEXT): winMain.c
 	$(CC) -c $(CC_SWITCHES) $(DEPARG) -DTK_TEST $(CC_OBJNAME)
 
 tkTest.$(OBJEXT): tkTest.c
+	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
+
+tkWinTest.$(OBJEXT): tkWinTest.c
 	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
 
 tkSquare.$(OBJEXT): tkSquare.c
