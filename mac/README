@@ -8,7 +8,7 @@ Jim Ingham
 Cygnus Solutions
 jingham@cygnus.com
 
-RCS: @(#) $Id: README,v 1.6 1999/01/04 19:25:27 rjohnson Exp $
+RCS: @(#) $Id: README,v 1.6.2.1 1999/03/22 06:42:59 jingham Exp $
 
 1. Introduction
 ---------------
@@ -44,7 +44,7 @@ the documentation for more details.  Syd Polk <icepick@eng.sun.com> is
 the author of the new menu code.  Feel free to contact him if you
 have questions or comments about the menu mechanism.
 
-As of Tk 8.0.5, MacTk menus will adopt the backgrounds, shape, separator, etc
+As of Tk 8.0.4, MacTk menus will adopt the backgrounds, shape, separator, etc
 of the current theme. 
 
 The "tk_messageBox" command on the Macintosh is now much more
@@ -182,9 +182,9 @@ following items:
 
 	CodeWarrior Pro 1 or higher (CodeWarrior release 9 or higher can work
 		and we have project files, but we are depricating support)
-		8.0.5 was build with CW Pro 3.
+		8.0.5 was build with CW Pro 4.
 	Mac Tcl 8.0 (source)
-	  (which requires More Files 1.4.2 or 1.4.3)
+	  (which requires More Files 1.4.2 or greater - except not 1.4.4)
 	Mac Tk 8.0 (source)
 
 The project  files included with the Mac Tcl source should work 
