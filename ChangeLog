@@ -1,3 +1,14 @@
+2003-01-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* generic/tkFrame.c (TkToplevelWindowForCommand): Added way of
+	mapping from command names to tkwins-for-toplevels.
+	* generic/tkImage.c (Tk_ImageObjCmd): Added check to make sure
+	that you're not creating an image named the same as .'s command,
+	which refixes 220891, even when the name of the command has been
+	changed with 'rename'.  The error message is better too.
+	* tests/image.test (image-1.10,image-1.11): Updated to match new
+	error message and added test for the rename case.
+
 2003-01-19  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkImage.c (DeleteImage): delete the image's entry in the

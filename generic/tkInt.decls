@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.32 2002/12/08 00:46:51 hobbs Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.33 2003/01/22 14:32:59 dkf Exp $
 
 library tk
 
@@ -666,6 +666,11 @@ declare 146 generic {
 }
 declare 147 generic {
     void TkStylePkgFree (TkMainInfo *mainPtr)
+}
+
+declare 148 generic {
+    Tk_Window TkToplevelWindowForCommand(Tcl_Interp *interp,
+	    CONST char *cmdName)
 }
 
 ##############################################################################
