@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.10 2002/10/08 19:57:48 hobbs Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.11 2003/02/20 21:08:30 pspjuth Exp $
  */
 
 #include "tkPort.h"
@@ -1635,8 +1635,7 @@ ArrangePanes(clientData)
 	    if (i == pwPtr->numSlaves - 1 && Tk_IsMapped(pwPtr->tkwin)) {
 		if (Tk_Width(pwPtr->tkwin) > Tk_ReqWidth(pwPtr->tkwin)) {
 		    paneWidth += Tk_Width(pwPtr->tkwin) -
-			Tk_ReqWidth(pwPtr->tkwin) -
-			Tk_InternalBorderWidth(pwPtr->tkwin);
+			Tk_ReqWidth(pwPtr->tkwin);
 		}
 	    }
 	    paneHeight = Tk_Height(pwPtr->tkwin) - (2 * slavePtr->pady) -
@@ -1646,8 +1645,7 @@ ArrangePanes(clientData)
 	    if (i == pwPtr->numSlaves - 1 && Tk_IsMapped(pwPtr->tkwin)) {
 		if (Tk_Height(pwPtr->tkwin) > Tk_ReqHeight(pwPtr->tkwin)) {
 		    paneHeight += Tk_Height(pwPtr->tkwin) -
-			Tk_ReqHeight(pwPtr->tkwin) -
-			Tk_InternalBorderWidth(pwPtr->tkwin);
+			Tk_ReqHeight(pwPtr->tkwin);
 		}
 	    }
 	    paneWidth = Tk_Width(pwPtr->tkwin) - (2 * slavePtr->padx) -

@@ -1,3 +1,9 @@
+2003-02-20  Peter Spjuth  <peter.spjuth@space.se>
+
+	* tests/panedwindow.test:
+	* generic/tkPanedWindow.c: Fixed calculation of the last slave's
+	size when increasing the size of the panedwindow. [Bug #689099]
+
 2003-02-20  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkImgGIF.c (GetDataBlock): Removed pointless static
