@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.2 2002/08/31 06:12:29 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.3 2003/02/24 19:27:08 wolfsuit Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -846,7 +846,7 @@ NavServicesGetFile(
         }
         if ((selectDescPtr != NULL)
                 && (selectDescPtr->descriptorType != typeNull)) {
-            NavCustomControl(dialogRef, kNavCtlSetSelection, &selectDescPtr);
+            NavCustomControl(dialogRef, kNavCtlSetSelection, selectDescPtr);
         }
         
         if ((err = NavDialogRun(dialogRef)) != noErr ){
