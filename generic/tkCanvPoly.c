@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.6.4.2 2001/07/18 16:15:27 dgp Exp $
+ * RCS: @(#) $Id: tkCanvPoly.c,v 1.6.4.3 2001/07/18 16:16:53 dgp Exp $
  */
 
 #include <stdio.h>
@@ -1491,9 +1491,8 @@ PolygonToArea(canvas, itemPtr, rectPtr)
      */
     inside = TkPolygonToArea(polyPoints, numPoints, rectPtr);
     if (inside==0) goto donearea;
-	    
-    if (polyPtr->outline.gc == None) goto donearea ;
 
+    if (polyPtr->outline.gc == None) goto donearea ;
 
     /*
      * Iterate through all of the edges of the line, computing a polygon
