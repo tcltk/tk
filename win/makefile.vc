@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.36 2000/08/06 00:10:56 hobbs Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.37 2000/09/02 01:18:24 ericm Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -348,6 +348,7 @@ install-libraries:
 	@mkd "$(INCLUDE_INSTALL_DIR)\X11"
 	copy "$(GENERICDIR)\tk.h"             "$(INCLUDE_INSTALL_DIR)"
 	copy "$(GENERICDIR)\tkDecls.h"        "$(INCLUDE_INSTALL_DIR)"
+	copy "$(GENERICDIR)\tkPlatDecls.h"    "$(INCLUDE_INSTALL_DIR)"
 	copy "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)"
 	xcopy "$(XLIBDIR)\X11\*.h"            "$(INCLUDE_INSTALL_DIR)\X11"
 	@mkd "$(SCRIPT_INSTALL_DIR)"

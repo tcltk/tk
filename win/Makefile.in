@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.29 2000/07/18 18:17:47 mo Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.30 2000/09/02 01:18:24 ericm Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -437,8 +437,8 @@ install-libraries:
 		fi; \
 	    done;
 	@echo "Installing header files";
-	@for i in $(GENERIC_DIR)/tk.h $(GENERIC_DIR)/tkDecls.h \
-		$(GENERIC_DIR)/tkIntXlibDecls.h ; \
+	@for i in $(GENERIC_DIR)/tk.h $(GENERIC_DIR)/tkPlatDecls.h \
+		$(GENERIC_DIR)/tkIntXlibDecls.h $(GENERIC_DIR)/tkDecls.h ; \
 	    do \
 	    $(INSTALL_DATA) $$i $(INCLUDE_INSTALL_DIR); \
 	    done;
