@@ -603,6 +603,10 @@ if test -r WindowId.3; then
     rm -f Tk_Height.3
     ln WindowId.3 Tk_Height.3
 fi
+if test -r GetHWND.3; then
+    rm -f Tk_GetHWND.3
+    ln GetHWND.3 Tk_GetHWND.3
+fi
 if test -r IdToWindow.3; then
     rm -f Tk_IdToWindow.3
     ln IdToWindow.3 Tk_IdToWindow.3

@@ -1,6 +1,12 @@
 2000-04-24  Eric Melski  <ericm@scriptics.com>
 
 	* unix/mkLinks: 
+	* doc/GetHWND.3: Man page for Tk_GetHWND [Bug: 1863].
+
+	* unix/mkLinks: 
+	* doc/HWNDToWindow.3: Man page for Tk_HWNDToWindow [Bug: 1869].
+
+	* unix/mkLinks: 
 	* doc/AddOption.3: Man page for Tk_AddOption [Bug: 1854]
 
 2000-04-19  Eric Melski  <ericm@scriptics.com>

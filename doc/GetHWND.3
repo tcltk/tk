@@ -1,0 +1,29 @@
+'\"
+'\" Copyright (c) 1998-2000 by Scriptics Corporation.
+'\" All rights reserved.
+'\" 
+'\" RCS: @(#) $Id: GetHWND.3,v 1.1 2000/04/24 19:47:26 ericm Exp $
+'\" 
+'\"
+.so man.macros
+.TH Tk_GetHWND 3 "" Tk "Tk Library Procedures"
+.BS
+.SH NAME
+Tk_GetHWND \- retrieve the Windows handle for an X window
+.SH SYNOPSIS
+.nf
+\fB#include <tk.h>\fR
+.sp
+HWND
+\fBTk_GetHWND\fR(\fIwindow\fR)
+.SH ARGUMENTS
+.AP Window window in
+X token for window.
+.BE
+.SH DESCRIPTION
+.PP
+\fBTk_GetHWND\fR returns the Windows HWND identifier for X Windows
+window given by \fIwindow\fR.
+
+.SH KEYWORDS
+identifier, window
