@@ -13,7 +13,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPPM.c,v 1.7 1999/12/21 23:55:11 hobbs Exp $
+ * RCS: @(#) $Id: tkImgPPM.c,v 1.7.2.1 2001/09/14 20:39:23 andreas_kupries Exp $
  */
 
 #define USE_OLD_IMAGE
@@ -274,10 +274,12 @@ FileWritePPM(interp, fileName, formatString, blockPtr)
 
     if (Tcl_SetChannelOption(interp, chan, "-translation", "binary")
 	    != TCL_OK) {
+	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
     }
     if (Tcl_SetChannelOption(interp, chan, "-encoding", "binary")
 	    != TCL_OK) {
+	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
     }
     

@@ -1,3 +1,13 @@
+2001-09-14  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
+
+	* generic/tkImgGIF.c:
+	* generic/tkImgPPM.c:
+	* generic/tkImgPhoto.c:
+	* generic/tkMenu.c: Applied patch [461578], provided by Vincent
+	  Darley. This fixes several memory leaks in the image code. They
+	  happen if there are errors during the initialization of the
+	  channel the image is supposed to be read from.
+
 2001-08-28  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinDialog.c (ChooseDirectoryHookProc): work-around for MS

@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.14.2.2 2001/08/24 23:58:14 hobbs Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.14.2.3 2001/09/14 20:39:23 andreas_kupries Exp $
  */
 
 /*
@@ -1354,6 +1354,7 @@ FileWriteGIF (interp, filename, format, blockPtr)
 	return TCL_ERROR;
     }
     if (Tcl_SetChannelOption(interp, chan, "-translation", "binary") != TCL_OK) {
+	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
     }
 
