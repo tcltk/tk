@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.21 2003/05/19 13:04:24 vincentdarley Exp $
+# RCS: @(#) $Id: text.test,v 1.22 2003/05/19 21:19:52 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1766,7 +1766,7 @@ test text-22.3 {TextDumpCmd procedure, bad args} {
 } {1 {Usage: .t dump ?-all -image -text -mark -tag -window? ?-command script? index ?index2?}}
 test text-22.4 {TextDumpCmd procedure, bad args} {
     list [catch {.t dump -bogus} msg] $msg
-} {1 {Usage: .t dump ?-all -image -text -mark -tag -window? ?-command script? index ?index2?}}
+} {1 {bad option "-bogus": must be -all, -command, -image, -mark, -tag, -text, or -window}}
 test text-22.5 {TextDumpCmd procedure, bad args} {
     list [catch {.t dump bogus} msg] $msg
 } {1 {bad text index "bogus"}}
