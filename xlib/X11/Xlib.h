@@ -1209,17 +1209,6 @@ extern GC XCreateGC(
 );
 
 
-extern Pixmap XCreateBitmapFromData(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    Drawable		/* d */,
-    _Xconst char*	/* data */,
-    unsigned int	/* width */,
-    unsigned int	/* height */
-#endif
-);
-
-
 extern void XDrawLine(
 #if NeedFunctionPrototypes
     Display*		/* display */,

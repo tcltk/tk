@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.2 1999/03/10 07:04:40 stanton Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.3 1999/03/10 18:56:08 redman Exp $
 
 library tk
 
@@ -1083,235 +1083,240 @@ declare 24 win {
 }
 
 declare 25 win {
+    Pixmap XCreateBitmapFromData(Display* display, Drawable d, \
+	    _Xconst char* data, unsigned int width,unsigned int height)
+}    
+
+declare 26 win {
     void XDefineCursor (Display* d, Window w, Cursor c)
 }
 
-declare 26 win {
+declare 27 win {
     void XDeleteProperty (Display* d, Window w, Atom a)
 }
 
-declare 27 win {
+declare 28 win {
     void XDestroyWindow (Display* d, Window w)
 }
 
-declare 28 win {
+declare 29 win {
     void XDrawArc (Display* d, Drawable dr, GC g, int i1, int i2, \
 	    unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 
-declare 29 win {
+declare 30 win {
     void XDrawLines (Display* d, Drawable dr, GC g, XPoint* x, int i1, int i2)
 }
 
-declare 30 win {
+declare 31 win {
     void XDrawRectangle (Display* d, Drawable dr, GC g, int i1, int i2,\
 	    unsigned int ui1, unsigned int ui2)
 }
 
-declare 31 win {
+declare 32 win {
     void XFillArc (Display* d, Drawable dr, GC g, int i1, int i2, \
 	    unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 
-declare 32 win {
+declare 33 win {
     void XFillPolygon (Display* d, Drawable dr, GC g, XPoint* x, \
 	    int i1, int i2, int i3)
 }
 
-declare 33 win {
+declare 34 win {
     void XFillRectangles (Display* d, Drawable dr, GC g, XRectangle* x, int i)
 }
 
-declare 34 win {
+declare 35 win {
     void XForceScreenSaver (Display* d, int i)
 }
 
-declare 35 win {
+declare 36 win {
     void XFreeColormap (Display* d, Colormap c)
 }
 
-declare 36 win {
+declare 37 win {
     void XFreeColors (Display* d, Colormap c, \
 	    unsigned long* ulp, int i, unsigned long ul)
 }
 
-declare 37 win {
+declare 38 win {
     void XFreeCursor (Display* d, Cursor c)
 }
 
-declare 38 win {
+declare 39 win {
     void XFreeModifiermap (XModifierKeymap* x)
 }
 
-declare 39 win {
+declare 40 win {
     Status XGetGeometry (Display* d, Drawable dr, Window* w, int* i1, \
 	    int* i2, unsigned int* ui1, unsigned int* ui2, unsigned int* ui3, \
 	    unsigned int* ui4)
 }
 
-declare 40 win {
+declare 41 win {
     void XGetInputFocus (Display* d, Window* w, int* i)
 }
 
-declare 41 win {
+declare 42 win {
     int XGetWindowProperty (Display* d, Window w, Atom a1, long l1, long l2, \
 	    Bool b, Atom a2, Atom* ap, int* ip, unsigned long* ulp1, \
 	    unsigned long* ulp2, unsigned char** cpp)
 }
 
-declare 42 win {
+declare 43 win {
     Status XGetWindowAttributes (Display* d, Window w, XWindowAttributes* x)
 }
 
-declare 43 win {
+declare 44 win {
     int XGrabKeyboard (Display* d, Window w, Bool b, int i1, int i2, Time t)
 }
 
-declare 44 win {
+declare 45 win {
     int XGrabPointer (Display* d, Window w1, Bool b, unsigned int ui, \
 	    int i1, int i2, Window w2, Cursor c, Time t)
 }
 
-declare 45 win {
+declare 46 win {
     KeyCode XKeysymToKeycode (Display* d, KeySym k)
 }
 
-declare 46 win {
+declare 47 win {
     Status XLookupColor (Display* d, Colormap c1, _Xconst char* c2, \
 	    XColor* x1, XColor* x2)
 }
 
-declare 47 win {
+declare 48 win {
     void XMapWindow (Display* d, Window w)
 }
 
-declare 48 win {
+declare 49 win {
     void XMoveResizeWindow (Display* d, Window w, int i1, int i2, \
 	    unsigned int ui1, unsigned int ui2)
 }
 
-declare 49 win {
+declare 50 win {
     void XMoveWindow (Display* d, Window w, int i1, int i2)
 }
 
-declare 50 win {
+declare 51 win {
     void XNextEvent (Display* d, XEvent* x)
 }
 
-declare 51 win {
+declare 52 win {
     void XPutBackEvent (Display* d, XEvent* x)
 }
 
-declare 52 win {
+declare 53 win {
     void XQueryColors (Display* d, Colormap c, XColor* x, int i)
 }
 
-declare 53 win {
+declare 54 win {
     Bool XQueryPointer (Display* d, Window w1, Window* w2, Window* w3, \
 	    int* i1, int* i2, int* i3, int* i4, unsigned int* ui)
 }
 
-declare 54 win {
+declare 55 win {
     Status XQueryTree (Display* d, Window w1, Window* w2, Window* w3, \
 	    Window** w4, unsigned int* ui)
 }
 
-declare 55 win {
+declare 56 win {
     void XRaiseWindow (Display* d, Window w)
 }
 
-declare 56 win {
+declare 57 win {
     void XRefreshKeyboardMapping (XMappingEvent* x)
 }
 
-declare 57 win {
+declare 58 win {
     void XResizeWindow (Display* d, Window w, unsigned int ui1, \
 	    unsigned int ui2)
 }
 
-declare 58 win {
+declare 59 win {
     void XSelectInput (Display* d, Window w, long l)
 }
 
-declare 59 win {
+declare 60 win {
     Status XSendEvent (Display* d, Window w, Bool b, long l, XEvent* x)
 }
 
-declare 60 win {
+declare 61 win {
     void XSetCommand (Display* d, Window w, char** c, int i)
 }
 
-declare 61 win {
+declare 62 win {
     void XSetIconName (Display* d, Window w, _Xconst char* c)
 }
 
-declare 62 win {
+declare 63 win {
     void XSetInputFocus (Display* d, Window w, int i, Time t)
 }
 
-declare 63 win {
+declare 64 win {
     void XSetSelectionOwner (Display* d, Atom a, Window w, Time t)
 }
 
-declare 64 win {
+declare 65 win {
     void XSetWindowBackground (Display* d, Window w, unsigned long ul)
 }
 
-declare 65 win {
+declare 66 win {
     void XSetWindowBackgroundPixmap (Display* d, Window w, Pixmap p)
 }
 
-declare 66 win {
+declare 67 win {
     void XSetWindowBorder (Display* d, Window w, unsigned long ul)
 }
 
-declare 67 win {
+declare 68 win {
     void XSetWindowBorderPixmap (Display* d, Window w, Pixmap p)
 }
 
-declare 68 win {
+declare 69 win {
     void XSetWindowBorderWidth (Display* d, Window w, unsigned int ui)
 }
 
-declare 69 win {
+declare 70 win {
     void XSetWindowColormap (Display* d, Window w, Colormap c)
 }
 
-declare 70 win {
+declare 71 win {
     Bool XTranslateCoordinates (Display* d, Window w1, Window w2, int i1,\
 	    int i2, int* i3, int* i4, Window* w3)
 }
 
-declare 71 win {
+declare 72 win {
     void XUngrabKeyboard (Display* d, Time t)
 }
 
-declare 72 win {
+declare 73 win {
     void XUngrabPointer (Display* d, Time t) 
 }
 
-declare 73 win {
+declare 74 win {
     void XUnmapWindow (Display* d, Window w)
 }
 
-declare 74 win {
+declare 75 win {
     void XWindowEvent (Display* d, Window w, long l, XEvent* x)
 }
 
-declare 75 win {
+declare 76 win {
     void XDestroyIC (XIC x)
 }
 
-declare 76 win {
+declare 77 win {
     Bool XFilterEvent (XEvent* x, Window w)
 }
 
-declare 77 win {
+declare 78 win {
     int XmbLookupString (XIC xi, XKeyPressedEvent* xk, \
 	    char* c, int i, KeySym* k, Status* s)
 }
 
-declare 78 win {
+declare 79 win {
     void TkPutImage (unsigned long *colors, \
 	    int ncolors, Display* display, Drawable d, \
 	    GC gc, XImage* image, int src_x, int src_y, \
@@ -1407,167 +1412,172 @@ declare 17 mac {
 }
 
 declare 18 mac {
+    Pixmap XCreateBitmapFromData(Display* display, Drawable d, \
+	    _Xconst char* data, unsigned int width,unsigned int height)
+}    
+
+declare 19 mac {
     void XDefineCursor (Display* d, Window w, Cursor c)
 }
 
-declare 19 mac {
+declare 20 mac {
     void XDestroyWindow (Display* d, Window w)
 }
 
-declare 20 mac {
+declare 21 mac {
     void XDrawArc (Display* d, Drawable dr, GC g, int i1, int i2, \
 	    unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 
-declare 21 mac {
+declare 22 mac {
     void XDrawLines (Display* d, Drawable dr, GC g, XPoint* x, int i1, int i2)
 }
 
-declare 22 mac {
+declare 23 mac {
     void XDrawRectangle (Display* d, Drawable dr, GC g, int i1, int i2,\
 	    unsigned int ui1, unsigned int ui2)
 }
 
-declare 23 mac {
+declare 24 mac {
     void XFillArc (Display* d, Drawable dr, GC g, int i1, int i2, \
 	    unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 
-declare 24 mac {
+declare 25 mac {
     void XFillPolygon (Display* d, Drawable dr, GC g, XPoint* x, \
 	    int i1, int i2, int i3)
 }
 
-declare 25 mac {
+declare 26 mac {
     void XFillRectangles (Display* d, Drawable dr, GC g, XRectangle* x, int i)
 }
 
-declare 26 mac {
+declare 27 mac {
     void XFreeColormap (Display* d, Colormap c)
 }
 
-declare 27 mac {
+declare 28 mac {
     void XFreeColors (Display* d, Colormap c, \
 	    unsigned long* ulp, int i, unsigned long ul)
 }
 
-declare 28 mac {
+declare 29 mac {
     void XFreeModifiermap (XModifierKeymap* x)
 }
 
-declare 29 mac {
+declare 30 mac {
     Status XGetGeometry (Display* d, Drawable dr, Window* w, int* i1, \
 	    int* i2, unsigned int* ui1, unsigned int* ui2, unsigned int* ui3, \
 	    unsigned int* ui4)
 }
 
-declare 30 mac {
+declare 31 mac {
     int XGetWindowProperty (Display* d, Window w, Atom a1, long l1, long l2, \
 	    Bool b, Atom a2, Atom* ap, int* ip, unsigned long* ulp1, \
 	    unsigned long* ulp2, unsigned char** cpp)
 }
 
-declare 31 mac {
+declare 32 mac {
     int XGrabKeyboard (Display* d, Window w, Bool b, int i1, int i2, Time t)
 }
 
-declare 32 mac {
+declare 33 mac {
     int XGrabPointer (Display* d, Window w1, Bool b, unsigned int ui, \
 	    int i1, int i2, Window w2, Cursor c, Time t)
 }
 
-declare 33 mac {
+declare 34 mac {
     KeyCode XKeysymToKeycode (Display* d, KeySym k)
 }
 
-declare 34 mac {
+declare 35 mac {
     void XMapWindow (Display* d, Window w)
 }
 
-declare 35 mac {
+declare 36 mac {
     void XMoveResizeWindow (Display* d, Window w, int i1, int i2, \
 	    unsigned int ui1, unsigned int ui2)
 }
 
-declare 36 mac {
+declare 37 mac {
     void XMoveWindow (Display* d, Window w, int i1, int i2)
 }
 
-declare 37 mac {
+declare 38 mac {
     Bool XQueryPointer (Display* d, Window w1, Window* w2, Window* w3, \
 	    int* i1, int* i2, int* i3, int* i4, unsigned int* ui)
 }
 
-declare 38 mac {
+declare 39 mac {
     void XRaiseWindow (Display* d, Window w)
 }
 
-declare 39 mac {
+declare 40 mac {
     void XRefreshKeyboardMapping (XMappingEvent* x)
 }
 
-declare 40 mac {
+declare 41 mac {
     void XResizeWindow (Display* d, Window w, unsigned int ui1, \
 	    unsigned int ui2)
 }
 
-declare 41 mac {
+declare 42 mac {
     void XSelectInput (Display* d, Window w, long l)
 }
 
-declare 42 mac {
+declare 43 mac {
     Status XSendEvent (Display* d, Window w, Bool b, long l, XEvent* x)
 }
 
-declare 43 mac {
+declare 44 mac {
     void XSetIconName (Display* d, Window w, _Xconst char* c)
 }
 
-declare 44 mac {
+declare 45 mac {
     void XSetInputFocus (Display* d, Window w, int i, Time t)
 }
 
-declare 45 mac {
+declare 46 mac {
     void XSetSelectionOwner (Display* d, Atom a, Window w, Time t)
 }
 
-declare 46 mac {
+declare 47 mac {
     void XSetWindowBackground (Display* d, Window w, unsigned long ul)
 }
 
-declare 47 mac {
+declare 48 mac {
     void XSetWindowBackgroundPixmap (Display* d, Window w, Pixmap p)
 }
 
-declare 48 mac {
+declare 49 mac {
     void XSetWindowBorder (Display* d, Window w, unsigned long ul)
 }
 
-declare 49 mac {
+declare 50 mac {
     void XSetWindowBorderPixmap (Display* d, Window w, Pixmap p)
 }
 
-declare 50 mac {
+declare 51 mac {
     void XSetWindowBorderWidth (Display* d, Window w, unsigned int ui)
 }
 
-declare 51 mac {
+declare 52 mac {
     void XSetWindowColormap (Display* d, Window w, Colormap c)
 }
 
-declare 52 mac {
+declare 53 mac {
     void XUngrabKeyboard (Display* d, Time t)
 }
 
-declare 53 mac {
+declare 54 mac {
     void XUngrabPointer (Display* d, Time t) 
 }
 
-declare 54 mac {
+declare 55 mac {
     void XUnmapWindow (Display* d, Window w)
 }
 
-declare 55 mac {
+declare 56 mac {
     void TkPutImage (unsigned long *colors, \
 	    int ncolors, Display* display, Drawable d, \
 	    GC gc, XImage* image, int src_x, int src_y, \

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.2 1999/03/10 07:04:43 stanton Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.3 1999/03/10 18:56:09 redman Exp $
  */
 
 #include "tkInt.h"
@@ -493,60 +493,61 @@ TkIntXlibStubs tkIntXlibStubs = {
     XConfigureWindow, /* 22 */
     XCopyArea, /* 23 */
     XCopyPlane, /* 24 */
-    XDefineCursor, /* 25 */
-    XDeleteProperty, /* 26 */
-    XDestroyWindow, /* 27 */
-    XDrawArc, /* 28 */
-    XDrawLines, /* 29 */
-    XDrawRectangle, /* 30 */
-    XFillArc, /* 31 */
-    XFillPolygon, /* 32 */
-    XFillRectangles, /* 33 */
-    XForceScreenSaver, /* 34 */
-    XFreeColormap, /* 35 */
-    XFreeColors, /* 36 */
-    XFreeCursor, /* 37 */
-    XFreeModifiermap, /* 38 */
-    XGetGeometry, /* 39 */
-    XGetInputFocus, /* 40 */
-    XGetWindowProperty, /* 41 */
-    XGetWindowAttributes, /* 42 */
-    XGrabKeyboard, /* 43 */
-    XGrabPointer, /* 44 */
-    XKeysymToKeycode, /* 45 */
-    XLookupColor, /* 46 */
-    XMapWindow, /* 47 */
-    XMoveResizeWindow, /* 48 */
-    XMoveWindow, /* 49 */
-    XNextEvent, /* 50 */
-    XPutBackEvent, /* 51 */
-    XQueryColors, /* 52 */
-    XQueryPointer, /* 53 */
-    XQueryTree, /* 54 */
-    XRaiseWindow, /* 55 */
-    XRefreshKeyboardMapping, /* 56 */
-    XResizeWindow, /* 57 */
-    XSelectInput, /* 58 */
-    XSendEvent, /* 59 */
-    XSetCommand, /* 60 */
-    XSetIconName, /* 61 */
-    XSetInputFocus, /* 62 */
-    XSetSelectionOwner, /* 63 */
-    XSetWindowBackground, /* 64 */
-    XSetWindowBackgroundPixmap, /* 65 */
-    XSetWindowBorder, /* 66 */
-    XSetWindowBorderPixmap, /* 67 */
-    XSetWindowBorderWidth, /* 68 */
-    XSetWindowColormap, /* 69 */
-    XTranslateCoordinates, /* 70 */
-    XUngrabKeyboard, /* 71 */
-    XUngrabPointer, /* 72 */
-    XUnmapWindow, /* 73 */
-    XWindowEvent, /* 74 */
-    XDestroyIC, /* 75 */
-    XFilterEvent, /* 76 */
-    XmbLookupString, /* 77 */
-    TkPutImage, /* 78 */
+    XCreateBitmapFromData, /* 25 */
+    XDefineCursor, /* 26 */
+    XDeleteProperty, /* 27 */
+    XDestroyWindow, /* 28 */
+    XDrawArc, /* 29 */
+    XDrawLines, /* 30 */
+    XDrawRectangle, /* 31 */
+    XFillArc, /* 32 */
+    XFillPolygon, /* 33 */
+    XFillRectangles, /* 34 */
+    XForceScreenSaver, /* 35 */
+    XFreeColormap, /* 36 */
+    XFreeColors, /* 37 */
+    XFreeCursor, /* 38 */
+    XFreeModifiermap, /* 39 */
+    XGetGeometry, /* 40 */
+    XGetInputFocus, /* 41 */
+    XGetWindowProperty, /* 42 */
+    XGetWindowAttributes, /* 43 */
+    XGrabKeyboard, /* 44 */
+    XGrabPointer, /* 45 */
+    XKeysymToKeycode, /* 46 */
+    XLookupColor, /* 47 */
+    XMapWindow, /* 48 */
+    XMoveResizeWindow, /* 49 */
+    XMoveWindow, /* 50 */
+    XNextEvent, /* 51 */
+    XPutBackEvent, /* 52 */
+    XQueryColors, /* 53 */
+    XQueryPointer, /* 54 */
+    XQueryTree, /* 55 */
+    XRaiseWindow, /* 56 */
+    XRefreshKeyboardMapping, /* 57 */
+    XResizeWindow, /* 58 */
+    XSelectInput, /* 59 */
+    XSendEvent, /* 60 */
+    XSetCommand, /* 61 */
+    XSetIconName, /* 62 */
+    XSetInputFocus, /* 63 */
+    XSetSelectionOwner, /* 64 */
+    XSetWindowBackground, /* 65 */
+    XSetWindowBackgroundPixmap, /* 66 */
+    XSetWindowBorder, /* 67 */
+    XSetWindowBorderPixmap, /* 68 */
+    XSetWindowBorderWidth, /* 69 */
+    XSetWindowColormap, /* 70 */
+    XTranslateCoordinates, /* 71 */
+    XUngrabKeyboard, /* 72 */
+    XUngrabPointer, /* 73 */
+    XUnmapWindow, /* 74 */
+    XWindowEvent, /* 75 */
+    XDestroyIC, /* 76 */
+    XFilterEvent, /* 77 */
+    XmbLookupString, /* 78 */
+    TkPutImage, /* 79 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     XGetModifierMapping, /* 0 */
@@ -567,44 +568,45 @@ TkIntXlibStubs tkIntXlibStubs = {
     XConfigureWindow, /* 15 */
     XCopyArea, /* 16 */
     XCopyPlane, /* 17 */
-    XDefineCursor, /* 18 */
-    XDestroyWindow, /* 19 */
-    XDrawArc, /* 20 */
-    XDrawLines, /* 21 */
-    XDrawRectangle, /* 22 */
-    XFillArc, /* 23 */
-    XFillPolygon, /* 24 */
-    XFillRectangles, /* 25 */
-    XFreeColormap, /* 26 */
-    XFreeColors, /* 27 */
-    XFreeModifiermap, /* 28 */
-    XGetGeometry, /* 29 */
-    XGetWindowProperty, /* 30 */
-    XGrabKeyboard, /* 31 */
-    XGrabPointer, /* 32 */
-    XKeysymToKeycode, /* 33 */
-    XMapWindow, /* 34 */
-    XMoveResizeWindow, /* 35 */
-    XMoveWindow, /* 36 */
-    XQueryPointer, /* 37 */
-    XRaiseWindow, /* 38 */
-    XRefreshKeyboardMapping, /* 39 */
-    XResizeWindow, /* 40 */
-    XSelectInput, /* 41 */
-    XSendEvent, /* 42 */
-    XSetIconName, /* 43 */
-    XSetInputFocus, /* 44 */
-    XSetSelectionOwner, /* 45 */
-    XSetWindowBackground, /* 46 */
-    XSetWindowBackgroundPixmap, /* 47 */
-    XSetWindowBorder, /* 48 */
-    XSetWindowBorderPixmap, /* 49 */
-    XSetWindowBorderWidth, /* 50 */
-    XSetWindowColormap, /* 51 */
-    XUngrabKeyboard, /* 52 */
-    XUngrabPointer, /* 53 */
-    XUnmapWindow, /* 54 */
-    TkPutImage, /* 55 */
+    XCreateBitmapFromData, /* 18 */
+    XDefineCursor, /* 19 */
+    XDestroyWindow, /* 20 */
+    XDrawArc, /* 21 */
+    XDrawLines, /* 22 */
+    XDrawRectangle, /* 23 */
+    XFillArc, /* 24 */
+    XFillPolygon, /* 25 */
+    XFillRectangles, /* 26 */
+    XFreeColormap, /* 27 */
+    XFreeColors, /* 28 */
+    XFreeModifiermap, /* 29 */
+    XGetGeometry, /* 30 */
+    XGetWindowProperty, /* 31 */
+    XGrabKeyboard, /* 32 */
+    XGrabPointer, /* 33 */
+    XKeysymToKeycode, /* 34 */
+    XMapWindow, /* 35 */
+    XMoveResizeWindow, /* 36 */
+    XMoveWindow, /* 37 */
+    XQueryPointer, /* 38 */
+    XRaiseWindow, /* 39 */
+    XRefreshKeyboardMapping, /* 40 */
+    XResizeWindow, /* 41 */
+    XSelectInput, /* 42 */
+    XSendEvent, /* 43 */
+    XSetIconName, /* 44 */
+    XSetInputFocus, /* 45 */
+    XSetSelectionOwner, /* 46 */
+    XSetWindowBackground, /* 47 */
+    XSetWindowBackgroundPixmap, /* 48 */
+    XSetWindowBorder, /* 49 */
+    XSetWindowBorderPixmap, /* 50 */
+    XSetWindowBorderWidth, /* 51 */
+    XSetWindowColormap, /* 52 */
+    XUngrabKeyboard, /* 53 */
+    XUngrabPointer, /* 54 */
+    XUnmapWindow, /* 55 */
+    TkPutImage, /* 56 */
 #endif /* MAC_TCL */
 };
 
