@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.12 2002/01/25 21:09:37 dgp Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.13 2002/04/05 08:41:44 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -4953,9 +4953,6 @@ CreateWrapper(wmPtr)
     wrapperPtr->mainPtr->refCount++;
     wrapperPtr->dirtyAtts = 0;
     wrapperPtr->dirtyChanges = 0;
-#ifdef TK_USE_INPUT_METHODS
-    wrapperPtr->inputContext = NULL;
-#endif /* TK_USE_INPUT_METHODS */
     wrapperPtr->wmInfoPtr = wmPtr;
 
     /*
