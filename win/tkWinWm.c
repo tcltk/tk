@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.80 2004/12/17 14:17:54 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.81 2004/12/19 18:14:26 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -3279,9 +3279,12 @@ WmDeiconifyCmd(tkwin, winPtr, interp, objc, objv)
 	return TCL_ERROR;
     }
     if (winPtr->flags & TK_EMBEDDED) {
-	Tcl_AppendResult(interp, "can't deiconify ", winPtr->pathName,
+	if(!SendMessage(wmPtr->wrapper, TK_DEICONIFY, 0, 0)) {
+	    Tcl_AppendResult(interp, "can't deiconify ", winPtr->pathName,
 		": it is an embedded window", (char *) NULL);
-	return TCL_ERROR;
+	    return TCL_ERROR;
+	}
+	return TCL_OK;
     }
 
     wmPtr->flags &= ~WM_WITHDRAWN;
@@ -3811,9 +3814,11 @@ WmIconifyCmd(tkwin, winPtr, interp, objc, objv)
 	return TCL_ERROR;
     }
     if (winPtr->flags & TK_EMBEDDED) {
-	Tcl_AppendResult(interp, "can't iconify ", winPtr->pathName,
+	if(!SendMessage(wmPtr->wrapper, TK_ICONIFY, 0, 0)) {
+	    Tcl_AppendResult(interp, "can't iconify ", winPtr->pathName,
 		": it is an embedded window", (char *) NULL);
-	return TCL_ERROR;
+	    return TCL_ERROR;
+	}
     }
     TkpWmSetState(winPtr, IconicState);
     return TCL_OK;
@@ -4913,8 +4918,13 @@ WmTitleCmd(tkwin, winPtr, interp, objc, objv)
 	if (!(wmPtr->flags & WM_NEVER_MAPPED) && wmPtr->wrapper != NULL) {
 	    Tcl_DString titleString;
 	    Tcl_WinUtfToTChar(wmPtr->title, -1, &titleString);
-	    (*tkWinProcs->setWindowText)(wmPtr->wrapper,
+	    if(winPtr->flags & TK_EMBEDDED) {
+		SendMessage(wmPtr->wrapper, TK_TITLE, 0, 
+		    (long)(LPCTSTR)Tcl_DStringValue(&titleString));
+	    } else {
+		(*tkWinProcs->setWindowText)(wmPtr->wrapper,
 		    (LPCTSTR) Tcl_DStringValue(&titleString));
+	    }
 	    Tcl_DStringFree(&titleString);
 	}
     }
@@ -5604,7 +5614,7 @@ UpdateGeometryInfo(clientData)
 	 * the other process understands this Tk message, otherwise
 	 * our requested geometry will be ignored.
 	 */
-
+	SendMessage(wmPtr->wrapper, TK_MOVEWINDOW, x, y);
 	SendMessage(wmPtr->wrapper, TK_GEOMETRYREQ, width, height);
     } else {
 	int reqHeight, reqWidth;
@@ -6307,7 +6317,11 @@ TkWmRestackToplevel(winPtr, aboveBelow, otherPtr)
 	insertAfter = NULL;
     }
 
-    TkWinSetWindowPos(hwnd, insertAfter, aboveBelow);
+    if(winPtr->flags & TK_EMBEDDED) {
+	SendMessage(winPtr->wmInfoPtr->wrapper, TK_RAISEWINDOW, (WPARAM)insertAfter, aboveBelow);
+    } else {
+	TkWinSetWindowPos(hwnd, insertAfter, aboveBelow);
+    }
 }
 
 /*
