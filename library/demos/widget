@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.4 2001/10/30 11:21:50 dkf Exp $
+# RCS: @(#) $Id: widget,v 1.5 2001/11/19 14:02:29 dkf Exp $
 
 eval destroy [winfo child .]
 wm title . "Widget Demonstration"
@@ -120,117 +120,76 @@ set lastLine ""
 
 # Create the text for the text widget.
 
+proc addDemoSection {title demos} {
+    .t insert end "\n" {} $title title " \n " demospace
+    set num 0
+    foreach {name description} $demos {
+	.t insert end "[incr num]. $description." [list demo demo-$name]
+	.t insert end " \n " demospace
+    }
+}
+
 .t insert end "Tk Widget Demonstrations\n" title
 .t insert end {
 This application provides a front end for several short scripts that demonstrate what you can do with Tk widgets.  Each of the numbered lines below describes a demonstration;  you can click on it to invoke the demonstration.  Once the demonstration window appears, you can click the "See Code" button to see the Tcl/Tk code that created the demonstration.  If you wish, you can edit the code and click the "Rerun Demo" button in the code window to reinvoke the demonstration with the modified code.
-
 }
-.t insert end "Labels, buttons, checkbuttons, and radiobuttons" title
-.t insert end " \n " {demospace}
-.t insert end "1. Labels (text and bitmaps)." {demo demo-label}
-.t insert end " \n " {demospace}
-.t insert end "2. Buttons." {demo demo-button}
-.t insert end " \n " {demospace}
-.t insert end "3. Checkbuttons (select any of a group)." {demo demo-check}
-.t insert end " \n " {demospace}
-.t insert end "4. Radiobuttons (select one of a group)." {demo demo-radio}
-.t insert end " \n " {demospace}
-.t insert end "5. A 15-puzzle game made out of buttons." {demo demo-puzzle}
-.t insert end " \n " {demospace}
-.t insert end "6. Iconic buttons that use bitmaps." {demo demo-icon}
-.t insert end " \n " {demospace}
-.t insert end "7. Two labels displaying images." {demo demo-image1}
-.t insert end " \n " {demospace}
-.t insert end "8. A simple user interface for viewing images." \
-    {demo demo-image2}
-.t insert end " \n " {demospace}
-.t insert end "9. Labelled frames." {demo demo-labelframe}
-.t insert end " \n " {demospace}
-
-.t insert end \n {} "Listboxes" title
-.t insert end " \n " {demospace}
-.t insert end "1. 50 states." {demo demo-states}
-.t insert end " \n " {demospace}
-.t insert end "2. Colors: change the color scheme for the application." \
-	{demo demo-colors}
-.t insert end " \n " {demospace}
-.t insert end "3. A collection of famous sayings." {demo demo-sayings}
-.t insert end " \n " {demospace}
-
-.t insert end \n {} "Entries and Spin-boxes" title
-.t insert end " \n " {demospace}
-.t insert end "1. Entries without scrollbars." {demo demo-entry1}
-.t insert end " \n " {demospace}
-.t insert end "2. Entries with scrollbars." {demo demo-entry2}
-.t insert end " \n " {demospace}
-.t insert end "3. Spin-boxes." {demo demo-spin}
-.t insert end " \n " {demospace}
-.t insert end "4. Simple Rolodex-like form." {demo demo-form}
-.t insert end " \n " {demospace}
-
-.t insert end \n {} "Text" title
-.t insert end " \n " {demospace}
-.t insert end "1. Basic editable text." {demo demo-text}
-.t insert end " \n " {demospace}
-.t insert end "2. Text display styles." {demo demo-style}
-.t insert end " \n " {demospace}
-.t insert end "3. Hypertext (tag bindings)." {demo demo-bind}
-.t insert end " \n " {demospace}
-.t insert end "4. A text widget with embedded windows." {demo demo-twind}
-.t insert end " \n " {demospace}
-.t insert end "5. A search tool built with a text widget." {demo demo-search}
-.t insert end " \n " {demospace}
-
-.t insert end \n {} "Canvases" title
-.t insert end " \n " {demospace}
-.t insert end "1. The canvas item types." {demo demo-items}
-.t insert end " \n " {demospace}
-.t insert end "2. A simple 2-D plot." {demo demo-plot}
-.t insert end " \n " {demospace}
-.t insert end "3. Text items in canvases." {demo demo-ctext}
-.t insert end " \n " {demospace}
-.t insert end "4. An editor for arrowheads on canvas lines." {demo demo-arrow}
-.t insert end " \n " {demospace}
-.t insert end "5. A ruler with adjustable tab stops." {demo demo-ruler}
-.t insert end " \n " {demospace}
-.t insert end "6. A building floor plan." {demo demo-floor}
-.t insert end " \n " {demospace}
-.t insert end "7. A simple scrollable canvas." {demo demo-cscroll}
-.t insert end " \n " {demospace}
-
-.t insert end \n {} "Scales" title
-.t insert end " \n " {demospace}
-.t insert end "1. Vertical scale." {demo demo-vscale}
-.t insert end " \n " {demospace}
-.t insert end "2. Horizontal scale." {demo demo-hscale}
-.t insert end " \n " {demospace}
-
-.t insert end \n {} "Menus" title
-.t insert end " \n " {demospace}
-.t insert end "1. Menus and cascades." \
-	{demo demo-menu}
-.t insert end " \n " {demospace}
-.t insert end "2. Menubuttons"\
-	{demo demo-menubu}
-.t insert end " \n " {demospace}
-
-.t insert end \n {} "Common Dialogs" title
-.t insert end " \n " {demospace}
-.t insert end "1. Message boxes." {demo demo-msgbox}
-.t insert end " \n " {demospace}
-.t insert end "2. File selection dialog." {demo demo-filebox}
-.t insert end " \n " {demospace}
-.t insert end "3. Color picker." {demo demo-clrpick}
-.t insert end " \n " {demospace}
-
-.t insert end \n {} "Miscellaneous" title
-.t insert end " \n " {demospace}
-.t insert end "1. The built-in bitmaps." {demo demo-bitmap}
-.t insert end " \n " {demospace}
-.t insert end "2. A dialog box with a local grab." {demo demo-dialog1}
-.t insert end " \n " {demospace}
-.t insert end "3. A dialog box with a global grab." {demo demo-dialog2}
-.t insert end " \n " {demospace}
+addDemoSection "Labels, buttons, checkbuttons, and radiobuttons" {
+    label	"Labels (text and bitmaps)"
+    button	"Buttons"
+    check	"Check-buttons (select any of a group)"
+    radio	"Radio-buttons (select one of a group)"
+    puzzle	"A 15-puzzle game made out of buttons"
+    icon	"Iconic buttons that use bitmaps"
+    image1	"Two labels displaying images"
+    image2	"A simple user interface for viewing images"
+    labelframe	"Labelled frames"
+}
+addDemoSection "Listboxes" {
+    states	"The 50 states"
+    colors	"Colors: change the color scheme for the application"
+    sayings	"A collection of famous and infamous sayings"
+}
+addDemoSection "Entries and Spin-boxes" {
+    entry1	"Entries without scrollbars"
+    entry2	"Entries with scrollbars"
+    entry3	"Validated entries and password fields"
+    spin	"Spin-boxes"
+    form	"Simple Rolodex-like form"
+}
+addDemoSection "Text" {
+    text	"Basic editable text"
+    style	"Text display styles"
+    bind	"Hypertext (tag bindings)"
+    twind	"A text widget with embedded windows"
+    search	"A search tool built with a text widget"
+}
+addDemoSection "Canvases" {
+    items	"The canvas item types"
+    plot	"A simple 2-D plot"
+    ctext	"Text items in canvases"
+    arrow	"An editor for arrowheads on canvas lines"
+    ruler	"A ruler with adjustable tab stops"
+    floor	"A building floor plan"
+    cscroll	"A simple scrollable canvas"
+}
+addDemoSection "Scales" {
+    vscale	"Vertical scale"
+    hscale	"Horizontal scale"
+}
+addDemoSection "Menus" {
+    menu	"Menus and cascades (sub-menus)"
+    menubu	"Menu-buttons"
+}
+addDemoSection "Common Dialogs" {
+    msgbox	"Message boxes"
+    filebox	"File selection dialog"
+    clrpick	"Color picker"
+}
+addDemoSection "Miscellaneous" {
+    bitmap	"The built-in bitmaps"
+    dialog1	"A dialog box with a local grab"
+    dialog2	"A dialog box with a global grab"
+}
 
 .t configure -state disabled
 focus .s
@@ -390,7 +349,8 @@ proc showCode w {
 proc aboutBox {} {
     tk_messageBox -icon info -type ok -title "About Widget Demo" -message \
 "Tk widget demonstration\n\n\
-Copyright (c) 1996-1997 Sun Microsystems, Inc."
+Copyright (c) 1996-1997 Sun Microsystems, Inc.\n
+Copyright (c) 2001 Donal K. Fellows"
 }
 
 # Local Variables:
