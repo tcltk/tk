@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.13.2.2 2001/10/17 07:02:07 wolfsuit Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.13.2.3 2001/11/11 17:58:53 wolfsuit Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -734,9 +734,6 @@ typedef struct TkIntStubs {
 #ifdef MAC_TCL
     void (*tkClipBox) _ANSI_ARGS_((TkRegion rgn, XRectangle* rect_return)); /* 113 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    void *reserved113;
-#endif /* MAC_OSX_TCL */
 #ifdef MAC_OSX_TK
     void (*tkClipBox) _ANSI_ARGS_((TkRegion rgn, XRectangle* rect_return)); /* 113 */
 #endif /* MAC_OSX_TK */
@@ -749,9 +746,6 @@ typedef struct TkIntStubs {
 #ifdef MAC_TCL
     TkRegion (*tkCreateRegion) _ANSI_ARGS_((void)); /* 114 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    void *reserved114;
-#endif /* MAC_OSX_TCL */
 #ifdef MAC_OSX_TK
     TkRegion (*tkCreateRegion) _ANSI_ARGS_((void)); /* 114 */
 #endif /* MAC_OSX_TK */
@@ -764,9 +758,6 @@ typedef struct TkIntStubs {
 #ifdef MAC_TCL
     void (*tkDestroyRegion) _ANSI_ARGS_((TkRegion rgn)); /* 115 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    void *reserved115;
-#endif /* MAC_OSX_TCL */
 #ifdef MAC_OSX_TK
     void (*tkDestroyRegion) _ANSI_ARGS_((TkRegion rgn)); /* 115 */
 #endif /* MAC_OSX_TK */
@@ -779,9 +770,6 @@ typedef struct TkIntStubs {
 #ifdef MAC_TCL
     void (*tkIntersectRegion) _ANSI_ARGS_((TkRegion sra, TkRegion srcb, TkRegion dr_return)); /* 116 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    void *reserved116;
-#endif /* MAC_OSX_TCL */
 #ifdef MAC_OSX_TK
     void (*tkIntersectRegion) _ANSI_ARGS_((TkRegion sra, TkRegion srcb, TkRegion dr_return)); /* 116 */
 #endif /* MAC_OSX_TK */
@@ -794,9 +782,6 @@ typedef struct TkIntStubs {
 #ifdef MAC_TCL
     int (*tkRectInRegion) _ANSI_ARGS_((TkRegion rgn, int x, int y, unsigned int width, unsigned int height)); /* 117 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    void *reserved117;
-#endif /* MAC_OSX_TCL */
 #ifdef MAC_OSX_TK
     int (*tkRectInRegion) _ANSI_ARGS_((TkRegion rgn, int x, int y, unsigned int width, unsigned int height)); /* 117 */
 #endif /* MAC_OSX_TK */
@@ -809,9 +794,6 @@ typedef struct TkIntStubs {
 #ifdef MAC_TCL
     void (*tkSetRegion) _ANSI_ARGS_((Display* display, GC gc, TkRegion rgn)); /* 118 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    void *reserved118;
-#endif /* MAC_OSX_TCL */
 #ifdef MAC_OSX_TK
     void (*tkSetRegion) _ANSI_ARGS_((Display* display, GC gc, TkRegion rgn)); /* 118 */
 #endif /* MAC_OSX_TK */
@@ -824,9 +806,6 @@ typedef struct TkIntStubs {
 #ifdef MAC_TCL
     void (*tkUnionRectWithRegion) _ANSI_ARGS_((XRectangle* rect, TkRegion src, TkRegion dr_return)); /* 119 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    void *reserved119;
-#endif /* MAC_OSX_TCL */
 #ifdef MAC_OSX_TK
     void (*tkUnionRectWithRegion) _ANSI_ARGS_((XRectangle* rect, TkRegion src, TkRegion dr_return)); /* 119 */
 #endif /* MAC_OSX_TK */

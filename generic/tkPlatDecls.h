@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.6.6.2 2001/10/17 07:02:07 wolfsuit Exp $
+ * RCS: @(#) $Id: tkPlatDecls.h,v 1.6.6.3 2001/11/11 17:58:53 wolfsuit Exp $
  */
 
 #ifndef _TKPLATDECLS
@@ -112,13 +112,8 @@ EXTERN GWorldPtr	TkMacOSXGetDrawablePort _ANSI_ARGS_((
 EXTERN ControlRef	TkMacOSXGetRootControl _ANSI_ARGS_((
 				Drawable drawable));
 /* 9 */
-EXTERN int		Tk_MacOSXOpenBundleResources _ANSI_ARGS_((
-				Tcl_Interp * interp, char * bundleName, 
-				char * libraryPath, int maxPathLen, 
-				int hasResourceFile));
-/* 10 */
 EXTERN void		Tk_MacOSXSetupTkNotifier _ANSI_ARGS_((void));
-/* 11 */
+/* 10 */
 EXTERN int		Tk_MacOSXIsAppInFront _ANSI_ARGS_((void));
 #endif /* MAC_OSX_TK */
 
@@ -157,9 +152,8 @@ typedef struct TkPlatStubs {
     void (*tkMacOSXInvalClipRgns) _ANSI_ARGS_((TkWindow * winPtr)); /* 6 */
     GWorldPtr (*tkMacOSXGetDrawablePort) _ANSI_ARGS_((Drawable drawable)); /* 7 */
     ControlRef (*tkMacOSXGetRootControl) _ANSI_ARGS_((Drawable drawable)); /* 8 */
-    int (*tk_MacOSXOpenBundleResources) _ANSI_ARGS_((Tcl_Interp * interp, char * bundleName, char * libraryPath, int maxPathLen, int hasResourceFile)); /* 9 */
-    void (*tk_MacOSXSetupTkNotifier) _ANSI_ARGS_((void)); /* 10 */
-    int (*tk_MacOSXIsAppInFront) _ANSI_ARGS_((void)); /* 11 */
+    void (*tk_MacOSXSetupTkNotifier) _ANSI_ARGS_((void)); /* 9 */
+    int (*tk_MacOSXIsAppInFront) _ANSI_ARGS_((void)); /* 10 */
 #endif /* MAC_OSX_TK */
 } TkPlatStubs;
 
@@ -286,17 +280,13 @@ extern TkPlatStubs *tkPlatStubsPtr;
 #define TkMacOSXGetRootControl \
 	(tkPlatStubsPtr->tkMacOSXGetRootControl) /* 8 */
 #endif
-#ifndef Tk_MacOSXOpenBundleResources
-#define Tk_MacOSXOpenBundleResources \
-	(tkPlatStubsPtr->tk_MacOSXOpenBundleResources) /* 9 */
-#endif
 #ifndef Tk_MacOSXSetupTkNotifier
 #define Tk_MacOSXSetupTkNotifier \
-	(tkPlatStubsPtr->tk_MacOSXSetupTkNotifier) /* 10 */
+	(tkPlatStubsPtr->tk_MacOSXSetupTkNotifier) /* 9 */
 #endif
 #ifndef Tk_MacOSXIsAppInFront
 #define Tk_MacOSXIsAppInFront \
-	(tkPlatStubsPtr->tk_MacOSXIsAppInFront) /* 11 */
+	(tkPlatStubsPtr->tk_MacOSXIsAppInFront) /* 10 */
 #endif
 #endif /* MAC_OSX_TK */
 

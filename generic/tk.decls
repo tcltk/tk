@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.15.2.2 2001/10/17 07:02:06 wolfsuit Exp $
+# RCS: @(#) $Id: tk.decls,v 1.15.2.3 2001/11/11 17:58:53 wolfsuit Exp $
 
 library tk
 
@@ -1290,17 +1290,9 @@ declare 8 aqua {
 }
 
 declare 9 aqua {
-    int Tk_MacOSXOpenBundleResources (Tcl_Interp *interp, \
-        char *bundleName, \
-        char *libraryPath, \
-        int  maxPathLen, \
-        int hasResourceFile)
-}
-
-declare 10 aqua {
     void Tk_MacOSXSetupTkNotifier (void)
 }
 
-declare 11 aqua {
+declare 10 aqua {
     int Tk_MacOSXIsAppInFront (void)
 }
