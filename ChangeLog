@@ -1,3 +1,10 @@
+2003-08-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/demos/msgbox.tcl: Brought into line with the newer
+	look-and-feel for the demos.
+	* library/demos/widget (addSeeDismiss): Added support for an extra
+	button defined by the caller.
+
 2003-08-21  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWin3d.c: Applied Tk patch 791273 from Jeremy Collins which
