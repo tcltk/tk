@@ -4078,7 +4078,7 @@ rm -f conftest*
     if test "$no_x" = "yes" -o "$not_really_there" = "yes"; then
 	echo $ac_n "checking for X11 header files""... $ac_c" 1>&6
 echo "configure:4081: checking for X11 header files" >&5
-	XINCLUDES="# no special path needed"
+	found_xincludes="no"
 	cat > conftest.$ac_ext <<EOF
 #line 4084 "configure"
 #include "confdefs.h"
@@ -4088,35 +4088,35 @@ ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
 { (eval echo configure:4089: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
-  :
+  rm -rf conftest*
+  found_xincludes="yes"
 else
   echo "$ac_err" >&5
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  XINCLUDES="nope"
+  found_xincludes="no"
 fi
 rm -f conftest*
-	if test "$XINCLUDES" = nope; then
+	if test "$found_xincludes" = "no"; then
 	    dirs="/usr/unsupported/include /usr/local/include /usr/X386/include /usr/X11R6/include /usr/X11R5/include /usr/include/X11R5 /usr/include/X11R4 /usr/openwin/include /usr/X11/include /usr/sww/include"
 	    for i in $dirs ; do
 		if test -r $i/X11/Intrinsic.h; then
 		    echo "$ac_t""$i" 1>&6
 		    XINCLUDES=" -I$i"
+		    found_xincludes="yes"
 		    break
 		fi
 	    done
 	fi
     else
 	if test "$x_includes" != ""; then
-	    XINCLUDES=-I$x_includes
-	else
-	    XINCLUDES="# no special path needed"
+	    XINCLUDES="-I$x_includes"
+	    found_xincludes="yes"
 	fi
     fi
-    if test "$XINCLUDES" = nope; then
+    if test found_xincludes = "no"; then
 	echo "$ac_t""couldn't find any!" 1>&6
-	XINCLUDES="# no include files found"
     fi
 
     if test "$no_x" = yes; then
