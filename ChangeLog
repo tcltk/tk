@@ -1,5 +1,9 @@
 2002-04-22  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/button.tcl (ButtonLeave): corrected the 3
+	implementations of ButtonLeave to check for Priv(relief) existing
+	before trying to use it. [Patch #541849]
+
 	* generic/tkTextDisp.c (DisplayLineBackground): 
 	* unix/tkUnix3d.c (Tk_3DHorizontalBevel): 
 	* unix/tkUnixFont.c (Tk_DrawChars): applied fixes to not overrun
