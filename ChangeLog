@@ -1,3 +1,13 @@
+2003-07-02  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* unix/tkUnixEvent.c (TkpCloseDisplay): Don't
+	test for XCloseIM bug when the XFree86 version
+	is newer than 4.0 since the layout of the
+	XIM structure has changed. The check is not
+	needed for newer XFree86 releases since
+	the bug we are checking for was fixed in
+	the 4.2.99.2 release. [Bug 755530]
+
 2003-06-26  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* library/menu.tcl: workaround problem on some Windows systems
