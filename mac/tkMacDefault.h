@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDefault.h,v 1.10 2001/09/26 21:36:19 pspjuth Exp $
+ * RCS: @(#) $Id: tkMacDefault.h,v 1.11 2001/10/12 13:30:31 tmh Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -250,6 +250,7 @@
 #define DEF_MENU_ENTRY_BITMAP		None
 #define DEF_MENU_ENTRY_COLUMN_BREAK	"0"
 #define DEF_MENU_ENTRY_COMMAND		(char *) NULL
+#define DEF_MENU_ENTRY_COMPOUND 	"none"
 #define DEF_MENU_ENTRY_FG		(char *) NULL
 #define DEF_MENU_ENTRY_FONT		(char *) NULL
 #define DEF_MENU_ENTRY_HIDE_MARGIN	"0"
