@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.2 2003/04/30 16:19:07 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.3 2003/09/25 05:37:48 das Exp $
  */
 
 #include "tkButton.h"
@@ -1171,6 +1171,26 @@ SetupBevelButton(
                 "SetControlData BevelButtonGraphicAlign failed, %d\n", err );
     }
 
+    if (butPtr->compound != COMPOUND_NONE) {
+        ControlButtonTextPlacement thePlacement = \
+                kControlBevelButtonPlaceNormally;
+        if (butPtr->compound == COMPOUND_TOP) {
+            thePlacement = kControlBevelButtonPlaceBelowGraphic;
+        } else if (butPtr->compound == COMPOUND_BOTTOM) {
+            thePlacement = kControlBevelButtonPlaceAboveGraphic;
+        } else if (butPtr->compound == COMPOUND_LEFT) {
+            thePlacement = kControlBevelButtonPlaceToRightOfGraphic;
+        } else if (butPtr->compound == COMPOUND_RIGHT) {
+            thePlacement = kControlBevelButtonPlaceToLeftOfGraphic;
+        }
+        if ((err=SetControlData(controlHandle, kControlButtonPart,
+                kControlBevelButtonTextPlaceTag,
+                sizeof(ControlButtonTextPlacement),
+                (char *) &thePlacement)) != noErr ) {
+            fprintf(stderr,
+                    "SetControlData BevelButtonTextPlace failed, %d\n", err );
+        }
+    }
 }
 
 /*
