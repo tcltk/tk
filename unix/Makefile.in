@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.60 2002/01/11 18:41:04 mdejong Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.61 2002/01/11 19:58:51 mdejong Exp $
 
 # Current Tk version;  used in various names.
 
@@ -405,11 +405,24 @@ ${TCL_BIN_DIR}/tcltest:
 	cd ${TCL_BIN_DIR} ; \
 	$(MAKE) tcltest
 
+# Resetting the LIB_RUNTIME_DIR below is required so that
+# the generated tktest executable gets the build directory
+# burned into its ld search path. This keeps tktest from
+# picking up an already installed version of the Tcl or
+# Tk shared libraries.
+
 tktest: ${TCL_BIN_DIR}/tcltest $(TKTEST_OBJS) $(TK_LIB_FILE)
+	$(MAKE) tktest-real LIB_RUNTIME_DIR=`pwd`:$(TCL_BIN_DIR)
+
+tktest-real:
 	${CC} $(LDFLAGS) $(TKTEST_OBJS) \
 		@TK_BUILD_LIB_SPEC@ \
 		$(WISH_LIBS) $(TK_CC_SEARCH_FLAGS) -o tktest
 
+# FIXME: This xttest rule seems to be broken in a number of ways.
+# It should use TK_CC_SEARCH_FLAGS, it does not include the shared
+# lib location logic from tktest, and it is not clear where this
+# test.o object file comes from.
 xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE)
 	${CC} $(LDFLAGS) test.o tkTest.o tkSquare.o \
 		@TK_BUILD_LIB_SPEC@ \
@@ -423,11 +436,6 @@ xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE)
 #	% make test TESTFLAGS="-verbose bps -file fileName.test"
 
 test: tktest
-	LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}; \
-	export LD_LIBRARY_PATH; \
-	LIBPATH=`pwd`:${TCL_BIN_DIR}:${LIBPATH}; export LIBPATH; \
-	SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}; \
-	export SHLIB_PATH; \
 	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
 	./tktest $(TOP_DIR)/tests/all.tcl -geometry +0+0 \
@@ -435,11 +443,6 @@ test: tktest
 
 # Tests with different languages
 testlang: tktest
-	LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}; \
-	export LD_LIBRARY_PATH; \
-	LIBPATH=`pwd`:${TCL_BIN_DIR}:${LIBPATH}; export LIBPATH; \
-	SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}; \
-	export SHLIB_PATH; \
 	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
 	for lang in $(LOCALES) ;  \
@@ -451,10 +454,6 @@ testlang: tktest
 
 # Useful target to launch a built tktest with the proper path,...
 runtest: tktest
-	LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}; \
-	export LD_LIBRARY_PATH; \
-	LIBPATH=`pwd`:${TCL_BIN_DIR}:${LIBPATH}; export LIBPATH; \
-	SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}; export SHLIB_PATH; \
 	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
 	./tktest
