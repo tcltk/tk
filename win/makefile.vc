@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# SCCS: @(#) makefile.vc 1.64 97/10/27 17:27:20
+# SCCS: %Z% $Id: makefile.vc,v 1.2 1998/07/01 18:48:48 escoffon Exp $ 
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -25,16 +25,16 @@
 # TCLDIR = location of top of Tcl source heirarchy
 #
 
-ROOT	= ..
-TMPDIR	= .
-TOOLS32	= c:\msdev
-TCLDIR	= ..\..\tcl8.0
+ROOT		= ..
+TOOLS32		= c:\progra~1\devstudio\vc
+TOOLS32_rc	= c:\progra~1\devstudio\sharedide
+TCLDIR		= ..\..\tcl8.0
 
 # Set this to the appropriate value of /MACHINE: for your platform
 MACHINE	= IX86
 
-# Comment the following line to compile with symbols
-NODEBUG=1
+# Set NODEBUG to 0 to compile with symbols
+NODEBUG = 1
 
 # uncomment the following two lines to compile with TCL_MEM_DEBUG
 #DEBUGDEFINES	=-DTCL_MEM_DEBUG
@@ -45,19 +45,28 @@ NODEBUG=1
 
 VERSION = 80
 
-TCLDLL = tcl$(VERSION).dll
-TCLLIB = tcl$(VERSION).lib
-TCLPLUGINDLL = tcl$(VERSION)p.dll
-TCLPLUGINLIB = tcl$(VERSION)p.lib
-TKDLL = tk$(VERSION).dll
-TKLIB = tk$(VERSION).lib
-TKPLUGINDLL = tk$(VERSION)p.dll
-TKPLUGINLIB = tk$(VERSION)p.lib
+!IF "$(NODEBUG)" == "1"
+TMPDIR		= Release
+DBGX		=
+!ELSE
+TMPDIR		= Debug
+DBGX		= d
+!ENDIF
+OUTDIR		= $(TMPDIR)
 
-WISH = wish$(VERSION).exe
-WISHP = wishp$(VERSION).exe
-TKTEST = tktest.exe
-DUMPEXTS = $(TMPDIR)\dumpexts.exe
+TCLLIB 		= tcl$(VERSION)$(DBGX).lib
+TCLPLUGINLIB 	= tcl$(VERSION)p.lib
+TKDLLNAME	= tk$(VERSION)$(DBGX).dll
+TKDLL 		= $(OUTDIR)\$(TKDLLNAME)
+TKLIB 		= $(OUTDIR)\tk$(VERSION)$(DBGX).lib
+TKPLUGINDLLNAME	= tk$(VERSION)p$(DBG).dll
+TKPLUGINDLL 	= $(OUTDIR)\$(TKPLUGINDLLNAME)
+TKPLUGINLIB 	= $(OUTDIR)\tk$(VERSION)p$(DBGX).lib
+
+WISH 		= $(OUTDIR)\wish$(VERSION)$(DBGX).exe
+WISHP 		= $(OUTDIR)\wishp$(VERSION)$(DBGX).exe
+TKTEST 		= $(OUTDIR)\tktest.exe
+DUMPEXTS 	= $(TMPDIR)\dumpexts.exe
 
 WISHOBJS = \
 	$(TMPDIR)\tkConsole.obj \
@@ -172,14 +181,14 @@ TKOBJS = \
 
 cc32		= $(TOOLS32)\bin\cl.exe
 link32		= $(TOOLS32)\bin\link.exe
-rc32		= $(TOOLS32)\bin\rc.exe
+rc32		= $(TOOLS32_rc)\bin\rc.exe
 include32	= -I$(TOOLS32)\include
 
 WINDIR          = $(ROOT)\win
 GENERICDIR	= $(ROOT)\generic
 XLIBDIR		= $(ROOT)\xlib
 BITMAPDIR	= $(ROOT)\bitmaps
-TCLLIBDIR       = $(TCLDIR)\win
+TCLLIBDIR       = $(TCLDIR)\win\$(OUTDIR)
 RCDIR		= $(WINDIR)\rc
 
 TK_INCLUDES	= -I$(WINDIR) -I$(GENERICDIR) -I$(BITMAPDIR) -I$(XLIBDIR) \
@@ -193,7 +202,7 @@ TK_CFLAGS	= $(cdebug) $(cflags) $(cvarsdll) $(include32) \
 # Link flags
 ######################################################################
 
-!IFDEF NODEBUG
+!IF "$(NODEBUG)" == "1"
 ldebug = /RELEASE
 !ELSE
 ldebug = -debug:full -debugtype:cv
@@ -232,14 +241,14 @@ guilibsdll = $(libcdll) $(winlibs)
 # Compile flags
 ######################################################################
 
-!IFDEF NODEBUG
+!IF "$(NODEBUG)" == "1"
 cdebug = -Oti -Gs -GD
 !ELSE
 cdebug = -Z7 -Od -WX
 !ENDIF
 
 # declarations common to all compiler options
-ccommon = -c -W3 -nologo -YX
+ccommon = -c -W3 -nologo -Fp$(TMPDIR)\ -YX
 
 !IF "$(MACHINE)" == "IX86"
 cflags = $(ccommon) -D_X86_=1
@@ -267,9 +276,13 @@ CON_CFLAGS	= $(cdebug) $(cflags) $(cvars) $(include32) -DCONSOLE
 # Project specific targets
 ######################################################################
 
-all:    $(WISH)
-test:	$(TKTEST)
-plugin:	$(TKPLUGINDLL) $(WISHP)
+all:    setup $(WISH)
+test:	setup $(TKTEST)
+plugin:	setup $(TKPLUGINDLL) $(WISHP)
+
+setup:
+	@mkd $(TMPDIR)
+	@mkd $(OUTDIR)
 
 $(TKLIB): $(TKDLL)
 
@@ -308,12 +321,12 @@ $(TKTEST): $(TKTESTOBJS) $(TKLIB) $(TMPDIR)\wish.res
 		$(guilibsdll) $(TCLLIBDIR)\$(TCLLIB) $(TKLIB) $(TKTESTOBJS)
 
 $(TMPDIR)\tk.def: $(DUMPEXTS) $(TKOBJS)
-	$(DUMPEXTS) -o $@ $(TKDLL) @<<
+	$(DUMPEXTS) -o $@ $(TKDLLNAME) @<<
 		$(TKOBJS)
 <<
 
 $(TMPDIR)\plugin.def: $(DUMPEXTS) $(TKOBJS)
-	$(DUMPEXTS) -o $@ $(TKPLUGINDLL) @<<
+	$(DUMPEXTS) -o $@ $(TKPLUGINDLLNAME) @<<
 		$(TKOBJS)
 <<
 
@@ -350,13 +363,18 @@ $(TMPDIR)\testMain.obj: $(ROOT)\win\winMain.c
 	$(rc32) -fo $@ -r -i $(GENERICDIR) $<
 
 clean:
-	-@del *.exp
-	-@del *.lib
-	-@del *.dll
-	-@del *.exe
-        -@del $(TMPDIR)\*.obj 
+        -@del $(OUTDIR)\*.exp 
+	-@del $(OUTDIR)\*.lib 
+	-@del $(OUTDIR)\*.dll 
+	-@del $(OUTDIR)\*.exe
+	-@del $(OUTDIR)\*.pdb
+	-@del $(TMPDIR)\*.pch
+        -@del $(TMPDIR)\*.obj
         -@del $(TMPDIR)\*.res
         -@del $(TMPDIR)\*.def
+        -@del $(TMPDIR)\*.exe
+	-@rmd $(OUTDIR)
+	-@rmd $(TMPDIR)
 
 # dependencies
 
