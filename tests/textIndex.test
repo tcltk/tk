@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textIndex.test,v 1.3 1999/04/16 01:51:41 stanton Exp $
+# RCS: @(#) $Id: textIndex.test,v 1.4 1999/04/19 23:54:57 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -252,7 +252,7 @@ test textIndex-4.8 {TkTextGetIndex, tags} {
     set result
 } {1.0 1.1}
 
-test textIndex-5.1 {TkTextGetIndex, "@"} {fonts} {
+test textIndex-5.1 {TkTextGetIndex, "@"} {nonPortable fonts} {
     .t index @12,9
 } 1.1
 test textIndex-5.2 {TkTextGetIndex, "@"} {fonts} {
