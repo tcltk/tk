@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: grid.n,v 1.13 2004/10/28 10:22:51 dkf Exp $
+'\" RCS: @(#) $Id: grid.n,v 1.14 2004/10/29 07:53:15 dkf Exp $
 '\" 
 .so man.macros
 .TH grid n 8.5 Tk "Tk Built-In Commands"
@@ -400,8 +400,8 @@ scrollbar .t.h \-orient horizontal \-command {.t.txt xview}
 \fBgrid\fR .t.txt .t.v \-sticky nsew
 \fBgrid\fR .t.h        \-sticky nsew
 # Tell the text widget to take all the extra room
-\fBgrid rowconfigure\fR    .t .t.txt -weight 1
-\fBgrid columnconfigure\fR .t .t.txt -weight 1
+\fBgrid rowconfigure\fR    .t .t.txt \-weight 1
+\fBgrid columnconfigure\fR .t .t.txt \-weight 1
 .CE
 .PP
 Three widgets of equal width, despite their different "natural" widths:
