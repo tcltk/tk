@@ -12,12 +12,20 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.24 1999/04/30 23:40:44 stanton Exp $
+ * RCS: @(#) $Id: tk.h,v 1.24.2.1 1999/05/19 23:24:26 redman Exp $
  */
 
 #ifndef _TK
 #define _TK
 
+/*
+ * For C++ compilers, use extern "C"
+ */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
 /*
  * When version numbers change here, you must also go into the following files
  * and update the version numbers:
@@ -1210,4 +1218,12 @@ typedef int (Tk_SelectionProc) _ANSI_ARGS_((ClientData clientData,
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
+/*
+ * end block for C++
+ */
+    
+#ifdef __cplusplus
+}
+#endif
+    
 #endif /* _TK */
