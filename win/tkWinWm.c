@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.81 2004/12/19 18:14:26 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.82 2004/12/20 01:13:12 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -3286,47 +3286,7 @@ WmDeiconifyCmd(tkwin, winPtr, interp, objc, objv)
 	}
 	return TCL_OK;
     }
-
-    wmPtr->flags &= ~WM_WITHDRAWN;
-
-    /*
-     * If WM_UPDATE_PENDING is true, a pending UpdateGeometryInfo may
-     * need to be called first to update a withdrawn toplevel's geometry
-     * before it is deiconified by TkpWmSetState.
-     * Don't bother if we've never been mapped.
-     */
-    if ((wmPtr->flags & WM_UPDATE_PENDING) &&
-	    !(wmPtr->flags & WM_NEVER_MAPPED)) {
-	Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData) winPtr);
-	UpdateGeometryInfo((ClientData) winPtr);
-    }
-
-    /*
-     * If we were in the ZoomState (maximized), 'wm deiconify'
-     * should not cause the window to shrink
-     */
-    if (wmPtr->hints.initial_state == ZoomState) {
-	TkpWmSetState(winPtr, ZoomState);
-    } else {
-	TkpWmSetState(winPtr, NormalState);
-    }
-
-    /*
-     * An unmapped window will be mapped at idle time
-     * by a call to MapFrame. That calls CreateWrapper
-     * which sets the focus and raises the window.
-     */
-    if (wmPtr->flags & WM_NEVER_MAPPED) {
-	return TCL_OK;
-    }
-
-    /*
-     * Follow Windows-like style here, raising the window to the top.
-     */
-    TkWmRestackToplevel(winPtr, Above, NULL);
-    if (!(Tk_Attributes((Tk_Window) winPtr)->override_redirect)) {
-	TkSetFocusWin(winPtr, 1);
-    }
+    TkpWinToplevelDeiconify(winPtr);
     return TCL_OK;
 }
 
@@ -3465,7 +3425,7 @@ WmGeometryCmd(tkwin, winPtr, interp, objc, objv)
     }
     if (objc == 3) {
 	char buf[16 + TCL_INTEGER_SPACE * 4];
-
+	int x, y;
 	xSign = (wmPtr->flags & WM_NEGATIVE_X) ? '-' : '+';
 	ySign = (wmPtr->flags & WM_NEGATIVE_Y) ? '-' : '+';
 	if (wmPtr->gridWin != NULL) {
@@ -3477,8 +3437,14 @@ WmGeometryCmd(tkwin, winPtr, interp, objc, objv)
 	    width = winPtr->changes.width;
 	    height = winPtr->changes.height;
 	}
-	sprintf(buf, "%dx%d%c%d%c%d", width, height, xSign, wmPtr->x,
-		ySign, wmPtr->y);
+	if(winPtr->flags & TK_EMBEDDED) {
+	    int result = SendMessage(wmPtr->wrapper, TK_MOVEWINDOW, -1, -1);
+	    wmPtr->x = result >> 16;
+	    wmPtr->y = result & 0x0000ffff;
+	} 
+	x = wmPtr->x;
+	y = wmPtr->y;
+	sprintf(buf, "%dx%d%c%d%c%d", width, height, xSign, x, ySign, y);
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	return TCL_OK;
     }
@@ -4353,8 +4319,8 @@ WmOverrideredirectCmd(tkwin, winPtr, interp, objc, objv)
 	atts.override_redirect = (boolean) ? True : False;
 	Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect,
 		&atts);
-	if (!(wmPtr->flags & (WM_NEVER_MAPPED)
-		&& !(winPtr->flags & TK_EMBEDDED))) {
+	if (!(wmPtr->flags & (WM_NEVER_MAPPED))
+		&& !(winPtr->flags & TK_EMBEDDED)) {
 	    UpdateWrapper(winPtr);
 	}
     }
@@ -4897,16 +4863,28 @@ WmTitleCmd(tkwin, winPtr, interp, objc, objv)
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     char *argv3;
     int length;
+    HWND wrapper;
 
     if (objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?newTitle?");
 	return TCL_ERROR;
     }
+
+    if(winPtr->flags & TK_EMBEDDED) {
+	wrapper = (HWND)SendMessage(wmPtr->wrapper, TK_GETFRAMEWID, 0, 0);
+    } else {
+	wrapper = wmPtr->wrapper;
+    }
     if (objc == 3) {
-	Tcl_SetResult(interp, (char *)
+	if(winPtr->flags & TK_EMBEDDED) {
+	    char buf[256];
+	    GetWindowText(wrapper, buf, 256);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	} else {
+	    Tcl_SetResult(interp, (char *)
 		((wmPtr->title != NULL) ? wmPtr->title : winPtr->nameUid),
 		TCL_STATIC);
-	return TCL_OK;
+	}
     } else {
 	if (wmPtr->title != NULL) {
 	    ckfree((char *) wmPtr->title);
@@ -4918,13 +4896,8 @@ WmTitleCmd(tkwin, winPtr, interp, objc, objv)
 	if (!(wmPtr->flags & WM_NEVER_MAPPED) && wmPtr->wrapper != NULL) {
 	    Tcl_DString titleString;
 	    Tcl_WinUtfToTChar(wmPtr->title, -1, &titleString);
-	    if(winPtr->flags & TK_EMBEDDED) {
-		SendMessage(wmPtr->wrapper, TK_TITLE, 0, 
-		    (long)(LPCTSTR)Tcl_DStringValue(&titleString));
-	    } else {
-		(*tkWinProcs->setWindowText)(wmPtr->wrapper,
-		    (LPCTSTR) Tcl_DStringValue(&titleString));
-	    }
+	    (*tkWinProcs->setWindowText)(wrapper,
+	        (LPCTSTR) Tcl_DStringValue(&titleString));
 	    Tcl_DStringFree(&titleString);
 	}
     }
@@ -5094,8 +5067,13 @@ WmWithdrawCmd(tkwin, winPtr, interp, objc, objv)
 		(char *) NULL);
 	return TCL_ERROR;
     }
-    wmPtr->flags |= WM_WITHDRAWN;
-    TkpWmSetState(winPtr, WithdrawnState);
+
+    if(winPtr->flags & TK_EMBEDDED) {
+	SendMessage(wmPtr->wrapper, TK_WITHDRAW, 0, 0);
+    } else {
+	wmPtr->flags |= WM_WITHDRAWN;
+	TkpWmSetState(winPtr, WithdrawnState);
+    }
     return TCL_OK;
 }
 
@@ -7672,4 +7650,166 @@ TkWinSetForegroundWindow(winPtr)
     } else {
 	SetForegroundWindow(Tk_GetHWND(winPtr->window));
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWinToplevelWithdraw --
+ *
+ *	This function is to be used by a window manage to withdraw
+ *	a toplevel window.
+ *
+ * Results:
+ *	none
+ *
+ * Side effects:
+ *	May withdraw the toplevel window.
+ *
+ *----------------------------------------------------------------------
+ */
+void 
+TkpWinToplevelWithDraw(winPtr)
+    TkWindow *winPtr;
+{
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    wmPtr->flags |= WM_WITHDRAWN;
+    TkpWmSetState(winPtr, WithdrawnState);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWinToplevelIconify --
+ *
+ *	This function is to be used by a window manage to iconify
+ *	a toplevel window.
+ *
+ * Results:
+ *	none
+ *
+ * Side effects:
+ *	May iconify the toplevel window.
+ *
+ *----------------------------------------------------------------------
+ */
+void TkpWinToplevelIconify(winPtr)
+    TkWindow *winPtr;
+{
+    TkpWmSetState(winPtr, IconicState);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWinToplevelDeiconify --
+ *
+ *	This function is to be used by a window manage to deiconify
+ *	a toplevel window.
+ *
+ * Results:
+ *	none
+ *
+ * Side effects:
+ *	May deiconify the toplevel window.
+ *
+ *----------------------------------------------------------------------
+ */
+void TkpWinToplevelDeiconify(winPtr)
+    TkWindow *winPtr;
+{
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
+
+    wmPtr->flags &= ~WM_WITHDRAWN;
+
+    /*
+     * If WM_UPDATE_PENDING is true, a pending UpdateGeometryInfo may
+     * need to be called first to update a withdrawn toplevel's geometry
+     * before it is deiconified by TkpWmSetState.
+     * Don't bother if we've never been mapped.
+     */
+    if ((wmPtr->flags & WM_UPDATE_PENDING) &&
+	    !(wmPtr->flags & WM_NEVER_MAPPED)) {
+	Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData) winPtr);
+	UpdateGeometryInfo((ClientData) winPtr);
+    }
+
+    /*
+     * If we were in the ZoomState (maximized), 'wm deiconify'
+     * should not cause the window to shrink
+     */
+    if (wmPtr->hints.initial_state == ZoomState) {
+	TkpWmSetState(winPtr, ZoomState);
+    } else {
+	TkpWmSetState(winPtr, NormalState);
+    }
+
+    /*
+     * An unmapped window will be mapped at idle time
+     * by a call to MapFrame. That calls CreateWrapper
+     * which sets the focus and raises the window.
+     */
+    if (wmPtr->flags & WM_NEVER_MAPPED) {
+	return;
+    }
+
+    /*
+     * Follow Windows-like style here, raising the window to the top.
+     */
+    TkWmRestackToplevel(winPtr, Above, NULL);
+    if (!(Tk_Attributes((Tk_Window) winPtr)->override_redirect)) {
+	TkSetFocusWin(winPtr, 1);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWinGeometryIsControlledByWm --
+ *
+ *	This function is to be used by a window manage to see if
+ *	wm has canceled geometry control.
+ *
+ * Results:
+ *	0 - if the window manager has canceled its control
+ *	1 - if the window manager controls the geometry
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+long TkpWinToplevelIsControlledByWm(winPtr) 
+    TkWindow *winPtr;
+{
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    return ((wmPtr->width != -1) && (wmPtr->height != -1))? 1:0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWinToplevelMove --
+ *
+ *	This function is to be used by a container to move
+ *	an embedded window.
+ *
+ * Results:
+ *	position of the upper left frame in a 32-bit long: 
+ *		16-MSBits - x; 16-LSBits - y
+ *
+ * Side effects:
+ *	May move the embedded window.
+ *
+ *----------------------------------------------------------------------
+ */
+long TkpWinToplevelMove(winPtr, x, y)
+    TkWindow *winPtr;
+    int x, y;
+{
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    if(!TkpWinToplevelIsControlledByWm(winPtr) && x >= 0 && y >= 0) {
+	Tk_MoveToplevelWindow((Tk_Window)winPtr, x, y);
+    }
+    return ((wmPtr->x << 16) & 0xffff0000) | (wmPtr->y & 0x0000ffff);
 }

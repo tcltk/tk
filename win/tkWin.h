@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin.h,v 1.8 2004/12/19 18:14:26 chengyemao Exp $
+ * RCS: @(#) $Id: tkWin.h,v 1.9 2004/12/20 01:13:12 chengyemao Exp $
  */
 
 #ifndef _TKWIN
@@ -46,7 +46,7 @@
 #define TK_ICONIFY	(WM_USER+6) /* an embedded window requests to iconify */
 #define TK_DEICONIFY	(WM_USER+7) /* an embedded window requests to deiconify */
 #define TK_WITHDRAW	(WM_USER+8) /* an embedded window requests to withdraw */
-#define TK_TITLE	(WM_USER+9) /* an embedded window requests to set title */
+#define TK_GETFRAMEWID	(WM_USER+9) /* an embedded window requests a frame window id */
 
 
 /*
