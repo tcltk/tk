@@ -1,3 +1,8 @@
+2004-09-24  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinX.c: Added declaration for advapi32 now that this file
+	uses the Reg* functions (req'd for nmake build system).
+
 2004-09-23  Vince Darley  <vincentdarley@users.sourceforge.net>
 
 	* generic/tkTest.c

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.33 2004/09/23 01:08:12 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.34 2004/09/24 01:15:07 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -28,6 +28,7 @@
 #include <commctrl.h>
 #ifdef _MSC_VER
 #   pragma comment (lib, "comctl32.lib")
+#   pragma comment (lib, "advapi32.lib")
 #endif
 
 /*
