@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scrollbar.test,v 1.14 2004/06/24 12:45:43 dkf Exp $
+# RCS: @(#) $Id: scrollbar.test,v 1.15 2004/12/07 10:08:00 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -84,43 +84,45 @@ foreach test {
     {-troughcolor #432 #432 lousy {unknown color name "lousy"}}
     {-width 32 32 badValue {bad screen distance "badValue"}}
 } {
-    set name [lindex $test 0]
-    test scrollbar-1.1 {configuration options} {
-	.s configure $name [lindex $test 1]
-	lindex [.s configure $name] 4
-    } [lindex $test 2]
+    lassign $test name value okResult badValue badResult
+    # Assume $name is plain; true of all our in-use options!
+    test scrollbar-1.$i {configuration options} \
+	".s configure $name [list $value]; .s cget $name" $okResult
     incr i
-    if {[lindex $test 3] ne ""} {
-	test scrollbar-1.2 {configuration options} {
-	    list [catch {.s configure $name [lindex $test 3]} msg] $msg
-	} [list 1 [lindex $test 4]]
+    if {$badValue ne ""} {
+	test scrollbar-1.$i {configuration options} \
+	    -body [list .s configure $name $badValue] \
+	    -returnCodes error -result $badResult
+	incr i
     }
     .s configure $name [lindex [.s configure $name] 3]
-    incr i
 }
 
 destroy .s
-test scrollbar-2.1 {Tk_ScrollbarCmd procedure} {
-    list [catch {scrollbar} msg] $msg
-} {1 {wrong # args: should be "scrollbar pathName ?options?"}}
-test scrollbar-2.2 {Tk_ScrollbarCmd procedure} {
-    list [catch {scrollbar gorp} msg] $msg
-} {1 {bad window path name "gorp"}}
-test scrollbar-2.3 {Tk_ScrollbarCmd procedure} {
+test scrollbar-2.1 {Tk_ScrollbarCmd procedure} -returnCodes error -body {
+    scrollbar
+} -result {wrong # args: should be "scrollbar pathName ?options?"}
+test scrollbar-2.2 {Tk_ScrollbarCmd procedure} -body {
+    scrollbar gorp
+} -returnCodes error -result {bad window path name "gorp"}
+test scrollbar-2.3 {Tk_ScrollbarCmd procedure} -setup {
     scrollbar .s
-    set x "[winfo class .s] [info command .s]"
+} -body {
+    list [winfo class .s] [info command .s]
+} -cleanup {
     destroy .s
-    set x
-} {Scrollbar .s}
+} -result {Scrollbar .s}
 test scrollbar-2.4 {Tk_ScrollbarCmd procedure} {
     list [catch {scrollbar .s -gorp blah} msg] $msg [winfo exists .s] \
 	    [info command .s]
 } {1 {unknown option "-gorp"} 0 {}}
-test scrollbar-2.5 {Tk_ScrollbarCmd procedure} {
-    set x [scrollbar .s]
+test scrollbar-2.5 {Tk_ScrollbarCmd procedure} -setup {
+    catch {destroy .s}
+} -body {
+    scrollbar .s
+} -cleanup {
     destroy .s
-    set x
-} {.s}
+} -result .s
 
 scrollbar .s -orient vertical -command scroll -highlightthickness 2 -bd 2
 pack .s -side right -fill y
