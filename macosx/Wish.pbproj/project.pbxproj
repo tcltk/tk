@@ -134,7 +134,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"${BUILD_STYLE}\" = \"Development\" ]; then\n\t# keep copy of debug library around, so that\n\t# Deployment build can be installed on top\n\t# of Development build without overwriting it\n\tcd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}\"\n\tcp -fp \"${PRODUCT_NAME}\" \"${PRODUCT_NAME}_debug\"\n\tln -fs \"Versions/Current/${PRODUCT_NAME}_debug\" ../..\n\tcp -fp \"libtkstub${FRAMEWORK_VERSION}.a\" \"libtkstub${FRAMEWORK_VERSION}g.a\"\n\n\t# force Deployment build to be relinked next time\n\tif [ -f \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nelse\n\t# force Development build to be relinked next time\n\tif [ -f \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nfi\n\n# fixup Framework structure\ncd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}\"\nln -fs `ls libtkstub* | sed -e 's|.*|Versions/Current/&|'` ../..\nln -fs \"Resources/tkConfig.sh\" ../..\nranlib libtkstub${FRAMEWORK_VERSION}*.a";
+			shellScript = "if [ \"${BUILD_STYLE}\" = \"Development\" ]; then\n\t# keep copy of debug library around, so that\n\t# Deployment build can be installed on top\n\t# of Development build without overwriting it\n\tcd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}\"\n\tcp -fp \"${PRODUCT_NAME}\" \"${PRODUCT_NAME}_debug\"\n\tln -fs \"Versions/Current/${PRODUCT_NAME}_debug\" ../..\n\tcp -fp \"libtkstub${FRAMEWORK_VERSION}.a\" \"libtkstub${FRAMEWORK_VERSION}g.a\"\n\n\t# force Deployment build to be relinked next time\n\tif [ -f \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nelse\n\t# force Development build to be relinked next time\n\tif [ -f \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/LinkFileList\"\n\tfi\nfi\n\n# fixup Framework structure\ncd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}\"\nln -fs `ls libtkstub* | sed -e \"s|.*|Versions/${FRAMEWORK_VERSION}/&|\"` ../..\nln -fs \"Versions/Current/tkConfig.sh\" ../..\nranlib libtkstub${FRAMEWORK_VERSION}*.a";
 		};
 		F537552A016C352C01DC9062 = {
 			buildStyles = (
@@ -1513,7 +1513,7 @@
 				DYLIB_INSTALL_PATH = /Library/Frameworks;
 				FRAMEWORK_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)\"";
 				FRAMEWORK_VERSION = 8.5;
-				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/Resources/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
+ 				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
 				HEADER_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/PrivateHeaders\" ../bitmaps ../generic ../xlib";
 				INSTALL_PATH = "${DYLIB_INSTALL_PATH}";
 				LIBRARY_SEARCH_PATHS = "";
@@ -2879,7 +2879,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)\" \"$(SYMROOT)\"";
 				FRAMEWORK_VERSION = 8.5;
-				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/Resources/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
+ 				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
 				HEADER_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/PrivateHeaders\" ../generic ../xlib";
 				INSTALL_PATH = /Applications/Utilities;
 				LIBRARY_SEARCH_PATHS = "";
@@ -3083,7 +3083,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 				F59D847903390D7E016F146B,
 			);
 			buildSettings = {
-				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/Resources/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
+				GLOBAL_CFLAGS = "`source \"${TCL_FRAMEWORK_DIR}/Tcl.framework/tclConfig.sh\"; echo $${}{TCL_EXTRA_CFLAGS} $${}{TCL_DEFS} | sed -e 's|\\\\\\\\\\\\\\\"|\\\"|g' | sed -e 's| -DTCL_WIDE_INT_TYPE=long. long||'` -U_REENTRANT";
 				HEADER_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/PrivateHeaders\" ../generic ../xlib";
 				LIBRARY_STYLE = STATIC;
 				OPTIMIZATION_CFLAGS = "-O0";
@@ -3522,7 +3522,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright Â
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# synthesize tkConfig.sh via buildTkConfig.tcl script\nexport DYLD_FRAMEWORK_PATH=\"${TCL_FRAMEWORK_DIR}\"\nTCLSH=\"${TCLSH_DIR}/tclsh${FRAMEWORK_VERSION}\"\nif [ ! -e \"${TCLSH}\" ]; then TCLSH=\"/bin/sh\"; fi\n\"${TCLSH}\" \"${SRCROOT}/buildTkConfig.tcl\" \"${TCL_FRAMEWORK_DIR}/Tcl.${WRAPPER_EXTENSION}/Resources/tclConfig.sh\" \"${SRCROOT}/../unix/tkConfig.sh.in\" \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Resources/tkConfig.sh\"";
+			shellScript = "# synthesize tkConfig.sh via buildTkConfig.tcl script\nexport DYLD_FRAMEWORK_PATH=\"${TCL_FRAMEWORK_DIR}\"\nTCLSH=\"${TCLSH_DIR}/tclsh${FRAMEWORK_VERSION}\"\nif [ ! -e \"${TCLSH}\" ]; then TCLSH=\"/bin/sh\"; fi\n\"${TCLSH}\" \"${SRCROOT}/buildTkConfig.tcl\" \"${TCL_FRAMEWORK_DIR}/Tcl.${WRAPPER_EXTENSION}/tclConfig.sh\" \"${SRCROOT}/../unix/tkConfig.sh.in\" \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}/tkConfig.sh\"";
 		};
 		F5C2EA33034D71B2016F146B = {
 			isa = PBXFileReference;
