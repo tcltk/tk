@@ -2062,7 +2062,7 @@ CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 # on symbols and static vs. shared.
 #--------------------------------------------------------------------
 
-if test "$SHARED_BUILD" = 0 -o $TCL_NEEDS_EXP_FILE = 0; then
+if test "$SHARED_BUILD" = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
     if test "${DBGX}" = "d"; then
         RC_DEFINES="${RC_DEFINE} STATIC_BUILD ${RC_DEFINE} DEBUG"
     else
