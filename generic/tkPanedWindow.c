@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.4 2002/06/19 23:17:17 hobbs Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.5 2002/07/31 14:10:56 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1501,7 +1501,10 @@ PanedWindowReqProc(clientData, tkwin)
 {
     Slave *panePtr = (Slave *) clientData;
     PanedWindow *pwPtr = (PanedWindow *) (panePtr->masterPtr);
-    ComputeGeometry(pwPtr);
+    if (!(pwPtr->flags & REQUESTED_RELAYOUT)) {
+	pwPtr->flags |= REQUESTED_RELAYOUT;
+	Tcl_DoWhenIdle(ArrangePanes, (ClientData) pwPtr);
+    }
 }
 
 /*
@@ -1810,7 +1813,7 @@ ComputeGeometry(pwPtr)
     int i, x, y, doubleBw, internalBw;
     int reqWidth, reqHeight, sashWidth, sxOff, syOff, hxOff, hyOff, dim;
     Slave *slavePtr;
-    
+
     pwPtr->flags |= REQUESTED_RELAYOUT;
 
     x = y = internalBw = Tk_InternalBorderWidth(pwPtr->tkwin);
