@@ -1,3 +1,13 @@
+2004-10-26  Don Porter	<dgp@users.sourceforge.net>
+
+        * tests/safe.test (safe-1.3):  Made test less sensitve to the
+        full set of existing aliases in an interp, so the it only tests
+        whether the tested ones are present.
+
+        * unix/Makefile.in:     Copied LD_LIBRARY_PATH machinery from
+        `make shell` target to other similar targets so that just built
+        libraries are tested, rather than previous installations.
+
 2004-10-26  Reinhard Max  <max@suse.de>
 
 	* generic/tkEvent.c (Tk_HandleEvent): Call XSetICFocus whenever
