@@ -1,3 +1,21 @@
+2000-10-04  Eric Melski  <ericm@ajubasolutions.com>
+
+	* doc/MaintGeom.3: Noted that Tk_MaintainGeometry handles direct
+	descendants properly.
+
+	* generic/tkGeometry.c (Tk_MaintainGeometry): Added a check for
+	the case in which the slave window is a direct descendant of the
+	master window.  In this case, we need not set up the additional
+	infrastructure normally provide by Tk_MaintainGeometry, because we
+	can rely on the parent/child relationship to handle it for us
+	implicitly.  In this case, Tk_MaintainGeometry just calls directly
+	to Tk_MoveResizeWindow.  This allows geometry managers to simply
+	always use Tk_MaintainGeometry to maintain geometry for slaves,
+	and avoid doing the direct descendant check themselves.
+	(Tk_UnmaintainGeometry): Added a matching check for the direct
+	descendant case; in this case, Tk_UnmaintainGeometry simply
+	returns immediately.
+
 2000-10-01  Eric Melski  <ericm@ajubasolutions.com>
 
 	* generic/tkButton.c (ConfigureButton): Added tests for -compound
