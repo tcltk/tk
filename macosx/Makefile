@@ -1,38 +1,57 @@
 ################################################################################
 #
-# Simple makefile for building on Mac OS X with the
-# Project Builder command line tool 'pbxbuild'
+# Makefile to build AquaTk on Mac OS X packaged as a Framework
+#	uses Project Builder command line tool 'pbxbuild'
 #
-# RCS: @(#) $Id: Makefile,v 1.10 2003/09/25 05:37:00 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.11 2003/10/01 14:35:32 das Exp $
 #
 ################################################################################
 
-INSTALL_ROOT	?=
+#-------------------------------------------------------------------------------
+# customizable settings
 
-BUILD_DIR	?= ${CURDIR}/../../build
-SYMROOT		?= ${BUILD_DIR}/${PROJECT}
+DESTDIR			?=
+INSTALL_ROOT		?= ${DESTDIR}
+
+BUILD_DIR		?= ${CURDIR}/../../build
+SYMROOT			?= ${BUILD_DIR}/${PROJECT}
+OBJROOT			?= ${SYMROOT}
+
+EXTRA_MAKE_ARGS		?= 
+
+INSTALL_PATH		?= /Library/Frameworks
+APPLICATION_INSTALL_PATH ?= /Applications/Utilities
+
+PREFIX			?= /usr
+BINDIR			?= ${PREFIX}/bin
 
 TCL_FRAMEWORK_DIR	?= ${BUILD_DIR}/tcl
-TCLSH_DIR	?= ${TCL_FRAMEWORK_DIR}
+TCLSH_DIR		?= ${TCL_FRAMEWORK_DIR}
 
-PROJECT		= tk
-TARGET		= Wish
+#-------------------------------------------------------------------------------
 
-DEVBUILDSTYLE	= Development
-DEPBUILDSTYLE	= Deployment
+PROJECT			= tk
+TARGET			= Wish
 
-PBXBUILD	= /usr/bin/pbxbuild
+DEVBUILDSTYLE		= Development
+DEPBUILDSTYLE		= Deployment
 
-BUILD		= ${PBXBUILD} SYMROOT="${SYMROOT}" -target "${TARGET}" \
-			TCL_FRAMEWORK_DIR="${TCL_FRAMEWORK_DIR}" \
-			TCLSH_DIR="${TCLSH_DIR}" ${MAKEOVERRIDES}
+PBXBUILD		= /usr/bin/pbxbuild
 
-DEVBUILD	= ${BUILD} -buildstyle "${DEVBUILDSTYLE}"
-DEPBUILD	= ${BUILD} -buildstyle "${DEPBUILDSTYLE}"
+MAKE_VARS		:= SYMROOT OBJROOT BINDIR APPLICATION_INSTALL_PATH \
+				TCL_FRAMEWORK_DIR TCLSH_DIR
+MAKE_ARGS_V		= $(foreach v,${MAKE_VARS},$v=${$v})
 
-INSTALLOPTS	= INSTALL_ROOT="${INSTALL_ROOT}"
+BUILD			= ${PBXBUILD} -target "${TARGET}" ${MAKE_ARGS_V} \
+				DYLIB_INSTALL_PATH="${INSTALL_PATH}" \
+				${EXTRA_MAKE_ARGS} ${MAKEOVERRIDES}
 
-EMBEDDEDOPTS	= EMBEDDED_BUILD=1
+DEVBUILD		= ${BUILD} -buildstyle "${DEVBUILDSTYLE}"
+DEPBUILD		= ${BUILD} -buildstyle "${DEPBUILDSTYLE}"
+
+INSTALLOPTS		= INSTALL_ROOT="${INSTALL_ROOT}"
+
+EMBEDDEDOPTS		= EMBEDDED_BUILD=1
 
 ################################################################################
 
@@ -81,7 +100,7 @@ clean-deploy:
 ################################################################################
 
 cleanup-embedded:
-	@-cd ${INSTALL_ROOT}; \
+	@-cd ${INSTALL_ROOT}/; \
 	chmod -RH u+w Library/Frameworks/Tcl.framework; \
 	rm -rf Library/Frameworks/Tcl.framework; \
 	chmod -RH u+w Library/Frameworks/Tk.framework; \
