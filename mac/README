@@ -1,14 +1,9 @@
 Tk 8.4 for Macintosh
 
-by Ray Johnson
-Scriptics Corporation
-rjohnson@scriptics.com
-with major help from
-Jim Ingham
-Cygnus Solutions
-jingham@cygnus.com
+Originally by Ray Johnson while at Sun Microsystems Labs
+with major help from Jim Ingham while at Cygnus Solutions
 
-RCS: @(#) $Id: README,v 1.14.4.1 2001/07/03 20:01:09 dgp Exp $
+RCS: @(#) $Id: README,v 1.14.4.2 2001/07/05 02:47:42 dgp Exp $
 
 1. Introduction
 ---------------
@@ -25,7 +20,7 @@ directory.
 There are several features or enhancements in Tk that are unique to 
 the Macintosh version of Tk.  The list of these features is
 maintained at
-	http://dev.scriptics.com/software/mac/features.html
+	http://www.purl.org/tcl/home/software/mac/features.html
 
 4. The Distribution
 -------------------

@@ -1,4 +1,4 @@
-2001-07-03  Don Porter  <dgp@users.sourceforge.net>
+2001-07-04  Don Porter  <dgp@users.sourceforge.net>
 
 	BRANCH dgp-privates-into-namespace:
 	* ChangeLog:
@@ -90,6 +90,7 @@
 	* unix/tkUnixScale.c:
 	* unix/tkUnixSelect.c:
 	* win/Makefile.in:
+	* win/README:
 	* win/configure:
 	* win/configure.in:
 	* win/makefile.vc:
