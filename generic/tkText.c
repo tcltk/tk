@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.46 2003/12/04 12:28:37 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.47 2003/12/05 17:19:06 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -25,6 +25,15 @@
 #if defined(MAC_TCL) || defined(MAC_OSX_TK)
 #define Style TkStyle
 #define DInfo TkDInfo
+#endif
+
+/*
+ * For compatibility with Tk 4.0 through 8.4.x, we allow tabs to be
+ * mis-specified with non-increasing values.  These are converted into
+ * tabs which are the equivalent of at least a character width apart.
+ */
+#if (TK_MAJOR_VERSION < 9)
+#define _TK_ALLOW_DECREASING_TABS
 #endif
 
 #include "tkText.h"
@@ -743,7 +752,7 @@ TextWidgetObjCmd(clientData, interp, objc, objv)
 		     * with the last artificial line in the widget.
 		     */
 		    while (fromPtr != indexToPtr->linePtr) {
-			value += TkTextUpdateOneLine(textPtr, fromPtr);
+			value += TkTextUpdateOneLine(textPtr, fromPtr, 0, NULL);
 			fromPtr = TkBTreeNextLine(fromPtr);
 		    }
 		    /* 
@@ -1556,7 +1565,7 @@ ConfigureText(interp, textPtr, objc, objv)
 	textPtr->tabArrayPtr = NULL;
     }
     if (textPtr->tabOptionPtr != NULL) {
-	textPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr->tkwin,
+	textPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr,
 		textPtr->tabOptionPtr);
 	if (textPtr->tabArrayPtr == NULL) {
 	    Tcl_AddErrorInfo(interp,"\n    (while processing -tabs option)");
@@ -3301,10 +3310,10 @@ TextSearchFoundMatch(lineNum, searchSpecPtr, clientData, theLine,
  */
 
 TkTextTabArray *
-TkTextGetTabs(interp, tkwin, stringPtr)
+TkTextGetTabs(interp, textPtr, stringPtr)
     Tcl_Interp *interp;			/* Used for error reporting. */
-    Tk_Window tkwin;			/* Window in which the tabs will be
-					 * used. */
+    TkText *textPtr;			/* Information about the
+                    			 * text widget. */
     Tcl_Obj *stringPtr;			/* Description of the tab stops.  
                        			 * See the text manual entry for 
                        			 * details. */
@@ -3352,8 +3361,8 @@ TkTextGetTabs(interp, tkwin, stringPtr)
     for (i = 0, tabPtr = &tabArrayPtr->tabs[0]; i  < objc; i++, tabPtr++) {
 	int index;
 	
-	if (Tk_GetPixelsFromObj(interp, tkwin, objv[i], &tabPtr->location)
-		!= TCL_OK) {
+	if (Tk_GetPixelsFromObj(interp, textPtr->tkwin, objv[i], 
+				&tabPtr->location) != TCL_OK) {
 	    goto error;
 	}
 
@@ -3365,23 +3374,38 @@ TkTextGetTabs(interp, tkwin, stringPtr)
 	}
 	
 	prevStop = lastStop;
-	if (Tk_GetMMFromObj(interp, tkwin, objv[i], &lastStop) != TCL_OK) {
+	if (Tk_GetMMFromObj(interp, textPtr->tkwin, objv[i], 
+			    &lastStop) != TCL_OK) {
 	    goto error;
 	}
-	lastStop *= WidthOfScreen(Tk_Screen(tkwin));
-	lastStop /= WidthMMOfScreen(Tk_Screen(tkwin));
+	lastStop *= WidthOfScreen(Tk_Screen(textPtr->tkwin));
+	lastStop /= WidthMMOfScreen(Tk_Screen(textPtr->tkwin));
 	
 	if (i > 0 && (tabPtr->location <= (tabPtr-1)->location)) {
 	    /* 
 	     * This tab is actually to the left of the previous
 	     * one, which is illegal.
 	     */
+#ifdef _TK_ALLOW_DECREASING_TABS
+	    /* 
+	     * Force the tab to be a typical character width to the
+	     * right of the previous one, and update the 'lastStop'
+	     * with the changed position.
+	     */
+	    if (textPtr->charWidth > 0) {
+	        tabPtr->location = (tabPtr-1)->location + textPtr->charWidth;
+	    } else {
+		tabPtr->location = (tabPtr-1)->location + 8;
+	    }
+	    lastStop = tabPtr->location;
+#else
 	    Tcl_AppendResult(interp, 
 		 "tabs must be monotonically increasing, but \"",
 		 Tcl_GetString(objv[i]), 
 		 "\" is smaller than or equal to the previous tab",
 		 NULL);
 	    goto error;
+#endif
 	}
 	
 	tabArrayPtr->numTabs++;
