@@ -1,16 +1,16 @@
 # This file is a Tcl script to test out Tk's "tk_dialog" command.
 # It is organized in the standard fashion for Tcl tests.
 #
-# RCS: @(#) $Id: dialog.test,v 1.4 2003/04/01 21:06:22 dgp Exp $
+# RCS: @(#) $Id: dialog.test,v 1.5 2004/11/01 16:51:21 dgp Exp $
 #
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-test dialog-1.1 {tk_dialog command} {
+test dialog-1.1 {tk_dialog command} -body {
     list [catch {tk_dialog} msg] $msg
-} {1 {wrong # args: should be "tk_dialog w title text bitmap default args"}}
+} -match glob -result {1 {wrong # args: should be "tk_dialog w title text bitmap default *"}}
 test dialog-1.2 {tk_dialog command} {
     list [catch {tk_dialog foo foo foo foo foo} msg] $msg
 } {1 {bad window path name "foo"}}
