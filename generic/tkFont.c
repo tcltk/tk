@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.1.4.2 1998/09/30 02:16:57 stanton Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.1.4.3 1998/10/21 22:12:43 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -1742,8 +1742,10 @@ Tk_UnderlineChars(display, drawable, gc, tkfont, string, x, y, firstChar,
 
     fontPtr = (TkFont *) tkfont;
     
-    Tk_MeasureChars(tkfont, string, firstChar, -1, 0, &startX);
-    Tk_MeasureChars(tkfont, string, lastChar, -1, 0, &endX);
+    Tk_MeasureChars(tkfont, string,
+	    (Tcl_UtfAtIndex(string, firstChar) - string), -1, 0, &startX);
+    Tk_MeasureChars(tkfont, string,
+	    (Tcl_UtfAtIndex(string, lastChar) - string), -1, 0, &endX);
 
     XFillRectangle(display, drawable, gc, x + startX,
 	    y + fontPtr->underlinePos, (unsigned int) (endX - startX),
