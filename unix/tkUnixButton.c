@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.11.2.4 2003/10/10 20:20:47 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.11.2.5 2004/12/02 02:07:43 hobbs Exp $
  */
 
 #include "tkButton.h"
@@ -236,12 +236,12 @@ TkpDisplayButton(clientData)
 	    }
 	    case COMPOUND_NONE: {break;}
 	}
-	
+
 	TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
 		butPtr->indicatorSpace + fullWidth, fullHeight, &x, &y);
 
 	x += butPtr->indicatorSpace;
-	
+
 	x += offset;
 	y += offset;
 	if (relief == TK_RELIEF_RAISED) {
@@ -256,6 +256,30 @@ TkpDisplayButton(clientData)
 	imageYOffset += y;
 
 	if (butPtr->image != NULL) {
+	    /*
+	     * Do boundary clipping, so that Tk_RedrawImage is passed
+	     * valid coordinates. [Bug 979239]
+	     */
+
+	    if (imageXOffset < 0) {
+		imageXOffset = 0;
+	    }
+	    if (imageYOffset < 0) {
+		imageYOffset = 0;
+	    }
+	    if (width > Tk_Width(tkwin)) {
+		width = Tk_Width(tkwin);
+	    }
+	    if (height > Tk_Height(tkwin)) {
+		height = Tk_Height(tkwin);
+	    }
+	    if ((width + imageXOffset) > Tk_Width(tkwin)) {
+		imageXOffset = Tk_Width(tkwin) - width;
+	    }
+	    if ((height + imageYOffset) > Tk_Height(tkwin)) {
+		imageYOffset = Tk_Height(tkwin) - height;
+	    }
+
 	    if ((butPtr->selectImage != NULL) && (butPtr->flags & SELECTED)) {
 		Tk_RedrawImage(butPtr->selectImage, 0, 0,
 			width, height, pixmap, imageXOffset, imageYOffset);
@@ -295,6 +319,30 @@ TkpDisplayButton(clientData)
 	    imageXOffset += x;
 	    imageYOffset += y;
 	    if (butPtr->image != NULL) {
+		/*
+		 * Do boundary clipping, so that Tk_RedrawImage is passed
+		 * valid coordinates. [Bug 979239]
+		 */
+
+		if (imageXOffset < 0) {
+		    imageXOffset = 0;
+		}
+		if (imageYOffset < 0) {
+		    imageYOffset = 0;
+		}
+		if (width > Tk_Width(tkwin)) {
+		    width = Tk_Width(tkwin);
+		}
+		if (height > Tk_Height(tkwin)) {
+		    height = Tk_Height(tkwin);
+		}
+		if ((width + imageXOffset) > Tk_Width(tkwin)) {
+		    imageXOffset = Tk_Width(tkwin) - width;
+		}
+		if ((height + imageYOffset) > Tk_Height(tkwin)) {
+		    imageYOffset = Tk_Height(tkwin) - height;
+		}
+
 		if ((butPtr->selectImage != NULL) &&
 			(butPtr->flags & SELECTED)) {
 		    Tk_RedrawImage(butPtr->selectImage, 0, 0, width,
