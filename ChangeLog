@@ -1,3 +1,9 @@
+2003-02-26  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* macosx/README: correct 8.4.3 refs to 8.4.2.
+
+	* unix/README: replace version refs with version-agnostic wording.
+
 2003-02-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinInt.h:
