@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.10 2000/08/23 19:18:19 hobbs Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.11 2000/10/01 21:35:27 ericm Exp $
  */
 
 #include "tkButton.h"
@@ -1028,7 +1028,7 @@ ConfigureButton(interp, butPtr, objc, objv)
 {
     Tk_SavedOptions savedOptions;
     Tcl_Obj *errorResult = NULL;
-    int error;
+    int error, haveImage;
     Tk_Image image;
 
     /*
@@ -1169,7 +1169,11 @@ ConfigureButton(interp, butPtr, objc, objv)
 	}
 	butPtr->selectImage = image;
 
-	if ((butPtr->imagePtr == NULL) && (butPtr->bitmap == None)
+	haveImage = 0;
+	if (butPtr->imagePtr != NULL || butPtr->bitmap != None) {
+	    haveImage = 1;
+	}
+	if ((!haveImage || butPtr->compound != COMPOUND_NONE)
 		&& (butPtr->textVarNamePtr != NULL)) {
 	    /*
 	     * The button must display the value of a variable: set up a trace
