@@ -3,7 +3,7 @@
 # Commands provided by Tk without official support.  Use them at your
 # own risk.  They may change or go away without notice.
 #
-# RCS: @(#) $Id: unsupported.tcl,v 1.2 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: unsupported.tcl,v 1.3 2001/08/06 18:29:41 dgp Exp $
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -222,6 +222,7 @@ namespace eval ::tk::unsupported {
 	tkTextUpDownLine		::tk::TextUpDownLine
 	tkTraverseToMenu		::tk::TraverseToMenu
 	tkTraverseWithinMenu		::tk::TraverseWithinMenu
+	unsupported1			::tk::unsupported::MacWindowStyle
     }
 
     # Map from the old global names of Tk private variable to their
@@ -229,7 +230,9 @@ namespace eval ::tk::unsupported {
 
     variable PrivateVariables
     array set PrivateVariables {
+	droped_to_start		::tk::mac::Droped_to_start
 	histNum			::tk::HistNum
+	stub_location		::tk::mac::Stub_location
 	tkFocusIn		::tk::FocusIn
 	tkFocusOut		::tk::FocusOut
 	tkPalette		::tk::Palette
