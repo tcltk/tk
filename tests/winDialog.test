@@ -4,21 +4,18 @@
 #
 # Copyright (c) 1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
-# All rights reserved.
+# Copyright (c) 1998-1999 ActiveState Corporation.
 #
-# RCS: @(#) $Id: winDialog.test,v 1.6 2001/04/04 06:47:25 hobbs Exp $
+# RCS: @(#) $Id: winDialog.test,v 1.7 2001/09/21 20:38:18 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
-if {[info command testwinevent] == ""} {
-    puts "skipping: tests require the testwinevent command"
-    ::tcltest::cleanupTests
-    return
-}
+set ::tcltest::testConfig(testwinevent) \
+	[llength [info commands testwinevent]]
 
-testwinevent debug 1
+catch {testwinevent debug 1}
 
 eval destroy [winfo children .] 
 wm geometry . {}
@@ -46,16 +43,16 @@ proc afterbody {} {
 	    set ::dialogresult ">30 iterations waiting on tk_dialog"
 	    return
 	}
-	after 100 {afterbody}
+	after 150 {afterbody}
 	return
     }
     uplevel #0 {set dialogresult [eval $command]}
-}    
+}
 
 proc Click {button} {
     testwinevent $::tk_dialog $button WM_LBUTTONDOWN 1 0x000a000b
     testwinevent $::tk_dialog $button WM_LBUTTONUP 0 0x000a000b
-}	    
+}
 
 proc GetText {button} {
     return [testwinevent $::tk_dialog $button WM_GETTEXT]
@@ -71,7 +68,7 @@ test winDialog-1.1 {Tk_ChooseColorObjCmd} {nt} {
 test winDialog-2.1 {ColorDlgHookProc} {nt} {
 } {}
 
-test winDialog-3.1 {Tk_GetOpenFileObjCmd} {nt} {
+test winDialog-3.1 {Tk_GetOpenFileObjCmd} {nt testwinevent} {
     start {tk_getOpenFile}
     then {
 	set x [GetText 2]
@@ -80,7 +77,7 @@ test winDialog-3.1 {Tk_GetOpenFileObjCmd} {nt} {
     set x
 } {Cancel}
 
-test winDialog-4.1 {Tk_GetSaveFileObjCmd} {nt} {
+test winDialog-4.1 {Tk_GetSaveFileObjCmd} {nt testwinevent} {
     start {tk_getSaveFile}
     then {
 	set x [GetText 2]
@@ -89,7 +86,7 @@ test winDialog-4.1 {Tk_GetSaveFileObjCmd} {nt} {
     set x
 } {Cancel}
 
-test winDialog-5.1 {GetFileName: no arguments} {nt} {
+test winDialog-5.1 {GetFileName: no arguments} {nt testwinevent} {
     start {tk_getOpenFile -title Open}
     then {
 	Click cancel
@@ -98,7 +95,7 @@ test winDialog-5.1 {GetFileName: no arguments} {nt} {
 test winDialog-5.2 {GetFileName: one argument} {nt} {
     list [catch {tk_getOpenFile -foo} msg] $msg
 } {1 {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -multiple, -parent, or -title}}
-test winDialog-5.4 {GetFileName: many arguments} {nt} {
+test winDialog-5.4 {GetFileName: many arguments} {nt testwinevent} {
     start {tk_getOpenFile -initialdir c:/ -parent . -title test -initialfile foo}
     then {
 	Click cancel
@@ -107,7 +104,7 @@ test winDialog-5.4 {GetFileName: many arguments} {nt} {
 test winDialog-5.5 {GetFileName: Tcl_GetIndexFromObj() != TCL_OK} {nt} {
     list [catch {tk_getOpenFile -foo bar -abc} msg] $msg
 } {1 {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -multiple, -parent, or -title}}
-test winDialog-5.6 {GetFileName: Tcl_GetIndexFromObj() == TCL_OK} {nt} {
+test winDialog-5.6 {GetFileName: Tcl_GetIndexFromObj() == TCL_OK} {nt testwinevent} {
     start {tk_getOpenFile -title bar}
     then {
 	Click cancel
@@ -116,7 +113,7 @@ test winDialog-5.6 {GetFileName: Tcl_GetIndexFromObj() == TCL_OK} {nt} {
 test winDialog-5.7 {GetFileName: valid option, but missing value} {nt} {
     list [catch {tk_getOpenFile -initialdir bar -title} msg] $msg
 } {1 {value for "-title" missing}}
-test winDialog-5.8 {GetFileName: extension begins with .} {nt} {
+test winDialog-5.8 {GetFileName: extension begins with .} {nt testwinevent} {
 #    if (string[0] == '.') {
 #	string++;
 #    }
@@ -128,7 +125,7 @@ test winDialog-5.8 {GetFileName: extension begins with .} {nt} {
     }
     string totitle $x
 } [string totitle [file join [pwd] bar.foo]]
-test winDialog-5.9 {GetFileName: extension doesn't begin with .} {nt} {
+test winDialog-5.9 {GetFileName: extension doesn't begin with .} {nt testwinevent} {
     start {set x [tk_getSaveFile -defaultextension foo -title Save]}
     then {
 	SetText 0x480 bar
@@ -136,7 +133,7 @@ test winDialog-5.9 {GetFileName: extension doesn't begin with .} {nt} {
     }
     string totitle $x
 } [string totitle [file join [pwd] bar.foo]]
-test winDialog-5.10 {GetFileName: file types} {nt} {
+test winDialog-5.10 {GetFileName: file types} {nt testwinevent} {
 #	    case FILE_TYPES: 
 
     start {tk_getSaveFile -filetypes {{"foo files" .foo FOOF}} -title Foo}
@@ -151,7 +148,7 @@ test winDialog-5.11 {GetFileName: file types: MakeFilter() fails} {nt} {
 
     list [catch {tk_getSaveFile -filetypes {{"foo" .foo FOO}}} msg] $msg
 } {1 {bad Macintosh file type "FOO"}}
-test winDialog-5.12 {GetFileName: initial directory} {nt} {
+test winDialog-5.12 {GetFileName: initial directory} {nt testwinevent} {
 #	    case FILE_INITDIR: 
 
     start {set x [tk_getSaveFile -initialdir c:/ -initialfile "12x 455" -title Foo]}
@@ -166,7 +163,7 @@ test winDialog-5.13 {GetFileName: initial directory: Tcl_TranslateFilename()} \
     
     list [catch {tk_getOpenFile -initialdir ~12x/455} msg] $msg
 } {1 {user "12x" doesn't exist}}
-test winDialog-5.14 {GetFileName: initial file} {nt} {
+test winDialog-5.14 {GetFileName: initial file} {nt testwinevent} {
 #	    case FILE_INITFILE: 
 
     start {set x [tk_getSaveFile -initialfile "12x 456" -title Foo]}
@@ -184,7 +181,7 @@ append a $a
 append a $a
 append a $a
 append a $a
-test winDialog-5.16 {GetFileName: initial file: long name} {nt} {
+test winDialog-5.16 {GetFileName: initial file: long name} {nt testwinevent} {
     start {set x [tk_getSaveFile -initialfile $a -title Long]}
     then {
 	Click 1
@@ -202,7 +199,7 @@ test winDialog-5.17 {GetFileName: parent} {nt} {
     }
     set x
 } {1}
-test winDialog-5.18 {GetFileName: title} {nt} {
+test winDialog-5.18 {GetFileName: title} {nt testwinevent} {
 #	    case FILE_TITLE: 
     
     start {tk_getOpenFile -title Narf}
@@ -210,7 +207,7 @@ test winDialog-5.18 {GetFileName: title} {nt} {
 	Click 2
     }
 } {0}
-test winDialog-5.19 {GetFileName: no filter specified} {nt} {
+test winDialog-5.19 {GetFileName: no filter specified} {nt testwinevent} {
 #    if (ofn.lpstrFilter == NULL) 
 
     start {tk_getOpenFile -title Filter} 
@@ -237,7 +234,7 @@ test winDialog-5.21 {GetFileName: parent HWND already exists} {nt} {
 	destroy .t
     }
 } {}
-test winDialog-5.22 {GetFileName: call GetOpenFileName} {nt} {
+test winDialog-5.22 {GetFileName: call GetOpenFileName} {nt testwinevent} {
 #	    winCode = GetOpenFileName(&ofn);
     
     start {tk_getOpenFile -title Open}
@@ -247,7 +244,7 @@ test winDialog-5.22 {GetFileName: call GetOpenFileName} {nt} {
     }
     set x
 } {&Open}
-test winDialog-5.23 {GetFileName: call GetSaveFileName} {nt} {
+test winDialog-5.23 {GetFileName: call GetSaveFileName} {nt testwinevent} {
 #	    winCode = GetSaveFileName(&ofn);
 
     start {tk_getSaveFile -title Save}
@@ -257,7 +254,7 @@ test winDialog-5.23 {GetFileName: call GetSaveFileName} {nt} {
     }
     set x
 } {&Save}
-test winDialog-5.24 {GetFileName: convert \ to /} {nt} {
+test winDialog-5.24 {GetFileName: convert \ to /} {nt testwinevent} {
     start {set x [tk_getSaveFile -title Back]}
     then {
 	SetText 0x480 "c:\\12x 457"
@@ -276,7 +273,7 @@ test winDialog-8.1 {OFNHookProc} {emptyTest nt} {} {}
 ## because somehow the GetOpenFileName ends up a noop in the static
 ## build.
 ##
-test winDialog-9.1 {Tk_ChooseDirectoryObjCmd: no arguments} {nt} {
+test winDialog-9.1 {Tk_ChooseDirectoryObjCmd: no arguments} {nt testwinevent} {
     start {tk_chooseDirectory}
     then {
 	Click cancel
@@ -285,7 +282,7 @@ test winDialog-9.1 {Tk_ChooseDirectoryObjCmd: no arguments} {nt} {
 test winDialog-9.2 {Tk_ChooseDirectoryObjCmd: one argument} {nt} {
     list [catch {tk_chooseDirectory -foo} msg] $msg
 } {1 {bad option "-foo": must be -initialdir, -mustexist, -parent, or -title}}
-test winDialog-9.3 {Tk_ChooseDirectoryObjCmd: many arguments} {nt} {
+test winDialog-9.3 {Tk_ChooseDirectoryObjCmd: many arguments} {nt testwinevent} {
     start {
 	tk_chooseDirectory -initialdir c:/ -mustexist 1 -parent . -title test
     }
@@ -298,7 +295,7 @@ test winDialog-9.4 {Tk_ChooseDirectoryObjCmd:\
     list [catch {tk_chooseDirectory -foo bar -abc} msg] $msg
 } {1 {bad option "-foo": must be -initialdir, -mustexist, -parent, or -title}}
 test winDialog-9.5 {Tk_ChooseDirectoryObjCmd:\
-	Tcl_GetIndexFromObj() == TCL_OK} {nt} {
+	Tcl_GetIndexFromObj() == TCL_OK} {nt testwinevent} {
     start {tk_chooseDirectory -title bar}
     then {
 	Click cancel
@@ -308,7 +305,7 @@ test winDialog-9.6 {Tk_ChooseDirectoryObjCmd:\
 	valid option, but missing value} {nt} {
     list [catch {tk_chooseDirectory -initialdir bar -title} msg] $msg
 } {1 {value for "-title" missing}}
-test winDialog-9.7 {Tk_ChooseDirectoryObjCmd: -initialdir} {nt} {
+test winDialog-9.7 {Tk_ChooseDirectoryObjCmd: -initialdir} {nt testwinevent} {
 #	    case DIR_INITIAL: 
 
     start {set x [tk_chooseDirectory -initialdir c:/ -title Foo]}
@@ -325,7 +322,7 @@ test winDialog-9.8 {Tk_ChooseDirectoryObjCmd:\
     list [catch {tk_chooseDirectory -initialdir ~12x/455} msg] $msg
 } {1 {user "12x" doesn't exist}}
 
-testwinevent debug 0
+catch {testwinevent debug 0}
 
 # cleanup
 ::tcltest::cleanupTests
