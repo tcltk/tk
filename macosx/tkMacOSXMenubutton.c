@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.1.2.2 2002/07/16 14:32:57 vincentdarley Exp $
  */
 
 #include <Carbon/Carbon.h>
@@ -232,12 +232,16 @@ TkpDisplayMenuButton(
         CompareControlTitleParams(&titleParams,&mbPtr->titleParams,
             &titleChanged,&styleChanged);
         if (titleChanged) {
+            CFStringRef cf;    	    
+            cf = CFStringCreateWithCString(NULL,
+                  titleParams.title, kCFStringEncodingMacRoman);
             if (hasImageOrBitmap) {
-                SetControlTitle(mbPtr->control, titleParams.title);
+                SetControlTitleWithCFString(mbPtr->control, cf);
             } else {
-                SetMenuItemText(mbPtr->menuRef, 1, titleParams.title);
+                SetMenuItemTextWithCFString(mbPtr->menuRef, 1, cf);
             }
-            bcopy(titleParams.title,mbPtr->titleParams.title,titleParams.len+2);
+            CFRelease(cf);
+            bcopy(titleParams.title,mbPtr->titleParams.title,titleParams.len+1);
             mbPtr->titleParams.len = titleParams.len;
         }
         if ((titleChanged||styleChanged) && titleParams .len) {
@@ -535,7 +539,7 @@ CompareControlTitleParams(
     if (p1Ptr->len != p2Ptr->len) {
          *titleChanged = 1;
     } else {
-        if (bcmp(p1Ptr->title+1,p2Ptr->title+1,p1Ptr->len)) {
+        if (bcmp(p1Ptr->title,p2Ptr->title,p1Ptr->len)) {
             *titleChanged = 1;
         } else {
             *titleChanged = 0;
@@ -552,9 +556,8 @@ static void
 ComputeControlTitleParams(TkMenuButton * butPtr, ControlTitleParams * paramsPtr )
 {
     Tk_Font font;
-    paramsPtr->len =Tk_GetFirstTextLayout(butPtr->textLayout,&font, paramsPtr->title + 1 );
-    paramsPtr->title [paramsPtr->len+1] = 0;
-    paramsPtr->title [0] = paramsPtr -> len;
+    paramsPtr->len =Tk_GetFirstTextLayout(butPtr->textLayout,&font, paramsPtr->title);
+    paramsPtr->title [paramsPtr->len] = 0;
     if (paramsPtr->len) {
         TkMacOSXInitControlFontStyle(font,&paramsPtr->style);
     }
@@ -653,7 +656,11 @@ MenuButtonInitControl (
         return 1;
     }
     if (mbPtr->params.isBevel) {
-        SetControlTitle(mbPtr->control, mbPtr->titleParams.title );
+            CFStringRef cf;    	    
+            cf = CFStringCreateWithCString(NULL,
+                  mbPtr->titleParams.title, kCFStringEncodingMacRoman);
+        SetControlTitleWithCFString(mbPtr->control, cf);
+        CFRelease(cf);
         if (mbPtr->titleParams.len) {
             if ((err=SetControlFontStyle(mbPtr->control,&mbPtr->titleParams.style))!=noErr) {
                 fprintf(stderr,"SetControlFontStyle failed %d\n", err);
@@ -661,6 +668,7 @@ MenuButtonInitControl (
              }
         }
     } else {
+            CFStringRef cf;    	    
         err = TkMacOSXGetNewMenuID(mbPtr->info.interp, (TkMenu *)mbPtr, 0, &menuID);
         if (err != TCL_OK) {
             return err;
@@ -672,7 +680,13 @@ MenuButtonInitControl (
         if (!(mbPtr->menuRef = NewMenu(menuID,itemText))) {
             return 1;
         }
-        AppendMenuItemText(mbPtr->menuRef, mbPtr->titleParams.title);
+            cf = CFStringCreateWithCString(NULL,
+                  mbPtr->titleParams.title, kCFStringEncodingMacRoman);
+        AppendMenuItemText(mbPtr->menuRef, "\px");
+        if (cf != NULL) {
+        SetMenuItemTextWithCFString(mbPtr->menuRef, 1, cf);
+        CFRelease(cf);
+        }
         err = SetControlData(mbPtr->control,
             kControlNoPart,
             kControlPopupButtonMenuRefTag,
