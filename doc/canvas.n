@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.15 2004/08/16 08:24:45 dkf Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.16 2004/08/19 14:41:52 dkf Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -1396,20 +1396,29 @@ irrelevant.
 .TP
 \fB\-smooth \fIsmoothMethod\fR
 \fIsmoothMethod\fR must have one of the forms accepted by
-\fBTk_GetBoolean\fR or a line smoothing method.  Only \fBbezier\fR is
-supported in the core, but more can be added at runtime.  If a boolean
+\fBTk_GetBoolean\fR or a line smoothing method.  Only \fBtrue\fR and \fBraw\fR are
+supported in the core (with \fBbezier\fR being an alias for \fBtrue\fR), but more can be added at runtime.  If a boolean
 false value or empty string is given, no smoothing is applied.  A boolean
-truth value assumes \fBbezier\fR smoothing.
-It indicates whether or not the line should be drawn as a curve.
-If so, the line is rendered as a set of parabolic splines: one spline
+truth value assumes \fBtrue\fR smoothing.
+If the smoothing method is \fBtrue\fR, this indicates that the line
+should be drawn as a curve, rendered as a set of quadratic splines: one spline
 is drawn for the first and second line segments, one for the second
 and third, and so on.  Straight-line segments can be generated within
 a curve by duplicating the end-points of the desired line segment.
+If the smoothing method is \fBraw\fR, this indicates that the line
+should also be drawn as a curve but where the list of coordinates is
+such that the first coordinate pair (and every third coordinate pair
+thereafter) is a knot point on a cubic Bezier curve, and the other
+coordinates are control points on the cubic Bezier curve.  Straight
+line segments can be venerated within a curve by making control points
+equal to their neighbouring knot points.  If the last point is a
+control point and not a knot point, the point is repeated (one or two
+times) so that it also becomes a knot point.
 .TP
 \fB\-splinesteps \fInumber\fR
 Specifies the degree of smoothness desired for curves:  each spline
 will be approximated with \fInumber\fR line segments.  This
-option is ignored unless the \fB\-smooth\fR option is true.
+option is ignored unless the \fB\-smooth\fR option is true or \fBraw\fR.
 .SH "OVAL ITEMS"
 .PP
 Items of type \fBoval\fR appear as circular or oval regions on
@@ -1516,17 +1525,30 @@ If this option isn't specified then it defaults to \fBmiter\fR.
 .TP
 \fB\-smooth \fIboolean\fR
 \fIBoolean\fR must have one of the forms accepted by \fBTk_GetBoolean\fR
-It indicates whether or not the polygon should be drawn with a
-curved perimeter.
-If so, the outline of the polygon becomes a set of parabolic splines,
-one spline for the first and second line segments, one for the second
-and third, and so on.  Straight-line segments can be generated in a
-smoothed polygon by duplicating the end-points of the desired line segment.
+or a line smoothing method. Only \fBtrue\fR and \fBraw\fR are
+supported in the core (with \fBbezier\fR being an alias for \fBtrue\fR), but more can be added at runtime.  If a boolean
+false value or empty string is given, no smoothing is applied.  A boolean
+truth value assumes \fBtrue\fR smoothing.
+If the smoothing method is \fBtrue\fR, this indicates that the polygon
+should be drawn as a curve, rendered as a set of quadratic splines: one spline
+is drawn for the first and second line segments, one for the second
+and third, and so on.  Straight-line segments can be generated within
+a curve by duplicating the end-points of the desired line segment.
+If the smoothing method is \fBraw\fR, this indicates that the polygon
+should also be drawn as a curve but where the list of coordinates is
+such that the first coordinate pair (and every third coordinate pair
+thereafter) is a knot point on a cubic Bezier curve, and the other
+coordinates are control points on the cubic Bezier curve.  Straight
+line segments can be venerated within a curve by making control points
+equal to their neighbouring knot points.  If the last point is not the
+second point of a pair of control points, the point is repeated (one or two
+times) so that it also becomes the second point of a pair of control
+points (the associated knot point will be the first control point).
 .TP
 \fB\-splinesteps \fInumber\fR
 Specifies the degree of smoothness desired for curves:  each spline
 will be approximated with \fInumber\fR line segments.  This
-option is ignored unless the \fB\-smooth\fR option is true.
+option is ignored unless the \fB\-smooth\fR option is true or \fBraw\fR.
 .PP
 Polygon items are different from other items such as rectangles, ovals
 and arcs in that interior points are considered to be ``inside'' a
