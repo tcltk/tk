@@ -1,3 +1,7 @@
+1999-04-06    <stanton@scriptics.com>
+
+	* tests/winfo.test: Enabled tests that previously failed.
+
 1999-04-05    <stanton@scriptics.com>
 
 	* library/bgerror.tcl:
