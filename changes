@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.36 1999/08/04 21:32:32 redman Exp $
+RCS: @(#) $Id: changes,v 1.36.2.1 1999/08/10 18:49:20 redman Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4663,3 +4663,27 @@ avoid compiler errors on Macintosh.  Patch from Vince Darley.
 [Bug: 2389] (hobbs)
 
 --------------- Released 8.2b2, August 5, 1999 ----------------------
+
+8/9/99 (bug fix) Cleand up button.tcl and fixed Windows relief
+bug. [Bug: 664] (hobbs)
+
+8/9/99 (bug fix) Changed Entry C/C/P to not use global data. 
+[Bug: 1475] (hobbs)
+
+8/9/99 (bug fix) Fixed extended mosde script error in listbox. 
+[Bug: 866] (hobbs)
+
+8/9/99 (doc change) Clarified that -troughcolor doesn't work on
+Windows. (hobbs)
+
+8/9/99 (doc change) Fixed wm positionfrom docs. [Bug: 2284] (hobbs)
+
+8/10/99 (bug fix) Changed "wm deiconify" on Windows to raise and force
+the focus on the deiconified window (BEHAVIORAL CHANGE from 8.1 to
+comply better with Windows style).  [Bug: 1609] (hobbs)
+
+8/10/99 (bug fix) Fixed code where abbreviations were used in calling
+widget methods (confused iWidgets).  [Bug: 2422] (hobbs)
+
+--------------- Released 8.2b3, August 11, 1999 ----------------------
+
