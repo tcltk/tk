@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.20 2002/09/03 01:05:11 hobbs Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.21 2003/04/25 20:03:44 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -461,10 +461,9 @@ TkpDisplayButton(clientData)
     }
 
     haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
-    
+
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
-	int imageXOffset, imageYOffset, fullWidth,
-	    fullHeight;
+	int imageXOffset, imageYOffset, fullWidth, fullHeight;
 	imageXOffset = 0;
 	imageYOffset = 0;
 	fullWidth = 0;
@@ -542,10 +541,14 @@ TkpDisplayButton(clientData)
 		    y + imageYOffset, 1);
 	    XSetClipOrigin(butPtr->display, gc, 0, 0);
 	}
-	
-	Tk_DrawTextLayout(butPtr->display, pixmap, gc, butPtr->textLayout,
-		x + textXOffset, y + textYOffset, 0, -1);
-	Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
+
+	/*
+	 * Use normalTextGC in this case since we have both text and image,
+	 * the whole button will later be stippled 50% grey.
+	 */
+	Tk_DrawTextLayout(butPtr->display, pixmap, butPtr->normalTextGC,
+		butPtr->textLayout, x + textXOffset, y + textYOffset, 0, -1);
+	Tk_UnderlineTextLayout(butPtr->display, pixmap, butPtr->normalTextGC,
 		butPtr->textLayout, x + textXOffset, y + textYOffset,
 		butPtr->underline);
 	height = fullHeight;
@@ -643,7 +646,7 @@ TkpDisplayButton(clientData)
 	    xSrc += tsdPtr->boxWidth*2;
 	}
 	ySrc = (butPtr->type == TYPE_RADIO_BUTTON) ? 0 : tsdPtr->boxHeight;
-		
+
 	/*
 	 * Update the palette in the boxes bitmap to reflect the current
 	 * button colors.  Note that this code relies on the layout of the
