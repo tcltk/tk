@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.32 2001/12/04 03:07:43 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.33 2001/12/28 23:44:19 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -350,7 +350,6 @@ static Tcl_ThreadDataKey dataKey;
  * because they must be shared across threads.
  */
 
-static WNDCLASS toplevelClass; /* Class for toplevel windows. */
 static int initialized;        /* Flag indicating whether module has
 				* been initialized. */
 TCL_DECLARE_MUTEX(winWmMutex)
@@ -670,8 +669,6 @@ static int ReadICOHeader( Tcl_Channel channel )
 static int InitWindowClass(WinIconPtr titlebaricon) {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    WNDCLASS * classPtr;
-    classPtr = &toplevelClass;
 
     if (! tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
@@ -681,7 +678,15 @@ static int InitWindowClass(WinIconPtr titlebaricon) {
     if (! initialized) {
 	Tcl_MutexLock(&winWmMutex);
 	if (! initialized) {
+	    Tcl_DString classString;
+	    WNDCLASS class;
 	    initialized = 1;
+
+	    /*
+	     * The only difference between WNDCLASSW and WNDCLASSA are
+	     * in pointers, so we can use the generic structure WNDCLASS.
+	     */
+	    ZeroMemory(&class, sizeof(WNDCLASS));
 
 	    /*
 	     * When threads are enabled, we cannot use CLASSDC because
@@ -692,23 +697,20 @@ static int InitWindowClass(WinIconPtr titlebaricon) {
 	     * which also initializes a WNDCLASS structure.
 	     */
 
-	#ifdef TCL_THREADS
-	    classPtr->style = CS_HREDRAW | CS_VREDRAW;
-	#else
-	    classPtr->style = CS_HREDRAW | CS_VREDRAW | CS_CLASSDC;
-	#endif
-	    classPtr->cbClsExtra = 0;
-	    classPtr->cbWndExtra = 0;
-	    classPtr->hInstance = Tk_GetHINSTANCE();
-	    classPtr->hbrBackground = NULL;
-	    classPtr->lpszMenuName = NULL;
-	    classPtr->lpszClassName = TK_WIN_TOPLEVEL_CLASS_NAME;
-	    classPtr->lpfnWndProc = WmProc;
+#ifdef TCL_THREADS
+	    class.style = CS_HREDRAW | CS_VREDRAW;
+#else
+	    class.style = CS_HREDRAW | CS_VREDRAW | CS_CLASSDC;
+#endif
+	    class.hInstance = Tk_GetHINSTANCE();
+	    Tcl_WinUtfToTChar(TK_WIN_TOPLEVEL_CLASS_NAME, -1, &classString);
+	    class.lpszClassName = (LPCTSTR) Tcl_DStringValue(&classString);
+	    class.lpfnWndProc = WmProc;
 	    if (titlebaricon == NULL) {
-		classPtr->hIcon = LoadIcon(Tk_GetHINSTANCE(), "tk");
+		class.hIcon = LoadIcon(Tk_GetHINSTANCE(), "tk");
 	    } else {
-		classPtr->hIcon = GetIcon(titlebaricon, ICON_BIG);
-		if (classPtr->hIcon == NULL) {
+		class.hIcon = GetIcon(titlebaricon, ICON_BIG);
+		if (class.hIcon == NULL) {
 		    return TCL_ERROR;
 		}
 		/* 
@@ -717,11 +719,12 @@ static int InitWindowClass(WinIconPtr titlebaricon) {
 		 */
 		tsdPtr->iconPtr = titlebaricon;
 	    }
-	    classPtr->hCursor = LoadCursor(NULL, IDC_ARROW);
+	    class.hCursor = LoadCursor(NULL, IDC_ARROW);
 
-	    if (!RegisterClass(classPtr)) {
+	    if (!(*tkWinProcs->registerClass)(&class)) {
 		panic("Unable to register TkTopLevel class");
 	    }
+	    Tcl_DStringFree(&classString);
 	}
 	Tcl_MutexUnlock(&winWmMutex);
     }
@@ -894,13 +897,16 @@ WinSetIcon(interp, titlebaricon, tkw)
 	    wmPtr = ((TkWindow*)tkw)->wmInfoPtr;
 	    hwnd = wmPtr->wrapper;
 	    if (hwnd == NULL) {
-		Tcl_AppendResult(interp,"Can't set icon; window has no wrapper.", (char*)NULL);
+		Tcl_AppendResult(interp,
+			"Can't set icon; window has no wrapper.", (char*)NULL);
 		return TCL_ERROR;
 	    }
 	}
-	SendMessage(hwnd,WM_SETICON,ICON_SMALL,(LPARAM)GetIcon(titlebaricon, ICON_SMALL));
-	SendMessage(hwnd,WM_SETICON,ICON_BIG,(LPARAM)GetIcon(titlebaricon, ICON_BIG));
-	
+	SendMessage(hwnd, WM_SETICON, ICON_SMALL,
+		(LPARAM) GetIcon(titlebaricon, ICON_SMALL));
+	SendMessage(hwnd, WM_SETICON, ICON_BIG,
+		(LPARAM) GetIcon(titlebaricon, ICON_BIG));
+
 	/* Update the iconPtr we keep for each WmInfo structure. */
 	if (wmPtr->iconPtr != NULL) {
 	    /* Free any old icon ptr which is associated with this window. */
@@ -1497,7 +1503,7 @@ UpdateWrapper(winPtr)
     WINDOWPLACEMENT place;
     HICON hSmallIcon = NULL;
     HICON hBigIcon = NULL;
-    Tcl_DString titleString;
+    Tcl_DString titleString, classString;
     int *childStateInfo = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -1584,11 +1590,14 @@ UpdateWrapper(winPtr)
 	 */
 
 	tsdPtr->createWindow = winPtr;
-	Tcl_UtfToExternalDString(NULL, wmPtr->titleUid, -1, &titleString);
-	wmPtr->wrapper = CreateWindowEx(wmPtr->exStyle,
-		TK_WIN_TOPLEVEL_CLASS_NAME,
-		Tcl_DStringValue(&titleString), wmPtr->style, x, y, width, 
-		height, parentHWND, NULL, Tk_GetHINSTANCE(), NULL);
+	Tcl_WinUtfToTChar(wmPtr->titleUid, -1, &titleString);
+	Tcl_WinUtfToTChar(TK_WIN_TOPLEVEL_CLASS_NAME, -1, &classString);
+	wmPtr->wrapper = (*tkWinProcs->createWindowEx)(wmPtr->exStyle,
+		(LPCTSTR) Tcl_DStringValue(&classString),
+		(LPCTSTR) Tcl_DStringValue(&titleString),
+		wmPtr->style, x, y, width, height,
+		parentHWND, NULL, Tk_GetHINSTANCE(), NULL);
+	Tcl_DStringFree(&classString);
 	Tcl_DStringFree(&titleString);
 #ifdef _WIN64
 	SetWindowLongPtr(wmPtr->wrapper, GWLP_USERDATA, (LONG_PTR) winPtr);
@@ -1627,8 +1636,10 @@ UpdateWrapper(winPtr)
     }
     oldWrapper = SetParent(child, wmPtr->wrapper);
     if (oldWrapper) {
-	hSmallIcon = (HICON) SendMessage(oldWrapper,WM_GETICON,ICON_SMALL,(LPARAM)NULL);
-	hBigIcon = (HICON) SendMessage(oldWrapper,WM_GETICON,ICON_BIG,(LPARAM)NULL);
+	hSmallIcon = (HICON) SendMessage(oldWrapper, WM_GETICON, ICON_SMALL,
+		(LPARAM) NULL);
+	hBigIcon = (HICON) SendMessage(oldWrapper, WM_GETICON, ICON_BIG,
+		(LPARAM) NULL);
     }
     
     if (oldWrapper && (oldWrapper != wmPtr->wrapper) 
@@ -3241,9 +3252,9 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    wmPtr->titleUid = Tk_GetUid(argv[3]);
 	    if (!(wmPtr->flags & WM_NEVER_MAPPED) && wmPtr->wrapper != NULL) {
 		Tcl_DString titleString;
-		Tcl_UtfToExternalDString(NULL, wmPtr->titleUid, -1, 
-			&titleString);
-		SetWindowText(wmPtr->wrapper, Tcl_DStringValue(&titleString));
+		Tcl_WinUtfToTChar(wmPtr->titleUid, -1, &titleString);
+		(*tkWinProcs->setWindowText)(wmPtr->wrapper,
+			(LPCTSTR) Tcl_DStringValue(&titleString));
 		Tcl_DStringFree(&titleString);
 	    }
 	}
@@ -4313,7 +4324,8 @@ BOOL CALLBACK TkWmStackorderToplevelEnumProc(hwnd, lParam)
  *
  *----------------------------------------------------------------------
  */
-void
+
+static void
 TkWmStackorderToplevelWrapperMap(winPtr, table)
     TkWindow *winPtr;				/* TkWindow to recurse on */
     Tcl_HashTable *table;		/* Table to maps HWND to TkWindow */
@@ -4402,7 +4414,8 @@ TkWmStackorderToplevel(parentPtr)
     pair.window_ptr = windows + table.numEntries;
     *pair.window_ptr-- = NULL;
 
-    if (EnumWindows(TkWmStackorderToplevelEnumProc, (LPARAM) &pair) == 0) {
+    if (EnumWindows((WNDENUMPROC) TkWmStackorderToplevelEnumProc,
+	    (LPARAM) &pair) == 0) {
         ckfree((char *) windows);
         windows = NULL;
     } else {
@@ -5463,7 +5476,8 @@ WmProc(hwnd, message, wParam, lParam)
 		 * This allows us to pass the message onto the
 		 * native menus [Bug: 2272]
 		 */
-		result = DefWindowProc(hwnd, message, wParam, lParam);
+		result = (*tkWinProcs->defWindowProc)(hwnd, message,
+			wParam, lParam);
 		goto done;
 	    }
 
@@ -5496,10 +5510,11 @@ WmProc(hwnd, message, wParam, lParam)
 	    result = 0;
 	} else if (!Tk_TranslateWinEvent(child, message, wParam, lParam,
 		&result)) {
-	    result = DefWindowProc(hwnd, message, wParam, lParam);
+	    result = (*tkWinProcs->defWindowProc)(hwnd, message,
+		    wParam, lParam);
 	}
     } else {
-	result = DefWindowProc(hwnd, message, wParam, lParam);
+	result = (*tkWinProcs->defWindowProc)(hwnd, message, wParam, lParam);
     }
 
     done:
