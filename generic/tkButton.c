@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.21 2003/04/26 02:59:20 hobbs Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.22 2003/11/12 00:07:42 hobbs Exp $
  */
 
 #include "tkButton.h"
@@ -1078,6 +1078,13 @@ ConfigureButton(interp, butPtr, objc, objv)
 	    errorResult = Tcl_GetObjResult(interp);
 	    Tcl_IncrRefCount(errorResult);
 	    Tk_RestoreSavedOptions(&savedOptions);
+	}
+
+	if ((butPtr->flags & BUTTON_DELETED)) {
+	    /*
+	     * Somehow button was deleted - just abort now. [Bug #824479]
+	     */
+	    return TCL_ERROR;
 	}
 
 	/*
