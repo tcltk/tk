@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.24.2.3 2000/07/28 08:12:05 mo Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.24.2.4 2000/08/05 23:52:32 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -509,7 +509,7 @@ $(TKTEST): $(TK_LIB_FILE) $(TKTEST_OBJS) $(WISH_RES) $(CAT32)
 	$(TK_LIB_FILE) $(LIBS) \
 	$(WISH_RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 
-cat32.${OBJEXT}: $(TCL_SRC_DIR)/cat.c
+cat32.${OBJEXT}: $(TCL_SRC_DIR)/win/cat.c
 	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
 
 $(CAT32): cat32.${OBJEXT}
