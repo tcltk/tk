@@ -167,9 +167,9 @@ proc tk_focusFollowsMouse {} {
     set script {
 	if {("%d" == "NotifyAncestor") || ("%d" == "NotifyNonlinear")
 		|| ("%d" == "NotifyInferior")} {
-	    if [tkFocusOK %W] {
-		focus %W
-	    }
+		    if {[tkFocusOK %W]} {
+			focus %W
+		    }
 	}
     }
     if {$old != ""} {

@@ -30,7 +30,7 @@
 proc tk_optionMenu {w varName firstValue args} {
     upvar #0 $varName var
 
-    if ![info exists var] {
+    if {![info exists var]} {
 	set var $firstValue
     }
     menubutton $w -textvariable $varName -indicatoron 1 -menu $w.menu \

@@ -119,4 +119,51 @@ test safe-4.2 {testing loadTk -use} {
     destroy $w
 } {}
 
+test safe-5.1 {loading Tk in safe interps without master's clearance} {
+    set i [safe::interpCreate]
+    catch {interp eval $i {load {} Tk}} msg
+    safe::interpDelete $i
+    set msg
+} {not allowed to start Tk by master's safe::TkInit}
+
+test safe-5.2 {multi-level Tk loading with clearance} {
+    # No error shall occur in that test and no window
+    # shall remain at the end.
+    set i [safe::interpCreate]
+    set j [list $i x]
+    set j [safe::interpCreate $j]
+    safe::loadTk $j
+    interp eval $j {
+	button .b -text Ok -command {destroy .}
+	pack .b
+#	tkwait window . ; # for interactive testing/debugging
+    }
+    safe::interpDelete $j
+    safe::interpDelete $i
+} {}
+
+test safe-6.1 {loadTk -use windowPath} {
+    set w .safeTkFrame
+    catch {destroy $w}
+    frame $w -container 1;
+    pack .safeTkFrame
+    set i [safe::loadTk [safe::interpCreate] -use $w]
+    interp eval $i {button .b -text "hello world!"; pack .b}
+    safe::interpDelete $i
+    destroy $w
+} {}
+
+test safe-6.2 {loadTk -use windowPath, conflicting -display} {
+    set w .safeTkFrame
+    catch {destroy $w}
+    frame $w -container 1;
+    pack .safeTkFrame
+    set i     [safe::interpCreate]
+    catch {safe::loadTk $i -use $w -display :23.56} msg
+    safe::interpDelete $i
+    destroy $w
+    string range $msg 0 36
+} {conflicting -display :23.56 and -use }
+
+
 unset hidden_cmds

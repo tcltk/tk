@@ -73,6 +73,24 @@ typedef struct TkMacWindowList {
  */
 
 /*
+ * This structure is for handling Netscape-type in process
+ * embedding where Tk does not control the top-level.  It contains
+ * various functions that are needed by Mac specific routines, like
+ * TkMacGetDrawablePort.  The definitions of the function types
+ * are in tclMac.h.
+ */
+
+typedef struct {
+	Tk_MacEmbedRegisterWinProc *registerWinProc;
+	Tk_MacEmbedGetGrafPortProc *getPortProc;
+	Tk_MacEmbedMakeContainerExistProc *containerExistProc;
+	Tk_MacEmbedGetClipProc *getClipProc;
+	Tk_MacEmbedGetOffsetInParentProc *getOffsetProc;
+} TkMacEmbedHandler;
+
+extern TkMacEmbedHandler *gMacEmbedHandler;
+
+/*
  * Defines used for TkMacInvalidateWindow
  */
  

@@ -114,7 +114,12 @@ Tk_Window
 Tk_HWNDToWindow(hwnd)
     HWND hwnd;
 {
-    Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&windowTable, (char*)hwnd);
+    Tcl_HashEntry *entryPtr;
+    if (!initialized) {
+	Tcl_InitHashTable(&windowTable, TCL_ONE_WORD_KEYS);
+	initialized = 1;
+    }
+    entryPtr = Tcl_FindHashEntry(&windowTable, (char*)hwnd);
     if (entryPtr != NULL) {
 	return (Tk_Window) Tcl_GetHashValue(entryPtr);
     }

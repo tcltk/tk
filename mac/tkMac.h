@@ -15,6 +15,8 @@
 #define _TKMAC
 
 #include <Windows.h>
+#include <QDOffscreen.h>
+#include "tkInt.h"
 
 /*
  * "export" is a MetroWerks specific pragma.  It flags the linker that  
@@ -32,21 +34,46 @@
 
 EXTERN QDGlobalsPtr tcl_macQdPtr;
 
-/* 
- * The following functions are needed to create a shell, and so they must be exported
- * from the Tk library.  However, these are not the final form of these interfaces, so
- * they are not currently supported as public interfaces.
+/*
+ * Structures and function types for handling Netscape-type in process
+ * embedding where Tk does not control the top-level
  */
+typedef  int (Tk_MacEmbedRegisterWinProc) (int winID, Tk_Window window);
+typedef GWorldPtr (Tk_MacEmbedGetGrafPortProc) (Tk_Window window); 
+typedef int (Tk_MacEmbedMakeContainerExistProc) (Tk_Window window); 
+typedef void (Tk_MacEmbedGetClipProc) (Tk_Window window, RgnHandle rgn); 
+typedef void (Tk_MacEmbedGetOffsetInParentProc) (Tk_Window window, Point *ulCorner);
+
+/* 
+ * Mac Specific functions that are available to extension writers.
+ */
+
+EXTERN void 	Tk_MacSetEmbedHandler _ANSI_ARGS_((
+    		        Tk_MacEmbedRegisterWinProc *registerWinProcPtr,
+    			Tk_MacEmbedGetGrafPortProc *getPortProcPtr,
+    			Tk_MacEmbedMakeContainerExistProc *containerExistProcPtr,
+    			Tk_MacEmbedGetClipProc *getClipProc,
+    			Tk_MacEmbedGetOffsetInParentProc *getOffsetProc));
+    			
  
+EXTERN void Tk_MacTurnOffMenus _ANSI_ARGS_ (());
+EXTERN void Tk_MacTkOwnsCursor _ANSI_ARGS_ ((int tkOwnsIt));
+
 /*
  * These functions are currently in tkMacInt.h.  They are just copied over here
  * so they can be exported.
  */
 
 EXTERN void 	TkMacInitMenus _ANSI_ARGS_((Tcl_Interp 	*interp));
-EXTERN void		TkMacInitAppleEvents _ANSI_ARGS_((Tcl_Interp *interp));
+EXTERN void	TkMacInitAppleEvents _ANSI_ARGS_((Tcl_Interp *interp));
 
-EXTERN int		TkMacConvertEvent _ANSI_ARGS_((EventRecord *eventPtr));
+EXTERN int	TkMacConvertEvent _ANSI_ARGS_((EventRecord *eventPtr));
+EXTERN int	TkMacConvertTkEvent _ANSI_ARGS_((EventRecord *eventPtr,
+			    Window window));
+EXTERN void	TkGenWMConfigureEvent _ANSI_ARGS_((Tk_Window tkwin,
+			    int x, int y, int width, int height, int flags));
+EXTERN void	TkMacInvalClipRgns _ANSI_ARGS_((TkWindow *winPtr));
+
 
 #pragma export reset
 

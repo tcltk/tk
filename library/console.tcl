@@ -108,7 +108,7 @@ proc tkConsoleSource {} {
 		      -filetypes {{"Tcl Scripts" .tcl} {"All Files" *}}]
     if {"$filename" != ""} {
     	set cmd [list source $filename]
-	if [catch {consoleinterp eval $cmd} result] {
+	if {[catch {consoleinterp eval $cmd} result]} {
 	    tkConsoleOutput stderr "$result\n"
 	}
     }
@@ -136,7 +136,7 @@ proc tkConsoleInvoke {args} {
     }
     if {$cmd == ""} {
 	tkConsolePrompt
-    } elseif [info complete $cmd] {
+    } elseif {[info complete $cmd]} {
 	.console mark set output end
 	.console tag delete input
 	set result [consoleinterp record $cmd]
@@ -168,7 +168,7 @@ proc tkConsoleHistory {cmd} {
     	prev {
 	    incr histNum -1
 	    if {$histNum == 0} {
-		set cmd {history event [expr [history nextid] -1]}
+		set cmd {history event [expr {[history nextid] -1}]}
 	    } else {
 		set cmd "history event $histNum"
 	    }
@@ -182,7 +182,7 @@ proc tkConsoleHistory {cmd} {
     	next {
 	    incr histNum
 	    if {$histNum == 0} {
-		set cmd {history event [expr [history nextid] -1]}
+		set cmd {history event [expr {[history nextid] -1}]}
 	    } elseif {$histNum > 0} {
 		set cmd ""
 		set histNum 1
@@ -213,7 +213,7 @@ proc tkConsolePrompt {{partial normal}} {
     if {$partial == "normal"} {
 	set temp [.console index "end - 1 char"]
 	.console mark set output end
-    	if [consoleinterp eval "info exists tcl_prompt1"] {
+    	if {[consoleinterp eval "info exists tcl_prompt1"]} {
     	    consoleinterp eval "eval \[set tcl_prompt1\]"
     	} else {
     	    puts -nonewline "% "
@@ -221,7 +221,7 @@ proc tkConsolePrompt {{partial normal}} {
     } else {
 	set temp [.console index output]
 	.console mark set output end
-    	if [consoleinterp eval "info exists tcl_prompt2"] {
+    	if {[consoleinterp eval "info exists tcl_prompt2"]} {
     	    consoleinterp eval "eval \[set tcl_prompt2\]"
     	} else {
 	    puts -nonewline "> "
@@ -271,7 +271,7 @@ proc tkConsoleBind {win} {
 	if {[%W tag nextrange sel 1.0 end] != ""} {
 	    %W tag remove sel sel.first promptEnd
 	} else {
-	    if [%W compare insert < promptEnd] {
+	    if {[%W compare insert < promptEnd]} {
 		break
 	    }
 	}
@@ -280,14 +280,14 @@ proc tkConsoleBind {win} {
 	if {[%W tag nextrange sel 1.0 end] != ""} {
 	    %W tag remove sel sel.first promptEnd
 	} else {
-	    if [%W compare insert <= promptEnd] {
+	    if {[%W compare insert <= promptEnd]} {
 		break
 	    }
 	}
     }
     foreach left {Control-a Home} {
 	bind $win <$left> {
-	    if [%W compare insert < promptEnd] {
+	    if {[%W compare insert < promptEnd]} {
 		tkTextSetCursor %W {insert linestart}
 	    } else {
 		tkTextSetCursor %W promptEnd
@@ -302,32 +302,32 @@ proc tkConsoleBind {win} {
 	}
     }
     bind $win <Control-d> {
-	if [%W compare insert < promptEnd] {
+	if {[%W compare insert < promptEnd]} {
 	    break
 	}
     }
     bind $win <Control-k> {
-	if [%W compare insert < promptEnd] {
+	if {[%W compare insert < promptEnd]} {
 	    %W mark set insert promptEnd
 	}
     }
     bind $win <Control-t> {
-	if [%W compare insert < promptEnd] {
+	if {[%W compare insert < promptEnd]} {
 	    break
 	}
     }
     bind $win <Meta-d> {
-	if [%W compare insert < promptEnd] {
+	if {[%W compare insert < promptEnd]} {
 	    break
 	}
     }
     bind $win <Meta-BackSpace> {
-	if [%W compare insert <= promptEnd] {
+	if {[%W compare insert <= promptEnd]} {
 	    break
 	}
     }
     bind $win <Control-h> {
-	if [%W compare insert <= promptEnd] {
+	if {[%W compare insert <= promptEnd]} {
 	    break
 	}
     }
@@ -353,7 +353,7 @@ proc tkConsoleBind {win} {
     }
     foreach left {Control-b Left} {
 	bind $win <$left> {
-	    if [%W compare insert == promptEnd] {
+	    if {[%W compare insert == promptEnd]} {
 		break
 	    }
 	    tkTextSetCursor %W insert-1c

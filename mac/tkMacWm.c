@@ -19,6 +19,7 @@
 #include <Windows.h>
 #include <ToolUtils.h>
 
+#include <tclMac.h>
 #include "tkPort.h"
 #include "tkInt.h"
 #include "tkMacInt.h"
@@ -532,7 +533,7 @@ TkWmMapWindow(
      */
 
     XMapWindow(winPtr->display, winPtr->window);
-
+    
     /*
      * Now that the window is visable we can determine the offset
      * from the window's content orgin to the window's decorative
@@ -2333,12 +2334,26 @@ Tk_GetRootCoords(
 	            y += winPtr->changes.y + winPtr->changes.border_width;
 		    
 		} else {
+		    Point theOffset;
 		    
-		    /*
-		     * NOTE: Here we should handle
-		     * out of process embedding.
-		     */
-		    
+		    if (gMacEmbedHandler->getOffsetProc != NULL) {
+		        /*
+		         * We do not require that the changes.x & changes.y for 
+		         * a non-Tk master window be kept up to date.  So we
+		         * first subtract off the possibly bogus values that have
+		         * been added on at the top of this pass through the loop,
+		         * and then call out to the getOffsetProc to give us
+		         * the correct offset.
+		         */
+		         
+	                x -= winPtr->changes.x + winPtr->changes.border_width;
+	                y -= winPtr->changes.y + winPtr->changes.border_width;
+	                
+		        gMacEmbedHandler->getOffsetProc((Tk_Window) winPtr, &theOffset);
+		        
+		        x += theOffset.h;
+		        y += theOffset.v;
+		    }
 		    break;
 		}
 	    }
@@ -3860,6 +3875,13 @@ TkMacMakeRealWindowExist(
 	if (contWinPtr != NULL) {
 	    TkMacMakeRealWindowExist(contWinPtr->privatePtr->toplevel->winPtr);
 	    macWin->flags |= TK_HOST_EXISTS;
+	    return;
+	} else if (gMacEmbedHandler != NULL) {
+	    if (gMacEmbedHandler->containerExistProc != NULL) {
+	        if (gMacEmbedHandler->containerExistProc((Tk_Window) winPtr) != TCL_OK) {
+	           panic("ContainerExistProc could not make container");
+	       }
+	    }
 	    return;
 	} else {
 	    panic("TkMacMakeRealWindowExist could not find container");

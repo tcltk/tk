@@ -42,7 +42,7 @@ set tk_strictMotif 0
 proc tkScreenChanged screen {
     set x [string last . $screen]
     if {$x > 0} {
-	set disp [string range $screen 0 [expr $x - 1]]
+	set disp [string range $screen 0 [expr {$x - 1}]]
     } else {
 	set disp $screen
     }
@@ -51,7 +51,7 @@ proc tkScreenChanged screen {
     global tkPriv
     global tcl_platform
 
-    if [info exists tkPriv] {
+    if {[info exists tkPriv]} {
 	set tkPriv(screen) $screen
 	return
     }
@@ -101,7 +101,7 @@ tkScreenChanged [winfo screen .]
 proc tkEventMotifBindings {n1 dummy dummy} {
     upvar $n1 name
     
-    if $name {
+    if {$name} {
 	set op delete
     } else {
 	set op add

@@ -49,7 +49,7 @@ proc tkTearOffMenu {w {x 0} {y 0}} {
     }
     for {set i 1} 1 {incr i} {
 	set menu $parent.tearoff$i
-	if ![winfo exists $menu] {
+	if {![winfo exists $menu]} {
 	    break
 	}
     }

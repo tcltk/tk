@@ -46,7 +46,7 @@
  */
 
 static TkDisplay *gMacDisplay = NULL; /* Macintosh display. */
-static char *macScreenName = "Macintosh:0";
+static char *macScreenName = ":0";
 				/* Default name of macintosh display. */
 
 /*

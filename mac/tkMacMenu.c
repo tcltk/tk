@@ -139,6 +139,8 @@ typedef struct TopLevelMenubarList {
 
 #define MENUBAR_REDRAW_PENDING 1
 
+static int gNoTkMenus = 0;      /* This is used by Tk_MacTurnOffMenus as the
+                                 * flag that Tk is not to draw any menus. */
 RgnHandle tkMenuCascadeRgn = NULL;
 				/* The region to clip drawing to when the
 				 * MDEF is up. */
@@ -1396,6 +1398,31 @@ TkpMenuNewEntry(
  *----------------------------------------------------------------------
  *
  * 
+ * Tk_MacTurnOffMenus --
+ *
+ *	Turns off all the menu drawing code.  This is more than just disabling
+ *      the "menu" command, this means that Tk will NEVER touch the menubar.
+ *      It is needed in the Plugin, where Tk does not own the menubar.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	A flag is set which will disable all menu drawing.
+ *
+ *----------------------------------------------------------------------
+ */
+
+EXTERN void
+Tk_MacTurnOffMenus()
+{
+    gNoTkMenus = 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * 
  * DrawMenuBarWhenIdle --
  *
  *	Update the menu bar next time there is an idle event.
@@ -1417,6 +1444,14 @@ DrawMenuBarWhenIdle(
     TkMenu *appleMenuPtr, *helpMenuPtr;
     MenuHandle macMenuHdl;
     Tcl_HashEntry *hashEntryPtr;
+    
+    /*
+     * If we have been turned off, exit.
+     */
+     
+    if (gNoTkMenus) {
+        return;
+    }
     
     /*
      * We need to clear the apple and help menus of any extra items.
@@ -3991,4 +4026,6 @@ TkpMenuInit(void)
     currentMenuBarInterp = NULL;
     currentMenuBarName = NULL;
     windowListPtr = NULL;
+    FixMDEF();
+
 }

@@ -33,7 +33,7 @@
 # makes that unnecessary.
 
 bind Listbox <1> {
-    if [winfo exists %W] {
+    if {[winfo exists %W]} {
 	tkListboxBeginSelect %W [%W index @%x,%y]
     }
 }
@@ -186,7 +186,7 @@ bind Listbox <B2-Motion> {
 proc tkListboxBeginSelect {w el} {
     global tkPriv
     if {[$w cget -selectmode]  == "multiple"} {
-	if [$w selection includes $el] {
+	if {[$w selection includes $el]} {
 	    $w selection clear $el
 	} else {
 	    $w selection set $el
@@ -224,7 +224,7 @@ proc tkListboxMotion {w el} {
 	}
 	extended {
 	    set i $tkPriv(listboxPrev)
-	    if [$w selection includes anchor] {
+	    if {[$w selection includes anchor]} {
 		$w selection clear $i $el
 		$w selection set anchor $el
 	    } else {
@@ -290,7 +290,7 @@ proc tkListboxBeginToggle {w el} {
 	set tkPriv(listboxSelection) [$w curselection]
 	set tkPriv(listboxPrev) $el
 	$w selection anchor $el
-	if [$w selection includes $el] {
+	if {[$w selection includes $el]} {
 	    $w selection clear $el
 	} else {
 	    $w selection set $el
@@ -340,7 +340,7 @@ proc tkListboxAutoScan {w} {
 
 proc tkListboxUpDown {w amount} {
     global tkPriv
-    $w activate [expr [$w index active] + $amount]
+    $w activate [expr {[$w index active] + $amount}]
     $w see active
     switch [$w cget -selectmode] {
 	browse {
@@ -371,7 +371,7 @@ proc tkListboxExtendUpDown {w amount} {
     if {[$w cget -selectmode] != "extended"} {
 	return
     }
-    $w activate [expr [$w index active] + $amount]
+    $w activate [expr {[$w index active] + $amount}]
     $w see active
     tkListboxMotion $w [$w index active]
 }
@@ -392,7 +392,7 @@ proc tkListboxDataExtend {w el} {
     if {$mode == "extended"} {
 	$w activate $el
 	$w see $el
-        if [$w selection includes anchor] {
+        if {[$w selection includes anchor]} {
 	    tkListboxMotion $w $el
 	}
     } elseif {$mode == "multiple"} {

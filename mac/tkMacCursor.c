@@ -64,9 +64,16 @@ static struct CursorName {
 
 static TkMacCursor * gCurrentCursor = NULL;  /* A pointer to the current
 					      * cursor. */
-static int gResizeOverride = false;	     /* A boolean indicating wether
+static int gResizeOverride = false;	     /* A boolean indicating whether
 					      * we should use the resize
 					      * cursor during installations. */
+static int gTkOwnsCursor = true;             /* A boolean indicating whether
+                                                Tk owns the cursor.  If not (for
+                                                instance, in the case where a Tk 
+                                                window is embedded in another app's
+                                                window, and the cursor is out of
+                                                the tk window, we will not attempt
+                                                to adjust the cursor */
 
 /*
  * Declarations of procedures local to this file
@@ -348,6 +355,9 @@ void
 TkpSetCursor(
     TkpCursor cursor)
 {
+    if (!gTkOwnsCursor) {
+        return;
+    }
     if (cursor == None) {
 	gCurrentCursor = NULL;
     } else {
@@ -357,4 +367,26 @@ TkpSetCursor(
     if (tkMacAppInFront) {
 	TkMacInstallCursor(gResizeOverride);
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_MacTkOwnsCursor --
+ *
+ *	Sets whether Tk has the right to adjust the cursor.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May keep Tk from changing the cursor.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void Tk_MacTkOwnsCursor(
+    int tkOwnsIt)
+{
+    gTkOwnsCursor = tkOwnsIt;
 }

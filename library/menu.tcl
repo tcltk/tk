@@ -218,7 +218,7 @@ proc tkMbLeave w {
     global tkPriv
 
     set tkPriv(inMenubutton) {}
-    if ![winfo exists $w] {
+    if {![winfo exists $w]} {
 	return
     }
     if {[$w cget -state] == "active"} {
@@ -273,29 +273,29 @@ proc tkMbPost {w {x {}} {y {}}} {
     # the menu just below the menubutton, as for a pull-down.
 
     update idletasks
-    if [catch {
+    if {[catch {
     	 switch [$w cget -direction] {
     	    above {
     	    	set x [winfo rootx $w]
-    	    	set y [expr [winfo rooty $w] - [winfo reqheight $menu]]
+    	    	set y [expr {[winfo rooty $w] - [winfo reqheight $menu]}]
     	    	$menu post $x $y
     	    }
     	    below {
     	    	set x [winfo rootx $w]
-    	    	set y [expr [winfo rooty $w] + [winfo height $w]]
+    	    	set y [expr {[winfo rooty $w] + [winfo height $w]}]
     	    	$menu post $x $y
     	    }
     	    left {
-    	    	set x [expr [winfo rootx $w] - [winfo reqwidth $menu]]
-    	    	set y [expr (2 * [winfo rooty $w] + [winfo height $w]) / 2]
+    	    	set x [expr {[winfo rootx $w] - [winfo reqwidth $menu]}]
+    	    	set y [expr {(2 * [winfo rooty $w] + [winfo height $w]) / 2}]
     	    	set entry [tkMenuFindName $menu [$w cget -text]]
-    	    	if [$w cget -indicatoron] {
+    	    	if {[$w cget -indicatoron]} {
 		    if {$entry == [$menu index last]} {
-		    	incr y [expr -([$menu yposition $entry] \
-			    	+ [winfo reqheight $menu])/2]
+		    	incr y [expr {-([$menu yposition $entry] \
+			    	+ [winfo reqheight $menu])/2}]
 		    } else {
-		    	incr y [expr -([$menu yposition $entry] \
-			        + [$menu yposition [expr $entry+1]])/2]
+		    	incr y [expr {-([$menu yposition $entry] \
+			        + [$menu yposition [expr {$entry+1}]])/2}]
 		    }
     	    	}
     	    	$menu post $x $y
@@ -305,16 +305,16 @@ proc tkMbPost {w {x {}} {y {}}} {
     	    	}
     	    }
     	    right {
-    	    	set x [expr [winfo rootx $w] + [winfo width $w]]
-    	    	set y [expr (2 * [winfo rooty $w] + [winfo height $w]) / 2]
+    	    	set x [expr {[winfo rootx $w] + [winfo width $w]}]
+    	    	set y [expr {(2 * [winfo rooty $w] + [winfo height $w]) / 2}]
     	    	set entry [tkMenuFindName $menu [$w cget -text]]
-    	    	if [$w cget -indicatoron] {
+    	    	if {[$w cget -indicatoron]} {
 		    if {$entry == [$menu index last]} {
-		    	incr y [expr -([$menu yposition $entry] \
-			    	+ [winfo reqheight $menu])/2]
+		    	incr y [expr {-([$menu yposition $entry] \
+			    	+ [winfo reqheight $menu])/2}]
 		    } else {
-		    	incr y [expr -([$menu yposition $entry] \
-			        + [$menu yposition [expr $entry+1]])/2]
+		    	incr y [expr {-([$menu yposition $entry] \
+			        + [$menu yposition [expr {$entry+1}]])/2}]
 		    }
     	    	}
     	    	$menu post $x $y
@@ -324,18 +324,18 @@ proc tkMbPost {w {x {}} {y {}}} {
     	    	}
     	    }
     	    default {
-    	    	if [$w cget -indicatoron] {
+    	    	if {[$w cget -indicatoron]} {
 	    	    if {$y == ""} {
-			set x [expr [winfo rootx $w] + [winfo width $w]/2]
-			set y [expr [winfo rooty $w] + [winfo height $w]/2]
+			set x [expr {[winfo rootx $w] + [winfo width $w]/2}]
+			set y [expr {[winfo rooty $w] + [winfo height $w]/2}]
 	    	    }
 	            tkPostOverPoint $menu $x $y [tkMenuFindName $menu [$w cget -text]]
 		} else {
-	    	    $menu post [winfo rootx $w] [expr [winfo rooty $w]+[winfo height $w]]
+	    	    $menu post [winfo rootx $w] [expr {[winfo rooty $w]+[winfo height $w]}]
     	    	}  
     	    }
     	 }
-     } msg] {
+     } msg]} {
 	# Error posting menu (e.g. bogus -postcommand). Unpost it and
 	# reflect the error.
 	
@@ -781,7 +781,7 @@ proc tkMenuNextMenu {menu direction} {
     }
     set buttons [winfo children [winfo parent $w]]
     set length [llength $buttons]
-    set i [expr [lsearch -exact $buttons $w] + $count]
+    set i [expr {[lsearch -exact $buttons $w] + $count}]
     while 1 {
 	while {$i < 0} {
 	    incr i $length
@@ -820,13 +820,13 @@ proc tkMenuNextEntry {menu count} {
     if {[$menu index last] == "none"} {
 	return
     }
-    set length [expr [$menu index last]+1]
+    set length [expr {[$menu index last]+1}]
     set quitAfter $length
     set active [$menu index active]
     if {$active == "none"} {
 	set i 0
     } else {
-	set i [expr $active + $count]
+	set i [expr {$active + $count}]
     }
     while 1 {
 	if {$quitAfter <= 0} {
@@ -1020,9 +1020,9 @@ proc tkTraverseWithinMenu {w char} {
 	return
     }
     for {set i 0} {$i <= $last} {incr i} {
-	if [catch {set char2 [string index \
+	if {[catch {set char2 [string index \
 		[$w entrycget $i -label] \
-		[$w entrycget $i -underline]]}] {
+		[$w entrycget $i -underline]]}]} {
 	    continue
 	}
 	if {[string compare $char [string tolower $char2]] == 0} {
@@ -1105,7 +1105,7 @@ proc tkMenuFindName {menu s} {
 	return
     }
     for {set i 0} {$i <= $last} {incr i} {
-	if ![catch {$menu entrycget $i -label} label] {
+	if {![catch {$menu entrycget $i -label} label]} {
 	    if {$label == $s} {
 		return $i
 	    }
@@ -1131,13 +1131,13 @@ proc tkPostOverPoint {menu x y {entry {}}}  {
     
     if {$entry != {}} {
 	if {$entry == [$menu index last]} {
-	    incr y [expr -([$menu yposition $entry] \
-		    + [winfo reqheight $menu])/2]
+	    incr y [expr {-([$menu yposition $entry] \
+		    + [winfo reqheight $menu])/2}]
 	} else {
-	    incr y [expr -([$menu yposition $entry] \
-		    + [$menu yposition [expr $entry+1]])/2]
+	    incr y [expr {-([$menu yposition $entry] \
+		    + [$menu yposition [expr {$entry+1}]])/2}]
 	}
-	incr x [expr -[winfo reqwidth $menu]/2]
+	incr x [expr {-[winfo reqwidth $menu]/2}]
     }
     $menu post $x $y
     if {($entry != {}) && ([$menu entrycget $entry -state] != "disabled")} {

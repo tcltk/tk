@@ -69,7 +69,8 @@ static int	GenerateUpdateEvent _ANSI_ARGS_((EventRecord *eventPtr,
 static void 	GenerateUpdates _ANSI_ARGS_((RgnHandle updateRgn,
 			TkWindow *winPtr));
 static int 	GeneratePollingEvents _ANSI_ARGS_((void));	
-static int 	GeneratePollingEvents2 _ANSI_ARGS_((Window window));	
+static int 	GeneratePollingEvents2 _ANSI_ARGS_((Window window,
+	                int adjustCursor));	
 static OSErr	TellWindowDefProcToCalcRegions _ANSI_ARGS_((WindowRef wRef));
 static int	WindowManagerMouse _ANSI_ARGS_((EventRecord *theEvent,
 		    Window window));
@@ -810,7 +811,7 @@ GeneratePollingEvents()
     }
     Tk_UpdatePointer(tkwin, whereGlobal.h,  whereGlobal.v,
 	    TkMacButtonKeyState());
-
+    
     /*
      * Finally, we make sure the proper cursor is installed.  The installation
      * is polled to 1) make our resize hack work, and 2) make sure we have the 
@@ -849,7 +850,8 @@ GeneratePollingEvents()
 
 static int
 GeneratePollingEvents2(
-    Window window)
+    Window window,
+    int adjustCursor)
 {
     Tk_Window tkwin, rootwin;
     WindowRef whichwindow, frontWin;
@@ -889,6 +891,7 @@ GeneratePollingEvents2(
 	}
     }
 
+    
     /*
      * The following call will generate the appropiate X events and
      * adjust any state that Tk must remember.
@@ -899,15 +902,17 @@ GeneratePollingEvents2(
     }
     Tk_UpdatePointer(tkwin, whereGlobal.h,  whereGlobal.v,
 	    TkMacButtonKeyState());
-
+    
     /*
      * Finally, we make sure the proper cursor is installed.  The installation
      * is polled to 1) make our resize hack work, and 2) make sure we have the 
      * proper cursor even if someone else changed the cursor out from under
      * us.
      */
-    TkMacInstallCursor(0);
-
+     
+    if (adjustCursor) {
+        TkMacInstallCursor(0);
+    }
     return true;
 }
 
@@ -1214,7 +1219,7 @@ TkMacConvertEvent(
  * TkMacConvertTkEvent --
  *
  *	This function converts a Macintosh event into zero or more
- *	Tcl events.
+ *	Tcl events.  It is intended for use in Netscape-style embedding.
  *
  * Results:
  *	Returns 1 if event added to Tcl queue, 0 otherwse.
@@ -1233,14 +1238,34 @@ TkMacConvertTkEvent(
     int eventFound = false;
     Point where;
     
+    /*
+     * By default, assume it is legal for us to set the cursor 
+     */
+     
+    Tk_MacTkOwnsCursor(1);
+    
     switch (eventPtr->what) {
 	case nullEvent:
+        /*
+         * We get NULL events only when the cursor is NOT over
+	 * the plugin.  Otherwise we get updateCursor events.
+	 * We will not generate polling events or move the cursor
+	 * in this case.
+         */
+            
+	    eventFound = false;
+	    break;
 	case adjustCursorEvent:
-	    if (GeneratePollingEvents2(window)) {
+	    if (GeneratePollingEvents2(window, 1)) {
 		eventFound = true;
 	    }
 	    break;
 	case updateEvt:
+        /*
+         * It is possibly not legal for us to set the cursor 
+         */
+     
+            Tk_MacTkOwnsCursor(0);
 	    if (GenerateUpdateEvent(eventPtr, window)) {
 		eventFound = true;
 	    }
@@ -1271,6 +1296,13 @@ TkMacConvertTkEvent(
 	    eventFound |= GenerateKeyEvent(eventPtr, window);
 	    break;
 	case activateEvt:
+        /*
+         * It is probably not legal for us to set the cursor
+	 * here, since we don't know where the mouse is in the
+	 * window that is being activated.
+         */
+     
+            Tk_MacTkOwnsCursor(0);
 	    eventFound |= GenerateActivateEvents(eventPtr, window);
 	    eventFound |= GenerateFocusEvent(eventPtr, window);
 	    break;
@@ -1291,10 +1323,18 @@ TkMacConvertTkEvent(
 	     * Do clipboard conversion.
 	     */
 	    switch ((eventPtr->message & osEvtMessageMask) >> 24) {
+        /*
+         * It is possibly not legal for us to set the cursor.
+         * Netscape sends us these events all the time... 
+         */
+     
+                Tk_MacTkOwnsCursor(0);
+        
 		case mouseMovedMessage:
-		    if (GeneratePollingEvents2(window)) {
+		    /* if (GeneratePollingEvents2(window, 0)) {
 			eventFound = true;
-		    }
+		    }  NEXT LINE IS TEMPORARY */
+		    eventFound = false;
 		    break;
 		case suspendResumeMessage:
 		    if (!(eventPtr->message & resumeFlag)) {
@@ -1516,7 +1556,6 @@ TellWindowDefProcToCalcRegions(
      * Assuming there are no errors we now call the window definition 
      * procedure to tell it to calculate the regions for the window.
      */
-
     if (err == noErr) {
  	(void) CallWindowDefProc((UniversalProcPtr) *wdef,
 		GetWVariant(wRef), wRef, wCalcRgns, 0);

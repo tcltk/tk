@@ -61,7 +61,7 @@ proc tkMessageBox {args} {
 	}
     }
 
-    if ![winfo exists $data(-parent)] {
+    if {![winfo exists $data(-parent)]} {
 	error "bad window path name \"$data(-parent)\""
     }
 
@@ -111,15 +111,15 @@ proc tkMessageBox {args} {
 	}
     }
 
-    if [string compare $data(-default) ""] {
+    if {[string compare $data(-default) ""]} {
 	set valid 0
 	foreach btn $buttons {
-	    if ![string compare [lindex $btn 0] $data(-default)] {
+	    if {![string compare [lindex $btn 0] $data(-default)]} {
 		set valid 1
 		break
 	    }
 	}
-	if !$valid {
+	if {!$valid} {
 	    error "invalid default button \"$data(-default)\""
 	}
     }
@@ -127,7 +127,7 @@ proc tkMessageBox {args} {
     # 2. Set the dialog to be a child window of $parent
     #
     #
-    if [string compare $data(-parent) .] {
+    if {[string compare $data(-parent) .]} {
 	set w $data(-parent).__tk__messagebox
     } else {
 	set w .__tk__messagebox
@@ -176,7 +176,7 @@ proc tkMessageBox {args} {
     foreach but $buttons {
 	set name [lindex $but 0]
 	set opts [lrange $but 1 end]
-	if ![string compare $opts {}] {
+	if {![string compare $opts {}]} {
 	    # Capitalize the first letter of $name
 	    set capName \
 		[string toupper \
@@ -186,7 +186,7 @@ proc tkMessageBox {args} {
 
 	eval button $w.$name $opts -command [list "set tkPriv(button) $name"]
 
-	if ![string compare $name $data(-default)] {
+	if {![string compare $name $data(-default)]} {
 	    $w.$name configure -default active
 	}
 	pack $w.$name -in $w.bot -side left -expand 1 \
@@ -206,7 +206,7 @@ proc tkMessageBox {args} {
     # 6. Create a binding for <Return> on the dialog if there is a
     # default button.
 
-    if [string compare $data(-default) ""] {
+    if {[string compare $data(-default) ""]} {
 	bind $w <Return> "tkButtonInvoke $w.$data(-default)"
     }
 
@@ -216,10 +216,10 @@ proc tkMessageBox {args} {
 
     wm withdraw $w
     update idletasks
-    set x [expr [winfo screenwidth $w]/2 - [winfo reqwidth $w]/2 \
-	    - [winfo vrootx [winfo parent $w]]]
-    set y [expr [winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
-	    - [winfo vrooty [winfo parent $w]]]
+    set x [expr {[winfo screenwidth $w]/2 - [winfo reqwidth $w]/2 \
+	    - [winfo vrootx [winfo parent $w]]}]
+    set y [expr {[winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
+	    - [winfo vrooty [winfo parent $w]]}]
     wm geom $w +$x+$y
     wm deiconify $w
 
@@ -231,7 +231,7 @@ proc tkMessageBox {args} {
 	set grabStatus [grab status $oldGrab]
     }
     grab $w
-    if [string compare $data(-default) ""] {
+    if {[string compare $data(-default) ""]} {
 	focus $w.$data(-default)
     } else {
 	focus $w
