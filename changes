@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.68 2004/03/03 23:27:25 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.69 2004/03/03 23:39:05 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5647,6 +5647,13 @@ in this changeset (new minor version) rather than bug fixes:
 
  * [TIP #110] tristate value option for checkbuttons and radiobuttons
 
+ * [TIP #113] add multi-line searching and -all searching to the text widget
+   Full Tcl_Obj-ification of the text widget
+ * [TIP #155] add 'count' and 'replace' subcommands and a '-blockcursor'
+   option to text widgets and support smooth-scrolling of them
+	*** POTENTIAL INCOMPATIBILITY ***
+   Negative or decreasing tab-stops are explicitly disallowed
+
  * [TIP #116] more safety for large image creation through use of attempted
    allocation of large memory blocks
 
@@ -5663,10 +5670,5 @@ in this changeset (new minor version) rather than bug fixes:
    'columnconfigure' and 'rowconfigure' subcommands
 
  * [TIP #150] make 'send' available on Windows
-
- * [TIP #155] add 'count' and 'replace' subcommands and a '-blockcursor'
-   option to text widgets and support smooth-scrolling of them
-	*** POTENTIAL INCOMPATIBILITY ***
-   Negative or decreasing tab-stops are explicitly disallowed
 
 --- Released 8.5a1, March 3, 2004 --- See ChangeLog for details ---
