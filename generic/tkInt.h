@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.28 2000/08/03 20:36:15 ericm Exp $ 
+ * RCS: $Id: tkInt.h,v 1.29 2000/08/03 21:02:19 ericm Exp $ 
  */
 
 #ifndef _TKINT
@@ -892,8 +892,9 @@ EXTERN int		Tk_AfterCmd _ANSI_ARGS_((ClientData clientData,
 EXTERN int		Tk_BellObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, 
 			    Tcl_Obj *CONST objv[]));
-EXTERN int		Tk_BindCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_BindObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_BindtagsObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));

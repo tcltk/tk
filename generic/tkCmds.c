@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.16 2000/08/03 20:36:15 ericm Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.17 2000/08/03 21:02:19 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -106,7 +106,7 @@ Tk_BellObjCmd(clientData, interp, objc, objv)
 /*
  *----------------------------------------------------------------------
  *
- * Tk_BindCmd --
+ * Tk_BindObjCmd --
  *
  *	This procedure is invoked to process the "bind" Tcl command.
  *	See the user documentation for details on what it does.
@@ -121,54 +121,82 @@ Tk_BellObjCmd(clientData, interp, objc, objv)
  */
 
 int
-Tk_BindCmd(clientData, interp, argc, argv)
+Tk_BindObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Main window associated with interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     TkWindow *winPtr;
     ClientData object;
-
-    if ((argc < 2) || (argc > 4)) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		" window ?pattern? ?command?\"", (char *) NULL);
+    char *string;
+    
+    if ((objc < 2) || (objc > 4)) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window ?pattern? ?command?");
 	return TCL_ERROR;
     }
-    if (argv[1][0] == '.') {
-	winPtr = (TkWindow *) Tk_NameToWindow(interp, argv[1], tkwin);
+    string = Tcl_GetString(objv[1]);
+    
+    /*
+     * Bind tags either a window name or a tag name for the first argument.
+     * If the argument starts with ".", assume it is a window; otherwise, it
+     * is a tag.
+     */
+
+    if (string[0] == '.') {
+	winPtr = (TkWindow *) Tk_NameToWindow(interp, string, tkwin);
 	if (winPtr == NULL) {
 	    return TCL_ERROR;
 	}
 	object = (ClientData) winPtr->pathName;
     } else {
 	winPtr = (TkWindow *) clientData;
-	object = (ClientData) Tk_GetUid(argv[1]);
+	object = (ClientData) Tk_GetUid(string);
     }
 
-    if (argc == 4) {
+    /*
+     * If there are four arguments, the command is modifying a binding.  If
+     * there are three arguments, the command is querying a binding.  If there
+     * are only two arguments, the command is querying all the bindings for
+     * the given tag/window.
+     */
+
+    if (objc == 4) {
 	int append = 0;
 	unsigned long mask;
+	char *sequence, *script;
+	sequence	= Tcl_GetString(objv[2]);
+	script		= Tcl_GetString(objv[3]);
+	
+	/*
+	 * If the script is null, just delete the binding.
+	 */
 
-	if (argv[3][0] == 0) {
+	if (script[0] == 0) {
 	    return Tk_DeleteBinding(interp, winPtr->mainPtr->bindingTable,
-		    object, argv[2]);
+		    object, sequence);
 	}
-	if (argv[3][0] == '+') {
-	    argv[3]++;
+
+	/*
+	 * If the script begins with "+", append this script to the existing
+	 * binding.
+	 */
+	
+	if (script[0] == '+') {
+	    script++;
 	    append = 1;
 	}
 	mask = Tk_CreateBinding(interp, winPtr->mainPtr->bindingTable,
-		object, argv[2], argv[3], append);
+		object, sequence, script, append);
 	if (mask == 0) {
 	    return TCL_ERROR;
 	}
-    } else if (argc == 3) {
+    } else if (objc == 3) {
 	char *command;
 
 	command = Tk_GetBinding(interp, winPtr->mainPtr->bindingTable,
-		object, argv[2]);
+		object, Tcl_GetString(objv[2]));
 	if (command == NULL) {
 	    Tcl_ResetResult(interp);
 	    return TCL_OK;
