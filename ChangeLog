@@ -1,3 +1,10 @@
+2002-02-05  Jim Ingham <jingham@apple.com>
+
+	* macosx/tkMacOSXMenu.c: Fix 513222.  We were going to
+	invalidate the menu & delete the selection without checking
+	whether the menu had already been deleted.
+	* mac/tkMacMenu.c: ditto.
+	
 2002-02-04  Jim Ingham <jingham@apple.com>
 
 	* macosx/tkMacOSXWm.c (Tk_WMStackorderToplevel): crab the Mac

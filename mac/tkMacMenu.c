@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.20.2.1 2002/02/05 02:25:17 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.20.2.2 2002/02/06 07:02:04 wolfsuit Exp $
  */
 
 #include "tkMacInt.h"
@@ -1405,9 +1405,17 @@ TkpPostMenu(
 	    TkMacHandleTearoffMenu();
 	    result = TCL_OK;
 	}
-	InvalidateMDEFRgns();
-	RecursivelyClearActiveMenu(menuPtr);
 	
+        /*
+         * Be careful, here.  The command executed in handling the menu event
+         * could destroy the window.  Don't try to do anything with it then.
+         */
+        
+        if (menuPtr->tkwin) {
+	    InvalidateMDEFRgns();
+	    RecursivelyClearActiveMenu(menuPtr);
+	}
+
 	inPostMenu--;
     }
     return result;
