@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.14 2001/11/23 02:05:04 das Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.15 2001/12/04 03:07:43 mdejong Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -479,6 +479,9 @@ EXTERN void		TkpInitKeymapInfo _ANSI_ARGS_((TkDisplay * dispPtr));
 /* 140 */
 EXTERN TkRegion		TkPhotoGetValidRegion _ANSI_ARGS_((
 				Tk_PhotoHandle handle));
+/* 141 */
+EXTERN TkWindow **	TkWmStackorderToplevel _ANSI_ARGS_((
+				TkWindow * parentPtr));
 
 typedef struct TkIntStubs {
     int magic;
@@ -705,6 +708,7 @@ typedef struct TkIntStubs {
     KeySym (*tkpGetKeySym) _ANSI_ARGS_((TkDisplay * dispPtr, XEvent * eventPtr)); /* 138 */
     void (*tkpInitKeymapInfo) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 139 */
     TkRegion (*tkPhotoGetValidRegion) _ANSI_ARGS_((Tk_PhotoHandle handle)); /* 140 */
+    TkWindow ** (*tkWmStackorderToplevel) _ANSI_ARGS_((TkWindow * parentPtr)); /* 141 */
 } TkIntStubs;
 
 #ifdef __cplusplus
@@ -1307,6 +1311,10 @@ extern TkIntStubs *tkIntStubsPtr;
 #ifndef TkPhotoGetValidRegion
 #define TkPhotoGetValidRegion \
 	(tkIntStubsPtr->tkPhotoGetValidRegion) /* 140 */
+#endif
+#ifndef TkWmStackorderToplevel
+#define TkWmStackorderToplevel \
+	(tkIntStubsPtr->tkWmStackorderToplevel) /* 141 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
