@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.36 2003/05/19 21:19:51 dkf Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.37 2003/05/21 09:21:57 dkf Exp $
  */
 
 #include "default.h"
@@ -2189,7 +2189,7 @@ TextSearchCmd(textPtr, interp, objc, objv)
 	    searchSpec.exact = 1;
 	    break;
 	case SEARCH_FWD:
-	    searchSpec.backwards = 1;
+	    searchSpec.backwards = 0;
 	    break;
 	case SEARCH_NOCASE:
 	    searchSpec.noCase = 1;
@@ -3398,7 +3398,8 @@ SearchPerform(interp, searchSpecPtr, patObj, fromPtr, toPtr)
      * chars for regexp search, utf-8 bytes for exact search)
      */
     if ((*searchSpecPtr->lineIndexProc)(interp, fromPtr, searchSpecPtr, 
-      &searchSpecPtr->startLine, &searchSpecPtr->startOffset) != TCL_OK) {
+	    &searchSpecPtr->startLine,
+	    &searchSpecPtr->startOffset) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -3407,7 +3408,8 @@ SearchPerform(interp, searchSpecPtr, patObj, fromPtr, toPtr)
      */
     if (toPtr != NULL) {
 	if ((*searchSpecPtr->lineIndexProc)(interp, toPtr, searchSpecPtr, 
-	  &searchSpecPtr->stopLine, &searchSpecPtr->stopOffset) != TCL_OK) {
+		&searchSpecPtr->stopLine,
+		&searchSpecPtr->stopOffset) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     } else {
@@ -3432,7 +3434,7 @@ SearchPerform(interp, searchSpecPtr, patObj, fromPtr, toPtr)
  *	The core of the search procedure.  This procedure is actually
  *	completely independent of Tk, and could in the future be split
  *	off.
- *	
+ *
  *	The function assumes regexp-based searches operate on Unicode
  *	strings, and exact searches on utf-8 strings.  Therefore the
  *	'foundMatchProc' and 'addLineProc' need to be aware of this
@@ -3442,9 +3444,9 @@ SearchPerform(interp, searchSpecPtr, patObj, fromPtr, toPtr)
  *	Standard Tcl result code.
  *
  * Side effects:
- *	Only those of the 'searchSpecPtr->foundMatchProc' which is called 
+ *	Only those of the 'searchSpecPtr->foundMatchProc' which is called
  *	whenever a match is found.
- *	
+ *
  *	Note that the way matching across multiple lines is implemented,
  *	we start afresh with each line we have available, even though we
  *	may already have examined the contents of that line (and further
@@ -3454,20 +3456,20 @@ SearchPerform(interp, searchSpecPtr, patObj, fromPtr, toPtr)
  *	Profiling should be done to see where the bottlenecks lie before
  *	attempting this, however.  We would also need to be very careful
  *	such optimisation keep within the specified search bounds.
- *	
+ *
  *----------------------------------------------------------------------
  */
 
 static int
 SearchCore(interp, searchSpecPtr, patObj)
-    Tcl_Interp *interp;             /* For error messages */
-    SearchSpec *searchSpecPtr;      /* Search parameters */
-    Tcl_Obj *patObj;                /* Contains an exact string or a
-                                     * regexp pattern.  Must have a 
-                                     * refCount > 0 */
+    Tcl_Interp *interp;			/* For error messages */
+    SearchSpec *searchSpecPtr;		/* Search parameters */
+    Tcl_Obj *patObj;			/* Contains an exact string or a
+					 * regexp pattern.  Must have a
+					 * refCount > 0 */
 {
     int passes;
-    /* 
+    /*
      * For exact searches these are utf-8 char* offsets, for regexp
      * searches they are Unicode char offsets
      */
@@ -3475,13 +3477,11 @@ SearchCore(interp, searchSpecPtr, patObj)
     int lineNum = searchSpecPtr->startLine;
     int code = TCL_OK;
     Tcl_Obj *theLine;
-    
-    /* For regexp searches only */
-    Tcl_RegExp regexp = NULL;
-    /* For exact searches only */
-    CONST char *pattern = NULL;
-    int firstNewLine;
-    
+
+    Tcl_RegExp regexp = NULL;		/* For regexp searches only */
+    CONST char *pattern = NULL;		/* For exact searches only */
+    int firstNewLine = -1;		/* For exact searches only */
+
     if (searchSpecPtr->exact) {
 	/*
 	 * Convert the pattern to lower-case if we're supposed to ignore
@@ -3489,27 +3489,27 @@ SearchCore(interp, searchSpecPtr, patObj)
 	 */
 	if (searchSpecPtr->noCase) {
 	    patObj = Tcl_DuplicateObj(patObj);
-	    /* 
+	    /*
 	     * This can change the length of the string behind the
 	     * object's back, so ensure it is correctly synchronised.
 	     */
 	    Tcl_SetObjLength(patObj, Tcl_UtfToLower(Tcl_GetString(patObj)));
 	}
     } else {
-	/* 
+	/*
 	 * Compile the regular expression.  We want '^$' to match after and
 	 * before \n respectively, so use the TCL_REG_NLANCH flag.
 	 */
 	regexp = Tcl_GetRegExpFromObj(interp, patObj,
-		(searchSpecPtr->noCase ? TCL_REG_NOCASE : 0) 
-		| (searchSpecPtr->noLineStop ? 0 : TCL_REG_NLSTOP) 
+		(searchSpecPtr->noCase ? TCL_REG_NOCASE : 0)
+		| (searchSpecPtr->noLineStop ? 0 : TCL_REG_NLSTOP)
 	        | TCL_REG_ADVANCED | TCL_REG_CANMATCH | TCL_REG_NLANCH);
 	if (regexp == NULL) {
 	    return TCL_ERROR;
 	}
     }
 
-    /* 
+    /*
      * For exact strings, we want to know where the first newline is,
      * and we will also use this as a flag to test whether it is even
      * possible to match the pattern on a single line.  If not we
@@ -3517,46 +3517,47 @@ SearchCore(interp, searchSpecPtr, patObj)
      */
     if (searchSpecPtr->exact) {
 	char *nl;
-	
-	/* 
+
+	/*
 	 * We only need to set the matchLength once for exact searches,
 	 * and we do it here.  It is also used below as the actual
 	 * pattern length, so it has dual purpose.
 	 */
 	pattern = Tcl_GetStringFromObj(patObj, &matchLength);
 	nl = strchr(pattern, '\n');
-	/* 
+	/*
 	 * If there is no newline, or it is the very end of the string,
 	 * then we don't need any special treatment, since single-line
 	 * matching will work fine.
 	 */
-	if (nl == NULL || nl[1] == '\0') {
-	    firstNewLine = -1;
-	} else {
+	if (nl != NULL && nl[1] != '\0') {
 	    firstNewLine = (nl - pattern);
 	}
     } else {
-	firstNewLine = -1;
 	matchLength = 0;  /* Only needed to prevent compiler warnings. */
     }
-    
-    /* 
+
+    /*
      * Keep a reference here, so that we can be sure the object
      * doesn't disappear behind our backs and invalidate its
      * contents which we are using.
      */
     Tcl_IncrRefCount(patObj);
 
-    /* For building up the current line being checked */
+    /*
+     * For building up the current line being checked
+     */
     theLine = Tcl_NewObj();
     Tcl_IncrRefCount(theLine);
 
     for (passes = 0; passes < 2; ) {
 	ClientData lineInfo;
 	int linesSearched = 1;
-	
+
 	if (lineNum >= searchSpecPtr->numLines) {
-	    /* Don't search the dummy last line of the text. */
+	    /*
+	     * Don't search the dummy last line of the text.
+	     */
 	    goto nextLine;
 	}
 
@@ -3568,8 +3569,8 @@ SearchCore(interp, searchSpecPtr, patObj)
 	 * what we 'lastOffset' represents.
 	 */
 
-	lineInfo = (*searchSpecPtr->addLineProc)(lineNum, searchSpecPtr, 
-						 theLine, &lastOffset);
+	lineInfo = (*searchSpecPtr->addLineProc)(lineNum,
+		searchSpecPtr, theLine, &lastOffset);
 
 	firstOffset = 0;
 	if (lineNum == searchSpecPtr->startLine) {
@@ -3581,14 +3582,14 @@ SearchCore(interp, searchSpecPtr, patObj)
 	    passes++;
 	    if ((passes == 1) ^ searchSpecPtr->backwards) {
 		/*
-		 * Forward search and first pass, or backward 
+		 * Forward search and first pass, or backward
 		 * search and second pass.
-		 * 
+		 *
 		 * Only use the last part of the line.
 		 */
 
-		if ((searchSpecPtr->startOffset >= lastOffset) 
-		  && ((lastOffset != 0) || searchSpecPtr->exact)) {
+		if ((searchSpecPtr->startOffset >= lastOffset)
+			&& ((lastOffset != 0) || searchSpecPtr->exact)) {
 		    goto nextLine;
 		}
 
@@ -3601,7 +3602,7 @@ SearchCore(interp, searchSpecPtr, patObj)
 		lastOffset = searchSpecPtr->startOffset;
 	    }
 	}
-	
+
 	/*
 	 * Check for matches within the current line 'lineNum'.  If so,
 	 * and if we're searching backwards or for all matches, repeat
@@ -3611,7 +3612,7 @@ SearchCore(interp, searchSpecPtr, patObj)
 	 */
 
 	matchOffset = -1;
-	
+
 	if (searchSpecPtr->exact) {
 	    int maxExtraLines = 0;
 	    CONST char *startOfLine = Tcl_GetString(theLine);
@@ -3619,18 +3620,20 @@ SearchCore(interp, searchSpecPtr, patObj)
 	    do {
 		Tcl_UniChar ch;
 		CONST char *p;
-		
-		p = strstr(startOfLine + firstOffset, pattern); 
+
+		p = strstr(startOfLine + firstOffset, pattern);
 		if (p == NULL) {
-		    if (firstNewLine == -1) break;
-		    if (firstNewLine >= (lastOffset - firstOffset)) break;
+		    if (firstNewLine == -1 ||
+			    firstNewLine >= (lastOffset - firstOffset)) {
+			break;
+		    }
 		    p = startOfLine + lastOffset - firstNewLine - 1;
-		    if (strncmp(p, pattern, ((unsigned)firstNewLine) + 1)) {
+		    if (strncmp(p, pattern, (unsigned)(firstNewLine + 1))) {
 			break;
 		    } else {
 			int extraLines = 1;
 			int skipFirst = lastOffset - firstNewLine -1;
-			/* 
+			/*
 			 * We may be able to match if given more text.
 			 * The following 'while' block handles multi-line
 			 * exact searches.
@@ -3638,87 +3641,94 @@ SearchCore(interp, searchSpecPtr, patObj)
 			while (1) {
 			    int len;
 
-			    if (lineNum + extraLines 
-			      >= searchSpecPtr->numLines) {
+			    if (lineNum+extraLines>=searchSpecPtr->numLines) {
 				p = NULL;
 				break;
 			    }
-			    
-			    /* 
+
+			    /*
 			     * Only add the line if we haven't already
 			     * done so already.
 			     */
 			    if (extraLines > maxExtraLines) {
-				if ((*searchSpecPtr->addLineProc)(lineNum 
-				  + extraLines, searchSpecPtr, theLine, 
-				  &len) == NULL) {
+				if ((*searchSpecPtr->addLineProc)(lineNum
+					+ extraLines, searchSpecPtr, theLine,
+					&len) == NULL) {
 				    p = NULL;
 				    break;
 				}
 				maxExtraLines = extraLines;
 			    }
-			    
+
 			    startOfLine = Tcl_GetString(theLine);
 			    p = startOfLine + skipFirst;
-			    /* 
-			     * Use the fact that 'matchLength = patLength' 
+			    /*
+			     * Use the fact that 'matchLength = patLength'
 			     * for exact searches
 			     */
 			    if ((len - skipFirst) >= matchLength) {
-			        /* 
+			        /*
 			         * We now have enough text to match, so
 			         * we make a final test and break
 			         * whatever the result
 			         */
-				if (strncmp(p, pattern,
-					(unsigned)matchLength)) {
+				if (strncmp(p, pattern, (unsigned)matchLength)) {
 				    p = NULL;
 				}
 				break;
 			    } else {
-				/* Not enough text yet, but check the prefix */
+				/*
+				 * Not enough text yet, but check the prefix
+				 */
 				if (strncmp(p, pattern,
 					(unsigned)(len - skipFirst))) {
 				    p = NULL;
 				    break;
 				}
-				/* The prefix matches, so keep looking */
+				/*
+				 * The prefix matches, so keep looking
+				 */
 			    }
 			    extraLines++;
 			}
-			/* 
-			 * If we reach here, with p != NULL, we've found a 
+			/*
+			 * If we reach here, with p != NULL, we've found a
 			 * multi-line match, else we started a multi-match
 			 * but didn't finish it off, so we go to the next line.
 			 */
-			if (p == NULL) break;
+			if (p == NULL) {
+			    break;
+			}
 		    }
 		}
 		firstOffset = p - startOfLine;
 		if (firstOffset >= lastOffset) {
 		    break;
 		}
-		
-		/* Remember the match */
+
+		/*
+		 * Remember the match
+		 */
 		matchOffset = firstOffset;
-		
-		/* 
+
+		/*
 		 * Move the starting point one character on from the
 		 * previous match, in case we are doing repeated or
 		 * backwards searches (for the latter, we actually do
 		 * repeated forward searches).
 		 */
-		firstOffset += Tcl_UtfToUniChar(startOfLine + matchOffset, &ch);
-		if (searchSpecPtr->all) {
-		    if (!(*searchSpecPtr->foundMatchProc)(lineNum, 
-		                    searchSpecPtr, lineInfo, theLine, 
-				    matchOffset, matchLength)) {
-			/* We reached the end of the search */
-			goto searchDone;
-		    }
+		firstOffset += Tcl_UtfToUniChar(startOfLine+matchOffset, &ch);
+		if (searchSpecPtr->all &&
+			!(*searchSpecPtr->foundMatchProc)(lineNum,
+			searchSpecPtr, lineInfo, theLine, matchOffset,
+			matchLength)) {
+		    /*
+		     * We reached the end of the search
+		     */
+		    goto searchDone;
 		}
 	    } while (searchSpecPtr->backwards || searchSpecPtr->all);
-	    
+
 	} else {
 
 	    int maxExtraLines = 0;
@@ -3727,9 +3737,8 @@ SearchCore(interp, searchSpecPtr, patObj)
 		Tcl_RegExpInfo info;
 		int match;
 
-		match = Tcl_RegExpExecObj(interp, regexp, theLine, 
-			  firstOffset, 1, 
-			  ((firstOffset > 0) ? TCL_REG_NOTBOL : 0));
+		match = Tcl_RegExpExecObj(interp, regexp, theLine, firstOffset,
+			1, ((firstOffset > 0) ? TCL_REG_NOTBOL : 0));
 		if (match < 0) {
 		    code = TCL_ERROR;
 		    goto searchDone;
@@ -3739,26 +3748,30 @@ SearchCore(interp, searchSpecPtr, patObj)
 		if (!match) {
 		    int extraLines = 1;
 		    int curLen = 0;
-		    
-		    if (info.extendStart < 0) { break; }
-		    
-		    /* 
+
+		    if (info.extendStart < 0) {
+			break;
+		    }
+
+		    /*
 		     * We may be able to match if given more text.
 		     * The following 'while' block handles multi-line
 		     * exact searches.
 		     */
 		    while (1) {
-			/* Move firstOffset to first possible start */
+			/*
+			 * Move firstOffset to first possible start
+			 */
 			firstOffset += info.extendStart;
 			if (firstOffset >= lastOffset) {
-			    /* 
+			    /*
 			     * We're being told that the only possible
 			     * new match is starting after the end of
 			     * the line. But, that is the next line which
 			     * we will handle when we look at that line.
 			     */
-			    if (!searchSpecPtr->backwards 
-			      && (firstOffset == curLen)) {
+			    if (!searchSpecPtr->backwards
+				    && (firstOffset == curLen)) {
 				linesSearched = extraLines + 1;
 			    }
 			    break;
@@ -3767,12 +3780,14 @@ SearchCore(interp, searchSpecPtr, patObj)
 			if (lineNum + extraLines >= searchSpecPtr->numLines) {
 			    break;
 			}
-			/* Add next line, provided we haven't already done so */
+			/*
+			 * Add next line, provided we haven't already done so
+			 */
 			if (extraLines > maxExtraLines) {
-			    if ((*searchSpecPtr->addLineProc)(lineNum 
-			      + extraLines, searchSpecPtr, theLine, 
-			      NULL) == NULL) {
-				/* 
+			    if ((*searchSpecPtr->addLineProc)(lineNum
+				    + extraLines, searchSpecPtr, theLine,
+				    NULL) == NULL) {
+				/*
 				 * There are no more acceptable lines, so
 				 * we can say we have searched all of these
 				 */
@@ -3783,28 +3798,30 @@ SearchCore(interp, searchSpecPtr, patObj)
 			    }
 			    maxExtraLines = extraLines;
 			}
-			
-			match = Tcl_RegExpExecObj(interp, regexp, theLine, 
-				  firstOffset, 1, 
+
+			match = Tcl_RegExpExecObj(interp, regexp, theLine,
+				  firstOffset, 1,
 				  ((firstOffset > 0) ? TCL_REG_NOTBOL : 0));
 			if (match < 0) {
 			    code = TCL_ERROR;
 			    goto searchDone;
 			}
 			Tcl_RegExpGetInfo(regexp, &info);
-			if (match || (info.extendStart < 0)) {
+			if (match || info.extendStart < 0) {
 			    break;
 			}
-			/* The prefix matches, so keep looking */
+			/*
+			 * The prefix matches, so keep looking
+			 */
 			extraLines++;
 		    }
-		    /* 
+		    /*
 		     * If we reach here, with match == 1, we've found a
 		     * multi-line match, which we will record in the code
 		     * which follows directly else we started a
 		     * multi-line match but didn't finish it off, so we
-		     * go to the next line.  
-		     * 
+		     * go to the next line.
+		     *
 		     * Here is where we could perform an optimisation,
 		     * since we have already retrieved the contents of
 		     * the next line (and many more), so we shouldn't
@@ -3813,53 +3830,54 @@ SearchCore(interp, searchSpecPtr, patObj)
 		     * searches.
 		     */
 		    if (!match) {
-			/* 
-			 * This 'break' will take us to
-			 * just before the 'nextLine:' below.
+			/*
+			 * This 'break' will take us to just before
+			 * the 'nextLine:' below.
 			 */
 			break;
 		    }
 		}
-		
+
 		firstOffset += info.matches[0].start;
 		if (firstOffset >= lastOffset) {
 		    break;
 		}
-		
-		/* Remember the match */
+
+		/*
+		 * Remember the match
+		 */
 		matchOffset = firstOffset;
 		matchLength = info.matches[0].end - info.matches[0].start;
-		
-		/* 
+
+		/*
 		 * Move the starting point one character on, in case
 		 * we are doing repeated or backwards searches (for the
 		 * latter, we actually do repeated forward searches).
 		 */
 		firstOffset++;
-		if (searchSpecPtr->all) {
-		    if (!(*searchSpecPtr->foundMatchProc)(lineNum, 
-				searchSpecPtr, lineInfo, theLine, 
-				matchOffset, matchLength)) {
-			/* We reached the end of the search */
-			goto searchDone;
-		    }
+		if (searchSpecPtr->all &&
+			!(*searchSpecPtr->foundMatchProc)(lineNum,
+			searchSpecPtr, lineInfo, theLine, matchOffset,
+			matchLength)) {
+		    /*
+		     * We reached the end of the search
+		     */
+		    goto searchDone;
 		}
 	    } while (searchSpecPtr->backwards || searchSpecPtr->all);
-	    
 	}
-	
+
 	/*
 	 * If the 'all' flag is set, we will already have stored all
 	 * matches, so we just proceed to the next line.
-	 * 
+	 *
 	 * If not, and there is a match we need to store that information
 	 * and we are done.
 	 */
 
 	if ((matchOffset >= 0) && !searchSpecPtr->all) {
-	    (*searchSpecPtr->foundMatchProc)(lineNum, searchSpecPtr, 
-					     lineInfo, theLine, 
-					     matchOffset, matchLength);
+		(*searchSpecPtr->foundMatchProc)(lineNum, searchSpecPtr,
+		lineInfo, theLine, matchOffset, matchLength);
 	    goto searchDone;
 	}
 
@@ -3867,14 +3885,16 @@ SearchCore(interp, searchSpecPtr, patObj)
 	 * Go to the next (or previous) line;
 	 */
 
-	nextLine:
+      nextLine:
 
-	for (;linesSearched > 0;linesSearched--) {
-	    /* If we have just completed the 'stopLine', we are done */
+	for (; linesSearched>0 ; linesSearched--) {
+	    /*
+	     * If we have just completed the 'stopLine', we are done
+	     */
 	    if (lineNum == searchSpecPtr->stopLine) {
 		goto searchDone;
 	    }
-	    
+
 	    if (searchSpecPtr->backwards) {
 		lineNum--;
 		if (lineNum < 0) {
@@ -3887,14 +3907,16 @@ SearchCore(interp, searchSpecPtr, patObj)
 		}
 	    }
 	}
-	
-	Tcl_SetObjLength(theLine,0);
+
+	Tcl_SetObjLength(theLine, 0);
     }
-    searchDone:
-    
-    /* Free up the cached line and pattern */
+  searchDone:
+
+    /*
+     * Free up the cached line and pattern
+     */
     Tcl_DecrRefCount(theLine);
     Tcl_DecrRefCount(patObj);
-    
+
     return code;
 }
