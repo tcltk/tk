@@ -1,3 +1,8 @@
+2004-01-28  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinCursor.c: Backported fix for bug #776646 which makes
+	* tests/cursor.test: hand2 and fleur native on windows.
+
 2003-01-27  Daniel Steffen  <das@users.sourceforge.net>
 
         * macosx/Wish.pbproj/project.pbxproj: removed erroneous reference
