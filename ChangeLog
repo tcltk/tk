@@ -1,3 +1,8 @@
+2002-06-26  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
+
+	* tests/font.test (font-32.1): updated this test
+	to expect the new behavior of canvas postscript.
+
 2002-06-25  Don Porter <dgp@users.sf.net>
 
 	* unix/Makefile.in:	Expanded install-binaries target to create
