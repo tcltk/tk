@@ -17,6 +17,17 @@
 #include "tkWinInt.h"
 
 /*
+ * Event structure for synthetic activation events.  These events are
+ * placed on the event queue whenever a toplevel gets a WM_MOUSEACTIVATE
+ * message.
+ */
+
+typedef struct ActivateEvent {
+    Tcl_Event ev;
+    TkWindow *winPtr;
+} ActivateEvent;
+
+/*
  * A data structure of the following type holds information for
  * each window manager protocol (such as WM_DELETE_WINDOW) for
  * which a handler (i.e. a Tcl command) has been defined for a
@@ -211,7 +222,8 @@ typedef struct TkWmInfo {
 
 #define WM_TRANSIENT_STYLE \
 		(WS_POPUP|WS_CAPTION|WS_SYSMENU|WS_CLIPSIBLINGS|CS_DBLCLKS)
-#define EX_TRANSIENT_STYLE (WS_EX_TOOLWINDOW | WS_EX_DLGMODALFRAME)
+#define EX_TRANSIENT_STYLE \
+		(WS_EX_TOOLWINDOW|WS_EX_DLGMODALFRAME)
 
 /*
  * This module keeps a list of all top-level windows.
@@ -282,6 +294,8 @@ static int firstWindow = 1;
  * Forward declarations for procedures defined in this file:
  */
 
+static int		ActivateWindow _ANSI_ARGS_((Tcl_Event *evPtr,
+			    int flags));
 static void		ConfigureEvent _ANSI_ARGS_((TkWindow *winPtr,
 			    XConfigureEvent *eventPtr));
 static void		ConfigureTopLevel _ANSI_ARGS_((WINDOWPOS *pos));
@@ -1360,6 +1374,9 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
 		    argv[0], " frame window\"", (char *) NULL);
 	    return TCL_ERROR;
+	}
+	if (Tk_WindowId((Tk_Window) winPtr) == None) {
+	    Tk_MakeWindowExist((Tk_Window) winPtr);
 	}
 	hwnd = wmPtr->wrapper;
 	if (hwnd == NULL) {
@@ -3966,6 +3983,44 @@ WmProc(hwnd, message, wParam, lParam)
 	    result = 0;
 	    goto done;
 
+	case WM_NCHITTEST: {
+	    winPtr = GetTopLevel(hwnd);
+	    if (winPtr && (TkGrabState(winPtr) == TK_GRAB_EXCLUDED)) {
+		/*
+		 * This window is outside the grab heirarchy, so don't let any
+		 * of the normal non-client processing occur.  Note that this
+		 * implementation is not strictly correct because the grab
+		 * might change between now and when the event would have been
+		 * processed by Tk, but it's close enough.
+		 */
+
+		result = HTCLIENT;
+		goto done;
+	    }
+	    break;
+	}
+
+	case WM_MOUSEACTIVATE: {
+	    ActivateEvent *eventPtr;
+	    winPtr = GetTopLevel((HWND) wParam);
+
+	    /*
+	     * Don't activate the window yet since there may be grabs
+	     * that should take precedence.  Instead we need to queue
+	     * an event so we can check the grab state right before we
+	     * handle the mouse event.
+	     */
+
+	    if (winPtr) { 
+		eventPtr = (ActivateEvent *)ckalloc(sizeof(ActivateEvent));
+		eventPtr->ev.proc = ActivateWindow;
+		eventPtr->winPtr = winPtr;
+		Tcl_QueueEvent((Tcl_Event*)eventPtr, TCL_QUEUE_TAIL);
+	    }
+	    result = MA_NOACTIVATE;
+	    goto done;
+	}
+
 	default:
 	    break;
     }
@@ -4119,4 +4174,44 @@ TkpGetWrapperWindow(
 	return NULL;
     }
     return winPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ActivateWindow --
+ *
+ *	This function is called when an ActivateEvent is processed.
+ *
+ * Results:
+ *	Returns 1 to indicate that the event was handled, else 0.
+ *
+ * Side effects:
+ *	May activate the toplevel window associated with the event.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+ActivateWindow(
+    Tcl_Event *evPtr,		/* Pointer to ActivateEvent. */
+    int flags)			/* Notifier event mask. */
+{
+    TkWindow *winPtr;
+
+    if (! (flags & TCL_WINDOW_EVENTS)) {
+	return 0;
+    }
+
+    winPtr = ((ActivateEvent *) evPtr)->winPtr;
+
+    /*
+     * Ensure that the window is not excluded by a grab.
+     */
+
+    if (winPtr && (TkGrabState(winPtr) != TK_GRAB_EXCLUDED)) {
+	SetFocus(Tk_GetHWND(winPtr->window));
+    }
+    
+    return 1;
 }
