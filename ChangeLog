@@ -1,3 +1,24 @@
+2001-10-12  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/demos/rolodex: Minor updates.
+	* library/demos/square: A bit of tidying up...
+	* library/demos/tcolor: Rewrote to remove uses of [case], brace-up
+	expressions, and not rely on the lines of rgb.txt being well-
+	formatted lists!
+	* library/demos/timer: Uses [clock clicks -milliseconds] now which
+	does not drift rapidly over time; the old version lost more than 5
+	seconds over half a minute!  Also improved the spacing on the
+	label and disabled those buttons that are not usefully clickable.
+	* library/demos/browse: No longer require "browse" to be
+	executable and on the path, and use [lsort [glob]] instead of
+	[exec ls] to read the directory contents.  Also add slashes to the
+	ends of directory entries so people can see what will happen when
+	the entry is double-clicked.
+	* library/demos/hello, library/demos/ixset: Added comments to make
+	Emacs think these are Tcl files.
+	* library/demos/rmt: Reworked to use 8.*-style menus and to behave
+	correctly when the window is enlarged by the user.
+
 2001-10-09  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/console.tcl:  added more smarts extracted from tkcon to

@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # Button-1 press/drag:		moves square to mouse
 # "a":				toggle size animation on/off
 #
-# RCS: @(#) $Id: square,v 1.2 1998/09/14 18:23:30 stanton Exp $
+# RCS: @(#) $Id: square,v 1.2.18.1 2001/10/12 10:56:13 dkf Exp $
 
 square .s
 pack .s -expand yes -fill both
@@ -26,7 +26,7 @@ focus .s
 
 proc center {x y} {
     set a [.s size]
-    .s position [expr $x-($a/2)] [expr $y-($a/2)]
+    .s position [expr {$x-($a/2)}] [expr {$y-($a/2)}]
 }
 
 # The procedures below provide a simple form of animation where
@@ -48,8 +48,11 @@ proc timer {} {
     global inc
     set s [.s size]
     if {$inc == 0} return
-    if {$s >= 40} {set inc -3}
-    if {$s <= 10} {set inc 3}
+    if {$s >= 40} {set inc -3} elseif {$s <= 10} {set inc 3}
     .s size [expr {$s+$inc}]
     after 30 timer
 }
+
+# Local Variables:
+# mode: tcl
+# End:

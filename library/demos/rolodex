@@ -8,11 +8,13 @@ exec wish "$0" "$@"
 # feel of a rolodex program, although it's lifeless and doesn't
 # actually do the rolodex application.
 #
-# RCS: @(#) $Id: rolodex,v 1.2 1998/09/14 18:23:29 stanton Exp $
+# RCS: @(#) $Id: rolodex,v 1.2.18.1 2001/10/12 10:56:13 dkf Exp $
 
 foreach i [winfo child .] {
     catch {destroy $i}
 }
+
+set version 1.1
 
 #------------------------------------------
 # Phase 0: create the front end.
@@ -145,19 +147,20 @@ proc Help {topic {x 0} {y 0}} {
 }
 
 proc getMenuTopic {w x y} {
-    return $w.[$w index @[expr $y-[winfo rooty $w]]]
+    return $w.[$w index @[expr {$y-[winfo rooty $w]}]]
 }
 
-bind . <Any-F1> {Help [winfo containing %X %Y] %X %Y}
-bind . <Any-Help> {Help [winfo containing %X %Y] %X %Y}
+event add <<Help>> <F1> <Help>
+bind .    <<Help>> {Help [winfo containing %X %Y] %X %Y}
+bind Menu <<Help>> {Help [winfo containing %X %Y] %X %Y}
 
 # Help text and commands follow:
 
 set helpTopics(.menu.file) {This is the "file" menu.  It can be used to invoke some overall operations on the rolodex applications, such as loading a file or exiting.}
 
 set helpCmds(.menu.file.m) {getMenuTopic $topic $x $y}
-set helpTopics(.menu.file.m.0) {The "Load" entry in the "File" menu posts a dialog box that you can use to select a rolodex file}
-set helpTopics(.menu.file.m.1) {The "Exit" entry in the "File" menu causes the rolodex application to terminate}
+set helpTopics(.menu.file.m.1) {The "Load" entry in the "File" menu posts a dialog box that you can use to select a rolodex file}
+set helpTopics(.menu.file.m.2) {The "Exit" entry in the "File" menu causes the rolodex application to terminate}
 set helpCmds(.menu.file.m.none) {set topic ".menu.file"}
 
 set helpTopics(.frame.1.entry) {In this field of the rolodex entry you should type the person's name}
@@ -180,7 +183,7 @@ set helpTopics(context) {Unfortunately, this application doesn't support context
 set helpTopics(help) {This application provides only very crude help.  Besides the entries in this menu, you can get help on individual windows by moving the mouse cursor over the window and pressing the Help or F1 keys.}
 set helpTopics(window) {This window is a dummy rolodex application created as part of Tom LaStrange's toolkit benchmark.  It doesn't really do anything useful except to demonstrate a few features of the Tk toolkit.}
 set helpTopics(keys) "The following accelerator keys are defined for this application (in addition to those already available for the entry windows):\n\nCtrl+A:\t\tAdd\nCtrl+C:\t\tClear\nCtrl+D:\t\tDelete\nCtrl+F:\t\tEnter file name\nCtrl+Q:\t\tExit application (quit)\nCtrl+S:\t\tSearch (dummy operation)"
-set helpTopics(version) {This is version 1.0.}
+set helpTopics(version) "This is version $version."
 
 # Entries in "Help" menu
 
@@ -194,3 +197,7 @@ set helpTopics(version) {This is version 1.0.}
 	-underline 3
 .menu.help.m add command -label "On Version..." -command {Help version}  \
 	-underline 3
+
+# Local Variables:
+# mode: tcl
+# End:

@@ -5,36 +5,42 @@ exec wish "$0" "$@"
 # timer --
 # This script generates a counter with start and stop buttons.
 #
-# RCS: @(#) $Id: timer,v 1.2 1998/09/14 18:23:30 stanton Exp $
+# RCS: @(#) $Id: timer,v 1.2.18.1 2001/10/12 10:56:13 dkf Exp $
 
-label .counter -text 0.00 -relief raised -width 10
+label .counter -text 0.00 -relief raised -width 10 -padx 2m -pady 1m
 button .start -text Start -command {
-    if $stopped {
+    if {$stopped} {
 	set stopped 0
+	set startMoment [clock clicks -milliseconds]
 	tick
+	.stop configure -state normal
+	.start configure -state disabled
     }
 }
-button .stop -text Stop -command {set stopped 1}
+button .stop -text Stop -state disabled -command {
+    set stopped 1
+    .stop configure -state disabled
+    .start configure -state normal
+}
 pack .counter -side bottom -fill both
 pack .start -side left -fill both -expand yes
 pack .stop -side right -fill both -expand yes
 
-set seconds 0
-set hundredths 0
+set startMoment {}
 set stopped 1
 
 proc tick {} {
-    global seconds hundredths stopped
-    if $stopped return
+    global startMoment stopped
+    if {$stopped} {return}
     after 50 tick
-    set hundredths [expr $hundredths+5]
-    if {$hundredths >= 100} {
-	set hundredths 0
-	set seconds [expr $seconds+1]
-    }
-    .counter config -text [format "%d.%02d" $seconds $hundredths]
+    set elapsedMS [expr {[clock clicks -milliseconds] - $startMoment}]
+    .counter config -text [format "%.2f" [expr {double($elapsedMS)/1000}]]
 }
 
 bind . <Control-c> {destroy .}
 bind . <Control-q> {destroy .}
 focus .
+
+# Local Variables:
+# mode: tcl
+# End:

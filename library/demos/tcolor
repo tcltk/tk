@@ -7,7 +7,7 @@ exec wish "$0" "$@"
 # create colors using either the RGB, HSB, or CYM color spaces
 # and apply the color to existing applications.
 #
-# RCS: @(#) $Id: tcolor,v 1.2 1998/09/14 18:23:30 stanton Exp $
+# RCS: @(#) $Id: tcolor,v 1.2.18.1 2001/10/12 10:56:13 dkf Exp $
 
 wm title . "Color Editor"
 
@@ -81,10 +81,12 @@ pack .command -in .bot -expand yes -fill x -ipadx 0.25c
 
 frame .middle -relief raised -borderwidth 2
 pack .middle -side top -fill both
-foreach i {/usr/local/lib/X11/rgb.txt /usr/lib/X11/rgb.txt
-	/X11/R5/lib/X11/rgb.txt /X11/R4/lib/rgb/rgb.txt
-	/usr/openwin/lib/X11/rgb.txt} {
-    if ![file readable $i] {
+foreach i {
+    /usr/local/lib/X11/rgb.txt /usr/lib/X11/rgb.txt
+    /X11/R5/lib/X11/rgb.txt /X11/R4/lib/rgb/rgb.txt
+    /usr/openwin/lib/X11/rgb.txt
+} {
+    if {![file readable $i]} {
 	continue;
     }
     set f [open $i]
@@ -100,8 +102,8 @@ foreach i {/usr/local/lib/X11/rgb.txt /usr/lib/X11/rgb.txt
     pack .names -in .middle.left -side left
     pack .scroll -in .middle.left -side right -fill y
     while {[gets $f line] >= 0} {
-	if {[llength $line] == 4} {
-	    .names insert end [lindex $line 3]
+	if {[regexp {^\s*\d+\s+\d+\s+\d+\s+(\S+)$} $line -> col]} {
+	    .names insert end [lrange $line 3 end]
 	}
     }
     close $f
@@ -147,19 +149,21 @@ pack .value -in .middle.right -side bottom -pady .25c
 
 proc tc_scaleChanged args {
     global red green blue colorSpace color updating autoUpdate
-    if $updating {
+    if {$updating} {
 	return
     }
-    if {$colorSpace == "rgb"} {
-	set red   [format %.0f [expr [.scale1 get]*65.535]]
-	set green [format %.0f [expr [.scale2 get]*65.535]]
-	set blue  [format %.0f [expr [.scale3 get]*65.535]]
-    } else {
-	if {$colorSpace == "cmy"} {
+    switch $colorSpace {
+	rgb {
+	    set red   [format %.0f [expr {[.scale1 get]*65.535}]]
+	    set green [format %.0f [expr {[.scale2 get]*65.535}]]
+	    set blue  [format %.0f [expr {[.scale3 get]*65.535}]]
+	}
+	cmy {
 	    set red   [format %.0f [expr {65535 - [.scale1 get]*65.535}]]
 	    set green [format %.0f [expr {65535 - [.scale2 get]*65.535}]]
 	    set blue  [format %.0f [expr {65535 - [.scale3 get]*65.535}]]
-	} else {
+	}
+	hsb {
 	    set list [hsbToRgb [expr {[.scale1 get]/1000.0}] \
 		    [expr {[.scale2 get]/1000.0}] \
 		    [expr {[.scale3 get]/1000.0}]]
@@ -170,7 +174,7 @@ proc tc_scaleChanged args {
     }
     set color [format "#%04x%04x%04x" $red $green $blue]
     .swatch config -bg $color
-    if $autoUpdate doUpdate
+    if {$autoUpdate} doUpdate
     update idletasks
 }
 
@@ -182,16 +186,18 @@ proc tc_scaleChanged args {
 proc tc_setScales {} {
     global red green blue colorSpace updating
     set updating 1
-    if {$colorSpace == "rgb"} {
-	.scale1 set [format %.0f [expr $red/65.535]]
-	.scale2 set [format %.0f [expr $green/65.535]]
-	.scale3 set [format %.0f [expr $blue/65.535]]
-    } else {
-	if {$colorSpace == "cmy"} {
-	    .scale1 set [format %.0f [expr (65535-$red)/65.535]]
-	    .scale2 set [format %.0f [expr (65535-$green)/65.535]]
-	    .scale3 set [format %.0f [expr (65535-$blue)/65.535]]
-	} else {
+    switch $colorSpace {
+	rgb {
+	    .scale1 set [format %.0f [expr {$red/65.535}]]
+	    .scale2 set [format %.0f [expr {$green/65.535}]]
+	    .scale3 set [format %.0f [expr {$blue/65.535}]]
+	}
+	cmy {
+	    .scale1 set [format %.0f [expr {(65535-$red)/65.535}]]
+	    .scale2 set [format %.0f [expr {(65535-$green)/65.535}]]
+	    .scale3 set [format %.0f [expr {(65535-$blue)/65.535}]]
+	}
+	hsb {
 	    set list [rgbToHsv $red $green $blue]
 	    .scale1 set [format %.0f [expr {[lindex $list 0] * 1000.0}]]
 	    .scale2 set [format %.0f [expr {[lindex $list 1] * 1000.0}]]
@@ -214,9 +220,9 @@ proc tc_loadNamedColor name {
 	set green [lindex $list 1]
 	set blue [lindex $list 2]
     } else {
-	case [string length $name] {
-	    4 {set format "#%1x%1x%1x"; set shift 12}
-	    7 {set format "#%2x%2x%2x"; set shift 8}
+	switch [string length $name] {
+	    4  {set format "#%1x%1x%1x"; set shift 12}
+	    7  {set format "#%2x%2x%2x"; set shift 8}
 	    10 {set format "#%3x%3x%3x"; set shift 4}
 	    13 {set format "#%4x%4x%4x"; set shift 0}
 	    default {error "syntax error in color name \"$name\""}
@@ -224,14 +230,14 @@ proc tc_loadNamedColor name {
 	if {[scan $name $format red green blue] != 3} {
 	    error "syntax error in color name \"$name\""
 	}
-	set red [expr $red<<$shift]
-	set green [expr $green<<$shift]
-	set blue [expr $blue<<$shift]
+	set red   [expr {$red   << $shift}]
+	set green [expr {$green << $shift}]
+	set blue  [expr {$blue  << $shift}]
     }
     tc_setScales
     set color [format "#%04x%04x%04x" $red $green $blue]
     .swatch config -bg $color
-    if $autoUpdate doUpdate
+    if {$autoUpdate} doUpdate
 }
 
 # The procedure below is invoked when a new color space is selected.
@@ -240,26 +246,28 @@ proc tc_loadNamedColor name {
 
 proc changeColorSpace space {
     global label1 label2 label3
-    if {$space == "rgb"} {
-	set label1 Red
-	set label2 Green
-	set label3 Blue
-	tc_setScales
-	return
-    }
-    if {$space == "cmy"} {
-	set label1 Cyan
-	set label2 Magenta
-	set label3 Yellow
-	tc_setScales
-	return
-    }
-    if {$space == "hsb"} {
-	set label1 Hue
-	set label2 Saturation
-	set label3 Brightness
-	tc_setScales
-	return
+    switch $space {
+	rgb {
+	    set label1 Red
+	    set label2 Green
+	    set label3 Blue
+	    tc_setScales
+	    return
+	}
+	cmy {
+	    set label1 Cyan
+	    set label2 Magenta
+	    set label3 Yellow
+	    tc_setScales
+	    return
+	}
+	hsb {
+	    set label1 Hue
+	    set label2 Saturation
+	    set label3 Brightness
+	    tc_setScales
+	    return
+	}
     }
 }
 
@@ -271,20 +279,18 @@ proc changeColorSpace space {
 
 proc rgbToHsv {red green blue} {
     if {$red > $green} {
-	set max $red.0
-	set min $green.0
+	set max [expr {double($red)}]
+	set min [expr {double($green)}]
     } else {
-	set max $green.0
-	set min $red.0
+	set max [expr {double($green)}]
+	set min [expr {double($red)}]
     }
     if {$blue > $max} {
-	set max $blue.0
-    } else {
-	if {$blue < $min} {
-	    set min $blue.0
-	}
+	set max [expr {double($blue)}]
+    } elseif {$blue < $min} {
+	set min [expr {double($blue)}]
     }
-    set range [expr $max-$min]
+    set range [expr {$max-$min}]
     if {$max == 0} {
 	set sat 0
     } else {
@@ -297,16 +303,14 @@ proc rgbToHsv {red green blue} {
 	set gc [expr {($max - $green)/$range}]
 	set bc [expr {($max - $blue)/$range}]
 	if {$red == $max} {
-	    set hue [expr {.166667*($bc - $gc)}]
+	    set hue [expr {($bc - $gc)/6.0}]
+	} elseif {$green == $max} {
+	    set hue [expr {(2 + $rc - $bc)/6.0}]
 	} else {
-	    if {$green == $max} {
-		set hue [expr {.166667*(2 + $rc - $bc)}]
-	    } else {
-		set hue [expr {.166667*(4 + $gc - $rc)}]
-	    }
+	    set hue [expr {(4 + $gc - $rc)/6.0}]
 	}
 	if {$hue < 0.0} {
-	    set hue [expr $hue + 1.0]
+	    set hue [expr {$hue + 1.0}]
 	}
     }
     return [list $hue $sat [expr {$max/65535}]]
@@ -319,27 +323,28 @@ proc rgbToHsv {red green blue} {
 # Computer Graphics" by Foley and Van Dam.
 
 proc hsbToRgb {hue sat value} {
-    set v [format %.0f [expr 65535.0*$value]]
+    set v [format %.0f [expr {65535.0*$value}]]
     if {$sat == 0} {
 	return "$v $v $v"
     } else {
-	set hue [expr $hue*6.0]
+	set hue [expr {$hue*6.0}]
 	if {$hue >= 6.0} {
 	    set hue 0.0
 	}
 	scan $hue. %d i
-	set f [expr $hue-$i]
+	set f [expr {$hue-$i}]
 	set p [format %.0f [expr {65535.0*$value*(1 - $sat)}]]
 	set q [format %.0f [expr {65535.0*$value*(1 - ($sat*$f))}]]
 	set t [format %.0f [expr {65535.0*$value*(1 - ($sat*(1 - $f)))}]]
-	case $i \
-	    0 {return "$v $t $p"} \
-	    1 {return "$q $v $p"} \
-	    2 {return "$p $v $t"} \
-	    3 {return "$p $q $v"} \
-	    4 {return "$t $p $v"} \
+	switch $i {
+	    0 {return "$v $t $p"}
+	    1 {return "$q $v $p"}
+	    2 {return "$p $v $t"}
+	    3 {return "$p $q $v"}
+	    4 {return "$t $p $v"}
 	    5 {return "$v $p $q"}
-	error "i value $i is out of range"
+	    default {error "i value $i is out of range"}
+	}
     }
 }
 
@@ -356,3 +361,7 @@ proc doUpdate {} {
 }
 
 changeColorSpace hsb
+
+# Local Variables:
+# mode: tcl
+# End:
