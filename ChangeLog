@@ -1,5 +1,8 @@
 2004-06-15  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* tests/canvas.test: Updated tests affected by the change to
+	ScrollFractions, which is now clean about result generation.
+
 	* generic/tkCanvas.c: Make tag search subsystem use symbolic names
 	for type flags for easier maintenance.
 	(FIRST_CANVAS_ITEM_MATCHING,FOR_EVERY_CANVAS_ITEM_MATCHING):
