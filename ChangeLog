@@ -1,3 +1,10 @@
+2005-02-11  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkCanvBmap.c (ConfigureBitmap, ComputeBitmapBbox): Fixed
+	possible crash with disabled bmap and bbox handling [Bug 1119460]
+	(BitmapToPostscript): made aware of various bitmap types
+	(DisplayBitmap): remove unused fg/bgColor refs
+
 2005-02-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/Makefile.in: remove SHLIB_LD_FLAGS (only for AIX, inlined
