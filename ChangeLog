@@ -1,3 +1,16 @@
+2001-10-29  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/demos/tcolor: Changes up-ported from core-8-3-1-branch
+	to make the script compliant with current good practise, as well
+	as extensive use of the new labelframe widget.
+
+	* library/demos/timer: Changes up-ported from core-8-3-1-branch to
+	make the script look and work better.
+
+	* library/demos/rmt: Changes up-ported from core-8-3-1-branch to
+	use more 8.* features and make the demo script more generally
+	useful to people.
+
 2001-10-23  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkCursor.c (Tk_GetCursorFromData): Fixed uninit nextPtr
