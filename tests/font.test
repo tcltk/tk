@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: font.test,v 1.5 1999/12/14 06:53:13 hobbs Exp $
+# RCS: @(#) $Id: font.test,v 1.6 2000/03/02 23:52:56 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1357,6 +1357,7 @@ test font-45.3 {TkFontGetAliasList: match} {pcOnly} {
     font actual {times 10} -family
 } {Times New Roman}
 test font-45.4 {TkFontGetAliasList: match} {unixOnly noExceed} {
+    # can fail on Unix systems that have a real "times new roman" font
     font actual {{times new roman} 10} -family
 } [font actual {times 10} -family]
 
