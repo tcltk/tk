@@ -1,5 +1,12 @@
 2003-02-24  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* unix/tkUnixButton.c (TkpDisplayButton): Correct visual display
+	of disabled check/radiobutton to be more distinctive on unix.
+	* tests/unixButton.test: [Bug #669595] (hintermayer)
+
+	* doc/panedwindow.n: clarified the need to use 'update idle' when
+	adding unmapped windows.  Needs further examination. [Bug #605105]
+
 	* generic/tkEntry.c (SpinboxWidgetObjCmd, EntryWidgetObjCmd):
 	* tests/entry.test:   return 1 if selection is present even if
 	* tests/spinbox.test: entry/spinbox is disabled, as selection get
