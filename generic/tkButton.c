@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.16 2002/03/20 22:55:16 dgp Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.17 2002/05/26 09:25:56 pspjuth Exp $
  */
 
 #include "tkButton.h"
@@ -1128,6 +1128,16 @@ ConfigureButton(interp, butPtr, objc, objv)
 			TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
 			== NULL) {
 		    continue;
+		}
+
+		/*
+		 * If a radiobutton has the empty string as value
+		 * it should be selected.
+		 */
+
+ 		if ((butPtr->type == TYPE_RADIO_BUTTON) &&
+			(*Tcl_GetString(butPtr->onValuePtr) == 0)) {
+		    butPtr->flags |= SELECTED;
 		}
 	    }
 	}

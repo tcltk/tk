@@ -1,5 +1,12 @@
 2002-05-26  Peter Spjuth <peter.spjuth@space.se>
 
+	* generic/tkButton.c (ConfigureButton): When creating
+	a radiobutton with -value "" it was not drawn properly
+	if the -variable was created by the radiobutton.
+	[Bug #548765]
+	
+2002-05-26  Peter Spjuth <peter.spjuth@space.se>
+
 	* generic/tkCanvText.c (ComputeTextBbox): Negative
 	coordinates were rounded badly causing a 1 pixel
 	displacement. [Bug #556526]
