@@ -1,6 +1,22 @@
+2004-06-08  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* generic/tkCanvText.c (DisplayCanvText): Fix text
+	rendering problem with canvas text items that
+	have a selected region. The previous implementation
+	would render the whole line and then redraw the
+	selected text if it was a different color. This caused
+	problems when the selected text foreground differs
+	from the normal text foreground, the anti-aliasing
+	alpha pixels for the two text strings would blend
+	together resulting in strange looking text. The
+	fix is to draw the normal text and the selected text
+	separately. This problem has only been observed
+	under Windows, with anti-aliased text. [Patch 968725]
+
 2004-05-14  Chengye Mao <chengye.geo@yahoo.com>
-        * win/tkWinWm.c <UpdateWrapper> Modified to delete the old wrapper
-        correctly [Bug #767176]
+
+	* win/tkWinWm.c <UpdateWrapper> Modified to delete the old wrapper
+	correctly [Bug #767176]
 
 2004-05-14  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
