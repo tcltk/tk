@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# SCCS: %Z% $Id: makefile.vc,v 1.10 1998/08/03 15:48:31 escoffon Exp $ 
+# SCCS: %Z% $Id: makefile.vc,v 1.11 1998/08/06 16:47:10 welch Exp $ 
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -88,6 +88,7 @@ XLIBOBJS = \
 	$(TMPDIR)\xcolors.obj \
 	$(TMPDIR)\xdraw.obj \
 	$(TMPDIR)\xgc.obj \
+	$(TMPDIR)\ximage.obj \
 	$(TMPDIR)\xutil.obj
 
 TKOBJS = \
