@@ -1,3 +1,12 @@
+2004-04-24  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkPort.h:
+	* unix/Makefile.in:
+	* win/Makefile.in: followup on tcl header reform [FR 922727]:
+	removed use of relative #include paths in tkPort.h to allow
+	installation of private headers outside of tk source tree; added
+	tcl plaform source dir to compiler header search path.
+
 2004-04-23  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/bind.n: Added examples (in line with the parallel programme
