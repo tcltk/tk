@@ -1,4 +1,5 @@
 2003-01-10  Joe English  <jenglish@users.sourceforge.net>
+
 	* unix/tkUnixEvent.c (OpenIM): Remove unused variable
 	(Fixes: #664780 "SGI warning: OpenIM")
 
@@ -23,6 +24,7 @@
 	repaired for C++ compilers.
 
 2002-12-27  Joe English  <jenglish@users.sourceforge.net>
+
 	* unix/tkUnixWm.c (WaitForEvent): process Map and Unmap events
 	as well as Configure events during WaitFor{Configure|Map}Notify.
 	Fixes [Bug 578569] (WaitForMapNotify could process Map and Unmap
@@ -30,6 +32,7 @@
 	it really wasn't).
 
 2002-12-18  Todd M. Helfter  <tmh@purdue.edu>
+
 	* doc/label.n: Fixed documentation of the -compound option to
 	the label widget.  The option was simply missing from the
 	man page [Bug 577540]
