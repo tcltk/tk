@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.21 2000/08/21 22:45:15 ericm Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.22 2000/11/21 16:18:05 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -4689,6 +4689,37 @@ Tk_PhotoSetSize(handle, width, height)
 	    ((height > 0) ? height: masterPtr->height));
     Tk_ImageChanged(masterPtr->tkMaster, 0, 0, 0, 0,
 	    masterPtr->width, masterPtr->height);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGetPhotoValidRegion --
+ *
+ *	This procedure is called to get the part of the photo where
+ *	there is valid data.  Or, conversely, the part of the photo
+ *	which is transparent.
+ *
+ * Results:
+ *	A TkRegion value that indicates the current area of the photo
+ *	that is valid.  This value should not be used after any
+ *	modification to the photo image.
+ *
+ * Side Effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TkRegion
+TkPhotoGetValidRegion(handle)
+    Tk_PhotoHandle handle; /* Handle for the image whose valid region
+			    * is to obtained. */
+{
+    PhotoMaster *masterPtr;
+
+    masterPtr = (PhotoMaster *) handle;
+    return masterPtr->validRegion;
 }
 
 /*

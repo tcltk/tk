@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.10 2000/04/10 22:43:12 ericm Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.11 2000/11/21 16:18:05 dkf Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -515,6 +515,9 @@ EXTERN KeySym		TkpGetKeySym _ANSI_ARGS_((TkDisplay * dispPtr,
 /* 139 */
 EXTERN void		TkpInitKeymapInfo _ANSI_ARGS_((TkDisplay * dispPtr));
 
+/* 140 */
+EXTERN TkRegion		TkPhotoGetValidRegion _ANSI_ARGS_((Tk_PhotoHandle handle));
+
 typedef struct TkIntStubs {
     int magic;
     struct TkIntStubHooks *hooks;
@@ -819,6 +822,7 @@ typedef struct TkIntStubs {
     void (*tkpSetKeycodeAndState) _ANSI_ARGS_((Tk_Window tkwin, KeySym keySym, XEvent * eventPtr)); /* 137 */
     KeySym (*tkpGetKeySym) _ANSI_ARGS_((TkDisplay * dispPtr, XEvent * eventPtr)); /* 138 */
     void (*tkpInitKeymapInfo) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 139 */
+    TkRegion (*tkPhotoGetValidRegion) _ANSI_ARGS_((Tk_PhotoHandle handle)); /* 140 */
 } TkIntStubs;
 
 #ifdef __cplusplus
@@ -1470,6 +1474,10 @@ extern TkIntStubs *tkIntStubsPtr;
 #ifndef TkpInitKeymapInfo
 #define TkpInitKeymapInfo \
 	(tkIntStubsPtr->tkpInitKeymapInfo) /* 139 */
+#endif
+#ifndef TkPhotoGetValidRegion
+#define TkPhotoGetValidRegion \
+	(tkIntStubsPtr->tkPhotoGetValidRegion) /* 140 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
