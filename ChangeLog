@@ -1,3 +1,7 @@
+2003-06-01  Joe English <jenglish@users.sourceforge.net>
+	* unix/configure.in: BUGFIX, --enable-xft test was broken.
+	* unix/configure: regen
+
 2003-05-31  Joe English <jenglish@users.sourceforge.net>
 	* unix/tkUnixRFont.c (InitFont): Fill in TkFontAttributes from
 	pattern returned from GetFont (actual font) instead of the 
