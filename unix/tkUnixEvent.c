@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.11.2.2 2004/05/03 22:23:09 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.11.2.3 2004/10/27 00:37:38 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -81,7 +81,7 @@ TkCreateXEventSource()
     if (!tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
 	Tcl_CreateEventSource(DisplaySetupProc, DisplayCheckProc, NULL);
-	Tcl_CreateExitHandler(DisplayExitHandler, NULL);
+	TkCreateExitHandler(DisplayExitHandler, NULL);
     }
 }
 

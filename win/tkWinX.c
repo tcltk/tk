@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.25.2.4 2004/09/23 01:49:08 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.25.2.5 2004/10/27 00:37:38 davygrvy Exp $
  */
 
 #include "tkWinInt.h"
@@ -283,8 +283,7 @@ TkWinXInit(hInstance)
     /*
      * Make sure we cleanup on finalize.
      */
-    Tcl_CreateExitHandler((Tcl_ExitProc *) TkWinXCleanup,
-	    (ClientData) hInstance);
+    TkCreateExitHandler(TkWinXCleanup, (ClientData) hInstance);
 }
 
 /*
@@ -304,9 +303,10 @@ TkWinXInit(hInstance)
  */
 
 void
-TkWinXCleanup(hInstance)
-    HINSTANCE hInstance;
+TkWinXCleanup(clientData)
+    ClientData clientData;
 {
+    HINSTANCE hInstance = (HINSTANCE) clientData;
     /*
      * Clean up our own class.
      */
