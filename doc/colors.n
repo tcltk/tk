@@ -2,7 +2,7 @@
 '\" Copyright (c) 1998-2000 by Scriptics Corporation.
 '\" All rights reserved.
 '\" 
-'\" RCS: @(#) $Id: colors.n,v 1.1.2.1 2000/06/30 20:33:44 ericm Exp $
+'\" RCS: @(#) $Id: colors.n,v 1.2 2000/06/30 20:33:44 ericm Exp $
 '\" 
 '\"
 .so man.macros
