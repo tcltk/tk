@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.5 2000/01/06 02:18:59 hobbs Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.6 2001/11/13 00:19:05 hobbs Exp $
  */
 
 #include "default.h"
@@ -151,7 +151,7 @@ TkTextTagCmd(textPtr, interp, argc, argv)
 		index2 = index1;
 		TkTextIndexForwChars(&index2, 1, &index2);
 	    }
-    
+
 	    if (tagPtr->affectsDisplay) {
 		TkTextRedrawTag(textPtr, &index1, &index2, tagPtr, !addTag);
 	    } else {
@@ -159,18 +159,34 @@ TkTextTagCmd(textPtr, interp, argc, argv)
 		 * Still need to trigger enter/leave events on tags that
 		 * have changed.
 		 */
-    
+
 		TkTextEventuallyRepick(textPtr);
 	    }
 	    TkBTreeTag(&index1, &index2, tagPtr, addTag);
-    
+
 	    /*
 	     * If the tag is "sel" then grab the selection if we're supposed
 	     * to export it and don't already have it.  Also, invalidate
 	     * partially-completed selection retrievals.
 	     */
-    
+
 	    if (tagPtr == textPtr->selTagPtr) {
+		XEvent event;
+		/*
+		 * Send an event that the selection changed.
+		 * This is equivalent to
+		 * "event generate $textWidget <<Selection>>"
+		 */
+
+		memset((VOID *) &event, 0, sizeof(event));
+		event.xany.type = VirtualEvent;
+		event.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
+		event.xany.send_event = False;
+		event.xany.window = Tk_WindowId(textPtr->tkwin);
+		event.xany.display = Tk_Display(textPtr->tkwin);
+		((XVirtualEvent *) &event)->name = Tk_GetUid("Selection");
+		Tk_HandleEvent(&event);
+
 		if (addTag && textPtr->exportSelection
 			&& !(textPtr->flags & GOT_SELECTION)) {
 		    Tk_OwnSelection(textPtr->tkwin, XA_PRIMARY,
@@ -462,6 +478,25 @@ TkTextTagCmd(textPtr, interp, argc, argv)
 	    TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree),
 		    0, &last),
 	    TkBTreeTag(&first, &last, tagPtr, 0);
+
+	    if (tagPtr == textPtr->selTagPtr) {
+		XEvent event;
+		/*
+		 * Send an event that the selection changed.
+		 * This is equivalent to
+		 * "event generate $textWidget <<Selection>>"
+		 */
+
+		memset((VOID *) &event, 0, sizeof(event));
+		event.xany.type = VirtualEvent;
+		event.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
+		event.xany.send_event = False;
+		event.xany.window = Tk_WindowId(textPtr->tkwin);
+		event.xany.display = Tk_Display(textPtr->tkwin);
+		((XVirtualEvent *) &event)->name = Tk_GetUid("Selection");
+		Tk_HandleEvent(&event);
+	    }
+
 	    Tcl_DeleteHashEntry(hPtr);
 	    if (textPtr->bindingTable != NULL) {
 		Tk_DeleteAllBindings(textPtr->bindingTable,
