@@ -1,3 +1,9 @@
+2005-01-18  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* library/demos/menu.tcl: Reworked to make dialogs children of the
+	demo widget so that they are properly visible. Issue reported by
+	Keith Nash <k.j.nash@usa.net>
+
 2005-01-14  Joe English  <jenglish@users.sourceforge.net>
 	* unix/tkUnixWm.c: Sync with CVS HEAD (r1.47):
 	Fixes: #959973 "wm title bug" (support Unicode titles)
