@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3 2002/10/16 19:44:05 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.1 2003/05/13 08:41:48 das Exp $
  */
 
 #include "tkInt.h"
@@ -143,8 +143,8 @@ TkpInit(interp)
      * FIXME: Should we come up with a more generic way of doing this?
      */
      
-    result = Tcl_MacOSXOpenBundleResources(interp, "com.tcltk.tklibrary", 
-                1, 1024, tkLibPath);
+    result = Tcl_MacOSXOpenVersionedBundleResources(interp, 
+    	    "com.tcltk.tklibrary", TK_VERSION, 1, 1024, tkLibPath);
      
     if (result != TCL_ERROR) {
         Tcl_SetVar(interp, "tk_library", tkLibPath, TCL_GLOBAL_ONLY);
