@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.21 2002/06/28 09:01:58 dkf Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.22 2002/07/22 21:25:39 mdejong Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -409,13 +409,6 @@ proc ::tk::MessageBox {args} {
     vwait ::tk::Priv(button)
 
     ::tk::RestoreFocusGrab $w $focus
-
-    # Remove the transient property to insulate the
-    # dialog from changes in the master's state.
-
-    if {[winfo exists $w]} {
-        wm transient $w {}
-    }
 
     return $Priv(button)
 }

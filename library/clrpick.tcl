@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# RCS: @(#) $Id: clrpick.tcl,v 1.18 2002/06/13 06:17:21 mdejong Exp $
+# RCS: @(#) $Id: clrpick.tcl,v 1.19 2002/07/22 21:25:39 mdejong Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -108,13 +108,6 @@ proc ::tk::dialog::color:: {args} {
     vwait ::tk::Priv(selectColor)
     ::tk::RestoreFocusGrab $w $data(okBtn)
     unset data
-
-    # Remove the transient property to insulate the
-    # dialog from changes in the master's state.
-
-    if {[winfo exists $w]} {
-        wm transient $w {}
-    }
 
     return $Priv(selectColor)
 }
