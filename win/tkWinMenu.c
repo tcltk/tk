@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.40 2005/01/09 06:59:20 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.41 2005/01/13 01:48:03 chengyemao Exp $
  */
 
 #define OEMRESOURCE
@@ -932,7 +932,7 @@ TkWinEmbeddedMenuProc(hwnd, message, wParam, lParam)
     WPARAM wParam;
     LPARAM lParam;
 {
-    static nPopupMenus = 0, nIdles = 0;
+    static nIdles = 0;
     LRESULT lResult = 1;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -947,12 +947,7 @@ TkWinEmbeddedMenuProc(hwnd, message, wParam, lParam)
 	
 	case WM_INITMENUPOPUP:
 	nIdles = 0;
-	nPopupMenus++;
 	break;
-
-	case WM_UNINITMENUPOPUP:
-	nPopupMenus--;
- 	break;
 
 	case WM_INITMENU:
 	case WM_SYSCOMMAND:
