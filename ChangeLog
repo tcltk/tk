@@ -1,5 +1,18 @@
 2005-03-23  Jim Ingham  <jingham@apple.com>
 
+	These changes allow us to draw the Entry and Spinbox widget
+	with a native look and feel on Mac OS X.
+
+	* generic/tkEntry.h: New file, extracting the definitions of
+	Entry and Spinbox.
+	* generic/tkEntry.c (DisplayEntry): Call out to 
+	TkpDrawEntryBorderAndFocus and TkpDrawSpinboxButtons.  Also 
+	provide default implementations for X11 & Win.
+	* macosx/tkMacOSXEntry.c: New file, implements the entry & focus
+	and spinbox button drawing.
+	* tkMacOSXDefaults.h: Change the Mac OS X defaults so they fit
+	the native widget shapes.
+	
         This is cleanup thanks to Neil Madden <nem@cs.nott.ac.uk>.
 	
 	* macosx/tkMacOSXWm.c (TkMacOSXWinStyle) New function.
