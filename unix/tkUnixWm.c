@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.33 2002/08/08 23:49:50 mdejong Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.34 2002/09/02 21:21:14 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -5454,8 +5454,6 @@ TkWmStackorderToplevel(parentPtr)
  *
  * Side effects:
  *	WinPtr gets restacked  as specified by aboveBelow and otherPtr.
- *	This procedure doesn't return until the restack has taken
- *	effect and the ConfigureNotify event for it has been received.
  *
  *----------------------------------------------------------------------
  */
@@ -5470,180 +5468,45 @@ TkWmRestackToplevel(winPtr, aboveBelow, otherPtr)
 				 * above or below *all* siblings. */
 {
     XWindowChanges changes;
-    XWindowAttributes atts;
     unsigned int mask;
-    Window window, dummy1, dummy2, vRoot;
-    Window *children;
-    unsigned int numChildren;
-    int i;
-    int desiredIndex = 0;	/* Initialized to stop gcc warnings. */
-    int ourIndex = 0;		/* Initialized to stop gcc warnings. */
-    unsigned long serial;
-    Tk_ErrorHandler handler;
     TkWindow *wrapperPtr;
 
     memset(&changes, 0, sizeof(XWindowChanges));
     changes.stack_mode = aboveBelow;
-    changes.sibling = None;
     mask = CWStackMode;
-    if (winPtr->window == None) {
-	Tk_MakeWindowExist((Tk_Window) winPtr);
-    }
-    if (winPtr->wmInfoPtr->flags & WM_NEVER_MAPPED) {
-	/*
-	 * Can't set stacking order properly until the window is on the
-	 * screen (mapping it may give it a reparent window), so make sure
-	 * it's on the screen.
-	 */
 
+    /*
+     * Make sure that winPtr and its wrapper window have been created.
+     */
+    if (winPtr->wmInfoPtr->flags & WM_NEVER_MAPPED) {
 	TkWmMapWindow(winPtr);
     }
     wrapperPtr = winPtr->wmInfoPtr->wrapperPtr;
-    window = (winPtr->wmInfoPtr->reparent != None)
-	    ? winPtr->wmInfoPtr->reparent : wrapperPtr->window;
+
     if (otherPtr != NULL) {
-	if (otherPtr->window == None) {
-	    Tk_MakeWindowExist((Tk_Window) otherPtr);
-	}
+	/*
+	 * The window is to be restacked with respect to another toplevel.
+	 * Make sure it has been created as well.
+	 */
 	if (otherPtr->wmInfoPtr->flags & WM_NEVER_MAPPED) {
 	    TkWmMapWindow(otherPtr);
 	}
-	changes.sibling = (otherPtr->wmInfoPtr->reparent != None)
-		? otherPtr->wmInfoPtr->reparent
-		: otherPtr->wmInfoPtr->wrapperPtr->window;
-	mask = CWStackMode|CWSibling;
+	changes.sibling = otherPtr->wmInfoPtr->wrapperPtr->window;
+	mask |= CWSibling;
     }
 
     /*
-     * Before actually reconfiguring the window, see if it's already
-     * in the right place.  If so then don't reconfigure it.  The
-     * reason for this extra work is that some window managers will
-     * ignore the reconfigure request if the window is already in
-     * the right place, causing a long delay in WaitForConfigureNotify
-     * while it times out.  Special note: if the window is almost in
-     * the right place, and the only windows between it and the right
-     * place aren't mapped, then we don't reconfigure it either, for
-     * the same reason.
+     * Reconfigure the window.  Note that we use XReconfigureWMWindow
+     * instead of XConfigureWindow, in order to handle the case
+     * where the window is to be restacked with respect to another toplevel.  
+     * See [ICCCM] 4.1.5 "Configuring the Window" and XReconfigureWMWindow(3)
+     * for details.
      */
 
-    vRoot = winPtr->wmInfoPtr->vRoot;
-    if (vRoot == None) {
-	vRoot = RootWindowOfScreen(Tk_Screen((Tk_Window) winPtr));
-    }
-    if (XQueryTree(winPtr->display, vRoot, &dummy1, &dummy2,
-	    &children, &numChildren) != 0) {
-	/*
-	 * Find where our window is in the stacking order, and
-	 * compute the desired location in the stacking order.
-	 */
-
-	for (i = 0; i < numChildren; i++) {
-	    if (children[i] == window) {
-		ourIndex = i;
-	    }
-	    if (children[i] == changes.sibling) {
-		desiredIndex = i;
-	    }
-	}
-	if (mask & CWSibling) {
-	    if (aboveBelow == Above) {
-		if (desiredIndex < ourIndex) {
-		    desiredIndex += 1;
-		}
-	    } else {
-		if (desiredIndex > ourIndex) {
-		    desiredIndex -= 1;
-		}
-	    }
-	} else {
-	    if (aboveBelow == Above) {
-		desiredIndex = numChildren-1;
-	    } else {
-		desiredIndex = 0;
-	    }
-	}
-
-	/*
-	 * See if there are any mapped windows between where we are
-	 * and where we want to be.
-	 */
-
-	handler = Tk_CreateErrorHandler(winPtr->display, -1, -1, -1,
-		(Tk_ErrorProc *) NULL, (ClientData) NULL);
-	while (desiredIndex != ourIndex) {
-	    if ((XGetWindowAttributes(winPtr->display, children[desiredIndex],
-		    &atts) != 0) && (atts.map_state != IsUnmapped)) {
-		break;
-	    }
-	    if (desiredIndex < ourIndex) {
-		desiredIndex++;
-	    } else {
-		desiredIndex--;
-	    }
-	}
-	Tk_DeleteErrorHandler(handler);
-	XFree((char *) children);
-	if (ourIndex == desiredIndex) {
-	    return;
-	}
-    }
-
-    /*
-     * Reconfigure the window.  This tricky because of two things:
-     * (a) Some window managers, like olvwm, insist that we raise
-     *     or lower the toplevel window itself, as opposed to its
-     *     decorative frame.  Attempts to raise or lower the frame
-     *     are ignored.
-     * (b) If the raise or lower is relative to a sibling, X will
-     *     generate an error unless we work with the frames (the
-     *     toplevels themselves aren't siblings).
-     * Fortunately, the procedure XReconfigureWMWindow is supposed
-     * to handle all of this stuff, so be careful to use it instead
-     * of XConfigureWindow.
-     */
-
-    serial = NextRequest(winPtr->display);
-    if (window != wrapperPtr->window) {
-	/*
-	 * We're going to have to wait for events on a window that
-	 * Tk doesn't own, so we have to tell X specially that we
-	 * want to get events on that window.  To make matters worse,
-	 * it's possible that the window doesn't exist anymore (e.g.
-	 * the toplevel could have been withdrawn) so ignore events
-	 * occurring during the request.
-	 */
-
-	handler = Tk_CreateErrorHandler(winPtr->display, -1, -1, -1,
-		(Tk_ErrorProc *) NULL, (ClientData) NULL);
-	XSelectInput(winPtr->display, window, StructureNotifyMask);
-	Tk_DeleteErrorHandler(handler);
-    }
     XReconfigureWMWindow(winPtr->display, wrapperPtr->window,
 	    Tk_ScreenNumber((Tk_Window) winPtr), mask,  &changes);
-
-    /*
-     * Wait for the reconfiguration to complete.  If we don't wait, then
-     * the window may not restack for a while and the application might
-     * observe it before it has restacked.  Waiting for the reconfiguration
-     * is tricky if winPtr has been reparented, since the window getting
-     * the event isn't one that Tk owns.
-     */
-
-    WaitForConfigureNotify(winPtr, serial);
-
-    if (window != wrapperPtr->window) {
-	/*
-	 * Ignore errors that occur when we are de-selecting events on
-	 * window, since it's possible that the window doesn't exist
-	 * anymore (see comment above previous call to XSelectInput).
-	 */
-
-	handler = Tk_CreateErrorHandler(winPtr->display, -1, -1, -1,
-		(Tk_ErrorProc *) NULL, (ClientData) NULL);
-	XSelectInput(winPtr->display, window, (long) 0);
-	Tk_DeleteErrorHandler(handler);
-    }
 }
+
 
 /*
  *----------------------------------------------------------------------
