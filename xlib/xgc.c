@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xgc.c,v 1.3 1999/04/16 01:51:55 stanton Exp $
+ * RCS: @(#) $Id: xgc.c,v 1.4 1999/12/14 06:55:39 hobbs Exp $
  */
 
 #include <tkInt.h>
@@ -46,7 +46,15 @@ XCreateGC(display, d, mask, values)
 {
     GC gp;
 
-    gp = (XGCValues *)ckalloc(sizeof(XGCValues));
+/*
+ * In order to have room for a dash list, MAX_DASH_LIST_SIZE extra chars are
+ * defined, which is invisible from the outside. The list is assumed to end
+ * with a 0-char, so this must be set explicitely during initialization.
+ */
+
+#define MAX_DASH_LIST_SIZE 10
+
+    gp = (XGCValues *)ckalloc(sizeof(XGCValues) + MAX_DASH_LIST_SIZE);
     if (!gp) {
 	return None;
     }
@@ -73,6 +81,7 @@ XCreateGC(display, d, mask, values)
     gp->clip_y_origin = (mask & GCClipYOrigin)	?values->clip_y_origin	:0;
     gp->dash_offset = 	(mask & GCDashOffset)	?values->dash_offset	:0;
     gp->dashes = 	(mask & GCDashList)	?values->dashes		:4;
+    (&(gp->dashes))[1] = 	0;
 
     if (mask & GCClipMask) {
 	gp->clip_mask = (Pixmap)ckalloc(sizeof(TkpClipMask));
@@ -131,7 +140,7 @@ XChangeGC(d, gc, mask, values)
     if (mask & GCClipYOrigin) { gc->clip_y_origin = values->clip_y_origin; }
     if (mask & GCClipMask) { XSetClipMask(d, gc, values->clip_mask); }
     if (mask & GCDashOffset) { gc->dash_offset = values->dash_offset; }
-    if (mask & GCDashList) { gc->dashes = values->dashes; }
+    if (mask & GCDashList) { gc->dashes = values->dashes; (&(gc->dashes))[1] = 0;}
 }
 
 /*
@@ -195,6 +204,30 @@ XSetBackground(display, gc, background)
     unsigned long background;
 {
     gc->background = background;
+}
+
+void
+XSetDashes(display, gc, dash_offset, dash_list, n)
+    Display* display;
+    GC gc;
+    int dash_offset;
+    _Xconst char* dash_list;
+    int n;
+{
+    char *p = &(gc->dashes);
+
+#ifdef TkWinDeleteBrush
+    TkWinDeleteBrush(gc->fgBrush);
+    TkWinDeletePen(gc->fgPen);
+    TkWinDeleteBrush(gc->bgBrush);
+    TkWinDeletePen(gc->fgExtPen);
+#endif
+    gc->dash_offset = dash_offset;
+    if (n > MAX_DASH_LIST_SIZE) n = MAX_DASH_LIST_SIZE;
+    while (n-- > 0) {
+	*p++ = *dash_list++;
+    }
+    *p = 0;
 }
 
 void
@@ -349,4 +382,158 @@ XSetClipMask(display, gc, pixmap)
     }
     ((TkpClipMask*)gc->clip_mask)->type = TKP_CLIP_PIXMAP;
     ((TkpClipMask*)gc->clip_mask)->value.pixmap = pixmap;
+}
+
+/*
+ * Some additional dummy functions (hopefully implemented soon).
+ */
+
+Cursor
+XCreateFontCursor(display, shape)
+    Display* display;
+    unsigned int shape;
+{
+    return (Cursor) 0;
+}
+
+void
+XDrawImageString(display, d, gc, x, y, string, length)
+    Display* display;
+    Drawable d;
+    GC gc;
+    int x;
+    int y;
+    _Xconst char* string;
+    int length;
+{
+}
+
+void
+XDrawPoint(display, d, gc, x, y)
+    Display* display;
+    Drawable d;
+    GC gc;
+    int x;
+    int y;
+{
+    XDrawLine(display, d, gc, x, y, x, y);
+}
+
+void
+XDrawPoints(display, d, gc, points, npoints, mode)
+    Display* display;
+    Drawable d;
+    GC gc;
+    XPoint* points;
+    int npoints;
+    int mode;
+{
+    int i;
+
+    for (i=0; i<npoints; i++) {
+	XDrawPoint(display, d, gc, points[i].x, points[i].y);
+    }
+}
+
+void
+XDrawSegments(display, d, gc, segments, nsegments)
+    Display* display;
+    Drawable d;
+    GC gc;
+    XSegment* segments;
+    int nsegments;
+{
+}
+
+char *
+XFetchBuffer(display, nbytes_return, buffer)
+    Display* display;
+    int* nbytes_return;
+    int buffer;
+{
+    return (char *) 0;
+}
+
+Status XFetchName(display, w, window_name_return)
+    Display* display;
+    Window w;
+    char** window_name_return;
+{
+    return (Status) 0;
+}
+
+Atom *XListProperties(display, w, num_prop_return)
+    Display* display;
+    Window w;
+    int* num_prop_return;
+{
+    return (Atom *) 0;
+}
+
+void
+XMapRaised(display, w)
+    Display* display;
+    Window w;
+{
+}
+
+void
+XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height)
+    Display* display;
+    Drawable d;
+    GC gc;
+    XImage* image;
+    int src_x;
+    int src_y;
+    int dest_x;
+    int dest_y;
+    unsigned int width;
+    unsigned int height;
+{
+}
+
+void XQueryTextExtents(display, font_ID, string, nchars, direction_return,
+	font_ascent_return, font_descent_return, overall_return)
+    Display* display;
+    XID font_ID;
+    _Xconst char* string;
+    int nchars;
+    int* direction_return;
+    int* font_ascent_return;
+    int* font_descent_return;
+    XCharStruct* overall_return;
+{
+}
+
+void
+XReparentWindow(display, w, parent, x, y)
+    Display* display;
+    Window w;
+    Window parent;
+    int x;
+    int y;
+{
+}
+
+void
+XRotateBuffers(display, rotate)
+    Display* display;
+    int rotate;
+{
+}
+
+void
+XStoreBuffer(display, bytes, nbytes, buffer)
+    Display* display;
+    _Xconst char* bytes;
+    int nbytes;
+    int buffer;
+{
+}
+
+void
+XUndefineCursor(display, w)
+    Display* display;
+    Window w;
+{
 }
