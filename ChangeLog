@@ -1,3 +1,8 @@
+2003-03-14  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/msgbox.tcl (Tk::MessageBox): Stop buttons from being
+	very wide when a messageBox has a lot of content. [Bug #701812]
+
 2003-03-13  Don Porter  <dgp@users.sourceforge.net>
 
         * tests/unixWm.test:  Constrained all tests older than revision 1.21
