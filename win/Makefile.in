@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.34 2000/10/31 01:28:26 davidg Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.35 2000/11/03 17:28:00 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -349,7 +349,7 @@ STUB_OBJS = \
 	tkStubLib.$(OBJEXT) \
 	tkStubImg.$(OBJEXT)
 
-TCL_DOCS = "$(TCL_SRC_DIR_NATIVE)"/../doc/*.[13n]
+TCL_DOCS = "$(TCL_SRC_DIR_NATIVE)"/doc/*.[13n]
 TK_DOCS = "$(ROOT_DIR_NATIVE)"/doc/*.[13n]
 CORE_DOCS = $(TCL_DOCS) $(TK_DOCS)
 
@@ -365,21 +365,21 @@ binaries: @LIBRARIES@ $(WISH)
 libraries:
 
 $(ROOT_DIR)/doc/man.macros:
-	$(INSTALL_DATA) @TCL_SRC_DIR@/../doc/man.macros $(ROOT_DIR)/doc/man.macros
+	$(INSTALL_DATA) "$(TCL_SRC_DIR)/doc/man.macros" "$(ROOT_DIR)/doc/man.macros"
 
 doc: $(ROOT_DIR)/doc/man.macros
 
-winhelp: $(TCL_SRC_DIR_NATIVE)/../tools/man2help.tcl $(MAN2TCL)
+winhelp: $(TCL_SRC_DIR_NATIVE)/tools/man2help.tcl $(MAN2TCL)
 	TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/library"; export TCL_LIBRARY; \
 	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
 	PATH="$(PATH):$(TCL_BIN_DIR)"; export PATH; \
-	$(TCLSH_PROG) "$(TCL_SRC_DIR_NATIVE)"/../tools/man2help.tcl tcl "$(VER)" $(CORE_DOCS)
+	$(TCLSH_PROG) "$(TCL_SRC_DIR_NATIVE)/tools/man2help.tcl" tcl "$(VER)" $(CORE_DOCS)
 	$(COPY) "$(TCL_BIN_DIR)"/tcl.hpj ./
 	hcw /c /e tcl.hpj
-	$(COPY) ./tcl$(VER).cnt ./TCL$(VER).HLP "$(TCL_SRC_DIR_NATIVE)"/../tools/
+	$(COPY) ./tcl$(VER).cnt ./TCL$(VER).HLP "$(TCL_SRC_DIR_NATIVE)"/tools/
 
-$(MAN2TCL): $(TCL_SRC_DIR_NATIVE)/../tools/man2tcl.c
-	$(CC) $(CFLAGS_OPTIMIZE) $(MAN2TCLFLAGS) -o $(MAN2TCL) "$(TCL_SRC_DIR_NATIVE)"/../tools/man2tcl.c
+$(MAN2TCL): $(TCL_SRC_DIR_NATIVE)/tools/man2tcl.c
+	$(CC) $(CFLAGS_OPTIMIZE) $(MAN2TCLFLAGS) -o $(MAN2TCL) "$(TCL_SRC_DIR_NATIVE)"/tools/man2tcl.c
 
 # Specifying TESTFLAGS on the command line is the standard way to pass
 # args to tcltest, ie:
