@@ -20,7 +20,7 @@ SGI, as well as PCs running Linux, BSDI, and SCO UNIX.  To compile for
 a PC running Windows, see the README file in the directory ../win.  To
 compile for a Macintosh, see the README file in the directory ../mac.
 
-RCS: @(#) $Id: README,v 1.15 2002/06/25 16:45:12 rmax Exp $
+RCS: @(#) $Id: README,v 1.16 2002/07/24 18:42:23 hobbs Exp $
 
 How To Compile And Install Tk:
 ------------------------------
@@ -139,7 +139,9 @@ safe to conclude that any errors represent portability problems in the
 test suite and not fundamental flaws with Tk.
 
 There are also a number of visual tests for things such as screen layout,
-Postscript generation, etc.  These tests all have to be run manually and
-the results have to be verified visually.  To run the tests, cd to the
-"tests" directory and run the script "visual".  It will present a main
-window with a bunch of menus, which you can use to select various tests.
+Postscript generation, etc.  These tests all have to be run by manually
+enabling the "userInteraction" constraint when testing, and the results
+have to be verified visually..  This can be done with
+     make test TESTFLAGS="-constraints userInteraction"
+Some tests will present a main window with a bunch of menus, which you can
+use to select various tests.
