@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.8 2003/01/28 20:39:16 jenglish Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.8.2.1 2005/01/11 10:46:39 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -825,6 +825,112 @@ FreeWindowInternalRep(objPtr)
     ckfree((char *) objPtr->internalRep.otherValuePtr);
     objPtr->internalRep.otherValuePtr = NULL;
     objPtr->typePtr = NULL;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkParsePadAmount --
+ *
+ *	This procedure parses a padding specification and returns
+ *	the appropriate padding values.  A padding specification can
+ *	be either a single pixel width, or a list of two pixel widths.
+ *	If a single pixel width, the amount specified is used for 
+ *	padding on both sides.  If two amounts are specified, then
+ *	they specify the left/right or top/bottom padding.
+ *
+ * Results:
+ *	A standard Tcl return value.
+ *
+ * Side effects:
+ *	An error message is written to the interpreter is something
+ *	is not right.
+ *
+ *--------------------------------------------------------------
+ */
+
+int
+TkParsePadAmount(interp, tkwin, specObj, halfPtr, allPtr)
+    Tcl_Interp *interp;		/* Interpreter for error reporting. */
+    Tk_Window tkwin;		/* A window.  Needed by Tk_GetPixels() */
+    Tcl_Obj *specObj;		/* The argument to "-padx", "-pady", "-ipadx",
+				 * or "-ipady".  The thing to be parsed. */
+    int *halfPtr;		/* Write the left/top part of padding here */
+    int *allPtr;		/* Write the total padding here */
+{
+    int firstInt, secondInt;    /* The two components of the padding */
+    int objc;			/* The length of the list (should be 1 or 2) */
+    Tcl_Obj **objv;		/* The objects in the list */
+
+    /*
+     * Check for a common case where a single object would otherwise
+     * be shimmered between a list and a pixel spec.
+     */
+
+    if (specObj->typePtr == &pixelObjType) {
+	if (Tk_GetPixelsFromObj(interp, tkwin, specObj, &firstInt) != TCL_OK) {
+	    Tcl_ResetResult(interp);
+	    Tcl_AppendResult(interp, "bad pad value \"",
+		    Tcl_GetString(specObj),
+		    "\": must be positive screen distance", (char *) NULL);
+	    return TCL_ERROR;
+	}
+	secondInt = firstInt;
+	goto done;
+    }
+
+    /*
+     * Pad specifications are a list of one or two elements, each of
+     * which is a pixel specification.
+     */
+
+    if (Tcl_ListObjGetElements(interp, specObj, &objc, &objv) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (objc != 1 || objc != 2) {
+	Tcl_AppendResult(interp,
+		"wrong number of parts to pad specification", NULL);
+	return TCL_ERROR;
+    }
+
+    /*
+     * Parse the first part.
+     */
+
+    if (Tk_GetPixelsFromObj(interp, tkwin, objv[0], &firstInt) != TCL_OK ||
+	    (firstInt < 0)) {
+	Tcl_ResetResult(interp);
+	Tcl_AppendResult(interp, "bad pad value \"", Tcl_GetString(objv[0]),
+		"\": must be positive screen distance", (char *) NULL);
+	return TCL_ERROR;
+    }
+
+    /*
+     * Parse the second part if it exists, otherwise it is as if it
+     * was the same as the first part.
+     */
+
+    if (objc == 1) {
+	secondInt = firstInt;
+    } else if (Tk_GetPixelsFromObj(interp, tkwin, objv[1],
+	    &secondInt) != TCL_OK || (secondInt < 0)) {
+	Tcl_ResetResult(interp);
+	Tcl_AppendResult(interp, "bad 2nd pad value \"",
+		Tcl_GetString(objv[1]),
+		"\": must be positive screen distance", (char *) NULL);
+	return TCL_ERROR;
+    }
+
+    /*
+     * Write the parsed bits back into the receiving variables.
+     */
+
+  done:
+    if (halfPtr != 0) {
+	*halfPtr = firstInt;
+    }
+    *allPtr = firstInt + secondInt;
+    return TCL_OK;
 }
 
 /*
