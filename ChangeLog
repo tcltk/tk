@@ -1,3 +1,10 @@
+2002-06-06  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* win/tkWinCursor.c (TkGetCursorByName): Fixed so that the reading
+	of cursors from a file with a cursor spec was built using [list]
+	works when the file has a space in instead of requiring fiddling
+	with backslashes.
+
 2002-06-06  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
 
 	* library/msgbox.tcl (MessageBox): Add -default normal
