@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.20.2.1 2001/04/04 07:57:17 hobbs Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.20.2.2 2001/10/19 17:33:00 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -144,6 +144,24 @@ proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
 	} else {
 	    grab $oldGrab
 	}
+    }
+}
+
+# ::tk::GetSelection --
+#   This tries to obtain the default selection.
+#   This shadows the 8.4 version which handles UTF8_STRING as well.
+# Arguments:
+#   w	The widget for which the selection will be retrieved.
+#	Important for the -displayof property.
+#   sel	The source of the selection (PRIMARY or CLIPBOARD)
+# Results:
+#   Returns the selection, or an error if none could be found
+#
+proc ::tk::GetSelection {w {sel PRIMARY}} {
+    if {[catch {selection get -displayof $w -selection $sel} txt]} {
+	return -code error "could not find default selection"
+    } else {
+	return $txt
     }
 }
 
