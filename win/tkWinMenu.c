@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.20 2002/08/05 04:30:41 dgp Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.21 2002/08/08 01:42:57 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -1240,16 +1240,15 @@ TkpSetWindowMenuBar(tkwin, menuPtr)
 	Tcl_SetHashValue(hashEntryPtr, (char *) menuPtr);
 	menuPtr->platformData = (TkMenuPlatformData) winMenuHdl;
 	TkWinSetMenu(tkwin, winMenuHdl);
-	if (menuPtr->menuFlags & MENU_RECONFIGURE_PENDING) {
-	    Tcl_DoWhenIdle(ReconfigureWindowsMenu, (ClientData) menuPtr);
+	if (!(menuPtr->menuFlags & MENU_RECONFIGURE_PENDING)) {
 	    menuPtr->menuFlags |= MENU_RECONFIGURE_PENDING;
+	    Tcl_DoWhenIdle(ReconfigureWindowsMenu, (ClientData) menuPtr);
 	}
     } else {
 	TkWinSetMenu(tkwin, NULL);
     }
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
