@@ -1,3 +1,9 @@
+2002-10-02  Jim Ingham  <jingham@apple.com>
+
+        * macosx/tkMacOSXScrlbr.c (TkpDisplayScrollbar): Put the Tk scrollbar
+        pointer into the control reference data for the Mac scrollbar, so we
+        can get it out again in the ScrollbarActionProc.
+        
 2002-10-02  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkText.c (TextBlinkProc): don't blink the cursor unless
