@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.13 2003/02/21 11:48:54 dkf Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.13.2.1 2003/07/17 00:37:03 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1636,9 +1636,12 @@ ArrangePanes(clientData)
 	if (pwPtr->orient == ORIENT_HORIZONTAL) {
 	    paneWidth = slavePtr->paneWidth;
 	    if (i == pwPtr->numSlaves - 1 && Tk_IsMapped(pwPtr->tkwin)) {
-		if (Tk_Width(pwPtr->tkwin) > Tk_ReqWidth(pwPtr->tkwin)) {
+		if (Tk_Width(pwPtr->tkwin) != Tk_ReqWidth(pwPtr->tkwin)) {
 		    paneWidth += Tk_Width(pwPtr->tkwin) -
 			Tk_ReqWidth(pwPtr->tkwin);
+		    if (paneWidth < 0) {
+			paneWidth = 0;
+		    }
 		}
 	    }
 	    paneHeight = Tk_Height(pwPtr->tkwin) - (2 * slavePtr->pady) -
@@ -1646,9 +1649,12 @@ ArrangePanes(clientData)
 	} else {
 	    paneHeight = slavePtr->paneHeight;
 	    if (i == pwPtr->numSlaves - 1 && Tk_IsMapped(pwPtr->tkwin)) {
-		if (Tk_Height(pwPtr->tkwin) > Tk_ReqHeight(pwPtr->tkwin)) {
+		if (Tk_Height(pwPtr->tkwin) != Tk_ReqHeight(pwPtr->tkwin)) {
 		    paneHeight += Tk_Height(pwPtr->tkwin) -
 			Tk_ReqHeight(pwPtr->tkwin);
+		    if (paneHeight < 0) {
+			paneHeight = 0;
+		    }
 		}
 	    }
 	    paneWidth = Tk_Width(pwPtr->tkwin) - (2 * slavePtr->padx) -
