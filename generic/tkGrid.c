@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.28 2003/09/18 18:22:22 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.29 2003/09/18 20:34:07 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -885,10 +885,11 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	    return TCL_ERROR;
 	}
 	ok = CheckSlotData(masterPtr, slot, slotType, /* checkOnly */ 1);
-	slotPtr = (slotType == COLUMN) ?
-		masterPtr->masterDataPtr->columnPtr :
-		masterPtr->masterDataPtr->rowPtr;
-
+        if (ok == TCL_OK) {
+            slotPtr = (slotType == COLUMN) ?
+                    masterPtr->masterDataPtr->columnPtr :
+                    masterPtr->masterDataPtr->rowPtr;
+        }
 	/*
 	 * Return all of the options for this row or column.  If the
 	 * request is out of range, return all 0's.
