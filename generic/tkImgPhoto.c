@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.4 2004/02/09 14:40:31 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.5 2004/02/23 10:49:30 das Exp $
  */
 
 #include "tkInt.h"
@@ -2678,10 +2678,10 @@ ImgPhotoDisplay(clientData, display, drawable, imageX, imageY, width,
     }
 
     if (
-#if defined(MAC_TCL) || defined(MAC_OSX_TK)
+#if defined(MAC_TCL)
 	/*
-	 * The retrieval of bgImg is currently not functional on OSX
-	 * (and likely not OS9 either), so skip attempts to alpha blend.
+	 * The retrieval of bgImg is currently not functional on OS9
+	 * so skip attempts to alpha blend.
 	 */
 	0 &&
 #endif
