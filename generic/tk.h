@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.53 2000/11/22 01:49:37 ericm Exp $
+ * RCS: @(#) $Id: tk.h,v 1.53.2.1 2001/07/03 20:01:07 dgp Exp $
  */
 
 #ifndef _TK
@@ -39,7 +39,7 @@ extern "C" {
  * win/README		(not patchlevel)
  * unix/README		(not patchlevel)
  * unix/tk.spec		(3 LOC Major/Minor, 2 LOC patch)
- * win/aclocal.m4	(not patchlevel)
+ * win/tcl.m4		(not patchlevel)
  *
  * You may also need to update some of these files when the numbers change
  * for the version of Tcl that this release of Tk is compiled against.
@@ -48,10 +48,10 @@ extern "C" {
 #define TK_MAJOR_VERSION   8
 #define TK_MINOR_VERSION   4
 #define TK_RELEASE_LEVEL   TCL_ALPHA_RELEASE
-#define TK_RELEASE_SERIAL  2
+#define TK_RELEASE_SERIAL  3
 
 #define TK_VERSION	"8.4"
-#define TK_PATCH_LEVEL	"8.4a2"
+#define TK_PATCH_LEVEL	"8.4a3"
 
 /*
  * The following definitions set up the proper options for Macintosh
@@ -1389,7 +1389,7 @@ EXTERN void		Tk_CreateOldPhotoImageFormat _ANSI_ARGS_((
 #define Tk_Main(argc, argv, proc) \
     Tk_MainEx(argc, argv, proc, Tcl_CreateInterp())
 
-char *Tk_InitStubs _ANSI_ARGS_((Tcl_Interp *interp, char *version, int exact));
+CONST char *Tk_InitStubs _ANSI_ARGS_((Tcl_Interp *interp, char *version, int exact));
 
 #ifndef USE_TK_STUBS
 

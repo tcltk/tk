@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.9.2.1 2001/02/28 23:29:55 dgp Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.9.2.2 2001/07/03 20:01:08 dgp Exp $
  */
 
 /*
@@ -1106,7 +1106,13 @@ TkInvokeMenu(interp, menuPtr, index)
 	}
 	Tcl_DecrRefCount(valuePtr);
     }
-    if ((result == TCL_OK) && (mePtr->commandPtr != NULL)) {
+    /*
+     * We check numEntries in addition to whether the menu entry
+     * has a command because that goes to zero if the menu gets
+     * deleted (e.g., during command evaluation).
+     */
+    if ((menuPtr->numEntries != 0) && (result == TCL_OK)
+	    && (mePtr->commandPtr != NULL)) {
 	Tcl_Obj *commandPtr = mePtr->commandPtr;
 
 	Tcl_IncrRefCount(commandPtr);
@@ -1115,7 +1121,7 @@ TkInvokeMenu(interp, menuPtr, index)
     }
     Tcl_Release((ClientData) mePtr);
     done:
-    return result; 
+    return result;
 }
 
 /*
@@ -1263,14 +1269,14 @@ TkDestroyMenu(menuPtr)
     if (menuPtr->menuFlags & MENU_DELETION_PENDING) {
     	return;
     }
-    
+
     /*
      * Now destroy all non-tearoff instances of this menu if this is a 
      * parent menu. Is this loop safe enough? Are there going to be
      * destroy bindings on child menus which kill the parent? If not,
      * we have to do a slightly more complex scheme.
      */
-    
+
     if (menuPtr->masterMenuPtr == menuPtr) {
     	menuPtr->menuFlags |= MENU_DELETION_PENDING;
 	while (menuPtr->nextInstancePtr != NULL) {
@@ -1287,13 +1293,13 @@ TkDestroyMenu(menuPtr)
      * If any toplevel widgets have this menu as their menubar,
      * the geometry of the window may have to be recalculated.
      */
-    
+
     topLevelListPtr = menuPtr->menuRefPtr->topLevelListPtr;
     while (topLevelListPtr != NULL) {
          nextTopLevelPtr = topLevelListPtr->nextPtr;
          TkpSetWindowMenuBar(topLevelListPtr->tkwin, NULL);
     	 topLevelListPtr = nextTopLevelPtr;
-    }   
+    }
     DestroyMenuInstance(menuPtr);
 }
 

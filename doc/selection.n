@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: selection.n,v 1.3 1999/06/03 18:50:45 stanton Exp $
+'\" RCS: @(#) $Id: selection.n,v 1.3.14.1 2001/07/03 20:01:07 dgp Exp $
 '\" 
 .so man.macros
 .TH selection n 8.1 Tk "Tk Built-In Commands"
@@ -22,6 +22,9 @@ selection \- Manipulate the X selection
 This command provides a Tcl interface to the X selection mechanism and
 implements the full selection functionality described in the
 X Inter-Client Communication Conventions Manual (ICCCM).
+.PP
+Note that for management of the CLIPBOARD selection (see below), the
+\fBclipboard\fR command may also be used.
 .PP
 The first argument to \fBselection\fR determines the format of the
 rest of the arguments and the behavior of the command.  The following
@@ -125,6 +128,9 @@ that it has lost the selection.
 If \fIcommand\fR is specified, it is a Tcl script to execute when
 some other window claims ownership of the selection away from
 \fIwindow\fR.  \fISelection\fR defaults to PRIMARY.
+
+.SH "SEE ALSO"
+clipboard
 
 .SH KEYWORDS
 clear, format, handler, ICCCM, own, selection, target, type

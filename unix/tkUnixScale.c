@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixScale.c,v 1.6 2000/04/14 08:34:49 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixScale.c,v 1.6.6.1 2001/07/03 20:01:10 dgp Exp $
  */
 
 #include "tkScale.h"
@@ -559,7 +559,7 @@ TkpDisplayScale(clientData)
     scalePtr->flags &= ~INVOKE_COMMAND;
     if (scalePtr->flags & SCALE_DELETED) {
 	Tcl_Release((ClientData) scalePtr);
-	goto done;
+	return;
     }
     Tcl_Release((ClientData) scalePtr);
 

@@ -1,3 +1,505 @@
+2001-07-03  Don Porter  <dgp@users.sourceforge.net>
+
+	BRANCH dgp-privates-into-namespace:
+	* ChangeLog:
+	* README:
+	* deleted_files/xlib/ximage.c:
+	* doc/TkInitStubs.3:
+	* doc/canvas.n:
+	* doc/clipboard.n:
+	* doc/colors.n:
+	* doc/console.n:
+	* doc/image.n:
+	* doc/menubutton.n:
+	* doc/selection.n:
+	* generic/tk.h:
+	* generic/tkBind.c:
+	* generic/tkCanvArc.c:
+	* generic/tkCanvBmap.c:
+	* generic/tkCanvLine.c:
+	* generic/tkCanvPoly.c:
+	* generic/tkCanvText.c:
+	* generic/tkCanvWind.c:
+	* generic/tkCanvas.c:
+	* generic/tkEntry.c:
+	* generic/tkFrame.c:
+	* generic/tkImage.c:
+	* generic/tkImgGIF.c:
+	* generic/tkImgPhoto.c:
+	* generic/tkInt.h:
+	* generic/tkListbox.c:
+	* generic/tkMenu.c:
+	* generic/tkMenubutton.c:
+	* generic/tkMenubutton.h:
+	* generic/tkObj.c:
+	* generic/tkRectOval.c:
+	* generic/tkSelect.c:
+	* generic/tkStubLib.c:
+	* generic/tkWindow.c:
+	* library/bgerror.tcl:
+	* library/clrpick.tcl:
+	* library/console.tcl:
+	* library/entry.tcl:
+	* library/msgbox.tcl:
+	* library/spinbox.tcl:
+	* library/text.tcl:
+	* library/tk.tcl:
+	* library/tkfbox.tcl:
+	* library/xmfbox.tcl:
+	* library/demos/arrow.tcl:
+	* library/demos/clrpick.tcl:
+	* library/demos/cscroll.tcl:
+	* library/demos/ctext.tcl:
+	* library/demos/filebox.tcl:
+	* library/demos/floor.tcl:
+	* library/demos/hscale.tcl:
+	* library/demos/items.tcl:
+	* library/demos/plot.tcl:
+	* library/demos/puzzle.tcl:
+	* library/demos/ruler.tcl:
+	* library/demos/twind.tcl:
+	* library/demos/vscale.tcl:
+	* library/msgs/de.msg:
+	* mac/README:
+	* mac/tkMacMenubutton.c:
+	* tests/bind.test:
+	* tests/canvas.test:
+	* tests/cursor.test:
+	* tests/entry.test:
+	* tests/event.test:
+	* tests/focus.test:
+	* tests/frame.test:
+	* tests/listbox.test:
+	* tests/macEmbed.test:
+	* tests/macMenu.test:
+	* tests/menu.test:
+	* tests/menubut.test:
+	* tests/safe.test:
+	* tests/select.test:
+	* tests/unixEmbed.test:
+	* tests/unixWm.test:
+	* tests/winClipboard.test:
+	* tests/winDialog.test:
+	* unix/Makefile.in:
+	* unix/configure:
+	* unix/configure.in:
+	* unix/tcl.m4:
+	* unix/tk.spec:
+	* unix/tkUnixFont.c:
+	* unix/tkUnixMenubu.c:
+	* unix/tkUnixScale.c:
+	* unix/tkUnixSelect.c:
+	* win/Makefile.in:
+	* win/configure:
+	* win/configure.in:
+	* win/makefile.vc:
+	* win/tcl.m4:
+	* win/tkWinDialog.c:
+	* win/tkWinInt.h:
+	* win/tkWinKey.c:
+	* win/tkWinMenu.c:
+	* win/tkWinWm.c:
+	* win/tkWinX.c: Merged in updates from HEAD branch.
+
+2001-07-03  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/xmfbox.tcl (tkMotifFDialog_ActivateSEnt): Added missing
+	backslash [Bug #438247]
+
+2001-07-02  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkWindow.c (Tk_DestroyWindow): changed to use
+	Tcl_EventuallyFree instead of ckfree so that widgets that have
+	references to a tkwin can use them.
+
+	* generic/tkCanvArc.c:
+	* generic/tkCanvBmap.c:
+	* generic/tkCanvLine.c:
+	* generic/tkCanvPoly.c:
+	* generic/tkCanvText.c:
+	* generic/tkCanvWind.c:
+	* generic/tkRectOval.c: corrected argument handling in
+	Create<Item> functions that could lead to ABRs or FMRs and
+	corrected names of argc/argv to objc/objv.
+
+	* generic/tkImgGIF.c (Mgetc): corrected screwy use of ternary
+	operator and possible FMR.
+
+	* generic/tkEntry.c: corrected missing Tcl_Release that caused
+	font not freed complaints when trying valid cleanup calls.
+	* generic/tkListbox.c: made use of Tcl_Preserve/Tcl_Release to
+	prevent FMR errors in Display functions.
+
+	* unix/tkUnixScale.c (TkpDisplayScale): corrected FMR when scale
+	was deleted while calling its command.
+
+	* library/console.tcl:
+	* library/entry.tcl:
+	* library/spinbox.tcl:
+	* library/text.tcl:
+	* library/tk.tcl: added private ::tk::GetSelection command to
+	handle requesting selection.  This is to support requesting
+	UTF8_STRING before generic STRING on Unix.  Changed Text, Spinbox,
+	Entry and Console to use this command.
+
+	* tests/select.test:
+	* generic/tkSelect.c (Tk_CreateSelHandler, Tk_DeleteSelHandler):
+	on Unix, a UTF8_STRING handler will be created when the user
+	requests a STRING handler (in addition to the STRING handler).
+	This provides implicit support for the new UTF8_STRING selection
+	target.
+	* unix/tkUnixSelect.c (TkSelEventProc, ConvertSelection): Added
+	support for UTF8_STRING target. [RFE #418653, Patch #433283]
+
+	* generic/tkInt.h: added utf8Atom to TkDisplay structure.
+
+	* tests/listbox.test: changed 'darkblue' to 'white' in a test
+	because it isn't a portable color name.
+
+	* generic/tkEntry.c (DestroyEntry): used Tcl_EventuallyFree
+	instead of ckfree for entryPtr to prevent FMRs. [Bug #413904]
+
+2001-06-26  Mo DeJong  <mdejong@redhat.com>
+
+	* unix/Makefile.in:
+	* win/Makefile.in: Add `make shell` target. This target
+	will set the proper env vars before invoking wish
+	from the build directory.
+
+2001-06-26  Mo DeJong  <mdejong@redhat.com>
+
+	* win/configure:
+	* win/configure.in: Revert cross compiling change
+	accidently added during last checkin.
+
+2001-06-26  Mo DeJong  <mdejong@redhat.com>
+
+	* unix/configure: Regen.
+	* unix/configure.in: Fix last checkin by removing
+	export since that only works in bash.
+	* win/configure: Regen.
+	* win/configure.in: Ditto.
+
+2001-06-26  Mo DeJong  <mdejong@redhat.com>
+
+	* unix/configure: Regen.
+	* unix/configure.in: Set CFLAGS to "" if the user
+	did not set CFLAGS in the env. This keeps AC_PROG_CC
+	from adding "-g -O2" to the CFLAGS by default.
+	* win/configure: Regen.
+	* win/configure.in: Ditto.
+
+2001-06-22  Mo DeJong  <mdejong@redhat.com>
+
+	* win/configure: Regen.
+	* win/configure.in: Use RC_DEFINE flag from tcl.m4.
+	* win/tcl.m4: Update from Tcl.
+
+2001-06-22  Mo DeJong  <mdejong@redhat.com>
+
+	* win/configure: Regen.
+	* win/tcl.m4: Update from Tcl.
+
+2001-06-22  Mo DeJong  <mdejong@redhat.com>
+
+	* win/configure: Regen.
+	* win/tcl.m4 (SC_CONFIG_CFLAGS): Link to the
+	imm32 library when building with mingw gcc.
+	* win/tkWinX.c: Include the imm.h header
+	to fix compiling with mingw gcc.
+
+2001-06-22  Mo DeJong  <mdejong@redhat.com>
+
+	* win/configure: Regen.
+	* win/configure.in: Add resource compiler fix from
+	8.3.3 to fix compiling with mingw.
+
+2001-06-22  Mo DeJong  <mdejong@redhat.com>
+
+	* win/configure: Regen.
+	* win/tcl.m4: Fix silly typo in last checkin.
+
+2001-06-22  Mo DeJong  <mdejong@redhat.com>
+
+	* unix/Makefile.in: Set CFLAGS to @CFLAGS@ and @CFLAGS_DEFAULT@.
+	Set LDFLAGS to @LDFLAGS@ and @LDFLAGS_DEFAULT@. Add LDFLAGS_DEBUG
+	and LDFLAGS_OPTIMIZE to match the way CFLAGS_DEFAULT works. Use
+	new LDFLAGS variable in the Makefile instead of @LDFLAGS@.
+	* unix/configure: Regen.
+	* unix/configure.in: Don't set CFLAGS to CFLAGS_DEFAULT, instead
+	subst CFLAGS_DEFAULT into the Makefile. Add AC_SUBST for CFLAGS_DEBUG,
+	CFLAGS_OPTIMIZE, LDFLAGS_DEFAULT, LDFLAGS_DEBUG, and LDFLAGS_OPTIMIZE.
+	Remove unused LD_FLAGS subst.
+	* unix/tcl.m4: Update from Tcl.
+	* win/Makefile.in: Set CFLAGS to @CFLAGS@ and @CFLAGS_DEFAULT@.
+	Set LDFLAGS to @LDFLAGS@ and @LDFLAGS_DEFAULT@.
+	* win/configure: Regen.
+	* win/configure.in: Don't set CFLAGS or LDFLAGS, instead subst
+	CFLAGS_DEFAULT and LDFLAGS_DEFAULT into the Makefile.
+	* win/tcl.m4: Update from Tcl.
+
+2001-06-22  Mo DeJong  <mdejong@redhat.com>
+
+	* win/configure:
+	* win/tcl.m4: Update From Tcl.
+
+2001-06-21  eric melski  <ericm@interwoven.com>
+
+	* doc/colors.n: Corrected bogus documentation with respect to
+	several shades of blue, all of which were listed as RGB 0 0 0.
+	[Bug #432104].
+
+2001-06-14  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/demos/floor.tcl, library/demos/filebox.tcl,
+	* library/demos/clrpick.tcl, library/demos/vscale.tcl,
+	* library/demos/twind.tcl, library/demos/ruler.tcl, 
+	* library/demos/plot.tcl, library/demos/items.tcl, 
+	* library/demos/hscale.tcl, library/demos/ctext.tcl,
+	* library/demos/cscroll.tcl, library/demos/arrow.tcl,
+	* library/xmfbox.tcl, library/msgbox.tcl,
+	* library/clrpick.tcl, library/bgerror.tcl: Braced expressions.
+
+2001-06-06  Mo DeJong  <mdejong@redhat.com>
+
+	* win/configure: Regen.
+	* win/configure.in: Handle the --prefix option correctly
+	it should default to /usr/local like the unix version.
+
+2001-06-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/selection.n: 
+	* doc/clipboard.n: added SEE ALSOs to cross-reference selection
+	and clipboard, with extra note for clipboard command in selection
+	docs.  [Patch #422256]
+
+	* unix/tkUnixFont.c: Corrected support for iso10646 (X11 Unicode)
+	fonts on Unix. This adds a ucs-2be (UCS-2 Big Endian) encoding in
+	Tk on Unix that is used for those fonts (X11 requires
+	big-endianness). (welch) [Patch #406411; Bug #220890 #220899]
+	This differs from the 8.3.3 patch by not adding ucs-2be in the
+	preferred encodingList (seems works fine without).
+	Added alias for jisx0201* fonts to jis0201 encoding. [Bug #414033]
+
+2001-05-30  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinKey.c (TkpSetKeycodeAndState): removed old debug info
+
+2001-05-29  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinX.c: moved the initialization of tkPlatformId from
+	TkWinXInit to TkWinGetPlatformId because static builds could call
+	it before it was initialized. [Bug #427278]
+
+2001-05-28  Peter Spjuth  <peter.spjuth@space.se>
+
+	* generic/tkFrame.c:
+	* generic/tkWindow.c:
+	* tests/frame.test: Upgraded frame to use the newer TK_OPTION
+	style when processing configuration options. Some cleanup of
+	bad comments and bad code. [part of patch #420861]
+
+2001-05-23  Mo DeJong  <mdejong@redhat.com>
+
+	* unix/configure:
+	* unix/tcl.m4:
+	* win/configure:
+	* win/tcl.m4: Sync from Tcl sources.
+
+2001-05-21  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tcl.m4: sync'ed up wih Tcl tcl.m4. [Bug #419812]
+
+	* doc/TkInitStubs.3:
+	* generic/tk.h:
+	* generic/tkStubLib.c: CONST'ified Tk_InitStubs to match CONST
+	changes to Tcl_PkgRequireEx.
+
+2001-05-21  Todd M. Helfter  <tmh@purdue.edu>
+
+	* doc/menubutton.n:
+	* generic/tkMenubutton.c:
+	* generic/tkMenubutton.h:
+	* mac/tkMacMenubutton.c:
+	* tests/menubut.test:
+	* unix/tkUnixMenubu.c: Implementation of TIP #11, the addition of
+	a -compound option to the menubutton allowing text and an image to
+	be displayed at the same time.  This behavior is identical to the
+	behavior of the button widget.
+
+2001-05-16  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* doc/console.n: Added - was erroneously placed in Tcl before...
+
+2001-04-25  Mo DeJong  <mdejong@redhat.com>
+
+	* unix/configure: Regen.
+	* unix/tcl.m4: Update from Tcl.
+	* win/configure: Regen.
+	* win/tcl.m4: Update from Tcl.
+
+2001-04-25  Mo DeJong  <mdejong@redhat.com>
+
+	* unix/configure: Regen.
+	* unix/configure.in: Use $@ in MAKE_LIB and MAKE_STUB_LIB
+	commands instead of using a delayed subst variable. Replace
+	instances of STUB_LIB_FILE with TK_STUB_LIB_FILE.
+
+2001-04-25  Mo DeJong  <mdejong@redhat.com>
+
+	* unix/Makefile.in: Use TCL_STUB_LIB_FILE instead of STUB_LIB_FILE.
+	* unix/configure: Regen.
+	* unix/configure.in: Don't subst STUB_LIB_FILE, use TCL_STUB_LIB_FILE
+	instead.
+
+2001-04-12  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* generic/tkImage.c (Tk_ImageObjCmd,DeleteImage): Better detection
+	of deletion when world is falling apart. [Bug #220819]
+
+2001-04-04  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinMenu.c (TkWinHandleMenuEvent): corrected reseting of
+	service mode to only occur when it was set. [Bug #220948]
+
+2001-04-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/winClipboard.test: improved results for understanding when
+	tests fail.
+
+	* tests/winDialog.test: string totitle'd some results that
+	expected [pwd] to return a capital drive letter.
+
+	* tests/cursor.test: changed tests to use 'heart' cursor because
+	'arrow' on windows has a pre-skewed use count.
+
+	* win/tkWinDialog.c (GetFileNameA): initialize multi to 0.
+
+2001-04-02  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/configure:
+	* win/tcl.m4 (SHLIB_LD): added -incremental:no. [Bug #219381]
+
+	* generic/tkMenu.c (TkInvokeMenu): checked for menu deletion
+	before calling associated menu entry command.  [Bug #220821]
+
+	* doc/image.n: added warning about names chosen for images.
+
+	* generic/tkImgPhoto.c (ImgPhotoCmd): corrected the src and dest
+	values for $imageName put when -format and -to are used.
+	[Bug #232741]
+
+	* tests/listbox.test: added test listbox-27.1, delete during
+	scrollbar update
+	* generic/tkListbox.c (DestroyListbox, ListboxEventProc):
+	corrected listbox to make proper use of Tcl_EventuallyFree and
+	protect against unusual listbox deletion.
+
+	* tests/entry.test: added tests entry-20.*, delete during widget
+	activity
+	* generic/tkEntry.c (DestroyEntry, EntryEventProc): fixed the
+	entry widget to survive deletion while processing scrollbar
+	updates and validation.
+
+	* tests/canvas.test: test of canvas delete during event
+	* generic/tkCanvas.c (DestroyCanvas, CanvasEventProc): fixed the
+	canvas to survive deletion during event processing. [Bug #228024]
+
+2001-04-01  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* README:
+	* mac/README: updated patchlevel to 8.4a3 and corrected links and
+	notes.
+
+	* generic/tk.h:
+	* unix/configure.in (TK_PATCH_LEVEL): 
+	* unix/configure:
+	* unix/tk.spec:
+	* win/configure.in (TK_PATCH_LEVEL): 
+	* win/configure: updated patchlevel to 8.4a3
+
+2001-03-30  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/safe.test: added note about correcting failures in
+	safe.test.
+	* library/tk.tcl: moved package require msgcat inside if case to
+	not be used in safe interps.
+
+	* win/makefile.vc:
+	* win/configure:
+	* win/tcl.m4: added imm32.lib to LIBS_GUI for Tk IME support.
+	* win/tkWinInt.h:
+	* win/tkWinKey.c:
+	* win/tkWinX.c: added support for changing IME on the fly in
+	Windows (2000).  (lam) [Patch #402993]
+	
+	* tests/bind.test (bind-22.18):
+	* generic/tkBind.c (NameToWindow): handled the error case where a
+	valid-looking but invalid identifier could be passed in certain
+	event generate options causing a crash. [Bug #411307]
+
+	* win/tkWinWm.c (UpdateWrapper): ensured that the passed in winPtr
+	had an existent window to operate on. [Bug #409172]
+
+	* win/Makefile.in (install-*): improved install-* targets to use
+	their base build dependency.
+
+	* generic/tkImage.c (Tk_ImageObjCmd, EventuallyDeleteImage):
+	added casts to allow compiling on Windows with debbuging.
+
+2001-03-29  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/msgs/de.msg: fixed translations. [Patch #403525]
+
+	* doc/canvas.n: Noted ability to specify coords as a list in the
+	docs. (techentin) [Patch #403660]
+
+	* tests/canvas.test: added test case to check obj conversion
+	* generic/tkObj.c (UpdateStringOfMM, SetMMFromAny): better
+	obj-aware screen distances.  (pgbaum, hobbs) [Patch #403327]
+
+	* library/bgerror.tcl (bgerror): allow focus into details window
+	for Windows C&P to work. [Bug #220929]
+
+	* library/tk.tcl: put a catch around adding <hpBackTab> to the
+	<<PrevWindow>> virtual event as it doesn't seem to work on all HP
+	systems. [Bug #411669]
+
+	* library/tkfbox.tcl: fixed selecting directories and single files
+	with spaces using tk_getOpenFile -multiple 1. [Bug #411640]
+
+	* win/tkWinDialog.c (GetFileNameA): added support for -multiple to
+	ascii-based tk_getOpenFile (Win9*). (haneef) [Patch #403047]
+	(GetFileNameW): increased number of files that could be returned
+	by tk_getOpenFile -multiple. [Patch #412042]
+
+2001-03-29  Mo DeJong  <mdejong@redhat.com>
+
+	* library/entry.tcl (tkEntryMouseSelect):
+	* library/text.tcl (tkTextSelectTo): When
+	the mouse is dragged with the button down,
+	move the insertion cursor to the current
+	mouse position.
+	* tests/event.test: Add a series of tests
+	for event generation. Add tests for selection,
+	check the position of the insertion cursor.
+
+2001-03-28  Jeff Hobbs  <jeffh@gimlet.activestate.com>
+
+	* unix/configure:
+	* unix/tcl.m4: corrected IRIX-5.x config to not use -n32.
+ 	(english) [Patch 403626]
+
+2001-03-28  Don Porter  <dgp@users.sourceforge.net>
+
+	* tests/focus.test (focus-6.1):
+	* tests/macEmbed.test (unixEmbed-5.1):
+	* tests/macMenu.test (macMenu-21.3):
+	* tests/menu.test (menu-27.1):
+	* tests/unixEmbed.test (unixEmbed-8.2):
+	* tests/unixWm.test (unixWm-50.4):  Replaced all [load {} tk]
+	in Tk test suite with [load {} Tk].  [Bug 220940, Patch 411952]
+
 2001-03-12  Don Porter  <dgp@users.sourceforge.net>
 
 	BRANCH dgp-privates-into-namespace:

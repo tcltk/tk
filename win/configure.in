@@ -2,19 +2,36 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.24 2000/10/31 01:28:26 davidg Exp $
+# RCS: @(#) $Id: configure.in,v 1.24.4.1 2001/07/03 20:01:10 dgp Exp $
 
 AC_INIT(../generic/tk.h)
 
 TK_VERSION=8.4
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=4
-TK_PATCH_LEVEL="a2"
+TK_PATCH_LEVEL="a3"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
+
+#------------------------------------------------------------------------
+# Handle the --prefix=... option
+#------------------------------------------------------------------------
+
+if test "${prefix}" = "NONE"; then
+    prefix=/usr/local
+fi
+if test "${exec_prefix}" = "NONE"; then
+    exec_prefix=$prefix
+fi
 
 #------------------------------------------------------------------------
 # Standard compiler checks
 #------------------------------------------------------------------------
+
+# If the user did not set CFLAGS, set it now to keep
+# the AC_PROG_CC macro from adding "-g -O2".
+if test "${CFLAGS+set}" != "set" ; then
+    CFLAGS=""
+fi
 
 AC_PROG_CC
 
@@ -89,8 +106,6 @@ AC_SUBST(MAN2TCLFLAGS)
 
 SC_ENABLE_SYMBOLS
 
-CFLAGS=${CFLAGS_DEFAULT}
-LDFLAGS=${LDFLAGS_DEFAULT}
 TK_DBGX=${DBGX}
 
 #--------------------------------------------------------------------
@@ -152,18 +167,18 @@ CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 
 if test "$SHARED_BUILD" = 0 -o $TCL_NEEDS_EXP_FILE = 0; then
     if test "${DBGX}" = "d"; then
-        RC_DEFINES="-d STATIC_BUILD -d DEBUG"
+        RC_DEFINES="${RC_DEFINE} STATIC_BUILD ${RC_DEFINE} DEBUG"
     else
-        RC_DEFINES="-d STATIC_BUILD"
+        RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
     fi
     TK_RES=""
 else
     if test "${DBGX}" = "d"; then
-        RC_DEFINES="-d DEBUG"
+        RC_DEFINES="${RC_DEFINE} DEBUG"
     else
         RC_DEFINES=""
     fi
-    TK_RES=tk.res
+    TK_RES='tk.$(RES)'
 fi
 
 AC_SUBST(TK_VERSION)
@@ -199,6 +214,7 @@ AC_SUBST(TK_SHARED_BUILD)
 AC_SUBST(PATHTYPE)
 AC_SUBST(CYGPATH)
 AC_SUBST(VPSEP)
+AC_SUBST(CFLAGS_DEFAULT)
 AC_SUBST(CFLAGS_DEBUG)
 AC_SUBST(CFLAGS_OPTIMIZE)
 AC_SUBST(CFLAGS_WARNING)
@@ -210,7 +226,7 @@ AC_SUBST(SHLIB_CFLAGS)
 AC_SUBST(SHLIB_SUFFIX)
 AC_SUBST(CC_OBJNAME)
 AC_SUBST(CC_EXENAME)
-AC_SUBST(LDFLAGS)
+AC_SUBST(LDFLAGS_DEFAULT)
 AC_SUBST(LDFLAGS_DEBUG)
 AC_SUBST(LDFLAGS_OPTIMIZE)
 AC_SUBST(LDFLAGS_CONSOLE)
@@ -221,6 +237,7 @@ AC_SUBST(RC)
 AC_SUBST(RC_OUT)
 AC_SUBST(RC_TYPE)
 AC_SUBST(RC_INCLUDE)
+AC_SUBST(RC_DEFINE)
 AC_SUBST(RC_DEFINES)
 AC_SUBST(TK_RES)
 AC_SUBST(RES)

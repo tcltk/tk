@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.5 1999/05/25 01:31:06 stanton Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.5.14.1 2001/07/03 20:01:09 dgp Exp $
  */
 
 /*
@@ -95,13 +95,13 @@ TkIntXlibStubs *tkIntXlibStubsPtr;
 #undef Tk_InitStubs
 #endif
 
-char *
+CONST char *
 Tk_InitStubs(interp, version, exact)
     Tcl_Interp *interp;
     char *version;
     int exact;
 {
-    char *actualVersion;
+    CONST char *actualVersion;
 
     actualVersion = Tcl_PkgRequireEx(interp, "Tk", version, exact,
 		(ClientData *) &tkStubsPtr);

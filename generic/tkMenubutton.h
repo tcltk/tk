@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.h,v 1.6 2000/11/22 01:49:38 ericm Exp $
+ * RCS: @(#) $Id: tkMenubutton.h,v 1.6.2.1 2001/07/03 20:01:08 dgp Exp $
  */
 
 #ifndef _TKMENUBUTTON
@@ -23,6 +23,15 @@
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLEXPORT
 #endif
+
+/*
+ * Legal values for the "compound" field of TkButton records.
+ */
+
+enum compound {
+    COMPOUND_BOTTOM, COMPOUND_CENTER, COMPOUND_LEFT, COMPOUND_NONE,
+        COMPOUND_RIGHT, COMPOUND_TOP
+};
 
 /*
  * Legal values for the "orient" field of TkMenubutton records.
@@ -161,6 +170,10 @@ typedef struct {
     /*
      * Miscellaneous information:
      */
+
+    int compound;               /* Value of -compound option; specifies whether
+                                 * the button should show both an image and
+                                 * text, and, if so, how. */
 
     enum direction direction;	/* Direction for where to pop the menu.
     				 * Valid directions are "above", "below",

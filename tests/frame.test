@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: frame.test,v 1.4 1999/12/14 06:53:13 hobbs Exp $
+# RCS: @(#) $Id: frame.test,v 1.4.6.1 2001/07/03 20:01:09 dgp Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -105,7 +105,7 @@ foreach test {
     {-highlightcolor #123456 #123456 non-existent
 	    {unknown color name "non-existent"}}
     {-highlightthickness 6 6 badValue {bad screen distance "badValue"}}
-    {-relief ridge ridge badValue {bad relief type "badValue": must be flat, groove, raised, ridge, solid, or sunken}}
+    {-relief ridge ridge badValue {bad relief "badValue": must be flat, groove, raised, ridge, solid, or sunken}}
     {-takefocus "any string" "any string" {} {}}
     {-width 32 32 badValue {bad screen distance "badValue"}}
 } {
@@ -178,11 +178,22 @@ test frame-2.9 {toplevel configuration options} {
     catch {destroy .t}
     list [catch {toplevel .t -width 200 -height 100 -screen bogus} msg] $msg
 } {1 {couldn't connect to display "bogus"}}
+test frame-2.10 {toplevel configuration options} {
+    catch {destroy .t}
+    catch {destroy .x}
+    toplevel .t -container 1 -width 300 -height 120
+    wm geometry .t +0+0
+    set result [list \
+            [catch {toplevel .x -container 1 -use [winfo id .t]} msg] $msg]
+    destroy .t .x
+    set result
+} {1 {A window cannot have both the -use and the -container option set.}}
+
 catch {destroy .t}
 toplevel .t -width 300 -height 150
 wm geometry .t +0+0
 update
-set i 8
+set i 11
 foreach test {
     {-background #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"}}
@@ -195,17 +206,17 @@ foreach test {
     {-highlightcolor #123456 #123456 non-existent
 	    {unknown color name "non-existent"}}
     {-highlightthickness 3 3 badValue {bad screen distance "badValue"}}
-    {-relief ridge ridge badValue {bad relief type "badValue": must be flat, groove, raised, ridge, solid, or sunken}}
+    {-relief ridge ridge badValue {bad relief "badValue": must be flat, groove, raised, ridge, solid, or sunken}}
     {-width 32 32 badValue {bad screen distance "badValue"}}
 } {
     set name [lindex $test 0]
-    test frame-2.$i {frame configuration options} {
+    test frame-2.$i {toplevel configuration options} {
 	.t configure $name [lindex $test 1]
 	lindex [.t configure $name] 4
     } [lindex $test 2]
     incr i
     if {[lindex $test 3] != ""} {
-	test frame-2.$i {frame configuration options} {
+	test frame-2.$i {toplevel configuration options} {
 	    list [catch {.t configure $name [lindex $test 3]} msg] $msg
 	} [list 1 [lindex $test 4]]
     }

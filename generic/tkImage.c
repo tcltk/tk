@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.10 2000/11/29 15:47:05 dkf Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.10.2.1 2001/07/03 20:01:08 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -69,7 +69,9 @@ typedef struct ImageMaster {
 				 * entry). */
     Image *instancePtr;		/* Pointer to first in list of instances
 				 * derived from this name. */
-    int deleted;		/* Flag set when image is being deleted */
+    int deleted;		/* Flag set when image is being deleted. */
+    TkWindow *winPtr;		/* Main window of interpreter (used to
+				 * detect when the world is falling apart.) */
 } ImageMaster;
 
 typedef struct ThreadSpecificData {
@@ -254,6 +256,7 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 		masterPtr->hPtr = hPtr;
 		masterPtr->instancePtr = NULL;
 		masterPtr->deleted = 0;
+		masterPtr->winPtr = winPtr->mainPtr->winPtr;
 		Tcl_SetHashValue(hPtr, masterPtr);
 	    } else {
 		/*
@@ -293,18 +296,18 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 		}
 		args[objc] = NULL;
 	    }
-	    Tcl_Preserve(masterPtr);
+	    Tcl_Preserve((ClientData) masterPtr);
 	    if ((*typePtr->createProc)(interp, name, objc,
 		    args, typePtr, (Tk_ImageMaster) masterPtr,
 		    &masterPtr->masterData) != TCL_OK) {
 		EventuallyDeleteImage(masterPtr);
-		Tcl_Release(masterPtr);
+		Tcl_Release((ClientData) masterPtr);
 		if (oldimage) {
 		    ckfree((char *) args);
 		}
 		return TCL_ERROR;
 	    }
-	    Tcl_Release(masterPtr);
+	    Tcl_Release((ClientData) masterPtr);
 	    if (oldimage) {
 		ckfree((char *) args);
 	    }
@@ -908,7 +911,9 @@ DeleteImage(masterPtr)
 	(*typePtr->deleteProc)(masterPtr->masterData);
     }
     if (masterPtr->instancePtr == NULL) {
-	Tcl_DeleteHashEntry(masterPtr->hPtr);
+        if ((masterPtr->winPtr->flags & TK_ALREADY_DEAD) == 0) {
+	    Tcl_DeleteHashEntry(masterPtr->hPtr);
+	}
 	ckfree((char *) masterPtr);
     }
 }
@@ -937,7 +942,8 @@ EventuallyDeleteImage(masterPtr)
 {
     if (!masterPtr->deleted) {
 	masterPtr->deleted = 1;
-	Tcl_EventuallyFree(masterPtr, (Tcl_FreeProc *)DeleteImage);
+	Tcl_EventuallyFree((ClientData) masterPtr,
+		(Tcl_FreeProc *)DeleteImage);
     }
 }
 

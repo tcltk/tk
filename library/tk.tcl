@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.27.4.1 2001/02/28 23:29:56 dgp Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.27.4.2 2001/07/03 20:01:09 dgp Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -13,11 +13,11 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Insist on running with compatible versions of Tcl and Tk.
-
 package require -exact Tk 8.4
 package require -exact Tcl 8.4
-package require msgcat
+
 if { ![interp issafe] } {
+    package require msgcat
     ::msgcat::mcload [file join $::tk_library msgs]
 }
 
@@ -147,6 +147,38 @@ proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
 	    grab -global $oldGrab
 	} else {
 	    grab $oldGrab
+	}
+    }
+}
+
+# ::tk::GetSelection --
+#   This tries to obtain the default selection.  On Unix, we first try
+#   and get a UTF8_STRING, a type supported by modern Unix apps for
+#   passing Unicode data safely.  We fall back on the default STRING
+#   type otherwise.  On Windows, only the STRING type is necessary.
+# Arguments:
+#   w	The widget for which the selection will be retrieved.
+#	Important for the -displayof property.
+#   sel	The source of the selection (PRIMARY or CLIPBOARD)
+# Results:
+#   Returns the selection, or an error if none could be found
+#
+if {[string equal $tcl_platform(platform) "unix"]} {
+    proc ::tk::GetSelection {w {sel PRIMARY}} {
+	if {[catch {selection get -displayof $w -selection $sel \
+		-type UTF8_STRING} txt] \
+		&& [catch {selection get -displayof $w -selection $sel} txt]} {
+	    return -code error "could not find default selection"
+	} else {
+	    return $txt
+	}
+    }
+} else {
+    proc ::tk::GetSelection {w {sel PRIMARY}} {
+	if {[catch {selection get -displayof $w -selection $sel} txt]} {
+	    return -code error "could not find default selection"
+	} else {
+	    return $txt
 	}
     }
 }
@@ -291,7 +323,10 @@ switch $::tcl_platform(platform) {
 	    switch $tcl_platform(os) {
 		"IRIX"  -
 		"Linux" { event add <<PrevWindow>> <ISO_Left_Tab> }
-		"HP-UX" { event add <<PrevWindow>> <hpBackTab> }
+		"HP-UX" {
+		    # This seems to be correct on *some* HP systems.
+		    catch { event add <<PrevWindow>> <hpBackTab> }
+		}
 	    }
 	}
 	trace variable ::tk_strictMotif w ::tk::EventMotifBindings
@@ -311,7 +346,6 @@ switch $::tcl_platform(platform) {
 	event add <<Clear>> <Clear>
     }
 }
-
 # ----------------------------------------------------------------------
 # Read in files that define all of the class bindings.
 # ----------------------------------------------------------------------
@@ -327,7 +361,6 @@ if {[string compare $::tcl_platform(platform) "macintosh"] && \
     source [file join $::tk_library spinbox.tcl]
     source [file join $::tk_library text.tcl]
 }
-
 # ----------------------------------------------------------------------
 # Default bindings for keyboard traversal.
 # ----------------------------------------------------------------------

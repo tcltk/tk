@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.13.4.1 2001/02/28 23:29:55 dgp Exp $
-# $Id: bgerror.tcl,v 1.13.4.1 2001/02/28 23:29:55 dgp Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.13.4.2 2001/07/03 20:01:09 dgp Exp $
+# $Id: bgerror.tcl,v 1.13.4.2 2001/07/03 20:01:09 dgp Exp $
 
 option add *ErrorDialog.function.text [::msgcat::mc "Save To Log"] \
 	widgetDefault
@@ -172,6 +172,7 @@ proc ::bgerror err {
     pack $W.text -side left -expand yes -fill both
     $W.text insert 0.0 "$err\n$info"
     $W.text mark set insert 0.0
+    bind $W.text <ButtonPress-1> { focus %W }
     $W.text configure -state disabled
 
     # 2. Fill the top part with bitmap and message
@@ -237,10 +238,10 @@ proc ::bgerror err {
     set parent [winfo parent	.bgerrorDialog]
     set width  [winfo reqwidth	.bgerrorDialog]
     set height [winfo reqheight	.bgerrorDialog]
-    set x [expr ([winfo screenwidth .bgerrorDialog]  - $width )/2 - \
-	    [winfo vrootx $parent]]
-    set y [expr ([winfo screenheight .bgerrorDialog] - $height)/2 - \
-	    [winfo vrooty $parent]]
+    set x [expr {([winfo screenwidth .bgerrorDialog]  - $width )/2 - \
+	    [winfo vrootx $parent]}]
+    set y [expr {([winfo screenheight .bgerrorDialog] - $height)/2 - \
+	    [winfo vrooty $parent]}]
     .bgerrorDialog configure -width $width
     wm geometry .bgerrorDialog +$x+$y
     wm deiconify .bgerrorDialog

@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.22 2000/11/21 16:18:05 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.22.2.1 2001/07/03 20:01:08 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -963,7 +963,7 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	    }
 	    if ((*imageFormat->stringReadProc)(interp, data,
 		    format, (Tk_PhotoHandle) masterPtr,
-		    0, 0, imageWidth, imageHeight, options.toX, options.toY)
+		    options.toX, options.toY, imageWidth, imageHeight, 0, 0)
 		    != TCL_OK) {
 		return TCL_ERROR;
 	    }

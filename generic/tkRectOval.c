@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkRectOval.c,v 1.7 2000/04/19 22:20:45 ericm Exp $
+ * RCS: @(#) $Id: tkRectOval.c,v 1.7.6.1 2001/07/03 20:01:09 dgp Exp $
  */
 
 #include <stdio.h>
@@ -142,11 +142,11 @@ static Tk_ConfigSpec configSpecs[] = {
 static void		ComputeRectOvalBbox _ANSI_ARGS_((Tk_Canvas canvas,
 			    RectOvalItem *rectOvalPtr));
 static int		ConfigureRectOval _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
-			    Tcl_Obj *CONST argv[], int flags));
+			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
+			    Tcl_Obj *CONST objv[], int flags));
 static int		CreateRectOval _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *CONST argv[]));
+			    int objc, Tcl_Obj *CONST objv[]));
 static void		DeleteRectOval _ANSI_ARGS_((Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display));
 static void		DisplayRectOval _ANSI_ARGS_((Tk_Canvas canvas,
@@ -157,8 +157,8 @@ static int		OvalToArea _ANSI_ARGS_((Tk_Canvas canvas,
 static double		OvalToPoint _ANSI_ARGS_((Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *pointPtr));
 static int		RectOvalCoords _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
-			    Tcl_Obj *CONST argv[]));
+			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
+			    Tcl_Obj *CONST objv[]));
 static int		RectOvalToPostscript _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass));
 static int		RectToArea _ANSI_ARGS_((Tk_Canvas canvas,
@@ -243,31 +243,28 @@ Tk_ItemType tkOvalType = {
  */
 
 static int
-CreateRectOval(interp, canvas, itemPtr, argc, argv)
+CreateRectOval(interp, canvas, itemPtr, objc, objv)
     Tcl_Interp *interp;			/* For error reporting. */
     Tk_Canvas canvas;			/* Canvas to hold new item. */
     Tk_Item *itemPtr;			/* Record to hold new item;  header
 					 * has been initialized by caller. */
-    int argc;				/* Number of arguments in argv. */
-    Tcl_Obj *CONST argv[];		/* Arguments describing rectangle. */
+    int objc;				/* Number of arguments in objv. */
+    Tcl_Obj *CONST objv[];		/* Arguments describing rectangle. */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
-    int i;
+    int i = 4;
 
 
-    if (argc==1) {
+    if (objc == 1) {
 	i = 1;
-    } else {
-	char *arg = Tcl_GetStringFromObj(argv[1], NULL);
-	if ((argc>1) && (arg[0] == '-')
-		&& (arg[1] >= 'a') && (arg[1] <= 'z')) {
+    } else if (objc > 1) {
+	char *arg = Tcl_GetString(objv[1]);
+	if ((arg[0] == '-') && (arg[1] >= 'a') && (arg[1] <= 'z')) {
 	    i = 1;
-	} else {
-	    i = 4;
 	}
     }
 
-    if (argc < i) {
+    if (objc < i) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
 		Tk_PathName(Tk_CanvasTkwin(canvas)), " create ",
 		itemPtr->typePtr->name, " x1 y1 x2 y2 ?options?\"",
@@ -296,10 +293,10 @@ CreateRectOval(interp, canvas, itemPtr, argc, argv)
      * Process the arguments to fill in the item record.
      */
 
-    if ((RectOvalCoords(interp, canvas, itemPtr, i, argv) != TCL_OK)) {
+    if ((RectOvalCoords(interp, canvas, itemPtr, i, objv) != TCL_OK)) {
 	goto error;
     }
-    if (ConfigureRectOval(interp, canvas, itemPtr, argc-i, argv+i, 0)
+    if (ConfigureRectOval(interp, canvas, itemPtr, objc-i, objv+i, 0)
 	    == TCL_OK) {
 	return TCL_OK;
     }
@@ -328,19 +325,19 @@ CreateRectOval(interp, canvas, itemPtr, argc, argv)
  */
 
 static int
-RectOvalCoords(interp, canvas, itemPtr, argc, argv)
+RectOvalCoords(interp, canvas, itemPtr, objc, objv)
     Tcl_Interp *interp;			/* Used for error reporting. */
     Tk_Canvas canvas;			/* Canvas containing item. */
     Tk_Item *itemPtr;			/* Item whose coordinates are to be
 					 * read or modified. */
-    int argc;				/* Number of coordinates supplied in
-					 * argv. */
-    Tcl_Obj *CONST argv[];		/* Array of coordinates: x1, y1,
+    int objc;				/* Number of coordinates supplied in
+					 * objv. */
+    Tcl_Obj *CONST objv[];		/* Array of coordinates: x1, y1,
 					 * x2, y2, ... */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
 
-    if (argc == 0) {
+    if (objc == 0) {
 	Tcl_Obj *obj = Tcl_NewObj();
 	Tcl_Obj *subobj = Tcl_NewDoubleObj(rectOvalPtr->bbox[0]);
 	Tcl_ListObjAppendElement(interp, obj, subobj);
@@ -351,26 +348,26 @@ RectOvalCoords(interp, canvas, itemPtr, argc, argv)
 	subobj = Tcl_NewDoubleObj(rectOvalPtr->bbox[3]);
 	Tcl_ListObjAppendElement(interp, obj, subobj);
 	Tcl_SetObjResult(interp, obj);
-    } else if ((argc == 1)||(argc == 4)) {
- 	if (argc==1) {
-	    if (Tcl_ListObjGetElements(interp, argv[0], &argc,
-		    (Tcl_Obj ***) &argv) != TCL_OK) {
+    } else if ((objc == 1)||(objc == 4)) {
+ 	if (objc==1) {
+	    if (Tcl_ListObjGetElements(interp, objv[0], &objc,
+		    (Tcl_Obj ***) &objv) != TCL_OK) {
 		return TCL_ERROR;
-	    } else if (argc != 4) {
+	    } else if (objc != 4) {
 		char buf[64 + TCL_INTEGER_SPACE];
 
-		sprintf(buf, "wrong # coordinates: expected 0 or 4, got %d", argc);
+		sprintf(buf, "wrong # coordinates: expected 0 or 4, got %d", objc);
 		Tcl_SetResult(interp, buf, TCL_VOLATILE);
 		return TCL_ERROR;
 	    }
 	}
-	if ((Tk_CanvasGetCoordFromObj(interp, canvas, argv[0],
+	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0],
  		    &rectOvalPtr->bbox[0]) != TCL_OK)
-		|| (Tk_CanvasGetCoordFromObj(interp, canvas, argv[1],
+		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1],
 		    &rectOvalPtr->bbox[1]) != TCL_OK)
-		|| (Tk_CanvasGetCoordFromObj(interp, canvas, argv[2],
+		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[2],
 			&rectOvalPtr->bbox[2]) != TCL_OK)
-		|| (Tk_CanvasGetCoordFromObj(interp, canvas, argv[3],
+		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[3],
 			&rectOvalPtr->bbox[3]) != TCL_OK)) {
 	    return TCL_ERROR;
 	}
@@ -378,7 +375,7 @@ RectOvalCoords(interp, canvas, itemPtr, argc, argv)
     } else {
 	char buf[64 + TCL_INTEGER_SPACE];
 	
-	sprintf(buf, "wrong # coordinates: expected 0 or 4, got %d", argc);
+	sprintf(buf, "wrong # coordinates: expected 0 or 4, got %d", objc);
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	return TCL_ERROR;
     }
@@ -406,12 +403,12 @@ RectOvalCoords(interp, canvas, itemPtr, argc, argv)
  */
 
 static int
-ConfigureRectOval(interp, canvas, itemPtr, argc, argv, flags)
+ConfigureRectOval(interp, canvas, itemPtr, objc, objv, flags)
     Tcl_Interp *interp;		/* Used for error reporting. */
     Tk_Canvas canvas;		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr;		/* Rectangle item to reconfigure. */
-    int argc;			/* Number of elements in argv.  */
-    Tcl_Obj *CONST argv[];	/* Arguments describing things to configure. */
+    int objc;			/* Number of elements in objv.  */
+    Tcl_Obj *CONST objv[];	/* Arguments describing things to configure. */
     int flags;			/* Flags to pass to Tk_ConfigureWidget. */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
@@ -426,7 +423,7 @@ ConfigureRectOval(interp, canvas, itemPtr, argc, argv, flags)
 
     tkwin = Tk_CanvasTkwin(canvas);
 
-    if (Tk_ConfigureWidget(interp, tkwin, configSpecs, argc, (char **) argv,
+    if (Tk_ConfigureWidget(interp, tkwin, configSpecs, objc, (char **) objv,
 	    (char *) rectOvalPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
 	return TCL_ERROR;
     }

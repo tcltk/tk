@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.5.4.1 2001/02/28 23:29:56 dgp Exp $
+# RCS: @(#) $Id: menu.test,v 1.5.4.2 2001/07/03 20:01:09 dgp Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -2300,7 +2300,7 @@ test menu-26.1 {DestroyMenuHashTable} {
 test menu-27.1 {GetMenuHashTable} {
     catch {interp destroy testinterp}
     interp create testinterp
-    load {} tk testinterp
+    load {} Tk testinterp
     list [catch {interp eval testinterp {menu .m1}} msg] $msg [interp delete testinterp]
 } {0 .m1 {}}
 

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.3 2000/12/13 19:44:15 hobbs Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.3.2.1 2001/07/03 20:01:08 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -64,6 +64,7 @@ static void		DupPixelInternalRep _ANSI_ARGS_((Tcl_Obj *srcPtr,
 			    Tcl_Obj *copyPtr));
 static void		FreeMMInternalRep _ANSI_ARGS_((Tcl_Obj *objPtr));
 static void		FreePixelInternalRep _ANSI_ARGS_((Tcl_Obj *objPtr));
+static void		UpdateStringOfMM _ANSI_ARGS_((Tcl_Obj *objPtr));
 static int		SetMMFromAny _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tcl_Obj *objPtr));
 static int		SetPixelFromAny _ANSI_ARGS_((Tcl_Interp *interp,
@@ -95,7 +96,7 @@ static Tcl_ObjType mmObjType = {
     "mm",			/* name */
     FreeMMInternalRep,		/* freeIntRepProc */
     DupMMInternalRep,		/* dupIntRepProc */
-    NULL,			/* updateStringProc */
+    UpdateStringOfMM,		/* updateStringProc */
     SetMMFromAny		/* setFromAnyProc */
 };
 
@@ -473,6 +474,48 @@ DupMMInternalRep(srcPtr, copyPtr)
 /*
  *----------------------------------------------------------------------
  *
+ * UpdateStringOfMM --
+ *
+ *      Update the string representation for a pixel Tcl_Obj
+ *      this function is only called, if the pixel Tcl_Obj has no unit,
+ *      because with units the string representation is created by
+ *      SetMMFromAny
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      The object's string is set to a valid string that results from
+ *      the double-to-string conversion.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+UpdateStringOfMM(objPtr)
+    register Tcl_Obj *objPtr;   /* pixel obj with string rep to update. */
+{
+    MMRep *mmPtr;
+    char buffer[TCL_DOUBLE_SPACE];
+    register int len;
+
+    mmPtr = (MMRep *) objPtr->internalRep.otherValuePtr;
+    /* assert( mmPtr->units == -1 && objPtr->bytes == NULL ); */
+    if ((mmPtr->units != -1) || (objPtr->bytes != NULL)) {
+        panic("UpdateStringOfMM: false precondition");
+    }
+
+    Tcl_PrintDouble((Tcl_Interp *) NULL, mmPtr->value, buffer);
+    len = strlen(buffer);
+
+    objPtr->bytes = (char *) ckalloc((unsigned) len + 1);
+    strcpy(objPtr->bytes, buffer);
+    objPtr->length = len;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * SetMMFromAny --
  *
  *	Attempt to generate a mm internal form for the Tcl object
@@ -501,11 +544,38 @@ SetMMFromAny(interp, objPtr)
     int units;
     MMRep *mmPtr;
 
-    if (objPtr->typePtr == &tclDoubleType) {
-	/* optimize for speed reasons */
+    static Tcl_ObjType *tclDoubleObjType = NULL;
+    static Tcl_ObjType *tclIntObjType = NULL;
+
+    if (tclDoubleObjType == NULL) {
+	/*
+	 * Cache the object types for comaprison below.
+	 * This allows optimized checks for standard cases.
+	 */
+
+	tclDoubleObjType = Tcl_GetObjType("double");
+	tclIntObjType    = Tcl_GetObjType("int");
+    }
+
+    if (objPtr->typePtr == tclDoubleObjType) {
 	Tcl_GetDoubleFromObj(interp, objPtr, &d);
 	units = -1;
+    } else if (objPtr->typePtr == tclIntObjType) {
+	Tcl_GetIntFromObj(interp, objPtr, &units);
+	d = (double) units;
+	units = -1;
+
+	/*
+	 * In the case of ints, we need to ensure that a valid
+	 * string exists in order for int-but-not-string objects
+	 * to be converted back to ints again from mm obj types.
+	 */
+	(void) Tcl_GetStringFromObj(objPtr, NULL);
     } else {
+	/*
+	 * It wasn't a known int or double, so parse it.
+	 */
+
 	string = Tcl_GetStringFromObj(objPtr, NULL);
 
 	d = strtod(string, &rest);
