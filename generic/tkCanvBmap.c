@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvBmap.c,v 1.9 2004/01/13 02:06:00 davygrvy Exp $
+ * RCS: @(#) $Id: tkCanvBmap.c,v 1.10 2004/06/08 20:28:19 dgp Exp $
  */
 
 #include <stdio.h>
@@ -606,8 +606,6 @@ DisplayBitmap(canvas, itemPtr, display, drawable, x, y, width, height)
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
     int bmapX, bmapY, bmapWidth, bmapHeight;
     short drawableX, drawableY;
-    XColor *fgColor;
-    XColor *bgColor;
     Pixmap bitmap;
     Tk_State state = itemPtr->state;
 
@@ -620,26 +618,12 @@ DisplayBitmap(canvas, itemPtr, display, drawable, x, y, width, height)
     if(state == TK_STATE_NULL) {
 	state = ((TkCanvas *)canvas)->canvas_state;
     }
-    fgColor = bmapPtr->fgColor;
-    bgColor = bmapPtr->bgColor;
     bitmap = bmapPtr->bitmap;
     if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
-	if (bmapPtr->activeFgColor!=NULL) {
-	    fgColor = bmapPtr->activeFgColor;
-	}
-	if (bmapPtr->activeBgColor!=NULL) {
-	    bgColor = bmapPtr->activeBgColor;
-	}
 	if (bmapPtr->activeBitmap!=None) {
 	    bitmap = bmapPtr->activeBitmap;
 	}
     } else if (state==TK_STATE_DISABLED) {
-	if (bmapPtr->disabledFgColor!=NULL) {
-	    fgColor = bmapPtr->disabledFgColor;
-	}
-	if (bmapPtr->disabledBgColor!=NULL) {
-	    bgColor = bmapPtr->disabledBgColor;
-	}
 	if (bmapPtr->disabledBitmap!=None) {
 	    bitmap = bmapPtr->disabledBitmap;
 	}

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.10 2004/05/03 23:23:14 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.11 2004/06/08 20:28:19 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -586,12 +586,11 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, border, indicatorColor, disableColor,
      */
 
     if ((mePtr->type == CHECK_BUTTON_ENTRY) && mePtr->indicatorOn) {
-	int dim, top, left;
+	int top, left;
 	int activeBorderWidth;
 	int disabled = (mePtr->state == ENTRY_DISABLED);
 	XColor *bg;
 
-	dim = (int) mePtr->platformEntryData;
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 	bg = Tk_3DBorderColor(border);
@@ -609,12 +608,11 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, border, indicatorColor, disableColor,
      */
 
     if ((mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn) {
-	int dim, top, left;
+	int top, left;
 	int activeBorderWidth;
 	int disabled = (mePtr->state == ENTRY_DISABLED);
 	XColor *bg;
 
-	dim = (int) mePtr->platformEntryData;
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 	bg = Tk_3DBorderColor(border);

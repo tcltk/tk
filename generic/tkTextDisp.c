@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.42 2004/06/07 16:23:52 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.43 2004/06/08 20:28:19 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -6120,7 +6120,6 @@ DlineXOfIndex(textPtr, dlPtr, byteIndex)
                                  * coordinate. */
 {
     register TkTextDispChunk *chunkPtr = dlPtr->chunkPtr;
-    TkTextIndex index;
     int x;
     
     if (byteIndex == 0 || chunkPtr == NULL) return 0;
@@ -6130,7 +6129,6 @@ DlineXOfIndex(textPtr, dlPtr, byteIndex)
      * the desired byte index.
      */
 
-    index = dlPtr->index;
     chunkPtr = dlPtr->chunkPtr;
     while (byteIndex > 0) {
 	if (byteIndex < chunkPtr->numBytes) {
