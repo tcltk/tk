@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.29 1999/10/29 03:58:39 hobbs Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.30 1999/12/09 14:46:41 hobbs Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -26,13 +26,19 @@
 #
 
 ROOT		= ..
-TOOLS32		= c:\progra~1\devstudio\vc
-TOOLS32_rc	= c:\progra~1\devstudio\sharedide
 TCLDIR		= ..\..\tcl8.3
 INSTALLDIR      = c:\progra~1\tcl
 
 # Set this to the appropriate value of /MACHINE: for your platform
 MACHINE	= IX86
+
+!IF "$(MACHINE)" == "IA64"
+TOOLS32		= c:\ia64sdk17
+TOOLS32_rc	= c:\ia64sdk17
+!ELSE
+TOOLS32		= c:\Progra~1\devstudio\vc
+TOOLS32_rc	= c:\Progra~1\devstudio\sharedide
+!ENDIF
 
 # Uncomment the following line to compile with thread support
 #THREADDEFINES = -DTCL_THREADS=1
@@ -85,7 +91,6 @@ WISH 		= $(OUTDIR)\$(WISHNAMEPREFIX)$(VERSION)$(DBGX).exe
 WISHC 		= $(OUTDIR)\$(WISHNAMEPREFIX)c$(VERSION)$(DBGX).exe
 WISHP 		= $(OUTDIR)\$(WISHNAMEPREFIX)p$(VERSION)$(DBGX).exe
 TKTEST 		= $(OUTDIR)\$(TKNAMEPREFIX)test.exe
-DUMPEXTS 	= $(TMPDIR)\dumpexts.exe
 CAT32           = $(TMPDIR)\cat32.exe
 
 BIN_INSTALL_DIR = $(INSTALLDIR)\bin
@@ -230,9 +235,33 @@ TK_INCLUDES	= -I$(WINDIR) -I$(GENERICDIR) -I$(BITMAPDIR) -I$(XLIBDIR) \
 			-I$(TCLDIR)\generic
 TK_DEFINES	= -D__WIN32__ $(DEBUGDEFINES) $(THREADDEFINES)
 
+######################################################################
+# Compile flags
+######################################################################
+
+!IF "$(NODEBUG)" == "1"
+!IF "$(MACHINE)" == "ALPHA"
+# MSVC on Alpha doesn't understand -Ot
+cdebug	= -O2i -Gs -GD
+!ELSE
+# NOTE: Due to a bug in MSVC, we cannot use -O2 here or Tk starts to misbehave.
+cdebug	= -Oti -Gs -GD
+!ENDIF
+!ELSE
+!IF "$(MACHINE)" == "IA64"
+cdebug	= -Od -Zi
+!ELSE
+cdebug	= -Z7 -Od -WX
+!ENDIF
+!ENDIF
+
+# declarations common to all compiler options
+cflags	= -c -W3 -nologo -Fp$(TMPDIR)\ -YX
+cvarsdll = -MD$(DBGX)
+
+CON_CFLAGS	= $(cdebug) $(cflags) $(include32) -DCONSOLE
 TK_CFLAGS	= $(cdebug) $(cflags) $(cvarsdll) $(include32) \
 			$(TK_INCLUDES) $(TK_DEFINES) -DUSE_TCL_STUBS
-
 WISH_CFLAGS	= $(cdebug) $(cflags) $(cvarsdll) $(include32) \
 			$(TK_INCLUDES) $(TK_DEFINES)
 
@@ -241,25 +270,23 @@ WISH_CFLAGS	= $(cdebug) $(cflags) $(cvarsdll) $(include32) \
 ######################################################################
 
 !IF "$(NODEBUG)" == "1"
-ldebug = /RELEASE
+ldebug	= /RELEASE
 !ELSE
-ldebug = -debug:full -debugtype:cv
+ldebug	= -debug:full -debugtype:cv
 !ENDIF
 
 # declarations common to all linker options
-lcommon = /NODEFAULTLIB /RELEASE /NOLOGO
+lcommon	= /NODEFAULTLIB /RELEASE /NOLOGO
+lflags	= $(lcommon) /MACHINE:$(MACHINE)
 
 # declarations for use on Intel i386, i486, and Pentium systems
 !IF "$(MACHINE)" == "IX86"
 DLLENTRY = @12
-lflags   = $(lcommon) /MACHINE:$(MACHINE)
-!ELSE
-lflags   = $(lcommon) /MACHINE:$(MACHINE)
 !ENDIF
 
-conlflags = $(lflags) -subsystem:console -entry:mainCRTStartup
-guilflags = $(lflags) -subsystem:windows -entry:WinMainCRTStartup
-dlllflags = $(lflags) -entry:_DllMainCRTStartup$(DLLENTRY) -dll
+conlflags	= $(lflags) -subsystem:console -entry:mainCRTStartup
+guilflags	= $(lflags) -subsystem:windows -entry:WinMainCRTStartup
+dlllflags	= $(lflags) -entry:_DllMainCRTStartup$(DLLENTRY) -dll
 
 !IF "$(MACHINE)" == "PPC"
 libc = libc$(DBGX).lib
@@ -274,53 +301,6 @@ winlibs    = $(baselibs) user32.lib gdi32.lib comdlg32.lib winspool.lib
 guilibs	   = $(libc) $(winlibs)
 conlibs    = $(libc) $(baselibs)
 guilibsdll = $(libcdll) $(winlibs)
-
-######################################################################
-# Compile flags
-######################################################################
-
-!IF "$(NODEBUG)" == "1"
-!IF "$(MACHINE)" == "ALPHA"
-# MSVC on Alpha doesn't understand -Ot
-cdebug = -O2i -Gs -GD
-!ELSE
-# NOTE: Due to a bug in MSVC, we cannot use -O2 here or Tk starts to misbehave.
-cdebug = -Oti -Gs -GD
-!ENDIF
-!ELSE
-cdebug = -Z7 -Od -WX
-!ENDIF
-
-# declarations common to all compiler options
-ccommon = -c -W3 -nologo -Fp$(TMPDIR)\ -YX
-
-!IF "$(MACHINE)" == "IX86"
-cflags = $(ccommon) -D_X86_=1
-!ELSE
-!IF "$(MACHINE)" == "MIPS"
-cflags = $(ccommon) -D_MIPS_=1
-!ELSE
-!IF "$(MACHINE)" == "PPC"
-cflags = $(ccommon) -D_PPC_=1
-!ELSE
-!IF "$(MACHINE)" == "ALPHA"
-cflags = $(ccommon) -D_ALPHA_=1
-!ENDIF
-!ENDIF
-!ENDIF
-!ENDIF
-
-cvars      = -DWIN32 -D_WIN32
-cvarsmt    = $(cvars) -D_MT
-cvarsdll   = $(cvarsmt) -D_DLL
-
-!IF "$(NODEBUG)" == "1"
-cvarsdll   = $(cvars) -MD
-!ELSE
-cvarsdll   = $(cvars) -MDd
-!ENDIF
-
-CON_CFLAGS	= $(cdebug) $(cflags) $(cvars) $(include32) -DCONSOLE
 
 ######################################################################
 # Project specific targets
@@ -379,9 +359,9 @@ $(TKLIB): $(TKDLL) $(TKSTUBLIB)
 $(TKSTUBLIB): $(TKSTUBOBJS)
         $(lib32) /out:$@ $(TKSTUBOBJS)
 
-$(TKDLL): $(TKOBJS) $(TMPDIR)\tk.res $(TMPDIR)\tk.def
+$(TKDLL): $(TKOBJS) $(TMPDIR)\tk.res
 	set LIB=$(TOOLS32)\lib
-       $(link32) $(ldebug) $(dlllflags) -def:$(TMPDIR)\tk.def \
+       $(link32) $(ldebug) $(dlllflags) \
 		-out:$@ $(TMPDIR)\tk.res $(TCLLIBDIR)\$(TCLSTUBLIB) \
 		$(guilibsdll) @<<
 			$(TKOBJS)
@@ -389,9 +369,9 @@ $(TKDLL): $(TKOBJS) $(TMPDIR)\tk.res $(TMPDIR)\tk.def
 
 $(TKPLUGINLIB): $(TKPLUGINDLL)
 
-$(TKPLUGINDLL): $(TKOBJS) $(TMPDIR)\tk.res $(TMPDIR)\plugin.def
+$(TKPLUGINDLL): $(TKOBJS) $(TMPDIR)\tk.res
 	set LIB=$(TOOLS32)\lib
-        $(link32) $(ldebug) $(dlllflags) -def:$(TMPDIR)\plugin.def \
+        $(link32) $(ldebug) $(dlllflags) \
 		-out:$@ $(TMPDIR)\tk.res $(TCLLIBDIR)\$(TCLPLUGINLIB) \
 		$(guilibsdll) @<<
 			$(TKOBJS)
@@ -417,22 +397,6 @@ $(TKTEST): $(TKTESTOBJS) $(TKLIB) $(TMPDIR)\wish.res
 	set LIB=$(TOOLS32)\lib
 	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -out:$@ \
 		$(guilibsdll) $(TCLLIBDIR)\$(TCLLIB) $(TKLIB) $(TKTESTOBJS)
-
-$(TMPDIR)\tk.def: $(DUMPEXTS) $(TKOBJS)
-	$(DUMPEXTS) -o $@ $(TKDLLNAME) @<<
-		$(TKOBJS)
-<<
-
-$(TMPDIR)\plugin.def: $(DUMPEXTS) $(TKOBJS)
-	$(DUMPEXTS) -o $@ $(TKPLUGINDLLNAME) @<<
-		$(TKOBJS)
-<<
-
-$(DUMPEXTS): $(TCLDIR)\win\winDumpExts.c
-	$(cc32) $(CON_CFLAGS) -Fo$(TMPDIR)\ $?
-	set LIB=$(TOOLS32)\lib
-	$(link32) $(ldebug) $(conlflags) $(guilibs) -out:$@ \
-		$(TMPDIR)\winDumpExts.obj 
 
 $(CAT32): $(TCLDIR)\win\cat.c
 	$(cc32) $(CON_CFLAGS) -Fo$(TMPDIR)\ $?
@@ -495,7 +459,6 @@ clean:
 	-@del $(TMPDIR)\*.pch
         -@del $(TMPDIR)\*.obj
         -@del $(TMPDIR)\*.res
-        -@del $(TMPDIR)\*.def
         -@del $(TMPDIR)\*.exe
 	-@rmd $(OUTDIR)
 	-@rmd $(TMPDIR)
