@@ -1,3 +1,9 @@
+2001-01-18  Daniel Steffen  <das@users.sourceforge.net>
+
+	* mac/tkMacDialog.c:
+	* mac/tkMacSend.c: TIP 27 CONSTification broke the mac
+	build in a few places.
+
 2002-01-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkListbox.c (ChangeListboxOffset): improved tracking
