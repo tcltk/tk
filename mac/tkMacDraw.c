@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDraw.c,v 1.7 1999/09/02 17:03:08 hobbs Exp $
+ * RCS: @(#) $Id: tkMacDraw.c,v 1.8 1999/12/14 06:52:56 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -974,6 +974,26 @@ TkMacSetUpGraphicsPort(
     }
     if (gc->line_width > 1) {
 	PenSize(gc->line_width, gc->line_width);
+    }
+    if (gc->line_style != LineSolid) {
+	unsigned char *p = (unsigned char *) &(gc->dashes);
+	/*
+	 * Here the dash pattern should be set in the drawing,
+	 * environment, but I don't know how to do that for the Mac.
+	 *
+	 * p[] is an array of unsigned chars containing the dash list.
+	 * A '\0' indicates the end of this list.
+	 *
+	 * Someone knows how to implement this? If you have a more
+	 * complete implementation of SetUpGraphicsPort() for
+	 * the Mac (or for Windows), please let me know.
+	 *
+	 *	Jan Nijtmans
+	 *	CMG Arnhem, B.V.
+	 *	email: j.nijtmans@chello.nl (private)
+	 *	       jan.nijtmans@cmg.nl (work)
+	 *	url:   http://purl.oclc.org/net/nijtmans/
+	 */
     }
 }
 
