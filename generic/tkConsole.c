@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.11 1999/11/19 22:00:03 hobbs Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.12 2000/07/18 02:31:06 davidg Exp $
  */
 
 #include "tk.h"
@@ -151,6 +151,23 @@ static int ShouldUseConsoleChannel(type)
     if ((handle == INVALID_HANDLE_VALUE) || (handle == 0)) {
 	return 1;
     }
+
+    /*
+     * Win2K BUG: GetStdHandle(STD_OUTPUT_HANDLE) can return what appears
+     * to be a valid handle.  See TclpGetDefaultStdChannel() for this change
+     * implemented.  We didn't change it here because GetFileType() [below]
+     * will catch this with FILE_TYPE_UNKNOWN and appropriately return a
+     * value of 1, anyways.
+     *
+     *    char dummyBuff[1];
+     *    DWORD dummyWritten;
+     *
+     *    if ((type == TCL_STDOUT)
+     *	    && !WriteFile(handle, dummyBuff, 0, &dummyWritten, NULL)) {
+     *	return 1;
+     *    }
+     */
+
     fileType = GetFileType(handle);
 
     /*
