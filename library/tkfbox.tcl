@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.38.2.5 2004/07/22 22:24:31 hobbs Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.38.2.6 2004/09/06 23:21:48 hobbs Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -1055,20 +1055,8 @@ static char updir_bits[] = {
 
     # Make the file types bits only if this is a File Dialog
     if { [string equal $class TkFDialog] } {
-	# The "File of types:" label needs to be grayed-out when
-	# -filetypes are not specified. The label widget does not support
-	# grayed-out text on monochrome displays. Therefore, we have to
-	# use a button widget to emulate a label widget (by setting its
-	# bindtags)
-
-	set data(typeMenuLab) [::tk::AmpWidget button $f2.lab2 \
-		-text $fTypeCaption  -anchor e  -bd [$f2.lab cget -bd] \
-		-highlightthickness [$f2.lab cget -highlightthickness] \
-		-relief [$f2.lab cget -relief] \
-		-padx [$f2.lab cget -padx] \
-		-pady [$f2.lab cget -pady]]
-	bindtags $data(typeMenuLab) [list $data(typeMenuLab) Label \
-		[winfo toplevel $data(typeMenuLab)] all]
+	set data(typeMenuLab) [::tk::AmpWidget label $f2.lab2 \
+		-text $fTypeCaption -anchor e -pady [$f2.lab cget -pady]]
 	set data(typeMenuBtn) [menubutton $f2.menu -indicatoron 1 \
 		-menu $f2.menu.m]
 	set data(typeMenu) [menu $data(typeMenuBtn).m -tearoff 0]
