@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.56 2002/07/05 07:20:56 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.57 2002/07/05 20:19:16 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5230,6 +5230,7 @@ in the master. (dejong)
 be consistent. (fellows)
 
 2002-06-14 (new feature) [TIP 98] Enhanced photo compositing (fellows)
+	*** POTENTIAL INCOMPATIBILITY ***
 
 2002-06-14 (bug fix) Removed references to matherr (kupries)
 
