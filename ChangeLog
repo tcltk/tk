@@ -1,5 +1,10 @@
 2002-09-10  Daniel Steffen  <das@users.sourceforge.net>
 
+	* macosx/Wish.pbproj/project.pbxproj: added backwards
+	compatibility for OSX 10.1 ProjectBuilder 2.0
+	
+2002-09-10  Daniel Steffen  <das@users.sourceforge.net>
+
 	* unix/Makefile.in: added DYLIB_INSTALL_DIR variable for Darwin
 	and set it to default value ${LIB_RUNTIME_DIR}
 	* unix/tcl.m4 (Darwin): use DYLIB_INSTALL_DIR instead of
