@@ -13,7 +13,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPPM.c,v 1.4 1999/04/24 01:50:47 stanton Exp $
+ * RCS: @(#) $Id: tkImgPPM.c,v 1.5 1999/07/01 00:39:44 redman Exp $
  */
 
 #include "tkInt.h"
@@ -183,6 +183,7 @@ FileReadPPM(interp, chan, fileName, formatString, imageHandle, destX, destY,
 	block.offset[1] = 1;
 	block.offset[2] = 2;
     }
+    block.offset[3] = 0;
     block.width = width;
     block.pitch = block.pixelSize * fileWidth;
 

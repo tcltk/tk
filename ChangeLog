@@ -1,3 +1,17 @@
+1999-06-30    <redman@scriptics.com>
+
+	* generic/tkGrid.c: removed deprecated functions (applied patch
+	from Jan Nijtmans). [Bug: 2080]
+
+	* generic/tkImgGIF.c:
+	* generic/tkImgPPM.c:
+	* generic/tkImgPhoto.c: Applied patch to allow Img extension to
+	work with 8.2, from Jan Nijtmans. [Bug: 2068]
+
+	* win/tkWinWm.c: Applied patch from Don Porter to prevent the
+	windows code from calling the Tcl functions when the stub table
+	has not been initialized in TkWinWmCleanup.  [Bug: 2269]
+	
 1999-06-16    <wart@scriptics.com>
 
 	* unix/configure.in:

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.8 1999/04/16 01:51:54 stanton Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.9 1999/07/01 00:39:48 redman Exp $
  */
 
 #include "tkWinInt.h"
@@ -518,7 +518,20 @@ void
 TkWinWmCleanup(hInstance)
     HINSTANCE hInstance;
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+    ThreadSpecificData *tsdPtr;
+
+    /*
+     * If we're using stubs to access the Tcl library, and they
+     * haven't been initialized, we can't call Tcl_GetThreadData.
+     */
+
+#ifdef USE_TCL_STUBS
+    if (tclStubsPtr == NULL) {
+        return;
+    }
+#endif
+
+    tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {

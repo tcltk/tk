@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.8 1999/04/30 22:49:55 stanton Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.9 1999/07/01 00:39:44 redman Exp $
  */
 
 #include "tkInt.h"
@@ -802,6 +802,7 @@ ImgPhotoCmd(clientData, interp, argc, argv)
 	block.offset[0] = 0;
 	block.offset[1] = 1;
 	block.offset[2] = 2;
+	block.offset[3] = 0;
 	Tk_PhotoPutBlock((ClientData)masterPtr, &block,
 		options.toX, options.toY, options.toX2 - options.toX,
 		options.toY2 - options.toY);
@@ -4173,5 +4174,6 @@ Tk_PhotoGetImage(handle, blockPtr)
     blockPtr->offset[0] = 0;
     blockPtr->offset[1] = 1;
     blockPtr->offset[2] = 2;
+    blockPtr->offset[3] = 0;
     return 1;
 }

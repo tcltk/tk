@@ -27,7 +27,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.3 1999/04/16 01:51:15 stanton Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.4 1999/07/01 00:39:44 redman Exp $
  */
 
 /*
@@ -263,6 +263,7 @@ FileReadGIF(interp, chan, fileName, formatString, imageHandle, destX, destY,
     block.offset[0] = 0;
     block.offset[1] = 1;
     block.offset[2] = 2;
+    block.offset[3] = 0;
     nBytes = height * block.pitch;
     block.pixelPtr = (unsigned char *) ckalloc((unsigned) nBytes);
 

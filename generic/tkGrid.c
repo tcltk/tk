@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.4 1999/04/16 01:51:14 stanton Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.5 1999/07/01 00:39:44 redman Exp $
  */
 
 #include "tkInt.h"
@@ -435,7 +435,7 @@ Tk_GridCmd(clientData, interp, argc, argv)
 		    slavePtr->iPadX = slavePtr->iPadY = 0;
 		    slavePtr->doubleBw = 2*Tk_Changes(tkwin)->border_width;
 		    if (slavePtr->flags & REQUESTED_RELAYOUT) {
-			Tk_CancelIdleCall(ArrangeGrid, (ClientData) slavePtr);
+			Tcl_CancelIdleCall(ArrangeGrid, (ClientData) slavePtr);
 		    }
 		    slavePtr->flags = 0;
 		    slavePtr->sticky = 0;
@@ -522,7 +522,7 @@ Tk_GridCmd(clientData, interp, argc, argv)
 	 */
 
 	while (masterPtr->flags & REQUESTED_RELAYOUT) {
-	    Tk_CancelIdleCall(ArrangeGrid, (ClientData) masterPtr);
+	    Tcl_CancelIdleCall(ArrangeGrid, (ClientData) masterPtr);
 	    ArrangeGrid ((ClientData) masterPtr);
 	}
 	SetGridSize(masterPtr);
@@ -2007,7 +2007,7 @@ Unlink(slavePtr)
  *
  * DestroyGrid --
  *
- *	This procedure is invoked by Tk_EventuallyFree or Tcl_Release
+ *	This procedure is invoked by Tcl_EventuallyFree or Tcl_Release
  *	to clean up the internal structure of a grid at a safe time
  *	(when no-one is using it anymore).   Cleaning up the grid involves
  *	freeing the main structure for all windows. and the master structure
@@ -2097,10 +2097,10 @@ GridStructureProc(clientData, eventPtr)
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->gridHashTable,
 		(char *) gridPtr->tkwin));
 	if (gridPtr->flags & REQUESTED_RELAYOUT) {
-	    Tk_CancelIdleCall(ArrangeGrid, (ClientData) gridPtr);
+	    Tcl_CancelIdleCall(ArrangeGrid, (ClientData) gridPtr);
 	}
 	gridPtr->tkwin = NULL;
-	Tk_EventuallyFree((ClientData) gridPtr, DestroyGrid);
+	Tcl_EventuallyFree((ClientData) gridPtr, DestroyGrid);
     } else if (eventPtr->type == MapNotify) {
 	if (!(gridPtr->flags & REQUESTED_RELAYOUT)) {
 	    gridPtr->flags |= REQUESTED_RELAYOUT;
