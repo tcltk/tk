@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.31 2004/01/13 02:06:00 davygrvy Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.32 2004/02/18 21:25:41 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -1411,9 +1411,9 @@ AdjustOffsets(size, slots, slotPtr)
 {
     register int slot;		/* Current slot. */
     int diff;			/* Extra pixels needed to add to the layout. */
-    int totalWeight = 0;	/* Sum of the weights for all the slots. */
-    int weight = 0;		/* Sum of the weights so far. */
-    int minSize = 0;		/* Minimum possible layout size. */
+    int totalWeight;		/* Sum of the weights for all the slots. */
+    int weight;			/* Sum of the weights so far. */
+    int minSize;		/* Minimum possible layout size. */
     int newDiff;		/* The most pixels that can be added on
     				 * the current pass. */
 
@@ -1431,11 +1431,12 @@ AdjustOffsets(size, slots, slotPtr)
      * If all the weights are zero, there is nothing more to do.
      */
 
-    for (slot=0; slot < slots; slot++) {
+    totalWeight = 0;
+    for (slot = 0; slot < slots; slot++) {
 	totalWeight += slotPtr[slot].weight;
     }
 
-    if (totalWeight == 0 ) {
+    if (totalWeight == 0) {
 	return slotPtr[slots-1].offset;
     }
 
@@ -1445,7 +1446,8 @@ AdjustOffsets(size, slots, slotPtr)
      */
 
     if (diff > 0) {
-	for (weight=slot=0; slot < slots; slot++) {
+	weight = 0;
+	for (slot = 0; slot < slots; slot++) {
 	    weight += slotPtr[slot].weight;
 	    slotPtr[slot].offset += diff * weight / totalWeight;
 	}
@@ -1455,16 +1457,19 @@ AdjustOffsets(size, slots, slotPtr)
     /*
      * The layout must shrink below its requested size.  Compute the
      * minimum possible size by looking at the slot minSizes.
+     * Store each slot's minimum size in temp.
      */
 
-    for (slot=0; slot < slots; slot++) {
+    minSize = 0;
+    for (slot = 0; slot < slots; slot++) {
     	if (slotPtr[slot].weight > 0) {
-	    minSize += slotPtr[slot].minSize;
+	    slotPtr[slot].temp = slotPtr[slot].minSize;
 	} else if (slot > 0) {
-	    minSize += slotPtr[slot].offset - slotPtr[slot-1].offset;
+	    slotPtr[slot].temp = slotPtr[slot].offset - slotPtr[slot-1].offset;
 	} else {
-	    minSize += slotPtr[slot].offset;
+	    slotPtr[slot].temp = slotPtr[slot].offset;
 	}
+	minSize += slotPtr[slot].temp;
     }
 
     /*
@@ -1474,14 +1479,8 @@ AdjustOffsets(size, slots, slotPtr)
 
     if (size <= minSize) {
     	int offset = 0;
-	for (slot=0; slot < slots; slot++) {
-	    if (slotPtr[slot].weight > 0) {
-		offset += slotPtr[slot].minSize;
-	    } else if (slot > 0) {
-		offset += slotPtr[slot].offset - slotPtr[slot-1].offset;
-	    } else {
-		offset += slotPtr[slot].offset;
-	    }
+	for (slot = 0; slot < slots; slot++) {
+	    offset += slotPtr[slot].temp;
 	    slotPtr[slot].offset = offset;
 	}
 	return minSize;
@@ -1493,12 +1492,12 @@ AdjustOffsets(size, slots, slotPtr)
      */
 
     while (diff < 0) {
-
 	/*
 	 * Find the total weight for the shrinkable slots.
 	 */
 
-	for (totalWeight=slot=0; slot < slots; slot++) {
+	totalWeight = 0;
+	for (slot = 0; slot < slots; slot++) {
 	    int current = (slot == 0) ? slotPtr[slot].offset :
 		    slotPtr[slot].offset - slotPtr[slot-1].offset;
 	    if (current > slotPtr[slot].minSize) {
@@ -1537,7 +1536,8 @@ AdjustOffsets(size, slots, slotPtr)
 	 * Now distribute the space.
 	 */
 
-	for (weight=slot=0; slot < slots; slot++) {
+	weight = 0;
+	for (slot = 0; slot < slots; slot++) {
 	    weight += slotPtr[slot].temp;
 	    slotPtr[slot].offset += newDiff * weight / totalWeight;
 	}
