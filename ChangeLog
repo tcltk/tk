@@ -1,3 +1,68 @@
+1999-03-10    <redman@scriptics.com>
+
+	* xlib/xdraw.c:
+	* xlib/X11/Xlib.h:
+	* mac/tkMac.h:
+	* mac/tkMacInt.h:
+	* mac/tkMacPort.h:
+	* mac/tkMacXStubs.c:
+	* mac/tkMacAppInit.c:
+	* mac/tkMacCursor.c:
+	* win/makefile.vc:
+	* win/tkWin.h:
+	* win/tkWinInt.h:
+	* win/tkWinPort.h:
+	* win/winMain.c:
+	* generic/tk.h:
+	* generic/tkInt.h:
+	* generic/tk.decls:
+	* generic/tkInt.decls:
+	* generic/tkDecls.h:
+	* generic/tkPlatDecls.h:
+	* generic/tkIntDecls.h:
+	* generic/tkIntPlatDecls.h:
+	* generic/tkIntXlibDecls.h:
+	* generic/tkStubs.c:
+	* generic/tkPlatStubs.c:
+	* generic/tkIntStubs.c:
+	* generic/tkIntPlatStubs.c:
+	* generic/tkIntXlibStubs.c:
+	* generic/tkStubInit.c:
+	* generic/tkStubLib.c:
+	* generic/tkBind.c:
+	* generic/tkCmds.c:
+	* generic/tkConfig.c:
+	* generic/tkConsole.c: 
+	* generic/tkCursor.c:
+	* generic/tkGrab.c:
+	* generic/tkImgPhoto.c:
+	* generic/tkMain.c:
+	* generic/tkMenu.c:
+	* generic/tkPointer.c:
+	* generic/tkTextDisp.c:
+	* generic/tkWindow.c:
+	* unix/tkUnixInt.h:
+	* unix/tkUnixPort.h:
+	* unix/Makefile.in:
+	* unix/configure.in:
+	* unix/tkConfig.sh.in:
+	* unix/tkUnix.c:
+	* unix/tkUnix3d.c:
+	* unix/tkUnixDraw.c:
+	* unix/tkUnixFont.c:
+	* unix/tkUnixMenubu.c: Stubs implementation for 8.1.  Tk_Main() is
+	replaced with a macro which calls Tk_MainEx(). Tk can link to the Tcl
+	stubs library, wish links directly to Tcl and Tk. Use
+	--enable-tcl-stubs to link Tk to the Tcl stubs library (Unix), on
+	by default on Windows. Exported all public functions through the
+	stubs mechanism (see the *.decls files) and many of the internal
+	functions. Most of the changes dealt with shifting around the
+	function declarations in the header files.  Mac code may not
+	compile, but it shouldn't take much work to fix this.
+	
+	* mac/tkMacMenu.c: Added dummy TkpMenuThreadInit for Mac to be
+	consistent with Unix and Windows versions.
+	
 1999-03-08    <lfb@scriptics.com>
 
         * win/tkWinWm.c: Toplevel class no longer shared between 
