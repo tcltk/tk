@@ -5,11 +5,12 @@
  *	the scale widget.
  *
  * Copyright (c) 1996 by Sun Microsystems, Inc.
+ * Copyright (c) 1999-2000 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.h,v 1.7 1999/12/22 20:01:08 hobbs Exp $
+ * RCS: @(#) $Id: tkScale.h,v 1.8 2000/04/14 08:33:16 hobbs Exp $
  */
 
 #ifndef _TKSCALE
@@ -63,7 +64,7 @@ typedef struct TkScale {
 				 * in pixels. */
     int length;			/* Desired long dimension of scale,
 				 * in pixels. */
-    double value;               /* Current value of scale. */
+    double value;		/* Current value of scale. */
     Tcl_Obj *varNamePtr;	/* Name of variable or NULL.
 				 * If non-NULL, scale's value tracks
 				 * the contents of this variable and
@@ -72,8 +73,8 @@ typedef struct TkScale {
 				 * scale. */
     double toValue;		/* Value corresponding to right or bottom
 				 * of scale. */
-    double tickInterval;	/* Distance between tick marks;  0 means
-				 * don't display any tick marks. */
+    double tickInterval;	/* Distance between tick marks;
+				 * 0 means don't display any tick marks. */
     double resolution;		/* If > 0, all values are rounded to an
 				 * even multiple of this value. */
     int digits;			/* Number of significant digits to print
@@ -83,16 +84,15 @@ typedef struct TkScale {
     char format[10];		/* Sprintf conversion specifier computed from
 				 * digits and other information. */
     double bigIncrement;	/* Amount to use for large increments to
-				 * scale value.  (0 means we pick a value). */
-    Tcl_Obj *commandPtr;        /* Command prefix to use when invoking Tcl
+				 * scale value.	 (0 means we pick a value). */
+    char *command;		/* Command prefix to use when invoking Tcl
 				 * commands because the scale value changed.
 				 * NULL means don't invoke commands. */
     int repeatDelay;		/* How long to wait before auto-repeating
 				 * on scrolling actions (in ms). */
     int repeatInterval;		/* Interval between autorepeats (in ms). */
-    Tcl_Obj *labelPtr;		/* Label to display above or to right of
-				 * scale;  NULL means don't display a
-				 * label.  */
+    char *label;		/* Label to display above or to right of
+				 * scale;  NULL means don't display a label. */
     int labelLength;		/* Number of non-NULL chars. in label. */
     enum state state;		/* Values are active, normal, or disabled.
 				 * Value of scale cannot be changed when 
@@ -132,7 +132,7 @@ typedef struct TkScale {
     int sliderLength;		/* Length of slider, measured in pixels along
 				 * long dimension of scale. */
     int showValue;		/* Non-zero means to display the scale value
-				 * below or to the left of the slider;  zero
+				 * below or to the left of the slider;	zero
 				 * means don't display the value. */
 
     /*
@@ -158,8 +158,9 @@ typedef struct TkScale {
      * Miscellaneous information:
      */
 
+    int fontHeight;		/* Height of scale font. */
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
-    Tcl_Obj *takeFocusPtr;	/* Value of -takefocus option;  not used in
+    Tcl_Obj *takeFocusPtr;	/* Value of -takefocus option;	not used in
 				 * the C code, but used by keyboard traversal
 				 * scripts.  May be NULL. */
     int flags;			/* Various flags;  see below for
@@ -240,13 +241,13 @@ EXTERN double		TkRoundToResolution _ANSI_ARGS_((TkScale *scalePtr,
 EXTERN TkScale *	TkpCreateScale _ANSI_ARGS_((Tk_Window tkwin));
 EXTERN void		TkpDestroyScale _ANSI_ARGS_((TkScale *scalePtr));
 EXTERN void		TkpDisplayScale _ANSI_ARGS_((ClientData clientData));
-EXTERN double		TkpPixelToValue _ANSI_ARGS_((TkScale *scalePtr, 
-			    int x, int y));
 EXTERN int		TkpScaleElement _ANSI_ARGS_((TkScale *scalePtr,
 			     int x, int y));
-EXTERN void		TkpSetScaleValue _ANSI_ARGS_((TkScale *scalePtr,
+EXTERN void		TkScaleSetValue _ANSI_ARGS_((TkScale *scalePtr,
 			    double value, int setVar, int invokeCommand));
-EXTERN int		TkpValueToPixel _ANSI_ARGS_((TkScale *scalePtr,
+EXTERN double		TkScalePixelToValue _ANSI_ARGS_((TkScale *scalePtr, 
+			    int x, int y));
+EXTERN int		TkScaleValueToPixel _ANSI_ARGS_((TkScale *scalePtr,
 			    double value));
 
 # undef TCL_STORAGE_CLASS
