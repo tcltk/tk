@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.22 2003/11/12 00:07:42 hobbs Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.23 2004/02/18 00:40:24 hobbs Exp $
  */
 
 #include "tkButton.h"
@@ -344,6 +344,11 @@ static Tk_OptionSpec checkbuttonOptionSpecs[] = {
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
 	DEF_BUTTON_TEXT_VARIABLE, Tk_Offset(TkButton, textVarNamePtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-tristateimage", "tristateImage", "TristateImage",
+	DEF_BUTTON_IMAGE, Tk_Offset(TkButton, tristateImagePtr), -1,
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-tristatevalue", "tristateValue", "TristateValue",
+	DEF_BUTTON_TRISTATE_VALUE, Tk_Offset(TkButton, tristateValuePtr), -1, 0, 0, 0},
     {TK_OPTION_INT, "-underline", "underline", "Underline",
 	DEF_BUTTON_UNDERLINE, -1, Tk_Offset(TkButton, underline), 0, 0, 0},
     {TK_OPTION_STRING, "-variable", "variable", "Variable",
@@ -450,6 +455,11 @@ static Tk_OptionSpec radiobuttonOptionSpecs[] = {
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
 	DEF_BUTTON_TEXT_VARIABLE, Tk_Offset(TkButton, textVarNamePtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-tristateimage", "tristateImage", "TristateImage",
+	DEF_BUTTON_IMAGE, Tk_Offset(TkButton, tristateImagePtr), -1,
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-tristatevalue", "tristateValue", "TristateValue",
+	DEF_BUTTON_TRISTATE_VALUE, Tk_Offset(TkButton, tristateValuePtr), -1, 0, 0, 0},
     {TK_OPTION_INT, "-underline", "underline", "Underline",
 	DEF_BUTTON_UNDERLINE, -1, Tk_Offset(TkButton, underline), 0, 0, 0},
     {TK_OPTION_STRING, "-value", "value", "Value",
@@ -521,6 +531,9 @@ static void		ButtonImageProc _ANSI_ARGS_((ClientData clientData,
 			    int x, int y, int width, int height,
 			    int imgWidth, int imgHeight));
 static void		ButtonSelectImageProc _ANSI_ARGS_((
+			    ClientData clientData, int x, int y, int width,
+			    int height, int imgWidth, int imgHeight));
+static void		ButtonTristateImageProc _ANSI_ARGS_((
 			    ClientData clientData, int x, int y, int width,
 			    int height, int imgWidth, int imgHeight));
 static char *		ButtonTextVarProc _ANSI_ARGS_((ClientData clientData,
@@ -681,6 +694,8 @@ ButtonCreate(clientData, interp, objc, objv, type)
     butPtr->image = NULL;
     butPtr->selectImagePtr = NULL;
     butPtr->selectImage = NULL;
+    butPtr->tristateImagePtr = NULL;
+    butPtr->tristateImage = NULL;
     butPtr->state = STATE_NORMAL;
     butPtr->normalBorder = NULL;
     butPtr->activeBorder = NULL;
@@ -725,6 +740,7 @@ ButtonCreate(clientData, interp, objc, objv, type)
     butPtr->selVarNamePtr = NULL;
     butPtr->onValuePtr = NULL;
     butPtr->offValuePtr = NULL;
+    butPtr->tristateValuePtr = NULL;
     butPtr->cursor = None;
     butPtr->takeFocusPtr = NULL;
     butPtr->commandPtr = NULL;
@@ -972,6 +988,9 @@ DestroyButton(butPtr)
     if (butPtr->selectImage != NULL) {
 	Tk_FreeImage(butPtr->selectImage);
     }
+    if (butPtr->tristateImage != NULL) {
+	Tk_FreeImage(butPtr->tristateImage);
+    }
     if (butPtr->normalTextGC != None) {
 	Tk_FreeGC(butPtr->display, butPtr->normalTextGC);
     }
@@ -1131,11 +1150,15 @@ ConfigureButton(interp, butPtr, objc, objv)
     
 	    valuePtr = Tcl_ObjGetVar2(interp, namePtr, NULL, TCL_GLOBAL_ONLY);
 	    butPtr->flags &= ~SELECTED;
+            butPtr->flags &= ~TRISTATED;
 	    if (valuePtr != NULL) {
 		if (strcmp(Tcl_GetString(valuePtr),
 			Tcl_GetString(butPtr->onValuePtr)) == 0) {
 		    butPtr->flags |= SELECTED;
-		}
+		} else if (strcmp(Tcl_GetString(valuePtr),
+                        Tcl_GetString(butPtr->tristateValuePtr)) == 0) {
+                    butPtr->flags |= TRISTATED;
+                }
 	    } else {
 		if (Tcl_ObjSetVar2(interp, namePtr, NULL,
 			(butPtr->type == TYPE_CHECK_BUTTON)
@@ -1191,6 +1214,20 @@ ConfigureButton(interp, butPtr, objc, objv)
 	    Tk_FreeImage(butPtr->selectImage);
 	}
 	butPtr->selectImage = image;
+	if (butPtr->tristateImagePtr != NULL) {
+	    image = Tk_GetImage(butPtr->interp, butPtr->tkwin,
+		    Tcl_GetString(butPtr->tristateImagePtr),
+		    ButtonTristateImageProc, (ClientData) butPtr);
+	    if (image == NULL) {
+		continue;
+	    }
+	} else {
+	    image = NULL;
+	}
+	if (butPtr->tristateImage != NULL) {
+	    Tk_FreeImage(butPtr->tristateImage);
+	}
+	butPtr->tristateImage = image;
 
 	haveImage = 0;
 	if (butPtr->imagePtr != NULL || butPtr->bitmap != None) {
@@ -1591,6 +1628,7 @@ ButtonVarProc(clientData, interp, name1, name2, flags)
 
     if (flags & TCL_TRACE_UNSETS) {
 	butPtr->flags &= ~SELECTED;
+        butPtr->flags &= ~TRISTATED;
 	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
 	    Tcl_TraceVar(interp, name,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
@@ -1615,8 +1653,15 @@ ButtonVarProc(clientData, interp, name1, name2, flags)
 	    return (char *) NULL;
 	}
 	butPtr->flags |= SELECTED;
-    } else if (butPtr->flags & SELECTED) {
-	butPtr->flags &= ~SELECTED;
+        butPtr->flags &= ~TRISTATED;
+    } else if (strcmp(value, Tcl_GetString(butPtr->tristateValuePtr)) == 0) {
+        if (butPtr->flags & TRISTATED) {
+            return (char *) NULL;
+        }
+        butPtr->flags |= TRISTATED;
+        butPtr->flags &= ~SELECTED;
+    } else if (butPtr->flags & (SELECTED | TRISTATED)) {
+	butPtr->flags &= ~(SELECTED | TRISTATED);
     } else {
 	return (char *) NULL;
     }
@@ -1772,6 +1817,47 @@ ButtonSelectImageProc(clientData, x, y, width, height, imgWidth, imgHeight)
      */
 
     if ((butPtr->flags & SELECTED) && (butPtr->tkwin != NULL)
+	    && Tk_IsMapped(butPtr->tkwin)
+	    && !(butPtr->flags & REDRAW_PENDING)) {
+	Tcl_DoWhenIdle(TkpDisplayButton, (ClientData) butPtr);
+	butPtr->flags |= REDRAW_PENDING;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ButtonTristateImageProc --
+ *
+ *	This procedure is invoked by the image code whenever the manager
+ *	for an image does something that affects the size or contents
+ *	of the image displayed in a button when it is selected.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May arrange for the button to get redisplayed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ButtonTristateImageProc(clientData, x, y, width, height, imgWidth, imgHeight)
+    ClientData clientData;		/* Pointer to widget record. */
+    int x, y;				/* Upper left pixel (within image)
+					 * that must be redisplayed. */
+    int width, height;			/* Dimensions of area to redisplay
+					 * (may be <= 0). */
+    int imgWidth, imgHeight;		/* New dimensions of image. */
+{
+    register TkButton *butPtr = (TkButton *) clientData;
+
+    /*
+     * Don't recompute geometry:  it's controlled by the primary image.
+     */
+
+    if ((butPtr->flags & TRISTATED) && (butPtr->tkwin != NULL)
 	    && Tk_IsMapped(butPtr->tkwin)
 	    && !(butPtr->flags & REDRAW_PENDING)) {
 	Tcl_DoWhenIdle(TkpDisplayButton, (ClientData) butPtr);

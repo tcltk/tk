@@ -1,3 +1,19 @@
+2004-02-17  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/checkbutton.n: TIP#110 implementation
+	* doc/radiobutton.n: Tristate Checkbutton and Radiobuttons
+	* generic/tkButton.c:
+	* generic/tkButton.h:
+	* library/demos/check.tcl:
+	* library/demos/radio.tcl:
+	* macosx/tkMacOSXButton.c:
+	* macosx/tkMacOSXDefault.h:
+	* tests/button.test:
+	* unix/tkUnixButton.c:
+	* unix/tkUnixDefault.h:
+	* win/tkWinButton.c:
+	* win/tkWinDefault.h:
+
 2004-02-17  Don Porter	<dgp@users.sourceforge.net>
 
 	* tests/imgPhoto.test (imgPhoto-16.1):	Corrected incorrect
@@ -5,7 +21,7 @@
 
 2004-02-15  Jim Ingham  <jingham@apple.com>
 
-        * tkMacOSXDialog.c (MatchOneType): If the Macintosh filetype
+	* tkMacOSXDialog.c (MatchOneType): If the Macintosh filetype
 	is 0, then automatically pass the fileType check.
 
 	* tkMacOSXCarbonEvents.c: New file - this doesn't do anything
@@ -34,7 +50,7 @@
 	* tkMacOSXSubwindows.c: Ditto
 	* tkMacOSXWindowEvent.c: Ditto
 	* tkMacOSXWm.c: Ditto
-	
+
 2004-02-13  Jim Ingham  <jingham@apple.com>
 
 	* tkMacOSXDialog.c (Tk_GetOpenFileObjCmd): Use CFStringRef for

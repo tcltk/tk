@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDefault.h,v 1.19 2003/10/31 09:02:17 vincentdarley Exp $
+ * RCS: @(#) $Id: tkUnixDefault.h,v 1.20 2004/02/18 00:40:24 hobbs Exp $
  */
 
 #ifndef _TKUNIXDEFAULT
@@ -88,6 +88,7 @@
 #define DEF_BUTTON_JUSTIFY		"center"
 #define DEF_BUTTON_OFF_VALUE		"0"
 #define DEF_BUTTON_ON_VALUE		"1"
+#define DEF_BUTTON_TRISTATE_VALUE	""
 #define DEF_BUTTON_OVER_RELIEF		""
 #define DEF_BUTTON_PADX			"3m"
 #define DEF_LABCHKRAD_PADX		"1"

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: radiobutton.n,v 1.6 2002/08/28 01:08:06 drh Exp $
+'\" RCS: @(#) $Id: radiobutton.n,v 1.7 2004/02/18 00:40:24 hobbs Exp $
 '\" 
 .so man.macros
 .TH radiobutton n 4.4 Tk "Tk Built-In Commands"
@@ -90,6 +90,14 @@ should be insensitive:  the default bindings will refuse to activate
 the widget and will ignore mouse button presses.
 In this state the \fBdisabledForeground\fR and
 \fBbackground\fR options determine how the radiobutton is displayed.
+.OP \-tristateimage tristateImage TristateImage
+Specifies an image to display (in place of the \fBimage\fR option)
+when the radiobutton is selected.
+This option is ignored unless the \fBimage\fR option has been
+specified.
+.OP \-tristatevalue tristateValue Value
+Specifies the value that causes the radiobutton to display the multi-value 
+selection, also known as the tri-state mode.  Defaults to ``""''
 .OP \-value value Value
 Specifies value to store in the button's associated variable whenever
 this button is selected.
@@ -147,8 +155,7 @@ color.  Under Windows, the indicator is drawn with a round mark inside.
 If the radiobutton is not selected, then the indicator is drawn with a
 deselected appearance, and the associated variable is
 set to a different value (typically 0).
-Under Unix, the indicator is drawn with a raised relief and no special
-color.  Under Windows, the indicator is drawn without a round mark inside.
+The indicator is drawn without a round mark inside.
 .VE
 Typically, several radiobuttons share a single variable and the
 value of the variable indicates which radiobutton is to be selected.
@@ -156,6 +163,10 @@ When a radiobutton is selected it sets the value of the variable to
 indicate that fact;  each radiobutton also monitors the value of
 the variable and automatically selects and deselects itself when the
 variable's value changes.
+If the variable's value matches the tristatevalue, then the radiobutton is 
+drawn using the tri-state mode.  This mode is used to indicate mixed or 
+multiple values.  (This is used when the radio button represents the state 
+of multiple items.)
 By default the variable \fBselectedButton\fR
 is used;  its contents give the name of the button that is
 selected, or the empty string if no button associated with that
