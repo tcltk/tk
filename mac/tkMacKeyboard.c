@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacKeyboard.c,v 1.5 2000/04/10 22:43:12 ericm Exp $
+ * RCS: @(#) $Id: tkMacKeyboard.c,v 1.6 2000/04/17 02:16:58 jingham Exp $
  */
 
 #include "tkInt.h"
@@ -346,6 +346,8 @@ XStringToKeysym(
  *	The function XKeysymToKeycode is only used by tkTest.c and
  *	currently only implementes the support for keys used in the
  *	Tk test suite.
+ *      FIXME - This is no longer true.  This function is now used in
+ *      "event generate" so we really should make it work.
  *
  * Results:
  *	None.
