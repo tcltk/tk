@@ -1,3 +1,12 @@
+2002-01-08  D. Richard Hipp  <drh@hwaci.com>
+
+	* win/tkWinMenu.c: Fix the following bug: If you select an entry
+	on a cascade menu then the next time the parent menu is posted, the
+	cascade entry was active.  Also, if you traverse to a disabled entry
+	using keystrokes and press ENTER on the disabled entry, then that
+	entry appears active the next time the menu is posted.  The same
+	patch fixes both problems.
+
 2002-01-04  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkBind.c (TkBindFree):

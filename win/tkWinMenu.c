@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.17 2001/11/27 04:36:18 drh Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.18 2002/01/08 15:40:15 drh Exp $
  */
 
 #define OEMRESOURCE
@@ -913,6 +913,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 			    (ClientData) menuPtr);
 		    ReconfigureWindowsMenu((ClientData) menuPtr);
 		}
+		RecursivelyClearActiveMenu(menuPtr);
 		if (!tsdPtr->inPostMenu) {
 		    Tcl_Interp *interp;
 		    int code;
@@ -1079,6 +1080,12 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 			TkActivateMenuEntry(menuPtr, -1);
 		    }
 		} else {
+		    /* On windows, menu entries should highlight even if they
+		    ** are disabled. (I know this seems dumb, but it is the way
+		    ** native windows menus works so we ought to mimic it.)
+		    ** The ENTRY_PLATFORM_FLAG1 flag will indicate that the
+		    ** entry should be highlighted even though it is disabled.
+		    */
 		    if (itemPtr->itemState & ODS_SELECTED) {
 			mePtr->entryFlags |= ENTRY_PLATFORM_FLAG1;
 		    } else {
@@ -1146,6 +1153,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		    Tcl_ServiceAll();
 		}
 	    }
+	    break;
 	}
     }
     return returnResult;
@@ -1178,6 +1186,10 @@ RecursivelyClearActiveMenu(
     MenuSelectEvent(menuPtr);
     for (i = 0; i < menuPtr->numEntries; i++) {
     	mePtr = menuPtr->entries[i];
+	if (mePtr->state == ENTRY_ACTIVE) {
+	    mePtr->state = ENTRY_NORMAL;
+	}
+	mePtr->entryFlags &= ~ENTRY_PLATFORM_FLAG1;
     	if (mePtr->type == CASCADE_ENTRY) {
     	    if ((mePtr->childMenuRefPtr != NULL)
     	    	    && (mePtr->childMenuRefPtr->menuPtr != NULL)) {
