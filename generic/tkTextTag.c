@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.14 2003/11/15 02:33:51 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.15 2003/12/05 17:19:06 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -441,7 +441,7 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 		    tagPtr->tabArrayPtr = NULL;
 		}
 		if (tagPtr->tabStringPtr != NULL) {
-		    tagPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr->tkwin,
+		    tagPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr,
 			    tagPtr->tabStringPtr);
 		    if (tagPtr->tabArrayPtr == NULL) {
 			return TCL_ERROR;
