@@ -1,5 +1,10 @@
 2002-08-07  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkCanvUtil.c (TkSmoothParseProc): recognize the built-in
+	bezier method by name. [Bug #578654]
+	* doc/canvas.n: update to note that -smooth really doesn't take
+	or return just booleans.
+
 	* win/tkWinMenu.c (TkpSetWindowMenuBar): fixed logic bug in when
 	to idle call ReconfigureWindowsMenu.
 
