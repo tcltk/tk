@@ -1,3 +1,8 @@
+2004-03-26  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkImgPPM.c (ReadPPMStringHeader): Code to read PPM/PGM data
+	(StringReadPPM, StringMatchPPM): from strings/bytearrays. [FRQ 540375]
+
 2004-03-26  Don Porter  <dgp@users.sourceforge.net>
 
 	* unix/tcl.m4:	Replaced -Wno-strict-alias with more portable
