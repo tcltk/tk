@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin3d.c,v 1.5 2000/04/14 01:36:35 ericm Exp $
+ * RCS: @(#) $Id: tkWin3d.c,v 1.6 2003/08/20 23:31:39 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -146,10 +146,10 @@ Tk_3DVerticalBevel(tkwin, drawable, border, x, y, width, height,
 	    break;
 	case TK_RELIEF_SUNKEN:
 	    left = (leftBevel)
-		? ((WinBorder *)borderPtr)->dark2ColorPtr->pixel
+		? borderPtr->darkGC->foreground
 		: ((WinBorder *)borderPtr)->light2ColorPtr->pixel;
 	    right = (leftBevel)
-		? borderPtr->darkGC->foreground
+		? ((WinBorder *)borderPtr)->dark2ColorPtr->pixel
 		: borderPtr->lightGC->foreground;
 	    break;
 	case TK_RELIEF_RIDGE:
@@ -247,10 +247,10 @@ Tk_3DHorizontalBevel(tkwin, drawable, border, x, y, width, height,
 	    break;
 	case TK_RELIEF_SUNKEN:
 	    topColor = (topBevel)
-		? ((WinBorder *)borderPtr)->dark2ColorPtr->pixel
+		? borderPtr->darkGC->foreground
 		: ((WinBorder *)borderPtr)->light2ColorPtr->pixel;
 	    bottomColor = (topBevel)
-		? borderPtr->darkGC->foreground
+		? ((WinBorder *)borderPtr)->dark2ColorPtr->pixel
 		: borderPtr->lightGC->foreground;
 	    break;
 	case TK_RELIEF_RIDGE:
