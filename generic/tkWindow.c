@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.50 2002/06/19 19:37:54 mdejong Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.51 2002/07/25 21:35:22 pspjuth Exp $
  */
 
 #include "tkPort.h"
@@ -127,7 +127,7 @@ static TkCmd commands[] = {
 #endif
     {"update",		NULL,			Tk_UpdateObjCmd,	1, 1},
     {"winfo",		NULL,			Tk_WinfoObjCmd,		1, 1},
-    {"wm",		Tk_WmCmd,		NULL,			0, 1},
+    {"wm",		NULL,			Tk_WmObjCmd,		0, 1},
 
     /*
      * Widget class commands.

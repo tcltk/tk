@@ -9,7 +9,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winWm.test,v 1.8 2002/07/13 20:28:36 dgp Exp $
+# RCS: @(#) $Id: winWm.test,v 1.9 2002/07/25 21:35:23 pspjuth Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -243,7 +243,7 @@ test winWm-6.3 {wm attributes} {pcOnly} {
     destroy .t
     toplevel .t
     list [catch {wm attributes .t -foo} msg] $msg
-} {1 {wrong # arguments: must be "wm attributes window ?-disabled ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}}
+} {1 {wrong # args: should be "wm attributes window ?-disabled ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}}
 
 destroy .t
 

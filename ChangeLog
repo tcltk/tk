@@ -1,3 +1,16 @@
+2002-07-25  Peter Spjuth  <peter.spjuth@space.se>
+
+	* generic/tkInt.h:
+	* generic/tkWindow.c:
+	* mac/tkMacWm.c:
+	* unix/tkUnixWm.c:
+	* win/tkWinWm.c:
+	* tests/wm.test:
+	* tests/winWm.test:
+	* tests/unixWm.test: Objectifed wm. [Patch #564521]
+	Note: At this point the Mac file is completely untested
+	and may not even compile.
+
 2002-07-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* tests/spinbox.test: added spinbox-22.[1-3]
