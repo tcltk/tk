@@ -22,10 +22,15 @@
  * initialization.
  * When called from a safe interpreter, it does not use file exists.
  * we don't use pwd either because of safe interpreters.
+ *
+ * We leave the door open to the application by using an existing
+ * tkInit proc which if it exists is responsible for finding and sourcing
+ * tk.tcl themselves. With that, an application that wish to ignore
+ * the env(TK_LIBRARY) or have special initialization need can do it.
  */
 
-static char initScript[] =
-"proc tkInit {} {\n\
+static char initScript[] = "if {[info proc tkInit]==\"\"} {\n\
+  proc tkInit {} {\n\
     global tk_library tk_version tk_patchLevel env errorInfo\n\
     rename tkInit {}\n\
     set errors \"\"\n\
@@ -71,6 +76,7 @@ static char initScript[] =
     append msg \"$errors\n\n\"\n\
     append msg \"This probably means that Tk wasn't installed properly.\n\"\n\
     error $msg\n\
+  }\n\
 }\n\
 tkInit";
 

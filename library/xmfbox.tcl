@@ -30,7 +30,7 @@ proc tkMotifFDialog {args} {
     set w __tk_filedialog
     upvar #0 $w data
 
-    if ![string compare [lindex [info level 0] 0] tk_getOpenFile] {
+    if {![string compare [lindex [info level 0] 0] tk_getOpenFile]} {
 	set type open
     } else {
 	set type save
@@ -70,10 +70,10 @@ proc tkMotifFDialog {args} {
 
     wm withdraw $w
     update idletasks
-    set x [expr [winfo screenwidth $w]/2 - [winfo reqwidth $w]/2 \
-	    - [winfo vrootx [winfo parent $w]]]
-    set y [expr [winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
-	    - [winfo vrooty [winfo parent $w]]]
+    set x [expr {[winfo screenwidth $w]/2 - [winfo reqwidth $w]/2 \
+	    - [winfo vrootx [winfo parent $w]]}]
+    set y [expr {[winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
+	    - [winfo vrooty [winfo parent $w]]}]
     wm geom $w +$x+$y
     wm deiconify $w
     wm title $w $data(-title)
@@ -128,7 +128,7 @@ proc tkMotifFDialog_Config {w type argList} {
 
     # 2: default values depending on the type of the dialog
     #
-    if ![info exists data(selectPath)] {
+    if {![info exists data(selectPath)]} {
 	# first time the dialog has been popped up
 	set data(selectPath) [pwd]
 	set data(selectFile) ""
@@ -138,8 +138,8 @@ proc tkMotifFDialog_Config {w type argList} {
     #
     tclParseConfigSpec $w $specs "" $argList
 
-    if ![string compare $data(-title) ""] {
-	if ![string compare $type "open"] {
+    if {![string compare $data(-title) ""]} {
+	if {![string compare $type "open"]} {
 	    set data(-title) "Open"
 	} else {
 	    set data(-title) "Save As"
@@ -149,8 +149,8 @@ proc tkMotifFDialog_Config {w type argList} {
     # 4: set the default directory and selection according to the -initial
     #    settings
     #
-    if [string compare $data(-initialdir) ""] {
-	if [file isdirectory $data(-initialdir)] {
+    if {[string compare $data(-initialdir) ""]} {
+	if {[file isdirectory $data(-initialdir)]} {
 	    set data(selectPath) [glob $data(-initialdir)]
 	} else {
 	    set data(selectPath) [pwd]
@@ -171,10 +171,10 @@ proc tkMotifFDialog_Config {w type argList} {
     #
     set data(-filetypes) [tkFDGetFileTypes $data(-filetypes)]
 
-    if ![info exists data(filter)] {
+    if {![info exists data(filter)]} {
 	set data(filter) *
     }
-    if ![winfo exists $data(-parent)] {
+    if {![winfo exists $data(-parent)]} {
 	error "bad window path name \"$data(-parent)\""
     }
 }
@@ -301,11 +301,11 @@ proc tkMotifFDialog_BrowseDList {w} {
     upvar #0 [winfo name $w] data
 
     focus $data(dList)
-    if ![string compare [$data(dList) curselection] ""] {
+    if {![string compare [$data(dList) curselection] ""]} {
 	return
     }
     set subdir [$data(dList) get [$data(dList) curselection]]
-    if ![string compare $subdir ""] {
+    if {![string compare $subdir ""]} {
 	return
     }
 
@@ -334,11 +334,11 @@ proc tkMotifFDialog_BrowseDList {w} {
 proc tkMotifFDialog_ActivateDList {w} {
     upvar #0 [winfo name $w] data
 
-    if ![string compare [$data(dList) curselection] ""] {
+    if {![string compare [$data(dList) curselection] ""]} {
 	return
     }
     set subdir [$data(dList) get [$data(dList) curselection]]
-    if ![string compare $subdir ""] {
+    if {![string compare $subdir ""]} {
 	return
     }
 
@@ -359,7 +359,7 @@ proc tkMotifFDialog_ActivateDList {w} {
     set data(selectPath) $newDir
     tkMotifFDialog_Update $w
 
-    if [string compare $subdir ..] {
+    if {[string compare $subdir ..]} {
 	$data(dList) selection set 0
 	$data(dList) activate 0
     } else {
@@ -372,11 +372,11 @@ proc tkMotifFDialog_BrowseFList {w} {
     upvar #0 [winfo name $w] data
 
     focus $data(fList)
-    if ![string compare [$data(fList) curselection] ""] {
+    if {![string compare [$data(fList) curselection] ""]} {
 	return
     }
     set data(selectFile) [$data(fList) get [$data(fList) curselection]]
-    if ![string compare $data(selectFile) ""] {
+    if {![string compare $data(selectFile) ""]} {
 	return
     }
 
@@ -394,11 +394,11 @@ proc tkMotifFDialog_BrowseFList {w} {
 proc tkMotifFDialog_ActivateFList {w} {
     upvar #0 [winfo name $w] data
 
-    if ![string compare [$data(fList) curselection] ""] {
+    if {![string compare [$data(fList) curselection] ""]} {
 	return
     }
     set data(selectFile) [$data(fList) get [$data(fList) curselection]]
-    if ![string compare $data(selectFile) ""] {
+    if {![string compare $data(selectFile) ""]} {
 	return
     } else {
 	tkMotifFDialog_ActivateSEnt $w
@@ -421,7 +421,7 @@ proc tkMotifFDialog_InterpFilter {w} {
     set text [string trim [$data(fEnt) get]]
     # Perform tilde substitution
     #
-    if ![string compare [string index $text 0] ~] {
+    if {![string compare [string index $text 0] ~]} {
 	set list [file split $text]
 	set tilde [lindex $list 0]
 	catch {
@@ -432,7 +432,7 @@ proc tkMotifFDialog_InterpFilter {w} {
 
     set resolved [file join [file dirname $text] [file tail $text]]
 
-    if [file isdirectory $resolved] {
+    if {[file isdirectory $resolved]} {
 	set dir $resolved
 	set fil $data(filter)
     } else {
@@ -465,32 +465,32 @@ proc tkMotifFDialog_ActivateSEnt {w} {
 	return
     }
 
-    if [string compare [file pathtype $selectFilePath] "absolute"] {
+    if {[string compare [file pathtype $selectFilePath] "absolute"]} {
 	tk_messageBox -icon warning -type ok \
 	    -message "\"$selectFilePath\" must be an absolute pathname"
 	return
     }
 
-    if ![file exists $selectPath] {
+    if {![file exists $selectPath]} {
 	tk_messageBox -icon warning -type ok \
 	    -message "Directory \"$selectPath\" does not exist."
 	return
     }
 
-    if ![file exists $selectFilePath] {
-	if ![string compare $data(type) open] {
+    if {![file exists $selectFilePath]} {
+	if {![string compare $data(type) open]} {
 	    tk_messageBox -icon warning -type ok \
 		-message "File \"$selectFilePath\" does not exist."
 	    return
 	}
     } else {
-	if ![string compare $data(type) save] {
+	if {![string compare $data(type) save]} {
 	    set message [format %s%s \
 		"File \"$selectFilePath\" already exists.\n\n" \
 		"Replace existing file?"]
 	    set answer [tk_messageBox -icon warning -type yesno \
 		-message $message]
-	    if ![string compare $answer "no"] {
+	    if {![string compare $answer "no"]} {
 		return
 	    }
 	}
@@ -549,9 +549,9 @@ proc tkMotifFDialog_LoadFiles {w} {
     $data(fList) delete 0 end
 
     set appPWD [pwd]
-    if [catch {
+    if {[catch {
 	cd $data(selectPath)
-    }] {
+    }]} {
 	cd $appPWD
 
 	$data(dList) insert end ".."
@@ -561,13 +561,13 @@ proc tkMotifFDialog_LoadFiles {w} {
     # Make the dir list
     #
     foreach f [lsort -command tclSortNoCase [glob -nocomplain .* *]] {
-	if [file isdir $f] {
+	if {[file isdirectory $f]} {
 	    $data(dList) insert end $f
 	}
     }
     # Make the file list
     #
-    if ![string compare $data(filter) *] {
+    if {![string compare $data(filter) *]} {
 	set files [lsort -command tclSortNoCase [glob -nocomplain .* *]]
     } else {
 	set files [lsort -command tclSortNoCase \
@@ -576,9 +576,9 @@ proc tkMotifFDialog_LoadFiles {w} {
 
     set top 0
     foreach f $files {
-	if ![file isdir $f] {
+	if {![file isdir $f]} {
 	    $data(fList) insert end $f
-	    if [string match .* $f] {
+	    if {[string match .* $f]} {
 		incr top
 	    }
 	}

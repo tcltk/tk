@@ -4128,6 +4128,39 @@ Apple Universal Headers V. 3.0 so we can compile with CW Pro 2.0 (JI)
 
 ----------------- Released 8.0p2, 11/25/97 -----------------------
 
+11/25/97 (security bug fix + added feature) Tk Safe Init now asks
+the master's safe::TkInit for the 'argv' to use. This is transparently
+dealt with by the safe::loadTk API. New optional "-display displayName"
+argument to safe::loadTk, and the "-use" argument accepts both window
+Ids and Tk window names: see loadTk(n). Made the ":0.0" default display
+work on the Mac as it works on Windows and Unix. (DL)
+
+12/3/97 (bug fix/optimization) Removed unneeded and potentially dangerous
+instances of double evaluations if "if" and "expr" statements from
+the library files. It is recommended that unless you need a double
+evaluation you always use "expr {...}" instead of "expr ..." and
+"if {...} ..." instead of "if ... ...". It will also be faster
+thanks to the byte compiler. (DL)
+
+12/3/97 (new feature) Added support for browser/plugin style embedding, 
+and made various other fixes to get the plugin working on the Mac. (JI)
+
+12/8/97 (bug fix) on Windows, using "winfo pathname" before "." was mapped
+was crashing. (DL)
+
+---- Shipped as part of the plugin2.0b5 as 8.0p2Plugin1, Dec 8th 97 ----
+
+12/97 (bug fix) more Macintosh embeding fixes needed for the plugin. (JI)
+
+Jan/9/98 (improvement) Allow applications to have custom init script
+without  having to patch the Tk core: Tk_Init will use an existing
+"tkInit" proc if one exists in the interp where one tries to install Tk
+instead of defining it's own (tkInit is the transient proc defined in
+generic/tkInitScript.h that searches and sources tk.tcl and defines 
+the 'correct' tk_library). (DL)
+
+---- Shipped as part of the plugin2.0 as 8.0p2Plugin2, Jan 15th 98 ----
+
 6/3/98 (bug fix) Fixed bugs in the tk_getOpenFile under Unix.
  1) If the -initialdir option was "." the result would be "././foo.tcl"
     instead of an absolute path, like the Windows interface.  
