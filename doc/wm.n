@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.20 2004/10/28 12:25:53 dkf Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.21 2004/11/11 01:24:31 das Exp $
 '\" 
 .so man.macros
 .TH wm n 8.5 Tk "Tk Built-In Commands"
@@ -70,8 +70,13 @@ outside that range will be constrained.  This is supported on Windows
 \fB1.0\fR.
 .VE 8.5
 .PP
-On Macintosh, there are currently two attribute values:
-\fB\-modified\fR and \fB\-titlepath\fR.
+On Mac OS X, \fB\-modified\fR gets or sets the modification state of the
+window (determines whether the window close widget contains the modification
+indicator). \fB\-titlepath\fR gets or sets the path of the file referenced as
+the window proxy icon (which can be dragged and dropped in lieu of the file's
+finder icon). \fB\-alpha\fR sets the alpha transparency level of the window,
+it accepts a value from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque),
+values outside that range will be constrained.
 .PP
 On Unix, there are currently no special attribute values.
 .RE
