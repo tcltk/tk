@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.36 2004/08/19 14:41:52 dkf Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.37 2004/09/21 19:13:56 mdejong Exp $
 
 library tk
 
@@ -853,6 +853,10 @@ declare 33 win {
 
 declare 34 win {
     void TkWinSetHINSTANCE (HINSTANCE hInstance)
+}
+
+declare 35 win {
+    int TkWinGetPlatformTheme (void)
 }
 
 ########################

@@ -1,5 +1,22 @@
 2004-09-21  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* generic/tkInt.decls: Add decl for TkWinGetPlatformTheme.
+	It is only defined under Win32.
+	* generic/tkIntPlatDecls.h: Regen.
+	* generic/tkStubInit.c: Regen.
+	* win/tkWinInt.h: Define TK_THEME_WIN_CLASSIC and
+	TK_THEME_WIN_XP.
+	* win/tkWinMenu.c (DrawMenuEntryAccelerator, DrawMenuEntryLabel):
+	Draw a disabled 3D text highlight for the accelerator only
+	with the Win95/98 look. Same goes for the menu entry text.
+	* win/tkWinX.c (TkWinGetPlatformId, TkWinGetPlatformTheme):
+	Automatically detect the Windows theme in use and return
+	either TK_THEME_WIN_CLASSIC or TK_THEME_WIN_XP when the
+	TkWinGetPlatformTheme function is invoked.
+	[Patch 866194]
+
+2004-09-21  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* win/tkWinWm.c: Rework WS_EX_LAYERED and LWA_ALPHA
 	defines so that compiling with mingw works again.
 

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.35 2004/09/03 14:09:05 dkf Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.36 2004/09/21 19:13:58 mdejong Exp $
  */
 
 #define OEMRESOURCE
@@ -1602,15 +1602,17 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr, x,
  *
  * DrawMenuEntryAccelerator --
  *
- *	This procedure draws the accelerator part of a menu. We
- *	need to decide what to draw here. Should we replace strings
+ *	This procedure draws the accelerator part of a menu.
+ *	For example, the string "CTRL-Z" could be drawn to
+ *	to the right of the label text for an Undo menu entry.
+ *	Need to decide what to draw here. Should we replace strings
  *	like "Control", "Command", etc?
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Commands are output to X to display the menu in its
+ *	Commands are output to display the menu in its
  *	current mode.
  *
  *----------------------------------------------------------------------
@@ -1641,18 +1643,21 @@ DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 
     baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
 
-    if ((mePtr->state == ENTRY_DISABLED) && (menuPtr->disabledFgPtr != NULL)
-	    && (mePtr->accelPtr != NULL)) {
-	COLORREF oldFgColor = gc->foreground;
+    /* Draw disabled 3D text highlight only with the Win95/98 look. */
 
-	gc->foreground = GetSysColor(COLOR_3DHILIGHT);
-	if ((mePtr->accelPtr != NULL) &&
-	        ((mePtr->entryFlags & ENTRY_PLATFORM_FLAG1) == 0)) {
-	    Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel,
-		    mePtr->accelLength, leftEdge + 1, baseline + 1);
+    if (TkWinGetPlatformTheme() == TK_THEME_WIN_CLASSIC) {
+	if ((mePtr->state == ENTRY_DISABLED) && (menuPtr->disabledFgPtr != NULL)
+	        && (mePtr->accelPtr != NULL)) {
+	    COLORREF oldFgColor = gc->foreground;
+
+	    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
+	    if ((mePtr->accelPtr != NULL) &&
+	            ((mePtr->entryFlags & ENTRY_PLATFORM_FLAG1) == 0)) {
+	        Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel,
+		        mePtr->accelLength, leftEdge + 1, baseline + 1);
+	    }
+	    gc->foreground = oldFgColor;
 	}
-
-	gc->foreground = oldFgColor;
     }
 
     if (mePtr->accelPtr != NULL) {
@@ -2182,16 +2187,18 @@ DrawMenuEntryLabel(
     	if (mePtr->labelLength > 0) {
 	    int baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
 	    char *label = Tcl_GetStringFromObj(mePtr->labelPtr, NULL);
-	    /* Win 95/98 systems draw disabled menu text with a
-	     * 3D highlight, unless the menu item is highlighted */
-	    if ((mePtr->state == ENTRY_DISABLED) &&
-	            ((mePtr->entryFlags & ENTRY_PLATFORM_FLAG1) == 0)){
-	        COLORREF oldFgColor = gc->foreground;
-		gc->foreground = GetSysColor(COLOR_3DHILIGHT);
-	        Tk_DrawChars(menuPtr->display, d, gc, tkfont, label, 
-		        mePtr->labelLength, leftEdge + textXOffset + 1, 
-		        baseline + textYOffset + 1);
-		gc->foreground = oldFgColor;
+	    if (TkWinGetPlatformTheme() == TK_THEME_WIN_CLASSIC) {
+	        /* Win 95/98 systems draw disabled menu text with a
+	         * 3D highlight, unless the menu item is highlighted */
+	        if ((mePtr->state == ENTRY_DISABLED) &&
+	                ((mePtr->entryFlags & ENTRY_PLATFORM_FLAG1) == 0)) {
+	            COLORREF oldFgColor = gc->foreground;
+		    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
+	            Tk_DrawChars(menuPtr->display, d, gc, tkfont, label, 
+		            mePtr->labelLength, leftEdge + textXOffset + 1, 
+		            baseline + textYOffset + 1);
+		    gc->foreground = oldFgColor;
+	        }
 	    }
 	    Tk_DrawChars(menuPtr->display, d, gc, tkfont, label, 
 		    mePtr->labelLength, leftEdge + textXOffset, 
@@ -2199,7 +2206,7 @@ DrawMenuEntryLabel(
 	    DrawMenuUnderline(menuPtr, mePtr, d, gc, tkfont, fmPtr, 
 	            x + textXOffset, y + textYOffset,
 		    width, height);
-    	}
+	}
     }
 
     if (mePtr->state == ENTRY_DISABLED) {

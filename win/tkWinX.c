@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.31 2004/07/05 21:21:53 dkf Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.32 2004/09/21 19:13:58 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -90,6 +90,7 @@ static HINSTANCE tkInstance = NULL; /* Application instance handle. */
 static int childClassInitialized;   /* Registered child class? */
 static WNDCLASS childClass;	    /* Window class for child windows. */
 static int tkPlatformId = 0;	    /* version of Windows platform */
+static int tkWinTheme = 0;          /* See TkWinGetPlatformTheme */
 static Tcl_Encoding keyInputEncoding = NULL;/* The current character
 				     * encoding for keyboard input */
 static int keyInputCharset = -1;    /* The Win32 CHARSET for the keyboard
@@ -361,8 +362,62 @@ TkWinGetPlatformId()
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(&os);
 	tkPlatformId = os.dwPlatformId;
+        
+        /* Set tkWinTheme to be TK_THEME_WIN_XP or TK_THEME_WIN_CLASSIC.
+         * The TK_THEME_WIN_CLASSIC could be set even when running
+         * under XP if the windows classic theme was selected. */
+	if ((os.dwPlatformId == VER_PLATFORM_WIN32_NT) &&
+	        (os.dwMajorVersion == 5 && os.dwMinorVersion == 1)) {
+	    HKEY   hKey;
+	    LPCSTR szSubKey  = TEXT("Control Panel\\Appearance");
+	    LPCSTR szCurrent = TEXT("Current");
+	    DWORD  dwSize = 200;
+	    char pBuffer[200];
+	    memset(pBuffer, 0, dwSize);
+	    if (RegOpenKeyEx(HKEY_CURRENT_USER, szSubKey, 0L,
+                    KEY_READ, &hKey) != ERROR_SUCCESS) {
+                tkWinTheme = TK_THEME_WIN_XP;
+	    } else {
+	        RegQueryValueEx(hKey, szCurrent, NULL, NULL, pBuffer, &dwSize);
+	        RegCloseKey(hKey);
+	        if (strcmp(pBuffer, "Windows Standard") == 0) {
+	            tkWinTheme = TK_THEME_WIN_CLASSIC;
+	        } else {
+	            tkWinTheme = TK_THEME_WIN_XP;
+	        }
+	    }
+	} else {
+	    tkWinTheme = TK_THEME_WIN_CLASSIC;
+	}
     }
     return tkPlatformId;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinGetPlatformTheme --
+ *
+ *	Return the Windows drawing style we should be using.
+ *
+ * Results:
+ *	The return value is one of:
+ *	    TK_THEME_WIN_CLASSIC		95/98/NT or XP in classic mode
+ *	    TK_THEME_WIN_XP	                XP not in classic mode
+ *
+ * Side effects:
+ *	Could invoke TkWinGetPlatformId.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int		
+TkWinGetPlatformTheme()
+{
+    if (tkPlatformId == 0) {
+        TkWinGetPlatformId();
+    }
+    return tkWinTheme;
 }
 
 /*
