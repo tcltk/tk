@@ -1,3 +1,16 @@
+2001-05-21  Todd M. Helfter  <tmh@purdue.edu
+
+        Implementation of TIP #11, the addition of  a -compound
+	option to the menubutton allowing text and an image to
+	be displayed at the same time.  This behavior is identical
+	to the behavior of the button widget.
+	* doc/menubutton.n
+	* generic/tkMenubutton.c
+	* generic/tkMenubutton.h
+	* mac/tkMacMenubutton.c
+	* tests/menubut.test
+	* unix/tkUnixMenubu.c
+
 2001-05-16  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* doc/console.n: Added - was erroneously placed in Tcl before...
