@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.9 1999/12/14 06:52:31 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.10 2000/01/06 02:18:58 hobbs Exp $
  */
 
 #include "default.h"
@@ -34,8 +34,7 @@
 
 static Tk_CustomOption stateOption = {
     (Tk_OptionParseProc *) TkStateParseProc,
-    TkStatePrintProc,
-    (ClientData) NULL	/* only "normal" and "disabled" */
+    TkStatePrintProc, (ClientData) NULL /* only "normal" and "disabled" */
 };
 
 /*
@@ -969,8 +968,8 @@ ConfigureText(interp, textPtr, argc, argv, flags)
 	    || (textPtr->selTagPtr->spacing2String != NULL)
 	    || (textPtr->selTagPtr->spacing3String != NULL)
 	    || (textPtr->selTagPtr->tabString != NULL)
-	    || (textPtr->selTagPtr->state != TK_STATE_NULL)
 	    || (textPtr->selTagPtr->underlineString != NULL)
+	    || (textPtr->selTagPtr->elideString != NULL)
 	    || (textPtr->selTagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
 	textPtr->selTagPtr->affectsDisplay = 1;
     }
@@ -1519,7 +1518,8 @@ TextFetchSelection(clientData, offset, buffer, maxBytes)
 		    }
 		}
 	    }
-	    if (segPtr->typePtr == &tkTextCharType && !TkTextIsElided(textPtr, &textPtr->selIndex)) {
+	    if ((segPtr->typePtr == &tkTextCharType)
+		    && !TkTextIsElided(textPtr, &textPtr->selIndex)) {
 		memcpy((VOID *) buffer, (VOID *) (segPtr->body.chars
 			+ offsetInSeg), (size_t) chunkSize);
 		buffer += chunkSize;
@@ -1695,7 +1695,7 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	    badSwitch:
 	    Tcl_AppendResult(interp, "bad switch \"", arg,
 		    "\": must be -forward, -backward, -exact, -regexp, ",
-		    "-nocase, -count, -hidden, or --", (char *) NULL);
+		    "-nocase, -count, -elide, or --", (char *) NULL);
 	    return TCL_ERROR;
 	}
 	c = arg[1];
@@ -1709,9 +1709,17 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	    }
 	    i++;
 	    varName = argv[i];
-	} else if ((c == 'e') && (strncmp(argv[i], "-exact", length) == 0)) {
+	} else if ((c == 'e') && (length > 2)
+		&& (strncmp(argv[i], "-exact", length) == 0)) {
 	    exact = 1;
-	} else if ((c == 'e') && (strncmp(argv[i], "-elide", length) == 0)) {
+	} else if ((c == 'e') && (length > 2)
+		&& (strncmp(argv[i], "-elide", length) == 0)) {
+	    searchElide = 1;
+	} else if ((c == 'h') && (strncmp(argv[i], "-hidden", length) == 0)) {
+	    /*
+	     * -hidden is kept around for backwards compatibility with
+	     * the dash patch, but -elide is the official option
+	     */
 	    searchElide = 1;
 	} else if ((c == 'f') && (strncmp(argv[i], "-forwards", length) == 0)) {
 	    backwards = 0;
@@ -1719,8 +1727,6 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	    noCase = 1;
 	} else if ((c == 'r') && (strncmp(argv[i], "-regexp", length) == 0)) {
 	    exact = 0;
-	} else if ((c == 'h') && (strncmp(argv[i], "-hidden", length) == 0)) {
-	    searchElide = 1;
 	} else if ((c == '-') && (strncmp(argv[i], "--", length) == 0)) {
 	    i++;
 	    break;
@@ -1818,7 +1824,8 @@ TextSearchCmd(textPtr, interp, argc, argv)
 	curIndex.linePtr = linePtr; curIndex.byteIndex = 0;
 	for (segPtr = linePtr->segPtr; segPtr != NULL;
 		curIndex.byteIndex += segPtr->size, segPtr = segPtr->nextPtr) {
-	    if (segPtr->typePtr != &tkTextCharType || (!searchElide && TkTextIsElided(textPtr, &curIndex))) {
+	    if ((segPtr->typePtr != &tkTextCharType)
+		    || (!searchElide && TkTextIsElided(textPtr, &curIndex))) {
 		continue;
 	    }
 	    Tcl_DStringAppend(&line, segPtr->body.chars, segPtr->size);

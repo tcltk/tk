@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.8 1999/12/14 06:52:32 hobbs Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.9 2000/01/06 02:18:59 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -502,7 +502,7 @@ GetStyle(textPtr, indexPtr)
 
     int borderPrio, borderWidthPrio, reliefPrio, bgStipplePrio;
     int fgPrio, fontPrio, fgStipplePrio;
-    int underlinePrio, statePrio, justifyPrio, offsetPrio;
+    int underlinePrio, elidePrio, justifyPrio, offsetPrio;
     int lMargin1Prio, lMargin2Prio, rMarginPrio;
     int spacing1Prio, spacing2Prio, spacing3Prio;
     int overstrikePrio, tabPrio, wrapPrio;
@@ -517,7 +517,7 @@ GetStyle(textPtr, indexPtr)
     tagPtrs = TkBTreeGetTags(indexPtr, &numTags);
     borderPrio = borderWidthPrio = reliefPrio = bgStipplePrio = -1;
     fgPrio = fontPrio = fgStipplePrio = -1;
-    underlinePrio = statePrio = justifyPrio = offsetPrio = -1;
+    underlinePrio = elidePrio = justifyPrio = offsetPrio = -1;
     lMargin1Prio = lMargin2Prio = rMarginPrio = -1;
     spacing1Prio = spacing2Prio = spacing3Prio = -1;
     overstrikePrio = tabPrio = wrapPrio = -1;
@@ -531,7 +531,7 @@ GetStyle(textPtr, indexPtr)
     styleValues.spacing3 = textPtr->spacing3;
     styleValues.tabArrayPtr = textPtr->tabArrayPtr;
     styleValues.wrapMode = textPtr->wrapMode;
-    styleValues.elide = (textPtr->state == TK_STATE_HIDDEN);
+    styleValues.elide = 0;
     for (i = 0 ; i < numTags; i++) {
 	tagPtr = tagPtrs[i];
 
@@ -636,10 +636,10 @@ GetStyle(textPtr, indexPtr)
 	    styleValues.underline = tagPtr->underline;
 	    underlinePrio = tagPtr->priority;
 	}
-	if ((tagPtr->state != TK_STATE_NULL)
-		&& (tagPtr->priority > statePrio)) {
-	    styleValues.elide = (tagPtr->state == TK_STATE_HIDDEN);
-	    statePrio = tagPtr->priority;
+	if ((tagPtr->elideString != NULL)
+		&& (tagPtr->priority > elidePrio)) {
+	    styleValues.elide = tagPtr->elide;
+	    elidePrio = tagPtr->priority;
 	}
 	if ((tagPtr->wrapMode != TEXT_WRAPMODE_NULL)
 		&& (tagPtr->priority > wrapPrio)) {
@@ -821,33 +821,36 @@ LayoutDLine(textPtr, indexPtr)
     dlPtr->nextPtr = NULL;
     dlPtr->flags = NEW_LAYOUT;
 
-
     /*
-	* special case entirely elide line as there may be 1000s or more
-	*/
-	elide = TkTextIsElided(textPtr, indexPtr);		/* save a malloc */
-	if (elide && indexPtr->byteIndex==0) {
-		maxBytes = 0;
-		for (segPtr = indexPtr->linePtr->segPtr; elide && segPtr!=NULL; segPtr = segPtr->nextPtr) {
-			if ((elidesize = segPtr->size) > 0) {
-				maxBytes += elidesize;
-
-			/* if have tag toggle, chance that invisibility state changed, so bail out */
-			} else if (segPtr->typePtr == &tkTextToggleOffType || segPtr->typePtr == &tkTextToggleOnType) {
-				if (segPtr->body.toggle.tagPtr->state!=TK_STATE_NULL) {
-					elide = (segPtr->typePtr == &tkTextToggleOffType) ^ (segPtr->body.toggle.tagPtr->state==TK_STATE_HIDDEN);
-				}
-			}
+     * Special case entirely elide line as there may be 1000s or more
+     */
+    elide = TkTextIsElided(textPtr, indexPtr);		/* save a malloc */
+    if (elide && indexPtr->byteIndex==0) {
+	maxBytes = 0;
+	for (segPtr = indexPtr->linePtr->segPtr;
+	     elide && (segPtr != NULL);
+	     segPtr = segPtr->nextPtr) {
+	    if ((elidesize = segPtr->size) > 0) {
+		maxBytes += elidesize;
+		/*
+		 * If have we have a tag toggle, there is a chance
+		 * that invisibility state changed, so bail out
+		 */
+	    } else if ((segPtr->typePtr == &tkTextToggleOffType)
+		    || (segPtr->typePtr == &tkTextToggleOnType)) {
+		if (segPtr->body.toggle.tagPtr->elideString != NULL) {
+		    elide = (segPtr->typePtr == &tkTextToggleOffType)
+			^ segPtr->body.toggle.tagPtr->elide;
 		}
-
-		if (elide) {
-		    dlPtr->byteCount = maxBytes;
-		    dlPtr->spaceAbove = dlPtr->spaceBelow = dlPtr->length = 0;
-		    return dlPtr;
-		}
+	    }
 	}
 
-
+	if (elide) {
+	    dlPtr->byteCount = maxBytes;
+	    dlPtr->spaceAbove = dlPtr->spaceBelow = dlPtr->length = 0;
+	    return dlPtr;
+	}
+    }
 
     /*
      * Each iteration of the loop below creates one TkTextDispChunk for
@@ -879,37 +882,43 @@ LayoutDLine(textPtr, indexPtr)
      */
 
     for (byteOffset = curIndex.byteIndex, segPtr = curIndex.linePtr->segPtr;
-	    (byteOffset > 0) && (byteOffset >= segPtr->size);
-	    byteOffset -= segPtr->size, segPtr = segPtr->nextPtr) {
+	 (byteOffset > 0) && (byteOffset >= segPtr->size);
+	 byteOffset -= segPtr->size, segPtr = segPtr->nextPtr) {
 	/* Empty loop body. */
     }
 
     while (segPtr != NULL) {
-
-	/* every line still gets at least one chunk due to expectations in rest of code,
-	   but able to skip elided portions of line quickly */
-	/* if current chunk elided and last chunk was too, coalese */
-	if (elide && lastChunkPtr!=NULL && lastChunkPtr->displayProc == NULL/*ElideDisplayProc*/) {
+	/*
+	 * Every line still gets at least one chunk due to expectations
+	 * in the rest of the code, but we are able to skip elided portions
+	 * of the line quickly.
+	 * If current chunk is elided and last chunk was too, coalese
+	 */
+	if (elide && (lastChunkPtr != NULL)
+		&& (lastChunkPtr->displayProc == NULL /*ElideDisplayProc*/)) {
 	    if ((elidesize = segPtr->size - byteOffset) > 0) {
-		   curIndex.byteIndex += elidesize;
-		   lastChunkPtr->numBytes += elidesize;
-		   breakByteOffset = lastChunkPtr->breakIndex = lastChunkPtr->numBytes;
-
-	    /* if have tag toggle, chance that invisibility state changed */
-	    } else if (segPtr->typePtr == &tkTextToggleOffType || segPtr->typePtr == &tkTextToggleOnType) {
-		   if (segPtr->body.toggle.tagPtr->state!=TK_STATE_NULL) {
-			  elide = (segPtr->typePtr == &tkTextToggleOffType) ^
- (segPtr->body.toggle.tagPtr->state==TK_STATE_HIDDEN);
-		   }
+		curIndex.byteIndex += elidesize;
+		lastChunkPtr->numBytes += elidesize;
+		breakByteOffset = lastChunkPtr->breakIndex = lastChunkPtr->numBytes;
+		/*
+		 * If have we have a tag toggle, there is a chance
+		 * that invisibility state changed, so bail out
+		 */
+	    } else if ((segPtr->typePtr == &tkTextToggleOffType)
+		    || (segPtr->typePtr == &tkTextToggleOnType)) {
+		if (segPtr->body.toggle.tagPtr->elideString != NULL) {
+		    elide = (segPtr->typePtr == &tkTextToggleOffType)
+			^ segPtr->body.toggle.tagPtr->elide;
+		}
 	    }
 
 	    byteOffset = 0;
 	    segPtr = segPtr->nextPtr;
-	    if (segPtr == NULL && chunkPtr != NULL) ckfree((char *) chunkPtr);
-
+	    if (segPtr == NULL && chunkPtr != NULL) {
+		ckfree((char *) chunkPtr);
+	    }
 	    continue;
 	}
-
 
 	if (segPtr->typePtr->layoutProc == NULL) {
 	    segPtr = segPtr->nextPtr;

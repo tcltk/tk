@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.6 1999/12/14 06:52:32 hobbs Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.7 2000/01/06 02:18:58 hobbs Exp $
  */
 
 #ifndef _TKTEXT
@@ -382,11 +382,13 @@ typedef struct TkTextTag {
 				 * TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD,
 				 * or TEXT_WRAPMODE_NULL to use wrapmode for
 				 * whole widget. */
+    char *elideString;		/* -elide option string (malloc-ed).
+				 * NULL means option not specified. */
+    int elide;			/* Non-zero means that data under this tag
+				 * should not be displayed. */
     int affectsDisplay;		/* Non-zero means that this tag affects the
 				 * way information is displayed on the screen
 				 * (so need to redisplay if tag changes). */
-    int state;			/* Must be STATE_NULL, STATE_NORMAL,
-				 * STATE_HIDDEN or STATE_DISABLED. */
 } TkTextTag;
 
 #define TK_TAG_AFFECTS_DISPLAY	0x1
@@ -484,8 +486,8 @@ typedef struct TkText {
 				 * image segment doesn't yet have an
 				 * associated image, there is no entry for
 				 * it here. */
-    int state;			/* Either STATE_NORMAL or STATE_DISABLED. A text 
-				 * widget is read-only when disabled. */
+    int state;			/* Either STATE_NORMAL or STATE_DISABLED. A
+				 * text widget is read-only when disabled. */
 
     /*
      * Default information for displaying (may be overridden by tags
@@ -820,7 +822,7 @@ EXTERN void		TkTextLostSelection _ANSI_ARGS_((
 EXTERN TkTextIndex *	TkTextMakeCharIndex _ANSI_ARGS_((TkTextBTree tree,
 			    int lineIndex, int charIndex,
 			    TkTextIndex *indexPtr));
-extern int		TkTextIsElided _ANSI_ARGS_((TkText *textPtr,
+EXTERN int		TkTextIsElided _ANSI_ARGS_((TkText *textPtr,
 			    TkTextIndex *indexPtr));
 EXTERN TkTextIndex *	TkTextMakeByteIndex _ANSI_ARGS_((TkTextBTree tree,
 			    int lineIndex, int byteIndex,

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.3 1999/12/14 06:51:44 hobbs Exp $
+'\" RCS: @(#) $Id: text.n,v 1.4 2000/01/06 02:18:54 hobbs Exp $
 '\" 
 .so man.macros
 .TH text n 4.0 Tk "Tk Built-In Commands"
@@ -324,6 +324,11 @@ option to give a 3-D appearance to the background for characters;
 it is ignored unless the \fB\-background\fR option
 has been set for the tag.
 .TP
+\fB\-elide \fIboolean\fR
+\fIElide\fR specifies whether the data should be elided.
+Elided data is not displayed and takes no space on screen, but further
+on behaves just as normal data.
+.TP
 \fB\-fgstipple \fIbitmap\fR
 \fIBitmap\fR specifies a bitmap that is used as a stipple pattern
 when drawing text and other foreground information such as
@@ -424,11 +429,6 @@ left below each text line, using any of the standard forms for
 screen distances.
 If a line wraps, this option only applies to the last
 line on the display.
-.TP
-\fB\-state \fIstate\fR
-\fIState\fR specifies if the text is \fIhidden\fR or \fInormal\fR.
-Hidden text is not displayed and takes no space on screen, but further
-on behaves just as normal text.
 .TP
 \fB\-tabs \fItabList\fR
 \fITabList\fR specifies a set of tab stops in the same form
@@ -1060,8 +1060,8 @@ The argument following \fB\-count\fR gives the name of a variable;
 if a match is found, the number of characters in the matching
 range will be stored in the variable.
 .TP
-\fB\-hidden\fR
-Find hidden text as well. By default only displayed text is found.
+\fB\-elide\fR
+Find elidden (hidden) text as well. By default only displayed text is found.
 .TP
 \fB\-\|\-\fR
 This switch has no effect except to terminate the list of switches:
