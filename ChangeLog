@@ -1,3 +1,8 @@
+2004-09-19  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/*: Standardize style of references to manual sections and public
+	Tcl symbols along the lines of what I set out in [Tcl Patch 1022527].
+
 2004-09-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinWm.c (WmAttributesCmd): correct -alpha 0.0/1.0 setting

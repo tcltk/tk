@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.16 2004/08/19 14:41:52 dkf Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.17 2004/09/19 16:05:36 dkf Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -39,14 +39,14 @@ be constrained within the scroll region.
 .OP \-height height Height
 Specifies a desired window height that the canvas widget should request from
 its geometry manager.  The value may be specified in any
-of the forms described in the COORDINATES section below.
+of the forms described in the \fBCOORDINATES\fR section below.
 .OP \-scrollregion scrollRegion ScrollRegion
 Specifies a list with four coordinates describing the left, top, right, and
 bottom coordinates of a rectangular region.
 This region is used for scrolling purposes and is considered to be
 the boundary of the information in the canvas.
 Each of the coordinates may be specified
-in any of the forms given in the COORDINATES section below.
+in any of the forms given in the \fBCOORDINATES\fR section below.
 .OP \-state state State
 Modifies the default state of the canvas where \fIstate\fR may be set to
 one of: \fBnormal\fR, \fBdisabled\fR, or \fBhidden\fR. Individual canvas
@@ -60,7 +60,7 @@ the appearence when the state is disabled.  Canvas items which are
 .OP \-width width width
 Specifies a desired window width that the canvas widget should request from
 its geometry manager.  The value may be specified in any
-of the forms described in the COORDINATES section below.
+of the forms described in the \fBCOORDINATES\fR section below.
 .OP \-xscrollincrement xScrollIncrement ScrollIncrement
 Specifies an increment for horizontal scrolling, in any of the usual forms
 permitted for screen distances.  If the value of this option is greater
@@ -1045,7 +1045,7 @@ See "DASH PATTERNS" for more information.
 The starting \fIoffset\fR in pixels into the pattern provided by the
 \fB\-dash\fR option.  \fB\-dashoffset\fR is ignored if there is no
 \fB-dash\fR pattern.  The \fIoffset\fR may have any of the forms described
-in the COORDINATES section above.
+in the \fBCOORDINATES\fR section above.
 .TP
 \fB\-fill \fIcolor\fR
 .TP
@@ -1130,8 +1130,8 @@ existing tags for the item.  \fITagList\fR may be an empty list.
 \fB\-disabledwidth \fIoutlineWidth\fR
 Specifies the width of the outline to be drawn around
 the item's region, in its normal, active and disabled states.
-\fIoutlineWidth\fR may be in any of the forms described in the COORDINATES
-section above.
+\fIoutlineWidth\fR may be in any of the forms described in the
+\fBCOORDINATES\fR section above.
 If the \fB\-outline\fR option has been specified as an empty string then
 this option has no effect.  This option defaults to 1.0.
 For arcs, wide outlines will be drawn centered on the edges of the
@@ -1368,7 +1368,7 @@ This option defaults to \fBnone\fR.
 This option indicates how to draw arrowheads.
 The \fIshape\fR argument must be a list with three elements, each
 specifying a distance in any of the forms described in
-the COORDINATES section above.
+the \fBCOORDINATES\fR section above.
 The first element of the list gives the distance along the line
 from the neck of the arrowhead to its tip.
 The second element gives the distance along the line from the
@@ -1673,7 +1673,7 @@ This option defaults to an empty string.
 .TP
 \fB\-width \fIlineLength\fR
 Specifies a maximum line length for the text, in any of the forms
-described in the COORDINATES section above.
+described in the \fBCOORDINATES\fR section above.
 If this option is zero (the default) the text is broken into
 lines only at newline characters.
 However, if this option is non-zero then any line that would
@@ -1718,14 +1718,14 @@ This option defaults to \fBcenter\fR.
 \fB\-height \fIpixels\fR
 Specifies the height to assign to the item's window.
 \fIPixels\fR may have any of the
-forms described in the COORDINATES section above.
+forms described in the \fBCOORDINATES\fR section above.
 If this option isn't specified, or if it is specified as an empty
 string, then the window is given whatever height it requests internally.
 .TP
 \fB\-width \fIpixels\fR
 Specifies the width to assign to the item's window.
 \fIPixels\fR may have any of the
-forms described in the COORDINATES section above.
+forms described in the \fBCOORDINATES\fR section above.
 If this option isn't specified, or if it is specified as an empty
 string, then the window is given whatever width it requests internally.
 .TP

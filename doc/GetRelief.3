@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetRelief.3,v 1.4 2002/08/05 04:30:38 dgp Exp $
+'\" RCS: @(#) $Id: GetRelief.3,v 1.5 2004/09/19 16:05:36 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_GetReliefFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -45,8 +45,9 @@ Pointer to location in which to store relief value corresponding to
 .AP "CONST char" *name
 Name of the relief.
 .AP int relief in
-Relief value (one of TK_RELIEF_FLAT, TK_RELIEF_RAISED, TK_RELIEF_SUNKEN,
-TK_RELIEF_GROOVE, TK_RELIEF_SOLID, or TK_RELIEF_RIDGE).
+Relief value (one of \fBTK_RELIEF_FLAT\fR, \fBTK_RELIEF_RAISED\fR,
+\fBTK_RELIEF_SUNKEN\fR, \fBTK_RELIEF_GROOVE\fR, \fBTK_RELIEF_SOLID\fR,
+or \fBTK_RELIEF_RIDGE\fR).
 .BE
 
 .SH DESCRIPTION
@@ -54,12 +55,12 @@ TK_RELIEF_GROOVE, TK_RELIEF_SOLID, or TK_RELIEF_RIDGE).
 .VS 8.1
 \fBTk_GetReliefFromObj\fR places in \fI*reliefPtr\fR the relief value
 corresponding to the value of \fIobjPtr\fR.  This value will be one of
-TK_RELIEF_FLAT, TK_RELIEF_RAISED, TK_RELIEF_SUNKEN,
-TK_RELIEF_GROOVE, TK_RELIEF_SOLID, or TK_RELIEF_RIDGE.
-Under normal circumstances the return value is TCL_OK and
+\fBTK_RELIEF_FLAT\fR, \fBTK_RELIEF_RAISED\fR, \fBTK_RELIEF_SUNKEN\fR,
+\fBTK_RELIEF_GROOVE\fR, \fBTK_RELIEF_SOLID\fR, or \fBTK_RELIEF_RIDGE\fR.
+Under normal circumstances the return value is \fBTCL_OK\fR and
 \fIinterp\fR is unused.
 If \fIobjPtr\fR doesn't contain one of the valid relief names
-or an abbreviation of one of them, then TCL_ERROR is returned,
+or an abbreviation of one of them, then \fBTCL_ERROR\fR is returned,
 \fI*reliefPtr\fR is unmodified, and an error message
 is stored in \fIinterp\fR's result if \fIinterp\fR isn't NULL.
 \fBTk_GetReliefFromObj\fR caches information about the return

@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: CrtPhImgFmt.3,v 1.5 2001/08/23 19:11:22 hobbs Exp $
+'\" RCS: @(#) $Id: CrtPhImgFmt.3,v 1.6 2004/09/19 16:05:36 dkf Exp $
 '\"
 .so man.macros
 .TH Tk_CreatePhotoImageFormat 3 8.3 Tk "Tk Library Procedures"
@@ -48,13 +48,13 @@ handler to deal with files and strings in this format.  The
 Tk_PhotoImageFormat structure contains the following fields:
 .CS
 typedef struct Tk_PhotoImageFormat {
-	char *\fIname\fR;
-	Tk_ImageFileMatchProc *\fIfileMatchProc\fR;
-	Tk_ImageStringMatchProc *\fIstringMatchProc\fR;
-	Tk_ImageFileReadProc *\fIfileReadProc\fR;
-	Tk_ImageStringReadProc *\fIstringReadProc\fR;
-	Tk_ImageFileWriteProc *\fIfileWriteProc\fR;
-	Tk_ImageStringWriteProc *\fIstringWriteProc\fR;
+    char *\fIname\fR;
+    Tk_ImageFileMatchProc *\fIfileMatchProc\fR;
+    Tk_ImageStringMatchProc *\fIstringMatchProc\fR;
+    Tk_ImageFileReadProc *\fIfileReadProc\fR;
+    Tk_ImageStringReadProc *\fIstringReadProc\fR;
+    Tk_ImageFileWriteProc *\fIfileWriteProc\fR;
+    Tk_ImageStringWriteProc *\fIstringWriteProc\fR;
 } Tk_PhotoImageFormat;
 .CE
 .PP
@@ -94,12 +94,12 @@ suitable for reading data in a given file.
 \fIformatPtr->fileMatchProc\fR must match the following prototype:
 .CS
 typedef int Tk_ImageFileMatchProc(
-	Tcl_Channel \fIchan\fR,
-	CONST char *\fIfileName\fR,
-	Tcl_Obj *\fIformat\fR,
-	int *\fIwidthPtr\fR,
-	int *\fIheightPtr\fR,
-	Tcl_Interp *\fIinterp\fR);
+    Tcl_Channel \fIchan\fR,
+    CONST char *\fIfileName\fR,
+    Tcl_Obj *\fIformat\fR,
+    int *\fIwidthPtr\fR,
+    int *\fIheightPtr\fR,
+    Tcl_Interp *\fIinterp\fR);
 .CE
 The \fIfileName\fR argument is the name of the file containing the
 image data, which is open for reading as \fIchan\fR.  The
@@ -117,11 +117,11 @@ suitable for reading data from a given string.
 \fIformatPtr->stringMatchProc\fR must match the following prototype:
 .CS
 typedef int Tk_ImageStringMatchProc(
-	Tcl_Obj *\fIdata\fR,
-	Tcl_Obj *\fIformat\fR,
-	int *\fIwidthPtr\fR,
-	int *\fIheightPtr\fR,
-	Tcl_Interp *\fIinterp\fR);
+    Tcl_Obj *\fIdata\fR,
+    Tcl_Obj *\fIformat\fR,
+    int *\fIwidthPtr\fR,
+    int *\fIheightPtr\fR,
+    Tcl_Interp *\fIinterp\fR);
 .CE
 The \fIdata\fR argument points to the object containing the image
 data.  The \fIformat\fR argument contains the value given for
@@ -138,14 +138,14 @@ Tk to call to read data from an image file into a photo image.
 \fIformatPtr->fileReadProc\fR must match the following prototype:
 .CS
 typedef int Tk_ImageFileReadProc(
-	Tcl_Interp *\fIinterp\fR,
-	Tcl_Channel \fIchan\fR,
-	CONST char *\fIfileName\fR,
-	Tcl_Obj *\fIformat\fR,
-	PhotoHandle \fIimageHandle\fR,
-	int \fIdestX\fR, int \fIdestY\fR,
-	int \fIwidth\fR, int \fIheight\fR,
-	int \fIsrcX\fR, int \fIsrcY\fR);
+    Tcl_Interp *\fIinterp\fR,
+    Tcl_Channel \fIchan\fR,
+    CONST char *\fIfileName\fR,
+    Tcl_Obj *\fIformat\fR,
+    PhotoHandle \fIimageHandle\fR,
+    int \fIdestX\fR, int \fIdestY\fR,
+    int \fIwidth\fR, int \fIheight\fR,
+    int \fIsrcX\fR, int \fIsrcY\fR);
 .CE
 The \fIinterp\fR argument is the interpreter in which the command was
 invoked to read the image; it should be used for reporting errors.
@@ -167,13 +167,13 @@ Tk to call to read data from a string into a photo image.
 \fIformatPtr->stringReadProc\fR must match the following prototype:
 .CS
 typedef int Tk_ImageStringReadProc(
-	Tcl_Interp *\fIinterp\fR,
-	Tcl_Obj *\fIdata\fR,
-	Tcl_Obj *\fIformat\fR,
-	PhotoHandle \fIimageHandle\fR,
-	int \fIdestX\fR, int \fIdestY\fR,
-	int \fIwidth\fR, int \fIheight\fR,
-	int \fIsrcX\fR, int \fIsrcY\fR);
+    Tcl_Interp *\fIinterp\fR,
+    Tcl_Obj *\fIdata\fR,
+    Tcl_Obj *\fIformat\fR,
+    PhotoHandle \fIimageHandle\fR,
+    int \fIdestX\fR, int \fIdestY\fR,
+    int \fIwidth\fR, int \fIheight\fR,
+    int \fIsrcX\fR, int \fIsrcY\fR);
 .CE
 The \fIinterp\fR argument is the interpreter in which the command was
 invoked to read the image; it should be used for reporting errors.
@@ -195,10 +195,10 @@ Tk to call to write data from a photo image to a file.
 \fIformatPtr->fileWriteProc\fR must match the following prototype:
 .CS
 typedef int Tk_ImageFileWriteProc(
-	Tcl_Interp *\fIinterp\fR,
-	CONST char *\fIfileName\fR,
-	Tcl_Obj *\fIformat\fR,
-	Tk_PhotoImageBlock *\fIblockPtr\fR);
+    Tcl_Interp *\fIinterp\fR,
+    CONST char *\fIfileName\fR,
+    Tcl_Obj *\fIformat\fR,
+    Tk_PhotoImageBlock *\fIblockPtr\fR);
 .CE
 The \fIinterp\fR argument is the interpreter in which the command was
 invoked to write the image; it should be used for reporting errors.
@@ -220,9 +220,9 @@ Tk to call to translate image data from a photo image into a string.
 \fIformatPtr->stringWriteProc\fR must match the following prototype:
 .CS
 typedef int Tk_ImageStringWriteProc(
-	Tcl_Interp *\fIinterp\fR,
-	Tcl_Obj *\fIformat\fR,
-	Tk_PhotoImageBlock *\fIblockPtr\fR);
+    Tcl_Interp *\fIinterp\fR,
+    Tcl_Obj *\fIformat\fR,
+    Tk_PhotoImageBlock *\fIblockPtr\fR);
 .CE
 The \fIinterp\fR argument is the interpreter in which the command was
 invoked to convert the image; it should be used for reporting errors.
