@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.1.4.3 1998/11/24 21:42:39 stanton Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.1.4.4 1998/11/25 22:36:50 stanton Exp $
  */
 
 /*
@@ -692,8 +692,9 @@ MenuWidgetObjCmd(clientData, interp, objc, objv)
 		goto done;
 	    }
 	    if ((index >= 0) 
-		    && (menuPtr->entries[index]->type == SEPARATOR_ENTRY)
-		    && (menuPtr->entries[index]->state == ENTRY_DISABLED)) {
+		    && ((menuPtr->entries[index]->type == SEPARATOR_ENTRY)
+			    || (menuPtr->entries[index]->state
+				    == ENTRY_DISABLED))) {
 		index = -1;
 	    }
 	    result = TkActivateMenuEntry(menuPtr, index);
