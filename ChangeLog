@@ -1,3 +1,11 @@
+1999-12-12  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* generic/tkText.c: fixed bug in TextSearchCmd for multibyte chars
+	(Darley) [Bug: 3839]
+
+	* unix/aclocal.m4: added warning when configuring with
+	--enable-threads that Tk may have problems
+
 1999-12-09  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* generic/tkImgGIF.c: updated casting
