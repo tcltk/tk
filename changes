@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.63 2003/03/03 15:54:49 dkf Exp $
+RCS: @(#) $Id: changes,v 1.64 2003/03/03 20:01:55 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5479,4 +5479,4 @@ on Windows. (martin)
 of the event structure when that field is valid for that event type. (fellows)
 	*** POTENTIAL INCOMPATIBILITY ***
 
---- Released 8.4.2, March X, 2002 --- See ChangeLog for details ---
+--- Released 8.4.2, March 3, 2002 --- See ChangeLog for details ---
