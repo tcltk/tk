@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCursor.c,v 1.9.2.1 2003/04/18 21:56:59 hobbs Exp $
+ * RCS: @(#) $Id: tkCursor.c,v 1.9.2.2 2004/09/24 17:35:48 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -848,6 +848,9 @@ TkDebugCursor(tkwin, name)
     Tcl_Obj *resultPtr, *objPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
+    if (!dispPtr->cursorInit) {
+	CursorInit(dispPtr);
+    }
     resultPtr = Tcl_NewObj();
     hashPtr = Tcl_FindHashEntry(&dispPtr->cursorNameTable, name);
     if (hashPtr != NULL) {
