@@ -3,7 +3,7 @@
 # Simple makefile for building on Mac OS X with the
 # Project Builder command line tool 'pbxbuild'
 #
-# RCS: @(#) $Id: Makefile,v 1.5 2002/10/09 13:02:08 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.6 2002/10/16 23:56:02 das Exp $
 #
 ################################################################################
 
@@ -86,7 +86,9 @@ cleanup-embedded:
 	@-cd ${INSTALL_ROOT}; \
 	rm -f Frameworks; \
 	rm -rf @executable_path; \
+	chmod -RH u+w Library/Frameworks/Tcl.framework; \
 	rm -rf Library/Frameworks/Tcl.framework; \
+	chmod -RH u+w Library/Frameworks/Tk.framework; \
 	rm -rf Library/Frameworks/Tk.framework; \
 	rmdir -p Library/Frameworks 2>&-;
 
