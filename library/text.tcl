@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.11 2000/03/31 09:24:11 hobbs Exp $
+# RCS: @(#) $Id: text.tcl,v 1.12 2000/04/17 23:24:29 ericm Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -53,12 +53,14 @@ bind Text <B1-Motion> {
 bind Text <Double-1> {
     set tkPriv(selectMode) word
     tkTextSelectTo %W %x %y
-    catch {%W mark set insert sel.first}
+    catch {%W mark set insert sel.last}
+    catch {%W mark set anchor sel.first}
 }
 bind Text <Triple-1> {
     set tkPriv(selectMode) line
     tkTextSelectTo %W %x %y
-    catch {%W mark set insert sel.first}
+    catch {%W mark set insert sel.last}
+    catch {%W mark set anchor sel.first}
 }
 bind Text <Shift-1> {
     tkTextResetAnchor %W @%x,%y
@@ -67,7 +69,7 @@ bind Text <Shift-1> {
 }
 bind Text <Double-Shift-1>	{
     set tkPriv(selectMode) word
-    tkTextSelectTo %W %x %y
+    tkTextSelectTo %W %x %y 1
 }
 bind Text <Triple-Shift-1>	{
     set tkPriv(selectMode) line
@@ -528,7 +530,7 @@ proc tkTextButton1 {w x y} {
 # x -		Mouse x position.
 # y - 		Mouse y position.
 
-proc tkTextSelectTo {w x y} {
+proc tkTextSelectTo {w x y {extend 0}} {
     global tkPriv tcl_platform
 
     set cur [tkTextClosestGap $w $x $y]
@@ -552,10 +554,18 @@ proc tkTextSelectTo {w x y} {
 	word {
 	    if {[$w compare $cur < anchor]} {
 		set first [tkTextPrevPos $w "$cur + 1c" tcl_wordBreakBefore]
-		set last [tkTextNextPos $w "anchor" tcl_wordBreakAfter]
+		if { !$extend } {
+		    set last [tkTextNextPos $w "anchor" tcl_wordBreakAfter]
+		} else {
+		    set last anchor
+		}
 	    } else {
-		set first [tkTextPrevPos $w anchor tcl_wordBreakBefore]
 		set last [tkTextNextPos $w "$cur - 1c" tcl_wordBreakAfter]
+		if { !$extend } {
+		    set first [tkTextPrevPos $w anchor tcl_wordBreakBefore]
+		} else {
+		    set first anchor
+		}
 	    }
 	}
 	line {

@@ -1,5 +1,13 @@
 2000-04-17  Eric Melski  <ericm@scriptics.com>
 
+	* library/text.tcl: Tweaked double-/triple-click selection;
+	previously, anchor and insert marks were placed in unexpected
+	locations following a double or triple click.  Now they are placed
+	logically.  Also tweaked the extension of selection via
+	shift-double-clicks so that it no longer selects the contiguous
+	whitespace on the side of the selection opposite the
+	double-click. [RFE: 4253].
+
 	* doc/menu.n: Added note regarding rendering of
 	checkbuttons/radiobuttons in menubars on different platforms --
 	some systems do not draw indicators for check/radiobuttons in
