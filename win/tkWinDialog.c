@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.12 2000/06/15 16:01:04 ericm Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.13 2000/07/06 03:17:44 mo Exp $
  *
  */
 
@@ -123,7 +123,6 @@ static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam,
 static UINT APIENTRY	OFNHookProcW(HWND hdlg, UINT uMsg, WPARAM wParam, 
 			    LPARAM lParam);
 static void		SetTkDialog(ClientData clientData);
-static int		TrySetDirectory(HWND hwnd, const TCHAR *dir);
 
 /*
  *-------------------------------------------------------------------------

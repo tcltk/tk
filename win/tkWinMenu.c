@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.10 2000/05/16 17:57:32 ericm Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.11 2000/07/06 03:17:44 mo Exp $
  */
 
 #define OEMRESOURCE
@@ -82,8 +82,6 @@ static int defaultBorderWidth;	/* The windows default border width. */
 static Tcl_DString menuFontDString;
 				/* A buffer to store the default menu font
 				 * string. */
-TCL_DECLARE_MUTEX(winMenuMutex)
-
 /*
  * Forward declarations for procedures defined later in this file:
  */
@@ -149,7 +147,6 @@ static void		GetTearoffEntryGeometry _ANSI_ARGS_((TkMenu *menuPtr,
 			    int *heightPtr));
 static int		GetNewID _ANSI_ARGS_((TkMenuEntry *mePtr,
 			    int *menuIDPtr));
-static void		MenuExitProc _ANSI_ARGS_((ClientData clientData));
 static int		MenuKeyBindProc _ANSI_ARGS_((
 			    ClientData clientData, 
 			    Tcl_Interp *interp, XEvent *eventPtr,

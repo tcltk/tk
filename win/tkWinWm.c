@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.25 2000/05/16 00:00:29 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.26 2000/07/06 03:17:45 mo Exp $
  */
 
 #include "tkWinInt.h"
@@ -276,8 +276,6 @@ TCL_DECLARE_MUTEX(winWmMutex)
 
 static int		ActivateWindow _ANSI_ARGS_((Tcl_Event *evPtr,
 			    int flags));
-static void		ConfigureEvent _ANSI_ARGS_((TkWindow *winPtr,
-			    XConfigureEvent *eventPtr));
 static void		ConfigureTopLevel _ANSI_ARGS_((WINDOWPOS *pos));
 static void		GenerateConfigureNotify _ANSI_ARGS_((
 			    TkWindow *winPtr));

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.9 2000/05/17 21:17:22 ericm Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.10 2000/07/06 03:17:44 mo Exp $
  */
 
 #define OEMRESOURCE
@@ -24,10 +24,6 @@
 #define PUSH_STYLE (BS_OWNERDRAW | BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS)
 #define CHECK_STYLE (BS_OWNERDRAW | BS_CHECKBOX | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS)
 #define RADIO_STYLE (BS_OWNERDRAW | BS_RADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS)
-
-static DWORD buttonStyles[] = {
-    LABEL_STYLE, PUSH_STYLE, CHECK_STYLE, RADIO_STYLE
-};
 
 /*
  * Declaration of Windows specific button structure.
@@ -83,13 +79,8 @@ static Tcl_ThreadDataKey dataKey;
 /*
  * Declarations for functions defined in this file.
  */
-
-static int		ButtonBindProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, XEvent *eventPtr,
-			    Tk_Window tkwin, KeySym keySym));
 static LRESULT CALLBACK	ButtonProc _ANSI_ARGS_((HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam));
-static DWORD		ComputeStyle _ANSI_ARGS_((WinButton* butPtr));
 static Window		CreateProc _ANSI_ARGS_((Tk_Window tkwin,
 			    Window parent, ClientData instanceData));
 static void		InitBoxes _ANSI_ARGS_((void));

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.10 2000/04/19 01:06:51 ericm Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.11 2000/07/06 03:17:45 mo Exp $
  */
 
 #include "tkWinInt.h"
@@ -30,8 +30,6 @@ static HINSTANCE tkInstance;        /* Application instance handle. */
 static int childClassInitialized;   /* Registered child class? */
 static WNDCLASS childClass;	    /* Window class for child windows. */
 static int tkPlatformId;	    /* version of Windows platform */
-
-TCL_DECLARE_MUTEX(winXMutex)
 
 /*
  * Thread local storage.  Notice that now each thread must have its

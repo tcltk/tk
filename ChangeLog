@@ -1,3 +1,19 @@
+2000-07-05  Mo DeJong  <mdejong@redhat.com>
+
+	* generic/tkFileFilter.c (AddClause): Cast to match function prototype.
+	* win/stubs.c (_XInitImageFuncPtrs): Add return value for function.
+	* win/tkWinButton.c (buttonStyles, ButtonBindProc, ComputeStyle):
+	Remove unused declarations.
+	* win/tkWinColor.c (GetColorByName, GetColorByValue): Remove unused
+	function declarations.
+	* win/tkWinDialog.c (TrySetDirectory): Remove unused function declaration.
+	* win/tkWinEmbed.c (TkWinEmbeddedEventProc): Cast to match function prototype.
+	* win/tkWinMenu.c (winMenuMutex, MenuExitProc): Remove unused declaration.
+	* win/tkWinWindow.c (StackWindow): Remove unused declaration.
+	* win/tkWinWm.c (ConfigureEvent): Remove unused declaration.
+	* win/tkWinX.c (winXMutex): Remove unused declaration.
+	* xlib/ximage.c (XCreateBitmapFromData): Cast to match function prototype.
+
 2000-07-05  Eric Melski  <ericm@scriptics.com>
 
 	* tests/imgPhoto.test: Added test for GIF writing code [Bug: 5823].

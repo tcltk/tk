@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWindow.c,v 1.5 1999/04/16 01:51:54 stanton Exp $
+ * RCS: @(#) $Id: tkWinWindow.c,v 1.6 2000/07/06 03:17:45 mo Exp $
  */
 
 #include "tkWinInt.h"
@@ -27,8 +27,6 @@ static Tcl_ThreadDataKey dataKey;
 
 static void		NotifyVisibility _ANSI_ARGS_((XEvent *eventPtr,
 			    TkWindow *winPtr));
-static void 		StackWindow _ANSI_ARGS_((Window w, Window sibling,
-			    int stack_mode));
 
 /*
  *----------------------------------------------------------------------
