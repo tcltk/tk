@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.20 2002/05/08 05:13:03 dgp Exp $
-# $Id: bgerror.tcl,v 1.20 2002/05/08 05:13:03 dgp Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.21 2002/06/09 09:07:14 mdejong Exp $
+# $Id: bgerror.tcl,v 1.21 2002/06/09 09:07:14 mdejong Exp $
 
 namespace eval ::tk {
     namespace eval dialog {
@@ -138,9 +138,6 @@ proc ::tk::dialog::error::bgerror err {
     wm title .bgerrorDialog $title
     wm iconname .bgerrorDialog ErrorDialog
     wm protocol .bgerrorDialog WM_DELETE_WINDOW { }
-
-    # The following, though surprising, works.
-    wm transient .bgerrorDialog .bgerrorDialog
 
     if {$tcl_platform(platform) eq "macintosh"} {
 	::tk::unsupported::MacWindowStyle style .bgerrorDialog dBoxProc
