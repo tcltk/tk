@@ -1,5 +1,9 @@
 2003-07-28  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* win/tkWinDialog.c: Applied patch from bug #611615 which fixes a
+	problem with double clicks in file dialogs falling through to the
+	window underneath in win32.
+
 	* library/panedwindow.tcl: Apply patch from bug #778893 to make
 	the panedwindow -opaqueresize option work as per the docs.
 
