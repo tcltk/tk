@@ -1,3 +1,11 @@
+2004-07-05  Joe English  <jenglish@users.sourceforge.net>
+
+	* unix/tkUnixWm.c: Set _NET_WM_NAME and _NET_WM_ICON_NAME
+	(freedesktop.org) in addition to WM_NAME and WM_ICON_NAME 
+	(ICCCM).  This allows the full Unicode character set
+	to be used in window manager strings (but only for
+	newer WMs that support the EWMH spec).  [Tk Bug #959973]
+
 2004-07-02  George Peter Staplin <GeorgePS@XMission.com>
 
 	* generic/tkEvent.c: Tk_HandleEvent was refactored to be more
