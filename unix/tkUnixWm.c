@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.18 2002/05/27 19:49:33 mdejong Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.19 2002/05/27 20:34:32 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -62,19 +62,14 @@ typedef struct TkWmInfo {
     char *title;		/* Title to display in window caption.  If
 				 * NULL, use name of widget.  Malloced. */
     char *iconName;		/* Name to display in icon.  Malloced. */
-    Window master;		/* Master window for TRANSIENT_FOR property,
-				 * or None. */
     XWMHints hints;		/* Various pieces of information for
 				 * window manager. */
     char *leaderName;		/* Path name of leader of window group
 				 * (corresponds to hints.window_group).
 				 * Malloc-ed.  Note:  this field doesn't
 				 * get updated if leader is destroyed. */
-    char *masterWindowName;	/* Path name of window specified as master
-				 * in "wm transient" command, or NULL.
-				 * Malloc-ed. Note:  this field doesn't
-				 * get updated if masterWindowName is
-				 * destroyed. */
+    TkWindow *masterPtr;	/* Master window for TRANSIENT_FOR property,
+				 * or NULL. */
     Tk_Window icon;		/* Window to use as icon for this window,
 				 * or NULL. */
     Tk_Window iconFor;		/* Window for which this window is icon, or
@@ -383,9 +378,6 @@ void TkWmCleanup(dispPtr)
 	if (wmPtr->leaderName != NULL) {
 	    ckfree(wmPtr->leaderName);
 	}
-	if (wmPtr->masterWindowName != NULL) {
-	    ckfree(wmPtr->masterWindowName);
-	}
 	if (wmPtr->menubar != NULL) {
 	    Tk_DestroyWindow(wmPtr->menubar);
 	}
@@ -438,7 +430,7 @@ TkWmNewWindow(winPtr)
     memset(wmPtr, 0, sizeof(WmInfo));
     wmPtr->winPtr = winPtr;
     wmPtr->reparent = None;
-    wmPtr->master = None;
+    wmPtr->masterPtr = NULL;
     wmPtr->hints.flags = InputHint | StateHint;
     wmPtr->hints.input = True;
     wmPtr->hints.initial_state = NormalState;
@@ -556,9 +548,9 @@ TkWmMapWindow(winPtr)
 	    Tcl_DStringFree(&ds);
 	}
     
-	if (wmPtr->master != None) {
+	if (wmPtr->masterPtr != NULL) {
 	    XSetTransientForHint(winPtr->display, wmPtr->wrapperPtr->window,
-		    wmPtr->master);
+		    wmPtr->masterPtr->wmInfoPtr->wrapperPtr->window);
 	}
     
 	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
@@ -707,9 +699,6 @@ TkWmDeadWindow(winPtr)
     }
     if (wmPtr->leaderName != NULL) {
 	ckfree(wmPtr->leaderName);
-    }
-    if (wmPtr->masterWindowName != NULL) {
-	ckfree(wmPtr->masterWindowName);
     }
     if (wmPtr->icon != NULL) {
 	wmPtr2 = ((TkWindow *) wmPtr->icon)->wmInfoPtr;
@@ -1326,7 +1315,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 		    "\": override-redirect flag is set", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	if (wmPtr->master != None) {
+	if (wmPtr->masterPtr != NULL) {
 	    Tcl_AppendResult(interp, "can't iconify \"", winPtr->pathName,
 		    "\": it is a transient", (char *) NULL);
 	    return TCL_ERROR;
@@ -1901,7 +1890,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 			    (char *) NULL);
 		    return TCL_ERROR;
 		}
-		if (wmPtr->master != None) {
+		if (wmPtr->masterPtr != NULL) {
 		    Tcl_AppendResult(interp, "can't iconify \"",
 			    winPtr->pathName,
 			    "\": it is a transient", (char *) NULL);
@@ -1974,7 +1963,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	}
     } else if ((c == 't') && (strncmp(argv[1], "transient", length) == 0)
 	    && (length >= 3)) {
-	Tk_Window master;
+	TkWindow *masterPtr = wmPtr->masterPtr;
 	WmInfo *wmPtr2;
 
 	if ((argc != 3) && (argc != 4)) {
@@ -1983,30 +1972,26 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    return TCL_ERROR;
 	}
 	if (argc == 3) {
-	    if (wmPtr->master != None) {
-		Tcl_SetResult(interp, wmPtr->masterWindowName, TCL_STATIC);
+	    if (masterPtr != NULL) {
+		Tcl_SetResult(interp, masterPtr->pathName, TCL_STATIC);
 	    }
 	    return TCL_OK;
 	}
 	if (argv[3][0] == '\0') {
-	    wmPtr->master = None;
-	    if (wmPtr->masterWindowName != NULL) {
-		ckfree(wmPtr->masterWindowName);
-	    }
-	    wmPtr->masterWindowName = NULL;
+	    wmPtr->masterPtr = NULL;
 	} else {
-	    master = Tk_NameToWindow(interp, argv[3], tkwin);
-	    if (master == NULL) {
+	    masterPtr = (TkWindow *) Tk_NameToWindow(interp, argv[3], tkwin);
+	    if (masterPtr == NULL) {
 		return TCL_ERROR;
 	    }
-	    while (!Tk_IsTopLevel(master)) {
+	    while (!Tk_IsTopLevel(masterPtr)) {
 		/*
 		 * Ensure that the master window is actually a Tk toplevel.
 		 */
 
-		master = Tk_Parent(master);
+		masterPtr = masterPtr->parentPtr;
 	    }
-	    Tk_MakeWindowExist(master);
+	    Tk_MakeWindowExist((Tk_Window) masterPtr);
 
 	    if (wmPtr->iconFor != NULL) {
 	        Tcl_AppendResult(interp, "can't make \"", argv[2],
@@ -2016,7 +2001,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	        return TCL_ERROR;
 	    }
 
-	    wmPtr2 = ((TkWindow *) master)->wmInfoPtr;
+	    wmPtr2 = masterPtr->wmInfoPtr;
 	    if (wmPtr2->wrapperPtr == NULL) {
 		CreateWrapper(wmPtr2);
 	    }
@@ -2029,16 +2014,13 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	        return TCL_ERROR;
 	    }
 
-	    wmPtr->master = Tk_WindowId(wmPtr2->wrapperPtr);
-	    if (wmPtr->masterWindowName != NULL) {
-		ckfree((char *) wmPtr->masterWindowName);
-	    }
-	    wmPtr->masterWindowName = ckalloc((unsigned) (strlen(argv[3])+1));
-	    strcpy(wmPtr->masterWindowName, argv[3]);
+	    wmPtr->masterPtr = masterPtr;
 	}
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
+	    Window xwin = (wmPtr->masterPtr == NULL) ? None :
+	            wmPtr->masterPtr->wmInfoPtr->wrapperPtr->window;
 	    XSetTransientForHint(winPtr->display, wmPtr->wrapperPtr->window,
-		    wmPtr->master);
+		    xwin);
 	}
     } else if ((c == 'w') && (strncmp(argv[1], "withdraw", length) == 0)
 	    && (length >= 2)) {

@@ -1,5 +1,15 @@
 2002-05-27  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* unix/tkUnixWm.c (WmInfo, TkWmCleanup, TkWmNewWindow,
+	TkWmMapWindow, TkWmDeadWindow, Tk_WmCmd): Replace
+	WmInfo's master and masterWindowName members with
+	a masterPtr member. This implementation is much
+	simpler and mirrors the Win32 implementation. This
+	change makes it easy to check the flags of the
+	master window. No user visible changes.
+
+2002-05-27  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* generic/tkInt.decls: Add unix decl for TkpWmSetState.
 	* generic/tkIntPlatDecls.h: Regen.
 	* generic/tkStubInit.c: Regen.
@@ -8,7 +18,7 @@
 	mapping.
 	* unix/tkUnixWm.c (Tk_WmCmd, TkpWmSetState): Move
 	state change code into TkpWmSetState to more closely
-	match the Win32 implementation.
+	match the Win32 implementation. No user visible changes.
 
 2002-05-27  Mo DeJong  <mdejong@users.sourceforge.net>
 
