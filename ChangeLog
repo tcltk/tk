@@ -1,5 +1,12 @@
 2002-06-22  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* doc/wm.n:                   TIP #95 Windows implementation and
+	* mac/tkMacWm.c (Tk_WmCmd):   docs with mac and unix stubs.
+	* unix/tkUnixWm.c (Tk_WmCmd):
+	* win/tkWinWm.c (Tk_WmCmd):
+	* tests/unixWm.test:
+	* tests/winWm.test: more wm attr tests will be needed.
+
 	* generic/tkGrid.c (GridReqProc): check that gridPtr is not NULL
 	(may be when embedded). [Bug #548791] (halliday)
 
