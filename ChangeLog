@@ -1,7 +1,12 @@
+2002-03-19  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkOldConfig.c (Tk_ConfigureValue): prevent leaving
+	interp->result as NULL.
+
 2002-02-28  Don Porter  <dgp@users.sourceforge.net>
 
-        * library/console.tcl (tkConsoleBind): Corrected console <<Paste>>
-        binding on Unix platforms.
+	* library/console.tcl (tkConsoleBind): Corrected console <<Paste>>
+	binding on Unix platforms.
 
 2002-02-25  Jeff Hobbs  <jeffh@ActiveState.com>
 

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.6 2000/03/07 00:09:08 ericm Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.6.2.1 2002/03/20 02:58:35 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -940,6 +940,12 @@ Tk_ConfigureValue(interp, tkwin, specs, widgRec, argvName, flags)
     }
     interp->result = FormatConfigValue(interp, tkwin, specPtr, widgRec,
 	    interp->result, &interp->freeProc);
+    /*
+     * Don't let the interp->result be NULL.
+     */
+    if (interp->result == NULL) {
+	interp->result = "";
+    }
     return TCL_OK;
 }
 
