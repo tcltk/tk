@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.10 2001/09/26 20:25:17 pspjuth Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.11 2002/01/17 05:13:11 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -209,8 +209,9 @@ Tk_PlaceObjCmd(clientData, interp, objc, objv)
     char *string;
     TkDisplay *dispPtr;
     Tk_OptionTable optionTable;
-    static char *optionStrings[] = { "configure", "forget", "info", "slaves",
-					 (char *) NULL };
+    static CONST char *optionStrings[] = {
+	"configure", "forget", "info", "slaves", (char *) NULL
+    };
     enum options { PLACE_CONFIGURE, PLACE_FORGET, PLACE_INFO, PLACE_SLAVES };
     int index;
     

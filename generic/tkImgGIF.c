@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.18 2001/09/14 20:35:58 andreas_kupries Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.19 2002/01/17 05:13:11 dgp Exp $
  */
 
 /*
@@ -249,7 +249,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
     int bitPixel;
     unsigned char colorMap[MAXCOLORMAPSIZE][4];
     int transparent = -1;
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"-index",	NULL
     };
 

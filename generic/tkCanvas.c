@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.16 2001/04/03 04:40:31 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.17 2002/01/17 05:13:11 dgp Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -527,7 +527,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 #endif /* USE_OLD_TAG_SEARCH */
 
     int index;
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"addtag",	"bbox",		"bind",		"canvasx",
 	"canvasy",	"cget",		"configure",	"coords",
 	"create",	"dchars",	"delete",	"dtag",
@@ -1620,7 +1620,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
       }
       case CANV_SCAN: {
 	int x, y, gain=10;
-	static char *optionStrings[] = {
+	static CONST char *optionStrings[] = {
 	    "mark", "dragto", NULL
 	};
 
@@ -1668,7 +1668,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
       }
       case CANV_SELECT: {
 	int index, optionindex;
-	static char *optionStrings[] = {
+	static CONST char *optionStrings[] = {
 	    "adjust", "clear", "from", "item", "to", NULL
 	};
 	enum options {
@@ -3972,7 +3972,7 @@ FindItems(interp, canvasPtr, argc, argv, newTag, first, searchPtrPtr)
     Tk_Item *itemPtr;
     Tk_Uid uid;
     int index;
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"above", "all", "below", "closest",
 	"enclosed", "overlapping", "withtag", NULL
     };
