@@ -1,19 +1,26 @@
-2003-10-06  Don Porter  <dgp@users.sourceforge.net>
+2003-10-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
-        *unix/configure.in:     Reconfigured to use $TCL_PREFIX as the
-        default value of --prefix, and also added warning when a TK_PREFIX
-        value different from TCL_PREFIX is selected, since [package require Tk]
-        fails in that configuration. [Bugs 428627,765642]
+	* win/configure:
+	* win/tcl.m4: removed incorrect checks for existence of
+	optimization.  TCL_CFG_OPTIMIZED is now defined whenever the user
+	does not build with --enable-symbols.
 
-        * unix/tcl.m4 (SC_PATH_TCLCONFIG):      Corrected search path so
-        that alpha and beta releases of Tcl are not favored. [Bug 608698]
+2003-10-06  Don Porter	<dgp@users.sourceforge.net>
 
-        * unix/configure.in:    Added check that version of Tcl header found
-        by configure matches that of the Tk we wish to build.  As long as
-        the Tk sources insist on lockstep releases, Tk's configuration should
-        verify that's what we have.  [Bug 749088]
+	* unix/configure.in:	 Reconfigured to use $TCL_PREFIX as the
+	default value of --prefix, and also added warning when a TK_PREFIX
+	value different from TCL_PREFIX is selected, since [package require Tk]
+	fails in that configuration. [Bugs 428627,765642]
 
-        * unix/configure:       autoconf (2.57)
+	* unix/tcl.m4 (SC_PATH_TCLCONFIG):	Corrected search path so
+	that alpha and beta releases of Tcl are not favored. [Bug 608698]
+
+	* unix/configure.in:	Added check that version of Tcl header found
+	by configure matches that of the Tk we wish to build.  As long as
+	the Tk sources insist on lockstep releases, Tk's configuration should
+	verify that's what we have.  [Bug 749088]
+
+	* unix/configure:	autoconf (2.57)
 
 2003-10-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
