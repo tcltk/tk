@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.31 2002/08/31 06:12:27 das Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.32 2002/10/02 21:23:10 hobbs Exp $
  */
 
 #include "default.h"
@@ -1945,9 +1945,10 @@ TextBlinkProc(clientData)
 		textPtr->insertOnTime, TextBlinkProc, (ClientData) textPtr);
     }
     TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
-    TkTextCharBbox(textPtr, &index, &x, &y, &w, &h);
-    TkTextRedrawRegion(textPtr, x - textPtr->insertWidth / 2, y,
-	    textPtr->insertWidth, h);
+    if (TkTextCharBbox(textPtr, &index, &x, &y, &w, &h) == 0) {
+	TkTextRedrawRegion(textPtr, x - textPtr->insertWidth / 2, y,
+		textPtr->insertWidth, h);
+    }
 }
 
 /*
