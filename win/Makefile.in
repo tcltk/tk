@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.24 2000/04/25 22:30:42 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.25 2000/05/23 02:44:18 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -417,7 +417,8 @@ install-binaries:
         fi
 
 install-libraries:
-	@for i in $(INSTALL_ROOT)$(prefix)/lib $(INCLUDE_INSTALL_DIR) \
+	@for i in $(INSTALL_ROOT)$(prefix)/lib \
+		$(INCLUDE_INSTALL_DIR) $(INCLUDE_INSTALL_DIR)/X11 \
 		$(SCRIPT_INSTALL_DIR) $(SCRIPT_INSTALL_DIR)/images; \
 	    do \
 	    if [ ! -d $$i ] ; then \
@@ -428,9 +429,14 @@ install-libraries:
 		fi; \
 	    done;
 	@echo "Installing header files";
-	@for i in $(GENERIC_DIR)/tk.h $(GENERIC_DIR)/tkDecls.h ; \
+	@for i in $(GENERIC_DIR)/tk.h $(GENERIC_DIR)/tkDecls.h \
+		$(GENERIC_DIR)/tkIntXlibDecls.h ; \
 	    do \
 	    $(INSTALL_DATA) $$i $(INCLUDE_INSTALL_DIR); \
+	    done;
+	@for i in $(XLIB_DIR)/X11/*.h; \
+	    do \
+	    $(INSTALL_DATA) $$i $(INCLUDE_INSTALL_DIR)/X11; \
 	    done;
 	@echo "Installing library files to $(SCRIPT_INSTALL_DIR)";
 	@for i in $(ROOT_DIR)/library/*.tcl $(GENERIC_DIR)/prolog.ps \
