@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.7 1999/05/22 06:35:34 jingham Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.8 2000/01/12 11:45:33 hobbs Exp $
  */
 
 #include <Gestalt.h>
@@ -1342,7 +1342,7 @@ Tk_WmCmd(
 	goto updateGeom;
     } else if ((c == 'o')
 	    && (strncmp(argv[1], "overrideredirect", length) == 0)) {
-	int boolean;
+	int boolean, curValue;
 	XSetWindowAttributes atts;
 
 	if ((argc != 3) && (argc != 4)) {
@@ -1351,21 +1351,23 @@ Tk_WmCmd(
 		    (char *) NULL);
 	    return TCL_ERROR;
 	}
+	curValue = Tk_Attributes((Tk_Window) winPtr)->override_redirect;
 	if (argc == 3) {
-	    if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
-		Tcl_SetResult(interp, "1", TCL_STATIC);
-	    } else {
-		Tcl_SetResult(interp, "0", TCL_STATIC);
-	    }
+	    Tcl_SetBooleanObj(Tcl_GetObjResult(interp), curValue);
 	    return TCL_OK;
 	}
 	if (Tcl_GetBoolean(interp, argv[3], &boolean) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	atts.override_redirect = (boolean) ? True : False;
-	Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect,
-		&atts);
-	wmPtr->style = (boolean) ? plainDBox : documentProc;
+	if (curValue != boolean) {
+	    /*
+	     * Only do this if we are really changing value
+	     */
+	    atts.override_redirect = (boolean) ? True : False;
+	    Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect,
+		    &atts);
+	    wmPtr->style = (boolean) ? plainDBox : documentProc;
+	}
     } else if ((c == 'p') && (strncmp(argv[1], "positionfrom", length) == 0)
 	    && (length >= 2)) {
 	if ((argc != 3) && (argc != 4)) {
@@ -1543,27 +1545,80 @@ Tk_WmCmd(
 	goto updateGeom;
     } else if ((c == 's') && (strncmp(argv[1], "state", length) == 0)
 	    && (length >= 2)) {
-	if (argc != 3) {
+	if ((argc < 3) || (argc > 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
-		    argv[0], " state window\"", (char *) NULL);
+		    argv[0], " state window ?state?\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	if (wmPtr->iconFor != NULL) {
-	    Tcl_SetResult(interp, "icon", TCL_STATIC);
+	if (argc == 4) {
+	    if (wmPtr->iconFor != NULL) {
+		Tcl_AppendResult(interp, "can't change state of ", argv[2],
+			": it is an icon for ", Tk_PathName(wmPtr->iconFor),
+			(char *) NULL);
+		return TCL_ERROR;
+	    }
+	    if (winPtr->flags & TK_EMBEDDED) {
+		Tcl_AppendResult(interp, "can't change state of ",
+			winPtr->pathName, ": it is an embedded window",
+			(char *) NULL);
+		return TCL_ERROR;
+	    }
+
+	    c = argv[3][0];
+	    length = strlen(argv[3]);
+
+	    if ((c == 'n') && (strncmp(argv[3], "normal", length) == 0)) {
+		TkpWmSetState(winPtr, NormalState);
+		/*
+		 * This varies from 'wm deiconify' because it does not
+		 * force the window to be raised and receive focus
+		 */
+	    } else if ((c == 'i')
+		    && (strncmp(argv[3], "iconic", length) == 0)) {
+		if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
+		    Tcl_AppendResult(interp, "can't iconify \"",
+			    winPtr->pathName,
+			    "\": override-redirect flag is set",
+			    (char *) NULL);
+		    return TCL_ERROR;
+		}
+		if (wmPtr->masterPtr != NULL) {
+		    Tcl_AppendResult(interp, "can't iconify \"",
+			    winPtr->pathName,
+			    "\": it is a transient", (char *) NULL);
+		    return TCL_ERROR;
+		}
+		TkpWmSetState(winPtr, IconicState);
+	    } else if ((c == 'w')
+		    && (strncmp(argv[3], "withdrawn", length) == 0)) {
+		TkpWmSetState(winPtr, WithdrawnState);
+	    } else if ((c == 'z')
+		    && (strncmp(argv[3], "zoomed", length) == 0)) {
+		TkpWmSetState(winPtr, ZoomState);
+	    } else {
+		Tcl_AppendResult(interp, "bad argument \"", argv[3],
+			"\": must be normal, iconic, withdrawn or zoomed",
+			(char *) NULL);
+		return TCL_ERROR;
+	    }
 	} else {
-	    switch (wmPtr->hints.initial_state) {
-		case NormalState:
-		    Tcl_SetResult(interp, "normal", TCL_STATIC);
-		    break;
-		case IconicState:
-		    Tcl_SetResult(interp, "iconic", TCL_STATIC);
-		    break;
-		case WithdrawnState:
-		    Tcl_SetResult(interp, "withdrawn", TCL_STATIC);
-		    break;
-		case ZoomState:
-		    Tcl_SetResult(interp, "zoomed", TCL_STATIC);
-		    break;
+	    if (wmPtr->iconFor != NULL) {
+		Tcl_SetResult(interp, "icon", TCL_STATIC);
+	    } else {
+		switch (wmPtr->hints.initial_state) {
+		    case NormalState:
+			Tcl_SetResult(interp, "normal", TCL_STATIC);
+			break;
+		    case IconicState:
+			Tcl_SetResult(interp, "iconic", TCL_STATIC);
+			break;
+		    case WithdrawnState:
+			Tcl_SetResult(interp, "withdrawn", TCL_STATIC);
+			break;
+		    case ZoomState:
+			Tcl_SetResult(interp, "zoomed", TCL_STATIC);
+			break;
+		}
 	    }
 	}
     } else if ((c == 't') && (strncmp(argv[1], "title", length) == 0)
@@ -4209,8 +4264,8 @@ TkpWmSetState(winPtr, state)
 	if (TkMacHaveAppearance()) {
 	    /*
 	     * The window always gets unmapped.  However, if we can show the
-	     * icon version of the window (collapsed) we make the window visable
-	     * and then collapse it.
+	     * icon version of the window (collapsed) we make the window
+	     * visible and then collapse it.
 	     *
 	     * TODO: This approach causes flashing!
 	     */

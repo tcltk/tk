@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.10 1999/12/22 20:01:19 hobbs Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.11 2000/01/12 11:45:36 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1186,8 +1186,11 @@ test unixWm-34.3 {Tk_WmCmd procedure, "sizefrom" option} {
 
 test unixWm-35.1 {Tk_WmCmd procedure, "state" option} {
     list [catch {wm state .t 1} msg]  $msg
-} {1 {wrong # arguments: must be "wm state window"}}
+} {1 {bad argument "1": must be normal, iconic or withdrawn}}
 test unixWm-35.2 {Tk_WmCmd procedure, "state" option} {
+    list [catch {wm state .t iconic 1} msg]  $msg
+} {1 {wrong # arguments: must be "wm state window ?state?"}}
+test unixWm-35.3 {Tk_WmCmd procedure, "state" option} {
     set result {}
     catch {destroy .t2}
     toplevel .t2 -width 120 -height 300
@@ -1200,6 +1203,23 @@ test unixWm-35.2 {Tk_WmCmd procedure, "state" option} {
     wm iconify .t2
     lappend result [wm state .t2]
     wm deiconify .t2
+    lappend result [wm state .t2]
+    destroy .t2
+    set result
+} {normal normal withdrawn iconic normal}
+test unixWm-35.4 {Tk_WmCmd procedure, "state" option} {
+    set result {}
+    catch {destroy .t2}
+    toplevel .t2 -width 120 -height 300
+    wm geometry .t2 +0+0
+    lappend result [wm state .t2]
+    update
+    lappend result [wm state .t2]
+    wm state .t2 withdrawn
+    lappend result [wm state .t2]
+    wm state .t2 iconic
+    lappend result [wm state .t2]
+    wm state .t2 normal
     lappend result [wm state .t2]
     destroy .t2
     set result
