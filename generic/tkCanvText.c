@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.16 2004/01/13 02:06:00 davygrvy Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.17 2004/06/08 20:25:04 mdejong Exp $
  */
 
 #include <stdio.h>
@@ -853,21 +853,30 @@ DisplayCanvText(canvas, itemPtr, display, drawable, x, y, width, height)
 
 
     /*
-     * Display the text in two pieces: draw the entire text item, then
-     * draw the selected text on top of it.  The selected text then
-     * will only need to be drawn if it has different attributes (such
-     * as foreground color) than regular text.
+     * If there is no selected text or the selected text foreground
+     * is the same as the regular text foreground, then draw one
+     * text string. If there is selected text and the foregrounds
+     * differ, draw the regular text up to the selection, draw
+     * the selection, then draw the rest of the regular text.
+     * Drawing the regular text and then the selected text over
+     * it would causes problems with anti-aliased text because the
+     * two anti-aliasing colors would blend together.
      */
 
     Tk_CanvasDrawableCoords(canvas, (double) textPtr->leftEdge,
 	    (double) textPtr->header.y1, &drawableX, &drawableY);
-    Tk_DrawTextLayout(display, drawable, textPtr->gc, textPtr->textLayout,
-	    drawableX, drawableY, 0, -1);
 
     if ((selFirstChar >= 0) && (textPtr->selTextGC != textPtr->gc)) {
+	Tk_DrawTextLayout(display, drawable, textPtr->gc, textPtr->textLayout,
+	    drawableX, drawableY, 0, selFirstChar);
 	Tk_DrawTextLayout(display, drawable, textPtr->selTextGC,
 	    textPtr->textLayout, drawableX, drawableY, selFirstChar,
 	    selLastChar + 1);
+	Tk_DrawTextLayout(display, drawable, textPtr->gc, textPtr->textLayout,
+	    drawableX, drawableY, selLastChar + 1, -1);
+    } else {
+	Tk_DrawTextLayout(display, drawable, textPtr->gc, textPtr->textLayout,
+	    drawableX, drawableY, 0, -1);
     }
 
     if (stipple != None) {
