@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.11 2001/03/30 22:42:10 hobbs Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.12 2001/04/12 12:30:42 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -69,7 +69,9 @@ typedef struct ImageMaster {
 				 * entry). */
     Image *instancePtr;		/* Pointer to first in list of instances
 				 * derived from this name. */
-    int deleted;		/* Flag set when image is being deleted */
+    int deleted;		/* Flag set when image is being deleted. */
+    TkWindow *winPtr;		/* Main window of interpreter (used to
+				 * detect when the world is falling apart.) */
 } ImageMaster;
 
 typedef struct ThreadSpecificData {
@@ -254,6 +256,7 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 		masterPtr->hPtr = hPtr;
 		masterPtr->instancePtr = NULL;
 		masterPtr->deleted = 0;
+		masterPtr->winPtr = winPtr->mainPtr->winPtr;
 		Tcl_SetHashValue(hPtr, masterPtr);
 	    } else {
 		/*
@@ -908,7 +911,9 @@ DeleteImage(masterPtr)
 	(*typePtr->deleteProc)(masterPtr->masterData);
     }
     if (masterPtr->instancePtr == NULL) {
-	Tcl_DeleteHashEntry(masterPtr->hPtr);
+        if ((masterPtr->winPtr->flags & TK_ALREADY_DEAD) == 0) {
+	    Tcl_DeleteHashEntry(masterPtr->hPtr);
+	}
 	ckfree((char *) masterPtr);
     }
 }
