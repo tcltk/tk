@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.24 2003/10/31 08:55:03 vincentdarley Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.25 2003/12/16 03:12:51 davygrvy Exp $
  */
 
 #define OEMRESOURCE
@@ -680,7 +680,11 @@ ReconfigureWindowsMenu(
 
     if ((menuPtr->menuType == MENUBAR) 
 	    && (menuPtr->parentTopLevelPtr != NULL)) {
-	DrawMenuBar(TkWinGetWrapperWindow(menuPtr->parentTopLevelPtr));
+	HANDLE bar;
+	bar = TkWinGetWrapperWindow(menuPtr->parentTopLevelPtr);
+	if (bar) {
+	    DrawMenuBar(bar);
+	}
 	Tk_GeometryRequest(menuPtr->parentTopLevelPtr, width, height);
     }
     
