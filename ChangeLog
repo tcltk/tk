@@ -1,3 +1,11 @@
+1999-10-19  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* library/scrlbar.tcl: changed tkScrollButtonUp to check for
+	existence of tkPriv(relief) in order to avoid spurious release
+	events
+
+	* unix/Makefile.in: added ChangeLog to dist archive
+
 1999-09-24  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* */README:
