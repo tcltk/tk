@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.55 2003/03/12 00:25:42 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.56 2003/12/09 13:43:35 vincentdarley Exp $
  */
 
 #include "tkWinInt.h"
@@ -1466,44 +1466,36 @@ ReadIconOrCursorFromFile(Tcl_Interp* interp, Tcl_Obj* fileName, BOOL isIcon) {
 	ckfree( (char*)lpIR );
 	return NULL;
     }
+    /* NULL-out everything to make memory management easier */
+    for( i = 0; i < lpIR->nNumImages; i++ ) {
+	lpIR->IconImages[i].lpBits = NULL;
+    }
     /*  Loop through and read in each image */
     for( i = 0; i < lpIR->nNumImages; i++ )    {
 	/*  Allocate memory for the resource */
 	lpIR->IconImages[i].lpBits = (LPBYTE) ckalloc(lpIDE[i].dwBytesInRes);
 	if (lpIR->IconImages[i].lpBits == NULL) {
 	    Tcl_AppendResult(interp,"Error allocating memory",(char*)NULL);
-	    Tcl_Close(NULL, channel);
-	    ckfree( (char*)lpIR );
-	    ckfree( (char*)lpIDE );
-	    return NULL;
+	    goto readError;
 	}
 	lpIR->IconImages[i].dwNumBytes = lpIDE[i].dwBytesInRes;
 	/*  Seek to beginning of this image */
 	if (Tcl_Seek(channel, lpIDE[i].dwImageOffset, FILE_BEGIN) == -1) {
 	    Tcl_AppendResult(interp,"Error seeking in file",(char*)NULL);
-	    Tcl_Close(NULL, channel);
-	    ckfree( (char*)lpIR );
-	    ckfree( (char*)lpIDE );
-	    return NULL;
+	    goto readError;
 	}
 	/*  Read it in */
 	dwBytesRead = Tcl_Read( channel, lpIR->IconImages[i].lpBits, 
 			       lpIDE[i].dwBytesInRes);
 	if (dwBytesRead != lpIDE[i].dwBytesInRes) {
 	    Tcl_AppendResult(interp,"Error reading file",(char*)NULL);
-	    Tcl_Close(NULL, channel);
-	    ckfree( (char*)lpIDE );
-	    ckfree( (char*)lpIR );
-	    return NULL;
+	    goto readError;
 	}
 	/*  Set the internal pointers appropriately */
 	if (!AdjustIconImagePointers( &(lpIR->IconImages[i]))) {
 	    Tcl_AppendResult(interp,"Error converting to internal format",
 			     (char*)NULL);
-	    Tcl_Close(NULL, channel);
-	    ckfree( (char*)lpIDE );
-	    ckfree( (char*)lpIR );
-	    return NULL;
+	    goto readError;
 	}
 	lpIR->IconImages[i].hIcon =
 	    MakeIconOrCursorFromResource(&(lpIR->IconImages[i]), isIcon);
@@ -1513,10 +1505,20 @@ ReadIconOrCursorFromFile(Tcl_Interp* interp, Tcl_Obj* fileName, BOOL isIcon) {
     Tcl_Close(NULL, channel);
     if (lpIR == NULL){
 	Tcl_AppendResult(interp,"Reading of ", Tcl_GetString(fileName),
-	" failed!",(char*)NULL);
+			 " failed!",(char*)NULL);
 	return NULL;
     }
     return lpIR;
+  readError:
+    Tcl_Close(NULL, channel);
+    for( i = 0; i < lpIR->nNumImages; i++ )    {
+    	if (lpIR->IconImages[i].lpBits != NULL) {
+	    ckfree((char*)lpIR->IconImages[i].lpBits);
+	}
+    }
+    ckfree((char*)lpIDE );
+    ckfree((char*)lpIR );
+    return NULL;
 }
 
 /*
