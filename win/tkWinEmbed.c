@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.11 2004/12/17 14:17:54 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.12 2004/12/18 20:35:16 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -367,32 +367,30 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	/* empty loop body */
     }
 
-    if (containerPtr == NULL) {
-	Tcl_Panic("TkWinContainerProc couldn't find Container record");
-    }
+    if (containerPtr) {
+	switch (message) {
+	    case TK_ATTACHWINDOW:
+	    /* An embedded window (either from this application or from
+	     * another application) is trying to attach to this container.
+	     * We attach it only if this container is not yet containing any
+	     * window.
+	     */
+	    if (containerPtr->embeddedHWnd == NULL) {
+		containerPtr->embeddedHWnd = (HWND)wParam;
+	    } else {
+		return 0;
+	    }
+	    break;
 
-    switch (message) {
-	case TK_ATTACHWINDOW:
-	/* An embedded window (either from this application or from
-	 * another application) is trying to attach to this container.
-	 * We attach it only if this container is not yet containing any
-	 * window.
-	 */
-	if (containerPtr->embeddedHWnd == NULL) {
-	    containerPtr->embeddedHWnd = (HWND)wParam;
-	} else {
-	    return 0;
+	    case TK_DETACHWINDOW:
+	    containerPtr->embeddedHWnd = NULL;
+	    containerPtr->parentPtr->flags &= ~TK_BOTH_HALVES;
+	    break;
+
+	    case TK_GEOMETRYREQ:
+	    EmbedGeometryRequest(containerPtr, (int) wParam, lParam);
+	    break;
 	}
-	break;
-
-	case TK_DETACHWINDOW:
-	containerPtr->embeddedHWnd = NULL;
-	containerPtr->parentPtr->flags &= ~TK_BOTH_HALVES;
-	break;
-
-	case TK_GEOMETRYREQ:
-	EmbedGeometryRequest(containerPtr, (int) wParam, lParam);
-	break;
     }
     return 1;
 }
@@ -632,6 +630,7 @@ EmbedWindowDeleted(winPtr)
 	    break;
 	}
 	if (containerPtr->parentPtr == winPtr) {
+	    SendMessage(containerPtr->embeddedHWnd, WM_CLOSE, 0, 0);
 	    containerPtr->parentPtr = NULL;
 	    break;
 	}
