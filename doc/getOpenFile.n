@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: getOpenFile.n,v 1.10 2002/04/19 22:16:02 jenglish Exp $
+'\" RCS: @(#) $Id: getOpenFile.n,v 1.11 2004/03/25 12:12:36 vincentdarley Exp $
 '\" 
 .so man.macros
 .TH tk_getOpenFile n 4.2 Tk "Tk Built-In Commands"
@@ -128,7 +128,7 @@ in the sample code matches files that EITHER have a \fB\.gif\fR
 extension OR belong to the \fImacType\fR \fBGIFF\fR.
 .PP
 On the Unix and Windows platforms, a file matches a file pattern
-if its name matches at at least one of the \fIextension\fR(s) of
+if its name matches at least one of the \fIextension\fR(s) of
 the file pattern. The \fImacType\fRs are ignored.
 .SH "SPECIFYING EXTENSIONS"
 .PP

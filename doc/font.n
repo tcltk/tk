@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: font.n,v 1.3 2000/07/25 21:14:35 jenglish Exp $
+'\" RCS: @(#) $Id: font.n,v 1.4 2004/03/25 12:12:36 vincentdarley Exp $
 '\" 
 .so man.macros
 .TH font n 8.0 Tk "Tk Built-In Commands"
@@ -24,7 +24,7 @@ first argument.  The following forms are currently supported:
 .TP
 \fBfont actual \fIfont\fR ?\fB\-displayof \fIwindow\fR? ?\fIoption\fR?  
 .
-Returns information about the the actual attributes that are obtained when
+Returns information about the actual attributes that are obtained when
 \fIfont\fR is used on \fIwindow\fR's display; the actual attributes obtained
 may differ from the attributes requested due to platform-dependant
 limitations, such as the availability of font families and pointsizes.
@@ -192,7 +192,7 @@ above the baseline line plus the descent below the baseline.
 \fB\-fixed          \0\fR
 .
 Returns a boolean flag that is ``\fB1\fR'' if this is a fixed-width font,
-where each normal character is the the same width as all the other
+where each normal character is the same width as all the other
 characters, or is ``\fB0\fR'' if this is a proportionally-spaced font, where 
 individual characters have different widths.  The widths of control 
 characters, tab characters, and other non-printing characters are not 
