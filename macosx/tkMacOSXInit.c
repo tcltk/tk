@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.1.2.2 2001/11/11 17:54:40 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -56,8 +56,8 @@ TkpInit(interp)
      * FIXME: Should we come up with a more generic way of doing this?
      */
      
-    result = Tk_MacOSXOpenBundleResources(interp, "com.tcltk.tklibrary", 
-                tkLibPath, 1024, 1);
+    result = Tcl_MacOSXOpenBundleResources(interp, "com.tcltk.tklibrary", 
+                1, 1024, tkLibPath);
      
     if (result != TCL_ERROR) {
         Tcl_SetVar(interp, "tk_library", tkLibPath, TCL_GLOBAL_ONLY);
@@ -134,78 +134,4 @@ TkpDisplayWarning(msg, title)
         Tcl_WriteChars(errChannel, msg, -1);
         Tcl_WriteChars(errChannel, "\n", 1);
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_MacOSXOpenBundleResources --
- *
- *	Given the bundle name for a shared library, this routine
- *	sets libraryVarName to the Resources/Scripts directory 
- *	in the framework package.  If hasResourceFile is
- *	true, it will also open the main resource file for the bundle.
- *
- *      FIXME: This should probably be in Tcl, but the resource stuff
- *      isn't in Darwin, and I haven't figured out how to sort out Darwin,
- *      the Unix side of Tcl, and the MacOS X side of Tcl.
- *
- * Results:
- *	Standard Tcl result.
- *
- * Side effects:
- *	libraryVariableName may be set, and the resource file opened.
- *
- *----------------------------------------------------------------------
- */
-
-int
-Tk_MacOSXOpenBundleResources(Tcl_Interp *interp,
-        char *bundleName,
-        char *libraryPath,
-        int maxPathLen,
-        int hasResourceFile)
-{
-    CFBundleRef bundleRef;
-    CFStringRef bundleNameRef;
-    
-    libraryPath[0] = '\0';
-    
-    bundleNameRef = CFStringCreateWithCString(NULL, 
-            bundleName, kCFStringEncodingUTF8);
-            
-    bundleRef = CFBundleGetBundleWithIdentifier(bundleNameRef);
-    CFRelease(bundleNameRef);
-    
-    if (bundleRef == 0) {
-        return TCL_ERROR;
-    } else {
-        CFURLRef libURL;
-        
-        if (hasResourceFile) {
-            short refNum;
-            refNum = CFBundleOpenBundleResourceMap(bundleRef);
-        }
-        
-	libURL = CFBundleCopyResourceURL(bundleRef, 
-	        CFSTR("Scripts"), 
-		NULL, 
-		NULL);
-        
-        if (libURL != NULL) {
-            /* 
-             * FIXME: This is a quick fix, it is probably not right 
-             * for internationalization. 
-             */
-            
-            if (CFURLGetFileSystemRepresentation (libURL, true,
-                    libraryPath, maxPathLen)) {
-            }
-            CFRelease(libURL);
-        } else {
-            return TCL_ERROR;
-        }
-    }
-    
-    return TCL_OK;
 }

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.1.2.3 2001/10/19 07:14:18 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.1.2.4 2001/11/11 17:54:40 wolfsuit Exp $
  */
 #include <pthread.h>
 #include "tk.h"
@@ -195,8 +195,8 @@ Tcl_AppInit(interp)
     char tclLibPath[MAX_PATH_LEN], tkLibPath[MAX_PATH_LEN];
     Tcl_Obj *pathPtr;
     
-    Tk_MacOSXOpenBundleResources (interp, "com.tcltk.tcllibrary", 
-        tclLibPath, MAX_PATH_LEN, 0);
+    Tcl_MacOSXOpenBundleResources (interp, "com.tcltk.tcllibrary", 
+        0, MAX_PATH_LEN, tclLibPath);
 
     if (tclLibPath[0] != '\0') {
         Tcl_SetVar(interp, "tcl_library", tclLibPath, TCL_GLOBAL_ONLY);
@@ -209,8 +209,8 @@ Tcl_AppInit(interp)
         return TCL_ERROR;
     }    
 
-    Tk_MacOSXOpenBundleResources (interp, "com.tcltk.tklibrary", 
-            tkLibPath, MAX_PATH_LEN, 1);
+    Tcl_MacOSXOpenBundleResources (interp, "com.tcltk.tklibrary", 
+            1, MAX_PATH_LEN, tkLibPath);
 
     /* 
      * FIXME: This is currently a hack...  I set the tcl_library, and
@@ -223,7 +223,7 @@ Tcl_AppInit(interp)
     if (tclLibPath[0] != '\0') {
         pathPtr = Tcl_NewStringObj(tclLibPath, -1);
     } else {
-        Tcl_Obj *pathPtr = TclGetLibraryPath();
+        pathPtr = TclGetLibraryPath();
     }
 
     if (tkLibPath[0] != '\0') {
