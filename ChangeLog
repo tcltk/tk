@@ -7,6 +7,10 @@
 
 	* win/tkWinWm.c (ActivateWindow): SetFocus to grab window when
 	clicking outside the grab window hierarchy. [Bug 220908]
+	(UpdateWrapper): update to Kovalenko to account for whether the
+	override window has a transient parent, and apply WS_POPUP in the
+	correct case.  The makes splash screens pop up as well as making
+	dropdowns not grab focus away from the parent.
 
 2004-09-09  Jeff Hobbs  <jeffh@ActiveState.com>
 
