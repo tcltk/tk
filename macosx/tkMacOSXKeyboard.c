@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.13 2004/01/24 18:16:09 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.14 2004/01/25 12:03:59 cc_benny Exp $
  */
 
 #include "tkInt.h"
@@ -712,9 +712,18 @@ TkpGetKeySym(
      */
 
     index = 0;
+
+    /*
+     * We want Option key combinations to use their base chars as keysyms, so
+     * we ignore the option modifier here.
+     */
+
+#if 0
     if (eventPtr->xkey.state & OPTION_MASK) {
         index |= 2;
     }
+#endif
+
     if ((eventPtr->xkey.state & ShiftMask)
             || (/* (dispPtr->lockUsage != LU_IGNORE)
                    && */ (eventPtr->xkey.state & LockMask))) {
