@@ -6,13 +6,13 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: id.test,v 1.8 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: id.test,v 1.9 2004/06/24 12:45:43 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-test id-1.1 {WindowIdCleanup, delaying window release} {unixOnly testwrapper} {
+test id-1.1 {WindowIdCleanup, delaying window release} {unix testwrapper} {
     bind all <Destroy> {lappend x %W}
     catch {unset map}
     frame .f

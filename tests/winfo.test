@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winfo.test,v 1.12 2004/06/17 22:38:57 dkf Exp $
+# RCS: @(#) $Id: winfo.test,v 1.13 2004/06/24 12:45:44 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -90,7 +90,7 @@ test winfo-3.2 {"winfo colormapfull" command} defaultPseudocolor8 {
 test winfo-3.3 {"winfo colormapfull" command} defaultPseudocolor8 {
     list [catch {winfo colormapfull foo} msg] $msg
 } {1 {bad window path name "foo"}}
-test winfo-3.4 {"winfo colormapfull" command} {unixOnly defaultPseudocolor8} {
+test winfo-3.4 {"winfo colormapfull" command} {unix defaultPseudocolor8} {
     eatColors .t {-colormap new}
     set result [list [winfo colormapfull .] [winfo colormapfull .t]]
     .t.c delete 34
@@ -143,10 +143,10 @@ test winfo-5.2 {"winfo interps" command} {
 test winfo-5.3 {"winfo interps" command} {
     list [catch {winfo interps -displayof geek} msg] $msg
 } {1 {bad window path name "geek"}}
-test winfo-5.4 {"winfo interps" command} {unixOnly} {
+test winfo-5.4 {"winfo interps" command} unix {
     expr [lsearch -exact [winfo interps] [tk appname]] >= 0
 } {1}
-test winfo-5.5 {"winfo interps" command} {unixOnly} {
+test winfo-5.5 {"winfo interps" command} unix {
     expr [lsearch -exact [winfo interps -displayof .] [tk appname]] >= 0
 } {1}
 
@@ -196,7 +196,7 @@ test winfo-7.6 {"winfo pathname" command} {
 test winfo-7.7 {"winfo pathname" command} {
     winfo pathname -displayof .b [winfo id .]
 } {.}
-test winfo-7.8 {"winfo pathname" command} {unixOnly testwrapper} {
+test winfo-7.8 {"winfo pathname" command} {unix testwrapper} {
     winfo pathname [testwrapper .]
 } {}
 

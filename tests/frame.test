@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: frame.test,v 1.13 2004/06/17 22:38:57 dkf Exp $
+# RCS: @(#) $Id: frame.test,v 1.14 2004/06/24 12:45:43 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -313,7 +313,7 @@ test frame-3.8 {TkCreateFrame procedure} {
 test frame-3.9 {TkCreateFrame procedure, -use option} -setup {
     catch {destroy .t}
     catch {destroy .x}
-} -constraints unixOnly -body {
+} -constraints unix -body {
     toplevel .t -container 1 -width 300 -height 120
     wm geometry .t +0+0
     toplevel .x -width 140 -height 300 -use [winfo id .t] -bg green
@@ -327,7 +327,7 @@ test frame-3.9 {TkCreateFrame procedure, -use option} -setup {
 test frame-3.10 {TkCreateFrame procedure, -use option} -setup {
     catch {destroy .t}
     catch {destroy .x}
-} -constraints unixOnly -body {
+} -constraints unix -body {
     toplevel .t -container 1 -width 300 -height 120
     wm geometry .t +0+0
     option add *x.use [winfo id .t]
@@ -386,7 +386,7 @@ test frame-3.14 {TkCreateFrame procedure} {defaultPseudocolor8 nonPortable} {
 test frame-3.15 {TkCreateFrame procedure, -use and -colormap} -setup {
     catch {destroy .t}
     catch {destroy .x}
-} -constraints {defaultPseudocolor8 unixOnly nonPortable} -body {
+} -constraints {defaultPseudocolor8 unix nonPortable} -body {
     toplevel .t -container 1 -width 300 -height 120
     wm geometry .t +0+0
     toplevel .x -width 140 -height 300 -use [winfo id .t] -bg green -colormap new

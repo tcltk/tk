@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.17 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: entry.test,v 1.18 2004/06/24 12:45:42 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -753,7 +753,7 @@ test entry-6.9 {EntryComputeGeometry procedure} {fonts} {
     update
     list [winfo reqwidth .e] [winfo reqheight .e]
 } {25 39}
-test entry-6.10 {EntryComputeGeometry procedure} {unixOnly fonts} {
+test entry-6.10 {EntryComputeGeometry procedure} {unix fonts} {
     catch {destroy .e}
     entry .e -bd 1 -relief raised -width 0 -show .
     .e insert 0 12345
@@ -765,7 +765,7 @@ test entry-6.10 {EntryComputeGeometry procedure} {unixOnly fonts} {
     .e configure -show ""
     lappend x [winfo reqwidth .e]
 } {23 53 43}
-test entry-6.11 {EntryComputeGeometry procedure} {pcOnly} {
+test entry-6.11 {EntryComputeGeometry procedure} win {
     catch {destroy .e}
     entry .e -bd 1 -relief raised -width 0 -show . -font {helvetica 12}
     .e insert 0 12345
@@ -1195,26 +1195,26 @@ test entry-13.9 {GetEntryIndex procedure} {
     list [.e index sel.first] [.e index sel.last]
 } {1 6}
 selection clear .e
-test entry-13.10 {GetEntryIndex procedure} {unixOnly} {
+test entry-13.10 {GetEntryIndex procedure} unix {
     # On unix, when selection is cleared, entry widget's internal 
     # selection range is reset.
 
     list [catch {.e index sel.first} msg] $msg
 } {1 {selection isn't in widget .e}}
-test entry-13.11 {GetEntryIndex procedure} {pcOnly} {
+test entry-13.11 {GetEntryIndex procedure} win {
     # On mac and pc, when selection is cleared, entry widget remembers
     # last selected range.  When selection ownership is restored to 
     # entry, the old range will be rehighlighted.
 
     list [catch {selection get}] [.e index sel.first]
 } {1 1}
-test entry-13.12 {GetEntryIndex procedure} {unixOnly} {
+test entry-13.12 {GetEntryIndex procedure} unix {
     list [catch {.e index sbogus} msg] $msg
 } {1 {selection isn't in widget .e}}
-test entry-13.13 {GetEntryIndex procedure} {pcOnly} {
+test entry-13.13 {GetEntryIndex procedure} win {
     list [catch {.e index sbogus} msg] $msg
 } {1 {bad entry index "sbogus"}}
-test entry-13.14 {GetEntryIndex procedure} {pcOnly} {
+test entry-13.14 {GetEntryIndex procedure} win {
     list [catch {selection get}] [catch {.e index sbogus}]
 } {1 1}
 test entry-13.15 {GetEntryIndex procedure} {
@@ -1315,13 +1315,13 @@ test entry-16.1 {EntryVisibleRange procedure} {fonts} {
     .e insert 0 .............................
     .e xview
 } {0 0.827586}
-test entry-15.2 {EntryVisibleRange procedure} {unixOnly fonts} {
+test entry-15.2 {EntryVisibleRange procedure} {unix fonts} {
     .e configure -show X
     .e delete 0 end
     .e insert 0 .............................
     .e xview
 } {0 0.275862}
-test entry-15.3 {EntryVisibleRange procedure} {pcOnly} {
+test entry-15.3 {EntryVisibleRange procedure} win {
     .e configure -show .
     .e delete 0 end
     .e insert 0 XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
