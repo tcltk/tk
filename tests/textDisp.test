@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.13 2003/11/03 16:10:12 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.14 2003/11/04 23:37:51 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -111,6 +111,36 @@ test textDisp-0.1 {double tag elide transition} {
 	.top insert 1.0 "hello\n"
 	.top tag configure tag$val
 	.top tag add tag$val 1.0 2.0
+	set ::Options(tag$val) 0
+    }
+
+    proc DoVis {tag} {
+	.top tag config $tag -elide $::Options($tag)
+    }
+
+    proc NickVis {val} {
+	foreach t [array names ::Options ] {
+	    if {$::Options($t) != $val} {
+		set ::Options($t) $val
+		DoVis $t
+	    }
+	}
+    }
+    NickVis 1
+    unset ::Options
+    destroy .top
+} {}
+
+test textDisp-0.2 {double tag elide transition} {
+    # Example from tkchat crash.  For some reason can only
+    # get this test case to crash when first.
+    catch {destroy .top}
+    pack [text .top]
+
+    foreach val {0 1 2 3} {
+	.top insert 1.0 "hello"
+	.top tag configure tag$val
+	.top tag add tag$val 1.0 1.5
 	set ::Options(tag$val) 0
     }
 
@@ -1470,6 +1500,8 @@ test textDisp-13.7 {TkTextSeeCmd procedure} {textfonts} {
     .t tag add sel 30.40
     update
     .t see 30.50
+    .t yview 25.0
+    .t see 30.50
     set x [list [.t bbox 30.50]]
     .t see 30.39
     lappend x [.t bbox 30.39]
@@ -1477,7 +1509,7 @@ test textDisp-13.7 {TkTextSeeCmd procedure} {textfonts} {
     lappend x [.t bbox 30.38]
     .t see 30.20
     lappend x [.t bbox 30.20]
-} [list [list 73 [expr {9*$fixedDiff + 55}] 7 $fixedHeight] [list 3 [expr {9*$fixedDiff + 55}] 7 $fixedHeight] [list 3 [expr {9*$fixedDiff + 55}] 7 $fixedHeight] [list 73 [expr {9*$fixedDiff + 55}] 7 $fixedHeight]]
+} [list [list 73 [expr {5*$fixedDiff + 68}] 7 $fixedHeight] [list 3 [expr {5*$fixedDiff + 68}] 7 $fixedHeight] [list 3 [expr {5*$fixedDiff + 68}] 7 $fixedHeight] [list 73 [expr {5*$fixedDiff + 68}] 7 $fixedHeight]]
 test textDisp-13.8 {TkTextSeeCmd procedure} {textfonts} {
     .t xview moveto 0
     .t yview moveto 0
@@ -1492,7 +1524,7 @@ test textDisp-13.8 {TkTextSeeCmd procedure} {textfonts} {
     lappend x [.t bbox 30.65]
     .t see 30.90
     lappend x [.t bbox 30.90]
-} [list [list 73 [expr {9*$fixedDiff + 55}] 7 $fixedHeight] [list 136 [expr {9*$fixedDiff + 55}] 7 $fixedHeight] [list 136 [expr {9*$fixedDiff + 55}] 7 $fixedHeight] [list 73 [expr {9*$fixedDiff + 55}] 7 $fixedHeight]]
+} [list [list 73 [expr {9*$fixedDiff/2 + 64}] 7 $fixedHeight] [list 136 [expr {9*$fixedDiff/2 + 64}] 7 $fixedHeight] [list 136 [expr {9*$fixedDiff/2 + 64}] 7 $fixedHeight] [list 73 [expr {9*$fixedDiff/2 + 64}] 7 $fixedHeight]]
 test textDisp-13.9 {TkTextSeeCmd procedure} {textfonts} {
     wm geom . [expr $width-2]x$height
     .t xview moveto 0
@@ -1508,7 +1540,7 @@ test textDisp-13.9 {TkTextSeeCmd procedure} {textfonts} {
     lappend x [.t bbox 30.65]
     .t see 30.90
     lappend x [.t bbox 30.90]
-} [list [list 80 [expr {10*$fixedDiff + 55}] 7 $fixedHeight] [list 136 [expr {10*$fixedDiff + 55}] 7 $fixedHeight] [list 136 [expr {10*$fixedDiff + 55}] 7 $fixedHeight] [list 80 [expr {10*$fixedDiff + 55}] 7 $fixedHeight]]
+} [list [list 80 [expr {9*$fixedDiff/2 + 66}] 7 $fixedHeight] [list 136 [expr {9*$fixedDiff/2 + 66}] 7 $fixedHeight] [list 136 [expr {9*$fixedDiff/2 + 66}] 7 $fixedHeight] [list 80 [expr {9*$fixedDiff/2 + 66}] 7 $fixedHeight]]
 test textDisp-13.10 {TkTextSeeCmd procedure} {} {
     # SF Bug 641778
     set w .tsee
@@ -1746,10 +1778,12 @@ test textDisp-16.15 {TkTextYviewCmd procedure, "moveto" option} {
     .t yview moveto .752
     .t index @0,0
 } {151.60}
-test textDisp-16.16 {TkTextYviewCmd procedure, "moveto" option} {
-    .t yview moveto .754
+test textDisp-16.16 {TkTextYviewCmd procedure, "moveto" option} {textfonts} {
+    set count [expr {5 * $bigHeight + 150 * $fixedHeight}]
+    set extra [expr {0.04 * double($fixedDiff * 150) / double($count)}]
+    .t yview moveto [expr {.754 - $extra}]
     .t index @0,0
-} {151.80}
+} {151.60}
 test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} {
     .t yview moveto .755
     .t index @0,0
@@ -1828,8 +1862,12 @@ test textDisp-16.28 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     .t yview 98.0
     update
     .t yview scroll 1 page
-    .t index @0,0
-} {103.0}
+    set res [expr int([.t index @0,0])]
+    if {$fixedDiff > 1} {
+	incr res -1
+    }
+    set res
+} {102}
 test textDisp-16.29 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     .t configure -height 1
     update
@@ -1951,9 +1989,9 @@ test textDisp-17.7 {TkTextScanCmd procedure} {textfonts} {
     .t scan dragto -5 65
     .t index @0,0
     set x [.t index @0,0]
-    .t scan dragto 0 70
+    .t scan dragto 0 [expr {70 + $fixedDiff}]
     list $x [.t index @0,0]
-} {6.13 3.6}
+} {6.13 2.6}
 test textDisp-17.8 {TkTextScanCmd procedure} {textfonts} {
     .t yview 1.0
     .t xview moveto 0
@@ -1977,10 +2015,9 @@ test textDisp-17.10 {TkTextScanCmd procedure, word wrapping} {textfonts} {
     .t scan mark -10 60
     .t scan dragto -5 65
     set x [.t index @0,0]
-    .t scan dragto 0 70
+    .t scan dragto 0 [expr {70 + $fixedDiff}]
     list $x [.t index @0,0]
-} {9.15 8.47}
-
+} {9.15 8.31}
 .t configure -xscrollcommand scroll -yscrollcommand {}
 test textDisp-18.1 {GetXView procedure} {
     .t configure -wrap none
@@ -2355,7 +2392,7 @@ test textDisp-19.12 {GetYView procedure, partially visible last line} {
     catch {destroy .top}
     toplevel .top
     wm geometry .top +0+0
-    text .top.t -width 40 -height 5
+    text .top.t -width 40 -height 5 -font $fixedFont
     pack .top.t -expand yes -fill both
     .top.t insert end "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
     # Need to wait for asychronous calculations to complete.
@@ -2364,12 +2401,12 @@ test textDisp-19.12 {GetYView procedure, partially visible last line} {
     wm geom .top ${twidth}x[expr $theight - 3]
     update
     .top.t yview
-} {0.0 0.9625}
+} [list 0.0 [expr {(5.0 * $fixedHeight - 3.0)/ (5.0 * $fixedHeight)}]]
 test textDisp-19.13 {GetYView procedure, partially visible last line} {textfonts} {
     catch {destroy .top}
     toplevel .top
     wm geometry .top +0+0
-    text .top.t -width 40 -height 5
+    text .top.t -width 40 -height 5 -font $fixedFont
     pack .top.t -expand yes -fill both
     .top.t insert end "Line 1\nLine 2\nLine 3\nLine 4 has enough text to wrap around at least once"
     # Need to wait for asychronous calculations to complete.
@@ -2378,7 +2415,7 @@ test textDisp-19.13 {GetYView procedure, partially visible last line} {textfonts
     wm geom .top ${twidth}x[expr $theight - 3]
     update
     .top.t yview
-} {0.0 0.9625}
+} [list 0.0 [expr {(5.0 * $fixedHeight - 3.0)/ (5.0 * $fixedHeight)}]]
 catch {destroy .top}
 test textDisp-19.14 {GetYView procedure} {
     .t configure -wrap word
@@ -2446,8 +2483,7 @@ test textDisp-19.16 {count -ypixels} {
       [.t count -ypixels 15.0 "16.0 displaylineend +1c"] \
       [.t count -ypixels 16.0 "16.0 displaylineend +1c"] \
       [.t count -ypixels "16.0 +1 displaylines" "16.0 +4 displaylines +3c"]
-} {300 300 15 30 15 45}
-
+} [list [expr {260 + 20 * $fixedDiff}] [expr {260 + 20 * $fixedDiff}] $fixedHeight [expr {2*$fixedHeight}] $fixedHeight [expr {3*$fixedHeight}]]
 .t delete 1.0 end
 .t insert end "Line 1"
 for {set i 2} {$i <= 200} {incr i} {
@@ -2461,11 +2497,11 @@ test textDisp-20.1 {FindDLine} {textfonts} {
     list [.t dlineinfo 46.0] [.t dlineinfo 47.0] [.t dlineinfo 49.0] \
 	    [.t dlineinfo 58.0]
 } [list {} {} [list 3 [expr {$fixedDiff + 16}] 49 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] {}]
-test textDisp-20.2 {FindDLine} {unixOnly textfonts} {
+test textDisp-20.2 {FindDLine} {textfonts} {
     .t yview 100.0
     .t yview -pickplace 53.0
     list [.t dlineinfo 50.0] [.t dlineinfo 50.14] [.t dlineinfo 50.15]
-} [list {} {} [list 3 3 140 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]]]
+} [list [list 3 [expr {-1 - $fixedDiff/2}] 105 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {-1 - $fixedDiff/2}] 105 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {12 + $fixedDiff/2}] 140 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]]]
 test textDisp-20.3 {FindDLine} {textfonts} {
     .t yview 100.0
     .t yview 49.0
@@ -3191,7 +3227,7 @@ test textDisp-31.1 {line embedded window height update} {
     lappend res [.t count -ypixels 1.0 end]
     lappend res [.t count -update -ypixels 1.0 end]
     set res
-} [list 190 190 105]
+} [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 6}] [expr {$fixedHeight * 7}]]
 
 test textDisp-31.2 {line update index shifting} {
     set res {}
@@ -3208,7 +3244,7 @@ test textDisp-31.2 {line update index shifting} {
     lappend res [.t count -ypixels 1.0 end]
     lappend res [.t count -update -ypixels 1.0 end]
     set res
-} [list 190 220 135 105 190]
+} [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
 
 test textDisp-31.3 {line update index shifting} {
     # Should do exactly the same as the above, as long
@@ -3232,7 +3268,7 @@ test textDisp-31.3 {line update index shifting} {
     update ; after 1000 ; update
     lappend res [.t count -ypixels 1.0 end]
     set res
-} [list 190 220 135 105 190]
+} [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
 
 test textDisp-31.4 {line embedded image height update} {
     set res {}
@@ -3245,7 +3281,7 @@ test textDisp-31.4 {line embedded image height update} {
     lappend res [.t count -ypixels 1.0 end]
     lappend res [.t count -update -ypixels 1.0 end]
     set res
-} [list 190 190 105]
+} [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 6}] [expr {$fixedHeight * 7}]]
 
 test textDisp-31.5 {line update index shifting} {
     set res {}
@@ -3262,7 +3298,7 @@ test textDisp-31.5 {line update index shifting} {
     lappend res [.t count -ypixels 1.0 end]
     lappend res [.t count -update -ypixels 1.0 end]
     set res
-} [list 190 220 135 105 190]
+} [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
 
 test textDisp-31.6 {line update index shifting} {
     # Should do exactly the same as the above, as long
@@ -3286,7 +3322,7 @@ test textDisp-31.6 {line update index shifting} {
     update ; after 1000 ; update
     lappend res [.t count -ypixels 1.0 end]
     set res
-} [list 190 220 135 105 190]
+} [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
 
 test textDisp-32.0 {everything elided} {
     # Must not crash

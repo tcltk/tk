@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textWind.test,v 1.10 2003/10/31 18:05:49 vincentdarley Exp $
+# RCS: @(#) $Id: textWind.test,v 1.11 2003/11/04 23:37:51 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -15,6 +15,16 @@ tcltest::loadTestedCommands
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
 
+if {[tcltest::testConstraint fonts]} {
+    tcltest::testConstraint textfonts 1
+} else {
+    if {$::tcl_platform(platform) eq "windows"} {
+	tcltest::testConstraint textfonts 1
+    } else {
+	tcltest::testConstraint textfonts 0
+    }
+}
+
 option add *Text.borderWidth 2
 option add *Text.highlightThickness 2
 if {$tcl_platform(platform) == "windows"} {
@@ -22,6 +32,19 @@ if {$tcl_platform(platform) == "windows"} {
 } else {   
     option add *Text.font {Courier -12}
 }
+
+set fixedFont {Courier -12}
+# 15 on XP, 13 on Solaris 8
+set fixedHeight [font metrics $fixedFont -linespace]
+# 7 on all platforms
+set fixedWidth [font measure $fixedFont m]
+# 12 on XP
+set fixedAscent [font metrics $fixedFont -ascent]
+set fixedDiff [expr {$fixedHeight - 13}] ;# 2 on XP
+
+catch {destroy .f}
+catch {destroy .t}
+catch {destroy .t2}
 
 text .t -width 30 -height 6 -bd 2 -highlightthickness 2
 pack append . .t {top expand fill}
@@ -429,7 +452,13 @@ test textWind-10.3 {EmbWinLayoutProc procedure, error in creating window} {fonts
     update
     list $msg [.t bbox 1.5]
 } {{{bad window path name "gorp"}} {40 11 0 0}}
-test textWind-10.4 {EmbWinLayoutProc procedure, error in creating window} {fonts} {
+proc bgerror args {
+    global msg
+    if {[lsearch -exact $msg $args] == -1} {
+	lappend msg $args
+    }
+}
+test textWind-10.4 {EmbWinLayoutProc procedure, error in creating window} {textfonts} {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     catch {destroy .t.f}
@@ -437,22 +466,47 @@ test textWind-10.4 {EmbWinLayoutProc procedure, error in creating window} {fonts
 	frame .t.f
 	frame .t.f.f -width 10 -height 20 -bg $color
     }
-    set msg xyzzy
+    set msg {}
     update
-    list $msg [.t bbox 1.5] [winfo exists .t.f.f]
-} {{{can't embed .t.f.f relative to .t}} {40 11 0 0} 1}
+    .t bbox 1.5 ; update ; after 100
+    lappend msg [.t bbox 1.5] [winfo exists .t.f.f]
+} [list {{can't embed .t.f.f relative to .t}} {{window name "f" already exists in parent}} [list 40 [expr {11+$fixedDiff/2}] 0 0] 1]
+test textWind-10.4.1 {EmbWinLayoutProc procedure, error in creating window} {textfonts} {
+    .t delete 1.0 end
+    .t insert 1.0 "Some sample text"
+    catch {destroy .t.f}
+    .t window create 1.5 -create {
+	frame .t.f
+	frame .t.f.f -width 10 -height 20 -bg $color
+    }
+    set msg {}
+    update idletasks
+    lappend msg [winfo exists .t.f.f]
+} [list {{can't embed .t.f.f relative to .t}} 1]
+test textWind-10.4.2 {EmbWinLayoutProc procedure, error in creating window} {textfonts} {
+    .t delete 1.0 end
+    .t insert 1.0 "Some sample text"
+    catch {destroy .t.f}
+    .t window create 1.5 -create {
+	frame .t.f
+	frame .t.f.f -width 10 -height 20 -bg $color
+    }
+    set msg {}
+    update
+    lappend msg [winfo exists .t.f.f]
+} {{{can't embed .t.f.f relative to .t}} {{window name "f" already exists in parent}} 1}
 catch {destroy .t.f}
-test textWind-10.5 {EmbWinLayoutProc procedure, error in creating window} {fonts} {
+test textWind-10.5 {EmbWinLayoutProc procedure, error in creating window} {textfonts} {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     .t window create 1.5 -create {
 	concat .t
     }
-    set msg xyzzy
+    set msg {}
     update
-    list $msg [.t bbox 1.5]
-} {{{can't embed .t relative to .t}} {40 11 0 0}}
-test textWind-10.6 {EmbWinLayoutProc procedure, error in creating window} {fonts} {
+    lappend msg [.t bbox 1.5]
+} [list {{can't embed .t relative to .t}} [list 40 [expr {11+$fixedDiff/2}] 0 0]]
+test textWind-10.6 {EmbWinLayoutProc procedure, error in creating window} {textfonts} {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     catch {destroy .t2}
@@ -461,10 +515,28 @@ test textWind-10.6 {EmbWinLayoutProc procedure, error in creating window} {fonts
 	wm geom .t2 +0+0
 	concat .t2
     }
-    set msg xyzzy
+    set msg {}
     update
-    list $msg [.t bbox 1.5]
-} {{{can't embed .t2 relative to .t}} {40 11 0 0}}
+    lappend msg [.t bbox 1.5]
+} [list {{can't embed .t2 relative to .t}} {{window name "t2" already exists in parent}} [list 40 [expr {11+$fixedDiff/2}] 0 0]]
+test textWind-10.6.1 {EmbWinLayoutProc procedure, error in creating window} {
+    .t delete 1.0 end
+    .t insert 1.0 "Some sample text"
+    catch {destroy .t2}
+    .t window create 1.5 -create {
+	toplevel .t2 -width 100 -height 150
+	wm geom .t2 +0+0
+	concat .t2
+    }
+    set msg {}
+    update
+    set msg
+} {{{can't embed .t2 relative to .t}} {{window name "t2" already exists in parent}}}
+
+proc bgerror args {
+    global msg
+    set msg $args
+}
 test textWind-10.7 {EmbWinLayoutProc procedure, steal window from self} {
     .t delete 1.0 end
     .t insert 1.0 ABCDEFGHIJKLMNOP
