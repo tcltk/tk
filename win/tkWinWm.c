@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.84 2004/12/21 05:58:20 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.85 2004/12/28 08:45:31 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -5549,22 +5549,6 @@ UpdateGeometryInfo(clientData)
     }
 
     /*
-     * If this window is embedded and the container is also in this
-     * process, we don't need to do anything special about the
-     * geometry, except to make sure that the desired size is known
-     * by the container.  Also, zero out any position information,
-     * since embedded windows are not allowed to move.
-     */
-
-    if (winPtr->flags & TK_BOTH_HALVES) {
-	wmPtr->x = wmPtr->y = 0;
-	wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
-	Tk_GeometryRequest((Tk_Window) TkpGetOtherWindow(winPtr),
-		width, height);
-	return;
-    }
-
-    /*
      * Reconfigure the window if it isn't already configured correctly.  Base
      * the size check on what we *asked for* last time, not what we got.
      * Return immediately if there have been no changes in the requested
@@ -6517,21 +6501,23 @@ TkWinSetMenu(tkwin, hMenu)
     WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     wmPtr->hMenu = hMenu;
+    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
+        int syncPending = wmPtr->flags & WM_SYNC_PENDING;
 
-    if (!(wmPtr->flags & TK_EMBEDDED)) {
-	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
-	    int syncPending = wmPtr->flags & WM_SYNC_PENDING;
-
-	    wmPtr->flags |= WM_SYNC_PENDING;
-	    SetMenu(wmPtr->wrapper, hMenu);
-	    if (!syncPending) {
-		wmPtr->flags &= ~WM_SYNC_PENDING;
-	    }
+        wmPtr->flags |= WM_SYNC_PENDING;
+        SetMenu(wmPtr->wrapper, hMenu);
+        if (!syncPending) {
+    	    wmPtr->flags &= ~WM_SYNC_PENDING;
 	}
+    }
+    if (!(winPtr->flags & TK_EMBEDDED)) {
 	if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
 	    Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
 	    wmPtr->flags |= WM_UPDATE_PENDING|WM_MOVE_PENDING;
 	}
+    } else {
+	SendMessage(wmPtr->wrapper, TK_SETMENU,
+	    (WPARAM)hMenu, (LPARAM)Tk_GetMenuHWND(tkwin)); 
     }
 }
 
@@ -7291,10 +7277,6 @@ WmProc(hwnd, message, wParam, lParam)
     LRESULT result;
     TkWindow *winPtr = NULL;
 
-    if (TkWinHandleMenuEvent(&hwnd, &message, &wParam, &lParam, &result)) {
-	goto done;
-    }
-
     switch (message) {
 	case WM_KILLFOCUS:
 	case WM_ERASEBKGND:
@@ -7437,6 +7419,34 @@ WmProc(hwnd, message, wParam, lParam)
     }
 
     winPtr = GetTopLevel(hwnd);
+    switch(message) {
+	case WM_SYSCOMMAND:
+        if (TkWinHandleMenuEvent(&hwnd, &message, &wParam, &lParam, &result)) {
+    	    goto done;
+        }
+	break;
+
+	case WM_INITMENU:
+	case WM_COMMAND:
+	case WM_MENUCHAR:
+	case WM_MEASUREITEM:
+	case WM_DRAWITEM:
+	case WM_MENUSELECT:
+	case WM_ENTERIDLE:
+	{
+	    HWND hMenuHWnd = Tk_GetEmbeddedMenuHWND((Tk_Window)winPtr);
+	    if(hMenuHWnd) {
+		SendMessage(hMenuHWnd, message, wParam, lParam);
+		goto done;
+	    } else {
+		if (TkWinHandleMenuEvent(&hwnd, &message, &wParam, &lParam, &result)) {
+    		    goto done;
+		}
+	    }
+	}
+	break;
+    }
+
     if (winPtr && winPtr->window) {
 	HWND child = Tk_GetHWND(winPtr->window);
 	if (message == WM_SETFOCUS) {
