@@ -3990,7 +3990,7 @@ FixMDEF(void)
     Handle MDEFHandle = GetResource('MDEF', 591);
     Handle SICNHandle = GetResource('SICN', SICN_RESOURCE_NUMBER);
     if ((MDEFHandle != NULL) && (SICNHandle != NULL)) {
-        MoveHHi(MDEFHandle);
+        HLock(MDEFHandle);
     	HLock(MDEFHandle);
     	menuDefProc = TkNewMenuDefProc(MenuDefProc);
     	memmove((void *) (((long) (*MDEFHandle)) + 0x24), &menuDefProc, 4);

@@ -20,7 +20,7 @@
  * Icons used in menu items.
  */
 
-resource 'SICN' (128, preload) {
+resource 'SICN' (128, preload, locked) {
 	{	/* array: 7 elements */
 		/* [1] */
 		$"0000 0000 8000 C000 E000 F000 F800 FC00"
