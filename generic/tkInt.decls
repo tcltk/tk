@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.2.2.3 1999/03/14 19:26:02 stanton Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.2.2.4 1999/03/30 04:12:25 stanton Exp $
 
 library tk
 
@@ -1418,6 +1418,10 @@ declare 80 win {
 #      XSetClipRectangles(Display *display, GC gc, int clip_x_origin, \
 #  	    int clip_y_origin, XRectangle rectangles[], int n, int ordering)
 #  }
+declare 82 win {
+    Status XParseColor (Display *display, Colormap map, \
+          _Xconst char* spec, XColor *colorPtr)
+}
 
 # X functions for Mac
 
@@ -1683,5 +1687,9 @@ declare 57 mac {
 	    GC gc, XImage* image, int src_x, int src_y, \
 	    int dest_x, int dest_y, unsigned int width, \
 	    unsigned int height)
+} 
+declare 58 mac {
+    Status XParseColor (Display *display, Colormap map, \
+          _Xconst char* spec, XColor *colorPtr)
 }
 

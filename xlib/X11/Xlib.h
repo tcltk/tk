@@ -1241,15 +1241,6 @@ extern void XFreeGC(
 #endif
 );
 
-extern Status XParseColor(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    Colormap		/* colormap */,
-    _Xconst char*	/* spec */,
-    XColor*		/* exact_def_return */
-#endif
-);
-
 extern void XSetClipMask(
 #if NeedFunctionPrototypes
     Display*		/* display */,
