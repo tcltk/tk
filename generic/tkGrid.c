@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.7 2000/01/20 23:46:20 ericm Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.8 2000/04/08 06:59:19 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1931,13 +1931,13 @@ InitMasterData(masterPtr)
 	gridPtr->columnEnd = 0;
 	gridPtr->columnMax = 0;
 	gridPtr->columnPtr = (SlotInfo *) ckalloc(size);
-	gridPtr->columnSpace = 0;
 	gridPtr->columnSpace = TYPICAL_SIZE;
 	gridPtr->rowEnd = 0;
 	gridPtr->rowMax = 0;
 	gridPtr->rowPtr = (SlotInfo *) ckalloc(size);
-	gridPtr->rowSpace = 0;
 	gridPtr->rowSpace = TYPICAL_SIZE;
+	gridPtr->startX = 0;
+	gridPtr->startY = 0;
 
 	memset((VOID *) gridPtr->columnPtr, 0, size);
 	memset((VOID *) gridPtr->rowPtr, 0, size);
