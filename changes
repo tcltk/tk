@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.37 1999/08/13 18:30:40 redman Exp $
+RCS: @(#) $Id: changes,v 1.38 1999/12/22 01:51:18 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4669,3 +4669,97 @@ that the build directory is separate from the sources.  Fixed bug in
 Tk_DrawChars(). (Jim Ingham)
 
 --------------- Released 8.2.0, August 17, 1999 ----------------------
+
+9/21/99 (bug fix) fixed 'wm deiconify' quirks on Windows. (hobbs)
+
+9/21/99 (bug fix) fix fg<>bg GC swap bug for canvas. [Bug: 2676] (hobbs)
+
+9/21/99 (config fix) fixed AIX config issues for Tk. (hobbs)
+
+9/24/99 (feature change) tk_dialog now uses {Times 12} by default. (hobbs)
+
+--- Released 8.2.1, October 04, 1999 --- See ChangeLog for details ---
+
+10/30/99 (bug fix) fixed XKeysymToKeycode to handle mapping of symbolic
+keysyms (Left, Home, ...) with event generate (hobbs)
+
+10/30/99 (bug fix) change tkEntrySeeInsert to avoid the use of a while loop
+that could eat CPU tremendously.  Behavior of moving the cursor at the
+right edge changes slightly. [Bug: 3195] (hobbs)
+
+10/30/99 (bug fix) changed tkScrollButtonUp to check for existence of
+tkPriv(relief) in order to avoid spurious release events (hobbs)
+
+--- Released 8.2.2, November 04, 1999 --- See ChangeLog for details ---
+
+11/19/99 (bug fix) fixed expression error that could cause
+'malformed bucket chain' error in tkEntry.c.
+
+11/19/99 (bug fix) fixed Tk_NameOfColor
+
+--- Released 8.2.3, December 16, 1999 --- See ChangeLog for details ---
+
+1999-09-01 (feature enhancement) rewrote runtime libraries to use new
+Tcl functions where appropriate
+
+1999-10-28 (feature enhancement) added Img patch from Jan Nijtmans that
+makes the image command Tcl_Obj-based, adds support for binary -data args,
+adds alpha channel to images, adds GIF write capability (RLE).  Binary
+compatability is maintained, and source level compatibility is retained
+with -DUSE_OLD_IMAGE.
+
+1999-11-16 (feature enhancement) made listbox Tcl_Obj based, added
+-listvariable option and itemconfigure command to allow coloring
+individual items.
+
+1999-11-23 (feature enhancement) added TK_OPTION_DONT_SET_DEFAULT as an
+equivalent to TK_CONFIG_DONT_SET_DEFAULT
+
+1999-11-24 (feature enhancement) updated dialogs to use color icons on
+Unix, center properly over -parent.
+
+1999-12-01 (feature enhancement) added hooks into main() code to support
+"big" shells more easily.
+
+1999-12-02 (feature enhancement) converted Tk_DestroyCmd, Tk_LowerCmd and
+Tk_RaiseCmd to their ObjCmd equivalent.
+
+1999-12-12 (bug fix) fixed bug in TextSearchCmd for multibyte chars
+
+1999-12-13 (feature enhancement) added support for pointer warping via the
+event -warp option, added some items from Dash patch: canvas widget now
+Tcl_Obj-based, added Tk_CreateSmoothMethod, added support for <Quadruple>
+clicks, entry widget validation routines, new -state hidden in text
+widgets, new -state -active* -disabled* -offset options to canvas items
+(see man page for full docs).  New features include dashed line support on
+the canvas, -elide support for TkMan, postscript printing of images and
+windows from the canvas.  Binary compatibility is maintained with 8.2, and
+source level compatibility is kept by using -DUSE_OLD_CANVAS.
+
+1999-12-16 (feature enhancement) added "bitstream cyberbit" to list of
+font fallbacks.
+
+1999-12-16 (feature enhancement) added new 'tk useinputmethods ...' command
+to provide support for disabling/enabling the use of XIM on X.  This was
+previously all done at compile time, and always on.  Now it is turned off
+by default, even when available, and the user must turn it on to use XIM
+(per display).
+	*** POTENTIAL INCOMPATIBILITY ***
+user must add 'tk useinputmethods 1' to retain old style.
+
+1999-12-16 (feature enhancement) added proper support for -initialfile
+to tk_get*File, and made Unix version better match Windows file box
+that it was emulating.
+
+1999-12-16 (bug fix) removed necessity of 'update idle' before 'wm
+deiconify' on Windows.
+
+1999-12-16 (feature enhancement) added support for Windows system cursors
+to TkGetCursorByName (use -cursor @filename).
+
+1999-12-21 (bug fix) fixed lack of refresh for thin frames
+
+1999-12-21 (bug fix) fixed panic in Tk_CoordsToWindow to print error
+to stderr instead (for Tix)
+
+--- Released 8.3b1, December 21, 1999 --- See ChangeLog for details ---

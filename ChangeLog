@@ -69,7 +69,8 @@
 	* generic/tkInt.h: add 'tk useinputmethods ?-display win? ?bool?'
 	call to provide support for disabling/enabling the use of XIM on
 	X.  This was previously all done at compile time, and always on.
-	Now it
+	Now it is turned off by default, even when available, and the user
+	must turn it on to use XIM (per display).
 
 	* generic/tkCanvUtil.c: fixed bug in Tk_CanvasPsOutline that freed
 	mem it shouldn't.
