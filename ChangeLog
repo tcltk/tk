@@ -1,5 +1,10 @@
 2004-10-28  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* doc/wm.n: Add wm attributes . -alpha doc to account
+	for recent alpha changes.
+
+2004-10-28  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* win/tkWin32Dll.c (DllMain, _except_dllmain_detach_handler):
 	Back port HAVE_NO_SEH handler code from CVS HEAD to fix
 	gcc build breakage caused by 2004-10-26 back port.
