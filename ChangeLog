@@ -1,3 +1,8 @@
+2003-12-16  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
+
+	* win/tkWinWm.c (InstallColormaps): Check for TK_ALREADY_DEAD
+	to avoid handling of dead windows.
+
 2003-12-15  David Gravereaux <davygrvy@pobox.com>
 
 	Some silent invalid handle issues discovered with NuMega's
