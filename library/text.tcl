@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.27 2003/10/31 09:02:13 vincentdarley Exp $
+# RCS: @(#) $Id: text.tcl,v 1.28 2003/11/13 14:44:22 vincentdarley Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -53,12 +53,12 @@ bind Text <B1-Motion> {
 bind Text <Double-1> {
     set tk::Priv(selectMode) word
     tk::TextSelectTo %W %x %y
-    catch {%W mark set insert sel.last}
+    catch {%W mark set insert sel.first}
 }
 bind Text <Triple-1> {
     set tk::Priv(selectMode) line
     tk::TextSelectTo %W %x %y
-    catch {%W mark set insert sel.last}
+    catch {%W mark set insert sel.first}
 }
 bind Text <Shift-1> {
     tk::TextResetAnchor %W @%x,%y

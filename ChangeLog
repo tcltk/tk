@@ -10,6 +10,9 @@
 	bindings trigger on window borders), and made two more functions
 	static in tkTextDisp.c.
 	
+	* library/text.tcl: fixed [Tcl Bug 699642] with double/triple-click
+	insert positioning.
+	
 2003-11-11  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/configure:
