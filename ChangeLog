@@ -1,5 +1,10 @@
 2003-02-21  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* library/clrpick.tcl (color::BuildDialog): 
+	* library/msgbox.tcl (MessageBox): Yet more places that did
+	complex and fragile width calculations instead of using grid,
+	though with these it is the -uniform option that saves the day.
+
 	* library/tkfbox.tcl (file::Create): This procedure was really
 	very crufty in how it went about creating the GUI.  It is far
 	easier and more robust to use the grid geometry manager than it is
