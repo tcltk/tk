@@ -1,3 +1,10 @@
+2003-12-31  Daniel Steffen  <das@users.sourceforge.net>
+
+        * macosx/Wish.pbproj/project.pbxproj: added missing private headers
+        to installed Tk.framework, so that tkInt.h can be included  
+        sucessfully from Tk.framework/PrivateHeaders.
+	* generic/tkPort.h: corrected include of tkMacOSXPort.h
+
 2003-12-17  Jim Ingham <jingham@apple.com>
 
         * macosx/tkMacOSXScrlbr.c: Reworking Vince's fix to [Bug 842952].  
@@ -9,7 +16,7 @@
 	
 2003-12-11  David Gravereaux <davygrvy@pobox.com>
 
-	win/winMain.c: Backed-out yesterdays change.  Reverted to 1.15 for
+	* win/winMain.c: Backed-out yesterdays change.  Reverted to 1.15 for
 	two reasons.  1) problem is best addressed in Tcl's DllMain() and
 	2) needs a MinGW custom assembly implimentation as it doesn't
 	understand SEH syntax.
