@@ -4,7 +4,7 @@
 # checkbutton, and radiobutton widgets and provides procedures
 # that help in implementing those bindings.
 #
-# RCS: @(#) $Id: button.tcl,v 1.15 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: button.tcl,v 1.16 2002/09/02 22:00:53 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -342,7 +342,7 @@ proc ::tk::ButtonEnter {w} {
 
 proc ::tk::ButtonLeave w {
     variable ::tk::Priv
-    if {[$w cget -state] eq "disabled"} {
+    if {[$w cget -state] ne "disabled"} {
 	$w configure -state normal
     }
 
