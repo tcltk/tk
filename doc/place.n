@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: place.n,v 1.5 2004/06/21 20:42:21 dkf Exp $
+'\" RCS: @(#) $Id: place.n,v 1.6 2004/07/01 08:06:15 dkf Exp $
 '\" 
 .so man.macros
 .TH place n "" Tk "Tk Built-In Commands"
@@ -240,7 +240,7 @@ frames and canvases that provide configuration options for this purpose.
 Make the label occupy the middle bit of the toplevel, no matter how it
 is resized:
 .CS
-label .l \-text "In the\nMiddle!" \-bg black \-fg white
+label .l \-text "In the\\nMiddle!" \-bg black \-fg white
 \fBplace\fR .l \-relwidth .3 \-relx .35 \-relheight .3 \-rely .35
 .CE
 
