@@ -1,3 +1,21 @@
+2003-03-06  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* generic/tkImgPhoto.c (Tk_PhotoExpand, Tk_PhotoPutBlock,
+	Tk_PhotoPutZoomedBlock, Tk_PhotoSetSize): Added interp argument to
+	these functions and made them return a standard Tcl result, with
+	error indicating memory allocation failure instead of panic()ing.
+	[See TIP #116 at http://purl.org/tcl/tip/116.html for discussion.]
+	Each of these functions has also acquired a backward-compatability
+	variant as well, named with a _Panic suffix.
+	* generic.tk.decls: New API in new slots, back-compat API in old ones.
+	* generic/tk.h (USE_PANIC_ON_PHOTO_ALLOC_FAILURE): Allow users to
+	define this symbol to get the old 8.4 photo image API, including
+	panic() calls when things go wrong.
+
+	* generic/tkImgPhoto.c (ImgPhotoCmd): Adjusted to use the new API
+	* generic/tkImgGIF.c (FileReadGIF):   discussed above.
+	* generic/tkImgPPM.c (FileReadPPM):
+
 2003-03-05  David Gravereaux  <davygrvy@pobox.com>
 
 	* win/rules.vc: updated default tcl version to 8.5.

@@ -13,7 +13,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPPM.c,v 1.10 2002/06/14 13:35:48 dkf Exp $
+ * RCS: @(#) $Id: tkImgPPM.c,v 1.11 2003/03/06 15:05:35 dkf Exp $
  */
 
 #define USE_OLD_IMAGE
@@ -189,7 +189,10 @@ FileReadPPM(interp, chan, fileName, formatString, imageHandle, destX, destY,
     block.width = width;
     block.pitch = block.pixelSize * fileWidth;
 
-    Tk_PhotoExpand(imageHandle, destX + width, destY + height);
+    if (Tk_PhotoExpand(interp, imageHandle,
+	    destX + width, destY + height) != TCL_OK) {
+	return TCL_ERROR;
+    }
 
     if (srcY > 0) {
 	Tcl_Seek(chan, (Tcl_WideInt)(srcY * block.pitch), SEEK_CUR);
@@ -228,8 +231,11 @@ FileReadPPM(interp, chan, fileName, formatString, imageHandle, destX, destY,
 	    }
 	}
 	block.height = nLines;
-	Tk_PhotoPutBlock(imageHandle, &block, destX, destY, width, nLines,
-		TK_PHOTO_COMPOSITE_SET);
+	if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, destY,
+		width, nLines, TK_PHOTO_COMPOSITE_SET) != TCL_OK) {
+	    ckfree((char *) pixelPtr);
+	    return TCL_ERROR;
+	}
 	destY += nLines;
     }
 
