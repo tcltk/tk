@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.24.2.1 2004/02/16 23:09:25 wolfsuit Exp $
+# RCS: @(#) $Id: text.tcl,v 1.24.2.2 2004/02/17 07:17:17 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -462,6 +462,15 @@ if {[string equal [tk windowingsystem] "classic"]
 	|| [string equal [tk windowingsystem] "aqua"]} {
     bind Text <MouseWheel> {
         %W yview scroll [expr {- (%D)}] units
+    }
+    bind Text <Option-MouseWheel> {
+        %W yview scroll [expr {-10 * (%D)}] units
+    }
+    bind Text <Shift-MouseWheel> {
+        %W xview scroll [expr {- (%D)}] units
+    }
+    bind Text <Shift-Option-MouseWheel> {
+        %W xview scroll [expr {-10 * (%D)}] units
     }
 } else {
     bind Text <MouseWheel> {
