@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.29 2003/12/28 05:04:18 mdejong Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.30 2003/12/28 23:11:10 mdejong Exp $
  */
 
 #define OEMRESOURCE
@@ -576,6 +576,7 @@ ReconfigureWindowsMenu(
 		|| (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
 	    Tcl_UtfToExternalDString(NULL, itemText, -1, &translatedText);
 	    lpNewItem = Tcl_DStringValue(&translatedText);
+	    flags |= MF_STRING;
 	} else {
 	    lpNewItem = (LPCTSTR) mePtr;
 	    flags |= MF_OWNERDRAW;
@@ -623,7 +624,11 @@ ReconfigureWindowsMenu(
 		->platformData;
 	    if (childMenuHdl != NULL) {
 		itemID = (UINT) childMenuHdl;
-		flags |= MF_POPUP;
+		/* Win32 draws the popup arrow in the wrong color    *
+		 * for a disabled cascade menu, so do it by hand.    */
+		if (mePtr->state != ENTRY_DISABLED) {
+		    flags |= MF_POPUP;
+		}	
 	    }
 	    if ((menuPtr->menuType == MENUBAR) 
 		    && !(mePtr->childMenuRefPtr->menuPtr->menuFlags
@@ -1071,6 +1076,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 	    TkWinDrawable *twdPtr;
 	    LPDRAWITEMSTRUCT itemPtr = (LPDRAWITEMSTRUCT) *plParam;
 	    Tk_FontMetrics fontMetrics;
+	    int drawArrow = 0;
 
 	    if (itemPtr != NULL) {
 		Tk_Font tkfont;
@@ -1099,6 +1105,12 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		    } else {
 			mePtr->entryFlags &= ~ENTRY_PLATFORM_FLAG1;
 		    }
+		    /* Also, set the drawArrow flag for a disabled cascade
+		    ** menu since we need to draw the arrow ourselves.
+		    */
+		    if (mePtr->type == CASCADE_ENTRY) {
+		        drawArrow = 1;
+		    }
 		}
 
 		tkfont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
@@ -1107,7 +1119,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 			&fontMetrics, itemPtr->rcItem.left,
 			itemPtr->rcItem.top, itemPtr->rcItem.right
 			- itemPtr->rcItem.left, itemPtr->rcItem.bottom
-			- itemPtr->rcItem.top, 0, 0);
+			- itemPtr->rcItem.top, 0, drawArrow);
 
 		ckfree((char *) twdPtr);
 		*plResult = 1;
@@ -1671,35 +1683,40 @@ DrawMenuEntryArrow(menuPtr, mePtr, d, gc,
 					 * out Windows' algorithm for where
 					 * to draw this. */
 {
-    if ((mePtr->state == ENTRY_DISABLED) && (menuPtr->disabledFgPtr != NULL)
-	    && ((mePtr->type == CASCADE_ENTRY) && drawArrow)) {
-	COLORREF oldFgColor = gc->foreground;
+    COLORREF oldFgColor;
+    COLORREF oldBgColor;
+    RECT rect;
 
-	gc->foreground = GetSysColor(COLOR_3DHILIGHT);
+    if (!drawArrow || (mePtr->type != CASCADE_ENTRY) ||
+            (mePtr->state != ENTRY_DISABLED))
+        return;
 
-	if (mePtr->type == CASCADE_ENTRY) {
-	    RECT rect;
+    oldFgColor = gc->foreground;
+    oldBgColor = gc->background;
 
-	    rect.top = y + GetSystemMetrics(SM_CYBORDER) + 1;
-	    rect.bottom = y + height - GetSystemMetrics(SM_CYBORDER) + 1;
-	    rect.left = x + mePtr->indicatorSpace + mePtr->labelWidth + 1;
-	    rect.right = x + width;
-	    DrawWindowsSystemBitmap(menuPtr->display, d, gc, &rect, 
-		    OBM_MNARROW, ALIGN_BITMAP_RIGHT);
-	}
-	gc->foreground = oldFgColor;
+    /* Set bitmap bg to highlight color if the menu is highlighted */
+    if (mePtr->entryFlags & ENTRY_PLATFORM_FLAG1) {
+        XColor *activeBgColor = Tk_3DBorderColor(Tk_Get3DBorderFromObj(
+                mePtr->menuPtr->tkwin,
+                (mePtr->activeBorderPtr == NULL) ?
+                mePtr->menuPtr->activeBorderPtr :
+                mePtr->activeBorderPtr));
+        gc->background = activeBgColor->pixel;
     }
 
-    if ((mePtr->type == CASCADE_ENTRY) && drawArrow) {
-	RECT rect;
+    gc->foreground = GetSysColor(COLOR_GRAYTEXT);
 
-	rect.top = y + GetSystemMetrics(SM_CYBORDER);
-	rect.bottom = y + height - GetSystemMetrics(SM_CYBORDER);
-	rect.left = x + mePtr->indicatorSpace + mePtr->labelWidth;
-	rect.right = x + width - 1;
-	DrawWindowsSystemBitmap(menuPtr->display, d, gc, &rect, OBM_MNARROW, 
-		ALIGN_BITMAP_RIGHT);
-    }
+    rect.top = y + GetSystemMetrics(SM_CYBORDER);
+    rect.bottom = y + height - GetSystemMetrics(SM_CYBORDER);
+    rect.left = x + mePtr->indicatorSpace + mePtr->labelWidth;
+    rect.right = x + width;
+
+    DrawWindowsSystemBitmap(menuPtr->display, d, gc, &rect, OBM_MNARROW,
+            ALIGN_BITMAP_RIGHT);
+
+    gc->foreground = oldFgColor;
+    gc->background = oldBgColor;
+    return;
 }
 
 /*
