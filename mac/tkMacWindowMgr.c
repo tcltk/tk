@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWindowMgr.c,v 1.7 2000/02/10 08:56:38 jingham Exp $
+ * RCS: @(#) $Id: tkMacWindowMgr.c,v 1.8 2000/04/17 02:17:24 jingham Exp $
  */
 
 #include <Events.h>
@@ -729,6 +729,10 @@ GenerateKeyEvent(
 
     dispPtr = TkGetDisplayList();
     tkwin = Tk_IdToWindow(dispPtr->display, window);
+    
+    if (tkwin == NULL) {
+        return false;
+    }
     tkwin = (Tk_Window) ((TkWindow *) tkwin)->dispPtr->focusPtr;
     if (tkwin == NULL) {
 	return false;
