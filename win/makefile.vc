@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.17 1998/11/03 02:04:06 stanton Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.18 1999/02/04 21:02:58 stanton Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -26,9 +26,10 @@
 #
 
 ROOT		= ..
-TOOLS32		= c:\progra~1\devstudio\vc
-TOOLS32_rc	= c:\progra~1\devstudio\sharedide
-TCLDIR		= ..\..\tcl8.0.4
+TOOLS32		= c:\program files\devstudio\vc
+TOOLS32_rc	= c:\program files\devstudio\sharedide
+TCLDIR		= ..\..\tcl8.0.5
+INSTALLDIR	= c:\program files\tcl
 
 # Set this to the appropriate value of /MACHINE: for your platform
 MACHINE	= IX86
@@ -47,6 +48,7 @@ TCLNAMEPREFIX = tcl
 TKNAMEPREFIX = tk
 WISHNAMEPREFIX = wish
 VERSION = 80
+DOTVERSION = 8.0
 
 BINROOT		= .
 !IF "$(NODEBUG)" == "1"
@@ -73,6 +75,11 @@ WISH 		= $(OUTDIR)\$(WISHNAMEPREFIX)$(VERSION)$(DBGX).exe
 WISHP 		= $(OUTDIR)\$(WISHNAMEPREFIX)p$(VERSION)$(DBGX).exe
 TKTEST 		= $(OUTDIR)\$(TKNAMEPREFIX)test.exe
 DUMPEXTS 	= $(TMPDIR)\dumpexts.exe
+
+BIN_INSTALL_DIR = $(INSTALLDIR)\bin
+INCLUDE_INSTALL_DIR = $(INSTALLDIR)\include
+LIB_INSTALL_DIR = $(INSTALLDIR)\lib
+SCRIPT_INSTALL_DIR = $(LIB_INSTALL_DIR)\tk$(DOTVERSION)
 
 WISHOBJS = \
 	$(TMPDIR)\winMain.obj
@@ -184,10 +191,10 @@ TKOBJS = \
 	$(TMPDIR)\tkVisual.obj \
 	$(TMPDIR)\tkWindow.obj
 
-cc32		= $(TOOLS32)\bin\cl.exe
-link32		= $(TOOLS32)\bin\link.exe
-rc32		= $(TOOLS32_rc)\bin\rc.exe
-include32	= -I$(TOOLS32)\include
+cc32		= "$(TOOLS32)\bin\cl.exe"
+link32		= "$(TOOLS32)\bin\link.exe"
+rc32		= "$(TOOLS32_rc)\bin\rc.exe"
+include32	= -I"$(TOOLS32)\include"
 
 WINDIR          = $(ROOT)\win
 GENERICDIR	= $(ROOT)\generic
@@ -219,7 +226,7 @@ lcommon = /NODEFAULTLIB /RELEASE /NOLOGO
 # declarations for use on Intel i386, i486, and Pentium systems
 !IF "$(MACHINE)" == "IX86"
 DLLENTRY = @12
-lflags   = $(lcommon) -align:0x1000 /MACHINE:$(MACHINE)
+lflags   = $(lcommon) /MACHINE:$(MACHINE)
 !ELSE
 lflags   = $(lcommon) /MACHINE:$(MACHINE)
 !ENDIF
@@ -247,12 +254,7 @@ guilibsdll = $(libcdll) $(winlibs)
 ######################################################################
 
 !IF "$(NODEBUG)" == "1"
-!IF "$(MACHINE)" == "ALPHA"
-# MSVC on Alpha doesn't understand -Ot
-cdebug = -O2i -Gs -GD
-!ELSE
-cdebug = -Oti -Gs -GD
-!ENDIF
+cdebug = -O2 -Gs -GD
 !ELSE
 cdebug = -Z7 -Od -WX
 !ENDIF
@@ -294,11 +296,34 @@ CON_CFLAGS	= $(cdebug) $(cflags) $(cvars) $(include32) -DCONSOLE
 
 all:    setup $(WISH)
 test:	setup $(TKTEST)
+install: install-binaries install-libraries
 plugin:	setup $(TKPLUGINDLL) $(WISHP)
+tktest: setup $(TKTEST)
 
 setup:
 	@mkd $(TMPDIR)
 	@mkd $(OUTDIR)
+
+install-binaries:
+	@mkd "$(BIN_INSTALL_DIR)"
+	copy $(TKDLL) "$(BIN_INSTALL_DIR)"
+	copy $(WISH) "$(BIN_INSTALL_DIR)"
+	@mkd "$(LIB_INSTALL_DIR)"
+	copy $(TKLIB) "$(LIB_INSTALL_DIR)"
+
+install-libraries:
+	@mkd "$(INCLUDE_INSTALL_DIR)"
+	@mkd "$(INCLUDE_INSTALL_DIR)\X11"
+	copy "$(ROOT)\generic\tk.h" "$(INCLUDE_INSTALL_DIR)"
+	xcopy "$(ROOT)\xlib\X11\*.h" "$(INCLUDE_INSTALL_DIR)\X11"
+	@mkd "$(SCRIPT_INSTALL_DIR)"
+	@mkd "$(SCRIPT_INSTALL_DIR)\images"
+	@mkd "$(SCRIPT_INSTALL_DIR)\demos"
+	@mkd "$(SCRIPT_INSTALL_DIR)\demos\images"
+	xcopy "$(ROOT)\library" "$(SCRIPT_INSTALL_DIR)"
+	xcopy "$(ROOT)\library\images" "$(SCRIPT_INSTALL_DIR)\images"
+	xcopy "$(ROOT)\library\demos" "$(SCRIPT_INSTALL_DIR)\demos"
+	xcopy "$(ROOT)\library\demos\images" "$(SCRIPT_INSTALL_DIR)\demos\images"
 
 $(TKLIB): $(TKDLL)
 
@@ -360,16 +385,16 @@ $(DUMPEXTS): $(TCLDIR)\win\winDumpExts.c
 #
 
 $(TMPDIR)\testMain.obj: $(ROOT)\win\winMain.c
-	$(cc32) $(TK_CFLAGS) -DSTATIC_BUILD -DTK_TEST -Fo$@ $?
+	$(cc32) $(TK_CFLAGS) -DTK_TEST -Fo$@ $?
 
 $(TMPDIR)\tkTest.obj: $(ROOT)\generic\tkTest.c
-	$(cc32) $(TK_CFLAGS) -DSTATIC_BUILD -Fo$@ $?
+	$(cc32) $(TK_CFLAGS) -Fo$@ $?
 
 $(TMPDIR)\tkSquare.obj: $(ROOT)\generic\tkSquare.c
 	$(cc32) $(TK_CFLAGS) -Fo$@ $?
 
 $(TMPDIR)\winMain.obj: $(ROOT)\win\winMain.c
-	$(cc32) $(TK_CFLAGS) -DSTATIC_BUILD -Fo$@ $?
+	$(cc32) $(TK_CFLAGS) -Fo$@ $?
 
 #
 # Implicit rules
