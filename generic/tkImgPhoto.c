@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.43 2004/01/13 02:06:00 davygrvy Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.44 2004/02/09 14:48:20 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -4291,6 +4291,7 @@ Tk_PhotoPutBlock(interp, handle, blockPtr, x, y, width, height, compRule)
     xEnd = x + width;
     yEnd = y + height;
     if ((xEnd > masterPtr->width) || (yEnd > masterPtr->height)) {
+	int sameSrc = (blockPtr->pixelPtr == masterPtr->pix32);
 	if (ImgPhotoSetSize(masterPtr, MAX(xEnd, masterPtr->width),
 		MAX(yEnd, masterPtr->height)) == TCL_ERROR) {
 	    if (interp != NULL) {
@@ -4299,6 +4300,10 @@ Tk_PhotoPutBlock(interp, handle, blockPtr, x, y, width, height, compRule)
 			TK_PHOTO_ALLOC_FAILURE_MESSAGE, (char *) NULL);
 	    }
 	    return TCL_ERROR;
+	}
+	if (sameSrc) {
+	    blockPtr->pixelPtr = masterPtr->pix32;
+	    blockPtr->pitch = masterPtr->width * 4;
 	}
     }
 
@@ -4610,6 +4615,7 @@ Tk_PhotoPutZoomedBlock(interp, handle, blockPtr, x, y, width, height,
 	}
 	if (sameSrc) {
 	    blockPtr->pixelPtr = masterPtr->pix32;
+	    blockPtr->pitch = masterPtr->width * 4;
 	}
     }
 
