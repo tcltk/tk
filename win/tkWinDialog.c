@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.30 2003/01/14 01:20:55 mdejong Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.31 2003/07/18 19:50:20 hobbs Exp $
  *
  */
 
@@ -119,10 +119,10 @@ static const struct {int type; int btnIds[3];} allowedTypes[] = {
  * be retrieved with tk_get*File -multiple 1.  It must be allocated
  * on the stack, so make it large enough but not too large.  -- hobbs
  * The data is stored as <dir>\0<file1>\0<file2>\0...<fileN>\0\0.
- * MAX_PATH == 260 on Win2K/NT.
+ * MAX_PATH == 260 on Win2K/NT, so *40 is ~10K.
  */
 
-#define TK_MULTI_MAX_PATH	(MAX_PATH*20)
+#define TK_MULTI_MAX_PATH	(MAX_PATH*40)
 
 /*
  * The following structure is used to pass information between the directory
