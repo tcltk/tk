@@ -6,7 +6,7 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.12 2001/04/03 04:40:31 hobbs Exp $
+# RCS: @(#) $Id: canvas.test,v 1.13 2001/07/04 00:40:11 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -366,6 +366,25 @@ test canvas-11.1 {canvas poly fill check, bug 5783} {
     .c create polygon 0 0 100 100 200 50 \
 	    -fill {} -stipple gray50 -outline black
 } 1
+test canvas-11.2 {canvas poly overlap fill check, bug 226357} {
+    destroy .c
+    pack [canvas .c]
+    set result {}
+    .c create poly 30 30 90 90 30 90 90 30
+    lappend result [.c find over 40 40 45 45]; # rect region inc. edge
+    lappend result [.c find over 60 40 60 40]; # top-center point
+    lappend result [.c find over 0 0 0 0]; # not on poly
+    lappend result [.c find over 60 60 60 60]; # center-point
+    lappend result [.c find over 45 50 45 50]; # outside poly
+    .c itemconfig 1 -fill "" -outline black
+    lappend result [.c find over 40 40 45 45]; # rect region inc. edge
+    lappend result [.c find over 60 40 60 40]; # top-center point
+    lappend result [.c find over 0 0 0 0]; # not on poly
+    lappend result [.c find over 60 60 60 60]; # center-point
+    lappend result [.c find over 45 50 45 50]; # outside poly
+    .c itemconfig 1 -width 8
+    lappend result [.c find over 45 50 45 50]; # outside poly
+} {1 1 {} 1 {} 1 1 {} 1 {} 1}
 
 test canvas-12.1 {canvas mm obj, patch SF-403327, 102471} {
     destroy .c

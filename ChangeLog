@@ -1,3 +1,10 @@
+2001-07-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/canvas.test:
+	* generic/tkCanvPoly.c (PolygonToArea): Added patch that respects
+	the polygon difference of including points in the polygon even
+	when fill is empty.  [Bug #226357]
+
 2001-07-03  Mo DeJong  <mdejong@redhat.com>
 
 	* win/Makefile.in: Remove PATHTYPE variable.
