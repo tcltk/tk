@@ -10,10 +10,21 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.18 2002/01/25 21:09:37 dgp Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.19 2002/03/07 02:08:32 mdejong Exp $
  */
 
 #include "tkWinInt.h"
+
+/*
+ * The w32api 1.1 package (included in Mingw 1.1) does not define _WIN32_IE
+ * by default. Define it here to gain access to the InitCommonControlsEx API
+ * in commctrl.h.
+ */
+
+#ifndef _WIN32_IE
+#define _WIN32_IE 0x0300
+#endif
+
 #include <commctrl.h>
 
 /*

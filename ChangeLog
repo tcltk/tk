@@ -1,3 +1,10 @@
+2002-03-06  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWinX.c: Define _WIN32_IE as 0x0300
+	before including commctrl.h so that we can
+	access the InitCommonControlsEx API when
+	building Tk with mingw.
+
 2002-03-06  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* README, generic/tk.h, unix/configure.in, unix/tk.spec:
