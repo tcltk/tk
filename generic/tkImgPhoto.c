@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.49 2004/08/04 14:47:33 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.50 2004/10/26 13:15:09 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -4558,34 +4558,16 @@ Tk_PhotoPutBlock(interp, handle, blockPtr, x, y, width, height, compRule)
 	    TkDestroyRegion(workRgn);
 	}
 
-	destLinePtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4 + 3;
-	for (y1 = 0; y1 < height; y1++) {
-	    x1 = 0;
-	    destPtr = destLinePtr;
-	    while (x1 < width) {
-		/* search for first non-transparent pixel */
-		while ((x1 < width) && !*destPtr) {
-		    x1++;
-		    destPtr += 4;
-		}
-		end = x1;
-		/* search for first transparent pixel */
-		while ((end < width) && *destPtr) {
-		    end++;
-		    destPtr += 4;
-		}
-		if (end > x1) {
-		    rect.x = x + x1;
-		    rect.y = y + y1;
-		    rect.width = end - x1;
-		    rect.height = 1;
-		    TkUnionRectWithRegion(&rect, masterPtr->validRegion,
-			    masterPtr->validRegion);
-		}
-		x1 = end;
-	    }
-	    destLinePtr += masterPtr->width * 4;
-	}
+	/*
+	 * Factorize out the main part of the building of the region
+	 * data to allow for more efficient per-platform
+	 * implementations. [Bug 919066]
+	 */
+
+	TkpBuildRegionFromAlphaData(masterPtr->validRegion, (unsigned) x,
+		(unsigned) y, (unsigned) width, (unsigned) height,
+		masterPtr->pix32 + (y * masterPtr->width + x) * 4 + 3,
+		4, (unsigned) masterPtr->width * 4);
     } else {
 	rect.x = x;
 	rect.y = y;
