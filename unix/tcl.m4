@@ -462,8 +462,9 @@ AC_DEFUN(SC_ENABLE_THREADS, [
 #------------------------------------------------------------------------
 # SC_ENABLE_SYMBOLS --
 #
-#	Specify if debugging symbols should be used
-#	Memory (TCL_MEM_DEBUG) debugging can also be enabled.
+#	Specify if debugging symbols should be used.
+#	Memory (TCL_MEM_DEBUG) and compile (TCL_COMPILE_DEBUG) debugging
+#	can also be enabled.
 #
 # Arguments:
 #	none
@@ -512,9 +513,14 @@ AC_DEFUN(SC_ENABLE_SYMBOLS, [
 	AC_DEFINE(TCL_MEM_DEBUG)
     fi
 
+    if test "$tcl_ok" = "compile" -o "$tcl_ok" = "all"; then
+	AC_DEFINE(TCL_COMPILE_DEBUG)
+	AC_DEFINE(TCL_COMPILE_STATS)
+    fi
+
     if test "$tcl_ok" != "yes" -a "$tcl_ok" != "no"; then
 	if test "$tcl_ok" = "all"; then
-	    AC_MSG_RESULT([enabled symbols mem debugging])
+	    AC_MSG_RESULT([enabled symbols mem compile debugging])
 	else
 	    AC_MSG_RESULT([enabled $tcl_ok debugging])
 	fi
@@ -607,7 +613,6 @@ AC_DEFUN(SC_CONFIG_MANPAGES, [
 
 	AC_SUBST(MKLINKS_FLAGS)
 ])
-
 
 #--------------------------------------------------------------------
 # SC_CONFIG_CFLAGS
@@ -788,8 +793,11 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     TCL_BUILD_EXP_FILE=""
     TCL_EXP_FILE=""
 dnl FIXME: Replace AC_CHECK_PROG with AC_CHECK_TOOL once cross compiling is fixed.
-dnl AC_CHECK_TOOL(AR, ar, :)
+dnl AC_CHECK_TOOL(AR, ar)
     AC_CHECK_PROG(AR, ar, ar)
+    if test "${AR}" = "" ; then
+	AC_MSG_ERROR([Required archive tool 'ar' not found on PATH.])
+    fi
     STLIB_LD='${AR} cr'
     LD_LIBRARY_PATH_VAR="LD_LIBRARY_PATH"
     PLAT_OBJS=""
@@ -966,7 +974,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    # Check to enable 64-bit flags for compiler/linker
 	    if test "$do64bit" = "yes" ; then
 		if test "$GCC" = "yes" ; then
-		    hpux_arch='`gcc -dumpmachine`'
+		    hpux_arch=`gcc -dumpmachine`
 		    case $hpux_arch in
 			hppa64*)
 			    # 64-bit gcc in use.  Fix flags for GNU ld.
@@ -974,6 +982,7 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 			    SHLIB_LD="gcc -shared"
 			    SHLIB_LD_LIBS=""
 			    LD_SEARCH_FLAGS=''
+			    CC_SEARCH_FLAGS=''
 			    ;;
 			*)
 			    AC_MSG_WARN("64bit mode not supported with GCC on $system")
