@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.37 2004/06/16 20:03:19 jenglish Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.38 2004/06/17 22:38:57 dkf Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -413,8 +413,6 @@ test unixWm-9.5 {TkWmMapWindow procedure, normal windows} unix {
     update
     winfo ismapped .t
 } {1}
-
-testConstraint testmenubar [llength [info commands testmenubar]]
 
 test unixWm-10.1 {TkWmDeadWindow procedure, canceling UpdateGeometry idle handler} unix {
     catch {destroy .t}

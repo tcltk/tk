@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textWind.test,v 1.16 2004/05/23 17:34:49 dkf Exp $
+# RCS: @(#) $Id: textWind.test,v 1.17 2004/06/17 22:38:57 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -14,16 +14,6 @@ tcltest::loadTestedCommands
 
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
-
-if {[tcltest::testConstraint fonts]} {
-    tcltest::testConstraint textfonts 1
-} else {
-    if {$::tcl_platform(platform) eq "windows"} {
-	tcltest::testConstraint textfonts 1
-    } else {
-	tcltest::testConstraint textfonts 0
-    }
-}
 
 option add *Text.borderWidth 2
 option add *Text.highlightThickness 2

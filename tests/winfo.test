@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winfo.test,v 1.11 2004/03/17 18:15:50 das Exp $
+# RCS: @(#) $Id: winfo.test,v 1.12 2004/06/17 22:38:57 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -81,20 +81,16 @@ test winfo-2.7 {"winfo atom" command} {
     winfo atomname -displayof . 2
 } SECONDARY
 
-# Some tests require the "pseudocolor" visual class.
-testConstraint pseudocolor [expr { ([winfo depth .] == 8) 
-				&& ([winfo visual .] == "pseudocolor")}]
-
-test winfo-3.1 {"winfo colormapfull" command} {pseudocolor} {
+test winfo-3.1 {"winfo colormapfull" command} defaultPseudocolor8 {
     list [catch {winfo colormapfull} msg] $msg
 } {1 {wrong # args: should be "winfo colormapfull window"}}
-test winfo-3.2 {"winfo colormapfull" command} {pseudocolor} {
+test winfo-3.2 {"winfo colormapfull" command} defaultPseudocolor8 {
     list [catch {winfo colormapfull a b} msg] $msg
 } {1 {wrong # args: should be "winfo colormapfull window"}}
-test winfo-3.3 {"winfo colormapfull" command} {pseudocolor} {
+test winfo-3.3 {"winfo colormapfull" command} defaultPseudocolor8 {
     list [catch {winfo colormapfull foo} msg] $msg
 } {1 {bad window path name "foo"}}
-test winfo-3.4 {"winfo colormapfull" command} {unixOnly pseudocolor} {
+test winfo-3.4 {"winfo colormapfull" command} {unixOnly defaultPseudocolor8} {
     eatColors .t {-colormap new}
     set result [list [winfo colormapfull .] [winfo colormapfull .t]]
     .t.c delete 34
