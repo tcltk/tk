@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.59 2002/06/14 13:35:47 dkf Exp $
+ * RCS: @(#) $Id: tk.h,v 1.60 2002/06/14 14:07:51 dkf Exp $
  */
 
 #ifndef _TK
@@ -1476,16 +1476,16 @@ typedef int (Tk_SelectionProc) _ANSI_ARGS_((ClientData clientData,
  * declarations of what is actually there can be correct.
  */
 
-#ifdef USE_OLD_PHOTO_PUT_BLOCK
+#ifdef USE_COMPOSITELESS_PHOTO_PUT_BLOCK
 #   ifdef Tk_PhotoPutBlock
 #	undef Tk_PhotoPutBlock
 #   endif
-#   define Tk_PhotoPutBlock		Tk_PhotoPutBlock_Old
+#   define Tk_PhotoPutBlock		Tk_PhotoPutBlock_NoComposite
 #   ifdef Tk_PhotoPutZoomedBlock
 #	undef Tk_PhotoPutZoomedBlock
 #   endif
-#   define Tk_PhotoPutZoomedBlock	Tk_PhotoPutZoomedBlock_Old
-#endif /* USE_OLD_PHOTO_PUT_BLOCK */
+#   define Tk_PhotoPutZoomedBlock	Tk_PhotoPutZoomedBlock_NoComposite
+#endif /* USE_COMPOSITELESS_PHOTO_PUT_BLOCK */
 
 /*
  * Tcl commands exported by Tk:

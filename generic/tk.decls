@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.19 2002/06/14 13:35:47 dkf Exp $
+# RCS: @(#) $Id: tk.decls,v 1.20 2002/06/14 14:07:50 dkf Exp $
 
 library tk
 
@@ -708,13 +708,13 @@ declare 143 generic {
 }
 
 declare 144 generic {
-    void Tk_PhotoPutBlock_Old (Tk_PhotoHandle handle, \
+    void Tk_PhotoPutBlock_NoComposite (Tk_PhotoHandle handle, \
 	    Tk_PhotoImageBlock *blockPtr, int x, int y, \
 	    int width, int height)
 }
 
 declare 145 generic {
-    void Tk_PhotoPutZoomedBlock_Old (Tk_PhotoHandle handle, \
+    void Tk_PhotoPutZoomedBlock_NoComposite (Tk_PhotoHandle handle, \
 	    Tk_PhotoImageBlock *blockPtr, int x, int y, \
 	    int width, int height, int zoomX, int zoomY, \
 	    int subsampleX, int subsampleY)
