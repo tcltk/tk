@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: photo.n,v 1.18 2004/08/20 14:15:29 dkf Exp $
+'\" RCS: @(#) $Id: photo.n,v 1.19 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH photo n 4.0 Tk "Tk Built-In Commands"
@@ -32,10 +32,8 @@ C code through a procedural interface.  At present, only GIF and PPM/PGM
 formats are supported, but an interface exists to allow additional
 image file formats to be added easily.  A photo image is transparent
 in regions where no image data has been supplied
-.VS 8.4
 or where it has been set transparent by the \fBtransparency set\fR
 subcommand.
-.VE 8.4
 .SH "CREATING PHOTOS"
 .PP
 Like all images, photos are created using the \fBimage create\fR
@@ -189,7 +187,6 @@ about the Y or X axes, respectively.  If \fIy\fR is not given, the
 default value is the same as \fIx\fR.
 .TP
 \fB\-compositingrule \fIrule\fR
-.VS 8.4
 Specifies how transparent pixels in the source image are combined with
 the destination image.  When a compositing rule of \fIoverlay\fR is
 set, the old contents of the destination image are visible, as if the
@@ -198,7 +195,6 @@ over the top of the destination.  When a compositing rule of \fIset\fR
 is set, the old contents of the destination image are discarded and
 the source image is used as-is.  The default compositing rule is
 \fIoverlay\fR.
-.VE 8.4
 .RE
 .TP
 \fIimageName \fBdata ?\fIoption value(s) ...\fR?
@@ -317,7 +313,6 @@ recalculate the dithered image in each window where the image is
 displayed.
 .TP
 \fIimageName \fBtransparency \fIsubcommand ?arg arg ...?\fR
-.VS 8.4
 Allows examination and manipulation of the transparency information in
 the photo image.  Several subcommands are available:
 .RS
@@ -330,7 +325,6 @@ transparent.
 Makes the pixel at (\fIx\fR,\fIy\fR) transparent if \fIboolean\fR is
 true, and makes that pixel opaque otherwise.
 .RE
-.VE 8.4
 .TP
 \fIimageName \fBwrite \fIfilename\fR ?\fIoption value(s) ...\fR?
 Writes image data from \fIimageName\fR to a file named \fIfilename\fR.
@@ -391,10 +385,8 @@ for the \fB\-format\fR option must begin with the complete name of the
 requested handler, and may contain additional information following
 that, which the handler can use, for example, to specify which variant
 to use of the formats supported by the handler.
-.VS 8.4
 Note that not all image handlers may support writing transparency data
 to a file, even where the target image format does.
-.VE 8.4
 .SH "COLOR ALLOCATION"
 .PP
 When a photo image is displayed in a window, the photo image code

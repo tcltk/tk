@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: radiobutton.n,v 1.9 2004/10/28 10:22:51 dkf Exp $
+'\" RCS: @(#) $Id: radiobutton.n,v 1.10 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH radiobutton n 4.4 Tk "Tk Built-In Commands"
@@ -54,7 +54,6 @@ whenever the widget is selected.
 If specified as an empty string then no special color is used for
 displaying when the widget is selected.
 .OP \-offrelief offRelief OffRelief
-.VS 8.4
 Specifies the relief for the checkbutton when the indicator is not drawn and
 the checkbutton is off.  The default value is "raised".  By setting this option
 to "flat" and setting -indicatoron to false and -overrelief to raised,
@@ -63,16 +62,13 @@ of having a flat button that raises on mouse-over and which is
 depressed when activated.  This is the behavior typically exhibited by
 the Align-Left, Align-Right, and Center radiobuttons on the toolbar of a 
 word-processor, for example.
-.VE 8.4
 .OP \-overrelief overRelief OverRelief
-.VS 8.4
 Specifies an alternative relief for the radiobutton, to be used when the
 mouse cursor is over the widget.  This option can be used to make
 toolbar buttons, by configuring \fB\-relief flat \-overrelief
 raised\fR.  If the value of this option is the empty string, then no
 alternative relief is used when the mouse cursor is over the radiobutton.
 The empty string is the default value.
-.VE 8.4
 .OP \-selectimage selectImage SelectImage
 Specifies an image to display (in place of the \fBimage\fR option)
 when the radiobutton is selected.
@@ -131,10 +127,8 @@ text, and initial relief.  The \fBradiobutton\fR command returns its
 there must not exist a window named \fIpathName\fR, but
 \fIpathName\fR's parent must exist.
 .PP
-.VS
 A radiobutton is a widget that displays a textual string, bitmap or image
 and a diamond or circle called an \fIindicator\fR.
-.VE
 If text is displayed, it must all be in a single font, but it
 can occupy multiple lines on the screen (if it contains newlines
 or if wrapping occurs because of the \fBwrapLength\fR option) and
@@ -149,7 +143,6 @@ check button.
 .PP
 In addition, radiobuttons can be \fIselected\fR.
 If a radiobutton is selected, the indicator is normally
-.VS
 drawn with a selected appearance, and
 a Tcl variable associated with the radiobutton is set to a particular
 value (normally 1).
@@ -159,7 +152,6 @@ If the radiobutton is not selected, then the indicator is drawn with a
 deselected appearance, and the associated variable is
 set to a different value (typically 0).
 The indicator is drawn without a round mark inside.
-.VE
 Typically, several radiobuttons share a single variable and the
 value of the variable indicates which radiobutton is to be selected.
 When a radiobutton is selected it sets the value of the variable to
@@ -244,14 +236,12 @@ value corresponding to this widget.
 Tk automatically creates class bindings for radiobuttons that give them
 the following default behavior:
 .IP [1]
-.VS
 On Unix systems, a radiobutton activates whenever the mouse passes
 over it and deactivates whenever the mouse leaves the radiobutton.  On
 Mac and Windows systems, when mouse button 1 is pressed over a
 radiobutton, the button activates whenever the mouse pointer is inside
 the button, and deactivates whenever the mouse pointer leaves the
 button.
-.VE
 .IP [2]
 When mouse button 1 is pressed over a radiobutton it is invoked (it
 becomes selected and the command associated with the button is
