@@ -1,5 +1,9 @@
 2002-09-02  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* tests/cursor.test: reverted 2002-08-31 change for OS X to use
+	'heart' cursor because 'arrow' on windows has a pre-skewed use
+	count. [Bug #602667]
+
 	* tests/button.test: added button-14.1
 	* win/tkWinButton.c (TkpComputeButtonGeometry): correct Win button
 	sizing to be equal for one-line buttons with -height of 0 or 1, as
