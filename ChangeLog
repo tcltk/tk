@@ -1,3 +1,11 @@
+2002-08-27  D. Richard Hipp <drh@hwaci.com>
+
+	* doc/checkbutton.n:      [Bug 582457] Fix the -offrelief option so
+	* doc/radiobutton.n:      that when -offrelief is flat and -relief is
+	* mac/tkMacButton.c:      sunken and -overrelief is raised, buttons
+	* unix/tkUnixButton.c:    work look toolbar buttons under Windows.
+	* win/tkWinButton.c:      See also: TIP #82.
+
 2002-08-26  Don Porter <dgp@users.sf.net>
 
 	* win/Makefile.in:	Removed dependence on the (parts of) the

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: radiobutton.n,v 1.5 2002/06/17 10:54:29 drh Exp $
+'\" RCS: @(#) $Id: radiobutton.n,v 1.6 2002/08/28 01:08:06 drh Exp $
 '\" 
 .so man.macros
 .TH radiobutton n 4.4 Tk "Tk Built-In Commands"
@@ -56,7 +56,14 @@ displaying when the widget is selected.
 .VS 8.4
 .OP \-offrelief offRelief OffRelief
 Specifies the relief for the checkbutton when the indicator is not drawn and
-the checkbutton is off.  The default value is "raised".
+the checkbutton is off.  The default value is "raised".  By setting this option
+to "flat" and setting -indicatoron to false and -overrelief to raised,
+the effect is achieved 
+of having a flat button that raises on mouse-over and which is
+depressed when activated.  This is the behavior typically exhibited by
+the Align-Left, Align-Right, and Center radiobuttons on the toolbar of a 
+word-processor, for example.
+
 .VE 8.4
 .VS 8.4
 .OP \-overrelief overRelief OverRelief
