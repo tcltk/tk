@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.1.4.3 1998/12/13 08:14:41 lfb Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.1.4.4 1999/04/06 23:22:23 redman Exp $
  */
 
 #include "tkPort.h"
@@ -424,7 +424,7 @@ TkWmNewWindow(winPtr)
     wmPtr->clientMachine = NULL;
     wmPtr->flags = WM_NEVER_MAPPED;
     wmPtr->nextPtr = (WmInfo *) dispPtr->firstWmPtr;
-    (WmInfo *) dispPtr->firstWmPtr = wmPtr;
+    dispPtr->firstWmPtr = wmPtr;
     winPtr->wmInfoPtr = wmPtr;
 
     UpdateVRootGeometry(wmPtr);
@@ -630,7 +630,7 @@ TkWmDeadWindow(winPtr)
 	return;
     }
     if ((WmInfo *) winPtr->dispPtr->firstWmPtr == wmPtr) {
-	(WmInfo *) winPtr->dispPtr->firstWmPtr = wmPtr->nextPtr;
+	winPtr->dispPtr->firstWmPtr = wmPtr->nextPtr;
     } else {
 	register WmInfo *prevPtr;
 
