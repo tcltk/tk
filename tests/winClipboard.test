@@ -10,16 +10,11 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winClipboard.test,v 1.11 2002/07/13 20:28:36 dgp Exp $
+# RCS: @(#) $Id: winClipboard.test,v 1.12 2003/04/01 21:07:00 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
-
-namespace import -force tcltest::bytestring
 
 # Note that these tests may fail if another application is grabbing the
 # clipboard (e.g. an X server)
@@ -81,5 +76,5 @@ test winClipboard-2.2 {TkSelUpdateClipboard reentrancy problem} {pcOnly testclip
 } [list "more data in string" "new data"]
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return

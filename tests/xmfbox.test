@@ -10,13 +10,10 @@
 # Contributions from Don Porter, NIST, 2002.  (not subject to US copyright)
 # All rights reserved.
 #
-# RCS: @(#) $Id: xmfbox.test,v 1.7 2002/07/13 20:28:36 dgp Exp $
+# RCS: @(#) $Id: xmfbox.test,v 1.8 2003/04/01 21:07:05 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 set testPWD [pwd]
@@ -142,7 +139,7 @@ test xmfbox-2.6 {tk::MotifFDialog_ActivateFList, ~ in file names} {unixOnly} {
 
 # cleanup
 cleanup
-::tcltest::cleanupTests
+cleanupTests
 return
 
 

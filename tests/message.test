@@ -6,13 +6,10 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: message.test,v 1.2 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: message.test,v 1.3 2003/04/01 21:06:46 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 option add *Message.borderWidth 2
@@ -121,5 +118,5 @@ test message-3.7 {MessageWidgetObjCmd procedure, "configure"} {
 } {4}
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return

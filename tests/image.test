@@ -7,18 +7,11 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: image.test,v 1.8 2003/01/22 14:32:59 dkf Exp $
+# RCS: @(#) $Id: image.test,v 1.9 2003/04/01 21:06:36 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
-
-namespace import -force tcltest::interpreter
-namespace import -force tcltest::makeFile
-namespace import -force tcltest::removeFile
 
 eval image delete [image names]
 canvas .c -highlightthickness 2
@@ -384,5 +377,5 @@ destroy .c
 eval image delete [image names]
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return

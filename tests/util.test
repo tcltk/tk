@@ -6,13 +6,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: util.test,v 1.5 2002/07/13 20:28:36 dgp Exp $
+# RCS: @(#) $Id: util.test,v 1.6 2003/04/01 21:06:58 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 listbox .l -width 20 -height 5 -relief sunken -bd 2
@@ -67,7 +64,7 @@ test util-1.12 {Tk_GetScrollInfo procedure} {
 } {1 {unknown option "dropdead": must be moveto or scroll}}
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return
 
 

@@ -7,13 +7,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: visual.test,v 1.6 2002/07/14 05:48:46 dgp Exp $
+# RCS: @(#) $Id: visual.test,v 1.7 2003/04/01 21:06:58 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 update
@@ -303,7 +300,7 @@ rename eatColors {}
 rename colorsFree {}
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return
 
 

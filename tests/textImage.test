@@ -7,13 +7,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textImage.test,v 1.5 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: textImage.test,v 1.6 2003/04/01 21:06:54 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # One time setup.  Create a font to insure the tests are font metric invariant.
@@ -351,7 +348,7 @@ foreach image [image names] {image delete $image}
 font delete test_font
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return
 
 

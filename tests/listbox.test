@@ -6,13 +6,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.21 2003/02/25 02:07:25 hobbs Exp $
+# RCS: @(#) $Id: listbox.test,v 1.22 2003/04/01 21:06:37 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 set fixed {Courier -12}
@@ -2150,5 +2147,5 @@ deleteWindows
 option clear
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return

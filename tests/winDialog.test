@@ -6,13 +6,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 1998-1999 ActiveState Corporation.
 #
-# RCS: @(#) $Id: winDialog.test,v 1.9 2002/07/13 20:28:36 dgp Exp $
+# RCS: @(#) $Id: winDialog.test,v 1.10 2003/04/01 21:07:00 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 testConstraint testwinevent [llength [info commands testwinevent]]
@@ -323,5 +320,5 @@ test winDialog-9.8 {Tk_ChooseDirectoryObjCmd:\
 catch {testwinevent debug 0}
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return

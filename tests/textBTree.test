@@ -8,13 +8,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textBTree.test,v 1.5 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: textBTree.test,v 1.6 2003/04/01 21:06:53 dgp Exp $
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 catch {destroy .t}
@@ -899,7 +896,7 @@ test btree-18.9 {tag search back, large complex btree spans} {
 destroy .t
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return
 
 

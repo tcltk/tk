@@ -6,17 +6,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menubut.test,v 1.7 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: menubut.test,v 1.8 2003/04/01 21:06:45 dgp Exp $
 
 # XXX This test file is woefully incomplete right now.  If any part
 # XXX of a procedure has tests then the whole procedure has tests,
 # XXX but many procedures have no tests.
 
 package require tcltest 2.1
-namespace import -force tcltest::configure
-namespace import -force tcltest::testsDirectory
-configure -testdir [file join [pwd] [file dirname [info script]]]
-configure -loadfile [file join [testsDirectory] constraints.tcl]
+eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Create entries in the option database to be sure that geometry options
@@ -342,7 +339,7 @@ deleteWindows
 option clear
 
 # cleanup
-::tcltest::cleanupTests
+cleanupTests
 return
 
 
