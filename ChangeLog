@@ -1,3 +1,7 @@
+2004-05-14  Chengye Mao <chengye.geo@yahoo.com>
+        * win/tkWinWm.c <UpdateWrapper> Modified to delete the old wrapper
+        correctly [Bug #767176]
+
 2004-05-14  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/msgbox.tcl (MessageBox): Shrank the default font size
