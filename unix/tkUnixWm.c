@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.25 2002/06/22 10:13:26 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.26 2002/06/24 02:17:57 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -2211,9 +2211,9 @@ WmWaitMapProc(clientData, eventPtr)
     if (masterPtr == NULL)
         return;
 
-    if (eventPtr->type == MapNotify &&
-            !(winPtr->wmInfoPtr->flags & WM_TRANSIENT_WITHDRAWN)) {
-        (void) TkpWmSetState(winPtr, NormalState);
+    if (eventPtr->type == MapNotify) {
+        if (!(winPtr->wmInfoPtr->flags & WM_TRANSIENT_WITHDRAWN))
+            (void) TkpWmSetState(winPtr, NormalState);
     } else if (eventPtr->type == UnmapNotify) {
         (void) TkpWmSetState(winPtr, WithdrawnState);
     }
