@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.25 2002/01/25 21:09:37 dgp Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.26 2002/02/26 01:58:25 hobbs Exp $
  */
 
 #include "default.h"
@@ -969,6 +969,16 @@ ConfigureText(interp, textPtr, argc, argv, flags)
 		    (ClientData) textPtr);
 	    textPtr->flags |= GOT_SELECTION;
 	}
+    }
+
+    /*
+     * Account for state changes that would reenable blinking cursor state.
+     */
+
+    if (textPtr->flags & GOT_FOCUS) {
+	Tcl_DeleteTimerHandler(textPtr->insertBlinkHandler);
+	textPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
+	TextBlinkProc((ClientData) textPtr);
     }
 
     /*
