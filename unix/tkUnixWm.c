@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.36.2.1 2004/04/21 02:45:22 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.36.2.2 2004/08/10 18:14:18 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -4239,6 +4239,7 @@ UpdateSizeHints(winPtr)
 	    hintsPtr->min_width = winPtr->reqWidth;
 	}
 	hintsPtr->max_width = hintsPtr->min_width;
+	hintsPtr->flags |= PMaxSize;
     }
     if (wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
 	if (wmPtr->height >= 0) {
@@ -4247,6 +4248,7 @@ UpdateSizeHints(winPtr)
 	    hintsPtr->min_height = winPtr->reqHeight + wmPtr->menuHeight;
 	}
 	hintsPtr->max_height = hintsPtr->min_height;
+	hintsPtr->flags |= PMaxSize;
     }
 
     XSetWMNormalHints(winPtr->display, wmPtr->wrapperPtr->window, hintsPtr);
