@@ -6,14 +6,19 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.5 2001/09/21 20:37:57 hobbs Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.6 2002/07/12 21:08:49 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-if {$::tcltest::testConfig(fonts) == 0} {
-    puts "skipping font-sensitive tests"
-}
+package require tcltest 2.1
+namespace import -force tcltest::test
+namespace import -force tcltest::testsDirectory
+namespace import -force tcltest::configure
+namespace import -force tcltest::interpreter
+namespace import -force tcltest::makeFile
+namespace import -force tcltest::removeFile
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
+eval configure $argv
 
 # The procedure below is used as the scrolling command for the text;
 # it just saves the scrolling information in a variable "scrollInfo".
