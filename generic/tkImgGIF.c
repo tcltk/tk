@@ -2,7 +2,7 @@
  * tkImgGIF.c --
  *
  *	A photo image file handler for GIF files. Reads 87a and 89a GIF
- *	files. At present there is no write function.  GIF images may be
+ *	files. At present, there only is a file write function. GIF images may be
  *	read using the -data option of the photo image.  The data may be
  *	given as a binary string in a Tcl_Obj or by representing
  *	the data as BASE64 encoded ascii.  Derived from the giftoppm code
@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.5 1999/10/29 03:57:56 hobbs Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.6 1999/11/30 07:26:53 hobbs Exp $
  */
 
 /*
@@ -92,6 +92,12 @@ static int	StringReadGIF _ANSI_ARGS_((Tcl_Interp *interp, Tcl_Obj *dataObj,
 		    Tcl_Obj *format, Tk_PhotoHandle imageHandle,
 		    int destX, int destY, int width, int height,
 		    int srcX, int srcY));
+static int 	FileWriteGIF _ANSI_ARGS_((Tcl_Interp *interp,  
+		    char *filename, Tcl_Obj *format,
+		    Tk_PhotoImageBlock *blockPtr));
+static int	CommonWriteGIF _ANSI_ARGS_((Tcl_Interp *interp,
+		    Tcl_Channel handle, Tcl_Obj *format,
+		    Tk_PhotoImageBlock *blockPtr));
 
 Tk_PhotoImageFormat tkImgFmtGIF = {
 	"GIF",			/* name */
@@ -99,7 +105,7 @@ Tk_PhotoImageFormat tkImgFmtGIF = {
 	StringMatchGIF, /* stringMatchProc */
 	FileReadGIF,    /* fileReadProc */
 	StringReadGIF,  /* stringReadProc */
-	NULL,           /* fileWriteProc */
+	FileWriteGIF,   /* fileWriteProc */
 	NULL,           /* stringWriteProc */
 };
 
@@ -150,6 +156,7 @@ static int		Mgetc _ANSI_ARGS_((MFile *handle));
 static int		char64 _ANSI_ARGS_((int c));
 static void		mInit _ANSI_ARGS_((unsigned char *string,
 			    MFile *handle));
+
 
 /*
  *----------------------------------------------------------------------
@@ -1187,3 +1194,760 @@ Fread(dst, hunk, count, chan)
 	return Tcl_Read(chan, (char *) dst, (int) (hunk * count));
     }
 }
+
+
+/*
+ * ChanWriteGIF - writes a image in GIF format.
+ *-------------------------------------------------------------------------
+ * Author:          		Lolo
+ *                              Engeneering Projects Area 
+ *	            		Department of Mining 
+ *                  		University of Oviedo
+ * e-mail			zz11425958@zeus.etsimo.uniovi.es
+ *                  		lolo@pcsig22.etsimo.uniovi.es
+ * Date:            		Fri September 20 1996
+ *
+ * Modified for transparency handling (gif89a) and miGIF compression
+ * by Jan Nijtmans <j.nijtmans@chello.nl>
+ *
+ *----------------------------------------------------------------------
+ * FileWriteGIF-
+ *
+ *    This procedure is called by the photo image type to write
+ *    GIF format data from a photo image into a given file 
+ *
+ * Results:
+ *	A standard TCL completion code.  If TCL_ERROR is returned
+ *	then an error message is left in interp->result.
+ *
+ *----------------------------------------------------------------------
+ */
+
+ /*
+  *  Types, defines and variables needed to write and compress a GIF.
+  */
+
+typedef int (* ifunptr) _ANSI_ARGS_((void));	
+
+#define LSB(a)                  ((unsigned char) (((short)(a)) & 0x00FF))
+#define MSB(a)                  ((unsigned char) (((short)(a)) >> 8))
+
+#define GIFBITS 12
+#define HSIZE  5003            /* 80% occupancy */
+
+static int ssize;
+static int csize;
+static int rsize;
+static unsigned char *pixelo;
+static int pixelSize;
+static int pixelPitch;
+static int greenOffset;
+static int blueOffset;
+static int alphaOffset;
+static int num;
+static unsigned char mapa[MAXCOLORMAPSIZE][3];
+
+/*
+ *	Definition of new functions to write GIFs
+ */
+
+static int color _ANSI_ARGS_((int red,int green, int blue));
+static void compress _ANSI_ARGS_((int init_bits, Tcl_Channel handle,
+		ifunptr readValue));
+static int nuevo _ANSI_ARGS_((int red, int green ,int blue,
+		unsigned char mapa[MAXCOLORMAPSIZE][3]));
+static int savemap _ANSI_ARGS_((Tk_PhotoImageBlock *blockPtr,
+		unsigned char mapa[MAXCOLORMAPSIZE][3]));
+static int ReadValue _ANSI_ARGS_((void));
+static int no_bits _ANSI_ARGS_((int colors));
+
+static int
+FileWriteGIF (interp, filename, format, blockPtr)
+    Tcl_Interp *interp;		/* Interpreter to use for reporting errors. */
+    char	*filename;
+    Tcl_Obj	*format;
+    Tk_PhotoImageBlock *blockPtr;
+{
+    Tcl_Channel chan = NULL;
+    int result;
+
+    chan = Tcl_OpenFileChannel(interp, filename, "w", 0644);
+    if (!chan) {
+	return TCL_ERROR;
+    }
+    if (Tcl_SetChannelOption(interp, chan, "-translation", "binary") != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (Tcl_SetChannelOption(interp, chan, "-encoding", "binary") != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    result = CommonWriteGIF(interp, chan, format, blockPtr);
+    if (Tcl_Close(interp, chan) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    return result;
+}
+
+#define Mputc(c,handle) Tcl_Write(handle,(char *) &c,1)
+
+static int
+CommonWriteGIF(interp, handle, format, blockPtr)
+    Tcl_Interp *interp;
+    Tcl_Channel handle;
+    Tcl_Obj *format;
+    Tk_PhotoImageBlock *blockPtr;
+{
+    int  resolution;
+    long  numcolormap;
+
+    long  width,height,x;
+    unsigned char c;
+    unsigned int top,left;
+    int num;
+
+    top = 0;
+    left = 0;
+
+    pixelSize=blockPtr->pixelSize;
+    greenOffset=blockPtr->offset[1]-blockPtr->offset[0];
+    blueOffset=blockPtr->offset[2]-blockPtr->offset[0];
+    alphaOffset = blockPtr->offset[0];
+    if (alphaOffset < blockPtr->offset[2]) {
+	alphaOffset = blockPtr->offset[2];
+    }
+    if (++alphaOffset < pixelSize) {
+	alphaOffset -= blockPtr->offset[0];
+    } else {
+	alphaOffset = 0;
+    }
+
+    Tcl_Write(handle, (char *) (alphaOffset ? "GIF89a":"GIF87a"), 6);
+
+    for (x=0;x<MAXCOLORMAPSIZE;x++) {
+	mapa[x][CM_RED] = 255;
+	mapa[x][CM_GREEN] = 255;
+	mapa[x][CM_BLUE] = 255;
+    }
+
+
+    width=blockPtr->width;
+    height=blockPtr->height;
+    pixelo=blockPtr->pixelPtr + blockPtr->offset[0];
+    pixelPitch=blockPtr->pitch;
+    if ((num=savemap(blockPtr,mapa))<0) {
+	Tcl_AppendResult(interp, "too many colors", (char *) NULL);
+	return TCL_ERROR;
+    }
+    if (num<3) num=3;
+    c=LSB(width);
+    Mputc(c,handle);
+    c=MSB(width);
+    Mputc(c,handle);
+    c=LSB(height);
+    Mputc(c,handle);
+    c=MSB(height);
+    Mputc(c,handle);
+
+    c= (1 << 7) | (no_bits(num) << 4) | (no_bits(num));
+    Mputc(c,handle);
+    resolution = no_bits(num)+1;
+
+    numcolormap=1 << resolution;
+
+    /*  background color */
+
+    c = 0;
+    Mputc(c,handle);
+
+    /*  zero for future expansion  */
+
+    Mputc(c,handle);
+
+    for (x=0; x<numcolormap ;x++) {
+	c = mapa[x][CM_RED];
+	Mputc(c,handle);
+	c = mapa[x][CM_GREEN];
+	Mputc(c,handle);
+	c = mapa[x][CM_BLUE];
+	Mputc(c,handle);
+    }
+
+    /*
+     * Write out extension for transparent colour index, if necessary.
+     */
+
+    if (alphaOffset) {
+	Tcl_Write(handle, "!\371\4\1\0\0\0", 8);
+    }
+
+    c = ',';
+    Mputc(c,handle);
+    c=LSB(top);
+    Mputc(c,handle);
+    c=MSB(top);
+    Mputc(c,handle);
+    c=LSB(left);
+    Mputc(c,handle);
+    c=MSB(left);
+    Mputc(c,handle);
+
+    c=LSB(width);
+    Mputc(c,handle);
+    c=MSB(width);
+    Mputc(c,handle);
+
+    c=LSB(height);
+    Mputc(c,handle);
+    c=MSB(height);
+    Mputc(c,handle);
+
+    c=0;
+    Mputc(c,handle);
+    c=resolution;
+    Mputc(c,handle);
+
+    ssize = rsize = blockPtr->width;
+    csize = blockPtr->height;
+    compress(resolution+1, handle, ReadValue);
+
+    c = 0; 
+    Mputc(c,handle);
+    c = ';';
+    Mputc(c,handle);
+
+    return TCL_OK;	
+}
+
+static int
+color(red, green, blue)
+    int red;
+    int green;
+    int blue;
+{
+    int x;
+    for (x=(alphaOffset != 0);x<=MAXCOLORMAPSIZE;x++) {
+	if ((mapa[x][CM_RED]==red) && (mapa[x][CM_GREEN]==green) &&
+		(mapa[x][CM_BLUE]==blue)) {
+	    return x;
+	}
+    }
+    return -1;
+}
+
+
+static int
+nuevo(red, green, blue, mapa)
+    int red,green,blue;
+    unsigned char mapa[MAXCOLORMAPSIZE][3];
+{
+    int x;
+    for (x=(alphaOffset != 0);x<num;x++) {
+	if ((mapa[x][CM_RED]==red) && (mapa[x][CM_GREEN]==green) &&
+		(mapa[x][CM_BLUE]==blue)) {
+	    return 0;
+	}
+    }
+    return 1;
+}
+
+static int
+savemap(blockPtr,mapa)
+    Tk_PhotoImageBlock *blockPtr;
+    unsigned char mapa[MAXCOLORMAPSIZE][3];
+{
+    unsigned char  *colores;
+    int x,y;
+    unsigned char  red,green,blue;
+
+    if (alphaOffset) {
+	num = 1;
+	mapa[0][CM_RED] = 0xd9;
+	mapa[0][CM_GREEN] = 0xd9;
+	mapa[0][CM_BLUE] = 0xd9;
+    } else {
+	num = 0;
+    }
+
+    for(y=0;y<blockPtr->height;y++) {
+	colores=blockPtr->pixelPtr + blockPtr->offset[0]
+		+ y * blockPtr->pitch;
+	for(x=0;x<blockPtr->width;x++) {
+	    if (!alphaOffset || (colores[alphaOffset] != 0)) {
+		red = colores[0];
+		green = colores[greenOffset];
+		blue = colores[blueOffset];
+		if (nuevo(red,green,blue,mapa)) {
+		    if (num>255) 
+			return -1;
+
+		    mapa[num][CM_RED]=red;
+		    mapa[num][CM_GREEN]=green;
+		    mapa[num][CM_BLUE]=blue;
+		    num++;
+		}
+	    }
+	    colores += pixelSize;
+	}
+    }
+    return num-1;
+}
+
+static int
+ReadValue()
+{
+    unsigned int col;
+
+    if (csize == 0) {
+	return EOF;
+    }
+    if (alphaOffset && (pixelo[alphaOffset]==0)) {
+	col = 0;
+    } else {
+	col = color(pixelo[0],pixelo[greenOffset],pixelo[blueOffset]);
+    }
+    pixelo += pixelSize;
+    if (--ssize <= 0) {
+	ssize = rsize;
+	csize--;
+	pixelo += pixelPitch - (rsize * pixelSize);
+    }
+
+    return col;
+}
+
+/*
+ * Return the number of bits ( -1 ) to represent a given
+ * number of colors ( ex: 256 colors => 7 ).
+ */
+
+static int
+no_bits( colors )
+int colors;
+{
+    register int bits = 0;
+
+    colors--;
+    while ( colors >> bits ) {
+	bits++;
+    }
+
+    return (bits-1);
+}
+
+
+
+/*-----------------------------------------------------------------------
+ *
+ * miGIF Compression - mouse and ivo's GIF-compatible compression
+ *
+ *          -run length encoding compression routines-
+ *
+ * Copyright (C) 1998 Hutchison Avenue Software Corporation
+ *               http://www.hasc.com
+ *               info@hasc.com
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose and without fee is hereby granted, provided
+ * that the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
+ * documentation.  This software is provided "AS IS." The Hutchison Avenue 
+ * Software Corporation disclaims all warranties, either express or implied, 
+ * including but not limited to implied warranties of merchantability and 
+ * fitness for a particular purpose, with respect to this code and accompanying
+ * documentation. 
+ * 
+ * The miGIF compression routines do not, strictly speaking, generate files 
+ * conforming to the GIF spec, since the image data is not LZW-compressed 
+ * (this is the point: in order to avoid transgression of the Unisys patent 
+ * on the LZW algorithm.)  However, miGIF generates data streams that any 
+ * reasonably sane LZW decompresser will decompress to what we want.
+ *
+ * miGIF compression uses run length encoding. It compresses horizontal runs 
+ * of pixels of the same color. This type of compression gives good results
+ * on images with many runs, for example images with lines, text and solid 
+ * shapes on a solid-colored background. It gives little or no compression 
+ * on images with few runs, for example digital or scanned photos.
+ *
+ *                               der Mouse
+ *                      mouse@rodents.montreal.qc.ca
+ *            7D C8 61 52 5D E7 2D 39  4E F1 31 3E E8 B3 27 4B
+ *
+ *                             ivo@hasc.com
+ *
+ * The Graphics Interchange Format(c) is the Copyright property of
+ * CompuServe Incorporated.  GIF(sm) is a Service Mark property of
+ * CompuServe Incorporated.
+ *
+ */
+
+static int rl_pixel;
+static int rl_basecode;
+static int rl_count;
+static int rl_table_pixel;
+static int rl_table_max;
+static int just_cleared;
+static int out_bits;
+static int out_bits_init;
+static int out_count;
+static int out_bump;
+static int out_bump_init;
+static int out_clear;
+static int out_clear_init;
+static int max_ocodes;
+static int code_clear;
+static int code_eof;
+static unsigned int obuf;
+static int obits;
+static Tcl_Channel ofile;
+static unsigned char oblock[256];
+static int oblen;
+
+/* Used only when debugging GIF compression code */
+/* #define DEBUGGING_ENVARS */
+
+#ifdef DEBUGGING_ENVARS
+
+static int verbose_set = 0;
+static int verbose;
+#define VERBOSE (verbose_set?verbose:set_verbose())
+
+static int set_verbose(void)
+{
+ verbose = !!getenv("GIF_VERBOSE");
+ verbose_set = 1;
+ return(verbose);
+}
+
+#else
+
+#define VERBOSE 0
+
+#endif
+
+
+static const char *
+binformat(v, nbits)
+    unsigned int v;
+    int nbits;
+{
+ static char bufs[8][64];
+ static int bhand = 0;
+ unsigned int bit;
+ int bno;
+ char *bp;
+
+ bhand --;
+ if (bhand < 0) bhand = (sizeof(bufs)/sizeof(bufs[0]))-1;
+ bp = &bufs[bhand][0];
+ for (bno=nbits-1,bit=1U<<bno;bno>=0;bno--,bit>>=1)
+  { *bp++ = (v & bit) ? '1' : '0';
+    if (((bno&3) == 0) && (bno != 0)) *bp++ = '.';
+  }
+ *bp = '\0';
+ return(&bufs[bhand][0]);
+}
+
+static void write_block()
+{
+ int i;
+ unsigned char c;
+
+ if (VERBOSE)
+  { printf("write_block %d:",oblen);
+    for (i=0;i<oblen;i++) printf(" %02x",oblock[i]);
+    printf("\n");
+  }
+ c = oblen;
+ Tcl_Write(ofile, (char *) &c, 1);
+ Tcl_Write(ofile, &oblock[0], oblen);
+ oblen = 0;
+}
+
+static void
+block_out(c)
+    unsigned char c;
+{
+ if (VERBOSE) printf("block_out %s\n",binformat(c,8));
+ oblock[oblen++] = c;
+ if (oblen >= 255) write_block();
+}
+
+static void block_flush()
+{
+ if (VERBOSE) printf("block_flush\n");
+ if (oblen > 0) write_block();
+}
+
+static void output(val)
+    int val;
+{
+ if (VERBOSE) printf("output %s [%s %d %d]\n",binformat(val,out_bits),binformat(obuf,obits),obits,out_bits);
+ obuf |= val << obits;
+ obits += out_bits;
+ while (obits >= 8)
+  { block_out(obuf&0xff);
+    obuf >>= 8;
+    obits -= 8;
+  }
+ if (VERBOSE) printf("output leaving [%s %d]\n",binformat(obuf,obits),obits);
+}
+
+static void output_flush()
+{
+ if (VERBOSE) printf("output_flush\n");
+ if (obits > 0) block_out(obuf);
+ block_flush();
+}
+
+static void did_clear()
+{
+ if (VERBOSE) printf("did_clear\n");
+ out_bits = out_bits_init;
+ out_bump = out_bump_init;
+ out_clear = out_clear_init;
+ out_count = 0;
+ rl_table_max = 0;
+ just_cleared = 1;
+}
+
+static void
+output_plain(c)
+    int c;
+{
+ if (VERBOSE) printf("output_plain %s\n",binformat(c,out_bits));
+ just_cleared = 0;
+ output(c);
+ out_count ++;
+ if (out_count >= out_bump)
+  { out_bits ++;
+    out_bump += 1 << (out_bits - 1);
+  }
+ if (out_count >= out_clear)
+  { output(code_clear);
+    did_clear();
+  }
+}
+
+static unsigned int isqrt(x)
+    unsigned int x;
+{
+ unsigned int r;
+ unsigned int v;
+
+ if (x < 2) return(x);
+ for (v=x,r=1;v;v>>=2,r<<=1) ;
+ while (1)
+  { v = ((x / r) + r) / 2;
+    if ((v == r) || (v == r+1)) return(r);
+    r = v;
+  }
+}
+
+static unsigned int
+compute_triangle_count(count, nrepcodes)
+    unsigned int count;
+    unsigned int nrepcodes;
+{
+ unsigned int perrep;
+ unsigned int cost;
+
+ cost = 0;
+ perrep = (nrepcodes * (nrepcodes+1)) / 2;
+ while (count >= perrep)
+  { cost += nrepcodes;
+    count -= perrep;
+  }
+ if (count > 0)
+  { unsigned int n;
+    n = isqrt(count);
+    while ((n*(n+1)) >= 2*count) n --;
+    while ((n*(n+1)) < 2*count) n ++;
+    cost += n;
+  }
+ return(cost);
+}
+
+static void max_out_clear()
+{
+ out_clear = max_ocodes;
+}
+
+static void reset_out_clear()
+{
+ out_clear = out_clear_init;
+ if (out_count >= out_clear)
+  { output(code_clear);
+    did_clear();
+  }
+}
+
+static void
+rl_flush_fromclear(count)
+    int count;
+{
+ int n;
+
+ if (VERBOSE) printf("rl_flush_fromclear %d\n",count);
+ max_out_clear();
+ rl_table_pixel = rl_pixel;
+ n = 1;
+ while (count > 0)
+  { if (n == 1)
+     { rl_table_max = 1;
+       output_plain(rl_pixel);
+       count --;
+     }
+    else if (count >= n)
+     { rl_table_max = n;
+       output_plain(rl_basecode+n-2);
+       count -= n;
+     }
+    else if (count == 1)
+     { rl_table_max ++;
+       output_plain(rl_pixel);
+       count = 0;
+     }
+    else
+     { rl_table_max ++;
+       output_plain(rl_basecode+count-2);
+       count = 0;
+     }
+    if (out_count == 0) n = 1; else n ++;
+  }
+ reset_out_clear();
+ if (VERBOSE) printf("rl_flush_fromclear leaving table_max=%d\n",rl_table_max);
+}
+
+static void rl_flush_clearorrep(count)
+    int count;
+{
+ int withclr;
+
+ if (VERBOSE) printf("rl_flush_clearorrep %d\n",count);
+ withclr = 1 + compute_triangle_count(count,max_ocodes);
+ if (withclr < count)
+  { output(code_clear);
+    did_clear();
+    rl_flush_fromclear(count);
+  }
+ else
+  { for (;count>0;count--) output_plain(rl_pixel);
+  }
+}
+
+static void rl_flush_withtable(count)
+    int count;
+{
+ int repmax;
+ int repleft;
+ int leftover;
+
+ if (VERBOSE) printf("rl_flush_withtable %d\n",count);
+ repmax = count / rl_table_max;
+ leftover = count % rl_table_max;
+ repleft = (leftover ? 1 : 0);
+ if (out_count+repmax+repleft > max_ocodes)
+  { repmax = max_ocodes - out_count;
+    leftover = count - (repmax * rl_table_max);
+    repleft = 1 + compute_triangle_count(leftover,max_ocodes);
+  }
+ if (VERBOSE) printf("rl_flush_withtable repmax=%d leftover=%d repleft=%d\n",repmax,leftover,repleft);
+ if (1+compute_triangle_count(count,max_ocodes) < repmax+repleft)
+  { output(code_clear);
+    did_clear();
+    rl_flush_fromclear(count);
+    return;
+  }
+ max_out_clear();
+ for (;repmax>0;repmax--) output_plain(rl_basecode+rl_table_max-2);
+ if (leftover)
+  { if (just_cleared)
+     { rl_flush_fromclear(leftover);
+     }
+    else if (leftover == 1)
+     { output_plain(rl_pixel);
+     }
+    else
+     { output_plain(rl_basecode+leftover-2);
+     }
+  }
+ reset_out_clear();
+}
+
+static void rl_flush()
+{
+ if (VERBOSE) printf("rl_flush [ %d %d\n",rl_count,rl_pixel);
+ if (rl_count == 1)
+  { output_plain(rl_pixel);
+    rl_count = 0;
+    if (VERBOSE) printf("rl_flush ]\n");
+    return;
+  }
+ if (just_cleared)
+  { rl_flush_fromclear(rl_count);
+  }
+ else if ((rl_table_max < 2) || (rl_table_pixel != rl_pixel))
+  { rl_flush_clearorrep(rl_count);
+  }
+ else
+  { rl_flush_withtable(rl_count);
+  }
+ if (VERBOSE) printf("rl_flush ]\n");
+ rl_count = 0;
+}
+
+
+static void compress( init_bits, handle, readValue )
+    int init_bits;
+    Tcl_Channel handle;
+    ifunptr readValue;
+{
+ int c;
+
+ ofile = handle;
+ obuf = 0;
+ obits = 0;
+ oblen = 0;
+ code_clear = 1 << (init_bits - 1);
+ code_eof = code_clear + 1;
+ rl_basecode = code_eof + 1;
+ out_bump_init = (1 << (init_bits - 1)) - 1;
+ /* for images with a lot of runs, making out_clear_init larger will
+    give better compression. */ 
+ out_clear_init = (init_bits <= 3) ? 9 : (out_bump_init-1);
+#ifdef DEBUGGING_ENVARS
+  { const char *ocienv;
+    ocienv = getenv("GIF_OUT_CLEAR_INIT");
+    if (ocienv)
+     { out_clear_init = atoi(ocienv);
+       if (VERBOSE) printf("[overriding out_clear_init to %d]\n",out_clear_init);
+     }
+  }
+#endif
+ out_bits_init = init_bits;
+ max_ocodes = (1 << GIFBITS) - ((1 << (out_bits_init - 1)) + 3);
+ did_clear();
+ output(code_clear);
+ rl_count = 0;
+ while (1)
+  { c = readValue();
+    if ((rl_count > 0) && (c != rl_pixel)) rl_flush();
+    if (c == EOF) break;
+    if (rl_pixel == c)
+     { rl_count ++;
+     }
+    else
+     { rl_pixel = c;
+       rl_count = 1;
+     }
+  }
+ output(code_eof);
+ output_flush();
+}
+
+/*-----------------------------------------------------------------------
+ *
+ * End of miGIF section  - See copyright notice at start of section.
+ *
+ *-----------------------------------------------------------------------*/
