@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.43 2000/03/30 19:02:31 ericm Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.44 2000/04/04 08:09:31 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -59,7 +59,7 @@ BIN_DIR =		$(exec_prefix)/bin
 INCLUDE_INSTALL_DIR =	$(INSTALL_ROOT)$(prefix)/include
 
 # Top-level directory for manual entries:
-MAN_INSTALL_DIR =	$(INSTALL_ROOT)$(prefix)/man
+MAN_INSTALL_DIR =	$(INSTALL_ROOT)@mandir@
 
 # Directory in which to install manual entry for wish:
 MAN1_INSTALL_DIR =	$(MAN_INSTALL_DIR)/man1
