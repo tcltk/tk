@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.34 2004/09/24 14:04:03 vincentdarley Exp $
+# RCS: @(#) $Id: text.tcl,v 1.35 2004/10/18 13:40:56 vincentdarley Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -459,7 +459,6 @@ set ::tk::Priv(prevPos) {}
 #     (int)-1/3 = -1
 # The following code ensure equal +/- behaviour.
 bind Text <MouseWheel> {
-    puts stderr %D
     if {%D >= 0} {
 	%W yview scroll [expr {-%D/3}] pixels
     } else {
