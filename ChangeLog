@@ -1,0 +1,259 @@
+1999-03-08    <lfb@scriptics.com>
+
+        * win/tkWinWm.c: Toplevel class no longer shared between 
+	threads.
+        
+	* win/tkWinX.c: Multiple threads no longer share the same
+	TkDisplay structure.  Required because TkDisplay stores much
+	thread-specific data for a given thread.
+
+        * win/tkWinSend.c: Moved application instance handle out
+	out thread-local storage.  DDE was failing to initialize
+	when the instance handles were different between threads.
+        
+	* win/makefile.vc: Added THREADDEFINES for building with
+	threads enabled.
+	
+	* generic/tkMenu.c:
+        * win/tkWinMenu.c:
+	* unix/tkUnixMenu.c: Added TkpMenuThreadInit for initializing
+	thread-specific Menu state.
+
+1999-03-01    <redman@scriptics.com>
+
+	* win/tkWinWm.c: 
+	* win/tkWinPointer.c:
+	* win/tkWinInt.h: Fix "focus -force" for Windows.  The Win32 API
+	function SetForegroundWindow() does not work unless the window
+	handle is a toplevel window (a Windows toplevel).  The handle
+	being passed was a Tk toplevel, which is a child of the Windows
+	toplevel.
+
+1999-02-26    <redman@scriptics.com>
+
+	* win/cat.c: Remove this file, use the one in the Tcl source directory.
+
+	* win/makefile.vc: Remove the wishc.exe from the default targets.  Add
+	a separate console-wish target to build it.  The need for a 
+	console-wish will go away soon, so we don't want to encourage its
+	use.
+
+1999-02-25    <redman@scriptics.com>
+
+	* win/tkWinWm.c: Properly initialize the tsdPtr->firstWindow field.
+	
+	* win/cat.c: Code for cat32.exe, copied from the Tcl sources. Required
+	in order to run the test suite from the makefile
+
+	* win/winMain.c: Add main() for a console-based wishc.exe, which meant
+	adding code to disable the call to Tk_ConsoleInit().
+	
+	* generic/tkConsole.c: Check the standard handles before creating the
+	new standard channels.  This allows a windows app that has stdin,
+	stdout, or stderr to correctly connect to them.
+	
+	* generic/tkMain.c: Add a proper check for the interactive mode, since
+	the standard channels may actually be connected in windows mode or
+	even in the console-based wish.
+	
+	* win/makefile.vc: Add targets for wishc.exe (console-based wish) and
+	cat32.exe (for testing). Fix the test suite target so it can be run
+	from the makefile (which can happen since the standard handles have
+	been fixed).
+
+1999-02-12    <lfb@scriptics.com>
+
+        * generic/tkMenuButton.h:
+        * generic/tkMenuButton.c:
+	* mac/tkMacMenubutton.c:
+	* mac/tkMacDefault.h
+	* unix/tkUnixMenubu.c: Eliminated Tk_Uids used by -state option.
+	* unix/tkUnixDefault.h
+	* win/tkWinDefault.h
+	
+
+	* generic/tk.h:
+	* generic/tkScale.h:
+	* generic/tkScale.c:
+	* generic/tkWindow.c:
+	* unix/tkUnixScale.c: 	
+	* unix/tkUnixDefault.h:
+	* unix/tkWinDefault.h:
+	* mac/tkMacDefault.h:  Objectified scale widget.
+
+	* win/tkWinX.c: Removed Thread-specific data from process
+	initialization code that was stopping the Tk Dll from 
+	loading.
+
+1999-02-11    <stanton@GASPODE>
+
+	* README:
+	* generic/tk.h: 
+	* unix/configure.in:
+	* win/README:
+	* win/makefile.bc:
+	* win/makefile.vc: Updated version to 8.1b2.
+	
+	* unix/tkUnixSend.c: Fixed one more Tcl_*ObjVar instance.
+	
+1999-02-04    <stanton@GASPODE>
+
+	* Various cleanup related to the Tcl_Eval and Tcl_ObjSetVar
+	changes in Tcl.
+	
+	INTEGRATED PATCHES FROM 8.0.5b2: 
+	
+	* win/tkWinMenu.c (TkpDestroyMenu): Changed so modalMenuPtr is
+	cleared when it is being destroyed.
+
+	* generic/tkImgPhoto.c: Changed so color tables are freed
+	immediately instead of being delayed.  This ensures that color
+	tables are properly disposed at process exit.
+
+	* library/prolog.ps: Changed string that determines font height to
+	include European character with an umlaut.
+
+	* generic/tkImgBmap.c (ImgBmapConfigureInstance): If an image
+	mask changed but ended up with the same XID, the GC failed to be
+	updated and so the new mask was not used. [Bug: 970]
+
+	* generic/tkFocus.c (SetFocus): Changed o focus window is always
+	set if -force is specified.  This fixes the problem on Windows
+	where Tk does not activate the window if it already has focus.
+
+	* generic/tkConsole.c: Fixed so errors in console eval are
+	reported properly.  Eliminated duplicate result messages. [Bug: 973]
+
+	* win/tkWinWm.c: Changed so windows that aren't resizable don't
+	have resize handles and the zoom box is disabled.
+
+	* win/tkWinInt.h:
+	* win/tkWinPointer.c: Changed to cancel the mouse timer when a
+	user initiated move/resize loop begins.
+
+	* unix/configure.in: TK_LD_SEARCH_FLAGS was set incorrectly if
+	SHLIB_LD_LIBS='${LIBS}', and shared linking is performed through
+	the C compiler. Systems affected are Linux, MP-RAS and NEXTSTEP,
+	but also with gcc on many more systems. [Bug: 908]
+
+	* win/makefile.vc: First stab at install target.  Fixed quoting so
+	paths with spaces work.
+	
+	* tests/main.test:
+	* tests/unixWm.test: Better cleanup of temporary files.
+	
+	* mac/tkMacAppInit.c:
+	* generic/tkTest.c:
+	* generic/tkAppInit.c:
+	* win/winMain.c: Changed some EXTERN declarations to extern
+	since they are not defining exported interfaces.  This avoids
+	generating useless declspec() attributes and makes the windows
+	makefile simpler.
+
+	* library/menu.tcl (tkMenuFind): Changed so keyboard shortcuts
+	will only be found in the current toplevel.  Previously, they
+	might be found in menus attached to other toplevels that might not
+	even be mapped. [Bug: 924]
+
+	* generic/tkCanvLine.c: Changed to treat zero width lines like
+	they have width 1 for purposes of selection. [Bug: 925]
+
+	* win/tkWinFont.c (Tk_MeasureChars): Added a workaround for a bug
+	in GetTextExtentExPoint on Win NT 4.0/Japanese. [Bug: 1006]
+
+	* unix/tkUnixSend.c (Tk_SetAppName): Fixed uninitialized memory
+	access bug. [Bug: 919]
+
+1999-1-28    <stanton@GASPODE>
+
+	* generic/tkGrid.c: Fixed bug in "grid forget" that failed to cancel
+	pending idle handlers, resulting in a crash in a few odd cases.
+
+1999-01-06  <lfb@JUSTICE>
+
+	* generic/tk.h, generic/tkGet.c, generic/tkConfig.c, 
+	* generic/tkOldConfig.c, generic/tkEntry.c, generic/tkMenubutton.c, 
+	* generic/tkMenubutton.h, generic/tkScale.c, generic/tkScale.h, 
+	* generic/tkTextDisplay.c, generic/tkText.c, unix/tkUnixMenubu.c, 
+	* unix/tkUnixScale.c, mac/tkMacMenu.c, mac/tkMacMenubutton.c, 
+	
+	Removed global Tk_Uids dealing with "-state" configuration option
+	and added new TK_CONFIG_STATE configSpec that doesn't use 
+	Tk_Uids.
+
+1998-12-11    === Tk 8.1b1 Release ===
+	
+1998-12-11    <stanton@GASPODE>
+
+	* generic/tkMain.c (Tk_Main): Fixed improper command line encoding
+	handling. 
+
+1998-12-08    <stanton@GASPODE>
+
+	* win/tkWinClipboard.c (TkSelGetSelection, TkWinClipboardRender):
+	Changed to handle multibyte characters properly. [Bug: 935]
+
+1998-12-07    <stanton@GASPODE>
+
+	* library/xmfbox.tcl (tkMotifFDialog_Create): In the cached case,
+	the data array was not being initialized with the correct set of
+	widgets.
+
+1998-12-4    <welch@SAGE>
+
+	* Changed patchLevel to 8.1b1
+
+	* generic/tkMenu.c (ConfigureMenuCloneEntries): The -menu configuration
+	option was being incorrectly specified as just "menu". 
+
+1998-11-30    <stanton@GASPODE>
+
+	* generic/tkButton.c (ConfigureButton): The error result was
+	getting lost when restoring configuration options. [Bug: 619]
+
+1998-11-25    <stanton@GASPODE>
+
+	* unix/tkUnixFont.c (GetFontAttributes): Initialize an unspecified
+	family to an empty string.
+	(FontMapLoadPage): if the font included characters below 32, the
+	index computation was incorrect because the range was shifted up
+	to 32.
+	(CreateClosestFont): check for empty locale as well as NULL.
+
+	* generic/tkFont.c (TkFontParseXLFD): initialize charset to
+	iso8859-1 if no charset is specified.
+
+	* mac/tkMacHLEvents.c (OdocHandler): added conversion from
+	external string to UTF [Bug: 869]
+
+	* integrated tk8.0.4 changes.
+	
+	* generic/tkBind.c: fixed deletion order bug where a crash would
+	result if a binding deleted "."
+
+	* generic/tkMenu.c (MenuWidgetObjCmd): disabled menu entries were
+	getting reenabled whenever the mouse passed over the entry [Bug: 860]
+
+	* unix/tkUnixMenu.c (TkpComputeStandardMenuGeometry): hidemargin
+	option was not honored properly in menus [Bug: 859]
+
+1998-11-24    <stanton@GASPODE>
+
+	* tkMacMenu.c, tkUnixMenu.c, tkWinMenu.c, tkMenuDraw.c, tkMenu.h,
+	* tkMenu.c: Backed out the previous fix for bug 620 and
+	eliminated a bunch of code that created unnecessary objects.
+	Changed back to using internal types instead of objects for many
+	configuration options.  There are many more fixes like this that
+	could be made, but some require a little restructuring of the
+	code. In any case the leaks are fixed and there is a lot less
+	allocation happening. [Bug: 620]
+
+1998-11-19    <stanton@GASPODE>
+
+	* tkMenu.c (DestroyMenuEntry): fixed memory leaks [Bug: 620]
+	
+	* tkWinX.c (GetTranslatedKey): fixed bad code merge
+
+	* tkWinWm.c, tkWinMenu.c: fixed titles and menus so they properly
+	display Unicode [Bug: 819]
+

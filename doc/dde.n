@@ -1,0 +1,100 @@
+'\"
+'\" Copyright (c) 1997 Sun Microsystems, Inc.
+'\"
+'\" See the file "license.terms" for information on usage and redistribution
+'\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+'\" 
+'\" RCS: @(#) $Id: dde.n,v 1.1.2.2 1998/09/30 02:16:14 stanton Exp $
+'\" 
+.so man.macros
+.TH dde n 8.1 Tk "Tk Built-In Commands"
+.BS
+'\" Note:  do not modify the .SH NAME line immediately below!
+.SH NAME
+dde \- Execute a Dynamic Data Exchange command
+.SH SYNOPSIS
+\fBdde ?\-async?\fR \fIcommand service topic \fR?\fIdata\fR?
+.BE
+
+.SH DESCRIPTION
+.PP
+This command allows an application to send Dynamic Data Exchange (DDE)
+command when running under Microsoft Windows. Dynamic Data Exchange is
+a mechanism where applications can exchange raw data. Each DDE
+transaction needs a \fIservice name\fR and a \fItopic\fR. Both the
+\fIservice name\fR and \fItopic\fR are application defined; Tk uses
+the service name \fBTk\fR, while the topic name is the name of the
+interpreter given by \fBtk appname\fR. Other applications have their
+own \fIservice names\fR and \fItopics\fR. For instance, Microsoft Excel
+has the service name \fBExcel\fR.
+.PP
+The only option to the \fBsend\fR command is:
+.TP
+\fB\-async\fR
+Requests asynchronous invocation.  This is valid only for the
+\fBexecute\fR subcommand. Normally, the \fBdde execute\fR subcommand
+waits until the command completes, returning appropriate error
+messages. When the \fB\-async\fR option is used, the command returns
+immediately, and no error information is available.
+.SH "DDE COMMANDS"
+.PP
+The following commands are a subset of the full Dynamic Data Exchange
+set of commands.
+.TP
+\fBdde execute \fIservice topic data\fR
+\fBdde execute\fR takes the \fIdata\fR and sends it to the server
+indicated by \fIservice\fR with the topic indicated by
+\fItopic\fR. Typically, \fIservice\fR is the name of an application,
+and \fItopic\fR is a file to work on.  The \fIdata\fR field is given
+to the remote application. Typically, the application treats the
+\fIdata\fR field as a script, and the script is run in the
+application. The command returns an error if the script did not
+run. If the \fB\-async\fR flag was used, the command
+returns immediately with no error.
+.TP
+\fBdde request \fIservice topic item\fR
+\fBdde request\fR is typically used to get the value of something; the
+value of a cell in Microsoft Excel or the text of a selection in
+Microsoft Word. \fIservice\fR is typically the name of an application,
+\fItopic\fR is typically the name of the file, and \fIitem\fR is
+application-specific. The command returns the value of \fIitem\fR as
+defined in the application.
+.TP
+\fBdde services \fIservice topic\fR
+\fBdde services\fR returns a list of service-topic pairs that
+currently exist on the machine. If \fIservice\fR and \fItopic\fR are
+both null strings ({}), then all service-topic pairs currently
+available on the system are returned. If \fIservice\fR is null and
+\fItopic\fR is not, then all services with the specified topic are
+returned. If \fIservice\fR is not null and \fItopic\fR is, all topics
+for a given service are returned. If both are not null, if that
+service-topic pair currently exists, it is returned; otherwise, null
+is returned.
+.SH "DDE AND TK"
+Tk always has a service name of "Tk". Each different interp of all
+running Tk applications has a unique name. A list of running interps
+can be retrieved using the \fBwinfo interps\fR command. A given
+interp's name can be set with the \fBtk appname\fR. Each interp is
+available as a DDE topic. So a \fBdde services Tk {}\fR command will
+return a list of service-topic pairs, where each of the currently
+running interps will be a topic.
+.PP
+When Tk processes a \fBdde execute\fR command, the data for the
+execute is run as a script in the interp named by the topic of the
+\fBdde execute\fR command.
+.PP
+When Tk processes a \fBdde request\fR command, it returns the value of
+the variable given in the dde command in the context of the interp
+named by the dde topic. Tk reserves the variable "$TK$EXECUTE$RESULT"
+for internal use, and \fBdde request\fR commands for that variable
+will give unpredictable results.
+.PP
+An external application which wishes to run a script in Tk should have
+that script store its result in a variable, run the \fBdde execute\fR
+command, and the run \fBdde request\fR to get the value of the
+variable.
+.SH KEYWORDS
+application, dde, name, remote execution
+.SH "SEE ALSO"
+tk, winfo, send
+
