@@ -11,13 +11,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.13 2000/04/14 08:33:15 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.14 2000/04/21 04:06:26 hobbs Exp $
  */
 
 #include "tkInt.h"
 #include "default.h"
-
-#define ENTRY_VALIDATE
 
 /*
  * A data structure of the following type is kept for each entry
@@ -505,64 +503,64 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
      * initialized already (e.g. resource pointers).
      */
 
-    entryPtr = (Entry *) ckalloc(sizeof(Entry));
-    entryPtr->tkwin = tkwin;
-    entryPtr->display = Tk_Display(tkwin);
-    entryPtr->interp = interp;
-    entryPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    entryPtr			= (Entry *) ckalloc(sizeof(Entry));
+    entryPtr->tkwin		= tkwin;
+    entryPtr->display		= Tk_Display(tkwin);
+    entryPtr->interp		= interp;
+    entryPtr->widgetCmd		= Tcl_CreateObjCommand(interp,
 	    Tk_PathName(entryPtr->tkwin), EntryWidgetObjCmd,
 	    (ClientData) entryPtr, EntryCmdDeletedProc);
-    entryPtr->optionTable = optionTable;
-    entryPtr->string = (char *) ckalloc(1);
-    entryPtr->string[0] = '\0';
-    entryPtr->insertPos = 0;
-    entryPtr->selectFirst = -1;
-    entryPtr->selectLast = -1;
-    entryPtr->selectAnchor = 0;
-    entryPtr->scanMarkX = 0;
-    entryPtr->scanMarkIndex = 0;
+    entryPtr->optionTable	= optionTable;
+    entryPtr->string		= (char *) ckalloc(1);
+    entryPtr->string[0]		= '\0';
+    entryPtr->insertPos		= 0;
+    entryPtr->selectFirst	= -1;
+    entryPtr->selectLast	= -1;
+    entryPtr->selectAnchor	= 0;
+    entryPtr->scanMarkX		= 0;
+    entryPtr->scanMarkIndex	= 0;
 
-    entryPtr->normalBorder = NULL;
-    entryPtr->borderWidth = 0;
-    entryPtr->cursor = None;
-    entryPtr->exportSelection = 1;
-    entryPtr->tkfont = NULL;
-    entryPtr->fgColorPtr = NULL;
-    entryPtr->highlightBgColorPtr = NULL;
-    entryPtr->highlightColorPtr = NULL;
-    entryPtr->highlightWidth = 0;
-    entryPtr->insertBorder = NULL;
-    entryPtr->insertBorderWidth = 0;
-    entryPtr->insertOffTime = 0;
-    entryPtr->insertOnTime = 0;
-    entryPtr->insertWidth = 0;
-    entryPtr->justify = TK_JUSTIFY_LEFT;
-    entryPtr->relief = TK_RELIEF_FLAT;
-    entryPtr->selBorder = NULL;
-    entryPtr->selBorderWidth = 0;
-    entryPtr->selFgColorPtr = NULL;
-    entryPtr->showChar = NULL;
-    entryPtr->state = STATE_NORMAL;
-    entryPtr->textVarName = NULL;
-    entryPtr->takeFocus = NULL;
-    entryPtr->prefWidth = 0;
-    entryPtr->scrollCmd = NULL;
-    entryPtr->numBytes = 0;
-    entryPtr->numChars = 0;
-    entryPtr->displayString = entryPtr->string;
-    entryPtr->numDisplayBytes = 0;
-    entryPtr->inset = XPAD;
-    entryPtr->textLayout = NULL;
-    entryPtr->layoutX = 0;
-    entryPtr->layoutY = 0;
-    entryPtr->leftX = 0;
-    entryPtr->leftIndex = 0;
-    entryPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
-    entryPtr->textGC = None;
-    entryPtr->selTextGC = None;
-    entryPtr->highlightGC = None;
-    entryPtr->avgWidth = 1;
-    entryPtr->flags = 0;
+    entryPtr->normalBorder	= NULL;
+    entryPtr->borderWidth	= 0;
+    entryPtr->cursor		= None;
+    entryPtr->exportSelection	= 1;
+    entryPtr->tkfont		= NULL;
+    entryPtr->fgColorPtr	= NULL;
+    entryPtr->highlightBgColorPtr	= NULL;
+    entryPtr->highlightColorPtr	= NULL;
+    entryPtr->highlightWidth	= 0;
+    entryPtr->insertBorder	= NULL;
+    entryPtr->insertBorderWidth	= 0;
+    entryPtr->insertOffTime	= 0;
+    entryPtr->insertOnTime	= 0;
+    entryPtr->insertWidth	= 0;
+    entryPtr->justify		= TK_JUSTIFY_LEFT;
+    entryPtr->relief		= TK_RELIEF_FLAT;
+    entryPtr->selBorder		= NULL;
+    entryPtr->selBorderWidth	= 0;
+    entryPtr->selFgColorPtr	= NULL;
+    entryPtr->showChar		= NULL;
+    entryPtr->state		= STATE_NORMAL;
+    entryPtr->textVarName	= NULL;
+    entryPtr->takeFocus		= NULL;
+    entryPtr->prefWidth		= 0;
+    entryPtr->scrollCmd		= NULL;
+    entryPtr->numBytes		= 0;
+    entryPtr->numChars		= 0;
+    entryPtr->displayString	= entryPtr->string;
+    entryPtr->numDisplayBytes	= 0;
+    entryPtr->inset		= XPAD;
+    entryPtr->textLayout	= NULL;
+    entryPtr->layoutX		= 0;
+    entryPtr->layoutY		= 0;
+    entryPtr->leftX		= 0;
+    entryPtr->leftIndex		= 0;
+    entryPtr->insertBlinkHandler	= (Tcl_TimerToken) NULL;
+    entryPtr->textGC		= None;
+    entryPtr->selTextGC		= None;
+    entryPtr->highlightGC	= None;
+    entryPtr->avgWidth		= 1;
+    entryPtr->flags		= 0;
     entryPtr->validateCmd	= NULL;
     entryPtr->validate		= VALIDATE_NONE;
     entryPtr->invalidCmd	= NULL;
