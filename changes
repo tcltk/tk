@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.1.4.2 1998/09/30 02:15:13 stanton Exp $
+RCS: @(#) $Id: changes,v 1.1.4.3 1998/11/25 04:10:24 stanton Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4341,3 +4341,6 @@ Mac (RJ)
 XLFD (no XA_FONT attribute) would lead to dereferencing NULL. (CCS)
 
 ----------------- Released 8.1a2, Feb 20 1998 -----------------------
+
+10/21/98 (bug fix) Tk_UnderlineChars did not handle UTF strings properly
+so underline indices were in bytes instead of characters. (stanton)

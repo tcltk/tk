@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.1.4.3 1998/11/24 21:42:47 stanton Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.1.4.4 1998/11/25 04:10:26 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -568,30 +568,29 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr,
      */
 
     if ((mePtr->type == CHECK_BUTTON_ENTRY) && mePtr->indicatorOn) {
-	    int dim, top, left;
-	    int activeBorderWidth;
-	    Tk_3DBorder border;
+	int dim, top, left;
+	int activeBorderWidth;
+	Tk_3DBorder border;
 	
-	    dim = (int) mePtr->platformEntryData;
-	    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
-		    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
-	    left = x + activeBorderWidth + (mePtr->indicatorSpace - dim)/2;
-	    if (menuPtr->menuType == MENUBAR) {
-		left += 5;
-	    }
-	    top = y + (height - dim)/2;
-	    border = Tk_Get3DBorderFromObj(menuPtr->tkwin,
-		    menuPtr->borderPtr);
-	    Tk_Fill3DRectangle(menuPtr->tkwin, d, border, left, top, dim,
-		    dim, DECORATION_BORDER_WIDTH, TK_RELIEF_SUNKEN);
-	    left += DECORATION_BORDER_WIDTH;
-	    top += DECORATION_BORDER_WIDTH;
-	    dim -= 2*DECORATION_BORDER_WIDTH;
-	    if ((dim > 0) && (mePtr->entryFlags
-		    & ENTRY_SELECTED)) {
-		XFillRectangle(menuPtr->display, d, indicatorGC, left, top,
-			(unsigned int) dim, (unsigned int) dim);
-	    }
+	dim = (int) mePtr->platformEntryData;
+	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
+		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
+	left = x + activeBorderWidth + (mePtr->indicatorSpace - dim)/2;
+	if (menuPtr->menuType == MENUBAR) {
+	    left += 5;
+	}
+	top = y + (height - dim)/2;
+	border = Tk_Get3DBorderFromObj(menuPtr->tkwin,
+		menuPtr->borderPtr);
+	Tk_Fill3DRectangle(menuPtr->tkwin, d, border, left, top, dim,
+		dim, DECORATION_BORDER_WIDTH, TK_RELIEF_SUNKEN);
+	left += DECORATION_BORDER_WIDTH;
+	top += DECORATION_BORDER_WIDTH;
+	dim -= 2*DECORATION_BORDER_WIDTH;
+	if ((dim > 0) && (mePtr->entryFlags
+		& ENTRY_SELECTED)) {
+	    XFillRectangle(menuPtr->display, d, indicatorGC, left, top,
+		    (unsigned int) dim, (unsigned int) dim);
 	}
     }
 
@@ -600,32 +599,31 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr,
      */
 
     if ((mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn) {
-	    XPoint points[4];
-	    int radius;
-	    Tk_3DBorder border;
+	XPoint points[4];
+	int radius;
+	Tk_3DBorder border;
 
-	    border = Tk_Get3DBorderFromObj(menuPtr->tkwin, 
-		    menuPtr->borderPtr);
-	    radius = ((int) mePtr->platformEntryData)/2;
-	    points[0].x = x + (mePtr->indicatorSpace
-		    - (int) mePtr->platformEntryData)/2;
-	    points[0].y = y + (height)/2;
-	    points[1].x = points[0].x + radius;
-	    points[1].y = points[0].y + radius;
-	    points[2].x = points[1].x + radius;
-	    points[2].y = points[0].y;
-	    points[3].x = points[1].x;
-	    points[3].y = points[0].y - radius;
-	    if (mePtr->entryFlags & ENTRY_SELECTED) {
-		XFillPolygon(menuPtr->display, d, indicatorGC, points, 4,
-			Convex, CoordModeOrigin);
-	    } else {
-		Tk_Fill3DPolygon(menuPtr->tkwin, d, border, points, 4,
-			DECORATION_BORDER_WIDTH, TK_RELIEF_FLAT);
-	    }
-	    Tk_Draw3DPolygon(menuPtr->tkwin, d, border, points, 4,
-		    DECORATION_BORDER_WIDTH, TK_RELIEF_SUNKEN);
+	border = Tk_Get3DBorderFromObj(menuPtr->tkwin, 
+		menuPtr->borderPtr);
+	radius = ((int) mePtr->platformEntryData)/2;
+	points[0].x = x + (mePtr->indicatorSpace
+		- (int) mePtr->platformEntryData)/2;
+	points[0].y = y + (height)/2;
+	points[1].x = points[0].x + radius;
+	points[1].y = points[0].y + radius;
+	points[2].x = points[1].x + radius;
+	points[2].y = points[0].y;
+	points[3].x = points[1].x;
+	points[3].y = points[0].y - radius;
+	if (mePtr->entryFlags & ENTRY_SELECTED) {
+	    XFillPolygon(menuPtr->display, d, indicatorGC, points, 4,
+		    Convex, CoordModeOrigin);
+	} else {
+	    Tk_Fill3DPolygon(menuPtr->tkwin, d, border, points, 4,
+		    DECORATION_BORDER_WIDTH, TK_RELIEF_FLAT);
 	}
+	Tk_Draw3DPolygon(menuPtr->tkwin, d, border, points, 4,
+		DECORATION_BORDER_WIDTH, TK_RELIEF_SUNKEN);
     }
 }
 
@@ -712,7 +710,6 @@ DrawMenuEntryLabel(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, y, width, height)
     int activeBorderWidth;
     int leftEdge;
     int imageHeight, imageWidth;
-    int state;
 
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
 	    &activeBorderWidth);
@@ -1310,7 +1307,7 @@ TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
     	    }
     	}
 
-	if (((parentDisabled || (state == ENTRY_DISABLED)))
+	if (((parentDisabled || (mePtr->state == ENTRY_DISABLED)))
 		&& (menuPtr->disabledFgPtr != NULL)) {
 	    gc = mePtr->disabledGC;
 	    if (gc == NULL) {

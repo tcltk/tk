@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: MeasureChar.3,v 1.1.4.1 1998/09/30 02:16:03 stanton Exp $
+'\" RCS: @(#) $Id: MeasureChar.3,v 1.1.4.2 1998/11/25 04:10:25 stanton Exp $
 '\" 
 .so man.macros
 .TH Tk_MeasureChars 3 "" Tk "Tk Library Procedures"
@@ -16,7 +16,7 @@ Tk_MeasureChars, Tk_TextWidth, Tk_DrawChars, Tk_UnderlineChars \- routines to me
 \fB#include <tk.h>\fR
 .sp
 int
-\fBTk_MeasureChars(\fItkfont, string, maxChars, maxPixels, flags, lengthPtr\fB)\fR
+\fBTk_MeasureChars(\fItkfont, string, numBytes, maxPixels, flags, lengthPtr\fB)\fR
 .sp
 int
 \fBTk_TextWidth(\fItkfont, string, numChars\fB)\fR
@@ -37,8 +37,8 @@ Text to be measured or displayed.  Need not be null terminated.  Any
 non-printing meta-characters in the string (such as tabs, newlines, and
 other control characters) will be measured or displayed in a
 platform-dependent manner.  
-.AP int maxChars in
-The maximum number of characters to consider when measuring \fIstring\fR.
+.AP int numBytes in
+The maximum number of bytes to consider when measuring \fIstring\fR.
 Must be greater than or equal to 0.
 .AP int maxPixels in
 If \fImaxPixels\fR is greater than 0, it specifies the longest permissible
