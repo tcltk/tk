@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.21 2003/11/03 13:10:05 dkf Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.22 2003/11/03 16:10:12 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -957,14 +957,18 @@ LayoutDLine(textPtr, indexPtr)
     if (elide && indexPtr->byteIndex==0) {
 	maxBytes = 0;
 	for (segPtr = indexPtr->linePtr->segPtr;
-	     elide && (segPtr != NULL);
+	     segPtr != NULL;
 	     segPtr = segPtr->nextPtr) {
-	    if ((elidesize = segPtr->size) > 0) {
-		maxBytes += elidesize;
-		/*
-		 * If have we have a tag toggle, there is a chance
-		 * that invisibility state changed, so bail out
-		 */
+	    if (segPtr->size > 0) {
+		if (elide == 0) {
+		    /*
+		     * We toggled a tag and the elide state changed to
+		     * visible, and we have something of non-zero 
+		     * size.  Therefore we must bail out.
+		     */
+		    break;
+		}
+		maxBytes += segPtr->size;
 	    } else if ((segPtr->typePtr == &tkTextToggleOffType)
 		    || (segPtr->typePtr == &tkTextToggleOnType)) {
 		if (segPtr->body.toggle.tagPtr->elideString != NULL) {
@@ -5733,12 +5737,11 @@ DlineXOfIndex(textPtr, dlPtr, byteIndex)
     int byteIndex;              /* The byte index for which we want the
                                  * coordinate. */
 {
-    TextDInfo *dInfoPtr = textPtr->dInfoPtr;
-    register TkTextDispChunk *chunkPtr;
+    register TkTextDispChunk *chunkPtr = dlPtr->chunkPtr;
     TkTextIndex index;
     int x;
     
-    if (byteIndex == 0) return 0;
+    if (byteIndex == 0 || chunkPtr == NULL) return 0;
 
     /*
      * Scan through the line's chunks to find the one that contains
