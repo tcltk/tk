@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacButton.c,v 1.17.2.1 2003/04/26 02:53:47 hobbs Exp $
+ * RCS: @(#) $Id: tkMacButton.c,v 1.17.2.2 2003/10/10 20:20:47 hobbs Exp $
  */
 
 #include "tkButton.h"
@@ -455,15 +455,15 @@ TkpDisplayButton(
 		    y += offset;
 		}
 		imageXOffset += x;
-		imageXOffset += y;
+		imageYOffset += y;
 		if (butPtr->image != NULL) {
 		    if ((butPtr->selectImage != NULL) &&
 			    (butPtr->flags & SELECTED)) {
 			Tk_RedrawImage(butPtr->selectImage, 0, 0, width,
-				height,	pixmap, x, y);
+				height,	pixmap, imageXOffset, imageYOffset);
 		    } else {
 			Tk_RedrawImage(butPtr->image, 0, 0, width, height,
-				pixmap, x, y);
+				pixmap, imageXOffset, imageYOffset);
 		    }
 		} else {
 		    XSetClipOrigin(butPtr->display, gc, x, y);
