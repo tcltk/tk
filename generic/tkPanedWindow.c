@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.6 2002/08/02 15:35:53 dkf Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.7 2002/08/06 14:38:13 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -134,6 +134,11 @@ typedef struct PanedWindow {
  *
  * WIDGET_DELETED:		Non-zero means that the paned window has
  *				been, or is in the process of being, deleted.
+ *
+ * RESIZE_PENDING:		Non-zero means that the window might need to
+ *				change its size (or the size of its panes)
+ *				because of a change in the size of one of its
+ *				children.
  */
 
 #define REDRAW_PENDING		0x0001
@@ -141,6 +146,8 @@ typedef struct PanedWindow {
 #define REQUESTED_RELAYOUT	0x0004
 #define RECOMPUTE_GEOMETRY	0x0008
 #define PROXY_REDRAW_PENDING	0x0010
+#define RESIZE_PENDING		0x0020
+
 /*
  * Forward declarations for procedures defined later in this file:
  */
@@ -1436,7 +1443,7 @@ DestroyPanedWindow(pwPtr)
     if (pwPtr->flags & REDRAW_PENDING) {
 	Tcl_CancelIdleCall(DisplayPanedWindow, (ClientData) pwPtr);
     }
-    if (pwPtr->flags & REQUESTED_RELAYOUT) {
+    if (pwPtr->flags & RESIZE_PENDING) {
 	Tcl_CancelIdleCall(ArrangePanes, (ClientData) pwPtr);
     }
 
@@ -1504,9 +1511,13 @@ PanedWindowReqProc(clientData, tkwin)
 {
     Slave *panePtr = (Slave *) clientData;
     PanedWindow *pwPtr = (PanedWindow *) (panePtr->masterPtr);
-    if (!(pwPtr->flags & REQUESTED_RELAYOUT)) {
-	pwPtr->flags |= REQUESTED_RELAYOUT;
-	Tcl_DoWhenIdle(ArrangePanes, (ClientData) pwPtr);
+    if (Tk_IsMapped(pwPtr->tkwin)) {
+	if (!(pwPtr->flags & RESIZE_PENDING)) {
+	    pwPtr->flags |= RESIZE_PENDING;
+	    Tcl_DoWhenIdle(ArrangePanes, (ClientData) pwPtr);
+	}
+    } else {
+	ComputeGeometry(pwPtr);
     }
 }
 
@@ -1578,7 +1589,7 @@ ArrangePanes(clientData)
     int i, slaveWidth, slaveHeight, slaveX, slaveY, paneWidth, paneHeight;
     int doubleBw;
     
-    pwPtr->flags &= ~REQUESTED_RELAYOUT;
+    pwPtr->flags &= ~(REQUESTED_RELAYOUT|RESIZE_PENDING);
 
     /*
      * If the parent has no slaves anymore, then don't do anything
