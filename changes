@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.13 2004/07/29 21:47:57 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.14 2004/11/16 19:02:27 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5672,10 +5672,54 @@ cursor on OS X when Tk asks for the "NULL" (empty) cursor.
 2004-07-19 (bug fix)[874058] improved build configuration on 64-bit systems.
 Corrects Tcl_StatBuf definition issues.  (hobbs)
 
-2003-07-23 (platform support) Mac OS X: Fix several problems with
+2004-07-23 (platform support) Mac OS X: Fix several problems with
 Icelandic (and Faroese) keyboards (riefenstahl)
 
-2003-07-24 (platform support) Mac OS X: Complete the implementation of
+2004-07-24 (platform support) Mac OS X: Complete the implementation of
 the CG version of the X drawing emulation layer. (tittle, ingham)
 
 --- Released 8.4.7, July 26, 2004 --- See ChangeLog for details ---
+
+2004-08-09 (bug fix)[1006286] test wrapping on canvas; Win (dejong)
+
+2004-08-10 (bug fix)[1006686] [wm resizable] Solaris (mcdonald,english)
+
+2004-08-17 (bug fix)[1010938] panedwindow -handlepad GEOMETRY (fellows)
+
+2004-08-19 (bug fix)[611615] file dialog double clicks fell through (hobbs)
+
+2004-09-10 (bug fix)[845189] file dialog state initialization (fellows)
+
+2004-09-10 (bug fix)[1013942] widget demo robust against strict motif (fellows)
+
+2004-09-16 (bug fix)[1028888] [place forget] memory leak (spjuth)
+
+2004-09-16 (bug fix)[607649] font size change: recompute menu geometry (hobbs)
+
+2004-09-17 (new feature)[TIP 222] [wm attributes -alpha] (hobbs)
+
+2004-09-22 (bug fix)[865842] disabled cascade menu arrow draw (dejong)
+
+2004-09-22 (bug fix)[866194] menu accelerator text highlights (dejong)
+
+2004-09-22 (bug fix)[223689] handle color/screen resolution changes (hobbs)
+
+2004-10-05 (new feature)[TIP 159] [wm iconphoto] (hobbs)
+
+2004-10-26 (bug fix)[905830] set IC focus after creation (max)
+
+2004-10-26 (bug fix) shutdown safety corrections for Win (gravereaux)
+
+2004-10-28 (bug fix) HAVE_NO_SEH handler code, Win (dejong)
+
+2004-10-29 (bug fix)[533519] multi-display window placement (thoyts)
+
+2004-11-10 (bug fix)[1055023] compound buttons, MacOSX (kirkham,ingham)
+
+2004-11-11 (bug fix)[1035348] [load]-able Tk on MacOSX/Aqua (steffen)
+
+2004-11-12 (bug fix)[800178] use correct display for [tk scaling] (hobbs)
+
+2004-11-16 (bug fix)[1063675] Italian msg catalog fixes (ugoccioni,welton)
+
+--- Released 8.4.8, November XX, 2004 --- See ChangeLog for details ---

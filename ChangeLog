@@ -1,5 +1,7 @@
 2004-11-16  Don Porter	<dgp@users.sourceforge.net>
 
+	* changes:	Updates for Tk 8.4.8 release.
+
 	* library/msgs/it.msg:	Updated Italian message catalog.
 	Thanks to Roberto Ugoccioni [Bug 1063675].
 
