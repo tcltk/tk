@@ -1,18 +1,20 @@
 /* 
  * Entry.c --
  *
- *	This module implements entry widgets for the Tk
- *	toolkit.  An entry displays a string and allows
- *	the string to be edited.
+ *	This module implements entry and spinbox widgets for the Tk toolkit.
+ *	An entry displays a string and allows the string to be edited.
+ *	A spinbox expands on the entry by adding up/down buttons that control
+ *	the value of the entry widget.
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  * Copyright (c) 2000 Ajuba Solutions.
+ * Copyright (c) 2002 ActiveState Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.29 2002/07/24 18:30:55 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.30 2002/07/25 21:19:01 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1590,6 +1592,22 @@ ConfigureEntry(interp, entryPtr, objc, objv, flags)
 	Tk_FreeSavedOptions(&savedOptions);
     }
 
+    /*
+     * If the entry is tied to the value of a variable, create the variable if
+     * it doesn't exist, and set the entry's value from the variable's value.
+     */
+
+    if (entryPtr->textVarName != NULL) {
+	CONST char *value;
+
+	value = Tcl_GetVar(interp, entryPtr->textVarName, TCL_GLOBAL_ONLY);
+	if (value == NULL) {
+	    EntryValueChanged(entryPtr, NULL);
+	} else {
+	    EntrySetValue(entryPtr, value);
+	}
+    }
+
     if (entryPtr->type == TK_SPINBOX) {
 	ComputeFormat(sbPtr);
 
@@ -1631,20 +1649,11 @@ ConfigureEntry(interp, entryPtr, objc, objv, flags)
     }
 
     /*
-     * If the entry is tied to the value of a variable, then set up
-     * a trace on the variable's value, create the variable if it doesn't
-     * exist, and set the entry's value from the variable's value.
+     * Set up a trace on the variable's value after we've possibly
+     * constrained the value according to new -from/-to values.
      */
 
     if (entryPtr->textVarName != NULL) {
-	CONST char *value;
-
-	value = Tcl_GetVar(interp, entryPtr->textVarName, TCL_GLOBAL_ONLY);
-	if (value == NULL) {
-	    EntryValueChanged(entryPtr, NULL);
-	} else {
-	    EntrySetValue(entryPtr, value);
-	}
 	Tcl_TraceVar(interp, entryPtr->textVarName,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		EntryTextVarProc, (ClientData) entryPtr);
