@@ -1,3 +1,10 @@
+2002-07-16  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* win/tkWinWm.c: 
+	* doc/wm.n: fix for part of [Bug 581627], and made iconbitmap
+	code on Windows more flexible about reading in icons [Bug
+	220800].
+	
 2002-07-15  David Gravereaux <davygrvy@pobox.com>
 
 	* win/makefile.bc (new): re-add of the borland makefile.  Submitted
