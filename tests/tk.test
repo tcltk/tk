@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 2002 ActiveState Corporation.
 #
-# RCS: @(#) $Id: tk.test,v 1.8 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: tk.test,v 1.9 2002/09/02 19:15:38 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -19,7 +19,7 @@ test tk-1.1 {tk command: general} {
 } {1 {wrong # args: should be "tk option ?arg?"}}
 test tk-1.2 {tk command: general} {
     list [catch {tk xyz} msg] $msg
-} {1 {bad option "xyz": must be appname, caret, scaling, or useinputmethods}}
+} {1 {bad option "xyz": must be appname, caret, scaling, useinputmethods, or windowingsystem}}
 
 set appname [tk appname]
 test tk-2.1 {tk command: appname} {
