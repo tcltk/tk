@@ -3,7 +3,7 @@ README:  Tk
 	Tk is maintained, enhanced, and distributed freely as a
 	service to the Tcl community by Scriptics Corporation.
 
-RCS: @(#) $Id: README,v 1.12 1999/02/17 02:05:30 hershey Exp $
+RCS: @(#) $Id: README,v 1.13 1999/02/17 02:34:36 hershey Exp $
 
 Contents
 --------
@@ -11,7 +11,7 @@ Contents
     2. Documentation
     3. Compiling and installing Tk
     4. Getting started
-    5. Summary of changes in Tcl 8.0
+    5. Summary of changes in Tk 8.0
     6. Development tools
     7. Tcl newsgroup
     8. Tcl contributed archive
@@ -23,10 +23,10 @@ Contents
 1. Introduction
 ---------------
 
-This directory and its descendants contain the sources and documentation
-for Tk, an X11 toolkit implemented with the Tcl scripting language.  The
-information here corresponds to Tk 8.0.5, which is the fifth patch update
-for Tk 8.0.  This release is designed to work with Tcl 8.0.5 and may not
+This directory contains the sources and documentation for Tk, an X11
+toolkit implemented with the Tcl scripting language.  The information
+here corresponds to release 8.0.5, which is the fifth patch update for
+Tk 8.0.  This release is designed to work with Tcl 8.0.5 and may not
 work with any other version of Tcl.
 
 Tk 8.0 is a major release with significant new features such as native
@@ -40,7 +40,7 @@ Note: with Tk 8.0 the Tk version number skipped from 4.2 to 8.0. The
 jump was made in order to synchronize the Tcl and Tk version numbers.
 
 Tk is a freely available open source package.  You can do virtually
-anything you like with it, such as modifying it, redistributing it ,
+anything you like with it, such as modifying it, redistributing it,
 and selling it either in whole or in part.  See the file
 "license.terms" for complete information.
 
