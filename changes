@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.26 1998/11/11 17:30:41 jingham Exp $
+RCS: @(#) $Id: changes,v 1.27 1998/11/25 02:14:14 stanton Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4282,3 +4282,11 @@ to update them to n32 for them to work with Tcl.  (RJ)
 backgrounds, separators and menu shape, if Appearance version 1.0.1 or 
 greater is installed.  The version of Appearance that shipped with MacOS 8.0 
 so it will not work with a straight 8.0, but it will with MacOS 8.1 or later. (JI)
+
+----------------- Released 8.0.4, 11/20/98 -----------------------
+
+----------------------------------------------------------
+Changes for Tk 8.0 go above this line.
+Changes for Tk 8.1 go below this line.
+----------------------------------------------------------
+
