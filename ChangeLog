@@ -1,3 +1,10 @@
+2005-01-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkObj.c (TkParsePadAmount):
+	* generic/tkPack.c: Moved function to tkObj.c and rewrote so that it
+	takes advantage of Tcl_Objs properly and cannot leave objects in an
+	inconsistent state. [Bug 1098779]
+
 2005-01-10  Joe English  <jenglish@users.sourceforge.net>
 	* unix/Makefile.in, unix/configure.in, unix/tkConfig.sh.in:
 	Remove ${DBGX}, ${TK_DBGX} from Tk build system [Patch 1081595].
