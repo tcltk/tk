@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: photo.n,v 1.17 2004/06/21 15:07:53 dkf Exp $
+'\" RCS: @(#) $Id: photo.n,v 1.18 2004/08/20 14:15:29 dkf Exp $
 '\" 
 .so man.macros
 .TH photo n 4.0 Tk "Tk Built-In Commands"
@@ -214,7 +214,7 @@ the specified color.
 \fB\-format\fI format-name\fR
 Specifies the name of the image file format handler to be used.
 Specifically, this subcommand searches
-for the first handler whose name matches a initial substring of
+for the first handler whose name matches an initial substring of
 \fIformat-name\fR and which has the capability to read this image data.
 If this option is not given, this subcommand uses the first
 handler that has the capability to read the image data.
@@ -345,7 +345,7 @@ the specified color.
 \fB\-format\fI format-name\fR
 Specifies the name of the image file format handler to be used to
 write the data to the file.  Specifically, this subcommand searches
-for the first handler whose name matches a initial substring of
+for the first handler whose name matches an initial substring of
 \fIformat-name\fR and which has the capability to write an image
 file.  If this option is not given, this subcommand uses the first
 handler that has the capability to write an image file.
