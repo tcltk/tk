@@ -1,3 +1,8 @@
+2002-06-28  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/msgbox.tcl (MessageBox): Force all non-button widgets to
+	have the same background as the containing toplevel.  [Bug #552515]
+
 2002-06-27  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
 
 	* win/Makefile.in (install-binaries): Fix of troubled Makefile
