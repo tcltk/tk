@@ -1,4 +1,7 @@
-2002-07-13  Don Porter <dgp@users.sf.net>
+2002-07-14  Don Porter <dgp@users.sf.net>
+
+	* tests/focustTcl.test:	Conversion bug: Corrected backwards logic.
+	* tests/imgPhoto.test:	Conversion bug: overwrote unix/README.
 
 	* tests/all.tcl:		Completed conversion of Tk test suite
 	* tests/constraints.tcl:	to use tcltest.

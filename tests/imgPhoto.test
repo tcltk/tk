@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.13 2002/07/14 05:48:46 dgp Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.14 2002/07/14 15:45:23 dgp Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -29,7 +29,7 @@ update
 
 set README [makeFile {
 README -- Tk test suite design document.
-} README]
+} README-imgPhotot]
 
 # find the teapot.ppm file for use in these tests
 # first look in $tk_library/demos/images/teapot.ppm
@@ -656,6 +656,6 @@ destroy .c
 eval image delete [image names]
 
 # cleanup
-removeFile README
+removeFile README-imgPhoto
 ::tcltest::cleanupTests
 return
