@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.30 2002/08/31 06:12:20 das Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.31 2002/10/09 11:56:28 das Exp $
 
 library tk
 
@@ -2231,4 +2231,9 @@ declare 88 {mac aqua} {
 declare 89 {mac aqua} {
     void XQueryColors (Display *display, Colormap colormap, \
 	    XColor *defs_in_out, int ncolors)
+}
+
+declare 90 {mac aqua} {
+    Status XQueryTree (Display* d, Window w1, Window* w2, Window* w3, \
+	    Window** w4, unsigned int* ui)
 }

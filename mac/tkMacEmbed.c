@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacEmbed.c,v 1.5 2002/08/05 04:30:40 dgp Exp $
+ *  RCS: @(#) $Id: tkMacEmbed.c,v 1.6 2002/10/09 11:56:39 das Exp $
  */
 
 #include "tkInt.h"
@@ -236,6 +236,7 @@ TkpUseWindow(
 				 * for tkwin;  must be an integer value. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *usePtr;
     MacDrawable *parent, *macWin;
     Container *containerPtr;
     XEvent event;
@@ -257,6 +258,20 @@ TkpUseWindow(
      
     if (Tcl_GetInt(interp, string, &result) != TCL_OK) {
 	return TCL_ERROR;
+    }
+
+    usePtr = (TkWindow *) Tk_IdToWindow(winPtr->display, (Window) result);
+
+    if (usePtr == NULL) {
+        Tcl_AppendResult(interp, "Tk window does not correspond to id \"",
+                string, "\"", (char *) NULL);
+        return TCL_ERROR;
+    } else {
+        if (!(usePtr->flags & TK_CONTAINER)) {
+	    Tcl_AppendResult(interp, "window \"", usePtr->pathName,
+                    "\" doesn't have -container option set", (char *) NULL);
+	    return TCL_ERROR;
+        }
     }
 
     parent = (MacDrawable *) result;

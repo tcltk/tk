@@ -31,7 +31,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacSend.c,v 1.6 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkMacSend.c,v 1.7 2002/10/09 11:56:54 das Exp $
  */
 
 #include <Gestalt.h>
@@ -249,7 +249,7 @@ Tk_SetAppName(
     int i, suffix, offset, result;
     int createCommand = 0;
     RegisteredInterp *riPtr, *prevPtr;
-    char *actualName;
+    CONST char *actualName;
     Tcl_DString dString;
     Tcl_Obj *resultObjPtr, *interpNamePtr;
     char *interpName;
@@ -306,7 +306,7 @@ Tk_SetAppName(
 		actualName = Tcl_DStringValue(&dString);
 	    }
 	    suffix++;
-	    sprintf(actualName + offset, "%d", suffix);
+	    sprintf(Tcl_DStringValue(&dString) + offset, "%d", suffix);
 	    i = 0;
 	} else {
 	    i++;

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacBitmap.c,v 1.5 2002/08/31 06:12:28 das Exp $
+ * RCS: @(#) $Id: tkMacBitmap.c,v 1.6 2002/10/09 11:56:36 das Exp $
  */
 
 #include "tkPort.h"
@@ -97,7 +97,7 @@ TkpDefineNativeBitmaps()
     int new;
     Tcl_HashEntry *predefHashPtr;
     TkPredefBitmap *predefPtr;
-    char * name;
+    CONST char * name;
     BuiltInIcon *builtInPtr;
     NativeIcon *nativeIconPtr;
     Tcl_HashTable *tablePtr;
