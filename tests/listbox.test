@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.15 2001/07/03 00:57:44 hobbs Exp $
+# RCS: @(#) $Id: listbox.test,v 1.16 2001/09/01 00:51:11 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1997,7 +1997,7 @@ foreach test {
     } [list [lindex $test 2] [lindex $test 2]]
     incr i
     if {[lindex $test 3] != ""} {
-	test listbox-1.$i {configuration options} {
+	test listbox-23.$i {configuration options} {
 	    list [catch {.l configure $name [lindex $test 3]} msg] $msg
 	} [list 1 [lindex $test 4]]
     }
