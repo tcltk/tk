@@ -7,12 +7,12 @@
  *	to the window manager.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright (c) 1998-2000 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.12 1999/12/16 21:59:35 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.13 2000/01/12 11:46:19 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -293,6 +293,8 @@ static void		InvalidateSubTree _ANSI_ARGS_((TkWindow *winPtr,
 			    Colormap colormap));
 static int		ParseGeometry _ANSI_ARGS_((Tcl_Interp *interp,
 			    char *string, TkWindow *winPtr));
+static void		RaiseWinWhenIdle _ANSI_ARGS_((
+			    ClientData clientData));
 static void		RefreshColormap _ANSI_ARGS_((Colormap colormap,
 	                    TkDisplay *dispPtr));
 static void		SetLimits _ANSI_ARGS_((HWND hwnd, MINMAXINFO *info));
@@ -693,7 +695,7 @@ UpdateWrapper(winPtr)
 	 * by default, so we need to explicitly add the WS_THICKFRAME style
 	 * if we want it to be resizeable.
 	 */
-	
+
 	if (winPtr->atts.override_redirect) {
 	    wmPtr->style = WM_OVERRIDE_STYLE;
 	    wmPtr->exStyle = EX_OVERRIDE_STYLE;
@@ -732,7 +734,6 @@ UpdateWrapper(winPtr)
 	 * pick a location.
 	 */
 
-   
 	if (!(wmPtr->sizeHintsFlags & (USPosition | PPosition))
 		&& (wmPtr->flags & WM_NEVER_MAPPED)) {
 	    x = CW_USEDEFAULT;
@@ -947,7 +948,6 @@ TkpWmSetState(winPtr, state)
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int cmd;
-    
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	wmPtr->hints.initial_state = state;
@@ -1159,7 +1159,8 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    return TCL_ERROR;
 	}
 	if (argc == 2) {
-	    Tcl_SetResult(interp, ((dispPtr->wmTracing) ? "on" : "off"), TCL_STATIC);
+	    Tcl_SetResult(interp, ((dispPtr->wmTracing) ? "on" : "off"),
+		    TCL_STATIC);
 	    return TCL_OK;
 	}
 	return Tcl_GetBoolean(interp, argv[2], &dispPtr->wmTracing);
@@ -1393,23 +1394,30 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	 * If WM_UPDATE_PENDING is true, a pending UpdateGeometryInfo may
 	 * need to be called first to update a withdrew toplevel's geometry
 	 * before it is deiconified by TkpWmSetState.
-	 * UpdateGeometryInfo has no effect on an iconified toplevel.
+	 * Don't bother if we've never been mapped.
 	 */
-	if (wmPtr->flags & WM_UPDATE_PENDING) {
+	if ((wmPtr->flags & WM_UPDATE_PENDING) &&
+		!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	    Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData) winPtr);
 	    UpdateGeometryInfo((ClientData) winPtr);
 	}
 
-	TkpWmSetState(winPtr, NormalState);
 	/*
-	 * Follow Windows-like style here:
-	 * raise the window to the top, and if it isn't overridden,
-	 * then force the focus on it
+	 * If we were in the ZoomState (maximized), 'wm deiconify'
+	 * should not cause the window to shrink
 	 */
-	TkWmRestackToplevel(winPtr, Above, NULL);
-	if (!(Tk_Attributes((Tk_Window) winPtr)->override_redirect)) {
-	    TkSetFocusWin(winPtr, 1);
+	if (wmPtr->hints.initial_state == ZoomState) {
+	    TkpWmSetState(winPtr, ZoomState);
+	} else {
+	    TkpWmSetState(winPtr, NormalState);
 	}
+
+	/*
+	 * Follow Windows-like style here, raising the window to the top.
+	 * Do this when idle, to not cause an unrefreshable window to
+	 * get mapped.
+	 */
+	Tcl_DoWhenIdle(RaiseWinWhenIdle, (ClientData) winPtr);
     } else if ((c == 'f') && (strncmp(argv[1], "focusmodel", length) == 0)
 	    && (length >= 2)) {
 	if ((argc != 3) && (argc != 4)) {
@@ -1863,7 +1871,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	goto updateGeom;
     } else if ((c == 'o')
 	    && (strncmp(argv[1], "overrideredirect", length) == 0)) {
-	int boolean;
+	int boolean, curValue;
 	XSetWindowAttributes atts;
 
 	if ((argc != 3) && (argc != 4)) {
@@ -1872,23 +1880,26 @@ Tk_WmCmd(clientData, interp, argc, argv)
 		    (char *) NULL);
 	    return TCL_ERROR;
 	}
+	curValue = Tk_Attributes((Tk_Window) winPtr)->override_redirect;
 	if (argc == 3) {
-	    if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
-		Tcl_SetResult(interp, "1", TCL_STATIC);
-	    } else {
-		Tcl_SetResult(interp, "0", TCL_STATIC);
-	    }
+	    Tcl_SetBooleanObj(Tcl_GetObjResult(interp), curValue);
 	    return TCL_OK;
 	}
 	if (Tcl_GetBoolean(interp, argv[3], &boolean) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	atts.override_redirect = (boolean) ? True : False;
-	Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect,
-		&atts);
-	if (!(wmPtr->flags & (WM_NEVER_MAPPED)
-		&& !(winPtr->flags & TK_EMBEDDED))) {
-	    UpdateWrapper(winPtr);
+	if (curValue != boolean) {
+	    /*
+	     * Only do this if we are really changing value, because it
+	     * causes some funky stuff to occur
+	     */
+	    atts.override_redirect = (boolean) ? True : False;
+	    Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect,
+		    &atts);
+	    if (!(wmPtr->flags & (WM_NEVER_MAPPED)
+		    && !(winPtr->flags & TK_EMBEDDED))) {
+		UpdateWrapper(winPtr);
+	    }
 	}
     } else if ((c == 'p') && (strncmp(argv[1], "positionfrom", length) == 0)
 	    && (length >= 2)) {
@@ -2061,27 +2072,80 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	goto updateGeom;
     } else if ((c == 's') && (strncmp(argv[1], "state", length) == 0)
 	    && (length >= 2)) {
-	if (argc != 3) {
+	if ((argc < 3) || (argc > 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
-		    argv[0], " state window\"", (char *) NULL);
+		    argv[0], " state window ?state?\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	if (wmPtr->iconFor != NULL) {
-	    Tcl_SetResult(interp, "icon", TCL_STATIC);
+	if (argc == 4) {
+	    if (wmPtr->iconFor != NULL) {
+		Tcl_AppendResult(interp, "can't change state of ", argv[2],
+			": it is an icon for ", Tk_PathName(wmPtr->iconFor),
+			(char *) NULL);
+		return TCL_ERROR;
+	    }
+	    if (winPtr->flags & TK_EMBEDDED) {
+		Tcl_AppendResult(interp, "can't change state of ",
+			winPtr->pathName, ": it is an embedded window",
+			(char *) NULL);
+		return TCL_ERROR;
+	    }
+
+	    c = argv[3][0];
+	    length = strlen(argv[3]);
+
+	    if ((c == 'n') && (strncmp(argv[3], "normal", length) == 0)) {
+		TkpWmSetState(winPtr, NormalState);
+		/*
+		 * This varies from 'wm deiconify' because it does not
+		 * force the window to be raised and receive focus
+		 */
+	    } else if ((c == 'i')
+		    && (strncmp(argv[3], "iconic", length) == 0)) {
+		if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
+		    Tcl_AppendResult(interp, "can't iconify \"",
+			    winPtr->pathName,
+			    "\": override-redirect flag is set",
+			    (char *) NULL);
+		    return TCL_ERROR;
+		}
+		if (wmPtr->masterPtr != NULL) {
+		    Tcl_AppendResult(interp, "can't iconify \"",
+			    winPtr->pathName,
+			    "\": it is a transient", (char *) NULL);
+		    return TCL_ERROR;
+		}
+		TkpWmSetState(winPtr, IconicState);
+	    } else if ((c == 'w')
+		    && (strncmp(argv[3], "withdrawn", length) == 0)) {
+		TkpWmSetState(winPtr, WithdrawnState);
+	    } else if ((c == 'z')
+		    && (strncmp(argv[3], "zoomed", length) == 0)) {
+		TkpWmSetState(winPtr, ZoomState);
+	    } else {
+		Tcl_AppendResult(interp, "bad argument \"", argv[3],
+			"\": must be normal, iconic, withdrawn or zoomed",
+			(char *) NULL);
+		return TCL_ERROR;
+	    }
 	} else {
-	    switch (wmPtr->hints.initial_state) {
-		case NormalState:
-		    Tcl_SetResult(interp, "normal", TCL_STATIC);
-		    break;
-		case IconicState:
-		    Tcl_SetResult(interp, "iconic", TCL_STATIC);
-		    break;
-		case WithdrawnState:
-		    Tcl_SetResult(interp, "withdrawn", TCL_STATIC);
-		    break;
-		case ZoomState:
-		    Tcl_SetResult(interp, "zoomed", TCL_STATIC);
-		    break;
+	    if (wmPtr->iconFor != NULL) {
+		Tcl_SetResult(interp, "icon", TCL_STATIC);
+	    } else {
+		switch (wmPtr->hints.initial_state) {
+		    case NormalState:
+			Tcl_SetResult(interp, "normal", TCL_STATIC);
+			break;
+		    case IconicState:
+			Tcl_SetResult(interp, "iconic", TCL_STATIC);
+			break;
+		    case WithdrawnState:
+			Tcl_SetResult(interp, "withdrawn", TCL_STATIC);
+			break;
+		    case ZoomState:
+			Tcl_SetResult(interp, "zoomed", TCL_STATIC);
+			break;
+		}
 	    }
 	}
     } else if ((c == 't') && (strncmp(argv[1], "title", length) == 0)
@@ -2144,11 +2208,19 @@ Tk_WmCmd(clientData, interp, argc, argv)
 		wmPtr->masterPtr = masterPtr;
 
 		/*
-		 * Ensure that the transient window is either mapped or 
-		 * unmapped like its master.
+		 * If the master is mapped, the transient window should
+		 * maintain its state, unless it was Iconic, in which case
+		 * we switch it to Withdrawn.  If the master is not mapped,
+		 * then the transient should be Withdrawn.
 		 */
 
-		TkpWmSetState(winPtr, NormalState);
+		if (masterPtr->flags & TK_MAPPED) {
+		    if (wmPtr->hints.initial_state == IconicState) {
+			TkpWmSetState(winPtr, WithdrawnState);
+		    }
+		} else {
+		    TkpWmSetState(winPtr, WithdrawnState);
+		}
 	    }
 	}
 	if (!(wmPtr->flags & (WM_NEVER_MAPPED)
@@ -3120,7 +3192,6 @@ TkWmRestackToplevel(winPtr, aboveBelow, otherPtr)
     hwnd = (winPtr->wmInfoPtr->wrapper != NULL)
 	? winPtr->wmInfoPtr->wrapper : Tk_GetHWND(winPtr->window);
 
-    
     if (otherPtr != NULL) {
 	if (otherPtr->window == None) {
 	    Tk_MakeWindowExist((Tk_Window) otherPtr);
@@ -3426,8 +3497,7 @@ ConfigureTopLevel(pos)
 		 */
 
 		if (!(wmPtr->flags & WM_UPDATE_PENDING)) {
-		    Tcl_DoWhenIdle(UpdateGeometryInfo,
-			    (ClientData) winPtr);
+		    Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
 		    wmPtr->flags |= WM_UPDATE_PENDING;
 		}
 		/* fall through */
@@ -4174,7 +4244,7 @@ WmProc(hwnd, message, wParam, lParam)
  *	None.
  *
  * Side effects:
- *	Changes the style bit used to create a new Mac toplevel.
+ *	Changes the style bit used to create a new toplevel.
  *
  *----------------------------------------------------------------------
  */
@@ -4363,5 +4433,35 @@ TkWinSetForegroundWindow(winPtr)
 	SetForegroundWindow(wmPtr->wrapper);
     } else {
 	SetForegroundWindow(Tk_GetHWND(winPtr->window));
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RaiseWinWhenIdle --
+ *
+ *	This procedure is invoked after a toplevel window is deiconified
+ *	and also as a when-idle procedure, to raise the toplevel window
+ *	to the top and force focus into it, if it isn't overridden.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The window will be raised to the top, and may receive focus.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RaiseWinWhenIdle(clientData)
+    ClientData clientData;		/* Pointer to the window's record. */
+{
+    register TkWindow *winPtr = (TkWindow *) clientData;
+
+    TkWmRestackToplevel(winPtr, Above, NULL);
+    if (!(Tk_Attributes((Tk_Window) winPtr)->override_redirect)) {
+	TkSetFocusWin(winPtr, 1);
     }
 }
