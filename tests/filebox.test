@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: filebox.test,v 1.1.4.2 1998/09/30 02:18:35 stanton Exp $
+# RCS: @(#) $Id: filebox.test,v 1.1.4.3 1998/12/10 03:43:54 stanton Exp $
 #
 
 set tk_strictMotif_old $tk_strictMotif
@@ -186,10 +186,9 @@ foreach mode $modes {
 	} else {
 	    set thisFile [info script]
 	    set fileName [file tail $thisFile]
-	    set appPWD [pwd]
-	    cd [file dirname $thisFile]
+
+	    # this file should be in the current working dir
 	    set fileDir [pwd]
-	    cd $appPWD
 	    set pathName [file join $fileDir $fileName]
 	}
 
