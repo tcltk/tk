@@ -9,12 +9,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.9 2001/06/04 03:07:54 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.10 2002/03/27 00:14:06 andreas_kupries Exp $
  */
  
 #include "tkUnixInt.h"
 #include "tkFont.h"
 #include <netinet/in.h>		/* for htons() prototype */
+#include <arpa/inet.h>		/* inet_ntoa() */
 
 /*
  * The preferred font encodings.
