@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.6 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.7 2003/05/19 13:04:23 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -32,6 +32,244 @@ static CONST char *	ForwBack _ANSI_ARGS_((CONST char *string,
 			    TkTextIndex *indexPtr));
 static CONST char *	StartEnd _ANSI_ARGS_((CONST char *string,
 			    TkTextIndex *indexPtr));
+static int		GetIndex _ANSI_ARGS_((Tcl_Interp *interp,
+			    TkText *textPtr, CONST char *string,
+			    TkTextIndex *indexPtr, int *canCachePtr));
+
+
+static void		DupTextIndexInternalRep _ANSI_ARGS_((Tcl_Obj *srcPtr,
+			    Tcl_Obj *copyPtr));
+static void		FreeTextIndexInternalRep _ANSI_ARGS_((Tcl_Obj *listPtr));
+static int		SetTextIndexFromAny _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tcl_Obj *objPtr));
+static void		UpdateStringOfTextIndex _ANSI_ARGS_((Tcl_Obj *objPtr));
+
+#define GET_TEXTINDEX(objPtr) \
+		((TkTextIndex *) (objPtr)->internalRep.twoPtrValue.ptr1)
+#define GET_INDEXEPOCH(objPtr) \
+		((int) (objPtr)->internalRep.twoPtrValue.ptr2)
+#define SET_TEXTINDEX(objPtr, indexPtr) \
+		(objPtr)->internalRep.twoPtrValue.ptr1 = (VOID*) (indexPtr)
+#define SET_INDEXEPOCH(objPtr, epoch) \
+		(objPtr)->internalRep.twoPtrValue.ptr2 = (VOID*) (epoch)
+/*
+ * Define the 'textindex' object type, which Tk uses to represent
+ * indices in text widgets internally.
+ */
+Tcl_ObjType tclTextIndexType = {
+    "textindex",			/* name */
+    FreeTextIndexInternalRep,		/* freeIntRepProc */
+    DupTextIndexInternalRep,	        /* dupIntRepProc */
+    NULL,                               /* updateStringProc */
+    SetTextIndexFromAny		        /* setFromAnyProc */
+};
+
+static void
+FreeTextIndexInternalRep(indexObjPtr)
+    Tcl_Obj *indexObjPtr;   /* TextIndex object with internal rep to free. */
+{
+    TkTextIndex *indexPtr = GET_TEXTINDEX(indexObjPtr);
+    if (indexPtr->textPtr != NULL) {
+        if (--indexPtr->textPtr->refCount == 0) {
+	    /* The text widget has been deleted and we need to free it now */
+	    ckfree((char *) (indexPtr->textPtr));
+	}
+    }
+    ckfree((char*)indexPtr);
+}
+
+static void
+DupTextIndexInternalRep(srcPtr, copyPtr)
+    Tcl_Obj *srcPtr;		/* TextIndex obj with internal rep to copy. */
+    Tcl_Obj *copyPtr;		/* TextIndex obj with internal rep to set. */
+{
+    int epoch;
+    TkTextIndex *dupIndexPtr, *indexPtr;
+    dupIndexPtr = (TkTextIndex*) ckalloc(sizeof(TkTextIndex));
+    indexPtr = GET_TEXTINDEX(srcPtr);
+    epoch = GET_INDEXEPOCH(srcPtr);
+    
+    dupIndexPtr->tree = indexPtr->tree;
+    dupIndexPtr->linePtr = indexPtr->linePtr;
+    dupIndexPtr->byteIndex = indexPtr->byteIndex;
+    
+    SET_TEXTINDEX(copyPtr, dupIndexPtr);
+    SET_INDEXEPOCH(copyPtr, epoch);
+}
+
+/* 
+ * This will not be called except by TkTextNewIndexObj below.
+ * This is because if a TkTextIndex is no longer valid, it is
+ * not possible to regenerate the string representation.
+ */
+static void
+UpdateStringOfTextIndex(objPtr)
+    Tcl_Obj *objPtr;
+{
+    char buffer[TK_POS_CHARS];
+    register int len;
+
+    CONST TkTextIndex *indexPtr = GET_TEXTINDEX(objPtr);
+
+    len = TkTextPrintIndex(indexPtr, buffer);
+
+    objPtr->bytes = ckalloc((unsigned) len + 1);
+    strcpy(objPtr->bytes, buffer);
+    objPtr->length = len;
+}
+    
+static int
+SetTextIndexFromAny(interp, objPtr)
+    Tcl_Interp *interp;		/* Used for error reporting if not NULL. */
+    Tcl_Obj *objPtr;		/* The object to convert. */
+{
+    Tcl_AppendToObj(Tcl_GetObjResult(interp),
+	"can't convert value to textindex except via TkTextGetIndexFromObj API",
+	-1);
+    return TCL_ERROR;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * MakeObjIndex --
+ *	
+ *	This procedure generates a Tcl_Obj description of an index,
+ *	suitable for reading in again later.  If the 'textPtr' is NULL
+ *	then we still generate an index object, but it's internal
+ *	description is deemed non-cacheable, and therefore effectively
+ *	useless (apart from as a temporary memory storage).  This is used
+ *	for indices whose meaning is very temporary (like @0,0 or the
+ *	name of a mark or tag).  The mapping from such strings/objects to
+ *	actual TkTextIndex pointers is not stable to minor text widget
+ *	changes which we do not track (we track insertions/deletions).
+ *
+ * Results:
+ *	A pointer to an allocated TkTextIndex which will be freed 
+ *	automatically when the Tcl_Obj is used for other purposes.
+ *
+ * Side effects:
+ *	A small amount of memory is allocated.
+ *
+ *---------------------------------------------------------------------------
+ */
+static TkTextIndex*
+MakeObjIndex(textPtr, objPtr, origPtr) 
+    TkText *textPtr;		/* Information about text widget. */
+    Tcl_Obj *objPtr;		/* Object containing description of position. */
+    CONST TkTextIndex *origPtr; /* Pointer to index. */
+{
+    TkTextIndex *indexPtr = (TkTextIndex*) ckalloc(sizeof(TkTextIndex));
+
+    indexPtr->tree = origPtr->tree;
+    indexPtr->linePtr = origPtr->linePtr;
+    indexPtr->byteIndex = origPtr->byteIndex;
+    SET_TEXTINDEX(objPtr, indexPtr);
+    objPtr->typePtr = &tclTextIndexType;
+    indexPtr->textPtr = textPtr;
+
+    if (textPtr != NULL) {
+	textPtr->refCount++;
+	SET_INDEXEPOCH(objPtr, textPtr->stateEpoch);
+    } else {
+	SET_INDEXEPOCH(objPtr, 0);
+    }
+    return indexPtr;
+}
+
+CONST TkTextIndex*
+TkTextGetIndexFromObj(interp, textPtr, objPtr)
+    Tcl_Interp *interp;		/* Use this for error reporting. */
+    TkText *textPtr;		/* Information about text widget. */
+    Tcl_Obj *objPtr;		/* Object containing description of position. */
+{
+    TkTextIndex index;
+    TkTextIndex *indexPtr = NULL;
+    int cache;
+    
+    if (objPtr->typePtr == &tclTextIndexType) {
+	int epoch;
+	
+	indexPtr = GET_TEXTINDEX(objPtr);
+	epoch = GET_INDEXEPOCH(objPtr);
+	
+	if (epoch == textPtr->stateEpoch) {
+	    if (indexPtr->textPtr == textPtr) {
+		return indexPtr;
+	    }
+	}
+    }
+
+    /* 
+     * The object is either not an index type or referred to a different
+     * text widget, or referred to the correct widget, but it is out of
+     * date (text has been added/deleted since).
+     */
+    
+    if (GetIndex(interp, textPtr, Tcl_GetString(objPtr), 
+		 &index, &cache) != TCL_OK) {
+	return NULL;
+    }
+    
+    if (objPtr->typePtr != NULL) {
+	if (objPtr->bytes == NULL) {
+	    objPtr->typePtr->updateStringProc(objPtr);
+	}
+	if ((objPtr->typePtr->freeIntRepProc) != NULL) {
+	    (*objPtr->typePtr->freeIntRepProc)(objPtr);
+	}
+    }
+    
+    if (cache) {
+	return MakeObjIndex(textPtr, objPtr, &index);
+    } else {
+	return MakeObjIndex(NULL, objPtr, &index);
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkTextNewIndexObj --
+ *	
+ *	This procedure generates a Tcl_Obj description of an index,
+ *	suitable for reading in again later.  The index generated is
+ *	effectively stable to all except insertion/deletion operations on
+ *	the widget.
+ *
+ * Results:
+ *	A new Tcl_Obj with refCount zero.
+ *
+ * Side effects:
+ *	A small amount of memory is allocated.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+Tcl_Obj*
+TkTextNewIndexObj(textPtr, indexPtr)
+    TkText *textPtr;             /* text widget for this index */
+    CONST TkTextIndex *indexPtr; /* Pointer to index. */
+{
+    Tcl_Obj *retVal;
+
+    retVal = Tcl_NewObj();
+    retVal->bytes = NULL;
+
+    /* 
+     * Assumption that the above call returns an object with
+     * retVal->typePtr == NULL
+     */
+    MakeObjIndex(textPtr, retVal, indexPtr);
+    
+    /* 
+     * Unfortunately, it isn't possible for us to regenerate the
+     * string representation so we have to create it here, while we
+     * can be sure the contents of the index are still valid.
+     */
+    UpdateStringOfTextIndex(retVal);
+    return retVal;
+}
 
 /*
  *---------------------------------------------------------------------------
@@ -294,6 +532,34 @@ TkTextSegToOffset(segPtr, linePtr)
 /*
  *---------------------------------------------------------------------------
  *
+ * TkTextGetObjIndex --
+ * 
+ *    Simpler wrapper around the string based function, but could be
+ *    enhanced with a new object type in the future.
+ *
+ * Results:
+ *    see TkTextGetIndex
+ *
+ * Side effects:
+ *    None.
+ *    
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkTextGetObjIndex(interp, textPtr, idxObj, indexPtr)
+    Tcl_Interp *interp;		/* Use this for error reporting. */
+    TkText *textPtr;		/* Information about text widget. */
+    Tcl_Obj *idxObj;	        /* Object containing textual description 
+				 * of position. */
+    TkTextIndex *indexPtr;	/* Index structure to fill in. */
+{
+    return GetIndex(interp, textPtr, Tcl_GetString(idxObj), indexPtr, NULL);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * TkTextGetIndex --
  *
  *	Given a string, return the index that is described.
@@ -317,6 +583,41 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
     CONST char *string;		/* Textual description of position. */
     TkTextIndex *indexPtr;	/* Index structure to fill in. */
 {
+    return GetIndex(interp, textPtr, string, indexPtr, NULL);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * GetIndex --
+ *
+ *	Given a string, return the index that is described.
+ *
+ * Results:
+ *	The return value is a standard Tcl return result.  If TCL_OK is
+ *	returned, then everything went well and the index at *indexPtr is
+ *	filled in; otherwise TCL_ERROR is returned and an error message
+ *	is left in the interp's result.
+ *	
+ *	If *canCachePtr is non-NULL, and everything went well, the
+ *	integer it points to is set to 1 if the indexPtr is something
+ *	which can be cached, and zero otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+GetIndex(interp, textPtr, string, indexPtr, canCachePtr)
+    Tcl_Interp *interp;		/* Use this for error reporting. */
+    TkText *textPtr;		/* Information about text widget. */
+    CONST char *string;		/* Textual description of position. */
+    TkTextIndex *indexPtr;	/* Index structure to fill in. */
+    int *canCachePtr;           /* Pointer to integer to store whether
+                                 * we can cache the index (or NULL) */
+{
     char *p, *end, *endOfBase;
     Tcl_HashEntry *hPtr;
     TkTextTag *tagPtr;
@@ -326,7 +627,8 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
     char c;
     CONST char *cp;
     Tcl_DString copy;
-
+    int canCache = 0;
+    
     /*
      *---------------------------------------------------------------------
      * Stage 1: check to see if the index consists of nothing but a mark
@@ -337,7 +639,7 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
      */
 
     if (TkTextMarkNameToIndex(textPtr, string, indexPtr) == TCL_OK) {
-	return TCL_OK;
+	goto done;
     }
 
     /*
@@ -443,6 +745,7 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
 	    endOfBase = end;
 	}
 	TkTextMakeCharIndex(textPtr->tree, lineIndex, charIndex, indexPtr);
+	canCache = 1;
 	goto gotBase;
     }
 
@@ -474,6 +777,7 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
 
 	TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree),
 		0, indexPtr);
+	canCache = 1;
 	goto gotBase;
     } else {
 	/*
@@ -532,6 +836,10 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
 	}
     }
     Tcl_DStringFree(&copy);
+    done:
+    if (canCachePtr != NULL) {
+	*canCachePtr = canCache;
+    }
     return TCL_OK;
 
     error:
@@ -551,7 +859,8 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
  *	for reading in again later.
  *
  * Results:
- *	The characters pointed to by string are modified.
+ *	The characters pointed to by string are modified.  Returns the
+ *	number of characters in the string.
  *
  * Side effects:
  *	None.
@@ -559,7 +868,7 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
  *---------------------------------------------------------------------------
  */
 
-void
+int
 TkTextPrintIndex(indexPtr, string)
     CONST TkTextIndex *indexPtr;/* Pointer to index. */
     char *string;		/* Place to store the position.  Must have
@@ -586,7 +895,7 @@ TkTextPrintIndex(indexPtr, string)
     } else {
 	charIndex += numBytes;
     }
-    sprintf(string, "%d.%d", TkBTreeLineIndex(indexPtr->linePtr) + 1,
+    return sprintf(string, "%d.%d", TkBTreeLineIndex(indexPtr->linePtr) + 1,
 	    charIndex);
 }
 

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.56 2003/01/28 20:39:17 jenglish Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.57 2003/05/19 13:04:24 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -168,7 +168,7 @@ static TkCmd commands[] = {
     {"scale",		NULL,	                Tk_ScaleObjCmd,		1, 0},
     {"scrollbar",	Tk_ScrollbarCmd,	NULL,			1, 1},
     {"spinbox",		NULL,                   Tk_SpinboxObjCmd,	1, 0},
-    {"text",		Tk_TextCmd,		NULL,			1, 1},
+    {"text",		NULL,		        Tk_TextObjCmd,		1, 1},
     {"toplevel",	NULL,			Tk_ToplevelObjCmd,	0, 0},
 
     /*

@@ -8,10 +8,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUndo.c,v 1.1 2002/06/21 23:09:55 hobbs Exp $
+ * RCS: @(#) $Id: tkUndo.c,v 1.2 2003/05/19 13:04:24 vincentdarley Exp $
  */
 
 #include "tkUndo.h"
+
+static int UndoScriptsEvaluate _ANSI_ARGS_ ((Tcl_Interp *interp, 
+				     Tcl_Obj *objPtr, TkUndoAtomType type));
 
 
 /*
@@ -112,7 +115,9 @@ void TkUndoClearStack ( stack )
 /*
  * TkUndoPushAction
  *    Push a new elem on the stack identified by stack.
- *    action and revert are given through Tcl_DStrings
+ *    action and revert are given through Tcl_Obj's to which
+ *    we will retain a reference.  (So they can be passed in
+ *    with a zero refCount if desired).
  *
  * Results:
  *    None
@@ -121,20 +126,25 @@ void TkUndoClearStack ( stack )
  *    None.
  */
  
-void TkUndoPushAction ( stack, actionScript, revertScript )
-    TkUndoRedoStack * stack;      /* An Undo or Redo stack */
-    Tcl_DString * actionScript; /* The script to get the action (redo) */
-    Tcl_DString * revertScript; /* The script to revert the action (undo) */
+void TkUndoPushAction ( stack, actionScript, revertScript, isList )
+    TkUndoRedoStack *stack;   /* An Undo or Redo stack */
+    Tcl_Obj *actionScript;    /* The script to get the action (redo) */
+    Tcl_Obj *revertScript;    /* The script to revert the action (undo) */
+    int isList;               /* Are the given objects lists of scripts? */
 { 
     TkUndoAtom * atom;
 
     atom = (TkUndoAtom *) ckalloc(sizeof(TkUndoAtom));
-    atom->type = TK_UNDO_ACTION;
+    if (isList) {
+	atom->type = TK_UNDO_ACTION_LIST;
+    } else {
+	atom->type = TK_UNDO_ACTION;
+    }
 
-    atom->apply = Tcl_NewStringObj(Tcl_DStringValue(actionScript),Tcl_DStringLength(actionScript));
+    atom->apply = actionScript;
     Tcl_IncrRefCount(atom->apply);
 
-    atom->revert = Tcl_NewStringObj(Tcl_DStringValue(revertScript),Tcl_DStringLength(revertScript));
+    atom->revert = revertScript;
     Tcl_IncrRefCount(atom->revert);
 
     TkUndoPushStack(&(stack->undoStack), atom);
@@ -333,7 +343,7 @@ int TkUndoRevert ( stack )
     }
     
     while ( elem && (elem->type != TK_UNDO_SEPARATOR) ) {
-        Tcl_EvalObjEx(stack->interp,elem->revert,TCL_EVAL_GLOBAL);
+	UndoScriptsEvaluate(stack->interp,elem->revert,elem->type);
         
         TkUndoPushStack(&(stack->redoStack),elem);
         elem = TkUndoPopStack(&(stack->undoStack));
@@ -347,7 +357,6 @@ int TkUndoRevert ( stack )
     
     return TCL_OK;
 }
-
 
 /*
  * TkUndoApply --
@@ -383,7 +392,7 @@ int TkUndoApply ( stack )
     }
 
     while ( elem && (elem->type != TK_UNDO_SEPARATOR) ) {
-        Tcl_EvalObjEx(stack->interp,elem->apply,TCL_EVAL_GLOBAL);
+	UndoScriptsEvaluate(stack->interp,elem->apply,elem->type);
         
         TkUndoPushStack(&(stack->undoStack), elem);
         elem = TkUndoPopStack(&(stack->redoStack));
@@ -396,5 +405,42 @@ int TkUndoApply ( stack )
     ++(stack->depth);
     
     return TCL_OK;
+}
+
+
+/*
+ * UndoScriptsEvaluate --
+ *    Execute either a single script, or a set of scripts
+ *
+ * Results:
+ *    A TCL status code
+ *
+ * Side effects:
+ *    None.
+ */
+static int 
+UndoScriptsEvaluate(interp, objPtr, type)
+    Tcl_Interp *interp;
+    Tcl_Obj *objPtr;
+    TkUndoAtomType type;
+{
+    if (type == TK_UNDO_ACTION_LIST) {
+	int objc;
+	Tcl_Obj **objv;
+	int res, i;
+	res = Tcl_ListObjGetElements(interp, objPtr, &objc, &objv);
+	if (res != TCL_OK) {
+	    return res;
+	}
+	for (i=0;i<objc;i++) {
+	    res = Tcl_EvalObjEx(interp, objv[i], TCL_EVAL_GLOBAL);
+	    if (res != TCL_OK) {
+	        return res;
+	    }
+	}
+	return res;
+    } else {
+	return Tcl_EvalObjEx(interp, objPtr, TCL_EVAL_GLOBAL);
+    }
 }
 

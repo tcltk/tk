@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.6 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.7 2003/05/19 13:04:24 vincentdarley Exp $
  */
 
 #include "tk.h"
@@ -35,15 +35,6 @@ static Tk_GeomMgr textGeomType = {
 };
 
 /*
- * Definitions for alignment values:
- */
-
-#define ALIGN_BOTTOM		0
-#define ALIGN_CENTER		1
-#define ALIGN_TOP		2
-#define ALIGN_BASELINE		3
-
-/*
  * Macro that determines the size of an embedded window segment:
  */
 
@@ -54,12 +45,6 @@ static Tk_GeomMgr textGeomType = {
  * Prototypes for procedures defined in this file:
  */
 
-static int		AlignParseProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, Tk_Window tkwin,
-			    CONST char *value, char *widgRec, int offset));
-static char *		AlignPrintProc _ANSI_ARGS_((ClientData clientData,
-			    Tk_Window tkwin, char *widgRec, int offset,
-			    Tcl_FreeProc **freeProcPtr));
 static TkTextSegment *	EmbWinCleanupProc _ANSI_ARGS_((TkTextSegment *segPtr,
 			    TkTextLine *linePtr));
 static void		EmbWinCheckProc _ANSI_ARGS_((TkTextSegment *segPtr,
@@ -69,7 +54,7 @@ static void		EmbWinBboxProc _ANSI_ARGS_((TkTextDispChunk *chunkPtr,
 			    int *xPtr, int *yPtr, int *widthPtr,
 			    int *heightPtr));
 static int		EmbWinConfigure _ANSI_ARGS_((TkText *textPtr,
-			    TkTextSegment *ewPtr, int argc, CONST char **argv));
+			    TkTextSegment *ewPtr, int objc, Tcl_Obj *CONST objv[]));
 static void		EmbWinDelayedUnmap _ANSI_ARGS_((
 			    ClientData clientData));
 static int		EmbWinDeleteProc _ANSI_ARGS_((TkTextSegment *segPtr,
@@ -104,32 +89,41 @@ static Tk_SegType tkTextEmbWindowType = {
 };
 
 /*
+ * Definitions for alignment values:
+ */
+
+static char *alignStrings[] = {
+    "baseline", "bottom", "center", "top", (char *) NULL
+};
+
+typedef enum {	
+    ALIGN_BASELINE, ALIGN_BOTTOM, ALIGN_CENTER, ALIGN_TOP
+} alignMode;
+
+/*
  * Information used for parsing window configuration options:
  */
 
-static Tk_CustomOption alignOption = {AlignParseProc, AlignPrintProc,
-	(ClientData) NULL};
-
-static Tk_ConfigSpec configSpecs[] = {
-    {TK_CONFIG_CUSTOM, "-align", (char *) NULL, (char *) NULL,
-	"center", 0, TK_CONFIG_DONT_SET_DEFAULT, &alignOption},
-    {TK_CONFIG_STRING, "-create", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextEmbWindow, create),
-	TK_CONFIG_DONT_SET_DEFAULT|TK_CONFIG_NULL_OK},
-    {TK_CONFIG_INT, "-padx", (char *) NULL, (char *) NULL,
-	"0", Tk_Offset(TkTextEmbWindow, padX),
-	TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_INT, "-pady", (char *) NULL, (char *) NULL,
-	"0", Tk_Offset(TkTextEmbWindow, padY),
-	TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_BOOLEAN, "-stretch", (char *) NULL, (char *) NULL,
-	"0", Tk_Offset(TkTextEmbWindow, stretch),
-	TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_WINDOW, "-window", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TkTextEmbWindow, tkwin),
-	TK_CONFIG_DONT_SET_DEFAULT|TK_CONFIG_NULL_OK},
-    {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, 0}
+static Tk_OptionSpec optionSpecs[] = {
+    {TK_OPTION_STRING_TABLE, "-align", (char *) NULL, (char *) NULL,
+        "center", -1, Tk_Offset(TkTextEmbWindow, align), 
+	0, (ClientData) alignStrings, 0},
+    {TK_OPTION_STRING, "-create", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextEmbWindow, create),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-padx", (char *) NULL, (char *) NULL,
+	"0", -1, Tk_Offset(TkTextEmbWindow, padX), 
+	0, 0, 0},
+    {TK_OPTION_PIXELS, "-pady", (char *) NULL, (char *) NULL,
+	"0", -1, Tk_Offset(TkTextEmbWindow, padY), 
+	0, 0, 0},
+    {TK_OPTION_BOOLEAN, "-stretch", (char *) NULL, (char *) NULL,
+	"0", -1, Tk_Offset(TkTextEmbWindow, stretch), 
+	0, 0, 0},
+    {TK_OPTION_WINDOW, "-window", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextEmbWindow, tkwin),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_END}
 };
 
 /*
@@ -151,152 +145,171 @@ static Tk_ConfigSpec configSpecs[] = {
  */
 
 int
-TkTextWindowCmd(textPtr, interp, argc, argv)
+TkTextWindowCmd(textPtr, interp, objc, objv)
     register TkText *textPtr;	/* Information about text widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    CONST char **argv;		/* Argument strings.  Someone else has already
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
-				 * argv[1] is "window". */
+				 * objv[1] is "window". */
 {
-    size_t length;
+    int optionIndex;
+    
+    static CONST char *windOptionStrings[] = {
+	"cget", "configure", "create", "names", (char *) NULL 
+    };
+    enum windOptions {
+	WIND_CGET, WIND_CONFIGURE, WIND_CREATE, WIND_NAMES
+    };
+
     register TkTextSegment *ewPtr;
 
-    if (argc < 3) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " window option ?arg arg ...?\"", (char *) NULL);
+    if (objc < 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
-    length = strlen(argv[2]);
-    if ((strncmp(argv[2], "cget", length) == 0) && (length >= 2)) {
-	TkTextIndex index;
-	TkTextSegment *ewPtr;
-
-	if (argc != 5) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " window cget index option\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	if (TkTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	ewPtr = TkTextIndexToSeg(&index, (int *) NULL);
-	if (ewPtr->typePtr != &tkTextEmbWindowType) {
-	    Tcl_AppendResult(interp, "no embedded window at index \"",
-		    argv[3], "\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	return Tk_ConfigureValue(interp, textPtr->tkwin, configSpecs,
-		(char *) &ewPtr->body.ew, argv[4], 0);
-    } else if ((strncmp(argv[2], "configure", length) == 0) && (length >= 2)) {
-	TkTextIndex index;
-	TkTextSegment *ewPtr;
-
-	if (argc < 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " window configure index ?option value ...?\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	if (TkTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	ewPtr = TkTextIndexToSeg(&index, (int *) NULL);
-	if (ewPtr->typePtr != &tkTextEmbWindowType) {
-	    Tcl_AppendResult(interp, "no embedded window at index \"",
-		    argv[3], "\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	if (argc == 4) {
-	    return Tk_ConfigureInfo(interp, textPtr->tkwin, configSpecs,
-		    (char *) &ewPtr->body.ew, (char *) NULL, 0);
-	} else if (argc == 5) {
-	    return Tk_ConfigureInfo(interp, textPtr->tkwin, configSpecs,
-		    (char *) &ewPtr->body.ew, argv[4], 0);
-	} else {
-	    TkTextChanged(textPtr, &index, &index);
-	    return EmbWinConfigure(textPtr, ewPtr, argc-4, argv+4);
-	}
-    } else if ((strncmp(argv[2], "create", length) == 0) && (length >= 2)) {
-	TkTextIndex index;
-	int lineIndex;
-
-	/*
-	 * Add a new window.  Find where to put the new window, and
-	 * mark that position for redisplay.
-	 */
-
-	if (argc < 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " window create index ?option value ...?\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	if (TkTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-
-	/*
-	 * Don't allow insertions on the last (dummy) line of the text.
-	 */
-    
-	lineIndex = TkBTreeLineIndex(index.linePtr);
-	if (lineIndex == TkBTreeNumLines(textPtr->tree)) {
-	    lineIndex--;
-	    TkTextMakeByteIndex(textPtr->tree, lineIndex, 1000000, &index);
-	}
-
-	/*
-	 * Create the new window segment and initialize it.
-	 */
-
-	ewPtr = (TkTextSegment *) ckalloc(EW_SEG_SIZE);
-	ewPtr->typePtr = &tkTextEmbWindowType;
-	ewPtr->size = 1;
-	ewPtr->body.ew.textPtr = textPtr;
-	ewPtr->body.ew.linePtr = NULL;
-	ewPtr->body.ew.tkwin = NULL;
-	ewPtr->body.ew.create = NULL;
-	ewPtr->body.ew.align = ALIGN_CENTER;
-	ewPtr->body.ew.padX = ewPtr->body.ew.padY = 0;
-	ewPtr->body.ew.stretch = 0;
-	ewPtr->body.ew.chunkCount = 0;
-	ewPtr->body.ew.displayed = 0;
-
-	/*
-	 * Link the segment into the text widget, then configure it (delete
-	 * it again if the configuration fails).
-	 */
-
-	TkTextChanged(textPtr, &index, &index);
-	TkBTreeLinkSegment(ewPtr, &index);
-	if (EmbWinConfigure(textPtr, ewPtr, argc-4, argv+4) != TCL_OK) {
-	    TkTextIndex index2;
-
-	    TkTextIndexForwChars(&index, 1, &index2);
-	    TkBTreeDeleteChars(&index, &index2);
-	    return TCL_ERROR;
-	}
-    } else if (strncmp(argv[2], "names", length) == 0) {
-	Tcl_HashSearch search;
-	Tcl_HashEntry *hPtr;
-
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " window names\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	for (hPtr = Tcl_FirstHashEntry(&textPtr->windowTable, &search);
-		hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	    Tcl_AppendElement(interp,
-		    Tcl_GetHashKey(&textPtr->markTable, hPtr));
-	}
-    } else {
-	Tcl_AppendResult(interp, "bad window option \"", argv[2],
-		"\": must be cget, configure, create, or names",
-		(char *) NULL);
+    if (Tcl_GetIndexFromObj(interp, objv[2], windOptionStrings, 
+			    "window option", 0, &optionIndex) != TCL_OK) {
 	return TCL_ERROR;
+    }
+    switch ((enum windOptions)optionIndex) {
+	case WIND_CGET: {
+	    TkTextIndex index;
+	    TkTextSegment *ewPtr;
+	    Tcl_Obj *objPtr;
+	    
+	    if (objc != 5) {
+		Tcl_WrongNumArgs(interp, 3, objv, "index option");
+		return TCL_ERROR;
+	    }
+	    if (TkTextGetObjIndex(interp, textPtr, objv[3], &index) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    ewPtr = TkTextIndexToSeg(&index, (int *) NULL);
+	    if (ewPtr->typePtr != &tkTextEmbWindowType) {
+		Tcl_AppendResult(interp, "no embedded window at index \"",
+				 Tcl_GetString(objv[3]), "\"", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    objPtr = Tk_GetOptionValue(interp, (char *) &ewPtr->body.ew,
+			ewPtr->body.ew.optionTable, objv[4], textPtr->tkwin);
+	    if (objPtr == NULL) {
+		return TCL_ERROR;
+	    } else {
+		Tcl_SetObjResult(interp, objPtr);
+		return TCL_OK;
+	    }
+	    break;
+	}
+	case WIND_CONFIGURE: {
+	    TkTextIndex index;
+	    TkTextSegment *ewPtr;
+
+	    if (objc < 4) {
+		Tcl_WrongNumArgs(interp, 3, objv, "index ?option value ...?");
+		return TCL_ERROR;
+	    }
+	    if (TkTextGetObjIndex(interp, textPtr, objv[3], &index) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    ewPtr = TkTextIndexToSeg(&index, (int *) NULL);
+	    if (ewPtr->typePtr != &tkTextEmbWindowType) {
+		Tcl_AppendResult(interp, "no embedded window at index \"",
+				 Tcl_GetString(objv[3]), "\"", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    if (objc <= 5) {
+		Tcl_Obj* objPtr = Tk_GetOptionInfo(interp, (char *) &ewPtr->body.ew,
+			ewPtr->body.ew.optionTable,
+			(objc == 5) ? objv[4] : (Tcl_Obj *) NULL,
+					  textPtr->tkwin);
+		if (objPtr == NULL) {
+		    return TCL_ERROR;
+		} else {
+		    Tcl_SetObjResult(interp, objPtr);
+		    return TCL_OK;
+		}
+	    } else {
+		TkTextChanged(textPtr, &index, &index);
+		return EmbWinConfigure(textPtr, ewPtr, objc-4, objv+4);
+	    }
+	    break;
+	}
+	case WIND_CREATE: {
+	    TkTextIndex index;
+	    int lineIndex;
+
+	    /*
+	     * Add a new window.  Find where to put the new window, and
+	     * mark that position for redisplay.
+	     */
+
+	    if (objc < 4) {
+		Tcl_WrongNumArgs(interp, 3, objv, "index ?option value ...?");
+		return TCL_ERROR;
+	    }
+	    if (TkTextGetObjIndex(interp, textPtr, objv[3], &index) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+
+	    /*
+	     * Don't allow insertions on the last (dummy) line of the text.
+	     */
+	
+	    lineIndex = TkBTreeLineIndex(index.linePtr);
+	    if (lineIndex == TkBTreeNumLines(textPtr->tree)) {
+		lineIndex--;
+		TkTextMakeByteIndex(textPtr->tree, lineIndex, 1000000, &index);
+	    }
+
+	    /*
+	     * Create the new window segment and initialize it.
+	     */
+
+	    ewPtr = (TkTextSegment *) ckalloc(EW_SEG_SIZE);
+	    ewPtr->typePtr = &tkTextEmbWindowType;
+	    ewPtr->size = 1;
+	    ewPtr->body.ew.textPtr = textPtr;
+	    ewPtr->body.ew.linePtr = NULL;
+	    ewPtr->body.ew.tkwin = NULL;
+	    ewPtr->body.ew.create = NULL;
+	    ewPtr->body.ew.align = ALIGN_CENTER;
+	    ewPtr->body.ew.padX = ewPtr->body.ew.padY = 0;
+	    ewPtr->body.ew.stretch = 0;
+	    ewPtr->body.ew.chunkCount = 0;
+	    ewPtr->body.ew.displayed = 0;
+	    ewPtr->body.ew.optionTable = Tk_CreateOptionTable(interp, optionSpecs);
+	    /*
+	     * Link the segment into the text widget, then configure it (delete
+	     * it again if the configuration fails).
+	     */
+
+	    TkTextChanged(textPtr, &index, &index);
+	    TkBTreeLinkSegment(ewPtr, &index);
+	    if (EmbWinConfigure(textPtr, ewPtr, objc-4, objv+4) != TCL_OK) {
+		TkTextIndex index2;
+
+		TkTextIndexForwChars(&index, 1, &index2);
+		TkBTreeDeleteChars(&index, &index2);
+		return TCL_ERROR;
+	    }
+	    break;
+	}
+	case WIND_NAMES: {
+	    Tcl_HashSearch search;
+	    Tcl_HashEntry *hPtr;
+
+	    if (objc != 3) {
+		Tcl_WrongNumArgs(interp, 3, objv, NULL);
+		return TCL_ERROR;
+	    }
+	    for (hPtr = Tcl_FirstHashEntry(&textPtr->windowTable, &search);
+		    hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
+		Tcl_AppendElement(interp,
+			Tcl_GetHashKey(&textPtr->markTable, hPtr));
+	    }
+	    break;
+	}
     }
     return TCL_OK;
 }
@@ -307,7 +320,7 @@ TkTextWindowCmd(textPtr, interp, argc, argv)
  * EmbWinConfigure --
  *
  *	This procedure is called to handle configuration options
- *	for an embedded window, using an argc/argv list.
+ *	for an embedded window, using an objc/objv list.
  *
  * Results:
  *	The return value is a standard Tcl result.  If TCL_ERROR is
@@ -322,12 +335,12 @@ TkTextWindowCmd(textPtr, interp, argc, argv)
  */
 
 static int
-EmbWinConfigure(textPtr, ewPtr, argc, argv)
+EmbWinConfigure(textPtr, ewPtr, objc, objv)
     TkText *textPtr;		/* Information about text widget that
 				 * contains embedded window. */
     TkTextSegment *ewPtr;	/* Embedded window to be configured. */
-    int argc;			/* Number of strings in argv. */
-    CONST char **argv;		/* Array of strings describing configuration
+    int objc;			/* Number of strings in objv. */
+    Tcl_Obj *CONST objv[];	/* Array of objects describing configuration
 				 * options. */
 {
     Tk_Window oldWindow;
@@ -335,9 +348,9 @@ EmbWinConfigure(textPtr, ewPtr, argc, argv)
     int new;
 
     oldWindow = ewPtr->body.ew.tkwin;
-    if (Tk_ConfigureWidget(textPtr->interp, textPtr->tkwin, configSpecs,
-	    argc, argv, (char *) &ewPtr->body.ew, TK_CONFIG_ARGV_ONLY)
-	    != TCL_OK) {
+    if (Tk_SetOptions(textPtr->interp, (char*)&ewPtr->body.ew, 
+            ewPtr->body.ew.optionTable,
+	    objc, objv, textPtr->tkwin, NULL, NULL) != TCL_OK) {
 	return TCL_ERROR;
     }
     if (oldWindow != ewPtr->body.ew.tkwin) {
@@ -409,99 +422,6 @@ EmbWinConfigure(textPtr, ewPtr, argc, argv)
 	}
     }
     return TCL_OK;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * AlignParseProc --
- *
- *	This procedure is invoked by Tk_ConfigureWidget during
- *	option processing to handle "-align" options for embedded
- *	windows.
- *
- * Results:
- *	A standard Tcl return value.
- *
- * Side effects:
- *	The alignment for the embedded window may change.
- *
- *--------------------------------------------------------------
- */
-
-	/* ARGSUSED */
-static int
-AlignParseProc(clientData, interp, tkwin, value, widgRec, offset)
-    ClientData clientData;		/* Not used.*/
-    Tcl_Interp *interp;			/* Used for reporting errors. */
-    Tk_Window tkwin;			/* Window for text widget. */
-    CONST char *value;			/* Value of option. */
-    char *widgRec;			/* Pointer to TkTextEmbWindow
-					 * structure. */
-    int offset;				/* Offset into item (ignored). */
-{
-    register TkTextEmbWindow *embPtr = (TkTextEmbWindow *) widgRec;
-
-    if (strcmp(value, "baseline") == 0) {
-	embPtr->align = ALIGN_BASELINE;
-    } else if (strcmp(value, "bottom") == 0) {
-	embPtr->align = ALIGN_BOTTOM;
-    } else if (strcmp(value, "center") == 0) {
-	embPtr->align = ALIGN_CENTER;
-    } else if (strcmp(value, "top") == 0) {
-	embPtr->align = ALIGN_TOP;
-    } else {
-	Tcl_AppendResult(interp, "bad alignment \"", value,
-		"\": must be baseline, bottom, center, or top",
-		(char *) NULL);
-	return TCL_ERROR;
-    }
-    return TCL_OK;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * AlignPrintProc --
- *
- *	This procedure is invoked by the Tk configuration code
- *	to produce a printable string for the "-align" configuration
- *	option for embedded windows.
- *
- * Results:
- *	The return value is a string describing the embedded
- *	window's current alignment.
- *
- * Side effects:
- *	None.
- *
- *--------------------------------------------------------------
- */
-
-	/* ARGSUSED */
-static char *
-AlignPrintProc(clientData, tkwin, widgRec, offset, freeProcPtr)
-    ClientData clientData;		/* Ignored. */
-    Tk_Window tkwin;			/* Window for text widget. */
-    char *widgRec;			/* Pointer to TkTextEmbWindow
-					 * structure. */
-    int offset;				/* Ignored. */
-    Tcl_FreeProc **freeProcPtr;		/* Pointer to variable to fill in with
-					 * information about how to reclaim
-					 * storage for return string. */
-{
-    switch (((TkTextEmbWindow *) widgRec)->align) {
-	case ALIGN_BASELINE:
-	    return "baseline";
-	case ALIGN_BOTTOM:
-	    return "bottom";
-	case ALIGN_CENTER:
-	    return "center";
-	case ALIGN_TOP:
-	    return "top";
-	default:
-	    return "??";
-    }
 }
 
 /*
@@ -678,8 +598,8 @@ EmbWinDeleteProc(ewPtr, linePtr, treeGone)
 	Tk_DestroyWindow(ewPtr->body.ew.tkwin);
     }
     Tcl_CancelIdleCall(EmbWinDelayedUnmap, (ClientData) ewPtr);
-    Tk_FreeOptions(configSpecs, (char *) &ewPtr->body.ew,
-	    ewPtr->body.ew.textPtr->display, 0);
+    Tk_FreeConfigOptions((char *) &ewPtr->body.ew, ewPtr->body.ew.optionTable,
+			 ewPtr->body.ew.tkwin);
     ckfree((char *) ewPtr);
     return 0;
 }

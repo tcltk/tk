@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textMark.test,v 1.6 2003/04/01 21:06:54 dgp Exp $
+# RCS: @(#) $Id: textMark.test,v 1.7 2003/05/19 13:04:24 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -79,7 +79,7 @@ test textMark-2.1 {TkTextMarkCmd - "names" option} courier12 {
 } {1 {wrong # args: should be ".t mark names"}}
 .t mark unset x
 test textMark-2.2 {TkTextMarkCmd - "names" option} courier12 {
-    lsort [.t mark n]
+    lsort [.t mark na]
 } {current insert}
 test textMark-2.3 {TkTextMarkCmd - "names" option} courier12 {
     .t mark set a 1.1
