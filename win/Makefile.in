@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.7 1999/07/16 21:43:30 redman Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.8 1999/07/29 23:01:43 redman Exp $
 
 TCLVERSION = @TCL_VERSION@
 VERSION = @TK_VERSION@
@@ -104,6 +104,8 @@ GENERIC_DIR_NATIVE 	= $(shell cygpath $(PATHTYPE) '$(GENERIC_DIR)')
 BITMAP_DIR_NATIVE	= $(shell cygpath $(PATHTYPE) '$(ROOT_DIR)/bitmaps')
 XLIB_DIR_NATIVE		= $(shell cygpath $(PATHTYPE) '$(ROOT_DIR)/xlib')
 TCL_GENERIC_NATIVE	= $(shell cygpath $(PATHTYPE) '$(TCL_GENERIC_DIR)')
+TCL_SRC_DIR_NATIVE      = $(shell cygpath $(PATHTYPE) '$(TCL_SRC_DIR)')
+TCL_BIN_DIR_NATIVE      = $(shell cygpath $(PATHTYPE) '$(TCL_BIN_DIR)')
 
 DLLSUFFIX		= @DLLSUFFIX@
 LIBSUFFIX		= @LIBSUFFIX@
@@ -195,7 +197,20 @@ INSTALL_DATA	= ${INSTALL}
 WISH_OBJS = \
 	winMain.$(OBJEXT)
 
+TCLTEST_OBJS = \
+	${TCL_BIN_DIR}/tclThreadTest.$(OBJEXT)
+
+TCLTEST_OBJS_NATIVE = \
+	"${TCL_BIN_DIR_NATIVE}/tclThreadTest.$(OBJEXT)"
+
 TKTEST_OBJS = \
+	$(TCLTEST_OBJS) \
+	testMain.$(OBJEXT) \
+	tkSquare.$(OBJEXT) \
+	tkTest.$(OBJEXT)
+
+TKTEST_OBJS_NATIVE = \
+	$(TCLTEST_OBJS_NATIVE) \
 	testMain.$(OBJEXT) \
 	tkSquare.$(OBJEXT) \
 	tkTest.$(OBJEXT)
@@ -323,9 +338,17 @@ libraries:
 doc:
 
 test: binaries $(TKTEST)
+	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/../library"; export TCL_LIBRARY; \
 	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
+	PATH="$(PATH):$(TCL_BIN_DIR)"; export PATH; \
 	./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/all.tcl" $(TESTFLAGS) \
 	| ./$(CAT32)
+
+runtest: tktest
+	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/../library"; export TCL_LIBRARY; \
+	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
+	PATH="$(PATH):$(TCL_BIN_DIR)"; export PATH; \
+	./$(TKTEST) 
 
 install: all install-binaries install-libraries install-doc install-demos
 
@@ -433,13 +456,16 @@ $(WISH): $(TK_LIB_FILE) $(WISH_OBJS) wish.res
 	$(CC) $(CFLAGS) $(WISH_OBJS) $(TCL_LIB_FILE) $(TK_LIB_FILE) $(LIBS) \
 	wish.res $(CC_EXENAME) -link $(LDFLAGS_WINDOW)
 
+tktest : $(TKTEST)
+
 $(TKTEST): $(TK_LIB_FILE) $(TKTEST_OBJS) wish.res $(CAT32)
-	$(CC) $(CFLAGS) $(TKTEST_OBJS) $(TCL_LIB_FILE) $(TK_LIB_FILE) $(LIBS) \
+	$(CC) $(CFLAGS) $(TKTEST_OBJS_NATIVE) $(TCL_LIB_FILE) \
+	$(TK_LIB_FILE) $(LIBS) \
 	wish.res $(CC_EXENAME) -link $(LDFLAGS_WINDOW)
 
 $(CAT32): $(TCL_SRC_DIR)/cat.c
 	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
-	$(CC) $(CFLAGS) cat32.obj $(CC_EXENAME) -link $(LDFLAGS_CONSOLE)
+	$(CC) $(CFLAGS) cat32.$(OBJEXT) $(CC_EXENAME) -link $(LDFLAGS_CONSOLE)
 
 # The following targets are configured by autoconf to generate either
 # a shared library or static library
@@ -458,17 +484,19 @@ ${TK_LIB_FILE}: ${TK_OBJS}
 
 # Special case object file targets
 
-winMain.obj: winMain.c
+winMain.$(OBJEXT): winMain.c
 	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
 
-testMain.obj: winMain.c
+testMain.$(OBJEXT): winMain.c
 	$(CC) -c $(CC_SWITCHES) $(DEPARG) -DTK_TEST $(CC_OBJNAME)
 
-tkTest.obj: tkTest.c
+tkTest.$(OBJEXT): tkTest.c
 	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
 
-tkSquare.obj: tkSquare.c
+tkSquare.$(OBJEXT): tkSquare.c
 	$(CC) -c $(CC_SWITCHES) $(DEPARG) $(CC_OBJNAME)
+
+tclThreadTest.$(OBJEXT): $(TCL_BIN_DIR)/tclThreadTest.$(OBJEXT)
 
 # Add the object extension to the implicit rules.  By default .obj is not
 # automatically added.

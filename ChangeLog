@@ -1,3 +1,9 @@
+1999-07-29    <redman@scriptics.com>
+
+	* win/Makefile.in: Corrected building threaded tktest.exe on
+	Windows.  Needed to link in .obj files from Tcl, needs to change
+	later so that code is in Tk and doesn't require a Tcl build.
+
 1999-07-22    <redman@scriptics.com>
 
 	* Changed version to 8.2b2
