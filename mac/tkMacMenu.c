@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.16 1999/12/07 03:51:10 hobbs Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.17 1999/12/16 21:58:02 hobbs Exp $
  */
 
 #include "tkMacInt.h"
@@ -751,11 +751,11 @@ GetEntryText(
  *
  * 	We try the following special mac characters. If none of them
  * 	are present, just use the check mark.
- * 	'' - Check mark character	(\022)
- * 	'´' - Bullet character	(\264 or \245 ??)
- * 	'' - Filled diamond		(\023)
- * 	'×' - Hollow diamond		(\327)
- * 	'„' = Long dash ("em dash")	(\204 or \321 ??)
+ * 	'' - Check mark character		(\022)
+ * 	'¥' - Mac Bullet character		(\245)
+ * 	'' - Filled diamond			(\023)
+ * 	'×' - Hollow diamond			(\327)
+ * 	'Ñ' = Mac Long dash ("em dash")	(\321)
  * 	'-' = short dash (minus, "en dash");
  *
  * Results:
@@ -781,14 +781,14 @@ FindMarkCharacter(
     	    
     if (!TkMacIsCharacterMissing(tkfont, '\022')) {
     	markChar = '\022';	/* Check mark */
-    } else if (!TkMacIsCharacterMissing(tkfont, '\264')) {
-    	markChar = '´';	/* Bullet */
+    } else if (!TkMacIsCharacterMissing(tkfont, '\245')) {
+    	markChar = '\245';	/* Bullet */
     } else if (!TkMacIsCharacterMissing(tkfont, '\023')) {
     	markChar = '\023';	/* Filled Diamond */
     } else if (!TkMacIsCharacterMissing(tkfont, '\327')) {
     	markChar = '\327';	/* Hollow Diamond */
-    } else if (!TkMacIsCharacterMissing(tkfont, '\204')) {
-    	markChar = '\204';	/* Lond Dash */
+    } else if (!TkMacIsCharacterMissing(tkfont, '\321')) {
+    	markChar = '\321';	/* Long Dash */
     } else if (!TkMacIsCharacterMissing(tkfont, '-')) {
     	markChar = '-';		/* Short Dash */
     } else {
