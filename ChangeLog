@@ -1,3 +1,9 @@
+2003-03-12  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/msgbox.tcl (tk::MessageBox): Stopped message box buttons
+	from getting very wide, and added some compensatory space so that
+	the smaller buttons still look nice (well, to me).  [Bug #701812]
+
 2003-03-11  Jim Ingham  <jingham@apple.com>
 
 	* macosx/tkMacOSXMenu.c (EventuallyInvokeMenu): New function,

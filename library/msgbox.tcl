@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.24 2003/02/21 14:40:26 dkf Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.25 2003/03/12 16:01:02 dkf Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -342,7 +342,7 @@ proc ::tk::MessageBox {args} {
 	    set opts [list -text $capName]
 	}
 
-	eval [list tk::AmpWidget button $w.$name] $opts \
+	eval [list tk::AmpWidget button $w.$name -padx 3m] $opts \
 		[list -command [list set tk::Priv(button) $name]]
 
 	if {[string equal $name $data(-default)]} {
@@ -351,7 +351,7 @@ proc ::tk::MessageBox {args} {
 	    $w.$name configure -default normal
 	}
 	grid $w.$name -in $w.bot -row 0 -column $i -padx 3m -pady 2m -sticky ew
-	grid columnconfigure $w.bot $i -weight 1 -uniform buttons
+	grid columnconfigure $w.bot $i -uniform buttons
         incr i
 
 	# create the binding for the key accelerator, based on the underline
