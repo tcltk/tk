@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.25 2003/05/19 13:04:24 vincentdarley Exp $
+# RCS: @(#) $Id: text.tcl,v 1.26 2003/10/06 22:14:26 jenglish Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -347,14 +347,6 @@ bind Text <<Redo>> {
     catch { %W edit redo }
 }
 
-if {[string compare $tcl_platform(platform) "windows"]} {
-bind Text <Control-v> {
-    if {!$tk_strictMotif} {
-	tk::TextScrollPages %W 1
-    }
-}
-}
-
 bind Text <Meta-b> {
     if {!$tk_strictMotif} {
 	tk::TextSetCursor %W [tk::TextPrevPos %W insert tcl_startOfPreviousWord]
@@ -427,6 +419,9 @@ bind Text <Shift-Option-Up> {
 }
 bind Text <Shift-Option-Down> {
     tk::TextKeySelect %W [tk::TextNextPara %W insert]
+}
+bind Text <Control-v> {
+    tk::TextScrollPages %W 1
 }
 
 # End of Mac only bindings
