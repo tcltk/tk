@@ -1,3 +1,18 @@
+2002-08-20  Don Porter <dgp@users.sf.net>
+
+	* README:		Bumped version number to 8.4b3 to distinguish
+	* generic/tk.h:		HEAD from the 8.4b2 release.
+	* unix/configure.in:
+	* win/configure.in:
+	* unix/tk.spec:
+	
+	* unix/configure:	autoconf
+	* win/configure:
+
+	* generic/tk.h:	Added compile-time check that the tcl.h header file
+	#included by Tk 8.4 is one from Tcl 8.4.  This is needed to be sure
+	that new #defines like CONST84 are available. [Bug 597432].
+
 2002-08-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/Makefile.in (install-binaries): simplified pkgIndex.tcl
