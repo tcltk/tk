@@ -1,5 +1,9 @@
 2003-02-24  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkListbox.c (ListboxSelectionSubCmd): 
+	* tests/listbox.test: Allow 'selection includes' to respond when
+	disabled (but only 'includes'). [Bug #632514]
+
 	* unix/tkUnixButton.c (TkpDisplayButton): Correct visual display
 	of disabled check/radiobutton to be more distinctive on unix.
 	* tests/unixButton.test: [Bug #669595] (hintermayer)
