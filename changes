@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.72 2004/12/06 22:54:12 dgp Exp $
+RCS: @(#) $Id: changes,v 1.73 2004/12/17 14:59:36 chengyemao Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5886,3 +5886,16 @@ for long lines using unix AA fonts (english)
 Updated test suite, documentation, and demos.
 
 --- Released 8.5a2, December 7, 2004 --- See ChangeLog for details ---
+
+2004-12-17 (feature change) Modified DisplayFrame to draw a container's 
+background when the embedded window is NULL (chengyemao)
+
+2004-12-17 (bug fix)[842945][831627] Fixed a bug in ContainerEventProc  
+to handle ConfigureNotify event properly; Changed CleanupContainList to 
+TkWinCleanupContainerList to be invoked in TkWinXCleanup; Changed Intialize 
+and CreateTopLevelWindow to create the DeleteWindowsExitProc after TkpInit 
+so that finalization will be done in a proper sequence (to avoid painics 
+and potential crashes in exit). (chengyemao)
+
+2004-12-17 (platform support) Added TkWinClenupContainerList into stublib. 
+(chengyemao)
