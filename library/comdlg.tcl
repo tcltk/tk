@@ -3,7 +3,7 @@
 #	Some functions needed for the common dialog boxes. Probably need to go
 #	in a different file.
 #
-# RCS: @(#) $Id: comdlg.tcl,v 1.5 1999/09/02 17:02:52 hobbs Exp $
+# RCS: @(#) $Id: comdlg.tcl,v 1.6 1999/12/07 03:04:43 hobbs Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -96,21 +96,6 @@ proc tclListValidFlags {v} {
     }
     return $errormsg
 }
-
-# This procedure is used to sort strings in a case-insenstive mode.
-#
-proc tclSortNoCase {str1 str2} {
-    string compare -nocase $str1 $str2
-}
-
-
-# Gives an error if the string does not contain a valid integer
-# number
-#
-proc tclVerifyInteger {string} {
-    lindex {1 2 3} $string
-}
-
 
 #----------------------------------------------------------------------
 #
