@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: message.n,v 1.3 2000/08/25 06:58:32 ericm Exp $
+'\" RCS: @(#) $Id: message.n,v 1.3.8.1 2004/10/28 10:19:29 dkf Exp $
 '\" 
 .so man.macros
 .TH message n 4.0 Tk "Tk Built-In Commands"
@@ -50,7 +50,7 @@ rectangular region.
 For example, suppose \fBanchor\fR is \fBe\fR and \fBjustify\fR is
 \fBleft\fR, and that the message window is much larger than needed
 for the text.
-The the text will displayed so that the left edges of all the lines
+The text will be displayed so that the left edges of all the lines
 line up and the right edge of the longest line is \fBpadX\fR from
 the right side of the window;  the entire text block will be centered
 in the vertical span of the window.

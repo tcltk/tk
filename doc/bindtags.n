@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bindtags.n,v 1.2 1998/09/14 18:22:54 stanton Exp $
+'\" RCS: @(#) $Id: bindtags.n,v 1.2.26.1 2004/10/28 10:19:29 dkf Exp $
 '\" 
 .so man.macros
 .TH bindtags n 4.0 Tk "Tk Built-In Commands"
@@ -73,6 +73,27 @@ This means that the default widget bindings for buttons, which are
 associated with the \fBButton\fR tag, will no longer apply to \fB.b\fR,
 but any bindings associated with \fBTrickyButton\fR (perhaps some
 new button behavior) will apply.
+.SH EXAMPLE
+If you have a set of nested \fBframe\fR widgets and you want events
+sent to a \fBbutton\fR widget to also be delivered to all the widgets
+up to the current \fBtoplevel\fR (in contrast to Tk's default
+behavior, where events are not delivered to those intermediate
+windows) to make it easier to have accelerators that are only active
+for part of a window, you could use a helper procedure like this to
+help set things up:
+.CS
+proc setupBindtagsForTreeDelivery {widget} {
+    set tags [list $widget [winfo class $widget]]
+    set w $widget
+    set t [winfo toplevel $w]
+    while {$w ne $t} {
+        set w [winfo parent $w]
+        lappend tags $w
+    }
+    lappend tags all
+    \fBbindtags\fR $widget $tags
+}
+.CE
 
 .SH "SEE ALSO"
 bind

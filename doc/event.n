@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: event.n,v 1.6 2000/11/03 01:13:51 hobbs Exp $
+'\" RCS: @(#) $Id: event.n,v 1.6.8.1 2004/10/28 10:19:29 dkf Exp $
 '\" 
 .so man.macros
 .TH event n 8.3 Tk "Tk Built-In Commands"
@@ -79,7 +79,6 @@ If \fB<<\fIvirtual\fB>>\fR is specified then the return value is
 a list whose elements are the physical event sequences currently
 defined for the given virtual event;  if the virtual event is
 not defined then an empty string is returned.
-
 .SH "EVENT FIELDS"
 .PP
 The following options are supported for the \fBevent generate\fR
@@ -197,7 +196,7 @@ Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
 events.  Corresponds to the \fB%X\fR substitution for binding scripts.
 .TP
 \fB\-rooty\fI coord\fR
-\fICoord\fR must be a screen distance;  it specifies th \fIy_root\fR
+\fICoord\fR must be a screen distance;  it specifies the \fIy_root\fR
 field for the event.
 Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBLeave\fR, and \fBMotion\fR
@@ -205,7 +204,7 @@ events.
 Corresponds to the \fB%Y\fR substitution for binding scripts.
 .TP
 \fB\-sendevent\fI boolean\fR
-\fBBoolean\fR must be a boolean value;  it specifies the \fIsend_event\fR
+\fIBoolean\fR must be a boolean value;  it specifies the \fIsend_event\fR
 field for the event.  Valid for all events.  Corresponds to the
 \fB%E\fR substitution for binding scripts.
 .TP
@@ -280,7 +279,7 @@ Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
 \fBButtonRelease\fR, \fBMotion\fR, \fBEnter\fR, \fBLeave\fR,
 \fBExpose\fR, \fBConfigure\fR, \fBGravity\fR, and \fBReparent\fR
 events.
-Corresponds to the the \fB%x\fR substitution for binding scripts.
+Corresponds to the \fB%x\fR substitution for binding scripts.
 If \fIWindow\fR is empty the coordinate is relative to the
 screen, and this option corresponds to the \fB%X\fR substitution
 for binding scripts.
@@ -292,7 +291,7 @@ Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
 \fBButtonRelease\fR, \fBMotion\fR, \fBEnter\fR, \fBLeave\fR,
 \fBExpose\fR, \fBConfigure\fR, \fBGravity\fR, and \fBReparent\fR
 events.
-Corresponds to the the \fB%y\fR substitution for binding scripts.
+Corresponds to the \fB%y\fR substitution for binding scripts.
 If \fIWindow\fR is empty the coordinate is relative to the
 screen, and this option corresponds to the \fB%Y\fR substitution
 for binding scripts.
@@ -300,7 +299,6 @@ for binding scripts.
 Any options that are not specified when generating an event are filled 
 with the value 0, except for \fIserial\fR, which is filled with the 
 next X event serial number.  
-
 .SH "VIRTUAL EVENT EXAMPLES"
 .PP
 In order for a virtual event binding to trigger, two things must
@@ -360,7 +358,7 @@ but instead invoke the virtual event \fB<<Paste>>\fR.  Second,
 pressing the F6 key will now also invoke the \fB<<Paste>>\fR binding.
 
 .SH "SEE ALSO"
-bind
+bind(n)
 
 .SH KEYWORDS
 event, binding, define, handle, virtual event
