@@ -705,7 +705,7 @@
 
 	* generic/tkObj.c (SetMMFromAny): Added ability to recognize
 	double type object to speed up canvas coord calculations.
-	[Patch #102471]
+	[Patch 403327]
 
 2000-12-12  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
