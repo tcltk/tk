@@ -1,4 +1,16 @@
+2000-05-12  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* win/tkWinFont.c (LoadFontRanges): improved support for all chars
+	in 0-255 range for bitmap ANSI fonts.  May be improved to handle
+	bitmap non-ANSI fonts in the future. [Bug: 2172]
+
+	* win/tkWinWm.c (RaiseWinWhenIdle): added TK_DONT_DESTROY_WINDOW
+	to flag check to prevent timing related core dump. [Bug: 5438]
+
 2000-05-11  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* win/tkWinTest.c (TestclipboardObjCmd): ensured CloseClipboard
+	would always get called for each OpenClipboard.
 
 	* tests/focus.test (focusSetupAlt): removed wm withdraw from proc
 	as it would cause a hang for tkwait visibility
