@@ -9,7 +9,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  * ----------------------------------------------------------------------------
- * RCS: @(#) $Id: nmakehlp.c,v 1.4 2003/12/23 04:01:02 davygrvy Exp $
+ * RCS: @(#) $Id: nmakehlp.c,v 1.5 2004/02/01 10:40:07 davygrvy Exp $
  * ----------------------------------------------------------------------------
  */
 #include <windows.h>
@@ -25,9 +25,11 @@ int GrepForDefine (const char *file, const char *string);
 DWORD WINAPI ReadFromPipe (LPVOID args);
 
 /* globals */
+#define CHUNK	25
+#define STATICBUFFERSIZE    1000
 typedef struct {
     HANDLE pipe;
-    char buffer[1000];
+    char buffer[STATICBUFFERSIZE];
 } pipeinfo;
 
 pipeinfo Out = {INVALID_HANDLE_VALUE, '\0'};
@@ -42,6 +44,13 @@ main (int argc, char *argv[])
     char msg[300];
     DWORD dwWritten;
     int chars;
+
+    /* make sure children (cl.exe and link.exe) are kept quiet. */
+    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
+
+    /* Make sure the compiler and linker aren't effected by the outside world. */
+    SetEnvironmentVariable("CL", "");
+    SetEnvironmentVariable("LINK", "");
 
     if (argc > 1 && *argv[1] == '-') {
 	switch (*(argv[1]+1)) {
@@ -133,11 +142,11 @@ CheckForCompilerFeature (const char *option)
 	    0, TRUE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
 
     /* base command line */
-    strcpy(cmdline, "cl.exe -nologo -c -TC -Fdtemp ");
+    strcpy(cmdline, "cl.exe -nologo -c -TC -Zs -X ");
     /* append our option for testing */
     strcat(cmdline, option);
     /* filename to compile, which exists, but is nothing and empty. */
-    strcat(cmdline, " nul");
+    strcat(cmdline, " .\\nul");
 
     ok = CreateProcess(
 	    NULL,	    /* Module name. */
@@ -176,10 +185,6 @@ CheckForCompilerFeature (const char *option)
     /* block waiting for the process to end. */
     WaitForSingleObject(pi.hProcess, INFINITE);
     CloseHandle(pi.hProcess);
-
-    /* clean up temporary files before returning */
-    DeleteFile("temp.idb");
-    DeleteFile("temp.pdb");
 
     /* wait for our pipe to get done reading, should it be a little slow. */
     WaitForMultipleObjects(2, pipeThreads, TRUE, 500);
@@ -231,8 +236,6 @@ CheckForLinkerFeature (const char *option)
     strcpy(cmdline, "link.exe -nologo ");
     /* append our option for testing */
     strcat(cmdline, option);
-    /* filename to compile, which exists, but is nothing and empty. */
-//    strcat(cmdline, " nul");
 
     ok = CreateProcess(
 	    NULL,	    /* Module name. */
@@ -290,7 +293,11 @@ ReadFromPipe (LPVOID args)
     BOOL ok;
 
 again:
-    ok = ReadFile(pi->pipe, lastBuf, 25, &dwRead, 0L);
+    if (lastBuf - pi->buffer + CHUNK > STATICBUFFERSIZE) {
+	CloseHandle(pi->pipe);
+	return -1;
+    }
+    ok = ReadFile(pi->pipe, lastBuf, CHUNK, &dwRead, 0L);
     if (!ok || dwRead == 0) {
 	CloseHandle(pi->pipe);
 	return 0;
@@ -336,9 +343,9 @@ GrepForDefine (const char *file, const char *string)
 	    /* is the first word what we're looking for? */
 	    if (!strcmp(s2, string)) {
 		fclose(f);
-		/* add 1 past double quote char.     "8.5" */
-		d1 = atof(s3 + 1);		  /*  8.5  */
-		return ((int) (d1 * 10) & 0xFF);  /*  85   */
+		/* add 1 past first double quote char. "8.5" */
+		d1 = atof(s3 + 1);		  /*    8.5  */
+		return ((int) (d1 * 10) & 0xFF);  /*    85   */
 	    }
 	}
     } while (!feof(f));
