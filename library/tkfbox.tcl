@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.38.2.3 2003/11/12 00:04:32 hobbs Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.38.2.4 2004/07/11 22:32:47 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -1082,6 +1082,7 @@ static char updir_bits[] = {
     # is in the right order
     set data(okBtn)     [::tk::AmpWidget button $f2.ok \
 	    -text "[mc "&OK"]"     -default active -pady 3]
+    bind $data(okBtn) <Destroy> [list ::tk::dialog::file::Destroyed $w]
     set data(cancelBtn) [::tk::AmpWidget button $f2.cancel \
 	    -text "[mc "&Cancel"]" -default normal -pady 3]
 
@@ -1656,6 +1657,16 @@ proc ::tk::dialog::file::CancelCmd {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
     variable ::tk::Priv
 
+    $data(okBtn) configure <Destroy> {}
+    set Priv(selectFilePath) ""
+}
+
+# Gets called when user destroys the dialog directly [Bug 987169]
+#
+proc ::tk::dialog::file::Destroyed {w} {
+    upvar ::tk::dialog::file::[winfo name $w] data
+    variable ::tk::Priv
+
     set Priv(selectFilePath) ""
 }
 
@@ -1777,5 +1788,6 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
 	    }
 	}
     }
+    $data(okBtn) configure <Destroy> {}
     set Priv(selectFilePath) $selectFilePath
 }
