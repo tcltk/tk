@@ -1,3 +1,10 @@
+2001-08-28  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tkUnixWm.c (TkWmRestackToplevel): reworked how
+	ConfigureNotify requests were handled in relation to the parent to
+	avoid the problem with potential 'raise' delays on some wms.
+	[Bug #220260] (baker)
+
 2001-08-27  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkWindow.c (Initialize): added call to Tcl_SetMainLoop.

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.8 2000/03/27 18:02:59 ericm Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.8.2.1 2001/08/28 19:28:43 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -300,7 +300,7 @@ static Tk_GeomMgr menubarMgrType = {
 
 typedef struct WaitRestrictInfo {
     Display *display;		/* Window belongs to this display. */
-    Window window;		/* We're waiting for events on this window. */
+    WmInfo *wmInfoPtr;
     int type;			/* We only care about this type of event. */
     XEvent *eventPtr;		/* Where to store the event when it's found. */
     int foundEvent;		/* Non-zero means that an event of the
@@ -335,7 +335,7 @@ static void		UpdateWmProtocols _ANSI_ARGS_((WmInfo *wmPtr));
 static void		WaitForConfigureNotify _ANSI_ARGS_((TkWindow *winPtr,
 			    unsigned long serial));
 static int		WaitForEvent _ANSI_ARGS_((Display *display,
-			    Window window, int type, XEvent *eventPtr));
+			    WmInfo *wmInfoPtr, int type, XEvent *eventPtr));
 static void		WaitForMapNotify _ANSI_ARGS_((TkWindow *winPtr,
 			    int mapped));
 static Tk_RestrictAction
@@ -2411,6 +2411,8 @@ ReparentEvent(wmPtr, reparentEventPtr)
 	wmPtr->xInParent = wmPtr->yInParent = 0;
 	wrapperPtr->changes.x = reparentEventPtr->x;
 	wrapperPtr->changes.y = reparentEventPtr->y;
+	wmPtr->winPtr->changes.x = reparentEventPtr->x;
+	wmPtr->winPtr->changes.y = reparentEventPtr->y + wmPtr->menuHeight;
 	return;
     }
 
@@ -2851,7 +2853,8 @@ UpdateGeometryInfo(clientData)
     serial = NextRequest(winPtr->display);
     height += wmPtr->menuHeight;
     if (wmPtr->flags & WM_MOVE_PENDING) {
-	if ((x == winPtr->changes.x) && (y == winPtr->changes.y)
+	if ((x + wmPtr->xInParent == winPtr->changes.x) &&
+		(y + wmPtr->yInParent + wmPtr->menuHeight == winPtr->changes.y)
 		&& (width == wmPtr->wrapperPtr->changes.width)
 		&& (height == wmPtr->wrapperPtr->changes.height)) {
 	    /*
@@ -3084,8 +3087,7 @@ WaitForConfigureNotify(winPtr, serial)
 
     while (!gotConfig) {
 	wmPtr->flags |= WM_SYNC_PENDING;
-	code = WaitForEvent(winPtr->display, wmPtr->wrapperPtr->window,
-		ConfigureNotify, &event);
+	code = WaitForEvent(winPtr->display, wmPtr, ConfigureNotify, &event);
 	wmPtr->flags &= ~WM_SYNC_PENDING;
 	if (code != TCL_OK) {
 	    if (winPtr->dispPtr->wmTracing) {
@@ -3131,9 +3133,9 @@ WaitForConfigureNotify(winPtr, serial)
  */
 
 static int
-WaitForEvent(display, window, type, eventPtr)
+WaitForEvent(display, wmInfoPtr, type, eventPtr)
     Display *display;		/* Display event is coming from. */
-    Window window;		/* Window for which event is desired. */
+    WmInfo *wmInfoPtr;		/* Window for which event is desired. */
     int type;			/* Type of event that is wanted. */
     XEvent *eventPtr;		/* Place to store event. */
 {
@@ -3149,7 +3151,7 @@ WaitForEvent(display, window, type, eventPtr)
      */
 
     info.display = display;
-    info.window = window;
+    info.wmInfoPtr = wmInfoPtr;
     info.type = type;
     info.eventPtr = eventPtr;
     info.foundEvent = 0;
@@ -3203,7 +3205,8 @@ WaitRestrictProc(clientData, eventPtr)
     if (eventPtr->type == ReparentNotify) {
 	return TK_PROCESS_EVENT;
     }
-    if ((eventPtr->xany.window != infoPtr->window)
+    if (((eventPtr->xany.window != infoPtr->wmInfoPtr->wrapperPtr->window)
+	    && (eventPtr->xany.window != infoPtr->wmInfoPtr->reparent))
 	    || (eventPtr->xany.display != infoPtr->display)) {
 	return TK_DEFER_EVENT;
     }
@@ -3265,7 +3268,7 @@ WaitForMapNotify(winPtr, mapped)
 	    break;
 	}
 	wmPtr->flags |= WM_SYNC_PENDING;
-	code = WaitForEvent(winPtr->display, wmPtr->wrapperPtr->window,
+	code = WaitForEvent(winPtr->display, wmPtr,
 		mapped ? MapNotify : UnmapNotify, &event);
 	wmPtr->flags &= ~WM_SYNC_PENDING;
 	if (code != TCL_OK) {
@@ -4104,8 +4107,6 @@ TkWmRestackToplevel(winPtr, aboveBelow, otherPtr)
     int desiredIndex = 0;	/* Initialized to stop gcc warnings. */
     int ourIndex = 0;		/* Initialized to stop gcc warnings. */
     unsigned long serial;
-    XEvent event;
-    int diff;
     Tk_ErrorHandler handler;
     TkWindow *wrapperPtr;
 
@@ -4258,9 +4259,12 @@ TkWmRestackToplevel(winPtr, aboveBelow, otherPtr)
     if (window == wrapperPtr->window) {
 	WaitForConfigureNotify(winPtr, serial);
     } else {
+	XEvent event;
+	int diff;
+
 	while (1) {
-	    if (WaitForEvent(winPtr->display, window, ConfigureNotify,
-		    &event) != TCL_OK) {
+	    if (WaitForEvent(winPtr->display, winPtr->wmInfoPtr,
+		    ConfigureNotify, &event) != TCL_OK) {
 		break;
 	    }
 	    diff = event.xconfigure.serial - serial;
@@ -4268,7 +4272,6 @@ TkWmRestackToplevel(winPtr, aboveBelow, otherPtr)
 		break;
 	    }
 	}
-
 	/*
 	 * Ignore errors that occur when we are de-selecting events on
 	 * window, since it's possible that the window doesn't exist
