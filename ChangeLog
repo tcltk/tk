@@ -1,3 +1,10 @@
+2001-08-17  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* generic/tkObj.c (TkGetWindowFromObj): Was failing to reuse
+	cached window objects, forcing a call to Tcl_GetStringFromObj and
+	Tk_NameToWindow every time.  This fault has been in there for
+	nearly three years...
+
 2001-08-15  Don Porter <dgp@users.sourceforge.net>
 
 	* changes: Labelled the TIP 44 changes as "POTENTIAL INCOMPATIBILITY".
