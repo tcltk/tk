@@ -3,7 +3,7 @@
 # This demonstration script shows how you can produce output (in label
 # widgets) using many different alphabets.
 #
-# RCS: @(#) $Id: unicodeout.tcl,v 1.1 2003/02/19 16:13:14 dkf Exp $
+# RCS: @(#) $Id: unicodeout.tcl,v 1.2 2003/02/21 13:05:06 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -37,21 +37,6 @@ pack [label $w.wait -text "Please wait while loading fonts..." \
 pack [frame $w.f] -expand 1 -fill both -padx 2m -pady 1m
 grid columnconfigure $w.f 1 -weight 1
 
-#frame $w.left
-#frame $w.right
-#pack $w.left $w.right -side left -expand yes -padx 10 -pady 10 -fill both
-#
-#label $w.left.l1 -text "First label"
-#label $w.left.l2 -text "Second label, raised" -relief raised
-#label $w.left.l3 -text "Third label, sunken" -relief sunken
-#pack $w.left.l1 $w.left.l2 $w.left.l3 -side top -expand yes -pady 2 -anchor w
-#
-#label $w.right.bitmap -borderwidth 2 -relief sunken \
-#	-bitmap @[file join $tk_library demos images face.bmp]
-#label $w.right.caption -text "Tcl/Tk Proprietor"
-#pack $w.right.bitmap $w.right.caption -side top
-
-#--- Begin ~/lang/tcl/cvs/unicode_output.tcl --------------------------
 set i 0
 proc addSample {w language args} {
     global font i
@@ -76,7 +61,7 @@ addSample $w Arabic \
 addSample $w "Trad. Chinese" "\u4E2D\u570B\u7684\u6F22\u5B57"
 addSample $w "Simpl. Chinese" "\u6C49\u8BED"
 addSample $w Greek \
-	 "\u0395\u03BB\u03BB\u03B7\u03BD\u03B9\u03BA\u03AC " \
+	 "\u0395\u03BB\u03BB\u03B7\u03BD\u03B9\u03BA\u03AE " \
 	 "\u03B3\u03BB\u03CE\u03C3\u03C3\u03B1"
 addSample $w Hebrew \
 	 "\u05DD\u05D9\u05DC\u05E9\u05D5\u05E8\u05D9 " \
@@ -91,4 +76,3 @@ addSample $w Russian \
 # We're done processing, so change things back to normal running...
 destroy $w.wait
 $w conf -cursor $oldCursor
-#--- End ~/lang/tcl/cvs/unicode_output.tcl ----------------------------
