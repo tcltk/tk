@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.57 2003/05/19 13:04:24 vincentdarley Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.58 2003/07/16 22:54:08 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -2953,7 +2953,6 @@ Initialize(interp)
 	while (1) {
 	    master = Tcl_GetMaster(master);
 	    if (master == NULL) {
-		Tcl_DStringFree(&ds);
 		Tcl_AppendResult(interp, "NULL master", (char *) NULL);
 		Tcl_MutexUnlock(&windowMutex);
 		return TCL_ERROR;
