@@ -1,3 +1,8 @@
+2002-10-09  Don Porter <dgp@users.sf.net>
+
+	* generic/tk.h:  Added reminder comment to edit
+	macosx/Wish.pbproj/project.pbxproj when version number changes.
+
 2002-10-09  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Makefile: don't remove tclsh after building embedded.
