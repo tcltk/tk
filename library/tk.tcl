@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.47 2003/03/04 23:50:42 dgp Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.48 2003/05/19 14:44:03 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -514,6 +514,24 @@ proc ::tk::AmpWidget {class path args} {
 	bind $path <<AltUnderlined>> [list $path invoke]
     }
     return $path
+}
+
+# ::tk::AmpMenuArgs --
+# Processes arguments for a menu entry, turning -label option into
+# -label and -underline options, returned by ::tk::UnderlineAmpersand.
+#
+proc ::tk::AmpMenuArgs {widget add type args} {
+    set resultArgs [list $widget add $type]
+    foreach {opt val} $args {
+	if {[string equal $opt {-label}]} {
+	    foreach {newlabel under} [::tk::UnderlineAmpersand $val] {
+		lappend resultArgs -label $newlabel -underline $under
+	    }
+	} else {
+	    lappend resultArgs $opt $val
+	}
+    }
+    eval $resultArgs
 }
 
 # ::tk::FindAltKeyTarget --
