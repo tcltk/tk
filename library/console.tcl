@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.23 2003/05/19 14:44:03 dkf Exp $
+# RCS: @(#) $Id: console.tcl,v 1.24 2003/10/02 23:02:36 patthoyts Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -130,6 +130,9 @@ proc ::tk::ConsoleInit {} {
     $con tag configure find	-background \#FFFF00
 
     focus $con
+
+    # Avoid listing this console in [winfo interps]
+    if {[info command ::send] eq "::send"} {rename ::send {}}
 
     wm protocol . WM_DELETE_WINDOW { wm withdraw . }
     wm title . [mc "Console"]
