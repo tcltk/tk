@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.10 1999/11/19 15:48:19 ericm Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.11 1999/11/23 23:52:13 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -270,20 +270,23 @@ static Tk_OptionSpec optionSpecs[] = {
 static Tk_OptionSpec itemAttrOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	 (char *)NULL, -1, Tk_Offset(ItemAttr, border),
-	 TK_OPTION_NULL_OK, (ClientData) DEF_LISTBOX_BG_MONO, 0},
+	 TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
+     (ClientData) DEF_LISTBOX_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bg", (char *) NULL, (char *) NULL,
 	 (char *) NULL, 0, -1, 0, (ClientData) "-background", 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", (char *) NULL,
 	 (char *) NULL, 0, -1, 0, (ClientData) "-foreground", 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
 	 (char *) NULL, -1, Tk_Offset(ItemAttr, fgColor),
-	 TK_OPTION_NULL_OK, 0, 0},
+	 TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Background",
 	 (char *) NULL, -1, Tk_Offset(ItemAttr, selBorder),
-	 TK_OPTION_NULL_OK, (ClientData) DEF_LISTBOX_SELECT_MONO, 0},
+	 TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
+     (ClientData) DEF_LISTBOX_SELECT_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Foreground",
 	 (char *) NULL, -1, Tk_Offset(ItemAttr, selFgColor),
-	 TK_OPTION_NULL_OK, (ClientData) DEF_LISTBOX_SELECT_FG_MONO, 0},
+	 TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
+     (ClientData) DEF_LISTBOX_SELECT_FG_MONO, 0},
     {TK_OPTION_END, (char *) NULL, (char *) NULL, (char *) NULL,
 	 (char *) NULL, 0, -1, 0, 0, 0}
 };

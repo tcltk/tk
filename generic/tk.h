@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.32 1999/10/29 03:57:55 hobbs Exp $
+ * RCS: @(#) $Id: tk.h,v 1.33 1999/11/23 23:52:13 hobbs Exp $
  */
 
 #ifndef _TK
@@ -199,6 +199,7 @@ typedef struct Tk_OptionSpec {
  */
 
 #define TK_OPTION_NULL_OK		1
+#define TK_OPTION_DONT_SET_DEFAULT	8
 
 /*
  * Macro to use to fill in "offset" fields of the Tk_OptionSpec.

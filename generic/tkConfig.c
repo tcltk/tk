@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.5 1999/04/21 21:53:25 rjohnson Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.6 1999/11/23 23:52:13 hobbs Exp $
  */
 
 /*
@@ -480,7 +480,12 @@ Tk_InitOptions(interp, recordPtr, optionTable, tkwin)
     for (optionPtr = tablePtr->options, count = tablePtr->numOptions;
 	    count > 0; optionPtr++, count--) {
 
-	if (optionPtr->specPtr->type == TK_OPTION_SYNONYM) {
+	/*
+	 * If we specify TK_OPTION_DONT_SET_DEFAULT, then the user has
+	 * processed and set a default for this already.
+	 */
+	if ((optionPtr->specPtr->type == TK_OPTION_SYNONYM) ||
+		(optionPtr->specPtr->flags & TK_OPTION_DONT_SET_DEFAULT)) {
 	    continue;
 	}
 	source = TABLE_DEFAULT;
@@ -503,7 +508,6 @@ Tk_InitOptions(interp, recordPtr, optionTable, tkwin)
 	/*
 	 * Second, check for a system-specific default value.
 	 */
-
 	if ((valuePtr == NULL)
 		&& (optionPtr->dbNameUID != NULL)) {
 	    valuePtr = TkpGetSystemDefault(tkwin, optionPtr->dbNameUID,
