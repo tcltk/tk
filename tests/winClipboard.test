@@ -10,7 +10,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winClipboard.test,v 1.4 1999/04/16 01:51:43 stanton Exp $
+# RCS: @(#) $Id: winClipboard.test,v 1.4.2.1 1999/05/18 22:27:33 stanton Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -39,6 +39,11 @@ test winClipboard-1.4 {TkSelGetSelection & TkWinClipboardRender} {pcOnly} {
     clipboard append "line 1\nline 2"
     list [selection get -selection CLIPBOARD] [testclipboard]
 } [list "line 1\nline 2" "line 1\r\nline 2"]
+test winClipboard-1.5 {TkSelGetSelection & TkWinClipboardRender} {pcOnly} {
+    clipboard clear
+    clipboard append "line 1\u00c7\nline 2"
+    list [selection get -selection CLIPBOARD] [testclipboard]
+} [list "line 1\u00c7\nline 2" [bytestring "line 1\u00c7\r\nline 2"]]
 
 # cleanup
 ::tcltest::cleanupTests
