@@ -2,7 +2,7 @@
 # tests.  Execute it by invoking "source all" when running tclTest
 # in this directory.
 #
-# RCS: @(#) $Id: all,v 1.4 1998/12/07 23:29:00 hershey Exp $
+# RCS: @(#) $Id: all,v 1.5 1999/03/24 18:07:46 hershey Exp $
 
 set TESTS_DIR [file join [pwd] [file dirname [info script]]]
 source [file join $TESTS_DIR defs]
@@ -73,5 +73,7 @@ if {[info exists TMP_DIR]} {
     cd $currentDir
 }
 
-catch {destroy .}
-exit
+# exit if Tk is running in non-interactive mode.
+if {[info exists tk_version] && !$tcl_interactive} {
+    exit
+}
