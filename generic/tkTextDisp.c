@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.33 2003/11/16 14:13:09 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.34 2003/11/21 17:29:13 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -356,11 +356,12 @@ typedef struct CharInfo {
  * checked to see how clever this code is at reducing redisplays.
  */
 
-static int numRedisplays;	/* Number of calls to DisplayText. */
-static int linesRedrawn;	/* Number of calls to DisplayDLine. */
-static int numCopies;		/* Number of calls to XCopyArea to copy part
-				 * of the screen. */
-
+static int numRedisplays;	    /* Number of calls to DisplayText. */
+static int linesRedrawn;	    /* Number of calls to DisplayDLine. */
+static int numCopies;		    /* Number of calls to XCopyArea
+				     * to copy part of the screen.  */
+static int lineHeightsRecalculated; /* Number of line layouts purely
+                                     * for height calculation purposes.*/
 /*
  * Forward declarations for procedures defined later in this file:
  */
@@ -433,7 +434,7 @@ static int		SizeOfTab _ANSI_ARGS_((TkText *textPtr,
 			    int x, int maxX));
 static void		TextInvalidateRegion _ANSI_ARGS_((TkText *textPtr,
 			    TkRegion region));
-static int              TextCalculateDisplayLineHeight _ANSI_ARGS_((
+static int              CalculateDisplayLineHeight _ANSI_ARGS_((
 			    TkText *textPtr, CONST TkTextIndex *indexPtr, 
 			    int *byteCountPtr));
 static void             DlineIndexOfX _ANSI_ARGS_((TkText *textPtr, 
@@ -1930,7 +1931,22 @@ FreeDLines(textPtr, firstPtr, lastPtr, action)
     register TkTextDispChunk *chunkPtr, *nextChunkPtr;
     register DLine *nextDLinePtr;
 
-    if (action == DLINE_UNLINK) {
+    if (action == DLINE_FREE_TEMP) {
+	lineHeightsRecalculated++;
+	if (tkTextDebug) {
+	    char string[TK_POS_CHARS];
+
+	    /*
+	     * Debugging is enabled, so keep a log of all the lines
+	     * whose height was recalculated.  The test suite uses this
+	     * information.
+	     */
+
+	    TkTextPrintIndex(&firstPtr->index, string);
+	    Tcl_SetVar2(textPtr->interp, "tk_textHeightCalc", (char *) NULL,
+		string, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+	}
+    } else if (action == DLINE_UNLINK) {
 	if (textPtr->dInfoPtr->dLinePtr == firstPtr) {
 	    textPtr->dInfoPtr->dLinePtr = lastPtr;
 	} else {
@@ -2519,6 +2535,12 @@ AsyncUpdateLineMetrics(clientData)
 	return;
     }
 
+    if (dInfoPtr->flags & REDRAW_PENDING) {
+	dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1, 
+		AsyncUpdateLineMetrics, clientData);
+	return;
+    }
+
     lineNum = dInfoPtr->currentMetricUpdateLine;
     if (lineNum == -1) {
 	dInfoPtr->lastMetricUpdateLine = 0;
@@ -2907,7 +2929,7 @@ TkTextFindDisplayLineEnd(textPtr, indexPtr, end, xOffset)
 /*
  *----------------------------------------------------------------------
  *
- * TextCalculateDisplayLineHeight --
+ * CalculateDisplayLineHeight --
  *
  *	This procedure is invoked to recalculate the height of the
  *	particular display line which starts with the given index, 
@@ -2939,7 +2961,7 @@ TkTextFindDisplayLineEnd(textPtr, indexPtr, end, xOffset)
  */
 
 static int
-TextCalculateDisplayLineHeight(textPtr, indexPtr, byteCountPtr)
+CalculateDisplayLineHeight(textPtr, indexPtr, byteCountPtr)
     TkText *textPtr;             /* Widget record for text widget. */
     CONST TkTextIndex *indexPtr; /* The index at the beginning of the
 				  * display line of interest. */
@@ -2982,7 +3004,7 @@ TextCalculateDisplayLineHeight(textPtr, indexPtr, byteCountPtr)
  *	top of the index's current display line (could be zero).
  *
  * Side effects:
- *	Just those of 'TextCalculateDisplayLineHeight'.
+ *	Just those of 'CalculateDisplayLineHeight'.
  *
  *----------------------------------------------------------------------
  */
@@ -3026,7 +3048,7 @@ TkTextIndexYPixels(textPtr, indexPtr)
 	 * specifically the 'linePtr->pixelHeight == pixelHeight' test 
 	 * below this while loop.
 	 */
-	height = TextCalculateDisplayLineHeight(textPtr, &index, &bytes);
+	height = CalculateDisplayLineHeight(textPtr, &index, &bytes);
 	
 	index.byteIndex += bytes;
 	
@@ -3065,7 +3087,7 @@ TkTextIndexYPixels(textPtr, indexPtr)
  * Side effects:
  *	Line heights may be recalculated, and a timer to update
  *	the scrollbar may be installed.  Also see the called 
- *	function 'TextCalculateDisplayLineHeight' for its side
+ *	function 'CalculateDisplayLineHeight' for its side
  *	effects.
  *
  *----------------------------------------------------------------------
@@ -3106,7 +3128,7 @@ TkTextUpdateOneLine(textPtr, linePtr)
 	 * specifically the 'linePtr->pixelHeight == pixelHeight' test 
 	 * below this while loop.
 	 */
-	height = TextCalculateDisplayLineHeight(textPtr, &index, &bytes);
+	height = CalculateDisplayLineHeight(textPtr, &index, &bytes);
 	
 	if (height > 0) {
 	    pixelHeight += height;
@@ -4309,7 +4331,7 @@ TkTextSetYView(textPtr, indexPtr, pickPlace)
      * window.  
      */
 
-    lineHeight = TextCalculateDisplayLineHeight(textPtr, indexPtr, NULL);
+    lineHeight = CalculateDisplayLineHeight(textPtr, indexPtr, NULL);
     /* 
      * It would be better if 'bottomY' were calculated using the
      * actual height of the given line, not 'textPtr->charHeight'.
@@ -4785,7 +4807,7 @@ YScrollByPixels(textPtr, offset)
 	 * not be totally visible.  Note that 'count' is 
 	 * negative here.
 	 */
-	offset -= TextCalculateDisplayLineHeight(textPtr, 
+	offset -= CalculateDisplayLineHeight(textPtr, 
 		&textPtr->topIndex, NULL) - dInfoPtr->topPixelOffset;
 	MeasureUp(textPtr, &textPtr->topIndex, -offset, 
 		&textPtr->topIndex, &dInfoPtr->newTopPixelOffset);
@@ -5359,6 +5381,21 @@ GetPixelCount(textPtr, dlPtr)
 		    break;
 		}
 		dlPtr = LayoutDLine(textPtr, &index);
+		
+		if (tkTextDebug) {
+		    char string[TK_POS_CHARS];
+
+		    /*
+		     * Debugging is enabled, so keep a log of all the
+		     * lines whose height was recalculated.  The test
+		     * suite uses this information.
+		     */
+
+		    TkTextPrintIndex(&index, string);
+		    Tcl_SetVar2(textPtr->interp, "tk_textHeightCalc", 
+			    (char *) NULL, string,
+			    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+		}
 		count -= dlPtr->height;
 		notFirst = 1;
 	    }
