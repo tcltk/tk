@@ -1,14 +1,15 @@
 '\"
 '\" Copyright (c) 1992-1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
+'\" Copyright (c) 1997-1999 Scriptics Corporation.
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.3 1998/10/16 00:46:18 rjohnson Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.4 1999/12/14 06:51:44 hobbs Exp $
 '\"
 .so man.macros
-.TH canvas n 4.0 Tk "Tk Built-In Commands"
+.TH canvas n 8.3 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
@@ -16,11 +17,11 @@ canvas \- Create and manipulate canvas widgets
 .SH SYNOPSIS
 \fBcanvas\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-background	\-highlightthickness	\-insertwidth	\-takefocus
-\-borderwidth	\-insertbackground	\-relief	\-xscrollcommand
-\-cursor	\-insertborderwidth	\-selectbackground	\-yscrollcommand
-\-highlightbackground	\-insertofftime	\-selectborderwidth
-\-highlightcolor	\-insertontime	\-selectforeground
+\-background	\-highlightthickness	\-insertwidth	\-relief
+\-borderwidth	\-insertbackground	\-state
+\-cursor	\-insertborderwidth	\-selectbackground	\-takefocus
+\-highlightbackground	\-insertofftime	\-selectborderwidth	\-xscrollcommand
+\-highlightcolor	\-insertontime	\-selectforeground	\-yscrollcommand
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-closeenough closeEnough CloseEnough
@@ -44,11 +45,19 @@ This region is used for scrolling purposes and is considered to be
 the boundary of the information in the canvas.
 Each of the coordinates may be specified
 in any of the forms given in the COORDINATES section below.
+.OP \-state state State
+Modifies the default state of the canvas where \fIstate\fR may be set to
+one of: normal, disabled, or hidden. Individual canvas objects all have
+their own state option, which overrides the default state. Many options can
+take separate specifications such that the appearance of the item can be
+different in different situations. The options that start with "active"
+control the appearence when the mouse pointer is over it, while the option
+starting with "disabled" controls the appearence when the state is
+disabled.
 .OP \-width width width
 Specifies a desired window width that the canvas widget should request from
 its geometry manager.  The value may be specified in any
 of the forms described in the COORDINATES section below.
-.br
 .OP \-xscrollincrement xScrollIncrement ScrollIncrement
 Specifies an increment for horizontal scrolling, in any of the usual forms
 permitted for screen distances.  If the value of this option is greater
@@ -152,6 +161,19 @@ matching the specifier.
 The symbol \fItagOrId\fR is used below to indicate that
 an argument specifies either an id that selects a single
 item or a tag that selects zero or more items.
+.PP
+\fItagOrId\fR may contain a logical expressions of
+tags by using operators: '&&', '||', '^' '!', and parenthezised
+subexpressions.  For example:
+.nf
+      .c find withtag {(a&&!b)|(!a&&b)}
+.fo
+or equivalently:
+.nf
+      .c find withtag {a^b}
+.fo
+will find only those items with either "a" or "b" tags, but not both.
+.PP
 Some widget commands only operate on a single item at a
 time;  if \fItagOrId\fR is specified in a way that
 names multiple items, then the normal behavior is for
@@ -192,34 +214,45 @@ described below, but they may not be rotated.
 .PP
 Text items support the notion of an \fIindex\fR for identifying
 particular positions within the item.
-Indices are used for commands such as inserting text, deleting
-a range of characters, and setting the insertion cursor position.
-An index may be specified in any of a number of ways, and
-different types of items may support different forms for
-specifying indices.
+In a similar fashion, line and polygon items support \fIindex\fR for
+identifying, inserting and deleting subsets of their coordinates.
+Indices are used for commands such as inserting or deleting
+a range of characters or coordinates, and setting the insertion
+cursor position. An index may be specified in any of a number
+of ways, and different types of items may support different forms
+for specifying indices.
 Text items support the following forms for an index;  if you
 define new types of text-like items, it would be advisable to
 support as many of these forms as practical.
 Note that it is possible to refer to the character just after
 the last one in the text item;  this is necessary for such
 tasks as inserting new text at the end of the item.
+Lines and Polygons don't support the insertion cursor
+and the selection. Their indixes are supposed to be even
+always, because coordinates always appear in pairs.
 .TP 10
 \fInumber\fR
 A decimal number giving the position of the desired character
 within the text item.
 0 refers to the first character, 1 to the next character, and
-so on.
+so on. If indexes are odd for lines and polygons, they will be
+automatically decremented by one.
 A number less than 0 is treated as if it were zero, and a
 number greater than the length of the text item is treated
-as if it were equal to the length of the text item.
+as if it were equal to the length of the text item. For
+polygons, numbers less than 0 or greater then the length
+of the coordinate list will be adjusted by adding or substracting
+the length until the result is between zero and the length,
+inclusive.
 .TP 10
 \fBend\fR
-Refers to the character just after the last one in the item
-(same as the number of characters in the item).
+Refers to the character or coordinate just after the last one
+in the item (same as the number of characters or coordinates
+in the item).
 .TP 10
 \fBinsert\fR
 Refers to the character just before which the insertion cursor
-is drawn in this item.
+is drawn in this item. Not valid for lines and polygons.
 .TP 10
 \fBsel.first\fR
 Refers to the first selected character in the item.
@@ -230,12 +263,44 @@ Refers to the last selected character in the item.
 If the selection isn't in this item then this form is illegal.
 .TP 10
 \fB@\fIx,y\fR
-Refers to the character at the point given by \fIx\fR and
+Refers to the character or coordinate at the point given by \fIx\fR and
 \fIy\fR, where \fIx\fR and \fIy\fR are specified in the coordinate
 system of the canvas.
 If \fIx\fR and \fIy\fR lie outside the coordinates covered by the
 text item, then they refer to the first or last character in the
 line that is closest to the given point.
+
+.SH "DASH PATTERNS"
+.PP
+Many items support the notion of an dash pattern for outlines.
+.PP
+The first possible syntax is a list of integers. Each element
+represents the number of pixels of a line segment. Only the odd
+segments are drawn using the "outline" color. The other segments
+are drawn transparant.
+.PP
+The second possible syntax is a character list containing only
+5 possible characters \fB[.,-_ ]\fR. The space can be used
+to enlarge the space between other line elements, and can not
+occur as the first posibion in the string. Some examples:
+    -dash .	= -dash {2 4}
+    -dash -     = -dash {6 4}
+    -dash -.    = -dash {6 4 2 4}
+    -dash -..   = -dash {6 4 2 4 2 4}
+    -dash {. }  = -dash {2 8}
+    -dash ,	= -dash {4 4}
+.PP
+The main difference of this syntax with the previous is that it
+it shape-conserving. This means that all values in the dash
+list will be multiplied by the line width before display. This
+assures that "." will always be displayed as a dot and "-"
+always as a dash regardless of the line width.
+.PP
+On systems where only a limited set of dash patterns, the dash
+pattern will be displayed as the most close dash pattern that
+is available. For example, on Windows only the first 4 of the
+above examples are available. The last 2 examples will be
+displayed identically as the first one.
 
 .SH "WIDGET COMMAND"
 .PP
@@ -351,7 +416,6 @@ returns a list of all the sequences for which bindings have been
 defined for \fItagOrId\fR.
 .RS
 .PP
-.VS
 The only events for which bindings may be specified are those related to
 the mouse and keyboard (such as \fBEnter\fR, \fBLeave\fR,
 \fBButtonPress\fR, \fBMotion\fR, and \fBKeyPress\fR) or virtual events.
@@ -365,7 +429,6 @@ any (see the \fBfocus\fR widget command below for more on this).  If a
 virtual event is used in a binding, that binding can trigger only if the
 virtual event is defined by an underlying mouse-related or
 keyboard-related event.
-.VE
 .PP
 It is possible for multiple bindings to match a particular event.
 This could occur, for example, if one binding is associated with the
@@ -441,13 +504,13 @@ on the syntax of this command.
 This command returns the id for the new item.
 .TP
 \fIpathName \fBdchars \fItagOrId first \fR?\fIlast\fR?
-For each item given by \fItagOrId\fR, delete the characters
-in the range given by \fIfirst\fR and \fIlast\fR,
-inclusive.
+For each item given by \fItagOrId\fR, delete the characters, or coordinates,
+in the range given by \fIfirst\fR and \fIlast\fR, inclusive.
 If some of the items given by \fItagOrId\fR don't support
-text operations, then they are ignored.
-\fIFirst\fR and \fIlast\fR are indices of characters
-within the item(s) as described in INDICES above.
+indexing operations then they ignore dchars.
+Text items interpret \fIfirst\fR and \fIlast\fR as indices to a character,
+line and polygon items interpret them indices to a coordinate (an x,y pair).
+Indices are described in INDICES above.
 If \fIlast\fR is omitted, it defaults to \fIfirst\fR.
 This command returns an empty string.
 .TP
@@ -509,8 +572,7 @@ If \fItagOrId\fR doesn't refer to any items, or if the item
 contains no tags, then an empty string is returned.
 .TP
 \fIpathName \fBicursor \fItagOrId index\fR
-Set the position of the insertion cursor for the item(s)
-given by \fItagOrId\fR
+Set the position of the insertion cursor for the item(s) given by \fItagOrId\fR
 to just before the character whose position is given by \fIindex\fR.
 If some or all of the items given by \fItagOrId\fR don't support
 an insertion cursor then this command has no effect on them.
@@ -527,16 +589,22 @@ This command returns a decimal string giving the numerical index
 within \fItagOrId\fR corresponding to \fIindex\fR.
 \fIIndex\fR gives a textual description of the desired position
 as described in INDICES above.
+Text items interpret \fIindex\fR as an index to a  character,
+line and polygon items interpret it as an index to a coordinate (an x,y pair).
 The return value is guaranteed to lie between 0 and the number
-of characters within the item, inclusive.
+of characters, or coordinates, within the item, inclusive.
 If \fItagOrId\fR refers to multiple items, then the index
 is processed in the first of these items that supports indexing
 operations (in display list order).
 .TP
 \fIpathName \fBinsert \fItagOrId beforeThis string\fR
 For each of the items given by \fItagOrId\fR, if the item supports
-text insertion then \fIstring\fR is inserted into the item's
-text just before the character whose index is \fIbeforeThis\fR.
+text or coordinate, insertion then \fIstring\fR is inserted into the item's
+text just before the character, or coordinate, whose index is \fIbeforeThis\fR.
+Text items interpret \fIbeforethis\fR as an index to a  character,
+line and polygon items interpret it as an index to a coordinate (an x,y pair).
+For lines and polygons the \fIstring\fR must be a valid coordinate
+sequence.
 See INDICES above for information about the forms allowed
 for \fIbeforeThis\fR.
 This command returns an empty string.
@@ -598,14 +666,12 @@ Generate a Postscript representation for part or all of the canvas.
 If the \fB\-file\fR option is specified then the Postscript is written
 to a file and an empty string is returned;  otherwise the Postscript
 is returned as the result of the command.
-.VS
 If the interpreter that owns the canvas is marked as safe, the operation
 will fail because safe interpreters are not allowed to write files.
 If the \fB\-channel\fR option is specified, the argument denotes the name
 of a channel already opened for writing. The Postscript is written to
 that channel, and the channel is left open for further writing at the end
 of the operation.
-.VE
 The Postscript is created in Encapsulated Postscript form using
 version 3.0 of the Document Structuring Conventions.
 Note: by default Postscript is only generated for information that
@@ -775,12 +841,13 @@ Typically this command is associated with a mouse button press in
 the widget and \fIx\fR and \fIy\fR are the coordinates of the
 mouse.  It returns an empty string.
 .TP
-\fIpathName \fBscan dragto \fIx y\fR.
+\fIpathName \fBscan dragto \fIx y ?gain?\fR.
 This command computes the difference between its \fIx\fR and \fIy\fR
 arguments (which are typically mouse coordinates) and the \fIx\fR and
 \fIy\fR arguments to the last \fBscan mark\fR command for the widget.
-It then adjusts the view by 10 times the
-difference in coordinates.  This command is typically associated
+It then adjusts the view by \fIgain\fR times the
+difference in coordinates, where \fIgain\fR defaults to 10.
+This command is typically associated
 with mouse motion events in the widget, to produce the effect of
 dragging the canvas at high speed through its window.  The return
 value is an empty string.
@@ -939,8 +1006,121 @@ for items of that type, which may be used in the
 Most items don't support indexing or selection or the commands
 related to them, such as \fBindex\fR and \fBinsert\fR.
 Where items do support these facilities, it is noted explicitly
-in the descriptions below (at present, only text items provide
-this support).
+in the descriptions below.
+At present, text, line and polygon items provide this support.
+For lines and polygons the indexing facility is used to manipulate
+the coordinates of the item.
+
+.SH "COMMON ITEM OPTIONS"
+.PP
+Many items share a common set of options.  These options are
+explained here, and then referred to be each widget type for brevity.
+.PP
+.TP
+\fB\-dash \fIpattern\fR
+.TP
+\fB\-activedash \fIpattern\fR
+.TP
+\fB\-disableddash \fIpattern\fR
+This option specifies dash patterns for the normal state, the active
+state, and the disabled state of an arc item.
+\fIpattern\fR may have any of the forms accepted by \fBTk_GetDash\fR.
+If the dash options are omitted then the default is a solid outline.
+See "DASH PATTERNS" for more information.
+.TP
+\fB\-dashoffset \fIoffset\fR
+The starting \fIoffset\fR into the pattern provided by the \fB\-dash\fR option.
+\fB\-dashoffset\fR is ignored if there is no \fB-dash\fR pattern.
+.TP
+\fB\-fill \fIcolor\fR
+.TP
+\fB\-activefill \fIcolor\fR
+.TP
+\fB\-disabledfill \fIcolor\fR
+Specifies the color to be used to fill item's area.
+in its normal, active, and disabled states,
+\fIColor\fR may have any of the forms accepted by \fBTk_GetColor\fR.
+If \fIcolor\fR is an empty string (the default), then
+then the item will not be filled.
+For the line item, it specifies the color of the line drawn.
+For the text item, it specifies the foreground color of the text.
+.TP
+\fB\-outline \fIcolor\fR
+.TP
+\fB\-activeoutline \fIcolor\fR
+.TP
+\fB\-disabledoutline \fIcolor\fR
+This option specifies the color that should be used to draw the
+outline of the item in its normal, active and disabled states.
+\fIColor\fR may have any of the forms accepted by \fBTk_GetColor\fR.
+This option defaults to \fBblack\fR.  If \fIcolor\fR is specified
+as an empty string then no outline is drawn for the item.
+.TP
+\fB\-offset \fIoffset\fR
+Specifies the offset of stipples.  The offset value can be of the form
+\fBx,y\fR or \fBside\fR, where side can be \fBn\fR, \fBne\fR, \fBe\fR,
+\fBse\fR, \fBs\fR, \fBsw\fR, \fBw\fR, \fBnw\fR, or \fBcenter\fR. In the
+first case the origin is the origin of the toplevel of the current window.
+For the canvas itself and canvas objects the origin is the canvas origin,
+but putting \fB#\fR in front of the coordinate pair indicates using the
+toplevel origin in stead. For canvas objects, the \fB-offset\fR option is
+used for stippling as well.  For the line and polygon canvas items you can
+also specify an index as argument, which connects the stipple origin to one
+of the coordinate points of the line/polygon.
+.TP
+\fB\-outlinestipple \fIbitmap\fR
+.TP
+\fB\-activeoutlinestipple \fIbitmap\fR
+.TP
+\fB\-disabledoutlinestipple \fIbitmap\fR
+This option specifies stipple patterns that should be used to draw the
+outline of the item in its normal, active and disabled states.
+Indicates that the outline for the item should be drawn with a stipple pattern;
+\fIbitmap\fR specifies the stipple pattern to use, in any of the
+forms accepted by \fBTk_GetBitmap\fR.
+If the \fB\-outline\fR option hasn't been specified then this option
+has no effect.
+If \fIbitmap\fR is an empty string (the default), then the outline is drawn
+in a solid fashion.
+.TP
+\fB\-stipple \fIbitmap\fR
+.TP
+\fB\-activestipple \fIbitmap\fR
+.TP
+\fB\-disabledstipple \fIbitmap\fR
+This option specifies stipple patterns that should be used to fill the
+the item in its normal, active and disabled states.
+\fIbitmap\fR specifies the stipple pattern to use, in any of the
+forms accepted by \fBTk_GetBitmap\fR.
+If the \fB\-fill\fR option hasn't been specified then this option
+has no effect.
+If \fIbitmap\fR is an empty string (the default), then filling is done
+in a solid fashion.
+For the text item, it affects the actual text.
+.TP
+\fB\-state \fIstate\fR
+This allows an item to override the canvas widget's global \fIstate\fR
+option.  It takes the same values:
+\fInormal\fR, \fIdisabled\fR or \fIhidden\fR.
+.TP
+\fB\-tags \fItagList\fR
+Specifies a set of tags to apply to the item.
+\fITagList\fR consists of a list of tag names, which replace any
+existing tags for the item.  \fITagList\fR may be an empty list.
+.TP
+\fB\-width \fIoutlineWidth\fR
+.TP
+\fB\-activewidth \fIoutlineWidth\fR
+.TP
+\fB\-disabledwidth \fIoutlineWidth\fR
+Specifies the width of the outline to be drawn around
+the item's region, in its normal, active and disabled states.
+\fIoutlineWidth\fR may be in any of the forms described in the COORDINATES
+section above.
+If the \fB\-outline\fR option has been specified as an empty string then
+this option has no effect.  This option defaults to 1.0.
+For arcs, wide outlines will be drawn centered on the edges of the
+arc's region.
 
 .SH "ARC ITEMS"
 .PP
@@ -960,7 +1140,33 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-The following options are supported for arcs:
+.br
+The following standard options are supported by arcs:
+.CS
+\-dash
+\-activedash
+\-disableddash
+\-dashoffset
+\-fill
+\-activefill
+\-disabledfill
+\-offset
+\-outline
+\-activeoutline
+\-disabledoutline
+\-outlinestipple
+\-activeoutlinestipple
+\-disabledoutlinestipple
+\-stipple
+\-activestipple
+\-disabledstipple
+\-state
+\-tags
+\-width
+\-activewidth
+\-disabledwidth
+.CE
+The following extra options are supported for arcs:
 .TP
 \fB\-extent \fIdegrees\fR
 Specifies the size of the angular range occupied by the arc.
@@ -970,41 +1176,11 @@ from the starting angle given by the \fB\-start\fR option.
 If it is greater than 360 or less than -360, then \fIdegrees\fR
 modulo 360 is used as the extent.
 .TP
-\fB\-fill \fIcolor\fR
-Fill the region of the arc with \fIcolor\fR.
-\fIColor\fR may have any of the forms accepted by \fBTk_GetColor\fR.
-If \fIcolor\fR is an empty string (the default), then
-then the arc will not be filled.
-.TP
-\fB\-outline \fIcolor\fR
-\fIColor\fR specifies a color to use for drawing the arc's
-outline;  it may have any of the forms accepted by \fBTk_GetColor\fR.
-This option defaults to \fBblack\fR.  If \fIcolor\fR is specified
-as an empty string then no outline is drawn for the arc.
-.TP
-\fB\-outlinestipple \fIbitmap\fR
-Indicates that the outline for the arc should be drawn with a stipple pattern;
-\fIbitmap\fR specifies the stipple pattern to use, in any of the
-forms accepted by \fBTk_GetBitmap\fR.
-If the \fB\-outline\fR option hasn't been specified then this option
-has no effect.
-If \fIbitmap\fR is an empty string (the default), then the outline is drawn
-in a solid fashion.
-.TP
 \fB\-start \fIdegrees\fR
 Specifies the beginning of the angular range occupied by the
 arc.
 \fIDegrees\fR is given in units of degrees measured counter-clockwise
 from the 3-o'clock position;  it may be either positive or negative.
-.TP
-\fB\-stipple \fIbitmap\fR
-Indicates that the arc should be filled in a stipple pattern;
-\fIbitmap\fR specifies the stipple pattern to use, in any of the
-forms accepted by \fBTk_GetBitmap\fR.
-If the \fB\-fill\fR option hasn't been specified then this option
-has no effect.
-If \fIbitmap\fR is an empty string (the default), then filling is done
-in a solid fashion.
 .TP
 \fB\-style \fItype\fR
 Specifies how to draw the arc.  If \fItype\fR is \fBpieslice\fR
@@ -1017,21 +1193,6 @@ connecting the two end points of the perimeter section.
 If \fItype\fR is \fBarc\fR then the arc's region consists of
 a section of the perimeter alone.
 In this last case the \fB\-fill\fR option is ignored.
-.TP
-\fB\-tags \fItagList\fR
-Specifies a set of tags to apply to the item.
-\fITagList\fR consists of a list of tag names, which replace any
-existing tags for the item.
-\fITagList\fR may be an empty list.
-.TP
-\fB\-width \fIoutlineWidth\fR
-Specifies the width of the outline to be drawn around
-the arc's region, in any of the forms described in the COORDINATES
-section above.
-If the \fB\-outline\fR option has been specified as an empty string
-then this option has no effect.
-Wide outlines will be drawn centered on the edges of the arc's region.
-This option defaults to 1.0.
 
 .SH "BITMAP ITEMS"
 .PP
@@ -1049,7 +1210,13 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-The following options are supported for bitmaps:
+.br
+The following standard options are supported by bitmaps:
+.CS
+\-state
+\-tags
+.CE
+The following extra options are supported for bitmaps:
 .TP
 \fB\-anchor \fIanchorPos\fR
 \fIAnchorPos\fR tells how to position the bitmap relative to the
@@ -1061,28 +1228,35 @@ its top center point is at the positioning point.
 This option defaults to \fBcenter\fR.
 .TP
 \fB\-background \fIcolor\fR
-Specifies a color to use for each of the bitmap pixels
-whose value is 0.
+.TP
+\fB\-activebackground \fIbitmap\fR
+.TP
+\fB\-disabledbackground \fIbitmap\fR
+Specifies the color to use for each of the bitmap's '0' valued pixels
+in its normal, active and disabled states.
 \fIColor\fR may have any of the forms accepted by \fBTk_GetColor\fR.
 If this option isn't specified, or if it is specified as an empty
 string, then nothing is displayed where the bitmap pixels are 0;  this
 produces a transparent effect.
 .TP
 \fB\-bitmap \fIbitmap\fR
-Specifies the bitmap to display in the item.
+.TP
+\fB\-activebitmap \fIbitmap\fR
+.TP
+\fB\-disabledbitmap \fIbitmap\fR
+Specifies the bitmaps to display in the item in its normal, active and
+disabled states.
 \fIBitmap\fR may have any of the forms accepted by \fBTk_GetBitmap\fR.
 .TP
 \fB\-foreground \fIcolor\fR
-Specifies a color to use for each of the bitmap pixels
-whose value is 1.
+.TP
+\fB\-activeforeground \fIbitmap\fR
+.TP
+\fB\-disabledforeground \fIbitmap\fR
+Specifies the color to use for each of the bitmap's '1' valued pixels
+in its normal, active and disabled states.
 \fIColor\fR may have any of the forms accepted by \fBTk_GetColor\fR and
 defaults to \fBblack\fR.
-.TP
-\fB\-tags \fItagList\fR
-Specifies a set of tags to apply to the item.
-\fITagList\fR consists of a list of tag names, which replace any
-existing tags for the item.
-\fITagList\fR may be an empty list.
 
 .SH "IMAGE ITEMS"
 .PP
@@ -1100,7 +1274,13 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-The following options are supported for images:
+.br
+The following standard options are supported by images:
+.CS
+\-state
+\-tags
+.CE
+The following extra options are supported for images:
 .TP
 \fB\-anchor \fIanchorPos\fR
 \fIAnchorPos\fR tells how to position the image relative to the
@@ -1112,19 +1292,21 @@ its top center point is at the positioning point.
 This option defaults to \fBcenter\fR.
 .TP
 \fB\-image \fIname\fR
-Specifies the name of the image to display in the item.
+.TP
+\fB\-activeimage \fIname\fR
+.TP
+\fB\-disabledimage \fIname\fR
+Specifies the name of the images to display in the item in is normal,
+active and disabled states.
 This image must have been created previously with the
 \fBimage create\fR command.
-.TP
-\fB\-tags \fItagList\fR
-Specifies a set of tags to apply to the item.
-\fITagList\fR consists of a list of tag names, which replace any
-existing tags for the item;  it may be an empty list.
 
 .SH "LINE ITEMS"
 .PP
 Items of type \fBline\fR appear on the display as one or more connected
 line segments or curves.
+Line items support coordinate indexing operations using the canvas
+widget commands: \fBdchars, index, insert.\fR
 Lines are created with widget commands of the following form:
 .CS
 \fIpathName \fBcreate line \fIx1 y1... xn yn \fR?\fIoption value option value ...\fR?
@@ -1137,7 +1319,26 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-The following options are supported for lines:
+.br
+The following standard options are supported by lines:
+.CS
+\-dash
+\-activedash
+\-disableddash
+\-dashoffset
+\-fill
+\-activefill
+\-disabledfill
+\-stipple
+\-activestipple
+\-disabledstipple
+\-state
+\-tags
+\-width
+\-activewidth
+\-disabledwidth
+.CE
+The following extra options are supported for lines:
 .TP
 \fB\-arrow \fIwhere\fR
 Indicates whether or not arrowheads are to be drawn at one or both
@@ -1169,12 +1370,6 @@ of the line.
 If this option isn't specified then it defaults to \fBbutt\fR.
 Where arrowheads are drawn the cap style is ignored.
 .TP
-\fB\-fill \fIcolor\fR
-\fIColor\fR specifies a color to use for drawing the line; it may have
-any of the forms acceptable to \fBTk_GetColor\fR.  It may also be an
-empty string, in which case the line will be transparent.
-This option defaults to \fBblack\fR.
-.TP
 \fB\-joinstyle \fIstyle\fR
 Specifies the ways in which joints are to be drawn at the vertices
 of the line.
@@ -1196,26 +1391,6 @@ a curve by duplicating the end-points of the desired line segment.
 Specifies the degree of smoothness desired for curves:  each spline
 will be approximated with \fInumber\fR line segments.  This
 option is ignored unless the \fB\-smooth\fR option is true.
-.TP
-\fB\-stipple \fIbitmap\fR
-Indicates that the line should be filled in a stipple pattern;
-\fIbitmap\fR specifies the stipple pattern to use, in any of the
-forms accepted by \fBTk_GetBitmap\fR.
-If \fIbitmap\fR is an empty string (the default), then filling is
-done in a solid fashion.
-.TP
-\fB\-tags \fItagList\fR
-Specifies a set of tags to apply to the item.
-\fITagList\fR consists of a list of tag names, which replace any
-existing tags for the item.
-\fITagList\fR may be an empty list.
-.TP
-\fB\-width \fIlineWidth\fR
-\fILineWidth\fR specifies the width of the line, in any of the forms
-described in the COORDINATES section above.
-Wide lines will be drawn centered on the path specified by the
-points.
-If this option isn't specified then it defaults to 1.0.
 
 .SH "OVAL ITEMS"
 .PP
@@ -1238,77 +1413,87 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-The following options are supported for ovals:
-.TP
-\fB\-fill \fIcolor\fR
-Fill the area of the oval with \fIcolor\fR.
-\fIColor\fR may have any of the forms accepted by \fBTk_GetColor\fR.
-If \fIcolor\fR is an empty string (the default), then
-then the oval will not be filled.
-.TP
-\fB\-outline \fIcolor\fR
-\fIColor\fR specifies a color to use for drawing the oval's
-outline;  it may have any of the forms accepted by \fBTk_GetColor\fR.
-This option defaults to \fBblack\fR.
-If \fIcolor\fR is an empty string then no outline will be
-drawn for the oval.
-.TP
-\fB\-stipple \fIbitmap\fR
-Indicates that the oval should be filled in a stipple pattern;
-\fIbitmap\fR specifies the stipple pattern to use, in any of the
-forms accepted by \fBTk_GetBitmap\fR.
-If the \fB\-fill\fR option hasn't been specified then this option
-has no effect.
-If \fIbitmap\fR is an empty string (the default), then filling is done
-in a solid fashion.
-.TP
-\fB\-tags \fItagList\fR
-Specifies a set of tags to apply to the item.
-\fITagList\fR consists of a list of tag names, which replace any
-existing tags for the item.
-\fITagList\fR may be an empty list.
-.TP
-\fB\-width \fIoutlineWidth\fR
-\fIoutlineWidth\fR specifies the width of the outline to be drawn around
-the oval, in any of the forms described in the COORDINATES section above.
-If the \fB\-outline\fR option hasn't been specified then this option
-has no effect.
-Wide outlines are drawn centered on the oval path defined by
-\fIx1\fR, \fIy1\fR, \fIx2\fR, and \fIy2\fR.
-This option defaults to 1.0.
+.br
+The following standard options are supported by ovals:
+.CS
+\-dash
+\-activedash
+\-disableddash
+\-dashoffset
+\-fill
+\-activefill
+\-disabledfill
+\-offset
+\-outline
+\-activeoutline
+\-disabledoutline
+\-outlinestipple
+\-activeoutlinestipple
+\-disabledoutlinestipple
+\-stipple
+\-activestipple
+\-disabledstipple
+\-state
+\-tags
+\-width
+\-activewidth
+\-disabledwidth
+.CE
 
 .SH "POLYGON ITEMS"
 .PP
 Items of type \fBpolygon\fR appear as polygonal or curved filled regions
 on the display.
+Polygon items support coordinate indexing operations using the canvas
+widget commands: \fBdchars, index, insert.\fR
 Polygons are created with widget commands of the following form:
 .CS
 \fIpathName \fBcreate polygon \fIx1 y1 ... xn yn \fR?\fIoption value option value ...\fR?
 .CE
 The arguments \fIx1\fR through \fIyn\fR specify the coordinates for
-three or more points that define a closed polygon.
-The first and last points may be the same;  whether they are or not,
-Tk will draw the polygon as a closed polygon.
+three or more points that define a polygon.
+The first point should not be repeated as the last to
+close the shape; Tk will automatically close the periphery between
+the first and last points.
 After the coordinates there may be any number of \fIoption\fR\-\fIvalue\fR
 pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-The following options are supported for polygons:
+.br
+The following standard options are supported by polygons:
+.CS
+\-dash
+\-activedash
+\-disableddash
+\-dashoffset
+\-fill
+\-activefill
+\-disabledfill
+\-offset
+\-outline
+\-activeoutline
+\-disabledoutline
+\-outlinestipple
+\-activeoutlinestipple
+\-disabledoutlinestipple
+\-stipple
+\-activestipple
+\-disabledstipple
+\-state
+\-tags
+\-width
+\-activewidth
+\-disabledwidth
+.CE
+The following extra options are supported for polygons:
 .TP
-\fB\-fill \fIcolor\fR
-\fIColor\fR specifies a color to use for filling the area of the
-polygon; it may have any of the forms acceptable to \fBTk_GetColor\fR.
-If \fIcolor\fR is an empty string then the polygon will be
-transparent.
-This option defaults to \fBblack\fR.
-.TP
-\fB\-outline \fIcolor\fR
-\fIColor\fR specifies a color to use for drawing the polygon's
-outline;  it may have any of the forms accepted by \fBTk_GetColor\fR.
-If \fIcolor\fR is an empty string then no outline will be
-drawn for the polygon.
-This option defaults to empty (no outline).
+\fB\-joinstyle \fIstyle\fR
+Specifies the ways in which joints are to be drawn at the vertices
+of the outline.
+\fIStyle\fR may have any of the forms accepted by \fBTk_GetCapStyle\fR
+(\fBbevel\fR, \fBmiter\fR, or \fBround\fR).
+If this option isn't specified then it defaults to \fBmiter\fR.
 .TP
 \fB\-smooth \fIboolean\fR
 \fIBoolean\fR must have one of the forms accepted by \fBTk_GetBoolean\fR
@@ -1323,25 +1508,6 @@ smoothed polygon by duplicating the end-points of the desired line segment.
 Specifies the degree of smoothness desired for curves:  each spline
 will be approximated with \fInumber\fR line segments.  This
 option is ignored unless the \fB\-smooth\fR option is true.
-.TP
-\fB\-stipple \fIbitmap\fR
-Indicates that the polygon should be filled in a stipple pattern;
-\fIbitmap\fR specifies the stipple pattern to use, in any of the
-forms accepted by \fBTk_GetBitmap\fR.
-If \fIbitmap\fR is an empty string (the default), then filling is
-done in a solid fashion.
-.TP
-\fB\-tags \fItagList\fR
-Specifies a set of tags to apply to the item.
-\fITagList\fR consists of a list of tag names, which replace any
-existing tags for the item.
-\fITagList\fR may be an empty list.
-.TP
-\fB\-width \fIoutlineWidth\fR
-\fIOutlineWidth\fR specifies the width of the outline to be drawn around
-the polygon, in any of the forms described in the COORDINATES section above.
-If the \fB\-outline\fR option hasn't been specified then this option
-has no effect.  This option defaults to 1.0.
 .PP
 Polygon items are different from other items such as rectangles, ovals
 and arcs in that interior points are considered to be ``inside'' a
@@ -1371,44 +1537,32 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-The following options are supported for rectangles:
-.TP
-\fB\-fill \fIcolor\fR
-Fill the area of the rectangle with \fIcolor\fR, which may be
-specified in any of the forms accepted by \fBTk_GetColor\fR.
-If \fIcolor\fR is an empty string (the default),
-then the rectangle will not be filled.
-.TP
-\fB\-outline \fIcolor\fR
-Draw an outline around the edge of the rectangle in \fIcolor\fR.
-\fIColor\fR may have any of the forms accepted by \fBTk_GetColor\fR.
-This option defaults to \fBblack\fR.
-If \fIcolor\fR is an empty string then no outline will be
-drawn for the rectangle.
-.TP
-\fB\-stipple \fIbitmap\fR
-Indicates that the rectangle should be filled in a stipple pattern;
-\fIbitmap\fR specifies the stipple pattern to use, in any of the
-forms accepted by \fBTk_GetBitmap\fR.
-If the \fB\-fill\fR option hasn't been specified then this option
-has no effect.
-If \fIbitmap\fR is an empty string (the default), then filling
-is done in a solid fashion.
-.TP
-\fB\-tags \fItagList\fR
-Specifies a set of tags to apply to the item.
-\fITagList\fR consists of a list of tag names, which replace any
-existing tags for the item.
-\fITagList\fR may be an empty list.
-.TP
-\fB\-width \fIoutlineWidth\fR
-\fIOutlineWidth\fR specifies the width of the outline to be drawn around
-the rectangle, in any of the forms described in the COORDINATES section above.
-If the \fB\-outline\fR option hasn't been specified then this option
-has no effect.
-Wide outlines are drawn centered on the rectangular path
-defined by \fIx1\fR, \fIy1\fR, \fIx2\fR, and \fIy2\fR.
-This option defaults to 1.0.
+.br
+The following standard options are supported by rectangles:
+.CS
+\-dash
+\-activedash
+\-disableddash
+\-dashoffset
+\-fill
+\-activefill
+\-disabledfill
+\-offset
+\-outline
+\-activeoutline
+\-disabledoutline
+\-outlinestipple
+\-activeoutlinestipple
+\-disabledoutlinestipple
+\-stipple
+\-activestipple
+\-disabledstipple
+\-state
+\-tags
+\-width
+\-activewidth
+\-disabledwidth
+.CE
 
 .SH "TEXT ITEMS"
 .PP
@@ -1431,7 +1585,19 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-The following options are supported for text items:
+.br
+The following standard options are supported by text items:
+.CS
+\-fill
+\-activefill
+\-disabledfill
+\-stipple
+\-activestipple
+\-disabledstipple
+\-state
+\-tags
+.CE
+The following extra options are supported for text items:
 .TP
 \fB\-anchor \fIanchorPos\fR
 \fIAnchorPos\fR tells how to position the text relative to the
@@ -1442,12 +1608,6 @@ is \fBcenter\fR then the text is centered on the point;  if
 the top center point of the rectangular region occupied by the
 text will be at the positioning point.
 This option defaults to \fBcenter\fR.
-.TP
-\fB\-fill \fIcolor\fR
-\fIColor\fR specifies a color to use for filling the text characters;
-it may have any of the forms accepted by \fBTk_GetColor\fR.
-If \fIcolor\fR is an empty string then the text will be transparent.
-If this option isn't specified then it defaults to \fBblack\fR.
 .TP
 \fB\-font \fIfontName\fR
 Specifies the font to use for the text item.
@@ -1462,20 +1622,6 @@ or \fBcenter\fR.
 This option will only matter if the text is displayed as multiple
 lines.
 If the option is omitted, it defaults to \fBleft\fR.
-.TP
-\fB\-stipple \fIbitmap\fR
-Indicates that the text should be drawn in a stippled pattern
-rather than solid;
-\fIbitmap\fR specifies the stipple pattern to use, in any of the
-forms accepted by \fBTk_GetBitmap\fR.
-If \fIbitmap\fR is an empty string (the default) then the text
-is drawn in a solid fashion.
-.TP
-\fB\-tags \fItagList\fR
-Specifies a set of tags to apply to the item.
-\fITagList\fR consists of a list of tag names, which replace any
-existing tags for the item.
-\fITagList\fR may be an empty list.
 .TP
 \fB\-text \fIstring\fR
 \fIString\fR specifies the characters to be displayed in the text item.
@@ -1511,7 +1657,13 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-The following options are supported for window items:
+.br
+The following standard options are supported by window items:
+.CS
+\-state
+\-tags
+.CE
+The following extra options are supported for window items:
 .TP
 \fB\-anchor \fIanchorPos\fR
 \fIAnchorPos\fR tells how to position the window relative to the
@@ -1528,12 +1680,6 @@ Specifies the height to assign to the item's window.
 forms described in the COORDINATES section above.
 If this option isn't specified, or if it is specified as an empty
 string, then the window is given whatever height it requests internally.
-.TP
-\fB\-tags \fItagList\fR
-Specifies a set of tags to apply to the item.
-\fITagList\fR consists of a list of tag names, which replace any
-existing tags for the item.
-\fITagList\fR may be an empty list.
 .TP
 \fB\-width \fIpixels\fR
 Specifies the width to assign to the item's window.
