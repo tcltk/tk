@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: clipboard.n,v 1.6 2004/03/04 00:06:06 hobbs Exp $
+'\" RCS: @(#) $Id: clipboard.n,v 1.7 2004/06/18 21:16:21 dkf Exp $
 '\" 
 .so man.macros
 .TH clipboard n 8.4 Tk "Tk Built-In Commands"
@@ -86,9 +86,22 @@ the data is to be returned and should be an atom name such as STRING
 or FILE_NAME.  \fIType\fR defaults to STRING.  This command is
 equivalent to \fBselection get -selection CLIPBOARD\fR.
 .VE 8.4
+.SH EXAMPLES
+Get the current contents of the clipboard.
+.CS
+if {[catch {\fBclipboard\fR get} contents]} {
+    # There were no clipboard contents at all
+}
+.CE
+.PP
+Set the clipboard to contain a fixed string.
+.CS
+\fBclipboard\fR clear
+\fBclipboard\fR append "some fixed string"
+.CE
 
 .SH "SEE ALSO"
-selection
+selection(n)
 
 .SH KEYWORDS
 clear, format, clipboard, append, selection, type
