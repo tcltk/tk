@@ -1,3 +1,7 @@
+2002-03-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/entry.tcl: added catch around Triple-1 binding use of sel.last
+
 2002-02-28  Don Porter  <dgp@users.sourceforge.net>
 
 	* library/console.tcl (ConsoleBind): Corrected console <<Paste>>
