@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.26 1999/07/09 02:10:07 stanton Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.27 1999/07/31 02:31:57 redman Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -100,8 +100,7 @@ TKTESTOBJS = \
 	$(TMPDIR)\tkTest.obj \
 	$(TMPDIR)\tkSquare.obj \
 	$(TMPDIR)\testMain.obj \
-# the tkThreadTest.c file has not been checked it yet.
-#	$(TMPDIR)\tkThreadTest.obj
+	$(TCLLIBDIR)\tclThreadTest.obj
 
 XLIBOBJS = \
 	$(TMPDIR)\xcolors.obj \
@@ -229,7 +228,7 @@ RCDIR		= $(WINDIR)\rc
 
 TK_INCLUDES	= -I$(WINDIR) -I$(GENERICDIR) -I$(BITMAPDIR) -I$(XLIBDIR) \
 			-I$(TCLDIR)\generic
-TK_DEFINES	= $(DEBUGDEFINES)
+TK_DEFINES	= -D__WIN32__ $(DEBUGDEFINES) $(THREADDEFINES)
 
 TK_CFLAGS	= $(cdebug) $(cflags) $(cvarsdll) $(include32) \
 			$(TK_INCLUDES) $(TK_DEFINES) -DUSE_TCL_STUBS
@@ -336,7 +335,10 @@ test:	setup $(TKTEST) $(TKLIB) $(CAT32)
 	set PATH=$(TCLDIR)\win\$(TMPDIRNAME);$(PATH)
 	$(TKTEST) $(ROOT)/tests/all.tcl | $(CAT32)
 
-#       copy $(TCLDIR)\bin\pkgIndex.tcl $(OUTDIR)
+runtest: setup $(TKTEST) $(TKLIB) $(CAT32)
+	set TCL_LIBRARY=$(TCLDIR)/library
+	set PATH=$(TCLDIR)\win\$(TMPDIRNAME);$(PATH)
+	$(TKTEST) 
 
 console-wish : all $(WISHC)
 
