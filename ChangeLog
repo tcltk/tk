@@ -1,3 +1,8 @@
+2001-07-03  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/xmfbox.tcl (tkMotifFDialog_ActivateSEnt): Added missing
+	backslash [Bug #438247]
+
 2001-07-02  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkWindow.c (Tk_DestroyWindow): changed to use
