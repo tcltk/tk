@@ -1,3 +1,12 @@
+2004-09-03  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* macosx/tkMacOSXMenus.c (GenerateEditEvent): 
+	* macosx/tkMacOSXMenu.c (MenuSelectEvent): 
+	* win/tkWinMenu.c (MenuSelectEvent): Make sure everywhere that
+	needs to NULL-out the user_data field does actually do so. (Code
+	that uses bzero() or memset() for the task just needs to be
+	rebuilt to work.) [Bug 1021812]
+
 2004-09-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* tests/bind.test (bind-22.163): Fix inadvertent minor breakage
