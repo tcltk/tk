@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.26 2005/01/17 07:08:51 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.27 2005/01/18 15:19:28 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -353,6 +353,7 @@ TkpMakeContainer(tkwin)
     containerPtr->parentHWnd = Tk_GetHWND(Tk_WindowId(tkwin));
     containerPtr->embeddedHWnd = NULL;
     containerPtr->embeddedPtr = NULL;
+    containerPtr->embeddedMenuHWnd = NULL;
     containerPtr->nextPtr = tsdPtr->firstContainerPtr;
     tsdPtr->firstContainerPtr = containerPtr;
     winPtr->flags |= TK_CONTAINER;
