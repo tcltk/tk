@@ -69,12 +69,12 @@ if {$tcl_platform(platform) == "windows"} {
 }
 if {$tcl_platform(platform) == "unix"} {
     bind Checkbutton <Return> {
-	if !$tk_strictMotif {
+	if {!$tk_strictMotif} {
 	    tkCheckRadioInvoke %W
 	}
     }
     bind Radiobutton <Return> {
-	if !$tk_strictMotif {
+	if {!$tk_strictMotif} {
 	    tkCheckRadioInvoke %W
 	}
     }
