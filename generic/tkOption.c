@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.10 2002/01/25 21:09:37 dgp Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.11 2002/02/22 01:58:36 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1125,8 +1125,8 @@ ReadOptionFile(interp, tkwin, fileName, priority)
      * overallocate if we are performing CRLF translation.
      */
     
-    bufferSize = Tcl_Seek(chan, 0L, SEEK_END);
-    (void) Tcl_Seek(chan, 0L, SEEK_SET);
+    bufferSize = (int) Tcl_Seek(chan, (Tcl_WideInt) 0, SEEK_END);
+    (void) Tcl_Seek(chan, (Tcl_WideInt) 0, SEEK_SET);
 
     if (bufferSize < 0) {
 	Tcl_AppendResult(interp, "error seeking to end of file \"",
