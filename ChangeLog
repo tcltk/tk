@@ -1,3 +1,10 @@
+2001-08-23  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/configure:
+	* unix/tcl.m4: added QNX-6 build support. [Bug #219410] (loverso)
+
+	* doc/CrtPhImgFmt.3: removed bogus note about including tkPhoto.h
+
 2001-08-22  Peter Spjuth  <peter.spjuth@space.se>
 
 	* generics/tkGrid.c (ConfigureSlaves):
