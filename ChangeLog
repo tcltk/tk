@@ -1,3 +1,106 @@
+1999-12-13  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* doc/canvas.n: added docs for items added by dash patch (-*dash*,
+	-state, -active*, -disabled*, -offset, essentially rewrote the
+	man patch for completely updated 8.3 canvas widget.
+	* doc/entry.n: added docs for entry widget validation
+	* doc/event.n: added docs for -warp
+	* doc/text.n: doc'ed new -state value 'hidden'
+	* doc/GetDash.3: (new file) man page explaining Tk_GetDash
+	* generic/tkStubInit.c:
+	* generic/tkDecls.h:
+	* generic/tkIntXlibDecls.h:
+	* generic/tkInt.decls: added XSetDashes and XWarpPointer
+	* generic/tk.decls: added Tk_CreateSmoothMethod, and reserved
+	two spots
+	* generic/tk.h: added Tk_SmoothMethod struct,
+	state item to canvas record, #defines for item state,
+	support for using old char*-based canvas item C creation
+	procedures with -DUSE_OLD_CANVAS,
+	Tk_Dash, Tk_TSOffset (-offsets) & Tk_Outline structs and #defs,
+	decls for dash, outline and postscript routines
+	* generic/tkBind.c: added support for Quadruple clicks, and added
+	the -warp option to 'event' with pointer warping routines
+	* xlib/xgc.c:
+	* generic/tkRectOval.c:
+	* generic/tkCanvArc.c:
+	* generic/tkCanvBmap.c:
+	* generic/tkCanvImg.c:
+	* generic/tkCanvLine.c:
+	* generic/tkCanvPoly.c:
+	* generic/tkCanvPs.c:
+	* generic/tkCanvText.c:
+	* generic/tkCanvUtil.c:
+	* generic/tkCanvWind.c:
+	* generic/tkCanvas.c:
+	* generic/tkCanvas.h: Canvas and items received overhaul to with
+	the addition of the dash patch (Nijtmans, et al)  This includes
+	objectification of the 'canvas' command, as well as support for
+	(where appropriate) dashes in items, extended stipple support,
+	state for all items, and postscript generation of images and
+	windows.  See the new canvas man page for related docs.
+	* generic/tkEntry.c: added entry widget validation, see entry.n
+	* generic/tkEvent.c: on simulated events, ButtonPress should
+	be matched with ButtonRelease to be correct
+	* generic/tkFont.c: corrected possible null reference
+	* generic/tkFrame.c: made frame a Tcl_Obj based command
+	* generic/tkGet.c: added TkGetDoublePixels
+	* generic/tkImage.c: bug fixes from Img patch and new
+	Tk_PostscriptImage and Tk_SetTSOrigin functions
+	* generic/tkImgBmap.c: new ImgBmapPostscript function
+	* generic/tkImgPhoto.c: new Tk_CreatePhotoOption, Tk_DitherPhoto
+	* generic/tkInt.h: declarations for some new functions
+	* generic/tkMessage.c: reworked relief drawing
+	* generic/tkOldConfig.c: added TK_CONFIG_OBJS so old style
+	ConfigureWidget calls can pass in Tcl_Obj arrays
+	* generic/tkScrollbar.c:
+	* generic/tkScrollbar.h: made -orient use an option table
+	* generic/tkText.c:
+	* generic/tkText.h: made -wrap and -state use option tables
+	* generic/tkTextBTree.c:
+	* generic/tkTextDisp.c:
+	* generic/tkTextImage.c:
+	* generic/tkTextMark.c:
+	* generic/tkTextTag.c:
+	* generic/tkTextWind.c: added support for -elide and -state hidden
+	* generic/tkTrig.c: changed TkMakeBezierCurve to support returning
+	the upper limit of points needed for spline
+	* generic/tkUtil.c: new option table parsing routines
+	* generic/tkWindow.c: init'ing of warp stuff, mouseButtonState
+
+	* tests/bind.test:
+	* tests/canvImg.test:
+	* tests/canvPsArc.tcl:
+	* tests/canvPsImg.tcl: (new file)
+	* tests/canvRect.test:
+	* tests/canvText.test:
+	* tests/canvas.test:
+	* tests/defs.tcl:
+	* tests/entry.test:
+	* tests/event.test:
+	* tests/font.test:
+	* tests/frame.test:
+	* tests/imgPhoto.test:
+	* tests/safe.test:
+	* tests/scale.test:
+	* tests/scrollbar.test:
+	* tests/select.test:
+	* tests/text.test:
+	* tests/textDisp.test:
+	* tests/textTag.test:
+	* tests/unixFont.test:
+	* tests/unixWm.test:
+	* tests/visual_bb.test:
+	* tests/winClipboard.test: tests for the dash patch changes
+
+	* unix/mkLinks: added GetDash.3 into the mkLink step
+
+	* mac/tkMacDraw.c: mac still needs pointer warping routine
+	* mac/tkMacXStubs.c:
+	* win/tkWinDraw.c:
+	* win/tkWinPointer.c: added support for pointer warping and
+	platform specific support for dash patch items
+
 1999-12-12  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* generic/tkText.c: fixed bug in TextSearchCmd for multibyte chars
