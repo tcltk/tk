@@ -5,9 +5,11 @@
 # in this directory.
 #
 # Copyright (c) 1998-1999 by Scriptics Corporation.
-# All rights reserved.
+#
+# See the file "license.terms" for information on usage and redistribution
+# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: all.tcl,v 1.4 1999/04/21 21:53:29 rjohnson Exp $
+# RCS: @(#) $Id: all.tcl,v 1.5 2002/04/10 19:56:50 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
