@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPort.h,v 1.4 2003/09/30 23:26:09 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXPort.h,v 1.5 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #ifndef _TKMACPORT
@@ -137,9 +137,6 @@ extern int errno;
  * in any other header file.
  */
 
-#ifndef panic	/* In a stubs-aware setting, this could confuse the #define */
-extern void 		panic  _ANSI_ARGS_(TCL_VARARGS(char *, string));
-#endif
 #ifndef strcasecmp
 extern int		strcasecmp _ANSI_ARGS_((CONST char *s1,
 			    CONST char *s2));

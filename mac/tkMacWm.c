@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.24 2003/02/09 07:51:04 hobbs Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.25 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include <Gestalt.h>
@@ -2429,7 +2429,7 @@ WmStackorderCmd(tkwin, winPtr, interp, objc, objv)
     if (objc == 3) {
 	windows = TkWmStackorderToplevel(winPtr);
 	if (windows == NULL) {
-	    panic("TkWmStackorderToplevel failed");
+	    Tcl_Panic("TkWmStackorderToplevel failed");
 	} else {
 	    for (window_ptr = windows; *window_ptr ; window_ptr++) {
 		Tcl_AppendElement(interp, (*window_ptr)->pathName);
@@ -2484,9 +2484,9 @@ WmStackorderCmd(tkwin, winPtr, interp, objc, objv)
 		    index2 = (window_ptr - windows);
 	    }
 	    if (index1 == -1)
-		panic("winPtr window not found");
+		Tcl_Panic("winPtr window not found");
 	    if (index2 == -1)
-		panic("winPtr2 window not found");
+		Tcl_Panic("winPtr2 window not found");
 
 	    ckfree((char *) windows);
 	}
@@ -3009,7 +3009,7 @@ TopLevelEventProc(
 	    printf("TopLevelEventProc: %s deleted\n", winPtr->pathName);
 	}
     } else if (eventPtr->type == ReparentNotify) {
-	panic("recieved unwanted reparent event");
+	Tcl_Panic("recieved unwanted reparent event");
     }
 }
 
@@ -3932,7 +3932,7 @@ Tk_MoveToplevelWindow(
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (!(winPtr->flags & TK_TOP_LEVEL)) {
-	panic("Tk_MoveToplevelWindow called with non-toplevel window");
+	Tcl_Panic("Tk_MoveToplevelWindow called with non-toplevel window");
     }
     wmPtr->x = x;
     wmPtr->y = y;
@@ -4143,7 +4143,7 @@ TkWmStackorderToplevel(parentPtr)
 			frontWindow = frontWindow->nextWindow;
 	    }
         if (window_ptr != (windows-1))
-            panic("num matched toplevel windows does not equal num children");
+            Tcl_Panic("num matched toplevel windows does not equal num children");
     }
 
     done:
@@ -5094,7 +5094,7 @@ TkUnsupported1Cmd(
 		    Tcl_SetResult(interp, "floatSideZoomProc", TCL_STATIC);
 		    break;
 		default:
-		    panic("invalid style");
+		    Tcl_Panic("invalid style");
 	    }
 	    if (appearanceSpec) {
 	        Tcl_Obj *attributeList, *newResult;
@@ -5119,7 +5119,7 @@ TkUnsupported1Cmd(
 	                newResult = Tcl_NewStringObj("document", -1);
 	                break;
                     default:
-                        panic("invalid class");
+                        Tcl_Panic("invalid class");
                 }
 
  	        attributeList = Tcl_NewListObj(0, NULL);
@@ -5404,12 +5404,12 @@ TkMacMakeRealWindowExist(
 	} else if (gMacEmbedHandler != NULL) {
 	    if (gMacEmbedHandler->containerExistProc != NULL) {
 	        if (gMacEmbedHandler->containerExistProc((Tk_Window) winPtr) != TCL_OK) {
-	           panic("ContainerExistProc could not make container");
+	           Tcl_Panic("ContainerExistProc could not make container");
 	       }
 	    }
 	    return;
 	} else {
-	    panic("TkMacMakeRealWindowExist could not find container");
+	    Tcl_Panic("TkMacMakeRealWindowExist could not find container");
 	}
 
 	/*
@@ -5444,7 +5444,7 @@ TkMacMakeRealWindowExist(
     }
 
     if (newWindow == NULL) {
-	panic("couldn't allocate new Mac window");
+	Tcl_Panic("couldn't allocate new Mac window");
     }
 
     /*
@@ -5467,7 +5467,7 @@ TkMacMakeRealWindowExist(
     valueHashPtr = Tcl_CreateHashEntry(&windowTable,
 	    (char *) newWindow, &new);
     if (!new) {
-	panic("same macintosh window allocated twice!");
+	Tcl_Panic("same macintosh window allocated twice!");
     }
     Tcl_SetHashValue(valueHashPtr, macWin);
 
@@ -5509,7 +5509,7 @@ TkMacRegisterOffScreenWindow(
     valueHashPtr = Tcl_CreateHashEntry(&windowTable,
 	    (char *) portPtr, &new);
     if (!new) {
-	panic("same macintosh window allocated twice!");
+	Tcl_Panic("same macintosh window allocated twice!");
     }
     Tcl_SetHashValue(valueHashPtr, macWin);
 }
@@ -5537,7 +5537,7 @@ TkMacUnregisterMacWindow(
     GWorldPtr portPtr)	/* Pointer to a Mac GWorld. */
 {
     if (!windowHashInit) {
-	panic("TkMacUnregisterMacWindow: unmapping before inited");;
+	Tcl_Panic("TkMacUnregisterMacWindow: unmapping before inited");;
     }
     Tcl_DeleteHashEntry(Tcl_FindHashEntry(&windowTable,
 	(char *) portPtr));

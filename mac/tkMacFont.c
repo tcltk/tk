@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacFont.c,v 1.8 2002/10/09 11:56:43 das Exp $
+ * RCS: @(#) $Id: tkMacFont.c,v 1.9 2004/01/13 02:06:01 davygrvy Exp $
  */
  
 #include <Windows.h>
@@ -311,7 +311,7 @@ TkpFontPkgInit(mainPtr)
 	 */
 	 
 	if (NewGWorld(&gWorld, 0, &rect, NULL, NULL, 0) != noErr) {
-	    panic("TkpFontPkgInit: NewGWorld failed");
+	    Tcl_Panic("TkpFontPkgInit: NewGWorld failed");
 	}
 	
 	/*
@@ -379,7 +379,7 @@ TkpFontPkgInit(mainPtr)
        	    }
        	}
        	if (fontMapOffset != numFonts) {
-       	    panic("TkpFontPkgInit: unexpected number of fonts");
+       	    Tcl_Panic("TkpFontPkgInit: unexpected number of fonts");
        	}
 
        	mapPtr = &newFontNameMap[numFonts];
@@ -2078,7 +2078,7 @@ GetUtfFaceName(
             return mapPtr->utfName;
         }
     }
-    panic("GetUtfFaceName: unexpected nativeName");
+    Tcl_Panic("GetUtfFaceName: unexpected nativeName");
     return NULL;
 }
 

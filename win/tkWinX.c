@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.27 2003/12/21 23:50:13 davygrvy Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.28 2004/01/13 02:06:02 davygrvy Exp $
  */
 
 #include "tkWinInt.h"
@@ -26,6 +26,9 @@
 #endif
 
 #include <commctrl.h>
+#ifdef _MSC_VER
+#   pragma comment (lib, "comctl32.lib")
+#endif
 
 /*
  * The zmouse.h file includes the definition for WM_MOUSEWHEEL.
@@ -38,6 +41,9 @@
  */
 
 #include <imm.h>
+#ifdef _MSC_VER
+#   pragma comment (lib, "imm32.lib")
+#endif
 
 static TkWinProcs asciiProcs = {
     0,
@@ -271,7 +277,7 @@ TkWinXInit(hInstance)
     childClass.hCursor = NULL;
 
     if (!RegisterClass(&childClass)) {
-	panic("Unable to register TkChild class");
+	Tcl_Panic("Unable to register TkChild class");
     }
 
     /*
@@ -552,7 +558,7 @@ TkpCloseDisplay(dispPtr)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (dispPtr != tsdPtr->winDisplay) {
-        panic("TkpCloseDisplay: tried to call TkpCloseDisplay on another display");
+        Tcl_Panic("TkpCloseDisplay: tried to call TkpCloseDisplay on another display");
         return;
     }
 

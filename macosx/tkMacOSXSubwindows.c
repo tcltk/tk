@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2 2002/08/31 06:12:30 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.3 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -425,7 +425,7 @@ XMoveResizeWindow(
 	    
 	    contWinPtr = TkpGetOtherWindow(macWin->winPtr);
 	    if (contWinPtr == NULL) {
-	            panic("XMoveResizeWindow could not find container");
+		Tcl_Panic("XMoveResizeWindow could not find container");
 	    }
 	    macParent = contWinPtr->privatePtr;
 	    
@@ -527,7 +527,7 @@ XMoveWindow(
 	    
 	    contWinPtr = TkpGetOtherWindow(macWin->winPtr);
 	    if (contWinPtr == NULL) {
-	            panic("XMoveWindow could not find container");
+		Tcl_Panic("XMoveWindow could not find container");
 	    }
 	    macParent = contWinPtr->privatePtr;
 	    
@@ -1259,7 +1259,7 @@ Tk_GetPixmap(
 	err = NewGWorld(&gWorld, depth, &bounds, NULL, NULL, useTempMem);
     }
     if (err != noErr) {
-        panic("Out of memory: NewGWorld failed in Tk_GetPixmap");
+        Tcl_Panic("Out of memory: NewGWorld failed in Tk_GetPixmap");
     }
 
     /*

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.15 2003/02/09 07:48:22 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.16 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include <stdio.h>
@@ -238,7 +238,7 @@ CreateText(interp, canvas, itemPtr, objc, objv)
     int i;
 
     if (objc == 0) {
-	panic("canvas did not pass any coords\n");
+	Tcl_Panic("canvas did not pass any coords\n");
     }
 
     /*

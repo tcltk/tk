@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacSubwindows.c,v 1.7 2002/06/14 22:25:12 jenglish Exp $
+ * RCS: @(#) $Id: tkMacSubwindows.c,v 1.8 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -425,7 +425,7 @@ XMoveResizeWindow(
 	    
 	    contWinPtr = TkpGetOtherWindow(macWin->winPtr);
 	    if (contWinPtr == NULL) {
-	            panic("XMoveResizeWindow could not find container");
+	            Tcl_Panic("XMoveResizeWindow could not find container");
 	    }
 	    macParent = contWinPtr->privatePtr;
 	    
@@ -516,29 +516,29 @@ XMoveWindow(
 	int deltaX, deltaY, parentBorderwidth;
 	Rect bounds;
 	MacDrawable *macParent;
-	
-        /*
-         * Find the Parent window -
-         * For an embedded window this will be its container.
-         */
-         
+
+	/*
+	 * Find the Parent window -
+	 * For an embedded window this will be its container.
+	 */
+
 	if (Tk_IsEmbedded(macWin->winPtr)) {
 	    TkWindow *contWinPtr;
-	    
+
 	    contWinPtr = TkpGetOtherWindow(macWin->winPtr);
 	    if (contWinPtr == NULL) {
-	            panic("XMoveWindow could not find container");
+		Tcl_Panic("XMoveWindow could not find container");
 	    }
 	    macParent = contWinPtr->privatePtr;
-	    
+
 	    /*
 	     * NOTE: Here we should handle out of process embedding.
 	     */
-		    
+
 	} else {
 	    macParent = macWin->winPtr->parentPtr->privatePtr;   
 	    if (macParent == NULL) {
-	        return; /* TODO: Probably should be a panic */
+		return; /* TODO: Probably should be a panic */
 	    }
 	}
 
@@ -547,12 +547,12 @@ XMoveWindow(
 
 	deltaX = - macWin->xOff;
 	deltaY = - macWin->yOff;
-	
-        /*
+
+	/*
 	 * If macWin->winPtr is an embedded window, don't offset by its
 	 *  parent's borderwidth...
 	 */
-	 
+
 	if (!Tk_IsEmbedded(macWin->winPtr)) {
 	    parentBorderwidth = macWin->winPtr->parentPtr->changes.border_width;
 	} else {
@@ -562,7 +562,7 @@ XMoveWindow(
 	    macWin->winPtr->changes.x;
 	deltaY += macParent->yOff + parentBorderwidth +
 	    macWin->winPtr->changes.y;
-		
+	
 	UpdateOffsets(macWin->winPtr, deltaX, deltaY);
 	TkMacWinBounds(macWin->winPtr, &bounds);
 	InvalRect(&bounds);
@@ -1212,7 +1212,7 @@ Tk_GetPixmap(
 	err = NewGWorld(&gWorld, depth, &bounds, NULL, NULL, useTempMem);
     }
     if (err != noErr) {
-        panic("Out of memory: NewGWorld failed in Tk_GetPixmap");
+        Tcl_Panic("Out of memory: NewGWorld failed in Tk_GetPixmap");
     }
 
     /*

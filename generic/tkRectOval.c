@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkRectOval.c,v 1.10 2003/02/09 07:48:22 hobbs Exp $
+ * RCS: @(#) $Id: tkRectOval.c,v 1.11 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include <stdio.h>
@@ -255,7 +255,7 @@ CreateRectOval(interp, canvas, itemPtr, objc, objv)
     int i;
 
     if (objc == 0) {
-	panic("canvas did not pass any coords\n");
+	Tcl_Panic("canvas did not pass any coords\n");
     }
 
     /*
