@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.48 2004/09/10 22:31:10 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.49 2005/01/13 09:54:04 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -104,6 +104,7 @@ proc ::tk::IconList_Selection {w op args} {
 		    set first $ind
 		    break
 		}
+		incr ind
 	    }
 	    set ind [expr {[llength $data(selection)] - 1}]
 	    for {} {$ind >= 0} {incr ind -1} {
@@ -258,6 +259,8 @@ proc ::tk::IconList_Create {w} {
     bind $data(canvas) <ButtonRelease-1> [list tk::CancelRepeat]
     bind $data(canvas) <Double-ButtonRelease-1> \
 	    [list tk::IconList_Double1 $w %x %y]
+
+    bind $data(canvas) <Control-B1-Motion> {;}
 
     bind $data(canvas) <Up>		[list tk::IconList_UpDown $w -1]
     bind $data(canvas) <Down>		[list tk::IconList_UpDown $w  1]
@@ -467,6 +470,7 @@ proc ::tk::IconList_Arrange {w} {
     if {$data(curItem) != ""} {
 	IconList_Select $w [lindex [lindex $data(list) $data(curItem)] 2] 0
     }
+    IconList_DrawSelection $w
 }
 
 # Gets called when the user invokes the IconList (usually by double-clicking
@@ -539,7 +543,7 @@ proc ::tk::IconList_Btn1 {w x y} {
     set x [expr {int([$data(canvas) canvasx $x])}]
     set y [expr {int([$data(canvas) canvasy $y])}]
     set i [IconList_Index $w @${x},${y}]
-    if {$i==""} return
+    if {$i eq ""} return
     IconList_Selection $w clear 0 end
     IconList_Selection $w set $i
     IconList_Selection $w anchor $i
@@ -553,7 +557,7 @@ proc ::tk::IconList_CtrlBtn1 {w x y} {
 	set x [expr {int([$data(canvas) canvasx $x])}]
 	set y [expr {int([$data(canvas) canvasy $y])}]
 	set i [IconList_Index $w @${x},${y}]
-	if {$i==""} return
+	if {$i eq ""} return
 	if { [IconList_Selection $w includes $i] } {
 	    IconList_Selection $w clear $i
 	} else {
@@ -571,7 +575,7 @@ proc ::tk::IconList_ShiftBtn1 {w x y} {
 	set x [expr {int([$data(canvas) canvasx $x])}]
 	set y [expr {int([$data(canvas) canvasy $y])}]
 	set i [IconList_Index $w @${x},${y}]
-	if {$i==""} return
+	if {$i eq ""} return
 	set a [IconList_Index $w anchor]
 	if { [string equal $a ""] } {
 	    set a $i
@@ -591,7 +595,7 @@ proc ::tk::IconList_Motion1 {w x y} {
     set x [expr {int([$data(canvas) canvasx $x])}]
     set y [expr {int([$data(canvas) canvasy $y])}]
     set i [IconList_Index $w @${x},${y}]
-    if {$i==""} return
+    if {$i eq ""} return
     IconList_Selection $w clear 0 end
     IconList_Selection $w set $i
 }
@@ -652,7 +656,7 @@ proc ::tk::IconList_UpDown {w amount} {
 	set i 0
     } else {
 	set i [tk::IconList_Index $w anchor]
-	if {$i==""} return
+	if {$i eq ""} return
 	incr i $amount
     }
     IconList_Selection $w clear 0 end
@@ -681,7 +685,7 @@ proc ::tk::IconList_LeftRight {w amount} {
 	set i 0
     } else {
 	set i [IconList_Index $w anchor]
-	if {$i==""} return
+	if {$i eq ""} return
 	incr i [expr {$amount*$data(itemsPerColumn)}]
     }
     IconList_Selection $w clear 0 end
@@ -721,7 +725,7 @@ proc ::tk::IconList_Goto {w text} {
 	return
     }
 
-    if {$data(curItem) == "" || $data(curItem) == 0} {
+    if {$data(curItem) eq "" || $data(curItem) == 0} {
 	set start  0
     } else {
 	set start  $data(curItem)
@@ -942,7 +946,7 @@ proc ::tk::dialog::file::Config {dataName type argList} {
     #
     tclParseConfigSpec ::tk::dialog::file::$dataName $specs "" $argList
 
-    if {$data(-title) == ""} {
+    if {$data(-title) eq ""} {
 	if {[string equal $type "open"]} {
 	    set data(-title) "[mc "Open"]"
 	} else {
