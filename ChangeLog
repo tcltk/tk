@@ -1,7 +1,9 @@
 2002-04-10  David Gravereaux <davygrvy@pobox.com>
 
 	* win/makefile.vc: Added missing $(TKSTUBLIB) to the
-	install-binaries target.
+	install-binaries target and added a special rule for tkStubImg.c
+	so it always is built with _DSTATIC_BUILD for use in the Stubs
+	library.
 
 2002-04-08  Daniel Steffen  <das@users.sourceforge.net>
 
