@@ -1,3 +1,9 @@
+2001-06-21  eric melski  <ericm@interwoven.com>
+
+	* doc/colors.n: Corrected bogus documentation with respect to
+	several shades of blue, all of which were listed as RGB 0 0 0.
+	[Bug #432104].
+
 2001-06-14  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/demos/floor.tcl, library/demos/filebox.tcl,
