@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# RCS: @(#) $Id: clrpick.tcl,v 1.15 2002/04/29 13:17:44 bagnonm Exp $
+# RCS: @(#) $Id: clrpick.tcl,v 1.16 2002/06/10 00:15:42 a_kovalenko Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -205,12 +205,12 @@ proc ::tk::dialog::color::BuildDialog {w} {
     # StripsFrame contains the colorstrips and the individual RGB entries
     set stripsFrame [frame $topFrame.colorStrip]
 
-    set maxWidth [mcmax Red Green Blue]
+    set maxWidth [::tk::mcmaxamp &Red &Green &Blue]
     set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
     set colorList [list \
-	    red		[mc "Red"]	\
-	    green	[mc "Green"]	\
-	    blue	[mc "Blue"]	\
+	    red		[mc "&Red"]	\
+	    green	[mc "&Green"]	\
+	    blue	[mc "&Blue"]	\
 	    ]
     foreach {color l} $colorList {
 	# each f frame contains an [R|G|B] entry and the equiv. color strip.
@@ -219,7 +219,9 @@ proc ::tk::dialog::color::BuildDialog {w} {
 	# The box frame contains the label and entry widget for an [R|G|B]
 	set box [frame $f.box]
 
-	label $box.label -text $l: -width $maxWidth -under 0 -anchor ne
+	bind [::tk::AmpWidget label $box.label -text $l: -width $maxWidth \
+	    -anchor ne] <<AltUnderlined>> [list focus $box.entry]
+	
 	entry $box.entry -textvariable \
 		::tk::dialog::color::[winfo name $w]($color,intensity) \
 		-width 4
@@ -265,8 +267,8 @@ proc ::tk::dialog::color::BuildDialog {w} {
     # selected color
     #
     set selFrame [frame $topFrame.sel]
-    set lab [label $selFrame.lab -text [mc "Selection:"] \
-	    -under 0 -anchor sw]
+    set lab [::tk::AmpWidget label $selFrame.lab -text [mc "&Selection:"] \
+	    -anchor sw]
     set ent [entry $selFrame.ent \
 	-textvariable ::tk::dialog::color::[winfo name $w](selection) \
 	-width 16]
@@ -285,13 +287,13 @@ proc ::tk::dialog::color::BuildDialog {w} {
     # the botFrame frame contains the buttons
     #
     set botFrame [frame $w.bot -relief raised -bd 1]
-    set maxWidth [mcmax OK Cancel]
+    set maxWidth [::tk::mcmaxamp &OK &Cancel]
     set maxWidth [expr {$maxWidth<8?8:$maxWidth}]
-    button $botFrame.ok     -text [mc "OK"]		\
-	    -width $maxWidth -under 0				\
+    ::tk::AmpWidget button $botFrame.ok     -text [mc "&OK"]		\
+	    -width $maxWidth \
 	    -command [list tk::dialog::color::OkCmd $w]
-    button $botFrame.cancel -text [mc "Cancel"]	\
-	    -width $maxWidth -under 0				\
+    ::tk::AmpWidget button $botFrame.cancel -text [mc "&Cancel"]	\
+	    -width $maxWidth \
 	    -command [list tk::dialog::color::CancelCmd $w]
 
     set data(okBtn)      $botFrame.ok
@@ -303,14 +305,9 @@ proc ::tk::dialog::color::BuildDialog {w} {
 
 
     # Accelerator bindings
-
-    bind $w <Alt-r> [list focus $data(red,entry)]
-    bind $w <Alt-g> [list focus $data(green,entry)]
-    bind $w <Alt-b> [list focus $data(blue,entry)]
-    bind $w <Alt-s> [list focus $ent]
+    bind $lab <<AltUnderlined>> [list focus $ent]
     bind $w <KeyPress-Escape> [list tk::ButtonInvoke $data(cancelBtn)]
-    bind $w <Alt-c> [list tk::ButtonInvoke $data(cancelBtn)]
-    bind $w <Alt-o> [list tk::ButtonInvoke $data(okBtn)]
+    bind $w <Alt-Key> [list tk::AltKeyInDialog $w %A]
 
     wm protocol $w WM_DELETE_WINDOW [list tk::dialog::color::CancelCmd $w]
 }

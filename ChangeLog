@@ -1,3 +1,25 @@
+2002-06-10  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
+
+	* library/tk.tcl: added utility functions to get "-underline" and 
+	"-text" for labels and buttons from translatable string containing 
+	"magic ampersand" [patch #566605]
+	* library/clrpick.tcl:
+	* library/msgbox.tcl:
+	* library/tkfbox.tcl:
+	* library/xmfbox.tcl: some places where msgcat is used to get
+	translated label are modified to handle labels with magic ampersand.
+	* library/msgs/ru.msg: russian translations added
+	* library/msgs/cs.msg:
+	* library/msgs/de.msg:
+	* library/msgs/el.msg: 
+	* library/msgs/es.msg:
+	* library/msgs/fr.msg:
+	* library/msgs/it.msg:
+	* library/msgs/nl.msg: all translation files now have labels with
+	'magic ampersand' where appropriate. In el.msg some ampersands are
+	missing, as I don't know which underline positions seems natural
+	to "el" users.
+
 2002-06-09  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* library/bgerror.tcl (tk::dialog::error::bgerror):
