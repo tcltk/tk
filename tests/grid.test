@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.20 2003/09/16 21:47:15 pspjuth Exp $
+# RCS: @(#) $Id: grid.test,v 1.21 2003/09/18 18:22:22 pspjuth Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -582,7 +582,7 @@ grid_reset 10.3
 
 test grid-10.4 {column/row configure} {
 	list [catch {grid columnconfigure . nine -weight} msg] $msg
-} {1 {expected integer but got "nine"}}
+} {1 {expected integer but got "nine" (when retreiving options only integer indices are allowed)}}
 grid_reset 10.4
 
 test grid-10.5 {column/row configure} {
@@ -686,6 +686,63 @@ test grid-10.20 {column/row configure} {
 	grid columnconfigure . 0 -uniform
 } {foo}
 grid_reset 10.20
+
+test grid-10.21 {column/row configure} {
+    list [catch {grid columnconfigure . .b -weight 1} msg] $msg
+} {1 {grid columnconfigure: illegal index ".b"}}
+grid_reset 10.21
+
+test grid-10.22 {column/row configure} {
+    button .b
+    list [catch {grid columnconfigure . .b -weight 1} msg] $msg
+} {1 {grid columnconfigure: the window ".b" is not managed by "."}}
+grid_reset 10.22
+
+test grid-10.23 {column/row configure} {
+    button .b
+    grid .b -column 1 -columnspan 2
+    grid columnconfigure . .b -weight 1
+    set res {}
+    foreach i {0 1 2 3} {
+        lappend res [grid columnconfigure . $i -weight]
+    }
+    set res
+} {0 1 1 0}
+grid_reset 10.23
+
+test grid-10.24 {column/row configure} {
+    button .b
+    button .c
+    button .d
+    grid .b -column 1 -columnspan 2
+    grid .c -column 2 -columnspan 3
+    grid .d -column 4 -columnspan 2
+    grid columnconfigure . {.b .d} -weight 1
+    grid columnconfigure . .c -weight 2
+    set res {}
+    foreach i {0 1 2 3 4 5 6} {
+        lappend res [grid columnconfigure . $i -weight]
+    }
+    set res
+} {0 1 2 2 2 1 0}
+grid_reset 10.24
+
+test grid-10.25 {column/row configure} {
+    button .b
+    button .c
+    button .d
+    grid .b -row 1 -rowspan 2
+    grid .c -row 2 -rowspan 3
+    grid .d -row 4 -rowspan 2
+    grid rowconfigure . {7 all} -weight 1
+    grid rowconfigure . {1 .d} -weight 2
+    set res {}
+    foreach i {0 1 2 3 4 5 6 7} {
+        lappend res [grid rowconfigure . $i -weight]
+    }
+    set res
+} {0 2 1 1 2 2 0 1}
+grid_reset 10.25
 
 # auto-placement tests
 

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.27 2003/09/16 21:47:15 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.28 2003/09/18 18:22:22 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -838,17 +838,17 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    Tk_Window master;
+    Tk_Window master, slave;
     Gridder *masterPtr;
+    Gridder *slavePtr;
     SlotInfo *slotPtr = NULL;
     int slot;			/* the column or row number */
     int slotType;		/* COLUMN or ROW */
     int size;			/* the configuration value */
-    int checkOnly;		/* check the size only */
     int lObjc;			/* Number of items in index list */
     Tcl_Obj **lObjv;		/* array of indices */
     int ok;			/* temporary TCL result code */
-    int i, j;
+    int i, j, first, last;
     char *string;
     static CONST char *optionStrings[] = {
 	"-minsize", "-pad", "-uniform", "-weight", (char *) NULL };
@@ -869,30 +869,26 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
     }
     
     string = Tcl_GetString(objv[1]);
-    checkOnly = ((objc == 4) || (objc == 5));
     masterPtr = GetGrid(master);
     slotType = (*string == 'c') ? COLUMN : ROW;
-    if (checkOnly && lObjc > 1) {
-	Tcl_AppendResult(interp, Tcl_GetString(objv[3]),
-		" must be a single element.", (char *) NULL);
-	return TCL_ERROR;
-    }
-    for (j = 0; j < lObjc; j++) {
-	if (Tcl_GetIntFromObj(interp, lObjv[j], &slot) != TCL_OK) {
+
+    if ((objc == 4) || (objc == 5)) {
+	if (lObjc != 1) {
+	    Tcl_AppendResult(interp, Tcl_GetString(objv[3]),
+		    " must be a single element.", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	ok = CheckSlotData(masterPtr, slot, slotType, checkOnly);
-	if ((ok != TCL_OK) && ((objc < 4) || (objc > 5))) {
-	    Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ", 
-		    Tcl_GetString(objv[1]), ": \"", Tcl_GetString(lObjv[j]),
-		    "\" is out of range", (char *) NULL);
+	if (Tcl_GetIntFromObj(interp, lObjv[0], &slot) != TCL_OK) {
+	    Tcl_AppendResult(interp,
+		    " (when retreiving options only integer indices are allowed)",
+		    (char *) NULL);
 	    return TCL_ERROR;
-	} else if (ok == TCL_OK) {
-	    slotPtr = (slotType == COLUMN) ?
-		    masterPtr->masterDataPtr->columnPtr :
-		    masterPtr->masterDataPtr->rowPtr;
 	}
-	
+	ok = CheckSlotData(masterPtr, slot, slotType, /* checkOnly */ 1);
+	slotPtr = (slotType == COLUMN) ?
+		masterPtr->masterDataPtr->columnPtr :
+		masterPtr->masterDataPtr->rowPtr;
+
 	/*
 	 * Return all of the options for this row or column.  If the
 	 * request is out of range, return all 0's.
@@ -902,7 +898,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	    int minsize = 0, pad = 0, weight = 0;
 	    Tk_Uid uniform = NULL;
 	    Tcl_Obj *res = Tcl_NewListObj(0, NULL);
-	 
+
 	    if (ok == TCL_OK) {
 		minsize = slotPtr[slot].minSize;
 		pad     = slotPtr[slot].pad;
@@ -926,114 +922,178 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	    Tcl_SetObjResult(interp, res);
 	    return TCL_OK;
 	}
-	
+
 	/*
-	 * Loop through each option value pair, setting the values as
-	 * required.  If only one option is given, with no value, the
+	 * If only one option is given, with no value, the
 	 * current value is returned.
 	 */
 	
-	for (i = 4; i < objc; i += 2) {
-	    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option", 0,
-		    &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[4], optionStrings,
+		    "option", 0, &index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (index == ROWCOL_MINSIZE) {
+	    Tcl_SetObjResult(interp,
+		    Tcl_NewIntObj((ok == TCL_OK) ? slotPtr[slot].minSize : 0));
+	} else if (index == ROWCOL_WEIGHT) {
+	    Tcl_SetObjResult(interp,
+		    Tcl_NewIntObj((ok == TCL_OK) ? slotPtr[slot].weight : 0));
+	} else if (index == ROWCOL_UNIFORM) {
+	    Tk_Uid value;
+	    value = (ok == TCL_OK) ? slotPtr[slot].uniform : "";
+	    Tcl_SetObjResult(interp, 
+		    Tcl_NewStringObj(value == NULL ? "" : value, -1));
+	} else if (index == ROWCOL_PAD) {
+	    Tcl_SetObjResult(interp, 
+		    Tcl_NewIntObj((ok == TCL_OK) ? slotPtr[slot].pad : 0));
+	}
+	return TCL_OK;
+    }
+
+    for (j = 0; j < lObjc; j++) {
+	int allSlaves = 0;
+	if (Tcl_GetIntFromObj(interp, lObjv[j], &slot) == TCL_OK) {
+	    first = slot;
+	    last = slot;
+	    slavePtr = NULL;
+	} else if (strcmp(Tcl_GetString(lObjv[j]), "all") == 0) {
+	    slavePtr = masterPtr->slavePtr;
+	    if (slavePtr == NULL) {
+		continue;
+	    }
+	    allSlaves = 1;
+	} else if (TkGetWindowFromObj(interp, tkwin, lObjv[j], &slave)
+		== TCL_OK) {
+	    /* Is it gridded in this master? */
+	    slavePtr = GetGrid(slave);
+	    if (slavePtr->masterPtr != masterPtr) {
+		Tcl_ResetResult(interp);
+		Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ", 
+			Tcl_GetString(objv[1]), ": the window \"",
+			Tcl_GetString(lObjv[j]),
+			"\" is not managed by \"", Tcl_GetString(objv[2]),
+			"\"", (char *) NULL);
 		return TCL_ERROR;
 	    }
-	    if (index == ROWCOL_MINSIZE) {
-		if (objc == 5) {
-		    Tcl_SetObjResult(interp, Tcl_NewIntObj(
-			    (ok == TCL_OK) ? slotPtr[slot].minSize : 0));
-		} else if (Tk_GetPixelsFromObj(interp, master, objv[i+1], &size)
-			!= TCL_OK) {
-		    return TCL_ERROR;
-		} else {
-		    slotPtr[slot].minSize = size;
-		}
-	    }
-	    else if (index == ROWCOL_WEIGHT) {
-		int wt;
-		if (objc == 5) {
-		    Tcl_SetObjResult(interp, Tcl_NewIntObj(
-			    (ok == TCL_OK) ? slotPtr[slot].weight : 0));
-		} else if (Tcl_GetIntFromObj(interp, objv[i+1], &wt)
-			!= TCL_OK) {
-		    return TCL_ERROR;
-		} else if (wt < 0) {
-		    Tcl_AppendResult(interp, "invalid arg \"",
-			    Tcl_GetString(objv[i]),
-			    "\": should be non-negative", (char *) NULL);
-		    return TCL_ERROR;
-		} else {
-		    slotPtr[slot].weight = wt;
-		}
-	    }
-	    else if (index == ROWCOL_UNIFORM) {
-		if (objc == 5) {
-		    Tk_Uid value;
-		    value = (ok == TCL_OK) ? slotPtr[slot].uniform : "";
-		    if (value == NULL) {
-			value = "";
-		    }
-		    Tcl_SetObjResult(interp, Tcl_NewStringObj(value, -1));
-		} else {
-		    slotPtr[slot].uniform = Tk_GetUid(Tcl_GetString(objv[i+1]));
-		    if (slotPtr[slot].uniform != NULL &&
-			    slotPtr[slot].uniform[0] == 0) {
-			slotPtr[slot].uniform = NULL;
-		    }
-		}
-	    }
-	    else if (index == ROWCOL_PAD) {
-		if (objc == 5) {
-		    Tcl_SetObjResult(interp, Tcl_NewIntObj(
-			    (ok == TCL_OK) ? slotPtr[slot].pad : 0));
-		} else if (Tk_GetPixelsFromObj(interp, master, objv[i+1], &size)
-			!= TCL_OK) {
-		    return TCL_ERROR;
-		} else if (size < 0) {
-		    Tcl_AppendResult(interp, "invalid arg \"", 
-			    Tcl_GetString(objv[i]),
-			    "\": should be non-negative", (char *) NULL);
-		    return TCL_ERROR;
-		} else {
-		    slotPtr[slot].pad = size;
-		}
-	    }
+	} else {
+	    Tcl_ResetResult(interp);
+	    Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ", 
+		    Tcl_GetString(objv[1]), ": illegal index \"",
+		    Tcl_GetString(lObjv[j]), "\"", (char *) NULL);
+	    return TCL_ERROR;
 	}
+
+	/*
+	 * The outer loop is only to handle "all".
+	 */
+	do {
+	    if (slavePtr != NULL) {
+		first = (slotType == COLUMN) ?
+			slavePtr->column : slavePtr->row;
+		last = first - 1 + ((slotType == COLUMN) ?
+			slavePtr->numCols : slavePtr->numRows);
+	    }
+
+	    for (slot = first; slot <= last; slot++) {
+		ok = CheckSlotData(masterPtr, slot, slotType, /*checkOnly*/ 0);
+		if (ok != TCL_OK) {
+		    Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ", 
+			    Tcl_GetString(objv[1]), ": \"",
+			    Tcl_GetString(lObjv[j]),
+			    "\" is out of range", (char *) NULL);
+		    return TCL_ERROR;
+		}
+		slotPtr = (slotType == COLUMN) ?
+			masterPtr->masterDataPtr->columnPtr :
+			masterPtr->masterDataPtr->rowPtr;
+	
+		/*
+		 * Loop through each option value pair, setting the values as
+		 * required.
+		 */
+
+		for (i = 4; i < objc; i += 2) {
+		    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,
+				"option", 0, &index) != TCL_OK) {
+			return TCL_ERROR;
+		    }
+		    if (index == ROWCOL_MINSIZE) {
+			if (Tk_GetPixelsFromObj(interp, master, objv[i+1],
+				    &size) != TCL_OK) {
+			    return TCL_ERROR;
+			} else {
+			    slotPtr[slot].minSize = size;
+			}
+		    } else if (index == ROWCOL_WEIGHT) {
+			int wt;
+			if (Tcl_GetIntFromObj(interp, objv[i+1], &wt) != TCL_OK) {
+			    return TCL_ERROR;
+			} else if (wt < 0) {
+			    Tcl_AppendResult(interp, "invalid arg \"",
+				    Tcl_GetString(objv[i]),
+				    "\": should be non-negative", (char *) NULL);
+			    return TCL_ERROR;
+			} else {
+			    slotPtr[slot].weight = wt;
+			}
+		    } else if (index == ROWCOL_UNIFORM) {
+			slotPtr[slot].uniform = Tk_GetUid(Tcl_GetString(objv[i+1]));
+			if (slotPtr[slot].uniform != NULL &&
+				slotPtr[slot].uniform[0] == 0) {
+			    slotPtr[slot].uniform = NULL;
+			}
+		    } else if (index == ROWCOL_PAD) {
+			if (Tk_GetPixelsFromObj(interp, master, objv[i+1], &size)
+				!= TCL_OK) {
+			    return TCL_ERROR;
+			} else if (size < 0) {
+			    Tcl_AppendResult(interp, "invalid arg \"", 
+				    Tcl_GetString(objv[i]),
+				    "\": should be non-negative", (char *) NULL);
+			    return TCL_ERROR;
+			} else {
+			    slotPtr[slot].pad = size;
+			}
+		    }
+		}
+	    }
+	    if (slavePtr != NULL) {
+		slavePtr = slavePtr->nextPtr;
+	    }
+	} while ((allSlaves == 1) && (slavePtr != NULL));
     }
     
     /*
-     * If we changed a property, re-arrange the table,
+     * We changed a property, re-arrange the table,
      * and check for constraint shrinkage.
      */
     
-    if (objc != 5) {
-	if (slotType == ROW) {
-	    int last = masterPtr->masterDataPtr->rowMax - 1;
-	    while ((last >= 0) && (slotPtr[last].weight == 0)
-		    && (slotPtr[last].pad == 0)
-		    && (slotPtr[last].minSize == 0)
-		    && (slotPtr[last].uniform == NULL)) {
-		last--;
-	    }
-	    masterPtr->masterDataPtr->rowMax = last+1;
-	} else {
-	    int last = masterPtr->masterDataPtr->columnMax - 1;
-	    while ((last >= 0) && (slotPtr[last].weight == 0)
-		    && (slotPtr[last].pad == 0)
-		    && (slotPtr[last].minSize == 0)
-		    && (slotPtr[last].uniform == NULL)) {
-		last--;
-	    }
-	    masterPtr->masterDataPtr->columnMax = last + 1;
+    if (slotType == ROW) {
+	int last = masterPtr->masterDataPtr->rowMax - 1;
+	while ((last >= 0) && (slotPtr[last].weight == 0)
+		&& (slotPtr[last].pad == 0)
+		&& (slotPtr[last].minSize == 0)
+		&& (slotPtr[last].uniform == NULL)) {
+	    last--;
 	}
-	
-	if (masterPtr->abortPtr != NULL) {
-	    *masterPtr->abortPtr = 1;
+	masterPtr->masterDataPtr->rowMax = last+1;
+    } else {
+	int last = masterPtr->masterDataPtr->columnMax - 1;
+	while ((last >= 0) && (slotPtr[last].weight == 0)
+		&& (slotPtr[last].pad == 0)
+		&& (slotPtr[last].minSize == 0)
+		&& (slotPtr[last].uniform == NULL)) {
+	    last--;
 	}
-	if (!(masterPtr->flags & REQUESTED_RELAYOUT)) {
-	    masterPtr->flags |= REQUESTED_RELAYOUT;
-	    Tcl_DoWhenIdle(ArrangeGrid, (ClientData) masterPtr);
-	}
+	masterPtr->masterDataPtr->columnMax = last + 1;
+    }
+
+    if (masterPtr->abortPtr != NULL) {
+	*masterPtr->abortPtr = 1;
+    }
+    if (!(masterPtr->flags & REQUESTED_RELAYOUT)) {
+	masterPtr->flags |= REQUESTED_RELAYOUT;
+	Tcl_DoWhenIdle(ArrangeGrid, (ClientData) masterPtr);
     }
     return TCL_OK;
 }
