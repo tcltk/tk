@@ -328,11 +328,8 @@
 			children = (
 				F5375533016C376E01DC9062,
 				4C3B4CF6040B18B200C916F0,
-				F5375534016C376E01DC9062,
 				F5375535016C376E01DC9062,
-				F5375536016C376E01DC9062,
 				F5375538016C376E01DC9062,
-				F5375539016C376E01DC9062,
 				F537553A016C376E01DC9062,
 			);
 			isa = PBXGroup;
@@ -345,34 +342,16 @@
 			path = tkAboutDlg.r;
 			refType = 4;
 		};
-		F5375534016C376E01DC9062 = {
-			fileEncoding = 5;
-			isa = PBXFileReference;
-			path = tkMacOSXApplication.r;
-			refType = 4;
-		};
 		F5375535016C376E01DC9062 = {
 			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXCursors.r;
 			refType = 4;
 		};
-		F5375536016C376E01DC9062 = {
-			fileEncoding = 5;
-			isa = PBXFileReference;
-			path = tkMacOSXLibrary.r;
-			refType = 4;
-		};
 		F5375538016C376E01DC9062 = {
 			fileEncoding = 5;
 			isa = PBXFileReference;
 			path = tkMacOSXMenu.r;
-			refType = 4;
-		};
-		F5375539016C376E01DC9062 = {
-			fileEncoding = 5;
-			isa = PBXFileReference;
-			path = tkMacOSXResource.r;
 			refType = 4;
 		};
 		F537553A016C376E01DC9062 = {
@@ -1530,7 +1509,7 @@
 			);
 			buildSettings = {
 				DYLIB_COMPATIBILITY_VERSION = 8.4;
-				DYLIB_CURRENT_VERSION = 8.4;
+				DYLIB_CURRENT_VERSION = "$(FRAMEWORK_VERSION)";
 				DYLIB_INSTALL_PATH = /Library/Frameworks;
 				FRAMEWORK_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)\"";
 				FRAMEWORK_VERSION = 8.4;
@@ -1549,10 +1528,6 @@
 				SECTORDER_FLAGS = "";
 				TCLSH_DIR = "$(TCL_FRAMEWORK_DIR)";
 				TCL_FRAMEWORK_DIR = "$(SYMROOT)";
-				TK_MAJOR_VERSION = 8;
-				TK_MINOR_VERSION = 4;
-				TK_PATCH_LEVEL = .1;
-				TK_VERSION = 8.4;
 				USE_GCC3_PFE_SUPPORT = YES;
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
 				WRAPPER_EXTENSION = framework;
@@ -1574,7 +1549,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Tk</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Tk Library 8.4, Copyright © 2002 Tcl Core Team.
+	<string>Tk Library 8.4, Copyright © 2003 Tcl Core Team.
 MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright © 2001-2002, Apple Computer, Inc.</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
@@ -2953,7 +2928,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright �
 	<key>CFBundleExecutable</key>
 	<string>Wish Shell</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Wish Shell 8.4, Copyright © 2002 Tcl Core Team.
+	<string>Wish Shell 8.4, Copyright © 2003 Tcl Core Team.
 MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright © 2001-2002, Apple Computer, Inc.</string>
 	<key>CFBundleIconFile</key>
 	<string>Wish.icns</string>
