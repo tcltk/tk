@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.44 2004/08/10 18:16:00 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.45 2004/08/19 19:39:33 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -4321,7 +4321,7 @@ UpdateTitle(winPtr)
     XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
 	    Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_NAME"),
 	    XA_UTF8_STRING, 8, PropModeReplace, 
-	    string, (signed int)strlen(string));
+	    (const unsigned char*)string, (signed int)strlen(string));
 
     /*
      * Set icon name:
@@ -4335,7 +4335,8 @@ UpdateTitle(winPtr)
 	XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
 		Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_ICON_NAME"),
 		XA_UTF8_STRING, 8, PropModeReplace,
-		wmPtr->iconName, (signed int)strlen(wmPtr->iconName));
+		(const unsigned char*)wmPtr->iconName,
+		(signed int)strlen(wmPtr->iconName));
     }
 }
 
