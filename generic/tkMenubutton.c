@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.5 2000/11/22 01:49:38 ericm Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.6 2001/05/21 14:07:33 tmh Exp $
  */
 
 #include "tkMenubutton.h"
@@ -34,6 +34,15 @@ static char *directionStrings[] = {
 
 static char *stateStrings[] = {
     "active", "disabled", "normal", (char *) NULL
+};
+
+/*
+ * The following table defines the legal values for the -compound option.
+ * It is used with the "enum compound" declaration in tkButton.h
+ */
+
+static char *compoundStrings[] = {
+    "bottom", "center", "left", "none", "right", "top", (char *) NULL
 };
 
 /*
@@ -113,6 +122,9 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_MENUBUTTON_RELIEF, -1, Tk_Offset(TkMenuButton, relief), 
         0, 0, 0},
+    {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
+         DEF_BUTTON_COMPOUND, -1, Tk_Offset(TkMenuButton, compound), 0,
+         (ClientData) compoundStrings, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_MENUBUTTON_STATE, -1, Tk_Offset(TkMenuButton, state),
 	0, (ClientData) stateStrings, 0},
