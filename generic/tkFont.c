@@ -11,16 +11,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.16 2002/06/26 22:12:43 a_kovalenko Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.17 2002/07/16 23:29:33 mdejong Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
 #include "tkFont.h"
-
-#ifndef assert
-#include <assert.h>
-#endif
 
 /*
  * The following structure is used to keep track of all the fonts that
@@ -439,7 +435,8 @@ TkFontPkgFree(mainPtr)
 	fprintf(stderr, "Font %s still in cache.\n", 
 		Tcl_GetHashKey(&fiPtr->fontCache, searchPtr));
     }
-    assert(fontsLeft == 0);
+    if (fontsLeft == 0)
+        panic("no fontsLeft");
 #ifdef PURIFY
     if (fontsLeft) {
 	panic("TkFontPkgFree: all fonts should have been freed already");
