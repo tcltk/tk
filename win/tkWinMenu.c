@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.5 1999/04/16 01:51:52 stanton Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.6 1999/09/15 22:35:42 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -2716,7 +2716,7 @@ SetDefaults(
     }
     SelectObject(scratchDC, menuFont);
     GetTextMetrics(scratchDC, &tm);
-    GetTextFace(scratchDC, sizeof(menuFontDString), faceName);
+    GetTextFace(scratchDC, LF_FACESIZE, faceName);
     pointSize = MulDiv(tm.tmHeight - tm.tmInternalLeading,
 	    72, GetDeviceCaps(scratchDC, LOGPIXELSY));
     if (tm.tmWeight >= 700) {

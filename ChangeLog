@@ -1,3 +1,7 @@
+1999-09-14  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* win/tkWinMenu.c: fix for stack overrun in GetTextFace [Bug: 909]
+
 1999-09-01  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* win/tkWinDraw.c:
@@ -5,8 +9,6 @@
 	* generic/tkCanvas.c: fixed GC error (bg <> fg) in tkCanvas.c
 	(from code added to support TkpDrawHighlightBorder) [Bug: 2676]
 	* unix/aclocal.m4: added -bnoentry to the AIX-* flags
-	* generic/tkCursor.c: fixed equality error in GetCursorFromObj
-	[Bug: 2562]
 	* library/msgbox.tcl: changed the behavior of tk_messageBox on
 	Unix to be more Windows like in handling of <Return> and the
 	default button
@@ -40,14 +42,16 @@
 
 	* generic/tkCursor.c: fixed bug in GetCursorFromObj that caused
 	panic [Bug: 2562]
-	
+
+	* TK 8.2.0 RELEASED
+
 1999-08-13  Jim Ingham  <jingham@cygnus.com>
 
-        * mac/tkMacMenu.c: Tk_DrawChars ends up setting the menu background
-        wrong.  There is no clean way to stop it, so I use lower level routines
-        here to draw the text.
-        * mac/tkMacProjects.sea.hqx: Rearrange the projects so that the build 
-        directory is separate from the sources.  Much more convenient! 
+	* mac/tkMacMenu.c: Tk_DrawChars ends up setting the menu background
+	wrong.	There is no clean way to stop it, so I use lower level routines
+	here to draw the text.
+	* mac/tkMacProjects.sea.hqx: Rearrange the projects so that the build 
+	directory is separate from the sources.  Much more convenient! 
         
 1999-08-10  Jeff Hobbs  <hobbs@scriptics.com>
 
