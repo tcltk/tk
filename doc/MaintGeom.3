@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: MaintGeom.3,v 1.2 1998/09/14 18:22:52 stanton Exp $
+'\" RCS: @(#) $Id: MaintGeom.3,v 1.3 2000/10/05 00:50:00 ericm Exp $
 '\" 
 .so man.macros
 .TH Tk_MaintainGeometry 3 4.0 Tk "Tk Library Procedures"
@@ -64,7 +64,8 @@ is unmapped, the slave is automatically removed by the screen
 by X.
 .PP
 \fBTk_MaintainGeometry\fR deals with these problems for slaves
-whose masters aren't their parents.
+whose masters aren't their parents, as well as handling the simpler
+case of slaves whose masters are their parents.
 \fBTk_MaintainGeometry\fR is typically called by a window manager
 once it has decided where a slave should be positioned relative
 to its master.
