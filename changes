@@ -4204,3 +4204,14 @@ comment at the top of generic/tkInitScript.h for more details. (SS)
 
 7/27/98 (bug fix) The bbox for coords in the canvas were incorrectly
 including the center of the coord as part of the bound area.  (RJ)
+
+8/4/98 (bug fix) Fixed memory leak in Windows menu code. (SS)
+
+8/4/98 (bug fix) Fixed bug where bgerror's were not being generated 
+from menu callbacks on Windows. (SS)
+
+8/4/98 (bug fix) Alt-key bindings were not being handled properly 
+under Windows, resulting in annoying beeps. (SS)
+
+8/4/98 (bug fix) Fixed bug in Windows menubar handling that allowed
+a shared menubar to be deleted when any window using it was deleted. (SS)
