@@ -1,5 +1,11 @@
 2001-12-18  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* unix/configure: Regen.
+	* unix/configure.in: Move EXP file changes over from
+	Tcl configure script to fix AIX build with gcc. [Bug 220955]
+
+2001-12-18  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* unix/Makefile.in:
 	* win/Makefile.in: Use $(MAKE) instead of make
 	in the tcltest rule.
