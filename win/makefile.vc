@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.31 2000/02/08 11:31:49 hobbs Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.32 2000/02/10 02:54:23 hobbs Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -44,7 +44,7 @@ TOOLS32_rc	= c:\Progra~1\devstudio\sharedide
 #THREADDEFINES = -DTCL_THREADS=1
 
 # Set NODEBUG to 0 to compile with symbols
-NODEBUG = 0
+NODEBUG = 1
 
 # uncomment the following two lines to compile with TCL_MEM_DEBUG
 #DEBUGDEFINES	=-DTCL_MEM_DEBUG
