@@ -1,3 +1,9 @@
+2003-11-07  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* tests/textDisp.test:
+	* generic/tkTextDisp.c: fix to another version of [Bug 833627]
+	(crash in tkchat), adding two new tests. 
+	
 2003-11-05  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/demos/nl.msg: Dutch messages from Arjen Markus [Patch 836368]
