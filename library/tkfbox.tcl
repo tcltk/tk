@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.14 2000/01/21 22:44:42 ericm Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.15 2000/02/07 22:12:26 ericm Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -1138,7 +1138,10 @@ proc tkFDialogResolveFile {context text defaultext} {
 
     set path [tkFDialog_JoinFile $context $text]
 
-    if {[string equal [file ext $path] ""]} {
+    # If the file has no extension, append the default.  Be careful not
+    # to do this for directories, otherwise typing a dirname in the box
+    # will give back "dirname.extension" instead of trying to change dir.
+    if {![file isdirectory $path] && [string equal [file ext $path] ""]} {
 	set path "$path$defaultext"
     }
 

@@ -1,3 +1,10 @@
+2000-02-07  Eric Melski  <ericm@scriptics.com>
+
+	* library/tkfbox.tcl: Applied patch from bug #4117,
+	tk_getOpenFile/getSaveFile doesn't do the right thing when user
+	types a directory name in the entry and a default extension is
+	specified.
+
 2000-02-05  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* unix/tkUnixScale.c (TkpDestroyScale): changed ckfree to
@@ -5,6 +12,13 @@
 	(prevents possible segfault).
 
 2000-02-03  Eric Melski  <ericm@scriptics.com>
+
+	* tests/canvText.test: test for fix for bug #2525.
+
+	* generic/tkFont.c (Tk_ComputeTextLayout): Was erroneously setting
+	the width of newline-only text display chunks to some arbitrary
+	huge number, instead of 0; this was interfering with things like
+	the canvas find enclosed feature. (bug #2525).
 
 	* tests/text.test: 
 	* generic/tkText.c (DumpLine/DumpSegment): Changed DumpSegment to
