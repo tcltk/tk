@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64 2003/03/03 20:01:55 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.64.2.1 2003/05/20 19:34:57 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5480,3 +5480,26 @@ of the event structure when that field is valid for that event type. (fellows)
 	*** POTENTIAL INCOMPATIBILITY ***
 
 --- Released 8.4.2, March 3, 2002 --- See ChangeLog for details ---
+
+2003-03-14 (bug fix)[701812] Stop buttons from being very wide when a
+tk_messageBox has a lot of content on Unix
+
+2003-03-18 (bug fix) Fixed crash in [winfo server] on Mac OS X
+
+2003-04-25 (bug fix)[477740] Correct compound button display in the
+disabled state
+
+2003-05-10 (bug fix)[734498] Correct crash when generating postscript for a
+single-line polygon (point) with no color.
+
+2003-05-13 (feature enhancement)[736774] Use new versioned bundle resource
+API to get tk runtime library for TK_VERSION on Mac OS X
+
+2003-05-14 (bug fix)[737790] Updated French message catalog
+
+2003-05-15 (bug fix)[557030] Use gb2312-raw as the alias for gb2312*
+charset fonts.  gb2312.enc was made to be euc-cn for Tcl because that is
+what is most often meant, but X really wants the original (-raw) gb2312
+encoding.
+
+--- Released 8.4.3, May 20, 2002 --- See ChangeLog for details ---
