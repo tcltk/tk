@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.1.4.4 1999/02/11 04:13:47 stanton Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.1.4.5 1999/02/16 11:39:32 lfb Exp $
  */
 
 #include "default.h"
@@ -112,7 +112,7 @@ static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_PIXELS, "-spacing3", "spacing3", "Spacing",
 	DEF_TEXT_SPACING3, Tk_Offset(TkText, spacing3),
 	TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_STATE, "-state", "state", "State",
+    {TK_CONFIG_UID, "-state", "state", "State",
 	DEF_TEXT_STATE, Tk_Offset(TkText, state), 0},
     {TK_CONFIG_STRING, "-tabs", "tabs", "Tabs",
 	DEF_TEXT_TABS, Tk_Offset(TkText, tabOptionString), TK_CONFIG_NULL_OK},
@@ -132,14 +132,6 @@ static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
 	(char *) NULL, 0, 0}
 };
-
-/*
- * Tk_Uid's used to represent text states:
- */
-
-Tk_Uid tkTextCharUid = NULL;
-Tk_Uid tkTextNoneUid = NULL;
-Tk_Uid tkTextWordUid = NULL;
 
 /*
  * Boolean variable indicating whether or not special debugging code
@@ -230,16 +222,6 @@ Tk_TextCmd(clientData, interp, argc, argv)
     }
 
     /*
-     * Perform once-only initialization:
-     */
-
-    if (tkTextCharUid == NULL) {
-	tkTextCharUid = Tk_GetUid("char");
-	tkTextNoneUid = Tk_GetUid("none");
-	tkTextWordUid = Tk_GetUid("word");
-    }
-
-    /*
      * Create the window.
      */
 
@@ -261,7 +243,7 @@ Tk_TextCmd(clientData, interp, argc, argv)
     Tcl_InitHashTable(&textPtr->markTable, TCL_STRING_KEYS);
     Tcl_InitHashTable(&textPtr->windowTable, TCL_STRING_KEYS);
     Tcl_InitHashTable(&textPtr->imageTable, TCL_STRING_KEYS);
-    textPtr->state = TK_STATE_NORMAL;
+    textPtr->state = Tk_GetUid("normal");
     textPtr->border = NULL;
     textPtr->borderWidth = 0;
     textPtr->padX = 0;
@@ -279,7 +261,7 @@ Tk_TextCmd(clientData, interp, argc, argv)
     textPtr->spacing3 = 0;
     textPtr->tabOptionString = NULL;
     textPtr->tabArrayPtr = NULL;
-    textPtr->wrapMode = tkTextCharUid;
+    textPtr->wrapMode = Tk_GetUid("char");
     textPtr->width = 0;
     textPtr->height = 0;
     textPtr->setGrid = 0;
@@ -497,7 +479,7 @@ TextWidgetCmd(clientData, interp, argc, argv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (textPtr->state == TK_STATE_NORMAL) {
+	if (textPtr->state == Tk_GetUid("normal")) {
 	    result = DeleteChars(textPtr, argv[2],
 		    (argc == 4) ? argv[3] : (char *) NULL);
 	}
@@ -605,7 +587,7 @@ TextWidgetCmd(clientData, interp, argc, argv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (textPtr->state == TK_STATE_NORMAL) {
+	if (textPtr->state == Tk_GetUid("normal")) {
 	    for (j = 3;  j < argc; j += 2) {
 		InsertChars(textPtr, &index1, argv[j]);
 		if (argc > (j+1)) {
@@ -781,20 +763,20 @@ ConfigureText(interp, textPtr, argc, argv, flags)
      * the geometry and setting the background from a 3-D border.
      */
 
-    if ((textPtr->state != TK_STATE_NORMAL)
-	    && (textPtr->state != TK_STATE_DISABLED)) {
+    if ((textPtr->state != Tk_GetUid("normal"))
+	    && (textPtr->state != Tk_GetUid("disabled"))) {
 	Tcl_AppendResult(interp, "bad state value \"", textPtr->state,
 		"\": must be normal or disabled", (char *) NULL);
-	textPtr->state = TK_STATE_NORMAL;
+	textPtr->state = Tk_GetUid("normal");
 	return TCL_ERROR;
     }
 
-    if ((textPtr->wrapMode != tkTextCharUid)
-	    && (textPtr->wrapMode != tkTextNoneUid)
-	    && (textPtr->wrapMode != tkTextWordUid)) {
+    if ((textPtr->wrapMode != Tk_GetUid("char"))
+	    && (textPtr->wrapMode != Tk_GetUid("none"))
+	    && (textPtr->wrapMode != Tk_GetUid("word"))) {
 	Tcl_AppendResult(interp, "bad wrap mode \"", textPtr->wrapMode,
 		"\": must be char, none, or word", (char *) NULL);
-	textPtr->wrapMode = tkTextCharUid;
+	textPtr->wrapMode = Tk_GetUid("char");
 	return TCL_ERROR;
     }
 

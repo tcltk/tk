@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.1.4.3 1999/01/07 02:42:49 lfb Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.1.4.4 1999/02/16 11:39:31 lfb Exp $
  */
 
 #include "tkInt.h"
@@ -32,6 +32,9 @@ typedef struct {
 				 * freed even after tkwin has gone away. */
     Tcl_Interp *interp;		/* Interpreter associated with entry. */
     Tcl_Command widgetCmd;	/* Token for entry's widget command. */
+    Tk_OptionTable optionTable;	/* Table that defines configuration options
+				 * available for this widget. */
+
 
     /*
      * Fields that are set by widget commands other than "configure".
@@ -174,6 +177,7 @@ typedef struct {
 #define GOT_FOCUS		8
 #define UPDATE_SCROLLBAR	0x10
 #define GOT_SELECTION		0x20
+#define ENTRY_DELETED           0x40
 
 /*
  * The following macro defines how many extra pixels to leave on each
@@ -184,93 +188,108 @@ typedef struct {
 #define YPAD 1
 
 /*
+ * The following enum is used to define a type for the -state option
+ * of the Entry widget.  These values are used as indices into the 
+ * string table below.
+ */
+
+enum state {
+    STATE_DISABLED, STATE_NORMAL
+};
+
+static char *stateStrings[] = {
+    "disabled", "normal", (char *) NULL
+};
+
+/*
  * Information used for argv parsing.
  */
 
-static Tk_ConfigSpec configSpecs[] = {
-    {TK_CONFIG_BORDER, "-background", "background", "Background",
-	DEF_ENTRY_BG_COLOR, Tk_Offset(Entry, normalBorder),
-	TK_CONFIG_COLOR_ONLY},
-    {TK_CONFIG_BORDER, "-background", "background", "Background",
-	DEF_ENTRY_BG_MONO, Tk_Offset(Entry, normalBorder),
-	TK_CONFIG_MONO_ONLY},
-    {TK_CONFIG_SYNONYM, "-bd", "borderWidth", (char *) NULL,
-	(char *) NULL, 0, 0},
-    {TK_CONFIG_SYNONYM, "-bg", "background", (char *) NULL,
-	(char *) NULL, 0, 0},
-    {TK_CONFIG_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_ENTRY_BORDER_WIDTH, Tk_Offset(Entry, borderWidth), 0},
-    {TK_CONFIG_ACTIVE_CURSOR, "-cursor", "cursor", "Cursor",
-	DEF_ENTRY_CURSOR, Tk_Offset(Entry, cursor), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BOOLEAN, "-exportselection", "exportSelection",
-	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION,
-	Tk_Offset(Entry, exportSelection), 0},
-    {TK_CONFIG_SYNONYM, "-fg", "foreground", (char *) NULL,
-	(char *) NULL, 0, 0},
-    {TK_CONFIG_FONT, "-font", "font", "Font",
-	DEF_ENTRY_FONT, Tk_Offset(Entry, tkfont), 0},
-    {TK_CONFIG_COLOR, "-foreground", "foreground", "Foreground",
-	DEF_ENTRY_FG, Tk_Offset(Entry, fgColorPtr), 0},
-    {TK_CONFIG_COLOR, "-highlightbackground", "highlightBackground",
+static Tk_OptionSpec optionSpecs[] = {
+    {TK_OPTION_BORDER, "-background", "background", "Background",
+	DEF_ENTRY_BG_COLOR, -1, Tk_Offset(Entry, normalBorder),
+	0, (ClientData) DEF_ENTRY_BG_MONO, 0},
+    {TK_OPTION_SYNONYM, "-bd", (char *) NULL, (char *) NULL,
+	(char *) NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
+    {TK_OPTION_SYNONYM, "-bg", (char *) NULL, (char *) NULL,
+	(char *) NULL, 0, -1, 0, (ClientData) "-background", 0},
+    {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
+	DEF_ENTRY_BORDER_WIDTH, -1, Tk_Offset(Entry, borderWidth), 
+        0, 0, 0},
+    {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
+	DEF_ENTRY_CURSOR, -1, Tk_Offset(Entry, cursor),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
+        "ExportSelection", DEF_ENTRY_EXPORT_SELECTION, -1, 
+        Tk_Offset(Entry, exportSelection), 0, 0, 0},
+    {TK_OPTION_SYNONYM, "-fg", "foreground", (char *) NULL,
+	(char *) NULL, 0, -1, 0, (ClientData) "-foreground", 0},
+    {TK_OPTION_FONT, "-font", "font", "Font",
+	DEF_ENTRY_FONT, -1, Tk_Offset(Entry, tkfont), 0, 0, 0},
+    {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
+	DEF_ENTRY_FG, -1, Tk_Offset(Entry, fgColorPtr), 0, 
+        0, 0},
+    {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_ENTRY_HIGHLIGHT_BG,
-	Tk_Offset(Entry, highlightBgColorPtr), 0},
-    {TK_CONFIG_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
-	DEF_ENTRY_HIGHLIGHT, Tk_Offset(Entry, highlightColorPtr), 0},
-    {TK_CONFIG_PIXELS, "-highlightthickness", "highlightThickness",
-	"HighlightThickness",
-	DEF_ENTRY_HIGHLIGHT_WIDTH, Tk_Offset(Entry, highlightWidth), 0},
-    {TK_CONFIG_BORDER, "-insertbackground", "insertBackground", "Foreground",
-	DEF_ENTRY_INSERT_BG, Tk_Offset(Entry, insertBorder), 0},
-    {TK_CONFIG_PIXELS, "-insertborderwidth", "insertBorderWidth", "BorderWidth",
-	DEF_ENTRY_INSERT_BD_COLOR, Tk_Offset(Entry, insertBorderWidth),
-	TK_CONFIG_COLOR_ONLY},
-    {TK_CONFIG_PIXELS, "-insertborderwidth", "insertBorderWidth", "BorderWidth",
-	DEF_ENTRY_INSERT_BD_MONO, Tk_Offset(Entry, insertBorderWidth),
-	TK_CONFIG_MONO_ONLY},
-    {TK_CONFIG_INT, "-insertofftime", "insertOffTime", "OffTime",
-	DEF_ENTRY_INSERT_OFF_TIME, Tk_Offset(Entry, insertOffTime), 0},
-    {TK_CONFIG_INT, "-insertontime", "insertOnTime", "OnTime",
-	DEF_ENTRY_INSERT_ON_TIME, Tk_Offset(Entry, insertOnTime), 0},
-    {TK_CONFIG_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
-	DEF_ENTRY_INSERT_WIDTH, Tk_Offset(Entry, insertWidth), 0},
-    {TK_CONFIG_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_ENTRY_JUSTIFY, Tk_Offset(Entry, justify), 0},
-    {TK_CONFIG_RELIEF, "-relief", "relief", "Relief",
-	DEF_ENTRY_RELIEF, Tk_Offset(Entry, relief), 0},
-    {TK_CONFIG_BORDER, "-selectbackground", "selectBackground", "Foreground",
-	DEF_ENTRY_SELECT_COLOR, Tk_Offset(Entry, selBorder),
-	TK_CONFIG_COLOR_ONLY},
-    {TK_CONFIG_BORDER, "-selectbackground", "selectBackground", "Foreground",
-	DEF_ENTRY_SELECT_MONO, Tk_Offset(Entry, selBorder),
-	TK_CONFIG_MONO_ONLY},
-    {TK_CONFIG_PIXELS, "-selectborderwidth", "selectBorderWidth", "BorderWidth",
-	DEF_ENTRY_SELECT_BD_COLOR, Tk_Offset(Entry, selBorderWidth),
-	TK_CONFIG_COLOR_ONLY},
-    {TK_CONFIG_PIXELS, "-selectborderwidth", "selectBorderWidth", "BorderWidth",
-	DEF_ENTRY_SELECT_BD_MONO, Tk_Offset(Entry, selBorderWidth),
-	TK_CONFIG_MONO_ONLY},
-    {TK_CONFIG_COLOR, "-selectforeground", "selectForeground", "Background",
-	DEF_ENTRY_SELECT_FG_COLOR, Tk_Offset(Entry, selFgColorPtr),
-	TK_CONFIG_COLOR_ONLY},
-    {TK_CONFIG_COLOR, "-selectforeground", "selectForeground", "Background",
-	DEF_ENTRY_SELECT_FG_MONO, Tk_Offset(Entry, selFgColorPtr),
-	TK_CONFIG_MONO_ONLY},
+	-1, Tk_Offset(Entry, highlightBgColorPtr), 
+        0, 0, 0},
+    {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
+	DEF_ENTRY_HIGHLIGHT, -1, Tk_Offset(Entry, highlightColorPtr),
+	0, 0, 0},
+    {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
+	"HighlightThickness", DEF_ENTRY_HIGHLIGHT_WIDTH, -1, 
+	Tk_Offset(Entry, highlightWidth), 0, 0, 0},
+    {TK_OPTION_BORDER, "-insertbackground", "insertBackground", "Foreground",
+	DEF_ENTRY_INSERT_BG,
+	-1, Tk_Offset(Entry, insertBorder), 
+        0, 0, 0},
+    {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth", 
+        "BorderWidth", DEF_ENTRY_INSERT_BD_COLOR, -1, 
+        Tk_Offset(Entry, insertBorderWidth), 0, 
+        (ClientData) DEF_ENTRY_INSERT_BD_MONO, 0},
+    {TK_OPTION_INT, "-insertofftime", "insertOffTime", "OffTime",
+        DEF_ENTRY_INSERT_OFF_TIME, -1, Tk_Offset(Entry, insertOffTime), 
+        0, 0, 0},
+    {TK_OPTION_INT, "-insertontime", "insertOnTime", "OnTime",
+        DEF_ENTRY_INSERT_ON_TIME, -1, Tk_Offset(Entry, insertOnTime), 
+        0, 0, 0},
+    {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
+	DEF_ENTRY_INSERT_WIDTH, -1, Tk_Offset(Entry, insertWidth), 
+        0, 0, 0},
+    {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
+	DEF_ENTRY_JUSTIFY, -1, Tk_Offset(Entry, justify), 0, 0, 0},
+    {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
+	DEF_ENTRY_RELIEF, -1, Tk_Offset(Entry, relief), 
+        0, 0, 0},
+    {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
+        DEF_ENTRY_SELECT_COLOR, -1, Tk_Offset(Entry, selBorder),
+        0, (ClientData) DEF_ENTRY_SELECT_MONO, 0},
+    {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth", 
+        "BorderWidth", DEF_ENTRY_SELECT_BD_COLOR, -1, 
+        Tk_Offset(Entry, selBorderWidth), 
+        0, (ClientData) DEF_ENTRY_SELECT_BD_MONO, 0},
+    {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
+	DEF_ENTRY_SELECT_FG_COLOR, -1, Tk_Offset(Entry, selFgColorPtr),
+	0, (ClientData) DEF_ENTRY_SELECT_FG_MONO, 0},
     {TK_CONFIG_STRING, "-show", "show", "Show",
-	DEF_ENTRY_SHOW, Tk_Offset(Entry, showChar), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STATE, "-state", "state", "State",
-	DEF_ENTRY_STATE, Tk_Offset(Entry, state), 0},
-    {TK_CONFIG_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_ENTRY_TAKE_FOCUS, Tk_Offset(Entry, takeFocus), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-textvariable", "textVariable", "Variable",
-	DEF_ENTRY_TEXT_VARIABLE, Tk_Offset(Entry, textVarName),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_INT, "-width", "width", "Width",
-	DEF_ENTRY_WIDTH, Tk_Offset(Entry, prefWidth), 0},
-    {TK_CONFIG_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
-	DEF_ENTRY_SCROLL_COMMAND, Tk_Offset(Entry, scrollCmd),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, 0}
+        DEF_ENTRY_SHOW, -1, Tk_Offset(Entry, showChar), 
+        TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING_TABLE, "-state", "state", "State",
+	DEF_ENTRY_STATE, -1, Tk_Offset(Entry, state), 
+        0, (ClientData) stateStrings, 0},
+    {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
+	DEF_ENTRY_TAKE_FOCUS, -1, Tk_Offset(Entry, takeFocus), 
+        TK_CONFIG_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
+	DEF_ENTRY_TEXT_VARIABLE, -1, Tk_Offset(Entry, textVarName),
+	TK_CONFIG_NULL_OK, 0, 0},
+    {TK_OPTION_INT, "-width", "width", "Width",
+	DEF_ENTRY_WIDTH, -1, Tk_Offset(Entry, prefWidth), 0, 0, 0},
+    {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
+	DEF_ENTRY_SCROLL_COMMAND, -1, Tk_Offset(Entry, scrollCmd),
+	TK_CONFIG_NULL_OK, 0, 0},
+    {TK_OPTION_END, (char *) NULL, (char *) NULL, (char *) NULL,
+	(char *) NULL, 0, -1, 0, 0, 0}
 };
 
 /*
@@ -281,12 +300,38 @@ static Tk_ConfigSpec configSpecs[] = {
 #define LAST_PLUS_ONE_OK	2
 
 /*
+ * The following tables define the entry widget commands (and sub-
+ * commands) and map the indexes into the string tables into 
+ * enumerated types used to dispatch the entry widget command.
+ */
+
+static char *commandNames[] = {
+    "bbox", "cget", "configure", "delete", "get", "icursor", "index", 
+    "insert", "scan", "selection", "xview", (char *) NULL
+};
+
+enum command {
+    COMMAND_BBOX, COMMAND_CGET, COMMAND_CONFIGURE, COMMAND_DELETE, 
+    COMMAND_GET, COMMAND_ICURSOR, COMMAND_INDEX, COMMAND_INSERT, 
+    COMMAND_SCAN, COMMAND_SELECTION, COMMAND_XVIEW
+};
+
+static char *selCommandNames[] = {
+    "adjust", "clear", "from", "present", "range", "to", (char *) NULL
+};
+
+enum selcommand {
+    SELECTION_ADJUST, SELECTION_CLEAR, SELECTION_FROM, 
+    SELECTION_PRESENT, SELECTION_RANGE, SELECTION_TO
+};
+
+/*
  * Forward declarations for procedures defined later in this file:
  */
 
 static int		ConfigureEntry _ANSI_ARGS_((Tcl_Interp *interp,
-			    Entry *entryPtr, int argc, char **argv,
-			    int flags));
+			    Entry *entryPtr, int objc, 
+                            Tcl_Obj *CONST objv[], int flags));
 static void		DeleteChars _ANSI_ARGS_((Entry *entryPtr, int index,
 			    int count));
 static void		DestroyEntry _ANSI_ARGS_((char *memPtr));
@@ -316,8 +361,9 @@ static void		EntryUpdateScrollbar _ANSI_ARGS_((Entry *entryPtr));
 static void		EntryValueChanged _ANSI_ARGS_((Entry *entryPtr));
 static void		EntryVisibleRange _ANSI_ARGS_((Entry *entryPtr,
 			    double *firstPtr, double *lastPtr));
-static int		EntryWidgetCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+static int		EntryWidgetObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+			    Tcl_Obj *CONST objv[]));
 static void		EntryWorldChanged _ANSI_ARGS_((
 			    ClientData instanceData));
 static int		GetEntryIndex _ANSI_ARGS_((Tcl_Interp *interp,
@@ -340,7 +386,7 @@ static TkClassProcs entryClass = {
 /*
  *--------------------------------------------------------------
  *
- * Tk_EntryCmd --
+ * Tk_EntryObjCmd --
  *
  *	This procedure is invoked to process the "entry" Tcl
  *	command.  See the user documentation for details on what
@@ -356,25 +402,43 @@ static TkClassProcs entryClass = {
  */
 
 int
-Tk_EntryCmd(clientData, interp, argc, argv)
-    ClientData clientData;	/* Main window associated with
-				 * interpreter. */
+Tk_EntryObjCmd(clientData, interp, objc, objv)
+    ClientData clientData;	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];      /* Argument objects. */
 {
-    Tk_Window tkwin = (Tk_Window) clientData;
-    Entry *entryPtr;
-    Tk_Window new;
+    register Entry *entryPtr;
+    Tk_OptionTable optionTable;
+    Tk_Window tkwin;
 
-    if (argc < 2) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		" pathName ?options?\"", (char *) NULL);
+    optionTable = (Tk_OptionTable) clientData;
+    if (optionTable == NULL) {
+	Tcl_CmdInfo info;
+	char *name;
+
+	/*
+	 * We haven't created the option table for this widget class
+	 * yet.  Do it now and save the table as the clientData for
+	 * the command, so we'll have access to it in future
+	 * invocations of the command.
+	 */
+
+	optionTable = Tk_CreateOptionTable(interp, optionSpecs);
+	name = Tcl_GetString(objv[0]);
+	Tcl_GetCommandInfo(interp, name, &info);
+	info.objClientData = (ClientData) optionTable;
+	Tcl_SetCommandInfo(interp, name, &info);
+    }
+
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
 	return TCL_ERROR;
     }
 
-    new = Tk_CreateWindowFromPath(interp, tkwin, argv[1], (char *) NULL);
-    if (new == NULL) {
+    tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp),
+            Tcl_GetString(objv[1]), (char *) NULL);
+    if (tkwin == NULL) {
 	return TCL_ERROR;
     }
 
@@ -385,12 +449,13 @@ Tk_EntryCmd(clientData, interp, argc, argv)
      */
 
     entryPtr = (Entry *) ckalloc(sizeof(Entry));
-    entryPtr->tkwin = new;
-    entryPtr->display = Tk_Display(new);
+    entryPtr->tkwin = tkwin;
+    entryPtr->display = Tk_Display(tkwin);
     entryPtr->interp = interp;
-    entryPtr->widgetCmd = Tcl_CreateCommand(interp,
-	    Tk_PathName(entryPtr->tkwin), EntryWidgetCmd,
+    entryPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+	    Tk_PathName(entryPtr->tkwin), EntryWidgetObjCmd,
 	    (ClientData) entryPtr, EntryCmdDeletedProc);
+    entryPtr->optionTable = optionTable;
     entryPtr->string = (char *) ckalloc(1);
     entryPtr->string[0] = '\0';
     entryPtr->insertPos = 0;
@@ -420,12 +485,11 @@ Tk_EntryCmd(clientData, interp, argc, argv)
     entryPtr->selBorderWidth = 0;
     entryPtr->selFgColorPtr = NULL;
     entryPtr->showChar = NULL;
-    entryPtr->state = TK_STATE_NORMAL;
+    entryPtr->state = STATE_NORMAL;
     entryPtr->textVarName = NULL;
     entryPtr->takeFocus = NULL;
     entryPtr->prefWidth = 0;
     entryPtr->scrollCmd = NULL;
-
     entryPtr->numBytes = 0;
     entryPtr->numChars = 0;
     entryPtr->displayString = entryPtr->string;
@@ -450,10 +514,16 @@ Tk_EntryCmd(clientData, interp, argc, argv)
 	    EntryEventProc, (ClientData) entryPtr);
     Tk_CreateSelHandler(entryPtr->tkwin, XA_PRIMARY, XA_STRING,
 	    EntryFetchSelection, (ClientData) entryPtr, XA_STRING);
-    if (ConfigureEntry(interp, entryPtr, argc-2, argv+2, 0) != TCL_OK) {
+
+    if (Tk_InitOptions(interp, (char *) entryPtr, optionTable, tkwin)
+	    != TCL_OK) {
+	Tk_DestroyWindow(entryPtr->tkwin);
+	return TCL_ERROR;
+    }
+    if (ConfigureEntry(interp, entryPtr, objc-2, objv+2, 0) != TCL_OK) {
 	goto error;
     }
-
+    
     Tcl_SetResult(interp, Tk_PathName(entryPtr->tkwin), TCL_STATIC);
     return TCL_OK;
 
@@ -465,7 +535,7 @@ Tk_EntryCmd(clientData, interp, argc, argv)
 /*
  *--------------------------------------------------------------
  *
- * EntryWidgetCmd --
+ * EntryWidgetObjCmd --
  *
  *	This procedure is invoked to process the Tcl command
  *	that corresponds to a widget managed by this module.
@@ -481,340 +551,406 @@ Tk_EntryCmd(clientData, interp, argc, argv)
  */
 
 static int
-EntryWidgetCmd(clientData, interp, argc, argv)
+EntryWidgetObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Information about entry widget. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     Entry *entryPtr = (Entry *) clientData;
-    int result = TCL_OK;
-    size_t length;
-    int c;
+    int cmdIndex, selIndex, result;
+    Tcl_Obj *objPtr;
 
-    if (argc < 2) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " option ?arg arg ...?\"", (char *) NULL);
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
     Tcl_Preserve((ClientData) entryPtr);
-    c = argv[1][0];
-    length = strlen(argv[1]);
-    if ((c == 'b') && (strncmp(argv[1], "bbox", length) == 0)) {
-	int index, byteIndex, x, y, width, height;
-	char *string;
-	char buf[TCL_INTEGER_SPACE * 4];
 
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " bbox index\"",
-		    (char *) NULL);
-	    goto error;
-	}
-	if (GetEntryIndex(interp, entryPtr, argv[2], &index) != TCL_OK) {
-	    goto error;
-	}
-	if ((index == entryPtr->numChars) && (index > 0)) {
-	    index--;
-	}
-	string = entryPtr->displayString;
-	byteIndex = Tcl_UtfAtIndex(string, index) - string;
-	Tk_CharBbox(entryPtr->textLayout, byteIndex, &x, &y, &width, &height);
-	sprintf(buf, "%d %d %d %d", x + entryPtr->layoutX,
-		y + entryPtr->layoutY, width, height);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
-    } else if ((c == 'c') && (strncmp(argv[1], "cget", length) == 0)
-	    && (length >= 2)) {
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " cget option\"",
-		    (char *) NULL);
-	    goto error;
-	}
-	result = Tk_ConfigureValue(interp, entryPtr->tkwin, configSpecs,
-		(char *) entryPtr, argv[2], 0);
-    } else if ((c == 'c') && (strncmp(argv[1], "configure", length) == 0)
-	    && (length >= 2)) {
-	if (argc == 2) {
-	    result = Tk_ConfigureInfo(interp, entryPtr->tkwin, configSpecs,
-		    (char *) entryPtr, (char *) NULL, 0);
-	} else if (argc == 3) {
-	    result = Tk_ConfigureInfo(interp, entryPtr->tkwin, configSpecs,
-		    (char *) entryPtr, argv[2], 0);
-	} else {
-	    result = ConfigureEntry(interp, entryPtr, argc-2, argv+2,
-		    TK_CONFIG_ARGV_ONLY);
-	}
-    } else if ((c == 'd') && (strncmp(argv[1], "delete", length) == 0)) {
-	int first, last;
+    /* 
+     * Parse the widget command by looking up the second token in
+     * the list of valid command names. 
+     */
 
-	if ((argc < 3) || (argc > 4)) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " delete firstIndex ?lastIndex?\"",
-		    (char *) NULL);
-	    goto error;
-	}
-	if (GetEntryIndex(interp, entryPtr, argv[2], &first) != TCL_OK) {
-	    goto error;
-	}
-	if (argc == 3) {
-	    last = first + 1;
-	} else {
-	    if (GetEntryIndex(interp, entryPtr, argv[3], &last) != TCL_OK) {
-		goto error;
-	    }
-	}
-	if ((last >= first) && (entryPtr->state == TK_STATE_NORMAL)) {
-	    DeleteChars(entryPtr, first, last - first);
-	}
-    } else if ((c == 'g') && (strncmp(argv[1], "get", length) == 0)) {
-	if (argc != 2) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " get\"", (char *) NULL);
-	    goto error;
-	}
-	Tcl_SetResult(interp, entryPtr->string, TCL_STATIC);
-    } else if ((c == 'i') && (strncmp(argv[1], "icursor", length) == 0)
-	    && (length >= 2)) {
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " icursor pos\"",
-		    (char *) NULL);
-	    goto error;
-	}
-	if (GetEntryIndex(interp, entryPtr, argv[2], &entryPtr->insertPos)
-		!= TCL_OK) {
-	    goto error;
-	}
-	EventuallyRedraw(entryPtr);
-    } else if ((c == 'i') && (strncmp(argv[1], "index", length) == 0)
-	    && (length >= 3)) {
-	int index;
-	char buf[TCL_INTEGER_SPACE];
+    result = Tcl_GetIndexFromObj(interp, objv[1], commandNames,
+	    "option", 0, &cmdIndex);
+    if (result != TCL_OK) {
+	return result;
+    }
 
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " index string\"", (char *) NULL);
-	    goto error;
-	}
-	if (GetEntryIndex(interp, entryPtr, argv[2], &index) != TCL_OK) {
-	    goto error;
-	}
-	sprintf(buf, "%d", index);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
-    } else if ((c == 'i') && (strncmp(argv[1], "insert", length) == 0)
-	    && (length >= 3)) {
-	int index;
+    switch (cmdIndex) {
+        case COMMAND_BBOX: {
+	    int index, byteIndex, x, y, width, height;
+	    char *string;
+	    char buf[TCL_INTEGER_SPACE * 4];
 
-	if (argc != 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " insert index text\"",
-		    (char *) NULL);
-	    goto error;
-	}
-	if (GetEntryIndex(interp, entryPtr, argv[2], &index) != TCL_OK) {
-	    goto error;
-	}
-	if (entryPtr->state == TK_STATE_NORMAL) {
-	    InsertChars(entryPtr, index, argv[3]);
-	}
-    } else if ((c == 's') && (length >= 2)
-	    && (strncmp(argv[1], "scan", length) == 0)) {
-	int x;
-
-	if (argc != 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " scan mark|dragto x\"", (char *) NULL);
-	    goto error;
-	}
-	if (Tcl_GetInt(interp, argv[3], &x) != TCL_OK) {
-	    goto error;
-	}
-	if ((argv[2][0] == 'm')
-		&& (strncmp(argv[2], "mark", strlen(argv[2])) == 0)) {
-	    entryPtr->scanMarkX = x;
-	    entryPtr->scanMarkIndex = entryPtr->leftIndex;
-	} else if ((argv[2][0] == 'd')
-		&& (strncmp(argv[2], "dragto", strlen(argv[2])) == 0)) {
-	    EntryScanTo(entryPtr, x);
-	} else {
-	    Tcl_AppendResult(interp, "bad scan option \"", argv[2],
-		    "\": must be mark or dragto", (char *) NULL);
-	    goto error;
-	}
-    } else if ((c == 's') && (length >= 2)
-	    && (strncmp(argv[1], "selection", length) == 0)) {
-	int index, index2;
-
-	if (argc < 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " select option ?index?\"", (char *) NULL);
-	    goto error;
-	}
-	length = strlen(argv[2]);
-	c = argv[2][0];
-	if ((c == 'c') && (strncmp(argv[2], "clear", length) == 0)) {
-	    if (argc != 3) {
-		Tcl_AppendResult(interp, "wrong # args: should be \"",
-			argv[0], " selection clear\"", (char *) NULL);
+	    if (objc != 3) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "bbox index");
 		goto error;
 	    }
-	    if (entryPtr->selectFirst >= 0) {
-		entryPtr->selectFirst = -1;
-		entryPtr->selectLast = -1;
-		EventuallyRedraw(entryPtr);
+	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]), 
+                    &index) != TCL_OK) {
+	        goto error;
 	    }
-	    goto done;
-	} else if ((c == 'p') && (strncmp(argv[2], "present", length) == 0)) {
-	    if (argc != 3) {
-		Tcl_AppendResult(interp, "wrong # args: should be \"",
-			argv[0], " selection present\"", (char *) NULL);
-		goto error;
+	    if ((index == entryPtr->numChars) && (index > 0)) {
+	        index--;
 	    }
-	    if (entryPtr->selectFirst < 0) {
-		Tcl_SetResult(interp, "0", TCL_STATIC);
-	    } else {
-		Tcl_SetResult(interp, "1", TCL_STATIC);
-	    }
-	    goto done;
-	}
-	if (argc >= 4) {
-	    if (GetEntryIndex(interp, entryPtr, argv[3], &index) != TCL_OK) {
-		goto error;
-	    }
-	}
-	if ((c == 'a') && (strncmp(argv[2], "adjust", length) == 0)) {
-	    if (argc != 4) {
-		Tcl_AppendResult(interp, "wrong # args: should be \"",
-			argv[0], " selection adjust index\"",
-			(char *) NULL);
-		goto error;
-	    }
-	    if (entryPtr->selectFirst >= 0) {
-		int half1, half2;
-		
-		half1 = (entryPtr->selectFirst + entryPtr->selectLast)/2;
-		half2 = (entryPtr->selectFirst + entryPtr->selectLast + 1)/2;
-		if (index < half1) {
-		    entryPtr->selectAnchor = entryPtr->selectLast;
-		} else if (index > half2) {
-		    entryPtr->selectAnchor = entryPtr->selectFirst;
-		} else {
-		    /*
-		     * We're at about the halfway point in the selection;
-		     * just keep the existing anchor.
-		     */
-		}
-	    }
-	    EntrySelectTo(entryPtr, index);
-	} else if ((c == 'f') && (strncmp(argv[2], "from", length) == 0)) {
-	    if (argc != 4) {
-		Tcl_AppendResult(interp, "wrong # args: should be \"",
-			argv[0], " selection from index\"",
-			(char *) NULL);
-		goto error;
-	    }
-	    entryPtr->selectAnchor = index;
-	} else if ((c == 'r') && (strncmp(argv[2], "range", length) == 0)) {
-	    if (argc != 5) {
-		Tcl_AppendResult(interp, "wrong # args: should be \"",
-			argv[0], " selection range start end\"",
-			(char *) NULL);
-		goto error;
-	    }
-	    if (GetEntryIndex(interp, entryPtr, argv[4], &index2) != TCL_OK) {
-		goto error;
-	    }
-	    if (index >= index2) {
-		entryPtr->selectFirst = -1;
-		entryPtr->selectLast = -1;
-	    } else {
-		entryPtr->selectFirst = index;
-		entryPtr->selectLast = index2;
-	    }
-	    if (!(entryPtr->flags & GOT_SELECTION)
-		    && (entryPtr->exportSelection)) {
-		Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY, 
-			EntryLostSelection, (ClientData) entryPtr);
-		entryPtr->flags |= GOT_SELECTION;
-	    }
-	    EventuallyRedraw(entryPtr);
-	} else if ((c == 't') && (strncmp(argv[2], "to", length) == 0)) {
-	    if (argc != 4) {
-		Tcl_AppendResult(interp, "wrong # args: should be \"",
-			argv[0], " selection to index\"",
-			(char *) NULL);
-		goto error;
-	    }
-	    EntrySelectTo(entryPtr, index);
-	} else {
-	    Tcl_AppendResult(interp, "bad selection option \"", argv[2],
-		    "\": must be adjust, clear, from, present, range, or to",
-		    (char *) NULL);
-	    goto error;
-	}
-    } else if ((c == 'x') && (strncmp(argv[1], "xview", length) == 0)) {
-	int index;
-
-	if (argc == 2) {
-	    double first, last;
-	    char buf[TCL_DOUBLE_SPACE * 2];
-	    
-	    EntryVisibleRange(entryPtr, &first, &last);
-	    sprintf(buf, "%g %g", first, last);
+	    string = entryPtr->displayString;
+	    byteIndex = Tcl_UtfAtIndex(string, index) - string;
+	    Tk_CharBbox(entryPtr->textLayout, byteIndex, &x, &y, 
+                    &width, &height);
+	    sprintf(buf, "%d %d %d %d", x + entryPtr->layoutX,
+		    y + entryPtr->layoutY, width, height);
 	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
-	    goto done;
-	} else if (argc == 3) {
-	    if (GetEntryIndex(interp, entryPtr, argv[2], &index) != TCL_OK) {
+	    break;
+	} 
+	
+        case COMMAND_CGET: {
+	    if (objc != 3) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "cget option");
 		goto error;
 	    }
-	} else {
-	    double fraction;
-	    int count;
+	    
+	    objPtr = Tk_GetOptionValue(interp, (char *) entryPtr,
+		    entryPtr->optionTable, objv[2], entryPtr->tkwin);
+	    if (objPtr == NULL) {
+		 goto error;
+	    } else {
+		Tcl_SetObjResult(interp, objPtr);
+	    }
+	    break;
+	}
 
-	    index = entryPtr->leftIndex;
-	    switch (Tk_GetScrollInfo(interp, argc, argv, &fraction, &count)) {
-		case TK_SCROLL_ERROR: {
+        case COMMAND_CONFIGURE: {
+	    if (objc <= 3) {
+		objPtr = Tk_GetOptionInfo(interp, (char *) entryPtr,
+			entryPtr->optionTable,
+			(objc == 3) ? objv[2] : (Tcl_Obj *) NULL,
+			entryPtr->tkwin);
+		if (objPtr == NULL) {
+		    goto error;
+		} else {
+		    Tcl_SetObjResult(interp, objPtr);
+		}
+	    } else {
+		result = ConfigureEntry(interp, entryPtr, objc-2, objv+2, 0);
+	    }
+	    break;
+	}
+
+        case COMMAND_DELETE: {
+	    int first, last;
+
+	    if ((objc < 3) || (objc > 4)) {
+	        Tcl_WrongNumArgs(interp, 1, objv, 
+                        "delete firstIndex ?lastIndex?");
+		goto error;
+	    }
+	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]), 
+                    &first) != TCL_OK) {
+	        goto error;
+	    }
+	    if (objc == 3) {
+	        last = first + 1;
+	    } else {
+	        if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[3]), 
+                        &last) != TCL_OK) {
 		    goto error;
 		}
-		case TK_SCROLL_MOVETO: {
-		    index = (int) ((fraction * entryPtr->numChars) + 0.5);
-		    break;
-		}
-		case TK_SCROLL_PAGES: {
-		    int charsPerPage;
-		    
-		    charsPerPage = ((Tk_Width(entryPtr->tkwin)
-			    - 2 * entryPtr->inset) / entryPtr->avgWidth) - 2;
-		    if (charsPerPage < 1) {
-			charsPerPage = 1;
+	    }
+	    if ((last >= first) && (entryPtr->state == STATE_NORMAL)) {
+	        DeleteChars(entryPtr, first, last - first);
+	    }
+	    break;
+	}
+
+        case COMMAND_GET: {
+	    if (objc != 2) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "get");
+		goto error;
+	    }
+	    Tcl_SetResult(interp, entryPtr->string, TCL_STATIC);
+	    break;
+	}
+
+        case COMMAND_ICURSOR: {
+	    if (objc != 3) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "icursor pos");
+		goto error;
+	    }
+	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+                    &entryPtr->insertPos) != TCL_OK) {
+	        goto error;
+	    }
+	    EventuallyRedraw(entryPtr);
+	    break;
+	}
+	
+        case COMMAND_INDEX: {
+	    int index;
+	    char buf[TCL_INTEGER_SPACE];
+
+	    if (objc != 3) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "index string");
+		goto error;
+	    }
+	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]), 
+                    &index) != TCL_OK) {
+	        goto error;
+	    }
+	    sprintf(buf, "%d", index);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	    break;
+	}
+
+        case COMMAND_INSERT: {
+	    int index;
+
+	    if (objc != 4) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "insert index text");
+		goto error;
+	    }
+	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]), 
+                    &index) != TCL_OK) {
+	        goto error;
+	    }
+	    if (entryPtr->state == STATE_NORMAL) {
+	        InsertChars(entryPtr, index, Tcl_GetString(objv[3]));
+	    }
+	    break;
+	}
+
+        case COMMAND_SCAN: {
+	    int x;
+	    char *minorCmd;
+
+	    if (objc != 4) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "scan mark|dragto x");
+		goto error;
+	    }
+	    if (Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK) {
+	        goto error;
+	    }
+
+	    minorCmd = Tcl_GetString(objv[2]);
+	    if (minorCmd[0] == 'm' 
+                    && (strncmp(minorCmd, "mark", strlen(minorCmd)) == 0)) {
+	        entryPtr->scanMarkX = x;
+		entryPtr->scanMarkIndex = entryPtr->leftIndex;
+	    } else if ((minorCmd[0] == 'd')
+		&& (strncmp(minorCmd, "dragto", strlen(minorCmd)) == 0)) {
+	        EntryScanTo(entryPtr, x);
+	    } else {
+	        Tcl_AppendResult(interp, "bad scan option \"", 
+                        Tcl_GetString(objv[2]), "\": must be mark or dragto", 
+                        (char *) NULL);
+		goto error;
+	    }
+	    break;
+	}
+	    
+	case COMMAND_SELECTION: {
+	    int index, index2;
+
+	    if (objc < 3) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "select option ?index?");
+		goto error;
+	    }
+
+	    /* 
+	     * Parse the selection sub-command, using the command
+	     * table "selCommandNames" defined above.
+	     */
+	    
+	    result = Tcl_GetIndexFromObj(interp, objv[2], selCommandNames,
+                    "selection option", 0, &selIndex);
+	    if (result != TCL_OK) {
+	        goto error;
+	    }
+
+	    switch(selIndex) {
+	        case SELECTION_ADJUST: {
+		    if (objc != 4) {
+		        Tcl_WrongNumArgs(interp, 1, objv, 
+                                "selection adjust index");
+			goto error;
 		    }
-		    index += count * charsPerPage;
+		    if (GetEntryIndex(interp, entryPtr, 
+                            Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		        goto error;
+		    }
+		    if (entryPtr->selectFirst >= 0) {
+		        int half1, half2;
+		
+			half1 = (entryPtr->selectFirst 
+			        + entryPtr->selectLast)/2;
+			half2 = (entryPtr->selectFirst 
+				+ entryPtr->selectLast + 1)/2;
+			if (index < half1) {
+			    entryPtr->selectAnchor = entryPtr->selectLast;
+			} else if (index > half2) {
+			    entryPtr->selectAnchor = entryPtr->selectFirst;
+			} else {
+			  /*
+			   * We're at about the halfway point in the 
+			   * selection; just keep the existing anchor.
+			   */
+			}
+		    }
+		    EntrySelectTo(entryPtr, index);
 		    break;
 		}
-		case TK_SCROLL_UNITS: {
-		    index += count;
+
+	        case SELECTION_CLEAR: {
+		    if (objc != 3) {
+		        Tcl_WrongNumArgs(interp, 1, objv, "selection clear");
+			goto error;
+		    }
+		    if (entryPtr->selectFirst >= 0) {
+		        entryPtr->selectFirst = -1;
+			entryPtr->selectLast = -1;
+			EventuallyRedraw(entryPtr);
+		    }
+		    goto done;
+		}
+
+	        case SELECTION_FROM: {
+		    if (objc != 4) {
+		        Tcl_WrongNumArgs(interp, 1, objv, 
+			        "selection from index");
+			goto error;
+		    }
+		    if (GetEntryIndex(interp, entryPtr, 
+                            Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		        goto error;
+		    }
+		    entryPtr->selectAnchor = index;
+		    break;
+		}
+
+	        case SELECTION_PRESENT: {
+		    if (objc != 3) {
+		        Tcl_WrongNumArgs(interp, 1, objv, "selection present");
+			goto error;
+		    }
+		    if (entryPtr->selectFirst < 0) {
+		        Tcl_SetResult(interp, "0", TCL_STATIC);
+		    } else {
+		        Tcl_SetResult(interp, "1", TCL_STATIC);
+		    }
+		    goto done;
+		}
+
+	        case SELECTION_RANGE: {
+		    if (objc != 5) {
+		        Tcl_WrongNumArgs(interp, 1, objv, 
+                                "selection range start end");
+			goto error;
+		    }
+		    if (GetEntryIndex(interp, entryPtr, 
+                            Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		        goto error;
+		    }
+		    if (GetEntryIndex(interp, entryPtr, 
+                            Tcl_GetString(objv[4]),& index2) != TCL_OK) {
+		        goto error;
+		    }
+		    if (index >= index2) {
+		        entryPtr->selectFirst = -1;
+			entryPtr->selectLast = -1;
+		    } else {
+		        entryPtr->selectFirst = index;
+			entryPtr->selectLast = index2;
+		    }
+		    if (!(entryPtr->flags & GOT_SELECTION)
+			    && (entryPtr->exportSelection)) {
+		        Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY, 
+			        EntryLostSelection, (ClientData) entryPtr);
+			entryPtr->flags |= GOT_SELECTION;
+		    }
+		    EventuallyRedraw(entryPtr);
+		    break;
+		}
+		
+	        case SELECTION_TO: {
+		    if (objc != 4) {
+		        Tcl_WrongNumArgs(interp, 1, objv, 
+                                "selection to index");
+			goto error;
+		    }
+		    if (GetEntryIndex(interp, entryPtr, 
+                            Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		        goto error;
+		    }
+		    EntrySelectTo(entryPtr, index);
 		    break;
 		}
 	    }
+	    break;
 	}
-	if (index >= entryPtr->numChars) {
-	    index = entryPtr->numChars - 1;
+
+        case COMMAND_XVIEW: {
+	    int index;
+
+	    if (objc == 2) {
+	        double first, last;
+		char buf[TCL_DOUBLE_SPACE * 2];
+	    
+		EntryVisibleRange(entryPtr, &first, &last);
+		sprintf(buf, "%g %g", first, last);
+		Tcl_SetResult(interp, buf, TCL_VOLATILE);
+		goto done;
+	    } else if (objc == 3) {
+	        if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]), 
+                        &index) != TCL_OK) {
+		    goto error;
+		}
+	    } else {
+	        double fraction;
+		int count;
+
+		index = entryPtr->leftIndex;
+		switch (Tk_GetScrollInfoObj(interp, objc, objv, &fraction, 
+                        &count)) {
+		    case TK_SCROLL_ERROR: {
+		        goto error;
+		    }
+		    case TK_SCROLL_MOVETO: {
+		        index = (int) ((fraction * entryPtr->numChars) + 0.5);
+			break;
+		    }
+		    case TK_SCROLL_PAGES: {
+		        int charsPerPage;
+		    
+			charsPerPage = ((Tk_Width(entryPtr->tkwin)
+    			        - 2 * entryPtr->inset) 
+                                / entryPtr->avgWidth) - 2;
+			if (charsPerPage < 1) {
+			    charsPerPage = 1;
+			}
+			index += count * charsPerPage;
+			break;
+		    }
+		    case TK_SCROLL_UNITS: {
+		        index += count;
+			break;
+		    }
+		}
+	    }
+	    if (index >= entryPtr->numChars) {
+	        index = entryPtr->numChars - 1;
+	    }
+	    if (index < 0) {
+	        index = 0;
+	    }
+	    entryPtr->leftIndex = index;
+	    entryPtr->flags |= UPDATE_SCROLLBAR;
+	    EntryComputeGeometry(entryPtr);
+	    EventuallyRedraw(entryPtr);
+	    break;
 	}
-	if (index < 0) {
-	    index = 0;
-	}
-	entryPtr->leftIndex = index;
-	entryPtr->flags |= UPDATE_SCROLLBAR;
-	EntryComputeGeometry(entryPtr);
-	EventuallyRedraw(entryPtr);
-    } else {
-	Tcl_AppendResult(interp, "bad option \"", argv[1],
-		"\": must be bbox, cget, configure, delete, get, ",
-		"icursor, index, insert, scan, selection, or xview",
-		(char *) NULL);
-	goto error;
     }
+
     done:
     Tcl_Release((ClientData) entryPtr);
     return result;
@@ -847,6 +983,12 @@ DestroyEntry(memPtr)
     char *memPtr;		/* Info about entry widget. */
 {
     Entry *entryPtr = (Entry *) memPtr;
+    entryPtr->flags |= ENTRY_DELETED;
+
+    Tcl_DeleteCommandFromToken(entryPtr->interp, entryPtr->widgetCmd);
+    if (entryPtr->flags & REDRAW_PENDING) {
+        Tcl_CancelIdleCall(DisplayEntry, (ClientData) entryPtr);
+    }
 
     /*
      * Free up all the stuff that requires special handling, then
@@ -871,7 +1013,9 @@ DestroyEntry(memPtr)
 	ckfree(entryPtr->displayString);
     }
     Tk_FreeTextLayout(entryPtr->textLayout);
-    Tk_FreeOptions(configSpecs, (char *) entryPtr, entryPtr->display, 0);
+    Tk_FreeConfigOptions((char *) entryPtr, entryPtr->optionTable,
+	    entryPtr->tkwin);
+    entryPtr->tkwin = NULL;
     ckfree((char *) entryPtr);
 }
 
@@ -897,14 +1041,17 @@ DestroyEntry(memPtr)
  */
 
 static int
-ConfigureEntry(interp, entryPtr, argc, argv, flags)
+ConfigureEntry(interp, entryPtr, objc, objv, flags)
     Tcl_Interp *interp;		/* Used for error reporting. */
     Entry *entryPtr;		/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int argc;			/* Number of valid entries in argv. */
-    char **argv;		/* Arguments. */
+    int objc;			/* Number of valid entries in argv. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
     int flags;			/* Flags to pass to Tk_ConfigureWidget. */
 {
+    Tk_SavedOptions savedOptions;
+    Tcl_Obj *errorResult;
+    int error;
     int oldExport;
 
     /*
@@ -918,9 +1065,79 @@ ConfigureEntry(interp, entryPtr, argc, argv, flags)
     }
 
     oldExport = entryPtr->exportSelection;
-    if (Tk_ConfigureWidget(interp, entryPtr->tkwin, configSpecs,
-	    argc, argv, (char *) entryPtr, flags) != TCL_OK) {
-	return TCL_ERROR;
+
+    for (error = 0; error <= 1; error++) {
+	if (!error) {
+	    /*
+	     * First pass: set options to new values.
+	     */
+
+	    if (Tk_SetOptions(interp, (char *) entryPtr,
+		    entryPtr->optionTable, objc, objv,
+		    entryPtr->tkwin, &savedOptions, (int *) NULL) != TCL_OK) {
+		continue;
+	    }
+	} else {
+	    /*
+	     * Second pass: restore options to old values.
+	     */
+
+	    errorResult = Tcl_GetObjResult(interp);
+	    Tcl_IncrRefCount(errorResult);
+	    Tk_RestoreSavedOptions(&savedOptions);
+	}
+
+	/*
+	 * A few other options also need special processing, such as parsing
+	 * the geometry and setting the background from a 3-D border.
+	 */
+
+	Tk_SetBackgroundFromBorder(entryPtr->tkwin, entryPtr->normalBorder);
+
+	if (entryPtr->insertWidth <= 0) {
+	    entryPtr->insertWidth = 2;
+	}
+	if (entryPtr->insertBorderWidth > entryPtr->insertWidth/2) {
+	    entryPtr->insertBorderWidth = entryPtr->insertWidth/2;
+	}
+
+	/*
+	 * Restart the cursor timing sequence in case the on-time or 
+	 * off-time just changed.
+	 */
+
+	if (entryPtr->flags & GOT_FOCUS) {
+	  EntryFocusProc(entryPtr, 1);
+	}
+
+	/*
+	 * Claim the selection if we've suddenly started exporting it.
+	 */
+
+	if (entryPtr->exportSelection && (!oldExport)
+	        && (entryPtr->selectFirst != -1)
+	        && !(entryPtr->flags & GOT_SELECTION)) {
+	    Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY, EntryLostSelection,
+		    (ClientData) entryPtr);
+	    entryPtr->flags |= GOT_SELECTION;
+	}
+
+	/*
+	 * Recompute the window's geometry and arrange for it to be
+	 * redisplayed.
+	 */
+
+	Tk_SetInternalBorder(entryPtr->tkwin,
+	        entryPtr->borderWidth + entryPtr->highlightWidth);
+	if (entryPtr->highlightWidth <= 0) {
+	    entryPtr->highlightWidth = 0;
+	}
+	entryPtr->inset = entryPtr->highlightWidth 
+	        + entryPtr->borderWidth + XPAD;
+	break;
+    }
+    if (!error) {
+	Tk_FreeSavedOptions(&savedOptions);
     }
 
     /*
@@ -943,63 +1160,14 @@ ConfigureEntry(interp, entryPtr, argc, argv, flags)
 		EntryTextVarProc, (ClientData) entryPtr);
     }
 
-    /*
-     * A few other options also need special processing, such as parsing
-     * the geometry and setting the background from a 3-D border.
-     */
-
-    if ((entryPtr->state != TK_STATE_NORMAL)
-	    && (entryPtr->state != TK_STATE_DISABLED)) {
-	Tcl_AppendResult(interp, "bad state value \"", entryPtr->state,
-		"\": must be normal or disabled", (char *) NULL);
-	entryPtr->state = TK_STATE_NORMAL;
-	return TCL_ERROR;
-    }
-
-    Tk_SetBackgroundFromBorder(entryPtr->tkwin, entryPtr->normalBorder);
-
-    if (entryPtr->insertWidth <= 0) {
-	entryPtr->insertWidth = 2;
-    }
-    if (entryPtr->insertBorderWidth > entryPtr->insertWidth/2) {
-	entryPtr->insertBorderWidth = entryPtr->insertWidth/2;
-    }
-
-    /*
-     * Restart the cursor timing sequence in case the on-time or off-time
-     * just changed.
-     */
-
-    if (entryPtr->flags & GOT_FOCUS) {
-	EntryFocusProc(entryPtr, 1);
-    }
-
-    /*
-     * Claim the selection if we've suddenly started exporting it.
-     */
-
-    if (entryPtr->exportSelection && (!oldExport)
-	    && (entryPtr->selectFirst != -1)
-	    && !(entryPtr->flags & GOT_SELECTION)) {
-	Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY, EntryLostSelection,
-		(ClientData) entryPtr);
-	entryPtr->flags |= GOT_SELECTION;
-    }
-
-    /*
-     * Recompute the window's geometry and arrange for it to be
-     * redisplayed.
-     */
-
-    Tk_SetInternalBorder(entryPtr->tkwin,
-	    entryPtr->borderWidth + entryPtr->highlightWidth);
-    if (entryPtr->highlightWidth <= 0) {
-	entryPtr->highlightWidth = 0;
-    }
-    entryPtr->inset = entryPtr->highlightWidth + entryPtr->borderWidth + XPAD;
-
     EntryWorldChanged((ClientData) entryPtr);
-    return TCL_OK;
+    if (error) {
+        Tcl_SetObjResult(interp, errorResult);
+	Tcl_DecrRefCount(errorResult);
+	return TCL_ERROR;
+    } else {
+        return TCL_OK;
+    }
 }
 
 /*
@@ -1185,7 +1353,7 @@ DisplayEntry(clientData)
      */
 
     if ((entryPtr->insertPos >= entryPtr->leftIndex)
-	    && (entryPtr->state == TK_STATE_NORMAL)
+	    && (entryPtr->state == STATE_NORMAL)
 	    && (entryPtr->flags & GOT_FOCUS)) {
 	int insertByte;
 
@@ -1730,14 +1898,7 @@ EntryEventProc(clientData, eventPtr)
 	EventuallyRedraw(entryPtr);
 	entryPtr->flags |= BORDER_NEEDED;
     } else if (eventPtr->type == DestroyNotify) {
-	if (entryPtr->tkwin != NULL) {
-	    entryPtr->tkwin = NULL;
-            Tcl_DeleteCommandFromToken(entryPtr->interp, entryPtr->widgetCmd);
-	}
-	if (entryPtr->flags & REDRAW_PENDING) {
-	    Tcl_CancelIdleCall(DisplayEntry, (ClientData) entryPtr);
-	}
-	Tcl_EventuallyFree((ClientData) entryPtr, DestroyEntry);
+        DestroyEntry((char *) clientData);
     } else if (eventPtr->type == ConfigureNotify) {
 	Tcl_Preserve((ClientData) entryPtr);
 	entryPtr->flags |= UPDATE_SCROLLBAR;
@@ -1778,7 +1939,6 @@ EntryCmdDeletedProc(clientData)
     ClientData clientData;	/* Pointer to widget record for widget. */
 {
     Entry *entryPtr = (Entry *) clientData;
-    Tk_Window tkwin = entryPtr->tkwin;
 
     /*
      * This procedure could be invoked either because the window was
@@ -1787,9 +1947,8 @@ EntryCmdDeletedProc(clientData)
      * destroys the widget.
      */
 
-    if (tkwin != NULL) {
-	entryPtr->tkwin = NULL;
-	Tk_DestroyWindow(tkwin);
+    if (! entryPtr->flags & ENTRY_DELETED) {
+        Tk_DestroyWindow(entryPtr->tkwin);
     }
 }
 

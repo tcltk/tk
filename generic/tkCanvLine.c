@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.1.4.4 1999/02/11 04:13:45 stanton Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.1.4.5 1999/02/16 11:39:30 lfb Exp $
  */
 
 #include <stdio.h>
@@ -181,17 +181,6 @@ Tk_ItemType tkLineType = {
 };
 
 /*
- * The Tk_Uid's below refer to uids for the various arrow types:
- */
-
-static Tk_Uid noneUid = NULL;
-static Tk_Uid firstUid = NULL;
-static Tk_Uid lastUid = NULL;
-static Tk_Uid bothUid = NULL;
-
-TCL_DECLARE_MUTEX(lineMutex)  /* Used to guard access to Tk_Uids above.*/
-
-/*
  * The definition below determines how large are static arrays
  * used to hold spline points (splines larger than this have to
  * have their arrays malloc-ed).
@@ -255,15 +244,7 @@ CreateLine(interp, canvas, itemPtr, argc, argv)
     linePtr->joinStyle = JoinRound;
     linePtr->gc = None;
     linePtr->arrowGC = None;
-    if (bothUid == NULL) {
-        Tcl_MutexLock(&lineMutex);
-	noneUid = Tk_GetUid("none");
-	firstUid = Tk_GetUid("first");
-	lastUid = Tk_GetUid("last");
-	bothUid = Tk_GetUid("both");
-        Tcl_MutexUnlock(&lineMutex);
-    }
-    linePtr->arrow = noneUid;
+    linePtr->arrow = Tk_GetUid("none");
     linePtr->arrowShapeA = (float)8.0;
     linePtr->arrowShapeB = (float)10.0;
     linePtr->arrowShapeC = (float)3.0;
@@ -390,7 +371,7 @@ LineCoords(interp, canvas, itemPtr, argc, argv)
 	    ckfree((char *) linePtr->lastArrowPtr);
 	    linePtr->lastArrowPtr = NULL;
 	}
-	if (linePtr->arrow != noneUid) {
+	if (linePtr->arrow != Tk_GetUid("none")) {
 	    ConfigureArrows(canvas, linePtr);
 	}
 	ComputeLineBbox(canvas, linePtr);
@@ -431,6 +412,10 @@ ConfigureLine(interp, canvas, itemPtr, argc, argv, flags)
     GC newGC, arrowGC;
     unsigned long mask;
     Tk_Window tkwin;
+    Tk_Uid noneUid = Tk_GetUid("none");
+    Tk_Uid bothUid = Tk_GetUid("both");
+    Tk_Uid firstUid = Tk_GetUid("first");
+    Tk_Uid lastUid = Tk_GetUid("last");
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (Tk_ConfigureWidget(interp, tkwin, configSpecs, argc, argv,
@@ -498,8 +483,8 @@ ConfigureLine(interp, canvas, itemPtr, argc, argv, flags)
 	ckfree((char *) linePtr->firstArrowPtr);
 	linePtr->firstArrowPtr = NULL;
     }
-    if ((linePtr->lastArrowPtr != NULL) && (linePtr->arrow != lastUid)
-	    && (linePtr->arrow != bothUid)) {
+    if ((linePtr->lastArrowPtr != NULL) && (linePtr->arrow != lastUid) 
+            && (linePtr->arrow != bothUid)) {
 	int i;
 
 	i = 2*(linePtr->numPoints-1);
@@ -510,7 +495,7 @@ ConfigureLine(interp, canvas, itemPtr, argc, argv, flags)
     }
     if (linePtr->arrow != noneUid) {
 	if ((linePtr->arrow != firstUid) && (linePtr->arrow != lastUid)
-		&& (linePtr->arrow != bothUid)) {
+       	        && (linePtr->arrow != bothUid)) {
 	    Tcl_AppendResult(interp, "bad arrow spec \"",
 		    linePtr->arrow, "\": must be none, first, last, or both",
 		    (char *) NULL);
@@ -657,14 +642,14 @@ ComputeLineBbox(canvas, linePtr)
      * Add in the sizes of arrowheads, if any.
      */
 
-    if (linePtr->arrow != noneUid) {
-	if (linePtr->arrow != lastUid) {
+    if (linePtr->arrow != Tk_GetUid("none")) {
+	if (linePtr->arrow != Tk_GetUid("last")) {
 	    for (i = 0, coordPtr = linePtr->firstArrowPtr; i < PTS_IN_ARROW;
 		    i++, coordPtr += 2) {
 		TkIncludePoint((Tk_Item *) linePtr, coordPtr);
 	    }
 	}
-	if (linePtr->arrow != firstUid) {
+	if (linePtr->arrow != Tk_GetUid("first")) {
 	    for (i = 0, coordPtr = linePtr->lastArrowPtr; i < PTS_IN_ARROW;
 		    i++, coordPtr += 2) {
 		TkIncludePoint((Tk_Item *) linePtr, coordPtr);
@@ -965,8 +950,8 @@ LineToPoint(canvas, itemPtr, pointPtr)
      * If there are arrowheads, check the distance to the arrowheads.
      */
 
-    if (linePtr->arrow != noneUid) {
-	if (linePtr->arrow != lastUid) {
+    if (linePtr->arrow != Tk_GetUid("none")) {
+	if (linePtr->arrow != Tk_GetUid("last")) {
 	    dist = TkPolygonToPoint(linePtr->firstArrowPtr, PTS_IN_ARROW,
 		    pointPtr);
 	    if (dist <= 0.0) {
@@ -976,7 +961,7 @@ LineToPoint(canvas, itemPtr, pointPtr)
 		bestDist = dist;
 	    }
 	}
-	if (linePtr->arrow != firstUid) {
+	if (linePtr->arrow != Tk_GetUid("first")) {
 	    dist = TkPolygonToPoint(linePtr->lastArrowPtr, PTS_IN_ARROW,
 		    pointPtr);
 	    if (dist <= 0.0) {
@@ -1069,15 +1054,15 @@ LineToArea(canvas, itemPtr, rectPtr)
      * Check arrowheads, if any.
      */
 
-    if (linePtr->arrow != noneUid) {
-	if (linePtr->arrow != lastUid) {
+    if (linePtr->arrow != Tk_GetUid("none")) {
+	if (linePtr->arrow != Tk_GetUid("last")) {
 	    if (TkPolygonToArea(linePtr->firstArrowPtr, PTS_IN_ARROW,
 		    rectPtr) != result) {
 		result = 0;
 		goto done;
 	    }
 	}
-	if (linePtr->arrow != firstUid) {
+	if (linePtr->arrow != Tk_GetUid("first")) {
 	    if (TkPolygonToArea(linePtr->lastArrowPtr, PTS_IN_ARROW,
 		    rectPtr) != result) {
 		result = 0;
@@ -1150,7 +1135,7 @@ ScaleLine(canvas, itemPtr, originX, originY, scaleX, scaleY)
 	coordPtr[0] = originX + scaleX*(*coordPtr - originX);
 	coordPtr[1] = originY + scaleY*(coordPtr[1] - originY);
     }
-    if (linePtr->arrow != noneUid) {
+    if (linePtr->arrow != Tk_GetUid("none")) {
 	ConfigureArrows(canvas, linePtr);
     }
     ComputeLineBbox(canvas, linePtr);
@@ -1371,7 +1356,7 @@ ConfigureArrows(canvas, linePtr)
 
     fracHeight = (linePtr->width/2.0)/shapeC;
     backup = fracHeight*shapeB + shapeA*(1.0 - fracHeight)/2.0;
-    if (linePtr->arrow != lastUid) {
+    if (linePtr->arrow != Tk_GetUid("last")) {
 	poly = linePtr->firstArrowPtr;
 	if (poly == NULL) {
 	    poly = (double *) ckalloc((unsigned)
@@ -1416,7 +1401,7 @@ ConfigureArrows(canvas, linePtr)
      * Similar arrowhead calculation for the last point of the line.
      */
 
-    if (linePtr->arrow != firstUid) {
+    if (linePtr->arrow != Tk_GetUid("first")) {
 	coordPtr = linePtr->coordPtr + 2*(linePtr->numPoints-2);
 	poly = linePtr->lastArrowPtr;
 	if (poly == NULL) {

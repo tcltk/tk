@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.1.4.3 1998/12/13 08:16:03 lfb Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.1.4.4 1999/02/16 11:39:31 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -184,7 +184,6 @@ TkBindEventProc(winPtr, eventPtr)
 {
 #define MAX_OBJS 20
     ClientData objects[MAX_OBJS], *objPtr;
-    static Tk_Uid allUid = NULL;
     TkWindow *topLevPtr;
     int i, count;
     char *p;
@@ -232,10 +231,7 @@ TkBindEventProc(winPtr, eventPtr)
 	} else {
 	    count = 3;
 	}
-	if (allUid == NULL) {
-	    allUid = Tk_GetUid("all");
-	}
-	objPtr[count-1] = (ClientData) allUid;
+	objPtr[count-1] = (ClientData) Tk_GetUid("all");
     }
     Tk_BindEvent(winPtr->mainPtr->bindingTable, eventPtr, (Tk_Window) winPtr,
 	    count, objPtr);

@@ -17,7 +17,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.1.4.5 1999/02/16 06:00:41 lfb Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.1.4.6 1999/02/16 11:39:32 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -162,7 +162,7 @@ static void		ComputeFormat _ANSI_ARGS_((TkScale *scalePtr));
 static void		ComputeScaleGeometry _ANSI_ARGS_((TkScale *scalePtr));
 static int		ConfigureScale _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkScale *scalePtr, int objc,
-			    Tcl_Obj *CONST objv[], int flags));
+			    Tcl_Obj *CONST objv[]));
 static void		DestroyScale _ANSI_ARGS_((char *memPtr));
 static void		ScaleCmdDeletedProc _ANSI_ARGS_((
 			    ClientData clientData));
@@ -320,7 +320,7 @@ Tk_ScaleObjCmd(clientData, interp, objc, objv)
 	Tk_DestroyWindow(scalePtr->tkwin);
 	return TCL_ERROR;
     }
-    if (ConfigureScale(interp, scalePtr, objc - 2, objv + 2, 0) != TCL_OK) {
+    if (ConfigureScale(interp, scalePtr, objc - 2, objv + 2) != TCL_OK) {
 	Tk_DestroyWindow(scalePtr->tkwin);
 	return TCL_ERROR;
     }
@@ -357,8 +357,7 @@ ScaleWidgetObjCmd(clientData, interp, objc, objv)
 {
     TkScale *scalePtr = (TkScale *) clientData;
     Tcl_Obj *objPtr;
-    int index;
-    int result;
+    int index, result;
 
     if (objc < 2) {
         Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
@@ -370,7 +369,7 @@ ScaleWidgetObjCmd(clientData, interp, objc, objv)
 
     switch (index) {
         case COMMAND_CGET: {
-  	    if (objc !=3) {
+  	    if (objc != 3) {
 	        Tcl_WrongNumArgs(interp, 1, objv, "cget option");
 		goto error;
 	    }
@@ -395,8 +394,7 @@ ScaleWidgetObjCmd(clientData, interp, objc, objv)
 		    Tcl_SetObjResult(interp, objPtr);
 		}
 	    } else {
-		result = ConfigureScale(interp, scalePtr, objc-2, objv+2,
-                        TK_CONFIG_ARGV_ONLY);
+		result = ConfigureScale(interp, scalePtr, objc-2, objv+2);
 	    }
 	    break;
 	}
@@ -573,13 +571,12 @@ DestroyScale(memPtr)
  */
 
 static int
-ConfigureScale(interp, scalePtr, objc, objv, flags)
+ConfigureScale(interp, scalePtr, objc, objv)
     Tcl_Interp *interp;		/* Used for error reporting. */
     register TkScale *scalePtr;	/* Information about widget;  may or may
 				 * not already have values for some fields. */
     int objc;			/* Number of valid entries in objv. */
     Tcl_Obj *CONST objv[];	/* Argument values. */
-    int flags;			/* Flags to pass to Tk_ConfigureWidget. */
 {
     Tk_SavedOptions savedOptions;
     Tcl_Obj *errorResult;

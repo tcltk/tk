@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.1.4.3 1999/02/11 04:13:47 stanton Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.1.4.4 1999/02/16 11:39:32 lfb Exp $
  */
 
 #ifndef _TKTEXT
@@ -470,7 +470,8 @@ typedef struct TkText {
 				 * image segment doesn't yet have an
 				 * associated image, there is no entry for
 				 * it here. */
-    int state;			/* One of the TK_STATE_* values. */
+    Tk_Uid state;		/* Either normal or disabled. A text 
+				 * widget is read-only when disabled. */
 
     /*
      * Default information for displaying (may be overridden by tags

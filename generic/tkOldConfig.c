@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.1.2.3 1999/01/07 02:42:50 lfb Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.1.2.4 1999/02/16 11:39:31 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -462,12 +462,6 @@ DoConfig(interp, tkwin, specPtr, value, valueIsUid, widgRec)
 		    return TCL_ERROR;
 		}
 		break;
-	    case TK_CONFIG_STATE:
-		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-		if (Tk_GetState(interp, uid, (int *) ptr) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-		break;
 	    case TK_CONFIG_CURSOR:
 	    case TK_CONFIG_ACTIVE_CURSOR: {
 		Tk_Cursor new, old;
@@ -824,9 +818,6 @@ FormatConfigValue(interp, tkwin, specPtr, widgRec, buffer, freeProcPtr)
 	}
 	case TK_CONFIG_RELIEF:
 	    result = Tk_NameOfRelief(*((int *) ptr));
-	    break;
-	case TK_CONFIG_STATE:
-	    result = Tk_NameOfState(*((int *) ptr));
 	    break;
 	case TK_CONFIG_CURSOR:
 	case TK_CONFIG_ACTIVE_CURSOR: {

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.1.4.3 1999/01/07 02:42:52 lfb Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.1.4.4 1999/02/16 11:39:32 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -56,8 +56,7 @@ typedef struct StyleValues {
     int underline;		/* Non-zero means draw underline underneath
 				 * text. */
     Tk_Uid wrapMode;		/* How to handle wrap-around for this tag.
-				 * One of tkTextCharUid, tkTextNoneUid,
-				 * or tkTextWordUid. */
+				 * One of char, none, or text. */
 } StyleValues;
 
 /*
@@ -808,7 +807,7 @@ LayoutDLine(textPtr, indexPtr)
     tabChunkPtr = NULL;
     tabArrayPtr = NULL;
     rMargin = 0;
-    wrapMode = tkTextCharUid;
+    wrapMode = Tk_GetUid("char");
     tabSize = 0;
     lastCharChunkPtr = NULL;
 
@@ -850,7 +849,7 @@ LayoutDLine(textPtr, indexPtr)
 	    x = ((curIndex.byteIndex == 0)
 		    ? chunkPtr->stylePtr->sValuePtr->lMargin1
 		    : chunkPtr->stylePtr->sValuePtr->lMargin2);
-	    if (wrapMode == tkTextNoneUid) {
+	    if (wrapMode == Tk_GetUid("none")) {
 		maxX = -1;
 	    } else {
 		maxX = textPtr->dInfoPtr->maxX - textPtr->dInfoPtr->x
@@ -1023,7 +1022,7 @@ LayoutDLine(textPtr, indexPtr)
      * what is implemented below.
      */
 
-    if (wrapMode == tkTextNoneUid) {
+    if (wrapMode == Tk_GetUid("none")) {
 	maxX = textPtr->dInfoPtr->maxX - textPtr->dInfoPtr->x - rMargin;
     }
     dlPtr->length = lastChunkPtr->x + lastChunkPtr->width;
@@ -1581,7 +1580,7 @@ DisplayDLine(textPtr, dlPtr, prevPtr, pixmap)
      * to its left.
      */
 
-    if (textPtr->state == TK_STATE_NORMAL) {
+    if (textPtr->state == Tk_GetUid("normal")) {
 	for (chunkPtr = dlPtr->chunkPtr; (chunkPtr != NULL);
 		chunkPtr = chunkPtr->nextPtr) {
 	    x = chunkPtr->x + dInfoPtr->x - dInfoPtr->curPixelOffset;
@@ -4242,8 +4241,8 @@ TkTextCharLayoutProc(textPtr, indexPtr, segPtr, byteOffset, maxX, maxBytes,
 				 * many characters. */
     int noCharsYet;		/* Non-zero means no characters have been
 				 * assigned to this display line yet. */
-    Tk_Uid wrapMode;		/* How to handle line wrapping: tkTextCharUid,
-				 * tkTextNoneUid, or tkTextWordUid. */
+    Tk_Uid wrapMode;		/* How to handle line wrapping: char, 
+				 * none, or text. */
     register TkTextDispChunk *chunkPtr;
 				/* Structure to fill in with information
 				 * about this chunk.  The x field has already
@@ -4337,7 +4336,7 @@ TkTextCharLayoutProc(textPtr, indexPtr, segPtr, byteOffset, maxX, maxBytes,
      * is not a character segment.
      */
 
-    if (wrapMode != tkTextWordUid) {
+    if (wrapMode != Tk_GetUid("word")) {
 	chunkPtr->breakIndex = chunkPtr->numBytes;
     } else {
 	for (count = bytesThatFit, p += bytesThatFit - 1; count > 0;

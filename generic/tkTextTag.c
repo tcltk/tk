@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.1.4.2 1998/09/30 02:17:26 stanton Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.1.4.3 1999/02/16 11:39:33 lfb Exp $
  */
 
 #include "default.h"
@@ -392,9 +392,9 @@ TkTextTagCmd(textPtr, interp, argc, argv)
 		}
 	    }
 	    if ((tagPtr->wrapMode != NULL)
-		    && (tagPtr->wrapMode != tkTextCharUid)
-		    && (tagPtr->wrapMode != tkTextNoneUid)
-		    && (tagPtr->wrapMode != tkTextWordUid)) {
+		    && (tagPtr->wrapMode != Tk_GetUid("char"))
+		    && (tagPtr->wrapMode != Tk_GetUid("none"))
+		    && (tagPtr->wrapMode != Tk_GetUid("word"))) {
 		Tcl_AppendResult(interp, "bad wrap mode \"", tagPtr->wrapMode,
 			"\": must be char, none, or word", (char *) NULL);
 		tagPtr->wrapMode = NULL;

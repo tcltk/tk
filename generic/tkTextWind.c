@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.1.4.2 1998/09/30 02:17:26 stanton Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.1.4.3 1999/02/16 11:39:33 lfb Exp $
  */
 
 #include "tk.h"
@@ -835,7 +835,7 @@ EmbWinLayoutProc(textPtr, indexPtr, ewPtr, offset, maxX, maxChars,
 	height = Tk_ReqHeight(ewPtr->body.ew.tkwin) + 2*ewPtr->body.ew.padY;
     }
     if ((width > (maxX - chunkPtr->x))
-	    && !noCharsYet && (textPtr->wrapMode != tkTextNoneUid)) {
+	    && !noCharsYet && (textPtr->wrapMode != Tk_GetUid("none"))) {
 	return 0;
     }
 

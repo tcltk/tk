@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.1.4.2 1998/09/30 02:17:27 stanton Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.1.4.3 1999/02/16 11:39:34 lfb Exp $
  */
 
 #include "tkInt.h"
@@ -206,6 +206,85 @@ Tk_GetScrollInfo(interp, argc, argv, dblPtr, intPtr)
 	}
     }
     Tcl_AppendResult(interp, "unknown option \"", argv[2],
+	    "\": must be moveto or scroll", (char *) NULL);
+    return TK_SCROLL_ERROR;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetScrollInfoObj --
+ *
+ *	This procedure is invoked to parse "xview" and "yview"
+ *	scrolling commands for widgets using the new scrolling
+ *	command syntax ("moveto" or "scroll" options).
+ *
+ * Results:
+ *	The return value is either TK_SCROLL_MOVETO, TK_SCROLL_PAGES,
+ *	TK_SCROLL_UNITS, or TK_SCROLL_ERROR.  This indicates whether
+ *	the command was successfully parsed and what form the command
+ *	took.  If TK_SCROLL_MOVETO, *dblPtr is filled in with the
+ *	desired position;  if TK_SCROLL_PAGES or TK_SCROLL_UNITS,
+ *	*intPtr is filled in with the number of lines to move (may be
+ *	negative);  if TK_SCROLL_ERROR, the interp's result contains an
+ *	error message.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Tk_GetScrollInfoObj(interp, objc, objv, dblPtr, intPtr)
+    Tcl_Interp *interp;			/* Used for error reporting. */
+    int objc;				/* # arguments for command. */
+    Tcl_Obj *CONST objv[];		/* Arguments for command. */
+    double *dblPtr;			/* Filled in with argument "moveto"
+					 * option, if any. */
+    int *intPtr;			/* Filled in with number of pages
+					 * or lines to scroll, if any. */
+{
+    int c;
+    size_t length;
+    char *arg2, *arg4;
+
+    arg2 = Tcl_GetString(objv[2]);
+    length = strlen(arg2);
+    c = arg2[0];
+    if ((c == 'm') && (strncmp(arg2, "moveto", length) == 0)) {
+	if (objc != 4) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "moveto fraction");
+	    return TK_SCROLL_ERROR;
+	}
+	if (Tcl_GetDoubleFromObj(interp, objv[3], dblPtr) != TCL_OK) {
+	    return TK_SCROLL_ERROR;
+	}
+	return TK_SCROLL_MOVETO;
+    } else if ((c == 's')
+	    && (strncmp(arg2, "scroll", length) == 0)) {
+	if (objc != 5) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "scroll number units|pages");
+	    return TK_SCROLL_ERROR;
+	}
+	if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
+	    return TK_SCROLL_ERROR;
+	}
+	arg4 = Tcl_GetString(objv[4]);
+	length = (strlen(arg4));
+	c = arg4[0];
+	if ((c == 'p') && (strncmp(arg4, "pages", length) == 0)) {
+	    return TK_SCROLL_PAGES;
+	} else if ((c == 'u')
+		&& (strncmp(arg4, "units", length) == 0)) {
+	    return TK_SCROLL_UNITS;
+	} else {
+	    Tcl_AppendResult(interp, "bad argument \"", arg4,
+		    "\": must be units or pages", (char *) NULL);
+	    return TK_SCROLL_ERROR;
+	}
+    }
+    Tcl_AppendResult(interp, "unknown option \"", arg2,
 	    "\": must be moveto or scroll", (char *) NULL);
     return TK_SCROLL_ERROR;
 }

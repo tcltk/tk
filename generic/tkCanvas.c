@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.1.4.4 1998/12/13 08:16:02 lfb Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.1.4.5 1999/02/16 11:39:30 lfb Exp $
  */
 
 #include "default.h"
@@ -150,13 +150,6 @@ static Tk_ItemType *typeList = NULL;	/* NULL means initialization hasn't
 extern Tk_ItemType tkArcType, tkBitmapType, tkImageType, tkLineType;
 extern Tk_ItemType tkOvalType, tkPolygonType;
 extern Tk_ItemType tkRectangleType, tkTextType, tkWindowType;
-
-/*
- * Various Tk_Uid's used by this module (set up during initialization):
- */
-
-static Tk_Uid allUid = NULL;
-static Tk_Uid currentUid = NULL;
 
 /*
  * Prototypes for procedures defined later in this file:
@@ -2164,8 +2157,6 @@ InitCanvas()
     tkBitmapType.nextPtr = &tkArcType;
     tkArcType.nextPtr = &tkWindowType;
     tkWindowType.nextPtr = NULL;
-    allUid = Tk_GetUid("all");
-    currentUid = Tk_GetUid("current");
 }
 
 /*
@@ -2255,7 +2246,7 @@ StartTagSearch(canvasPtr, tag, searchPtr)
     }
 
     searchPtr->tag = uid = Tk_GetUid(tag);
-    if (uid == allUid) {
+    if (uid == Tk_GetUid("all")) {
 
 	/*
 	 * All items match.
@@ -3143,7 +3134,7 @@ PickCurrentItem(canvasPtr, eventPtr)
 
 	if ((itemPtr == canvasPtr->currentItemPtr) && !buttonDown) {
 	    for (i = itemPtr->numTags-1; i >= 0; i--) {
-		if (itemPtr->tagPtr[i] == currentUid) {
+		if (itemPtr->tagPtr[i] == Tk_GetUid("current")) {
 		    itemPtr->tagPtr[i] = itemPtr->tagPtr[itemPtr->numTags-1];
 		    itemPtr->numTags--;
 		    break;
@@ -3173,7 +3164,8 @@ PickCurrentItem(canvasPtr, eventPtr)
     if (canvasPtr->currentItemPtr != NULL) {
 	XEvent event;
 
-	DoItem((Tcl_Interp *) NULL, canvasPtr->currentItemPtr, currentUid);
+	DoItem((Tcl_Interp *) NULL, canvasPtr->currentItemPtr, 
+                Tk_GetUid("current"));
 	event = canvasPtr->pickEvent;
 	event.type = EnterNotify;
 	event.xcrossing.detail = NotifyAncestor;
@@ -3289,7 +3281,7 @@ CanvasDoEvent(canvasPtr, eventPtr)
 	objectPtr = (ClientData *) ckalloc((unsigned)
 		(numObjects * sizeof(ClientData)));
     }
-    objectPtr[0] = (ClientData) allUid;
+    objectPtr[0] = (ClientData) Tk_GetUid("all");
     for (i = itemPtr->numTags-1; i >= 0; i--) {
 	objectPtr[i+1] = (ClientData) itemPtr->tagPtr[i];
     }

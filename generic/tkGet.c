@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGet.c,v 1.1.4.4 1999/01/07 02:42:50 lfb Exp $
+ * RCS: @(#) $Id: tkGet.c,v 1.1.4.5 1999/02/16 11:39:31 lfb Exp $
  */
 
 #include "tkInt.h"
@@ -676,84 +676,5 @@ Tk_GetPixels(interp, tkwin, string, intPtr)
     }
     return TCL_OK;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_GetState --
- *
- *	Parse a state description and return the corresponding
- *	state value, or an error.
- *
- * Results:
- *	A standard Tcl return value.  If all goes well then
- *	*statePtr is filled in with one of the values
- *	TK_STATE_ACTIVE, TK_STATE_DISABLED, or TK_STATE_NORMAL.
- *      If an unknown state value is used, then *statePtr is
- *      filled with TK_STATE_UNDEFINED.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
 
-int
-Tk_GetState(interp, name, statePtr)
-    Tcl_Interp *interp;		/* For error messages. */
-    char *name;			/* Name of a state type. */
-    int *statePtr;		/* Where to store converted state. */
-{
-    char c;
-    size_t length;
-
-    c = name[0];
-    length = strlen(name);
-    if ((c == 'a') && (strncmp(name, "active", length) == 0)) {
-	*statePtr = TK_STATE_ACTIVE;
-    } else if ((c == 'd') && (strncmp(name, "disabled", length) == 0)
-	    && (length >= 2)) {
-        *statePtr = TK_STATE_DISABLED;
-    } else if ((c == 'n') && (strncmp(name, "normal", length) == 0)
-	    && (length >= 2)) {
-	*statePtr = TK_STATE_NORMAL;
-    } else {
-        *statePtr = TK_STATE_UNDEFINED;
-    }
-    return TCL_OK;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * Tk_NameOfState --
- *
- *	Given a state value, produce a string describing that
- *	state value.
- *
- * Results:
- *	The return value is a static string that is equivalent
- *	to state.
- *
- * Side effects:
- *	None.
- *
- *--------------------------------------------------------------
- */
-
-char *
-Tk_NameOfState(state)
-    int state;		/* One of TK_STATE_ACTIVE, TK_STATE_DISABLED,
-			 * or TK_STATE_NORMAL */
-{
-    if (state == TK_STATE_ACTIVE) {
-	return "active";
-    } else if (state == TK_STATE_DISABLED) {
-	return "disabled";
-    } else if (state == TK_STATE_NORMAL) {
-	return "normal";
-    } else {
-	return "unknown state";
-    }
-}
 

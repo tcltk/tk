@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.1.4.10 1999/02/16 06:00:40 lfb Exp $
+ * RCS: @(#) $Id: tk.h,v 1.1.4.11 1999/02/16 11:39:29 lfb Exp $
  */
 
 #ifndef _TK
@@ -330,7 +330,7 @@ typedef struct Tk_ConfigSpec {
 typedef enum {
     TK_CONFIG_BOOLEAN, TK_CONFIG_INT, TK_CONFIG_DOUBLE, TK_CONFIG_STRING,
     TK_CONFIG_UID, TK_CONFIG_COLOR, TK_CONFIG_FONT, TK_CONFIG_BITMAP,
-    TK_CONFIG_BORDER, TK_CONFIG_RELIEF, TK_CONFIG_STATE, TK_CONFIG_CURSOR, 
+    TK_CONFIG_BORDER, TK_CONFIG_RELIEF, TK_CONFIG_CURSOR, 
     TK_CONFIG_ACTIVE_CURSOR, TK_CONFIG_JUSTIFY, TK_CONFIG_ANCHOR, 
     TK_CONFIG_SYNONYM, TK_CONFIG_CAP_STYLE, TK_CONFIG_JOIN_STYLE,
     TK_CONFIG_PIXELS, TK_CONFIG_MM, TK_CONFIG_WINDOW, TK_CONFIG_CUSTOM, 
@@ -430,16 +430,6 @@ typedef enum {
 #define TK_RELIEF_RIDGE		3
 #define TK_RELIEF_SOLID		4
 #define TK_RELIEF_SUNKEN	5
-
-/*
- * Values used to represent various widget states, used by
- * Tk_GetState, Tk_GetStateFromObj.
- */ 
-
-#define TK_STATE_ACTIVE         0
-#define TK_STATE_DISABLED       1
-#define TK_STATE_NORMAL         2
-#define TK_STATE_UNDEFINED      -1
 
 /*
  * "Which" argument values for Tk_3DBorderGC:
@@ -1509,13 +1499,14 @@ EXTERN void		Tk_GetRootCoords _ANSI_ARGS_ ((Tk_Window tkwin,
 EXTERN int		Tk_GetScrollInfo _ANSI_ARGS_((Tcl_Interp *interp,
 			    int argc, char **argv, double *dblPtr,
 			    int *intPtr));
+EXTERN int		Tk_GetScrollInfoObj _ANSI_ARGS_((Tcl_Interp *interp,
+			    int objc, Tcl_Obj *CONST objv[], double *dblPtr,
+			    int *intPtr));
 EXTERN int		Tk_GetScreenMM _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window tkwin, char *string, double *doublePtr));
 EXTERN int		Tk_GetSelection _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window tkwin, Atom selection, Atom target,
 			    Tk_GetSelProc *proc, ClientData clientData));
-EXTERN int		Tk_GetState _ANSI_ARGS_((Tcl_Interp *interp,
-			    char *name, int *statePtr));
 EXTERN Tk_Uid		Tk_GetUid _ANSI_ARGS_((CONST char *string));
 EXTERN Visual *		Tk_GetVisual _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window tkwin, char *string, int *depthPtr,
@@ -1575,7 +1566,6 @@ EXTERN char *		Tk_NameOfImage _ANSI_ARGS_((
 EXTERN char *		Tk_NameOfJoinStyle _ANSI_ARGS_((int join));
 EXTERN char *		Tk_NameOfJustify _ANSI_ARGS_((Tk_Justify justify));
 EXTERN char *		Tk_NameOfRelief _ANSI_ARGS_((int relief));
-EXTERN char *		Tk_NameOfState _ANSI_ARGS_((int state));
 EXTERN Tk_Window	Tk_NameToWindow _ANSI_ARGS_((Tcl_Interp *interp,
 			    char *pathName, Tk_Window tkwin));
 EXTERN void		Tk_OwnSelection _ANSI_ARGS_((Tk_Window tkwin,
@@ -1713,8 +1703,9 @@ EXTERN int              Tk_ChooseFontObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_DestroyCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_EntryCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_EntryObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+                            Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_EventObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
