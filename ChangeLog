@@ -1,3 +1,9 @@
+2003-07-03  Jim Ingham <jingham@apple.com>
+
+	* macosx/tkMacOSXColor.c (GetControlPartColor): Use
+	the ThemeBrushes to get the control text color for
+	buttons.  
+	
 2003-07-02  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/tkUnixEvent.c (TkpCloseDisplay): Don't
