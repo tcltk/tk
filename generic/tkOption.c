@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.3 1999/04/16 01:51:20 stanton Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.4 2000/03/24 23:13:18 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -454,7 +454,7 @@ Tk_GetOption(tkwin, name, className)
 /*
  *--------------------------------------------------------------
  *
- * Tk_OptionCmd --
+ * Tk_OptionObjCmd --
  *
  *	This procedure is invoked to process the "option" Tcl command.
  *	See the user documentation for details on what it does.
@@ -469,100 +469,117 @@ Tk_GetOption(tkwin, name, className)
  */
 
 int
-Tk_OptionCmd(clientData, interp, argc, argv)
+Tk_OptionObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Main window associated with
 				 * interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of Tcl_Obj arguments. */
+    Tcl_Obj *CONST objv[];	/* Tcl_Obj arguments. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
-    size_t length;
-    char c;
+    int index, result;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (argc < 2) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		" cmd arg ?arg ...?\"", (char *) NULL);
+    static char *optionCmds[] = {
+	"add", "clear", "get", "readfile", NULL
+    };
+
+    enum optionVals {
+	OPTION_ADD, OPTION_CLEAR, OPTION_GET, OPTION_READFILE
+    };
+
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "cmd arg ?arg ...?");
 	return TCL_ERROR;
     }
-    c = argv[1][0];
-    length = strlen(argv[1]);
-    if ((c == 'a') && (strncmp(argv[1], "add", length) == 0)) {
-	int priority;
 
-	if ((argc != 4) && (argc != 5)) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " add pattern value ?priority?\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	if (argc == 4) {
-	    priority = TK_INTERACTIVE_PRIO;
-	} else {
-	    priority = ParsePriority(interp, argv[4]);
-	    if (priority < 0) {
-		return TCL_ERROR;
-	    }
-	}
-	Tk_AddOption(tkwin, argv[2], argv[3], priority);
-	return TCL_OK;
-    } else if ((c == 'c') && (strncmp(argv[1], "clear", length) == 0)) {
-	TkMainInfo *mainPtr;
-
-	if (argc != 2) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " clear\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	mainPtr = ((TkWindow *) tkwin)->mainPtr;
-	if (mainPtr->optionRootPtr != NULL) {
-	    ClearOptionTree(mainPtr->optionRootPtr);
-	    mainPtr->optionRootPtr = NULL;
-	}
-	tsdPtr->cachedWindow = NULL;
-	return TCL_OK;
-    } else if ((c == 'g') && (strncmp(argv[1], "get", length) == 0)) {
-	Tk_Window window;
-	Tk_Uid value;
-
-	if (argc != 5) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " get window name class\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	window = Tk_NameToWindow(interp, argv[2], tkwin);
-	if (window == NULL) {
-	    return TCL_ERROR;
-	}
-	value = Tk_GetOption(window, argv[3], argv[4]);
-	if (value != NULL) {
-	    Tcl_SetResult(interp, value, TCL_STATIC);
-	}
-	return TCL_OK;
-    } else if ((c == 'r') && (strncmp(argv[1], "readfile", length) == 0)) {
-	int priority;
-
-	if ((argc != 3) && (argc != 4)) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " readfile fileName ?priority?\"",
-		    (char *) NULL);
-	    return TCL_ERROR;
-	}
-	if (argc == 4) {
-	    priority = ParsePriority(interp, argv[3]);
-	    if (priority < 0) {
-		return TCL_ERROR;
-	    }
-	} else {
-	    priority = TK_INTERACTIVE_PRIO;
-	}
-	return ReadOptionFile(interp, tkwin, argv[2], priority);
-    } else {
-	Tcl_AppendResult(interp, "bad option \"", argv[1],
-		"\": must be add, clear, get, or readfile", (char *) NULL);
-	return TCL_ERROR;
+    result = Tcl_GetIndexFromObj(interp, objv[1], optionCmds, "option", 0,
+	    &index);
+    if (result != TCL_OK) {
+	return result;
     }
+    
+    result = TCL_OK;
+    switch ((enum optionVals) index) {
+	case OPTION_ADD: {
+	    int priority;
+	    if ((objc != 4) && (objc != 5)) {
+		Tcl_WrongNumArgs(interp, 2, objv, "pattern value ?priority?");
+		return TCL_ERROR;
+	    }
+
+	    if (objc == 4) {
+		priority = TK_INTERACTIVE_PRIO;
+	    } else {
+		priority = ParsePriority(interp, Tcl_GetString(objv[4]));
+		if (priority < 0) {
+		    return TCL_ERROR;
+		}
+	    }
+	    Tk_AddOption(tkwin, Tcl_GetString(objv[2]),
+		    Tcl_GetString(objv[3]), priority);
+	    break;
+	}
+
+	case OPTION_CLEAR: {
+	    TkMainInfo *mainPtr;
+
+	    if (objc != 2) {
+		Tcl_WrongNumArgs(interp, 2, objv, "");
+		return TCL_ERROR;
+	    }
+	    mainPtr = ((TkWindow *) tkwin)->mainPtr;
+	    if (mainPtr->optionRootPtr != NULL) {
+		ClearOptionTree(mainPtr->optionRootPtr);
+		mainPtr->optionRootPtr = NULL;
+	    }
+	    tsdPtr->cachedWindow = NULL;
+	    break;
+	}
+
+	case OPTION_GET: {
+	    Tk_Window window;
+	    Tk_Uid value;
+	    
+	    if (objc != 5) {
+		Tcl_WrongNumArgs(interp, 2, objv, "window name class");
+		return TCL_ERROR;
+	    }
+	    window = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
+	    if (window == NULL) {
+		return TCL_ERROR;
+	    }
+	    value = Tk_GetOption(window, Tcl_GetString(objv[3]),
+		    Tcl_GetString(objv[4]));
+	    if (value != NULL) {
+		Tcl_SetResult(interp, value, TCL_STATIC);
+	    }
+	    break;
+	}
+
+	case OPTION_READFILE: {
+	    int priority;
+	    
+	    if ((objc != 3) && (objc != 4)) {
+		Tcl_WrongNumArgs(interp, 2, objv, "fileName ?priority?");
+		return TCL_ERROR;
+	    }
+
+	    if (objc == 4) {
+		priority = ParsePriority(interp, Tcl_GetString(objv[3]));
+		if (priority < 0) {
+		    return TCL_ERROR;
+		}
+	    } else {
+		priority = TK_INTERACTIVE_PRIO;
+	    }
+	    result = ReadOptionFile(interp, tkwin, Tcl_GetString(objv[2]),
+		    priority);
+	    break;
+	}
+    }
+    return result;
 }
 
 /*
