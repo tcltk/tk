@@ -1,3 +1,8 @@
+2005-02-07  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* generic/tkCanvas.c (CanvasWidgetCmd): Fix stupid mistake in
+	variable names, reported by Andreas Leitgeb.
+
 2005-02-03  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* generic/tkCanvas.c (GetStaticUids): New function to manage the
