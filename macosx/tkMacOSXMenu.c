@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.1.2.4 2002/07/16 14:32:30 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.1.2.5 2002/07/18 09:34:42 vincentdarley Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -1142,38 +1142,15 @@ ReconfigureIndividualMenu(
 	    	}
 	    }
 	    
-    	    if ((mePtr->type != CASCADE_ENTRY) 
-    	    	    && (0 != (mePtr->entryFlags & ENTRY_ACCEL_MASK))) {
+    	    if ((mePtr->type != CASCADE_ENTRY) && (mePtr->accelPtr != NULL)) {
                 int accelLen;
 		int modifiers = 0;
+                int hasCmd = 0;
 		int offset = ((EntryGeometry *)mePtr->platformEntryData)->accelTextStart;
     	    	char *accel = Tcl_GetStringFromObj(mePtr->accelPtr, &accelLen);
                 accelLen -= offset;
 		accel+= offset;
 		
-                if (accelLen == 1) {
-                    SetItemCmd(macMenuHdl, base + index, accel[0]);
-                } else {
-		    /* 
-		     * Now we need to convert from various textual names
-		     * to Carbon codes
-		     */
-		    char glyph = 0x0;
-		    if ((accel[0] == 'f' || accel[0] == 'F') 
-			&& (accel[1] > '0' && accel[1] <= '9')) {
-			int fkey = accel[1] - '0';
-			if (accel[2] > '0' && accel[2] <= '9') {
-			    fkey = 10*fkey + (accel[2] - '0');
-			}
-			if (fkey > 0 && fkey < 16) {
-			    glyph = 0x6e + fkey;
-			}
-		    }
-		    if (glyph != 0x0) {
-			SetMenuItemKeyGlyph(macMenuHdl, base + index, glyph);
-			modifiers |= kMenuNoCommandModifier;
-		    }
-                }
 		if (mePtr->entryFlags & ENTRY_OPTION_ACCEL) {
 		    modifiers |= kMenuOptionModifier;
 		}
@@ -1184,13 +1161,74 @@ ReconfigureIndividualMenu(
 		    modifiers |= kMenuControlModifier;
 		}
 		if (mePtr->entryFlags & ENTRY_COMMAND_ACCEL) {
-		    /* modifiers |= kMenuCommandModifier; */
+		    hasCmd = 1;
 		}
-		if (modifiers != 0 && modifiers != kMenuShiftModifier) {
-		    if (!(mePtr->entryFlags & ENTRY_COMMAND_ACCEL)) {
-		        modifiers |= kMenuNoCommandModifier;
+                if (accelLen == 1) {
+		    if (hasCmd || (modifiers != 0 && modifiers != kMenuShiftModifier)) {
+                        SetItemCmd(macMenuHdl, base + index, accel[0]);
+			if (!hasCmd) {
+			    modifiers |= kMenuNoCommandModifier;
+			}
 		    }
-		}
+                } else {
+		    /* 
+		     * Now we need to convert from various textual names
+		     * to Carbon codes
+		     */
+		    char glyph = 0x0;
+                    char first = UCHAR(accel[0]);
+		    if (first == 'F' && (accel[1] > '0' && accel[1] <= '9')) {
+			int fkey = accel[1] - '0';
+			if (accel[2] > '0' && accel[2] <= '9') {
+			    fkey = 10*fkey + (accel[2] - '0');
+			}
+			if (fkey > 0 && fkey < 16) {
+			    glyph = kMenuF1Glyph + fkey - 1;
+			}
+		    } else if (first == 'P' && 0 ==strcasecmp(accel,"pageup")) {
+                        glyph = kMenuPageUpGlyph;
+		    } else if (first == 'P' && 0 ==strcasecmp(accel,"pagedown")) {
+                        glyph = kMenuPageDownGlyph;
+		    } else if (first == 'L' && 0 ==strcasecmp(accel,"left")) {
+                        glyph = kMenuLeftArrowGlyph;
+		    } else if (first == 'R' && 0 ==strcasecmp(accel,"right")) {
+                        glyph = kMenuRightArrowGlyph;
+		    } else if (first == 'U' && 0 ==strcasecmp(accel,"up")) {
+                        glyph = kMenuUpArrowGlyph;
+		    } else if (first == 'D' && 0 ==strcasecmp(accel,"down")) {
+                        glyph = kMenuDownArrowGlyph;
+		    } else if (first == 'E' && 0 ==strcasecmp(accel,"escape")) {
+                        glyph = kMenuEscapeGlyph;
+		    } else if (first == 'C' && 0 ==strcasecmp(accel,"clear")) {
+                        glyph = kMenuClearGlyph;
+		    } else if (first == 'E' && 0 ==strcasecmp(accel,"enter")) {
+                        glyph = kMenuEnterGlyph;
+		    } else if (first == 'D' && 0 ==strcasecmp(accel,"backspace")) {
+                        glyph = kMenuDeleteLeftGlyph;
+		    } else if (first == 'S' && 0 ==strcasecmp(accel,"space")) {
+                        glyph = kMenuSpaceGlyph;
+		    } else if (first == 'T' && 0 ==strcasecmp(accel,"tab")) {
+                        glyph = kMenuTabRightGlyph;
+		    } else if (first == 'F' && 0 ==strcasecmp(accel,"delete")) {
+                        glyph = kMenuDeleteRightGlyph;
+		    } else if (first == 'H' && 0 ==strcasecmp(accel,"home")) {
+                        glyph = kMenuNorthwestArrowGlyph;
+		    } else if (first == 'R' && 0 ==strcasecmp(accel,"return")) {
+                        glyph = kMenuReturnGlyph;
+		    } else if (first == 'H' && 0 ==strcasecmp(accel,"help")) {
+                        glyph = kMenuHelpGlyph;
+		    } else if (first == 'P' && 0 ==strcasecmp(accel,"power")) {
+                        glyph = kMenuPowerGlyph;
+                    }
+		    if (glyph != 0x0) {
+			SetMenuItemKeyGlyph(macMenuHdl, base + index, glyph);
+			if (modifiers == 0) {
+			    if (!hasCmd) {
+				modifiers |= kMenuNoCommandModifier;
+			    }
+			}
+		    }
+                }
 		
 		SetMenuItemModifiers(macMenuHdl, base + index, modifiers);
 	    }
