@@ -1,3 +1,7 @@
+2005-02-09  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* tests/wm.test: Convert to use more tcltest2 features.
+
 2005-02-07  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* generic/tkCanvas.c (CanvasWidgetCmd): Fix stupid mistake in
