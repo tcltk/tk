@@ -7,8 +7,8 @@
 
 2003-09-26  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
 
-    * macosx/tkMacOSXWm.c (TkWmStackorderToplevelWrapperMap): Add
-    GetWindowFromPort() [Bug #812415]; make function static.
+	* macosx/tkMacOSXWm.c (TkWmStackorderToplevelWrapperMap): Add
+	GetWindowFromPort() [Bug #812415]; make function static.
 
 2003-09-25  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -53,8 +53,8 @@
 	* tests/main.test:		command line option by Tk_MainEx()
 	and thus by wish, and any other program built on Tk_MainEx().
 	[Patch 800139].
-        This is a ***POTENTIAL INCOMPATIBILITY*** only for those C programs
-        that embed Tcl and Tk, build on Tk_MainEx(), and make use of
+	This is a ***POTENTIAL INCOMPATIBILITY*** only for those C programs
+	that embed Tcl and Tk, build on Tk_MainEx(), and make use of
 	Tk_MainEx's former ability to pass a leading "-encoding" option to
 	interactive shell operations.
 
@@ -734,7 +734,7 @@
 	* unix/tkUnixWm.c (UpdateGeometryInfo, UpdateSizeHints):
 	Fixup comments and initialization for the minWidth,
 	minHeight, maxWidth, maxHeight, width, and height
- 	members of the WmInfo struct. Check to ensure
+	members of the WmInfo struct. Check to ensure
 	that a new toplevel window size is not larger
 	than the maxsize or smaller than the minsize
 	when updating the geometry at idle time.
@@ -747,7 +747,7 @@
 	* win/tkWinWm.c (UpdateGeometryInfo):
 	Fixup comments and initialization for the minWidth,
 	minHeight, maxWidth, maxHeight, width, and height
- 	members of the WmInfo struct. Check to ensure
+	members of the WmInfo struct. Check to ensure
 	that a new toplevel window size is not larger
 	than the maxsize or smaller than the minsize
 	when updating the geometry at idle time.
@@ -5515,7 +5515,7 @@
 
 	* unix/configure:
 	* unix/tcl.m4: corrected IRIX-5.x config to not use -n32.
- 	(english) [Patch 403626]
+	(english) [Patch 403626]
 
 2001-03-28  Don Porter  <dgp@users.sourceforge.net>
 
@@ -8816,20 +8816,20 @@
 1999-03-26    <redman@scriptics.com>
 
 	* unix/configure.in: Removed --enable-tcl-stub.  Linking Tk to Tcl
- 	stubs is causing too many problems when linking executables like wish.
-  	Until the Tk is a fully loadable extension, linking against the Tcl
- 	stubs is not supported in Tk.
+	stubs is causing too many problems when linking executables like wish.
+	Until the Tk is a fully loadable extension, linking against the Tcl
+	stubs is not supported in Tk.
 
 1999-03-19    <redman@scriptics.com>
 
 	* generic/tkBitmap.c:
 	* generic/tkCursor.c:
 	* generic/tkGC.c: When creating hash tables that key off of XID
- 	handles, make sure to pass TCL_ONE_WORD_KEYS.  XIDs are guaranteed
- 	to be 32bit numbers, although on some 64bit systems (including 64bit
- 	Solaris 7) they are packed into a 64bit value where the upper 32bits
- 	are zero. The normal method of sizeof(XID)/sizeof(int) causes the
- 	hash table code to assume that the XID is a pointer to an array of 
+	handles, make sure to pass TCL_ONE_WORD_KEYS.  XIDs are guaranteed
+	to be 32bit numbers, although on some 64bit systems (including 64bit
+	Solaris 7) they are packed into a 64bit value where the upper 32bits
+	are zero. The normal method of sizeof(XID)/sizeof(int) causes the
+	hash table code to assume that the XID is a pointer to an array of 
 	two ints, which it is not.  Tk now supports 64bit Solaris 7.
 
 1999-03-17    <stanton@scriptics.com>
