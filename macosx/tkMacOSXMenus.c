@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.2 2002/08/31 06:12:30 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.2.2.1 2003/05/13 02:42:57 das Exp $
  */
 
 #include "tk.h"
@@ -209,7 +209,6 @@ TkMacOSXInitMenus(
     }
     
     DrawMenuBar();
-    TkMacOSXSetHelpMenuItemCount();
     return;
 }
 
