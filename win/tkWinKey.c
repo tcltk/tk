@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinKey.c,v 1.13 2001/03/30 23:50:17 hobbs Exp $
+ * RCS: @(#) $Id: tkWinKey.c,v 1.14 2001/05/30 22:41:11 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -583,14 +583,6 @@ TkpSetKeycodeAndState(tkwin, keySym, eventPtr)
                 eventPtr->xkey.state |= Mod2Mask;
             eventPtr->xkey.keycode = (KeyCode) (result & 0xff);
 	}
-    }
-    {
-        /* Debug log */
-        FILE *fp = fopen("c:\\temp\\tklog.txt", "a");
-        if (fp != NULL) {
-            fprintf(fp, "TkpSetKeycode. Keycode %d State %d Keysym %d\n", eventPtr->xkey.keycode, eventPtr->xkey.state, keySym);
-            fclose(fp);
-        }
     }
 }
 
