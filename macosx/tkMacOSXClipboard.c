@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.1.2.2 2002/06/28 22:30:14 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -64,19 +64,31 @@ TkSelGetSelection(
         /* 
          * Get the scrap from the Macintosh global clipboard.
          */
-        if ((err=GetCurrentScrap(&scrapRef))!=noErr) {
-            fprintf(stderr,"GetCurrentScrap failed,%d\n", err );
+         
+        err=GetCurrentScrap(&scrapRef);
+        if (err != noErr) {
+            Tcl_AppendResult(interp, Tk_GetAtomName(tkwin, selection),
+                " GetCurrentScrap failed.", (char *) NULL);
             return TCL_ERROR;
         }
-        if ((err=GetScrapFlavorSize(scrapRef,'TEXT',&length))!= noErr) {
-            fprintf(stderr,"GetScrapFlavorSize failed, %d\n", err );
+        
+        err=GetScrapFlavorSize(scrapRef,'TEXT',&length);
+        if (err != noErr) {
+            Tcl_AppendResult(interp, Tk_GetAtomName(tkwin, selection),
+                " GetScrapFlavorSize failed.", (char *) NULL);
             return TCL_ERROR;
         }
         if (length > 0) {
             Tcl_DString encodedText;
 
             buf = (char *)ckalloc(length+1);
-            buf[length] = 0;
+	    buf[length] = 0;
+	    err = GetScrapFlavorData(scrapRef, 'TEXT', &length, buf);
+            if (err != noErr) {
+                    Tcl_AppendResult(interp, Tk_GetAtomName(tkwin, selection),
+                        " GetScrapFlavorData failed.", (char *) NULL);
+                    return TCL_ERROR;
+            }
 
             Tcl_ExternalToUtfDString(NULL, buf, length, &encodedText);
             result = (*proc)(clientData, interp,
