@@ -1,3 +1,9 @@
+2004-09-16  Peter Spjuth  <peter.spjuth@space.se>
+
+	* tests/place.test:
+	* generic/tkPlace.c: Fixed a memory leak when a placed widget was
+	forgotten. [Bug 1028888]
+
 2004-09-13  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinWm.c (ReadIconFromFile): fix mem alloc to get the right

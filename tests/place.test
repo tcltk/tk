@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: place.test,v 1.8 2002/11/07 19:10:30 pspjuth Exp $
+# RCS: @(#) $Id: place.test,v 1.8.2.1 2004/09/16 18:22:21 pspjuth Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -13,6 +13,9 @@ namespace import -force tcltest::testsDirectory
 configure -testdir [file join [pwd] [file dirname [info script]]]
 configure -loadfile [file join [testsDirectory] constraints.tcl]
 tcltest::loadTestedCommands
+
+# Used for constraining memory leak tests
+testConstraint memory [llength [info commands memory]]
 
 # XXX - This test file is woefully incomplete.  At present, only a
 # few of the features are tested.
@@ -376,6 +379,47 @@ test place-13.1 {test respect for internalborder} {
     destroy .pack
     set res
 } {196x188+2+10 177x186+5+7}
+
+test place-14.1 {memory leak testing} -setup {
+    proc getbytes {} {
+        set lines [split [memory info] "\n"]
+        lindex [lindex $lines 3] 3
+    }
+    # Repeat each body checking that memory does not increase
+    proc stress {args} {
+        set res {}
+        foreach body $args {
+            set end 0
+            for {set i 0} {$i < 5} {incr i} {
+                uplevel 1 $body
+                set tmp $end
+                set end [getbytes]
+            }
+            lappend res [expr {$end - $tmp}]
+        }
+        return $res
+    }
+} -constraints memory -body {
+    # Test all manners of forgetting a slave
+    frame .f
+    frame .f.f
+    stress {
+        place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
+        place forget .f.f
+    } {
+        place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
+        pack .f.f
+    } {
+        place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
+        destroy .f
+        frame .f
+        frame .f.f
+    }
+} -result {0 0 0} -cleanup {
+    destroy .f
+    rename getbytes {}
+    rename stress {}
+}
 
 catch {destroy .t}
 
