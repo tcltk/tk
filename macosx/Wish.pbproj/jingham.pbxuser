@@ -17,31 +17,32 @@
 			F571FE4F0179702301DC9062,
 			F571FE500179702301DC9062,
 			F5D47B92017C934C01DC9062,
+			F54B24D6017FF76601DC9062,
+			F54B24D7017FFFBF01DC9062,
 		);
 		perUserDictionary = {
 			PBXWorkspaceConfiguration = {
-				ContentSize = "{838, 674}";
+				ContentSize = "{906, 673}";
 				LeftSlideOut = {
 					ActiveTab = 0;
-					Frame = "{{0, 23}, {838, 651}}";
+					Frame = "{{0, 23}, {906, 650}}";
 					Split0 = {
-						ActiveTab = 1;
-						Frame = "{{322, 0}, {516, 651}}";
+						Frame = "{{322, 0}, {584, 650}}";
 						Split0 = {
-							Frame = "{{0, 158}, {516, 493}}";
+							Frame = "{{0, 25}, {584, 625}}";
 						};
 						SplitCount = 1;
 						Tab0 = {
 							Debugger = {
 								ActiveTab = 1;
-								Frame = "{{0, 0}, {616, 264}}";
+								Frame = "{{0, 0}, {516, 264}}";
 								Split0 = {
-									Frame = "{{0, 263}, {616, 1}}";
+									Frame = "{{0, 263}, {516, 1}}";
 									Split0 = {
-										Frame = "{{0, 0}, {162, 1}}";
+										Frame = "{{0, 0}, {66, 1}}";
 									};
 									Split1 = {
-										Frame = "{{171, 0}, {445, 1}}";
+										Frame = "{{75, 0}, {441, 1}}";
 									};
 									SplitCount = 2;
 								};
@@ -50,11 +51,11 @@
 									Frame = "{{0, 0}, {616, 112}}";
 								};
 								Tab1 = {
-									Frame = "{{0, 0}, {616, 238}}";
+									Frame = "{{0, 0}, {516, 238}}";
 								};
 								TabCount = 2;
 							};
-							Frame = "{{0, 0}, {616, 264}}";
+							Frame = "{{0, 0}, {516, 264}}";
 							LauncherConfigVersion = 4;
 						};
 						Tab1 = {
@@ -65,18 +66,18 @@
 							};
 						};
 						Tab2 = {
-							BuildMessageFrame = "{{0, 0}, {518, 53}}";
-							BuildTranscriptFrame = "{{0, 62}, {518, 126}}";
-							Frame = "{{0, 0}, {516, 186}}";
+							BuildMessageFrame = "{{0, 0}, {615, 53}}";
+							BuildTranscriptFrame = "{{0, 62}, {615, 126}}";
+							Frame = "{{0, 0}, {613, 186}}";
 						};
 						Tab3 = {
-							Frame = "{{0, 0}, {713, 295}}";
+							Frame = "{{0, 0}, {516, 295}}";
 						};
 						TabCount = 4;
 					};
 					SplitCount = 1;
 					Tab0 = {
-						Frame = "{{0, 0}, {297, 651}}";
+						Frame = "{{0, 0}, {297, 650}}";
 					};
 					Tab1 = {
 						ClassesFrame = "{{0, 0}, {202, 56}}";
@@ -137,6 +138,18 @@
 		sourceDirectories = (
 		);
 	};
+	F54B24D6017FF76601DC9062 = {
+		fileReference = F5375548016C376E01DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 129;
+		state = 1;
+	};
+	F54B24D7017FFFBF01DC9062 = {
+		fileReference = F53755AA016C389901DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 141;
+		state = 1;
+	};
 	F571FE470179562E01DC9062 = {
 		fileReference = F5375583016C389901DC9062;
 		isa = PBXFileBreakpoint;
@@ -146,19 +159,19 @@
 	F571FE4A0179695001DC9062 = {
 		fileReference = F5375558016C376E01DC9062;
 		isa = PBXFileBreakpoint;
-		lineNumber = 176;
+		lineNumber = 175;
 		state = 2;
 	};
 	F571FE4C01796B1101DC9062 = {
 		fileReference = F5375558016C376E01DC9062;
 		isa = PBXFileBreakpoint;
-		lineNumber = 173;
+		lineNumber = 172;
 		state = 2;
 	};
 	F571FE4D01796CAF01DC9062 = {
 		fileReference = F5375558016C376E01DC9062;
 		isa = PBXFileBreakpoint;
-		lineNumber = 230;
+		lineNumber = 229;
 		state = 2;
 	};
 	F571FE4E01796F9201DC9062 = {
@@ -188,7 +201,7 @@
 	F5D47B92017C934C01DC9062 = {
 		fileReference = F5375548016C376E01DC9062;
 		isa = PBXFileBreakpoint;
-		lineNumber = 275;
+		lineNumber = 269;
 		state = 1;
 	};
 }

@@ -5,6 +5,12 @@
 	};
 	objectVersion = 34;
 	objects = {
+		F51D903E0181474301DC9062 = {
+			fileRef = F5875C7B016FEF1D01DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F537552A016C352C01DC9062 = {
 			buildStyles = (
 				F537552C016C352C01DC9062,
@@ -1238,7 +1244,7 @@
 			buildSettings = {
 				DYLIB_COMPATIBILITY_VERSION = 8.4;
 				DYLIB_CURRENT_VERSION = 8.4;
-				FRAMEWORK_SEARCH_PATHS = /Volumes/CodeBits/jingham/Products;
+				FRAMEWORK_SEARCH_PATHS = "\"$(SYMROOT)\"";
 				FRAMEWORK_VERSION = 8.4;
 				HEADER_SEARCH_PATHS = "../../tcl/generic ../../tcl/unix ../bitmaps ../generic ../xlib";
 				INSTALL_PATH = /Library/Frameworks;
@@ -1478,8 +1484,8 @@ Copyright Apple Computer, Inc 2001</string>
 		F53755E3016C38D301DC9062 = {
 			buildActionMask = 2147483647;
 			files = (
+				F51D903E0181474301DC9062,
 				F537567E016C3ADB01DC9062,
-				F5875C7C016FEF1D01DC9062,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
@@ -2601,9 +2607,9 @@ Copyright Apple Computer, Inc 2001</string>
 				F5FBD6E30173513601DC9062,
 			);
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = /Volumes/CodeBits/jingham/Products;
+				FRAMEWORK_SEARCH_PATHS = "\"$(SYMROOT)\"";
 				HEADER_SEARCH_PATHS = "../../tcl/generic ../../tcl/unix ../generic ../xlib";
-				LIBRARY_SEARCH_PATHS = "\"${BUILD_ROOT}/tcl\"";
+				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "-DMAC_OSX_TCL -DMAC_OSX_TK -DHAVE_UNISTD_H=1 -DHAVE_LIMITS_H=1 -DTCL_THREADS=1 -DHAVE_PTHREAD_ATTR_SETSTACKSIZE=1 -DHAVE_GETCWD=1 -DHAVE_OPENDIR=1 -DHAVE_STRSTR=1 -DHAVE_STRTOL=1 -DHAVE_TMPNAM=1 -DHAVE_WAITPID=1 -DNO_VALUES_H=1 -DNO_DLFCN_H=1 -DHAVE_UNISTD_H=1 -DHAVE_SYS_PARAM_H=1 -DUSE_TERMIOS=1 -DHAVE_SYS_TIME_H=1 -DTIME_WITH_SYS_TIME=1 -DHAVE_TM_ZONE=1 -DHAVE_TM_GMTOFF=1 -DHAVE_ST_BLKSIZE=1 -DSTDC_HEADERS=1 -DNEED_MATHERR=1 -DHAVE_SIGNED_CHAR=1 -DHAVE_SYS_IOCTL_H=1 -DHAVE_SYS_FILIO_H=1";
 				OTHER_LDFLAGS = "";
@@ -2698,9 +2704,9 @@ Copyright Apple Computer, Inc 2001</string>
 		F53756A6016C4DD401DC9062 = {
 			buildActionMask = 2147483647;
 			files = (
-				F53756A7016C4DD401DC9062,
 				F53756A8016C4DD401DC9062,
 				F5875C7D016FEF1D01DC9062,
+				F53756A7016C4DD401DC9062,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
@@ -2763,12 +2769,6 @@ Copyright Apple Computer, Inc 2001</string>
 			isa = PBXFrameworkReference;
 			path = Tcl.framework;
 			refType = 3;
-		};
-		F5875C7C016FEF1D01DC9062 = {
-			fileRef = F5875C7B016FEF1D01DC9062;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F5875C7D016FEF1D01DC9062 = {
 			fileRef = F5875C7B016FEF1D01DC9062;
@@ -3007,14 +3007,14 @@ Copyright Apple Computer, Inc 2001</string>
 		F5C8865A017D625C01DC9062 = {
 			isa = PBXFileReference;
 			name = tk.decls;
-			path = /Volumes/CodeBits/jingham/Tcl/source/tk/generic/tk.decls;
-			refType = 0;
+			path = ../generic/tk.decls;
+			refType = 2;
 		};
 		F5C8865B017D625C01DC9062 = {
 			isa = PBXFileReference;
 			name = tkInt.decls;
-			path = /Volumes/CodeBits/jingham/Tcl/source/tk/generic/tkInt.decls;
-			refType = 0;
+			path = ../generic/tkInt.decls;
+			refType = 2;
 		};
 		F5C8865C017D625C01DC9062 = {
 			fileRef = F5C8865A017D625C01DC9062;
