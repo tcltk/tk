@@ -1,3 +1,10 @@
+2003-12-31  Daniel Steffen  <das@users.sourceforge.net>
+
+        * macosx/Wish.pbproj/project.pbxproj: added missing private headers
+        to installed Tk.framework, so that tkInt.h can be included  
+        sucessfully from Tk.framework/PrivateHeaders.
+	* generic/tkPort.h: corrected include of tkMacOSXPort.h
+
 2003-12-28  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/tkWinMenu.c (ReconfigureWindowsMenu,
@@ -61,6 +68,7 @@
 	when the version changes.
 
 2003-12-22  Joe English  <jenglish@users.sourceforge.net>
+
 	* doc/text.n: Fix markup errors (".t" at beginning of line).
 
 2003-12-21  David Gravereaux <davygrvy@pobox.com>
@@ -82,6 +90,7 @@
 			      added for MinGW yet.  [Tcl Patch 858493]
 
 2003-12-20  Joe English  <jenglish@users.sourceforge.net>
+
 	* library/bgerror.tcl: Truncate displayed error message
 	if it's too long (fixes: #231251)
 
