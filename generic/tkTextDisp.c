@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.32 2003/11/15 16:57:57 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.33 2003/11/16 14:13:09 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -61,7 +61,7 @@ typedef struct StyleValues {
 				 * be NULL). */
     int underline;		/* Non-zero means draw underline underneath
 				 * text. */
-    int elide;			/* Non-zero means draw text */
+    int elide;			/* Zero means draw text, otherwise not */
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
 				 * One of TEXT_WRAPMODE_CHAR,
 				 * TEXT_WRAPMODE_NONE or TEXT_WRAPMODE_WORD.*/
@@ -5180,6 +5180,11 @@ TkTextScanCmd(textPtr, interp, objc, objv)
 		dInfoPtr->scanMarkY = y;
 	    }
 	}
+	dInfoPtr->flags |= DINFO_OUT_OF_DATE;
+	if (!(dInfoPtr->flags & REDRAW_PENDING)) {
+	    dInfoPtr->flags |= REDRAW_PENDING;
+	    Tcl_DoWhenIdle(DisplayText, (ClientData) textPtr);
+	}
     } else if (c=='m' && strncmp(Tcl_GetString(objv[2]), "mark", length)==0) {
 	dInfoPtr->scanMarkXPixel = dInfoPtr->newXPixelOffset;
 	dInfoPtr->scanMarkX = x;
@@ -5189,11 +5194,6 @@ TkTextScanCmd(textPtr, interp, objc, objv)
 	Tcl_AppendResult(interp, "bad scan option \"", Tcl_GetString(objv[2]),
 		"\": must be mark or dragto", (char *) NULL);
 	return TCL_ERROR;
-    }
-    dInfoPtr->flags |= DINFO_OUT_OF_DATE;
-    if (!(dInfoPtr->flags & REDRAW_PENDING)) {
-	dInfoPtr->flags |= REDRAW_PENDING;
-	Tcl_DoWhenIdle(DisplayText, (ClientData) textPtr);
     }
     return TCL_OK;
 }
@@ -5311,47 +5311,56 @@ GetPixelCount(textPtr, dlPtr)
 {
     TkTextLine *linePtr = dlPtr->index.linePtr;
     /* 
-     * Get the pixel count of one pixel beyond the 
-     * botton of the given line.
+     * Get the pixel count to the top of dlPtr's logical line.
      */
     int count = TkBTreePixels(linePtr);
    
     /* 
-     * For the common case where this dlPtr is also the start of 
-     * the logical line, we can return right away.
+     * For the common case where this dlPtr is also the start of the
+     * logical line, we can return right away.
      */
     if (dlPtr->index.byteIndex == 0) {
         return count;
     }
-    
-    count += linePtr->pixelHeight;
 
     /* 
-     * Now we have to subtract off the distance between the top of this
-     * dlPtr and the next logical line.
+     * Add on the logical line's height to reach one pixel beyond the
+     * bottom of the line.  And then subtract off the heights of all the
+     * display lines from dlPtr to the end of its logical line.  
+     * 
+     * A different approach would be to lay things out from the start of
+     * the logical line until we reach dlPtr, but since none of those are
+     * pre-calculated, it'll usually take a lot longer.  (But there are
+     * cases where it would be more efficient: say if we're on the second
+     * of 1000 wrapped lines all from a single logical line -- but that
+     * sort of optimization is left for the future).
      */
+    count += linePtr->pixelHeight;
+
     do {
 	count -= dlPtr->height;
 	if (dlPtr->nextPtr == NULL) {
-	    /* We've run out of lines */
+	    /* 
+	     * We've run out of pre-calculated display lines, so we
+	     * have to lay them out ourselves until the end of the
+	     * logical line.  Here's where we could be clever and ask:
+	     * what's faster, to layout all lines from here to line-end,
+	     * or all lines from the original dlPtr to the line-start?
+	     * We just assume the former.
+	     */
 	    TkTextIndex index;
-	    DLine *dlPrev = NULL;
+	    int notFirst = 0;
 	    while (1) {
 		TkTextIndexForwBytes(&dlPtr->index, dlPtr->byteCount, &index);
+		if (notFirst) {
+		    FreeDLines(textPtr, dlPtr, (DLine *)NULL, DLINE_FREE_TEMP);
+		}
 		if (index.linePtr != linePtr) {
 		    break;
 		}
-		if (dlPrev != NULL) {
-		    FreeDLines(textPtr, dlPrev, (DLine *) NULL, 
-			       DLINE_FREE_TEMP);
-		}
 		dlPtr = LayoutDLine(textPtr, &index);
-		dlPrev = dlPtr;
 		count -= dlPtr->height;
-	    }
-	    if (dlPrev != NULL) {
-		FreeDLines(textPtr, dlPrev, (DLine *) NULL, 
-			   DLINE_FREE_TEMP);
+		notFirst = 1;
 	    }
 	    break;
 	} else {
@@ -6737,16 +6746,17 @@ SizeOfTab(textPtr, tabArrayPtr, indexPtr, x, maxX)
     int tabX, prev, result, index, spaceWidth;
     TkTextTabAlign alignment;
     
+    index = *indexPtr;
+
     if ((tabArrayPtr == NULL) || (tabArrayPtr->numTabs == 0)) {
 	tabX = NextTabStop(textPtr->tkfont, x, 0);
 	/* 
 	 * We used up one tab stop.
 	 */
-	*indexPtr = (*indexPtr)+1;
+	*indexPtr = index+1;
 	return tabX - x;
     }
 
-    index = *indexPtr;
     do {
 	/* 
 	 * We were given the count before this tabs, so increment it

@@ -5,10 +5,10 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.21 2003/11/15 02:41:41 jenglish Exp $
+'\" RCS: @(#) $Id: text.n,v 1.22 2003/11/16 14:13:09 vincentdarley Exp $
 '\" 
 .so man.macros
-.TH text n 8.4 Tk "Tk Built-In Commands"
+.TH text n 8.5 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
@@ -187,12 +187,12 @@ the index from the starting point (e.g. move forward or backward one
 character).  Every index must contain a \fIbase\fR, but the
 \fImodifier\fRs are optional.  Most modifiers (as documented below) allow
 an optional submodifier.  Valid \fIsubmodifier\fRs are nothing, \fIany\fB
-or \fIdisplay\fB. If the submodifier is abbreviated, then it must be
+or \fIdisplay\fR. If the submodifier is abbreviated, then it must be
 followed by whitespace, but otherwise there need be no space between the
-submodifier and the following \fImodifier\fR.  Typically the \fIdisplay\fB
+submodifier and the following \fImodifier\fR.  Typically the \fIdisplay\fR
 submodifier adjusts the meaning of the following \fImodifier\fR to make
 it refer to visual or non-elided units rather than logical units, but
-this is explained for each relevant case below.  Lastly, where \fIcount\fB
+this is explained for each relevant case below.  Lastly, where \fIcount\fR
 is used as part of a modifier, it can be positive or negative, so '\fIbase\fR
 - -3 lines' is perfectly valid (and equivalent to '\fIbase\fR
 +3lines').
@@ -254,8 +254,8 @@ Adjust the index forward by \fIcount\fR characters, moving to later lines
 in the text if necessary.  If there are fewer than \fIcount\fR characters
 in the text after the current index, then set the index to the last index
 in the text.  Spaces on either side of \fIcount\fR are optional.  If the
-\fIdisplay\fB submodifier is given, elided characters are skipped over
-without being counted.  If \fIany\fB is given, then all characters are
+\fIdisplay\fR submodifier is given, elided characters are skipped over
+without being counted.  If \fIany\fR is given, then all characters are
 counted.  For historical reasons, if neither modifier is given then the
 count actually takes place in units of index positions (see \fBindices\fR
 for details).  This behaviour may be changed in a future major release,
@@ -267,8 +267,8 @@ Adjust the index backward by \fIcount\fR characters, moving to earlier
 lines in the text if necessary.  If there are fewer than \fIcount\fR
 characters in the text before the current index, then set the index to
 the first index in the text (1.0).  Spaces on either side of \fIcount\fR
-are optional.  If the \fIdisplay\fB submodifier is given, elided
-characters are skipped over without being counted.  If \fIany\fB is
+are optional.  If the \fIdisplay\fR submodifier is given, elided
+characters are skipped over without being counted.  If \fIany\fR is
 given, then all characters are counted.  For historical reasons, if
 neither modifier is given then the count actually takes place in units of
 index positions (see \fBindices\fR for details).  This behaviour may be
@@ -282,7 +282,7 @@ index positions in the text after the current index, then set the index
 to the last index position in the text.  Spaces on either side of
 \fIcount\fR are optional.  Note that an index position is either a single
 character or a single embedded image or embedded window.  If the
-\fIdisplay\fB submodifier is given, elided indices are skipped over
+\fIdisplay\fR submodifier is given, elided indices are skipped over
 without being counted.  If \fIany\fR is given, then all indices are
 counted, which is also the default behaviour if no modifier is given.
 .TP
@@ -291,12 +291,12 @@ Adjust the index backward by \fIcount\fR index positions, moving to
 earlier lines in the text if necessary.  If there are fewer than
 \fIcount\fR index positions in the text before the current index, then
 set the index to the first index position (1.0) in the text.  Spaces on
-either side of \fIcount\fR are optional.  If the \fIdisplay\fB
+either side of \fIcount\fR are optional.  If the \fIdisplay\fR
 submodifier is given, elided indices are skipped over without being
 counted.  If \fIany\fR is given, then all indices are counted, which is
 also the default behaviour if no modifier is given.
 .TP
-\fB+ \fIcount\fB \fI?modifier?\fB lines\fR
+\fB+ \fIcount\fB \fI?submodifier?\fB lines\fR
 Adjust the index forward by \fIcount\fR lines, retaining the same
 character position within the line.  If there are fewer than \fIcount\fR
 lines after the line containing the current index, then set the index to
@@ -304,7 +304,7 @@ refer to the same character position on the last line of the text.  Then,
 if the line is not long enough to contain a character at the indicated
 character position, adjust the character position to refer to the last
 character of the line (the newline).  Spaces on either side of
-\fIcount\fR are optional.  If the \fIdisplay\fB submodifier is given,
+\fIcount\fR are optional.  If the \fIdisplay\fR submodifier is given,
 then each visual display line is counted separately.  Otherwise, if
 \fIany\fR (or no modifier) is given, then each logical line (no matter
 how many times it is visually wrapped) counts just once.  If the relevant
@@ -318,23 +318,23 @@ the index to refer to the same character position on the first line of
 the text.  Then, if the line is not long enough to contain a character at
 the indicated character position, adjust the character position to refer
 to the last character of the line (the newline).  Spaces on either side
-of \fIcount\fR are optional.  If the \fIdisplay\fB submodifier is given,
+of \fIcount\fR are optional.  If the \fIdisplay\fR submodifier is given,
 then each visual display line is counted separately.  Otherwise, if
 \fIany\fR (or no modifier) is given, then each logical line (no matter
 how many times it is visually wrapped) counts just once.  If the relevant
 lines are not wrapped, then these two methods of counting are equivalent.
 .TP
-\fB?submodifier? linestart\fR
+\fB\fI?submodifier?\fB linestart\fR
 Adjust the index to refer to the first character on the line.  If the 
 \fIdisplay\fR submodifier is given, this is the first character on the 
 display line, otherwise on the logical line.
 .TP
-\fB?submodifier? lineend\fR
+\fB\fI?submodifier?\fB lineend\fR
 Adjust the index to refer to the last character on the line (the
 newline).  If the \fIdisplay\fR submodifier is given, this is the last
 character on the display line, otherwise on the logical line.
 .TP
-\fB?submodifier? wordstart\fR
+\fB\fI?submodifier?\fB wordstart\fR
 Adjust the index to refer to the first character of the word containing
 the current index.  A word consists of any number of adjacent characters
 that are letters, digits, or underscores, or a single character that is
@@ -342,7 +342,7 @@ not one of these.  If the \fIdisplay\fR submodifier is given, this only
 examines non-elided characters, otherwise all characters (elided or not)
 are examined.
 .TP
-\fB?submodifier? wordend\fR
+\fB\fI?submodifier?\fB wordend\fR
 Adjust the index to refer to the character just after the last one of the
 word containing the current index.  If the current index refers to the
 last character of the text then it is not modified.  If the \fIdisplay\fR
@@ -888,6 +888,7 @@ modifies the given widget option(s) to have the given value(s);  in
 this case the command returns an empty string.
 \fIOption\fR may have any of the values accepted by the \fBtext\fR
 command.
+.VS 8.5
 .TP
 \fIpathName \fBcount \fI?options\fI? \fIindex1 \fIindex2\fR
 Counts the number of relevant things between the two indices.
@@ -951,6 +952,7 @@ than one option was supplied.  For example '.text count -xpixels
 -ypixels 1.3 4.5' is perfectly valid and will return a list of two
 elements.
 .RE
+.VE 8.5
 .TP
 \fIpathName \fBdebug \fR?\fIboolean\fR?
 If \fIboolean\fR is specified, then it must have one of the true or
@@ -1677,15 +1679,18 @@ span of the text is off-screen to the left.
 \fIpathName \fBxview scroll \fInumber what\fR
 This command shifts the view in the window left or right according to
 \fInumber\fR and \fIwhat\fR.
-\fINumber\fR must be an integer.
-\fIWhat\fR must be either \fBunits\fR or \fBpages\fR or an abbreviation
-of one of these.
-If \fIwhat\fR is \fBunits\fR, the view adjusts left or right by
-\fInumber\fR average-width characters on the display;  if it is
-\fBpages\fR then the view adjusts by \fInumber\fR screenfuls.
-If \fInumber\fR is negative then characters farther to the left
-become visible;  if it is positive then characters farther to the right
-become visible.
+\fIWhat\fR must be \fBunits\fR, \fBpages\fR or \fBpixels\fR.
+If \fIwhat\fR is \fBunits\fR or \fBpages\fR then \fInumber\fR must be an
+integer, otherwise number may be specified in any of the forms acceptable
+to \fBTk_GetPixels\fR, such as ``2.0c'' or ``1i'' (the result is rounded
+to the nearest integer value.  If no units are given, pixels are
+assumed).  If \fIwhat\fR is \fBunits\fR, the view adjusts left or right by
+\fInumber\fR average-width characters on the display; if it is
+\fBpages\fR then the view adjusts by \fInumber\fR screenfuls; if it is
+\fBpixels\fR then the view adjusts by \fInumber\fR pixels.  If
+\fInumber\fR is negative then characters farther to the left become
+visible; if it is positive then characters farther to the right become
+visible.
 .RE
 .TP
 \fIpathName \fByview \fI?args\fR?
@@ -1773,12 +1778,12 @@ Dragging with mouse button 1 strokes out a selection between
 the insertion cursor and the character under the mouse.
 .IP [2]
 Double-clicking with mouse button 1 selects the word under the mouse
-and positions the insertion cursor at the end of the word.
+and positions the insertion cursor at the start of the word.
 Dragging after a double click will stroke out a selection consisting
 of whole words.
 .IP [3]
 Triple-clicking with mouse button 1 selects the line under the mouse
-and positions the insertion cursor at the end of the line.
+and positions the insertion cursor at the start of the line.
 Dragging after a triple click will stroke out a selection consisting
 of whole lines.
 .IP [4]
@@ -1990,6 +1995,7 @@ limitation is that while a single logical line can result in multiple
 display lines, a single display line cannot be derived from multiple
 logical lines.  This does mean, however, that logical lines which are
 completely elided have no problems.
+.VS 8.5
 .PP
 The \fBsearch -regexp\fR sub-command attempts to perform sophisticated
 regexp matching across multiple lines in an efficient fashion (since Tk
@@ -2006,8 +2012,8 @@ least a partial match with the pattern.  This means in the case where the
 first extra line added results in no match and Tcl's regexp system
 returns the incorrect code and adding a second extra line would actually
 match, the text widget will return the wrong result.  In practice this is
-a rare problem, but it can occur, for example: \fBpack [text .t] ; .t
-insert 1.0 "aaaa\\nbbbb\\ncccc\\nbbbb\\naaaa\\n" ; .t search -regexp --
+a rare problem, but it can occur, for example: \fBpack [text .t] ; 
+.t insert 1.0 "aaaa\\nbbbb\\ncccc\\nbbbb\\naaaa\\n" ; .t search -regexp --
 {(a+|b+\\nc+\\nb+)+\\na+} 1.0\fR will not find a match when one exists of 19
 characters starting from the first 'b'.
 .PP
@@ -2026,6 +2032,7 @@ Similarly if we add \fB-all\fR to this case, it matches at
 all of '5.0', '4.0', '3.0' and '1.0', 
 when really it should only match at '1.0' since that match
 encloses all the others.
+.VE 8.5
 
 .SH KEYWORDS
 text, widget, tkvars
