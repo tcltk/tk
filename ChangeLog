@@ -1,3 +1,7 @@
+2004-12-20  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/panedwindow.n: Fix silly typo. [Bug 1087842]
+
 2004-12-10  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* unix/tk.spec, macosx/Tk-Info.plist, macosx/Wish-Info.plist: 
