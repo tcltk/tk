@@ -1,5 +1,10 @@
 2004-09-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* doc/wm.n:
+	* tests/winWm.test: Add 'wm attributes -alpha' to control toplevel
+	* win/tkWinInt.h:   alpha transparency on Win2K/XP+.
+	* win/tkWinWm.c:    TIP #222 [Patch 892194]
+
 	* win/tkWinWm.c (UpdateWrapper): Ensure that we maintain Z order
 	* tests/winWm.test:              and focus of preexisting window
 	when replacing the wrapper window.

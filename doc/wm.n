@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.14 2004/06/21 19:56:11 dkf Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.15 2004/09/17 23:26:21 hobbs Exp $
 '\" 
 .so man.macros
 .TH wm n 8.4 Tk "Tk Built-In Commands"
@@ -62,6 +62,11 @@ On Windows, \fB-disabled\fR gets or sets whether the window is in a
 disabled state. \fB-toolwindow\fR gets or sets the style of the window
 to toolwindow (as defined in the MSDN). \fB-topmost\fR gets or sets
 whether this is a topmost window (displays above all other windows).
+\fB-alpha\fR sets the transparency level of the toplevel.  It accepts
+a value from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque).  Values
+outside that range will be constrained.  Transparent toplevels are
+supported on Windows 2000/XP+.  Where not support, the \fB-alpha\fR value
+remains at \fB1.0\fR.
 .PP
 On Macintosh,
 .PP
