@@ -1,5 +1,8 @@
 2002-06-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* unix/Makefile.in (dist): correct installation of
+	wish.exe.manifest to DISTDIR target directory.
+
 	* generic/tkCmds.c (Tk_TkObjCmd): 
 	* generic/tkInt.h (struct TkCaret): 
 	* mac/tkMacXStubs.c (Tk_SetCaretPos): 
