@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scale.test,v 1.7 1999/04/21 21:53:30 rjohnson Exp $
+# RCS: @(#) $Id: scale.test,v 1.8 1999/12/14 06:53:14 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -65,9 +65,9 @@ foreach test {
     {-showvalue 0 0 badValue {expected boolean value but got "badValue"}}
     {-sliderlength 86 86 badValue {bad screen distance "badValue"}}
     {-sliderrelief raised raised badValue {bad relief "badValue": must be flat, groove, raised, ridge, solid, or sunken}}
-    {-state disabled disabled badValue
+    {-state d disabled badValue
 	    {bad state "badValue": must be active, disabled, or normal}}
-    {-state normal normal {} {}}
+    {-state n normal {} {}}
     {-takefocus "any string" "any string" {} {}}
     {-tickinterval 4.3 4.0 badValue
 	    {expected floating-point number but got "badValue"}}
@@ -123,8 +123,8 @@ test scale-3.5 {ScaleWidgetCmd procedure, cget option} {
     .s cget -highlightthickness
 } {2}
 test scale-3.6 {ScaleWidgetCmd procedure, configure option} {
-    list [llength [.s configure]] [lindex [.s configure] 5]
-} {33 {-borderwidth borderWidth BorderWidth 2 2}}
+    list [llength [.s configure]] [lindex [.s configure] 6]
+} {33 {-command command Command {} {}}}
 test scale-3.7 {ScaleWidgetCmd procedure, configure option} {
     list [catch {.s configure -foo} msg] $msg
 } {1 {unknown option "-foo"}}

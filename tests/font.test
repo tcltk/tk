@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: font.test,v 1.4 1999/04/16 01:51:37 stanton Exp $
+# RCS: @(#) $Id: font.test,v 1.5 1999/12/14 06:53:13 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -133,7 +133,7 @@ test font-4.6 {font command: actual: arguments} {
     # (objc - skip > 4) when skip == 2
     list [catch {font actual xyz -displayof . abc def} msg] $msg
 } {1 {wrong # args: should be "font actual font ?-displayof window? ?option?"}}
-test font-4.7 {font command: actual: arguments} {
+test font-4.7 {font command: actual: arguments} {noExceed} {
     # (tkfont == NULL)
     list [catch {font actual "\{xyz"} msg] $msg
 } [list 1 "font \"{xyz\" doesn't exist"]
@@ -141,7 +141,7 @@ test font-4.8 {font command: actual: all attributes} {
     # not (objc > 3) so objPtr = NULL
     lindex [font actual {-family times}] 0
 } {-family}
-test font-4.9 {font command: actual} {macOrUnix} {
+test font-4.9 {font command: actual} {macOrUnix noExceed} {
     # (objc > 3) so objPtr = objv[3 + skip]
     string tolower [font actual {-family times} -family]
 } {times}
@@ -322,7 +322,7 @@ test font-9.3 {font command: measure: arguments} {
     # (objc - skip != 4) 
     list [catch {font measure xyz abc def} msg] $msg
 } {1 {wrong # args: should be "font measure font ?-displayof window? text"}}
-test font-9.4 {font command: measure: arguments} {
+test font-9.4 {font command: measure: arguments} {noExceed} {
     # (tkfont == NULL)
     list [catch {font measure "\{xyz" abc} msg] $msg
 } [list 1 "font \"{xyz\" doesn't exist"]
@@ -350,7 +350,7 @@ test font-10.5 {font command: metrics: arguments} {
     # (objc - skip) > 4) when skip == 2
     list [catch {font metrics xyz -displayof . abc} msg] $msg
 } {1 {bad metric "abc": must be -ascent, -descent, -linespace, or -fixed}}
-test font-10.6 {font command: metrics: bad font} {
+test font-10.6 {font command: metrics: bad font} {noExceed} {
     # (tkfont == NULL)
     list [catch {font metrics "\{xyz"} msg] $msg
 } [list 1 "font \"{xyz\" doesn't exist"]
@@ -522,7 +522,7 @@ test font-15.10 {Tk_AllocFontFromObj procedure: get attribute font} {
     # (fontPtr == NULL) 
     list [catch {.b.f config -font {xxx yyy zzz}} msg] $msg
 } {1 {expected integer but got "yyy"}}
-test font-15.11 {Tk_AllocFontFromObj procedure: no match} {
+test font-15.11 {Tk_AllocFontFromObj procedure: no match} {noExceed} {
     # (ParseFontNameObj() != TCL_OK)
     list [catch {font actual "\{xyz"} msg] $msg
 } [list 1 "font \"{xyz\" doesn't exist"]
@@ -645,7 +645,7 @@ test font-20.1 {Tk_GetFontMetrics procedure} {
 
 proc psfontname {name} {
     set a [.b.c itemcget text -font]
-    .b.c itemconfig text -font $name
+    .b.c itemconfig text -text "We need text" -font $name
     set post [.b.c postscript]
     .b.c itemconfig text -font $a
     set end [string first "findfont" $post]
@@ -1260,10 +1260,10 @@ test font-38.5 {ParseFontNameObj procedure: begins with *} {
 test font-38.6 {ParseFontNameObj procedure: begins with *} {
     font actual *-times-xyz -family
 } $times
-test font-38.7 {ParseFontNameObj procedure: arguments} {
+test font-38.7 {ParseFontNameObj procedure: arguments} {noExceed} {
     list [catch {font actual "\{xyz"} msg] $msg
 } [list 1 "font \"{xyz\" doesn't exist"]
-test font-38.8 {ParseFontNameObj procedure: arguments} {
+test font-38.8 {ParseFontNameObj procedure: arguments} {noExceed} {
     list [catch {font actual ""} msg] $msg
 } {1 {font "" doesn't exist}}
 test font-38.9 {ParseFontNameObj procedure: arguments} {
@@ -1340,30 +1340,23 @@ tk scaling 0.5
 test font-44.1 {TkFontGetPixels: size < 0} {
     font actual {times -12} -size
 } {24}
-test font-44.2 {TkFontGetPixels: size >= 0} {
+test font-44.2 {TkFontGetPoints: size >= 0} {noExceed} {
     font actual {times 12} -size
 } {12}
-
-test font-45.1 {TkFontGetPoints: size >= 0} {
-    font actual {times 12} -size
-} {12}
-test font-45.2 {TkFontGetPoints: size < 0} {
-    font actual {times -12} -size
-} {24}
 
 tk scaling $oldscale
 
-test font-46.1 {TkFontGetAliasList: no match} {
+test font-45.1 {TkFontGetAliasList: no match} {
     font actual {snarky 10} -family
 } [font actual {-size 10} -family]
-test font-46.2 {TkFontGetAliasList: match} {macOnly} {
+test font-45.2 {TkFontGetAliasList: match} {macOnly} {
     # Result could be either "Times" or "New York"
     font actual {{times new roman} 10} -family
 } [font actual {times 10} -family]
-test font-46.3 {TkFontGetAliasList: match} {pcOnly} {
+test font-45.3 {TkFontGetAliasList: match} {pcOnly} {
     font actual {times 10} -family
 } {Times New Roman}
-test font-46.4 {TkFontGetAliasList: match} {unixOnly} {
+test font-45.4 {TkFontGetAliasList: match} {unixOnly noExceed} {
     font actual {{times new roman} 10} -family
 } [font actual {times 10} -family]
 

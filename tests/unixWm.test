@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.7 1999/04/21 21:53:31 rjohnson Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.8 1999/12/14 06:53:15 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1609,6 +1609,7 @@ test unixWm-47.1 {WaitRestrictProc procedure} {nonPOrtable} {
     event generate .t.f <Configure> -when tail
     event generate .t <Configure> -when tail
     event generate .t <Button> -button 3 -when tail
+    event generate .t <ButtonRelease> -button 3 -when tail
     event generate .t <Map> -when tail
     lappend result iconify
     wm iconify .t

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: safe.test,v 1.5 1999/04/16 01:51:40 stanton Exp $
+# RCS: @(#) $Id: safe.test,v 1.6 1999/12/14 06:53:13 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -21,7 +21,7 @@ foreach i [winfo children .] {
 if {"$tcl_platform(platform)" == "macintosh"} {
     set hidden_cmds {beep bell cd clipboard echo encoding exit fconfigure file glob grab load ls menu open pwd selection send socket source tk tk_chooseColor tk_chooseDirectory tk_getOpenFile tk_getSaveFile toplevel wm}
 } elseif {"$tcl_platform(platform)" == "windows"} {
-    set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection socket source tk tk_chooseColor tk_getOpenFile tk_getSaveFile tk_messageBox toplevel wm}
+    set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection socket source tk tk_chooseColor tk_chooseDirectory tk_getOpenFile tk_getSaveFile tk_messageBox toplevel wm}
 } else {
     set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection send socket source tk toplevel wm}
 }

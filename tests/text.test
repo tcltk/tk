@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.5 1999/04/21 21:53:30 rjohnson Exp $
+# RCS: @(#) $Id: text.test,v 1.6 1999/12/14 06:53:14 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -81,10 +81,10 @@ foreach test {
     {-spacing2 -1 0 bogus}
     {-spacing3 20 20 bogus}
     {-spacing3 -10 0 bogus}
-    {-state disabled disabled foo}
+    {-state d disabled foo}
     {-tabs {1i 2i 3i 4i} {1i 2i 3i 4i} bad_tabs}
     {-width 73 73 2.4}
-    {-wrap word word bad_wrap}
+    {-wrap w word bad_wrap}
 } {
     test text-1.[incr i] {text options} {
 	set result {}
@@ -854,7 +854,7 @@ test text-19.3 {TkTextLostSelection procedure} {
 .t insert end "xxyz xyz x. the\nfoo -forward bar xxxxx BaR foo\nxyz xxyzx"
 test text-20.1 {TextSearchCmd procedure, argument parsing} {
     list [catch {.t search -} msg] $msg
-} {1 {bad switch "-": must be -forward, -backward, -exact, -regexp, -nocase, -count, or --}}
+} {1 {bad switch "-": must be -forward, -backward, -exact, -regexp, -nocase, -count, -hidden, or --}}
 test text-20.2 {TextSearchCmd procedure, -backwards option} {
     .t search -backwards xyz 1.4
 } {1.1}

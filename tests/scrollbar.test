@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scrollbar.test,v 1.4 1999/08/18 00:31:50 jenn Exp $
+# RCS: @(#) $Id: scrollbar.test,v 1.5 1999/12/14 06:53:14 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -97,7 +97,7 @@ foreach test {
     {-repeatdelay 140 140 129.3 {expected integer but got "129.3"}}
     {-repeatinterval 140 140 129.3 {expected integer but got "129.3"}}
     {-takefocus "any string" "any string" {} {}}
-    {-trough #432 #432 lousy {unknown color name "lousy"}}
+    {-troughcolor #432 #432 lousy {unknown color name "lousy"}}
     {-width 32 32 badValue {bad screen distance "badValue"}}
 } {
     set name [lindex $test 0]
@@ -633,6 +633,7 @@ test scrollbar-8.1 {TkScrollbarEventProc: recursive deletion} {
     update
     set result [winfo exists .t.f.s]
     event generate .t.f.s <ButtonPress> -button 1 -x [expr [winfo width .t.f.s] / 2] -y 5
+    event generate .t <ButtonRelease> -button 1
     update
     lappend result [winfo exists .t.f.s] [winfo exists .t.f]
     rename bgerror {}
@@ -650,6 +651,7 @@ test scrollbar-8.2 {TkScrollbarEventProc: recursive deletion} {
     update
     set result [winfo exists .t.f.s]
     event generate .t.f.s <ButtonPress> -button 1 -x [expr [winfo width .t.f.s] / 2] -y 5
+    event generate .t.f <ButtonRelease> -button 1
     update
     lappend result [winfo exists .t.f.s] [winfo exists .t.f]
     rename bgerror {}

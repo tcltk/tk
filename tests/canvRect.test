@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvRect.test,v 1.3 1999/04/16 01:51:35 stanton Exp $
+# RCS: @(#) $Id: canvRect.test,v 1.4 1999/12/14 06:53:12 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -32,7 +32,7 @@ foreach test {
     {-outline #123456 #123456 bad_color {unknown color name "bad_color"}}
     {-stipple gray50 gray50 bogus {bitmap "bogus" not defined}}
     {-tags {test a b c} {test a b c} {} {}}
-    {-width 6 6 abc {bad screen distance "abc"}}
+    {-width 6.0 6.0 abc {bad screen distance "abc"}}
 } {
     set name [lindex $test 0]
     test canvRect-1.$i {configuration options} {
@@ -117,11 +117,10 @@ test canvRect-3.7 {RectOvalCoords procedure} {
 test canvRect-4.1 {ConfigureRectOval procedure} {
     list [catch {.c itemconfigure x -width abc} msg] $msg \
 	    [.c itemcget x -width]
-} {1 {bad screen distance "abc"} 1}
+} {1 {bad screen distance "abc"} 1.0}
 test canvRect-4.2 {ConfigureRectOval procedure} {
-    .c itemconfigure x -width -5
-    .c itemcget x -width
-} {1}
+    list [catch {.c itemconfigure x -width -5} msg] $msg
+} {1 {bad screen distance "-5"}}
 test canvRect-4.3 {ConfigureRectOval procedure} {nonPortable} {
     # Non-portable due to rounding differences.
     .c itemconfigure x -width 10

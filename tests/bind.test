@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bind.test,v 1.6 1999/07/08 18:22:22 jenn Exp $
+# RCS: @(#) $Id: bind.test,v 1.7 1999/12/14 06:53:11 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1038,8 +1038,10 @@ test bind-15.14 {MatchPatterns procedure, checking "nearby"} {
     bind .b.f <Double-1> {set x 1}
     set x 0
     event gen .b.f <Button-2> 
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Button-1> -x 30 -y 40
     event gen .b.f <Button-1> -x 31 -y 39
+    event gen .b.f <ButtonRelease-1>
     set x
 } 1
 test bind-15.15 {MatchPatterns procedure, checking "nearby"} {
@@ -1047,8 +1049,10 @@ test bind-15.15 {MatchPatterns procedure, checking "nearby"} {
     bind .b.f <Double-1> {set x 1}
     set x 0
     event gen .b.f <Button-2> 
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Button-1> -x 30 -y 40
     event gen .b.f <Button-1> -x 29 -y 41
+    event gen .b.f <ButtonRelease-1>
     set x
 } 1
 test bind-15.16 {MatchPatterns procedure, checking "nearby"} {
@@ -1056,8 +1060,10 @@ test bind-15.16 {MatchPatterns procedure, checking "nearby"} {
     bind .b.f <Double-1> {set x 1}
     set x 0
     event gen .b.f <Button-2> 
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Button-1> -x 30 -y 40
     event gen .b.f <Button-1> -x 40 -y 40
+    event gen .b.f <ButtonRelease-2>
     set x
 } 0
 test bind-15.17 {MatchPatterns procedure, checking "nearby"} {
@@ -1065,8 +1071,10 @@ test bind-15.17 {MatchPatterns procedure, checking "nearby"} {
     bind .b.f <Double-1> {set x 1}
     set x 0
     event gen .b.f <Button-2> 
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Button-1> -x 30 -y 40
     event gen .b.f <Button-1> -x 20 -y 40
+    event gen .b.f <ButtonRelease-1>
     set x
 } 0
 test bind-15.18 {MatchPatterns procedure, checking "nearby"} {
@@ -1074,8 +1082,10 @@ test bind-15.18 {MatchPatterns procedure, checking "nearby"} {
     bind .b.f <Double-1> {set x 1}
     set x 0
     event gen .b.f <Button-2> 
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Button-1> -x 30 -y 40
     event gen .b.f <Button-1> -x 30 -y 30
+    event gen .b.f <ButtonRelease-1>
     set x
 } 0
 test bind-15.19 {MatchPatterns procedure, checking "nearby"} {
@@ -1083,8 +1093,10 @@ test bind-15.19 {MatchPatterns procedure, checking "nearby"} {
     bind .b.f <Double-1> {set x 1}
     set x 0
     event gen .b.f <Button-2> 
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Button-1> -x 30 -y 40
     event gen .b.f <Button-1> -x 30 -y 50
+    event gen .b.f <ButtonRelease-1>
     set x
 } 0
 test bind-15.20 {MatchPatterns procedure, checking "nearby"} {
@@ -1092,8 +1104,10 @@ test bind-15.20 {MatchPatterns procedure, checking "nearby"} {
     bind .b.f <Double-1> {set x 1}
     set x 0
     event gen .b.f <Button-2> 
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Button-1> -time 300
     event gen .b.f <Button-1> -time 700
+    event gen .b.f <ButtonRelease-1>
     set x
 } 1
 test bind-15.21 {MatchPatterns procedure, checking "nearby"} {
@@ -1101,8 +1115,10 @@ test bind-15.21 {MatchPatterns procedure, checking "nearby"} {
     bind .b.f <Double-1> {set x 1}
     set x 0
     event gen .b.f <Button-2> 
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Button-1> -time 300
     event gen .b.f <Button-1> -time 900
+    event gen .b.f <ButtonRelease-1>
     set x
 } 0
 test bind-15.22 {MatchPatterns procedure, time wrap-around} {
@@ -1111,6 +1127,7 @@ test bind-15.22 {MatchPatterns procedure, time wrap-around} {
     set x 0
     event gen .b.f <Button-1> -time [expr -100]
     event gen .b.f <Button-1> -time 200
+    event gen .b.f <ButtonRelease-1>
     set x
 } 1
 test bind-15.23 {MatchPatterns procedure, time wrap-around} {
@@ -1119,6 +1136,7 @@ test bind-15.23 {MatchPatterns procedure, time wrap-around} {
     set x 0
     event gen .b.f <Button-1> -time -100
     event gen .b.f <Button-1> -time 500
+    event gen .b.f <ButtonRelease-1>
     set x
 } 0
 test bind-15.24 {MatchPatterns procedure, virtual event} {
@@ -1127,6 +1145,7 @@ test bind-15.24 {MatchPatterns procedure, virtual event} {
     bind .b.f <<Paste>> {lappend x paste}
     set x {}
     event gen .b.f <Button-1>
+    event gen .b.f <ButtonRelease-1>
     set x
 } {paste}
 test bind-15.25 {MatchPatterns procedure, reject a  virtual event} {
@@ -1135,6 +1154,7 @@ test bind-15.25 {MatchPatterns procedure, reject a  virtual event} {
     bind .b.f <<Paste>> {lappend x paste}
     set x {}
     event gen .b.f <Button-1>
+    event gen .b.f <ButtonRelease-1>
     set x
 } {}
 test bind-15.26 {MatchPatterns procedure, reject a virtual event} {
@@ -1147,10 +1167,12 @@ test bind-15.26 {MatchPatterns procedure, reject a virtual event} {
     event gen .b.f <Button> -serial 101
     event gen .b.f <Button-1> -serial 102
     event gen .b.f <Shift-Button-1> -serial 103
+    event gen .b.f <ButtonRelease-1>
     bind .b.f <Shift-Button-1> "lappend x Shift-Button-1"
     event gen .b.f <Button> -serial 104
     event gen .b.f <Button-1> -serial 105
     event gen .b.f <Shift-Button-1> -serial 106
+    event gen .b.f <ButtonRelease-1>
     set x
 } {V2102 V2103 V2105 Shift-Button-1}
 test bind-15.27 {MatchPatterns procedure, conflict resolution} {
@@ -1186,6 +1208,7 @@ test bind-15.30 {MatchPatterns procedure, conflict resolution} {
     bind .b.f <1> {set x 1}
     set x none
     event gen .b.f <Button-1>
+    event gen .b.f <ButtonRelease-1>
     set x
 } 1
 test bind-15.31 {MatchPatterns procedure, conflict resolution} {
@@ -1213,6 +1236,7 @@ test bind-15.33 {MatchPatterns procedure, conflict resolution} {
     event gen .b.f <Button-1>
     event gen .b.f <Button-1>
     event gen .b.f <Button-1>
+    event gen .b.f <ButtonRelease-1>
     set x
 } {single single(Test) single double(Test) single double(Test)}
 foreach i [bind Test] {
@@ -1244,6 +1268,7 @@ test bind-16.4 {ExpandPercents procedure} {
     bind .b.f <Button> {set x %b}
     set x none
     event gen .b.f <Button-3>
+    event gen .b.f <ButtonRelease-3>
     set x
 } 3
 test bind-16.5 {ExpandPercents procedure} {
@@ -1397,9 +1422,10 @@ test bind-16.26 {ExpandPercents procedure} {
     setup
     bind .b.f <1> {set x "%s"}
     set x none
-    event gen .b.f <Button-1> -state 122
+    event gen .b.f <Button-1> -state 1402
+    event gen .b.f <ButtonRelease-1>
     set x
-} 122
+} 1402
 test bind-16.27 {ExpandPercents procedure} {
     setup
     bind .b.f <Enter> {set x "%s"}
@@ -1433,6 +1459,7 @@ test bind-16.31 {ExpandPercents procedure} {
     bind .b.f <Button> {set x "%t"}
     set x none
     event gen .b.f <Button> -time 4294
+    event gen .b.f <ButtonRelease>
     set x
 } 4294
 test bind-16.32 {ExpandPercents procedure} {
@@ -1440,6 +1467,7 @@ test bind-16.32 {ExpandPercents procedure} {
     bind .b.f <Button> {set x "%x %y"}
     set x none
     event gen .b.f <Button> -x 881 -y 432
+    event gen .b.f <ButtonRelease>
     set x
 } {881 432}
 test bind-16.33 {ExpandPercents procedure} {
@@ -1535,6 +1563,7 @@ test bind-16.43 {ExpandPercents procedure} {
     bind .b.f <Button> {set x "%X %Y"}
     set x none
     event gen .b.f <Button> -rootx 422 -rooty 13
+    event gen .b.f <ButtonRelease>
     set x
 } {422 13}
 
@@ -1711,8 +1740,10 @@ test bind-19.11 {DeleteVirtualEvent procedure: owned by 1, only} {
     bind .b.f <<xyz>> {lappend x %#}
     set x {}
     event gen .b.f <Button-2> -serial 101
+    event gen .b.f <ButtonRelease-2>
     event delete <<xyz>>
     event gen .b.f <Button-2> -serial 102
+    event gen .b.f <ButtonRelease-2>
     set x
 } {101}
 test bind-19.12 {DeleteVirtualEvent procedure: owned by 1, first in chain} {
@@ -1723,10 +1754,14 @@ test bind-19.12 {DeleteVirtualEvent procedure: owned by 1, first in chain} {
     bind .b.f <<abc>> {lappend x abc}
     set x {}
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Control-Button-2>
+    event gen .b.f <Control-ButtonRelease-2>
     event delete <<xyz>> 
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Control-Button-2>
+    event gen .b.f <Control-ButtonRelease-2>
     list $x [event info <<abc>>]
 } {{xyz abc abc} <Control-Button-2>}
 test bind-19.13 {DeleteVirtualEvent procedure: owned by 1, second in chain} {
@@ -1739,12 +1774,18 @@ test bind-19.13 {DeleteVirtualEvent procedure: owned by 1, second in chain} {
     bind .b.f <<def>> {lappend x def}
     set x {}
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Control-Button-2>
+    event gen .b.f <Control-ButtonRelease-2>
     event gen .b.f <Shift-Button-2>
+    event gen .b.f <Shift-ButtonRelease-2>
     event delete <<xyz>>
     event gen .b.f <Button-2>
     event gen .b.f <Control-Button-2>
     event gen .b.f <Shift-Button-2>
+    event gen .b.f <ButtonRelease-2>
+    event gen .b.f <Control-ButtonRelease-2>
+    event gen .b.f <Shift-ButtonRelease-2>
     list $x [event info <<def>>] [event info <<xyz>>] [event info <<abc>>]
 } {{xyz abc def abc def} <Shift-Button-2> {} <Control-Button-2>}
 test bind-19.14 {DeleteVirtualEvent procedure: owned by 1, last in chain} {
@@ -1757,12 +1798,18 @@ test bind-19.14 {DeleteVirtualEvent procedure: owned by 1, last in chain} {
     bind .b.f <<def>> {lappend x def}
     set x {}
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Control-Button-2>
+    event gen .b.f <Control-ButtonRelease-2>
     event gen .b.f <Shift-Button-2>
+    event gen .b.f <Shift-ButtonRelease-2>
     event delete <<xyz>> 
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Control-Button-2>
+    event gen .b.f <Control-ButtonRelease-2>
     event gen .b.f <Shift-Button-2>
+    event gen .b.f <Shift-ButtonRelease-2>
     list $x [event info <<xyz>>] [event info <<abc>>] [event info <<def>>]
 } {{xyz abc def abc def} {} <Control-Button-2> <Shift-Button-2>}
 test bind-19.15 {DeleteVirtualEvent procedure: owned by many, first} {
@@ -1778,12 +1825,18 @@ test bind-19.15 {DeleteVirtualEvent procedure: owned by many, first} {
     bind .b.h <<def>> {lappend x def}
     set x {}
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.g <Button-2>
+    event gen .b.g <ButtonRelease-2>
     event gen .b.h <Button-2>
+    event gen .b.h <ButtonRelease-2>
     event delete <<xyz>> 
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.g <Button-2>
+    event gen .b.g <ButtonRelease-2>
     event gen .b.h <Button-2>
+    event gen .b.h <ButtonRelease-2>
     destroy .b.g
     destroy .b.h
     list $x [event info <<xyz>>] [event info <<abc>>] [event info <<def>>]
@@ -1801,12 +1854,18 @@ test bind-19.16 {DeleteVirtualEvent procedure: owned by many, middle} {
     bind .b.h <<def>> {lappend x def}
     set x {}
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.g <Button-2>
+    event gen .b.g <ButtonRelease-2>
     event gen .b.h <Button-2>
+    event gen .b.h <ButtonRelease-2>
     event delete <<abc>>
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.g <Button-2>
+    event gen .b.g <ButtonRelease-2>
     event gen .b.h <Button-2>
+    event gen .b.h <ButtonRelease-2>
     destroy .b.g
     destroy .b.h
     list $x [event info <<xyz>>] [event info <<abc>>] [event info <<def>>]
@@ -1824,12 +1883,18 @@ test bind-19.17 {DeleteVirtualEvent procedure: owned by many, last} {
     bind .b.h <<def>> {lappend x def}
     set x {}
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.g <Button-2>
+    event gen .b.g <ButtonRelease-2>
     event gen .b.h <Button-2>
+    event gen .b.h <ButtonRelease-2>
     event delete <<def>> 
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.g <Button-2>
+    event gen .b.g <ButtonRelease-2>
     event gen .b.h <Button-2>
+    event gen .b.h <ButtonRelease-2>
     destroy .b.g
     destroy .b.h
     list $x [event info <<xyz>>] [event info <<abc>>] [event info <<def>>]
@@ -1885,9 +1950,9 @@ test bind-22.4 {HandleEventGenerate} {
     setup
     bind .b.f <Button> {set x "%s %b"}
     set x {}
-    event gen [winfo id .b.f] <Control-Button-1>
+    event gen [winfo id .b.f] <Control-Button-1> -state 260
     set x
-} {4 1}
+} {260 1}
 test bind-22.5 {HandleEventGenerate} {
     list [catch {event gen . <xyz>} msg] $msg
 } {1 {bad event type or keysym "xyz"}}
@@ -1904,7 +1969,11 @@ test bind-22.9 {HandleEventGenerate} {
     setup
     bind .b.f <Button> {set x "%s %b"}
     set x {}
+    event gen .b.f <ButtonRelease-1>
+    event gen .b.f <ButtonRelease-2>
+    event gen .b.f <ButtonRelease-3>
     event gen .b.f <Control-Button-1>
+    event gen .b.f <Control-ButtonRelease-1>
     set x
 } {4 1}
 test bind-22.10 {HandleEventGenerate} {
@@ -1933,6 +2002,7 @@ test bind-22.13 {HandleEventGenerate} {
     bind .b.f <Button> {lappend x %#}
     set x {}
     event gen .b.f <Button> -when now -serial 100
+    event gen .b.f <ButtonRelease> -when now
     set x
 } {100}
 test bind-22.14 {HandleEventGenerate} {
@@ -1942,6 +2012,7 @@ test bind-22.14 {HandleEventGenerate} {
     event gen .b.f <Button> -when head -serial 100
     event gen .b.f <Button> -when head -serial 101
     event gen .b.f <Button> -when head -serial 102
+    event gen .b.f <ButtonRelease> -when tail
     lappend x foo
     update
     set x
@@ -1954,6 +2025,7 @@ test bind-22.15 {HandleEventGenerate} {
     event gen .b.f <Button> -when mark -serial 100
     event gen .b.f <Button> -when mark -serial 101
     event gen .b.f <Button> -when mark -serial 102
+    event gen .b.f <ButtonRelease> -when tail
     lappend x foo
     update
     set x
@@ -1966,6 +2038,7 @@ test bind-22.16 {HandleEventGenerate} {
     event gen .b.f <Button> -when tail -serial 100
     event gen .b.f <Button> -when tail -serial 101
     event gen .b.f <Button> -when tail -serial 102
+    event gen .b.f <ButtonRelease> -when tail
     lappend x foo
     update
     set x
@@ -1987,6 +2060,7 @@ foreach check {
 
     {<Button> %b    {-button xyz} {{1 {expected integer but got "xyz"}}}}
     {<Button> %b    {-button 1} 1}
+    {<ButtonRelease> %b    {-button 1} 1}
     {<Key> %k	    {-button 1} {{1 {<Key> event doesn't accept "-button" option}}}}
 
     {<Expose> %c    {-count xyz} {{1 {expected integer but got "xyz"}}}}
@@ -2035,6 +2109,7 @@ foreach check {
     {<Key> %R	    {-root xyz} {{1 {bad window name/identifier "xyz"}}}}
     {<Key> %R	    {-root [winfo id .b]} {[winfo id .b]}}
     {<Button> %R    {-root .b} {[winfo id .b]}}
+    {<ButtonRelease> %R    {-root .b} {[winfo id .b]}}
     {<Motion> %R    {-root .b} {[winfo id .b]}}
     {<<Paste>> %R   {-root .b} {[winfo id .b]}}
     {<Enter> %R	    {-root .b} {[winfo id .b]}}
@@ -2043,6 +2118,7 @@ foreach check {
     {<Key> %X	    {-rootx xyz} {{1 {bad screen distance "xyz"}}}}
     {<Key> %X	    {-rootx 2i} {[winfo pixels .b.f 2i]}}
     {<Button> %X    {-rootx 2i} {[winfo pixels .b.f 2i]}}
+    {<ButtonRelease> %X    {-rootx 2i} {[winfo pixels .b.f 2i]}}
     {<Motion> %X    {-rootx 2i} {[winfo pixels .b.f 2i]}}
     {<<Paste>> %X   {-rootx 2i} {[winfo pixels .b.f 2i]}}
     {<Enter> %X	    {-rootx 2i} {[winfo pixels .b.f 2i]}}
@@ -2051,6 +2127,7 @@ foreach check {
     {<Key> %Y	    {-rooty xyz} {{1 {bad screen distance "xyz"}}}}
     {<Key> %Y	    {-rooty 2i} {[winfo pixels .b.f 2i]}}
     {<Button> %Y    {-rooty 2i} {[winfo pixels .b.f 2i]}}
+    {<ButtonRelease> %Y    {-rooty 2i} {[winfo pixels .b.f 2i]}}
     {<Motion> %Y    {-rooty 2i} {[winfo pixels .b.f 2i]}}
     {<<Paste>> %Y   {-rooty 2i} {[winfo pixels .b.f 2i]}}
     {<Enter> %Y	    {-rooty 2i} {[winfo pixels .b.f 2i]}}
@@ -2066,7 +2143,8 @@ foreach check {
 
     {<Key> %s	    {-state xyz} {{1 {expected integer but got "xyz"}}}}
     {<Key> %s	    {-state 1} 1}
-    {<Button> %s    {-state 1} 1}
+    {<Button> %s    {-state 1025} 1025}
+    {<ButtonRelease> %s    {-state 1025} 1025}
     {<Motion> %s    {-state 1} 1}
     {<<Paste>> %s   {-state 1} 1}
     {<Enter> %s	    {-state 1} 1}
@@ -2079,6 +2157,7 @@ foreach check {
     {<Key> %S	    {-subwindow xyz} {{1 {bad window name/identifier "xyz"}}}}
     {<Key> %S	    {-subwindow [winfo id .b]} {[winfo id .b]}}
     {<Button> %S    {-subwindow .b} {[winfo id .b]}}
+    {<ButtonRelease> %S    {-subwindow .b} {[winfo id .b]}}
     {<Motion> %S    {-subwindow .b} {[winfo id .b]}}
     {<<Paste>> %S   {-subwindow .b} {[winfo id .b]}}
     {<Enter> %S	    {-subwindow .b} {[winfo id .b]}}
@@ -2087,6 +2166,7 @@ foreach check {
     {<Key> %t	    {-time xyz} {{1 {expected integer but got "xyz"}}}}
     {<Key> %t	    {-time 100} 100}
     {<Button> %t    {-time 100} 100}
+    {<ButtonRelease> %t    {-time 100} 100}
     {<Motion> %t    {-time 100} 100}
     {<<Paste>> %t   {-time 100} 100}
     {<Enter> %t	    {-time 100} 100}
@@ -2113,6 +2193,7 @@ foreach check {
     {<Key> %x	    {-x xyz} {{1 {bad screen distance "xyz"}}}}
     {<Key> %x	    {-x 2i} {[winfo pixels .b.f 2i]}}
     {<Button> %x    {-x 2i} {[winfo pixels .b.f 2i]}}
+    {<ButtonRelease> %x    {-x 2i} {[winfo pixels .b.f 2i]}}
     {<Motion> %x    {-x 2i} {[winfo pixels .b.f 2i]}}
     {<<Paste>> %x   {-x 2i} {[winfo pixels .b.f 2i]}}
     {<Enter> %x	    {-x 2i} {[winfo pixels .b.f 2i]}}
@@ -2125,6 +2206,7 @@ foreach check {
     {<Key> %y	    {-y xyz} {{1 {bad screen distance "xyz"}}}}
     {<Key> %y	    {-y 2i} {[winfo pixels .b.f 2i]}}
     {<Button> %y    {-y 2i} {[winfo pixels .b.f 2i]}}
+    {<ButtonRelease> %y    {-y 2i} {[winfo pixels .b.f 2i]}}
     {<Motion> %y    {-y 2i} {[winfo pixels .b.f 2i]}}
     {<<Paste>> %y   {-y 2i} {[winfo pixels .b.f 2i]}}
     {<Enter> %y	    {-y 2i} {[winfo pixels .b.f 2i]}}
@@ -2134,7 +2216,7 @@ foreach check {
     {<Reparent> %y  {-y 2i} {[winfo pixels .b.f 2i]}}
     {<Map> %y	    {-y 2i} {{1 {<Map> event doesn't accept "-y" option}}}}
 
-    {<Key> %k	    {-xyz 1} {{1 {bad option "-xyz": must be -when, -above, -borderwidth, -button, -count, -delta, -detail, -focus, -height, -keycode, -keysym, -mode, -override, -place, -root, -rootx, -rooty, -sendevent, -serial, -state, -subwindow, -time, -width, -window, -x, or -y}}}}
+    {<Key> %k	    {-xyz 1} {{1 {bad option "-xyz": must be -when, -above, -borderwidth, -button, -count, -delta, -detail, -focus, -height, -keycode, -keysym, -mode, -override, -place, -root, -rootx, -rooty, -sendevent, -serial, -state, -subwindow, -time, -warp, -width, -window, -x, or -y}}}}
 } {
     set event [lindex $check 0]
     test bind-22.$i "HandleEventGenerate: options $event [lindex $check 2]" {
@@ -2179,16 +2261,24 @@ test bind-24.5 {FindSequence procedure, multiple bindings} {
     bind .b.f <1> {lappend x single}
     bind .b.f <Double-1> {lappend x double}
     bind .b.f <Triple-1> {lappend x triple}
+    bind .b.f <Quadruple-1> {lappend x quadruple}
     set x press
     event gen .b.f <Button-1>
+    event gen .b.f <ButtonRelease-1>
     lappend x press
     event gen .b.f <Button-1>
+    event gen .b.f <ButtonRelease-1>
     lappend x press
     event gen .b.f <Button-1>
+    event gen .b.f <ButtonRelease-1>
     lappend x press
     event gen .b.f <Button-1>
+    event gen .b.f <ButtonRelease-1>
+    lappend x press
+    event gen .b.f <Button-1>
+    event gen .b.f <ButtonRelease-1>
     set x
-} {press single press double press triple press triple}
+} {press single press double press triple press quadruple press quadruple}
 test bind-24.6 {FindSequence procedure: virtual composed} {
     list [catch {bind .b <Control-b><<Paste>> "puts hi"} msg] $msg
 } {1 {virtual events may not be composed}}
@@ -2197,7 +2287,9 @@ test bind-24.7 {FindSequence procedure: new pattern sequence} {
     bind .b.f <Button-1><Button-2> {lappend x 1-2}
     set x {}
     event gen .b.f <Button-1>
+    event gen .b.f <ButtonRelease-1>
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     set x
 } {1-2}
 test bind-24.8 {FindSequence procedure: similar pattern sequence} {
@@ -2207,8 +2299,11 @@ test bind-24.8 {FindSequence procedure: similar pattern sequence} {
     set x {}
     event gen .b.f <Button-3>
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Button-1>
+    event gen .b.f <ButtonRelease-1>
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     set x
 } {2 1-2}
 test bind-24.9 {FindSequence procedure: similar pattern sequence} {
@@ -2218,9 +2313,13 @@ test bind-24.9 {FindSequence procedure: similar pattern sequence} {
     set x {}
     event gen .b.f <Button-3>
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Button-1>
+    event gen .b.f <ButtonRelease-1>
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     set x
 } {2-2 1-2}
 test bind-24.10 {FindSequence procedure: similar pattern sequence} {
@@ -2230,10 +2329,15 @@ test bind-24.10 {FindSequence procedure: similar pattern sequence} {
     set x {}
     event gen .b.f <Button-3>
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Button-2>
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Button-1>
+    event gen .b.f <ButtonRelease-1>
     event gen .b.f <Button-2> -x 100
+    event gen .b.f <ButtonRelease-2>
     event gen .b.f <Button-2> -x 200
+    event gen .b.f <ButtonRelease-2>
     set x
 } {d-2 2-2}
 test bind-24.11 {FindSequence procedure: new sequence, don't create} {
@@ -2453,6 +2557,7 @@ foreach button {1 2 3 4 5} {
 	bind .b.f <Button-$button> "lappend x \"button $button\""
 	set x [bind .b.f]
 	event gen .b.f <Button-$button>
+	event gen .b.f <ButtonRelease-$button>
 	set x
     } [list <Button-$button> "button $button"]
     incr i
@@ -2522,6 +2627,7 @@ test bind-30.1 {Tk_BackgroundError procedure} {
     bind .b.f <Button> {error "This is a test"}
     set x none
     event gen .b.f <Button>
+    event gen .b.f <ButtonRelease>
     update
     set x
 } {{This is a test} {This is a test
@@ -2531,6 +2637,7 @@ test bind-30.1 {Tk_BackgroundError procedure} {
 test bind-30.2 {Tk_BackgroundError procedure} {
     proc do {} {
 	event gen .b.f <Button>
+	event gen .b.f <ButtonRelease>
     }
     setup
     bind .b.f <Button> {error Message2}

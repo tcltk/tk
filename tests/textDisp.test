@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.3 1999/04/16 01:51:41 stanton Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.4 1999/12/14 06:53:14 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1793,10 +1793,10 @@ foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
 .t configure -wrap none
 test textDisp-17.1 {TkTextScanCmd procedure} {
     list [catch {.t scan a b} msg] $msg
-} {1 {wrong # args: should be ".t scan mark|dragto x y"}}
+} {1 {wrong # args: should be ".t scan mark x y" or ".t scan dragto x y ?gain?"}}
 test textDisp-17.2 {TkTextScanCmd procedure} {
     list [catch {.t scan a b c d} msg] $msg
-} {1 {wrong # args: should be ".t scan mark|dragto x y"}}
+} {1 {expected integer but got "b"}}
 test textDisp-17.3 {TkTextScanCmd procedure} {
     list [catch {.t scan stupid b 20} msg] $msg
 } {1 {expected integer but got "b"}}

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.3 1999/04/16 01:51:37 stanton Exp $
+# RCS: @(#) $Id: entry.test,v 1.4 1999/12/14 06:53:13 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -80,7 +80,7 @@ foreach test {
     {-selectborderwidth 1.3 1 badValue {bad screen distance "badValue"}}
     {-selectforeground #654321 #654321 bogus {unknown color name "bogus"}}
     {-show * * {} {}}
-    {-state normal normal bogus {bad state "bogus": must be disabled or normal}}
+    {-state n normal bogus {bad state "bogus": must be disabled or normal}}
     {-takefocus "any string" "any string" {} {}}
     {-textvariable i i {} {}}
     {-width 402 402 3p {expected integer but got "3p"}}
@@ -191,7 +191,7 @@ test entry-3.14 {EntryWidgetCmd procedure, "cget" widget command} {
 } {4}
 test entry-3.15 {EntryWidgetCmd procedure, "configure" widget command} {
     llength [.e configure]
-} {28}
+} {33}
 test entry-3.16 {EntryWidgetCmd procedure, "configure" widget command} {
     list [catch {.e configure -foo} msg] $msg
 } {1 {unknown option "-foo"}}
@@ -271,7 +271,7 @@ test entry-3.30 {EntryWidgetCmd procedure, "icursor" widget command} {
 } {4}
 test entry-3.31 {EntryWidgetCmd procedure, "index" widget command} {
     list [catch {.e in} msg] $msg
-} {1 {ambiguous option "in": must be bbox, cget, configure, delete, get, icursor, index, insert, scan, selection, or xview}}
+} {1 {ambiguous option "in": must be bbox, cget, configure, delete, get, icursor, index, insert, scan, selection, validate, or xview}}
 test entry-3.32 {EntryWidgetCmd procedure, "index" widget command} {
     list [catch {.e index} msg] $msg
 } {1 {wrong # args: should be ".e index string"}}
@@ -508,19 +508,19 @@ test entry-3.80 {EntryWidgetCmd procedure, "xview" widget command} {
 test entry-3.81 {EntryWidgetCmd procedure, "xview" widget command} {
     # UTF
     # If Tcl_NumUtfChars wasn't used, wrong answer would be:
-    # {0.106383 0.319149} {0.117021 0.351064} {0.117021 0.351064}
+    # 0.106383 0.117021 0.117021
 
     set x {}
     .e xview moveto .1
-    lappend x [.e xview]
+    lappend x [lindex [.e xview] 0]
     .e xview moveto .11
-    lappend x [.e xview]
+    lappend x [lindex [.e xview] 0]
     .e xview moveto .12
-    lappend x [.e xview]
-} {{0.0957447 0.308511} {0.106383 0.319149} {0.117021 0.329787}}
+    lappend x [lindex [.e xview] 0]
+} {0.0957447 0.106383 0.117021}
 test entry-3.82 {EntryWidgetCmd procedure} {
     list [catch {.e gorp} msg] $msg
-} {1 {bad option "gorp": must be bbox, cget, configure, delete, get, icursor, index, insert, scan, selection, or xview}}
+} {1 {bad option "gorp": must be bbox, cget, configure, delete, get, icursor, index, insert, scan, selection, validate, or xview}}
 
 # The test below doesn't actually check anything directly, but if run
 # with Purify or some other memory-allocation-checking program it will
@@ -1330,6 +1330,7 @@ test entry-17.3 {EntryUpdateScrollbar procedure} {
 } {0.315789 0.842105}
 test entry-17.4 {EntryUpdateScrollbar procedure} {
     catch {destroy .e}
+    catch {rename bogus {}}
     proc bgerror msg {
 	global x
 	set x $msg

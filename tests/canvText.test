@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvText.test,v 1.7 1999/11/12 23:55:16 wart Exp $
+# RCS: @(#) $Id: canvText.test,v 1.8 1999/12/14 06:53:12 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -105,7 +105,7 @@ test canvText-3.4 {TextCoords procedure} {
 } {10.0 10.0}
 test canvText-3.5 {TextCoords procedure} {
     list [catch {.c coords test 10} msg] $msg
-} {1 {wrong # coordinates: expected 0 or 2, got 1}}
+} {1 {wrong # coordinates: expected 2, got 1}}
 test canvText-3.6 {TextCoords procedure} {
     list [catch {.c coords test 10 10 10} msg] $msg
 } {1 {wrong # coordinates: expected 0 or 2, got 3}}
