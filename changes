@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.37.2.2 1999/11/03 00:43:00 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.37.2.3 1999/12/10 05:53:24 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4691,3 +4691,10 @@ right edge changes slightly. [Bug: 3195] (hobbs)
 tkPriv(relief) in order to avoid spurious release events (hobbs)
 
 --- Released 8.2.2, November 04, 1999 --- See ChangeLog for details ---
+
+11/19/99 (bug fix) fixed expression error that could cause
+'malformed bucket chain' error in tkEntry.c.
+
+11/19/99 (bug fix) fixed Tk_NameOfColor
+
+--- Released 8.2.3, December 16, 1999 --- See ChangeLog for details ---
