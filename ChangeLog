@@ -1,3 +1,8 @@
+1998-12-08    <stanton@GASPODE>
+
+	* win/tkWinClipboard.c (TkSelGetSelection, TkWinClipboardRender):
+	Changed to handle multibyte characters properly. [Bug: 935]
+
 1998-12-07    <stanton@GASPODE>
 
 	* library/xmfbox.tcl (tkMotifFDialog_Create): In the cached case,
