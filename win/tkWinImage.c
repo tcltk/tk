@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinImage.c,v 1.4 2002/03/26 20:13:39 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinImage.c,v 1.5 2002/10/10 07:25:24 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -261,6 +261,242 @@ XCreateImage(display, visual, depth, format, offset, data, width, height,
 
 /*
  *----------------------------------------------------------------------
+ * XGetImageZPixmap --
+ *
+ *	This function copies data from a pixmap or window into an
+ *	XImage.  This handles the ZPixmap case only.
+ *
+ * Results:
+ *	Returns a newly allocated image containing the data from the
+ *	given rectangle of the given drawable.
+ *
+ * Side effects:
+ *	None.
+ *
+ * This procedure is adapted from the XGetImage implementation in TkNT.
+ * That code is Copyright (c) 1994 Software Research Associates, Inc.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static XImage *
+XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
+    Display* display;
+    Drawable d;
+    int x;
+    int y;
+    unsigned int width;
+    unsigned int height;
+    unsigned long plane_mask;
+    int	format;
+{
+    TkWinDrawable *twdPtr = (TkWinDrawable *)d;
+    XImage *ret_image;
+    unsigned char *smallBitData, *smallBitBase, *bigBitData;
+    HDC hdc, hdcMem;
+    HBITMAP hbmp, hbmpPrev;
+    BITMAPINFO *bmInfo = NULL;
+    HPALETTE hPal, hPalPrev1, hPalPrev2;
+    unsigned int byte_width;
+    unsigned int h, w, n;
+    unsigned char plmr, plmg, plmb;
+    unsigned char *data;
+    int size;
+    unsigned int depth;
+    TkWinDCState state;
+    BOOL ret;
+
+    if (format != ZPixmap) {
+	TkpDisplayWarning(
+	    "XGetImageZPixmap: only ZPixmap types are implemented",
+	    "XGetImageZPixmap Failure");
+	return NULL;
+    }
+
+    hdc = TkWinGetDrawableDC(display, d, &state);
+
+    /* Need to do a Blt operation to copy into a new bitmap */
+    hbmp = CreateCompatibleBitmap(hdc, width, height);
+    hdcMem = CreateCompatibleDC(hdc);
+    hbmpPrev = SelectObject(hdcMem, hbmp);
+    hPal = state.palette;
+    if (hPal) {
+        hPalPrev1 = SelectPalette(hdcMem, hPal, FALSE);
+        n = RealizePalette(hdcMem);
+        if (n > 0) {
+            UpdateColors (hdcMem);
+        }
+	hPalPrev2 = SelectPalette(hdc, hPal, FALSE);
+        n = RealizePalette(hdc);
+        if (n > 0) {
+            UpdateColors (hdc);
+        }
+    }
+
+    ret = BitBlt(hdcMem, 0, 0, width, height, hdc, x, y, SRCCOPY);
+    if (hPal) {
+	SelectPalette(hdc, hPalPrev2, FALSE);
+    }
+    SelectObject(hdcMem, hbmpPrev);
+    TkWinReleaseDrawableDC(d, hdc, &state);
+    if (ret == FALSE) {
+	goto cleanup;
+    }
+    if (twdPtr->type == TWD_WINDOW) {
+	depth = Tk_Depth((Tk_Window) twdPtr->window.winPtr);
+    } else {
+	depth = twdPtr->bitmap.depth;
+    }
+
+    size = sizeof(BITMAPINFO);
+    if (depth <= 8) {
+	size += sizeof(unsigned short) * (1 << depth);
+    }
+    bmInfo = (BITMAPINFO *) ckalloc(size);
+
+    bmInfo->bmiHeader.biSize               = sizeof(BITMAPINFOHEADER);
+    bmInfo->bmiHeader.biWidth              = width;
+    bmInfo->bmiHeader.biHeight             = -(int) height;
+    bmInfo->bmiHeader.biPlanes             = 1;
+    bmInfo->bmiHeader.biBitCount           = depth;
+    bmInfo->bmiHeader.biCompression        = BI_RGB;
+    bmInfo->bmiHeader.biSizeImage          = 0;
+    bmInfo->bmiHeader.biXPelsPerMeter      = 0;
+    bmInfo->bmiHeader.biYPelsPerMeter      = 0;
+    bmInfo->bmiHeader.biClrUsed            = 0;
+    bmInfo->bmiHeader.biClrImportant       = 0;
+
+    if (depth == 1) {
+	unsigned char *p, *pend;
+	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_PAL_COLORS);
+	data = ckalloc(bmInfo->bmiHeader.biSizeImage);
+	if (!data) {
+	    /* printf("Failed to allocate data area for XImage.\n"); */
+	    ret_image = NULL;
+	    goto cleanup;
+	}
+	ret_image = XCreateImage(display, NULL, depth, ZPixmap, 0, data,
+		width, height, 32, ((width + 31) >> 3) & ~1);
+	if (ret_image == NULL) {
+	    ckfree(data);
+	    goto cleanup;
+	}
+
+	/* Get the BITMAP info into the Image. */
+	if (GetDIBits(hdcMem, hbmp, 0, height, data, bmInfo,
+		DIB_PAL_COLORS) == 0) {
+	    ckfree((char *) ret_image->data);
+	    ckfree((char *) ret_image);
+	    ret_image = NULL;
+	    goto cleanup;
+	}
+	p = data;
+	pend = data + bmInfo->bmiHeader.biSizeImage;
+	while (p < pend) {
+	    *p = ~*p;
+	    p++;
+	}
+    } else if (depth == 8) {
+	unsigned short *palette;
+	unsigned int i;
+	unsigned char *p;
+
+	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_PAL_COLORS);
+	data = ckalloc(bmInfo->bmiHeader.biSizeImage);
+	if (!data) {
+	    /* printf("Failed to allocate data area for XImage.\n"); */
+	    ret_image = NULL;
+	    goto cleanup;
+	}
+	ret_image = XCreateImage(display, NULL, 8, ZPixmap, 0, data,
+		width, height, 8, width);
+	if (ret_image == NULL) {
+	    ckfree((char *) data);
+	    goto cleanup;
+	}
+
+	/* Get the BITMAP info into the Image. */
+	if (GetDIBits(hdcMem, hbmp, 0, height, data, bmInfo,
+		DIB_PAL_COLORS) == 0) {
+	    ckfree((char *) ret_image->data);
+	    ckfree((char *) ret_image);
+	    ret_image = NULL;
+	    goto cleanup;
+	}
+	p = data;
+	palette = (unsigned short *) bmInfo->bmiColors;
+	for (i = 0; i < bmInfo->bmiHeader.biSizeImage; i++, p++) {
+	    *p = (unsigned char) palette[*p];
+	}
+    } else {
+	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_RGB_COLORS);
+	data = ckalloc(width * height * 4);
+	if (!data) {
+	    /* printf("Failed to allocate data area for XImage.\n"); */
+	    ret_image = NULL;
+	    goto cleanup;
+	}
+	ret_image = XCreateImage(display, NULL, 32, ZPixmap, 0, data,
+		width, height, 0, width * 4);
+	if (ret_image == NULL) {
+	    ckfree((char *) data);
+	    goto cleanup;
+	}
+
+	byte_width = ((width * 3 + 3) & ~3);
+	smallBitBase = ckalloc(byte_width * height);
+	if (!smallBitBase) {
+	    ckfree((char *) ret_image->data);
+	    ckfree((char *) ret_image);
+	    ret_image = NULL;
+	    goto cleanup;
+	}
+	smallBitData = smallBitBase;
+
+	/* Get the BITMAP info into the Image. */
+	if (GetDIBits(hdcMem, hbmp, 0, height, smallBitData, bmInfo,
+		DIB_RGB_COLORS) == 0) {
+	    ckfree((char *) ret_image->data);
+	    ckfree((char *) ret_image);
+	    ret_image = NULL;
+	    goto cleanup;
+	}
+
+	plmr = (unsigned char) (plane_mask & 0xff0000) >> 16;
+	plmg = (unsigned char) (plane_mask & 0x00ff00) >> 8;
+	plmb = (unsigned char) (plane_mask & 0x0000ff);
+
+	/* Copy the 24 Bit Pixmap to a 32-Bit one. */
+	for (h = 0; h < height; h++) {
+	    bigBitData = ret_image->data + h * ret_image->bytes_per_line;
+	    smallBitData = smallBitBase + h * byte_width;
+
+	    for (w = 0; w < width; w++) {
+		*bigBitData++ = ((*smallBitData++)) /* & plmr */;
+		*bigBitData++ = ((*smallBitData++)) /* & plmg */;
+		*bigBitData++ = ((*smallBitData++)) /* & plmb */;
+		*bigBitData++ = 0;
+	    }
+	}
+	/* Free the Device contexts, and the Bitmap */
+	ckfree((char *) smallBitBase);
+    }
+
+  cleanup:
+    if (bmInfo) {
+	ckfree((char *) bmInfo);
+    }
+    if (hPal) {
+	SelectPalette(hdcMem, hPalPrev1, FALSE);
+    }
+    DeleteDC(hdcMem);
+    DeleteObject(hbmp);
+
+    return ret_image;
+}
+
+/*
+ *----------------------------------------------------------------------
  *
  * XGetImage --
  *
@@ -291,39 +527,101 @@ XGetImage(display, d, x, y, width, height, plane_mask, format)
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
     XImage *imagePtr;
     HDC dc;
-    char infoBuf[sizeof(BITMAPINFO) + sizeof(RGBQUAD)];
-    BITMAPINFO *infoPtr = (BITMAPINFO*)infoBuf;
 
-    if ((twdPtr->type != TWD_BITMAP) || (twdPtr->bitmap.handle == NULL)
-	    || (format != XYPixmap) || (plane_mask != 1)) {
-	panic("XGetImage: not implemented");
+    display->request++;
+
+    if (twdPtr == NULL) {
+	/*
+	 * Avoid unmapped windows or bad drawables
+	 */
+	return NULL;
     }
 
+    if (format == ZPixmap) {
+	/*
+	 * This actually handles most TWD_WINDOW requests, but it varies
+	 * from the one below in that it really does a screen capture of
+	 * an area, but that is consistent with the Unix behavior -- hobbs
+	 */
+	imagePtr = XGetImageZPixmap(display, d, x, y,
+		width, height, plane_mask, format);
+    } else if (twdPtr->type != TWD_BITMAP) {
+	/*
+	 * This handles TWD_WINDOW or TWD_WINDC.
+	 * If the window being copied isn't visible (unmapped or obscured),
+	 * we quietly stop copying (no user error).  The user will see black
+	 * where the widget should be.
+	 * This branch is likely not followed in favor of XGetImageZPixmap.
+	 */
+	Tk_Window tkwin = (Tk_Window) TkWinGetWinPtr(d);
+	TkWinDCState state;
+	unsigned int xx, yy, size;
+	COLORREF pixel;
 
-    imagePtr = XCreateImage(display, NULL, 1, XYBitmap, 0, NULL,
-	    width, height, 32, 0);
-    imagePtr->data = ckalloc(imagePtr->bytes_per_line * imagePtr->height);
+	dc = TkWinGetDrawableDC(display, d, &state);
 
-    dc = GetDC(NULL);
+	imagePtr = XCreateImage(display, NULL, Tk_Depth(tkwin),
+		format, 0, NULL, width, height, 32, 0);
+	size = imagePtr->bytes_per_line * imagePtr->height;
+	imagePtr->data = ckalloc(size);
+	ZeroMemory(imagePtr->data, size);
 
-    GetDIBits(dc, twdPtr->bitmap.handle, 0, height, NULL,
-	    infoPtr, DIB_RGB_COLORS);
+	for (yy = 0; yy < height; yy++) {
+	    for (xx = 0; xx < width; xx++) {
+		pixel = GetPixel(dc, x+(int)xx, y+(int)yy);
+		if (pixel == CLR_INVALID) {
+		    break;
+		}
+		PutPixel(imagePtr, xx, yy, pixel);
+	    }
+	}
 
-    infoPtr->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    infoPtr->bmiHeader.biWidth = width;
-    infoPtr->bmiHeader.biHeight = -(LONG)height;
-    infoPtr->bmiHeader.biPlanes = 1;
-    infoPtr->bmiHeader.biBitCount = 1;
-    infoPtr->bmiHeader.biCompression = BI_RGB;
-    infoPtr->bmiHeader.biCompression = 0;
-    infoPtr->bmiHeader.biXPelsPerMeter = 0;
-    infoPtr->bmiHeader.biYPelsPerMeter = 0;
-    infoPtr->bmiHeader.biClrUsed = 0;
-    infoPtr->bmiHeader.biClrImportant = 0;
+	TkWinReleaseDrawableDC(d, dc, &state);
+    } else {
+	char *errMsg = NULL;
+	char infoBuf[sizeof(BITMAPINFO) + sizeof(RGBQUAD)];
+	BITMAPINFO *infoPtr = (BITMAPINFO*)infoBuf;
 
-    GetDIBits(dc, twdPtr->bitmap.handle, 0, height, imagePtr->data,
-	    infoPtr, DIB_RGB_COLORS);
-    ReleaseDC(NULL, dc);
+	if (twdPtr->bitmap.handle == NULL) {
+	    errMsg = "XGetImage: not implemented for empty bitmap handles";
+	} else if (format != XYPixmap) {
+	    errMsg = "XGetImage: not implemented for format != XYPixmap";
+	} else if (plane_mask != 1) {
+	    errMsg = "XGetImage: not implemented for plane_mask != 1";
+	}
+	if (errMsg != NULL) {
+	    /*
+	     * Do a soft warning for the unsupported XGetImage types.
+	     */
+	    TkpDisplayWarning(errMsg, "XGetImage Failure");
+	    return NULL;
+	}
+
+	imagePtr = XCreateImage(display, NULL, 1, XYBitmap, 0, NULL,
+		width, height, 32, 0);
+	imagePtr->data = ckalloc(imagePtr->bytes_per_line * imagePtr->height);
+
+	dc = GetDC(NULL);
+
+	GetDIBits(dc, twdPtr->bitmap.handle, 0, height, NULL,
+		infoPtr, DIB_RGB_COLORS);
+
+	infoPtr->bmiHeader.biSize		= sizeof(BITMAPINFOHEADER);
+	infoPtr->bmiHeader.biWidth		= width;
+	infoPtr->bmiHeader.biHeight		= -(LONG)height;
+	infoPtr->bmiHeader.biPlanes		= 1;
+	infoPtr->bmiHeader.biBitCount		= 1;
+	infoPtr->bmiHeader.biCompression	= BI_RGB;
+	infoPtr->bmiHeader.biCompression	= 0;
+	infoPtr->bmiHeader.biXPelsPerMeter	= 0;
+	infoPtr->bmiHeader.biYPelsPerMeter	= 0;
+	infoPtr->bmiHeader.biClrUsed		= 0;
+	infoPtr->bmiHeader.biClrImportant	= 0;
+
+	GetDIBits(dc, twdPtr->bitmap.handle, 0, height, imagePtr->data,
+		infoPtr, DIB_RGB_COLORS);
+	ReleaseDC(NULL, dc);
+    }
 
     return imagePtr;
 }
