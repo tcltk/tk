@@ -1,5 +1,8 @@
 2004-11-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkCanvWind.c (ConfigureWinItem): unmap windows
+	immediately when state hidden is requested. [Bug 982248]
+
 	* generic/tkCanvImg.c (ImageToPostscript): don't try ps generation
 	of canvas image item without image specified. [Bug 1032300]
 

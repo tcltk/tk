@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvWind.c,v 1.9 2003/02/09 07:48:22 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvWind.c,v 1.9.2.1 2004/11/17 22:44:37 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -382,6 +382,14 @@ ConfigureWinItem(interp, canvas, itemPtr, objc, objv, flags)
 		    (ClientData) winItemPtr);
 	}
     }
+    if ((winItemPtr->tkwin != NULL)
+	    && (itemPtr->state == TK_STATE_HIDDEN)) {
+	if (canvasTkwin == Tk_Parent(winItemPtr->tkwin)) {
+	    Tk_UnmapWindow(winItemPtr->tkwin);
+	} else {
+	    Tk_UnmaintainGeometry(winItemPtr->tkwin, canvasTkwin);
+	}
+    }
 
     ComputeWindowBbox(canvas, winItemPtr);
 
@@ -588,11 +596,15 @@ DisplayWinItem(canvas, itemPtr, display, drawable, regionX, regionY,
     if (winItemPtr->tkwin == NULL) {
 	return;
     }
-    if(state == TK_STATE_NULL) {
+    if (state == TK_STATE_NULL) {
 	state = ((TkCanvas *)canvas)->canvas_state;
     }
     if (state == TK_STATE_HIDDEN) {
-	Tk_UnmapWindow(winItemPtr->tkwin);
+	if (canvasTkwin == Tk_Parent(winItemPtr->tkwin)) {
+	    Tk_UnmapWindow(winItemPtr->tkwin);
+	} else {
+	    Tk_UnmaintainGeometry(winItemPtr->tkwin, canvasTkwin);
+	}
 	return;
     }
     Tk_CanvasWindowCoords(canvas, (double) winItemPtr->header.x1,
