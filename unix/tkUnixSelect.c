@@ -9,11 +9,24 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.4 1999/05/25 20:40:55 stanton Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.5 1999/06/01 18:51:20 stanton Exp $
  */
 
 #include "tkInt.h"
 #include "tkSelect.h"
+
+typedef struct ConvertInfo {
+    int offset;			/* The starting byte offset into the selection
+				 * for the next chunk; -1 means all data has
+				 * been transferred for this conversion. -2
+				 * means only the final zero-length transfer
+				 * still has to be done.  Otherwise it is the
+				 * offset of the next chunk of data to
+				 * transfer. */
+    Tcl_EncodingState state;	/* The encoding state needed across chunks. */
+    char buffer[TCL_UTF_MAX+1];	/* A buffer to hold part of a UTF character
+				 * that is split across chunks.*/
+} ConvertInfo;
 
 /*
  * When handling INCR-style selection retrievals, the selection owner
@@ -31,17 +44,21 @@ typedef struct IncrInfo {
 				 * MULTIPLE retrievals) or to a static
 				 * array. */
     unsigned long numConversions;
-				/* Number of entries in offsets (same as
+				/* Number of entries in converts (same as
 				 * # of pairs in multAtoms). */
-    int *offsets;		/* One entry for each pair in
-				 * multAtoms;  -1 means all data has
-				 * been transferred for this
-				 * conversion.  -2 means only the
-				 * final zero-length transfer still
-				 * has to be done.  Otherwise it is the
-				 * offset of the next chunk of data
-				 * to transfer.  This array is malloc-ed. */
-    int numIncrs;		/* Number of entries in offsets that
+    ConvertInfo *converts;	/* One entry for each pair in multAtoms.
+				 * This array is malloc-ed. */
+    char **tempBufs;		/* One pointer for each pair in multAtoms;
+				 * each pointer is either NULL, or it points
+				 * to a small bit of character data that was
+				 * left over from the previous chunk. */
+    Tcl_EncodingState *state;	/* One state info per pair in multAtoms:
+				 * State info for encoding conversions
+				 * that span multiple buffers. */
+    int *flags;			/* One state flag per pair in multAtoms:
+				 * Encoding flags, set to TCL_ENCODING_START
+				 * at the beginning of an INCR transfer. */
+    int numIncrs;		/* Number of entries in converts that
 				 * aren't -1 (i.e. # of INCR-mode transfers
 				 * not yet completed). */
     Tcl_TimerToken timeout;	/* Token for timer procedure. */
@@ -55,10 +72,6 @@ typedef struct IncrInfo {
 				 * changes. */
     struct IncrInfo *nextPtr;	/* Next in list of all INCR-style
 				 * retrievals currently pending. */
-    Tcl_EncodingState state;	/* State info for encoding conversions
-				 * that span multiple buffers. */
-    int flags;			/* Encoding flags, set to TCL_ENCODING_START
-				 * at the beginning of an INCR transfer. */
 } IncrInfo;
 
 
@@ -233,12 +246,16 @@ TkSelPropProc(eventPtr)
     register XEvent *eventPtr;		/* X PropertyChange event. */
 {
     register IncrInfo *incrPtr;
-    int i, format;
+    int i, length, numItems, flags;
+    Tcl_Encoding encoding;
+    int srcLen, dstLen, result, srcRead, dstWrote, soFar;
+    Tcl_DString ds;
+    char *src, *dst;
     Atom target, formatType;
     register TkSelHandler *selPtr;
     long buffer[TK_SEL_WORDS_AT_ONCE];
-    int numItems;
     char *propPtr;
+    TkDisplay *dispPtr = TkGetDisplay(eventPtr->xany.display);
     Tk_ErrorHandler errorHandler;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -257,86 +274,219 @@ TkSelPropProc(eventPtr)
 	if (incrPtr->reqWindow != eventPtr->xproperty.window) {
 	    continue;
 	}
+
+	/*
+	 * For each conversion that has been requested, handle any
+	 * chunks that haven't been transmitted yet.
+	 */						  
+
 	for (i = 0; i < incrPtr->numConversions; i++) {
 	    if ((eventPtr->xproperty.atom != incrPtr->multAtoms[2*i + 1])
-		    || (incrPtr->offsets[i] == -1)){
+		    || (incrPtr->converts[i].offset == -1)) {
 		continue;
 	    }
 	    target = incrPtr->multAtoms[2*i];
 	    incrPtr->idleTime = 0;
+
+	    /*
+	     * Look for a matching selection handler.
+	     */
+
 	    for (selPtr = incrPtr->winPtr->selHandlerList; ;
 		    selPtr = selPtr->nextPtr) {
 		if (selPtr == NULL) {
+		    /*
+		     * No handlers match, so mark the conversion as done.
+		     */
+
 		    incrPtr->multAtoms[2*i + 1] = None;
-		    incrPtr->offsets[i] = -1;
+		    incrPtr->converts[i].offset = -1;
 		    incrPtr->numIncrs --;
 		    return;
 		}
 		if ((selPtr->target == target)
 			&& (selPtr->selection == incrPtr->selection)) {
-		    formatType = selPtr->format;
-		    if (incrPtr->offsets[i] == -2) {
-			numItems = 0;
-			((char *) buffer)[0] = 0;
-		    } else {
-			TkSelInProgress ip;
-			ip.selPtr = selPtr;
-			ip.nextPtr = TkSelGetInProgress();
-			TkSelSetInProgress(&ip);
-			numItems = (*selPtr->proc)(selPtr->clientData,
-				incrPtr->offsets[i], (char *) buffer,
-				TK_SEL_BYTES_AT_ONCE);
-			TkSelSetInProgress(ip.nextPtr);
-			if (ip.selPtr == NULL) {
-			    /*
-			     * The selection handler deleted itself.
-			     */
-
-			    return;
-			}
-			if (numItems > TK_SEL_BYTES_AT_ONCE) {
-			    panic("selection handler returned too many bytes");
-			} else {
-			    if (numItems < 0) {
-				numItems = 0;
-			    }
-			}
-			((char *) buffer)[numItems] = '\0';
-		    }
-		    if (numItems < TK_SEL_BYTES_AT_ONCE) {
-			if (numItems <= 0) {
-			    incrPtr->offsets[i] = -1;
-			    incrPtr->numIncrs--;
-			} else {
-			    incrPtr->offsets[i] = -2;
-			}
-		    } else {
-			incrPtr->offsets[i] += numItems;
-		    }
-		    if (formatType == XA_STRING) {
-			propPtr = (char *) buffer;
-			format = 8;
-		    } else {
-			propPtr = (char *) SelCvtToX((char *) buffer,
-				formatType, (Tk_Window) incrPtr->winPtr,
-				&numItems);
-			format = 32;
-		    }
-		    errorHandler = Tk_CreateErrorHandler(
-			    eventPtr->xproperty.display, -1, -1, -1,
-			    (int (*)()) NULL, (ClientData) NULL);
-		    XChangeProperty(eventPtr->xproperty.display,
-			    eventPtr->xproperty.window,
-			    eventPtr->xproperty.atom, formatType,
-			    format, PropModeReplace,
-			    (unsigned char *) propPtr, numItems);
-		    Tk_DeleteErrorHandler(errorHandler);
-		    if (propPtr != (char *) buffer) {
-			ckfree(propPtr);
-		    }
-		    return;
+		    break;
 		}
 	    }
+
+	    /*
+	     * We found a handler, so get the next chunk from it.
+	     */
+
+	    formatType = selPtr->format;
+	    if (incrPtr->converts[i].offset == -2) {
+		/*
+		 * We already got the last chunk, so send a null chunk
+		 * to indicate that we are finished.
+		 */
+
+		numItems = 0;
+	    } else {
+		TkSelInProgress ip;
+		ip.selPtr = selPtr;
+		ip.nextPtr = TkSelGetInProgress();
+		TkSelSetInProgress(&ip);
+
+		/*
+		 * Copy any bytes left over from a partial character at the end
+		 * of the previous chunk into the beginning of the buffer.
+		 * Pass the rest of the buffer space into the selection
+		 * handler.
+		 */
+
+		length = strlen(incrPtr->converts[i].buffer);
+		strcpy((char *)buffer, incrPtr->converts[i].buffer);
+			    
+		numItems = (*selPtr->proc)(selPtr->clientData,
+			incrPtr->converts[i].offset,
+			((char *) buffer) + length,
+			TK_SEL_BYTES_AT_ONCE - length);
+		TkSelSetInProgress(ip.nextPtr);
+		if (ip.selPtr == NULL) {
+		    /*
+		     * The selection handler deleted itself.
+		     */
+
+		    return;
+		}
+		if (numItems < 0) {
+		    numItems = 0;
+		}
+		numItems += length;
+		if (numItems > TK_SEL_BYTES_AT_ONCE) {
+		    panic("selection handler returned too many bytes");
+		}
+	    }
+	    ((char *) buffer)[numItems] = 0;
+
+	    /*
+	     * Encode the data using the proper format for each type.
+	     */
+
+	    if ((formatType == XA_STRING)
+		    || (dispPtr
+			    && (formatType == dispPtr->compoundTextAtom))) {
+		/*
+		 * Set up the encoding state based on the format and whether
+		 * this is the first and/or last chunk.
+		 */
+
+		flags = 0;
+		if (incrPtr->converts[i].offset == 0) {
+		    flags |= TCL_ENCODING_START;
+		}
+		if (numItems < TK_SEL_BYTES_AT_ONCE) {
+		    flags |= TCL_ENCODING_END;
+		}
+		if (formatType == XA_STRING) {
+		    encoding = Tcl_GetEncoding(NULL, "iso8859-1");
+		} else {
+		    encoding = Tcl_GetEncoding(NULL, "iso2022");
+		}
+
+		/*
+		 * Now convert the data.
+		 */
+
+		src = (char *)buffer;
+		srcLen = numItems;
+		Tcl_DStringInit(&ds);
+		dst = Tcl_DStringValue(&ds);
+		dstLen = ds.spaceAvl - 1;
+
+
+		/*
+		 * Now convert the data, growing the destination buffer
+		 * as needed. 
+		 */
+
+		while (1) {
+		    result = Tcl_UtfToExternal(NULL, encoding,
+			    src, srcLen, flags,
+			    &incrPtr->converts[i].state,
+			    dst, dstLen, &srcRead, &dstWrote, NULL);
+		    soFar = dst + dstWrote - Tcl_DStringValue(&ds);
+		    flags &= ~TCL_ENCODING_START;
+		    src += srcRead;
+		    srcLen -= srcRead;
+		    if (result != TCL_CONVERT_NOSPACE) {
+			Tcl_DStringSetLength(&ds, soFar);
+			break;
+		    }
+		    if (Tcl_DStringLength(&ds) == 0) {
+			Tcl_DStringSetLength(&ds, dstLen);
+		    }
+		    Tcl_DStringSetLength(&ds,
+			    2 * Tcl_DStringLength(&ds) + 1);
+		    dst = Tcl_DStringValue(&ds) + soFar;
+		    dstLen = Tcl_DStringLength(&ds) - soFar - 1;
+		}
+		Tcl_DStringSetLength(&ds, soFar);
+
+		/*
+		 * Set the property to the encoded string value.
+		 */
+
+		errorHandler = Tk_CreateErrorHandler(
+		    eventPtr->xproperty.display, -1, -1, -1,
+		    (int (*)()) NULL, (ClientData) NULL);
+		XChangeProperty(eventPtr->xproperty.display,
+			eventPtr->xproperty.window,
+			eventPtr->xproperty.atom, formatType, 8,
+			PropModeReplace,
+			(unsigned char *) Tcl_DStringValue(&ds),
+			Tcl_DStringLength(&ds));
+		Tk_DeleteErrorHandler(errorHandler);
+
+		/*
+		 * Preserve any left-over bytes.
+		 */
+
+		if (srcLen > TCL_UTF_MAX) {
+		    panic("selection conversion left too many bytes unconverted");
+		}
+		memcpy(incrPtr->converts[i].buffer, src, (size_t) srcLen+1);
+		Tcl_DStringFree(&ds);
+	    } else {
+		propPtr = (char *) SelCvtToX((char *) buffer,
+			formatType, (Tk_Window) incrPtr->winPtr,
+			&numItems);
+
+		/*
+		 * Set the property to the encoded string value.
+		 */
+
+		errorHandler = Tk_CreateErrorHandler(
+		    eventPtr->xproperty.display, -1, -1, -1,
+		    (int (*)()) NULL, (ClientData) NULL);
+		XChangeProperty(eventPtr->xproperty.display,
+			eventPtr->xproperty.window,
+			eventPtr->xproperty.atom, formatType, 8,
+			PropModeReplace,
+			(unsigned char *) Tcl_DStringValue(&ds), numItems);
+		Tk_DeleteErrorHandler(errorHandler);
+
+		ckfree(propPtr);
+	    }
+
+	    /*
+	     * Compute the next offset value.  If this was the last chunk,
+	     * then set the offset to -2.  If this was an empty chunk,
+	     * then set the offset to -1 to indicate we are done.
+	     */
+
+	    if (numItems < TK_SEL_BYTES_AT_ONCE) {
+		if (numItems <= 0) {
+		    incrPtr->converts[i].offset = -1;
+		    incrPtr->numIncrs--;
+		} else {
+		    incrPtr->converts[i].offset = -2;
+		}
+	    } else {
+		incrPtr->converts[i].offset += numItems;
+	    }
+	    return;
 	}
     }
 }
@@ -454,13 +604,15 @@ TkSelEventProc(tkwin, eventPtr)
 	     * uses a modified iso2022 encoding, not the current system
 	     * encoding.  For now we'll just blindly apply the iso2022
 	     * encoding.  This is probably wrong, but it's a placeholder
-	     * until we figure out what we're really supposed to do.
+	     * until we figure out what we're really supposed to do.  For
+	     * STRING, we need to use Latin-1 instead.  Again, it's not
+	     * really the full iso8859-1 space, but this is close enough.
 	     */
 
 	    if (type == dispPtr->compoundTextAtom) {
 		encoding = Tcl_GetEncoding(NULL, "iso2022");
 	    } else {
-		encoding = NULL;
+		encoding = Tcl_GetEncoding(NULL, "iso8859-1");
 	    }
 	    Tcl_ExternalToUtfDString(encoding, propInfo, (int)numItems, &ds);
 	    if (encoding) {
@@ -700,8 +852,8 @@ ConvertSelection(winPtr, eventPtr)
      * be returned below).
      */
 
-    incr.offsets = (int *) ckalloc((unsigned)
-	    (incr.numConversions*sizeof(int)));
+    incr.converts = (ConvertInfo *) ckalloc((unsigned)
+	    (incr.numConversions*sizeof(ConvertInfo)));
     incr.numIncrs = 0;
     for (i = 0; i < incr.numConversions; i++) {
 	Atom target, property, type;
@@ -712,7 +864,8 @@ ConvertSelection(winPtr, eventPtr)
 
 	target = incr.multAtoms[2*i];
 	property = incr.multAtoms[2*i + 1];
-	incr.offsets[i] = -1;
+	incr.converts[i].offset = -1;
+	incr.converts[i].buffer[0] = '\0';
 
 	for (selPtr = winPtr->selHandlerList; selPtr != NULL;
 		selPtr = selPtr->nextPtr) {
@@ -773,19 +926,42 @@ ConvertSelection(winPtr, eventPtr)
 	    numItems = 1;
 	    propPtr = (char *) buffer;
 	    format = 32;
-	    incr.offsets[i] = 0;
-	} else if (type == XA_STRING) {
-	    propPtr = (char *) buffer;
-	    format = 8;
+	    incr.converts[i].offset = 0;
+	    XChangeProperty(reply.display, reply.requestor,
+		    property, type, format, PropModeReplace,
+		    (unsigned char *) propPtr, numItems);
+	} else if ((type == XA_STRING)
+		|| (type == winPtr->dispPtr->compoundTextAtom)) {
+	    Tcl_DString ds;
+	    Tcl_Encoding encoding;
+
+	    /*
+	     * STRING is Latin-1, COMPOUND_TEXT is an iso2022 variant.
+	     * We need to convert the selection text into these external
+	     * forms before modifying the property.
+	     */
+
+	    if (type == XA_STRING) {
+		encoding = Tcl_GetEncoding(NULL, "iso8859-1");
+	    } else {
+		encoding = Tcl_GetEncoding(NULL, "iso2022");
+	    } 
+	    Tcl_UtfToExternalDString(encoding, (char*)buffer, -1, &ds);
+	    XChangeProperty(reply.display, reply.requestor,
+		    property, type, 8, PropModeReplace,
+		    (unsigned char *) Tcl_DStringValue(&ds),
+		    Tcl_DStringLength(&ds));
+	    if (encoding) {
+		Tcl_FreeEncoding(encoding);
+	    }
+	    Tcl_DStringFree(&ds);
 	} else {
 	    propPtr = (char *) SelCvtToX((char *) buffer,
 		    type, (Tk_Window) winPtr, &numItems);
 	    format = 32;
-	}
-	XChangeProperty(reply.display, reply.requestor,
-		property, type, format, PropModeReplace,
-		(unsigned char *) propPtr, numItems);
-	if (propPtr != (char *) buffer) {
+	    XChangeProperty(reply.display, reply.requestor,
+		    property, type, format, PropModeReplace,
+		    (unsigned char *) propPtr, numItems);
 	    ckfree(propPtr);
 	}
     }
@@ -858,7 +1034,7 @@ ConvertSelection(winPtr, eventPtr)
      * All done.  Cleanup and return.
      */
 
-    ckfree((char *) incr.offsets);
+    ckfree((char *) incr.converts);
     if (multiple) {
 	XFree((char *) incr.multAtoms);
     }
@@ -949,7 +1125,7 @@ SelRcvIncrProc(clientData, eventPtr)
 	if (type == retrPtr->winPtr->dispPtr->compoundTextAtom) {
 	    encoding = Tcl_GetEncoding(NULL, "iso2022");
 	} else {
-	    encoding = NULL;
+	    encoding = Tcl_GetEncoding(NULL, "iso8859-1");
 	}
 
 	/*
@@ -1011,6 +1187,7 @@ SelRcvIncrProc(clientData, eventPtr)
 	    dst = Tcl_DStringValue(dstPtr) + soFar;
 	    dstLen = Tcl_DStringLength(dstPtr) - soFar - 1;
 	}
+	Tcl_DStringSetLength(dstPtr, soFar);
 
 	result = (*retrPtr->proc)(retrPtr->clientData, interp,
 		Tcl_DStringValue(dstPtr));
