@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCursor.c,v 1.1.4.3 1998/12/13 08:16:04 lfb Exp $
+ * RCS: @(#) $Id: tkCursor.c,v 1.1.4.3.2.1 1999/03/10 02:22:51 redman Exp $
  */
 
 #include "tkPort.h"
@@ -330,7 +330,8 @@ Tk_GetCursorFromData(interp, tkwin, source, mask, width, height,
     register TkCursor *cursorPtr;
     int new;
     XColor fgColor, bgColor;
-    TkDisplay *dispPtr;
+    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
+
 
     if (!dispPtr->cursorInit) {
 	CursorInit(dispPtr);
