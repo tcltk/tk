@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.25.2.1 2004/02/18 20:10:34 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.25.2.2 2005/01/11 10:46:39 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -292,14 +292,6 @@ static void	SetGridSize _ANSI_ARGS_((Gridder *gridPtr));
 static void	StickyToString _ANSI_ARGS_((int flags, char *result));
 static int	StringToSticky _ANSI_ARGS_((char *string));
 static void	Unlink _ANSI_ARGS_((Gridder *gridPtr));
-
-/*
- * Prototypes for procedures contained in other files but not exported
- * using tkIntDecls.h
- */
-
-void TkPrintPadAmount _ANSI_ARGS_((Tcl_Interp*, char*, int, int));
-int  TkParsePadAmount _ANSI_ARGS_((Tcl_Interp*, Tk_Window, Tcl_Obj*, int*, int*));
 
 static Tk_GeomMgr gridMgrType = {
     "grid",			/* name */
