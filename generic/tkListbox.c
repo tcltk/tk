@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.7 1999/11/17 22:13:02 ericm Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.8 1999/11/18 01:47:07 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -1276,8 +1276,6 @@ ConfigureListbox(interp, listPtr, objc, objv, flags)
 	return TCL_ERROR;
     }
     
-    Tk_FreeSavedOptions(&savedOptions);
-
     /*
      * A few options need special processing, such as setting the
      * background from a 3-D border.
@@ -1319,9 +1317,10 @@ ConfigureListbox(interp, listPtr, objc, objv, flags)
      */
     oldListObj = listPtr->listObj;
     if (listPtr->listVarName != NULL) {
-	if (Tcl_GetVar2(interp, listPtr->listVarName, (char *)NULL,
-		TCL_GLOBAL_ONLY) == NULL) {
-	    Tcl_Obj *listVarObj;
+	Tcl_Obj *listVarObj = Tcl_GetVar2Ex(interp, listPtr->listVarName,
+		(char *)NULL, TCL_GLOBAL_ONLY);
+	int dummy;
+	if (listVarObj == NULL) {
 	    if (listPtr->listObj != NULL) {
 		listVarObj = listPtr->listObj;
 	    } else {
@@ -1330,11 +1329,17 @@ ConfigureListbox(interp, listPtr, objc, objv, flags)
 	    if (Tcl_SetVar2Ex(interp, listPtr->listVarName, (char *)NULL,
 		    listVarObj, TCL_GLOBAL_ONLY) == NULL) {
 		Tcl_DecrRefCount(listVarObj);
+		Tk_RestoreSavedOptions(&savedOptions);
 		return TCL_ERROR;
 	    }
 	}
-	listPtr->listObj = Tcl_GetVar2Ex(interp, listPtr->listVarName,
-		(char *)NULL, TCL_GLOBAL_ONLY);
+	/* Make sure the object is a good list object */
+	if (Tcl_ListObjLength(listPtr->interp, listVarObj, &dummy) != TCL_OK) {
+	    Tk_RestoreSavedOptions(&savedOptions);
+	    return TCL_ERROR;
+	}
+    
+	listPtr->listObj = listVarObj;
 	Tcl_TraceVar(listPtr->interp, listPtr->listVarName,
                 TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
                 ListboxListVarProc, (ClientData) listPtr);
@@ -1351,6 +1356,7 @@ ConfigureListbox(interp, listPtr, objc, objv, flags)
     /* Make sure that the list length is correct */
     Tcl_ListObjLength(listPtr->interp, listPtr->listObj, &listPtr->nElements);
     
+    Tk_FreeSavedOptions(&savedOptions);
     ListboxWorldChanged((ClientData) listPtr);
     return TCL_OK;
 }
@@ -2794,7 +2800,7 @@ ListboxListVarProc(clientData, interp, name1, name2, flags)
     int flags;                  /* Information about what happened. */
 {
     Listbox *listPtr = (Listbox *)clientData;
-    Tcl_Obj *oldListObj;
+    Tcl_Obj *oldListObj, *varListObj;
     int oldLength;
     int i;
     Tcl_HashEntry *entry;
@@ -2811,16 +2817,28 @@ ListboxListVarProc(clientData, interp, name1, name2, flags)
 	}
     } else {
 	oldListObj = listPtr->listObj;
-	/* Make sure the internal pointer points to the correct object */
-	listPtr->listObj = Tcl_GetVar2Ex(listPtr->interp, listPtr->listVarName,
+	varListObj = Tcl_GetVar2Ex(listPtr->interp, listPtr->listVarName,
 		(char *)NULL, TCL_GLOBAL_ONLY);
+	/*
+	 * Make sure the new value is a good list; if it's not, disallow
+	 * the change -- the fact that it is a listvar means that it must
+	 * always be a valid list
+	 */
+	if (Tcl_ListObjLength(listPtr->interp, varListObj, &i) != TCL_OK) {
+	    Tcl_SetVar2Ex(interp, listPtr->listVarName, (char *)NULL,
+		    oldListObj, TCL_GLOBAL_ONLY);
+	    varListObj = oldListObj;
+	}
+	
+	listPtr->listObj = varListObj;
 	/* Incr the obj ref count so it doesn't vanish if the var is unset */
 	Tcl_IncrRefCount(listPtr->listObj);
 	/* Clean up the ref to our old list obj */
 	Tcl_DecrRefCount(oldListObj);
     }
 
-    /* If the list length has decreased, then we should clean up the selection
+    /*
+     * If the list length has decreased, then we should clean up the selection
      * from elements past the end of the new list
      */
     oldLength = listPtr->nElements;
@@ -2834,7 +2852,6 @@ ListboxListVarProc(clientData, interp, name1, name2, flags)
 	}
     }
 
-    
     /*
      * The computed maxWidth may have changed as a result of this operation.
      * However, we don't want to recompute it every time this trace fires
@@ -2844,7 +2861,7 @@ ListboxListVarProc(clientData, interp, name1, name2, flags)
      */
     listPtr->flags |= MAXWIDTH_IS_STALE;
     
-    EventuallyRedrawRange(clientData, 0, listPtr->nElements-1);
+    EventuallyRedrawRange(listPtr, 0, listPtr->nElements-1);
     return (char*)NULL;
 }
 

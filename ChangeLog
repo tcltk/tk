@@ -1,5 +1,15 @@
 1999-11-17  Eric Melski  <ericm@scriptics.com>
 
+	* tests/listbox.test: Added tests for bad -listvar's.
+
+	* generic/tkListbox.c: Added handlers for bad -listvar's (ie, bad
+	lists)
+
+	* tests/listbox.test: Added tests for ListboxUpdateHScrollbar.
+
+	* generic/tkListbox.c: Changed some old static buffers to base
+	size on TCL_DOUBLLE_SPACE instead of (completely) hardcoding the size.
+
 	* tests/listbox.test: New tests for -listvar functionality, and an
 	odd extra case that wasn't covered before.
 
