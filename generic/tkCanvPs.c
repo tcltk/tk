@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.11 2002/10/10 07:25:24 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.12 2002/10/10 21:01:17 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1113,6 +1113,12 @@ GetPostscriptPoints(interp, string, doublePtr)
  *      data passed as an argument, and should work for all Visual
  *      types.
  *
+ *	This implementation is bogus on Windows because the colormap
+ *	data is never filled in.  Instead all postscript generated
+ *	data coming through here is expected to be RGB color data.
+ *	To handle lower bit-depth images properly, XQueryColors
+ *	must be implemented for Windows.
+ *
  * Results:
  *	Returns red, green, and blue color values in the range 
  *      0 to 1.  There are no error returns.
@@ -1122,7 +1128,27 @@ GetPostscriptPoints(interp, string, doublePtr)
  *
  *--------------------------------------------------------------
  */
+#ifdef WIN32
+#include <windows.h>
 
+/*
+ * We could just define these instead of pulling in windows.h.
+ #define GetRValue(rgb)	((BYTE)(rgb))
+ #define GetGValue(rgb)	((BYTE)(((WORD)(rgb)) >> 8))
+ #define GetBValue(rgb)	((BYTE)((rgb)>>16))
+*/
+
+static void
+TkImageGetColor(cdata, pixel, red, green, blue)
+    TkColormapData *cdata;              /* Colormap data */
+    unsigned long pixel;                /* Pixel value to look up */
+    double *red, *green, *blue;         /* Color data to return */
+{
+    *red   = (double) GetRValue(pixel) / 255.0;
+    *green = (double) GetGValue(pixel) / 255.0;
+    *blue  = (double) GetBValue(pixel) / 255.0;
+}
+#else
 static void
 TkImageGetColor(cdata, pixel, red, green, blue)
     TkColormapData *cdata;              /* Colormap data */
@@ -1133,26 +1159,16 @@ TkImageGetColor(cdata, pixel, red, green, blue)
 	int r = (pixel & cdata->red_mask) >> cdata->red_shift;
 	int g = (pixel & cdata->green_mask) >> cdata->green_shift;
 	int b = (pixel & cdata->blue_mask) >> cdata->blue_shift;
-#ifdef WIN32
-	/*
-	 * Because XQueryColors is an empty stub on Windows, we need
-	 * to just make this simple calculation.  The TkColormapData
-	 * XColor data is otherwise bogus on Windows.  -- hobbs
-	 */
-	*red   = (double)r / 255.0;
-	*green = (double)g / 255.0;
-	*blue  = (double)b / 255.0;
-#else
 	*red   = cdata->colors[r].red / 65535.0;
 	*green = cdata->colors[g].green / 65535.0;
 	*blue  = cdata->colors[b].blue / 65535.0;
-#endif
     } else {
 	*red   = cdata->colors[pixel].red / 65535.0;
 	*green = cdata->colors[pixel].green / 65535.0;
 	*blue  = cdata->colors[pixel].blue / 65535.0;
     }
 }
+#endif
 
 /*
  *--------------------------------------------------------------
