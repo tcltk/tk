@@ -1,6 +1,11 @@
+2004-11-03  Don Porter  <dgp@users.sourceforge.net>
+
+	* tests/button.test: Update expected results to account for more
+	verbose errorinfo from errors in variable traces [Tcl Bug 572164]
+
 2004-11-01  Don Porter  <dgp@users.sourceforge.net>
 
-	* dialog.test (dialog-1.1):	Update expected result to changes
+	* tests/dialog.test (dialog-1.1): Update expected result to changes
 	in the error messages produced by procs.
 
 2004-10-29  Mo DeJong  <mdejong@users.sourceforge.net>

@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: button.test,v 1.16 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: button.test,v 1.17 2004/11/03 18:07:46 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -269,23 +269,25 @@ test button-4.23 {ButtonWidgetCmd procedure, "deselect" option} {
     .r deselect
     set value2
 } {}
-test button-4.24 {ButtonWidgetCmd procedure, "deselect" option} {
+test button-4.24 {ButtonWidgetCmd procedure, "deselect" option} -body {
     set value 1
     trace variable value w bogusTrace
     set result [list [catch {.c deselect} msg] $msg $errorInfo $value]
     trace vdelete value w bogusTrace
     set result
-} {1 {can't set "value": trace aborted} {can't set "value": trace aborted
+} -match glob -result {1 {can't set "value": trace aborted} {*trace aborted
     while executing
+*
 ".c deselect"} 0}
-test button-4.25 {ButtonWidgetCmd procedure, "deselect" option} {
+test button-4.25 {ButtonWidgetCmd procedure, "deselect" option} -body {
     set value2 red
     trace variable value2 w bogusTrace
     set result [list [catch {.r deselect} msg] $msg $errorInfo $value2]
     trace vdelete value2 w bogusTrace
     set result
-} {1 {can't set "value2": trace aborted} {can't set "value2": trace aborted
+} -match glob -result {1 {can't set "value2": trace aborted} {*trace aborted
     while executing
+*
 ".r deselect"} {}}
 test button-4.26 {ButtonWidgetCmd procedure, "flash" option} {
     list [catch {.b flash foo} msg] $msg
@@ -356,14 +358,15 @@ test button-4.41 {ButtonWidgetCmd procedure, "select" option} {
     .r select
     set value2
 } {red}
-test button-4.42 {ButtonWidgetCmd procedure, "select" option} {
+test button-4.42 {ButtonWidgetCmd procedure, "select" option} -body {
     set value2 yellow
     trace variable value2 w bogusTrace
     set result [list [catch {.r select} msg] $msg $errorInfo $value2]
     trace vdelete value2 w bogusTrace
     set result
-} {1 {can't set "value2": trace aborted} {can't set "value2": trace aborted
+} -match glob -result {1 {can't set "value2": trace aborted} {*trace aborted
     while executing
+*
 ".r select"} red}
 test button-4.43 {ButtonWidgetCmd procedure, "toggle" option} {
     list [catch {.l toggle} msg] $msg
@@ -387,25 +390,27 @@ test button-4.47 {ButtonWidgetCmd procedure, "toggle" option} {
     .c toggle
     lappend result $value
 } {sunshine rain sunshine}
-test button-4.48 {ButtonWidgetCmd procedure, "toggle" option} {
+test button-4.48 {ButtonWidgetCmd procedure, "toggle" option} -body {
     .c configure -onvalue xyz -offvalue abc
     set value xyz
     trace variable value w bogusTrace
     set result [list [catch {.c toggle} msg] $msg $errorInfo $value]
     trace vdelete value w bogusTrace
     set result
-} {1 {can't set "value": trace aborted} {can't set "value": trace aborted
+} -match glob -result {1 {can't set "value": trace aborted} {*trace aborted
     while executing
+*
 ".c toggle"} abc}
-test button-4.49 {ButtonWidgetCmd procedure, "toggle" option} {
+test button-4.49 {ButtonWidgetCmd procedure, "toggle" option} -body {
     .c configure -onvalue xyz -offvalue abc
     set value abc
     trace variable value w bogusTrace
     set result [list [catch {.c toggle} msg] $msg $errorInfo $value]
     trace vdelete value w bogusTrace
     set result
-} {1 {can't set "value": trace aborted} {can't set "value": trace aborted
+} -match glob -result {1 {can't set "value": trace aborted} {*trace aborted
     while executing
+*
 ".c toggle"} xyz}
 test button-4.50 {ButtonWidgetCmd procedure, "toggle" option} {
     catch {unset value}; set value(1) 1;
@@ -641,7 +646,7 @@ test button-9.4 {TkInvokeButton procedure} {
     .b1 invoke
     lappend result $x
 } {0 red red}
-test button-9.5 {TkInvokeButton procedure} {
+test button-9.5 {TkInvokeButton procedure} -body {
     catch {destroy .b1}
     radiobutton .b1 -variable x -value red
     set x green
@@ -649,8 +654,9 @@ test button-9.5 {TkInvokeButton procedure} {
     set result [list [catch {.b1 invoke} msg] $msg $errorInfo $x]
     trace vdelete x w bogusTrace
     set result
-} {1 {can't set "x": trace aborted} {can't set "x": trace aborted
+} -match glob -result {1 {can't set "x": trace aborted} {*trace aborted
     while executing
+*
 ".b1 invoke"} red}
 test button-9.6 {TkInvokeButton procedure} {
     deleteWindows
