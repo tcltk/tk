@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.29 2004/03/17 18:15:50 das Exp $
+# RCS: @(#) $Id: text.test,v 1.30 2004/06/09 22:39:08 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2562,6 +2562,35 @@ test text-20.172 {TextSearchCmd, regexp search multi-line} {knownBug} {
     .t2 search -regexp -backward -- {b+\n|a+\n(b+\n)+} end
     # Should match at 1.0 for a true greedy match
 } {1.0}
+
+test text-20.173 {TextSearchCmd, regexp search multi-line} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "\naaaxxx\nyyy\n"
+    set res {}
+    lappend res [.t2 search -count c -regexp -- {x*\ny*} 2.0] $c
+    lappend res [.t2 search -count c -regexp -- {x*\ny*} 2.1] $c
+    set res
+} {2.3 7 2.3 7}
+
+test text-20.174 {TextSearchCmd, regexp search multi-line} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "\naaa\n\n\n\n\nxxx\n"
+    set res {}
+    lappend res [.t2 search -count c -regexp -- {\n+} 2.0] $c
+    lappend res [.t2 search -count c -regexp -- {\n+} 2.1] $c
+    set res
+} {2.3 5 2.3 5}
+
+test text-20.175 {TextSearchCmd, regexp search multi-line} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "\naaa\n\n\t  \n\t\t\t  \n\nxxx\n"
+    set res {}
+    lappend res [.t2 search -count c -regexp -- {(\n+(\t+ *)*)+} 2.0] $c
+    set res
+} {2.3 13}
 
 deleteWindows
 text .t2 -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
