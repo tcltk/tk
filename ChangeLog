@@ -1,3 +1,10 @@
+2005-04-03  Peter Spjuth  <peter.spjuth@space.se>
+
+	* tests/grid.test:
+	* generic/tkGrid.c: Fixed bug in geometry calculations for
+	widgets that span multiple columns/row.
+	Bug was introduced in 8.5a1 when fixing 792387. [Bug 1175092]
+
 2005-03-29  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tcl.m4, win/configure: do not require cygpath in macros to
