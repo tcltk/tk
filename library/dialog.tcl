@@ -3,7 +3,7 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# RCS: @(#) $Id: dialog.tcl,v 1.14 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: dialog.tcl,v 1.14.2.1 2003/10/22 15:22:07 dkf Exp $
 #
 # Copyright (c) 1992-1993 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -155,6 +155,16 @@ proc ::tk_dialog {w title text bitmap default args} {
 	    - [winfo vrootx [winfo parent $w]]}]
     set y [expr {[winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
 	    - [winfo vrooty [winfo parent $w]]}]
+    # Make sure that the window is on the screen and set the maximum
+    # size of the window is the size of the screen.  That'll let things
+    # fail fairly gracefully when very large messages are used. [Bug 827535]
+    if {$x < 0} {
+	set x 0
+    }
+    if {$y < 0} {
+	set y 0
+    }
+    wm maxsize $w [winfo screenwidth $w] [winfo screenheight $w]
     wm geom $w +$x+$y
     wm deiconify $w
 
