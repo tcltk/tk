@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: event.test,v 1.7 2001/12/19 01:12:58 dgp Exp $
+# RCS: @(#) $Id: event.test,v 1.8 2002/02/14 12:13:51 mdejong Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -156,13 +156,22 @@ proc _pause { {msecs 1000} } {
 # Helper proc to convert index to x y position
 
 proc _text_ind_to_x_y { text ind } {
-    foreach {x1 y1 x2 y2} [$text bbox $ind] break
-    set middle_y [expr {$y1 + (($y2 - $y1) / 2)}]
+    foreach {x1 y1 width height} [$text bbox $ind] break
+    set middle_y [expr {$y1 + ($height / 2)}]
     return [list $x1 $middle_y]
 }
 
+# Return selection only if owned by the given widget
 
-
+proc _get_selection { widget } {
+    if {[string compare $widget [selection own]] != 0} {
+        return ""
+    }
+    if {[catch {selection get} sel]} {
+        return ""
+    }
+    return $sel
+}
 
 # Begining of the actual tests
 
@@ -316,7 +325,8 @@ test event-click-drag-1.1 { click and drag in a text widget, this
     set anchor 1.6
     set selend 1.18
 
-    set result [list [$e get 1.0 1.end]]
+    set result [list]
+    lappend result [$e get 1.0 1.end]
 
     # Get the x,y coords of the second T in "Tcl/Tk"
     foreach {anchor_x anchor_y} [_text_ind_to_x_y $e $anchor] break
@@ -345,7 +355,7 @@ test event-click-drag-1.1 { click and drag in a text widget, this
     lappend result [$e index insert]
 
     # Save the highlighted text
-    lappend result [$e get sel.first sel.last]
+    lappend result [_get_selection $e]
 
     # Now click and click and drag to the left, over "Tcl/Tk selection"
 
@@ -365,7 +375,7 @@ test event-click-drag-1.1 { click and drag in a text widget, this
     lappend result [$e index insert]
 
     # Save the highlighted text
-    lappend result [$e get sel.first sel.last]
+    lappend result [_get_selection $e]
 
 } {{A Tcl/Tk selection test!} 1.6 1.18 {Tk selection} 1.2 {Tcl/Tk selection}}
 
@@ -384,7 +394,8 @@ test event-click-drag-1.2 { click and drag in an entry widget, this
     set anchor 6
     set selend 18
 
-    set result [list [$e get]]
+    set result [list]
+    lappend result [$e get]
 
     # Get the x,y coords of the second T in "Tcl/Tk"
     foreach {anchor_x anchor_y} [_text_ind_to_x_y $e $anchor] break
@@ -413,7 +424,7 @@ test event-click-drag-1.2 { click and drag in an entry widget, this
     lappend result [$e index insert]
 
     # Save the highlighted text
-    lappend result [selection get]
+    lappend result [_get_selection $e]
 
     # Now click and click and drag to the left, over "Tcl/Tk selection"
 
@@ -433,7 +444,7 @@ test event-click-drag-1.2 { click and drag in an entry widget, this
     lappend result [$e index insert]
 
     # Save the highlighted text
-    lappend result [selection get]
+    lappend result [_get_selection $e]
 
 } {{A Tcl/Tk selection!} 6 18 {Tk selection} 2 {Tcl/Tk selection}}
 
@@ -449,6 +460,7 @@ rename _keypress_lookup {}
 rename _keypress {}
 rename _pause {}
 rename _text_ind_to_x_y {}
+rename _get_selection {}
 
 ::tcltest::cleanupTests
 return

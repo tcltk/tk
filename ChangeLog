@@ -1,3 +1,12 @@
+2002-02-14  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* tests/event.test (_text_ind_to_x_y, _get_selection): Fix
+	incorrect use of results from bbox invocation so that
+	y center point for a give index is calculated correctly.
+	Add new method to return the selection and use it in
+	test cases. Always lappend to the result list to avoid
+	case where initial result includes a space.
+
 2002-02-07  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkMain.c:
