@@ -1,6 +1,12 @@
-2002-03-04  Jeff Hobbs  <jeffh@ActiveState.com>
+2002-03-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	*** 8.4a4 TAGGED FOR RELEASE ***
+
+	* unix/README: updated --* options docs.
+
+	* unix/tk.spec: fixed URL refs to use www.tcl.tk or SF.
+
+2002-03-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* README: 
 	* mac/README: 
