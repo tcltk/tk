@@ -1,3 +1,9 @@
+2004-09-16  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkMenu.c (MenuWorldChanged): ensure that we recompute
+	the menu geometry on WorldChanged to handle font size
+	changes. [Bug 607649]
+
 2004-09-16  Peter Spjuth  <peter.spjuth@space.se>
 
 	* tests/place.test:
