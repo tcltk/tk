@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.10 2001/12/04 03:07:43 mdejong Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.11 2001/12/13 01:58:46 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -4186,7 +4186,8 @@ TkWmProtocolEventProc(winPtr, eventPtr)
  *
  *----------------------------------------------------------------------
  */
-void
+
+static void
 TkWmStackorderToplevelWrapperMap(winPtr, table)
     TkWindow *winPtr;				/* TkWindow to recurse on */
     Tcl_HashTable *table;			/* Maps X id to TkWindow */
