@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.12 2000/03/29 00:09:06 ericm Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.13 2000/04/13 17:36:58 ericm Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -1931,6 +1931,13 @@ DestroyCanvas(memPtr)
     TkCanvas *canvasPtr = (TkCanvas *) memPtr;
     Tk_Item *itemPtr;
 
+    if (canvasPtr->tkwin != NULL) {
+	Tcl_DeleteCommandFromToken(canvasPtr->interp, canvasPtr->widgetCmd);
+    }
+    if (canvasPtr->flags & REDRAW_PENDING) {
+	Tcl_CancelIdleCall(DisplayCanvas, (ClientData) canvasPtr);
+    }
+	
     /*
      * Free up all of the items in the canvas.
      */
@@ -1973,6 +1980,7 @@ DestroyCanvas(memPtr)
 	Tk_DeleteBindingTable(canvasPtr->bindingTable);
     }
     Tk_FreeOptions(configSpecs, (char *) canvasPtr, canvasPtr->display, 0);
+    canvasPtr->tkwin = NULL;
     ckfree((char *) canvasPtr);
 }
 
@@ -2440,15 +2448,7 @@ CanvasEventProc(clientData, eventPtr)
 	    canvasPtr->flags |= REDRAW_BORDERS;
 	}
     } else if (eventPtr->type == DestroyNotify) {
-	if (canvasPtr->tkwin != NULL) {
-	    canvasPtr->tkwin = NULL;
-            Tcl_DeleteCommandFromToken(canvasPtr->interp,
-		    canvasPtr->widgetCmd);
-	}
-	if (canvasPtr->flags & REDRAW_PENDING) {
-	    Tcl_CancelIdleCall(DisplayCanvas, (ClientData) canvasPtr);
-	}
-	Tcl_EventuallyFree((ClientData) canvasPtr, DestroyCanvas);
+	DestroyCanvas((ClientData) canvasPtr);
     } else if (eventPtr->type == ConfigureNotify) {
 	canvasPtr->flags |= UPDATE_SCROLLBARS;
 
@@ -2554,6 +2554,14 @@ Tk_CanvasEventuallyRedraw(canvas, x1, y1, x2, y2)
 				 * Pixels on edge are not redrawn. */
 {
     TkCanvas *canvasPtr = (TkCanvas *) canvas;
+    /*
+     * If tkwin is NULL, the canvas has been destroyed, so we can't really
+     * redraw it.
+     */
+    if (canvasPtr->tkwin == NULL) {
+	return;
+    }
+
     if ((x1 >= x2) || (y1 >= y2) ||
  	    (x2 < canvasPtr->xOrigin) || (y2 < canvasPtr->yOrigin) ||
 	    (x1 >= canvasPtr->xOrigin + Tk_Width(canvasPtr->tkwin)) ||

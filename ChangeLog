@@ -1,3 +1,26 @@
+2000-04-13  Eric Melski  <ericm@scriptics.com>
+
+	* generic/tkCanvas.c: Applied patch from [Bug: 4202]; adds a check
+	for NULL tkwin in Tk_CanvasEventuallyRedraw.
+
+2000-04-11  Eric Melski  <ericm@scriptics.com>
+
+	* msgcat.n: Added docs for new behavior from patch in [Bug: 4158].
+
+	* msgcat.test: Added tests for new behavior from patch in [Bug:
+	4158].
+	
+	* msgcat.tcl: Applied patch from [Bug: 4158], which enables
+	msgcat::mc to search the entire namespace ancestry chain for
+	message translations (ie, first it checks the current namespace,
+	then the parent, then the parent's parent, etc).  Also allows the
+	specification of additional args for msgcat::mc; if extra args are
+	given, the [format] command is used to substitute the additional
+	args in the translated message.
+
+	* library/bgerror.tcl: Moved check for withdrawn state after check
+	for tkerror; this was causing problems when tkerror was used.
+
 2000-04-10  Eric Melski  <ericm@scriptics.com>
 
 	* library/bgerror.tcl: Added check for withdrawn state of . and
