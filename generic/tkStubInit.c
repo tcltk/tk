@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.23 2000/06/03 08:58:16 hobbs Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.24 2000/10/05 18:31:26 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -951,6 +951,7 @@ TkStubs tkStubs = {
     Tk_PostscriptPhoto, /* 238 */
     Tk_CreateClientMessageHandler, /* 239 */
     Tk_DeleteClientMessageHandler, /* 240 */
+    Tk_CreateAnonymousWindow, /* 241 */
 };
 
 /* !END!: Do not edit above this line. */

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.25 2000/08/08 19:21:20 ericm Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.26 2000/10/05 18:31:26 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -199,7 +199,8 @@ static Tk_ArgvInfo argTable[] = {
  */
 
 static Tk_Window	CreateTopLevelWindow _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_Window parent, char *name, char *screenName));
+			    Tk_Window parent, char *name, char *screenName,
+			    unsigned int flags));
 static void		DeleteWindowsExitProc _ANSI_ARGS_((
 			    ClientData clientData));
 static TkDisplay *	GetScreen _ANSI_ARGS_((Tcl_Interp *interp,
@@ -234,7 +235,7 @@ static void		UnlinkWindow _ANSI_ARGS_((TkWindow *winPtr));
  */
 
 static Tk_Window
-CreateTopLevelWindow(interp, parent, name, screenName)
+CreateTopLevelWindow(interp, parent, name, screenName, flags)
     Tcl_Interp *interp;		/* Interpreter to use for error reporting. */
     Tk_Window parent;		/* Token for logical parent of new window
 				 * (used for naming, options, etc.).  May
@@ -247,6 +248,7 @@ CreateTopLevelWindow(interp, parent, name, screenName)
 				 * variable to determine.  Empty string means
 				 * use parent's screen, or DISPLAY if no
 				 * parent. */
+    unsigned int flags;		/* Additional flags to set on the window. */
 {
     register TkWindow *winPtr;
     register TkDisplay *dispPtr;
@@ -291,6 +293,11 @@ CreateTopLevelWindow(interp, parent, name, screenName)
 
     winPtr = TkAllocWindow(dispPtr, screenId, (TkWindow *) parent);
 
+    /*
+     * Set the flags specified in the call.
+     */
+    winPtr->flags |= flags;
+    
     /*
      * Force the window to use a border pixel instead of border pixmap. 
      * This is needed for the case where the window doesn't use the
@@ -699,6 +706,19 @@ NameWindow(interp, winPtr, parentPtr, name)
     parentPtr->lastChildPtr = winPtr;
     winPtr->mainPtr = parentPtr->mainPtr;
     winPtr->mainPtr->refCount++;
+
+    /*
+     * If this is an anonymous window (ie, it has no name), just return OK
+     * now.
+     */
+    if (winPtr->flags & TK_ANONYMOUS_WINDOW) {
+	return TCL_OK;
+    }
+
+    /*
+     * For non-anonymous windows, set up the window name.
+     */
+
     winPtr->nameUid = Tk_GetUid(name);
 
     /*
@@ -808,7 +828,7 @@ TkCreateMainWindow(interp, screenName, baseName)
      */
 
     tkwin = CreateTopLevelWindow(interp, (Tk_Window) NULL, baseName,
-	    screenName);
+	    screenName, /* flags */ 0);
     if (tkwin == NULL) {
 	return NULL;
     }
@@ -959,7 +979,81 @@ Tk_CreateWindow(interp, parent, name, screenName)
             return (Tk_Window) winPtr;
 	}
     } else {
-	return CreateTopLevelWindow(interp, parent, name, screenName);
+	return CreateTopLevelWindow(interp, parent, name, screenName,
+		/* flags */ 0);
+    }
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * Tk_CreateAnonymousWindow --
+ *
+ *	Create a new internal or top-level window as a child of an
+ *	existing window; this window will be anonymous (unnamed), so
+ *	it will not be visible at the Tcl level.
+ *
+ * Results:
+ *	The return value is a token for the new window.  This
+ *	is not the same as X's token for the window.  If an error
+ *	occurred in creating the window (e.g. no such display or
+ *	screen), then an error message is left in the interp's result and
+ *	NULL is returned.
+ *
+ * Side effects:
+ *	A new window structure is allocated locally.  An X
+ *	window is not initially created, but will be created
+ *	the first time the window is mapped.
+ *
+ *--------------------------------------------------------------
+ */
+
+Tk_Window
+Tk_CreateAnonymousWindow(interp, parent, screenName)
+    Tcl_Interp *interp;		/* Interpreter to use for error reporting.
+				 * the interp's result is assumed to be
+				 * initialized by the caller. */
+    Tk_Window parent;		/* Token for parent of new window. */
+    char *screenName;		/* If NULL, new window will be internal on
+				 * same screen as its parent.  If non-NULL,
+				 * gives name of screen on which to create
+				 * new window;  window will be a top-level
+				 * window. */
+{
+    TkWindow *parentPtr = (TkWindow *) parent;
+    TkWindow *winPtr;
+
+    if ((parentPtr != NULL) && (parentPtr->flags & TK_ALREADY_DEAD)) {
+	Tcl_AppendResult(interp,
+		"can't create window: parent has been destroyed",
+		(char *) NULL);
+	return NULL;
+    } else if ((parentPtr != NULL) &&
+	    (parentPtr->flags & TK_CONTAINER)) {
+	Tcl_AppendResult(interp,
+		"can't create window: its parent has -container = yes",
+		(char *) NULL);
+	return NULL;
+    }
+    if (screenName == NULL) {
+	winPtr = TkAllocWindow(parentPtr->dispPtr, parentPtr->screenNum,
+		parentPtr);
+	/*
+	 * Add the anonymous window flag now, so that NameWindow will behave
+	 * correctly.
+	 */
+
+	winPtr->flags |= TK_ANONYMOUS_WINDOW;
+	if (NameWindow(interp, winPtr, parentPtr, (char *)NULL) != TCL_OK) {
+	    Tk_DestroyWindow((Tk_Window) winPtr);
+	    return NULL;
+	} else {
+            return (Tk_Window) winPtr;
+	}
+	return (Tk_Window) winPtr;
+    } else {
+	return CreateTopLevelWindow(interp, parent, (char *)NULL, screenName,
+		TK_ANONYMOUS_WINDOW);
     }
 }
 
@@ -1080,7 +1174,7 @@ Tk_CreateWindowFromPath(interp, tkwin, pathName, screenName)
 	}
     } else {
 	return CreateTopLevelWindow(interp, parent, pathName+numChars+1,
-		screenName);
+		screenName, /* flags */ 0);
     }
 }
 
@@ -1219,12 +1313,13 @@ Tk_DestroyWindow(tkwin)
      * expensive, but without it no event handlers will get called for
      * windows that don't exist yet.
      *
-     * Note: if the window's pathName is NULL it means that the window
-     * was not successfully initialized in the first place, so we should
-     * not make the window exist or generate the event.
+     * Note: if the window's pathName is NULL and the window is not an
+     * anonymous window, it means that the window was not successfully
+     * initialized in the first place, so we should not make the window exist
+     * or generate the event.
      */
 
-    if (winPtr->pathName != NULL) {
+    if (winPtr->pathName != NULL && !(winPtr->flags & TK_ANONYMOUS_WINDOW)) {
 	if (winPtr->window == None) {
 	    Tk_MakeWindowExist(tkwin);
 	}

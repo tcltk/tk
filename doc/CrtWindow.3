@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CrtWindow.3,v 1.4 1999/04/21 21:53:21 rjohnson Exp $
+'\" RCS: @(#) $Id: CrtWindow.3,v 1.5 2000/10/05 18:31:24 ericm Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateWindow 3 4.2 Tk "Tk Library Procedures"
@@ -18,6 +18,9 @@ Tk_CreateWindow, Tk_CreateWindowFromPath, Tk_DestroyWindow, Tk_MakeWindowExist \
 .sp
 Tk_Window
 \fBTk_CreateWindow\fR(\fIinterp, parent, name, topLevScreen\fR)
+.sp
+Tk_Window
+\fBTk_CreateAnonymousWindow\fR(\fIinterp, parent, topLevScreen\fR)
 .sp
 Tk_Window
 \fBTk_CreateWindowFromPath\fR(\fIinterp, tkwin, pathName, topLevScreen\fR)
@@ -51,9 +54,9 @@ Name of new window, specified as path name within application
 
 .SH DESCRIPTION
 .PP
-The procedures \fBTk_CreateWindow\fR
+The procedures \fBTk_CreateWindow\fR, 
 .VS
-and \fBTk_CreateWindowFromPath\fR
+\fBTk_CreateAnonymousWindow\fR, and \fBTk_CreateWindowFromPath\fR
 are used to create new windows for
 use in Tk-based applications.  Each of the procedures returns a token
 that can be used to manipulate the window in other calls to the Tk
@@ -85,6 +88,12 @@ will not be a child of \fIparent\fR's X window.  For example, a pull-down
 menu's \fIparent\fR would be the button-like window used to invoke it,
 which would in turn be a child of the menu bar window.  A dialog box might
 have the application's main window as its parent.
+.PP
+\fBTk_CreateAnonymousWindow\fR differs from \fBTk_CreateWindow\fR in
+that it creates an unnamed window.  This window will be manipulable
+only using C interfaces, and will not be visible to Tcl scripts.  Both
+interior windows and top-level windows may be created with
+\fBTk_CreateAnonymousWindow\fR.
 .PP
 \fBTk_CreateWindowFromPath\fR offers an alternate way of specifying
 new windows.  In \fBTk_CreateWindowFromPath\fR the new
