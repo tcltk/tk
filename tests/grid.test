@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.21 2003/09/18 18:22:22 pspjuth Exp $
+# RCS: @(#) $Id: grid.test,v 1.22 2003/09/18 20:34:07 pspjuth Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -743,6 +743,12 @@ test grid-10.25 {column/row configure} {
     set res
 } {0 2 1 1 2 2 0 1}
 grid_reset 10.25
+
+test grid-10.26 {column/row configure} {
+    button .b
+    grid columnconfigure .b 0
+} {-minsize 0 -pad 0 -uniform {} -weight 0}
+grid_reset 10.26
 
 # auto-placement tests
 
