@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXColor.c,v 1.2 2002/08/31 06:12:29 das Exp $
+ * RCS: @(#) $Id: tkMacOSXColor.c,v 1.3 2003/07/03 18:47:03 wolfsuit Exp $
  */
 
 #include <tkColor.h>
@@ -330,8 +330,9 @@ TkpGetColorByValue(
  * GetControlPartColor --
  *
  *        Given a part number this function will return the standard
- *        system default color for that part.  It does this by looking
- *        in the system's 'cctb' resource.
+ *        system default color for that part.  On MacOS X this uses the
+ *        Theme Brushes to find the active color, though for now, only
+ *        the "Text Color" is supported.
  *
  * Results:
  *        True if a color is found, false otherwise.
@@ -348,24 +349,21 @@ GetControlPartColor(
     short part,                 /* Part code. */
     RGBColor *macColor)                /* Pointer to Mac color. */
 {
-/* Stubbed out for OS X
-    short index;
-    CCTabHandle ccTab;
-
-    if (defaultAuxCtlHandle == NULL) {
-        GetAuxiliaryControlRecord(NULL, &defaultAuxCtlHandle);
-    }
-    ccTab = (**defaultAuxCtlHandle).acCTable;
-    if(ccTab && (ResError() == noErr)) {
-        for(index = 0; index <= (**ccTab).ctSize; index++) {
-            if((**ccTab).ctTable[index].value == part) {
-                *macColor = (**ccTab).ctTable[index].rgb;
-                return true;
+    int retVal = false;
+    OSErr err; 
+    
+    switch (part) {
+        case cTextColor:
+            err = GetThemeTextColor(kThemeTextColorPushButtonActive, 32, 
+                    true, macColor);
+            if (err == noErr) {
+                retVal = true;
             }
-        }
+            break;
+        default:
+            retVal = false;
     }
-*/
-    return false;
+    return retVal;
 }
 
 /*
