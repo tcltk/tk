@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.13 2000/01/06 02:22:25 hobbs Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.14 2000/01/21 22:44:42 ericm Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -975,7 +975,7 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	# should have been checked before tkFDialog_Update is called, so
 	# we normally won't come to here. Anyways, give an error and abort
 	# action.
-	tk_messageBox -type ok -parent $data(-parent) -message \
+	tk_messageBox -type ok -parent $w -message \
 	    "Cannot change to the directory \"$data(selectPath)\".\nPermission denied."\
 	    -icon warning
 	cd $appPWD
@@ -1255,7 +1255,7 @@ proc tkFDialog_ActivateEnt {w} {
 	}
 	FILE {
 	    if {[string equal $data(type) open]} {
-		tk_messageBox -icon warning -type ok -parent $data(-parent) \
+		tk_messageBox -icon warning -type ok -parent $w \
 		    -message "File \"[file join $path $file]\" does not exist."
 		$data(ent) selection range 0 end
 		$data(ent) icursor end
@@ -1266,20 +1266,20 @@ proc tkFDialog_ActivateEnt {w} {
 	    }
 	}
 	PATH {
-	    tk_messageBox -icon warning -type ok -parent $data(-parent) \
+	    tk_messageBox -icon warning -type ok -parent $w \
 		-message "Directory \"$path\" does not exist."
 	    $data(ent) selection range 0 end
 	    $data(ent) icursor end
 	}
 	CHDIR {
-	    tk_messageBox -type ok -parent $data(-parent) -message \
+	    tk_messageBox -type ok -parent $w -message \
 	       "Cannot change to the directory \"$path\".\nPermission denied."\
 		-icon warning
 	    $data(ent) selection range 0 end
 	    $data(ent) icursor end
 	}
 	ERROR {
-	    tk_messageBox -type ok -parent $data(-parent) -message \
+	    tk_messageBox -type ok -parent $w -message \
 	       "Invalid file name \"$path\"."\
 		-icon warning
 	    $data(ent) selection range 0 end
@@ -1387,7 +1387,7 @@ proc tkFDialog_ListInvoke {w text} {
     if {[file isdirectory $file]} {
 	set appPWD [pwd]
 	if {[catch {cd $file}]} {
-	    tk_messageBox -type ok -parent $data(-parent) -message \
+	    tk_messageBox -type ok -parent $w -message \
 	       "Cannot change to the directory \"$file\".\nPermission denied."\
 		-icon warning
 	} else {
@@ -1420,7 +1420,7 @@ proc tkFDialog_Done {w {selectFilePath ""}} {
 
 	if {[file exists $selectFilePath] && [string equal $data(type) save]} {
 	    set reply [tk_messageBox -icon warning -type yesno\
-		    -parent $data(-parent) -message "File\
+		    -parent $w -message "File\
 		    \"$selectFilePath\" already exists.\nDo\
 		    you want to overwrite it?"]
 	    if {[string equal $reply "no"]} {
