@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.43 2005/01/31 04:08:32 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.44 2005/02/28 22:11:57 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1056,14 +1056,14 @@ GenerateXEvent(hwnd, message, wParam, lParam)
 		Tk_InternAtom((Tk_Window)winPtr, "CLIPBOARD");
 	    event.xselectionclear.time = TkpGetMS();
 	    break;
-	    
+
 	case WM_MOUSEWHEEL:
 	    /*
 	     * The mouse wheel event is closer to a key event than a
 	     * mouse event in that the message is sent to the window
 	     * that has focus.
 	     */
-	    
+
 	case WM_CHAR:
 	case WM_SYSKEYDOWN:
 	case WM_SYSKEYUP:
@@ -1078,7 +1078,7 @@ GenerateXEvent(hwnd, message, wParam, lParam)
 	    /*
 	     * Compute the screen and window coordinates of the event.
 	     */
-	    
+
 	    msgPos = GetMessagePos();
 	    rootPoint = MAKEPOINTS(msgPos);
 	    clientPoint.x = rootPoint.x;
@@ -1110,11 +1110,14 @@ GenerateXEvent(hwnd, message, wParam, lParam)
 		     * We have invented a new X event type to handle
 		     * this event.  It still uses the KeyPress struct.
 		     * However, the keycode field has been overloaded
-		     * to hold the zDelta of the wheel.
+		     * to hold the zDelta of the wheel.  Set nbytes to 0
+		     * to prevent conversion of the keycode to a keysym
+		     * in TkpGetString. [Bug 1118340].
 		     */
-		    
+
 		    event.type = MouseWheelEvent;
 		    event.xany.send_event = -1;
+		    event.xany.nbytes = 0;
 		    event.xkey.keycode = (short) HIWORD(wParam);
 		    break;
 		case WM_SYSKEYDOWN:
