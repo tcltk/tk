@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.22 2005/01/09 18:28:06 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.23 2005/01/31 04:08:32 chengyemao Exp $
  */
 
 #ifndef _TKWININT
@@ -200,6 +200,7 @@ typedef struct TkWinProcs {
 	    HINSTANCE hInstance, LPVOID lpParam);
     BOOL (WINAPI *insertMenu)(HMENU hMenu, UINT uPosition, UINT uFlags,
 	    UINT uIDNewItem, LPCTSTR lpNewItem);
+    int (WINAPI *getWindowText)(HWND hWnd, LPCTSTR lpString, int nMaxCount);
 } TkWinProcs;
 
 EXTERN TkWinProcs *tkWinProcs;
