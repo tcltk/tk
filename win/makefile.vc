@@ -12,7 +12,7 @@
 # Copyright (c) 2001 Tomasoft Engineering.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.51 2002/02/22 02:41:17 hobbs Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.52 2002/03/21 17:48:54 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -393,8 +393,9 @@ cdebug = -Od -Zi
 cdebug = -Z7 -Od -WX
 !endif
 !else
-# This cranks the optimization level to maximize speed
-cdebug = -O2
+# This cranks the optimization level up.  We can't use -02 because sometimes
+# it causes problems.
+cdebug = -Oti
 !endif
 
 # declarations common to all compiler options
