@@ -6,17 +6,14 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.13 2001/07/04 00:40:11 hobbs Exp $
+# RCS: @(#) $Id: canvas.test,v 1.14 2002/07/14 05:48:46 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 # XXX - This test file is woefully incomplete.  At present, only a
 # few of the features are tested.
@@ -135,7 +132,7 @@ test canvas-3.2 {CanvasWidgetCmd, yview option} {
 } {{0 0.5} {0.1 0.6}}
 
 test canvas-4.1 {ButtonEventProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     canvas .c1 -bg #543210
     rename .c1 .c2
     set x {}
@@ -146,7 +143,7 @@ test canvas-4.1 {ButtonEventProc procedure} {
 } {.c1 #543210 {} {}}
 
 test canvas-5.1 {ButtonCmdDeletedProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     canvas .c1
     rename .c1 {}
     list [info command .c*] [winfo children .]
@@ -196,7 +193,7 @@ test canvas-6.5 {CanvasSetOrigin procedure} {
 } {55.0}
 
 set l [interp hidden]
-eval destroy [winfo children .]
+deleteWindows
 
 test canvas-7.1 {canvas widget vs hidden commands} {
     catch {destroy .c}

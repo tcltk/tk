@@ -6,18 +6,19 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clipboard.test,v 1.5 2000/08/01 18:52:45 ericm Exp $
+# RCS: @(#) $Id: clipboard.test,v 1.6 2002/07/14 05:48:46 dgp Exp $
 
 #
 # Note: Multiple display clipboard handling will only be tested if the
 # environment variable TK_ALT_DISPLAY is set to an alternate display.
 #
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-eval destroy [winfo child .]
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 # set up a very large buffer to test INCR retrievals
 set longValue ""

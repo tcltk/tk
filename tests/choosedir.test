@@ -5,13 +5,17 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: choosedir.test,v 1.9 2000/04/10 22:43:13 ericm Exp $
+# RCS: @(#) $Id: choosedir.test,v 1.10 2002/07/14 05:48:46 dgp Exp $
 #
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    package require tcltest
-    namespace import -force ::tcltest::*
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
+
+namespace import -force tcltest::makeDirectory
 
 #----------------------------------------------------------------------
 #

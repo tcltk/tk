@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.12 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: menu.test,v 1.13 2002/07/14 05:48:46 dgp Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -2461,7 +2461,7 @@ test menu-32.9 {Ensure deleting of clones doesn't corrupt menu refs} {
 } {.menubar.cascade .#menubar.#menubar#test.#menubar#cascade .menubar.cascade .#menubar.#menubar#test.#menubar#cascade}
 
 set l [interp hidden]
-eval destroy [winfo children .]
+deleteWindows
 
 test menu-33.1 {menu vs command hiding} {
     catch {destroy .m}

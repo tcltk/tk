@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.19 2002/07/13 21:52:34 dgp Exp $
+# RCS: @(#) $Id: listbox.test,v 1.20 2002/07/14 05:48:46 dgp Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -1295,7 +1295,7 @@ test listbox-8.2 {ListboxEventProc procedure} {fonts} {
     list [.l xview] [.l yview]
 } {{0 0.222222} {0 0.333333}}
 test listbox-8.3 {ListboxEventProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     listbox .l1 -bg #543210
     rename .l1 .l2
     set x {}
@@ -1306,7 +1306,7 @@ test listbox-8.3 {ListboxEventProc procedure} {
 } {.l1 #543210 {} {}}
 
 test listbox-9.1 {ListboxCmdDeletedProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     listbox .l1
     rename .l1 {}
     list [info command .l*] [winfo children .]
@@ -1749,7 +1749,7 @@ test listbox-19.2 {ListboxUpdateVScrollbar procedure} {
     (horizontal scrolling command executed by listbox)}}
 
 set l [interp hidden]
-eval destroy [winfo children .]
+deleteWindows
 
 test listbox-20.1 {listbox vs hidden commands} {
     catch {destroy .l}
@@ -2133,7 +2133,7 @@ test listbox-28.3 {listbox -activestyle} {
 } dotbox
 
 resetGridInfo
-eval destroy [winfo children .]
+deleteWindows
 option clear
 
 # cleanup

@@ -1,15 +1,27 @@
+if {[namespace exists tk::test]} {
+    deleteWindows
+    wm geometry . {}
+    raise .
+    return
+}
+
 package require Tcl 8.4
 
 package require Tk 8.4
 tk appname tktest
 wm title . tktest
+# If the main window isn't already mapped (e.g. because the tests are
+# being run automatically) , specify a precise size for it so that the
+# user won't have to position it manually.
+
+if {![winfo ismapped .]} {
+    wm geometry . +0+0
+    update
+}
 
 package require tcltest 2.1
 
 namespace eval tk {
-    if {[namespace exists test]} {
-	namespace delete test
-    }
     namespace eval test {
 	namespace eval bg {
 	    # Manage a background process.  
@@ -96,6 +108,19 @@ namespace eval tk {
 	proc deleteWindows {} {
 	    eval destroy [winfo children .]
 	}
+
+	namespace export fixfocus 
+	proc fixfocus {} {
+            catch {destroy .focus}
+            toplevel .focus
+            wm geometry .focus +0+0
+            entry .focus.e
+            .focus.e insert 0 "fixfocus"
+            pack .focus.e
+            update
+            focus -force .focus.e
+            destroy .focus
+	}
     }
 }
 
@@ -111,6 +136,7 @@ testConstraint noExceed [expr {![testConstraint unix]
 testConstraint testImageType [expr {[lsearch [image types] test] >= 0}]
 testConstraint testembed [llength [info commands testembed]]
 testConstraint testwrapper [llength [info commands testwrapper]]
+testConstraint testfont [llength [info commands testfont]]
 testConstraint fonts 1
 destroy .e
 entry .e -width 0 -font {Helvetica -12} -bd 1
@@ -129,6 +155,19 @@ destroy .t
 if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
     testConstraint fonts 0
 }
+testConstraint pseudocolor8 [expr {([catch {
+                        toplevel .t -visual {pseudocolor 8} -colormap new
+                        }] == 0) && ([winfo depth .t] == 8)}]
+destroy .t
+setupbg
+set app [dobg {tk appname}]
+testConstraint secureserver 1
+if {[catch {send $app set a 0} msg] == 1} {
+    if {[string match "X server insecure *" $msg]} {
+        testConstraint secureserver 0
+    }
+}
+cleanupbg
 
 eval tcltest::configure $argv
 namespace import -force tcltest::test
