@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.21 2004/07/02 23:36:24 georgeps Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.22 2004/07/05 22:27:12 georgeps Exp $
  */
 
 #include "tkPort.h"
@@ -213,11 +213,11 @@ static TkWindow *       GetTkWindowFromXEvent _ANSI_ARGS_((XEvent *eventPtr));
 #ifdef TK_USE_INPUT_METHODS
 static int              InvokeInputMethods _ANSI_ARGS_((TkWindow *winPtr, 
 			    XEvent *eventPtr));
-#endif
-
 #if TK_XIM_SPOT
 static void             CreateXIMSpotMethods _ANSI_ARGS_((TkWindow *winPtr));
 #endif
+
+#endif /* TK_USE_INPUT_METHODS */
 
 static int              InvokeMouseHandlers _ANSI_ARGS_((TkWindow *winPtr, 
 			    unsigned long mask, XEvent *eventPtr));
@@ -329,7 +329,7 @@ InvokeMouseHandlers(winPtr, mask, eventPtr)
  *
  *---------------------------------------------------------
  */
-#if TK_XIM_SPOT
+#if defined(TK_USE_INPUT_METHODS) && TK_XIM_SPOT
 static void
 CreateXIMSpotMethods(winPtr)
     TkWindow *winPtr;
@@ -379,7 +379,7 @@ CreateXIMSpotMethods(winPtr)
 	    NULL);
     }
 }
-#endif /*TK_XIM_SPOT*/
+#endif
 
 /*
  *----------------------------------------------------------
