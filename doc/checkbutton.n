@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: checkbutton.n,v 1.7 2004/02/18 00:40:23 hobbs Exp $
+'\" RCS: @(#) $Id: checkbutton.n,v 1.8 2004/08/16 14:01:10 dkf Exp $
 '\" 
 .so man.macros
 .TH checkbutton n 4.4 Tk "Tk Built-In Commands"
@@ -16,14 +16,14 @@ checkbutton \- Create and manipulate checkbutton widgets
 .SH SYNOPSIS
 \fBcheckbutton\fI pathName \fR?\fIoptions\fR?
 .SO
-\-activebackground	\-font	\-pady
-\-activeforeground	\-foreground	\-relief
-\-anchor	\-highlightbackground	\-takefocus
-\-background	\-highlightcolor	\-text
-\-bitmap	\-highlightthickness	\-textvariable
-\-borderwidth	\-image	\-underline
+\-activebackground	\-disabledforeground	\-padx
+\-activeforeground	\-font	\-pady
+\-anchor	\-foreground	\-relief
+\-background	\-highlightbackground	\-takefocus
+\-bitmap	\-highlightcolor	\-text
+\-borderwidth	\-highlightthickness	\-textvariable
+\-compound	\-image	\-underline
 \-cursor	\-justify	\-wraplength
-\-disabledforeground	\-padx
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-command command Command
