@@ -1,3 +1,15 @@
+2003-12-15  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* generic/tkText.h: 
+	* generic/tkText.h:
+	* generic/tkTextBTree.c:
+	* generic/tkTextDisp.c:
+	* generic/tkTextIndex.c: improved documentation in comments to
+	explain how pixel heights are kept track of.  Also ensured 
+	correct clean-up of elide-state calculation, even with very
+	large numbers of tags.  Also provided slightly better updating
+	of cache for totally elided display lines.
+
 2003-12-12  David Gravereaux <davygrvy@pobox.com>
 
 	* win/tkWinEmbed.c (TkWinEmbeddedEventProc) : for loop dereferences

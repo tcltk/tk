@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.12 2003/11/12 17:19:18 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.13 2003/12/15 11:51:06 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -1473,6 +1473,7 @@ TkTextIndexForwChars(textPtr, srcPtr, charCount, dstPtr, type)
     }
   forwardCharDone:
     if (infoPtr != NULL) {
+	TkTextFreeElideInfo(infoPtr);
 	ckfree((char*) infoPtr);
     }
 }
@@ -1662,6 +1663,7 @@ TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type)
     }
   countDone:
     if (infoPtr != NULL) {
+	TkTextFreeElideInfo(infoPtr);
 	ckfree((char*) infoPtr);
     }
     return count;
@@ -1920,6 +1922,7 @@ TkTextIndexBackChars(textPtr, srcPtr, charCount, dstPtr, type)
     }
   backwadCharDone:
     if (infoPtr != NULL) {
+	TkTextFreeElideInfo(infoPtr);
 	ckfree((char*) infoPtr);
     }
 }
