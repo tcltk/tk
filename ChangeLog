@@ -1,5 +1,11 @@
 2001-09-09  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* win/Makefile.in: Fix Windows Makefile so that
+	tcltest will automatically be compiled if the
+	user tries to build tktest.
+
+2001-09-09  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* win/Makefile.in: Use TKTEST variable directly
 	instead of depending on the tktest alias.
 

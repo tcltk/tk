@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.43 2001/09/10 00:40:54 mdejong Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.44 2001/09/10 03:23:54 mdejong Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -123,6 +123,7 @@ SHARED_LIBRARIES 	= $(TK_DLL_FILE) $(TK_STUB_LIB_FILE)
 STATIC_LIBRARIES	= $(TK_LIB_FILE)
 
 WISH			= wish$(VER)${EXESUFFIX}
+TCLTEST			= $(TCL_BIN_DIR)/tcltest${EXEEXT}
 TKTEST			= tktest${EXEEXT}
 CAT32			= cat32$(EXEEXT)
 MAN2TCL			= man2tcl$(EXEEXT)
@@ -500,7 +501,13 @@ $(WISH): $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(WISH_OBJS) wish.$(RES)
 
 tktest : $(TKTEST)
 
-$(TKTEST): $(TK_LIB_FILE) $(TKTEST_OBJS) wish.$(RES) $(CAT32)
+# This rule is executed if the user tried to run tktest without first
+# building tcltest in the Tcl bin directory. Just do it for them.
+$(TCLTEST):
+	cd ${TCL_BIN_DIR} ; \
+	make tcltest
+
+$(TKTEST): $(TCLTEST) $(TK_LIB_FILE) $(TKTEST_OBJS) wish.$(RES) $(CAT32)
 	$(CC) $(CFLAGS) $(TKTEST_OBJS_NATIVE) $(TCL_LIB_FILE) \
 	$(TK_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
