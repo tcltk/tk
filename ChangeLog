@@ -1,3 +1,8 @@
+2002-07-19  D. Richard Hipp  <drh@hwaci.com>
+
+	* library/mkpsec.tcl: Fix a bug that was causing postscript generation
+	to fail under Win2K.
+
 2002-07-18  Reinhard Max  <max@suse.de>
 
 	* unix/tkUnixSend.c: Using Tcl_GetTime instead of TclpGetTime.
