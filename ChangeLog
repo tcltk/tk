@@ -1,3 +1,8 @@
+1999-07-22    <redman@scriptics.com>
+
+	* library/menu.tcl: Applied patch from Jeff Hobbs to fix typo.
+	[Bug: 2425]
+	
 1999-07-21    <redman@scriptics.com>
 
 	* unix/Makefile.in: Add Windows configure script to distribution.

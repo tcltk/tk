@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.6 1999/05/07 20:05:40 stanton Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.7 1999/07/22 16:31:48 redman Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -934,7 +934,7 @@ proc tkMenuFind {w char} {
 			[$child cget -underline]]
               if {![string compare $char [string tolower $char2]]
                       || ![string compare $char ""]} {
-                  if {[string compare [$child cget $i -state] "disabled"]} {
+                  if {[string compare [$child cget -state] "disabled"]} {
 			return $child
 		    }
 		}
