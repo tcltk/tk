@@ -8,7 +8,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixButton.test,v 1.5 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: unixButton.test,v 1.6 2003/02/25 01:39:56 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -163,21 +163,37 @@ test unixbutton-1.11 {TkpComputeButtonGeometry procedure} unix {
     list [winfo reqwidth .b2] [winfo reqheight .b2]
 } {27 37}
 
+test unixbutton-2.1 {disabled coloring check, bug 669595} unix {
+    # this was just a visual bug, but at least this shows the visual
+    deleteWindows
+    set on 1
+    set off 0
+    label .l -text "The following widgets should\
+	    \nshow significant visible diffs\
+	    \nfor selected vs unselected."
+    checkbutton .cb0 -anchor w -state disabled \
+	    -text Unselected -variable off
+    checkbutton .cb1 -anchor w -state disabled \
+	    -text Selected -variable on
+    checkbutton .cb2 -anchor w -state disabled \
+	    -text Unselected -variable off -disabledforeground ""
+    checkbutton .cb3 -anchor w -state disabled \
+	    -text Selected -variable on -disabledforeground ""
+    radiobutton .rb0 -anchor w -state disabled \
+	    -text Unselected -variable off
+    radiobutton .rb1 -anchor w -state disabled \
+	    -text Selected -variable on -value 1
+    radiobutton .rb2 -anchor w -state disabled \
+	    -text Unselected -variable off -disabledforeground ""
+    radiobutton .rb3 -anchor w -state disabled \
+	    -text Selected -variable on -value 1 -disabledforeground ""
+    pack .l .cb0 .cb1 .cb2 .cb3 .rb0 .rb1 .rb2 .rb3 -side top -fill x
+    after 400
+    set on
+} 1
+
 deleteWindows
 
 # cleanup
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
