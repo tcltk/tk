@@ -1,4 +1,13 @@
+2002-08-08  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* tests/wm.test: Add deleteWindows at start of
+	new transient tests so they do not fail if the
+	toplevels already exist.
+	* unix/tkUnixWm.c: Revert patch for Tk Bug #592201
+	which incorrectly removed numTransients member.
+
 2002-08-08  Joe English  <jenglish@users.sourceforge.net>
+
 	* unix/tkUnixWm.c:
 	* win/tkWinWm.c:
 	* tests/wm.test: Fix for Tk Bug #592201 "wm transient fails with two

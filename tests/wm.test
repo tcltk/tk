@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.17 2002/08/08 22:32:11 jenglish Exp $
+# RCS: @(#) $Id: wm.test,v 1.18 2002/08/08 23:45:01 mdejong Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -1375,6 +1375,7 @@ test wm-transient-6.2 { a withdrawn transient does not track
 # 7.1 and 7.2 added to catch (potential) future errors.
 #
 test wm-transient-7.1 {Destroying transient} {
+    deleteWindows
     toplevel .t 
     toplevel .transient 
     wm transient .transient .t
@@ -1384,6 +1385,7 @@ test wm-transient-7.1 {Destroying transient} {
 } {}
 
 test wm-transient-7.2 {Destroying master} {
+    deleteWindows
     toplevel .t
     toplevel .transient 
     wm transient .transient .t
@@ -1394,6 +1396,7 @@ test wm-transient-7.2 {Destroying master} {
 } {}
 
 test wm-transient-7.3 {Reassign transient, destroy old master} {
+    deleteWindows
     toplevel .t1 
     toplevel .t2 
     toplevel .transient
@@ -1405,6 +1408,7 @@ test wm-transient-7.3 {Reassign transient, destroy old master} {
 } {}
 
 test wm-transient-7.4 {Reassign transient, destroy new master} {
+    deleteWindows
     toplevel .t1 
     toplevel .t2 
     toplevel .transient
@@ -1416,6 +1420,7 @@ test wm-transient-7.4 {Reassign transient, destroy new master} {
 } {}
 
 test wm-transient-7.5 {Reassign transient, destroy transient} {
+    deleteWindows
     toplevel .t1 
     toplevel .t2 
     toplevel .transient
