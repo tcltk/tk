@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.2 2003/05/31 18:23:08 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.3 2003/05/31 23:00:36 jenglish Exp $
  */
 
 #include "tkUnixInt.h"
@@ -136,40 +136,7 @@ InitFont (Tk_Window tkwin, FcPattern *pattern)
 	    fontPtr->faces[i].charset = 0;
     }
 
-    /*
-     * Build the Tk font structure
-     */
-    if (XftPatternGetString (pattern, XFT_FAMILY, 0, &family) != XftResultMatch)
-	family = "Unknown";
-    
-    if (XftPatternGetInteger (pattern, XFT_WEIGHT, 0, &weight) != XftResultMatch)
-	weight = XFT_WEIGHT_MEDIUM;
-    if (weight <= XFT_WEIGHT_MEDIUM)
-	weight = TK_FW_NORMAL;
-    else
-	weight = TK_FW_BOLD;
-    
-    if (XftPatternGetInteger (pattern, XFT_SLANT, 0, &slant) != XftResultMatch)
-	slant = XFT_SLANT_ROMAN;
-    if (slant <= XFT_SLANT_ROMAN)
-	slant = TK_FS_ROMAN;
-    else
-	slant = TK_FS_ITALIC;
-    
-    if (XftPatternGetDouble (pattern, XFT_SIZE, 0, &size) != XftResultMatch)
-	size = 12.0;
-    
-    if (XftPatternGetInteger (pattern, XFT_SPACING, 0, &spacing) != XftResultMatch)
-	spacing = XFT_PROPORTIONAL;
-    if (spacing == XFT_PROPORTIONAL)
-	spacing = 0;
-    else
-	spacing = 1;
-#if DEBUG_FONTSEL
-    printf ("family %s size %g weight %d slant %d\n", family, size, weight, slant);
-#endif
     fontPtr->font.fid	= XLoadFont (Tk_Display (tkwin), "fixed");
-    
     fontPtr->display	= Tk_Display (tkwin);
     fontPtr->screen	= Tk_ScreenNumber (tkwin);
     fontPtr->ftDraw	= 0;
@@ -179,7 +146,47 @@ InitFont (Tk_Window tkwin, FcPattern *pattern)
     fontPtr->color.color.blue = 0;
     fontPtr->color.color.alpha= 0xffff;
     fontPtr->color.pixel = 0xffffffff;
+
+    ftFont              = GetFont (fontPtr, 0);
+
+    /*
+     * Build the Tk font structure
+     */
+    if (XftPatternGetString (ftFont->pattern, XFT_FAMILY, 0, &family) 
+	    != XftResultMatch)
+	family = "Unknown";
     
+    if (XftPatternGetInteger (ftFont->pattern, XFT_WEIGHT, 0, &weight) 
+	    	!= XftResultMatch)
+	weight = XFT_WEIGHT_MEDIUM;
+    if (weight <= XFT_WEIGHT_MEDIUM)
+	weight = TK_FW_NORMAL;
+    else
+	weight = TK_FW_BOLD;
+    
+    if (XftPatternGetInteger (ftFont->pattern, XFT_SLANT, 0, &slant) 
+	    	!= XftResultMatch)
+	slant = XFT_SLANT_ROMAN;
+    if (slant <= XFT_SLANT_ROMAN)
+	slant = TK_FS_ROMAN;
+    else
+	slant = TK_FS_ITALIC;
+    
+    if (XftPatternGetDouble (ftFont->pattern, XFT_SIZE, 0, &size) 
+	    	!= XftResultMatch)
+	size = 12.0;
+    
+    if (XftPatternGetInteger (ftFont->pattern, XFT_SPACING, 0, &spacing) 
+	    	!= XftResultMatch)
+	spacing = XFT_PROPORTIONAL;
+    if (spacing == XFT_PROPORTIONAL)
+	spacing = 0;
+    else
+	spacing = 1;
+#if DEBUG_FONTSEL
+    printf ("family %s size %g weight %d slant %d\n", family, size, weight, slant);
+#endif
+
     faPtr		= &fontPtr->font.fa;
     faPtr->family	= family;
     faPtr->size		= (int) size;
@@ -188,7 +195,6 @@ InitFont (Tk_Window tkwin, FcPattern *pattern)
     faPtr->underline	= 0;
     faPtr->overstrike	= 0;
 
-    ftFont              = GetFont (fontPtr, 0);
     fmPtr		= &fontPtr->font.fm;
     fmPtr->ascent	= ftFont->ascent;
     fmPtr->descent	= ftFont->descent;
