@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPort.h,v 1.3.4.1 1999/03/06 00:07:09 redman Exp $
+ * RCS: @(#) $Id: tkWinPort.h,v 1.3.4.2 1999/03/06 23:07:53 stanton Exp $
  */
 
 #ifndef _WINPORT
@@ -111,5 +111,15 @@ struct timezone {
 };
 
 extern int gettimeofday(struct timeval *, struct timezone *);
+
+/*
+ * tclInt.h is included to get declarations of the following functions.
+ *	void		panic _ANSI_ARGS_(TCL_VARARGS(char *,format));
+ *	void		TclpGetTime _ANSI_ARGS_((Tcl_Time *time));
+ */
+  
+#ifndef _TCLINT
+#   include <tclInt.h>
+#endif
 
 #endif /* _WINPORT */

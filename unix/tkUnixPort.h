@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixPort.h,v 1.3 1998/09/30 19:01:22 rjohnson Exp $
+ * RCS: @(#) $Id: tkUnixPort.h,v 1.3.4.1 1999/03/06 23:07:53 stanton Exp $
  */
 
 #ifndef _UNIXPORT
@@ -176,13 +176,6 @@ extern int errno;
 #endif
 
 /*
- * Declarations for various library procedures that may not be declared
- * in any other header file.
- */
-
-extern void		panic _ANSI_ARGS_(TCL_VARARGS(char *, string));
-
-/*
  * These functions do nothing under Unix, so we just eliminate calls to them.
  */
 
@@ -221,10 +214,13 @@ extern void		panic _ANSI_ARGS_(TCL_VARARGS(char *, string));
 #define ALWAYS_SHOW_SELECTION
 
 /*
- * The following declaration is used to get access to a private Tcl interface
- * that is needed for portability reasons.
+ * tclInt.h is included to get declarations of the following functions.
+ *	void		panic _ANSI_ARGS_(TCL_VARARGS(char *,format));
+ *	void		TclpGetTime _ANSI_ARGS_((Tcl_Time *time));
  */
-
-EXTERN void		TclpGetTime _ANSI_ARGS_((Tcl_Time *time));
+  
+#ifndef _TCLINT
+#   include <tclInt.h>
+#endif
 
 #endif /* _UNIXPORT */

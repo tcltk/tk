@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.19.4.1 1999/03/06 00:08:01 redman Exp $
+ * RCS: @(#) $Id: tk.h,v 1.19.4.2 1999/03/06 23:07:51 stanton Exp $
  */
 
 #ifndef _TK
@@ -82,9 +82,15 @@
 #   include <stddef.h>
 #endif
 
+#undef TCL_STORAGE_CLASS
 #ifdef BUILD_tk
-# undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLEXPORT
+#else
+# ifdef USE_TK_STUBS
+#  define TCL_STORAGE_CLASS
+# else
+#  define TCL_STORAGE_CLASS DLLIMPORT
+# endif
 #endif
 
 /*
@@ -1045,6 +1051,30 @@ typedef Tk_RestrictAction (Tk_RestrictProc) _ANSI_ARGS_((
 typedef int (Tk_SelectionProc) _ANSI_ARGS_((ClientData clientData,
 	int offset, char *buffer, int maxBytes));
 
+
+/*
+ * Public functions that are not accessible via the stubs table.
+ */
+
+EXTERN void		Tk_Main _ANSI_ARGS_((int argc, char **argv,
+			    Tcl_AppInitProc *appInitProc));
+EXTERN void		Tk_MainEx _ANSI_ARGS_((int argc, char **argv,
+			    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp));
+
+/*
+ * Stubs initialization function.  This function should be invoked before
+ * any other Tk functions in a stubs-aware extension.  Tk_InitStubs is
+ * implemented in the stub library, not the main Tk library.  In directly
+ * linked code, this function turns into a call to Tcl_PkgRequire().
+ */
+
+EXTERN char *		Tk_InitStubs _ANSI_ARGS_((Tcl_Interp *interp,
+			    char *version, int exact));
+
+#ifndef USE_TK_STUBS
+#define Tk_InitStubs(interp, version, exact) \
+ 	 Tcl_PkgRequire(interp, "Tk", version, exact)
+#endif
 
 #include "tkDecls.h"
 

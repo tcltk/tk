@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.11.4.1 1999/03/06 02:23:18 redman Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.11.4.2 1999/03/06 23:07:52 stanton Exp $
 
 # Current Tk version;  used in various names.
 
@@ -137,7 +137,8 @@ TK_STUB_LIB_FILE = @TK_STUB_LIB_FILE@
 TK_STUB_LIB_FLAG = @TK_STUB_LIB_FLAG@
 #TK_STUB_LIB_FLAG = -ltkstub
 
-
+TCL_STUB_FLAGS = @TCL_STUB_FLAGS@
+#TCL_STUB_FLAGS = -DUSE_TCL_STUBS
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
@@ -178,6 +179,9 @@ TK_LIB_FILE = @TK_LIB_FILE@
 TK_LIB_FLAG = @TK_LIB_FLAG@
 #TK_LIB_FLAG = -ltk
 
+TK_EXP_FILE = @TK_EXP_FILE@
+TK_BUILD_EXP_FILE = @TK_BUILD_EXP_FILE@
+
 # The symbol below provides support for dynamic loading and shared
 # libraries.  See configure.in for a description of what it means.
 # The values of the symbolis normally set by the configure script.
@@ -217,20 +221,21 @@ CC_SWITCHES =	${CFLAGS} ${CFLAGS_WARNING} ${TK_SHLIB_CFLAGS} \
 -I${UNIX_DIR} -I${GENERIC_DIR} \
 -I${BMAP_DIR} -I${TCL_GENERIC_DIR} ${X11_INCLUDES} \
 ${AC_FLAGS} ${PROTO_FLAGS} \
-${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS}
+${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
+${TCL_STUB_FLAGS}
 
 STUB_CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I${UNIX_DIR} -I${GENERIC_DIR} \
 -I${BMAP_DIR} -I${TCL_GENERIC_DIR} ${X11_INCLUDES} \
 ${AC_FLAGS} ${PROTO_FLAGS} \
-${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS}\
+${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} ${TCL_STUB_FLAGS} \
  -DTK_SHLIB_EXT=\"${SHLIB_SUFFIX}\"
 
 DEPEND_SWITCHES = ${CFLAGS} -I${UNIX_DIR} -I${GENERIC_DIR} \
 -I${BMAP_DIR} \
 -I${TCL_GENERIC_DIR} ${X11_INCLUDES} \
 ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} \
-${KEYSYM_FLAGS} -DTK_SHLIB_EXT=\"${SHLIB_SUFFIX}\" $(STUB_FLAGS)
+${KEYSYM_FLAGS} $(TCL_STUB_FLAGS) -DTK_SHLIB_EXT=\"${SHLIB_SUFFIX}\"
 
 WISH_OBJS = tkAppInit.o
 
@@ -264,6 +269,10 @@ OBJS =  tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkClipboard.o tkCmds.o \
 	tkMain.o tkOption.o tkPack.o tkPlace.o \
 	tkSelect.o tkUtil.o tkVisual.o tkWindow.o \
 	$(UNIXOBJS) $(WIDGOBJS) $(CANVOBJS) $(IMAGEOBJS) $(TEXTOBJS)
+
+TK_DECLS = \
+	$(GENERIC_DIR)/tk.decls \
+	$(GENERIC_DIR)/tkInt.decls
 
 SRCS = \
 	$(GENERIC_DIR)/tk3d.c $(GENERIC_DIR)/tkArgv.c \
@@ -393,7 +402,7 @@ install: install-binaries install-libraries install-demos install-man
 # some ranlibs write to current directory, and this might not always be
 # possible (e.g. if installing as root).
 
-install-binaries: $(TK_LIB_FILE) wish
+install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) ; \
 	    do \
 	    if [ ! -d $$i ] ; then \
@@ -407,10 +416,20 @@ install-binaries: $(TK_LIB_FILE) wish
 	@$(INSTALL_DATA) $(TK_LIB_FILE) $(LIB_INSTALL_DIR)/$(TK_LIB_FILE)
 	@(cd $(LIB_INSTALL_DIR); $(RANLIB) $(TK_LIB_FILE))
 	@chmod 555 $(LIB_INSTALL_DIR)/$(TK_LIB_FILE)
+	@if test "$(TK_BUILD_EXP_FILE)" != ""; then \
+	    echo "Installing $(TK_EXP_FILE)"; \
+	    $(INSTALL_DATA) $(TK_BUILD_EXP_FILE) \
+			$(LIB_INSTALL_DIR)/$(TK_EXP_FILE); \
+	    fi
 	@echo "Installing wish"
 	@$(INSTALL_PROGRAM) wish $(BIN_INSTALL_DIR)/wish$(VERSION)
 	@echo "Installing tkConfig.sh"
 	@$(INSTALL_DATA) tkConfig.sh $(LIB_INSTALL_DIR)/tkConfig.sh
+	@if test "$(TK_STUB_LIB_FILE)" != "" ; then \
+	    echo "Installing $(TK_STUB_LIB_FILE)"; \
+	    $(INSTALL_DATA) $(STUB_LIB_FILE) \
+			 $(LIB_INSTALL_DIR)/$(TK_STUB_LIB_FILE); \
+	    fi
 
 install-libraries:
 	@for i in $(INSTALL_ROOT)$(prefix)/lib $(INCLUDE_INSTALL_DIR) \
@@ -795,25 +814,57 @@ tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixXId.c
 
 tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubInit.c
+	$(CC) -c $(C__SWITCHES) $(GENERIC_DIR)/tkStubInit.c
+
+
+# Stub library binaries, these must be compiled for use in a shared library
+# even though they will be placed in a static archive
 
 tkStubs.o: $(GENERIC_DIR)/tkStubs.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubs.c
+	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkStubs.c
 
 tkIntStubs.o: $(GENERIC_DIR)/tkIntStubs.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkIntStubs.c
+	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkIntStubs.c
 
 tkPlatStubs.o: $(GENERIC_DIR)/tkPlatStubs.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkPlatStubs.c
+	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkPlatStubs.c
 
 tkIntPlatStubs.o: $(GENERIC_DIR)/tkIntPlatStubs.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkIntPlatStubs.c
+	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkIntPlatStubs.c
 
 tkIntXlibStubs.o: $(GENERIC_DIR)/tkIntXlibStubs.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkIntXlibStubs.c
+	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkIntXlibStubs.c
+
+tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
+	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkStubLib.c
 
 .c.o:
 	$(CC) -c $(CC_SWITCHES) $<
+
+#
+# Target to regenerate header files and stub files from the *.decls tables.
+#
+
+genstubs:
+	tclsh $(TOOL_DIR)/genStubs.tcl $(GENERIC_DIR) \
+		$(GENERIC_DIR)/tk.decls $(GENERIC_DIR)/tkInt.decls
+
+#
+# Target to check that all exported functions have an entry in the stubs
+# tables.
+#
+
+checkstubs:
+	-@for i in `nm -p $(TK_LIB_FILE) | awk '$$2 ~ /T/ { print $$3 }' \
+		| sort -n`; do \
+		match=0; \
+		for j in $(TK_DECLS); do \
+		    if [ `grep -c $$i $$j` -gt 0 ]; then \
+			match=1; \
+		    fi; \
+		done; \
+		if [ $$match -eq 0 ]; then echo $$i; fi \
+	done
 
 #
 # Target to check for proper usage of UCHAR macro.
