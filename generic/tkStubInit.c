@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.41 2003/01/22 14:33:00 dkf Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.42 2003/03/06 15:05:40 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1010,9 +1010,9 @@ TkStubs tkStubs = {
     Tk_PhotoPutZoomedBlock_NoComposite, /* 145 */
     Tk_PhotoGetImage, /* 146 */
     Tk_PhotoBlank, /* 147 */
-    Tk_PhotoExpand, /* 148 */
+    Tk_PhotoExpand_Panic, /* 148 */
     Tk_PhotoGetSize, /* 149 */
-    Tk_PhotoSetSize, /* 150 */
+    Tk_PhotoSetSize_Panic, /* 150 */
     Tk_PointToChar, /* 151 */
     Tk_PostscriptFontName, /* 152 */
     Tk_PreserveColormap, /* 153 */
@@ -1108,8 +1108,8 @@ TkStubs tkStubs = {
     Tk_SetInternalBorderEx, /* 243 */
     Tk_SetMinimumRequestSize, /* 244 */
     Tk_SetCaretPos, /* 245 */
-    Tk_PhotoPutBlock, /* 246 */
-    Tk_PhotoPutZoomedBlock, /* 247 */
+    Tk_PhotoPutBlock_Panic, /* 246 */
+    Tk_PhotoPutZoomedBlock_Panic, /* 247 */
     Tk_CollapseMotionEvents, /* 248 */
     Tk_RegisterStyleEngine, /* 249 */
     Tk_GetStyleEngine, /* 250 */
@@ -1127,6 +1127,10 @@ TkStubs tkStubs = {
     Tk_GetElementBox, /* 262 */
     Tk_GetElementBorderWidth, /* 263 */
     Tk_DrawElement, /* 264 */
+    Tk_PhotoExpand, /* 265 */
+    Tk_PhotoPutBlock, /* 266 */
+    Tk_PhotoPutZoomedBlock, /* 267 */
+    Tk_PhotoSetSize, /* 268 */
 };
 
 /* !END!: Do not edit above this line. */
