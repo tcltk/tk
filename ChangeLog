@@ -1,3 +1,8 @@
+2000-10-06  Jeff Hobbs  <hobbs@ajubasolutions.com>
+
+	* win/Makefile.in (cat32.${OBJEXT}): add win/ subdirectory to
+	cat32 target to correctly find the source file.
+
 2000-10-05  Eric Melski  <ericm@ajubasolutions.com>
 
 	* generic/tkCmds.c (Tk_WinfoObjCmd): Added check for
