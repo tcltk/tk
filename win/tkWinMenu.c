@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.4.2.1 2005/01/04 05:07:03 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.4.2.2 2005/01/19 02:03:48 chengyemao Exp $
  */
 
 #define OEMRESOURCE
@@ -537,7 +537,6 @@ ReconfigureWindowsMenu(
     UINT flags;
     UINT itemID;
     int i, count, systemMenu = 0, base;
-    int width, height;
     Tcl_DString translatedText;
   
     if (NULL == winMenuHdl) {
@@ -549,13 +548,6 @@ ReconfigureWindowsMenu(
      * problem.
      *
      */
-
-    if ((menuPtr->menuType == MENUBAR)
-	    && (menuPtr->parentTopLevelPtr != NULL)) {
-	width = Tk_Width(menuPtr->parentTopLevelPtr);
-	height = Tk_Height(menuPtr->parentTopLevelPtr);
-    }
-
     base = (menuPtr->menuFlags & MENU_SYSTEM_MENU) ? 7 : 0;
     count = GetMenuItemCount(winMenuHdl);
     for (i = base; i < count; i++) {
@@ -703,7 +695,6 @@ ReconfigureWindowsMenu(
     if ((menuPtr->menuType == MENUBAR) 
 	    && (menuPtr->parentTopLevelPtr != NULL)) {
 	DrawMenuBar(TkWinGetWrapperWindow(menuPtr->parentTopLevelPtr));
-	Tk_GeometryRequest(menuPtr->parentTopLevelPtr, width, height);
     }
     
     menuPtr->menuFlags &= ~(MENU_RECONFIGURE_PENDING);
@@ -935,7 +926,7 @@ TkWinEmbeddedMenuProc(hwnd, message, wParam, lParam)
     WPARAM wParam;
     LPARAM lParam;
 {
-    static nPopupMenus = 0, nIdles = 0;
+    static nIdles = 0;
     LRESULT lResult = 1;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -950,12 +941,7 @@ TkWinEmbeddedMenuProc(hwnd, message, wParam, lParam)
 	
 	case WM_INITMENUPOPUP:
 	nIdles = 0;
-	nPopupMenus++;
 	break;
-
-	case WM_UNINITMENUPOPUP:
-	nPopupMenus--;
- 	break;
 
 	case WM_INITMENU:
 	case WM_SYSCOMMAND:
@@ -1104,9 +1090,9 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		    Tcl_BackgroundError(interp);
 		}
 		Tcl_Release((ClientData)interp);
+		*plResult = 0;
+		returnResult = 1;
 	    }
-	    *plResult = 0;
-	    returnResult = 1;
 	    break;
 	}
 
@@ -1145,7 +1131,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 	case WM_MEASUREITEM: {
 	    LPMEASUREITEMSTRUCT itemPtr = (LPMEASUREITEMSTRUCT) *plParam;
     
-	    if (itemPtr != NULL) {
+	    if (itemPtr != NULL && itemPtr->itemData != 0 && tsdPtr->modalMenuPtr != NULL) {
 		mePtr = (TkMenuEntry *) itemPtr->itemData;
 		menuPtr = mePtr->menuPtr;
 
@@ -1174,7 +1160,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 	    Tk_FontMetrics fontMetrics;
 	    int drawArrow = 0;
 
-	    if (itemPtr != NULL) {
+	    if (itemPtr != NULL && itemPtr->itemData != 0 && tsdPtr->modalMenuPtr != NULL) {
 		Tk_Font tkfont;
 
 		mePtr = (TkMenuEntry *) itemPtr->itemData;
@@ -1217,9 +1203,9 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 			- itemPtr->rcItem.left, itemPtr->rcItem.bottom
 			- itemPtr->rcItem.top, 0, drawArrow);
 		ckfree((char *) twdPtr);
-		*plResult = 1;
-		returnResult = 1;
 	    }
+    	    *plResult = 1;
+	    returnResult = 1;
 	    break;
 	}
 
@@ -1244,14 +1230,15 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		}
 
 		if (menuPtr != NULL) {
+		    long entryIndex = LOWORD(*pwParam);
 	    	    mePtr = NULL;
-		    if (flags != 0xFFFF) {
+		    if (flags != 0xFFFF && entryIndex < menuPtr->numEntries) {
 			if (flags & MF_POPUP) {
-			    mePtr = menuPtr->entries[LOWORD(*pwParam)];
+			    mePtr = menuPtr->entries[entryIndex];
 			} else {
 			    hashEntryPtr = Tcl_FindHashEntry(
                                     &tsdPtr->commandTable,
-				    (char *) LOWORD(*pwParam));
+				    (char *) entryIndex);
 			    if (hashEntryPtr != NULL) {
 				mePtr = (TkMenuEntry *) 
 					Tcl_GetHashValue(hashEntryPtr);
@@ -1269,6 +1256,8 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		    }
 		    MenuSelectEvent(menuPtr);
 		    Tcl_ServiceAll();
+		    *plResult = 0;
+		    returnResult = 1;
 		}
 	    }
 	    break;
