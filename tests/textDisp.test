@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.7 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.8 2002/11/22 23:25:20 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -1448,6 +1448,17 @@ test textDisp-13.9 {TkTextSeeCmd procedure} {fonts} {
     .t see 30.90
     lappend x [.t bbox 30.90]
 } {{80 55 7 13} {136 55 7 13} {136 55 7 13} {80 55 7 13}}
+test textDisp-13.10 {TkTextSeeCmd procedure} {} {
+    # SF Bug 641778
+    set w .tsee
+    destroy $w
+    text $w -font {Helvetica 8 normal} -bd 16
+    $w insert end Hello
+    $w see end
+    set res [$w bbox end]
+    destroy $w
+    set res
+} {}
 wm geom . {}
 
 .t configure -wrap none
