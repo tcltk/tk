@@ -1,5 +1,12 @@
 2003-04-14  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* win/tkWinMenu.c (TkpInitializeMenuBindings):
+	Rename the private menu helper cmd from
+	tk::tkWinMenuKey to tk::WinMenuKey.
+	[Bug 721514]
+
+2003-04-14  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* generic/tkBind.c (TkpGetBindingXEvent): Add helper method
 	that can be used to query the XEvent* for the currently
 	executing binding.
