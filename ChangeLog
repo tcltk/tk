@@ -1,3 +1,11 @@
+2003-01-17  D. Richard Hipp <drh@hwaci.com>
+	* generic/tkCanvUtil.c: The clipping algorithm introduced on 2003-01-08
+	was unnecessarily aggressive in reducing the size of the clipping box.
+	This did not cause a problem for normal display, but did create
+	trouble for some extensions that attempt to render a canvas on a
+	GDI printer under Windows.  The patch here relaxes the constraints on
+	the clipping box somewhat.  [Bug #663981]
+
 2003-01-14  Joe English  <jenglish@users.sourceforge.net>
 	* generic/tkSelect.c (Tk_CreateSelHandler):
 	Fix for #666346 "Selection handling crashes under KDE 3.0"
@@ -37,7 +45,7 @@
 	* generic/tkCanvas.h:
 	* generic/tkCanvUtil.c: Clip long lines so that they will display
 	properly even on windowing systems where coordinates are expressed
-	as 16-bit numbers.  [But #663981]
+	as 16-bit numbers.  [Bug #663981]
 
 2003-01-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
