@@ -1,3 +1,8 @@
+2001-11-27  D. Richard Hipp <drh@hwaci.com>
+
+	* library/menu.tcl: Do not allow keyboard traversal of torn-off
+	menus to visit the (invisible) tearoff bar.
+
 2001-11-26  D. Richard Hipp <drh@hwaci.com>
 
 	* win/tkWinMenu.c: disabled menu items show the activebackground

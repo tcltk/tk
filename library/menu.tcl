@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.14 2001/11/16 22:54:22 hobbs Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.15 2001/11/27 14:08:04 drh Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -870,7 +870,9 @@ proc ::tk::MenuNextEntry {menu count} {
 	    incr i -$length
 	}
 	if {[catch {$menu entrycget $i -state} state] == 0} {
-	    if {[string compare $state "disabled"]} {
+	    if {$state!="disabled" && 
+		($i!=0 || [$menu cget -type]!="tearoff" 
+			|| [$menu type 0]!="tearoff")} {
 		break
 	    }
 	}
