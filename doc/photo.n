@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: photo.n,v 1.2 1998/09/14 18:22:59 stanton Exp $
+'\" RCS: @(#) $Id: photo.n,v 1.3 1999/10/29 03:57:40 hobbs Exp $
 '\" 
 .so man.macros
 .TH photo n 4.0 Tk "Tk Built-In Commands"
@@ -24,7 +24,7 @@ photo \- Full-color images
 .SH DESCRIPTION
 .PP
 A photo is an image whose pixels can display any color or be
-transparent.  A photo image is stored internally in full color (24
+transparent.  A photo image is stored internally in full color (32
 bits per pixel), and is displayed using dithering if necessary.  Image
 data for a photo image can be obtained from a file or a string, or it
 can be supplied from
@@ -186,25 +186,78 @@ about the Y or X axes, respectively.  If \fIy\fR is not given, the
 default value is the same as \fIx\fR.
 .RE
 .TP
+\fIimageName \fBdata ?\fIoption value(s) ...\fR?
+Returns image data in the form of a string. The following options
+may be specified:
+.RS
+.TP
+\fB\-background\fI color\fR
+If the color is specified, the data will not contain any transparency
+information. In all transparent pixels the color will be replaced by
+the specified color.
+.TP
+\fB\-format\fI format-name\fR
+Specifies the name of the image file format handler to be used to
+write the data to the file.  Specifically, this subcommand searches
+for the first handler whose name matches a initial substring of
+\fIformat-name\fR and which has the capability to write an image
+file.  If this option is not given, this subcommand uses the first
+handler that has the capability to write an image file.
+.TP
+\fB\-from \fIx1 y1 x2 y2\fR
+Specifies a rectangular region of \fIimageName\fR to be written to the
+image file.  If only \fIx1\fR and \fIy1\fR are specified, the region
+extends from \fI(x1,y1)\fR to the bottom-right corner of
+\fIimageName\fR.  If all four coordinates are given, they specify
+diagonally opposite corners of the rectangular region.  The default,
+if this option is not given, is the whole image.
+.TP
+\fB\-grayscale\fR
+If this options is specified, the data will not contain color
+information. All pixel data will be transformed into grayscale.
+.RE
+.TP
 \fIimageName \fBget\fR \fIx y\fR
 Returns the color of the pixel at coordinates (\fIx\fR,\fIy\fR) in the
 image as a list of three integers between 0 and 255, representing the
 red, green and blue components respectively.
 .TP
-\fIimageName \fBput \fIdata\fR ?\fB\-to\fI x1 y1 x2 y2\fR?
-Sets pixels in \fIimageName\fR to the colors specified in \fIdata\fR.
-\fIdata\fR is used to form a two-dimensional array of pixels that are
-then copied into the \fIimageName\fR.  \fIdata\fR is structured as a
-list of horizontal rows, from top to bottom, each of which is a list
-of colors, listed from left to right.  Each color may be specified by name
-(e.g., blue) or in hexadecimal form (e.g., #2376af).  The
-\fB\-to\fR option can be used to specify the area of \fIimageName\fR to be
-affected.  If only \fIx1\fR and \fIy1\fR are given, the area affected
-has its top-left corner at (\fIx1,y1\fR) and is the same size as the
-array given in \fIdata\fR.  If all four coordinates are given, they
-specify diagonally opposite corners of the affected rectangle, and the
-array given in \fIdata\fR will be replicated as necessary in the X and
-Y directions to fill the rectangle.
+\fIimageName \fBput\fR \fIdata\fR ?\fIoption value(s) ...\fR?
+Sets pixels in \fI imageName\fR to the data specified in
+\fIdata\fR. This command first searches the list of image file
+format handlers for a handler that can interpret the data
+in \fIdata\fR, and then reads the image in \fIfilename\fR into
+\fIimageName\fR (the destination image). The following options
+may be specified:
+.RS
+.TP
+\fB\-format \fIformat-name\fR
+Specifies the format of the image data in \fIdata\fR.
+Specifically, only image file format handlers whose names begin with
+\fIformat-name\fR will be used while searching for an image data
+format handler to read the data.
+.TP
+\fB\-from \fIx1 y1 x2 y2\fR
+Specifies a rectangular sub-region of the image file data to be
+returned. If only \fIx1\fR and \fIy1\fR are specified, the region
+extends from (\fIx1,y1\fR) to the bottom-right corner of the image
+in the image file.  If all four coordinates are specified, they
+specify diagonally opposite corners or the region. The default,
+if this option is not specified, is the whole of the image.
+.TP
+\fB\-shrink\fR
+If this option, the size of \fIimageName\fR will be reduced, if
+necessary, so that the region into which the image file data are read
+is at the bottom-right corner of the \fIimageName\fR.  This option
+will not affect the width or height of the image if the user has
+specified a non-zero value for the \fB\-width\fR or \fB\-height\fR
+configuration option, respectively.
+.TP
+\fB\-to \fIx y\fR
+Specifies the coordinates of the top-left corner of the region of
+\fIimageName\fR into which data from \fIfilename\fR are to be read.
+The default is (0,0).
+.RE
 .TP
 \fIimageName \fBread\fR \fIfilename\fR ?\fIoption value(s) ...\fR?
 Reads image data from the file named \fIfilename\fR into the image.
@@ -258,6 +311,11 @@ Writes image data from \fIimageName\fR to a file named \fIfilename\fR.
 The following options may be specified:
 .RS
 .TP
+\fB\-background\fI color\fR
+If the color is specified, the data will not contain any transparency
+information. In all transparent pixels the color will be replaced by
+the specified color.
+.TP
 \fB\-format\fI format-name\fR
 Specifies the name of the image file format handler to be used to
 write the data to the file.  Specifically, this subcommand searches
@@ -273,7 +331,12 @@ extends from \fI(x1,y1)\fR to the bottom-right corner of
 \fIimageName\fR.  If all four coordinates are given, they specify
 diagonally opposite corners of the rectangular region.  The default,
 if this option is not given, is the whole image.
+.TP
+\fB\-grayscale\fR
+If this options is specified, the data will not contain color
+information. All pixel data will be transformed into grayscale.
 .RE
+.TP
 .SH "IMAGE FORMATS"
 .PP
 The photo image code is structured to allow handlers for additional

@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: FindPhoto.3,v 1.2 1998/09/14 18:22:47 stanton Exp $
+'\" RCS: @(#) $Id: FindPhoto.3,v 1.3 1999/10/29 03:57:40 hobbs Exp $
 '\"
 .so man.macros
 .TH Tk_FindPhoto 3 8.0 Tk "Tk Library Procedures"
@@ -119,7 +119,7 @@ typedef struct {
 	int \fIheight\fR;
 	int \fIpitch\fR;
 	int \fIpixelSize\fR;
-	int \fIoffset[3]\fR;
+	int \fIoffset[4]\fR;
 } Tk_PhotoImageBlock;
 .CE
 The \fIpixelPtr\fR field points to the first pixel, that is, the
@@ -130,10 +130,10 @@ difference between two horizontally adjacent pixels.  Often it is 3
 or 4, but it can have any value.  The \fIpitch\fR field specifies the
 address difference between two vertically adjacent pixels.  The
 \fIoffset\fR array contains the offsets from the address of a pixel
-to the addresses of the bytes containing the red, green and blue
-components.  These are normally 0, 1 and 2, but can have other values,
-e.g., for images that are stored as separate red, green and blue
-planes.
+to the addresses of the bytes containing the red, green, blue and alpha
+(transparency) components.  These are normally 0, 1, 2 and 3, but can
+have other values, e.g., for images that are stored as separate red,
+green and blue planes.
 .PP
 The value given for the \fIwidth\fR and \fIheight\fR parameters to
 \fBTk_PhotoPutBlock\fR do not have to correspond to the values specified

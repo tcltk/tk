@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CrtImgType.3,v 1.2 1998/09/14 18:22:46 stanton Exp $
+'\" RCS: @(#) $Id: CrtImgType.3,v 1.3 1999/10/29 03:57:40 hobbs Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateImageType 3 8.0 Tk "Tk Library Procedures"
@@ -109,8 +109,8 @@ an image of the new type.
 typedef int Tk_ImageCreateProc(
 	Tcl_Interp *\fIinterp\fR,
 	char *\fIname\fR,
-	int \fIargc\fR,
-	char **\fIargv\fR,
+	int \fIobjc\fR,
+	Tcl_Obj *CONST \fIobjv\fR[],
 	Tk_ImageType *\fItypePtr\fR,
 	Tk_ImageMaster \fImaster\fR,
 	ClientData *\fImasterDataPtr\fR);
@@ -119,13 +119,13 @@ The \fIinterp\fR argument is the interpreter in which the \fBimage\fR
 command was invoked, and \fIname\fR is the name for the new image,
 which was either specified explicitly in the \fBimage\fR command
 or generated automatically by the \fBimage\fR command.
-The \fIargc\fR and \fIargv\fR arguments describe all the configuration
+The \fIobjc\fR and \fIobjv\fR arguments describe all the configuration
 options for the new image (everything after the name argument to
 \fBimage\fR).
 The \fImaster\fR argument is a token that refers to Tk's information
 about this image;  the image manager must return this token to
 Tk when invoking the \fBTk_ImageChanged\fR procedure.
-Typically \fIcreateProc\fR will parse \fIargc\fR and \fIargv\fR
+Typically \fIcreateProc\fR will parse \fIobjc\fR and \fIobjv\fR
 and create an image master data structure for the new image.
 \fIcreateProc\fR may store an arbitrary one-word value at
 *\fImasterDataPtr\fR, which will be passed back to the
