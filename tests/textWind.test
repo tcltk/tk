@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textWind.test,v 1.12 2003/11/07 15:36:27 vincentdarley Exp $
+# RCS: @(#) $Id: textWind.test,v 1.13 2003/11/21 17:29:13 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -482,18 +482,6 @@ test textWind-10.4.1 {EmbWinLayoutProc procedure, error in creating window} {tex
     update idletasks
     lappend msg [winfo exists .t.f.f]
 } [list {{can't embed .t.f.f relative to .t}} 1]
-test textWind-10.4.2 {EmbWinLayoutProc procedure, error in creating window} {textfonts} {
-    .t delete 1.0 end
-    .t insert 1.0 "Some sample text"
-    catch {destroy .t.f}
-    .t window create 1.5 -create {
-	frame .t.f
-	frame .t.f.f -width 10 -height 20 -bg $color
-    }
-    set msg {}
-    update
-    lappend msg [winfo exists .t.f.f]
-} {{{can't embed .t.f.f relative to .t}} {{window name "f" already exists in parent}} 1}
 catch {destroy .t.f}
 test textWind-10.5 {EmbWinLayoutProc procedure, error in creating window} {textfonts} {
     .t delete 1.0 end
