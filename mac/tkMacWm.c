@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.1.4.3 1998/11/25 21:16:37 stanton Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.1.4.4 1998/12/13 08:16:14 lfb Exp $
  */
 
 #include <Gestalt.h>
@@ -2428,6 +2428,7 @@ Tk_CoordsToWindow(
 				 * far that contains point. */
     int x, y;			/* Coordinates in winPtr. */
     int tmpx, tmpy, bd;
+    TkDisplay *dispPtr;
 
     /*
      * Step 1: find the top-level window that contains the desired point.
@@ -2440,7 +2441,8 @@ Tk_CoordsToWindow(
 	return NULL;
     }
     rootChild = TkMacGetXWindow(whichWin);
-    winPtr = (TkWindow *) Tk_IdToWindow(tkDisplayList->display, rootChild);
+    dispPtr = TkGetDisplayList();
+    winPtr = (TkWindow *) Tk_IdToWindow(dispPtr->display, rootChild);
     if (winPtr == NULL) {
         return NULL;
     }
@@ -3284,6 +3286,7 @@ TkMacGrowToplevel(
     Point start)
 {
     Point where = start;
+    TkDisplay *dispPtr;
 
     GlobalToLocal(&where);
     if (where.h > (whichWindow->portRect.right - 16) &&
@@ -3296,7 +3299,8 @@ TkMacGrowToplevel(
 	long growResult;
 
 	window = TkMacGetXWindow(whichWindow);
-	winPtr = (TkWindow *) Tk_IdToWindow(tkDisplayList->display, window);
+	dispPtr = TkGetDisplayList();
+	winPtr = (TkWindow *) Tk_IdToWindow(dispPtr->display, window);
 	wmPtr = winPtr->wmInfoPtr;
 	
 	/* TODO: handle grid size options. */
@@ -3628,7 +3632,8 @@ TkMacZoomToplevel(
      * has changed.
      */
     window = TkMacGetXWindow(whichWindow);
-    tkwin = Tk_IdToWindow(tkDisplayList->display, window);
+    dispPtr = TkGetDisplayList();
+    tkwin = Tk_IdToWindow(dispPtr->display, window);
     if (tkwin == NULL) {
 	return false;
     }

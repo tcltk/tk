@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.1.4.2 1998/09/30 02:19:31 stanton Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.1.4.3 1998/12/13 08:16:17 lfb Exp $
  *
  */
 
@@ -19,20 +19,16 @@
 #include <dlgs.h>       /* includes common dialog template defines */
 #include <cderr.h>      /* includes the common dialog error codes */
 
-/*
- * The following variable flags whether we should output debugging 
- * infomation while displaying a builtin dialog.
- */
-
-static int debugFlag = 0;
-static Tcl_Interp *debugInterp = NULL;
-
-/*
- * The following variable holds a registered windows event used for 
- * communicating between the DirectoryChooser dialog and its hook proc.
- */
-
-static UINT WM_LBSELCHANGED = 0;
+typedef struct ThreadSpecificData { 
+    int debugFlag;            /* Flags whether we should output debugging 
+			       * information while displaying a builtin 
+			       * dialog. */
+    Tcl_Interp *debugInterp;  /* Interpreter to used for debugging. */
+    UINT WM_LBSELCHANGED;     /* Holds a registered windows event used for
+			       * communicating between the Directory
+			       * Chooser dialog and its hook proc. */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * The following structures are used by Tk_MessageBox() to parse 
@@ -146,7 +142,10 @@ void
 TkWinDialogDebug(
     int debug)
 {
-    debugFlag = debug;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    tsdPtr->debugFlag = debug;
 }
 
 /*
@@ -321,6 +320,9 @@ ColorDlgHookProc(hDlg, uMsg, wParam, lParam)
     WPARAM wParam;		/* First message parameter. */
     LPARAM lParam;		/* Second message parameter. */
 {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
     switch (uMsg) {
 	case WM_INITDIALOG: {
 	    const char *title;
@@ -338,8 +340,8 @@ ColorDlgHookProc(hDlg, uMsg, wParam, lParam)
 		SetWindowText(hDlg, (TCHAR *) Tcl_DStringValue(&ds));
 		Tcl_DStringFree(&ds);
 	    }
-	    if (debugFlag) {
-		debugInterp = (Tcl_Interp *) ccPtr->lpTemplateName;
+	    if (tsdPtr->debugFlag) {
+		tsdPtr->debugInterp = (Tcl_Interp *) ccPtr->lpTemplateName;
 		Tcl_DoWhenIdle(SetTkDialog, (ClientData) hDlg);
 	    }
 	    return TRUE;
@@ -435,6 +437,8 @@ GetFileName(clientData, interp, objc, objv, open)
     Tk_Window tkwin;
     Tcl_DString utfFilterString, utfDirString;
     Tcl_DString extString, filterString, dirString, titleString;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     static char *optionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
 	"-parent",	"-title",	NULL
@@ -574,7 +578,7 @@ GetFileName(clientData, interp, objc, objv, open)
 	ofn.Flags |= OFN_OVERWRITEPROMPT;
     }
 
-    if (debugFlag != 0) {
+    if (tsdPtr->debugFlag != 0) {
 	ofn.Flags |= OFN_ENABLEHOOK;
     }
 
@@ -683,6 +687,8 @@ OFNHookProc(
     WPARAM wParam,	// message parameter
     LPARAM lParam) 	// message parameter
 {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     OPENFILENAME *ofnPtr;
 
     if (uMsg == WM_INITDIALOG) {
@@ -701,7 +707,7 @@ OFNHookProc(
 	    if (ofnPtr->Flags & OFN_EXPLORER) {
 		hdlg = GetParent(hdlg);
 	    }
-	    debugInterp = (Tcl_Interp *) ofnPtr->lCustData;
+	    tsdPtr->debugInterp = (Tcl_Interp *) ofnPtr->lCustData;
 	    Tcl_DoWhenIdle(SetTkDialog, (ClientData) hdlg);
 	    SetWindowLong(hdlg, GWL_USERDATA, (LPARAM) NULL);
 	}
@@ -873,6 +879,8 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     char *utfTitle;
     Tcl_DString utfDirString;
     Tcl_DString titleString, dirString;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     static char *optionStrings[] = {
 	"-initialdir",	"-mustexist",	"-parent",	"-title",
 	NULL
@@ -881,8 +889,8 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
 	DIR_INITIAL,	DIR_EXIST,	DIR_PARENT,	FILE_TITLE
     };
 
-    if (WM_LBSELCHANGED == 0) {
-        WM_LBSELCHANGED = RegisterWindowMessage(LBSELCHSTRING);
+    if (tsdPtr->WM_LBSELCHANGED == 0) {
+        tsdPtr->WM_LBSELCHANGED = RegisterWindowMessage(LBSELCHSTRING);
     }
    
     result = TCL_ERROR;
@@ -1059,6 +1067,8 @@ ChooseDirectoryHookProc(
     WPARAM wParam,
     LPARAM lParam)
 {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     OPENFILENAME *ofnPtr;
 
     /*
@@ -1084,8 +1094,8 @@ ChooseDirectoryHookProc(
 	}
 	SetDlgItemText(hwnd, edt10, cdPtr->path);
 	SendDlgItemMessage(hwnd, edt10, EM_SETSEL, 0, -1);
-	if (debugFlag) {
-	    debugInterp = cdPtr->interp;
+	if (tsdPtr->debugFlag) {
+	    tsdPtr->debugInterp = cdPtr->interp;
 	    Tcl_DoWhenIdle(SetTkDialog, (ClientData) hwnd);
 	}
 	return 0;
@@ -1094,7 +1104,7 @@ ChooseDirectoryHookProc(
 	return 0;
     }
 
-    if (message == WM_LBSELCHANGED) {
+    if (message == tsdPtr->WM_LBSELCHANGED) {
 	/*
 	 * Called when double-clicking on directory.
 	 * If directory wasn't already open, browse that directory.
@@ -1408,11 +1418,13 @@ Tk_MessageBoxObjCmd(clientData, interp, objc, objv)
 static void 
 SetTkDialog(ClientData clientData)
 {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     char buf[32];
     HWND hwnd;
 
     hwnd = (HWND) clientData;
 
     sprintf(buf, "0x%08x", hwnd);
-    Tcl_SetVar(debugInterp, "tk_dialog", buf, TCL_GLOBAL_ONLY);
+    Tcl_SetVar(tsdPtr->debugInterp, "tk_dialog", buf, TCL_GLOBAL_ONLY);
 }

@@ -10,20 +10,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.1.4.3 1998/11/24 21:43:21 stanton Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.1.4.4 1998/12/13 08:16:00 lfb Exp $
  */
 
 #include "tk3d.h"
 
-/*
- * Hash table to map from a string color name to a TkBorder structure
- * that can be used to draw borders with that color.
- */
-
-static Tcl_HashTable borderTable;
-
-static int initialized = 0;	/* 0 means static structures haven't
-				 * been initialized yet. */
 /*
  * The following table defines the string values for reliefs, which are
  * used by Tk_GetReliefFromObj.
@@ -36,7 +27,7 @@ static char *reliefStrings[] = {"flat", "groove", "raised", "ridge", "solid",
  * Forward declarations for procedures defined in this file:
  */
 
-static void		BorderInit _ANSI_ARGS_((void));
+static void		BorderInit _ANSI_ARGS_((TkDisplay *dispPtr));
 static void		DupBorderObjProc _ANSI_ARGS_((Tcl_Obj *srcObjPtr,
 			    Tcl_Obj *dupObjPtr));
 static void		FreeBorderObjProc _ANSI_ARGS_((Tcl_Obj *objPtr));
@@ -202,12 +193,15 @@ Tk_Get3DBorder(interp, tkwin, colorName)
     int new;
     XGCValues gcValues;
     XColor *bgColorPtr;
+    TkDisplay *dispPtr;
 
-    if (!initialized) {
-	BorderInit();
+    dispPtr = ((TkWindow *) tkwin)->dispPtr;
+
+    if (!dispPtr->borderInit) {
+	BorderInit(dispPtr);
     }
 
-    hashPtr = Tcl_CreateHashEntry(&borderTable, colorName, &new);
+    hashPtr = Tcl_CreateHashEntry(&dispPtr->borderTable, colorName, &new);
     if (!new) {
 	existingBorderPtr = (TkBorder *) Tcl_GetHashValue(hashPtr);
 	for (borderPtr = existingBorderPtr; borderPtr != NULL;
@@ -1057,10 +1051,11 @@ Tk_Fill3DPolygon(tkwin, drawable, border, pointPtr, numPoints,
  */
 
 static void
-BorderInit()
+BorderInit(dispPtr)
+     TkDisplay * dispPtr;     /* Used to access thread-specific data. */
 {
-    initialized = 1;
-    Tcl_InitHashTable(&borderTable, TCL_STRING_KEYS);
+    dispPtr->borderInit = 1;
+    Tcl_InitHashTable(&dispPtr->borderTable, TCL_STRING_KEYS);
 }
 
 /*
@@ -1251,6 +1246,7 @@ Tk_Get3DBorderFromObj(tkwin, objPtr)
 {
     TkBorder *borderPtr = NULL;
     Tcl_HashEntry *hashPtr;
+    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     if (objPtr->typePtr != &borderObjType) {
 	InitBorderObj(objPtr);
@@ -1271,7 +1267,8 @@ Tk_Get3DBorderFromObj(tkwin, objPtr)
 	hashPtr = borderPtr->hashPtr;
 	FreeBorderObjProc(objPtr);
     } else {
-	hashPtr = Tcl_FindHashEntry(&borderTable, Tcl_GetString(objPtr));
+	hashPtr = Tcl_FindHashEntry(&dispPtr->borderTable, 
+                Tcl_GetString(objPtr));
 	if (hashPtr == NULL) {
 	    goto error;
 	}
@@ -1367,9 +1364,10 @@ TkDebugBorder(tkwin, name)
     TkBorder *borderPtr;
     Tcl_HashEntry *hashPtr;
     Tcl_Obj *resultPtr, *objPtr;
+    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     resultPtr = Tcl_NewObj();
-    hashPtr = Tcl_FindHashEntry(&borderTable, name);
+    hashPtr = Tcl_FindHashEntry(&dispPtr->borderTable, name);
     if (hashPtr != NULL) {
 	borderPtr = (TkBorder *) Tcl_GetHashValue(hashPtr);
 	if (borderPtr == NULL) {

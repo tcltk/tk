@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinClipboard.c,v 1.1.4.3 1998/12/08 23:28:52 stanton Exp $
+ * RCS: @(#) $Id: tkWinClipboard.c,v 1.1.4.4 1998/12/13 08:16:16 lfb Exp $
  */
 
 #include "tkWinInt.h"
@@ -122,7 +122,7 @@ XSetSelectionOwner(display, selection, owner, time)
      * It expects a Tk_Window, even though it only needs a Tk_Display.
      */
 
-    tkwin = (Tk_Window)tkMainWindowList->winPtr;
+    tkwin = (Tk_Window) TkGetMainInfoList()->winPtr;
 
     if (selection == Tk_InternAtom(tkwin, "CLIPBOARD")) {
 

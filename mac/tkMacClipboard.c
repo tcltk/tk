@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacClipboard.c,v 1.1.4.2 1998/09/30 02:18:03 stanton Exp $
+ * RCS: @(#) $Id: tkMacClipboard.c,v 1.1.4.3 1998/12/13 08:16:12 lfb Exp $
  */
 
 #include "tkInt.h"
@@ -241,7 +241,7 @@ TkSuspendClipboard()
     char *buffer, *p, *endPtr, *buffPtr;
     long length;
 
-    dispPtr = tkDisplayList;
+    dispPtr = TkGetDisplayList();
     if ((dispPtr == NULL) || !dispPtr->clipboardActive) {
 	return;
     }

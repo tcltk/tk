@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCursor.c,v 1.1.4.2 1998/09/30 02:16:53 stanton Exp $
+ * RCS: @(#) $Id: tkCursor.c,v 1.1.4.3 1998/12/13 08:16:04 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -20,23 +20,11 @@
 /*
  * A TkCursor structure exists for each cursor that is currently
  * active.  Each structure is indexed with two hash tables defined
- * below.  One of the tables is idTable, and the other is either
- * nameTable or dataTable, also defined below.
+ * below.  One of the tables is cursorIdTable, and the other is either
+ * cursorNameTable or cursorDataTable, each of which are stored in the
+ * TkDisplay structure for the current thread.
  */
 
-/*
- * Hash table to map from a string name for a cursor to the TkCursor
- * record for the cursor:
- */
-
-static Tcl_HashTable nameTable;
-
-/*
- * Hash table to map from a collection of in-core data about a
- * cursor (bitmap contents, etc.) to a TkCursor structure:
- */
-
-static Tcl_HashTable dataTable;
 typedef struct {
     char *source;		/* Cursor bits. */
     char *mask;			/* Mask bits. */
@@ -48,24 +36,10 @@ typedef struct {
 } DataKey;
 
 /*
- * Hash table that maps from <display + cursor id> to the TkCursor structure
- * for the cursor.  This table is used by Tk_FreeCursor.
- */
-
-static Tcl_HashTable idTable;
-typedef struct {
-    Display *display;		/* Display for which cursor was allocated. */
-    Tk_Cursor cursor;		/* Cursor identifier. */
-} IdKey;
-
-static int initialized = 0;	/* 0 means static structures haven't been
-				 * initialized yet. */
-
-/*
  * Forward declarations for procedures defined in this file:
  */
 
-static void		CursorInit _ANSI_ARGS_((void));
+static void		CursorInit _ANSI_ARGS_((TkDisplay *dispPtr));
 static void		DupCursorObjProc _ANSI_ARGS_((Tcl_Obj *srcObjPtr,
 			    Tcl_Obj *dupObjPtr));
 static void		FreeCursor _ANSI_ARGS_((TkCursor *cursorPtr));
@@ -259,17 +233,18 @@ GetCursor(interp, tkwin, string)
     char *string;		/* Description of cursor.  See manual entry
 				 * for details on legal syntax. */
 {
-    IdKey idKey;
     Tcl_HashEntry *nameHashPtr;
     register TkCursor *cursorPtr;
     TkCursor *existingCursorPtr = NULL;
     int new;
+    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (!initialized) {
-	CursorInit();
+    if (!dispPtr->cursorInit) {
+	CursorInit(dispPtr);
     }
 
-    nameHashPtr = Tcl_CreateHashEntry(&nameTable, string, &new);
+    nameHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorNameTable, 
+            string, &new);
     if (!new) {
 	existingCursorPtr = (TkCursor *) Tcl_GetHashValue(nameHashPtr);
 	for (cursorPtr = existingCursorPtr; cursorPtr != NULL;
@@ -299,12 +274,10 @@ GetCursor(interp, tkwin, string)
     cursorPtr->display = Tk_Display(tkwin);
     cursorPtr->resourceRefCount = 1;
     cursorPtr->objRefCount = 0;
-    cursorPtr->otherTable = &nameTable;
+    cursorPtr->otherTable = &dispPtr->cursorNameTable;
     cursorPtr->hashPtr = nameHashPtr;
-    idKey.display = Tk_Display(tkwin);
-    idKey.cursor = cursorPtr->cursor;
-    cursorPtr->idHashPtr = Tcl_CreateHashEntry(&idTable, (char *) &idKey,
-	    &new);
+    cursorPtr->idHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorIdTable, 
+            (char *) cursorPtr->cursor, &new);
     if (!new) {
 	panic("cursor already registered in Tk_GetCursor");
     }
@@ -353,14 +326,14 @@ Tk_GetCursorFromData(interp, tkwin, source, mask, width, height,
     Tk_Uid bg;			/* Background color for cursor. */
 {
     DataKey dataKey;
-    IdKey idKey;
     Tcl_HashEntry *dataHashPtr;
     register TkCursor *cursorPtr;
     int new;
     XColor fgColor, bgColor;
+    TkDisplay *dispPtr;
 
-    if (!initialized) {
-	CursorInit();
+    if (!dispPtr->cursorInit) {
+	CursorInit(dispPtr);
     }
 
     dataKey.source = source;
@@ -372,7 +345,8 @@ Tk_GetCursorFromData(interp, tkwin, source, mask, width, height,
     dataKey.fg = fg;
     dataKey.bg = bg;
     dataKey.display = Tk_Display(tkwin);
-    dataHashPtr = Tcl_CreateHashEntry(&dataTable, (char *) &dataKey, &new);
+    dataHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorDataTable, 
+            (char *) &dataKey, &new);
     if (!new) {
 	cursorPtr = (TkCursor *) Tcl_GetHashValue(dataHashPtr);
 	cursorPtr->resourceRefCount++;
@@ -403,13 +377,11 @@ Tk_GetCursorFromData(interp, tkwin, source, mask, width, height,
     }
 
     cursorPtr->resourceRefCount = 1;
-    cursorPtr->otherTable = &dataTable;
+    cursorPtr->otherTable = &dispPtr->cursorDataTable;
     cursorPtr->hashPtr = dataHashPtr;
     cursorPtr->objRefCount = 0;
-    idKey.display = dataKey.display;
-    idKey.cursor = cursorPtr->cursor;
-    cursorPtr->idHashPtr = Tcl_CreateHashEntry(&idTable, (char *) &idKey,
-	    &new);
+    cursorPtr->idHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorIdTable, 
+            (char *) cursorPtr->cursor, &new);
     if (!new) {
 	panic("cursor already registered in Tk_GetCursorFromData");
     }
@@ -449,24 +421,24 @@ Tk_NameOfCursor(display, cursor)
     Tk_Cursor cursor;		/* Identifier for cursor whose name is
 				 * wanted. */
 {
-    IdKey idKey;
     Tcl_HashEntry *idHashPtr;
     TkCursor *cursorPtr;
-    static char string[20];
+    TkDisplay *dispPtr;
 
-    if (!initialized) {
+    dispPtr = TkGetDisplay(display);
+
+    if (!dispPtr->cursorInit) {
 	printid:
-	sprintf(string, "cursor id 0x%x", (unsigned int) cursor);
-	return string;
+	sprintf(dispPtr->cursorString, "cursor id 0x%x", 
+                (unsigned int) cursor);
+	return dispPtr->cursorString;
     }
-    idKey.display = display;
-    idKey.cursor = cursor;
-    idHashPtr = Tcl_FindHashEntry(&idTable, (char *) &idKey);
+    idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, (char *) cursor);
     if (idHashPtr == NULL) {
 	goto printid;
     }
     cursorPtr = (TkCursor *) Tcl_GetHashValue(idHashPtr);
-    if (cursorPtr->otherTable != &nameTable) {
+    if (cursorPtr->otherTable != &dispPtr->cursorNameTable) {
 	goto printid;
     }
     return cursorPtr->hashPtr->key.string;
@@ -545,16 +517,14 @@ Tk_FreeCursor(display, cursor)
     Display *display;		/* Display for which cursor was allocated. */
     Tk_Cursor cursor;		/* Identifier for cursor to be released. */
 {
-    IdKey idKey;
     Tcl_HashEntry *idHashPtr;
+    TkDisplay *dispPtr = TkGetDisplay(display);
 
-    if (!initialized) {
+    if (!dispPtr->cursorInit) {
 	panic("Tk_FreeCursor called before Tk_GetCursor");
     }
 
-    idKey.display = display;
-    idKey.cursor = cursor;
-    idHashPtr = Tcl_FindHashEntry(&idTable, (char *) &idKey);
+    idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, (char *) cursor);
     if (idHashPtr == NULL) {
 	panic("Tk_FreeCursor received unknown cursor argument");
     }
@@ -717,6 +687,7 @@ GetCursorFromObj(tkwin, objPtr)
 {
     TkCursor *cursorPtr;
     Tcl_HashEntry *hashPtr;
+    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     if (objPtr->typePtr != &cursorObjType) {
 	InitCursorObj(objPtr);
@@ -729,7 +700,8 @@ GetCursorFromObj(tkwin, objPtr)
 	}
 	hashPtr = cursorPtr->hashPtr;
     } else {
-	hashPtr = Tcl_FindHashEntry(&nameTable, Tcl_GetString(objPtr));
+	hashPtr = Tcl_FindHashEntry(&dispPtr->cursorNameTable, 
+                Tcl_GetString(objPtr));
 	if (hashPtr == NULL) {
 	    goto error;
 	}
@@ -811,11 +783,11 @@ InitCursorObj(objPtr)
  */
 
 static void
-CursorInit()
+CursorInit(dispPtr)
+    TkDisplay *dispPtr;   /* Display used to store thread-specific data. */
 {
-    initialized = 1;
-    Tcl_InitHashTable(&nameTable, TCL_STRING_KEYS);
-    Tcl_InitHashTable(&dataTable, sizeof(DataKey)/sizeof(int));
+    Tcl_InitHashTable(&dispPtr->cursorNameTable, TCL_STRING_KEYS);
+    Tcl_InitHashTable(&dispPtr->cursorDataTable, sizeof(DataKey)/sizeof(int));
 
     /*
      * The call below is tricky:  can't use sizeof(IdKey) because it
@@ -823,8 +795,9 @@ CursorInit()
      * machines.
      */
 
-    Tcl_InitHashTable(&idTable, (sizeof(Display *) + sizeof(Tk_Cursor))
+    Tcl_InitHashTable(&dispPtr->cursorIdTable, sizeof(Display *) 
 	    /sizeof(int));
+    dispPtr->cursorInit = 1;
 }
 
 /*
@@ -855,9 +828,10 @@ TkDebugCursor(tkwin, name)
     TkCursor *cursorPtr;
     Tcl_HashEntry *hashPtr;
     Tcl_Obj *resultPtr, *objPtr;
+    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     resultPtr = Tcl_NewObj();
-    hashPtr = Tcl_FindHashEntry(&nameTable, name);
+    hashPtr = Tcl_FindHashEntry(&dispPtr->cursorNameTable, name);
     if (hashPtr != NULL) {
 	cursorPtr = (TkCursor *) Tcl_GetHashValue(hashPtr);
 	if (cursorPtr == NULL) {

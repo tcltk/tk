@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.1.4.2 1998/09/30 02:17:00 stanton Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.1.4.3 1998/12/13 08:16:06 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -242,7 +242,7 @@ Tk_GrabCmd(clientData, interp, argc, argv)
 			TCL_STATIC);
 	    }
 	} else {
-	    for (dispPtr = tkDisplayList; dispPtr != NULL;
+	    for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
 		    dispPtr = dispPtr->nextPtr) {
 		if (dispPtr->eventualGrabWinPtr != NULL) {
 		    Tcl_AppendElement(interp,

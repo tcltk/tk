@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.1.4.2 1998/09/30 02:17:10 stanton Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.1.4.3 1998/12/13 08:16:09 lfb Exp $
  */
 
 #include "tkMenubutton.h"
@@ -26,6 +26,7 @@ static Tk_Uid belowUid = NULL;
 static Tk_Uid leftUid = NULL;
 static Tk_Uid rightUid = NULL;
 static Tk_Uid flushUid = NULL;
+TCL_DECLARE_MUTEX(menuButMutex)
 
 /*
  * Information used for parsing configuration specs:
@@ -250,12 +251,16 @@ Tk_MenubuttonCmd(clientData, interp, argc, argv)
     mbPtr->cursor = None;
     mbPtr->takeFocus = NULL;
     mbPtr->flags = 0;
-    if (aboveUid == NULL) {
-	aboveUid = Tk_GetUid("above");
-	belowUid = Tk_GetUid("below");
-	leftUid = Tk_GetUid("left");
-	rightUid = Tk_GetUid("right");
-	flushUid = Tk_GetUid("flush");
+    if (flushUid == NULL) {
+        Tcl_MutexLock(&menuButMutex);
+	if (flushUid == NULL) {
+	    aboveUid = Tk_GetUid("above");
+	    belowUid = Tk_GetUid("below");
+	    leftUid = Tk_GetUid("left");
+	    rightUid = Tk_GetUid("right");
+	    flushUid = Tk_GetUid("flush");
+	}
+        Tcl_MutexLock(&menuButMutex);
     }
     mbPtr->direction = flushUid;
 

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinScrlbr.c,v 1.1.4.2 1998/09/30 02:19:37 stanton Exp $
+ * RCS: @(#) $Id: tkWinScrlbr.c,v 1.1.4.3 1998/12/13 08:16:19 lfb Exp $
  */
 
 #include "tkWinInt.h"
@@ -56,6 +56,8 @@ typedef struct WinScrollbar {
 static int initialized = 0;
 static int hArrowWidth, hThumb; /* Horizontal control metrics. */
 static int vArrowWidth, vArrowHeight, vThumb; /* Vertical control metrics. */
+
+TCL_DECLARE_MUTEX(winScrlbrMutex)
 
 /*
  * This variable holds the default width for a scrollbar in string
@@ -116,8 +118,10 @@ TkpCreateScrollbar(tkwin)
     TkWindow *winPtr = (TkWindow *)tkwin;
     
     if (!initialized) {
+        Tcl_MutexLock(&winScrlbrMutex);
 	UpdateScrollbarMetrics();
 	initialized = 1;
+	Tcl_MutexUnlock(&winScrlbrMutex);
     }
 
     scrollPtr = (WinScrollbar *) ckalloc(sizeof(WinScrollbar));

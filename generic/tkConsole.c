@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.1.4.2 1998/09/30 02:16:52 stanton Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.1.4.3 1998/12/13 08:16:03 lfb Exp $
  */
 
 #include "tk.h"
@@ -27,9 +27,12 @@ typedef struct ConsoleInfo {
     Tcl_Interp *interp;		/* Interpreter to send console commands. */
 } ConsoleInfo;
 
-static Tcl_Interp *gStdoutInterp = NULL;
-
 EXTERN void		TclInitSubsystems _ANSI_ARGS_((CONST char *argv0));
+
+typedef struct ThreadSpecificData {
+    Tcl_Interp *gStdoutInterp;
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Forward declarations for procedures defined later in this file:
@@ -155,6 +158,8 @@ TkConsoleInit(interp)
     Tcl_Interp *consoleInterp;
     ConsoleInfo *info;
     Tk_Window mainWindow = Tk_MainWindow(interp);
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 #ifdef MAC_TCL
     static char initCmd[] = "source -rsrc {Console}";
 #else
@@ -176,7 +181,7 @@ TkConsoleInit(interp)
     if (Tk_Init(consoleInterp) != TCL_OK) {
 	goto error;
     }
-    gStdoutInterp = interp;
+    tsdPtr->gStdoutInterp = interp;
     
     /* 
      * Add console commands to the interp 
@@ -232,11 +237,15 @@ ConsoleOutput(instanceData, buf, toWrite, errorCode)
     int toWrite;			/* How many bytes to write? */
     int *errorCode;			/* Where to store error code. */
 {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
     *errorCode = 0;
     Tcl_SetErrno(0);
 
-    if (gStdoutInterp != NULL) {
-	TkConsolePrint(gStdoutInterp, (int) instanceData, buf, toWrite);
+    if (tsdPtr->gStdoutInterp != NULL) {
+	TkConsolePrint(tsdPtr->gStdoutInterp, (int) instanceData, buf, 
+                toWrite);
     }
     
     return toWrite;

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.1.4.2 1998/09/30 02:17:13 stanton Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.1.4.3 1998/12/13 08:16:10 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -94,19 +94,6 @@ typedef struct Packer {
 #define EXPAND			8
 #define OLD_STYLE		16
 #define DONT_PROPAGATE		32
-
-/*
- * Hash table used to map from Tk_Window tokens to corresponding
- * Packer structures:
- */
-
-static Tcl_HashTable packerHashTable;
-
-/*
- * Have statics in this module been initialized?
- */
-
-static int initialized = 0;
 
 /*
  * The following structure is the official type record for the
@@ -957,10 +944,11 @@ GetPacker(tkwin)
     register Packer *packPtr;
     Tcl_HashEntry *hPtr;
     int new;
+    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (!initialized) {
-	initialized = 1;
-	Tcl_InitHashTable(&packerHashTable, TCL_ONE_WORD_KEYS);
+    if (!dispPtr->packInit) {
+	dispPtr->packInit = 1;
+	Tcl_InitHashTable(&dispPtr->packerHashTable, TCL_ONE_WORD_KEYS);
     }
 
     /*
@@ -968,7 +956,8 @@ GetPacker(tkwin)
      * then create a new one.
      */
 
-    hPtr = Tcl_CreateHashEntry(&packerHashTable, (char *) tkwin, &new);
+    hPtr = Tcl_CreateHashEntry(&dispPtr->packerHashTable, (char *) tkwin, 
+            &new);
     if (!new) {
 	return (Packer *) Tcl_GetHashValue(hPtr);
     }
@@ -1324,6 +1313,8 @@ PackStructureProc(clientData, eventPtr)
     XEvent *eventPtr;			/* Describes what just happened. */
 {
     register Packer *packPtr = (Packer *) clientData;
+    TkDisplay *dispPtr;
+
     if (eventPtr->type == ConfigureNotify) {
 	if ((packPtr->slavePtr != NULL)
 		&& !(packPtr->flags & REQUESTED_REPACK)) {
@@ -1353,8 +1344,11 @@ PackStructureProc(clientData, eventPtr)
 	    nextPtr = slavePtr->nextPtr;
 	    slavePtr->nextPtr = NULL;
 	}
-	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&packerHashTable,
-		(char *) packPtr->tkwin));
+	if (packPtr->tkwin != NULL) {
+	    dispPtr = ((TkWindow *) packPtr->tkwin)->dispPtr;
+            Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->packerHashTable,
+		    (char *) packPtr->tkwin));
+	}
 	if (packPtr->flags & REQUESTED_REPACK) {
 	    Tcl_CancelIdleCall(ArrangePacking, (ClientData) packPtr);
 	}

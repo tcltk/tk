@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.1.4.2 1998/09/30 02:17:04 stanton Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.1.4.3 1998/12/13 08:16:07 lfb Exp $
  */
 
 #include "tkInt.h"
@@ -290,6 +290,12 @@ Tk_ImageType tkPhotoImageType = {
     (Tk_ImageType *) NULL	/* nextPtr */
 };
 
+typedef struct ThreadSpecificData {
+    Tk_PhotoImageFormat *formatList;  /* Pointer to the first in the 
+				       * list of known photo image formats.*/
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
+
 /*
  * Default configuration
  */
@@ -329,12 +335,6 @@ static Tk_ConfigSpec configSpecs[] = {
 static Tcl_HashTable imgPhotoColorHash;
 static int imgPhotoColorHashInitialized;
 #define N_COLOR_HASH	(sizeof(ColorTableId) / sizeof(int))
-
-/*
- * Pointer to the first in the list of known photo image formats.
- */
-
-static Tk_PhotoImageFormat *formatList = NULL;
 
 /*
  * Forward declarations
@@ -415,13 +415,15 @@ Tk_CreatePhotoImageFormat(formatPtr)
 				 * to Tk_CreatePhotoImageFormat previously. */
 {
     Tk_PhotoImageFormat *copyPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     copyPtr = (Tk_PhotoImageFormat *) ckalloc(sizeof(Tk_PhotoImageFormat));
     *copyPtr = *formatPtr;
     copyPtr->name = (char *) ckalloc((unsigned) (strlen(formatPtr->name) + 1));
     strcpy(copyPtr->name, formatPtr->name);
-    copyPtr->nextPtr = formatList;
-    formatList = copyPtr;
+    copyPtr->nextPtr = tsdPtr->formatList;
+    tsdPtr->formatList = copyPtr;
 }
 
 /*
@@ -529,6 +531,8 @@ ImgPhotoCmd(clientData, interp, argc, argv)
     Tcl_Channel chan;
     Tk_PhotoHandle srcHandle;
     size_t length;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (argc < 2) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
@@ -975,7 +979,7 @@ ImgPhotoCmd(clientData, interp, argc, argv)
 	 */
 
 	matched = 0;
-	for (imageFormat = formatList; imageFormat != NULL;
+	for (imageFormat = tsdPtr->formatList; imageFormat != NULL;
 	     imageFormat = imageFormat->nextPtr) {
 	    if ((options.format == NULL)
 		    || (strncasecmp(options.format, imageFormat->name,
@@ -3012,6 +3016,8 @@ MatchFileFormat(interp, chan, fileName, formatString, imageFormatPtr,
 {
     int matched;
     Tk_PhotoImageFormat *formatPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Scan through the table of file format handlers to find
@@ -3019,7 +3025,7 @@ MatchFileFormat(interp, chan, fileName, formatString, imageFormatPtr,
      */
 
     matched = 0;
-    for (formatPtr = formatList; formatPtr != NULL;
+    for (formatPtr = tsdPtr->formatList; formatPtr != NULL;
 	 formatPtr = formatPtr->nextPtr) {
 	if (formatString != NULL) {
 	    if (strncasecmp(formatString, formatPtr->name,
@@ -3102,6 +3108,8 @@ MatchStringFormat(interp, string, formatString, imageFormatPtr,
 {
     int matched;
     Tk_PhotoImageFormat *formatPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Scan through the table of file format handlers to find
@@ -3109,7 +3117,7 @@ MatchStringFormat(interp, string, formatString, imageFormatPtr,
      */
 
     matched = 0;
-    for (formatPtr = formatList; formatPtr != NULL;
+    for (formatPtr = tsdPtr->formatList; formatPtr != NULL;
 	    formatPtr = formatPtr->nextPtr) {
 	if (formatString != NULL) {
 	    if (strncasecmp(formatString, formatPtr->name,

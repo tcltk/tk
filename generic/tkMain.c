@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.1.4.3 1998/12/11 23:32:22 stanton Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.1.4.4 1998/12/13 08:16:09 lfb Exp $
  */
 
 #include <ctype.h>
@@ -26,6 +26,18 @@
 #else
 #   include <stdlib.h>
 #endif
+
+typedef struct ThreadSpecificData {
+    Tcl_Interp *interp;         /* Interpreter for this thread. */
+    Tcl_DString command;        /* Used to assemble lines of terminal input
+				 * into Tcl commands. */
+    Tcl_DString line;           /* Used to read the next line from the
+				 * terminal input. */
+    int tty;                    /* Non-zero means standard input is a 
+				 * terminal-like device.  Zero means it's
+				 * a file. */
+} ThreadSpecificData;
+Tcl_ThreadDataKey dataKey;
 
 /*
  * Declarations for various library procedures and variables (don't want
@@ -42,19 +54,6 @@ extern char *		strrchr _ANSI_ARGS_((CONST char *string, int c));
 #endif
 extern void		TkpDisplayWarning _ANSI_ARGS_((char *msg,
 			    char *title));
-
-/*
- * Global variables used by the main program:
- */
-
-static Tcl_Interp *interp;	/* Interpreter for this application. */
-static Tcl_DString command;	/* Used to assemble lines of terminal input
-				 * into Tcl commands. */
-static Tcl_DString line;	/* Used to read the next line from the
-                                 * terminal input. */
-static int tty;			/* Non-zero means standard input is a
-				 * terminal-like device.  Zero means it's
-				 * a file. */
 
 /*
  * Forward declarations for procedures defined later in this file.
@@ -98,9 +97,12 @@ Tk_Main(argc, argv, appInitProc)
     size_t length;
     Tcl_Channel inChannel, outChannel;
     Tcl_DString argString;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    Tcl_Interp *interp;
 
     Tcl_FindExecutable(argv[0]);
-    interp = Tcl_CreateInterp();
+    interp = tsdPtr->interp = Tcl_CreateInterp();
 #ifdef TCL_MEM_DEBUG
     Tcl_InitMemory(interp);
 #endif
@@ -158,12 +160,12 @@ Tk_Main(argc, argv, appInitProc)
      */
 
 #ifdef __WIN32__
-    tty = 1;
+    tsdPtr->tty = 1;
 #else
-    tty = isatty(0);
+    tsdPtr->tty = isatty(0);
 #endif
     Tcl_SetVar(interp, "tcl_interactive",
-	    ((fileName == NULL) && tty) ? "1" : "0", TCL_GLOBAL_ONLY);
+	    ((fileName == NULL) && tsdPtr->tty) ? "1" : "0", TCL_GLOBAL_ONLY);
 
     /*
      * Invoke application-specific initialization.
@@ -192,7 +194,7 @@ Tk_Main(argc, argv, appInitProc)
 	    Tcl_DeleteInterp(interp);
 	    Tcl_Exit(1);
 	}
-	tty = 0;
+	tsdPtr->tty = 0;
     } else {
 
 	/*
@@ -210,7 +212,7 @@ Tk_Main(argc, argv, appInitProc)
 	    Tcl_CreateChannelHandler(inChannel, TCL_READABLE, StdinProc,
 		    (ClientData) inChannel);
 	}
-	if (tty) {
+	if (tsdPtr->tty) {
 	    Prompt(interp, 0);
 	}
     }
@@ -220,8 +222,8 @@ Tk_Main(argc, argv, appInitProc)
     if (outChannel) {
 	Tcl_Flush(outChannel);
     }
-    Tcl_DStringInit(&command);
-    Tcl_DStringInit(&line);
+    Tcl_DStringInit(&tsdPtr->command);
+    Tcl_DStringInit(&tsdPtr->line);
     Tcl_ResetResult(interp);
 
     /*
@@ -264,12 +266,15 @@ StdinProc(clientData, mask)
     char *cmd;
     int code, count;
     Tcl_Channel chan = (Tcl_Channel) clientData;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    Tcl_Interp *interp = tsdPtr->interp;
 
-    count = Tcl_Gets(chan, &line);
+    count = Tcl_Gets(chan, &tsdPtr->line);
 
     if (count < 0) {
 	if (!gotPartial) {
-	    if (tty) {
+	    if (tsdPtr->tty) {
 		Tcl_Exit(0);
 	    } else {
 		Tcl_DeleteChannelHandler(chan, StdinProc, (ClientData) chan);
@@ -278,9 +283,10 @@ StdinProc(clientData, mask)
 	} 
     }
 
-    (void) Tcl_DStringAppend(&command, Tcl_DStringValue(&line), -1);
-    cmd = Tcl_DStringAppend(&command, "\n", -1);
-    Tcl_DStringFree(&line);
+    (void) Tcl_DStringAppend(&tsdPtr->command, Tcl_DStringValue(
+            &tsdPtr->line), -1);
+    cmd = Tcl_DStringAppend(&tsdPtr->command, "\n", -1);
+    Tcl_DStringFree(&tsdPtr->line);
     if (!Tcl_CommandComplete(cmd)) {
         gotPartial = 1;
         goto prompt;
@@ -303,9 +309,9 @@ StdinProc(clientData, mask)
 	Tcl_CreateChannelHandler(chan, TCL_READABLE, StdinProc,
 		(ClientData) chan);
     }
-    Tcl_DStringFree(&command);
+    Tcl_DStringFree(&tsdPtr->command);
     if (Tcl_GetStringResult(interp)[0] != '\0') {
-	if ((code != TCL_OK) || (tty)) {
+	if ((code != TCL_OK) || (tsdPtr->tty)) {
 	    chan = Tcl_GetStdChannel(TCL_STDOUT);
 	    if (chan) {
 		Tcl_WriteObj(chan, Tcl_GetObjResult(interp));
@@ -319,7 +325,7 @@ StdinProc(clientData, mask)
      */
 
     prompt:
-    if (tty) {
+    if (tsdPtr->tty) {
 	Prompt(interp, gotPartial);
     }
     Tcl_ResetResult(interp);

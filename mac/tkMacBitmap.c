@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacBitmap.c,v 1.1.4.2 1998/09/30 02:18:02 stanton Exp $
+ * RCS: @(#) $Id: tkMacBitmap.c,v 1.1.4.3 1998/12/13 08:16:12 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -100,10 +100,14 @@ TkpDefineNativeBitmaps()
     char * name;
     BuiltInIcon *builtInPtr;
     NativeIcon *nativeIconPtr;
+    Tcl_HashTable *tablePtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     
     for (builtInPtr = builtInIcons; builtInPtr->name != NULL; builtInPtr++) {
 	name = Tk_GetUid(builtInPtr->name);
-	predefHashPtr = Tcl_CreateHashEntry(&tkPredefBitmapTable, name, &new);
+	tablePtr = TkGetBitmapPredefTable();
+	predefHashPtr = Tcl_CreateHashEntry(tablePtr, name, &new);
 	if (!new) {
 	    continue;
 	}

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.1.4.2 1998/09/30 02:19:32 stanton Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.1.4.3 1998/12/13 08:16:18 lfb Exp $
  */
 
 #include "tkWinInt.h"
@@ -38,9 +38,11 @@ typedef struct Container {
 					 * this process. */
 } Container;
 
-static Container *firstContainerPtr = NULL;
-					/* First in list of all containers
+typedef struct ThreadSpecificData {
+    Container *firstContainerPtr;       /* First in list of all containers
 					 * managed by this process.  */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 static void		CleanupContainerList _ANSI_ARGS_((
     			    ClientData clientData));
@@ -74,14 +76,16 @@ CleanupContainerList(clientData)
     ClientData clientData;
 {
     Container *nextPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     
     for (;
-        firstContainerPtr != (Container *) NULL;
-        firstContainerPtr = nextPtr) {
-        nextPtr = firstContainerPtr->nextPtr;
-        ckfree((char *) firstContainerPtr);
+        tsdPtr->firstContainerPtr != (Container *) NULL;
+        tsdPtr->firstContainerPtr = nextPtr) {
+        nextPtr = tsdPtr->firstContainerPtr->nextPtr;
+        ckfree((char *) tsdPtr->firstContainerPtr);
     }
-    firstContainerPtr = (Container *) NULL;
+    tsdPtr->firstContainerPtr = (Container *) NULL;
 }
 
 /*
@@ -147,6 +151,8 @@ TkpUseWindow(interp, tkwin, string)
     int id;
     HWND hwnd;
     Container *containerPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr->window != None) {
         panic("TkpUseWindow: Already assigned a window");
@@ -191,7 +197,7 @@ TkpUseWindow(interp, tkwin, string)
      * things will get cleaned up at finalization.
      */
 
-    if (firstContainerPtr == (Container *) NULL) {
+    if (tsdPtr->firstContainerPtr == (Container *) NULL) {
         Tcl_CreateExitHandler(CleanupContainerList, (ClientData) NULL);
     }
     
@@ -202,8 +208,8 @@ TkpUseWindow(interp, tkwin, string)
      * app. are in the same process.
      */
 
-    for (containerPtr = firstContainerPtr; containerPtr != NULL;
-	    containerPtr = containerPtr->nextPtr) {
+    for (containerPtr = tsdPtr->firstContainerPtr; 
+            containerPtr != NULL; containerPtr = containerPtr->nextPtr) {
 	if (containerPtr->parentHWnd == hwnd) {
 	    winPtr->flags |= TK_BOTH_HALVES;
 	    containerPtr->parentPtr->flags |= TK_BOTH_HALVES;
@@ -214,8 +220,8 @@ TkpUseWindow(interp, tkwin, string)
 	containerPtr = (Container *) ckalloc(sizeof(Container));
 	containerPtr->parentPtr = NULL;
 	containerPtr->parentHWnd = hwnd;
-	containerPtr->nextPtr = firstContainerPtr;
-	firstContainerPtr = containerPtr;
+	containerPtr->nextPtr = tsdPtr->firstContainerPtr;
+	tsdPtr->firstContainerPtr = containerPtr;
     }
 
     /*
@@ -259,13 +265,15 @@ TkpMakeContainer(tkwin)
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     Container *containerPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * If this is the first container, register an exit handler so that
      * things will get cleaned up at finalization.
      */
 
-    if (firstContainerPtr == (Container *) NULL) {
+    if (tsdPtr->firstContainerPtr == (Container *) NULL) {
         Tcl_CreateExitHandler(CleanupContainerList, (ClientData) NULL);
     }
     
@@ -280,8 +288,8 @@ TkpMakeContainer(tkwin)
     containerPtr->parentHWnd = Tk_GetHWND(Tk_WindowId(tkwin));
     containerPtr->embeddedHWnd = NULL;
     containerPtr->embeddedPtr = NULL;
-    containerPtr->nextPtr = firstContainerPtr;
-    firstContainerPtr = containerPtr;
+    containerPtr->nextPtr = tsdPtr->firstContainerPtr;
+    tsdPtr->firstContainerPtr = containerPtr;
     winPtr->flags |= TK_CONTAINER;
 
     /*
@@ -359,12 +367,14 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
     LPARAM lParam;
 {
     Container *containerPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Find the Container structure associated with the parent window.
      */
 
-    for (containerPtr = firstContainerPtr;
+    for (containerPtr = tsdPtr->firstContainerPtr;
 	    containerPtr->parentHWnd != hwnd;
 	    containerPtr = containerPtr->nextPtr) {
 	if (containerPtr == NULL) {
@@ -509,8 +519,10 @@ TkpGetOtherWindow(winPtr)
 				 * embedded window. */
 {
     Container *containerPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    for (containerPtr = firstContainerPtr; containerPtr != NULL;
+    for (containerPtr = tsdPtr->firstContainerPtr; containerPtr != NULL;
 	    containerPtr = containerPtr->nextPtr) {
 	if (containerPtr->embeddedPtr == winPtr) {
 	    return containerPtr->parentPtr;
@@ -609,6 +621,8 @@ EmbedWindowDeleted(winPtr)
 				 * was deleted. */
 {
     Container *containerPtr, *prevPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Find the Container structure for this window work.  Delete the
@@ -617,7 +631,7 @@ EmbedWindowDeleted(winPtr)
      */
 
     prevPtr = NULL;
-    containerPtr = firstContainerPtr;
+    containerPtr = tsdPtr->firstContainerPtr;
     while (1) {
 	if (containerPtr->embeddedPtr == winPtr) {
 	    containerPtr->embeddedHWnd = NULL;
@@ -637,7 +651,7 @@ EmbedWindowDeleted(winPtr)
     if ((containerPtr->embeddedPtr == NULL)
 	    && (containerPtr->parentPtr == NULL)) {
 	if (prevPtr == NULL) {
-	    firstContainerPtr = containerPtr->nextPtr;
+	    tsdPtr->firstContainerPtr = containerPtr->nextPtr;
 	} else {
 	    prevPtr->nextPtr = containerPtr->nextPtr;
 	}

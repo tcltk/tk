@@ -11,26 +11,14 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.c,v 1.1.4.2 1998/09/30 02:16:51 stanton Exp $
+ * RCS: @(#) $Id: tkColor.c,v 1.1.4.3 1998/12/13 08:16:03 lfb Exp $
  */
 
 #include "tkColor.h"
 
 /*
- * There are two global hash tables used for managing colors.  The
- * first one, nameTable, maps from string color names like "red" or
- * "#00ff80" to TkColor structures.  It is used by Tk_AllocColorFromObj
- * Tk_GetColor.  The second table, valueTable, maps from integer
- * RGB values to TkColor structures.  It is used by Tk_GetColorByValue
- */
-
-static Tcl_HashTable nameTable;
-static Tcl_HashTable valueTable;
-static int initialized = 0;	/* 0 means static structures haven't been
-				 * initialized yet. */
-
-/*
- * Structures of the following following type are used as keys for valueTable.
+ * Structures of the following following type are used as keys for 
+ * colorValueTable (in TkDisplay).
  */
 
 typedef struct {
@@ -40,11 +28,21 @@ typedef struct {
     Display *display;		/* Display for colormap. */
 } ValueKey;
 
+
+/*
+ * The structure below is used to allocate thread-local data. 
+ */
+
+typedef struct ThreadSpecificData {
+    char rgbString[20];            /* */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
+
 /*
  * Forward declarations for procedures defined in this file:
  */
 
-static void		ColorInit _ANSI_ARGS_((void));
+static void		ColorInit _ANSI_ARGS_((TkDisplay *dispPtr));
 static void		DupColorObjProc _ANSI_ARGS_((Tcl_Obj *srcObjPtr,
 			    Tcl_Obj *dupObjPtr));
 static void		FreeColorObjProc _ANSI_ARGS_((Tcl_Obj *objPtr));
@@ -196,9 +194,10 @@ Tk_GetColor(interp, tkwin, name)
     int new;
     TkColor *tkColPtr;
     TkColor *existingColPtr;
+    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (!initialized) {
-	ColorInit();
+    if (!dispPtr->colorInit) {
+	ColorInit(dispPtr);
     }
 
     /*
@@ -206,7 +205,7 @@ Tk_GetColor(interp, tkwin, name)
      * name.
      */
 
-    nameHashPtr = Tcl_CreateHashEntry(&nameTable, name, &new);
+    nameHashPtr = Tcl_CreateHashEntry(&dispPtr->colorNameTable, name, &new);
     if (!new) {
 	existingColPtr = (TkColor *) Tcl_GetHashValue(nameHashPtr);
 	for (tkColPtr = existingColPtr;  tkColPtr != NULL;
@@ -244,7 +243,8 @@ Tk_GetColor(interp, tkwin, name)
     }
 
     /*
-     * Now create a new TkColor structure and add it to nameTable.
+     * Now create a new TkColor structure and add it to colorNameTable
+     * (in TkDisplay).
      */
 
     tkColPtr->magic = COLOR_MAGIC;
@@ -254,7 +254,7 @@ Tk_GetColor(interp, tkwin, name)
     tkColPtr->visual  = Tk_Visual(tkwin);
     tkColPtr->resourceRefCount = 1;
     tkColPtr->objRefCount = 0;
-    tkColPtr->tablePtr = &nameTable;
+    tkColPtr->tablePtr = &dispPtr->colorNameTable;
     tkColPtr->hashPtr = nameHashPtr;
     tkColPtr->nextPtr = existingColPtr;
     Tcl_SetHashValue(nameHashPtr, tkColPtr);
@@ -297,9 +297,10 @@ Tk_GetColorByValue(tkwin, colorPtr)
     int new;
     TkColor *tkColPtr;
     Display *display = Tk_Display(tkwin);
+    TkDisplay *dispPtr = TkGetDisplay(display);
 
-    if (!initialized) {
-	ColorInit();
+    if (!dispPtr->colorInit) {
+	ColorInit(dispPtr);
     }
 
     /*
@@ -312,7 +313,8 @@ Tk_GetColorByValue(tkwin, colorPtr)
     valueKey.blue = colorPtr->blue;
     valueKey.colormap = Tk_Colormap(tkwin);
     valueKey.display = display;
-    valueHashPtr = Tcl_CreateHashEntry(&valueTable, (char *) &valueKey, &new);
+    valueHashPtr = Tcl_CreateHashEntry(&dispPtr->colorValueTable, 
+            (char *) &valueKey, &new);
     if (!new) {
 	tkColPtr = (TkColor *) Tcl_GetHashValue(valueHashPtr);
 	tkColPtr->resourceRefCount++;
@@ -321,7 +323,7 @@ Tk_GetColorByValue(tkwin, colorPtr)
 
     /*
      * The name isn't currently known.  Find a pixel value for this
-     * color and add a new structure to valueTable.
+     * color and add a new structure to colorValueTable (in TkDisplay).
      */
 
     tkColPtr = TkpGetColorByValue(tkwin, colorPtr);
@@ -332,7 +334,7 @@ Tk_GetColorByValue(tkwin, colorPtr)
     tkColPtr->visual  = Tk_Visual(tkwin);
     tkColPtr->resourceRefCount = 1;
     tkColPtr->objRefCount = 0;
-    tkColPtr->tablePtr = &valueTable;
+    tkColPtr->tablePtr = &dispPtr->colorValueTable;
     tkColPtr->hashPtr = valueHashPtr;
     tkColPtr->nextPtr = NULL;
     Tcl_SetHashValue(valueHashPtr, tkColPtr);
@@ -366,15 +368,15 @@ Tk_NameOfColor(colorPtr)
     XColor *colorPtr;		/* Color whose name is desired. */
 {
     register TkColor *tkColPtr = (TkColor *) colorPtr;
-    static char string[20];
-
-    if ((tkColPtr->magic == COLOR_MAGIC)
-	    && (tkColPtr->tablePtr == &nameTable)) {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    
+    if (tkColPtr->magic == COLOR_MAGIC) {
 	return tkColPtr->hashPtr->key.string;
     }
-    sprintf(string, "#%04x%04x%04x", colorPtr->red, colorPtr->green,
-	    colorPtr->blue);
-    return string;
+    sprintf(tsdPtr->rgbString, "#%04x%04x%04x", colorPtr->red, 
+            colorPtr->green, colorPtr->blue);
+    return tsdPtr->rgbString;
 }
 
 /*
@@ -637,6 +639,7 @@ Tk_GetColorFromObj(tkwin, objPtr)
 {
     TkColor *tkColPtr;
     Tcl_HashEntry *hashPtr;
+    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     if (objPtr->typePtr != &colorObjType) {
 	InitColorObj(objPtr);
@@ -657,7 +660,8 @@ Tk_GetColorFromObj(tkwin, objPtr)
 	hashPtr = tkColPtr->hashPtr;
 	FreeColorObjProc(objPtr);
     } else {
-	hashPtr = Tcl_FindHashEntry(&nameTable, Tcl_GetString(objPtr));
+	hashPtr = Tcl_FindHashEntry(&dispPtr->colorNameTable, 
+                Tcl_GetString(objPtr));
 	if (hashPtr == NULL) {
 	    goto error;
 	}
@@ -741,11 +745,15 @@ InitColorObj(objPtr)
  */
 
 static void
-ColorInit()
+ColorInit(dispPtr)
+    TkDisplay *dispPtr;
 {
-    initialized = 1;
-    Tcl_InitHashTable(&nameTable, TCL_STRING_KEYS);
-    Tcl_InitHashTable(&valueTable, sizeof(ValueKey)/sizeof(int));
+    if (!dispPtr->colorInit) {
+        dispPtr->colorInit = 1;
+	Tcl_InitHashTable(&dispPtr->colorNameTable, TCL_STRING_KEYS);
+	Tcl_InitHashTable(&dispPtr->colorValueTable, 
+                sizeof(ValueKey)/sizeof(int));
+    }
 }
 
 /*
@@ -776,9 +784,10 @@ TkDebugColor(tkwin, name)
     TkColor *tkColPtr;
     Tcl_HashEntry *hashPtr;
     Tcl_Obj *resultPtr, *objPtr;
+    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     resultPtr = Tcl_NewObj();
-    hashPtr = Tcl_FindHashEntry(&nameTable, name);
+    hashPtr = Tcl_FindHashEntry(&dispPtr->colorNameTable, name);
     if (hashPtr != NULL) {
 	tkColPtr = (TkColor *) Tcl_GetHashValue(hashPtr);
 	if (tkColPtr == NULL) {

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinColor.c,v 1.1.4.2 1998/09/30 02:19:29 stanton Exp $
+ * RCS: @(#) $Id: tkWinColor.c,v 1.1.4.3 1998/12/13 08:16:16 lfb Exp $
  */
 
 #include "tkWinInt.h"
@@ -25,12 +25,6 @@ typedef struct WinColor {
     int index;			/* Index for GetSysColor(), -1 if color
 				 * is not a "live" system color. */
 } WinColor;
-
-/*
- * colorTable is a hash table used to look up X colors by name.
- */
-
-static Tcl_HashTable colorTable;
 
 /*
  * The sysColors array contains the names and index values for the
@@ -75,7 +69,10 @@ static SystemColorEntry sysColors[] = {
     NULL,			0
 };
 
-static int ncolors = 0;
+typedef struct ThreadSpecificData { 
+    int ncolors;
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Forward declarations for functions defined later in this file.
@@ -111,13 +108,15 @@ FindSystemColor(name, colorPtr, indexPtr)
     int *indexPtr;		/* Out parameter to store color index. */
 {
     int l, u, r, i;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Count the number of elements in the color array if we haven't
      * done so yet.
      */
 
-    if (ncolors == 0) {
+    if (tsdPtr->ncolors == 0) {
 	SystemColorEntry *ePtr;
 	int version;
 
@@ -130,7 +129,7 @@ FindSystemColor(name, colorPtr, indexPtr)
 		    ePtr->index = COLOR_BTNHIGHLIGHT;
 		}
 	    }
-	    ncolors++;
+	    tsdPtr->ncolors++;
 	}
     }
 
@@ -139,7 +138,7 @@ FindSystemColor(name, colorPtr, indexPtr)
      */
 
     l = 0;
-    u = ncolors - 1;
+    u = tsdPtr->ncolors - 1;
     while (l <= u) {
 	i = (l + u) / 2;
 	r = strcasecmp(name, sysColors[i].name);

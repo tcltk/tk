@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.1.4.3 1998/11/25 21:16:31 stanton Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.1.4.4 1998/12/13 08:16:02 lfb Exp $
  */
 
 #include "default.h"
@@ -157,13 +157,6 @@ extern Tk_ItemType tkRectangleType, tkTextType, tkWindowType;
 
 static Tk_Uid allUid = NULL;
 static Tk_Uid currentUid = NULL;
-
-/*
- * Statistics counters:
- */
-
-static int numIdSearches;
-static int numSlowSearches;
 
 /*
  * Prototypes for procedures defined later in this file:
@@ -2213,6 +2206,11 @@ StartTagSearch(canvasPtr, tag, searchPtr)
     Tk_Uid *tagPtr;
     Tk_Uid uid;
     int count;
+    TkWindow *tkwin;
+    TkDisplay *dispPtr;
+
+    tkwin = (TkWindow *) canvasPtr->tkwin;
+    dispPtr = tkwin->dispPtr;
 
     /*
      * Initialize the search.
@@ -2231,15 +2229,15 @@ StartTagSearch(canvasPtr, tag, searchPtr)
     if (isdigit(UCHAR(*tag))) {
 	char *end;
 	Tcl_HashEntry *entryPtr;
-	
-	numIdSearches++;
+
+	dispPtr->numIdSearches++;
 	id = strtoul(tag, &end, 0);
 	if (*end == 0) {
 	    itemPtr = canvasPtr->hotPtr;
-	    lastPtr = canvasPtr->hotPrevPtr;
+            lastPtr = canvasPtr->hotPrevPtr;
 	    if ((itemPtr == NULL) || (itemPtr->id != id) || (lastPtr == NULL)
 		    || (lastPtr->nextPtr != itemPtr)) {
-		numSlowSearches++;
+		dispPtr->numSlowSearches++;
 		entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable, (char *) id);
 		if (entryPtr != NULL) {
 		    itemPtr = (Tk_Item *)Tcl_GetHashValue(entryPtr);

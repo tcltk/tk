@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.1.4.2 1998/09/30 02:17:18 stanton Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.1.4.3 1998/12/13 08:16:11 lfb Exp $
  */
 
 #include "tkInt.h"
@@ -45,12 +45,16 @@ typedef struct LostCommand {
 } LostCommand;
 
 /*
- * Shared variables:
+ * The structure below is used to keep each thread's pending list
+ * separate.
  */
 
-TkSelInProgress *pendingPtr = NULL;
+typedef struct ThreadSpecificData {
+    TkSelInProgress *pendingPtr;
 				/* Topmost search in progress, or
 				 * NULL if none. */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Forward declarations for procedures defined in this file:
@@ -199,6 +203,8 @@ Tk_DeleteSelHandler(tkwin, selection, target)
     TkWindow *winPtr = (TkWindow *) tkwin;
     register TkSelHandler *selPtr, *prevPtr;
     register TkSelInProgress *ipPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Find the selection handler to be deleted, or return if it doesn't
@@ -220,7 +226,8 @@ Tk_DeleteSelHandler(tkwin, selection, target)
      * handler is dead.
      */
 
-    for (ipPtr = pendingPtr; ipPtr != NULL; ipPtr = ipPtr->nextPtr) {
+    for (ipPtr = tsdPtr->pendingPtr; ipPtr != NULL; 
+            ipPtr = ipPtr->nextPtr) {
 	if (ipPtr->selPtr == selPtr) {
 	    ipPtr->selPtr = NULL;
 	}
@@ -480,6 +487,8 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
     TkSelectionInfo *infoPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (dispPtr->multipleAtom == None) {
 	TkSelInit(tkwin);
@@ -528,13 +537,13 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
 	    offset = 0;
 	    result = TCL_OK;
 	    ip.selPtr = selPtr;
-	    ip.nextPtr = pendingPtr;
-	    pendingPtr = &ip;
+	    ip.nextPtr = tsdPtr->pendingPtr;
+	    tsdPtr->pendingPtr = &ip;
 	    while (1) {
 		count = (selPtr->proc)(selPtr->clientData, offset, buffer,
 			TK_SEL_BYTES_AT_ONCE);
 		if ((count < 0) || (ip.selPtr == NULL)) {
-		    pendingPtr = ip.nextPtr;
+		    tsdPtr->pendingPtr = ip.nextPtr;
 		    goto cantget;
 		}
 		if (count > TK_SEL_BYTES_AT_ONCE) {
@@ -548,7 +557,7 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
 		}
 		offset += count;
 	    }
-	    pendingPtr = ip.nextPtr;
+	    tsdPtr->pendingPtr = ip.nextPtr;
 	}
 	return result;
     }
@@ -886,6 +895,60 @@ Tk_SelectionCmd(clientData, interp, argc, argv)
 /*
  *----------------------------------------------------------------------
  *
+ * TkSelGetInProgress --
+ *
+ *	This procedure returns a pointer to the thread-local
+ *      list of pending searches.
+ *
+ * Results:
+ *	The return value is a pointer to the first search in progress, 
+ *      or NULL if there are none. 
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TkSelInProgress *
+TkSelGetInProgress(void)
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    return tsdPtr->pendingPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkSelSetInProgress --
+ *
+ *	This procedure is used to set the thread-local list of pending 
+ *      searches.  It is required because the pending list is kept
+ *      in thread local storage.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+void
+TkSelSetInProgress(pendingPtr)
+    TkSelInProgress *pendingPtr;
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+   tsdPtr->pendingPtr = pendingPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkSelDeadWindow --
  *
  *	This procedure is invoked just before a TkWindow is deleted.
@@ -907,6 +970,8 @@ TkSelDeadWindow(winPtr)
     register TkSelHandler *selPtr;
     register TkSelInProgress *ipPtr;
     TkSelectionInfo *infoPtr, *prevPtr, *nextPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * While deleting all the handlers, be careful to check whether
@@ -917,7 +982,8 @@ TkSelDeadWindow(winPtr)
     while (winPtr->selHandlerList != NULL) {
 	selPtr = winPtr->selHandlerList;
 	winPtr->selHandlerList = selPtr->nextPtr;
-	for (ipPtr = pendingPtr; ipPtr != NULL; ipPtr = ipPtr->nextPtr) {
+	for (ipPtr = tsdPtr->pendingPtr; ipPtr != NULL; 
+                ipPtr = ipPtr->nextPtr) {
 	    if (ipPtr->selPtr == selPtr) {
 		ipPtr->selPtr = NULL;
 	    }

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.1.4.2 1998/09/30 02:16:56 stanton Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.1.4.3 1998/12/13 08:16:04 lfb Exp $
  */
 
 #include "tkInt.h"
@@ -74,12 +74,6 @@ typedef struct TkDisplayFocusInfo {
 				/* Next in list of all display focus
 				 * records for a given application. */
 } DisplayFocusInfo;
-
-/*
- * Global used for debugging.
- */
-
-int tclFocusDebug = 0;
 
 /*
  * The following magic value is stored in the "send_event" field of
@@ -494,7 +488,7 @@ TkFocusFilterEvent(winPtr, eventPtr)
 	if (eventPtr->xcrossing.focus &&
                 (displayFocusPtr->focusWinPtr == NULL)
 		&& !(winPtr->flags & TK_EMBEDDED)) {
-	    if (tclFocusDebug) {
+	    if (dispPtr->focusDebug) {
 		printf("Focussed implicitly on %s\n",
 			newFocusPtr->pathName);
 	    }
@@ -519,7 +513,7 @@ TkFocusFilterEvent(winPtr, eventPtr)
 
 	if ((dispPtr->implicitWinPtr != NULL)
 		&& !(winPtr->flags & TK_EMBEDDED)) {
-	    if (tclFocusDebug) {
+	    if (dispPtr->focusDebug) {
 		printf("Defocussed implicit Async\n");
 	    }
 	    GenerateFocusEvents(displayFocusPtr->focusWinPtr,
@@ -828,7 +822,7 @@ TkFocusDeadWindow(winPtr)
 	     */
 
 	    if (dispPtr->implicitWinPtr == winPtr) {
-		if (tclFocusDebug) {
+		if (dispPtr->focusDebug) {
 		    printf("releasing focus to root after %s died\n",
 			    tlFocusPtr->topLevelPtr->pathName);
 		}
@@ -856,7 +850,7 @@ TkFocusDeadWindow(winPtr)
 	    tlFocusPtr->focusWinPtr = tlFocusPtr->topLevelPtr;
 	    if ((displayFocusPtr->focusWinPtr == winPtr)
 		    && !(tlFocusPtr->topLevelPtr->flags & TK_ALREADY_DEAD)) {
-		if (tclFocusDebug) {
+		if (dispPtr->focusDebug) {
 		    printf("forwarding focus to %s after %s died\n",
 			    tlFocusPtr->topLevelPtr->pathName,
 			    winPtr->pathName);
@@ -951,7 +945,7 @@ FocusMapProc(clientData, eventPtr)
     if (eventPtr->type == VisibilityNotify) {
 	displayFocusPtr = FindDisplayFocusInfo(winPtr->mainPtr,
 		winPtr->dispPtr);
-	if (tclFocusDebug) {
+	if (winPtr->dispPtr->focusDebug) {
 	    printf("auto-focussing on %s, force %d\n", winPtr->pathName,
 		    displayFocusPtr->forceFocus);
 	}

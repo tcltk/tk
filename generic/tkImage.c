@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.1.4.2 1998/09/30 02:17:01 stanton Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.1.4.3 1998/12/13 08:16:07 lfb Exp $
  */
 
 #include "tkInt.h"
@@ -71,12 +71,11 @@ typedef struct ImageMaster {
 				 * derived from this name. */
 } ImageMaster;
 
-/*
- * The following variable points to the first in a list of all known
- * image types.
- */
-
-static Tk_ImageType *imageTypeList = NULL;
+typedef struct ThreadSpecificData {
+    Tk_ImageType *imageTypeList;/* First in a list of all known image 
+				 * types. */  
+} ThreadSpecificData;           
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Prototypes for local procedures:
@@ -110,8 +109,11 @@ Tk_CreateImageType(typePtr)
 				 * in by caller.  Must not have been passed
 				 * to Tk_CreateImageType previously. */
 {
-    typePtr->nextPtr = imageTypeList;
-    imageTypeList = typePtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    typePtr->nextPtr = tsdPtr->imageTypeList;
+    tsdPtr->imageTypeList = typePtr;
 }
 
 /*
@@ -147,7 +149,9 @@ Tk_ImageCmd(clientData, interp, argc, argv)
     Tcl_HashEntry *hPtr;
     Tcl_HashSearch search;
     char idString[16 + TCL_INTEGER_SPACE], *name;
-    static int id = 0;
+    TkDisplay *dispPtr = winPtr->dispPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (argc < 2) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
@@ -168,7 +172,7 @@ Tk_ImageCmd(clientData, interp, argc, argv)
 	 * Look up the image type.
 	 */
 
-	for (typePtr = imageTypeList; typePtr != NULL;
+	for (typePtr = tsdPtr->imageTypeList; typePtr != NULL;
 		typePtr = typePtr->nextPtr) {
 	    if ((c == typePtr->name[0])
 		    && (strcmp(argv[2], typePtr->name) == 0)) {
@@ -186,8 +190,8 @@ Tk_ImageCmd(clientData, interp, argc, argv)
 	 */
 
 	if ((argc == 3) || (argv[3][0] == '-')) {
-	    id++;
-	    sprintf(idString, "image%d", id);
+	    dispPtr->imageId++;
+	    sprintf(idString, "image%d", dispPtr->imageId);
 	    name = idString;
 	    firstOption = 3;
 	} else {
@@ -312,7 +316,7 @@ Tk_ImageCmd(clientData, interp, argc, argv)
 		    " types\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
-	for (typePtr = imageTypeList; typePtr != NULL;
+	for (typePtr = tsdPtr->imageTypeList; typePtr != NULL;
 		typePtr = typePtr->nextPtr) {
 	    Tcl_AppendElement(interp, typePtr->name);
 	}

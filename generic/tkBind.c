@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.1.4.4 1998/12/10 04:29:42 stanton Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.1.4.5 1998/12/13 08:16:00 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -376,6 +376,7 @@ static Tcl_HashTable nameTable;		/* keyArray hashed by keysym name. */
  */
 
 static int initialized = 0;
+TCL_DECLARE_MUTEX(bindMutex)
 
 /*
  * A hash table is kept to map from the string names of event
@@ -727,37 +728,40 @@ TkBindInit(mainPtr)
      */
 
     if (!initialized) {
-	Tcl_HashEntry *hPtr;
-	ModInfo *modPtr;
-	EventInfo *eiPtr;
-	int dummy;
+        Tcl_MutexLock(bindMutex);
+	if (!initialized) {
+	    Tcl_HashEntry *hPtr;
+	    ModInfo *modPtr;
+	    EventInfo *eiPtr;
+	    int dummy;
 
 #ifdef REDO_KEYSYM_LOOKUP
-	KeySymInfo *kPtr;
+	    KeySymInfo *kPtr;
 
-	Tcl_InitHashTable(&keySymTable, TCL_STRING_KEYS);
-	Tcl_InitHashTable(&nameTable, TCL_ONE_WORD_KEYS);
-	for (kPtr = keyArray; kPtr->name != NULL; kPtr++) {
-	    hPtr = Tcl_CreateHashEntry(&keySymTable, kPtr->name, &dummy);
-	    Tcl_SetHashValue(hPtr, kPtr->value);
-	    hPtr = Tcl_CreateHashEntry(&nameTable, (char *) kPtr->value,
-		    &dummy);
-	    Tcl_SetHashValue(hPtr, kPtr->name);
-	}
+	    Tcl_InitHashTable(&keySymTable, TCL_STRING_KEYS);
+	    Tcl_InitHashTable(&nameTable, TCL_ONE_WORD_KEYS);
+	    for (kPtr = keyArray; kPtr->name != NULL; kPtr++) {
+	        hPtr = Tcl_CreateHashEntry(&keySymTable, kPtr->name, &dummy);
+		Tcl_SetHashValue(hPtr, kPtr->value);
+		hPtr = Tcl_CreateHashEntry(&nameTable, (char *) kPtr->value,
+		        &dummy);
+		Tcl_SetHashValue(hPtr, kPtr->name);
+	    }
 #endif /* REDO_KEYSYM_LOOKUP */
 
-	Tcl_InitHashTable(&modTable, TCL_STRING_KEYS);
-	for (modPtr = modArray; modPtr->name != NULL; modPtr++) {
-	    hPtr = Tcl_CreateHashEntry(&modTable, modPtr->name, &dummy);
-	    Tcl_SetHashValue(hPtr, modPtr);
-	}
+	    Tcl_InitHashTable(&modTable, TCL_STRING_KEYS);
+	    for (modPtr = modArray; modPtr->name != NULL; modPtr++) {
+	        hPtr = Tcl_CreateHashEntry(&modTable, modPtr->name, &dummy);
+		Tcl_SetHashValue(hPtr, modPtr);
+	    }
     
-	Tcl_InitHashTable(&eventTable, TCL_STRING_KEYS);
-	for (eiPtr = eventArray; eiPtr->name != NULL; eiPtr++) {
-	    hPtr = Tcl_CreateHashEntry(&eventTable, eiPtr->name, &dummy);
-	    Tcl_SetHashValue(hPtr, eiPtr);
+	    Tcl_InitHashTable(&eventTable, TCL_STRING_KEYS);
+	    for (eiPtr = eventArray; eiPtr->name != NULL; eiPtr++) {
+	        hPtr = Tcl_CreateHashEntry(&eventTable, eiPtr->name, &dummy);
+		Tcl_SetHashValue(hPtr, eiPtr);
+	    }
+	    initialized = 1;
 	}
-	initialized = 1;
     }
 
     mainPtr->bindingTable = Tk_CreateBindingTable(mainPtr->interp);

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.1.4.2 1998/09/30 02:16:50 stanton Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.1.4.3 1998/12/13 08:16:03 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -851,7 +851,7 @@ Tk_UpdateObjCmd(clientData, interp, objc, objv)
 	while (Tcl_DoOneEvent(flags) != 0) {
 	    /* Empty loop body */
 	}
-	for (dispPtr = tkDisplayList; dispPtr != NULL;
+	for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
 		dispPtr = dispPtr->nextPtr) {
 	    XSync(dispPtr->display, False);
 	}

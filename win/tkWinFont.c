@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.1.4.2 1998/09/30 02:19:33 stanton Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.1.4.3 1998/12/13 08:16:18 lfb Exp $
  */
 
 #include "tkWinInt.h"
@@ -151,14 +151,6 @@ typedef struct CanUse {
 } CanUse;
 
 /*
- * The list of font families that are currently loaded.  As screen fonts
- * are loaded, this list grows to hold information about what characters
- * exist in each font family.
- */
-
-static FontFamily *fontFamilyList = NULL;
-
-/*
  * The following structure is used to map between the Tcl strings that
  * represent the system fonts and the numbers used by Windows.
  */
@@ -172,6 +164,16 @@ static TkStateMap systemMap[] = {
     {SYSTEM_FONT,	    "system"},
     {-1,		    NULL}
 };
+
+typedef struct ThreadSpecificData {
+    FontFamily *fontFamilyList; /* The list of font families that are 
+				 * currently loaded.  As screen fonts
+				 * are loaded, this list grows to hold 
+				 * information about what characters
+				 * exist in each font family.  */
+    Tcl_HashTable uidTable;
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Information cached about the system at startup time.
@@ -1221,6 +1223,8 @@ AllocFontFamily(
     Tcl_DString faceString;
     Tcl_Encoding encoding;
     char buf[LF_FACESIZE * sizeof(WCHAR)];
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     hFont = SelectObject(hdc, hFont);
     if (platformId == VER_PLATFORM_WIN32_NT) {
@@ -1233,7 +1237,7 @@ AllocFontFamily(
     Tcl_DStringFree(&faceString);
     hFont = SelectObject(hdc, hFont);
 
-    familyPtr = fontFamilyList; 
+    familyPtr = tsdPtr->fontFamilyList; 
     for ( ; familyPtr != NULL; familyPtr = familyPtr->nextPtr) {
 	if (familyPtr->faceName == faceName) {
 	    familyPtr->refCount++;
@@ -1243,8 +1247,8 @@ AllocFontFamily(
 
     familyPtr = (FontFamily *) ckalloc(sizeof(FontFamily));
     memset(familyPtr, 0, sizeof(FontFamily));
-    familyPtr->nextPtr = fontFamilyList;
-    fontFamilyList = familyPtr;
+    familyPtr->nextPtr = tsdPtr->fontFamilyList;
+    tsdPtr->fontFamilyList = familyPtr;
 
     /* 
      * Set key for this FontFamily. 
@@ -1327,6 +1331,8 @@ FreeFontFamily(
 {
     int i;
     FontFamily **familyPtrPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (familyPtr == NULL) {
         return;
@@ -1354,7 +1360,7 @@ FreeFontFamily(
      * Delete from list. 
      */
          
-    for (familyPtrPtr = &fontFamilyList; ; ) {
+    for (familyPtrPtr = &tsdPtr->fontFamilyList; ; ) {
         if (*familyPtrPtr == familyPtr) {
   	    *familyPtrPtr = familyPtr->nextPtr;
 	    break;

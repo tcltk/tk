@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSend.c,v 1.1.4.2 1998/09/30 02:19:38 stanton Exp $
+ * RCS: @(#) $Id: tkWinSend.c,v 1.1.4.3 1998/12/13 08:16:19 lfb Exp $
  */
 
 #include "tkWinInt.h"
@@ -41,19 +41,17 @@ typedef struct Conversation {
     Tcl_Obj *returnPackagePtr;	/* The result package for this conversation. */
 } Conversation;
 
-/*
- * Static variables used by the registration process. Most of these
- * are allocated in RegOpen and freed in RegClose.
- */
-
-static Conversation *currentConversations;
-				/* A list of conversations currently
-				 * being processed. */
-static DWORD ddeInstance = 0;	/* The application instance handle given
+typedef struct ThreadSpecificData {
+    DWORD ddeInstance;          /* The application instance handle given
 				 * to us by DdeInitialize. */
-static RegisteredInterp *interpListPtr;
-				/* The list of interps that this particular
-				 * application knows about. */
+    Conversation *currentConversations;
+                                /* A list of conversations currently
+				 * being processed. */
+    RegisteredInterp *interpListPtr;
+                                /* List of all interpreters registered
+				 * in the current process. */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Forward declarations for procedures defined later in this file.
@@ -116,25 +114,28 @@ Tk_SetAppName(tkwin, name)
     Tcl_DString dString;
     Tcl_Obj *resultObjPtr, *interpNamePtr;
     char *interpName;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     /*
      * Make sure that the DDE server is there. This is done only once,
      * add an exit handler tear it down.
      */
 
-    if (ddeInstance == 0) {
+    if (tsdPtr->ddeInstance == 0) {
 	HSZ ddeService;
 
-	if (DdeInitialize(&ddeInstance, TkDdeServerProc,
+	if (DdeInitialize(&tsdPtr->ddeInstance, TkDdeServerProc,
 		CBF_SKIP_REGISTRATIONS|CBF_SKIP_UNREGISTRATIONS
 		|CBF_FAIL_POKES, 0) 
 		!= DMLERR_NO_ERROR) {
-	    DdeUninitialize(ddeInstance);
+	    DdeUninitialize(tsdPtr->ddeInstance);
 	    return NULL;
 	}
 	Tcl_CreateExitHandler(RemoveDdeServerExitProc, NULL);
-	ddeService = DdeCreateStringHandle(ddeInstance, "Tk", 0);
-	DdeNameService(ddeInstance, ddeService, 0L, DNS_REGISTER);
+	ddeService = DdeCreateStringHandle(tsdPtr->ddeInstance, "Tk", 0);
+	DdeNameService(tsdPtr->ddeInstance, ddeService, 0L, DNS_REGISTER);
     }
 
     /*
@@ -143,11 +144,11 @@ Tk_SetAppName(tkwin, name)
      * will take care of disposing of this entry.
      */
 
-    for (riPtr = interpListPtr, prevPtr = NULL; riPtr != NULL; 
+    for (riPtr = tsdPtr->interpListPtr, prevPtr = NULL; riPtr != NULL; 
 	    prevPtr = riPtr, riPtr = riPtr->nextPtr) {
 	if (riPtr->interp == interp) {
 	    if (prevPtr == NULL) {
-		interpListPtr = interpListPtr->nextPtr;
+		tsdPtr->interpListPtr = tsdPtr->interpListPtr->nextPtr;
 	    } else {
 		prevPtr->nextPtr = riPtr->nextPtr;
 	    }
@@ -202,8 +203,8 @@ Tk_SetAppName(tkwin, name)
     riPtr = (RegisteredInterp *) ckalloc(sizeof(RegisteredInterp));
     riPtr->interp = interp;
     riPtr->name = ckalloc(strlen(actualName) + 1);
-    riPtr->nextPtr = interpListPtr;
-    interpListPtr = riPtr;
+    riPtr->nextPtr = tsdPtr->interpListPtr;
+    tsdPtr->interpListPtr = riPtr;
     strcpy(riPtr->name, actualName);
 
     Tcl_CreateObjCommand(interp, "send", Tk_SendObjCmd, 
@@ -243,6 +244,8 @@ Tk_SendObjCmd(
     int objc,			/* Number of arguments */
     Tcl_Obj *CONST objv[])	/* The arguments */
 {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     char *string, *sendName;
     int async, i, result, length;
     RegisteredInterp *riPtr;
@@ -310,7 +313,8 @@ Tk_SendObjCmd(
      * deallocated objects.
      */
 
-    for (riPtr = interpListPtr; riPtr != NULL; riPtr = riPtr->nextPtr) {
+    for (riPtr = tsdPtr->interpListPtr; riPtr != NULL; riPtr
+            = riPtr->nextPtr) {
 	if (stricmp(sendName, riPtr->name) == 0) {
 	    break;
 	}
@@ -380,23 +384,23 @@ Tk_SendObjCmd(
 
 	objPtr = Tcl_ConcatObj(objc, objv);
 	string = Tcl_GetStringFromObj(objPtr, &length);
-	ddeItem = DdeCreateDataHandle(ddeInstance, string, length, 0, 0,
+	ddeItem = DdeCreateDataHandle(tsdPtr->ddeInstance, string, length, 0, 0,
 		CF_TEXT, 0);
 	if (async) {
 	    ddeData = DdeClientTransaction((LPBYTE) ddeItem, 0xFFFFFFFF, hConv, 0,
 		    CF_TEXT, XTYP_EXECUTE, TIMEOUT_ASYNC, &ddeResult);
-	    DdeAbandonTransaction(ddeInstance, hConv, ddeResult);
+	    DdeAbandonTransaction(tsdPtr->ddeInstance, hConv, ddeResult);
 	} else {
 	    ddeData = DdeClientTransaction((LPBYTE) ddeItem, 0xFFFFFFFF, hConv, 0,
 		    CF_TEXT, XTYP_EXECUTE, 7200000, NULL);
 	    if (ddeData != 0) {
 		HSZ ddeCookie;
 
-		ddeCookie = DdeCreateStringHandle(ddeInstance, 
+		ddeCookie = DdeCreateStringHandle(tsdPtr->ddeInstance, 
 			"$TK$EXECUTE$RESULT", CP_WINANSI);
 		ddeData = DdeClientTransaction(NULL, 0, hConv, ddeCookie,
 			CF_TEXT, XTYP_REQUEST, 7200000, NULL);
-		DdeFreeStringHandle(ddeInstance, ddeCookie);
+		DdeFreeStringHandle(tsdPtr->ddeInstance, ddeCookie);
 	    }
 	}
 
@@ -499,10 +503,12 @@ TkGetInterpNames(interp, tkwin)
     Tcl_DString dString;
     char *topicName;
     int len;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     convInfo.cb = sizeof(CONVINFO);
-    ddeService = DdeCreateStringHandle(ddeInstance, "Tk", CP_WINANSI);
-    hConvList = DdeConnectList(ddeInstance, ddeService, NULL,
+    ddeService = DdeCreateStringHandle(tsdPtr->ddeInstance, "Tk", CP_WINANSI);
+    hConvList = DdeConnectList(tsdPtr->ddeInstance, ddeService, NULL,
 	    0, NULL);
     hConv = 0;
 
@@ -510,11 +516,11 @@ TkGetInterpNames(interp, tkwin)
     listObjPtr = Tcl_NewListObj(0, (Tcl_Obj **) NULL);
     while (hConv = DdeQueryNextServer(hConvList, hConv), hConv != 0) {
 	DdeQueryConvInfo(hConv, QID_SYNC, &convInfo);
-	len = DdeQueryString(ddeInstance, convInfo.hszTopic,
+	len = DdeQueryString(tsdPtr->ddeInstance, convInfo.hszTopic,
 		NULL, 0, CP_WINANSI);
 	Tcl_DStringSetLength(&dString, len);
 	topicName = Tcl_DStringValue(&dString);
-	DdeQueryString(ddeInstance, convInfo.hszTopic, topicName,
+	DdeQueryString(tsdPtr->ddeInstance, convInfo.hszTopic, topicName,
 		len + 1, CP_WINANSI);
 	Tcl_ListObjAppendElement(interp, listObjPtr, 
 		Tcl_NewStringObj(topicName, len));
@@ -550,8 +556,10 @@ DeleteProc(clientData)
 {
     RegisteredInterp *riPtr = (RegisteredInterp *) clientData;
     RegisteredInterp *searchPtr, *prevPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    for (searchPtr = interpListPtr, prevPtr = NULL;
+    for (searchPtr = tsdPtr->interpListPtr, prevPtr = NULL;
 	    (searchPtr != NULL) && (searchPtr != riPtr);
 	    prevPtr = searchPtr, searchPtr = searchPtr->nextPtr) {
 	/*
@@ -563,7 +571,7 @@ DeleteProc(clientData)
 
     if (searchPtr != NULL) {
 	if (prevPtr == NULL) {
-	    interpListPtr = interpListPtr->nextPtr;
+	    tsdPtr->interpListPtr = tsdPtr->interpListPtr->nextPtr;
 	} else {
 	    prevPtr->nextPtr = searchPtr->nextPtr;
 	}
@@ -666,6 +674,8 @@ TkDdeServerProc (
     HDDEDATA ddeReturn = NULL;
     RegisteredInterp *riPtr;
     Conversation *convPtr, *prevConvPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     switch(uType) {
 	case XTYP_CONNECT:
@@ -675,14 +685,14 @@ TkDdeServerProc (
 	     * and make sure we have a valid topic.
 	     */
 
-	    len = DdeQueryString(ddeInstance, ddeTopic, NULL, 0, 0);
+	    len = DdeQueryString(tsdPtr->ddeInstance, ddeTopic, NULL, 0, 0);
 	    Tcl_DStringInit(&dString);
 	    Tcl_DStringSetLength(&dString, len);
 	    utilString = Tcl_DStringValue(&dString);
-	    DdeQueryString(ddeInstance, ddeTopic, utilString, len + 1,
+	    DdeQueryString(tsdPtr->ddeInstance, ddeTopic, utilString, len + 1,
 		    CP_WINANSI);
 
-	    for (riPtr = interpListPtr; riPtr != NULL;
+	    for (riPtr = tsdPtr->interpListPtr; riPtr != NULL;
 		    riPtr = riPtr->nextPtr) {
 		if (stricmp(utilString, riPtr->name) == 0) {
 		    Tcl_DStringFree(&dString);
@@ -702,21 +712,21 @@ TkDdeServerProc (
 	     * XTYP_REQUEST.
 	     */
 
-	    len = DdeQueryString(ddeInstance, ddeTopic, NULL, 0, 0);
+	    len = DdeQueryString(tsdPtr->ddeInstance, ddeTopic, NULL, 0, 0);
 	    Tcl_DStringInit(&dString);
 	    Tcl_DStringSetLength(&dString, len);
 	    utilString = Tcl_DStringValue(&dString);
-	    DdeQueryString(ddeInstance, ddeTopic, utilString, len + 1, 
+	    DdeQueryString(tsdPtr->ddeInstance, ddeTopic, utilString, len + 1, 
 		    CP_WINANSI);
-	    for (riPtr = interpListPtr; riPtr != NULL; 
+	    for (riPtr = tsdPtr->interpListPtr; riPtr != NULL; 
 		    riPtr = riPtr->nextPtr) {
 		if (stricmp(riPtr->name, utilString) == 0) {
 		    convPtr = (Conversation *) ckalloc(sizeof(Conversation));
-		    convPtr->nextPtr = currentConversations;
+		    convPtr->nextPtr = tsdPtr->currentConversations;
 		    convPtr->returnPackagePtr = NULL;
 		    convPtr->hConv = hConv;
 		    convPtr->riPtr = riPtr;
-		    currentConversations = convPtr;
+		    tsdPtr->currentConversations = convPtr;
 		    break;
 		}
 	    }
@@ -730,12 +740,12 @@ TkDdeServerProc (
 	     * conversation.
 	     */
 
-	    for (convPtr = currentConversations, prevConvPtr = NULL;
+	    for (convPtr = tsdPtr->currentConversations, prevConvPtr = NULL;
 		    convPtr != NULL; 
 		    prevConvPtr = convPtr, convPtr = convPtr->nextPtr) {
 		if (hConv == convPtr->hConv) {
 		    if (prevConvPtr == NULL) {
-			currentConversations = convPtr->nextPtr;
+			tsdPtr->currentConversations = convPtr->nextPtr;
 		    } else {
 			prevConvPtr->nextPtr = convPtr->nextPtr;
 		    }
@@ -761,7 +771,7 @@ TkDdeServerProc (
 	    }
 
 	    ddeReturn = (HDDEDATA) FALSE;
-	    for (convPtr = currentConversations; (convPtr != NULL)
+	    for (convPtr = tsdPtr->currentConversations; (convPtr != NULL)
 		    && (convPtr->hConv != hConv); convPtr = convPtr->nextPtr) {
 		/*
 		 * Empty loop body.
@@ -771,17 +781,17 @@ TkDdeServerProc (
 	    if (convPtr != NULL) {
 		char *returnString;
 
-		len = DdeQueryString(ddeInstance, ddeItem, NULL, 0,
+		len = DdeQueryString(tsdPtr->ddeInstance, ddeItem, NULL, 0,
 			CP_WINANSI);
 		Tcl_DStringInit(&dString);
 		Tcl_DStringSetLength(&dString, len);
 		utilString = Tcl_DStringValue(&dString);
-		DdeQueryString(ddeInstance, ddeItem, utilString, len + 1,
-			CP_WINANSI);
+		DdeQueryString(tsdPtr->ddeInstance, ddeItem, utilString, 
+                        len + 1, CP_WINANSI);
 		if (stricmp(utilString, "$TK$EXECUTE$RESULT") == 0) {
 		    returnString =
 		        Tcl_GetStringFromObj(convPtr->returnPackagePtr, &len);
-		    ddeReturn = DdeCreateDataHandle(ddeInstance,
+		    ddeReturn = DdeCreateDataHandle(tsdPtr->ddeInstance,
 			    returnString, len, 0, ddeItem, CF_TEXT,
 			    0);
 		} else {
@@ -791,7 +801,7 @@ TkDdeServerProc (
 		    if (variableObjPtr != NULL) {
 			returnString = Tcl_GetStringFromObj(variableObjPtr,
 				&len);
-			ddeReturn = DdeCreateDataHandle(ddeInstance,
+			ddeReturn = DdeCreateDataHandle(tsdPtr->ddeInstance,
 				returnString, len, 0, ddeItem, CF_TEXT, 0);
 		    } else {
 			ddeReturn = NULL;
@@ -811,7 +821,7 @@ TkDdeServerProc (
 
 	    Tcl_Obj *returnPackagePtr;
 
-	    for (convPtr = currentConversations; (convPtr != NULL)
+	    for (convPtr = tsdPtr->currentConversations; (convPtr != NULL)
 		    && (convPtr->hConv != hConv); convPtr = convPtr->nextPtr) {
 		/*
 		 * Empty loop body.
@@ -833,7 +843,7 @@ TkDdeServerProc (
 	    convPtr->returnPackagePtr = NULL;
 	    returnPackagePtr = 
 		    ExecuteRemoteObject(convPtr->riPtr, ddeObjectPtr);
-	    for (convPtr = currentConversations; (convPtr != NULL)
+	    for (convPtr = tsdPtr->currentConversations; (convPtr != NULL)
  		    && (convPtr->hConv != hConv); convPtr = convPtr->nextPtr) {
 		/*
 		 * Empty loop body.
@@ -862,7 +872,7 @@ TkDdeServerProc (
 	    int i;
 	    int numItems;
 
-	    for (i = 0, riPtr = interpListPtr; riPtr != NULL;
+	    for (i = 0, riPtr = tsdPtr->interpListPtr; riPtr != NULL;
 		    i++, riPtr = riPtr->nextPtr) {
 		/*
 		 * Empty loop body.
@@ -871,15 +881,15 @@ TkDdeServerProc (
 	    }
 
 	    numItems = i;
-	    ddeReturn = DdeCreateDataHandle(ddeInstance, NULL,
+	    ddeReturn = DdeCreateDataHandle(tsdPtr->ddeInstance, NULL,
 		    (numItems + 1) * sizeof(HSZPAIR), 0, 0, 0, 0);
 	    returnPtr = (HSZPAIR *) DdeAccessData(ddeReturn, &len);
-	    for (i = 0, riPtr = interpListPtr; i < numItems; 
+	    for (i = 0, riPtr = tsdPtr->interpListPtr; i < numItems; 
 		    i++, riPtr = riPtr->nextPtr) {
-		returnPtr[i].hszSvc = DdeCreateStringHandle(ddeInstance,
-			"Tk", CP_WINANSI);
-		returnPtr[i].hszTopic = DdeCreateStringHandle(ddeInstance,
-			riPtr->name, CP_WINANSI);
+		returnPtr[i].hszSvc = DdeCreateStringHandle(
+                        tsdPtr->ddeInstance, "Tk", CP_WINANSI);
+		returnPtr[i].hszTopic = DdeCreateStringHandle(
+                        tsdPtr->ddeInstance, riPtr->name, CP_WINANSI);
 	    }
 	    returnPtr[i].hszSvc = NULL;
 	    returnPtr[i].hszTopic = NULL;
@@ -912,9 +922,12 @@ static void
 RemoveDdeServerExitProc(
     ClientData clientData)	    /* Not used in this handler. */
 {
-    DdeNameService(ddeInstance, NULL, 0, DNS_UNREGISTER);
-    DdeUninitialize(ddeInstance);
-    ddeInstance = 0;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    DdeNameService(tsdPtr->ddeInstance, NULL, 0, DNS_UNREGISTER);
+    DdeUninitialize(tsdPtr->ddeInstance);
+    tsdPtr->ddeInstance = 0;
 }
 
 /*
@@ -943,13 +956,15 @@ MakeDdeConnection(
 {
     HSZ ddeTopic, ddeService;
     HCONV ddeConv;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     
-    ddeService = DdeCreateStringHandle(ddeInstance, "Tk", 0);
-    ddeTopic = DdeCreateStringHandle(ddeInstance, name, 0);
+    ddeService = DdeCreateStringHandle(tsdPtr->ddeInstance, "Tk", 0);
+    ddeTopic = DdeCreateStringHandle(tsdPtr->ddeInstance, name, 0);
 
-    ddeConv = DdeConnect(ddeInstance, ddeService, ddeTopic, NULL);
-    DdeFreeStringHandle(ddeInstance, ddeService);
-    DdeFreeStringHandle(ddeInstance, ddeTopic);
+    ddeConv = DdeConnect(tsdPtr->ddeInstance, ddeService, ddeTopic, NULL);
+    DdeFreeStringHandle(tsdPtr->ddeInstance, ddeService);
+    DdeFreeStringHandle(tsdPtr->ddeInstance, ddeTopic);
 
     if (ddeConv == (HCONV) NULL) {
 	if (interp != NULL) {
@@ -987,8 +1002,10 @@ SetDdeError(
 {
     Tcl_Obj *resultPtr = Tcl_GetObjResult(interp);
     int err;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    err = DdeGetLastError(ddeInstance);
+    err = DdeGetLastError(tsdPtr->ddeInstance);
     switch (err) {
 	case DMLERR_DATAACKTIMEOUT:
 	case DMLERR_EXECACKTIMEOUT:
@@ -1056,6 +1073,8 @@ Tk_DdeObjCmd(
     int firstArg, length, dataLength;
     DWORD ddeResult;
     HDDEDATA ddeReturn;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, 
@@ -1116,14 +1135,15 @@ Tk_DdeObjCmd(
     if (length == 0) {
 	serviceName = NULL;
     } else {
-	ddeService = DdeCreateStringHandle(ddeInstance, serviceName,
+	ddeService = DdeCreateStringHandle(tsdPtr->ddeInstance, serviceName,
 		CP_WINANSI);
     }
     topicName = Tcl_GetStringFromObj(objv[firstArg + 1], &length);
     if (length == 0) {
 	topicName = NULL;
     } else {
-	ddeTopic = DdeCreateStringHandle(ddeInstance, topicName, CP_WINANSI);
+	ddeTopic = DdeCreateStringHandle(tsdPtr->ddeInstance, 
+                topicName, CP_WINANSI);
     }
 
     switch (index) {
@@ -1135,7 +1155,8 @@ Tk_DdeObjCmd(
 		result = TCL_ERROR;
 		break;
 	    }
-	    hConv = DdeConnect(ddeInstance, ddeService, ddeTopic, NULL);
+	    hConv = DdeConnect(tsdPtr->ddeInstance, ddeService, ddeTopic, 
+                    NULL);
 
 	    if (hConv == NULL) {
 		SetDdeError(interp);
@@ -1143,13 +1164,14 @@ Tk_DdeObjCmd(
 		break;
 	    }
 
-	    ddeData = DdeCreateDataHandle(ddeInstance, dataString,
+	    ddeData = DdeCreateDataHandle(tsdPtr->ddeInstance, dataString,
 		    dataLength, 0, 0, CF_TEXT, 0);
 	    if (ddeData != NULL) {
 		if (async) {
 		    DdeClientTransaction((LPBYTE) ddeData, 0xFFFFFFFF, hConv, 0, 
 			    CF_TEXT, XTYP_EXECUTE, TIMEOUT_ASYNC, &ddeResult);
-		    DdeAbandonTransaction(ddeInstance, hConv, ddeResult);
+		    DdeAbandonTransaction(tsdPtr->ddeInstance, hConv, 
+                            ddeResult);
 		} else {
 		    ddeReturn = DdeClientTransaction((LPBYTE) ddeData, 0xFFFFFFFF,
 			    hConv, 0, CF_TEXT, XTYP_EXECUTE, 7200000, NULL);
@@ -1173,15 +1195,16 @@ Tk_DdeObjCmd(
 			"cannot request value of null data", -1);
 		return TCL_ERROR;
 	    }
-	    hConv = DdeConnect(ddeInstance, ddeService, ddeTopic, NULL);
+	    hConv = DdeConnect(tsdPtr->ddeInstance, ddeService, ddeTopic, 
+                    NULL);
 	    
 	    if (hConv == NULL) {
 		SetDdeError(interp);
 		result = TCL_ERROR;
 	    } else {
 		Tcl_Obj *returnObjPtr;
-		ddeItem = DdeCreateStringHandle(ddeInstance, itemString,
-			CP_WINANSI);
+		ddeItem = DdeCreateStringHandle(tsdPtr->ddeInstance, 
+                        itemString, CP_WINANSI);
 		if (ddeItem != NULL) {
 		    ddeData = DdeClientTransaction(NULL, 0, hConv, ddeItem,
 			    CF_TEXT, XTYP_REQUEST, 5000, NULL);
@@ -1212,8 +1235,8 @@ Tk_DdeObjCmd(
 	    char *name;
 	    
 	    convInfo.cb = sizeof(CONVINFO);
-	    hConvList = DdeConnectList(ddeInstance, ddeService, ddeTopic,
-		    0, NULL);
+	    hConvList = DdeConnectList(tsdPtr->ddeInstance, ddeService, 
+                    ddeTopic, 0, NULL);
 	    hConv = 0;
 	    convListObjPtr = Tcl_NewListObj(0, (Tcl_Obj **) NULL);
 	    Tcl_DStringInit(&dString);
@@ -1221,19 +1244,19 @@ Tk_DdeObjCmd(
 	    while (hConv = DdeQueryNextServer(hConvList, hConv), hConv != 0) {
 		elementObjPtr = Tcl_NewListObj(0, (Tcl_Obj **) NULL);
 		DdeQueryConvInfo(hConv, QID_SYNC, &convInfo);
-		length = DdeQueryString(ddeInstance, convInfo.hszSvcPartner,
-			NULL, 0, CP_WINANSI);
+		length = DdeQueryString(tsdPtr->ddeInstance, 
+                        convInfo.hszSvcPartner, NULL, 0, CP_WINANSI);
 		Tcl_DStringSetLength(&dString, length);
 		name = Tcl_DStringValue(&dString);
-		DdeQueryString(ddeInstance, convInfo.hszSvcPartner, name,
-			length + 1, CP_WINANSI);
+		DdeQueryString(tsdPtr->ddeInstance, convInfo.hszSvcPartner, 
+                        name, length + 1, CP_WINANSI);
 		Tcl_ListObjAppendElement(interp, elementObjPtr,
 			Tcl_NewStringObj(name, length));
-		length = DdeQueryString(ddeInstance, convInfo.hszTopic,
+		length = DdeQueryString(tsdPtr->ddeInstance, convInfo.hszTopic,
 			NULL, 0, CP_WINANSI);
 		Tcl_DStringSetLength(&dString, length);
 		name = Tcl_DStringValue(&dString);
-		DdeQueryString(ddeInstance, convInfo.hszTopic, name,
+		DdeQueryString(tsdPtr->ddeInstance, convInfo.hszTopic, name,
 			length + 1, CP_WINANSI);
 		Tcl_ListObjAppendElement(interp, elementObjPtr,
 			Tcl_NewStringObj(name, length));
@@ -1246,10 +1269,10 @@ Tk_DdeObjCmd(
 	}
     }
     if (ddeService != NULL) {
-	DdeFreeStringHandle(ddeInstance, ddeService);
+	DdeFreeStringHandle(tsdPtr->ddeInstance, ddeService);
     }
     if (ddeTopic != NULL) {
-	DdeFreeStringHandle(ddeInstance, ddeTopic);
+	DdeFreeStringHandle(tsdPtr->ddeInstance, ddeTopic);
     }
 
     return result;

@@ -9,22 +9,17 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWindow.c,v 1.1.4.2 1998/09/30 02:19:39 stanton Exp $
+ * RCS: @(#) $Id: tkWinWindow.c,v 1.1.4.3 1998/12/13 08:16:20 lfb Exp $
  */
 
 #include "tkWinInt.h"
 
-/*
- * The windowTable maps from HWND to Tk_Window handles.
- */
-
-static Tcl_HashTable windowTable;
-
-/*
- * Have statics in this module been initialized?
- */
-
-static int initialized = 0;
+typedef struct ThreadSpecificData {
+    int initialized;            /* 0 means table below needs initializing. */
+    Tcl_HashTable windowTable;  /* The windowTable maps from HWND to 
+				 * Tk_Window handles. */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Forward declarations for procedures defined in this file:
@@ -61,10 +56,12 @@ Tk_AttachHWND(tkwin, hwnd)
     int new;
     Tcl_HashEntry *entryPtr;
     TkWinDrawable *twdPtr = (TkWinDrawable *) Tk_WindowId(tkwin);
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (!initialized) {
-	Tcl_InitHashTable(&windowTable, TCL_ONE_WORD_KEYS);
-	initialized = 1;
+    if (!tsdPtr->initialized) {
+	Tcl_InitHashTable(&tsdPtr->windowTable, TCL_ONE_WORD_KEYS);
+	tsdPtr->initialized = 1;
     }
 
     /*
@@ -77,7 +74,7 @@ Tk_AttachHWND(tkwin, hwnd)
 	twdPtr->type = TWD_WINDOW;
 	twdPtr->window.winPtr = (TkWindow *) tkwin;
     } else if (twdPtr->window.handle != NULL) {
-	entryPtr = Tcl_FindHashEntry(&windowTable,
+	entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable,
 		(char *)twdPtr->window.handle);
 	Tcl_DeleteHashEntry(entryPtr);
     }
@@ -87,7 +84,7 @@ Tk_AttachHWND(tkwin, hwnd)
      */
 
     twdPtr->window.handle = hwnd;
-    entryPtr = Tcl_CreateHashEntry(&windowTable, (char *)hwnd, &new);
+    entryPtr = Tcl_CreateHashEntry(&tsdPtr->windowTable, (char *)hwnd, &new);
     Tcl_SetHashValue(entryPtr, (ClientData)tkwin);
 
     return (Window)twdPtr;
@@ -115,11 +112,14 @@ Tk_HWNDToWindow(hwnd)
     HWND hwnd;
 {
     Tcl_HashEntry *entryPtr;
-    if (!initialized) {
-	Tcl_InitHashTable(&windowTable, TCL_ONE_WORD_KEYS);
-	initialized = 1;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (!tsdPtr->initialized) {
+	Tcl_InitHashTable(&tsdPtr->windowTable, TCL_ONE_WORD_KEYS);
+	tsdPtr->initialized = 1;
     }
-    entryPtr = Tcl_FindHashEntry(&windowTable, (char*)hwnd);
+    entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable, (char*)hwnd);
     if (entryPtr != NULL) {
 	return (Tk_Window) Tcl_GetHashValue(entryPtr);
     }
@@ -295,6 +295,8 @@ XDestroyWindow(display, w)
     TkWinDrawable *twdPtr = (TkWinDrawable *)w;
     TkWindow *winPtr = TkWinGetWinPtr(w);
     HWND hwnd = Tk_GetHWND(w);
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     display->request++;
 
@@ -305,7 +307,7 @@ XDestroyWindow(display, w)
 
     TkPointerDeadWindow(winPtr);
 
-    entryPtr = Tcl_FindHashEntry(&windowTable, (char*)hwnd);
+    entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable, (char*)hwnd);
     if (entryPtr != NULL) {
 	Tcl_DeleteHashEntry(entryPtr);
     }

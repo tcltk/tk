@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWindowMgr.c,v 1.1.4.2 1998/09/30 02:18:18 stanton Exp $
+ * RCS: @(#) $Id: tkMacWindowMgr.c,v 1.1.4.3 1998/12/13 08:16:14 lfb Exp $
  */
 
 #include <Events.h>
@@ -104,6 +104,7 @@ WindowManagerMouse(
     Point where, where2;
     int xOffset, yOffset;
     short windowPart;
+    TkDisplay *dispPtr;
 				
     frontWindow = FrontWindow();
 
@@ -122,7 +123,8 @@ WindowManagerMouse(
     }
 
     windowPart = FindWindow(eventPtr->where, &whichWindow);
-    tkwin = Tk_IdToWindow(tkDisplayList->display, window);
+    dispPtr = TkGetDisplayList();
+    tkwin = Tk_IdToWindow(dispPtr->display, window);
     switch (windowPart) {
 	case inSysWindow:
 	    SystemClick(eventPtr, (GrafPort *) whichWindow);
@@ -293,8 +295,10 @@ GenerateUpdateEvent(
 {
     WindowRef macWindow;
     register TkWindow *winPtr;
+    TkDisplay *dispPtr;
 	
-    winPtr = (TkWindow *) Tk_IdToWindow(tkDisplayList->display, window);
+    dispPtr = TkGetDisplayList();
+    winPtr = (TkWindow *) Tk_IdToWindow(dispPtr->display, window);
 
     if (winPtr == NULL) {
 	 return false;
@@ -464,6 +468,7 @@ TkGenerateButtonEvent(
     Point where;
     Tk_Window tkwin;
     int dummy;
+    TkDisplay *dispPtr;
 
     /* 
      * ButtonDown events will always occur in the front
@@ -480,7 +485,8 @@ TkGenerateButtonEvent(
 	return false;
     }
 
-    tkwin = Tk_IdToWindow(tkDisplayList->display, window);
+    dispPtr = TkGetDisplayList();
+    tkwin = Tk_IdToWindow(dispPtr->display, window);
     
     GlobalToLocal(&where);
     if (tkwin != NULL) {
@@ -517,8 +523,10 @@ GenerateActivateEvents(
     Window window)		/* Root X window for event. */
 {
     TkWindow *winPtr;
+    TkDisplay *dispPtr;
     
-    winPtr = (TkWindow *) Tk_IdToWindow(tkDisplayList->display, window);
+    dispPtr = TkGetDisplayList();
+    winPtr = (TkWindow *) Tk_IdToWindow(dispPtr->display, window);
     if (winPtr == NULL || winPtr->window == None) {
 	return false;
     }
@@ -629,8 +637,10 @@ GenerateFocusEvent(
 {
     XEvent event;
     Tk_Window tkwin;
+    TkDisplay *dispPtr;
     
-    tkwin = Tk_IdToWindow(tkDisplayList->display, window);
+    dispPtr = TkGetDisplayList();
+    tkwin = Tk_IdToWindow(dispPtr->display, window);
     if (tkwin == NULL) {
 	return false;
     }
@@ -646,9 +656,9 @@ GenerateFocusEvent(
 	event.xany.type = FocusOut;
     }
 
-    event.xany.serial = tkDisplayList->display->request;
+    event.xany.serial = dispPtr->display->request;
     event.xany.send_event = False;
-    event.xfocus.display = tkDisplayList->display;
+    event.xfocus.display = dispPtr->display;
     event.xfocus.window = window;
     event.xfocus.mode = NotifyNormal;
     event.xfocus.detail = NotifyDetailNone;
@@ -690,6 +700,7 @@ GenerateKeyEvent(
     XEvent event;
     unsigned char byte;
     char buf[16];
+    TkDisplay *dispPtr;
     
     /*
      * The focus must be in the FrontWindow on the Macintosh.
@@ -697,7 +708,8 @@ GenerateKeyEvent(
      * that owns the focus.
      */
 
-    tkwin = Tk_IdToWindow(tkDisplayList->display, window);
+    dispPtr = TkGetDisplayList();
+    tkwin = Tk_IdToWindow(dispPtr->display, window);
     tkwin = (Tk_Window) ((TkWindow *) tkwin)->dispPtr->focusPtr;
     if (tkwin == NULL) {
 	return false;
@@ -790,7 +802,8 @@ GeneratePollingEvents()
     short part;
     int local_x, local_y;
     int generatedEvents = false;
-    
+    TkDisplay *dispPtr;
+
     /*
      * First we get the current mouse position and determine
      * what Tk window the mouse is over (if any).
@@ -812,7 +825,8 @@ GeneratePollingEvents()
 	tkwin = NULL;
     } else {
 	window = TkMacGetXWindow(whichwindow);
-	rootwin = Tk_IdToWindow(tkDisplayList->display, window);
+	dispPtr = TkGetDisplayList();
+	rootwin = Tk_IdToWindow(dispPtr->display, window);
 	if (rootwin == NULL) {
 	    tkwin = NULL;
 	} else {
@@ -879,6 +893,7 @@ GeneratePollingEvents2(
     int local_x, local_y;
     int generatedEvents = false;
     Rect bounds;
+    TkDisplay *dispPtr;
     
     /*
      * First we get the current mouse position and determine
@@ -901,7 +916,8 @@ GeneratePollingEvents2(
     if (whichwindow != frontWin) {
 	tkwin = NULL;
     } else {
-	rootwin = Tk_IdToWindow(tkDisplayList->display, window);
+        dispPtr = TkGetDisplayList();
+	rootwin = Tk_IdToWindow(dispPtr->display, window);
 	TkMacWinBounds((TkWindow *) rootwin, &bounds);
 	if (!PtInRect(whereLocal, &bounds)) {
 	    tkwin = NULL;

@@ -12,35 +12,25 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.1.4.2 1998/09/30 02:17:28 stanton Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.1.4.3 1998/12/13 08:16:12 lfb Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
 
-/*
- * Count of number of main windows currently open in this process.
- */
-
-static int numMainWindows;
-
-/*
- * First in list of all main windows managed by this process.
- */
-
-TkMainInfo *tkMainWindowList = NULL;
-
-/*
- * List of all displays currently in use.
- */
-
-TkDisplay *tkDisplayList = NULL;
-
-/*
- * Have statics in this module been initialized?
- */
-
-static int initialized = 0;
+typedef struct ThreadSpecificData {
+    int numMainWindows;    /* Count of numver of main windows currently
+			    * open in this thread. */
+    TkMainInfo *mainWindowList;
+                           /* First in list of all main windows managed
+			    * by this thread. */
+    TkDisplay *displayList;
+                           /* List of all displays currently in use by 
+			    * the current thread. */
+    int initialized;       /* 0 means the structures above need 
+			    * initializing. */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * The variables below hold several uid's that are used in many places
@@ -50,6 +40,12 @@ static int initialized = 0;
 Tk_Uid tkDisabledUid = NULL;
 Tk_Uid tkActiveUid = NULL;
 Tk_Uid tkNormalUid = NULL;
+
+/* 
+ * The Mutex below is used to lock access to the Tk_Uids above. 
+ */
+
+TCL_DECLARE_MUTEX(windowMutex);
 
 /*
  * Default values for "changes" and "atts" fields of TkWindows.  Note
@@ -258,12 +254,20 @@ CreateTopLevelWindow(interp, parent, name, screenName)
     register TkWindow *winPtr;
     register TkDisplay *dispPtr;
     int screenId;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (!initialized) {
-	initialized = 1;
-	tkActiveUid = Tk_GetUid("active");
-	tkDisabledUid = Tk_GetUid("disabled");
-	tkNormalUid = Tk_GetUid("normal");
+    if (!tsdPtr->initialized) {
+	tsdPtr->initialized = 1;
+	if (tkNormalUid == NULL) {
+	    Tcl_MutexLock(&windowMutex);
+	    if (tkNormalUid == NULL) {
+	        tkActiveUid = Tk_GetUid("active");
+		tkDisabledUid = Tk_GetUid("disabled");
+		tkNormalUid = Tk_GetUid("normal");
+	    }
+	    Tcl_MutexUnlock(&windowMutex);
+	}
 
 	/*
 	 * Create built-in image types.
@@ -363,6 +367,8 @@ GetScreen(interp, screenName, screenPtr)
     char *p;
     int screenId;
     size_t length;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Separate the screen number from the rest of the display
@@ -394,7 +400,7 @@ GetScreen(interp, screenName, screenPtr)
      * then open a new connection.
      */
 
-    for (dispPtr = tkDisplayList; ; dispPtr = dispPtr->nextPtr) {
+    for (dispPtr = TkGetDisplayList(); ; dispPtr = dispPtr->nextPtr) {
 	if (dispPtr == NULL) {
 	    dispPtr = TkpOpenDisplay(screenName);
 	    if (dispPtr == NULL) {
@@ -402,29 +408,35 @@ GetScreen(interp, screenName, screenPtr)
 			screenName, "\"", (char *) NULL);
 		return (TkDisplay *) NULL;
 	    }
-	    dispPtr->nextPtr = tkDisplayList;
+	    dispPtr->nextPtr = TkGetDisplayList();
 	    dispPtr->name = (char *) ckalloc((unsigned) (length+1));
 	    dispPtr->lastEventTime = CurrentTime;
-	    strncpy(dispPtr->name, screenName, length);
-	    dispPtr->name[length] = '\0';
+	    dispPtr->borderInit = 0;
+	    dispPtr->atomInit = 0;
 	    dispPtr->bindInfoStale = 1;
 	    dispPtr->modeModMask = 0;
 	    dispPtr->metaModMask = 0;
 	    dispPtr->altModMask = 0;
 	    dispPtr->numModKeyCodes = 0;
 	    dispPtr->modKeyCodes = NULL;
-	    OpenIM(dispPtr);
+	    dispPtr->bitmapInit = 0;
+	    dispPtr->bitmapAutoNumber = 0;
+	    dispPtr->numIdSearches = 0;
+	    dispPtr->numSlowSearches = 0;
+	    dispPtr->colorInit = 0;
+	    dispPtr->stressPtr = NULL;
+	    dispPtr->cursorInit = 0;
+	    dispPtr->cursorString[0] = '\0';
+	    dispPtr->cursorFont = None;
 	    dispPtr->errorPtr = NULL;
 	    dispPtr->deleteCount = 0;
-	    dispPtr->commTkwin = NULL;
-	    dispPtr->selectionInfoPtr = NULL;
-	    dispPtr->multipleAtom = None;
-	    dispPtr->clipWindow = NULL;
-	    dispPtr->clipboardActive = 0;
-	    dispPtr->clipboardAppPtr = NULL;
-	    dispPtr->clipTargetPtr = NULL;
-	    dispPtr->atomInit = 0;
-	    dispPtr->cursorFont = None;
+	    dispPtr->delayedMotionPtr = NULL;
+	    dispPtr->focusDebug = 0;
+	    dispPtr->implicitWinPtr = NULL;
+	    dispPtr->focusPtr = NULL;
+	    dispPtr->gcInit = 0;
+	    dispPtr->geomInit = 0;
+	    dispPtr->uidInit = 0;
 	    dispPtr->grabWinPtr = NULL;
 	    dispPtr->eventualGrabWinPtr = NULL;
 	    dispPtr->buttonWinPtr = NULL;
@@ -432,18 +444,32 @@ GetScreen(interp, screenName, screenPtr)
 	    dispPtr->firstGrabEventPtr = NULL;
 	    dispPtr->lastGrabEventPtr = NULL;
 	    dispPtr->grabFlags = 0;
-	    TkInitXId(dispPtr);
+	    dispPtr->gridInit = 0;
+	    dispPtr->imageId = 0;
+	    dispPtr->packInit = 0;
+	    dispPtr->placeInit = 0;
+	    dispPtr->selectionInfoPtr = NULL;
+	    dispPtr->multipleAtom = None;
+	    dispPtr->clipWindow = NULL;
+	    dispPtr->clipboardActive = 0;
+	    dispPtr->clipboardAppPtr = NULL;
+	    dispPtr->clipTargetPtr = NULL;
+	    dispPtr->commTkwin = NULL;
+	    dispPtr->wmTracing = 0;
+	    dispPtr->firstWmPtr = NULL;
+	    dispPtr->foregroundWmPtr = NULL;
 	    dispPtr->destroyCount = 0;
 	    dispPtr->lastDestroyRequest = 0;
 	    dispPtr->cmapPtr = NULL;
-	    dispPtr->implicitWinPtr = NULL;
-	    dispPtr->focusPtr = NULL;
-	    dispPtr->stressPtr = NULL;
-	    dispPtr->delayedMotionPtr = NULL;
 	    Tcl_InitHashTable(&dispPtr->winTable, TCL_ONE_WORD_KEYS);
+
             dispPtr->refCount = 0;
-            
-	    tkDisplayList = dispPtr;
+	    strncpy(dispPtr->name, screenName, length);
+	    dispPtr->name[length] = '\0';
+	    OpenIM(dispPtr);
+	    TkInitXId(dispPtr);
+
+	    tsdPtr->displayList = dispPtr;
 	    break;
 	}
 	if ((strncmp(dispPtr->name, screenName, length) == 0)
@@ -485,8 +511,10 @@ TkGetDisplay(display)
      Display *display;          /* X's display pointer */
 {
     TkDisplay *dispPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    for (dispPtr = tkDisplayList; dispPtr != NULL;
+    for (dispPtr = tsdPtr->displayList; dispPtr != NULL;
 	    dispPtr = dispPtr->nextPtr) {
 	if (dispPtr->display == display) {
 	    break;
@@ -495,6 +523,58 @@ TkGetDisplay(display)
     return dispPtr;
 }
 
+/*
+ *--------------------------------------------------------------
+ *
+ * TkGetDisplayList --
+ *
+ *	This procedure returns a pointer to the thread-local
+ *      list of TkDisplays corresponding to the open displays.
+ *
+ * Results:
+ *	The return value is a pointer to the first TkDisplay
+ *      structure in thread-local-storage.
+ *
+ * Side effects:
+ *      None.
+ *
+ *--------------------------------------------------------------
+ */
+TkDisplay *
+TkGetDisplayList()
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    
+    return tsdPtr->displayList;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkGetMainInfoList --
+ *
+ *	This procedure returns a pointer to the list of structures
+ *      containing information about all main windows for the
+ *      current thread.
+ *
+ * Results:
+ *	The return value is a pointer to the first TkMainInfo
+ *      structure in thread local storage.
+ *
+ * Side effects:
+ *      None.
+ *
+ *--------------------------------------------------------------
+ */
+TkMainInfo *
+TkGetMainInfoList()
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    
+    return tsdPtr->mainWindowList;
+}
 /*
  *--------------------------------------------------------------
  *
@@ -717,6 +797,8 @@ TkCreateMainWindow(interp, screenName, baseName)
     register TkWindow *winPtr;
     register TkCmd *cmdPtr;
     ClientData clientData;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     
     /*
      * Panic if someone updated the TkWindow structure without
@@ -748,6 +830,7 @@ TkCreateMainWindow(interp, screenName, baseName)
     mainPtr->refCount = 1;
     mainPtr->interp = interp;
     Tcl_InitHashTable(&mainPtr->nameTable, TCL_STRING_KEYS);
+    TkEventInit();
     TkBindInit(mainPtr);
     TkFontPkgInit(mainPtr);
     mainPtr->tlFocusPtr = NULL;
@@ -759,8 +842,8 @@ TkCreateMainWindow(interp, screenName, baseName)
 	    TCL_LINK_BOOLEAN) != TCL_OK) {
 	Tcl_ResetResult(interp);
     }
-    mainPtr->nextPtr = tkMainWindowList;
-    tkMainWindowList = mainPtr;
+    mainPtr->nextPtr = tsdPtr->mainWindowList;
+    tsdPtr->mainWindowList = mainPtr;
     winPtr->mainPtr = mainPtr;
     hPtr = Tcl_CreateHashEntry(&mainPtr->nameTable, ".", &dummy);
     Tcl_SetHashValue(hPtr, winPtr);
@@ -816,7 +899,7 @@ TkCreateMainWindow(interp, screenName, baseName)
     Tcl_SetVar(interp, "tk_patchLevel", TK_PATCH_LEVEL, TCL_GLOBAL_ONLY);
     Tcl_SetVar(interp, "tk_version", TK_VERSION, TCL_GLOBAL_ONLY);
 
-    numMainWindows++;
+    tsdPtr->numMainWindows++;
     return tkwin;
 }
 
@@ -1032,6 +1115,8 @@ Tk_DestroyWindow(tkwin)
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
     XEvent event;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr->flags & TK_ALREADY_DEAD) {
 	/*
@@ -1075,19 +1160,19 @@ Tk_DestroyWindow(tkwin)
 
     if (winPtr->mainPtr->winPtr == winPtr) {
         dispPtr->refCount--;
-	if (tkMainWindowList == winPtr->mainPtr) {
-	    tkMainWindowList = winPtr->mainPtr->nextPtr;
+	if (tsdPtr->mainWindowList == winPtr->mainPtr) {
+	    tsdPtr->mainWindowList = winPtr->mainPtr->nextPtr;
 	} else {
 	    TkMainInfo *prevPtr;
 
-	    for (prevPtr = tkMainWindowList;
+	    for (prevPtr = tsdPtr->mainWindowList;
 		    prevPtr->nextPtr != winPtr->mainPtr;
 		    prevPtr = prevPtr->nextPtr) {
 		/* Empty loop body. */
 	    }
 	    prevPtr->nextPtr = winPtr->mainPtr->nextPtr;
 	}
-	numMainWindows--;
+	tsdPtr->numMainWindows--;
     }
 
     /*
@@ -1278,7 +1363,7 @@ Tk_DestroyWindow(tkwin)
                  * Splice this display out of the list of displays.
                  */
                 
-                for (theDispPtr = tkDisplayList, backDispPtr = NULL;
+                for (theDispPtr = displayList, backDispPtr = NULL;
                          (theDispPtr != winPtr->dispPtr) &&
                              (theDispPtr != NULL);
                          theDispPtr = theDispPtr->nextPtr) {
@@ -1288,7 +1373,7 @@ Tk_DestroyWindow(tkwin)
                     panic("could not find display to close!");
                 }
                 if (backDispPtr == NULL) {
-                    tkDisplayList = theDispPtr->nextPtr;
+                    displayList = theDispPtr->nextPtr;
                 } else {
                     backDispPtr->nextPtr = theDispPtr->nextPtr;
                 }
@@ -2069,7 +2154,7 @@ Tk_IdToWindow(display, window)
     TkDisplay *dispPtr;
     Tcl_HashEntry *hPtr;
 
-    for (dispPtr = tkDisplayList; ; dispPtr = dispPtr->nextPtr) {
+    for (dispPtr = TkGetDisplayList(); ; dispPtr = dispPtr->nextPtr) {
 	if (dispPtr == NULL) {
 	    return NULL;
 	}
@@ -2310,8 +2395,10 @@ Tk_MainWindow(interp)
 					 * reporting also. */
 {
     TkMainInfo *mainPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    for (mainPtr = tkMainWindowList; mainPtr != NULL;
+    for (mainPtr = tsdPtr->mainWindowList; mainPtr != NULL;
 	    mainPtr = mainPtr->nextPtr) {
 	if (mainPtr->interp == interp) {
 	    return (Tk_Window) mainPtr->winPtr;
@@ -2428,7 +2515,10 @@ OpenIM(dispPtr)
 int
 Tk_GetNumMainWindows()
 {
-    return numMainWindows;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    return tsdPtr->numMainWindows;
 }
 
 /*
@@ -2454,8 +2544,10 @@ DeleteWindowsExitProc(clientData)
 {
     TkDisplay *displayPtr, *nextPtr;
     Tcl_Interp *interp;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     
-    while (tkMainWindowList != NULL) {
+    while (tsdPtr->mainWindowList != NULL) {
         /*
          * We must protect the interpreter while deleting the window,
          * because of <Destroy> bindings which could destroy the interpreter
@@ -2463,14 +2555,14 @@ DeleteWindowsExitProc(clientData)
          * the call stack pointing at deleted memory, causing core dumps.
          */
         
-        interp = tkMainWindowList->winPtr->mainPtr->interp;
+        interp = tsdPtr->mainWindowList->winPtr->mainPtr->interp;
         Tcl_Preserve((ClientData) interp);
-	Tk_DestroyWindow((Tk_Window) tkMainWindowList->winPtr);
+	Tk_DestroyWindow((Tk_Window) tsdPtr->mainWindowList->winPtr);
         Tcl_Release((ClientData) interp);
     }
     
-    displayPtr = tkDisplayList;
-    tkDisplayList = NULL;
+    displayPtr = tsdPtr->displayList;
+    tsdPtr->displayList = NULL;
     
     /*
      * Iterate destroying the displays until no more displays remain.
@@ -2479,9 +2571,9 @@ DeleteWindowsExitProc(clientData)
      * as well as the old ones.
      */
     
-    for (displayPtr = tkDisplayList;
+    for (displayPtr = tsdPtr->displayList;
          displayPtr != NULL;
-         displayPtr = tkDisplayList) {
+         displayPtr = tsdPtr->displayList) {
 
         /*
          * Now iterate over the current list of open displays, and first
@@ -2492,7 +2584,8 @@ DeleteWindowsExitProc(clientData)
          * if it needs to dispatch a message.
          */
         
-        for (tkDisplayList = NULL; displayPtr != NULL; displayPtr = nextPtr) {
+        for (tsdPtr->displayList = NULL; displayPtr != NULL; 
+                displayPtr = nextPtr) {
             nextPtr = displayPtr->nextPtr;
             if (displayPtr->name != (char *) NULL) {
                 ckfree(displayPtr->name);
@@ -2502,12 +2595,14 @@ DeleteWindowsExitProc(clientData)
         }
     }
     
-    numMainWindows = 0;
-    tkMainWindowList = NULL;
-    initialized = 0;
+    tsdPtr->numMainWindows = 0;
+    tsdPtr->mainWindowList = NULL;
+    tsdPtr->initialized = 0;
+    Tcl_MutexLock(&windowMutex);
     tkDisabledUid = NULL;
     tkActiveUid = NULL;
     tkNormalUid = NULL;
+    Tcl_MutexUnlock(&windowMutex);
 }
 
 /*
@@ -2627,6 +2722,8 @@ Initialize(interp)
     int argc, code;
     char **argv, *args[20];
     Tcl_DString class;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Start by initializing all the static variables to default acceptable
@@ -2634,6 +2731,7 @@ Initialize(interp)
      * code.
      */
 
+    Tcl_MutexLock(&windowMutex);
     synchronize = 0;
     name = NULL;
     display = NULL;
@@ -2788,7 +2886,7 @@ Initialize(interp)
 	 * that it will be available to subprocesses created by us.
 	 */
 
-	if (numMainWindows == 0) {
+	if (tsdPtr->numMainWindows == 0) {
 	    Tcl_SetVar2(interp, "env", "DISPLAY", display, TCL_GLOBAL_ONLY);
 	}
     }
@@ -2835,6 +2933,8 @@ Initialize(interp)
 	}
         geometry = NULL;
     }
+    Tcl_MutexUnlock(&windowMutex);
+
     if (Tcl_PkgRequire(interp, "Tcl", TCL_VERSION, 1) == NULL) {
 	code = TCL_ERROR;
 	goto done;

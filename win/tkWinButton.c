@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.1.4.2 1998/09/30 02:19:28 stanton Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.1.4.3 1998/12/13 08:16:15 lfb Exp $
  */
 
 #define OEMRESOURCE
@@ -65,21 +65,20 @@ enum {
 };
 
 /*
- * Variables for the cached information about the boxes bitmap.
+ * Cached information about the boxes bitmap, and the default border 
+ * width for a button in string form for use in Tk_OptionSpecs for 
+ * the various button widget classes.
  */
 
-static BITMAPINFOHEADER *boxesPtr = NULL;   /* Information about the bitmap. */
-static DWORD *boxesPalette = NULL;	    /* Pointer to color palette. */
-static LPSTR boxesBits = NULL;		    /* Pointer to bitmap data. */
-static DWORD boxHeight = 0, boxWidth = 0;    /* Size of each sub-image. */
-
-/*
- * The following variable holds the default border width for a button
- * in string form for use in Tk_OptionSpecs for the various button
- * widget classes.
- */
-
-static char defWidth[TCL_INTEGER_SPACE];
+typedef struct ThreadSpecificData { 
+    BITMAPINFOHEADER *boxesPtr;   /* Information about the bitmap. */
+    DWORD *boxesPalette;	  /* Pointer to color palette. */
+    LPSTR boxesBits;		  /* Pointer to bitmap data. */
+    DWORD boxHeight;              /* Height of each sub-image. */
+    DWORD boxWidth ;              /* Width of each sub-image. */
+    char defWidth[TCL_INTEGER_SPACE];
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Declarations for functions defined in this file.
@@ -140,31 +139,34 @@ InitBoxes()
     HGLOBAL hblk;
     LPBITMAPINFOHEADER newBitmap;
     DWORD size;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     hrsrc = FindResource(module, "buttons", RT_BITMAP);
     if (hrsrc) {
 	hblk = LoadResource(module, hrsrc);
-	boxesPtr = (LPBITMAPINFOHEADER)LockResource(hblk);
+	tsdPtr->boxesPtr = (LPBITMAPINFOHEADER)LockResource(hblk);
     }
 
     /*
      * Copy the DIBitmap into writable memory.
      */
 
-    if (boxesPtr != NULL && !(boxesPtr->biWidth % 4)
-	    && !(boxesPtr->biHeight % 2)) {
-	size = boxesPtr->biSize + (1 << boxesPtr->biBitCount) * sizeof(RGBQUAD)
-	    + boxesPtr->biSizeImage;
+    if (tsdPtr->boxesPtr != NULL && !(tsdPtr->boxesPtr->biWidth % 4)
+	    && !(tsdPtr->boxesPtr->biHeight % 2)) {
+	size = tsdPtr->boxesPtr->biSize + (1 << tsdPtr->boxesPtr->biBitCount) 
+                * sizeof(RGBQUAD) + tsdPtr->boxesPtr->biSizeImage;
 	newBitmap = (LPBITMAPINFOHEADER) ckalloc(size);
-	memcpy(newBitmap, boxesPtr, size);
-	boxesPtr = newBitmap;
-	boxWidth = boxesPtr->biWidth / 4;
-	boxHeight = boxesPtr->biHeight / 2;
-	boxesPalette = (DWORD*) (((LPSTR)boxesPtr) + boxesPtr->biSize);
-	boxesBits = ((LPSTR)boxesPalette)
-	    + ((1 << boxesPtr->biBitCount) * sizeof(RGBQUAD));
+	memcpy(newBitmap, tsdPtr->boxesPtr, size);
+	tsdPtr->boxesPtr = newBitmap;
+	tsdPtr->boxWidth = tsdPtr->boxesPtr->biWidth / 4;
+	tsdPtr->boxHeight = tsdPtr->boxesPtr->biHeight / 2;
+	tsdPtr->boxesPalette = (DWORD*) (((LPSTR) tsdPtr->boxesPtr) 
+                + tsdPtr->boxesPtr->biSize);
+	tsdPtr->boxesBits = ((LPSTR) tsdPtr->boxesPalette)
+	    + ((1 << tsdPtr->boxesPtr->biBitCount) * sizeof(RGBQUAD));
     } else {
-	boxesPtr = NULL;
+	tsdPtr->boxesPtr = NULL;
     }
 }
 
@@ -193,17 +195,19 @@ TkpButtonSetDefaults(specPtr)
 				 * TK_OPTION_END. */
 {
     int width;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (defWidth[0] == 0) {
+    if (tsdPtr->defWidth[0] == 0) {
 	width = GetSystemMetrics(SM_CXEDGE);
 	if (width == 0) {
 	    width = 1;
 	}
-	sprintf(defWidth, "%d", width);
+	sprintf(tsdPtr->defWidth, "%d", width);
     }
     for ( ; specPtr->type != TK_OPTION_END; specPtr++) {
 	if (specPtr->internalOffset == Tk_Offset(TkButton, borderWidth)) {
-	    specPtr->defValue = defWidth;
+	    specPtr->defValue = tsdPtr->defWidth;
 	}
     }
 }
@@ -348,7 +352,12 @@ TkpDisplayButton(clientData)
 				 * it is a flavor of button, so we offset
 				 * the text to make the button appear to
 				 * move up and down as the relief changes. */
+    DWORD *boxesPalette;
 
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    boxesPalette= tsdPtr->boxesPalette;
     butPtr->flags &= ~REDRAW_PENDING;
     if ((butPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	return;
@@ -494,17 +503,17 @@ TkpDisplayButton(clientData)
      */
 
     if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn
-	    && boxesPtr) {
+	    && tsdPtr->boxesPtr) {
 	int xSrc, ySrc;
 
 	x -= butPtr->indicatorSpace;
 	y -= butPtr->indicatorDiameter / 2;
 
-	xSrc = (butPtr->flags & SELECTED) ? boxWidth : 0;
+	xSrc = (butPtr->flags & SELECTED) ? tsdPtr->boxWidth : 0;
 	if (butPtr->state == STATE_ACTIVE) {
-	    xSrc += boxWidth*2;
+	    xSrc += tsdPtr->boxWidth*2;
 	}
-	ySrc = (butPtr->type == TYPE_RADIO_BUTTON) ? 0 : boxHeight;
+	ySrc = (butPtr->type == TYPE_RADIO_BUTTON) ? 0 : tsdPtr->boxHeight;
 		
 	/*
 	 * Update the palette in the boxes bitmap to reflect the current
@@ -537,9 +546,10 @@ TkpDisplayButton(clientData)
 		border, TK_3D_FLAT_GC));
 
 	dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
-	StretchDIBits(dc, x, y, boxWidth, boxHeight, xSrc, ySrc, 
-		boxWidth, boxHeight, boxesBits, (LPBITMAPINFO)boxesPtr, 
-		DIB_RGB_COLORS, SRCCOPY);
+	StretchDIBits(dc, x, y, tsdPtr->boxWidth, tsdPtr->boxHeight, 
+                xSrc, ySrc, tsdPtr->boxWidth, tsdPtr->boxHeight, 
+                tsdPtr->boxesBits, (LPBITMAPINFO) tsdPtr->boxesPtr, 
+                DIB_RGB_COLORS, SRCCOPY);
 	TkWinReleaseDrawableDC(pixmap, dc, &state);
     }
 
@@ -630,6 +640,8 @@ TkpComputeButtonGeometry(butPtr)
 {
     int width, height, avgWidth;
     Tk_FontMetrics fm;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (butPtr->highlightWidth < 0) {
 	butPtr->highlightWidth = 0;
@@ -637,7 +649,7 @@ TkpComputeButtonGeometry(butPtr)
     butPtr->inset = butPtr->highlightWidth + butPtr->borderWidth;
     butPtr->indicatorSpace = 0;
 
-    if (!boxesPtr) {
+    if (!tsdPtr->boxesPtr) {
 	InitBoxes();
     }
 
@@ -651,8 +663,8 @@ TkpComputeButtonGeometry(butPtr)
 	    height = butPtr->height;
 	}
 	if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-	    butPtr->indicatorSpace = boxWidth * 2;
-	    butPtr->indicatorDiameter = boxHeight;
+	    butPtr->indicatorSpace = tsdPtr->boxWidth * 2;
+	    butPtr->indicatorDiameter = tsdPtr->boxHeight;
 	}
     } else if (butPtr->bitmap != None) {
 	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
@@ -676,7 +688,7 @@ TkpComputeButtonGeometry(butPtr)
 	}
 
 	if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-	    butPtr->indicatorDiameter = boxHeight;
+	    butPtr->indicatorDiameter = tsdPtr->boxHeight;
 	    butPtr->indicatorSpace = butPtr->indicatorDiameter + avgWidth;
 	}
 

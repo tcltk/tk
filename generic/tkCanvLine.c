@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.1.4.2 1998/09/30 02:16:43 stanton Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.1.4.3 1998/12/13 08:16:02 lfb Exp $
  */
 
 #include <stdio.h>
@@ -188,6 +188,8 @@ static Tk_Uid firstUid = NULL;
 static Tk_Uid lastUid = NULL;
 static Tk_Uid bothUid = NULL;
 
+TCL_DECLARE_MUTEX(lineMutex)  /* Used to guard access to Tk_Uids above.*/
+
 /*
  * The definition below determines how large are static arrays
  * used to hold spline points (splines larger than this have to
@@ -252,11 +254,13 @@ CreateLine(interp, canvas, itemPtr, argc, argv)
     linePtr->joinStyle = JoinRound;
     linePtr->gc = None;
     linePtr->arrowGC = None;
-    if (noneUid == NULL) {
+    if (bothUid == NULL) {
+        Tcl_MutexLock(&lineMutex);
 	noneUid = Tk_GetUid("none");
 	firstUid = Tk_GetUid("first");
 	lastUid = Tk_GetUid("last");
 	bothUid = Tk_GetUid("both");
+        Tcl_MutexUnlock(&lineMutex);
     }
     linePtr->arrow = noneUid;
     linePtr->arrowShapeA = (float)8.0;
